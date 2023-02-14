@@ -1127,12 +1127,6 @@ bool RacyFeatures::IsActiveWithFeature(uint32_t aFeature) {
 }
 
 /* static */
-bool RacyFeatures::IsActiveWithoutFeature(uint32_t aFeature) {
-  uint32_t af = sActiveAndFeatures;  // copy it first
-  return (af & Active) && !(af & aFeature);
-}
-
-/* static */
 bool RacyFeatures::IsActiveAndUnpaused() {
   uint32_t af = sActiveAndFeatures;  // copy it first
   return (af & Active) && !(af & Paused);
@@ -3423,15 +3417,6 @@ bool profiler_feature_active(uint32_t aFeature) {
   return RacyFeatures::IsActiveWithFeature(aFeature);
 }
 
-bool profiler_active_without_feature(uint32_t aFeature) {
-  // This function runs both on and off the main thread.
-
-  MOZ_RELEASE_ASSERT(CorePS::Exists());
-
-  // This function is hot enough that we use RacyFeatures, not ActivePS.
-  return RacyFeatures::IsActiveWithoutFeature(aFeature);
-}
-
 void profiler_add_sampled_counter(BaseProfilerCount* aCounter) {
   DEBUG_LOG("profiler_add_sampled_counter(%s)", aCounter->mLabel);
   PSAutoLock lock;
@@ -3686,8 +3671,7 @@ UniquePtr<ProfileChunkedBuffer> profiler_capture_backtrace() {
                            PROFILER);
 
   // Quick is-active check before allocating a buffer.
-  // If NoMarkerStacks is set, we don't want to capture a backtrace.
-  if (!profiler_active_without_feature(ProfilerFeature::NoMarkerStacks)) {
+  if (!profiler_is_active()) {
     return nullptr;
   }
 

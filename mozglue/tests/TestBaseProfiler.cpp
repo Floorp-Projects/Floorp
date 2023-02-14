@@ -4821,6 +4821,9 @@ void TestProfiler() {
   TestProfilerDependencies();
 
   {
+    printf("profiler_init()...\n");
+    AUTO_BASE_PROFILER_INIT;
+
     MOZ_RELEASE_ASSERT(!baseprofiler::profiler_is_active());
     MOZ_RELEASE_ASSERT(!baseprofiler::profiler_thread_is_being_profiled());
     MOZ_RELEASE_ASSERT(!baseprofiler::profiler_thread_is_sleeping());
@@ -5720,13 +5723,8 @@ int main()
   TestProgressLogger();
   // Note that there are two `TestProfiler{,Markers}` functions above, depending
   // on whether MOZ_GECKO_PROFILER is #defined.
-  {
-    printf("profiler_init()...\n");
-    AUTO_BASE_PROFILER_INIT;
-
-    TestProfiler();
-    TestProfilerMarkers();
-  }
+  TestProfiler();
+  TestProfilerMarkers();
 
   return 0;
 }

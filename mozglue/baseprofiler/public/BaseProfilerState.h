@@ -181,8 +181,8 @@ class MOZ_RAII AutoProfilerStats {
     MACRO(4, "fileioall", FileIOAll,                                         \
           "Add file I/O from all threads, implies fileio")                   \
                                                                              \
-    MACRO(5, "nomarkerstacks", NoMarkerStacks,                               \
-          "Markers do not capture stacks, to reduce overhead")               \
+    MACRO(5, "noiostacks", NoIOStacks,                                       \
+          "File I/O markers do not capture stacks, to reduce overhead")      \
                                                                              \
     MACRO(6, "screenshots", Screenshots,                                     \
           "Take a snapshot of the window on every composition")              \
@@ -277,19 +277,9 @@ class RacyFeatures {
 
   MFBT_API static void SetSamplingUnpaused();
 
-  [[nodiscard]] MFBT_API static mozilla::Maybe<uint32_t> FeaturesIfActive() {
-    if (uint32_t af = sActiveAndFeatures; af & Active) {
-      // Active, remove the Active&Paused bits to get all features.
-      return Some(af & ~(Active | Paused | SamplingPaused));
-    }
-    return Nothing();
-  }
-
   [[nodiscard]] MFBT_API static bool IsActive();
 
   [[nodiscard]] MFBT_API static bool IsActiveWithFeature(uint32_t aFeature);
-
-  [[nodiscard]] MFBT_API static bool IsActiveWithoutFeature(uint32_t aFeature);
 
   // True if profiler is active, and not fully paused.
   // Note that periodic sampling *could* be paused!
@@ -374,23 +364,11 @@ MFBT_API bool IsThreadBeingProfiled();
 // not.
 [[nodiscard]] MFBT_API uint32_t profiler_get_available_features();
 
-// Returns the full feature set if the profiler is active.
-// Note: the return value can become immediately out-of-date, much like the
-// return value of profiler_is_active().
-[[nodiscard]] inline mozilla::Maybe<uint32_t> profiler_features_if_active() {
-  return baseprofiler::detail::RacyFeatures::FeaturesIfActive();
-}
-
 // Check if a profiler feature (specified via the ProfilerFeature type) is
 // active. Returns false if the profiler is inactive. Note: the return value
 // can become immediately out-of-date, much like the return value of
 // profiler_is_active().
 [[nodiscard]] MFBT_API bool profiler_feature_active(uint32_t aFeature);
-
-// Check if the profiler is active without a feature (specified via the
-// ProfilerFeature type). Note: the return value can become immediately
-// out-of-date, much like the return value of profiler_is_active().
-[[nodiscard]] MFBT_API bool profiler_active_without_feature(uint32_t aFeature);
 
 // Returns true if any of the profiler mutexes are currently locked *on the
 // current thread*. This may be used by re-entrant code that may call profiler
