@@ -291,16 +291,15 @@ nsresult ExpandedPrincipal::GetSiteIdentifier(SiteIdentifier& aSite) {
 }
 
 nsresult ExpandedPrincipal::PopulateJSONObject(Json::Value& aObject) {
-  Json::Value principalList = Json::arrayValue;
-
+  Json::Value& principalList = aObject[std::to_string(eSpecs)] =
+      Json::arrayValue;
   for (const auto& principal : mPrincipals) {
     Json::Value object = Json::objectValue;
     nsresult rv = BasePrincipal::Cast(principal)->ToJSON(object);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    principalList.append(object);
+    principalList.append(std::move(object));
   }
-  aObject[std::to_string(eSpecs)] = principalList;
 
   nsAutoCString suffix;
   OriginAttributesRef().CreateSuffix(suffix);
