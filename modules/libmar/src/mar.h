@@ -55,8 +55,7 @@ typedef struct SeenIndex_ {
  * Mozilla ARchive (MAR) file data structure
  */
 struct MarFile_ {
-  unsigned char* buffer;          /* file buffer containing the entire MAR */
-  size_t data_len;                /* byte count of the data in the buffer */
+  FILE* fp;                       /* file pointer to the archive */
   MarItem* item_table[TABLESIZE]; /* hash table of files in the archive */
   SeenIndex* index_list;          /* file indexes processed */
   int item_table_is_valid;        /* header and index validation flag */
@@ -73,29 +72,16 @@ typedef struct MarFile_ MarFile;
  */
 typedef int (*MarItemCallback)(MarFile* mar, const MarItem* item, void* data);
 
-enum MarReadResult_ {
-  MAR_READ_SUCCESS,
-  MAR_IO_ERROR,
-  MAR_MEM_ERROR,
-  MAR_FILE_TOO_BIG_ERROR,
-};
-
-typedef enum MarReadResult_ MarReadResult;
-
 /**
  * Open a MAR file for reading.
  * @param path      Specifies the path to the MAR file to open.  This path must
  *                  be compatible with fopen.
- * @param out_mar   Out-parameter through which the created MarFile structure is
- *                  returned. Guaranteed to be a valid structure if
- *                  MAR_READ_SUCCESS is returned. Otherwise NULL will be
- *                  assigned.
  * @return          NULL if an error occurs.
  */
-MarReadResult mar_open(const char* path, MarFile** out_mar);
+MarFile* mar_open(const char* path);
 
 #ifdef XP_WIN
-MarReadResult mar_wopen(const wchar_t* path, MarFile** out_mar);
+MarFile* mar_wopen(const wchar_t* path);
 #endif
 
 /**
@@ -103,49 +89,6 @@ MarReadResult mar_wopen(const wchar_t* path, MarFile** out_mar);
  * @param mar       The MarFile object to close.
  */
 void mar_close(MarFile* mar);
-
-/**
- * Reads the specified amount of data from the buffer in MarFile that contains
- * the entirety of the MAR file data.
- * @param mar       The MAR file to read from.
- * @param dest      The buffer to read into.
- * @param position  The byte index to start reading from the MAR at.
- *                  On success, position will be incremented by size.
- * @param size      The number of bytes to read.
- * @return          0  If the specified amount of data was read.
- *                  -1 If the buffer MAR is not large enough to read the
- *                     specified amount of data at the specified position.
- */
-int mar_read_buffer(MarFile* mar, void* dest, size_t* position, size_t size);
-
-/**
- * Reads the specified amount of data from the buffer in MarFile that contains
- * the entirety of the MAR file data. If there isn't that much data remaining,
- * reads as much as possible.
- * @param mar       The MAR file to read from.
- * @param dest      The buffer to read into.
- * @param position  The byte index to start reading from the MAR at.
- *                  This function will increment position by the number of bytes
- *                  copied.
- * @param size      The maximum number of bytes to read.
- * @return          The number of bytes copied into dest.
- */
-int mar_read_buffer_max(MarFile* mar, void* dest, size_t* position,
-                        size_t size);
-
-/**
- * Increments position by distance. Checks that the resulting position is still
- * within the bounds of the buffer. Much like fseek, this will allow position to
- * be successfully placed just after the end of the buffer.
- * @param mar       The MAR file to read from.
- * @param position  The byte index to start reading from the MAR at.
- *                  On success, position will be incremented by size.
- * @param distance  The number of bytes to move forward by.
- * @return          0  If position was successfully moved.
- *                  -1 If moving position by distance would move it outside the
- *                     bounds of the buffer.
- */
-int mar_buffer_seek(MarFile* mar, size_t* position, size_t distance);
 
 /**
  * Find an item in the MAR file by name.
