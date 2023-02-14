@@ -2506,9 +2506,24 @@ const JSClass& WasmMemoryObject::protoClass_ = PlainObject::class_;
 
 static constexpr char WasmMemoryName[] = "Memory";
 
+static JSObject* CreateWasmMemoryPrototype(JSContext* cx, JSProtoKey key) {
+  RootedObject proto(cx, GlobalObject::createBlankPrototype(
+                             cx, cx->global(), &WasmMemoryObject::protoClass_));
+  if (!proto) {
+    return nullptr;
+  }
+  if (MemoryControlAvailable(cx)) {
+    if (!JS_DefineFunctions(cx, proto,
+                            WasmMemoryObject::memoryControlMethods)) {
+      return nullptr;
+    }
+  }
+  return proto;
+}
+
 const ClassSpec WasmMemoryObject::classSpec_ = {
     CreateWasmConstructor<WasmMemoryObject, WasmMemoryName>,
-    GenericCreatePrototype<WasmMemoryObject>,
+    CreateWasmMemoryPrototype,
     WasmMemoryObject::static_methods,
     nullptr,
     WasmMemoryObject::methods,
@@ -2727,7 +2742,9 @@ const JSFunctionSpec WasmMemoryObject::methods[] = {
 #ifdef ENABLE_WASM_TYPE_REFLECTIONS
     JS_FN("type", WasmMemoryObject::type, 0, JSPROP_ENUMERATE),
 #endif
-    JS_FN("grow", WasmMemoryObject::grow, 1, JSPROP_ENUMERATE),
+    JS_FN("grow", WasmMemoryObject::grow, 1, JSPROP_ENUMERATE), JS_FS_END};
+
+const JSFunctionSpec WasmMemoryObject::memoryControlMethods[] = {
     JS_FN("discard", WasmMemoryObject::discard, 2, JSPROP_ENUMERATE),
     JS_FS_END};
 

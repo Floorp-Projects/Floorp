@@ -8108,8 +8108,14 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             CHECK(EmitMemOrTableInit(f, /*isMem=*/false));
           case uint32_t(MiscOp::TableFill):
             CHECK(EmitTableFill(f));
-          case uint32_t(MiscOp::MemoryDiscard):
+#if ENABLE_WASM_MEMORY_CONTROL
+          case uint32_t(MiscOp::MemoryDiscard): {
+            if (!f.moduleEnv().memoryControlEnabled()) {
+              return f.iter().unrecognizedOpcode(&op);
+            }
             CHECK(EmitMemDiscard(f));
+          }
+#endif
           case uint32_t(MiscOp::TableGrow):
             CHECK(EmitTableGrow(f));
           case uint32_t(MiscOp::TableSize):

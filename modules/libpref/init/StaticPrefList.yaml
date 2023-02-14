@@ -7662,6 +7662,13 @@
     mirror: always
 #endif // defined(ENABLE_WASM_GC)
 
+#if defined(ENABLE_WASM_MEMORY_CONTROL)
+-   name: javascript.options.wasm_memory_control
+    type: bool
+    value: false
+    mirror: always
+#endif // defined(ENABLE_WASM_MEMORY_CONTROL)
+
 #if defined(ENABLE_WASM_SIMD)
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
   # Enables AVX instructions support on X86/X64 platforms.
