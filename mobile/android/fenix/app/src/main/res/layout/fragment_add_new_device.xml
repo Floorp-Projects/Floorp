@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/sync_error_background_color"
+        android:baselineAligned="false"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
+
+        <FrameLayout
+            android:id="@+id/icon_frame"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <androidx.preference.internal.PreferenceImageView
+                android:id="@android:id/icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:maxHeight="48dp"
+                app:maxWidth="48dp" />
+        </FrameLayout>
+
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="15dp"
+            android:layout_marginEnd="6dp"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:paddingStart="0dp"
+            android:paddingTop="16dp"
+            android:paddingEnd="0dp"
+            android:paddingBottom="16dp">
+
+            <TextView
+                android:id="@+id/errorSummary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawablePadding="8dp"
+                android:ellipsize="marquee"
+                android:fadingEdge="horizontal"
+                android:text="@string/sync_add_new_device_message"
+                android:textColor="@color/sync_error_text_color"
+                android:textSize="16sp"
+                android:visibility="visible"
+                app:drawableStartCompat="@drawable/ic_info"
+                app:drawableTint="@color/sync_error_text_color" />
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:id="@android:id/widget_frame"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="vertical" />
+
+    </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/learn_button"
+        style="@style/NeutralButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:text="@string/sync_add_new_device_learn_button" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/connect_button"
+        style="@style/NeutralButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:text="@string/sync_add_new_device_connect_button" />
+</LinearLayout>

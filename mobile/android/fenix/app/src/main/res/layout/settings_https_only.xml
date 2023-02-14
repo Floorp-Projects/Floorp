@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/https_only_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="2dp"
+        android:clickable="false"
+        app:lineHeight="24.sp"
+        android:text="@string/preferences_https_only_title"
+        android:textAppearance="@style/ListItemTextStyle"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toTopOf="@id/https_only_summary"
+        app:layout_constraintEnd_toStartOf="@id/https_only_switch"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:targetApi="p" />
+
+    <TextView
+        android:id="@+id/https_only_summary"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:lineHeight="16.sp"
+        android:textColor="?attr/textSecondary"
+        android:textColorLink="?attr/textSecondary"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toTopOf="@id/https_only_modes"
+        app:layout_constraintEnd_toEndOf="@id/https_only_title"
+        app:layout_constraintStart_toStartOf="@id/https_only_title"
+        app:layout_constraintTop_toBottomOf="@id/https_only_title"
+        tools:targetApi="p"
+        tools:text="@string/preferences_https_only_summary" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/https_only_switch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:paddingStart="18dp"
+        android:paddingEnd="18dp"
+        android:textColor="@color/state_list_text_color"
+        android:textOff="@string/studies_off"
+        android:textOn="@string/studies_on"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/https_only_title" />
+
+    <RadioGroup
+        android:id="@+id/https_only_modes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/https_only_summary">
+
+        <org.mozilla.fenix.settings.PreferenceBackedRadioButton
+            android:id="@+id/https_only_all_tabs"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:button="@null"
+            android:drawablePadding="@dimen/radio_button_preference_drawable_padding"
+            android:paddingStart="@dimen/radio_button_preference_horizontal"
+            android:paddingTop="@dimen/radio_button_preference_vertical"
+            android:paddingEnd="@dimen/radio_button_preference_horizontal"
+            android:paddingBottom="@dimen/radio_button_preference_vertical"
+            android:text="@string/preferences_https_only_in_all_tabs"
+            android:textAppearance="?android:attr/textAppearanceListItem"
+            android:textSize="16sp"
+            app:drawableStartCompat="?android:attr/listChoiceIndicatorSingle"
+            app:preferenceKey="@string/pref_key_https_only_in_all_tabs"
+            app:preferenceKeyDefaultValue="true" />
+
+        <org.mozilla.fenix.settings.PreferenceBackedRadioButton
+            android:id="@+id/https_only_private_tabs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:button="@null"
+            android:drawablePadding="@dimen/radio_button_preference_drawable_padding"
+            android:paddingStart="@dimen/radio_button_preference_horizontal"
+            android:paddingTop="@dimen/radio_button_preference_vertical"
+            android:paddingEnd="@dimen/radio_button_preference_horizontal"
+            android:paddingBottom="@dimen/radio_button_preference_vertical"
+            android:text="@string/preferences_https_only_in_private_tabs"
+            android:textAppearance="?android:attr/textAppearanceListItem"
+            android:textSize="16sp"
+            app:drawableStartCompat="?android:attr/listChoiceIndicatorSingle"
+            app:preferenceKey="@string/pref_key_https_only_in_private_tabs"
+            app:preferenceKeyDefaultValue="false" />
+    </RadioGroup>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

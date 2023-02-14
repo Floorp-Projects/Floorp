@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:contentDescription="@string/quick_settings_sheet"
+    android:fillViewport="true">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/quick_action_sheet"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/layer1">
+
+        <FrameLayout
+            android:id="@+id/websiteInfoLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@id/webSitePermissionsDivider" />
+
+        <FrameLayout
+            android:id="@+id/websitePermissionsLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@id/trackingProtectionDivider" />
+
+        <View
+            android:id="@+id/webSitePermissionsDivider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="?borderPrimary"
+            app:layout_constraintBottom_toTopOf="@id/websitePermissionsLayout" />
+
+        <FrameLayout
+            android:id="@+id/trackingProtectionLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@+id/clearSiteDataDivider" />
+
+        <View
+            android:id="@+id/trackingProtectionDivider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="?borderPrimary"
+            app:layout_constraintBottom_toTopOf="@id/trackingProtectionLayout" />
+
+        <FrameLayout
+            android:id="@+id/clearSiteDataLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <View
+            android:id="@+id/clearSiteDataDivider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="?borderPrimary"
+            app:layout_constraintBottom_toTopOf="@id/clearSiteDataLayout" />
+
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/websitePermissionsGroup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:constraint_referenced_ids="websitePermissionsLayout,webSitePermissionsDivider"
+            tools:visibility="visible" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.core.widget.NestedScrollView>

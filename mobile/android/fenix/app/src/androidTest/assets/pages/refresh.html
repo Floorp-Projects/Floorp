@@ -1,0 +1,45 @@
+
+<html>
+<script src="jquery-3.4.1.slim.min.js"></script>
+<script>
+
+    function setCookie(newVal){
+	window.document.cookie = "pageStatus = " + newVal + ";";
+    }
+
+
+    function readCookie(name) {
+	var nameEQ = name + "=";
+	var ca = document.cookie.split(';');
+	for(var i=0;i < ca.length;i++) {
+	    var c = ca[i];
+	    while (c.charAt(0)==' ') c = c.substring(1,c.length);
+	    if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+	}
+	return null;
+    }
+
+    function valSwap(){
+	    currentCookie = readCookie("pageStatus");
+	    if(currentCookie == null) {
+            setCookie("DEFAULT");
+	    }
+
+        if (currentCookie.localeCompare("REFRESHED") == 0) {
+                setCookie("DEFAULT");
+            return "DEFAULT";
+        } else {
+                setCookie("REFRESHED");
+            return "REFRESHED";
+        }
+    }
+
+    var textToShow = valSwap();
+    window.addEventListener('DOMContentLoaded', (event) => {
+        document.querySelector('h1').innerHTML = textToShow;
+    });
+</script>
+<body>
+<h1>DEFAULT</h1>
+</body>
+</html>

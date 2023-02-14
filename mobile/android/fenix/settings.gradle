@@ -1,0 +1,90 @@
+include ':app'
+
+include ':mozilla-detekt-rules'
+include ':mozilla-lint-rules'
+def log(message) {
+    logger.lifecycle("[settings] ${message}")
+}
+
+def runCmd(cmd, workingDir, successMessage, captureStdout=true) {
+    def proc = cmd.execute(null, new File(workingDir))
+    def standardOutput = captureStdout ? new ByteArrayOutputStream() : System.out
+    proc.consumeProcessOutput(standardOutput, System.err)
+    proc.waitFor()
+
+    if (proc.exitValue() != 0) {
+        throw new GradleException("Process '${cmd}' finished with non-zero exit value ${proc.exitValue()}");
+    } else {
+        log(successMessage)
+    }
+    return captureStdout ? standardOutput : null
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Local Development overrides
+//////////////////////////////////////////////////////////////////////////
+
+Properties localProperties = null
+String settingAppServicesPath = "autoPublish.application-services.dir"
+String settingAndroidComponentsPath = "autoPublish.android-components.dir"
+String settingGleanPath = "autoPublish.glean.dir"
+
+if (file('local.properties').canRead()) {
+    localProperties = new Properties()
+    localProperties.load(file('local.properties').newDataInputStream())
+    log('Loaded local.properties')
+} else {
+    log('Missing local.properties; see https://github.com/mozilla-mobile/fenix/blob/main/README.md#local-properties-helpers for instructions.')
+}
+
+if (localProperties != null) {
+    localProperties.each { prop ->
+        gradle.ext.set("localProperties.${prop.key}", prop.value)
+    }
+
+    String appServicesLocalPath = localProperties.getProperty(settingAppServicesPath)
+
+    if (appServicesLocalPath != null) {
+        log("Enabling automatic publication of application-services from: $appServicesLocalPath")
+        // Windows can't execute .py files directly, so we assume a "manually installed" python,
+        // which comes with a "py" launcher and respects the shebang line to specify the version.
+        def publishAppServicesCmd = [];
+        if (System.properties['os.name'].toLowerCase().contains('windows')) {
+            publishAppServicesCmd << "py";
+        }
+        publishAppServicesCmd << "./automation/publish_to_maven_local_if_modified.py";
+        runCmd(publishAppServicesCmd, appServicesLocalPath, "Published application-services for local development.", false)
+    } else {
+        log("Disabled auto-publication of application-services. Enable it by settings '$settingAppServicesPath' in local.properties")
+    }
+
+    String androidComponentsLocalPath = localProperties.getProperty(settingAndroidComponentsPath)
+
+    if (androidComponentsLocalPath != null) {
+        log("Enabling automatic publication of android-components from: $androidComponentsLocalPath")
+        // As above, hacks to execute .py files on Windows.
+        def publishAcCmd = [];
+        if (System.properties['os.name'].toLowerCase().contains('windows')) {
+            publishAcCmd << "py";
+        }
+        publishAcCmd << "./automation/publish_to_maven_local_if_modified.py";
+        runCmd(publishAcCmd, androidComponentsLocalPath, "Published android-components for local development.", false)
+    } else {
+        log("Disabled auto-publication of android-components. Enable it by settings '$settingAndroidComponentsPath' in local.properties")
+    }
+
+    String gleanLocalPath = localProperties.getProperty(settingGleanPath)
+
+    if (gleanLocalPath != null) {
+        log("Enabling automatic publication of Glean from: $gleanLocalPath")
+        // As above, hacks to execute .py files on Windows.
+        def publishGleanCmd = [];
+        if (System.properties['os.name'].toLowerCase().contains('windows')) {
+            publishGleanCmd << "py";
+        }
+        publishGleanCmd << "./build-scripts/publish_to_maven_local_if_modified.py";
+        runCmd(publishGleanCmd, gleanLocalPath, "Published Glean for local development.", false)
+    } else {
+        log("Disabled auto-publication of Glean. Enable it by settings '$settingGleanPath' in local.properties")
+    }
+}

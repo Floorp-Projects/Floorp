@@ -1,0 +1,1123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">Riña gachē nu huît %s</string>
+
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (Riña gachē nu huìt)</string>
+
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Doj sa ga\'ue nagi\'át</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">Nāchrūn riña gāchē nu huìt</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_disable_private_browsing_button">Dūnâ\’āJ riña gāchē nu huìt</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="search_hint">Gachrūn nuguan\' ruhuât nanà\'uìt</string>
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">Duguatûj nuguan\'an</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">Hiūj nan nāruguì\’ nej rakïj ñanj huā ni\’nïnj ïn</string>
+
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Hiūj nan nāruguì\’ nej rakïj ñanj huì nīkājt.</string>
+
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">%1$d sa naguij</string>
+    <!-- Label of button in create collection dialog for creating a new collection  -->
+    <string name="tab_tray_add_new_collection">Nūtà\' \'ngō yi\'nïn\' nākàa</string>
+    <!-- Label of editable text in create collection dialog for naming a new collection  -->
+    <string name="tab_tray_add_new_collection_name">Si yugui</string>
+    <!-- Label of button in save to collection dialog for selecting a current collection  -->
+    <string name="tab_tray_select_collection">Nāguī sa màn yì\'nïn\'ïn</string>
+
+    <!-- Content description for close button while in multiselect mode in tab tray -->
+    <string name="tab_tray_close_multiselect_content_description">Gāhuī riña multiselección</string>
+    <!-- Content description for save to collection button while in multiselect mode in tab tray -->
+    <string name="tab_tray_collection_button_multiselect_content_description">Na\'nïnj sà\' nej rakïj ñanj riña \'na\' nej kolexión</string>
+    <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
+    <string name="tab_tray_multiselect_selected_content_description">Sa naguit</string>
+
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Marcador nakà doj</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">Hìaj nanu sà\'aj</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description_2">Gīni\'hiāj riña daran\' nej markado nū sa\'a</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="recently_saved_menu_item_remove">Nādure\'</string>
+
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s huin \’ngō sa giri Mozilla.</string>
+
+    <!-- Private Browsing -->
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description_2">%1$snadure\' nej sa nana\'uî\'t nga gaché nunt riña nej rakïj ñanj huì garâj sunt nan sisī naránt asi gahuīt riña aplikasiûn nan. Nan nī sê sī gāta ruhuaj sisī à\'ngō nādure\'ej sò\' riña nej sîtio asi riña duguî\' dû\'uèj internet, sanī rugûñu\'un da\' \'ngōrïnt gīni\'in sa \'iát ngà aché nunt nī sī ga\'ue gīni\'in a\'ngô guìi ngà\'.</string>
+    <string name="private_browsing_common_myths">Nuguan\' nē huā rayi\'î riña aché nu huì\'</string>
+
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Nūtà\' \'ngō aksêso dirêckto da\' na\'nïnt rakïj ñanj huìi asìj riña pantayâ ayi\'ìt.</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">Nūtà\' \'ngō aksêso dirêckto</string>
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">Guruhuât nānj ân</string>
+
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">Rakïj ñanj nakàa</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">Rakïj ñaj nakà gārasun \'ngō rïn\'</string>
+
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">Ne\' rukùu</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">Ne\' ñāan</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">Nāgi\'iaj nākà</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">Gānikïn\'</string>
+
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_add_ons">Sa gā\'ue nūtò\'</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">Nitāj sa gā\'ue nūtò\' mân hiūj nan</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">Sa rūgûñu\'ūnj un</string>
+
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">Nùhuin sā huā nākà doj</string>
+
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">Nāgi\'iô\'</string>
+
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_library">Dukuâ ñanj</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">Si luguâ eskritôrio</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">Nāchrūn riña pantayâ Ayi\'ìi</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">Gā\'nïnj</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">Nānà\'uì\' riña ñanj</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection_2">Na\'nïnj sà\' riña màn si yi\'nïnj</string>
+
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">Dūyingô\'</string>
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_open_in_fenix">Na\'nīn\' riña %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by">RUGÛÑU\'ŪNJ SA GU\'NÀJ %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">Rugûñu\'ūnj sa gu\'nàj %1$s</string>
+
+    <!-- Browser menu button to put the current page in reader mode -->
+    <string name="browser_menu_read">Sa ni\'iāj duguî\' ahiaa</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Gāhuī riña a’ue ahiat</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">Na\'nīn\' riña aplikasiûn</string>
+
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">Nāguī nânj gā\'min</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">Gārāsun nânj nikāj aga\' nan \'naj</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">Nānà\'uì\' nânj huāa</string>
+
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">Nātsij hue\'ê</string>
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">Sa nagi\'iaj sa nānà\'ui\'i</string>
+    <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
+    <string name="awesomebar_clipboard_title">Gāchrūn si enlasê portapâpel</string>
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">Ga\'nīn</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">Sī ga\'nïnjt</string>
+
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">Dīganj nuguan\' dàj nanà\'uì\'t riña sesiûn guendâ \'ngō rînt</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">%s dūyingaj daran\' sa gāchrūnt riña barra direksiûn ngà sa nana\'ui\' nīkājt.</string>
+
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Nānà\'uì\'</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Nānà\'uì\' riña web</string>
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Nānà\'uì\' ngà nanèt</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">Nāgi\'iô\'</string>
+
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">Da\' huā ngej</string>
+    <!-- Preference category for all links about Fenix -->
+    <string name="preferences_category_about">Rayi\'î</string>
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_default_search_engine">Sa nana\'ui\' nīka \'na\'</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Nānà\'uì\'</string>
+
+    <!-- Preference for settings related to Search address bar -->
+    <string name="preferences_search_address_bar">Dukuán direksion</string>
+
+    <!-- Preference link to rating Fenix on the Play Store -->
+    <string name="preferences_rate">Nāga\'uì\' du\'uej riña Google Play</string>
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">Rayi\'î %1$s</string>
+
+    <!-- Preference for settings related to changing the default browser -->
+    <string name="preferences_set_as_default_browser">Dūnâj gāhuin man riña sa nānà\'uì\' yītïnjt</string>
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">Sa tàj ñā doj</string>
+
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Riña ginu \'ngō rînt nī sa dūgumî sò\'</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">Sa rikî nì\'iaj sîtio</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">Riña gachē nu huìt</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Gāna\'nin riña a\'ngô rakïj ñanj nakàa</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Ga\'nīn nārij ñadu\'ua pantaya riña gāchē nu huìt</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">Gāchrūn aksêso direkto riña aché nu huìt</string>
+
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">Dàj gā gātū\'</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Servidor nagi\'iaj man\'ânt riña kuentâ Firefox</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Servidor nagi\'iaj man\'ânt riña Sync</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Ngà  nadunâ servidor nikāj kuentâ Firefox ngà Sync. Naran riña aplikasiûn da\' natà\' sa nadunâ hua…</string>
+    <!-- Preference category for account information -->
+    <string name="preferences_category_account">Kuênta</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">Dukuán nikāj sa gārāsun\'</string>
+
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Têma</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Nādunō\' dàj huin ruhuô\'</string>
+    <!-- Preference description for banner about signing in -->
+    <string moz:RemovedIn="104" name="preferences_sign_in_description" tools:ignore="UnusedResources">Nāgi\'aj nūgua\'àn nej markadô, nej sa ni\'iājt nī doj ngà si kuentât Firefox</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">Si kuendâ Firefox</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">Nātū nākà ñû da\' gānahuij nāgi\'iaj nūguàn\'anj</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">Nânj ga\'minj</string>
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">Doj sa nikāj nej dâto</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">Nara\'uij nej dâto</string>
+
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">Guxūn sa kïj ï ngà USB</string>
+    <!-- Preference title for switch preference to show search engines -->
+    <string name="preferences_show_search_engines">Nāruguì’ nej sa nana’ui’i gīni’iājt</string>
+    <!-- Preference title for switch preference to show search suggestions -->
+    <string name="preferences_show_search_suggestions">Dīgân a\'ngô nuguan\' nikāj dugui\' ngà sa nana\'uî\'</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Dīgân riña nānà\'uì\' ngà nanè\'</string>
+
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">Dīgân riña nej sesiûn huìi</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">Dīgân a\'ngô nuguan\' nù riña portapapel</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">Nānà\'uì\' nej sa gatsít nga gaché nunt</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">Nānà\'uì\' nej sa garâj sun nīchrà\'t</string>
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">Nāgi\'iô\' riña kuênta</string>
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Nā\'nīn nej lînk riña nej aplikasiûn</string>
+
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Sa gā\'ue nūtò\'</string>
+
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">Nāgi\'iaj nūguàn\'àn hìaj</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">Nāguī sa ruhuât nāgi\'iaj nūguàn\'ànt</string>
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">Sa gini\'iājt</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">Nej sa râj sun nichrà\'t doj</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Nej riña ayi\'ìt sēsiûn</string>
+
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">Nej Rakïj ñanj huā nî\'nïnj ïn</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">Nārán riña sēsiûn</string>
+
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">Si yugui aga\'a</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">Si ga\'ue gā gātsìi riña \'na\' si yugui aga\'a</string>
+    <!-- Label indicating that sync is in progress -->
+    <string name="sync_syncing_in_progress">Hìaj nagi\'iaj nūguàn\'anj…</string>
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">Nu ga\'ue nāgi\'iaj nūguàn\'anj. Amān gahui sà\'aj rukù nï\': %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">Nu ga\'ue nāgi\'iaj nūguàn\'anj. Sa nahuin nūguàn\'àn rukù nï\': nitāj āmān gahuin</string>
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">Sa nahuin nūguàn\'àn rukù nï\': %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">Sa nahuin nūguàn\'àn rukù nï\': nitāj āmān gahuin</string>
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name_2">%1$s riña %2$s %3$s</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">Nej rakïj ñanj nahuin rā\'ât</string>
+
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Si nūguàn\' nej rakïj ñanj nahuin ra\'a riña a\'ngô nej aga\' Firefox.</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">Nahuin rā\'a rakïj ñanj</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">Si rakïj ñanj %s</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">esepsiûn</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Nāchrūn riña daran\' nej sîtio</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Â\'nïnj nej esepsiûn gūxūnt sa narrán riña sa naga\'nāj riña nej sitiô naguit.</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Gāhuin chrūn doj</string>
+
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">Dàj gārāsunt nī nej dato tekniko</string>
+
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">Gānatà\' dàj \'iaj sunj, dàj arâj sunt, aga\' nīka nī doj nej sa nīkāj sa nana\'uî\'t gu\'nàj Mozilla da\' ga\'ue nāgi\'iaj sà\' si doj man %1$s</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">Sa huā rayi\'î Marketin</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Turn on Sync preference view -->
+    <string moz:RemovedIn="104" name="preferences_sync" tools:ignore="UnusedResources">Nāchrūn Sync</string>
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">Gāyi\'ì sēsiûn da\' ga\'ue gānātū nûnt</string>
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">Gūdure\' kuênta</string>
+
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions_2"><![CDATA[Nārī ñadu\'ua da\'nga\' QR rugui\' riña <b>firefox.com/pair</b>]]></string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">Nda raj</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">Yi\'ij</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Rāngà\' man</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Huā rūmin\' man</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Sa nachrûn sa dugumîn batería</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Gānikò\' si tema aga\' dan</string>
+
+    <!-- Library -->
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">Sa nadunïnjt</string>
+    <!-- Option in library to open Bookmarks page -->
+    <string name="library_bookmarks">Nej sa râj sun nichrà\'t doj</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">Nej sa râj sun nichrà\'t doj nīkāj Eskritorio</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">Si menu Nej sa râj sun nichrà\'t doj</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">Dukuán nikāj sa gārāsun\' si\'aj Nej sa râj sun nichrà\'t do</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">A\'ngô nej sa râj sun nichrà\'t doj</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">Sa gahuin</string>
+
+    <!-- Settings Page Title -->
+    <string name="settings_title">Nāgi\'iô\'</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">Nārán</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">Nej Rakïj ñanj huā nî\'nïnj ïn</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">Rakïj ñanj huìi</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">Nūtà\' a\'ngô rakïj ñanj</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Nūtà\' a\'ngô rakïj ñanj huìi</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Sa huìi</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Dūyinga\' daran\' nej rakïj ñanj</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Nārrán riña daran\' nej rakïj ñanj</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Nādure\' rakïj ñanj riña màn yì\'nïnj</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">Nārán rakïj ñanj</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">Nārán rakij ñanj %s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">Nā\'nïn si menú rakïj ñanj</string>
+
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection1">Na\'nïnj sà\' nej rakïj ñanj riña màn si yi\'nïnj</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">Nādūre\' da\' huā ngè yi\'nïn\'ïn</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">Nādūnā si yugui yi\'nïn\'ïn</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">Nej Rakïj ñanj huā nî\'nïnj ïn</string>
+    <!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">Nādure\'</string>
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (Riña Huìi)</string>
+
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">Nādūre\' sa gini\'iājt</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">Ngà nare\' nej sa gini\'iājt</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">Ngà nare\' %1$s</string>
+
+    <!-- Context description text for the button to delete a single history item -->
+    <string name="history_delete_item">Nādūre\'</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">%1$d sa naguij</string>
+
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">sa gahuin gachîn 7 gui</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">sa gahuin gachîn 30 gui</string>
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">Sa nâ doj</string>
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">Nitāj à\'ngō sa gini\'iājt</string>
+
+
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">Sī ga\'man ruhuât. %1$s na\'ue nāchra riña pajinâ dan.</string>
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">Gā\'nïnj gan\'ānj nuguan\' rayi\'î sa \'iaj re\' Mozilla</string>
+    <!-- Close tab button text on the tab crash page -->
+    <string name="tab_crash_close">Nārán rakïj ñanj</string>
+    <!-- Restore tab button text on the tab crash page -->
+    <string name="tab_crash_restore">Nāgi\'iaj nākà rakïj ñanj</string>
+
+    <!-- Bookmarks -->
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">Huā yītïnj ruhuât nādure\'t kārpetâ nan anj</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s nādure’ej nej sa naguit dan.</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">Nūtà\' kārpêta</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">Ngà nañûn man riña sa arâj sun nīchrà\'t doj</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">NĀGI\'IAJ RIÑAJ</string>
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">Nāgi\'iaj riñaj</string>
+    <!-- Bookmark overflow menu copy button -->
+    <string name="bookmark_menu_copy_button">Gūxūn nī nāchrūnt a\'ngô hiūj u</string>
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">Dūyingô\'</string>
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">Nā\'nïn riña rakïj ñanj nakàa</string>
+    <!-- Bookmark overflow menu open in private tab button -->
+    <string name="bookmark_menu_open_in_private_tab_button">Nā\'nïn riña rakïj ñanj huìi</string>
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">Nādūre\'</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">Nā\'nïnj sà\'</string>
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">%1$d sa naguit</string>
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">Nādūnā riña sa arâj sun nīchrò\' doj</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">Nādūnā sa huā riña kārpeta</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">Gāyi\'ì sēsiûn da\' ga\'ue gini\'iāt riña màn nej sa arâ sun nīchrò\' doj huā nūguan\'àan</string>
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">URL</string>
+
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">KĀRPÊTA</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">SI YŪGUI</string>
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">Nūtà\' kārpêta</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">Nāguī karpêta</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">Da\'ui gā \'ngō si yūgui</string>
+    <!-- Bookmark editing error missing or improper URL -->
+    <string name="bookmark_invalid_url_error">Sê URL huin</string>
+
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">Nitāj sa arâj sun nīchrà\'t hua hiūj nan</string>
+    <!-- Bookmark snackbar message on deletion
+     The first parameter is the host part of the URL of the bookmark deleted, if any -->
+    <string name="bookmark_deletion_snackbar_message">Ngà nare\' %1$s</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_2">Ngà nare\' nej sa arâj sun nīchrò\' doj</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Nādure’ nej karpetâ naguit</string>
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">NĀNIKÀJ RŪKÙ</string>
+
+    <!-- Site Permissions -->
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Gūij riña ga\'ue Nāgi\'iô\'</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Ñanj \'na\' sa ga\'ue nāgi\'iô\' hīo doj</string>
+    <!-- Label that indicates that this option it the recommended one -->
+    <string name="phone_feature_recommended">Sā sà\'a huin ânj</string>
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">Nādure\' nej sa achín nì\'iaj</string>
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">Nādure\' sa achín nì\'iaj</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">Nādure\' nej sa achín nì\'iaj riña daran\' nej sîtio</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">Nānùn ma\'an man</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Kâmara</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Aga\' uxun nanèe</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Danè\' huin</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Sa atāj nan\'ānj an</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Gāchinj nì\'iaj</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Nitāj si hūaj nāyi\'nïn</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Gā\'ue</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Nitāj si hūaj nāyi\'nïn \'iaj Android</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">Sa huā gi\'iát</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="tracking_protection_on">Nāchrūn</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">Dūnâ\’àj</string>
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Gā\'nïn gī\'iaj sun sa unïnt ngà sa ni\'iājt</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">Nārán riña sa unïnt ngà sa ni\'iājt ngà datô si āgâ\'t li</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Nānùn sa unïnt ngà sa ni\'iājt ngà Wi-Fi</string>
+    <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio2">Màn riña sa unïnt nārán</string>
+    <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked3">Nārán riña sa unïnt ngà sa ni\'iājt</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">Nāchrūn</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">Dūnâ\’àj</string>
+
+    <!-- Collections -->
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">Koleksiôn</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">Si menû koleksiûn</string>
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">Nāguī nej rakïj ñanj</string>
+    <!-- Title for the "select collection" step of the collection creator -->
+    <string name="create_collection_select_collection">Nāguī sa màn yì\'nïn\'ïn</string>
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">Si yugui sa màn yì\'nïn\'ïn</string>
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">Nūtà\' \'ngō yi\'nïn\' nākàa</string>
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">Gīda\'a daran\'anj</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">Nā\'nïnj ra\'a daran\'anj</string>
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">Nāguī nej rakïj ñanj ruhuât nā\'nïnj sà\'t</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">%d nej rakïj ñanj naguit</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">%d rakïj ñanj naguit</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">Nej rakïj ñanj na\'nín sà\'t</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">Ngà nanun sà\' nej sa nachra chrē\'t</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">Rakïj ñanj na\'nïnj sà\'t</string>
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">Nārán</string>
+
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">Nā\'nïnj sà\'</string>
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Ni\'iāj</string>
+
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">Sa nachra chrē\'t %d</string>
+
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header_2">Dūyingô\'</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">Dūyingô\'</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">Gā\'nïnj riña aga\'</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">Daran\' sun huā</string>
+
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">Hìaj garâj sun nākàt</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">Gāyi\'ì sēsiû riña Sync</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">Gā \'nïnj gan\'an riña daran\' nej aga\'a</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">Gānātū nākà ñû riña Sync</string>
+
+    <!-- Text displayed when sync is offline and cannot be accessed -->
+    <string name="sync_offline">Nitāj kōneksiûn hua</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">Gātū\' ngà a\'ngô aga\'a</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">Da\' ga\'ue gā\'nïnjt \'ngō rakïj ñanj, da\'uît gāyi\'ìt sēsiûn riña a\'ngô aga\'a,</string>
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">Ngà gunïn</string>
+
+    <!-- Share error message -->
+    <string name="share_error_snackbar">Si ga\'ue gà\'nïn\' riña duguî\' aplikasiûn nan</string>
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">Gā\'nïnj riña aga\'</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">Nitāj à\'ngō aga\'a hua kōnektadô</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">Gāhuin chrūn doj dàj gà\'nïn\' rakïj ñanj gan\'an…</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">Gī\'iaj kōnektandô a\'ngô aga\'a…</string>
+
+    <!-- Notifications -->
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text_2">Nārán riña nej rakïj ñanj huìi</string>
+
+    <!-- Snackbar -->
+    <!-- Text shown in snackbar when user deletes a collection -->
+    <string name="snackbar_collection_deleted">Ganare\' sa ganachra chrē\'t</string>
+    <!-- Text shown in snackbar when user renames a collection -->
+    <string name="snackbar_collection_renamed">Nadunâ si yūgui sa ganachra chrē\'t</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">Ganarán riña rakïj ñanj</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">Ganarán riña nej rakïj ñanj</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">Ngà narán riña rakïj ñanj huìi</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">Ngà narán riña nej rakïj ñanj huìi</string>
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">NĀNIKÀJ RŪKÙ</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">Ngà ganare\' sîtio</string>
+    <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
+        First parameter is the name of the app, second parameter is the URL or text scanned-->
+    <string name="qr_scanner_confirmation_dialog_message">Gā\'nïn riña %1$s gā\'nïn %2$s</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">GA\'NĪN</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">SĪ GA\'NÏNJT</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">Huā yītïnj ruhuât nādure\'t %1$s anj</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">Nādurê\'t %1$s raj</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">Nādūre\'</string>
+
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">Hiàj nanunj da\' huā ngè riña aga\'a</string>
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">Ngà naka URL</string>
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">Ni\'iāj sò\' hua lechrâ nan. Dānaj gūruguì\'ij ni\'iājt sisī nāgi\'iaj yāchìjt asi nāgi\'iaj lít man.</string>
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">Nāgi\'iaj yāchìj asi nāgi\'iaj lij lêchra riña nej sitio web</string>
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">Dàj yāchìj gā lêchra</string>
+
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_2">Dàj yāchìj hua niñā lêchra \'naj</string>
+
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">Gūñā gā lechrâ nan ngà sa nikāj Android. Si ruhuât nādūnāt man nī gūxūn opsiôn nan.</string>
+
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">Nādure\' nej si datô riña sā nana\'uî\'t</string>
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title_2">Nā\'nïn nej rakïj ñanj</string>
+    <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
+    <string name="preferences_delete_browsing_data_tabs_subtitle">%d nej rakïj ñanj</string>
+
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">Sa gini\'iājt ngà gaché nunt nī si datô nej sîtio</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d nej direksiûn</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Nej kôki</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">Gānarán sēsiûn riña gà\'ì nej sîtio</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">Sa ni\'io\' nī archibô kāchê</string>
+
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">Gī\'iaj hīu hiūj nachrasàt</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">Sa rikî nì\'iaj sîtio</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">Nādure\' nej si datô riña sā nana\'uî\'t</string>
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">Nādure\' nej si datô riña sā nana\'uî\'t ngà gāhuīt</string>
+
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Nārè\' man\'an nej si datô riña sā nana\'uî\'t ngà gūru\'man ra\'ât riña tāj \“Gāhuīt\” riña menú ñāan</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Gāhuī</string>
+
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string moz:removedIn="104" name="delete_browsing_data_prompt_message" tools:ignore="UnusedResources">Gānarè\' daran\' nej si datôt ngà gaché nunt.</string>
+
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s nādure\'ej nej si datô riña gaché nunt ngà naguit.</string>
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">Dūyichin\'</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">Nādūre\'</string>
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">Ngà ganare\' nej si datô sa nana\'uî\'t</string>
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">Hīaj nadure\'ej nej si datô riña sā nana\'uî\'t…</string>
+
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome message
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_header">Guruhuât gunumânt riña %s</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">Ngà nanûn Sync</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button_2">Sa huā chre\' (dàj huaj \'naj)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Sa nùkuaj doj</string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">Riña aché nu huìt</string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">Gahiā sa atāj na\'ānj ñûnj guendâ sa huìi</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Gāyi\'ì gāchē nunt</string>
+
+    <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Nāguī si temât</string>
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">Sa nañû ma\'an</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">Nakāj dugui\'ij ngà daj hua riña si āgâ\'t</string>
+
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">Temâ huā rūmin\'in</string>
+
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">Temâ huā yigiïn</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">Nej rakïj ñanj ngà gan\'ānj</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">Rakïj ñanj ngà gan\'ānj</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Nu ga\'ue gan\'an</string>
+
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">GINÙ HUIN ÑÛ</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">Gānārī ñadu\'ua da\'nga\' kôdigo</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[Gānā\'nïn Firefox riña si āgâ\'t nī gātū riña <b>https://firefox.com/pair</b>]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">Ngà huā chrunj da\' gānārij ñadu\'ua</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">Gāyì\'ì sēsiûn ngà si kamarât</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">Gārāsun si kōrreôt si lūgaj</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">Dūnâj %s si nāgi\'iaj nūguàn\'anj si kuentât, sanī si dure\'ej nej datô râj sunt ngà aché nunt riña aga\' nan.</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">Gāhuī riña internet</string>
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">Dūyichin\'</string>
+
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">Sī ga\'ue nādūnāt sa mà riña nej karpetâ ngà nīka \'naj</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">Riña gā\'ue nāgi\'iát riña sa dugumî sò\'</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">Sa huā hue\'ê doj guendâ nārán riña sa naga\'nāj a</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">Nitāj gà\' \'ngō ganikò\' sò\' si gāchē nunt</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">Duguminj nej si datôt. %s naran rayi\'ît riña nej sa naga\'nāj sa \'iát nga aché nunt.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Gāhuin chrūn doj</string>
+
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Sa huā chre\' (dàj huaj \'naj)</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">Ahuin si riñā narán sa dugumî sò\' \'na\' niñā guendâ nej sa naga\'nāj a</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">Sa nùkuaj doj</string>
+
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Ahuin si riñā narán sa nùkuaj doj dugumî sò\' \'na\' niñā guendâ nej sa naga\'nāj a</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">Nāgi\'iaj mun\'ûn\'</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Nāguī nej sa naga\'nāj a asi a\'ngô sa riñā ruhuât naránt.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Nan huin sa riñā narán sa dugumî sò\' \'na\' niñā guendâ nej sa naga\'nāj a</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Nej kôki</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Sa naga\'nāj riña nej sîtio nī nej rêd sociâl</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Si kokî nej sitiô nu atûjt</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Daran\' nej kokî ânej e (ga\'ue gī\'iaj sun a\'nan\' web gī\'ia)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Daran\' nej kokî (ga\'ue dūre\'ej dā\'āj sîtio)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Sa nīkāj sa naga\'nāj a</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Riña daran\' nej rakïj ñanj</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Màn riña nej rakïj ñanj huìi</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Nej kriptominêro</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Nej da\'nga\' rā\'a</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_blocked">Nitāj si hūaj nāyi\'nïn</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">Gā\'ue</string>
+
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">Nej sa naga\'nāj nej rêd sosiâl</string>
+
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Sī ga\'nïnjt riña nej rêd sōsiâl da\' nāga\'nāj nìko sa \'iát ngà aché nunt.</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">Nej kokî naga\'nāj riña nej dūguì\' nej sîtio</string>
+
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">Nārán riña nej kokî arâj sun nej rêd duyinga\' sa ane\'e nī nej dukuâ sun nadigi\'ñûn sa anïn ruhuâ guìi da\' si naga\'nāj nìko man nej sa \'iát nga aché nunt.</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">Nej kriptominêro</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Nu â\'nïn riña nej skripts yi\'ìi da\' gātū nej man riña si āgâ\'t nī gīrī nej man san\'ānj nānèe.</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">Nej sa nani\'in nej da\'nga\' rā\'a</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Nu â\'nïn da\' sī nari a\'ngô sa yi\'ìi nej nuguan\' nīkāj si āgâ\'t nī ga\'ue nāga\'nāj nej man sò\'.</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">Sa nīkāj sa naga\'nāj a</string>
+
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">Naran riña nej nuguan\' duyinga\' nej sa ane\'e, sa ni\'io\' nī riña nej nuguan\' nīkāj sa naga\'nāj a. Ga\'ue gā\'uì\' yī\'ij dàj \'iaj sun nej sîtio.</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">Ngà \'IAJ SUN nej sa dugumî sò\' riña sitiô nan</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">NITĀJ SI \'IAJ SUN nej sa dugumî sò\' riña sitiô nan</string>
+
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">Nitāj si \'iaj sun sa nùkuaj narán riña sa naga\'nāj a riña nej sitiô nan</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Gūij ne\' rūkùu</string>
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">Sa nākà doj huā riña %s</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s Dukuâ ñanj OSS</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">Sa rugûñu\'ūnj un</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Nej sa gahui a\'nan\'</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">Nuguan\' huì huin si dūkuan</string>
+
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">Gīni\'in nej nuguan\' tna\'uēj rayi\'ît</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">Si nùguàn\' līsênsia</string>
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">Nej dukuâ ñanj arâj sun ñûnj</string>
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Menû nagi\'aj hìo: gūru\'man ra\'a %1$d da\' nāchrūnt</string>
+    <string name="about_debug_menu_toast_done">Menû nagi\'aj hìo ngà \'iaj sun</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">Gūxūn nī nāchrūnt a\'ngô hiūj u</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">Gāchrūn &amp; Gūij</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">Gāchrūn</string>
+
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL ngà nachîn riña portapapeles</string>
+
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">Gāchrūn man riña pantâya</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">Dūyichin\'</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">Nūtà\'</string>
+
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Ginu ngè riña sitiô nan</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Si yūgui aksêso dīrêkto</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Nej riña gayi\'ìt sēsiûn nī nej da\'nga\' huìi</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Nā\'nïnj sà\' nej riña gayi\'ìt sēsiûn nī nej da\'nga\' huìi</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Gāchìnj nì\'iaj nā\'nïnj sà\'t</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Nitāj āmān nā\'nïnj sà\'t</string>
+
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Nāgi\'iaj nūguàn\'àn nej riña ayì\'ìt sēsiûn</string>
+
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">Sa gayi\'ìt sesiûn ngà naginu sà\'</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">Nej riña gayi\'ìt sēsiûn asi rña nagi\'iaj nūguà\'ànt man ngà %s gūruguì\' hiūj nan gīni\'iājt.</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Gāhuin chrūn doj rayi\'î Sync.</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">Sa huā gi\'iát</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Hiūj nan gūruguì\' nej riña gayì\'ìt sēsiûn ngà nej da\'nga\' huì na\'nïn sà\'t.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Sê sī nānun sà\' nej riña gayi\'ît sēsiûn nī nej da\'nga\' huìi guiendâ nej sitiô nan.</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Nānà\'uì\' nej riña gayi\'ît sēsiûn</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">Sîtio</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">Si yūguî rè\'</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">Da\'nga\' huìi</string>
+
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Ngà nañû da\'nga\' huìi riña portapapel</string>
+
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Ngà nañû si yūguît riña portapapel</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">Gūxūn da\'nga\' huìi nī nāchrūnt a\'ngô hiūj u</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">Gūxūn si yūguît nī nāchrūnt a\'ngô hiūj u</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">Nādīgân da\'nga\' huìi</string>
+
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">Da\'nga\' huì huā huìi</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">Gā\'nïn riñanj da\' ga\'ue ni\'iājt nej riña gayì\'ìt sēsiûn na\'nïn sà\'t</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Nāgi\'iaj ran riña gayì\'ìt sēsiûn nī nej da\'nga\' huì nīkājt</string>
+
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Nāchrūn \'ngō da\'nga\' huì duyâ ra\'ât riña si āgâ\'t, \'ngō PIN asi \'ngō da\'nga\' huì achrûnt da\' si ga\'ue gīni\'iāj nej duguî\' riñā rûgûñu\'ūnjt si āgâ\'t nej riña gayì\'ìt sēsiûn asi nej da\'nga\' huì màn sà\' \'iát.</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">Ne\' rūkù doj</string>
+
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">À\' \'ngō nāgi\'iát riñanj</string>
+
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">Nā\'nïn riña si āgâ\'t</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">Zoom riña daran\' nej sîtio</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">Nāchrūn sa huā nan da\' ga\'ue duyâ ra\'ât nī gi\'iát zoom, nda riña nej sitiô nu a\'nïnj sa huā dānanj.</string>
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">Si yūgui (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">Āmān garâj sun rūkù nï\'t</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Nāgi\'iaj hue\'ê riña menú gayì\'ìt sēsiûn</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">Nūtà\' a\'ngô sa riñā nānà\'uì\'t</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">Nāgi\'iaj riña sa riñā nānà\'uì\'t</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">Nūtà\'</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Nā\'nïnj sà\'</string>
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">Nāgi\'iaj riñaj</string>
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">Nādūre\'</string>
+
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">A\'ngoj</string>
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">Si yugui</string>
+
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">Kadenâ nana\'ui\' huū gārasunt</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Nādūnā sa nana\'uî\'t ngà “%s”. dàj rû\':\nhttps://www.google.com/search?q=%s</string>
+
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Sa huā riña sa nana\'uî\'t nagi\'iaj man\'ânt</string>
+
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">Gāchrūn si yūgui riña sā nana\'uî\'t</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">Gāchrūn \'ngō kādenâ nanà\'uì\'t</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">Gīni\'iāj sisī dàj rû\' hua kādenâ \'na\' diganj hua si kādenât</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">Na\'ue gi\'iaj kōnektandoj ngà “%s”</string>
+
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">%s ngà nahuij gahui</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message">Ngà nanun sà\' %s</string>
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">Ngà nare\' %s</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Da\' ga\'ue gā\'nïn:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Gūij riña ga\'ue nāgi\'iát Android</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Gūru\'man ra\'a riña <b>nej sa achín nì\'iát</b>]]></string>
+
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Nāchrūn <b>%1$s</b>]]></string>
+
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">Huin hīa ruhuât nādurê\' nej sa achín nì\'iaj nīkāj daran\' nej sitio aj.</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">Huin hīa ruhuât nādurê\' daran\' nej sa achín nì\'iaj nīkāj sitiô nan anj.</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">Huin hīa ruhuât nādurê\' sa achín nì\'iaj nīkāj sitiô nan anj.</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">Nitāj à\'ngō nej sîtio gūnàj</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">Huā yītïnj ruhuât nādure\'t markadô nan anj.</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">Ngà ganatsij sa gu\'nàj: %1$s</string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">Nādūre\'</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Nāgi\'iaj riñaj</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">Huā yītïnj ruhuât nādure\'t riña gayì\'ìt sēsiûn nan anj</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">Nādūre\'</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">A\'ngô sa ga\'ue gī\'iát da\' ga\'ue gāyi\'ìt sēsiûn</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Hūaj ga\'ue nāchrūnt nuguan\'an riña direksiûn web gayi\'ìt sēsiûn.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Hūaj ga\'ue nāchrūnt nuguan\'an riña si yūgui riña gayi\'ìt sēsiûn.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Hūaj ga\'ue nāchrūnt nuguan\'an riña da\'nga\' huì riña gayi\'ìt sēsiûn.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Nā\'nïnj sà\' sa nadunâ riña gayì\'ìt sēsiûn.</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Nāgi\'iaj riñaj</string>
+
+    <!--  The error message in add/edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Achin da\'nga\' huìi</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Nānà\'uì\' ngà nanèt</string>
+
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Gā\'mīn hìaj</string>
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Ngà huā \'ngō riña gayì\'ìt sēsiûn gù\'nàj dàdanj</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Gātū ngà a\'ngô aga\'a.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Gi\'iaj sunūj u, nādigân ñû si huê hīat huin.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Gi\'iaj sunūj u, nāchrūn sa nāgi\'iaj nūguàn\'ànt nej rakïj ñanj.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Nitāj à\'ngō rakïj ñanj huā nî\'nïnj riña Firefox riña a\'ngô nej si āgâ\'t.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Gīni\'iāj \'ngō dukuán rakïj ñanj nīkāj a\'ngô nej si āgâ\'t.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Gāyi\'ì sēsiûn riña sync</string>
+
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">Ga\'ue, ngà garâj da\'nga\' ruhuâj</string>
+
+    </resources>

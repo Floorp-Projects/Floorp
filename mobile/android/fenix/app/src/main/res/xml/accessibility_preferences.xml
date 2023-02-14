@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="@string/pref_key_accessibility_auto_size"
+        android:summary="@string/preference_accessibility_auto_size_summary"
+        android:title="@string/preference_accessibility_auto_size_2" />
+    <!-- Custom Preference that scales from 50-200% by steps of 5 represented by 0-30 in steps of 1-->
+    <org.mozilla.fenix.settings.TextPercentageSeekBarPreference
+        android:defaultValue="10"
+        android:key="@string/pref_key_accessibility_font_scale"
+        android:layout="@layout/layout_percentage_seek_bar"
+        android:max="30"
+        android:summary="@string/preference_accessibility_text_size_summary"
+        android:title="@string/preference_accessibility_font_size_title"
+        app:adjustable="true"
+        app:enabled="false"
+        app:iconSpaceReserved="false"
+        app:min="0"
+        app:seekBarIncrement="1"
+        app:showSeekBarValue="true" />
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="@string/pref_key_accessibility_force_enable_zoom"
+        android:summary="@string/preference_accessibility_force_enable_zoom_summary"
+        android:title="@string/preference_accessibility_force_enable_zoom"
+        app:allowDividerAbove="true" />
+</PreferenceScreen>

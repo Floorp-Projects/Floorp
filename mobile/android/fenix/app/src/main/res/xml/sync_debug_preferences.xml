@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <androidx.preference.EditTextPreference
+        android:key="@string/pref_key_override_fxa_server"
+        android:title="@string/preferences_override_fxa_server"
+        android:inputType="textUri"
+        app:iconSpaceReserved="false" />
+    <androidx.preference.EditTextPreference
+        android:key="@string/pref_key_override_sync_tokenserver"
+        android:title="@string/preferences_override_sync_tokenserver"
+        android:inputType="textUri"
+        app:iconSpaceReserved="false" />
+    <androidx.preference.EditTextPreference
+        android:key="@string/pref_key_override_push_server"
+        android:title="@string/preferences_override_push_server"
+        android:inputType="textUri"
+        app:iconSpaceReserved="false" />
+    <androidx.preference.Preference
+        android:key="@string/pref_key_sync_debug_quit"
+        android:title="@string/preferences_sync_debug_quit_button_title"
+        android:summary="@string/preferences_sync_debug_quit_button_summary"
+        android:icon="@drawable/ic_close"
+        app:isPreferenceVisible="false" />
+</PreferenceScreen>

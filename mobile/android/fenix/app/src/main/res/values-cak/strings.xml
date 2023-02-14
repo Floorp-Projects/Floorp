@@ -1,0 +1,1890 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">Ichinan %s</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (Ichinan)</string>
+
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Ch\'aqa\' chik taq cha\'oj</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">Titzij ri ichinan okem pa k\'amaya\'l</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_disable_private_browsing_button">Tichup ri ichinan okem pa k\'amaya\'l</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="search_hint">Tikanöx o ketz\'ib\'äx ri taq ochochib\'äl</string>
+
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">Wawe\' xkeq\'alajin pe ri jaqäl taq ruwi\'.</string>
+
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Wawe\' xkeq\'alajin pe ri ichinan taq ruwi\'.</string>
+
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 ruwi\' jaqon. Tachapa\' richin nak\'ëx ruwi\'.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s ruwi\' ejaqon. Tachapa\' richin nak\'ëx ruwi\'.</string>
+
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">%1$d xcha\'</string>
+    <!-- Label of button in create collection dialog for creating a new collection  -->
+    <string name="tab_tray_add_new_collection">Titz\'aqatisäx k\'ak\'a\' mol</string>
+    <!-- Label of editable text in create collection dialog for naming a new collection  -->
+    <string name="tab_tray_add_new_collection_name">B\'i\'aj</string>
+
+    <!-- Label of button in save to collection dialog for selecting a current collection  -->
+    <string name="tab_tray_select_collection">Ticha\' mol</string>
+
+    <!-- Content description for close button while in multiselect mode in tab tray -->
+    <string name="tab_tray_close_multiselect_content_description">Tel pa k\'ïy cha\'oj b\'anikil</string>
+    <!-- Content description for save to collection button while in multiselect mode in tab tray -->
+    <string name="tab_tray_collection_button_multiselect_content_description">Keyak cha\'on taq ruwi\' pa mol</string>
+    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
+    <string name="tab_tray_item_selected_multiselect_content_description">Xcha\' %1$s</string>
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">Man xcha\' ta %1$s</string>
+    <!-- Content description announcement when exiting multiselect mode in tab tray -->
+    <string name="tab_tray_exit_multiselect_content_description">Xel pa k\'ïy cha\'oj b\'anikil</string>
+    <!-- Content description announcement when entering multiselect mode in tab tray -->
+    <string name="tab_tray_enter_multiselect_content_description">Xatok pa k\'ïy cha\'oj b\'anikil, ke\'acha\' taq ruwi\' richin ye\'ayäk pa jun mol</string>
+
+    <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
+    <string name="tab_tray_multiselect_selected_content_description">Xcha\'</string>
+
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_bookmarks">K\'a b\'a keyak</string>
+    <!-- Content description for the recently saved bookmarks section on the home screen. -->
+    <string name="recently_saved_bookmarks_content_description">Taq yaketal k\'a b\'a\' keyak</string>
+    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all">Tik\'ut ronojel</string>
+
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description">Kek\'ut ronojel ri yakon taq yaketal</string>
+
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s b\'anon ruma Mozilla.</string>
+
+    <!-- Private Browsing -->
+    <!-- Title for private session option -->
+    <string name="private_browsing_title">At k\'o pa jun ichinan molojri\'ïl</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description_2">%1$s nuyüj ri akanoxik chuqa\' runatab\'al awokem pa k\'amaya\'l toq yatel pa ri chokoy o ri  ichinan taq wi\'. Estape\' re re\' man yatrewaj ta pan ajk\'amaya\'l o chuwäch ri niya\'on ak\'amaya\'l, yatruto\' richin nichinäx ronojel ri nab\'än pan k\'amab\'ey chuwäch jun chik winäq nrokisaj ri awokisab\'al.</string>
+    <string name="private_browsing_common_myths">Ch\'ob\'on taq tzij chi rij ri ichinan okem pa k\'amaya\'l</string>
+    <!-- Delete session button to erase your history in a private session -->
+    <string name="private_browsing_delete_session">Tiyuj molojri\ïl</string>
+
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">Titz\'aqatisäx jun choj okem richin yejaq ichinan taq ruwi\' pa ri Tikirib\'äl ruwäch.</string>
+
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">Titz\'aqatisäx choj okem</string>
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">Mani matyox</string>
+
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">Yatikïr nab\'än runuk\'ulem ri Firefox richin ruyon yerujäq taq ximoj pa taq chokoy.</string>
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">Tib\'e pa taq nuk\'ulem</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">Tewäx</string>
+
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Najowäx okem pa elesäy wachib\'äl. Jät pa runuk\'ulem Android, tachapa\' pa ya\'oj q\'ij k\'a ri\' pa tiya\' q\'ij.</string>
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">Tib\'e pa taq nuk\'ulem</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">Tewäx</string>
+
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">Tib\'an kinuk\'ulem ri jaqon taq ruwi\' richin chi ketz\'apitäj kiyon, ri xetz\'et ri ruk\'isib\'äl q\'ij, wuqq\'ij o ik\'.</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">Ketz\'et taq cha\'oj</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Tewäx</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">K’ak’a’ ruwi’</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">K’ak’a’ ichinan ruwi’</string>
+
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">Jeb\'ël taq ruxaq</string>
+
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">Titz\'et chik</string>
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">Tik\'ut ronojel</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header">Ik\'owinäq taq kanoxïk</string>
+
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
+    <string name="browser_tabs_button">Kejaq taq Ruwi\'</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">Chi rij</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">Jun chik</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">Titzolïx</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">Tiq\'at</string>
+    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
+    <string name="browser_menu_bookmark">Yaketal</string>
+    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
+    <string name="browser_menu_edit_bookmark">Tinuk\' yaketal</string>
+
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_add_ons">Taq tz\'aqat</string>
+    <!-- Browser menu button that opens the addon extensions manager -->
+    <string name="browser_menu_extensions">Taq k\'amal</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">Majun tz\'aqat wakami</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">To\'ïk</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">Achike natzijoj</string>
+
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">Nuk’ulem</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_library">Wujb\'äl</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">Ruxaq ch\'atal</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">Titz\'aqatisäx pa ri Rutikirib\'al ruwa</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">Tiyak</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">Ximon taq ruwi\'</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Tixim chik</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">Tikanöx pa ruxaq</string>
+    <!-- Browser menu button that creates a private tab -->
+    <string name="browser_menu_private_tab">Ichinan ruwi\'</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection_2">Tiyak pa mol</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">Tikomonïx</string>
+    <!-- Share menu title, displayed when a user is sharing their current site -->
+    <string name="menu_share_with">Tikomonïx rik\'in…</string>
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_open_in_fenix">Tijaq pa %1$s</string>
+
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by">YA\'ON RUMA %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">B\'anon ruma %1$s</string>
+    <!-- Browser menu button to put the current page in reader mode -->
+    <string name="browser_menu_read">Sik\'inem tz\'etoj</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Titz\'apïx rutz\'etik sik\'inïk</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">Tijaq pa Chokoy</string>
+    <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
+    <string name="browser_menu_read_appearance">Rutzub\'al</string>
+
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">Ke\'ichinäx rutz\'etoj sik\'inem</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Titz\'aqatisäx</string>
+
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Tinuk\'</string>
+
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Rutikirib\'al ruwäch</string>
+
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">Man nok ta. Man netamäx ta ruwa ruch\'akulal URL.</string>
+
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">Xcha\' ch\'ab\'äl</string>
+    <!-- Content description for search icon -->
+    <string name="a11y_search_icon_content_description">Tikanöx</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">Tokisäx ri ruch\'ab\'äl oyonib\'äl</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">Tikanöx ch\'ab\'äl</string>
+
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">Tiwachib\'ëx</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">Kanob\'äl</string>
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">Runuk\'ulem kanob\'äl</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_engines_search_with">Wakami tikanöx rik\'in:</string>
+    <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
+    <string name="awesomebar_clipboard_title">Titz\'ajb\'äl ri ximonel pa ri molwuj</string>
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">Tiya\' q\'ij</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">Man tiya\' q\'ij</string>
+
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">¿La niya\' q\'ij richin yek\'ut pe taq ruchilab\'exik kanoxïk pa nichinan taq molojri\'ïl?</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">%s xtukomonij ronojel ri xtatz\'ib\'aj pa ri kikajtz\'ik taq ochochib\'äl rik\'in ri akanob\'al k\'o wi.</string>
+    <!-- Search suggestion onboarding hint Learn more link text -->
+    <string name="search_suggestions_onboarding_learn_more_link">Tetamäx ch\'aqa\' chik</string>
+
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">Tikanöx %s</string>
+
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">Tikanöx pa kikajtz\'ik ochochib\'äl</string>
+
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">Tijaq jun k\'ak\'a\' ruwi\' Firefox</string>
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Tikanöx</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Tikanöx pan ajk\'amaya\'l</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Tikanöx chi ch\'ab\'äl</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">Taq nuk\'ulem</string>
+    <!-- Preference category for basic settings -->
+    <string name="preferences_category_basics">Taq etamel</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">Chijun</string>
+    <!-- Preference category for all links about Fenix -->
+    <string name="preferences_category_about">Tawetamaj qawäch</string>
+
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_default_search_engine">Kanob\'äl k\'o wi</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Tikanöx</string>
+    <!-- Preference for settings related to Search address bar -->
+    <string name="preferences_search_address_bar">Kikajtz\'ik Ochochib\'äl</string>
+    <!-- Preference linking to help about Fenix -->
+    <string name="preferences_help">Tob\'äl</string>
+    <!-- Preference link to rating Fenix on the Play Store -->
+    <string name="preferences_rate">Tiya\' rejqalem pa Google Play</string>
+    <!-- Preference for giving feedback about Fenix -->
+    <string name="preferences_feedback">Titaq na\'oj</string>
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">Chi rij %1$s</string>
+    <!-- Preference linking to the your rights SUMO page -->
+    <string name="preferences_your_rights">Taq Ach\'ojib\'al</string>
+    <!-- Preference for settings related to saved passwords -->
+    <string name="preferences_passwords">Ewan taq tzij</string>
+    <!-- Preference for settings related to saved credit cards and addresses -->
+    <string name="preferences_credit_cards_addresses">Kretit Kar chuqa\' taq ochochib\'äl</string>
+    <!-- Preference for settings related to changing the default browser -->
+    <string name="preferences_set_as_default_browser">Tiya\' kan achi\'el kanob\'äl k\'o wi</string>
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">Q\'axinäq</string>
+    <!-- Preference category for privacy settings -->
+    <string name="preferences_category_privacy">Ichinanem</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Ichinanem chuqa\' jikomal</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">Taq ruya\'oj q\'ij ri ruxaq</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">Ichinan okem pa k\'amaya\'l</string>
+
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Kejaq taq ximonel pa jun ichinan ruwi\'</string>
+
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Tiya\' q\'ij richin nichap ruwa pa ichinan okem pa k\'amaya\'l</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">We ya\'on q\'ij, xketz\'et chuqa\' ri ichinan taq ruwi\' toq e jaqäl k\'ïy chokoy</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">Titz\'aqatisäx choj okem pa ri ichinan okem pa k\'amaya\'l</string>
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">Okel</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Ichinan ruk\'u\'x rusamaj Firefox Account</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Ichinan ruk\'u\'x rusamaj Sync</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Xjal ruk\'u\'x kisamaj Firefox Account/Sync. Nitz\'apïx chokoy richin yesamajïx ri taq jaloj…</string>
+    <!-- Preference category for account information -->
+    <string name="preferences_category_account">Rub\'i\' taqoya\'l</string>
+    <!-- Preference shown on banner to sign into account -->
+    <string name="preferences_sign_in">Titikirisäx molojri\'ïl</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">Cholsamajib\'äl</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Wachinel</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">Tikirib\'äl</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">B\'anoj paläj</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Tichinäx</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description">Ke\'axima\' taq yaketal, natab\'äl chuqa\' ch\'aqa\' chik rik\'in ri rub\'i\' ataqoya\'l richin Firefox.</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">Firefox Taqoya\'l</string>
+
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">Tokisäx chik richin nitikirisäx chik ri ximoj</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">Ch\'ab\'äl</string>
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">Rucha\'ik tzij</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">Rucha\'ik tzij</string>
+    <!-- Preference linking to the privacy notice -->
+    <string name="preferences_privacy_link">Ichinan na\'oj</string>
+    <!-- Preference category for developer tools -->
+    <string name="developer_tools_category">Taq rusamajib\'al nuk\'unel</string>
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">Näj chojmirisanem pa USB</string>
+    <!-- Preference title for switch preference to show search engines -->
+    <string name="preferences_show_search_engines">Tik\'ut kanob\'äl</string>
+    <!-- Preference title for switch preference to show search suggestions -->
+    <string name="preferences_show_search_suggestions">Kek\'ut pe ri taq chilab\'enïk richin yakanon</string>
+
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Tik\'ut rukanoxik chi ch\'ab\'äl</string>
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">Tik\'ut pan ichinan molojri\'ïl</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">Kek\'ut pe ri taq ruchilab\'enïk molwuj</string>
+
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">Tikanöx runatab\'al okem pa k\'amaya\'l</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">Kekanöx taq yaketal</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Kekanöx ri taq ruwi\' eximon</string>
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">Kinuk\'ulem Rub\'i\' Taqoya\'l</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Titz\'aqatisäx ruyon URLs</string>
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Kejaq taq ximonel pa taq chokoy</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Runuk\'samajel chi rij qasanïk</string>
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Taq tz’aqat</string>
+
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">Taq rutzijol</string>
+
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Kimolik ichinan taq Tz\'aqat</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">ÜTZ</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Tiq\'at</string>
+
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Rub\'i\' mol</string>
+
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Rajaw Mol (Winäq ID)</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Xjal kimolaj tz\'aqat. Nitz\'apïx chokoy richin yesamajïx ri taq jaloj…</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">Man nuk\'äm ta ri\' ri tz\'aqat</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">Xyak ri tz\'aqat</string>
+
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">Tixim wakami</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">Tacha\' achike naxïm</string>
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">Natab\'äl</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">Taq yaketal</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Ketikirisäx molojri\'ïl</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">Kejaq ruwi\'</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">Titz\'apïx molojri\'ïl</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">Rub\'i\' ri okisaxel</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">Man tikirel ta kowöl rub\'i\' okisab\'äl.</string>
+    <!-- Label indicating that sync is in progress -->
+    <string name="sync_syncing_in_progress">Nixim…</string>
+
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">Xsach ri ximoj. Ruk\'isib\'äl mul xok: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">Xsach ri ximoj. Ruk\'isib\'äl mul xok: majub\'ey</string>
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">Ruk\'isib\'äl mul xxim: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">Ruk\'isib\'äl mul xxim: majub\'ey</string>
+
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name_2">%1$s pa %2$s %3$s</string>
+
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Rutarjeta\' kre\'ito\'</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Taq ochochib\'äl</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">Taq ruwi\' ek\'ulun</string>
+
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Taq rutzijol taq ruwi\' ek\'ulun pa ch\'aqa\' chik rokisab\'al Firefox.</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">Ruwi\' k\'ulun</string>
+    <!-- When multiple tabs have been received -->
+    <string name="fxa_tabs_received_notification_name">Taq Ruwi\' ek\'ulun</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">Ruwi\' %s</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection settings -->
+    <string name="preferences_tracking_protection_settings">Chajinïk chuwäch Ojqanïk</string>
+    <!-- Preference switch for tracking protection -->
+    <string name="preferences_tracking_protection">Chajinïk chuwäch Ojqanïk</string>
+    <!-- Preference switch description for tracking protection -->
+    <string name="preferences_tracking_protection_description">Keq\'at rupam chuqa\' taq skrip yatkojqaj pa k\'amab\'ey</string>
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">Taq man relik ta</string>
+
+    <!-- Preference description for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions_description">Chupül ri Chajinïk chuwäch Ojqanem pa re ajk\'amaya\'l ruxaq re\'</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Titzij kichin ronojel taq ruxaq</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Ri taq man relik ta nikiya\' q\'ij chawe richin nachüp ri chajinïk chuwäch ojqanem pa ri taq ruxaq echa\'on.</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Tetamäx ch\'aqa\' chik</string>
+
+    <!-- Preference switch for Telemetry -->
+    <string name="preferences_telemetry">Etataqonel</string>
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">Okisanem chuqa\' samajel taq tzij</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">Takomonij ri na\'oj pa ruwi\' rub\'eyal nisamäj, ri rokisaxik, ch\'akulakem chuqa\' richinaxik awokik\'amaya\'l rik\'in Mozilla richin chi ri %1$s nel ütz</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">Marketin tzij</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">Ke\'akomonij taq tzij chi rij ri taq samaj nawokisaj pa %1$s rik\'in Leanplum, ri ya\'öl qamarketin richin oyonib\'äl.</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Ke\'ichinäx nab\'ey taq tzij ye\'okisäx pa Adjust, ya\'öl qamarkentin richin oyonib\'äl</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Taq tijonïk</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Taya\' q\'ij chi ri Mozilla nuyäk chuqa\' nub\'än taq tijonïk</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">Taq solna\'oj</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">Taya\' q\'ij chi ri Mozilla nuyäk chuqa\' yerumöl taq tzij richin tojtob\'enem.</string>
+    <!-- Preference switch for crash reporter -->
+    <string name="preferences_crash_reporter">Rutzijol sachoj</string>
+
+    <!-- Preference switch for Mozilla location service -->
+    <string name="preferences_mozilla_location_service">Mozilla tzalq\'omanem samaj</string>
+    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preferences_fenix_health_report">Rutzijol raxnaqil %s</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Turn on Sync preference view -->
+    <string name="preferences_sync">Titzij Sync</string>
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">Titz\'ajwachib\'ëx rub\'itz\'ib\' junamanem pa ri ruwäch ch\'atal Firefox</string>
+    <!-- Preference for account login -->
+    <string name="preferences_sync_sign_in">Titikirisäx molojri\'ïl</string>
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">Titikirisäx molojri\'ïl richin nok chik</string>
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">Tiyuj Rub\'i\' Taqoya\'l</string>
+
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions_2"><![CDATA[Titz\'ajwachib\'ëx ri QR b\'itz\'ib\' k\'o pa <b>firefox.com/pair</b>]]></string>
+    <!-- Button to open camera for pairing -->
+    <string name="pair_open_camera">Tijaq Elesäy wachib\'äl</string>
+    <!-- Button to cancel pairing -->
+    <string name="pair_cancel">Tiq\'at</string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">Ajsik</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">Ikim</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Yuk\'unel</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Q\'equ\'m</string>
+
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Xjikib\'äx ruma ri Yakonel Uchuq\'ab\'äl</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Tojqäx ri ruwachinel oyonib\'äl</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Tiqirirëx richin nik\'ex</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Taq\'axaj richin nawewaj ri ajkajtz\'ik</string>
+
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Tiq\'axäx ri ajkajtz\'ik chi taq ruchi\' richin nijal ruwi\'</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Tiq\'axäx ri ajkatz\'ik ajsik richin yejaq taq ruwi\'</string>
+
+    <!-- Library -->
+    <!-- Option in Library to open Sessions page -->
+    <string name="library_sessions">Taq Moloj</string>
+    <!-- Option in Library to open Screenshots page -->
+    <string name="library_screenshots">Chapoj taq ruwäch</string>
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">Taq qasanïk</string>
+    <!-- Option in library to open Bookmarks page -->
+    <string name="library_bookmarks">Taq yaketal</string>
+
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">Kematz\'ib\'äl taq Yaketal</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">Kik\'utsamaj taq Yaketal</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">Kimolsamajib\'al taq Yaketal</string>
+
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">Ch\'aqa\' chik taq Yaketal</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">Natab\'äl</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">K\'ak\'a\' ruwi\'</string>
+    <!-- Option in Library to find text in page -->
+    <string name="library_find_in_page">Tikanöx pa ruxaq</string>
+    <!-- Option in Library to open Reading List -->
+    <string name="library_reading_list">Rucholajem sik\'inem</string>
+    <!-- Menu Item Label for Search in Library -->
+    <string name="library_search">Tikanöx</string>
+    <!-- Settings Page Title -->
+    <string name="settings_title">Taq nuk\'ulem</string>
+    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
+    <string name="content_description_history_menu">Kik\'utsamaj taq ruch\'akulal natab\'äl</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">Titz\'apïx</string>
+
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">Taq ruwi\' nimakol ketz\'apïx</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">Tik\'ut ronojel natab\'äl</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">%d taq ruwi\'</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d ruwi\'</string>
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">Taq ruwi\' man nimakol ta ketz\'apïx wawe\'</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Taq ruwi\'</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Kitz\'etik ruwi\'</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Cholajem</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Kajtz\'ikil</string>
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">Ketz\'apïx taq ruwi\'</string>
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">Chi q\'ab\'aj</string>
+
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">Jun q\'ij tik\'o</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">Jun wuq\'ij tik\'o</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">Jun ik\' tik\'o</string>
+
+    <!-- Start on Home -->
+    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
+    <string name="preferences_start_on_home">Titikirisäx pa ri rutikirib\'al ruwäch</string>
+    <!-- Option for starting on the home screen after after four hours or inactivity -->
+    <string name="start_on_home_after_four_hours">Chi rij kaji\' ramaj</string>
+    <!-- Option for always starting on the home screen -->
+    <string name="start_on_home_always">Junelïk</string>
+    <!-- Option for never starting on the home screen -->
+    <string name="start_on_home_never">Majub\'ey</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">Titz\'apïx chi q\'ab\'aj</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Titz\'apïx chi rij jun q\'ij</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Titz\'apïx chi rij jun wuqq\'ij</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">Titz\'apïx chi rij jun ik\'</string>
+
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Tiyuj</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Tzijïl</string>
+    <!-- Description for studies, it indicates why Firefox use studies -->
+    <string name="studies_description">Firefox k\'o b\'ey nitikïr yeruyäk chuqa\' yerub\'än taq tijob\'alil.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Tetamäx ch\'aqa\' chik</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">ÜTZ</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Tiq\'at</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">Kejaq taq ruwi\'</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_title">Ichinan molojri\'ïl</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">Ichinan taq ruwi\'</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Ximon taq ruwi\'</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">Titz\'aqatisäx ruwi\'</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Titz\'aqatisäx ichinan ruwi\'</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Ichinan</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Tixim</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">Kejaq taq Ruwi\'</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">Tiyak pa mol</string>
+    <!-- Text shown in the menu for the collection selector -->
+    <string name="tab_tray_menu_select">Ticha\'</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Kekomonïx ronojel taq ruwi\'</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">Taq ruwi\' nimakol ketz\'apïx</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed">K\'a b\'a ketz\'apïx</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Kinuk\'ulem rub\'i\' taqoya\'l</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">Kinuk\'ulem ruwi\'</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Titz\'apïx ronojel ri taq ruwi\'</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">K\'ak\'a\' ruwi\'</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">Tib\'e pa tikirib\'äl</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">Tik\'exlöx pa ruwi\' b\'anikil</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">Yaketal</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">Titz\'apïx</string>
+    <!-- Content description for tabs tray multiselect share button -->
+    <string name="tab_tray_multiselect_share_content_description">Kekomonïx cha\'on taq ruwi\'</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">Cha\'on kik\'utsamaj ruwi\'</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Tiyuj ruwi\' pa molb\'äl</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">Kecha\' taq ruwi\'</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">Titz\'apïx ruwi\'</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">Titz\'apïx ruwi\' %s</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">Tijaq kik\'utsamaj ruwi\'</string>
+    <!-- Open tabs menu item to close all tabs -->
+    <string name="tabs_menu_close_all_tabs">Titz\'apïx ronojel ri taq ruwi\'</string>
+    <!-- Open tabs menu item to share all tabs -->
+    <string name="tabs_menu_share_tabs">Kekomonïx taq ruwi\'</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection1">Keyak ruwi\' pa mol</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
+    <string name="tab_menu">Ruk\'utsamaj ruwi\'</string>
+    <!-- Tab menu item to share the tab -->
+    <string name="tab_share">Tikomonïx ruwi\'</string>
+    <!-- Button in the current session menu. Deletes the session when pressed -->
+    <string name="current_session_delete">Tiyuj</string>
+    <!-- Button in the current session menu. Saves the session when pressed -->
+    <string name="current_session_save">Tiyak</string>
+    <!-- Button in the current session menu. Opens the share menu when pressed -->
+    <string name="current_session_share">Tikomonïx</string>
+    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
+    <string name="current_session_image">Ruwachib\'al mmolojri\'ïl k\'o wakami</string>
+    <!-- Button to save the current set of tabs into a collection -->
+    <string name="save_to_collection">Tiyak pa mol</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">Tiyuj mol</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">Tijal rub\'i\' mol</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">Kejaq taq ruwi\'</string>
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Rub\'i\' mol</string>
+    <!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Tisik\'ïx chik</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">Tiyuj</string>
+
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Tiyuj pa natab\'äl</string>
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (Ichinan Rub\'anikil)</string>
+
+    <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
+    <string name="tab_tray_save_to_collection">Tiyak</string>
+
+    <!-- History -->
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">Tiyuj natab\'äl</string>
+    <!-- Text for the dialog to confirm clearing all history -->
+    <string name="history_delete_all_dialog">¿La kan nawajo\' nayüj el rupam ri natab\'äl?</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">Xyuj Natab\'äl</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">Xyuj %1$s</string>
+    <!-- Text for positive action to delete history in deleting history dialog -->
+    <string name="history_clear_dialog">Tijosq\'ïx</string>
+    <!-- History overflow menu copy button -->
+    <string name="history_menu_copy_button">Tiwachib\'ëx</string>
+    <!-- History overflow menu share button -->
+    <string name="history_menu_share_button">Tikomonïx</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="history_menu_open_in_new_tab_button">Tijaq pa k\'ak\'a\' ruwi\'</string>
+    <!-- History overflow menu open in private tab button -->
+    <string name="history_menu_open_in_private_tab_button">Tijaq pan ichinan ruwi\'</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="history_delete_item">Tiyuj</string>
+
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">%1$d xcha\'</string>
+    <!-- Text for the button to clear selected history items. The first parameter
+        is a digit showing the number of items you have selected -->
+    <string name="history_delete_some">Keyuj %1$d ch\'akulal</string>
+
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">Wakami</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">Iwir</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">Ruk\'isib\'äl 24 ramaj</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">Ruk\'isib\'äl 7 q\'ij</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">Ruk\'isib\'äl 30 q\'ij</string>
+
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">Ojer</string>
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">Majun natab\'äl wawe\'</string>
+
+    <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">Keyuj taq qasanïk</string>
+    <!-- Text for the dialog to confirm clearing all downloads -->
+    <string name="download_delete_all_dialog">¿La kan nawajo\' nayüj el rupam aqasanik?</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">Xesilöx taq Qasanïk</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">Xsilöx %1$s</string>
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message_1">Man xeqasäx ta taq yakb\'äl</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">%1$d xcha\'</string>
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">Tijaq</string>
+
+
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">Tiyuj</string>
+
+
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">Takuyu\'. Man nitikïr ta nusamajij ri ruxaq ri %1$s.</string>
+    <!-- Description text displayed on the tab crash page -->
+    <string name="tab_crash_description">Yatikïr natojtob\'ej nab\'än ruk\'ojlem o natz\'apij ri ruwi\'</string>
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">Titaq rutzijol sachoj chi re ri Mozilla</string>
+    <!-- Close tab button text on the tab crash page -->
+    <string name="tab_crash_close">Titz\'apïx ruwi\'</string>
+    <!-- Restore tab button text on the tab crash page -->
+    <string name="tab_crash_restore">Titzolïx ruwi\'</string>
+
+    <!-- Content Description for session item menu button -->
+    <string name="content_description_session_menu">Taq rucha\'oj molojri\'ïl</string>
+
+    <!-- Content Description for session item share button -->
+    <string name="content_description_session_share">Tikomonïx molojri\'ïl</string>
+
+    <!-- Bookmarks -->
+    <!-- Content description for bookmarks library menu -->
+    <string name="bookmark_menu_content_description">Yaketal k\'utsamaj</string>
+    <!-- Screen title for editing bookmarks -->
+    <string name="bookmark_edit">Tinuk\' yaketal</string>
+
+    <!-- Screen title for selecting a bookmarks folder -->
+    <string name="bookmark_select_folder">Ticha\' molyakb\'äl</string>
+
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">¿La kan nawajo\' chi nayüj re molyakb\'äl re\'?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s xkeruyüj ri cha\'on taq wachinäq.</string>
+    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
+    <string name="bookmark_delete_folder_snackbar">Xyuj %1$s</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">Titz\'aqatisäx Yakwuj</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">¡Xyak yaketal!</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">TINUK\'</string>
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">Tinuk\'</string>
+    <!-- Bookmark overflow menu select button -->
+    <string name="bookmark_menu_select_button">Ticha\'</string>
+    <!-- Bookmark overflow menu copy button -->
+    <string name="bookmark_menu_copy_button">Tiwachib\'ëx</string>
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">Tikomonïx</string>
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">Tijaq pa jun k\'ak\'a\' ruwi\'</string>
+    <!-- Bookmark overflow menu open in private tab button -->
+    <string name="bookmark_menu_open_in_private_tab_button">Tijaq pa jun ichinan ruwi\'</string>
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">Tiyuj</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">Tiyak</string>
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">%1$d xcha\'</string>
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">Tinuk\' yaketal</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">Tinuk\' Molyakb\'äl</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">Titikirisäx molojri\'ïl richin yetz\'et ximon taq yaketal</string>
+
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">URL</string>
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">MOLYAKWUJ</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">B\'I\'AJ</string>
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">Titz\'aqatisäx molyakwuj</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">Ticha\' molyakb\'äl</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">K\'o chi k\'o jun rub\'i\'</string>
+    <!-- Bookmark editing error missing or improper URL -->
+    <string name="bookmark_invalid_url_error">Man okel ta URL</string>
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">Majun yaketal wawe\'</string>
+    <!-- Bookmark snackbar message on deletion
+     The first parameter is the host part of the URL of the bookmark deleted, if any -->
+    <string name="bookmark_deletion_snackbar_message">Xyuj %1$s</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_2">Taq yaketal xeyuj</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">Yeyuj cha\'on taq molwuj</string>
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">TITZOLÏX</string>
+
+    <!-- Site Permissions -->
+    <!-- Site permissions preferences header -->
+    <string name="permissions_header">Taq ya\'oj q\'ij</string>
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Tib\'e pa taq Nuk\'ulem</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Ruxaq aninäq taq nuk\'ulem</string>
+    <!-- Label that indicates that this option it the recommended one -->
+    <string name="phone_feature_recommended">Chilab\'en</string>
+    <!-- button that allows editing site permissions settings -->
+    <string name="quick_settings_sheet_manage_site_permissions">Kenuk\'samajïx taq ruya\'oj q\'ij ruxaq</string>
+
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">Keyuj ya\'oj taq q\'ij</string>
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">Tiyuj ya\'oj q\'ij</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">Keyuj ya\'oj taq q\'ij pa ronojel taq ruxaq</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">Ruyonil rutzijik</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Elesäy wachib\'äl</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Q\'asäy ch\'ab\'äl</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">K\'ojlemal</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Rutzijol</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">Jutaqil taq Yakoj</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">DRM-chajin rupam</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Tik\'utüx q\'ij</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Xq\'at</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Xya\' q\'ij</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Xq\'at ruma Android</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">Taq man relik ta</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="tracking_protection_on">Titzij</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">Tichup</string>
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Tiya\' q\'ij k\'oxom chuqa\' silowäch</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
+    <string name="quick_setting_option_autoplay_allowed">Tiya\' q\'ij k\'oxom chuqa\' silowäch</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">Keq\'at k\'oxom chuqa\' silowäch xa xe rik\'in kitzij selular</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Ri  k\'oxom chuqa\' silowäch xketzij rik\'in Wi-Fi</string>
+    <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio2">Xa xe tiq\'at k\'oxom</string>
+    <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_block_audio">Xa xe tiq\'at k\'oxom</string>
+    <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked3">Tiq\'at k\'oxom chuqa\' silowäch</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_blocked">Tiq\'at k\'oxom chuqa\' silowäch</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">Titzij</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">Tichup</string>
+
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">Titzij</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Tichup</string>
+
+    <!-- Collections -->
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">Taq mol</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">Ruk\'utsamaj mol</string>
+
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description2">Ke\'amolo\' ri naqa chawäch.\nKe\'atzob\'ajij ri junam taq kanoxïk, taq ruxaq chuqa\' ri taq ruwi\' richin anin yatok chi kipam.</string>
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">Kecha\' taq Ruwi\'</string>
+    <!-- Title for the "select collection" step of the collection creator -->
+    <string name="create_collection_select_collection">Ticha\' mol</string>
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">Rub\'i\' mol</string>
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">Titz\'aqatisäx k\'ak\'a\' mol</string>
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">Ticha\' Ronojel</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">Man ticha\' Ronojel</string>
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">Kecha\' taq ruwi\' yeyak</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">%d taq ruwi\' echa\'on</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">%d ruwi\' cha\'on</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">¡Taq ruwi\' xeyak!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">¡Xyak ri mol!</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">¡Ruwi\' xyak!</string>
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">Titz\'apïx</string>
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">Tiyak</string>
+
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Titz\'et</string>
+
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">Mol %d</string>
+
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header">Titaq chuqa\' Tikomonïx</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">Tikomonïx</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">Tikomonïx</string>
+    <!-- Sub-header in the dialog to share a link to another app -->
+    <string name="share_link_subheader">Tikomonïx jun ximonel</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">Titaq pa okisab\'äl</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">Ronojel b\'anoj</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">K\'a b\'a ke\'okisäx</string>
+    <!-- An option from the three dot menu to into sync -->
+    <string name="sync_menu_sign_in">Tatikirisaj molojri\'ïl richin nixim</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">Tatikirisaj molojri\'ïl pa Sync</string>
+
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">Titaq pa ronojel okisab\'äl</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">Tokisäx chik pa Sync</string>
+    <!-- Text displayed when sync is offline and cannot be accessed -->
+    <string name="sync_offline">Chupül</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">Tokisäx jun chik okisab\'äl</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">Richin nitaq jun ruwi\', titikirisäx molojri\'ïl xa pa jun chik okisab\'äl.</string>
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">Xno\' pa nuwi\'</string>
+    <!-- Share error message -->
+    <string name="share_error_snackbar">Man nitikïr ta nikomonïx rik\'in re chokoy re\'</string>
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">Titaq pan okisab\'äl</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">Majun Okisab\'äl Okisan</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">Tetamäx chi rij ri Kitaqik taq Ruwi\'…</string>
+
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">Tokisäx Jun Chik Okisab\'äl…</string>
+
+    <!-- Notifications -->
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
+    <string name="notification_pbm_channel_name">Ichinan okem pa k\'amaya\'l</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text">Keyuj ichinan taq ruwi\'</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text_2">Ketz\'apïx ichinan taq ruwi\'</string>
+    <!-- Notification action to open Fenix and resume the current browsing session. -->
+    <string name="notification_pbm_action_open">Tijaq</string>
+    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
+    <string name="notification_pbm_action_delete_and_open">Tiyuj chuqa\' Tijaq</string>
+    <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_powered_by_channel_name">B\'anon Ruma</string>
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">Markentin</string>
+
+    <!-- Snackbar -->
+    <!-- Text shown in snackbar when user deletes a collection -->
+    <string name="snackbar_collection_deleted">Xyuj ri mol</string>
+    <!-- Text shown in snackbar when user renames a collection -->
+    <string name="snackbar_collection_renamed">Xjal rub\'i\' mol</string>
+    <!-- Text shown in snackbar when user deletes a tab -->
+    <string name="snackbar_tab_deleted">Ruwi\' xyuj</string>
+    <!-- Text shown in snackbar when user deletes all tabs -->
+    <string name="snackbar_tabs_deleted">Taq ruwi\' xeyuj</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">Ruwi\' xtz\'apïx</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">Taq ruwi\' xetz\'apïx</string>
+    <!-- Text shown in snackbar when user closes tabs -->
+    <string name="snackbar_message_tabs_closed">¡Taq ruwi\' xetz\'apïx!</string>
+    <!-- Text shown in snackbar when user bookmarks a list of tabs -->
+    <string name="snackbar_message_bookmarks_saved">¡Xeyak taq yaketal!</string>
+    <!-- Text shown in snackbar action for viewing bookmarks -->
+    <string name="snackbar_message_bookmarks_view">Titz\'et</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">¡Xtz\'aqatisäx pa ri jutaqil taq ruxaq!</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">Ichinan ruwi\' xtz\'apïx</string>
+
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">Ichinan taq ruwi\' xetz\'apïx</string>
+    <!-- Text shown in snackbar when user deletes all private tabs -->
+    <string name="snackbar_private_tabs_deleted">Ichinan taq ruwi\' xeyuj</string>
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">TITZOLÏX</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">Ruxaq xyuj</string>
+    <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_undo">Titzolïx</string>
+    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_confirm">Tijikib\'äx</string>
+    <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
+        First parameter is the name of the app, second parameter is the URL or text scanned-->
+    <string name="qr_scanner_confirmation_dialog_message">Tiya\' q\'ij chi re %1$s richin nujäq %2$s</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">TIYA\' Q\'IJ</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">MAN TIYA\' Q\'IJ</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">¿La kan nawajo\' nayuj %1$s?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Rik\'in niyuj re ruwi\' re\' xkeyuj ronojel ri mol. Yatikïr ye\'atz\'ük k\'ak\'a\' taq mol xab\'achike ramaj.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">¿La niyuj %1$s?</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">Tiyuj</string>
+    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">Tiq\'at</string>
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">Nok pa chijun ruwa</string>
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">URL xwachib\'ëx</string>
+
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">Re re\' jun tz\'etb\'äl tz\'ib\'anïk. K\'o wawe\' richin nuk\'üt achi\'el xtiwachin ri tz\'ib\'anïk toq xtanimirisaj o xtach\'utinisaj rik\'in re runuk\'ulem re\'.</string>
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">Kenimirisäx o kech\'utinisäx kipalem taq tzij pa ri ajk\'amaya\'l ruxaq</string>
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">Runimilem Tz\'ib\'</string>
+
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_2">Ruyonil tijal rupalem tz\'ib\'</string>
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">Ri rupalem tz\'ib\' xtuk\'äm ri\' rik\'in ri runuk\'ulem Android. Tichup richin ninuk\'samajïx rupalem tz\'ib\' wawe\'.</string>
+
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">Keyuj taq rutzij okem pa k\'amaya\'l</string>
+
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title_2">Kejaq taq ruwi\'</string>
+    <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
+    <string name="preferences_delete_browsing_data_tabs_subtitle">%d taq ruwi\'</string>
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">Runatab\'al okem chuqa\' taq rutzij ruxaq k\'amaya\'l</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d taq ochochib\'äl</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Natab\'äl</string>
+    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
+        number of history pages the user has -->
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d taq ruxaq</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Taq kuki</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">Xketz\'apïx molojri\'ïl pa b\'ama ronojel ruxaq</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">Taq wachib\'äl chuqa\' taq yakb\'äl pa jumejyak</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">Tajama\' rupam yakb\'äl</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">Taq ruya\'oj q\'ij ruxaq</string>
+
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Taq qasanïk</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">Keyuj taq rutzij okem pa k\'amaya\'l</string>
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">Keyuj taq rutzij okem pa k\'amaya\'l toq nel</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit">Keyuj ri taq tzij okem pa k\'amaya\'l pa ruyonil toq xtacha\' &quot;Tel&quot; pa ri nïm k\'utsamajib\'äl</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Keyuj ri taq tzij okem pa k\'amaya\'l pa ruyonil toq xtacha\' \&quot;Tel\&quot; pa ri nïm k\'utsamajib\'äl</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Tel</string>
+
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message">Xkeyuj ronojel ri taq rutzij awokem.</string>
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s xkeruyüj el ri taq rutzij awokem xecha\'.</string>
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">Tiq\'at</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">Tiyuj</string>
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">Rutzij okem xeyuj</string>
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">yeyuj taq rutzij okem pa k\'amaya\'l…</string>
+
+    <!-- Tips -->
+    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header">Firefox Preview wakami ja ri Firefox Nightly</string>
+
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">Firefox Nightly nuk\'ëx ri\' ronojel taq aq\'a\' chuqa\' k\'o k\'ak\'a\' tojtob\'enel taq rusamaj.
+        Po rik\'in jub\'a\' man kan ta jikïl. Taqasaj ri beta qokik\'amaya\'l richin jun jikïl samaj.</string>
+
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">Tak\'ulu\' Firefox richin Android Beta</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly xsilöx</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_installed">Man xtuk\'ül ta chik ruk\'exoj jikomal re chokoy re\'. Man tawokisaj chik chuqa\' tajala\' rik\'in ri k\'ak\'a\' Nightly.
+        \n\nRichin ye\'aq\'axaj ri taq ayaketal, kitikirib\'al amolojri\'ïl chuqa\' anatab\'al pa jun chik chokoy, tatz\'uku\' jun rutaqoya\'l Firefox.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_installed">Tajala\' rik\'in ri k\'ak\'a\' Nightly</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly xsilöx</string>
+
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">Man xtuk\'ül ta chik ruk\'exoj jikomal re chokoy re\'. Man tawokisaj chik chuqa\' tajala\' rik\'in re chokoy re\'.
+        \n\nRichin ye\'aq\'axaj ri taq ayaketal, kitikirib\'al amolojri\'ïl chuqa\' anatab\'al pa jun chik chokoy, tatz\'uku\' jun rutaqoya\'l Firefox.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">Tak\'ulu\' ri k\'ak\'a\' Nightly</string>
+
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome message
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_header">¡Niya\' rutzil awäch pa %s!</string>
+    <!-- text for the Firefox Accounts section header -->
+    <string name="onboarding_fxa_section_header">¿La k\'o chik jun rub\'i\' ataqoya\'l?</string>
+    <!-- text for the "What's New" onboarding card header -->
+    <string name="onboarding_whats_new_header1">Tatz\'eta\' ri k\'ak\'a\'</string>
+
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">¿La k\'o ak\'utunik chi rij ri xwachib\'ëx chik chi rij ri %s? ¿La nawajo\' nawetamaj achike ri xjalatäj?</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string name="onboarding_whats_new_description_linktext">Wawe\' e k\'o ri tzolin taq tzij</string>
+    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
+    <string name="onboarding_account_sign_in_header_1">Taxima\' Firefox pa taq awokisab\'al</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account -->
+    <string name="onboarding_manual_sign_in_description">Kek\'am pe taq yaketal, natab\'äl chuqa\' ewan taq tzij pa Firefox pa re okisab\'äl re\'.</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_3">Xatikirisaj molojri\'ïl pa jun chik rokik\'amaya\'l Firefox achi\'el %s pa re okisab\'äl re\'. ¿La nawajo\' natikirisaj molojri\'ïl rik\'in re rub\'i\' taqoya\'l re\'?</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">Ja\', titikirisäx molojri\'ïl</string>
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">Nitikirisäx molojri\'ïl…</string>
+    <!-- text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in_1">Tatz\'ib\'aj ab\'i\'</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">Jantape\' chupül</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">Tzijïl Sync</string>
+    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
+    <string name="onboarding_firefox_account_automatic_signin_failed">Xsach toq xtikirisäx molojri\'ïl</string>
+
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_3">Junelïk tzijïl ichinanem</string>
+    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
+    <string name="onboarding_tracking_protection_description_3">Junaman richin ichinanem chuqa\' rub\'eyal nisamäj. Yesamajïx ri taq ruxaq pa relik rub\'eyal.</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button_2">Junaman (k\'o wi)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_3">Junaman richin ichinanem chuqa\' rub\'eyal nisamäj. Yesamajïx ri taq ruxaq pa relik rub\'eyal.</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">K\'atzinel (chilab\'en)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Nimaläj</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_3">Yeruq\'ät mas ojqanela\' richin anin yesamäj ri taq ruxaq, po rik\'in jub\'a\' jujun taq rusamaj re ruxaq xkesachiyaj.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Tacha\' ri ruk\'ojlib\'al rukajtz\'ik samajib\'äl</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description_1">Taya\' pan aq\'a\' ri rukajtz\'ik samajib\'äl. Taya\' ikim o tasiloj pa jotöl.</string>
+    <!-- text for the private browsing onboarding card header -->
+    <string name="onboarding_private_browsing_header">Tawichinaj ri awokem</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string name="onboarding_private_browsing_description1">Richin nijaq jun ichinan ruwi\' jub\'ey: Tachapa\' ri %s wachib\'äl.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">Richin jantape\' yejaq ichinan taq ruwi\': Ke\'ajala\' ri taq runuk\'ulem ichinan k\'amaya\'l.</string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string name="onboarding_private_browsing_button">Tijaq runuk\'ulem</string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">Awichinanem</string>
+
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
+    <string name="onboarding_privacy_notice_description2">Xqawachib\'ej %s richin nachajij ri nakomonij pa k\'amab\'ey chuqa\' ri nakomonij qik\'in.</string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">Tasik\'ij ri rutzijol qichinanem</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">Titz\'apïx</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Titikirisäx okem pa k\'amaya\'l</string>
+
+    <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Tacha\' ri awachinel</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description_2">Takolo\' jub\'a\' ruwateriya\' chuqa\' tachajij ri runaq\' awäch, tacha\' ri q\'ëq rub\'anikil.</string>
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">Yonil</string>
+
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">Nuk\'äm ri\' rik\'in ri runuk\'ulem awoyonib\'al</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">Q\'equ\'m wachinel</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">Säq wachinel</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">¡Xetaq taq ruwi\'!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">¡Xtaq ruwi\'!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Man nitaq ta</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">TITOJTOB\'ËX CHIK</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">Titz\'ajwachib\'ëx b\'itz\'ib\'</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[Tajaqa\' Firefox pan awoyonib\'al k\'a ri\' jät pa <b>https://firefox.com/pair</b>]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">Ütz chik nitz\'ajwachib\'ëx</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">Tatikirisaj molojri\'ïl rik\'in ri elesäy awachib\'al</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">Tawokisaj ri taqoya\'l</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[¿La man k\'o ta rub\'i\' ataqoya\'l? <u>Tatz\'uku\' jun</u> richin naxïm Firefox pa taq okisab\'äl.]]></string>
+    <!-- Text shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_confirmation_message">Firefox man xtuxïm ta chik ri rub\'i\' ataqoya\'l, man xkeyuj ta ri taq rutzij awokem pa re oyonib\'äl re\'.</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s Man xtuxïm ta chik ri rub\'i\' ataqoya\'l, man xkeyuj ta ri taq rutzij awokem pa re oyonib\'äl re\'.</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">Tichup</string>
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">Tiq\'at</string>
+
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">Man yenuk\' ta ri taq molwuj e k\'o</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">Runuk\'ulem Ojqanem</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">Utzirisan Chajinïk chuwäch Ojqanem</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">Katok pa k\'amaya\'l akuchi\' man yatoqäx ta</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">Yeruchajij ri taq atzij. %s yaruchajij chi kiwäch relik ojqanela\', ri nikoqaj ri nab\'än pa k\'amab\'ey.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Tetamäx ch\'aqa\' chik</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Junaman (k\'o wi)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_4">Junaman richin ichinanem chuqa\' rub\'eyal nisamäj. Yesamajïx ri taq ruxaq pa relik rub\'eyal.</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">Achike ri q\'aton ruma ri relik ruchajixik ojqanem</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">Nimaläj</string>
+
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_3">Yeruq\'ät mas ojqanela\' richin anin yesamäj ri taq ruxaq, po rik\'in jub\'a\' jujun taq rusamaj re ruxaq xkesachiyaj.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Achike ri q\'aton ruma ri ruchajixik ojqanem k\'o</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">Ichinan</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Ke\'acha\' achike taq ojqanela\' chuqa\' kiskrip nawajo\' ye\'aq\'ät.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Achike ri q\'aton ruma ri chijun ruchajixik ojqanem</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Taq kuki</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Kojqanela\' taq ruxaq chuqa\' aj winäq k\'amab\'ey</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Taq kikuki ruxaq k\'amaya\'l man etz\'eton ta</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Konojel ri taq kikuki aj rox winäq (yetikïr yetz\'ilon pan ajk\'amaya\'l ruxaq)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Ronojel kuki (xketz\'ilon pa ri ajk\'amaya\'l ruxaq)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Rupam ojqanem</string>
+
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Pa ronojel ruwi\'</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Xa xe\' pan Ichinan taq ruwi\'</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Xa xe pan Ichinan ruwi\'</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Cryptominers</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Ketal ruwi\' q\'ab\'aj</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">Kib\'anikil</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_blocked">Xq\'at</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">Xya\' q\'ij</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">Kojqanela\' aj Winäq K\'amab\'ey</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Nuq\'ät kuchuq\'a\' ri aj winäq k\'amab\'ey richin yekojqaj ri asamaj awokem pa k\'amab\'ey.</string>
+
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">Kikuki Rojqanela\' Xoch\'in taq Ruxaq</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">Keq\'at taq kikuki eltzijonel taq k\'amab\'ey chuqa\' ri taq ajk\'ayij ch\'ob\'oj richin yekimöl taq rutzij awokem pa k\'ïy ruxaq.</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">Taq kriptominer</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Man nikiya\' ta q\'ij chi ri itzel taq skrip yetikïr ye\'ok pan awokisab\'al richin nikik\'äm kematz\'ib\'il pwäq.</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">Ketal ruwi\' q\'ab\'aj</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Tachajij awi\' richin chi kekimöl taq atzij pan awokisab\'al, ri ye\'okisäx richin yatoqäx.</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">Rupam Ojqanem</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">Ke\'aq\'ata\' ri taq eltzijol man e k\'o ta chupam, taq silowäch chuqa\' taq rupam kik\'wan taq rub\'itz\'ib\' ojqanem. Nitikïr yerutz\'ila\' jujun taq rusamaj ajk\'amaya\'l ruxaq.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Toq xtatz\'ët ri tuq\' pokob\', %s xeruq\'ät ojqanela\' pa jun ruxaq k\'amaya\'l. Tapitz\'a\' richin ch\'aqa\' chik retamab\'al.</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">TZIJÏL ri chajinïk pa re ruxaq re\'</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">CHUPÜL ri chajinïk pa re ruxaq re\'</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">Chupül ri Utzilan Chajinïk chuwäch Ojqanem pa re ajk\'amaya\'l taq ruxaq re\'</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Katok pa k\'amaya\'l chi rij</string>
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">Taq Ach\'ojib\'al</string>
+
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">Jaqäl rub\'itz\'ib\' taq wujb\'äl yeqokisaj</string>
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">Achike ri k\'ak\'a\' pa %s</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | OSS taq wujb\'äl</string>
+
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Kechojmïx chik Ojqanela\'</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Yeruyüj ri taq cookies echojmirisan pan ajk\'amaya\'l taq ruxaq ojqanem etaman kiwa.</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">Tob\'äl</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Taq sachoj</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">Ichinan na\'oj</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">Tawetamaj ach\'ojib\'al</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">Na\'oj chi rij ya\'öl q\'ij</string>
+
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">Taq wujb\'äl yeqokisaj</string>
+
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Ruk\'utsamaj chojmirisanel: %1$d (taq) pitz\'oj richin nitzij</string>
+    <string name="about_debug_menu_toast_done">Xtzij ruk\'utsamaj chojmirisanel</string>
+
+    <!-- Content description of the tab counter toolbar button when one tab is open -->
+    <string name="tab_counter_content_description_one_tab">1 ruwi\'</string>
+    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
+    <string name="tab_counter_content_description_multi_tab">%d taq ruwi\'</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">Tiwachib\'ëx</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">Titz\'ajb\'äx chuqa\' tib\'e</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">Titz\'ajb\'äx</string>
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL wachib\'en pa molwuj</string>
+
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">Titz\'aqatisäx pa ri Rutikirib\'al ruwa</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">Tiq\'at</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">Titz\'aqatisäx</string>
+
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Tik\'oje\' pan ajk\'amaya\'l ruxaq</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Rub\'i\' ri choj okem</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">Anin yatikïr naya\' re ajk\'amaya\'l pa ri Rutikirib\'al ruxaq okisab\'al richin aninäq nawokisaj chuqa\' aninäq yatok pa k\'amaya\'l, achi\'el ta xa jun chokoy.</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Kitikirisaxik molojri\'ïl chuqa\' ewan taq tzij</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Keyak kitikirisaxik molojri\'ïl chuqa\' ewan taq tzij</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Tik\'utüx chi niyak</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Majub\'ey tiyak</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Nunojisaj pa ruyonil</string>
+
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Sync tikirisanïk molojri\'ïl</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Sync rutikirib\'al molojri\'ïl rik\'in okisaxel</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">Tok chik</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">Tatikirisaj molojri\'ïl pa Sync</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">Xeyak kitikirisaxik mojojri\'ïl</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">Wawe\' xkeq\'alajin ri taq tikirisanïk molojri\'ïl xke\'ayäk o xke\'axïm rik\'in %s.</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Tawetamaj ch\'aqa\' chik chi rij ri Sync.</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">Taq man relik ta</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Wawe\' xkeq\'alajin ri taq tikirisanïk molojri\'ïl chuqa\' ri ewan taq tzij man yeyak ta.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Man xkeyak ta ri taq tikirisanïk molojri\'ïl chuqa\' ri ewan taq kitzij re taq ruxaq re\'.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Tiyuj ronojel man relik ta</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Kekanöx tikirib\'äl taq molojri\'ïl</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">Rucholajem tz\'ib\'</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">K\'a b\'a ke\'okisäx</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">Ruxaq k\'amaya\'l</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">Rub\'i\' winäq</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">Ewan tzij</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">Tatz\'ib\'aj chik ri PIN</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">Man tiq\'at chik richin ye\'atz\'ët ri tikirib\'äl amolojri\'ïl e\'ayakon</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">Man ütz re okem re\'. Ri taq awokisanem xe\'atz\'ib\'aj rik\'in jub\'a\' k\'o etamayon kichin.</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">Tetamäx ch\'aqa\' chik</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">¿La nawajo\' chi ri %s nuyäk re tikirib\'äl molojri\'ïl re\'?</string>
+    <!-- Positive confirmation that Fenix should save the new or updated login -->
+    <string name="logins_doorhanger_save_confirmation">Tiyak</string>
+    <!-- Negative confirmation that Fenix should not save the new or updated login -->
+    <string name="logins_doorhanger_save_dont_save">Man tiyak</string>
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Ewan tzij wachib\'en pa molwuj</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Rub\'i\' winäq wachib\'en pa molwuj</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">Xwachib\'ëx ri ruxaq pa molwuj</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">Tiwachib\'ëx ewan tzij</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Tijosq\'iï ewan tzij</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">Tiwachib\'ëx rub\'i\' winäq</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Tijosq\'ïx rub\'i\' winäq</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">Tiwachib\'ëx ruxaq</string>
+
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Tijaq ruxaq pan okik\'amaya\'l</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">Tik\'ut ewan tzij</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">Tewäx ewan tzij</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">Man tiq\'at chik richin ye\'atz\'ët ri tikirib\'äl amolojri\'ïl e\'ayakon</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Ke\'ajikib\'a\' kitikirisaxik amolojri\'ïl chuqa\' ewan taq atzij</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Tab\'ana\' runuk\'ulem jun retal ruq\'atoj okisab\'äl, jun PIN o jun ewan tzij richin nachajij ri kitikirib\'al amolojri\'ïl chuqa\' ewan taq atzij e\'ayakon we xa ta k\'o xtichapo ri awokisab\'al.</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">Jub\'a\' chik na</string>
+
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">Tib\'an runuk\'ulem wakami</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">Man taq\'ät chik ri awokisab\'al</string>
+
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">Zoom pa ronojel ajk\'amaya\'l ruxaq</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">Titzij re\' richin niya\' q\'ij nik\'et chuqa\' nib\'an zoom, achi\'el chuqa\' pa ajk\'amaya\'l ruxaq man nikiya\' ta q\'ij.</string>
+
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">B\'i\'aj (A-Y)</string>
+
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">Ruk\'isib\'äl mul xokisäx</string>
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Ticholajïx ruk\'utsamaj rutikirib\'al molojri\'ïl</string>
+
+    <!-- Credit Cards Autofill -->
+    <!-- Preference and title for managing the settings for credit cards -->
+    <string name="preferences_credit_cards">Rutarjeta\' kre\'ito\'</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">Keyak chuqa\' ruyon kenojisäx ri tarjeta\'</string>
+
+    <!-- Preference summary for saving and autofilling credit card data -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Ewan kisik\'ixik ri taq tzij</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">Sync tarjeta\' chi kikojol okisab\'äl</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Sync taq tarjeta\'</string>
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">Titz\'aqatisäx rutarjeta\' kre\'ito\'</string>
+
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Kenuk\'samajïx yakon taq tarjeta\'</string>
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">Titz\'aqatisäx tarjeta\'</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Tinuk\' tarjeta\'</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Rajilab\'al Tarjeta\'</string>
+
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Q\'in Nik\'is Ruq\'ijul</string>
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_month">Ik\' Nik\'is Ruq\'ijul</string>
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_year">Juna\' Nik\'is Ruq\'ijul</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">B\'i\'aj pa Tarjeta\'</string>
+    <!-- The header for the nickname for a credit card -->
+    <string name="credit_cards_card_nickname">Tz\'ukun Rub\'i\' Tarjeta\'</string>
+
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">Tiyuj tarjeta\'</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Tiyuj tarjeta\'</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Tiyak</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Tiyak</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">Tiq\'at</string>
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">Keyak tarjeta\'</string>
+
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Titz\'ib\'äx jun okel rajilab\'al rutarjeta\' kre\'ito\'</string>
+
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">Tanojisaj re k\'ojlem re\'</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Tib\'an runuk\'ulem wakami</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Jub\'a\' chik na</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Man taq\'ät chik ri awokisab\'al</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">Titz\'aqatisäx kanob\'äl</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">Tinuk\' kanob\'äl</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">Titz\'aqatisäx</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Tiyak</string>
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">Tinuk\'</string>
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">Tiyuj</string>
+
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">Juley chik</string>
+
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">B\'i\'aj</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">Rucholajil kanoxïk nokisäx</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string formatted="false" name="search_add_custom_engine_search_string_example">Tik\'ex k\'ulb\'enïk rik\'in “%s”.
+Achi\'el: \nhttps://www.google.com/search?q=%s</string>
+    <!-- Text for the button to learn more about adding a custom search engine -->
+    <string name="search_add_custom_engine_learn_more_label">Tetamäx Ch\'aqa\' Chik</string>
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Rub\'anikil ichinan kanob\'äl</string>
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">Ruximonel tetamäx ch\'aqa\' chik</string>
+
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">Titz\'ib\'äx rub\'i\' kanob\'äl</string>
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">K\'o chik ri kanob\'äl rik\'in ri b\'i\'aj “%s”.</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">Titz\'ib\'äx jun rucholajil kanoxïk</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">Tinik\'öx chi ri rucholajem ri nikanöx nuk\'äm ri\' rik\'in ri rub\'anikil tz\'etb\'äl</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">Xsach toq nok rik\'in “%s”</string>
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">Xtz\'uk %s</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message">Tiyak %s</string>
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">Xyuj %s</string>
+
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">Ütz apetik pa k\'ak\'a\' rutz\'aqat %s</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">Atroyob\'en jun okik\'amaya\'l xwachib\'ëx chik, rik\'in jun rub\'eyal nisamäj chuqa\' utzilan taq samaj richin nab\'än k\'ïy wachinäq pa k\'amab\'ey.\n\nTawoyob\'ej xa xe niqak\'ëx ri %s rik\'in ri</string>
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">Nik\'ex%s…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">Titikirisäx %s</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">Tz\'aqät b\'enam</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">Ewan taq tzij</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Richin niya\' q\'ij chi re:</string>
+
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Jät pa Runuk\'ulem Android</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Tachapa\' <b>Taq Ya\'oj Q\'ij</b>]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Tik\'exlöx <b>%1$s</b> rik\'in TZIJÏL]]></string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection">Ütz Okem</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection">Man Ütz Ta Okem</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">¿La kan nawajo\' ye\'ayüj el ronojel ri taq ya\'oj q\'ij pa ronojel taq ruxaq?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">¿La kan nawajo\' ye\'ayüj el ronojel ri taq ya\'oj q\'ij pa re ruxaq re\'?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">¿La kan nawajo\' ye\'ayüj el re ya\'oj q\'ij re\' pa re ruxaq re\'?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">Majun man relik ta richin re ruxaq</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">Nïm taq Cholna\'oj</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">¿La kan nawajo\' chi niyuj el re yaketal re\'?</string>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">Titz\'aqatisäx pa ri jutaqil taq ruxaq</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">Jikib\'an Ruma: %1$s</string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">Tiyuj</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Tinuk\'</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">¿La kan nawajo\' chi niyuj el re tikirib\'äl molojri\'ïl re\'?</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">Tiyuj</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Taq rucha\'oj rutikirib\'al molojri\'ïl</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Ruk\'ojlem nuk\'el rutz\'ib\'axik rochochib\'al ajk\'amaya\'l pa ri rutikirib\'al molojri\'ïl.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">Ruk\'ojlem nuk\'el rutz\'ib\'axik rub\'i\' winäq pa ri rutikirib\'al molojri\'ïl.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">Ruk\'ojlem nuk\'el rutz\'ib\'axik ewan tzij pa ri rutikirib\'al molojri\'ïl.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Keyaj taq jaloj richin ri rutikirib\'al molojri\'ïl.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">Kech\'aqïx taq Jaloj</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Tinuk\'</string>
+    <!--  The error message in edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Najowäx ewan tzij</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Tikanöx chi ch\'ab\'äl</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Kach\'o wakami</string>
+
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">K\'o chik jun tikirib\'äl molojri\'ïl rik\'in re b\'i\'aj re\'</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Tokisäx jun chik okisab\'äl</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Tajuxub\'ej chik awi\'.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Tatzija\' ri kiximik taq ruwi\'.</string>
+
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Majun ruwi\' ajaqon pa Firefox pa ri ch\'aqa\' chik awokisab\'al.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Titz\'et jun kicholb\'al ruwi\' pa juley chik awokisab\'al.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Tatikirisaj molojri\'ïl pa yaximon</string>
+
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">Majun ruwi\' ejaqon</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">Xaq\'i\' ruchi\' ri jutaqil taq ruxaq</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content_2">Richin natz\'aqatisaj jun k\'ak\'a\' nimaläj ruxaq, tayuju\' jun. Tapitz\'a\' ri ruxaq chuqa\' tacha\' tiyuj.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">ÜTZ, Wetaman Chik</string>
+
+    <!-- Label for the show most visited sites preference -->
+    <string name="top_sites_toggle_top_frecent_sites">Kek\'ut taq ruxaq yalan etz\'eton</string>
+
+    <!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">B\'i\'aj</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">Jeb\'ël kib\'i\' ruxaq</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">ÜTZ</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">Tiq\'at</string>
+
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_30_days">30 taq q\'ij</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string name="inactive_tabs_7_days">1 wuqq\'ij</string>
+
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Nub\'än kinuk\'ulem ximonel ajk\'amaya\'l taq ruxaq, taq taqoya\'l chuqa\' taq rutzijol richin yejaq pa ruyonil pa Firefox.</string>
+
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Tiyuj</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Tipitz\' richin ch\'aqa\' rub\'anikil</string>
+
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Tib\'an okem ajsik</string>
+
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Titz\'apïx</string>
+
+</resources>

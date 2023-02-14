@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  sharedUserId: This release type is meant to replace Firefox (Beta channel) and therefore needs to inherit
+                its sharedUserId for all eternity. Shipping an app update without sharedUserId can have
+                fatal consequences. For example see:
+                - https://issuetracker.google.com/issues/36924841
+                - https://issuetracker.google.com/issues/36905922
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    android:sharedUserId="${sharedUserId}">
+</manifest>

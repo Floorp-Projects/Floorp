@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/panel_wrapper"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/layer1">
+
+    <ImageView
+        android:id="@+id/navigate_back"
+        android:layout_width="@dimen/tracking_protection_item_height"
+        android:layout_height="@dimen/tracking_protection_item_height"
+        android:contentDescription="@string/etp_back_button_content_description"
+        android:scaleType="center"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/mozac_ic_back"
+        app:tint="?attr/textPrimary" />
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:clickable="false"
+        android:focusable="false"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="16dp"
+        android:textColor="?attr/textPrimary"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/navigate_back"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Turn off Cookize Banner Reduction for [domain.com]? " />
+
+
+    <TextView
+        android:id="@+id/details"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp"
+        android:textColor="?attr/textSecondary"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/navigate_back"
+        app:layout_constraintTop_toBottomOf="@id/title"
+        tools:text="Firefox will clear this site’s cookies and refresh the page. Clearing all cookies may sign you out or empty shopping carts." />
+
+    <org.mozilla.fenix.trackingprotection.SwitchWithDescription
+        android:id="@+id/cookieBannerSwitch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/tracking_protection_item_height"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="23dp"
+        app:layout_constraintStart_toEndOf="@+id/navigate_back"
+        app:layout_constraintTop_toBottomOf="@id/details"
+        app:switchDescriptionOff="@string/reduce_cookie_banner_off_for_site"
+        app:switchDescriptionOn="@string/reduce_cookie_banner_on_for_site"
+        app:switchShowIcon="false"
+        app:switchTitle="@string/preferences_cookie_banner_reduction" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

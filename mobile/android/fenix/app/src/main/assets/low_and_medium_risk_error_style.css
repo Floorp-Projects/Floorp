@@ -1,0 +1,35 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  --background-color: #f9f9fb;
+  --text-color: #15141a;
+  --primary-button-color: #312a65;
+  --primary-button-text-color: #ffffff;
+  --secondary-button-color: #e0e0e6;
+  --secondary-button-text-color: #20123a;
+  --header-color: #312a65;
+}
+
+#badCertTechnicalInfo {
+  overflow: auto;
+  white-space: pre-line;
+}
+
+#advancedPanelButtonContainer {
+  display: flex;
+  justify-content: center;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background-color: #15141a;
+    --text-color: #fbfbfe;
+    --primary-button-color: #9059ff;
+    --primary-button-text-color: #ffffff;
+    --secondary-button-color: #e0e0e6;
+    --secondary-button-text-color: #312a65;
+    --header-color: #fbfbfe;
+  }
+}

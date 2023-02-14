@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <androidx.preference.PreferenceCategory
+        android:layout="@layout/preference_cat_style"
+        android:title="@string/preferences_theme"
+        app:iconSpaceReserved="false">
+        <org.mozilla.fenix.settings.RadioButtonPreference
+            android:defaultValue="@bool/underAPI28"
+            android:key="@string/pref_key_light_theme"
+            android:title="@string/preference_light_theme" />
+
+        <org.mozilla.fenix.settings.RadioButtonPreference
+            android:defaultValue="false"
+            android:key="@string/pref_key_dark_theme"
+            android:title="@string/preference_dark_theme" />
+
+        <org.mozilla.fenix.settings.RadioButtonPreference
+            android:defaultValue="false"
+            android:key="@string/pref_key_auto_battery_theme"
+            android:title="@string/preference_auto_battery_theme"
+            app:isPreferenceVisible="@bool/underAPI28" />
+
+        <org.mozilla.fenix.settings.RadioButtonPreference
+            android:defaultValue="@bool/API28"
+            android:key="@string/pref_key_follow_device_theme"
+            android:title="@string/preference_follow_device_theme"
+            app:isPreferenceVisible="@bool/API28" />
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        android:layout="@layout/preference_cat_style"
+        android:title="@string/preferences_toolbar"
+        app:iconSpaceReserved="false">
+        <org.mozilla.fenix.settings.RadioButtonPreference
+            android:key="@string/pref_key_toolbar_top"
+            android:title="@string/preference_top_toolbar" />
+        <org.mozilla.fenix.settings.RadioButtonPreference
+            android:key="@string/pref_key_toolbar_bottom"
+            android:title="@string/preference_bottom_toolbar" />
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        android:layout="@layout/preference_cat_style"
+        android:title="@string/preferences_gestures"
+        app:iconSpaceReserved="false">
+        <androidx.preference.SwitchPreference
+            android:key="@string/pref_key_website_pull_to_refresh"
+            android:title="@string/preference_gestures_website_pull_to_refresh"
+            app:isPreferenceVisible="false" />
+        <androidx.preference.SwitchPreference
+            android:key="@string/pref_key_dynamic_toolbar"
+            android:title="@string/preference_gestures_dynamic_toolbar" />
+        <androidx.preference.SwitchPreference
+            android:key="@string/pref_key_swipe_toolbar_switch_tabs"
+            android:title="@string/preference_gestures_swipe_toolbar_switch_tabs" />
+        <androidx.preference.SwitchPreference
+            android:key="@string/pref_key_swipe_toolbar_show_tabs"
+            android:title="@string/preference_gestures_swipe_toolbar_show_tabs"
+            app:isPreferenceVisible="false" />
+    </androidx.preference.PreferenceCategory>
+</androidx.preference.PreferenceScreen>

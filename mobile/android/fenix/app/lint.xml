@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<lint>
+    <issue id="InvalidPackage">
+        <!-- The Sentry SDK is compiled against parts of the Java SDK that are not available in the Android SDK.
+             Let's just ignore issues in the Sentry code since that is a third-party dependency anyways. -->
+        <ignore path="**/sentry*.jar" />
+    </issue>
+
+    <!-- Lints that don't apply to our translation process -->
+    <issue id="MissingTranslation" severity="ignore" />
+    <issue id="PluralsCandidate" severity="ignore" />
+    <issue id="StringFormatCount" severity="ignore" />
+    <issue id="TypographyEllipsis" severity="ignore" />
+    <issue id="ExtraTranslation" severity="ignore" />
+
+    <!-- Lints that are disabled by default -->
+    <issue id="ConvertToWebp" severity="warning" />
+
+    <!-- Performance: we haven't validated that addressing these checks have a significant impact
+         on performance but they're very quick to fix so we escalate them to error. -->
+    <!-- Performance: big wins from a theoretical perspective so we escalate to error. -->
+    <issue id="DrawAllocation" severity="error" />
+    <issue id="Wakelock" severity="error" />
+    <issue id="WakelockTimeout" severity="error" />
+    <issue id="Recycle" severity="error" />
+    <issue id="StaticFieldLeak" severity="error" />
+    <issue id="ViewTag" severity="error" />
+    <issue id="ViewHolder" severity="error" />
+    <issue id="HandlerLeak" severity="error" />
+    <issue id="NestedWeights" severity="error" />
+
+    <!-- Performance: quick-to-fix violations so we escalate to error.
+         We haven't validated that they have a significant impact though. -->
+    <issue id="ObsoleteLayoutParam" severity="error" />
+    <issue id="ObsoleteSdkInt" severity="error" />
+    <issue id="AnimatorKeep" severity="error" />
+    <issue id="DuplicateDivider" severity="error" />
+    <issue id="MergeRootFrame" severity="error" />
+    <issue id="UseOfBundledGooglePlayServices" severity="error" />
+    <issue id="UseValueOf" severity="error" />
+    <issue id="InefficientWeight" severity="error" />
+    <issue id="DisableBaselineAlignment" severity="error" />
+    <issue id="UselessLeaf" severity="error" />
+    <issue id="UselessParent" severity="error" />
+    <issue id="UnusedNamespace" severity="error" />
+
+    <!-- Performance: checks we'd like to eventually set to error. -->
+    <issue id="UseCompoundDrawables" severity="warning" />
+    <issue id="Overdraw" severity="warning" />
+    <issue id="UnusedResources" severity="error">
+        <!-- Using an automated process to remove localized strings after they are removed from the default strings.xml
+        means the files for localized strings will contain unused resources for a few days after the original removal operation. -->
+        <ignore path="**/values-*/strings.xml" />
+    </issue>
+
+    <!-- Performance: checks that we're unsure of the value of that we might want to investigate. -->
+    <issue id="UnpackedNativeCode" severity="informational" />
+    <issue id="LogConditional" severity="informational" />
+    <issue id="VectorPath" severity="informational" />
+    <issue id="UseSparseArrays" severity="informational" /> <!-- hurts developer convenience of kotlin Map... -->
+    <issue id="TooDeepLayout" severity="warning" /> <!-- depth can be customized -->
+    <issue id="TooManyViews" severity="warning" /> <!-- view count can be customized -->
+
+    <!-- Correctness: checks with increased severity -->
+    <issue id="PrivateResource" severity="error" />
+</lint>
+

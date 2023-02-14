@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width; user-scalable=false;" />
+    <meta http-equiv="Content-Security-Policy" content="default-src resource:; object-src 'none'" />
+    <link rel="stylesheet" type="text/css" href="shared_error_style.css" />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="low_and_medium_risk_error_style.css"
+    />
+  </head>
+
+  <body id="errorPage" dir="auto">
+    <!-- PAGE CONTAINER (for styling purposes only) -->
+    <div id="errorPageContainer">
+      <!-- Error Image -->
+      <iframe id="errorImage" src="" frameborder="0"></iframe>
+
+      <!-- Error Title -->
+      <div id="errorTitle">
+        <h1 id="errorTitleText"></h1>
+      </div>
+
+      <!-- LONG CONTENT (the section most likely to require scrolling) -->
+      <div id="errorLongContent">
+        <div id="errorShortDesc"></div>
+      </div>
+
+      <!-- Retry Button -->
+      <button id="errorTryAgain"></button>
+
+      <!-- Advanced Button -->
+      <button
+        id="advancedButton"
+        class="buttonSecondary hidden"
+      ></button>
+
+      <!-- "Go back" Button (For HTTPS-Only error page only) -->
+      <button id="backFromHttp"></button>
+
+      <!-- "Continue to HTTP site" Button (For HTTPS-Only error page only) -->
+      <button id="continueHttp" class="buttonSecondary"></button>
+
+      <hr id="horizontalLine" hidden />
+      <div id="advancedPanelContainer">
+        <div id="badCertAdvancedPanel" hidden class="advanced-panel">
+          <p id="badCertTechnicalInfo"></p>
+          <div
+            id="advancedPanelBackButtonContainer"
+            class="advancedPanelButtonContainer"
+          >
+            <button
+              id="advancedPanelBackButton"
+            ></button>
+          </div>
+          <div
+            id="advancedPanelAcceptButtonContainer"
+            class="advancedPanelButtonContainer"
+          >
+            <button
+              id="advancedPanelAcceptButton"
+              class="buttonSecondary"
+            ></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+
+  <script type="text/javascript">
+    if (window.history.length == 1) {
+        document.getElementById('advancedPanelBackButton').style.display = 'none';
+    }
+
+    function toggleAdvancedAndScroll() {
+      toggleAdvanced();
+
+      const horizontalLine = document.getElementById("horizontalLine");
+      const advancedPanelAcceptButton = document.getElementById(
+        "advancedPanelAcceptButton"
+      );
+      const badCertAdvancedPanel = document.getElementById(
+        "badCertAdvancedPanel"
+      );
+
+      // We know that the button is being displayed
+      if (badCertAdvancedPanel.style.display === "block") {
+        horizontalLine.hidden = false;
+        advancedPanelAcceptButton.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+          inline: "nearest",
+        });
+      } else {
+        horizontalLine.hidden = true;
+      }
+    }
+  </script>
+
+    <script src="./lowMediumErrorPages.js"></script>
+</html>

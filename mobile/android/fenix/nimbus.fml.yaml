@@ -1,0 +1,244 @@
+---
+about:
+  description: Nimbus Feature Manifest for Fenix (Firefox Android)
+  kotlin:
+    package: org.mozilla.fenix
+    class: .nimbus.FxNimbus
+channels:
+  - release
+  - beta
+  - nightly
+  - developer
+includes:
+  - ./messaging.fml.yaml
+features:
+  homescreen:
+    description: The homescreen that the user goes to when they press home or new tab.
+    variables:
+      sections-enabled:
+        description: "This property provides a lookup table of whether or not the given section should be enabled.
+        If the section is enabled, it should be toggleable in the settings screen, and on by default."
+        type: Map<HomeScreenSection, Boolean>
+        default:
+          {
+            "top-sites": true,
+            "jump-back-in": true,
+            "recently-saved": true,
+            "recent-explorations": true,
+            "pocket": true,
+            "pocket-sponsored-stories": true,
+          }
+    defaults:
+      - channel: nightly
+        value: {
+          "sections-enabled": {
+            "top-sites": true,
+            "jump-back-in": true,
+            "recently-saved": true,
+            "recent-explorations": true,
+            "pocket": true,
+          }
+        }
+  nimbus-validation:
+    description: "A feature that does not correspond to an application feature suitable for showing
+    that Nimbus is working. This should never be used in production."
+    variables:
+      settings-title:
+        description: The title of displayed in the Settings screen and app menu.
+        type: Text
+        default: browser_menu_settings
+      settings-punctuation:
+        description: The emoji displayed in the Settings screen title.
+        type: String
+        default: ""
+      settings-icon:
+        description: The drawable displayed in the app menu for Settings
+        type: String
+        default: mozac_ic_settings
+  search-term-groups:
+    description: A feature allowing the grouping of URLs around the search term that it came from.
+    variables:
+      enabled:
+        description: If true, the feature shows up on the homescreen and on the new tab screen.
+        type: Boolean
+        default: false
+    defaults:
+      - channel: nightly
+        value:
+          enabled: true
+      - channel: developer
+        value:
+          enabled: true
+  mr2022:
+    description: Features for MR 2022.
+    variables:
+      sections-enabled:
+        description: "This property provides a lookup table of whether or not the given section should be enabled."
+        type: Map<MR2022Section, Boolean>
+        default:
+          {
+            "home-onboarding-dialog-existing-users": true,
+            "sync-cfr": true,
+            "wallpapers-selection-tool": true,
+            "jump-back-in-cfr": true,
+            "tcp-cfr": false,
+            "tcp-feature": false,
+          }
+    defaults:
+      - channel: developer
+        value: {
+          "sections-enabled": {
+            "home-onboarding-dialog-existing-users": true,
+            "sync-cfr": true,
+            "wallpapers-selection-tool": true,
+            "jump-back-in-cfr": true,
+          }
+        }
+
+  cookie-banners:
+    description: Features for cookie banner handling.
+    variables:
+      sections-enabled:
+        description: "This property provides a lookup table of whether or not the given section should be enabled."
+        type: Map<CookieBannersSection, Int>
+        default:
+          {
+            "feature-ui": 0,
+            "feature-setting-value": 0,
+            "dialog-re-engage-time": 4,
+            "dialog-text-variant": 0,
+          }
+    defaults:
+      - channel: developer
+        value: {
+          "sections-enabled": {
+            "feature-ui": 1,
+            "feature-setting-value": 0,
+            "dialog-re-engage-time": 4,
+            "dialog-text-variant": 0,
+          }
+        }
+      - channel: nightly
+        value: {
+          "sections-enabled": {
+            "feature-ui": 1,
+            "feature-setting-value": 0,
+            "dialog-re-engage-time": 4,
+            "dialog-text-variant": 0,
+          }
+        }
+  unified-search:
+    description: A feature allowing user to easily search for specified results directly in the search bar.
+    variables:
+      enabled:
+        description: If true, the feature shows up in the search bar.
+        type: Boolean
+        default: false
+    defaults:
+      - channel: nightly
+        value:
+          enabled: false
+
+  growth-data:
+    description: A feature measuring campaign growth data
+    variables:
+      enabled:
+        description: If true, the feature is active
+        type: Boolean
+        default: false
+    defaults:
+      - channel: release
+        value:
+          enabled: true
+
+  re-engagement-notification:
+    description: A feature that shows the re-enagement notification if the user is inactive.
+    variables:
+      enabled:
+        description: If true, the re-engagement notification is shown to the inactive user.
+        type: Boolean
+        default: true
+
+  pre-permission-notification-prompt:
+    description: A feature that shows the pre-permission notification prompt.
+    variables:
+      enabled:
+        description: if true, the pre-permission notification prompt is shown to the user.
+        type: Boolean
+        default: true
+
+  onboarding:
+    description: "A feature that configures the new user onboarding page.
+    Note that onboarding is a **first run** feature, and should only be modified by first run experiments."
+    variables:
+      order:
+        description: Determines the order of the onboarding page panels
+        type: List<OnboardingPanel>
+        default: ["themes", "toolbar-placement", "sync", "tcp", "privacy-notice"]
+
+types:
+  objects: {}
+
+  enums:
+    HomeScreenSection:
+      description: The identifiers for the sections of the homescreen.
+      variants:
+        top-sites:
+          description: The frecency and pinned sites.
+        recently-saved:
+          description: The sites the user has bookmarked recently.
+        jump-back-in:
+          description: The tabs the user was looking immediately before being interrupted.
+        recent-explorations:
+          description: The tab groups
+        pocket:
+          description: The pocket section. This should only be available in the US.
+        pocket-sponsored-stories:
+          description: Subsection of the Pocket homescreen section which shows sponsored stories.
+
+    MR2022Section:
+      description: The identifiers for the sections of the MR 2022.
+      variants:
+        home-onboarding-dialog-existing-users:
+          description: Home onboarding dialog for upgraded users.
+        sync-cfr:
+          description: CFR for the first time you see a synced tab on the home screen.
+        wallpapers-selection-tool:
+          description: Wallpapers selection dialog tool for the home screen.
+        jump-back-in-cfr:
+          description: Jump back-in onboarding message.
+        tcp-cfr:
+          description: CFR for the first time you use the browse with Total Cookie Protection on the browser screen.
+        tcp-feature:
+          description: Controls the Total Cookie Protection feature.
+    CookieBannersSection:
+      description: The identifiers for the sections of the MR 2022.
+      variants:
+        feature-ui:
+          description: An integer either 0 or 1 indicating if the UI for cookie banner handling should be visible,
+            0 to hide the UI and 1 to show the UI. The actual UI is composed by cookie banner section 
+            in the settings page, the toolbar section and the re-engagement dialog.
+        feature-setting-value:
+          description: An integer either 0 or 1 indicating if cookie banner setting should be enabled or disabled,
+             0 for setting the value to disabled, 1  for enabling the setting with the value reject_all.
+        dialog-re-engage-time:
+          description: An integer indicating the number of hours that needs to happen before
+            the re-engagement dialog shows again since the last seen, for example if set to 4
+            that means if the users has seen the dialog, it will see it 4 hours later.
+        dialog-text-variant:
+          description: An integer from 0 to 2, indicating which text variant should be used on the re-engagement dialog.
+            0 to indicate the variant control should be used, 1 indicates the variant 1 should be used,
+            2 indicates the variant 2 should be used, each variant can be found in the mockups for cookie banner handling.
+    OnboardingPanel:
+      description: The types of onboarding panels in the onboarding page
+      variants:
+        themes:
+          description: The themes onboarding panel where users pick themes
+        toolbar-placement:
+          description: The onboarding panel where users choose their toolbar placement (bottom or top)
+        sync:
+          description: The onboarding panel where users can sign in to sync
+        tcp:
+          description: The onboarding panel where users can choose their total cookie protection settings
+        privacy-notice:
+          description: The onboarding panel where users can tap to view our privacy notice.

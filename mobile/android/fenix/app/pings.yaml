@@ -1,0 +1,64 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+$schema: moz://mozilla.org/schemas/glean/pings/2-0-0
+
+activation:
+  description: |
+    This ping is intended to provide a measure of the activation of mobile
+    products. It's generated when Fenix starts, right after Glean is
+    initialized. It doesn't include the client_id, since it might be reporting
+    an hashed version of the Google Advertising ID.
+  include_client_id: false
+  bugs:
+    - https://bugzilla.mozilla.com/1538011/
+    - https://bugzilla.mozilla.com/1501822/
+  data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209
+  notification_emails:
+    - android-probes@mozilla.com
+
+first-session:
+  description: |
+    This ping is intended to capture the source of the app install
+    on the first session.
+  include_client_id: true
+  bugs:
+    - https://github.com/mozilla-mobile/fenix/issues/7295
+  data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202
+  notification_emails:
+    - android-probes@mozilla.com
+
+topsites-impression:
+  description: |
+    Recorded when a sponsored top site is rendered and visible on the home
+    screen. Visibility is qualified as when the homepage is brought to the
+    front of the Browser, and sponsored tiles are 100% visible on screen.
+  include_client_id: false
+  bugs:
+    - https://github.com/mozilla-mobile/fenix/issues/23893
+  data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/23945
+  notification_emails:
+    - android-probes@mozilla.com
+
+spoc:
+  description: |
+    Contains data identifying with which Pocket sponsored story the user
+    interacted with and the type of interaction: story impression or click.
+  include_client_id: false
+  reasons:
+    impression: |
+      A sponsored story had more than 50% of it's content visible
+      on the screen.
+    click: |
+      A sponsored story was clicked by the user.
+  bugs:
+    - https://github.com/mozilla-mobile/fenix/issues/27549
+    - https://mozilla-hub.atlassian.net/browse/FNXV2-21791
+  data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/27550#issuecomment-1295027631
+  notification_emails:
+    - android-probes@mozilla.com

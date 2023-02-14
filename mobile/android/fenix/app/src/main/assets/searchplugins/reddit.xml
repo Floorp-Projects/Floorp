@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+    <ShortName>Reddit</ShortName>
+    <Description>Search Reddit</Description>
+    <LongName>Reddit Search</LongName>
+    <Image width="16" height="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAD9UlEQVR4AcyYA9QkSwyF69k2j59te/Bs27Zt2/batm3btu1v+55eN6p6uPec/P/MlJJCchNTCHCj2YGsuYq0+dqTxp4MJ2VmkDZLkfifh6tNfdRXY0w5weVmD1LmHtKmticLvc8kEY3RWM2huUqn+JVmR9LmDU/mSZFCiObSnJq7eIrfaLYibR7yZJIWLYZobq2htQqr/BXmIFKmuyeUSLprzcIonzanW3a9mKdxen7Kp8wdnizWhGWSxdIhH+XZTOSOxNem1DtvkcXSyf3BFvrOP3A0PHMOXLFjsO3q3eCTO+C7x+C6PWPfhHSzusqieJuxg0FYsRyG94YGv8IX98FjJ8PwXqzD1LGxRki3WBcrH1xw5bXDq1bByyl4/gL4/SVoVwMpG4rvH7d5p4ciI2xR3OVLl8DyZXDZ9sG2bx4mAF0lm3sNi9gK5UV5gH++BkO7h7ddtQuMG8I6TBoJ1+zuEiPeCBCzPLlNtHSsA3V/jG6/cmf4/F748n5dN2futBEBFCMsmgucMQk+vasYc9+z4fWpXRTlbz0YhHsPLwbVqL0uGYnm83nKO9fB/NmQ2qIYBiyU7kbZUcEmlaIPHgNvXQ3fPAI9m8O08b5rfPsaeOg4SG9ZMCOku1GKl9ckl24LH9wMnerBvFlYoRNR3w9v1dh8T+FrGdDYaWdfzcJvL/o7md0GMlvDL8/B7GnkjDnT4feXfUMyW/knpzXeuELfXQxoLAOGx3YSf+nbho0wsi+M6k/BoFgwtAcbYVAXa0yQ7kYVg9hO1T6nbGj4m+0UZugEltqIWNkwY5LtBJbaDZg0iliIlInviBaIsOl7dF/1UV+Nie8rzJ1hNcB+hWp9SwykyEb9pWAE1BYgerFo+o/1CtkfsXarfwciIC4T6B8Jtbn2HT0Art/b+ojd3KiCz6ypbrv6StrxBCyndeVOTm7UPZDNmmK91/4bGEck1ObSVwnQZds5BjJXKjGgIyWDDHOmEq5krupnlAytKrmTOWc6fduhSsopCZ44zZ1OJ0po/n+PUMiwmw+Av9+AxQuJxLKlUOMruGEfWDCHUDT5O3lC45xSyht1aUAoWlb0SyJyq8oD/n8X6v8Ctb+DX1+Ad6+Ha/eAq3eFRr8TiiHdlPwnTykTJfVioo3+iKbKCj6iyo+cCDcf6J+M8oD3bhC3iWavoth+THFP6vMqq3x8O0yfQN6YOxO+fyKY6NjLKvkXtkS1lRMoaiaGSij/vGWrxLkXtvIuLerK/Pg0tKqsXMFnkksX+w9XQXDMQGhf06/MPX1WDnny+tJi4uJu+WX1EIO7Q3p4fUhPcAzpKaaRO8k38NOsoxPd9F9qMLrYY6gttwEAUidatlp2alsAAAAASUVORK5CYII=</Image>
+    <Url type="text/html" method="get" template="https://www.reddit.com/search/?q={searchTerms}"/>
+</SearchPlugin>

@@ -1,0 +1,55 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+task-defaults:
+    description: Run a simple UI test to verify Nightly build can start
+    treeherder:
+        kind: test
+        platform: 'nightly-start-test/opt'
+        tier: 2
+    worker-type: b-android
+    worker:
+        docker-image: {in-tree: ui-tests}
+        max-run-time: 7200
+        env:
+            GOOGLE_APPLICATION_CREDENTIALS: '.firebase_token.json'
+            GOOGLE_PROJECT: moz-fenix
+        artifacts:
+            - name: public
+              path: /builds/worker/artifacts
+              type: directory
+    run:
+        using: run-commands
+        use-caches: false
+        secrets:
+            - name: project/mobile/fenix/firebase
+              key: firebaseToken
+              path: .firebase_token.json
+              json: true
+    run-on-tasks-for: []
+    attributes:
+        build-type: nightly
+        # cannot safely run this in Firebase
+        # turning off til we can safely run test in taskcluster
+        # https://github.com/mozilla-mobile/fenix/issues/7702
+        #nightly: true
+    dependencies:
+        signing: signing-nightly
+        signing-android-test: signing-android-test-nightly
+
+tasks:
+    nightly-arm:
+        run:
+            commands:
+                - [wget, {artifact-reference: '<signing/public/build/arm64-v8a/target.apk>'}, '-O', app.apk]
+                - [wget, {artifact-reference: '<signing-android-test/public/build/noarch/target.apk>'}, '-O', android-test.apk]
+                - [automation/taskcluster/androidTest/ui-test.sh, arm-start-test, app.apk, android-test.apk, '1']
+        treeherder:
+            symbol: nightly(startup-arm)

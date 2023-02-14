@@ -1,0 +1,158 @@
+---
+loader: taskgraph.loader.transform:loader
+transforms:
+    - fenix_taskgraph.transforms.browsertime:transforms
+    - fenix_taskgraph.transforms.notify:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - signing
+    - toolchain
+
+primary-dependency: signing
+
+only-for-build-types:
+    - nightly-simulation
+
+only-for-abis:
+    - armeabi-v7a
+
+task-defaults:
+    attributes:
+        artifact_prefix: public/test_info
+        nightly-test: true
+    dependencies:
+        geckoview-nightly: geckoview-nightly
+    notify:
+        by-level:
+            '3':
+                email:
+                    content: This calls for an action of the Performance team. Use the link to view it on Treeherder.
+                    link:
+                        text: Treeherder Job
+                        href: 'https://treeherder.mozilla.org/#/jobs?repo={product_name}&revision={head_rev}&searchStr={task_name}'
+                    on-reasons: [failed]
+                    subject: '[{product_name}] Raptor-Browsertime job "{task_name}" failed'
+                    to-addresses: [perftest-alerts@mozilla.com]
+            default: {}
+    run-on-tasks-for: []
+    treeherder:
+        kind: test
+        tier: 2
+        platform:
+            by-abi:
+                armeabi-v7a: android-hw-a51-11-0-aarch64-shippable-qr/opt
+    worker-type:
+        by-abi:
+            armeabi-v7a: t-bitbar-gw-perf-a51
+    worker:
+        max-run-time: 3600
+        env:
+            GECKO_HEAD_REPOSITORY: "https://hg.mozilla.org/mozilla-central"
+            MOZ_AUTOMATION: "1"
+            MOZ_HIDE_RESULTS_TABLE: "1"
+            MOZ_NO_REMOTE: "1"
+            MOZ_NODE_PATH: "/usr/local/bin/node"
+            MOZHARNESS_CONFIG: "raptor/android_hw_config.py"
+            MOZHARNESS_SCRIPT: "raptor_script.py"
+            NEED_XVFB: "false"
+            NO_FAIL_ON_TEST_ERRORS: "1"
+            XPCOM_DEBUG_BREAK: "warn"
+            PYTHON: "python3"
+            LANG: "en_US.UTF-8"
+        artifacts:
+            - name: public/logs/
+              path: workspace/logs
+              type: directory
+
+            - name: public/test_info/
+              path: workspace/build/blobber_upload_dir
+              type: directory
+    run-visual-metrics: True
+    chimera: True
+    run:
+        using: run-task
+        checkout: false
+        run-as-root: true
+        command:
+            - 'bash'
+            - './test-linux.sh'
+            - '--cfg=mozharness/configs/raptor/android_hw_config.py'
+            - '--app=fenix'
+            - '--browsertime'
+            - '--binary=org.mozilla.fenix'
+            - '--activity=org.mozilla.fenix.IntentReceiverActivity'
+            - '--download-symbols=ondemand'
+            - '--browsertime-node=$MOZ_FETCHES_DIR/node/bin/node'
+            - '--browsertime-geckodriver=$MOZ_FETCHES_DIR/geckodriver'
+            - '--browsertime-ffmpeg=$MOZ_FETCHES_DIR/ffmpeg-4.1.4-i686-static/bin/ffmpeg'
+            - '--browsertime-browsertimejs=$MOZ_FETCHES_DIR/browsertime/node_modules/browsertime/bin/browsertime.js'
+            - '--conditioned-profile=settled'
+    fetches:
+        toolchain:
+            - browsertime
+            - linux64-ffmpeg-4.1.4
+            - linux64-geckodriver
+            - linux64-minidump-stackwalk
+            - linux64-node-16
+
+tasks:
+    tp6m:
+        run-with-fission: True
+        page-load-tests:
+            - amazon
+            - instagram
+            - [bing-search-restaurants, bing-s-r]
+            - [ebay-kleinanzeigen-search, ebay-k-s]
+            - wikipedia
+            - booking
+            - [cnn-ampstories, cnn-amp]
+            - dailymail
+            - imdb
+            - [facebook-cristiano, fb-cris]
+            - youtube
+            - bing
+            - [ebay-kleinanzeigen, ebay-k]
+            - [google-maps, gmaps]
+            - reddit
+            - sina
+            - [stackoverflow, stacko]
+            - web-de
+            - cnn
+            - [google-search-restaurants, gsearch-r]
+
+    tp6m-hv:
+        run-with-fission: True
+        page-load-tests:
+            - google
+            - [amazon-search, amazon-s]
+            - [microsoft-support, micros-sup]
+            - espn
+            - facebook
+            - [youtube-watch, youtube-w]
+            - allrecipes
+
+    speedometer3:
+        description: "Raptor Speedometer 3 Benchmark tests on Fenix"
+        test-name: speedometer3
+        run-visual-metrics: False
+        chimera: False
+
+    youtube-playback-av1-sfr:
+        description: "Raptor YouTube Playback AV1 SFR on Fenix"
+        test-name: youtube-playback-av1-sfr
+        run-visual-metrics: False
+        chimera: False
+
+    youtube-playback-h264-sfr:
+        description: "Raptor YouTube Playback H264 SFR on Fenix"
+        test-name: youtube-playback-h264-sfr
+        run-visual-metrics: False
+        chimera: False
+
+    youtube-playback-vp9-sfr:
+        description: "Raptor YouTube Playback VP9 SFR on Fenix"
+        run-visual-metrics: False
+        chimera: False
+        test-name: youtube-playback-vp9-sfr

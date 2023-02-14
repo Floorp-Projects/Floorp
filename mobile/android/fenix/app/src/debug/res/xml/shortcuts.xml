@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="open_new_tab"
+        android:enabled="true"
+        android:icon="@drawable/ic_static_shortcut_tab"
+        android:shortcutShortLabel="@string/home_screen_shortcut_open_new_tab_2"
+        android:shortcutLongLabel="@string/home_screen_shortcut_open_new_tab_2">
+        <intent
+            android:action="org.mozilla.fenix.OPEN_TAB"
+            android:targetPackage="org.mozilla.fenix.debug"
+            android:targetClass="org.mozilla.fenix.IntentReceiverActivity" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="open_new_private_tab"
+        android:enabled="true"
+        android:icon="@drawable/ic_static_shortcut_private_tab"
+        android:shortcutShortLabel="@string/home_screen_shortcut_open_new_private_tab_2"
+        android:shortcutLongLabel="@string/home_screen_shortcut_open_new_private_tab_2">
+        <intent
+            android:action="org.mozilla.fenix.OPEN_PRIVATE_TAB"
+            android:targetPackage="org.mozilla.fenix.debug"
+            android:targetClass="org.mozilla.fenix.IntentReceiverActivity" />
+    </shortcut>
+</shortcuts>

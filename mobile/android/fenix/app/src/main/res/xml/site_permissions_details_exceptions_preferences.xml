@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.preference.PreferenceScreen
+        xmlns:android="http://schemas.android.com/apk/res/android">
+    <androidx.preference.Preference
+            android:icon="@drawable/ic_camera_enabled"
+            android:key="@string/pref_key_phone_feature_camera"
+            android:title="@string/preference_phone_feature_camera"
+            android:summary="@string/preference_option_phone_feature_ask_to_allow"/>
+
+    <androidx.preference.Preference
+            android:icon="@drawable/ic_location_enabled"
+            android:key="@string/pref_key_phone_feature_location"
+            android:title="@string/preference_phone_feature_location"
+            android:summary="@string/preference_option_phone_feature_ask_to_allow"/>
+
+    <androidx.preference.Preference
+            android:icon="@drawable/ic_microphone_enabled"
+            android:key="@string/pref_key_phone_feature_microphone"
+            android:title="@string/preference_phone_feature_microphone"
+            android:summary="@string/preference_option_phone_feature_ask_to_allow"/>
+
+    <androidx.preference.Preference
+            android:icon="@drawable/ic_notifications_enabled"
+            android:key="@string/pref_key_phone_feature_notification"
+            android:title="@string/preference_phone_feature_notification"
+            android:summary="@string/preference_option_phone_feature_ask_to_allow"/>
+
+    <androidx.preference.Preference
+        android:icon="@drawable/ic_storage"
+        android:key="@string/pref_key_browser_feature_persistent_storage"
+        android:title="@string/preference_phone_feature_persistent_storage"
+        android:summary="@string/preference_option_phone_feature_ask_to_allow"/>
+
+    <androidx.preference.Preference
+        android:icon="@drawable/ic_cookies"
+        android:key="@string/pref_key_browser_feature_cross_origin_storage_access"
+        android:title="@string/preference_phone_feature_cross_origin_storage_access"
+        android:summary="@string/preference_option_phone_feature_ask_to_allow"/>
+
+    <androidx.preference.Preference
+        android:icon="@drawable/ic_link"
+        android:key="@string/pref_key_browser_feature_media_key_system_access"
+        android:title="@string/preference_phone_feature_media_key_system_access"
+        android:summary="@string/preference_option_phone_feature_ask_to_allow"/>
+
+    <androidx.preference.Preference
+        android:icon="@drawable/ic_autoplay"
+        android:key="@string/pref_key_browser_feature_autoplay_v2"
+        android:title="@string/preference_browser_feature_autoplay"
+        android:summary="@string/preference_option_phone_feature_ask_to_allow"/>
+
+    <androidx.preference.Preference
+            android:key="@string/pref_key_exceptions_clear_site_permissions"
+            android:layout="@layout/layout_clear_permission_button"/>
+
+</androidx.preference.PreferenceScreen>
