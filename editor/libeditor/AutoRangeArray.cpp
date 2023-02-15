@@ -127,6 +127,27 @@ void AutoRangeArray::EnsureOnlyEditableRanges(const Element& aEditingHost) {
     const OwningNonNull<nsRange>& range = mRanges[i - 1];
     if (!AutoRangeArray::IsEditableRange(range, aEditingHost)) {
       mRanges.RemoveElementAt(i - 1);
+      continue;
+    }
+    // Special handling for `inert` attribute. If anchor node is inert, the
+    // range should be treated as not editable.
+    nsIContent* anchorContent =
+        mDirection == eDirNext
+            ? nsIContent::FromNode(range->GetStartContainer())
+            : nsIContent::FromNode(range->GetEndContainer());
+    if (anchorContent && HTMLEditUtils::ContentIsInert(*anchorContent)) {
+      mRanges.RemoveElementAt(i - 1);
+      continue;
+    }
+    // Additionally, if focus node is inert, the range should be collapsed to
+    // anchor node.
+    nsIContent* focusContent =
+        mDirection == eDirNext
+            ? nsIContent::FromNode(range->GetEndContainer())
+            : nsIContent::FromNode(range->GetStartContainer());
+    if (focusContent && focusContent != anchorContent &&
+        HTMLEditUtils::ContentIsInert(*focusContent)) {
+      range->Collapse(mDirection == eDirNext);
     }
   }
   mAnchorFocusRange = mRanges.IsEmpty() ? nullptr : mRanges.LastElement().get();
@@ -206,12 +227,17 @@ AutoRangeArray::ExtendAnchorFocusRangeFor(
     return Err(NS_ERROR_FAILURE);
   }
 
-  // At this point, the anchor-focus ranges must match for bidi information.
-  // See `EditorBase::AutoCaretBidiLevelManager`.
-  MOZ_ASSERT(aEditorBase.SelectionRef().GetAnchorFocusRange()->StartRef() ==
-             mAnchorFocusRange->StartRef());
-  MOZ_ASSERT(aEditorBase.SelectionRef().GetAnchorFocusRange()->EndRef() ==
-             mAnchorFocusRange->EndRef());
+  // By a preceding call of EnsureOnlyEditableRanges(), anchor/focus range may
+  // have been changed.  In that case, we cannot use nsFrameSelection anymore.
+  // FIXME: We should make `nsFrameSelection::CreateRangeExtendedToSomewhere`
+  //        work without `Selection` instance.
+  if (MOZ_UNLIKELY(
+          aEditorBase.SelectionRef().GetAnchorFocusRange()->StartRef() !=
+              mAnchorFocusRange->StartRef() ||
+          aEditorBase.SelectionRef().GetAnchorFocusRange()->EndRef() !=
+              mAnchorFocusRange->EndRef())) {
+    return aDirectionAndAmount;
+  }
 
   RefPtr<nsFrameSelection> frameSelection =
       aEditorBase.SelectionRef().GetFrameSelection();
