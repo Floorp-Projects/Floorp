@@ -261,6 +261,16 @@ object TestHelper {
         return bitmap
     }
 
+    /**
+     * Wrapper for tests to run only when certain conditions are met.
+     * For example: this method will avoid accidentally running a test on GV versions where the feature is disabled.
+     */
+    fun runWithCondition(condition: Boolean, testBlock: () -> Unit) {
+        if (condition) {
+            testBlock()
+        }
+    }
+
     /********* Old code locators - used only in Screenshots tests  */
     // wait for web area to be visible
     @JvmStatic
