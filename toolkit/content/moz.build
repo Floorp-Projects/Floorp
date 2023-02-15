@@ -10,7 +10,7 @@ for var in ("CC", "CC_VERSION", "CXX", "RUSTC", "RUSTC_VERSION"):
     if CONFIG[var]:
         DEFINES[var] = CONFIG[var]
 
-for var in ("MOZ_CONFIGURE_OPTIONS",):
+for var in ("MOZ_CONFIGURE_OPTIONS", "MOZ_APP_DISPLAYNAME"):
     DEFINES[var] = CONFIG[var]
 
 if CONFIG["MOZ_ANDROID_FAT_AAR_ARCHITECTURES"]:
