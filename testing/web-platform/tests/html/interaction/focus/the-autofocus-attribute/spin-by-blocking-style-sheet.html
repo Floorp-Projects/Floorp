@@ -11,7 +11,8 @@
 'use strict';
 
 promise_test(async () => {
-  await waitForEvent(document.body, 'focus', {capture:true});
+  await waitForLoad(window);
+  await waitForAnimationFrame();
   assert_equals(document.activeElement.id, 'second');
 }, 'Script-blocking style sheet should pause flushing autofocus candidates.');
 </script>
