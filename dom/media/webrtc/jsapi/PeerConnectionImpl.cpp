@@ -1465,6 +1465,14 @@ void PeerConnectionImpl::NotifyDataChannel(
   mPCObserver->NotifyDataChannel(*domchannel, jrv);
 }
 
+void PeerConnectionImpl::NotifyDataChannelOpen(DataChannel*) {
+  mDataChannelsOpened++;
+}
+
+void PeerConnectionImpl::NotifyDataChannelClosed(DataChannel*) {
+  mDataChannelsClosed++;
+}
+
 NS_IMETHODIMP
 PeerConnectionImpl::CreateOffer(const RTCOfferOptions& aOptions) {
   JsepOfferOptions options;
@@ -3465,6 +3473,20 @@ RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
   }
 
   promises.AppendElement(GetDataChannelStats(mDataConnection, now));
+
+  auto pcStatsCollection = MakeUnique<dom::RTCStatsCollection>();
+  RTCPeerConnectionStats pcStats;
+  pcStats.mTimestamp.Construct(now);
+  pcStats.mType.Construct(RTCStatsType::Peer_connection);
+  pcStats.mId.Construct(NS_ConvertUTF8toUTF16(mHandle.c_str()));
+  pcStats.mDataChannelsOpened.Construct(mDataChannelsOpened);
+  pcStats.mDataChannelsClosed.Construct(mDataChannelsClosed);
+  if (!pcStatsCollection->mPeerConnectionStats.AppendElement(std::move(pcStats),
+                                                             fallible)) {
+    mozalloc_handle_oom(0);
+  }
+  promises.AppendElement(RTCStatsPromise::CreateAndResolve(
+      std::move(pcStatsCollection), __func__));
 
   // This is what we're going to return; all the stuff in |promises| will be
   // accumulated here.
