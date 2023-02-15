@@ -36,6 +36,15 @@ enum RTCIceConnectionState {
     "closed"
 };
 
+enum RTCPeerConnectionState {
+  "closed",
+  "failed",
+  "disconnected",
+  "new",
+  "connecting",
+  "connected"
+};
+
 enum mozPacketDumpType {
   "rtp", // dump unencrypted rtp as the MediaPipeline sees it
   "srtp", // dump encrypted rtp as the MediaPipeline sees it
@@ -107,6 +116,7 @@ interface RTCPeerConnection : EventTarget  {
   readonly attribute boolean? canTrickleIceCandidates;
   readonly attribute RTCIceGatheringState iceGatheringState;
   readonly attribute RTCIceConnectionState iceConnectionState;
+  readonly attribute RTCPeerConnectionState connectionState;
   undefined restartIce ();
   [Pref="media.peerconnection.identity.enabled"]
   readonly attribute Promise<RTCIdentityAssertion> peerIdentity;
@@ -160,6 +170,7 @@ interface RTCPeerConnection : EventTarget  {
   attribute EventHandler ontrack;     // replaces onaddtrack and onaddstream.
   attribute EventHandler oniceconnectionstatechange;
   attribute EventHandler onicegatheringstatechange;
+  attribute EventHandler onconnectionstatechange;
 
   Promise<RTCStatsReport> getStats (optional MediaStreamTrack? selector = null);
 
