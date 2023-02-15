@@ -216,7 +216,7 @@ nsresult nsStyledElement::BindToTree(BindContext& aContext, nsINode& aParent) {
 
   if (HasAttr(nsGkAtoms::autofocus) && aContext.AllowsAutoFocus() &&
       (!IsSVGElement() || IsFocusable())) {
-    aContext.OwnerDoc().ElementWithAutoFocusInserted(this);
+    aContext.OwnerDoc().SetAutoFocusElement(this);
   }
 
   return NS_OK;

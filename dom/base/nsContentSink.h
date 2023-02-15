@@ -169,10 +169,6 @@ class nsContentSink : public nsICSSLoaderObserver,
 
   Document* GetDocument() { return mDocument; }
 
-  // Later on we might want to make this more involved somehow
-  // (e.g. stop waiting after some timeout or whatnot).
-  bool WaitForPendingSheets() { return mPendingSheetCount > 0; }
-
  protected:
   inline int32_t GetNotificationInterval() {
     if (mDynamicLowerValue) {
@@ -183,6 +179,10 @@ class nsContentSink : public nsICSSLoaderObserver,
   }
 
   virtual nsresult FlushTags() = 0;
+
+  // Later on we might want to make this more involved somehow
+  // (e.g. stop waiting after some timeout or whatnot).
+  bool WaitForPendingSheets() { return mPendingSheetCount > 0; }
 
   void DoProcessLinkHeader();
 

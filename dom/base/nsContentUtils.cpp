@@ -2983,59 +2983,6 @@ BrowserParent* nsContentUtils::GetCommonBrowserParentAncestor(
 }
 
 /* static */
-Element* nsContentUtils::GetTargetElement(Document* aDocument,
-                                          const nsAString& aAnchorName) {
-  MOZ_ASSERT(aDocument);
-
-  if (aAnchorName.IsEmpty()) {
-    return nullptr;
-  }
-  // 1. If there is an element in the document tree that has an ID equal to
-  //    fragment, then return the first such element in tree order.
-  if (Element* el = aDocument->GetElementById(aAnchorName)) {
-    return el;
-  }
-
-  // 2. If there is an a element in the document tree that has a name
-  // attribute whose value is equal to fragment, then return the first such
-  // element in tree order.
-  //
-  // FIXME(emilio): Why the different code-paths for HTML and non-HTML docs?
-  if (aDocument->IsHTMLDocument()) {
-    nsCOMPtr<nsINodeList> list = aDocument->GetElementsByName(aAnchorName);
-    // Loop through the named nodes looking for the first anchor
-    uint32_t length = list->Length();
-    for (uint32_t i = 0; i < length; i++) {
-      nsIContent* node = list->Item(i);
-      if (node->IsHTMLElement(nsGkAtoms::a)) {
-        return node->AsElement();
-      }
-    }
-  } else {
-    constexpr auto nameSpace = u"http://www.w3.org/1999/xhtml"_ns;
-    // Get the list of anchor elements
-    nsCOMPtr<nsINodeList> list =
-        aDocument->GetElementsByTagNameNS(nameSpace, u"a"_ns);
-    // Loop through the anchors looking for the first one with the given name.
-    for (uint32_t i = 0; true; i++) {
-      nsIContent* node = list->Item(i);
-      if (!node) {  // End of list
-        break;
-      }
-
-      // Compare the name attribute
-      if (node->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
-                                         aAnchorName, eCaseMatters)) {
-        return node->AsElement();
-      }
-    }
-  }
-
-  // 3. Return null.
-  return nullptr;
-}
-
-/* static */
 template <typename FPT, typename FRT, typename SPT, typename SRT>
 Maybe<int32_t> nsContentUtils::ComparePoints(
     const RangeBoundaryBase<FPT, FRT>& aFirstBoundary,

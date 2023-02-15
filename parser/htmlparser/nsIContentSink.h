@@ -90,12 +90,6 @@ class nsIContentSink : public nsISupports {
   virtual void WillResume() = 0;
 
   /**
-   * This method returns nullptr unless `this` can
-   * be cast as nsHtml5TreeOpExecutor.
-   */
-  virtual nsIContentSink* AsExecutor() { return nullptr; }
-
-  /**
    * This method gets called by the parser so that the content
    * sink can retain a reference to the parser. The expectation
    * is that the content sink will drop the reference when it

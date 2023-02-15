@@ -131,8 +131,6 @@ class nsHtml5TreeOpExecutor final
    */
   void WillResume() override;
 
-  virtual nsIContentSink* AsExecutor() override { return this; }
-
   virtual void InitialTranslationCompleted() override;
 
   /**
