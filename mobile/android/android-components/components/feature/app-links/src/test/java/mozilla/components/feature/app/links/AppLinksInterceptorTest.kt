@@ -13,6 +13,7 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -499,5 +500,24 @@ class AppLinksInterceptorTest {
         val testRedirect = AppLinkRedirect(null, fallbackUrl, null)
         val response = appLinksInterceptor.handleRedirect(testRedirect, webUrl)
         assert(response is RequestInterceptor.InterceptionResponse.Url)
+    }
+
+    @Test
+    fun `WHEN url have same domain THEN is same domain returns true ELSE false`() {
+        appLinksInterceptor = AppLinksInterceptor(
+            context = mockContext,
+            interceptLinkClicks = true,
+            launchInApp = { true },
+            useCases = mockUseCases,
+            launchFromInterceptor = true,
+        )
+
+        assert(appLinksInterceptor.isSameDomain("maps.google.com", "www.google.com"))
+        assert(appLinksInterceptor.isSameDomain("mobile.mozilla.com", "www.mozilla.com"))
+        assert(appLinksInterceptor.isSameDomain("m.mozilla.com", "maps.mozilla.com"))
+
+        assertFalse(appLinksInterceptor.isSameDomain("www.google.ca", "www.google.com"))
+        assertFalse(appLinksInterceptor.isSameDomain("maps.google.ca", "m.google.com"))
+        assertFalse(appLinksInterceptor.isSameDomain("accounts.google.com", "www.google.com"))
     }
 }

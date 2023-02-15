@@ -18,6 +18,7 @@ import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 private const val WWW = "www."
 private const val M = "m."
 private const val MOBILE = "mobile."
+private const val MAPS = "maps."
 
 /**
  * This feature implements use cases for detecting and handling redirects to external apps. The user
@@ -144,18 +145,21 @@ class AppLinksInterceptor(
         return null
     }
 
-    // for app links interceptor any domains such as example.com, www.example.com and m.example.com
-    // are considered as the same domain
-    private fun isSameDomain(url1: String?, url2: String?): Boolean {
+    // Determines if the transition between the two URLs is related.  If the two URLs
+    // are from the same website then the app links interceptor will not try to find an application to open it.
+    @VisibleForTesting
+    internal fun isSameDomain(url1: String?, url2: String?): Boolean {
         return stripCommonSubDomains(url1?.tryGetHostFromUrl()) == stripCommonSubDomains(url2?.tryGetHostFromUrl())
     }
 
+    // Remove subdomains that are ignored when determining if two URLs are from the same website.
     private fun stripCommonSubDomains(url: String?): String? {
         return when {
             url == null -> return null
             url.startsWith(WWW) -> url.replaceFirst(WWW, "")
             url.startsWith(M) -> url.replaceFirst(M, "")
             url.startsWith(MOBILE) -> url.replaceFirst(MOBILE, "")
+            url.startsWith(MAPS) -> url.replaceFirst(MAPS, "")
             else -> url
         }
     }
