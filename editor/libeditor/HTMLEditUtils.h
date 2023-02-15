@@ -1457,17 +1457,8 @@ class HTMLEditUtils final {
       return EditorDOMRangeType();
     }
     return EditorDOMRangeType(
-        typename EditorDOMRangeType::PointType(
-            firstListItem->GetFirstChild() &&
-                    firstListItem->GetFirstChild()->IsText()
-                ? firstListItem->GetFirstChild()
-                : static_cast<nsIContent*>(firstListItem),
-            0u),
-        EditorDOMRangeType::PointType::AtEndOf(
-            lastListItem->GetLastChild() &&
-                    lastListItem->GetLastChild()->IsText()
-                ? *lastListItem->GetFirstChild()
-                : static_cast<nsIContent&>(*lastListItem)));
+        typename EditorDOMRangeType::PointType(firstListItem, 0u),
+        EditorDOMRangeType::PointType::AtEndOf(*lastListItem));
   }
 
   /**
