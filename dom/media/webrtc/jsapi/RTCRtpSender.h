@@ -76,13 +76,12 @@ class RTCRtpSender : public nsISupports,
   nsTArray<RefPtr<RTCStatsPromise>> GetStatsInternal(
       bool aSkipIceStats = false);
 
-  // This would just be stream ids, except PeerConnection.jsm uses GetStreams
-  // to implement the non-standard RTCPeerConnection.getLocalStreams. We might
-  // be able to simplify this later.
-  // ChromeOnly webidl
-  void SetStreams(const Sequence<OwningNonNull<DOMMediaStream>>& aStreams);
+  void SetStreams(const Sequence<OwningNonNull<DOMMediaStream>>& aStreams,
+                  ErrorResult& aRv);
   // ChromeOnly webidl
   void GetStreams(nsTArray<RefPtr<DOMMediaStream>>& aStreams);
+  // ChromeOnly webidl
+  void SetStreamsImpl(const Sequence<OwningNonNull<DOMMediaStream>>& aStreams);
   // ChromeOnly webidl
   void SetTrack(const RefPtr<MediaStreamTrack>& aTrack);
   void Shutdown();

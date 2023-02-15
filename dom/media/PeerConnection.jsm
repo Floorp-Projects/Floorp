@@ -1385,7 +1385,7 @@ class RTCPeerConnection {
 
     if (transceiver) {
       transceiver.sender.setTrack(track);
-      transceiver.sender.setStreams(streams);
+      transceiver.sender.setStreamsImpl(...streams);
       if (transceiver.direction == "recvonly") {
         transceiver.setDirectionInternal("sendrecv");
       } else if (transceiver.direction == "inactive") {

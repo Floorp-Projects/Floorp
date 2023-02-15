@@ -226,7 +226,7 @@ void RTCRtpTransceiver::Init(const RTCRtpTransceiverInit& aInit,
     InitConduitControl();
   }
 
-  mSender->SetStreams(aInit.mStreams);
+  mSender->SetStreamsImpl(aInit.mStreams);
   mDirection = aInit.mDirection;
 }
 
