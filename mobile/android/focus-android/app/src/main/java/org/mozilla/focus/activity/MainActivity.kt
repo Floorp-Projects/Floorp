@@ -24,6 +24,7 @@ import androidx.core.view.isVisible
 import androidx.preference.PreferenceManager
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.feature.search.widget.BaseVoiceSearchActivity
 import mozilla.components.lib.auth.canUseBiometricFeature
 import mozilla.components.lib.crash.Crash
 import mozilla.components.service.glean.private.NoExtras
@@ -281,6 +282,10 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     }
 
     private fun handleAppRestoreFromBackground(intent: SafeIntent) {
+        if (!intent.extras?.getString(BaseVoiceSearchActivity.SPEECH_PROCESSING).isNullOrEmpty()) {
+            handleAppNavigation(intent)
+            return
+        }
         when (components.appStore.state.screen) {
             is Screen.Settings -> components.appStore.dispatch(
                 AppAction.OpenSettings(
