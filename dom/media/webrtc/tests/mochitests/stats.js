@@ -154,6 +154,26 @@ const statsExpectedByType = {
     unimplemented: ["mediaTrackId", "transportId", "sliCount", "targetBitrate"],
     deprecated: ["isRemote"],
   },
+  "media-source": {
+    expected: ["id", "timestamp", "type", "trackIdentifier", "kind"],
+    unimplemented: [
+      "audioLevel",
+      "totalAudioEnergy",
+      "totalSamplesDuration",
+      "echoReturnLoss",
+      "echoReturnLossEnhancement",
+      "droppedSamplesDuration",
+      "droppedSamplesEvents",
+      "totalCaptureDelay",
+      "totalSamplesCaptured",
+      "width",
+      "height",
+      "frames",
+      "framesPerSecond",
+    ],
+    optional: [],
+    deprecated: [],
+  },
   csrc: { skip: true },
   codec: {
     expected: [
@@ -1024,6 +1044,14 @@ function pedanticChecks(report) {
           `${stat.type}.timestamp, and no older than 30 seconds. ` +
           `difference=${ageSeconds}s`
       );
+    } else if (stat.type == "media-source") {
+      // trackIdentifier
+      is(typeof stat.trackIdentifier, "string");
+      isnot(stat.trackIdentifier, "");
+
+      // kind
+      is(typeof stat.kind, "string");
+      ok(stat.kind == "audio" || stat.kind == "video");
     } else if (stat.type == "codec") {
       //
       // Required fields
