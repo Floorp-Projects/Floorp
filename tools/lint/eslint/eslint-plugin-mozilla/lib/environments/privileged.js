@@ -799,8 +799,5 @@ module.exports = {
     XULScrollElement: false,
     XULTextElement: false,
     console: false,
-    mozRTCIceCandidate: false,
-    mozRTCPeerConnection: false,
-    mozRTCSessionDescription: false,
   },
 };
