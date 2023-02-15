@@ -712,6 +712,27 @@ void MacroAssembler::branchTruncateFloat32MaybeModUint32(FloatRegister src,
   as_sll(dest, dest, 0);
 }
 
+void MacroAssembler::branchTruncateDoubleToInt32(FloatRegister src,
+                                                 Register dest, Label* fail) {
+  ScratchRegisterScope scratch(asMasm());
+  ScratchDoubleScope fpscratch(asMasm());
+
+  // Convert scalar to signed 64-bit fixed-point, rounding toward zero.
+  // In the case of -0, the output is zero.
+  // In the case of overflow, the output is:
+  //   - MIPS64R2: 2^63-1
+  //   - MIPS64R6: saturated
+  // In the case of NaN, the output is:
+  //   - MIPS64R2: 2^63-1
+  //   - MIPS64R6: 0
+  as_truncld(fpscratch, src);
+  moveFromDouble(fpscratch, dest);
+
+  // Fail on overflow cases, besides MIPS64R2 will also fail here on NaN cases.
+  as_sll(scratch, dest, 0);
+  ma_b(dest, scratch, fail, Assembler::NotEqual);
+}
+
 void MacroAssembler::fallibleUnboxPtr(const ValueOperand& src, Register dest,
                                       JSValueType type, Label* fail) {
   MOZ_ASSERT(type == JSVAL_TYPE_OBJECT || type == JSVAL_TYPE_STRING ||
