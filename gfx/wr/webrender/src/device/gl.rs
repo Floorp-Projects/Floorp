@@ -1728,12 +1728,17 @@ impl Device {
         // from a non-zero offset within a PBO to fail. See bug 1603783.
         let supports_nonzero_pbo_offsets = !is_macos;
 
-        // On Mali-Gxx and Txxx there is a driver bug when rendering partial updates to
-        // offscreen render targets, so we must ensure we render to the entire target.
-        // See bug 1663355.
-        let is_mali_g = renderer_name.starts_with("Mali-G");
-        let is_mali_t = renderer_name.starts_with("Mali-T");
-        let supports_render_target_partial_update = !is_mali_g && !is_mali_t;
+        // We have encountered several issues when only partially updating render targets on a
+        // variety of Mali GPUs. As a precaution avoid doing so on all Midgard and Bifrost GPUs.
+        // Valhall (eg Mali-Gx7 onwards) appears to be unnaffected. See bug 1691955, bug 1558374,
+        // and bug 1663355.
+        let supports_render_target_partial_update = !(renderer_name.starts_with("Mali-T")
+            || renderer_name == "Mali-G31"
+            || renderer_name == "Mali-G51"
+            || renderer_name == "Mali-G71"
+            || renderer_name == "Mali-G52"
+            || renderer_name == "Mali-G72"
+            || renderer_name == "Mali-G76");
 
         let supports_shader_storage_object = match gl.get_type() {
             // see https://www.g-truc.net/post-0734.html
@@ -1777,7 +1782,7 @@ impl Device {
         if is_software_webrender {
             // No benefit to batching texture uploads with swgl.
             requires_batched_texture_uploads = Some(false);
-        } else if is_mali_g {
+        } else if renderer_name.starts_with("Mali-G") {
             // On Mali-Gxx the driver really struggles with many small texture uploads,
             // and handles fewer, larger uploads better.
             requires_batched_texture_uploads = Some(true);
@@ -1786,7 +1791,7 @@ impl Device {
         // On Mali-Txxx devices we have observed crashes during draw calls when rendering
         // to an alpha target immediately after using glClear to clear regions of it.
         // Using a shader to clear the regions avoids the crash. See bug 1638593.
-        let supports_alpha_target_clears = !is_mali_t;
+        let supports_alpha_target_clears = !renderer_name.starts_with("Mali-T");
 
         // On Adreno 4xx devices with older drivers we have seen render tasks to alpha targets have
         // no effect unless the target is fully cleared prior to rendering. See bug 1714227.
