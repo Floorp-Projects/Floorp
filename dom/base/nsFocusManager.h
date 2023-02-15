@@ -214,8 +214,7 @@ class nsFocusManager final : public nsIFocusManager,
    * Setter for focusedWindow with CallerType
    */
   MOZ_CAN_RUN_SCRIPT nsresult SetFocusedWindowWithCallerType(
-      mozIDOMWindowProxy* aWindowToFocus, mozilla::dom::CallerType aCallerType,
-      uint64_t aActionId);
+      mozIDOMWindowProxy* aWindowToFocus, mozilla::dom::CallerType aCallerType);
 
   /**
    * Given an element, which must be the focused element, activate the remote
@@ -314,10 +313,13 @@ class nsFocusManager final : public nsIFocusManager,
    *
    * All actual focus changes must use this method to do so. (as opposed
    * to those that update the focus in an inactive window for instance).
+   *
+   * Returns Nothing() if we end up not trying to focus the element,
+   * otherwise returns the generated action id.
    */
-  MOZ_CAN_RUN_SCRIPT void SetFocusInner(mozilla::dom::Element* aNewContent,
-                                        int32_t aFlags, bool aFocusChanged,
-                                        bool aAdjustWidget, uint64_t aActionId);
+  MOZ_CAN_RUN_SCRIPT Maybe<uint64_t> SetFocusInner(
+      mozilla::dom::Element* aNewContent, int32_t aFlags, bool aFocusChanged,
+      bool aAdjustWidget);
 
   /**
    * Returns true if aPossibleAncestor is the same as aWindow or an
