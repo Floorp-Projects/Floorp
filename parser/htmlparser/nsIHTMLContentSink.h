@@ -83,6 +83,12 @@ class nsIHTMLContentSink : public nsIContentSink {
    * @param  aTag - The tag to be closed.
    */
   NS_IMETHOD CloseContainer(ElementType aTag) = 0;
+
+  /**
+   *  This method returns true if there are more than one
+   *  pending style sheets, false otherwise.
+   */
+  virtual bool WaitForPendingSheets() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLContentSink, NS_IHTML_CONTENT_SINK_IID)

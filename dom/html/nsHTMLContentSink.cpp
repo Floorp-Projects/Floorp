@@ -114,6 +114,7 @@ class HTMLContentSink : public nsContentSink, public nsIHTMLContentSink {
   virtual void SetDocumentCharset(NotNull<const Encoding*> aEncoding) override;
   virtual nsISupports* GetTarget() override;
   virtual bool IsScriptExecuting() override;
+  virtual bool WaitForPendingSheets() override;
   virtual void ContinueInterruptedParsingAsync() override;
 
   // nsIHTMLContentSink
@@ -922,6 +923,10 @@ void HTMLContentSink::ContinueInterruptedParsingIfEnabled() {
   if (mParser && mParser->IsParserEnabled()) {
     static_cast<nsIParser*>(mParser.get())->ContinueInterruptedParsing();
   }
+}
+
+bool HTMLContentSink::WaitForPendingSheets() {
+  return nsContentSink::WaitForPendingSheets();
 }
 
 void HTMLContentSink::ContinueInterruptedParsingAsync() {

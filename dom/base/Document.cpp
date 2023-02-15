@@ -381,6 +381,7 @@
 #include "nsIX509Cert.h"
 #include "nsIX509CertValidity.h"
 #include "nsIXMLContentSink.h"
+#include "nsIHTMLContentSink.h"
 #include "nsIXULRuntime.h"
 #include "nsImageLoadingContent.h"
 #include "nsImportModule.h"
@@ -12790,6 +12791,27 @@ void Document::FlushAutoFocusCandidates() {
       iter.Remove();
       continue;
     }
+
+    nsCOMPtr<nsIContentSink> sink =
+        do_QueryInterface(autoFocusElementDoc->GetCurrentContentSink());
+    if (sink) {
+      nsHtml5TreeOpExecutor* executor =
+          static_cast<nsHtml5TreeOpExecutor*>(sink->AsExecutor());
+      if (executor) {
+        // This is a HTML5 document
+        MOZ_ASSERT(autoFocusElementDoc->IsHTMLDocument());
+        // If doc's script-blocking style sheet counter is greater than 0, th
+        // return.
+        if (executor->WaitForPendingSheets()) {
+          // In this case, element is the currently-best candidate, but doc is
+          // not ready for autofocusing. We'll try again next time flush
+          // autofocus candidates is called.
+          ScheduleFlushAutoFocusCandidates();
+          return;
+        }
+      }
+    }
+
     // The autofocus element could be moved to a different
     // top level BC.
     if (bc->Top()->GetDocument() != this) {
