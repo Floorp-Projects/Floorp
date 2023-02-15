@@ -277,6 +277,7 @@ class GCRuntime {
     MOZ_ASSERT(JS::shadow::Zone::from(zone)->isAtomsZone());
     return zone;
   }
+  Zone* maybeSharedAtomsZone() { return sharedAtomsZone_; }
 
   [[nodiscard]] bool freezeSharedAtomsZone();
   void restoreSharedAtomsZone();
