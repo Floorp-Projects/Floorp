@@ -31,7 +31,7 @@
             android:layout_marginTop="8dp"
             android:layout_marginEnd="32dp"
             android:lineSpacingExtra="2dp"
-            android:text="@string/private_mode_cfr_message"
+            android:text="@string/private_mode_cfr_message_2"
             android:textColor="@color/fx_mobile_text_color_oncolor_primary"
             app:layout_constraintBottom_toTopOf="@id/cfr_pos_button"
             app:layout_constraintEnd_toEndOf="parent"
