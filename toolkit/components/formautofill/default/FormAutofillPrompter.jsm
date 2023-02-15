@@ -644,11 +644,14 @@ let FormAutofillPrompter = {
           DESCRIPTION_ID,
           description
         );
-        this._updateDescription(
-          notificationContent,
-          ADDITIONAL_DESCRIPTION_ID,
-          additionalDescription
-        );
+
+        if (additionalDescription) {
+          this._updateDescription(
+            notificationContent,
+            ADDITIONAL_DESCRIPTION_ID,
+            additionalDescription
+          );
+        }
       };
       this._setAnchor(browser, anchor);
       chromeWin.PopupNotifications.show(
