@@ -26,6 +26,7 @@ export class FeatureCallout {
     this.browser = browser || this.win.docShell.chromeEventHandler;
     this.config = null;
     this.loadingConfig = false;
+    this.message = null;
     this.currentScreen = null;
     this.renderObserver = null;
     this.savedActiveElement = null;
@@ -248,6 +249,16 @@ export class FeatureCallout {
     // This means the message was misconfigured, mistargeted, or the
     // content of the parent page is not as expected.
     if (!parent && !this.currentScreen?.content.callout_position_override) {
+      if (this.message?.template === "feature_callout") {
+        Services.telemetry.recordEvent(
+          "messaging_experiments",
+          "feature_callout",
+          "create_failed",
+          `${this.message.id || "no_message"}-${this.currentScreen
+            ?.parent_selector || "no_current_screen"}`
+        );
+      }
+
       return false;
     }
 
@@ -764,6 +775,7 @@ export class FeatureCallout {
       id: "featureCalloutCheck",
       context: { source: this.page },
     });
+    this.message = result.message;
     this.loadingConfig = false;
 
     if (result.message.template !== "feature_callout") {

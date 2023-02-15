@@ -1456,6 +1456,25 @@ messaging_experiments:
     notification_emails:
       - ujet@mozilla.com
     expiry_version: never
+  feature_callout:
+    objects:
+      - create_failed
+    methods:
+      - feature_callout
+    release_channel_collection: opt-out
+    products:
+      - firefox
+    record_in_processes:
+      - main
+    description: >
+      Record errors when the feature callout surface is unable to be
+      created due to a missing parent element. The value field contains a
+      concatenation of the Message ID and the parent selector.
+    bug_numbers:
+      - 1788996
+    notification_emails:
+      - omc@mozilla.com
+    expiry_version: never
 
 # This category contains event entries used for Telemetry tests.
 # They will not be sent out with any pings.
