@@ -624,9 +624,9 @@ class ProtocolHandler(object):
         return """
         {{
           .mScheme = {scheme},
-          .mModuleID = {module_id},
           .mProtocolFlags = {flags},
           .mDefaultPort = {default_port},
+          .mModuleID = {module_id},
           .mHasDynamicFlags = {has_dynamic_flags},
         }}
         """.format(
