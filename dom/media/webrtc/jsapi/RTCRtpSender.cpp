@@ -993,6 +993,18 @@ Sequence<RTCRtpEncodingParameters> RTCRtpSender::GetMatchingEncodings(
 }
 
 void RTCRtpSender::SetStreams(
+    const Sequence<OwningNonNull<DOMMediaStream>>& aStreams, ErrorResult& aRv) {
+  if (mPc->IsClosed()) {
+    aRv.ThrowInvalidStateError(
+        "Cannot call setStreams if the peer connection is closed");
+    return;
+  }
+
+  SetStreamsImpl(aStreams);
+  mPc->UpdateNegotiationNeeded();
+}
+
+void RTCRtpSender::SetStreamsImpl(
     const Sequence<OwningNonNull<DOMMediaStream>>& aStreams) {
   mStreams.Clear();
   for (const auto& stream : aStreams) {
