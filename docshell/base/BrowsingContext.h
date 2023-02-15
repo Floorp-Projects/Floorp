@@ -1077,6 +1077,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void DidSet(FieldIndex<IDX_PrefersColorSchemeOverride>,
               dom::PrefersColorSchemeOverride aOldValue);
 
+  template <typename Callback>
+  void WalkPresContexts(Callback&&);
   void PresContextAffectingFieldChanged();
 
   void DidSet(FieldIndex<IDX_MediumOverride>, nsString&& aOldValue);
@@ -1088,6 +1090,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   bool CanSet(FieldIndex<IDX_TouchEventsOverrideInternal>,
               dom::TouchEventsOverride aTouchEventsOverride,
               ContentParent* aSource);
+  void DidSet(FieldIndex<IDX_TouchEventsOverrideInternal>,
+              dom::TouchEventsOverride&& aOldValue);
 
   bool CanSet(FieldIndex<IDX_DisplayMode>, const enum DisplayMode& aDisplayMode,
               ContentParent* aSource) {
