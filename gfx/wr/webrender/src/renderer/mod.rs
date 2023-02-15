@@ -2370,7 +2370,10 @@ impl Renderer {
             self.set_blend(false, framebuffer_kind);
 
             let clear_color = target.clear_color.map(|c| c.to_array());
-            let scissor_rect = if self.device.get_capabilities().supports_render_target_partial_update {
+            let scissor_rect = if self.device.get_capabilities().supports_render_target_partial_update
+                && (target.dirty_rect != target.valid_rect
+                    || self.device.get_capabilities().prefers_clear_scissor)
+            {
                 Some(target.dirty_rect)
             } else {
                 None
