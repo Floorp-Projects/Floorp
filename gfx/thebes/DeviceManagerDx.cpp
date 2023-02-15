@@ -25,17 +25,10 @@
 #include "nsPrintfCString.h"
 #include "nsString.h"
 
-#undef _WIN32_WINNT
-#define _WIN32_WINNT _WIN32_WINNT_WINBLUE
-#undef NTDDI_VERSION
-#define NTDDI_VERSION NTDDI_WINBLUE
+// -
 
-// We also need this, or dcomp.h won't give us e.g. IDCompositionDevice3:
-#undef _WIN32_WINNT_WINTHRESHOLD
-#define _WIN32_WINNT_WINTHRESHOLD _WIN32_WINNT
-
+#include "mozilla/gfx/AllOfDcomp.h"
 #include <d3d11.h>
-#include <dcomp.h>
 #include <ddraw.h>
 #include <dxgi.h>
 
