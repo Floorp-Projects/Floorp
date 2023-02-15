@@ -38,3 +38,43 @@ browser.launched_to_handle:
           launched to complete.
         type: string
     telemetry_mirror: BrowserLaunched_to_handle_SystemNotification_Toast
+
+background_update:
+  reasons_to_not_update:
+    type: string_list
+    description: >
+      Records which error was causing the background updater to fail.
+      This list supercedes the `background-update.reason` in
+      `mozapps/update/metrics.yaml`
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1795471
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1795471
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - background-update
+      - metrics
+    lifetime: application
+
+  time_last_update_scheduled:
+    type: datetime
+    time_unit: day
+    description: >
+      Last time the background update was triggered.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1795471
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1795471
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - background-update
+      - metrics
+    lifetime: application

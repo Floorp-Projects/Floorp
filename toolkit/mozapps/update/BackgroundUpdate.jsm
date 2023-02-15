@@ -194,6 +194,8 @@ var BackgroundUpdate = {
       reasons.push(this.REASON.MANUAL_UPDATE_ONLY);
     }
 
+    this._recordGleanMetrics(reasons);
+
     return reasons;
   },
 
@@ -262,6 +264,8 @@ var BackgroundUpdate = {
     if (!serviceRegKeyExists) {
       reasons.push(this.REASON.SERVICE_REGISTRY_KEY_MISSING);
     }
+
+    this._recordGleanMetrics(reasons);
 
     return reasons;
   },
@@ -389,6 +393,9 @@ var BackgroundUpdate = {
     lazy.log.info(
       `${SLUG}: checking eligibility before scheduling background update task`
     );
+
+    // datetime with an empty parameter records 'now'
+    Glean.backgroundUpdate.timeLastUpdateScheduled.set();
 
     let previousEnabled;
     let successfullyReadPrevious;
@@ -773,6 +780,35 @@ var BackgroundUpdate = {
     }
 
     return defaultProfileTargetingSnapshot;
+  },
+
+  /**
+   * Local helper function to record all reasons why the background updater is
+   * not used with Glean. This function will only track the first 20 reasons.
+   * It is also fault tolerant and will only display debug messages if the
+   * metric cannot be recorded for any reason.
+   *
+   * @param {array of strings} [reasons]
+   *        a list of BackgroundUpdate.REASON values (=> string)
+   */
+  async _recordGleanMetrics(reasons) {
+    // Record Glean metrics with all the reasons why the update was impossible.
+    for (const [key, value] of Object.entries(this.REASON)) {
+      if (reasons.includes(value)) {
+        try {
+          // `testGetValue` throws `NS_ERROR_LOSS_OF_SIGNIFICANT_DATA` in case
+          // of `InvalidOverflow` and other outstanding errors.
+          Glean.backgroundUpdate.reasonsToNotUpdate.testGetValue();
+          Glean.backgroundUpdate.reasonsToNotUpdate.add(key);
+        } catch (e) {
+          // Debug print an error message and break the loop to avoid Glean
+          // messages on the console would otherwise be caused by the add().
+          lazy.log.debug("Error recording reasonsToNotUpdate");
+          console.log("Error recording reasonsToNotUpdate");
+          break;
+        }
+      }
+    }
   },
 };
 
