@@ -305,6 +305,10 @@ class AudioContext final : public DOMEventTargetHelper,
 
   bool IsOffline() const { return mIsOffline; }
 
+  bool ShouldResistFingerprinting() const {
+    return mShouldResistFingerprinting;
+  }
+
   MediaTrackGraph* Graph() const;
   AudioNodeTrack* DestinationTrack() const;
 

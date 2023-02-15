@@ -280,10 +280,6 @@ class AudioStream final {
   // was opened, of the audio hardware.  Thread-safe.
   int64_t GetPositionInFrames();
 
-  static uint32_t GetPreferredRate() {
-    return CubebUtils::PreferredSampleRate();
-  }
-
   uint32_t GetOutChannels() const { return mOutChannels; }
 
   // Set playback rate as a multiple of the intrinsic playback rate. This is

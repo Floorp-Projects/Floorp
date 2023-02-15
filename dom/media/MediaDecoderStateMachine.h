@@ -506,6 +506,8 @@ class MediaDecoderStateMachine
 
   const bool mIsMSE;
 
+  const bool mShouldResistFingerprinting;
+
   bool mSeamlessLoopingAllowed;
 
   // If media was in looping and had reached to the end before, then we need
