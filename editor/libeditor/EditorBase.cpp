@@ -134,6 +134,7 @@ namespace mozilla {
 using namespace dom;
 using namespace widget;
 
+using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
 using LeafNodeType = HTMLEditUtils::LeafNodeType;
 using LeafNodeTypes = HTMLEditUtils::LeafNodeTypes;
 using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
@@ -4791,43 +4792,39 @@ nsresult EditorBase::DeleteRangesWithTransaction(
     return rv;
   }
 
-  if (AllowsTransactionsToChangeSelection()) {
-    EditorDOMPoint pointToPutCaret =
-        deleteSelectionTransaction->SuggestPointToPutCaret();
-    if (pointToPutCaret.IsSet()) {
-      nsresult rv = CollapseSelectionTo(pointToPutCaret);
-      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-        return NS_ERROR_EDITOR_DESTROYED;
+  EditorDOMPoint pointToPutCaret =
+      deleteSelectionTransaction->SuggestPointToPutCaret();
+  if (IsHTMLEditor() && aStripWrappers == nsIEditor::eStrip) {
+    const nsCOMPtr<nsIContent> anchorContent =
+        pointToPutCaret.GetContainerAs<nsIContent>();
+    if (MOZ_LIKELY(anchorContent) &&
+        MOZ_LIKELY(HTMLEditUtils::IsSimplyEditableNode(*anchorContent)) &&
+        // FIXME: Perhaps, this should use `HTMLEditor::IsEmptyNode` instead.
+        !anchorContent->Length()) {
+      AutoTrackDOMPoint trackPoint(RangeUpdaterRef(), &pointToPutCaret);
+      nsresult rv =
+          MOZ_KnownLive(AsHTMLEditor())
+              ->RemoveEmptyInclusiveAncestorInlineElements(*anchorContent);
+      if (NS_FAILED(rv)) {
+        NS_WARNING(
+            "HTMLEditor::RemoveEmptyInclusiveAncestorInlineElements() "
+            "failed");
+        return rv;
       }
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv),
-          "EditorBase::CollapseSelectionTo() failed, but ignored");
     }
   }
 
-  if (IsTextEditor() || aStripWrappers == nsIEditor::eNoStrip) {
-    return NS_OK;
+  if (AllowsTransactionsToChangeSelection() && pointToPutCaret.IsSet()) {
+    nsresult rv = CollapseSelectionTo(pointToPutCaret);
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "EditorBase::CollapseSelectionTo() failed, but ignored");
   }
 
-  if (!SelectionRef().IsCollapsed()) {
-    NS_WARNING("Selection was changed by mutation event listeners");
-    return NS_OK;
-  }
-
-  nsINode* anchorNode = SelectionRef().GetAnchorNode();
-  if (NS_WARN_IF(!anchorNode) || NS_WARN_IF(!anchorNode->IsContent()) ||
-      NS_WARN_IF(!HTMLEditUtils::IsSimplyEditableNode(*anchorNode)) ||
-      anchorNode->Length() > 0) {
-    return NS_OK;
-  }
-
-  OwningNonNull<nsIContent> anchorContent = *anchorNode->AsContent();
-  rv = MOZ_KnownLive(AsHTMLEditor())
-           ->RemoveEmptyInclusiveAncestorInlineElements(anchorContent);
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "HTMLEditor::RemoveEmptyInclusiveAncestorInlineElements() failed");
-  return rv;
+  return NS_OK;
 }
 
 already_AddRefed<Element> EditorBase::CreateHTMLContent(
