@@ -791,7 +791,7 @@ struct FlowLengthProperty {
 };
 
 int32_t nsTextFrame::GetInFlowContentLength() {
-  if (!(mState & NS_FRAME_IS_BIDI)) {
+  if (!HasAnyStateBits(NS_FRAME_IS_BIDI)) {
     return mContent->TextLength() - mContentOffset;
   }
 
@@ -7827,7 +7827,7 @@ void nsTextFrame::SelectionStateChanged(uint32_t aStart, uint32_t aEnd,
                                         SelectionType aSelectionType) {
   NS_ASSERTION(!GetPrevContinuation(),
                "Should only be called for primary frame");
-  DEBUG_VERIFY_NOT_DIRTY(mState);
+  DEBUG_VERIFY_NOT_DIRTY(GetStateBits());
 
   InvalidateSelectionState();
 
@@ -7919,8 +7919,8 @@ nsresult nsTextFrame::GetPointFromOffset(int32_t inOffset, nsPoint* outPoint) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  DEBUG_VERIFY_NOT_DIRTY(mState);
-  if (mState & NS_FRAME_IS_DIRTY) {
+  DEBUG_VERIFY_NOT_DIRTY(GetStateBits());
+  if (HasAnyStateBits(NS_FRAME_IS_DIRTY)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -7950,8 +7950,8 @@ nsresult nsTextFrame::GetPointFromOffset(int32_t inOffset, nsPoint* outPoint) {
 nsresult nsTextFrame::GetCharacterRectsInRange(int32_t aInOffset,
                                                int32_t aLength,
                                                nsTArray<nsRect>& aRects) {
-  DEBUG_VERIFY_NOT_DIRTY(mState);
-  if (mState & NS_FRAME_IS_DIRTY) {
+  DEBUG_VERIFY_NOT_DIRTY(GetStateBits());
+  if (HasAnyStateBits(NS_FRAME_IS_DIRTY)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -8041,9 +8041,9 @@ nsresult nsTextFrame::GetChildFrameContainingOffset(int32_t aContentOffset,
                                                     bool aHint,
                                                     int32_t* aOutOffset,
                                                     nsIFrame** aOutFrame) {
-  DEBUG_VERIFY_NOT_DIRTY(mState);
+  DEBUG_VERIFY_NOT_DIRTY(GetStateBits());
 #if 0  // XXXrbs disable due to bug 310227
-  if (mState & NS_FRAME_IS_DIRTY)
+  if (HasAnyStateBits(NS_FRAME_IS_DIRTY))
     return NS_ERROR_UNEXPECTED;
 #endif
 
@@ -10531,9 +10531,9 @@ nsIFrame::RenderedText nsTextFrame::GetRenderedText(
 
 /* virtual */
 bool nsTextFrame::IsEmpty() {
-  NS_ASSERTION(!(mState & TEXT_IS_ONLY_WHITESPACE) ||
-                   !(mState & TEXT_ISNOT_ONLY_WHITESPACE),
-               "Invalid state");
+  NS_ASSERTION(
+      !HasAllStateBits(TEXT_IS_ONLY_WHITESPACE | TEXT_ISNOT_ONLY_WHITESPACE),
+      "Invalid state");
 
   // XXXldb Should this check compatibility mode as well???
   const nsStyleText* textStyle = StyleText();
@@ -10547,11 +10547,11 @@ bool nsTextFrame::IsEmpty() {
            !GetContent()->GetParent()->IsHTMLElement(nsGkAtoms::input);
   }
 
-  if (mState & TEXT_ISNOT_ONLY_WHITESPACE) {
+  if (HasAnyStateBits(TEXT_ISNOT_ONLY_WHITESPACE)) {
     return false;
   }
 
-  if (mState & TEXT_IS_ONLY_WHITESPACE) {
+  if (HasAnyStateBits(TEXT_IS_ONLY_WHITESPACE)) {
     return true;
   }
 

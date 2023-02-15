@@ -50,7 +50,7 @@ nsTableColFrame::nsTableColFrame(ComputedStyle* aStyle,
 nsTableColFrame::~nsTableColFrame() = default;
 
 nsTableColType nsTableColFrame::GetColType() const {
-  return (nsTableColType)((mState & COL_TYPE_BITS) >> COL_TYPE_OFFSET);
+  return (nsTableColType)((GetStateBits() & COL_TYPE_BITS) >> COL_TYPE_OFFSET);
 }
 
 void nsTableColFrame::SetColType(nsTableColType aType) {

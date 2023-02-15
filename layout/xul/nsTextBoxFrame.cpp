@@ -482,7 +482,7 @@ void nsTextBoxFrame::DrawText(gfxContext& aRenderingContext,
 
   nsresult rv = NS_ERROR_FAILURE;
 
-  if (mState & NS_FRAME_IS_BIDI) {
+  if (HasAnyStateBits(NS_FRAME_IS_BIDI)) {
     presContext->SetBidiEnabled();
     mozilla::intl::BidiEmbeddingLevel level =
         nsBidiPresUtils::BidiLevelFromStyle(Style());

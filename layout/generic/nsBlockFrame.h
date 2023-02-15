@@ -251,14 +251,14 @@ class nsBlockFrame : public nsContainerFrame {
    * @return true if this frame has an inside ::marker frame.
    */
   bool HasInsideMarker() const {
-    return 0 != (mState & NS_BLOCK_FRAME_HAS_INSIDE_MARKER);
+    return HasAnyStateBits(NS_BLOCK_FRAME_HAS_INSIDE_MARKER);
   }
 
   /**
    * @return true if this frame has an outside ::marker frame.
    */
   bool HasOutsideMarker() const {
-    return 0 != (mState & NS_BLOCK_FRAME_HAS_OUTSIDE_MARKER);
+    return HasAnyStateBits(NS_BLOCK_FRAME_HAS_OUTSIDE_MARKER);
   }
 
   /**
