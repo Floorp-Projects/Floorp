@@ -1828,15 +1828,17 @@ class EditorBase : public nsIEditor,
                                     ErrorResult& aRv);
 
   /**
-   * DeleteTextWithTransaction() removes text in the range from aTextNode.
+   * Delete text in the range in aTextNode.  Use
+   * `HTMLEditor::ReplaceTextWithTransaction` if you'll insert text there (and
+   * if you want to use it in `TextEditor`, move it into `EditorBase`).
    *
    * @param aTextNode           The text node which should be modified.
    * @param aOffset             Start offset of removing text in aTextNode.
    * @param aLength             Length of removing text.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult DeleteTextWithTransaction(dom::Text& aTextNode,
-                                                        uint32_t aOffset,
-                                                        uint32_t aLength);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CaretPoint, nsresult>
+  DeleteTextWithTransaction(dom::Text& aTextNode, uint32_t aOffset,
+                            uint32_t aLength);
 
   /**
    * MarkElementDirty() sets a special dirty attribute on the element.

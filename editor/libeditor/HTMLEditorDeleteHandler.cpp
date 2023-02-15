@@ -452,6 +452,7 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
                       SuggestCaret::AndIgnoreTrivialError});
     if (NS_FAILED(rv)) {
       NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
+      return Err(rv);
     }
     NS_WARNING_ASSERTION(
         rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
@@ -2211,16 +2212,24 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     NS_WARNING("Mutation event listener changed the DOM tree");
     return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
-  rv = aHTMLEditor.DeleteTextWithTransaction(
-      visibleTextNode, startToDelete.Offset(),
-      endToDelete.Offset() - startToDelete.Offset());
-  if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
-    return Err(NS_ERROR_EDITOR_DESTROYED);
-  }
-  if (NS_FAILED(rv)) {
+  Result<CaretPoint, nsresult> caretPointOrError =
+      aHTMLEditor.DeleteTextWithTransaction(
+          visibleTextNode, startToDelete.Offset(),
+          endToDelete.Offset() - startToDelete.Offset());
+  if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
     NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
+    return caretPointOrError.propagateErr();
+  }
+  rv = caretPointOrError.inspect().SuggestCaretPointTo(
+      aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
+                    SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                    SuggestCaret::AndIgnoreTrivialError});
+  if (NS_FAILED(rv)) {
+    NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
     return Err(rv);
   }
+  NS_WARNING_ASSERTION(rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+                       "CaretPoint::SuggestCaretPointTo() failed, but ignored");
 
   // XXX When Backspace key is pressed, Chromium removes following empty
   //     text nodes when removing the last character of the non-empty text
@@ -3403,6 +3412,7 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteNonCollapsedRanges(
                           SuggestCaret::AndIgnoreTrivialError});
         if (NS_FAILED(rv)) {
           NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
+          return Err(rv);
         }
         NS_WARNING_ASSERTION(
             rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
@@ -3616,6 +3626,7 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
                         SuggestCaret::AndIgnoreTrivialError});
       if (NS_FAILED(rv)) {
         NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
+        return Err(rv);
       }
       NS_WARNING_ASSERTION(
           rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
@@ -3705,6 +3716,7 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
                     SuggestCaret::AndIgnoreTrivialError});
   if (NS_FAILED(rv)) {
     NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
+    return Err(rv);
   }
   NS_WARNING_ASSERTION(rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
                        "CaretPoint::SuggestCaretPointTo() failed, but ignored");
@@ -3889,29 +3901,46 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   if (rangeStart.IsInTextNode() && !rangeStart.IsEndOfContainer()) {
     // Delete to last character
     OwningNonNull<Text> textNode = *rangeStart.ContainerAs<Text>();
-    nsresult rv = aHTMLEditor.DeleteTextWithTransaction(
-        textNode, rangeStart.Offset(),
-        rangeStart.GetContainer()->Length() - rangeStart.Offset());
-    if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    if (NS_FAILED(rv)) {
+    Result<CaretPoint, nsresult> caretPointOrError =
+        aHTMLEditor.DeleteTextWithTransaction(
+            textNode, rangeStart.Offset(),
+            rangeStart.GetContainer()->Length() - rangeStart.Offset());
+    if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
       NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
+      return caretPointOrError.unwrapErr();
+    }
+    nsresult rv = caretPointOrError.inspect().SuggestCaretPointTo(
+        aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
+                      SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                      SuggestCaret::AndIgnoreTrivialError});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
       return rv;
     }
+    NS_WARNING_ASSERTION(
+        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+        "CaretPoint::SuggestCaretPointTo() failed, but ignored");
   }
   if (rangeEnd.IsInTextNode() && !rangeEnd.IsStartOfContainer()) {
     // Delete to first character
     OwningNonNull<Text> textNode = *rangeEnd.ContainerAs<Text>();
-    nsresult rv =
+    Result<CaretPoint, nsresult> caretPointOrError =
         aHTMLEditor.DeleteTextWithTransaction(textNode, 0, rangeEnd.Offset());
-    if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    if (NS_FAILED(rv)) {
+    if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
       NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
+      return caretPointOrError.unwrapErr();
+    }
+    nsresult rv = caretPointOrError.inspect().SuggestCaretPointTo(
+        aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
+                      SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                      SuggestCaret::AndIgnoreTrivialError});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
       return rv;
     }
+    NS_WARNING_ASSERTION(
+        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+        "CaretPoint::SuggestCaretPointTo() failed, but ignored");
   }
   return NS_OK;
 }
@@ -4624,12 +4653,25 @@ nsresult HTMLEditor::DeleteTextAndTextNodesWithTransaction(
       return rv;
     }
     RefPtr<Text> textNode = aStartPoint.template ContainerAs<Text>();
-    nsresult rv =
+    Result<CaretPoint, nsresult> caretPointOrError =
         DeleteTextWithTransaction(*textNode, aStartPoint.Offset(),
                                   aEndPoint.Offset() - aStartPoint.Offset());
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::DeleteTextWithTransaction() failed");
-    return rv;
+    if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
+      NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
+      return caretPointOrError.unwrapErr();
+    }
+    nsresult rv = caretPointOrError.inspect().SuggestCaretPointTo(
+        *this, {SuggestCaret::OnlyIfHasSuggestion,
+                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                SuggestCaret::AndIgnoreTrivialError});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
+      return rv;
+    }
+    NS_WARNING_ASSERTION(
+        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+        "CaretPoint::SuggestCaretPointTo() failed, but ignored");
+    return NS_OK;
   }
 
   RefPtr<nsRange> range =
@@ -4668,16 +4710,25 @@ nsresult HTMLEditor::DeleteTextAndTextNodesWithTransaction(
         }
         continue;
       }
-      nsresult rv = DeleteTextWithTransaction(
-          MOZ_KnownLive(textNode), aStartPoint.Offset(),
-          textNode->Length() - aStartPoint.Offset());
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      if (NS_FAILED(rv)) {
+      Result<CaretPoint, nsresult> caretPointOrError =
+          DeleteTextWithTransaction(MOZ_KnownLive(textNode),
+                                    aStartPoint.Offset(),
+                                    textNode->Length() - aStartPoint.Offset());
+      if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
         NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
+        return caretPointOrError.unwrapErr();
+      }
+      nsresult rv = caretPointOrError.inspect().SuggestCaretPointTo(
+          *this, {SuggestCaret::OnlyIfHasSuggestion,
+                  SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                  SuggestCaret::AndIgnoreTrivialError});
+      if (NS_FAILED(rv)) {
+        NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
         return rv;
       }
+      NS_WARNING_ASSERTION(
+          rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+          "CaretPoint::SuggestCaretPointTo() failed, but ignored");
       continue;
     }
 
@@ -4694,14 +4745,24 @@ nsresult HTMLEditor::DeleteTextAndTextNodesWithTransaction(
                              "deleteEmptyContentNodeWithTransaction() failed");
         return rv;
       }
-      nsresult rv = DeleteTextWithTransaction(MOZ_KnownLive(textNode), 0,
-                                              aEndPoint.Offset());
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
+      Result<CaretPoint, nsresult> caretPointOrError =
+          DeleteTextWithTransaction(MOZ_KnownLive(textNode), 0,
+                                    aEndPoint.Offset());
+      if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
+        NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
+        return caretPointOrError.unwrapErr();
       }
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "HTMLEditor::DeleteTextWithTransaction() failed");
-      return rv;
+      nsresult rv = caretPointOrError.inspect().SuggestCaretPointTo(
+          *this, {SuggestCaret::OnlyIfHasSuggestion,
+                  SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                  SuggestCaret::AndIgnoreTrivialError});
+      if (NS_FAILED(rv)) {
+        NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
+        return rv;
+      }
+      NS_WARNING_ASSERTION(rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+                           "CaretPoint::SuggestCaretPointTo() failed");
+      return NS_OK;
     }
 
     nsresult rv =
@@ -5606,13 +5667,26 @@ nsresult HTMLEditor::AutoMoveOneLineHandler::
           return Err(rv);
         }
       } else {
-        nsresult rv = aHTMLEditor.DeleteTextWithTransaction(
-            *textNodeEndingWithUnnecessaryLineBreak,
-            textNodeEndingWithUnnecessaryLineBreak->TextDataLength() - 1u, 1u);
-        if (NS_FAILED(rv)) {
+        Result<CaretPoint, nsresult> caretPointOrError =
+            aHTMLEditor.DeleteTextWithTransaction(
+                *textNodeEndingWithUnnecessaryLineBreak,
+                textNodeEndingWithUnnecessaryLineBreak->TextDataLength() - 1u,
+                1u);
+        if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
           NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
+          return caretPointOrError.propagateErr();
+        }
+        nsresult rv = caretPointOrError.inspect().SuggestCaretPointTo(
+            aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
+                          SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                          SuggestCaret::AndIgnoreTrivialError});
+        if (NS_FAILED(rv)) {
+          NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
           return Err(rv);
         }
+        NS_WARNING_ASSERTION(
+            rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+            "CaretPoint::SuggestCaretPointTo() failed, but ignored");
       }
     }
   }
@@ -5645,11 +5719,16 @@ nsresult HTMLEditor::AutoMoveOneLineHandler::
   if (Text* textNode = Text::FromNode(lastLineBreakContent)) {
     MOZ_ASSERT(EditorUtils::IsNewLinePreformatted(*textNode));
     if (textNode->TextDataLength() > 1) {
-      nsresult rv = aHTMLEditor.DeleteTextWithTransaction(
-          MOZ_KnownLive(*textNode), textNode->TextDataLength() - 1u, 1u);
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "HTMLEditor::DeleteTextWithTransaction() failed");
-      return rv;
+      Result<CaretPoint, nsresult> caretPointOrError =
+          aHTMLEditor.DeleteTextWithTransaction(
+              MOZ_KnownLive(*textNode), textNode->TextDataLength() - 1u, 1u);
+      if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
+        NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
+        return caretPointOrError.unwrapErr();
+      }
+      // IgnoreCaretPointSuggestion() because of dontChangeMySelection above.
+      caretPointOrError.unwrap().IgnoreCaretPointSuggestion();
+      return NS_OK;
     }
   } else {
     MOZ_ASSERT(lastLineBreakContent->IsHTMLElement(nsGkAtoms::br));
