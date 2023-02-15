@@ -2711,6 +2711,11 @@ who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.15.0@git:48d8666de002c7bfddbe85a2596f7748b4cc18b4 -> 0.15.0@git:41de797c745d317e93b9cf50e7446faff7f65954"
 
+[[audits.wgpu-core]]
+who = "Nicolas Silva <nical@fastmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.15.0@git:581b22e6a026ac92589be2f36a30357600f9d02c -> 0.15.0@git:b33731c44c9dd3bfb79d889e7a699c26c3929cd3"
+
 [[audits.wgpu-hal]]
 who = "Dzmitry Malyshau <kvark@fastmail.com>"
 criteria = "safe-to-deploy"
@@ -2759,6 +2764,11 @@ who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.15.1@git:48d8666de002c7bfddbe85a2596f7748b4cc18b4 -> 0.15.1@git:41de797c745d317e93b9cf50e7446faff7f65954"
 
+[[audits.wgpu-hal]]
+who = "Nicolas Silva <nical@fastmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.15.1@git:581b22e6a026ac92589be2f36a30357600f9d02c -> 0.15.1@git:b33731c44c9dd3bfb79d889e7a699c26c3929cd3"
+
 [[audits.wgpu-types]]
 who = "Dzmitry Malyshau <kvark@fastmail.com>"
 criteria = "safe-to-deploy"
@@ -2806,6 +2816,11 @@ delta = "0.15.0@git:41de797c745d317e93b9cf50e7446faff7f65954 -> 0.15.0@git:581b2
 who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.15.0@git:48d8666de002c7bfddbe85a2596f7748b4cc18b4 -> 0.15.0@git:41de797c745d317e93b9cf50e7446faff7f65954"
+
+[[audits.wgpu-types]]
+who = "Nicolas Silva <nical@fastmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.15.0@git:581b22e6a026ac92589be2f36a30357600f9d02c -> 0.15.0@git:b33731c44c9dd3bfb79d889e7a699c26c3929cd3"
 
 [[audits.whatsys]]
 who = "Bobby Holley <bobbyholley@gmail.com>"
