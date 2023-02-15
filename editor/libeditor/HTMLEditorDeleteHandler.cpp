@@ -433,7 +433,7 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
   DeleteParentBlocksWithTransactionIfEmpty(HTMLEditor& aHTMLEditor,
                                            const EditorDOMPoint& aPoint);
 
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditActionResult, nsresult>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CaretPoint, nsresult>
   FallbackToDeleteRangesWithTransaction(HTMLEditor& aHTMLEditor,
                                         AutoRangeArray& aRangesToDelete) const {
     MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
@@ -442,23 +442,9 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
         aHTMLEditor.DeleteRangesWithTransaction(mOriginalDirectionAndAmount,
                                                 mOriginalStripWrappers,
                                                 aRangesToDelete);
-    if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
-      NS_WARNING("HTMLEditor::DeleteRangesWithTransaction() failed");
-      return caretPointOrError.propagateErr();
-    }
-    nsresult rv = caretPointOrError.inspect().SuggestCaretPointTo(
-        aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
-                      SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                      SuggestCaret::AndIgnoreTrivialError});
-    if (NS_FAILED(rv)) {
-      NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
-      return Err(rv);
-    }
-    NS_WARNING_ASSERTION(
-        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-        "CaretPoint::SuggestCaretPointTo() failed, but ignored");
-    // Don't return "ignored" for avoiding to fall it back again.
-    return EditActionResult::HandledResult();
+    NS_WARNING_ASSERTION(caretPointOrError.isOk(),
+                         "HTMLEditor::DeleteRangesWithTransaction() failed");
+    return caretPointOrError;
   }
 
   /**
@@ -1618,12 +1604,27 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::Run(
       if (!CanFallbackToDeleteRangesWithTransaction(aRangesToDelete)) {
         return EditActionResult::IgnoredResult();
       }
-      Result<EditActionResult, nsresult> result =
+      Result<CaretPoint, nsresult> caretPointOrError =
           FallbackToDeleteRangesWithTransaction(aHTMLEditor, aRangesToDelete);
-      NS_WARNING_ASSERTION(result.isOk(),
-                           "AutoDeleteRangesHandler::"
-                           "FallbackToDeleteRangesWithTransaction() failed");
-      return result;
+      if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
+        NS_WARNING(
+            "AutoDeleteRangesHandler::FallbackToDeleteRangesWithTransaction() "
+            "failed");
+      }
+      nsresult rv = caretPointOrError.inspect().SuggestCaretPointTo(
+          aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
+                        SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                        SuggestCaret::AndIgnoreTrivialError});
+      if (NS_FAILED(rv)) {
+        NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
+        return Err(rv);
+      }
+      NS_WARNING_ASSERTION(
+          rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+          "CaretPoint::SuggestCaretPointTo() failed, but ignored");
+      // Don't return "ignored" to avoid to fall it back to delete ranges
+      // recursively.
+      return EditActionResult::HandledResult();
     }
 
     if (aRangesToDelete.IsCollapsed()) {
@@ -2821,14 +2822,29 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
             aRangesToDelete)) {
       return EditActionResult::IgnoredResult();
     }
-    Result<EditActionResult, nsresult> result =
+    Result<CaretPoint, nsresult> caretPointOrError =
         mDeleteRangesHandler->FallbackToDeleteRangesWithTransaction(
             aHTMLEditor, aRangesToDelete);
+    if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
+      NS_WARNING(
+          "AutoDeleteRangesHandler::FallbackToDeleteRangesWithTransaction() "
+          "failed");
+      return caretPointOrError.propagateErr();
+    }
+    nsresult rv = caretPointOrError.inspect().SuggestCaretPointTo(
+        aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
+                      SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                      SuggestCaret::AndIgnoreTrivialError});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
+      return Err(rv);
+    }
     NS_WARNING_ASSERTION(
-        result.isOk(),
-        "AutoDeleteRangesHandler::FallbackToDeleteRangesWithTransaction() "
-        "failed to delete leaf content in the block");
-    return result;
+        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+        "CaretPoint::SuggestCaretPointTo() failed, but ignored");
+    // Don't return "ignored" to avoid to fall it back to delete ranges
+    // recursively.
+    return EditActionResult::HandledResult();
   }
 
   // Else we are joining content to block
