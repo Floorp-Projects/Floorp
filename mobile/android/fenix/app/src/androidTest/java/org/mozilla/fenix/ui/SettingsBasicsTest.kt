@@ -16,26 +16,18 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
-import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.getLoremIpsumAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.helpers.TestHelper.runWithSystemLocaleChanged
-import org.mozilla.fenix.ui.SettingsBasicsTest.CreditCard.MOCK_CREDIT_CARD_NUMBER
-import org.mozilla.fenix.ui.SettingsBasicsTest.CreditCard.MOCK_EXPIRATION_MONTH
-import org.mozilla.fenix.ui.SettingsBasicsTest.CreditCard.MOCK_EXPIRATION_YEAR
-import org.mozilla.fenix.ui.SettingsBasicsTest.CreditCard.MOCK_LAST_CARD_DIGITS
-import org.mozilla.fenix.ui.SettingsBasicsTest.CreditCard.MOCK_NAME_ON_CARD
 import org.mozilla.fenix.ui.robots.checkTextSizeOnWebsite
 import org.mozilla.fenix.ui.robots.homeScreen
-import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.util.FRENCH_LANGUAGE_HEADER
 import org.mozilla.fenix.ui.util.FRENCH_SYSTEM_LOCALE_OPTION
 import org.mozilla.fenix.ui.util.FR_SETTINGS
 import org.mozilla.fenix.ui.util.ROMANIAN_LANGUAGE_HEADER
-import java.time.LocalDate
 import java.util.Locale
 
 /**
@@ -45,14 +37,6 @@ import java.util.Locale
 class SettingsBasicsTest {
     /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
     private lateinit var mockWebServer: MockWebServer
-
-    object CreditCard {
-        const val MOCK_CREDIT_CARD_NUMBER = "5555555555554444"
-        const val MOCK_LAST_CARD_DIGITS = "4444"
-        const val MOCK_NAME_ON_CARD = "Mastercard"
-        const val MOCK_EXPIRATION_MONTH = "February"
-        val MOCK_EXPIRATION_YEAR = (LocalDate.now().year + 1).toString()
-    }
 
     @get:Rule
     val activityIntentTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
@@ -116,51 +100,6 @@ class SettingsBasicsTest {
         }.openAccessibilitySubMenu {
             clickFontSizingSwitch()
             verifyMenuItemsAreDisabled()
-        }
-    }
-
-    @SmokeTest
-    @Test
-    fun verifyCreditCardAutofillTest() {
-        val creditCardFormPage = TestAssetHelper.getCreditCardFormAsset(mockWebServer)
-
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openAutofillSubMenu {
-            clickAddCreditCardButton()
-            fillAndSaveCreditCard(MOCK_CREDIT_CARD_NUMBER, MOCK_NAME_ON_CARD, MOCK_EXPIRATION_MONTH, MOCK_EXPIRATION_YEAR)
-            // Opening Manage saved cards to dismiss here the Secure your credit prompt
-            clickManageSavedCardsButton()
-            clickSecuredCreditCardsLaterButton()
-        }.goBackToAutofillSettings {
-        }.goBack {
-        }.goBack {
-        }
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(creditCardFormPage.url) {
-            clickCardNumberTextBox()
-            clickSelectCreditCardButton()
-            clickCreditCardSuggestion(MOCK_LAST_CARD_DIGITS)
-            verifyAutofilledCreditCard(MOCK_CREDIT_CARD_NUMBER)
-        }
-    }
-
-    @SmokeTest
-    @Test
-    fun deleteSavedCreditCardTest() {
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openAutofillSubMenu {
-            clickAddCreditCardButton()
-            fillAndSaveCreditCard(MOCK_CREDIT_CARD_NUMBER, MOCK_NAME_ON_CARD, MOCK_EXPIRATION_MONTH, MOCK_EXPIRATION_YEAR)
-            clickManageSavedCardsButton()
-            clickSecuredCreditCardsLaterButton()
-            clickSavedCreditCard()
-            clickDeleteCreditCardButton()
-            clickConfirmDeleteCreditCardButton()
-            verifyAddCreditCardsButton()
         }
     }
 
