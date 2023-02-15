@@ -203,7 +203,7 @@ void nsBoxFrame::CacheAttributes() {
   GetInitialVAlignment(mValign);
   GetInitialHAlignment(mHalign);
 
-  bool autostretch = !!(mState & NS_STATE_AUTO_STRETCH);
+  bool autostretch = HasAnyStateBits(NS_STATE_AUTO_STRETCH);
   GetInitialAutoStretch(autostretch);
   if (autostretch)
     AddStateBits(NS_STATE_AUTO_STRETCH);
@@ -349,7 +349,7 @@ bool nsBoxFrame::GetInitialAutoStretch(bool& aStretch) {
 void nsBoxFrame::DidReflow(nsPresContext* aPresContext,
                            const ReflowInput* aReflowInput) {
   nsFrameState preserveBits =
-      mState & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
+      GetStateBits() & (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN);
   nsIFrame::DidReflow(aPresContext, aReflowInput);
   AddStateBits(preserveBits);
   if (preserveBits & NS_FRAME_IS_DIRTY) {
@@ -815,7 +815,7 @@ nsresult nsBoxFrame::AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
       GetInitialVAlignment(mValign);
       GetInitialHAlignment(mHalign);
 
-      bool autostretch = !!(mState & NS_STATE_AUTO_STRETCH);
+      bool autostretch = HasAnyStateBits(NS_STATE_AUTO_STRETCH);
       GetInitialAutoStretch(autostretch);
       if (autostretch)
         AddStateBits(NS_STATE_AUTO_STRETCH);

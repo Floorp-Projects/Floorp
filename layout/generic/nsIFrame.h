@@ -5066,8 +5066,10 @@ class nsIFrame : public nsQueryFrame {
     AddStateBits(NS_FRAME_IN_REFLOW);
   }
 
+ private:
   nsFrameState mState;
 
+ protected:
   /**
    * List of properties attached to the frame.
    */

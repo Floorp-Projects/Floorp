@@ -841,7 +841,7 @@ void nsIFrame::DestroyFrom(nsIFrame* aDestructRoot,
 
   nsPresContext* presContext = PresContext();
   mozilla::PresShell* presShell = presContext->GetPresShell();
-  if (mState & NS_FRAME_OUT_OF_FLOW) {
+  if (HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
     nsPlaceholderFrame* placeholder = GetPlaceholderFrame();
     NS_ASSERTION(
         !placeholder || (aDestructRoot != this),
@@ -899,7 +899,7 @@ void nsIFrame::DestroyFrom(nsIFrame* aDestructRoot,
 
   presShell->NotifyDestroyingFrame(this);
 
-  if (mState & NS_FRAME_EXTERNAL_REFERENCE) {
+  if (HasAnyStateBits(NS_FRAME_EXTERNAL_REFERENCE)) {
     presShell->ClearFrameRefs(this);
   }
 
@@ -1829,7 +1829,7 @@ bool nsIFrame::IsSVGTransformed(gfx::Matrix* aOwnTransforms,
 bool nsIFrame::Extend3DContext(const nsStyleDisplay* aStyleDisplay,
                                const nsStyleEffects* aStyleEffects,
                                mozilla::EffectSet* aEffectSetForOpacity) const {
-  if (!(mState & NS_FRAME_MAY_BE_TRANSFORMED)) {
+  if (!HasAnyStateBits(NS_FRAME_MAY_BE_TRANSFORMED)) {
     return false;
   }
   const nsStyleDisplay* disp = StyleDisplayWithOptionalParam(aStyleDisplay);
@@ -9973,7 +9973,7 @@ bool nsIFrame::FinishAndStoreOverflow(OverflowAreas& aOverflowAreas,
     DebugOnly<nsRect*> r = &aOverflowAreas.Overflow(otype);
     NS_ASSERTION(aNewSize.width == 0 || aNewSize.height == 0 ||
                      r->width == nscoord_MAX || r->height == nscoord_MAX ||
-                     (mState & NS_FRAME_SVG_LAYOUT) ||
+                     HasAnyStateBits(NS_FRAME_SVG_LAYOUT) ||
                      r->Contains(nsRect(nsPoint(0, 0), aNewSize)),
                  "Computed overflow area must contain frame bounds");
   }
@@ -10431,13 +10431,13 @@ ComputedStyle* nsIFrame::DoGetParentComputedStyle(
     }
   }
 
-  if (!(mState & NS_FRAME_OUT_OF_FLOW)) {
+  if (!HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
     /*
      * If this frame is an anonymous block created when an inline with a block
      * inside it got split, then the parent style is on its preceding inline. We
      * can get to it using GetIBSplitSiblingForAnonymousBlock.
      */
-    if (mState & NS_FRAME_PART_OF_IBSPLIT) {
+    if (HasAnyStateBits(NS_FRAME_PART_OF_IBSPLIT)) {
       nsIFrame* ibSplitSibling = GetIBSplitSiblingForAnonymousBlock(this);
       if (ibSplitSibling) {
         return (*aProviderFrame = ibSplitSibling)->Style();

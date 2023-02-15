@@ -444,7 +444,7 @@ void nsHTMLCanvasFrame::Reflow(nsPresContext* aPresContext,
       ("enter nsHTMLCanvasFrame::Reflow: availSize=%d,%d",
        aReflowInput.AvailableWidth(), aReflowInput.AvailableHeight()));
 
-  MOZ_ASSERT(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
+  MOZ_ASSERT(HasAnyStateBits(NS_FRAME_IN_REFLOW), "frame is not in reflow");
 
   WritingMode wm = aReflowInput.GetWritingMode();
   const LogicalSize finalSize = aReflowInput.ComputedSizeWithBorderPadding(wm);
