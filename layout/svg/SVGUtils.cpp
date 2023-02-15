@@ -602,10 +602,9 @@ void SVGUtils::PaintFrameWithEffects(nsIFrame* aFrame, gfxContext& aContext,
     }
     int32_t appUnitsPerDevPx = aFrame->PresContext()->AppUnitsPerDevPixel();
     gfxMatrix tm = aTransform;
-    if (aFrame->IsFrameOfType(nsIFrame::eSVG | nsIFrame::eSVGContainer)) {
+    if (SVGContainerFrame* container = do_QueryFrame(aFrame)) {
       gfx::Matrix childrenOnlyTM;
-      if (static_cast<SVGContainerFrame*>(aFrame)->HasChildrenOnlyTransform(
-              &childrenOnlyTM)) {
+      if (container->HasChildrenOnlyTransform(&childrenOnlyTM)) {
         // Undo the children-only transform:
         if (!childrenOnlyTM.Invert()) {
           return;
