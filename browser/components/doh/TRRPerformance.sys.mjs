@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /*
  * This module tests TRR performance by issuing DNS requests to TRRs and
  * recording telemetry for the network time for each request.
@@ -17,16 +15,12 @@
  * usable network until a full set of results has been captured. We stop retrying
  * after 5 attempts.
  */
-var EXPORTED_SYMBOLS = ["TRRRacer", "DNSLookup", "LookupAggregator"];
-
 Services.telemetry.setEventRecordingEnabled(
   "security.doh.trrPerformance",
   true
 );
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -91,7 +85,7 @@ function getRandomSubdomain() {
 // callback. The wrapper attempts the lookup 3 times before passing on a failure.
 // If a false-y `domain` is supplied, a random subdomain will be used. Each retry
 // will use a different random subdomain to ensure we bypass chached responses.
-class DNSLookup {
+export class DNSLookup {
   constructor(domain, trrServer, callback) {
     this._domain = domain;
     this.trrServer = trrServer;
@@ -134,7 +128,7 @@ DNSLookup.prototype.QueryInterface = ChromeUtils.generateQI(["nsIDNSListener"]);
 // A wrapper around a single set of measurements. The required lookups are
 // triggered and the results aggregated before telemetry is sent. If aborted,
 // any aggregated results are discarded.
-class LookupAggregator {
+export class LookupAggregator {
   constructor(onCompleteCallback, trrList) {
     this.onCompleteCallback = onCompleteCallback;
     this.trrList = trrList;
@@ -240,7 +234,7 @@ class LookupAggregator {
 // When the network goes down, an ongoing aggregator is aborted and a new one
 // spawned next time we get a link, up to 5 times. On the fifth time, we just
 // let the aggegator complete and mark it as tainted.
-class TRRRacer {
+export class TRRRacer {
   constructor(onCompleteCallback, trrList) {
     this._aggregator = null;
     this._retryCount = 0;

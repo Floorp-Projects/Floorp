@@ -7,11 +7,9 @@
 /* import-globals-from /toolkit/content/preferencesBindings.js */
 /* import-globals-from ../extensionControlled.js */
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "DoHConfigController",
-  "resource:///modules/DoHConfig.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  DoHConfigController: "resource:///modules/DoHConfig.sys.mjs",
+});
 
 document
   .getElementById("ConnectionsDialog")

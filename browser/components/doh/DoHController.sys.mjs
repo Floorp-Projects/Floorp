@@ -2,32 +2,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /*
  * This module runs the automated heuristics to enable/disable DoH on different
  * networks. Heuristics are run at startup and upon network changes.
  * Heuristics are disabled if the user sets their DoH provider or mode manually.
  */
-var EXPORTED_SYMBOLS = ["DoHController"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   ClientID: "resource://gre/modules/ClientID.sys.mjs",
+  DoHConfigController: "resource:///modules/DoHConfig.sys.mjs",
+  Heuristics: "resource:///modules/DoHHeuristics.sys.mjs",
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  DoHConfigController: "resource:///modules/DoHConfig.jsm",
-  Heuristics: "resource:///modules/DoHHeuristics.jsm",
 });
 
 // When this is set we suppress automatic TRR selection beyond dry-run as well
@@ -146,7 +137,7 @@ function getHashedNetworkID() {
   return hasher.finish(true);
 }
 
-const DoHController = {
+export const DoHController = {
   _heuristicsAreEnabled: false,
 
   async init() {
@@ -568,15 +559,15 @@ const DoHController = {
 
     if (lazy.kIsInAutomation) {
       // For mochitests, just record telemetry with a dummy result.
-      // TRRPerformance.jsm is tested in xpcshell.
+      // TRRPerformance.sys.mjs is tested in xpcshell.
       setDryRunResultAndRecordTelemetry("https://example.com/dns-query");
       return;
     }
 
     // Importing the module here saves us from having to do it at startup, and
     // ensures tests have time to set prefs before the module initializes.
-    let { TRRRacer } = ChromeUtils.import(
-      "resource:///modules/TRRPerformance.jsm"
+    let { TRRRacer } = ChromeUtils.importESModule(
+      "resource:///modules/TRRPerformance.sys.mjs"
     );
     await new Promise(resolve => {
       let trrList = lazy.DoHConfigController.currentConfig.trrSelection.providerList.map(

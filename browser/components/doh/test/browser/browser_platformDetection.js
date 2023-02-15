@@ -4,8 +4,8 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  Heuristics: "resource:///modules/DoHHeuristics.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  Heuristics: "resource:///modules/DoHHeuristics.sys.mjs",
 });
 
 add_task(setup);

@@ -81,8 +81,8 @@ function setup() {
     "firefox-dns-perf-test.net."
   );
 
-  let TRRPerformance = ChromeUtils.import(
-    "resource:///modules/TRRPerformance.jsm"
+  let TRRPerformance = ChromeUtils.importESModule(
+    "resource:///modules/TRRPerformance.sys.mjs"
   );
 
   DNSLookup = TRRPerformance.DNSLookup;

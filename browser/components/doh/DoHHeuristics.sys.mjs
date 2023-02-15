@@ -2,18 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /*
  * This module implements the heuristics used to determine whether to enable
  * or disable DoH on different networks. DoHController is responsible for running
  * these at startup and upon network changes.
  */
-var EXPORTED_SYMBOLS = ["Heuristics", "parentalControls"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -31,13 +25,8 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIParentalControlsService"
 );
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "DoHConfigController",
-  "resource:///modules/DoHConfig.jsm"
-);
-
 ChromeUtils.defineESModuleGetters(lazy, {
+  DoHConfigController: "resource:///modules/DoHConfig.sys.mjs",
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
 });
 
@@ -45,7 +34,7 @@ const GLOBAL_CANARY = "use-application-dns.net.";
 
 const NXDOMAIN_ERR = "NS_ERROR_UNKNOWN_HOST";
 
-const Heuristics = {
+export const Heuristics = {
   // String constants used to indicate outcome of heuristics.
   ENABLE_DOH: "enable_doh",
   DISABLE_DOH: "disable_doh",
@@ -229,7 +218,7 @@ async function modifiedRoots() {
   return "enable_doh";
 }
 
-async function parentalControls() {
+export async function parentalControls() {
   if (lazy.gParentalControlsService.parentalControlsEnabled) {
     return "disable_doh";
   }
