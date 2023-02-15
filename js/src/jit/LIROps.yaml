@@ -2623,7 +2623,6 @@
   mir_op: true
 
 - name: MegamorphicStoreSlot
-  result_type: BoxedValue
   operands:
     object: WordSized
     rhs: BoxedValue
