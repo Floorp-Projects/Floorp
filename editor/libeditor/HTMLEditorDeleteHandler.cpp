@@ -438,12 +438,24 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
                                         AutoRangeArray& aRangesToDelete) const {
     MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
     MOZ_ASSERT(CanFallbackToDeleteRangesWithTransaction(aRangesToDelete));
-    nsresult rv = aHTMLEditor.DeleteRangesWithTransaction(
-        mOriginalDirectionAndAmount, mOriginalStripWrappers, aRangesToDelete);
-    if (NS_FAILED(rv)) {
+    Result<CaretPoint, nsresult> caretPointOrError =
+        aHTMLEditor.DeleteRangesWithTransaction(mOriginalDirectionAndAmount,
+                                                mOriginalStripWrappers,
+                                                aRangesToDelete);
+    if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
       NS_WARNING("HTMLEditor::DeleteRangesWithTransaction() failed");
-      return Err(rv);
+      return caretPointOrError.propagateErr();
     }
+    nsresult rv = caretPointOrError.inspect().SuggestCaretPointTo(
+        aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
+                      SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                      SuggestCaret::AndIgnoreTrivialError});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
+    }
+    NS_WARNING_ASSERTION(
+        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+        "CaretPoint::SuggestCaretPointTo() failed, but ignored");
     // Don't return "ignored" for avoiding to fall it back again.
     return EditActionResult::HandledResult();
   }
@@ -3378,12 +3390,23 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteNonCollapsedRanges(
       {
         AutoTrackDOMRange firstRangeTracker(aHTMLEditor.RangeUpdaterRef(),
                                             &aRangesToDelete.FirstRangeRef());
-        nsresult rv = aHTMLEditor.DeleteRangesWithTransaction(
-            aDirectionAndAmount, aStripWrappers, aRangesToDelete);
-        if (NS_FAILED(rv)) {
+        Result<CaretPoint, nsresult> caretPointOrError =
+            aHTMLEditor.DeleteRangesWithTransaction(
+                aDirectionAndAmount, aStripWrappers, aRangesToDelete);
+        if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
           NS_WARNING("EditorBase::DeleteRangesWithTransaction() failed");
-          return Err(rv);
+          return caretPointOrError.propagateErr();
         }
+        nsresult rv = caretPointOrError.inspect().SuggestCaretPointTo(
+            aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
+                          SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                          SuggestCaret::AndIgnoreTrivialError});
+        if (NS_FAILED(rv)) {
+          NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
+        }
+        NS_WARNING_ASSERTION(
+            rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+            "CaretPoint::SuggestCaretPointTo() failed, but ignored");
       }
       if (NS_WARN_IF(!aRangesToDelete.FirstRangeRef()->IsPositioned()) ||
           (aHTMLEditor.MayHaveMutationEventListeners(
@@ -3576,14 +3599,28 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
   {
     AutoTrackDOMRange firstRangeTracker(aHTMLEditor.RangeUpdaterRef(),
                                         &aRangesToDelete.FirstRangeRef());
-    nsresult rv = aHTMLEditor.DeleteRangesWithTransaction(
-        aDirectionAndAmount, aStripWrappers, aRangesToDelete);
-    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      return Err(NS_ERROR_EDITOR_DESTROYED);
+    Result<CaretPoint, nsresult> caretPointOrError =
+        aHTMLEditor.DeleteRangesWithTransaction(
+            aDirectionAndAmount, aStripWrappers, aRangesToDelete);
+    if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
+      if (NS_WARN_IF(caretPointOrError.inspectErr() ==
+                     NS_ERROR_EDITOR_DESTROYED)) {
+        return Err(NS_ERROR_EDITOR_DESTROYED);
+      }
+      NS_WARNING(
+          "EditorBase::DeleteRangesWithTransaction() failed, but ignored");
+    } else {
+      nsresult rv = caretPointOrError.inspect().SuggestCaretPointTo(
+          aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
+                        SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                        SuggestCaret::AndIgnoreTrivialError});
+      if (NS_FAILED(rv)) {
+        NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
+      }
+      NS_WARNING_ASSERTION(
+          rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+          "CaretPoint::SuggestCaretPointTo() failed, but ignored");
     }
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "EditorBase::DeleteRangesWithTransaction() failed, but ignored");
   }
   nsresult rv =
       mDeleteRangesHandler->DeleteUnnecessaryNodesAndCollapseSelection(
@@ -3654,12 +3691,23 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
       aSelectionWasCollapsed == SelectionWasCollapsed::Yes &&
       nsIEditor::DirectionIsBackspace(aDirectionAndAmount);
 
-  nsresult rv = aHTMLEditor.DeleteRangesWithTransaction(
-      aDirectionAndAmount, aStripWrappers, aRangesToDelete);
-  if (NS_FAILED(rv)) {
+  Result<CaretPoint, nsresult> caretPointOrError =
+      aHTMLEditor.DeleteRangesWithTransaction(aDirectionAndAmount,
+                                              aStripWrappers, aRangesToDelete);
+  if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
     NS_WARNING("EditorBase::DeleteRangesWithTransaction() failed");
-    return Err(rv);
+    return caretPointOrError.propagateErr();
   }
+
+  nsresult rv = caretPointOrError.inspect().SuggestCaretPointTo(
+      aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
+                    SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                    SuggestCaret::AndIgnoreTrivialError});
+  if (NS_FAILED(rv)) {
+    NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
+  }
+  NS_WARNING_ASSERTION(rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+                       "CaretPoint::SuggestCaretPointTo() failed, but ignored");
 
   if (NS_WARN_IF(!mLeftContent->GetParentNode()) ||
       NS_WARN_IF(!mRightContent->GetParentNode()) ||
