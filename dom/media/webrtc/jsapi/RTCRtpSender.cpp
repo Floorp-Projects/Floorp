@@ -191,8 +191,8 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
         }));
   }
 
-  promises.AppendElement(
-      InvokeAsync(mPipeline->mCallThread, __func__, [pipeline = mPipeline] {
+  promises.AppendElement(InvokeAsync(
+      mPipeline->mCallThread, __func__, [pipeline = mPipeline, trackName] {
         auto report = MakeUnique<dom::RTCStatsCollection>();
         auto asAudio = pipeline->mConduit->AsAudioSessionConduit();
         auto asVideo = pipeline->mConduit->AsVideoSessionConduit();
@@ -429,6 +429,26 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> RTCRtpSender::GetStatsInternal(
             }
           });
         }
+
+        auto constructCommonMediaSourceStats =
+            [&](RTCMediaSourceStats& aStats) {
+              nsString id = u"mediasource_"_ns + idstr + trackName;
+              aStats.mTimestamp.Construct(
+                  pipeline->GetTimestampMaker().GetNow());
+              aStats.mId.Construct(id);
+              aStats.mType.Construct(RTCStatsType::Media_source);
+              aStats.mTrackIdentifier = trackName;
+              aStats.mKind = kind;
+            };
+
+        // TODO(bug 1804678): Use RTCAudioSourceStats/RTCVideoSourceStats
+        RTCMediaSourceStats mediaSourceStats;
+        constructCommonMediaSourceStats(mediaSourceStats);
+        if (!report->mMediaSourceStats.AppendElement(
+                std::move(mediaSourceStats), fallible)) {
+          mozalloc_handle_oom(0);
+        }
+
         return RTCStatsPromise::CreateAndResolve(std::move(report), __func__);
       }));
 
