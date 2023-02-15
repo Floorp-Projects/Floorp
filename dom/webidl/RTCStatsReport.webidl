@@ -56,8 +56,8 @@ enum RTCCodecType {
 };
 
 dictionary RTCReceivedRtpStreamStats: RTCRtpStreamStats {
-  unsigned long packetsReceived;
-  unsigned long packetsLost;
+  unsigned long long packetsReceived;
+  long long packetsLost;
   double jitter;
   unsigned long discardedPackets; // non-standard alias for packetsDiscarded
   unsigned long packetsDiscarded;
