@@ -6,11 +6,12 @@
 #ifndef DeleteTextTransaction_h
 #define DeleteTextTransaction_h
 
-#include "EditTransactionBase.h"
+#include "DeleteContentTransactionBase.h"
 
 #include "EditorForwards.h"
 
 #include "mozilla/dom/Text.h"
+
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsID.h"
@@ -22,7 +23,7 @@ namespace mozilla {
 /**
  * A transaction that removes text from a content node.
  */
-class DeleteTextTransaction final : public EditTransactionBase {
+class DeleteTextTransaction final : public DeleteContentTransactionBase {
  protected:
   DeleteTextTransaction(EditorBase& aEditorBase, dom::Text& aTextNode,
                         uint32_t aOffset, uint32_t aLengthToDelete);
@@ -62,13 +63,15 @@ class DeleteTextTransaction final : public EditTransactionBase {
   bool CanDoIt() const;
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DeleteTextTransaction,
-                                           EditTransactionBase)
+                                           DeleteContentTransactionBase)
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
 
   NS_DECL_EDITTRANSACTIONBASE
   NS_DECL_EDITTRANSACTIONBASE_GETASMETHODS_OVERRIDE(DeleteTextTransaction)
 
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() final;
+
+  EditorDOMPoint SuggestPointToPutCaret() const final;
 
   dom::Text* GetText() const { return mTextNode; }
   uint32_t Offset() const { return mOffset; }
@@ -78,9 +81,6 @@ class DeleteTextTransaction final : public EditTransactionBase {
                                   const DeleteTextTransaction& aTransaction);
 
  protected:
-  // The provider of basic editing operations.
-  RefPtr<EditorBase> mEditorBase;
-
   // The CharacterData node to operate upon.
   RefPtr<dom::Text> mTextNode;
 

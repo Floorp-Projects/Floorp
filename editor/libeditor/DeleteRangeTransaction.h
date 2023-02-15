@@ -6,6 +6,7 @@
 #ifndef DeleteRangeTransaction_h
 #define DeleteRangeTransaction_h
 
+#include "DeleteContentTransactionBase.h"
 #include "EditAggregateTransaction.h"
 
 #include "EditorBase.h"
@@ -52,6 +53,8 @@ class DeleteRangeTransaction final : public EditAggregateTransaction {
 
   NS_DECL_EDITTRANSACTIONBASE
   NS_DECL_EDITTRANSACTIONBASE_GETASMETHODS_OVERRIDE(DeleteRangeTransaction)
+
+  void AppendChild(DeleteContentTransactionBase& aTransaction);
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
 

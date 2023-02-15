@@ -9,12 +9,13 @@
 #include "EditTransactionBase.h"
 
 #include "mozilla/OwningNonNull.h"
+#include "mozilla/RefPtr.h"
+
+#include "nsAtom.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsAtom.h"
-#include "nsISupportsImpl.h"
 #include "nsTArray.h"
-#include "nscore.h"
+#include "nsISupportsImpl.h"
 
 namespace mozilla {
 
@@ -23,19 +24,7 @@ namespace mozilla {
  * provides a list of child transactions.
  */
 class EditAggregateTransaction : public EditTransactionBase {
- protected:
-  EditAggregateTransaction() = default;
-
  public:
-  /**
-   * Creates an edit aggregate transaction.  This never returns nullptr.
-   */
-  static already_AddRefed<EditAggregateTransaction> Create() {
-    RefPtr<EditAggregateTransaction> transaction =
-        new EditAggregateTransaction();
-    return transaction.forget();
-  }
-
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(EditAggregateTransaction,
                                            EditTransactionBase)
@@ -46,14 +35,9 @@ class EditAggregateTransaction : public EditTransactionBase {
   NS_IMETHOD Merge(nsITransaction* aOtherTransaction, bool* aDidMerge) override;
 
   /**
-   * Append a transaction to this aggregate.
-   */
-  NS_IMETHOD AppendChild(EditTransactionBase* aTransaction);
-
-  /**
    * Get the name assigned to this transaction.
    */
-  NS_IMETHOD GetName(nsAtom** aName);
+  nsAtom* GetName() const;
 
   const nsTArray<OwningNonNull<EditTransactionBase>>& ChildTransactions()
       const {
@@ -61,6 +45,7 @@ class EditAggregateTransaction : public EditTransactionBase {
   }
 
  protected:
+  EditAggregateTransaction() = default;
   virtual ~EditAggregateTransaction() = default;
 
   nsTArray<OwningNonNull<EditTransactionBase>> mChildren;

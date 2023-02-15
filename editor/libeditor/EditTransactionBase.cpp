@@ -3,13 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/EditTransactionBase.h"
+#include "EditTransactionBase.h"
 
 #include "mozilla/Logging.h"
 
 #include "ChangeAttributeTransaction.h"
 #include "ChangeStyleTransaction.h"
 #include "CompositionTransaction.h"
+#include "DeleteContentTransactionBase.h"
+#include "DeleteMultipleRangesTransaction.h"
 #include "DeleteNodeTransaction.h"
 #include "DeleteRangeTransaction.h"
 #include "DeleteTextTransaction.h"
@@ -76,6 +78,8 @@ LogModule* EditTransactionBase::GetLogModule() {
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(ChangeAttributeTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(ChangeStyleTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(CompositionTransaction)
+NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(DeleteContentTransactionBase)
+NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(DeleteMultipleRangesTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(DeleteNodeTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(DeleteRangeTransaction)
 NS_IMPL_EDITTRANSACTIONBASE_GETASMETHODS(DeleteTextTransaction)

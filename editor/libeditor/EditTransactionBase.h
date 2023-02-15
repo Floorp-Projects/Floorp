@@ -51,6 +51,8 @@ class EditTransactionBase : public nsITransaction {
   NS_DECL_GETASTRANSACTION_BASE(ChangeAttributeTransaction)
   NS_DECL_GETASTRANSACTION_BASE(ChangeStyleTransaction)
   NS_DECL_GETASTRANSACTION_BASE(CompositionTransaction)
+  NS_DECL_GETASTRANSACTION_BASE(DeleteContentTransactionBase)
+  NS_DECL_GETASTRANSACTION_BASE(DeleteMultipleRangesTransaction)
   NS_DECL_GETASTRANSACTION_BASE(DeleteNodeTransaction)
   NS_DECL_GETASTRANSACTION_BASE(DeleteRangeTransaction)
   NS_DECL_GETASTRANSACTION_BASE(DeleteTextTransaction)

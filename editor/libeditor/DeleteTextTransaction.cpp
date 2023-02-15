@@ -5,12 +5,14 @@
 
 #include "DeleteTextTransaction.h"
 
+#include "EditorBase.h"
+#include "EditorDOMPoint.h"
 #include "HTMLEditUtils.h"
+#include "SelectionState.h"
+
 #include "mozilla/Assertions.h"
-#include "mozilla/EditorBase.h"
-#include "mozilla/EditorDOMPoint.h"
-#include "mozilla/SelectionState.h"
 #include "mozilla/dom/Selection.h"
+
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsISupportsImpl.h"
@@ -77,7 +79,7 @@ DeleteTextTransaction::MaybeCreateForNextCharacter(EditorBase& aEditorBase,
 DeleteTextTransaction::DeleteTextTransaction(EditorBase& aEditorBase,
                                              Text& aTextNode, uint32_t aOffset,
                                              uint32_t aLengthToDelete)
-    : mEditorBase(&aEditorBase),
+    : DeleteContentTransactionBase(aEditorBase),
       mTextNode(&aTextNode),
       mOffset(aOffset),
       mLengthToDelete(aLengthToDelete) {
@@ -99,11 +101,11 @@ std::ostream& operator<<(std::ostream& aStream,
   return aStream;
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteTextTransaction, EditTransactionBase,
-                                   mEditorBase, mTextNode)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteTextTransaction,
+                                   DeleteContentTransactionBase, mTextNode)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeleteTextTransaction)
-NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
+NS_INTERFACE_MAP_END_INHERITING(DeleteContentTransactionBase)
 
 bool DeleteTextTransaction::CanDoIt() const {
   if (NS_WARN_IF(!mTextNode) || NS_WARN_IF(!mEditorBase)) {
@@ -145,10 +147,17 @@ NS_IMETHODIMP DeleteTextTransaction::DoTransaction() {
     return NS_OK;
   }
 
-  editorBase->CollapseSelectionTo(EditorRawDOMPoint(textNode, mOffset), error);
+  editorBase->CollapseSelectionTo(SuggestPointToPutCaret(), error);
   NS_WARNING_ASSERTION(!error.Failed(),
                        "EditorBase::CollapseSelectionTo() failed");
   return error.StealNSResult();
+}
+
+EditorDOMPoint DeleteTextTransaction::SuggestPointToPutCaret() const {
+  if (NS_WARN_IF(!mTextNode) || NS_WARN_IF(!mTextNode->IsInComposedDoc())) {
+    return EditorDOMPoint();
+  }
+  return EditorDOMPoint(mTextNode, mOffset);
 }
 
 // XXX: We may want to store the selection state and restore it properly.  Was

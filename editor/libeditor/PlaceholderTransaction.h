@@ -51,13 +51,14 @@ class PlaceholderTransaction final : public EditAggregateTransaction,
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PlaceholderTransaction,
                                            EditAggregateTransaction)
-  // ------------ EditAggregateTransaction -----------------------
 
   NS_DECL_EDITTRANSACTIONBASE
   NS_DECL_EDITTRANSACTIONBASE_GETASMETHODS_OVERRIDE(PlaceholderTransaction)
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
   NS_IMETHOD Merge(nsITransaction* aTransaction, bool* aDidMerge) override;
+
+  void AppendChild(EditTransactionBase& aTransaction);
 
   nsresult EndPlaceHolderBatch();
 
