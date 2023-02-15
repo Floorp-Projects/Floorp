@@ -97,6 +97,7 @@
 #include "mozilla/layers/PersistentBufferProvider.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/RestyleManager.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/Telemetry.h"
@@ -3315,15 +3316,23 @@ bool CanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
     return SetFontInternalDisconnected(aFont, aError);
   }
 
-  nsCString usedFont;
-  RefPtr<const ComputedStyle> sc =
-      GetFontStyleForServo(mCanvasElement, aFont, presShell, usedFont, aError);
-  if (!sc) {
+  nsPresContext* c = presShell->GetPresContext();
+  CacheKey key{aFont, c->RestyleManager()->GetRestyleGeneration()};
+  auto entry = mFontStyleCache.Lookup(key);
+  if (!entry) {
+    FontStyleData newData;
+    newData.mKey = key;
+    newData.mStyle = GetFontStyleForServo(mCanvasElement, aFont, presShell,
+                                          newData.mUsedFont, aError);
+    entry.Set(newData);
+  }
+
+  const auto& data = entry.Data();
+  if (!data.mStyle) {
     return false;
   }
 
-  const nsStyleFont* fontStyle = sc->StyleFont();
-  nsPresContext* c = presShell->GetPresContext();
+  const nsStyleFont* fontStyle = data.mStyle->StyleFont();
 
   // Purposely ignore the font size that respects the user's minimum
   // font preference (fontStyle->mFont.size) in favor of the computed
@@ -3358,7 +3367,7 @@ bool CanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
   gfxFontGroup* newFontGroup = metrics->GetThebesFontGroup();
   CurrentState().fontGroup = newFontGroup;
   NS_ASSERTION(CurrentState().fontGroup, "Could not get font group");
-  CurrentState().font = usedFont;
+  CurrentState().font = data.mUsedFont;
   CurrentState().fontFont = fontStyle->mFont;
   CurrentState().fontFont.size = fontStyle->mSize;
   CurrentState().fontLanguage = fontStyle->mLanguage;
