@@ -27,38 +27,38 @@ namespace net {
 
 struct HttpChannelOnStartRequestArgs
 {
-  nsITransportSecurityInfo securityInfo;
-  nsIReferrerInfo overrideReferrerInfo;
-  uint64_t cacheEntryId;
-  int64_t altDataLength;
-  nsCString altDataType;
-  nsCString cookie;
-  NetAddr selfAddr;
-  NetAddr peerAddr;
-  ResourceTimingStructArgs timing;
-  ParentLoadInfoForwarderArgs loadInfoForwarder;
   nsresult channelStatus;
-  TRRMode effectiveTRRMode;
-  TRRSkippedReason trrSkipReason;
-  uint32_t cacheFetchCount;
-  uint32_t cacheExpirationTime;
-  uint32_t cacheKey;
-  uint32_t? multiPartID;
+  ParentLoadInfoForwarderArgs loadInfoForwarder;
   bool isFromCache;
   bool isRacing;
   bool cacheEntryAvailable;
+  uint64_t cacheEntryId;
+  uint32_t cacheFetchCount;
+  uint32_t cacheExpirationTime;
+  nsITransportSecurityInfo securityInfo;
+  NetAddr selfAddr;
+  NetAddr peerAddr;
+  uint8_t redirectCount;
+  uint32_t cacheKey;
+  nsCString altDataType;
+  int64_t altDataLength;
   bool deliveringAltData;
   bool applyConversion;
   bool isResolvedByTRR;
+  ResourceTimingStructArgs timing;
   bool allRedirectsSameOrigin;
+  uint32_t? multiPartID;
   bool isFirstPartOfMultiPart;
   bool isLastPartOfMultiPart;
   CrossOriginOpenerPolicy openerPolicy;
+  nsIReferrerInfo overrideReferrerInfo;
   bool shouldWaitForOnStartRequestSent;
+  nsCString cookie;
   bool dataFromSocketProcess;
   bool hasHTTPSRR;
   bool isProxyUsed;
-  uint8_t redirectCount;
+  TRRMode effectiveTRRMode;
+  TRRSkippedReason trrSkipReason;
 };
 
 struct HttpChannelAltDataStream
