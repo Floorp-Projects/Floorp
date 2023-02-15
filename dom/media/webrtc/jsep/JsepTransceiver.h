@@ -190,10 +190,8 @@ class JsepTransceiver {
     return mRecvTrack.GetMediaType();
   }
 
-  bool HasTransport() const { return mTransport.mComponents != 0; }
-
   bool HasOwnTransport() const {
-    if (HasTransport() &&
+    if (mTransport.mComponents &&
         (!HasBundleLevel() || (GetLevel() == BundleLevel()))) {
       return true;
     }
