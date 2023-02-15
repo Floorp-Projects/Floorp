@@ -1126,7 +1126,8 @@ nsresult nsSystemInfo::Init() {
     return rv;
   }
   rv = SetPropertyAsBool(u"isPackagedApp"_ns,
-                         widget::IsRunningUnderFlatpakOrSnap());
+                         widget::IsRunningUnderFlatpakOrSnap() ||
+                             widget::IsPackagedAppFileExists());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
