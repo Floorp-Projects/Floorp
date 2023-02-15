@@ -60,7 +60,7 @@ Document* AnimationUtils::GetDocumentFromGlobal(JSObject* aGlobalObject) {
 
 /* static */
 bool AnimationUtils::FrameHasAnimatedScale(const nsIFrame* aFrame) {
-  EffectSet* effectSet = EffectSet::GetEffectSetForFrame(
+  EffectSet* effectSet = EffectSet::GetForFrame(
       aFrame, nsCSSPropertyIDSet::TransformLikeProperties());
   if (!effectSet) {
     return false;
@@ -80,7 +80,7 @@ bool AnimationUtils::HasCurrentTransitions(const Element* aElement,
                                            PseudoStyleType aPseudoType) {
   MOZ_ASSERT(aElement);
 
-  EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
+  EffectSet* effectSet = EffectSet::Get(aElement, aPseudoType);
   if (!effectSet) {
     return false;
   }

@@ -249,8 +249,7 @@ static uint64_t AddAnimationsForWebRender(
     nsDisplayItem* aItem, RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder,
     const Maybe<LayoutDevicePoint>& aPosition = Nothing()) {
-  EffectSet* effects =
-      EffectSet::GetEffectSetForFrame(aItem->Frame(), aItem->GetType());
+  auto* effects = EffectSet::GetForFrame(aItem->Frame(), aItem->GetType());
   if (!effects || effects->IsEmpty()) {
     // If there is no animation on the nsIFrame, that means
     //  1) we've never created any animations on this frame or

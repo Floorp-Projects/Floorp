@@ -581,7 +581,7 @@ void Gecko_UpdateAnimations(const Element* aElement,
   }
 
   if (aTasks & UpdateAnimationsTasks::CascadeResults) {
-    EffectSet* effectSet = EffectSet::GetEffectSet(aElement, pseudoType);
+    EffectSet* effectSet = EffectSet::Get(aElement, pseudoType);
     // CSS animations/transitions might have been destroyed as part of the above
     // steps so before updating cascade results, we check if there are still any
     // animations to update.
@@ -608,14 +608,13 @@ size_t Gecko_GetAnimationEffectCount(const Element* aElementOrPseudo) {
   PseudoStyleType pseudoType =
       GetPseudoTypeFromElementForAnimation(aElementOrPseudo);
 
-  EffectSet* effectSet = EffectSet::GetEffectSet(aElementOrPseudo, pseudoType);
+  EffectSet* effectSet = EffectSet::Get(aElementOrPseudo, pseudoType);
   return effectSet ? effectSet->Count() : 0;
 }
 
 bool Gecko_ElementHasAnimations(const Element* aElement) {
   PseudoStyleType pseudoType = GetPseudoTypeFromElementForAnimation(aElement);
-
-  return !!EffectSet::GetEffectSet(aElement, pseudoType);
+  return !!EffectSet::Get(aElement, pseudoType);
 }
 
 bool Gecko_ElementHasCSSAnimations(const Element* aElement) {

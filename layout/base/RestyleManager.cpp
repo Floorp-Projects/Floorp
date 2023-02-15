@@ -1835,7 +1835,7 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
 
 /* static */
 uint64_t RestyleManager::GetAnimationGenerationForFrame(nsIFrame* aStyleFrame) {
-  EffectSet* effectSet = EffectSet::GetEffectSetForStyleFrame(aStyleFrame);
+  EffectSet* effectSet = EffectSet::GetForStyleFrame(aStyleFrame);
   return effectSet ? effectSet->GetAnimationGeneration() : 0;
 }
 
@@ -1993,8 +1993,7 @@ void RestyleManager::AnimationsWithDestroyedFrame ::StopAnimationsWithoutFrame(
 
     // All other animations should keep running but not running on the
     // *compositor* at this point.
-    EffectSet* effectSet = EffectSet::GetEffectSet(element, aPseudoType);
-    if (effectSet) {
+    if (EffectSet* effectSet = EffectSet::Get(element, aPseudoType)) {
       for (KeyframeEffect* effect : *effectSet) {
         effect->ResetIsRunningOnCompositor();
       }

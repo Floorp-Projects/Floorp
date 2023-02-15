@@ -47,15 +47,15 @@ class EffectSet {
   // Methods for supporting cycle-collection
   void Traverse(nsCycleCollectionTraversalCallback& aCallback);
 
-  static EffectSet* GetEffectSet(const dom::Element* aElement,
-                                 PseudoStyleType aPseudoType);
-  static EffectSet* GetOrCreateEffectSet(dom::Element* aElement,
-                                         PseudoStyleType aPseudoType);
+  static EffectSet* Get(const dom::Element* aElement,
+                        PseudoStyleType aPseudoType);
+  static EffectSet* GetOrCreate(dom::Element* aElement,
+                                PseudoStyleType aPseudoType);
 
-  static EffectSet* GetEffectSetForFrame(const nsIFrame* aFrame,
-                                         const nsCSSPropertyIDSet& aProperties);
-  static EffectSet* GetEffectSetForFrame(const nsIFrame* aFrame,
-                                         DisplayItemType aDisplayItemType);
+  static EffectSet* GetForFrame(const nsIFrame* aFrame,
+                                const nsCSSPropertyIDSet& aProperties);
+  static EffectSet* GetForFrame(const nsIFrame* aFrame,
+                                DisplayItemType aDisplayItemType);
   // Gets the EffectSet associated with the specified frame's content.
   //
   // Typically the specified frame should be a "style frame".
@@ -69,16 +69,16 @@ class EffectSet {
   // In such a situation, passing in the primary frame here will return nullptr
   // despite the fact that it has a transform animation applied to it.
   //
-  // GetEffectSetForFrame, above, handles this by automatically looking up the
+  // GetForFrame, above, handles this by automatically looking up the
   // EffectSet on the corresponding style frame when querying transform
   // properties. Unless you are sure you know what you are doing, you should
-  // try using GetEffectSetForFrame first.
+  // try using GetForFrame first.
   //
   // If you decide to use this, consider documenting why you are sure it is ok
   // to use this.
-  static EffectSet* GetEffectSetForStyleFrame(const nsIFrame* aStyleFrame);
+  static EffectSet* GetForStyleFrame(const nsIFrame* aStyleFrame);
 
-  static EffectSet* GetEffectSetForEffect(const dom::KeyframeEffect* aEffect);
+  static EffectSet* GetForEffect(const dom::KeyframeEffect* aEffect);
 
   static void DestroyEffectSet(dom::Element* aElement,
                                PseudoStyleType aPseudoType);

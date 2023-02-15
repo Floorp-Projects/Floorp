@@ -24,8 +24,8 @@ void EffectSet::Traverse(nsCycleCollectionTraversalCallback& aCallback) {
 }
 
 /* static */
-EffectSet* EffectSet::GetEffectSet(const dom::Element* aElement,
-                                   PseudoStyleType aPseudoType) {
+EffectSet* EffectSet::Get(const dom::Element* aElement,
+                          PseudoStyleType aPseudoType) {
   if (auto* data = aElement->GetAnimationData()) {
     return data->GetEffectSetFor(aPseudoType);
   }
@@ -33,14 +33,14 @@ EffectSet* EffectSet::GetEffectSet(const dom::Element* aElement,
 }
 
 /* static */
-EffectSet* EffectSet::GetOrCreateEffectSet(dom::Element* aElement,
-                                           PseudoStyleType aPseudoType) {
+EffectSet* EffectSet::GetOrCreate(dom::Element* aElement,
+                                  PseudoStyleType aPseudoType) {
   return &aElement->EnsureAnimationData().EnsureEffectSetFor(aPseudoType);
 }
 
 /* static */
-EffectSet* EffectSet::GetEffectSetForFrame(
-    const nsIFrame* aFrame, const nsCSSPropertyIDSet& aProperties) {
+EffectSet* EffectSet::GetForFrame(const nsIFrame* aFrame,
+                                  const nsCSSPropertyIDSet& aProperties) {
   MOZ_ASSERT(aFrame);
 
   // Transform animations are run on the primary frame (but stored on the
@@ -68,18 +68,18 @@ EffectSet* EffectSet::GetEffectSetForFrame(
     return nullptr;
   }
 
-  return GetEffectSet(target->mElement, target->mPseudoType);
+  return Get(target->mElement, target->mPseudoType);
 }
 
 /* static */
-EffectSet* EffectSet::GetEffectSetForFrame(const nsIFrame* aFrame,
-                                           DisplayItemType aDisplayItemType) {
-  return EffectSet::GetEffectSetForFrame(
+EffectSet* EffectSet::GetForFrame(const nsIFrame* aFrame,
+                                  DisplayItemType aDisplayItemType) {
+  return EffectSet::GetForFrame(
       aFrame, LayerAnimationInfo::GetCSSPropertiesFor(aDisplayItemType));
 }
 
 /* static */
-EffectSet* EffectSet::GetEffectSetForStyleFrame(const nsIFrame* aStyleFrame) {
+EffectSet* EffectSet::GetForStyleFrame(const nsIFrame* aStyleFrame) {
   Maybe<NonOwningAnimationTarget> target =
       EffectCompositor::GetAnimationElementAndPseudoForFrame(aStyleFrame);
 
@@ -87,18 +87,17 @@ EffectSet* EffectSet::GetEffectSetForStyleFrame(const nsIFrame* aStyleFrame) {
     return nullptr;
   }
 
-  return GetEffectSet(target->mElement, target->mPseudoType);
+  return Get(target->mElement, target->mPseudoType);
 }
 
 /* static */
-EffectSet* EffectSet::GetEffectSetForEffect(
-    const dom::KeyframeEffect* aEffect) {
+EffectSet* EffectSet::GetForEffect(const dom::KeyframeEffect* aEffect) {
   NonOwningAnimationTarget target = aEffect->GetAnimationTarget();
   if (!target) {
     return nullptr;
   }
 
-  return EffectSet::GetEffectSet(target.mElement, target.mPseudoType);
+  return EffectSet::Get(target.mElement, target.mPseudoType);
 }
 
 /* static */

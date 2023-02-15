@@ -229,7 +229,7 @@ static bool HasMatchingAnimations(const nsIFrame* aFrame,
     return false;
   }
 
-  EffectSet* effectSet = EffectSet::GetEffectSetForFrame(aFrame, aPropertySet);
+  EffectSet* effectSet = EffectSet::GetForFrame(aFrame, aPropertySet);
   if (!effectSet) {
     return false;
   }
@@ -252,8 +252,7 @@ bool nsLayoutUtils::HasAnimationOfPropertySet(
     const nsIFrame* aFrame, const nsCSSPropertyIDSet& aPropertySet,
     EffectSet* aEffectSet) {
   MOZ_ASSERT(
-      !aEffectSet ||
-          EffectSet::GetEffectSetForFrame(aFrame, aPropertySet) == aEffectSet,
+      !aEffectSet || EffectSet::GetForFrame(aFrame, aPropertySet) == aEffectSet,
       "The EffectSet, if supplied, should match what we would otherwise fetch");
 
   if (!aEffectSet) {
@@ -309,7 +308,7 @@ nsCSSPropertyIDSet nsLayoutUtils::GetAnimationPropertiesForCompositor(
   // We fetch the effects for the style frame here since this method is called
   // by RestyleManager::AddLayerChangesForAnimation which takes care to apply
   // the relevant hints to the primary frame as needed.
-  EffectSet* effects = EffectSet::GetEffectSetForStyleFrame(aStyleFrame);
+  EffectSet* effects = EffectSet::GetForStyleFrame(aStyleFrame);
   if (!effects) {
     return properties;
   }
