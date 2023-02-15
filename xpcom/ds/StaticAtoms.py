@@ -2140,22 +2140,10 @@ STATIC_ATOMS = [
     Atom("onfetch", "onfetch"),
     # Content property names
     Atom("afterPseudoProperty", "afterPseudoProperty"),  # nsXMLElement*
-    Atom("animationsProperty", "AnimationsProperty"),  # FrameAnimations*
-    Atom("animationsOfBeforeProperty", "AnimationsOfBeforeProperty"),  # FrameAnimations*
-    Atom("animationsOfAfterProperty", "AnimationsOfAfterProperty"),  # FrameAnimations*
-    Atom("animationsOfMarkerProperty", "AnimationsOfMarkerProperty"),  # FrameAnimations*
-    Atom("animationEffectsProperty", "AnimationEffectsProperty"),  # EffectSet*
-    Atom("animationEffectsForBeforeProperty", "AnimationsEffectsForBeforeProperty"),  # EffectSet*
-    Atom("animationEffectsForAfterProperty", "AnimationsEffectsForAfterProperty"),  # EffectSet*
-    Atom("animationEffectsForMarkerProperty", "AnimationsEffectsForMarkerProperty"),  # EffectSet*
     Atom("beforePseudoProperty", "beforePseudoProperty"),  # nsXMLElement*
     Atom("cssPseudoElementBeforeProperty", "CSSPseudoElementBeforeProperty"),  # CSSPseudoElement*
     Atom("cssPseudoElementAfterProperty", "CSSPseudoElementAfterProperty"),  # CSSPseudoElement*
     Atom("cssPseudoElementMarkerProperty", "CSSPseudoElementMarkerProperty"),  # CSSPseudoElement*
-    Atom("transitionsProperty", "TransitionsProperty"),  # FrameTransitions*
-    Atom("transitionsOfBeforeProperty", "TransitionsOfBeforeProperty"),  # FrameTransitions*
-    Atom("transitionsOfAfterProperty", "TransitionsOfAfterProperty"),  # FrameTransitions*
-    Atom("transitionsOfMarkerProperty", "TransitionsOfMarkerProperty"),  # FrameTransitions*
     Atom("genConInitializerProperty", "QuoteNodeProperty"),
     Atom("labelMouseDownPtProperty", "LabelMouseDownPtProperty"),
     Atom("lockedStyleStates", "lockedStyleStates"),

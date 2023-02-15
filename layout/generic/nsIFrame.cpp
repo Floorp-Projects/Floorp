@@ -11535,15 +11535,13 @@ nsIFrame::CaretPosition::CaretPosition() : mContentOffset(0) {}
 nsIFrame::CaretPosition::~CaretPosition() = default;
 
 bool nsIFrame::HasCSSAnimations() {
-  auto collection =
-      AnimationCollection<CSSAnimation>::GetAnimationCollection(this);
-  return collection && collection->mAnimations.Length() > 0;
+  auto* collection = AnimationCollection<CSSAnimation>::Get(this);
+  return collection && !collection->mAnimations.IsEmpty();
 }
 
 bool nsIFrame::HasCSSTransitions() {
-  auto collection =
-      AnimationCollection<CSSTransition>::GetAnimationCollection(this);
-  return collection && collection->mAnimations.Length() > 0;
+  auto* collection = AnimationCollection<CSSTransition>::Get(this);
+  return collection && !collection->mAnimations.IsEmpty();
 }
 
 void nsIFrame::AddSizeOfExcludingThisForTree(nsWindowSizes& aSizes) const {
@@ -11756,10 +11754,8 @@ void nsIFrame::UpdateVisibleDescendantsState() {
 }
 
 void nsIFrame::UpdateAnimationVisibility() {
-  auto* animationCollection =
-      AnimationCollection<CSSAnimation>::GetAnimationCollection(this);
-  auto* transitionCollection =
-      AnimationCollection<CSSTransition>::GetAnimationCollection(this);
+  auto* animationCollection = AnimationCollection<CSSAnimation>::Get(this);
+  auto* transitionCollection = AnimationCollection<CSSTransition>::Get(this);
 
   if ((!animationCollection || animationCollection->mAnimations.IsEmpty()) &&
       (!transitionCollection || transitionCollection->mAnimations.IsEmpty())) {

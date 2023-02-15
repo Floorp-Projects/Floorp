@@ -10,6 +10,7 @@
 
 #include "mozilla/AnimationEventDispatcher.h"
 #include "mozilla/EffectCompositor.h"
+#include "mozilla/ElementAnimationData.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/dom/AnimationEffect.h"
@@ -374,9 +375,8 @@ void nsAnimationManager::DoUpdateAnimations(
   // Likewise, when we initially construct frames, we're not in a
   // style change, but also not in an animation restyle.
 
-  CSSAnimationCollection* collection =
-      CSSAnimationCollection::GetAnimationCollection(aTarget.mElement,
-                                                     aTarget.mPseudoType);
+  auto* collection =
+      CSSAnimationCollection::Get(aTarget.mElement, aTarget.mPseudoType);
   if (!collection && aStyle.mAnimationNameCount == 1 &&
       aStyle.mAnimations[0].GetName() == nsGkAtoms::_empty) {
     return;
@@ -398,16 +398,10 @@ void nsAnimationManager::DoUpdateAnimations(
   }
 
   if (!collection) {
-    bool createdCollection = false;
-    collection = CSSAnimationCollection::GetOrCreateAnimationCollection(
-        aTarget.mElement, aTarget.mPseudoType, &createdCollection);
-    if (!collection) {
-      MOZ_ASSERT(!createdCollection, "outparam should agree with return value");
-      NS_WARNING("allocating collection failed");
-      return;
-    }
-
-    if (createdCollection) {
+    collection =
+        &aTarget.mElement->EnsureAnimationData().EnsureAnimationCollection(
+            *aTarget.mElement, aTarget.mPseudoType);
+    if (!collection->isInList()) {
       AddElementCollection(collection);
     }
   }

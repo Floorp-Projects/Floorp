@@ -103,7 +103,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CharacterData)
   nsIContent::Unlink(tmp);
 
   if (nsContentSlots* slots = tmp->GetExistingContentSlots()) {
-    slots->Unlink();
+    slots->Unlink(*tmp);
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 

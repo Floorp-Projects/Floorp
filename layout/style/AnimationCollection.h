@@ -21,73 +21,42 @@ namespace mozilla {
 namespace dom {
 class Element;
 }
-
-// Traits class to define the specific atoms used when storing specializations
-// of AnimationCollection as a property on an Element (e.g. which atom
-// to use when storing an AnimationCollection<CSSAnimation> for a ::before
-// pseudo-element).
-template <class AnimationType>
-struct AnimationTypeTraits {};
+enum class PseudoStyleType : uint8_t;
 
 template <class AnimationType>
 class AnimationCollection
     : public LinkedListElement<AnimationCollection<AnimationType>> {
   typedef AnimationCollection<AnimationType> SelfType;
-  typedef AnimationTypeTraits<AnimationType> TraitsType;
 
-  AnimationCollection(dom::Element* aElement, nsAtom* aElementProperty)
-      : mElement(aElement), mElementProperty(aElementProperty) {
+ public:
+  AnimationCollection(dom::Element& aOwner, PseudoStyleType aPseudoType)
+      : mElement(aOwner), mPseudo(aPseudoType) {
     MOZ_COUNT_CTOR(AnimationCollection);
   }
 
- public:
-  ~AnimationCollection() {
-    MOZ_ASSERT(mCalledPropertyDtor,
-               "must call destructor through element property dtor");
-    MOZ_COUNT_DTOR(AnimationCollection);
-    LinkedListElement<SelfType>::remove();
-  }
+  ~AnimationCollection();
 
   void Destroy();
-
-  static void PropertyDtor(void* aObject, nsAtom* aPropertyName,
-                           void* aPropertyValue, void* aData);
-
-  // Get the collection of animations for the given |aElement| and
-  // |aPseudoType|.
-  static AnimationCollection<AnimationType>* GetAnimationCollection(
-      const dom::Element* aElement, PseudoStyleType aPseudoType);
 
   // Given the frame |aFrame| with possibly animated content, finds its
   // associated collection of animations. If |aFrame| is a generated content
   // frame, this function may examine the parent frame to search for such
   // animations.
-  static AnimationCollection<AnimationType>* GetAnimationCollection(
-      const nsIFrame* aFrame);
+  static AnimationCollection* Get(const nsIFrame* aFrame);
+  static AnimationCollection* Get(const dom::Element* aElement,
+                                  PseudoStyleType aPseudoType);
 
-  // Get the collection of animations for the given |aElement| and
-  // |aPseudoType| or create it if it does not already exist.
-  //
-  // We'll set the outparam |aCreatedCollection| to true if we have
-  // to create the collection and we successfully do so. Otherwise,
-  // we'll set it to false.
-  static AnimationCollection<AnimationType>* GetOrCreateAnimationCollection(
-      dom::Element* aElement, PseudoStyleType aPseudoType,
-      bool* aCreatedCollection);
-
-  dom::Element* mElement;
-
-  // the atom we use in mElement's prop table (must be a static atom,
-  // i.e., in an atom list)
-  nsAtom* mElementProperty;
+  // The element. Weak reference is fine since it owns us.
+  // FIXME(emilio): These are only needed for Destroy(), so maybe remove and
+  // rely on the caller clearing us properly?
+  dom::Element& mElement;
+  const PseudoStyleType mPseudo;
 
   nsTArray<RefPtr<AnimationType>> mAnimations;
 
  private:
-  static nsAtom* GetPropertyAtomForPseudoType(PseudoStyleType aPseudoType);
-
   // We distinguish between destroying this by calling Destroy() vs directly
-  // calling RemoveProperty on an element.
+  // clearing the collection.
   //
   // The former case represents regular updating due to style changes and should
   // trigger subsequent restyles.
@@ -95,10 +64,6 @@ class AnimationCollection
   // The latter case represents document tear-down or other DOM surgery in
   // which case we should not trigger restyles.
   bool mCalledDestroy = false;
-
-#ifdef DEBUG
-  bool mCalledPropertyDtor = false;
-#endif
 };
 
 }  // namespace mozilla

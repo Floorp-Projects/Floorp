@@ -53,9 +53,8 @@ class CommonAnimationManager {
   void StopAnimationsForElement(dom::Element* aElement,
                                 PseudoStyleType aPseudoType) {
     MOZ_ASSERT(aElement);
-    AnimationCollection<AnimationType>* collection =
-        AnimationCollection<AnimationType>::GetAnimationCollection(aElement,
-                                                                   aPseudoType);
+    auto* collection =
+        AnimationCollection<AnimationType>::Get(aElement, aPseudoType);
     if (!collection) {
       return;
     }

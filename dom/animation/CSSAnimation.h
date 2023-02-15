@@ -233,20 +233,6 @@ class CSSAnimationKeyframeEffect : public KeyframeEffect {
 
 }  // namespace dom
 
-template <>
-struct AnimationTypeTraits<dom::CSSAnimation> {
-  static nsAtom* ElementPropertyAtom() { return nsGkAtoms::animationsProperty; }
-  static nsAtom* BeforePropertyAtom() {
-    return nsGkAtoms::animationsOfBeforeProperty;
-  }
-  static nsAtom* AfterPropertyAtom() {
-    return nsGkAtoms::animationsOfAfterProperty;
-  }
-  static nsAtom* MarkerPropertyAtom() {
-    return nsGkAtoms::animationsOfMarkerProperty;
-  }
-};
-
 }  // namespace mozilla
 
 #endif  // mozilla_dom_CSSAnimation_h

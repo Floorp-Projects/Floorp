@@ -15,6 +15,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "nsCSSPropertyIDSet.h"
 #include "mozilla/EffectSet.h"
+#include "mozilla/ElementAnimationData.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StyleAnimationValue.h"
@@ -64,8 +65,7 @@ bool nsTransitionManager::UpdateTransitions(dom::Element* aElement,
     return false;
   }
 
-  CSSTransitionCollection* collection =
-      CSSTransitionCollection::GetAnimationCollection(aElement, aPseudoType);
+  auto* collection = CSSTransitionCollection::Get(aElement, aPseudoType);
   return DoUpdateTransitions(*aNewStyle.StyleUIReset(), aElement, aPseudoType,
                              collection, aOldStyle, aNewStyle);
 }
@@ -74,7 +74,7 @@ bool nsTransitionManager::DoUpdateTransitions(
     const nsStyleUIReset& aStyle, dom::Element* aElement,
     PseudoStyleType aPseudoType, CSSTransitionCollection*& aElementTransitions,
     const ComputedStyle& aOldStyle, const ComputedStyle& aNewStyle) {
-  MOZ_ASSERT(!aElementTransitions || aElementTransitions->mElement == aElement,
+  MOZ_ASSERT(!aElementTransitions || &aElementTransitions->mElement == aElement,
              "Element mismatch");
 
   // Per http://lists.w3.org/Archives/Public/www-style/2009Aug/0109.html
@@ -291,7 +291,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
   // IsShorthand itself will assert if aProperty is not a property.
   MOZ_ASSERT(!nsCSSProps::IsShorthand(aProperty), "property out of range");
   NS_ASSERTION(
-      !aElementTransitions || aElementTransitions->mElement == aElement,
+      !aElementTransitions || &aElementTransitions->mElement == aElement,
       "Element mismatch");
 
   aProperty = nsCSSProps::Physicalize(aProperty, aNewStyle);
@@ -475,17 +475,10 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
   animation->PlayFromStyle();
 
   if (!aElementTransitions) {
-    bool createdCollection = false;
     aElementTransitions =
-        CSSTransitionCollection::GetOrCreateAnimationCollection(
-            aElement, aPseudoType, &createdCollection);
-    if (!aElementTransitions) {
-      MOZ_ASSERT(!createdCollection, "outparam should agree with return value");
-      NS_WARNING("allocating collection failed");
-      return false;
-    }
-
-    if (createdCollection) {
+        &aElement->EnsureAnimationData().EnsureTransitionCollection(
+            *aElement, aPseudoType);
+    if (!aElementTransitions->isInList()) {
       AddElementCollection(aElementTransitions);
     }
   }
