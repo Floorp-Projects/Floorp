@@ -695,7 +695,7 @@ void SVGGeometryFrame::Render(gfxContext* aContext, uint32_t aRenderComponents,
 
 bool SVGGeometryFrame::IsInvisible() const {
   if (!StyleVisibility()->IsVisible()) {
-    return false;
+    return true;
   }
 
   // Anything below will round to zero later down the pipeline.
