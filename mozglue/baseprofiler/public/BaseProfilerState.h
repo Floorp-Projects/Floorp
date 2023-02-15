@@ -181,8 +181,8 @@ class MOZ_RAII AutoProfilerStats {
     MACRO(4, "fileioall", FileIOAll,                                         \
           "Add file I/O from all threads, implies fileio")                   \
                                                                              \
-    MACRO(5, "noiostacks", NoIOStacks,                                       \
-          "File I/O markers do not capture stacks, to reduce overhead")      \
+    MACRO(5, "nomarkerstacks", NoMarkerStacks,                               \
+          "Markers do not capture stacks, to reduce overhead")               \
                                                                              \
     MACRO(6, "screenshots", Screenshots,                                     \
           "Take a snapshot of the window on every composition")              \

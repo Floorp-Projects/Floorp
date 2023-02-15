@@ -442,9 +442,9 @@ const featureDescriptions = [
       "Record File I/O markers from all threads, even unregistered threads.",
   },
   {
-    name: "No File IO Stack Sampling",
-    value: "noiostacks",
-    title: "Do not sample stacks when recording File I/O markers.",
+    name: "No Marker Stack Sampling",
+    value: "nomarkerstacks",
+    title: "Do not sample stacks when recording markers.",
   },
   {
     name: "Sequential Styling",
