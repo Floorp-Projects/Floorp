@@ -2,16 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /*
  * This module provides an interface to access DoH configuration - e.g. whether
  * DoH is enabled, whether capabilities are enabled, etc. The configuration is
  * sourced from either Remote Settings or pref values, with Remote Settings
  * being preferred.
  */
-var EXPORTED_SYMBOLS = ["DoHConfigController"];
-
 const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"
 );
@@ -159,7 +155,7 @@ function makeBaseConfigObject() {
   return newConfig;
 }
 
-const DoHConfigController = {
+export const DoHConfigController = {
   initComplete: null,
   _resolveInitComplete: null,
 

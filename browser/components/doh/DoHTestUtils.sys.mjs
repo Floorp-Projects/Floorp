@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["DoHTestUtils"];
-
 const lazy = {};
 
 ChromeUtils.defineModuleGetter(
@@ -33,7 +29,7 @@ const kControllerReloadedTopic = "doh:controller-reloaded";
  * Some tests need to load/reset config while DoH actors are
  * uninitialized. Pass waitForConfigFlushes = false in these cases.
  */
-const DoHTestUtils = {
+export const DoHTestUtils = {
   providers: [
     {
       uri: "https://example.com/1",

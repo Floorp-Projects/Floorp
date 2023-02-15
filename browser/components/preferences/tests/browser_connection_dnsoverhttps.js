@@ -12,21 +12,11 @@ const {
   "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "DoHController",
-  "resource:///modules/DoHController.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "DoHConfigController",
-  "resource:///modules/DoHConfig.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "DoHTestUtils",
-  "resource://testing-common/DoHTestUtils.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  DoHConfigController: "resource:///modules/DoHConfig.sys.mjs",
+  DoHController: "resource:///modules/DoHController.sys.mjs",
+  DoHTestUtils: "resource://testing-common/DoHTestUtils.sys.mjs",
+});
 
 const SUBDIALOG_URL =
   "chrome://browser/content/preferences/dialogs/connection.xhtml";
