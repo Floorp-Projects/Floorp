@@ -768,6 +768,19 @@ Result<EditActionResult, nsresult> HTMLEditor::CanHandleHTMLEditSubAction(
     return EditActionResult::CanceledResult();
   }
 
+  // If anchor node is in an HTML element which has inert attribute, we should
+  // do nothing.
+  // XXX HTMLEditor typically uses first range instead of anchor/focus range.
+  //     Therefore, referring first range here is more reasonable than
+  //     anchor/focus range of Selection.
+  nsIContent* const selAnchorContent = SelectionRef().GetDirection() == eDirNext
+                                           ? nsIContent::FromNode(selStartNode)
+                                           : nsIContent::FromNode(selEndNode);
+  if (selAnchorContent &&
+      HTMLEditUtils::ContentIsInert(*selAnchorContent->AsContent())) {
+    return EditActionResult::CanceledResult();
+  }
+
   // XXX What does it mean the common ancestor is editable?  I have no idea.
   //     It should be in same (active) editing host, and even if it's editable,
   //     there may be non-editable contents in the range.
