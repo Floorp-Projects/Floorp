@@ -427,7 +427,7 @@ let Player = {
       }
 
       case "draggableregionleftmousedown": {
-        document.querySelector("#settings").classList.add("hide");
+        this.toggleSubtitlesSettingsPanel({ forceHide: true });
         break;
       }
     }
@@ -572,15 +572,7 @@ let Player = {
       }
 
       case "closed-caption": {
-        let settingsPanel = document.querySelector("#settings");
-        let settingsPanelVisible = !settingsPanel.classList.contains("hide");
-        if (settingsPanelVisible) {
-          settingsPanel.classList.add("hide");
-          this.controls.removeAttribute("donthide");
-        } else {
-          settingsPanel.classList.remove("hide");
-          this.controls.setAttribute("donthide", true);
-        }
+        this.toggleSubtitlesSettingsPanel();
         // Early return to prevent hiding the panel below
         return;
       }
@@ -592,9 +584,24 @@ let Player = {
     }
     // If the click came from a element that is not inside the subtitles settings panel
     // then we want to hide the panel
-    let settingsPanel = document.querySelector("#settings");
-    if (!settingsPanel.contains(event.target)) {
-      document.querySelector("#settings").classList.add("hide");
+    if (!this.settingsPanel.contains(event.target)) {
+      this.toggleSubtitlesSettingsPanel({ forceHide: true });
+    }
+  },
+
+  /**
+   * Function to toggle the visibility of the subtitles settings panel
+   * @param {Object} options [optional] Object containing options for the function
+   *   - forceHide: true to force hide the subtitles settings panel
+   */
+  toggleSubtitlesSettingsPanel(options) {
+    let settingsPanelVisible = !this.settingsPanel.classList.contains("hide");
+    if (options?.forceHide || settingsPanelVisible) {
+      this.settingsPanel.classList.add("hide");
+      this.controls.removeAttribute("donthide");
+    } else {
+      this.settingsPanel.classList.remove("hide");
+      this.controls.setAttribute("donthide", true);
     }
   },
 
@@ -982,6 +989,11 @@ let Player = {
   get seekForward() {
     delete this.seekForward;
     return (this.seekForward = document.getElementById("seekForward"));
+  },
+
+  get settingsPanel() {
+    delete this.settingsPanel;
+    return (this.settingsPanel = document.getElementById("settings"));
   },
 
   _isPlaying: false,
