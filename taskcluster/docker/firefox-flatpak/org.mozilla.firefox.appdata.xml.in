@@ -30,4 +30,8 @@
 	<screenshot>https://raw.githubusercontent.com/mozilla-releng/scriptworker-scripts/master/pushflatpakscript/media/screenshots/image2.png</screenshot>
 	<screenshot>https://raw.githubusercontent.com/mozilla-releng/scriptworker-scripts/master/pushflatpakscript/media/screenshots/image3.png</screenshot>
   </screenshots>
+  <custom>
+    <value key="flathub::manifest">https://hg.mozilla.org/mozilla-central/file/tip/taskcluster/docker/firefox-flatpak/runme.sh</value>
+  </custom>
+
 </application>
