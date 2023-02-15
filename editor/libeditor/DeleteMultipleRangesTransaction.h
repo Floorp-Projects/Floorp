@@ -40,6 +40,11 @@ class DeleteMultipleRangesTransaction final : public EditAggregateTransaction {
   void AppendChild(DeleteContentTransactionBase& aTransaction);
   void AppendChild(DeleteRangeTransaction& aTransaction);
 
+  /**
+   * Return latest caret point suggestion of child transaction.
+   */
+  EditorDOMPoint SuggestPointToPutCaret() const;
+
  protected:
   ~DeleteMultipleRangesTransaction() = default;
 };

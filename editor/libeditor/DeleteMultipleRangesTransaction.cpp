@@ -8,6 +8,10 @@
 #include "DeleteContentTransactionBase.h"
 #include "DeleteRangeTransaction.h"
 #include "EditorBase.h"
+#include "EditorDOMPoint.h"
+#include "EditTransactionBase.h"
+
+#include "nsDebug.h"
 
 namespace mozilla {
 
@@ -85,6 +89,34 @@ void DeleteMultipleRangesTransaction::AppendChild(
 void DeleteMultipleRangesTransaction::AppendChild(
     DeleteRangeTransaction& aTransaction) {
   mChildren.AppendElement(aTransaction);
+}
+
+EditorDOMPoint DeleteMultipleRangesTransaction::SuggestPointToPutCaret() const {
+  for (const OwningNonNull<EditTransactionBase>& transaction :
+       Reversed(mChildren)) {
+    if (const DeleteContentTransactionBase* deleteContentTransaction =
+            transaction->GetAsDeleteContentTransactionBase()) {
+      EditorDOMPoint pointToPutCaret =
+          deleteContentTransaction->SuggestPointToPutCaret();
+      if (pointToPutCaret.IsSet()) {
+        return pointToPutCaret;
+      }
+      continue;
+    }
+    if (const DeleteRangeTransaction* deleteRangeTransaction =
+            transaction->GetAsDeleteRangeTransaction()) {
+      EditorDOMPoint pointToPutCaret =
+          deleteRangeTransaction->SuggestPointToPutCaret();
+      if (pointToPutCaret.IsSet()) {
+        return pointToPutCaret;
+      }
+      continue;
+    }
+    MOZ_ASSERT_UNREACHABLE(
+        "Child transactions must be DeleteContentTransactionBase or "
+        "DeleteRangeTransaction");
+  }
+  return EditorDOMPoint();
 }
 
 }  // namespace mozilla
