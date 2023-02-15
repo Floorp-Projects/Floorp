@@ -616,6 +616,8 @@ class nsNavHistoryContainerResultNode
   nsNavHistoryResultNode* FindChildByGuid(const nsACString& guid,
                                           int32_t* nodeIndex);
 
+  nsNavHistoryResultNode* FindChildById(int64_t aItemId, uint32_t* aNodeIndex);
+
   nsresult InsertChildAt(nsNavHistoryResultNode* aNode, int32_t aIndex);
   nsresult InsertSortedChild(nsNavHistoryResultNode* aNode,
                              bool aIgnoreDuplicates = false);
@@ -821,8 +823,6 @@ class nsNavHistoryFolderResultNode final
 
   bool StartIncrementalUpdate();
   void ReindexRange(int32_t aStartIndex, int32_t aEndIndex, int32_t aDelta);
-
-  nsNavHistoryResultNode* FindChildById(int64_t aItemId, uint32_t* aNodeIndex);
 
   nsresult OnBeginUpdateBatch();
   nsresult OnEndUpdateBatch();

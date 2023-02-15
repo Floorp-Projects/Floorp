@@ -718,7 +718,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    * <meta name="viewport"> tag is respected in a specific docshell.
    * Possible values are listed above.
    */
-  [infallible] attribute nsIDocShell_MetaViewportOverride metaViewportOverride;
+  [infallible, setter_can_run_script] attribute nsIDocShell_MetaViewportOverride metaViewportOverride;
 
   /**
    * Attribute that determines whether tracking protection is enabled.

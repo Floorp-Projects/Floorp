@@ -183,6 +183,9 @@ class MediaDecoderOwner {
   // Return true is the owner is actually invisible to users.
   virtual bool IsActuallyInvisible() const = 0;
 
+  // Returns true if the owner should resist fingerprinting.
+  virtual bool ShouldResistFingerprinting() const = 0;
+
   /*
    * Servo only methods go here. Please provide default implementations so they
    * can build in Gecko without any modification.

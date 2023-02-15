@@ -34,13 +34,15 @@ static const int64_t AUDIO_FUZZ_FRAMES = 1;
 using media::TimeUnit;
 
 AudioSink::AudioSink(AbstractThread* aThread,
-                     MediaQueue<AudioData>& aAudioQueue, const AudioInfo& aInfo)
+                     MediaQueue<AudioData>& aAudioQueue, const AudioInfo& aInfo,
+                     bool aShouldResistFingerprinting)
     : mPlaying(true),
       mWritten(0),
       mErrored(false),
       mOwnerThread(aThread),
       mFramesParsed(0),
-      mOutputRate(DecideAudioPlaybackSampleRate(aInfo)),
+      mOutputRate(
+          DecideAudioPlaybackSampleRate(aInfo, aShouldResistFingerprinting)),
       mOutputChannels(DecideAudioPlaybackChannels(aInfo)),
       mAudibilityMonitor(
           mOutputRate,

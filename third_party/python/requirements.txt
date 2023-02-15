@@ -114,8 +114,8 @@ jinja2==2.11.3; python_version >= "2.7" and python_full_version < "3.0.0" or pyt
 jinxed==1.2.0; platform_system == "Windows" and python_version >= "2.7" \
     --hash=sha256:cfc2b2e4e3b4326954d546ba6d6b9a7a796ddcb0aef8d03161d005177eb0d48b \
     --hash=sha256:032acda92d5c57cd216033cbbd53de731e6ed50deb63eb4781336ca55f72cda5
-jsmin==2.1.0 \
-    --hash=sha256:5d07bf0251a4128e5e8e8eef603849b6b5741c337bff087731a248f9cc774f56
+jsmin==3.0.0 \
+    --hash=sha256:88fc1bd6033a47c5911dbcada7d279c7a8b7ad0841909590f6a742c20c4d2e08
 json-e==2.7.0 \
     --hash=sha256:d8c1ec3f5bbc7728c3a504ebe58829f283c64eca230871e4eefe974b4cdaae4a
 jsonschema==3.2.0 \

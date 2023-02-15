@@ -42,7 +42,7 @@ class AudioSink : private AudioStream::DataSource {
   };
 
   AudioSink(AbstractThread* aThread, MediaQueue<AudioData>& aAudioQueue,
-            const AudioInfo& aInfo);
+            const AudioInfo& aInfo, bool aShouldResistFingerprinting);
 
   ~AudioSink();
 

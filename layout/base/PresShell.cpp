@@ -1947,6 +1947,13 @@ void PresShell::RefreshZoomConstraintsForScreenSizeChange() {
   }
 }
 
+void PresShell::ForceResizeReflowWithCurrentDimensions() {
+  nscoord currentWidth = 0;
+  nscoord currentHeight = 0;
+  mViewManager->GetWindowDimensions(&currentWidth, &currentHeight);
+  ResizeReflow(currentWidth, currentHeight);
+}
+
 void PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight,
                              ResizeReflowOptions aOptions) {
   if (mZoomConstraintsClient) {
@@ -11071,15 +11078,8 @@ void PresShell::MaybeRecreateMobileViewportManager(bool aAfterInitialization) {
                             ResolutionChangeOrigin::MainThreadRestore);
 
     if (aAfterInitialization) {
-      // Force a reflow to our correct size by going back to the docShell
-      // and asking it to reassert its size. This is necessary because
-      // everything underneath the docShell, like the ViewManager, has been
-      // altered by the MobileViewportManager in an irreversible way.
-      nsDocShell* docShell =
-          static_cast<nsDocShell*>(GetPresContext()->GetDocShell());
-      int32_t width, height;
-      docShell->GetSize(&width, &height);
-      docShell->SetSize(width, height, false);
+      // Force a reflow to our correct view manager size.
+      ForceResizeReflowWithCurrentDimensions();
     }
   }
 

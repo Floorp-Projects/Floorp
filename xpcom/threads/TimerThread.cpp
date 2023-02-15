@@ -20,6 +20,8 @@
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/StaticPrefs_timer.h"
 
+#include "mozilla/glean/GleanMetrics.h"
+
 #include <math.h>
 
 using namespace mozilla;
@@ -539,6 +541,15 @@ TimerThread::Run() {
   mAllowedEarlyFiringMicroseconds = usIntervalResolution / 2;
   bool forceRunNextTimer = false;
 
+  // Queue for tracking of how many timers are fired on each wake-up. We need to
+  // buffer these locally and only send off to glean occasionally to avoid
+  // performance hit.
+  static constexpr size_t kMaxQueuedTimerFired = 128;
+  size_t queuedTimerFiredCount = 0;
+  AutoTArray<uint64_t, kMaxQueuedTimerFired> queuedTimersFiredPerWakeup;
+  queuedTimersFiredPerWakeup.SetLengthAndRetainStorage(kMaxQueuedTimerFired);
+
+  uint64_t timersFiredThisWakeup = 0;
   while (!mShutdown) {
     // Have to use PRIntervalTime here, since PR_WaitCondVar takes it
     TimeDuration waitFor;
@@ -581,6 +592,7 @@ TimerThread::Run() {
           // release of the timer so that we don't end up releasing the timer
           // on the TimerThread instead of on the thread it targets.
           {
+            ++timersFiredThisWakeup;
             LogTimerEvent::Run run(timerRef.get());
             PostTimerEvent(timerRef.forget());
           }
@@ -643,6 +655,16 @@ TimerThread::Run() {
     mWaiting = true;
     mNotified = false;
     {
+      // About to sleep - let's make note of how many timers we processed and
+      // see if we should send out a new batch of telemetry.
+      queuedTimersFiredPerWakeup[queuedTimerFiredCount] = timersFiredThisWakeup;
+      ++queuedTimerFiredCount;
+      if (queuedTimerFiredCount == kMaxQueuedTimerFired) {
+        glean::timer_thread::timers_fired_per_wakeup.AccumulateSamples(
+            queuedTimersFiredPerWakeup);
+        queuedTimerFiredCount = 0;
+      }
+      timersFiredThisWakeup = 0;
       AUTO_PROFILER_TRACING_MARKER("TimerThread", "Wait", OTHER);
       mMonitor.Wait(waitFor);
     }
@@ -650,6 +672,13 @@ TimerThread::Run() {
       forceRunNextTimer = false;
     }
     mWaiting = false;
+  }
+
+  // About to shut down - let's send out the final batch of timers fired counts.
+  if (queuedTimerFiredCount != 0) {
+    queuedTimersFiredPerWakeup.SetLengthAndRetainStorage(queuedTimerFiredCount);
+    glean::timer_thread::timers_fired_per_wakeup.AccumulateSamples(
+        queuedTimersFiredPerWakeup);
   }
 
   return NS_OK;

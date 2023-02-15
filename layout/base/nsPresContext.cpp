@@ -2876,10 +2876,7 @@ void nsPresContext::SetDynamicToolbarMaxHeight(ScreenIntCoord aHeight) {
     // PresShell::ResizeReflow ends up subtracting the new dynamic toolbar
     // height from the window dimensions and kick a reflow with the proper ICB
     // size.
-    nscoord currentWidth, currentHeight;
-    presShell->GetViewManager()->GetWindowDimensions(&currentWidth,
-                                                     &currentHeight);
-    presShell->ResizeReflow(currentWidth, currentHeight);
+    presShell->ForceResizeReflowWithCurrentDimensions();
   }
 }
 

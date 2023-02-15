@@ -982,6 +982,11 @@ void MacroAssembler::branchTruncateFloat32MaybeModUint32(FloatRegister src,
   ma_b(ScratchRegister, Imm32(0), fail, Assembler::NotEqual);
 }
 
+void MacroAssembler::branchTruncateDoubleToInt32(FloatRegister src,
+                                                 Register dest, Label* fail) {
+  convertDoubleToInt32(src, dest, fail, false);
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

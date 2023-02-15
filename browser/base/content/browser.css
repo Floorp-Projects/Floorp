@@ -1071,15 +1071,15 @@ browser[tabmodalPromptShowing], browser[tabDialogShowing] {
 /*** Visibility of downloads indicator controls ***/
 
 /* Hide the default icon, show the anchor instead. */
-#downloads-button[indicator] > .toolbarbutton-badge-stack > image.toolbarbutton-icon {
+#downloads-button > .toolbarbutton-badge-stack > image.toolbarbutton-icon {
   display: none;
 }
 
-toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > .toolbarbutton-badge-stack > image.toolbarbutton-icon {
+toolbarpaletteitem[place="palette"] > #downloads-button > .toolbarbutton-badge-stack > image.toolbarbutton-icon {
   display: -moz-box;
 }
 
-toolbarpaletteitem[place="palette"] > #downloads-button[indicator] > .toolbarbutton-badge-stack > #downloads-indicator-anchor {
+toolbarpaletteitem[place="palette"] > #downloads-button > .toolbarbutton-badge-stack > #downloads-indicator-anchor {
   display: none;
 }
 
