@@ -37,6 +37,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withHint
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.UiObject
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
@@ -74,6 +75,7 @@ import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.helpers.withBitmapDrawable
+import org.mozilla.fenix.utils.Settings
 
 /**
  * Implementation of Robot Pattern for the home screen menu.
@@ -151,9 +153,9 @@ class HomeScreenRobot {
         assertItemWithResIdExists(signInButton)
     }
 
-    fun verifyPrivacyProtectionCard(isStandardChecked: Boolean, isStrictChecked: Boolean) {
+    fun verifyPrivacyProtectionCard(settings: Settings, isStandardChecked: Boolean, isStrictChecked: Boolean) {
         scrollToElementByText(getStringResource(R.string.onboarding_privacy_notice_header_1))
-        assertItemContainingTextExists(privacyProtectionHeader, privacyProtectionDescription)
+        assertItemContainingTextExists(privacyProtectionHeader, privacyProtectionDescription(settings))
         assertCheckedItemWithResIdExists(
             standardTrackingProtectionToggle(isStandardChecked),
             strictTrackingProtectionToggle(isStrictChecked),
@@ -1060,6 +1062,16 @@ private fun sponsoredShortcut(sponsoredShortcutTitle: String) =
 private fun storyByTopicItem(composeTestRule: ComposeTestRule, position: Int) =
     composeTestRule.onNodeWithTag("pocket.categories").onChildAt(position - 1)
 
+private fun privacyProtectionDescription(settings: Settings): UiObject {
+    val isTCPPublic = settings.enabledTotalCookieProtectionCFR
+    val descriptionText = when (isTCPPublic) {
+        true -> R.string.onboarding_tracking_protection_description
+        false -> R.string.onboarding_tracking_protection_description_old
+    }
+
+    return itemContainingText(getStringResource(descriptionText))
+}
+
 private val homeScreen =
     itemWithResId("$packageName:id/homeLayout")
 private val privateBrowsingButton =
@@ -1112,8 +1124,6 @@ private val signInButton =
     itemWithResId("$packageName:id/fxa_sign_in_button")
 private val privacyProtectionHeader =
     itemContainingText(getStringResource(R.string.onboarding_tracking_protection_header))
-private val privacyProtectionDescription =
-    itemContainingText(getStringResource(R.string.onboarding_tracking_protection_description))
 private fun standardTrackingProtectionToggle(isChecked: Boolean) =
     checkedItemWithResId("$packageName:id/tracking_protection_standard_option", isChecked)
 private fun strictTrackingProtectionToggle(isChecked: Boolean) =

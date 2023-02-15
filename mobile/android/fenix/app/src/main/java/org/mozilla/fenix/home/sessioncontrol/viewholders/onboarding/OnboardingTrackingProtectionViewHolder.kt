@@ -4,7 +4,9 @@
 
 package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
+import android.content.Context
 import android.view.View
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import org.mozilla.fenix.GleanMetrics.Onboarding
 import org.mozilla.fenix.R
@@ -18,6 +20,7 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
 
     private var standardTrackingProtection: OnboardingRadioButton
     private var strictTrackingProtection: OnboardingRadioButton
+    private var descriptionText: TextView
 
     init {
         val binding = OnboardingTrackingProtectionBinding.bind(view)
@@ -25,10 +28,24 @@ class OnboardingTrackingProtectionViewHolder(view: View) : RecyclerView.ViewHold
 
         standardTrackingProtection = binding.trackingProtectionStandardOption
         strictTrackingProtection = binding.trackingProtectionStrictDefault
+        descriptionText = binding.descriptionText
+
+        val isTCPPublic = view.context.settings().enabledTotalCookieProtectionCFR
+        setupDescriptionText(view.context, isTCPPublic)
 
         val isTrackingProtectionEnabled = view.context.settings().shouldUseTrackingProtection
         setupRadioGroup(isTrackingProtectionEnabled)
         updateRadioGroupState(isTrackingProtectionEnabled)
+    }
+
+    private fun setupDescriptionText(context: Context, shuldUseNewDescription: Boolean) {
+        if (!shuldUseNewDescription) {
+            val appName = context.getString(R.string.app_name)
+            descriptionText.text = context.getString(
+                R.string.onboarding_tracking_protection_description_old,
+                appName,
+            )
+        }
     }
 
     private fun setupRadioGroup(isChecked: Boolean) {

@@ -64,7 +64,11 @@ class OnboardingTest {
             )
             verifyToolbarPlacementCard(isBottomChecked = true, isTopChecked = false)
             verifySignInToSyncCard()
-            verifyPrivacyProtectionCard(isStandardChecked = true, isStrictChecked = false)
+            verifyPrivacyProtectionCard(
+                settings = activityTestRule.activity.getSettings(),
+                isStandardChecked = true,
+                isStrictChecked = false,
+            )
             verifyPrivacyNoticeCard()
             verifyStartBrowsingSection()
             verifyNavigationToolbarItems("0")
@@ -193,11 +197,23 @@ class OnboardingTest {
     @Test
     fun privacyProtectionByDefaultCardTest() {
         homeScreen {
-            verifyPrivacyProtectionCard(isStandardChecked = true, isStrictChecked = false)
+            verifyPrivacyProtectionCard(
+                settings = activityTestRule.activity.getSettings(),
+                isStandardChecked = true,
+                isStrictChecked = false,
+            )
             clickStrictTrackingProtectionButton()
-            verifyPrivacyProtectionCard(isStandardChecked = false, isStrictChecked = true)
+            verifyPrivacyProtectionCard(
+                settings = activityTestRule.activity.getSettings(),
+                isStandardChecked = false,
+                isStrictChecked = true,
+            )
             clickStandardTrackingProtectionButton()
-            verifyPrivacyProtectionCard(isStandardChecked = true, isStrictChecked = false)
+            verifyPrivacyProtectionCard(
+                settings = activityTestRule.activity.getSettings(),
+                isStandardChecked = true,
+                isStrictChecked = false,
+            )
         }
     }
 

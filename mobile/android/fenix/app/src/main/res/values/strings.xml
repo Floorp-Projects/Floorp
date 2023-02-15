@@ -1308,6 +1308,8 @@
     <string name="onboarding_firefox_account_sync_is_on">Sync is on</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Privacy protection by default</string>
+    <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_old">%1$s automatically stops companies from secretly following you around the web.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">Featuring Total Cookie Protection to stop trackers from using cookies to stalk you across sites.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
