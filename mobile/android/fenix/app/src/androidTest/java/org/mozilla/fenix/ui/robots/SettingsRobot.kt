@@ -173,8 +173,11 @@ class SettingsRobot {
         }
 
         fun openAutofillSubMenu(interact: SettingsSubMenuAutofillRobot.() -> Unit): SettingsSubMenuAutofillRobot.Transition {
-            mDevice.findObject(UiSelector().textContains(getStringResource(R.string.preferences_autofill))).waitForExists(waitingTime)
-            onView(withText(R.string.preferences_autofill)).click()
+            mDevice.findObject(UiSelector().textContains(getStringResource(R.string.preferences_autofill)))
+                .also {
+                    it.waitForExists(waitingTime)
+                    it.click()
+                }
 
             SettingsSubMenuAutofillRobot().interact()
             return SettingsSubMenuAutofillRobot.Transition()

@@ -543,12 +543,15 @@ class BrowserRobot {
 
     fun verifySelectAddressButtonExists(exists: Boolean) = assertItemWithResIdExists(selectAddressButton, exists = exists)
 
-    fun clickCardNumberTextBox() = clickPageObject(webPageItemWithResourceId("cardNumber"))
+    fun clickCreditCardNumberTextBox() = clickPageObject(webPageItemWithResourceId("cardNumber"))
 
     fun clickSelectCreditCardButton() {
         selectCreditCardButton.waitForExists(waitingTime)
         selectCreditCardButton.clickAndWaitForNewWindow(waitingTime)
     }
+
+    fun verifySelectCreditCardPromptExists(exists: Boolean) =
+        assertItemWithResIdExists(selectCreditCardButton, exists = exists)
 
     fun clickLoginSuggestion(userName: String) {
         val loginSuggestion =
@@ -1163,6 +1166,13 @@ class BrowserRobot {
 
         fun clickManageAddressButton(interact: SettingsSubMenuAutofillRobot.() -> Unit): SettingsSubMenuAutofillRobot.Transition {
             itemWithResId("$packageName:id/manage_addresses").clickAndWaitForNewWindow(waitingTime)
+
+            SettingsSubMenuAutofillRobot().interact()
+            return SettingsSubMenuAutofillRobot.Transition()
+        }
+
+        fun clickManageCreditCardsButton(interact: SettingsSubMenuAutofillRobot.() -> Unit): SettingsSubMenuAutofillRobot.Transition {
+            itemWithResId("$packageName:id/manage_credit_cards").clickAndWaitForNewWindow(waitingTime)
 
             SettingsSubMenuAutofillRobot().interact()
             return SettingsSubMenuAutofillRobot.Transition()
