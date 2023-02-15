@@ -108,27 +108,39 @@ const tests = [
   },
 
   async function checkBadSetParametersRidChangedWarning() {
+    // This pref does not let rid change errors slide anymore
     await pushPrefs(
       ["media.peerconnection.allow_old_setParameters", true]);
     const pc = new RTCPeerConnection();
     const {sender} = pc.addTransceiver('video', {
       sendEncodings: [{rid: "0"},{rid: "1"},{rid: "2"}]
     });
-    let oldRate = await GleanTest.rtcrtpsenderSetparameters.warnRidChanged.testGetValue();
+    let oldRate = await GleanTest.rtcrtpsenderSetparameters.failRidChanged.testGetValue();
+    let oldWarnRate = await GleanTest.rtcrtpsenderSetparameters.warnRidChanged.testGetValue();
     let params = sender.getParameters();
     params.encodings[1].rid = "foo";
-    await sender.setParameters(params);
-    let newRate = await GleanTest.rtcrtpsenderSetparameters.warnRidChanged.testGetValue();
-    is(newRate.numerator, oldRate.numerator + 1, "Glean should have recorded a warning due to a rid change in encodings");
+    try {
+      await sender.setParameters(params);
+    } catch (e) {
+    }
+    let newRate = await GleanTest.rtcrtpsenderSetparameters.failRidChanged.testGetValue();
+    let newWarnRate = await GleanTest.rtcrtpsenderSetparameters.warnRidChanged.testGetValue();
+    is(newRate.numerator, oldRate.numerator + 1, "Glean should have recorded an error due to a rid change in encodings");
+    is(newWarnRate.numerator, oldWarnRate.numerator, "Glean should not have recorded a warning due to a rid change in encodings");
 
-    // Glean should only record the warning once per sender!
+    // Glean should only record the error once per sender!
     params = sender.getParameters();
     params.encodings[1].rid = "bar";
     oldRate = newRate;
-    await sender.setParameters(params);
-    newRate = await GleanTest.rtcrtpsenderSetparameters.warnRidChanged.testGetValue();
-    is(newRate.numerator, oldRate.numerator, "Glean should not have recorded another warning due to a rid change in encodings");
-  },
+    try {
+      await sender.setParameters(params);
+    } catch (e) {
+    }
+    newRate = await GleanTest.rtcrtpsenderSetparameters.failRidChanged.testGetValue();
+    newWarnRate = await GleanTest.rtcrtpsenderSetparameters.warnRidChanged.testGetValue();
+    is(newRate.numerator, oldRate.numerator, "Glean should not have recorded another error due to a rid change in encodings");
+    is(newWarnRate.numerator, oldWarnRate.numerator, "Glean should not have recorded a warning due to a rid change in encodings");
+   },
 
   async function checkBadSetParametersNoTransactionIdWarning() {
     await pushPrefs(
