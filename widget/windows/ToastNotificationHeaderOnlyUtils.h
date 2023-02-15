@@ -73,7 +73,7 @@ inline bool WaitEventWithTimeout(const HANDLE& event) {
 
   switch (result) {
     case WAIT_OBJECT_0:
-      NOTIFY_LOG(LogLevel::Info, ("Pipe wait timed out"));
+      NOTIFY_LOG(LogLevel::Info, ("Pipe wait signaled"));
       return true;
     case WAIT_TIMEOUT:
       NOTIFY_LOG(LogLevel::Warning, ("Pipe wait timed out"));
