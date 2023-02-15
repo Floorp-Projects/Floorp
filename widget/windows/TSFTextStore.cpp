@@ -29,11 +29,6 @@
 #include "nsWindow.h"
 #include "nsPrintfCString.h"
 
-// Workaround for mingw32
-#ifndef TS_SD_INPUTPANEMANUALDISPLAYENABLE
-#  define TS_SD_INPUTPANEMANUALDISPLAYENABLE 0x40
-#endif
-
 // For collecting other people's log, tell `MOZ_LOG=IMEHandler:4,sync`
 // rather than `MOZ_LOG=IMEHandler:5,sync` since using `5` may create too
 // big file.

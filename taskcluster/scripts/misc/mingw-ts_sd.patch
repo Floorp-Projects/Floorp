@@ -1,0 +1,33 @@
+From 8e23d493352ada53b3a766f14e2e93484353c15c Mon Sep 17 00:00:00 2001
+From: Tom Ritter <tom@ritter.vg>
+Date: Wed, 8 Feb 2023 10:52:16 -0500
+Subject: [PATCH 11/11] TS_SD_ defines
+
+---
+ mingw-w64-headers/include/textstor.h | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/mingw-w64-headers/include/textstor.h b/mingw-w64-headers/include/textstor.h
+index 0681cab92..64b5ebec5 100644
+--- a/mingw-w64-headers/include/textstor.h
++++ b/mingw-w64-headers/include/textstor.h
+@@ -68,6 +68,16 @@ extern "C" {
+ 
+ #define TS_SD_LOADING (0x2)
+ 
++#define TS_SD_RESERVED (0x4)
++
++#define TS_SD_TKBAUTOCORRECTENABLE (0x8)
++
++#define TS_SD_TKBPREDICTIONENABLE (0x10)
++
++#define TS_SD_UIINTEGRATIONENABLE (0x20)
++
++#define TS_SD_INPUTPANEMANUALDISPLAYENABLE (0x40)
++
+ #define TS_SS_DISJOINTSEL (0x1)
+ 
+ #define TS_SS_REGIONS (0x2)
+-- 
+2.25.1
+
