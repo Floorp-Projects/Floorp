@@ -526,10 +526,6 @@ class nsContentUtils {
       mozilla::dom::BrowserParent* aBrowserParent1,
       mozilla::dom::BrowserParent* aBrowserParent2);
 
-  // https://html.spec.whatwg.org/#target-element
-  // https://html.spec.whatwg.org/#find-a-potential-indicated-element
-  static Element* GetTargetElement(Document* aDocument,
-                                   const nsAString& aAnchorName);
   /**
    * Returns true if aNode1 is before aNode2 in the same connected
    * tree.
