@@ -193,6 +193,10 @@ class PeerConnectionImpl final
       // inside libxul.
       override;
 
+  void NotifyDataChannelOpen(DataChannel*) override;
+
+  void NotifyDataChannelClosed(DataChannel*) override;
+
   const RefPtr<MediaTransportHandler> GetTransportHandler() const;
 
   // Handle system to allow weak references to be passed through C code
@@ -659,6 +663,8 @@ class PeerConnectionImpl final
 
   // DataConnection that's used to get all the DataChannels
   RefPtr<mozilla::DataChannelConnection> mDataConnection;
+  unsigned int mDataChannelsOpened = 0;
+  unsigned int mDataChannelsClosed = 0;
 
   bool mForceIceTcp;
   RefPtr<MediaTransportHandler> mTransportHandler;
