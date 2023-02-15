@@ -84,7 +84,7 @@ struct StringOffset final {
  * Represents an offset into the interfaces table.
  */
 struct InterfaceOffset final {
-  uint16_t mOffset;
+  uint32_t mOffset;
 };
 
 /**
@@ -223,7 +223,6 @@ struct JSServiceEntry final {
   ModuleID mModuleID;
 
   InterfaceOffset mInterfaceOffset;
-
   uint8_t mInterfaceCount;
 
   nsCString Name() const;
@@ -242,9 +241,9 @@ struct StaticProtocolHandler final {
   }
 
   StringOffset mScheme;
+  ModuleID mModuleID;
   uint32_t mProtocolFlags;
   int32_t mDefaultPort;
-  ModuleID mModuleID;
   bool mHasDynamicFlags;
 
   nsCString Scheme() const;
