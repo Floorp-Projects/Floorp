@@ -1164,7 +1164,8 @@ impl RenderApi {
     }
 
     /// Update debugging flags.
-    pub fn set_debug_flags(&self, flags: DebugFlags) {
+    pub fn set_debug_flags(&mut self, flags: DebugFlags) {
+        self.resources.set_debug_flags(flags);
         let cmd = DebugCommand::SetFlags(flags);
         self.api_sender.send(ApiMsg::DebugCommand(cmd)).unwrap();
     }

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::api::{BlobImageKey, ImageDescriptor, DirtyRect, TileSize};
+use crate::api::{BlobImageKey, ImageDescriptor, DirtyRect, TileSize, DebugFlags};
 use crate::api::{BlobImageHandler, AsyncBlobImageRasterizer, BlobImageData, BlobImageParams};
 use crate::api::{BlobImageRequest, BlobImageDescriptor, FontTemplate};
 use crate::api::units::*;
@@ -35,6 +35,10 @@ pub struct ApiResources {
     blob_image_templates: HashMap<BlobImageKey, BlobImageTemplate>,
     pub blob_image_handler: Option<Box<dyn BlobImageHandler>>,
     fonts: SharedFontResources,
+    // This should only be true for CI or debugging purposes. If true,
+    // we'll restrict the size of blob images as a result effectively
+    // rendering them incorrectly.
+    debug_restrict_blob_size: bool,
 }
 
 impl ApiResources {
@@ -46,6 +50,7 @@ impl ApiResources {
             blob_image_templates: HashMap::new(),
             blob_image_handler,
             fonts,
+            debug_restrict_blob_size: false,
         }
     }
 
@@ -53,11 +58,27 @@ impl ApiResources {
         self.fonts.clone()
     }
 
+    pub fn set_debug_flags(&mut self, flags: DebugFlags) {
+        self.debug_restrict_blob_size = flags.contains(DebugFlags::RESTRICT_BLOB_SIZE);
+    }
+
+    pub fn adjust_blob_visible_rect(&self, rect: &mut DeviceIntRect, size: Option<&mut DeviceIntSize>) {
+        if self.debug_restrict_blob_size {
+            rect.max.x = rect.max.x.min(rect.min.x + 2048);
+            rect.max.y = rect.max.y.min(rect.min.y + 2048);
+            if let Some(size) = size {
+                size.width = size.width.min(2048);
+                size.height = size.height.min(2048);
+            }
+        }
+    }
+
     pub fn update(&mut self, transaction: &mut TransactionMsg) {
         let mut blobs_to_rasterize = Vec::new();
         for update in &mut transaction.resource_updates {
             match *update {
-                ResourceUpdate::AddBlobImage(ref img) => {
+                ResourceUpdate::AddBlobImage(ref mut img) => {
+                    self.adjust_blob_visible_rect(&mut img.visible_rect, Some(&mut img.descriptor.size));
                     self.blob_image_handler
                         .as_mut()
                         .expect("no blob image handler")
@@ -75,8 +96,9 @@ impl ApiResources {
                     );
                     blobs_to_rasterize.push(img.key);
                 }
-                ResourceUpdate::UpdateBlobImage(ref img) => {
+                ResourceUpdate::UpdateBlobImage(ref mut img) => {
                     debug_assert_eq!(img.visible_rect.size(), img.descriptor.size);
+                    self.adjust_blob_visible_rect(&mut img.visible_rect, Some(&mut img.descriptor.size));
                     self.update_blob_image(
                         img.key,
                         Some(&img.descriptor),
@@ -93,8 +115,9 @@ impl ApiResources {
                         handler.delete(key);
                     }
                 }
-                ResourceUpdate::SetBlobImageVisibleArea(ref key, ref area) => {
-                    self.update_blob_image(*key, None, None, None, area);
+                ResourceUpdate::SetBlobImageVisibleArea(ref key, ref mut area) => {
+                    self.adjust_blob_visible_rect(area, None);
+                    self.update_blob_image(*key, None, None, None, &area);
                     blobs_to_rasterize.push(*key);
                 }
                 ResourceUpdate::AddFont(ref font) => {

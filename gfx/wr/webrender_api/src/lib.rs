@@ -657,6 +657,9 @@ bitflags! {
         const FORCE_PICTURE_INVALIDATION = (1 as u32) << 26;
         /// Display window visibility on screen.
         const WINDOW_VISIBILITY_DBG     = 1 << 27;
+        /// Render large blobs with at a smaller size (incorrectly). This is a temporary workaround for
+        /// fuzzing.
+        const RESTRICT_BLOB_SIZE        = 1 << 28;
     }
 }
 
