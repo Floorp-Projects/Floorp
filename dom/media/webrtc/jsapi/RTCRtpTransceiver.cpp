@@ -226,7 +226,18 @@ void RTCRtpTransceiver::Init(const RTCRtpTransceiverInit& aInit,
     InitConduitControl();
   }
 
-  mSender->SetStreamsImpl(aInit.mStreams);
+  auto self = nsMainThreadPtrHandle<RTCRtpTransceiver>(
+      new nsMainThreadPtrHolder<RTCRtpTransceiver>(
+          "RTCRtpTransceiver::RTCRtpTransceiver::self", this, false));
+  mStsThread->Dispatch(
+      NS_NewRunnableFunction("RTCRtpTransceiver::RTCRtpTransceiver", [self] {
+        self->mTransportHandler->SignalStateChange.connect(
+            self.get(), &RTCRtpTransceiver::UpdateDtlsTransportState);
+        self->mTransportHandler->SignalRtcpStateChange.connect(
+            self.get(), &RTCRtpTransceiver::UpdateDtlsTransportState);
+      }));
+
+  mSender->SetStreams(aInit.mStreams);
   mDirection = aInit.mDirection;
 }
 
@@ -240,6 +251,23 @@ void RTCRtpTransceiver::SetDtlsTransport(dom::RTCDtlsTransport* aDtlsTransport,
 
 void RTCRtpTransceiver::RollbackToStableDtlsTransport() {
   mDtlsTransport = mLastStableDtlsTransport;
+}
+
+void RTCRtpTransceiver::UpdateDtlsTransportState(
+    const std::string& aTransportId, TransportLayer::State aState) {
+  if (!GetMainThreadSerialEventTarget()->IsOnCurrentThread()) {
+    GetMainThreadSerialEventTarget()->Dispatch(
+        WrapRunnable(this, &RTCRtpTransceiver::UpdateDtlsTransportState,
+                     aTransportId, aState),
+        NS_DISPATCH_NORMAL);
+    return;
+  }
+
+  if (!mDtlsTransport) {
+    return;
+  }
+
+  mDtlsTransport->UpdateState(aState);
 }
 
 void RTCRtpTransceiver::InitAudio() {
@@ -857,7 +885,13 @@ void RTCRtpTransceiver::StopImpl() {
   mSender->Stop();
   mReceiver->Stop();
 
-  mTransportHandler = nullptr;
+  auto self = nsMainThreadPtrHandle<RTCRtpTransceiver>(
+      new nsMainThreadPtrHolder<RTCRtpTransceiver>(
+          "RTCRtpTransceiver::StopImpl::self", this, false));
+  mStsThread->Dispatch(NS_NewRunnableFunction(__func__, [self] {
+    self->disconnect_all();
+    self->mTransportHandler = nullptr;
+  }));
 }
 
 bool RTCRtpTransceiver::IsVideo() const { return mIsVideo; }

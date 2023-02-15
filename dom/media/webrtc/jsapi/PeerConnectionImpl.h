@@ -193,14 +193,6 @@ class PeerConnectionImpl final
       // inside libxul.
       override;
 
-  void NotifyDataChannelOpen(DataChannel*) override;
-
-  void NotifyDataChannelClosed(DataChannel*) override;
-
-  void NotifySctpConnected() override;
-
-  void NotifySctpClosed() override;
-
   const RefPtr<MediaTransportHandler> GetTransportHandler() const;
 
   // Handle system to allow weak references to be passed through C code
@@ -376,14 +368,6 @@ class PeerConnectionImpl final
     return mIceGatheringState;
   }
 
-  NS_IMETHODIMP ConnectionState(mozilla::dom::RTCPeerConnectionState* aState);
-
-  mozilla::dom::RTCPeerConnectionState ConnectionState() {
-    mozilla::dom::RTCPeerConnectionState state;
-    ConnectionState(&state);
-    return state;
-  }
-
   NS_IMETHODIMP Close();
 
   void Close(ErrorResult& rv) { rv = Close(); }
@@ -396,8 +380,6 @@ class PeerConnectionImpl final
                                const RTCConfiguration& aConfiguration) {
     rv = SetConfiguration(aConfiguration);
   }
-
-  dom::RTCSctpTransport* GetSctp() const;
 
   void RestartIce();
   void RestartIceNoRenegotiationNeeded();
@@ -486,11 +468,6 @@ class PeerConnectionImpl final
 
   // called when DTLS connects; we only need this once
   nsresult OnAlpnNegotiated(bool aPrivacyRequested);
-
-  void OnDtlsStateChange(const std::string& aTransportId,
-                         TransportLayer::State aState);
-  void UpdateConnectionState();
-  dom::RTCPeerConnectionState GetNewConnectionState() const;
 
   // initialize telemetry for when calls start
   void StartCallTelem();
@@ -622,8 +599,6 @@ class PeerConnectionImpl final
   mozilla::dom::RTCIceConnectionState mIceConnectionState;
   mozilla::dom::RTCIceGatheringState mIceGatheringState;
 
-  mozilla::dom::RTCPeerConnectionState mConnectionState;
-
   RefPtr<PeerConnectionObserver> mPCObserver;
 
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
@@ -669,8 +644,6 @@ class PeerConnectionImpl final
 
   // DataConnection that's used to get all the DataChannels
   RefPtr<mozilla::DataChannelConnection> mDataConnection;
-  unsigned int mDataChannelsOpened = 0;
-  unsigned int mDataChannelsClosed = 0;
 
   bool mForceIceTcp;
   RefPtr<MediaTransportHandler> mTransportHandler;
@@ -831,7 +804,6 @@ class PeerConnectionImpl final
   nsTArray<RefPtr<dom::RTCRtpTransceiver>> mTransceivers;
   std::map<std::string, RefPtr<dom::RTCDtlsTransport>>
       mTransportIdToRTCDtlsTransport;
-  RefPtr<dom::RTCSctpTransport> mSctpTransport;
 
   // Used whenever we need to dispatch a runnable to STS to tweak something
   // on our ICE ctx, but are not ready to do so at the moment (eg; we are
@@ -897,8 +869,6 @@ class PeerConnectionImpl final
     void OnCandidateFound_s(const std::string& aTransportId,
                             const CandidateInfo& aCandidateInfo);
     void AlpnNegotiated_s(const std::string& aAlpn, bool aPrivacyRequested);
-    void ConnectionStateChange_s(const std::string& aTransportId,
-                                 TransportLayer::State aState);
 
    private:
     const std::string mHandle;

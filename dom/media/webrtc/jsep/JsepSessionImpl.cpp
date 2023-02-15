@@ -2515,42 +2515,12 @@ bool JsepSessionImpl::CheckNegotiationNeeded() const {
     const SdpMediaSection& remote =
         mCurrentRemoteDescription->GetMediaSection(level);
 
-    if (transceiver->mJsDirection & sdp::kSend) {
-      std::vector<std::string> sdpMsids;
-      if (local.GetAttributeList().HasAttribute(SdpAttribute::kMsidAttribute)) {
-        for (const auto& msidAttr : local.GetAttributeList().GetMsid().mMsids) {
-          if (msidAttr.identifier != "-") {
-            sdpMsids.push_back(msidAttr.identifier);
-          }
-        }
-      }
-      std::sort(sdpMsids.begin(), sdpMsids.end());
-
-      std::vector<std::string> jsepMsids;
-      for (const auto& jsepMsid : transceiver->mSendTrack.GetStreamIds()) {
-        jsepMsids.push_back(jsepMsid);
-      }
-      std::sort(jsepMsids.begin(), jsepMsids.end());
-
-      if (!std::equal(sdpMsids.begin(), sdpMsids.end(), jsepMsids.begin(),
-                      jsepMsids.end())) {
-        MOZ_MTLOG(ML_DEBUG,
-                  "[" << mName
-                      << "]: Negotiation needed because transceiver "
-                         "is sending, and the local SDP has different "
-                         "msids than the send track");
-        MOZ_MTLOG(ML_DEBUG, "[" << mName << "]: SDP msids = [");
-        for (const auto& msid : sdpMsids) {
-          MOZ_MTLOG(ML_DEBUG, msid << ", ");
-        }
-        MOZ_MTLOG(ML_DEBUG, "]");
-        MOZ_MTLOG(ML_DEBUG, "[" << mName << "]: JSEP msids = [");
-        for (const auto& msid : jsepMsids) {
-          MOZ_MTLOG(ML_DEBUG, msid << ", ");
-        }
-        MOZ_MTLOG(ML_DEBUG, "]");
-        return true;
-      }
+    if (!local.GetAttributeList().HasAttribute(SdpAttribute::kMsidAttribute) &&
+        (transceiver->mJsDirection & sdp::kSend)) {
+      MOZ_MTLOG(ML_DEBUG, "[" << mName
+                              << "]: Negotiation needed because of "
+                                 "lack of a=msid, and transceiver is sending.");
+      return true;
     }
 
     if (mIsCurrentOfferer.isSome() && *mIsCurrentOfferer) {
