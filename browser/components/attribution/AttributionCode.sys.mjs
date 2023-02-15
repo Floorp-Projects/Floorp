@@ -1,31 +1,23 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
-
-var EXPORTED_SYMBOLS = ["AttributionCode", "AttributionIOUtils"];
 
 /**
  * This is a policy object used to override behavior for testing.
  */
-const AttributionIOUtils = {
+export const AttributionIOUtils = {
   write: async (path, bytes) => IOUtils.write(path, bytes),
   read: async path => IOUtils.read(path),
   exists: async path => IOUtils.exists(path),
 };
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "MacAttribution",
-  "resource:///modules/MacAttribution.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  MacAttribution: "resource:///modules/MacAttribution.sys.mjs",
+});
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.importESModule(
     "resource://gre/modules/Console.sys.mjs"
@@ -66,7 +58,7 @@ const ATTR_CODE_KEYS = [
 
 let gCachedAttrData = null;
 
-var AttributionCode = {
+export var AttributionCode = {
   /**
    * Wrapper to pull campaign IDs from MSIX builds.
    * This function solely exists to make it easy to mock out for tests.

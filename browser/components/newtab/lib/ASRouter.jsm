@@ -38,7 +38,9 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
     "resource://messaging-system/lib/SpecialMessageActions.jsm",
   TargetingContext: "resource://messaging-system/targeting/Targeting.jsm",
   Utils: "resource://services-settings/Utils.jsm",
-  MacAttribution: "resource:///modules/MacAttribution.jsm",
+});
+ChromeUtils.defineESModuleGetters(lazy, {
+  MacAttribution: "resource:///modules/MacAttribution.sys.mjs",
 });
 XPCOMUtils.defineLazyServiceGetters(lazy, {
   BrowserHandler: ["@mozilla.org/browser/clh;1", "nsIBrowserHandler"],
@@ -59,8 +61,8 @@ const { RemoteSettings } = ChromeUtils.import(
 const { CFRPageActions } = ChromeUtils.import(
   "resource://activity-stream/lib/CFRPageActions.jsm"
 );
-const { AttributionCode } = ChromeUtils.import(
-  "resource:///modules/AttributionCode.jsm"
+const { AttributionCode } = ChromeUtils.importESModule(
+  "resource:///modules/AttributionCode.sys.mjs"
 );
 
 // List of hosts for endpoints that serve router messages.

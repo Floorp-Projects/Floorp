@@ -4,14 +4,14 @@
 
 "use strict";
 
-const { AttributionCode } = ChromeUtils.import(
-  "resource:///modules/AttributionCode.jsm"
+const { AttributionCode } = ChromeUtils.importESModule(
+  "resource:///modules/AttributionCode.sys.mjs"
 );
 const { ASRouterTargeting } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouterTargeting.jsm"
 );
-const { MacAttribution } = ChromeUtils.import(
-  "resource:///modules/MacAttribution.jsm"
+const { MacAttribution } = ChromeUtils.importESModule(
+  "resource:///modules/MacAttribution.sys.mjs"
 );
 const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
   "resource://testing-common/EnterprisePolicyTesting.sys.mjs"

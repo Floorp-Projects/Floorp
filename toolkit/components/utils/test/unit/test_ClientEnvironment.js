@@ -79,8 +79,8 @@ add_task(async () => {
     await ClientEnvironmentBase.attribution;
   } catch (ex) {
     equal(
-      ex.name,
-      "NS_ERROR_FILE_NOT_FOUND",
+      ex.result,
+      Cr.NS_ERROR_FILE_NOT_FOUND,
       "Test environment does not have attribution data"
     );
   }
