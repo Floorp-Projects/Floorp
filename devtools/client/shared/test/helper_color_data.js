@@ -1,5 +1,7 @@
 "use strict";
 
+// This is used to test color.js in browser_css_color.js
+
 /* eslint-disable max-len */
 function getFixtureColorData() {
   return [
@@ -1467,6 +1469,33 @@ function getFixtureColorData() {
       hsl: "unset",
       rgb: "unset",
       hwb: "unset",
+      cycle: false,
+    },
+    {
+      authored: "currentcolor",
+      name: "currentcolor",
+      hex: "currentcolor",
+      hsl: "currentcolor",
+      rgb: "currentcolor",
+      hwb: "currentcolor",
+      cycle: false,
+    },
+    {
+      authored: "accentcolor",
+      name: "",
+      hex: "",
+      hsl: "",
+      rgb: "",
+      hwg: "",
+      cycle: false,
+    },
+    {
+      authored: "-moz-menubartext",
+      name: "",
+      hex: "",
+      hsl: "",
+      rgb: "",
+      hwg: "",
       cycle: false,
     },
   ];
