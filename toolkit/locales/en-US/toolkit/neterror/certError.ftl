@@ -107,9 +107,8 @@ deniedPortAccess-title = This address is restricted
 dnsNotFound-title = Hmm. We’re having trouble finding that site.
 
 # Variables:
-#   $hostname (string) - Hostname of the website to which the user was trying to connect.
-dns-not-found-trr-only-title =
-  Possible security risk for { $hostname }.
+dns-not-found-trr-only-title2 =
+  Possible security risk looking up this domain
 
 # Variables:
 #   $hostname (string) - Hostname of the website to which the user was trying to connect.

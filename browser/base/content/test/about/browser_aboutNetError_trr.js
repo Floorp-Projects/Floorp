@@ -50,7 +50,7 @@ add_task(async function exceptionButtonTRROnly() {
     const actualDataL10nID = titleEl.getAttribute("data-l10n-id");
     is(
       actualDataL10nID,
-      "dns-not-found-trr-only-title",
+      "dns-not-found-trr-only-title2",
       "Correct error page title is set"
     );
 
