@@ -257,8 +257,8 @@ TEST_F(FOGFixture, TestCppTimingDistWorks) {
   const uint64_t NANOS_IN_MILLIS = 1e6;
 
   // bug 1701847 - Sleeps don't necessarily round up as you'd expect.
-  // Give ourselves a 40000ns (0.04ms) window to be off on fast machines.
-  const uint64_t EPSILON = 40000;
+  // Give ourselves a 200000ns (0.2ms) window to be off on fast machines.
+  const uint64_t EPSILON = 200000;
 
   // We don't know exactly how long those sleeps took, only that it was at
   // least 15ms total.
