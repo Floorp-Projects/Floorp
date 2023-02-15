@@ -183,6 +183,54 @@ add_task(async function feature_callout_closes_on_dismiss() {
   sandbox.restore();
 });
 
+add_task(async function feature_callout_not_rendered_when_it_has_no_parent() {
+  Services.telemetry.clearEvents();
+  const testMessage = getCalloutMessageById(
+    "FIREFOX_VIEW_FEATURE_TOUR_1_NO_CWS"
+  );
+  testMessage.message.content.screens[0].parent_selector = "#fake-selector";
+  const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:firefoxview",
+    },
+    async browser => {
+      const { document } = browser.contentWindow;
+
+      const CONTAINER_NOT_CREATED_EVENT = [
+        [
+          "messaging_experiments",
+          "feature_callout",
+          "create_failed",
+          `${testMessage.message.id}-${testMessage.message.content.screens[0].parent_selector}`,
+        ],
+      ];
+      await TestUtils.waitForCondition(() => {
+        let events = Services.telemetry.snapshotEvents(
+          Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+          false
+        ).parent;
+        return events && events.length >= 2;
+      }, "Waiting for container_not_created event");
+
+      TelemetryTestUtils.assertEvents(
+        CONTAINER_NOT_CREATED_EVENT,
+        { method: "feature_callout" },
+        { clear: true, process: "parent" }
+      );
+
+      ok(
+        !document.querySelector(`${calloutSelector}:not(.hidden)`),
+        "Feature Callout screen does not render if its parent element does not exist"
+      );
+    }
+  );
+
+  sandbox.restore();
+});
+
 add_task(async function feature_callout_only_highlights_existing_elements() {
   const testMessage = getCalloutMessageById(
     "FIREFOX_VIEW_FEATURE_TOUR_1_NO_CWS"
