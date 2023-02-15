@@ -3184,23 +3184,22 @@ nsresult EditorBase::SetTextNodeWithoutTransaction(const nsAString& aString,
   return NS_OK;
 }
 
-nsresult EditorBase::DeleteTextWithTransaction(Text& aTextNode,
-                                               uint32_t aOffset,
-                                               uint32_t aLength) {
+Result<CaretPoint, nsresult> EditorBase::DeleteTextWithTransaction(
+    Text& aTextNode, uint32_t aOffset, uint32_t aLength) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   RefPtr<DeleteTextTransaction> transaction =
       DeleteTextTransaction::MaybeCreate(*this, aTextNode, aOffset, aLength);
-  if (!transaction) {
+  if (MOZ_UNLIKELY(!transaction)) {
     NS_WARNING("DeleteTextTransaction::MaybeCreate() failed");
-    return NS_ERROR_FAILURE;
+    return Err(NS_ERROR_FAILURE);
   }
 
   IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eDeleteText, nsIEditor::ePrevious, ignoredError);
   if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
-    return ignoredError.StealNSResult();
+    return Err(ignoredError.StealNSResult());
   }
   NS_WARNING_ASSERTION(
       !ignoredError.Failed(),
@@ -3226,24 +3225,14 @@ nsresult EditorBase::DeleteTextWithTransaction(Text& aTextNode,
         *this, EditorRawDOMPoint(&aTextNode, aOffset));
   }
 
+  if (NS_WARN_IF(Destroyed())) {
+    return Err(NS_ERROR_EDITOR_DESTROYED);
+  }
   if (NS_FAILED(rv)) {
-    return rv;
+    return Err(rv);
   }
 
-  if (AllowsTransactionsToChangeSelection()) {
-    EditorDOMPoint pointToPutCaret = transaction->SuggestPointToPutCaret();
-    if (MOZ_LIKELY(pointToPutCaret.IsSet())) {
-      nsresult rv = CollapseSelectionTo(pointToPutCaret);
-      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv),
-          "EditorBase::CollapseSelectionTo() failed, but ignored");
-    }
-  }
-
-  return NS_OK;
+  return CaretPoint(transaction->SuggestPointToPutCaret());
 }
 
 bool EditorBase::IsRoot(const nsINode* inNode) const {

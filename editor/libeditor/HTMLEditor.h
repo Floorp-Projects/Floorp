@@ -732,17 +732,16 @@ class HTMLEditor final : public EditorBase,
       EDirection aSelect = eNone);
 
   /**
-   * DeleteTextWithTransaction() removes text in the range from aTextNode if
-   * it's modifiable.  Note that this not an override of same method of
-   * EditorBase.
+   * Delete text in the range in aTextNode.  If aTextNode is not editable, this
+   * does nothing.
    *
    * @param aTextNode           The text node which should be modified.
    * @param aOffset             Start offset of removing text in aTextNode.
    * @param aLength             Length of removing text.
    */
-  MOZ_CAN_RUN_SCRIPT nsresult DeleteTextWithTransaction(dom::Text& aTextNode,
-                                                        uint32_t aOffset,
-                                                        uint32_t aLength);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CaretPoint, nsresult>
+  DeleteTextWithTransaction(dom::Text& aTextNode, uint32_t aOffset,
+                            uint32_t aLength);
 
   /**
    * ReplaceTextWithTransaction() replaces text in the range with
