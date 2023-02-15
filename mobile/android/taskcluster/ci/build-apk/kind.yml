@@ -54,7 +54,10 @@ tasks:
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
         description: 'Focus debug build from source code'
-        run-on-tasks-for: [github-pull-request, github-push]
+        run-on-tasks-for:
+            - github-pull-request
+            - github-pull-request-untrusted
+            - github-push
         run:
             gradle-build-type: debug
             gradle-build-name: focusDebug
@@ -69,7 +72,10 @@ tasks:
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
         description: 'Klar debug build from source code'
-        run-on-tasks-for: [github-pull-request, github-push]
+        run-on-tasks-for:
+            - github-pull-request
+            - github-pull-request-untrusted
+            - github-push
         run:
             gradle-build-type: debug
             gradle-build-name: klarDebug
@@ -84,7 +90,10 @@ tasks:
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-fenix
         description: 'Fenix debug build from source code'
-        run-on-tasks-for: [github-pull-request, github-push]
+        run-on-tasks-for:
+            - github-pull-request
+            - github-pull-request-untrusted
+            - github-push
         run:
             gradle-build-type: debug
             gradle-build-name: fenixDebug
@@ -297,7 +306,10 @@ tasks:
             code-review: true
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
-        run-on-tasks-for: [github-pull-request, github-push]
+        run-on-tasks-for:
+            - github-pull-request
+            - github-pull-request-untrusted
+            - github-push
         run:
             gradle-build-type: androidTest
             gradle-build-name: androidTest
@@ -317,7 +329,10 @@ tasks:
             external-gradle-dependencies: external-gradle-dependencies-fenix
         attributes:
             code-review: true
-        run-on-tasks-for: [github-pull-request, github-push]
+        run-on-tasks-for:
+            - github-pull-request
+            - github-pull-request-untrusted
+            - github-push
         run:
             gradle-build-type: androidTest
             gradle-build-name: androidTest
