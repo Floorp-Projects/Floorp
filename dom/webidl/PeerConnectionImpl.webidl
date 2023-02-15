@@ -108,15 +108,12 @@ interface PeerConnectionImpl  {
 
   readonly attribute RTCIceConnectionState iceConnectionState;
   readonly attribute RTCIceGatheringState iceGatheringState;
-  readonly attribute RTCPeerConnectionState connectionState;
   readonly attribute RTCSignalingState signalingState;
   attribute DOMString id;
 
   [SetterThrows]
   attribute DOMString peerIdentity;
   readonly attribute boolean privacyRequested;
-
-  readonly attribute RTCSctpTransport? sctp;
 
   /* Data channels */
   [Throws]

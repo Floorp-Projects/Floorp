@@ -31,20 +31,9 @@ UNIFIED_SOURCES += [
     "RTCRtpReceiver.cpp",
     "RTCRtpSender.cpp",
     "RTCRtpTransceiver.cpp",
-    "RTCSctpTransport.cpp",
     "RTCStatsIdGenerator.cpp",
     "RTCStatsReport.cpp",
     "WebrtcGlobalInformation.cpp",
-]
-
-EXPORTS.mozilla.dom += [
-    "RTCDtlsTransport.h",
-    "RTCDTMFSender.h",
-    "RTCRtpReceiver.h",
-    "RTCRtpSender.h",
-    "RTCRtpTransceiver.h",
-    "RTCSctpTransport.h",
-    "RTCStatsReport.h",
 ]
 
 FINAL_LIBRARY = "xul"

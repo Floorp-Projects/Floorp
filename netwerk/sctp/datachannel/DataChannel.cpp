@@ -3272,17 +3272,11 @@ void DataChannel::AnnounceOpen() {
         auto state = GetReadyState();
         // Special-case; spec says to put brand-new remote-created DataChannel
         // in "open", but queue the firing of the "open" event.
-        if (state != CLOSING && state != CLOSED) {
-          if (!mEverOpened && mConnection && mConnection->mListener) {
-            mEverOpened = true;
-            mConnection->mListener->NotifyDataChannelOpen(this);
-          }
+        if (state != CLOSING && state != CLOSED && mListener) {
           SetReadyState(OPEN);
           DC_DEBUG(("%s: sending ON_CHANNEL_OPEN for %s/%s: %u", __FUNCTION__,
                     mLabel.get(), mProtocol.get(), mStream));
-          if (mListener) {
-            mListener->OnChannelConnected(mContext);
-          }
+          mListener->OnChannelConnected(mContext);
         }
       }));
 }
@@ -3292,9 +3286,6 @@ void DataChannel::AnnounceClosed() {
       "DataChannel::AnnounceClosed", [this, self = RefPtr<DataChannel>(this)] {
         if (GetReadyState() == CLOSED) {
           return;
-        }
-        if (mEverOpened && mConnection && mConnection->mListener) {
-          mConnection->mListener->NotifyDataChannelClosed(this);
         }
         SetReadyState(CLOSED);
         mBufferedData.Clear();

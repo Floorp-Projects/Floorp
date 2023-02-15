@@ -1,6 +1,5 @@
 <!doctype html>
 <meta charset=utf-8>
-<meta name="timeout" content="long">
 <title>RTCPeerConnection getStats test related to outbound-rtp stats</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
@@ -24,10 +23,10 @@ promise_test(async (test) => {
 
   const stream = await getNoiseStream({audio: true, video: true});
   stream.getTracks().forEach(t => pc1.addTrack(t, stream));
-  exchangeIceCandidates(pc1, pc2);
   exchangeOfferAnswer(pc1, pc2);
-  const {track} = await new Promise(r => pc2.ontrack = r);
-  await new Promise(r => track.onunmute = r);
+  exchangeIceCandidates(pc1, pc2);
+  await listenToConnected(pc1);
+
   let outboundStats = extractOutboundRtpStats(await pc1.getStats());
   assert_equals(outboundStats.length, 2);
   assert_true(outboundStats[0].active);

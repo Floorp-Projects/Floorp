@@ -1504,6 +1504,12 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "mozInnerScreenY", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "mozRTCIceCandidate", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "mozRTCPeerConnection", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "mozRTCSessionDescription", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "name", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "navigator", insecureContext: true },

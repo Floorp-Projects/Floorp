@@ -32,7 +32,6 @@ static auto ForAllPublicRTCStatsCollectionMembers(Collection& aStats,
   return aFunction(
       aStats.mInboundRtpStreamStats, aStats.mOutboundRtpStreamStats,
       aStats.mRemoteInboundRtpStreamStats, aStats.mRemoteOutboundRtpStreamStats,
-      aStats.mMediaSourceStats, aStats.mPeerConnectionStats,
       aStats.mRtpContributingSourceStats, aStats.mIceCandidatePairStats,
       aStats.mIceCandidateStats, aStats.mTrickledIceCandidateStats,
       aStats.mDataChannelStats, aStats.mCodecStats);
@@ -439,9 +438,6 @@ struct ParamTraits<mozilla::dom::RTCRemoteOutboundRtpStreamStats> {
   }
 };
 
-DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCMediaSourceStats, mId,
-                                  mTimestamp, mType, mTrackIdentifier, mKind);
-
 template <>
 struct ParamTraits<mozilla::dom::RTCRTPContributingSourceStats> {
   typedef mozilla::dom::RTCRTPContributingSourceStats paramType;
@@ -461,10 +457,6 @@ struct ParamTraits<mozilla::dom::RTCRTPContributingSourceStats> {
     return true;
   }
 };
-
-DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCPeerConnectionStats, mId,
-                                  mTimestamp, mType, mDataChannelsOpened,
-                                  mDataChannelsClosed);
 
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(
     mozilla::dom::RTCVideoFrameHistoryEntryInternal, mWidth, mHeight,
