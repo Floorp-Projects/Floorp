@@ -94,8 +94,10 @@ class Reader(object):
             self.event.set()
 
         if not (
-            line.startswith("JavaScript error:")
-            or line.startswith("JavaScript warning:")
+            "JavaScript error:" in line
+            or "JavaScript warning:" in line
+            or "SyntaxError:" in line
+            or "TypeError:" in line
         ):
             LOG.process_output(self.proc.pid, line)
             self.output.append(line)
