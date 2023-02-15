@@ -214,7 +214,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "glean-parser"
-version = "6.4.0"
+version = "7.0.0"
 description = "Parser tools for Mozilla's Glean telemetry"
 category = "main"
 optional = false
@@ -300,8 +300,8 @@ ansicon = {version = "*", markers = "platform_system == \"Windows\""}
 
 [[package]]
 name = "jsmin"
-version = "2.1.0"
-description = "JavaScript minifier.\nPLEASE UPDATE TO VERSION >= 2.0.6. Older versions have a serious bug related to comments."
+version = "3.0.0"
+description = "JavaScript minifier."
 category = "main"
 optional = false
 python-versions = "*"
@@ -797,7 +797,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "a1068ebc7bed961126ecacbb0ca60aa2b67bc73ae1d7d2df3f75ab235d6f0c84"
+content-hash = "860c0b59297524a1e533309fdaed6fe16102e062c33d1a40f8ad6912b9229b92"
 
 [metadata.files]
 aiohttp = [
@@ -918,8 +918,8 @@ giturlparse = [
     {file = "giturlparse-0.10.0.tar.gz", hash = "sha256:2595ab291d30717cda8474b874c9fd509f1b9802ad7f6968c36a45e4b13eb337"},
 ]
 glean-parser = [
-    {file = "glean_parser-6.4.0-py3-none-any.whl", hash = "sha256:011c187aeb655af03a24bf1970aeac685e29a8ff1cbdfe9ccbd441bca9d7005e"},
-    {file = "glean_parser-6.4.0.tar.gz", hash = "sha256:f7e53d911324710634b636a8e8f9a2d124ea874c70d29154d3fc595e56b090a3"},
+    {file = "glean_parser-7.0.0-py3-none-any.whl", hash = "sha256:c9df09b8cbe149e840125153e0ffebda264f45cd9e51805dbc0288bf203c54ab"},
+    {file = "glean_parser-7.0.0.tar.gz", hash = "sha256:c48960dd6fc0dc506f54e1229ff92ed10766cc65e598e9b9c8b798be81a4ccd5"},
 ]
 idna = [
     {file = "idna-2.10-py2.py3-none-any.whl", hash = "sha256:b97d804b1e9b523befed77c48dacec60e6dcb0b5391d57af6a65a312a90648c0"},
@@ -945,7 +945,7 @@ jinxed = [
     {file = "jinxed-1.2.0.tar.gz", hash = "sha256:032acda92d5c57cd216033cbbd53de731e6ed50deb63eb4781336ca55f72cda5"},
 ]
 jsmin = [
-    {file = "jsmin-2.1.0.tar.gz", hash = "sha256:5d07bf0251a4128e5e8e8eef603849b6b5741c337bff087731a248f9cc774f56"},
+    {file = "jsmin-3.0.0.tar.gz", hash = "sha256:88fc1bd6033a47c5911dbcada7d279c7a8b7ad0841909590f6a742c20c4d2e08"},
 ]
 json-e = [
     {file = "json-e-2.7.0.tar.gz", hash = "sha256:d8c1ec3f5bbc7728c3a504ebe58829f283c64eca230871e4eefe974b4cdaae4a"},
