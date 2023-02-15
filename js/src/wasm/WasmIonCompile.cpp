@@ -6095,6 +6095,7 @@ static bool EmitTableFill(FunctionCompiler& f) {
                              tableIndexArg);
 }
 
+#if ENABLE_WASM_MEMORY_CONTROL
 static bool EmitMemDiscard(FunctionCompiler& f) {
   MDefinition *start, *len;
   if (!f.iter().readMemDiscard(&start, &len)) {
@@ -6115,6 +6116,7 @@ static bool EmitMemDiscard(FunctionCompiler& f) {
            : (f.isMem32() ? SASigMemDiscardM32 : SASigMemDiscardM64));
   return f.emitInstanceCall3(bytecodeOffset, callee, start, len, memoryBase);
 }
+#endif
 
 static bool EmitTableGet(FunctionCompiler& f) {
   uint32_t tableIndex;
