@@ -434,7 +434,7 @@ abstract class BaseBrowserFragment :
             feature = FindInPageIntegration(
                 store = store,
                 sessionId = customTabSessionId,
-                stub = binding.stubFindInPage,
+                view = binding.findInPageView,
                 engineView = binding.engineView,
                 toolbarInfo = FindInPageIntegration.ToolbarInfo(
                     browserToolbarView.view,

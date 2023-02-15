@@ -6,7 +6,7 @@ package org.mozilla.fenix.components
 
 import android.view.View
 import android.view.ViewGroup.MarginLayoutParams
-import android.view.ViewStub
+import androidx.annotation.UiThread
 import androidx.annotation.VisibleForTesting
 import androidx.core.view.isVisible
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
@@ -14,8 +14,9 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.findinpage.FindInPageFeature
-import mozilla.components.feature.findinpage.view.FindInPageView
+import mozilla.components.feature.findinpage.view.FindInPageBar
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.components.FindInPageIntegration.ToolbarInfo
 
 /**
@@ -30,19 +31,38 @@ import org.mozilla.fenix.components.FindInPageIntegration.ToolbarInfo
 class FindInPageIntegration(
     private val store: BrowserStore,
     private val sessionId: String? = null,
-    stub: ViewStub,
+    private val view: FindInPageBar,
     private val engineView: EngineView,
     private val toolbarInfo: ToolbarInfo,
-) : InflationAwareFeature(stub) {
-    override fun onViewInflated(view: View): LifecycleAwareFeature {
-        return FindInPageFeature(store, view as FindInPageView, engineView) {
-            restorePreviousLayout()
+) : LifecycleAwareFeature, UserInteractionHandler {
+    private val feature by lazy { FindInPageFeature(store, view, engineView, ::onClose) }
 
-            view.visibility = View.GONE
-        }
+    override fun start() {
+        feature.start()
     }
 
-    override fun onLaunch(view: View, feature: LifecycleAwareFeature) {
+    override fun stop() {
+        feature.stop()
+    }
+
+    override fun onBackPressed(): Boolean {
+        return feature.onBackPressed()
+    }
+
+    private fun onClose() {
+        view.visibility = View.GONE
+        restorePreviousLayout()
+    }
+
+    /**
+     * Start the find in page functionality.
+     */
+    @UiThread
+    fun launch() {
+        onLaunch(view, feature)
+    }
+
+    private fun onLaunch(view: View, feature: LifecycleAwareFeature) {
         store.state.findCustomTabOrSelectedTab(sessionId)?.let { tab ->
             prepareLayoutForFindBar()
 

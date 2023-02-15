@@ -9,8 +9,9 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:clickable="true"
-        android:focusable="true"
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
         tools:background="#ffffffff"
         tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
 
@@ -23,6 +24,11 @@
             android:ems="10"
             android:gravity="center_vertical"
             android:hint="@string/mozac_feature_findindpage_input"
+            android:accessibilityHeading="true"
+            android:importantForAccessibility="yes"
+            android:clickable="true"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
             android:inputType="textNoSuggestions"
             android:lines="1"
             android:maxLines="1"
