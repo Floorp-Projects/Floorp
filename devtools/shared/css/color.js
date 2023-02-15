@@ -138,8 +138,14 @@ CssColor.prototype = {
     return this.getRGBATuple().a !== 1;
   },
 
+  /**
+   * Return true if the color is a valid color and we can get rgba tuples from it.
+   */
   get valid() {
-    return InspectorUtils.isValidCSSColor(this.authored);
+    // We can't use InspectorUtils.isValidCSSColor as colors can be valid but we can't have
+    // their rgba tuples (e.g. currentColor, accentColor, … whose actual values depends on
+    // additional context we don't have here).
+    return InspectorUtils.colorToRGBA(this.authored) !== null;
   },
 
   /**
@@ -365,7 +371,10 @@ CssColor.prototype = {
    * @return {String|Boolean}
    *         - If the current color is a special value e.g. "transparent" then
    *           return the color.
-   *         - If the color is invalid return an empty string.
+   *         - If the current color is a system value e.g. "accentcolor" then
+   *           return the color.
+   *         - If the color is invalid or that we can't get rgba components from it
+   *           (e.g. "accentcolor"), return an empty string.
    *         - If the color is a regular color e.g. #F06 so we return false
    *           to indicate that the color is neither invalid or special.
    */
