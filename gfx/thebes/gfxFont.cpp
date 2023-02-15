@@ -2233,8 +2233,25 @@ void gfxFont::DrawEmphasisMarks(const gfxTextRun* aShapedText, gfx::Point* aPt,
   }
 }
 
+nsTArray<mozilla::gfx::sRGBColor>* TextRunDrawParams::GetPaletteFor(
+    const gfxFont* aFont) {
+  auto entry = mPaletteCache.Lookup(aFont);
+  if (!entry) {
+    CacheData newData;
+    newData.mKey = aFont;
+
+    gfxFontEntry* fe = aFont->GetFontEntry();
+    gfxFontEntry::AutoHBFace face = fe->GetHBFace();
+    newData.mPalette = COLRFonts::SetupColorPalette(
+        face, paletteValueSet, fontPalette, fe->FamilyName());
+
+    entry.Set(std::move(newData));
+  }
+  return entry.Data().mPalette.get();
+}
+
 void gfxFont::Draw(const gfxTextRun* aTextRun, uint32_t aStart, uint32_t aEnd,
-                   gfx::Point* aPt, const TextRunDrawParams& aRunParams,
+                   gfx::Point* aPt, TextRunDrawParams& aRunParams,
                    gfx::ShapedTextFlags aOrientation) {
   NS_ASSERTION(aRunParams.drawMode == DrawMode::GLYPH_PATH ||
                    !(int(aRunParams.drawMode) & int(DrawMode::GLYPH_PATH)),
@@ -2267,10 +2284,7 @@ void gfxFont::Draw(const gfxTextRun* aTextRun, uint32_t aStart, uint32_t aEnd,
     fontParams.currentColor = aRunParams.context->GetDeviceColor(ctxColor)
                                   ? sRGBColor::FromABGR(ctxColor.ToABGR())
                                   : sRGBColor::OpaqueBlack();
-    gfxFontEntry::AutoHBFace face = GetFontEntry()->GetHBFace();
-    fontParams.palette = COLRFonts::SetupColorPalette(
-        face, aRunParams.paletteValueSet, aRunParams.fontPalette,
-        GetFontEntry()->FamilyName());
+    fontParams.palette = aRunParams.GetPaletteFor(this);
   }
 
   if (textDrawer) {
@@ -2564,7 +2578,7 @@ bool gfxFont::RenderColorGlyph(DrawTarget* aDrawTarget, gfxContext* aContext,
           GetFontEntry()->GetCOLR(), hbShaper->GetHBFont(), paintGraph,
           aDrawTarget, aTextDrawer, aFontParams.scaledFont,
           aFontParams.drawOptions, aPoint, aFontParams.currentColor,
-          aFontParams.palette.get(), aGlyphId, mFUnitsConvFactor);
+          aFontParams.palette, aGlyphId, mFUnitsConvFactor);
     }
   }
 
@@ -2574,7 +2588,7 @@ bool gfxFont::RenderColorGlyph(DrawTarget* aDrawTarget, gfxContext* aContext,
     bool ok = COLRFonts::PaintGlyphLayers(
         GetFontEntry()->GetCOLR(), face, layers, aDrawTarget, aTextDrawer,
         aFontParams.scaledFont, aFontParams.drawOptions, aPoint,
-        aFontParams.currentColor, aFontParams.palette.get());
+        aFontParams.currentColor, aFontParams.palette);
     return ok;
   }
 
