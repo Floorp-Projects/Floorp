@@ -6842,6 +6842,9 @@ already_AddRefed<PresShell> Document::CreatePresShell(
     mDocumentL10n->OnCreatePresShell();
   }
 
+  if (HasAutoFocusCandidates()) {
+    ScheduleFlushAutoFocusCandidates();
+  }
   // Now that we have a shell, we might have @font-face rules (the presence of a
   // shell may change which rules apply to us). We don't need to do anything
   // like EnsureStyleFlush or such, there's nothing to update yet and when stuff
@@ -6948,6 +6951,7 @@ void Document::DeletePresShell() {
   mExternalResourceMap.HideViewers();
   if (nsPresContext* presContext = mPresShell->GetPresContext()) {
     presContext->RefreshDriver()->CancelPendingFullscreenEvents(this);
+    presContext->RefreshDriver()->CancelFlushAutoFocus(this);
   }
 
   // When our shell goes away, request that all our images be immediately
@@ -12625,121 +12629,233 @@ Document* Document::GetTemplateContentsOwner() {
   return mTemplateContentsOwner;
 }
 
-static already_AddRefed<nsPIDOMWindowOuter> FindTopWindowForElement(
-    Element* element) {
-  Document* document = element->OwnerDoc();
-  if (!document) {
-    return nullptr;
+// https://html.spec.whatwg.org/#the-autofocus-attribute
+void Document::ElementWithAutoFocusInserted(Element* aAutoFocusCandidate) {
+  BrowsingContext* bc = GetBrowsingContext();
+  if (!bc) {
+    return;
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> window = document->GetWindow();
-  if (!window) {
-    return nullptr;
+  // If target is not fully active, then return.
+  if (!IsCurrentActiveDocument()) {
+    return;
   }
 
-  // Trying to find the top window (equivalent to window.top).
-  if (nsCOMPtr<nsPIDOMWindowOuter> top = window->GetInProcessTop()) {
-    window = std::move(top);
+  // If target's active sandboxing flag set has the sandboxed automatic features
+  // browsing context flag, then return.
+  if (GetSandboxFlags() & SANDBOXED_AUTOMATIC_FEATURES) {
+    return;
   }
-  return window.forget();
-}
 
-/**
- * nsAutoFocusEvent is used to dispatch a focus event for an
- * nsGenericHTMLFormElement with the autofocus attribute enabled.
- */
-class nsAutoFocusEvent : public Runnable {
- public:
-  explicit nsAutoFocusEvent(nsCOMPtr<Element>&& aElement,
-                            nsCOMPtr<nsPIDOMWindowOuter>&& aTopWindow)
-      : mozilla::Runnable("nsAutoFocusEvent"),
-        mElement(std::move(aElement)),
-        mTopWindow(std::move(aTopWindow)) {}
-
-  NS_IMETHOD Run() override {
-    nsCOMPtr<nsPIDOMWindowOuter> currentTopWindow =
-        FindTopWindowForElement(mElement);
-    if (currentTopWindow != mTopWindow) {
-      // The element's top window changed from when the event was queued.
-      // Don't take away focus from an unrelated window.
-      return NS_OK;
+  // For each ancestorBC of target's browsing context's ancestor browsing
+  // contexts: if ancestorBC's active document's origin is not same origin with
+  // target's origin, then return.
+  while (bc) {
+    BrowsingContext* parent = bc->GetParent();
+    if (!parent) {
+      break;
+    }
+    // AncestorBC is not the same site
+    if (!parent->IsInProcess()) {
+      return;
     }
 
-    if (Document* doc = mTopWindow->GetExtantDoc()) {
-      if (doc->IsAutoFocusFired()) {
-        return NS_OK;
+    Document* currentDocument = bc->GetDocument();
+    if (!currentDocument) {
+      return;
+    }
+
+    Document* parentDocument = parent->GetDocument();
+    if (!parentDocument) {
+      return;
+    }
+
+    // Not same origin
+    if (!currentDocument->NodePrincipal()->Equals(
+            parentDocument->NodePrincipal())) {
+      return;
+    }
+
+    bc = parent;
+  }
+  MOZ_ASSERT(bc->IsTop());
+
+  Document* topDocument = bc->GetDocument();
+  MOZ_ASSERT(topDocument);
+  topDocument->AppendAutoFocusCandidateToTopDocument(aAutoFocusCandidate);
+}
+
+void Document::ScheduleFlushAutoFocusCandidates() {
+  MOZ_ASSERT(mPresShell && mPresShell->DidInitialize());
+  MOZ_ASSERT(GetBrowsingContext()->IsTop());
+  if (nsRefreshDriver* rd = mPresShell->GetRefreshDriver()) {
+    rd->ScheduleAutoFocusFlush(this);
+  }
+}
+
+void Document::AppendAutoFocusCandidateToTopDocument(
+    Element* aAutoFocusCandidate) {
+  MOZ_ASSERT(GetBrowsingContext()->IsTop());
+  if (mAutoFocusFired) {
+    return;
+  }
+
+  if (!HasAutoFocusCandidates()) {
+    // PresShell may be initialized later
+    if (mPresShell && mPresShell->DidInitialize()) {
+      ScheduleFlushAutoFocusCandidates();
+    }
+  }
+
+  nsWeakPtr element = do_GetWeakReference(aAutoFocusCandidate);
+  mAutoFocusCandidates.RemoveElement(element);
+  mAutoFocusCandidates.AppendElement(element);
+}
+
+void Document::SetAutoFocusFired() {
+  mAutoFocusCandidates.Clear();
+  mAutoFocusFired = true;
+}
+
+// https://html.spec.whatwg.org/#flush-autofocus-candidates
+void Document::FlushAutoFocusCandidates() {
+  MOZ_ASSERT(GetBrowsingContext()->IsTop());
+  if (mAutoFocusFired) {
+    return;
+  }
+
+  if (!mPresShell) {
+    return;
+  }
+
+  MOZ_ASSERT(HasAutoFocusCandidates());
+  MOZ_ASSERT(mPresShell->DidInitialize());
+
+  nsCOMPtr<nsPIDOMWindowOuter> topWindow = GetWindow();
+  // We should be the top document
+  if (!topWindow) {
+    return;
+  }
+
+#ifdef DEBUG
+  {
+    // Trying to find the top window (equivalent to window.top).
+    nsCOMPtr<nsPIDOMWindowOuter> top = topWindow->GetInProcessTop();
+    MOZ_ASSERT(topWindow == top);
+  }
+#endif
+
+  // Don't steal the focus from the user
+  if (topWindow->GetFocusedElement()) {
+    SetAutoFocusFired();
+    return;
+  }
+
+  MOZ_ASSERT(mDocumentURI);
+  nsAutoCString ref;
+  // GetRef never fails
+  nsresult rv = mDocumentURI->GetRef(ref);
+  if (NS_SUCCEEDED(rv) &&
+      nsContentUtils::GetTargetElement(this, NS_ConvertUTF8toUTF16(ref))) {
+    SetAutoFocusFired();
+    return;
+  }
+
+  nsTObserverArray<nsWeakPtr>::ForwardIterator iter(mAutoFocusCandidates);
+  while (iter.HasMore()) {
+    nsCOMPtr<Element> autoFocusElement = do_QueryReferent(iter.GetNext());
+    if (!autoFocusElement) {
+      continue;
+    }
+    RefPtr<Document> autoFocusElementDoc = autoFocusElement->OwnerDoc();
+    // Get the latest info about the frame and allow scripts
+    // to run which might affect the focusability of this element.
+    autoFocusElementDoc->FlushPendingNotifications(FlushType::Frames);
+
+    // Above layout flush may cause the PresShell to disappear.
+    if (!mPresShell) {
+      return;
+    }
+
+    // Re-get the element because the ownerDoc() might have changed
+    autoFocusElementDoc = autoFocusElement->OwnerDoc();
+    BrowsingContext* bc = autoFocusElementDoc->GetBrowsingContext();
+    if (!bc) {
+      continue;
+    }
+
+    // If doc is not fully active, then remove element from candidates, and
+    // continue.
+    if (!autoFocusElementDoc->IsCurrentActiveDocument()) {
+      iter.Remove();
+      continue;
+    }
+    // The autofocus element could be moved to a different
+    // top level BC.
+    if (bc->Top()->GetDocument() != this) {
+      continue;
+    }
+
+    iter.Remove();
+
+    // Let inclusiveAncestorDocuments be a list consisting of doc, plus the
+    // active documents of each of doc's browsing context's ancestor browsing
+    // contexts.
+    // If any Document in inclusiveAncestorDocuments has non-null target
+    // element, then continue.
+    bool shouldFocus = true;
+    while (bc) {
+      Document* doc = bc->GetDocument();
+      if (!doc) {
+        shouldFocus = false;
+        break;
       }
-      doc->SetAutoFocusFired();
+
+      nsIURI* uri = doc->GetDocumentURI();
+      if (!uri) {
+        shouldFocus = false;
+        break;
+      }
+
+      nsAutoCString ref;
+      nsresult rv = uri->GetRef(ref);
+      // If there is an element in the document tree that has an ID equal to
+      // fragment
+      if (NS_SUCCEEDED(rv) &&
+          nsContentUtils::GetTargetElement(doc, NS_ConvertUTF8toUTF16(ref))) {
+        shouldFocus = false;
+        break;
+      }
+      bc = bc->GetParent();
     }
 
-    // Don't steal focus from the user.
-    if (mTopWindow->GetFocusedElement()) {
-      return NS_OK;
+    if (!shouldFocus) {
+      continue;
     }
 
-    FocusOptions options;
-    ErrorResult rv;
-    mElement->Focus(options, CallerType::System, rv);
-    return rv.StealNSResult();
+    MOZ_ASSERT(topWindow);
+    if (TryAutoFocusCandidate(*autoFocusElement)) {
+      // We've successfully autofocused an element, don't
+      // need to try to focus the rest.
+      SetAutoFocusFired();
+      break;
+    }
   }
 
- private:
-  nsCOMPtr<Element> mElement;
-  nsCOMPtr<nsPIDOMWindowOuter> mTopWindow;
-};
-
-void Document::SetAutoFocusElement(Element* aAutoFocusElement) {
-  if (mAutoFocusFired) {
-    // Too late.
-    return;
+  if (HasAutoFocusCandidates()) {
+    ScheduleFlushAutoFocusCandidates();
   }
-
-  if (mAutoFocusElement) {
-    // The spec disallows multiple autofocus elements, so we consider only the
-    // first one to preserve the old behavior.
-    return;
-  }
-
-  mAutoFocusElement = do_GetWeakReference(aAutoFocusElement);
-  TriggerAutoFocus();
 }
 
-void Document::SetAutoFocusFired() { mAutoFocusFired = true; }
-
-bool Document::IsAutoFocusFired() { return mAutoFocusFired; }
-
-void Document::TriggerAutoFocus() {
-  if (mAutoFocusFired) {
-    return;
+bool Document::TryAutoFocusCandidate(Element& aElement) {
+  const FocusOptions options;
+  if (RefPtr<Element> target = nsFocusManager::GetTheFocusableArea(
+          &aElement, nsFocusManager::ProgrammaticFocusFlags(options))) {
+    target->Focus(options, CallerType::NonSystem, IgnoreErrors());
+    return true;
   }
 
-  if (!mPresShell || !mPresShell->DidInitialize()) {
-    // Delay autofocus until frames are constructed so that we don't thrash
-    // style and layout calculations.
-    return;
-  }
-
-  nsCOMPtr<Element> autoFocusElement = do_QueryReferent(mAutoFocusElement);
-  if (autoFocusElement && autoFocusElement->OwnerDoc() == this) {
-    nsCOMPtr<nsPIDOMWindowOuter> topWindow =
-        FindTopWindowForElement(autoFocusElement);
-    if (!topWindow) {
-      return;
-    }
-
-    // NOTE: This may be removed in the future since the spec technically
-    // allows autofocus after load.
-    nsCOMPtr<Document> topDoc = topWindow->GetExtantDoc();
-    if (topDoc &&
-        topDoc->GetReadyStateEnum() == Document::READYSTATE_COMPLETE) {
-      return;
-    }
-
-    nsCOMPtr<nsIRunnable> event =
-        new nsAutoFocusEvent(std::move(autoFocusElement), topWindow.forget());
-    nsresult rv = NS_DispatchToCurrentThread(event.forget());
-    NS_ENSURE_SUCCESS_VOID(rv);
-  }
+  return false;
 }
 
 void Document::SetScrollToRef(nsIURI* aDocumentURI) {
