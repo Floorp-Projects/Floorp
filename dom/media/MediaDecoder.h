@@ -321,6 +321,11 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
 
   bool IsVideoDecodingSuspended() const;
 
+  // The MediaDecoderOwner of this decoder wants to resist fingerprinting.
+  bool ShouldResistFingerprinting() const {
+    return mShouldResistFingerprinting;
+  }
+
   /******
    * The following methods must only be called on the main
    * thread.
@@ -586,6 +591,9 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // True if the decoder has a suspend taint - meaning suspend-video-decoder is
   // disabled.
   bool mHasSuspendTaint;
+
+  // If true, the decoder should resist fingerprinting.
+  const bool mShouldResistFingerprinting;
 
   MediaDecoderOwner::NextFrameStatus mNextFrameStatus =
       MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;

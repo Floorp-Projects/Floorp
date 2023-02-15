@@ -3331,12 +3331,14 @@ void MediaTrackGraphImpl::Destroy() {
 // GTests can create a graph without a window.
 /* static */
 MediaTrackGraphImpl* MediaTrackGraphImpl::GetInstanceIfExists(
-    uint64_t aWindowID, TrackRate aSampleRate,
+    uint64_t aWindowID, bool aShouldResistFingerprinting, TrackRate aSampleRate,
     CubebUtils::AudioDeviceID aOutputDeviceID) {
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
 
   TrackRate sampleRate =
-      aSampleRate ? aSampleRate : CubebUtils::PreferredSampleRate();
+      aSampleRate
+          ? aSampleRate
+          : CubebUtils::PreferredSampleRate(aShouldResistFingerprinting);
   GraphKey key(aWindowID, sampleRate, aOutputDeviceID);
 
   return gGraphs.Get(key);
@@ -3348,21 +3350,25 @@ MediaTrackGraphImpl* MediaTrackGraphImpl::GetInstanceIfExists(
 MediaTrackGraph* MediaTrackGraph::GetInstanceIfExists(
     nsPIDOMWindowInner* aWindow, TrackRate aSampleRate,
     CubebUtils::AudioDeviceID aOutputDeviceID) {
-  return MediaTrackGraphImpl::GetInstanceIfExists(aWindow->WindowID(),
-                                                  aSampleRate, aOutputDeviceID);
+  return MediaTrackGraphImpl::GetInstanceIfExists(
+      aWindow->WindowID(), aWindow->AsGlobal()->ShouldResistFingerprinting(),
+      aSampleRate, aOutputDeviceID);
 }
 
 /* static */
 MediaTrackGraphImpl* MediaTrackGraphImpl::GetInstance(
     GraphDriverType aGraphDriverRequested, uint64_t aWindowID,
-    TrackRate aSampleRate, CubebUtils::AudioDeviceID aOutputDeviceID,
+    bool aShouldResistFingerprinting, TrackRate aSampleRate,
+    CubebUtils::AudioDeviceID aOutputDeviceID,
     nsISerialEventTarget* aMainThread) {
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
 
   TrackRate sampleRate =
-      aSampleRate ? aSampleRate : CubebUtils::PreferredSampleRate();
-  MediaTrackGraphImpl* graph =
-      GetInstanceIfExists(aWindowID, sampleRate, aOutputDeviceID);
+      aSampleRate
+          ? aSampleRate
+          : CubebUtils::PreferredSampleRate(aShouldResistFingerprinting);
+  MediaTrackGraphImpl* graph = GetInstanceIfExists(
+      aWindowID, aShouldResistFingerprinting, sampleRate, aOutputDeviceID);
 
   if (!graph) {
     GraphRunType runType = DIRECT_DRIVER;
@@ -3396,8 +3402,9 @@ MediaTrackGraph* MediaTrackGraph::GetInstance(
     GraphDriverType aGraphDriverRequested, nsPIDOMWindowInner* aWindow,
     TrackRate aSampleRate, CubebUtils::AudioDeviceID aOutputDeviceID) {
   return MediaTrackGraphImpl::GetInstance(
-      aGraphDriverRequested, aWindow->WindowID(), aSampleRate, aOutputDeviceID,
-      aWindow->EventTargetFor(TaskCategory::Other));
+      aGraphDriverRequested, aWindow->WindowID(),
+      aWindow->AsGlobal()->ShouldResistFingerprinting(), aSampleRate,
+      aOutputDeviceID, aWindow->EventTargetFor(TaskCategory::Other));
 }
 
 MediaTrackGraph* MediaTrackGraph::CreateNonRealtimeInstance(

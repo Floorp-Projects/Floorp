@@ -43,8 +43,7 @@ class SVGFEContainerFrame final : public nsContainerFrame {
       return false;
     }
 
-    return nsContainerFrame::IsFrameOfType(
-        aFlags & ~(nsIFrame::eSVG | nsIFrame::eSVGContainer));
+    return nsContainerFrame::IsFrameOfType(aFlags & ~nsIFrame::eSVG);
   }
 
 #ifdef DEBUG_FRAME_DUMP

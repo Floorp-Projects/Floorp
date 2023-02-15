@@ -1247,6 +1247,25 @@ nsNavHistoryResultNode* nsNavHistoryContainerResultNode::FindChildByGuid(
 }
 
 /**
+ * Searches this folder for a node with the given id/target-folder-id.
+ *
+ * @return the node if found, null otherwise.
+ * @note Does not addref the node!
+ */
+nsNavHistoryResultNode* nsNavHistoryContainerResultNode::FindChildById(
+    int64_t aItemId, uint32_t* aNodeIndex) {
+  for (int32_t i = 0; i < mChildren.Count(); ++i) {
+    if (mChildren[i]->mItemId == aItemId ||
+        (mChildren[i]->IsFolder() &&
+         mChildren[i]->GetAsFolder()->mTargetFolderItemId == aItemId)) {
+      *aNodeIndex = i;
+      return mChildren[i];
+    }
+  }
+  return nullptr;
+}
+
+/**
  * This does the work of adding a child to the container.  The child can be
  * either a container or or a single item that may even be collapsed with the
  * adjacent ones.
@@ -2530,30 +2549,36 @@ nsresult nsNavHistoryQueryResultNode::OnItemUrlChanged(int64_t aItemId,
                                                        const nsACString& aGUID,
                                                        const nsACString& aURL,
                                                        PRTime aLastModified) {
-  if (aItemId != mItemId) {
-    return NS_OK;
+  if (aItemId == mItemId) {
+    nsresult rv = nsNavHistoryResultNode::OnItemUrlChanged(aItemId, aGUID, aURL,
+                                                           aLastModified);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsNavHistory* history = nsNavHistory::GetHistoryService();
+    NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
+    nsCOMPtr<nsINavHistoryQuery> query;
+    nsCOMPtr<nsINavHistoryQueryOptions> options;
+    rv = history->QueryStringToQuery(mURI, getter_AddRefs(query),
+                                     getter_AddRefs(options));
+    NS_ENSURE_SUCCESS(rv, rv);
+    mQuery = do_QueryObject(query);
+    NS_ENSURE_STATE(mQuery);
+    mOptions = do_QueryObject(options);
+    NS_ENSURE_STATE(mOptions);
+    rv = mOptions->Clone(getter_AddRefs(mOriginalOptions));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return Refresh();
   }
-
-  nsresult rv = nsNavHistoryResultNode::OnItemUrlChanged(aItemId, aGUID, aURL,
-                                                         aLastModified);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsNavHistory* history = nsNavHistory::GetHistoryService();
-  NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-  nsCOMPtr<nsINavHistoryQuery> query;
-  nsCOMPtr<nsINavHistoryQueryOptions> options;
-  rv = history->QueryStringToQuery(mURI, getter_AddRefs(query),
-                                   getter_AddRefs(options));
-  NS_ENSURE_SUCCESS(rv, rv);
-  mQuery = do_QueryObject(query);
-  NS_ENSURE_STATE(mQuery);
-  mOptions = do_QueryObject(options);
-  NS_ENSURE_STATE(mOptions);
-  rv = mOptions->Clone(getter_AddRefs(mOriginalOptions));
-  NS_ENSURE_SUCCESS(rv, rv);
 
   if (mLiveUpdate == QUERYUPDATE_COMPLEX_WITH_BOOKMARKS) {
     return Refresh();
+  }
+
+  uint32_t index;
+  nsNavHistoryResultNode* node = FindChildById(aItemId, &index);
+  if (node) {
+    return node->OnItemUrlChanged(aItemId, aGUID, aURL, aLastModified);
   }
 
   return NS_OK;
@@ -2991,25 +3016,6 @@ void nsNavHistoryFolderResultNode::ReindexRange(int32_t aStartIndex,
         node->mBookmarkIndex <= aEndIndex)
       node->mBookmarkIndex += aDelta;
   }
-}
-
-/**
- * Searches this folder for a node with the given id/target-folder-id.
- *
- * @return the node if found, null otherwise.
- * @note Does not addref the node!
- */
-nsNavHistoryResultNode* nsNavHistoryFolderResultNode::FindChildById(
-    int64_t aItemId, uint32_t* aNodeIndex) {
-  for (int32_t i = 0; i < mChildren.Count(); ++i) {
-    if (mChildren[i]->mItemId == aItemId ||
-        (mChildren[i]->IsFolder() &&
-         mChildren[i]->GetAsFolder()->mTargetFolderItemId == aItemId)) {
-      *aNodeIndex = i;
-      return mChildren[i];
-    }
-  }
-  return nullptr;
 }
 
 // Used by nsNavHistoryFolderResultNode's methods below. If the container is

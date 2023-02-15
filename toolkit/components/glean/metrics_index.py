@@ -26,6 +26,7 @@ gecko_metrics = [
     "toolkit/components/glean/metrics.yaml",
     "toolkit/components/pdfjs/metrics.yaml",
     "toolkit/components/processtools/metrics.yaml",
+    "xpcom/metrics.yaml",
 ]
 
 # Metrics that are sent by Firefox Desktop

@@ -153,7 +153,8 @@ uint32_t DecideAudioPlaybackChannels(const AudioInfo& info);
 
 // Decide the sample-rate to use for audio output according to the
 // given AudioInfo and the prefs that are being set.
-uint32_t DecideAudioPlaybackSampleRate(const AudioInfo& info);
+uint32_t DecideAudioPlaybackSampleRate(const AudioInfo& info,
+                                       bool aShouldResistFingerprinting);
 
 bool IsDefaultPlaybackDeviceMono();
 

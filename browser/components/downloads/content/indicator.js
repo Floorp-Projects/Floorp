@@ -620,16 +620,11 @@ const DownloadsIndicatorView = {
    * is not present in the browser window yet.
    */
   get indicator() {
-    if (this._indicator) {
-      return this._indicator;
+    if (!this._indicator) {
+      this._indicator = document.getElementById("downloads-button");
     }
 
-    let indicator = document.getElementById("downloads-button");
-    if (!indicator || indicator.getAttribute("indicator") != "true") {
-      return null;
-    }
-
-    return (this._indicator = indicator);
+    return this._indicator;
   },
 
   get indicatorAnchor() {

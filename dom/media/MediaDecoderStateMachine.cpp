@@ -3290,6 +3290,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
       mVideoDecodeSuspendTimer(mTaskQueue),
       mVideoDecodeMode(VideoDecodeMode::Normal),
       mIsMSE(aDecoder->IsMSE()),
+      mShouldResistFingerprinting(aDecoder->ShouldResistFingerprinting()),
       mSeamlessLoopingAllowed(false),
       INIT_MIRROR(mStreamName, nsAutoString()),
       INIT_MIRROR(mSinkDevice, nullptr),
@@ -3375,8 +3376,8 @@ MediaSink* MediaDecoderStateMachine::CreateAudioSink() {
 
   auto audioSinkCreator = [s = RefPtr<MediaDecoderStateMachine>(this), this]() {
     MOZ_ASSERT(OnTaskQueue());
-    AudioSink* audioSink =
-        new AudioSink(mTaskQueue, mAudioQueue, Info().mAudio);
+    AudioSink* audioSink = new AudioSink(mTaskQueue, mAudioQueue, Info().mAudio,
+                                         mShouldResistFingerprinting);
     mAudibleListener.DisconnectIfExists();
     mAudibleListener = audioSink->AudibleEvent().Connect(
         mTaskQueue, this, &MediaDecoderStateMachine::AudioAudibleChanged);

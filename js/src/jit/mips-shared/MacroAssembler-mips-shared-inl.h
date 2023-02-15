@@ -682,11 +682,6 @@ void MacroAssembler::branchDouble(DoubleCondition cond, FloatRegister lhs,
   ma_bc1d(lhs, rhs, label, cond);
 }
 
-void MacroAssembler::branchTruncateDoubleToInt32(FloatRegister src,
-                                                 Register dest, Label* fail) {
-  convertDoubleToInt32(src, dest, fail, false);
-}
-
 template <typename T>
 void MacroAssembler::branchAdd32(Condition cond, T src, Register dest,
                                  Label* overflow) {

@@ -1587,8 +1587,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                            Label* fail)
       DEFINED_ON(arm, arm64, mips_shared, x86, x64, loong64, riscv64, wasm32);
   inline void branchTruncateDoubleToInt32(FloatRegister src, Register dest,
-                                          Label* fail)
-      DEFINED_ON(arm, arm64, mips_shared, x86, x64, loong64, riscv64, wasm32);
+                                          Label* fail) PER_ARCH;
 
   inline void branchDouble(DoubleCondition cond, FloatRegister lhs,
                            FloatRegister rhs, Label* label) PER_SHARED_ARCH;
