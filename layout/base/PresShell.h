@@ -241,7 +241,7 @@ class PresShell final : public nsStubDocumentObserver,
     return mLastOverWindowPointerLocation;
   }
 
-  void Init(nsPresContext*, nsViewManager*);
+  MOZ_CAN_RUN_SCRIPT void Init(nsPresContext*, nsViewManager*);
 
   /**
    * All callers are responsible for calling |Destroy| after calling
@@ -355,6 +355,7 @@ class PresShell final : public nsStubDocumentObserver,
   MOZ_CAN_RUN_SCRIPT bool ResizeReflowIgnoreOverride(
       nscoord aWidth, nscoord aHeight,
       ResizeReflowOptions = ResizeReflowOptions::NoOption);
+  MOZ_CAN_RUN_SCRIPT void ForceResizeReflowWithCurrentDimensions();
 
   /**
    * Add this pres shell to the refresh driver to be observed for resize
@@ -396,7 +397,8 @@ class PresShell final : public nsStubDocumentObserver,
    * Note that the assumptions that determine whether we need a mobile viewport
    * manager may have changed.
    */
-  void MaybeRecreateMobileViewportManager(bool aAfterInitialization);
+  MOZ_CAN_RUN_SCRIPT void MaybeRecreateMobileViewportManager(
+      bool aAfterInitialization);
 
   /**
    * Returns true if this document uses mobile viewport sizing (including
