@@ -8,6 +8,7 @@
 #include "DeleteContentTransactionBase.h"
 #include "DeleteNodeTransaction.h"
 #include "DeleteTextTransaction.h"
+#include "EditTransactionBase.h"
 #include "EditorBase.h"
 #include "EditorDOMPoint.h"
 #include "EditorUtils.h"
@@ -21,6 +22,7 @@
 #include "mozilla/StaticPrefs_editor.h"
 #include "mozilla/ToString.h"
 #include "mozilla/dom/Selection.h"
+
 #include "nsAtom.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -42,7 +44,7 @@ DeleteRangeTransaction::DeleteRangeTransaction(EditorBase& aEditorBase,
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteRangeTransaction,
                                    EditAggregateTransaction, mEditorBase,
-                                   mRangeToDelete)
+                                   mRangeToDelete, mPointToPutCaret)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeleteRangeTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditAggregateTransaction)
@@ -197,16 +199,23 @@ NS_IMETHODIMP DeleteRangeTransaction::DoTransaction() {
            this, __FUNCTION__,
            nsAtomCString(mName ? mName.get() : nsGkAtoms::_empty).get()));
 
-  if (!mEditorBase->AllowsTransactionsToChangeSelection()) {
-    return NS_OK;
+  mPointToPutCaret = rangeToDelete->StartRef();
+  if (MOZ_UNLIKELY(!mPointToPutCaret.IsSetAndValid())) {
+    for (const OwningNonNull<EditTransactionBase>& transaction :
+         Reversed(mChildren)) {
+      if (const DeleteContentTransactionBase* deleteContentTransaction =
+              transaction->GetAsDeleteContentTransactionBase()) {
+        mPointToPutCaret = deleteContentTransaction->SuggestPointToPutCaret();
+        if (mPointToPutCaret.IsSetAndValid()) {
+          break;
+        }
+        continue;
+      }
+      MOZ_ASSERT_UNREACHABLE(
+          "Child transactions must be DeleteContentTransactionBase");
+    }
   }
-
-  OwningNonNull<EditorBase> editorBase = *mEditorBase;
-  rv = editorBase->CollapseSelectionTo(
-      EditorRawDOMPoint(rangeToDelete->StartRef()));
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::CollapseSelectionTo() failed");
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP DeleteRangeTransaction::UndoTransaction() {

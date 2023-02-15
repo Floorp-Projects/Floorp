@@ -142,15 +142,7 @@ NS_IMETHODIMP DeleteTextTransaction::DoTransaction() {
 
   editorBase->RangeUpdaterRef().SelAdjDeleteText(textNode, mOffset,
                                                  mLengthToDelete);
-
-  if (!editorBase->AllowsTransactionsToChangeSelection()) {
-    return NS_OK;
-  }
-
-  editorBase->CollapseSelectionTo(SuggestPointToPutCaret(), error);
-  NS_WARNING_ASSERTION(!error.Failed(),
-                       "EditorBase::CollapseSelectionTo() failed");
-  return error.StealNSResult();
+  return NS_OK;
 }
 
 EditorDOMPoint DeleteTextTransaction::SuggestPointToPutCaret() const {
@@ -182,7 +174,21 @@ NS_IMETHODIMP DeleteTextTransaction::RedoTransaction() {
   MOZ_LOG(GetLogModule(), LogLevel::Info,
           ("%p DeleteTextTransaction::%s this=%s", this, __FUNCTION__,
            ToString(*this).c_str()));
-  return DoTransaction();
+  nsresult rv = DoTransaction();
+  if (NS_FAILED(rv)) {
+    NS_WARNING("DeleteTextTransaction::DoTransaction() failed");
+    return rv;
+  }
+  if (!mEditorBase || !mEditorBase->AllowsTransactionsToChangeSelection()) {
+    return NS_OK;
+  }
+  OwningNonNull<EditorBase> editorBase = *mEditorBase;
+  rv = editorBase->CollapseSelectionTo(SuggestPointToPutCaret());
+  if (NS_FAILED(rv)) {
+    NS_WARNING("EditorBase::CollapseSelectionTo() failed");
+    return rv;
+  }
+  return NS_OK;
 }
 
 }  // namespace mozilla

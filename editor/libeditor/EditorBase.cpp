@@ -3225,7 +3225,24 @@ nsresult EditorBase::DeleteTextWithTransaction(Text& aTextNode,
         *this, EditorRawDOMPoint(&aTextNode, aOffset));
   }
 
-  return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (AllowsTransactionsToChangeSelection()) {
+    EditorDOMPoint pointToPutCaret = transaction->SuggestPointToPutCaret();
+    if (MOZ_LIKELY(pointToPutCaret.IsSet())) {
+      nsresult rv = CollapseSelectionTo(pointToPutCaret);
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "EditorBase::CollapseSelectionTo() failed, but ignored");
+    }
+  }
+
+  return NS_OK;
 }
 
 bool EditorBase::IsRoot(const nsINode* inNode) const {
@@ -4772,6 +4789,20 @@ nsresult EditorBase::DeleteRangesWithTransaction(
   }
   if (NS_FAILED(rv)) {
     return rv;
+  }
+
+  if (AllowsTransactionsToChangeSelection()) {
+    EditorDOMPoint pointToPutCaret =
+        deleteSelectionTransaction->SuggestPointToPutCaret();
+    if (pointToPutCaret.IsSet()) {
+      nsresult rv = CollapseSelectionTo(pointToPutCaret);
+      if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      NS_WARNING_ASSERTION(
+          NS_SUCCEEDED(rv),
+          "EditorBase::CollapseSelectionTo() failed, but ignored");
+    }
   }
 
   if (IsTextEditor() || aStripWrappers == nsIEditor::eNoStrip) {
