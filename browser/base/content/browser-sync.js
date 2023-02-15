@@ -1841,10 +1841,8 @@ var gSync = {
 
   openSyncedTabsPanel() {
     let placement = CustomizableUI.getPlacementOfWidget("sync-button");
-    let area = placement && placement.area;
-    let anchor =
-      document.getElementById("sync-button") ||
-      document.getElementById("PanelUI-menu-button");
+    let area = placement?.area;
+    let anchor = document.getElementById("sync-button");
     if (area == CustomizableUI.AREA_FIXED_OVERFLOW_PANEL) {
       // The button is in the overflow panel, so we need to show the panel,
       // then show our subview.
@@ -1853,6 +1851,11 @@ var gSync = {
         PanelUI.showSubView("PanelUI-remotetabs", anchor);
       }, console.error);
     } else {
+      if (
+        !anchor?.checkVisibility({ checkVisibilityCSS: true, flush: false })
+      ) {
+        anchor = document.getElementById("PanelUI-menu-button");
+      }
       // It is placed somewhere else - just try and show it.
       PanelUI.showSubView("PanelUI-remotetabs", anchor);
     }
