@@ -197,6 +197,10 @@ class PeerConnectionImpl final
 
   void NotifyDataChannelClosed(DataChannel*) override;
 
+  void NotifySctpConnected() override;
+
+  void NotifySctpClosed() override;
+
   const RefPtr<MediaTransportHandler> GetTransportHandler() const;
 
   // Handle system to allow weak references to be passed through C code
@@ -392,6 +396,8 @@ class PeerConnectionImpl final
                                const RTCConfiguration& aConfiguration) {
     rv = SetConfiguration(aConfiguration);
   }
+
+  dom::RTCSctpTransport* GetSctp() const;
 
   void RestartIce();
   void RestartIceNoRenegotiationNeeded();
@@ -825,6 +831,7 @@ class PeerConnectionImpl final
   nsTArray<RefPtr<dom::RTCRtpTransceiver>> mTransceivers;
   std::map<std::string, RefPtr<dom::RTCDtlsTransport>>
       mTransportIdToRTCDtlsTransport;
+  RefPtr<dom::RTCSctpTransport> mSctpTransport;
 
   // Used whenever we need to dispatch a runnable to STS to tweak something
   // on our ICE ctx, but are not ready to do so at the moment (eg; we are
