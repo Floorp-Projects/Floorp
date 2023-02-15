@@ -15,8 +15,7 @@ add_task(async function() {
 
   const newTitlePromise = PlacesTestUtils.waitForNotification(
     "page-title-changed",
-    events => /new_page$/.test(events[0].url),
-    "places"
+    events => /new_page$/.test(events[0].url)
   );
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {

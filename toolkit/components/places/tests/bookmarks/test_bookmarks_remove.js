@@ -4,11 +4,7 @@
 const UNVISITED_BOOKMARK_BONUS = 140;
 
 function promiseRankingChanged() {
-  return PlacesTestUtils.waitForNotification(
-    "pages-rank-changed",
-    () => true,
-    "places"
-  );
+  return PlacesTestUtils.waitForNotification("pages-rank-changed");
 }
 
 add_task(async function setup() {
@@ -179,8 +175,7 @@ add_task(async function remove_multiple_bookmarks_complex() {
         notifiedIndexes.push({ guid: event.guid, index: event.index });
       }
       return notifiedIndexes.length == bmsToRemove.length;
-    },
-    "places"
+    }
   );
   await PlacesUtils.bookmarks.remove(bmsToRemove);
   await notificationPromise;
@@ -222,8 +217,7 @@ add_task(async function remove_multiple_bookmarks_complex() {
         notifiedIndexes.push({ guid: event.guid, index: event.index });
       }
       return notifiedIndexes.length == bmsToRemove.length;
-    },
-    "places"
+    }
   );
   await PlacesUtils.bookmarks.remove(bmsToRemove);
   await notificationPromise;

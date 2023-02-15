@@ -1695,60 +1695,6 @@ nsresult nsNavBookmarks::GetBookmarksForURI(
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsNavBookmarks::AddObserver(nsINavBookmarkObserver* aObserver, bool aOwnsWeak) {
-  NS_ENSURE_ARG(aObserver);
-
-  if (NS_WARN_IF(!mCanNotify)) return NS_ERROR_UNEXPECTED;
-
-  return mObservers.AppendWeakElementUnlessExists(aObserver, aOwnsWeak);
-}
-
-NS_IMETHODIMP
-nsNavBookmarks::RemoveObserver(nsINavBookmarkObserver* aObserver) {
-  return mObservers.RemoveWeakElement(aObserver);
-}
-
-NS_IMETHODIMP
-nsNavBookmarks::GetObservers(
-    nsTArray<RefPtr<nsINavBookmarkObserver>>& aObservers) {
-  aObservers.Clear();
-
-  if (!mCanNotify) return NS_OK;
-
-  for (uint32_t i = 0; i < mObservers.Length(); ++i) {
-    nsCOMPtr<nsINavBookmarkObserver> observer =
-        mObservers.ElementAt(i).GetValue();
-    // Skip nullified weak observers.
-    if (observer) {
-      aObservers.AppendElement(observer.forget());
-    }
-  }
-
-  return NS_OK;
-}
-
-void nsNavBookmarks::NotifyItemChanged(const ItemChangeData& aData) {
-  // A guid must always be defined.
-  MOZ_ASSERT(!aData.bookmark.guid.IsEmpty());
-  // No more supported.
-  MOZ_ASSERT(!aData.isAnnotation, "Don't notify item annotation changes");
-  PRTime lastModified = aData.bookmark.lastModified;
-  if (aData.updateLastModified) {
-    lastModified = RoundedPRNow();
-    MOZ_ALWAYS_SUCCEEDS(SetItemDateInternal(
-        LAST_MODIFIED, DetermineSyncChangeDelta(aData.source),
-        aData.bookmark.id, lastModified));
-  }
-
-  NOTIFY_BOOKMARKS_OBSERVERS(
-      mCanNotify, mObservers,
-      OnItemChanged(aData.bookmark.id, aData.property, aData.isAnnotation,
-                    aData.newValue, lastModified, aData.bookmark.type,
-                    aData.bookmark.parentId, aData.bookmark.guid,
-                    aData.bookmark.parentGuid, aData.oldValue, aData.source));
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIObserver
 
@@ -1761,7 +1707,6 @@ nsNavBookmarks::Observe(nsISupports* aSubject, const char* aTopic,
     // Don't even try to notify observers from this point on, the category
     // cache would init services that could try to use our APIs.
     mCanNotify = false;
-    mObservers.Clear();
   }
 
   return NS_OK;

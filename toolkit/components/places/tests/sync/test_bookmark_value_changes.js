@@ -1878,11 +1878,8 @@ add_task(async function test_tags() {
     "twelve",
   ]);
 
-  let wait = PlacesTestUtils.waitForNotification(
-    "bookmark-removed",
-    events =>
-      events.some(event => event.parentGuid == PlacesUtils.bookmarks.tagsGuid),
-    "places"
+  let wait = PlacesTestUtils.waitForNotification("bookmark-removed", events =>
+    events.some(event => event.parentGuid == PlacesUtils.bookmarks.tagsGuid)
   );
 
   PlacesUtils.tagging.untagURI(

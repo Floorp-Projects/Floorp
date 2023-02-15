@@ -210,11 +210,8 @@ add_task(async function test_changes_deleted_bookmark() {
   );
   await PlacesTestUtils.markBookmarksAsSynced();
 
-  let wait = PlacesTestUtils.waitForNotification(
-    "bookmark-removed",
-    events =>
-      events.some(event => event.parentGuid == PlacesUtils.bookmarks.tagsGuid),
-    "places"
+  let wait = PlacesTestUtils.waitForNotification("bookmark-removed", events =>
+    events.some(event => event.parentGuid == PlacesUtils.bookmarks.tagsGuid)
   );
   await PlacesUtils.bookmarks.remove("mozBmk______");
 

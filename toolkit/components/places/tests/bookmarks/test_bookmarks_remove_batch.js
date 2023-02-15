@@ -31,11 +31,7 @@ add_task(async function test_remove_multiple_bookmarks() {
   );
 
   info("Remove multiple bookmarks");
-  const onRemoved = PlacesTestUtils.waitForNotification(
-    "bookmark-removed",
-    () => true,
-    "places"
-  );
+  const onRemoved = PlacesTestUtils.waitForNotification("bookmark-removed");
   await PlacesUtils.bookmarks.remove(bookmarks);
   const events = await onRemoved;
 
@@ -86,8 +82,7 @@ add_task(async function test_remove_folder_with_bookmarks() {
     events => {
       notifiedEvents.push(events);
       return notifiedEvents.length === 2;
-    },
-    "places"
+    }
   );
   await PlacesUtils.bookmarks.remove(folder);
   await onRemoved;

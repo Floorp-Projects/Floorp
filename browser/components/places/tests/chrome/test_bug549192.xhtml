@@ -108,8 +108,7 @@
 
           const promiseRemoved = PlacesTestUtils.waitForNotification(
             "page-removed",
-            events => events[0].url === node.uri,
-            "places"
+            events => events[0].url === node.uri
           );
 
           tree.controller.remove();

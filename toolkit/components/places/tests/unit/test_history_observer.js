@@ -123,11 +123,7 @@ add_task(async function test_pageRemovedFromStore() {
   let [testuri] = await task_add_visit();
   let testguid = do_get_guid_for_uri(testuri);
 
-  const promiseNotify = PlacesTestUtils.waitForNotification(
-    "page-removed",
-    () => true,
-    "places"
-  );
+  const promiseNotify = PlacesTestUtils.waitForNotification("page-removed");
 
   await PlacesUtils.history.remove(testuri);
 
@@ -141,11 +137,7 @@ add_task(async function test_pageRemovedFromStore() {
 });
 
 add_task(async function test_pageRemovedAllVisits() {
-  const promiseNotify = PlacesTestUtils.waitForNotification(
-    "page-removed",
-    () => true,
-    "places"
-  );
+  const promiseNotify = PlacesTestUtils.waitForNotification("page-removed");
 
   let msecs24hrsAgo = Date.now() - 86400 * 1000;
   let [testuri] = await task_add_visit(undefined, msecs24hrsAgo * 1000);
@@ -174,9 +166,7 @@ add_task(async function test_pageTitleChanged() {
   const title = "test-title";
 
   const promiseNotify = PlacesTestUtils.waitForNotification(
-    "page-title-changed",
-    () => true,
-    "places"
+    "page-title-changed"
   );
 
   await PlacesTestUtils.addVisits({

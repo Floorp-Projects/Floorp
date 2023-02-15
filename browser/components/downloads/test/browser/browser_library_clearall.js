@@ -59,8 +59,7 @@ async function testClearingDownloads(clearCallback) {
         }
       }
       return receivedNotifications.length == DOWNLOAD_DATA.length;
-    },
-    "places"
+    }
   );
 
   promiseLength = waitForChildrenLength(listbox, 0);

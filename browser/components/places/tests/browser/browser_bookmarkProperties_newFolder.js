@@ -53,8 +53,7 @@ add_task(async function test_newFolder() {
         }
       }
       return false;
-    },
-    "places"
+    }
   );
 
   let menulist = document.getElementById("editBMPanel_folderMenuList");
@@ -75,8 +74,7 @@ add_task(async function test_newFolder() {
 
   let renameObserver = PlacesTestUtils.waitForNotification(
     "bookmark-title-changed",
-    events => events.some(e => e.title === "f"),
-    "places"
+    events => events.some(e => e.title === "f")
   );
 
   // Enter a new name.

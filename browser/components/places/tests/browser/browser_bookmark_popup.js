@@ -129,8 +129,7 @@ async function test_bookmarks_popup({
             events.some(
               event =>
                 event.parentGuid == defaultLocation && TEST_URL == event.url
-            ),
-          "places"
+            )
         );
       }
 

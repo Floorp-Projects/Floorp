@@ -35,8 +35,7 @@ add_task(async function() {
       async function test(dialogWin) {
         let promiseTitleChangeNotification = PlacesTestUtils.waitForNotification(
           "bookmark-title-changed",
-          events => events.some(e => e.title === "n"),
-          "places"
+          events => events.some(e => e.title === "n")
         );
 
         fillBookmarkTextField("editBMPanel_namePicker", "n", dialogWin, false);

@@ -71,17 +71,14 @@ function promiseFaviconMissingForPage(aPageURI) {
 }
 
 function promiseFaviconChanged(aExpectedPageURI, aExpectedFaviconURI) {
-  return PlacesTestUtils.waitForNotification(
-    "favicon-changed",
-    events =>
-      events.some(e => {
-        if (e.url == aExpectedPageURI.spec) {
-          Assert.equal(e.faviconUrl, aExpectedFaviconURI.spec);
-          do_check_guid_for_uri(aExpectedPageURI, e.pageGuid);
-          return true;
-        }
-        return false;
-      }),
-    "places"
+  return PlacesTestUtils.waitForNotification("favicon-changed", events =>
+    events.some(e => {
+      if (e.url == aExpectedPageURI.spec) {
+        Assert.equal(e.faviconUrl, aExpectedFaviconURI.spec);
+        do_check_guid_for_uri(aExpectedPageURI, e.pageGuid);
+        return true;
+      }
+      return false;
+    })
   );
 }

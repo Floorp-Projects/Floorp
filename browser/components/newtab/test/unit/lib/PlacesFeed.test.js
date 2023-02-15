@@ -27,7 +27,6 @@ const POCKET_SITE_PREF = "extensions.pocket.site";
 
 describe("PlacesFeed", () => {
   let PlacesFeed;
-  let BookmarksObserver;
   let PlacesObserver;
   let globals;
   let sandbox;
@@ -66,8 +65,6 @@ describe("PlacesFeed", () => {
       .stub(global.PlacesUtils.bookmarks, "TYPE_BOOKMARK")
       .value(TYPE_BOOKMARK);
     sandbox.stub(global.PlacesUtils.bookmarks, "SOURCES").value(SOURCES);
-    sandbox.spy(global.PlacesUtils.bookmarks, "addObserver");
-    sandbox.spy(global.PlacesUtils.bookmarks, "removeObserver");
     sandbox.spy(global.PlacesUtils.history, "addObserver");
     sandbox.spy(global.PlacesUtils.history, "removeObserver");
     sandbox.spy(global.PlacesUtils.observers, "addListener");
@@ -105,7 +102,6 @@ describe("PlacesFeed", () => {
     ({ PlacesFeed } = injector({
       "lib/ShortURL.jsm": { shortURL: shortURLStub },
     }));
-    BookmarksObserver = PlacesFeed.BookmarksObserver;
     PlacesObserver = PlacesFeed.PlacesObserver;
     feed = new PlacesFeed();
     feed.store = { dispatch: sinon.spy() };
@@ -116,16 +112,6 @@ describe("PlacesFeed", () => {
   afterEach(() => {
     globals.restore();
     sandbox.restore();
-  });
-
-  it("should have a BookmarksObserver that dispatch to the store", () => {
-    assert.instanceOf(feed.bookmarksObserver, BookmarksObserver);
-    const action = { type: "FOO" };
-
-    feed.bookmarksObserver.dispatch(action);
-
-    assert.calledOnce(feed.store.dispatch);
-    assert.equal(feed.store.dispatch.firstCall.args[0].type, action.type);
   });
 
   it("should have a PlacesObserver that dispatches to the store", () => {
@@ -183,11 +169,6 @@ describe("PlacesFeed", () => {
       feed.onAction({ type: at.INIT });
 
       assert.calledWith(
-        global.PlacesUtils.bookmarks.addObserver,
-        feed.bookmarksObserver,
-        true
-      );
-      assert.calledWith(
         global.PlacesUtils.observers.addListener,
         [
           "bookmark-added",
@@ -206,10 +187,6 @@ describe("PlacesFeed", () => {
       let spy = feed.placesChangedTimer.cancel;
       feed.onAction({ type: at.UNINIT });
 
-      assert.calledWith(
-        global.PlacesUtils.bookmarks.removeObserver,
-        feed.bookmarksObserver
-      );
       assert.calledWith(
         global.PlacesUtils.observers.removeListener,
         [
@@ -1263,23 +1240,6 @@ describe("PlacesFeed", () => {
           type: at.PLACES_BOOKMARKS_REMOVED,
           data: { urls: ["foo.com"] },
         });
-      });
-    });
-  });
-
-  describe("BookmarksObserver", () => {
-    let dispatch;
-    let observer;
-    beforeEach(() => {
-      dispatch = sandbox.spy();
-      observer = new BookmarksObserver(dispatch);
-    });
-    it("should have a QueryInterface property", () => {
-      assert.property(observer, "QueryInterface");
-    });
-    describe("Other empty methods (to keep code coverage happy)", () => {
-      it("should have a various empty functions for xpconnect happiness", () => {
-        observer.onItemChanged();
       });
     });
   });

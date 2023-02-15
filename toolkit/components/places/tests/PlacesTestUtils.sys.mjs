@@ -406,43 +406,45 @@ export var PlacesTestUtils = Object.freeze({
     }));
   },
 
-  waitForNotification(notification, conditionFn, type = "bookmarks") {
-    if (type == "places") {
-      return new Promise(resolve => {
-        function listener(events) {
-          if (!conditionFn || conditionFn(events)) {
-            PlacesObservers.removeListener([notification], listener);
-            resolve(events);
-          }
-        }
-        PlacesObservers.addListener([notification], listener);
-      });
-    }
-
+  /**
+   * Returns a promise that waits until happening Places events specified by
+   * notification parameter.
+   *
+   * @param {string} notification
+   *        Available values are:
+   *          bookmark-added
+   *          bookmark-removed
+   *          bookmark-moved
+   *          bookmark-guid_changed
+   *          bookmark-keyword_changed
+   *          bookmark-tags_changed
+   *          bookmark-time_changed
+   *          bookmark-title_changed
+   *          bookmark-url_changed
+   *          favicon-changed
+   *          history-cleared
+   *          page-removed
+   *          page-title-changed
+   *          page-visited
+   *          pages-rank-changed
+   *          purge-caches
+   * @param {Function} conditionFn [optional]
+   *        If need some more condition to wait, please use conditionFn.
+   *        This is an optional, but if set, should returns true when the wait
+   *        condition is met.
+   * @return {Promise}
+   *         A promise that resolved if the wait condition is met.
+   *         The resolved value is an array of PlacesEvent object.
+   */
+  waitForNotification(notification, conditionFn) {
     return new Promise(resolve => {
-      let proxifiedObserver = new Proxy(
-        {},
-        {
-          get: (target, name) => {
-            if (name == "QueryInterface") {
-              return ChromeUtils.generateQI([Ci.nsINavBookmarkObserver]);
-            }
-            if (name == notification) {
-              return (...args) => {
-                if (!conditionFn || conditionFn.apply(this, args)) {
-                  lazy.PlacesUtils[type].removeObserver(proxifiedObserver);
-                  resolve();
-                }
-              };
-            }
-            if (name == "skipTags") {
-              return false;
-            }
-            return () => false;
-          },
+      function listener(events) {
+        if (!conditionFn || conditionFn(events)) {
+          PlacesObservers.removeListener([notification], listener);
+          resolve(events);
         }
-      );
-      lazy.PlacesUtils[type].addObserver(proxifiedObserver);
+      }
+      PlacesObservers.addListener([notification], listener);
     });
   },
 

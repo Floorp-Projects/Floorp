@@ -59,8 +59,7 @@ add_task(async function redirect_check_new_typed_visit() {
         redirectNotified = true;
       }
       return url == TARGET_URI.spec;
-    },
-    "places"
+    }
   );
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
@@ -95,8 +94,7 @@ add_task(async function redirect_check_second_typed_visit() {
         redirectNotified = true;
       }
       return url == TARGET_URI.spec;
-    },
-    "places"
+    }
   );
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
@@ -129,8 +127,7 @@ add_task(async function redirect_check_subsequent_link_visit() {
         redirectNotified = true;
       }
       return url == TARGET_URI.spec;
-    },
-    "places"
+    }
   );
 
   let tab = await BrowserTestUtils.openNewForegroundTab(

@@ -316,11 +316,7 @@ gTests.push({
     // Add a visit.
     await PlacesTestUtils.addVisits(TEST_URL);
 
-    this._addObserver = PlacesTestUtils.waitForNotification(
-      "bookmark-added",
-      null,
-      "places"
-    );
+    this._addObserver = PlacesTestUtils.waitForNotification("bookmark-added");
   },
 
   selectNode(tree) {
@@ -396,8 +392,7 @@ gTests.push({
         self._cleanShutdown = true;
         self._removeObserver = PlacesTestUtils.waitForNotification(
           "bookmark-removed",
-          events => events.some(eve => eve.guid == self._bookmarkGuid),
-          "places"
+          events => events.some(eve => eve.guid == self._bookmarkGuid)
         );
 
         self.window.document

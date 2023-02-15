@@ -34,9 +34,7 @@ const TEST_URI = Services.io.newURI("http://foo.com");
 
   // set up observer
   const promiseObserved = PlacesTestUtils.waitForNotification(
-    "bookmark-title-changed",
-    () => true,
-    "places"
+    "bookmark-title-changed"
   );
 
   // modify the bookmark's title

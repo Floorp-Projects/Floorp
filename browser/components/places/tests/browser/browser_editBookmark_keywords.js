@@ -39,9 +39,7 @@ add_task(async function() {
     );
     info("Add a keyword to the bookmark");
     const promise = PlacesTestUtils.waitForNotification(
-      "bookmark-keyword-changed",
-      () => true,
-      "places"
+      "bookmark-keyword-changed"
     );
     keywordField.focus();
     keywordField.value = "kw";

@@ -190,8 +190,7 @@ add_task(async function test_import_json() {
   let restored = 0;
   let promiseBookmarksRestored = PlacesTestUtils.waitForNotification(
     "bookmark-added",
-    events => events.some(() => ++restored == actualBookmarks.length),
-    "places"
+    events => events.some(() => ++restored == actualBookmarks.length)
   );
 
   await promiseBookmarksRestored;

@@ -16,10 +16,8 @@ function copyFavicons(source, dest, inPrivate) {
 }
 
 function promisePageChanged(url) {
-  return PlacesTestUtils.waitForNotification(
-    "favicon-changed",
-    events => events.some(e => e.url == url),
-    "places"
+  return PlacesTestUtils.waitForNotification("favicon-changed", events =>
+    events.some(e => e.url == url)
   );
 }
 

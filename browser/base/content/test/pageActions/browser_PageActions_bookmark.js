@@ -51,8 +51,7 @@ add_task(async function bookmark() {
     );
     let onItemAddedPromise = PlacesTestUtils.waitForNotification(
       "bookmark-added",
-      events => events.some(event => event.url == url),
-      "places"
+      events => events.some(event => event.url == url)
     );
     let promise = BrowserTestUtils.waitForPopupEvent(StarUI.panel, "shown");
     EventUtils.synthesizeMouseAtCenter(bookmarkButton, {});
@@ -91,8 +90,7 @@ add_task(async function bookmark() {
 
     let onItemRemovedPromise = PlacesTestUtils.waitForNotification(
       "bookmark-removed",
-      events => events.some(event => event.url == url),
-      "places"
+      events => events.some(event => event.url == url)
     );
     // Click the remove-bookmark button in the panel.
     StarUI._element("editBookmarkPanelRemoveButton").click();
@@ -160,8 +158,7 @@ add_task(async function bookmarkDelayedApply() {
       info("Save the bookmark.");
       const onItemAddedPromise = PlacesTestUtils.waitForNotification(
         "bookmark-added",
-        events => events.some(event => event.url == url),
-        "places"
+        events => events.some(event => event.url == url)
       );
       starUIPanel.hidePopup();
       await onItemAddedPromise;
@@ -179,8 +176,7 @@ add_task(async function bookmarkDelayedApply() {
       info("Remove the bookmark.");
       const onItemRemovedPromise = PlacesTestUtils.waitForNotification(
         "bookmark-removed",
-        events => events.some(event => event.url == url),
-        "places"
+        events => events.some(event => event.url == url)
       );
       win.StarUI._element("editBookmarkPanelRemoveButton").click();
       await onItemRemovedPromise;
@@ -221,8 +217,7 @@ add_task(async function bookmarkDelayedApplyNoEditDialog() {
       // The bookmark should be saved immediately after clicking the star.
       const onItemAddedPromise = PlacesTestUtils.waitForNotification(
         "bookmark-added",
-        events => events.some(event => event.url == url),
-        "places"
+        events => events.some(event => event.url == url)
       );
       EventUtils.synthesizeMouseAtCenter(bookmarkButton, {}, win);
       await onItemAddedPromise;

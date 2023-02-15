@@ -95,9 +95,5 @@ add_task(async function test_nsNavHistory_recalculate() {
 });
 
 function onRankingChanged() {
-  return PlacesTestUtils.waitForNotification(
-    "pages-rank-changed",
-    () => true,
-    "places"
-  );
+  return PlacesTestUtils.waitForNotification("pages-rank-changed");
 }

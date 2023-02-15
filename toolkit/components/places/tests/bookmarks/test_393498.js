@@ -28,16 +28,8 @@ var observer = {
       }
     }
   },
-  onItemChanged(id, property, isAnnotationProperty, value) {
-    this._itemChangedId = id;
-    this._itemChangedProperty = property;
-    this._itemChanged_isAnnotationProperty = isAnnotationProperty;
-    this._itemChangedValue = value;
-  },
 };
-Object.setPrototypeOf(observer, NavBookmarkObserver.prototype);
 
-PlacesUtils.bookmarks.addObserver(observer);
 observer.handlePlacesEvents = observer.handlePlacesEvents.bind(observer);
 PlacesUtils.observers.addListener(
   ["bookmark-added", "bookmark-time-changed", "bookmark-title-changed"],
@@ -45,7 +37,6 @@ PlacesUtils.observers.addListener(
 );
 
 registerCleanupFunction(function() {
-  PlacesUtils.bookmarks.removeObserver(observer);
   PlacesUtils.observers.removeListener(
     ["bookmark-added", "bookmark-time-changed", "bookmark-title-changed"],
     observer.handlePlacesEvents

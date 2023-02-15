@@ -112,8 +112,7 @@ add_task(async function test_simple_move_down() {
     events =>
       events.some(
         e => e.guid === bookmarks[0].guid && e.oldIndex == 0 && e.index == 1
-      ),
-    "places"
+      )
   );
 
   await run_drag_test(0, 2);

@@ -39,14 +39,11 @@ add_task(async function test_removeFolderTransaction_reinsert() {
       ]);
     }
   };
-  let observer = Object.create(NavBookmarkObserver.prototype);
-  PlacesUtils.bookmarks.addObserver(observer);
   PlacesUtils.observers.addListener(
     ["bookmark-added", "bookmark-removed"],
     listener
   );
   PlacesUtils.registerShutdownFunction(function() {
-    PlacesUtils.bookmarks.removeObserver(observer);
     PlacesUtils.observers.removeListener(
       ["bookmark-added", "bookmark-removed"],
       listener

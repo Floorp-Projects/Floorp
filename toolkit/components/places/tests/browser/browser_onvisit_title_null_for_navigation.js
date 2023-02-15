@@ -8,14 +8,12 @@ add_task(async function checkTitleNotificationForNavigation() {
 
   const promiseVisit = PlacesTestUtils.waitForNotification(
     "page-visited",
-    events => events[0].url === EXPECTED_URL.spec,
-    "places"
+    events => events[0].url === EXPECTED_URL.spec
   );
 
   const promiseTitle = PlacesTestUtils.waitForNotification(
     "page-title-changed",
-    events => events[0].url === EXPECTED_URL.spec,
-    "places"
+    events => events[0].url === EXPECTED_URL.spec
   );
 
   let tab = await BrowserTestUtils.openNewForegroundTab(

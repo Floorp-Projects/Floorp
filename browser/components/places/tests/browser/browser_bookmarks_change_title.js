@@ -85,8 +85,7 @@ async function test_change_title_from_BookmarkStar(delayedApply) {
 
   let promiseNotification = PlacesTestUtils.waitForNotification(
     "bookmark-title-changed",
-    events => events.some(e => e.title === titleAfterFirstUpdate),
-    "places"
+    events => events.some(e => e.title === titleAfterFirstUpdate)
   );
 
   // Update the bookmark's title.
@@ -171,8 +170,7 @@ add_task(async function test_change_title_from_Toolbar() {
 
       let promiseTitleChange = PlacesTestUtils.waitForNotification(
         "bookmark-title-changed",
-        events => events.some(e => e.title === "Toolbar title"),
-        "places"
+        events => events.some(e => e.title === "Toolbar title")
       );
 
       // Update the bookmark's title.
@@ -223,8 +221,7 @@ add_task(async function test_change_title_from_Sidebar() {
 
         let promiseTitleChange = PlacesTestUtils.waitForNotification(
           "bookmark-title-changed",
-          events => events.some(e => e.title === "Sidebar Title"),
-          "places"
+          events => events.some(e => e.title === "Sidebar Title")
         );
 
         // Update the bookmark's title.
@@ -273,8 +270,7 @@ async function test_change_title_from_Library(delayedApply) {
     : "Library Instant Apply";
   const promiseTitleChange = PlacesTestUtils.waitForNotification(
     "bookmark-title-changed",
-    events => events.some(e => e.title === newTitle),
-    "places"
+    events => events.some(e => e.title === newTitle)
   );
   info("Update the bookmark's title.");
   fillBookmarkTextField("editBMPanel_namePicker", newTitle, library);

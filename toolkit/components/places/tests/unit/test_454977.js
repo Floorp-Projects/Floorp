@@ -17,8 +17,7 @@ async function task_add_visit(aURI, aVisitType) {
       visitId = visits[0].visitId;
       let { url } = visits[0];
       return url == aURI.spec;
-    },
-    "places"
+    }
   );
 
   // Add visits.

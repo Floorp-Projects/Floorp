@@ -42,9 +42,7 @@ add_task(async function instantEditBookmark_editTagContainer() {
 
   let promiseTagResetNotification = PlacesTestUtils.waitForNotification(
     "bookmark-tags-changed",
-    events =>
-      events.some(({ tags }) => tags.length === 1 && tags[0] === "tag1"),
-    "places"
+    events => events.some(({ tags }) => tags.length === 1 && tags[0] === "tag1")
   );
 
   await withBookmarksDialog(
@@ -75,8 +73,7 @@ add_task(async function instantEditBookmark_editTagContainer() {
       let promiseTagChangeNotification = PlacesTestUtils.waitForNotification(
         "bookmark-tags-changed",
         events =>
-          events.some(({ tags }) => tags.length === 1 && tags[0] === "tag2"),
-        "places"
+          events.some(({ tags }) => tags.length === 1 && tags[0] === "tag2")
       );
 
       let promiseTagRemoveNotification = PlacesTestUtils.waitForNotification(
@@ -84,8 +81,7 @@ add_task(async function instantEditBookmark_editTagContainer() {
         events =>
           events.some(
             event => event.parentGuid == PlacesUtils.bookmarks.tagsGuid
-          ),
-        "places"
+          )
       );
       fillBookmarkTextField("editBMPanel_namePicker", "tag2", dialogWin);
 

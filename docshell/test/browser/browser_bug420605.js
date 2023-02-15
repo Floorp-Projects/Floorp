@@ -81,8 +81,7 @@ add_task(async function test() {
           return true;
         }
         return false;
-      }),
-    "places"
+      })
   );
   let promiseIcon2 = PlacesTestUtils.waitForNotification(
     "favicon-changed",
@@ -108,8 +107,7 @@ add_task(async function test() {
           return true;
         }
         return false;
-      }),
-    "places"
+      })
   );
 
   // Now open the test page in a new tab.
