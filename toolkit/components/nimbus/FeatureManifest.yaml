@@ -950,6 +950,17 @@ cookieBannerHandling:
         - 1
         - 2
 
+accessibilityCache:
+  description: Caches all accessibility information from all documents in the Firefox main process.
+  owner: jteh@mozilla.com
+  hasExposure: false
+  isEarlyStartup: true
+  variables:
+    enabled:
+      description: Whether to enable the accessibility cache.
+      type: boolean
+      setPref: accessibility.cache.enabled
+
 fxaButtonVisibility:
   description: Prefs to control the visibility of the Firefox Accounts toolbar button when not signed in.
   owner: mconley@mozilla.com
