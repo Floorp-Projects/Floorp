@@ -19,6 +19,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/MruCache.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/RWLock.h"
@@ -1690,7 +1691,7 @@ class gfxFont {
    * -- all glyphs use this font
    */
   void Draw(const gfxTextRun* aTextRun, uint32_t aStart, uint32_t aEnd,
-            mozilla::gfx::Point* aPt, const TextRunDrawParams& aRunParams,
+            mozilla::gfx::Point* aPt, TextRunDrawParams& aRunParams,
             mozilla::gfx::ShapedTextFlags aOrientation);
 
   /**
@@ -2273,9 +2274,6 @@ class gfxFont {
                         const FontDrawParams& aFontParams,
                         const mozilla::gfx::Point& aPoint, uint32_t aGlyphId);
 
-  void SetupColorPalette(FontDrawParams* aFontParams,
-                         const TextRunDrawParams& aRunParams) const;
-
   // Subclasses can override to return true if the platform is able to render
   // COLR-font glyphs directly, instead of us painting the layers explicitly.
   // (Currently used only for COLR.v0 fonts on macOS.)
@@ -2317,6 +2315,34 @@ struct MOZ_STACK_CLASS TextRunDrawParams {
   bool isRTL = false;
   bool paintSVGGlyphs = true;
   bool allowGDI = true;
+
+  // MRU cache of color-font palettes being used by fonts in the run. We cache
+  // these in the TextRunDrawParams so that we can avoid re-creating a new
+  // palette (which can be quite expensive) for each individual glyph run.
+  using CacheKey = const gfxFont*;
+
+  struct CacheData {
+    CacheKey mKey;
+    mozilla::UniquePtr<nsTArray<mozilla::gfx::sRGBColor>> mPalette;
+  };
+
+  class PaletteCache
+      : public mozilla::MruCache<CacheKey, CacheData, PaletteCache> {
+   public:
+    static mozilla::HashNumber Hash(const CacheKey& aKey) {
+      return mozilla::HashGeneric(aKey);
+    }
+    static bool Match(const CacheKey& aKey, const CacheData& aVal) {
+      return aVal.mKey == aKey;
+    }
+  };
+
+  PaletteCache mPaletteCache;
+
+  // Returns a pointer to a palette owned by the PaletteCache. This is only
+  // valid until the next call to GetPaletteFor (which might evict it) or
+  // until the TextRunDrawParams goes out of scope.
+  nsTArray<mozilla::gfx::sRGBColor>* GetPaletteFor(const gfxFont* aFont);
 };
 
 struct MOZ_STACK_CLASS FontDrawParams {
@@ -2328,7 +2354,7 @@ struct MOZ_STACK_CLASS FontDrawParams {
   mozilla::gfx::DrawOptions drawOptions;
   gfxFloat advanceDirection;
   mozilla::gfx::sRGBColor currentColor;
-  mozilla::UniquePtr<nsTArray<mozilla::gfx::sRGBColor>> palette;
+  nsTArray<mozilla::gfx::sRGBColor>* palette;  // owned by TextRunDrawParams
   bool isVerticalFont;
   bool haveSVGGlyphs;
   bool haveColorGlyphs;
