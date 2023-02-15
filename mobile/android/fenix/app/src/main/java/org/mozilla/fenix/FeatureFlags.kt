@@ -55,7 +55,7 @@ object FeatureFlags {
     /**
      * Enables compose on the tabs tray items.
      */
-    val composeTabsTray = Config.channel.isDebug
+    const val composeTabsTray = false
 
     /**
      * Enables the wallpaper v2 enhancements.

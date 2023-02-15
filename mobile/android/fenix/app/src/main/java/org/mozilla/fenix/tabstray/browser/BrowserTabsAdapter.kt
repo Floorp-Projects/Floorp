@@ -16,7 +16,6 @@ import mozilla.components.browser.tabstray.SelectableTabViewHolder
 import mozilla.components.browser.tabstray.TabsAdapter.Companion.PAYLOAD_DONT_HIGHLIGHT_SELECTED_ITEM
 import mozilla.components.browser.tabstray.TabsAdapter.Companion.PAYLOAD_HIGHLIGHT_SELECTED_ITEM
 import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.databinding.TabTrayGridItemBinding
 import org.mozilla.fenix.databinding.TabTrayItemBinding
@@ -65,14 +64,14 @@ class BrowserTabsAdapter(
     override fun getItemViewType(position: Int): Int {
         return when {
             context.components.settings.gridTabView -> {
-                if (FeatureFlags.composeTabsTray) {
+                if (context.components.settings.enableTabsTrayToCompose) {
                     ViewType.COMPOSE_GRID.layoutRes
                 } else {
                     ViewType.GRID.layoutRes
                 }
             }
             else -> {
-                if (FeatureFlags.composeTabsTray) {
+                if (context.components.settings.enableTabsTrayToCompose) {
                     ViewType.COMPOSE_LIST.layoutRes
                 } else {
                     ViewType.LIST.layoutRes

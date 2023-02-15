@@ -64,6 +64,8 @@
     <string name="preferences_sync_debug_quit_button_title">Stop Firefox</string>
     <!-- Quit app button summary for the Sync Debug preferences -->
     <string name="preferences_sync_debug_quit_button_summary">Custom server changes will take effect on the next Firefox run.</string>
+    <!-- Label for enabling the Tabs Tray to Compose changes -->
+    <string name="preferences_debug_settings_tabs_tray_to_compose" translatable="false">Enable Tabs Tray to Compose rewrite</string>
 
     <!-- A secret menu option in the tabs tray for making a tab inactive for testing. -->
     <string name="inactive_tabs_menu_item">Make inactive</string>

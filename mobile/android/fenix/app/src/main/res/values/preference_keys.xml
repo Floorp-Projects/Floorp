@@ -296,6 +296,8 @@
     <string name="pref_key_camera_permissions_needed" translatable="false">pref_key_camera_permissions_needed</string>
     <string name="pref_key_inactive_tabs_category" translatable="false">pref_key_inactive_tabs_category</string>
     <string name="pref_key_inactive_tabs" translatable="false">pref_key_inactive_tabs</string>
+    <!-- Whether or not the Tabs Tray to Compose changes are shown -->
+    <string name="pref_key_enable_tabs_tray_to_compose" translatable="false">pref_key_enable_tabs_tray_to_compose</string>
 
     <string name="pref_key_return_to_browser" translatable="false">pref_key_return_to_browser</string>
 
