@@ -49,10 +49,19 @@ void js::IterateHeapUnbarriered(JSContext* cx, void* data,
   AutoPrepareForTracing prep(cx);
   JS::AutoSuppressGCAnalysis nogc(cx);
 
-  for (ZonesIter zone(cx->runtime(), WithAtoms); !zone.done(); zone.next()) {
+  auto iterateZone = [&](Zone* zone) -> void {
     (*zoneCallback)(cx->runtime(), data, zone, nogc);
     IterateRealmsArenasCellsUnbarriered(cx, zone, data, realmCallback,
                                         arenaCallback, cellCallback, nogc);
+  };
+
+  // Include the shared atoms zone if present.
+  if (Zone* zone = cx->runtime()->gc.maybeSharedAtomsZone()) {
+    iterateZone(zone);
+  }
+
+  for (ZonesIter zone(cx->runtime(), WithAtoms); !zone.done(); zone.next()) {
+    iterateZone(zone);
   }
 }
 
