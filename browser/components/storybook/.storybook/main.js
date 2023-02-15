@@ -33,6 +33,7 @@ module.exports = {
       },
     },
     "@storybook/addon-a11y",
+    path.resolve(__dirname, "addon-pseudo-localization"),
   ],
   framework: "@storybook/web-components",
   webpackFinal: async (config, { configType }) => {
