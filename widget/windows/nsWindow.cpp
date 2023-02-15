@@ -594,7 +594,6 @@ class InitializeVirtualDesktopManagerTask : public Task {
 #endif
 
   virtual bool Run() override {
-#ifndef __MINGW32__
     if (!IsWin10OrLater()) {
       return true;
     }
@@ -608,7 +607,6 @@ class InitializeVirtualDesktopManagerTask : public Task {
     }
 
     gVirtualDesktopManager = desktopManager;
-#endif
     return true;
   }
 };
