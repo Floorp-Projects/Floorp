@@ -16,13 +16,8 @@
 #include "rtc_base/ignore_wundef.h"
 
 RTC_PUSH_IGNORING_WUNDEF()
-#if defined(WEBRTC_MOZILLA_BUILD)
-#include "opus.h"
-#include "opus_multistream.h"
-#else
 #include "third_party/opus/src/include/opus.h"
 #include "third_party/opus/src/include/opus_multistream.h"
-#endif
 RTC_POP_IGNORING_WUNDEF()
 
 struct WebRtcOpusEncInst {

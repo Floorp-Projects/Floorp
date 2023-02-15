@@ -12,10 +12,13 @@
 
 #include <string>
 
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
+#include "api/test/video/video_frame_writer.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/strings/string_builder.h"
+#include "test/pc/e2e/analyzer/video/video_dumping.h"
 #include "test/testsupport/file_utils.h"
 
 namespace webrtc {
@@ -126,12 +129,17 @@ std::string PeerConnectionE2EQualityTestFixture::VideoSubscription::ToString()
 PeerConnectionE2EQualityTestFixture::VideoDumpOptions::VideoDumpOptions(
     absl::string_view output_directory,
     int sampling_modulo,
-    bool export_frame_ids)
+    bool export_frame_ids,
+    std::function<std::unique_ptr<test::VideoFrameWriter>(
+        absl::string_view file_name_prefix,
+        const VideoResolution& resolution)> video_frame_writer_factory)
     : output_directory_(output_directory),
       sampling_modulo_(sampling_modulo),
-      export_frame_ids_(export_frame_ids) {
+      export_frame_ids_(export_frame_ids),
+      video_frame_writer_factory_(video_frame_writer_factory) {
   RTC_CHECK_GT(sampling_modulo, 0);
 }
+
 PeerConnectionE2EQualityTestFixture::VideoDumpOptions::VideoDumpOptions(
     absl::string_view output_directory,
     bool export_frame_ids)
@@ -139,12 +147,48 @@ PeerConnectionE2EQualityTestFixture::VideoDumpOptions::VideoDumpOptions(
                        kDefaultSamplingModulo,
                        export_frame_ids) {}
 
+std::unique_ptr<test::VideoFrameWriter> PeerConnectionE2EQualityTestFixture::
+    VideoDumpOptions::CreateInputDumpVideoFrameWriter(
+        absl::string_view stream_label,
+        const VideoResolution& resolution) const {
+  std::unique_ptr<test::VideoFrameWriter> writer = video_frame_writer_factory_(
+      GetInputDumpFileName(stream_label), resolution);
+  absl::optional<std::string> frame_ids_file =
+      GetInputFrameIdsDumpFileName(stream_label);
+  if (frame_ids_file.has_value()) {
+    writer = CreateVideoFrameWithIdsWriter(std::move(writer), *frame_ids_file);
+  }
+  return writer;
+}
+
+std::unique_ptr<test::VideoFrameWriter> PeerConnectionE2EQualityTestFixture::
+    VideoDumpOptions::CreateOutputDumpVideoFrameWriter(
+        absl::string_view stream_label,
+        absl::string_view receiver,
+        const VideoResolution& resolution) const {
+  std::unique_ptr<test::VideoFrameWriter> writer = video_frame_writer_factory_(
+      GetOutputDumpFileName(stream_label, receiver), resolution);
+  absl::optional<std::string> frame_ids_file =
+      GetOutputFrameIdsDumpFileName(stream_label, receiver);
+  if (frame_ids_file.has_value()) {
+    writer = CreateVideoFrameWithIdsWriter(std::move(writer), *frame_ids_file);
+  }
+  return writer;
+}
+
+std::unique_ptr<test::VideoFrameWriter> PeerConnectionE2EQualityTestFixture::
+    VideoDumpOptions::Y4mVideoFrameWriterFactory(
+        absl::string_view file_name_prefix,
+        const VideoResolution& resolution) {
+  return std::make_unique<test::Y4mVideoFrameWriterImpl>(
+      std::string(file_name_prefix) + ".y4m", resolution.width(),
+      resolution.height(), resolution.fps());
+}
+
 std::string
 PeerConnectionE2EQualityTestFixture::VideoDumpOptions::GetInputDumpFileName(
     absl::string_view stream_label) const {
-  rtc::StringBuilder file_name;
-  file_name << stream_label << ".y4m";
-  return test::JoinFilename(output_directory_, file_name.Release());
+  return test::JoinFilename(output_directory_, stream_label);
 }
 
 absl::optional<std::string> PeerConnectionE2EQualityTestFixture::
@@ -161,7 +205,7 @@ PeerConnectionE2EQualityTestFixture::VideoDumpOptions::GetOutputDumpFileName(
     absl::string_view stream_label,
     absl::string_view receiver) const {
   rtc::StringBuilder file_name;
-  file_name << stream_label << "_" << receiver << ".y4m";
+  file_name << stream_label << "_" << receiver;
   return test::JoinFilename(output_directory_, file_name.Release());
 }
 

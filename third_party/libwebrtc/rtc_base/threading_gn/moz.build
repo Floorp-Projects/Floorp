@@ -31,7 +31,6 @@ LOCAL_INCLUDES += [
 UNIFIED_SOURCES += [
     "/third_party/libwebrtc/rtc_base/async_resolver.cc",
     "/third_party/libwebrtc/rtc_base/internal/default_socket_server.cc",
-    "/third_party/libwebrtc/rtc_base/message_handler.cc",
     "/third_party/libwebrtc/rtc_base/network_monitor.cc",
     "/third_party/libwebrtc/rtc_base/network_monitor_factory.cc",
     "/third_party/libwebrtc/rtc_base/physical_socket_server.cc",

@@ -13,6 +13,8 @@
 #include <set>
 
 #include "absl/strings/string_view.h"
+#include "modules/video_coding/svc/create_scalability_structure.h"
+#include "modules/video_coding/svc/scalability_mode_util.h"
 #include "rtc_base/arraysize.h"
 #include "test/testsupport/file_utils.h"
 
@@ -109,15 +111,6 @@ void PeerParamsPreprocessor::ValidateParams(const PeerConfigurerImpl& peer) {
     RTC_CHECK(inserted) << "Duplicate video_config.stream_label="
                         << video_config.stream_label.value();
 
-    if (video_config.input_dump_file_name.has_value()) {
-      RTC_CHECK_GT(video_config.input_dump_sampling_modulo, 0)
-          << "video_config.input_dump_sampling_modulo must be greater than 0";
-    }
-    if (video_config.output_dump_file_name.has_value()) {
-      RTC_CHECK_GT(video_config.output_dump_sampling_modulo, 0)
-          << "video_config.input_dump_sampling_modulo must be greater than 0";
-    }
-
     // TODO(bugs.webrtc.org/4762): remove this check after synchronization of
     // more than two streams is supported.
     if (video_config.sync_group.has_value()) {
@@ -130,11 +123,6 @@ void PeerParamsPreprocessor::ValidateParams(const PeerConfigurerImpl& peer) {
     }
 
     if (video_config.simulcast_config) {
-      if (video_config.simulcast_config->target_spatial_index) {
-        RTC_CHECK_GE(*video_config.simulcast_config->target_spatial_index, 0);
-        RTC_CHECK_LT(*video_config.simulcast_config->target_spatial_index,
-                     video_config.simulcast_config->simulcast_streams_count);
-      }
       if (!video_config.encoding_params.empty()) {
         RTC_CHECK_EQ(video_config.simulcast_config->simulcast_streams_count,
                      video_config.encoding_params.size())
@@ -145,6 +133,44 @@ void PeerParamsPreprocessor::ValidateParams(const PeerConfigurerImpl& peer) {
       RTC_CHECK_LE(video_config.encoding_params.size(), 1)
           << "|encoding_params| has multiple values but simulcast is not "
              "enabled.";
+    }
+
+    if (video_config.emulated_sfu_config) {
+      if (video_config.simulcast_config &&
+          video_config.emulated_sfu_config->target_layer_index) {
+        RTC_CHECK_LT(*video_config.emulated_sfu_config->target_layer_index,
+                     video_config.simulcast_config->simulcast_streams_count);
+      }
+      if (!video_config.encoding_params.empty()) {
+        bool is_svc = false;
+        for (const auto& encoding_param : video_config.encoding_params) {
+          if (!encoding_param.scalability_mode)
+            continue;
+
+          absl::optional<ScalabilityMode> scalability_mode =
+              ScalabilityModeFromString(*encoding_param.scalability_mode);
+          RTC_CHECK(scalability_mode) << "Unknown scalability_mode requested";
+
+          absl::optional<ScalableVideoController::StreamLayersConfig>
+              stream_layers_config =
+                  ScalabilityStructureConfig(*scalability_mode);
+          is_svc |= stream_layers_config->num_spatial_layers > 1;
+          RTC_CHECK(stream_layers_config->num_spatial_layers == 1 ||
+                    video_config.encoding_params.size() == 1)
+              << "Can't enable SVC modes with multiple spatial layers ("
+              << stream_layers_config->num_spatial_layers
+              << " layers) or simulcast ("
+              << video_config.encoding_params.size() << " layers)";
+          if (video_config.emulated_sfu_config->target_layer_index) {
+            RTC_CHECK_LT(*video_config.emulated_sfu_config->target_layer_index,
+                         stream_layers_config->num_spatial_layers);
+          }
+        }
+        if (!is_svc && video_config.emulated_sfu_config->target_layer_index) {
+          RTC_CHECK_LT(*video_config.emulated_sfu_config->target_layer_index,
+                       video_config.encoding_params.size());
+        }
+      }
     }
   }
   if (p.audio_config) {

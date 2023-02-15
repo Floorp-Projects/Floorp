@@ -68,12 +68,6 @@ class PacingController {
   // encoding them). Bitrate sent may temporarily exceed target set by
   // UpdateBitrate() so that this limit will be upheld.
   static const TimeDelta kMaxExpectedQueueLength;
-  // Pacing-rate relative to our target send rate.
-  // Multiplicative factor that is applied to the target bitrate to calculate
-  // the number of bytes that can be transmitted per interval.
-  // Increasing this factor will result in lower delays in cases of bitrate
-  // overshoots from the encoder.
-  static const float kDefaultPaceMultiplier;
   // If no media or paused, wake up at least every `kPausedProcessIntervalMs` in
   // order to send a keep-alive packet so we don't get stuck in a bad state due
   // to lack of feedback.

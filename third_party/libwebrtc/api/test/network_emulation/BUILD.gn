@@ -49,7 +49,4 @@ rtc_library("create_cross_traffic") {
     "../../../rtc_base/task_utils:repeating_task",
     "../../../test/network:emulated_network",
   ]
-  if (build_with_mozilla) {
-    deps -= [ "../../../test/network:emulated_network" ]
-  }
 }

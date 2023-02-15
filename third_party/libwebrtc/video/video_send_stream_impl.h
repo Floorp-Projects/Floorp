@@ -25,21 +25,22 @@
 #include "api/video/encoded_image.h"
 #include "api/video/video_bitrate_allocation.h"
 #include "api/video/video_bitrate_allocator.h"
-#include "api/video/video_stream_encoder_interface.h"
 #include "api/video_codecs/video_encoder.h"
-#include "api/video_codecs/video_encoder_config.h"
 #include "call/bitrate_allocator.h"
 #include "call/rtp_config.h"
 #include "call/rtp_transport_controller_send_interface.h"
 #include "call/rtp_video_sender_interface.h"
 #include "modules/include/module_common_types.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "modules/utility/maybe_worker_thread.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/task_utils/repeating_task.h"
 #include "rtc_base/thread_annotations.h"
+#include "video/config/video_encoder_config.h"
 #include "video/send_statistics_proxy.h"
+#include "video/video_stream_encoder_interface.h"
 
 namespace webrtc {
 namespace internal {
@@ -66,7 +67,6 @@ class VideoSendStreamImpl : public webrtc::BitrateAllocatorObserver,
  public:
   VideoSendStreamImpl(Clock* clock,
                       SendStatisticsProxy* stats_proxy,
-                      TaskQueueBase* rtp_transport_queue,
                       RtpTransportControllerSendInterface* transport,
                       BitrateAllocatorInterface* bitrate_allocator,
                       VideoStreamEncoderInterface* video_stream_encoder,
@@ -139,7 +139,7 @@ class VideoSendStreamImpl : public webrtc::BitrateAllocatorObserver,
   SendStatisticsProxy* const stats_proxy_;
   const VideoSendStream::Config* const config_;
 
-  TaskQueueBase* const rtp_transport_queue_;
+  MaybeWorkerThread* const rtp_transport_queue_;
 
   RepeatingTaskHandle check_encoder_activity_task_
       RTC_GUARDED_BY(rtp_transport_queue_);

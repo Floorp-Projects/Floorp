@@ -775,10 +775,6 @@ rtc_library("webrtc_opus") {
   public_deps =  # no-presubmit-check TODO(webrtc:8603)
       [ ":webrtc_opus_wrapper" ]
 
-  if (build_with_mozilla) {
-    include_dirs = [ "/media/libopus/include" ]
-  }
-
   defines = audio_codec_defines
 }
 
@@ -813,10 +809,6 @@ rtc_library("webrtc_multiopus") {
   public_deps =  # no-presubmit-check TODO(webrtc:8603)
       [ ":webrtc_opus_wrapper" ]
 
-  if (build_with_mozilla) {
-    include_dirs = [ "/media/libopus/include" ]
-  }
-
   defines = audio_codec_defines
 }
 
@@ -841,7 +833,7 @@ rtc_library("webrtc_opus_wrapper") {
     deps += [ rtc_opus_dir ]
     public_configs = [ "//third_party/opus:opus_config" ]
   } else if (build_with_mozilla) {
-    include_dirs = [ "/media/libopus/include" ]
+    public_configs = [ "//third_party/opus:opus_config" ]
   }
 }
 
@@ -1232,7 +1224,6 @@ if (rtc_enable_protobuf) {
 }
 
 # Allow to re-use some test classes from chromium.
-if (rtc_include_tests) {
 rtc_library("audio_coding_modules_tests_shared") {
   testonly = true
   visibility = []
@@ -1283,7 +1274,6 @@ rtc_library("audio_coding_modules_tests_shared") {
     defines += [ "WEBRTC_NETEQ_UNITTEST_BITEXACT" ]
     deps += [ ":neteq_unittest_proto" ]
   }
-}
 }
 
 if (rtc_include_tests) {
@@ -1441,12 +1431,13 @@ if (rtc_include_tests) {
       ":neteq_test_support",
       ":neteq_test_tools",
       "../../api/audio_codecs/opus:audio_encoder_opus",
+      "../../api/test/metrics:global_metrics_logger_and_exporter",
+      "../../api/test/metrics:metric",
       "../../rtc_base:macromagic",
       "../../rtc_base:timeutils",
       "../../system_wrappers",
       "../../system_wrappers:field_trial",
       "../../test:fileutils",
-      "../../test:perf_test",
       "../../test:test_support",
     ]
   }
@@ -1708,6 +1699,7 @@ if (rtc_include_tests) {
         "../../api/audio_codecs:builtin_audio_decoder_factory",
         "../../api/neteq:neteq_api",
         "../../rtc_base:checks",
+        "../../rtc_base:stringutils",
         "../../system_wrappers",
         "../../test:fileutils",
         "../../test:test_support",

@@ -15,7 +15,6 @@
 #include "api/video/video_frame.h"
 #include "api/video/video_sink_interface.h"
 #include "api/video/video_source_interface.h"
-#include "api/video_codecs/video_encoder_config.h"
 #include "call/video_receive_stream.h"
 #include "call/video_send_stream.h"
 #include "rtc_base/checks.h"
@@ -24,6 +23,7 @@
 #include "test/field_trial.h"
 #include "test/frame_generator_capturer.h"
 #include "test/gtest.h"
+#include "video/config/video_encoder_config.h"
 
 namespace webrtc {
 namespace {

@@ -37,7 +37,6 @@ rtc_source_set("flat_map") {
   ]
 }
 
-if (!build_with_mozilla) {
 rtc_library("unittests") {
   testonly = true
   sources = [
@@ -54,5 +53,4 @@ rtc_library("unittests") {
     "//testing/gtest:gtest",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/algorithm:container" ]
-}
 }

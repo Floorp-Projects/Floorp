@@ -145,7 +145,10 @@ rtc_library("h264_packet_buffer") {
     "../rtp_rtcp:rtp_rtcp_format",
     "../rtp_rtcp:rtp_video_header",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("frame_helpers") {
@@ -298,10 +301,10 @@ rtc_library("video_coding") {
     "../../rtc_base/system:no_unique_address",
     "../../rtc_base/task_utils:repeating_task",
     "../../rtc_base/third_party/base64",
-    "../../rtc_base/time:timestamp_extrapolator",
     "../../system_wrappers",
     "../../system_wrappers:field_trial",
     "../../system_wrappers:metrics",
+    "../../video/config:encoder_config",
     "../rtp_rtcp",
     "../rtp_rtcp:rtp_rtcp_format",
     "../rtp_rtcp:rtp_video_header",
@@ -339,7 +342,10 @@ rtc_library("video_codec_interface") {
     "../../common_video/generic_frame_descriptor",
     "../../rtc_base/system:rtc_export",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("video_coding_legacy") {
@@ -531,11 +537,10 @@ rtc_library("webrtc_h264") {
     "../../rtc_base/system:rtc_export",
     "../../system_wrappers:field_trial",
     "../../system_wrappers:metrics",
+    "svc:scalability_structures",
+    "svc:scalable_video_controller",
     "//third_party/libyuv",
   ]
-  if (build_with_mozilla) {
-    deps -= [ "//third_party/libyuv" ]
-  }
   absl_deps = [
     "//third_party/abseil-cpp/absl/container:inlined_vector",
     "//third_party/abseil-cpp/absl/strings",
@@ -550,12 +555,6 @@ rtc_library("webrtc_h264") {
     if (!build_with_mozilla) {
       deps += [ "../../media:rtc_media_base" ]
     }
-  }
-  if (build_with_mozilla) {
-    include_dirs = [
-      "/media/libyuv",
-      "/media/libyuv/libyuv/include",
-    ]
   }
 }
 
@@ -604,7 +603,6 @@ rtc_library("webrtc_libvpx_interface") {
   }
 }
 
-if (!build_with_mozilla) {
 rtc_library("mock_libvpx_interface") {
   testonly = true
   sources = [ "codecs/interface/mock_libvpx_interface.h" ]
@@ -612,7 +610,6 @@ rtc_library("mock_libvpx_interface") {
     ":webrtc_libvpx_interface",
     "../../test:test_support",
   ]
-}
 }
 
 # This target includes the internal SW codec.
@@ -656,9 +653,6 @@ rtc_library("webrtc_vp8") {
     "svc:scalability_mode_util",
     "//third_party/libyuv",
   ]
-  if (build_with_mozilla) {
-    deps -= [ "//third_party/libyuv" ]
-  }
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/strings:strings",
@@ -666,12 +660,6 @@ rtc_library("webrtc_vp8") {
   ]
   if (rtc_build_libvpx) {
     deps += [ rtc_libvpx_dir ]
-  }
-  if (build_with_mozilla) {
-    include_dirs = [
-      "/media/libyuv",
-      "/media/libyuv/libyuv/include",
-    ]
   }
 }
 
@@ -790,13 +778,6 @@ rtc_library("webrtc_vp9") {
     "svc:svc_rate_allocator",
     "//third_party/libyuv",
   ]
-  if (build_with_mozilla) {
-    deps -= [ "//third_party/libyuv" ]
-    include_dirs = [
-      "/media/libyuv",
-      "/media/libyuv/libyuv/include",
-    ]
-  }
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/container:inlined_vector",
@@ -939,16 +920,7 @@ if (rtc_include_tests) {
       "../rtp_rtcp:rtp_rtcp_format",
       "//third_party/libyuv",
     ]
-    if (build_with_mozilla) {
-      deps -= [ "//third_party/libyuv" ]
-    }
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
-    if (build_with_mozilla) {
-      include_dirs = [
-        "/media/libyuv",
-        "/media/libyuv/libyuv/include",
-      ]
-    }
   }
 
   video_coding_modules_tests_resources = []
@@ -999,6 +971,8 @@ if (rtc_include_tests) {
       ":webrtc_vp9_helpers",
       "../../api:array_view",
       "../../api:videocodec_test_fixture_api",
+      "../../api/test/metrics:global_metrics_logger_and_exporter",
+      "../../api/test/metrics:metric",
       "../../api/test/video:function_video_factory",
       "../../api/transport:field_trial_based_config",
       "../../api/video:video_bitrate_allocation",
@@ -1025,10 +999,11 @@ if (rtc_include_tests) {
       "../../rtc_base:timeutils",
       "../../system_wrappers",
       "../../test:fileutils",
-      "../../test:perf_test",
       "../../test:test_support",
       "../../test:video_test_common",
       "../../test:video_test_support",
+      "../../video/config:encoder_config",
+      "../../video/config:streams_config",
     ]
     absl_deps = [
       "//third_party/abseil-cpp/absl/strings:strings",
@@ -1117,16 +1092,8 @@ if (rtc_include_tests) {
       "../../test:video_test_common",
       "../rtp_rtcp:rtp_rtcp_format",
       "codecs/av1:dav1d_decoder",
-      "codecs/av1:libaom_av1_decoder",
       "//third_party/libyuv",
     ]
-    if (build_with_mozilla) {
-      deps -= [ "//third_party/libyuv" ]
-      include_dirs = [
-        "/media/libyuv",
-        "/media/libyuv/libyuv/include",
-      ]
-    }
     absl_deps = [
       "//third_party/abseil-cpp/absl/memory",
       "//third_party/abseil-cpp/absl/types:optional",
@@ -1170,10 +1137,12 @@ if (rtc_include_tests) {
       "codecs/vp8/libvpx_vp8_simulcast_test.cc",
       "codecs/vp8/screenshare_layers_unittest.cc",
       "codecs/vp9/svc_config_unittest.cc",
+      "decoder_database_unittest.cc",
       "decoding_state_unittest.cc",
       "fec_controller_unittest.cc",
       "frame_buffer2_unittest.cc",
       "frame_dependencies_calculator_unittest.cc",
+      "frame_helpers_unittest.cc",
       "generic_decoder_unittest.cc",
       "h264_packet_buffer_unittest.cc",
       "h264_sprop_parameter_sets_unittest.cc",
@@ -1201,6 +1170,7 @@ if (rtc_include_tests) {
       "utility/simulcast_rate_allocator_unittest.cc",
       "utility/vp9_uncompressed_header_parser_unittest.cc",
       "video_codec_initializer_unittest.cc",
+      "video_receiver2_unittest.cc",
       "video_receiver_unittest.cc",
     ]
     if (rtc_use_h264) {
@@ -1216,6 +1186,7 @@ if (rtc_include_tests) {
       ":encoded_frame",
       ":frame_buffer2",
       ":frame_dependencies_calculator",
+      ":frame_helpers",
       ":h264_packet_buffer",
       ":nack_requester",
       ":packet_buffer",

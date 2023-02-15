@@ -11,6 +11,7 @@
 #ifndef MODULES_VIDEO_CODING_TIMING_JITTER_ESTIMATOR_H_
 #define MODULES_VIDEO_CODING_TIMING_JITTER_ESTIMATOR_H_
 
+#include <algorithm>
 #include <memory>
 #include <queue>
 
@@ -38,11 +39,8 @@ class JitterEstimator {
   struct Config {
     static constexpr char kFieldTrialsKey[] = "WebRTC-JitterEstimatorConfig";
 
-    static Config Parse(absl::string_view field_trial) {
-      Config config;
-      config.Parser()->Parse(field_trial);
-      return config;
-    }
+    // Parses a field trial string and validates the values.
+    static Config ParseAndValidate(absl::string_view field_trial);
 
     std::unique_ptr<StructParametersParser> Parser() {
       // clang-format off
@@ -50,9 +48,11 @@ class JitterEstimator {
           "avg_frame_size_median", &avg_frame_size_median,
           "max_frame_size_percentile", &max_frame_size_percentile,
           "frame_size_window", &frame_size_window,
+          "num_stddev_delay_clamp", &num_stddev_delay_clamp,
           "num_stddev_delay_outlier", &num_stddev_delay_outlier,
           "num_stddev_size_outlier", &num_stddev_size_outlier,
-          "congestion_rejection_factor", &congestion_rejection_factor);
+          "congestion_rejection_factor", &congestion_rejection_factor,
+          "estimate_noise_when_congested", &estimate_noise_when_congested);
       // clang-format on
     }
 
@@ -60,7 +60,7 @@ class JitterEstimator {
       return max_frame_size_percentile.has_value();
     }
 
-    // If set, the "avg" frame size is calculated as the median over a window
+    // If true, the "avg" frame size is calculated as the median over a window
     // of recent frame sizes.
     bool avg_frame_size_median = false;
 
@@ -70,6 +70,12 @@ class JitterEstimator {
 
     // The length of the percentile filters' window, in number of frames.
     absl::optional<int> frame_size_window = absl::nullopt;
+
+    // The incoming frame delay variation samples are clamped to be at most
+    // this number of standard deviations away from zero.
+    //
+    // Increasing this value clamps fewer samples.
+    absl::optional<double> num_stddev_delay_clamp = absl::nullopt;
 
     // A (relative) frame delay variation sample is an outlier if its absolute
     // deviation from the Kalman filter model falls outside this number of
@@ -91,6 +97,12 @@ class JitterEstimator {
     //
     // Decreasing this value rejects fewer samples.
     absl::optional<double> congestion_rejection_factor = absl::nullopt;
+
+    // If true, the noise estimate will be updated for congestion rejected
+    // frames. This is currently enabled by default, but that may not be optimal
+    // since congested frames typically are not spread around the line with
+    // Gaussian noise. (This is the whole reason for the congestion rejection!)
+    bool estimate_noise_when_congested = true;
   };
 
   JitterEstimator(Clock* clock, const FieldTrialsView& field_trials);
@@ -131,11 +143,6 @@ class JitterEstimator {
   Config GetConfigForTest() const;
 
  private:
-  // These functions return values that could be overriden through the config.
-  double GetNumStddevDelayOutlier() const;
-  double GetNumStddevSizeOutlier() const;
-  double GetCongestionRejectionFactor() const;
-
   // Updates the random jitter estimate, i.e. the variance of the time
   // deviations from the line given by the Kalman filter.
   //

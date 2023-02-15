@@ -33,6 +33,11 @@ struct BitrateProberConfig {
   FieldTrialParameter<TimeDelta> min_probe_delta;
   // Maximum amount of time each probe can be delayed.
   FieldTrialParameter<TimeDelta> max_probe_delay;
+  // This is used to start sending a probe after a large enough packet.
+  // The min packet size is scaled with the bitrate we're probing at.
+  // This defines the max min packet size, meaning that on high bitrates
+  // a packet of at least this size is needed to trigger sending a probe.
+  FieldTrialParameter<DataSize> min_packet_size;
 };
 
 // Note that this class isn't thread-safe by itself and therefore relies

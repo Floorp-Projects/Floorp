@@ -42,8 +42,8 @@ enum class VideoType {
   kUYVY,
   kMJPEG,
   kNV21,
-  kNV12,
   kBGRA,
+  kNV12,
 };
 
 // This is the max PSNR value our algorithms can return.

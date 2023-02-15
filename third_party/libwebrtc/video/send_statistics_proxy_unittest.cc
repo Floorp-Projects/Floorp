@@ -22,11 +22,11 @@
 #include "api/video/video_bitrate_allocation.h"
 #include "api/video/video_codec_type.h"
 #include "api/video_codecs/video_codec.h"
-#include "api/video_codecs/video_encoder_config.h"
 #include "rtc_base/fake_clock.h"
 #include "system_wrappers/include/metrics.h"
 #include "test/gtest.h"
 #include "test/scoped_key_value_config.h"
+#include "video/config/video_encoder_config.h"
 
 namespace webrtc {
 namespace {
@@ -322,26 +322,18 @@ TEST_F(SendStatisticsProxyTest, SendSideDelay) {
     // stream.
     int avg_delay_ms = ssrc;
     int max_delay_ms = ssrc + 1;
-    uint64_t total_packet_send_delay_ms = ssrc + 2;
-    observer->SendSideDelayUpdated(avg_delay_ms, max_delay_ms,
-                                   total_packet_send_delay_ms, ssrc);
+    observer->SendSideDelayUpdated(avg_delay_ms, max_delay_ms, ssrc);
     expected_.substreams[ssrc].avg_delay_ms = avg_delay_ms;
     expected_.substreams[ssrc].max_delay_ms = max_delay_ms;
-    expected_.substreams[ssrc].total_packet_send_delay_ms =
-        total_packet_send_delay_ms;
   }
   for (const auto& ssrc : config_.rtp.rtx.ssrcs) {
     // Use ssrc as avg_delay_ms and max_delay_ms to get a unique value for each
     // stream.
     int avg_delay_ms = ssrc;
     int max_delay_ms = ssrc + 1;
-    uint64_t total_packet_send_delay_ms = ssrc + 2;
-    observer->SendSideDelayUpdated(avg_delay_ms, max_delay_ms,
-                                   total_packet_send_delay_ms, ssrc);
+    observer->SendSideDelayUpdated(avg_delay_ms, max_delay_ms, ssrc);
     expected_.substreams[ssrc].avg_delay_ms = avg_delay_ms;
     expected_.substreams[ssrc].max_delay_ms = max_delay_ms;
-    expected_.substreams[ssrc].total_packet_send_delay_ms =
-        total_packet_send_delay_ms;
   }
   VideoSendStream::Stats stats = statistics_proxy_->GetStats();
   ExpectEqual(expected_, stats);

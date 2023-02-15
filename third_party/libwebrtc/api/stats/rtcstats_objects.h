@@ -245,6 +245,12 @@ class RTC_EXPORT RTCIceCandidateStats : public RTCStats {
   RTCStatsMember<std::string> candidate_type;
   RTCStatsMember<int32_t> priority;
   RTCStatsMember<std::string> url;
+  RTCStatsMember<std::string> foundation;
+  RTCStatsMember<std::string> related_address;
+  RTCStatsMember<int32_t> related_port;
+  RTCStatsMember<std::string> username_fragment;
+  // Enum type RTCIceTcpCandidateType.
+  RTCStatsMember<std::string> tcp_type;
 
   RTCNonStandardStatsMember<bool> vpn;
   RTCNonStandardStatsMember<std::string> network_adapter_type;
@@ -340,23 +346,21 @@ class RTC_EXPORT RTCMediaStreamTrackStats final : public RTCStats {
   RTCStatsMember<uint64_t> concealment_events;
   RTCStatsMember<uint64_t> inserted_samples_for_deceleration;
   RTCStatsMember<uint64_t> removed_samples_for_acceleration;
-  // Non-standard audio-only member
-  // https://w3c.github.io/webrtc-provisional-stats/#dom-rtcaudioreceiverstats-jitterbufferflushes
+  // TODO(crbug.com/webrtc/14524): These metrics have been moved, delete them.
   RTCNonStandardStatsMember<uint64_t> jitter_buffer_flushes;
   RTCNonStandardStatsMember<uint64_t> delayed_packet_outage_samples;
   RTCNonStandardStatsMember<double> relative_packet_arrival_delay;
-  // TODO(henrik.lundin): Add description of the interruption metrics at
-  // https://github.com/w3c/webrtc-provisional-stats/issues/17
   RTCNonStandardStatsMember<uint32_t> interruption_count;
   RTCNonStandardStatsMember<double> total_interruption_duration;
   // Non-standard video-only members.
   // https://w3c.github.io/webrtc-provisional-stats/#dom-rtcvideoreceiverstats
+  RTCNonStandardStatsMember<double> total_frames_duration;
+  RTCNonStandardStatsMember<double> sum_squared_frame_durations;
+  // TODO(crbug.com/webrtc/14521): These metrics have been moved, delete them.
   RTCNonStandardStatsMember<uint32_t> freeze_count;
   RTCNonStandardStatsMember<uint32_t> pause_count;
   RTCNonStandardStatsMember<double> total_freezes_duration;
   RTCNonStandardStatsMember<double> total_pauses_duration;
-  RTCNonStandardStatsMember<double> total_frames_duration;
-  RTCNonStandardStatsMember<double> sum_squared_frame_durations;
 };
 
 // https://w3c.github.io/webrtc-stats/#pcstats-dict*
@@ -406,7 +410,6 @@ class RTC_EXPORT RTCReceivedRtpStreamStats : public RTCRTPStreamStats {
 
   RTCStatsMember<double> jitter;
   RTCStatsMember<int32_t> packets_lost;  // Signed per RFC 3550
-  RTCStatsMember<uint64_t> packets_discarded;
 
  protected:
   RTCReceivedRtpStreamStats(const std::string&& id, int64_t timestamp_us);
@@ -446,6 +449,7 @@ class RTC_EXPORT RTCInboundRTPStreamStats final
   RTCStatsMember<std::string> mid;
   RTCStatsMember<std::string> remote_id;
   RTCStatsMember<uint32_t> packets_received;
+  RTCStatsMember<uint64_t> packets_discarded;
   RTCStatsMember<uint64_t> fec_packets_received;
   RTCStatsMember<uint64_t> fec_packets_discarded;
   RTCStatsMember<uint64_t> bytes_received;
@@ -479,6 +483,10 @@ class RTC_EXPORT RTCInboundRTPStreamStats final
   RTCNonStandardStatsMember<uint32_t> frames_assembled_from_multiple_packets;
   RTCStatsMember<double> total_inter_frame_delay;
   RTCStatsMember<double> total_squared_inter_frame_delay;
+  RTCStatsMember<uint32_t> pause_count;
+  RTCStatsMember<double> total_pauses_duration;
+  RTCStatsMember<uint32_t> freeze_count;
+  RTCStatsMember<double> total_freezes_duration;
   // https://w3c.github.io/webrtc-provisional-stats/#dom-rtcinboundrtpstreamstats-contenttype
   RTCStatsMember<std::string> content_type;
   // Only populated if audio/video sync is enabled.
@@ -492,6 +500,19 @@ class RTC_EXPORT RTCInboundRTPStreamStats final
   RTCStatsMember<uint32_t> pli_count;
   RTCStatsMember<uint32_t> nack_count;
   RTCStatsMember<uint64_t> qp_sum;
+  // This is a remnant of the legacy getStats() API. When the "video-timing"
+  // header extension is used,
+  // https://webrtc.github.io/webrtc-org/experiments/rtp-hdrext/video-timing/,
+  // `googTimingFrameInfo` is exposed with the value of
+  // TimingFrameInfo::ToString().
+  // TODO(https://crbug.com/webrtc/14586): Unship or standardize this metric.
+  RTCStatsMember<std::string> goog_timing_frame_info;
+  // Non-standard audio metrics.
+  RTCNonStandardStatsMember<uint64_t> jitter_buffer_flushes;
+  RTCNonStandardStatsMember<uint64_t> delayed_packet_outage_samples;
+  RTCNonStandardStatsMember<double> relative_packet_arrival_delay;
+  RTCNonStandardStatsMember<uint32_t> interruption_count;
+  RTCNonStandardStatsMember<double> total_interruption_duration;
 
   // The former googMinPlayoutDelayMs (in seconds).
   RTCNonStandardStatsMember<double> min_playout_delay;
@@ -516,7 +537,6 @@ class RTC_EXPORT RTCOutboundRTPStreamStats final : public RTCRTPStreamStats {
   RTCStatsMember<uint64_t> bytes_sent;
   RTCStatsMember<uint64_t> header_bytes_sent;
   RTCStatsMember<uint64_t> retransmitted_bytes_sent;
-  // TODO(https://crbug.com/webrtc/13394): Also collect this metric for video.
   RTCStatsMember<double> target_bitrate;
   RTCStatsMember<uint32_t> frames_encoded;
   RTCStatsMember<uint32_t> key_frames_encoded;
@@ -559,7 +579,6 @@ class RTC_EXPORT RTCRemoteInboundRtpStreamStats final
   RTCRemoteInboundRtpStreamStats(const RTCRemoteInboundRtpStreamStats& other);
   ~RTCRemoteInboundRtpStreamStats() override;
 
-  RTCStatsMember<uint64_t> packets_discarded;
   RTCStatsMember<std::string> local_id;
   RTCStatsMember<double> round_trip_time;
   RTCStatsMember<double> fraction_lost;

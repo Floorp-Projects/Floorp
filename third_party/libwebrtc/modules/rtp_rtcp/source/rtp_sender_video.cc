@@ -171,7 +171,7 @@ RTPSenderVideo::RTPSenderVideo(const Config& config)
                     this,
                     config.frame_transformer,
                     rtp_sender_->SSRC(),
-                    config.send_transport_queue)
+                    config.task_queue_factory)
               : nullptr),
       include_capture_clock_offset_(!absl::StartsWith(
           config.field_trials->Lookup(kIncludeCaptureClockOffset),

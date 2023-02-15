@@ -20,13 +20,13 @@
 #include "absl/strings/string_view.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "api/task_queue/task_queue_base.h"
+#include "api/test/metrics/metric.h"
 #include "api/test/simulated_network.h"
 #include "call/call.h"
 #include "call/simulated_network.h"
 #include "rtc_base/event.h"
 #include "rtc_base/task_utils/repeating_task.h"
 #include "test/call_test.h"
-#include "test/testsupport/perf_test.h"
 
 namespace webrtc {
 
@@ -68,8 +68,8 @@ class RampUpTester : public test::EndToEndTest {
 
   void ReportResult(absl::string_view measurement,
                     size_t value,
-                    absl::string_view units,
-                    test::ImproveDirection improve_direction) const;
+                    test::Unit unit,
+                    test::ImprovementDirection improvement_direction) const;
   void TriggerTestDone();
 
   Clock* const clock_;
@@ -166,5 +166,6 @@ class RampUpDownUpTester : public RampUpTester {
   int sent_bytes_;
   std::vector<int> loss_rates_;
 };
+
 }  // namespace webrtc
 #endif  // CALL_RAMPUP_TESTS_H_

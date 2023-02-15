@@ -60,6 +60,7 @@ rtc_library("jitter_estimator") {
     "../../../api/units:timestamp",
     "../../../rtc_base",
     "../../../rtc_base:checks",
+    "../../../rtc_base:logging",
     "../../../rtc_base:rtc_numerics",
     "../../../rtc_base:safe_conversions",
     "../../../rtc_base/experiments:field_trial_parser",
@@ -83,6 +84,18 @@ rtc_library("rtt_filter") {
   ]
 }
 
+rtc_library("timestamp_extrapolator") {
+  sources = [
+    "timestamp_extrapolator.cc",
+    "timestamp_extrapolator.h",
+  ]
+  deps = [
+    "../../../api/units:timestamp",
+    "../../../modules:module_api_public",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
+
 rtc_library("timing_module") {
   sources = [
     "timing.cc",
@@ -90,6 +103,7 @@ rtc_library("timing_module") {
   ]
   deps = [
     ":codec_timer",
+    ":timestamp_extrapolator",
     "../../../api:field_trials_view",
     "../../../api/units:time_delta",
     "../../../api/video:video_frame",
@@ -99,13 +113,11 @@ rtc_library("timing_module") {
     "../../../rtc_base:rtc_numerics",
     "../../../rtc_base/experiments:field_trial_parser",
     "../../../rtc_base/synchronization:mutex",
-    "../../../rtc_base/time:timestamp_extrapolator",
     "../../../system_wrappers",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
-if (!build_with_mozilla) {
 rtc_library("timing_unittests") {
   testonly = true
   sources = [
@@ -113,6 +125,7 @@ rtc_library("timing_unittests") {
     "inter_frame_delay_unittest.cc",
     "jitter_estimator_unittest.cc",
     "rtt_filter_unittest.cc",
+    "timestamp_extrapolator_unittest.cc",
     "timing_unittest.cc",
   ]
   deps = [
@@ -120,6 +133,7 @@ rtc_library("timing_unittests") {
     ":inter_frame_delay",
     ":jitter_estimator",
     ":rtt_filter",
+    ":timestamp_extrapolator",
     ":timing_module",
     "../../../api:array_view",
     "../../../api:field_trials",
@@ -134,5 +148,4 @@ rtc_library("timing_unittests") {
     "../../../test:test_support",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
-}
 }

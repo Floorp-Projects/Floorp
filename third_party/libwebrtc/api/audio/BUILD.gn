@@ -55,7 +55,6 @@ rtc_library("aec3_config") {
   ]
 }
 
-if (!build_with_mozilla) {
 rtc_library("aec3_config_json") {
   visibility = [ "*" ]
   allow_poison = [ "rtc_json" ]
@@ -72,7 +71,6 @@ rtc_library("aec3_config_json") {
     "../../rtc_base/system:rtc_export",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
-}
 }
 
 rtc_library("aec3_factory") {

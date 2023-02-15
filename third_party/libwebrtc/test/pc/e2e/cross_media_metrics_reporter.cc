@@ -14,12 +14,23 @@
 
 #include "api/stats/rtc_stats.h"
 #include "api/stats/rtcstats_objects.h"
+#include "api/test/metrics/metric.h"
 #include "api/units/timestamp.h"
+#include "rtc_base/checks.h"
 #include "rtc_base/event.h"
 #include "system_wrappers/include/field_trial.h"
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
+
+using ::webrtc::test::ImprovementDirection;
+using ::webrtc::test::Unit;
+
+CrossMediaMetricsReporter::CrossMediaMetricsReporter(
+    test::MetricsLogger* metrics_logger)
+    : metrics_logger_(metrics_logger) {
+  RTC_CHECK(metrics_logger_);
+}
 
 void CrossMediaMetricsReporter::Start(
     absl::string_view test_case_name,
@@ -98,25 +109,17 @@ void CrossMediaMetricsReporter::StopAndReportResults() {
   MutexLock lock(&mutex_);
   for (const auto& pair : stats_info_) {
     const std::string& sync_group = pair.first;
-    ReportResult("audio_ahead_ms",
-                 GetTestCaseName(pair.second.audio_stream_label, sync_group),
-                 pair.second.audio_ahead_ms, "ms",
-                 webrtc::test::ImproveDirection::kSmallerIsBetter);
-    ReportResult("video_ahead_ms",
-                 GetTestCaseName(pair.second.video_stream_label, sync_group),
-                 pair.second.video_ahead_ms, "ms",
-                 webrtc::test::ImproveDirection::kSmallerIsBetter);
+    metrics_logger_->LogMetric(
+        "audio_ahead_ms",
+        GetTestCaseName(pair.second.audio_stream_label, sync_group),
+        pair.second.audio_ahead_ms, Unit::kMilliseconds,
+        webrtc::test::ImprovementDirection::kSmallerIsBetter);
+    metrics_logger_->LogMetric(
+        "video_ahead_ms",
+        GetTestCaseName(pair.second.video_stream_label, sync_group),
+        pair.second.video_ahead_ms, Unit::kMilliseconds,
+        webrtc::test::ImprovementDirection::kSmallerIsBetter);
   }
-}
-
-void CrossMediaMetricsReporter::ReportResult(
-    const std::string& metric_name,
-    const std::string& test_case_name,
-    const SamplesStatsCounter& counter,
-    const std::string& unit,
-    webrtc::test::ImproveDirection improve_direction) {
-  test::PrintResult(metric_name, /*modifier=*/"", test_case_name, counter, unit,
-                    /*important=*/false, improve_direction);
 }
 
 std::string CrossMediaMetricsReporter::GetTestCaseName(

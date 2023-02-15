@@ -13,9 +13,9 @@
 #include <algorithm>
 
 #include "api/units/time_delta.h"
+#include "modules/video_coding/timing/timestamp_extrapolator.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/time/timestamp_extrapolator.h"
 #include "system_wrappers/include/clock.h"
 
 namespace webrtc {

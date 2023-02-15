@@ -23,6 +23,7 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/string_format.h"
+#include "rtc_base/trace_event.h"
 
 namespace webrtc {
 
@@ -149,6 +150,7 @@ void RemoteAudioSource::RemoveSink(AudioTrackSinkInterface* sink) {
 
 void RemoteAudioSource::OnData(const AudioSinkInterface::Data& audio) {
   // Called on the externally-owned audio callback thread, via/from webrtc.
+  TRACE_EVENT0("webrtc", "RemoteAudioSource::OnData");
   MutexLock lock(&sink_lock_);
   for (auto* sink : sinks_) {
     // When peerconnection acts as an audio source, it should not provide

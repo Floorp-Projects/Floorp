@@ -22,6 +22,7 @@
 #include "api/crypto/frame_encryptor_interface.h"
 #include "api/function_view.h"
 #include "api/rtc_event_log/rtc_event_log.h"
+#include "api/task_queue/task_queue_base.h"
 #include "audio/audio_state.h"
 #include "audio/channel_send.h"
 #include "audio/conversion.h"
@@ -35,10 +36,9 @@
 #include "modules/audio_processing/include/audio_processing.h"
 #include "modules/rtp_rtcp/source/rtp_header_extensions.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/event.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/audio_format_to_string.h"
-#include "rtc_base/task_queue.h"
+#include "rtc_base/trace_event.h"
 
 namespace webrtc {
 namespace {
@@ -74,6 +74,7 @@ void UpdateEventLogStreamConfig(RtcEventLog* event_log,
   event_log->Log(std::make_unique<RtcEventAudioSendStreamConfig>(
       std::move(rtclog_config)));
 }
+
 }  // namespace
 
 constexpr char AudioAllocationConfig::kKey[];
@@ -175,7 +176,6 @@ AudioSendStream::AudioSendStream(
   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
   ConfigureStream(config, true);
   UpdateCachedTargetAudioBitrateConstraints();
-  pacer_thread_checker_.Detach();
 }
 
 AudioSendStream::~AudioSendStream() {
@@ -183,11 +183,10 @@ AudioSendStream::~AudioSendStream() {
   RTC_LOG(LS_INFO) << "~AudioSendStream: " << config_.rtp.ssrc;
   RTC_DCHECK(!sending_);
   channel_send_->ResetSenderCongestionControlObjects();
+
   // Blocking call to synchronize state with worker queue to ensure that there
   // are no pending tasks left that keeps references to audio.
-  rtc::Event thread_sync_event;
-  rtp_transport_queue_->PostTask([&] { thread_sync_event.Set(); });
-  thread_sync_event.Wait(rtc::Event::kForever);
+  rtp_transport_queue_->RunSynchronous([] {});
 }
 
 const webrtc::AudioSendStream::Config& AudioSendStream::GetConfig() const {
@@ -392,6 +391,7 @@ void AudioSendStream::Stop() {
 void AudioSendStream::SendAudioData(std::unique_ptr<AudioFrame> audio_frame) {
   RTC_CHECK_RUNS_SERIALIZED(&audio_capture_race_checker_);
   RTC_DCHECK_GT(audio_frame->sample_rate_hz_, 0);
+  TRACE_EVENT0("webrtc", "AudioSendStream::SendAudioData");
   double duration = static_cast<double>(audio_frame->samples_per_channel_) /
                     audio_frame->sample_rate_hz_;
   {
@@ -845,9 +845,9 @@ void AudioSendStream::ConfigureBitrateObserver() {
   if (allocation_settings_.priority_bitrate_raw)
     priority_bitrate = *allocation_settings_.priority_bitrate_raw;
 
-  rtp_transport_queue_->PostTask([this, constraints, priority_bitrate,
-                                  config_bitrate_priority =
-                                      config_.bitrate_priority] {
+  rtp_transport_queue_->RunOrPost([this, constraints, priority_bitrate,
+                                   config_bitrate_priority =
+                                       config_.bitrate_priority] {
     RTC_DCHECK_RUN_ON(rtp_transport_queue_);
     bitrate_allocator_->AddObserver(
         this,
@@ -862,13 +862,10 @@ void AudioSendStream::ConfigureBitrateObserver() {
 
 void AudioSendStream::RemoveBitrateObserver() {
   registered_with_allocator_ = false;
-  rtc::Event thread_sync_event;
-  rtp_transport_queue_->PostTask([this, &thread_sync_event] {
+  rtp_transport_queue_->RunSynchronous([this] {
     RTC_DCHECK_RUN_ON(rtp_transport_queue_);
     bitrate_allocator_->RemoveObserver(this);
-    thread_sync_event.Set();
   });
-  thread_sync_event.Wait(rtc::Event::kForever);
 }
 
 absl::optional<AudioSendStream::TargetAudioBitrateConstraints>
@@ -931,7 +928,7 @@ void AudioSendStream::UpdateCachedTargetAudioBitrateConstraints() {
   if (!new_constraints.has_value()) {
     return;
   }
-  rtp_transport_queue_->PostTask([this, new_constraints]() {
+  rtp_transport_queue_->RunOrPost([this, new_constraints]() {
     RTC_DCHECK_RUN_ON(rtp_transport_queue_);
     cached_constraints_ = new_constraints;
   });

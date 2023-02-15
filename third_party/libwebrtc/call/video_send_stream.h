@@ -29,13 +29,13 @@
 #include "api/video/video_sink_interface.h"
 #include "api/video/video_source_interface.h"
 #include "api/video/video_stream_encoder_settings.h"
-#include "api/video_codecs/video_encoder_config.h"
 #include "call/rtp_config.h"
 #include "common_video/frame_counts.h"
 #include "common_video/include/quality_limitation_reason.h"
 #include "modules/rtp_rtcp/include/report_block_data.h"
 #include "modules/rtp_rtcp/include/rtcp_statistics.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "video/config/video_encoder_config.h"
 
 namespace webrtc {
 
@@ -77,9 +77,10 @@ class VideoSendStream {
     // TODO(holmer): Move bitrate_bps out to the webrtc::Call layer.
     int total_bitrate_bps = 0;
     int retransmit_bitrate_bps = 0;
+    // `avg_delay_ms` and `max_delay_ms` are only used in tests. Consider
+    // deleting.
     int avg_delay_ms = 0;
     int max_delay_ms = 0;
-    uint64_t total_packet_send_delay_ms = 0;
     StreamDataCounters rtp_stats;
     RtcpPacketTypeCounter rtcp_packet_type_counts;
     // A snapshot of the most recent Report Block with additional data of

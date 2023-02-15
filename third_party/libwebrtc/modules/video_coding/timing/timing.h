@@ -19,15 +19,13 @@
 #include "api/video/video_frame.h"
 #include "api/video/video_timing.h"
 #include "modules/video_coding/timing/codec_timer.h"
+#include "modules/video_coding/timing/timestamp_extrapolator.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
-#include "rtc_base/time/timestamp_extrapolator.h"
+#include "system_wrappers/include/clock.h"
 
 namespace webrtc {
-
-class Clock;
-class TimestampExtrapolator;
 
 class VCMTiming {
  public:
@@ -71,7 +69,8 @@ class VCMTiming {
 
   // Used to report that a frame is passed to decoding. Updates the timestamp
   // filter which is used to map between timestamps and receiver system time.
-  void IncomingTimestamp(uint32_t rtp_timestamp, Timestamp last_packet_time);
+  virtual void IncomingTimestamp(uint32_t rtp_timestamp,
+                                 Timestamp last_packet_time);
 
   // Returns the receiver system time when the frame with timestamp
   // `frame_timestamp` should be rendered, assuming that the system time

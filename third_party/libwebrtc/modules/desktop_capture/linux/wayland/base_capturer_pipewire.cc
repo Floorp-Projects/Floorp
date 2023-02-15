@@ -44,7 +44,9 @@ BaseCapturerPipeWire::BaseCapturerPipeWire(
   source_id_ = RestoreTokenManager::GetInstance().GetUnusedId();
 }
 
-BaseCapturerPipeWire::~BaseCapturerPipeWire() {}
+BaseCapturerPipeWire::~BaseCapturerPipeWire() {
+  options_.screencast_stream()->StopScreenCastStream();
+}
 
 void BaseCapturerPipeWire::OnScreenCastRequestResult(RequestResponse result,
                                                      uint32_t stream_node_id,
@@ -138,6 +140,7 @@ void BaseCapturerPipeWire::CaptureFrame() {
   // TODO(julien.isorce): http://crbug.com/945468. Set the icc profile on
   // the frame, see ScreenCapturerX11::CaptureFrame.
 
+  frame->set_capturer_id(DesktopCapturerId::kWaylandCapturerLinux);
   callback_->OnCaptureResult(Result::SUCCESS, std::move(frame));
 }
 

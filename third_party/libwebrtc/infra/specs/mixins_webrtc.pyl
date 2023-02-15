@@ -35,10 +35,10 @@
       }
     }
   },
-  'ios-device-15.3': {
+  'ios-device-15.7': {
     'swarming': {
       'dimensions': {
-        'os': 'iOS-15.3',
+        'os': 'iOS-15.7',
         'pool': 'chrome.tests',
       },
     },
@@ -231,6 +231,17 @@
         '--undefok=enable-run-ios-unittests-with-xctest',
       ],
     },
+  },
+  'xcode_12d4e': {
+    '$mixin_append': {
+      'args': ['--xcode-build-version', '12d4e'],
+      'swarming': {
+        'named_caches': [{
+          'name': 'xcode_ios_12d4e',
+          'path': 'Xcode.app'
+        }]
+      }
+    }
   },
   'xcode_13_main': {
     '$mixin_append': {

@@ -107,11 +107,30 @@ bool StunRequestManager::CheckResponse(StunMessage* msg) {
   // integrity-protected or not.
   // For some tests, the message integrity is not set in the request.
   // Complain, and then don't check.
-  bool skip_integrity_checking = false;
-  if (request->msg()->integrity() == StunMessage::IntegrityStatus::kNotSet) {
-    skip_integrity_checking = true;
+  bool skip_integrity_checking =
+      (request->msg()->integrity() == StunMessage::IntegrityStatus::kNotSet);
+  if (skip_integrity_checking) {
+    // This indicates lazy test writing (not adding integrity attribute).
+    // Complain, but only in debug mode (while developing).
+    RTC_DLOG(LS_ERROR)
+        << "CheckResponse called on a passwordless request. Fix test!";
   } else {
-    msg->ValidateMessageIntegrity(request->msg()->password());
+    if (msg->integrity() == StunMessage::IntegrityStatus::kNotSet) {
+      // Checking status for the first time. Normal.
+      msg->ValidateMessageIntegrity(request->msg()->password());
+    } else if (msg->integrity() == StunMessage::IntegrityStatus::kIntegrityOk &&
+               msg->password() == request->msg()->password()) {
+      // Status is already checked, with the same password. This is the case
+      // we would want to see happen.
+    } else if (msg->integrity() ==
+               StunMessage::IntegrityStatus::kIntegrityBad) {
+      // This indicates that the original check had the wrong password.
+      // Bad design, needs revisiting.
+      // TODO(crbug.com/1177125): Fix this.
+      msg->RevalidateMessageIntegrity(request->msg()->password());
+    } else {
+      RTC_CHECK_NOTREACHED();
+    }
   }
 
   bool success = true;

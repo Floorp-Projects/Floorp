@@ -27,6 +27,8 @@
 #include "api/stats/rtc_stats.h"
 #include "api/stats/rtc_stats_report.h"
 #include "api/stats/rtcstats_objects.h"
+#include "api/test/metrics/global_metrics_logger_and_exporter.h"
+#include "api/test/metrics/metric.h"
 #include "api/video_codecs/builtin_video_decoder_factory.h"
 #include "api/video_codecs/builtin_video_encoder_factory.h"
 #include "modules/audio_device/include/audio_device.h"
@@ -54,11 +56,14 @@
 #include "rtc_base/virtual_socket_server.h"
 #include "system_wrappers/include/clock.h"
 #include "test/gtest.h"
-#include "test/testsupport/perf_test.h"
 
 namespace webrtc {
-
 namespace {
+
+using ::webrtc::test::GetGlobalMetricsLogger;
+using ::webrtc::test::ImprovementDirection;
+using ::webrtc::test::Unit;
+
 static const int kDefaultTestTimeMs = 15000;
 static const int kRampUpTimeMs = 5000;
 static const int kPollIntervalTimeMs = 50;
@@ -72,6 +77,7 @@ static const int kTurnExternalPort = 0;
 // Setting the network bandwidth to 1 Mbps allows the video's bitrate to push
 // the network's limitations.
 static const int kNetworkBandwidth = 1000000;
+
 }  // namespace
 
 using RTCConfiguration = PeerConnectionInterface::RTCConfiguration;
@@ -265,8 +271,10 @@ class PeerConnectionRampUpTest : public ::testing::Test {
     double average_bandwidth_estimate = total_bwe / number_of_polls;
     std::string value_description =
         "bwe_after_" + std::to_string(kDefaultTestTimeMs / 1000) + "_seconds";
-    test::PrintResult("peerconnection_ramp_up_", test_string, value_description,
-                      average_bandwidth_estimate, "bwe", false);
+    GetGlobalMetricsLogger()->LogSingleValueMetric(
+        "peerconnection_ramp_up_" + test_string, value_description,
+        average_bandwidth_estimate, Unit::kUnitless,
+        ImprovementDirection::kNeitherIsBetter);
   }
 
   rtc::Thread* network_thread() { return network_thread_.get(); }

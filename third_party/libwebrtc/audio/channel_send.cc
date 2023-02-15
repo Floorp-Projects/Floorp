@@ -40,6 +40,7 @@
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/time_utils.h"
+#include "rtc_base/trace_event.h"
 #include "system_wrappers/include/clock.h"
 #include "system_wrappers/include/metrics.h"
 
@@ -832,6 +833,8 @@ void ChannelSend::RtcpPacketTypesCounterUpdated(
 
 void ChannelSend::ProcessAndEncodeAudio(
     std::unique_ptr<AudioFrame> audio_frame) {
+  TRACE_EVENT0("webrtc", "ChannelSend::ProcessAndEncodeAudio");
+
   RTC_DCHECK_RUNS_SERIALIZED(&audio_thread_race_checker_);
   RTC_DCHECK_GT(audio_frame->samples_per_channel_, 0);
   RTC_DCHECK_LE(audio_frame->num_channels_, 8);

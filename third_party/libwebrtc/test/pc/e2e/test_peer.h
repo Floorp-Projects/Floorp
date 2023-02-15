@@ -173,6 +173,8 @@ class TestPeer final : public StatsProvider {
       nullptr;
 
   // Keeps ownership of worker thread. It has to be destroyed after `wrapper_`.
+  // `worker_thread_`can be null if the Peer use only one thread as both the
+  // worker thread and network thread.
   std::unique_ptr<rtc::Thread> worker_thread_;
   std::unique_ptr<PeerConnectionWrapper> wrapper_;
   std::vector<PeerConfigurerImpl::VideoSource> video_sources_;

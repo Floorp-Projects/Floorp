@@ -190,8 +190,8 @@ TEST_F(ReceiveStatisticsProxy2Test, OnDecodedFrameIncreasesProcessingDelay) {
   // We set receive time fixed and increase the clock by 10ms
   // in the loop which will increase the processing delay by
   // 10/20/30ms respectively.
-  RtpPacketInfos::vector_type packet_infos = {
-      RtpPacketInfo({}, {}, {}, {}, {}, Now())};
+  RtpPacketInfos::vector_type packet_infos = {RtpPacketInfo(
+      /*ssrc=*/{}, /*csrcs=*/{}, /*rtp_timestamp=*/{}, /*receive_time=*/Now())};
   frame.set_packet_infos(RtpPacketInfos(packet_infos));
   for (int i = 1; i <= 3; ++i) {
     time_controller_.AdvanceTime(kProcessingDelay);
@@ -228,8 +228,8 @@ TEST_F(ReceiveStatisticsProxy2Test, OnDecodedFrameIncreasesAssemblyTime) {
 
   // A single-packet frame will not increase total assembly time
   // and frames assembled.
-  RtpPacketInfos::vector_type single_packet_frame = {
-      RtpPacketInfo({}, {}, {}, {}, {}, Now())};
+  RtpPacketInfos::vector_type single_packet_frame = {RtpPacketInfo(
+      /*ssrc=*/{}, /*csrcs=*/{}, /*rtp_timestamp=*/{}, /*receive_time=*/Now())};
   frame.set_packet_infos(RtpPacketInfos(single_packet_frame));
   statistics_proxy_->OnDecodedFrame(frame, absl::nullopt, TimeDelta::Millis(1),
                                     VideoContentType::UNSPECIFIED);
@@ -243,9 +243,12 @@ TEST_F(ReceiveStatisticsProxy2Test, OnDecodedFrameIncreasesAssemblyTime) {
 
   // In an ordered frame the first and last packet matter.
   RtpPacketInfos::vector_type ordered_frame = {
-      RtpPacketInfo({}, {}, {}, {}, {}, Now()),
-      RtpPacketInfo({}, {}, {}, {}, {}, Now() + kAssemblyTime),
-      RtpPacketInfo({}, {}, {}, {}, {}, Now() + 2 * kAssemblyTime),
+      RtpPacketInfo(/*ssrc=*/{}, /*csrcs=*/{}, /*rtp_timestamp=*/{},
+                    /*receive_time=*/Now()),
+      RtpPacketInfo(/*ssrc=*/{}, /*csrcs=*/{}, /*rtp_timestamp=*/{},
+                    /*receive_time=*/Now() + kAssemblyTime),
+      RtpPacketInfo(/*ssrc=*/{}, /*csrcs=*/{}, /*rtp_timestamp=*/{},
+                    /*receive_time=*/Now() + 2 * kAssemblyTime),
   };
   frame.set_packet_infos(RtpPacketInfos(ordered_frame));
   statistics_proxy_->OnDecodedFrame(frame, 1u, TimeDelta::Millis(3),
@@ -264,9 +267,12 @@ TEST_F(ReceiveStatisticsProxy2Test, OnDecodedFrameIncreasesAssemblyTime) {
 
   // "First" and "last" are in receive time, not sequence number.
   RtpPacketInfos::vector_type unordered_frame = {
-      RtpPacketInfo({}, {}, {}, {}, {}, Now() + 2 * kAssemblyTime),
-      RtpPacketInfo({}, {}, {}, {}, {}, Now()),
-      RtpPacketInfo({}, {}, {}, {}, {}, Now() + kAssemblyTime),
+      RtpPacketInfo(/*ssrc=*/{}, /*csrcs=*/{}, /*rtp_timestamp=*/{},
+                    /*receive_time=*/Now() + 2 * kAssemblyTime),
+      RtpPacketInfo(/*ssrc=*/{}, /*csrcs=*/{}, /*rtp_timestamp=*/{},
+                    /*receive_time=*/Now()),
+      RtpPacketInfo(/*ssrc=*/{}, /*csrcs=*/{}, /*rtp_timestamp=*/{},
+                    /*receive_time=*/Now() + kAssemblyTime),
   };
   frame.set_packet_infos(RtpPacketInfos(unordered_frame));
   statistics_proxy_->OnDecodedFrame(frame, 1u, TimeDelta::Millis(3),

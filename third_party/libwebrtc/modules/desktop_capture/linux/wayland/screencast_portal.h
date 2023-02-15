@@ -38,16 +38,6 @@ class ScreenCastPortal : public xdg_portal::ScreenCapturePortalInterface {
                GVariant* parameters,
                gpointer user_data);
 
-  // Values are set based on source type property in
-  // xdg-desktop-portal/screencast
-  // https://github.com/flatpak/xdg-desktop-portal/blob/master/data/org.freedesktop.portal.ScreenCast.xml
-  // TODO(https://crbug.com/1359411): Make this private.
-  enum class CaptureSourceType : uint32_t {
-    kScreen = 0b01,
-    kWindow = 0b10,
-    kAnyScreenContent = kScreen | kWindow
-  };
-
   // Values are set based on cursor mode property in
   // xdg-desktop-portal/screencast
   // https://github.com/flatpak/xdg-desktop-portal/blob/master/data/org.freedesktop.portal.ScreenCast.xml
@@ -96,14 +86,6 @@ class ScreenCastPortal : public xdg_portal::ScreenCapturePortalInterface {
                        sources_request_response_signal_handler,
                    gpointer user_data);
 
-  // TODO(https://crbug.com/1359411): Migrate downstream consumers off of
-  // CaptureSourceType and delete this.
-  ScreenCastPortal(CaptureSourceType source_type,
-                   PortalNotifier* notifier,
-                   ProxyRequestResponseHandler proxy_request_response_handler,
-                   SourcesRequestResponseSignalHandler
-                       sources_request_response_signal_handler,
-                   gpointer user_data);
   ~ScreenCastPortal();
 
   // Initialize ScreenCastPortal with series of DBus calls where we try to
@@ -136,6 +118,16 @@ class ScreenCastPortal : public xdg_portal::ScreenCapturePortalInterface {
   std::string RestoreToken() const;
 
  private:
+  // Values are set based on source type property in
+  // xdg-desktop-portal/screencast
+  // https://github.com/flatpak/xdg-desktop-portal/blob/master/data/org.freedesktop.portal.ScreenCast.xml
+  enum class CaptureSourceType : uint32_t {
+    kScreen = 0b01,
+    kWindow = 0b10,
+    kAnyScreenContent = kScreen | kWindow
+  };
+  static CaptureSourceType ToCaptureSourceType(CaptureType type);
+
   PortalNotifier* notifier_;
 
   // A PipeWire stream ID of stream we will be connecting to

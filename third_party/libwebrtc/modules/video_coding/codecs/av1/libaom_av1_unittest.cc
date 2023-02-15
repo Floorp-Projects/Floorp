@@ -22,7 +22,7 @@
 #include "api/units/time_delta.h"
 #include "api/video_codecs/video_codec.h"
 #include "api/video_codecs/video_encoder.h"
-#include "modules/video_coding/codecs/av1/libaom_av1_decoder.h"
+#include "modules/video_coding/codecs/av1/dav1d_decoder.h"
 #include "modules/video_coding/codecs/av1/libaom_av1_encoder.h"
 #include "modules/video_coding/codecs/test/encoded_video_frame_producer.h"
 #include "modules/video_coding/include/video_codec_interface.h"
@@ -73,7 +73,7 @@ VideoEncoder::Settings DefaultEncoderSettings() {
 class TestAv1Decoder {
  public:
   explicit TestAv1Decoder(int decoder_id)
-      : decoder_id_(decoder_id), decoder_(CreateLibaomAv1Decoder()) {
+      : decoder_id_(decoder_id), decoder_(CreateDav1dDecoder()) {
     if (decoder_ == nullptr) {
       ADD_FAILURE() << "Failed to create a decoder#" << decoder_id_;
       return;

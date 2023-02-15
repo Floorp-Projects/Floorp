@@ -796,14 +796,9 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
 
   webrtc::MutexLock lock(&queue_lock_);
 
-  // Move to the next frame if the current one is being used and shared
+  queue_.MoveToNextFrame();
   if (queue_.current_frame() && queue_.current_frame()->IsShared()) {
-    queue_.MoveToNextFrame();
-    if (queue_.current_frame() && queue_.current_frame()->IsShared()) {
-      RTC_LOG(LS_WARNING)
-          << "Failed to process PipeWire buffer: no available frame";
-      return;
-    }
+    RTC_DLOG(LS_WARNING) << "Overwriting frame that is still shared";
   }
 
   if (!queue_.current_frame() ||

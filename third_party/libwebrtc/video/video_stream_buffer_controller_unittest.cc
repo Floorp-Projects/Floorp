@@ -80,6 +80,21 @@ std::unique_ptr<test::FakeEncodedFrame> WithReceiveTimeFromRtpTimestamp(
   return frame;
 }
 
+class VCMTimingTest : public VCMTiming {
+ public:
+  using VCMTiming::VCMTiming;
+  void IncomingTimestamp(uint32_t rtp_timestamp,
+                         Timestamp last_packet_time) override {
+    IncomingTimestampMocked(rtp_timestamp, last_packet_time);
+    VCMTiming::IncomingTimestamp(rtp_timestamp, last_packet_time);
+  }
+
+  MOCK_METHOD(void,
+              IncomingTimestampMocked,
+              (uint32_t rtp_timestamp, Timestamp last_packet_time),
+              ());
+};
+
 class VCMReceiveStatisticsCallbackMock : public VCMReceiveStatisticsCallback {
  public:
   MOCK_METHOD(void,
@@ -210,8 +225,8 @@ class VideoStreamBufferControllerFixture
   Clock* const clock_;
   test::FakeMetronome fake_metronome_;
   DecodeSynchronizer decode_sync_;
-  VCMTiming timing_;
 
+  ::testing::NiceMock<VCMTimingTest> timing_;
   ::testing::NiceMock<VCMReceiveStatisticsCallbackMock> stats_callback_;
   std::unique_ptr<VideoStreamBufferController> buffer_;
 
@@ -739,6 +754,50 @@ TEST_P(VideoStreamBufferControllerTest, NextFrameWithOldTimestamp) {
   EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(test::WithId(2)));
 }
 
+TEST_P(VideoStreamBufferControllerTest,
+       FrameNotSetForDecodedIfFrameBufferBecomesNonDecodable) {
+  // This can happen if the frame buffer receives non-standard input. This test
+  // will simply clear the frame buffer to replicate this.
+  StartNextDecodeForceKeyframe();
+  // Initial keyframe.
+  buffer_->InsertFrame(WithReceiveTimeFromRtpTimestamp(
+      test::FakeFrameBuilder().Id(0).Time(0).SpatialLayer(1).AsLast().Build()));
+  EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Zero()), Frame(test::WithId(0)));
+
+  // Insert a frame that will become non-decodable.
+  buffer_->InsertFrame(WithReceiveTimeFromRtpTimestamp(test::FakeFrameBuilder()
+                                                           .Id(11)
+                                                           .Time(kFps30Rtp)
+                                                           .Refs({0})
+                                                           .SpatialLayer(1)
+                                                           .AsLast()
+                                                           .Build()));
+  StartNextDecode();
+  // Second layer inserted after last layer for the same frame out-of-order.
+  // This second frame requires some older frame to be decoded and so now the
+  // super-frame is no longer decodable despite already being scheduled.
+  buffer_->InsertFrame(WithReceiveTimeFromRtpTimestamp(test::FakeFrameBuilder()
+                                                           .Id(10)
+                                                           .Time(kFps30Rtp)
+                                                           .SpatialLayer(0)
+                                                           .Refs({2})
+                                                           .Build()));
+  EXPECT_THAT(WaitForFrameOrTimeout(kMaxWaitForFrame), TimedOut());
+
+  // Ensure that this frame can be decoded later.
+  StartNextDecode();
+  buffer_->InsertFrame(WithReceiveTimeFromRtpTimestamp(test::FakeFrameBuilder()
+                                                           .Id(2)
+                                                           .Time(kFps30Rtp / 2)
+                                                           .SpatialLayer(0)
+                                                           .Refs({0})
+                                                           .AsLast()
+                                                           .Build()));
+  EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(test::WithId(2)));
+  StartNextDecode();
+  EXPECT_THAT(WaitForFrameOrTimeout(kFps30Delay), Frame(test::WithId(10)));
+}
+
 INSTANTIATE_TEST_SUITE_P(VideoStreamBufferController,
                          VideoStreamBufferControllerTest,
                          ::testing::Combine(::testing::Bool(),
@@ -833,5 +892,33 @@ INSTANTIATE_TEST_SUITE_P(
             "WebRTC-ZeroPlayoutDelay/min_pacing:16ms,max_decode_queue_size:5/",
             "WebRTC-ZeroPlayoutDelay/"
             "min_pacing:16ms,max_decode_queue_size:5/")));
+
+class IncomingTimestampVideoStreamBufferControllerTest
+    : public ::testing::Test,
+      public VideoStreamBufferControllerFixture {};
+
+TEST_P(IncomingTimestampVideoStreamBufferControllerTest,
+       IncomingTimestampOnMarkerBitOnly) {
+  StartNextDecodeForceKeyframe();
+  EXPECT_CALL(timing_, IncomingTimestampMocked)
+      .Times(field_trials_.IsDisabled("WebRTC-IncomingTimestampOnMarkerBitOnly")
+                 ? 3
+                 : 1);
+  buffer_->InsertFrame(WithReceiveTimeFromRtpTimestamp(
+      test::FakeFrameBuilder().Id(0).SpatialLayer(0).Time(0).Build()));
+  buffer_->InsertFrame(WithReceiveTimeFromRtpTimestamp(
+      test::FakeFrameBuilder().Id(1).SpatialLayer(1).Time(0).Build()));
+  buffer_->InsertFrame(WithReceiveTimeFromRtpTimestamp(
+      test::FakeFrameBuilder().Id(2).SpatialLayer(2).Time(0).AsLast().Build()));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    VideoStreamBufferController,
+    IncomingTimestampVideoStreamBufferControllerTest,
+    ::testing::Combine(
+        ::testing::Bool(),
+        ::testing::Values(
+            "WebRTC-IncomingTimestampOnMarkerBitOnly/Enabled/",
+            "WebRTC-IncomingTimestampOnMarkerBitOnly/Disabled/")));
 
 }  // namespace webrtc

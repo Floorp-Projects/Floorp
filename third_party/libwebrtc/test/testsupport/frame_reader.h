@@ -110,7 +110,7 @@ class Y4mFrameReaderImpl : public YuvFrameReaderImpl {
 
  private:
   // Buffer that is used to read file and frame headers.
-  uint8_t* buffer_;
+  char* buffer_;
 };
 
 }  // namespace test

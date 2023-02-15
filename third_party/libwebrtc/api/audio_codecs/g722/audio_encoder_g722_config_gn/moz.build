@@ -52,6 +52,10 @@ if CONFIG["OS_TARGET"] == "Android":
     DEFINES["__STDC_CONSTANT_MACROS"] = True
     DEFINES["__STDC_FORMAT_MACROS"] = True
 
+    OS_LIBS += [
+        "log"
+    ]
+
 if CONFIG["OS_TARGET"] == "Darwin":
 
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
@@ -117,6 +121,10 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["_WIN32_WINNT"] = "0x0A00"
     DEFINES["_WINDOWS"] = True
     DEFINES["__STD_C"] = True
+
+    OS_LIBS += [
+        "winmm"
+    ]
 
 if CONFIG["CPU_ARCH"] == "aarch64":
 

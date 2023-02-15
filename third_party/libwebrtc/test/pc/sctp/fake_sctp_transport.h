@@ -13,6 +13,7 @@
 
 #include <memory>
 
+#include "api/transport/sctp_transport_factory_interface.h"
 #include "media/sctp/sctp_transport_internal.h"
 
 // Used for tests in this file to verify that PeerConnection responds to signals

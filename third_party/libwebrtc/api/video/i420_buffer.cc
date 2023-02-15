@@ -16,9 +16,9 @@
 
 #include "api/make_ref_counted.h"
 #include "rtc_base/checks.h"
-#include "libyuv/include/libyuv/convert.h"
-#include "libyuv/include/libyuv/planar_functions.h"
-#include "libyuv/include/libyuv/scale.h"
+#include "third_party/libyuv/include/libyuv/convert.h"
+#include "third_party/libyuv/include/libyuv/planar_functions.h"
+#include "third_party/libyuv/include/libyuv/scale.h"
 
 // Aligning pointer to 64 bytes for improved performance, e.g. use SIMD.
 static const int kBufferAlignment = 64;

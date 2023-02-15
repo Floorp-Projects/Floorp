@@ -77,35 +77,27 @@ void SimulatedThread::BlockingCall(rtc::FunctionView<void()> functor) {
   }
 }
 
-void SimulatedThread::Post(const rtc::Location& posted_from,
-                           rtc::MessageHandler* phandler,
-                           uint32_t id,
-                           rtc::MessageData* pdata,
-                           bool time_sensitive) {
-  rtc::Thread::Post(posted_from, phandler, id, pdata, time_sensitive);
+void SimulatedThread::PostTask(absl::AnyInvocable<void() &&> task) {
+  rtc::Thread::PostTask(std::move(task));
   MutexLock lock(&lock_);
   next_run_time_ = Timestamp::MinusInfinity();
 }
 
-void SimulatedThread::PostDelayed(const rtc::Location& posted_from,
-                                  int delay_ms,
-                                  rtc::MessageHandler* phandler,
-                                  uint32_t id,
-                                  rtc::MessageData* pdata) {
-  rtc::Thread::PostDelayed(posted_from, delay_ms, phandler, id, pdata);
+void SimulatedThread::PostDelayedTask(absl::AnyInvocable<void() &&> task,
+                                      TimeDelta delay) {
+  rtc::Thread::PostDelayedTask(std::move(task), delay);
   MutexLock lock(&lock_);
   next_run_time_ =
-      std::min(next_run_time_, Timestamp::Millis(rtc::TimeMillis() + delay_ms));
+      std::min(next_run_time_, Timestamp::Millis(rtc::TimeMillis()) + delay);
 }
 
-void SimulatedThread::PostAt(const rtc::Location& posted_from,
-                             int64_t target_time_ms,
-                             rtc::MessageHandler* phandler,
-                             uint32_t id,
-                             rtc::MessageData* pdata) {
-  rtc::Thread::PostAt(posted_from, target_time_ms, phandler, id, pdata);
+void SimulatedThread::PostDelayedHighPrecisionTask(
+    absl::AnyInvocable<void() &&> task,
+    TimeDelta delay) {
+  rtc::Thread::PostDelayedHighPrecisionTask(std::move(task), delay);
   MutexLock lock(&lock_);
-  next_run_time_ = std::min(next_run_time_, Timestamp::Millis(target_time_ms));
+  next_run_time_ =
+      std::min(next_run_time_, Timestamp::Millis(rtc::TimeMillis()) + delay);
 }
 
 void SimulatedThread::Stop() {
