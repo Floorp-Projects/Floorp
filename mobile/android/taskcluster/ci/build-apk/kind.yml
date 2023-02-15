@@ -51,6 +51,7 @@ tasks:
     focus-debug:
         attributes:
             code-review: true
+            shipping-product: focus
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
         description: 'Focus debug build from source code'
@@ -69,6 +70,7 @@ tasks:
     klar-debug:
         attributes:
             code-review: true
+            shipping-product: focus
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
         description: 'Klar debug build from source code'
@@ -87,6 +89,7 @@ tasks:
     fenix-debug:
         attributes:
             code-review: true
+            shipping-product: fenix
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-fenix
         description: 'Fenix debug build from source code'
@@ -109,6 +112,7 @@ tasks:
             # inherit this attribute via the multi_dep loader
         attributes:
             release-type: release
+            shipping-product: focus
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
         run-on-tasks-for: []
@@ -127,6 +131,7 @@ tasks:
         description: 'Release Klar build'
         attributes:
             release-type: release
+            shipping-product: focus
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
         run-on-tasks-for: []
@@ -145,6 +150,7 @@ tasks:
         description: 'Release Fenix build'
         attributes:
             release-type: release
+            shipping-product: fenix
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-fenix
         run-on-tasks-for: []
@@ -166,6 +172,7 @@ tasks:
             # any tasks that have this as a primary dependency will
             # inherit this attribute via the multi_dep loader
             nightly-task: true
+            shipping-product: focus
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
         run-on-tasks-for: []
@@ -184,6 +191,7 @@ tasks:
             # any tasks that have this as a primary dependency will
             # inherit this attribute via the multi_dep loader
             nightly-task: true
+            shipping-product: fenix
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-fenix
         run-on-tasks-for: []
@@ -201,6 +209,7 @@ tasks:
         description: 'Beta focus build'
         attributes:
             release-type: beta
+            shipping-product: focus
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
         run-on-tasks-for: []
@@ -219,6 +228,7 @@ tasks:
         description: 'Beta fenix build'
         attributes:
             release-type: beta
+            shipping-product: fenix
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-fenix
         run-on-tasks-for: []
@@ -235,6 +245,8 @@ tasks:
             platform: fenix-android-all/opt
 
     focus-nightly-firebase:
+        attributes:
+            shipping-product: focus
         description: 'Focus Nightly build for UI tests'
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
@@ -251,6 +263,8 @@ tasks:
             symbol: focus-nightly(Bf)
 
     fenix-nightly-firebase:
+        attributes:
+            shipping-product: fenix
         description: 'Fenix Nightly build for UI tests'
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-fenix
@@ -268,6 +282,8 @@ tasks:
             platform: fenix-android-all/opt
 
     focus-beta-firebase:
+        attributes:
+            shipping-product: focus
         description: 'Focus Beta build for UI tests'
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
@@ -284,6 +300,8 @@ tasks:
             symbol: focus-beta(Bf)
 
     fenix-beta-firebase:
+        attributes:
+            shipping-product: fenix
         description: 'Fenix Beta build for UI tests'
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-fenix
@@ -301,6 +319,8 @@ tasks:
             platform: fenix-android-all/opt
 
     focus-android-test-debug:
+        attributes:
+            shipping-product: focus
         description: 'Focus Android Test for debugging'
         attributes:
             code-review: true
@@ -324,6 +344,8 @@ tasks:
             symbol: focus-debug(Bat)
 
     fenix-android-test-debug:
+        attributes:
+            shipping-product: focus
         description: 'Fenix Debug Android Test for debugging'
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-fenix
@@ -354,6 +376,8 @@ tasks:
     # nightly means we need an androidTest APK with the same signature.
 
     focus-android-test-nightly:
+        attributes:
+            shipping-product: focus
         description: 'Focus Nightly Android Test for debugging'
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
@@ -379,6 +403,8 @@ tasks:
     # TODO: See if we can tweak the signing kind to make 2 signing jobs out of a single `android-test`
     # job.
     fenix-android-test-nightly:
+        attributes:
+            shipping-product: fenix
         description: 'Fenix Nightly Android Test for debugging'
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-fenix
@@ -403,6 +429,8 @@ tasks:
             platform: fenix-android-all/opt
 
     focus-android-test-beta:
+        attributes:
+            shipping-product: focus
         description: 'Focus Beta Android Test for debugging'
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-focus
@@ -421,6 +449,8 @@ tasks:
             symbol: focus-beta(Bat)
 
     fenix-android-test-beta:
+        attributes:
+            shipping-product: fenix
         description: 'Fenix Beta Android Test for debugging'
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-fenix
@@ -443,6 +473,8 @@ tasks:
             platform: fenix-android-all/opt
 
     fenix-android-test-mozillaonline:
+        attributes:
+            shipping-product: fenix
         description: 'Fenix Android Test mozillaonline'
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-fenix
@@ -472,6 +504,7 @@ tasks:
             external-gradle-dependencies: external-gradle-dependencies-fenix
         attributes:
             nightly: false
+            shipping-product: fenix
         run-on-tasks-for: [github-push]
         include-nightly-version: true
         include-shippable-secrets: true
@@ -493,6 +526,7 @@ tasks:
         attributes:
             release-type: beta
             shipping_phase: promote
+            shipping-product: fenix
         include-release-version: true
         include-shippable-secrets: true
         filter-incomplete-translations: true
@@ -516,6 +550,7 @@ tasks:
         attributes:
             release-type: release
             shipping_phase: promote
+            shipping-product: fenix
         include-release-version: true
         include-shippable-secrets: true
         filter-incomplete-translations: true
