@@ -1909,6 +1909,13 @@
   result_type: Value
   alias_set: custom
 
+- name: StoreSlotByIteratorIndex
+  operands:
+    object: Object
+    iterator: Object
+    value: Value
+  alias_set: custom
+
 # Load the private value expando from a DOM proxy. The target is stored in the
 # proxy object's private slot.
 # This is either an UndefinedValue (no expando), ObjectValue (the expando

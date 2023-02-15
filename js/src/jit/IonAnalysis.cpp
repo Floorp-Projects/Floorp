@@ -4653,6 +4653,7 @@ bool jit::OptimizeIteratorIndices(MIRGenerator* mir, MIRGraph& graph) {
 
       MDefinition* receiver = nullptr;
       MDefinition* idVal = nullptr;
+      MDefinition* setValue = nullptr;
       if (ins->isMegamorphicHasProp() &&
           ins->toMegamorphicHasProp()->hasOwn()) {
         receiver = ins->toMegamorphicHasProp()->object();
@@ -4666,6 +4667,14 @@ bool jit::OptimizeIteratorIndices(MIRGenerator* mir, MIRGraph& graph) {
       } else if (ins->isGetPropertyCache()) {
         receiver = ins->toGetPropertyCache()->value();
         idVal = ins->toGetPropertyCache()->idval();
+      } else if (ins->isMegamorphicSetElement()) {
+        receiver = ins->toMegamorphicSetElement()->object();
+        idVal = ins->toMegamorphicSetElement()->index();
+        setValue = ins->toMegamorphicSetElement()->value();
+      } else if (ins->isSetPropertyCache()) {
+        receiver = ins->toSetPropertyCache()->object();
+        idVal = ins->toSetPropertyCache()->idval();
+        setValue = ins->toSetPropertyCache()->value();
       }
 
       if (!receiver) {
@@ -4704,12 +4713,18 @@ bool jit::OptimizeIteratorIndices(MIRGenerator* mir, MIRGraph& graph) {
           MIteratorHasIndices::New(graph.alloc(), iter->object(), iter);
       MInstruction* replacement;
       if (ins->isHasOwnCache() || ins->isMegamorphicHasProp()) {
+        MOZ_ASSERT(!setValue);
         replacement = MConstant::New(graph.alloc(), BooleanValue(true));
-      } else {
-        MOZ_ASSERT(ins->isMegamorphicLoadSlotByValue() ||
-                   ins->isGetPropertyCache());
+      } else if (ins->isMegamorphicLoadSlotByValue() ||
+                 ins->isGetPropertyCache()) {
+        MOZ_ASSERT(!setValue);
         replacement =
             MLoadSlotByIteratorIndex::New(graph.alloc(), receiver, iter);
+      } else {
+        MOZ_ASSERT(ins->isMegamorphicSetElement() || ins->isSetPropertyCache());
+        MOZ_ASSERT(setValue);
+        replacement = MStoreSlotByIteratorIndex::New(graph.alloc(), receiver,
+                                                     iter, setValue);
       }
 
       if (!block->wrapInstructionInFastpath(ins, replacement, indicesCheck)) {

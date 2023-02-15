@@ -2443,6 +2443,42 @@ void MacroAssembler::emitMegamorphicCacheLookupExists(
   bind(&cacheMiss);
 }
 
+void MacroAssembler::extractCurrentIndexAndKindFromIterator(Register iterator,
+                                                            Register outIndex,
+                                                            Register outKind) {
+  // Load iterator object
+  Address nativeIterAddr(iterator,
+                         PropertyIteratorObject::offsetOfIteratorSlot());
+  loadPrivate(nativeIterAddr, outIndex);
+
+  // Compute offset of propertyCursor_ from propertiesBegin()
+  loadPtr(Address(outIndex, NativeIterator::offsetOfPropertyCursor()), outKind);
+  subPtr(Address(outIndex, NativeIterator::offsetOfShapesEnd()), outKind);
+
+  // Compute offset of current index from indicesBegin(). Note that because
+  // propertyCursor has already been incremented, this is actually the offset
+  // of the next index. We adjust accordingly below.
+  size_t indexAdjustment =
+      sizeof(GCPtr<JSLinearString*>) / sizeof(PropertyIndex);
+  if (indexAdjustment != 1) {
+    MOZ_ASSERT(indexAdjustment == 2);
+    rshift32(Imm32(1), outKind);
+  }
+
+  // Load current index.
+  loadPtr(Address(outIndex, NativeIterator::offsetOfPropertiesEnd()), outIndex);
+  load32(BaseIndex(outIndex, outKind, Scale::TimesOne,
+                   -int32_t(sizeof(PropertyIndex))),
+         outIndex);
+
+  // Extract kind.
+  move32(outIndex, outKind);
+  rshift32(Imm32(PropertyIndex::KindShift), outKind);
+
+  // Extract index.
+  and32(Imm32(PropertyIndex::IndexMask), outIndex);
+}
+
 void MacroAssembler::emitMegamorphicCachedSetSlot(
     ValueOperand id, Register obj, Register scratch1,
 #ifndef JS_CODEGEN_X86  // See MegamorphicSetElement in LIROps.yaml

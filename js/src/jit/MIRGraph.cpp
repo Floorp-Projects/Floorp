@@ -362,21 +362,23 @@ bool MBasicBlock::wrapInstructionInFastpath(MInstruction* ins,
     return false;
   }
 
-  // Insert phi.
-  MPhi* phi = MPhi::New(graph_.alloc());
-  if (!phi->reserveLength(2)) {
-    return false;
-  }
-  phi->addInput(fastpath);
-  fastpathBlock->setSuccessorWithPhis(join, 0);
-  phi->addInput(ins);
-  slowpathBlock->setSuccessorWithPhis(join, 1);
-  join->addPhi(phi);
+  if (ins->hasUses()) {
+    // Insert phi.
+    MPhi* phi = MPhi::New(graph_.alloc());
+    if (!phi->reserveLength(2)) {
+      return false;
+    }
+    phi->addInput(fastpath);
+    fastpathBlock->setSuccessorWithPhis(join, 0);
+    phi->addInput(ins);
+    slowpathBlock->setSuccessorWithPhis(join, 1);
+    join->addPhi(phi);
 
-  for (MUseIterator i(ins->usesBegin()), e(ins->usesEnd()); i != e;) {
-    MUse* use = *i++;
-    if (use->consumer() != phi && use->consumer() != ins->resumePoint()) {
-      use->replaceProducer(phi);
+    for (MUseIterator i(ins->usesBegin()), e(ins->usesEnd()); i != e;) {
+      MUse* use = *i++;
+      if (use->consumer() != phi && use->consumer() != ins->resumePoint()) {
+        use->replaceProducer(phi);
+      }
     }
   }
 

@@ -179,6 +179,7 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   void emitPostWriteBarrier(const LAllocation* obj);
   void emitPostWriteBarrier(Register objreg);
   void emitPostWriteBarrierS(Address address, Register prev, Register next);
+  void emitPostWriteBarrierElement(Register objreg, Register index);
 
   template <class LPostBarrierType, MIRType nurseryType>
   void visitPostWriteBarrierCommon(LPostBarrierType* lir, OutOfLineCode* ool);

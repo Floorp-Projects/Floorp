@@ -2245,6 +2245,14 @@
 
   num_temps: 2
 
+- name: StoreSlotByIteratorIndex
+  operands:
+    object: WordSized
+    iterator: WordSized
+    value: BoxedValue
+  num_temps: 2
+  mir_op: true
+
 # Patchable jump to stubs generated for a SetProperty cache.
 - name: SetPropertyCache
   operands:

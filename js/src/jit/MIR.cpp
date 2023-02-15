@@ -6857,6 +6857,11 @@ AliasSet MLoadSlotByIteratorIndex::getAliasSet() const {
                         AliasSet::DynamicSlot | AliasSet::Element);
 }
 
+AliasSet MStoreSlotByIteratorIndex::getAliasSet() const {
+  return AliasSet::Store(AliasSet::ObjectFields | AliasSet::FixedSlot |
+                         AliasSet::DynamicSlot | AliasSet::Element);
+}
+
 MDefinition* MGuardInt32IsNonNegative::foldsTo(TempAllocator& alloc) {
   MOZ_ASSERT(index()->type() == MIRType::Int32);
 
