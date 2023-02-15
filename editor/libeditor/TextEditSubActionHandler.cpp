@@ -671,12 +671,24 @@ Result<EditActionResult, nsresult> TextEditor::HandleDeleteSelectionInternal(
     rangesToDelete.EnsureRangesInTextNode(*theTextNode);
   }
 
-  nsresult rv = DeleteRangesWithTransaction(
+  Result<CaretPoint, nsresult> caretPointOrError = DeleteRangesWithTransaction(
       result.unwrap(), nsIEditor::eNoStrip, rangesToDelete);
-  if (NS_FAILED(rv)) {
+  if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
     NS_WARNING("EditorBase::DeleteRangesWithTransaction(eNoStrip) failed");
+    return caretPointOrError.propagateErr();
+  }
+
+  nsresult rv = caretPointOrError.inspect().SuggestCaretPointTo(
+      *this, {SuggestCaret::OnlyIfHasSuggestion,
+              SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+              SuggestCaret::AndIgnoreTrivialError});
+  if (NS_FAILED(rv)) {
+    NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
     return Err(rv);
   }
+  NS_WARNING_ASSERTION(rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+                       "CaretPoint::SuggestCaretPointTo() failed, but ignored");
+
   return EditActionResult::HandledResult();
 }
 

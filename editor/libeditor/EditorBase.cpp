@@ -4633,14 +4633,25 @@ nsresult EditorBase::DeleteSelectionWithTransaction(
     }
   }
 
-  nsresult rv = DeleteRangesWithTransaction(aDirectionAndAmount, aStripWrappers,
-                                            rangesToDelete);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::DeleteRangesWithTransaction() failed");
-  return rv;
+  Result<CaretPoint, nsresult> caretPointOrError = DeleteRangesWithTransaction(
+      aDirectionAndAmount, aStripWrappers, rangesToDelete);
+  if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
+    NS_WARNING("EditorBase::DeleteRangesWithTransaction() failed");
+    return caretPointOrError.unwrapErr();
+  }
+  nsresult rv = caretPointOrError.inspect().SuggestCaretPointTo(
+      *this, {SuggestCaret::OnlyIfHasSuggestion,
+              SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+              SuggestCaret::AndIgnoreTrivialError});
+  if (NS_FAILED(rv)) {
+    NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
+  }
+  NS_WARNING_ASSERTION(rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+                       "CaretPoint::SuggestCaretPointTo() failed, but ignored");
+  return NS_OK;
 }
 
-nsresult EditorBase::DeleteRangesWithTransaction(
+Result<CaretPoint, nsresult> EditorBase::DeleteRangesWithTransaction(
     nsIEditor::EDirection aDirectionAndAmount,
     nsIEditor::EStripWrappers aStripWrappers,
     const AutoRangeArray& aRangesToDelete) {
@@ -4658,15 +4669,15 @@ nsresult EditorBase::DeleteRangesWithTransaction(
         false,
         "For avoiding to throw incompatible exception for `execCommand`, fix "
         "the caller");
-    return NS_ERROR_FAILURE;
+    return Err(NS_ERROR_FAILURE);
   }
 
   RefPtr<DeleteMultipleRangesTransaction> deleteSelectionTransaction =
       CreateTransactionForDeleteSelection(howToHandleCollapsedRange,
                                           aRangesToDelete);
-  if (!deleteSelectionTransaction) {
+  if (MOZ_UNLIKELY(!deleteSelectionTransaction)) {
     NS_WARNING("EditorBase::CreateTransactionForDeleteSelection() failed");
-    return NS_ERROR_FAILURE;
+    return Err(NS_ERROR_FAILURE);
   }
 
   // XXX This is odd, this assumes that there are no multiple collapsed
@@ -4697,7 +4708,7 @@ nsresult EditorBase::DeleteRangesWithTransaction(
       *this, EditSubAction::eDeleteSelectedContent, aDirectionAndAmount,
       ignoredError);
   if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
-    return ignoredError.StealNSResult();
+    return Err(ignoredError.StealNSResult());
   }
   NS_WARNING_ASSERTION(
       !ignoredError.Failed(),
@@ -4786,10 +4797,10 @@ nsresult EditorBase::DeleteRangesWithTransaction(
   }
 
   if (NS_WARN_IF(destroyedByTransaction)) {
-    return NS_ERROR_EDITOR_DESTROYED;
+    return Err(NS_ERROR_EDITOR_DESTROYED);
   }
   if (NS_FAILED(rv)) {
-    return rv;
+    return Err(rv);
   }
 
   EditorDOMPoint pointToPutCaret =
@@ -4809,22 +4820,12 @@ nsresult EditorBase::DeleteRangesWithTransaction(
         NS_WARNING(
             "HTMLEditor::RemoveEmptyInclusiveAncestorInlineElements() "
             "failed");
-        return rv;
+        return Err(rv);
       }
     }
   }
 
-  if (AllowsTransactionsToChangeSelection() && pointToPutCaret.IsSet()) {
-    nsresult rv = CollapseSelectionTo(pointToPutCaret);
-    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rv),
-        "EditorBase::CollapseSelectionTo() failed, but ignored");
-  }
-
-  return NS_OK;
+  return CaretPoint(std::move(pointToPutCaret));
 }
 
 already_AddRefed<Element> EditorBase::CreateHTMLContent(
