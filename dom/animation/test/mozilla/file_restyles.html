@@ -516,7 +516,7 @@ waitForAllPaints(() => {
     parentElement.appendChild(div);
 
     await waitForAnimationReadyToRestyle(animation);
-    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
+    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor, "Should not be running in compositor");
 
     const markers = await observeStyling(20);
     is(markers.length, 20,

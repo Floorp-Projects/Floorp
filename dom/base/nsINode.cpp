@@ -204,7 +204,7 @@ void nsINode::nsSlots::Traverse(nsCycleCollectionTraversalCallback& cb) {
   cb.NoteXPCOMChild(mChildNodes);
 }
 
-void nsINode::nsSlots::Unlink() {
+void nsINode::nsSlots::Unlink(nsINode&) {
   if (mChildNodes) {
     mChildNodes->InvalidateCacheIfAvailable();
     ImplCycleCollectionUnlink(mChildNodes);
@@ -1490,9 +1490,8 @@ bool nsINode::Traverse(nsINode* tmp, nsCycleCollectionTraversalCallback& cb) {
 void nsINode::Unlink(nsINode* tmp) {
   tmp->ReleaseWrapper(tmp);
 
-  nsSlots* slots = tmp->GetExistingSlots();
-  if (slots) {
-    slots->Unlink();
+  if (nsSlots* slots = tmp->GetExistingSlots()) {
+    slots->Unlink(*tmp);
   }
 
   if (tmp->NodeType() != DOCUMENT_NODE &&

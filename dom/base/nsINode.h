@@ -1281,7 +1281,7 @@ class nsINode : public mozilla::dom::EventTarget {
     virtual ~nsSlots();
 
     virtual void Traverse(nsCycleCollectionTraversalCallback&);
-    virtual void Unlink();
+    virtual void Unlink(nsINode&);
 
     /**
      * A list of mutation observers
@@ -1910,6 +1910,7 @@ class nsINode : public mozilla::dom::EventTarget {
   void ClearPointerLock() { ClearBoolFlag(ElementHasPointerLock); }
   bool MayHaveAnimations() const { return GetBoolFlag(ElementHasAnimations); }
   void SetMayHaveAnimations() { SetBoolFlag(ElementHasAnimations); }
+  void ClearMayHaveAnimations() { ClearBoolFlag(ElementHasAnimations); }
   void SetHasValidDir() { SetBoolFlag(NodeHasValidDirAttribute); }
   void ClearHasValidDir() { ClearBoolFlag(NodeHasValidDirAttribute); }
   bool HasValidDir() const { return GetBoolFlag(NodeHasValidDirAttribute); }

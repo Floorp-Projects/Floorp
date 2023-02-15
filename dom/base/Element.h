@@ -567,13 +567,32 @@ class Element : public FragmentOrElement {
   void ClearServoData() { ClearServoData(GetComposedDoc()); }
   void ClearServoData(Document* aDocument);
 
+  ElementAnimationData* GetAnimationData() const {
+    if (!MayHaveAnimations()) {
+      return nullptr;
+    }
+    const nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
+    return slots ? slots->mAnimations.get() : nullptr;
+  }
+
+  ElementAnimationData& EnsureAnimationData() {
+    if (auto* anim = GetAnimationData()) {
+      return *anim;
+    }
+    return CreateAnimationData();
+  }
+
+ private:
+  ElementAnimationData& CreateAnimationData();
+
+ public:
   /**
    * Gets the custom element data used by web components custom element.
    * Custom element data is created at the first attempt to enqueue a callback.
    *
    * @return The custom element data or null if none.
    */
-  inline CustomElementData* GetCustomElementData() const {
+  CustomElementData* GetCustomElementData() const {
     if (!HasCustomElementData()) {
       return nullptr;
     }

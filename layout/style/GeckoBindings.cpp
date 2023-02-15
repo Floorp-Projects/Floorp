@@ -620,42 +620,34 @@ bool Gecko_ElementHasAnimations(const Element* aElement) {
 
 bool Gecko_ElementHasCSSAnimations(const Element* aElement) {
   PseudoStyleType pseudoType = GetPseudoTypeFromElementForAnimation(aElement);
-  nsAnimationManager::CSSAnimationCollection* collection =
-      nsAnimationManager::CSSAnimationCollection ::GetAnimationCollection(
-          aElement, pseudoType);
-
+  auto* collection =
+      nsAnimationManager::CSSAnimationCollection::Get(aElement, pseudoType);
   return collection && !collection->mAnimations.IsEmpty();
 }
 
 bool Gecko_ElementHasCSSTransitions(const Element* aElement) {
   PseudoStyleType pseudoType = GetPseudoTypeFromElementForAnimation(aElement);
-  nsTransitionManager::CSSTransitionCollection* collection =
-      nsTransitionManager::CSSTransitionCollection ::GetAnimationCollection(
-          aElement, pseudoType);
-
+  auto* collection =
+      nsTransitionManager::CSSTransitionCollection::Get(aElement, pseudoType);
   return collection && !collection->mAnimations.IsEmpty();
 }
 
 size_t Gecko_ElementTransitions_Length(const Element* aElement) {
   PseudoStyleType pseudoType = GetPseudoTypeFromElementForAnimation(aElement);
-  nsTransitionManager::CSSTransitionCollection* collection =
-      nsTransitionManager::CSSTransitionCollection ::GetAnimationCollection(
-          aElement, pseudoType);
-
+  auto* collection =
+      nsTransitionManager::CSSTransitionCollection::Get(aElement, pseudoType);
   return collection ? collection->mAnimations.Length() : 0;
 }
 
 static CSSTransition* GetCurrentTransitionAt(const Element* aElement,
                                              size_t aIndex) {
   PseudoStyleType pseudoType = GetPseudoTypeFromElementForAnimation(aElement);
-  nsTransitionManager::CSSTransitionCollection* collection =
-      nsTransitionManager::CSSTransitionCollection ::GetAnimationCollection(
-          aElement, pseudoType);
+  auto* collection =
+      nsTransitionManager::CSSTransitionCollection ::Get(aElement, pseudoType);
   if (!collection) {
     return nullptr;
   }
-  nsTArray<RefPtr<CSSTransition>>& transitions = collection->mAnimations;
-  return aIndex < transitions.Length() ? transitions[aIndex].get() : nullptr;
+  return collection->mAnimations.SafeElementAt(aIndex);
 }
 
 nsCSSPropertyID Gecko_ElementTransitions_PropertyAt(const Element* aElement,

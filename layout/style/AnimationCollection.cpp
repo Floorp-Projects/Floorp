@@ -5,7 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/AnimationCollection.h"
+#include <type_traits>
 
+#include "mozilla/ElementAnimationData.h"
 #include "mozilla/RestyleManager.h"
 #include "nsDOMMutationObserver.h"      // For nsAutoAnimationMutationBatch
 #include "mozilla/dom/CSSAnimation.h"   // For dom::CSSAnimation
@@ -14,126 +16,59 @@
 namespace mozilla {
 
 template <class AnimationType>
-/* static */ void AnimationCollection<AnimationType>::PropertyDtor(
-    void* aObject, nsAtom* aPropertyName, void* aPropertyValue, void* aData) {
-  AnimationCollection* collection =
-      static_cast<AnimationCollection*>(aPropertyValue);
-#ifdef DEBUG
-  MOZ_ASSERT(!collection->mCalledPropertyDtor, "can't call dtor twice");
-  collection->mCalledPropertyDtor = true;
-#endif
+AnimationCollection<AnimationType>::~AnimationCollection() {
+  MOZ_COUNT_DTOR(AnimationCollection);
 
-  PostRestyleMode postRestyle = collection->mCalledDestroy
-                                    ? PostRestyleMode::IfNeeded
-                                    : PostRestyleMode::Never;
+  const PostRestyleMode postRestyle =
+      mCalledDestroy ? PostRestyleMode::IfNeeded : PostRestyleMode::Never;
   {
-    nsAutoAnimationMutationBatch mb(collection->mElement->OwnerDoc());
+    nsAutoAnimationMutationBatch mb(mElement.OwnerDoc());
 
-    for (size_t animIdx = collection->mAnimations.Length(); animIdx-- != 0;) {
-      collection->mAnimations[animIdx]->CancelFromStyle(postRestyle);
+    for (size_t animIdx = mAnimations.Length(); animIdx-- != 0;) {
+      mAnimations[animIdx]->CancelFromStyle(postRestyle);
     }
   }
-  delete collection;
-}
-
-template <class AnimationType>
-/* static */ AnimationCollection<AnimationType>*
-AnimationCollection<AnimationType>::GetAnimationCollection(
-    const dom::Element* aElement, PseudoStyleType aPseudoType) {
-  if (!aElement->MayHaveAnimations()) {
-    // Early return for the most common case.
-    return nullptr;
-  }
-
-  nsAtom* propName = GetPropertyAtomForPseudoType(aPseudoType);
-  if (!propName) {
-    return nullptr;
-  }
-
-  return static_cast<AnimationCollection<AnimationType>*>(
-      aElement->GetProperty(propName));
-}
-
-template <class AnimationType>
-/* static */ AnimationCollection<AnimationType>*
-AnimationCollection<AnimationType>::GetAnimationCollection(
-    const nsIFrame* aFrame) {
-  Maybe<NonOwningAnimationTarget> pseudoElement =
-      EffectCompositor::GetAnimationElementAndPseudoForFrame(aFrame);
-  if (!pseudoElement) {
-    return nullptr;
-  }
-
-  if (!pseudoElement->mElement->MayHaveAnimations()) {
-    return nullptr;
-  }
-
-  return GetAnimationCollection(pseudoElement->mElement,
-                                pseudoElement->mPseudoType);
-}
-
-template <class AnimationType>
-/* static */ AnimationCollection<AnimationType>*
-AnimationCollection<AnimationType>::GetOrCreateAnimationCollection(
-    dom::Element* aElement, PseudoStyleType aPseudoType,
-    bool* aCreatedCollection) {
-  MOZ_ASSERT(aCreatedCollection);
-  *aCreatedCollection = false;
-
-  nsAtom* propName = GetPropertyAtomForPseudoType(aPseudoType);
-  MOZ_ASSERT(propName,
-             "Should only try to create animations for one of the"
-             " recognized pseudo types");
-
-  auto collection = static_cast<AnimationCollection<AnimationType>*>(
-      aElement->GetProperty(propName));
-  if (!collection) {
-    // FIXME: Consider arena-allocating?
-    collection = new AnimationCollection<AnimationType>(aElement, propName);
-    nsresult rv = aElement->SetProperty(
-        propName, collection, &AnimationCollection<AnimationType>::PropertyDtor,
-        false);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("SetProperty failed");
-      // The collection must be destroyed via PropertyDtor, otherwise
-      // mCalledPropertyDtor assertion is triggered in destructor.
-      AnimationCollection<AnimationType>::PropertyDtor(aElement, propName,
-                                                       collection, nullptr);
-      return nullptr;
-    }
-
-    *aCreatedCollection = true;
-    aElement->SetMayHaveAnimations();
-  }
-
-  return collection;
-}
-
-template <class AnimationType>
-/*static*/ nsAtom*
-AnimationCollection<AnimationType>::GetPropertyAtomForPseudoType(
-    PseudoStyleType aPseudoType) {
-  nsAtom* propName = nullptr;
-
-  if (aPseudoType == PseudoStyleType::NotPseudo) {
-    propName = TraitsType::ElementPropertyAtom();
-  } else if (aPseudoType == PseudoStyleType::before) {
-    propName = TraitsType::BeforePropertyAtom();
-  } else if (aPseudoType == PseudoStyleType::after) {
-    propName = TraitsType::AfterPropertyAtom();
-  } else if (aPseudoType == PseudoStyleType::marker) {
-    propName = TraitsType::MarkerPropertyAtom();
-  }
-
-  return propName;
+  LinkedListElement<SelfType>::remove();
 }
 
 template <class AnimationType>
 void AnimationCollection<AnimationType>::Destroy() {
   mCalledDestroy = true;
+  auto* data = mElement.GetAnimationData();
+  MOZ_ASSERT(data);
+  if constexpr (std::is_same_v<AnimationType, dom::CSSAnimation>) {
+    MOZ_ASSERT(data->GetAnimationCollection(mPseudo) == this);
+    data->ClearAnimationCollectionFor(mPseudo);
+  } else {
+    MOZ_ASSERT(data->GetTransitionCollection(mPseudo) == this);
+    data->ClearTransitionCollectionFor(mPseudo);
+  }
+}
 
-  // This will call our destructor.
-  mElement->RemoveProperty(mElementProperty);
+template <class AnimationType>
+AnimationCollection<AnimationType>* AnimationCollection<AnimationType>::Get(
+    const dom::Element* aElement, const PseudoStyleType aType) {
+  auto* data = aElement->GetAnimationData();
+  if (!data) {
+    return nullptr;
+  }
+  if constexpr (std::is_same_v<AnimationType, dom::CSSAnimation>) {
+    return data->GetAnimationCollection(aType);
+  } else {
+    return data->GetTransitionCollection(aType);
+  }
+}
+
+template <class AnimationType>
+/* static */ AnimationCollection<AnimationType>*
+AnimationCollection<AnimationType>::Get(const nsIFrame* aFrame) {
+  Maybe<NonOwningAnimationTarget> target =
+      EffectCompositor::GetAnimationElementAndPseudoForFrame(aFrame);
+  if (!target) {
+    return nullptr;
+  }
+
+  return Get(target->mElement, target->mPseudoType);
 }
 
 // Explicit class instantiations
