@@ -8,20 +8,20 @@
 #include <stdio.h>   // for nullptr, stdout
 #include <string.h>  // for strcmp
 
-#include "AutoRangeArray.h"              // for AutoRangeArray
-#include "ChangeAttributeTransaction.h"  // for ChangeAttributeTransaction
-#include "CompositionTransaction.h"      // for CompositionTransaction
-#include "DeleteNodeTransaction.h"       // for DeleteNodeTransaction
-#include "DeleteRangeTransaction.h"      // for DeleteRangeTransaction
-#include "DeleteTextTransaction.h"       // for DeleteTextTransaction
-#include "EditAction.h"                  // for EditSubAction
-#include "EditAggregateTransaction.h"    // for EditAggregateTransaction
-#include "EditorDOMPoint.h"              // for EditorDOMPoint
-#include "EditorUtils.h"                 // for various helper classes.
-#include "EditTransactionBase.h"         // for EditTransactionBase
-#include "EditTransactionBase.h"         // for EditTransactionBase
-#include "EditorEventListener.h"         // for EditorEventListener
-#include "HTMLEditor.h"                  // for HTMLEditor
+#include "AutoRangeArray.h"  // for AutoRangeArray
+#include "ChangeAttributeTransaction.h"
+#include "CompositionTransaction.h"
+#include "DeleteContentTransactionBase.h"
+#include "DeleteMultipleRangesTransaction.h"
+#include "DeleteNodeTransaction.h"
+#include "DeleteRangeTransaction.h"
+#include "DeleteTextTransaction.h"
+#include "EditAction.h"           // for EditSubAction
+#include "EditorDOMPoint.h"       // for EditorDOMPoint
+#include "EditorUtils.h"          // for various helper classes.
+#include "EditTransactionBase.h"  // for EditTransactionBase
+#include "EditorEventListener.h"  // for EditorEventListener
+#include "HTMLEditor.h"           // for HTMLEditor
 #include "HTMLEditorInlines.h"
 #include "HTMLEditUtils.h"           // for HTMLEditUtils
 #include "InsertNodeTransaction.h"   // for InsertNodeTransaction
@@ -3733,7 +3733,7 @@ void EditorBase::DoAfterRedoTransaction() {
   MOZ_ALWAYS_SUCCEEDS(IncrementModificationCount(1));
 }
 
-already_AddRefed<EditAggregateTransaction>
+already_AddRefed<DeleteMultipleRangesTransaction>
 EditorBase::CreateTransactionForDeleteSelection(
     HowToHandleCollapsedRange aHowToHandleCollapsedRange,
     const AutoRangeArray& aRangesToDelete) {
@@ -3748,8 +3748,8 @@ EditorBase::CreateTransactionForDeleteSelection(
   }
 
   // allocate the out-param transaction
-  RefPtr<EditAggregateTransaction> aggregateTransaction =
-      EditAggregateTransaction::Create();
+  RefPtr<DeleteMultipleRangesTransaction> transaction =
+      DeleteMultipleRangesTransaction::Create();
   for (const OwningNonNull<nsRange>& range : aRangesToDelete.Ranges()) {
     // Same with range as with selection; if it is collapsed and action
     // is eNone, do nothing.
@@ -3757,11 +3757,7 @@ EditorBase::CreateTransactionForDeleteSelection(
       RefPtr<DeleteRangeTransaction> deleteRangeTransaction =
           DeleteRangeTransaction::Create(*this, range);
       // XXX Oh, not checking if deleteRangeTransaction can modify the range...
-      DebugOnly<nsresult> rvIgnored =
-          aggregateTransaction->AppendChild(deleteRangeTransaction);
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rvIgnored),
-          "EditAggregationTransaction::AppendChild() failed, but ignored");
+      transaction->AppendChild(*deleteRangeTransaction);
       continue;
     }
 
@@ -3770,7 +3766,7 @@ EditorBase::CreateTransactionForDeleteSelection(
     }
 
     // Let's extend the collapsed range to delete content around it.
-    RefPtr<EditTransactionBase> deleteNodeOrTextTransaction =
+    RefPtr<DeleteContentTransactionBase> deleteNodeOrTextTransaction =
         CreateTransactionForCollapsedRange(range, aHowToHandleCollapsedRange);
     // XXX When there are two or more ranges and at least one of them is
     //     not editable, deleteNodeOrTextTransaction may be nullptr.
@@ -3779,19 +3775,15 @@ EditorBase::CreateTransactionForDeleteSelection(
       NS_WARNING("EditorBase::CreateTransactionForCollapsedRange() failed");
       return nullptr;
     }
-    DebugOnly<nsresult> rvIgnored =
-        aggregateTransaction->AppendChild(deleteNodeOrTextTransaction);
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rvIgnored),
-        "EditAggregationTransaction::AppendChild() failed, but ignored");
+    transaction->AppendChild(*deleteNodeOrTextTransaction);
   }
 
-  return aggregateTransaction.forget();
+  return transaction.forget();
 }
 
 // XXX: currently, this doesn't handle edge conditions because GetNext/GetPrior
 // are not implemented
-already_AddRefed<EditTransactionBase>
+already_AddRefed<DeleteContentTransactionBase>
 EditorBase::CreateTransactionForCollapsedRange(
     const nsRange& aCollapsedRange,
     HowToHandleCollapsedRange aHowToHandleCollapsedRange) {
@@ -4651,7 +4643,7 @@ nsresult EditorBase::DeleteRangesWithTransaction(
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<EditAggregateTransaction> deleteSelectionTransaction =
+  RefPtr<DeleteMultipleRangesTransaction> deleteSelectionTransaction =
       CreateTransactionForDeleteSelection(howToHandleCollapsedRange,
                                           aRangesToDelete);
   if (!deleteSelectionTransaction) {

@@ -119,25 +119,6 @@ NS_IMETHODIMP EditAggregateTransaction::Merge(nsITransaction* aOtherTransaction,
   return mChildren[0]->Merge(aOtherTransaction, aDidMerge);
 }
 
-NS_IMETHODIMP EditAggregateTransaction::AppendChild(
-    EditTransactionBase* aTransaction) {
-  if (NS_WARN_IF(!aTransaction)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  mChildren.AppendElement(*aTransaction);
-  return NS_OK;
-}
-
-NS_IMETHODIMP EditAggregateTransaction::GetName(nsAtom** aName) {
-  if (NS_WARN_IF(!aName)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  if (NS_WARN_IF(!mName)) {
-    return NS_ERROR_FAILURE;
-  }
-  *aName = do_AddRef(mName).take();
-  return NS_OK;
-}
+nsAtom* EditAggregateTransaction::GetName() const { return mName; }
 
 }  // namespace mozilla

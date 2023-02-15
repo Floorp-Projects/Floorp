@@ -14,9 +14,6 @@ webidl Range;
 #include "mozilla/EditorDOMPoint.h"
 class nsINode;
 class nsIContent;
-namespace mozilla {
-template class EditorDOMPointBase<nsINode*, nsIContent*>;
-} // namespace mozilla
 %}
 
 [ref] native EditorRawDOMPointRef(mozilla::EditorDOMPointBase<nsINode*, nsIContent*>);

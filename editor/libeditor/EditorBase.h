@@ -2553,26 +2553,23 @@ class EditorBase : public nsIEditor,
                               const AutoRangeArray& aRangesToDelete);
 
   /**
-   * Create an aggregate transaction for delete the content in aRangesToDelete.
-   * The result may include DeleteNodeTransactions and/or DeleteTextTransactions
-   * as its children.
+   * Create a transaction for delete the content in aRangesToDelete.
+   * The result may include DeleteRangeTransaction (for deleting non-collapsed
+   * range), DeleteNodeTransactions and DeleteTextTransactions (for deleting
+   * collapsed range) as its children.
    *
    * @param aHowToHandleCollapsedRange
    *                            How to handle collapsed ranges.
    * @param aRangesToDelete     The ranges to delete content.
-   * @return                    If it can remove the content in ranges, returns
-   *                            an aggregate transaction which has some
-   *                            DeleteNodeTransactions and/or
-   *                            DeleteTextTransactions as its children.
    */
-  already_AddRefed<EditAggregateTransaction>
+  already_AddRefed<DeleteMultipleRangesTransaction>
   CreateTransactionForDeleteSelection(
       HowToHandleCollapsedRange aHowToHandleCollapsedRange,
       const AutoRangeArray& aRangesToDelete);
 
   /**
-   * Create a transaction for removing the nodes and/or text around
-   * aRangeToDelete.
+   * Create a DeleteNodeTransaction or DeleteTextTransaction for removing a
+   * nodes or some text around aRangeToDelete.
    *
    * @param aCollapsedRange     The range to be removed.  This must be
    *                            collapsed.
@@ -2580,11 +2577,9 @@ class EditorBase : public nsIEditor,
    *                            How to handle aCollapsedRange.  Must
    *                            be HowToHandleCollapsedRange::ExtendBackward or
    *                            HowToHandleCollapsedRange::ExtendForward.
-   * @return                    The transaction to remove content around the
-   *                            range.  Its type is DeleteNodeTransaction or
-   *                            DeleteTextTransaction.
    */
-  already_AddRefed<EditTransactionBase> CreateTransactionForCollapsedRange(
+  already_AddRefed<DeleteContentTransactionBase>
+  CreateTransactionForCollapsedRange(
       const nsRange& aCollapsedRange,
       HowToHandleCollapsedRange aHowToHandleCollapsedRange);
 

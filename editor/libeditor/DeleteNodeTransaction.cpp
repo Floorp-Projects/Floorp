@@ -5,12 +5,15 @@
 
 #include "DeleteNodeTransaction.h"
 
+#include "EditorBase.h"
+#include "EditorDOMPoint.h"
 #include "HTMLEditUtils.h"
-#include "mozilla/EditorBase.h"
+#include "SelectionState.h"  // RangeUpdater
+#include "TextEditor.h"
+
 #include "mozilla/Logging.h"
-#include "mozilla/SelectionState.h"  // RangeUpdater
-#include "mozilla/TextEditor.h"
 #include "mozilla/ToString.h"
+
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsAString.h"
@@ -30,7 +33,7 @@ already_AddRefed<DeleteNodeTransaction> DeleteNodeTransaction::MaybeCreate(
 
 DeleteNodeTransaction::DeleteNodeTransaction(EditorBase& aEditorBase,
                                              nsIContent& aContentToDelete)
-    : mEditorBase(&aEditorBase),
+    : DeleteContentTransactionBase(aEditorBase),
       mContentToDelete(&aContentToDelete),
       mParentNode(aContentToDelete.GetParentNode()) {
   MOZ_DIAGNOSTIC_ASSERT_IF(
@@ -64,14 +67,14 @@ std::ostream& operator<<(std::ostream& aStream,
   return aStream;
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteNodeTransaction, EditTransactionBase,
-                                   mEditorBase, mContentToDelete, mParentNode,
-                                   mRefContent)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteNodeTransaction,
+                                   DeleteContentTransactionBase,
+                                   mContentToDelete, mParentNode, mRefContent)
 
-NS_IMPL_ADDREF_INHERITED(DeleteNodeTransaction, EditTransactionBase)
-NS_IMPL_RELEASE_INHERITED(DeleteNodeTransaction, EditTransactionBase)
+NS_IMPL_ADDREF_INHERITED(DeleteNodeTransaction, DeleteContentTransactionBase)
+NS_IMPL_RELEASE_INHERITED(DeleteNodeTransaction, DeleteContentTransactionBase)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeleteNodeTransaction)
-NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
+NS_INTERFACE_MAP_END_INHERITING(DeleteContentTransactionBase)
 
 bool DeleteNodeTransaction::CanDoIt() const {
   if (NS_WARN_IF(!mContentToDelete) || NS_WARN_IF(!mEditorBase) ||
@@ -108,6 +111,10 @@ NS_IMETHODIMP DeleteNodeTransaction::DoTransaction() {
   parentNode->RemoveChild(contentToDelete, error);
   NS_WARNING_ASSERTION(!error.Failed(), "nsINode::RemoveChild() failed");
   return error.StealNSResult();
+}
+
+EditorDOMPoint DeleteNodeTransaction::SuggestPointToPutCaret() const {
+  return EditorDOMPoint();
 }
 
 NS_IMETHODIMP DeleteNodeTransaction::UndoTransaction() {

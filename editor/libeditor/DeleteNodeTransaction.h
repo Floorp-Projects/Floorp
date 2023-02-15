@@ -6,7 +6,7 @@
 #ifndef DeleteNodeTransaction_h
 #define DeleteNodeTransaction_h
 
-#include "EditTransactionBase.h"
+#include "DeleteContentTransactionBase.h"
 
 #include "EditorForwards.h"
 
@@ -22,7 +22,7 @@ namespace mozilla {
 /**
  * A transaction that deletes a single element
  */
-class DeleteNodeTransaction final : public EditTransactionBase {
+class DeleteNodeTransaction final : public DeleteContentTransactionBase {
  protected:
   DeleteNodeTransaction(EditorBase& aEditorBase, nsIContent& aContentToDelete);
 
@@ -45,12 +45,14 @@ class DeleteNodeTransaction final : public EditTransactionBase {
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DeleteNodeTransaction,
-                                           EditTransactionBase)
+                                           DeleteContentTransactionBase)
 
   NS_DECL_EDITTRANSACTIONBASE
   NS_DECL_EDITTRANSACTIONBASE_GETASMETHODS_OVERRIDE(DeleteNodeTransaction)
 
-  MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
+  MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() final;
+
+  EditorDOMPoint SuggestPointToPutCaret() const final;
 
   nsIContent* GetContent() const { return mContentToDelete; }
 
@@ -59,9 +61,6 @@ class DeleteNodeTransaction final : public EditTransactionBase {
 
  protected:
   virtual ~DeleteNodeTransaction() = default;
-
-  // The editor for this transaction.
-  RefPtr<EditorBase> mEditorBase;
 
   // The element to delete.
   nsCOMPtr<nsIContent> mContentToDelete;

@@ -35,6 +35,8 @@ UNIFIED_SOURCES += [
     "ChangeStyleTransaction.cpp",
     "CompositionTransaction.cpp",
     "CSSEditUtils.cpp",
+    "DeleteContentTransactionBase.cpp",
+    "DeleteMultipleRangesTransaction.cpp",
     "DeleteNodeTransaction.cpp",
     "DeleteRangeTransaction.cpp",
     "DeleteTextTransaction.cpp",

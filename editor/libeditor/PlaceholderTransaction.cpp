@@ -52,6 +52,10 @@ NS_INTERFACE_MAP_END_INHERITING(EditAggregateTransaction)
 NS_IMPL_ADDREF_INHERITED(PlaceholderTransaction, EditAggregateTransaction)
 NS_IMPL_RELEASE_INHERITED(PlaceholderTransaction, EditAggregateTransaction)
 
+void PlaceholderTransaction::AppendChild(EditTransactionBase& aTransaction) {
+  mChildren.AppendElement(aTransaction);
+}
+
 NS_IMETHODIMP PlaceholderTransaction::DoTransaction() {
   MOZ_LOG(
       GetLogModule(), LogLevel::Info,
@@ -165,11 +169,7 @@ NS_IMETHODIMP PlaceholderTransaction::Merge(nsITransaction* aOtherTransaction,
       if (!mCompositionTransaction) {
         // this is the first IME txn in the placeholder
         mCompositionTransaction = otherCompositionTransaction;
-        DebugOnly<nsresult> rvIgnored =
-            AppendChild(otherCompositionTransaction);
-        NS_WARNING_ASSERTION(
-            NS_SUCCEEDED(rvIgnored),
-            "EditAggregateTransaction::AppendChild() failed, but ignored");
+        AppendChild(*otherCompositionTransaction);
       } else {
         bool didMerge;
         mCompositionTransaction->Merge(otherCompositionTransaction, &didMerge);
@@ -178,11 +178,7 @@ NS_IMETHODIMP PlaceholderTransaction::Merge(nsITransaction* aOtherTransaction,
           // not absorb further IME txns.  So just stack this one after it
           // and remember it as a candidate for further merges.
           mCompositionTransaction = otherCompositionTransaction;
-          DebugOnly<nsresult> rvIgnored =
-              AppendChild(otherCompositionTransaction);
-          NS_WARNING_ASSERTION(
-              NS_SUCCEEDED(rvIgnored),
-              "EditAggregateTransaction::AppendChild() failed, but ignored");
+          AppendChild(*otherCompositionTransaction);
         }
       }
     } else {
@@ -191,10 +187,7 @@ NS_IMETHODIMP PlaceholderTransaction::Merge(nsITransaction* aOtherTransaction,
       if (!otherPlaceholderTransaction) {
         // See bug 171243: just drop incoming placeholders on the floor.
         // Their children will be swallowed by this preexisting one.
-        DebugOnly<nsresult> rvIgnored = AppendChild(otherTransactionBase);
-        NS_WARNING_ASSERTION(
-            NS_SUCCEEDED(rvIgnored),
-            "EditAggregateTransaction::AppendChild() failed, but ignored");
+        AppendChild(*otherTransactionBase);
       }
     }
     *aDidMerge = true;
@@ -228,11 +221,7 @@ NS_IMETHODIMP PlaceholderTransaction::Merge(nsITransaction* aOtherTransaction,
     return NS_OK;
   }
 
-  RefPtr<nsAtom> otherTransactionName;
-  DebugOnly<nsresult> rvIgnored = otherPlaceholderTransaction->GetName(
-      getter_AddRefs(otherTransactionName));
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                       "PlaceholderTransaction::GetName() failed, but ignored");
+  RefPtr<nsAtom> otherTransactionName = otherPlaceholderTransaction->GetName();
   if (!otherTransactionName || otherTransactionName == nsGkAtoms::_empty ||
       otherTransactionName != mName) {
     MOZ_LOG(GetLogModule(), LogLevel::Debug,
@@ -312,7 +301,7 @@ NS_IMETHODIMP PlaceholderTransaction::Merge(nsITransaction* aOtherTransaction,
   // pre-existing placeholder and drop the new one on the floor.  The
   // EndPlaceHolderBatch() call on the new placeholder will be
   // forwarded to this older one.
-  rvIgnored = RememberEndingSelection();
+  DebugOnly<nsresult> rvIgnored = RememberEndingSelection();
   NS_WARNING_ASSERTION(
       NS_SUCCEEDED(rvIgnored),
       "PlaceholderTransaction::RememberEndingSelection() failed, but "

@@ -5,6 +5,7 @@
 
 #include "DeleteRangeTransaction.h"
 
+#include "DeleteContentTransactionBase.h"
 #include "DeleteNodeTransaction.h"
 #include "DeleteTextTransaction.h"
 #include "EditorBase.h"
@@ -45,6 +46,11 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteRangeTransaction,
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeleteRangeTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditAggregateTransaction)
+
+void DeleteRangeTransaction::AppendChild(
+    DeleteContentTransactionBase& aTransaction) {
+  mChildren.AppendElement(aTransaction);
+}
 
 nsresult
 DeleteRangeTransaction::MaybeExtendDeletingRangeWithSurroundingWhitespace(
@@ -280,10 +286,7 @@ nsresult DeleteRangeTransaction::AppendTransactionsToDeleteIn(
       NS_WARNING("DeleteTextTransaction::MaybeCreate() failed");
       return NS_ERROR_FAILURE;
     }
-    DebugOnly<nsresult> rvIgnored = AppendChild(deleteTextTransaction);
-    NS_WARNING_ASSERTION(
-        NS_SUCCEEDED(rvIgnored),
-        "DeleteRangeTransaction::AppendChild() failed, but ignored");
+    AppendChild(*deleteTextTransaction);
     return NS_OK;
   }
 
@@ -302,10 +305,7 @@ nsresult DeleteRangeTransaction::AppendTransactionsToDeleteIn(
     RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
         DeleteNodeTransaction::MaybeCreate(*mEditorBase, *child);
     if (deleteNodeTransaction) {
-      DebugOnly<nsresult> rvIgnored = AppendChild(deleteNodeTransaction);
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rvIgnored),
-          "DeleteRangeTransaction::AppendChild() failed, but ignored");
+      AppendChild(*deleteNodeTransaction);
     }
   }
 
@@ -350,10 +350,7 @@ nsresult DeleteRangeTransaction::AppendTransactionToDeleteText(
     NS_WARNING("DeleteTextTransaction::MaybeCreate() failed");
     return NS_ERROR_FAILURE;
   }
-  DebugOnly<nsresult> rvIgnored = AppendChild(deleteTextTransaction);
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rvIgnored),
-      "DeleteRangeTransaction::AppendChild() failed, but ignored");
+  AppendChild(*deleteTextTransaction);
   return NS_OK;
 }
 
@@ -384,10 +381,7 @@ DeleteRangeTransaction::AppendTransactionsToDeleteNodesWhoseEndBoundaryIn(
     RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
         DeleteNodeTransaction::MaybeCreate(*mEditorBase, *node->AsContent());
     if (deleteNodeTransaction) {
-      DebugOnly<nsresult> rvIgnored = AppendChild(deleteNodeTransaction);
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rvIgnored),
-          "DeleteRangeTransaction::AppendChild() failed, but ignored");
+      AppendChild(*deleteNodeTransaction);
     }
   }
   return NS_OK;
