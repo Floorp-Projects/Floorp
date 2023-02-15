@@ -574,8 +574,8 @@ static void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
   GFX_WEBRENDER_DEBUG(".capture-profiler", wr::DebugFlags::PROFILER_CAPTURE)
   GFX_WEBRENDER_DEBUG(".window-visibility",
                       wr::DebugFlags::WINDOW_VISIBILITY_DBG)
+  GFX_WEBRENDER_DEBUG(".restrict-blob-size", wr::DebugFlags::RESTRICT_BLOB_SIZE)
 #undef GFX_WEBRENDER_DEBUG
-
   gfx::gfxVars::SetWebRenderDebugFlags(flags.bits);
 }
 
