@@ -14,6 +14,7 @@
 #include <stdint.h>
 
 #include <map>
+#include <memory>
 
 #include "absl/types/optional.h"
 #include "api/sequence_checker.h"
@@ -23,23 +24,24 @@
 
 namespace webrtc {
 
-class VCMDecoderDataBase {
+class VCMDecoderDatabase {
  public:
-  VCMDecoderDataBase();
-  VCMDecoderDataBase(const VCMDecoderDataBase&) = delete;
-  VCMDecoderDataBase& operator=(const VCMDecoderDataBase&) = delete;
-  ~VCMDecoderDataBase() = default;
+  VCMDecoderDatabase();
+  VCMDecoderDatabase(const VCMDecoderDatabase&) = delete;
+  VCMDecoderDatabase& operator=(const VCMDecoderDatabase&) = delete;
+  ~VCMDecoderDatabase() = default;
 
   // Returns a pointer to the previously registered decoder or nullptr if none
   // was registered for the `payload_type`.
-  VideoDecoder* DeregisterExternalDecoder(uint8_t payload_type);
+  void DeregisterExternalDecoder(uint8_t payload_type);
   void RegisterExternalDecoder(uint8_t payload_type,
-                               VideoDecoder* external_decoder);
+                               std::unique_ptr<VideoDecoder> external_decoder);
   bool IsExternalDecoderRegistered(uint8_t payload_type) const;
 
   void RegisterReceiveCodec(uint8_t payload_type,
                             const VideoDecoder::Settings& settings);
   bool DeregisterReceiveCodec(uint8_t payload_type);
+  void DeregisterReceiveCodecs();
 
   // Returns a decoder specified by frame.PayloadType. The decoded frame
   // callback of the decoder is set to `decoded_frame_callback`. If no such
@@ -62,7 +64,7 @@ class VCMDecoderDataBase {
   // Initialization paramaters for decoders keyed by payload type.
   std::map<uint8_t, VideoDecoder::Settings> decoder_settings_;
   // Decoders keyed by payload type.
-  std::map<uint8_t, VideoDecoder*> decoders_
+  std::map<uint8_t, std::unique_ptr<VideoDecoder>> decoders_
       RTC_GUARDED_BY(decoder_sequence_checker_);
 };
 

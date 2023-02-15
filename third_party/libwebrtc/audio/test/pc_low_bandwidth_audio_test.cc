@@ -15,6 +15,10 @@
 #include "absl/strings/string_view.h"
 #include "api/test/create_network_emulation_manager.h"
 #include "api/test/create_peerconnection_quality_test_fixture.h"
+#include "api/test/metrics/chrome_perf_dashboard_metrics_exporter.h"
+#include "api/test/metrics/global_metrics_logger_and_exporter.h"
+#include "api/test/metrics/metrics_exporter.h"
+#include "api/test/metrics/stdout_metrics_exporter.h"
 #include "api/test/network_emulation_manager.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
 #include "api/test/simulated_network.h"
@@ -23,7 +27,6 @@
 #include "test/gtest.h"
 #include "test/pc/e2e/network_quality_metrics_reporter.h"
 #include "test/testsupport/file_utils.h"
-#include "test/testsupport/perf_test.h"
 
 ABSL_DECLARE_FLAG(std::string, test_case_prefix);
 ABSL_DECLARE_FLAG(int, sample_rate_hz);
@@ -53,24 +56,6 @@ std::string GetMetricTestCaseName() {
   return test_case_prefix + "_" + test_info->name();
 }
 
-std::pair<EmulatedNetworkManagerInterface*, EmulatedNetworkManagerInterface*>
-CreateTwoNetworkLinks(NetworkEmulationManager* emulation,
-                      const BuiltInNetworkBehaviorConfig& config) {
-  auto* alice_node = emulation->CreateEmulatedNode(config);
-  auto* bob_node = emulation->CreateEmulatedNode(config);
-
-  auto* alice_endpoint = emulation->CreateEndpoint(EmulatedEndpointConfig());
-  auto* bob_endpoint = emulation->CreateEndpoint(EmulatedEndpointConfig());
-
-  emulation->CreateRoute(alice_endpoint, {alice_node}, bob_endpoint);
-  emulation->CreateRoute(bob_endpoint, {bob_node}, alice_endpoint);
-
-  return {
-      emulation->CreateEmulatedNetworkManagerInterface({alice_endpoint}),
-      emulation->CreateEmulatedNetworkManagerInterface({bob_endpoint}),
-  };
-}
-
 std::unique_ptr<webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture>
 CreateTestFixture(absl::string_view test_case_name,
                   TimeController& time_controller,
@@ -88,7 +73,8 @@ CreateTestFixture(absl::string_view test_case_name,
                    bob_configurer);
   fixture->AddQualityMetricsReporter(
       std::make_unique<webrtc_pc_e2e::NetworkQualityMetricsReporter>(
-          network_links.first, network_links.second));
+          network_links.first, network_links.second,
+          test::GetGlobalMetricsLogger()));
   return fixture;
 }
 
@@ -115,7 +101,12 @@ std::string PerfResultsOutputFile() {
 
 void LogTestResults() {
   std::string perf_results_output_file = PerfResultsOutputFile();
-  EXPECT_TRUE(webrtc::test::WritePerfResults(perf_results_output_file));
+  std::vector<std::unique_ptr<MetricsExporter>> exporters;
+  exporters.push_back(std::make_unique<StdoutMetricsExporter>());
+  exporters.push_back(std::make_unique<ChromePerfDashboardMetricsExporter>(
+      perf_results_output_file));
+  EXPECT_TRUE(
+      ExportPerfMetric(*GetGlobalMetricsLogger(), std::move(exporters)));
 
   const ::testing::TestInfo* const test_info =
       ::testing::UnitTest::GetInstance()->current_test_info();
@@ -133,8 +124,8 @@ TEST(PCLowBandwidthAudioTest, PCGoodNetworkHighBitrate) {
       CreateNetworkEmulationManager();
   auto fixture = CreateTestFixture(
       GetMetricTestCaseName(), *network_emulation_manager->time_controller(),
-      CreateTwoNetworkLinks(network_emulation_manager.get(),
-                            BuiltInNetworkBehaviorConfig()),
+      network_emulation_manager->CreateEndpointPairWithTwoWayRoutes(
+          BuiltInNetworkBehaviorConfig()),
       [](PeerConfigurer* alice) {
         AudioConfig audio;
         audio.stream_label = "alice-audio";
@@ -160,7 +151,7 @@ TEST(PCLowBandwidthAudioTest, PC40kbpsNetwork) {
   config.loss_percent = 1;
   auto fixture = CreateTestFixture(
       GetMetricTestCaseName(), *network_emulation_manager->time_controller(),
-      CreateTwoNetworkLinks(network_emulation_manager.get(), config),
+      network_emulation_manager->CreateEndpointPairWithTwoWayRoutes(config),
       [](PeerConfigurer* alice) {
         AudioConfig audio;
         audio.stream_label = "alice-audio";

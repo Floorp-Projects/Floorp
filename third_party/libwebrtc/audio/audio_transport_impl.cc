@@ -20,6 +20,7 @@
 #include "modules/async_audio_processing/async_audio_processing.h"
 #include "modules/audio_processing/include/audio_frame_proxies.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/trace_event.h"
 
 namespace webrtc {
 
@@ -70,6 +71,8 @@ int Resample(const AudioFrame& frame,
              const int destination_sample_rate,
              PushResampler<int16_t>* resampler,
              int16_t* destination) {
+  TRACE_EVENT2("webrtc", "Resample", "frame sample rate", frame.sample_rate_hz_,
+               "destination_sample_rate", destination_sample_rate);
   const int number_of_channels = static_cast<int>(frame.num_channels_);
   const int target_number_of_samples_per_channel =
       destination_sample_rate / 100;
@@ -177,6 +180,7 @@ int32_t AudioTransportImpl::RecordedDataIsAvailable(
 
 void AudioTransportImpl::SendProcessedData(
     std::unique_ptr<AudioFrame> audio_frame) {
+  TRACE_EVENT0("webrtc", "AudioTransportImpl::SendProcessedData");
   RTC_DCHECK_GT(audio_frame->samples_per_channel_, 0);
   MutexLock lock(&capture_lock_);
   if (audio_senders_.empty())
@@ -202,6 +206,7 @@ int32_t AudioTransportImpl::NeedMorePlayData(const size_t nSamples,
                                              size_t& nSamplesOut,
                                              int64_t* elapsed_time_ms,
                                              int64_t* ntp_time_ms) {
+  TRACE_EVENT0("webrtc", "AudioTransportImpl::SendProcessedData");
   RTC_DCHECK_EQ(sizeof(int16_t) * nChannels, nBytesPerSample);
   RTC_DCHECK_GE(nChannels, 1);
   RTC_DCHECK_LE(nChannels, 2);
@@ -239,6 +244,8 @@ void AudioTransportImpl::PullRenderData(int bits_per_sample,
                                         void* audio_data,
                                         int64_t* elapsed_time_ms,
                                         int64_t* ntp_time_ms) {
+  TRACE_EVENT2("webrtc", "AudioTransportImpl::PullRenderData", "sample_rate",
+               sample_rate, "number_of_frames", number_of_frames);
   RTC_DCHECK_EQ(bits_per_sample, 16);
   RTC_DCHECK_GE(number_of_channels, 1);
   RTC_DCHECK_GE(sample_rate, AudioProcessing::NativeRate::kSampleRate8kHz);

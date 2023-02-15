@@ -23,6 +23,7 @@
 #include "api/sequence_checker.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "api/task_queue/task_queue_base.h"
+#include "api/units/time_delta.h"
 #include "audio/audio_level.h"
 #include "audio/channel_receive_frame_transformer_delegate.h"
 #include "audio/channel_send.h"
@@ -47,7 +48,9 @@
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/time_utils.h"
+#include "rtc_base/trace_event.h"
 #include "system_wrappers/include/metrics.h"
+#include "system_wrappers/include/ntp_time.h"
 
 namespace webrtc {
 namespace voe {
@@ -374,6 +377,8 @@ void ChannelReceive::InitFrameTransformerDelegate(
 AudioMixer::Source::AudioFrameInfo ChannelReceive::GetAudioFrameWithInfo(
     int sample_rate_hz,
     AudioFrame* audio_frame) {
+  TRACE_EVENT_BEGIN1("webrtc", "ChannelReceive::GetAudioFrameWithInfo",
+                     "sample_rate_hz", sample_rate_hz);
   RTC_DCHECK_RUNS_SERIALIZED(&audio_thread_race_checker_);
   audio_frame->sample_rate_hz_ = sample_rate_hz;
 
@@ -389,6 +394,9 @@ AudioMixer::Source::AudioFrameInfo ChannelReceive::GetAudioFrameWithInfo(
     // error so that the audio mixer module doesn't add it to the mix. As
     // a result, it won't be played out and the actions skipped here are
     // irrelevant.
+
+    TRACE_EVENT_END1("webrtc", "ChannelReceive::GetAudioFrameWithInfo", "error",
+                     1);
     return AudioMixer::Source::AudioFrameInfo::kError;
   }
 
@@ -439,7 +447,6 @@ AudioMixer::Source::AudioFrameInfo ChannelReceive::GetAudioFrameWithInfo(
 
   if (capture_start_rtp_time_stamp_ >= 0) {
     // audio_frame.timestamp_ should be valid from now on.
-
     // Compute elapsed time.
     int64_t unwrap_timestamp =
         rtp_ts_wraparound_handler_->Unwrap(audio_frame->timestamp_);
@@ -465,14 +472,19 @@ AudioMixer::Source::AudioFrameInfo ChannelReceive::GetAudioFrameWithInfo(
   // Fill in local capture clock offset in `audio_frame->packet_infos_`.
   RtpPacketInfos::vector_type packet_infos;
   for (auto& packet_info : audio_frame->packet_infos_) {
-    absl::optional<int64_t> local_capture_clock_offset;
+    absl::optional<int64_t> local_capture_clock_offset_q32x32;
     if (packet_info.absolute_capture_time().has_value()) {
-      local_capture_clock_offset =
+      local_capture_clock_offset_q32x32 =
           capture_clock_offset_updater_.AdjustEstimatedCaptureClockOffset(
               packet_info.absolute_capture_time()
                   ->estimated_capture_clock_offset);
     }
     RtpPacketInfo new_packet_info(packet_info);
+    absl::optional<TimeDelta> local_capture_clock_offset;
+    if (local_capture_clock_offset_q32x32.has_value()) {
+      local_capture_clock_offset = TimeDelta::Millis(
+          UQ32x32ToInt64Ms(*local_capture_clock_offset_q32x32));
+    }
     new_packet_info.set_local_capture_clock_offset(local_capture_clock_offset);
     packet_infos.push_back(std::move(new_packet_info));
   }
@@ -495,6 +507,8 @@ AudioMixer::Source::AudioFrameInfo ChannelReceive::GetAudioFrameWithInfo(
     }));
   }
 
+  TRACE_EVENT_END2("webrtc", "ChannelReceive::GetAudioFrameWithInfo", "gain",
+                   output_gain, "muted", muted);
   return muted ? AudioMixer::Source::AudioFrameInfo::kMuted
                : AudioMixer::Source::AudioFrameInfo::kNormal;
 }

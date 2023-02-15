@@ -34,7 +34,6 @@
 #include "api/video/video_sink_interface.h"
 #include "api/video/video_source_interface.h"
 #include "api/video/video_timing.h"
-#include "api/video_codecs/video_encoder_config.h"
 #include "api/video_codecs/video_encoder_factory.h"
 #include "call/video_receive_stream.h"
 #include "common_video/include/quality_limitation_reason.h"
@@ -53,6 +52,7 @@
 #include "rtc_base/socket.h"
 #include "rtc_base/string_encode.h"
 #include "rtc_base/strings/string_builder.h"
+#include "video/config/video_encoder_config.h"
 
 namespace rtc {
 class Timing;
@@ -391,7 +391,7 @@ struct MediaSenderInfo {
   // https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-nackcount
   uint32_t nacks_rcvd = 0;
   // https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-targetbitrate
-  double target_bitrate = 0.0;
+  absl::optional<double> target_bitrate;
   int packets_lost = 0;
   float fraction_lost = 0.0f;
   int64_t rtt_ms = 0;
@@ -595,7 +595,8 @@ struct VideoSenderInfo : public MediaSenderInfo {
   uint64_t total_encode_time_ms = 0;
   // https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-totalencodedbytestarget
   uint64_t total_encoded_bytes_target = 0;
-  uint64_t total_packet_send_delay_ms = 0;
+  // https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-totalpacketsenddelay
+  webrtc::TimeDelta total_packet_send_delay = webrtc::TimeDelta::Zero();
   bool has_entered_low_resolution = false;
   absl::optional<uint64_t> qp_sum;
   webrtc::VideoContentType content_type = webrtc::VideoContentType::UNSPECIFIED;

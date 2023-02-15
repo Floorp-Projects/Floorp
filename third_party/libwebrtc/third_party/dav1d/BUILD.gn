@@ -1,0 +1,13 @@
+import("//third_party/libaom/options.gni")
+import("../../webrtc.gni")
+
+config("dav1d_include_config") {
+  include_dirs = [
+    "/media/libdav1d/",
+    "/third_party/dav1d/include/dav1d",
+  ]
+}
+
+rtc_library("dav1d") {
+  public_configs = [ ":dav1d_include_config" ]
+}

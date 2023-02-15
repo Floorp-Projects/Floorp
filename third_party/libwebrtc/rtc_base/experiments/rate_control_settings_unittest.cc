@@ -11,9 +11,9 @@
 #include "rtc_base/experiments/rate_control_settings.h"
 
 #include "api/video_codecs/video_codec.h"
-#include "api/video_codecs/video_encoder_config.h"
 #include "test/field_trial.h"
 #include "test/gtest.h"
+#include "video/config/video_encoder_config.h"
 
 namespace webrtc {
 

@@ -329,7 +329,7 @@
     'machines': {
       'iOS64 Debug': {
         'mixins': [
-          'ios-device-15.3', 'webrtc-xctest', 'chrome-tester-service-account',
+          'ios-device-15.7', 'webrtc-xctest', 'chrome-tester-service-account',
           'xcode_13_main', 'mac_toolchain', 'has_native_resultdb_integration',
           'out_dir_arg'
         ],
@@ -352,7 +352,7 @@
       },
       'iOS64 Release': {
         'mixins': [
-          'ios-device-15.3', 'webrtc-xctest', 'chrome-tester-service-account',
+          'ios-device-15.7', 'webrtc-xctest', 'chrome-tester-service-account',
           'xcode_13_main', 'mac_toolchain', 'has_native_resultdb_integration',
           'out_dir_arg'
         ],

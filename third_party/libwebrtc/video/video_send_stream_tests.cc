@@ -16,6 +16,8 @@
 #include "api/sequence_checker.h"
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/task_queue/task_queue_base.h"
+#include "api/test/metrics/global_metrics_logger_and_exporter.h"
+#include "api/test/metrics/metric.h"
 #include "api/test/simulated_network.h"
 #include "api/video/builtin_video_bitrate_allocator_factory.h"
 #include "api/video/encoded_image.h"
@@ -66,8 +68,8 @@
 #include "test/gtest.h"
 #include "test/null_transport.h"
 #include "test/rtcp_packet_parser.h"
-#include "test/testsupport/perf_test.h"
 #include "test/video_encoder_proxy_factory.h"
+#include "video/config/encoder_stream_factory.h"
 #include "video/send_statistics_proxy.h"
 #include "video/transport_adapter.h"
 #include "video/video_send_stream.h"
@@ -1514,9 +1516,11 @@ TEST_F(VideoSendStreamTest, MinTransmitBitrateRespectsRemb) {
           EXPECT_EQ(1u, stats.substreams.size());
           int total_bitrate_bps =
               stats.substreams.begin()->second.total_bitrate_bps;
-          test::PrintResult(
-              "bitrate_stats_", "min_transmit_bitrate_low_remb", "bitrate_bps",
-              static_cast<size_t>(total_bitrate_bps), "bps", false);
+          test::GetGlobalMetricsLogger()->LogSingleValueMetric(
+              "bitrate_stats_min_transmit_bitrate_low_remb", "bitrate_bps",
+              static_cast<size_t>(total_bitrate_bps) / 1000.0,
+              test::Unit::kKilobitsPerSecond,
+              test::ImprovementDirection::kNeitherIsBetter);
           if (total_bitrate_bps > kHighBitrateBps) {
             rtp_rtcp_->SetRemb(kRembBitrateBps, {ssrc});
             bitrate_capped_ = true;
@@ -2621,11 +2625,11 @@ TEST_F(VideoSendStreamTest, TranslatesTwoLayerScreencastToTargetBitrate) {
 
    private:
     std::vector<VideoStream> CreateEncoderStreams(
-        int width,
-        int height,
+        int frame_width,
+        int frame_height,
         const VideoEncoderConfig& encoder_config) override {
       std::vector<VideoStream> streams =
-          test::CreateVideoStreams(width, height, encoder_config);
+          test::CreateVideoStreams(frame_width, frame_height, encoder_config);
       RTC_CHECK_GT(streams[0].max_bitrate_bps,
                    kScreencastMaxTargetBitrateDeltaKbps);
       streams[0].target_bitrate_bps =
@@ -4076,6 +4080,7 @@ void VideoSendStreamTest::TestTemporalLayers(
         VideoSendStream::Config* send_config,
         std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
         VideoEncoderConfig* encoder_config) override {
+      webrtc::VideoEncoder::EncoderInfo encoder_info;
       send_config->encoder_settings.encoder_factory = encoder_factory_;
       send_config->rtp.payload_name = payload_name_;
       send_config->rtp.payload_type = test::CallTest::kVideoSendPayloadType;
@@ -4084,7 +4089,7 @@ void VideoSendStreamTest::TestTemporalLayers(
       encoder_config->video_stream_factory =
           rtc::make_ref_counted<cricket::EncoderStreamFactory>(
               payload_name_, /*max_qp=*/56, /*is_screenshare=*/false,
-              /*conference_mode=*/false);
+              /*conference_mode=*/false, encoder_info);
       encoder_config->max_bitrate_bps = kMaxBitrateBps;
       if (absl::EqualsIgnoreCase(payload_name_, "VP9")) {
         encoder_config->encoder_specific_settings = rtc::make_ref_counted<

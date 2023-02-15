@@ -440,8 +440,9 @@ NetworkControlUpdate GoogCcNetworkController::OnTransportPacketsFeedback(
   }
   if (packet_feedback_only_) {
     if (!feedback_max_rtts_.empty()) {
-      int64_t sum_rtt_ms = std::accumulate(feedback_max_rtts_.begin(),
-                                           feedback_max_rtts_.end(), 0);
+      int64_t sum_rtt_ms =
+          std::accumulate(feedback_max_rtts_.begin(), feedback_max_rtts_.end(),
+                          static_cast<int64_t>(0));
       int64_t mean_rtt_ms = sum_rtt_ms / feedback_max_rtts_.size();
       if (delay_based_bwe_)
         delay_based_bwe_->OnRttUpdate(TimeDelta::Millis(mean_rtt_ms));
@@ -548,8 +549,8 @@ NetworkControlUpdate GoogCcNetworkController::OnTransportPacketsFeedback(
     bandwidth_estimation_->UpdateDelayBasedEstimate(report.feedback_time,
                                                     result.target_bitrate);
   }
-  bandwidth_estimation_->UpdateLossBasedEstimator(report,
-                                                  result.delay_detector_state);
+  bandwidth_estimation_->UpdateLossBasedEstimator(
+      report, result.delay_detector_state, probe_bitrate);
   if (result.updated) {
     // Update the estimate in the ProbeController, in case we want to probe.
     MaybeTriggerOnNetworkChanged(&update, report.feedback_time);

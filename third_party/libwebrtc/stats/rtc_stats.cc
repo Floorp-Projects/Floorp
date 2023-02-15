@@ -289,6 +289,54 @@ WEBRTC_DEFINE_RTCSTATSMEMBER(rtc_stats_internal::MapStringDouble,
                              MapToString(value_),
                              MapToStringAsDouble(value_));
 
+// Restricted members that expose hardware capabilites.
+template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<bool, StatExposureCriteria::kHardwareCapability>;
+template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<int32_t,
+                             StatExposureCriteria::kHardwareCapability>;
+template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<uint32_t,
+                             StatExposureCriteria::kHardwareCapability>;
+template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<int64_t,
+                             StatExposureCriteria::kHardwareCapability>;
+template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<uint64_t,
+                             StatExposureCriteria::kHardwareCapability>;
+template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<double, StatExposureCriteria::kHardwareCapability>;
+template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<std::string,
+                             StatExposureCriteria::kHardwareCapability>;
+template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<std::vector<bool>,
+                             StatExposureCriteria::kHardwareCapability>;
+template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<std::vector<int32_t>,
+                             StatExposureCriteria::kHardwareCapability>;
+template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<std::vector<uint32_t>,
+                             StatExposureCriteria::kHardwareCapability>;
+template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<std::vector<int64_t>,
+                             StatExposureCriteria::kHardwareCapability>;
+template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<std::vector<uint64_t>,
+                             StatExposureCriteria::kHardwareCapability>;
+template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<std::vector<double>,
+                             StatExposureCriteria::kHardwareCapability>;
+template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<std::vector<std::string>,
+                             StatExposureCriteria::kHardwareCapability>;
+template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<std::map<std::string, uint64_t>,
+                             StatExposureCriteria::kHardwareCapability>;
+template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<std::map<std::string, double>,
+                             StatExposureCriteria::kHardwareCapability>;
+
 template class RTC_EXPORT_TEMPLATE_DEFINE(RTC_EXPORT)
     RTCNonStandardStatsMember<bool>;
 template class RTC_EXPORT_TEMPLATE_DEFINE(RTC_EXPORT)

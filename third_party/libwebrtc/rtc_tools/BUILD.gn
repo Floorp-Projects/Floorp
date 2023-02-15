@@ -44,6 +44,7 @@ group("rtc_tools") {
     deps += [
       ":audioproc_f",
       ":event_log_visualizer",
+      ":rtc_event_log_to_text",
       ":unpack_aecdump",
     ]
   }
@@ -110,12 +111,14 @@ rtc_library("video_quality_analysis") {
     "../api:array_view",
     "../api:make_ref_counted",
     "../api:scoped_refptr",
+    "../api/numerics",
+    "../api/test/metrics:metric",
+    "../api/test/metrics:metrics_logger",
     "../api/video:video_frame",
     "../api/video:video_rtp_headers",
     "../common_video",
     "../rtc_base:checks",
     "../rtc_base:logging",
-    "../test:perf_test",
     "//third_party/libyuv",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
@@ -138,8 +141,11 @@ rtc_executable("frame_analyzer") {
     ":video_quality_analysis",
     "../api:make_ref_counted",
     "../api:scoped_refptr",
+    "../api/test/metrics:chrome_perf_dashboard_metrics_exporter",
+    "../api/test/metrics:global_metrics_logger_and_exporter",
+    "../api/test/metrics:metrics_exporter",
+    "../api/test/metrics:stdout_metrics_exporter",
     "../rtc_base:stringutils",
-    "../test:perf_test",
     "//third_party/abseil-cpp/absl/flags:flag",
     "//third_party/abseil-cpp/absl/flags:parse",
     "//third_party/abseil-cpp/absl/strings",
@@ -213,6 +219,8 @@ if (!is_component_build) {
       "../test:fileutils",
       "../test:rtp_test_utils",
       "../test:video_test_common",
+      "../video/config:encoder_config",
+      "../video/config:streams_config",
       "//third_party/abseil-cpp/absl/flags:flag",
       "//third_party/abseil-cpp/absl/flags:parse",
       "//third_party/abseil-cpp/absl/flags:usage",
@@ -240,6 +248,7 @@ if (!is_component_build) {
     testonly = true
     sources = [ "video_replay.cc" ]
     deps = [
+      "../api:field_trials",
       "../api/rtc_event_log",
       "../api/task_queue:default_task_queue_factory",
       "../api/test/video:function_video_factory",
@@ -270,6 +279,7 @@ if (!is_component_build) {
       "../test:test_support",
       "../test:video_test_common",
       "../test:video_test_support",
+      "../test/time_controller:time_controller",
       "//third_party/abseil-cpp/absl/flags:flag",
       "//third_party/abseil-cpp/absl/flags:parse",
     ]
@@ -490,6 +500,39 @@ if (rtc_include_tests) {
           "//third_party/abseil-cpp/absl/strings",
         ]
       }
+
+      rtc_executable("rtc_event_log_to_text") {
+        testonly = true
+        sources = [
+          "rtc_event_log_to_text/converter.cc",
+          "rtc_event_log_to_text/converter.h",
+          "rtc_event_log_to_text/main.cc",
+        ]
+        deps = [
+          "../api/rtc_event_log",
+          "../logging:ice_log",
+          "../logging:rtc_event_audio",
+          "../logging:rtc_event_begin_end",
+          "../logging:rtc_event_bwe",
+          "../logging:rtc_event_frame_events",
+          "../logging:rtc_event_generic_packet_events",
+          "../logging:rtc_event_log2_proto",
+          "../logging:rtc_event_log_impl_encoder",
+          "../logging:rtc_event_log_parser",
+          "../logging:rtc_event_log_proto",
+          "../logging:rtc_event_pacing",
+          "../logging:rtc_event_rtp_rtcp",
+          "../logging:rtc_event_video",
+          "../logging:rtc_stream_config",
+          "../rtc_base:checks",
+          "../rtc_base:logging",
+          "//third_party/abseil-cpp/absl/base:core_headers",
+          "//third_party/abseil-cpp/absl/flags:flag",
+          "//third_party/abseil-cpp/absl/flags:parse",
+          "//third_party/abseil-cpp/absl/flags:usage",
+          "//third_party/abseil-cpp/absl/strings",
+        ]
+      }
     }
 
     tools_unittests_resources = [
@@ -526,6 +569,8 @@ if (rtc_include_tests) {
         ":video_file_writer",
         ":video_quality_analysis",
         "../api:scoped_refptr",
+        "../api/test/metrics:metric",
+        "../api/test/metrics:metrics_logger",
         "../api/video:video_frame",
         "../api/video:video_rtp_headers",
         "../common_video",
@@ -533,6 +578,7 @@ if (rtc_include_tests) {
         "../rtc_base:checks",
         "../rtc_base:null_socket_server",
         "../rtc_base:threading",
+        "../system_wrappers",
         "../test:fileutils",
         "../test:test_main",
         "../test:test_support",

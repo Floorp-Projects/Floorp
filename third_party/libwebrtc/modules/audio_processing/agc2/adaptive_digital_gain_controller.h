@@ -13,6 +13,7 @@
 
 #include <memory>
 
+#include "absl/types/optional.h"
 #include "modules/audio_processing/agc2/adaptive_digital_gain_applier.h"
 #include "modules/audio_processing/agc2/adaptive_mode_level_estimator.h"
 #include "modules/audio_processing/agc2/noise_level_estimator.h"
@@ -49,6 +50,10 @@ class AdaptiveDigitalGainController {
 
   // Handles a gain change applied to the input signal (e.g., analog gain).
   void HandleInputGainChange();
+
+  // Returns the most recent speech level (dBFs) if the estimator is confident.
+  // Otherwise returns absl::nullopt.
+  absl::optional<float> GetSpeechLevelDbfsIfConfident() const;
 
  private:
   AdaptiveModeLevelEstimator speech_level_estimator_;

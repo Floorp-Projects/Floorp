@@ -40,6 +40,10 @@ if (is_android) {
   import("//build/config/android/rules.gni")
 }
 
+if (is_fuchsia) {
+  import("//build/config/fuchsia/config.gni")
+}
+
 # This declare_args is separated from the next one because args declared
 # in this one, can be read from the next one (args defined in the same
 # declare_args cannot be referenced in that scope).
@@ -148,7 +152,7 @@ declare_args() {
   rtc_use_pipewire = is_linux && use_sysroot
 
   # Set this to link PipeWire and required libraries directly instead of using the dlopen.
-  rtc_link_pipewire = !build_with_mozilla
+  rtc_link_pipewire = false
 
   # Experimental: enable use of Android AAudio which requires Android SDK 26 or above
   # and NDK r16 or above.
@@ -183,9 +187,6 @@ declare_args() {
   # bugs.webrtc.org/9213#c13 for more info.
   rtc_use_h264 =
       proprietary_codecs && !is_android && !is_ios && !(is_win && !is_clang)
-
-  # Enable this to allow vp9 codec support
-  rtc_libvpx_build_vp9 = true
 
   # Enable this flag to make webrtc::Mutex be implemented by absl::Mutex.
   rtc_use_absl_mutex = false
@@ -257,6 +258,7 @@ declare_args() {
   rtc_build_json = !build_with_mozilla
   rtc_build_libsrtp = !build_with_mozilla
   rtc_build_libvpx = !build_with_mozilla
+  rtc_libvpx_build_vp9 = true
   rtc_build_opus = !build_with_mozilla
   rtc_build_ssl = !build_with_mozilla
 

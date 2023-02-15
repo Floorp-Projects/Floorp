@@ -85,14 +85,6 @@ enum IceCandidatePairType {
 
 // These values are persisted to logs. Entries should not be renumbered and
 // numeric values should never be reused.
-enum KeyExchangeProtocolType {
-  kEnumCounterKeyProtocolDtls = 0,
-  kEnumCounterKeyProtocolSdes = 1,
-  kEnumCounterKeyProtocolMax
-};
-
-// These values are persisted to logs. Entries should not be renumbered and
-// numeric values should never be reused.
 enum KeyExchangeProtocolMedia {
   kEnumCounterKeyProtocolMediaTypeDtlsAudio = 0,
   kEnumCounterKeyProtocolMediaTypeDtlsVideo = 1,

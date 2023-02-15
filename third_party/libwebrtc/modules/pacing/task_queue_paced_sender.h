@@ -17,7 +17,6 @@
 #include <memory>
 #include <vector>
 
-#include "absl/base/attributes.h"
 #include "absl/types/optional.h"
 #include "api/field_trials_view.h"
 #include "api/sequence_checker.h"
@@ -28,9 +27,9 @@
 #include "modules/pacing/pacing_controller.h"
 #include "modules/pacing/rtp_packet_pacer.h"
 #include "modules/rtp_rtcp/source/rtp_packet_to_send.h"
+#include "modules/utility/maybe_worker_thread.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/numerics/exp_filter.h"
-#include "rtc_base/task_queue.h"
 #include "rtc_base/thread_annotations.h"
 
 namespace webrtc {
@@ -187,10 +186,13 @@ class TaskQueuePacedSender : public RtpPacketPacer, public RtpPacketSender {
   rtc::ExpFilter packet_size_ RTC_GUARDED_BY(task_queue_);
   bool include_overhead_ RTC_GUARDED_BY(task_queue_);
 
+  // TODO(webrtc:14502): Remove stats_mutex_ when pacer runs on the worker
+  // thread.
   mutable Mutex stats_mutex_;
   Stats current_stats_ RTC_GUARDED_BY(stats_mutex_);
 
-  rtc::TaskQueue task_queue_;
+  ScopedTaskSafety safety_;
+  MaybeWorkerThread task_queue_;
 };
 }  // namespace webrtc
 #endif  // MODULES_PACING_TASK_QUEUE_PACED_SENDER_H_

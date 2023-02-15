@@ -147,9 +147,12 @@ absl::optional<int64_t> VideoStreamBufferController::InsertFrame(
   int complete_units = buffer_->GetTotalNumberOfContinuousTemporalUnits();
   if (buffer_->InsertFrame(std::move(frame))) {
     RTC_DCHECK(metadata.receive_time) << "Frame receive time must be set!";
-    if (!metadata.delayed_by_retransmission && metadata.receive_time)
+    if (!metadata.delayed_by_retransmission && metadata.receive_time &&
+        (field_trials_.IsDisabled("WebRTC-IncomingTimestampOnMarkerBitOnly") ||
+         metadata.is_last_spatial_layer)) {
       timing_->IncomingTimestamp(metadata.rtp_timestamp,
                                  *metadata.receive_time);
+    }
     if (complete_units < buffer_->GetTotalNumberOfContinuousTemporalUnits()) {
       TRACE_EVENT2("webrtc",
                    "VideoStreamBufferController::InsertFrame Frame Complete",
@@ -196,7 +199,8 @@ void VideoStreamBufferController::OnFrameReady(
     absl::InlinedVector<std::unique_ptr<EncodedFrame>, 4> frames,
     Timestamp render_time) {
   RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
-  RTC_DCHECK(!frames.empty());
+  RTC_CHECK(!frames.empty())
+      << "Callers must ensure there is at least one frame to decode.";
 
   timeout_tracker_.OnEncodedFrameReleased();
 
@@ -210,7 +214,11 @@ void VideoStreamBufferController::OnFrameReady(
     keyframe_required_ = false;
 
   // Gracefully handle bad RTP timestamps and render time issues.
-  if (FrameHasBadRenderTiming(render_time, now, timing_->TargetVideoDelay())) {
+  if (FrameHasBadRenderTiming(render_time, now) ||
+      TargetVideoDelayIsTooLarge(timing_->TargetVideoDelay())) {
+    RTC_LOG(LS_WARNING) << "Resetting jitter estimator and timing module due "
+                           "to bad render timing for rtp_timestamp="
+                        << first_frame.Timestamp();
     jitter_estimator_.Reset();
     timing_->Reset();
     render_time = timing_->RenderTime(first_frame.Timestamp(), now);
@@ -277,11 +285,29 @@ void VideoStreamBufferController::OnTimeout(TimeDelta delay) {
 void VideoStreamBufferController::FrameReadyForDecode(uint32_t rtp_timestamp,
                                                       Timestamp render_time) {
   RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
-  auto frames = buffer_->ExtractNextDecodableTemporalUnit();
-  RTC_DCHECK(frames[0]->Timestamp() == rtp_timestamp)
+  // Check that the frame to decode is still valid before passing the frame for
+  // decoding.
+  auto decodable_tu_info = buffer_->DecodableTemporalUnitsInfo();
+  if (!decodable_tu_info) {
+    RTC_LOG(LS_ERROR)
+        << "The frame buffer became undecodable during the wait "
+           "to decode frame with rtp-timestamp "
+        << rtp_timestamp
+        << ". Cancelling the decode of this frame, decoding "
+           "will resume when the frame buffers become decodable again.";
+    return;
+  }
+  RTC_DCHECK_EQ(rtp_timestamp, decodable_tu_info->next_rtp_timestamp)
       << "Frame buffer's next decodable frame was not the one sent for "
-         "extraction rtp="
-      << rtp_timestamp << " extracted rtp=" << frames[0]->Timestamp();
+         "extraction.";
+  auto frames = buffer_->ExtractNextDecodableTemporalUnit();
+  if (frames.empty()) {
+    RTC_LOG(LS_ERROR)
+        << "The frame buffer should never return an empty temporal until list "
+           "when there is a decodable temporal unit.";
+    RTC_DCHECK_NOTREACHED();
+    return;
+  }
   OnFrameReady(std::move(frames), render_time);
 }
 

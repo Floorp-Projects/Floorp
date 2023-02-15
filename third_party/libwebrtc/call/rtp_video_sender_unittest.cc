@@ -153,7 +153,8 @@ class RtpVideoSenderTestFixture {
         &transport_controller_, &event_log_, &retransmission_rate_limiter_,
         std::make_unique<FecControllerDefault>(time_controller_.GetClock()),
         nullptr, CryptoOptions{}, frame_transformer,
-        field_trials ? *field_trials : field_trials_);
+        field_trials ? *field_trials : field_trials_,
+        time_controller_.GetTaskQueueFactory());
   }
 
   RtpVideoSenderTestFixture(
@@ -207,7 +208,7 @@ class RtpVideoSenderTestFixture {
   // that allow for running a `task` on the transport queue, similar to
   // SendTask().
   void RunOnTransportQueue(absl::AnyInvocable<void() &&> task) {
-    transport_controller_.GetWorkerQueue()->PostTask(std::move(task));
+    transport_controller_.GetWorkerQueue()->RunOrPost(std::move(task));
     AdvanceTime(TimeDelta::Zero());
   }
 

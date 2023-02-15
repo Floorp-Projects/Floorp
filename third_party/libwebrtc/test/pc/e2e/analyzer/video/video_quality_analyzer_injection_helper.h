@@ -30,6 +30,7 @@
 #include "rtc_base/synchronization/mutex.h"
 #include "system_wrappers/include/clock.h"
 #include "test/pc/e2e/analyzer/video/encoded_image_data_injector.h"
+#include "test/pc/e2e/analyzer/video/quality_analyzing_video_encoder.h"
 #include "test/test_video_capturer.h"
 #include "test/testsupport/video_frame_writer.h"
 
@@ -55,7 +56,7 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
       absl::string_view peer_name,
       std::unique_ptr<VideoEncoderFactory> delegate,
       double bitrate_multiplier,
-      std::map<std::string, absl::optional<int>> stream_required_spatial_index)
+      QualityAnalyzingVideoEncoder::EmulatedSFUConfigMap stream_to_sfu_config)
       const;
   // Wraps video decoder factory to give video quality analyzer access to
   // received encoded images and frames, that were decoded from them.
@@ -133,38 +134,6 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
     }
   };
 
-  class VideoFrameIdsWriter {
-   public:
-    explicit VideoFrameIdsWriter(absl::string_view file_name);
-    ~VideoFrameIdsWriter();
-
-    void WriteFrameId(uint16_t frame_id);
-
-   private:
-    const std::string file_name_;
-    FILE* output_file_;
-  };
-
-  class VideoWriter2 final : public rtc::VideoSinkInterface<VideoFrame> {
-   public:
-    VideoWriter2(test::VideoFrameWriter* video_writer,
-                 VideoFrameIdsWriter* frame_ids_writer,
-                 int sampling_modulo);
-    ~VideoWriter2() override = default;
-
-    void OnFrame(const VideoFrame& frame) override;
-
-   private:
-    test::VideoFrameWriter* const video_writer_;
-    VideoFrameIdsWriter* const frame_ids_writer_;
-    const int sampling_modulo_;
-
-    int64_t frames_counter_ = 0;
-  };
-
-  test::VideoFrameWriter* MaybeCreateVideoWriter(
-      absl::optional<std::string> file_name,
-      const PeerConnectionE2EQualityTestFixture::VideoConfig& config);
   // Creates a deep copy of the frame and passes it to the video analyzer, while
   // passing real frame to the sinks
   void OnFrame(absl::string_view peer_name, const VideoFrame& frame);
@@ -177,7 +146,6 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
   EncodedImageDataExtractor* extractor_;
 
   std::vector<std::unique_ptr<test::VideoFrameWriter>> video_writers_;
-  std::vector<std::unique_ptr<VideoFrameIdsWriter>> frame_ids_writers_;
 
   Mutex mutex_;
   int peers_count_ RTC_GUARDED_BY(mutex_);

@@ -19,7 +19,7 @@
 #include "modules/desktop_capture/desktop_capture_types.h"
 #include "modules/desktop_capture/desktop_geometry.h"
 #include "rtc_base/checks.h"
-#include "libyuv/include/libyuv/planar_functions.h"
+#include "third_party/libyuv/include/libyuv/planar_functions.h"
 
 namespace webrtc {
 

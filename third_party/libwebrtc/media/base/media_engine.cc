@@ -106,6 +106,13 @@ webrtc::RTCError CheckRtpParametersValues(
                              "num_temporal_layers to an invalid number.");
       }
     }
+
+    if (rtp_parameters.encodings[i].requested_resolution &&
+        rtp_parameters.encodings[i].scale_resolution_down_by) {
+      LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_RANGE,
+                           "Attempted to set scale_resolution_down_by and "
+                           "requested_resolution simultaniously.");
+    }
   }
 
   return webrtc::RTCError::OK();

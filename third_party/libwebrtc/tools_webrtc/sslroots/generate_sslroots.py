@@ -147,19 +147,22 @@ def _CreateCertSection(root_dir, source_file, label, options):
   command = 'openssl x509 -in %s%s -noout -C' % (root_dir, source_file)
   _PrintOutput(command, options)
   output = subprocess.getstatusoutput(command)[1]
-  renamed_output = output.replace('unsigned char XXX_',
-                                  'const unsigned char ' + label + '_')
+  decl_block = 'unsigned char .*_(%s|%s|%s)' %\
+    (_SUBJECT_NAME_ARRAY, _PUBLIC_KEY_ARRAY, _CERTIFICATE_ARRAY)
+  prog = re.compile(decl_block, re.IGNORECASE)
+  renamed_output = prog.sub('const unsigned char ' + label + r'_\1', output)
+
   filtered_output = ''
   cert_block = '^const unsigned char.*?};$'
-  prog = re.compile(cert_block, re.IGNORECASE | re.MULTILINE | re.DOTALL)
+  prog2 = re.compile(cert_block, re.IGNORECASE | re.MULTILINE | re.DOTALL)
   if not options.full_cert:
-    filtered_output = prog.sub('', renamed_output, count=2)
+    filtered_output = prog2.sub('', renamed_output, count=2)
   else:
     filtered_output = renamed_output
 
   cert_size_block = r'\d\d\d+'
-  prog2 = re.compile(cert_size_block, re.MULTILINE | re.VERBOSE)
-  result = prog2.findall(renamed_output)
+  prog3 = re.compile(cert_size_block, re.MULTILINE | re.VERBOSE)
+  result = prog3.findall(renamed_output)
   cert_size = result[len(result) - 1]
 
   return filtered_output, cert_size

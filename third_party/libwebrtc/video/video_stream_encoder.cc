@@ -33,6 +33,7 @@
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_encoder.h"
 #include "call/adaptation/resource_adaptation_processor.h"
+#include "call/adaptation/video_source_restrictions.h"
 #include "call/adaptation/video_stream_adapter.h"
 #include "modules/video_coding/include/video_codec_initializer.h"
 #include "modules/video_coding/svc/svc_rate_allocator.h"
@@ -51,6 +52,7 @@
 #include "system_wrappers/include/metrics.h"
 #include "video/adaptation/video_stream_encoder_resource_manager.h"
 #include "video/alignment_adjuster.h"
+#include "video/config/encoder_stream_factory.h"
 #include "video/frame_cadence_adapter.h"
 
 namespace webrtc {
@@ -507,7 +509,7 @@ void ApplyEncoderBitrateLimitsIfSingleActiveStream(
 }
 
 absl::optional<int> ParseVp9LowTierCoreCountThreshold(
-    const webrtc::FieldTrialsView& trials) {
+    const FieldTrialsView& trials) {
   FieldTrialFlag disable_low_tier("Disabled");
   FieldTrialParameter<int> max_core_count("max_core_count", 2);
   ParseFieldTrial({&disable_low_tier, &max_core_count},
@@ -516,6 +518,22 @@ absl::optional<int> ParseVp9LowTierCoreCountThreshold(
     return absl::nullopt;
   }
   return max_core_count.Get();
+}
+
+absl::optional<VideoSourceRestrictions> MergeRestrictions(
+    const std::vector<absl::optional<VideoSourceRestrictions>>& list) {
+  absl::optional<VideoSourceRestrictions> return_value;
+  for (const auto& res : list) {
+    if (!res) {
+      continue;
+    }
+    if (!return_value) {
+      return_value = *res;
+      continue;
+    }
+    return_value->UpdateMin(*res);
+  }
+  return return_value;
 }
 
 }  //  namespace
@@ -931,15 +949,32 @@ void VideoStreamEncoder::ReconfigureEncoder() {
     encoder_reset_required = true;
   }
 
+  // TODO(webrtc:14451) : Move AlignmentAdjuster into EncoderStreamFactory
   // Possibly adjusts scale_resolution_down_by in `encoder_config_` to limit the
   // alignment value.
   AlignmentAdjuster::GetAlignmentAndMaybeAdjustScaleFactors(
       encoder_->GetEncoderInfo(), &encoder_config_, absl::nullopt);
 
-  std::vector<VideoStream> streams =
-      encoder_config_.video_stream_factory->CreateEncoderStreams(
-          last_frame_info_->width, last_frame_info_->height, encoder_config_);
+  std::vector<VideoStream> streams;
+  if (encoder_config_.video_stream_factory) {
+    // Note: only tests set their own EncoderStreamFactory...
+    streams = encoder_config_.video_stream_factory->CreateEncoderStreams(
+        last_frame_info_->width, last_frame_info_->height, encoder_config_);
+  } else {
+    rtc::scoped_refptr<VideoEncoderConfig::VideoStreamFactoryInterface>
+        factory = rtc::make_ref_counted<cricket::EncoderStreamFactory>(
+            encoder_config_.video_format.name, encoder_config_.max_qp,
+            encoder_config_.content_type ==
+                webrtc::VideoEncoderConfig::ContentType::kScreen,
+            encoder_config_.legacy_conference_mode, encoder_->GetEncoderInfo(),
+            MergeRestrictions({latest_restrictions_, animate_restrictions_}),
+            &field_trials_);
 
+    streams = factory->CreateEncoderStreams(
+        last_frame_info_->width, last_frame_info_->height, encoder_config_);
+  }
+
+  // TODO(webrtc:14451) : Move AlignmentAdjuster into EncoderStreamFactory
   // Get alignment when actual number of layers are known.
   int alignment = AlignmentAdjuster::GetAlignmentAndMaybeAdjustScaleFactors(
       encoder_->GetEncoderInfo(), &encoder_config_, streams.size());
@@ -1130,10 +1165,30 @@ void VideoStreamEncoder::ReconfigureEncoder() {
   RTC_DCHECK_LE(codec.startBitrate, 1000000);
   max_framerate_ = codec.maxFramerate;
 
-  // Inform source about max configured framerate.
+  // Inform source about max configured framerate,
+  // requested_resolution and which layers are active.
   int max_framerate = 0;
+  // Is any layer active.
+  bool active = false;
+  // The max requested_resolution.
+  absl::optional<rtc::VideoSinkWants::FrameSize> requested_resolution;
   for (const auto& stream : streams) {
     max_framerate = std::max(stream.max_framerate, max_framerate);
+    active |= stream.active;
+    // Note: we propagate the highest requested_resolution regardless
+    // if layer is active or not.
+    if (stream.requested_resolution) {
+      if (!requested_resolution) {
+        requested_resolution.emplace(stream.requested_resolution->width,
+                                     stream.requested_resolution->height);
+      } else {
+        requested_resolution.emplace(
+            std::max(stream.requested_resolution->width,
+                     requested_resolution->width),
+            std::max(stream.requested_resolution->height,
+                     requested_resolution->height));
+      }
+    }
   }
 
   // The resolutions that we're actually encoding with.
@@ -1146,20 +1201,28 @@ void VideoStreamEncoder::ReconfigureEncoder() {
     encoder_resolutions.emplace_back(simulcastStream.width,
                                      simulcastStream.height);
   }
+
   worker_queue_->PostTask(SafeTask(
       task_safety_.flag(),
       [this, max_framerate, alignment,
-       encoder_resolutions = std::move(encoder_resolutions)]() {
+       encoder_resolutions = std::move(encoder_resolutions),
+       requested_resolution = std::move(requested_resolution), active]() {
         RTC_DCHECK_RUN_ON(worker_queue_);
         if (max_framerate !=
                 video_source_sink_controller_.frame_rate_upper_limit() ||
             alignment != video_source_sink_controller_.resolution_alignment() ||
             encoder_resolutions !=
-                video_source_sink_controller_.resolutions()) {
+                video_source_sink_controller_.resolutions() ||
+            (video_source_sink_controller_.requested_resolution() !=
+             requested_resolution) ||
+            (video_source_sink_controller_.active() != active)) {
           video_source_sink_controller_.SetFrameRateUpperLimit(max_framerate);
           video_source_sink_controller_.SetResolutionAlignment(alignment);
           video_source_sink_controller_.SetResolutions(
               std::move(encoder_resolutions));
+          video_source_sink_controller_.SetRequestedResolution(
+              requested_resolution);
+          video_source_sink_controller_.SetActive(active);
           video_source_sink_controller_.PushSourceSinkSettings();
         }
       }));
@@ -2269,6 +2332,11 @@ void VideoStreamEncoder::OnVideoSourceRestrictionsUpdated(
   RTC_LOG(LS_INFO) << "Updating sink restrictions from "
                    << (reason ? reason->Name() : std::string("<null>"))
                    << " to " << restrictions.ToString();
+
+  // TODO(webrtc:14451) Split video_source_sink_controller_
+  // so that ownership on restrictions/wants is kept on &encoder_queue_
+  latest_restrictions_ = restrictions;
+
   worker_queue_->PostTask(SafeTask(
       task_safety_.flag(), [this, restrictions = std::move(restrictions)]() {
         RTC_DCHECK_RUN_ON(worker_queue_);
@@ -2410,6 +2478,17 @@ void VideoStreamEncoder::CheckForAnimatedContent(
       RTC_LOG(LS_INFO) << "Removing resolution cap due to no consistent "
                           "animation detection.";
     }
+    // TODO(webrtc:14451) Split video_source_sink_controller_
+    // so that ownership on restrictions/wants is kept on &encoder_queue_
+    if (should_cap_resolution) {
+      animate_restrictions_ =
+          VideoSourceRestrictions(kMaxAnimationPixels,
+                                  /* target_pixels_per_frame= */ absl::nullopt,
+                                  /* max_frame_rate= */ absl::nullopt);
+    } else {
+      animate_restrictions_.reset();
+    }
+
     worker_queue_->PostTask(
         SafeTask(task_safety_.flag(), [this, should_cap_resolution]() {
           RTC_DCHECK_RUN_ON(worker_queue_);

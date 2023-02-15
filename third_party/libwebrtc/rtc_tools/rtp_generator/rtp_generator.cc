@@ -19,12 +19,13 @@
 #include "api/video_codecs/builtin_video_decoder_factory.h"
 #include "api/video_codecs/builtin_video_encoder_factory.h"
 #include "api/video_codecs/video_encoder.h"
-#include "api/video_codecs/video_encoder_config.h"
 #include "media/base/media_constants.h"
 #include "rtc_base/strings/json.h"
 #include "rtc_base/system/file_wrapper.h"
 #include "rtc_base/thread.h"
 #include "test/testsupport/file_utils.h"
+#include "video/config/encoder_stream_factory.h"
+#include "video/config/video_encoder_config.h"
 
 namespace webrtc {
 namespace {
@@ -174,6 +175,7 @@ RtpGenerator::RtpGenerator(const RtpGeneratorOptions& options)
   constexpr int kMaxBitrateBps = 2500000;  // 2.5 Mbps
 
   int stream_count = 0;
+  webrtc::VideoEncoder::EncoderInfo encoder_info;
   for (const auto& send_config : options.video_streams) {
     webrtc::VideoSendStream::Config video_config(this);
     video_config.encoder_settings.encoder_factory =
@@ -224,7 +226,7 @@ RtpGenerator::RtpGenerator(const RtpGeneratorOptions& options)
     encoder_config.video_stream_factory =
         rtc::make_ref_counted<cricket::EncoderStreamFactory>(
             video_config.rtp.payload_name, /*max qp*/ 56, /*screencast*/ false,
-            /*screenshare enabled*/ false);
+            /*screenshare enabled*/ false, encoder_info);
 
     // Setup the fake video stream for this.
     std::unique_ptr<test::FrameGeneratorCapturer> frame_generator =

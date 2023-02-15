@@ -132,6 +132,7 @@ rtc_library("rtp_rtcp_format") {
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/base:core_headers",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
     "//third_party/abseil-cpp/absl/types:variant",
@@ -319,15 +320,11 @@ rtc_library("rtp_rtcp") {
     "../../rtc_base/synchronization:mutex",
     "../../rtc_base/system:no_unique_address",
     "../../rtc_base/task_utils:repeating_task",
-    "../../rtc_base/time:timestamp_extrapolator",
     "../../system_wrappers",
     "../../system_wrappers:metrics",
     "../remote_bitrate_estimator",
     "../video_coding:codec_globals_headers",
   ]
-  if (build_with_mozilla) {
-    deps -= [ "../../api:libjingle_peerconnection_api" ]
-  }
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/base:core_headers",
@@ -369,6 +366,7 @@ rtc_source_set("rtp_rtcp_legacy") {
     "../remote_bitrate_estimator",
   ]
   absl_deps = [
+    "//third_party/abseil-cpp/absl/base:core_headers",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
@@ -452,7 +450,6 @@ rtc_library("fec_test_helper") {
   ]
 }
 
-if (rtc_include_tests) {
 rtc_library("mock_rtp_rtcp") {
   testonly = true
   public = [
@@ -472,7 +469,6 @@ rtc_library("mock_rtp_rtcp") {
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
-}
 }
 
 rtc_library("rtp_packetizer_av1_test_helper") {
@@ -617,6 +613,7 @@ if (rtc_include_tests) {
       "../../api:time_controller",
       "../../api:transport_api",
       "../../api/rtc_event_log",
+      "../../api/task_queue",
       "../../api/transport:field_trial_based_config",
       "../../api/transport/rtp:dependency_descriptor",
       "../../api/units:data_rate",

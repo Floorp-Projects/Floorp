@@ -14,17 +14,19 @@
 #include <utility>
 
 #include "absl/strings/string_view.h"
+#include "modules/rtp_rtcp/source/rtp_util.h"
+#include "rtc_base/event.h"
 
 namespace webrtc {
 
 DegradedCall::FakeNetworkPipeOnTaskQueue::FakeNetworkPipeOnTaskQueue(
     TaskQueueBase* task_queue,
-    const ScopedTaskSafety& task_safety,
+    rtc::scoped_refptr<PendingTaskSafetyFlag> call_alive,
     Clock* clock,
     std::unique_ptr<NetworkBehaviorInterface> network_behavior)
     : clock_(clock),
       task_queue_(task_queue),
-      task_safety_(task_safety),
+      call_alive_(std::move(call_alive)),
       pipe_(clock, std::move(network_behavior)) {}
 
 void DegradedCall::FakeNetworkPipeOnTaskQueue::SendRtp(
@@ -61,13 +63,13 @@ bool DegradedCall::FakeNetworkPipeOnTaskQueue::Process() {
     return false;
   }
 
-  task_queue_->PostTask(SafeTask(task_safety_.flag(), [this, time_to_next] {
+  task_queue_->PostTask(SafeTask(call_alive_, [this, time_to_next] {
     RTC_DCHECK_RUN_ON(task_queue_);
     int64_t next_process_time = *time_to_next + clock_->TimeInMilliseconds();
     if (!next_process_ms_ || next_process_time < *next_process_ms_) {
       next_process_ms_ = next_process_time;
       task_queue_->PostDelayedHighPrecisionTask(
-          SafeTask(task_safety_.flag(),
+          SafeTask(call_alive_,
                    [this] {
                      RTC_DCHECK_RUN_ON(task_queue_);
                      if (!Process()) {
@@ -126,6 +128,54 @@ bool DegradedCall::FakeNetworkPipeTransportAdapter::SendRtcp(
   return true;
 }
 
+DegradedCall::ThreadedPacketReceiver::ThreadedPacketReceiver(
+    webrtc::TaskQueueBase* worker_thread,
+    webrtc::TaskQueueBase* network_thread,
+    rtc::scoped_refptr<PendingTaskSafetyFlag> call_alive,
+    webrtc::PacketReceiver* receiver)
+    : worker_thread_(worker_thread),
+      network_thread_(network_thread),
+      call_alive_(std::move(call_alive)),
+      receiver_(receiver) {}
+
+DegradedCall::ThreadedPacketReceiver::~ThreadedPacketReceiver() = default;
+
+PacketReceiver::DeliveryStatus
+DegradedCall::ThreadedPacketReceiver::DeliverPacket(
+    MediaType media_type,
+    rtc::CopyOnWriteBuffer packet,
+    int64_t packet_time_us) {
+  // `Call::DeliverPacket` expects RTCP packets to be delivered from the
+  // network thread and RTP packets to be delivered from the worker thread.
+  // Because `FakeNetworkPipe` queues packets, the thread used when this packet
+  // is delivered to `DegradedCall::DeliverPacket` may differ from the thread
+  // used when this packet is delivered to
+  // `ThreadedPacketReceiver::DeliverPacket`. To solve this problem, always
+  // make sure that packets are sent in the correct thread.
+  if (IsRtcpPacket(packet)) {
+    if (!network_thread_->IsCurrent()) {
+      network_thread_->PostTask(
+          SafeTask(call_alive_, [receiver = receiver_, media_type,
+                                 packet = std::move(packet), packet_time_us]() {
+            receiver->DeliverPacket(media_type, std::move(packet),
+                                    packet_time_us);
+          }));
+      return DELIVERY_OK;
+    }
+  } else {
+    if (!worker_thread_->IsCurrent()) {
+      worker_thread_->PostTask([receiver = receiver_, media_type,
+                                packet = std::move(packet), packet_time_us]() {
+        receiver->DeliverPacket(media_type, std::move(packet), packet_time_us);
+      });
+      return DELIVERY_OK;
+    }
+  }
+
+  return receiver_->DeliverPacket(media_type, std::move(packet),
+                                  packet_time_us);
+}
+
 /* Mozilla: Avoid this since it could use GetRealTimeClock().
 DegradedCall::DegradedCall(
     std::unique_ptr<Call> call,
@@ -133,6 +183,7 @@ DegradedCall::DegradedCall(
     const std::vector<TimeScopedNetworkConfig>& receive_configs)
     : clock_(Clock::GetRealTimeClock()),
       call_(std::move(call)),
+      call_alive_(PendingTaskSafetyFlag::CreateDetached()),
       send_config_index_(0),
       send_configs_(send_configs),
       send_simulated_network_(nullptr),
@@ -143,11 +194,13 @@ DegradedCall::DegradedCall(
     receive_simulated_network_ = network.get();
     receive_pipe_ =
         std::make_unique<webrtc::FakeNetworkPipe>(clock_, std::move(network));
-    receive_pipe_->SetReceiver(call_->Receiver());
+    packet_receiver_ = std::make_unique<ThreadedPacketReceiver>(
+        call_->worker_thread(), call_->network_thread(), call_alive_,
+        call_->Receiver());
+    receive_pipe_->SetReceiver(packet_receiver_.get());
     if (receive_configs_.size() > 1) {
       call_->network_thread()->PostDelayedTask(
-          SafeTask(task_safety_.flag(),
-                   [this] { UpdateReceiveNetworkConfig(); }),
+          SafeTask(call_alive_, [this] { UpdateReceiveNetworkConfig(); }),
           receive_configs_[0].duration);
     }
   }
@@ -155,17 +208,30 @@ DegradedCall::DegradedCall(
     auto network = std::make_unique<SimulatedNetwork>(send_configs_[0]);
     send_simulated_network_ = network.get();
     send_pipe_ = std::make_unique<FakeNetworkPipeOnTaskQueue>(
-        call_->network_thread(), task_safety_, clock_, std::move(network));
+        call_->network_thread(), call_alive_, clock_, std::move(network));
     if (send_configs_.size() > 1) {
       call_->network_thread()->PostDelayedTask(
-          SafeTask(task_safety_.flag(), [this] { UpdateSendNetworkConfig(); }),
+          SafeTask(call_alive_, [this] { UpdateSendNetworkConfig(); }),
           send_configs_[0].duration);
     }
   }
 }
 */
 
-DegradedCall::~DegradedCall() = default;
+DegradedCall::~DegradedCall() {
+  RTC_DCHECK_RUN_ON(call_->worker_thread());
+  // Thread synchronization is required to call `SetNotAlive`.
+  // Otherwise, when the `DegradedCall` object is destroyed but
+  // `SetNotAlive` has not yet been called,
+  // another Closure guarded by `call_alive_` may be called.
+  rtc::Event event;
+  call_->network_thread()->PostTask(
+      [flag = std::move(call_alive_), &event]() mutable {
+        flag->SetNotAlive();
+        event.Set();
+      });
+  event.Wait(rtc::Event::kForever);
+}
 
 AudioSendStream* DegradedCall::CreateAudioSendStream(
     const AudioSendStream::Config& config) {
@@ -354,7 +420,7 @@ void DegradedCall::UpdateSendNetworkConfig() {
   send_config_index_ = (send_config_index_ + 1) % send_configs_.size();
   send_simulated_network_->SetConfig(send_configs_[send_config_index_]);
   call_->network_thread()->PostDelayedTask(
-      SafeTask(task_safety_.flag(), [this] { UpdateSendNetworkConfig(); }),
+      SafeTask(call_alive_, [this] { UpdateSendNetworkConfig(); }),
       send_configs_[send_config_index_].duration);
 }
 
@@ -363,7 +429,7 @@ void DegradedCall::UpdateReceiveNetworkConfig() {
   receive_simulated_network_->SetConfig(
       receive_configs_[receive_config_index_]);
   call_->network_thread()->PostDelayedTask(
-      SafeTask(task_safety_.flag(), [this] { UpdateReceiveNetworkConfig(); }),
+      SafeTask(call_alive_, [this] { UpdateReceiveNetworkConfig(); }),
       receive_configs_[receive_config_index_].duration);
 }
 }  // namespace webrtc

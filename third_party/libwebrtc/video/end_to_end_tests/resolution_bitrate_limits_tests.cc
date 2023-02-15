@@ -18,6 +18,7 @@
 #include "test/field_trial.h"
 #include "test/gtest.h"
 #include "test/video_encoder_proxy_factory.h"
+#include "video/config/encoder_stream_factory.h"
 
 namespace webrtc {
 namespace test {
@@ -128,6 +129,7 @@ class InitEncodeTest : public test::EndToEndTest,
       VideoSendStream::Config* send_config,
       std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
       VideoEncoderConfig* encoder_config) override {
+    webrtc::VideoEncoder::EncoderInfo encoder_info;
     send_config->encoder_settings.encoder_factory = &encoder_factory_;
     send_config->rtp.payload_name = payload_name_;
     send_config->rtp.payload_type = test::CallTest::kVideoSendPayloadType;
@@ -136,7 +138,7 @@ class InitEncodeTest : public test::EndToEndTest,
     encoder_config->video_stream_factory =
         rtc::make_ref_counted<cricket::EncoderStreamFactory>(
             payload_name_, /*max qp*/ 0, /*screencast*/ false,
-            /*screenshare enabled*/ false);
+            /*screenshare enabled*/ false, encoder_info);
     encoder_config->max_bitrate_bps = -1;
     if (configs_.size() == 1 && configs_[0].bitrate.max)
       encoder_config->max_bitrate_bps = configs_[0].bitrate.max->bps();

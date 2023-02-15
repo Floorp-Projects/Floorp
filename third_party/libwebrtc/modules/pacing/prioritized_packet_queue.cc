@@ -180,6 +180,13 @@ std::unique_ptr<RtpPacketToSend> PrioritizedPacketQueue::Pop() {
       last_update_time_ - packet.enqueue_time - pause_time_sum_;
   queue_time_sum_ -= time_in_non_paused_state;
 
+  // Set the time spent in the send queue, which is the per-packet equivalent of
+  // totalPacketSendDelay. The notion of being paused is an implementation
+  // detail that we do not want to expose, so it makes sense to report the
+  // metric excluding the pause time. This also avoids spikes in the metric.
+  // https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-totalpacketsenddelay
+  packet.packet->set_time_in_send_queue(time_in_non_paused_state);
+
   RTC_DCHECK(size_packets_ > 0 || queue_time_sum_ == TimeDelta::Zero());
 
   RTC_CHECK(packet.enqueue_time_iterator != enqueue_times_.end());

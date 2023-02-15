@@ -90,7 +90,6 @@ DEPRECATED_RtpSenderEgress::DEPRECATED_RtpSenderEgress(
       timestamp_offset_(0),
       max_delay_it_(send_delays_.end()),
       sum_delays_ms_(0),
-      total_packet_send_delay_ms_(0),
       send_rates_(kNumMediaTypes,
                   {kBitrateStatisticsWindowMs, RateStatistics::kBpsScale}),
       rtp_sequence_number_map_(need_rtp_packet_infos_
@@ -341,7 +340,6 @@ void DEPRECATED_RtpSenderEgress::UpdateDelayStatistics(int64_t capture_time_ms,
 
   int avg_delay_ms = 0;
   int max_delay_ms = 0;
-  uint64_t total_packet_send_delay_ms = 0;
   {
     MutexLock lock(&lock_);
     // Compute the max and average of the recent capture-to-send delays.
@@ -392,8 +390,6 @@ void DEPRECATED_RtpSenderEgress::UpdateDelayStatistics(int64_t capture_time_ms,
       max_delay_it_ = it;
     }
     sum_delays_ms_ += new_send_delay;
-    total_packet_send_delay_ms_ += new_send_delay;
-    total_packet_send_delay_ms = total_packet_send_delay_ms_;
 
     size_t num_delays = send_delays_.size();
     RTC_DCHECK(max_delay_it_ != send_delays_.end());
@@ -405,8 +401,8 @@ void DEPRECATED_RtpSenderEgress::UpdateDelayStatistics(int64_t capture_time_ms,
     avg_delay_ms =
         rtc::dchecked_cast<int>((sum_delays_ms_ + num_delays / 2) / num_delays);
   }
-  send_side_delay_observer_->SendSideDelayUpdated(
-      avg_delay_ms, max_delay_ms, total_packet_send_delay_ms, ssrc);
+  send_side_delay_observer_->SendSideDelayUpdated(avg_delay_ms, max_delay_ms,
+                                                  ssrc);
 }
 
 void DEPRECATED_RtpSenderEgress::RecomputeMaxSendDelay() {

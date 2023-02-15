@@ -14,6 +14,7 @@
 #include <utility>
 
 #include "absl/memory/memory.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "api/transport/network_types.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/experiments/field_trial_parser.h"
@@ -72,9 +73,7 @@ TaskQueuePacedSender::TaskQueuePacedSender(
       is_shutdown_(false),
       packet_size_(/*alpha=*/0.95),
       include_overhead_(false),
-      task_queue_(task_queue_factory->CreateTaskQueue(
-          "TaskQueuePacedSender",
-          TaskQueueFactory::Priority::NORMAL)) {
+      task_queue_(field_trials, "TaskQueuePacedSender", task_queue_factory) {
   RTC_DCHECK_GE(max_hold_back_window_, PacingController::kMinSleepTime);
   // There are multiple field trials that can affect burst. If multiple bursts
   // are specified we pick the largest of the values.
@@ -95,14 +94,14 @@ TaskQueuePacedSender::~TaskQueuePacedSender() {
   // Post an immediate task to mark the queue as shutting down.
   // The rtc::TaskQueue destructor will wait for pending tasks to
   // complete before continuing.
-  task_queue_.PostTask([&]() {
+  task_queue_.RunOrPost([&]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
     is_shutdown_ = true;
   });
 }
 
 void TaskQueuePacedSender::EnsureStarted() {
-  task_queue_.PostTask([this]() {
+  task_queue_.RunOrPost([this]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
     is_started_ = true;
     MaybeProcessPackets(Timestamp::MinusInfinity());
@@ -111,7 +110,7 @@ void TaskQueuePacedSender::EnsureStarted() {
 
 void TaskQueuePacedSender::CreateProbeClusters(
     std::vector<ProbeClusterConfig> probe_cluster_configs) {
-  task_queue_.PostTask(
+  task_queue_.RunOrPost(
       [this, probe_cluster_configs = std::move(probe_cluster_configs)]() {
         RTC_DCHECK_RUN_ON(&task_queue_);
         pacing_controller_.CreateProbeClusters(probe_cluster_configs);
@@ -120,14 +119,14 @@ void TaskQueuePacedSender::CreateProbeClusters(
 }
 
 void TaskQueuePacedSender::Pause() {
-  task_queue_.PostTask([this]() {
+  task_queue_.RunOrPost([this]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
     pacing_controller_.Pause();
   });
 }
 
 void TaskQueuePacedSender::Resume() {
-  task_queue_.PostTask([this]() {
+  task_queue_.RunOrPost([this]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
     pacing_controller_.Resume();
     MaybeProcessPackets(Timestamp::MinusInfinity());
@@ -135,7 +134,7 @@ void TaskQueuePacedSender::Resume() {
 }
 
 void TaskQueuePacedSender::SetCongested(bool congested) {
-  task_queue_.PostTask([this, congested]() {
+  task_queue_.RunOrPost([this, congested]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
     pacing_controller_.SetCongested(congested);
     MaybeProcessPackets(Timestamp::MinusInfinity());
@@ -144,7 +143,7 @@ void TaskQueuePacedSender::SetCongested(bool congested) {
 
 void TaskQueuePacedSender::SetPacingRates(DataRate pacing_rate,
                                           DataRate padding_rate) {
-  task_queue_.PostTask([this, pacing_rate, padding_rate]() {
+  task_queue_.RunOrPost([this, pacing_rate, padding_rate]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
     pacing_controller_.SetPacingRates(pacing_rate, padding_rate);
     MaybeProcessPackets(Timestamp::MinusInfinity());
@@ -153,30 +152,31 @@ void TaskQueuePacedSender::SetPacingRates(DataRate pacing_rate,
 
 void TaskQueuePacedSender::EnqueuePackets(
     std::vector<std::unique_ptr<RtpPacketToSend>> packets) {
-  task_queue_.PostTask([this, packets = std::move(packets)]() mutable {
-    RTC_DCHECK_RUN_ON(&task_queue_);
-    TRACE_EVENT0(TRACE_DISABLED_BY_DEFAULT("webrtc"),
-                 "TaskQueuePacedSender::EnqueuePackets");
-    for (auto& packet : packets) {
-      TRACE_EVENT2(TRACE_DISABLED_BY_DEFAULT("webrtc"),
-                   "TaskQueuePacedSender::EnqueuePackets::Loop",
-                   "sequence_number", packet->SequenceNumber(), "rtp_timestamp",
-                   packet->Timestamp());
+  task_queue_.TaskQueueForPost()->PostTask(task_queue_.MaybeSafeTask(
+      safety_.flag(), [this, packets = std::move(packets)]() mutable {
+        RTC_DCHECK_RUN_ON(&task_queue_);
+        TRACE_EVENT0(TRACE_DISABLED_BY_DEFAULT("webrtc"),
+                     "TaskQueuePacedSender::EnqueuePackets");
+        for (auto& packet : packets) {
+          TRACE_EVENT2(TRACE_DISABLED_BY_DEFAULT("webrtc"),
+                       "TaskQueuePacedSender::EnqueuePackets::Loop",
+                       "sequence_number", packet->SequenceNumber(),
+                       "rtp_timestamp", packet->Timestamp());
 
-      size_t packet_size = packet->payload_size() + packet->padding_size();
-      if (include_overhead_) {
-        packet_size += packet->headers_size();
-      }
-      packet_size_.Apply(1, packet_size);
-      RTC_DCHECK_GE(packet->capture_time(), Timestamp::Zero());
-      pacing_controller_.EnqueuePacket(std::move(packet));
-    }
-    MaybeProcessPackets(Timestamp::MinusInfinity());
-  });
+          size_t packet_size = packet->payload_size() + packet->padding_size();
+          if (include_overhead_) {
+            packet_size += packet->headers_size();
+          }
+          packet_size_.Apply(1, packet_size);
+          RTC_DCHECK_GE(packet->capture_time(), Timestamp::Zero());
+          pacing_controller_.EnqueuePacket(std::move(packet));
+        }
+        MaybeProcessPackets(Timestamp::MinusInfinity());
+      }));
 }
 
 void TaskQueuePacedSender::SetAccountForAudioPackets(bool account_for_audio) {
-  task_queue_.PostTask([this, account_for_audio]() {
+  task_queue_.RunOrPost([this, account_for_audio]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
     pacing_controller_.SetAccountForAudioPackets(account_for_audio);
     MaybeProcessPackets(Timestamp::MinusInfinity());
@@ -184,7 +184,7 @@ void TaskQueuePacedSender::SetAccountForAudioPackets(bool account_for_audio) {
 }
 
 void TaskQueuePacedSender::SetIncludeOverhead() {
-  task_queue_.PostTask([this]() {
+  task_queue_.RunOrPost([this]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
     include_overhead_ = true;
     pacing_controller_.SetIncludeOverhead();
@@ -193,7 +193,7 @@ void TaskQueuePacedSender::SetIncludeOverhead() {
 }
 
 void TaskQueuePacedSender::SetTransportOverhead(DataSize overhead_per_packet) {
-  task_queue_.PostTask([this, overhead_per_packet]() {
+  task_queue_.RunOrPost([this, overhead_per_packet]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
     pacing_controller_.SetTransportOverhead(overhead_per_packet);
     MaybeProcessPackets(Timestamp::MinusInfinity());
@@ -201,7 +201,7 @@ void TaskQueuePacedSender::SetTransportOverhead(DataSize overhead_per_packet) {
 }
 
 void TaskQueuePacedSender::SetQueueTimeLimit(TimeDelta limit) {
-  task_queue_.PostTask([this, limit]() {
+  task_queue_.RunOrPost([this, limit]() {
     RTC_DCHECK_RUN_ON(&task_queue_);
     pacing_controller_.SetQueueTimeLimit(limit);
     MaybeProcessPackets(Timestamp::MinusInfinity());
@@ -330,9 +330,11 @@ void TaskQueuePacedSender::MaybeProcessPackets(
       }
     }
 
-    task_queue_.Get()->PostDelayedTaskWithPrecision(
+    task_queue_.TaskQueueForDelayedTasks()->PostDelayedTaskWithPrecision(
         precision,
-        [this, next_send_time]() { MaybeProcessPackets(next_send_time); },
+        task_queue_.MaybeSafeTask(
+            safety_.flag(),
+            [this, next_send_time]() { MaybeProcessPackets(next_send_time); }),
         time_to_next_process.RoundUpTo(TimeDelta::Millis(1)));
     next_process_time_ = next_send_time;
   }

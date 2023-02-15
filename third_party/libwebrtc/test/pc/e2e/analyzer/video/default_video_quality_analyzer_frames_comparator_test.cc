@@ -11,6 +11,7 @@
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_frames_comparator.h"
 
 #include <map>
+#include <string>
 #include <vector>
 
 #include "api/test/create_frame_generator.h"
@@ -25,8 +26,10 @@
 namespace webrtc {
 namespace {
 
+using ::testing::Contains;
 using ::testing::Eq;
 using ::testing::IsEmpty;
+using ::testing::Pair;
 
 using StatsSample = ::webrtc::SamplesStatsCounter::StatsSample;
 
@@ -70,8 +73,9 @@ StreamCodecInfo Vp8CodecForOneFrame(uint16_t frame_id, Timestamp time) {
 }
 
 FrameStats FrameStatsWith10msDeltaBetweenPhasesAnd10x10Frame(
+    uint16_t frame_id,
     Timestamp captured_time) {
-  FrameStats frame_stats(captured_time);
+  FrameStats frame_stats(frame_id, captured_time);
   frame_stats.pre_encode_time = captured_time + TimeDelta::Millis(10);
   frame_stats.encoded_time = captured_time + TimeDelta::Millis(20);
   frame_stats.received_time = captured_time + TimeDelta::Millis(30);
@@ -88,7 +92,7 @@ FrameStats FrameStatsWith10msDeltaBetweenPhasesAnd10x10Frame(
 }
 
 FrameStats ShiftStatsOn(const FrameStats& stats, TimeDelta delta) {
-  FrameStats frame_stats(stats.captured_time + delta);
+  FrameStats frame_stats(stats.frame_id, stats.captured_time + delta);
   frame_stats.pre_encode_time = stats.pre_encode_time + delta;
   frame_stats.encoded_time = stats.encoded_time + delta;
   frame_stats.received_time = stats.received_time + delta;
@@ -105,8 +109,16 @@ FrameStats ShiftStatsOn(const FrameStats& stats, TimeDelta delta) {
 }
 
 double GetFirstOrDie(const SamplesStatsCounter& counter) {
-  EXPECT_TRUE(!counter.IsEmpty()) << "Counter has to be not empty";
+  EXPECT_FALSE(counter.IsEmpty()) << "Counter has to be not empty";
   return counter.GetSamples()[0];
+}
+
+void AssertFirstMetadataHasField(const SamplesStatsCounter& counter,
+                                 const std::string& field_name,
+                                 const std::string& field_value) {
+  EXPECT_FALSE(counter.IsEmpty()) << "Coutner has to be not empty";
+  EXPECT_THAT(counter.GetTimedSamples()[0].metadata,
+              Contains(Pair(field_name, field_value)));
 }
 
 std::string ToString(const SamplesStatsCounter& counter) {
@@ -141,8 +153,8 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   size_t peers_count = 2;
   InternalStatsKey stats_key(stream, sender, receiver);
 
-  FrameStats frame_stats =
-      FrameStatsWith10msDeltaBetweenPhasesAnd10x10Frame(stream_start_time);
+  FrameStats frame_stats = FrameStatsWith10msDeltaBetweenPhasesAnd10x10Frame(
+      /*frame_id=*/1, stream_start_time);
 
   comparator.Start(/*max_threads_count=*/1);
   comparator.EnsureStatsForStream(stream, sender, peers_count,
@@ -165,8 +177,9 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
       GetFirstOrDie(stats.at(stats_key).resolution_of_rendered_frame), 100.0);
 }
 
-TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
-     MultiFrameStatsPresentedAfterAddingTwoComparisonWith10msDelay) {
+TEST(
+    DefaultVideoQualityAnalyzerFramesComparatorTest,
+    MultiFrameStatsPresentedWithMetadataAfterAddingTwoComparisonWith10msDelay) {
   DefaultVideoQualityAnalyzerCpuMeasurer cpu_measurer;
   DefaultVideoQualityAnalyzerFramesComparator comparator(
       Clock::GetRealTimeClock(), cpu_measurer, AnalyzerOptionsForTest());
@@ -178,10 +191,10 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   size_t peers_count = 2;
   InternalStatsKey stats_key(stream, sender, receiver);
 
-  FrameStats frame_stats1 =
-      FrameStatsWith10msDeltaBetweenPhasesAnd10x10Frame(stream_start_time);
+  FrameStats frame_stats1 = FrameStatsWith10msDeltaBetweenPhasesAnd10x10Frame(
+      /*frame_id=*/1, stream_start_time);
   FrameStats frame_stats2 = FrameStatsWith10msDeltaBetweenPhasesAnd10x10Frame(
-      stream_start_time + TimeDelta::Millis(15));
+      /*frame_id=*/2, stream_start_time + TimeDelta::Millis(15));
   frame_stats2.prev_frame_rendered_time = frame_stats1.rendered_time;
 
   comparator.Start(/*max_threads_count=*/1);
@@ -200,10 +213,11 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   std::map<InternalStatsKey, StreamStats> stats = comparator.stream_stats();
   EXPECT_DOUBLE_EQ(
       GetFirstOrDie(stats.at(stats_key).time_between_rendered_frames_ms), 15.0);
+  AssertFirstMetadataHasField(
+      stats.at(stats_key).time_between_rendered_frames_ms, "frame_id", "2");
   EXPECT_DOUBLE_EQ(stats.at(stats_key).encode_frame_rate.GetEventsPerSecond(),
                    2.0 / 15 * 1000)
       << "There should be 2 events with interval of 15 ms";
-  ;
 }
 
 TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
@@ -232,26 +246,30 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   //   * 6th - all of them set
   std::vector<FrameStats> stats;
   // 1st stat
-  FrameStats frame_stats(stream_start_time);
+  FrameStats frame_stats(/*frame_id=*/1, stream_start_time);
   stats.push_back(frame_stats);
   // 2nd stat
   frame_stats = ShiftStatsOn(frame_stats, TimeDelta::Millis(15));
+  frame_stats.frame_id = 2;
   frame_stats.pre_encode_time =
       frame_stats.captured_time + TimeDelta::Millis(10);
   stats.push_back(frame_stats);
   // 3rd stat
   frame_stats = ShiftStatsOn(frame_stats, TimeDelta::Millis(15));
+  frame_stats.frame_id = 3;
   frame_stats.encoded_time = frame_stats.captured_time + TimeDelta::Millis(20);
   frame_stats.used_encoder = Vp8CodecForOneFrame(1, frame_stats.encoded_time);
   stats.push_back(frame_stats);
   // 4th stat
   frame_stats = ShiftStatsOn(frame_stats, TimeDelta::Millis(15));
+  frame_stats.frame_id = 4;
   frame_stats.received_time = frame_stats.captured_time + TimeDelta::Millis(30);
   frame_stats.decode_start_time =
       frame_stats.captured_time + TimeDelta::Millis(40);
   stats.push_back(frame_stats);
   // 5th stat
   frame_stats = ShiftStatsOn(frame_stats, TimeDelta::Millis(15));
+  frame_stats.frame_id = 5;
   frame_stats.decode_end_time =
       frame_stats.captured_time + TimeDelta::Millis(50);
   frame_stats.used_decoder =
@@ -259,6 +277,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   stats.push_back(frame_stats);
   // 6th stat
   frame_stats = ShiftStatsOn(frame_stats, TimeDelta::Millis(15));
+  frame_stats.frame_id = 6;
   frame_stats.rendered_time = frame_stats.captured_time + TimeDelta::Millis(60);
   frame_stats.rendered_frame_width = 10;
   frame_stats.rendered_frame_height = 10;
@@ -330,7 +349,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   InternalStatsKey stats_key(stream, sender, receiver);
 
   // Frame captured
-  FrameStats frame_stats(captured_time);
+  FrameStats frame_stats(/*frame_id=*/1, captured_time);
 
   comparator.Start(/*max_threads_count=*/1);
   comparator.EnsureStatsForStream(stream, sender, /*peers_count=*/2,
@@ -387,7 +406,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   InternalStatsKey stats_key(stream, sender, receiver);
 
   // Frame captured
-  FrameStats frame_stats(captured_time);
+  FrameStats frame_stats(/*frame_id=*/1, captured_time);
   // Frame pre encoded
   frame_stats.pre_encode_time = captured_time + TimeDelta::Millis(10);
 
@@ -447,7 +466,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   InternalStatsKey stats_key(stream, sender, receiver);
 
   // Frame captured
-  FrameStats frame_stats(captured_time);
+  FrameStats frame_stats(/*frame_id=*/1, captured_time);
   // Frame pre encoded
   frame_stats.pre_encode_time = captured_time + TimeDelta::Millis(10);
   // Frame encoded
@@ -515,7 +534,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   InternalStatsKey stats_key(stream, sender, receiver);
 
   // Frame captured
-  FrameStats frame_stats(captured_time);
+  FrameStats frame_stats(/*frame_id=*/1, captured_time);
   // Frame pre encoded
   frame_stats.pre_encode_time = captured_time + TimeDelta::Millis(10);
   // Frame encoded
@@ -583,7 +602,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   InternalStatsKey stats_key(stream, sender, receiver);
 
   // Frame captured
-  FrameStats frame_stats(captured_time);
+  FrameStats frame_stats(/*frame_id=*/1, captured_time);
   // Frame pre encoded
   frame_stats.pre_encode_time = captured_time + TimeDelta::Millis(10);
   // Frame encoded
@@ -656,7 +675,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   InternalStatsKey stats_key(stream, sender, receiver);
 
   // Frame captured
-  FrameStats frame_stats(captured_time);
+  FrameStats frame_stats(/*frame_id=*/1, captured_time);
   // Frame pre encoded
   frame_stats.pre_encode_time = captured_time + TimeDelta::Millis(10);
   // Frame encoded
@@ -734,7 +753,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   InternalStatsKey stats_key(stream, sender, receiver);
 
   // Frame captured
-  FrameStats frame_stats(captured_time);
+  FrameStats frame_stats(/*frame_id=*/1, captured_time);
   // Frame pre encoded
   frame_stats.pre_encode_time = captured_time + TimeDelta::Millis(10);
   // Frame encoded
@@ -814,7 +833,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   InternalStatsKey stats_key(stream, sender, receiver);
 
   // Frame captured
-  FrameStats frame_stats(captured_time);
+  FrameStats frame_stats(/*frame_id=*/1, captured_time);
 
   comparator.Start(/*max_threads_count=*/1);
   comparator.EnsureStatsForStream(stream, sender, /*peers_count=*/2,
@@ -871,7 +890,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   InternalStatsKey stats_key(stream, sender, receiver);
 
   // Frame captured
-  FrameStats frame_stats(captured_time);
+  FrameStats frame_stats(/*frame_id=*/1, captured_time);
   // Frame pre encoded
   frame_stats.pre_encode_time = captured_time + TimeDelta::Millis(10);
 
@@ -931,7 +950,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   InternalStatsKey stats_key(stream, sender, receiver);
 
   // Frame captured
-  FrameStats frame_stats(captured_time);
+  FrameStats frame_stats(/*frame_id=*/1, captured_time);
   // Frame pre encoded
   frame_stats.pre_encode_time = captured_time + TimeDelta::Millis(10);
   // Frame encoded
@@ -999,7 +1018,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   InternalStatsKey stats_key(stream, sender, receiver);
 
   // Frame captured
-  FrameStats frame_stats(captured_time);
+  FrameStats frame_stats(/*frame_id=*/1, captured_time);
   // Frame pre encoded
   frame_stats.pre_encode_time = captured_time + TimeDelta::Millis(10);
   // Frame encoded
@@ -1073,7 +1092,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   InternalStatsKey stats_key(stream, sender, receiver);
 
   // Frame captured
-  FrameStats frame_stats(captured_time);
+  FrameStats frame_stats(/*frame_id=*/1, captured_time);
   // Frame pre encoded
   frame_stats.pre_encode_time = captured_time + TimeDelta::Millis(10);
   // Frame encoded
@@ -1151,7 +1170,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   InternalStatsKey stats_key(stream, sender, receiver);
 
   // Frame captured
-  FrameStats frame_stats(captured_time);
+  FrameStats frame_stats(/*frame_id=*/1, captured_time);
   // Frame pre encoded
   frame_stats.pre_encode_time = captured_time + TimeDelta::Millis(10);
   // Frame encoded
@@ -1233,7 +1252,7 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   // Frame captured
   VideoFrame frame =
       CreateFrame(frame_id, /*width=*/320, /*height=*/180, captured_time);
-  FrameStats frame_stats(captured_time);
+  FrameStats frame_stats(/*frame_id=*/1, captured_time);
   // Frame pre encoded
   frame_stats.pre_encode_time = captured_time + TimeDelta::Millis(10);
   // Frame encoded
@@ -1299,7 +1318,131 @@ TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
   EXPECT_EQ(stats.decoders,
             std::vector<StreamCodecInfo>{*frame_stats.used_decoder});
 }
+
+TEST(DefaultVideoQualityAnalyzerFramesComparatorTest, AllStatsHaveMetadataSet) {
+  DefaultVideoQualityAnalyzerCpuMeasurer cpu_measurer;
+  DefaultVideoQualityAnalyzerFramesComparator comparator(
+      Clock::GetRealTimeClock(), cpu_measurer,
+      DefaultVideoQualityAnalyzerOptions());
+
+  Timestamp captured_time = Clock::GetRealTimeClock()->CurrentTime();
+  uint16_t frame_id = 1;
+  size_t stream = 0;
+  size_t sender = 0;
+  size_t receiver = 1;
+  InternalStatsKey stats_key(stream, sender, receiver);
+
+  // Frame captured
+  VideoFrame frame =
+      CreateFrame(frame_id, /*width=*/320, /*height=*/180, captured_time);
+  FrameStats frame_stats(/*frame_id=*/1, captured_time);
+  // Frame pre encoded
+  frame_stats.pre_encode_time = captured_time + TimeDelta::Millis(10);
+  // Frame encoded
+  frame_stats.encoded_time = captured_time + TimeDelta::Millis(20);
+  frame_stats.used_encoder =
+      Vp8CodecForOneFrame(frame_id, frame_stats.encoded_time);
+  frame_stats.encoded_frame_type = VideoFrameType::kVideoFrameKey;
+  frame_stats.encoded_image_size = DataSize::Bytes(1000);
+  frame_stats.target_encode_bitrate = 2000;
+  // Frame pre decoded
+  frame_stats.pre_decoded_frame_type = VideoFrameType::kVideoFrameKey;
+  frame_stats.pre_decoded_image_size = DataSize::Bytes(500);
+  frame_stats.received_time = captured_time + TimeDelta::Millis(30);
+  frame_stats.decode_start_time = captured_time + TimeDelta::Millis(40);
+  // Frame decoded
+  frame_stats.decode_end_time = captured_time + TimeDelta::Millis(50);
+  frame_stats.used_decoder =
+      Vp8CodecForOneFrame(frame_id, frame_stats.decode_end_time);
+  // Frame rendered
+  frame_stats.rendered_time = captured_time + TimeDelta::Millis(60);
+  frame_stats.rendered_frame_width = 200;
+  frame_stats.rendered_frame_height = 100;
+
+  comparator.Start(/*max_threads_count=*/1);
+  comparator.EnsureStatsForStream(stream, sender, /*peers_count=*/2,
+                                  captured_time, captured_time);
+  comparator.AddComparison(stats_key,
+                           /*captured=*/frame,
+                           /*rendered=*/frame, FrameComparisonType::kRegular,
+                           frame_stats);
+  comparator.Stop(/*last_rendered_frame_times=*/{});
+
+  EXPECT_EQ(comparator.stream_stats().size(), 1lu);
+  StreamStats stats = comparator.stream_stats().at(stats_key);
+  AssertFirstMetadataHasField(stats.psnr, "frame_id", "1");
+  AssertFirstMetadataHasField(stats.ssim, "frame_id", "1");
+  AssertFirstMetadataHasField(stats.transport_time_ms, "frame_id", "1");
+  AssertFirstMetadataHasField(stats.total_delay_incl_transport_ms, "frame_id",
+                              "1");
+  AssertFirstMetadataHasField(stats.encode_time_ms, "frame_id", "1");
+  AssertFirstMetadataHasField(stats.decode_time_ms, "frame_id", "1");
+  AssertFirstMetadataHasField(stats.receive_to_render_time_ms, "frame_id", "1");
+  AssertFirstMetadataHasField(stats.resolution_of_rendered_frame, "frame_id",
+                              "1");
+  AssertFirstMetadataHasField(stats.target_encode_bitrate, "frame_id", "1");
+  AssertFirstMetadataHasField(stats.recv_key_frame_size_bytes, "frame_id", "1");
+
+  expectEmpty(stats.recv_delta_frame_size_bytes);
+}
 // Regular frame end
+
+TEST(DefaultVideoQualityAnalyzerFramesComparatorTest,
+     FreezeStatsPresentedWithMetadataAfterAddFrameWithSkippedAndDelay) {
+  DefaultVideoQualityAnalyzerCpuMeasurer cpu_measurer;
+  DefaultVideoQualityAnalyzerFramesComparator comparator(
+      Clock::GetRealTimeClock(), cpu_measurer, AnalyzerOptionsForTest());
+
+  Timestamp stream_start_time = Clock::GetRealTimeClock()->CurrentTime();
+  size_t stream = 0;
+  size_t sender = 0;
+  size_t receiver = 1;
+  size_t peers_count = 2;
+  InternalStatsKey stats_key(stream, sender, receiver);
+
+  comparator.Start(/*max_threads_count=*/1);
+  comparator.EnsureStatsForStream(stream, sender, peers_count,
+                                  stream_start_time, stream_start_time);
+
+  // Add 5 frames which were rendered with 30 fps (~30ms between frames)
+  // Frame ids are in [1..5] and last frame is with 120ms offset from first.
+  Timestamp prev_frame_rendered_time = Timestamp::MinusInfinity();
+  for (int i = 0; i < 5; ++i) {
+    FrameStats frame_stats = FrameStatsWith10msDeltaBetweenPhasesAnd10x10Frame(
+        /*frame_id=*/i + 1, stream_start_time + TimeDelta::Millis(30 * i));
+    frame_stats.prev_frame_rendered_time = prev_frame_rendered_time;
+    prev_frame_rendered_time = frame_stats.rendered_time;
+
+    comparator.AddComparison(stats_key,
+                             /*captured=*/absl::nullopt,
+                             /*rendered=*/absl::nullopt,
+                             FrameComparisonType::kRegular, frame_stats);
+  }
+
+  // Next frame was rendered with 4 frames skipped and delay 300ms after last
+  // frame.
+  FrameStats freeze_frame_stats =
+      FrameStatsWith10msDeltaBetweenPhasesAnd10x10Frame(
+          /*frame_id=*/10, stream_start_time + TimeDelta::Millis(120 + 300));
+  freeze_frame_stats.prev_frame_rendered_time = prev_frame_rendered_time;
+
+  comparator.AddComparison(stats_key,
+                           /*skipped_between_rendered=*/4,
+                           /*captured=*/absl::nullopt,
+                           /*rendered=*/absl::nullopt,
+                           FrameComparisonType::kRegular, freeze_frame_stats);
+  comparator.Stop(/*last_rendered_frame_times=*/{});
+
+  StreamStats stats = comparator.stream_stats().at(stats_key);
+  ASSERT_THAT(GetFirstOrDie(stats.skipped_between_rendered), Eq(4));
+  AssertFirstMetadataHasField(stats.skipped_between_rendered, "frame_id", "10");
+  ASSERT_THAT(GetFirstOrDie(stats.freeze_time_ms), Eq(300));
+  AssertFirstMetadataHasField(stats.freeze_time_ms, "frame_id", "10");
+  // 180ms is time from the stream start to the rendered time of the last frame
+  // among first 5 frames which were received before freeze.
+  ASSERT_THAT(GetFirstOrDie(stats.time_between_freezes_ms), Eq(180));
+  AssertFirstMetadataHasField(stats.time_between_freezes_ms, "frame_id", "10");
+}
 // Stats validation tests end.
 
 }  // namespace

@@ -728,18 +728,20 @@ int AudioProcessingImpl::MaybeInitializeCapture(
   }
 
   if (processing_config.input_stream() != input_config) {
-    processing_config.input_stream() = input_config;
     reinitialization_required = true;
   }
 
   if (processing_config.output_stream() != output_config) {
-    processing_config.output_stream() = output_config;
     reinitialization_required = true;
   }
 
   if (reinitialization_required) {
     MutexLock lock_render(&mutex_render_);
     MutexLock lock_capture(&mutex_capture_);
+    // Reread the API format since the render format may have changed.
+    processing_config = formats_.api_format;
+    processing_config.input_stream() = input_config;
+    processing_config.output_stream() = output_config;
     RETURN_ON_ERR(InitializeLocked(processing_config));
   }
   return kNoError;

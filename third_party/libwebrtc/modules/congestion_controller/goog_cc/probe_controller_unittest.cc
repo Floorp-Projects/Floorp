@@ -470,7 +470,7 @@ TEST(ProbeControllerTest, ConfigurableProbingFieldTrial) {
   ProbeControllerFixture fixture(
       "WebRTC-Bwe-ProbingConfiguration/"
       "p1:2,p2:5,step_size:3,further_probe_threshold:0.8,"
-      "alloc_p1:2,alloc_p2/");
+      "alloc_p1:2,alloc_p2,min_probe_packets_sent:2/");
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
 
@@ -479,7 +479,9 @@ TEST(ProbeControllerTest, ConfigurableProbingFieldTrial) {
                                               fixture.CurrentTime());
   EXPECT_EQ(probes.size(), 2u);
   EXPECT_EQ(probes[0].target_data_rate.bps(), 600);
+  EXPECT_EQ(probes[0].target_probe_count, 2);
   EXPECT_EQ(probes[1].target_data_rate.bps(), 1500);
+  EXPECT_EQ(probes[1].target_probe_count, 2);
 
   // Repeated probe should only be sent when estimated bitrate climbs above
   // 0.8 * 5 * kStartBitrateBps = 1200.
@@ -831,5 +833,108 @@ TEST(ProbeControllerTest, ProbeFurtherWhenDelayBasedLimited) {
   EXPECT_EQ(probes[0].target_data_rate, state_estimate.link_capacity_upper);
 }
 
+TEST(ProbeControllerTest, SkipAlrProbeIfEstimateLargerThanMaxProbe) {
+  ProbeControllerFixture fixture(
+      "WebRTC-Bwe-ProbingConfiguration/"
+      "skip_if_est_larger_than_fraction_of_max:0.9/");
+  std::unique_ptr<ProbeController> probe_controller =
+      fixture.CreateController();
+  probe_controller->EnablePeriodicAlrProbing(true);
+  auto probes = probe_controller->SetBitrates(
+      kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
+  ASSERT_FALSE(probes.empty());
+
+  probes = probe_controller->SetEstimatedBitrate(
+      kMaxBitrate, /*bwe_limited_due_to_packet_loss=*/false,
+      fixture.CurrentTime());
+  EXPECT_TRUE(probes.empty());
+
+  probe_controller->SetAlrStartTimeMs(fixture.CurrentTime().ms());
+  fixture.AdvanceTime(TimeDelta::Seconds(10));
+  probes = probe_controller->Process(fixture.CurrentTime());
+  EXPECT_TRUE(probes.empty());
+
+  // But if the max rate increase, A new probe is sent.
+  probe_controller->SetMaxBitrate(2 * kMaxBitrate);
+  probes = probe_controller->Process(fixture.CurrentTime());
+  EXPECT_FALSE(probes.empty());
+}
+
+TEST(ProbeControllerTest, SkipNetworkStateProbeIfEstimateLargerThanMaxProbe) {
+  ProbeControllerFixture fixture(
+      "WebRTC-Bwe-ProbingConfiguration/"
+      "network_state_interval:2s,skip_if_est_larger_than_fraction_of_max:0.9/");
+  std::unique_ptr<ProbeController> probe_controller =
+      fixture.CreateController();
+  auto probes = probe_controller->SetBitrates(
+      kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
+  ASSERT_FALSE(probes.empty());
+
+  probe_controller->SetNetworkStateEstimate(
+      {.link_capacity_upper = 2 * kMaxBitrate});
+  probes = probe_controller->SetEstimatedBitrate(
+      kMaxBitrate, /*bwe_limited_due_to_packet_loss=*/false,
+      fixture.CurrentTime());
+  EXPECT_TRUE(probes.empty());
+
+  fixture.AdvanceTime(TimeDelta::Seconds(10));
+  probes = probe_controller->Process(fixture.CurrentTime());
+  EXPECT_TRUE(probes.empty());
+}
+
+TEST(ProbeControllerTest, SendsProbeIfNetworkStateEstimateLowerThanMaxProbe) {
+  ProbeControllerFixture fixture(
+      "WebRTC-Bwe-ProbingConfiguration/"
+      "network_state_interval:2s,skip_if_est_larger_than_fraction_of_max:0.9,"
+      "network_state_drop_down_rate:0.5/");
+  std::unique_ptr<ProbeController> probe_controller =
+      fixture.CreateController();
+  auto probes = probe_controller->SetBitrates(
+      kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
+  ASSERT_FALSE(probes.empty());
+  probe_controller->SetNetworkStateEstimate(
+      {.link_capacity_upper = 2 * kMaxBitrate});
+  probes = probe_controller->SetEstimatedBitrate(
+      kMaxBitrate, /*bwe_limited_due_to_packet_loss=*/false,
+      fixture.CurrentTime());
+  EXPECT_TRUE(probes.empty());
+
+  // Need to wait at least one second before process can trigger a new probe.
+  fixture.AdvanceTime(TimeDelta::Millis(1100));
+
+  // Sends a probe immediately if NetworkState estimate decrease.
+  probe_controller->SetNetworkStateEstimate(
+      {.link_capacity_upper = kStartBitrate});
+  probes = probe_controller->Process(fixture.CurrentTime());
+  EXPECT_FALSE(probes.empty());
+}
+
+TEST(ProbeControllerTest, DontSendProbeIfNetworkStateEstimateIsZero) {
+  ProbeControllerFixture fixture(
+      "WebRTC-Bwe-ProbingConfiguration/"
+      "network_state_interval:5s,network_state_drop_down_rate:0.5,limit_probe_"
+      "target_rate_to_loss_bwe:true/");
+  std::unique_ptr<ProbeController> probe_controller =
+      fixture.CreateController();
+  auto probes = probe_controller->SetBitrates(
+      kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
+  probes = probe_controller->SetEstimatedBitrate(
+      kStartBitrate, /*bwe_limited_due_to_packet_loss=*/false,
+      fixture.CurrentTime());
+  probe_controller->SetNetworkStateEstimate(
+      {.link_capacity_upper = kStartBitrate});
+  // Need to wait at least one second before process can trigger a new probe.
+  fixture.AdvanceTime(TimeDelta::Millis(1100));
+  probes = probe_controller->Process(fixture.CurrentTime());
+  ASSERT_TRUE(probes.empty());
+
+  probe_controller->SetNetworkStateEstimate(
+      {.link_capacity_upper = DataRate::Zero()});
+  probes = probe_controller->Process(fixture.CurrentTime());
+  EXPECT_TRUE(probes.empty());
+  fixture.AdvanceTime(TimeDelta::Seconds(6));
+  probes = probe_controller->Process(fixture.CurrentTime());
+  EXPECT_TRUE(probes.empty());
+}
 }  // namespace test
 }  // namespace webrtc

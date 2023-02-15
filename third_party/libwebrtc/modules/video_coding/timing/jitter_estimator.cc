@@ -24,6 +24,7 @@
 #include "api/units/timestamp.h"
 #include "modules/video_coding/timing/rtt_filter.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/logging.h"
 #include "rtc_base/numerics/safe_conversions.h"
 #include "system_wrappers/include/clock.h"
 
@@ -49,7 +50,7 @@ constexpr double kDefaultMaxFrameSizePercentile = 0.95;
 constexpr int kDefaultFrameSizeWindow = 30 * 10;
 
 // Outlier rejection constants.
-constexpr double kDefaultMaxTimestampDeviationInSigmas = 3.5;
+constexpr double kNumStdDevDelayClamp = 3.5;
 constexpr double kNumStdDevDelayOutlier = 15.0;
 constexpr double kNumStdDevSizeOutlier = 3.0;
 constexpr double kCongestionRejectionFactor = -0.25;
@@ -85,9 +86,53 @@ constexpr Frequency kMaxFramerateEstimate = Frequency::Hertz(200);
 
 constexpr char JitterEstimator::Config::kFieldTrialsKey[];
 
+JitterEstimator::Config JitterEstimator::Config::ParseAndValidate(
+    absl::string_view field_trial) {
+  Config config;
+  config.Parser()->Parse(field_trial);
+
+  // The `MovingPercentileFilter` RTC_CHECKs on the validity of the
+  // percentile and window length, so we'd better validate the field trial
+  // provided values here.
+  if (config.max_frame_size_percentile) {
+    double original = *config.max_frame_size_percentile;
+    config.max_frame_size_percentile = std::min(std::max(0.0, original), 1.0);
+    if (config.max_frame_size_percentile != original) {
+      RTC_LOG(LS_ERROR) << "Skipping invalid max_frame_size_percentile="
+                        << original;
+    }
+  }
+  if (config.frame_size_window && config.frame_size_window < 1) {
+    RTC_LOG(LS_ERROR) << "Skipping invalid frame_size_window="
+                      << *config.frame_size_window;
+    config.frame_size_window = 1;
+  }
+
+  // General sanity checks.
+  if (config.num_stddev_delay_clamp && config.num_stddev_delay_clamp < 0.0) {
+    RTC_LOG(LS_ERROR) << "Skipping invalid num_stddev_delay_clamp="
+                      << *config.num_stddev_delay_clamp;
+    config.num_stddev_delay_clamp = 0.0;
+  }
+  if (config.num_stddev_delay_outlier &&
+      config.num_stddev_delay_outlier < 0.0) {
+    RTC_LOG(LS_ERROR) << "Skipping invalid num_stddev_delay_outlier="
+                      << *config.num_stddev_delay_outlier;
+    config.num_stddev_delay_outlier = 0.0;
+  }
+  if (config.num_stddev_size_outlier && config.num_stddev_size_outlier < 0.0) {
+    RTC_LOG(LS_ERROR) << "Skipping invalid num_stddev_size_outlier="
+                      << *config.num_stddev_size_outlier;
+    config.num_stddev_size_outlier = 0.0;
+  }
+
+  return config;
+}
+
 JitterEstimator::JitterEstimator(Clock* clock,
                                  const FieldTrialsView& field_trials)
-    : config_(Config::Parse(field_trials.Lookup(Config::kFieldTrialsKey))),
+    : config_(Config::ParseAndValidate(
+          field_trials.Lookup(Config::kFieldTrialsKey))),
       avg_frame_size_median_bytes_(static_cast<size_t>(
           config_.frame_size_window.value_or(kDefaultFrameSizeWindow))),
       max_frame_size_bytes_percentile_(
@@ -179,8 +224,10 @@ void JitterEstimator::UpdateEstimate(TimeDelta frame_delay,
   prev_frame_size_ = frame_size;
 
   // Cap frame_delay based on the current time deviation noise.
-  TimeDelta max_time_deviation = TimeDelta::Millis(
-      kDefaultMaxTimestampDeviationInSigmas * sqrt(var_noise_ms2_) + 0.5);
+  double num_stddev_delay_clamp =
+      config_.num_stddev_delay_clamp.value_or(kNumStdDevDelayClamp);
+  TimeDelta max_time_deviation =
+      TimeDelta::Millis(num_stddev_delay_clamp * sqrt(var_noise_ms2_) + 0.5);
   frame_delay.Clamp(-max_time_deviation, max_time_deviation);
 
   double delay_deviation_ms =
@@ -196,7 +243,8 @@ void JitterEstimator::UpdateEstimate(TimeDelta frame_delay,
   // https://en.wikipedia.org/wiki/68-95-99.7_rule. Note that neither of the
   // estimated means are true sample means, which implies that they are possibly
   // not normally distributed. Hence, this rejection method is just a heuristic.
-  double num_stddev_delay_outlier = GetNumStddevDelayOutlier();
+  double num_stddev_delay_outlier =
+      config_.num_stddev_delay_outlier.value_or(kNumStdDevDelayOutlier);
   // Delay outlier rejection is two-sided.
   bool abs_delay_is_not_outlier =
       fabs(delay_deviation_ms) <
@@ -206,37 +254,50 @@ void JitterEstimator::UpdateEstimate(TimeDelta frame_delay,
   // median-filtered version, even if configured to use latter for the
   // calculation in `CalculateEstimate()`.
   // Size outlier rejection is one-sided.
+  double num_stddev_size_outlier =
+      config_.num_stddev_size_outlier.value_or(kNumStdDevSizeOutlier);
   bool size_is_positive_outlier =
       frame_size.bytes() >
       avg_frame_size_bytes_ +
-          GetNumStddevSizeOutlier() * sqrt(var_frame_size_bytes2_);
+          num_stddev_size_outlier * sqrt(var_frame_size_bytes2_);
 
   // Only update the Kalman filter if the sample is not considered an extreme
   // outlier. Even if it is an extreme outlier from a delay point of view, if
   // the frame size also is large the deviation is probably due to an incorrect
   // line slope.
   if (abs_delay_is_not_outlier || size_is_positive_outlier) {
-    // Update the variance of the deviation from the line given by the Kalman
-    // filter.
-    EstimateRandomJitter(delay_deviation_ms);
     // Prevent updating with frames which have been congested by a large frame,
     // and therefore arrives almost at the same time as that frame.
     // This can occur when we receive a large frame (key frame) which has been
     // delayed. The next frame is of normal size (delta frame), and thus deltaFS
     // will be << 0. This removes all frame samples which arrives after a key
     // frame.
+    double congestion_rejection_factor =
+        config_.congestion_rejection_factor.value_or(
+            kCongestionRejectionFactor);
     double filtered_max_frame_size_bytes =
         config_.MaxFrameSizePercentileEnabled()
             ? max_frame_size_bytes_percentile_.GetFilteredValue()
             : max_frame_size_bytes_;
-    if (delta_frame_bytes >
-        GetCongestionRejectionFactor() * filtered_max_frame_size_bytes) {
-      // Update the Kalman filter with the new data
+    bool is_not_congested =
+        delta_frame_bytes >
+        congestion_rejection_factor * filtered_max_frame_size_bytes;
+
+    if (is_not_congested || config_.estimate_noise_when_congested) {
+      // Update the variance of the deviation from the line given by the Kalman
+      // filter.
+      EstimateRandomJitter(delay_deviation_ms);
+    }
+    if (is_not_congested) {
+      // Neither a delay outlier nor a congested frame, so we can safely update
+      // the Kalman filter with the sample.
       kalman_filter_.PredictAndUpdate(frame_delay.ms(), delta_frame_bytes,
                                       filtered_max_frame_size_bytes,
                                       var_noise_ms2_);
     }
   } else {
+    // Delay outliers affect the noise estimate through a value equal to the
+    // outlier rejection threshold.
     double num_stddev = (delay_deviation_ms >= 0) ? num_stddev_delay_outlier
                                                   : -num_stddev_delay_outlier;
     EstimateRandomJitter(num_stddev * sqrt(var_noise_ms2_));
@@ -263,19 +324,6 @@ void JitterEstimator::UpdateRtt(TimeDelta rtt) {
 
 JitterEstimator::Config JitterEstimator::GetConfigForTest() const {
   return config_;
-}
-
-double JitterEstimator::GetNumStddevDelayOutlier() const {
-  return config_.num_stddev_delay_outlier.value_or(kNumStdDevDelayOutlier);
-}
-
-double JitterEstimator::GetNumStddevSizeOutlier() const {
-  return config_.num_stddev_size_outlier.value_or(kNumStdDevSizeOutlier);
-}
-
-double JitterEstimator::GetCongestionRejectionFactor() const {
-  return config_.congestion_rejection_factor.value_or(
-      kCongestionRejectionFactor);
 }
 
 // Estimates the random jitter by calculating the variance of the sample

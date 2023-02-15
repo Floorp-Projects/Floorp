@@ -639,7 +639,6 @@ TEST_F(RtcpTransceiverImplTest, ReceiverReportUsesReceiveStatistics) {
   report_blocks[0].SetMediaSsrc(kMediaSsrc);
   EXPECT_CALL(receive_statistics, RtcpReportBlocks(_))
       .WillRepeatedly(Return(report_blocks));
-  SimulatedClock clock(0);
 
   RtcpTransceiverConfig config = DefaultTestConfig();
   config.feedback_ssrc = kSenderSsrc;
@@ -848,7 +847,6 @@ TEST_F(RtcpTransceiverImplTest,
   MockReceiveStatisticsProvider receive_statistics;
   EXPECT_CALL(receive_statistics, RtcpReportBlocks(_))
       .WillOnce(Return(statistics_report_blocks));
-  SimulatedClock clock(0);
 
   RtcpTransceiverConfig config = DefaultTestConfig();
   config.schedule_periodic_compound_packets = false;
@@ -894,7 +892,6 @@ TEST_F(RtcpTransceiverImplTest,
   MockReceiveStatisticsProvider receive_statistics;
   EXPECT_CALL(receive_statistics, RtcpReportBlocks(_))
       .WillOnce(Return(statistics_report_blocks));
-  SimulatedClock clock(0);
 
   RtcpTransceiverConfig config = DefaultTestConfig();
   config.schedule_periodic_compound_packets = false;

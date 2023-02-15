@@ -268,12 +268,6 @@ TEST_P(PeerConnectionIntegrationTest, EndToEndCallWithDtls) {
   MediaExpectations media_expectations;
   media_expectations.ExpectBidirectionalAudioAndVideo();
   ASSERT_TRUE(ExpectNewFrames(media_expectations));
-  EXPECT_METRIC_LE(
-      2, webrtc::metrics::NumEvents("WebRTC.PeerConnection.KeyProtocol",
-                                    webrtc::kEnumCounterKeyProtocolDtls));
-  EXPECT_METRIC_EQ(
-      0, webrtc::metrics::NumEvents("WebRTC.PeerConnection.KeyProtocol",
-                                    webrtc::kEnumCounterKeyProtocolSdes));
 }
 
 #if defined(WEBRTC_FUCHSIA)
@@ -293,12 +287,6 @@ TEST_P(PeerConnectionIntegrationTest, EndToEndCallWithSdes) {
   MediaExpectations media_expectations;
   media_expectations.ExpectBidirectionalAudioAndVideo();
   ASSERT_TRUE(ExpectNewFrames(media_expectations));
-  EXPECT_METRIC_LE(
-      2, webrtc::metrics::NumEvents("WebRTC.PeerConnection.KeyProtocol",
-                                    webrtc::kEnumCounterKeyProtocolSdes));
-  EXPECT_METRIC_EQ(
-      0, webrtc::metrics::NumEvents("WebRTC.PeerConnection.KeyProtocol",
-                                    webrtc::kEnumCounterKeyProtocolDtls));
 }
 #endif
 

@@ -17,6 +17,7 @@
 #include "api/test/create_peer_connection_quality_test_frame_generator.h"
 #include "api/test/create_peerconnection_quality_test_fixture.h"
 #include "api/test/frame_generator_interface.h"
+#include "api/test/metrics/global_metrics_logger_and_exporter.h"
 #include "api/test/network_emulation_manager.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
 #include "api/test/simulated_network.h"
@@ -24,6 +25,7 @@
 #include "api/video_codecs/vp9_profile.h"
 #include "call/simulated_network.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
+#include "modules/video_coding/svc/scalability_mode_util.h"
 #include "rtc_base/containers/flat_map.h"
 #include "system_wrappers/include/field_trial.h"
 #include "test/field_trial.h"
@@ -46,37 +48,16 @@ using ScreenShareConfig = ::webrtc::webrtc_pc_e2e::
     PeerConnectionE2EQualityTestFixture::ScreenShareConfig;
 using VideoCodecConfig = ::webrtc::webrtc_pc_e2e::
     PeerConnectionE2EQualityTestFixture::VideoCodecConfig;
+using EmulatedSFUConfig = ::webrtc::webrtc_pc_e2e::
+    PeerConnectionE2EQualityTestFixture::EmulatedSFUConfig;
 using ::cricket::kAv1CodecName;
+using ::cricket::kH264CodecName;
 using ::cricket::kVp8CodecName;
 using ::cricket::kVp9CodecName;
 using ::testing::Combine;
 using ::testing::UnitTest;
 using ::testing::Values;
 using ::testing::ValuesIn;
-
-EmulatedNetworkNode* CreateEmulatedNodeWithConfig(
-    NetworkEmulationManager* emulation,
-    const BuiltInNetworkBehaviorConfig& config) {
-  return emulation->CreateEmulatedNode(config);
-}
-
-std::pair<EmulatedNetworkManagerInterface*, EmulatedNetworkManagerInterface*>
-CreateTwoNetworkLinks(NetworkEmulationManager* emulation,
-                      const BuiltInNetworkBehaviorConfig& config) {
-  auto* alice_node = CreateEmulatedNodeWithConfig(emulation, config);
-  auto* bob_node = CreateEmulatedNodeWithConfig(emulation, config);
-
-  auto* alice_endpoint = emulation->CreateEndpoint(EmulatedEndpointConfig());
-  auto* bob_endpoint = emulation->CreateEndpoint(EmulatedEndpointConfig());
-
-  emulation->CreateRoute(alice_endpoint, {alice_node}, bob_endpoint);
-  emulation->CreateRoute(bob_endpoint, {bob_node}, alice_endpoint);
-
-  return {
-      emulation->CreateEmulatedNetworkManagerInterface({alice_endpoint}),
-      emulation->CreateEmulatedNetworkManagerInterface({bob_endpoint}),
-  };
-}
 
 std::unique_ptr<webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture>
 CreateTestFixture(absl::string_view test_case_name,
@@ -108,6 +89,22 @@ enum class UseDependencyDescriptor {
 };
 
 struct SvcTestParameters {
+  static SvcTestParameters Create(const std::string& codec_name,
+                                  const std::string& scalability_mode_str) {
+    absl::optional<ScalabilityMode> scalability_mode =
+        ScalabilityModeFromString(scalability_mode_str);
+    RTC_CHECK(scalability_mode.has_value())
+        << "Unsupported scalability mode: " << scalability_mode_str;
+
+    int num_spatial_layers =
+        ScalabilityModeToNumSpatialLayers(*scalability_mode);
+    int num_temporal_layers =
+        ScalabilityModeToNumTemporalLayers(*scalability_mode);
+
+    return SvcTestParameters{codec_name, scalability_mode_str,
+                             num_spatial_layers, num_temporal_layers};
+  }
+
   std::string codec_name;
   std::string scalability_mode;
   int expected_spatial_layers;
@@ -139,6 +136,10 @@ class SvcTest : public testing::TestWithParam<
     return std::get<1>(GetParam()) == UseDependencyDescriptor::Enabled;
   }
 
+  bool IsSMode() const {
+    return SvcTestParameters().scalability_mode[0] == 'S';
+  }
+
  protected:
   VideoCodecConfig video_codec_config;
 };
@@ -161,6 +162,7 @@ class SvcVideoQualityAnalyzer : public DefaultVideoQualityAnalyzer {
 
   explicit SvcVideoQualityAnalyzer(webrtc::Clock* clock)
       : DefaultVideoQualityAnalyzer(clock,
+                                    test::GetGlobalMetricsLogger(),
                                     DefaultVideoQualityAnalyzerOptions{
                                         .compute_psnr = false,
                                         .compute_ssim = false,
@@ -170,12 +172,13 @@ class SvcVideoQualityAnalyzer : public DefaultVideoQualityAnalyzer {
   void OnFrameEncoded(absl::string_view peer_name,
                       uint16_t frame_id,
                       const EncodedImage& encoded_image,
-                      const EncoderStats& stats) override {
+                      const EncoderStats& stats,
+                      bool discarded) override {
     absl::optional<int> spatial_id = encoded_image.SpatialIndex();
     absl::optional<int> temporal_id = encoded_image.TemporalIndex();
     encoder_layers_seen_[spatial_id.value_or(0)][temporal_id.value_or(0)]++;
-    DefaultVideoQualityAnalyzer::OnFrameEncoded(peer_name, frame_id,
-                                                encoded_image, stats);
+    DefaultVideoQualityAnalyzer::OnFrameEncoded(
+        peer_name, frame_id, encoded_image, stats, discarded);
   }
 
   void OnFramePreDecode(absl::string_view peer_name,
@@ -183,11 +186,16 @@ class SvcVideoQualityAnalyzer : public DefaultVideoQualityAnalyzer {
                         const EncodedImage& input_image) override {
     absl::optional<int> spatial_id = input_image.SpatialIndex();
     absl::optional<int> temporal_id = input_image.TemporalIndex();
-    for (int i = 0; i <= spatial_id.value_or(0); ++i) {
-      // If there are no spatial layers (for example VP8), we still want to
-      // record the temporal index for pseudo-layer "0" frames.
-      if (i == 0 || input_image.SpatialLayerFrameSize(i).has_value()) {
-        decoder_layers_seen_[i][temporal_id.value_or(0)]++;
+    if (!spatial_id) {
+      decoder_layers_seen_[0][temporal_id.value_or(0)]++;
+    } else {
+      for (int i = 0; i <= *spatial_id; ++i) {
+        // If there are no spatial layers (for example VP8), we still want to
+        // record the temporal index for pseudo-layer "0" frames.
+        if (*spatial_id == 0 ||
+            input_image.SpatialLayerFrameSize(i).value_or(0) > 0) {
+          decoder_layers_seen_[i][temporal_id.value_or(0)]++;
+        }
       }
     }
     DefaultVideoQualityAnalyzer::OnFramePreDecode(peer_name, frame_id,
@@ -210,31 +218,71 @@ MATCHER_P2(HasSpatialAndTemporalLayers,
            expected_spatial_layers,
            expected_temporal_layers,
            "") {
-  if (arg.size() != (size_t)expected_spatial_layers) {
+  if (arg.size() != static_cast<size_t>(expected_spatial_layers)) {
     *result_listener << "spatial layer count mismatch expected "
                      << expected_spatial_layers << " but got " << arg.size();
     return false;
   }
-  for (const auto& spatial_layer : arg) {
-    if (spatial_layer.first < 0 ||
-        spatial_layer.first >= expected_spatial_layers) {
+  for (const auto& [spatial_layer_index, temporal_layers] : arg) {
+    if (spatial_layer_index < 0 ||
+        spatial_layer_index >= expected_spatial_layers) {
       *result_listener << "spatial layer index is not in range [0,"
                        << expected_spatial_layers << "[.";
       return false;
     }
 
-    if (spatial_layer.second.size() != (size_t)expected_temporal_layers) {
+    if (temporal_layers.size() !=
+        static_cast<size_t>(expected_temporal_layers)) {
       *result_listener << "temporal layer count mismatch on spatial layer "
-                       << spatial_layer.first << ", expected "
+                       << spatial_layer_index << ", expected "
                        << expected_temporal_layers << " but got "
-                       << spatial_layer.second.size();
+                       << temporal_layers.size();
       return false;
     }
-    for (const auto& temporal_layer : spatial_layer.second) {
-      if (temporal_layer.first < 0 ||
-          temporal_layer.first >= expected_temporal_layers) {
+    for (const auto& [temporal_layer_index, temporal_layer_frame_count] :
+         temporal_layers) {
+      if (temporal_layer_index < 0 ||
+          temporal_layer_index >= expected_temporal_layers) {
         *result_listener << "temporal layer index on spatial layer "
-                         << spatial_layer.first << " is not in range [0,"
+                         << spatial_layer_index << " is not in range [0,"
+                         << expected_temporal_layers << "[.";
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+MATCHER_P2(HasSpatialAndTemporalLayersSMode,
+           expected_spatial_layers,
+           expected_temporal_layers,
+           "") {
+  if (arg.size() != 1) {
+    *result_listener << "spatial layer count mismatch expected 1 but got "
+                     << arg.size();
+    return false;
+  }
+  for (const auto& [spatial_layer_index, temporal_layers] : arg) {
+    if (spatial_layer_index != expected_spatial_layers - 1) {
+      *result_listener << "spatial layer index is not equal to "
+                       << expected_spatial_layers - 1 << ".";
+      return false;
+    }
+
+    if (temporal_layers.size() !=
+        static_cast<size_t>(expected_temporal_layers)) {
+      *result_listener << "temporal layer count mismatch on spatial layer "
+                       << spatial_layer_index << ", expected "
+                       << expected_temporal_layers << " but got "
+                       << temporal_layers.size();
+      return false;
+    }
+    for (const auto& [temporal_layer_index, temporal_layer_frame_count] :
+         temporal_layers) {
+      if (temporal_layer_index < 0 ||
+          temporal_layer_index >= expected_temporal_layers) {
+        *result_listener << "temporal layer index on spatial layer "
+                         << spatial_layer_index << " is not in range [0,"
                          << expected_temporal_layers << "[.";
         return false;
       }
@@ -257,11 +305,16 @@ TEST_P(SvcTest, ScalabilityModeSupported) {
   auto fixture = CreateTestFixture(
       UnitTest::GetInstance()->current_test_info()->name(),
       *network_emulation_manager->time_controller(),
-      CreateTwoNetworkLinks(network_emulation_manager.get(),
-                            BuiltInNetworkBehaviorConfig()),
+      network_emulation_manager->CreateEndpointPairWithTwoWayRoutes(
+          BuiltInNetworkBehaviorConfig()),
       [this](PeerConfigurer* alice) {
         VideoConfig video(/*stream_label=*/"alice-video", /*width=*/1850,
                           /*height=*/1110, /*fps=*/30);
+        if (IsSMode()) {
+          video.emulated_sfu_config = EmulatedSFUConfig(
+              SvcTestParameters().expected_spatial_layers - 1,
+              SvcTestParameters().expected_temporal_layers - 1);
+        }
         RtpEncodingParameters parameters;
         parameters.scalability_mode = SvcTestParameters().scalability_mode;
         video.encoding_params.push_back(parameters);
@@ -277,10 +330,18 @@ TEST_P(SvcTest, ScalabilityModeSupported) {
               HasSpatialAndTemporalLayers(
                   SvcTestParameters().expected_spatial_layers,
                   SvcTestParameters().expected_temporal_layers));
-  EXPECT_THAT(analyzer_ptr->decoder_layers_seen(),
-              HasSpatialAndTemporalLayers(
-                  SvcTestParameters().expected_spatial_layers,
-                  SvcTestParameters().expected_temporal_layers));
+  if (IsSMode()) {
+    EXPECT_THAT(analyzer_ptr->decoder_layers_seen(),
+                HasSpatialAndTemporalLayersSMode(
+                    SvcTestParameters().expected_spatial_layers,
+                    SvcTestParameters().expected_temporal_layers));
+  } else {
+    EXPECT_THAT(analyzer_ptr->decoder_layers_seen(),
+                HasSpatialAndTemporalLayers(
+                    SvcTestParameters().expected_spatial_layers,
+                    SvcTestParameters().expected_temporal_layers));
+  }
+
   RTC_LOG(LS_INFO) << "Encoder layers seen: "
                    << analyzer_ptr->encoder_layers_seen().size();
   for (auto& [spatial_index, temporal_layers] :
@@ -304,56 +365,72 @@ TEST_P(SvcTest, ScalabilityModeSupported) {
 INSTANTIATE_TEST_SUITE_P(
     SvcTestVP8,
     SvcTest,
-    Combine(Values(SvcTestParameters{kVp8CodecName, "L1T1", 1, 1},
-                   SvcTestParameters{kVp8CodecName, "L1T2", 1, 2},
-                   SvcTestParameters{kVp8CodecName, "L1T3", 1, 3}),
+    Combine(Values(SvcTestParameters::Create(kVp8CodecName, "L1T1"),
+                   SvcTestParameters::Create(kVp8CodecName, "L1T2"),
+                   SvcTestParameters::Create(kVp8CodecName, "L1T3")),
             Values(UseDependencyDescriptor::Disabled,
                    UseDependencyDescriptor::Enabled)),
     SvcTestNameGenerator);
-#if RTC_ENABLE_VP9
+
+#if defined(WEBRTC_USE_H264)
+INSTANTIATE_TEST_SUITE_P(
+    SvcTestH264,
+    SvcTest,
+    Combine(ValuesIn({
+                SvcTestParameters::Create(kH264CodecName, "L1T1"),
+                SvcTestParameters::Create(kH264CodecName, "L1T2"),
+                SvcTestParameters::Create(kH264CodecName, "L1T3"),
+            }),
+            // Like AV1, H.264 RTP format does not include SVC related
+            // information, so always use Dependency Descriptor.
+            Values(UseDependencyDescriptor::Enabled)),
+    SvcTestNameGenerator);
+#endif
+
+#if defined(RTC_ENABLE_VP9)
 INSTANTIATE_TEST_SUITE_P(
     SvcTestVP9,
     SvcTest,
     Combine(
         // TODO(bugs.webrtc.org/13960): Fix and enable remaining VP9 modes
         ValuesIn({
-            SvcTestParameters{kVp9CodecName, "L1T1", 1, 1},
-            SvcTestParameters{kVp9CodecName, "L1T2", 1, 2},
-            SvcTestParameters{kVp9CodecName, "L1T3", 1, 3},
-            SvcTestParameters{kVp9CodecName, "L2T1", 2, 1},
-            SvcTestParameters{kVp9CodecName, "L2T1h", 2, 1},
-            SvcTestParameters{kVp9CodecName, "L2T1_KEY", 2, 1},
-            SvcTestParameters{kVp9CodecName, "L2T2", 2, 2},
-            SvcTestParameters{kVp9CodecName, "L2T2h", 2, 2},
-            SvcTestParameters{kVp9CodecName, "L2T2_KEY", 2, 2},
-            SvcTestParameters{kVp9CodecName, "L2T2_KEY_SHIFT", 2, 2},
-            SvcTestParameters{kVp9CodecName, "L2T3", 2, 3},
-            SvcTestParameters{kVp9CodecName, "L2T3h", 2, 3},
-            SvcTestParameters{kVp9CodecName, "L2T3_KEY", 2, 3},
-            // SvcTestParameters{kVp9CodecName, "L2T3_KEY_SHIFT", 2, 3},
-            SvcTestParameters{kVp9CodecName, "L3T1", 3, 1},
-            SvcTestParameters{kVp9CodecName, "L3T1h", 3, 1},
-            SvcTestParameters{kVp9CodecName, "L3T1_KEY", 3, 1},
-            SvcTestParameters{kVp9CodecName, "L3T2", 3, 2},
-            SvcTestParameters{kVp9CodecName, "L3T2h", 3, 2},
-            SvcTestParameters{kVp9CodecName, "L3T2_KEY", 3, 2},
-            // SvcTestParameters{kVp9CodecName, "L3T2_KEY_SHIFT", 3, 2},
-            SvcTestParameters{kVp9CodecName, "L3T3", 3, 3},
-            SvcTestParameters{kVp9CodecName, "L3T3h", 3, 3},
-            SvcTestParameters{kVp9CodecName, "L3T3_KEY", 3, 3},
-            // SvcTestParameters{kVp9CodecName, "L3T3_KEY_SHIFT", 3, 3},
-            // SvcTestParameters{kVp9CodecName, "S2T1", 2, 1},
-            // SvcTestParameters{kVp9CodecName, "S2T1h", 2, 1},
-            // SvcTestParameters{kVp9CodecName, "S2T2", 2, 2},
-            // SvcTestParameters{kVp9CodecName, "S2T2h", 2, 2},
-            SvcTestParameters{kVp9CodecName, "S2T3", 2, 3},
-            // SvcTestParameters{kVp9CodecName, "S2T3h", 2, 3},
-            // SvcTestParameters{kVp9CodecName, "S3T1", 3, 1},
-            // SvcTestParameters{kVp9CodecName, "S3T1h", 3, 1},
-            // SvcTestParameters{kVp9CodecName, "S3T2", 3, 2},
-            // SvcTestParameters{kVp9CodecName, "S3T2h", 3, 2},
-            // SvcTestParameters{kVp9CodecName, "S3T3", 3, 3},
-            // SvcTestParameters{kVp9CodecName, "S3T3h", 3, 3},
+            SvcTestParameters::Create(kVp9CodecName, "L1T1"),
+            SvcTestParameters::Create(kVp9CodecName, "L1T2"),
+            SvcTestParameters::Create(kVp9CodecName, "L1T3"),
+            SvcTestParameters::Create(kVp9CodecName, "L2T1"),
+            SvcTestParameters::Create(kVp9CodecName, "L2T1h"),
+            SvcTestParameters::Create(kVp9CodecName, "L2T1_KEY"),
+            SvcTestParameters::Create(kVp9CodecName, "L2T2"),
+            SvcTestParameters::Create(kVp9CodecName, "L2T2h"),
+            SvcTestParameters::Create(kVp9CodecName, "L2T2_KEY"),
+            SvcTestParameters::Create(kVp9CodecName, "L2T2_KEY_SHIFT"),
+            SvcTestParameters::Create(kVp9CodecName, "L2T3"),
+            SvcTestParameters::Create(kVp9CodecName, "L2T3h"),
+            SvcTestParameters::Create(kVp9CodecName, "L2T3_KEY"),
+            // SvcTestParameters::Create(kVp9CodecName, "L2T3_KEY_SHIFT"),
+            SvcTestParameters::Create(kVp9CodecName, "L3T1"),
+            SvcTestParameters::Create(kVp9CodecName, "L3T1h"),
+            SvcTestParameters::Create(kVp9CodecName, "L3T1_KEY"),
+            SvcTestParameters::Create(kVp9CodecName, "L3T2"),
+            SvcTestParameters::Create(kVp9CodecName, "L3T2h"),
+            SvcTestParameters::Create(kVp9CodecName, "L3T2_KEY"),
+            // SvcTestParameters::Create(kVp9CodecName, "L3T2_KEY_SHIFT"),
+            SvcTestParameters::Create(kVp9CodecName, "L3T3"),
+            SvcTestParameters::Create(kVp9CodecName, "L3T3h"),
+            SvcTestParameters::Create(kVp9CodecName, "L3T3_KEY"),
+            // SvcTestParameters::Create(kVp9CodecName, "L3T3_KEY_SHIFT"),
+            SvcTestParameters::Create(kVp9CodecName, "S2T1"),
+            SvcTestParameters::Create(kVp9CodecName, "S2T1h"),
+            SvcTestParameters::Create(kVp9CodecName, "S2T2"),
+            SvcTestParameters::Create(kVp9CodecName, "S2T2h"),
+            SvcTestParameters::Create(kVp9CodecName, "S2T3"),
+            SvcTestParameters::Create(kVp9CodecName, "S2T3h"),
+            SvcTestParameters::Create(kVp9CodecName, "S3T1"),
+            SvcTestParameters::Create(kVp9CodecName, "S3T1h"),
+            SvcTestParameters::Create(kVp9CodecName, "S3T2"),
+            SvcTestParameters::Create(kVp9CodecName, "S3T2h"),
+            SvcTestParameters::Create(kVp9CodecName, "S3T3"),
+            SvcTestParameters::Create(kVp9CodecName, "S3T3h"),
         }),
         Values(UseDependencyDescriptor::Disabled,
                UseDependencyDescriptor::Enabled)),
@@ -363,43 +440,43 @@ INSTANTIATE_TEST_SUITE_P(
     SvcTestAV1,
     SvcTest,
     Combine(ValuesIn({
-                SvcTestParameters{kAv1CodecName, "L1T1", 1, 1},
-                SvcTestParameters{kAv1CodecName, "L1T2", 1, 2},
-                SvcTestParameters{kAv1CodecName, "L1T3", 1, 3},
-                SvcTestParameters{kAv1CodecName, "L2T1", 2, 1},
-                SvcTestParameters{kAv1CodecName, "L2T1h", 2, 1},
-                SvcTestParameters{kAv1CodecName, "L2T1_KEY", 2, 1},
-                SvcTestParameters{kAv1CodecName, "L2T2", 2, 2},
-                SvcTestParameters{kAv1CodecName, "L2T2h", 2, 2},
-                SvcTestParameters{kAv1CodecName, "L2T2_KEY", 2, 2},
-                SvcTestParameters{kAv1CodecName, "L2T2_KEY_SHIFT", 2, 2},
-                SvcTestParameters{kAv1CodecName, "L2T3", 2, 3},
-                SvcTestParameters{kAv1CodecName, "L2T3h", 2, 3},
-                SvcTestParameters{kAv1CodecName, "L2T3_KEY", 2, 3},
-                // SvcTestParameters{kAv1CodecName, "L2T3_KEY_SHIFT", 2, 3},
-                SvcTestParameters{kAv1CodecName, "L3T1", 3, 1},
-                SvcTestParameters{kAv1CodecName, "L3T1h", 3, 1},
-                SvcTestParameters{kAv1CodecName, "L3T1_KEY", 3, 1},
-                SvcTestParameters{kAv1CodecName, "L3T2", 3, 2},
-                SvcTestParameters{kAv1CodecName, "L3T2h", 3, 2},
-                SvcTestParameters{kAv1CodecName, "L3T2_KEY", 3, 2},
-                // SvcTestParameters{kAv1CodecName, "L3T2_KEY_SHIFT", 3, 2},
-                SvcTestParameters{kAv1CodecName, "L3T3", 3, 3},
-                SvcTestParameters{kAv1CodecName, "L3T3h", 3, 3},
-                SvcTestParameters{kAv1CodecName, "L3T3_KEY", 3, 3},
-                // SvcTestParameters{kAv1CodecName, "L3T3_KEY_SHIFT", 3, 3},
-                // SvcTestParameters{kAv1CodecName, "S2T1", 2, 1},
-                // SvcTestParameters{kAv1CodecName, "S2T1h", 2, 1},
-                // SvcTestParameters{kAv1CodecName, "S2T2", 2, 2},
-                // SvcTestParameters{kAv1CodecName, "S2T2h", 2, 2},
-                // SvcTestParameters{kAv1CodecName, "S2T3", 2, 3},
-                // SvcTestParameters{kAv1CodecName, "S2T3h", 2, 3},
-                // SvcTestParameters{kAv1CodecName, "S3T1", 3, 1},
-                // SvcTestParameters{kAv1CodecName, "S3T1h", 3, 1},
-                // SvcTestParameters{kAv1CodecName, "S3T2", 3, 2},
-                // SvcTestParameters{kAv1CodecName, "S3T2h", 3, 2},
-                // SvcTestParameters{kAv1CodecName, "S3T3", 3, 3},
-                // SvcTestParameters{kAv1CodecName, "S3T3h", 3, 3},
+                SvcTestParameters::Create(kAv1CodecName, "L1T1"),
+                SvcTestParameters::Create(kAv1CodecName, "L1T2"),
+                SvcTestParameters::Create(kAv1CodecName, "L1T3"),
+                SvcTestParameters::Create(kAv1CodecName, "L2T1"),
+                SvcTestParameters::Create(kAv1CodecName, "L2T1h"),
+                SvcTestParameters::Create(kAv1CodecName, "L2T1_KEY"),
+                SvcTestParameters::Create(kAv1CodecName, "L2T2"),
+                SvcTestParameters::Create(kAv1CodecName, "L2T2h"),
+                SvcTestParameters::Create(kAv1CodecName, "L2T2_KEY"),
+                SvcTestParameters::Create(kAv1CodecName, "L2T2_KEY_SHIFT"),
+                SvcTestParameters::Create(kAv1CodecName, "L2T3"),
+                SvcTestParameters::Create(kAv1CodecName, "L2T3h"),
+                SvcTestParameters::Create(kAv1CodecName, "L2T3_KEY"),
+                // SvcTestParameters::Create(kAv1CodecName, "L2T3_KEY_SHIFT"),
+                SvcTestParameters::Create(kAv1CodecName, "L3T1"),
+                SvcTestParameters::Create(kAv1CodecName, "L3T1h"),
+                SvcTestParameters::Create(kAv1CodecName, "L3T1_KEY"),
+                SvcTestParameters::Create(kAv1CodecName, "L3T2"),
+                SvcTestParameters::Create(kAv1CodecName, "L3T2h"),
+                SvcTestParameters::Create(kAv1CodecName, "L3T2_KEY"),
+                // SvcTestParameters::Create(kAv1CodecName, "L3T2_KEY_SHIFT"),
+                SvcTestParameters::Create(kAv1CodecName, "L3T3"),
+                SvcTestParameters::Create(kAv1CodecName, "L3T3h"),
+                SvcTestParameters::Create(kAv1CodecName, "L3T3_KEY"),
+                // SvcTestParameters::Create(kAv1CodecName, "L3T3_KEY_SHIFT"),
+                SvcTestParameters::Create(kAv1CodecName, "S2T1"),
+                SvcTestParameters::Create(kAv1CodecName, "S2T1h"),
+                SvcTestParameters::Create(kAv1CodecName, "S2T2"),
+                SvcTestParameters::Create(kAv1CodecName, "S2T2h"),
+                SvcTestParameters::Create(kAv1CodecName, "S2T3"),
+                SvcTestParameters::Create(kAv1CodecName, "S2T3h"),
+                SvcTestParameters::Create(kAv1CodecName, "S3T1"),
+                SvcTestParameters::Create(kAv1CodecName, "S3T1h"),
+                SvcTestParameters::Create(kAv1CodecName, "S3T2"),
+                SvcTestParameters::Create(kAv1CodecName, "S3T2h"),
+                SvcTestParameters::Create(kAv1CodecName, "S3T3"),
+                SvcTestParameters::Create(kAv1CodecName, "S3T3h"),
             }),
             Values(UseDependencyDescriptor::Enabled)),
     SvcTestNameGenerator);

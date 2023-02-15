@@ -307,6 +307,10 @@ specific_include_rules = {
     "+rtc_base/containers/flat_map.h",
   ],
 
+  "video_track_source_proxy_factory.h": [
+    "+rtc_base/thread.h",
+  ],
+
   # .cc files in api/ should not be restricted in what they can #include,
   # so we re-add all the top-level directories here. (That's because .h
   # files leak their #includes to whoever's #including them, but .cc files

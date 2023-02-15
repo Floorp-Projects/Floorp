@@ -47,7 +47,6 @@ bool IsEnabled(const FieldTrialsView& field_trials, absl::string_view key) {
 
 const TimeDelta PacingController::kMaxExpectedQueueLength =
     TimeDelta::Millis(2000);
-const float PacingController::kDefaultPaceMultiplier = 2.5f;
 const TimeDelta PacingController::kPausedProcessInterval =
     kCongestedPacketInterval;
 const TimeDelta PacingController::kMinSleepTime = TimeDelta::Millis(1);

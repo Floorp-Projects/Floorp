@@ -138,11 +138,11 @@ void RtpRtcpEndToEndTest::TestRtpStatePreservation(
 
    private:
     std::vector<VideoStream> CreateEncoderStreams(
-        int width,
-        int height,
+        int frame_width,
+        int frame_height,
         const VideoEncoderConfig& encoder_config) override {
       std::vector<VideoStream> streams =
-          test::CreateVideoStreams(width, height, encoder_config);
+          test::CreateVideoStreams(frame_width, frame_height, encoder_config);
 
       if (encoder_config.number_of_streams > 1) {
         // Lower bitrates so that all streams send initially.

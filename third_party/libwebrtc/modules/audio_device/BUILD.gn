@@ -72,6 +72,7 @@ rtc_library("audio_device_buffer") {
     "../../common_audio:common_audio_c",
     "../../rtc_base:buffer",
     "../../rtc_base:checks",
+    "../../rtc_base:event_tracer",
     "../../rtc_base:logging",
     "../../rtc_base:macromagic",
     "../../rtc_base:rtc_task_queue",
@@ -229,19 +230,13 @@ rtc_library("audio_device_impl") {
     "include/test_audio_device.cc",
     "include/test_audio_device.h",
   ]
+
   if (build_with_mozilla) {
     sources -= [
       "include/test_audio_device.cc",
       "include/test_audio_device.h",
     ]
   }
-
-  #if (build_with_mozilla) {
-  #  sources += [
-  #    "opensl/single_rw_fifo.cc",
-  #    "opensl/single_rw_fifo.h",
-  #  ]
-  #}
 
   defines = []
   cflags = []
@@ -394,7 +389,6 @@ if (is_mac) {
   }
 }
 
-if (rtc_include_tests) {
 rtc_source_set("mock_audio_device") {
   visibility = [ "*" ]
   testonly = true
@@ -410,7 +404,6 @@ rtc_source_set("mock_audio_device") {
     "../../api:make_ref_counted",
     "../../test:test_support",
   ]
-}
 }
 
 if (rtc_include_tests && !build_with_chromium) {

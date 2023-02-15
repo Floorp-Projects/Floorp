@@ -12,7 +12,7 @@
 #include "api/make_ref_counted.h"
 #include "api/video/i420_buffer.h"
 #include "rtc_base/checks.h"
-#include "libyuv/include/libyuv/convert.h"
+#include "third_party/libyuv/include/libyuv/convert.h"
 
 namespace webrtc {
 

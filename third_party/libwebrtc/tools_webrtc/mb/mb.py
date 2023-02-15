@@ -52,6 +52,7 @@ class WebRTCMetaBuildWrapper(mb.MetaBuildWrapper):
     test_type = isolate_map[target]['type']
 
     is_android = 'target_os="android"' in vals['gn_args']
+    is_fuchsia = 'target_os="fuchsia"' in vals['gn_args']
     is_linux = self.platform.startswith('linux') and not is_android
     is_ios = 'target_os="ios"' in vals['gn_args']
 
@@ -85,7 +86,7 @@ class WebRTCMetaBuildWrapper(mb.MetaBuildWrapper):
           '--logcat-output-file', '${ISOLATED_OUTDIR}/logcats',
           '--store-tombstones'
       ]
-    elif is_ios:
+    elif is_ios or is_fuchsia:
       cmdline += [
           vpython_exe, '../../tools_webrtc/flags_compatibility.py',
           'bin/run_%s' % target

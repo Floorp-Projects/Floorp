@@ -596,10 +596,10 @@ RTCError PeerConnection::Initialize(
   cricket::ServerAddresses stun_servers;
   std::vector<cricket::RelayServerConfig> turn_servers;
 
-  RTCErrorType parse_error =
-      ParseIceServers(configuration.servers, &stun_servers, &turn_servers);
-  if (parse_error != RTCErrorType::NONE) {
-    return RTCError(parse_error, "ICE server parse failed");
+  RTCError parse_error = ParseIceServersOrError(configuration.servers,
+                                                &stun_servers, &turn_servers);
+  if (!parse_error.ok()) {
+    return parse_error;
   }
 
   // Add the turn logging id to all turn servers
@@ -667,10 +667,6 @@ RTCError PeerConnection::Initialize(
         ReportUsagePattern();
       },
       delay_ms);
-
-  // Record the number of configured ICE servers for all connections.
-  RTC_HISTOGRAM_COUNTS_LINEAR("WebRTC.PeerConnection.IceServers.Configured",
-                              configuration_.servers.size(), 0, 31, 32);
 
   return RTCError::OK();
 }
@@ -1523,10 +1519,10 @@ RTCError PeerConnection::SetConfiguration(
   // Parse ICE servers before hopping to network thread.
   cricket::ServerAddresses stun_servers;
   std::vector<cricket::RelayServerConfig> turn_servers;
-  RTCErrorType parse_error =
-      ParseIceServers(configuration.servers, &stun_servers, &turn_servers);
-  if (parse_error != RTCErrorType::NONE) {
-    return RTCError(parse_error, "ICE server parse failed");
+  RTCError parse_error = ParseIceServersOrError(configuration.servers,
+                                                &stun_servers, &turn_servers);
+  if (!parse_error.ok()) {
+    return parse_error;
   }
   // Add the turn logging id to all turn servers
   for (cricket::RelayServerConfig& turn_server : turn_servers) {
@@ -1984,10 +1980,6 @@ void PeerConnection::ReportFirstConnectUsageMetrics() {
   }
   RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.ProvisionalAnswer", pranswer,
                             kProvisionalAnswerMax);
-
-  // Record the number of configured ICE servers for connected connections.
-  RTC_HISTOGRAM_COUNTS_LINEAR("WebRTC.PeerConnection.IceServers.Connected",
-                              configuration_.servers.size(), 0, 31, 32);
 
   // Record the number of valid / invalid ice-ufrag. We do allow certain
   // non-spec ice-char for backward-compat reasons. At this point we know

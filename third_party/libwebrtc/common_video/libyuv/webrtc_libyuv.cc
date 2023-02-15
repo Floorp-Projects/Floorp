@@ -9,28 +9,26 @@
  */
 
 #include "common_video/libyuv/include/webrtc_libyuv.h"
-#include "libyuv/planar_functions.h"
 
 #include <cstdint>
 
 #include "api/video/i420_buffer.h"
 #include "common_video/include/video_frame_buffer.h"
 #include "rtc_base/checks.h"
-#include "libyuv/include/libyuv.h"
+#include "third_party/libyuv/include/libyuv.h"
 
 namespace webrtc {
 
 size_t CalcBufferSize(VideoType type, int width, int height) {
   RTC_DCHECK_GE(width, 0);
   RTC_DCHECK_GE(height, 0);
-
   size_t buffer_size = 0;
   switch (type) {
     case VideoType::kI420:
-    case VideoType::kNV12:
     case VideoType::kNV21:
     case VideoType::kIYUV:
-    case VideoType::kYV12: {
+    case VideoType::kYV12:
+    case VideoType::kNV12: {
       int half_width = (width + 1) >> 1;
       int half_height = (height + 1) >> 1;
       buffer_size = width * height + half_width * half_height * 2;
@@ -111,8 +109,6 @@ int ConvertVideoType(VideoType video_type) {
       return libyuv::FOURCC_MJPG;
     case VideoType::kNV21:
       return libyuv::FOURCC_NV21;
-    case VideoType::kNV12:
-      return libyuv::FOURCC_NV12;
     case VideoType::kARGB:
       return libyuv::FOURCC_ARGB;
     case VideoType::kBGRA:
@@ -121,6 +117,8 @@ int ConvertVideoType(VideoType video_type) {
       return libyuv::FOURCC_R444;
     case VideoType::kARGB1555:
       return libyuv::FOURCC_RGBO;
+    case VideoType::kNV12:
+      return libyuv::FOURCC_NV12;
   }
   RTC_DCHECK_NOTREACHED();
   return libyuv::FOURCC_ANY;

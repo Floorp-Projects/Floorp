@@ -58,7 +58,8 @@ void ExampleVideoQualityAnalyzer::OnFrameEncoded(
     absl::string_view peer_name,
     uint16_t frame_id,
     const webrtc::EncodedImage& encoded_image,
-    const EncoderStats& stats) {
+    const EncoderStats& stats,
+    bool discarded) {
   MutexLock lock(&lock_);
   ++frames_encoded_;
 }

@@ -72,7 +72,6 @@ rtc_library("common_audio") {
   }
 }
 
-if (rtc_include_tests) {
 rtc_source_set("mock_common_audio") {
   visibility += webrtc_default_visibility
   testonly = true
@@ -84,7 +83,6 @@ rtc_source_set("mock_common_audio") {
     ":common_audio",
     "../test:test_support",
   ]
-}
 }
 
 rtc_source_set("common_audio_c_arm_asm") {
@@ -264,9 +262,9 @@ if (target_cpu == "x86" || target_cpu == "x64") {
 
   rtc_library("common_audio_avx2") {
     sources = [
-      "resampler/sinc_resampler_avx2.cc",
       "fir_filter_avx2.cc",
       "fir_filter_avx2.h",
+      "resampler/sinc_resampler_avx2.cc",
     ]
 
       cflags = [

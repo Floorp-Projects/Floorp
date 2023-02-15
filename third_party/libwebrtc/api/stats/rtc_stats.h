@@ -215,6 +215,17 @@ enum class NonStandardGroupId {
   kRtcStatsRelativePacketArrivalDelay,
 };
 
+// Certain stat members should only be exposed to the JavaScript API in
+// certain circumstances as to avoid passive fingerprinting.
+enum class StatExposureCriteria : uint8_t {
+  // The stat should always be exposed. This is the default.
+  kAlways,
+  // The stat exposes hardware capabilities and thus should has limited exposure
+  // to JavaScript. The requirements for exposure are written in the spec at
+  // https://w3c.github.io/webrtc-stats/#limiting-exposure-of-hardware-capabilities.
+  kHardwareCapability,
+};
+
 // Interface for `RTCStats` members, which have a name and a value of a type
 // defined in a subclass. Only the types listed in `Type` are supported, these
 // are implemented by `RTCStatsMember<T>`. The value of a member may be
@@ -256,9 +267,17 @@ class RTCStatsMemberInterface {
   // Non-standard stats members can have group IDs in order to be exposed in
   // JavaScript through experiments. Standardized stats have no group IDs.
   virtual std::vector<NonStandardGroupId> group_ids() const { return {}; }
+  // The conditions for exposing the statistic to JavaScript. Stats with
+  // criteria that is not kAlways has some restriction and should be filtered
+  // in accordance to the spec.
+  virtual StatExposureCriteria exposure_criteria() const {
+    return StatExposureCriteria::kAlways;
+  }
   // Type and value comparator. The names are not compared. These operators are
   // exposed for testing.
-  virtual bool operator==(const RTCStatsMemberInterface& other) const = 0;
+  bool operator==(const RTCStatsMemberInterface& other) const {
+    return IsEqual(other);
+  }
   bool operator!=(const RTCStatsMemberInterface& other) const {
     return !(*this == other);
   }
@@ -280,6 +299,8 @@ class RTCStatsMemberInterface {
   RTCStatsMemberInterface(const char* name, bool is_defined)
       : name_(name), is_defined_(is_defined) {}
 
+  virtual bool IsEqual(const RTCStatsMemberInterface& other) const = 0;
+
   const char* const name_;
   bool is_defined_;
 };
@@ -291,16 +312,21 @@ template <typename T>
 class RTCStatsMember : public RTCStatsMemberInterface {
  public:
   explicit RTCStatsMember(const char* name)
-      : RTCStatsMemberInterface(name, /*is_defined=*/false), value_() {}
+      : RTCStatsMemberInterface(name,
+                                /*is_defined=*/false),
+        value_() {}
   RTCStatsMember(const char* name, const T& value)
-      : RTCStatsMemberInterface(name, /*is_defined=*/true), value_(value) {}
+      : RTCStatsMemberInterface(name,
+                                /*is_defined=*/true),
+        value_(value) {}
   RTCStatsMember(const char* name, T&& value)
-      : RTCStatsMemberInterface(name, /*is_defined=*/true),
+      : RTCStatsMemberInterface(name,
+                                /*is_defined=*/true),
         value_(std::move(value)) {}
-  explicit RTCStatsMember(const RTCStatsMember<T>& other)
+  RTCStatsMember(const RTCStatsMember<T>& other)
       : RTCStatsMemberInterface(other.name_, other.is_defined_),
         value_(other.value_) {}
-  explicit RTCStatsMember(RTCStatsMember<T>&& other)
+  RTCStatsMember(RTCStatsMember<T>&& other)
       : RTCStatsMemberInterface(other.name_, other.is_defined_),
         value_(std::move(other.value_)) {}
 
@@ -309,17 +335,6 @@ class RTCStatsMember : public RTCStatsMemberInterface {
   bool is_sequence() const override;
   bool is_string() const override;
   bool is_standardized() const override { return true; }
-  bool operator==(const RTCStatsMemberInterface& other) const override {
-    if (type() != other.type() || is_standardized() != other.is_standardized())
-      return false;
-    const RTCStatsMember<T>& other_t =
-        static_cast<const RTCStatsMember<T>&>(other);
-    if (!is_defined_)
-      return !other_t.is_defined();
-    if (!other.is_defined())
-      return false;
-    return value_ == other_t.value_;
-  }
   std::string ValueToString() const override;
   std::string ValueToJson() const override;
 
@@ -363,6 +378,21 @@ class RTCStatsMember : public RTCStatsMemberInterface {
     return &value_;
   }
 
+ protected:
+  bool IsEqual(const RTCStatsMemberInterface& other) const override {
+    if (type() != other.type() ||
+        is_standardized() != other.is_standardized() ||
+        exposure_criteria() != other.exposure_criteria())
+      return false;
+    const RTCStatsMember<T>& other_t =
+        static_cast<const RTCStatsMember<T>&>(other);
+    if (!is_defined_)
+      return !other_t.is_defined();
+    if (!other.is_defined())
+      return false;
+    return value_ == other_t.value_;
+  }
+
  private:
   T value_;
 };
@@ -404,6 +434,81 @@ WEBRTC_DECLARE_RTCSTATSMEMBER(std::vector<double>);
 WEBRTC_DECLARE_RTCSTATSMEMBER(std::vector<std::string>);
 WEBRTC_DECLARE_RTCSTATSMEMBER(rtc_stats_internal::MapStringUint64);
 WEBRTC_DECLARE_RTCSTATSMEMBER(rtc_stats_internal::MapStringDouble);
+
+// For stats with restricted exposure.
+template <typename T, StatExposureCriteria E>
+class RTCRestrictedStatsMember : public RTCStatsMember<T> {
+ public:
+  explicit RTCRestrictedStatsMember(const char* name)
+      : RTCStatsMember<T>(name) {}
+  RTCRestrictedStatsMember(const char* name, const T& value)
+      : RTCStatsMember<T>(name, value) {}
+  RTCRestrictedStatsMember(const char* name, T&& value)
+      : RTCStatsMember<T>(name, std::move(value)) {}
+  RTCRestrictedStatsMember(const RTCRestrictedStatsMember<T, E>& other)
+      : RTCStatsMember<T>(other) {}
+  RTCRestrictedStatsMember(RTCRestrictedStatsMember<T, E>&& other)
+      : RTCStatsMember<T>(std::move(other)) {}
+
+  StatExposureCriteria exposure_criteria() const override { return E; }
+
+  T& operator=(const T& value) { return RTCStatsMember<T>::operator=(value); }
+  T& operator=(const T&& value) {
+    return RTCStatsMember<T>::operator=(std::move(value));
+  }
+
+ private:
+  static_assert(E != StatExposureCriteria::kAlways,
+                "kAlways is the default exposure criteria. Use "
+                "RTCStatMember<T> instead.");
+};
+
+extern template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<bool, StatExposureCriteria::kHardwareCapability>;
+extern template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<int32_t,
+                             StatExposureCriteria::kHardwareCapability>;
+extern template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<uint32_t,
+                             StatExposureCriteria::kHardwareCapability>;
+extern template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<int64_t,
+                             StatExposureCriteria::kHardwareCapability>;
+extern template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<uint64_t,
+                             StatExposureCriteria::kHardwareCapability>;
+extern template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<double, StatExposureCriteria::kHardwareCapability>;
+extern template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<std::string,
+                             StatExposureCriteria::kHardwareCapability>;
+extern template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<std::vector<bool>,
+                             StatExposureCriteria::kHardwareCapability>;
+extern template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<std::vector<int32_t>,
+                             StatExposureCriteria::kHardwareCapability>;
+extern template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<std::vector<uint32_t>,
+                             StatExposureCriteria::kHardwareCapability>;
+extern template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<std::vector<int64_t>,
+                             StatExposureCriteria::kHardwareCapability>;
+extern template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<std::vector<uint64_t>,
+                             StatExposureCriteria::kHardwareCapability>;
+extern template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<std::vector<double>,
+                             StatExposureCriteria::kHardwareCapability>;
+extern template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<std::vector<std::string>,
+                             StatExposureCriteria::kHardwareCapability>;
+extern template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<std::map<std::string, uint64_t>,
+                             StatExposureCriteria::kHardwareCapability>;
+extern template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)
+    RTCRestrictedStatsMember<std::map<std::string, double>,
+                             StatExposureCriteria::kHardwareCapability>;
 
 // Using inheritance just so that it's obvious from the member's declaration
 // whether it's standardized or not.

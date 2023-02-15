@@ -923,6 +923,8 @@ class WebRtcVoiceMediaChannel::WebRtcAudioSendStream
               size_t number_of_channels,
               size_t number_of_frames,
               absl::optional<int64_t> absolute_capture_timestamp_ms) override {
+    TRACE_EVENT_BEGIN2("webrtc", "WebRtcAudioSendStream::OnData", "sample_rate",
+                       sample_rate, "number_of_frames", number_of_frames);
     RTC_DCHECK_EQ(16, bits_per_sample);
     RTC_CHECK_RUNS_SERIALIZED(&audio_capture_race_checker_);
     RTC_DCHECK(stream_);
@@ -938,6 +940,8 @@ class WebRtcVoiceMediaChannel::WebRtcAudioSendStream
           *absolute_capture_timestamp_ms);
     }
     stream_->SendAudioData(std::move(audio_frame));
+    TRACE_EVENT_END1("webrtc", "WebRtcAudioSendStream::OnData",
+                     "number_of_channels", number_of_channels);
   }
 
   // Callback from the `source_` when it is going away. In case Start() has
@@ -1931,7 +1935,7 @@ bool WebRtcVoiceMediaChannel::AddRecvStream(const StreamParams& sp) {
       codec_pair_id_, engine()->audio_jitter_buffer_max_packets_,
       engine()->audio_jitter_buffer_fast_accelerate_,
       engine()->audio_jitter_buffer_min_delay_ms_, unsignaled_frame_decryptor_,
-      crypto_options_, nullptr);
+      crypto_options_, unsignaled_frame_transformer_);
 
   recv_streams_.insert(std::make_pair(
       ssrc, new WebRtcAudioReceiveStream(std::move(config), call_)));
@@ -2477,6 +2481,13 @@ void WebRtcVoiceMediaChannel::SetDepacketizerToDecoderFrameTransformer(
     uint32_t ssrc,
     rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer) {
   RTC_DCHECK_RUN_ON(worker_thread_);
+  if (ssrc == 0) {
+    // If the receiver is unsignaled, save the frame transformer and set it when
+    // the stream is associated with an ssrc.
+    unsignaled_frame_transformer_ = std::move(frame_transformer);
+    return;
+  }
+
   auto matching_stream = recv_streams_.find(ssrc);
   if (matching_stream == recv_streams_.end()) {
     RTC_LOG(LS_INFO) << "Attempting to set frame transformer for SSRC:" << ssrc

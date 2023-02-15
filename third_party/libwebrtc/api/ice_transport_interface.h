@@ -89,7 +89,20 @@ struct IceTransportInit final {
   // transport, in contrast with a legacy ICE controller that only picks the
   // best connection to use or ping, and lets the transport decide when and
   // whether to switch.
-  // TODO(bugs.webrtc.org/14367): currently unused, update doc when used.
+  //
+  // Which ICE controller is used is determined based on the field trial
+  // "WebRTC-UseActiveIceController" as follows:
+  //
+  //   1. If the field trial is not enabled
+  //      a. The legacy ICE controller factory is used if one is supplied.
+  //      b. If not, a default ICE controller (BasicIceController) is
+  //      constructed and used.
+  //
+  //   2. If the field trial is enabled
+  //      a. If an active ICE controller factory is supplied, it is used and
+  //      the legacy ICE controller factory is not used.
+  //      b. If not, a default active ICE controller is used, wrapping over the
+  //      supplied or the default legacy ICE controller.
   void set_active_ice_controller_factory(
       cricket::ActiveIceControllerFactoryInterface*
           active_ice_controller_factory) {

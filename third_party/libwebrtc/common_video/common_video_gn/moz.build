@@ -39,11 +39,9 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/common_video/h264/pps_parser.cc",
     "/third_party/libwebrtc/common_video/h264/sps_parser.cc",
     "/third_party/libwebrtc/common_video/h264/sps_vui_rewriter.cc",
-    "/third_party/libwebrtc/common_video/incoming_video_stream.cc",
     "/third_party/libwebrtc/common_video/libyuv/webrtc_libyuv.cc",
     "/third_party/libwebrtc/common_video/video_frame_buffer.cc",
-    "/third_party/libwebrtc/common_video/video_frame_buffer_pool.cc",
-    "/third_party/libwebrtc/common_video/video_render_frames.cc"
+    "/third_party/libwebrtc/common_video/video_frame_buffer_pool.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:

@@ -36,7 +36,6 @@
 #include "api/video_codecs/video_decoder_factory.h"
 #include "call/rtp_stream_receiver_controller_interface.h"
 #include "call/rtx_receive_stream.h"
-#include "common_video/include/incoming_video_stream.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/include/video_coding_defines.h"
 #include "modules/video_coding/include/video_error_codes.h"
@@ -54,6 +53,7 @@
 #include "video/call_stats2.h"
 #include "video/frame_dumping_decoder.h"
 #include "video/receive_statistics_proxy2.h"
+#include "video/render/incoming_video_stream.h"
 #include "video/task_queue_frame_decode_scheduler.h"
 
 namespace webrtc {
@@ -66,9 +66,9 @@ namespace {
 constexpr TimeDelta kMinBaseMinimumDelay = TimeDelta::Zero();
 constexpr TimeDelta kMaxBaseMinimumDelay = TimeDelta::Seconds(10);
 
-// Create a decoder for the preferred codec before the stream starts and any
-// other decoder lazily on demand.
-constexpr int kDefaultMaximumPreStreamDecoders = 1;
+// Create no decoders before the stream starts. All decoders are created on
+// demand when we receive payload data of the corresponding type.
+constexpr int kDefaultMaximumPreStreamDecoders = 0;
 
 // Concrete instance of RecordableEncodedFrame wrapping needed content
 // from EncodedFrame.
@@ -420,19 +420,19 @@ void VideoReceiveStream2::Start() {
 
 void VideoReceiveStream2::Stop() {
   RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
-  {
-    // TODO(bugs.webrtc.org/11993): Make this call on the network thread.
-    // Also call `GetUniqueFramesSeen()` at the same time (since it's a counter
-    // that's updated on the network thread).
-    RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-    rtp_video_stream_receiver_.StopReceive();
-  }
+
+  // TODO(bugs.webrtc.org/11993): Make this call on the network thread.
+  // Also call `GetUniqueFramesSeen()` at the same time (since it's a counter
+  // that's updated on the network thread).
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  rtp_video_stream_receiver_.StopReceive();
 
   stats_proxy_.OnUniqueFramesCounted(
       rtp_video_stream_receiver_.GetUniqueFramesSeen());
 
   buffer_->Stop();
   call_stats_->DeregisterStatsObserver(this);
+
   if (decoder_running_) {
     rtc::Event done;
     decode_queue_.PostTask([this, &done] {
@@ -453,6 +453,11 @@ void VideoReceiveStream2::Stop() {
 
     UpdateHistograms();
   }
+
+  // TODO(bugs.webrtc.org/11993): Make these calls on the network thread.
+  RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
+  rtp_video_stream_receiver_.RemoveReceiveCodecs();
+  video_receiver_.DeregisterReceiveCodecs();
 
   video_stream_decoder_.reset();
   incoming_video_stream_.reset();

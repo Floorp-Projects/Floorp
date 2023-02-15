@@ -43,6 +43,7 @@ rtc_library("audio_codecs_api") {
     "../units:time_delta",
   ]
   absl_deps = [
+    "//third_party/abseil-cpp/absl/base:core_headers",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]

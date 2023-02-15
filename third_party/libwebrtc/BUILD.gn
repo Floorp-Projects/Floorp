@@ -52,7 +52,6 @@ if (!build_with_chromium && !build_with_mozilla) {
         ":voip_unittests",
         ":webrtc_nonparallel_tests",
         ":webrtc_perf_tests",
-        "api/test/metrics:metrics_unittests",
         "common_audio:common_audio_unittests",
         "common_video:common_video_unittests",
         "examples:examples_unittests",
@@ -504,13 +503,13 @@ if (!build_with_chromium) {
     if (build_with_mozilla) {
       deps -= [
         "api:create_peerconnection_factory",
-        "api:libjingle_peerconnection_api",
         "api:rtc_error",
         "api:transport_api",
         "api/crypto",
         "api/rtc_event_log:rtc_event_log_factory",
         "api/task_queue",
         "api/task_queue:default_task_queue_factory",
+        "api/test/metrics",
         "logging:rtc_event_log_api",
         "p2p:rtc_p2p",
         "pc:libjingle_peerconnection",
@@ -596,6 +595,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "api/audio_codecs/test:audio_codecs_api_unittests",
       "api/numerics:numerics_unittests",
       "api/task_queue:pending_task_safety_flag_unittests",
+      "api/test/metrics:metrics_unittests",
       "api/transport:stun_unittest",
       "api/video/test:rtc_api_video_unittests",
       "api/video_codecs/test:video_codecs_api_unittests",
@@ -616,7 +616,6 @@ if (rtc_include_tests && !build_with_chromium) {
       "rtc_base/experiments:experiments_unittests",
       "rtc_base/system:file_wrapper_unittests",
       "rtc_base/task_utils:repeating_task_unittests",
-      "rtc_base/time:timestamp_extrapolator_unittests",
       "rtc_base/units:units_unittests",
       "sdk:sdk_tests",
       "test:rtp_test_utils",
@@ -768,7 +767,6 @@ if (rtc_include_tests && !build_with_chromium) {
   }
 }
 
-if (!build_with_mozilla) {
 # Build target for standalone dcsctp
 rtc_static_library("dcsctp") {
   # Only the root target should depend on this.
@@ -784,7 +782,6 @@ rtc_static_library("dcsctp") {
     "net/dcsctp/socket:dcsctp_socket",
     "net/dcsctp/timer:task_queue_timeout",
   ]
-}
 }
 
 # ---- Poisons ----

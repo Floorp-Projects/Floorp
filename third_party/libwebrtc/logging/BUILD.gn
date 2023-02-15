@@ -385,7 +385,6 @@ if (rtc_enable_protobuf) {
   }
 }
 
-if (rtc_include_tests) {
 rtc_library("fake_rtc_event_log") {
   testonly = true
   sources = [
@@ -401,7 +400,6 @@ rtc_library("fake_rtc_event_log") {
     "../rtc_base:macromagic",
     "../rtc_base/synchronization:mutex",
   ]
-}
 }
 
 if (rtc_enable_protobuf) {
@@ -465,6 +463,7 @@ if (rtc_enable_protobuf) {
       "../rtc_base/system:file_wrapper",
     ]
     absl_deps = [
+      "//third_party/abseil-cpp/absl/base:core_headers",
       "//third_party/abseil-cpp/absl/memory",
       "//third_party/abseil-cpp/absl/strings",
       "//third_party/abseil-cpp/absl/types:optional",
@@ -562,7 +561,6 @@ if (rtc_enable_protobuf) {
   }
 }
 
-if (!build_with_mozilla) {
 rtc_library("ice_log") {
   sources = [
     "rtc_event_log/events/rtc_event_dtls_transport_state.cc",
@@ -588,7 +586,6 @@ rtc_library("ice_log") {
     "//third_party/abseil-cpp/absl/memory",
     "//third_party/abseil-cpp/absl/strings",
   ]
-}
 }
 
 if (rtc_include_tests) {
