@@ -346,6 +346,8 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
 
   bool IsWaitingForPaint(mozilla::TimeStamp aTime);
 
+  void ScheduleAutoFocusFlush(Document* aDocument);
+
   // nsARefreshObserver
   NS_IMETHOD_(MozExternalRefCountType) AddRef(void) override {
     return TransactionIdAllocator::AddRef();
@@ -447,6 +449,8 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   // paints to one per vsync (see CanDoExtraTick).
   void FinishedVsyncTick() { mAttemptedExtraTickSinceLastVsync = false; }
 
+  void CancelFlushAutoFocus(Document* aDocument);
+
  private:
   typedef nsTArray<RefPtr<VVPResizeEvent>> VisualViewportResizeEventArray;
   typedef nsTArray<RefPtr<mozilla::Runnable>> ScrollEventArray;
@@ -474,6 +478,8 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
     operator RefPtr<nsARefreshObserver>() { return mObserver; }
   };
   typedef nsTObserverArray<ObserverData> ObserverArray;
+  MOZ_CAN_RUN_SCRIPT
+  void FlushAutoFocusDocuments();
   void RunFullscreenSteps();
   void DispatchAnimationEvents();
   MOZ_CAN_RUN_SCRIPT
@@ -669,6 +675,7 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   // nsTArray on purpose, because we want to be able to swap.
   nsTArray<Document*> mFrameRequestCallbackDocs;
   nsTArray<Document*> mThrottledFrameRequestCallbackDocs;
+  nsTArray<RefPtr<Document>> mAutoFocusFlushDocuments;
   nsTObserverArray<nsAPostRefreshObserver*> mPostRefreshObservers;
   nsTArray<mozilla::UniquePtr<mozilla::PendingFullscreenEvent>>
       mPendingFullscreenEvents;

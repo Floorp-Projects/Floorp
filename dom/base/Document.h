@@ -1927,6 +1927,8 @@ class Document : public nsINode,
   // layer. The removed element, if any, is returned.
   Element* TopLayerPop(FunctionRef<bool(Element*)> aPredicate);
 
+  MOZ_CAN_RUN_SCRIPT bool TryAutoFocusCandidate(Element& aElement);
+
  public:
   // Removes all the elements with fullscreen flag set from the top layer, and
   // clears their fullscreen flag.
@@ -3103,10 +3105,14 @@ class Document : public nsINode,
 
   nsISupports* GetCurrentContentSink();
 
-  void SetAutoFocusElement(Element* aAutoFocusElement);
-  void TriggerAutoFocus();
+  void ElementWithAutoFocusInserted(Element* aAutoFocusCandidate);
+  MOZ_CAN_RUN_SCRIPT void FlushAutoFocusCandidates();
+  void ScheduleFlushAutoFocusCandidates();
+  bool HasAutoFocusCandidates() const {
+    return !mAutoFocusCandidates.IsEmpty();
+  }
+
   void SetAutoFocusFired();
-  bool IsAutoFocusFired();
 
   void SetScrollToRef(nsIURI* aDocumentURI);
   MOZ_CAN_RUN_SCRIPT void ScrollToRef();
@@ -3949,6 +3955,8 @@ class Document : public nsINode,
   void DoCacheAllKnownLangPrefs();
   void RecomputeLanguageFromCharset();
   bool GetSHEntryHasUserInteraction();
+
+  void AppendAutoFocusCandidateToTopDocument(Element* aAutoFocusCandidate);
 
  public:
   void SetMayNeedFontPrefsUpdate() { mMayNeedFontPrefsUpdate = true; }
@@ -5139,7 +5147,11 @@ class Document : public nsINode,
   // Recorded time of change to 'loading' state.
   TimeStamp mLoadingTimeStamp;
 
-  nsWeakPtr mAutoFocusElement;
+  // Decided to use nsTObserverArray because it allows us to
+  // remove candidates while iterating them and this is what
+  // the spec defines. We could implement the spec without
+  // using nsTObserverArray, however using nsTObserverArray is more clear.
+  nsTObserverArray<nsWeakPtr> mAutoFocusCandidates;
 
   nsCString mScrollToRef;
 
