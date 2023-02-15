@@ -67,7 +67,6 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.gfx += [
-    "AllOfDcomp.h",
     "D3D11Checks.h",
     "DeviceManagerDx.h",
     "DisplayConfigWindows.h",
