@@ -16,11 +16,11 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
+  AttributionCode: "resource:///modules/AttributionCode.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
-  AttributionCode: "resource:///modules/AttributionCode.jsm",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
