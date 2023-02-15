@@ -44,6 +44,7 @@ patch_file4="$(pwd)/taskcluster/scripts/misc/mingw-enum.patch"
 patch_file5="$(pwd)/taskcluster/scripts/misc/mingw-widl.patch"
 patch_file6="$(pwd)/taskcluster/scripts/misc/mingw-dispatchqueue.patch"
 patch_file7="$(pwd)/taskcluster/scripts/misc/mingw-numerics.patch"
+patch_file8="$(pwd)/taskcluster/scripts/misc/mingw-mft-type.patch"
 
 prepare() {
   pushd $MOZ_FETCHES_DIR/mingw-w64
@@ -54,6 +55,7 @@ prepare() {
   patch -p1 <$patch_file5
   patch -p1 <$patch_file6
   patch -p1 <$patch_file7
+  patch -p1 <$patch_file8
   popd
 }
 

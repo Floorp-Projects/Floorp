@@ -275,8 +275,6 @@ const char* MFTMessageTypeToStr(MFT_MESSAGE_TYPE aMsg) {
       return "MFT_MESSAGE_NOTIFY_END_OF_STREAM";
     case MFT_MESSAGE_NOTIFY_START_OF_STREAM:
       return "MFT_MESSAGE_NOTIFY_START_OF_STREAM";
-#if !defined(__MINGW32__)
-    // These messages are not defined in MinGW header. See bug 1740359.
     case MFT_MESSAGE_DROP_SAMPLES:
       return "MFT_MESSAGE_DROP_SAMPLES";
     case MFT_MESSAGE_COMMAND_TICK:
@@ -291,7 +289,6 @@ const char* MFTMessageTypeToStr(MFT_MESSAGE_TYPE aMsg) {
       return "MFT_MESSAGE_COMMAND_SET_OUTPUT_STREAM_STATE";
     case MFT_MESSAGE_COMMAND_FLUSH_OUTPUT_STREAM:
       return "MFT_MESSAGE_COMMAND_FLUSH_OUTPUT_STREAM";
-#endif
     default:
       return "Invalid message?";
   }
