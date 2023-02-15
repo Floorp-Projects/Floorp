@@ -20,11 +20,11 @@ origin:
 
   # Human-readable identifier for this version/release
   # Generally "version NNN", "tag SSS", "bookmark SSS"
-  release: commit 581b22e6a026ac92589be2f36a30357600f9d02c
+  release: commit b33731c44c9dd3bfb79d889e7a699c26c3929cd3
 
   # Revision to pull in
   # Must be a long or short commit SHA (long preferred)
-  revision: 581b22e6a026ac92589be2f36a30357600f9d02c
+  revision: b33731c44c9dd3bfb79d889e7a699c26c3929cd3
 
   license: ['MIT', 'Apache-2.0']
 
