@@ -31,7 +31,6 @@ task-defaults:
               path: /builds/worker/artifacts
               type: directory
         retry-exit-status: [20]
-
     treeherder:
         kind: test
         tier: 2
@@ -41,6 +40,60 @@ task-defaults:
         dummy-secrets:
             - content: "faketoken"
               path: .adjust_token
+    routes:
+        - notify.slack-channel.G016BC5FUHJ.on-failed
+    scopes:
+        - queue:route:notify.slack-channel.G016BC5FUHJ.on-failed
+            - notify:slack-channel:G016BC5FUHJ
+    extra:
+        notify:
+            # slackText: 'https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId} | ${task.metadata.name} | ${task.metadata.source}'
+            slackBlocks: |
+                [
+                  {
+                    "type": "header",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "firefox-android :firefox: ${task.metadata.name} :x:\n "
+                    }
+                  },
+                  {
+                    "type": "divider"
+                  },
+                  {
+                     "type": "section",
+                     "text": {
+                         "type": "mrkdwn",
+                         "text": "*Task*: <https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId}|Taskcluster>"
+                    }
+                  },
+                  {
+                    "type": "section",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": "*Owner*: ${task.metadata.owner}"
+                    }
+                  },
+                  {
+                    "type": "section",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": "*Source*: <${task.payload.env.MOBILE_BASE_REPOSITORY}/commit/${task.payload.env.MOBILE_HEAD_REV}|Commit> :github:"
+                    }
+                  },
+                  {
+                    "type": "divider"
+                  },
+                  {
+                    "type": "context",
+                    "elements": [
+                        {
+                            "type": "mrkdwn",
+                            "text": ":testops-notify: created by <https://mana.mozilla.org/wiki/x/P_zNBw|Mobile Test Engineering>"
+                        }
+                    ]
+                  }
+                ]
 
 tasks:
     focus-arm-debug:
@@ -156,61 +209,6 @@ tasks:
         worker:
             env:
                 GOOGLE_PROJECT: moz-fenix
-            retry-exit-status: [20]
-        routes:
-            - notify.slack-channel.G016BC5FUHJ.on-failed
-        scopes:
-            - queue:route:notify.slack-channel.G016BC5FUHJ.on-failed
-            - notify:slack-channel:G016BC5FUHJ
-        extra:
-            notify:
-                # slackText: 'https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId} | ${task.metadata.name} | ${task.metadata.source}'
-                slackBlocks: |
-                    [
-                      {
-                        "type": "header",
-                        "text": {
-                          "type": "plain_text",
-                          "text": "Fenix :firefox: ${task.metadata.name} :x:\n "
-                        }
-                      },
-                      {
-                        "type": "divider"
-                      },
-                      {
-                         "type": "section",
-                         "text": {
-                             "type": "mrkdwn",
-                             "text": "*Task*: <https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId}|Taskcluster>"
-                        }
-                      },
-                      {
-                        "type": "section",
-                        "text": {
-                          "type": "mrkdwn",
-                          "text": "*Owner*: ${task.metadata.owner}"
-                        }
-                      },
-                      {
-                        "type": "section",
-                        "text": {
-                          "type": "mrkdwn",
-                          "text": "*Source*: <${task.payload.env.MOBILE_BASE_REPOSITORY}/commit/${task.payload.env.MOBILE_HEAD_REV}|Commit> :github:"
-                        }
-                      },
-                      {
-                        "type": "divider"
-                      },
-                      {
-                        "type": "context",
-                        "elements": [
-                            {
-                                "type": "mrkdwn",
-                                "text": ":testops-notify: created by <https://mana.mozilla.org/wiki/x/P_zNBw|Mobile Test Engineering>"
-                            }
-                        ]
-                      }
-                    ]
     screenshots-arm:
         attributes:
             shipping-product: fenix
@@ -240,61 +238,6 @@ tasks:
         worker:
             env:
                 GOOGLE_PROJECT: moz-fenix
-            retry-exit-status: [20]
-        routes:
-            - notify.slack-channel.G016BC5FUHJ.on-failed
-        scopes:
-            - queue:route:notify.slack-channel.G016BC5FUHJ.on-failed
-            - notify:slack-channel:G016BC5FUHJ
-        extra:
-            notify:
-                # slackText: 'https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId} | ${task.metadata.name} | ${task.metadata.source}'
-                slackBlocks: |
-                    [
-                      {
-                        "type": "header",
-                        "text": {
-                          "type": "plain_text",
-                          "text": "Fenix :firefox: ${task.metadata.name} :x:\n "
-                        }
-                      },
-                      {
-                        "type": "divider"
-                      },
-                      {
-                         "type": "section",
-                         "text": {
-                             "type": "mrkdwn",
-                             "text": "*Task*: <https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId}|Taskcluster>"
-                        }
-                      },
-                      {
-                        "type": "section",
-                        "text": {
-                          "type": "mrkdwn",
-                          "text": "*Owner*: ${task.metadata.owner}"
-                        }
-                      },
-                      {
-                        "type": "section",
-                        "text": {
-                          "type": "mrkdwn",
-                          "text": "*Source*: <${task.payload.env.MOBILE_BASE_REPOSITORY}/commit/${task.payload.env.MOBILE_HEAD_REV}|Commit> :github:"
-                        }
-                      },
-                      {
-                        "type": "divider"
-                      },
-                      {
-                        "type": "context",
-                        "elements": [
-                            {
-                                "type": "mrkdwn",
-                                "text": ":testops-notify: created by <https://mana.mozilla.org/wiki/x/P_zNBw|Mobile Test Engineering>"
-                            }
-                        ]
-                      }
-                    ]
     fenix-arm-beta:
         attributes:
             build-type: beta-firebase
@@ -323,61 +266,6 @@ tasks:
         worker:
             env:
                 GOOGLE_PROJECT: moz-fenix
-            retry-exit-status: [20]
-        routes:
-            - notify.slack-channel.G016BC5FUHJ.on-failed
-        scopes:
-            - queue:route:notify.slack-channel.G016BC5FUHJ.on-failed
-            - notify:slack-channel:G016BC5FUHJ
-        extra:
-            notify:
-                # slackText: 'https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId} | ${task.metadata.name} | ${task.metadata.source}'
-                slackBlocks: |
-                    [
-                      {
-                        "type": "header",
-                        "text": {
-                          "type": "plain_text",
-                          "text": "Fenix :firefox: ${task.metadata.name} :x:\n "
-                        }
-                      },
-                      {
-                        "type": "divider"
-                      },
-                      {
-                         "type": "section",
-                         "text": {
-                             "type": "mrkdwn",
-                             "text": "*Task*: <https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId}|Taskcluster>"
-                        }
-                      },
-                      {
-                        "type": "section",
-                        "text": {
-                          "type": "mrkdwn",
-                          "text": "*Owner*: ${task.metadata.owner}"
-                        }
-                      },
-                      {
-                        "type": "section",
-                        "text": {
-                          "type": "mrkdwn",
-                          "text": "*Source*: <${task.payload.env.MOBILE_BASE_REPOSITORY}/commit/${task.payload.env.MOBILE_HEAD_REV}|Commit> :github:"
-                        }
-                      },
-                      {
-                        "type": "divider"
-                      },
-                      {
-                        "type": "context",
-                        "elements": [
-                            {
-                                "type": "mrkdwn",
-                                "text": ":testops-notify: created by <https://mana.mozilla.org/wiki/x/P_zNBw|Mobile Test Engineering>"
-                            }
-                        ]
-                      }
-                    ]
     fenix-arm-nightly:
         attributes:
             build-type: nightly-firebase
@@ -405,61 +293,6 @@ tasks:
         worker:
             env:
                 GOOGLE_PROJECT: moz-fenix
-            retry-exit-status: [20]
-        routes:
-            - notify.slack-channel.G016BC5FUHJ.on-failed
-        scopes:
-            - queue:route:notify.slack-channel.G016BC5FUHJ.on-failed
-            - notify:slack-channel:G016BC5FUHJ
-        extra:
-            notify:
-                # slackText: 'https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId} | ${task.metadata.name} | ${task.metadata.source}'
-                slackBlocks: |
-                    [
-                      {
-                        "type": "header",
-                        "text": {
-                          "type": "plain_text",
-                          "text": "Fenix :firefox: ${task.metadata.name} :x:\n "
-                        }
-                      },
-                      {
-                        "type": "divider"
-                      },
-                      {
-                         "type": "section",
-                         "text": {
-                             "type": "mrkdwn",
-                             "text": "*Task*: <https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId}|Taskcluster>"
-                        }
-                      },
-                      {
-                        "type": "section",
-                        "text": {
-                          "type": "mrkdwn",
-                          "text": "*Owner*: ${task.metadata.owner}"
-                        }
-                      },
-                      {
-                        "type": "section",
-                        "text": {
-                          "type": "mrkdwn",
-                          "text": "*Source*: <${task.payload.env.MOBILE_BASE_REPOSITORY}/commit/${task.payload.env.MOBILE_HEAD_REV}|Commit> :github:"
-                        }
-                      },
-                      {
-                        "type": "divider"
-                      },
-                      {
-                        "type": "context",
-                        "elements": [
-                            {
-                                "type": "mrkdwn",
-                                "text": ":testops-notify: created by <https://mana.mozilla.org/wiki/x/P_zNBw|Mobile Test Engineering>"
-                            }
-                        ]
-                      }
-                    ]
     fenix-legacy-arm:
         attributes:
             legacy: true
@@ -489,58 +322,3 @@ tasks:
         worker:
             env:
                 GOOGLE_PROJECT: moz-fenix
-            retry-exit-status: [20]
-        routes:
-            - notify.slack-channel.G016BC5FUHJ.on-failed
-        scopes:
-            - queue:route:notify.slack-channel.G016BC5FUHJ.on-failed
-            - notify:slack-channel:G016BC5FUHJ
-        extra:
-            notify:
-                # slackText: 'https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId} | ${task.metadata.name} | ${task.metadata.source}'
-                slackBlocks: |
-                    [
-                      {
-                        "type": "header",
-                        "text": {
-                          "type": "plain_text",
-                          "text": "Fenix :firefox: ${task.metadata.name} :x:\n "
-                        }
-                      },
-                      {
-                        "type": "divider"
-                      },
-                      {
-                         "type": "section",
-                         "text": {
-                             "type": "mrkdwn",
-                             "text": "*Task*: <https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId}|Taskcluster>"
-                        }
-                      },
-                      {
-                        "type": "section",
-                        "text": {
-                          "type": "mrkdwn",
-                          "text": "*Owner*: ${task.metadata.owner}"
-                        }
-                      },
-                      {
-                        "type": "section",
-                        "text": {
-                          "type": "mrkdwn",
-                          "text": "*Source*: <${task.payload.env.MOBILE_BASE_REPOSITORY}/commit/${task.payload.env.MOBILE_HEAD_REV}|Commit> :github:"
-                        }
-                      },
-                      {
-                        "type": "divider"
-                      },
-                      {
-                        "type": "context",
-                        "elements": [
-                            {
-                                "type": "mrkdwn",
-                                "text": ":testops-notify: created by <https://mana.mozilla.org/wiki/x/P_zNBw|Mobile Test Engineering>"
-                            }
-                        ]
-                      }
-                    ]
