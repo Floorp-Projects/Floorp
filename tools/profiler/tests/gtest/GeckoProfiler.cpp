@@ -4978,4 +4978,102 @@ TEST(GeckoProfiler, FailureHandling)
   ASSERT_EQ(profile.get(), nullptr);
 }
 
+TEST(GeckoProfiler, NoMarkerStacks)
+{
+  uint32_t features = ProfilerFeature::NoMarkerStacks;
+  const char* filters[] = {"GeckoMain"};
+
+  ASSERT_TRUE(!profiler_get_profile());
+
+  // Make sure that profiler_capture_backtrace returns nullptr when the profiler
+  // is not active.
+  ASSERT_TRUE(!profiler_capture_backtrace());
+
+  {
+    // Start the profiler without the NoMarkerStacks feature and make sure we
+    // capture stacks.
+    profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
+                   /* features */ 0, filters, MOZ_ARRAY_LENGTH(filters), 0);
+
+    ASSERT_TRUE(profiler_capture_backtrace());
+    profiler_stop();
+  }
+
+  // Start the profiler without the NoMarkerStacks feature and make sure we
+  // don't capture stacks.
+  profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL, features,
+                 filters, MOZ_ARRAY_LENGTH(filters), 0);
+
+  // Make sure that the active features has the NoMarkerStacks feature.
+  mozilla::Maybe<uint32_t> activeFeatures = profiler_features_if_active();
+  ASSERT_TRUE(activeFeatures.isSome());
+  ASSERT_TRUE(ProfilerFeature::HasNoMarkerStacks(*activeFeatures));
+
+  // Make sure we don't capture stacks.
+  ASSERT_TRUE(!profiler_capture_backtrace());
+
+  // Add a marker with a stack to test.
+  EXPECT_TRUE(profiler_add_marker(
+      "Text with stack", geckoprofiler::category::OTHER, MarkerStack::Capture(),
+      geckoprofiler::markers::TextMarker{}, ""));
+
+  UniquePtr<char[]> profile = profiler_get_profile();
+  JSONOutputCheck(profile.get(), [&](const Json::Value& aRoot) {
+    // Check that the meta.configuration.features array contains
+    // "nomarkerstacks".
+    GET_JSON(meta, aRoot["meta"], Object);
+    {
+      GET_JSON(configuration, meta["configuration"], Object);
+      {
+        GET_JSON(features, configuration["features"], Array);
+        {
+          EXPECT_EQ(features.size(), 1u);
+          EXPECT_JSON_ARRAY_CONTAINS(features, String, "nomarkerstacks");
+        }
+      }
+    }
+
+    // Make sure that the marker we captured doesn't have a stack.
+    GET_JSON(threads, aRoot["threads"], Array);
+    {
+      ASSERT_EQ(threads.size(), 1u);
+      GET_JSON(thread0, threads[0], Object);
+      {
+        GET_JSON(markers, thread0["markers"], Object);
+        {
+          GET_JSON(data, markers["data"], Array);
+          {
+            const unsigned int NAME = 0u;
+            const unsigned int PAYLOAD = 5u;
+            bool foundMarker = false;
+            GET_JSON(stringTable, thread0["stringTable"], Array);
+
+            for (const Json::Value& marker : data) {
+              // Even though we only added one marker, some markers like
+              // NotifyObservers are being added as well. Let's iterate over
+              // them and make sure that we have the one we added explicitly and
+              // check its stack doesn't exist.
+              GET_JSON(name, stringTable[marker[NAME].asUInt()], String);
+              std::string nameString = name.asString();
+
+              if (nameString == "Text with stack") {
+                // Make sure that the marker doesn't have a stack.
+                foundMarker = true;
+                EXPECT_FALSE(marker[PAYLOAD].isNull());
+                EXPECT_TRUE(marker[PAYLOAD]["stack"].isNull());
+              }
+            }
+
+            EXPECT_TRUE(foundMarker);
+          }
+        }
+      }
+    }
+  });
+
+  profiler_stop();
+
+  ASSERT_TRUE(!profiler_get_profile());
+}
+
 #endif  // MOZ_GECKO_PROFILER
