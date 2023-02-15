@@ -20,7 +20,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.onboarding.view.Onboarding
+import org.mozilla.fenix.onboarding.view.UpgradeOnboarding
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -52,7 +52,7 @@ class HomeOnboardingDialogFragment : DialogFragment() {
                     val account =
                         components.backgroundServices.syncStore.observeAsComposableState { state -> state.account }
 
-                    Onboarding(
+                    UpgradeOnboarding(
                         isSyncSignIn = account.value != null,
                         onDismiss = ::onDismiss,
                         onSignInButtonClick = {
