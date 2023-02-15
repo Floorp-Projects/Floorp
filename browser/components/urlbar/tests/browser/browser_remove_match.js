@@ -22,8 +22,7 @@ add_task(async function test_remove_history() {
 
   let promiseVisitRemoved = PlacesTestUtils.waitForNotification(
     "page-removed",
-    events => events[0].url === TEST_URL,
-    "places"
+    events => events[0].url === TEST_URL
   );
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({

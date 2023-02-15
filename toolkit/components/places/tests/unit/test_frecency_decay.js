@@ -9,11 +9,7 @@ const PREF_FREC_DECAY_RATE_DEF = 0.975;
  * @returns {Promise} A promise which is resolved when the notification is seen.
  */
 function promiseRankingChanged() {
-  return PlacesTestUtils.waitForNotification(
-    "pages-rank-changed",
-    () => true,
-    "places"
-  );
+  return PlacesTestUtils.waitForNotification("pages-rank-changed");
 }
 
 add_task(async function setup() {

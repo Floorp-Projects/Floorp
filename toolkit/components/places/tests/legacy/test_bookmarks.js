@@ -46,25 +46,6 @@ var bookmarksObserver = {
         break;
     }
   },
-
-  onItemChanged(
-    id,
-    property,
-    isAnnotationProperty,
-    value,
-    lastModified,
-    itemType,
-    parentId,
-    guid,
-    parentGuid,
-    oldValue
-  ) {
-    this._itemChangedId = id;
-    this._itemChangedProperty = property;
-    this._itemChangedValue = value;
-    this._itemChangedOldValue = oldValue;
-  },
-  QueryInterface: ChromeUtils.generateQI(["nsINavBookmarkObserver"]),
 };
 
 var root;
@@ -77,7 +58,6 @@ add_task(async function setup() {
 });
 
 add_task(async function test_bookmarks() {
-  bs.addObserver(bookmarksObserver);
   os.addListener(
     ["bookmark-added", "bookmark-removed", "bookmark-title-changed"],
     bookmarksObserver.handlePlacesEvents

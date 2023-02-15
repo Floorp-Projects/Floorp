@@ -20,9 +20,7 @@ add_task(async function() {
   // Make sure titles are correctly saved for a URI with the proper
   // notifications.
   const titleChangedPromise = PlacesTestUtils.waitForNotification(
-    "page-title-changed",
-    () => true,
-    "places"
+    "page-title-changed"
   );
 
   const url1 =

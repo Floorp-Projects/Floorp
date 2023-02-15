@@ -70,8 +70,7 @@ add_task(async function test_create_and_remove_bookmarks() {
   );
   let promiseItemRemovedNotification = PlacesTestUtils.waitForNotification(
     "bookmark-removed",
-    events => events.some(event => event.guid == folderNode.bookmarkGuid),
-    "places"
+    events => events.some(event => event.guid == folderNode.bookmarkGuid)
   );
 
   // Press the delete key and check that the bookmark has been removed.

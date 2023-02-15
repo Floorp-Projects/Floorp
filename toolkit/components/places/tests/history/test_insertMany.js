@@ -113,9 +113,7 @@ add_task(async function test_insertMany() {
       );
     } else {
       const promiseRankingChanged = PlacesTestUtils.waitForNotification(
-        "pages-rank-changed",
-        () => true,
-        "places"
+        "pages-rank-changed"
       );
       result = await PlacesUtils.history.insertMany(pageInfos);
       await promiseRankingChanged;

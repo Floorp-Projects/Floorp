@@ -72,8 +72,7 @@ add_task(async function test_open_bookmark_from_library_instantEdiBookmark() {
     async dialogWin => {
       let promiseLocationChange = PlacesTestUtils.waitForNotification(
         "bookmark-url-changed",
-        events => events.some(e => e.url === "https://example4.com/"),
-        "places"
+        events => events.some(e => e.url === "https://example4.com/")
       );
 
       let beforeUpdatedPRTime = Date.now() * 1000;

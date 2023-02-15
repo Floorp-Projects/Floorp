@@ -38,8 +38,7 @@ add_task(async function test_add_icon() {
         event =>
           event.url == "http://book.ma.rk/" &&
           event.faviconUrl.startsWith("data:image/png;base64")
-      ),
-    "places"
+      )
   );
 
   PlacesUtils.favicons.setAndFetchFaviconForPage(
@@ -65,8 +64,7 @@ add_task(async function test_remove_page() {
           event.url === "http://book.ma.rk/" &&
           !event.isRemovedFromStore &&
           !event.isPartialVisistsRemoval
-      ),
-    "places"
+      )
   );
   await PlacesUtils.history.remove("http://book.ma.rk/");
   await promiseNotifications;

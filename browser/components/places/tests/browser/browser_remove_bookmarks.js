@@ -57,8 +57,7 @@ add_task(async function test_remove_bookmark_from_toolbar() {
 
   let removePromise = PlacesTestUtils.waitForNotification(
     "bookmark-removed",
-    events => events.some(event => event.url == TEST_URL),
-    "places"
+    events => events.some(event => event.url == TEST_URL)
   );
 
   contextMenu.activateItem(contextMenuDeleteBookmark, {});
@@ -142,8 +141,7 @@ add_task(async function test_remove_bookmark_from_library() {
 
   let removePromise = PlacesTestUtils.waitForNotification(
     "bookmark-removed",
-    events => events.some(event => event.url == uris[0]),
-    "places"
+    events => events.some(event => event.url == uris[0])
   );
   contextMenu.activateItem(contextMenuDeleteBookmark, {});
 

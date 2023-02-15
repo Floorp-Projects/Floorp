@@ -13,8 +13,7 @@ async function test_icon(pageUrl, iconUrl) {
   let iconPromise = waitForFaviconMessage(true, iconUrl);
   let storedIconPromise = PlacesTestUtils.waitForNotification(
     "favicon-changed",
-    events => events.some(e => e.url == pageUrl),
-    "places"
+    events => events.some(e => e.url == pageUrl)
   );
   await BrowserTestUtils.withNewTab(pageUrl, async () => {
     let { iconURL } = await iconPromise;

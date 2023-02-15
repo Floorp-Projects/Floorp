@@ -27,7 +27,6 @@ interface nsINavHistoryQueryResultNode;
 interface nsINavHistoryQuery;
 interface nsINavHistoryQueryOptions;
 interface nsINavHistoryResult;
-interface nsINavHistoryBatchCallback;
 
 [scriptable, uuid(91d104bb-17ef-404b-9f9a-d9ed8de6824c)]
 interface nsINavHistoryResultNode : nsISupports

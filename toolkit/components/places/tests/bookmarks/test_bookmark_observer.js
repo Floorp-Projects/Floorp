@@ -41,8 +41,6 @@ var gBookmarksObserver = {
 };
 
 var gBookmarkSkipObserver = {
-  skipTags: true,
-
   expected: null,
   setup(expected) {
     this.expected = expected;

@@ -29,8 +29,7 @@ add_task(async function test() {
 
   let promiseTitleChanged = PlacesTestUtils.waitForNotification(
     "page-title-changed",
-    events => events[0].url == TEST_URL,
-    "places"
+    events => events[0].url == TEST_URL
   );
   await BrowserTestUtils.openNewForegroundTab(win.gBrowser, TEST_URL);
   await promiseTitleChanged;
@@ -41,8 +40,7 @@ add_task(async function test() {
 
   promiseTitleChanged = PlacesTestUtils.waitForNotification(
     "page-title-changed",
-    events => events[0].url == TEST_URL,
-    "places"
+    events => events[0].url == TEST_URL
   );
   await BrowserTestUtils.openNewForegroundTab(win.gBrowser, TEST_URL);
   await promiseTitleChanged;
@@ -55,8 +53,7 @@ add_task(async function test() {
 
   promiseTitleChanged = PlacesTestUtils.waitForNotification(
     "page-title-changed",
-    events => events[0].url == TEST_URL,
-    "places"
+    events => events[0].url == TEST_URL
   );
   await BrowserTestUtils.openNewForegroundTab(win.gBrowser, TEST_URL);
   await promiseTitleChanged;

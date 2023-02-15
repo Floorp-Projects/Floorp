@@ -3012,9 +3012,9 @@ nsNavHistoryResultNode* nsNavHistoryFolderResultNode::FindChildById(
   return nullptr;
 }
 
-// Used by nsNavHistoryFolderResultNode's nsINavBookmarkObserver methods below.
-// If the container is notified of a bookmark event while asynchronous execution
-// is pending, this restarts it and returns.
+// Used by nsNavHistoryFolderResultNode's methods below. If the container is
+// notified of a bookmark event while asynchronous execution is pending, this
+// restarts it and returns.
 #define RESTART_AND_RETURN_IF_ASYNC_PENDING() \
   if (mAsyncPendingStmt) {                    \
     CancelAsyncOpen(true);                    \
@@ -3903,8 +3903,6 @@ void nsNavHistoryResult::requestRefresh(
       ContainerObserverList::NoIndex)
     mRefreshParticipants.AppendElement(aContainer);
 }
-
-// nsINavBookmarkObserver implementation
 
 // Here, it is important that we create a COPY of the observer array. Some
 // observers will requery themselves, which may cause the observer array to

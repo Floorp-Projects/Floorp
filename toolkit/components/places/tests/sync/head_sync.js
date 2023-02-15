@@ -398,41 +398,8 @@ BookmarkObserver.prototype = {
       }
     }
   },
-  onItemChanged(
-    itemId,
-    property,
-    isAnnoProperty,
-    newValue,
-    lastModified,
-    type,
-    parentId,
-    guid,
-    parentGuid,
-    oldValue,
-    source
-  ) {
-    let params = {
-      itemId,
-      property,
-      isAnnoProperty,
-      newValue,
-      type,
-      parentId,
-      guid,
-      parentGuid,
-      oldValue,
-      source,
-    };
-    if (!this.ignoreDates) {
-      params.lastModified = lastModified;
-    }
-    this.notifications.push({ name: "onItemChanged", params });
-  },
-
-  QueryInterface: ChromeUtils.generateQI(["nsINavBookmarkObserver"]),
 
   check(expectedNotifications) {
-    PlacesUtils.bookmarks.removeObserver(this);
     PlacesUtils.observers.removeListener(
       [
         "bookmark-added",
@@ -457,7 +424,6 @@ BookmarkObserver.prototype = {
 
 function expectBookmarkChangeNotifications(options) {
   let observer = new BookmarkObserver(options);
-  PlacesUtils.bookmarks.addObserver(observer);
   PlacesUtils.observers.addListener(
     [
       "bookmark-added",

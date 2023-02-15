@@ -34,8 +34,7 @@ add_task(async function() {
 
         let promiseTitleResetNotification = PlacesTestUtils.waitForNotification(
           "bookmark-title-changed",
-          events => events.some(e => e.title === "folder"),
-          "places"
+          events => events.some(e => e.title === "folder")
         );
         await withBookmarksDialog(
           true,
@@ -64,8 +63,7 @@ add_task(async function() {
             );
             let promiseTitleChangeNotification = PlacesTestUtils.waitForNotification(
               "bookmark-title-changed",
-              events => events.some(e => e.title === "newname"),
-              "places"
+              events => events.some(e => e.title === "newname")
             );
 
             fillBookmarkTextField(

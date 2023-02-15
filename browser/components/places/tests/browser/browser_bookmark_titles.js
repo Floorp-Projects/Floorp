@@ -112,8 +112,7 @@ async function checkBookmark(url, expected_title) {
       events.some(
         ({ url: eventUrl }) =>
           eventUrl == gBrowser.selectedBrowser.currentURI.spec
-      ),
-    "places"
+      )
   );
   PlacesCommandHook.bookmarkPage();
   await promiseBookmark;

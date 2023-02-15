@@ -70,8 +70,7 @@ async function checkResponse({ showToolbar, expectedFolder, reason }) {
   let guid = win.gEditItemOverlay._paneInfo.itemGuid;
   let promiseRemoved = PlacesTestUtils.waitForNotification(
     "bookmark-removed",
-    events => events.some(e => e.guid == guid),
-    "places"
+    events => events.some(e => e.guid == guid)
   );
   win.document.getElementById("editBookmarkPanelRemoveButton").click();
   await hiddenPromise;

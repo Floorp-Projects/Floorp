@@ -80,8 +80,7 @@ add_task(async function() {
             return true;
           }
           return false;
-        }),
-      "places"
+        })
     );
 
     PlacesUtils.favicons.setAndFetchFaviconForPage(

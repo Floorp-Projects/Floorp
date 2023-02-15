@@ -37,8 +37,7 @@ add_task(async function bookmark_all_tabs_using_instant_apply() {
 
       let promiseTitleChange = PlacesTestUtils.waitForNotification(
         "bookmark-title-changed",
-        events => events.some(e => e.title === "folder"),
-        "places"
+        events => events.some(e => e.title === "folder")
       );
 
       fillBookmarkTextField("editBMPanel_namePicker", "folder", dialog);
@@ -67,10 +66,8 @@ add_task(async function bookmark_all_tabs_using_instant_apply() {
     dialog => {
       let savedItemId = dialog.gEditItemOverlay.itemId;
       Assert.greater(savedItemId, 0, "Found the itemId");
-      return PlacesTestUtils.waitForNotification(
-        "bookmark-removed",
-        events => events.some(event => event.id === savedItemId),
-        "places"
+      return PlacesTestUtils.waitForNotification("bookmark-removed", events =>
+        events.some(event => event.id === savedItemId)
       );
     }
   );
@@ -100,9 +97,7 @@ add_task(async function bookmark_all_tabs_using_delayed_apply() {
 
       fillBookmarkTextField("editBMPanel_namePicker", TEST_FOLDER_NAME, dialog);
       const bookmarkAdded = PlacesTestUtils.waitForNotification(
-        "bookmark-added",
-        undefined,
-        "places"
+        "bookmark-added"
       );
       EventUtils.synthesizeKey("VK_RETURN", {}, dialog);
       await bookmarkAdded;

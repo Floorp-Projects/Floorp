@@ -117,7 +117,6 @@ add_task(async function test() {
     bookmarksObserver.handlePlacesEvents = bookmarksObserver.handlePlacesEvents.bind(
       bookmarksObserver
     );
-    PlacesUtils.bookmarks.addObserver(bookmarksObserver);
     PlacesUtils.observers.addListener(
       ["bookmark-added", "bookmark-removed"],
       bookmarksObserver.handlePlacesEvents
@@ -153,7 +152,6 @@ add_task(async function test() {
     }
 
     // Remove observers.
-    PlacesUtils.bookmarks.removeObserver(bookmarksObserver);
     PlacesUtils.observers.removeListener(
       ["bookmark-added", "bookmark-removed"],
       bookmarksObserver.handlePlacesEvents
@@ -173,8 +171,6 @@ add_task(async function test() {
 var bookmarksObserver = {
   _notifications: [],
 
-  QueryInterface: ChromeUtils.generateQI(["nsINavBookmarkObserver"]),
-
   handlePlacesEvents(events) {
     for (let { type, parentGuid, guid, index } of events) {
       switch (type) {
@@ -191,24 +187,6 @@ var bookmarksObserver = {
           break;
       }
     }
-  },
-
-  onItemChanged(
-    itemId,
-    property,
-    annoProperty,
-    newValue,
-    lastModified,
-    itemType,
-    parentId,
-    guid,
-    parentGuid
-  ) {
-    if (property !== "title") {
-      return;
-    }
-
-    this._notifications.push(["assertItemChanged", parentGuid, guid, newValue]);
   },
 
   async assertViewsUpdatedCorrectly() {

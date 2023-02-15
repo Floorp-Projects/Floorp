@@ -25,8 +25,7 @@ add_task(async function() {
     events =>
       events.some(
         e => e.url == lastPageURI.spec && e.faviconUrl == SMALLPNG_DATA_URI.spec
-      ),
-    "places"
+      )
   );
 
   info("Test null page uri");

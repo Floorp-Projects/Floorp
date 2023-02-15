@@ -32,10 +32,8 @@ async function test_bulk_tag_from_library(delayedApply) {
   // Add a tag to multiple bookmarks.
   library.ContentTree.view.selectAll();
   const promiseAllTagsChanged = TEST_URLS.map(url =>
-    PlacesTestUtils.waitForNotification(
-      "bookmark-tags-changed",
-      events => events.some(evt => evt.url === url),
-      "places"
+    PlacesTestUtils.waitForNotification("bookmark-tags-changed", events =>
+      events.some(evt => evt.url === url)
     )
   );
   const tag = delayedApply ? "delayed, tag" : "instant, tag";

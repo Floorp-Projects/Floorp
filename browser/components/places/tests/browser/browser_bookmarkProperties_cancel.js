@@ -112,8 +112,7 @@ add_task(async function test_cancel_with_changes_instantEditBookmark() {
 
         let promiseTitleChangeNotification = PlacesTestUtils.waitForNotification(
           "bookmark-title-changed",
-          events => events.some(e => e.title === "n"),
-          "places"
+          events => events.some(e => e.title === "n")
         );
 
         fillBookmarkTextField("editBMPanel_namePicker", "n", dialogWin);

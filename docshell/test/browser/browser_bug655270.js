@@ -29,8 +29,7 @@ add_task(async function test() {
           return true;
         }
         return false;
-      }),
-    "places"
+      })
   );
   let icon2;
   let promiseIcon2 = PlacesTestUtils.waitForNotification(
@@ -42,8 +41,7 @@ add_task(async function test() {
           return true;
         }
         return false;
-      }),
-    "places"
+      })
   );
 
   // The page at origURL has a <link rel='icon'>, so we should get a call into

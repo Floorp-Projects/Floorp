@@ -5,10 +5,8 @@ const TEST_URL =
 
 function closeHandler(dialogWin) {
   let savedItemId = dialogWin.gEditItemOverlay.itemId;
-  return PlacesTestUtils.waitForNotification(
-    "bookmark-removed",
-    events => events.some(event => event.id === savedItemId),
-    "places"
+  return PlacesTestUtils.waitForNotification("bookmark-removed", events =>
+    events.some(event => event.id === savedItemId)
   );
 }
 
@@ -41,8 +39,7 @@ add_task(async function() {
 
           let promiseKeywordNotification = PlacesTestUtils.waitForNotification(
             "bookmark-keyword-changed",
-            events => events.some(event => event.keyword === "kw"),
-            "places"
+            events => events.some(event => event.keyword === "kw")
           );
 
           fillBookmarkTextField("editBMPanel_keywordField", "kw", dialogWin);

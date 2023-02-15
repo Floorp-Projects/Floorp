@@ -72,8 +72,7 @@ add_task(async function test() {
 
     let promise = PlacesTestUtils.waitForNotification(
       "bookmark-added",
-      events => events.some(({ url }) => url == URL1),
-      "places"
+      events => events.some(({ url }) => url == URL1)
     );
 
     EventUtils.synthesizeDrop(
@@ -131,8 +130,7 @@ add_task(async function test() {
           e.oldParentGuid === PlacesUtils.bookmarks.toolbarGuid &&
           e.oldIndex == 1 &&
           e.index == 0
-      ),
-    "places"
+      )
   );
 
   EventUtils.synthesizeDrop(
@@ -166,8 +164,7 @@ add_task(async function test() {
           e.oldParentGuid === PlacesUtils.bookmarks.toolbarGuid &&
           e.oldIndex == 2 &&
           e.index == 1
-      ),
-    "places"
+      )
   );
 
   EventUtils.synthesizeDrop(

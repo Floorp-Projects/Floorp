@@ -56,8 +56,7 @@ add_task(async function test_remove_bookmark_with_tag_via_edit_bookmark() {
 
   let removeNotification = PlacesTestUtils.waitForNotification(
     "bookmark-removed",
-    events => events.some(event => unescape(event.url) == testURL),
-    "places"
+    events => events.some(event => unescape(event.url) == testURL)
   );
 
   let removeButton = document.getElementById("editBookmarkPanelRemoveButton");

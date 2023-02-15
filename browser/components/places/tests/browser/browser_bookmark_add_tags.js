@@ -79,8 +79,7 @@ add_task(async function test_add_bookmark_tags_from_bookmarkProperties() {
   );
   let promiseNotification = PlacesTestUtils.waitForNotification(
     "bookmark-added",
-    events => events.some(({ url }) => !url || url == TEST_URL),
-    "places"
+    events => events.some(({ url }) => !url || url == TEST_URL)
   );
   await fillBookmarkTextField("editBMPanel_tagsField", "tag1", window);
   await promiseNotification;
@@ -103,9 +102,7 @@ add_task(async function test_add_bookmark_tags_from_bookmarkProperties() {
   // Click the bookmark star again, add more tags.
   await clickBookmarkStar();
   promiseNotification = PlacesTestUtils.waitForNotification(
-    "bookmark-tags-changed",
-    () => true,
-    "places"
+    "bookmark-tags-changed"
   );
   await fillBookmarkTextField(
     "editBMPanel_tagsField",
@@ -168,8 +165,7 @@ add_task(
         );
         const bookmarkAddedPromise = PlacesTestUtils.waitForNotification(
           "bookmark-added",
-          events => events.some(({ url }) => !url || url == TEST_URL),
-          "places"
+          events => events.some(({ url }) => !url || url == TEST_URL)
         );
         doneButton.click();
         await bookmarkAddedPromise;
@@ -189,9 +185,7 @@ add_task(
           win
         );
         const tagsChangedPromise = PlacesTestUtils.waitForNotification(
-          "bookmark-tags-changed",
-          () => true,
-          "places"
+          "bookmark-tags-changed"
         );
         doneButton.click();
         await tagsChangedPromise;

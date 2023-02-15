@@ -139,8 +139,7 @@ add_task(async function bookmark() {
 
   let onItemRemovedPromise = PlacesTestUtils.waitForNotification(
     "bookmark-removed",
-    events => events.some(event => event.url == url),
-    "places"
+    events => events.some(event => event.url == url)
   );
 
   // Click the remove-bookmark button in the panel.

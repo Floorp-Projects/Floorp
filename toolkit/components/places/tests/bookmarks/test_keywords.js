@@ -609,8 +609,7 @@ add_task(async function test_invalidation() {
   let promiseNotification = PlacesTestUtils.waitForNotification(
     "bookmark-keyword-changed",
     events =>
-      events.some(event => event.guid === fx.guid && event.keyword === "fx"),
-    "places"
+      events.some(event => event.guid === fx.guid && event.keyword === "fx")
   );
   await PlacesUtils.bookmarks.update({
     guid: fx.guid,
