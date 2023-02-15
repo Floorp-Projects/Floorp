@@ -14,6 +14,13 @@
 #include "nsWindow.h"
 #include "nsIGfxInfo.h"
 #include "mozilla/Components.h"
+#include "nsCOMPtr.h"
+#include "nsIProperties.h"
+#include "nsIFile.h"
+#include "nsXULAppAPI.h"
+#include "nsXPCOMCID.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsString.h"
 #include "nsGtkKeyUtils.h"
 #include "nsGtkUtils.h"
 
@@ -133,6 +140,31 @@ bool IsRunningUnderFlatpak() {
   // https://gitlab.gnome.org/GNOME/gtk/-/blob/4300a5c609306ce77cbc8a3580c19201dccd8d13/gdk/gdk.c#L472
   static bool sRunning = [] {
     return g_file_test("/.flatpak-info", G_FILE_TEST_EXISTS);
+  }();
+  return sRunning;
+}
+
+bool IsPackagedAppFileExists() {
+  static bool sRunning = [] {
+    nsresult rv;
+    nsCString path;
+    nsCOMPtr<nsIFile> file;
+    nsCOMPtr<nsIProperties> directoryService;
+
+    directoryService = do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
+    NS_ENSURE_TRUE(directoryService, FALSE);
+
+    rv = directoryService->Get(NS_GRE_DIR, NS_GET_IID(nsIFile),
+                               getter_AddRefs(file));
+    NS_ENSURE_SUCCESS(rv, FALSE);
+
+    rv = file->AppendNative("is-packaged-app"_ns);
+    NS_ENSURE_SUCCESS(rv, FALSE);
+
+    rv = file->GetNativePath(path);
+    NS_ENSURE_SUCCESS(rv, FALSE);
+
+    return g_file_test(path.get(), G_FILE_TEST_EXISTS);
   }();
   return sRunning;
 }
