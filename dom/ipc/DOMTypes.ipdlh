@@ -276,30 +276,11 @@ struct DocShellLoadStateInit
   nsIURI URI;
   nsIURI OriginalURI;
   nsIURI ResultPrincipalURI;
-  bool ResultPrincipalURIIsSome;
   nsIPrincipal TriggeringPrincipal;
   nsIReferrerInfo ReferrerInfo;
-  bool KeepResultPrincipalURIIfSet;
-  bool LoadReplace;
-  bool InheritPrincipal;
-  bool PrincipalIsExplicit;
   nsIPrincipal PrincipalToInherit;
   nsIPrincipal PartitionedPrincipalToInherit;
-  bool ForceAllowDataURI;
-  bool IsExemptFromHTTPSOnlyMode;
-  bool OriginalFrameSrc;
-  bool IsFormSubmission;
-  uint32_t LoadType;
-  nsString Target;
   nsIURI BaseURI;
-  uint32_t LoadFlags;
-  uint32_t InternalLoadFlags;
-  bool FirstParty;
-  bool HasValidUserGestureActivation;
-  bool AllowFocusMove;
-  nsCString TypeHint;
-  nsString FileName;
-  bool IsFromProcessingFrameAttributes;
   // The Content Security Policy of the load, that is, the CSP of the entity
   // responsible for causing the load to occur. Most likely this is the CSP
   // of the document that started the load. In case the entity starting the
@@ -307,44 +288,63 @@ struct DocShellLoadStateInit
   // also the CSP that will be applied to the load in case the load
   // encounters a server side redirect.
   nsIContentSecurityPolicy Csp;
+  nsIInputStream PostDataStream;
+  nsIInputStream HeadersStream;
+  nsIURI UnstrippedURI;
+  uint64_t LoadIdentifier;
+  nsString Target;
+  nsCString TypeHint;
+  nsString FileName;
 
   MaybeDiscardedBrowsingContext SourceBrowsingContext;
   MaybeDiscardedBrowsingContext TargetBrowsingContext;
-
-  // The TriggineringSandboxFlags are the SandboxFlags of the entity
-  // responsible for causing the load to occur.
-  uint32_t TriggeringSandboxFlags;
 
   // The provided remote type of the process responsible for causing the load to
   // occur. Validated in the parent process.
   nsCString TriggeringRemoteType;
 
+  nsString SrcdocData; // useless without sourcedocshell
+
   nsCString? OriginalURIString;
+
+  nsCString? RemoteTypeOverride;
+
+  LoadingSessionHistoryInfo? loadingSessionHistoryInfo;
+
+  uint32_t LoadType;
+  uint32_t LoadFlags;
+  uint32_t InternalLoadFlags;
+  
+  // The TriggineringSandboxFlags are the SandboxFlags of the entity
+  // responsible for causing the load to occur.
+  uint32_t TriggeringSandboxFlags;
   int32_t? CancelContentJSEpoch;
 
-  nsIInputStream PostDataStream;
-  nsIInputStream HeadersStream;
 
-  nsString SrcdocData; // useless without sourcedocshell
+  bool ResultPrincipalURIIsSome;
+  bool KeepResultPrincipalURIIfSet;
+  bool LoadReplace;
+  bool InheritPrincipal;
+  bool PrincipalIsExplicit;
+  bool ForceAllowDataURI;
+  bool IsExemptFromHTTPSOnlyMode;
+  bool OriginalFrameSrc;
+  bool IsFormSubmission;
+  bool FirstParty;
+  bool HasValidUserGestureActivation;
+  bool AllowFocusMove;
+  bool IsFromProcessingFrameAttributes;
 
   // Fields missing due to lack of need or serialization
   // nsCOMPtr<nsIDocShell> mSourceDocShell;
   // bool mIsSrcDocLoad; // useless without sourcedocshell
   // nsIChannel pendingRedirectedChannel; // sent through other mechanism
 
-  uint64_t LoadIdentifier;
-
   bool ChannelInitialized;
 
   bool TryToReplaceWithSessionHistoryLoad;
 
-  LoadingSessionHistoryInfo? loadingSessionHistoryInfo;
-
   bool IsMetaRefresh;
-
-  nsIURI UnstrippedURI;
-
-  nsCString? RemoteTypeOverride;
 };
 
 struct TimedChannelInfo
