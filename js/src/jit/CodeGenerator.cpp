@@ -4945,6 +4945,21 @@ void CodeGenerator::emitPostWriteBarrier(const LAllocation* obj) {
   EmitPostWriteBarrier(masm, gen->runtime, objreg, object, isGlobal, regs);
 }
 
+void CodeGenerator::emitPostWriteBarrierElement(Register objreg,
+                                                Register index) {
+  AllocatableGeneralRegisterSet regs(GeneralRegisterSet::Volatile());
+  regs.takeUnchecked(index);
+
+  Register runtimereg = regs.takeAny();
+  using Fn = void (*)(JSRuntime*, JSObject*, int32_t);
+  masm.setupAlignedABICall();
+  masm.mov(ImmPtr(gen->runtime), runtimereg);
+  masm.passABIArg(runtimereg);
+  masm.passABIArg(objreg);
+  masm.passABIArg(index);
+  masm.callWithABI<Fn, PostWriteElementBarrier<IndexInBounds::Maybe>>();
+}
+
 void CodeGenerator::emitPostWriteBarrier(Register objreg) {
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::Volatile());
   regs.takeUnchecked(objreg);
@@ -14137,37 +14152,7 @@ void CodeGenerator::visitLoadSlotByIteratorIndex(
   Register temp2 = ToRegister(lir->temp1());
   ValueOperand result = ToOutValue(lir);
 
-  // Load iterator object
-  Address nativeIterAddr(iterator,
-                         PropertyIteratorObject::offsetOfIteratorSlot());
-  masm.loadPrivate(nativeIterAddr, temp);
-
-  // Compute offset of propertyCursor_ from propertiesBegin()
-  masm.loadPtr(Address(temp, NativeIterator::offsetOfPropertyCursor()), temp2);
-  masm.subPtr(Address(temp, NativeIterator::offsetOfShapesEnd()), temp2);
-
-  // Compute offset of current index from indicesBegin(). Note that because
-  // propertyCursor has already been incremented, this is actually the offset
-  // of the next index. We adjust accordingly below.
-  size_t indexAdjustment =
-      sizeof(GCPtr<JSLinearString*>) / sizeof(PropertyIndex);
-  if (indexAdjustment != 1) {
-    MOZ_ASSERT(indexAdjustment == 2);
-    masm.rshift32(Imm32(1), temp2);
-  }
-
-  // Load current index.
-  masm.loadPtr(Address(temp, NativeIterator::offsetOfPropertiesEnd()), temp);
-  masm.load32(
-      BaseIndex(temp, temp2, Scale::TimesOne, -int32_t(sizeof(PropertyIndex))),
-      temp);
-
-  // Extract kind.
-  masm.move32(temp, temp2);
-  masm.rshift32(Imm32(PropertyIndex::KindShift), temp2);
-
-  // Extract index.
-  masm.and32(Imm32(PropertyIndex::IndexMask), temp);
+  masm.extractCurrentIndexAndKindFromIterator(iterator, temp, temp2);
 
   Label notDynamicSlot, notFixedSlot, done;
   masm.branch32(Assembler::NotEqual, temp2,
@@ -14202,6 +14187,67 @@ void CodeGenerator::visitLoadSlotByIteratorIndex(
   masm.bind(&indexOkay);
 
   masm.loadValue(BaseObjectElementIndex(temp2, temp), result);
+  masm.bind(&done);
+}
+
+void CodeGenerator::visitStoreSlotByIteratorIndex(
+    LStoreSlotByIteratorIndex* lir) {
+  Register object = ToRegister(lir->object());
+  Register iterator = ToRegister(lir->iterator());
+  ValueOperand value = ToValue(lir, LStoreSlotByIteratorIndex::ValueIndex);
+  Register temp = ToRegister(lir->temp0());
+  Register temp2 = ToRegister(lir->temp1());
+
+  masm.extractCurrentIndexAndKindFromIterator(iterator, temp, temp2);
+
+  Label notDynamicSlot, notFixedSlot, done, doStore;
+  masm.branch32(Assembler::NotEqual, temp2,
+                Imm32(uint32_t(PropertyIndex::Kind::DynamicSlot)),
+                &notDynamicSlot);
+  masm.loadPtr(Address(object, NativeObject::offsetOfSlots()), temp2);
+  masm.computeEffectiveAddress(BaseValueIndex(temp2, temp), temp);
+  masm.jump(&doStore);
+
+  masm.bind(&notDynamicSlot);
+  masm.branch32(Assembler::NotEqual, temp2,
+                Imm32(uint32_t(PropertyIndex::Kind::FixedSlot)), &notFixedSlot);
+  // Fixed slot
+  masm.computeEffectiveAddress(
+      BaseValueIndex(object, temp, sizeof(NativeObject)), temp);
+  masm.jump(&doStore);
+  masm.bind(&notFixedSlot);
+
+#ifdef DEBUG
+  Label kindOkay;
+  masm.branch32(Assembler::Equal, temp2,
+                Imm32(uint32_t(PropertyIndex::Kind::Element)), &kindOkay);
+  masm.assumeUnreachable("Invalid PropertyIndex::Kind");
+  masm.bind(&kindOkay);
+#endif
+
+  // Dense element
+  masm.loadPtr(Address(object, NativeObject::offsetOfElements()), temp2);
+  Label indexOkay;
+  Address initLength(temp2, ObjectElements::offsetOfInitializedLength());
+  masm.branch32(Assembler::Above, initLength, temp, &indexOkay);
+  masm.assumeUnreachable("Dense element out of bounds");
+  masm.bind(&indexOkay);
+
+  BaseObjectElementIndex elementAddress(temp2, temp);
+  masm.computeEffectiveAddress(elementAddress, temp);
+
+  masm.bind(&doStore);
+  Address storeAddress(temp, 0);
+  emitPreBarrier(storeAddress);
+  masm.storeValue(value, storeAddress);
+
+  masm.branchPtrInNurseryChunk(Assembler::Equal, object, temp2, &done);
+  masm.branchValueIsNurseryCell(Assembler::NotEqual, value, temp2, &done);
+
+  saveVolatile(temp2);
+  emitPostWriteBarrier(object);
+  restoreVolatile(temp2);
+
   masm.bind(&done);
 }
 

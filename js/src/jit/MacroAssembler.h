@@ -5165,6 +5165,13 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                         Register scratch1, Register scratch2,
                                         Register scratch3, Register output,
                                         Label* cacheHit, bool hasOwn);
+
+  // Given a PropertyIteratorObject with valid indices, extract the current
+  // PropertyIndex, storing the index in |outIndex| and the kind in |outKind|
+  void extractCurrentIndexAndKindFromIterator(Register iterator,
+                                              Register outIndex,
+                                              Register outKind);
+
 #ifdef JS_CODEGEN_X86
   // See MegamorphicSetElement in LIROps.yaml
   void emitMegamorphicCachedSetSlot(

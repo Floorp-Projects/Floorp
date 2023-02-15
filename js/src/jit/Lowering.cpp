@@ -4928,6 +4928,14 @@ void LIRGenerator::visitLoadSlotByIteratorIndex(MLoadSlotByIteratorIndex* ins) {
   defineBox(lir, ins);
 }
 
+void LIRGenerator::visitStoreSlotByIteratorIndex(
+    MStoreSlotByIteratorIndex* ins) {
+  auto* lir = new (alloc()) LStoreSlotByIteratorIndex(
+      useRegister(ins->object()), useRegister(ins->iterator()),
+      useBox(ins->value()), temp(), temp());
+  add(lir, ins);
+}
+
 void LIRGenerator::visitIteratorHasIndices(MIteratorHasIndices* ins) {
   MOZ_ASSERT(ins->hasOneUse());
   emitAtUses(ins);
