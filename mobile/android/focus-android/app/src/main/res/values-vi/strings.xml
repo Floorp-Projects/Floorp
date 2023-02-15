@@ -1006,11 +1006,37 @@
 
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">Trang web bạn yêu cầu không hỗ trợ HTTPS</string>
-    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">Theo mặc định, %1$s cố gắng kết nối bằng HTTPS để tăng cường bảo mật. Để thay đổi cài đặt này hoặc để tìm hiểu thêm, hãy đi đến Cài đặt &gt; Quyền riêng tư &amp; bảo mật &gt; Bảo mật.</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">Trang web bạn yêu cầu không hỗ trợ HTTPS</string>
 
-    <!-- Sessions List -->
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Trang web này không hỗ trợ HTTPS</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Theo mặc định, %1$s cố gắng kết nối bằng HTTPS để tăng cường bảo mật. Để thay đổi cài đặt này hoặc để tìm hiểu thêm, hãy đi đến Cài đặt &gt; Quyền riêng tư &amp; bảo mật &gt; Bảo mật.</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s đã thử kết nối HTTPS bất cứ khi nào có thể để bảo mật hơn.
+     <a href="%2$s">Tìm hiểu thêm</a> <br/><br/>
+     Thay đổi cài đặt này trong Cài đặt > Riêng tư &amp; bảo mật > Bảo mật.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Kết nối không an toàn</string>
+
+    <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    Đây có thể là sự cố với cấu hình của máy chủ hoặc có thể là ai đó đang cố mạo danh máy chủ. <br/><br/>
+    Nếu trước đây bạn đã kết nối thành công với máy chủ này, lỗi có thể là tạm thời.
+    ]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Ai đó có thể đang cố mạo danh trang web và việc tiếp tục có thể gặp rủi ro.</label>
+        <br><br>
+        <label>%1$s không tin tưởng <b>%2$s</b> bởi vì tổ chức phát hành chứng chỉ của nó không xác định, chứng chỉ tự ký hoặc máy chủ không gửi đúng chứng chỉ trung gian.</label>
+    ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Đóng thẻ</string>
 

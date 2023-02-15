@@ -1003,12 +1003,24 @@
 
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">Lo site qu’avètz demandat es pas compatible amb lo protocòl l’HTTPS</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">Lo site qu’avètz demandat es pas compatible amb lo protocòl l’HTTPS</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Aqueste site es pas compatible HTTPS</string>
 
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">Per defaut %1$s tempta de se connectar en utilizant lo protocòl HTTPS per una melhora seguretat. Per modificar aqueste reglatge o per ne saber mai, anatz als Paramètres &gt; Vida privada e seguretat &gt; Seguretat.</string>
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Per defaut %1$s tempta de se connectar en utilizant lo protocòl HTTPS per una melhora seguretat. Per modificar aqueste reglatge o per ne saber mai, anatz als Paramètres &gt; Vida privada e seguretat &gt; Seguretat.</string>
 
-    <!-- Sessions List -->
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Connexion pas segura</string>
+
+     <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+ Aquò pòt èsser degut a un problèma de configuracion del servidor o a una persona qu’ensaja d’usurpar l’identitat del servidor. <br/><br/>
+ Se ja sètz connectat(ada) amb succès a aqueste servidor, benlèu l’error es temporària e podètz ensajar tornamai pus tard.
+ ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Tampar l’onglet</string>
 
