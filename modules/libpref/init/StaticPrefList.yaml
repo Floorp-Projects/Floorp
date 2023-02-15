@@ -11021,6 +11021,13 @@
   value: true
   mirror: always
 
+# Whether to display auth prompts if X-Frame-Options header will block loading
+# page
+- name: network.auth.supress_auth_prompt_for_XFO_failures
+  type: bool
+  value: true
+  mirror: always
+
 # Whether to use new implementation of ParseReasm
 - name: network.auth.use_new_parse_realm
   type: RelaxedAtomicBool
