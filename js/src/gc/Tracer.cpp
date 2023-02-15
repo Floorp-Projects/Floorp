@@ -268,10 +268,10 @@ void js::gc::GetTraceThingInfo(char* buf, size_t bufsize, void* thing,
       }
 
       case JS::TraceKind::Symbol: {
+        *buf++ = ' ';
+        bufsize--;
         auto* sym = static_cast<JS::Symbol*>(thing);
         if (JSAtom* desc = sym->description()) {
-          *buf++ = ' ';
-          bufsize--;
           PutEscapedString(buf, bufsize, desc, 0);
         } else {
           snprintf(buf, bufsize, "<null>");
