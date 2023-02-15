@@ -48,7 +48,7 @@ bool SandboxEnabled();
 uint32_t MaxNumberOfChannels();
 
 // Get the sample rate the hardware/mixer runs at. Thread safe.
-uint32_t PreferredSampleRate();
+uint32_t PreferredSampleRate(bool aShouldResistFingerprinting);
 
 // Initialize a cubeb stream. A pass through wrapper for cubeb_stream_init,
 // that can simulate streams that are very slow to start, by setting the pref

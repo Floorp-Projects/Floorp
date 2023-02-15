@@ -381,11 +381,11 @@ bool InitPreferredSampleRate() {
   return true;
 }
 
-uint32_t PreferredSampleRate() {
+uint32_t PreferredSampleRate(bool aShouldResistFingerprinting) {
   if (sCubebForcedSampleRate) {
     return sCubebForcedSampleRate;
   }
-  if (nsContentUtils::ShouldResistFingerprinting()) {
+  if (aShouldResistFingerprinting) {
     return 44100;
   }
   if (!InitPreferredSampleRate()) {

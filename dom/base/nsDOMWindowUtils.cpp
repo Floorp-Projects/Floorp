@@ -2689,7 +2689,10 @@ nsDOMWindowUtils::GetCurrentMaxAudioChannels(uint32_t* aChannels) {
 
 NS_IMETHODIMP
 nsDOMWindowUtils::GetCurrentPreferredSampleRate(uint32_t* aRate) {
-  *aRate = CubebUtils::PreferredSampleRate();
+  nsCOMPtr<Document> doc = GetDocument();
+  *aRate = CubebUtils::PreferredSampleRate(
+      doc ? doc->ShouldResistFingerprinting()
+          : nsContentUtils::ShouldResistFingerprinting("Fallback"));
   return NS_OK;
 }
 
