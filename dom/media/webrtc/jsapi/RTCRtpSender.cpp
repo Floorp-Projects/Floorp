@@ -1007,8 +1007,14 @@ void RTCRtpSender::SetStreams(
 void RTCRtpSender::SetStreamsImpl(
     const Sequence<OwningNonNull<DOMMediaStream>>& aStreams) {
   mStreams.Clear();
+  std::set<nsString> ids;
   for (const auto& stream : aStreams) {
-    mStreams.AppendElement(stream);
+    nsString id;
+    stream->GetId(id);
+    if (!ids.count(id)) {
+      ids.insert(id);
+      mStreams.AppendElement(stream);
+    }
   }
 }
 
