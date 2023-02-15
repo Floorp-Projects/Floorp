@@ -4,7 +4,7 @@
 
 function removeTrickleOption(desc) {
   var sdp = desc.sdp.replace(/\r\na=ice-options:trickle\r\n/, "\r\n");
-  return new mozRTCSessionDescription({ type: desc.type, sdp });
+  return new RTCSessionDescription({ type: desc.type, sdp });
 }
 
 function makeOffererNonTrickle(chain) {
