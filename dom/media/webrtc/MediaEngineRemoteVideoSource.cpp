@@ -185,7 +185,8 @@ nsresult MediaEngineRemoteVideoSource::Deallocate() {
 
   if (camera::GetChildAndCall(&camera::CamerasChild::ReleaseCapture, mCapEngine,
                               mCaptureId)) {
-    MOZ_ASSERT_UNREACHABLE("Couldn't release allocated device");
+    // Failure can occur when the parent process is shutting down.
+    return NS_ERROR_FAILURE;
   }
   return NS_OK;
 }
@@ -285,7 +286,7 @@ nsresult MediaEngineRemoteVideoSource::Stop() {
 
   if (camera::GetChildAndCall(&camera::CamerasChild::StopCapture, mCapEngine,
                               mCaptureId)) {
-    MOZ_DIAGNOSTIC_ASSERT(false, "Stopping a started capture failed");
+    // Failure can occur when the parent process is shutting down.
     return NS_ERROR_FAILURE;
   }
 
