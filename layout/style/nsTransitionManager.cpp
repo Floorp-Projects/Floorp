@@ -189,7 +189,7 @@ bool nsTransitionManager::DoUpdateTransitions(
           currentValue != anim->ToValue()) {
         // stop the transition
         if (anim->HasCurrentEffect()) {
-          EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
+          EffectSet* effectSet = EffectSet::Get(aElement, aPseudoType);
           if (effectSet) {
             effectSet->UpdateAnimationGeneration(mPresContext);
           }
@@ -382,7 +382,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
       animations[currentIndex]->CancelFromStyle(PostRestyleMode::IfNeeded);
       oldTransition = nullptr;  // Clear pointer so it doesn't dangle
       animations.RemoveElementAt(currentIndex);
-      EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
+      EffectSet* effectSet = EffectSet::Get(aElement, aPseudoType);
       if (effectSet) {
         effectSet->UpdateAnimationGeneration(mPresContext);
       }
@@ -514,8 +514,7 @@ bool nsTransitionManager::ConsiderInitiatingTransition(
     animations.AppendElement(animation);
   }
 
-  EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
-  if (effectSet) {
+  if (auto* effectSet = EffectSet::Get(aElement, aPseudoType)) {
     effectSet->UpdateAnimationGeneration(mPresContext);
   }
 

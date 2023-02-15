@@ -902,7 +902,7 @@ void AnimationInfo::AddAnimationsForDisplayItem(
   // layer, we still need to mark it as up-to-date with regards to animations.
   // Otherwise, in RestyleManager we'll notice the discrepancy between the
   // animation generation numbers and update the layer indefinitely.
-  EffectSet* effects = EffectSet::GetEffectSetForFrame(aFrame, aType);
+  EffectSet* effects = EffectSet::GetForFrame(aFrame, aType);
   uint64_t animationGeneration =
       effects ? effects->GetAnimationGeneration() : 0;
   SetAnimationGeneration(animationGeneration);

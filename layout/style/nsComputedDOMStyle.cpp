@@ -162,19 +162,10 @@ static bool ElementNeedsRestyle(Element* aElement, PseudoStyleType aPseudo,
   }
 
   // If the pseudo-element is animating, make sure to flush.
-  if (aElement->MayHaveAnimations() && aPseudo != PseudoStyleType::NotPseudo) {
-    if (aPseudo == PseudoStyleType::before) {
-      if (EffectSet::GetEffectSet(aElement, PseudoStyleType::before)) {
-        return true;
-      }
-    } else if (aPseudo == PseudoStyleType::after) {
-      if (EffectSet::GetEffectSet(aElement, PseudoStyleType::after)) {
-        return true;
-      }
-    } else if (aPseudo == PseudoStyleType::marker) {
-      if (EffectSet::GetEffectSet(aElement, PseudoStyleType::marker)) {
-        return true;
-      }
+  if (aElement->MayHaveAnimations() && aPseudo != PseudoStyleType::NotPseudo &&
+      AnimationUtils::IsSupportedPseudoForAnimations(aPseudo)) {
+    if (EffectSet::Get(aElement, aPseudo)) {
+      return true;
     }
   }
 

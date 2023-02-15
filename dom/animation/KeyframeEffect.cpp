@@ -304,9 +304,8 @@ static bool IsEffectiveProperty(const EffectSet& aEffects,
 
 const AnimationProperty* KeyframeEffect::GetEffectiveAnimationOfProperty(
     nsCSSPropertyID aProperty, const EffectSet& aEffects) const {
-  MOZ_ASSERT(mTarget &&
-             &aEffects == EffectSet::GetEffectSet(mTarget.mElement,
-                                                  mTarget.mPseudoType));
+  MOZ_ASSERT(mTarget && &aEffects == EffectSet::Get(mTarget.mElement,
+                                                    mTarget.mPseudoType));
 
   for (const AnimationProperty& property : mProperties) {
     if (aProperty != property.mProperty) {
@@ -338,7 +337,7 @@ bool KeyframeEffect::HasEffectiveAnimationOfPropertySet(
 nsCSSPropertyIDSet KeyframeEffect::GetPropertiesForCompositor(
     EffectSet& aEffects, const nsIFrame* aFrame) const {
   MOZ_ASSERT(&aEffects ==
-             EffectSet::GetEffectSet(mTarget.mElement, mTarget.mPseudoType));
+             EffectSet::Get(mTarget.mElement, mTarget.mPseudoType));
 
   nsCSSPropertyIDSet properties;
 
@@ -678,7 +677,7 @@ void KeyframeEffect::ComposeStyle(RawServoAnimationValueMap& aComposeResult,
     nsPresContext* presContext =
         nsContentUtils::GetContextForContent(mTarget.mElement);
     EffectSet* effectSet =
-        EffectSet::GetEffectSet(mTarget.mElement, mTarget.mPseudoType);
+        EffectSet::Get(mTarget.mElement, mTarget.mPseudoType);
     if (presContext && effectSet) {
       TimeStamp now = presContext->RefreshDriver()->MostRecentRefresh();
       effectSet->UpdateLastOverflowAnimationSyncTime(now);
@@ -982,7 +981,7 @@ void KeyframeEffect::UpdateTargetRegistration() {
 
   if (isRelevant && !mInEffectSet) {
     EffectSet* effectSet =
-        EffectSet::GetOrCreateEffectSet(mTarget.mElement, mTarget.mPseudoType);
+        EffectSet::GetOrCreate(mTarget.mElement, mTarget.mPseudoType);
     effectSet->AddEffect(*this);
     mInEffectSet = true;
     UpdateEffectSet(effectSet);
@@ -999,8 +998,7 @@ void KeyframeEffect::UnregisterTarget() {
     return;
   }
 
-  EffectSet* effectSet =
-      EffectSet::GetEffectSet(mTarget.mElement, mTarget.mPseudoType);
+  EffectSet* effectSet = EffectSet::Get(mTarget.mElement, mTarget.mPseudoType);
   MOZ_ASSERT(effectSet,
              "If mInEffectSet is true, there must be an EffectSet"
              " on the target element");
@@ -1499,8 +1497,7 @@ bool KeyframeEffect::CanThrottle() const {
                    property.mProperty),
                "The property should be able to run on the compositor");
     if (!effectSet) {
-      effectSet =
-          EffectSet::GetEffectSet(mTarget.mElement, mTarget.mPseudoType);
+      effectSet = EffectSet::Get(mTarget.mElement, mTarget.mPseudoType);
       MOZ_ASSERT(effectSet,
                  "CanThrottle should be called on an effect "
                  "associated with a target element");
@@ -1535,8 +1532,7 @@ bool KeyframeEffect::CanThrottle() const {
 bool KeyframeEffect::CanThrottleOverflowChanges(const nsIFrame& aFrame) const {
   TimeStamp now = aFrame.PresContext()->RefreshDriver()->MostRecentRefresh();
 
-  EffectSet* effectSet =
-      EffectSet::GetEffectSet(mTarget.mElement, mTarget.mPseudoType);
+  EffectSet* effectSet = EffectSet::Get(mTarget.mElement, mTarget.mPseudoType);
   MOZ_ASSERT(effectSet,
              "CanOverflowTransformChanges is expected to be called"
              " on an effect in an effect set");
@@ -1693,8 +1689,7 @@ bool KeyframeEffect::CanAnimateTransformOnCompositor(
 bool KeyframeEffect::ShouldBlockAsyncTransformAnimations(
     const nsIFrame* aFrame, const nsCSSPropertyIDSet& aPropertySet,
     AnimationPerformanceWarning::Type& aPerformanceWarning /* out */) const {
-  EffectSet* effectSet =
-      EffectSet::GetEffectSet(mTarget.mElement, mTarget.mPseudoType);
+  EffectSet* effectSet = EffectSet::Get(mTarget.mElement, mTarget.mPseudoType);
   // The various transform properties ('transform', 'scale' etc.) get combined
   // on the compositor.
   //
@@ -1923,8 +1918,7 @@ void KeyframeEffect::MarkCascadeNeedsUpdate() {
     return;
   }
 
-  EffectSet* effectSet =
-      EffectSet::GetEffectSet(mTarget.mElement, mTarget.mPseudoType);
+  EffectSet* effectSet = EffectSet::Get(mTarget.mElement, mTarget.mPseudoType);
   if (!effectSet) {
     return;
   }
@@ -2013,9 +2007,8 @@ void KeyframeEffect::UpdateEffectSet(EffectSet* aEffectSet) const {
   }
 
   EffectSet* effectSet =
-      aEffectSet
-          ? aEffectSet
-          : EffectSet::GetEffectSet(mTarget.mElement, mTarget.mPseudoType);
+      aEffectSet ? aEffectSet
+                 : EffectSet::Get(mTarget.mElement, mTarget.mPseudoType);
   if (!effectSet) {
     return;
   }

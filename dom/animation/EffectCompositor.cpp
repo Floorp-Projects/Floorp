@@ -123,7 +123,7 @@ bool FindAnimationsForCompositor(
   MOZ_ASSERT(!aMatches || aMatches->IsEmpty(),
              "Matches array, if provided, should be empty");
 
-  EffectSet* effects = EffectSet::GetEffectSetForFrame(aFrame, aPropertySet);
+  EffectSet* effects = EffectSet::GetForFrame(aFrame, aPropertySet);
   if (!effects || effects->IsEmpty()) {
     return false;
   }
@@ -163,7 +163,7 @@ bool FindAnimationsForCompositor(
           nsLayoutUtils::GetStyleFrame(aFrame));
   MOZ_ASSERT(pseudoElement,
              "We have a valid element for the frame, if we don't we should "
-             "have bailed out at above the call to EffectSet::GetEffectSet");
+             "have bailed out at above the call to EffectSet::Get");
   EffectCompositor::MaybeUpdateCascadeResults(pseudoElement->mElement,
                                               pseudoElement->mPseudoType);
 
@@ -252,8 +252,7 @@ void EffectCompositor::RequestRestyle(dom::Element* aElement,
 
   if (aRestyleType == RestyleType::Layer) {
     mPresContext->RestyleManager()->IncrementAnimationGeneration();
-    EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
-    if (effectSet) {
+    if (auto* effectSet = EffectSet::Get(aElement, aPseudoType)) {
       effectSet->UpdateAnimationGeneration(mPresContext);
     }
   }
@@ -353,7 +352,7 @@ void EffectCompositor::ClearRestyleRequestsFor(Element* aElement) {
 void EffectCompositor::UpdateEffectProperties(const ComputedStyle* aStyle,
                                               Element* aElement,
                                               PseudoStyleType aPseudoType) {
-  EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
+  EffectSet* effectSet = EffectSet::Get(aElement, aPseudoType);
   if (!effectSet) {
     return;
   }
@@ -427,7 +426,7 @@ bool EffectCompositor::GetServoAnimationRule(
              "Should not be trying to run animations on elements in documents"
              " without a pres shell (e.g. XMLHttpRequest documents)");
 
-  EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
+  EffectSet* effectSet = EffectSet::Get(aElement, aPseudoType);
   if (!effectSet) {
     return false;
   }
@@ -458,7 +457,7 @@ bool EffectCompositor::GetServoAnimationRule(
   ComposeSortedEffects(sortedEffectList, effectSet, aCascadeLevel,
                        aAnimationValues);
 
-  MOZ_ASSERT(effectSet == EffectSet::GetEffectSet(aElement, aPseudoType),
+  MOZ_ASSERT(effectSet == EffectSet::Get(aElement, aPseudoType),
              "EffectSet should not change while composing style");
 
   return true;
@@ -488,8 +487,7 @@ bool EffectCompositor::ComposeServoAnimationRuleForEffect(
   // need to ensure the cascade results are up-to-date manually.
   MaybeUpdateCascadeResults(target.mElement, target.mPseudoType);
 
-  EffectSet* effectSet =
-      EffectSet::GetEffectSet(target.mElement, target.mPseudoType);
+  EffectSet* effectSet = EffectSet::Get(target.mElement, target.mPseudoType);
 
   // Get a list of effects sorted by composite order up to and including
   // |aEffect|, even if it is not in the EffectSet.
@@ -509,9 +507,8 @@ bool EffectCompositor::ComposeServoAnimationRuleForEffect(
   ComposeSortedEffects(sortedEffectList, effectSet, aCascadeLevel,
                        aAnimationValues);
 
-  MOZ_ASSERT(
-      effectSet == EffectSet::GetEffectSet(target.mElement, target.mPseudoType),
-      "EffectSet should not change while composing style");
+  MOZ_ASSERT(effectSet == EffectSet::Get(target.mElement, target.mPseudoType),
+             "EffectSet should not change while composing style");
 
   return true;
 }
@@ -575,7 +572,7 @@ nsTArray<RefPtr<dom::Animation>> EffectCompositor::GetAnimationsForCompositor(
 /* static */
 void EffectCompositor::ClearIsRunningOnCompositor(const nsIFrame* aFrame,
                                                   DisplayItemType aType) {
-  EffectSet* effects = EffectSet::GetEffectSetForFrame(aFrame, aType);
+  EffectSet* effects = EffectSet::GetForFrame(aFrame, aType);
   if (!effects) {
     return;
   }
@@ -590,7 +587,7 @@ void EffectCompositor::ClearIsRunningOnCompositor(const nsIFrame* aFrame,
 /* static */
 void EffectCompositor::MaybeUpdateCascadeResults(Element* aElement,
                                                  PseudoStyleType aPseudoType) {
-  EffectSet* effects = EffectSet::GetEffectSet(aElement, aPseudoType);
+  EffectSet* effects = EffectSet::Get(aElement, aPseudoType);
   if (!effects || !effects->CascadeNeedsUpdate()) {
     return;
   }
@@ -681,7 +678,7 @@ nsCSSPropertyIDSet EffectCompositor::GetOverriddenProperties(
 void EffectCompositor::UpdateCascadeResults(EffectSet& aEffectSet,
                                             Element* aElement,
                                             PseudoStyleType aPseudoType) {
-  MOZ_ASSERT(EffectSet::GetEffectSet(aElement, aPseudoType) == &aEffectSet,
+  MOZ_ASSERT(EffectSet::Get(aElement, aPseudoType) == &aEffectSet,
              "Effect set should correspond to the specified (pseudo-)element");
   if (aEffectSet.IsEmpty()) {
     aEffectSet.MarkCascadeUpdated();
@@ -784,7 +781,7 @@ void EffectCompositor::UpdateCascadeResults(EffectSet& aEffectSet,
 void EffectCompositor::SetPerformanceWarning(
     const nsIFrame* aFrame, const nsCSSPropertyIDSet& aPropertySet,
     const AnimationPerformanceWarning& aWarning) {
-  EffectSet* effects = EffectSet::GetEffectSetForFrame(aFrame, aPropertySet);
+  EffectSet* effects = EffectSet::GetForFrame(aFrame, aPropertySet);
   if (!effects) {
     return;
   }
@@ -875,8 +872,7 @@ bool EffectCompositor::PreTraverseInSubtree(ServoTraversalFlags aFlags,
         continue;
       }
 
-      EffectSet* effects =
-          EffectSet::GetEffectSet(target.mElement, target.mPseudoType);
+      EffectSet* effects = EffectSet::Get(target.mElement, target.mPseudoType);
       if (!effects || !effects->CascadeNeedsUpdate()) {
         continue;
       }
@@ -911,8 +907,7 @@ bool EffectCompositor::PreTraverseInSubtree(ServoTraversalFlags aFlags,
 
       foundElementsNeedingRestyle = true;
 
-      EffectSet* effects =
-          EffectSet::GetEffectSet(target.mElement, target.mPseudoType);
+      auto* effects = EffectSet::Get(target.mElement, target.mPseudoType);
       if (!effects) {
         // Drop EffectSets that have been destroyed.
         iter.Remove();
@@ -979,8 +974,7 @@ static void ReduceEffectSet(EffectSet& aEffectSet) {
 void EffectCompositor::ReduceAnimations() {
   for (auto iter = mElementsToReduce.iter(); !iter.done(); iter.next()) {
     const OwningAnimationTarget& target = iter.get();
-    EffectSet* effectSet =
-        EffectSet::GetEffectSet(target.mElement, target.mPseudoType);
+    auto* effectSet = EffectSet::Get(target.mElement, target.mPseudoType);
     if (effectSet) {
       ReduceEffectSet(*effectSet);
     }

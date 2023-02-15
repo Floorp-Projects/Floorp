@@ -693,7 +693,7 @@ void nsIFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     // It's fine to fetch the EffectSet for the style frame here because in the
     // following code we take care of the case where animations may target
     // a different frame.
-    EffectSet* effectSet = EffectSet::GetEffectSetForStyleFrame(this);
+    EffectSet* effectSet = EffectSet::GetForStyleFrame(this);
     if (effectSet) {
       mMayHaveOpacityAnimation = effectSet->MayHaveOpacityAnimation();
 
@@ -869,7 +869,7 @@ void nsIFrame::DestroyFrom(nsIFrame* aDestructRoot,
       // It's fine to look up the style frame here since if we're destroying the
       // frames for display:table content we should be destroying both wrapper
       // and inner frame.
-      EffectSet::GetEffectSetForStyleFrame(this)) {
+      EffectSet::GetForStyleFrame(this)) {
     // If no new frame for this element is created by the end of the
     // restyling process, stop animations and transitions for this frame
     RestyleManager::AnimationsWithDestroyedFrame* adf =
@@ -3136,8 +3136,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
   const auto& style = *Style();
   const nsStyleDisplay* disp = style.StyleDisplay();
   const nsStyleEffects* effects = style.StyleEffects();
-  EffectSet* effectSetForOpacity = EffectSet::GetEffectSetForFrame(
-      this, nsCSSPropertyIDSet::OpacityProperties());
+  EffectSet* effectSetForOpacity =
+      EffectSet::GetForFrame(this, nsCSSPropertyIDSet::OpacityProperties());
   // We can stop right away if this is a zero-opacity stacking context and
   // we're painting, and we're not animating opacity.
   bool needHitTestInfo = aBuilder->BuildCompositorHitTestInfo() &&
