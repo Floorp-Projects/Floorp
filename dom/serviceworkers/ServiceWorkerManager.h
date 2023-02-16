@@ -355,9 +355,6 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
 
   void MaybeRemoveRegistration(ServiceWorkerRegistrationInfo* aRegistration);
 
-  void PurgeServiceWorker(const ServiceWorkerRegistrationData& aRegistration,
-                          nsIPrincipal* aPrincipal);
-
   RefPtr<ServiceWorkerManagerChild> mActor;
 
   bool mShuttingDown;
