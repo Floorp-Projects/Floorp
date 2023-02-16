@@ -23,6 +23,18 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
+  "getOriginalLocation",
+  "resource://devtools/client/debugger/src/utils/source-maps.js",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "createLocation",
+  "resource://devtools/client/debugger/src/utils/location.js",
+  true
+);
+loader.lazyRequireGetter(
+  this,
   "registerStoreObserver",
   "resource://devtools/client/shared/redux/subscriber.js",
   true
@@ -209,6 +221,81 @@ class DebuggerPanel {
     return this._actions.selectSourceURL(cx, url, { line, column });
   }
 
+  /**
+   * This is called when some other panels wants to open a given source
+   * in the debugger at a precise line/column.
+   *
+   * @param {String} generatedURL
+   * @param {Number} generatedLine
+   * @param {Number} generatedColumn
+   * @param {String} sourceActorId (optional)
+   *        If the callsite knows about a particular sourceActorId,
+   *        or if the source doesn't have a URL, you have to pass a sourceActorId.
+   * @param {String} reason
+   *        A telemetry identifier to record when opening the debugger.
+   *        This help differentiate why we opened the debugger.
+   *
+   * @return {Boolean}
+   *         Returns true if the location is known by the debugger
+   *         and the debugger opens it.
+   */
+  async openSourceInDebugger({
+    generatedURL,
+    generatedLine,
+    generatedColumn,
+    sourceActorId,
+    reason,
+  }) {
+    const generatedSource = sourceActorId
+      ? this._selectors.getSourceByActorId(this._getState(), sourceActorId)
+      : this._selectors.getSourceByURL(this._getState(), generatedURL);
+    // We won't try opening source in the debugger when we can't find the related source actor in the reducer,
+    // or, when it doesn't have any related source actor registered.
+    if (
+      !generatedSource ||
+      // Note: We're not entirely sure when this can happen,
+      // so we may want to revisit that at some point.
+      !this._selectors.getSourceActorsForSource(
+        this._getState(),
+        generatedSource.id
+      ).length
+    ) {
+      return false;
+    }
+
+    const generatedLocation = createLocation({
+      sourceId: generatedSource.id,
+      line: generatedLine,
+      column: generatedColumn,
+    });
+
+    // Note that getOriginalLocation can easily return generatedLocation
+    // if the location can't be mapped to any original source.
+    // So that we may open either regular source or original sources here.
+    const originalLocation = await getOriginalLocation(
+      generatedLocation,
+      this.toolbox.sourceMapLoader
+    );
+
+    // view-source module only forced the load of debugger in the background.
+    // Now that we know we want to show a source, force displaying it in foreground.
+    //
+    // Note that browser_markup_view-source.js doesn't wait for the debugger
+    // to be fully loaded with the source and requires the debugger to be loaded late.
+    // But we might try to load display it early to improve user perception.
+    await this.toolbox.selectTool("jsdebugger", reason);
+
+    const cx = this._selectors.getContext(this._getState());
+    await this._actions.selectSpecificLocation(cx, originalLocation);
+
+    // XXX: should this be moved to selectSpecificLocation??
+    if (this._selectors.hasLogpoint(this._getState(), originalLocation)) {
+      this._actions.openConditionalPanel(originalLocation, true);
+    }
+
+    return true;
+  }
+
   async selectWorker(workerDescriptorFront) {
     const threadActorID = workerDescriptorFront.threadFront?.actorID;
 
@@ -232,48 +319,22 @@ class DebuggerPanel {
     this.selectThread(threadActorID);
 
     // select worker's source
-    const source = this.getSourceByURL(workerDescriptorFront._url);
+    const source = this._selectors.getSourceByURL(
+      this._getState(),
+      workerDescriptorFront._url
+    );
     const sourceActor = this._selectors.getFirstSourceActorForGeneratedSource(
       this._getState(),
       source.id,
       threadActorID
     );
-    await this.selectSource(source.id, sourceActor.actor, 1, 1);
+    const cx = this._selectors.getContext(this._getState());
+    await this._actions.selectSource(cx, source.id, sourceActor.id);
   }
 
   selectThread(threadActorID) {
     const cx = this._selectors.getContext(this._getState());
     this._actions.selectThread(cx, threadActorID);
-  }
-
-  async selectSource(sourceId, sourceActorId, line, column) {
-    const cx = this._selectors.getContext(this._getState());
-    const location = { sourceId, line, column };
-
-    await this._actions.selectSource(cx, sourceId, sourceActorId, location);
-    if (this._selectors.hasLogpoint(this._getState(), location)) {
-      this._actions.openConditionalPanel(location, true);
-    }
-  }
-
-  getSourceActorsForSource(sourceId) {
-    return this._selectors.getSourceActorsForSource(this._getState(), sourceId);
-  }
-
-  getSourceByActorId(sourceId) {
-    return this._selectors.getSourceByActorId(this._getState(), sourceId);
-  }
-
-  getSourceByURL(sourceURL) {
-    return this._selectors.getSourceByURL(this._getState(), sourceURL);
-  }
-
-  getSource(sourceId) {
-    return this._selectors.getSource(this._getState(), sourceId);
-  }
-
-  getLocationSource(location) {
-    return this._selectors.getLocationSource(this._getState(), location);
   }
 
   destroy() {
