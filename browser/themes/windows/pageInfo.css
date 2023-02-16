@@ -19,11 +19,19 @@
 }
 
 #viewGroup > radio {
-  list-style-image: url("chrome://browser/skin/pageInfo.png");
   appearance: none;
+  list-style-image: none;
   min-width: 4.5em;
   margin: 0;
   padding: 3px;
+}
+
+#viewGroup .radio-icon {
+  background-image: url("chrome://browser/skin/pageInfo.png");
+  width: 32px;
+  height: 32px;
+  /* Avoid anti-aliasing seams in HiDPI */
+  image-rendering: crisp-edges;
 }
 
 #viewGroup > radio:hover {
@@ -36,6 +44,10 @@
   color: black;
 }
 
+#viewGroup > radio:is(:hover, [selected="true"]) .radio-icon {
+  background-position-y: -32px;
+}
+
 #viewGroup > radio > .radio-label-box {
   margin: 0;
   padding: 0 6px;
@@ -45,40 +57,20 @@
   outline: var(--default-focusring);
 }
 
-#generalTab {
-  -moz-image-region: rect(0px, 32px, 32px, 0px)
+#generalTab .radio-icon {
+  background-position-x: 0;
 }
 
-#generalTab:hover,
-#generalTab[selected="true"] {
-  -moz-image-region: rect(32px, 32px, 64px, 0px)
+#mediaTab .radio-icon {
+  background-position-x: -32px;
 }
 
-#mediaTab {
-  -moz-image-region: rect(0px, 64px, 32px, 32px)
+#permTab .radio-icon {
+  background-position-x: -96px;
 }
 
-#mediaTab:hover,
-#mediaTab[selected="true"] {
-  -moz-image-region: rect(32px, 64px, 64px, 32px)
-}
-
-#permTab {
-  -moz-image-region: rect(0px, 128px, 32px, 96px)
-}
-
-#permTab:hover,
-#permTab[selected="true"] {
-  -moz-image-region: rect(32px, 128px, 64px, 96px)
-}
-
-#securityTab {
-  -moz-image-region: rect(0px, 160px, 32px, 128px)
-}
-
-#securityTab:hover,
-#securityTab[selected="true"] {
-  -moz-image-region: rect(32px, 160px, 64px, 128px)
+#securityTab .radio-icon {
+  background-position-x: -128px;
 }
 
 /* Misc */
