@@ -2355,6 +2355,7 @@ struct MOZ_STACK_CLASS FontDrawParams {
   gfxFloat advanceDirection;
   mozilla::gfx::sRGBColor currentColor;
   nsTArray<mozilla::gfx::sRGBColor>* palette;  // owned by TextRunDrawParams
+  mozilla::gfx::Rect fontExtents;
   bool isVerticalFont;
   bool haveSVGGlyphs;
   bool haveColorGlyphs;
