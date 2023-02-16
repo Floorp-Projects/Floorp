@@ -6217,22 +6217,23 @@ void Document::DeferredContentEditableCountChange(Element* aElement) {
 
       RefPtr<HTMLEditor> htmlEditor = docshell->GetHTMLEditor();
       if (htmlEditor) {
-        RefPtr<nsRange> range = nsRange::Create(aElement);
-        IgnoredErrorResult res;
-        range->SelectNode(*aElement, res);
-        if (res.Failed()) {
-          // The node might be detached from the document at this point,
-          // which would cause this call to fail.  In this case, we can
-          // safely ignore the contenteditable count change.
-          return;
-        }
-
         nsCOMPtr<nsIInlineSpellChecker> spellChecker;
         rv = htmlEditor->GetInlineSpellChecker(false,
                                                getter_AddRefs(spellChecker));
         NS_ENSURE_SUCCESS_VOID(rv);
 
-        if (spellChecker) {
+        if (spellChecker &&
+            aElement->InclusiveDescendantMayNeedSpellchecking(htmlEditor)) {
+          RefPtr<nsRange> range = nsRange::Create(aElement);
+          IgnoredErrorResult res;
+          range->SelectNode(*aElement, res);
+          if (res.Failed()) {
+            // The node might be detached from the document at this point,
+            // which would cause this call to fail.  In this case, we can
+            // safely ignore the contenteditable count change.
+            return;
+          }
+
           rv = spellChecker->SpellCheckRange(range);
           NS_ENSURE_SUCCESS_VOID(rv);
         }

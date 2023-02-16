@@ -22,6 +22,7 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/ElementAnimationData.h"
 #include "mozilla/HTMLEditor.h"
+#include "mozilla/mozInlineSpellChecker.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/TextEditor.h"
@@ -354,6 +355,13 @@ already_AddRefed<URLExtraData> nsIContent::GetURLDataForStyleAttr(
 
 void nsIContent::ConstructUbiNode(void* storage) {
   JS::ubi::Concrete<nsIContent>::construct(storage, this);
+}
+
+bool nsIContent::InclusiveDescendantMayNeedSpellchecking(HTMLEditor* aEditor) {
+  // Return true if the node may have elements as children, since those or their
+  // descendants may have spellcheck attributes.
+  return HasFlag(NODE_MAY_HAVE_ELEMENT_CHILDREN) ||
+         mozInlineSpellChecker::ShouldSpellCheckNode(aEditor, this);
 }
 
 //----------------------------------------------------------------------

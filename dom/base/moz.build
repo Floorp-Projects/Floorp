@@ -565,6 +565,7 @@ LOCAL_INCLUDES += [
     "/dom/xml",
     "/dom/xslt/xpath",
     "/dom/xul",
+    "/extensions/spellcheck/src",
     "/gfx/2d",
     "/image",
     "/js/xpconnect/loader",

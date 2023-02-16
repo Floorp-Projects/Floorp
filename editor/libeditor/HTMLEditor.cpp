@@ -4423,12 +4423,26 @@ void HTMLEditor::DoContentInserted(nsIContent* aChild,
 
     // Update spellcheck for only the newly-inserted node (bug 743819)
     if (mInlineSpellChecker) {
-      RefPtr<nsRange> range = nsRange::Create(aChild);
       nsIContent* endContent = aChild;
       if (aInsertedOrAppended == eAppended) {
+        nsIContent* child = nullptr;
+        for (child = aChild; child; child = child->GetNextSibling()) {
+          if (child->InclusiveDescendantMayNeedSpellchecking(this)) {
+            break;
+          }
+        }
+        if (!child) {
+          // No child needed spellchecking, return.
+          return;
+        }
+
         // Maybe more than 1 child was appended.
         endContent = container->GetLastChild();
+      } else if (!aChild->InclusiveDescendantMayNeedSpellchecking(this)) {
+        return;
       }
+
+      RefPtr<nsRange> range = nsRange::Create(aChild);
       range->SelectNodesInContainer(container, aChild, endContent);
       DebugOnly<nsresult> rvIgnored =
           mInlineSpellChecker->SpellCheckRange(range);
