@@ -27,6 +27,7 @@ plugins {
 include ':app'
 include ':mozilla-detekt-rules'
 include ':mozilla-lint-rules'
+include ':benchmark'
 
 // Synchronized library configuration for all modules
 // This "componentsVersion" number is defined in "version.txt" and should follow

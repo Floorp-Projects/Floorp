@@ -48,6 +48,10 @@
         android:usesCleartextTraffic="true"
         tools:ignore="UnusedAttribute">
 
+        <profileable
+            android:shell="true"
+            tools:targetApi="29" />
+
         <!--
           We inherited this entry (${applicationId}.App) from Fennec. We need to keep this as our
           main launcher to avoid launcher icons on the home screen disappearing for all our users.

@@ -1,0 +1,70 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+plugins {
+    id 'com.android.test'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'org.mozilla.fenix.benchmark'
+    compileSdk Config.compileSdkVersion
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+
+    defaultConfig {
+        minSdk 23
+        targetSdk Config.targetSdkVersion
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        // This benchmark buildType is used for benchmarking, and should function like your
+        // release build (for example, with minification on). It's signed with a debug key
+        // for easy local testing.
+        benchmark {
+            debuggable = true
+            signingConfig signingConfigs.debug
+            matchingFallbacks = ["release"]
+        }
+    }
+
+    targetProjectPath = ":app"
+    experimentalProperties["android.experimental.self-instrumenting"] = true
+}
+
+/**
+ * This fixes the dependency resolution issue with Glean Native. The glean gradle plugin does this
+ * and that's applied to the app module. Since there are no other uses of the glean plugin in the
+ * benchmark module, we do this manually here.
+ */
+configurations.all {
+    resolutionStrategy.capabilitiesResolution.withCapability("org.mozilla.telemetry:glean-native") {
+        def toBeSelected = candidates.find { it.id instanceof ModuleComponentIdentifier && it.id.module.contains('geckoview') }
+        if (toBeSelected != null) {
+            select(toBeSelected)
+        }
+        because 'use GeckoView Glean instead of standalone Glean'
+    }
+}
+
+dependencies {
+    implementation FenixDependencies.androidx_junit
+    implementation FenixDependencies.espresso_core
+    implementation FenixDependencies.uiautomator
+    implementation FenixDependencies.androidx_benchmark_macro_junit4
+}
+
+androidComponents {
+    beforeVariants(selector().all()) {
+        enabled = buildType == "benchmark"
+    }
+}

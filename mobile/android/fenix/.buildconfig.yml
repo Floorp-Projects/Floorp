@@ -136,6 +136,17 @@ variants:
   build_type: beta
   name: fenixBeta
 - apks:
+  - abi: arm64-v8a
+    fileName: app-fenix-arm64-v8a-benchmark-unsigned.apk
+  - abi: armeabi-v7a
+    fileName: app-fenix-armeabi-v7a-benchmark-unsigned.apk
+  - abi: x86
+    fileName: app-fenix-x86-benchmark-unsigned.apk
+  - abi: x86_64
+    fileName: app-fenix-x86_64-benchmark-unsigned.apk
+  build_type: benchmark
+  name: fenixBenchmark
+- apks:
   - abi: noarch
     fileName: app-debug-androidTest.apk
   build_type: androidTest

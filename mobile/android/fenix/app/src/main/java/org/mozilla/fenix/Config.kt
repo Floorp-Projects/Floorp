@@ -53,7 +53,7 @@ enum class ReleaseChannel {
 object Config {
     val channel = when (BuildConfig.BUILD_TYPE) {
         "debug" -> ReleaseChannel.Debug
-        "nightly" -> ReleaseChannel.Nightly
+        "nightly", "benchmark" -> ReleaseChannel.Nightly
         "beta" -> ReleaseChannel.Beta
         "release" -> ReleaseChannel.Release
         else -> {
