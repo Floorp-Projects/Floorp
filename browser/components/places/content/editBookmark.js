@@ -378,17 +378,6 @@ var gEditItemOverlay = {
       );
     }
 
-    // Observe changes.
-    if (!this._observersAdded) {
-      this.handlePlacesEvents = this.handlePlacesEvents.bind(this);
-      PlacesUtils.observers.addListener(
-        ["bookmark-title-changed"],
-        this.handlePlacesEvents
-      );
-      window.addEventListener("unload", this);
-      this._observersAdded = true;
-    }
-
     let focusElement = () => {
       // The focusedElement possible values are:
       //  * preferred: focus the field that the user touched first the last
@@ -423,7 +412,7 @@ var gEditItemOverlay = {
       await this._tagsUpdatePromise;
     }
 
-    this._bookmarkState = this.makeNewStateObject({ index: aInfo.node?.index });
+    this._bookmarkState = this.makeNewStateObject();
     if (isBookmark || bulkTagging) {
       await this._initAllTags();
       await this._rebuildTagsSelectorList();
@@ -595,15 +584,6 @@ var gEditItemOverlay = {
       }
     }
 
-    if (this._observersAdded) {
-      PlacesUtils.observers.removeListener(
-        ["bookmark-title-changed"],
-        this.handlePlacesEvents
-      );
-      window.removeEventListener("unload", this);
-      this._observersAdded = false;
-    }
-
     if (this._folderMenuListListenerAdded) {
       this._folderMenuList.removeEventListener("select", this);
       this._folderMenuListListenerAdded = false;
@@ -624,7 +604,7 @@ var gEditItemOverlay = {
     );
   },
 
-  makeNewStateObject(extraOptions) {
+  makeNewStateObject() {
     if (
       this._paneInfo.isItem ||
       this._paneInfo.isTag ||
@@ -633,11 +613,7 @@ var gEditItemOverlay = {
       const isLibraryWindow =
         document.documentElement.getAttribute("windowtype") ===
         "Places:Organizer";
-      const options = {
-        autosave: isLibraryWindow,
-        info: this._paneInfo,
-        ...extraOptions,
-      };
+      const options = { autosave: isLibraryWindow, info: this._paneInfo };
 
       if (this._paneInfo.isBookmark) {
         options.tags = this._element("tagsField").value;
@@ -681,24 +657,16 @@ var gEditItemOverlay = {
   async _updateTags() {
     this._tagsUpdatePromise = (async () => {
       const inputTags = this._getTagsArrayFromTagsInputField();
-      const isLibraryWindow =
-        document.documentElement.getAttribute("windowtype") ===
-        "Places:Organizer";
       await this._bookmarkState._tagsChanged(inputTags);
+      delete this._paneInfo._cachedCommonTags;
 
-      if (isLibraryWindow) {
-        // Ensure the tagsField is in sync, clean it up from empty tags
-        delete this._paneInfo._cachedCommonTags;
-        const currentTags = this._paneInfo.bulkTagging
-          ? this._getCommonTags()
-          : PlacesUtils.tagging.getTagsForURI(this._paneInfo.uri);
-        this._initTextField(this._tagsField, currentTags.join(", "), false);
-        await this._initAllTags();
-      } else {
-        // Autosave is disabled. Update _allTags in memory so that the selector
-        // list shows any new tags that haven't been saved yet.
-        inputTags.forEach(tag => this._allTags?.set(tag.toLowerCase(), tag));
-      }
+      // Ensure the tagsField is in sync, clean it up from empty tags
+      const currentTags = this._paneInfo.bulkTagging
+        ? this._getCommonTags()
+        : PlacesUtils.tagging.getTagsForURI(this._paneInfo.uri);
+      this._initTextField(this._tagsField, currentTags.join(", "), false);
+
+      await this._initAllTags();
       await this._rebuildTagsSelectorList();
     })().catch(console.error);
     await this._tagsUpdatePromise;
@@ -1104,19 +1072,6 @@ var gEditItemOverlay = {
     }
   },
 
-  async handlePlacesEvents(events) {
-    for (const event of events) {
-      switch (event.type) {
-        case "bookmark-title-changed":
-          if (this._paneInfo.isItem || this._paneInfo.isTag) {
-            // This also updates titles of folders in the folder menu list.
-            this._onItemTitleChange(event.id, event.title, event.guid);
-          }
-          break;
-      }
-    }
-  },
-
   toggleItemCheckbox(item) {
     // Update the tags field when items are checked/unchecked in the listbox
     let tags = this._getTagsArrayFromTagsInputField();
@@ -1151,30 +1106,6 @@ var gEditItemOverlay = {
     }
 
     this._initTextField(this._tagsField, tags.join(", "));
-  },
-
-  _onItemTitleChange(aItemId, aNewTitle, aGuid) {
-    if (this._paneInfo.visibleRows.has("folderRow")) {
-      // If the title of a folder which is listed within the folders
-      // menulist has been changed, we need to update the label of its
-      // representing element.
-      let menupopup = this._folderMenuList.menupopup;
-      for (let menuitem of menupopup.children) {
-        if ("folderGuid" in menuitem && menuitem.folderGuid == aGuid) {
-          menuitem.label = aNewTitle;
-          break;
-        }
-      }
-    }
-    // We need to also update title of recent folders.
-    if (this._recentFolders) {
-      for (let folder of this._recentFolders) {
-        if (folder.folderGuid == aGuid) {
-          folder.title = aNewTitle;
-          break;
-        }
-      }
-    }
   },
 
   /**

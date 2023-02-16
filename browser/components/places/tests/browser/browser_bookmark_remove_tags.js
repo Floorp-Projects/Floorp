@@ -33,7 +33,7 @@ add_task(async function test_remove_tags_from_BookmarkStar() {
     url: TEST_URL,
     title: TEST_URL,
   });
-  PlacesUtils.tagging.tagURI(TEST_URI, ["tag1", "tag2", "tag3", "tag4"]);
+  PlacesUtils.tagging.tagURI(TEST_URI, ["tag1, tag2, tag3, tag4"]);
 
   let tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
