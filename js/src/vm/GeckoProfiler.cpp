@@ -95,9 +95,6 @@ void GeckoProfilerRuntime::enable(bool enabled) {
     cx->jitActivation->setLastProfilingCallSite(nullptr);
   }
 
-  // Reset the jitcode collection, if toggled on
-  jit::ResetPerfSpewer(enabled);
-
   enabled_ = enabled;
 
   /* Toggle Gecko Profiler-related jumps on baseline jitcode.
