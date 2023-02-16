@@ -145,8 +145,6 @@ class nsSprocketLayout : public nsBoxLayout {
 
   virtual bool GetDefaultFlex(int32_t& aFlex);
 
-  virtual void GetFrameState(nsIFrame* aBox, nsFrameState& aState);
-
  private:
   // because the sprocket layout manager has no instance variables. We
   // can make a static one and reuse it everywhere.

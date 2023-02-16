@@ -371,7 +371,7 @@ uint64_t LocalAccessible::VisibilityState() const {
   // marked invisible.
   // XXX Can we just remove this check? Why do we need to mark empty
   // text invisible?
-  if (frame->IsTextFrame() && !(frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
+  if (frame->IsTextFrame() && !frame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) &&
       frame->GetRect().IsEmpty()) {
     nsIFrame::RenderedText text = frame->GetRenderedText(
         0, UINT32_MAX, nsIFrame::TextOffsetType::OffsetsInContentText,
@@ -408,7 +408,7 @@ uint64_t LocalAccessible::NativeState() const {
 
   nsIFrame* frame = GetFrame();
   if (frame) {
-    if (frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) state |= states::FLOATING;
+    if (frame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) state |= states::FLOATING;
 
     // XXX we should look at layout for non XUL box frames, but need to decide
     // how that interacts with ARIA.

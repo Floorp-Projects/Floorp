@@ -2790,7 +2790,7 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
     //   SVG 1.1 say that if we fail to resolve a mask, we should draw the
     //   object unmasked so return Nothing().
     if (!maskIsComplete &&
-        (aMaskItem->Frame()->GetStateBits() & NS_FRAME_SVG_LAYOUT)) {
+        aMaskItem->Frame()->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
       return Nothing();
     }
 
