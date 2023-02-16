@@ -37,7 +37,7 @@ a11y-checks:
 aab:
     description: "{description} with aab test_runner"
     component: "GeckoView::General"
-    expiration: "2023-03-01"
+    expiration: "2023-09-01"
     when: &gv_e10s_filter
         $eval: '"android" in task["test-platform"]'
     suffix: "aab"
@@ -58,7 +58,7 @@ aab:
 geckoview-no-fission:
     description: "{description} without fission enabled"
     component: "Core::DOM: Content Processes"
-    expiration: "2023-03-01"
+    expiration: "2023-09-01"
     when:
         <<: *gv_e10s_filter
     suffix: "nofis"
@@ -70,21 +70,21 @@ geckoview-no-fission:
 geckoview-fission:
     description: "{description} with fission enabled"
     component: "Core::DOM: Content Processes"
-    expiration: "2023-03-01"
+    expiration: "2023-09-01"
     when:
         <<: *gv_e10s_filter
     suffix: "fis"
 
 fission:
     description: "{description} with fission enabled"
-    component: "Testing::General"
-    expiration: "2023-03-01"
+    component: "Core::DOM: Content Processes"
+    expiration: "2023-09-01"
     suffix: "fis"
 
 no-fission:
     description: "{description} without fission enabled"
-    component: "Testing::General"
-    expiration: "2023-03-01"
+    component: "Core::DOM: Content Processes"
+    expiration: "2023-09-01"
     suffix: "nofis"
     merge:
         mozharness:
@@ -94,7 +94,7 @@ no-fission:
 xorigin:
     description: "{description} with cross-origin"
     component: "Core::DOM: Content Processes"
-    expiration: "2023-03-01"
+    expiration: "2023-09-01"
     suffix: "xorig"
     replace:
         e10s: true
