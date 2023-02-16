@@ -176,23 +176,27 @@ class ScriptModule extends Module {
   }
 
   #evaluatePreloadScripts() {
-    new Promise(resolve => {
-      // Block script parsing.
-      this.messageHandler.window.document.blockParsing(resolve);
-
-      for (const script of this.#preloadScripts.values()) {
-        const realm = this.#getRealmFromSandboxName(script.sandbox);
-        const rv = realm.executeInGlobal(script.expression);
-
-        if ("throw" in rv) {
-          const exception = this.#toRawObject(rv.throw);
-          realm.reportError(lazy.stringify(exception), rv.stack);
-        }
-      }
-
-      // Continue script parsing.
-      resolve();
+    let resolveBlockerPromise;
+    const blockerPromise = new Promise(resolve => {
+      resolveBlockerPromise = resolve;
     });
+
+    // Block script parsing.
+    this.messageHandler.window.document.blockParsing(blockerPromise);
+    for (const script of this.#preloadScripts.values()) {
+      const { functionDeclaration, sandbox } = script;
+      const realm = this.#getRealmFromSandboxName(sandbox);
+
+      const rv = realm.executeInGlobalWithBindings(functionDeclaration, []);
+
+      if ("throw" in rv) {
+        const exception = this.#toRawObject(rv.throw);
+        realm.reportError(lazy.stringify(exception), rv.stack);
+      }
+    }
+
+    // Continue script parsing.
+    resolveBlockerPromise();
   }
 
   #getRealm(realmId, sandboxName) {
