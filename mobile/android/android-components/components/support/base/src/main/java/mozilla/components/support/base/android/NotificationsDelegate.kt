@@ -86,6 +86,7 @@ class NotificationsDelegate(
      * Note that it will also be called when the permission is already granted.
      * @param onPermissionRejected optional callback for handling permission refusal.
      */
+    @SuppressLint("NotifyUsage")
     fun notify(
         notificationTag: String? = null,
         notificationId: Int,
