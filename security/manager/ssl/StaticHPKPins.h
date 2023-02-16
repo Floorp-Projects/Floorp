@@ -71,6 +71,14 @@ static const char kDigiCert_Global_Root_G3Fingerprint[] =
 static const char kDigiCert_High_Assurance_EV_Root_CAFingerprint[] =
   "WoiWRyIOVNa9ihaBciRSC7XHjliYS9VwUGOIud4PB18=";
 
+/* DigiCert TLS ECC P384 Root G5 */
+static const char kDigiCert_TLS_ECC_P384_Root_G5Fingerprint[] =
+  "oC+voZLIy4HLE0FVT5wFtxzKKokLDRKY1oNkfJYe+98=";
+
+/* DigiCert TLS RSA4096 Root G5 */
+static const char kDigiCert_TLS_RSA4096_Root_G5Fingerprint[] =
+  "ape1HIIZ6T5d7GS61YBs3rD4NVvkfnVwELcCRW4Bqv0=";
+
 /* DigiCert Trusted Root G4 */
 static const char kDigiCert_Trusted_Root_G4Fingerprint[] =
   "Wd8xe/qfTwq3ylFNd3IpaqLHZbh2ZNCLluVzmeNkcpw=";
@@ -396,6 +404,9 @@ static const StaticFingerprints kPinset_google_root_pems = {
 static const char* const kPinset_mozilla_services_Data[] = {
   kISRG_Root_X1Fingerprint,
   kDigiCert_High_Assurance_EV_Root_CAFingerprint,
+  kDigiCert_TLS_RSA4096_Root_G5Fingerprint,
+  kDigiCert_Global_Root_G2Fingerprint,
+  kDigiCert_TLS_ECC_P384_Root_G5Fingerprint,
   kDigiCert_Global_Root_CAFingerprint,
 };
 static const StaticFingerprints kPinset_mozilla_services = {
@@ -1095,4 +1106,4 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1684409250095000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1685014014631000);
