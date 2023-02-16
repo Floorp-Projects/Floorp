@@ -446,6 +446,19 @@ void PerfSpewer::CollectJitCodeInfo(UniqueChars& function_name, void* code_addr,
   }
 }
 
+void PerfSpewer::recordOffset(MacroAssembler& masm, const char* msg) {
+  if (!PerfIREnabled()) {
+    return;
+  }
+
+  UniqueChars offsetStr = DuplicateString(msg);
+  if (!opcodes_.emplaceBack(masm.currentOffset(), offsetStr)) {
+    opcodes_.clear();
+    AutoLockPerfSpewer lock;
+    DisablePerfSpewer(lock);
+  }
+}
+
 void PerfSpewer::saveJitCodeIRInfo(const char* desc, JitCode* code,
                                    JS::JitCodeRecord* profilerRecord,
                                    AutoLockPerfSpewer& lock) {
