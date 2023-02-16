@@ -17,6 +17,7 @@ class nsIFrame;
 
 namespace mozilla {
 class EventChainPreVisitor;
+class HTMLEditor;
 struct URLExtraData;
 namespace dom {
 struct BindContext;
@@ -623,6 +624,12 @@ class nsIContent : public nsINode {
     rc -= GetChildCount();
     return rc == 0;
   }
+
+  /**
+   * Use this method with designMode and contentEditable to check if the
+   * node may need spellchecking.
+   */
+  bool InclusiveDescendantMayNeedSpellchecking(mozilla::HTMLEditor* aEditor);
 
  protected:
   /**
