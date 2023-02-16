@@ -521,8 +521,9 @@ void nsImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   GetImageMap();  // Ensure to init the image map asap. This is important to
                   // make <area> elements focusable.
 
+  nsPresContext* pc = PresContext();
   if (!gIconLoad) {
-    LoadIcons(PresContext());
+    LoadIcons(pc);
   }
 
   if (mKind == Kind::ImageLoadingContent) {
@@ -533,10 +534,10 @@ void nsImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     // that it can register images.
     imageLoader->FrameCreated(this);
     AssertSyncDecodingHintIsInSync();
-    if (nsIDocShell* docShell = PresContext()->GetDocShell()) {
+    if (nsIDocShell* docShell = pc->GetDocShell()) {
       RefPtr<BrowsingContext> bc = docShell->GetBrowsingContext();
       mIsInObjectOrEmbed = bc->IsEmbedderTypeObjectOrEmbed() &&
-                           PresContext()->Document()->IsImageDocument();
+                           pc->Document()->IsImageDocument();
     }
   } else {
     const StyleImage* image = GetImageFromStyle();
@@ -544,8 +545,7 @@ void nsImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                "Content image should only parse url() type");
     if (image->IsImageRequestType()) {
       if (imgRequestProxy* proxy = image->GetImageRequest()) {
-        proxy->Clone(mListener, PresContext()->Document(),
-                     getter_AddRefs(mOwnedRequest));
+        proxy->Clone(mListener, pc->Document(), getter_AddRefs(mOwnedRequest));
         SetupOwnedRequest();
       }
     }
