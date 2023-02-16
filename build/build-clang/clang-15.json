@@ -18,6 +18,7 @@
         "llvmorg-16-init-14750-ga903ecb4a26d.patch",
         "llvmorg-16-init-15447-g8d3ab9dfc4d4.patch",
         "llvmorg-16-init-17468-gc512eda38ebe.patch",
+        "llvmorg-17-init-2171-g8198f30f7e75.patch",
         "compiler-rt-rss-limit-heap-profile.patch"
     ]
 }
