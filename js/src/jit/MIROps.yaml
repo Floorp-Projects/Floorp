@@ -576,8 +576,15 @@
 - name: ToNumberInt32
   gen_boilerplate: false
 
-- name: ToIntegerInt32
-  gen_boilerplate: false
+- name: BooleanToInt32
+  operands:
+    input: Boolean
+  result_type: Int32
+  movable: true
+  compute_range: custom
+  folds_to: custom
+  congruent_to: if_operands_equal
+  alias_set: none
 
 - name: TruncateToInt32
   gen_boilerplate: false
