@@ -2,20 +2,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { generatedToOriginalId } from "devtools/client/shared/source-map-loader/index";
+import {
+  generatedToOriginalId,
+  originalToGeneratedId,
+} from "devtools/client/shared/source-map-loader/index";
 
 import assert from "../../utils/assert";
 import { recordEvent } from "../../utils/telemetry";
 import { updateBreakpointsForNewPrettyPrintedSource } from "../breakpoints";
 
-import { setSymbols } from "./symbols";
 import {
   getPrettySourceURL,
   isGenerated,
   isJavaScript,
 } from "../../utils/source";
 import { isFulfilled } from "../../utils/async-value";
-import { loadGeneratedSourceText } from "./loadSourceText";
+import {
+  loadGeneratedSourceText,
+  loadOriginalSourceText,
+} from "./loadSourceText";
 import { mapFrames } from "../pause";
 import { selectSpecificLocation } from "../sources";
 import { createPrettyPrintOriginalSource } from "../../client/firefox/create";
@@ -23,7 +28,6 @@ import { createPrettyPrintOriginalSource } from "../../client/firefox/create";
 import {
   getSource,
   getFirstSourceActorForGeneratedSource,
-  getSourceFromId,
   getSourceByURL,
   getSelectedLocation,
   getThreadContext,
@@ -77,11 +81,10 @@ export async function prettyPrintSource(
   };
 }
 
-export function createPrettySource(cx, sourceId) {
-  return async ({ dispatch, getState }) => {
-    const source = getSourceFromId(getState(), sourceId);
+function createPrettySource(cx, source) {
+  return async ({ dispatch, sourceMapLoader, getState }) => {
     const url = getPrettyOriginalSourceURL(source);
-    const id = generatedToOriginalId(sourceId, url);
+    const id = generatedToOriginalId(source.id, url);
     const prettySource = createPrettyPrintOriginalSource(id, url);
 
     dispatch({
@@ -89,20 +92,21 @@ export function createPrettySource(cx, sourceId) {
       cx,
       originalSources: [prettySource],
     });
-
-    await dispatch(selectSource(cx, id));
-
     return prettySource;
   };
 }
 
-function selectPrettyLocation(cx, prettySource, generatedLocation) {
+function selectPrettyLocation(cx, prettySource) {
   return async ({ dispatch, sourceMapLoader, getState }) => {
-    let location = generatedLocation
-      ? generatedLocation
-      : getSelectedLocation(getState());
+    let location = getSelectedLocation(getState());
 
-    if (location && location.line >= 1) {
+    // If we were selecting a particular line in the minified/generated source,
+    // try to select the matching line in the prettified/original source.
+    if (
+      location &&
+      location.line >= 1 &&
+      location.sourceId == originalToGeneratedId(prettySource.id)
+    ) {
       location = await sourceMapLoader.getOriginalLocation(location);
 
       return dispatch(
@@ -115,16 +119,14 @@ function selectPrettyLocation(cx, prettySource, generatedLocation) {
 }
 
 /**
- * Toggle the pretty printing of a source's text. All subsequent calls to
- * |getText| will return the pretty-toggled text. Nothing will happen for
- * non-javascript files.
+ * Toggle the pretty printing of a source's text.
+ * Nothing will happen for non-javascript files.
  *
- * @memberof actions/sources
- * @static
- * @param string id The source form from the RDP.
+ * @param Object cx
+ * @param String sourceId
+ *        The source ID for the minified/generated source object.
  * @returns Promise
- *          A promise that resolves to [aSource, prettyText] or rejects to
- *          [aSource, error].
+ *          A promise that resolves to the Pretty print/original source object.
  */
 export function togglePrettyPrint(cx, sourceId) {
   return async ({ dispatch, getState }) => {
@@ -156,15 +158,25 @@ export function togglePrettyPrint(cx, sourceId) {
       return dispatch(selectPrettyLocation(cx, prettySource));
     }
 
-    const selectedLocation = getSelectedLocation(getState());
-    const newPrettySource = await dispatch(createPrettySource(cx, sourceId));
-    await dispatch(selectPrettyLocation(cx, newPrettySource, selectedLocation));
+    const newPrettySource = await dispatch(createPrettySource(cx, source));
+
+    // Force loading the pretty source/original text.
+    // This will end up calling prettyPrintSource() of this module, and
+    // more importantly, will populate the sourceMapLoader, which is used by selectPrettyLocation.
+    await dispatch(loadOriginalSourceText({ cx, source: newPrettySource }));
+    // Select the pretty/original source based on the location we may
+    // have had against the minified/generated source.
+    // This uses source map to map locations.
+    // Also note that selecting a location force many things:
+    // * opening tabs
+    // * fetching symbols/inline scope
+    // * fetching breakable lines
+    await dispatch(selectPrettyLocation(cx, newPrettySource));
 
     const threadcx = getThreadContext(getState());
+    // Update frames to the new pretty/original source (in case we were paused)
     await dispatch(mapFrames(threadcx));
-
-    await dispatch(setSymbols({ cx, source: newPrettySource, sourceActor }));
-
+    // Update breakpoints locations to the new pretty/original source
     await dispatch(updateBreakpointsForNewPrettyPrintedSource(cx, sourceId));
 
     return newPrettySource;

@@ -27,12 +27,4 @@ describe("assert", () => {
       }).toThrow(new Error(testAssertMessageHead + testAssertMessage));
     });
   });
-
-  describe("when not in Node test", () => {
-    it("does not throw an Error", () => {
-      process.env.NODE_ENV = "production";
-      expect(() => assert(false, testAssertMessage)).not.toThrow();
-      delete process.env.NODE_ENV;
-    });
-  });
 });
