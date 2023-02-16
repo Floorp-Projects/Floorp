@@ -106,7 +106,7 @@ linux1804-64-clang-trunk-qr/opt:
     build-platform: linux64-plain-clang-trunk/opt
     test-sets:
         - awsy
-        - browsertime
+        - browsertime-clang
 
 ##
 # Windows platforms (matching /windows.*/)
