@@ -271,6 +271,9 @@ Prefs that can be changed with this action are:
 - `cookiebanners.service.mode`
 - `cookiebanners.service.mode.privateBrowsing`
 
+Alternatively, if a pref is set with this action and is not present in the list
+above, it will be created and prepended with `messaging-system-action.`.
+
 * args:
 ```ts
 {
