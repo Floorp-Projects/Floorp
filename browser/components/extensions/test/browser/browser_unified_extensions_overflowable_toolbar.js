@@ -10,6 +10,8 @@
 
 loadTestSubscript("head_unified_extensions.js");
 
+requestLongerTimeout(2);
+
 const NUM_EXTENSIONS = 5;
 const OVERFLOW_WINDOW_WIDTH_PX = 450;
 const DEFAULT_WIDGET_IDS = [
@@ -312,13 +314,23 @@ async function withWindowOverflowed(
   }
 }
 
-async function verifyExtensionWidget(win, widget) {
+async function verifyExtensionWidget(widget, win = window) {
   Assert.ok(widget, "expected widget");
 
-  let actionButton = widget.firstElementChild;
+  let actionButton = widget.querySelector(
+    ".unified-extensions-item-action-button"
+  );
   Assert.ok(
     actionButton.classList.contains("unified-extensions-item-action-button"),
     "expected action class on the button"
+  );
+  ok(
+    actionButton.classList.contains("subviewbutton"),
+    "expected the .subviewbutton CSS class on the action button in the panel"
+  );
+  ok(
+    !actionButton.classList.contains("toolbarbutton-1"),
+    "expected no .toolbarbutton-1 CSS class on the action button in the panel"
   );
 
   let menuButton = widget.lastElementChild;
@@ -429,7 +441,7 @@ add_task(async function test_overflowable_toolbar() {
           extensionIDs.includes(child.dataset.extensionid),
           `Unified Extensions overflow list should have ${child.dataset.extensionid}`
         );
-        await verifyExtensionWidget(win, child, true);
+        await verifyExtensionWidget(child, win);
       }
 
       let extensionWidgetID = AppUiTestInternals.getBrowserActionWidgetId(
@@ -741,8 +753,10 @@ add_task(async function test_message_deck() {
  */
 add_task(async function test_pinning_to_toolbar_when_overflowed() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
+
   let movedNode;
   let extensionWidgetID;
+  let actionButton;
 
   await withWindowOverflowed(win, {
     beforeOverflowed: async extensionIDs => {
@@ -755,12 +769,42 @@ add_task(async function test_pinning_to_toolbar_when_overflowed() {
       movedNode = CustomizableUI.getWidget(extensionWidgetID).forWindow(win)
         .node;
 
+      actionButton = movedNode.querySelector(
+        ".unified-extensions-item-action-button"
+      );
+      ok(
+        actionButton.classList.contains("toolbarbutton-1"),
+        "expected .toolbarbutton-1 CSS class on the action button in the navbar"
+      );
+      ok(
+        !actionButton.classList.contains("subviewbutton"),
+        "expected no .subviewbutton CSS class on the action button in the navbar"
+      );
+
       CustomizableUI.addWidgetToArea(
         extensionWidgetID,
         CustomizableUI.AREA_ADDONS
       );
+
+      ok(
+        actionButton.classList.contains("subviewbutton"),
+        "expected .subviewbutton CSS class on the action button in the panel"
+      );
+      ok(
+        !actionButton.classList.contains("toolbarbutton-1"),
+        "expected no .toolbarbutton-1 CSS class on the action button in the panel"
+      );
     },
     whenOverflowed: async (defaultList, unifiedExtensionList, extensionIDs) => {
+      ok(
+        actionButton.classList.contains("subviewbutton"),
+        "expected .subviewbutton CSS class on the action button in the panel"
+      );
+      ok(
+        !actionButton.classList.contains("toolbarbutton-1"),
+        "expected no .toolbarbutton-1 CSS class on the action button in the panel"
+      );
+
       // Now that the window is overflowed, let's move the widget in the addons
       // panel back to the navbar. This should cause the widget to overflow back
       // into the addons panel.
@@ -776,6 +820,15 @@ add_task(async function test_pinning_to_toolbar_when_overflowed() {
         unifiedExtensionList,
         "Should have overflowed the extension button to the right list."
       );
+
+      ok(
+        actionButton.classList.contains("subviewbutton"),
+        "expected no .subviewbutton CSS class on the action button in the panel"
+      );
+      ok(
+        !actionButton.classList.contains("toolbarbutton-1"),
+        "expected .toolbarbutton-1 CSS class on the action button in the panel"
+      );
     },
   });
 
@@ -789,7 +842,7 @@ add_task(async function test_pinning_to_toolbar_when_overflowed() {
  * extension into the dedicated addons area of the panel, and that the item
  * then does not underflow.
  */
-add_task(async function test_() {
+add_task(async function test_unpin_overflowed_widget() {
   let win = await BrowserTestUtils.openNewBrowserWindow();
   let extensionID;
 
@@ -810,6 +863,17 @@ add_task(async function test_() {
       Assert.ok(
         movedNode.hasAttribute("overflowedItem"),
         "expected extension widget to be overflowed"
+      );
+      let actionButton = movedNode.querySelector(
+        ".unified-extensions-item-action-button"
+      );
+      ok(
+        actionButton.classList.contains("subviewbutton"),
+        "expected the .subviewbutton CSS class on the action button in the panel"
+      );
+      ok(
+        !actionButton.classList.contains("toolbarbutton-1"),
+        "expected no .toolbarbutton-1 CSS class on the action button in the panel"
       );
 
       // Open the panel, then the context menu of the extension widget, verify
@@ -869,6 +933,17 @@ add_task(async function test_() {
       Assert.ok(
         item,
         "expected extension widget to be listed in the unified extensions panel"
+      );
+      let actionButton = item.querySelector(
+        ".unified-extensions-item-action-button"
+      );
+      ok(
+        actionButton.classList.contains("subviewbutton"),
+        "expected the .subviewbutton CSS class on the action button in the panel"
+      );
+      ok(
+        !actionButton.classList.contains("toolbarbutton-1"),
+        "expected no .toolbarbutton-1 CSS class on the action button in the panel"
       );
 
       await closeExtensionsPanel(win);
