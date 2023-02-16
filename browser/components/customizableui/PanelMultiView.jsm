@@ -392,7 +392,6 @@ var PanelMultiView = class extends AssociatedToNode {
   constructor(node) {
     super(node);
     this._openPopupPromise = Promise.resolve(false);
-    this._openPopupCancelCallback = () => {};
   }
 
   connect() {
@@ -508,6 +507,11 @@ var PanelMultiView = class extends AssociatedToNode {
         canCancel = false;
         this.dispatchCustomEvent("popuphidden");
       }
+      if (cancelCallback == this._openPopupCancelCallback) {
+        // If still current, let go of the cancel callback since it will capture
+        // the entire scope and tie it to the main window.
+        delete this._openPopupCancelCallback;
+      }
     });
 
     // Create a promise that is resolved with the result of the last call to
@@ -529,6 +533,11 @@ var PanelMultiView = class extends AssociatedToNode {
       // our handler of the "popuphidden" event because this has a lower chance
       // of locking indefinitely if events aren't raised in the expected order.
       if (wasShown && ["open", "showing"].includes(this._panel.state)) {
+        if (cancelCallback == this._openPopupCancelCallback) {
+          // If still current, let go of the cancel callback since it will
+          // capture the entire scope and tie it to the main window.
+          delete this._openPopupCancelCallback;
+        }
         return true;
       }
       try {
@@ -554,6 +563,11 @@ var PanelMultiView = class extends AssociatedToNode {
       try {
         canCancel = false;
         this._panel.openPopup(anchor, options, ...args);
+        if (cancelCallback == this._openPopupCancelCallback) {
+          // If still current, let go of the cancel callback since it will
+          // capture the entire scope and tie it to the main window.
+          delete this._openPopupCancelCallback;
+        }
         // Set an attribute on the popup to let consumers style popup elements -
         // for example, the anchor arrow is styled to match the color of the header
         // in the Protections Panel main view.
@@ -617,7 +631,7 @@ var PanelMultiView = class extends AssociatedToNode {
     if (["open", "showing"].includes(this._panel.state)) {
       this._panel.hidePopup(animate);
     } else {
-      this._openPopupCancelCallback();
+      this._openPopupCancelCallback?.();
     }
 
     // We close all the views synchronously, so that they are ready to be opened
