@@ -75,8 +75,8 @@ int mar_extract(const char* path) {
   MarFile* mar;
   int rv;
 
-  mar = mar_open(path);
-  if (!mar) {
+  MarReadResult result = mar_open(path, &mar);
+  if (result != MAR_READ_SUCCESS) {
     return -1;
   }
 
