@@ -6676,6 +6676,15 @@
   value: 512
   mirror: always
 
+# WebRender upper bound for shared surface size
+# According to apitrace, textures larger than 2048 break fast clear
+# optimizations on some intel drivers. We sometimes need to go larger, but
+# we try to avoid it.
+- name: gfx.webrender.max-shared-surface-size
+  type: int32_t
+  value: 2048
+  mirror: once
+
 # Whether to use EGL robustness or not.
 - name: gfx.webrender.prefer-robustness
   type: bool
