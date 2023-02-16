@@ -10,6 +10,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.NotificationManagerCompat
 import mozilla.components.browser.engine.gecko.cookiebanners.GeckoCookieBannersStorage
 import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.state.engine.EngineMiddleware
@@ -50,6 +51,7 @@ import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.service.location.LocationService
 import mozilla.components.service.location.MozillaLocationService
 import mozilla.components.service.nimbus.NimbusApi
+import mozilla.components.support.base.android.NotificationsDelegate
 import mozilla.components.support.locale.LocaleManager
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.browser.BlockedTrackersMiddleware
@@ -91,6 +93,14 @@ class Components(
                 screen = if (context.settings.isFirstRun) Screen.FirstRun else Screen.Home,
                 topSites = emptyList(),
             ),
+        )
+    }
+
+    private val notificationManagerCompat = NotificationManagerCompat.from(context)
+
+    val notificationsDelegate: NotificationsDelegate by lazy {
+        NotificationsDelegate(
+            notificationManagerCompat,
         )
     }
 
