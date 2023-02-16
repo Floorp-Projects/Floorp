@@ -3171,7 +3171,12 @@ GCRuntime::MarkQueueProgress GCRuntime::processTestMarkQueue() {
   return QueueComplete;
 }
 
-void GCRuntime::finishCollection() {
+static bool IsEmergencyGC(JS::GCReason reason) {
+  return reason == JS::GCReason::LAST_DITCH ||
+         reason == JS::GCReason::MEM_PRESSURE;
+}
+
+void GCRuntime::finishCollection(JS::GCReason reason) {
   assertBackgroundSweepingFinished();
 
   MOZ_ASSERT(!hasDelayedMarking());
@@ -3180,6 +3185,10 @@ void GCRuntime::finishCollection() {
   }
 
   maybeStopPretenuring();
+
+  if (IsEmergencyGC(reason)) {
+    waitBackgroundFreeEnd();
+  }
 
   TimeStamp currentTime = TimeStamp::Now();
 
@@ -3751,7 +3760,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
       [[fallthrough]];
 
     case State::Finish:
-      finishCollection();
+      finishCollection(reason);
       incrementalState = State::NotActive;
       break;
   }

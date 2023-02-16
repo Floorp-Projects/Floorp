@@ -951,7 +951,7 @@ class GCRuntime {
 
   void maybeRequestGCAfterBackgroundTask(const AutoLockHelperThreadState& lock);
   void cancelRequestedGCAfterBackgroundTask();
-  void finishCollection();
+  void finishCollection(JS::GCReason reason);
   void maybeStopPretenuring();
   void checkGCStateNotInUse();
   IncrementalProgress joinBackgroundMarkTask();
