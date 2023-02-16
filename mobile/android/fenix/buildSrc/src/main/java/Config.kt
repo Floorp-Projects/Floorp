@@ -14,7 +14,7 @@ object Config {
     // Synchronized build configuration for all modules
     const val compileSdkVersion = 33
     const val minSdkVersion = 21
-    const val targetSdkVersion = 32
+    const val targetSdkVersion = 33
 
     @JvmStatic
     private fun generateDebugVersionName(): String {
