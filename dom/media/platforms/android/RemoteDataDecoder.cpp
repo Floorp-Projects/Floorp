@@ -229,6 +229,8 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
       mMediaInfoFlag |= MediaInfoFlag::VIDEO_VP8;
     } else if (mMimeType.EqualsLiteral("video/vp9")) {
       mMediaInfoFlag |= MediaInfoFlag::VIDEO_VP9;
+    } else if (mMimeType.EqualsLiteral("video/av1")) {
+      mMediaInfoFlag |= MediaInfoFlag::VIDEO_AV1;
     }
     return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
   }
