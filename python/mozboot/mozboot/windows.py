@@ -99,11 +99,6 @@ class WindowsBootstrapper(BaseBootstrapper):
             "We do not support building Android on Windows. Sorry!"
         )
 
-    def ensure_clang_static_analysis_package(self):
-        from mozboot import static_analysis
-
-        self.install_toolchain_static_analysis(static_analysis.WINDOWS_CLANG_TIDY)
-
     def _update_package_manager(self):
         self.pacman_update()
 

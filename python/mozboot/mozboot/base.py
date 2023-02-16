@@ -333,26 +333,11 @@ class BaseBootstrapper(object):
             % __name__
         )
 
-    def ensure_clang_static_analysis_package(self):
-        """
-        Install the clang static analysis package
-        """
-        raise NotImplementedError(
-            "%s does not yet implement ensure_clang_static_analysis_package()"
-            % __name__
-        )
-
     def ensure_sccache_packages(self):
         """
         Install sccache.
         """
         pass
-
-    def install_toolchain_static_analysis(self, toolchain_job):
-        clang_tools_path = self.state_dir / "clang-tools"
-        if not clang_tools_path.exists():
-            clang_tools_path.mkdir()
-        self.install_toolchain_artifact_impl(clang_tools_path, toolchain_job)
 
     def install_toolchain_artifact(self, toolchain_job, no_unpack=False):
         if no_unpack:

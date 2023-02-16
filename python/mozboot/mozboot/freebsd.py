@@ -66,9 +66,5 @@ class FreeBSDBootstrapper(BaseBootstrapper):
     def install_browser_artifact_mode_packages(self, mozconfig_builder):
         self.install_browser_packages(mozconfig_builder, artifact_mode=True)
 
-    def ensure_clang_static_analysis_package(self):
-        # TODO: we don't ship clang base static analysis for this platform
-        pass
-
     def upgrade_mercurial(self, current):
         self.pkg_install("mercurial")

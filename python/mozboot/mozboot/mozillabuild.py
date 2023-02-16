@@ -222,11 +222,6 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
     def generate_mobile_android_artifact_mode_mozconfig(self):
         return self.generate_mobile_android_mozconfig(artifact_mode=True)
 
-    def ensure_clang_static_analysis_package(self):
-        from mozboot import static_analysis
-
-        self.install_toolchain_static_analysis(static_analysis.WINDOWS_CLANG_TIDY)
-
     def ensure_sccache_packages(self):
         from mozboot import sccache
 
