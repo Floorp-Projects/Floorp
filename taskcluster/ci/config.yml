@@ -650,11 +650,16 @@ workers:
             implementation: generic-worker
             os: windows
             worker-type: '{alias}'
-        t-win7-32(|-gpu):
+        t-win7-32-gpu:
             provisioner: '{trust-domain}-t'
             implementation: generic-worker
             os: windows
             worker-type: '{alias}'
+        t-win7-32:
+            provisioner: releng-hardware
+            implementation: generic-worker
+            os: windows
+            worker-type: 'gecko-{alias}-hw'
         t-win64-aarch64-laptop:
             provisioner: bitbar
             implementation: generic-worker
