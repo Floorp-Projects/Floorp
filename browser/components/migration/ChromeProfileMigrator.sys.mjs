@@ -81,6 +81,10 @@ export class ChromeProfileMigrator extends MigratorBase {
     return "migration-wizard-migrator-display-name-chrome";
   }
 
+  static get brandImage() {
+    return "chrome://browser/content/migration/brands/chrome.png";
+  }
+
   get _chromeUserDataPathSuffix() {
     return "Chrome";
   }
@@ -519,6 +523,10 @@ export class ChromiumProfileMigrator extends ChromeProfileMigrator {
     return "migration-wizard-migrator-display-name-chromium";
   }
 
+  static get brandImage() {
+    return "chrome://browser/content/migration/brands/chromium.png";
+  }
+
   _chromeUserDataPathSuffix = "Chromium";
   _keychainServiceName = "Chromium Safe Storage";
   _keychainAccountName = "Chromium";
@@ -535,6 +543,10 @@ export class CanaryProfileMigrator extends ChromeProfileMigrator {
 
   static get displayNameL10nID() {
     return "migration-wizard-migrator-display-name-canary";
+  }
+
+  static get brandImage() {
+    return "chrome://browser/content/migration/brands/canary.png";
   }
 
   get _chromeUserDataPathSuffix() {
@@ -613,6 +625,10 @@ export class ChromiumEdgeMigrator extends ChromeProfileMigrator {
     return "migration-wizard-migrator-display-name-chromium-edge";
   }
 
+  static get brandImage() {
+    return "chrome://browser/content/migration/brands/edge.png";
+  }
+
   _chromeUserDataPathSuffix = "Edge";
   _keychainServiceName = "Microsoft Edge Safe Storage";
   _keychainAccountName = "Microsoft Edge";
@@ -628,6 +644,10 @@ export class ChromiumEdgeBetaMigrator extends ChromeProfileMigrator {
 
   static get displayNameL10nID() {
     return "migration-wizard-migrator-display-name-chromium-edge-beta";
+  }
+
+  static get brandImage() {
+    return "chrome://browser/content/migration/brands/edgebeta.png";
   }
 
   _chromeUserDataPathSuffix = "Edge Beta";
@@ -647,6 +667,10 @@ export class Chromium360seMigrator extends ChromeProfileMigrator {
     return "migration-wizard-migrator-display-name-chromium-360se";
   }
 
+  static get brandImage() {
+    return "chrome://browser/content/migration/brands/360.png";
+  }
+
   _chromeUserDataPathSuffix = "360 SE";
   _keychainServiceName = "Microsoft Edge Safe Storage";
   _keychainAccountName = "Microsoft Edge";
@@ -662,6 +686,10 @@ export class OperaProfileMigrator extends ChromeProfileMigrator {
 
   static get displayNameL10nID() {
     return "migration-wizard-migrator-display-name-opera";
+  }
+
+  static get brandImage() {
+    return "chrome://browser/content/migration/brands/opera.png";
   }
 
   _chromeUserDataPathSuffix = "Opera";
@@ -683,6 +711,10 @@ export class OperaGXProfileMigrator extends ChromeProfileMigrator {
 
   static get displayNameL10nID() {
     return "migration-wizard-migrator-display-name-opera-gx";
+  }
+
+  static get brandImage() {
+    return "chrome://browser/content/migration/brands/operagx.png";
   }
 
   _chromeUserDataPathSuffix = "Opera GX";

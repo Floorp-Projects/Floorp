@@ -10,3 +10,4 @@ browser.jar:
    content/browser/migration/migration-dialog-window.js       (content/migration-dialog-window.js)
    content/browser/migration/migration-wizard.mjs             (content/migration-wizard.mjs)
    content/browser/migration/migration-wizard-constants.mjs   (content/migration-wizard-constants.mjs)
+   content/browser/migration/brands                           (content/brands/*.png)
