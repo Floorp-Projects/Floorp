@@ -3082,31 +3082,14 @@ GeckoDriver.prototype.print = async function(cmd) {
   lazy.assert.array(settings.pageRanges);
 
   const linkedBrowser = this.curBrowser.tab.linkedBrowser;
-  const filePath = await lazy.print.printToFile(linkedBrowser, settings);
-
-  // return all data as a base64 encoded string
-  let bytes;
-  try {
-    bytes = await IOUtils.read(filePath);
-  } finally {
-    await IOUtils.remove(filePath);
-  }
-
-  // Each UCS2 character has an upper byte of 0 and a lower byte matching
-  // the binary data. Splitting the file into chunks to avoid hitting the
-  // internal argument length limit.
-  const chunks = [];
-  // This is the largest power of 2 smaller than MAX_ARGS_LENGTH defined in Spidermonkey
-  const argLengthLimit = 262144;
-
-  for (let offset = 0; offset < bytes.length; offset += argLengthLimit) {
-    const chunkData = bytes.subarray(offset, offset + argLengthLimit);
-
-    chunks.push(String.fromCharCode.apply(null, chunkData));
-  }
+  const printSettings = await lazy.print.getPrintSettings(settings);
+  const encodedString = await lazy.print.printToEncodedString(
+    linkedBrowser,
+    printSettings
+  );
 
   return {
-    value: btoa(chunks.join("")),
+    value: encodedString,
   };
 };
 
