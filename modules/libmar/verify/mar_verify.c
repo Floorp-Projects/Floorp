@@ -56,35 +56,38 @@ int mar_read_entire_file(const char* filePath, uint32_t maxSize,
   return result;
 }
 
-int mar_extract_and_verify_signatures_fp(FILE* fp,
-                                         CryptoX_ProviderHandle provider,
-                                         CryptoX_PublicKey* keys,
-                                         uint32_t keyCount);
-int mar_verify_signatures_for_fp(FILE* fp, CryptoX_ProviderHandle provider,
-                                 CryptoX_PublicKey* keys,
-                                 const uint8_t* const* extractedSignatures,
-                                 uint32_t keyCount, uint32_t* numVerified);
+int mar_extract_and_verify_signatures(MarFile* mar,
+                                      CryptoX_ProviderHandle provider,
+                                      CryptoX_PublicKey* keys,
+                                      uint32_t keyCount);
+int mar_verify_extracted_signatures(MarFile* mar,
+                                    CryptoX_ProviderHandle provider,
+                                    CryptoX_PublicKey* keys,
+                                    const uint8_t* const* extractedSignatures,
+                                    uint32_t keyCount, uint32_t* numVerified);
 
 /**
- * Reads the specified number of bytes from the file pointer and
+ * Reads the specified number of bytes from the MAR buffer and
  * stores them in the passed buffer.
  *
- * @param  fp     The file pointer to read from.
+ * @param  mar    An opened MAR
+ * @param  mar_position
+ *                Our current position within the MAR file buffer.
  * @param  buffer The buffer to store the read results.
  * @param  size   The number of bytes to read, buffer must be
  *                at least of this size.
  * @param  ctxs   Pointer to the first element in an array of verify context.
  * @param  count  The number of elements in ctxs
  * @param  err    The name of what is being written to in case of error.
- * @return  0 on success
- *         -1 on read error
- *         -2 on verify update error
+ * @return  CryptoX_Success on success
+ *          CryptoX_Error   on error
  */
-int ReadAndUpdateVerifyContext(FILE* fp, void* buffer, uint32_t size,
-                               CryptoX_SignatureHandle* ctxs, uint32_t count,
-                               const char* err) {
+CryptoX_Result ReadAndUpdateVerifyContext(MarFile* mar, size_t* mar_position,
+                                          void* buffer, uint32_t size,
+                                          CryptoX_SignatureHandle* ctxs,
+                                          uint32_t count, const char* err) {
   uint32_t k;
-  if (!fp || !buffer || !ctxs || count == 0 || !err) {
+  if (!mar || !mar_position || !buffer || !ctxs || count == 0 || !err) {
     fprintf(stderr, "ERROR: Invalid parameter specified.\n");
     return CryptoX_Error;
   }
@@ -93,7 +96,7 @@ int ReadAndUpdateVerifyContext(FILE* fp, void* buffer, uint32_t size,
     return CryptoX_Success;
   }
 
-  if (fread(buffer, size, 1, fp) != 1) {
+  if (mar_read_buffer(mar, buffer, mar_position, size) != 0) {
     fprintf(stderr, "ERROR: Could not read %s\n", err);
     return CryptoX_Error;
   }
@@ -101,7 +104,7 @@ int ReadAndUpdateVerifyContext(FILE* fp, void* buffer, uint32_t size,
   for (k = 0; k < count; k++) {
     if (CryptoX_Failed(CryptoX_VerifyUpdate(&ctxs[k], buffer, size))) {
       fprintf(stderr, "ERROR: Could not update verify context for %s\n", err);
-      return -2;
+      return CryptoX_Error;
     }
   }
   return CryptoX_Success;
@@ -136,11 +139,6 @@ int mar_verify_signatures(MarFile* mar, const uint8_t* const* certData,
     goto failure;
   }
 
-  if (!mar->fp) {
-    fprintf(stderr, "ERROR: MAR file is not open.\n");
-    goto failure;
-  }
-
   if (CryptoX_Failed(CryptoX_InitCryptoProvider(&provider))) {
     fprintf(stderr, "ERROR: Could not init crytpo library.\n");
     goto failure;
@@ -154,7 +152,7 @@ int mar_verify_signatures(MarFile* mar, const uint8_t* const* certData,
     }
   }
 
-  rv = mar_extract_and_verify_signatures_fp(mar->fp, provider, keys, certCount);
+  rv = mar_extract_and_verify_signatures(mar, provider, keys, certCount);
 
 failure:
 
@@ -169,50 +167,41 @@ failure:
 
 /**
  * Extracts each signature from the specified MAR file,
- * then calls mar_verify_signatures_for_fp to verify each signature.
+ * then calls mar_verify_extracted_signatures to verify each signature.
  *
- * @param  fp       An opened MAR file handle
+ * @param  mar      An opened MAR
  * @param  provider A library provider
  * @param  keys     The public keys to use to verify the MAR
  * @param  keyCount The number of keys pointed to by keys
  * @return 0 on success
  */
-int mar_extract_and_verify_signatures_fp(FILE* fp,
-                                         CryptoX_ProviderHandle provider,
-                                         CryptoX_PublicKey* keys,
-                                         uint32_t keyCount) {
+int mar_extract_and_verify_signatures(MarFile* mar,
+                                      CryptoX_ProviderHandle provider,
+                                      CryptoX_PublicKey* keys,
+                                      uint32_t keyCount) {
   uint32_t signatureCount, signatureLen, numVerified = 0;
   uint32_t signatureAlgorithmIDs[MAX_SIGNATURES];
   uint8_t* extractedSignatures[MAX_SIGNATURES];
   uint32_t i;
+  size_t mar_position = 0;
 
   memset(signatureAlgorithmIDs, 0, sizeof(signatureAlgorithmIDs));
   memset(extractedSignatures, 0, sizeof(extractedSignatures));
 
-  if (!fp) {
+  if (!mar) {
     fprintf(stderr, "ERROR: Invalid file pointer passed.\n");
     return CryptoX_Error;
   }
 
-  /* To protect against invalid MAR files, we assumes that the MAR file
-     size is less than or equal to MAX_SIZE_OF_MAR_FILE. */
-  if (fseeko(fp, 0, SEEK_END)) {
-    fprintf(stderr, "ERROR: Could not seek to the end of the MAR file.\n");
-    return CryptoX_Error;
-  }
-  if (ftello(fp) > MAX_SIZE_OF_MAR_FILE) {
-    fprintf(stderr, "ERROR: MAR file is too large to be verified.\n");
-    return CryptoX_Error;
-  }
-
   /* Skip to the start of the signature block */
-  if (fseeko(fp, SIGNATURE_BLOCK_OFFSET, SEEK_SET)) {
+  if (mar_buffer_seek(mar, &mar_position, SIGNATURE_BLOCK_OFFSET) != 0) {
     fprintf(stderr, "ERROR: Could not seek to the signature block.\n");
     return CryptoX_Error;
   }
 
   /* Get the number of signatures */
-  if (fread(&signatureCount, sizeof(signatureCount), 1, fp) != 1) {
+  if (mar_read_buffer(mar, &signatureCount, &mar_position,
+                      sizeof(signatureCount)) != 0) {
     fprintf(stderr, "ERROR: Could not read number of signatures.\n");
     return CryptoX_Error;
   }
@@ -228,19 +217,21 @@ int mar_extract_and_verify_signatures_fp(FILE* fp,
 
   for (i = 0; i < signatureCount; i++) {
     /* Get the signature algorithm ID */
-    if (fread(&signatureAlgorithmIDs[i], sizeof(uint32_t), 1, fp) != 1) {
+    if (mar_read_buffer(mar, &signatureAlgorithmIDs[i], &mar_position,
+                        sizeof(uint32_t)) != 0) {
       fprintf(stderr, "ERROR: Could not read signatures algorithm ID.\n");
       return CryptoX_Error;
     }
     signatureAlgorithmIDs[i] = ntohl(signatureAlgorithmIDs[i]);
 
-    if (fread(&signatureLen, sizeof(uint32_t), 1, fp) != 1) {
+    if (mar_read_buffer(mar, &signatureLen, &mar_position, sizeof(uint32_t)) !=
+        0) {
       fprintf(stderr, "ERROR: Could not read signatures length.\n");
       return CryptoX_Error;
     }
     signatureLen = ntohl(signatureLen);
 
-    /* To protected against invalid input make sure the signature length
+    /* To protect against invalid input make sure the signature length
        isn't too big. */
     if (signatureLen > MAX_SIGNATURE_LENGTH) {
       fprintf(stderr, "ERROR: Signature length is too large to verify.\n");
@@ -249,10 +240,11 @@ int mar_extract_and_verify_signatures_fp(FILE* fp,
 
     extractedSignatures[i] = malloc(signatureLen);
     if (!extractedSignatures[i]) {
-      fprintf(stderr, "ERROR: Could allocate buffer for signature.\n");
+      fprintf(stderr, "ERROR: Could not allocate buffer for signature.\n");
       return CryptoX_Error;
     }
-    if (fread(extractedSignatures[i], signatureLen, 1, fp) != 1) {
+    if (mar_read_buffer(mar, extractedSignatures[i], &mar_position,
+                        signatureLen) != 0) {
       fprintf(stderr, "ERROR: Could not read extracted signature.\n");
       for (i = 0; i < signatureCount; ++i) {
         free(extractedSignatures[i]);
@@ -270,11 +262,8 @@ int mar_extract_and_verify_signatures_fp(FILE* fp,
     }
   }
 
-  if (ftello(fp) == -1) {
-    return CryptoX_Error;
-  }
-  if (mar_verify_signatures_for_fp(
-          fp, provider, keys, (const uint8_t* const*)extractedSignatures,
+  if (mar_verify_extracted_signatures(
+          mar, provider, keys, (const uint8_t* const*)extractedSignatures,
           signatureCount, &numVerified) == CryptoX_Error) {
     return CryptoX_Error;
   }
@@ -304,7 +293,7 @@ int mar_extract_and_verify_signatures_fp(FILE* fp,
  * certificate given, etc. The signature count must exactly match the number of
  * certificates given, and all signature verifications must succeed.
  *
- * @param  fp                   An opened MAR file handle
+ * @param  mar                  An opened MAR
  * @param  provider             A library provider
  * @param  keys                 A pointer to the first element in an
  *                              array of keys.
@@ -315,18 +304,18 @@ int mar_extract_and_verify_signatures_fp(FILE* fp,
  *                              the number of verified signatures.
  *                              This information can be useful for printing
  *                              error messages.
- * @return 0 on success, *numVerified == signatureCount.
+ * @return  CryptoX_Success on success, *numVerified == signatureCount.
  */
-int mar_verify_signatures_for_fp(FILE* fp, CryptoX_ProviderHandle provider,
-                                 CryptoX_PublicKey* keys,
-                                 const uint8_t* const* extractedSignatures,
-                                 uint32_t signatureCount,
-                                 uint32_t* numVerified) {
+CryptoX_Result mar_verify_extracted_signatures(
+    MarFile* mar, CryptoX_ProviderHandle provider, CryptoX_PublicKey* keys,
+    const uint8_t* const* extractedSignatures, uint32_t signatureCount,
+    uint32_t* numVerified) {
   CryptoX_SignatureHandle signatureHandles[MAX_SIGNATURES];
   char buf[BLOCKSIZE];
   uint32_t signatureLengths[MAX_SIGNATURES];
   uint32_t i;
   int rv = CryptoX_Error;
+  size_t mar_position = 0;
 
   memset(signatureHandles, 0, sizeof(signatureHandles));
   memset(signatureLengths, 0, sizeof(signatureLengths));
@@ -355,19 +344,13 @@ int mar_verify_signatures_for_fp(FILE* fp, CryptoX_ProviderHandle provider,
     }
   }
 
-  /* Skip to the start of the file */
-  if (fseeko(fp, 0, SEEK_SET)) {
-    fprintf(stderr, "ERROR: Could not seek to start of the file\n");
-    goto failure;
-  }
-
   /* Bytes 0-3: MAR1
      Bytes 4-7: index offset
      Bytes 8-15: size of entire MAR
    */
   if (CryptoX_Failed(ReadAndUpdateVerifyContext(
-          fp, buf, SIGNATURE_BLOCK_OFFSET + sizeof(uint32_t), signatureHandles,
-          signatureCount, "signature block"))) {
+          mar, &mar_position, buf, SIGNATURE_BLOCK_OFFSET + sizeof(uint32_t),
+          signatureHandles, signatureCount, "signature block"))) {
     goto failure;
   }
 
@@ -375,14 +358,14 @@ int mar_verify_signatures_for_fp(FILE* fp, CryptoX_ProviderHandle provider,
   for (i = 0; i < signatureCount; i++) {
     /* Get the signature algorithm ID */
     if (CryptoX_Failed(ReadAndUpdateVerifyContext(
-            fp, &buf, sizeof(uint32_t), signatureHandles, signatureCount,
-            "signature algorithm ID"))) {
+            mar, &mar_position, &buf, sizeof(uint32_t), signatureHandles,
+            signatureCount, "signature algorithm ID"))) {
       goto failure;
     }
 
     if (CryptoX_Failed(ReadAndUpdateVerifyContext(
-            fp, &signatureLengths[i], sizeof(uint32_t), signatureHandles,
-            signatureCount, "signature length"))) {
+            mar, &mar_position, &signatureLengths[i], sizeof(uint32_t),
+            signatureHandles, signatureCount, "signature length"))) {
       goto failure;
     }
     signatureLengths[i] = ntohl(signatureLengths[i]);
@@ -392,20 +375,15 @@ int mar_verify_signatures_for_fp(FILE* fp, CryptoX_ProviderHandle provider,
     }
 
     /* Skip past the signature itself as those are not included */
-    if (fseeko(fp, signatureLengths[i], SEEK_CUR)) {
+    if (mar_buffer_seek(mar, &mar_position, signatureLengths[i]) != 0) {
       fprintf(stderr, "ERROR: Could not seek past signature.\n");
       goto failure;
     }
   }
 
   /* Read the rest of the file after the signature block */
-  while (!feof(fp)) {
-    int numRead = fread(buf, 1, BLOCKSIZE, fp);
-    if (ferror(fp)) {
-      fprintf(stderr, "ERROR: Error reading data block.\n");
-      goto failure;
-    }
-
+  while (mar_position < mar->data_len) {
+    int numRead = mar_read_buffer_max(mar, buf, &mar_position, BLOCKSIZE);
     for (i = 0; i < signatureCount; i++) {
       if (CryptoX_Failed(
               CryptoX_VerifyUpdate(&signatureHandles[i], buf, numRead))) {
