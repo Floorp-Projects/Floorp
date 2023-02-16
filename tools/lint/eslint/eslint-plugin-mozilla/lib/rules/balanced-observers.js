@@ -15,6 +15,10 @@ module.exports = {
       url:
         "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/balanced-observers.html",
     },
+    messages: {
+      noCorresponding:
+        "No corresponding 'removeObserver(\"{{observable}}\")' was found.",
+    },
     schema: [],
     type: "problem",
   },
@@ -106,8 +110,7 @@ module.exports = {
         getUnbalancedObservers().forEach(function(observer) {
           context.report({
             node: observer.node,
-            message:
-              "No corresponding 'removeObserver(\"{{observable}}\")' was found.",
+            messageId: "noCorresponding",
             data: {
               observable: observer.observable,
             },

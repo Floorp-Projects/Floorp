@@ -21,10 +21,8 @@ function wrapCode(code, filename = "xpcshell/test_foo.js") {
 }
 
 function invalidCode(code) {
-  let message =
-    "listen for events instead of setTimeout() with arbitrary delay";
   let obj = wrapCode(code);
-  obj.errors = [{ message, type: "CallExpression" }];
+  obj.errors = [{ messageId: "listenForEvents", type: "CallExpression" }];
   return obj;
 }
 

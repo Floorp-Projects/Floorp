@@ -24,7 +24,8 @@ function invalidCode(code, varNames) {
     code,
     errors: varNames.map(name => {
       return {
-        message: `${name} is now defined in global scope, a separate definition is no longer necessary.`,
+        messageId: "noSeparateDefinition",
+        data: { name },
         type: "VariableDeclarator",
       };
     }),

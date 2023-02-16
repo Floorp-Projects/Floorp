@@ -14,6 +14,8 @@ var helpers = require("../helpers");
 var browserWindowEnv = require("../environments/browser-window");
 
 module.exports = {
+  // This rule currently has no messages.
+  // eslint-disable-next-line eslint-plugin/prefer-message-ids
   meta: {
     docs: {
       url:

@@ -19,6 +19,10 @@ module.exports = {
       url:
         "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/lazy-getter-object-name.html",
     },
+    messages: {
+      mustUseLazy:
+        "The variable name of the object passed to ChromeUtils.defineESModuleGetters must be `lazy`",
+    },
     schema: [],
     type: "problem",
   },
@@ -36,8 +40,7 @@ module.exports = {
         ) {
           context.report({
             node,
-            message:
-              "The variable name of the object passed to ChromeUtils.defineESModuleGetters must be `lazy`",
+            messageId: "mustUseLazy",
           });
         }
       },

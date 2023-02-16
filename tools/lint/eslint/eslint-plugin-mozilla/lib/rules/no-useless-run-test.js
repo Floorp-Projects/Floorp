@@ -15,6 +15,10 @@ module.exports = {
         "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/no-useless-run-test.html",
     },
     fixable: "code",
+    messages: {
+      noUselessRunTest:
+        "Useless run_test function - only contains run_next_test; whole function can be removed",
+    },
     schema: [],
     type: "suggestion",
   },
@@ -64,8 +68,7 @@ module.exports = {
                 node.range[1] + 1,
               ]);
             },
-            message:
-              "Useless run_test function - only contains run_next_test; whole function can be removed",
+            messageId: "noUselessRunTest",
           });
         }
       },

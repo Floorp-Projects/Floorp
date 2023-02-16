@@ -15,7 +15,14 @@ function isNamedLikeSetup(name) {
 
 module.exports = {
   meta: {
+    docs: {
+      url:
+        "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/no-addtask-setup.html",
+    },
     fixable: "code",
+    messages: {
+      useAddSetup: "Do not use add_task() for setup, use add_setup() instead.",
+    },
     schema: [],
     type: "suggestion",
   },
@@ -34,8 +41,7 @@ module.exports = {
           }
           context.report({
             node,
-            message:
-              "Do not use add_task() for setup, use add_setup() instead.",
+            messageId: "useAddSetup",
             fix: fixer => {
               let range = [node.callee.range[0], arg.id.range[1]];
               let asyncOrNot = arg.async ? "async " : "";

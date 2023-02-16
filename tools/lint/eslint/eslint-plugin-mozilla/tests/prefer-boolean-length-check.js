@@ -17,8 +17,7 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
 // ------------------------------------------------------------------------------
 
 function invalidError() {
-  let message = "Prefer boolean length check";
-  return [{ message, type: "BinaryExpression" }];
+  return [{ messageId: "preferBooleanCheck", type: "BinaryExpression" }];
 }
 
 ruleTester.run("check-length", rule, {

@@ -26,6 +26,12 @@ module.exports = {
       url:
         "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/prefer-formatValues.html",
     },
+    messages: {
+      outsideCallBlock: "call expression found outside of known block",
+      useSingleCall:
+        "prefer to use a single document.l10n.formatValues call instead " +
+        "of multiple calls to document.l10n.formatValue or document.l10n.formatValues",
+    },
     schema: [],
     type: "problem",
   },
@@ -41,9 +47,7 @@ module.exports = {
         for (let callNode of calls) {
           context.report({
             node: callNode,
-            message:
-              "prefer to use a single document.l10n.formatValues call instead " +
-              "of multiple calls to document.l10n.formatValue or document.l10n.formatValues",
+            messageId: "useSingleCall",
           });
         }
       }
@@ -59,7 +63,7 @@ module.exports = {
         if (!BlockStack.length) {
           context.report({
             node,
-            message: "call expression found outside of known block",
+            messageId: "outsideCallBlock",
           });
         }
 

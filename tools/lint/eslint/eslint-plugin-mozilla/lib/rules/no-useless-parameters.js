@@ -16,6 +16,12 @@ module.exports = {
         "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/no-useless-parameters.html",
     },
     fixable: "code",
+    messages: {
+      newURIParams: "newURI's last parameters are optional.",
+      obmittedWhenFalse:
+        "{{fnName}}'s {{index}} parameter can be omitted when it's false.",
+      onlyTakes: "{{fnName}} only takes {{params}}",
+    },
     schema: [],
     type: "suggestion",
   },
@@ -58,7 +64,8 @@ module.exports = {
             fix: fixer => {
               return fixer.removeRange(getRangeAfterArgToEnd(1, args));
             },
-            message: `${name}'s third parameter can be omitted when it's false.`,
+            messageId: "obmittedWhenFalse",
+            data: { fnName: name, index: "third" },
           });
         }
 
@@ -68,7 +75,8 @@ module.exports = {
             fix: fixer => {
               return fixer.removeRange(getRangeAfterArgToEnd(0, args));
             },
-            message: `${name} takes only 1 parameter.`,
+            messageId: "onlyTakes",
+            data: { fnName: name, params: "1 parameter" },
           });
         }
 
@@ -78,7 +86,8 @@ module.exports = {
             fix: fixer => {
               return fixer.removeRange(getRangeAfterArgToEnd(1, args));
             },
-            message: "removeObserver only takes 2 parameters.",
+            messageId: "onlyTakes",
+            data: { fnName: name, params: "2 parameters" },
           });
         }
 
@@ -88,7 +97,8 @@ module.exports = {
             fix: fixer => {
               return fixer.removeRange(getRangeAfterArgToEnd(0, args));
             },
-            message: `${name}'s second parameter can be omitted when it's false.`,
+            messageId: "obmittedWhenFalse",
+            data: { fnName: name, index: "second" },
           });
         }
 
@@ -102,7 +112,8 @@ module.exports = {
             fix: fixer => {
               return fixer.removeRange(getRangeAfterArgToEnd(1, args));
             },
-            message: `${name}'s third parameter can be omitted.`,
+            messageId: "obmittedWhenFalse",
+            data: { fnName: name, index: "third" },
           });
         }
 
@@ -116,7 +127,8 @@ module.exports = {
             fix: fixer => {
               return fixer.removeRange(getRangeAfterArgToEnd(0, args));
             },
-            message: "getComputedStyle's second parameter can be omitted.",
+            messageId: "obmittedWhenFalse",
+            data: { fnName: "getComputedStyle", index: "second" },
           });
         }
 
@@ -136,7 +148,7 @@ module.exports = {
                 getRangeAfterArgToEnd(args.length - 2, args)
               );
             },
-            message: "newURI's last parameters are optional.",
+            messageId: "newURIParams",
           });
         }
       },
