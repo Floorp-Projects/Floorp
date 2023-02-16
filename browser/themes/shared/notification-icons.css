@@ -365,28 +365,6 @@
   }
 }
 
-/* TRANSLATION */
-
-.translation-icon {
-  list-style-image: url(chrome://browser/skin/translation-16.png);
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
-}
-
-.translation-icon.in-use {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
-}
-
-@media (-moz-platform: macos) and (min-resolution: 1.1dppx) {
-  .translation-icon {
-    list-style-image: url(chrome://browser/skin/translation-16@2x.png);
-    -moz-image-region: rect(0px, 32px, 32px, 0px);
-  }
-
-  .translation-icon.in-use {
-    -moz-image-region: rect(0px, 64px, 32px, 32px);
-  }
-}
-
 /* UPDATE */
 .popup-notification-icon[popupid="update-available"],
 .popup-notification-icon[popupid="update-manual"],
