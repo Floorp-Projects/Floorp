@@ -309,7 +309,7 @@ nsImageFrame::nsImageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
       mComputedSize(0, 0),
       mIntrinsicSize(0, 0),
       mKind(aKind),
-      mContentURLRequestRegistered(false),
+      mOwnedRequestRegistered(false),
       mDisplayingIcon(false),
       mFirstFrameComplete(false),
       mReflowCallbackPosted(false),
@@ -371,8 +371,8 @@ void nsImageFrame::DestroyFrom(nsIFrame* aDestructRoot,
   MOZ_ASSERT(mListener);
 
   if (mKind == Kind::ImageLoadingContent) {
-    MOZ_ASSERT(!mContentURLRequest);
-    MOZ_ASSERT(!mContentURLRequestRegistered);
+    MOZ_ASSERT(!mOwnedRequest);
+    MOZ_ASSERT(!mOwnedRequestRegistered);
     nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
     MOZ_ASSERT(imageLoader);
 
@@ -380,11 +380,11 @@ void nsImageFrame::DestroyFrom(nsIFrame* aDestructRoot,
     // deregister with our refresh driver.
     imageLoader->FrameDestroyed(this);
     imageLoader->RemoveNativeObserver(mListener);
-  } else if (mContentURLRequest) {
-    PresContext()->Document()->ImageTracker()->Remove(mContentURLRequest);
-    nsLayoutUtils::DeregisterImageRequest(PresContext(), mContentURLRequest,
-                                          &mContentURLRequestRegistered);
-    mContentURLRequest->Cancel(NS_BINDING_ABORTED);
+  } else if (mOwnedRequest) {
+    PresContext()->Document()->ImageTracker()->Remove(mOwnedRequest);
+    nsLayoutUtils::DeregisterImageRequest(PresContext(), mOwnedRequest,
+                                          &mOwnedRequestRegistered);
+    mOwnedRequest->Cancel(NS_BINDING_ABORTED);
   }
 
   // set the frame to null so we don't send messages to a dead object.
@@ -540,8 +540,8 @@ void nsImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
     if (image->IsImageRequestType()) {
       if (imgRequestProxy* proxy = image->GetImageRequest()) {
         proxy->Clone(mListener, PresContext()->Document(),
-                     getter_AddRefs(mContentURLRequest));
-        SetupForContentURLRequest();
+                     getter_AddRefs(mOwnedRequest));
+        SetupOwnedRequest();
       }
     }
   }
@@ -562,26 +562,26 @@ void nsImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   MaybeSendIntrinsicSizeAndRatioToEmbedder();
 }
 
-void nsImageFrame::SetupForContentURLRequest() {
+void nsImageFrame::SetupOwnedRequest() {
   MOZ_ASSERT(mKind != Kind::ImageLoadingContent);
-  if (!mContentURLRequest) {
+  if (!mOwnedRequest) {
     return;
   }
 
   // We're not using AssociateRequestToFrame for the content property, so we
   // need to add it to the image tracker manually.
-  PresContext()->Document()->ImageTracker()->Add(mContentURLRequest);
+  PresContext()->Document()->ImageTracker()->Add(mOwnedRequest);
 
   uint32_t status = 0;
-  nsresult rv = mContentURLRequest->GetImageStatus(&status);
+  nsresult rv = mOwnedRequest->GetImageStatus(&status);
   if (NS_FAILED(rv)) {
     return;
   }
 
   if (status & imgIRequest::STATUS_SIZE_AVAILABLE) {
     nsCOMPtr<imgIContainer> image;
-    mContentURLRequest->GetImage(getter_AddRefs(image));
-    OnSizeAvailable(mContentURLRequest, image);
+    mOwnedRequest->GetImage(getter_AddRefs(image));
+    OnSizeAvailable(mOwnedRequest, image);
   }
 
   if (status & imgIRequest::STATUS_FRAME_COMPLETE) {
@@ -589,8 +589,8 @@ void nsImageFrame::SetupForContentURLRequest() {
   }
 
   if (status & imgIRequest::STATUS_IS_ANIMATED) {
-    nsLayoutUtils::RegisterImageRequest(PresContext(), mContentURLRequest,
-                                        &mContentURLRequestRegistered);
+    nsLayoutUtils::RegisterImageRequest(PresContext(), mOwnedRequest,
+                                        &mOwnedRequestRegistered);
   }
 }
 
@@ -781,7 +781,7 @@ bool nsImageFrame::GetSourceToDestTransform(nsTransform2D& aTransform) {
 bool nsImageFrame::IsPendingLoad(imgIRequest* aRequest) const {
   // Default to pending load in case of errors
   if (mKind != Kind::ImageLoadingContent) {
-    MOZ_ASSERT(aRequest == mContentURLRequest);
+    MOZ_ASSERT(aRequest == mOwnedRequest);
     return false;
   }
 
@@ -914,8 +914,8 @@ void nsImageFrame::Notify(imgIRequest* aRequest, int32_t aType,
 
   if (aType == imgINotificationObserver::IS_ANIMATED &&
       mKind != Kind::ImageLoadingContent) {
-    nsLayoutUtils::RegisterImageRequest(PresContext(), mContentURLRequest,
-                                        &mContentURLRequestRegistered);
+    nsLayoutUtils::RegisterImageRequest(PresContext(), mOwnedRequest,
+                                        &mOwnedRequestRegistered);
   }
 
   if (aType == imgINotificationObserver::LOAD_COMPLETE) {
@@ -2305,10 +2305,10 @@ ImgDrawResult nsImageFrame::PaintImage(gfxContext& aRenderingContext,
 
 already_AddRefed<imgIRequest> nsImageFrame::GetCurrentRequest() const {
   if (mKind != Kind::ImageLoadingContent) {
-    return do_AddRef(mContentURLRequest);
+    return do_AddRef(mOwnedRequest);
   }
 
-  MOZ_ASSERT(!mContentURLRequest);
+  MOZ_ASSERT(!mOwnedRequest);
 
   nsCOMPtr<imgIRequest> request;
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);

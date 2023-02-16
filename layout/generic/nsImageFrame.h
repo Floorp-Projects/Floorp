@@ -100,7 +100,7 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
 
   void ResponsiveContentDensityChanged();
   void ElementStateChanged(mozilla::dom::ElementState) override;
-  void SetupForContentURLRequest();
+  void SetupOwnedRequest();
   bool ShouldShowBrokenImageIcon() const;
 
   bool IsForImageLoadingContent() const {
@@ -393,7 +393,7 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   RefPtr<nsImageListener> mListener;
 
   // An image request created for content: url(..) or list-style-image.
-  RefPtr<imgRequestProxy> mContentURLRequest;
+  RefPtr<imgRequestProxy> mOwnedRequest;
 
   nsCOMPtr<imgIContainer> mImage;
   nsCOMPtr<imgIContainer> mPrevImage;
@@ -409,7 +409,7 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   mozilla::AspectRatio mIntrinsicRatio;
 
   const Kind mKind;
-  bool mContentURLRequestRegistered;
+  bool mOwnedRequestRegistered;
   bool mDisplayingIcon;
   bool mFirstFrameComplete;
   bool mReflowCallbackPosted;
