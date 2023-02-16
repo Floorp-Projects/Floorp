@@ -1144,7 +1144,7 @@ bool nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
     NS_ENSURE_SUCCESS(GetWindowDimensions(dimensions), false);
 
     // Don't show remote iframe if we are waiting for the completion of reflow.
-    if (!aFrame || !(aFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+    if (!aFrame || !aFrame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
       mRemoteBrowser->UpdateDimensions(dimensions, size);
     }
   }
@@ -1187,7 +1187,7 @@ void nsFrameLoader::ForceLayoutIfNecessary() {
 
   // Only force the layout flush if the frameloader hasn't ever been
   // run through layout.
-  if (frame->GetStateBits() & NS_FRAME_FIRST_REFLOW) {
+  if (frame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
     if (RefPtr<PresShell> presShell = presContext->GetPresShell()) {
       presShell->FlushPendingNotifications(FlushType::Layout);
     }

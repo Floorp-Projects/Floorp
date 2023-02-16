@@ -1084,7 +1084,7 @@ bool nsTypeAheadFind::IsRangeVisible(nsRange* aRange, bool aMustBeInViewPort,
   // selection controller.
   if (aUsesIndependentSelection) {
     *aUsesIndependentSelection =
-        (frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION);
+        frame->HasAnyStateBits(NS_FRAME_INDEPENDENT_SELECTION);
   }
 
   return aMustBeInViewPort ? IsRangeRendered(aRange) : true;

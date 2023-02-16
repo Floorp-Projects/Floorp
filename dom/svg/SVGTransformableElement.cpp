@@ -44,7 +44,7 @@ nsChangeHint SVGTransformableElement::GetAttributeChangeHint(
     nsIFrame* frame =
         const_cast<SVGTransformableElement*>(this)->GetPrimaryFrame();
     retval |= nsChangeHint_InvalidateRenderingObservers;
-    if (!frame || (frame->GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
+    if (!frame || frame->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
       return retval;
     }
 

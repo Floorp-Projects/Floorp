@@ -79,7 +79,7 @@ uint64_t ImageAccessible::NativeState() const {
     MOZ_ASSERT(!frame || frame->AccessibleType() == eImageType ||
                frame->AccessibleType() == a11y::eHTMLImageMapType ||
                frame->IsImageBoxFrame());
-    if (frame && !(frame->GetStateBits() & IMAGE_SIZECONSTRAINED)) {
+    if (frame && !frame->HasAnyStateBits(IMAGE_SIZECONSTRAINED)) {
       // The size of this image hasn't been constrained and we haven't loaded
       // enough of the image to know its size yet. This means it currently
       // has 0 width and height.
@@ -243,7 +243,7 @@ void ImageAccessible::Notify(imgIRequest* aRequest, int32_t aType,
 
   if ((status ^ mImageRequestStatus) & imgIRequest::STATUS_SIZE_AVAILABLE) {
     nsIFrame* frame = GetFrame();
-    if (frame && !(frame->GetStateBits() & IMAGE_SIZECONSTRAINED)) {
+    if (frame && !frame->HasAnyStateBits(IMAGE_SIZECONSTRAINED)) {
       RefPtr<AccEvent> event = new AccStateChangeEvent(
           this, states::INVISIBLE,
           !(status & imgIRequest::STATUS_SIZE_AVAILABLE));
