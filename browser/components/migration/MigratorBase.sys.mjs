@@ -217,8 +217,12 @@ export class MigratorBase {
    *   True if this migration is occurring during startup.
    * @param {object|string} aProfile
    *   The other browser profile that is being migrated from.
+   * @param {Function|null} aProgressCallback
+   *   An optional callback that will be fired once a resourceType has finished
+   *   migrating. The callback will be passed the numeric representation of the
+   *   resource type.
    */
-  async migrate(aItems, aStartup, aProfile) {
+  async migrate(aItems, aStartup, aProfile, aProgressCallback = () => {}) {
     let resources = await this.#getMaybeCachedResources(aProfile);
     if (!resources.length) {
       throw new Error("migrate called for a non-existent source");
@@ -357,6 +361,9 @@ export class MigratorBase {
                   : "Migration:ItemError",
                 migrationType
               );
+
+              aProgressCallback(migrationType);
+
               resourcesGroupedByItems.delete(migrationType);
 
               if (stopwatchHistogramId) {

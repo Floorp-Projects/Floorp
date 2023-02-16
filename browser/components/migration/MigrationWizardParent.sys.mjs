@@ -18,7 +18,8 @@ XPCOMUtils.defineLazyGetter(lazy, "gFluentStrings", function() {
 ChromeUtils.defineESModuleGetters(lazy, {
   InternalTestingProfileMigrator:
     "resource:///modules/InternalTestingProfileMigrator.sys.mjs",
-  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
+  MigrationWizardConstants:
+    "chrome://browser/content/migration/migration-wizard-constants.mjs",
 });
 
 /**
@@ -112,66 +113,45 @@ export class MigrationWizardParent extends JSWindowActorParent {
 
     this.sendAsyncMessage("UpdateProgress", progress);
 
-    let observer = {
-      observe: (subject, topic, resourceType) => {
-        if (topic == "Migration:Ended") {
-          observer.migrationDefer.resolve();
-          return;
-        }
+    try {
+      await migrator.migrate(
+        resourceTypesToMigrate,
+        false,
+        profileObj,
+        async resourceTypeNum => {
+          // Unfortunately, MigratorBase hands us the the numeric value of the
+          // MigrationUtils.resourceType for this callback. For now, we'll just
+          // do a look-up to map it to the right constant.
+          let foundResourceTypeName;
+          for (let resourceTypeName in MigrationUtils.resourceTypes) {
+            if (
+              MigrationUtils.resourceTypes[resourceTypeName] == resourceTypeNum
+            ) {
+              foundResourceTypeName = resourceTypeName;
+              break;
+            }
+          }
 
-        // Unfortunately, MigratorBase hands us the string representation
-        // of the numeric value of the MigrationUtils.resourceType from this
-        // observer. For now, we'll just do a look-up to map it to the right
-        // constant.
-
-        let resourceTypeNum = parseInt(resourceType, 10);
-        let foundResourceTypeName;
-        for (let resourceTypeName in MigrationUtils.resourceTypes) {
-          if (
-            MigrationUtils.resourceTypes[resourceTypeName] == resourceTypeNum
-          ) {
-            foundResourceTypeName = resourceTypeName;
-            break;
+          if (!foundResourceTypeName) {
+            console.error(
+              "Could not find a resource type for value: ",
+              resourceTypeNum
+            );
+          } else {
+            // For now, we ignore errors in migration, and simply display
+            // the success state.
+            progress[foundResourceTypeName] = {
+              inProgress: false,
+              message: await this.#getStringForImportQuantity(
+                foundResourceTypeName
+              ),
+            };
+            this.sendAsyncMessage("UpdateProgress", progress);
           }
         }
-
-        if (!foundResourceTypeName) {
-          console.error(
-            "Could not find a resource type for value: ",
-            resourceType
-          );
-        } else {
-          // For now, we ignore errors in migration, and simply display
-          // the success state.
-          progress[foundResourceTypeName] = {
-            inProgress: false,
-            message: "",
-          };
-          this.sendAsyncMessage("UpdateProgress", progress);
-        }
-      },
-
-      migrationDefer: lazy.PromiseUtils.defer(),
-
-      QueryInterface: ChromeUtils.generateQI([
-        Ci.nsIObserver,
-        Ci.nsISupportsWeakReference,
-      ]),
-    };
-    Services.obs.addObserver(observer, "Migration:ItemAfterMigrate", true);
-    Services.obs.addObserver(observer, "Migration:ItemError", true);
-    Services.obs.addObserver(observer, "Migration:Ended", true);
-
-    try {
-      // The MigratorBase API is somewhat awkward - we must wait for an observer
-      // notification with topic Migration:Ended to know when the migration
-      // finishes.
-      migrator.migrate(resourceTypesToMigrate, false, profileObj);
-      await observer.migrationDefer.promise;
-    } finally {
-      Services.obs.removeObserver(observer, "Migration:ItemAfterMigrate");
-      Services.obs.removeObserver(observer, "Migration:ItemError");
-      Services.obs.removeObserver(observer, "Migration:Ended");
+      );
+    } catch (e) {
+      console.error(e);
     }
   }
 
@@ -280,5 +260,50 @@ export class MigrationWizardParent extends JSWindowActorParent {
       resourceTypes: availableResourceTypes,
       profile: profileObj,
     };
+  }
+
+  /**
+   * Returns the "success" string for a particular resource type after
+   * migration has completed.
+   *
+   * @param {string} resourceTypeStr
+   *   A string mapping to one of the key values of
+   *   MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.
+   * @returns {Promise<string>}
+   *   The success string for the resource type after migration has completed.
+   */
+  #getStringForImportQuantity(resourceTypeStr) {
+    switch (resourceTypeStr) {
+      case lazy.MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS: {
+        let quantity = MigrationUtils.getImportedCount("bookmarks");
+        return lazy.gFluentStrings.formatValue(
+          "migration-wizard-progress-success-bookmarks",
+          {
+            quantity,
+          }
+        );
+      }
+      case lazy.MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.HISTORY: {
+        let quantity = MigrationUtils.getImportedCount("history");
+        return lazy.gFluentStrings.formatValue(
+          "migration-wizard-progress-success-history",
+          {
+            quantity,
+          }
+        );
+      }
+      case lazy.MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS: {
+        let quantity = MigrationUtils.getImportedCount("logins");
+        return lazy.gFluentStrings.formatValue(
+          "migration-wizard-progress-success-passwords",
+          {
+            quantity,
+          }
+        );
+      }
+      default: {
+        return "";
+      }
+    }
   }
 }

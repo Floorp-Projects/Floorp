@@ -9,6 +9,23 @@ const { InternalTestingProfileMigrator } = ChromeUtils.importESModule(
 );
 
 /**
+ * These are the resource types that currently display their import success
+ * message with a quantity.
+ */
+const RESOURCE_TYPES_WITH_QUANTITIES = [
+  MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS,
+  MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.HISTORY,
+  MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS,
+];
+
+/**
+ * We'll have this be our magic number of quantities of various imports.
+ * We will use Sinon to prepare MigrationUtils to presume that this was
+ * how many of each quantity-supported resource type was imported.
+ */
+const EXPECTED_QUANTITY = 123;
+
+/**
  * A helper function that prepares the InternalTestingProfileMigrator
  * with some set of fake available resources, and resolves a Promise
  * when the InternalTestingProfileMigrator is used for a migration.
@@ -48,19 +65,31 @@ async function waitForTestMigration(
       );
     });
 
+  sandbox.stub(MigrationUtils, "_importQuantities").value({
+    bookmarks: EXPECTED_QUANTITY,
+    history: EXPECTED_QUANTITY,
+    logins: EXPECTED_QUANTITY,
+  });
+
   // Fake out the migrate method of the migrator and assert that the
   // next time it's called, its arguments match our expectations.
   return new Promise(resolve => {
     sandbox
       .stub(InternalTestingProfileMigrator.prototype, "migrate")
-      .callsFake((aResourceTypes, aStartup, aProfile) => {
+      .callsFake((aResourceTypes, aStartup, aProfile, aProgressCallback) => {
         Assert.ok(
           !aStartup,
           "Migrator should not have been called as a startup migration."
         );
+
+        let bitMask = 0;
+        for (let resourceType of expectedResourceTypes) {
+          bitMask |= resourceType;
+        }
+
         Assert.deepEqual(
           aResourceTypes,
-          expectedResourceTypes,
+          bitMask,
           "Got the expected resource types"
         );
         Assert.deepEqual(
@@ -68,6 +97,10 @@ async function waitForTestMigration(
           expectedProfile,
           "Got the expected profile object"
         );
+
+        for (let resourceType of expectedResourceTypes) {
+          aProgressCallback(resourceType);
+        }
         Services.obs.notifyObservers(null, "Migration:Ended");
         resolve();
       });
@@ -122,6 +155,77 @@ function selectResourceTypesAndStartMigration(wizard, selectedResourceTypes) {
 }
 
 /**
+ * Assert that the resource types passed in expectedResourceTypes are
+ * showing a success state after a migration, and if they are part of
+ * the RESOURCE_TYPES_WITH_QUANTITIES group, that they're showing the
+ * EXPECTED_QUANTITY magic number in their success message. Otherwise,
+ * we (currently) check that they show the empty string.
+ *
+ * @param {Element} wizard
+ *   The MigrationWizard element.
+ * @param {string[]} expectedResourceTypes
+ *   An array of resource type strings from
+ *   MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.
+ */
+function assertQuantitiesShown(wizard, expectedResourceTypes) {
+  let shadow = wizard.openOrClosedShadowRoot;
+
+  // Make sure that we're showing the progress page first.
+  let deck = shadow.querySelector("#wizard-deck");
+  Assert.equal(
+    deck.selectedViewName,
+    `page-${MigrationWizardConstants.PAGES.PROGRESS}`
+  );
+
+  // Go through each displayed resource and make sure that only the
+  // ones that are expected are shown, and are showing the right
+  // success message.
+
+  let progressGroups = shadow.querySelectorAll(".resource-progress-group");
+  for (let progressGroup of progressGroups) {
+    if (expectedResourceTypes.includes(progressGroup.dataset.resourceType)) {
+      let progressIcon = progressGroup.querySelector(".progress-icon");
+      let successText = progressGroup.querySelector(".success-text")
+        .textContent;
+
+      Assert.ok(
+        progressIcon.classList.contains("completed"),
+        "Should be showing completed state."
+      );
+
+      if (
+        RESOURCE_TYPES_WITH_QUANTITIES.includes(
+          progressGroup.dataset.resourceType
+        )
+      ) {
+        Assert.notEqual(
+          successText.indexOf(EXPECTED_QUANTITY),
+          -1,
+          `Found expected quantity in success string: ${successText}`
+        );
+      } else {
+        // If you've found yourself here, and this is failing, it's probably because you've
+        // updated MigrationWizardParent.#getStringForImportQuantity to return a string for
+        // a resource type that's not in RESOURCE_TYPES_WITH_QUANTITIES, and you'll need
+        // to modify this function to check for that string.
+        Assert.equal(
+          successText,
+          "",
+          "Expected the empty string if the resource type " +
+            "isn't in RESOURCE_TYPES_WITH_QUANTITIES"
+        );
+      }
+    } else {
+      Assert.ok(
+        BrowserTestUtils.is_hidden(progressGroup),
+        `Resource progress group for ${progressGroup.dataset.resourceType}` +
+          ` should be hidden.`
+      );
+    }
+  }
+}
+
+/**
  * Tests that the MigrationWizard can be used to successfully migrate
  * using the InternalTestingProfileMigrator in a few scenarios.
  */
@@ -145,6 +249,9 @@ add_task(async function test_successful_migrations() {
     ]);
     await migration;
     await wizardDone;
+    assertQuantitiesShown(wizard, [
+      MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS,
+    ]);
   });
 
   // Scenario 2: Several resource types are available, but only 1
@@ -170,5 +277,31 @@ add_task(async function test_successful_migrations() {
     ]);
     await migration;
     await wizardDone;
+    assertQuantitiesShown(wizard, [
+      MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS,
+    ]);
+  });
+
+  // Scenario 3: Several resource types are available, all are checked.
+  let allResourceTypeStrs = Object.values(
+    MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES
+  );
+  let allResourceTypes = allResourceTypeStrs.map(resourceTypeStr => {
+    return MigrationUtils.resourceTypes[resourceTypeStr];
+  });
+
+  migration = waitForTestMigration(allResourceTypes, allResourceTypes, null);
+
+  await withMigrationWizardDialog(async prefsWin => {
+    let dialogBody = prefsWin.document.body;
+    let wizard = dialogBody.querySelector("migration-wizard");
+    let wizardDone = BrowserTestUtils.waitForEvent(
+      wizard,
+      "MigrationWizard:DoneMigration"
+    );
+    selectResourceTypesAndStartMigration(wizard, allResourceTypeStrs);
+    await migration;
+    await wizardDone;
+    assertQuantitiesShown(wizard, allResourceTypeStrs);
   });
 });
