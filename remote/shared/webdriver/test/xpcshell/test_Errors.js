@@ -388,6 +388,16 @@ add_test(function test_NoSuchFrameError() {
   run_next_test();
 });
 
+add_test(function test_NoSuchScriptError() {
+  let err = new error.NoSuchScriptError("foo");
+  equal("NoSuchScriptError", err.name);
+  equal("foo", err.message);
+  equal("no such script", err.status);
+  ok(err instanceof error.WebDriverError);
+
+  run_next_test();
+});
+
 add_test(function test_NoSuchShadowRootError() {
   let err = new error.NoSuchShadowRootError("foo");
   equal("NoSuchShadowRootError", err.name);

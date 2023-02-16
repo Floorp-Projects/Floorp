@@ -26,6 +26,7 @@ const ERRORS = new Set([
   "NoSuchAlertError",
   "NoSuchElementError",
   "NoSuchFrameError",
+  "NoSuchScriptError",
   "NoSuchShadowRootError",
   "NoSuchWindowError",
   "ScriptTimeoutError",
@@ -395,6 +396,16 @@ class NoSuchElementError extends WebDriverError {
 }
 
 /**
+ * A command tried to remove an unknown preload script.
+ */
+class NoSuchScriptError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "no such script";
+  }
+}
+
+/**
  * A shadow root was not attached to the element.
  */
 class NoSuchShadowRootError extends WebDriverError {
@@ -536,6 +547,7 @@ const STATUSES = new Map([
   ["no such alert", NoSuchAlertError],
   ["no such element", NoSuchElementError],
   ["no such frame", NoSuchFrameError],
+  ["no such script", NoSuchScriptError],
   ["no such shadow root", NoSuchShadowRootError],
   ["no such window", NoSuchWindowError],
   ["script timeout", ScriptTimeoutError],
