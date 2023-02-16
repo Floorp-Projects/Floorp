@@ -17169,6 +17169,30 @@
     "description": "The length of time (in seconds) that a Picture-in-Picture window was open.",
     "releaseChannelCollection": "opt-out"
   },
+  "FX_PICTURE_IN_PICTURE_BACKGROUND_TAB_PLAYING_DURATION": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["mconley@mozilla.com"],
+    "bug_numbers": [1817042],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 100,
+    "description": "The length of time (in seconds) that a video was in Picture-in-Picture mode in a background tab.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "FX_PICTURE_IN_PICTURE_FOREGROUND_TAB_PLAYING_DURATION": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["mconley@mozilla.com"],
+    "bug_numbers": [1817042],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 100,
+    "description": "The length of time (in seconds) that a video was in Picture-in-Picture mode in a foreground tab.",
+    "releaseChannelCollection": "opt-out"
+  },
   "ORB_JAVASCRIPT_VALIDATION_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox"],

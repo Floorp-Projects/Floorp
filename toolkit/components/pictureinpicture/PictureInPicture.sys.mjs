@@ -33,6 +33,10 @@ const TOGGLE_POSITION_PREF =
 const TOGGLE_POSITION_RIGHT = "right";
 const TOGGLE_POSITION_LEFT = "left";
 const RESIZE_MARGIN_PX = 16;
+const BACKGROUND_DURATION_HISTOGRAM_ID =
+  "FX_PICTURE_IN_PICTURE_BACKGROUND_TAB_PLAYING_DURATION";
+const FOREGROUND_DURATION_HISTOGRAM_ID =
+  "FX_PICTURE_IN_PICTURE_FOREGROUND_TAB_PLAYING_DURATION";
 
 /**
  * Tracks the number of currently open player windows for Telemetry tracking
@@ -182,6 +186,11 @@ export var PictureInPicture = {
     switch (event.type) {
       case "TabSwapPictureInPicture": {
         this.onPipSwappedBrowsers(event);
+        break;
+      }
+      case "TabSelect": {
+        this.updatePlayingDurationHistograms();
+        break;
       }
     }
   },
@@ -195,6 +204,12 @@ export var PictureInPicture = {
       ? this.browserWeakMap.get(browser)
       : 0;
     this.browserWeakMap.set(browser, count + 1);
+
+    // If a browser is being added to the browserWeakMap, that means its
+    // probably a good time to make sure the playing duration histograms
+    // are up-to-date, as it means that we've either opened a new PiP
+    // player window, or moved the originating tab to another window.
+    this.updatePlayingDurationHistograms();
   },
 
   /**
@@ -210,6 +225,11 @@ export var PictureInPicture = {
     if (!count || count == 0) {
       this.setOriginatingWindowActive(parentWin.browsingContext, true);
       this.originatingWinWeakMap.set(parentWin, 1);
+
+      let gBrowser = browser.getTabBrowser();
+      if (gBrowser) {
+        gBrowser.tabContainer.addEventListener("TabSelect", this);
+      }
     } else {
       this.originatingWinWeakMap.set(parentWin, count + 1);
     }
@@ -252,6 +272,11 @@ export var PictureInPicture = {
     if (!count || count <= 1) {
       this.originatingWinWeakMap.delete(parentWin, 0);
       this.setOriginatingWindowActive(parentWin.browsingContext, false);
+
+      let gBrowser = browser.getTabBrowser();
+      if (gBrowser) {
+        gBrowser.tabContainer.removeEventListener("TabSelect", this);
+      }
     } else {
       this.originatingWinWeakMap.set(parentWin, count - 1);
     }
@@ -270,6 +295,43 @@ export var PictureInPicture = {
         }
       }
       otherTab.addEventListener("TabSwapPictureInPicture", this);
+    }
+  },
+
+  updatePlayingDurationHistograms() {
+    // A tab switch occurred in a browser window with one more tabs that have
+    // PiP player windows associated with them.
+    for (let win of Services.wm.getEnumerator(WINDOW_TYPE)) {
+      let browser = this.weakWinToBrowser.get(win);
+      let gBrowser = browser.getTabBrowser();
+      if (gBrowser?.selectedBrowser == browser) {
+        // If there are any background stopwatches running for this window, finish
+        // them and switch to foreground.
+        if (TelemetryStopwatch.running(BACKGROUND_DURATION_HISTOGRAM_ID, win)) {
+          TelemetryStopwatch.finish(BACKGROUND_DURATION_HISTOGRAM_ID, win);
+        }
+        if (
+          !TelemetryStopwatch.running(FOREGROUND_DURATION_HISTOGRAM_ID, win)
+        ) {
+          TelemetryStopwatch.start(FOREGROUND_DURATION_HISTOGRAM_ID, win, {
+            inSeconds: true,
+          });
+        }
+      } else {
+        // If there are any foreground stopwatches running for this window, finish
+        // them and switch to background.
+        if (TelemetryStopwatch.running(FOREGROUND_DURATION_HISTOGRAM_ID, win)) {
+          TelemetryStopwatch.finish(FOREGROUND_DURATION_HISTOGRAM_ID, win);
+        }
+
+        if (
+          !TelemetryStopwatch.running(BACKGROUND_DURATION_HISTOGRAM_ID, win)
+        ) {
+          TelemetryStopwatch.start(BACKGROUND_DURATION_HISTOGRAM_ID, win, {
+            inSeconds: true,
+          });
+        }
+      }
     }
   },
 
@@ -490,6 +552,14 @@ export var PictureInPicture = {
       "FX_PICTURE_IN_PICTURE_WINDOW_OPEN_DURATION",
       window
     );
+
+    if (TelemetryStopwatch.running(BACKGROUND_DURATION_HISTOGRAM_ID, window)) {
+      TelemetryStopwatch.finish(BACKGROUND_DURATION_HISTOGRAM_ID, window);
+    } else if (
+      TelemetryStopwatch.running(FOREGROUND_DURATION_HISTOGRAM_ID, window)
+    ) {
+      TelemetryStopwatch.finish(FOREGROUND_DURATION_HISTOGRAM_ID, window);
+    }
 
     this.removeOriginatingWinFromWeakMap(this.weakWinToBrowser.get(window));
 
