@@ -1,0 +1,39 @@
+# Google Cloud Documentation: https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
+# Flank Documentation: https://flank.github.io/flank/
+gcloud:
+  results-bucket: fenix_test_artifacts
+  record-video: true
+  timeout: 10m
+  async: false
+
+  app: /app/path
+
+  auto-google-login: false
+  use-orchestrator: true
+  environment-variables:
+    clearPackageData: true
+
+  device:
+    - model: Pixel2.arm
+      version: 26
+      locale: en_US
+    - model: walleye
+      version: 27
+      locale: en_US
+    - model: dreamlte
+      version: 28
+      locale: en_US
+    - model: HWCOR
+      version: 27
+      locale: en_US
+    - model: blueline
+      version: 28
+      locale: en_US
+
+  type: robo
+
+flank:
+  project: GOOGLE_PROJECT
+  num-test-runs: 1
+  output-style: compact
+  full-junit-result: true

@@ -322,3 +322,30 @@ tasks:
         worker:
             env:
                 GOOGLE_PROJECT: moz-fenix
+
+    fenix-robo-arm-debug:
+        attributes:
+            shipping-product: fenix
+            code-review: false
+        description: Run Robo test on ARM devices
+        run-on-tasks-for: [github-push]
+        run-on-git-branches: [main]
+        dependencies:
+            signed-apk-debug-apk: signing-apk-fenix-debug
+        run:
+            secrets:
+                - name: project/mobile/fenix/firebase
+                  key: firebaseToken
+                  path: .firebase_token.json
+                  json: true
+            pre-commands:
+                - ["cd", "fenix"]
+            commands:
+                - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/fenix/arm64-v8a/target.apk>'}, '-O', app.apk]
+                - [automation/taskcluster/androidTest/robo-test.sh, arm-robo-test, app.apk]
+        treeherder:
+            platform: 'fenix-ui-test/opt'
+            symbol: fenix-debug(robo-arm)
+        worker:
+            env:
+                GOOGLE_PROJECT: moz-fenix
