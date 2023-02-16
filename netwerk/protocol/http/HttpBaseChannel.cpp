@@ -3999,6 +3999,10 @@ bool HttpBaseChannel::ShouldIntercept(nsIURI* aURI) {
   GetCallback(controller);
   bool shouldIntercept = false;
 
+  if (!StaticPrefs::dom_serviceWorkers_enabled()) {
+    return false;
+  }
+
   // We should never intercept internal redirects.  The ServiceWorker code
   // can trigger interntal redirects as the result of a FetchEvent.  If
   // we re-intercept then an infinite loop can occur.
