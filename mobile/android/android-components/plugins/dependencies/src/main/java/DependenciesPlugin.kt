@@ -66,7 +66,7 @@ object Versions {
         const val compose = compose_version
         const val constraintlayout = "2.0.4"
         const val coordinatorlayout = "1.1.0"
-        const val core = "1.8.0"
+        const val core = "1.9.0"
         const val fragment = "1.5.1"
         const val recyclerview = "1.2.0"
         const val test = "1.5.0"
