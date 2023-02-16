@@ -2760,6 +2760,10 @@ class Extension extends ExtensionData {
     return this.manifest.background?.scripts;
   }
 
+  get backgroundTypeModule() {
+    return this.manifest.background?.type === "module";
+  }
+
   get backgroundWorkerScript() {
     return this.manifest.background?.service_worker;
   }
@@ -2828,6 +2832,7 @@ class Extension extends ExtensionData {
     return {
       backgroundScripts: this.backgroundScripts,
       backgroundWorkerScript: this.backgroundWorkerScript,
+      backgroundTypeModule: this.backgroundTypeModule,
       childModules: this.modules && this.modules.child,
       dependencies: this.dependencies,
       persistentBackground: this.persistentBackground,

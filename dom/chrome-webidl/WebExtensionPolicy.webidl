@@ -316,5 +316,8 @@ dictionary WebExtensionInit {
   sequence<DOMString>? backgroundScripts = null;
   DOMString? backgroundWorkerScript = null;
 
+  // Whether the background scripts should be loaded as ES modules.
+  boolean backgroundTypeModule = false;
+
   Promise<WebExtensionPolicy?> readyPromise;
 };

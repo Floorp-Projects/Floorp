@@ -368,6 +368,8 @@ class WebExtensionPolicy final : public nsISupports, public nsWrapperCache {
 
   dom::Nullable<nsTArray<nsString>> mBackgroundScripts;
 
+  bool mBackgroundTypeModule = false;
+
   nsTArray<RefPtr<WebExtensionContentScript>> mContentScripts;
 
   RefPtr<dom::Promise> mReadyPromise;

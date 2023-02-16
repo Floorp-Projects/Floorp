@@ -30,6 +30,10 @@ using namespace dom;
 
 static const char kProto[] = "moz-extension";
 
+static const char kBackgroundScriptTypeDefault[] = "text/javascript";
+
+static const char kBackgroundScriptTypeModule[] = "module";
+
 static const char kBackgroundPageHTMLStart[] =
     "<!DOCTYPE html>\n\
 <html>\n\
@@ -38,7 +42,7 @@ static const char kBackgroundPageHTMLStart[] =
 
 static const char kBackgroundPageHTMLScript[] =
     "\n\
-    <script type=\"text/javascript\" src=\"%s\"></script>";
+    <script type=\"%s\" src=\"%s\"></script>";
 
 static const char kBackgroundPageHTMLEnd[] =
     "\n\
@@ -297,6 +301,8 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
         aInit.mBackgroundScripts.Value());
   }
 
+  mBackgroundTypeModule = aInit.mBackgroundTypeModule;
+
   mContentScripts.SetCapacity(aInit.mContentScripts.Length());
   for (const auto& scriptInit : aInit.mContentScripts) {
     // The activeTab permission is only for dynamically injected scripts,
@@ -525,11 +531,13 @@ nsCString WebExtensionPolicy::BackgroundPageHTML() const {
 
   result.AppendLiteral(kBackgroundPageHTMLStart);
 
+  const char* scriptType = mBackgroundTypeModule ? kBackgroundScriptTypeModule
+                                                 : kBackgroundScriptTypeDefault;
+
   for (auto& script : mBackgroundScripts.Value()) {
     nsCString escaped;
     nsAppendEscapedHTML(NS_ConvertUTF16toUTF8(script), escaped);
-
-    result.AppendPrintf(kBackgroundPageHTMLScript, escaped.get());
+    result.AppendPrintf(kBackgroundPageHTMLScript, scriptType, escaped.get());
   }
 
   result.AppendLiteral(kBackgroundPageHTMLEnd);
