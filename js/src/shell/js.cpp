@@ -571,6 +571,7 @@ JS::OffThreadToken* OffThreadJob::waitUntilDone(JSContext* cx) {
 }
 
 struct ShellCompartmentPrivate {
+  GCPtr<JSObject*> blackRoot;
   GCPtr<JSObject*> grayRoot;
 };
 
@@ -780,18 +781,29 @@ ShellContext* js::shell::GetShellContext(JSContext* cx) {
   return sc;
 }
 
-static bool TraceGrayRoots(JSTracer* trc, SliceBudget& budget, void* data) {
+static void TraceRootArrays(JSTracer* trc, gc::MarkColor color) {
   JSRuntime* rt = trc->runtime();
   for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
       auto priv = static_cast<ShellCompartmentPrivate*>(
           JS_GetCompartmentPrivate(comp.get()));
       if (priv) {
-        TraceNullableEdge(trc, &priv->grayRoot, "test gray root");
+        if (color == gc::MarkColor::Black) {
+          TraceNullableEdge(trc, &priv->blackRoot, "test black root");
+        } else {
+          TraceNullableEdge(trc, &priv->grayRoot, "test gray root");
+        }
       }
     }
   }
+}
 
+static void TraceBlackRoots(JSTracer* trc, void* data) {
+  TraceRootArrays(trc, gc::MarkColor::Black);
+}
+
+static bool TraceGrayRoots(JSTracer* trc, SliceBudget& budget, void* data) {
+  TraceRootArrays(trc, gc::MarkColor::Gray);
   return true;
 }
 
@@ -4146,6 +4158,7 @@ static void WorkerMain(UniquePtr<WorkerInput> input) {
   sc->isWorker = true;
 
   JS_SetContextPrivate(cx, sc);
+  JS_AddExtraGCRootsTracer(cx, TraceBlackRoots, nullptr);
   JS_SetGrayGCRootsTracer(cx, TraceGrayRoots, nullptr);
   SetWorkerContextOptions(cx);
 
@@ -7842,9 +7855,8 @@ static bool DumpScopeChain(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-// For testing gray marking, grayRoot() will heap-allocate an address
-// where we can store a JSObject*, and create a new object if one doesn't
-// already exist.
+// For testing GC marking, blackRoot() and grayRoot() will heap-allocate an
+// array that will be marked as a root in GC.
 //
 // Note that EnsureGrayRoot() will blacken the returned object, so it will not
 // actually end up marked gray until the following GC clears the black bit
@@ -7860,7 +7872,8 @@ static bool DumpScopeChain(JSContext* cx, unsigned argc, Value* vp) {
 // getMarks(), in the form of an array of strings with each index corresponding
 // to the original objects passed to addMarkObservers().
 
-static bool EnsureGrayRoot(JSContext* cx, unsigned argc, Value* vp) {
+static bool EnsureRootArray(JSContext* cx, gc::MarkColor color, unsigned argc,
+                            Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   auto priv = EnsureShellCompartmentPrivate(cx);
@@ -7868,18 +7881,27 @@ static bool EnsureGrayRoot(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (!priv->grayRoot) {
-    if (!(priv->grayRoot = NewTenuredDenseEmptyArray(cx))) {
-      return false;
-    }
+  GCPtr<JSObject*>& root =
+      (color == gc::MarkColor::Black) ? priv->blackRoot : priv->grayRoot;
+
+  if (!root && !(root = NewTenuredDenseEmptyArray(cx))) {
+    return false;
   }
 
   // Barrier to enforce the invariant that JS does not touch gray objects.
-  JSObject* obj = priv->grayRoot;
+  JSObject* obj = root;
   JS::ExposeObjectToActiveJS(obj);
 
   args.rval().setObject(*obj);
   return true;
+}
+
+static bool EnsureBlackRoot(JSContext* cx, unsigned argc, Value* vp) {
+  return EnsureRootArray(cx, gc::MarkColor::Black, argc, vp);
+}
+
+static bool EnsureGrayRoot(JSContext* cx, unsigned argc, Value* vp) {
+  return EnsureRootArray(cx, gc::MarkColor::Gray, argc, vp);
 }
 
 static MarkBitObservers* EnsureMarkBitObservers(JSContext* cx) {
@@ -9250,10 +9272,15 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "dumpScopeChain(obj)",
 "  Prints the scope chain of an interpreted function or a module."),
 
+    JS_FN_HELP("blackRoot", EnsureBlackRoot, 0, 0,
+"blackRoot()",
+"  Return an array in the current compartment that will be marked black by\n"
+"  the GC."),
+
     JS_FN_HELP("grayRoot", EnsureGrayRoot, 0, 0,
 "grayRoot()",
-"  Create a gray root Array, if needed, for the current compartment, and\n"
-"  return it."),
+"  Return an array in the current compartment that will be marked gray by\n"
+"  the GC."),
 
     JS_FN_HELP("addMarkObservers", AddMarkObservers, 1, 0,
 "addMarkObservers(array_of_objects)",
@@ -12228,6 +12255,7 @@ int main(int argc, char** argv) {
   });
 
   JS_SetContextPrivate(cx, sc.get());
+  JS_AddExtraGCRootsTracer(cx, TraceBlackRoots, nullptr);
   JS_SetGrayGCRootsTracer(cx, TraceGrayRoots, nullptr);
   auto resetGrayGCRootsTracer =
       MakeScopeExit([cx] { JS_SetGrayGCRootsTracer(cx, nullptr, nullptr); });
