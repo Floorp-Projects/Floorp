@@ -83,11 +83,6 @@ SOURCES += [
     "WaylandVsyncSource.cpp",  # conflicts with X11 headers
 ]
 
-if CONFIG["ACCESSIBILITY"]:
-    UNIFIED_SOURCES += [
-        "maiRedundantObjectFactory.c",
-    ]
-
 if CONFIG["MOZ_WAYLAND"]:
     UNIFIED_SOURCES += [
         "DMABufLibWrapper.cpp",
