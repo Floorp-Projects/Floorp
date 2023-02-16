@@ -52,24 +52,12 @@ const PLACES_LINKS_CHANGED_DELAY_TIME = 1000; // time in ms to delay timer for p
 const TOP_SITES_BLOCKED_SPONSORS_PREF = "browser.topsites.blockedSponsors";
 
 /**
- * Observer - a wrapper around history/bookmark observers to add the QueryInterface.
- */
-class Observer {
-  constructor(dispatch, observerInterface) {
-    this.dispatch = dispatch;
-    this.QueryInterface = ChromeUtils.generateQI([
-      observerInterface,
-      "nsISupportsWeakReference",
-    ]);
-  }
-}
-
-/**
  * PlacesObserver - observes events from PlacesUtils.observers
  */
-class PlacesObserver extends Observer {
+class PlacesObserver {
   constructor(dispatch) {
-    super(dispatch, Ci.nsINavBookmarkObserver);
+    this.dispatch = dispatch;
+    this.QueryInterface = ChromeUtils.generateQI(["nsISupportsWeakReference"]);
     this.handlePlacesEvent = this.handlePlacesEvent.bind(this);
   }
 
