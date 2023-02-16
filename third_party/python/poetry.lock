@@ -82,11 +82,11 @@ testing = ["pytest", "pytest-cov"]
 
 [[package]]
 name = "certifi"
-version = "2018.4.16"
+version = "2022.12.7"
 description = "Python package for providing Mozilla's CA Bundle."
 category = "main"
 optional = false
-python-versions = "*"
+python-versions = ">=3.6"
 
 [[package]]
 name = "chardet"
@@ -797,7 +797,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "860c0b59297524a1e533309fdaed6fe16102e062c33d1a40f8ad6912b9229b92"
+content-hash = "a43dc447469a334d2dfe1a1397ecd6d03702590bb1b0d2b3cbbf68fb2edd1ff2"
 
 [metadata.files]
 aiohttp = [
@@ -864,8 +864,8 @@ cbor2 = [
     {file = "cbor2-4.0.1.tar.gz", hash = "sha256:cee0d01e520563b5a73c72eace5c428bb68aefb1b3f7aee5d692d3af6a1e5172"},
 ]
 certifi = [
-    {file = "certifi-2018.4.16-py2.py3-none-any.whl", hash = "sha256:9fa520c1bacfb634fa7af20a76bcbd3d5fb390481724c597da32c719a7dca4b0"},
-    {file = "certifi-2018.4.16.tar.gz", hash = "sha256:13e698f54293db9f89122b0581843a782ad0934a4fe0172d2a980ba77fc61bb7"},
+    {file = "certifi-2022.12.7-py3-none-any.whl", hash = "sha256:4ad3232f5e926d6718ec31cfc1fcadfde020920e278684144551c91769c7bc18"},
+    {file = "certifi-2022.12.7.tar.gz", hash = "sha256:35824b4c3a97115964b408844d64aa14db1cc518f6562e8d7261699d1350a9e3"},
 ]
 chardet = [
     {file = "chardet-4.0.0-py2.py3-none-any.whl", hash = "sha256:f864054d66fd9118f2e67044ac8981a54775ec5b67aed0441892edb553d21da5"},
