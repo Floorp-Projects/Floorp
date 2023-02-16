@@ -281,8 +281,6 @@ toolbarbutton menupopup[placespopup] > menu > .menu-right {
   fill-opacity: 0.6;
   width: unset;
   height: unset;
-  /* Reset the rect we inherit from the button */
-  -moz-image-region: auto;
 }
 
 toolbarbutton menupopup[placespopup] > menu > .menu-right:-moz-locale-dir(rtl) {

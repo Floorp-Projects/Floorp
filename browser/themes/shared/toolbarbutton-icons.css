@@ -454,12 +454,10 @@ toolbarbutton.bookmark-item {
 
 .bookmark-item[query][tagContainer] {
   list-style-image: url("chrome://browser/skin/places/tag.svg");
-  -moz-image-region: auto;
 }
 
 .bookmark-item[query][dayContainer] {
   list-style-image: url("chrome://browser/skin/history.svg");
-  -moz-image-region: auto;
 }
 
 .bookmark-item[query][hostContainer] {
