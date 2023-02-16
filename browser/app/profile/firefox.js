@@ -1269,7 +1269,11 @@ pref("browser.bookmarks.editDialog.maxRecentFolders", 7);
 
 // By default the Edit Bookmark dialog is instant-apply. This feature pref will allow to
 // just save on Accept, once the project is complete.
-pref("browser.bookmarks.editDialog.delayedApply.enabled", false);
+#ifdef NIGHTLY_BUILD
+  pref("browser.bookmarks.editDialog.delayedApply.enabled", true);
+#else
+  pref("browser.bookmarks.editDialog.delayedApply.enabled", false);
+#endif
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   // This controls the strength of the Windows content process sandbox for
