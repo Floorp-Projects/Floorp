@@ -6338,7 +6338,7 @@ MethodStatus BaselineCompiler::emitBody() {
       return Method_Error;
     }
 
-    perfSpewer_.recordInstruction(masm, op);
+    perfSpewer_.recordInstruction(cx, masm, handler.pc(), frame);
 
 #define EMIT_OP(OP, ...)                                       \
   case JSOp::OP: {                                             \
