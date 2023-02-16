@@ -726,9 +726,6 @@ PresShell::PresShell(Document* aDocument)
     : mDocument(aDocument),
       mViewManager(nullptr),
       mFrameManager(nullptr),
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-      mAllocatedPointers(MakeUnique<nsTHashSet<void*>>()),
-#endif  // MOZ_DIAGNOSTIC_ASSERT_ENABLED
       mAutoWeakFrames(nullptr),
 #ifdef ACCESSIBILITY
       mDocAccessible(nullptr),
