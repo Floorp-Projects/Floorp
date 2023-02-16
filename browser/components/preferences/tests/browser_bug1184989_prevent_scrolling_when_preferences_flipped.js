@@ -16,21 +16,24 @@ add_task(async function() {
     // Test button
     let button = doc.getElementById("button");
     button.focus();
+    let initialScrollTop = container.scrollTop;
     EventUtils.sendString(" ");
-    await checkPageScrolling(container, "button");
+    await checkPageScrolling(container, "button", initialScrollTop);
 
     // Test checkbox
     let checkbox = doc.getElementById("checkbox");
     checkbox.focus();
+    initialScrollTop = container.scrollTop;
     EventUtils.sendString(" ");
     ok(checkbox.checked, "Checkbox is checked");
-    await checkPageScrolling(container, "checkbox");
+    await checkPageScrolling(container, "checkbox", initialScrollTop);
 
     // Test radio
     let radiogroup = doc.getElementById("radiogroup");
     radiogroup.focus();
+    initialScrollTop = container.scrollTop;
     EventUtils.sendString(" ");
-    await checkPageScrolling(container, "radio");
+    await checkPageScrolling(container, "radio", initialScrollTop);
   });
 
   await BrowserTestUtils.withNewTab(
@@ -42,6 +45,7 @@ add_task(async function() {
       // Test search
       let engineList = doc.getElementById("engineList");
       engineList.focus();
+      let initialScrollTop = container.scrollTop;
       EventUtils.sendString(" ");
       is(
         engineList.view.selection.currentIndex,
@@ -49,7 +53,11 @@ add_task(async function() {
         "Search engineList is selected"
       );
       EventUtils.sendString(" ");
-      await checkPageScrolling(container, "search engineList");
+      await checkPageScrolling(
+        container,
+        "search engineList",
+        initialScrollTop
+      );
     }
   );
 
@@ -81,19 +89,24 @@ add_task(async function() {
 
   let tabsToggle = doc.getElementById("tabsToggle");
   tabsToggle.focus();
+  let initialScrollTop = doc.documentElement.scrollTop;
   EventUtils.sendString(" ");
-  await checkPageScrolling(doc.documentElement, "session restore");
+  await checkPageScrolling(
+    doc.documentElement,
+    "session restore",
+    initialScrollTop
+  );
 
   gBrowser.removeCurrentTab();
   finish();
 });
 
-function checkPageScrolling(container, type) {
+function checkPageScrolling(container, type, initialScrollTop = 0) {
   return new Promise(resolve => {
     setTimeout(() => {
       is(
         container.scrollTop,
-        0,
+        initialScrollTop,
         "Page should not scroll when " + type + " flipped"
       );
       resolve();
