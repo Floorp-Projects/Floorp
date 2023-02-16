@@ -8718,6 +8718,14 @@ void nsWindow::SetDrawsInTitlebar(bool aState) {
     return;
   }
 
+  if (mWindowType == WindowType::Dialog &&
+      !bool(mBorderStyle & BorderStyle::Title) &&
+      !bool(mBorderStyle & BorderStyle::ResizeH)) {
+    gtk_window_set_decorated(GTK_WINDOW(mShell), !aState);
+    LOG("  set decoration for dialog with titlebar=no %d", aState);
+    return;
+  }
+
   if (mGtkWindowDecoration == GTK_DECORATION_SYSTEM) {
     SetWindowDecoration(aState ? BorderStyle::Border : mBorderStyle);
   } else if (mGtkWindowDecoration == GTK_DECORATION_CLIENT) {
