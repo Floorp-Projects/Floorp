@@ -306,14 +306,8 @@ NS_IMPL_FRAMEARENA_HELPERS(nsImageFrame)
 nsImageFrame::nsImageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
                            ClassID aID, Kind aKind)
     : nsAtomicContainerFrame(aStyle, aPresContext, aID),
-      mComputedSize(0, 0),
       mIntrinsicSize(0, 0),
-      mKind(aKind),
-      mOwnedRequestRegistered(false),
-      mDisplayingIcon(false),
-      mFirstFrameComplete(false),
-      mReflowCallbackPosted(false),
-      mForceSyncDecoding(false) {
+      mKind(aKind) {
   EnableVisibilityTracking();
 }
 
