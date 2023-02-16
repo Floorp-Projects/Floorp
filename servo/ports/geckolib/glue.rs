@@ -20,6 +20,7 @@ use std::os::raw::c_void;
 use std::ptr;
 use style::applicable_declarations::ApplicableDeclarationBlock;
 use style::author_styles::AuthorStyles;
+use style::color::mix::ColorInterpolationMethod;
 use style::context::ThreadLocalStyleContext;
 use style::context::{CascadeInputs, QuirksMode, SharedStyleContext, StyleContext};
 use style::counter_style;
@@ -46,8 +47,8 @@ use style::gecko_bindings::bindings::Gecko_GetOrCreateInitialKeyframe;
 use style::gecko_bindings::bindings::Gecko_GetOrCreateKeyframeAtStart;
 use style::gecko_bindings::bindings::Gecko_HaveSeenPtr;
 use style::gecko_bindings::structs;
-use style::gecko_bindings::structs::gfxFontFeatureValueSet;
 use style::gecko_bindings::structs::gfx::FontPaletteValueSet;
+use style::gecko_bindings::structs::gfxFontFeatureValueSet;
 use style::gecko_bindings::structs::ipc::ByteBuf;
 use style::gecko_bindings::structs::nsAtom;
 use style::gecko_bindings::structs::nsCSSCounterDesc;
@@ -85,11 +86,10 @@ use style::gecko_bindings::structs::{nsINode as RawGeckoNode, Element as RawGeck
 use style::gecko_bindings::structs::{
     RawServoAnimationValue, RawServoAuthorStyles, RawServoContainerRule, RawServoCounterStyleRule,
     RawServoDeclarationBlock, RawServoFontFaceRule, RawServoFontFeatureValuesRule,
-    RawServoFontPaletteValuesRule,
-    RawServoImportRule, RawServoKeyframe, RawServoKeyframesRule, RawServoLayerBlockRule,
-    RawServoLayerStatementRule, RawServoMediaList, RawServoMediaRule, RawServoMozDocumentRule,
-    RawServoNamespaceRule, RawServoPageRule, RawServoSharedMemoryBuilder, RawServoStyleSet,
-    RawServoStyleSheetContents, RawServoSupportsRule, ServoCssRules,
+    RawServoFontPaletteValuesRule, RawServoImportRule, RawServoKeyframe, RawServoKeyframesRule,
+    RawServoLayerBlockRule, RawServoLayerStatementRule, RawServoMediaList, RawServoMediaRule,
+    RawServoMozDocumentRule, RawServoNamespaceRule, RawServoPageRule, RawServoSharedMemoryBuilder,
+    RawServoStyleSet, RawServoStyleSheetContents, RawServoSupportsRule, ServoCssRules,
 };
 use style::gecko_bindings::sugar::ownership::{FFIArcHelpers, HasArcFFI, HasFFI};
 use style::gecko_bindings::sugar::ownership::{
@@ -112,7 +112,9 @@ use style::properties::{SourcePropertyDeclaration, StyleBuilder};
 use style::rule_cache::RuleCacheConditions;
 use style::rule_tree::{CascadeLevel, StrongRuleNode};
 use style::selector_parser::PseudoElementCascadeType;
-use style::shared_lock::{Locked, SharedRwLock, SharedRwLockReadGuard, StylesheetGuards, ToCssWithGuard};
+use style::shared_lock::{
+    Locked, SharedRwLock, SharedRwLockReadGuard, StylesheetGuards, ToCssWithGuard,
+};
 use style::string_cache::{Atom, WeakAtom};
 use style::style_adjuster::StyleAdjuster;
 use style::stylesheets::container_rule::ContainerSizeQuery;
@@ -141,7 +143,6 @@ use style::values::computed::font::{
 };
 use style::values::computed::{self, Context, ToComputedValue};
 use style::values::distance::ComputeSquaredDistance;
-use style::values::generics::color::ColorInterpolationMethod;
 use style::values::generics::easing::BeforeFlag;
 use style::values::specified::gecko::IntersectionObserverRootMargin;
 use style::values::specified::source_size_list::SourceSizeList;
@@ -1207,7 +1208,13 @@ pub extern "C" fn Servo_StyleSet_GetBaseComputedValuesForElement(
         thread_local: &mut tlc,
     };
 
-    resolve_rules_for_element_with_context(element, context, without_animations_rules, &computed_values).into()
+    resolve_rules_for_element_with_context(
+        element,
+        context,
+        without_animations_rules,
+        &computed_values,
+    )
+    .into()
 }
 
 #[no_mangle]
@@ -1258,7 +1265,13 @@ pub extern "C" fn Servo_StyleSet_GetComputedValuesByAddingAnimation(
         thread_local: &mut tlc,
     };
 
-    resolve_rules_for_element_with_context(element, context, with_animations_rules, &computed_values).into()
+    resolve_rules_for_element_with_context(
+        element,
+        context,
+        with_animations_rules,
+        &computed_values,
+    )
+    .into()
 }
 
 #[no_mangle]
@@ -3015,7 +3028,8 @@ pub extern "C" fn Servo_FontFeatureValuesRule_GetFontFamily(
     result: &mut nsACString,
 ) {
     read_locked_arc(rule, |rule: &FontFeatureValuesRule| {
-        rule.family_names.to_css(&mut CssWriter::new(result))
+        rule.family_names
+            .to_css(&mut CssWriter::new(result))
             .unwrap()
     })
 }
@@ -3036,8 +3050,7 @@ pub extern "C" fn Servo_FontPaletteValuesRule_GetName(
     result: &mut nsACString,
 ) {
     read_locked_arc(rule, |rule: &FontPaletteValuesRule| {
-        rule.name.to_css(&mut CssWriter::new(result))
-            .unwrap()
+        rule.name.to_css(&mut CssWriter::new(result)).unwrap()
     })
 }
 
@@ -3048,7 +3061,8 @@ pub extern "C" fn Servo_FontPaletteValuesRule_GetFontFamily(
 ) {
     read_locked_arc(rule, |rule: &FontPaletteValuesRule| {
         if !rule.family_names.is_empty() {
-            rule.family_names.to_css(&mut CssWriter::new(result))
+            rule.family_names
+                .to_css(&mut CssWriter::new(result))
                 .unwrap()
         }
     })
@@ -3060,7 +3074,8 @@ pub extern "C" fn Servo_FontPaletteValuesRule_GetBasePalette(
     result: &mut nsACString,
 ) {
     read_locked_arc(rule, |rule: &FontPaletteValuesRule| {
-        rule.base_palette.to_css(&mut CssWriter::new(result))
+        rule.base_palette
+            .to_css(&mut CssWriter::new(result))
             .unwrap()
     })
 }
@@ -3072,7 +3087,8 @@ pub extern "C" fn Servo_FontPaletteValuesRule_GetOverrideColors(
 ) {
     read_locked_arc(rule, |rule: &FontPaletteValuesRule| {
         if !rule.override_colors.is_empty() {
-            rule.override_colors.to_css(&mut CssWriter::new(result))
+            rule.override_colors
+                .to_css(&mut CssWriter::new(result))
                 .unwrap()
         }
     })
@@ -4070,7 +4086,7 @@ pub extern "C" fn Servo_ComputedValues_ResolveHighlightPseudoStyle(
         &data.styles,
         None,
         &doc_data.stylist,
-        /* is_probe = */true,
+        /* is_probe = */ true,
         Some(&matching_fn),
     );
     match style {
@@ -7684,7 +7700,7 @@ pub extern "C" fn Servo_InterpolateColor(
     right: &AnimatedRGBA,
     progress: f32,
 ) -> AnimatedRGBA {
-    style::values::animated::color::Color::mix(
+    style::color::mix::mix(
         interpolation,
         left,
         progress,
