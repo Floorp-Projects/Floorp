@@ -12,10 +12,6 @@ add_setup(async function() {
   Services.prefs.clearUserPref(LOCATION_PREF);
   await PlacesUtils.bookmarks.eraseEverything();
 
-  // Panel must be instant apply for tests to pass.
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.bookmarks.editDialog.delayedApply.enabled", false]],
-  });
   win = await BrowserTestUtils.openNewBrowserWindow();
 
   let oldTimeout = win.StarUI._autoCloseTimeout;
