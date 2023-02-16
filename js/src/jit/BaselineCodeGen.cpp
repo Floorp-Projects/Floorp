@@ -223,6 +223,7 @@ MethodStatus BaselineCompiler::compile() {
 
   MOZ_ASSERT(!script->hasBaselineScript());
 
+  perfSpewer_.recordOffset(masm, "Prologue");
   if (!emitPrologue()) {
     return Method_Error;
   }
@@ -232,10 +233,12 @@ MethodStatus BaselineCompiler::compile() {
     return status;
   }
 
+  perfSpewer_.recordOffset(masm, "Epilogue");
   if (!emitEpilogue()) {
     return Method_Error;
   }
 
+  perfSpewer_.recordOffset(masm, "OOLPostBarrierSlot");
   if (!emitOutOfLinePostBarrierSlot()) {
     return Method_Error;
   }

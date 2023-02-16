@@ -13168,6 +13168,7 @@ bool CodeGenerator::generate() {
     return false;
   }
 
+  perfSpewer_.recordOffset(masm, "Prologue");
   if (!generatePrologue()) {
     return false;
   }
@@ -13186,6 +13187,7 @@ bool CodeGenerator::generate() {
     return false;
   }
 
+  perfSpewer_.recordOffset(masm, "Epilogue");
   if (!generateEpilogue()) {
     return false;
   }
@@ -13195,10 +13197,12 @@ bool CodeGenerator::generate() {
     return false;
   }
 
+  perfSpewer_.recordOffset(masm, "InvalidateEpilogue");
   generateInvalidateEpilogue();
 
   // native => bytecode entries for OOL code will be added
   // by CodeGeneratorShared::generateOutOfLineCode
+  perfSpewer_.recordOffset(masm, "OOLCode");
   if (!generateOutOfLineCode()) {
     return false;
   }
@@ -13425,9 +13429,7 @@ bool CodeGenerator::link(JSContext* cx, const WarpSnapshot* snapshot) {
   }
   ionScript->setInvalidationEpilogueOffset(invalidate_.offset());
 
-  if (PerfEnabled()) {
-    perfSpewer_.saveProfile(cx, script, code);
-  }
+  perfSpewer_.saveProfile(cx, script, code);
 
 #ifdef MOZ_VTUNE
   vtune::MarkScript(code, script, "ion");

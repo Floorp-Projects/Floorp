@@ -80,6 +80,8 @@ class PerfSpewer {
  public:
   PerfSpewer() = default;
 
+  void recordOffset(MacroAssembler& masm, const char*);
+
   void saveJitCodeIRInfo(const char* desc, JitCode* code,
                          JS::JitCodeRecord* profilerRecord,
                          AutoLockPerfSpewer& lock);
