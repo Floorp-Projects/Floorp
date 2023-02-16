@@ -3655,7 +3655,7 @@ toolbar#nav-bar {
         self.message_logger.dump_buffered()
         self.message_logger.buffering = False
         self.log.info(error_message)
-        self.log.error("Force-terminating active process(es).")
+        self.log.warning("Force-terminating active process(es).")
 
         browser_pid = browser_pid or proc.pid
         child_pids = self.extract_child_pids(processLog, browser_pid)

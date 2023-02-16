@@ -809,7 +809,7 @@ class RefTest(object):
             "%s | application timed out after %d seconds with no output"
             % (self.lastTestSeen, int(timeout))
         )
-        self.log.error("Force-terminating active process(es).")
+        self.log.warning("Force-terminating active process(es).")
         self.killAndGetStack(
             proc, utilityPath, debuggerInfo, dump_screen=not debuggerInfo
         )
