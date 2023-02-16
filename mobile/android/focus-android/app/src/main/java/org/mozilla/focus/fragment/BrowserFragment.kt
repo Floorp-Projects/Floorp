@@ -351,6 +351,7 @@ class BrowserFragment :
                     requireContext().applicationContext,
                     components.store,
                     DownloadService::class,
+                    notificationsDelegate = components.notificationsDelegate,
                 ),
                 onNeedToRequestPermissions = { permissions ->
                     requestInPlacePermissions(REQUEST_KEY_DOWNLOAD_PERMISSIONS, permissions) { result ->

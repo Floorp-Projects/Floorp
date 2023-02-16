@@ -20,6 +20,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.EXTRA_DOWNLOAD_STATUS
+import mozilla.components.support.base.android.NotificationsDelegate
 import mozilla.components.support.test.any
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
@@ -46,12 +47,14 @@ class FetchDownloadManagerTest {
     private lateinit var download: DownloadState
     private lateinit var downloadManager: FetchDownloadManager<MockDownloadService>
     private lateinit var store: BrowserStore
+    private lateinit var notificationsDelegate: NotificationsDelegate
 
     @Before
     fun setup() {
         broadcastManager = LocalBroadcastManager.getInstance(testContext)
         service = MockDownloadService()
         store = BrowserStore()
+        notificationsDelegate = mock()
         download = DownloadState(
             "http://ipv4.download.thinkbroadband.com/5MB.zip",
             "",
@@ -59,7 +62,13 @@ class FetchDownloadManagerTest {
             5242880,
             userAgent = "Mozilla/5.0 (Linux; Android 7.1.1) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Focus/8.0 Chrome/69.0.3497.100 Mobile Safari/537.36",
         )
-        downloadManager = FetchDownloadManager(testContext, store, MockDownloadService::class, broadcastManager)
+        downloadManager = FetchDownloadManager(
+            testContext,
+            store,
+            MockDownloadService::class,
+            broadcastManager,
+            notificationsDelegate = notificationsDelegate,
+        )
     }
 
     @Test(expected = SecurityException::class)
@@ -69,8 +78,6 @@ class FetchDownloadManagerTest {
 
     @Test
     fun `calling download must queue the download`() {
-        val context: Context = mock()
-        downloadManager = FetchDownloadManager(context, store, MockDownloadService::class, broadcastManager)
         var downloadStopped = false
 
         downloadManager.onDownloadStopped = { _, _, _ -> downloadStopped = true }
@@ -91,7 +98,13 @@ class FetchDownloadManagerTest {
     @Test
     fun `calling tryAgain starts the download again`() {
         val context: Context = mock()
-        downloadManager = FetchDownloadManager(context, store, MockDownloadService::class, broadcastManager)
+        downloadManager = FetchDownloadManager(
+            context,
+            store,
+            MockDownloadService::class,
+            broadcastManager,
+            notificationsDelegate = notificationsDelegate,
+        )
         var downloadStopped = false
 
         downloadManager.onDownloadStopped = { _, _, _ -> downloadStopped = true }
@@ -115,33 +128,36 @@ class FetchDownloadManagerTest {
 
     @Test
     fun `GIVEN a device that supports scoped storage THEN permissions must not included file access`() {
-        downloadManager =
-            spy(FetchDownloadManager(mock(), store, MockDownloadService::class, broadcastManager))
+        val downloadManagerSpy = spy(downloadManager)
 
-        doReturn(Build.VERSION_CODES.Q).`when`(downloadManager).getSDKVersion()
+        doReturn(Build.VERSION_CODES.Q).`when`(downloadManagerSpy).getSDKVersion()
 
-        assertTrue(WRITE_EXTERNAL_STORAGE !in downloadManager.permissions)
+        assertTrue(WRITE_EXTERNAL_STORAGE !in downloadManagerSpy.permissions)
     }
 
     @Test
     fun `GIVEN a device does not supports scoped storage THEN permissions must be included file access`() {
-        downloadManager =
-            spy(FetchDownloadManager(mock(), store, MockDownloadService::class, broadcastManager))
+        val downloadManagerSpy = spy(downloadManager)
 
-        doReturn(Build.VERSION_CODES.P).`when`(downloadManager).getSDKVersion()
+        doReturn(Build.VERSION_CODES.P).`when`(downloadManagerSpy).getSDKVersion()
 
-        assertTrue(WRITE_EXTERNAL_STORAGE in downloadManager.permissions)
+        assertTrue(WRITE_EXTERNAL_STORAGE in downloadManagerSpy.permissions)
 
-        doReturn(Build.VERSION_CODES.O_MR1).`when`(downloadManager).getSDKVersion()
+        doReturn(Build.VERSION_CODES.O_MR1).`when`(downloadManagerSpy).getSDKVersion()
 
-        assertTrue(WRITE_EXTERNAL_STORAGE in downloadManager.permissions)
+        assertTrue(WRITE_EXTERNAL_STORAGE in downloadManagerSpy.permissions)
     }
 
     @Test
     fun `try again should not crash when download does not exist`() {
         val context: Context = mock()
-        downloadManager = FetchDownloadManager(context, store, MockDownloadService::class, broadcastManager)
-
+        downloadManager = FetchDownloadManager(
+            context,
+            store,
+            MockDownloadService::class,
+            broadcastManager,
+            notificationsDelegate = notificationsDelegate,
+        )
         grantPermissions()
         val id = downloadManager.download(download)!!
 
@@ -160,7 +176,8 @@ class FetchDownloadManagerTest {
 
     @Test
     fun `trying to download a file with a blob scheme should trigger a download`() {
-        val validBlobDownload = download.copy(url = "blob:https://ipv4.download.thinkbroadband.com/5MB.zip")
+        val validBlobDownload =
+            download.copy(url = "blob:https://ipv4.download.thinkbroadband.com/5MB.zip")
         grantPermissions()
 
         val id = downloadManager.download(validBlobDownload)!!

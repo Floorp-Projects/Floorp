@@ -129,6 +129,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
                     requireContext().applicationContext,
                     components.store,
                     DownloadService::class,
+                    notificationsDelegate = components.notificationsDelegate,
                 ),
                 tabId = sessionId,
                 onNeedToRequestPermissions = { permissions ->

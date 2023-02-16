@@ -513,6 +513,7 @@ abstract class BaseBrowserFragment :
                 context.applicationContext,
                 store,
                 DownloadService::class,
+                notificationsDelegate = context.components.notificationsDelegate,
             ),
             shouldForwardToThirdParties = {
                 PreferenceManager.getDefaultSharedPreferences(context).getBoolean(

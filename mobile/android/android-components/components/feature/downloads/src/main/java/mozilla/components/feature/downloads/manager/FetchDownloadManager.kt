@@ -26,6 +26,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.EXTRA_DOWNLOAD_STATUS
 import mozilla.components.feature.downloads.ext.isScheme
+import mozilla.components.support.base.android.NotificationsDelegate
 import mozilla.components.support.utils.ext.getSerializableExtraCompat
 import kotlin.reflect.KClass
 
@@ -41,6 +42,7 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
     private val service: KClass<T>,
     private val broadcastManager: LocalBroadcastManager = LocalBroadcastManager.getInstance(applicationContext),
     override var onDownloadStopped: onDownloadStopped = noop,
+    private val notificationsDelegate: NotificationsDelegate,
 ) : BroadcastReceiver(), DownloadManager {
 
     private var isSubscribedReceiver = false
@@ -70,6 +72,10 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
             return null
         }
         validatePermissionGranted(applicationContext)
+
+        if (SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notificationsDelegate.requestNotificationPermission()
+        }
 
         // The middleware will notify the service to start the download
         // once this action is processed.
