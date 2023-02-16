@@ -647,56 +647,9 @@ void gfxTextRun::Draw(const Range aRange, const gfx::Point aPt,
   gfxFloat advance = 0.0;
   gfx::Point pt = aPt;
 
-  layout::TextDrawTarget* textDrawer = aParams.context->GetTextDrawer();
   while (iter.NextRun()) {
     gfxFont* font = iter.GetGlyphRun()->mFont;
     Range runRange(iter.GetStringStart(), iter.GetStringEnd());
-
-    if (textDrawer && GlyphRunCount() > 1) {
-      // If we're using a TextDrawTarget, check if the run range intersects the
-      // current clip; if not, we don't need to draw it.
-      Metrics runMetrics = MeasureText(runRange, gfxFont::LOOSE_INK_EXTENTS,
-                                       params.dt, aParams.provider);
-
-      if (params.isVerticalRun) {
-        std::swap(runMetrics.mBoundingBox.x, runMetrics.mBoundingBox.y);
-        std::swap(runMetrics.mBoundingBox.width,
-                  runMetrics.mBoundingBox.height);
-      }
-
-      if (IsRightToLeft()) {
-        if (params.isVerticalRun) {
-          runMetrics.mBoundingBox.MoveBy(
-              gfxPoint(pt.x, pt.y - runMetrics.mAdvanceWidth));
-        } else {
-          runMetrics.mBoundingBox.MoveBy(
-              gfxPoint(pt.x - runMetrics.mAdvanceWidth, pt.y));
-        }
-      } else {
-        runMetrics.mBoundingBox.MoveBy(gfxPoint(pt.x, pt.y));
-      }
-
-      // MeasureText returns mBoundingBox as appUnits stored in a gfxRect;
-      // convert to layout device pixels to intersect with the clip.
-      runMetrics.mBoundingBox.RoundOut();
-      const auto bounds = LayoutDeviceRect::FromAppUnits(
-          nsRect(nscoord(runMetrics.mBoundingBox.x),
-                 nscoord(runMetrics.mBoundingBox.y),
-                 nscoord(runMetrics.mBoundingBox.width),
-                 nscoord(runMetrics.mBoundingBox.height)),
-          GetAppUnitsPerDevUnit());
-      if (!bounds.Intersects(textDrawer->GeckoClipRect())) {
-        // The run is entirely out of view; just update position, but don't
-        // bother trying to paint the glyphs.
-        if (params.isVerticalRun) {
-          pt.y += float(runMetrics.mAdvanceWidth * direction);
-        } else {
-          pt.x += float(runMetrics.mAdvanceWidth * direction);
-        }
-        advance += runMetrics.mAdvanceWidth;
-        continue;
-      }
-    }
 
     bool needToRestore = false;
     if (mayNeedBuffering && HasSyntheticBoldOrColor(font)) {

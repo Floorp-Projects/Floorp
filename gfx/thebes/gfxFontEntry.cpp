@@ -285,6 +285,10 @@ uint16_t gfxFontEntry::UnitsPerEm() {
       if (len >= sizeof(HeadTable)) {
         mUnitsPerEm = head->unitsPerEm;
       }
+      mXMin = head->xMin;
+      mYMin = head->yMin;
+      mXMax = head->xMax;
+      mYMax = head->yMax;
     }
 
     // if we didn't find a usable 'head' table, or if the value was

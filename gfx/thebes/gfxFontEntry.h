@@ -6,6 +6,7 @@
 #ifndef GFX_FONTENTRY_H
 #define GFX_FONTENTRY_H
 
+#include <limits>
 #include <math.h>
 #include <new>
 #include <utility>
@@ -483,6 +484,13 @@ class gfxFontEntry {
   // (This is a floating-point number because of possible interpolation.)
   float TrackingForCSSPx(float aSize) const;
 
+  mozilla::gfx::Rect GetFontExtents(float aFUnitScaleFactor) const {
+    return mozilla::gfx::Rect(float(mXMin) * aFUnitScaleFactor,
+                              float(mYMin) * aFUnitScaleFactor,
+                              float(mXMax - mXMin) * aFUnitScaleFactor,
+                              float(mYMax - mYMin) * aFUnitScaleFactor);
+  }
+
   nsCString mName;
   nsCString mFamilyName;
 
@@ -720,6 +728,13 @@ class gfxFontEntry {
   uint16_t mUnitsPerEm = 0;
 
   uint16_t mNumTrakSizes = 0;
+
+  // Font extents in FUnits. (To be set from the 'head' table; default to
+  // "huge" to avoid any clipping if real extents not available.)
+  int16_t mXMin = std::numeric_limits<int16_t>::min();
+  int16_t mYMin = std::numeric_limits<int16_t>::min();
+  int16_t mXMax = std::numeric_limits<int16_t>::max();
+  int16_t mYMax = std::numeric_limits<int16_t>::max();
 
  private:
   /**
