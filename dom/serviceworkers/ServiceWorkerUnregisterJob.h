@@ -13,8 +13,8 @@ namespace mozilla::dom {
 
 class ServiceWorkerUnregisterJob final : public ServiceWorkerJob {
  public:
-  ServiceWorkerUnregisterJob(nsIPrincipal* aPrincipal,
-                             const nsACString& aScope);
+  ServiceWorkerUnregisterJob(nsIPrincipal* aPrincipal, const nsACString& aScope,
+                             bool aSendToParent);
 
   bool GetResult() const;
 
@@ -28,6 +28,7 @@ class ServiceWorkerUnregisterJob final : public ServiceWorkerJob {
   void Unregister();
 
   bool mResult;
+  bool mSendToParent;
 };
 
 }  // namespace mozilla::dom
