@@ -94,6 +94,18 @@ browsertime:
     - browsertime-responsiveness
     - browsertime-regression-tests
 
+browsertime-clang:
+    - browsertime-tp6
+    - browsertime-tp6-essential
+    - browsertime-tp6-bytecode
+    - browsertime-tp6-live
+    - browsertime-tp6-live-sheriffed
+    - browsertime-benchmark
+    - browsertime-benchmark-wasm
+    - browsertime-youtube-playback
+    - browsertime-grandprix
+    - browsertime-responsiveness
+
 browsertime-profiling:
     - browsertime-tp6-profiling
 

@@ -555,7 +555,7 @@ browsertime-custom:
             windows.*-32.*: []
             .*64.*shippable-qr/.*: [mozilla-central]
             default: []
-    tier: 2
+    tier: 1
     treeherder-symbol: Btime(ps)
 
 browsertime-first-install:
@@ -574,7 +574,7 @@ browsertime-first-install:
             windows.*-32.*: []
             .*64.*shippable-qr/.*: [trunk]
             default: []
-    tier: 2
+    tier: 1
     treeherder-symbol: Btime(welcome)
 
 browsertime-grandprix:
