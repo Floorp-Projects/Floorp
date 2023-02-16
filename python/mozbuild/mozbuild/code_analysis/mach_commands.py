@@ -1592,38 +1592,12 @@ def get_clang_tools(
     if source:
         return _get_clang_tools_from_source(command_context, clang_paths, source)
 
-    from mozbuild.artifact_commands import artifact_toolchain
-
     if not download_if_needed:
         return 0, clang_paths
 
-    job, _ = command_context.platform
+    from mozbuild.bootstrap import bootstrap_toolchain
 
-    if job is None:
-        raise Exception(
-            "The current platform isn't supported. "
-            "Currently only the following platforms are "
-            "supported: win32/win64, linux64 and macosx64."
-        )
-
-    job += "-clang-tidy"
-
-    # We want to unpack data in the clang-tidy mozbuild folder
-    currentWorkingDir = os.getcwd()
-    os.chdir(clang_paths._clang_tools_path)
-    rc = artifact_toolchain(
-        command_context,
-        verbose=verbose,
-        skip_cache=skip_cache,
-        from_build=[job],
-        no_unpack=False,
-        retry=0,
-    )
-    # Change back the cwd
-    os.chdir(currentWorkingDir)
-
-    if rc:
-        return rc, clang_paths
+    bootstrap_toolchain("clang-tools/clang-tidy")
 
     return 0 if _is_version_eligible(command_context, clang_paths) else 1, clang_paths
 

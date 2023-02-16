@@ -261,7 +261,7 @@ class Bootstrapper(object):
         self.instance.install_toolchain_artifact("fix-stacks")
         self.instance.install_toolchain_artifact("minidump-stackwalk")
         if not self.instance.artifact_mode:
-            self.instance.ensure_clang_static_analysis_package()
+            self.instance.install_toolchain_artifact("clang-tools/clang-tidy")
             self.instance.ensure_sccache_packages()
         # Like 'ensure_browser_packages' or 'ensure_mobile_android_packages'
         getattr(self.instance, "ensure_%s_packages" % application)()

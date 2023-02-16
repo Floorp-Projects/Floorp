@@ -142,6 +142,11 @@ def bootstrap_path(path, **kwargs):
         if not path:
             return
         path_parts = path.split("/")
+        path_prefix = ""
+        # Small hack until clang-tidy stops being a separate toolchain in a
+        # weird location.
+        if path_parts[0] == "clang-tools":
+            path_prefix = path_parts.pop(0)
 
         def try_bootstrap(exists):
             if not tasks:
@@ -228,9 +233,9 @@ def bootstrap_path(path, **kwargs):
             log.info(
                 "%s bootstrapped toolchain in %s",
                 "Updating" if exists else "Installing",
-                os.path.join(toolchains_base_dir, path_parts[0]),
+                os.path.join(toolchains_base_dir, path_prefix, path_parts[0]),
             )
-            os.makedirs(toolchains_base_dir, exist_ok=True)
+            os.makedirs(os.path.join(toolchains_base_dir, path_prefix), exist_ok=True)
             subprocess.run(
                 [
                     sys.executable,
@@ -238,7 +243,7 @@ def bootstrap_path(path, **kwargs):
                     "--log-no-times",
                 ]
                 + command,
-                cwd=toolchains_base_dir,
+                cwd=os.path.join(toolchains_base_dir, path_prefix),
                 check=True,
             )
             ensureParentDir(index_file)
@@ -246,7 +251,7 @@ def bootstrap_path(path, **kwargs):
                 fh.write(task_index)
             return True
 
-        path = os.path.join(toolchains_base_dir, *path_parts)
+        path = os.path.join(toolchains_base_dir, path_prefix, *path_parts)
         if bootstrap:
             try:
                 if not try_bootstrap(os.path.exists(path)):

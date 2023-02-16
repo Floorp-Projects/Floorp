@@ -164,9 +164,6 @@ class OSXBootstrapperLight(OSXAndroidBootstrapper, BaseBootstrapper):
     def install_browser_artifact_mode_packages(self, mozconfig_builder):
         pass
 
-    def ensure_clang_static_analysis_package(self):
-        pass
-
 
 class OSXBootstrapper(OSXAndroidBootstrapper, BaseBootstrapper):
     def __init__(self, version, **kwargs):
@@ -271,16 +268,6 @@ class OSXBootstrapper(OSXAndroidBootstrapper, BaseBootstrapper):
         homebrew_found = self._ensure_homebrew_found()
         if not homebrew_found:
             self.install_homebrew()
-
-    def ensure_clang_static_analysis_package(self):
-        from mozboot import static_analysis
-
-        if platform.machine() == "arm64":
-            self.install_toolchain_static_analysis(
-                static_analysis.MACOS_AARCH64_CLANG_TIDY
-            )
-        else:
-            self.install_toolchain_static_analysis(static_analysis.MACOS_CLANG_TIDY)
 
     def ensure_sccache_packages(self):
         from mozboot import sccache

@@ -123,7 +123,6 @@ def bootstrap_tasks(config, tasks):
                         "python/mozboot/mozboot/mozconfig.py",
                         "python/mozboot/mozboot/rust.py",
                         "python/mozboot/mozboot/sccache.py",
-                        "python/mozboot/mozboot/static_analysis.py",
                         "python/mozboot/mozboot/util.py",
                     ]
                     + [f"python/mozboot/mozboot/{f}" for f in os_specific]
