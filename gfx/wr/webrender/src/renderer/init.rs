@@ -190,7 +190,6 @@ pub struct WebRenderOptions {
     /// items, if the zoom factor is relatively small, bilinear filtering should
     /// make the result look quite close to the high-quality zoom, except for glyphs.
     pub low_quality_pinch_zoom: bool,
-    pub max_shared_surface_size: i32,
 }
 
 impl WebRenderOptions {
@@ -259,7 +258,6 @@ impl Default for WebRenderOptions {
             enable_instancing: true,
             reject_software_rasterizer: false,
             low_quality_pinch_zoom: false,
-            max_shared_surface_size: 2048,
         }
     }
 }
@@ -535,7 +533,6 @@ pub fn create_webrender_instance(
         is_software,
         low_quality_pinch_zoom: options.low_quality_pinch_zoom,
         uses_native_antialiasing: device.get_capabilities().uses_native_antialiasing,
-        max_shared_surface_size: options.max_shared_surface_size,
     };
     info!("WR {:?}", config);
 

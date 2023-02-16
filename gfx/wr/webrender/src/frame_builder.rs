@@ -64,7 +64,6 @@ pub struct FrameBuilderConfig {
     pub is_software: bool,
     pub low_quality_pinch_zoom: bool,
     pub uses_native_antialiasing: bool,
-    pub max_shared_surface_size: i32,
 }
 
 /// A set of common / global resources that are retained between
@@ -549,7 +548,6 @@ impl FrameBuilder {
             resource_cache,
             gpu_cache,
             &mut deferred_resolves,
-            scene.config.max_shared_surface_size,
         );
 
         let mut passes = Vec::new();
