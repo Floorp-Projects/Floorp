@@ -465,42 +465,47 @@ static bool SizeIsAvailable(imgIRequest* aRequest) {
 }
 
 const StyleImage* nsImageFrame::GetImageFromStyle() const {
-  if (mKind == Kind::ImageLoadingContent) {
-    MOZ_ASSERT_UNREACHABLE("Don't call me");
-    return nullptr;
-  }
-  if (mKind == Kind::ListStyleImage) {
-    MOZ_ASSERT(
-        GetParent()->GetContent()->IsGeneratedContentContainerForMarker());
-    MOZ_ASSERT(mContent->IsHTMLElement(nsGkAtoms::mozgeneratedcontentimage));
-    return &StyleList()->mListStyleImage;
-  }
-  uint32_t contentIndex = 0;
-  const nsStyleContent* styleContent = StyleContent();
-  if (mKind == Kind::ContentPropertyAtIndex) {
-    MOZ_RELEASE_ASSERT(
-        mContent->IsHTMLElement(nsGkAtoms::mozgeneratedcontentimage));
-    contentIndex = static_cast<GeneratedImageContent*>(mContent.get())->Index();
+  switch (mKind) {
+    case Kind::ImageLoadingContent:
+      break;
+    case Kind::ListStyleImage:
+      MOZ_ASSERT(
+          GetParent()->GetContent()->IsGeneratedContentContainerForMarker());
+      MOZ_ASSERT(mContent->IsHTMLElement(nsGkAtoms::mozgeneratedcontentimage));
+      return &StyleList()->mListStyleImage;
+    case Kind::ContentProperty:
+    case Kind::ContentPropertyAtIndex: {
+      uint32_t contentIndex = 0;
+      const nsStyleContent* styleContent = StyleContent();
+      if (mKind == Kind::ContentPropertyAtIndex) {
+        MOZ_RELEASE_ASSERT(
+            mContent->IsHTMLElement(nsGkAtoms::mozgeneratedcontentimage));
+        contentIndex =
+            static_cast<GeneratedImageContent*>(mContent.get())->Index();
 
-    // TODO(emilio): Consider inheriting the `content` property instead of doing
-    // this parent traversal?
-    nsIFrame* parent = GetParent();
-    MOZ_DIAGNOSTIC_ASSERT(
-        parent->GetContent()->IsGeneratedContentContainerForMarker() ||
-        parent->GetContent()->IsGeneratedContentContainerForAfter() ||
-        parent->GetContent()->IsGeneratedContentContainerForBefore());
-    nsIFrame* nonAnonymousParent = parent;
-    while (nonAnonymousParent->Style()->IsAnonBox()) {
-      nonAnonymousParent = nonAnonymousParent->GetParent();
+        // TODO(emilio): Consider inheriting the `content` property instead of
+        // doing this parent traversal?
+        nsIFrame* parent = GetParent();
+        MOZ_DIAGNOSTIC_ASSERT(
+            parent->GetContent()->IsGeneratedContentContainerForMarker() ||
+            parent->GetContent()->IsGeneratedContentContainerForAfter() ||
+            parent->GetContent()->IsGeneratedContentContainerForBefore());
+        nsIFrame* nonAnonymousParent = parent;
+        while (nonAnonymousParent->Style()->IsAnonBox()) {
+          nonAnonymousParent = nonAnonymousParent->GetParent();
+        }
+        MOZ_DIAGNOSTIC_ASSERT(parent->GetContent() ==
+                              nonAnonymousParent->GetContent());
+        styleContent = nonAnonymousParent->StyleContent();
+      }
+      MOZ_RELEASE_ASSERT(contentIndex < styleContent->ContentCount());
+      auto& contentItem = styleContent->ContentAt(contentIndex);
+      MOZ_RELEASE_ASSERT(contentItem.IsImage());
+      return &contentItem.AsImage();
     }
-    MOZ_DIAGNOSTIC_ASSERT(parent->GetContent() ==
-                          nonAnonymousParent->GetContent());
-    styleContent = nonAnonymousParent->StyleContent();
   }
-  MOZ_RELEASE_ASSERT(contentIndex < styleContent->ContentCount());
-  auto& contentItem = styleContent->ContentAt(contentIndex);
-  MOZ_RELEASE_ASSERT(contentItem.IsImage());
-  return &contentItem.AsImage();
+  MOZ_ASSERT_UNREACHABLE("Don't call me");
+  return nullptr;
 }
 
 void nsImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
