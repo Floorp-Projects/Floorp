@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Discover Focus beta version
         id: discover-beta-version
-        uses: mozilla-mobile/fenix-beta-version@4.2.2
+        uses: mozilla-mobile/fenix-beta-version@4.2.3
       - name: Skip non-beta versions
         uses: andymckay/cancel-action@0.2
         if: ${{ steps.discover-beta-version.outputs.beta_version == '' }}
