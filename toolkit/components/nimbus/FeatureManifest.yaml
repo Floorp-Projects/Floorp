@@ -925,30 +925,9 @@ cookieBannerHandling:
   owner: dwalker@mozilla.com
   hasExposure: false
   variables:
-    serviceMode:
-      type: int
-      setPref: cookiebanners.service.mode
-      description: Controls cookie banner handling behavior. 0=off; 1=reject-only; 2=reject-or-accept
-      enum:
-        - 0
-        - 1
-        - 2
-    detectOnlyMode:
-      type: boolean
-      setPref: cookiebanners.service.detectOnly
-      description: Detects when the user has seen a cookie banner, required for doorhanger
-    desktopUiEnabled:
-      type: boolean
-      setPref: cookiebanners.ui.desktop.enabled
-      description: Controls whether the desktop UI is enabled
     desktopCfrVariant:
       type: int
-      setPref: cookiebanners.ui.desktop.cfrVariant
-      description: Which variant of the doorhanger the user should receive. 0=control; 1=A; 2=B
-      enum:
-        - 0
-        - 1
-        - 2
+      description: Which variant of the doorhanger the user should receive. 0=unenrolled; 1=control; 2=A; 3=B
 
 fxaButtonVisibility:
   description: Prefs to control the visibility of the Firefox Accounts toolbar button when not signed in.
