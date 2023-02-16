@@ -80,37 +80,6 @@ xul|toolbar[mode="text"] .toolbarbutton-text {
   margin: 3px 5px !important;
 }
 
-/* ::::: Print preview ::::: */
-
-.print-preview-navigate-button {
-  min-width: 1.9em;
-}
-
-.print-preview-navigate-button > .toolbarbutton-icon {
-  display: none;
-}
-
-#print-preview-portrait-button {
-  list-style-image: url("chrome://global/skin/icons/Print-preview.png");
-  -moz-image-region: rect(0px 16px 16px 0px);
-}
-
-#print-preview-landscape-button {
-  list-style-image: url("chrome://global/skin/icons/Print-preview.png");
-  -moz-image-region: rect(0px 32px 16px 16px);
-}
-
-#print-preview-portrait-button > .toolbarbutton-icon,
-#print-preview-landscape-button > .toolbarbutton-icon {
-  margin-inline-end: 2px;
-}
-
-html|*#print-preview-pageNumber {
-  /* 3 chars + (3px border + 1px padding) on both sides */
-  width: calc(8px + 3ch);
-  margin: 0 4px;
-}
-
 /* Separators */
 
 xul|separator:not([orient="vertical"]) {
