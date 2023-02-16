@@ -103,13 +103,7 @@ void EventMsgInfo::LogParameters(nsCString& str, WPARAM wParam, LPARAM lParam,
 nsAutoCString DefaultParamInfo(uint64_t wParam, uint64_t lParam,
                                bool /* isPreCall */) {
   nsAutoCString result;
-  result.AppendPrintf("(0x%08llX 0x%08llX)", wParam, lParam);
-  return result;
-}
-
-nsAutoCString EmptyParamInfo(uint64_t wParam, uint64_t lParam,
-                             bool /* isPreCall */) {
-  nsAutoCString result;
+  result.AppendPrintf("wParam=0x%08llX lParam=0x%08llX", wParam, lParam);
   return result;
 }
 
@@ -1021,17 +1015,17 @@ void ResolutionParamInfo(nsCString& result, uint64_t value, const char* name,
 }
 
 // Window message with default wParam/lParam logging
-#define ENTRY(_msg) \
-  {                 \
-    _msg, {         \
-#      _msg, _msg   \
-    }               \
+#define ENTRY(_msg)                 \
+  {                                 \
+    _msg, {                         \
+#      _msg, _msg, DefaultParamInfo \
+    }                               \
   }
 // Window message with no parameters
 #define ENTRY_WITH_NO_PARAM_INFO(_msg) \
   {                                    \
     _msg, {                            \
-#      _msg, _msg, EmptyParamInfo      \
+#      _msg, _msg, nullptr             \
     }                                  \
   }
 // Window message with custom parameter logging functions
