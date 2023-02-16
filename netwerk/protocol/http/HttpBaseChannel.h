@@ -643,9 +643,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   bool NeedOpaqueResponseAllowedCheckAfterSniff() const;
   void BlockOpaqueResponseAfterSniff();
   void AllowOpaqueResponseAfterSniff();
-  void SetChannelBlockedByOpaqueResponse() {
-    mChannelBlockedByOpaqueResponse = true;
-  }
+  void SetChannelBlockedByOpaqueResponse();
   bool Http3Allowed() const;
 
   friend class OpaqueResponseBlocker;

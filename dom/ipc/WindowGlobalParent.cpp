@@ -1374,6 +1374,11 @@ IPCResult WindowGlobalParent::RecvDiscoverIdentityCredentialFromExternalSource(
 }
 
 void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
+  if (GetBrowsingContext()->IsTopContent()) {
+    Telemetry::Accumulate(Telemetry::ORB_DID_EVER_BLOCK_RESPONSE,
+                          mHasBlockedOpaqueResponse);
+  }
+
   if (mPageUseCountersWindow) {
     mPageUseCountersWindow->FinishAccumulatingPageUseCounters();
     mPageUseCountersWindow = nullptr;
