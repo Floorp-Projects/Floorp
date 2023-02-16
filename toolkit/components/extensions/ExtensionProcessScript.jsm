@@ -142,6 +142,14 @@ ExtensionManager = {
         ({ backgroundWorkerScript } = getData(extension, "extendedData") || {});
       }
 
+      let { backgroundTypeModule } = extension;
+      if (
+        backgroundTypeModule == null &&
+        WebExtensionPolicy.isExtensionProcess
+      ) {
+        ({ backgroundTypeModule } = getData(extension, "extendedData") || {});
+      }
+
       policy = new WebExtensionPolicy({
         id: extension.id,
         mozExtensionHostname: extension.uuid,
@@ -162,6 +170,7 @@ ExtensionManager = {
 
         backgroundScripts,
         backgroundWorkerScript,
+        backgroundTypeModule,
 
         contentScripts: extension.contentScripts,
       });

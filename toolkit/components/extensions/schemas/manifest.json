@@ -148,6 +148,11 @@
                     "type": "array",
                     "items": { "$ref": "ExtensionURL" }
                   },
+                  "type": {
+                    "optional": true,
+                    "type": "string",
+                    "enum": ["module", "classic"]
+                  },
                   "persistent": {
                     "optional": true,
                     "type": "boolean",
