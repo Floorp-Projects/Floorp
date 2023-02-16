@@ -18,6 +18,13 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs",
 });
 
+function getUUID() {
+  return Services.uuid
+    .generateUUID()
+    .toString()
+    .slice(1, -1);
+}
+
 /**
  * @typedef {string} ScriptEvaluateResultType
  **/
@@ -47,6 +54,99 @@ class ScriptModule extends Module {
 
   destroy() {
     this.#preloadScriptMap = null;
+  }
+
+  /**
+   * Used as return value for script.addPreloadScript command.
+   *
+   * @typedef AddPreloadScriptResult
+   *
+   * @property {string} script
+   *    The unique id associated with added preload script.
+   */
+
+  /**
+   * Represents a channel used to send custom messages from preload script
+   * to clients.
+   *
+   * @typedef Channel
+   *
+   * @property {'channel'} type
+   * @property {string} value
+   *  The channel id.
+   */
+
+  /**
+   * Adds a preload script, which runs on creation of a new Window,
+   * before any author-defined script have run.
+   *
+   * @param {Object=} options
+   * @param {Array<Channel>=} arguments [unsupported]
+   *     The arguments to pass to the function call.
+   * @param {string} functionDeclaration
+   *     The expression to evaluate.
+   * @param {string=} sandbox
+   *     The name of the sandbox. If the value is null or empty
+   *     string, the default realm will be used.
+   *
+   * @returns {AddPreloadScriptResult}
+   *
+   * @throws {InvalidArgumentError}
+   *     If any of the arguments does not have the expected type.
+   */
+  async addPreloadScript(options = {}) {
+    const {
+      arguments: commandArguments,
+      functionDeclaration,
+      sandbox,
+    } = options;
+
+    lazy.assert.string(
+      functionDeclaration,
+      `Expected "functionDeclaration" to be a string, got ${functionDeclaration}`
+    );
+
+    if (sandbox != null) {
+      lazy.assert.string(
+        sandbox,
+        `Expected "sandbox" to be a string, got ${sandbox}`
+      );
+    }
+
+    if (commandArguments != null) {
+      lazy.assert.array(
+        commandArguments,
+        `Expected "arguments" to be an array, got ${commandArguments}`
+      );
+      throw new lazy.error.UnsupportedOperationError(
+        `arguments are not supported yet`
+      );
+    }
+
+    const script = getUUID();
+    const preloadScript = {
+      arguments: commandArguments,
+      functionDeclaration,
+      sandbox,
+    };
+
+    this.#preloadScriptMap.set(script, preloadScript);
+
+    await this.messageHandler.addSessionData({
+      category: "preload-script",
+      moduleName: "script",
+      values: [
+        {
+          ...preloadScript,
+          script,
+        },
+      ],
+      contextDescriptor: {
+        type: lazy.ContextDescriptorType.All,
+      },
+    });
+
+    return { script };
   }
 
   /**
