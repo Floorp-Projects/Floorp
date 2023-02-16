@@ -402,8 +402,8 @@ const SpecialMessageActions = {
           source: "firefoxview",
         });
         break;
-      case "RELOAD_BROWSER":
-        browser.reload();
+      case "ENABLE_CBH":
+        window.gCookieBannerHandlingExperiment.onActivate();
         break;
     }
   },
