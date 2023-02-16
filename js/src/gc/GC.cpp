@@ -2772,7 +2772,6 @@ void GCRuntime::endPreparePhase(JS::GCReason reason) {
     // Discard JIT code. For incremental collections, the sweep phase will
     // also discard JIT code.
     discardJITCodeForGC();
-    startBackgroundFreeAfterMinorGC();
 
     /*
      * Relazify functions after discarding JIT code (we can't relazify
@@ -2798,6 +2797,8 @@ void GCRuntime::endPreparePhase(JS::GCReason reason) {
      * it. This object might never be marked, so a GC hazard would exist.
      */
     purgeRuntime();
+
+    startBackgroundFreeAfterMinorGC();
 
     if (isShutdownGC()) {
       /* Clear any engine roots that may hold external data live. */
