@@ -358,10 +358,6 @@ export class IEProfileMigrator extends MigratorBase {
     return "migration-wizard-migrator-display-name-ie";
   }
 
-  static get brandImage() {
-    return "chrome://browser/content/migration/brands/ie.png";
-  }
-
   getResources() {
     let resources = [MSMigrationUtils.getBookmarksMigrator(), new History()];
     // Only support the form password migrator for Windows XP to 7.
