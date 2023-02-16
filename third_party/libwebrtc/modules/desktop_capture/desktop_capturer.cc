@@ -25,11 +25,6 @@
 #include "rtc_base/win/windows_version.h"
 #endif  // defined(RTC_ENABLE_WIN_WGC)
 
-#if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
-#include <gtk/gtk.h>
-#include <gtk/gtkx.h>
-#endif
-
 namespace webrtc {
 
 DesktopCapturer::~DesktopCapturer() = default;
