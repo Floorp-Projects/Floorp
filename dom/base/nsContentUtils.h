@@ -2873,13 +2873,12 @@ class nsContentUtils {
 
   static void TransferablesToIPCTransferables(
       nsIArray* aTransferables, nsTArray<mozilla::dom::IPCDataTransfer>& aIPC,
-      bool aInSyncMessage, mozilla::dom::ContentChild* aChild,
-      mozilla::dom::ContentParent* aParent);
+      bool aInSyncMessage, mozilla::dom::ContentParent* aParent);
 
   static void TransferableToIPCTransferable(
       nsITransferable* aTransferable,
       mozilla::dom::IPCDataTransfer* aIPCDataTransfer, bool aInSyncMessage,
-      mozilla::dom::ContentChild* aChild, mozilla::dom::ContentParent* aParent);
+      mozilla::dom::ContentParent* aParent);
 
   /*
    * Get the pixel data from the given source surface and return it as a

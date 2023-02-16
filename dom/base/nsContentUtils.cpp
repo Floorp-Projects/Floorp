@@ -7997,8 +7997,7 @@ nsresult nsContentUtils::IPCTransferableItemToVariant(
 
 void nsContentUtils::TransferablesToIPCTransferables(
     nsIArray* aTransferables, nsTArray<IPCDataTransfer>& aIPC,
-    bool aInSyncMessage, mozilla::dom::ContentChild* aChild,
-    mozilla::dom::ContentParent* aParent) {
+    bool aInSyncMessage, mozilla::dom::ContentParent* aParent) {
   aIPC.Clear();
   if (aTransferables) {
     uint32_t transferableCount = 0;
@@ -8007,8 +8006,7 @@ void nsContentUtils::TransferablesToIPCTransferables(
       IPCDataTransfer* dt = aIPC.AppendElement();
       nsCOMPtr<nsITransferable> transferable =
           do_QueryElementAt(aTransferables, i);
-      TransferableToIPCTransferable(transferable, dt, aInSyncMessage, aChild,
-                                    aParent);
+      TransferableToIPCTransferable(transferable, dt, aInSyncMessage, aParent);
     }
   }
 }
@@ -8103,9 +8101,8 @@ static IPCDataTransferCString AsIPCDataTransferCString(
 
 void nsContentUtils::TransferableToIPCTransferable(
     nsITransferable* aTransferable, IPCDataTransfer* aIPCDataTransfer,
-    bool aInSyncMessage, mozilla::dom::ContentChild* aChild,
-    mozilla::dom::ContentParent* aParent) {
-  MOZ_ASSERT((aChild && !aParent) || (!aChild && aParent));
+    bool aInSyncMessage, mozilla::dom::ContentParent* aParent) {
+  MOZ_ASSERT_IF(XRE_IsParentProcess(), aParent);
 
   if (aTransferable) {
     nsTArray<nsCString> flavorList;
