@@ -571,8 +571,8 @@ JS::OffThreadToken* OffThreadJob::waitUntilDone(JSContext* cx) {
 }
 
 struct ShellCompartmentPrivate {
-  GCPtr<JSObject*> blackRoot;
-  GCPtr<JSObject*> grayRoot;
+  GCPtr<ArrayObject*> blackRoot;
+  GCPtr<ArrayObject*> grayRoot;
 };
 
 struct MOZ_STACK_CLASS EnvironmentPreparer
@@ -787,11 +787,19 @@ static void TraceRootArrays(JSTracer* trc, gc::MarkColor color) {
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
       auto priv = static_cast<ShellCompartmentPrivate*>(
           JS_GetCompartmentPrivate(comp.get()));
-      if (priv) {
-        if (color == gc::MarkColor::Black) {
-          TraceNullableEdge(trc, &priv->blackRoot, "test black root");
-        } else {
-          TraceNullableEdge(trc, &priv->grayRoot, "test gray root");
+      if (!priv) {
+        continue;
+      }
+
+      GCPtr<ArrayObject*>& array =
+          (color == gc::MarkColor::Black) ? priv->blackRoot : priv->grayRoot;
+      TraceNullableEdge(trc, &array, "shell root array");
+
+      if (array) {
+        // Trace the array elements as part of root marking.
+        for (uint32_t i = 0; i < array->length(); i++) {
+          Value& value = const_cast<Value&>(array->getDenseElement(i));
+          TraceManuallyBarrieredEdge(trc, &value, "shell root array element");
         }
       }
     }
@@ -7856,7 +7864,8 @@ static bool DumpScopeChain(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 // For testing GC marking, blackRoot() and grayRoot() will heap-allocate an
-// array that will be marked as a root in GC.
+// array whose elements (as well as the array itself) will be marked as roots in
+// subsequent GCs.
 //
 // Note that EnsureGrayRoot() will blacken the returned object, so it will not
 // actually end up marked gray until the following GC clears the black bit
@@ -7881,7 +7890,7 @@ static bool EnsureRootArray(JSContext* cx, gc::MarkColor color, unsigned argc,
     return false;
   }
 
-  GCPtr<JSObject*>& root =
+  GCPtr<ArrayObject*>& root =
       (color == gc::MarkColor::Black) ? priv->blackRoot : priv->grayRoot;
 
   if (!root && !(root = NewTenuredDenseEmptyArray(cx))) {
@@ -9274,13 +9283,13 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 
     JS_FN_HELP("blackRoot", EnsureBlackRoot, 0, 0,
 "blackRoot()",
-"  Return an array in the current compartment that will be marked black by\n"
-"  the GC."),
+"  Return an array in the current compartment whose elements will be marked\n"
+"  as black roots by the GC."),
 
     JS_FN_HELP("grayRoot", EnsureGrayRoot, 0, 0,
 "grayRoot()",
-"  Return an array in the current compartment that will be marked gray by\n"
-"  the GC."),
+"  Return an array in the current compartment whose elements will be marked\n"
+"  as gray roots by the GC."),
 
     JS_FN_HELP("addMarkObservers", AddMarkObservers, 1, 0,
 "addMarkObservers(array_of_objects)",
