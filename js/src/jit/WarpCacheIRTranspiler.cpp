@@ -1154,17 +1154,7 @@ bool WarpCacheIRTranspiler::emitGuardBooleanToInt32(ValOperandId inputId,
                                                     Int32OperandId resultId) {
   MDefinition* input = getOperand(inputId);
 
-  MDefinition* boolean;
-  if (input->type() == MIRType::Boolean) {
-    boolean = input;
-  } else {
-    auto* unbox =
-        MUnbox::New(alloc(), input, MIRType::Boolean, MUnbox::Fallible);
-    add(unbox);
-    boolean = unbox;
-  }
-
-  auto* ins = MToIntegerInt32::New(alloc(), boolean);
+  auto* ins = MBooleanToInt32::New(alloc(), input);
   add(ins);
 
   return defineOperand(resultId, ins);

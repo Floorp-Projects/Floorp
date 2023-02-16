@@ -1218,28 +1218,6 @@ void CodeGenerator::visitFloat32ToInt32(LFloat32ToInt32* lir) {
   bailoutFrom(&fail, lir->snapshot());
 }
 
-void CodeGenerator::visitDoubleToIntegerInt32(LDoubleToIntegerInt32* lir) {
-  FloatRegister input = ToFloatRegister(lir->input());
-  Register output = ToRegister(lir->output());
-
-  auto* ool = new (alloc()) OutOfLineZeroIfNaN(lir, input, output);
-  addOutOfLineCode(ool, lir->mir());
-
-  masm.branchTruncateDoubleToInt32(input, output, ool->entry());
-  masm.bind(ool->rejoin());
-}
-
-void CodeGenerator::visitFloat32ToIntegerInt32(LFloat32ToIntegerInt32* lir) {
-  FloatRegister input = ToFloatRegister(lir->input());
-  Register output = ToRegister(lir->output());
-
-  auto* ool = new (alloc()) OutOfLineZeroIfNaN(lir, input, output);
-  addOutOfLineCode(ool, lir->mir());
-
-  masm.branchTruncateFloat32ToInt32(input, output, ool->entry());
-  masm.bind(ool->rejoin());
-}
-
 void CodeGenerator::visitInt32ToIntPtr(LInt32ToIntPtr* lir) {
 #ifdef JS_64BIT
   Register output = ToRegister(lir->output());

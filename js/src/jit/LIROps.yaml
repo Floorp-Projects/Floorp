@@ -1303,28 +1303,6 @@
     in: WordSized
   mir_op: ToNumberInt32
 
-# Truncates a double to an int32.
-#   Input: floating-point Register
-#   Output: 32-bit integer
-#   Bailout: if the double when converted to an integer exceeds the int32
-#            bounds. No bailout for NaN or negative zero.
-- name: DoubleToIntegerInt32
-  result_type: WordSized
-  operands:
-    in: WordSized
-  mir_op: ToIntegerInt32
-
-# Truncates a float to an int32.
-#   Input: floating-point Register
-#   Output: 32-bit integer
-#   Bailout: if the double when converted to an integer exceeds the int32
-#            bounds. No bailout for NaN or negative zero.
-- name: Float32ToIntegerInt32
-  result_type: WordSized
-  operands:
-    in: WordSized
-  mir_op: ToIntegerInt32
-
 # Convert a double to a truncated int32.
 #   Input: floating-point Register
 #   Output: 32-bit integer

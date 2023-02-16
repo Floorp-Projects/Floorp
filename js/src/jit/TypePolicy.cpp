@@ -381,6 +381,15 @@ template bool SymbolPolicy<0>::staticAdjustInputs(TempAllocator& alloc,
                                                   MInstruction* ins);
 
 template <unsigned Op>
+bool BooleanPolicy<Op>::staticAdjustInputs(TempAllocator& alloc,
+                                           MInstruction* ins) {
+  return UnboxOperand(alloc, ins, Op, MIRType::Boolean);
+}
+
+template bool BooleanPolicy<0>::staticAdjustInputs(TempAllocator& alloc,
+                                                   MInstruction* ins);
+
+template <unsigned Op>
 bool StringPolicy<Op>::staticAdjustInputs(TempAllocator& alloc,
                                           MInstruction* ins) {
   return UnboxOperand(alloc, ins, Op, MIRType::String);
@@ -663,8 +672,7 @@ bool ToDoublePolicy::staticAdjustInputs(TempAllocator& alloc,
 
 bool ToInt32Policy::staticAdjustInputs(TempAllocator& alloc,
                                        MInstruction* ins) {
-  MOZ_ASSERT(ins->isToNumberInt32() || ins->isTruncateToInt32() ||
-             ins->isToIntegerInt32());
+  MOZ_ASSERT(ins->isToNumberInt32() || ins->isTruncateToInt32());
 
   IntConversionInputKind conversion = IntConversionInputKind::Any;
   if (ins->isToNumberInt32()) {
@@ -681,9 +689,7 @@ bool ToInt32Policy::staticAdjustInputs(TempAllocator& alloc,
       return true;
     case MIRType::Undefined:
       // No need for boxing when truncating.
-      // Also no need for boxing when performing ToInteger, because
-      // ToInteger(undefined) = ToInteger(NaN) = 0.
-      if (ins->isTruncateToInt32() || ins->isToIntegerInt32()) {
+      if (ins->isTruncateToInt32()) {
         return true;
       }
       break;
@@ -1013,6 +1019,7 @@ bool ClampPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
 
 #define TEMPLATE_TYPE_POLICY_LIST(_)                                          \
   _(BigIntPolicy<0>)                                                          \
+  _(BooleanPolicy<0>)                                                         \
   _(BoxExceptPolicy<0, MIRType::Object>)                                      \
   _(BoxPolicy<0>)                                                             \
   _(ConvertToInt32Policy<0>)                                                  \

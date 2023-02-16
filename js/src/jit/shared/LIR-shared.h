@@ -1951,10 +1951,6 @@ class LValueToInt32 : public LInstructionHelper<1, BOX_PIECES, 2> {
     MOZ_ASSERT(mode_ == TRUNCATE);
     return mir_->toTruncateToInt32();
   }
-  MToIntegerInt32* mirTruncateNoWrap() const {
-    MOZ_ASSERT(mode_ == TRUNCATE_NOWRAP);
-    return mir_->toToIntegerInt32();
-  }
   MInstruction* mir() const { return mir_->toInstruction(); }
 };
 

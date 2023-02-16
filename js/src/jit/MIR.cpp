@@ -3720,40 +3720,12 @@ MDefinition* MToNumberInt32::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
-MDefinition* MToIntegerInt32::foldsTo(TempAllocator& alloc) {
+MDefinition* MBooleanToInt32::foldsTo(TempAllocator& alloc) {
   MDefinition* input = getOperand(0);
+  MOZ_ASSERT(input->type() == MIRType::Boolean);
 
-  // Fold this operation if the input operand is constant.
   if (input->isConstant()) {
-    switch (input->type()) {
-      case MIRType::Undefined:
-      case MIRType::Null:
-        return MConstant::New(alloc, Int32Value(0));
-      case MIRType::Boolean:
-        return MConstant::New(alloc,
-                              Int32Value(input->toConstant()->toBoolean()));
-      case MIRType::Int32:
-        return MConstant::New(alloc,
-                              Int32Value(input->toConstant()->toInt32()));
-      case MIRType::Float32:
-      case MIRType::Double: {
-        double result = JS::ToInteger(input->toConstant()->numberToDouble());
-        int32_t ival;
-        // Only the value within the range of Int32 can be substituted as
-        // constant.
-        if (mozilla::NumberEqualsInt32(result, &ival)) {
-          return MConstant::New(alloc, Int32Value(ival));
-        }
-        break;
-      }
-      default:
-        break;
-    }
-  }
-
-  // See the comment in |MToNumberInt32::foldsTo|.
-  if (input->type() == MIRType::Int32 && !IsUint32Type(input)) {
-    return input;
+    return MConstant::New(alloc, Int32Value(input->toConstant()->toBoolean()));
   }
 
   return this;

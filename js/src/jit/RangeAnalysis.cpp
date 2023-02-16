@@ -1232,10 +1232,6 @@ Range* Range::NaNToZero(TempAllocator& alloc, const Range* op) {
   return copy;
 }
 
-Range* Range::toIntegerInt32(TempAllocator& alloc, const Range* op) {
-  return Range::NaNToZero(alloc, Range::ceil(alloc, op));
-}
-
 bool Range::negativeZeroMul(const Range* lhs, const Range* rhs) {
   // The result can only be negative zero if both sides are finite and they
   // have differing signs.
@@ -1729,9 +1725,8 @@ void MToNumberInt32::computeRange(TempAllocator& alloc) {
   setRange(new (alloc) Range(getOperand(0)));
 }
 
-void MToIntegerInt32::computeRange(TempAllocator& alloc) {
-  Range other(input());
-  setRange(Range::toIntegerInt32(alloc, &other));
+void MBooleanToInt32::computeRange(TempAllocator& alloc) {
+  setRange(Range::NewUInt32Range(alloc, 0, 1));
 }
 
 void MLimitedTruncate::computeRange(TempAllocator& alloc) {
