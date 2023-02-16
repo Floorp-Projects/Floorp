@@ -540,7 +540,7 @@ function showNativeFallbackWarning() {
   if (skipReason.includes("HEURISTIC_TRIPPED")) {
     descriptionTag = "neterror-dns-not-found-native-fallback-heuristic";
   } else if (skipReason == "TRR_NOT_CONFIRMED") {
-    descriptionTag = "neterror-dns-not-found-native-fallback-not-confirmed";
+    descriptionTag = "neterror-dns-not-found-native-fallback-not-confirmed2";
   }
 
   let description = document.getElementById("nativeFallbackDescription");
