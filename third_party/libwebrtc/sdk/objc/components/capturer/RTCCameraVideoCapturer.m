@@ -186,6 +186,7 @@ const int64_t kNanosecondsPerSecond = 1000000000;
                       [self updateOrientation];
                       [self updateDeviceCaptureFormat:format fps:fps];
                       [self updateVideoDataOutputPixelFormat:format];
+                      [_videoDataOutput setSampleBufferDelegate:self queue:self.frameQueue];
                       [self.captureSession startRunning];
                       [self.currentDevice unlockForConfiguration];
                       self.isRunning = YES;
@@ -470,7 +471,6 @@ const int64_t kNanosecondsPerSecond = 1000000000;
   _outputPixelFormat = _preferredOutputPixelFormat;
   videoDataOutput.videoSettings = @{(NSString *)kCVPixelBufferPixelFormatTypeKey : pixelFormat};
   videoDataOutput.alwaysDiscardsLateVideoFrames = NO;
-  [videoDataOutput setSampleBufferDelegate:self queue:self.frameQueue];
   _videoDataOutput = videoDataOutput;
 }
 
