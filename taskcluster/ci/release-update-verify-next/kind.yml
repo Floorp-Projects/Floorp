@@ -36,7 +36,7 @@ job-defaults:
         env:
             CHANNEL: "esr-localtest-next"
     treeherder:
-        symbol: UV(UVnext)
+        symbol: UVnext()
         kind: test
     extra:
         chunks: 12
