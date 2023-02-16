@@ -13414,7 +13414,7 @@
 # No way to enable on Android, Bug 1552602
 - name: security.webauth.u2f
   type: bool
-  value: @IS_NOT_ANDROID@
+  value: false
   mirror: always
 
 # WebAuthn CTAP2 support
