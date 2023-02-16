@@ -3280,6 +3280,23 @@ void HttpBaseChannel::AllowOpaqueResponseAfterSniff() {
   mORB->AllowResponse();
 }
 
+void HttpBaseChannel::SetChannelBlockedByOpaqueResponse() {
+  mChannelBlockedByOpaqueResponse = true;
+
+  RefPtr<dom::CanonicalBrowsingContext> browsingContext =
+      dom::CanonicalBrowsingContext::Get(mTopBrowsingContextId);
+  if (!browsingContext) {
+    return;
+  }
+
+  dom::WindowGlobalParent* windowContext =
+      browsingContext->GetTopWindowContext();
+
+  if (windowContext) {
+    windowContext->SetHasBlockedOpaqueResponse();
+  }
+}
+
 NS_IMETHODIMP
 HttpBaseChannel::SetCookie(const nsACString& aCookieHeader) {
   if (mLoadFlags & LOAD_ANONYMOUS) return NS_OK;

@@ -17194,5 +17194,14 @@
     "n_buckets": 50,
     "bug_numbers": [1804638],
     "description": "Time (in ms) that it takes to receive data for ORB JavaScript validation, including IPC to the validator actor."
+  },
+  "ORB_DID_EVER_BLOCK_RESPONSE": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["farre@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "bug_numbers": [1812051],
+    "description": "If any opaque response was blocked for a given top-level window context."
   }
 }
