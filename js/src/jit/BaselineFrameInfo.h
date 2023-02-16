@@ -220,6 +220,7 @@ class FrameInfo {
 };
 
 class CompilerFrameInfo : public FrameInfo {
+  friend class BaselinePerfSpewer;
   JSScript* script;
   FixedList<StackValue> stack;
   size_t spIndex;
