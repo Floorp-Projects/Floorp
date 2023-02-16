@@ -498,6 +498,51 @@ class ScriptModule extends Module {
     return { realms: await this.#getRealmInfos(destination) };
   }
 
+  /**
+   * Removes a preload script.
+   *
+   * @param {Object=} options
+   * @param {string} script
+   *     The unique id associated with a preload script.
+   *
+   * @throws {InvalidArgumentError}
+   *     If any of the arguments does not have the expected type.
+   * @throws {NoSuchScriptError}
+   *     If the script cannot be found.
+   */
+  async removePreloadScript(options = {}) {
+    const { script } = options;
+
+    lazy.assert.string(
+      script,
+      `Expected "script" to be a string, got ${script}`
+    );
+
+    if (!this.#preloadScriptMap.has(script)) {
+      throw new lazy.error.NoSuchScriptError(
+        `Preload script with id ${script} not found`
+      );
+    }
+
+    const preloadScript = this.#preloadScriptMap.get(script);
+
+    await this.messageHandler.removeSessionData({
+      category: "preload-script",
+      moduleName: "script",
+      values: [
+        {
+          ...preloadScript,
+          script,
+        },
+      ],
+      contextDescriptor: {
+        type: lazy.ContextDescriptorType.All,
+      },
+    });
+
+    this.#preloadScriptMap.delete(script);
+  }
+
   #assertResultOwnership(resultOwnership) {
     if (
       ![lazy.OwnershipModel.None, lazy.OwnershipModel.Root].includes(
