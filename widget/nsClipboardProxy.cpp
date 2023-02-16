@@ -34,7 +34,7 @@ nsClipboardProxy::SetData(nsITransferable* aTransferable,
 
   IPCDataTransfer ipcDataTransfer;
   nsContentUtils::TransferableToIPCTransferable(aTransferable, &ipcDataTransfer,
-                                                false, child, nullptr);
+                                                false, nullptr);
 
   bool isPrivateData = aTransferable->GetIsPrivateData();
   nsCOMPtr<nsIPrincipal> requestingPrincipal =
