@@ -24,7 +24,6 @@ menucaption {
   -moz-default-appearance: menuitem;
   -moz-box-align: center;
   list-style-image: none;
-  -moz-image-region: auto;
 }
 
 @media (-moz-windows-non-native-menus) {

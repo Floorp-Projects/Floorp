@@ -372,7 +372,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 #BMB_bookmarksToolbar,
 #panelMenu_bookmarksToolbar {
   list-style-image: url("chrome://browser/skin/places/bookmarksToolbar.svg");
-  -moz-image-region: auto;
 }
 
 /* Status panel */

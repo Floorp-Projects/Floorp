@@ -26,7 +26,6 @@ menucaption {
   padding: 4px 6px;
   max-width: 42em;
   list-style-image: none;
-  -moz-image-region: auto;
 
   /* Specify our background to avoid triggering reflows on hover. This is an
    * optimization, as backgrounds don't disable theming on XUL elements, but
@@ -136,7 +135,6 @@ menulist > menupopup > :is(menuitem, menucaption, menu) {
   height: 1ex;
   /* These next two rules are needed to prevent inheritance and thus ugliness */
   list-style-image: none;
-  -moz-image-region: auto;
   appearance: auto;
   -moz-default-appearance: menuarrow;
 }
