@@ -672,13 +672,20 @@ def update_git_tools(git: Optional[Path], root_state_dir: Path):
     if not exists or cinnabar_exe.stat().st_size == 0:
         from urllib.request import urlopen
 
+        import certifi
+
         if not cinnabar_dir.exists():
             cinnabar_dir.mkdir()
 
         cinnabar_url = "https://github.com/glandium/git-cinnabar/"
         download_py = cinnabar_dir / "download.py"
         with open(download_py, "wb") as fh:
-            shutil.copyfileobj(urlopen(f"{cinnabar_url}/raw/master/download.py"), fh)
+            shutil.copyfileobj(
+                urlopen(
+                    f"{cinnabar_url}/raw/master/download.py", cafile=certifi.where()
+                ),
+                fh,
+            )
 
         try:
             subprocess.check_call(

@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 from urllib.request import urlopen
 
+import certifi
 from mach.site import PythonVirtualenv
 from mach.util import get_state_dir
 
@@ -33,7 +34,7 @@ def http_download_and_save(url, dest: Path, hexhash, digest="sha256"):
     that will be used to validate the downloaded file using the given
     digest algorithm.  The value of digest can be any value accepted by
     hashlib.new.  The default digest used is 'sha256'."""
-    f = urlopen(url)
+    f = urlopen(url, cafile=certifi.where())
     h = hashlib.new(digest)
     with open(dest, "wb") as out:
         while True:
