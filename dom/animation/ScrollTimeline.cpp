@@ -172,10 +172,10 @@ Nullable<TimeDuration> ScrollTimeline::GetCurrentTimeAsDuration() const {
 
   const auto orientation = Axis();
 
-  // If this orientation is not ready for scrolling (i.e. the scroll range is
-  // not larger than or equal to one device pixel), we make it 100%.
+  // If there is no scrollable overflow, then the ScrollTimeline is inactive.
+  // https://drafts.csswg.org/scroll-animations-1/#scrolltimeline-interface
   if (!scrollFrame->GetAvailableScrollingDirections().contains(orientation)) {
-    return TimeDuration::FromMilliseconds(PROGRESS_TIMELINE_DURATION_MILLISEC);
+    return nullptr;
   }
 
   const nsPoint& scrollOffset = scrollFrame->GetScrollPosition();
