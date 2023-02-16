@@ -626,15 +626,22 @@ export var PictureInPicture = {
       requestingWin.devicePixelRatio / requestingWin.desktopToDeviceScale;
 
     let top, left, width, height;
-    if (isPlayer) {
+    if (!isPlayer) {
+      // requestingWin is a content window, load last PiP's dimensions
+      ({ top, left, width, height } = this.loadPosition());
+    } else if (requestingWin.windowState === requestingWin.STATE_FULLSCREEN) {
+      // `requestingWin` is a PiP window and in fullscreen. We stored the size
+      // and position before entering fullscreen and we will use that to
+      // calculate the new position
+      ({ top, left, width, height } = requestingWin.getDeferredResize());
+      left *= requestingCssToDesktopScale;
+      top *= requestingCssToDesktopScale;
+    } else {
       // requestingWin is a PiP player, conserve its dimensions in this case
       left = requestingWin.screenX * requestingCssToDesktopScale;
       top = requestingWin.screenY * requestingCssToDesktopScale;
       width = requestingWin.outerWidth;
       height = requestingWin.outerHeight;
-    } else {
-      // requestingWin is a content window, load last PiP's dimensions
-      ({ top, left, width, height } = this.loadPosition());
     }
 
     // Check that previous location and size were loaded.
@@ -968,9 +975,7 @@ export var PictureInPicture = {
       return;
     }
 
-    let { top, left, width, height } = this.fitToScreen(win, videoData);
-    win.resizeTo(width, height);
-    win.moveTo(left, top);
+    win.resizeToVideo(this.fitToScreen(win, videoData));
   },
 
   /**

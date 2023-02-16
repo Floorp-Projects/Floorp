@@ -80,6 +80,25 @@ function setIsMutedState(isMuted) {
   Player.isMuted = isMuted;
 }
 
+/**
+ * Function to resize and reposition the PiP window
+ * @param {Object} rect
+ *   An object containing `left`, `top`, `width`, and `height` for the PiP
+ *   window
+ */
+function resizeToVideo(rect) {
+  Player.resizeToVideo(rect);
+}
+
+/**
+ * Returns an object containing `left`, `top`, `width`, and `height` of the
+ * PiP window before entering fullscreen. Will be null if the PiP window is
+ * not in fullscreen.
+ */
+function getDeferredResize() {
+  return Player.deferredResize;
+}
+
 function enableSubtitlesButton() {
   Player.enableSubtitlesButton();
 }
@@ -144,6 +163,12 @@ let Player = {
    * Gets updated whenever a new hover state is detected.
    */
   isCurrentHover: false,
+
+  /**
+   * Store the size and position of the window before entering fullscreen and
+   * use this to correctly position the window when exiting fullscreen
+   */
+  deferredResize: null,
 
   /**
    * Initializes the player browser, and sets up the initial state.
@@ -379,6 +404,13 @@ let Player = {
             Services.obs.notifyObservers(window, "fullscreen-painted");
           }
         });
+
+        // If we are exiting fullscreen we want to resize the window to the
+        // stored size and position
+        if (this.deferredResize && event.type === "MozDOMFullscreen:Exited") {
+          this.resizeToVideo(this.deferredResize);
+          this.deferredResize = null;
+        }
 
         // Sets the title for fullscreen button when PIP is in Enter Fullscreen mode and Exit Fullscreen mode
         const fullscreenButton = document.getElementById("fullscreen");
@@ -616,7 +648,25 @@ let Player = {
     if (this.isFullscreen) {
       document.exitFullscreen();
     } else {
+      this.deferredResize = {
+        left: window.screenX,
+        top: window.screenY,
+        width: window.innerWidth,
+        height: window.innerHeight,
+      };
       document.body.requestFullscreen();
+    }
+  },
+
+  resizeToVideo(rect) {
+    if (this.isFullscreen) {
+      // We store the size and position because resizing the PiP window
+      // while fullscreened will cause issues
+      this.deferredResize = rect;
+    } else {
+      let { left, top, width, height } = rect;
+      window.resizeTo(width, height);
+      window.moveTo(left, top);
     }
   },
 
