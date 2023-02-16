@@ -10,7 +10,7 @@
     <!-- Label used for buttons, e.g. in dialogs -->
     <string name="action_ok">እሺ</string>
 
-    <string name="action_save">ማስቀመጥ</string>
+    <string name="action_save">አስቀምጥ</string>
 
     <!-- This text is shown in the URL bar when it's empty -->
     <string name="urlbar_hint">ፍለጋ ወይም አድራሻ ያስገቡ</string>
@@ -26,7 +26,7 @@
     <string name="feedback_erase_custom_tab">የትሩ የአሰሳ ታሪክ ተደምስሷል።</string>
 
     <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
-    <string name="search_hint">ምፈልገው %1$s</string>
+    <string name="search_hint">ፈልግ ስለ %1$s</string>
 
     <!-- Menu item: Share the currently visible page -->
     <string name="menu_share">ያጋሩ…\n\n</string>
@@ -46,7 +46,7 @@
     <string name="menu_open_with_a_browser2">ክፈት በ…</string>
 
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
-    <string name="menu_add_to_home_screen">ወደ መነሻ ማያ ገጽ ማከል\n</string>
+    <string name="menu_add_to_home_screen">ወደ መነሻ ማያ ገጽ አክል</string>
 
     <!-- Menu item: Add the current site as a shortcut on the Home screen -->
     <string name="menu_add_to_shortcuts">ወደ አቋራጭ ጨምር</string>
@@ -84,7 +84,7 @@
 
     <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
          sharing an URL. -->
-    <string name="share_dialog_title">በኩል ያጋሩ</string>
+    <string name="share_dialog_title">ያጋሩ በ</string>
 
     <!-- While a browsing session is active (in the foreground or background) we will show a notification
          so that the user doesn't forget about the website still being open. This text is shown in
@@ -322,7 +322,7 @@
      app's content (in our case especially the content of webpages) to show up in the "recent apps"
      screen. Additionally Android will prevent the user from taking screenshots or casting the app
      to other displays. -->
-    <string name="preference_privacy_stealth_summary">መተግበሪያዎችን በሚቀይሩበት ጊዜ ድረ-ገጾችን ደብቅ\n</string>
+    <string name="preference_privacy_stealth_summary">መተግበሪያዎች በሚቀይሩበት ጊዜ ድረ-ገጾችን ደብቅ እና ስክሪንሻት መውሰድን አግድ።</string>
 
     <string name="preference_category_security">ደህንነት</string>
 
@@ -815,6 +815,9 @@
     <!-- Title of the completed section on the studies list -->
     <string name="studies_completed">የተጠናቀቀ</string>
 
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">በUSB/Wi-Fi በኩል የርቀት ማረም</string>
+
     <!-- Text Button for show biometric prompt -->
     <string name="show_biometric_button_text">ይክፈቱ</string>
 
@@ -991,6 +994,84 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">የመሳሪያውን ገጽታ ተከተል</string>
 
-     <!-- Promote SearchWidget Dialog -->
+     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">የጠየቁት ድረ-ገፅ HTTPSን አይደግፍም</string>
 
-    </resources>
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">ይህ ድረ-ገፅ HTTPSን አይደግፍም</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">በነባሪነት %1$s ለበለጠ ደህንነት HTTPS በመጠቀም ለመገናኘት ይሞክራል። ይህን ቅንብር ለመለወጥ ወይም የበለጠ ለማወቅ ወደ ቅንብሮች &gt; ግላዊነት እና ደህንነት &gt; ደህንነት ይሂዱ።</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s ለበለጠ ደህንነት በተቻለ መጠን የHTTPS ግንኙነት ለመጠቀም ይሞክራል።
+     <a href="%2$s">የበለጠ ለመረዳት</a> <br/><br/>
+     ይህን ቅንብር በቅንብሮች> ግላዊነት &amp; ደህንነት > ደህንነት።]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">ግንኙነት ደህንነቱ የተጠበቀ አይደለም</string>
+
+    <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    ይህ የሰርቨር  ውቅር ችግር ሊሆን ይችላል፣ ወይም ሰርቨሩን ለመምሰል የሚሞክር ሰው ሊሆን ይችላል። <br/><br/>
+    ከዚህ ሰርቨር ጋር ከዚህ ቀደም በተሳካ ሁኔታ ከተገናኙ፤ ስህተቱ ጊዜያዊ ሊሆን ይችላል።
+    ]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>አንድ ሰው ድረ-ገፁን ለማስመሰል እየሞከረ ሊሆን ይችላል እና መቀጠል አደገኛ ሊሆን ይችላል።</label>
+        <br><br>
+        <label>%1$s <b>%2$s</b>ን አያምንም ምክንያቱም የእውቅና ማረጋገጫ ሰጪው ስለማይታወቅ፣ የእውቅና ማረጋገጫው በራሱ የተፈረመ ነው ወይም ሰርቨሩ ትክክለኛ መካከለኛ የእውቅና ማረጋገጫዎችን እየላከ አይደለም።</label>
+    ]]></string>
+
+     <!-- Sessions List -->
+    <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
+    <string name="close_tab">ትርን ዝጋ</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon2">ይዘናቸዋል! ይህ ድረ-ገፅ እርስዎን እንዳይሰልል አቁመነዋል። የምንከለክለውን ለማየት በማንኛውም ጊዜ መከለያውን ይንኩ።</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">ብቅ ባይን ዝጋ</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">እርስዎ ጥበቃ ይደረግልዎታል!</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">እነዚህ ነባሪ ቅንጅቶች ጠንካራ ጥበቃ ይሰጣሉ። ግን ልዩ ፍላጎቶችዎን ለማሟላት ቅንብሮቹን ማስተካከል ቀላል ነው።</string>
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">አሰናብት</string>
+
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon2">ሁሉንም - ታሪክን፣ ኩኪዎችን፣ ሁሉንም ነገር ለማጥፋት እዚህ ነካ ያድርጉ እና በአዲስ ትር ላይ አዲስ ይጀምሩ።</string>
+
+    <!-- Promote SearchWidget Dialog -->
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_content_description">ዝጋ</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_picture_content_description">የፍለጋ መግብር</string>
+
+    <!-- This is the title of promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_title">የአሰሳ ታሪክ ጸድቷል! 🎉</string>
+
+    <!-- Banner Info Message than will appear when user first enters in the app. The location is at the toolbar. -->
+    <string name="cfr_for_start_browsing">የግል አሰሳ ክፍለ ጊዜህን ጀምር፣ እና ሲጠቀሙ መከታተያዎችን እና ሌሎች መጥፎ ነገሮችን እናግዳለን።</string>
+
+    <!-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. "Focus") -->
+    <string name="promote_search_widget_dialog_subtitle">እርስዎን ከግል አሰሳዎ ጋር እንተውዎታለን፣ ነገር-ግን በሚቀጥለው ጊዜ በመነሻ ማያዎ ላይ ባለው %1$s መግብር በፍጥነት ይጀምሩ።</string>
+
+    <!-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. -->
+    <string name="promote_search_widget_button_text">መግብርን ወደ መነሻ ማያ ገጽ ያክሉ</string>
+
+    <!-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. -->
+    <string name="promote_search_widget_snackbar_message">መግብር ወደ መነሻ ማያ ገጽ ታክሏል</string>
+</resources>
