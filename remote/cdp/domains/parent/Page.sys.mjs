@@ -12,6 +12,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   DialogHandler:
     "chrome://remote/content/cdp/domains/parent/page/DialogHandler.sys.mjs",
   PollPromise: "chrome://remote/content/shared/Sync.sys.mjs",
+  print: "chrome://remote/content/shared/PDF.sys.mjs",
   streamRegistry: "chrome://remote/content/cdp/domains/parent/IO.sys.mjs",
   Stream: "chrome://remote/content/cdp/StreamRegistry.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
@@ -586,9 +587,6 @@ export class Page extends Domain {
       throw new TypeError("paperWidth is zero or negative");
     }
 
-    let path;
-    let stream;
-
     const psService = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
       Ci.nsIPrintSettingsService
     );
@@ -599,37 +597,6 @@ export class Page extends Domain {
     printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
     printSettings.printerName = "";
     printSettings.printSilent = true;
-
-    if (transferMode === PDF_TRANSFER_MODES.stream) {
-      // If we are returning a stream, we write the PDF to disk so that we don't
-      // keep (potentially very large) PDFs in memory. We can then stream them
-      // to the client via the returned Stream.
-      //
-      // NOTE: This is a potentially premature optimization -- it might be fine
-      // to keep these PDFs in memory, but we don't have specifics on how CDP is
-      // used in the field so it is possible that leaving the PDFs in memory
-      // could cause a regression.
-      path = await IOUtils.createUniqueFile(
-        PathUtils.tempDir,
-        "remote-agent.pdf"
-      );
-
-      printSettings.outputDestination =
-        Ci.nsIPrintSettings.kOutputDestinationFile;
-      printSettings.toFileName = path;
-    } else {
-      // If we are returning the data immediately, there is no sense writing it
-      // to disk only to read it later.
-      const UINT32_MAX = 0xffffffff;
-      stream = Cc["@mozilla.org/storagestream;1"].createInstance(
-        Ci.nsIStorageStream
-      );
-      stream.init(4096, UINT32_MAX);
-
-      printSettings.outputDestination =
-        Ci.nsIPrintSettings.kOutputDestinationStream;
-      printSettings.outputStream = stream.getOutputStream(0);
-    }
 
     printSettings.paperSizeUnit = Ci.nsIPrintSettings.kPaperSizeInches;
     printSettings.paperWidth = paperWidth;
@@ -658,26 +625,35 @@ export class Page extends Domain {
       printSettings.orientation = Ci.nsIPrintSettings.kLandscapeOrientation;
     }
 
+    const retval = { data: null, stream: null };
     const { linkedBrowser } = this.session.target.tab;
 
-    await linkedBrowser.browsingContext.print(printSettings);
-
-    const retval = { data: null, stream: null };
-    if (transferMode == PDF_TRANSFER_MODES.stream) {
-      retval.stream = lazy.streamRegistry.add(new lazy.Stream(path));
-    } else {
-      const inputStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
-        Ci.nsIBinaryInputStream
+    if (transferMode === PDF_TRANSFER_MODES.stream) {
+      // If we are returning a stream, we write the PDF to disk so that we don't
+      // keep (potentially very large) PDFs in memory. We can then stream them
+      // to the client via the returned Stream.
+      //
+      // NOTE: This is a potentially premature optimization -- it might be fine
+      // to keep these PDFs in memory, but we don't have specifics on how CDP is
+      // used in the field so it is possible that leaving the PDFs in memory
+      // could cause a regression.
+      const path = await IOUtils.createUniqueFile(
+        PathUtils.tempDir,
+        "remote-agent.pdf"
       );
 
-      inputStream.setInputStream(stream.newInputStream(0));
+      printSettings.outputDestination =
+        Ci.nsIPrintSettings.kOutputDestinationFile;
+      printSettings.toFileName = path;
 
-      const available = inputStream.available();
-      const bytes = inputStream.readBytes(available);
+      await linkedBrowser.browsingContext.print(printSettings);
 
-      retval.data = btoa(bytes);
-
-      stream.close();
+      retval.stream = lazy.streamRegistry.add(new lazy.Stream(path));
+    } else {
+      retval.data = await lazy.print.printToEncodedString(
+        linkedBrowser,
+        printSettings
+      );
     }
 
     return retval;
