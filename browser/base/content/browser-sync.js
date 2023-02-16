@@ -5,6 +5,10 @@
 // This file is loaded into the browser window scope.
 /* eslint-env mozilla/browser-window */
 
+const { UIState } = ChromeUtils.importESModule(
+  "resource://services-sync/UIState.sys.mjs"
+);
+
 ChromeUtils.defineModuleGetter(
   this,
   "FxAccounts",
@@ -17,7 +21,6 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineESModuleGetters(this, {
   SyncedTabs: "resource://services-sync/SyncedTabs.sys.mjs",
-  UIState: "resource://services-sync/UIState.sys.mjs",
   Weave: "resource://services-sync/main.sys.mjs",
 });
 
@@ -334,9 +337,7 @@ var gSync = {
   // once syncing completes (bug 1239042).
   _syncStartTime: 0,
   _syncAnimationTimer: 0,
-  _obs: AppConstants.MOZ_SERVICES_SYNC
-    ? ["weave:engine:sync:finish", "quit-application", UIState.ON_UPDATE]
-    : [],
+  _obs: ["weave:engine:sync:finish", "quit-application", UIState.ON_UPDATE],
 
   get log() {
     if (!this._log) {
@@ -454,7 +455,7 @@ var gSync = {
 
     this._definePrefGetters();
 
-    if (!AppConstants.MOZ_SERVICES_SYNC || !this.FXA_ENABLED) {
+    if (!this.FXA_ENABLED) {
       this.onFxaDisabled();
       return;
     }
@@ -1566,7 +1567,7 @@ var gSync = {
 
   // "Send Page to Device" and "Send Link to Device" menu items
   updateContentContextMenu(contextMenu) {
-    if (!AppConstants.MOZ_SERVICES_SYNC || !this.FXA_ENABLED) {
+    if (!this.FXA_ENABLED) {
       // These items are hidden by default. No need to do anything.
       return false;
     }
