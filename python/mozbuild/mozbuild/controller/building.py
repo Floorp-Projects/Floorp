@@ -1295,6 +1295,15 @@ class BuildDriver(MozbuildObject):
                     if make_dir is None and make_target is None:
                         return 1
 
+                    if config.is_artifact_build and target.startswith("installers-"):
+                        # See https://bugzilla.mozilla.org/show_bug.cgi?id=1387485
+                        print(
+                            "Localized Builds are not supported with Artifact Builds enabled.\n"
+                            "You should disable Artifact Builds (Use --disable-compile-environment "
+                            "in your mozconfig instead) then re-build to proceed."
+                        )
+                        return 1
+
                     # See bug 886162 - we don't want to "accidentally" build
                     # the entire tree (if that's really the intent, it's
                     # unlikely they would have specified a directory.)
