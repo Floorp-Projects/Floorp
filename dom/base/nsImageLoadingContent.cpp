@@ -309,7 +309,7 @@ void nsImageLoadingContent::OnImageIsAnimated(imgIRequest* aRequest) {
 
 static bool IsOurImageFrame(nsIFrame* aFrame) {
   if (nsImageFrame* f = do_QueryFrame(aFrame)) {
-    return f->IsForElement();
+    return f->IsForImageLoadingContent();
   }
   return aFrame->IsSVGImageFrame() || aFrame->IsSVGFEImageFrame();
 }

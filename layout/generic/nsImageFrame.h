@@ -103,7 +103,9 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   void SetupForContentURLRequest();
   bool ShouldShowBrokenImageIcon() const;
 
-  bool IsForElement() const { return mKind == Kind::ImageElement; }
+  bool IsForImageLoadingContent() const {
+    return mKind == Kind::ImageLoadingContent;
+  }
 
   const mozilla::StyleImage* GetImageFromStyle() const;
 
@@ -190,7 +192,7 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   // The kind of image frame we are.
   enum class Kind : uint8_t {
     // For an nsImageLoadingContent.
-    ImageElement,
+    ImageLoadingContent,
     // For css 'content: url(..)' on non-generated content.
     ContentProperty,
     // For a child of a ::before / ::after pseudo-element that had an url() item
@@ -225,7 +227,7 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
 
  protected:
   nsImageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext, ClassID aID)
-      : nsImageFrame(aStyle, aPresContext, aID, Kind::ImageElement) {}
+      : nsImageFrame(aStyle, aPresContext, aID, Kind::ImageLoadingContent) {}
 
   ~nsImageFrame() override;
 
