@@ -896,6 +896,10 @@ echPrefs:
       description: Probability of GREASEing a TLS connection with ECH (0-100).
       type: int
       setPref: "security.tls.ech.grease_probability"
+    h3GreaseEnabled:
+      description: Whether to apply GREASE settings to H3/QUIC connections.
+      type: boolean
+      setPref: "security.tls.ech.grease_http3"
     disableGreaseOnFallback:
       description: Whether to disable GREASE when retrying a connection.
       type: boolean

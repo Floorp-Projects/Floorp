@@ -13656,6 +13656,12 @@
 #endif
   mirror: always
 
+# Whether to apply ECH GREASE settings to HTTP3/QUIC connections
+- name: security.tls.ech.grease_http3
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Whether to retry connections without ECH Grease
 - name: security.tls.ech.disable_grease_on_fallback
   type: RelaxedAtomicBool

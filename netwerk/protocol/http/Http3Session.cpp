@@ -16,6 +16,7 @@
 #include "SSLServerCertVerification.h"
 #include "SSLTokensCache.h"
 #include "ScopedNSSTypes.h"
+#include "mozilla/RandomNum.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/net/DNS.h"
@@ -171,8 +172,17 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
     ZeroRttTelemetry(ZeroRttOutcome::NOT_USED);
   }
 
-  if (gHttpHandler->EchConfigEnabled(true)) {
-    mSocketControl->SetEchConfig(mConnInfo->GetEchConfig());
+  auto config = mConnInfo->GetEchConfig();
+  if (config.IsEmpty()) {
+    if (StaticPrefs::security_tls_ech_grease_http3() && config.IsEmpty()) {
+      if ((RandomUint64().valueOr(0) % 100) >=
+          100 - StaticPrefs::security_tls_ech_grease_probability()) {
+        // Setting an empty config enables GREASE mode.
+        mSocketControl->SetEchConfig(config);
+      }
+    }
+  } else if (gHttpHandler->EchConfigEnabled(true) && !config.IsEmpty()) {
+    mSocketControl->SetEchConfig(config);
     HttpConnectionActivity activity(
         mConnInfo->HashKey(), mConnInfo->GetOrigin(), mConnInfo->OriginPort(),
         mConnInfo->EndToEndSSL(), !mConnInfo->GetEchConfig().IsEmpty(),
@@ -190,14 +200,12 @@ nsresult Http3Session::Init(const nsHttpConnectionInfo* aConnInfo,
 }
 
 void Http3Session::DoSetEchConfig(const nsACString& aEchConfig) {
-  if (!aEchConfig.IsEmpty()) {
-    LOG(("Http3Session::DoSetEchConfig %p", this));
-    nsTArray<uint8_t> config;
-    config.AppendElements(
-        reinterpret_cast<const uint8_t*>(aEchConfig.BeginReading()),
-        aEchConfig.Length());
-    mHttp3Connection->SetEchConfig(config);
-  }
+  LOG(("Http3Session::DoSetEchConfig %p", this));
+  nsTArray<uint8_t> config;
+  config.AppendElements(
+      reinterpret_cast<const uint8_t*>(aEchConfig.BeginReading()),
+      aEchConfig.Length());
+  mHttp3Connection->SetEchConfig(config);
 }
 
 nsresult Http3Session::SendPriorityUpdateFrame(uint64_t aStreamId,
