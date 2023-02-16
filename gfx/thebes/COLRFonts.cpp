@@ -1822,7 +1822,8 @@ struct PaintComposite {
     if (compositeMode == COMPOSITE_DEST) {
       return DispatchPaint(aState, aOffset + backdropPaintOffset, aBounds);
     }
-    // We need bounds for the temporary surface; so if we didn't have
+
+    // We need bounds for the temporary surfaces; so if we didn't have
     // explicitly-provided bounds from a clipList entry for the top-level
     // glyph, then we need to determine the bounding rect here.
     Rect bounds = aBounds ? *aBounds : GetBoundingRect(aState, aOffset);
@@ -1830,34 +1831,57 @@ struct PaintComposite {
       return true;
     }
     bounds.RoundOut();
-    // Because not all backends support PushLayerWithBlend (looking at you,
-    // DrawTargetD2D1), we paint this sub-graph of the glyph to a temporary
-    // Skia surface where we know we *can* use PushLayerWithBlend, and then
-    // copy it to the final destination.
-    RefPtr dt = Factory::CreateDrawTarget(
-        BackendType::SKIA, IntSize(int(bounds.width), int(bounds.height)),
-        SurfaceFormat::B8G8R8A8);
-    if (!dt) {
-      // If this failed, we'll just bail out, leaving this glyph (partially)
-      // unpainted, but allow other rendering to continue.
+
+    PaintState state = aState;
+    state.mDrawOptions.mCompositionOp = CompositionOp::OP_OVER;
+    IntSize intSize(int(bounds.width), int(bounds.height));
+
+    if (!aState.mDrawTarget->CanCreateSimilarDrawTarget(
+            intSize, SurfaceFormat::B8G8R8A8)) {
+      // We're not going to be able to render this, so just bail out.
+      // (Returning true rather than false means we'll just not paint this
+      // part of the glyph, but won't return an error and likely fall back
+      // to an ugly black blob.)
       return true;
     }
-    dt->SetTransform(Matrix::Translation(-bounds.TopLeft()));
-    PaintState state = aState;
-    state.mDrawTarget = dt;
-    bool ok = DispatchPaint(state, aOffset + backdropPaintOffset, &bounds);
-    if (ok) {
-      dt->PushLayerWithBlend(true, 1.0, nullptr, Matrix(), IntRect(), false,
-                             mapCompositionMode(compositeMode));
-      ok = DispatchPaint(state, aOffset + sourcePaintOffset, &bounds);
-      dt->PopLayer();
+
+    // Draw the backdrop paint graph to a temporary surface.
+    RefPtr backdrop = aState.mDrawTarget->CreateSimilarDrawTarget(
+        intSize, SurfaceFormat::B8G8R8A8);
+    if (!backdrop) {
+      return true;
     }
-    if (ok) {
-      RefPtr snapshot = dt->Snapshot();
-      aState.mDrawTarget->DrawSurface(snapshot, bounds,
-                                      Rect(Point(), bounds.Size()));
+    backdrop->SetTransform(Matrix::Translation(-bounds.TopLeft()));
+    state.mDrawTarget = backdrop;
+    if (!DispatchPaint(state, aOffset + backdropPaintOffset, &bounds)) {
+      return false;
     }
-    return ok;
+
+    // Draw the source paint graph to another temp surface.
+    RefPtr source = aState.mDrawTarget->CreateSimilarDrawTarget(
+        intSize, SurfaceFormat::B8G8R8A8);
+    if (!source) {
+      return true;
+    }
+    source->SetTransform(Matrix::Translation(-bounds.TopLeft()));
+    state.mDrawTarget = source;
+    if (!DispatchPaint(state, aOffset + sourcePaintOffset, &bounds)) {
+      return false;
+    }
+
+    // Composite the source onto the backdrop using the specified operation.
+    Rect localBounds(Point(), bounds.Size());
+    RefPtr snapshot = source->Snapshot();
+    backdrop->SetTransform(Matrix());
+    backdrop->DrawSurface(snapshot, localBounds, localBounds,
+                          DrawSurfaceOptions(),
+                          DrawOptions(1.0, mapCompositionMode(compositeMode)));
+
+    // And copy the composited result to our final destination.
+    snapshot = backdrop->Snapshot();
+    aState.mDrawTarget->DrawSurface(snapshot, bounds, localBounds);
+
+    return true;
   }
 
   Rect GetBoundingRect(const PaintState& aState, uint32_t aOffset) const {
