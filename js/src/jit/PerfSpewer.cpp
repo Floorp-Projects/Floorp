@@ -255,6 +255,10 @@ void js::jit::ResetPerfSpewer(bool enabled) {
 }
 
 static JS::JitCodeRecord* CreateProfilerEntry(AutoLockPerfSpewer& lock) {
+  if (!IsGeckoProfiling()) {
+    return nullptr;
+  }
+
   if (!profilerData.growBy(1)) {
     DisablePerfSpewer(lock);
     return nullptr;
@@ -353,11 +357,7 @@ void InlineCachePerfSpewer::recordInstruction(MacroAssembler& masm,
   }
   AutoLockPerfSpewer lock;
 
-  OpcodeEntry entry;
-  entry.opcode = static_cast<unsigned>(op);
-  masm.bind(&entry.addr);
-
-  if (!opcodes_.append(entry)) {
+  if (!opcodes_.emplaceBack(masm.currentOffset(), static_cast<unsigned>(op))) {
     opcodes_.clear();
     DisablePerfSpewer(lock);
   }
@@ -369,11 +369,7 @@ void IonPerfSpewer::recordInstruction(MacroAssembler& masm, LNode::Opcode op) {
   }
   AutoLockPerfSpewer lock;
 
-  OpcodeEntry entry;
-  entry.opcode = static_cast<unsigned>(op);
-  masm.bind(&entry.addr);
-
-  if (!opcodes_.append(entry)) {
+  if (!opcodes_.emplaceBack(masm.currentOffset(), static_cast<unsigned>(op))) {
     opcodes_.clear();
     DisablePerfSpewer(lock);
   }
@@ -385,11 +381,7 @@ void BaselinePerfSpewer::recordInstruction(MacroAssembler& masm, JSOp op) {
   }
   AutoLockPerfSpewer lock;
 
-  OpcodeEntry entry;
-  masm.bind(&entry.addr);
-  entry.opcode = static_cast<unsigned>(op);
-
-  if (!opcodes_.append(entry)) {
+  if (!opcodes_.emplaceBack(masm.currentOffset(), static_cast<unsigned>(op))) {
     opcodes_.clear();
     DisablePerfSpewer(lock);
   }
@@ -492,20 +484,27 @@ void PerfSpewer::saveJitCodeIRInfo(const char* desc, JitCode* code,
 
   for (size_t i = 0; i < opcodes_.length(); i++) {
     OpcodeEntry& entry = opcodes_[i];
-    if (JS::JitCodeIRInfo* irInfo =
-            CreateProfilerIREntry(profilerRecord, lock)) {
-      irInfo->offset = entry.addr.offset();
-      irInfo->opcode = entry.opcode;
-    }
-
 #ifdef JS_ION_PERF
     if (IsPerfProfiling()) {
-      fprintf(scriptFile, "%s\n", CodeName(entry.opcode));
-      uint64_t addr = uint64_t(code->raw()) + entry.addr.offset();
+      // If a string was recorded for this offset, use that instead.
+      if (entry.str) {
+        fprintf(scriptFile, "%s\n", entry.str.get());
+      } else {
+        fprintf(scriptFile, "%s\n", CodeName(entry.opcode));
+      }
+      uint64_t addr = uint64_t(code->raw()) + entry.offset;
       uint64_t lineno = i + 1;
       WriteJitDumpDebugEntry(addr, scriptFilename.get(), lineno, 0, lock);
     }
 #endif
+
+    if (JS::JitCodeIRInfo* irInfo =
+            CreateProfilerIREntry(profilerRecord, lock)) {
+      irInfo->offset = entry.offset;
+      irInfo->opcode = entry.opcode;
+      // Profiler API now owns this string, if defined.
+      irInfo->str = std::move(entry.str);
+    }
   }
   opcodes_.clear();
 

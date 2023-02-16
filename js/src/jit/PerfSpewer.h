@@ -10,9 +10,9 @@
 #ifdef JS_ION_PERF
 #  include <stdio.h>
 #endif
+#include "jit/BaselineFrameInfo.h"
 #include "jit/CacheIR.h"
 #include "jit/JitCode.h"
-#include "jit/Label.h"
 #include "jit/LIR.h"
 #include "js/AllocPolicy.h"
 #include "js/JitCodeAPI.h"
@@ -42,8 +42,31 @@ bool PerfEnabled();
 class PerfSpewer {
  protected:
   struct OpcodeEntry {
-    Label addr;
+    uint32_t offset = 0;
     unsigned opcode = 0;
+
+    // This string is used to replace the opcode, to define things like
+    // Prologue/Epilogue, or to add operand info.
+    UniqueChars str;
+
+    OpcodeEntry(uint32_t offset_, unsigned opcode_, UniqueChars& str_)
+        : offset(offset_), opcode(opcode_) {
+      str = std::move(str_);
+    }
+    OpcodeEntry(uint32_t offset_, UniqueChars& str_) : offset(offset_) {
+      str = std::move(str_);
+    }
+    OpcodeEntry(uint32_t offset_, unsigned opcode_)
+        : offset(offset_), opcode(opcode_) {}
+
+    OpcodeEntry(OpcodeEntry&& copy) {
+      offset = copy.offset;
+      opcode = copy.opcode;
+      str = std::move(copy.str);
+    }
+
+    // Do not copy the UniqueChars member.
+    OpcodeEntry(OpcodeEntry& copy) = delete;
   };
   Vector<OpcodeEntry, 0, SystemAllocPolicy> opcodes_;
 
