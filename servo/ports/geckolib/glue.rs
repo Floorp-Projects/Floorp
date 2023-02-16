@@ -21,6 +21,7 @@ use std::ptr;
 use style::applicable_declarations::ApplicableDeclarationBlock;
 use style::author_styles::AuthorStyles;
 use style::color::mix::ColorInterpolationMethod;
+use style::color::AbsoluteColor;
 use style::context::ThreadLocalStyleContext;
 use style::context::{CascadeInputs, QuirksMode, SharedStyleContext, StyleContext};
 use style::counter_style;
@@ -7702,12 +7703,13 @@ pub extern "C" fn Servo_InterpolateColor(
 ) -> AnimatedRGBA {
     style::color::mix::mix(
         interpolation,
-        left,
+        &AbsoluteColor::from(left.clone()),
         progress,
-        right,
+        &AbsoluteColor::from(right.clone()),
         1.0 - progress,
         /* normalize_weights = */ false,
     )
+    .into()
 }
 
 #[no_mangle]
