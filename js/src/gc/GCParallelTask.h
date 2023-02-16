@@ -150,6 +150,7 @@ class GCParallelTask : private mozilla::LinkedListElement<GCParallelTask>,
 
   // Instead of dispatching to a helper, run the task on the current thread.
   void runFromMainThread();
+  void runFromMainThread(AutoLockHelperThreadState& lock);
 
   // If the task is not already running, either start it or run it on the main
   // thread if that fails.
@@ -192,6 +193,7 @@ class GCParallelTask : private mozilla::LinkedListElement<GCParallelTask>,
     // builds that may hide bugs. There's no race if the assertion passes.
     MOZ_ASSERT(state_ == State::Idle);
   }
+
   bool isRunning(const AutoLockHelperThreadState& lock) const {
     return state_ == State::Running;
   }
