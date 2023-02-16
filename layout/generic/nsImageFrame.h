@@ -409,12 +409,11 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   mozilla::AspectRatio mIntrinsicRatio;
 
   const Kind mKind;
-  bool mOwnedRequestRegistered;
-  bool mDisplayingIcon;
-  bool mFirstFrameComplete;
-  bool mReflowCallbackPosted;
-  bool mForceSyncDecoding;
-
+  bool mOwnedRequestRegistered = false;
+  bool mDisplayingIcon = false;
+  bool mFirstFrameComplete = false;
+  bool mReflowCallbackPosted = false;
+  bool mForceSyncDecoding = false;
   bool mIsInObjectOrEmbed = false;
 
   /* loading / broken image icon support */
