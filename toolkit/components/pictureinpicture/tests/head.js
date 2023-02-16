@@ -28,6 +28,9 @@ const TOGGLE_POSITION_PREF =
 const HAS_USED_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.has-used";
 const SHARED_DATA_KEY = "PictureInPicture:SiteOverrides";
+// Used for clearing the size and location of the PiP window
+const PLAYER_URI = "chrome://global/content/pictureinpicture/player.xhtml";
+const ACCEPTABLE_DIFFERENCE = 2;
 
 /**
  * We currently ship with a few different variations of the
@@ -951,4 +954,25 @@ async function waitForNextCue(browser, videoID, textTrackIndex = 0) {
       ok(video.paused, "Video is paused");
     }
   );
+}
+
+/**
+ * The PiP window saves the positon when closed and sometimes we don't want
+ * this information to persist to other tests. This function will clear the
+ * position so the PiP window will open in the default position.
+ */
+function clearSavedPosition() {
+  let xulStore = Services.xulStore;
+  xulStore.setValue(PLAYER_URI, "picture-in-picture", "left", NaN);
+  xulStore.setValue(PLAYER_URI, "picture-in-picture", "top", NaN);
+  xulStore.setValue(PLAYER_URI, "picture-in-picture", "width", NaN);
+  xulStore.setValue(PLAYER_URI, "picture-in-picture", "height", NaN);
+}
+
+function overrideSavedPosition(left, top, width, height) {
+  let xulStore = Services.xulStore;
+  xulStore.setValue(PLAYER_URI, "picture-in-picture", "left", left);
+  xulStore.setValue(PLAYER_URI, "picture-in-picture", "top", top);
+  xulStore.setValue(PLAYER_URI, "picture-in-picture", "width", width);
+  xulStore.setValue(PLAYER_URI, "picture-in-picture", "height", height);
 }
