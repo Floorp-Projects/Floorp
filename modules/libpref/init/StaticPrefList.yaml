@@ -8673,7 +8673,7 @@
 # Is support for CSS overflow: overlay enabled
 - name: layout.css.overflow-overlay.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
