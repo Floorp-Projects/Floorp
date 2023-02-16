@@ -38,14 +38,11 @@
 using namespace js;
 using namespace js::jit;
 
-#define PERF_MODE_NONE 1
-#define PERF_MODE_FUNC 2
-#define PERF_MODE_SRC 3
-#define PERF_MODE_IR 4
+enum class PerfModeType { None, Function, Source, IR, IROperands };
 
 static std::atomic<bool> geckoProfiling = false;
 
-static uint32_t PerfMode = 0;
+static PerfModeType PerfMode = PerfModeType::None;
 
 // Mutex to guard access to the profiler vectors and jitdump file if perf
 // profiling is enabled.
@@ -184,7 +181,7 @@ static bool openJitDump() {
   mmap_address =
       mmap(nullptr, page_size, PROT_READ | PROT_EXEC, MAP_PRIVATE, fd, 0);
   if (mmap_address == MAP_FAILED) {
-    PerfMode = PERF_MODE_NONE;
+    PerfMode = PerfModeType::None;
     return false;
   }
 
@@ -198,17 +195,26 @@ void js::jit::CheckPerf() {
   if (!PerfChecked) {
     const char* env = getenv("IONPERF");
     if (env == nullptr) {
-      PerfMode = PERF_MODE_NONE;
+      PerfMode = PerfModeType::None;
       fprintf(stderr,
               "Warning: JIT perf reporting requires IONPERF set to \"func\" "
               ", \"src\" or \"ir\". ");
       fprintf(stderr, "Perf mapping will be deactivated.\n");
     } else if (!strcmp(env, "src")) {
-      PerfMode = PERF_MODE_SRC;
+      PerfMode = PerfModeType::Source;
     } else if (!strcmp(env, "ir")) {
-      PerfMode = PERF_MODE_IR;
+      PerfMode = PerfModeType::IR;
+    } else if (!strcmp(env, "ir-ops")) {
+#  ifdef JS_JITSPEW
+      PerfMode = PerfModeType::IROperands;
+#  else
+      fprintf(stderr,
+              "Warning: IONPERF=ir-ops requires --enable-jitspew to be "
+              "enabled, defaulting to IONPERF=ir\n");
+      PerfMode = PerfModeType::IR;
+#  endif
     } else if (!strcmp(env, "func")) {
-      PerfMode = PERF_MODE_FUNC;
+      PerfMode = PerfModeType::Function;
     } else {
       fprintf(stderr, "Use IONPERF=func to record at function granularity\n");
       fprintf(stderr,
@@ -219,14 +225,14 @@ void js::jit::CheckPerf() {
       exit(0);
     }
 
-    if (PerfMode != PERF_MODE_NONE) {
+    if (PerfMode != PerfModeType::None) {
       if (openJitDump()) {
         PerfChecked = true;
         return;
       }
 
       fprintf(stderr, "Failed to open perf map file.  Disabling IONPERF.\n");
-      PerfMode = PERF_MODE_NONE;
+      PerfMode = PerfModeType::None;
     }
     PerfChecked = true;
   }
@@ -237,7 +243,7 @@ static void DisablePerfSpewer(AutoLockPerfSpewer& lock) {
   fprintf(stderr, "Warning: Disabling PerfSpewer.");
 
   geckoProfiling = false;
-  PerfMode = 0;
+  PerfMode = PerfModeType::None;
 #ifdef JS_ION_PERF
   long page_size = sysconf(_SC_PAGESIZE);
   munmap(mmap_address, page_size);
@@ -335,15 +341,20 @@ JS::JitCodeIterator::JitCodeIterator() : iteratorIndex(0) {
 JS::JitCodeIterator::~JitCodeIterator() { PerfMutex.unlock(); }
 
 static bool PerfSrcEnabled() {
-  return PerfMode == PERF_MODE_SRC || geckoProfiling;
+  return PerfMode == PerfModeType::Source || geckoProfiling;
 }
 
+#ifdef JS_JITSPEW
+static bool PerfIROpsEnabled() { return PerfMode == PerfModeType::IROperands; }
+#endif
+
 static bool PerfIREnabled() {
-  return PerfMode == PERF_MODE_IR || geckoProfiling;
+  return (PerfMode == PerfModeType::IROperands) ||
+         (PerfMode == PerfModeType::IR) || geckoProfiling;
 }
 
 static bool PerfFuncEnabled() {
-  return PerfMode == PERF_MODE_FUNC || geckoProfiling;
+  return PerfMode == PerfModeType::Function || geckoProfiling;
 }
 
 bool js::jit::PerfEnabled() {
@@ -363,14 +374,34 @@ void InlineCachePerfSpewer::recordInstruction(MacroAssembler& masm,
   }
 }
 
-void IonPerfSpewer::recordInstruction(MacroAssembler& masm, LNode::Opcode op) {
+#define CHECK_RETURN(x)      \
+  if (!(x)) {                \
+    AutoLockPerfSpewer lock; \
+    DisablePerfSpewer(lock); \
+    return;                  \
+  }
+
+void IonPerfSpewer::recordInstruction(MacroAssembler& masm, LInstruction* ins) {
   if (!PerfIREnabled()) {
     return;
   }
-  AutoLockPerfSpewer lock;
 
-  if (!opcodes_.emplaceBack(masm.currentOffset(), static_cast<unsigned>(op))) {
+  LNode::Opcode op = ins->op();
+  UniqueChars opcodeStr;
+
+#ifdef JS_JITSPEW
+  if (PerfIROpsEnabled()) {
+    Sprinter buf;
+    CHECK_RETURN(buf.init());
+    CHECK_RETURN(buf.put(LIRCodeName(op)));
+    ins->printOperands(buf);
+    opcodeStr = buf.release();
+  }
+#endif
+  if (!opcodes_.emplaceBack(masm.currentOffset(), static_cast<unsigned>(op),
+                            opcodeStr)) {
     opcodes_.clear();
+    AutoLockPerfSpewer lock;
     DisablePerfSpewer(lock);
   }
 }

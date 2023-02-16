@@ -6623,7 +6623,7 @@ bool CodeGenerator::generateBody() {
         return false;
       }
 
-      perfSpewer_.recordInstruction(masm, iter->op());
+      perfSpewer_.recordInstruction(masm, *iter);
 #ifdef JS_JITSPEW
       JitSpewStart(JitSpew_Codegen, "                                # LIR=%s",
                    iter->opName());

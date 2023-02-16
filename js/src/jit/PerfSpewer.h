@@ -112,7 +112,7 @@ class IonPerfSpewer : public PerfSpewer {
   virtual const char* CodeName(unsigned op) override;
 
  public:
-  void recordInstruction(MacroAssembler& masm, LNode::Opcode op);
+  void recordInstruction(MacroAssembler& masm, LInstruction* ins);
   void saveProfile(JSContext* cx, JSScript* script, JitCode* code);
 };
 
