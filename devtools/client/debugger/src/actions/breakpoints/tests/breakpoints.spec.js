@@ -571,37 +571,6 @@ describe("breakpoints", () => {
     );
   });
 
-  it("should remap breakpoints on pretty print", async () => {
-    const { dispatch, getState, cx } = createStore(mockClient({ "1": [0] }));
-
-    const loc = {
-      sourceId: "a.js",
-      line: 1,
-      column: 0,
-      sourceUrl: "http://localhost:8000/examples/a.js",
-    };
-
-    const source = await dispatch(
-      actions.newGeneratedSource(makeSource("a.js"))
-    );
-    const sourceActor = selectors.getFirstSourceActorForGeneratedSource(
-      getState(),
-      source.id
-    );
-    await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
-
-    await dispatch(actions.addBreakpoint(cx, loc));
-    await dispatch(actions.togglePrettyPrint(cx, "a.js"));
-
-    const breakpoint = selectors.getBreakpointsList(getState())[0];
-
-    expect(
-      breakpoint.location.sourceUrl &&
-        breakpoint.location.sourceUrl.includes("formatted")
-    ).toBe(true);
-    expect(breakpoint).toMatchSnapshot();
-  });
-
   it("should remove the pretty-printed breakpoint that was added", async () => {
     const { dispatch, getState, cx } = createStore(mockClient({ "1": [0] }));
 

@@ -4,8 +4,19 @@
 
 import { isNodeTest } from "./environment";
 
-export default function assert(condition, message) {
-  if (isNodeTest() && !condition) {
-    throw new Error(`Assertion failure: ${message}`);
-  }
+let assert;
+// TODO: try to enable these assertions on mochitest by also enabling it on:
+//   import flags from "devtools/shared/flags";
+//   if (flags.testing)
+// Unfortunately it throws a lot on mochitests...
+
+if (isNodeTest()) {
+  assert = function(condition, message) {
+    if (!condition) {
+      throw new Error(`Assertion failure: ${message}`);
+    }
+  };
+} else {
+  assert = function() {};
 }
+export default assert;
