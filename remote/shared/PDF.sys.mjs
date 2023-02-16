@@ -7,6 +7,9 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  clearInterval: "resource://gre/modules/Timer.sys.mjs",
+  setInterval: "resource://gre/modules/Timer.sys.mjs",
+
   assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
 });
@@ -49,7 +52,7 @@ print.addDefaultSettings = function(settings) {
   };
 };
 
-print.getPrintSettings = function(settings) {
+function getPrintSettings(settings, filePath) {
   const psService = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
     Ci.nsIPrintSettingsService
   );
@@ -61,6 +64,8 @@ print.getPrintSettings = function(settings) {
   printSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatPDF;
   printSettings.printerName = "marionette";
   printSettings.printSilent = true;
+  printSettings.outputDestination = Ci.nsIPrintSettings.kOutputDestinationFile;
+  printSettings.toFileName = filePath;
 
   // Setting the paperSizeUnit to kPaperSizeMillimeters doesn't work on mac
   printSettings.paperSizeUnit = Ci.nsIPrintSettings.kPaperSizeInches;
@@ -99,7 +104,7 @@ print.getPrintSettings = function(settings) {
   }
 
   return printSettings;
-};
+}
 
 /**
  * Convert array of strings of the form ["1-3", "2-4", "7", "9-"] to an flat array of
@@ -184,29 +189,34 @@ function parseRanges(ranges) {
   return rv;
 }
 
-print.printToEncodedString = async function(browser, printSettings) {
-  // Create a stream to write to.
-  const stream = Cc["@mozilla.org/storagestream;1"].createInstance(
-    Ci.nsIStorageStream
+print.printToFile = async function(browser, settings) {
+  // Create a unique filename for the temporary PDF file
+  const filePath = await IOUtils.createUniqueFile(
+    PathUtils.tempDir,
+    "marionette.pdf",
+    0o600
   );
-  stream.init(4096, 0xffffffff);
 
-  printSettings.outputDestination =
-    Ci.nsIPrintSettings.kOutputDestinationStream;
-  printSettings.outputStream = stream.getOutputStream(0);
+  let printSettings = getPrintSettings(settings, filePath);
 
   await browser.browsingContext.print(printSettings);
 
-  const inputStream = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
-    Ci.nsIBinaryInputStream
-  );
+  // Bug 1603739 - With e10s enabled the promise returned by print() resolves
+  // too early, which means the file hasn't been completely written.
+  await new Promise(resolve => {
+    const DELAY_CHECK_FILE_COMPLETELY_WRITTEN = 100;
 
-  inputStream.setInputStream(stream.newInputStream(0));
+    let lastSize = 0;
+    const timerId = lazy.setInterval(async () => {
+      const fileInfo = await IOUtils.stat(filePath);
+      if (lastSize > 0 && fileInfo.size == lastSize) {
+        lazy.clearInterval(timerId);
+        resolve();
+      }
+      lastSize = fileInfo.size;
+    }, DELAY_CHECK_FILE_COMPLETELY_WRITTEN);
+  });
 
-  const available = inputStream.available();
-  const bytes = inputStream.readBytes(available);
-
-  stream.close();
-
-  return btoa(bytes);
+  lazy.logger.debug(`PDF output written to ${filePath}`);
+  return filePath;
 };
