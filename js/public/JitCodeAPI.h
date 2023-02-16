@@ -43,6 +43,7 @@ struct JitCodeSourceInfo {
 struct JitCodeIRInfo {
   uint32_t offset = 0;
   uint32_t opcode = 0;
+  UniqueChars str;
 };
 
 typedef js::Vector<JitCodeSourceInfo, 0, js::SystemAllocPolicy>
