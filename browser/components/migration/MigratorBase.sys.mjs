@@ -404,7 +404,7 @@ export class MigratorBase {
       // Note: We do not need to do so for the Firefox migrator
       // (=startupOnlyMigrator), as it just copies over the places database
       // from another profile.
-      (async function() {
+      await (async function() {
         // Tell nsBrowserGlue we're importing default bookmarks.
         let browserGlue = Cc["@mozilla.org/browser/browserglue;1"].getService(
           Ci.nsIObserver
@@ -438,11 +438,11 @@ export class MigratorBase {
         });
         browserGlue.observe(null, TOPIC_DID_IMPORT_BOOKMARKS, "");
         await placesInitedPromise;
-        doMigrate();
+        await doMigrate();
       })();
       return;
     }
-    doMigrate();
+    await doMigrate();
   }
 
   /**
