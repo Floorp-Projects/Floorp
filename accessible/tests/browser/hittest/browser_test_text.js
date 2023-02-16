@@ -13,6 +13,13 @@ a
   a
   <iframe width="1" height="1"></iframe>
 </div>
+<button id="pointBeforeText">
+  <div style="display: flex;">
+    <div style="width: 100px; background-color: red;" role="none"></div>
+    test
+    <div style="width: 100px; background-color: blue;" role="none"></div>
+  </div>
+</button>
   `,
   async function(browser, docAcc) {
     const dpr = await getContentDPR(browser);
@@ -43,6 +50,30 @@ a
     x += width - 1;
     y += height - 1;
     await testOffsetAtPoint(iframeAtEnd, x, y, COORDTYPE_SCREEN_RELATIVE, -1);
+
+    // Test that 0 is returned if the point is within the container but before
+    // the rectangle at offset 0. This is buggy behavior that some users have
+    // unfortunately come to rely on (bug 1816601).
+    const pointBeforeText = findAccessibleChildByID(docAcc, "pointBeforeText", [
+      Ci.nsIAccessibleText,
+    ]);
+    [x, y, width, height] = Layout.getBounds(pointBeforeText, dpr);
+    await testOffsetAtPoint(
+      pointBeforeText,
+      x + 1,
+      y + 1,
+      COORDTYPE_SCREEN_RELATIVE,
+      0
+    );
+    // But this buggy behavior only applies for a point before offset 0, not
+    // a point after the last offset. So it's asymmetrically buggy. :(
+    await testOffsetAtPoint(
+      pointBeforeText,
+      x + width - 1,
+      y + height - 1,
+      COORDTYPE_SCREEN_RELATIVE,
+      -1
+    );
   },
   {
     topLevel: true,
