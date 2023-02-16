@@ -546,6 +546,7 @@ void nsJSContext::Destroy() {
   }
 
   DropJSObjects(this);
+  PROFILER_CLEAR_JS_CONTEXT();
 }
 
 // QueryInterface implementation for nsJSContext
