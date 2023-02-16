@@ -831,11 +831,13 @@ let JSWINDOWACTORS = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(
-  lazy,
-  "WeaveService",
-  () => Cc["@mozilla.org/weave/service;1"].getService().wrappedJSObject
-);
+if (AppConstants.MOZ_SERVICES_SYNC) {
+  XPCOMUtils.defineLazyGetter(
+    lazy,
+    "WeaveService",
+    () => Cc["@mozilla.org/weave/service;1"].getService().wrappedJSObject
+  );
+}
 
 if (AppConstants.MOZ_CRASHREPORTER) {
   XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -2825,7 +2827,7 @@ BrowserGlue.prototype = {
       {
         name: "WeaveService",
         task: async () => {
-          if (lazy.WeaveService.enabled) {
+          if (lazy.WeaveService?.enabled) {
             await lazy.WeaveService.whenLoaded();
             lazy.WeaveService.Weave.Service.scheduler.autoConnect();
           }
