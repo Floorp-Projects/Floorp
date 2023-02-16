@@ -156,6 +156,8 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         ).also {
             it.start()
         }
+
+        components.notificationsDelegate.bindToActivity(this)
     }
 
     private fun requestNotificationPermission() {
@@ -465,6 +467,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         super.onDestroy()
         _binding = null
         privateNotificationFeature.stop()
+        components.notificationsDelegate.unBindActivity(this)
     }
 
     enum class AppOpenType(val type: String) {

@@ -357,6 +357,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             startTimeProfiler,
             "HomeActivity.onCreate",
         )
+
+        components.notificationsDelegate.bindToActivity(this)
+
         StartupTimeline.onActivityCreateEndHome(this) // DO NOT MOVE ANYTHING BELOW HERE.
     }
 
@@ -559,6 +562,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         components.core.pocketStoriesService.stopPeriodicStoriesRefresh()
         components.core.pocketStoriesService.stopPeriodicSponsoredStoriesRefresh()
         privateNotificationObserver?.stop()
+        components.notificationsDelegate.unBindActivity(this)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
