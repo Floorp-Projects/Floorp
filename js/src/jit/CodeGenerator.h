@@ -75,7 +75,6 @@ class OutOfLineRegExpInstanceOptimizable;
 class OutOfLineNaNToZero;
 class OutOfLineResumableWasmTrap;
 class OutOfLineAbortingWasmTrap;
-class OutOfLineZeroIfNaN;
 class OutOfLineGuardNumberToIntPtrIndex;
 class OutOfLineBoxNonStrictThis;
 class OutOfLineArrayPush;
@@ -150,7 +149,6 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   void visitOutOfLineIsConstructor(OutOfLineIsConstructor* ool);
 
   void visitOutOfLineNaNToZero(OutOfLineNaNToZero* ool);
-  void visitOutOfLineZeroIfNaN(OutOfLineZeroIfNaN* ool);
 
   void visitOutOfLineResumableWasmTrap(OutOfLineResumableWasmTrap* ool);
   void visitOutOfLineAbortingWasmTrap(OutOfLineAbortingWasmTrap* ool);
