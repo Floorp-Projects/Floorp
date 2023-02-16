@@ -15,16 +15,15 @@ ac_add_options --enable-perf
 
 ## Environment Variables
 
-Two environment variables are available for perf JIT profiling:
+Environment variables that must be defined for perf JIT profiling:
 
-The first environment variable must be defined for SpiderMonkey to generate the necessary jitdump binary files for JIT profiling.
-The supported values are "ir", "src" and "func".  `IONPERF=ir` will enable IR annotation, `IONPERF=src` will enable source code annotation **only if** perf can read the source file locally.  `IONPERF=func` will disable all annotation and only function names will be available.  It is recommended to use `IONPERF=ir` for most situations.
+`PERF_SPEW_OUTPUT`: Location of jitdump output files.  Making this directory a tmpfs filesystem could help reduce overhead.\
+`IONPERF`: Valid options include: `func`, `src`, `ir`, `ir-ops`.
 
-The second environment variable is optional, but is highly recommended to avoid polluting your cwd by putting all jitdump files into a separate directory:
-```
-mkdir output
-export PERF_SPEW_DIR=output
-```
+`IONPERF=func` will disable all annotation and only function names will be available. It is the fastest option.\
+`IONPERF=ir` will enable IR annotation.\
+`IONPERF=ir-ops` will enable IR annotation with operand support.  **Requires --enable-jitspew** and adds additional overhead to "ir".\
+`IONPERF=src` will enable source code annotation **only if** perf can read the source file locally.  Only really works well in the JS shell.
 
 ## Profiling the JS shell
 
@@ -52,7 +51,7 @@ perf inject -j -i perf.data -o jit.data
 
 View the profile:
 ```
-perf report --no-children -i jit.data
+perf report --no-children --call-graph=graph,0 -i jit.data
 ```
 
 All of the above commands can be put into a single shell script.
