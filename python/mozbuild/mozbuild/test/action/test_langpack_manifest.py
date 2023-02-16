@@ -63,7 +63,7 @@ langpack-contributors = { "" }
         self.assertEqual(
             data["author"], "Suomennosprojekti (contributors: Joe Smith, Mary White)"
         )
-        self.assertEqual(data["version"], "57.0.1buildid20210928.100000")
+        self.assertEqual(data["version"], "57.0.20210928.100000")
 
     def test_manifest_truncated_name(self):
         ctx = {
@@ -151,6 +151,34 @@ langpack-contributors = { "" }
 
         self.assertEqual(len(title), 45)
         self.assertEqual(len(description), 132)
+
+    def test_get_version_maybe_buildid(self):
+        for (app_version, buildid, expected_version) in [
+            ("109", "", "109"),
+            ("109.0", "", "109.0"),
+            ("109.0.0", "", "109.0.0"),
+            ("109", "20210928", "109"),  # buildid should be 14 chars
+            ("109", "20210928123456", "109.20210928.123456"),
+            ("109.0", "20210928123456", "109.0.20210928.123456"),
+            ("109.0.0", "20210928123456", "109.0.20210928.123456"),
+            ("109", "20230215023456", "109.20230215.23456"),
+            ("109.0", "20230215023456", "109.0.20230215.23456"),
+            ("109.0.0", "20230215023456", "109.0.20230215.23456"),
+            ("109", "20230215003456", "109.20230215.3456"),
+            ("109", "20230215000456", "109.20230215.456"),
+            ("109", "20230215000056", "109.20230215.56"),
+            ("109", "20230215000006", "109.20230215.6"),
+            ("109", "20230215000000", "109.20230215.0"),
+            ("109.1.2.3", "20230201000000", "109.1.20230201.0"),
+            ("109.0a1", "", "109.0"),
+            ("109a0.0b0", "", "109.0"),
+            ("109.0.0b1", "", "109.0.0"),
+            ("109.0.b1", "", "109.0.0"),
+            ("109..1", "", "109.0.1"),
+        ]:
+            os.environ["MOZ_BUILD_DATE"] = buildid
+            version = langpack_manifest.get_version_maybe_buildid(app_version)
+            self.assertEqual(version, expected_version)
 
 
 if __name__ == "__main__":

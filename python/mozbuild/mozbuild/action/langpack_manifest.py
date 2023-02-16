@@ -17,6 +17,7 @@ import io
 import json
 import logging
 import os
+import re
 import sys
 
 import fluent.syntax.ast as FTL
@@ -345,29 +346,50 @@ def parse_chrome_manifest(path, base_path, chrome_entries):
             raise Exception("Unknown type {0}".format(entry.name))
 
 
-##
+###
 # Gets the version to use in the langpack.
 #
-# This uses the env variable MOZ_BUILD_DATE if it exists to expand the version to be unique
-# in automation.
+# This uses the env variable MOZ_BUILD_DATE if it exists to expand the version
+# to be unique in automation.
 #
 # Args:
-#    min_version - Application version
+#    app_version - Application version
 #
 # Returns:
-#    str - Version to use, may include buildid
+#    str - Version to use
 #
 ###
-def get_version_maybe_buildid(version):
+def get_version_maybe_buildid(app_version):
+    def _extract_numeric_part(part):
+        matches = re.compile("[^\d]").search(part)
+        if matches:
+            part = part[0 : matches.start()]
+        if len(part) == 0:
+            return "0"
+        return part
+
+    parts = [_extract_numeric_part(part) for part in app_version.split(".")]
+
     buildid = os.environ.get("MOZ_BUILD_DATE")
     if buildid and len(buildid) != 14:
         print("Ignoring invalid MOZ_BUILD_DATE: %s" % buildid, file=sys.stderr)
         buildid = None
+
     if buildid:
-        # Split into date/time parts so no part is >= 2^31 (bug 1732676)
-        # Bug 1733396 may revisit that limit
+        # Use simple versioning format, see: Bug 1793925 - The version string
+        # should start with: <firefox major>.<firefox minor>
+        version = ".".join(parts[0:2])
+        # We then break the buildid into two version parts so that the full
+        # version looks like: <firefox major>.<firefox minor>.YYYYMMDD.HHmmss
         date, time = buildid[:8], buildid[8:]
-        version = f"{version}buildid{date}.{time}"
+        # Leading zeros are not allowed.
+        time = time.lstrip("0")
+        if len(time) == 0:
+            time = "0"
+        version = f"{version}.{date}.{time}"
+    else:
+        version = ".".join(parts)
+
     return version
 
 
