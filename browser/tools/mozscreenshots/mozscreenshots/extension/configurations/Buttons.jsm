@@ -98,8 +98,7 @@ function createWidget() {
   let styles =
     "" +
     "#screenshot-widget > .toolbarbutton-icon {" +
-    "  list-style-image: url(chrome://browser/skin/Toolbar.png);" +
-    "  -moz-image-region: rect(0px, 18px, 18px, 0px);" +
+    "  list-style-image: url(chrome://browser/skin/thumb-down.svg);" +
     "}";
   st.appendChild(browserWindow.document.createTextNode(styles));
   browserWindow.document.documentElement.appendChild(st);
