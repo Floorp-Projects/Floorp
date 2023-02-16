@@ -13629,6 +13629,17 @@ if (IsCSSPropertyPrefEnabled("layout.css.color-scheme.enabled")) {
   };
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.forced-color-adjust.enabled")) {
+  gCSSProperties["forced-color-adjust"] = {
+    domProp: "forcedColorAdjust",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["auto"],
+    other_values: ["none"],
+    invalid_values: [],
+  };
+}
+
 if (IsCSSPropertyPrefEnabled("layout.css.animation-composition.enabled")) {
   gCSSProperties["animation-composition"] = {
     domProp: "animationComposition",
