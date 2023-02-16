@@ -2075,12 +2075,6 @@ void GCRuntime::queueUnusedLifoBlocksForFree(LifoAlloc* lifo) {
   lifoBlocksToFree.ref().transferUnusedFrom(lifo);
 }
 
-void GCRuntime::queueAllLifoBlocksForFree(LifoAlloc* lifo) {
-  MOZ_ASSERT(JS::RuntimeHeapIsBusy());
-  AutoLockHelperThreadState lock;
-  lifoBlocksToFree.ref().transferFrom(lifo);
-}
-
 void GCRuntime::queueAllLifoBlocksForFreeAfterMinorGC(LifoAlloc* lifo) {
   lifoBlocksToFreeAfterMinorGC.ref().transferFrom(lifo);
 }
