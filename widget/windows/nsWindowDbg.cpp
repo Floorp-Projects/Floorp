@@ -36,23 +36,30 @@ namespace mozilla::widget {
 // Using an unordered_set so we can initialize this with nice syntax instead of
 // having to add them one at a time to a mozilla::HashSet.
 std::unordered_set<UINT> gEventsToLogOriginalParams = {
-    WM_WINDOWPOSCHANGING, WM_SIZING,        WM_STYLECHANGING,
-    WM_GETTEXT,           WM_GETMINMAXINFO, WM_MEASUREITEM,
+    WM_WINDOWPOSCHANGING,  // (dummy comments for clang-format)
+    WM_SIZING,             //
+    WM_STYLECHANGING,
+    WM_GETTEXT,
+    WM_GETMINMAXINFO,
+    WM_MEASUREITEM,
+    WM_NCCALCSIZE,
 };
 
 // If you add an event here, you must add cases for these to
 // MakeMessageSpecificData() and AppendFriendlyMessageSpecificData()
 // in nsWindowLoggedMessages.cpp.
-std::unordered_set<UINT> gEventsToRecordInAboutPage = {WM_WINDOWPOSCHANGING,
-                                                       WM_WINDOWPOSCHANGED,
-                                                       WM_SIZING,
-                                                       WM_SIZE,
-                                                       WM_DPICHANGED,
-                                                       WM_SETTINGCHANGE,
-                                                       WM_NCCALCSIZE,
-                                                       WM_MOVE,
-                                                       WM_MOVING,
-                                                       WM_GETMINMAXINFO};
+std::unordered_set<UINT> gEventsToRecordInAboutPage = {
+    WM_WINDOWPOSCHANGING,  // (dummy comments for clang-format)
+    WM_WINDOWPOSCHANGED,   //
+    WM_SIZING,
+    WM_SIZE,
+    WM_DPICHANGED,
+    WM_SETTINGCHANGE,
+    WM_NCCALCSIZE,
+    WM_MOVE,
+    WM_MOVING,
+    WM_GETMINMAXINFO,
+};
 
 PrintEvent::PrintEvent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     : mHwnd(hwnd),
@@ -221,10 +228,11 @@ bool PrintEvent::PrintEventInternal() {
                                   : "initial call";
       nsAutoCString logMessage;
       logMessage.AppendPrintf(
-          "%6ld 0x%08llX - 0x%04X %s %s: 0x%08llX (%s)\n",
+          "%6ld %08" PRIX64 " - 0x%04X %s%s%s: 0x%08" PRIX64 " (%s)\n",
           mEventCounter.valueOr(gEventCounter),
-          reinterpret_cast<uint64_t>(mHwnd), mMsg, paramInfo.get(),
-          msgText ? msgText : "Unknown",
+          reinterpret_cast<uint64_t>(mHwnd), mMsg,
+          msgText ? msgText : "Unknown", paramInfo.IsEmpty() ? "" : " ",
+          paramInfo.get(),
           mResult.isSome() ? static_cast<uint64_t>(mRetValue) : 0, resultMsg);
       const char* logMessageData = logMessage.Data();
       MOZ_LOG(gWindowsEventLog, targetLogLevel, ("%s", logMessageData));
@@ -1456,12 +1464,17 @@ std::unordered_map<UINT, EventMsgInfo> gAllEvents = {
     ENTRY(WM_PENWINFIRST),
     ENTRY(WM_PENWINLAST),
     ENTRY(WM_APP),
-    ENTRY(WM_DWMCOMPOSITIONCHANGED),
-    ENTRY(WM_DWMNCRENDERINGCHANGED),
-    ENTRY(WM_DWMCOLORIZATIONCOLORCHANGED),
-    ENTRY(WM_DWMWINDOWMAXIMIZEDCHANGE),
-    ENTRY(WM_DWMSENDICONICTHUMBNAIL),
-    ENTRY(WM_DWMSENDICONICLIVEPREVIEWBITMAP),
+    ENTRY_WITH_NO_PARAM_INFO(WM_DWMCOMPOSITIONCHANGED),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_DWMNCRENDERINGCHANGED, TrueFalseParamInfo,
+                                 "DwmNcRendering", nullptr, nullptr),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_DWMCOLORIZATIONCOLORCHANGED, HexParamInfo,
+                                 "color:AARRGGBB", TrueFalseParamInfo,
+                                 "isOpaque"),
+    ENTRY_WITH_SPLIT_PARAM_INFOS(WM_DWMWINDOWMAXIMIZEDCHANGE,
+                                 TrueFalseParamInfo, "maximized", nullptr,
+                                 nullptr),
+    ENTRY(WM_DWMSENDICONICTHUMBNAIL),  // lParam: HIWORD is x, LOWORD is y
+    ENTRY_WITH_NO_PARAM_INFO(WM_DWMSENDICONICLIVEPREVIEWBITMAP),
     ENTRY(WM_TABLET_QUERYSYSTEMGESTURESTATUS),
     ENTRY(WM_GESTURE),
     ENTRY(WM_GESTURENOTIFY),
@@ -1469,7 +1482,7 @@ std::unordered_map<UINT, EventMsgInfo> gAllEvents = {
     ENTRY_WITH_SPLIT_PARAM_INFOS(WM_DPICHANGED, XLowWordYHighWordParamInfo,
                                  "newDPI", RectParamInfo,
                                  "suggestedSizeAndPos"),
-    {0x0, {nullptr, 0x0}}};
+};
 #undef ENTRY
 #undef ENTRY_WITH_NO_PARAM_INFO
 #undef ENTRY_WITH_CUSTOM_PARAM_INFO
@@ -1481,7 +1494,7 @@ std::unordered_map<UINT, EventMsgInfo> gAllEvents = {
 void DDError(const char* msg, HRESULT hr) {
   /*XXX make nicer */
   MOZ_LOG(gWindowsLog, LogLevel::Error,
-          ("direct draw error %s: 0x%08lx\n", msg, hr));
+          ("DirectDraw error %s: 0x%08lx\n", msg, hr));
 }
 #endif
 
