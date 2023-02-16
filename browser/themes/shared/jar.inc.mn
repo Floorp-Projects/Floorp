@@ -98,7 +98,6 @@
   skin/classic/browser/tracking-protection-disabled.svg               (../shared/identity-block/tracking-protection-disabled.svg)
   skin/classic/browser/tracking-protection-active.svg                 (../shared/identity-block/tracking-protection-active.svg)
   skin/classic/browser/tracking-protection-active-brighttext.svg      (../shared/identity-block/tracking-protection-active-brighttext.svg)
-  skin/classic/browser/translation/infobar.css                        (../shared/translation/infobar.css)
 
   skin/classic/browser/toolbar-drag-indicator.svg                     (../shared/toolbar-drag-indicator.svg)
 
@@ -230,10 +229,6 @@
   skin/classic/browser/tabbrowser/tab-loading-inverted.png     (../shared/tabbrowser/tab-loading-inverted.png)
   skin/classic/browser/tabbrowser/tab-loading-inverted@2x.png  (../shared/tabbrowser/tab-loading-inverted@2x.png)
 
-  skin/classic/browser/translating-16.png                      (../shared/translation/translating-16.png)
-  skin/classic/browser/translating-16@2x.png                   (../shared/translation/translating-16@2x.png)
-  skin/classic/browser/translation-16.png                      (../shared/translation/translation-16.png)
-  skin/classic/browser/translation-16@2x.png                   (../shared/translation/translation-16@2x.png)
   skin/classic/browser/update-badge.svg                        (../shared/update-badge.svg)
   skin/classic/browser/profiler-popup-backdrop.png             (../shared/profiler-popup-backdrop.png)
   skin/classic/browser/tab-crashed.svg                         (../shared/incontent-icons/tab-crashed.svg)
