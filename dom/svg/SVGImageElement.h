@@ -12,6 +12,7 @@
 #include "mozilla/dom/SVGAnimatedString.h"
 #include "mozilla/dom/SVGGeometryElement.h"
 #include "mozilla/dom/SVGAnimatedPreserveAspectRatio.h"
+#include "mozilla/gfx/2D.h"
 
 nsresult NS_NewSVGImageElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -22,7 +23,7 @@ class SVGImageFrame;
 namespace dom {
 class DOMSVGAnimatedPreserveAspectRatio;
 
-using SVGImageElementBase = SVGGeometryElement;
+using SVGImageElementBase = SVGGraphicsElement;
 
 class SVGImageElement : public SVGImageElementBase,
                         public nsImageLoadingContent {
@@ -54,11 +55,6 @@ class SVGImageElement : public SVGImageElementBase,
   nsresult AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                         const nsAttrValue* aValue, const nsAttrValue* aOldValue,
                         nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
-  bool IsNodeOfType(uint32_t aFlags) const override {
-    // <image> is not really a SVGGeometryElement, we should
-    // ignore eSHAPE flag accepted by SVGGeometryElement.
-    return SVGGraphicsElement::IsNodeOfType(aFlags);
-  }
 
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
   void UnbindFromTree(bool aNullParent) override;
@@ -68,13 +64,6 @@ class SVGImageElement : public SVGImageElementBase,
   void DestroyContent() override;
 
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* name) const override;
-
-  // SVGGeometryElement methods:
-  bool GetGeometryBounds(
-      Rect* aBounds, const StrokeOptions& aStrokeOptions,
-      const Matrix& aToBoundsSpace,
-      const Matrix* aToNonScalingStrokeSpace = nullptr) override;
-  already_AddRefed<Path> BuildPath(PathBuilder* aBuilder) override;
 
   // SVGSVGElement methods:
   bool HasValidDimensions() const override;
@@ -90,6 +79,8 @@ class SVGImageElement : public SVGImageElementBase,
   already_AddRefed<DOMSVGAnimatedLength> Height();
   already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
   already_AddRefed<DOMSVGAnimatedString> Href();
+
+  void GetGeometryBounds(gfx::Rect* aBounds, const gfx::Matrix& aToBoundsSpace);
 
   void SetDecoding(const nsAString& aDecoding, ErrorResult& aError) {
     SetAttr(nsGkAtoms::decoding, aDecoding, aError);

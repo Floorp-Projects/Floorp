@@ -20,7 +20,6 @@
 #include "nsLayoutUtils.h"
 #include "imgINotificationObserver.h"
 #include "SVGGeometryProperty.h"
-#include "SVGGeometryFrame.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_image.h"
 #include "mozilla/SVGContentUtils.h"
@@ -57,9 +56,44 @@ class SVGImageListener final : public imgINotificationObserver {
 
 // ---------------------------------------------------------------------
 // nsQueryFrame methods
+
 NS_QUERYFRAME_HEAD(SVGImageFrame)
+  NS_QUERYFRAME_ENTRY(ISVGDisplayableFrame)
   NS_QUERYFRAME_ENTRY(SVGImageFrame)
-NS_QUERYFRAME_TAIL_INHERITING(SVGGeometryFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsIFrame)
+
+void DisplaySVGImage::HitTest(nsDisplayListBuilder* aBuilder,
+                              const nsRect& aRect, HitTestState* aState,
+                              nsTArray<nsIFrame*>* aOutFrames) {
+  auto* frame = static_cast<SVGImageFrame*>(mFrame);
+  nsPoint pointRelativeToReferenceFrame = aRect.Center();
+  // ToReferenceFrame() includes frame->GetPosition(), our user space position.
+  nsPoint userSpacePtInAppUnits = pointRelativeToReferenceFrame -
+                                  (ToReferenceFrame() - frame->GetPosition());
+  gfxPoint userSpacePt =
+      gfxPoint(userSpacePtInAppUnits.x, userSpacePtInAppUnits.y) /
+      AppUnitsPerCSSPixel();
+  if (frame->GetFrameForPoint(userSpacePt)) {
+    aOutFrames->AppendElement(frame);
+  }
+}
+
+void DisplaySVGImage::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
+  uint32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+
+  // ToReferenceFrame includes our mRect offset, but painting takes
+  // account of that too. To avoid double counting, we subtract that
+  // here.
+  nsPoint offset = ToReferenceFrame() - mFrame->GetPosition();
+
+  gfxPoint devPixelOffset =
+      nsLayoutUtils::PointToGfxPoint(offset, appUnitsPerDevPixel);
+
+  gfxMatrix tm = SVGUtils::GetCSSPxToDevPxMatrix(mFrame) *
+                 gfxMatrix::Translation(devPixelOffset);
+  imgDrawingParams imgParams(aBuilder->GetImageDecodeFlags());
+  static_cast<SVGImageFrame*>(mFrame)->PaintSVG(*aCtx, tm, imgParams);
+}
 
 }  // namespace mozilla
 
@@ -91,7 +125,8 @@ void SVGImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   NS_ASSERTION(aContent->IsSVGElement(nsGkAtoms::image),
                "Content is not an SVG image!");
 
-  SVGGeometryFrame::Init(aContent, aParent, aPrevInFlow);
+  AddStateBits(aParent->GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD);
+  nsIFrame::Init(aContent, aParent, aPrevInFlow);
 
   if (HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
     // Non-display frames are likely to be patterns, masks or the like.
@@ -143,7 +178,7 @@ void SVGImageFrame::DestroyFrom(nsIFrame* aDestructRoot,
 
 /* virtual */
 void SVGImageFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
-  SVGGeometryFrame::DidSetComputedStyle(aOldStyle);
+  nsIFrame::DidSetComputedStyle(aOldStyle);
 
   if (!mImageContainer || !aOldStyle) {
     return;
@@ -168,6 +203,11 @@ void SVGImageFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
   }
 
   // TODO(heycam): We should handle aspect-ratio, like nsImageFrame does.
+}
+
+bool SVGImageFrame::IsSVGTransformed(gfx::Matrix* aOwnTransform,
+                                     gfx::Matrix* aFromParentTransform) const {
+  return SVGUtils::IsSVGTransformed(this, aOwnTransform, aFromParentTransform);
 }
 
 //----------------------------------------------------------------------
@@ -206,7 +246,7 @@ nsresult SVGImageFrame::AttributeChanged(int32_t aNameSpaceID,
     }
   }
 
-  return SVGGeometryFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
+  return nsIFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
 
 void SVGImageFrame::OnVisibilityChange(
@@ -217,7 +257,7 @@ void SVGImageFrame::OnVisibilityChange(
     imageLoader->OnVisibilityChange(aNewVisibility, aNonvisibleAction);
   }
 
-  SVGGeometryFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
+  nsIFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
 }
 
 gfx::Matrix SVGImageFrame::GetRasterImageTransform(int32_t aNativeWidth,
@@ -437,12 +477,44 @@ void SVGImageFrame::PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
   }
 }
 
+void SVGImageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                                     const nsDisplayListSet& aLists) {
+  if (!static_cast<const SVGElement*>(GetContent())->HasValidDimensions()) {
+    return;
+  }
+
+  if (aBuilder->IsForPainting()) {
+    if (!IsVisibleForPainting()) {
+      return;
+    }
+    if (StyleEffects()->mOpacity == 0.0f) {
+      return;
+    }
+    aBuilder->BuildCompositorHitTestInfoIfNeeded(this,
+                                                 aLists.BorderBackground());
+  }
+
+  DisplayOutline(aBuilder, aLists);
+  aLists.Content()->AppendNewToTop<DisplaySVGImage>(aBuilder, this);
+}
+
+bool SVGImageFrame::IsInvisible() const {
+  if (!StyleVisibility()->IsVisible()) {
+    return true;
+  }
+
+  // Anything below will round to zero later down the pipeline.
+  constexpr float opacity_threshold = 1.0 / 128.0;
+
+  return StyleEffects()->mOpacity <= opacity_threshold;
+}
+
 bool SVGImageFrame::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const mozilla::layers::StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
-    nsDisplayListBuilder* aDisplayListBuilder, DisplaySVGGeometry* aItem,
+    nsDisplayListBuilder* aDisplayListBuilder, DisplaySVGImage* aItem,
     bool aDryRun) {
   if (!StyleVisibility()->IsVisible()) {
     return true;
@@ -712,10 +784,7 @@ nsIFrame* SVGImageFrame::GetFrameForPoint(const gfxPoint& aPoint) {
 }
 
 //----------------------------------------------------------------------
-// SVGGeometryFrame methods:
-
-// Lie about our fill/stroke so that covered region and hit detection work
-// properly
+// SVGImageFrame methods:
 
 void SVGImageFrame::ReflowSVG() {
   NS_ASSERTION(SVGUtils::OuterSVGIsCallingReflowSVG(this),
@@ -821,6 +890,36 @@ uint16_t SVGImageFrame::GetHitTestFlags() {
   }
 
   return flags;
+}
+
+void SVGImageFrame::NotifySVGChanged(uint32_t aFlags) {
+  MOZ_ASSERT(aFlags & (TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED),
+             "Invalidation logic may need adjusting");
+}
+
+SVGBBox SVGImageFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
+                                           uint32_t aFlags) {
+  SVGBBox bbox;
+
+  if (aToBBoxUserspace.IsSingular()) {
+    // XXX ReportToConsole
+    return bbox;
+  }
+
+  if ((aFlags & SVGUtils::eForGetClientRects) &&
+      aToBBoxUserspace.PreservesAxisAlignedRectangles()) {
+    Rect rect = NSRectToRect(mRect, AppUnitsPerCSSPixel());
+    bbox = aToBBoxUserspace.TransformBounds(rect);
+    return bbox;
+  }
+
+  auto* element = static_cast<SVGImageElement*>(GetContent());
+
+  Rect simpleBounds;
+  element->GetGeometryBounds(&simpleBounds, aToBBoxUserspace);
+  bbox = simpleBounds;
+
+  return bbox;
 }
 
 //----------------------------------------------------------------------
