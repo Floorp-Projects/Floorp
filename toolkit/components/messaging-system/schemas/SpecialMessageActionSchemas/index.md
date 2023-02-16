@@ -327,8 +327,8 @@ Selects an element in the current Window's document and triggers a click action
 Action for opening about:firefoxview and the colorways modal
 
 
-### `RELOAD_BROWSER`
+### `ENABLE_CBH`
 
 * args: (none)
 
-Action for reloading the current browser
+Action that enables the cookie banner handling feature
