@@ -6385,6 +6385,11 @@
   value: true
   mirror: always
 
+- name: gfx.webrender.svg-shapes
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 - name: gfx.webrender.debug.blob.paint-flashing
   type: RelaxedAtomicBool
   value: false

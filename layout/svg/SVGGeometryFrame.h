@@ -97,7 +97,7 @@ class SVGGeometryFrame : public nsIFrame, public ISVGDisplayableFrame {
 
   bool IsInvisible() const;
 
- protected:
+ private:
   // ISVGDisplayableFrame interface:
   void PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
                 imgDrawingParams& aImgParams,
@@ -115,14 +115,13 @@ class SVGGeometryFrame : public nsIFrame, public ISVGDisplayableFrame {
    * into account the type of element and the value of the 'pointer-events'
    * property on the element.
    */
-  virtual uint16_t GetHitTestFlags();
+  uint16_t GetHitTestFlags();
 
- private:
   enum { eRenderFill = 1, eRenderStroke = 2 };
   void Render(gfxContext* aContext, uint32_t aRenderComponents,
               const gfxMatrix& aTransform, imgDrawingParams& aImgParams);
 
-  virtual bool CreateWebRenderCommands(
+  bool CreateWebRenderCommands(
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const mozilla::layers::StackingContextHelper& aSc,
@@ -180,7 +179,7 @@ class DisplaySVGGeometry final : public nsPaintedDisplayItem {
                                           /*aDryRun=*/true);
   }
 
-  virtual bool CreateWebRenderCommands(
+  bool CreateWebRenderCommands(
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const mozilla::layers::StackingContextHelper& aSc,
