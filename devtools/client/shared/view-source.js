@@ -120,80 +120,25 @@ exports.viewSourceInDebugger = async function(
   sourceActorId,
   reason = "unknown"
 ) {
-  const location = await getViewSourceInDebuggerLocation(
-    toolbox,
+  // Load the debugger in the background
+  const dbg = await toolbox.loadTool("jsdebugger");
+
+  const openedSourceInDebugger = await dbg.openSourceInDebugger({
     generatedURL,
     generatedLine,
     generatedColumn,
-    sourceActorId
-  );
+    sourceActorId,
+    reason,
+  });
 
-  if (location) {
-    const { id, line, column } = location;
-
-    const dbg = await toolbox.selectTool("jsdebugger", reason);
-    try {
-      await dbg.selectSource(id, sourceActorId, line, column);
-      return true;
-    } catch (err) {
-      console.error("Failed to view source in debugger", err);
-    }
+  if (openedSourceInDebugger) {
+    return true;
   }
 
+  // Fallback to built-in firefox view-source:
   exports.viewSource(toolbox, generatedURL, generatedLine);
   return false;
 };
-
-async function getViewSourceInDebuggerLocation(
-  toolbox,
-  generatedURL,
-  generatedLine,
-  generatedColumn,
-  sourceActorId
-) {
-  const dbg = await toolbox.loadTool("jsdebugger");
-
-  const generatedSource = sourceActorId
-    ? dbg.getSourceByActorId(sourceActorId)
-    : dbg.getSourceByURL(generatedURL);
-  if (
-    !generatedSource ||
-    // Note: We're not entirely sure when this can happen, so we may want
-    // to revisit that at some point.
-    dbg.getSourceActorsForSource(generatedSource.id).length === 0
-  ) {
-    return null;
-  }
-
-  const generatedLocation = {
-    id: generatedSource.id,
-    line: generatedLine,
-    column: generatedColumn,
-  };
-
-  const originalLocation = await getOriginalLocation(
-    toolbox,
-    generatedLocation.id,
-    generatedLocation.line,
-    generatedLocation.column
-  );
-
-  if (!originalLocation) {
-    return generatedLocation;
-  }
-
-  const originalSource = dbg.getLocationSource(originalLocation);
-
-  if (!originalSource) {
-    return generatedLocation;
-  }
-
-  return {
-    id: originalSource.id,
-    line: originalLocation.line,
-    column: originalLocation.column,
-  };
-}
 
 async function getOriginalLocation(
   toolbox,
