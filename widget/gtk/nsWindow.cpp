@@ -4746,7 +4746,7 @@ void nsWindow::OnButtonReleaseEvent(GdkEventButton* aEvent) {
 
   // Open window manager menu on PIP window to allow user
   // to place it on top / all workspaces.
-  if (mIsPIPWindow && aEvent->button == 3) {
+  if (mAlwaysOnTop && aEvent->button == 3) {
     TryToShowNativeWindowMenu(aEvent);
   }
 }
