@@ -16,8 +16,8 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 9 } });
 // Tests
 // ------------------------------------------------------------------------------
 
-function callError(message) {
-  return [{ message, type: "CallExpression" }];
+function callError() {
+  return [{ messageId: "useAddSetup", type: "CallExpression" }];
 }
 
 ruleTester.run("no-addtask-setup", rule, {
@@ -38,44 +38,32 @@ ruleTester.run("no-addtask-setup", rule, {
     {
       code: "add_task(function setup() {});",
       output: "add_setup(function() {});",
-      errors: callError(
-        "Do not use add_task() for setup, use add_setup() instead."
-      ),
+      errors: callError(),
     },
     {
       code: "add_task(function setup () {});",
       output: "add_setup(function () {});",
-      errors: callError(
-        "Do not use add_task() for setup, use add_setup() instead."
-      ),
+      errors: callError(),
     },
     {
       code: "add_task(async function setup() {});",
       output: "add_setup(async function() {});",
-      errors: callError(
-        "Do not use add_task() for setup, use add_setup() instead."
-      ),
+      errors: callError(),
     },
     {
       code: "add_task(async function setup () {});",
       output: "add_setup(async function () {});",
-      errors: callError(
-        "Do not use add_task() for setup, use add_setup() instead."
-      ),
+      errors: callError(),
     },
     {
       code: "add_task(async function setUp() {});",
       output: "add_setup(async function() {});",
-      errors: callError(
-        "Do not use add_task() for setup, use add_setup() instead."
-      ),
+      errors: callError(),
     },
     {
       code: "add_task(async function init() {});",
       output: "add_setup(async function() {});",
-      errors: callError(
-        "Do not use add_task() for setup, use add_setup() instead."
-      ),
+      errors: callError(),
     },
   ],
 });

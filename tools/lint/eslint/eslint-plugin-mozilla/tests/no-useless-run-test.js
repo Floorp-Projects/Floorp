@@ -17,9 +17,11 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
 // ------------------------------------------------------------------------------
 
 function invalidCode(code, output) {
-  let message =
-    "Useless run_test function - only contains run_next_test; whole function can be removed";
-  return { code, output, errors: [{ message, type: "FunctionDeclaration" }] };
+  return {
+    code,
+    output,
+    errors: [{ messageId: "noUselessRunTest", type: "FunctionDeclaration" }],
+  };
 }
 
 ruleTester.run("no-useless-run-test", rule, {

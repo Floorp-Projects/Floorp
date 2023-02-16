@@ -18,9 +18,7 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
 
 function error(line, column = undefined) {
   return {
-    message:
-      "prefer to use a single document.l10n.formatValues call instead " +
-      "of multiple calls to document.l10n.formatValue or document.l10n.formatValues",
+    messageId: "useSingleCall",
     type: "CallExpression",
     line,
     column,

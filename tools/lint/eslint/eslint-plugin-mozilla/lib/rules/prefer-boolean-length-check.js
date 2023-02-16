@@ -63,6 +63,9 @@ module.exports = {
         "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/prefer-boolean-length-check.html",
     },
     fixable: "code",
+    messages: {
+      preferBooleanCheck: "Prefer boolean length check",
+    },
     schema: [],
     type: "suggestion",
   },
@@ -104,7 +107,7 @@ module.exports = {
 
                 return fixer.replaceText(node, generateExpression);
               },
-              message: "Prefer boolean length check",
+              messageId: "preferBooleanCheck",
             });
           } else {
             context.report({
@@ -117,7 +120,7 @@ module.exports = {
                 );
                 return fixer.replaceText(node, generateExpression);
               },
-              message: "Prefer boolean length check",
+              messageId: "preferBooleanCheck",
             });
           }
         }

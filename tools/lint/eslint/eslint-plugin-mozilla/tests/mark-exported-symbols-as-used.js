@@ -16,8 +16,8 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
 // Tests
 // ------------------------------------------------------------------------------
 
-function invalidCode(code, type, message) {
-  return { code, errors: [{ message, type }] };
+function invalidCode(code, type, messageId) {
+  return { code, errors: [{ messageId, type }] };
 }
 
 ruleTester.run("mark-exported-symbols-as-used", rule, {
@@ -29,17 +29,17 @@ ruleTester.run("mark-exported-symbols-as-used", rule, {
     invalidCode(
       "let EXPORTED_SYMBOLS = ['foo'];",
       "VariableDeclaration",
-      "EXPORTED_SYMBOLS cannot be declared via `let`. Use `var` or `this.EXPORTED_SYMBOLS =`"
+      "useLetForExported"
     ),
     invalidCode(
       "var EXPORTED_SYMBOLS = 'foo';",
       "VariableDeclaration",
-      "Unexpected assignment of non-Array to EXPORTED_SYMBOLS"
+      "nonArrayAssignedToImported"
     ),
     invalidCode(
       "this.EXPORTED_SYMBOLS = 'foo';",
       "AssignmentExpression",
-      "Unexpected assignment of non-Array to EXPORTED_SYMBOLS"
+      "nonArrayAssignedToImported"
     ),
   ],
 });

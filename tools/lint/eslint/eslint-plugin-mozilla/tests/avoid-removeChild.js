@@ -16,13 +16,8 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
 // Tests
 // ------------------------------------------------------------------------------
 
-function invalidCode(code, message) {
-  if (!message) {
-    message =
-      "use element.remove() instead of " +
-      "element.parentNode.removeChild(element)";
-  }
-  return { code, errors: [{ message, type: "CallExpression" }] };
+function invalidCode(code, messageId = "useRemove") {
+  return { code, errors: [{ messageId, type: "CallExpression" }] };
 }
 
 ruleTester.run("avoid-removeChild", rule, {
@@ -37,10 +32,6 @@ ruleTester.run("avoid-removeChild", rule, {
     invalidCode("elt.parentNode.parentNode.removeChild(elt.parentNode);"),
     invalidCode("$(e).parentNode.removeChild($(e));"),
     invalidCode("$('e').parentNode.removeChild($('e'));"),
-    invalidCode(
-      "elt.removeChild(elt.firstChild);",
-      "use element.firstChild.remove() instead of " +
-        "element.removeChild(element.firstChild)"
-    ),
+    invalidCode("elt.removeChild(elt.firstChild);", "useFirstChildRemove"),
   ],
 });

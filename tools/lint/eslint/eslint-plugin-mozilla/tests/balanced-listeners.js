@@ -16,10 +16,16 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
 // Tests
 // ------------------------------------------------------------------------------
 
-function error(code, message) {
+function error(code, functionName, type) {
   return {
     code,
-    errors: [{ message, type: "Identifier" }],
+    errors: [
+      {
+        messageId: "noCorresponding",
+        type: "Identifier",
+        data: { functionName, type },
+      },
+    ],
   };
 }
 
@@ -59,31 +65,36 @@ ruleTester.run("balanced-listeners", rule, {
   invalid: [
     error(
       "elt.addEventListener('click', handler, false);",
-      "No corresponding 'removeEventListener(click)' was found."
+      "removeEventListener",
+      "click"
     ),
 
     error(
       "elt.addEventListener('click', handler, false);" +
         "elt.removeEventListener('click', handler, true);",
-      "No corresponding 'removeEventListener(click)' was found."
+      "removeEventListener",
+      "click"
     ),
 
     error(
       "elt.addEventListener('click', handler, {capture: false});" +
         "elt.removeEventListener('click', handler, true);",
-      "No corresponding 'removeEventListener(click)' was found."
+      "removeEventListener",
+      "click"
     ),
 
     error(
       "elt.addEventListener('click', handler, {capture: true});" +
         "elt.removeEventListener('click', handler);",
-      "No corresponding 'removeEventListener(click)' was found."
+      "removeEventListener",
+      "click"
     ),
 
     error(
       "elt.addEventListener('click', handler, true);" +
         "elt.removeEventListener('click', handler);",
-      "No corresponding 'removeEventListener(click)' was found."
+      "removeEventListener",
+      "click"
     ),
   ],
 });

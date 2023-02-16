@@ -16,8 +16,8 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
 // Tests
 // ------------------------------------------------------------------------------
 
-function callError(message) {
-  return [{ message, type: "CallExpression" }];
+function callError(messageId, data = {}) {
+  return [{ messageId, data, type: "CallExpression" }];
 }
 
 ruleTester.run("no-useless-parameters", rule, {
@@ -45,103 +45,131 @@ ruleTester.run("no-useless-parameters", rule, {
     {
       code: "Services.prefs.clearUserPref('browser.search.custom', false);",
       output: "Services.prefs.clearUserPref('browser.search.custom');",
-      errors: callError("clearUserPref takes only 1 parameter."),
+      errors: callError("onlyTakes", {
+        fnName: "clearUserPref",
+        params: "1 parameter",
+      }),
     },
     {
       code: "Services.prefs.clearUserPref('browser.search.custom',\n   false);",
       output: "Services.prefs.clearUserPref('browser.search.custom');",
-      errors: callError("clearUserPref takes only 1 parameter."),
+      errors: callError("onlyTakes", {
+        fnName: "clearUserPref",
+        params: "1 parameter",
+      }),
     },
     {
       code: "Services.removeObserver('notification name', {}, false);",
       output: "Services.removeObserver('notification name', {});",
-      errors: callError("removeObserver only takes 2 parameters."),
+      errors: callError("onlyTakes", {
+        fnName: "removeObserver",
+        params: "2 parameters",
+      }),
     },
     {
       code: "Services.removeObserver('notification name', {}, true);",
       output: "Services.removeObserver('notification name', {});",
-      errors: callError("removeObserver only takes 2 parameters."),
+      errors: callError("onlyTakes", {
+        fnName: "removeObserver",
+        params: "2 parameters",
+      }),
     },
     {
       code: "Services.io.newURI('http://example.com', null, null);",
       output: "Services.io.newURI('http://example.com');",
-      errors: callError("newURI's last parameters are optional."),
+      errors: callError("newURIParams"),
     },
     {
       code: "Services.io.newURI('http://example.com', 'utf8', null);",
       output: "Services.io.newURI('http://example.com', 'utf8');",
-      errors: callError("newURI's last parameters are optional."),
+      errors: callError("newURIParams"),
     },
     {
       code: "Services.io.newURI('http://example.com', null);",
       output: "Services.io.newURI('http://example.com');",
-      errors: callError("newURI's last parameters are optional."),
+      errors: callError("newURIParams"),
     },
     {
       code: "Services.io.newURI('http://example.com', '', '');",
       output: "Services.io.newURI('http://example.com');",
-      errors: callError("newURI's last parameters are optional."),
+      errors: callError("newURIParams"),
     },
     {
       code: "Services.io.newURI('http://example.com', '');",
       output: "Services.io.newURI('http://example.com');",
-      errors: callError("newURI's last parameters are optional."),
+      errors: callError("newURIParams"),
     },
     {
       code: "elt.addEventListener('click', handler, false);",
       output: "elt.addEventListener('click', handler);",
-      errors: callError(
-        "addEventListener's third parameter can be omitted when it's false."
-      ),
+      errors: callError("obmittedWhenFalse", {
+        fnName: "addEventListener",
+        index: "third",
+      }),
     },
     {
       code: "elt.removeEventListener('click', handler, false);",
       output: "elt.removeEventListener('click', handler);",
-      errors: callError(
-        "removeEventListener's third parameter can be omitted when it's" +
-          " false."
-      ),
+      errors: callError("obmittedWhenFalse", {
+        fnName: "removeEventListener",
+        index: "third",
+      }),
     },
     {
       code: "Services.obs.addObserver(this, 'topic', false);",
       output: "Services.obs.addObserver(this, 'topic');",
-      errors: callError(
-        "addObserver's third parameter can be omitted when it's false."
-      ),
+      errors: callError("obmittedWhenFalse", {
+        fnName: "addObserver",
+        index: "third",
+      }),
     },
     {
       code: "Services.prefs.addObserver('branch', this, false);",
       output: "Services.prefs.addObserver('branch', this);",
-      errors: callError(
-        "addObserver's third parameter can be omitted when it's false."
-      ),
+      errors: callError("obmittedWhenFalse", {
+        fnName: "addObserver",
+        index: "third",
+      }),
     },
     {
       code: "array.appendElement(elt, false);",
       output: "array.appendElement(elt);",
-      errors: callError(
-        "appendElement's second parameter can be omitted when it's false."
-      ),
+      errors: callError("obmittedWhenFalse", {
+        fnName: "appendElement",
+        index: "second",
+      }),
     },
     {
       code: "Services.obs.notifyObservers(obj, 'topic', null);",
       output: "Services.obs.notifyObservers(obj, 'topic');",
-      errors: callError("notifyObservers's third parameter can be omitted."),
+      errors: callError("obmittedWhenFalse", {
+        fnName: "notifyObservers",
+        index: "third",
+      }),
     },
     {
       code: "Services.obs.notifyObservers(obj, 'topic', '');",
       output: "Services.obs.notifyObservers(obj, 'topic');",
-      errors: callError("notifyObservers's third parameter can be omitted."),
+      errors: callError("obmittedWhenFalse", {
+        fnName: "notifyObservers",
+        index: "third",
+      }),
     },
     {
       code: "window.getComputedStyle(elt, null);",
       output: "window.getComputedStyle(elt);",
-      errors: callError("getComputedStyle's second parameter can be omitted."),
+      errors: callError("obmittedWhenFalse", {
+        fnName: "getComputedStyle",
+        index: "second",
+      }),
     },
     {
       code: "window.getComputedStyle(elt, '');",
       output: "window.getComputedStyle(elt);",
-      errors: callError("getComputedStyle's second parameter can be omitted."),
+      errors: callError("obmittedWhenFalse", {
+        fnName: "getComputedStyle",
+        index: "second",
+      }),
     },
   ],
 });

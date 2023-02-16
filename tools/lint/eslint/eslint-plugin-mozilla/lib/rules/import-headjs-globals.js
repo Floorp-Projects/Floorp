@@ -28,6 +28,8 @@ function importHead(context, path, node) {
 }
 
 module.exports = {
+  // This rule currently has no messages.
+  // eslint-disable-next-line eslint-plugin/prefer-message-ids
   meta: {
     docs: {
       url:

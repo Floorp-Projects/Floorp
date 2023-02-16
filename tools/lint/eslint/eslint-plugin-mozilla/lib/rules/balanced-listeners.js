@@ -18,6 +18,10 @@ module.exports = {
       url:
         "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/balanced-listeners.html",
     },
+    messages: {
+      noCorresponding:
+        "No corresponding '{{functionName}}({{type}})' was found.",
+    },
     schema: [],
     type: "problem",
   },
@@ -133,7 +137,7 @@ module.exports = {
         getUnbalancedListeners().forEach(function(listener) {
           context.report({
             node: listener.node,
-            message: "No corresponding '{{functionName}}({{type}})' was found.",
+            messageId: "noCorresponding",
             data: {
               functionName: DICTIONARY[listener.functionName],
               type: listener.type,

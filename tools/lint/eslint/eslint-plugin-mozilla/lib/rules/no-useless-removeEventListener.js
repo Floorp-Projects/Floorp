@@ -15,6 +15,10 @@ module.exports = {
       url:
         "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/no-useless-removeEventListener.html",
     },
+    messages: {
+      useOnce:
+        "use {once: true} instead of removeEventListener as the first instruction of the listener",
+    },
     schema: [],
     type: "suggestion",
   },
@@ -57,9 +61,7 @@ module.exports = {
         ) {
           context.report({
             node: call,
-            message:
-              "use {once: true} instead of removeEventListener as " +
-              "the first instruction of the listener",
+            messageId: "useOnce",
           });
         }
       },

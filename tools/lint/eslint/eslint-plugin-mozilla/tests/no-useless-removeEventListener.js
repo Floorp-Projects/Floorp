@@ -17,10 +17,7 @@ const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 6 } });
 // ------------------------------------------------------------------------------
 
 function invalidCode(code) {
-  let message =
-    "use {once: true} instead of removeEventListener " +
-    "as the first instruction of the listener";
-  return { code, errors: [{ message, type: "CallExpression" }] };
+  return { code, errors: [{ messageId: "useOnce", type: "CallExpression" }] };
 }
 
 ruleTester.run("no-useless-removeEventListener", rule, {

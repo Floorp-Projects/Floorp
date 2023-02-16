@@ -13,7 +13,7 @@ function markArrayElementsAsUsed(context, node, expression) {
   if (expression.type != "ArrayExpression") {
     context.report({
       node,
-      message: "Unexpected assignment of non-Array to EXPORTED_SYMBOLS",
+      messageId: "nonArrayAssignedToImported",
     });
     return;
   }
@@ -37,6 +37,12 @@ module.exports = {
     docs: {
       url:
         "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/mark-exported-symbols-as-used.html",
+    },
+    messages: {
+      useLetForExported:
+        "EXPORTED_SYMBOLS cannot be declared via `let`. Use `var` or `this.EXPORTED_SYMBOLS =`",
+      nonArrayAssignedToImported:
+        "Unexpected assignment of non-Array to EXPORTED_SYMBOLS",
     },
     schema: [],
     type: "problem",
@@ -72,8 +78,7 @@ module.exports = {
               // the script executes.
               context.report({
                 node,
-                message:
-                  "EXPORTED_SYMBOLS cannot be declared via `let`. Use `var` or `this.EXPORTED_SYMBOLS =`",
+                messageId: "useLetForExported",
               });
             }
 

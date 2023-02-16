@@ -14,6 +14,10 @@ module.exports = {
       url:
         "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/avoid-Date-timing.html",
     },
+    messages: {
+      usePerfNow:
+        "use performance.now() instead of Date.now() for timing measurements",
+    },
     schema: [],
     type: "problem",
   },
@@ -34,9 +38,7 @@ module.exports = {
 
         context.report({
           node,
-          message:
-            "use performance.now() instead of Date.now() for timing " +
-            "measurements",
+          messageId: "usePerfNow",
         });
       },
 
@@ -52,9 +54,7 @@ module.exports = {
 
         context.report({
           node,
-          message:
-            "use performance.now() instead of new Date() for timing " +
-            "measurements",
+          messageId: "usePerfNow",
         });
       },
     };
