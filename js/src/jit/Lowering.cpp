@@ -2645,8 +2645,7 @@ void LIRGenerator::visitToNumberInt32(MToNumberInt32* convert) {
                                               LValueToInt32::NORMAL);
       assignSnapshot(lir, convert->bailoutKind());
       define(lir, convert);
-      if (lir->mode() == LValueToInt32::TRUNCATE ||
-          lir->mode() == LValueToInt32::TRUNCATE_NOWRAP) {
+      if (lir->mode() == LValueToInt32::TRUNCATE) {
         assignSafepoint(lir, convert);
       }
       break;
