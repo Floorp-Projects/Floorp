@@ -8,7 +8,6 @@ import androidx.core.net.toUri
 import mozilla.components.concept.engine.utils.EngineReleaseChannel
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -210,7 +209,6 @@ class DownloadTest {
         }
     }
 
-    @Ignore("Failing because of https://bugzilla.mozilla.org/show_bug.cgi?id=1810132")
     @SmokeTest
     @Test
     fun saveAndOpenPdfTest() {
@@ -226,7 +224,6 @@ class DownloadTest {
             }.openThreeDotMenu {
             }.clickShareButton {
             }.clickSaveAsPDF {
-                // change back to simple filename
                 verifyDownloadPrompt(pdfFileName)
             }.clickDownload {
             }.clickOpen("application/pdf") {
