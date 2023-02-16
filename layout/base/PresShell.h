@@ -1791,11 +1791,11 @@ class PresShell final : public nsStubDocumentObserver,
   bool DetermineFontSizeInflationState();
 
   void RecordAlloc(void* aPtr) {
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#ifdef DEBUG
     if (!mAllocatedPointers) {
       return;  // Hash set was presumably freed to avert OOM.
     }
-    MOZ_DIAGNOSTIC_ASSERT(!mAllocatedPointers->Contains(aPtr));
+    MOZ_ASSERT(!mAllocatedPointers->Contains(aPtr));
     if (!mAllocatedPointers->Insert(aPtr, fallible)) {
       // Yikes! We're nearly out of memory, and this insertion would've pushed
       // us over the ledge. At this point, we discard & stop using this set,
@@ -1807,11 +1807,11 @@ class PresShell final : public nsStubDocumentObserver,
   }
 
   void RecordFree(void* aPtr) {
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#ifdef DEBUG
     if (!mAllocatedPointers) {
       return;  // Hash set was presumably freed to avert OOM.
     }
-    MOZ_DIAGNOSTIC_ASSERT(mAllocatedPointers->Contains(aPtr));
+    MOZ_ASSERT(mAllocatedPointers->Contains(aPtr));
     mAllocatedPointers->Remove(aPtr);
 #endif
   }
@@ -2910,7 +2910,7 @@ class PresShell final : public nsStubDocumentObserver,
   // moving/sizing loop is running, see bug 491700 for details.
   nsCOMPtr<nsITimer> mReflowContinueTimer;
 
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#ifdef DEBUG
   // We track allocated pointers in a diagnostic hash set, to assert against
   // missing/double frees. This set is allocated infallibly in the PresShell
   // constructor's initialization list. The set can get quite large, so we use
@@ -2918,7 +2918,8 @@ class PresShell final : public nsStubDocumentObserver,
   // fail, then we just get rid of the set and stop using this diagnostic from
   // that point on.  (There's not much else we can do, when the set grows
   // larger than the available memory.)
-  UniquePtr<nsTHashSet<void*>> mAllocatedPointers;
+  UniquePtr<nsTHashSet<void*>> mAllocatedPointers{
+      MakeUnique<nsTHashSet<void*>>()};
 #endif
 
   // A list of stack weak frames. This is a pointer to the last item in the
