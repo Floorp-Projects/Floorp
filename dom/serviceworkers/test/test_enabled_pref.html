@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1645054 - test dom.serviceWorkers.enabled preference</title>
+</head>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="utils.js"></script>
+<script>
+
+  function create_iframe(url) {
+    return new Promise(function(res) {
+      iframe = document.createElement('iframe');
+      iframe.src = url;
+      iframe.onload = function() { res(iframe) }
+      document.body.appendChild(iframe);
+    });
+  }
+
+  async function do_fetch(pref) {
+    await SpecialPowers.pushPrefEnv({ set: [pref] });
+
+    let iframe = await create_iframe("./pref/fetch_nonexistent_file.html");
+    let status = await iframe.contentWindow.fetch_status();
+
+    await SpecialPowers.popPrefEnv();
+    return status;
+  }
+
+  add_task(async () => {
+    await SpecialPowers.pushPrefEnv({
+      set: [['dom.serviceWorkers.testing.enabled', true]]
+    });
+
+    let reg = await navigator.serviceWorker.register(
+      'pref/intercept_nonexistent_file_sw.js');
+    await waitForState(reg.installing, 'activated');
+
+    let status;
+
+    status = await do_fetch(['dom.serviceWorkers.enabled', true]);
+    is(status, 200, 'SW enabled');
+
+    status = await do_fetch(['dom.serviceWorkers.enabled', false]);
+    is(status, 404, 'SW disabled');
+
+    status = await do_fetch(['dom.serviceWorkers.enabled', true]);
+    is(status, 200, 'SW enabled again');
+
+    await reg.unregister();
+  });
+
+</script>
+<body>
+</body>
+</html>

@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script>
+
+  async function fetch_status() {
+    let response = await fetch('this_file_does_not_exist.txt');
+    return response.status;
+  }
+
+</script>
+</head>
+<body>
+</body>
+</html>
