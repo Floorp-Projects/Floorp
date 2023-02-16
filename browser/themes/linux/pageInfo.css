@@ -7,12 +7,20 @@
 
 /* View buttons */
 #viewGroup > radio {
-  list-style-image: url("chrome://browser/skin/pageInfo.png");
   appearance: none;
+  list-style-image: none;
   min-width: 4.5em;
   margin: 0;
   padding: 3px;
   color: FieldText;
+}
+
+#viewGroup .radio-icon {
+  background-image: url("chrome://browser/skin/pageInfo.png");
+  width: 32px;
+  height: 32px;
+  /* Avoid anti-aliasing seams in HiDPI */
+  image-rendering: crisp-edges;
 }
 
 #viewGroup > radio[selected="true"] {
@@ -35,20 +43,20 @@
   color: FieldText;
 }
 
-#generalTab {
-  -moz-image-region: rect(0px, 32px, 32px, 0px)
+#generalTab .radio-icon {
+  background-position-x: 0;
 }
 
-#mediaTab {
-  -moz-image-region: rect(0px, 64px, 32px, 32px)
+#mediaTab .radio-icon {
+  background-position-x: -32px;
 }
 
-#permTab {
-  -moz-image-region: rect(0px, 128px, 32px, 96px)
+#permTab .radio-icon {
+  background-position-x: -96px;
 }
 
-#securityTab {
-  -moz-image-region: rect(0px, 160px, 32px, 128px)
+#securityTab .radio-icon {
+  background-position-x: -128px;
 }
 
 /* Misc */
