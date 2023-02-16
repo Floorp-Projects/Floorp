@@ -54,13 +54,11 @@ std::unordered_set<UINT> gEventsToRecordInAboutPage = {WM_WINDOWPOSCHANGING,
                                                        WM_MOVING,
                                                        WM_GETMINMAXINFO};
 
-PrintEvent::PrintEvent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
-                       LRESULT retValue)
+PrintEvent::PrintEvent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     : mHwnd(hwnd),
       mMsg(msg),
       mWParam(wParam),
       mLParam(lParam),
-      mRetValue(retValue),
       mResult(mozilla::Nothing()),
       mShouldLogPostCall(false) {
   if (PrintEventInternal()) {
