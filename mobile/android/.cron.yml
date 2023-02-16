@@ -10,8 +10,8 @@ jobs:
           treeherder-symbol: nightly-D
           target-tasks-method: nightly
       when:
-          - {hour: 14, minute: 30}
-          - {hour: 19, minute: 0}
+          - {hour: 4, minute: 0}
+          - {hour: 16, minute: 0}
     - name: nightly-test
       job:
           type: decision-task
