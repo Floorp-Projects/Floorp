@@ -873,17 +873,37 @@ scriptLoaderPrefs:
 
 echPrefs:
   description: Prefs that control Encrypted Client Hello.
-  owner: kershaw@mozilla.com
+  owner: djackson@mozilla.com
   hasExposure: false
   variables:
-    configEnabled:
-      description: Whether to enable encrypted client hello.
+    tlsEnabled:
+      description: Whether to enable ECH for connections using TLS
       type: boolean
       setPref: "network.dns.echconfig.enabled"
-    greaseProbability:
+    h3Enabled:
+      description: Whether to enable ECH for connections using H3/QUIC
+      type: boolean
+      setPref: "network.dns.http3_echconfig.enabled"
+    forceWaitHttpsRR:
+      description: Whether to force waiting for HTTPS DNS records, which ECH requires.
+      type: boolean
+      setPref: "network.dns.force_waiting_https_r"
+    insecureFallback:
+      description: Whether to fallback to non-ECH connections if all ECH RRs fail.
+      type: boolean
+      setPref: "network.dns.echconfig.fallback_to_origin_when_all_failed"
+    tlsGreaseProb:
       description: Probability of GREASEing a TLS connection with ECH (0-100).
       type: int
       setPref: "security.tls.ech.grease_probability"
+    disableGreaseOnFallback:
+      description: Whether to disable GREASE when retrying a connection.
+      type: boolean
+      setPref: "security.tls.ech.disable_grease_on_fallback"
+    greasePaddingSize:
+      description: Assumed echConfig padding length for GREASE extensions (1-255).
+      type: int
+      setPref: "security.tls.ech.grease_size"
 
 pingsender:
   description: "In-product usage of the pingsender telemetry reporter."
