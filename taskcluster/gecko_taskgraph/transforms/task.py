@@ -883,7 +883,7 @@ def build_scriptworker_signing_payload(config, task, task_def):
                     behavior=worker.get("mac-behavior"),
                 )
             )
-    task["attributes"]["release_artifacts"] = list(artifacts)
+    task["attributes"]["release_artifacts"] = sorted(list(artifacts))
 
 
 @payload_builder(
