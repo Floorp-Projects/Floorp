@@ -76,6 +76,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "font-variant-numeric",
       "font-variant-position",
       "-moz-force-broken-image-icon",
+      "forced-color-adjust",
       "grid-auto-columns",
       "grid-auto-flow",
       "grid-auto-rows",
