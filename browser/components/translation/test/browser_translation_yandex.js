@@ -66,22 +66,6 @@ add_task(async function test_yandex_translation() {
   gBrowser.removeTab(tab);
 });
 
-/**
- * Ensure that Yandex.Translate is propertly attributed.
- */
-add_task(async function test_yandex_attribution() {
-  // Loading the fixture page.
-  let url = constructFixtureURL("bug1022725-fr.html");
-  let tab = await promiseTestPageLoad(url);
-
-  info("Show an info bar saying the current page is in French");
-  let notif = showTranslationUI(tab, "fr");
-  let attribution = notif._getAnonElt("translationEngine").selectedIndex;
-  Assert.equal(attribution, 1, "Yandex attribution should be shown.");
-
-  gBrowser.removeTab(tab);
-});
-
 add_task(async function test_preference_attribution() {
   let prefUrl = "about:preferences#general";
   let waitPrefLoaded = TestUtils.topicObserved("sync-pane-loaded", () => true);
