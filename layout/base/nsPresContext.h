@@ -502,7 +502,9 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
    *
    * XXX Temporary: see http://wiki.mozilla.org/Gecko:PrintPreview
    */
-  float GetPrintPreviewScaleForSequenceFrame() { return mPPScale; }
+  float GetPrintPreviewScaleForSequenceFrameOrScrollbars() const {
+    return mPPScale;
+  }
   void SetPrintPreviewScale(float aScale) { mPPScale = aScale; }
 
   nsDeviceContext* DeviceContext() const { return mDeviceContext; }
@@ -573,6 +575,7 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   }
   void SetFullZoom(float aZoom);
   void SetOverrideDPPX(float);
+  void SetInRDMPane(bool aInRDMPane);
 
  public:
   float GetFullZoom() { return mFullZoom; }
@@ -824,17 +827,9 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
    */
   uint32_t GetBidi() const;
 
-  /*
-   * Obtain a native theme for rendering our widgets (both form controls and
-   * html)
-   *
-   * Guaranteed to return non-null.
-   */
-  nsITheme* Theme() MOZ_NONNULL_RETURN {
-    if (MOZ_LIKELY(mTheme)) {
-      return mTheme;
-    }
-    return EnsureTheme();
+  nsITheme* Theme() const MOZ_NONNULL_RETURN {
+    MOZ_ASSERT(mTheme);
+    return mTheme;
   }
 
   void RecomputeTheme();
@@ -906,6 +901,8 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   bool IsPrintingOrPrintPreview() const {
     return mType == eContext_Print || mType == eContext_PrintPreview;
   }
+
+  bool IsPrintPreview() const { return mType == eContext_PrintPreview; }
 
   // Is this presentation in a chrome docshell?
   bool IsChrome() const;
@@ -1351,6 +1348,9 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   unsigned mFontPaletteValuesDirty : 1;
 
   unsigned mIsVisual : 1;
+
+  // Are we in the RDM pane?
+  unsigned mInRDMPane : 1;
 
   unsigned mHasWarnedAboutTooLargeDashedOrDottedRadius : 1;
 
