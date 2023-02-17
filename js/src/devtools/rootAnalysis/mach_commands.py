@@ -201,6 +201,43 @@ no shell found in %s -- must build the JS shell with `mach hazards build-shell` 
         )
 
 
+def validate_mozconfig(command_context, kwargs):
+    app = kwargs.pop("application")
+    default_mozconfig = "js/src/devtools/rootAnalysis/mozconfig.%s" % app
+    mozconfig_path = (
+        kwargs.pop("mozconfig", None)
+        or os.environ.get("MOZCONFIG")
+        or default_mozconfig
+    )
+    mozconfig_path = os.path.join(command_context.topsrcdir, mozconfig_path)
+
+    loader = MozconfigLoader(command_context.topsrcdir)
+    mozconfig = loader.read_mozconfig(mozconfig_path)
+    configure_args = mozconfig["configure_args"]
+
+    # Require an explicit --enable-project/application=APP (even if you just
+    # want to build the default browser application.)
+    if (
+        "--enable-project=%s" % app not in configure_args
+        and "--enable-application=%s" % app not in configure_args
+    ):
+        raise FailedCommandError(
+            textwrap.dedent(
+                f"""\
+            mozconfig {mozconfig_path} builds wrong project.
+            unset MOZCONFIG to use the default {default_mozconfig}\
+            """
+            )
+        )
+
+    if not any("--with-compiler-wrapper" in a for a in configure_args):
+        raise FailedCommandError(
+            "mozconfig must wrap compiles with --with-compiler-wrapper"
+        )
+
+    return mozconfig_path
+
+
 @inherit_command_args("build")
 @SubCommand(
     "hazards",
@@ -224,6 +261,8 @@ def gather_hazard_data(command_context, **kwargs):
         objdir = os.environ.get("HAZ_OBJDIR")
     if objdir is None:
         objdir = os.path.join(command_context.topsrcdir, "obj-analyzed-" + application)
+
+    validate_mozconfig(command_context, kwargs)
 
     work_dir = get_work_dir(command_context, application, kwargs["work_dir"])
     ensure_dir_exists(work_dir)
@@ -294,32 +333,12 @@ def inner_compile(command_context, **kwargs):
     # Check whether we are running underneath the manager (and therefore
     # have a server to talk to).
     if "XGILL_CONFIG" not in env:
-        raise Exception(
+        raise FailedCommandError(
             "no sixgill manager detected. `mach hazards compile` "
             + "should only be run from `mach hazards gather`"
         )
 
-    app = kwargs.pop("application")
-    default_mozconfig = "js/src/devtools/rootAnalysis/mozconfig.%s" % app
-    mozconfig_path = (
-        kwargs.pop("mozconfig", None) or env.get("MOZCONFIG") or default_mozconfig
-    )
-    mozconfig_path = os.path.join(command_context.topsrcdir, mozconfig_path)
-
-    # Validate the mozconfig.
-
-    # Require an explicit --enable-project/application=APP (even if you just
-    # want to build the default browser application.)
-    loader = MozconfigLoader(command_context.topsrcdir)
-    mozconfig = loader.read_mozconfig(mozconfig_path)
-    configure_args = mozconfig["configure_args"]
-    if (
-        "--enable-project=%s" % app not in configure_args
-        and "--enable-application=%s" % app not in configure_args
-    ):
-        raise Exception("mozconfig %s builds wrong project" % mozconfig_path)
-    if not any("--with-compiler-wrapper" in a for a in configure_args):
-        raise Exception("mozconfig must wrap compiles")
+    mozconfig_path = validate_mozconfig(command_context, kwargs)
 
     # Communicate mozconfig to build subprocesses.
     env["MOZCONFIG"] = os.path.join(command_context.topsrcdir, mozconfig_path)
