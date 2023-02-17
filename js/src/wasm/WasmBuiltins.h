@@ -126,10 +126,12 @@ enum class SymbolicAddress {
   PostBarrier,
   PostBarrierPrecise,
   PostBarrierPreciseWithOffset,
-  StructNew,
   ExceptionNew,
   ThrowException,
+  StructNew,
+  StructNewUninit,
   ArrayNew,
+  ArrayNewUninit,
   ArrayNewData,
   ArrayNewElem,
   ArrayCopy,
@@ -252,10 +254,12 @@ extern const SymbolicAddressSignature SASigRefFunc;
 extern const SymbolicAddressSignature SASigPostBarrier;
 extern const SymbolicAddressSignature SASigPostBarrierPrecise;
 extern const SymbolicAddressSignature SASigPostBarrierPreciseWithOffset;
-extern const SymbolicAddressSignature SASigStructNew;
 extern const SymbolicAddressSignature SASigExceptionNew;
 extern const SymbolicAddressSignature SASigThrowException;
+extern const SymbolicAddressSignature SASigStructNew;
+extern const SymbolicAddressSignature SASigStructNewUninit;
 extern const SymbolicAddressSignature SASigArrayNew;
+extern const SymbolicAddressSignature SASigArrayNewUninit;
 extern const SymbolicAddressSignature SASigArrayNewData;
 extern const SymbolicAddressSignature SASigArrayNewElem;
 extern const SymbolicAddressSignature SASigArrayCopy;

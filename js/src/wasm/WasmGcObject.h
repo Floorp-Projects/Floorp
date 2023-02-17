@@ -168,6 +168,7 @@ class WasmArrayObject : public WasmGcObject {
   static WasmArrayObject* createArray(JSContext* cx,
                                       const wasm::TypeDef* typeDef,
                                       uint32_t numElements);
+  template <bool ZeroFields = true>
   static WasmArrayObject* createArray(JSContext* cx,
                                       const wasm::TypeDef* typeDef,
                                       uint32_t numElements,
@@ -240,6 +241,7 @@ class WasmStructObject : public WasmGcObject {
   // is an out of memory error.  `typeDef` is the type of the struct.
   static WasmStructObject* createStruct(JSContext* cx,
                                         const wasm::TypeDef* typeDef);
+  template <bool ZeroFields = true>
   static WasmStructObject* createStruct(JSContext* cx,
                                         const wasm::TypeDef* typeDef,
                                         const WasmGcObject::AllocArgs& args);
