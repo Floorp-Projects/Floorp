@@ -398,13 +398,14 @@ def _find_doc_dir(path):
         return
 
     valid_doc_dirs = ("doc", "docs")
-    if os.path.basename(path) in valid_doc_dirs:
-        return path
-
     for d in valid_doc_dirs:
         p = os.path.join(path, d)
         if os.path.isdir(p):
-            return p
+            path = p
+
+    for index_file in ["index.rst", "index.md"]:
+        if os.path.exists(os.path.join(path, index_file)):
+            return path
 
 
 def _s3_upload(root, project, unique_id, version=None):
