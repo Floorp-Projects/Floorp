@@ -1149,9 +1149,7 @@ static int32_t MemDiscardNotShared(Instance* instance, I byteOffset, I byteLen,
                                         gc::Cell** location) {
   MOZ_ASSERT(SASigPostBarrier.failureMode == FailureMode::Infallible);
   MOZ_ASSERT(location);
-  JSContext* cx = instance->cx();
-  cx->runtime()->gc.storeBuffer().putCell(
-      reinterpret_cast<JSObject**>(location));
+  instance->storeBuffer_->putCell(reinterpret_cast<JSObject**>(location));
 }
 
 /* static */ void Instance::postBarrierPrecise(Instance* instance,
@@ -1581,6 +1579,7 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
           cx->runtime()->jitRuntime()->getExceptionTail().value),
       preBarrierCode_(
           cx->runtime()->jitRuntime()->preBarrier(MIRType::Object).value),
+      storeBuffer_(&cx->runtime()->gc.storeBuffer()),
       object_(object),
       code_(std::move(code)),
       memory_(memory),
