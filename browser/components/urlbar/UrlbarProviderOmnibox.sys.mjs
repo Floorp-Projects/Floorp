@@ -19,11 +19,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ExtensionSearchHandler:
     "resource://gre/modules/ExtensionSearchHandler.sys.mjs",
 
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
 });
-
-// After this time, we'll give up waiting for the extension to return matches.
-const MAXIMUM_ALLOWED_EXTENSION_TIME_MS = 3000;
 
 /**
  * This provider handles results returned by extensions using the WebExtensions
@@ -195,7 +193,7 @@ class ProviderOmnibox extends UrlbarProvider {
     // we add a timer racing with the addition.
     let timeoutPromise = new SkippableTimer({
       name: "ProviderOmnibox",
-      time: MAXIMUM_ALLOWED_EXTENSION_TIME_MS,
+      time: lazy.UrlbarPrefs.get("extension.omnibox.timeout"),
       logger: this.logger,
     }).promise;
     await Promise.race([timeoutPromise, this._resultsPromise]).catch(ex =>

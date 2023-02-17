@@ -120,9 +120,13 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether the urlbar displays a permanent search button.
   ["experimental.searchButton", false],
 
-  // When we send events to extensions, we wait this amount of time in
-  // milliseconds for them to respond before timing out.
+  // When we send events to (privileged) extensions (urlbar API), we wait this
+  // amount of time in milliseconds for them to respond before timing out.
   ["extension.timeout", 400],
+
+  // When we send events to extensions that use the omnibox API, we wait this
+  // amount of time in milliseconds for them to respond before timing out.
+  ["extension.omnibox.timeout", 3000],
 
   // When true, `javascript:` URLs are not included in search results.
   ["filter.javascript", true],
