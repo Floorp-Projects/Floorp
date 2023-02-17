@@ -10064,6 +10064,9 @@ class MWasmDerivedIndexPointer : public MBinaryInstruction,
   ALLOW_CLONE(MWasmDerivedIndexPointer)
 };
 
+// Whether to perform a pre-write barrier for a wasm store reference.
+enum class WasmPreBarrierKind : uint8_t { None, Normal };
+
 // Stores a reference to an address. This performs a pre-barrier on the address,
 // but not a post-barrier. A post-barrier must be performed separately, if it's
 // required.  The accessed location is `valueBase + valueOffset`.  The latter
@@ -10072,12 +10075,15 @@ class MWasmDerivedIndexPointer : public MBinaryInstruction,
 class MWasmStoreRef : public MAryInstruction<3>, public NoTypePolicy::Data {
   uint32_t offset_;
   AliasSet::Flag aliasSet_;
+  WasmPreBarrierKind preBarrierKind_;
 
   MWasmStoreRef(MDefinition* instance, MDefinition* valueBase,
-                size_t valueOffset, MDefinition* value, AliasSet::Flag aliasSet)
+                size_t valueOffset, MDefinition* value, AliasSet::Flag aliasSet,
+                WasmPreBarrierKind preBarrierKind)
       : MAryInstruction<3>(classOpcode),
         offset_(uint32_t(valueOffset)),
-        aliasSet_(aliasSet) {
+        aliasSet_(aliasSet),
+        preBarrierKind_(preBarrierKind) {
     MOZ_ASSERT(valueOffset <= INT32_MAX);
     MOZ_ASSERT(valueBase->type() == MIRType::Pointer ||
                valueBase->type() == MIRType::StackResults);
@@ -10094,6 +10100,7 @@ class MWasmStoreRef : public MAryInstruction<3>, public NoTypePolicy::Data {
 
   uint32_t offset() const { return offset_; }
   AliasSet getAliasSet() const override { return AliasSet::Store(aliasSet_); }
+  WasmPreBarrierKind preBarrierKind() const { return preBarrierKind_; }
 
 #ifdef JS_JITSPEW
   void getExtras(ExtrasCollector* extras) override {
@@ -11226,12 +11233,15 @@ class MWasmStoreFieldRefKA : public MAryInstruction<4>,
                              public NoTypePolicy::Data {
   uint32_t offset_;
   AliasSet aliases_;
+  WasmPreBarrierKind preBarrierKind_;
 
   MWasmStoreFieldRefKA(MDefinition* instance, MDefinition* ka, MDefinition* obj,
-                       size_t offset, MDefinition* value, AliasSet aliases)
+                       size_t offset, MDefinition* value, AliasSet aliases,
+                       WasmPreBarrierKind preBarrierKind)
       : MAryInstruction<4>(classOpcode),
         offset_(uint32_t(offset)),
-        aliases_(aliases) {
+        aliases_(aliases),
+        preBarrierKind_(preBarrierKind) {
     MOZ_ASSERT(obj->type() == TargetWordMIRType() ||
                obj->type() == MIRType::Pointer ||
                obj->type() == MIRType::RefOrNull);
@@ -11258,6 +11268,7 @@ class MWasmStoreFieldRefKA : public MAryInstruction<4>,
 
   uint32_t offset() const { return offset_; }
   AliasSet getAliasSet() const override { return aliases_; }
+  WasmPreBarrierKind preBarrierKind() const { return preBarrierKind_; }
 
 #ifdef JS_JITSPEW
   void getExtras(ExtrasCollector* extras) override {

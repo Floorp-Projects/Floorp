@@ -5493,8 +5493,8 @@ void LIRGenerator::visitWasmStoreRef(MWasmStoreRef* ins) {
   LAllocation valueBase = useFixed(ins->valueBase(), PreBarrierReg);
   LAllocation value = useRegister(ins->value());
   uint32_t valueOffset = ins->offset();
-  add(new (alloc())
-          LWasmStoreRef(instance, valueBase, value, temp(), valueOffset),
+  add(new (alloc()) LWasmStoreRef(instance, valueBase, value, temp(),
+                                  valueOffset, ins->preBarrierKind()),
       ins);
 }
 
@@ -6948,7 +6948,9 @@ void LIRGenerator::visitWasmStoreFieldRefKA(MWasmStoreFieldRefKA* ins) {
   LAllocation obj = useFixed(ins->obj(), PreBarrierReg);
   LAllocation value = useRegister(ins->value());
   uint32_t offset = ins->offset();
-  add(new (alloc()) LWasmStoreRef(instance, obj, value, temp(), offset), ins);
+  add(new (alloc()) LWasmStoreRef(instance, obj, value, temp(), offset,
+                                  ins->preBarrierKind()),
+      ins);
   add(new (alloc()) LKeepAliveObject(useKeepalive(ins->ka())), ins);
 }
 
