@@ -529,7 +529,8 @@ impl Serialize for AttestationObject {
             .map(serde_cbor::Value::Bytes)
             .map_err(|_| SerError::custom("Failed to serialize auth_data"))?;
 
-        map.serialize_entry(&"authData", &auth_data)?;
+        // CTAP2 canonical CBOR order for these entries is ("fmt", "attStmt", "authData")
+        // as strings are sorted by length and then lexically.
         match self.att_statement {
             AttestationStatement::None => {
                 // Even with Att None, an empty map is returned in the cbor!
@@ -546,6 +547,7 @@ impl Serialize for AttestationObject {
                 map.serialize_entry(&"attStmt", v)?;
             }
         }
+        map.serialize_entry(&"authData", &auth_data)?;
         map.end()
     }
 }
