@@ -4,7 +4,8 @@
 
 package mozilla.components.feature.webnotifications
 
-import android.app.NotificationManager
+import androidx.core.app.NotificationChannelCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -16,6 +17,7 @@ import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.permission.SitePermissions.Status
 import mozilla.components.concept.engine.webnotifications.WebNotification
 import mozilla.components.feature.sitepermissions.OnDiskSitePermissionsStorage
+import mozilla.components.support.base.android.NotificationsDelegate
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
@@ -44,8 +46,9 @@ class WebNotificationFeatureTest {
     private val browserIcons: BrowserIcons = mock()
     private val icon: Icon = mock()
     private val engine: Engine = mock()
-    private val notificationManager: NotificationManager = mock()
+    private val notificationManager: NotificationManagerCompat = mock()
     private val permissionsStorage: OnDiskSitePermissionsStorage = mock()
+    private val notificationsDelegate: NotificationsDelegate = mock()
 
     private val testNotification = WebNotification(
         "Mozilla",
@@ -62,7 +65,7 @@ class WebNotificationFeatureTest {
 
     @Before
     fun setup() {
-        `when`(context.getSystemService(NotificationManager::class.java)).thenReturn(notificationManager)
+        `when`(notificationsDelegate.notificationManagerCompat).thenReturn(notificationManager)
         `when`(icon.source).thenReturn(Source.GENERATOR) // to no-op the browser icons call.
         `when`(browserIcons.loadIcon(any())).thenReturn(CompletableDeferred(icon))
     }
@@ -70,9 +73,17 @@ class WebNotificationFeatureTest {
     @Test
     fun `register web notification delegate`() {
         doNothing().`when`(engine).registerWebNotificationDelegate(any())
-        doNothing().`when`(notificationManager).createNotificationChannel(any())
+        doNothing().`when`(notificationManager).createNotificationChannel(any<NotificationChannelCompat>())
 
-        WebNotificationFeature(context, engine, browserIcons, android.R.drawable.ic_dialog_alert, mock(), null)
+        WebNotificationFeature(
+            context,
+            engine,
+            browserIcons,
+            android.R.drawable.ic_dialog_alert,
+            mock(),
+            null,
+            notificationsDelegate = notificationsDelegate,
+        )
 
         verify(engine).registerWebNotificationDelegate(any())
     }
@@ -80,8 +91,15 @@ class WebNotificationFeatureTest {
     @Test
     fun `engine notifies to cancel notification`() {
         val webNotification: WebNotification = mock()
-        val feature =
-            WebNotificationFeature(context, engine, browserIcons, android.R.drawable.ic_dialog_alert, mock(), null)
+        val feature = WebNotificationFeature(
+            context,
+            engine,
+            browserIcons,
+            android.R.drawable.ic_dialog_alert,
+            mock(),
+            null,
+            notificationsDelegate = notificationsDelegate,
+        )
 
         `when`(webNotification.tag).thenReturn("testTag")
 
@@ -101,7 +119,9 @@ class WebNotificationFeatureTest {
             permissionsStorage,
             null,
             coroutineContext,
+            notificationsDelegate = notificationsDelegate,
         )
+
         val permission = SitePermissions(origin = "https://mozilla.org:443", notification = Status.ALLOWED, savedAt = 0)
 
         `when`(
@@ -114,7 +134,13 @@ class WebNotificationFeatureTest {
 
         feature.onShowNotification(notification)
 
-        verify(notificationManager).notify(eq(notification.tag), eq(NOTIFICATION_ID), any())
+        verify(notificationsDelegate).notify(
+            eq(notification.tag),
+            eq(NOTIFICATION_ID),
+            any(),
+            any(),
+            any(),
+        )
     }
 
     @Test
@@ -125,9 +151,9 @@ class WebNotificationFeatureTest {
             engine,
             browserIcons,
             android.R.drawable.ic_dialog_alert,
-            permissionsStorage,
+            mock(),
             null,
-            coroutineContext,
+            notificationsDelegate = notificationsDelegate,
         )
 
         // No permissions found.
@@ -176,9 +202,17 @@ class WebNotificationFeatureTest {
             permissionsStorage,
             null,
             coroutineContext,
+            notificationsDelegate = notificationsDelegate,
         )
 
         feature.onShowNotification(webExtensionNotification)
-        verify(notificationManager).notify(eq(testNotification.tag), eq(NOTIFICATION_ID), any())
+
+        verify(notificationsDelegate).notify(
+            eq(testNotification.tag),
+            eq(NOTIFICATION_ID),
+            any(),
+            any(),
+            any(),
+        )
     }
 }
