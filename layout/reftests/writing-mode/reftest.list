@@ -53,7 +53,6 @@ fuzzy(0-116,0-94) fuzzy-if(winWidget,0-135,0-124) == 1115916-1-vertical-metrics.
 == ua-style-sheet-margin-12.html ua-style-sheet-margin-12-ref.html
 == ua-style-sheet-margin-13.html ua-style-sheet-margin-13-ref.html
 == ua-style-sheet-margin-14.html ua-style-sheet-margin-14-ref.html
-== ua-style-sheet-border-1.html ua-style-sheet-border-1-ref.html
 == ua-style-sheet-border-2.html ua-style-sheet-border-2-ref.html
 == ua-style-sheet-border-3.html ua-style-sheet-border-3-ref.html
 == ua-style-sheet-border-4.html ua-style-sheet-border-4-ref.html
