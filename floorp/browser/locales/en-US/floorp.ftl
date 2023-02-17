@@ -624,6 +624,9 @@ gf-floorp-open-browser-manager-sidebar-description = Open Browser Manager Sideba
 gf-floorp-close-browser-manager-sidebar-name = [Floorp] Close BMS
 gf-floorp-close-browser-manager-sidebar-description = Close Browser Manager Sidebar
 
+gf-floorp-toggle-browser-manager-sidebar-name = [Floorp] toggle BMS
+gf-floorp-toggle-browser-manager-sidebar-description = toggle Browser Manager Sidebar
+
 gf-floorp-show-statusbar-name = [Floorp] Show Status Bar
 gf-floorp-show-statusbar-description = Show Status Bar
 

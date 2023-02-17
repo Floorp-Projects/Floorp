@@ -51,6 +51,13 @@
         "async": true
       },
       {
+        "name": "changeBrowserManagerSidebarVisibility",
+        "type": "function",
+        "description": "Change Browser Manager Sidebar Visibility",
+        "parameters": [],
+        "async": true
+      },
+      {
         "name": "showStatusbar",
         "type": "function",
         "description": "Show status bar",
