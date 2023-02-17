@@ -9,8 +9,8 @@ const { actionTypes: at } = ChromeUtils.importESModule(
 const { getDomain } = ChromeUtils.import(
   "resource://activity-stream/lib/TippyTopProvider.jsm"
 );
-const { RemoteSettings } = ChromeUtils.import(
-  "resource://services-settings/remote-settings.js"
+const { RemoteSettings } = ChromeUtils.importESModule(
+  "resource://services-settings/remote-settings.sys.mjs"
 );
 
 const lazy = {};

@@ -15,8 +15,8 @@ const { SearchUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/SearchUtils.sys.mjs"
 );
 
-const { RemoteSettings } = ChromeUtils.import(
-  "resource://services-settings/remote-settings.js"
+const { RemoteSettings } = ChromeUtils.importESModule(
+  "resource://services-settings/remote-settings.sys.mjs"
 );
 
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");

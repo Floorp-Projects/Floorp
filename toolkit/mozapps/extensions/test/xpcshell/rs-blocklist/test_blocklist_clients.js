@@ -4,8 +4,8 @@ const { BlocklistPrivate } = ChromeUtils.import(
 const { Utils: RemoteSettingsUtils } = ChromeUtils.import(
   "resource://services-settings/Utils.jsm"
 );
-const { RemoteSettings } = ChromeUtils.import(
-  "resource://services-settings/remote-settings.js"
+const { RemoteSettings } = ChromeUtils.importESModule(
+  "resource://services-settings/remote-settings.sys.mjs"
 );
 
 const IS_ANDROID = AppConstants.platform == "android";

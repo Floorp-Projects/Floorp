@@ -9,8 +9,8 @@ const { ASRouter } = ChromeUtils.import(
 const { BrowserUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/BrowserUtils.sys.mjs"
 );
-const { Downloader } = ChromeUtils.import(
-  "resource://services-settings/Attachments.jsm"
+const { Downloader } = ChromeUtils.importESModule(
+  "resource://services-settings/Attachments.sys.mjs"
 );
 const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/NimbusTestUtils.jsm"
@@ -26,8 +26,8 @@ const {
 const { RemoteImagesTestUtils, RemoteSettingsServer } = ChromeUtils.import(
   "resource://testing-common/RemoteImagesTestUtils.jsm"
 );
-const { RemoteSettings } = ChromeUtils.import(
-  "resource://services-settings/remote-settings.js"
+const { RemoteSettings } = ChromeUtils.importESModule(
+  "resource://services-settings/remote-settings.sys.mjs"
 );
 const { RemoteSettingsExperimentLoader } = ChromeUtils.import(
   "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
