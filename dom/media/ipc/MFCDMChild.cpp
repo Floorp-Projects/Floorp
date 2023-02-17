@@ -166,8 +166,8 @@ RefPtr<MFCDMChild::InitPromise> MFCDMChild::Init(
     return InitPromise::CreateAndReject(mState, __func__);
   }
 
-  MFCDMInitParamsIPDL params{nsString(aOrigin), aPersistentState,
-                             aDistinctiveID, aHWSecure};
+  MFCDMInitParamsIPDL params{nsString(aOrigin), aDistinctiveID,
+                             aPersistentState, aHWSecure};
   auto doSend = [self = RefPtr{this}, this, params]() {
     SendInit(params)
         ->Then(
