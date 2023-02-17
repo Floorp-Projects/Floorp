@@ -3,12 +3,7 @@
 const TEST_URL =
   "http://mochi.test:8888/browser/browser/components/places/tests/browser/keyword_form.html";
 
-function closeHandler(dialogWin, delayedApply) {
-  if (delayedApply) {
-    // We are in delayed apply mode, thus cancelling dialog will not produce a
-    // bookmark-removed notification.
-    return PlacesUtils.bookmarks.eraseEverything();
-  }
+function closeHandler(dialogWin) {
   let savedItemId = dialogWin.gEditItemOverlay.itemId;
   return PlacesTestUtils.waitForNotification("bookmark-removed", events =>
     events.some(event => event.id === savedItemId)
@@ -17,10 +12,7 @@ function closeHandler(dialogWin, delayedApply) {
 
 let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
 
-async function add_keyword(delayedApply) {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.bookmarks.editDialog.delayedApply.enabled", delayedApply]],
-  });
+add_task(async function() {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -34,7 +26,7 @@ async function add_keyword(delayedApply) {
       );
 
       await withBookmarksDialog(
-        !delayedApply,
+        true,
         function() {
           AddKeywordForSearchField();
           contentAreaContextMenu.hidePopup();
@@ -54,9 +46,7 @@ async function add_keyword(delayedApply) {
 
           Assert.ok(!acceptBtn.disabled, "Accept button is enabled");
 
-          if (delayedApply) {
-            acceptBtn.click();
-          }
+          // The dialog is instant apply.
           await promiseKeywordNotification;
 
           // After the notification, the keywords cache will update asynchronously.
@@ -73,7 +63,9 @@ async function add_keyword(delayedApply) {
             "accenti%3D%E0%E8%EC%F2%F9&search%3D%25s",
             "POST data is correct"
           );
-          let bm = await PlacesUtils.bookmarks.fetch({ url: TEST_URL });
+          let savedItemId = dialogWin.gEditItemOverlay.itemId;
+          let savedItemGuid = await PlacesUtils.promiseItemGuid(savedItemId);
+          let bm = await PlacesUtils.bookmarks.fetch(savedItemGuid);
           Assert.equal(
             bm.parentGuid,
             await PlacesUIUtils.defaultParentGuid,
@@ -99,24 +91,13 @@ async function add_keyword(delayedApply) {
           );
           Assert.equal(data.url, TEST_URL, "getShortcutOrURI URL is correct");
         },
-        dialogWin => closeHandler(dialogWin, delayedApply)
+        closeHandler
       );
     }
   );
-}
-
-add_task(async function add_keyword_instant_apply() {
-  await add_keyword(false);
 });
 
-add_task(async function add_keyword_delayed_apply() {
-  await add_keyword(true);
-});
-
-async function reopen_same_field(delayedApply) {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.bookmarks.editDialog.delayedApply.enabled", delayedApply]],
-  });
+add_task(async function reopen_same_field() {
   await PlacesUtils.keywords.insert({
     url: TEST_URL,
     keyword: "kw",
@@ -155,24 +136,13 @@ async function reopen_same_field(delayedApply) {
             .getButton("accept");
           ok(!acceptBtn.disabled, "Accept button is enabled");
         },
-        dialogWin => closeHandler(dialogWin, delayedApply)
+        closeHandler
       );
     }
   );
-}
-
-add_task(async function reopen_same_field_instant_apply() {
-  await reopen_same_field(false);
 });
 
-add_task(async function reopen_same_field_delayed_apply() {
-  await reopen_same_field(true);
-});
-
-async function open_other_field(delayedApply) {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.bookmarks.editDialog.delayedApply.enabled", delayedApply]],
-  });
+add_task(async function open_other_field() {
   await PlacesUtils.keywords.insert({
     url: TEST_URL,
     keyword: "kw2",
@@ -212,18 +182,10 @@ async function open_other_field(delayedApply) {
           );
           is(elt.value, "");
         },
-        dialogWin => closeHandler(dialogWin, delayedApply)
+        closeHandler
       );
     }
   );
-}
-
-add_task(async function open_other_field_instant_apply() {
-  await open_other_field(false);
-});
-
-add_task(async function open_other_field_delayed_apply() {
-  await open_other_field(true);
 });
 
 function getPostDataString(stream) {
