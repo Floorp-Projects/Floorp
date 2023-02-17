@@ -466,6 +466,14 @@ class NativeLayerCA : public NativeLayer {
   bool mSpecializeVideo = false;
   bool mHasExtent = false;
   bool mIsDRM = false;
+
+#ifdef NIGHTLY_BUILD
+  // Track the consistency of our caller's API usage. Layers that are drawn
+  // should only ever be called with NotifySurfaceReady. Layers that are
+  // external should only ever be called with AttachExternalImage.
+  bool mHasEverAttachExternalImage = false;
+  bool mHasEverNotifySurfaceReady = false;
+#endif
 };
 
 }  // namespace layers
