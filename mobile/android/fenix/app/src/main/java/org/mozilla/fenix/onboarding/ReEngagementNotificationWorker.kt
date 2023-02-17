@@ -9,7 +9,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import androidx.annotation.VisibleForTesting
-import androidx.core.app.NotificationManagerCompat
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
@@ -20,6 +19,7 @@ import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.utils.IntentUtils
@@ -51,12 +51,11 @@ class ReEngagementNotificationWorker(
         }
 
         val channelId = ensureMarketingChannelExists(applicationContext)
-        NotificationManagerCompat.from(applicationContext)
-            .notify(
-                NOTIFICATION_TAG,
-                RE_ENGAGEMENT_NOTIFICATION_ID,
-                buildNotification(channelId),
-            )
+        applicationContext.components.notificationsDelegate.notify(
+            NOTIFICATION_TAG,
+            RE_ENGAGEMENT_NOTIFICATION_ID,
+            buildNotification(channelId),
+        )
 
         // re-engagement notification should only be shown once
         settings.reEngagementNotificationShown = true

@@ -12,7 +12,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.os.IBinder
-import androidx.core.app.NotificationManagerCompat
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
@@ -22,7 +21,6 @@ import mozilla.components.service.nimbus.messaging.FxNimbusMessaging
 import mozilla.components.service.nimbus.messaging.Message
 import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.utils.BootUtils
-import org.mozilla.fenix.ext.areNotificationsEnabledSafe
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.onboarding.ensureMarketingChannelExists
 import org.mozilla.fenix.perf.runBlockingIncrement
@@ -46,11 +44,6 @@ class MessageNotificationWorker(
     @SuppressWarnings("ReturnCount")
     override fun doWork(): Result {
         val context = applicationContext
-
-        val nm = NotificationManagerCompat.from(context)
-        if (!nm.areNotificationsEnabledSafe()) {
-            return Result.success()
-        }
 
         val messagingStorage = context.components.analytics.messagingStorage
         val messages = runBlockingIncrement { messagingStorage.getMessages() }
@@ -76,7 +69,7 @@ class MessageNotificationWorker(
 
         runBlockingIncrement { nimbusMessagingController.onMessageDisplayed(updatedMessage) }
 
-        nm.notify(
+        context.components.notificationsDelegate.notify(
             MESSAGE_TAG,
             SharedIdsHelper.getIdForTag(context, updatedMessage.id),
             buildNotification(
