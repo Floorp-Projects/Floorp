@@ -150,11 +150,6 @@ class BodyStream final : public nsIInputStreamCallback,
     // We are ready to write something in the JS Buffer.
     eWriting,
 
-    // After a writing, we want to check if the stream is closed. After the
-    // check, we go back to eWaiting. If a reading request happens in the
-    // meantime, we move to eReading state.
-    eChecking,
-
     // Operation completed.
     eClosed,
   };
