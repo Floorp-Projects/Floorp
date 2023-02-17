@@ -45,6 +45,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -512,7 +515,18 @@ fun PoweredByPocketHeader(
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            Column {
+            val onClickLabel = stringResource(id = R.string.a11y_action_label_pocket_learn_more)
+            Column(
+                Modifier.semantics(mergeDescendants = true) {
+                    role = Role.Button
+                    onClick(label = onClickLabel) {
+                        onLearnMoreClicked(
+                            "https://www.mozilla.org/en-US/firefox/pocket/?$POCKET_FEATURE_UTM_KEY_VALUE",
+                        )
+                        false
+                    }
+                },
+            ) {
                 Text(
                     text = stringResource(
                         R.string.pocket_stories_feature_title_2,
