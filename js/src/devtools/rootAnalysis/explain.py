@@ -139,7 +139,12 @@ try:
                 # mangled names, expanding them to unmangled names when
                 # producing hazards.txt and the other output files.
                 mangled, _ = splitfunc(gcFunction)
-                key = mangled2full[mangled]
+
+                # Note that we will also get indirect calls (calls through a
+                # function pointer) here, which will not be in the mangled2full
+                # table. For those, fall back to the mangled name, which will
+                # be identical to the unmangled name.
+                key = mangled2full.get(mangled, mangled)
 
             if key in gcExplanations:
                 print(gcHazards[index] + gcExplanations[key], file=hazards)
