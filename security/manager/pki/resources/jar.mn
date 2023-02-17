@@ -12,6 +12,7 @@ pippki.jar:
     content/pippki/clientauthask.js          (content/clientauthask.js)
     content/pippki/clientauthask.xhtml         (content/clientauthask.xhtml)
     content/pippki/deletecert.js             (content/deletecert.js)
+    content/pippki/deletecert.css            (content/deletecert.css)
     content/pippki/deletecert.xhtml            (content/deletecert.xhtml)
     content/pippki/device_manager.js         (content/device_manager.js)
     content/pippki/device_manager.xhtml        (content/device_manager.xhtml)
