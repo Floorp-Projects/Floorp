@@ -101,6 +101,7 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   void ResponsiveContentDensityChanged();
   void ElementStateChanged(mozilla::dom::ElementState) override;
   void SetupOwnedRequest();
+  void DeinitOwnedRequest();
   bool ShouldShowBrokenImageIcon() const;
 
   bool IsForImageLoadingContent() const {
