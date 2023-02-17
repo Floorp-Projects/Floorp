@@ -496,6 +496,10 @@ export class EdgeProfileMigrator extends MigratorBase {
     return "migration-wizard-migrator-display-name-edge-legacy";
   }
 
+  static get brandImage() {
+    return "chrome://browser/content/migration/brands/edge.png";
+  }
+
   getBookmarksMigratorForTesting(dbOverride) {
     return new EdgeBookmarksMigrator(dbOverride);
   }
