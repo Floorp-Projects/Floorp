@@ -1276,26 +1276,11 @@ this.VideoControlsImplWidget = class {
           "videocontrols-position-and-duration-labels",
           { position, duration }
         );
-
-        // We use .formatValueSync here because .setAttribute doesn't update
-        // the DOM fast enough to use this.positionDurationBox.textContent and
-        // if we set the innerHTML on the positionDurationBox then we lose
-        // reference to the durationSpan element so it is easier to use
-        // .formatValueSync to just update the string for the aria-valuetext
-        let positionDurationMarkup = this.l10n.formatValueSync(
-          "videocontrols-position-and-duration-labels",
+        this.l10n.setAttributes(
+          this.scrubber,
+          "videocontrols-scrubber-position-and-duration",
           { position, duration }
         );
-
-        // It's possible that the string we get has markup to overlay into the
-        // DOM. We only want the raw text so we use DOMParser to strip any tags
-        let parser = new this.window.DOMParser();
-        let positionDurationString = parser.parseFromString(
-          positionDurationMarkup,
-          "text/html"
-        ).body.textContent;
-
-        this.scrubber.setAttribute("aria-valuetext", positionDurationString);
       },
 
       showBuffered() {
@@ -2887,7 +2872,7 @@ this.VideoControlsImplWidget = class {
                     <progress id="progressBar" class="progressBar" value="0" max="100" aria-hidden="true"></progress>
                   </div>
                 </div>
-                <input type="range" id="scrubber" class="scrubber" tabindex="-1" data-l10n-id="videocontrols-scrubber"/>
+                <input type="range" id="scrubber" class="scrubber" tabindex="-1" data-l10n-attrs="aria-valuetext"/>
               </div>
               <bdi id="positionLabel" class="positionLabel" role="presentation"></bdi>
               <bdi id="durationLabel" class="durationLabel" role="presentation"></bdi>
