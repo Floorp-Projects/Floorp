@@ -29,7 +29,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setInterval: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
-  DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -456,11 +455,6 @@ let BrowserUsageTelemetry = {
       () => this._recordContentProcessCount(),
       CONTENT_PROCESS_COUNT_INTERVAL_MS
     );
-
-    this._onTabsOpenedTask = new lazy.DeferredTask(
-      this._onTabsOpened.bind(this),
-      0
-    );
   },
 
   /**
@@ -531,7 +525,7 @@ let BrowserUsageTelemetry = {
   handleEvent(event) {
     switch (event.type) {
       case "TabOpen":
-        this._onTabOpen();
+        this._onTabOpen(getOpenTabsAndWinsCounts());
         break;
       case "TabPinned":
         this._onTabPinned();
@@ -1032,22 +1026,11 @@ let BrowserUsageTelemetry = {
 
   /**
    * Updates the tab counts.
+   * @param {Object} [counts] The counts returned by `getOpenTabsAndWindowCounts`.
    */
-  _onTabOpen() {
+  _onTabOpen({ tabCount, loadedTabCount }) {
     // Update the "tab opened" count and its maximum.
     Services.telemetry.scalarAdd(TAB_OPEN_EVENT_COUNT_SCALAR_NAME, 1);
-
-    // In the case of opening multiple tabs at once, avoid enumerating all open
-    // tabs and windows each time a tab opens.
-    this._onTabsOpenedTask.disarm();
-    this._onTabsOpenedTask.arm();
-  },
-
-  /**
-   * Update tab counts after opening multiple tabs.
-   */
-  _onTabsOpened() {
-    const { tabCount, loadedTabCount } = getOpenTabsAndWinsCounts();
     Services.telemetry.scalarSetMaximum(MAX_TAB_COUNT_SCALAR_NAME, tabCount);
 
     this._recordTabCounts({ tabCount, loadedTabCount });
