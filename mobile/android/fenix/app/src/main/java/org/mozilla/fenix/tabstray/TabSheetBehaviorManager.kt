@@ -39,6 +39,7 @@ internal class TabSheetBehaviorManager(
     internal var currentOrientation = orientation
 
     init {
+        behavior.skipCollapsed = true
         behavior.addBottomSheetCallback(
             TraySheetBehaviorCallback(behavior, navigationInteractor),
         )
