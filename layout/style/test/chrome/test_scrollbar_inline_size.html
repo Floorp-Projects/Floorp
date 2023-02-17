@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<title>Test for env(scrollbar-inline-size)</title>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="chrome://global/skin"/>
+<link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+<div id="scroller" style="width: 100px; height: 100px; overflow: scroll"></div>
+<div id="ref" style="width: env(scrollbar-inline-size, 1000px)"></div>
+<script>
+  SimpleTest.waitForExplicitFinish();
+  async function runTest() {
+    // We need to disable overlay scrollbars to measure the real scrollbar
+    // size.
+    await SpecialPowers.pushPrefEnv({
+      set: [["ui.useOverlayScrollbars", 0]],
+    });
+    runOnce();
+
+    info("with full zoom");
+    SpecialPowers.setFullZoom(window, 2.0);
+
+    runOnce();
+  }
+
+  function runOnce() {
+    let scroller = document.getElementById("scroller");
+    let ref = document.getElementById("ref");
+    let scrollbarSize = scroller.getBoundingClientRect().width - scroller.clientWidth;
+    ok(scrollbarSize > 0, "Should have a scrollbar");
+    // clientWidth rounds, so we might see a bit of rounding error
+    isfuzzy(ref.getBoundingClientRect().width, scrollbarSize, 1, "env() should match the scrollbar size");
+  }
+
+  runTest().then(SimpleTest.finish);
+</script>
