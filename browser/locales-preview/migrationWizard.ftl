@@ -51,6 +51,7 @@ migration-history-option-label = Browsing history
 migration-form-autofill-option-label = Form autofill data
 migration-import-button-label = Import
 migration-cancel-button-label = Cancel
+migration-done-button-label = Done
 
 migration-wizard-progress-header = Importing Data
 migration-wizard-progress-done-header = Data Imported Successfully

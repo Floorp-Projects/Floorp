@@ -233,6 +233,13 @@
         "migration-wizard-progress-header",
         "Should be showing in-progress header string"
       );
+
+      let progressPage = gShadowRoot.querySelector("div[name='page-progress']");
+      let doneButton = progressPage.querySelector("#done-button");
+      ok(isHidden(doneButton), "Done button should be hidden");
+      let cancelButton = progressPage.querySelector(".cancel-close");
+      ok(!isHidden(cancelButton), "Cancel button should be visible");
+      ok(cancelButton.disabled, "Cancel button should be disabled");
     });
 
     /**
@@ -294,6 +301,12 @@
         "migration-wizard-progress-done-header",
         "Should be showing completed migration header string"
       );
+
+      let progressPage = gShadowRoot.querySelector("div[name='page-progress']");
+      let doneButton = progressPage.querySelector("#done-button");
+      ok(!isHidden(doneButton), "Done button should be visible and enabled");
+      let cancelButton = progressPage.querySelector(".cancel-close");
+      ok(isHidden(cancelButton), "Cancel button should be hidden");
     });
 
     /**
@@ -312,7 +325,7 @@
       // that one. Let's make this test fail if there are multiple so that we can
       // then update this test to switch to the right pages to test those buttons
       // too.
-      let buttons = gShadowRoot.querySelectorAll(".cancel-close");
+      let buttons = gShadowRoot.querySelectorAll(".cancel-close:not([disabled])");
       is(
         buttons.length,
         1,
@@ -332,7 +345,7 @@
 </head>
 <body>
 <p id="display"></p>
-<div id="content"><migration-wizard id="test-wizard"></migration-wizard></div>
+<div id="content"><migration-wizard id="test-wizard" dialog-mode=""></migration-wizard></div>
 <pre id="test"></pre>
 </body>
 </html>
