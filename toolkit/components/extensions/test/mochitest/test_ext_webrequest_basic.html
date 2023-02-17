@@ -41,11 +41,9 @@ add_task(async function setup() {
   let imgTools = SpecialPowers.Cc["@mozilla.org/image/tools;1"].getService(SpecialPowers.Ci.imgITools);
   let cache = imgTools.getImgCacheForDocument(document);
   cache.clearCache(false);
-  function clearCache() {
-    /* eslint-env mozilla/chrome-script */
+  await SpecialPowers.spawnChrome([], async () => {
     Services.cache2.clear();
-  }
-  SpecialPowers.loadChromeScript(clearCache);
+  });
 
   await SpecialPowers.pushPrefEnv({
     set: [["network.http.rcwn.enabled", false]],

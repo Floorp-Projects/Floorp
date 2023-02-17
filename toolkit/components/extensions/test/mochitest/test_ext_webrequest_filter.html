@@ -18,11 +18,9 @@ if (AppConstants.platform === "android") {
 let windowData, testWindow;
 
 add_task(async function setup() {
-  let chromeScript = SpecialPowers.loadChromeScript(function() {
-    /* eslint-env mozilla/chrome-script */
+  await SpecialPowers.spawnChrome([], async () => {
     Services.cache2.clear();
   });
-  chromeScript.destroy();
 
   testWindow = window.open("about:blank", "_blank", "width=100,height=100");
   await waitForLoad(testWindow);
