@@ -269,10 +269,6 @@ def rust_supported_targets(rustc):
             if t.startswith("thumb"):
                 cpu, rest = t.split("-", 1)
                 retry = "-".join(("arm", rest))
-            elif t.endswith("-windows-msvc"):
-                retry = t[: -len("windows-msvc")] + "mingw32"
-            elif t.endswith("-windows-gnu"):
-                retry = t[: -len("windows-gnu")] + "mingw32"
             else:
                 continue
             try:
@@ -310,7 +306,12 @@ def detect_rustc_target(
         # narrow further down using extra information from the build system.
         # - For windows targets, correlate with the C compiler type
         if host_or_target.kernel == "WINNT":
-            if compiler_info.type in ("gcc", "clang"):
+            if host_or_target.abi:
+                if host_or_target.abi == "msvc":
+                    suffix = "windows-msvc"
+                elif host_or_target.abi == "mingw":
+                    suffix = "windows-gnu"
+            elif compiler_info.type in ("gcc", "clang"):
                 suffix = "windows-gnu"
             else:
                 suffix = "windows-msvc"
@@ -374,8 +375,13 @@ def detect_rustc_target(
                     ) and c.rust_target.endswith(suffix):
                         return c.rust_target
 
-        # See if we can narrow down on the exact alias
-        narrowed = [c for c in candidates if c.target.alias == host_or_target.alias]
+        # See if we can narrow down on the exact alias.
+        # We use the sub_configure_alias to keep support mingw32 triplets as input.
+        narrowed = [
+            c
+            for c in candidates
+            if c.target.sub_configure_alias == host_or_target.sub_configure_alias
+        ]
         if len(narrowed) == 1:
             return narrowed[0].rust_target
         elif narrowed:

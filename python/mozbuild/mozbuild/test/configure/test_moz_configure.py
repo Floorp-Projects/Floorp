@@ -24,7 +24,7 @@ class TargetTest(BaseConfigureTest):
     def get_target(self, args, env={}):
         if "linux" in self.HOST:
             platform = "linux2"
-        elif "mingw" in self.HOST:
+        elif "mingw" in self.HOST or "windows" in self.HOST:
             platform = "win32"
         elif "openbsd6" in self.HOST:
             platform = "openbsd6"
@@ -43,20 +43,21 @@ class TestTargetLinux(TargetTest):
             "i686-unknown-linux-gnu",
         )
         self.assertEqual(
-            self.get_target(["--target=i686-pc-mingw32"]), "i686-pc-mingw32"
+            self.get_target(["--target=i686-pc-windows-msvc"]), "i686-pc-windows-msvc"
         )
 
 
 class TestTargetWindows(TargetTest):
     # BaseConfigureTest uses this as the return value for config.guess
-    HOST = "i686-pc-mingw32"
+    HOST = "i686-pc-windows-msvc"
 
     def test_target(self):
         self.assertEqual(self.get_target([]), self.HOST)
         self.assertEqual(
-            self.get_target(["--target=x86_64-pc-mingw32"]), "x86_64-pc-mingw32"
+            self.get_target(["--target=x86_64-pc-windows-msvc"]),
+            "x86_64-pc-windows-msvc",
         )
-        self.assertEqual(self.get_target(["--target=x86_64"]), "x86_64-pc-mingw32")
+        self.assertEqual(self.get_target(["--target=x86_64"]), "x86_64-pc-windows-msvc")
 
         # The tests above are actually not realistic, because most Windows
         # machines will have a few environment variables that make us not
@@ -67,31 +68,41 @@ class TestTargetWindows(TargetTest):
             "PROCESSOR_ARCHITECTURE": "x86",
             "PROCESSOR_ARCHITEW6432": "AMD64",
         }
-        self.assertEqual(self.get_target([], env), "x86_64-pc-mingw32")
+        self.assertEqual(self.get_target([], env), "x86_64-pc-windows-msvc")
         self.assertEqual(
-            self.get_target(["--target=i686-pc-mingw32"]), "i686-pc-mingw32"
+            self.get_target(["--target=i686-pc-windows-msvc"]), "i686-pc-windows-msvc"
         )
-        self.assertEqual(self.get_target(["--target=i686"]), "i686-pc-mingw32")
+        self.assertEqual(self.get_target(["--target=i686"]), "i686-pc-windows-msvc")
 
         # 64-bits process on x86_64 host.
         env = {
             "PROCESSOR_ARCHITECTURE": "AMD64",
         }
-        self.assertEqual(self.get_target([], env), "x86_64-pc-mingw32")
+        self.assertEqual(self.get_target([], env), "x86_64-pc-windows-msvc")
         self.assertEqual(
-            self.get_target(["--target=i686-pc-mingw32"]), "i686-pc-mingw32"
+            self.get_target(["--target=i686-pc-windows-msvc"]), "i686-pc-windows-msvc"
         )
-        self.assertEqual(self.get_target(["--target=i686"]), "i686-pc-mingw32")
+        self.assertEqual(self.get_target(["--target=i686"]), "i686-pc-windows-msvc")
 
         # 32-bits process on x86 host.
         env = {
             "PROCESSOR_ARCHITECTURE": "x86",
         }
-        self.assertEqual(self.get_target([], env), "i686-pc-mingw32")
+        self.assertEqual(self.get_target([], env), "i686-pc-windows-msvc")
         self.assertEqual(
-            self.get_target(["--target=x86_64-pc-mingw32"]), "x86_64-pc-mingw32"
+            self.get_target(["--target=x86_64-pc-windows-msvc"]),
+            "x86_64-pc-windows-msvc",
         )
-        self.assertEqual(self.get_target(["--target=x86_64"]), "x86_64-pc-mingw32")
+        self.assertEqual(self.get_target(["--target=x86_64"]), "x86_64-pc-windows-msvc")
+
+        # While host autodection will give us a -windows-msvc triplet, setting host
+        # is expecting to implicitly set the target.
+        self.assertEqual(
+            self.get_target(["--host=x86_64-pc-windows-gnu"]), "x86_64-pc-windows-gnu"
+        )
+        self.assertEqual(
+            self.get_target(["--host=x86_64-pc-mingw32"]), "x86_64-pc-mingw32"
+        )
 
 
 class TestTargetAndroid(TargetTest):
@@ -150,7 +161,7 @@ class TestMozConfigure(BaseConfigureTest):
             sandbox = self.get_sandbox(
                 {"/usr/bin/makensis": FakeNSIS(version)},
                 {},
-                ["--target=x86_64-pc-mingw32", "--disable-bootstrap"],
+                ["--target=x86_64-pc-windows-msvc", "--disable-bootstrap"],
                 {"PATH": "/usr/bin", "MAKENSISU": "/usr/bin/makensis"},
             )
             return sandbox._value_for(sandbox["nsis_version"])

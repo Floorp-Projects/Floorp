@@ -161,7 +161,7 @@ def bindgen_clang_compiler(
         return
     # Hack before bug 1617793: if the compiler is clang-cl, hack the target
     if cxx_compiler.type == "clang-cl":
-        target = split_triplet("%s-pc-windows-msvc" % target.raw_cpu, allow_msvc=True)
+        target = split_triplet("%s-pc-windows-msvc" % target.raw_cpu)
     flags = []
     if sysroot_path:
         flags.extend(("--sysroot", sysroot_path))

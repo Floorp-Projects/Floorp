@@ -431,13 +431,14 @@ option(
 )
 
 
+@imports(_from="mozbuild.configure.constants", _import="Abi")
 @imports(_from="mozbuild.configure.constants", _import="CPU")
 @imports(_from="mozbuild.configure.constants", _import="CPU_bitness")
 @imports(_from="mozbuild.configure.constants", _import="Endianness")
 @imports(_from="mozbuild.configure.constants", _import="Kernel")
 @imports(_from="mozbuild.configure.constants", _import="OS")
 @imports(_from="__builtin__", _import="ValueError")
-def split_triplet(triplet, allow_msvc=False, allow_wasi=False):
+def split_triplet(triplet, allow_wasi=False):
     # The standard triplet is defined as
     #   CPU_TYPE-VENDOR-OPERATING_SYSTEM
     # There is also a quartet form:
@@ -464,7 +465,9 @@ def split_triplet(triplet, allow_msvc=False, allow_wasi=False):
     # which can probably be improved/cleaned up because they are based on a
     # mix of uname and config.guess output, while we now only use the latter,
     # which presumably has a cleaner and leaner output. Let's refine later.
-    os = os.replace("/", "_")
+    raw_os = os = os.replace("/", "_")
+    abi = None
+    sub_configure_alias = triplet
     if "android" in os:
         canonical_os = "Android"
         canonical_kernel = "Linux"
@@ -476,10 +479,18 @@ def split_triplet(triplet, allow_msvc=False, allow_wasi=False):
         canonical_kernel = "kFreeBSD"
     elif os.startswith("gnu"):
         canonical_os = canonical_kernel = "GNU"
-    elif os.startswith("mingw") or (allow_msvc and os == "windows-msvc"):
-        # windows-msvc is only opt-in for the caller of this function until
-        # full support in bug 1617793.
+    elif os.startswith("mingw") or os in ("windows-msvc", "windows-gnu"):
         canonical_os = canonical_kernel = "WINNT"
+        if not os.startswith("mingw"):
+            if os == "windows-msvc":
+                abi = "msvc"
+            elif os == "windows-gnu":
+                abi = "mingw"
+            # Many things down the line are looking for the string "mingw32"
+            # until they are all fixed, we pretend that's the raw os we had
+            # in the first place, even when we didn't.
+            sub_configure_alias = sub_configure_alias[: -len(os)] + "mingw32"
+            raw_os = "mingw32"
     elif os.startswith("darwin"):
         canonical_kernel = "Darwin"
         canonical_os = "OSX"
@@ -563,8 +574,6 @@ def split_triplet(triplet, allow_msvc=False, allow_wasi=False):
 
     if os.startswith("darwin"):
         toolchain = "%s-apple-%s" % (cpu, os)
-    elif canonical_cpu == "aarch64" and canonical_os == "WINNT":
-        toolchain = "aarch64-windows-msvc"
     else:
         toolchain = "%s-%s" % (cpu, os)
 
@@ -575,10 +584,13 @@ def split_triplet(triplet, allow_msvc=False, allow_wasi=False):
         kernel=Kernel(canonical_kernel),
         os=OS(canonical_os),
         endianness=Endianness(endianness),
+        # For now, only report the Windows ABI.
+        abi=abi and Abi(abi),
         raw_cpu=cpu,
-        raw_os=os,
+        raw_os=raw_os,
         toolchain=toolchain,
         vendor=vendor,
+        sub_configure_alias=sub_configure_alias,
     )
 
 
@@ -595,6 +607,7 @@ def help_host_target(help, host, target):
             kernel="unknown",
             os="unknown",
             endianness="unknown",
+            abi="unknown",
             raw_cpu="unknown",
             raw_os="unknown",
             toolchain="unknown-unknown",
@@ -603,7 +616,19 @@ def help_host_target(help, host, target):
 
 def config_sub(shell, triplet):
     config_sub = os.path.join(os.path.dirname(__file__), "..", "autoconf", "config.sub")
-    return check_cmd_output(shell, config_sub, triplet).strip()
+    # Config.sub doesn't like the *-windows-msvc/*-windows-gnu triplets, so
+    # munge those before and after calling config.sub.
+    suffix = None
+    mingw_suffix = "-mingw32"
+    for check_suffix in ("-windows-msvc", "-windows-gnu"):
+        if triplet.endswith(check_suffix):
+            suffix = check_suffix
+            triplet = triplet[: -len(suffix)] + mingw_suffix
+    result = check_cmd_output(shell, config_sub, triplet).strip()
+    if suffix:
+        assert result.endswith(mingw_suffix)
+        result = result[: -len(mingw_suffix)] + suffix
+    return result
 
 
 @depends("--host", shell)
@@ -617,9 +642,9 @@ def real_host(value, shell):
             "PROCESSOR_ARCHITECTURE"
         )
         if arch == "AMD64":
-            return split_triplet("x86_64-pc-mingw32")
+            return split_triplet("x86_64-pc-windows-msvc")
         elif arch == "x86":
-            return split_triplet("i686-pc-mingw32")
+            return split_triplet("i686-pc-windows-msvc")
 
     if not value:
         config_guess = os.path.join(
@@ -729,13 +754,12 @@ add_old_configure_assignment("HAVE_64BIT_BUILD", have_64_bit)
 
 @depends(host)
 def host_for_sub_configure(host):
-    return "--host=%s" % host.alias
+    return "--host=%s" % host.sub_configure_alias
 
 
 @depends(target)
 def target_for_sub_configure(target):
-    target_alias = target.alias
-    return "--target=%s" % target_alias
+    return "--target=%s" % target.sub_configure_alias
 
 
 # These variables are for compatibility with the current moz.builds and

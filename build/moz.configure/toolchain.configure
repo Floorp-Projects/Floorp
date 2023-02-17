@@ -864,7 +864,13 @@ def default_c_compilers(host_or_target, other_c_compiler=None):
         host_or_target, target, toolchain_prefix, *other_c_compiler
     ):
         if host_or_target.kernel == "WINNT":
-            supported = types = ("clang-cl", "clang")
+            if host_or_target.abi:
+                if host_or_target.abi == "msvc":
+                    supported = types = ("clang-cl",)
+                elif host_or_target.abi == "mingw":
+                    supported = types = ("clang",)
+            else:
+                supported = types = ("clang-cl", "clang")
         elif host_or_target.kernel == "Darwin":
             types = ("clang",)
             supported = ("clang", "gcc")
@@ -1339,6 +1345,12 @@ def compiler(
                     ):
                         flags.extend(overlay_flags)
 
+        if (info.type, host_or_target.abi) in (
+            ("clang", "msvc"),
+            ("clang-cl", "mingw"),
+        ):
+            raise FatalCheckError("Unknown compiler or compiler not supported.")
+
         # If you want to bump the version check here ensure the version
         # is known for Xcode in get_compiler_info.
         if info.type == "clang" and info.version < "5.0":
@@ -1512,14 +1524,23 @@ host_cxx_compiler = compiler(
 
 @template
 def windows_abi(host_or_target, c_compiler):
-    @depends(host_or_target, c_compiler)
-    def windows_abi(host_or_target, c_compiler):
+    @depends(host_or_target)
+    def windows_abi(host_or_target):
+        if host_or_target.os == "WINNT":
+            return host_or_target.abi
+
+    @depends(host_or_target, windows_abi)
+    def need_windows_abi_from_compiler(host_or_target, windows_abi):
+        return host_or_target.os == "WINNT" and windows_abi is None
+
+    @depends(host_or_target, c_compiler, when=need_windows_abi_from_compiler)
+    def windows_abi_from_compiler(host_or_target, c_compiler):
         if host_or_target.os == "WINNT":
             if c_compiler.type == "clang-cl":
                 return "msvc"
             return "mingw"
 
-    return windows_abi
+    return windows_abi | windows_abi_from_compiler
 
 
 target_windows_abi = windows_abi(target, c_compiler)

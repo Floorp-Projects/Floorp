@@ -261,7 +261,7 @@ def library_name_info_template(host_or_target):
         target: target_windows_abi,
     }[host_or_target]
 
-    @depends(host_or_target, windows_abi, so_version)
+    @depends(host_or_target, host_or_target.abi | windows_abi, so_version)
     def library_name_info_impl(host_or_target, windows_abi, so_version):
         if host_or_target.kernel == "WINNT":
             # There aren't artifacts for mingw builds, so it's OK that the
