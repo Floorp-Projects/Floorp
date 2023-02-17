@@ -250,7 +250,7 @@ class Core(
                     additionalBundledSearchEngineIds = listOf("reddit", "youtube"),
                     migration = SearchMigration(context),
                 ),
-                RecordingDevicesMiddleware(context),
+                RecordingDevicesMiddleware(context, context.components.notificationsDelegate),
                 PromptMiddleware(),
                 AdsTelemetryMiddleware(adsTelemetry),
                 LastMediaAccessMiddleware(),

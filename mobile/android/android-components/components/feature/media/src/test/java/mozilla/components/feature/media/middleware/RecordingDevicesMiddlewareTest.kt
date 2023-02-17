@@ -9,23 +9,29 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import androidx.core.app.NotificationManagerCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.media.RecordingDevice
+import mozilla.components.support.base.android.NotificationsDelegate
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito
 import org.robolectric.Shadows
 
 @RunWith(AndroidJUnit4::class)
 class RecordingDevicesMiddlewareTest {
+    private lateinit var notificationsDelegate: NotificationsDelegate
+
     @Before
     fun setup() {
         // Prepare the PackageManager to answer getLaunchIntentForPackage call.
@@ -38,6 +44,16 @@ class RecordingDevicesMiddlewareTest {
             activityComponent,
             IntentFilter(Intent.ACTION_MAIN).apply { addCategory(Intent.CATEGORY_INFO) },
         )
+
+        val notificationManagerCompat: NotificationManagerCompat = Mockito.spy(
+            NotificationManagerCompat.from(
+                testContext,
+            ),
+        )
+
+        notificationsDelegate = NotificationsDelegate(notificationManagerCompat)
+
+        whenever(notificationManagerCompat.areNotificationsEnabled()).thenReturn(true)
     }
 
     @Test
@@ -48,7 +64,7 @@ class RecordingDevicesMiddlewareTest {
 
         assertEquals(0, notificationManager.size())
 
-        val middleware = RecordingDevicesMiddleware(testContext)
+        val middleware = RecordingDevicesMiddleware(testContext, notificationsDelegate)
 
         middleware.updateNotification(RecordingState.Camera)
 
@@ -68,7 +84,7 @@ class RecordingDevicesMiddlewareTest {
 
         assertEquals(0, notificationManager.size())
 
-        val middleware = RecordingDevicesMiddleware(testContext)
+        val middleware = RecordingDevicesMiddleware(testContext, notificationsDelegate)
 
         middleware.updateNotification(RecordingState.Camera)
 
@@ -85,7 +101,7 @@ class RecordingDevicesMiddlewareTest {
             as NotificationManager
         val notificationManager = Shadows.shadowOf(realNotificationManager)
 
-        val middleware = RecordingDevicesMiddleware(testContext)
+        val middleware = RecordingDevicesMiddleware(testContext, notificationsDelegate)
         val store = BrowserStore(
             initialState = BrowserState(
                 tabs = listOf(

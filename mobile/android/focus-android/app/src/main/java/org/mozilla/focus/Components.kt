@@ -165,7 +165,7 @@ class Components(
                 PromptMiddleware(),
                 AdsTelemetryMiddleware(adsTelemetry),
                 BlockedTrackersMiddleware(context),
-                RecordingDevicesMiddleware(context),
+                RecordingDevicesMiddleware(context, notificationsDelegate),
                 CfrMiddleware(context),
             ) + EngineMiddleware.create(
                 engine,

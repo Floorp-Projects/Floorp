@@ -178,7 +178,7 @@ open class DefaultComponents(private val applicationContext: Context) {
                     LocationService.default(),
                 ),
                 SearchMiddleware(applicationContext),
-                RecordingDevicesMiddleware(applicationContext),
+                RecordingDevicesMiddleware(applicationContext, notificationsDelegate),
                 LastAccessMiddleware(),
                 PromptMiddleware(),
                 SessionPrioritizationMiddleware(),
