@@ -3830,7 +3830,7 @@ Result<CaretPoint, nsresult> HTMLEditor::DeleteTextWithTransaction(
   return caretPointOrError;
 }
 
-nsresult HTMLEditor::ReplaceTextWithTransaction(
+Result<InsertTextResult, nsresult> HTMLEditor::ReplaceTextWithTransaction(
     Text& aTextNode, uint32_t aOffset, uint32_t aLength,
     const nsAString& aStringToInsert) {
   MOZ_ASSERT(IsEditActionDataAvailable());
@@ -3843,48 +3843,25 @@ nsresult HTMLEditor::ReplaceTextWithTransaction(
       NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
       return caretPointOrError.propagateErr();
     }
-    nsresult rv = caretPointOrError.inspect().SuggestCaretPointTo(
-        *this, {SuggestCaret::OnlyIfHasSuggestion,
-                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                SuggestCaret::AndIgnoreTrivialError});
-    if (NS_FAILED(rv)) {
-      NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
-      return Err(rv);
-    }
-    NS_WARNING_ASSERTION(
-        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-        "CaretPoint::SuggestCaretPointTo() failed, but ignored");
-    return NS_OK;
+    return InsertTextResult(EditorDOMPointInText(&aTextNode, aOffset),
+                            caretPointOrError.unwrap());
   }
 
   if (!aLength) {
     RefPtr<Document> document = GetDocument();
     if (NS_WARN_IF(!document)) {
-      return NS_ERROR_NOT_INITIALIZED;
+      return Err(NS_ERROR_NOT_INITIALIZED);
     }
     Result<InsertTextResult, nsresult> insertTextResult =
         InsertTextWithTransaction(*document, aStringToInsert,
                                   EditorDOMPoint(&aTextNode, aOffset));
-    if (MOZ_UNLIKELY(insertTextResult.isErr())) {
-      NS_WARNING("HTMLEditor::InsertTextWithTransaction() failed");
-      return insertTextResult.unwrapErr();
-    }
-    nsresult rv = insertTextResult.unwrap().SuggestCaretPointTo(
-        *this, {SuggestCaret::OnlyIfHasSuggestion,
-                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                SuggestCaret::AndIgnoreTrivialError});
-    if (NS_FAILED(rv)) {
-      NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
-      return Err(rv);
-    }
-    NS_WARNING_ASSERTION(
-        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-        "CaretPoint::SuggestCaretPointTo() failed, but ignored");
-    return NS_OK;
+    NS_WARNING_ASSERTION(insertTextResult.isOk(),
+                         "HTMLEditor::InsertTextWithTransaction() failed");
+    return insertTextResult;
   }
 
   if (NS_WARN_IF(!HTMLEditUtils::IsSimplyEditableNode(aTextNode))) {
-    return NS_ERROR_FAILURE;
+    return Err(NS_ERROR_FAILURE);
   }
 
   // This should emulates inserting text for better undo/redo behavior.
@@ -3892,7 +3869,7 @@ nsresult HTMLEditor::ReplaceTextWithTransaction(
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eInsertText, nsIEditor::eNext, ignoredError);
   if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
-    return EditorBase::ToGenericNSResult(ignoredError.StealNSResult());
+    return Err(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(
       !ignoredError.Failed(),
@@ -3901,30 +3878,6 @@ nsresult HTMLEditor::ReplaceTextWithTransaction(
   // FYI: Create the insertion point before changing the DOM tree because
   //      the point may become invalid offset after that.
   EditorDOMPointInText pointToInsert(&aTextNode, aOffset);
-
-  // `ReplaceTextTransaction()` removes the replaced text first, then,
-  // insert new text.  Therefore, if selection is in the text node, the
-  // range is moved to start of the range and deletion and never adjusted
-  // for the inserting text since the change occurs after the range.
-  // Therefore, we might need to save/restore selection here.
-  Maybe<AutoSelectionRestorer> restoreSelection;
-  if (!AllowsTransactionsToChangeSelection() && !ArePreservingSelection()) {
-    const uint32_t rangeCount = SelectionRef().RangeCount();
-    for (const uint32_t i : IntegerRange(rangeCount)) {
-      MOZ_ASSERT(SelectionRef().RangeCount() == rangeCount);
-      const nsRange* range = SelectionRef().GetRangeAt(i);
-      if (MOZ_UNLIKELY(!range)) {
-        continue;
-      }
-      if ((range->GetStartContainer() == &aTextNode &&
-           range->StartOffset() >= aOffset) ||
-          (range->GetEndContainer() == &aTextNode &&
-           range->EndOffset() >= aOffset)) {
-        restoreSelection.emplace(*this);
-        break;
-      }
-    }
-  }
 
   RefPtr<ReplaceTextTransaction> transaction = ReplaceTextTransaction::Create(
       *this, aStringToInsert, aTextNode, aOffset, aLength);
@@ -3944,6 +3897,12 @@ nsresult HTMLEditor::ReplaceTextWithTransaction(
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::DoTransactionInternal() failed");
 
+  // Don't check whether we've been destroyed here because we need to notify
+  // listeners and observers below even if we've already destroyed.
+
+  EditorDOMPointInText endOfInsertedText(&aTextNode,
+                                         aOffset + aStringToInsert.Length());
+
   if (pointToInsert.IsSet()) {
     auto [begin, end] = ComputeInsertedRange(pointToInsert, aStringToInsert);
     if (begin.IsSet() && end.IsSet()) {
@@ -3952,11 +3911,9 @@ nsresult HTMLEditor::ReplaceTextWithTransaction(
       TopLevelEditSubActionDataRef().DidInsertText(
           *this, begin.To<EditorRawDOMPoint>(), end.To<EditorRawDOMPoint>());
     }
-  }
 
-  // Now, restores selection for allowing the following listeners to modify
-  // selection.
-  restoreSelection.reset();
+    // XXX Should we update endOfInsertedText here?
+  }
 
   if (!mActionListeners.IsEmpty()) {
     for (auto& listener : mActionListeners.Clone()) {
@@ -3968,7 +3925,13 @@ nsresult HTMLEditor::ReplaceTextWithTransaction(
     }
   }
 
-  return NS_WARN_IF(Destroyed()) ? NS_ERROR_EDITOR_DESTROYED : rv;
+  if (NS_WARN_IF(Destroyed())) {
+    return Err(NS_ERROR_EDITOR_DESTROYED);
+  }
+
+  return InsertTextResult(
+      std::move(endOfInsertedText),
+      transaction->SuggestPointToPutCaret<EditorDOMPoint>());
 }
 
 Result<InsertTextResult, nsresult> HTMLEditor::InsertTextWithTransaction(

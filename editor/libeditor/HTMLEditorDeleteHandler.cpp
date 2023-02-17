@@ -2083,8 +2083,7 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteTextAroundCollapsedRanges(
     return Err(NS_ERROR_FAILURE);
   }
 
-  AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
-  Result<EditorDOMPoint, nsresult> result =
+  Result<CaretPoint, nsresult> caretPointOrError =
       aHTMLEditor.DeleteTextAndNormalizeSurroundingWhiteSpaces(
           rangeToDelete.StartRef().AsInText(),
           rangeToDelete.EndRef().AsInText(),
@@ -2092,20 +2091,20 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteTextAroundCollapsedRanges(
           aDirectionAndAmount == nsIEditor::eNext ? DeleteDirection::Forward
                                                   : DeleteDirection::Backward);
   aHTMLEditor.TopLevelEditSubActionDataRef().mDidNormalizeWhitespaces = true;
-  if (MOZ_UNLIKELY(result.isErr())) {
+  if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
     NS_WARNING(
         "HTMLEditor::DeleteTextAndNormalizeSurroundingWhiteSpaces() failed");
-    return result.propagateErr();
+    return caretPointOrError.propagateErr();
   }
-  const EditorDOMPoint& newCaretPosition = result.inspect();
-  MOZ_ASSERT(newCaretPosition.IsSetAndValid());
-
-  rv = aHTMLEditor.CollapseSelectionTo(newCaretPosition);
-  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-    return Err(NS_ERROR_EDITOR_DESTROYED);
+  rv = caretPointOrError.unwrap().SuggestCaretPointTo(
+      aHTMLEditor,
+      {SuggestCaret::OnlyIfHasSuggestion, SuggestCaret::AndIgnoreTrivialError});
+  if (NS_FAILED(rv)) {
+    NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
+    return Err(rv);
   }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::CollapseSelectionTo() failed, but ignored");
+  NS_WARNING_ASSERTION(rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+                       "CaretPoint::SuggestCaretPointTo() failed, but ignored");
   return EditActionResult::HandledResult();
 }
 
