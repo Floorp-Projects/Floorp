@@ -46,6 +46,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: beta
           branch: automation/uplift-ac-strings-${{ steps.discover-beta-version.outputs.beta_version }}
+          author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
           commit-message: "Uplift AC strings from ${{ github.ref_name }} to ${{ steps.env-variables.outputs.beta_branch }}"
           title: "Uplift AC strings from ${{ github.ref_name }} to ${{ steps.env-variables.outputs.beta_branch }}"
           body: "This (automated) PR uplifts strings from `${{ github.ref_name }}` to `${{ steps.env-variables.outputs.beta_branch }}`"
