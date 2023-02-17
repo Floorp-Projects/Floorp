@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -20,14 +18,12 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 });
 XPCOMUtils.defineLazyGetter(lazy, "console", () => lazy.Utils.log);
 
-var EXPORTED_SYMBOLS = ["Database"];
-
 /**
  * Database is a tiny wrapper with the objective
  * of providing major kinto-offline-client collection API.
  * (with the objective of getting rid of kinto-offline-client)
  */
-class Database {
+export class Database {
   static destroy() {
     return destroyIDB();
   }
