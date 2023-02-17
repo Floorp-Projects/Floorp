@@ -1,4 +1,4 @@
-const WEBCOMPATS = [
+const WEBCOMPATS_INJECT = [
   /*
   {
     "matches": ["*://*.youtube.com/*"],
@@ -14,11 +14,11 @@ let REGISTED_CONTENT_SCRIPTS = [];
 
 async function regist_webcompat_contentScripts() {
   let platform = (await browser.runtime.getPlatformInfo()).os;
-  for (let WEBCOMPAT of WEBCOMPATS) {
-    if (WEBCOMPAT.platforms.includes(platform)) {
-      let WEBCOMPAT_cloned = Object.assign({}, WEBCOMPAT);
-      delete WEBCOMPAT_cloned.platforms;
-      let registeredContentScript = await browser.contentScripts.register(WEBCOMPAT_cloned);
+  for (let WEBCOMPAT_INJECT of WEBCOMPATS_INJECT) {
+    if (WEBCOMPAT_INJECT.platforms.includes(platform)) {
+      let WEBCOMPAT_INJECT_cloned = Object.assign({}, WEBCOMPAT_INJECT);
+      delete WEBCOMPAT_INJECT_cloned.platforms;
+      let registeredContentScript = await browser.contentScripts.register(WEBCOMPAT_INJECT_cloned);
       REGISTED_CONTENT_SCRIPTS.push(registeredContentScript);
     }
   }
