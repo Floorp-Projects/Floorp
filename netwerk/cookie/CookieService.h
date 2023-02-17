@@ -85,7 +85,9 @@ class CookieService final : public nsICookieService,
                         bool aStorageAccessPermissionGranted,
                         uint32_t aRejectedReason, bool aIsSafeTopLevelNav,
                         bool aIsSameSiteForeign, bool aHadCrossSiteRedirects,
-                        bool aHttpBound, const OriginAttributes& aOriginAttrs,
+                        bool aHttpBound,
+                        bool aAllowSecureCookiesToInsecureOrigin,
+                        const OriginAttributes& aOriginAttrs,
                         nsTArray<Cookie*>& aCookieList);
 
   /**

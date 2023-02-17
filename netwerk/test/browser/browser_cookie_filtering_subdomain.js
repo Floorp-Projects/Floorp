@@ -60,13 +60,14 @@ async function test_insecure_domain() {
       gBrowser,
       url: browserTestPath(HTTP_EXAMPLE_COM),
     },
-    await runSuiteWithContentListener(
-      "test_insecure_domain",
-      triggerSuite,
-      suiteMatchingDomain(HTTP_EXAMPLE_COM).concat(
-        suiteMatchingDomain(HTTP_SUBDOMAIN_1_EXAMPLE_COM)
-      )
-    )
+
+    await runSuiteWithContentListener("test_insecure_domain", triggerSuite, [
+      "",
+      "", // HTTPS fetch cookies show as empty strings
+      "test-cookie-insecure=insecure_domain",
+      "test-cookie-insecure=insecure_subdomain",
+      "",
+    ])
   );
 }
 
@@ -93,11 +94,16 @@ async function test_insecure_subdomain() {
       url: browserTestPath(HTTP_SUBDOMAIN_2_EXAMPLE_COM),
     },
     await runSuiteWithContentListener(
-      "test_insecure_domain",
+      "test_insecure_subdomain",
       triggerSuite,
-      suiteMatchingDomain(HTTP_EXAMPLE_COM).concat(
-        suiteMatchingDomain(HTTP_SUBDOMAIN_1_EXAMPLE_COM)
-      )
+
+      [
+        "",
+        "", // HTTPS fetch cookies show as empty strings
+        "test-cookie-insecure=insecure_domain",
+        "test-cookie-insecure=insecure_subdomain",
+        "",
+      ]
     )
   );
 }
@@ -123,7 +129,7 @@ function cookiesFromSuite() {
   return cookies;
 }
 
-function suiteMatchingDomain(domain) {
+function cookiesMatchingDomain(domain) {
   var s = suite();
   var result = [];
   for (var [cookie, dom] of s) {
