@@ -2480,6 +2480,7 @@ WasmStructObject* Instance::constantStructNewDefault(JSContext* cx,
   TypeDefInstanceData* typeDefData = typeDefInstanceData(typeIndex);
   const TypeDef* typeDef = typeDefData->typeDef;
   WasmGcObject::AllocArgs args(cx, typeDefData);
+  args.initialHeap = gc::TenuredHeap;
   return WasmStructObject::createStruct(cx, typeDef, args);
 }
 
@@ -2489,6 +2490,7 @@ WasmArrayObject* Instance::constantArrayNewDefault(JSContext* cx,
   TypeDefInstanceData* typeDefData = typeDefInstanceData(typeIndex);
   const TypeDef* typeDef = typeDefData->typeDef;
   WasmGcObject::AllocArgs args(cx, typeDefData);
+  args.initialHeap = gc::TenuredHeap;
   return WasmArrayObject::createArray(cx, typeDef, numElements, args);
 }
 
