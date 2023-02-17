@@ -5,8 +5,8 @@
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-const { FxAccounts } = ChromeUtils.import(
-  "resource://gre/modules/FxAccounts.jsm"
+const { FxAccounts } = ChromeUtils.importESModule(
+  "resource://gre/modules/FxAccounts.sys.mjs"
 );
 const { Weave } = ChromeUtils.importESModule(
   "resource://services-sync/main.sys.mjs"
@@ -14,11 +14,9 @@ const { Weave } = ChromeUtils.importESModule(
 
 ChromeUtils.defineESModuleGetters(this, {
   EventEmitter: "resource://gre/modules/EventEmitter.sys.mjs",
+  FxAccountsPairingFlow: "resource://gre/modules/FxAccountsPairing.sys.mjs",
 });
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  FxAccountsPairingFlow: "resource://gre/modules/FxAccountsPairing.jsm",
-});
 const { require } = ChromeUtils.importESModule(
   "resource://devtools/shared/loader/Loader.sys.mjs"
 );

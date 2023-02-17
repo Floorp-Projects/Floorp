@@ -5,8 +5,8 @@
 
 // Tests for the FxA storage manager.
 
-const { FxAccountsStorageManager } = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsStorage.jsm"
+const { FxAccountsStorageManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/FxAccountsStorage.sys.mjs"
 );
 const { DATA_FORMAT_VERSION, log } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"

@@ -21,8 +21,8 @@ const { RESTRequest } = ChromeUtils.import(
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );
-const { Credentials } = ChromeUtils.import(
-  "resource://gre/modules/Credentials.jsm"
+const { Credentials } = ChromeUtils.importESModule(
+  "resource://gre/modules/Credentials.sys.mjs"
 );
 
 const lazy = {};
