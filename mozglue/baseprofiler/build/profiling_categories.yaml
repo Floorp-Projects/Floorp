@@ -285,3 +285,10 @@
   subcategories:
     - name: PROFILER
       label: Other
+
+- name: TIMER
+  label: Timer
+  color: grey
+  subcategories:
+    - name: TIMER
+      label: Other
