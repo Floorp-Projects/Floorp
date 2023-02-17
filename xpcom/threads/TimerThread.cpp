@@ -316,6 +316,92 @@ void TimerEventAllocator::Free(void* aPtr) {
 
 }  // namespace
 
+struct TimerMarker {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("Timer");
+  }
+  static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
+                                   uint32_t aDelay, uint8_t aType,
+                                   MarkerThreadId aThreadId, bool aCanceled) {
+    aWriter.IntProperty("delay", aDelay);
+    if (!aThreadId.IsUnspecified()) {
+      // Tech note: If `ToNumber()` returns a uint64_t, the conversion to
+      // int64_t is "implementation-defined" before C++20. This is
+      // acceptable here, because this is a one-way conversion to a unique
+      // identifier that's used to visually separate data by thread on the
+      // front-end.
+      aWriter.IntProperty(
+          "threadId", static_cast<int64_t>(aThreadId.ThreadId().ToNumber()));
+    }
+    if (aCanceled) {
+      aWriter.BoolProperty("canceled", true);
+      // Show a red 'X' as a prefix on the marker chart for canceled timers.
+      aWriter.StringProperty("prefix", "❌");
+    }
+
+    // The string property for the timer type is not written when the type is
+    // one shot, as that's the type used almost all the time, and that would
+    // consume space in the profiler buffer and then in the profile JSON,
+    // getting in the way of capturing long power profiles.
+    // Bug 1815677 might make this cheap to capture.
+    if (aType != nsITimer::TYPE_ONE_SHOT) {
+      if (aType == nsITimer::TYPE_REPEATING_SLACK) {
+        aWriter.StringProperty("ttype", "repeating slack");
+      } else if (aType == nsITimer::TYPE_REPEATING_PRECISE) {
+        aWriter.StringProperty("ttype", "repeating precise");
+      } else if (aType == nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP) {
+        aWriter.StringProperty("ttype", "repeating precise can skip");
+      } else if (aType == nsITimer::TYPE_REPEATING_SLACK_LOW_PRIORITY) {
+        aWriter.StringProperty("ttype", "repeating slack low priority");
+      } else if (aType == nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY) {
+        aWriter.StringProperty("ttype", "low priority");
+      }
+    }
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
+    schema.AddKeyLabelFormat("delay", "Delay", MS::Format::Milliseconds);
+    schema.AddKeyLabelFormat("ttype", "Timer Type", MS::Format::String);
+    schema.AddKeyLabelFormat("canceled", "Canceled", MS::Format::String);
+    schema.SetChartLabel("{marker.data.prefix} {marker.data.delay}");
+    schema.SetTableLabel(
+        "{marker.name} - {marker.data.prefix} {marker.data.delay}");
+    return schema;
+  }
+};
+
+struct AddRemoveTimerMarker {
+  static constexpr Span<const char> MarkerTypeName() {
+    return MakeStringSpan("AddRemoveTimer");
+  }
+  static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
+                                   const ProfilerString8View& aTimerName,
+                                   uint32_t aDelay, MarkerThreadId aThreadId) {
+    aWriter.StringProperty("name", aTimerName);
+    aWriter.IntProperty("delay", aDelay);
+    if (!aThreadId.IsUnspecified()) {
+      // Tech note: If `ToNumber()` returns a uint64_t, the conversion to
+      // int64_t is "implementation-defined" before C++20. This is
+      // acceptable here, because this is a one-way conversion to a unique
+      // identifier that's used to visually separate data by thread on the
+      // front-end.
+      aWriter.IntProperty(
+          "threadId", static_cast<int64_t>(aThreadId.ThreadId().ToNumber()));
+    }
+  }
+  static MarkerSchema MarkerTypeDisplay() {
+    using MS = MarkerSchema;
+    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
+    schema.AddKeyLabelFormatSearchable("name", "Name", MS::Format::String,
+                                       MS::Searchable::Searchable);
+    schema.AddKeyLabelFormat("delay", "Delay", MS::Format::Milliseconds);
+    schema.SetTableLabel(
+        "{marker.name} - {marker.data.name} - {marker.data.delay}");
+    return schema;
+  }
+};
+
 void nsTimerEvent::Init() { sAllocator = new TimerEventAllocator(); }
 
 void nsTimerEvent::Shutdown() {
@@ -353,15 +439,31 @@ nsTimerEvent::Run() {
   }
 
   if (profiler_thread_is_being_profiled_for_markers(mTimerThreadId)) {
+    MutexAutoLock lock(mTimer->mMutex);
     nsAutoCString name;
-    mTimer->GetName(name);
-    PROFILER_MARKER_TEXT(
-        "PostTimerEvent", OTHER,
+    mTimer->GetName(name, lock);
+    // This adds a marker with the timer name as the marker name, to make it
+    // obvious which timers are being used. This marker will be useful to
+    // understand which timers might be added and firing excessively often.
+    profiler_add_marker(
+        name, geckoprofiler::category::TIMER,
+        MarkerOptions(MOZ_LIKELY(mInitTime)
+                          ? MarkerTiming::Interval(
+                                mTimer->mTimeout - mTimer->mDelay, mInitTime)
+                          : MarkerTiming::IntervalUntilNowFrom(
+                                mTimer->mTimeout - mTimer->mDelay),
+                      MarkerThreadId(mTimerThreadId)),
+        TimerMarker{}, mTimer->mDelay.ToMilliseconds(), mTimer->mType,
+        MarkerThreadId::CurrentThread(), false);
+    // This marker is meant to help understand the behavior of the timer thread.
+    profiler_add_marker(
+        "PostTimerEvent", geckoprofiler::category::OTHER,
         MarkerOptions(MOZ_LIKELY(mInitTime)
                           ? MarkerTiming::IntervalUntilNowFrom(mInitTime)
                           : MarkerTiming::InstantNow(),
                       MarkerThreadId(mTimerThreadId)),
-        name);
+        AddRemoveTimerMarker{}, name, mTimer->mDelay.ToMilliseconds(),
+        MarkerThreadId::CurrentThread());
   }
 
   mTimer->Fire(mGeneration);
@@ -726,38 +828,6 @@ nsresult TimerThread::AddTimer(nsTimerImpl* aTimer,
   }
 
   if (profiler_thread_is_being_profiled_for_markers(mProfilerThreadId)) {
-    struct TimerMarker {
-      static constexpr Span<const char> MarkerTypeName() {
-        return MakeStringSpan("Timer");
-      }
-      static void StreamJSONMarkerData(
-          baseprofiler::SpliceableJSONWriter& aWriter,
-          const ProfilerString8View& aTimerName, uint32_t aDelay,
-          MarkerThreadId aThreadId) {
-        aWriter.StringProperty("name", aTimerName);
-        aWriter.IntProperty("delay", aDelay);
-        if (!aThreadId.IsUnspecified()) {
-          // Tech note: If `ToNumber()` returns a uint64_t, the conversion to
-          // int64_t is "implementation-defined" before C++20. This is
-          // acceptable here, because this is a one-way conversion to a unique
-          // identifier that's used to visually separate data by thread on the
-          // front-end.
-          aWriter.IntProperty("threadId", static_cast<int64_t>(
-                                              aThreadId.ThreadId().ToNumber()));
-        }
-      }
-      static MarkerSchema MarkerTypeDisplay() {
-        using MS = MarkerSchema;
-        MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
-        schema.AddKeyLabelFormatSearchable("name", "Name", MS::Format::String,
-                                           MS::Searchable::Searchable);
-        schema.AddKeyLabelFormat("delay", "Delay", MS::Format::Milliseconds);
-        schema.SetTableLabel(
-            "{marker.name} - {marker.data.name} - {marker.data.delay}");
-        return schema;
-      }
-    };
-
     nsAutoCString name;
     aTimer->GetName(name, aProofOfLock);
 
@@ -768,7 +838,7 @@ nsresult TimerThread::AddTimer(nsTimerImpl* aTimer,
                       MarkerStack::MaybeCapture(
                           name.Equals("nonfunction:JS") ||
                           StringHead(name, prefix.Length()) == prefix)),
-        TimerMarker{}, name, aTimer->mDelay.ToMilliseconds(),
+        AddRemoveTimerMarker{}, name, aTimer->mDelay.ToMilliseconds(),
         MarkerThreadId::CurrentThread());
   }
 
@@ -801,13 +871,24 @@ nsresult TimerThread::RemoveTimer(nsTimerImpl* aTimer,
     aTimer->GetName(name, aProofOfLock);
 
     nsLiteralCString prefix("Anonymous_");
-    PROFILER_MARKER_TEXT(
-        "RemoveTimer", OTHER,
+    // This marker is meant to help understand the behavior of the timer thread.
+    profiler_add_marker(
+        "RemoveTimer", geckoprofiler::category::OTHER,
         MarkerOptions(MarkerThreadId(mProfilerThreadId),
                       MarkerStack::MaybeCapture(
                           name.Equals("nonfunction:JS") ||
                           StringHead(name, prefix.Length()) == prefix)),
-        name);
+        AddRemoveTimerMarker{}, name, aTimer->mDelay.ToMilliseconds(),
+        MarkerThreadId::CurrentThread());
+    // This adds a marker with the timer name as the marker name, to make it
+    // obvious which timers are being used. This marker will be useful to
+    // understand which timers might be added and removed excessively often.
+    profiler_add_marker(name, geckoprofiler::category::TIMER,
+                        MarkerOptions(MarkerTiming::IntervalUntilNowFrom(
+                                          aTimer->mTimeout - aTimer->mDelay),
+                                      MarkerThreadId(mProfilerThreadId)),
+                        TimerMarker{}, aTimer->mDelay.ToMilliseconds(),
+                        aTimer->mType, MarkerThreadId::CurrentThread(), true);
   }
 
   return NS_OK;
