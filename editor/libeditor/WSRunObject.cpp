@@ -1315,22 +1315,23 @@ Result<EditorDOMPoint, nsresult> WhiteSpaceVisibilityKeeper::ReplaceText(
     return Err(NS_ERROR_UNEXPECTED);
   }
   OwningNonNull<Document> document = *aHTMLEditor.GetDocument();
-  Result<EditorDOMPoint, nsresult> insertTextResult =
+  Result<InsertTextResult, nsresult> insertTextResult =
       aHTMLEditor.InsertTextWithTransaction(document, theString, pointToInsert);
-  if (MOZ_UNLIKELY(insertTextResult.isErr() && insertTextResult.inspectErr() ==
-                                                   NS_ERROR_EDITOR_DESTROYED)) {
-    NS_WARNING(
-        "HTMLEditor::InsertTextWithTransaction() caused destroying the editor");
-    return Err(NS_ERROR_EDITOR_DESTROYED);
+  if (MOZ_UNLIKELY(insertTextResult.isErr())) {
+    if (MOZ_UNLIKELY(insertTextResult.inspectErr() ==
+                     NS_ERROR_EDITOR_DESTROYED)) {
+      NS_WARNING("HTMLEditor::InsertTextWithTransaction() failed");
+      return Err(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING("HTMLEditor::InsertTextWithTransaction() failed, but ignored");
+    // XXX Temporarily, set new insertion point to the original point.
+    return pointToInsert;
   }
-  if (insertTextResult.isOk()) {
-    return insertTextResult.unwrap();
-  }
-
-  NS_WARNING("HTMLEditor::InsertTextWithTransaction() failed, but ignored");
-
-  // XXX Temporarily, set new insertion point to the original point.
-  return pointToInsert;
+  insertTextResult.inspect().IgnoreCaretPointSuggestion();
+  return insertTextResult.inspect().Handled() ? insertTextResult.inspect()
+                                                    .EndOfInsertedTextRef()
+                                                    .To<EditorDOMPoint>()
+                                              : pointToInsert;
 }
 
 // static

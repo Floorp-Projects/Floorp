@@ -752,9 +752,10 @@ class HTMLEditor final : public EditorBase,
       const nsAString& aStringToInsert);
 
   /**
-   * InsertTextWithTransaction() inserts aStringToInsert at aPointToInsert.
+   * Insert aStringToInsert to aPointToInsert.  If the point is not editable,
+   * this returns error.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditorDOMPoint, nsresult>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<InsertTextResult, nsresult>
   InsertTextWithTransaction(Document& aDocument,
                             const nsAString& aStringToInsert,
                             const EditorDOMPoint& aPointToInsert) final;

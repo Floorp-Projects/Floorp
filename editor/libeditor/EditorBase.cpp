@@ -2748,14 +2748,9 @@ EditorDOMPointType EditorBase::FindBetterInsertionPoint(
   return aPoint;
 }
 
-Result<EditorDOMPoint, nsresult> EditorBase::InsertTextWithTransaction(
+Result<InsertTextResult, nsresult> EditorBase::InsertTextWithTransaction(
     Document& aDocument, const nsAString& aStringToInsert,
     const EditorDOMPoint& aPointToInsert) {
-  MOZ_ASSERT(
-      ShouldHandleIMEComposition() || !AllowsTransactionsToChangeSelection(),
-      "caller must have already used AutoTransactionsConserveSelection "
-      "if this is not for updating composition string");
-
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
     return Err(NS_ERROR_INVALID_ARG);
   }
@@ -2763,7 +2758,7 @@ Result<EditorDOMPoint, nsresult> EditorBase::InsertTextWithTransaction(
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
   if (!ShouldHandleIMEComposition() && aStringToInsert.IsEmpty()) {
-    return aPointToInsert;
+    return InsertTextResult();
   }
 
   // In some cases, the node may be the anonymous div element or a padding
@@ -2785,7 +2780,6 @@ Result<EditorDOMPoint, nsresult> EditorBase::InsertTextWithTransaction(
   }
 
   if (ShouldHandleIMEComposition()) {
-    CheckedUint32 newOffset;
     if (!pointToInsert.IsInTextNode()) {
       // create a text node
       RefPtr<nsTextNode> newTextNode = CreateTextNode(u""_ns);
@@ -2799,62 +2793,27 @@ Result<EditorDOMPoint, nsresult> EditorBase::InsertTextWithTransaction(
         NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
         return insertTextNodeResult.propagateErr();
       }
-      nsresult rv = insertTextNodeResult.inspect().SuggestCaretPointTo(
-          *this, {SuggestCaret::OnlyIfHasSuggestion,
-                  SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                  SuggestCaret::AndIgnoreTrivialError});
-      if (NS_FAILED(rv)) {
-        NS_WARNING("CreateTextResult::SuggestCaretPointTo() failed");
-        return Err(rv);
-      }
-      NS_WARNING_ASSERTION(
-          rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-          "CreateTextResult::SuggestCaretPointTo() failed, but ignored");
+      insertTextNodeResult.unwrap().IgnoreCaretPointSuggestion();
       pointToInsert.Set(newTextNode, 0u);
-      newOffset = aStringToInsert.Length();
-    } else {
-      newOffset = aStringToInsert.Length();
-      newOffset += pointToInsert.Offset();
-      if (NS_WARN_IF(!newOffset.isValid())) {
-        return Err(NS_ERROR_FAILURE);
-      }
     }
-    nsresult rv = InsertTextIntoTextNodeWithTransaction(
-        aStringToInsert, pointToInsert.AsInText());
-    if (MOZ_UNLIKELY(Destroyed())) {
-      NS_WARNING(
-          "EditorBase::InsertTextIntoTextNodeWithTransaction() caused "
-          "destroying the editor");
-      return Err(NS_ERROR_EDITOR_DESTROYED);
-    }
-    if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::InsertTextIntoTextNodeWithTransaction() failed");
-      return Err(rv);
-    }
-    return EditorDOMPoint(pointToInsert.GetContainer(), newOffset.value());
+    Result<InsertTextResult, nsresult> insertTextResult =
+        InsertTextIntoTextNodeWithTransaction(aStringToInsert,
+                                              pointToInsert.AsInText());
+    NS_WARNING_ASSERTION(
+        insertTextResult.isOk(),
+        "EditorBase::InsertTextIntoTextNodeWithTransaction() failed");
+    return insertTextResult;
   }
 
   if (pointToInsert.IsInTextNode()) {
-    CheckedUint32 newOffset = aStringToInsert.Length();
-    newOffset += pointToInsert.Offset();
-    if (NS_WARN_IF(!newOffset.isValid())) {
-      return Err(NS_ERROR_FAILURE);
-    }
     // we are inserting text into an existing text node.
-    nsresult rv = InsertTextIntoTextNodeWithTransaction(
-        aStringToInsert, EditorDOMPointInText(pointToInsert.ContainerAs<Text>(),
-                                              pointToInsert.Offset()));
-    if (MOZ_UNLIKELY(Destroyed())) {
-      NS_WARNING(
-          "EditorBase::InsertTextIntoTextNodeWithTransaction() caused "
-          "destroying the editor");
-      return Err(NS_ERROR_EDITOR_DESTROYED);
-    }
-    if (NS_FAILED(rv)) {
-      NS_WARNING("EditorBase::InsertTextIntoTextNodeWithTransaction() failed");
-      return Err(rv);
-    }
-    return EditorDOMPoint(pointToInsert.GetContainer(), newOffset.value());
+    Result<InsertTextResult, nsresult> insertTextResult =
+        InsertTextIntoTextNodeWithTransaction(aStringToInsert,
+                                              pointToInsert.AsInText());
+    NS_WARNING_ASSERTION(
+        insertTextResult.isOk(),
+        "EditorBase::InsertTextIntoTextNodeWithTransaction() failed");
+    return insertTextResult;
   }
 
   // we are inserting text into a non-text node.  first we have to create a
@@ -2870,19 +2829,12 @@ Result<EditorDOMPoint, nsresult> EditorBase::InsertTextWithTransaction(
     NS_WARNING("EditorBase::InsertNodeWithTransaction() failed");
     return Err(insertTextNodeResult.unwrapErr());
   }
-  nsresult rv = insertTextNodeResult.inspect().SuggestCaretPointTo(
-      *this, {SuggestCaret::OnlyIfHasSuggestion,
-              SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-              SuggestCaret::AndIgnoreTrivialError});
-  if (NS_FAILED(rv)) {
-    NS_WARNING("CreateTextResult::SuggestCaretPointTo() failed");
-    return Err(rv);
+  insertTextNodeResult.unwrap().IgnoreCaretPointSuggestion();
+  if (NS_WARN_IF(!newTextNode->IsInComposedDoc())) {
+    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
-  NS_WARNING_ASSERTION(
-      rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-      "CreateTextResult::SuggestCaretPointTo() failed, but ignored");
-  return EditorDOMPoint(insertTextNodeResult.inspect().GetNewNode(),
-                        aStringToInsert.Length());
+  return InsertTextResult(EditorDOMPointInText::AtEndOf(*newTextNode),
+                          EditorDOMPoint::AtEndOf(*newTextNode));
 }
 
 static bool TextFragmentBeginsWithStringAtOffset(
@@ -2939,18 +2891,16 @@ EditorBase::ComputeInsertedRange(const EditorDOMPointInText& aInsertedPoint,
   return {EditorDOMPointInText(), EditorDOMPointInText()};
 }
 
-nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
+Result<InsertTextResult, nsresult>
+EditorBase::InsertTextIntoTextNodeWithTransaction(
     const nsAString& aStringToInsert,
-    const EditorDOMPointInText& aPointToInsert, bool aSuppressIME) {
+    const EditorDOMPointInText& aPointToInsert) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
   RefPtr<EditTransactionBase> transaction;
   bool isIMETransaction = false;
-  // aSuppressIME is used when editor must insert text, yet this text is not
-  // part of the current IME operation. Example: adjusting white-space around an
-  // IME insertion.
-  if (ShouldHandleIMEComposition() && !aSuppressIME) {
+  if (ShouldHandleIMEComposition()) {
     transaction =
         CompositionTransaction::Create(*this, aStringToInsert, aPointToInsert);
     isIMETransaction = true;
@@ -2967,6 +2917,9 @@ nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
                        "EditorBase::DoTransactionInternal() failed");
   EndUpdateViewBatch(__FUNCTION__);
 
+  // Don't check whether we've been destroyed here because we need to notify
+  // listeners and observers below even if we've already destroyed.
+
   auto pointToInsert = [&]() -> EditorDOMPointInText {
     if (!isIMETransaction) {
       return aPointToInsert;
@@ -2980,6 +2933,10 @@ nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
                  mComposition->GetContainerTextNode()->TextDataLength()));
   }();
 
+  EditorDOMPointInText endOfInsertedText(
+      pointToInsert.ContainerAs<Text>(),
+      pointToInsert.Offset() + aStringToInsert.Length());
+
   if (IsHTMLEditor()) {
     auto [begin, end] = ComputeInsertedRange(pointToInsert, aStringToInsert);
     if (begin.IsSet() && end.IsSet()) {
@@ -2991,6 +2948,7 @@ nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
       // IME since non-ASCII character may be inserted into it in most cases.
       pointToInsert.ContainerAs<Text>()->MarkAsMaybeModifiedFrequently();
     }
+    // XXX Should we update endOfInsertedText here?
   }
 
   // let listeners know what happened
@@ -2998,9 +2956,9 @@ nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
     for (auto& listener : mActionListeners.Clone()) {
       // TODO: might need adaptation because of mutation event listeners called
       // during `DoTransactionInternal`.
-      DebugOnly<nsresult> rvIgnored =
-          listener->DidInsertText(pointToInsert.ContainerAs<Text>(),
-                                  pointToInsert.Offset(), aStringToInsert, rv);
+      DebugOnly<nsresult> rvIgnored = listener->DidInsertText(
+          pointToInsert.ContainerAs<Text>(),
+          static_cast<int32_t>(pointToInsert.Offset()), aStringToInsert, rv);
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
           "nsIEditActionListener::DidInsertText() failed, but ignored");
@@ -3020,20 +2978,27 @@ nsresult EditorBase::InsertTextIntoTextNodeWithTransaction(
   if (IsHTMLEditor() && isIMETransaction && mComposition) {
     RefPtr<Text> textNode = mComposition->GetContainerTextNode();
     if (textNode && !textNode->Length()) {
-      nsresult rv = DeleteNodeWithTransaction(*textNode);
-      if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
-        NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
-        return rv;
+      rv = DeleteNodeWithTransaction(*textNode);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "EditorBase::DeleteNodeTransaction() failed");
+      if (MOZ_LIKELY(!textNode->IsInComposedDoc())) {
+        mComposition->OnTextNodeRemoved();
       }
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv),
-          "EditorBase::DeleteNodeWithTransaction() failed, but ignored");
-      mComposition->OnTextNodeRemoved();
       static_cast<CompositionTransaction*>(transaction.get())->MarkFixed();
     }
   }
 
-  return rv;
+  if (NS_WARN_IF(Destroyed())) {
+    return Err(NS_ERROR_EDITOR_DESTROYED);
+  }
+
+  InsertTextTransaction* const insertTextTransaction =
+      transaction->GetAsInsertTextTransaction();
+  return insertTextTransaction
+             ? InsertTextResult(std::move(endOfInsertedText),
+                                insertTextTransaction
+                                    ->SuggestPointToPutCaret<EditorDOMPoint>())
+             : InsertTextResult(std::move(endOfInsertedText));
 }
 
 nsresult EditorBase::NotifyDocumentListeners(

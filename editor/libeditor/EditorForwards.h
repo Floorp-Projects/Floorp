@@ -75,11 +75,6 @@ using EditorRawDOMPointInText = EditorDOMPointBase<dom::Text*, nsIContent*>;
  ******************************************************************************/
 
 class AutoPendingStyleCacheArray;  // mozilla/PendingStyles.h
-class AutoSelectionRangeArray;     // EditorUtils.h
-class CaretPoint;                  // EditorUtils.h
-class ChangeStyleTransaction;      // ChangeStyleTransaction.h
-class CSSEditUtils;                // CSSEditUtils.h
-class EditActionResult;            // EditorUtils.h
 class EditTransactionBase;         // mozilla/EditTransactionBase.h
 class EditorBase;                  // mozilla/EditorBase.h
 class HTMLEditor;                  // mozilla/HTMLEditor.h
@@ -92,18 +87,24 @@ class SelectionState;              // mozilla/SelectionState.h
 class TextEditor;                  // mozilla/TextEditor.h
 
 class AutoRangeArray;                   // AutoRangeArray.h
+class AutoSelectionRangeArray;          // EditorUtils.h
+class CaretPoint;                       // EditorUtils.h
 class ChangeAttributeTransaction;       // ChangeAttributeTransaction.h
+class ChangeStyleTransaction;           // ChangeStyleTransaction.h
 class CompositionTransaction;           // CompositionTransaction.h
+class CSSEditUtils;                     // CSSEditUtils.h
 class DeleteContentTransactionBase;     // DeleteContentTransactionBase.h
 class DeleteMultipleRangesTransaction;  // DeleteMultipleRangesTransaction.h
 class DeleteNodeTransaction;            // DeleteNodeTransaction.h
 class DeleteRangeTransaction;           // DeleteRangeTransaction.h
 class DeleteTextTransaction;            // DeleteTextTransaction.h
+class EditActionResult;                 // EditorUtils.h
 class EditAggregateTransaction;         // EditAggregateTransaction.h
 class EditorEventListener;              // EditorEventListener.h
 class EditResult;                       // HTMLEditHelpers.h
 class HTMLEditorEventListener;          // HTMLEditorEventListener.h
 class InsertNodeTransaction;            // InsertNodeTransaction.h
+class InsertTextResult;                 // EditorUtils.h
 class InsertTextTransaction;            // InsertTextTransaction.h
 class InterCiter;                       // InterCiter.h
 class JoinNodesResult;                  // HTMLEditHelpers.h

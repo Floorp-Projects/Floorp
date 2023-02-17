@@ -3862,13 +3862,24 @@ nsresult HTMLEditor::ReplaceTextWithTransaction(
     if (NS_WARN_IF(!document)) {
       return NS_ERROR_NOT_INITIALIZED;
     }
-    Result<EditorDOMPoint, nsresult> insertTextResult =
+    Result<InsertTextResult, nsresult> insertTextResult =
         InsertTextWithTransaction(*document, aStringToInsert,
                                   EditorDOMPoint(&aTextNode, aOffset));
     if (MOZ_UNLIKELY(insertTextResult.isErr())) {
       NS_WARNING("HTMLEditor::InsertTextWithTransaction() failed");
       return insertTextResult.unwrapErr();
     }
+    nsresult rv = insertTextResult.unwrap().SuggestCaretPointTo(
+        *this, {SuggestCaret::OnlyIfHasSuggestion,
+                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                SuggestCaret::AndIgnoreTrivialError});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
+      return Err(rv);
+    }
+    NS_WARNING_ASSERTION(
+        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+        "CaretPoint::SuggestCaretPointTo() failed, but ignored");
     return NS_OK;
   }
 
@@ -3960,7 +3971,7 @@ nsresult HTMLEditor::ReplaceTextWithTransaction(
   return NS_WARN_IF(Destroyed()) ? NS_ERROR_EDITOR_DESTROYED : rv;
 }
 
-Result<EditorDOMPoint, nsresult> HTMLEditor::InsertTextWithTransaction(
+Result<InsertTextResult, nsresult> HTMLEditor::InsertTextWithTransaction(
     Document& aDocument, const nsAString& aStringToInsert,
     const EditorDOMPoint& aPointToInsert) {
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
