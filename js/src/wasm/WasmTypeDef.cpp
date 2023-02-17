@@ -29,6 +29,7 @@
 #include "vm/Runtime.h"
 #include "vm/StringType.h"
 #include "wasm/WasmCodegenConstants.h"
+#include "wasm/WasmGcObject.h"
 #include "wasm/WasmJS.h"
 
 using namespace js;
@@ -294,6 +295,23 @@ bool StructType::init() {
       return false;
     }
     field.offset = offset.value();
+    if (!field.type.isRefRepr()) {
+      continue;
+    }
+
+    bool isOutline;
+    uint32_t adjustedOffset;
+    WasmStructObject::fieldOffsetToAreaAndOffset(field.type, field.offset,
+                                                 &isOutline, &adjustedOffset);
+    if (isOutline) {
+      if (!outlineTraceOffsets_.append(adjustedOffset)) {
+        return false;
+      }
+    } else {
+      if (!inlineTraceOffsets_.append(adjustedOffset)) {
+        return false;
+      }
+    }
   }
 
   CheckedInt32 size = layout.close();
