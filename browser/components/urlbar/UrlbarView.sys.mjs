@@ -781,7 +781,7 @@ export class UrlbarView {
     this.resultMenu.openPopup(anchor, "bottomright topright");
     anchor.toggleAttribute("open", true);
     this.resultMenu.addEventListener(
-      "popuphidden",
+      "popuphiding",
       () => {
         anchor.toggleAttribute("open", false);
       },
