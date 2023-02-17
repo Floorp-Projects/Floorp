@@ -74,6 +74,11 @@ WindowsBinaryType = EnumString.subclass(
     "win64",
 )
 
+Abi = EnumString.subclass(
+    "msvc",
+    "mingw",
+)
+
 # The order of those checks matter
 CPU_preprocessor_checks = OrderedDict(
     (
