@@ -132,8 +132,6 @@ checkbox:not([native]):focus-visible > .checkbox-check {
     appearance: auto;
     -moz-default-appearance: checkbox;
     -moz-box-align: center;
-    min-width: 13px;
-    min-height: 13px;
     margin-inline-end: 5px;
   }
 }
