@@ -2,22 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global __URI__ */
-
-"use strict";
-
-var EXPORTED_SYMBOLS = [
-  "RemoteSettings",
-  "jexlFilterFunc",
-  "remoteSettingsBroadcastHandler",
-];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
@@ -84,7 +70,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
  * @param {ClientEnvironment} environment Information about version, language, platform etc.
  * @returns {?Object} the entry or null if excluded.
  */
-async function jexlFilterFunc(entry, environment) {
+export async function jexlFilterFunc(entry, environment) {
   const { filter_expression } = entry;
   if (!filter_expression) {
     return entry;
@@ -583,7 +569,10 @@ function remoteSettingsFunction() {
       '"0"'
     );
     const moduleInfo = {
-      moduleURI: __URI__,
+      // TODO: This should be `import.meta.url`, however the push service
+      // does not currently support ES modules, so use the old URI which still
+      // works for ChromeUtils.import. See bug 1817460.
+      moduleURI: "resource://services-settings/remote-settings.js",
       symbolName: "remoteSettingsBroadcastHandler",
     };
     lazy.pushBroadcastService.addListener(
@@ -596,9 +585,9 @@ function remoteSettingsFunction() {
   return remoteSettings;
 }
 
-var RemoteSettings = remoteSettingsFunction();
+export var RemoteSettings = remoteSettingsFunction();
 
-var remoteSettingsBroadcastHandler = {
+export var remoteSettingsBroadcastHandler = {
   async receivedBroadcastMessage(version, broadcastID, context) {
     const { phase } = context;
     const isStartup = [
