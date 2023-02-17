@@ -163,26 +163,6 @@ center {
   text-align: -moz-center;
 }
 
-blockquote[type=cite] {
-  display: block;
-  margin-block-start: 1em;
-  margin-block-end: 1em;
-  margin-inline-start: 0;
-  margin-inline-end: 0;
-  padding-inline-start: 1em;
-  border-inline-start: solid;
-  border-color: blue;
-  border-width: thin;
-}
-
-span[_moz_quote=true] {
-  color: blue;
-}
-
-pre[_moz_quote=true] {
-  color: blue;
-}
-
 h1 {
   display: block;
   font-size: 2em;
