@@ -257,9 +257,6 @@ WasmGcObject* WasmGcObject::create(JSContext* cx, const wasm::TypeDef* typeDef,
   obj->initShape(args.shape);
   obj->typeDef_ = typeDef;
 
-  MOZ_ASSERT(args.clasp->shouldDelayMetadataBuilder());
-  cx->realm()->setObjectPendingMetadata(cx, obj);
-
   js::gc::gcprobes::CreateObject(obj);
   probes::CreateObject(cx, obj);
 
@@ -453,7 +450,6 @@ WasmArrayObject* WasmArrayObject::createArray(
   }
 
   Rooted<WasmArrayObject*> arrayObj(cx);
-  AutoSetNewObjectMetadata metadata(cx);
   arrayObj = (WasmArrayObject*)WasmGcObject::create(cx, typeDef, args);
   if (!arrayObj) {
     ReportOutOfMemory(cx);
@@ -615,7 +611,6 @@ WasmStructObject* WasmStructObject::createStruct(
   }
 
   Rooted<WasmStructObject*> structObj(cx);
-  AutoSetNewObjectMetadata metadata(cx);
   structObj = (WasmStructObject*)WasmGcObject::create(cx, typeDef, args);
   if (!structObj) {
     ReportOutOfMemory(cx);
