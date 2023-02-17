@@ -14,22 +14,22 @@ BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
 
 EXTRA_JS_MODULES += [
-    "Credentials.jsm",
-    "FxAccounts.jsm",
-    "FxAccountsClient.jsm",
-    "FxAccountsCommands.js",
+    "Credentials.sys.mjs",
+    "FxAccounts.sys.mjs",
+    "FxAccountsClient.sys.mjs",
+    "FxAccountsCommands.sys.mjs",
     "FxAccountsCommon.js",
-    "FxAccountsConfig.jsm",
-    "FxAccountsDevice.jsm",
-    "FxAccountsKeys.jsm",
-    "FxAccountsPairing.jsm",
-    "FxAccountsPairingChannel.js",
-    "FxAccountsProfile.jsm",
-    "FxAccountsProfileClient.jsm",
-    "FxAccountsPush.jsm",
-    "FxAccountsStorage.jsm",
-    "FxAccountsTelemetry.jsm",
-    "FxAccountsWebChannel.jsm",
+    "FxAccountsConfig.sys.mjs",
+    "FxAccountsDevice.sys.mjs",
+    "FxAccountsKeys.sys.mjs",
+    "FxAccountsPairing.sys.mjs",
+    "FxAccountsPairingChannel.sys.mjs",
+    "FxAccountsProfile.sys.mjs",
+    "FxAccountsProfileClient.sys.mjs",
+    "FxAccountsPush.sys.mjs",
+    "FxAccountsStorage.sys.mjs",
+    "FxAccountsTelemetry.sys.mjs",
+    "FxAccountsWebChannel.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [

@@ -2,16 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 // FxA Telemetry support. For hysterical raisins, the actual implementation
 // is inside "sync". We should move the core implementation somewhere that's
 // sanely shared (eg, services-common?), but let's wait and see where we end up
 // first...
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -34,7 +30,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   ""
 );
 
-class FxAccountsTelemetry {
+export class FxAccountsTelemetry {
   constructor(fxai) {
     this._fxai = fxai;
     Services.telemetry.setEventRecordingEnabled("fxa", true);
@@ -176,5 +172,3 @@ class FxAccountsTelemetry {
     }
   }
 }
-
-var EXPORTED_SYMBOLS = ["FxAccountsTelemetry"];

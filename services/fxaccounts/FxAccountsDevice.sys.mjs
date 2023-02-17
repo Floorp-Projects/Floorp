@@ -1,11 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const {
   log,
@@ -57,7 +54,7 @@ function sanitizeDeviceName(name) {
 }
 
 // Everything to do with FxA devices.
-class FxAccountsDevice {
+export class FxAccountsDevice {
   constructor(fxai) {
     this._fxai = fxai;
     this._deviceListCache = null;
@@ -653,5 +650,3 @@ FxAccountsDevice.prototype.QueryInterface = ChromeUtils.generateQI([
 function urlsafeBase64Encode(buffer) {
   return ChromeUtils.base64URLEncode(new Uint8Array(buffer), { pad: false });
 }
-
-var EXPORTED_SYMBOLS = ["FxAccountsDevice"];

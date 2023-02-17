@@ -1,8 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
-var EXPORTED_SYMBOLS = ["FxAccountsConfig"];
 
 const { RESTRequest } = ChromeUtils.import(
   "resource://services-common/rest.js"
@@ -10,9 +8,7 @@ const { RESTRequest } = ChromeUtils.import(
 const { log } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -57,7 +53,7 @@ const CONFIG_PREFS = [
 ];
 const SYNC_PARAM = "sync";
 
-var FxAccountsConfig = {
+export var FxAccountsConfig = {
   async promiseEmailURI(email, entrypoint, extraParams = {}) {
     return this._buildURL("", {
       extraParams: { entrypoint, email, service: SYNC_PARAM, ...extraParams },

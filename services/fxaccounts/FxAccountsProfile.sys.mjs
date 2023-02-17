@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /**
  * Firefox Accounts Profile helper.
  *
@@ -11,8 +9,6 @@
  * It will handle things like fetching profile data, listening for updates to
  * the user's profile in open browser tabs, and cacheing/invalidating profile data.
  */
-
-var EXPORTED_SYMBOLS = ["FxAccountsProfile"];
 
 const { ON_PROFILE_CHANGE_NOTIFICATION, log } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"
@@ -30,7 +26,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/FxAccountsProfileClient.jsm"
 );
 
-var FxAccountsProfile = function(options = {}) {
+export var FxAccountsProfile = function(options = {}) {
   this._currentFetchPromise = null;
   this._cachedAt = 0; // when we saved the cached version.
   this._isNotifying = false; // are we sending a notification?

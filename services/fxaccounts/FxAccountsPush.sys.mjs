@@ -26,7 +26,7 @@ const {
  *        Object, custom options that used for testing
  * @constructor
  */
-function FxAccountsPushService(options = {}) {
+export function FxAccountsPushService(options = {}) {
   this.log = log;
 
   if (options.log) {
@@ -312,5 +312,3 @@ FxAccountsPushService.prototype = {
     });
   },
 };
-
-var EXPORTED_SYMBOLS = ["FxAccountsPushService"];

@@ -1,11 +1,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
+import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
+
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );
@@ -56,7 +54,7 @@ const DEPRECATED_KEY_SCOPES = [DEPRECATED_SCOPE_ECOSYSTEM_TELEMETRY];
  * possible.  We intend to remove support for Firefox ever directly handling `kB`
  * at some point in the future.
  */
-class FxAccountsKeys {
+export class FxAccountsKeys {
   constructor(fxAccountsInternal) {
     this._fxai = fxAccountsInternal;
   }
@@ -749,5 +747,3 @@ class FxAccountsKeys {
     return CryptoUtils.digestBytes(bytes, hasher);
   }
 }
-
-var EXPORTED_SYMBOLS = ["FxAccountsKeys"];
