@@ -24,6 +24,7 @@
 #include "NamespaceImports.h"
 
 #include "gc/Allocator.h"
+#include "gc/Pretenuring.h"
 #include "js/Utility.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmTypeDecls.h"
@@ -49,6 +50,9 @@ struct TypeDefInstanceData {
   // The canonicalized pointer to this type definition. This is kept alive by
   // the type context associated with the instance.
   const wasm::TypeDef* typeDef;
+
+  // The allocation site for GC types. This is used for pre-tenuring.
+  gc::AllocSite allocSite;
 
   // The following fields are only meaningful and used by structs and arrays.
   // This must be kept in sync with WasmGcObject::AllocArgs.

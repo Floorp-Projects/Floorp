@@ -248,8 +248,9 @@ WasmGcObject* WasmGcObject::create(JSContext* cx, const wasm::TypeDef* typeDef,
 
   debugCheckNewObject(args.shape, args.allocKind, args.initialHeap);
 
-  WasmGcObject* obj = cx->newCell<WasmGcObject>(
-      args.allocKind, /* nDynamicSlots = */ 0, args.initialHeap, args.clasp);
+  WasmGcObject* obj =
+      cx->newCell<WasmGcObject>(args.allocKind, /* nDynamicSlots = */ 0,
+                                args.initialHeap, args.clasp, args.allocSite);
   if (!obj) {
     return nullptr;
   }

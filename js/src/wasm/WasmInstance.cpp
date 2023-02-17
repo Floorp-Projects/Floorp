@@ -1196,6 +1196,10 @@ static int32_t MemDiscardNotShared(Instance* instance, I byteOffset, I byteLen,
 
   const TypeDef* typeDef = typeDefData->typeDef;
   WasmGcObject::AllocArgs args(cx, typeDefData);
+  // Update the initial heap to take into account pre-tenuring.
+  if (typeDefData->clasp == &WasmStructObject::classInline_) {
+    args.initialHeap = typeDefData->allocSite.initialHeap();
+  }
   return WasmStructObject::createStruct(cx, typeDef, args);
 }
 
@@ -1206,6 +1210,8 @@ static int32_t MemDiscardNotShared(Instance* instance, I byteOffset, I byteLen,
 
   const TypeDef* typeDef = typeDefData->typeDef;
   WasmGcObject::AllocArgs args(cx, typeDefData);
+  // Arrays can only be allocated in the tenured heap, so don't use the
+  // allocation site for pretenuring yet.
   return WasmArrayObject::createArray(cx, typeDef, numElements, args);
 }
 
@@ -1721,6 +1727,7 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
   // Initialize type definitions in the instance data.
   const SharedTypeContext& types = metadata().types;
   WasmGcObject::AllocArgs allocArgs(cx);
+  Zone* zone = realm()->zone();
   for (uint32_t typeIndex = 0; typeIndex < types->length(); typeIndex++) {
     const TypeDef& typeDef = types->type(typeIndex);
     TypeDefInstanceData* typeDefData = typeDefInstanceData(typeIndex);
@@ -1742,6 +1749,9 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
       typeDefData->clasp = allocArgs.clasp;
       typeDefData->allocKind = allocArgs.allocKind;
       typeDefData->initialHeap = allocArgs.initialHeap;
+
+      // Initialize the allocation site for pre-tenuring.
+      typeDefData->allocSite.initWasm(zone);
     }
   }
 

@@ -41,9 +41,9 @@ enum class CatchAllAllocSite { Unknown, Optimized };
 // Information about an allocation site.
 //
 // Nursery cells contain a pointer to one of these in their cell header (stored
-// before the cell). The site can relate to either for a specific bytecode
-// instruction or can be a catch-all instance for unknown sites or optimized
-// code.
+// before the cell). The site can relate to either a specific JS bytecode
+// instruction, a specific WebAssembly type, or can be a catch-all instance for
+// unknown sites or JS JIT optimized code.
 class AllocSite {
  public:
   enum class State : uint32_t { ShortLived = 0, Unknown = 1, LongLived = 2 };
@@ -55,12 +55,13 @@ class AllocSite {
   static_assert((AllocSite::LONG_LIVED_BIT & int32_t(State::ShortLived)) == 0);
 
  private:
-  JS::Zone* const zone_;
+  JS::Zone* zone_;
 
   // Word storing JSScript pointer and site state.
   //
-  // The script pointer is the script that owns this allocation site or null for
-  // unknown sites. This is used when we need to invalidate the script.
+  // The script pointer is the script that owns this allocation site, a special
+  // sentinel script for wasm sites, or null for unknown sites. This is used
+  // when we need to invalidate the script.
   uintptr_t scriptAndState = uintptr_t(State::Unknown);
   static constexpr uintptr_t STATE_MASK = BitMask(2);
 
@@ -79,8 +80,13 @@ class AllocSite {
 
   static AllocSite* const EndSentinel;
 
+  // Sentinel script for wasm sites.
+  static JSScript* const WasmScript;
+
   friend class PretenuringZone;
   friend class PretenuringNursery;
+
+  uintptr_t rawScript() const { return scriptAndState & ~STATE_MASK; }
 
  public:
   // Create a dummy site to use for unknown allocations.
@@ -89,17 +95,33 @@ class AllocSite {
 
   // Create a site for an opcode in the given script.
   AllocSite(JS::Zone* zone, JSScript* script) : AllocSite(zone) {
+    MOZ_ASSERT(script != WasmScript);
     setScript(script);
+  }
+
+  // Initialize a site to be a wasm site.
+  void initWasm(JS::Zone* zone) {
+    MOZ_ASSERT(!zone_ && !scriptAndState);
+    zone_ = zone;
+    nurseryTenuredCount = 0;
+    invalidationCount = 0;
+    setScript(WasmScript);
   }
 
   JS::Zone* zone() const { return zone_; }
 
   State state() const { return State(scriptAndState & STATE_MASK); }
 
+  // Whether this site has a script associated with it. This is not true if
+  // this site is for a wasm site.
+  bool hasScript() const { return rawScript() != uintptr_t(WasmScript); }
   JSScript* script() const {
-    return reinterpret_cast<JSScript*>(scriptAndState & ~STATE_MASK);
+    MOZ_ASSERT(hasScript());
+    return reinterpret_cast<JSScript*>(rawScript());
   }
-  bool hasScript() const { return script(); }
+
+  // Whether this site is not the unknown or optimized site.
+  bool isNormal() const { return rawScript() != 0; }
 
   enum class Kind : uint32_t { Normal, Unknown, Optimized };
   Kind kind() const;
@@ -167,7 +189,7 @@ class AllocSite {
 
   void setState(State newState) {
     MOZ_ASSERT((uintptr_t(newState) & ~STATE_MASK) == 0);
-    scriptAndState = uintptr_t(script()) | uintptr_t(newState);
+    scriptAndState = rawScript() | uintptr_t(newState);
   }
 
   const char* stateName() const;
