@@ -8374,11 +8374,13 @@ void CodeGenerator::visitWasmStoreRef(LWasmStoreRef* ins) {
   Register value = ToRegister(ins->value());
   Register temp = ToRegister(ins->temp0());
 
-  Label skipPreBarrier;
-  wasm::EmitWasmPreBarrierGuard(masm, instance, temp, valueBase, offset,
-                                &skipPreBarrier);
-  wasm::EmitWasmPreBarrierCall(masm, instance, temp, valueBase, offset);
-  masm.bind(&skipPreBarrier);
+  if (ins->preBarrierKind() == WasmPreBarrierKind::Normal) {
+    Label skipPreBarrier;
+    wasm::EmitWasmPreBarrierGuard(masm, instance, temp, valueBase, offset,
+                                  &skipPreBarrier);
+    wasm::EmitWasmPreBarrierCall(masm, instance, temp, valueBase, offset);
+    masm.bind(&skipPreBarrier);
+  }
 
   masm.storePtr(value, Address(valueBase, offset));
   // The postbarrier is handled separately.
