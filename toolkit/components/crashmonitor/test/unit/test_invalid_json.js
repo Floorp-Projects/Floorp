@@ -9,7 +9,7 @@
 add_task(async function test_invalid_file() {
   // Write bogus data to checkpoint file
   let data = "[}";
-  await OS.File.writeAtomic(sessionCheckpointsPath, data, {
+  await IOUtils.writeUTF8(sessionCheckpointsPath, data, {
     tmpPath: sessionCheckpointsPath + ".tmp",
   });
 
