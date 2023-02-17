@@ -69,6 +69,14 @@ class ReplaceTextTransaction final : public EditTransactionBase {
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() final;
 
+  template <typename EditorDOMPointType>
+  EditorDOMPointType SuggestPointToPutCaret() const {
+    if (NS_WARN_IF(!mTextNode)) {
+      return EditorDOMPointType();
+    }
+    return EditorDOMPointType(mTextNode, mOffset + mStringToInsert.Length());
+  }
+
   friend std::ostream& operator<<(std::ostream& aStream,
                                   const ReplaceTextTransaction& aTransaction);
 

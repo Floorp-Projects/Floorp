@@ -63,22 +63,6 @@ NS_IMETHODIMP ReplaceTextTransaction::DoTransaction() {
   editorBase->RangeUpdaterRef().SelAdjReplaceText(textNode, mOffset,
                                                   mStringToBeReplaced.Length(),
                                                   mStringToInsert.Length());
-
-  if (!editorBase->AllowsTransactionsToChangeSelection()) {
-    return NS_OK;
-  }
-
-  // XXX Should we stop setting selection when mutation event listener
-  //     modifies the text node?
-  editorBase->CollapseSelectionTo(
-      EditorRawDOMPoint(textNode, mOffset + mStringToInsert.Length()), error);
-  if (MOZ_UNLIKELY(error.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
-    NS_WARNING(
-        "EditorBase::CollapseSelectionTo() caused destroying the editor");
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  NS_ASSERTION(!error.Failed(),
-               "EditorBase::CollapseSelectionTo() failed, but ignored");
   return NS_OK;
 }
 
@@ -187,8 +171,8 @@ NS_IMETHODIMP ReplaceTextTransaction::RedoTransaction() {
 
   // XXX Should we stop setting selection when mutation event listener
   //     modifies the text node?
-  editorBase->CollapseSelectionTo(
-      EditorRawDOMPoint(textNode, mOffset + mStringToInsert.Length()), error);
+  editorBase->CollapseSelectionTo(SuggestPointToPutCaret<EditorRawDOMPoint>(),
+                                  error);
   if (MOZ_UNLIKELY(error.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
     NS_WARNING(
         "EditorBase::CollapseSelectionTo() caused destroying the editor");

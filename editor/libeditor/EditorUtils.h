@@ -269,11 +269,17 @@ class MOZ_STACK_CLASS InsertTextResult final : public CaretPoint {
   explicit InsertTextResult(EditorDOMPointInText&& aEndOfInsertedText)
       : CaretPoint(EditorDOMPoint()),
         mEndOfInsertedText(std::move(aEndOfInsertedText)) {}
-  template <typename EditorDOMPointType>
+  template <typename PT, typename CT>
   InsertTextResult(EditorDOMPointInText&& aEndOfInsertedText,
-                   const EditorDOMPointType& aCaretPoint)
+                   const EditorDOMPointBase<PT, CT>& aCaretPoint)
       : CaretPoint(aCaretPoint.template To<EditorDOMPoint>()),
         mEndOfInsertedText(std::move(aEndOfInsertedText)) {}
+  InsertTextResult(EditorDOMPointInText&& aEndOfInsertedText,
+                   CaretPoint&& aCaretPoint)
+      : CaretPoint(std::move(aCaretPoint)),
+        mEndOfInsertedText(std::move(aEndOfInsertedText)) {
+    UnmarkAsHandledCaretPoint();
+  }
 
   [[nodiscard]] bool Handled() const { return mEndOfInsertedText.IsSet(); }
   const EditorDOMPointInText& EndOfInsertedTextRef() const {

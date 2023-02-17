@@ -1533,8 +1533,10 @@ class WhiteSpaceVisibilityKeeper final {
                                             const EditorDOMPoint& aCaretPoint);
 
   /**
-   * NormalizeVisibleWhiteSpacesAt() tries to normalize visible white-space
-   * sequence around aPoint.
+   * Try to normalize visible white-space sequence around aPoint.
+   * This may collapse `Selection` after replaced text.  Therefore, the callers
+   * of this need to restore `Selection` by themselves (this does not do it for
+   * performance reason of multiple calls).
    */
   template <typename EditorDOMPointType>
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult

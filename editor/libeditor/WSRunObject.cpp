@@ -64,8 +64,6 @@ template EditorRawDOMPoint WSRunScanner::GetFirstVisiblePoint(
 template nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
     HTMLEditor& aHTMLEditor, const EditorDOMPoint& aScanStartPoint);
 template nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
-    HTMLEditor& aHTMLEditor, const EditorRawDOMPoint& aScanStartPoint);
-template nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
     HTMLEditor& aHTMLEditor, const EditorDOMPointInText& aScanStartPoint);
 
 template WSRunScanner::TextFragmentData::TextFragmentData(
@@ -938,15 +936,18 @@ WhiteSpaceVisibilityKeeper::InsertBRElement(
           atNBSPReplacedWithASCIIWhiteSpace.IsCharNBSP()) {
         AutoTrackDOMPoint trackPointToInsert(aHTMLEditor.RangeUpdaterRef(),
                                              &pointToInsert);
-        AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
-        nsresult rv = aHTMLEditor.ReplaceTextWithTransaction(
-            MOZ_KnownLive(
-                *atNBSPReplacedWithASCIIWhiteSpace.ContainerAs<Text>()),
-            atNBSPReplacedWithASCIIWhiteSpace.Offset(), 1, u" "_ns);
-        if (NS_FAILED(rv)) {
+        Result<InsertTextResult, nsresult> replaceTextResult =
+            aHTMLEditor.ReplaceTextWithTransaction(
+                MOZ_KnownLive(
+                    *atNBSPReplacedWithASCIIWhiteSpace.ContainerAs<Text>()),
+                atNBSPReplacedWithASCIIWhiteSpace.Offset(), 1, u" "_ns);
+        if (MOZ_UNLIKELY(replaceTextResult.isErr())) {
           NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed failed");
-          return Err(rv);
+          return replaceTextResult.propagateErr();
         }
+        // Ignore caret suggestion because there was
+        // AutoTransactionsConserveSelection.
+        replaceTextResult.unwrap().IgnoreCaretPointSuggestion();
         // Don't refer the following variables anymore unless tracking the
         // change.
         atNBSPReplaceableWithSP.Clear();
@@ -1099,15 +1100,18 @@ Result<InsertTextResult, nsresult> WhiteSpaceVisibilityKeeper::ReplaceText(
         AutoTrackDOMRange trackInvisibleTrailingWhiteSpaceRange(
             aHTMLEditor.RangeUpdaterRef(),
             &invisibleTrailingWhiteSpaceRangeAtEnd);
-        AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
-        nsresult rv = aHTMLEditor.ReplaceTextWithTransaction(
-            MOZ_KnownLive(
-                *atNBSPReplacedWithASCIIWhiteSpace.ContainerAs<Text>()),
-            atNBSPReplacedWithASCIIWhiteSpace.Offset(), 1, u" "_ns);
-        if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+        Result<InsertTextResult, nsresult> replaceTextResult =
+            aHTMLEditor.ReplaceTextWithTransaction(
+                MOZ_KnownLive(
+                    *atNBSPReplacedWithASCIIWhiteSpace.ContainerAs<Text>()),
+                atNBSPReplacedWithASCIIWhiteSpace.Offset(), 1, u" "_ns);
+        if (MOZ_UNLIKELY(replaceTextResult.isErr())) {
           NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed");
-          return Err(rv);
+          return replaceTextResult.propagateErr();
         }
+        // Ignore caret suggestion because there was
+        // AutoTransactionsConserveSelection.
+        replaceTextResult.unwrap().IgnoreCaretPointSuggestion();
       }
     }
 
@@ -1152,15 +1156,18 @@ Result<InsertTextResult, nsresult> WhiteSpaceVisibilityKeeper::ReplaceText(
         AutoTrackDOMRange trackInvisibleTrailingWhiteSpaceRange(
             aHTMLEditor.RangeUpdaterRef(),
             &invisibleTrailingWhiteSpaceRangeAtEnd);
-        AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
-        nsresult rv = aHTMLEditor.ReplaceTextWithTransaction(
-            MOZ_KnownLive(
-                *atNBSPReplacedWithASCIIWhiteSpace.ContainerAs<Text>()),
-            atNBSPReplacedWithASCIIWhiteSpace.Offset(), 1, u" "_ns);
-        if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+        Result<InsertTextResult, nsresult> replaceTextResult =
+            aHTMLEditor.ReplaceTextWithTransaction(
+                MOZ_KnownLive(
+                    *atNBSPReplacedWithASCIIWhiteSpace.ContainerAs<Text>()),
+                atNBSPReplacedWithASCIIWhiteSpace.Offset(), 1, u" "_ns);
+        if (MOZ_UNLIKELY(replaceTextResult.isErr())) {
           NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed failed");
-          return Err(rv);
+          return replaceTextResult.propagateErr();
         }
+        // Ignore caret suggestion because there was
+        // AutoTransactionsConserveSelection.
+        replaceTextResult.unwrap().IgnoreCaretPointSuggestion();
         // Don't refer the following variables anymore unless tracking the
         // change.
         atNBSPReplaceableWithSP.Clear();
@@ -3038,26 +3045,30 @@ nsresult WhiteSpaceVisibilityKeeper::ReplaceTextAndRemoveEmptyTextNodes(
   MOZ_ASSERT(aRangeToReplace.EndRef().IsSetAndValid());
   MOZ_ASSERT(aRangeToReplace.StartRef().IsBefore(aRangeToReplace.EndRef()));
 
-  AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
-  nsresult rv = aHTMLEditor.ReplaceTextWithTransaction(
-      MOZ_KnownLive(*aRangeToReplace.StartRef().ContainerAs<Text>()),
-      aRangeToReplace.StartRef().Offset(),
-      aRangeToReplace.InSameContainer()
-          ? aRangeToReplace.EndRef().Offset() -
-                aRangeToReplace.StartRef().Offset()
-          : aRangeToReplace.StartRef().ContainerAs<Text>()->TextLength() -
-                aRangeToReplace.StartRef().Offset(),
-      aReplaceString);
-  if (NS_FAILED(rv)) {
+  Result<InsertTextResult, nsresult> replaceTextResult =
+      aHTMLEditor.ReplaceTextWithTransaction(
+          MOZ_KnownLive(*aRangeToReplace.StartRef().ContainerAs<Text>()),
+          aRangeToReplace.StartRef().Offset(),
+          aRangeToReplace.InSameContainer()
+              ? aRangeToReplace.EndRef().Offset() -
+                    aRangeToReplace.StartRef().Offset()
+              : aRangeToReplace.StartRef().ContainerAs<Text>()->TextLength() -
+                    aRangeToReplace.StartRef().Offset(),
+          aReplaceString);
+  if (MOZ_UNLIKELY(replaceTextResult.isErr())) {
     NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed");
-    return rv;
+    return replaceTextResult.propagateErr();
   }
+  // Ignore caret suggestion because there was
+  // AutoTransactionsConserveSelection.
+  replaceTextResult.unwrap().IgnoreCaretPointSuggestion();
 
   if (aRangeToReplace.InSameContainer()) {
     return NS_OK;
   }
 
-  rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
+  AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
+  nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
       EditorDOMPointInText::AtEndOf(
           *aRangeToReplace.StartRef().ContainerAs<Text>()),
       aRangeToReplace.EndRef(),
@@ -3114,7 +3125,7 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
             atEndOfVisibleWhiteSpaces);
     if (!atPreviousCharOfEndOfVisibleWhiteSpaces.IsSet() ||
         atPreviousCharOfEndOfVisibleWhiteSpaces.IsEndOfContainer() ||
-        // If the NBSP is never replaced from an ASCII white-space, we cannod
+        // If the NBSP is never replaced from an ASCII white-space, we cannot
         // replace it with an ASCII white-space.
         !atPreviousCharOfEndOfVisibleWhiteSpaces.IsCharCollapsibleNBSP()) {
       return NS_OK;
@@ -3201,27 +3212,17 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
           if (MOZ_UNLIKELY(insertBRElementResult.isErr())) {
             NS_WARNING(
                 "HTMLEditor::InsertBRElement(WithTransaction::Yes) failed");
-            return insertBRElementResult.unwrapErr();
+            return insertBRElementResult.propagateErr();
           }
-          // XXX Is this intentional selection change?
-          nsresult rv = insertBRElementResult.inspect().SuggestCaretPointTo(
-              aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
-                            SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                            SuggestCaret::AndIgnoreTrivialError});
-          if (NS_FAILED(rv)) {
-            NS_WARNING("CreateElementResult::SuggestCaretPointTo() failed");
-            return rv;
-          }
-          NS_WARNING_ASSERTION(
-              rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-              "CreateElementResult::SuggestCaretPointTo() failed, but ignored");
           MOZ_ASSERT(insertBRElementResult.inspect().GetNewNode());
+          // Ignore caret suggestion because the caller must want to restore
+          // `Selection` due to the purpose of this method.
+          insertBRElementResult.unwrap().IgnoreCaretPointSuggestion();
 
           atPreviousCharOfEndOfVisibleWhiteSpaces =
               textFragmentData.GetPreviousEditableCharPoint(
                   atEndOfVisibleWhiteSpaces);
-          if (MOZ_UNLIKELY(NS_WARN_IF(
-                  !atPreviousCharOfEndOfVisibleWhiteSpaces.IsSet()))) {
+          if (NS_WARN_IF(!atPreviousCharOfEndOfVisibleWhiteSpaces.IsSet())) {
             return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
           }
           atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces =
@@ -3256,14 +3257,19 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
           (followedByVisibleContent || followedByBRElement) &&
           !visibleWhiteSpaces.StartsFromPreformattedLineBreak()) {
         MOZ_ASSERT(!followedByPreformattedLineBreak);
-        AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
-        nsresult rv = aHTMLEditor.ReplaceTextWithTransaction(
-            MOZ_KnownLive(
-                *atPreviousCharOfEndOfVisibleWhiteSpaces.ContainerAs<Text>()),
-            atPreviousCharOfEndOfVisibleWhiteSpaces.Offset(), 1, u" "_ns);
-        NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                             "HTMLEditor::ReplaceTextWithTransaction() failed");
-        return rv;
+        Result<InsertTextResult, nsresult> replaceTextResult =
+            aHTMLEditor.ReplaceTextWithTransaction(
+                MOZ_KnownLive(*atPreviousCharOfEndOfVisibleWhiteSpaces
+                                   .ContainerAs<Text>()),
+                atPreviousCharOfEndOfVisibleWhiteSpaces.Offset(), 1, u" "_ns);
+        if (MOZ_UNLIKELY(replaceTextResult.isErr())) {
+          NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed");
+          return replaceTextResult.propagateErr();
+        }
+        // Ignore caret suggestion because the caller must want to restore
+        // `Selection` due to the purpose of this method.
+        replaceTextResult.unwrap().IgnoreCaretPointSuggestion();
+        return NS_OK;
       }
     }
     // If the text node is not preformatted, and the NBSP is followed by a <br>
@@ -3290,7 +3296,6 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
         textFragmentData.GetFirstASCIIWhiteSpacePointCollapsedTo(
             atPreviousCharOfPreviousCharOfEndOfVisibleWhiteSpaces,
             nsIEditor::eNone);
-    AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
     uint32_t numberOfASCIIWhiteSpacesInStartNode =
         atFirstASCIIWhiteSpace.ContainerAs<Text>() ==
                 atPreviousCharOfEndOfVisibleWhiteSpaces.ContainerAs<Text>()
@@ -3305,18 +3310,23 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
                  atPreviousCharOfEndOfVisibleWhiteSpaces.ContainerAs<Text>()
              ? 1
              : 0);
-    nsresult rv = aHTMLEditor.ReplaceTextWithTransaction(
-        MOZ_KnownLive(*atFirstASCIIWhiteSpace.ContainerAs<Text>()),
-        atFirstASCIIWhiteSpace.Offset(), replaceLengthInStartNode,
-        textFragmentData.StartsFromPreformattedLineBreak() &&
-                textFragmentData.EndsByPreformattedLineBreak()
-            ? u"\x00A0\x00A0"_ns
-            : (textFragmentData.EndsByPreformattedLineBreak() ? u" \x00A0"_ns
-                                                              : u"\x00A0 "_ns));
-    if (NS_FAILED(rv)) {
+    Result<InsertTextResult, nsresult> replaceTextResult =
+        aHTMLEditor.ReplaceTextWithTransaction(
+            MOZ_KnownLive(*atFirstASCIIWhiteSpace.ContainerAs<Text>()),
+            atFirstASCIIWhiteSpace.Offset(), replaceLengthInStartNode,
+            textFragmentData.StartsFromPreformattedLineBreak() &&
+                    textFragmentData.EndsByPreformattedLineBreak()
+                ? u"\x00A0\x00A0"_ns
+                : (textFragmentData.EndsByPreformattedLineBreak()
+                       ? u" \x00A0"_ns
+                       : u"\x00A0 "_ns));
+    if (MOZ_UNLIKELY(replaceTextResult.isErr())) {
       NS_WARNING("HTMLEditor::ReplaceTextWithTransaction() failed");
-      return rv;
+      return replaceTextResult.propagateErr();
     }
+    // Ignore caret suggestion because the caller must want to restore
+    // `Selection` due to the purpose of this method.
+    replaceTextResult.unwrap().IgnoreCaretPointSuggestion();
 
     if (atFirstASCIIWhiteSpace.GetContainer() ==
         atPreviousCharOfEndOfVisibleWhiteSpaces.GetContainer()) {
@@ -3326,7 +3336,7 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
     // We need to remove the following unnecessary ASCII white-spaces and
     // NBSP at atPreviousCharOfEndOfVisibleWhiteSpaces because we collapsed them
     // into the start node.
-    rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
+    nsresult rv = aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
         EditorDOMPointInText::AtEndOf(
             *atFirstASCIIWhiteSpace.ContainerAs<Text>()),
         atPreviousCharOfEndOfVisibleWhiteSpaces.NextPoint(),
@@ -3387,16 +3397,20 @@ nsresult WhiteSpaceVisibilityKeeper::NormalizeVisibleWhiteSpacesAt(
         atPreviousCharOfEndOfVisibleWhiteSpaces.NextPoint();
   }
 
-  AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
-  Result<EditorDOMPoint, nsresult> result =
+  Result<CaretPoint, nsresult> caretPointOrError =
       aHTMLEditor.DeleteTextAndNormalizeSurroundingWhiteSpaces(
           startToDelete, endToDelete,
           HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries,
           HTMLEditor::DeleteDirection::Forward);
-  NS_WARNING_ASSERTION(
-      !result.isOk(),
-      "HTMLEditor::DeleteTextAndNormalizeSurroundingWhiteSpaces() failed");
-  return result.isErr() ? result.unwrapErr() : NS_OK;
+  if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
+    NS_WARNING(
+        "HTMLEditor::DeleteTextAndNormalizeSurroundingWhiteSpace() failed");
+    return caretPointOrError.unwrapErr();
+  }
+  // Ignore caret suggestion because the caller must want to restore
+  // `Selection` due to the purpose of this method.
+  caretPointOrError.unwrap().IgnoreCaretPointSuggestion();
+  return NS_OK;
 }
 
 EditorDOMPointInText WSRunScanner::TextFragmentData::
