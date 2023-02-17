@@ -22,10 +22,6 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/BrowserUsageTelemetry.jsm"
 );
 
-const { ObjectUtils } = ChromeUtils.import(
-  "resource://gre/modules/ObjectUtils.jsm"
-);
-
 // Reset internal URI counter in case URIs were opened by other tests.
 Services.obs.notifyObservers(null, TELEMETRY_SUBSESSION_TOPIC);
 
@@ -487,8 +483,16 @@ add_task(async function test_loadedTabsHistogram() {
   ];
 
   // There are two tabs open: the mochi.test tab and the foreground tab.
-  const snapshot = loadedTabCount.snapshot();
-  checkTabCountHistogram(snapshot, { 1: 0, 2: 1, 3: 0 }, "TAB_COUNT - new tab");
+  checkTabCountHistogram(
+    tabCount.snapshot(),
+    { 1: 0, 2: 1, 3: 0 },
+    "TAB_COUNT - new tab"
+  );
+  checkTabCountHistogram(
+    loadedTabCount.snapshot(),
+    { 1: 0, 2: 1, 3: 0 },
+    "TAB_COUNT - new tab"
+  );
 
   // Open a pending tab, as if by session restore.
   resetTimestamps();
@@ -496,10 +500,6 @@ add_task(async function test_loadedTabsHistogram() {
     createLazyBrowser: true,
   });
   tabs.push(lazyTab);
-
-  await BrowserTestUtils.waitForCondition(
-    () => !ObjectUtils.deepEqual(snapshot, tabCount.snapshot())
-  );
 
   checkTabCountHistogram(
     tabCount.snapshot(),
