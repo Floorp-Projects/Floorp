@@ -2934,7 +2934,20 @@
     value: WordSized
   arguments:
     offset: uint32_t
+    maybeTrap: MaybeTrapSiteInfo
     preBarrierKind: WasmPreBarrierKind
+  num_temps: 1
+  mir_op: true
+
+# Generational write barrier used when writing an object to another object.
+- name: WasmPostWriteBarrier
+  operands:
+    instance: WordSized
+    object: WordSized
+    valueBase: WordSized
+    value: WordSized
+  arguments:
+    valueOffset: uint32_t
   num_temps: 1
   mir_op: true
 

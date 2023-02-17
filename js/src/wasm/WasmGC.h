@@ -39,6 +39,7 @@ class MacroAssembler;
 namespace wasm {
 
 class ArgTypeVector;
+class BytecodeOffset;
 
 using jit::Label;
 using jit::MIRType;
@@ -446,10 +447,16 @@ wasm::StackMap* ConvertStackMapBoolVectorToStackMap(
 // prebarrier is not needed.  Will clobber `scratch`.
 //
 // It is OK for `instance` and `scratch` to be the same register.
+//
+// If `trapOffset` is non-null, then metadata to catch a null access and emit
+// a null pointer exception will be emitted. This will only catch a null access
+// due to an incremental GC being in progress, the write that follows this
+// pre-barrier guard must also be guarded against null.
 
 void EmitWasmPreBarrierGuard(jit::MacroAssembler& masm, Register instance,
                              Register scratch, Register valueAddr,
-                             size_t valueOffset, Label* skipBarrier);
+                             size_t valueOffset, Label* skipBarrier,
+                             BytecodeOffset* trapOffset);
 
 // Before storing a GC pointer value in memory, call out-of-line prebarrier
 // code. This assumes `PreBarrierReg` contains the address that will be updated.

@@ -10111,6 +10111,31 @@ class MWasmStoreRef : public MAryInstruction<3>, public NoTypePolicy::Data {
 #endif
 };
 
+// Given a value being written to another object, update the generational store
+// buffer if the value is in the nursery and object is in the tenured heap.
+class MWasmPostWriteBarrier : public MQuaternaryInstruction,
+                              public NoTypePolicy::Data {
+  uint32_t valueOffset_;
+
+  MWasmPostWriteBarrier(MDefinition* instance, MDefinition* object,
+                        MDefinition* valueBase, uint32_t valueOffset,
+                        MDefinition* value)
+      : MQuaternaryInstruction(classOpcode, instance, object, valueBase, value),
+        valueOffset_(valueOffset) {
+    setGuard();
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmPostWriteBarrier)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, instance), (1, object), (2, valueBase), (3, value))
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+  uint32_t valueOffset() const { return valueOffset_; }
+
+  ALLOW_CLONE(MWasmPostWriteBarrier)
+};
+
 class MWasmParameter : public MNullaryInstruction {
   ABIArg abi_;
 
@@ -11233,14 +11258,17 @@ class MWasmStoreFieldRefKA : public MAryInstruction<4>,
                              public NoTypePolicy::Data {
   uint32_t offset_;
   AliasSet aliases_;
+  MaybeTrapSiteInfo maybeTrap_;
   WasmPreBarrierKind preBarrierKind_;
 
   MWasmStoreFieldRefKA(MDefinition* instance, MDefinition* ka, MDefinition* obj,
                        size_t offset, MDefinition* value, AliasSet aliases,
+                       MaybeTrapSiteInfo maybeTrap,
                        WasmPreBarrierKind preBarrierKind)
       : MAryInstruction<4>(classOpcode),
         offset_(uint32_t(offset)),
         aliases_(aliases),
+        maybeTrap_(maybeTrap),
         preBarrierKind_(preBarrierKind) {
     MOZ_ASSERT(obj->type() == TargetWordMIRType() ||
                obj->type() == MIRType::Pointer ||
@@ -11259,6 +11287,9 @@ class MWasmStoreFieldRefKA : public MAryInstruction<4>,
     initOperand(1, ka);
     initOperand(2, obj);
     initOperand(3, value);
+    if (maybeTrap_) {
+      setGuard();
+    }
   }
 
  public:
@@ -11268,6 +11299,7 @@ class MWasmStoreFieldRefKA : public MAryInstruction<4>,
 
   uint32_t offset() const { return offset_; }
   AliasSet getAliasSet() const override { return aliases_; }
+  MaybeTrapSiteInfo maybeTrap() const { return maybeTrap_; }
   WasmPreBarrierKind preBarrierKind() const { return preBarrierKind_; }
 
 #ifdef JS_JITSPEW

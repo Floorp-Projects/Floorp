@@ -78,6 +78,7 @@ class OutOfLineAbortingWasmTrap;
 class OutOfLineGuardNumberToIntPtrIndex;
 class OutOfLineBoxNonStrictThis;
 class OutOfLineArrayPush;
+class OutOfLineWasmCallPostWriteBarrier;
 
 class CodeGenerator final : public CodeGeneratorSpecific {
   [[nodiscard]] bool generateBody();
@@ -172,6 +173,9 @@ class CodeGenerator final : public CodeGeneratorSpecific {
       OutOfLineGuardNumberToIntPtrIndex* ool);
 
   void visitOutOfLineArrayPush(OutOfLineArrayPush* ool);
+
+  void visitOutOfLineWasmCallPostWriteBarrier(
+      OutOfLineWasmCallPostWriteBarrier* ool);
 
  private:
   void emitPostWriteBarrier(const LAllocation* obj);

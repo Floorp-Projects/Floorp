@@ -204,13 +204,20 @@ bool wasm::GenerateStackmapEntriesForTrapExit(
 
 void wasm::EmitWasmPreBarrierGuard(MacroAssembler& masm, Register instance,
                                    Register scratch, Register valueAddr,
-                                   size_t valueOffset, Label* skipBarrier) {
+                                   size_t valueOffset, Label* skipBarrier,
+                                   BytecodeOffset* trapOffset) {
   // If no incremental GC has started, we don't need the barrier.
   masm.loadPtr(
       Address(instance, Instance::offsetOfAddressOfNeedsIncrementalBarrier()),
       scratch);
   masm.branchTest32(Assembler::Zero, Address(scratch, 0), Imm32(0x1),
                     skipBarrier);
+
+  // Emit metadata for a potential null access when reading the previous value.
+  if (trapOffset) {
+    masm.append(wasm::Trap::NullPointerDereference,
+                wasm::TrapSite(masm.currentOffset(), *trapOffset));
+  }
 
   // If the previous value is null, we don't need the barrier.
   masm.loadPtr(Address(valueAddr, valueOffset), scratch);

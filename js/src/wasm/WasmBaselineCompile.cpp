@@ -6230,7 +6230,7 @@ void BaseCompiler::emitPreBarrier(RegPtr valueAddr) {
 #endif
 
   EmitWasmPreBarrierGuard(masm, instance, scratch, valueAddr,
-                          /*valueOffset=*/0, &skipBarrier);
+                          /*valueOffset=*/0, &skipBarrier, nullptr);
 
 #ifndef RABALDR_PIN_INSTANCE
   fr.loadInstancePtr(instance);
