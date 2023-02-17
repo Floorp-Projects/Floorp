@@ -2378,8 +2378,6 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
       return false;
     }
     if (type.isRefRepr()) {
-      // Ensure we don't have a temporarily unsupported Ref type in callExport
-      MOZ_RELEASE_ASSERT(!type.isTypeRef());
       void* ptr = *reinterpret_cast<void**>(rawArgLoc);
       // Store in rooted array until no more GC is possible.
       RootedAnyRef ref(cx, AnyRef::fromCompiledCode(ptr));

@@ -676,9 +676,8 @@ class PackedType : public T {
 
   // Returns whether the type has a representation in JS.
   bool isExposable() const {
-#if defined(ENABLE_WASM_SIMD) || defined(ENABLE_WASM_GC)
-    return kind() != Kind::V128 && !isAnyRef() && !isStructRef() &&
-           !isArrayRef() && !isTypeRef();
+#if defined(ENABLE_WASM_SIMD)
+    return kind() != Kind::V128;
 #else
     return true;
 #endif
