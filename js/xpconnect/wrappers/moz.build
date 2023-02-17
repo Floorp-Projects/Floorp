@@ -30,5 +30,3 @@ LOCAL_INCLUDES += [
     "../src",
     "/caps",
 ]
-
-REQUIRES_UNIFIED_BUILD = True
