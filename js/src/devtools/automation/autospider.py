@@ -314,7 +314,7 @@ if platform.system() == "Windows":
 # Configure flags, based on word length and cross-compilation
 if word_bits == 32:
     if platform.system() == "Windows":
-        CONFIGURE_ARGS += " --target=i686-pc-mingw32"
+        CONFIGURE_ARGS += " --target=i686-pc-windows-msvc"
     elif platform.system() == "Linux":
         if not platform.machine().startswith("arm"):
             CONFIGURE_ARGS += " --target=i686-pc-linux"
@@ -329,7 +329,7 @@ if word_bits == 32:
         env["CXXFLAGS"] = "{0} {1}".format(env.get("CXXFLAGS", ""), sse_flags)
 else:
     if platform.system() == "Windows":
-        CONFIGURE_ARGS += " --target=x86_64-pc-mingw32"
+        CONFIGURE_ARGS += " --target=x86_64-pc-windows-msvc"
 
 if platform.system() == "Linux" and AUTOMATION:
     CONFIGURE_ARGS = "--enable-stdcxx-compat " + CONFIGURE_ARGS
