@@ -56,11 +56,13 @@ import org.mozilla.fenix.helpers.Constants.LISTS_MAXSWIPES
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.MatcherHelper.assertCheckedItemWithResIdExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithDescriptionExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndDescriptionExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
 import org.mozilla.fenix.helpers.MatcherHelper.checkedItemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
@@ -324,10 +326,8 @@ class HomeScreenRobot {
     // Collections elements
     fun verifyCollectionIsDisplayed(title: String, collectionExists: Boolean = true) {
         if (collectionExists) {
-            scrollToElementByText(title)
             assertTrue(mDevice.findObject(UiSelector().text(title)).waitForExists(waitingTime))
         } else {
-            scrollToElementByText("Collections")
             assertTrue(mDevice.findObject(UiSelector().text(title)).waitUntilGone(waitingTime))
         }
     }
@@ -723,13 +723,10 @@ class HomeScreenRobot {
             return TabDrawerRobot.Transition()
         }
 
-        fun expandCollection(title: String, rule: ComposeTestRule, interact: CollectionRobot.() -> Unit): CollectionRobot.Transition {
-            homeScreenList().waitForExists(waitingTime)
-            homeScreenList().scrollToEnd(LISTS_MAXSWIPES)
-
-            collectionTitle(title, rule)
-                .assertIsDisplayed()
-                .performClick()
+        fun expandCollection(title: String, interact: CollectionRobot.() -> Unit): CollectionRobot.Transition {
+            assertItemContainingTextExists(itemContainingText(title))
+            itemContainingText(title).clickAndWaitForNewWindow(waitingTimeShort)
+            assertItemWithDescriptionExists(itemWithDescription(getStringResource(R.string.remove_tab_from_collection)))
 
             CollectionRobot().interact()
             return CollectionRobot.Transition()
