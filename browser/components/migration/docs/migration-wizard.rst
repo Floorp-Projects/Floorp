@@ -64,7 +64,7 @@ Since the ``MigrationWizard`` might be embedded in unprivileged documents, addit
   :members:
 
 ``migration-dialog-window.html``
-=========================
+================================
 
 This document is meant for being loaded in a window dialog, and embeds the ``MigrationWizard`` reusable component, setting ``dialog-mode`` on it. It listens for dialog-specific events from the ``MigrationWizard``, such as ``MigrationWizard:Close``, which indicates that a "Cancel" button that should close the dialog was clicked.
 
