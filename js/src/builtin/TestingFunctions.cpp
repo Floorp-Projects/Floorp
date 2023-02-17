@@ -5810,13 +5810,18 @@ static bool FindPath(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    RootedValue wrapped(cx, nodes[i]);
-    if (!cx->compartment()->wrap(cx, &wrapped)) {
-      return false;
-    }
+    // Only define the "node" property if we're not fuzzing, to prevent the
+    // fuzzers from messing with internal objects that we don't want to expose
+    // to arbitrary JS.
+    if (!fuzzingSafe) {
+      RootedValue wrapped(cx, nodes[i]);
+      if (!cx->compartment()->wrap(cx, &wrapped)) {
+        return false;
+      }
 
-    if (!JS_DefineProperty(cx, obj, "node", wrapped, JSPROP_ENUMERATE)) {
-      return false;
+      if (!JS_DefineProperty(cx, obj, "node", wrapped, JSPROP_ENUMERATE)) {
+        return false;
+      }
     }
 
     heaptools::EdgeName edgeName = std::move(edges[i]);
