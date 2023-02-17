@@ -24,16 +24,12 @@ using mozilla::RelativeLuminanceUtils;
 /* static */
 auto ScrollbarDrawing::GetDPIRatioForScrollbarPart(const nsPresContext* aPc)
     -> DPIRatio {
-  auto ratio = [&] {
-    if (auto* rootPc = aPc->GetRootPresContext()) {
-      if (nsCOMPtr<nsIWidget> widget = rootPc->GetRootWidget()) {
-        return widget->GetDefaultScale();
-      }
-    }
-    return DPIRatio(
-        float(AppUnitsPerCSSPixel()) /
-        float(aPc->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom()));
-  }();
+  DPIRatio ratio(
+      float(AppUnitsPerCSSPixel()) /
+      float(aPc->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom()));
+  if (aPc->IsPrintPreview()) {
+    ratio.scale *= aPc->GetPrintPreviewScaleForSequenceFrameOrScrollbars();
+  }
   if (mKind == Kind::Cocoa) {
     return DPIRatio(ratio.scale >= 2.0f ? 2.0f : 1.0f);
   }

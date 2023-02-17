@@ -502,7 +502,9 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
    *
    * XXX Temporary: see http://wiki.mozilla.org/Gecko:PrintPreview
    */
-  float GetPrintPreviewScaleForSequenceFrame() { return mPPScale; }
+  float GetPrintPreviewScaleForSequenceFrameOrScrollbars() const {
+    return mPPScale;
+  }
   void SetPrintPreviewScale(float aScale) { mPPScale = aScale; }
 
   nsDeviceContext* DeviceContext() const { return mDeviceContext; }
@@ -896,6 +898,8 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   bool IsPrintingOrPrintPreview() const {
     return mType == eContext_Print || mType == eContext_PrintPreview;
   }
+
+  bool IsPrintPreview() const { return mType == eContext_PrintPreview; }
 
   // Is this presentation in a chrome docshell?
   bool IsChrome() const;
