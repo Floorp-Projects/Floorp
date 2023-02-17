@@ -184,11 +184,6 @@ pref("dom.text-recognition.enabled", true);
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);
 
-pref("browser.display.force_inline_alttext", false); // true = force ALT text for missing images to be layed out inline
-// enable showing image placeholders while image is loading or when image is broken
-pref("browser.display.show_image_placeholders", true);
-// if browser.display.show_image_placeholders is true then this controls whether the loading image placeholder and border is shown or not
-pref("browser.display.show_loading_image_placeholder", false);
 // min font device pixel size at which to turn on high quality
 pref("browser.display.auto_quality_min_font_size", 20);
 
