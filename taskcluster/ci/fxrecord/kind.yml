@@ -13,9 +13,11 @@ only-for-build-platforms:
 transforms:
     - gecko_taskgraph.transforms.name_sanity:transforms
     - gecko_taskgraph.transforms.fxrecord:transforms
+    - gecko_taskgraph.transforms.release_notifications:transforms
     - gecko_taskgraph.transforms.task:transforms
 
 job-template:
+    name: notify-fxrecord-failure
     description: "Desktop Startup Visual Metrics"
     run-on-projects:
         - "mozilla-central"
@@ -29,3 +31,12 @@ job-template:
         symbol: fxrec(1st)
         tier: 2
         kind: other
+    notifications:
+        status-types:
+            - "on-failed"
+            - "on-exception"
+        subject: fxrecord run failed
+        message: fxrecord run failed
+        emails:
+            - "barret@mozilla.com"
+            - "perftest@mozilla.com"
