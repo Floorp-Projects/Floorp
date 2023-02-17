@@ -25,7 +25,6 @@
 #include "nsIX509Cert.h"
 #include "nsNSSDialogHelper.h"
 #include "nsPromiseFlatString.h"
-#include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsVariant.h"
 
