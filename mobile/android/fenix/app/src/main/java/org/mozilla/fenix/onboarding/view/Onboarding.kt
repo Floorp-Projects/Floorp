@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.onboarding.view
 
+import android.os.Build
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +25,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,10 +34,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.insets.navigationBarsPadding
 import com.google.accompanist.insets.statusBarsPadding
@@ -69,72 +73,74 @@ fun Onboarding(
 ) {
     var onboardingState by remember { mutableStateOf(OnboardingState.Welcome) }
 
-    Column(
-        modifier = Modifier
-            .background(FirefoxTheme.colors.layer1)
-            .fillMaxSize()
-            .padding(bottom = 32.dp)
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.SpaceBetween,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End,
+    CompositionLocalProvider(LocalLayoutDirection provides layoutDirection()) {
+        Column(
+            modifier = Modifier
+                .background(FirefoxTheme.colors.layer1)
+                .fillMaxSize()
+                .padding(bottom = 32.dp)
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            IconButton(
-                onClick = {
-                    if (onboardingState == OnboardingState.Welcome) {
-                        OnboardingMetrics.welcomeCloseClicked.record(NoExtras())
-                    } else {
-                        OnboardingMetrics.syncCloseClicked.record(NoExtras())
-                    }
-                    onDismiss()
-                },
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.mozac_ic_close),
-                    contentDescription = stringResource(R.string.onboarding_home_content_description_close_button),
-                    tint = FirefoxTheme.colors.iconPrimary,
-                )
-            }
-        }
-
-        if (onboardingState == OnboardingState.Welcome) {
-            OnboardingWelcomeContent()
-
-            OnboardingWelcomeBottomContent(
-                onboardingState = onboardingState,
-                isSyncSignIn = isSyncSignIn,
-                onGetStartedButtonClick = {
-                    OnboardingMetrics.welcomeGetStartedClicked.record(NoExtras())
-                    if (isSyncSignIn) {
+                IconButton(
+                    onClick = {
+                        if (onboardingState == OnboardingState.Welcome) {
+                            OnboardingMetrics.welcomeCloseClicked.record(NoExtras())
+                        } else {
+                            OnboardingMetrics.syncCloseClicked.record(NoExtras())
+                        }
                         onDismiss()
-                    } else {
-                        onboardingState = OnboardingState.SyncSignIn
-                    }
-                },
-            )
+                    },
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.mozac_ic_close),
+                        contentDescription = stringResource(R.string.onboarding_home_content_description_close_button),
+                        tint = FirefoxTheme.colors.iconPrimary,
+                    )
+                }
+            }
 
-            OnboardingMetrics.welcomeCardImpression.record(NoExtras())
-        } else if (onboardingState == OnboardingState.SyncSignIn) {
-            OnboardingSyncSignInContent()
+            if (onboardingState == OnboardingState.Welcome) {
+                OnboardingWelcomeContent()
 
-            OnboardingSyncSignInBottomContent(
-                onboardingState = onboardingState,
-                onSignInButtonClick = {
-                    OnboardingMetrics.syncSignInClicked.record(NoExtras())
-                    onSignInButtonClick()
-                },
-                onSkipButtonClick = {
-                    OnboardingMetrics.syncSkipClicked.record(NoExtras())
-                    onDismiss()
-                },
-            )
+                OnboardingWelcomeBottomContent(
+                    onboardingState = onboardingState,
+                    isSyncSignIn = isSyncSignIn,
+                    onGetStartedButtonClick = {
+                        OnboardingMetrics.welcomeGetStartedClicked.record(NoExtras())
+                        if (isSyncSignIn) {
+                            onDismiss()
+                        } else {
+                            onboardingState = OnboardingState.SyncSignIn
+                        }
+                    },
+                )
 
-            OnboardingMetrics.syncCardImpression.record(NoExtras())
+                OnboardingMetrics.welcomeCardImpression.record(NoExtras())
+            } else if (onboardingState == OnboardingState.SyncSignIn) {
+                OnboardingSyncSignInContent()
+
+                OnboardingSyncSignInBottomContent(
+                    onboardingState = onboardingState,
+                    onSignInButtonClick = {
+                        OnboardingMetrics.syncSignInClicked.record(NoExtras())
+                        onSignInButtonClick()
+                    },
+                    onSkipButtonClick = {
+                        OnboardingMetrics.syncSkipClicked.record(NoExtras())
+                        onDismiss()
+                    },
+                )
+
+                OnboardingMetrics.syncCardImpression.record(NoExtras())
+            }
         }
     }
 }
@@ -294,4 +300,16 @@ private fun OnboardingPreview() {
             onSignInButtonClick = {},
         )
     }
+}
+
+/**
+ * Force Left to Right layout direction when running on Android API level < 23 (Android 5.1).
+ * Bug with compose and RTL views causing crash in the Onboarding screen in Android 5.1.
+ * Bugzilla link: https://bugzilla.mozilla.org/show_bug.cgi?id=1792796
+ */
+@Composable
+private fun layoutDirection() = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
+    LocalLayoutDirection.current
+} else {
+    LayoutDirection.Ltr
 }
