@@ -16,9 +16,7 @@ const {
 const {
   FxAccountsProfileClient,
   FxAccountsProfileClientError,
-} = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccountsProfileClient.sys.mjs"
-);
+} = ChromeUtils.import("resource://gre/modules/FxAccountsProfileClient.jsm");
 
 const STATUS_SUCCESS = 200;
 

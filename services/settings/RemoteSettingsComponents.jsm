@@ -1,14 +1,19 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
+
+var EXPORTED_SYMBOLS = ["RemoteSettingsTimer"];
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "RemoteSettings",
+  "resource://services-settings/remote-settings.js"
+);
 
-export var RemoteSettingsTimer = function() {};
+var RemoteSettingsTimer = function() {};
 RemoteSettingsTimer.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsITimerCallback"]),
   classID: Components.ID("{5e756573-234a-49ea-bbe4-59ec7a70657d}"),

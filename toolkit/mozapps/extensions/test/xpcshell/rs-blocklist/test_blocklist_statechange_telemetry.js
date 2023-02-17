@@ -11,8 +11,8 @@ createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42.0", "42.0");
 // apply to add-ons with a privileged signature.
 AddonTestUtils.usePrivilegedSignatures = false;
 
-const { Downloader } = ChromeUtils.importESModule(
-  "resource://services-settings/Attachments.sys.mjs"
+const { Downloader } = ChromeUtils.import(
+  "resource://services-settings/Attachments.jsm"
 );
 
 const { TelemetryController } = ChromeUtils.importESModule(

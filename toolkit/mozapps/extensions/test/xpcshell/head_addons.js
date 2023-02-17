@@ -80,10 +80,14 @@ ChromeUtils.defineESModuleGetters(this, {
   MockRegistrar: "resource://testing-common/MockRegistrar.sys.mjs",
   MockRegistry: "resource://testing-common/MockRegistry.sys.mjs",
   PromiseTestUtils: "resource://testing-common/PromiseTestUtils.sys.mjs",
-  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-  TestUtils: "resource://testing-common/TestUtils.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
+  TestUtils: "resource://testing-common/TestUtils.sys.mjs",
 });
+ChromeUtils.defineModuleGetter(
+  this,
+  "RemoteSettings",
+  "resource://services-settings/remote-settings.js"
+);
 
 XPCOMUtils.defineLazyServiceGetter(
   this,

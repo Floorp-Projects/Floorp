@@ -53,7 +53,6 @@ ChromeUtils.defineModuleGetter(
 ChromeUtils.defineESModuleGetters(lazy, {
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
-  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(
   lazy,
@@ -64,6 +63,11 @@ ChromeUtils.defineModuleGetter(
   lazy,
   "PageThumbs",
   "resource://gre/modules/PageThumbs.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "RemoteSettings",
+  "resource://services-settings/remote-settings.js"
 );
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {

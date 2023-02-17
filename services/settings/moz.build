@@ -15,16 +15,16 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES["services-settings"] += [
-    "Attachments.sys.mjs",
-    "Database.sys.mjs",
+    "Attachments.jsm",
+    "Database.jsm",
     "IDBHelpers.jsm",
-    "remote-settings.sys.mjs",
-    "RemoteSettingsClient.sys.mjs",
-    "RemoteSettingsComponents.sys.mjs",
+    "remote-settings.js",
+    "RemoteSettingsClient.jsm",
+    "RemoteSettingsComponents.jsm",
     "RemoteSettingsWorker.js",
-    "RemoteSettingsWorker.sys.mjs",
+    "RemoteSettingsWorker.jsm",
     "SharedUtils.jsm",
-    "SyncHistory.sys.mjs",
+    "SyncHistory.jsm",
     "Utils.jsm",
 ]
 

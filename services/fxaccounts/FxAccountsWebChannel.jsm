@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
 /**
  * Firefox Accounts Web Channel.
@@ -9,8 +10,16 @@
  * about account state changes.
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+var EXPORTED_SYMBOLS = [
+  "EnsureFxAccountsWebChannel",
+  // These are exported for tests.
+  "FxAccountsWebChannel",
+  "FxAccountsWebChannelHelpers",
+];
 
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 const {
   COMMAND_PROFILE_CHANGE,
   COMMAND_LOGIN,
@@ -38,22 +47,29 @@ const {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  FxAccountsPairingFlow: "resource://gre/modules/FxAccountsPairing.sys.mjs",
-  FxAccountsStorageManagerCanStoreField:
-    "resource://gre/modules/FxAccountsStorage.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   Weave: "resource://services-sync/main.sys.mjs",
   WebChannel: "resource://gre/modules/WebChannel.sys.mjs",
 });
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
-  return ChromeUtils.importESModule(
-    "resource://gre/modules/FxAccounts.sys.mjs"
+  return ChromeUtils.import(
+    "resource://gre/modules/FxAccounts.jsm"
   ).getFxAccountsSingleton();
 });
 ChromeUtils.defineModuleGetter(
   lazy,
+  "FxAccountsStorageManagerCanStoreField",
+  "resource://gre/modules/FxAccountsStorage.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  lazy,
   "CryptoUtils",
   "resource://services-crypto/utils.js"
+);
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "FxAccountsPairingFlow",
+  "resource://gre/modules/FxAccountsPairing.jsm"
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
@@ -125,7 +141,7 @@ function getErrorDetails(error) {
  *     Helpers functions. Should only be passed in for testing.
  * @constructor
  */
-export function FxAccountsWebChannel(options) {
+function FxAccountsWebChannel(options) {
   if (!options) {
     throw new Error("Missing configuration options");
   }
@@ -390,7 +406,7 @@ FxAccountsWebChannel.prototype = {
   },
 };
 
-export function FxAccountsWebChannelHelpers(options) {
+function FxAccountsWebChannelHelpers(options) {
   options = options || {};
 
   this._fxAccounts = options.fxAccounts || lazy.fxAccounts;
@@ -727,13 +743,12 @@ FxAccountsWebChannelHelpers.prototype = {
 };
 
 var singleton;
-
 // The entry-point for this module, which ensures only one of our channels is
 // ever created - we require this because the WebChannel is global in scope
 // (eg, it uses the observer service to tell interested parties of interesting
 // things) and allowing multiple channels would cause such notifications to be
 // sent multiple times.
-export var EnsureFxAccountsWebChannel = () => {
+var EnsureFxAccountsWebChannel = () => {
   let contentUri = Services.urlFormatter.formatURLPref(
     "identity.fxaccounts.remote.root"
   );

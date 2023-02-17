@@ -62,8 +62,9 @@ import { Status } from "resource://services-sync/status.sys.mjs";
 ChromeUtils.importESModule("resource://services-sync/telemetry.sys.mjs");
 import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
 
-import { getFxAccountsSingleton } from "resource://gre/modules/FxAccounts.sys.mjs";
-
+const { getFxAccountsSingleton } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
+);
 const fxAccounts = getFxAccountsSingleton();
 
 function getEngineModules() {

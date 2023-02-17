@@ -6,8 +6,8 @@
 
 /* Unit tests for the nsIUrlClassifierRemoteSettingsService implementation. */
 
-const { RemoteSettings } = ChromeUtils.importESModule(
-  "resource://services-settings/remote-settings.sys.mjs"
+const { RemoteSettings } = ChromeUtils.import(
+  "resource://services-settings/remote-settings.js"
 );
 const { SBRS_UPDATE_MINIMUM_DELAY } = ChromeUtils.import(
   "resource://gre/modules/UrlClassifierRemoteSettingsService.jsm"

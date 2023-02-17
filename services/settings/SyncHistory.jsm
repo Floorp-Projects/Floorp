@@ -2,13 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 
 const lazy = {};
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   KeyValueService: "resource://gre/modules/kvstore.jsm",
 });
+
+var EXPORTED_SYMBOLS = ["SyncHistory"];
 
 /**
  * A helper to keep track of synchronization statuses.
@@ -17,7 +21,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
  * because the eventual goal is to be able to detect `IndexedDB` issues and act
  * accordingly.
  */
-export class SyncHistory {
+class SyncHistory {
   // Internal reference to underlying rkv store.
   #store;
 

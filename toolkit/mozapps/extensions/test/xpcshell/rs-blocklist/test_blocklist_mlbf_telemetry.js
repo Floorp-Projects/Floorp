@@ -7,8 +7,8 @@ Services.prefs.setBoolPref("extensions.blocklist.useMLBF", true);
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
 
-const { Downloader } = ChromeUtils.importESModule(
-  "resource://services-settings/Attachments.sys.mjs"
+const { Downloader } = ChromeUtils.import(
+  "resource://services-settings/Attachments.jsm"
 );
 
 const { TelemetryController } = ChromeUtils.importESModule(

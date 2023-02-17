@@ -17,14 +17,19 @@ import {
   fakeSHA256HMAC,
 } from "resource://testing-common/services/sync/fakeservices.sys.mjs";
 
-import {
-  FxAccounts,
-  AccountState,
-} from "resource://gre/modules/FxAccounts.sys.mjs";
-import { FxAccountsClient } from "resource://gre/modules/FxAccountsClient.sys.mjs";
-
+const { FxAccounts } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
+);
+const { FxAccountsClient } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsClient.jsm"
+);
 const { SCOPE_OLD_SYNC, LEGACY_SCOPE_WEBEXT_SYNC } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"
+);
+
+// and grab non-exported stuff via a backstage pass.
+export const { AccountState } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
 );
 
 // A mock "storage manager" for FxAccounts that doesn't actually write anywhere.

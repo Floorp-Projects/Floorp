@@ -14,8 +14,8 @@ ChromeUtils.defineModuleGetter(
   "resource://activity-stream/lib/ASRouterTargeting.jsm"
 );
 // eslint-disable-next-line no-unused-vars
-const { FxAccounts } = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccounts.sys.mjs"
+const { FxAccounts } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
 );
 // We import sinon here to make it available across all mochitest test files
 // eslint-disable-next-line no-unused-vars

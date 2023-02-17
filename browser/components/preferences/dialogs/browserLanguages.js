@@ -17,9 +17,11 @@ ChromeUtils.defineModuleGetter(
   "AddonRepository",
   "resource://gre/modules/addons/AddonRepository.jsm"
 );
-ChromeUtils.defineESModuleGetters(this, {
-  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  this,
+  "RemoteSettings",
+  "resource://services-settings/remote-settings.js"
+);
 ChromeUtils.defineModuleGetter(
   this,
   "SelectionChangedMenulist",

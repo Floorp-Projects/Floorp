@@ -5,7 +5,6 @@ import { MockRegistrar } from "resource://testing-common/MockRegistrar.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
 });
 
@@ -13,6 +12,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
   ExtensionTestUtils: "resource://testing-common/ExtensionXPCShellUtils.jsm",
+  RemoteSettings: "resource://services-settings/remote-settings.js",
   sinon: "resource://testing-common/Sinon.jsm",
 });
 

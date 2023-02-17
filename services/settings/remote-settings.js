@@ -4,23 +4,30 @@
 
 /* global __URI__ */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+"use strict";
+
+var EXPORTED_SYMBOLS = [
+  "RemoteSettings",
+  "jexlFilterFunc",
+  "remoteSettingsBroadcastHandler",
+];
+
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
 
 const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  Database: "resource://services-settings/Database.sys.mjs",
-  RemoteSettingsClient:
-    "resource://services-settings/RemoteSettingsClient.sys.mjs",
-  SyncHistory: "resource://services-settings/SyncHistory.sys.mjs",
-});
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   UptakeTelemetry: "resource://services-common/uptake-telemetry.js",
   pushBroadcastService: "resource://gre/modules/PushBroadcastService.jsm",
+  RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
+  SyncHistory: "resource://services-settings/SyncHistory.jsm",
+  Database: "resource://services-settings/Database.jsm",
   Utils: "resource://services-settings/Utils.jsm",
-
   FilterExpressions:
     "resource://gre/modules/components-utils/FilterExpressions.jsm",
 });
@@ -77,7 +84,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
  * @param {ClientEnvironment} environment Information about version, language, platform etc.
  * @returns {?Object} the entry or null if excluded.
  */
-export async function jexlFilterFunc(entry, environment) {
+async function jexlFilterFunc(entry, environment) {
   const { filter_expression } = entry;
   if (!filter_expression) {
     return entry;
@@ -589,9 +596,9 @@ function remoteSettingsFunction() {
   return remoteSettings;
 }
 
-export var RemoteSettings = remoteSettingsFunction();
+var RemoteSettings = remoteSettingsFunction();
 
-export var remoteSettingsBroadcastHandler = {
+var remoteSettingsBroadcastHandler = {
   async receivedBroadcastMessage(version, broadcastID, context) {
     const { phase } = context;
     const isStartup = [

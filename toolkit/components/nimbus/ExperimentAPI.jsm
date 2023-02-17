@@ -19,13 +19,10 @@ const { AppConstants } = ChromeUtils.importESModule(
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-});
-
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ExperimentStore: "resource://nimbus/lib/ExperimentStore.jsm",
   ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
+  RemoteSettings: "resource://services-settings/remote-settings.js",
   FeatureManifest: "resource://nimbus/FeatureManifest.js",
 });
 

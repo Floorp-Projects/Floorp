@@ -1,17 +1,23 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
-import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
-
+const { PromiseUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PromiseUtils.sys.mjs"
+);
 const { CryptoUtils } = ChromeUtils.import(
   "resource://services-crypto/utils.js"
 );
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
-
-import { FxAccountsStorageManager } from "resource://gre/modules/FxAccountsStorage.sys.mjs";
-
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+const { clearTimeout, setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
+const { FxAccountsStorageManager } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsStorage.jsm"
+);
 const {
   ERRNO_INVALID_AUTH_TOKEN,
   ERROR_AUTH_ERROR,
@@ -41,16 +47,47 @@ const {
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  FxAccountsClient: "resource://gre/modules/FxAccountsClient.sys.mjs",
-  FxAccountsCommands: "resource://gre/modules/FxAccountsCommands.sys.mjs",
-  FxAccountsConfig: "resource://gre/modules/FxAccountsConfig.sys.mjs",
-  FxAccountsDevice: "resource://gre/modules/FxAccountsDevice.sys.mjs",
-  FxAccountsKeys: "resource://gre/modules/FxAccountsKeys.sys.mjs",
-  FxAccountsProfile: "resource://gre/modules/FxAccountsProfile.sys.mjs",
-  FxAccountsTelemetry: "resource://gre/modules/FxAccountsTelemetry.sys.mjs",
-  Preferences: "resource://gre/modules/Preferences.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "FxAccountsClient",
+  "resource://gre/modules/FxAccountsClient.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "FxAccountsConfig",
+  "resource://gre/modules/FxAccountsConfig.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "FxAccountsCommands",
+  "resource://gre/modules/FxAccountsCommands.js"
+);
+
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "FxAccountsDevice",
+  "resource://gre/modules/FxAccountsDevice.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "FxAccountsKeys",
+  "resource://gre/modules/FxAccountsKeys.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "FxAccountsProfile",
+  "resource://gre/modules/FxAccountsProfile.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "FxAccountsTelemetry",
+  "resource://gre/modules/FxAccountsTelemetry.jsm"
+);
 
 XPCOMUtils.defineLazyGetter(lazy, "mpLocked", () => {
   return ChromeUtils.importESModule("resource://services-sync/util.sys.mjs")
@@ -60,6 +97,10 @@ XPCOMUtils.defineLazyGetter(lazy, "mpLocked", () => {
 XPCOMUtils.defineLazyGetter(lazy, "ensureMPUnlocked", () => {
   return ChromeUtils.importESModule("resource://services-sync/util.sys.mjs")
     .Utils.ensureMPUnlocked;
+});
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -88,7 +129,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 // }
 // If the state has changed between the function being called and the promise
 // being resolved, the .resolve() call will actually be rejected.
-export function AccountState(storageManager) {
+function AccountState(storageManager) {
   this.storageManager = storageManager;
   this.inFlightTokenRequests = new Map();
   this.promiseInitialized = this.storageManager
@@ -334,7 +375,7 @@ function copyObjectProperties(from, to, thisObj, keys) {
  * (although |./mach doc| is broken on windows (bug 1232403) and on Linux for
  * markh (some obscure npm issue he gave up on) - so later...)
  */
-export class FxAccounts {
+class FxAccounts {
   constructor(mocks = null) {
     this._internal = new FxAccountsInternal();
     if (mocks) {
@@ -1604,8 +1645,7 @@ FxAccountsInternal.prototype = {
 };
 
 let fxAccountsSingleton = null;
-
-export function getFxAccountsSingleton() {
+function getFxAccountsSingleton() {
   if (fxAccountsSingleton) {
     return fxAccountsSingleton;
   }
@@ -1620,3 +1660,4 @@ export function getFxAccountsSingleton() {
 }
 
 // `AccountState` is exported for tests.
+var EXPORTED_SYMBOLS = ["getFxAccountsSingleton", "FxAccounts", "AccountState"];

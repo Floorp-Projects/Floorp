@@ -25,8 +25,8 @@ const { ActionsManager } = ChromeUtils.import(
 );
 const { Uptake } = ChromeUtils.import("resource://normandy/lib/Uptake.jsm");
 
-const { RemoteSettings } = ChromeUtils.importESModule(
-  "resource://services-settings/remote-settings.sys.mjs"
+const { RemoteSettings } = ChromeUtils.import(
+  "resource://services-settings/remote-settings.js"
 );
 
 add_task(async function getFilterContext() {

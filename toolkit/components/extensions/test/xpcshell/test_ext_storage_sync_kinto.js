@@ -26,8 +26,8 @@ const {
 const { BulkKeyBundle } = ChromeUtils.importESModule(
   "resource://services-sync/keys.sys.mjs"
 );
-const { FxAccountsKeys } = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccountsKeys.sys.mjs"
+const { FxAccountsKeys } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsKeys.jsm"
 );
 const { Utils } = ChromeUtils.importESModule(
   "resource://services-sync/util.sys.mjs"
