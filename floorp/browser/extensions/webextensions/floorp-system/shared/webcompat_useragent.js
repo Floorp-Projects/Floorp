@@ -25,6 +25,7 @@ for (let WEBCOMPAT_USERAGENT of WEBCOMPATS_USERAGENT) {
         WEBCOMPAT_USERAGENT.platforms.includes(platform)) {
         browser.webRequest.onBeforeSendHeaders.addListener(
             function(e) {
+                if (e.tabId === -1) return;
                 for (let requestHeader of e.requestHeaders) {
                     if (requestHeader.name.toLowerCase() === "user-agent") {
                         requestHeader.value = WEBCOMPAT_USERAGENT["ua"];
