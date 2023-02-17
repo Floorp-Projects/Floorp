@@ -10,3 +10,23 @@ browser.jar:
    content/browser/migration/migration-dialog-window.js       (content/migration-dialog-window.js)
    content/browser/migration/migration-wizard.mjs             (content/migration-wizard.mjs)
    content/browser/migration/migration-wizard-constants.mjs   (content/migration-wizard-constants.mjs)
+#ifdef XP_WIN
+   content/browser/migration/brands/360.png                   (content/brands/360.png)
+   content/browser/migration/brands/ie.png                    (content/brands/ie.png)
+#endif
+
+#if defined(XP_MACOSX) || defined(XP_WIN)
+   content/browser/migration/brands/canary.png                (content/brands/canary.png)
+   content/browser/migration/brands/edge.png                  (content/brands/edge.png)
+   content/browser/migration/brands/edgebeta.png              (content/brands/edgebeta.png)
+#endif
+
+   content/browser/migration/brands/chrome.png                (content/brands/chrome.png)
+   content/browser/migration/brands/chromium.png              (content/brands/chromium.png)
+   content/browser/migration/brands/opera.png                 (content/brands/opera.png)
+   content/browser/migration/brands/operagx.png               (content/brands/operagx.png)
+   content/browser/migration/brands/vivaldi.png               (content/brands/vivaldi.png)
+
+#ifdef XP_MACOSX
+   content/browser/migration/brands/safari.png                (content/brands/safari.png)
+#endif

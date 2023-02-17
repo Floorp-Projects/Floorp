@@ -353,6 +353,10 @@ export class SafariProfileMigrator extends MigratorBase {
     return "migration-wizard-migrator-display-name-safari";
   }
 
+  static get brandImage() {
+    return "chrome://browser/content/migration/brands/safari.png";
+  }
+
   getResources() {
     let profileDir = FileUtils.getDir("ULibDir", ["Safari"], false);
     if (!profileDir.exists()) {

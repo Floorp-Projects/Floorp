@@ -68,6 +68,17 @@ export class MigratorBase {
   }
 
   /**
+   * This method should get overridden to return an icon url of the browser
+   * to be imported from. By default, this will just use the default Favicon
+   * image.
+   *
+   * @type {string}
+   */
+  static get brandImage() {
+    return "chrome://global/skin/icons/defaultFavicon.svg";
+  }
+
+  /**
    * OVERRIDE IF AND ONLY IF the source supports multiple profiles.
    *
    * Returns array of profile objects from which data may be imported. The object
