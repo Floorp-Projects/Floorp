@@ -6685,12 +6685,14 @@ bool BaseCompiler::emitStructNew() {
   // but to do better we need a bit more machinery to load elements off the
   // stack into registers.
 
+  bool isOutlineStruct = structType.size_ > WasmStructObject_MaxInlineBytes;
+
   // Reserve this register early if we will need it so that it is not taken by
   // any register used in this function.
   needPtr(RegPtr(PreBarrierReg));
 
-  RegRef rp = popRef();
-  RegPtr rbase = needPtr();
+  RegRef object = popRef();
+  RegPtr outlineBase = isOutlineStruct ? needPtr() : RegPtr();
 
   // Free the barrier reg after we've allocated all registers
   freePtr(RegPtr(PreBarrierReg));
@@ -6699,7 +6701,7 @@ bool BaseCompiler::emitStructNew() {
   // zero/null we need store nothing.  This case may be somewhat common
   // because struct.new forces a value to be specified for every field.
 
-  // Optimization opportunity: this loop reestablishes the area base pointer
+  // Optimization opportunity: this loop reestablishes the outline base pointer
   // every iteration, which really isn't very clever.  It would be better to
   // establish it once before we start, then re-set it if/when we transition
   // from the out-of-line area back to the in-line area.  That would however
@@ -6717,35 +6719,41 @@ bool BaseCompiler::emitStructNew() {
     WasmStructObject::fieldOffsetToAreaAndOffset(fieldType, fieldOffset,
                                                  &areaIsOutline, &areaOffset);
 
-    // Make rbase point at the first byte of the relevant area
-    if (areaIsOutline) {
-      masm.loadPtr(Address(rp, WasmStructObject::offsetOfOutlineData()), rbase);
-    } else {
-      masm.computeEffectiveAddress(
-          Address(rp, WasmStructObject::offsetOfInlineData()), rbase);
-    }
-
     // Reserve the barrier reg if we might need it for this store
     if (fieldType.isRefRepr()) {
       needPtr(RegPtr(PreBarrierReg));
     }
-
     AnyReg value = popAny();
-
     // Free the barrier reg now that we've loaded the value
     if (fieldType.isRefRepr()) {
       freePtr(RegPtr(PreBarrierReg));
     }
 
-    // Consumes value. rp is unchanged by this call.
-    if (!emitGcStructSet<NoNullCheck>(rp, rbase, areaOffset, fieldType,
-                                      value)) {
-      return false;
+    if (areaIsOutline) {
+      // Load the outline data pointer
+      masm.loadPtr(Address(object, WasmStructObject::offsetOfOutlineData()),
+                   outlineBase);
+
+      // Consumes value and outline data, object is preserved by this call.
+      if (!emitGcStructSet<NoNullCheck>(object, outlineBase, areaOffset,
+                                        fieldType, value)) {
+        return false;
+      }
+    } else {
+      // Consumes value. object is unchanged by this call.
+      if (!emitGcStructSet<NoNullCheck>(
+              object, RegPtr(object),
+              WasmStructObject::offsetOfInlineData() + areaOffset, fieldType,
+              value)) {
+        return false;
+      }
     }
   }
 
-  freePtr(rbase);
-  pushRef(rp);
+  if (isOutlineStruct) {
+    freePtr(outlineBase);
+  }
+  pushRef(object);
 
   return true;
 }
@@ -6779,8 +6787,6 @@ bool BaseCompiler::emitStructGet(FieldWideningOp wideningOp) {
 
   const StructType& structType = (*moduleEnv_.types)[typeIndex].structType();
 
-  RegRef rp = popRef();
-
   // Decide whether we're accessing inline or outline, and at what offset
   FieldType fieldType = structType.fields_[fieldIndex].type;
   uint32_t fieldOffset = structType.fields_[fieldIndex].offset;
@@ -6790,24 +6796,23 @@ bool BaseCompiler::emitStructGet(FieldWideningOp wideningOp) {
   WasmStructObject::fieldOffsetToAreaAndOffset(fieldType, fieldOffset,
                                                &areaIsOutline, &areaOffset);
 
-  // Make rbase point at the first byte of the relevant area
-  RegPtr rbase = needPtr();
+  RegRef object = popRef();
   if (areaIsOutline) {
+    RegPtr outlineBase = needPtr();
     SignalNullCheck::emitTrapSite(this);
-    masm.loadPtr(Address(rp, WasmStructObject::offsetOfOutlineData()), rbase);
+    masm.loadPtr(Address(object, WasmStructObject::offsetOfOutlineData()),
+                 outlineBase);
     // Load the value
     emitGcGet<Address, NoNullCheck>(fieldType, wideningOp,
-                                    Address(rbase, areaOffset));
+                                    Address(outlineBase, areaOffset));
+    freePtr(outlineBase);
   } else {
-    masm.computeEffectiveAddress(
-        Address(rp, WasmStructObject::offsetOfInlineData()), rbase);
     // Load the value
-    emitGcGet<Address, SignalNullCheck>(fieldType, wideningOp,
-                                        Address(rbase, areaOffset));
+    emitGcGet<Address, SignalNullCheck>(
+        fieldType, wideningOp,
+        Address(object, WasmStructObject::offsetOfInlineData() + areaOffset));
   }
-
-  freePtr(rbase);
-  freeRef(rp);
+  freeRef(object);
 
   return true;
 }
@@ -6827,21 +6832,6 @@ bool BaseCompiler::emitStructSet() {
   const StructType& structType = (*moduleEnv_.types)[typeIndex].structType();
   const StructField& structField = structType.fields_[fieldIndex];
 
-  // Reserve this register early if we will need it so that it is not taken by
-  // any register used in this function.
-  if (structField.type.isRefRepr()) {
-    needPtr(RegPtr(PreBarrierReg));
-  }
-
-  RegPtr rbase = needPtr();
-  AnyReg value = popAny();
-  RegRef rp = popRef();
-
-  // Free the barrier reg after we've allocated all registers
-  if (structField.type.isRefRepr()) {
-    freePtr(RegPtr(PreBarrierReg));
-  }
-
   // Decide whether we're accessing inline or outline, and at what offset
   FieldType fieldType = structType.fields_[fieldIndex].type;
   uint32_t fieldOffset = structType.fields_[fieldIndex].offset;
@@ -6851,26 +6841,44 @@ bool BaseCompiler::emitStructSet() {
   WasmStructObject::fieldOffsetToAreaAndOffset(fieldType, fieldOffset,
                                                &areaIsOutline, &areaOffset);
 
-  // Make rbase point at the first byte of the relevant area
+  // Reserve this register early if we will need it so that it is not taken by
+  // any register used in this function.
+  if (structField.type.isRefRepr()) {
+    needPtr(RegPtr(PreBarrierReg));
+  }
+
+  RegPtr outlineBase = areaIsOutline ? needPtr() : RegPtr();
+  AnyReg value = popAny();
+  RegRef object = popRef();
+
+  // Free the barrier reg after we've allocated all registers
+  if (structField.type.isRefRepr()) {
+    freePtr(RegPtr(PreBarrierReg));
+  }
+
+  // Make outlineBase point at the first byte of the relevant area
   if (areaIsOutline) {
     SignalNullCheck::emitTrapSite(this);
-    masm.loadPtr(Address(rp, WasmStructObject::offsetOfOutlineData()), rbase);
-    if (!emitGcStructSet<NoNullCheck>(rp, rbase, areaOffset, fieldType,
-                                      value)) {
+    masm.loadPtr(Address(object, WasmStructObject::offsetOfOutlineData()),
+                 outlineBase);
+    if (!emitGcStructSet<NoNullCheck>(object, outlineBase, areaOffset,
+                                      fieldType, value)) {
       return false;
     }
   } else {
-    masm.computeEffectiveAddress(
-        Address(rp, WasmStructObject::offsetOfInlineData()), rbase);
-    // Consumes value. rp is unchanged by this call.
-    if (!emitGcStructSet<SignalNullCheck>(rp, rbase, areaOffset, fieldType,
-                                          value)) {
+    // Consumes value. object is unchanged by this call.
+    if (!emitGcStructSet<SignalNullCheck>(
+            object, RegPtr(object),
+            WasmStructObject::offsetOfInlineData() + areaOffset, fieldType,
+            value)) {
       return false;
     }
   }
 
-  freePtr(rbase);
-  freeRef(rp);
+  if (areaIsOutline) {
+    freePtr(outlineBase);
+  }
+  freeRef(object);
 
   return true;
 }
