@@ -41,11 +41,6 @@ const knownUnshownImages = [
   },
 
   {
-    file: "resource://gre-resources/loading-image.png",
-    platforms: ["win", "macosx"],
-    intermittentNotLoaded: ["win", "macosx"],
-  },
-  {
     file: "resource://gre-resources/broken-image.png",
     platforms: ["win", "macosx"],
     intermittentNotLoaded: ["win", "macosx"],
