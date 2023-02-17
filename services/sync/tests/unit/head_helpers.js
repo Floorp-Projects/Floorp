@@ -38,7 +38,6 @@ var { ObjectUtils } = ChromeUtils.import(
   "resource://gre/modules/ObjectUtils.jsm"
 );
 var {
-  AccountState,
   MockFxaStorageManager,
   SyncTestingInfrastructure,
   configureFxAccountIdentity,

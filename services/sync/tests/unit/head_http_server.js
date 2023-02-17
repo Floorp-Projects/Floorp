@@ -11,7 +11,6 @@ var { TestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TestUtils.sys.mjs"
 );
 var {
-  AccountState,
   MockFxaStorageManager,
   SyncTestingInfrastructure,
   configureFxAccountIdentity,
