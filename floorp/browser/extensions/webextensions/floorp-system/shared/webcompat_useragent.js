@@ -8,27 +8,13 @@ const WEBCOMPATS_USERAGENT = [
         "platforms": ["all"], // "mac", "win", "android", "cros", "linux", "openbsd", "fuchsia", "all"
     },
     {
-        "matches": ["*://*.pococha.com/*"],
-        "ua": CHROME_STABLE_UA,
-        "platforms": ["all"],
-    },
-    {
-        "matches": ["*://*.recochoku.jp/*"],
-        "ua": CHROME_STABLE_UA,
-        "platforms": ["all"],
-    },
-    {
-        "matches": ["*://business.apple.com/*"],
-        "ua": CHROME_STABLE_UA,
-        "platforms": ["all"],
-    },
-    {
-        "matches": ["*://*.picnet.co.jp/*"],
-        "ua": CHROME_STABLE_UA,
-        "platforms": ["all"],
-    },
-    {
-        "matches": ["*://*.picnet8.jp/*"],
+        "matches": [
+            "*://*.pococha.com/*",
+            "*://*.recochoku.jp/*",
+            "*://business.apple.com/*",
+            "*://*.picnet.co.jp/*",
+            "*://*.picnet8.jp/*",
+        ],
         "ua": CHROME_STABLE_UA,
         "platforms": ["all"],
     },
