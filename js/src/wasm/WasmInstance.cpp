@@ -1138,13 +1138,6 @@ static int32_t MemDiscardNotShared(Instance* instance, I byteOffset, I byteLen,
 //
 // Object support.
 
-/* static */ void Instance::preBarrierFiltering(Instance* instance,
-                                                gc::Cell** location) {
-  MOZ_ASSERT(SASigPreBarrierFiltering.failureMode == FailureMode::Infallible);
-  MOZ_ASSERT(location);
-  gc::PreWriteBarrier(*reinterpret_cast<JSObject**>(location));
-}
-
 /* static */ void Instance::postBarrier(Instance* instance,
                                         gc::Cell** location) {
   MOZ_ASSERT(SASigPostBarrier.failureMode == FailureMode::Infallible);
@@ -1169,18 +1162,6 @@ static int32_t MemDiscardNotShared(Instance* instance, I byteOffset, I byteLen,
   JSObject** location = (JSObject**)(uintptr_t(base) + size_t(offset));
   JSObject* next = *location;
   JSObject::postWriteBarrier(location, prev, next);
-}
-
-/* static */ void Instance::postBarrierFiltering(Instance* instance,
-                                                 gc::Cell** location) {
-  MOZ_ASSERT(SASigPostBarrierFiltering.failureMode == FailureMode::Infallible);
-  MOZ_ASSERT(location);
-  if (*location == nullptr || !gc::IsInsideNursery(*location)) {
-    return;
-  }
-  JSContext* cx = instance->cx();
-  cx->runtime()->gc.storeBuffer().putCell(
-      reinterpret_cast<JSObject**>(location));
 }
 
 //////////////////////////////////////////////////////////////////////////////
