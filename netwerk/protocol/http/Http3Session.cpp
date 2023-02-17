@@ -676,7 +676,7 @@ nsresult Http3Session::ProcessEvents() {
                     (rv == NS_BINDING_RETARGETED) ? NS_BINDING_RETARGETED
                                                   : NS_OK);
               }
-              return NS_OK;
+              break;
             }
 
             if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) {
