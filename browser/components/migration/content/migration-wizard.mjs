@@ -89,6 +89,10 @@ export class MigrationWizard extends HTMLElement {
                 <span class="success-text">&nbsp;</span>
               </div>
             </div>
+            <moz-button-group class="buttons">
+              <button class="cancel-close" data-l10n-id="migration-cancel-button-label" disabled></button>
+              <button class="primary" id="done-button" data-l10n-id="migration-done-button-label"></button>
+            </moz-button-group>
           </div>
 
           <div name="page-safari-permission">
@@ -140,6 +144,9 @@ export class MigrationWizard extends HTMLElement {
     for (let button of cancelCloseButtons) {
       button.addEventListener("click", this);
     }
+
+    let doneCloseButtons = shadow.querySelector("#done-button");
+    doneCloseButtons.addEventListener("click", this);
 
     this.#importButton = shadow.querySelector("#import");
     this.#importButton.addEventListener("click", this);
@@ -319,12 +326,20 @@ export class MigrationWizard extends HTMLElement {
       }
     }
 
-    let headerL10nID =
-      remainingProgressGroups > 0
-        ? "migration-wizard-progress-header"
-        : "migration-wizard-progress-done-header";
+    let migrationDone = remainingProgressGroups == 0;
+    let headerL10nID = migrationDone
+      ? "migration-wizard-progress-done-header"
+      : "migration-wizard-progress-header";
     let header = this.#shadowRoot.getElementById("progress-header");
     document.l10n.setAttributes(header, headerL10nID);
+
+    let progressPage = this.#shadowRoot.querySelector(
+      "div[name='page-progress']"
+    );
+    let doneButton = progressPage.querySelector("#done-button");
+    let cancelButton = progressPage.querySelector(".cancel-close");
+    doneButton.hidden = !migrationDone;
+    cancelButton.hidden = migrationDone;
   }
 
   /**
@@ -384,7 +399,10 @@ export class MigrationWizard extends HTMLElement {
       case "click": {
         if (event.target == this.#importButton) {
           this.#doImport();
-        } else if (event.target.classList.contains("cancel-close")) {
+        } else if (
+          event.target.classList.contains("cancel-close") ||
+          event.target.id == "done-button"
+        ) {
           this.dispatchEvent(
             new CustomEvent("MigrationWizard:Close", { bubbles: true })
           );
