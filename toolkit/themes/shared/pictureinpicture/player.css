@@ -73,6 +73,7 @@ browser {
   width: 100vw;
   margin: 0 calc(-1 * var(--resize-margin)) calc(-1 * var(--resize-margin)) calc(-1 * var(--resize-margin));
   pointer-events: none;
+  -moz-window-dragging: drag;
 }
 
 #controls-bottom {
