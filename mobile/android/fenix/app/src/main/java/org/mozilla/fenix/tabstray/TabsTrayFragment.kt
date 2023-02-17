@@ -14,6 +14,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatDialogFragment
+import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
@@ -59,6 +60,7 @@ import org.mozilla.fenix.tabstray.ext.collectionMessage
 import org.mozilla.fenix.tabstray.ext.make
 import org.mozilla.fenix.tabstray.ext.showWithTheme
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsIntegration
+import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.utils.allowUndo
 import kotlin.math.max
@@ -115,27 +117,12 @@ class TabsTrayFragment : AppCompatDialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?) =
         TabsTrayDialog(requireContext(), theme) { tabsTrayInteractor }
 
+    @Suppress("LongMethod")
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
-        _tabsTrayDialogBinding = FragmentTabTrayDialogBinding.inflate(
-            inflater,
-            container,
-            false,
-        )
-        _tabsTrayBinding = ComponentTabstray2Binding.inflate(
-            inflater,
-            tabsTrayDialogBinding.root,
-            true,
-        )
-        _fabButtonBinding = ComponentTabstrayFabBinding.inflate(
-            LayoutInflater.from(tabsTrayDialogBinding.root.context),
-            tabsTrayDialogBinding.root,
-            true,
-        )
-
         val args by navArgs<TabsTrayFragmentArgs>()
         args.accessPoint.takeIf { it != TabsTrayAccessPoint.None }?.let {
             TabsTray.accessPoint[it.name.lowercase()].add()
@@ -146,6 +133,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             TabsTrayState.Mode.Normal
         }
         val initialPage = args.page
+        val activity = activity as HomeActivity
 
         tabsTrayStore = StoreProvider.get(this) {
             TabsTrayStore(
@@ -158,34 +146,6 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                 ),
             )
         }
-
-        return tabsTrayDialogBinding.root
-    }
-
-    override fun onStart() {
-        super.onStart()
-        findPreviousDialogFragment()?.let { dialog ->
-            dialog.onAcceptClicked = ::onCancelDownloadWarningAccepted
-        }
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _tabsTrayBinding = null
-        _tabsTrayDialogBinding = null
-        _fabButtonBinding = null
-    }
-
-    @Suppress("LongMethod")
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        val activity = activity as HomeActivity
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-            fabButtonBinding.newTabButton.accessibilityTraversalAfter =
-                tabsTrayBinding.tabLayout.id
-        }
-        TabsTray.opened.record(NoExtras())
 
         navigationInteractor =
             DefaultNavigationInteractor(
@@ -226,34 +186,189 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             controller = tabsTrayController,
         )
 
-        setupMenu(navigationInteractor)
-        setupPager(
-            context = view.context,
-            lifecycleOwner = viewLifecycleOwner,
-            store = tabsTrayStore,
-            trayInteractor = tabsTrayInteractor,
-        )
+        return if (requireContext().settings().enableTabsTrayToCompose) {
+            ComposeView(requireContext()).apply {
+                setContent {
+                    FirefoxTheme {
+                        TabsTray()
+                    }
+                }
+            }
+        } else {
+            _tabsTrayDialogBinding = FragmentTabTrayDialogBinding.inflate(
+                inflater,
+                container,
+                false,
+            )
+            _tabsTrayBinding = ComponentTabstray2Binding.inflate(
+                inflater,
+                tabsTrayDialogBinding.root,
+                true,
+            )
+            _fabButtonBinding = ComponentTabstrayFabBinding.inflate(
+                LayoutInflater.from(tabsTrayDialogBinding.root.context),
+                tabsTrayDialogBinding.root,
+                true,
+            )
 
-        setupBackgroundDismissalListener {
-            TabsTray.closed.record(NoExtras())
-            dismissAllowingStateLoss()
+            tabsTrayDialogBinding.root
         }
+    }
 
-        trayBehaviorManager = TabSheetBehaviorManager(
-            behavior = BottomSheetBehavior.from(tabsTrayBinding.tabWrapper),
-            orientation = resources.configuration.orientation,
-            maxNumberOfTabs = max(
-                requireContext().components.core.store.state.normalTabs.size,
-                requireContext().components.core.store.state.privateTabs.size,
-            ),
-            numberForExpandingTray = if (requireContext().settings().gridTabView) {
-                EXPAND_AT_GRID_SIZE
-            } else {
-                EXPAND_AT_LIST_SIZE
-            },
-            navigationInteractor = navigationInteractor,
-            displayMetrics = requireContext().resources.displayMetrics,
-        )
+    override fun onStart() {
+        super.onStart()
+        findPreviousDialogFragment()?.let { dialog ->
+            dialog.onAcceptClicked = ::onCancelDownloadWarningAccepted
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _tabsTrayBinding = null
+        _tabsTrayDialogBinding = null
+        _fabButtonBinding = null
+    }
+
+    @Suppress("LongMethod")
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        TabsTray.opened.record(NoExtras())
+
+        if (!requireContext().settings().enableTabsTrayToCompose) {
+            val activity = activity as HomeActivity
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+                fabButtonBinding.newTabButton.accessibilityTraversalAfter =
+                    tabsTrayBinding.tabLayout.id
+            }
+
+            setupMenu(navigationInteractor)
+            setupPager(
+                context = view.context,
+                lifecycleOwner = viewLifecycleOwner,
+                store = tabsTrayStore,
+                trayInteractor = tabsTrayInteractor,
+            )
+
+            setupBackgroundDismissalListener {
+                TabsTray.closed.record(NoExtras())
+                dismissAllowingStateLoss()
+            }
+
+            trayBehaviorManager = TabSheetBehaviorManager(
+                behavior = BottomSheetBehavior.from(tabsTrayBinding.tabWrapper),
+                orientation = resources.configuration.orientation,
+                maxNumberOfTabs = max(
+                    requireContext().components.core.store.state.normalTabs.size,
+                    requireContext().components.core.store.state.privateTabs.size,
+                ),
+                numberForExpandingTray = if (requireContext().settings().gridTabView) {
+                    EXPAND_AT_GRID_SIZE
+                } else {
+                    EXPAND_AT_LIST_SIZE
+                },
+                navigationInteractor = navigationInteractor,
+                displayMetrics = requireContext().resources.displayMetrics,
+            )
+
+            tabsTrayCtaBinding.set(
+                feature = TabsTrayInfoBannerBinding(
+                    context = view.context,
+                    store = requireComponents.core.store,
+                    infoBannerView = tabsTrayBinding.infoBanner,
+                    settings = requireComponents.settings,
+                    navigationInteractor = navigationInteractor,
+                ),
+                owner = this,
+                view = view,
+            )
+
+            tabLayoutMediator.set(
+                feature = TabLayoutMediator(
+                    tabLayout = tabsTrayBinding.tabLayout,
+                    tabPager = tabsTrayBinding.tabsTray,
+                    interactor = tabsTrayInteractor,
+                    browsingModeManager = activity.browsingModeManager,
+                    tabsTrayStore = tabsTrayStore,
+                ),
+                owner = this,
+                view = view,
+            )
+
+            val tabsTrayTabCounter2Binding = TabsTrayTabCounter2Binding.bind(
+                tabsTrayBinding.tabLayout,
+            )
+
+            tabCounterBinding.set(
+                feature = TabCounterBinding(
+                    store = requireComponents.core.store,
+                    counter = tabsTrayTabCounter2Binding.tabCounter,
+                ),
+                owner = this,
+                view = view,
+            )
+
+            floatingActionButtonBinding.set(
+                feature = FloatingActionButtonBinding(
+                    store = tabsTrayStore,
+                    actionButton = fabButtonBinding.newTabButton,
+                    interactor = tabsTrayInteractor,
+                ),
+                owner = this,
+                view = view,
+            )
+
+            val tabsTrayMultiselectItemsBinding = TabstrayMultiselectItemsBinding.bind(
+                tabsTrayBinding.root,
+            )
+
+            selectionBannerBinding.set(
+                feature = SelectionBannerBinding(
+                    context = requireContext(),
+                    binding = tabsTrayBinding,
+                    store = tabsTrayStore,
+                    navInteractor = navigationInteractor,
+                    tabsTrayInteractor = tabsTrayInteractor,
+                    backgroundView = tabsTrayBinding.topBar,
+                    showOnSelectViews = VisibilityModifier(
+                        tabsTrayMultiselectItemsBinding.collectMultiSelect,
+                        tabsTrayMultiselectItemsBinding.shareMultiSelect,
+                        tabsTrayMultiselectItemsBinding.menuMultiSelect,
+                        tabsTrayBinding.multiselectTitle,
+                        tabsTrayBinding.exitMultiSelect,
+                    ),
+                    showOnNormalViews = VisibilityModifier(
+                        tabsTrayBinding.tabLayout,
+                        tabsTrayBinding.tabTrayOverflow,
+                        fabButtonBinding.newTabButton,
+                    ),
+                ),
+                owner = this,
+                view = view,
+            )
+
+            selectionHandleBinding.set(
+                feature = SelectionHandleBinding(
+                    store = tabsTrayStore,
+                    handle = tabsTrayBinding.handle,
+                    containerLayout = tabsTrayBinding.tabWrapper,
+                ),
+                owner = this,
+                view = view,
+            )
+
+            tabsTrayInactiveTabsOnboardingBinding.set(
+                feature = TabsTrayInactiveTabsOnboardingBinding(
+                    context = requireContext(),
+                    store = requireComponents.core.store,
+                    tabsTrayBinding = tabsTrayBinding,
+                    settings = requireComponents.settings,
+                    navigationInteractor = navigationInteractor,
+                ),
+                owner = this,
+                view = view,
+            )
+        }
 
         tabsFeature.set(
             feature = TabsFeature(
@@ -267,110 +382,12 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             view = view,
         )
 
-        tabsTrayCtaBinding.set(
-            feature = TabsTrayInfoBannerBinding(
-                context = view.context,
-                store = requireComponents.core.store,
-                infoBannerView = tabsTrayBinding.infoBanner,
-                settings = requireComponents.settings,
-                navigationInteractor = navigationInteractor,
-            ),
-            owner = this,
-            view = view,
-        )
-
-        tabLayoutMediator.set(
-            feature = TabLayoutMediator(
-                tabLayout = tabsTrayBinding.tabLayout,
-                tabPager = tabsTrayBinding.tabsTray,
-                interactor = tabsTrayInteractor,
-                browsingModeManager = activity.browsingModeManager,
-                tabsTrayStore = tabsTrayStore,
-            ),
-            owner = this,
-            view = view,
-        )
-
-        val tabsTrayTabCounter2Binding = TabsTrayTabCounter2Binding.bind(
-            tabsTrayBinding.tabLayout,
-        )
-
-        tabCounterBinding.set(
-            feature = TabCounterBinding(
-                store = requireComponents.core.store,
-                counter = tabsTrayTabCounter2Binding.tabCounter,
-            ),
-            owner = this,
-            view = view,
-        )
-
-        floatingActionButtonBinding.set(
-            feature = FloatingActionButtonBinding(
-                store = tabsTrayStore,
-                actionButton = fabButtonBinding.newTabButton,
-                interactor = tabsTrayInteractor,
-            ),
-            owner = this,
-            view = view,
-        )
-
-        val tabsTrayMultiselectItemsBinding = TabstrayMultiselectItemsBinding.bind(
-            tabsTrayBinding.root,
-        )
-
-        selectionBannerBinding.set(
-            feature = SelectionBannerBinding(
-                context = requireContext(),
-                binding = tabsTrayBinding,
-                store = tabsTrayStore,
-                navInteractor = navigationInteractor,
-                tabsTrayInteractor = tabsTrayInteractor,
-                backgroundView = tabsTrayBinding.topBar,
-                showOnSelectViews = VisibilityModifier(
-                    tabsTrayMultiselectItemsBinding.collectMultiSelect,
-                    tabsTrayMultiselectItemsBinding.shareMultiSelect,
-                    tabsTrayMultiselectItemsBinding.menuMultiSelect,
-                    tabsTrayBinding.multiselectTitle,
-                    tabsTrayBinding.exitMultiSelect,
-                ),
-                showOnNormalViews = VisibilityModifier(
-                    tabsTrayBinding.tabLayout,
-                    tabsTrayBinding.tabTrayOverflow,
-                    fabButtonBinding.newTabButton,
-                ),
-            ),
-            owner = this,
-            view = view,
-        )
-
-        selectionHandleBinding.set(
-            feature = SelectionHandleBinding(
-                store = tabsTrayStore,
-                handle = tabsTrayBinding.handle,
-                containerLayout = tabsTrayBinding.tabWrapper,
-            ),
-            owner = this,
-            view = view,
-        )
-
         secureTabsTrayBinding.set(
             feature = SecureTabsTrayBinding(
                 store = tabsTrayStore,
                 settings = requireComponents.settings,
                 fragment = this,
                 dialog = dialog as TabsTrayDialog,
-            ),
-            owner = this,
-            view = view,
-        )
-
-        tabsTrayInactiveTabsOnboardingBinding.set(
-            feature = TabsTrayInactiveTabsOnboardingBinding(
-                context = requireContext(),
-                store = requireComponents.core.store,
-                tabsTrayBinding = tabsTrayBinding,
-                settings = requireComponents.settings,
-                navigationInteractor = navigationInteractor,
             ),
             owner = this,
             view = view,
@@ -397,10 +414,12 @@ class TabsTrayFragment : AppCompatDialogFragment() {
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
-        trayBehaviorManager.updateDependingOnOrientation(newConfig.orientation)
+        if (!requireContext().settings().enableTabsTrayToCompose) {
+            trayBehaviorManager.updateDependingOnOrientation(newConfig.orientation)
 
-        if (requireContext().settings().gridTabView) {
-            tabsTrayBinding.tabsTray.adapter?.notifyDataSetChanged()
+            if (requireContext().settings().gridTabView) {
+                tabsTrayBinding.tabsTray.adapter?.notifyDataSetChanged()
+            }
         }
     }
 
