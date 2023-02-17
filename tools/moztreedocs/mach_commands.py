@@ -103,6 +103,11 @@ BASE_LINK = "http://gecko-docs.mozilla.org-l1.s3-website.us-west-2.amazonaws.com
     help="Check that the upper bound on the number of warnings is respected.",
 )
 @CommandArgument("--verbose", action="store_true", help="Run Sphinx in verbose mode")
+@CommandArgument(
+    "--no-autodoc",
+    action="store_true",
+    help="Disable generating Python/JS API documentation",
+)
 def build_docs(
     command_context,
     path=None,
@@ -120,6 +125,7 @@ def build_docs(
     enable_fatal_warnings=False,
     check_num_warnings=False,
     verbose=None,
+    no_autodoc=False,
 ):
     # TODO: Bug 1704891 - move the ESLint setup tools to a shared place.
     import setup_helper
@@ -165,6 +171,12 @@ def build_docs(
     if linkcheck:
         # We want to verify if the links are valid or not
         fmt = "linkcheck"
+    if no_autodoc:
+        if check_num_warnings:
+            return die(
+                "'--no-autodoc' flag may not be used with '--check-num-warnings'"
+            )
+        toggle_no_autodoc()
 
     status, warnings = _run_sphinx(docdir, savedir, fmt=fmt, jobs=jobs, verbose=verbose)
     if status != 0:
@@ -332,6 +344,12 @@ def manager():
     from moztreedocs import manager
 
     return manager
+
+
+def toggle_no_autodoc():
+    import moztreedocs
+
+    moztreedocs._SphinxManager.NO_AUTODOC = True
 
 
 @memoize
