@@ -1929,7 +1929,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "bc84f700f8c2867f9d63977dc0905fdd7af1e770"
+        "revision": "9a5ffcb876c0e5959278f56323bbfcb730c9a565"
     },
     "wo": {
         "pin": false,
