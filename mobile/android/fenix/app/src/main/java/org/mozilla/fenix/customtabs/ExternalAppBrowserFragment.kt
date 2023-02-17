@@ -147,6 +147,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                         customTabSessionId,
                         manifest,
                     ),
+                    notificationsDelegate = requireComponents.notificationsDelegate,
                 ),
             )
         } else {

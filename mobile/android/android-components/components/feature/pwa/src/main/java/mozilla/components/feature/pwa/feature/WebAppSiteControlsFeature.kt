@@ -31,6 +31,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.pwa.R
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.support.base.android.NotificationsDelegate
 
 /**
  * Displays site controls notification for fullscreen web apps.
@@ -46,6 +47,7 @@ class WebAppSiteControlsFeature(
     private val manifest: WebAppManifest? = null,
     private val controlsBuilder: SiteControlsBuilder = SiteControlsBuilder.Default(),
     private val icons: BrowserIcons? = null,
+    private val notificationsDelegate: NotificationsDelegate,
 ) : BroadcastReceiver(), DefaultLifecycleObserver {
 
     constructor(
@@ -56,6 +58,7 @@ class WebAppSiteControlsFeature(
         manifest: WebAppManifest? = null,
         controlsBuilder: SiteControlsBuilder = SiteControlsBuilder.CopyAndRefresh(reloadUrlUseCase),
         icons: BrowserIcons? = null,
+        notificationsDelegate: NotificationsDelegate,
     ) : this(
         applicationContext,
         store,
@@ -63,6 +66,7 @@ class WebAppSiteControlsFeature(
         manifest,
         controlsBuilder,
         icons,
+        notificationsDelegate,
     )
 
     private var notificationIcon: Deferred<mozilla.components.browser.icons.Icon>? = null
@@ -88,15 +92,14 @@ class WebAppSiteControlsFeature(
         val filter = controlsBuilder.getFilter()
         applicationContext.registerReceiver(this, filter)
 
-        val manager = NotificationManagerCompat.from(applicationContext)
         val iconAsync = notificationIcon
         if (iconAsync != null) {
             owner.lifecycleScope.launch {
                 val bitmap = iconAsync.await().bitmap
-                manager.notify(NOTIFICATION_TAG, NOTIFICATION_ID, buildNotification(bitmap))
+                notificationsDelegate.notify(NOTIFICATION_TAG, NOTIFICATION_ID, buildNotification(bitmap))
             }
         } else {
-            manager.notify(NOTIFICATION_TAG, NOTIFICATION_ID, buildNotification(null))
+            notificationsDelegate.notify(NOTIFICATION_TAG, NOTIFICATION_ID, buildNotification(null))
         }
     }
 

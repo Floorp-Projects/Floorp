@@ -99,6 +99,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                     sessionId!!,
                     manifest,
                     icons = components.icons,
+                    notificationsDelegate = components.notificationsDelegate,
                 ),
             )
         }

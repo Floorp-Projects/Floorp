@@ -32,7 +32,7 @@ class WebAppSiteControlsFeatureTest {
     fun `register receiver on resume`() {
         val context = spy(testContext)
 
-        val feature = WebAppSiteControlsFeature(context, mock(), "session-id", mock())
+        val feature = WebAppSiteControlsFeature(context, mock(), "session-id", mock(), notificationsDelegate = mock())
         feature.onResume(mock())
 
         verify(context).registerReceiver(eq(feature), any())
@@ -44,7 +44,7 @@ class WebAppSiteControlsFeatureTest {
 
         doNothing().`when`(context).unregisterReceiver(any())
 
-        val feature = WebAppSiteControlsFeature(context, mock(), "session-id", mock())
+        val feature = WebAppSiteControlsFeature(context, mock(), "session-id", mock(), notificationsDelegate = mock())
         feature.onPause(mock())
 
         verify(context).unregisterReceiver(feature)
@@ -62,7 +62,14 @@ class WebAppSiteControlsFeatureTest {
             ),
         )
 
-        val feature = WebAppSiteControlsFeature(testContext, store, reloadUrlUseCase, "session-id", mock())
+        val feature = WebAppSiteControlsFeature(
+            testContext,
+            store,
+            reloadUrlUseCase,
+            "session-id",
+            mock(),
+            notificationsDelegate = mock(),
+        )
         feature.onReceive(testContext, Intent("mozilla.components.feature.pwa.REFRESH"))
 
         verify(reloadUrlUseCase).invoke("session-id")
@@ -98,7 +105,14 @@ class WebAppSiteControlsFeatureTest {
             ),
         )
 
-        val feature = WebAppSiteControlsFeature(testContext, store, "session-id", manifest, icons = icons)
+        val feature = WebAppSiteControlsFeature(
+            testContext,
+            store,
+            "session-id",
+            manifest,
+            icons = icons,
+            notificationsDelegate = mock(),
+        )
         feature.onCreate(mock())
 
         verify(icons).loadIcon(
