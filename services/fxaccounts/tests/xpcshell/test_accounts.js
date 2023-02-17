@@ -6,11 +6,11 @@
 const { CryptoUtils } = ChromeUtils.import(
   "resource://services-crypto/utils.js"
 );
-const { FxAccounts } = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccounts.sys.mjs"
+const { FxAccounts } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
 );
-const { FxAccountsClient } = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccountsClient.sys.mjs"
+const { FxAccountsClient } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsClient.jsm"
 );
 const {
   ERRNO_INVALID_AUTH_TOKEN,
@@ -27,8 +27,8 @@ const { PromiseUtils } = ChromeUtils.importESModule(
 );
 
 // We grab some additional stuff via backstage passes.
-var { AccountState } = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccounts.sys.mjs"
+var { AccountState } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
 );
 
 const MOCK_TOKEN_RESPONSE = {

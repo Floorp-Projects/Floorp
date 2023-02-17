@@ -32,8 +32,6 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  FxAccountsClient: "resource://gre/modules/FxAccountsClient.sys.mjs",
-  FxAccountsConfig: "resource://gre/modules/FxAccountsConfig.sys.mjs",
   Log: "resource://gre/modules/Log.sys.mjs",
   Svc: "resource://services-sync/util.sys.mjs",
   Weave: "resource://services-sync/main.sys.mjs",
@@ -41,9 +39,14 @@ ChromeUtils.defineESModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  FxAccountsClient: "resource://gre/modules/FxAccountsClient.jsm",
+  FxAccountsConfig: "resource://gre/modules/FxAccountsConfig.jsm",
+});
+
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
-  return ChromeUtils.importESModule(
-    "resource://gre/modules/FxAccounts.sys.mjs"
+  return ChromeUtils.import(
+    "resource://gre/modules/FxAccounts.jsm"
   ).getFxAccountsSingleton();
 });
 

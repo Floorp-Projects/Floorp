@@ -2,12 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-  RemoteSettingsClient:
-    "resource://services-settings/RemoteSettingsClient.sys.mjs",
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  RemoteSettings: "resource://services-settings/remote-settings.js",
+  RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
 });
 
 const SETTINGS_IGNORELIST_KEY = "hijack-blocklists";

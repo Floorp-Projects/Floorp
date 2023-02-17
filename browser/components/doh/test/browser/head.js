@@ -7,11 +7,11 @@ ChromeUtils.defineESModuleGetters(this, {
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   RegionTestUtils: "resource://testing-common/RegionTestUtils.sys.mjs",
-  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ASRouter: "resource://activity-stream/lib/ASRouter.jsm",
+  RemoteSettings: "resource://services-settings/remote-settings.js",
 });
 
 XPCOMUtils.defineLazyServiceGetter(

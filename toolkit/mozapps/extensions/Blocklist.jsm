@@ -27,10 +27,16 @@ ChromeUtils.defineModuleGetter(
   "AddonManagerPrivate",
   "resource://gre/modules/AddonManager.jsm"
 );
-ChromeUtils.defineESModuleGetters(lazy, {
-  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-  jexlFilterFunc: "resource://services-settings/remote-settings.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "RemoteSettings",
+  "resource://services-settings/remote-settings.js"
+);
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "jexlFilterFunc",
+  "resource://services-settings/remote-settings.js"
+);
 
 const CascadeFilter = Components.Constructor(
   "@mozilla.org/cascade-filter;1",

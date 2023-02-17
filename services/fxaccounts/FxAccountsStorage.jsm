@@ -1,6 +1,14 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
+
+var EXPORTED_SYMBOLS = [
+  "FxAccountsStorageManagerCanStoreField",
+  "FxAccountsStorageManager",
+  // Exported for tests.
+  "LoginManagerStorage",
+];
 
 const {
   DATA_FORMAT_VERSION,
@@ -14,7 +22,7 @@ const {
 
 // A helper function so code can check what fields are able to be stored by
 // the storage manager without having a reference to a manager instance.
-export function FxAccountsStorageManagerCanStoreField(fieldName) {
+function FxAccountsStorageManagerCanStoreField(fieldName) {
   return (
     FXA_PWDMGR_PLAINTEXT_FIELDS.has(fieldName) ||
     FXA_PWDMGR_SECURE_FIELDS.has(fieldName)
@@ -22,7 +30,7 @@ export function FxAccountsStorageManagerCanStoreField(fieldName) {
 }
 
 // The storage manager object.
-export var FxAccountsStorageManager = function(options = {}) {
+var FxAccountsStorageManager = function(options = {}) {
   this.options = {
     filename: options.filename || DEFAULT_STORAGE_FILENAME,
     baseDir: options.baseDir || Services.dirsvc.get("ProfD", Ci.nsIFile).path,
@@ -467,7 +475,6 @@ JSONStorage.prototype = {
 };
 
 function StorageLockedError() {}
-
 /**
  * LoginManagerStorage constructor that creates instances that set/get
  * data stored securely in the nsILoginManager.
@@ -475,7 +482,7 @@ function StorageLockedError() {}
  * @return instance
  */
 
-export function LoginManagerStorage() {}
+function LoginManagerStorage() {}
 
 LoginManagerStorage.prototype = {
   STORAGE_LOCKED: StorageLockedError,

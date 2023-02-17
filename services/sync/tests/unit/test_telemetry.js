@@ -13,8 +13,8 @@ const { Resource } = ChromeUtils.importESModule(
 const { RotaryEngine } = ChromeUtils.importESModule(
   "resource://testing-common/services/sync/rotaryengine.sys.mjs"
 );
-const { getFxAccountsSingleton } = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccounts.sys.mjs"
+const { getFxAccountsSingleton } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
 );
 const fxAccounts = getFxAccountsSingleton();
 

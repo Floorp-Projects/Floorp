@@ -3,14 +3,14 @@
 
 "use strict";
 
-const { FxAccounts } = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccounts.sys.mjs"
+const { FxAccounts } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
 );
-const { FxAccountsClient } = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccountsClient.sys.mjs"
+const { FxAccountsClient } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsClient.jsm"
 );
-var { AccountState } = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccounts.sys.mjs"
+var { AccountState } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
 );
 
 function promiseNotification(topic) {

@@ -8,8 +8,8 @@
 // See verbose logging from FxAccounts.jsm
 Services.prefs.setCharPref("identity.fxaccounts.loglevel", "Trace");
 
-const { FxAccounts } = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccounts.sys.mjs"
+const { FxAccounts } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
 );
 const { FXA_PWDMGR_HOST, FXA_PWDMGR_REALM } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"
@@ -17,8 +17,8 @@ const { FXA_PWDMGR_HOST, FXA_PWDMGR_REALM } = ChromeUtils.import(
 
 // Use a backstage pass to get at our LoginManagerStorage object, so we can
 // mock the prototype.
-var { LoginManagerStorage } = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccountsStorage.sys.mjs"
+var { LoginManagerStorage } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsStorage.jsm"
 );
 var isLoggedIn = true;
 LoginManagerStorage.prototype.__defineGetter__("_isLoggedIn", () => isLoggedIn);

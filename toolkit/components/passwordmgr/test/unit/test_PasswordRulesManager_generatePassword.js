@@ -12,8 +12,8 @@ const { PasswordRulesManagerParent } = ChromeUtils.import(
 const { PasswordRulesParser } = ChromeUtils.import(
   "resource://gre/modules/PasswordRulesParser.jsm"
 );
-const { RemoteSettings } = ChromeUtils.importESModule(
-  "resource://services-settings/remote-settings.sys.mjs"
+const { RemoteSettings } = ChromeUtils.import(
+  "resource://services-settings/remote-settings.js"
 );
 const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"

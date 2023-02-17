@@ -55,8 +55,8 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/AddonManager.jsm"
 );
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
-  return ChromeUtils.importESModule(
-    "resource://gre/modules/FxAccounts.sys.mjs"
+  return ChromeUtils.import(
+    "resource://gre/modules/FxAccounts.jsm"
   ).getFxAccountsSingleton();
 });
 XPCOMUtils.defineLazyServiceGetter(

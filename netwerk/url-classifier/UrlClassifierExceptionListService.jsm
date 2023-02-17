@@ -6,9 +6,11 @@ function UrlClassifierExceptionListService() {}
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "RemoteSettings",
+  "resource://services-settings/remote-settings.js"
+);
 
 const COLLECTION_NAME = "url-classifier-skip-urls";
 

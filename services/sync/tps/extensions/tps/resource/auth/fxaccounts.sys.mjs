@@ -5,11 +5,16 @@
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
-import { getFxAccountsSingleton } from "resource://gre/modules/FxAccounts.sys.mjs";
-
+const { getFxAccountsSingleton } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
+);
 const fxAccounts = getFxAccountsSingleton();
-import { FxAccountsClient } from "resource://gre/modules/FxAccountsClient.sys.mjs";
-import { FxAccountsConfig } from "resource://gre/modules/FxAccountsConfig.sys.mjs";
+const { FxAccountsClient } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsClient.jsm"
+);
+const { FxAccountsConfig } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsConfig.jsm"
+);
 import { Logger } from "resource://tps/logger.sys.mjs";
 
 /**

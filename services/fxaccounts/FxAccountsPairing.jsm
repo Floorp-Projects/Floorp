@@ -2,6 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+"use strict";
+
 const {
   log,
   PREF_REMOTE_PAIRING_URI,
@@ -11,25 +13,27 @@ const {
   COMMAND_PAIR_HEARTBEAT,
   COMMAND_PAIR_COMPLETE,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-import {
-  getFxAccountsSingleton,
-  FxAccounts,
-} from "resource://gre/modules/FxAccounts.sys.mjs";
-
+const { getFxAccountsSingleton, FxAccounts } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
+);
 const fxAccounts = getFxAccountsSingleton();
-import { setTimeout, clearTimeout } from "resource://gre/modules/Timer.sys.mjs";
-
+const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
 ChromeUtils.import("resource://services-common/utils.js");
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
-  FxAccountsPairingChannel:
-    "resource://gre/modules/FxAccountsPairingChannel.sys.mjs",
   Weave: "resource://services-sync/main.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(
   lazy,
   "jwcrypto",
   "resource://services-crypto/jwcrypto.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "FxAccountsPairingChannel",
+  "resource://gre/modules/FxAccountsPairingChannel.js"
 );
 
 const PAIRING_REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob:pair-auth-webchannel";
@@ -169,8 +173,7 @@ class Errored extends State {
 }
 
 const flows = new Map();
-
-export class FxAccountsPairingFlow {
+class FxAccountsPairingFlow {
   static get(channelId) {
     return flows.get(channelId);
   }
@@ -515,3 +518,5 @@ export class FxAccountsPairingFlow {
     );
   }
 }
+
+const EXPORTED_SYMBOLS = ["FxAccountsPairingFlow"];

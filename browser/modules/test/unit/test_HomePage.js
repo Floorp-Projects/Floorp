@@ -8,12 +8,10 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-ChromeUtils.defineESModuleGetters(this, {
-  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-});
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   HomePage: "resource:///modules/HomePage.jsm",
+  RemoteSettings: "resource://services-settings/remote-settings.js",
+  // RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
   sinon: "resource://testing-common/Sinon.jsm",
 });
 

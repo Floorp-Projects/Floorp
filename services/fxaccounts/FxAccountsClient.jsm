@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+var EXPORTED_SYMBOLS = ["FxAccountsClient"];
+
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );
@@ -23,7 +25,9 @@ const {
   ERRNO_INVALID_AUTH_TOKEN,
   log,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-import { Credentials } from "resource://gre/modules/Credentials.sys.mjs";
+const { Credentials } = ChromeUtils.import(
+  "resource://gre/modules/Credentials.jsm"
+);
 
 const HOST_PREF = "identity.fxaccounts.auth.uri";
 
@@ -32,9 +36,7 @@ const SIGNUP = "/account/create";
 // Devices older than this many days will not appear in the devices list
 const DEVICES_FILTER_DAYS = 21;
 
-export var FxAccountsClient = function(
-  host = Services.prefs.getCharPref(HOST_PREF)
-) {
+var FxAccountsClient = function(host = Services.prefs.getCharPref(HOST_PREF)) {
   this.host = host;
 
   // The FxA auth server expects requests to certain endpoints to be authorized

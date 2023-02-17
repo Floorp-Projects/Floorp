@@ -1,6 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
+var EXPORTED_SYMBOLS = ["FxAccountsConfig"];
 
 const { RESTRequest } = ChromeUtils.import(
   "resource://services-common/rest.js"
@@ -8,20 +10,23 @@ const { RESTRequest } = ChromeUtils.import(
 const { log } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"
 );
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
 
 const lazy = {};
 
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
-  return ChromeUtils.importESModule(
-    "resource://gre/modules/FxAccounts.sys.mjs"
+  return ChromeUtils.import(
+    "resource://gre/modules/FxAccounts.jsm"
   ).getFxAccountsSingleton();
 });
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  EnsureFxAccountsWebChannel:
-    "resource://gre/modules/FxAccountsWebChannel.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "EnsureFxAccountsWebChannel",
+  "resource://gre/modules/FxAccountsWebChannel.jsm"
+);
 
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
@@ -52,7 +57,7 @@ const CONFIG_PREFS = [
 ];
 const SYNC_PARAM = "sync";
 
-export var FxAccountsConfig = {
+var FxAccountsConfig = {
   async promiseEmailURI(email, entrypoint, extraParams = {}) {
     return this._buildURL("", {
       extraParams: { entrypoint, email, service: SYNC_PARAM, ...extraParams },

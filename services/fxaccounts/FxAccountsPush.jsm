@@ -26,7 +26,7 @@ const {
  *        Object, custom options that used for testing
  * @constructor
  */
-export function FxAccountsPushService(options = {}) {
+function FxAccountsPushService(options = {}) {
   this.log = log;
 
   if (options.log) {
@@ -83,8 +83,8 @@ FxAccountsPushService.prototype = {
     if (options.fxai) {
       this.fxai = options.fxai;
     } else {
-      const { getFxAccountsSingleton } = ChromeUtils.importESModule(
-        "resource://gre/modules/FxAccounts.sys.mjs"
+      const { getFxAccountsSingleton } = ChromeUtils.import(
+        "resource://gre/modules/FxAccounts.jsm"
       );
       const fxAccounts = getFxAccountsSingleton();
       this.fxai = fxAccounts._internal;
@@ -312,3 +312,5 @@ FxAccountsPushService.prototype = {
     });
   },
 };
+
+var EXPORTED_SYMBOLS = ["FxAccountsPushService"];

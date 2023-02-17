@@ -6,7 +6,9 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-import { RemoteSettings } from "resource://services-settings/remote-settings.sys.mjs";
+const { RemoteSettings } = ChromeUtils.import(
+  "resource://services-settings/remote-settings.js"
+);
 
 const lazy = {};
 

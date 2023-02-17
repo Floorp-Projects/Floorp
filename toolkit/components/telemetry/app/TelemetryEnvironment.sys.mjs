@@ -28,8 +28,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
-  return ChromeUtils.importESModule(
-    "resource://gre/modules/FxAccounts.sys.mjs"
+  return ChromeUtils.import(
+    "resource://gre/modules/FxAccounts.jsm"
   ).getFxAccountsSingleton();
 });
 ChromeUtils.defineModuleGetter(

@@ -6,9 +6,11 @@ function URLDecorationAnnotationsService() {}
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
-});
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "RemoteSettings",
+  "resource://services-settings/remote-settings.js"
+);
 
 const COLLECTION_NAME = "anti-tracking-url-decoration";
 const PREF_NAME = "privacy.restrict3rdpartystorage.url_decorations";

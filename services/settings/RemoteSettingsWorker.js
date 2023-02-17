@@ -129,7 +129,7 @@ const Agent = {
 /**
  * Wrap worker invocations in order to return the `callbackId` along
  * the result. This will allow to transform the worker invocations
- * into promises in `RemoteSettingsWorker.sys.mjs`.
+ * into promises in `RemoteSettingsWorker.jsm`.
  */
 self.onmessage = event => {
   const { callbackId, method, args = [] } = event.data;
@@ -157,7 +157,7 @@ let gPendingTransactions = new Set();
  */
 async function importDumpIDB(bucket, collection, records, timestamp) {
   // Open the DB. It will exist since if we are running this, it means
-  // we already tried to read the timestamp in `remote-settings.sys.mjs`
+  // we already tried to read the timestamp in `remote-settings.js`
   const db = await IDBHelpers.openIDB(false /* do not allow upgrades */);
 
   // try...finally to ensure we always close the db.

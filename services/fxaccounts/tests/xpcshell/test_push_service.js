@@ -5,6 +5,7 @@
 
 // Tests for the FxA push service.
 
+/* eslint-disable no-shadow */
 /* eslint-disable mozilla/use-chromeutils-generateqi */
 
 const {
@@ -21,13 +22,16 @@ const {
   log,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 
-const { FxAccountsPushService } = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccountsPush.sys.mjs"
+let importScope = {};
+Services.scriptloader.loadSubScript(
+  "resource://gre/modules/FxAccountsPush.jsm",
+  importScope
 );
+const FxAccountsPushService = importScope.FxAccountsPushService;
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
-  "PushService",
+  "pushService",
   "@mozilla.org/push/Service;1",
   "nsIPushService"
 );
@@ -39,8 +43,8 @@ const MOCK_ENDPOINT = "http://mochi.test:8888";
 
 // tests do not allow external connections, mock the PushService
 let mockPushService = {
-  pushTopic: PushService.pushTopic,
-  subscriptionChangeTopic: PushService.subscriptionChangeTopic,
+  pushTopic: pushService.pushTopic,
+  subscriptionChangeTopic: pushService.subscriptionChangeTopic,
   subscribe(scope, principal, cb) {
     cb(Cr.NS_OK, {
       endpoint: MOCK_ENDPOINT,
@@ -212,8 +216,8 @@ add_task(async function observePushTopicDeviceDisconnected_current_device() {
   };
 
   let signoutCalled = false;
-  let { FxAccounts } = ChromeUtils.importESModule(
-    "resource://gre/modules/FxAccounts.sys.mjs"
+  let { FxAccounts } = ChromeUtils.import(
+    "resource://gre/modules/FxAccounts.jsm"
   );
   const fxAccountsMock = new FxAccounts({
     newAccountState() {
@@ -268,8 +272,8 @@ add_task(async function observePushTopicDeviceDisconnected_another_device() {
   };
 
   let signoutCalled = false;
-  let { FxAccounts } = ChromeUtils.importESModule(
-    "resource://gre/modules/FxAccounts.sys.mjs"
+  let { FxAccounts } = ChromeUtils.import(
+    "resource://gre/modules/FxAccounts.jsm"
   );
   const fxAccountsMock = new FxAccounts({
     newAccountState() {

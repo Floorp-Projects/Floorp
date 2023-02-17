@@ -183,7 +183,7 @@ services/common/kinto-http-client.js
 services/common/kinto-offline-client.js
 
 # Webpack-bundled library
-services/fxaccounts/FxAccountsPairingChannel.sys.mjs
+services/fxaccounts/FxAccountsPairingChannel.js
 
 # Servo is imported.
 servo/

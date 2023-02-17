@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { FxAccountsPairingFlow } = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccountsPairing.sys.mjs"
+const { FxAccountsPairingFlow } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsPairing.jsm"
 );
 const { EventEmitter } = ChromeUtils.importESModule(
   "resource://gre/modules/EventEmitter.sys.mjs"

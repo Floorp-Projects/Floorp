@@ -39,8 +39,8 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () =>
   LoginHelper.createLogger("FirefoxRelay")
 );
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () =>
-  ChromeUtils.importESModule(
-    "resource://gre/modules/FxAccounts.sys.mjs"
+  ChromeUtils.import(
+    "resource://gre/modules/FxAccounts.jsm"
   ).getFxAccountsSingleton()
 );
 XPCOMUtils.defineLazyGetter(lazy, "strings", function() {

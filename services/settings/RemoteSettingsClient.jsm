@@ -2,25 +2,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+"use strict";
 
-import { Downloader } from "resource://services-settings/Attachments.sys.mjs";
+var EXPORTED_SYMBOLS = ["RemoteSettingsClient"];
+
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
+const { Downloader } = ChromeUtils.import(
+  "resource://services-settings/Attachments.jsm"
+);
 
 const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  Database: "resource://services-settings/Database.sys.mjs",
-  RemoteSettingsWorker:
-    "resource://services-settings/RemoteSettingsWorker.sys.mjs",
-});
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ClientEnvironmentBase:
     "resource://gre/modules/components-utils/ClientEnvironment.jsm",
+  Database: "resource://services-settings/Database.jsm",
   IDBHelpers: "resource://services-settings/IDBHelpers.jsm",
   KintoHttpClient: "resource://services-common/kinto-http-client.js",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
+  RemoteSettingsWorker: "resource://services-settings/RemoteSettingsWorker.jsm",
   SharedUtils: "resource://services-settings/SharedUtils.jsm",
   UptakeTelemetry: "resource://services-common/uptake-telemetry.js",
   Utils: "resource://services-settings/Utils.jsm",
@@ -262,7 +267,7 @@ class AttachmentDownloader extends Downloader {
   }
 }
 
-export class RemoteSettingsClient extends EventEmitter {
+class RemoteSettingsClient extends EventEmitter {
   static get APIError() {
     return APIError;
   }

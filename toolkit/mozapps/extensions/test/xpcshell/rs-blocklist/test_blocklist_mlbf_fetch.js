@@ -9,8 +9,8 @@
 
 Services.prefs.setBoolPref("extensions.blocklist.useMLBF", true);
 
-const { Downloader } = ChromeUtils.importESModule(
-  "resource://services-settings/Attachments.sys.mjs"
+const { Downloader } = ChromeUtils.import(
+  "resource://services-settings/Attachments.jsm"
 );
 
 const ExtensionBlocklistMLBF = getExtensionBlocklistMLBF();

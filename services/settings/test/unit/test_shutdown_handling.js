@@ -7,14 +7,14 @@ const { TestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TestUtils.sys.mjs"
 );
 
-const { Database } = ChromeUtils.importESModule(
-  "resource://services-settings/Database.sys.mjs"
+const { Database } = ChromeUtils.import(
+  "resource://services-settings/Database.jsm"
 );
-const { RemoteSettingsWorker } = ChromeUtils.importESModule(
-  "resource://services-settings/RemoteSettingsWorker.sys.mjs"
+const { RemoteSettingsWorker } = ChromeUtils.import(
+  "resource://services-settings/RemoteSettingsWorker.jsm"
 );
-const { RemoteSettingsClient } = ChromeUtils.importESModule(
-  "resource://services-settings/RemoteSettingsClient.sys.mjs"
+const { RemoteSettingsClient } = ChromeUtils.import(
+  "resource://services-settings/RemoteSettingsClient.jsm"
 );
 
 add_task(async function test_shutdown_abort_after_start() {

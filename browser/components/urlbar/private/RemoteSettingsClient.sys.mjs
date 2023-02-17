@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { BaseFeature } from "resource:///modules/urlbar/private/BaseFeature.sys.mjs";
 
 const lazy = {};
@@ -9,9 +10,12 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   EventEmitter: "resource://gre/modules/EventEmitter.sys.mjs",
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
-  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   TaskQueue: "resource:///modules/UrlbarUtils.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
+});
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  RemoteSettings: "resource://services-settings/remote-settings.js",
 });
 
 const RS_COLLECTION = "quicksuggest";

@@ -3,12 +3,12 @@
 
 "use strict";
 
-const { FxAccountsCommands, SendTab } = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccountsCommands.sys.mjs"
+const { FxAccountsCommands, SendTab } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsCommands.js"
 );
 
-const { FxAccountsClient } = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccountsClient.sys.mjs"
+const { FxAccountsClient } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsClient.jsm"
 );
 
 const { COMMAND_SENDTAB, COMMAND_SENDTAB_TAIL } = ChromeUtils.import(

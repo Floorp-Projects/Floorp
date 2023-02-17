@@ -7,8 +7,12 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
-  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
 });
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "RemoteSettings",
+  "resource://services-settings/remote-settings.js"
+);
 ChromeUtils.defineModuleGetter(
   lazy,
   "pktApi",

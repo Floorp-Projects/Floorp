@@ -92,7 +92,7 @@ add_task(async function verify_dump_first_run() {
   // If this fails:
   // - "dump_fallback" means that the MLBF attachment is out of sync with the
   //   collection data.
-  // - undefined could mean that the implementation of Attachments.sys.mjs changed.
+  // - undefined could mean that the implementation of Attachments.jsm changed.
   Assert.equal(
     downloadResult._source,
     "dump_match",

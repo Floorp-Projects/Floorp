@@ -9,8 +9,13 @@
  * See https://github.com/mozilla/fxa-auth-server/wiki/onepw-protocol
  */
 
-import { Log } from "resource://gre/modules/Log.sys.mjs";
+"use strict";
 
+var EXPORTED_SYMBOLS = ["Credentials"];
+
+const { Log } = ChromeUtils.importESModule(
+  "resource://gre/modules/Log.sys.mjs"
+);
 const { CryptoUtils } = ChromeUtils.import(
   "resource://services-crypto/utils.js"
 );
@@ -40,7 +45,7 @@ var log = Log.repository.getLogger("Identity.FxAccounts");
 log.level = LOG_LEVEL;
 log.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
 
-export var Credentials = Object.freeze({
+var Credentials = Object.freeze({
   /**
    * Make constants accessible to tests
    */

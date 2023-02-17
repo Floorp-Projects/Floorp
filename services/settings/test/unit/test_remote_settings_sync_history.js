@@ -1,7 +1,7 @@
 "use strict";
 
-const { SyncHistory } = ChromeUtils.importESModule(
-  "resource://services-settings/SyncHistory.sys.mjs"
+const { SyncHistory } = ChromeUtils.import(
+  "resource://services-settings/SyncHistory.jsm"
 );
 
 async function clear_state() {

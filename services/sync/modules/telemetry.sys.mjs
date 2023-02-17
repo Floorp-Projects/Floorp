@@ -20,7 +20,6 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AuthenticationError: "resource://services-sync/sync_auth.sys.mjs",
-  FxAccounts: "resource://gre/modules/FxAccounts.sys.mjs",
   Resource: "resource://services-sync/resource.sys.mjs",
   Status: "resource://services-sync/status.sys.mjs",
   Svc: "resource://services-sync/util.sys.mjs",
@@ -32,13 +31,14 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   Async: "resource://services-common/async.js",
+  FxAccounts: "resource://gre/modules/FxAccounts.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   Observers: "resource://services-common/observers.js",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
-  return ChromeUtils.importESModule(
-    "resource://gre/modules/FxAccounts.sys.mjs"
+  return ChromeUtils.import(
+    "resource://gre/modules/FxAccounts.jsm"
   ).getFxAccountsSingleton();
 });
 

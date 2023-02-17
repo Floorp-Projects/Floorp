@@ -1,8 +1,8 @@
-const { RemoteSettingsClient } = ChromeUtils.importESModule(
-  "resource://services-settings/RemoteSettingsClient.sys.mjs"
+const { RemoteSettingsClient } = ChromeUtils.import(
+  "resource://services-settings/RemoteSettingsClient.jsm"
 );
-const { RemoteSettingsWorker } = ChromeUtils.importESModule(
-  "resource://services-settings/RemoteSettingsWorker.sys.mjs"
+const { RemoteSettingsWorker } = ChromeUtils.import(
+  "resource://services-settings/RemoteSettingsWorker.jsm"
 );
 const { SharedUtils } = ChromeUtils.import(
   "resource://services-settings/SharedUtils.jsm"

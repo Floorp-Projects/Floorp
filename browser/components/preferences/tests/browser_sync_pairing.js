@@ -6,8 +6,8 @@
 const { UIState } = ChromeUtils.importESModule(
   "resource://services-sync/UIState.sys.mjs"
 );
-const { FxAccountsPairingFlow } = ChromeUtils.importESModule(
-  "resource://gre/modules/FxAccountsPairing.sys.mjs"
+const { FxAccountsPairingFlow } = ChromeUtils.import(
+  "resource://gre/modules/FxAccountsPairing.jsm"
 );
 
 // Use sinon for mocking.

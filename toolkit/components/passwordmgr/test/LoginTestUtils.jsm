@@ -9,10 +9,14 @@
 
 const EXPORTED_SYMBOLS = ["LoginTestUtils"];
 
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  RemoteSettings: "resource://services-settings/remote-settings.js",
 });
 
 let { Assert: AssertCls } = ChromeUtils.importESModule(
