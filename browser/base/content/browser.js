@@ -571,13 +571,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   }
 );
 
-customElements.setElementCreationCallback("translation-notification", () => {
-  Services.scriptloader.loadSubScript(
-    "chrome://browser/content/translation-notification.js",
-    window
-  );
-});
-
 customElements.setElementCreationCallback("screenshots-buttons", () => {
   Services.scriptloader.loadSubScript(
     "chrome://browser/content/screenshots/screenshots-buttons.js",
