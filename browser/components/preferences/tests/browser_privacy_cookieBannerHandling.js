@@ -7,6 +7,7 @@
 
 const FEATURE_PREF = "cookiebanners.ui.desktop.enabled";
 const MODE_PREF = "cookiebanners.service.mode";
+const PBM_MODE_PREF = "cookiebanners.service.mode.privateBrowsing";
 const DETECT_ONLY_PREF = "cookiebanners.service.detectOnly";
 
 const GROUPBOX_ID = "cookieBannerHandlingGroup";
@@ -140,6 +141,7 @@ add_task(async function test_checkbox_modifies_prefs() {
     set: [
       [FEATURE_PREF, true],
       [MODE_PREF, Ci.nsICookieBannerService.MODE_UNSET],
+      [PBM_MODE_PREF, Ci.nsICookieBannerService.MODE_UNSET],
       [DETECT_ONLY_PREF, true],
     ],
   });
@@ -170,6 +172,11 @@ add_task(async function test_checkbox_modifies_prefs() {
         "cookie banner handling mode should be set to REJECT mode after checking the checkbox"
       );
       Assert.equal(
+        Ci.nsICookieBannerService.MODE_REJECT,
+        Services.prefs.getIntPref(PBM_MODE_PREF),
+        "cookie banner handling mode for PBM should be set to REJECT mode after checking the checkbox"
+      );
+      Assert.equal(
         false,
         Services.prefs.getBoolPref(DETECT_ONLY_PREF),
         "cookie banner handling detect-only mode should be disabled after checking the checkbox"
@@ -185,6 +192,11 @@ add_task(async function test_checkbox_modifies_prefs() {
         Ci.nsICookieBannerService.MODE_DISABLED,
         Services.prefs.getIntPref(MODE_PREF),
         "cookie banner handling mode should be set to DISABLED mode after unchecking the checkbox"
+      );
+      Assert.equal(
+        Ci.nsICookieBannerService.MODE_DISABLED,
+        Services.prefs.getIntPref(PBM_MODE_PREF),
+        "cookie banner handling mode for PBM should be set to DISABLED mode after unchecking the checkbox"
       );
       Assert.equal(
         false,
