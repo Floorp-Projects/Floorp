@@ -1173,7 +1173,7 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleInsertText(
     if (!compositionEndPoint.IsSet()) {
       compositionEndPoint = compositionStartPoint;
     }
-    Result<EditorDOMPoint, nsresult> replaceTextResult =
+    Result<InsertTextResult, nsresult> replaceTextResult =
         WhiteSpaceVisibilityKeeper::ReplaceText(
             *this, aInsertionString,
             EditorDOMRange(compositionStartPoint, compositionEndPoint));
@@ -1181,6 +1181,9 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleInsertText(
       NS_WARNING("WhiteSpaceVisibilityKeeper::ReplaceText() failed");
       return replaceTextResult.propagateErr();
     }
+    MOZ_ASSERT(
+        !replaceTextResult.inspect().HasCaretPointSuggestion(),
+        "Assuming CompositionTransaction set caret by itself, but it didn't?");
 
     compositionStartPoint = GetFirstIMESelectionStartPoint<EditorDOMPoint>();
     compositionEndPoint = GetLastIMESelectionEndPoint<EditorDOMPoint>();
@@ -1327,17 +1330,26 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleInsertText(
 
         // is it a tab?
         if (subStr.Equals(tabStr)) {
-          Result<EditorDOMPoint, nsresult> insertTextResult =
+          Result<InsertTextResult, nsresult> insertTextResult =
               WhiteSpaceVisibilityKeeper::InsertText(*this, spacesStr,
                                                      currentPoint);
           if (MOZ_UNLIKELY(insertTextResult.isErr())) {
             NS_WARNING("WhiteSpaceVisibilityKeeper::InsertText() failed");
             return insertTextResult.propagateErr();
           }
+          // Ignore the caret suggestion because of `dontChangeMySelection`
+          // above.
+          insertTextResult.inspect().IgnoreCaretPointSuggestion();
           pos++;
-          MOZ_ASSERT(insertTextResult.inspect().IsSet());
-          currentPoint = insertTextResult.inspect();
-          pointToInsert = insertTextResult.unwrap();
+          if (insertTextResult.inspect().Handled()) {
+            pointToInsert = currentPoint = insertTextResult.unwrap()
+                                               .EndOfInsertedTextRef()
+                                               .To<EditorDOMPoint>();
+            MOZ_ASSERT(pointToInsert.IsSet());
+          } else {
+            pointToInsert = currentPoint;
+            MOZ_ASSERT(pointToInsert.IsSet());
+          }
         }
         // is it a return?
         else if (subStr.Equals(newlineStr)) {
@@ -1384,16 +1396,25 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleInsertText(
               currentPoint == pointToInsert,
               "Perhaps, newBRElement has been moved or removed unexpectedly");
         } else {
-          Result<EditorDOMPoint, nsresult> insertTextResult =
+          Result<InsertTextResult, nsresult> insertTextResult =
               WhiteSpaceVisibilityKeeper::InsertText(*this, subStr,
                                                      currentPoint);
           if (MOZ_UNLIKELY(insertTextResult.isErr())) {
             NS_WARNING("WhiteSpaceVisibilityKeeper::InsertText() failed");
             return insertTextResult.propagateErr();
           }
-          MOZ_ASSERT(insertTextResult.inspect().IsSet());
-          currentPoint = insertTextResult.inspect();
-          pointToInsert = insertTextResult.unwrap();
+          // Ignore the caret suggestion because of `dontChangeMySelection`
+          // above.
+          insertTextResult.inspect().IgnoreCaretPointSuggestion();
+          if (insertTextResult.inspect().Handled()) {
+            pointToInsert = currentPoint = insertTextResult.unwrap()
+                                               .EndOfInsertedTextRef()
+                                               .To<EditorDOMPoint>();
+            MOZ_ASSERT(pointToInsert.IsSet());
+          } else {
+            pointToInsert = currentPoint;
+            MOZ_ASSERT(pointToInsert.IsSet());
+          }
         }
       }
     }
