@@ -4,20 +4,8 @@
 
 /* global __URI__ */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = [
-  "RemoteSettings",
-  "jexlFilterFunc",
-  "remoteSettingsBroadcastHandler",
-];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
@@ -84,7 +72,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
  * @param {ClientEnvironment} environment Information about version, language, platform etc.
  * @returns {?Object} the entry or null if excluded.
  */
-async function jexlFilterFunc(entry, environment) {
+export async function jexlFilterFunc(entry, environment) {
   const { filter_expression } = entry;
   if (!filter_expression) {
     return entry;
@@ -596,9 +584,9 @@ function remoteSettingsFunction() {
   return remoteSettings;
 }
 
-var RemoteSettings = remoteSettingsFunction();
+export var RemoteSettings = remoteSettingsFunction();
 
-var remoteSettingsBroadcastHandler = {
+export var remoteSettingsBroadcastHandler = {
   async receivedBroadcastMessage(version, broadcastID, context) {
     const { phase } = context;
     const isStartup = [

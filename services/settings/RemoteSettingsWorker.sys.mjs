@@ -2,19 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /**
  * Interface to a dedicated thread handling for Remote Settings heavy operations.
  */
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
-  "resource://gre/modules/Timer.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["RemoteSettingsWorker"];
+import { setTimeout, clearTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
 const lazy = {};
 
@@ -240,6 +233,6 @@ try {
   gShutdown = true;
 }
 
-var RemoteSettingsWorker = new Worker(
+export var RemoteSettingsWorker = new Worker(
   "resource://services-settings/RemoteSettingsWorker.js"
 );
