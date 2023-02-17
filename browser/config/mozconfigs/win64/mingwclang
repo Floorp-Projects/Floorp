@@ -18,7 +18,7 @@
 export MOZ_PACKAGE_JSSHELL=1
 
 # MinGW Stuff
-ac_add_options --target=x86_64-w64-mingw32
+ac_add_options --target=x86_64-pc-windows-gnu
 ac_add_options --with-toolchain-prefix=x86_64-w64-mingw32-
 
 ac_add_options --disable-warnings-as-errors

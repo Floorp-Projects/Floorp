@@ -1,6 +1,6 @@
 # This file is used by all AArch64 Win64 builds
 
-ac_add_options --target=aarch64-windows-mingw32
+ac_add_options --target=aarch64-pc-windows-msvc
 
 . $topsrcdir/build/win64-aarch64/mozconfig.vs-latest
 

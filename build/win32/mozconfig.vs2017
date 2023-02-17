@@ -8,4 +8,4 @@ if [ -d "${VSPATH}" ]; then
     export WINSYSROOT="${VSPATH}"
 fi
 
-ac_add_options --target=i686-pc-mingw32
+ac_add_options --target=i686-pc-windows-msvc
