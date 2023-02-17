@@ -6,7 +6,6 @@
 #include "nsHyphenator.h"
 
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/Omnijar.h"
 #include "nsContentUtils.h"
 #include "nsIChannel.h"
 #include "nsIFile.h"
@@ -17,7 +16,6 @@
 #include "nsNetUtil.h"
 #include "nsUnicodeProperties.h"
 #include "nsUTF8Utils.h"
-#include "nsZipArchive.h"
 
 #include "mapped_hyph.h"
 

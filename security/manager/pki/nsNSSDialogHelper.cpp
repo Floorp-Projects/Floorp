@@ -6,7 +6,6 @@
 
 #include "nsNSSDialogHelper.h"
 
-#include "mozIDOMWindow.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsCOMPtr.h"
 #include "nsIWindowWatcher.h"

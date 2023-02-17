@@ -20,3 +20,5 @@ FINAL_LIBRARY = "xul"
 
 if CONFIG["COMPILE_ENVIRONMENT"]:
     CbindgenHeader("mapped_hyph.h", inputs=["/third_party/rust/mapped_hyph"])
+
+REQUIRES_UNIFIED_BUILD = True

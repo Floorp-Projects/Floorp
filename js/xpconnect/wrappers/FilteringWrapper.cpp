@@ -11,7 +11,6 @@
 #include "nsJSUtils.h"
 #include "mozilla/ErrorResult.h"
 #include "xpcpublic.h"
-#include "xpcprivate.h"
 
 #include "jsapi.h"
 #include "js/Symbol.h"
@@ -63,9 +62,8 @@ bool AppendCrossOriginWhitelistedPropNames(JSContext* cx,
     MOZ_ASSERT(!props[n].isSymbol(), "Unexpected existing symbol-name prop");
   }
 #endif
-  if (!props.reserve(
-          props.length() +
-          mozilla::ArrayLength(sCrossOriginWhitelistedSymbolCodes))) {
+  if (!props.reserve(props.length() +
+                     ArrayLength(sCrossOriginWhitelistedSymbolCodes))) {
     return false;
   }
 
