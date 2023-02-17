@@ -123,11 +123,9 @@ enum class SymbolicAddress {
   TableSize,
   RefFunc,
   RefTest,
-  PreBarrierFiltering,
   PostBarrier,
   PostBarrierPrecise,
   PostBarrierPreciseWithOffset,
-  PostBarrierFiltering,
   StructNew,
   ExceptionNew,
   ThrowException,
@@ -251,11 +249,9 @@ extern const SymbolicAddressSignature SASigTableInit;
 extern const SymbolicAddressSignature SASigTableSet;
 extern const SymbolicAddressSignature SASigTableSize;
 extern const SymbolicAddressSignature SASigRefFunc;
-extern const SymbolicAddressSignature SASigPreBarrierFiltering;
 extern const SymbolicAddressSignature SASigPostBarrier;
 extern const SymbolicAddressSignature SASigPostBarrierPrecise;
 extern const SymbolicAddressSignature SASigPostBarrierPreciseWithOffset;
-extern const SymbolicAddressSignature SASigPostBarrierFiltering;
 extern const SymbolicAddressSignature SASigStructNew;
 extern const SymbolicAddressSignature SASigExceptionNew;
 extern const SymbolicAddressSignature SASigThrowException;
