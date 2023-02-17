@@ -20,9 +20,8 @@ const {
   SCOPE_PROFILE,
   SCOPE_PROFILE_WRITE,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-const { getFxAccountsSingleton } = ChromeUtils.import(
-  "resource://gre/modules/FxAccounts.jsm"
-);
+import { getFxAccountsSingleton } from "resource://gre/modules/FxAccounts.sys.mjs";
+
 const fxAccounts = getFxAccountsSingleton();
 const { RESTRequest } = ChromeUtils.import(
   "resource://services-common/rest.js"

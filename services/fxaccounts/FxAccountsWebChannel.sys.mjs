@@ -38,29 +38,22 @@ const {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  FxAccountsPairingFlow: "resource://gre/modules/FxAccountsPairing.sys.mjs",
+  FxAccountsStorageManagerCanStoreField:
+    "resource://gre/modules/FxAccountsStorage.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   Weave: "resource://services-sync/main.sys.mjs",
   WebChannel: "resource://gre/modules/WebChannel.sys.mjs",
 });
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
-  return ChromeUtils.import(
-    "resource://gre/modules/FxAccounts.jsm"
+  return ChromeUtils.importESModule(
+    "resource://gre/modules/FxAccounts.sys.mjs"
   ).getFxAccountsSingleton();
 });
 ChromeUtils.defineModuleGetter(
   lazy,
-  "FxAccountsStorageManagerCanStoreField",
-  "resource://gre/modules/FxAccountsStorage.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
   "CryptoUtils",
   "resource://services-crypto/utils.js"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FxAccountsPairingFlow",
-  "resource://gre/modules/FxAccountsPairing.jsm"
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,

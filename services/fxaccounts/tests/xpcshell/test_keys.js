@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { FxAccountsKeys } = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsKeys.jsm"
+const { FxAccountsKeys } = ChromeUtils.importESModule(
+  "resource://gre/modules/FxAccountsKeys.sys.mjs"
 );
 
 // Ref https://github.com/mozilla/fxa-crypto-relier/ for the details

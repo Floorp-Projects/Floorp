@@ -10,9 +10,8 @@ const { CryptoUtils } = ChromeUtils.import(
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
-const { FxAccountsStorageManager } = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsStorage.jsm"
-);
+import { FxAccountsStorageManager } from "resource://gre/modules/FxAccountsStorage.sys.mjs";
+
 const {
   ERRNO_INVALID_AUTH_TOKEN,
   ERROR_AUTH_ERROR,
@@ -42,47 +41,16 @@ const {
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FxAccountsClient",
-  "resource://gre/modules/FxAccountsClient.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FxAccountsConfig",
-  "resource://gre/modules/FxAccountsConfig.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FxAccountsCommands",
-  "resource://gre/modules/FxAccountsCommands.js"
-);
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FxAccountsDevice",
-  "resource://gre/modules/FxAccountsDevice.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FxAccountsKeys",
-  "resource://gre/modules/FxAccountsKeys.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FxAccountsProfile",
-  "resource://gre/modules/FxAccountsProfile.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FxAccountsTelemetry",
-  "resource://gre/modules/FxAccountsTelemetry.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  FxAccountsClient: "resource://gre/modules/FxAccountsClient.sys.mjs",
+  FxAccountsCommands: "resource://gre/modules/FxAccountsCommands.sys.mjs",
+  FxAccountsConfig: "resource://gre/modules/FxAccountsConfig.sys.mjs",
+  FxAccountsDevice: "resource://gre/modules/FxAccountsDevice.sys.mjs",
+  FxAccountsKeys: "resource://gre/modules/FxAccountsKeys.sys.mjs",
+  FxAccountsProfile: "resource://gre/modules/FxAccountsProfile.sys.mjs",
+  FxAccountsTelemetry: "resource://gre/modules/FxAccountsTelemetry.sys.mjs",
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
+});
 
 XPCOMUtils.defineLazyGetter(lazy, "mpLocked", () => {
   return ChromeUtils.importESModule("resource://services-sync/util.sys.mjs")
@@ -92,10 +60,6 @@ XPCOMUtils.defineLazyGetter(lazy, "mpLocked", () => {
 XPCOMUtils.defineLazyGetter(lazy, "ensureMPUnlocked", () => {
   return ChromeUtils.importESModule("resource://services-sync/util.sys.mjs")
     .Utils.ensureMPUnlocked;
-});
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  Preferences: "resource://gre/modules/Preferences.sys.mjs",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(

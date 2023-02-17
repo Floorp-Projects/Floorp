@@ -13,16 +13,15 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
-  return ChromeUtils.import(
-    "resource://gre/modules/FxAccounts.jsm"
+  return ChromeUtils.importESModule(
+    "resource://gre/modules/FxAccounts.sys.mjs"
   ).getFxAccountsSingleton();
 });
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "EnsureFxAccountsWebChannel",
-  "resource://gre/modules/FxAccountsWebChannel.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  EnsureFxAccountsWebChannel:
+    "resource://gre/modules/FxAccountsWebChannel.sys.mjs",
+});
 
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
