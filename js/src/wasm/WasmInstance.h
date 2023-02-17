@@ -41,6 +41,10 @@ class WasmBreakpointSite;
 class WasmStructObject;
 class WasmArrayObject;
 
+namespace gc {
+class StoreBuffer;
+}  // namespace gc
+
 namespace wasm {
 
 using mozilla::Atomic;
@@ -146,6 +150,9 @@ class alignas(16) Instance {
 
   // Address of the JitRuntime's object prebarrier trampoline
   void* preBarrierCode_;
+
+  // Address of the store buffer for this instance
+  gc::StoreBuffer* storeBuffer_;
 
   // Weak pointer to WasmInstanceObject that owns this instance
   WeakHeapPtr<WasmInstanceObject*> object_;
