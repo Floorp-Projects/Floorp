@@ -5,10 +5,9 @@ This document provides a high level, nontechnical overview of Firefox's address
 bar, with a focus on the different types of results it shows and how it chooses
 them.
 
-.. toctree::
-   :caption: Table of Contents
+.. contents::
+   :depth: 2
 
-   nontechnical-overview
 
 Terminology
 -----------

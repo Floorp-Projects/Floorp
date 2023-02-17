@@ -9,10 +9,9 @@ More information regarding Bookmarks - `Bookmarks in Firefox`_
 
 There are multiple ways to access and manipulate Bookmarks, such as:
 
-.. toctree::
-   :maxdepth: 2
+.. contents::
+   :depth: 2
 
-   nontechnical-overview
 
 Firefox menu bar
 ----------------

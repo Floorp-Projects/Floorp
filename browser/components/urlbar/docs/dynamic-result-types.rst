@@ -9,10 +9,9 @@ The intended audience for this document is developers who need to add new kinds
 of address bar results, either internally in the address bar codebase or through
 extensions.
 
-.. toctree::
-   :caption: Table of Contents
+.. contents::
+   :depth: 2
 
-   dynamic-result-types
 
 Motivation
 ----------

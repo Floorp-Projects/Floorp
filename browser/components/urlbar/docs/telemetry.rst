@@ -7,10 +7,9 @@ Address Bar.
 For telemetry specific to Firefox Suggest, see the
 :doc:`firefox-suggest-telemetry` document.
 
-.. toctree::
-   :caption: Table of Contents
+.. contents::
+   :depth: 2
 
-   telemetry
 
 Histograms
 ----------
