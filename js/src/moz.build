@@ -558,7 +558,7 @@ if CONFIG["CC_TYPE"] == "clang":
 # Bug 1722102 - This should never be enabled in Release without explicit
 # security and SpiderMonkey review.
 # See https://bugzilla.mozilla.org/show_bug.cgi?id=1722102#c16
-if CONFIG["NIGHTLY_BUILD"] and CONFIG["INTEL_ARCHITECTURE"]:
+if CONFIG["ENABLE_WASM_MOZ_INTGEMM"]:
     DIRS += ["intgemm"]
 
 if CONFIG["JS_JITSPEW"]:

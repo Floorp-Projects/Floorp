@@ -641,6 +641,15 @@ set_define(
     "WASM_CODEGEN_DEBUG", depends_if("--enable-wasm-codegen-debug")(lambda x: True)
 )
 
+# WebAssembly feature flags
+# ==================================================
+
+option(
+    "--wasm-no-experimental",
+    default=False,
+    help="Force disable all wasm experimental features for testing.",
+)
+
 # Support for WebAssembly function-references.
 # ===========================
 
@@ -658,8 +667,11 @@ option(
 )
 
 
-@depends("--enable-wasm-function-references")
-def wasm_function_references(value):
+@depends("--enable-wasm-function-references", "--wasm-no-experimental")
+def wasm_function_references(value, no_experimental):
+    if no_experimental:
+        return
+
     if value:
         return True
 
@@ -682,9 +694,11 @@ option(
 )
 
 
-@depends("--enable-wasm-gc", "--enable-wasm-function-references")
-def wasm_gc(value, function_references):
-    if not value:
+@depends(
+    "--enable-wasm-gc", "--enable-wasm-function-references", "--wasm-no-experimental"
+)
+def wasm_gc(value, function_references, no_experimental):
+    if no_experimental or not value:
         return
 
     if function_references:
@@ -733,8 +747,11 @@ option(
 )
 
 
-@depends("--enable-wasm-extended-const")
-def wasm_extended_const(value):
+@depends("--enable-wasm-extended-const", "--wasm-no-experimental")
+def wasm_extended_const(value, no_experimental):
+    if no_experimental:
+        return
+
     if value:
         return True
 
@@ -770,9 +787,10 @@ option(
     "--enable-jit",
     "--enable-simulator",
     target,
+    "--wasm-no-experimental",
 )
-def wasm_simd(value, jit_enabled, simulator, target):
-    if not value:
+def wasm_simd(value, jit_enabled, simulator, target, no_experimental):
+    if no_experimental or not value:
         return
 
     if not jit_enabled:
@@ -797,8 +815,16 @@ set_define("ENABLE_WASM_SIMD", wasm_simd)
 # =====================================================================
 
 
-@depends(target, c_compiler, moz_debug, milestone)
-def wasm_verify_serialization_for_size(target, c_compiler, debug, milestone):
+@depends(
+    target,
+    c_compiler,
+    moz_debug,
+    milestone,
+    "--wasm-no-experimental",
+)
+def wasm_verify_serialization_for_size(
+    target, c_compiler, debug, milestone, no_experimental
+):
     if (
         debug == True
         and target.kernel == "Linux"
@@ -806,6 +832,7 @@ def wasm_verify_serialization_for_size(target, c_compiler, debug, milestone):
         and c_compiler
         and c_compiler.type == "clang"
         and milestone.is_nightly
+        and not no_experimental
     ):
         return True
     return
@@ -841,9 +868,15 @@ option(
 )
 
 
-@depends("--enable-wasm-avx", "--enable-wasm-simd", "--enable-simulator", target)
-def wasm_avx(value, wasm_simd_enabled, simulator, target):
-    if not value:
+@depends(
+    "--enable-wasm-avx",
+    "--enable-wasm-simd",
+    "--enable-simulator",
+    target,
+    "--wasm-no-experimental",
+)
+def wasm_avx(value, wasm_simd_enabled, simulator, target, no_experimental):
+    if no_experimental or not value:
         return
 
     if not wasm_simd_enabled:
@@ -878,9 +911,9 @@ option(
 )
 
 
-@depends("--enable-wasm-relaxed-simd", "--enable-wasm-simd")
-def wasm_relaxed_simd(value, wasm_simd):
-    if not value:
+@depends("--enable-wasm-relaxed-simd", "--enable-wasm-simd", "--wasm-no-experimental")
+def wasm_relaxed_simd(value, wasm_simd, no_experimental):
+    if no_experimental or not value:
         return
 
     if not wasm_simd:
@@ -909,8 +942,11 @@ option(
 )
 
 
-@depends("--enable-wasm-moz-intgemm", target)
-def wasm_moz_intgemm(value, target):
+@depends("--enable-wasm-moz-intgemm", target, "--wasm-no-experimental")
+def wasm_moz_intgemm(value, target, no_experimental):
+    if no_experimental:
+        return
+
     if value and target.cpu in ("x86", "x86_64"):
         return True
 
@@ -941,9 +977,11 @@ option(
 )
 
 
-@depends("--enable-wasm-memory64", "--enable-simulator", target)
-def wasm_memory64(value, simulator, target):
-    if not value:
+@depends(
+    "--enable-wasm-memory64", "--enable-simulator", target, "--wasm-no-experimental"
+)
+def wasm_memory64(value, simulator, target, no_experimental):
+    if no_experimental or not value:
         return
 
     if target.cpu == "mips32":
@@ -976,9 +1014,9 @@ option(
 )
 
 
-@depends("--enable-wasm-memory-control")
-def wasm_memory_control(value):
-    if not value:
+@depends("--enable-wasm-memory-control", "--wasm-no-experimental")
+def wasm_memory_control(value, no_experimental):
+    if no_experimental or not value:
         return
 
     return True

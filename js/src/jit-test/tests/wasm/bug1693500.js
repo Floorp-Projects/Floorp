@@ -1,4 +1,4 @@
-// |jit-test| skip-if: wasmCompileMode() != "ion" || (!getBuildConfiguration().x86 && !getBuildConfiguration().x64) || getBuildConfiguration().simulator
+// |jit-test| skip-if: !wasmSimdEnabled() || wasmCompileMode() != "ion" || (!getBuildConfiguration().x86 && !getBuildConfiguration().x64) || getBuildConfiguration().simulator
 
 const avx = isAvxPresent();
 for (let [n1, n2, numInstr] of [

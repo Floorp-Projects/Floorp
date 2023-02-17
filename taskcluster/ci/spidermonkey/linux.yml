@@ -314,6 +314,29 @@ sm-linux64-wasi/opt:
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
 
+sm-wasm-no-experimental-linux64/debug:
+    description: "Spidermonkey WebAssembly No experimental features"
+    index:
+        job-name: sm-wasm-no-experimental-linux64-debug
+    treeherder:
+        platform: linux64/debug
+        symbol: SM(wasm-no-experimental)
+        tier: 2
+    run:
+        spidermonkey-variant: wasm-noexperimental
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-breakpad-injector
+            - linux64-minidump-stackwalk
+            - linux64-llvm-symbolizer
+            - linux64-rust
+            - linux64-gcc
+            - linux64-pkgconf
+            - sysroot-x86_64-linux-gnu
+
 sm-msan-linux64/opt:
     description: "Spidermonkey Memory Sanitizer"
     index:
