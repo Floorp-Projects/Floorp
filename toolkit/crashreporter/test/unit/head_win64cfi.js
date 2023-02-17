@@ -198,9 +198,7 @@ async function do_x64CFITest(how, expectedStack, minidumpAnalyzerArgs) {
     runMinidumpAnalyzer(minidumpFile, minidumpAnalyzerArgs);
 
     // Refresh updated extra data
-    let data = await OS.File.read(extraFile.path);
-    let decoder = new TextDecoder();
-    extra = JSON.parse(decoder.decode(data));
+    extra = await IOUtils.readJSON(extraFile.path);
 
     initTestCrasherSymbols();
     let stackTraces = extra.StackTraces;
