@@ -114,7 +114,7 @@
 @BINPATH@/actors/*
 
 ; [Browser Chrome Files]
-#ifdef NIGHTLY_BUILD
+#ifdef EARLY_BETA_OR_EARLIER
 @BINPATH@/chrome/pdfjs.manifest
 @BINPATH@/chrome/pdfjs/*
 #endif
