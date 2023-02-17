@@ -321,7 +321,7 @@ CookieServiceChild::GetCookieStringFromDocument(dom::Document* aDocument,
       continue;
     }
 
-    // if the cookie is secure and the host scheme isn't, we can't send it
+    // do not display the cookie if it is secure and the host scheme isn't
     if (cookie->IsSecure() && !isPotentiallyTrustworthy) {
       continue;
     }
@@ -406,17 +406,29 @@ CookieServiceChild::SetCookieStringFromDocument(
 
   if (cookies) {
     // We need to see if the cookie we're setting would overwrite an httponly
-    // one. This would not affect anything we send over the net (those come
-    // from the parent, which already checks this), but script could see an
-    // inconsistent view of things.
+    // or a secure one. This would not affect anything we send over the net
+    // (those come from the parent, which already checks this),
+    // but script could see an inconsistent view of things.
+
+    nsCOMPtr<nsIPrincipal> principal = aDocument->EffectiveCookiePrincipal();
+    bool isPotentiallyTrustworthy =
+        principal->GetIsOriginPotentiallyTrustworthy();
+
     for (uint32_t i = 0; i < cookies->Length(); ++i) {
       RefPtr<Cookie> existingCookie = cookies->ElementAt(i);
       if (existingCookie->Name().Equals(cookie->Name()) &&
           existingCookie->Host().Equals(cookie->Host()) &&
-          existingCookie->Path().Equals(cookie->Path()) &&
-          existingCookie->IsHttpOnly()) {
+          existingCookie->Path().Equals(cookie->Path())) {
         // Can't overwrite an httponly cookie from a script context.
-        return NS_OK;
+        if (existingCookie->IsHttpOnly()) {
+          return NS_OK;
+        }
+
+        // prevent insecure cookie from overwriting a secure one in insecure
+        // context.
+        if (existingCookie->IsSecure() && !isPotentiallyTrustworthy) {
+          return NS_OK;
+        }
       }
     }
   }

@@ -4106,7 +4106,9 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
 
     // only broadcast the cookie change to content processes that need it
     const Cookie& cookie = xpcCookie->AsCookie();
-    if (!cs->CookieMatchesContentList(cookie)) {
+
+    // do not send cookie if content process does not have similar cookie
+    if (!cs->ContentProcessHasCookie(cookie)) {
       return NS_OK;
     }
 

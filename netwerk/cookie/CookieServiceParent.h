@@ -46,7 +46,8 @@ class CookieServiceParent : public PCookieServiceParent {
   // processes, not the one they originated from.
   bool ProcessingCookie() { return mProcessingCookie; }
 
-  bool CookieMatchesContentList(const Cookie& cookie);
+  bool ContentProcessHasCookie(const Cookie& cookie);
+  bool InsecureCookieOrSecureOrigin(const Cookie& cookie);
   void UpdateCookieInContentList(nsIURI* aHostURI,
                                  const OriginAttributes& aOriginAttrs);
 
@@ -66,8 +67,9 @@ class CookieServiceParent : public PCookieServiceParent {
       const bool& aIsSameSiteForeign, const bool& aHadCrossSiteRedirects,
       const OriginAttributes& aAttrs);
 
-  static void SerialializeCookieList(const nsTArray<Cookie*>& aFoundCookieList,
-                                     nsTArray<CookieStruct>& aCookiesList);
+  static void SerializeCookieList(const nsTArray<Cookie*>& aFoundCookieList,
+                                  nsTArray<CookieStruct>& aCookiesList,
+                                  nsIURI* aHostURI);
 
   nsCOMPtr<nsIEffectiveTLDService> mTLDService;
   RefPtr<CookieService> mCookieService;

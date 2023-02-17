@@ -50,8 +50,10 @@ void CookieServiceParent::RemoveBatchDeletedCookies(nsIArray* aCookieList) {
     const auto& cookie = xpcCookie->AsCookie();
     attrs = cookie.OriginAttributesRef();
     cookieStruct = cookie.ToIPC();
-    if (cookie.IsHttpOnly()) {
-      // Child only needs to exist if an HttpOnly cookie exists, not its value
+
+    // Child only needs to know HttpOnly cookies exists, not its value
+    // Same for Secure cookies going to a process for an insecure site.
+    if (cookie.IsHttpOnly() || !InsecureCookieOrSecureOrigin(cookie)) {
       cookieStruct.value() = "";
     }
     cookieStructList.AppendElement(cookieStruct);
@@ -65,7 +67,10 @@ void CookieServiceParent::RemoveAll() { Unused << SendRemoveAll(); }
 void CookieServiceParent::RemoveCookie(const Cookie& cookie) {
   const OriginAttributes& attrs = cookie.OriginAttributesRef();
   CookieStruct cookieStruct = cookie.ToIPC();
-  if (cookie.IsHttpOnly()) {
+
+  // Child only needs to know HttpOnly cookies exists, not its value
+  // Same for Secure cookies going to a process for an insecure site.
+  if (cookie.IsHttpOnly() || !InsecureCookieOrSecureOrigin(cookie)) {
     cookieStruct.value() = "";
   }
   Unused << SendRemoveCookie(cookieStruct, attrs);
@@ -74,18 +79,32 @@ void CookieServiceParent::RemoveCookie(const Cookie& cookie) {
 void CookieServiceParent::AddCookie(const Cookie& cookie) {
   const OriginAttributes& attrs = cookie.OriginAttributesRef();
   CookieStruct cookieStruct = cookie.ToIPC();
-  if (cookie.IsHttpOnly()) {
+
+  // Child only needs to know HttpOnly cookies exists, not its value
+  // Same for Secure cookies going to a process for an insecure site.
+  if (cookie.IsHttpOnly() || !InsecureCookieOrSecureOrigin(cookie)) {
     cookieStruct.value() = "";
   }
   Unused << SendAddCookie(cookieStruct, attrs);
 }
 
-bool CookieServiceParent::CookieMatchesContentList(const Cookie& cookie) {
+bool CookieServiceParent::ContentProcessHasCookie(const Cookie& cookie) {
   nsCString baseDomain;
   // CookieStorage notifications triggering this won't fail to get base domain
   MOZ_ALWAYS_SUCCEEDS(CookieCommons::GetBaseDomainFromHost(
       mTLDService, cookie.Host(), baseDomain));
 
+  CookieKey cookieKey(baseDomain, cookie.OriginAttributesRef());
+  return mCookieKeysInContent.MaybeGet(cookieKey).isSome();
+}
+
+bool CookieServiceParent::InsecureCookieOrSecureOrigin(const Cookie& cookie) {
+  nsCString baseDomain;
+  // CookieStorage notifications triggering this won't fail to get base domain
+  MOZ_ALWAYS_SUCCEEDS(CookieCommons::GetBaseDomainFromHost(
+      mTLDService, cookie.Host(), baseDomain));
+
+  // cookie is insecure or cookie is associated with a secure-origin process
   CookieKey cookieKey(baseDomain, cookie.OriginAttributesRef());
   if (Maybe<bool> allowSecure = mCookieKeysInContent.MaybeGet(cookieKey)) {
     return (!cookie.IsSecure() || *allowSecure);
@@ -124,9 +143,9 @@ void CookieServiceParent::TrackCookieLoad(nsIChannel* aChannel) {
       result.contains(ThirdPartyAnalysis::IsThirdPartySocialTrackingResource),
       result.contains(ThirdPartyAnalysis::IsStorageAccessPermissionGranted),
       rejectedReason, isSafeTopLevelNav, isSameSiteForeign,
-      hadCrossSiteRedirects, false, attrs, foundCookieList);
+      hadCrossSiteRedirects, false, true, attrs, foundCookieList);
   nsTArray<CookieStruct> matchingCookiesList;
-  SerialializeCookieList(foundCookieList, matchingCookiesList);
+  SerializeCookieList(foundCookieList, matchingCookiesList, uri);
   Unused << SendTrackCookiesLoad(matchingCookiesList, attrs);
 }
 
@@ -150,15 +169,24 @@ void CookieServiceParent::UpdateCookieInContentList(
 }
 
 // static
-void CookieServiceParent::SerialializeCookieList(
+void CookieServiceParent::SerializeCookieList(
     const nsTArray<Cookie*>& aFoundCookieList,
-    nsTArray<CookieStruct>& aCookiesList) {
+    nsTArray<CookieStruct>& aCookiesList, nsIURI* aHostURI) {
   for (uint32_t i = 0; i < aFoundCookieList.Length(); i++) {
     Cookie* cookie = aFoundCookieList.ElementAt(i);
     CookieStruct* cookieStruct = aCookiesList.AppendElement();
     *cookieStruct = cookie->ToIPC();
+
+    // clear http-only cookie values
     if (cookie->IsHttpOnly()) {
       // Value only needs to exist if an HttpOnly cookie exists.
+      cookieStruct->value() = "";
+    }
+
+    // clear secure cookie values in insecure context
+    bool potentiallyTurstworthy =
+        nsMixedContentBlocker::IsPotentiallyTrustworthyOrigin(aHostURI);
+    if (cookie->IsSecure() && !potentiallyTurstworthy) {
       cookieStruct->value() = "";
     }
   }
@@ -189,9 +217,9 @@ IPCResult CookieServiceParent::RecvPrepareCookieList(
       aHost, nullptr, aIsForeign, aIsThirdPartyTrackingResource,
       aIsThirdPartySocialTrackingResource, aStorageAccessPermissionGranted,
       aRejectedReason, aIsSafeTopLevelNav, aIsSameSiteForeign,
-      aHadCrossSiteRedirects, false, aAttrs, foundCookieList);
+      aHadCrossSiteRedirects, false, true, aAttrs, foundCookieList);
   nsTArray<CookieStruct> matchingCookiesList;
-  SerialializeCookieList(foundCookieList, matchingCookiesList);
+  SerializeCookieList(foundCookieList, matchingCookiesList, aHost);
   Unused << SendTrackCookiesLoad(matchingCookiesList, aAttrs);
   return IPC_OK();
 }

@@ -509,7 +509,7 @@ CookieService::GetCookieStringFromHttp(nsIURI* aHostURI, nsIChannel* aChannel,
       result.contains(ThirdPartyAnalysis::IsThirdPartySocialTrackingResource),
       result.contains(ThirdPartyAnalysis::IsStorageAccessPermissionGranted),
       rejectedReason, isSafeTopLevelNav, isSameSiteForeign,
-      hadCrossSiteRedirects, true, attrs, foundCookieList);
+      hadCrossSiteRedirects, true, false, attrs, foundCookieList);
 
   ComposeCookieString(foundCookieList, aCookieString);
 
@@ -929,6 +929,7 @@ void CookieService::GetCookiesForURI(
     bool aStorageAccessPermissionGranted, uint32_t aRejectedReason,
     bool aIsSafeTopLevelNav, bool aIsSameSiteForeign,
     bool aHadCrossSiteRedirects, bool aHttpBound,
+    bool aAllowSecureCookiesToInsecureOrigin,
     const OriginAttributes& aOriginAttrs, nsTArray<Cookie*>& aCookieList) {
   NS_ASSERTION(aHostURI, "null host!");
 
@@ -1045,8 +1046,12 @@ void CookieService::GetCookiesForURI(
       continue;
     }
 
-    // if the cookie is secure and the host scheme isn't, we can't send it
-    if (cookie->IsSecure() && !potentiallyTurstworthy) {
+    // if the cookie is secure and the host scheme isn't, we avoid sending
+    // cookie if possible. But for process synchronization purposes, we may want
+    // the content process to know about the cookie (without it's value). In
+    // which case we will wipe the value before sending
+    if (cookie->IsSecure() && !potentiallyTurstworthy &&
+        !aAllowSecureCookiesToInsecureOrigin) {
       continue;
     }
 

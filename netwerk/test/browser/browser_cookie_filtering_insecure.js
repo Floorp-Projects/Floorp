@@ -37,6 +37,7 @@ async function test_insecure_suite_insecure_com() {
   expected.push("test-cookie=png1");
   expected.push("test-cookie=png2");
   // insecure com will not recieve the secure com request with secure cookie
+  expected.push(""); // insecure com will lose visibility of secure com cookie
   expected.push("test-cookie=png3");
   info(expected);
 
