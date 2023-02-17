@@ -784,15 +784,19 @@ browserRect.height: ${browserRect.height}`);
       shrinkToFit: false,
       printBackground: true,
     });
+    const printSettings = lazy.print.getPrintSettings(settings);
 
-    const filePath = await lazy.print.printToFile(win.gBrowser, settings);
+    const binaryString = await lazy.print.printToBinaryString(
+      win.gBrowser,
+      printSettings
+    );
 
     try {
-      const pdf = await this.loadPdf(url, filePath);
+      const pdf = await this.loadPdf(binaryString);
       let pages = this.getPages(pageRanges, url, pdf.numPages);
       return [this.renderPages(pdf, pages), pages.size];
     } finally {
-      await IOUtils.remove(filePath);
+      lazy.logger.warn(`Loading of pdf failed`);
     }
   }
 
@@ -810,8 +814,7 @@ browserRect.height: ${browserRect.height}`);
       "resource://pdf.js/build/pdf.worker.js";
   }
 
-  async loadPdf(url, filePath) {
-    const data = await IOUtils.read(filePath);
+  async loadPdf(data) {
     return this.parentWindow.pdfjsLib.getDocument({ data }).promise;
   }
 
