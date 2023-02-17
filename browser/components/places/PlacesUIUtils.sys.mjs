@@ -1113,8 +1113,10 @@ export var PlacesUIUtils = {
    * @param {object} view
    *          The current view that contains the node or nodes selected for
    *          opening
+   * @param {Function=} updateTelemetryFn
+   *          Optional function to call if telemetry needs to be updated
    */
-  openMultipleLinksInTabs(nodeOrNodes, event, view) {
+  openMultipleLinksInTabs(nodeOrNodes, event, view, updateTelemetryFn = null) {
     let window = view.ownerWindow;
     let urlsToOpen = [];
 
@@ -1132,6 +1134,9 @@ export var PlacesUIUtils = {
       }
     }
     if (lazy.OpenInTabsUtils.confirmOpenInTabs(urlsToOpen.length, window)) {
+      if (updateTelemetryFn) {
+        updateTelemetryFn(urlsToOpen.length);
+      }
       this.openTabset(urlsToOpen, event, window);
     }
   },
@@ -1452,7 +1457,7 @@ export var PlacesUIUtils = {
     return guidsToSelect;
   },
 
-  onSidebarTreeClick(event) {
+  onSidebarTreeClick(event, updateTelemetryFn = null) {
     // right-clicks are not handled here
     if (event.button == 2) {
       return;
@@ -1491,7 +1496,12 @@ export var PlacesUIUtils = {
       event.originalTarget.localName == "treechildren"
     ) {
       tree.view.selection.select(cell.row);
-      this.openMultipleLinksInTabs(tree.selectedNode, event, tree);
+      this.openMultipleLinksInTabs(
+        tree.selectedNode,
+        event,
+        tree,
+        updateTelemetryFn
+      );
     } else if (
       !mouseInGutter &&
       !isContainer &&
@@ -1501,15 +1511,21 @@ export var PlacesUIUtils = {
       // do this *before* attempting to load the link since openURL uses
       // selection as an indication of which link to load.
       tree.view.selection.select(cell.row);
+      if (updateTelemetryFn) {
+        updateTelemetryFn();
+      }
       this.openNodeWithEvent(tree.selectedNode, event);
     }
   },
 
-  onSidebarTreeKeyPress(event) {
+  onSidebarTreeKeyPress(event, updateTelemetryFn = null) {
     let node = event.target.selectedNode;
     if (node) {
       if (event.keyCode == event.DOM_VK_RETURN) {
-        this.openNodeWithEvent(node, event);
+        PlacesUIUtils.openNodeWithEvent(node, event);
+        if (updateTelemetryFn) {
+          updateTelemetryFn();
+        }
       }
     }
   },
