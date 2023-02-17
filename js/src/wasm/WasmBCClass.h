@@ -150,6 +150,14 @@ struct FunctionCall {
   size_t stackArgAreaSize;
 };
 
+enum class PreBarrierKind {
+  // No pre-write barrier is required because the previous value is undefined.
+  None,
+  // Perform a pre-write barrier to mark the previous value if an incremental
+  // GC is underway.
+  Normal,
+};
+
 enum class PostBarrierKind {
   // Remove an existing store buffer entry if the new value does not require
   // one. This is required to preserve invariants with HeapPtr when used for
@@ -1306,7 +1314,8 @@ struct BaseCompiler final {
   // Preserves `object` and `value`. Consumes `valueAddr`.
   [[nodiscard]] bool emitBarrieredStore(const Maybe<RegRef>& object,
                                         RegPtr valueAddr, RegRef value,
-                                        PostBarrierKind kind);
+                                        PreBarrierKind preBarrierKind,
+                                        PostBarrierKind postBarrierKind);
 
   // Emits a store of nullptr to a JS object pointer at the address valueAddr.
   // Preserves `valueAddr`.
@@ -1683,10 +1692,12 @@ struct BaseCompiler final {
   template <typename NullCheckPolicy>
   [[nodiscard]] bool emitGcStructSet(RegRef object, RegPtr areaBase,
                                      uint32_t areaOffset, FieldType fieldType,
-                                     AnyReg value);
+                                     AnyReg value,
+                                     PreBarrierKind preBarrierKind);
 
   [[nodiscard]] bool emitGcArraySet(RegRef object, RegPtr data, RegI32 index,
-                                    const ArrayType& array, AnyReg value);
+                                    const ArrayType& array, AnyReg value,
+                                    PreBarrierKind preBarrierKind);
 #endif  // ENABLE_WASM_GC
 
 #ifdef ENABLE_WASM_SIMD
