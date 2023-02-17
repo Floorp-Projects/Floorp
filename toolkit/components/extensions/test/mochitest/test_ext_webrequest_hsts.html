@@ -49,10 +49,16 @@ function getExtension() {
       }
     }
 
+    function stripQuery(url) {
+      // In this whole test we are not interested in the query part of the URL.
+      // Most tests include a cache buster (bustcache) param in the URL.
+      return url.split("?")[0];
+    }
+
     browser.webRequest.onHeadersReceived.addListener(async (details) => {
       browser.test.assertEq(expect.shift(), "onHeadersReceived");
 
-      // We exepect all requests to have been upgraded at this point.
+      // We expect all requests to have been upgraded at this point.
       browser.test.assertTrue(details.url.startsWith("https"), "connection is https");
       await testSecurityInfo(details, {});
       await testSecurityInfo(details, {certificateChain: true});
@@ -80,7 +86,7 @@ function getExtension() {
     }, {urls});
     browser.webRequest.onCompleted.addListener(details => {
       browser.test.assertEq(expect.shift(), "onCompleted");
-      browser.test.sendMessage("onCompleted", details.url);
+      browser.test.sendMessage("onCompleted", stripQuery(details.url));
     }, {urls});
     browser.webRequest.onErrorOccurred.addListener(details => {
       browser.test.notifyFail(`onErrorOccurred ${JSON.stringify(details)}`);
@@ -92,7 +98,7 @@ function getExtension() {
       }
       browser.tabs.remove(tabId);
       browser.tabs.onUpdated.removeListener(onUpdated);
-      browser.test.sendMessage("tabs-done", tab.url);
+      browser.test.sendMessage("tabs-done", stripQuery(tab.url));
     }
     browser.test.onMessage.addListener((url, expected) => {
       expect = expected;
@@ -115,6 +121,14 @@ function getExtension() {
   });
 }
 
+add_setup(async () => {
+  // In bug 1605515, we repeatedly saw a missing onHeadersReceived event,
+  // possibly related to bug 1595610. As a workaround, clear the cache.
+  await SpecialPowers.spawnChrome([], async () => {
+    Services.cache2.clear();
+  });
+});
+
 // This test makes a request against a server that redirects with a 302.
 add_task(async function test_hsts_request() {
   const testPath = "example.org/tests/toolkit/components/extensions/test/mochitest";
@@ -125,14 +139,14 @@ add_task(async function test_hsts_request() {
   // simple redirect
   let sample = "https://example.org/tests/toolkit/components/extensions/test/mochitest/file_sample.html";
   extension.sendMessage(
-    `https://${testPath}/redirect_auto.sjs?redirect_uri=${sample}`,
+    `https://${testPath}/redirect_auto.sjs?redirect_uri=${sample}?bustcache1=${Math.random()}`,
     ["onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders",
      "onHeadersReceived", "onBeforeRedirect", "onBeforeRequest",
      "onBeforeSendHeaders", "onSendHeaders", "onHeadersReceived",
      "onResponseStarted", "onCompleted"]);
-  // redirect_auto adds a query string
-  ok((await extension.awaitMessage("tabs-done")).startsWith(sample), "redirection ok");
-  ok((await extension.awaitMessage("onCompleted")).startsWith(sample), "redirection ok");
+  // Note: stripQuery strips query string added by redirect_auto.
+  is(await extension.awaitMessage("tabs-done"), sample, "redirection ok");
+  is(await extension.awaitMessage("onCompleted"), sample, "redirection ok");
 
   // priming hsts
   extension.sendMessage(
@@ -171,7 +185,7 @@ add_task(async function test_hsts_header() {
   let completed = extension.awaitMessage("onCompleted");
   let tabdone = extension.awaitMessage("tabs-done");
   extension.sendMessage(
-    `https://${testPath}/file_sample.html`,
+    `https://${testPath}/file_sample.html?bustcache2=${Math.random()}`,
     ["onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders",
      "onHeadersReceived", "onResponseStarted", "onCompleted"]);
   is(await tabdone, `https://${testPath}/file_sample.html`, "priming request done");
@@ -181,7 +195,7 @@ add_task(async function test_hsts_header() {
   completed = extension.awaitMessage("onCompleted");
   tabdone = extension.awaitMessage("tabs-done");
   extension.sendMessage(
-    `http://${testPath}/file_sample.html`,
+    `http://${testPath}/file_sample.html?bustcache3=${Math.random()}`,
     ["onBeforeRequest", "onBeforeRedirect", "onBeforeRequest",
      "onBeforeSendHeaders", "onSendHeaders", "onHeadersReceived",
      "onResponseStarted", "onCompleted"]);
@@ -207,7 +221,9 @@ add_task(async function test_nonBlocking_securityInfo() {
         browser.tabs.remove(tab.id);
         browser.test.notifyPass("success");
       }, {urls: ["<all_urls>"], types: ["main_frame"]});
-      tab = await browser.tabs.create({url: "https://example.org/tests/toolkit/components/extensions/test/mochitest/file_sample.html"});
+      tab = await browser.tabs.create({
+        url: `https://example.org/tests/toolkit/components/extensions/test/mochitest/file_sample.html?bustcache4=${Math.random()}`,
+      });
     },
   });
   await extension.startup();
