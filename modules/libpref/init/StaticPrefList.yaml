@@ -1264,6 +1264,26 @@
   value: false
   mirror: always
 
+# Whether to force alt text for missing images to be laid out inline.
+- name: browser.display.force_inline_alttext
+  type: bool
+  value: false
+  mirror: always
+
+# Enable showing image placeholders while image is loading or when image is broken.
+- name: browser.display.show_image_placeholders
+  type: bool
+  value: true
+  mirror: always
+
+# If browser.display.show_image_placeholders is true then this controls whether
+# the loading image placeholder and border is shown or not.
+# TODO(emilio): Consider removing some or most of these image prefs.
+- name: browser.display.show_loading_image_placeholder
+  type: bool
+  value: false
+  mirror: always
+
 # Whether we should always enable focus rings after focus was moved by keyboard.
 #
 # This behavior matches both historical and GTK / Windows focus behavior.

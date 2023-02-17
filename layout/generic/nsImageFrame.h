@@ -127,12 +127,7 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
 
   LogicalSides GetLogicalSkipSides() const final;
 
-  static void ReleaseGlobals() {
-    if (gIconLoad) {
-      gIconLoad->Shutdown();
-      gIconLoad = nullptr;
-    }
-  }
+  static void ReleaseGlobals();
 
   already_AddRefed<imgIRequest> GetCurrentRequest() const;
   void Notify(imgIRequest*, int32_t aType, const nsIntRect* aData);
@@ -429,47 +424,7 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   nsresult LoadIcon(const nsAString& aSpec, nsPresContext* aPresContext,
                     imgRequestProxy** aRequest);
 
-  class IconLoad final : public nsIObserver, public imgINotificationObserver {
-    // private class that wraps the data and logic needed for
-    // broken image and loading image icons
-   public:
-    IconLoad();
-
-    void Shutdown();
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
-    NS_DECL_IMGINOTIFICATIONOBSERVER
-
-    void AddIconObserver(nsImageFrame* frame) {
-      MOZ_ASSERT(!mIconObservers.Contains(frame),
-                 "Observer shouldn't aleady be in array");
-      mIconObservers.AppendElement(frame);
-    }
-
-    void RemoveIconObserver(nsImageFrame* frame) {
-      mozilla::DebugOnly<bool> didRemove = mIconObservers.RemoveElement(frame);
-      MOZ_ASSERT(didRemove, "Observer not in array");
-    }
-
-   private:
-    ~IconLoad() = default;
-
-    void GetPrefs();
-    nsTObserverArray<nsImageFrame*> mIconObservers;
-
-   public:
-    RefPtr<imgRequestProxy> mLoadingImage;
-    RefPtr<imgRequestProxy> mBrokenImage;
-    bool mPrefForceInlineAltText;
-    bool mPrefShowPlaceholders;
-    bool mPrefShowLoadingPlaceholder;
-  };
-
  public:
-  // singleton pattern: one LoadIcons instance is used
-  static mozilla::StaticRefPtr<IconLoad> gIconLoad;
-
   friend class mozilla::nsDisplayImage;
   friend class nsDisplayGradient;
 };
