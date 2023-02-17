@@ -17,7 +17,6 @@
 #include "nsISupportsImpl.h"
 #include "nsNetCID.h"
 #include "nsWeakReference.h"
-#include "mozilla/Mutex.h"
 
 class nsIGlobalObject;
 
@@ -79,12 +78,11 @@ class BodyStreamHolder : public nsISupports {
 
 class BodyStream final : public nsIInputStreamCallback,
                          public nsIObserver,
-                         public nsSupportsWeakReference,
-                         public SingleWriterLockOwner {
+                         public nsSupportsWeakReference {
   friend class BodyStreamHolder;
 
  public:
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIINPUTSTREAMCALLBACK
   NS_DECL_NSIOBSERVER
 
@@ -97,27 +95,13 @@ class BodyStream final : public nsIInputStreamCallback,
 
   void Close();
 
-  bool OnWritingThread() const override {
-#ifdef MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
-    return _mOwningThread.IsCurrentThread();
-#else
-    return true;
-#endif
-  }
-
   static nsresult RetrieveInputStream(BodyStreamHolder* aStream,
                                       nsIInputStream** aInputStream);
 
  private:
   BodyStream(nsIGlobalObject* aGlobal, BodyStreamHolder* aStreamHolder,
              nsIInputStream* aInputStream);
-  ~BodyStream() = default;
-
-#ifdef DEBUG
-  void AssertIsOnOwningThread() const;
-#else
-  void AssertIsOnOwningThread() const {}
-#endif
+  ~BodyStream();
 
  public:
   // Pull Callback
@@ -139,20 +123,14 @@ class BodyStream final : public nsIInputStreamCallback,
       JSContext* aCx, ReadableStream* aStream, uint64_t aAvailableData,
       ErrorResult& aRv);
 
-  void ErrorPropagation(JSContext* aCx,
-                        const MutexSingleWriterAutoLock& aProofOfLock,
-                        ReadableStream* aStream, nsresult aError)
-      MOZ_REQUIRES(mMutex);
+  void ErrorPropagation(JSContext* aCx, ReadableStream* aStream,
+                        nsresult aError);
 
   // TODO: convert this to MOZ_CAN_RUN_SCRIPT (bug 1750605)
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void CloseAndReleaseObjects(
-      JSContext* aCx, const MutexSingleWriterAutoLock& aProofOfLock,
-      ReadableStream* aStream) MOZ_REQUIRES(mMutex);
+      JSContext* aCx, ReadableStream* aStream);
 
   class WorkerShutdown;
-
-  void ReleaseObjects(const MutexSingleWriterAutoLock& aProofOfLock)
-      MOZ_REQUIRES(mMutex);
 
   void ReleaseObjects();
 
@@ -181,18 +159,12 @@ class BodyStream final : public nsIInputStreamCallback,
     eClosed,
   };
 
-  // We need a mutex because JS engine can release BodyStream on a non-owning
-  // thread. We must be sure that the releasing of resources doesn't trigger
-  // race conditions.
-  MutexSingleWriter mMutex;
-
-  // Protected by mutex.
-  State mState MOZ_GUARDED_BY(mMutex);  // all writes are from the owning thread
+  State mState;
 
   // mGlobal is set on creation, and isn't modified off the owning thread.
   // It isn't set to nullptr until ReleaseObjects() runs.
   nsCOMPtr<nsIGlobalObject> mGlobal;
-  RefPtr<BodyStreamHolder> mStreamHolder MOZ_GUARDED_BY(mMutex);
+  RefPtr<BodyStreamHolder> mStreamHolder;
   nsCOMPtr<nsIEventTarget> mOwningEventTarget;
 
   // This is the original inputStream received during the CTOR. It will be
