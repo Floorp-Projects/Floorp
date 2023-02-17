@@ -77,7 +77,7 @@ function GroupBy(groupingType) {
   searchHistory(gSearchBox.value);
 }
 
-function updateHistoryTelemetry(num = 1) {
+function selectLink(event) {
   let searchesHistogram = Services.telemetry.getHistogramById(
     "PLACES_SEARCHBAR_CUMULATIVE_SEARCHES"
   );
@@ -88,7 +88,11 @@ function updateHistoryTelemetry(num = 1) {
   filterCountHistogram.add(gCumulativeFilterCount);
   clearCumulativeCounters();
 
-  Services.telemetry.keyedScalarAdd("sidebar.link", "history", num);
+  if (event.type == "click") {
+    PlacesUIUtils.onSidebarTreeClick(event);
+  } else if (event.type == "keypress") {
+    PlacesUIUtils.onSidebarTreeKeyPress(event);
+  }
 }
 
 function searchHistory(aInput) {
