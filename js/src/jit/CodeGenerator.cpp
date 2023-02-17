@@ -8376,14 +8376,83 @@ void CodeGenerator::visitWasmStoreRef(LWasmStoreRef* ins) {
 
   if (ins->preBarrierKind() == WasmPreBarrierKind::Normal) {
     Label skipPreBarrier;
-    wasm::EmitWasmPreBarrierGuard(masm, instance, temp, valueBase, offset,
-                                  &skipPreBarrier);
+    wasm::EmitWasmPreBarrierGuard(
+        masm, instance, temp, valueBase, offset, &skipPreBarrier,
+        ins->maybeTrap() ? &ins->maybeTrap()->offset : nullptr);
     wasm::EmitWasmPreBarrierCall(masm, instance, temp, valueBase, offset);
     masm.bind(&skipPreBarrier);
   }
 
+  EmitSignalNullCheckTrapSite(masm, ins);
   masm.storePtr(value, Address(valueBase, offset));
   // The postbarrier is handled separately.
+}
+
+// Out-of-line path to update the store buffer for wasm references.
+class OutOfLineWasmCallPostWriteBarrier
+    : public OutOfLineCodeBase<CodeGenerator> {
+  LInstruction* lir_;
+  const LAllocation* valueBase_;
+  uint32_t valueOffset_;
+
+ public:
+  OutOfLineWasmCallPostWriteBarrier(LInstruction* lir,
+                                    const LAllocation* valueBase,
+                                    uint32_t valueOffset)
+      : lir_(lir), valueBase_(valueBase), valueOffset_(valueOffset) {}
+
+  void accept(CodeGenerator* codegen) override {
+    codegen->visitOutOfLineWasmCallPostWriteBarrier(this);
+  }
+
+  LInstruction* lir() const { return lir_; }
+  const LAllocation* valueBase() const { return valueBase_; }
+  uint32_t valueOffset() const { return valueOffset_; }
+};
+
+void CodeGenerator::visitOutOfLineWasmCallPostWriteBarrier(
+    OutOfLineWasmCallPostWriteBarrier* ool) {
+  saveLiveVolatile(ool->lir());
+  masm.Push(InstanceReg);
+  int32_t framePushedAfterInstance = masm.framePushed();
+
+  // Fold the value offset into the value base
+  Register valueAddr = ToRegister(ool->valueBase());
+  masm.addPtr(Imm32(ool->valueOffset()), valueAddr);
+
+  // Call Instance::postBarrier
+  masm.setupWasmABICall();
+  masm.passABIArg(InstanceReg);
+  masm.passABIArg(valueAddr);
+  int32_t instanceOffset = masm.framePushed() - framePushedAfterInstance;
+  masm.callWithABI(wasm::BytecodeOffset(0), wasm::SymbolicAddress::PostBarrier,
+                   mozilla::Some(instanceOffset), MoveOp::GENERAL);
+
+  masm.Pop(InstanceReg);
+  restoreLiveVolatile(ool->lir());
+
+  masm.jump(ool->rejoin());
+}
+
+void CodeGenerator::visitWasmPostWriteBarrier(LWasmPostWriteBarrier* lir) {
+  MOZ_ASSERT(ToRegister(lir->instance()) == InstanceReg);
+  auto ool = new (alloc()) OutOfLineWasmCallPostWriteBarrier(
+      lir, lir->valueBase(), lir->valueOffset());
+  addOutOfLineCode(ool, lir->mir());
+
+  Register temp = ToTempRegisterOrInvalid(lir->temp0());
+  Register object = ToRegister(lir->object());
+  Register value = ToRegister(lir->value());
+
+  // If the pointer being stored is null, no barrier.
+  masm.branchTestPtr(Assembler::Zero, value, value, ool->rejoin());
+
+  // If there is a containing object and it is in the nursery, no barrier.
+  masm.branchPtrInNurseryChunk(Assembler::Equal, object, temp, ool->rejoin());
+
+  // If the pointer being stored is to a tenured object, no barrier.
+  masm.branchPtrInNurseryChunk(Assembler::Equal, value, temp, ool->entry());
+  masm.bind(ool->rejoin());
 }
 
 void CodeGenerator::visitWasmLoadSlotI64(LWasmLoadSlotI64* ins) {

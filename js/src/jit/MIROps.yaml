@@ -2866,6 +2866,9 @@
 - name: WasmStoreRef
   gen_boilerplate: false
 
+- name: WasmPostWriteBarrier
+  gen_boilerplate: false
+
 - name: WasmParameter
   gen_boilerplate: false
 

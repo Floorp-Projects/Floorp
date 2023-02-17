@@ -1823,6 +1823,9 @@ class FunctionCompiler {
         MWasmInterruptCheck::New(alloc(), instancePointer_, bytecodeOffset()));
   }
 
+  // Perform a post-write barrier to update the generational store buffer. This
+  // version will remove a previous store buffer entry if it is no longer
+  // needed.
   [[nodiscard]] bool postBarrierPrecise(uint32_t lineOrBytecode,
                                         MDefinition* valueAddr,
                                         MDefinition* value) {
@@ -1830,6 +1833,9 @@ class FunctionCompiler {
                              value);
   }
 
+  // Perform a post-write barrier to update the generational store buffer. This
+  // version will remove a previous store buffer entry if it is no longer
+  // needed.
   [[nodiscard]] bool postBarrierPreciseWithOffset(uint32_t lineOrBytecode,
                                                   MDefinition* valueBase,
                                                   uint32_t valueOffset,
@@ -1840,6 +1846,23 @@ class FunctionCompiler {
     }
     return emitInstanceCall3(lineOrBytecode, SASigPostBarrierPreciseWithOffset,
                              valueBase, valueOffsetDef, value);
+  }
+
+  // Perform a post-write barrier to update the generational store buffer. This
+  // version is the most efficient and only requires the address to store the
+  // value and the new value. It does not remove a previous store buffer entry
+  // if it is no longer needed, you must use a precise post-write barrier for
+  // that.
+  [[nodiscard]] bool postBarrier(uint32_t lineOrBytecode, MDefinition* object,
+                                 MDefinition* valueBase, uint32_t valueOffset,
+                                 MDefinition* newValue) {
+    auto* barrier = MWasmPostWriteBarrier::New(
+        alloc(), instancePointer_, object, valueBase, valueOffset, newValue);
+    if (!barrier) {
+      return false;
+    }
+    curBlock_->add(barrier);
+    return true;
   }
 
   /***************************************************************** Calls */
@@ -3280,27 +3303,17 @@ class FunctionCompiler {
         continue;
       }
 
-      // Load the previous value
-      auto* prevValue = MWasmLoadFieldKA::New(
-          alloc(), exception, data, offset, type.toMIRType(), MWideningOp::None,
-          AliasSet::Load(AliasSet::Any));
-      if (!prevValue) {
-        return false;
-      }
-      curBlock_->add(prevValue);
-
       // Store the new value
       auto* store = MWasmStoreFieldRefKA::New(
           alloc(), instancePointer_, exception, data, offset, argValues[i],
-          AliasSet::Store(AliasSet::Any), WasmPreBarrierKind::None);
+          AliasSet::Store(AliasSet::Any), Nothing(), WasmPreBarrierKind::None);
       if (!store) {
         return false;
       }
       curBlock_->add(store);
 
       // Call the post-write barrier
-      if (!postBarrierPreciseWithOffset(bytecodeOffset, data, offset,
-                                        prevValue)) {
+      if (!postBarrier(bytecodeOffset, exception, data, offset, argValues[i])) {
         return false;
       }
     }
@@ -3581,27 +3594,18 @@ class FunctionCompiler {
     MOZ_ASSERT(narrowingOp == MNarrowingOp::None);
     MOZ_ASSERT(fieldType.widenToValType() == fieldType.valType());
 
-    auto* prevValue = MWasmLoadFieldKA::New(
-        alloc(), keepAlive, base, offset, fieldType.valType().toMIRType(),
-        MWideningOp::None, AliasSet::Load(aliasBitset),
-        mozilla::Some(getTrapSiteInfo()));
-    if (!prevValue) {
-      return false;
-    }
-    curBlock_->add(prevValue);
-
     // Store the new value
     auto* store = MWasmStoreFieldRefKA::New(
         alloc(), instancePointer_, keepAlive, base, offset, value,
-        AliasSet::Store(aliasBitset), preBarrierKind);
+        AliasSet::Store(aliasBitset), mozilla::Some(getTrapSiteInfo()),
+        preBarrierKind);
     if (!store) {
       return false;
     }
     curBlock_->add(store);
 
     // Call the post-write barrier
-    return postBarrierPreciseWithOffset(lineOrBytecode, base, offset,
-                                        prevValue);
+    return postBarrier(lineOrBytecode, keepAlive, base, offset, value);
   }
 
   // Generate a write of `value` at address `base + index * scale`, where
