@@ -80,6 +80,16 @@ def get_work_dir(command_context, application, given):
     return os.path.join(command_context.topsrcdir, "haz-" + application)
 
 
+def get_objdir(command_context, kwargs):
+    application = kwargs["application"]
+    objdir = kwargs["haz_objdir"]
+    if objdir is None:
+        objdir = os.environ.get("HAZ_OBJDIR")
+    if objdir is None:
+        objdir = os.path.join(command_context.topsrcdir, "obj-analyzed-" + application)
+    return objdir
+
+
 def ensure_dir_exists(dir):
     os.makedirs(dir, exist_ok=True)
     return dir
@@ -128,6 +138,59 @@ def bootstrap(command_context, **kwargs):
         )
     finally:
         os.chdir(orig_dir)
+
+
+CLOBBER_CHOICES = {"objdir", "work", "shell", "all"}
+
+
+@SubCommand("hazards", "clobber", description="Clean up hazard-related files")
+@CommandArgument(
+    "--application", default="browser", help="Build the given application."
+)
+@CommandArgument("--haz-objdir", default=None, help="Hazard analysis objdir.")
+@CommandArgument(
+    "--work-dir", default=None, help="Directory for output and working files."
+)
+@CommandArgument(
+    "what",
+    default=["objdir", "work"],
+    nargs="*",
+    help="Target to clobber, must be one of {{{}}} (default "
+    "objdir and work).".format(", ".join(CLOBBER_CHOICES)),
+)
+def clobber(command_context, what, **kwargs):
+    from mozbuild.controller.clobber import Clobberer
+
+    what = set(what)
+    if "all" in what:
+        what.update(CLOBBER_CHOICES)
+    invalid = what - CLOBBER_CHOICES
+    if invalid:
+        print(
+            "Unknown clobber target(s): {}. Choose from {{{}}}".format(
+                ", ".join(invalid), ", ".join(CLOBBER_CHOICES)
+            )
+        )
+        return 1
+
+    try:
+        substs = command_context.substs
+    except BuildEnvironmentNotFoundException:
+        substs = {}
+
+    if "objdir" in what:
+        objdir = get_objdir(command_context, kwargs)
+        print(f"removing {objdir}")
+        Clobberer(command_context.topsrcdir, objdir, substs).remove_objdir(full=True)
+    if "work" in what:
+        application = kwargs["application"]
+        work_dir = get_work_dir(command_context, application, kwargs["work_dir"])
+        print(f"removing {work_dir}")
+        Clobberer(command_context.topsrcdir, work_dir, substs).remove_objdir(full=True)
+    if "shell" in what:
+        objdir = os.path.join(command_context.topsrcdir, "obj-haz-shell")
+        print(f"removing {objdir}")
+        Clobberer(command_context.topsrcdir, objdir, substs).remove_objdir(full=True)
 
 
 @inherit_command_args("build")
@@ -256,11 +319,7 @@ def validate_mozconfig(command_context, kwargs):
 def gather_hazard_data(command_context, **kwargs):
     """Gather analysis information by compiling the tree"""
     application = kwargs["application"]
-    objdir = kwargs["haz_objdir"]
-    if objdir is None:
-        objdir = os.environ.get("HAZ_OBJDIR")
-    if objdir is None:
-        objdir = os.path.join(command_context.topsrcdir, "obj-analyzed-" + application)
+    objdir = get_objdir(command_context, kwargs)
 
     validate_mozconfig(command_context, kwargs)
 
