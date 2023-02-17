@@ -378,28 +378,6 @@ static void WriteValTo(const Val& val, FieldType ty, void* dest) {
 }
 
 //=========================================================================
-// MemoryTracingVisitor (private to this file)
-
-namespace {
-
-class MemoryTracingVisitor {
-  JSTracer* trace_;
-
- public:
-  explicit MemoryTracingVisitor(JSTracer* trace) : trace_(trace) {}
-
-  void visitReference(uint8_t* base, size_t offset);
-};
-
-}  // namespace
-
-void MemoryTracingVisitor::visitReference(uint8_t* base, size_t offset) {
-  GCPtr<JSObject*>* objectPtr =
-      reinterpret_cast<GCPtr<JSObject*>*>(base + offset);
-  TraceNullableEdge(trace_, objectPtr, "reference-obj");
-}
-
-//=========================================================================
 // WasmArrayObject
 
 /* static */
@@ -477,7 +455,6 @@ void WasmArrayObject::obj_trace(JSTracer* trc, JSObject* object) {
     return;
   }
 
-  MemoryTracingVisitor visitor(trc);
   const auto& typeDef = arrayObj.typeDef();
   const auto& arrayType = typeDef.arrayType();
   if (!arrayType.elementType_.isRefRepr()) {
@@ -488,7 +465,9 @@ void WasmArrayObject::obj_trace(JSTracer* trc, JSObject* object) {
   MOZ_ASSERT(numElements > 0);
   uint32_t elemSize = arrayType.elementType_.size();
   for (uint32_t i = 0; i < numElements; i++) {
-    visitor.visitReference(data, i * elemSize);
+    GCPtr<JSObject*>* objectPtr =
+        reinterpret_cast<GCPtr<JSObject*>*>(data + i * elemSize);
+    TraceNullableEdge(trc, objectPtr, "reference-obj");
   }
 }
 
@@ -636,17 +615,16 @@ WasmStructObject* WasmStructObject::createStruct(
 void WasmStructObject::obj_trace(JSTracer* trc, JSObject* object) {
   WasmStructObject& structObj = object->as<WasmStructObject>();
 
-  MemoryTracingVisitor visitor(trc);
   const auto& structType = structObj.typeDef().structType();
-  for (const StructField& field : structType.fields_) {
-    if (!field.type.isRefRepr()) {
-      continue;
-    }
-    // Ensure no out-of-range access possible
-    MOZ_RELEASE_ASSERT(field.offset + field.type.size() <= structType.size_);
-    uint8_t* fieldAddr =
-        structObj.fieldOffsetToAddress(field.type, field.offset);
-    visitor.visitReference(fieldAddr, 0);
+  for (uint32_t offset : structType.inlineTraceOffsets_) {
+    GCPtr<JSObject*>* objectPtr =
+        reinterpret_cast<GCPtr<JSObject*>*>(&structObj.inlineData_[0] + offset);
+    TraceNullableEdge(trc, objectPtr, "reference-obj");
+  }
+  for (uint32_t offset : structType.outlineTraceOffsets_) {
+    GCPtr<JSObject*>* objectPtr =
+        reinterpret_cast<GCPtr<JSObject*>*>(structObj.outlineData_ + offset);
+    TraceNullableEdge(trc, objectPtr, "reference-obj");
   }
 }
 

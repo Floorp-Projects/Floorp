@@ -258,10 +258,15 @@ struct StructField {
 
 using StructFieldVector = Vector<StructField, 0, SystemAllocPolicy>;
 
+using InlineTraceOffsetVector = Vector<uint32_t, 2, SystemAllocPolicy>;
+using OutlineTraceOffsetVector = Vector<uint32_t, 0, SystemAllocPolicy>;
+
 class StructType {
  public:
   StructFieldVector fields_;  // Field type, offset, and mutability
   uint32_t size_;             // The size of the type in bytes.
+  InlineTraceOffsetVector inlineTraceOffsets_;
+  OutlineTraceOffsetVector outlineTraceOffsets_;
 
  public:
   StructType() : fields_(), size_(0) {}
