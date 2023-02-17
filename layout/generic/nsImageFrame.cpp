@@ -374,11 +374,8 @@ void nsImageFrame::DestroyFrom(nsIFrame* aDestructRoot,
     // deregister with our refresh driver.
     imageLoader->FrameDestroyed(this);
     imageLoader->RemoveNativeObserver(mListener);
-  } else if (mOwnedRequest) {
-    PresContext()->Document()->ImageTracker()->Remove(mOwnedRequest);
-    nsLayoutUtils::DeregisterImageRequest(PresContext(), mOwnedRequest,
-                                          &mOwnedRequestRegistered);
-    mOwnedRequest->Cancel(NS_BINDING_ABORTED);
+  } else {
+    DeinitOwnedRequest();
   }
 
   // set the frame to null so we don't send messages to a dead object.
@@ -389,6 +386,18 @@ void nsImageFrame::DestroyFrom(nsIFrame* aDestructRoot,
   if (mDisplayingIcon) gIconLoad->RemoveIconObserver(this);
 
   nsAtomicContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
+}
+
+void nsImageFrame::DeinitOwnedRequest() {
+  MOZ_ASSERT(mKind != Kind::ImageLoadingContent);
+  if (!mOwnedRequest) {
+    return;
+  }
+  PresContext()->Document()->ImageTracker()->Remove(mOwnedRequest);
+  nsLayoutUtils::DeregisterImageRequest(PresContext(), mOwnedRequest,
+                                        &mOwnedRequestRegistered);
+  mOwnedRequest->CancelAndForgetObserver(NS_BINDING_ABORTED);
+  mOwnedRequest = nullptr;
 }
 
 void nsImageFrame::MaybeRecordContentUrlOnImageTelemetry() {
