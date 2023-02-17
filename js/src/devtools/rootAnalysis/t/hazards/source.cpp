@@ -405,6 +405,12 @@ void safevals() {
     subp->cannotScriptThis();
     use(safe18);
   }
+  {
+    Cell* unsafe19 = &cell;
+    void (*f)() = GC;
+    f();
+    use(unsafe19);
+  }
 }
 
 // Make sure `this` is live at the beginning of a function.
