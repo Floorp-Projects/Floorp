@@ -887,7 +887,7 @@ echPrefs:
     forceWaitHttpsRR:
       description: Whether to force waiting for HTTPS DNS records, which ECH requires.
       type: boolean
-      setPref: "network.dns.force_waiting_https_r"
+      setPref: "network.dns.force_waiting_https_rr"
     insecureFallback:
       description: Whether to fallback to non-ECH connections if all ECH RRs fail.
       type: boolean
