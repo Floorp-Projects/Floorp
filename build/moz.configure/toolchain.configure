@@ -1509,6 +1509,23 @@ host_cxx_compiler = compiler(
     other_c_compiler=c_compiler,
 )
 
+
+@template
+def windows_abi(host_or_target, c_compiler):
+    @depends(host_or_target, c_compiler)
+    def windows_abi(host_or_target, c_compiler):
+        if host_or_target.os == "WINNT":
+            if c_compiler.type == "clang-cl":
+                return "msvc"
+            return "mingw"
+
+    return windows_abi
+
+
+target_windows_abi = windows_abi(target, c_compiler)
+host_windows_abi = windows_abi(host, host_c_compiler)
+
+
 # Generic compiler-based conditions.
 building_with_gcc = depends(c_compiler)(lambda info: info.type == "gcc")
 
