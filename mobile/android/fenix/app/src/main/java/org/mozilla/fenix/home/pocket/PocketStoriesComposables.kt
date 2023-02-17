@@ -439,13 +439,6 @@ fun PocketStoriesCategories(
     categoryColors: SelectableChipColors = SelectableChipColors.buildColors(),
     onCategoryClick: (PocketRecommendedStoriesCategory) -> Unit,
 ) {
-    val selectableChipColors = SelectableChipColors(
-        selectedTextColor = categoryColors.selectedTextColor,
-        unselectedTextColor = categoryColors.unselectedTextColor,
-        selectedBackgroundColor = categoryColors.selectedBackgroundColor,
-        unselectedBackgroundColor = categoryColors.unselectedBackgroundColor,
-    )
-
     Box(
         modifier = modifier.semantics {
             testTagsAsResourceId = true
@@ -461,7 +454,7 @@ fun PocketStoriesCategories(
                     text = category.name,
                     isSelected = selections.map { it.name }.contains(category.name),
                     isSquare = true,
-                    selectableChipColors = selectableChipColors,
+                    selectableChipColors = categoryColors,
                 ) {
                     onCategoryClick(category)
                 }

@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@file:OptIn(ExperimentalMaterialApi::class)
+
 package org.mozilla.fenix.compose
 
 import android.content.res.Configuration
@@ -12,13 +14,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ChipDefaults.chipColors
+import androidx.compose.material.ChipDefaults.filterChipColors
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.FilterChip
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -79,20 +79,16 @@ fun SelectableChip(
     selectableChipColors: SelectableChipColors = SelectableChipColors.buildColors(),
     onClick: () -> Unit,
 ) {
-    var selected by remember { mutableStateOf(isSelected) }
-
-    Chip(
-        text = text,
-        backgroundColor = if (selected) {
-            selectableChipColors.selectedBackgroundColor
-        } else {
-            selectableChipColors.unselectedBackgroundColor
-        },
-        isSquare = isSquare,
-        textColor = if (selected) selectableChipColors.selectedTextColor else selectableChipColors.unselectedTextColor,
+    FilterChip(
+        selected = isSelected,
+        onClick = onClick,
+        shape = if (isSquare) RoundedCornerShape(4.dp) else RoundedCornerShape(25.dp),
+        colors = selectableChipColors.toMaterialChipColors(),
     ) {
-        selected = !selected
-        onClick()
+        Text(
+            text = text,
+            style = FirefoxTheme.typography.body2,
+        )
     }
 }
 
@@ -129,6 +125,17 @@ data class SelectableChipColors(
         )
     }
 }
+
+/**
+ * Map applications' colors for selectable chips to the platform type.
+ */
+@Composable
+private fun SelectableChipColors.toMaterialChipColors() = filterChipColors(
+    selectedBackgroundColor = selectedBackgroundColor,
+    backgroundColor = unselectedBackgroundColor,
+    selectedContentColor = selectedTextColor,
+    contentColor = unselectedTextColor,
+)
 
 @Composable
 @LightDarkPreview
