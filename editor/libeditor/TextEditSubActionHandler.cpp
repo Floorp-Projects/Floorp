@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ErrorList.h"
 #include "TextEditor.h"
 
 #include "AutoRangeArray.h"
@@ -218,49 +219,34 @@ TextEditor::InsertLineFeedCharacterAtSelection() {
     return Err(NS_ERROR_NOT_INITIALIZED);
   }
 
-  // Don't change my selection in sub-transactions.
-  AutoTransactionsConserveSelection dontChangeMySelection(*this);
-
   // Insert a linefeed character.
-  Result<EditorDOMPoint, nsresult> insertTextResult =
+  Result<InsertTextResult, nsresult> insertTextResult =
       InsertTextWithTransaction(*document, u"\n"_ns, pointToInsert);
   if (MOZ_UNLIKELY(insertTextResult.isErr())) {
     NS_WARNING("TextEditor::InsertTextWithTransaction(\"\\n\") failed");
     return insertTextResult.propagateErr();
   }
-  if (MOZ_UNLIKELY(!insertTextResult.inspect().IsSet())) {
-    NS_WARNING(
-        "EditorBase::InsertTextWithTransaction(\"\\n\") didn't return position "
-        "of inserted linefeed");
+  insertTextResult.inspect().IgnoreCaretPointSuggestion();
+  EditorDOMPoint pointToPutCaret = insertTextResult.inspect().Handled()
+                                       ? insertTextResult.inspect()
+                                             .EndOfInsertedTextRef()
+                                             .To<EditorDOMPoint>()
+                                       : pointToInsert;
+  if (NS_WARN_IF(!pointToPutCaret.IsSetAndValid())) {
     return Err(NS_ERROR_FAILURE);
   }
-
-  // set the selection to the correct location
-  MOZ_ASSERT(insertTextResult.inspect().IsInTextNode(),
-             "After inserting text into a text node, insertTextResult should "
-             "return a point in a text node");
-  nsresult rv = CollapseSelectionTo(insertTextResult.inspect());
+  // XXX I don't think we still need this.  This must have been required when
+  //     `<textarea>` was implemented with text nodes and `<br>` elements.
+  // We want the caret to stick to the content on the "right".  We want the
+  // caret to stick to whatever is past the break.  This is because the break is
+  // on the same line we were on, but the next content will be on the following
+  // line.
+  pointToPutCaret.SetInterlinePosition(InterlinePosition::StartOfNextLine);
+  nsresult rv = CollapseSelectionTo(pointToPutCaret);
   if (NS_FAILED(rv)) {
     NS_WARNING("EditorBase::CollapseSelectionTo() failed");
     return Err(rv);
   }
-
-  // XXX I don't think we still need this.  This must have been required when
-  //     `<textarea>` was implemented with text nodes and `<br>` elements.
-  // see if we're at the end of the editor range
-  const auto endPoint = GetFirstSelectionEndPoint<EditorRawDOMPoint>();
-  if (endPoint == insertTextResult.inspect()) {
-    // SetInterlinePosition(true) means we want the caret to stick to the
-    // content on the "right".  We want the caret to stick to whatever is
-    // past the break.  This is because the break is on the same line we
-    // were on, but the next content will be on the following line.
-    DebugOnly<nsresult> rvIgnored =
-        SelectionRef().SetInterlinePosition(InterlinePosition::StartOfNextLine);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                         "Selection::SetInterlinePosition(InterlinePosition::"
-                         "StartOfNextLine) failed, but ignored");
-  }
-
   return EditActionResult::HandledResult();
 }
 
@@ -475,33 +461,45 @@ Result<EditActionResult, nsresult> TextEditor::HandleInsertText(
           compositionStartPoint.IsSet(),
           "EditorBase::FindBetterInsertionPoint() failed, but ignored");
     }
-    Result<EditorDOMPoint, nsresult> insertTextResult =
+    Result<InsertTextResult, nsresult> insertTextResult =
         InsertTextWithTransaction(*document, insertionString,
                                   compositionStartPoint);
     if (MOZ_UNLIKELY(insertTextResult.isErr())) {
       NS_WARNING("EditorBase::InsertTextWithTransaction() failed");
       return insertTextResult.propagateErr();
     }
+    nsresult rv = insertTextResult.unwrap().SuggestCaretPointTo(
+        *this, {SuggestCaret::OnlyIfHasSuggestion,
+                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                SuggestCaret::AndIgnoreTrivialError});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
+      return Err(rv);
+    }
+    NS_WARNING_ASSERTION(
+        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+        "CaretPoint::SuggestCaretPointTo() failed, but ignored");
   } else {
     MOZ_ASSERT(aEditSubAction == EditSubAction::eInsertText);
 
-    // don't change my selection in subtransactions
-    AutoTransactionsConserveSelection dontChangeMySelection(*this);
-
-    Result<EditorDOMPoint, nsresult> insertTextResult =
+    Result<InsertTextResult, nsresult> insertTextResult =
         InsertTextWithTransaction(*document, insertionString,
                                   atStartOfSelection);
     if (MOZ_UNLIKELY(insertTextResult.isErr())) {
       NS_WARNING("EditorBase::InsertTextWithTransaction() failed");
       return insertTextResult.propagateErr();
     }
-
-    if (insertTextResult.inspect().IsSet()) {
+    // Ignore caret suggestion because there was
+    // AutoTransactionsConserveSelection.
+    insertTextResult.inspect().IgnoreCaretPointSuggestion();
+    if (insertTextResult.inspect().Handled()) {
       // Make the caret attach to the inserted text, unless this text ends with
       // a LF, in which case make the caret attach to the next line.
       const bool endsWithLF =
           !insertionString.IsEmpty() && insertionString.Last() == nsCRT::LF;
-      EditorDOMPoint pointToPutCaret = insertTextResult.unwrap();
+      EditorDOMPoint pointToPutCaret = insertTextResult.inspect()
+                                           .EndOfInsertedTextRef()
+                                           .To<EditorDOMPoint>();
       pointToPutCaret.SetInterlinePosition(
           endsWithLF ? InterlinePosition::StartOfNextLine
                      : InterlinePosition::EndOfLine);

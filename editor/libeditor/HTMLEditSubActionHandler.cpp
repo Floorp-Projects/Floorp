@@ -1148,13 +1148,24 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleInsertText(
       // Right now the WhiteSpaceVisibilityKeeper code bails on empty strings,
       // but IME needs the InsertTextWithTransaction() call to still happen
       // since empty strings are meaningful there.
-      Result<EditorDOMPoint, nsresult> insertTextResult =
+      Result<InsertTextResult, nsresult> insertTextResult =
           InsertTextWithTransaction(*document, aInsertionString,
                                     compositionStartPoint);
       if (MOZ_UNLIKELY(insertTextResult.isErr())) {
         NS_WARNING("HTMLEditor::InsertTextWithTransaction() failed");
         return insertTextResult.propagateErr();
       }
+      nsresult rv = insertTextResult.unwrap().SuggestCaretPointTo(
+          *this, {SuggestCaret::OnlyIfHasSuggestion,
+                  SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                  SuggestCaret::AndIgnoreTrivialError});
+      if (NS_FAILED(rv)) {
+        NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
+        return Err(rv);
+      }
+      NS_WARNING_ASSERTION(
+          rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+          "CaretPoint::SuggestCaretPointTo() failed, but ignored");
       return EditActionResult::HandledResult();
     }
 
@@ -1273,14 +1284,22 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleInsertText(
                                "to different point "
                                "by mutation observer");
         } else {
-          Result<EditorDOMPoint, nsresult> insertTextResult =
+          Result<InsertTextResult, nsresult> insertTextResult =
               InsertTextWithTransaction(*document, subStr, currentPoint);
           if (MOZ_UNLIKELY(insertTextResult.isErr())) {
             NS_WARNING("HTMLEditor::InsertTextWithTransaction() failed");
             return insertTextResult.propagateErr();
           }
-          currentPoint = insertTextResult.inspect();
-          pointToInsert = insertTextResult.unwrap();
+          // Ignore the caret suggestion because of `dontChangeMySelection`
+          // above.
+          insertTextResult.inspect().IgnoreCaretPointSuggestion();
+          if (insertTextResult.inspect().Handled()) {
+            pointToInsert = currentPoint = insertTextResult.unwrap()
+                                               .EndOfInsertedTextRef()
+                                               .To<EditorDOMPoint>();
+          } else {
+            pointToInsert = currentPoint;
+          }
         }
       }
     } else {
@@ -2311,13 +2330,19 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::HandleInsertLinefeed(
   {
     AutoTrackDOMPoint trackingInsertingPosition(RangeUpdaterRef(),
                                                 &pointToInsert);
-    Result<EditorDOMPoint, nsresult> insertTextResult =
+    Result<InsertTextResult, nsresult> insertTextResult =
         InsertTextWithTransaction(*document, u"\n"_ns, pointToInsert);
     if (MOZ_UNLIKELY(insertTextResult.isErr())) {
       NS_WARNING("HTMLEditor::InsertTextWithTransaction() failed");
-      return insertTextResult;
+      return insertTextResult.propagateErr();
     }
-    pointToPutCaret = insertTextResult.unwrap();
+    // Ignore the caret suggestion because of `dontChangeMySelection` above.
+    insertTextResult.inspect().IgnoreCaretPointSuggestion();
+    pointToPutCaret = insertTextResult.inspect().Handled()
+                          ? insertTextResult.unwrap()
+                                .EndOfInsertedTextRef()
+                                .To<EditorDOMPoint>()
+                          : pointToInsert;
   }
 
   // Insert a padding <br> element at the end of the block element if there is

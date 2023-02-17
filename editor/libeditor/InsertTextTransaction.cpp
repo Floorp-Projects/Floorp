@@ -5,16 +5,18 @@
 
 #include "InsertTextTransaction.h"
 
+#include "ErrorList.h"
 #include "mozilla/EditorBase.h"  // mEditorBase
 #include "mozilla/Logging.h"
 #include "mozilla/SelectionState.h"  // RangeUpdater
 #include "mozilla/ToString.h"
 #include "mozilla/dom/Selection.h"  // Selection local var
 #include "mozilla/dom/Text.h"       // mTextNode
-#include "nsAString.h"              // nsAString parameter
-#include "nsDebug.h"                // for NS_ASSERTION, etc.
-#include "nsError.h"                // for NS_OK, etc.
-#include "nsQueryObject.h"          // for do_QueryObject
+
+#include "nsAString.h"      // nsAString parameter
+#include "nsDebug.h"        // for NS_ASSERTION, etc.
+#include "nsError.h"        // for NS_OK, etc.
+#include "nsQueryObject.h"  // for do_QueryObject
 
 namespace mozilla {
 
@@ -77,28 +79,9 @@ NS_IMETHODIMP InsertTextTransaction::DoTransaction() {
     return error.StealNSResult();
   }
 
-  // Only set selection to insertion point if editor gives permission
-  if (editorBase->AllowsTransactionsToChangeSelection()) {
-    RefPtr<Selection> selection = editorBase->GetSelection();
-    if (NS_WARN_IF(!selection)) {
-      return NS_ERROR_FAILURE;
-    }
-    DebugOnly<nsresult> rvIgnored = editorBase->CollapseSelectionTo(
-        EditorRawDOMPoint(textNode, mOffset + mStringToInsert.Length()));
-    NS_ASSERTION(NS_SUCCEEDED(rvIgnored),
-                 "EditorBase::CollapseSelectionTo() failed, but ignored");
-    // Keep handling to adjust the ranges in the range updater even if the
-    // editor is destroyed.
-  } else {
-    // Do nothing - DOM Range gravity will adjust selection
-  }
-  // XXX Other transactions do not do this but its callers do.
-  //     Why do this transaction do this by itself?
   editorBase->RangeUpdaterRef().SelAdjInsertText(textNode, mOffset,
                                                  mStringToInsert.Length());
-
-  return MOZ_UNLIKELY(editorBase->Destroyed()) ? NS_ERROR_EDITOR_DESTROYED
-                                               : NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP InsertTextTransaction::UndoTransaction() {
@@ -121,7 +104,22 @@ NS_IMETHODIMP InsertTextTransaction::RedoTransaction() {
   MOZ_LOG(GetLogModule(), LogLevel::Info,
           ("%p InsertTextTransaction::%s this=%s", this, __FUNCTION__,
            ToString(*this).c_str()));
-  return DoTransaction();
+  nsresult rv = DoTransaction();
+  if (NS_FAILED(rv)) {
+    NS_WARNING("InsertTextTransaction::DoTransaction() failed");
+    return rv;
+  }
+  if (RefPtr<EditorBase> editorBase = mEditorBase) {
+    nsresult rv = editorBase->CollapseSelectionTo(
+        SuggestPointToPutCaret<EditorRawDOMPoint>());
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "EditorBase::CollapseSelectionTo() failed, but ignored");
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP InsertTextTransaction::Merge(nsITransaction* aOtherTransaction,
