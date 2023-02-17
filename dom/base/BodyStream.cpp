@@ -192,7 +192,7 @@ already_AddRefed<Promise> BodyStream::PullCallback(
   MOZ_DIAGNOSTIC_ASSERT(mOwningEventTarget->IsOnCurrentThread());
 
   MOZ_DIAGNOSTIC_ASSERT(mState == eInitializing || mState == eWaiting ||
-                        mState == eChecking || mState == eReading);
+                        mState == eReading);
 
   RefPtr<Promise> resolvedWithUndefinedPromise =
       Promise::CreateResolvedWithUndefined(aController.GetParentObject(), aRv);
@@ -202,15 +202,6 @@ already_AddRefed<Promise> BodyStream::PullCallback(
 
   if (mState == eReading) {
     // We are already reading data.
-    return resolvedWithUndefinedPromise.forget();
-  }
-
-  if (mState == eChecking) {
-    // If we are looking for more data, there is nothing else we should do:
-    // let's move this checking operation in a reading.
-    MOZ_ASSERT(mInputStream);
-    mState = eReading;
-
     return resolvedWithUndefinedPromise.forget();
   }
 
@@ -264,7 +255,6 @@ void BodyStream::WriteIntoReadRequestBuffer(JSContext* aCx,
 
   MOZ_DIAGNOSTIC_ASSERT(mInputStream);
   MOZ_DIAGNOSTIC_ASSERT(mState == eWriting);
-  mState = eChecking;
 
   uint32_t written;
   nsresult rv;
@@ -296,13 +286,6 @@ void BodyStream::WriteIntoReadRequestBuffer(JSContext* aCx,
     CloseAndReleaseObjects(aCx, aStream);
     return;
   }
-
-  rv = mInputStream->AsyncWait(this, 0, 0, mOwningEventTarget);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    ErrorPropagation(aCx, aStream, rv);
-    return;
-  }
-  mAsyncWaitWorkerRef = mWorkerRef;
 
   // All good.
 }
@@ -454,7 +437,7 @@ BodyStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
   AutoEntryScript aes(mGlobal, "fetch body data available");
 
   MOZ_DIAGNOSTIC_ASSERT(mInputStream);
-  MOZ_DIAGNOSTIC_ASSERT(mState == eReading || mState == eChecking);
+  MOZ_DIAGNOSTIC_ASSERT(mState == eReading);
 
   JSContext* cx = aes.cx();
   ReadableStream* stream = mStreamHolder->GetReadableStreamBody();
@@ -464,21 +447,11 @@ BodyStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
 
   uint64_t size = 0;
   nsresult rv = mInputStream->Available(&size);
-  if (NS_SUCCEEDED(rv) && size == 0) {
-    // In theory this should not happen. If size is 0, the stream should be
-    // considered closed.
-    rv = NS_BASE_STREAM_CLOSED;
-  }
+  MOZ_ASSERT_IF(NS_SUCCEEDED(rv), size > 0);
 
   // No warning for stream closed.
   if (rv == NS_BASE_STREAM_CLOSED || NS_WARN_IF(NS_FAILED(rv))) {
     ErrorPropagation(cx, stream, rv);
-    return NS_OK;
-  }
-
-  // This extra checking is completed. Let's wait for the next read request.
-  if (mState == eChecking) {
-    mState = eWaiting;
     return NS_OK;
   }
 
@@ -491,6 +464,8 @@ BodyStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
     ErrorPropagation(cx, stream, errorResult.StealNSResult());
     return NS_OK;
   }
+
+  mState = eWaiting;
 
   // The previous call can execute JS (even up to running a nested event
   // loop), so |mState| can't be asserted to have any particular value, even
