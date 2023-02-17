@@ -466,11 +466,15 @@ class alignas(16) Instance {
                                  JSObject* prev);
   static void postBarrierPreciseWithOffset(Instance* instance, JSObject** base,
                                            uint32_t offset, JSObject* prev);
-  static void* structNew(Instance* instance, TypeDefInstanceData* typeDefData);
   static void* exceptionNew(Instance* instance, JSObject* tag);
   static int32_t throwException(Instance* instance, JSObject* exn);
+  static void* structNew(Instance* instance, TypeDefInstanceData* typeDefData);
+  static void* structNewUninit(Instance* instance,
+                               TypeDefInstanceData* typeDefData);
   static void* arrayNew(Instance* instance, uint32_t numElements,
                         TypeDefInstanceData* typeDefData);
+  static void* arrayNewUninit(Instance* instance, uint32_t numElements,
+                              TypeDefInstanceData* typeDefData);
   static void* arrayNewData(Instance* instance, uint32_t segByteOffset,
                             uint32_t numElements,
                             TypeDefInstanceData* typeDefData,

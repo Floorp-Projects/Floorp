@@ -1659,13 +1659,15 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
     case SymbolicAddress::PostBarrierPrecise:
     case SymbolicAddress::PostBarrierPreciseWithOffset:
       return "call to native GC postbarrier (in wasm)";
-    case SymbolicAddress::StructNew:
-      return "call to native struct.new (in wasm)";
     case SymbolicAddress::ExceptionNew:
       return "call to native exception new (in wasm)";
     case SymbolicAddress::ThrowException:
       return "call to native throw exception (in wasm)";
+    case SymbolicAddress::StructNew:
+    case SymbolicAddress::StructNewUninit:
+      return "call to native struct.new (in wasm)";
     case SymbolicAddress::ArrayNew:
+    case SymbolicAddress::ArrayNewUninit:
       return "call to native array.new (in wasm)";
     case SymbolicAddress::ArrayNewData:
       return "call to native array.new_data function";

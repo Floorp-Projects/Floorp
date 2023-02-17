@@ -6678,10 +6678,10 @@ bool BaseCompiler::emitStructNew() {
 
   const StructType& structType = (*moduleEnv_.types)[typeIndex].structType();
 
-  // Allocate a default initialized struct. This requires the type definition
+  // Allocate an uninitialized struct. This requires the type definition
   // for the struct to be pushed on the stack. This will trap on OOM.
   pushPtr(loadTypeDefInstanceData(typeIndex));
-  if (!emitInstanceCall(SASigStructNew)) {
+  if (!emitInstanceCall(SASigStructNewUninit)) {
     return false;
   }
 
@@ -6904,10 +6904,10 @@ bool BaseCompiler::emitArrayNew() {
 
   const ArrayType& arrayType = (*moduleEnv_.types)[typeIndex].arrayType();
 
-  // Allocate a default initialized array. This requires the type definition
+  // Allocate an uninitialized array. This requires the type definition
   // for the array to be pushed on the stack. This will trap on OOM.
   pushPtr(loadTypeDefInstanceData(typeIndex));
-  if (!emitInstanceCall(SASigArrayNew)) {
+  if (!emitInstanceCall(SASigArrayNewUninit)) {
     return false;
   }
 

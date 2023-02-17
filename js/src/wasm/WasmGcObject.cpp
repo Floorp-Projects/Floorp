@@ -397,7 +397,8 @@ WasmArrayObject* WasmArrayObject::createArray(JSContext* cx,
   return createArray(cx, typeDef, numElements, args);
 }
 
-/*static*/
+/* static */
+template <bool ZeroFields>
 WasmArrayObject* WasmArrayObject::createArray(
     JSContext* cx, const wasm::TypeDef* typeDef, uint32_t numElements,
     const WasmGcObject::AllocArgs& args) {
@@ -440,12 +441,21 @@ WasmArrayObject* WasmArrayObject::createArray(
 
   arrayObj->numElements_ = numElements;
   arrayObj->data_ = outlineData;
-  if (arrayObj->data_) {
-    memset(arrayObj->data_, 0, outlineBytes.value());
+  if constexpr (ZeroFields) {
+    if (arrayObj->data_) {
+      memset(arrayObj->data_, 0, outlineBytes.value());
+    }
   }
 
   return arrayObj;
 }
+
+template WasmArrayObject* WasmArrayObject::createArray<true>(
+    JSContext* cx, const wasm::TypeDef* typeDef, uint32_t numElements,
+    const WasmGcObject::AllocArgs& args);
+template WasmArrayObject* WasmArrayObject::createArray<false>(
+    JSContext* cx, const wasm::TypeDef* typeDef, uint32_t numElements,
+    const WasmGcObject::AllocArgs& args);
 
 /* static */
 void WasmArrayObject::obj_trace(JSTracer* trc, JSObject* object) {
@@ -570,6 +580,7 @@ WasmStructObject* WasmStructObject::createStruct(JSContext* cx,
 }
 
 /* static */
+template <bool ZeroFields>
 WasmStructObject* WasmStructObject::createStruct(
     JSContext* cx, const wasm::TypeDef* typeDef,
     const WasmGcObject::AllocArgs& args) {
@@ -603,14 +614,22 @@ WasmStructObject* WasmStructObject::createStruct(
   // Initialize the outline data field
   structObj->outlineData_ = outlineData;
 
-  // Default initialize the fields to zero
-  memset(&(structObj->inlineData_[0]), 0, inlineBytes);
-  if (outlineBytes > 0) {
-    memset(structObj->outlineData_, 0, outlineBytes);
+  if constexpr (ZeroFields) {
+    memset(&(structObj->inlineData_[0]), 0, inlineBytes);
+    if (outlineBytes > 0) {
+      memset(structObj->outlineData_, 0, outlineBytes);
+    }
   }
 
   return structObj;
 }
+
+template WasmStructObject* WasmStructObject::createStruct<true>(
+    JSContext* cx, const wasm::TypeDef* typeDef,
+    const WasmGcObject::AllocArgs& args);
+template WasmStructObject* WasmStructObject::createStruct<false>(
+    JSContext* cx, const wasm::TypeDef* typeDef,
+    const WasmGcObject::AllocArgs& args);
 
 /* static */
 void WasmStructObject::obj_trace(JSTracer* trc, JSObject* object) {

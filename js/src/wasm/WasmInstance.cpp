@@ -1182,6 +1182,20 @@ static int32_t MemDiscardNotShared(Instance* instance, I byteOffset, I byteLen,
   return WasmStructObject::createStruct(cx, typeDef, args);
 }
 
+/* static */ void* Instance::structNewUninit(Instance* instance,
+                                             TypeDefInstanceData* typeDefData) {
+  MOZ_ASSERT(SASigStructNew.failureMode == FailureMode::FailOnNullPtr);
+  JSContext* cx = instance->cx();
+
+  const TypeDef* typeDef = typeDefData->typeDef;
+  WasmGcObject::AllocArgs args(cx, typeDefData);
+  // Update the initial heap to take into account pre-tenuring.
+  if (typeDefData->clasp == &WasmStructObject::classInline_) {
+    args.initialHeap = typeDefData->allocSite.initialHeap();
+  }
+  return WasmStructObject::createStruct<false>(cx, typeDef, args);
+}
+
 /* static */ void* Instance::arrayNew(Instance* instance, uint32_t numElements,
                                       TypeDefInstanceData* typeDefData) {
   MOZ_ASSERT(SASigArrayNew.failureMode == FailureMode::FailOnNullPtr);
@@ -1192,6 +1206,19 @@ static int32_t MemDiscardNotShared(Instance* instance, I byteOffset, I byteLen,
   // Arrays can only be allocated in the tenured heap, so don't use the
   // allocation site for pretenuring yet.
   return WasmArrayObject::createArray(cx, typeDef, numElements, args);
+}
+
+/* static */ void* Instance::arrayNewUninit(Instance* instance,
+                                            uint32_t numElements,
+                                            TypeDefInstanceData* typeDefData) {
+  MOZ_ASSERT(SASigArrayNew.failureMode == FailureMode::FailOnNullPtr);
+  JSContext* cx = instance->cx();
+
+  const TypeDef* typeDef = typeDefData->typeDef;
+  WasmGcObject::AllocArgs args(cx, typeDefData);
+  // Arrays can only be allocated in the tenured heap, so don't use the
+  // allocation site for pretenuring yet.
+  return WasmArrayObject::createArray<false>(cx, typeDef, numElements, args);
 }
 
 // Creates an array (WasmArrayObject) containing `numElements` of type
