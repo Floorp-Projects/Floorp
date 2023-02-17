@@ -110,10 +110,6 @@ class RTC_EXPORT VideoAdapter {
   // Can return `numeric_limits<float>::infinity()` if no limit is set.
   float GetMaxFramerate() const;
 
-  // Requests the output frame size from |AdaptFrameResolution| be scaled
-  // down from the input by a factor of scale_resolution_by (min 1.0)
-  virtual void OnScaleResolutionBy(absl::optional<float> scale_resolution_by);
-
  private:
   // Determine if frame should be dropped based on input fps and requested fps.
   bool DropFrame(int64_t in_timestamp_ns) RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
@@ -153,8 +149,6 @@ class RTC_EXPORT VideoAdapter {
   int resolution_request_target_pixel_count_ RTC_GUARDED_BY(mutex_);
   int resolution_request_max_pixel_count_ RTC_GUARDED_BY(mutex_);
   int max_framerate_request_ RTC_GUARDED_BY(mutex_);
-  float scale_resolution_by_ RTC_GUARDED_BY(mutex_);
-  bool scale_ RTC_GUARDED_BY(mutex_);
 
   // Stashed OutputFormatRequest that is used to save value of
   // OnOutputFormatRequest in case all active encoders are using
