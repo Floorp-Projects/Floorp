@@ -149,7 +149,7 @@ enum DashState {
 
 static DashState GetStrokeDashData(
     SVGContentUtils::AutoStrokeOptions* aStrokeOptions, SVGElement* aElement,
-    const nsStyleSVG* aStyleSVG, SVGContextPaint* aContextPaint) {
+    const nsStyleSVG* aStyleSVG, const SVGContextPaint* aContextPaint) {
   size_t dashArrayLength;
   Float totalLengthOfDashes = 0.0, totalLengthOfGaps = 0.0;
   Float pathScale = 1.0;
@@ -250,7 +250,7 @@ static DashState GetStrokeDashData(
 void SVGContentUtils::GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
                                        SVGElement* aElement,
                                        const ComputedStyle* aComputedStyle,
-                                       SVGContextPaint* aContextPaint,
+                                       const SVGContextPaint* aContextPaint,
                                        StrokeOptionFlags aFlags) {
   auto doCompute = [&](const ComputedStyle* computedStyle) {
     const nsStyleSVG* styleSVG = computedStyle->StyleSVG();
@@ -317,9 +317,9 @@ void SVGContentUtils::GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
   }
 }
 
-Float SVGContentUtils::GetStrokeWidth(SVGElement* aElement,
+Float SVGContentUtils::GetStrokeWidth(const SVGElement* aElement,
                                       const ComputedStyle* aComputedStyle,
-                                      SVGContextPaint* aContextPaint) {
+                                      const SVGContextPaint* aContextPaint) {
   Float res = 0.0;
 
   auto doCompute = [&](const ComputedStyle* computedStyle) {
@@ -349,7 +349,7 @@ Float SVGContentUtils::GetStrokeWidth(SVGElement* aElement,
   return res;
 }
 
-float SVGContentUtils::GetFontSize(Element* aElement) {
+float SVGContentUtils::GetFontSize(const Element* aElement) {
   if (!aElement) {
     return 1.0f;
   }
@@ -373,7 +373,7 @@ float SVGContentUtils::GetFontSize(Element* aElement) {
   return 1.0f;
 }
 
-float SVGContentUtils::GetFontSize(nsIFrame* aFrame) {
+float SVGContentUtils::GetFontSize(const nsIFrame* aFrame) {
   MOZ_ASSERT(aFrame, "NULL frame in GetFontSize");
   return GetFontSize(aFrame->Style(), aFrame->PresContext());
 }
@@ -387,7 +387,7 @@ float SVGContentUtils::GetFontSize(const ComputedStyle* aComputedStyle,
          aPresContext->EffectiveTextZoom();
 }
 
-float SVGContentUtils::GetFontXHeight(Element* aElement) {
+float SVGContentUtils::GetFontXHeight(const Element* aElement) {
   if (!aElement) {
     return 1.0f;
   }
@@ -411,7 +411,7 @@ float SVGContentUtils::GetFontXHeight(Element* aElement) {
   return 1.0f;
 }
 
-float SVGContentUtils::GetFontXHeight(nsIFrame* aFrame) {
+float SVGContentUtils::GetFontXHeight(const nsIFrame* aFrame) {
   MOZ_ASSERT(aFrame, "NULL frame in GetFontXHeight");
   return GetFontXHeight(aFrame->Style(), aFrame->PresContext());
 }
@@ -434,14 +434,15 @@ float SVGContentUtils::GetFontXHeight(const ComputedStyle* aComputedStyle,
   return nsPresContext::AppUnitsToFloatCSSPixels(xHeight) /
          aPresContext->EffectiveTextZoom();
 }
-nsresult SVGContentUtils::ReportToConsole(Document* doc, const char* aWarning,
+nsresult SVGContentUtils::ReportToConsole(const Document* doc,
+                                          const char* aWarning,
                                           const nsTArray<nsString>& aParams) {
   return nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "SVG"_ns,
                                          doc, nsContentUtils::eSVG_PROPERTIES,
                                          aWarning, aParams);
 }
 
-bool SVGContentUtils::EstablishesViewport(nsIContent* aContent) {
+bool SVGContentUtils::EstablishesViewport(const nsIContent* aContent) {
   // Although SVG 1.1 states that <image> is an element that establishes a
   // viewport, this is really only for the document it references, not
   // for any child content, which is what this function is used for.
@@ -799,7 +800,7 @@ bool SVGContentUtils::ParseInteger(const nsAString& aString, int32_t& aValue) {
   return ParseInteger(iter, end, aValue) && iter == end;
 }
 
-float SVGContentUtils::CoordToFloat(SVGElement* aContent,
+float SVGContentUtils::CoordToFloat(const SVGElement* aContent,
                                     const LengthPercentage& aLength,
                                     uint8_t aCtxType) {
   float result = aLength.ResolveToCSSPixelsWith([&] {
