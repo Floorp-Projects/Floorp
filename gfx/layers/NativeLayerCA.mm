@@ -861,9 +861,12 @@ bool NativeLayerCA::ShouldSpecializeVideo(const MutexAutoLock& aProofOfLock) {
 
   MOZ_ASSERT(mTextureHost);
 
-  // DRM video must use a specialized video layer.
-  if (mTextureHost->IsFromDRMSource()) {
-    return true;
+  // DRM video is supported in macOS 10.15 and beyond, and such video must use
+  // a specialized video layer.
+  if (@available(macOS 10.15, iOS 13.0, *)) {
+    if (mTextureHost->IsFromDRMSource()) {
+      return true;
+    }
   }
 
   // Beyond this point, we need to know about the format of the video.
