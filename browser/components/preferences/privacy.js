@@ -2003,6 +2003,15 @@ var gPrivacyPane = {
       mode = Ci.nsICookieBannerService.MODE_DISABLED;
     }
 
+    /**
+     * There is a second service.mode pref for private browsing,
+     * but for now we want it always be the same as service.mode
+     * more info: https://bugzilla.mozilla.org/show_bug.cgi?id=1817201
+     */
+    Services.prefs.setIntPref(
+      "cookiebanners.service.mode.privateBrowsing",
+      mode
+    );
     return mode;
   },
 
