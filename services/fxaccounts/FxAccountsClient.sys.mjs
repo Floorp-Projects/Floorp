@@ -23,9 +23,7 @@ const {
   ERRNO_INVALID_AUTH_TOKEN,
   log,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-const { Credentials } = ChromeUtils.import(
-  "resource://gre/modules/Credentials.jsm"
-);
+import { Credentials } from "resource://gre/modules/Credentials.sys.mjs";
 
 const HOST_PREF = "identity.fxaccounts.auth.uri";
 

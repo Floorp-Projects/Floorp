@@ -11,26 +11,25 @@ const {
   COMMAND_PAIR_HEARTBEAT,
   COMMAND_PAIR_COMPLETE,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-const { getFxAccountsSingleton, FxAccounts } = ChromeUtils.import(
-  "resource://gre/modules/FxAccounts.jsm"
-);
+import {
+  getFxAccountsSingleton,
+  FxAccounts,
+} from "resource://gre/modules/FxAccounts.sys.mjs";
+
 const fxAccounts = getFxAccountsSingleton();
 import { setTimeout, clearTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
 ChromeUtils.import("resource://services-common/utils.js");
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
+  FxAccountsPairingChannel:
+    "resource://gre/modules/FxAccountsPairingChannel.sys.mjs",
   Weave: "resource://services-sync/main.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(
   lazy,
   "jwcrypto",
   "resource://services-crypto/jwcrypto.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FxAccountsPairingChannel",
-  "resource://gre/modules/FxAccountsPairingChannel.js"
 );
 
 const PAIRING_REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob:pair-auth-webchannel";

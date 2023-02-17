@@ -3,14 +3,14 @@
 
 "use strict";
 
-const { FxAccounts } = ChromeUtils.import(
-  "resource://gre/modules/FxAccounts.jsm"
+const { FxAccounts } = ChromeUtils.importESModule(
+  "resource://gre/modules/FxAccounts.sys.mjs"
 );
-const { FxAccountsClient } = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsClient.jsm"
+const { FxAccountsClient } = ChromeUtils.importESModule(
+  "resource://gre/modules/FxAccountsClient.sys.mjs"
 );
-const { FxAccountsDevice } = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsDevice.jsm"
+const { FxAccountsDevice } = ChromeUtils.importESModule(
+  "resource://gre/modules/FxAccountsDevice.sys.mjs"
 );
 const {
   ERRNO_DEVICE_SESSION_CONFLICT,
@@ -20,8 +20,8 @@ const {
   ON_DEVICE_DISCONNECTED_NOTIFICATION,
   ON_DEVICELIST_UPDATED,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
-var { AccountState } = ChromeUtils.import(
-  "resource://gre/modules/FxAccounts.jsm"
+var { AccountState } = ChromeUtils.importESModule(
+  "resource://gre/modules/FxAccounts.sys.mjs"
 );
 
 initTestLogging("Trace");

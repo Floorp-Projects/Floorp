@@ -14,7 +14,9 @@ const { CryptoUtils } = ChromeUtils.import(
 const {
   FxAccountsWebChannel,
   FxAccountsWebChannelHelpers,
-} = ChromeUtils.import("resource://gre/modules/FxAccountsWebChannel.jsm");
+} = ChromeUtils.importESModule(
+  "resource://gre/modules/FxAccountsWebChannel.sys.mjs"
+);
 
 const URL_STRING = "https://example.com";
 

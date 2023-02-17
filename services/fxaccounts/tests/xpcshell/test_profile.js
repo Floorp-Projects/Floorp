@@ -6,11 +6,11 @@
 const { ON_PROFILE_CHANGE_NOTIFICATION, log } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"
 );
-const { FxAccountsProfileClient } = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsProfileClient.jsm"
+const { FxAccountsProfileClient } = ChromeUtils.importESModule(
+  "resource://gre/modules/FxAccountsProfileClient.sys.mjs"
 );
-const { FxAccountsProfile } = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsProfile.jsm"
+const { FxAccountsProfile } = ChromeUtils.importESModule(
+  "resource://gre/modules/FxAccountsProfile.sys.mjs"
 );
 const { PromiseUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/PromiseUtils.sys.mjs"
