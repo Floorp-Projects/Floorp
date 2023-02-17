@@ -1,13 +1,13 @@
 /* import-globals-from ../../../common/tests/unit/head_helpers.js */
 
-const { RemoteSettings } = ChromeUtils.import(
-  "resource://services-settings/remote-settings.js"
+const { RemoteSettings } = ChromeUtils.importESModule(
+  "resource://services-settings/remote-settings.sys.mjs"
 );
 const { UptakeTelemetry } = ChromeUtils.import(
   "resource://services-common/uptake-telemetry.js"
 );
-const { Downloader } = ChromeUtils.import(
-  "resource://services-settings/Attachments.jsm"
+const { Downloader } = ChromeUtils.importESModule(
+  "resource://services-settings/Attachments.sys.mjs"
 );
 const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"

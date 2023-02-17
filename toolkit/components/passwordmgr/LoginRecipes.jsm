@@ -36,8 +36,8 @@ XPCOMUtils.defineLazyGetter(lazy, "log", () =>
   lazy.LoginHelper.createLogger("LoginRecipes")
 );
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  RemoteSettings: "resource://services-settings/remote-settings.js",
+ChromeUtils.defineESModuleGetters(lazy, {
+  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
 });
 
 /**

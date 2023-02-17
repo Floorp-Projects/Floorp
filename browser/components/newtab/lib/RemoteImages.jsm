@@ -9,17 +9,15 @@ const { JSONFile } = ChromeUtils.importESModule(
 const { PromiseUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/PromiseUtils.sys.mjs"
 );
-const { RemoteSettings } = ChromeUtils.import(
-  "resource://services-settings/remote-settings.js"
+const { RemoteSettings } = ChromeUtils.importESModule(
+  "resource://services-settings/remote-settings.sys.mjs"
 );
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Downloader",
-  "resource://services-settings/Attachments.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  Downloader: "resource://services-settings/Attachments.sys.mjs",
+});
 
 ChromeUtils.defineModuleGetter(
   lazy,

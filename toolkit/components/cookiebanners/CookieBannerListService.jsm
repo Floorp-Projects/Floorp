@@ -13,10 +13,7 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 
 ChromeUtils.defineESModuleGetters(lazy, {
   JsonSchema: "resource://gre/modules/JsonSchema.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  RemoteSettings: "resource://services-settings/remote-settings.js",
+  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
 });
 
 XPCOMUtils.defineLazyPreferenceGetter(
