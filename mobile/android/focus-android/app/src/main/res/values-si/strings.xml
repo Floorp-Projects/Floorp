@@ -985,12 +985,37 @@
     <string name="preference_follow_device_theme">උපාංගයේ තේමාව</string>
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">ඔබ ඉල්ලූ අඩවිය HTTPS සඳහා සහය නොදක්වයි</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">ඔබ ඉල්ලූ අඩවිය HTTPS සඳහා සහය නොදක්වයි</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">අඩවිය HTTPS සඳහා සහය නොදක්වයි</string>
 
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">පෙරනිමි ලෙස, ඉහළ ආරක්‍ෂාවක් සඳහා HTTPS භාවිතයෙන් සම්බන්ධ වීමට %1$s උත්සාහ කරයි. මෙම සැකසුම වෙනස් කිරීමට හෝ තව දැන ගැනීමට, සැකසුම් &gt; පෞද්ගලිකත්‍වය හා ආරක්‍ෂාව &gt; ආරක්‍ෂාව වෙත යන්න.</string>
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">පෙරනිමි ලෙස, ඉහළ ආරක්‍ෂාවක් සඳහා HTTPS භාවිතයෙන් සම්බන්ධ වීමට %1$s උත්සාහ කරයි. මෙම සැකසුම වෙනස් කිරීමට හෝ තව දැන ගැනීමට, සැකසුම් &gt; පෞද්ගලිකත්‍වය හා ආරක්‍ෂාව &gt; ආරක්‍ෂාව වෙත යන්න.</string>
 
-    <!-- Sessions List -->
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[වැඩි ආරක්‍ෂාවක් සඳහා %1$s හැකි සෑම විටම HTTPS සම්බන්ධතාවයක් භාවිතයට උත්සාහ කරයි.
+ <a href="%2$s">තව දැනගන්න</a> <br/><br/>
+ සැකසුම් > පෞද්ගලිකත්‍වය හා ආරක්‍ෂාව > ආරක්‍ෂාව හරහා සැකසුම වෙනස් කරන්න.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">සම්බන්ධතාවය අනාරක්‍ෂිතයි</string>
+
+     <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+ මෙය සේවාදායකයේ වින්‍යාසයෙහි ගැටළුවක් විය හැකිය, හෝ යමෙක් සේවාදායකය ලෙස වංචනිකව පෙනී සිටීමට තැත් කරනවා විය හැකිය. <br/><br/>
+ ඔබ පෙර දී මෙම සේවාදායකයට සාර්ථකව සම්බන්ධ වී ඇත්නම්, මෙය තාවකාලික දෝෂයක් විය හැකිය.
+ ]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+ <label>යමෙක් වංචනිකව මෙම අඩවිය හසුරුවීමට තැත් කරන හෙයින් ඉදිරියට යාම අවදානම් සහගතය.</label>
+ <br><br>
+ <label><b>%2$s</b> හි සහතිකයේ නිකුත්කරු නොදන්නා නිසා %1$s එය විශ්වාස නොකරයි, සහතිකය ස්වයං-අත්සන් කර හෝ සේවාදායකය නිවැරදි අතරමැදි සහතිකය එවන්නේ නැත.</label>
+ ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">පටිත්ත වසන්න</string>
 

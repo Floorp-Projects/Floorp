@@ -67,7 +67,9 @@
     <!-- Text for the main message -->
     <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Adicione um atalho na tela inicial do dispositivo para abrir abas privativas.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message">Aba a próxima aba privativa com apenas um toque.</string>
+    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">Aba a próxima aba privativa com apenas um toque.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message_2">Aba a próxima aba privativa com apenas um toque.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Adicionar atalho</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->

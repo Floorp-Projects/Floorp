@@ -1009,12 +1009,18 @@
 
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">Asmel i tebɣiḍ ur issefrak ara HTTPS</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">Asmel i tebɣiḍ ur issefrak ara HTTPS</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Asmel-a ur issefrak ara HTTPS</string>
 
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">S wudem amezwer, %1$s yineεruḍen i tuqqna s useqdec n HTTPS i wugar n tɣellist. I usnifel n uɣewwar-a neɣ i wugar n telɣut, ddu ɣer Iɣewwaren &gt; Tabaḍnit &amp; Taɣellist &gt; Taɣellist.</string>
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">S wudem amezwer, %1$s yineεruḍen i tuqqna s useqdec n HTTPS i wugar n tɣellist. I usnifel n uɣewwar-a neɣ i wugar n telɣut, ddu ɣer Iɣewwaren &gt; Tabaḍnit &amp; Taɣellist &gt; Taɣellist.</string>
 
-    <!-- Sessions List -->
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Tuqqna d taraɣellsant</string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Mdel Iccer</string>
 
