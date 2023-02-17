@@ -193,7 +193,6 @@ windows-7-tests:
     - mochitest-browser-a11y
     - mochitest-browser-chrome
     - mochitest-browser-media
-    - mochitest-webgpu
     - xpcshell
 
 windows32-2004-tests:
@@ -210,6 +209,7 @@ windows32-2004-tests:
     - mochitest-plain
     - mochitest-plain-gpu
     - mochitest-remote
+    - mochitest-webgpu
     - reftest
     - telemetry-tests-client
     - test-verify
