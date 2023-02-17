@@ -8365,9 +8365,11 @@ void nsIFrame::DumpFrameTreeLimitedInCSSPixels() const {
 
 #endif
 
-bool nsIFrame::IsVisibleForPainting() { return StyleVisibility()->IsVisible(); }
+bool nsIFrame::IsVisibleForPainting() const {
+  return StyleVisibility()->IsVisible();
+}
 
-bool nsIFrame::IsVisibleOrCollapsedForPainting() {
+bool nsIFrame::IsVisibleOrCollapsedForPainting() const {
   return StyleVisibility()->IsVisibleOrCollapsed();
 }
 

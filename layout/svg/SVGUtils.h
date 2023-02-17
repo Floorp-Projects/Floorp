@@ -203,7 +203,7 @@ class SVGUtils final {
    * Returns true if the frame or any of its children need ReflowSVG
    * to be called on them.
    */
-  static bool NeedsReflowSVG(nsIFrame* aFrame);
+  static bool NeedsReflowSVG(const nsIFrame* aFrame);
 
   /**
    * Percentage lengths in SVG are resolved against the width/height of the
@@ -310,7 +310,7 @@ class SVGUtils final {
    * The arguments for aX, aY, aWidth and aHeight should be the dimensions of
    * the viewport established by aFrame.
    */
-  static gfxRect GetClipRectForFrame(nsIFrame* aFrame, float aX, float aY,
+  static gfxRect GetClipRectForFrame(const nsIFrame* aFrame, float aX, float aY,
                                      float aWidth, float aHeight);
 
   static void SetClipRect(gfxContext* aContext, const gfxMatrix& aCTM,
@@ -321,7 +321,7 @@ class SVGUtils final {
    * not applying filters and not both stroking and filling, we can
    * generate the same result without going through the overhead of a
    * push/pop group. */
-  static bool CanOptimizeOpacity(nsIFrame* aFrame);
+  static bool CanOptimizeOpacity(const nsIFrame* aFrame);
 
   /**
    * Take the CTM to userspace for an element, and adjust it to a CTM to its
@@ -334,7 +334,7 @@ class SVGUtils final {
    * @param aFlags One or more of the BBoxFlags values defined below.
    */
   static gfxMatrix AdjustMatrixForUnits(const gfxMatrix& aMatrix,
-                                        SVGAnimatedEnumeration* aUnits,
+                                        const SVGAnimatedEnumeration* aUnits,
                                         nsIFrame* aFrame, uint32_t aFlags);
 
   enum BBoxFlags {
@@ -398,7 +398,7 @@ class SVGUtils final {
    * This function returns the offset one needs to add to something in frame
    * space in order to get its coordinates in user space.
    */
-  static gfxPoint FrameSpaceInCSSPxToUserSpaceOffset(nsIFrame* aFrame);
+  static gfxPoint FrameSpaceInCSSPxToUserSpaceOffset(const nsIFrame* aFrame);
 
   /**
    * Convert a userSpaceOnUse/objectBoundingBoxUnits rectangle that's specified
@@ -440,7 +440,7 @@ class SVGUtils final {
    * system in which the stroke is fixed).  If aUserToOuterSVG is set to a
    * non-identity matrix this function returns true, else it returns false.
    */
-  static bool GetNonScalingStrokeTransform(nsIFrame* aFrame,
+  static bool GetNonScalingStrokeTransform(const nsIFrame* aFrame,
                                            gfxMatrix* aUserToOuterSVG);
 
   /**
@@ -457,10 +457,10 @@ class SVGUtils final {
    * This should die once bug 478152 is fixed.
    */
   static gfxRect PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
-                                               nsTextFrame* aFrame,
+                                               const nsTextFrame* aFrame,
                                                const gfxMatrix& aMatrix);
   static gfxRect PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
-                                               SVGGeometryFrame* aFrame,
+                                               const SVGGeometryFrame* aFrame,
                                                const gfxMatrix& aMatrix);
 
   /**
@@ -495,16 +495,16 @@ class SVGUtils final {
                                    imgDrawingParams& aImgParams,
                                    SVGContextPaint* aContextPaint = nullptr);
 
-  static float GetOpacity(const StyleSVGOpacity&, SVGContextPaint*);
+  static float GetOpacity(const StyleSVGOpacity&, const SVGContextPaint*);
 
   /*
    * @return false if there is no stroke
    */
-  static bool HasStroke(nsIFrame* aFrame,
-                        SVGContextPaint* aContextPaint = nullptr);
+  static bool HasStroke(const nsIFrame* aFrame,
+                        const SVGContextPaint* aContextPaint = nullptr);
 
-  static float GetStrokeWidth(nsIFrame* aFrame,
-                              SVGContextPaint* aContextPaint = nullptr);
+  static float GetStrokeWidth(const nsIFrame* aFrame,
+                              const SVGContextPaint* aContextPaint = nullptr);
 
   /*
    * Set up a context for a stroked path (including any dashing that applies).
@@ -518,7 +518,7 @@ class SVGUtils final {
    * into account the type of element and the value of the 'pointer-events'
    * property on the element.
    */
-  static uint16_t GetGeometryHitTestFlags(nsIFrame* aFrame);
+  static uint16_t GetGeometryHitTestFlags(const nsIFrame* aFrame);
 
   static FillRule ToFillRule(StyleFillRule aFillRule) {
     return aFillRule == StyleFillRule::Evenodd ? FillRule::FILL_EVEN_ODD
@@ -547,7 +547,7 @@ class SVGUtils final {
    * @param aResult the result (valid when true is returned)
    * @return true if calculating the extents succeeded
    */
-  static bool GetSVGGlyphExtents(Element* aElement,
+  static bool GetSVGGlyphExtents(const Element* aElement,
                                  const gfxMatrix& aSVGToAppSpace,
                                  gfxRect* aResult);
 
@@ -581,10 +581,10 @@ class SVGUtils final {
     }
   };
 
-  static void DetermineMaskUsage(nsIFrame* aFrame, bool aHandleOpacity,
+  static void DetermineMaskUsage(const nsIFrame* aFrame, bool aHandleOpacity,
                                  MaskUsage& aUsage);
 
-  static float ComputeOpacity(nsIFrame* aFrame, bool aHandleOpacity);
+  static float ComputeOpacity(const nsIFrame* aFrame, bool aHandleOpacity);
 
   /**
    * SVG frames expect to paint in SVG user units, which are equal to CSS px
@@ -592,7 +592,7 @@ class SVGUtils final {
    * gfxContext's current transform to convert the context's current units from
    * its usual dev pixels to SVG user units/CSS px to keep the SVG code happy.
    */
-  static gfxMatrix GetCSSPxToDevPxMatrix(nsIFrame* aNonSVGFrame);
+  static gfxMatrix GetCSSPxToDevPxMatrix(const nsIFrame* aNonSVGFrame);
 
   static bool IsInSVGTextSubtree(const nsIFrame* aFrame) {
     // Returns true if the frame is an SVGTextFrame or one of its descendants.

@@ -142,7 +142,7 @@ class SVGContentUtils {
   static void GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
                                dom::SVGElement* aElement,
                                const ComputedStyle* aComputedStyle,
-                               mozilla::SVGContextPaint* aContextPaint,
+                               const SVGContextPaint* aContextPaint,
                                StrokeOptionFlags aFlags = eAllStrokeOptions);
 
   /**
@@ -154,9 +154,9 @@ class SVGContentUtils {
    * and 'stroke-opacity' properties to, say, return zero if they are "none" or
    * "0", respectively.
    */
-  static Float GetStrokeWidth(dom::SVGElement* aElement,
+  static Float GetStrokeWidth(const dom::SVGElement* aElement,
                               const ComputedStyle* aComputedStyle,
-                              mozilla::SVGContextPaint* aContextPaint);
+                              const SVGContextPaint* aContextPaint);
 
   /*
    * Get the number of CSS px (user units) per em (i.e. the em-height in user
@@ -165,8 +165,8 @@ class SVGContentUtils {
    * XXX document the conditions under which these may fail, and what they
    * return in those cases.
    */
-  static float GetFontSize(mozilla::dom::Element* aElement);
-  static float GetFontSize(nsIFrame* aFrame);
+  static float GetFontSize(const mozilla::dom::Element* aElement);
+  static float GetFontSize(const nsIFrame* aFrame);
   static float GetFontSize(const ComputedStyle*, nsPresContext*);
   /*
    * Get the number of CSS px (user units) per ex (i.e. the x-height in user
@@ -175,14 +175,15 @@ class SVGContentUtils {
    * XXX document the conditions under which these may fail, and what they
    * return in those cases.
    */
-  static float GetFontXHeight(mozilla::dom::Element* aElement);
-  static float GetFontXHeight(nsIFrame* aFrame);
+  static float GetFontXHeight(const mozilla::dom::Element* aElement);
+  static float GetFontXHeight(const nsIFrame* aFrame);
   static float GetFontXHeight(const ComputedStyle*, nsPresContext*);
 
   /*
    * Report a localized error message to the error console.
    */
-  static nsresult ReportToConsole(dom::Document* doc, const char* aWarning,
+  static nsresult ReportToConsole(const dom::Document* doc,
+                                  const char* aWarning,
                                   const nsTArray<nsString>& aParams);
 
   static Matrix GetCTM(dom::SVGElement* aElement, bool aScreenCTM);
@@ -205,7 +206,7 @@ class SVGContentUtils {
    * Check if this is one of the SVG elements that SVG 1.1 Full says
    * establishes a viewport: svg, symbol, image or foreignObject.
    */
-  static bool EstablishesViewport(nsIContent* aContent);
+  static bool EstablishesViewport(const nsIContent* aContent);
 
   static mozilla::dom::SVGViewportElement* GetNearestViewportElement(
       const nsIContent* aContent);
@@ -317,7 +318,7 @@ class SVGContentUtils {
    * Converts a LengthPercentage into a userspace value, resolving percentage
    * values relative to aContent's SVG viewport.
    */
-  static float CoordToFloat(dom::SVGElement* aContent,
+  static float CoordToFloat(const dom::SVGElement* aContent,
                             const StyleLengthPercentageUnion&,
                             uint8_t aCtxType = SVGContentUtils::XY);
   /**
