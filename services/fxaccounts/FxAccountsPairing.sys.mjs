@@ -2,8 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-"use strict";
-
 const {
   log,
   PREF_REMOTE_PAIRING_URI,
@@ -17,9 +15,8 @@ const { getFxAccountsSingleton, FxAccounts } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm"
 );
 const fxAccounts = getFxAccountsSingleton();
-const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
-  "resource://gre/modules/Timer.sys.mjs"
-);
+import { setTimeout, clearTimeout } from "resource://gre/modules/Timer.sys.mjs";
+
 ChromeUtils.import("resource://services-common/utils.js");
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -173,7 +170,8 @@ class Errored extends State {
 }
 
 const flows = new Map();
-class FxAccountsPairingFlow {
+
+export class FxAccountsPairingFlow {
   static get(channelId) {
     return flows.get(channelId);
   }
@@ -518,5 +516,3 @@ class FxAccountsPairingFlow {
     );
   }
 }
-
-const EXPORTED_SYMBOLS = ["FxAccountsPairingFlow"];

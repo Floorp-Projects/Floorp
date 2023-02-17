@@ -1,20 +1,15 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
+import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
+
 const { CryptoUtils } = ChromeUtils.import(
   "resource://services-crypto/utils.js"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { clearTimeout, setTimeout } = ChromeUtils.importESModule(
-  "resource://gre/modules/Timer.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
+
 const { FxAccountsStorageManager } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsStorage.jsm"
 );
@@ -129,7 +124,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 // }
 // If the state has changed between the function being called and the promise
 // being resolved, the .resolve() call will actually be rejected.
-function AccountState(storageManager) {
+export function AccountState(storageManager) {
   this.storageManager = storageManager;
   this.inFlightTokenRequests = new Map();
   this.promiseInitialized = this.storageManager
@@ -375,7 +370,7 @@ function copyObjectProperties(from, to, thisObj, keys) {
  * (although |./mach doc| is broken on windows (bug 1232403) and on Linux for
  * markh (some obscure npm issue he gave up on) - so later...)
  */
-class FxAccounts {
+export class FxAccounts {
   constructor(mocks = null) {
     this._internal = new FxAccountsInternal();
     if (mocks) {
@@ -1645,7 +1640,8 @@ FxAccountsInternal.prototype = {
 };
 
 let fxAccountsSingleton = null;
-function getFxAccountsSingleton() {
+
+export function getFxAccountsSingleton() {
   if (fxAccountsSingleton) {
     return fxAccountsSingleton;
   }
@@ -1660,4 +1656,3 @@ function getFxAccountsSingleton() {
 }
 
 // `AccountState` is exported for tests.
-var EXPORTED_SYMBOLS = ["getFxAccountsSingleton", "FxAccounts", "AccountState"];
