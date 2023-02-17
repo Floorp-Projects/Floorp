@@ -24,12 +24,14 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
+  RemoteSettingsClient:
+    "resource://services-settings/RemoteSettingsClient.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  RemoteSettings: "resource://services-settings/remote-settings.js",
   Storage: "resource://normandy/lib/Storage.jsm",
   FilterExpressions:
     "resource://gre/modules/components-utils/FilterExpressions.jsm",
@@ -41,7 +43,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   Uptake: "resource://normandy/lib/Uptake.jsm",
   ActionsManager: "resource://normandy/lib/ActionsManager.jsm",
   BaseAction: "resource://normandy/actions/BaseAction.jsm",
-  RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
 });
 
 var EXPORTED_SYMBOLS = ["RecipeRunner"];

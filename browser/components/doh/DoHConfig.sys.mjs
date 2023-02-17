@@ -8,9 +8,8 @@
  * sourced from either Remote Settings or pref values, with Remote Settings
  * being preferred.
  */
-const { RemoteSettings } = ChromeUtils.import(
-  "resource://services-settings/remote-settings.js"
-);
+
+import { RemoteSettings } from "resource://services-settings/remote-settings.sys.mjs";
 
 const lazy = {};
 

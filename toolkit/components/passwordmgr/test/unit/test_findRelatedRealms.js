@@ -6,8 +6,8 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 const { LoginRelatedRealmsParent } = ChromeUtils.import(
   "resource://gre/modules/LoginRelatedRealms.jsm"
 );
-const { RemoteSettings } = ChromeUtils.import(
-  "resource://services-settings/remote-settings.js"
+const { RemoteSettings } = ChromeUtils.importESModule(
+  "resource://services-settings/remote-settings.sys.mjs"
 );
 
 const REMOTE_SETTINGS_COLLECTION = "websites-with-shared-credential-backends";

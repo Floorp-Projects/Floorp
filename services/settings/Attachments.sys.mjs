@@ -5,8 +5,13 @@
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  RemoteSettingsWorker:
+    "resource://services-settings/RemoteSettingsWorker.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  RemoteSettingsWorker: "resource://services-settings/RemoteSettingsWorker.jsm",
   Utils: "resource://services-settings/Utils.jsm",
 });
 
