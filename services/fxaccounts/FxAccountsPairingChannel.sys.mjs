@@ -22,15 +22,14 @@
 // from Firefox browser code, hence the presence of these privileged browser APIs.
 // If you're trying to use this from ordinary web content you're in for a bad time.
 
-const {setTimeout} = ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs");
+import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
+
 // We cannot use WebSocket from chrome code without a window,
 // see https://bugzilla.mozilla.org/show_bug.cgi?id=784686
 const browser = Services.appShell.createWindowlessBrowser(true);
 const {WebSocket} = browser.document.ownerGlobal;
 
-const EXPORTED_SYMBOLS = ["FxAccountsPairingChannel"];
-
-var FxAccountsPairingChannel =
+export var FxAccountsPairingChannel =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -704,7 +703,7 @@ async function verifyHmac(keyBytes, signature, message) {
     hash: { name: 'SHA-256' },
     name: 'HMAC',
   }, false, ['verify']);
-  if (! await crypto.subtle.verify({ name: 'HMAC' }, key, signature, message)) {
+  if (! (await crypto.subtle.verify({ name: 'HMAC' }, key, signature, message))) {
     // Yes, we really do throw 'decrypt_error' when failing to verify a HMAC,
     // and a 'bad_record_mac' error when failing to decrypt.
     throw new TLSError(ALERT_DESCRIPTION.DECRYPT_ERROR);

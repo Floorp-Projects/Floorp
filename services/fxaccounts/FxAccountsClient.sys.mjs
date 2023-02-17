@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["FxAccountsClient"];
-
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );
@@ -36,7 +34,9 @@ const SIGNUP = "/account/create";
 // Devices older than this many days will not appear in the devices list
 const DEVICES_FILTER_DAYS = 21;
 
-var FxAccountsClient = function(host = Services.prefs.getCharPref(HOST_PREF)) {
+export var FxAccountsClient = function(
+  host = Services.prefs.getCharPref(HOST_PREF)
+) {
   this.host = host;
 
   // The FxA auth server expects requests to certain endpoints to be authorized

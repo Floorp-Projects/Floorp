@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = ["SendTab", "FxAccountsCommands"];
-
 const {
   COMMAND_SENDTAB,
   COMMAND_SENDTAB_TAIL,
@@ -16,9 +14,8 @@ ChromeUtils.defineModuleGetter(
   "PushCrypto",
   "resource://gre/modules/PushCrypto.jsm"
 );
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const { Observers } = ChromeUtils.import(
   "resource://services-common/observers.js"
 );
@@ -39,7 +36,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   }
 );
 
-class FxAccountsCommands {
+export class FxAccountsCommands {
   constructor(fxAccountsInternal) {
     this._fxai = fxAccountsInternal;
     this.sendTab = new SendTab(this, fxAccountsInternal);
@@ -248,7 +245,7 @@ class FxAccountsCommands {
  * the push keys to deliver the tabs using same mechanism we use for web-push.
  * However, clients use the send-tab keys for end-to-end encryption.
  */
-class SendTab {
+export class SendTab {
   constructor(commands, fxAccountsInternal) {
     this._commands = commands;
     this._fxai = fxAccountsInternal;
