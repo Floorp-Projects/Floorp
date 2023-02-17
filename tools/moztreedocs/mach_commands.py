@@ -157,7 +157,15 @@ def build_docs(
     outdir = outdir or os.path.join(command_context.topobjdir, "docs")
     savedir = os.path.join(outdir, fmt)
 
-    path = path or command_context.topsrcdir
+    if path is None:
+        path = command_context.topsrcdir
+        if os.environ.get("MOZ_AUTOMATION") != "1":
+            print(
+                "\nBuilding the full documentation tree."
+                "Did you mean to only build part of the documentation?\n"
+                "For a faster command, consider running:\n"
+                " ./mach doc path/to/docs\n"
+            )
     path = os.path.normpath(os.path.abspath(path))
 
     docdir = _find_doc_dir(path)
