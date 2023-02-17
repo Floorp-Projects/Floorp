@@ -1005,16 +1005,6 @@ class WindowsToolchainTest(BaseToolchainTest):
     CLANGXX_4_0_RESULT = LinuxToolchainTest.CLANGXX_4_0_RESULT
     DEFAULT_CLANG_RESULT = LinuxToolchainTest.DEFAULT_CLANG_RESULT
     DEFAULT_CLANGXX_RESULT = LinuxToolchainTest.DEFAULT_CLANGXX_RESULT
-    GCC_4_9_RESULT = LinuxToolchainTest.GCC_4_9_RESULT
-    GXX_4_9_RESULT = LinuxToolchainTest.GXX_4_9_RESULT
-    GCC_5_RESULT = LinuxToolchainTest.GCC_5_RESULT
-    GXX_5_RESULT = LinuxToolchainTest.GXX_5_RESULT
-    GCC_6_RESULT = LinuxToolchainTest.GCC_6_RESULT
-    GXX_6_RESULT = LinuxToolchainTest.GXX_6_RESULT
-    GCC_7_RESULT = LinuxToolchainTest.GCC_7_RESULT
-    GXX_7_RESULT = LinuxToolchainTest.GXX_7_RESULT
-    DEFAULT_GCC_RESULT = LinuxToolchainTest.DEFAULT_GCC_RESULT
-    DEFAULT_GXX_RESULT = LinuxToolchainTest.DEFAULT_GXX_RESULT
 
     def test_unsupported_msvc(self):
         self.do_toolchain_test(
@@ -1044,7 +1034,7 @@ class WindowsToolchainTest(BaseToolchainTest):
         paths = {
             k: v
             for k, v in six.iteritems(self.PATHS)
-            if os.path.basename(k) not in ("cl", "clang-cl")
+            if os.path.basename(k) != "clang-cl"
         }
         self.do_toolchain_test(
             paths,
@@ -1076,7 +1066,7 @@ class WindowsToolchainTest(BaseToolchainTest):
         paths = {
             k: v
             for k, v in six.iteritems(self.PATHS)
-            if os.path.basename(k) not in ("cl", "clang-cl", "gcc")
+            if os.path.basename(k) not in ("clang-cl", "gcc")
         }
         self.do_toolchain_test(
             paths,
@@ -1809,10 +1799,8 @@ class RustTest(BaseConfigureTest):
 
         # Windows
         for autoconf, building_with_gcc, rust in (
-            ("i686-pc-mingw32", "cl", "i686-pc-windows-msvc"),
-            ("x86_64-pc-mingw32", "cl", "x86_64-pc-windows-msvc"),
-            ("i686-pc-mingw32", "gcc", "i686-pc-windows-gnu"),
-            ("x86_64-pc-mingw32", "gcc", "x86_64-pc-windows-gnu"),
+            ("i686-pc-mingw32", "clang-cl", "i686-pc-windows-msvc"),
+            ("x86_64-pc-mingw32", "clang-cl", "x86_64-pc-windows-msvc"),
             ("i686-pc-mingw32", "clang", "i686-pc-windows-gnu"),
             ("x86_64-pc-mingw32", "clang", "x86_64-pc-windows-gnu"),
             ("i686-w64-mingw32", "clang", "i686-pc-windows-gnu"),
