@@ -35,6 +35,9 @@ const { Status } = ChromeUtils.importESModule(
 const { TokenServerClient, TokenServerClientServerError } = ChromeUtils.import(
   "resource://services-common/tokenserverclient.js"
 );
+const { AccountState } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
+);
 
 const SECOND_MS = 1000;
 const MINUTE_MS = SECOND_MS * 60;

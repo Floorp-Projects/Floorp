@@ -27,8 +27,7 @@ const { SCOPE_OLD_SYNC, LEGACY_SCOPE_WEBEXT_SYNC } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"
 );
 
-// and grab non-exported stuff via a backstage pass.
-export const { AccountState } = ChromeUtils.import(
+const { AccountState } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm"
 );
 
