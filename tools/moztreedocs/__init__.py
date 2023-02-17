@@ -76,6 +76,8 @@ def read_build_config(docdir):
 class _SphinxManager(object):
     """Manages the generation of Sphinx documentation for the tree."""
 
+    NO_AUTODOC = False
+
     def __init__(self, topsrcdir, main_path):
         self.topsrcdir = topsrcdir
         self.conf_py_path = os.path.join(main_path, "conf.py")
@@ -88,6 +90,10 @@ class _SphinxManager(object):
 
     def generate_docs(self, app):
         """Generate/stage documentation."""
+        if self.NO_AUTODOC:
+            logger.info("Python/JS API documentation generation will be skipped")
+            app.config["extensions"].remove("sphinx.ext.autodoc")
+            app.config["extensions"].remove("sphinx_js")
         self.staging_dir = os.path.join(app.outdir, "_staging")
 
         logger.info("Reading Sphinx metadata from build configuration")
@@ -96,8 +102,8 @@ class _SphinxManager(object):
         logger.info("Staging static documentation")
         self._synchronize_docs(app)
 
-        logger.info("Generating Python API documentation")
-        self._generate_python_api_docs()
+        if not self.NO_AUTODOC:
+            self._generate_python_api_docs()
 
     def _generate_python_api_docs(self):
         """Generate Python API doc files."""
