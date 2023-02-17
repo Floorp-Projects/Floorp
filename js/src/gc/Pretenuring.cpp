@@ -60,6 +60,8 @@ static constexpr size_t HighNurserySurvivalOptimizedAllocThreshold = 10000;
 static constexpr size_t HighNurserySurvivalCountBeforeRecovery = 2;
 
 AllocSite* const AllocSite::EndSentinel = reinterpret_cast<AllocSite*>(1);
+JSScript* const AllocSite::WasmScript =
+    reinterpret_cast<JSScript*>(AllocSite::STATE_MASK + 1);
 
 static bool SiteBasedPretenuringEnabled = true;
 
@@ -109,13 +111,13 @@ size_t PretenuringNursery::doPretenuring(GCRuntime* gc, JS::GCReason reason,
     AllocSite* next = site->nextNurseryAllocated;
     site->nextNurseryAllocated = nullptr;
 
-    MOZ_ASSERT_IF(site->hasScript(),
+    MOZ_ASSERT_IF(site->isNormal(),
                   site->nurseryAllocCount >= site->nurseryTenuredCount);
 
     bool hasPromotionRate = false;
     double promotionRate = 0.0;
     bool wasInvalidated = false;
-    if (site->hasScript()) {
+    if (site->isNormal()) {
       sitesActive++;
 
       if (site->nurseryAllocCount > AllocSiteAttentionThreshold) {
@@ -138,9 +140,11 @@ size_t PretenuringNursery::doPretenuring(GCRuntime* gc, JS::GCReason reason,
             session.emplace(gc, JS::HeapState::MinorCollecting);
           }
 
-          wasInvalidated = site->invalidateScript(gc);
-          if (wasInvalidated) {
-            sitesInvalidated++;
+          if (site->hasScript()) {
+            wasInvalidated = site->invalidateScript(gc);
+            if (wasInvalidated) {
+              sitesInvalidated++;
+            }
           }
         }
       }
@@ -232,7 +236,7 @@ void PretenuringNursery::maybeStopPretenuring(GCRuntime* gc) {
 }
 
 AllocSite::Kind AllocSite::kind() const {
-  if (hasScript()) {
+  if (isNormal()) {
     return Kind::Normal;
   }
 
@@ -383,7 +387,9 @@ void AllocSite::printInfo(bool hasPromotionRate, double promotionRate,
   // Script, or which kind of catch-all site this is.
   if (!hasScript()) {
     fprintf(stderr, " %16s",
-            kind() == Kind::Optimized ? "optimized" : "unknown");
+            kind() == Kind::Optimized
+                ? "optimized"
+                : (kind() == Kind::Normal ? "normal" : "unknown"));
   } else {
     fprintf(stderr, " %16p", script());
   }
@@ -406,7 +412,7 @@ void AllocSite::printInfo(bool hasPromotionRate, double promotionRate,
   fprintf(stderr, " %6s", buffer);
 
   // Current state for sites associated with a script.
-  const char* state = hasScript() ? stateName() : "";
+  const char* state = isNormal() ? stateName() : "";
   fprintf(stderr, " %10s", state);
 
   // Whether the associated script was invalidated.

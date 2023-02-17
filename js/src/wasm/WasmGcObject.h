@@ -11,6 +11,7 @@
 #include "mozilla/Maybe.h"
 
 #include "gc/Allocator.h"
+#include "gc/Pretenuring.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/JSObject.h"
 #include "wasm/WasmInstanceData.h"
@@ -115,11 +116,13 @@ class WasmGcObject : public JSObject {
     explicit AllocArgs(JSContext* cx)
         : shape(cx),
           clasp(nullptr),
+          allocSite(nullptr),
           allocKind(gc::AllocKind::LIMIT),
           initialHeap(gc::DefaultHeap) {}
     AllocArgs(JSContext* cx, wasm::TypeDefInstanceData* typeDefData)
         : shape(cx, typeDefData->shape),
           clasp(typeDefData->clasp),
+          allocSite(&typeDefData->allocSite),
           allocKind(typeDefData->allocKind),
           initialHeap(typeDefData->initialHeap) {}
 
@@ -128,6 +131,7 @@ class WasmGcObject : public JSObject {
 
     Rooted<Shape*> shape;
     const JSClass* clasp;
+    gc::AllocSite* allocSite;
     gc::AllocKind allocKind;
     gc::InitialHeap initialHeap;
   };
