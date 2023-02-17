@@ -1,4 +1,3 @@
-var { OS, require } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { makeFakeAppDir } = ChromeUtils.importESModule(
   "resource://testing-common/AppData.sys.mjs"
 );
@@ -7,7 +6,7 @@ var { AppConstants } = ChromeUtils.importESModule(
 );
 
 function getEventDir() {
-  return OS.Path.join(do_get_tempdir().path, "crash-events");
+  return PathUtils.join(do_get_tempdir().path, "crash-events");
 }
 
 function sendCommandAsync(command) {
@@ -152,9 +151,7 @@ async function handleMinidump(callback) {
   registerCleanupFunction(cleanup);
 
   Assert.ok(extrafile.exists());
-  let data = await OS.File.read(extrafile.path);
-  let decoder = new TextDecoder();
-  let extra = JSON.parse(decoder.decode(data));
+  let extra = await IOUtils.readJSON(extrafile.path);
 
   if (callback) {
     await callback(minidump, extra, extrafile, memoryfile);
