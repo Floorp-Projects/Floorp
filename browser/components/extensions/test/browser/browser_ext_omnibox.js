@@ -8,6 +8,25 @@ const { UrlbarTestUtils } = ChromeUtils.importESModule(
 
 const keyword = "VeryUniqueKeywordThatDoesNeverMatchAnyTestUrl";
 
+// This test does a lot. To ease debugging, we'll sometimes print the lines.
+function getCallerLines() {
+  const lines = Array.from(
+    new Error().stack.split("\n").slice(1),
+    line => /browser_ext_omnibox.js:(\d+):\d+$/.exec(line)?.[1]
+  );
+  return "Caller lines: " + lines.filter(lineno => lineno != null).join(", ");
+}
+
+add_setup(async () => {
+  // Override default timeout of 3000 ms, to make sure that the test progresses
+  // reasonably quickly. See comment in "function waitForResult" below.
+  // In this whole test, we respond ASAP to omnibox.onInputChanged events, so
+  // it should be safe to choose a relatively low timeout.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.extension.omnibox.timeout", 500]],
+  });
+});
+
 add_task(async function() {
   // This keyword needs to be unique to prevent history entries from unrelated
   // tests from appearing in the suggestions list.
@@ -80,9 +99,14 @@ add_task(async function() {
     },
   });
 
-  async function expectEvent(event, expected = {}) {
+  async function expectEvent(event, expected) {
+    info(`Waiting for event: ${event} (${getCallerLines()})`);
     let actual = await extension.awaitMessage(event);
-    if (expected.text) {
+    if (!expected) {
+      ok(true, `Expected "${event} to have fired."`);
+      return;
+    }
+    if (expected.text != undefined) {
       is(
         actual.text,
         expected.text,
@@ -98,8 +122,21 @@ add_task(async function() {
     }
   }
 
-  async function waitForResult(index, searchString) {
+  async function waitForResult(index) {
+    info(`waitForResult (${getCallerLines()})`);
+    // When omnibox.onInputChanged is triggered, the "startQuery" method in
+    // UrlbarProviderOmnibox.sys.mjs's startQuery will wait for a fixed amount
+    // of time before releasing the promise, which we observe by the call to
+    // UrlbarTestUtils here.
+    //
+    // To reduce the time that the test takes, we lower this in add_setup, by
+    // overriding the browser.urlbar.extension.omnibox.timeout preference.
+    //
+    // While this is not specific to the "waitForResult" test helper here, the
+    // issue is only observed in waitForResult because it is usually the first
+    // method called after observing "on-input-changed-fired".
     let result = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
+
     // Ensure the addition is complete, for proper mouse events on the entries.
     await new Promise(resolve =>
       window.requestIdleCallback(resolve, { timeout: 1000 })
