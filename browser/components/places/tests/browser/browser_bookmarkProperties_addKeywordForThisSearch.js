@@ -3,7 +3,12 @@
 const TEST_URL =
   "http://mochi.test:8888/browser/browser/components/places/tests/browser/keyword_form.html";
 
-function closeHandler(dialogWin) {
+function closeHandler(dialogWin, delayedApply) {
+  if (delayedApply) {
+    // We are in delayed apply mode, thus cancelling dialog will not produce a
+    // bookmark-removed notification.
+    return PlacesUtils.bookmarks.eraseEverything();
+  }
   let savedItemId = dialogWin.gEditItemOverlay.itemId;
   return PlacesTestUtils.waitForNotification("bookmark-removed", events =>
     events.some(event => event.id === savedItemId)
@@ -12,7 +17,10 @@ function closeHandler(dialogWin) {
 
 let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
 
-add_task(async function() {
+async function add_keyword(delayedApply) {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.bookmarks.editDialog.delayedApply.enabled", delayedApply]],
+  });
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -26,7 +34,7 @@ add_task(async function() {
       );
 
       await withBookmarksDialog(
-        true,
+        !delayedApply,
         function() {
           AddKeywordForSearchField();
           contentAreaContextMenu.hidePopup();
@@ -46,7 +54,9 @@ add_task(async function() {
 
           Assert.ok(!acceptBtn.disabled, "Accept button is enabled");
 
-          // The dialog is instant apply.
+          if (delayedApply) {
+            acceptBtn.click();
+          }
           await promiseKeywordNotification;
 
           // After the notification, the keywords cache will update asynchronously.
@@ -63,9 +73,7 @@ add_task(async function() {
             "accenti%3D%E0%E8%EC%F2%F9&search%3D%25s",
             "POST data is correct"
           );
-          let savedItemId = dialogWin.gEditItemOverlay.itemId;
-          let savedItemGuid = await PlacesUtils.promiseItemGuid(savedItemId);
-          let bm = await PlacesUtils.bookmarks.fetch(savedItemGuid);
+          let bm = await PlacesUtils.bookmarks.fetch({ url: TEST_URL });
           Assert.equal(
             bm.parentGuid,
             await PlacesUIUtils.defaultParentGuid,
@@ -91,13 +99,24 @@ add_task(async function() {
           );
           Assert.equal(data.url, TEST_URL, "getShortcutOrURI URL is correct");
         },
-        closeHandler
+        dialogWin => closeHandler(dialogWin, delayedApply)
       );
     }
   );
+}
+
+add_task(async function add_keyword_instant_apply() {
+  await add_keyword(false);
 });
 
-add_task(async function reopen_same_field() {
+add_task(async function add_keyword_delayed_apply() {
+  await add_keyword(true);
+});
+
+async function reopen_same_field(delayedApply) {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.bookmarks.editDialog.delayedApply.enabled", delayedApply]],
+  });
   await PlacesUtils.keywords.insert({
     url: TEST_URL,
     keyword: "kw",
@@ -136,13 +155,24 @@ add_task(async function reopen_same_field() {
             .getButton("accept");
           ok(!acceptBtn.disabled, "Accept button is enabled");
         },
-        closeHandler
+        dialogWin => closeHandler(dialogWin, delayedApply)
       );
     }
   );
+}
+
+add_task(async function reopen_same_field_instant_apply() {
+  await reopen_same_field(false);
 });
 
-add_task(async function open_other_field() {
+add_task(async function reopen_same_field_delayed_apply() {
+  await reopen_same_field(true);
+});
+
+async function open_other_field(delayedApply) {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.bookmarks.editDialog.delayedApply.enabled", delayedApply]],
+  });
   await PlacesUtils.keywords.insert({
     url: TEST_URL,
     keyword: "kw2",
@@ -182,10 +212,18 @@ add_task(async function open_other_field() {
           );
           is(elt.value, "");
         },
-        closeHandler
+        dialogWin => closeHandler(dialogWin, delayedApply)
       );
     }
   );
+}
+
+add_task(async function open_other_field_instant_apply() {
+  await open_other_field(false);
+});
+
+add_task(async function open_other_field_delayed_apply() {
+  await open_other_field(true);
 });
 
 function getPostDataString(stream) {
