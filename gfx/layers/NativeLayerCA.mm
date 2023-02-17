@@ -807,6 +807,11 @@ NativeLayerCA::~NativeLayerCA() {
 void NativeLayerCA::AttachExternalImage(wr::RenderTextureHost* aExternalImage) {
   MutexAutoLock lock(mMutex);
 
+#ifdef NIGHTLY_BUILD
+  mHasEverAttachExternalImage = true;
+  MOZ_RELEASE_ASSERT(!mHasEverNotifySurfaceReady, "Shouldn't change layer type to external.");
+#endif
+
   wr::RenderMacIOSurfaceTextureHost* texture = aExternalImage->AsRenderMacIOSurfaceTextureHost();
   MOZ_ASSERT(texture || aExternalImage->IsWrappingAsyncRemoteTexture());
   mTextureHost = texture;
@@ -1187,10 +1192,46 @@ void NativeLayerCA::HandlePartialUpdate(const MutexAutoLock& aProofOfLock,
 
   MOZ_RELEASE_ASSERT(!mInProgressUpdateRegion);
   MOZ_RELEASE_ASSERT(!mInProgressDisplayRect);
+
+#ifdef NIGHTLY_BUILD
+  // Check if this update will leave the in progress surface with invalid pixels. This is
+  // only possible if the display rect is changing. That is true because definitionally the
+  // front surface has valid pixels for the entire current display rect. Given that, the in
+  // progress surface will copy the valid pixels from the front surface to cover any
+  // invalid regions in the in progress surface. It is only when the display rect changes
+  // that the in progress surface is relying on aUpdateRegion to cover the revealed area,
+  // which might also be partly or completely covered by valid pixels in the front surface.
+  //
+  // To check this, we check that the area exposed by the new display rect is covered by
+  // some combination of the update region and the front surface's valid region. Because
+  // this check is complex, we only do it in Nightly.
+  //
+  // Also, since this condition will hit a later release assert in NotifySurfaceReady, we
+  // choose to crash now.
+
+  if (!mDisplayRect.IsEqualInterior(aDisplayRect)) {
+    gfx::IntRegion exposedRegion(aDisplayRect);
+
+    if (mFrontSurface) {
+      // If there's a front surface, we'll fill in any valid pixels in the exposed region.
+      // We express this by intersecting the exposed region with the invalid region of the
+      // front surface.
+      exposedRegion.AndWith(mFrontSurface->mInvalidRegion);
+    }
+
+    if (!aUpdateRegion.Contains(exposedRegion)) {
+      // Let's crash now instead of later.
+      std::ostringstream reason;
+      reason << "The update region " << aUpdateRegion << " must cover the invalid region "
+             << exposedRegion << ".";
+      gfxCriticalError() << reason.str();
+      MOZ_CRASH();
+    }
+  }
+#endif
+
   mInProgressUpdateRegion = Some(aUpdateRegion);
   mInProgressDisplayRect = Some(aDisplayRect);
-
-  InvalidateRegionThroughoutSwapchain(aProofOfLock, aUpdateRegion);
 
   if (mFrontSurface) {
     // Copy not-overwritten valid content from mFrontSurface so that valid content never gets lost.
@@ -1204,6 +1245,8 @@ void NativeLayerCA::HandlePartialUpdate(const MutexAutoLock& aProofOfLock,
       mInProgressSurface->mInvalidRegion.SubOut(copyRegion);
     }
   }
+
+  InvalidateRegionThroughoutSwapchain(aProofOfLock, aUpdateRegion);
 }
 
 RefPtr<gfx::DrawTarget> NativeLayerCA::NextSurfaceAsDrawTarget(const IntRect& aDisplayRect,
@@ -1272,6 +1315,11 @@ Maybe<GLuint> NativeLayerCA::NextSurfaceAsFramebuffer(const IntRect& aDisplayRec
 
 void NativeLayerCA::NotifySurfaceReady() {
   MutexAutoLock lock(mMutex);
+
+#ifdef NIGHTLY_BUILD
+  mHasEverNotifySurfaceReady = true;
+  MOZ_RELEASE_ASSERT(!mHasEverAttachExternalImage, "Shouldn't change layer type to drawn.");
+#endif
 
   MOZ_RELEASE_ASSERT(mInProgressSurface,
                      "NotifySurfaceReady called without preceding call to NextSurface");
