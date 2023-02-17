@@ -7,13 +7,18 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  Database: "resource://services-settings/Database.sys.mjs",
+  RemoteSettingsClient:
+    "resource://services-settings/RemoteSettingsClient.sys.mjs",
+  SyncHistory: "resource://services-settings/SyncHistory.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   UptakeTelemetry: "resource://services-common/uptake-telemetry.js",
   pushBroadcastService: "resource://gre/modules/PushBroadcastService.jsm",
-  RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
-  SyncHistory: "resource://services-settings/SyncHistory.jsm",
-  Database: "resource://services-settings/Database.jsm",
   Utils: "resource://services-settings/Utils.jsm",
+
   FilterExpressions:
     "resource://gre/modules/components-utils/FilterExpressions.jsm",
 });
@@ -568,6 +573,7 @@ function remoteSettingsFunction() {
       PREF_SETTINGS_LAST_ETAG,
       '"0"'
     );
+
     const moduleInfo = {
       // TODO: This should be `import.meta.url`, however the push service
       // does not currently support ES modules, so use the old URI which still

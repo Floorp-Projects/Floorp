@@ -4,8 +4,8 @@
 let { LoginBreaches } = ChromeUtils.importESModule(
   "resource:///modules/LoginBreaches.sys.mjs"
 );
-let { RemoteSettings } = ChromeUtils.import(
-  "resource://services-settings/remote-settings.js"
+let { RemoteSettings } = ChromeUtils.importESModule(
+  "resource://services-settings/remote-settings.sys.mjs"
 );
 let { _AboutLogins } = ChromeUtils.importESModule(
   "resource:///actors/AboutLoginsParent.sys.mjs"

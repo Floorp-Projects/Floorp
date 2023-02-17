@@ -7,11 +7,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  RemoteSettings: "resource://services-settings/remote-settings.js",
 });
 
 const USER_LOCALE = "$USER_LOCALE";

@@ -11,10 +11,14 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
+  RemoteSettingsClient:
+    "resource://services-settings/RemoteSettingsClient.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
-  RemoteSettings: "resource://services-settings/remote-settings.js",
-  RemoteSettingsClient: "resource://services-settings/RemoteSettingsClient.jsm",
 });
 
 export const LoginBreaches = {
