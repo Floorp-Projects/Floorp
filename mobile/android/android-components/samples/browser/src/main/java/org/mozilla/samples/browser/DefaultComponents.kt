@@ -145,7 +145,7 @@ open class DefaultComponents(private val applicationContext: Context) {
     }
 
     val addonUpdater =
-        DefaultAddonUpdater(applicationContext, Frequency(1, TimeUnit.DAYS))
+        DefaultAddonUpdater(applicationContext, Frequency(1, TimeUnit.DAYS), notificationsDelegate)
 
     // Engine
     open val engine: Engine by lazy {
@@ -191,6 +191,7 @@ open class DefaultComponents(private val applicationContext: Context) {
                 R.mipmap.ic_launcher_foreground,
                 permissionStorage,
                 IntentReceiverActivity::class.java,
+                notificationsDelegate = notificationsDelegate,
             )
 
             MediaSessionFeature(applicationContext, MediaSessionService::class.java, this).start()

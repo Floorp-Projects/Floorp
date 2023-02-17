@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.addons.update
 
+import android.app.Notification
 import android.app.NotificationManager
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -26,6 +27,7 @@ import mozilla.components.feature.addons.update.AddonUpdaterWorker.Companion.KEY
 import mozilla.components.feature.addons.update.DefaultAddonUpdater.Companion.WORK_TAG_IMMEDIATE
 import mozilla.components.feature.addons.update.DefaultAddonUpdater.Companion.WORK_TAG_PERIODIC
 import mozilla.components.feature.addons.update.DefaultAddonUpdater.NotificationHandlerService
+import mozilla.components.support.base.android.NotificationsDelegate
 import mozilla.components.support.base.worker.Frequency
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -59,7 +61,7 @@ class DefaultAddonUpdaterTest {
     @Test
     fun `registerForFutureUpdates - schedule work for future update`() = runTestOnMain {
         val frequency = Frequency(1, TimeUnit.DAYS)
-        val updater = DefaultAddonUpdater(testContext, frequency)
+        val updater = DefaultAddonUpdater(testContext, frequency, mock())
         val addonId = "addonId"
 
         val workId = updater.getUniquePeriodicWorkName(addonId)
@@ -82,7 +84,10 @@ class DefaultAddonUpdaterTest {
 
     @Test
     fun `update - schedule work for immediate update`() = runTestOnMain {
-        val updater = DefaultAddonUpdater(testContext)
+        val updater = DefaultAddonUpdater(
+            testContext,
+            notificationsDelegate = mock(),
+        )
         val addonId = "addonId"
 
         val workId = updater.getUniqueImmediateWorkName(addonId)
@@ -117,24 +122,40 @@ class DefaultAddonUpdaterTest {
             doReturn(packageManager).`when`(it).packageManager
         }
 
+        val notificationsDelegate: NotificationsDelegate = mock()
+
         var allowedPreviously = false
-        val updater = DefaultAddonUpdater(context)
+        val updater = spy(
+            DefaultAddonUpdater(
+                context,
+                notificationsDelegate = notificationsDelegate,
+            ),
+        )
+
         val currentExt: WebExtension = mock()
         val updatedExt: WebExtension = mock()
         whenever(currentExt.id).thenReturn("addonId")
         whenever(updatedExt.id).thenReturn("addonId")
+        val notificationId = NotificationHandlerService.getNotificationId(context, updatedExt.id)
+
+        val notification: Notification = mock()
+        val newPermissions = listOf("privacy")
+
+        doReturn(notification).`when`(updater).createNotification(updatedExt, newPermissions, notificationId)
 
         updater.updateStatusStorage.clear(context)
 
-        updater.onUpdatePermissionRequest(currentExt, updatedExt, listOf("privacy")) {
+        updater.onUpdatePermissionRequest(currentExt, updatedExt, newPermissions) {
             allowedPreviously = it
         }
 
         assertFalse(allowedPreviously)
 
-        val notificationId = NotificationHandlerService.getNotificationId(context, currentExt.id)
-
-        assertTrue(isNotificationVisible(notificationId))
+        verify(notificationsDelegate).notify(
+            null,
+            10000,
+            notification,
+        )
 
         updater.updateStatusStorage.clear(context)
     }
@@ -150,7 +171,10 @@ class DefaultAddonUpdaterTest {
         }
 
         var allowedPreviously = false
-        val updater = DefaultAddonUpdater(context)
+        val updater = DefaultAddonUpdater(
+            context,
+            notificationsDelegate = mock(),
+        )
         val currentExt: WebExtension = mock()
         val updatedExt: WebExtension = mock()
         whenever(currentExt.id).thenReturn("addonId")
@@ -174,7 +198,10 @@ class DefaultAddonUpdaterTest {
 
     @Test
     fun `createContentText - notification content must adapt to the amount of valid permissions`() {
-        val updater = DefaultAddonUpdater(testContext)
+        val updater = DefaultAddonUpdater(
+            testContext,
+            notificationsDelegate = mock(),
+        )
         val validPermissions = listOf("privacy", "management")
 
         var content = updater.createContentText(validPermissions).split("\n")
@@ -199,7 +226,10 @@ class DefaultAddonUpdaterTest {
             doReturn(packageManager).`when`(it).packageManager
         }
 
-        val updater = DefaultAddonUpdater(context)
+        val updater = DefaultAddonUpdater(
+            context,
+            notificationsDelegate = mock(),
+        )
         val currentExt: WebExtension = mock()
         val updatedExt: WebExtension = mock()
         whenever(currentExt.id).thenReturn("addonId")
@@ -225,7 +255,12 @@ class DefaultAddonUpdaterTest {
 
     @Test
     fun `createAllowAction - will create an intent with the correct addon id and allow action`() {
-        val updater = spy(DefaultAddonUpdater(testContext))
+        val updater = spy(
+            DefaultAddonUpdater(
+                testContext,
+                notificationsDelegate = mock(),
+            ),
+        )
         val ext: WebExtension = mock()
         whenever(ext.id).thenReturn("addonId")
 
@@ -236,7 +271,12 @@ class DefaultAddonUpdaterTest {
 
     @Test
     fun `createDenyAction - will create an intent with the correct addon id and deny action`() {
-        val updater = spy(DefaultAddonUpdater(testContext))
+        val updater = spy(
+            DefaultAddonUpdater(
+                testContext,
+                notificationsDelegate = mock(),
+            ),
+        )
         val ext: WebExtension = mock()
         whenever(ext.id).thenReturn("addonId")
 
@@ -247,7 +287,10 @@ class DefaultAddonUpdaterTest {
 
     @Test
     fun `createNotificationIntent - will generate an intent with an addonId and an action`() {
-        val updater = DefaultAddonUpdater(testContext)
+        val updater = DefaultAddonUpdater(
+            testContext,
+            notificationsDelegate = mock(),
+        )
         val addonId = "addonId"
         val action = "action"
 
@@ -260,7 +303,7 @@ class DefaultAddonUpdaterTest {
     @Test
     fun `unregisterForFutureUpdates - will remove scheduled work for future update`() = runTestOnMain {
         val frequency = Frequency(1, TimeUnit.DAYS)
-        val updater = DefaultAddonUpdater(testContext, frequency)
+        val updater = DefaultAddonUpdater(testContext, frequency, mock())
         updater.scope = CoroutineScope(Dispatchers.Main)
 
         val addonId = "addonId"
@@ -291,7 +334,7 @@ class DefaultAddonUpdaterTest {
     @Test
     fun `createPeriodicWorkerRequest - will contains the right parameters`() {
         val frequency = Frequency(1, TimeUnit.DAYS)
-        val updater = DefaultAddonUpdater(testContext, frequency)
+        val updater = DefaultAddonUpdater(testContext, frequency, mock())
         val addonId = "addonId"
 
         val workId = updater.getUniquePeriodicWorkName(addonId)
@@ -308,7 +351,10 @@ class DefaultAddonUpdaterTest {
 
     @Test
     fun `registerForFutureUpdates - will register only unregistered extensions`() = runTestOnMain {
-        val updater = DefaultAddonUpdater(testContext)
+        val updater = DefaultAddonUpdater(
+            testContext,
+            notificationsDelegate = mock(),
+        )
         val registeredExt: WebExtension = mock()
         val notRegisteredExt: WebExtension = mock()
         whenever(registeredExt.id).thenReturn("registeredExt")
@@ -329,7 +375,10 @@ class DefaultAddonUpdaterTest {
 
     @Test
     fun `registerForFutureUpdates - will not register built-in and unsupported extensions`() = runTestOnMain {
-        val updater = DefaultAddonUpdater(testContext)
+        val updater = DefaultAddonUpdater(
+            testContext,
+            notificationsDelegate = mock(),
+        )
 
         val regularExt: WebExtension = mock()
         whenever(regularExt.id).thenReturn("regularExt")
