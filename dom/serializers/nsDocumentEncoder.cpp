@@ -17,6 +17,8 @@
 #include "nsCRT.h"
 #include "nsIContentSerializer.h"
 #include "nsIDocumentEncoder.h"
+#include "nsINode.h"
+#include "nsIContentInlines.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIOutputStream.h"
 #include "nsRange.h"
