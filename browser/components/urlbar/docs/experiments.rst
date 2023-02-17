@@ -13,10 +13,9 @@ framework.
 
 .. _WebExtensions: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions
 
-.. toctree::
-   :caption: Table of Contents
+.. contents::
+   :depth: 2
 
-   experiments
 
 WebExtensions
 -------------

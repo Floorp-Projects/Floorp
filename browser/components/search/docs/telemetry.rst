@@ -9,10 +9,9 @@ telemetry and telemetry related to fetching search suggestions. Toolkit search
 telemetry is relevant to Firefox as well as other consumers of Toolkit. See
 :doc:`/toolkit/search/Telemetry` in the Toolkit documentation for details.
 
-.. toctree::
-   :caption: Table of Contents
+.. contents::
+   :depth: 2
 
-   telemetry
 
 Glossary
 --------
