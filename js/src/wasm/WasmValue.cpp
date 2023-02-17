@@ -136,13 +136,16 @@ bool wasm::CheckRefType(JSContext* cx, RefType targetType, HandleValue v,
       return CheckFuncRefValue(cx, v, fnval);
     case RefType::Extern:
       return BoxAnyRef(cx, v, refval);
+    case RefType::Any:
+      return CheckAnyRefValue(cx, v, refval);
     case RefType::Eq:
       return CheckEqRefValue(cx, v, refval);
-    case RefType::Any:
     case RefType::Struct:
+      return CheckStructRefValue(cx, v, refval);
     case RefType::Array:
+      return CheckArrayRefValue(cx, v, refval);
     case RefType::TypeRef:
-      break;
+      return CheckTypeRefValue(cx, targetType.typeDef(), v, refval);
   }
 
   MOZ_ASSERT(!ValType(targetType).isExposable());
@@ -174,6 +177,26 @@ bool wasm::CheckFuncRefValue(JSContext* cx, HandleValue v,
   return false;
 }
 
+bool wasm::CheckAnyRefValue(JSContext* cx, HandleValue v,
+                            MutableHandleAnyRef vp) {
+  if (v.isNull()) {
+    vp.set(AnyRef::null());
+    return true;
+  }
+
+  if (v.isObject()) {
+    JSObject& obj = v.toObject();
+    if (obj.is<WasmGcObject>()) {
+      vp.set(AnyRef::fromJSObject(&obj.as<WasmGcObject>()));
+      return true;
+    }
+  }
+
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           JSMSG_WASM_BAD_ANYREF_VALUE);
+  return false;
+}
+
 bool wasm::CheckEqRefValue(JSContext* cx, HandleValue v,
                            MutableHandleAnyRef vp) {
   if (v.isNull()) {
@@ -191,6 +214,67 @@ bool wasm::CheckEqRefValue(JSContext* cx, HandleValue v,
 
   JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                            JSMSG_WASM_BAD_EQREF_VALUE);
+  return false;
+}
+
+bool wasm::CheckStructRefValue(JSContext* cx, HandleValue v,
+                               MutableHandleAnyRef vp) {
+  if (v.isNull()) {
+    vp.set(AnyRef::null());
+    return true;
+  }
+
+  if (v.isObject()) {
+    JSObject& obj = v.toObject();
+    if (obj.is<WasmStructObject>()) {
+      vp.set(AnyRef::fromJSObject(&obj.as<WasmStructObject>()));
+      return true;
+    }
+  }
+
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           JSMSG_WASM_BAD_STRUCTREF_VALUE);
+  return false;
+}
+
+bool wasm::CheckArrayRefValue(JSContext* cx, HandleValue v,
+                              MutableHandleAnyRef vp) {
+  if (v.isNull()) {
+    vp.set(AnyRef::null());
+    return true;
+  }
+
+  if (v.isObject()) {
+    JSObject& obj = v.toObject();
+    if (obj.is<WasmArrayObject>()) {
+      vp.set(AnyRef::fromJSObject(&obj.as<WasmArrayObject>()));
+      return true;
+    }
+  }
+
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           JSMSG_WASM_BAD_ARRAYREF_VALUE);
+  return false;
+}
+
+bool wasm::CheckTypeRefValue(JSContext* cx, const TypeDef* typeDef,
+                             HandleValue v, MutableHandleAnyRef vp) {
+  if (v.isNull()) {
+    vp.set(AnyRef::null());
+    return true;
+  }
+
+  if (v.isObject()) {
+    JSObject& obj = v.toObject();
+    if (obj.is<WasmGcObject>() &&
+        obj.as<WasmGcObject>().isRuntimeSubtype(typeDef)) {
+      vp.set(AnyRef::fromJSObject(&obj.as<WasmGcObject>()));
+      return true;
+    }
+  }
+
+  JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                           JSMSG_WASM_BAD_TYPEREF_VALUE);
   return false;
 }
 
@@ -252,12 +336,14 @@ bool ToWebAssemblyValue_i8(JSContext* cx, HandleValue val, int8_t* loc) {
   Debug::print(*loc);
   return ok;
 }
+
 template <typename Debug = NoDebug>
 bool ToWebAssemblyValue_i16(JSContext* cx, HandleValue val, int16_t* loc) {
   bool ok = ToInt16(cx, val, loc);
   Debug::print(*loc);
   return ok;
 }
+
 template <typename Debug = NoDebug>
 bool ToWebAssemblyValue_i32(JSContext* cx, HandleValue val, int32_t* loc,
                             bool mustWrite64) {
@@ -272,6 +358,7 @@ bool ToWebAssemblyValue_i32(JSContext* cx, HandleValue val, int32_t* loc,
   Debug::print(*loc);
   return ok;
 }
+
 template <typename Debug = NoDebug>
 bool ToWebAssemblyValue_i64(JSContext* cx, HandleValue val, int64_t* loc,
                             bool mustWrite64) {
@@ -280,6 +367,7 @@ bool ToWebAssemblyValue_i64(JSContext* cx, HandleValue val, int64_t* loc,
   Debug::print(*loc);
   return true;
 }
+
 template <typename Debug = NoDebug>
 bool ToWebAssemblyValue_f32(JSContext* cx, HandleValue val, float* loc,
                             bool mustWrite64) {
@@ -290,6 +378,7 @@ bool ToWebAssemblyValue_f32(JSContext* cx, HandleValue val, float* loc,
   Debug::print(*loc);
   return ok;
 }
+
 template <typename Debug = NoDebug>
 bool ToWebAssemblyValue_f64(JSContext* cx, HandleValue val, double* loc,
                             bool mustWrite64) {
@@ -298,6 +387,7 @@ bool ToWebAssemblyValue_f64(JSContext* cx, HandleValue val, double* loc,
   Debug::print(*loc);
   return ok;
 }
+
 template <typename Debug = NoDebug>
 bool ToWebAssemblyValue_externref(JSContext* cx, HandleValue val, void** loc,
                                   bool mustWrite64) {
@@ -305,7 +395,7 @@ bool ToWebAssemblyValue_externref(JSContext* cx, HandleValue val, void** loc,
   if (!BoxAnyRef(cx, val, &result)) {
     return false;
   }
-  *loc = result.get().forCompiledCode();
+  loc[0] = result.get().forCompiledCode();
 #ifndef JS_64BIT
   if (mustWrite64) {
     loc[1] = nullptr;
@@ -314,22 +404,7 @@ bool ToWebAssemblyValue_externref(JSContext* cx, HandleValue val, void** loc,
   Debug::print(*loc);
   return true;
 }
-template <typename Debug = NoDebug>
-bool ToWebAssemblyValue_eqref(JSContext* cx, HandleValue val, void** loc,
-                              bool mustWrite64) {
-  RootedAnyRef result(cx, AnyRef::null());
-  if (!CheckEqRefValue(cx, val, &result)) {
-    return false;
-  }
-  *loc = result.get().forCompiledCode();
-#ifndef JS_64BIT
-  if (mustWrite64) {
-    loc[1] = nullptr;
-  }
-#endif
-  Debug::print(*loc);
-  return true;
-}
+
 template <typename Debug = NoDebug>
 bool ToWebAssemblyValue_funcref(JSContext* cx, HandleValue val, void** loc,
                                 bool mustWrite64) {
@@ -337,7 +412,81 @@ bool ToWebAssemblyValue_funcref(JSContext* cx, HandleValue val, void** loc,
   if (!CheckFuncRefValue(cx, val, &fun)) {
     return false;
   }
-  *loc = fun;
+  loc[0] = fun;
+#ifndef JS_64BIT
+  if (mustWrite64) {
+    loc[1] = nullptr;
+  }
+#endif
+  Debug::print(*loc);
+  return true;
+}
+
+template <typename Debug = NoDebug>
+bool ToWebAssemblyValue_anyref(JSContext* cx, HandleValue val, void** loc,
+                               bool mustWrite64) {
+  RootedAnyRef result(cx, AnyRef::null());
+  if (!CheckAnyRefValue(cx, val, &result)) {
+    return false;
+  }
+  loc[0] = result.get().forCompiledCode();
+#ifndef JS_64BIT
+  if (mustWrite64) {
+    loc[1] = nullptr;
+  }
+#endif
+  Debug::print(*loc);
+  return true;
+}
+
+template <typename Debug = NoDebug>
+bool ToWebAssemblyValue_eqref(JSContext* cx, HandleValue val, void** loc,
+                              bool mustWrite64) {
+  return ToWebAssemblyValue_anyref(cx, val, loc, mustWrite64);
+}
+
+template <typename Debug = NoDebug>
+bool ToWebAssemblyValue_structref(JSContext* cx, HandleValue val, void** loc,
+                                  bool mustWrite64) {
+  RootedAnyRef result(cx, AnyRef::null());
+  if (!CheckStructRefValue(cx, val, &result)) {
+    return false;
+  }
+  loc[0] = result.get().forCompiledCode();
+#ifndef JS_64BIT
+  if (mustWrite64) {
+    loc[1] = nullptr;
+  }
+#endif
+  Debug::print(*loc);
+  return true;
+}
+
+template <typename Debug = NoDebug>
+bool ToWebAssemblyValue_arrayref(JSContext* cx, HandleValue val, void** loc,
+                                 bool mustWrite64) {
+  RootedAnyRef result(cx, AnyRef::null());
+  if (!CheckArrayRefValue(cx, val, &result)) {
+    return false;
+  }
+  loc[0] = result.get().forCompiledCode();
+#ifndef JS_64BIT
+  if (mustWrite64) {
+    loc[1] = nullptr;
+  }
+#endif
+  Debug::print(*loc);
+  return true;
+}
+
+template <typename Debug = NoDebug>
+bool ToWebAssemblyValue_typeref(JSContext* cx, const TypeDef* typeDef,
+                                HandleValue val, void** loc, bool mustWrite64) {
+  RootedAnyRef result(cx, AnyRef::null());
+  if (!CheckTypeRefValue(cx, typeDef, val, &result)) {
+    return false;
+  }
+  loc[0] = result.get().forCompiledCode();
 #ifndef JS_64BIT
   if (mustWrite64) {
     loc[1] = nullptr;
@@ -404,14 +553,21 @@ bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, FieldType type,
         case RefType::Extern:
           return ToWebAssemblyValue_externref<Debug>(cx, val, (void**)loc,
                                                      mustWrite64);
+        case RefType::Any:
+          return ToWebAssemblyValue_anyref<Debug>(cx, val, (void**)loc,
+                                                  mustWrite64);
         case RefType::Eq:
           return ToWebAssemblyValue_eqref<Debug>(cx, val, (void**)loc,
                                                  mustWrite64);
-        case RefType::Any:
         case RefType::Struct:
+          return ToWebAssemblyValue_structref<Debug>(cx, val, (void**)loc,
+                                                     mustWrite64);
         case RefType::Array:
+          return ToWebAssemblyValue_arrayref<Debug>(cx, val, (void**)loc,
+                                                    mustWrite64);
         case RefType::TypeRef:
-          break;
+          return ToWebAssemblyValue_typeref<Debug>(cx, type.typeDef(), val,
+                                                   (void**)loc, mustWrite64);
       }
   }
 
@@ -420,6 +576,7 @@ bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, FieldType type,
                            JSMSG_WASM_BAD_VAL_TYPE);
   return false;
 }
+
 template <typename Debug>
 bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
                               void* loc, bool mustWrite64,
@@ -434,18 +591,21 @@ bool ToJSValue_i8(JSContext* cx, int8_t src, MutableHandleValue dst) {
   Debug::print(src);
   return true;
 }
+
 template <typename Debug = NoDebug>
 bool ToJSValue_i16(JSContext* cx, int16_t src, MutableHandleValue dst) {
   dst.set(Int32Value(src));
   Debug::print(src);
   return true;
 }
+
 template <typename Debug = NoDebug>
 bool ToJSValue_i32(JSContext* cx, int32_t src, MutableHandleValue dst) {
   dst.set(Int32Value(src));
   Debug::print(src);
   return true;
 }
+
 template <typename Debug = NoDebug>
 bool ToJSValue_i64(JSContext* cx, int64_t src, MutableHandleValue dst) {
   // If bi is manipulated other than test & storing, it would need
@@ -458,32 +618,37 @@ bool ToJSValue_i64(JSContext* cx, int64_t src, MutableHandleValue dst) {
   Debug::print(src);
   return true;
 }
+
 template <typename Debug = NoDebug>
 bool ToJSValue_f32(JSContext* cx, float src, MutableHandleValue dst) {
   dst.set(JS::CanonicalizedDoubleValue(src));
   Debug::print(src);
   return true;
 }
+
 template <typename Debug = NoDebug>
 bool ToJSValue_f64(JSContext* cx, double src, MutableHandleValue dst) {
   dst.set(JS::CanonicalizedDoubleValue(src));
   Debug::print(src);
   return true;
 }
+
 template <typename Debug = NoDebug>
 bool ToJSValue_funcref(JSContext* cx, void* src, MutableHandleValue dst) {
   dst.set(UnboxFuncRef(FuncRef::fromCompiledCode(src)));
   Debug::print(src);
   return true;
 }
+
 template <typename Debug = NoDebug>
 bool ToJSValue_externref(JSContext* cx, void* src, MutableHandleValue dst) {
   dst.set(UnboxAnyRef(AnyRef::fromCompiledCode(src)));
   Debug::print(src);
   return true;
 }
+
 template <typename Debug = NoDebug>
-bool ToJSValue_eqref(JSContext* cx, void* src, MutableHandleValue dst) {
+bool ToJSValue_anyref(JSContext* cx, void* src, MutableHandleValue dst) {
   dst.set(UnboxAnyRef(AnyRef::fromCompiledCode(src)));
   Debug::print(src);
   return true;
@@ -539,13 +704,13 @@ bool wasm::ToJSValue(JSContext* cx, const void* src, FieldType type,
         case RefType::Extern:
           return ToJSValue_externref<Debug>(
               cx, *reinterpret_cast<void* const*>(src), dst);
-        case RefType::Eq:
-          return ToJSValue_eqref<Debug>(
-              cx, *reinterpret_cast<void* const*>(src), dst);
         case RefType::Any:
+        case RefType::Eq:
         case RefType::Struct:
         case RefType::Array:
         case RefType::TypeRef:
+          return ToJSValue_anyref<Debug>(
+              cx, *reinterpret_cast<void* const*>(src), dst);
           break;
       }
   }
@@ -554,6 +719,7 @@ bool wasm::ToJSValue(JSContext* cx, const void* src, FieldType type,
   dst.setUndefined();
   return true;
 }
+
 template <typename Debug>
 bool wasm::ToJSValue(JSContext* cx, const void* src, ValType type,
                      MutableHandleValue dst, CoercionLevel level) {
