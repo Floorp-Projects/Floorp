@@ -73,7 +73,7 @@ class SMILTimeValueSpec {
   void UpdateReferencedElement(Element* aFrom, Element* aTo);
   void UnregisterFromReferencedElement(Element* aElement);
   SMILTimedElement* GetTimedElement(Element* aElement);
-  bool IsWhitelistedEvent();
+  bool IsEventAllowedWhenScriptingIsDisabled();
   void RegisterEventListener(Element* aTarget);
   void UnregisterEventListener(Element* aTarget);
   void HandleEvent(Event* aEvent);
