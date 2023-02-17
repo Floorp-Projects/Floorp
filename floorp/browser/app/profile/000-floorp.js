@@ -90,6 +90,7 @@ pref("floorp.browser.sidebar2.data", '{"data":{"1":{"url":"floorp//bmt","width":
 pref("floorp.browser.sidebar2.global.webpanel.width", 400);
 
 pref("floorp.tabsleep.enabled", false);
+pref("floorp.webcompat.enabled", true);
 
 // システムアドオンのアップデート確認先
 pref("extensions.systemAddon.update.url", "https://floorp-update.ablaze.one/systemAddon/xml/%DISPLAY_VERSION%/%OS%/update.xml");
