@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { Credentials } = ChromeUtils.import(
-  "resource://gre/modules/Credentials.jsm"
+const { Credentials } = ChromeUtils.importESModule(
+  "resource://gre/modules/Credentials.sys.mjs"
 );
 const { CryptoUtils } = ChromeUtils.import(
   "resource://services-crypto/utils.js"

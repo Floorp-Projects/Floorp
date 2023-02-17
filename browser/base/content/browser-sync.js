@@ -9,17 +9,10 @@ const { UIState } = ChromeUtils.importESModule(
   "resource://services-sync/UIState.sys.mjs"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "FxAccounts",
-  "resource://gre/modules/FxAccounts.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "EnsureFxAccountsWebChannel",
-  "resource://gre/modules/FxAccountsWebChannel.jsm"
-);
 ChromeUtils.defineESModuleGetters(this, {
+  EnsureFxAccountsWebChannel:
+    "resource://gre/modules/FxAccountsWebChannel.sys.mjs",
+  FxAccounts: "resource://gre/modules/FxAccounts.sys.mjs",
   SyncedTabs: "resource://services-sync/SyncedTabs.sys.mjs",
   Weave: "resource://services-sync/main.sys.mjs",
 });

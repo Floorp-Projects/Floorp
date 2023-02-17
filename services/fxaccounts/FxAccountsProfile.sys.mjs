@@ -13,18 +13,16 @@
 const { ON_PROFILE_CHANGE_NOTIFICATION, log } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"
 );
-const { getFxAccountsSingleton } = ChromeUtils.import(
-  "resource://gre/modules/FxAccounts.jsm"
-);
+import { getFxAccountsSingleton } from "resource://gre/modules/FxAccounts.sys.mjs";
+
 const fxAccounts = getFxAccountsSingleton();
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "FxAccountsProfileClient",
-  "resource://gre/modules/FxAccountsProfileClient.jsm"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  FxAccountsProfileClient:
+    "resource://gre/modules/FxAccountsProfileClient.sys.mjs",
+});
 
 export var FxAccountsProfile = function(options = {}) {
   this._currentFetchPromise = null;

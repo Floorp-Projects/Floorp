@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { getFxAccountsSingleton } = ChromeUtils.import(
-  "resource://gre/modules/FxAccounts.jsm"
+const { getFxAccountsSingleton } = ChromeUtils.importESModule(
+  "resource://gre/modules/FxAccounts.sys.mjs"
 );
 const fxAccounts = getFxAccountsSingleton();
 
