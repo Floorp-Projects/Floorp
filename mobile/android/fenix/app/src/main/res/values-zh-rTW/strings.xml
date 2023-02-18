@@ -69,7 +69,9 @@
     <!-- Text for the main message -->
     <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">加入捷徑，從裝置主畫面直接開啟隱私瀏覽分頁。</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message">只要輕鬆一點，即可開啟新的隱私保護分頁。</string>
+    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">只要輕鬆一點，即可開啟新的隱私保護分頁。</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message_2">只要輕鬆一點，即可開啟新的隱私保護分頁。</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">新增捷徑</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->

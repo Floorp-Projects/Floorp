@@ -73,7 +73,9 @@
     <!-- Text for the main message -->
     <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Voeg een snelkoppeling toe om privétabbladen vanuit uw startscherm te openen.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message">Start het volgende privétabblad met één tik.</string>
+    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">Start het volgende privétabblad met één tik.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message_2">Start uw volgende privétabblad met één tik.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Snelkoppeling toevoegen</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->

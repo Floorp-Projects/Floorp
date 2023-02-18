@@ -66,7 +66,9 @@
     <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Үй экранынан жекелік беттерді ашу үшін жарлықты қосыңыз.</string>
 
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message">Келесі жекелік бетін бір шерту арқылы ашыңыз.</string>
+    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">Келесі жекелік бетін бір шерту арқылы ашыңыз.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message_2">Келесі жекелік бетін бір шерту арқылы ашыңыз.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Жарлықты қосу</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->

@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_write_description">클립보드에 데이터 넣기</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">모든 페이지에서 콘텐츠 차단</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">방문 기록 읽기</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">파일을 다운로드하고 브라우저의 다운로드 기록을 읽고 수정</string>
     <!-- Description for downloads_open permission. -->

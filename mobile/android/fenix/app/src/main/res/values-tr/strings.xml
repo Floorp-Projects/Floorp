@@ -68,7 +68,9 @@
     <!-- Text for the main message -->
     <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Ana ekranınızdan gizli sekme açmak için kısayol ekleyebilirsiniz.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message">Bir sonraki gizli sekmenizi tek dokunuşla açın.</string>
+    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">Bir sonraki gizli sekmenizi tek dokunuşla açın.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message_2">Bir sonraki gizli sekmenizi tek dokunuşla açın.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Kısayol ekle</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->

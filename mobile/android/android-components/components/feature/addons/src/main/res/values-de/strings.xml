@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Daten in die Zwischenablage schreiben</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">Inhalte auf jeder Seite blockieren</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Lesen Sie Ihre Surf-Chronik</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Dateien herunterladen und die Download-Chronik lesen und verändern</string>
     <!-- Description for downloads_open permission. -->

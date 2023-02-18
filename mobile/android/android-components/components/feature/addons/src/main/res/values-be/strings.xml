@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Змяшчаць дадзеныя ў буфер абмену</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">Блакаваць змесціва на любой старонцы</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Бачыць вашу гісторыю аглядання</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Сцягванне файлаў, прагляд і змяненне гісторыі сцягванняў браўзера</string>
     <!-- Description for downloads_open permission. -->

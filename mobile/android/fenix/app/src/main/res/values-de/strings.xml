@@ -71,7 +71,9 @@
     <!-- Text for the main message -->
     <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Fügen Sie eine Verknüpfung hinzu, um private Tabs vom Startbildschirm aus zu öffnen.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message">Starten Sie den nächsten privaten Tab mit einem Fingertipp.</string>
+    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">Starten Sie den nächsten privaten Tab mit einem Fingertipp.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message_2">Starten Sie Ihren nächsten privaten Tab mit einem Fingertipp.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Verknüpfung hinzufügen</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->

@@ -65,7 +65,9 @@
     <!-- Text for the main message -->
     <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">ເພີ່ມທາງລັດເພື່ອເປີດແຖບສ່ວນຕົວຈາກໜ້າຈໍຫລັກຂອງທ່ານ.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message">ເປີດໃຊ້ແຖບສ່ວນຕົວຕໍ່ໄປໃນແທັບດຽວ.</string>
+    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">ເປີດໃຊ້ແຖບສ່ວນຕົວຕໍ່ໄປໃນແທັບດຽວ.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message_2">ເປີດໃຊ້ແຖບສ່ວນຕົວຕໍ່ໄປຂອງທ່ານໃນໜຶ່ງການກົດ.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">ເພີ່ມທາງລັດ</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
