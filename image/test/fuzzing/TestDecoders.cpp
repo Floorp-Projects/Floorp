@@ -137,7 +137,7 @@ static int RunDecodeToSurfaceFuzzingJXL(nsCOMPtr<nsIInputStream> inputStream) {
 #endif
 
 int FuzzingInitImage(int* argc, char*** argv) {
-  Preferences::SetBool("image.avif.enabled", true);
+  Preferences::SetBool("image.avif.sequence.enabled", true);
 #ifdef MOZ_JXL
   Preferences::SetBool("image.jxl.enabled", true);
 #endif
