@@ -21,7 +21,8 @@ FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"] += [
     "download-notification.js",
     "portable-update.js",
     "update.js",
-    "webcompat.js",
+    "webcompat_inject.js",
+    "webcompat_useragent.js",
 ]
 
 FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["_locales"]["ja"] += [
