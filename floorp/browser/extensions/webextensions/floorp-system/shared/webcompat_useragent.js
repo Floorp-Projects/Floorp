@@ -15,7 +15,6 @@ const WEBCOMPATS_USERAGENT = [
     {
         "matches": ["*://*.mercari.com/*"],
         "ua": FIREFOX_STABLE_UA,
-        "platforms": ["all"], // "mac", "win", "android", "cros", "linux", "openbsd", "fuchsia", "all"
     },
     {
         "matches": [
@@ -26,7 +25,6 @@ const WEBCOMPATS_USERAGENT = [
             "*://*.picnet8.jp/*",
         ],
         "ua": CHROME_STABLE_UA,
-        "platforms": ["all"],
     },
 ];
 
@@ -39,22 +37,19 @@ browser.aboutConfigPrefs.onPrefChange.addListener(function() {
 let platformInfo = browser.runtime.getPlatformInfo();
 
 for (let WEBCOMPAT_USERAGENT of WEBCOMPATS_USERAGENT) {
-    if (WEBCOMPAT_USERAGENT.platforms.includes("all") ||
-        WEBCOMPAT_USERAGENT.platforms.includes(platform)) {
-        browser.webRequest.onBeforeSendHeaders.addListener(
-            async function(e) {
-                if (!await enabled) return;
-                if (e.tabId === -1) return;
-                if (typeof WEBCOMPAT_USERAGENT["ua"][(await platformInfo).os] === "undefined") return;
-                for (let requestHeader of e.requestHeaders) {
-                    if (requestHeader.name.toLowerCase() === "user-agent") {
-                        requestHeader.value = WEBCOMPAT_USERAGENT["ua"][(await platformInfo).os];
-                    }
+    browser.webRequest.onBeforeSendHeaders.addListener(
+        async function(e) {
+            if (!await enabled) return;
+            if (e.tabId === -1) return;
+            if (typeof WEBCOMPAT_USERAGENT["ua"][(await platformInfo).os] === "undefined") return;
+            for (let requestHeader of e.requestHeaders) {
+                if (requestHeader.name.toLowerCase() === "user-agent") {
+                    requestHeader.value = WEBCOMPAT_USERAGENT["ua"][(await platformInfo).os];
                 }
-                return { requestHeaders: e.requestHeaders };
-            },
-            { urls: WEBCOMPAT_USERAGENT["matches"] },
-            ["blocking", "requestHeaders"]
-        );
-    }
+            }
+            return { requestHeaders: e.requestHeaders };
+        },
+        { urls: WEBCOMPAT_USERAGENT["matches"] },
+        ["blocking", "requestHeaders"]
+    );
 }
