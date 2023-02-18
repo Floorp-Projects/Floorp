@@ -55,7 +55,6 @@ class nsTouchBarInputIcon : public mozilla::widget::IconLoader::Listener {
 
  protected:
   RefPtr<Document> mDocument;
-  nsIntRect mImageRegionRect;
   bool mSetIcon;
   NSButton* mButton;
   // We accept a mShareScrubber only as a special case since
