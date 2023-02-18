@@ -2757,7 +2757,21 @@ void BrowsingContext::DidSet(FieldIndex<IDX_InRDMPane>, bool aOldValue) {
   if (GetInRDMPane() == aOldValue) {
     return;
   }
-  PresContextAffectingFieldChanged();
+
+  PreOrderWalk([&](BrowsingContext* aContext) {
+    if (nsIDocShell* shell = aContext->GetDocShell()) {
+      if (nsPresContext* pc = shell->GetPresContext()) {
+        pc->RecomputeTheme();
+
+        // This is a bit of a lie, but this affects the overlay-scrollbars
+        // media query and it's the code-path that gets taken for regular system
+        // metrics changes via ThemeChanged().
+        pc->MediaFeatureValuesChanged(
+            {MediaFeatureChangeReason::SystemMetricsChange},
+            MediaFeatureChangePropagation::JustThisDocument);
+      }
+    }
+  });
 }
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_PageAwakeRequestCount>,

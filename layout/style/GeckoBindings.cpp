@@ -305,16 +305,6 @@ bool Gecko_AnimationNameMayBeReferencedFromStyle(
   return aPresContext->AnimationManager()->AnimationMayBeReferenced(aName);
 }
 
-float Gecko_GetScrollbarInlineSize(const nsPresContext* aPc) {
-  MOZ_ASSERT(aPc);
-  AutoWriteLock guard(*sServoFFILock);  // We read some look&feel values.
-  auto overlay = aPc->UseOverlayScrollbars() ? nsITheme::Overlay::Yes
-                                             : nsITheme::Overlay::No;
-  LayoutDeviceIntCoord size =
-      aPc->Theme()->GetScrollbarSize(aPc, StyleScrollbarWidth::Auto, overlay);
-  return aPc->DevPixelsToFloatCSSPixels(size);
-}
-
 PseudoStyleType Gecko_GetImplementedPseudo(const Element* aElement) {
   return aElement->GetPseudoElementType();
 }
