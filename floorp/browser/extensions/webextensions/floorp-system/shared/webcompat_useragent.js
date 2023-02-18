@@ -13,7 +13,10 @@ const CHROME_STABLE_UA = {
 
 const WEBCOMPATS_USERAGENT = [
     {
-        "matches": ["*://*.mercari.com/*"],
+        "matches": [
+            "*://*.mercari.com/*",
+            "*://*.mercari.jp/*",
+        ],
         "ua": FIREFOX_STABLE_UA,
     },
     {
