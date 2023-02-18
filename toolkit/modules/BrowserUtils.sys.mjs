@@ -399,6 +399,7 @@ export var BrowserUtils = {
     RELAY: 2,
     FOCUS: 3,
     PIN: 4,
+    COOKIE_BANNERS: 5,
   },
 
   /**
@@ -422,6 +423,7 @@ export var BrowserUtils = {
       case this.PromoType.FOCUS:
       case this.PromoType.PIN:
       case this.PromoType.RELAY:
+      case this.PromoType.COOKIE_BANNERS:
         break;
       default:
         throw new Error("Unknown promo type: ", promoType);
@@ -448,6 +450,7 @@ export var BrowserUtils = {
 
     // Don't show promo if there's an active enterprise policy
     const noActivePolicy =
+      info.showForEnterprise ||
       !Services.policies ||
       Services.policies.status !== Services.policies.ACTIVE;
 
@@ -533,6 +536,12 @@ let PromoInfo = {
         "identity.fxaccounts.remote.pairing.uri",
         "identity.sync.tokenserver.uri",
       ].every(pref => !Services.prefs.prefHasUserValue(pref)),
+  },
+  [BrowserUtils.PromoType.COOKIE_BANNERS]: {
+    enabledPref: "browser.promo.cookiebanners.enabled",
+    lazyStringSetPrefs: {},
+    illegalRegions: [],
+    showForEnterprise: true,
   },
 };
 

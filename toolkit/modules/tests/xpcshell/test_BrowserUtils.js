@@ -206,6 +206,22 @@ add_task(async function test_shouldShowRelayPromo() {
   Preferences.reset("identity.fxaccounts.autoconfig.uri");
 });
 
+add_task(async function test_shouldShowCookieBannersPromo() {
+  Preferences.set("browser.promo.cookiebanners.enabled", true);
+  // Show cookie banners promo type by default when promo is enabled
+  Assert.ok(
+    BrowserUtils.shouldShowPromo(BrowserUtils.PromoType.COOKIE_BANNERS)
+  );
+
+  // Don't show when promo disabled by pref
+  Preferences.set("browser.promo.cookiebanners.enabled", false);
+  Assert.ok(
+    !BrowserUtils.shouldShowPromo(BrowserUtils.PromoType.COOKIE_BANNERS)
+  );
+
+  Preferences.resetBranch("browser.promo.cookiebanners");
+});
+
 add_task(function test_isShareableURL() {
   // Some test suites, specifically android, don't have this setup properly -- so we add it manually
   if (!Preferences.get("services.sync.engine.tabs.filteredSchemes")) {

@@ -2,8 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const PromoInfo = {
+  FOCUS: { enabledPref: "browser.promo.focus.enabled" },
+  VPN: { enabledPref: "browser.vpn_promo.enabled" },
+  PIN: { enabledPref: "browser.promo.pin.enabled" },
+  COOKIE_BANNERS: { enabledPref: "browser.promo.cookiebanners.enabled" },
+};
+
+async function resetState() {
+  await Promise.all([ASRouter.resetMessageState(), ASRouter.unblockAll()]);
+}
+
 add_setup(async function() {
-  ASRouter.resetMessageState();
+  registerCleanupFunction(resetState);
+  await resetState();
   await SpecialPowers.pushPrefEnv({
     set: [["browser.promo.pin.enabled", false]],
   });
@@ -11,16 +23,17 @@ add_setup(async function() {
 });
 
 add_task(async function test_privatebrowsing_asrouter_messages_state() {
-  ASRouter.resetMessageState();
-  const initialMsgCount = ASRouter.state.messages.length;
+  await resetState();
   let pinPromoMessage = ASRouter.state.messages.find(
     m => m.id === "PB_NEWTAB_PIN_PROMO"
   );
-
   Assert.ok(pinPromoMessage, "Pin Promo message found");
-  let { win: win1, tab: tab1 } = await openTabAndWaitForRender();
 
-  await SpecialPowers.spawn(tab1, [], async function() {
+  const initialMessages = JSON.parse(JSON.stringify(ASRouter.state.messages));
+
+  let { win, tab } = await openTabAndWaitForRender();
+
+  await SpecialPowers.spawn(tab, [], async function() {
     const promoContainer = content.document.querySelector(".promo");
     ok(promoContainer, "Focus promo is shown");
   });
@@ -30,16 +43,27 @@ add_task(async function test_privatebrowsing_asrouter_messages_state() {
     0,
     "Pin Promo message removed from state when Promotype Pin is disabled"
   );
-  Assert.equal(
-    ASRouter.state.messages.length,
-    initialMsgCount - 1,
-    "ASRouter state browsing messages persists"
-  );
-  await BrowserTestUtils.closeWindow(win1);
+
+  for (let msg of initialMessages) {
+    let shouldPersist =
+      msg.template !== "pb_newtab" ||
+      Services.prefs.getBoolPref(
+        PromoInfo[msg.content?.promoType]?.enabledPref,
+        true
+      );
+    Assert.equal(
+      !!ASRouter.state.messages.find(m => m.id === msg.id),
+      shouldPersist,
+      shouldPersist
+        ? "Message persists in ASRouter state"
+        : "Promo message with disabled promoType removed from ASRouter state"
+    );
+  }
+  await BrowserTestUtils.closeWindow(win);
 });
 
 add_task(async function test_default_promo() {
-  ASRouter.resetMessageState();
+  await resetState();
 
   let { win: win1, tab: tab1 } = await openTabAndWaitForRender();
 
@@ -75,7 +99,7 @@ add_task(async function test_default_promo() {
 });
 
 add_task(async function test_remove_promo_from_prerendered_tab_if_blocked() {
-  ASRouter.resetMessageState();
+  await resetState();
 
   const { win, tab: tab1 } = await openTabAndWaitForRender();
 
@@ -101,6 +125,5 @@ add_task(async function test_remove_promo_from_prerendered_tab_if_blocked() {
     );
   });
 
-  await ASRouter.unblockAll();
   await BrowserTestUtils.closeWindow(win);
 });

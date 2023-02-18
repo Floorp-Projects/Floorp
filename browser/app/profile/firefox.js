@@ -1992,6 +1992,10 @@ pref("browser.promo.focus.enabled", true);
 // Default to enabling pin promos to be shown where allowed.
 pref("browser.promo.pin.enabled", true);
 
+// Default to enabling cookie banner reduction promos to be shown where allowed.
+// Set to true for Fx113 (see bug 1808611)
+pref("browser.promo.cookiebanners.enabled", false);
+
 // Comma separated string of mozilla vpn supported platforms.
 pref("browser.contentblocking.report.vpn_platforms", "win,mac,linux");
 pref("browser.contentblocking.report.hide_vpn_banner", false);
