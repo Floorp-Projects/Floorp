@@ -146,7 +146,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 float nsPageSequenceFrame::GetPrintPreviewScale() const {
   nsPresContext* pc = PresContext();
-  float scale = pc->GetPrintPreviewScaleForSequenceFrameOrScrollbars();
+  float scale = pc->GetPrintPreviewScaleForSequenceFrame();
 
   WritingMode wm = GetWritingMode();
   if (pc->IsScreen() && MOZ_LIKELY(mScrollportSize.ISize(wm) > 0 &&
