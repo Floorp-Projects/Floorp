@@ -68,29 +68,6 @@ void BodyStreamHolder::StoreBodyStream(BodyStream* aBodyStream) {
 //
 // ---------------------------------------------------------------------------
 
-class BodyStream::WorkerShutdown final : public WorkerControlRunnable {
- public:
-  WorkerShutdown(WorkerPrivate* aWorkerPrivate, RefPtr<BodyStream> aStream)
-      : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
-        mStream(std::move(aStream)) {}
-
-  bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
-    mStream->ReleaseObjects();
-    return true;
-  }
-
-  // This runnable starts from a JS Thread. We need to disable a couple of
-  // assertions overring the following methods.
-
-  bool PreDispatch(WorkerPrivate* aWorkerPrivate) override { return true; }
-
-  void PostDispatch(WorkerPrivate* aWorkerPrivate,
-                    bool aDispatchResult) override {}
-
- private:
-  RefPtr<BodyStream> mStream;
-};
-
 NS_IMPL_ISUPPORTS(BodyStream, nsIInputStreamCallback, nsIObserver,
                   nsISupportsWeakReference)
 
@@ -581,32 +558,10 @@ void BodyStream::CloseAndReleaseObjects(JSContext* aCx,
 }
 
 void BodyStream::ReleaseObjects() {
-  // This method can be called on 2 possible threads: the owning one and a JS
-  // thread used to release resources. If we are on the JS thread, we need to
-  // dispatch a runnable to go back to the owning thread in order to release
-  // resources correctly.
-
   MOZ_DIAGNOSTIC_ASSERT(mOwningEventTarget->IsOnCurrentThread());
 
   if (mState == eClosed) {
     // Already gone. Nothing to do.
-    return;
-  }
-
-  if (!NS_IsMainThread() && !IsCurrentThreadRunningWorker()) {
-    // Let's dispatch a WorkerControlRunnable if the owning thread is a worker.
-    if (mWorkerRef) {
-      RefPtr<WorkerShutdown> r =
-          new WorkerShutdown(mWorkerRef->Private(), this);
-      Unused << NS_WARN_IF(!r->Dispatch());
-      return;
-    }
-
-    // A normal runnable of the owning thread is the main-thread.
-    RefPtr<BodyStream> self = this;
-    RefPtr<Runnable> r = NS_NewRunnableFunction(
-        "BodyStream::ReleaseObjects", [self]() { self->ReleaseObjects(); });
-    mOwningEventTarget->Dispatch(r.forget());
     return;
   }
 
@@ -622,19 +577,7 @@ void BodyStream::ReleaseObjects() {
   mWorkerRef = nullptr;
   mGlobal = nullptr;
 
-  // Since calling ForgetBodyStream can cause our current ref count to drop to
-  // zero, which would be bad, because this means we'd be destroying the mutex
-  // which aProofOfLock is holding; instead, we do this later by creating an
-  // event.
-  GetCurrentSerialEventTarget()->Dispatch(NS_NewCancelableRunnableFunction(
-      "BodyStream::ReleaseObjects",
-      [streamHolder = RefPtr{mStreamHolder->TakeBodyStream()}] {
-        // Intentionally left blank: The destruction of this lambda will free
-        // free the stream holder, thus releasing the bodystream.
-        //
-        // This is cancelable because if a worker cancels this, we're still fine
-        // as the lambda will be successfully destroyed.
-      }));
+  RefPtr<BodyStream> self = mStreamHolder->TakeBodyStream();
   mStreamHolder->NullifyStream();
   mStreamHolder = nullptr;
 }
