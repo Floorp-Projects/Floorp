@@ -375,6 +375,8 @@ jobs:
         sudo mkswap /mnt/swapfile
         sudo swapon /mnt/swapfile
 
+        sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk hhvm google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
+        sudo apt autoremove -y
         sudo rm -rf /usr/share/dotnet
         sudo rm -rf /usr/local/lib/android
         sudo rm -rf /opt/ghc
