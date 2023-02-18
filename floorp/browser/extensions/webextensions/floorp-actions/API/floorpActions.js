@@ -39,6 +39,10 @@ this.floorpActions = class extends ExtensionAPI {
             window.changeSidebarVisibility();
           }
         },
+        async changeBrowserManagerSidebarVisibility() {
+          let window = await this._getCurrentWindow();
+          window.changeSidebarVisibility();
+        },
         async showStatusbar() {
           Services.prefs.setBoolPref("browser.display.statusbar", true);
         },

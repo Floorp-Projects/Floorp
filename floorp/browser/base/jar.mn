@@ -8,7 +8,6 @@ browser.jar:
   content/browser/browser-UI-custom.js          (content/browser-UI-custom.js)
   content/browser/browser-manager-sidebar.js    (content/browser-manager-sidebar.js)
   content/browser/browser-design.js             (content/browser-design.js)
-  content/browser/browser-startup.js            (content/browser-startup.js)
   content/browser/browser-statusbar.js          (content/browser-statusbar.js)
   content/browser/browser-tabbar.js             (content/browser-tabbar.js)
   content/browser/browser-userChrome.js         (content/browser-userChrome.js)

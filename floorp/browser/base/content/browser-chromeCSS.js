@@ -200,20 +200,37 @@ var { FileUtils } = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 			this.edit(OS.Path.join(OS.Constants.Path.profileDir, "chrome","a").slice( 0, -1 ) + aLeafName);
 		},
 		edit: function (aFile) {
-			const prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+			function openInEditor (){
+				try {
+					const editor = Services.prefs.getStringPref("view_source.editor.path");
+					var UI = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
+					UI.charset = window.navigator.platform.toLowerCase().indexOf("win") >= 0 ? "Shift_JIS" : "UTF-8";
+					var path = UI.ConvertFromUnicode(aFile);
+					var app = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+					app.initWithPath(editor);
+					var process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
+					process.init(app);
+					process.run(false, [path], 1);
+		     	  } catch (e) { }
+			}
 			let l10n = new Localization(["browser/floorp.ftl"], true);
 			const editor = Services.prefs.getStringPref("view_source.editor.path");
-			if (!editor) return prompts.alert(null, l10n.formatValueSync("not-found-editor-path"), l10n.formatValueSync("set-pref-description"));
-			try {
-				var UI = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
-				UI.charset = window.navigator.platform.toLowerCase().indexOf("win") >= 0 ? "Shift_JIS" : "UTF-8";
-				var path = UI.ConvertFromUnicode(aFile);
-				var app = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-				app.initWithPath(editor);
-				var process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
-				process.init(app);
-				process.run(false, [path], 1);
-			} catch (e) { }
+			let WindowsNotepadPath = { value: "C:\\windows\\system32\\notepad.exe" };
+		    let setPathPromise = new Promise((resolve) => {
+			    if (editor == ""){
+					if(Services.prompt.prompt(null, l10n.formatValueSync("not-found-editor-path") , l10n.formatValueSync("set-pref-description") , WindowsNotepadPath, null, { value: 0 })){
+			          let editorPath = WindowsNotepadPath.value;
+			          Services.prefs.setStringPref("view_source.editor.path", editorPath);
+			    	} 
+			    resolve();
+			    } else {
+				openInEditor();
+				}
+			});
+				 setPathPromise.then(() => {
+				 openInEditor();
+			});
+
 		},
 		create: async function (aLeafName) {
 			let l10n = new Localization(["browser/floorp.ftl"], true);

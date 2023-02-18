@@ -74,31 +74,24 @@ async function onFinalUIStartup() {
             IOUtils.writeUTF8(uccpth,`
 /*************************************************************************************************************************************************************************************************************************************************************
 
-userChrome.cssは、スタイルシートであり、Floorp のユーザーインターフェースに適用され、デフォルトの Floorp のスタイルルールをオーバーライドできます。 残念ながら、userChrome.cssを使用して Floorp の機能操作を変更することはできません。
+"userChrome.css" is a custom CSS file that can be used to specify CSS style rules for Floorp's interface (NOT internal site) using "chrome" privileges.
+For instance, if you want to hide the tab bar, you can use the following CSS rule:
 
-userChrome.cssファイルを作成し、スタイルルールを追加すると、フォントや色を変更したり、不要なアイテムを非表示にしたり、間隔を調整したり、Firefoxの外観を変更したりできます。
+**************************************
+#TabsToolbar {                       *
+    display: none !important;        *
+}                                    *
+**************************************
 
-タブバーを削除する
-******************************************
-#tabbrowser-tabs{
-  display: none;
-}
+NOTE: You can use the userChrome.css file without change preferences (about:config)
 
-******************************************
-このように、要素の非表示などを行うことができます。自分が気に入らない要素を非表示にできるので、とても便利です。ネットにはこの実装例が公開されていることがあります。
-
-また、userChrome.css はブラウザーのツールバーに適用する CSS のことを指し、userContent.css はブラウザー内部サイトに対して CSS を適用できます。
-詳しくは、同じディレクトリに存在するファイルを参照してください
-
-NOTE:適用に、about:config の操作は不要です。
-
-参考: https://userChrome.org | https://github.com/topics/userchrome 
+Quote: https://userChrome.org | https://github.com/topics/userchrome 
 
 ************************************************************************************************************************************************************************************************************************************************************/
 
 @charset "UTF-8";
 @-moz-document url(chrome://browser/content/browser.xhtml) {
-/*この下にCSSを書いてください*/
+/* Please write your custom CSS under this line*/
 
 
 }
@@ -108,27 +101,23 @@ NOTE:適用に、about:config の操作は不要です。
             IOUtils.writeUTF8(ucconpth,`
 /*************************************************************************************************************************************************************************************************************************************************************
  
-userContent.css は userChrome.css と同じく、chrome 特権を用いてブラウザーに対して CSS スタイルルールを指定できる特殊なCSSファイルです。
-ただし、userChrome.css と適用範囲はことなるので正しく理解しておく必要があります。
+"userContent.css" is a custom CSS file that can be used to specify CSS style rules for Floorp's intenal site using "chrome" privileges.
+For instance, if you want to apply CSS at "about:newtab" and "about:home", you can use the following CSS rule:
 
-userChrome.css は、ツールバーなどのブラウザーを制御する場所に適用するのに対し、userContent.css はブラウザー内部サイトにスタイルルールを定義できます。ただし、指定先をただしくURLで指定する必要があります。
+***********************************************************************
+@-moz-document url-prefix("about:newtab"), url-prefix("about:home") { *
+                                                                      *
+/*Write your css*/                                                    *
+                                                                      *
+}                                                                     *
+***********************************************************************
 
-新しいタブに CSS を書く場合
-***********************************
-@-moz-document url-prefix("about:newtab"), url-prefix("about:home") {
-
-/*ここに CSS を書いていく*/
-
-}
-***********************************
-
-以上です。後の使い方はuserChrome.css と変わりません。Floorp をお楽しみください。
-
+NOTE: You can use the userContent.css file without change preferences (about:config)
 
 ************************************************************************************************************************************************************************************************************************************************************/
 
 @charset "UTF-8";
-
+/* Please write your custom CSS under this line*/
 `);
 
         }

@@ -3,7 +3,7 @@ const browser_ = window.wrappedJSObject.browser;
 
 if (browser_.runtime.id == "{506e023c-7f2b-40a3-8066-bc5deb40aebe}") {
   let gesturefyController = {
-    "commandsId": ["open-tree-style-tab","open-bookmarks-sidebar","open-history-sidebar","open-synctabs-sidebar","close-sidebar","open-browser-manager-sidebar","close-browser-manager-sidebar","show-statusbar","hide-statusbar","toggle-statusbar"],
+    "commandsId": ["open-tree-style-tab","open-bookmarks-sidebar","open-history-sidebar","open-synctabs-sidebar","close-sidebar","open-browser-manager-sidebar","close-browser-manager-sidebar","toggle-browser-manager-sidebar","show-statusbar","hide-statusbar","toggle-statusbar"],
     "commandObject": {
       "open-tree-style-tab": `{"name":"SendMessageToOtherAddon","settings":{"extensionId":"floorp-actions@floorp.ablaze.one","message":"{\\"action\\": \\"open-tree-style-tab\\"}"}}`
     },

@@ -228,18 +228,11 @@ this.PrefsFeed = class PrefsFeed {
       let str = new RegExp(`\\.(${Services.prefs.getStringPref("browser.newtabpage.activity-stream.floorp.background.images.extensions","").split(",").join("|")})+$`)
       let imagesDataPath = []
       if(imagesPath != 0){
-        let reader = new FileReader();
         for(let elem of imagesPath){
           if(!str.test(elem)) continue
           let filePath = Services.io.newFileURI(FileUtils.File(elem)).asciiSpec
-          let fileBlob = await (await fetch(filePath)).blob()
-          let icon_data_url = await new Promise(resolve => {
-            reader.addEventListener("load", function () {
-              resolve(this.result);
-            })
-            reader.readAsDataURL(fileBlob);
-          });
-          imagesDataPath.push(icon_data_url)
+          let fileBlob = URL.createObjectURL(await (await fetch(filePath)).blob())
+          imagesDataPath.push(fileBlob)
         }
         
       }

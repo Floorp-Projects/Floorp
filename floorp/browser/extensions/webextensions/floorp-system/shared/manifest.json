@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "__MSG_extensionName__",
   "description": "Floorp のシステムが含まれています。このアドオンは削除・停止ができません。",
-  "version": "1.1",
+  "version": "1.2",
   "homepage_url": "https://ablaze.one",
   "default_locale": "en",
   "permissions": [
@@ -13,7 +13,9 @@
     "mozillaAddons",
     "about:*",
     "downloads",
-    "<all_urls>"
+    "<all_urls>",
+    "webRequest",
+    "webRequestBlocking"
   ],
   "content_scripts": [
     {
@@ -92,7 +94,8 @@
   "background": {
     "scripts": [
       "gesturefy/background.js",
-      "webcompat.js",
+      "webcompat_inject.js",
+      "webcompat_useragent.js",
       "update.js",
       "portable-update.js",
       "download-notification.js"

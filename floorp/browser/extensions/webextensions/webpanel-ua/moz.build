@@ -4,16 +4,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-FINAL_TARGET_FILES.features["user-agent@floorp.ablaze.one"] += [
+FINAL_TARGET_FILES.features["webpanel-ua@floorp.ablaze.one"] += [
     "background.js",
     "link-48.png",
     "manifest.json",
 ]
 
-FINAL_TARGET_FILES.features["user-agent@floorp.ablaze.one"]["APIs"] += [
+FINAL_TARGET_FILES.features["webpanel-ua@floorp.ablaze.one"]["APIs"] += [
     "APIs/webRequestExt.js",
     "APIs/webRequestExt.json",
 ]
 
 with Files("**"):
-    BUG_COMPONENT = ("Firefox", "user-agent@floorp.ablaze.one")
+    BUG_COMPONENT = ("Firefox", "webpanel-ua@floorp.ablaze.one")
