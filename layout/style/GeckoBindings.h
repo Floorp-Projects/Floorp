@@ -350,8 +350,6 @@ void Gecko_NoteAnimationOnlyDirtyElement(const mozilla::dom::Element*);
 bool Gecko_AnimationNameMayBeReferencedFromStyle(const nsPresContext*,
                                                  nsAtom* name);
 
-float Gecko_GetScrollbarInlineSize(const nsPresContext*);
-
 // Incremental restyle.
 mozilla::PseudoStyleType Gecko_GetImplementedPseudo(
     const mozilla::dom::Element*);
