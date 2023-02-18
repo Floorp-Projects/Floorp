@@ -13,8 +13,8 @@ fuzzy-if(Android,0-43,0-26) fuzzy-if(gtkWidget,0-14,12-32) fuzzy-if(cocoaWidget,
 # Different async zoom levels. Since the scrollthumb gets async-scaled in the
 # compositor, the border-radius ends of the scrollthumb are going to be a little
 # off, hence the fuzzy-if clauses.
-fuzzy-if(Android,0-54,0-33) fuzzy-if(!Android,0-107,0-72) pref(apz.allow_zooming,true) == root-scrollbar-async-zoomed-in.html root-scrollbar-async-zoomed-in-ref.html
-fuzzy-if(Android,0-53,0-30) fuzzy-if(!Android,0-107,0-167) pref(apz.allow_zooming,true) == root-scrollbar-async-zoomed-out.html root-scrollbar-async-zoomed-out-ref.html
+fuzzy-if(Android,0-54,0-33) fuzzy-if(!Android,0-80,0-72) pref(apz.allow_zooming,true) == root-scrollbar-async-zoomed-in.html root-scrollbar-async-zoomed-in-ref.html
+fuzzy-if(Android,0-53,0-30) fuzzy-if(!Android,0-80,0-167) pref(apz.allow_zooming,true) == root-scrollbar-async-zoomed-out.html root-scrollbar-async-zoomed-out-ref.html
 
 # Test scrollbars working properly with pinch-zooming, i.e. different document resolutions.
 # As above, the end of the scrollthumb won't match perfectly, but the bulk of the scrollbar should be present and identical.
