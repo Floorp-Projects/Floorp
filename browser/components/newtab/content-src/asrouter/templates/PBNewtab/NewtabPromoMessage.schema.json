@@ -53,9 +53,9 @@
           "description": "Promo type used to determine if promo should show to a given user",
           "enum": [
             "FOCUS",
-            "RALLY",
             "VPN",
             "PIN",
+            "COOKIE_BANNERS",
             "OTHER"
           ]
         },

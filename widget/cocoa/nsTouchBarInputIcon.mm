@@ -121,7 +121,6 @@ nsresult nsTouchBarInputIcon::OnComplete(imgIContainer* aImage) {
                                                      withSize:NSMakeSize(kIconHeight, kIconHeight)
                                                   presContext:nullptr
                                                 computedStyle:nullptr
-                                                      subrect:mImageRegionRect
                                                   scaleFactor:kHiDPIScalingFactor];
   [mButton setImage:image];
   [mShareScrubber setButtonImage:image];
