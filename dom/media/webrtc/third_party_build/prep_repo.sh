@@ -23,8 +23,6 @@ echo "MOZ_PRIOR_LIBWEBRTC_BRANCH: $MOZ_PRIOR_LIBWEBRTC_BRANCH"
 # * o pipefail: All stages of all pipes should succeed.
 set -eEuo pipefail
 
-# wipe no-op commit tracking files for new run
-rm -f $STATE_DIR/*.no-op-cherry-pick-msg
 # wipe resume_state for new run
 rm -f $STATE_DIR/resume_state
 
@@ -99,20 +97,6 @@ git format-patch -o $TMP_DIR -k $CHERRY_PICK_BASE..branch-heads/$MOZ_PRIOR_UPSTR
 sed -i.bak -e "/^Subject: / s/^Subject: /Subject: (cherry-pick-branch-heads\/$MOZ_PRIOR_UPSTREAM_BRANCH_HEAD_NUM) /" $TMP_DIR/*.patch
 git am $TMP_DIR/*.patch # applies to branch mozpatches
 rm $TMP_DIR/*.patch $TMP_DIR/*.patch.bak
-
-# write no-op files for the cherry-picked release branch commits.  For more
-# details on what this is doing, see make_upstream_revert_noop.sh.
-COMMITS=`git log -r $CHERRY_PICK_BASE..branch-heads/$MOZ_PRIOR_UPSTREAM_BRANCH_HEAD_NUM --format='%h'`
-for commit in $COMMITS; do
-
-  echo "Processing release branch commit $commit for no-op handling"
-  CHERRY_PICK_COMMIT=`git show $commit | grep "cherry picked from commit" | tr -d "()" | awk '{ print $5; }'`
-  SHORT_SHA=`git show --name-only $CHERRY_PICK_COMMIT --format='%h' | head -1`
-
-  echo "We already cherry-picked this when we vendored $commit." \
-  > $STATE_DIR/$SHORT_SHA.no-op-cherry-pick-msg
-
-done
 
 # grab all the moz patches and apply
 # git format-patch -k $MOZ_LIBWEBRTC_BASE..$MOZ_PRIOR_LIBWEBRTC_BRANCH

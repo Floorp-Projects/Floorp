@@ -1,0 +1,32 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="204" height="157" fill="none" viewBox="0 0 204 157">
+<path fill="#EAE1FE" d="M115.519 43.539c18.814 12.243 25.054 17.48 56.8 24.172 31.745 6.692 41.168 46.329-16.09 47.79-29.197-2.708-39.085 10.319-71.109 25.239-32.024 14.92-52.84 0-52.84-15.8 0-12.707-13.03-18.21-18.109-26.86-5.077-8.652-1.216-14.617 34.882-29.556 17.744-7.343-.36-22.32 9.676-36.078C68.765 18.686 92 28.235 115.52 43.539Z" opacity=".17"/>
+<g clip-path="url(#a)">
+<rect width="113.695" height="74.905" x="39.12" y="48.74" fill="#42414D" rx="6.688"/>
+<path fill="#42414D" stroke="#fff" stroke-width="1.4" d="m45.753 88.132.698-.06c2.288-.193 3.429-1.078 4.01-1.832.298-.388.465-.763.557-1.036a2.743 2.743 0 0 0 .101-.393l.002-.012-5.368 3.332Zm0 0 .06.697c1.265 14.969 14.426 26.077 29.395 24.811 14.969-1.266 26.077-14.427 24.811-29.396-1.266-14.969-14.427-26.077-29.396-24.81l-.653.054.012.655c.007.38.016.749.025 1.107.06 2.427.107 4.375-.637 6.125-.822 1.934-2.683 3.732-7.094 5.42l-.53.203.089.56c.439 2.752.01 4.739-.815 6.188-.83 1.456-2.1 2.44-3.466 3.106-1.369.667-2.804 1.001-3.91 1.166a15.142 15.142 0 0 1-1.704.158 5.128 5.128 0 0 1-.093.001h-.026l-6.068 3.954Z"/>
+<circle cx="81.015" cy="94.079" r="5.307" fill="#EAE1FE" stroke="#fff" stroke-width=".7" transform="rotate(-4.835 81.015 94.079)"/>
+<circle cx="60.022" cy="94.706" r="3.4" fill="#EAE1FE" stroke="#fff" stroke-width=".7" transform="rotate(-4.835 60.022 94.706)"/>
+<circle cx="82.287" cy="72.925" r="3.4" fill="#EAE1FE" stroke="#fff" stroke-width=".7" transform="rotate(-4.835 82.287 72.925)"/>
+<circle cx="85.879" cy="83.718" r="1.906" fill="#8A52FF" stroke="#fff" stroke-width=".7" transform="rotate(-4.835 85.879 83.718)"/>
+<circle cx="67.642" cy="85.261" r="1.906" fill="#8A52FF" stroke="#fff" stroke-width=".7" transform="rotate(-4.835 67.642 85.261)"/>
+<circle cx="70.827" cy="100.297" r="1.906" fill="#8A52FF" stroke="#fff" stroke-width=".7" transform="rotate(-4.835 70.827 100.297)"/>
+<circle cx="91.173" cy="76.191" r=".572" fill="#fff" stroke="#fff" stroke-width=".904" transform="rotate(-4.835 91.173 76.191)"/>
+<circle cx="69.932" cy="75.737" r=".572" fill="#fff" stroke="#fff" stroke-width=".904" transform="rotate(-4.835 69.932 75.737)"/>
+<circle cx="72.698" cy="108.436" r=".572" fill="#fff" stroke="#fff" stroke-width=".904" transform="rotate(-4.835 72.698 108.436)"/>
+<circle cx="60.305" cy="103.496" r=".572" fill="#fff" stroke="#fff" stroke-width=".904" transform="rotate(-4.835 60.305 103.496)"/>
+<circle cx="50.381" cy="92.361" r=".572" fill="#fff" stroke="#fff" stroke-width=".904" transform="rotate(-4.835 50.381 92.36)"/>
+<circle cx="93.735" cy="91.687" r=".572" fill="#fff" stroke="#fff" stroke-width=".904" transform="rotate(-4.835 93.735 91.687)"/>
+<rect width="19" height="6" x="129.12" y="104.74" fill="#8A52FF" stroke="#fff" stroke-width=".702" rx=".697"/>
+<rect width="19" height="6" x="107.12" y="104.74" fill="#E7DEFD" stroke="#fff" stroke-width=".702" rx=".697"/>
+</g>
+<rect width="115.099" height="76.309" x="38.418" y="48.038" stroke="#fff" stroke-width="1.404" rx="7.39"/>
+<path fill="#E7DEFD" fill-opacity=".8" stroke="#8A52FF" stroke-linecap="square" stroke-linejoin="round" stroke-width="5" d="M167.5 56c0 4.354-1.357 8.39-3.672 11.71l-28.055-28.865A20.404 20.404 0 0 1 147 35.5c11.322 0 20.5 9.178 20.5 20.5Zm-35.552-13.917 28.535 29.36A20.421 20.421 0 0 1 147 76.5c-11.322 0-20.5-9.178-20.5-20.5a20.425 20.425 0 0 1 5.448-13.917Z"/>
+<path stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.548" d="M128.12 79.74h-21M166.12 92.74h-59"/>
+<defs>
+<clipPath id="a">
+<rect width="113.695" height="74.905" x="39.12" y="48.74" fill="#fff" rx="6.688"/>
+</clipPath>
+</defs>
+</svg>
