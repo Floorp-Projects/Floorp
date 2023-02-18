@@ -63,3 +63,11 @@ about-private-browsing-pin-promo-link-text = { PLATFORM() ->
    *[other] Pin to taskbar
 }
 about-private-browsing-pin-promo-title = No saved cookies or history, right from your desktop. Browse like no one’s watching.
+
+## Strings used in a promotion message for cookie banner reduction
+
+# Simplified version of the headline if the original text doesn't work
+# in your language: `See fewer cookie requests`.
+about-private-browsing-cookie-banners-promo-header = Cookie banners begone!
+about-private-browsing-cookie-banners-promo-button = Reduce Cookie Banners
+about-private-browsing-cookie-banners-promo-message = Let { -brand-short-name } automatically answer cookie pop-ups for you so you can get back to distraction-free browsing. { -brand-short-name } will reject all requests if possible.

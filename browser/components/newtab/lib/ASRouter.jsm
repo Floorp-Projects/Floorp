@@ -1814,6 +1814,7 @@ class _ASRouter {
       FOCUS: { enabledPref: "browser.promo.focus.enabled" },
       VPN: { enabledPref: "browser.vpn_promo.enabled" },
       PIN: { enabledPref: "browser.promo.pin.enabled" },
+      COOKIE_BANNERS: { enabledPref: "browser.promo.cookiebanners.enabled" },
     };
     await this.loadMessagesFromAllProviders();
 
