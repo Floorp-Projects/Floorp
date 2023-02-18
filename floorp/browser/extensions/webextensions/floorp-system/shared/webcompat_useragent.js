@@ -29,7 +29,7 @@ const WEBCOMPATS_USERAGENT = [
 ];
 
 
-// Synchronization is required to process requests before the page is loaded.
+// It must be a synchronous process in order to process requests before the page is loaded.
 let enabled = browser.aboutConfigPrefs.getBoolPref(FLOORP_WEBCOMPAT_ENABLED_PREF);
 browser.aboutConfigPrefs.onPrefChange.addListener(function() {
     enabled = browser.aboutConfigPrefs.getBoolPref(FLOORP_WEBCOMPAT_ENABLED_PREF);
