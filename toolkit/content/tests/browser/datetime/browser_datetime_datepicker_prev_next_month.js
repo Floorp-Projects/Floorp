@@ -17,8 +17,8 @@ add_task(async function test_datepicker_prev_month_btn() {
   );
 
   // Move focus from the selected date to the Previous Month button:
-  EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
-  EventUtils.synthesizeKey(" ", {});
+  EventUtils.synthesizeKey("KEY_Tab");
+  EventUtils.synthesizeKey(" ");
 
   // 2016-11-15:
   const focusableDay = getDayEl(15);
@@ -114,8 +114,8 @@ add_task(async function test_datepicker_next_month_btn() {
   );
 
   // Move focus from the selected date to the Next Month button:
-  EventUtils.synthesizeKey("KEY_Tab", { repeat: 4 });
-  EventUtils.synthesizeKey(" ", {});
+  EventUtils.synthesizeKey("KEY_Tab", { repeat: 3 });
+  EventUtils.synthesizeKey(" ");
 
   // 2017-01-15:
   const focusableDay = getDayEl(15);
@@ -188,7 +188,7 @@ add_task(async function test_datepicker_next_month_btn() {
   );
 
   // Move focus from the Next Month button to the same day of the month (2017-01-15):
-  EventUtils.synthesizeKey("KEY_Tab", {});
+  EventUtils.synthesizeKey("KEY_Tab");
 
   Assert.ok(
     focusableDay.matches(":focus"),
@@ -213,8 +213,8 @@ add_task(async function test_datepicker_prev_month_btn_rtl() {
   );
 
   // Move focus from the selected date to the Previous Month button:
-  EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
-  EventUtils.synthesizeKey(" ", {});
+  EventUtils.synthesizeKey("KEY_Tab");
+  EventUtils.synthesizeKey(" ");
 
   // 2016-11-15:
   const focusableDay = getDayEl(15);
@@ -266,8 +266,8 @@ add_task(async function test_datepicker_next_month_btn_rtl() {
   );
 
   // Move focus from the selected date to the Next Month button:
-  EventUtils.synthesizeKey("KEY_Tab", { repeat: 4 });
-  EventUtils.synthesizeKey(" ", {});
+  EventUtils.synthesizeKey("KEY_Tab", { repeat: 3 });
+  EventUtils.synthesizeKey(" ");
 
   // 2017-01-15:
   const focusableDay = getDayEl(15);
@@ -293,7 +293,7 @@ add_task(async function test_datepicker_next_month_btn_rtl() {
   );
 
   // Move focus from the Next Month button to the same day of the month (2017-01-15):
-  EventUtils.synthesizeKey("KEY_Tab", {});
+  EventUtils.synthesizeKey("KEY_Tab");
 
   Assert.ok(
     focusableDay.matches(":focus"),

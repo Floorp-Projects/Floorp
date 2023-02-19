@@ -108,13 +108,15 @@ class DateTimePickerChild extends JSWindowActorChild {
 
         let win = this._inputElement.ownerGlobal;
 
-        // dateTimeBoxElement is within UA Widget Shadow DOM.
-        // An event dispatch to it can't be accessed by document.
-        dateTimeBoxElement.dispatchEvent(
-          new win.CustomEvent("MozPickerValueChanged", {
-            detail: Cu.cloneInto(aMessage.data, win),
-          })
-        );
+        if (this._inputElement.openOrClosedShadowRoot) {
+          // dateTimeBoxElement is within UA Widget Shadow DOM.
+          // An event dispatch to it can't be accessed by document.
+          dateTimeBoxElement.dispatchEvent(
+            new win.CustomEvent("MozPickerValueChanged", {
+              detail: Cu.cloneInto(aMessage.data, win),
+            })
+          );
+        }
         break;
       }
       default:

@@ -57,10 +57,6 @@ class DateTimePickerParent extends JSWindowActorParent {
   handleEvent(aEvent) {
     debug("handleEvent: " + aEvent.type);
     switch (aEvent.type) {
-      case "DateTimePickerValueCleared": {
-        this.sendAsyncMessage("FormDateTime:PickerValueChanged", null);
-        break;
-      }
       case "DateTimePickerValueChanged": {
         this.sendAsyncMessage("FormDateTime:PickerValueChanged", aEvent.detail);
         break;
@@ -130,7 +126,6 @@ class DateTimePickerParent extends JSWindowActorParent {
     }
     this._picker.element.addEventListener("popuphidden", this);
     this._picker.element.addEventListener("DateTimePickerValueChanged", this);
-    this._picker.element.addEventListener("DateTimePickerValueCleared", this);
   }
 
   // Stop listening to picker's event.
@@ -141,10 +136,6 @@ class DateTimePickerParent extends JSWindowActorParent {
     this._picker.element.removeEventListener("popuphidden", this);
     this._picker.element.removeEventListener(
       "DateTimePickerValueChanged",
-      this
-    );
-    this._picker.element.removeEventListener(
-      "DateTimePickerValueCleared",
       this
     );
   }
