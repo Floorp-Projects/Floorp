@@ -16,7 +16,7 @@ UNIFIED_SOURCES += [
     "WrapperFactory.cpp",
 ]
 
-# XrayWrapper needs to be built separately becaue of template instantiations.
+# XrayWrapper needs to be built separately because of template instantiations.
 SOURCES += [
     "XrayWrapper.cpp",
 ]
@@ -30,5 +30,3 @@ LOCAL_INCLUDES += [
     "../src",
     "/caps",
 ]
-
-REQUIRES_UNIFIED_BUILD = True
