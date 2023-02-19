@@ -40,7 +40,7 @@ add_task(async function test_spinner_month_keyboard_arrows() {
   );
 
   // Move focus from the selection to the month-year toggle button:
-  EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
+  EventUtils.synthesizeKey("KEY_Tab", { repeat: 3 });
   // Open month-year selection panel with spinners:
   EventUtils.synthesizeKey(" ", {});
 
@@ -161,7 +161,7 @@ add_task(async function test_spinner_month_keyboard_pageup_pagedown() {
   );
   // const browser = helper.tab.linkedBrowser;
   // Move focus from the selection to the month-year toggle button:
-  EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
+  EventUtils.synthesizeKey("KEY_Tab", { repeat: 3 });
   // Open month-year selection panel with spinners:
   EventUtils.synthesizeKey(" ", {});
 
@@ -252,7 +252,7 @@ add_task(async function test_spinner_month_keyboard_home_end() {
   );
   // const browser = helper.tab.linkedBrowser;
   // Move focus from the selection to the month-year toggle button:
-  EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
+  EventUtils.synthesizeKey("KEY_Tab", { repeat: 3 });
   // Open month-year selection panel with spinners:
   EventUtils.synthesizeKey(" ", {});
 
@@ -345,7 +345,7 @@ add_task(async function test_spinner_year_keyboard_arrows() {
   info("Testing general keyboard navigation");
 
   // Move focus from the selection to the month-year toggle button:
-  EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
+  EventUtils.synthesizeKey("KEY_Tab", { repeat: 3 });
   // Open month-year selection panel with spinners:
   EventUtils.synthesizeKey(" ", {});
 
@@ -451,7 +451,7 @@ add_task(async function test_spinner_year_keyboard_pageup_pagedown() {
   );
   // const browser = helper.tab.linkedBrowser;
   // Move focus from the selection to the month-year toggle button:
-  EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
+  EventUtils.synthesizeKey("KEY_Tab", { repeat: 3 });
   // Open month-year selection panel with spinners:
   EventUtils.synthesizeKey(" ", {});
 
@@ -545,7 +545,7 @@ add_task(async function test_spinner_year_keyboard_home_end() {
   );
 
   // Move focus from the selection to the month-year toggle button:
-  EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
+  EventUtils.synthesizeKey("KEY_Tab", { repeat: 3 });
   // Open month-year selection panel with spinners:
   EventUtils.synthesizeKey(" ", {});
 

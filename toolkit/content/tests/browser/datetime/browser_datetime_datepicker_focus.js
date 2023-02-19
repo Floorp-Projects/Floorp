@@ -80,7 +80,7 @@ add_task(async function test_focus_after_selection() {
 
   let ready = helper.waitForPickerReady();
 
-  // Move the keyboard focus to the input field and reopen the picker
+  // Move the keyboard focus to the input field to reopen the picker
   EventUtils.synthesizeKey("KEY_Tab", {});
 
   // Check the focus is returned to the Calendar button
@@ -132,7 +132,7 @@ add_task(async function test_focus_after_selection() {
   info("Test behavior when selection is done on the month-year panel");
 
   // Move focus to the month-year toggle button and open it:
-  EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
+  EventUtils.synthesizeKey("KEY_Tab", { repeat: 3 });
   EventUtils.synthesizeKey(" ");
 
   // Move focus to the month spin button and change its value
