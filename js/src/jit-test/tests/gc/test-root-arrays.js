@@ -1,3 +1,4 @@
+gczeal(0);
 let objects = [{}, {}, {}];
 blackRoot()[0] = objects[0];
 grayRoot()[0] = objects[1];
