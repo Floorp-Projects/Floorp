@@ -215,10 +215,14 @@ def get_branding(use_official, build_app, finder, log=None):
     def conf_vars_value(key):
         lines = open(conf_vars).readlines()
         for line in lines:
+            line = line.strip()
+            if line and line[0] == "#":
+                continue
             if key not in line:
                 continue
             _, _, value = line.partition("=")
-            value = value.strip()
+            if not value:
+                continue
             log(
                 logging.INFO,
                 "msix",
