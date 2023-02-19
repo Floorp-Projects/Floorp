@@ -30,13 +30,6 @@ using namespace mozilla;
 
 namespace xpc {
 
-#ifndef MOZ_UNIFIED_BUILD
-extern template class FilteringWrapper<js::CrossCompartmentSecurityWrapper,
-                                       Opaque>;
-extern template class FilteringWrapper<js::CrossCompartmentSecurityWrapper,
-                                       OpaqueWithCall>;
-#endif
-
 // When chrome pulls a naked property across the membrane using
 // .wrappedJSObject, we want it to cross the membrane into the
 // chrome compartment without automatically being wrapped into an
