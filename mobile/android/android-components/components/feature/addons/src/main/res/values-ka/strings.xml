@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Description for privacy add-on permission. -->
-    <string name="mozac_feature_addons_permissions_privacy_description">პირადი მონაცემების პარამეტრების ნახვა და შეცვლა</string>
+    <string name="mozac_feature_addons_permissions_privacy_description">პირადულობის პარამეტრების ნახვა და შეცვლა</string>
     <!-- Description for all_urls add-on permission. -->
     <string name="mozac_feature_addons_permissions_all_urls_description">ყველა საიტზე თქვენს მონაცემებთან წვდომა</string>
     <!-- Description for giving an add-on access to users's data on one site. %1$s  will be replaced by the DNS host name for which a web extension is requesting access (e.g., www.mozilla.org). -->
@@ -10,38 +10,40 @@
     <string name="mozac_feature_addons_permissions_sites_in_domain_description">%1$s მისამართის საიტებზე თქვენს მონაცემებთან წვდომა</string>
     <!-- When an add-on requires access to more than 4 sites, for example the add-on requires access for 5 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
      then we will show another collapsed entry saying "Access your data on 1 other site". This entry it's for the singular case, when the add-on is only accessing one extra site. -->
-    <string name="mozac_feature_addons_permissions_one_extra_site_description" tools:ignore="PluralsCandidate">თქვენს მონაცემებთან წვდომა, 1 სხვა საიტზე</string>
+    <string name="mozac_feature_addons_permissions_one_extra_site_description" tools:ignore="PluralsCandidate">თქვენს მონაცემებთან წვდომა 1 სხვა საიტზე</string>
     <!-- When an add-on requires access to more than 4 sites, for example the add-on requires access for 6 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
      then we will show another collapsed entry saying "Access your data on 2 other sites". This entry it's for the plural case, when the add-on is accessing more than one extra site.
      %1$d will be replaced by an integer indicating the number of additional hosts for which this web extension is requesting permission. -->
-    <string name="mozac_feature_addons_permissions_extra_sites_description" tools:ignore="PluralsCandidate">თქვენს მონაცემებთან წვდომა, %1$d სხვა საიტზე</string>
+    <string name="mozac_feature_addons_permissions_extra_sites_description" tools:ignore="PluralsCandidate">თქვენს მონაცემებთან წვდომა %1$d სხვა საიტზე</string>
     <!-- When an add-on requires access to more than 4 domains, for example the add-on requires access for 5 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
       then we will show another collapsed entry saying "Access your data on 1 other domain". This entry it's for the singular case, when the add-on is only accessing one extra domain. -->
-    <string name="mozac_feature_addons_permissions_one_extra_domain_description" tools:ignore="PluralsCandidate">თქვენს მონაცემებთან წვდომა, 1 სხვა მისამართზე</string>
+    <string name="mozac_feature_addons_permissions_one_extra_domain_description" tools:ignore="PluralsCandidate">თქვენს მონაცემებთან წვდომა 1 სხვა მისამართზე</string>
     <!-- When an add-on requires access to more than 4 domains, for example the add-on requires access for 6 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
      then we will show another collapsed entry saying "Access your data on 2 other domains". This entry it's for the plural case, when the add-on is accessing more than one extra domain.
      %1$d will be replaced by an integer indicating the number of additional domains for which this web extension is requesting permission. -->
-    <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate">თქვენს მონაცემებთან წვდომა, %1$d სხვა მისამართზე</string>
+    <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate">თქვენს მონაცემებთან წვდომა %1$d სხვა მისამართზე</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">ბრაუზერის ჩანართებთან წვდომა</string>
     <!-- Description for unlimited_storage permission. -->
     <string name="mozac_feature_addons_permissions_unlimited_storage_description">განუსაზღვრელი მოცულობის მონაცემების შენახვა დისკზე</string>
     <!-- Description for navigation permission. -->
-    <string name="mozac_feature_addons_permissions_web_navigation_description">გვერდების მონახულებისას, ბრაუზერის მოქმედებებთან წვდომა</string>
+    <string name="mozac_feature_addons_permissions_web_navigation_description">გვერდების მონახულებისას ბრაუზერის მოქმედებებთან წვდომა</string>
     <!-- Description for bookmarks permission. -->
     <string name="mozac_feature_addons_permissions_bookmarks_description">სანიშნების ნახვა და შეცვლა</string>
     <!-- Description for browser_setting permission. -->
     <string name="mozac_feature_addons_permissions_browser_setting_description">ბრაუზერის პარამეტრების ნახვა და შეცვლა</string>
     <!-- Description for browser_data permission. -->
-    <string name="mozac_feature_addons_permissions_browser_data_description">ბოლოს შენახული ისტორიის, ფუნთუშებისა და მასთან დაკავშირებული მონაცემების წაშლა</string>
+    <string name="mozac_feature_addons_permissions_browser_data_description">ბოლოს ნანახი გვერდების, ფუნთუშებისა და თანდართული მონაცემების წაშლა</string>
     <!-- Description for clipboard_read permission. -->
-    <string name="mozac_feature_addons_permissions_clipboard_read_description">წვდომა მონაცემების ასლზე</string>
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">წვდომა აღებული ასლის მონაცემებზე</string>
     <!-- Description for clipboard_write permission. -->
-    <string name="mozac_feature_addons_permissions_clipboard_write_description">აღებული მონაცემების ასლში ინფორმაციის ჩამატება</string>
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">აღებულ ასლში მონაცემების ჩამატება</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">შიგთავსის შეზღუდვა ნებისმიერ გვერდზე</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">თქვენი მონახულებული გვერდების ხილვა</string>
     <!-- Description for downloads permission. -->
-    <string name="mozac_feature_addons_permissions_downloads_description">ფაილების ჩამოტვირთვა, ჩამოტვირთვების ისტორიის ნახვა და შეცვლა</string>
+    <string name="mozac_feature_addons_permissions_downloads_description">ფაილების ჩამოტვირთვა, ჩამოტვირთვების ნახვა და შეცვლა</string>
     <!-- Description for downloads_open permission. -->
     <string name="mozac_feature_addons_permissions_downloads_open_description">თქვენს მოწყობილობაზე ჩამოტვირთული ფაილების გახსნა</string>
     <!-- Description for find permission. -->
@@ -53,11 +55,11 @@
     <!-- Description for management permission. -->
     <string name="mozac_feature_addons_permissions_management_description">გაფართოების მოხმარების შესახებ მონაცემების შეგროვება და თემების მართვა</string>
     <!-- Description for native_messaging permission. -->
-    <string name="mozac_feature_addons_permissions_native_messaging_description">შეტყობინებების გაცვლა, გარეშე პროგრამებთან</string>
+    <string name="mozac_feature_addons_permissions_native_messaging_description">შეტყობინებების გაცვლა გარეშე პროგრამებთან</string>
     <!-- Description for notifications permission. -->
     <string name="mozac_feature_addons_permissions_notifications_description">შეტყობინებების ჩვენება</string>
     <!-- Description for pkcs11 permission. -->
-    <string name="mozac_feature_addons_permissions_pkcs11_description">ანგარიშზე დაშიფრულად შესვლის მომსახურებების გამოყენება</string>
+    <string name="mozac_feature_addons_permissions_pkcs11_description">ანგარიშზე დაშიფრულად შესვლის მომსახურებების მოწოდება</string>
     <!-- Description for proxy permission. -->
     <string name="mozac_feature_addons_permissions_proxy_description">ბრაუზერის პროქსის პარამეტრების მართვა</string>
     <!-- Description for sessions permission. -->
@@ -67,7 +69,7 @@
     <!-- Description for top_sites permission. -->
     <string name="mozac_feature_addons_permissions_top_sites_description">მონახულებული გვერდების ისტორიასთან წვდომა</string>
     <!-- Description for devtools permission. -->
-    <string name="mozac_feature_addons_permissions_devtools_description">შემმუშავებლის ხელსაწყოების გამოყენება, გახსნილ ჩანართებზე თქვენს მონაცემებთან წვდომისთვის</string>
+    <string name="mozac_feature_addons_permissions_devtools_description">შემმუშავებლის ხელსაწყოებით თქვენს მონაცემებთან წვდომა გახსნილ ჩანართებში</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">ვერსია</string>
     <!-- The authors of an add-on. -->

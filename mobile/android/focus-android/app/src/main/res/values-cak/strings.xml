@@ -113,8 +113,21 @@
 
 
     <!-- This is the label of an action we offer when the user selects text in other third-party apps.
-         Clicking this action will launch Focus and perform a search in the default search engine. -->
-    <string name="text_selection_search_action">Tikanöx chi ichinem</string>
+         Focus is hard coded since we can't use variables in this context.
+         Do not translate or transliterate Focus.-->
+    <string name="text_selection_search_action_focus">Tikanöx pa Focus</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+             Klar is hard coded since we can't use variables in this context.
+             Do not translate or transliterate Klar.-->
+    <string name="text_selection_search_action_klar">Tikanöx pa Klar</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+            Focus Beta is hard coded since we can't use variables in this context.
+            Do not translate or transliterate Focus Beta.-->
+    <string name="text_selection_search_action_focus_beta">Tikanöx pa Focus Beta</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+          Focus Nightly is hard coded since we can't use variables in this context.
+          Do not translate or transliterate Focus Nightly.-->
+    <string name="text_selection_search_action_focus_nightly">Tikanöx pa Focus Nightly</string>
 
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Ichinanem &amp; Jikomal</string>
@@ -445,7 +458,13 @@
 
 
 
-  <!-- First run tour (Default browser): Title -->
+  <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Titz\'apïx</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Titikirisäx</string>
+
+    <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Tinimär ruchuq\'a\' ri awichinem</string>
     <!-- First run tour (Default browser): Text. -->
     <string name="firstrun_defaultbrowser_text2">Katik\'o pa ri jun chik ruxaq ri ichinan okem pa k\'amaya\'l. Ke\'aq\'ata\' ri taq rutzijol chuqa\' juley chik taq etamab\'äl ri yetikïr yatkojqaj rik\'in ruxaq k\'amaya\'l chuqa\' nuch\'öb\' ri ramaj nisamäj ri ruxaq.</string>
@@ -654,7 +673,7 @@
 
     <!-- Tracking protection bottom sheet -->
 
-    <!-- Promote SearchWidget Dialog -->
+     <!-- Promote SearchWidget Dialog -->
 
     !-- Content description (not visible, for screen readers etc.): This is the description for
     picture of search widget from promote search widget dialog. --&gt;

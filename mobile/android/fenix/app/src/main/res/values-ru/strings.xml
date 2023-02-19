@@ -71,7 +71,9 @@
     <!-- Text for the main message -->
     <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Добавьте ярлык, чтобы открывать приватные вкладки с домашнего экрана.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message">Запустите следующую приватную вкладку одним касанием.</string>
+    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">Запустите следующую приватную вкладку одним касанием.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message_2">Запустите следующую приватную вкладку одним касанием.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Добавить ярлык</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->

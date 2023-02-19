@@ -21,18 +21,16 @@
     <string name="mozac_browser_errorpages_security_bad_cert_title">უსაფრთხო დაკავშირება ვერ მოხერხდა</string>
     <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
-        <li>ეს შესაძლოა, საიტის გაუმართაობის ბრალი იყოს, ან
-ვინმე მის შეცვლას ცდილობდეს.</li>
-        <li>თუ ამ საიტს მანამდე წარმატებით უკავშირდებოდით, ხარვეზი შესაძლოა
-დროებითი იყოს და მოგვიანებით შეგიძლიათ კვლავ სცადოთ.</li>
+        <li>ამას შესაძლოა, საიტის გაუმართაობა ან სხვა საიტად გასაღების მცდელობა იწვევდეს.</li>
+        <li>თუ აღნიშნულ საიტს მანამდე წარმატებით უკავშირდებოდით, ხარვეზი შეიძლება დროებითია და მოგვიანებით შეგიძლიათ, კვლავ სცადოთ.</li>
       </ul>]]></string>
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">დამატებით…</string>
     <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
-    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>ვიღაც შესაძლოა ამ საიტის სხვა საიტად გასაღებას ცდილობდეს და სჯობს აღარ განაგრძოთ.</label>
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>შესაძლოა, ვიღაც ამ საიტის სხვა საიტად გასაღებას ცდილობდეს და ჯობია, აღარ განაგრძოთ.</label>
         <br><br>
-        <label>ვებსაიტები საკუთარ ნამდვილობას სერტიფიკატებით ადასტურებს. %1$s არ ენდობა <b>%2$s</b>-ს, რადგან მისი უსაფრთხოების სერტიფიკატის გამომშვები უცნობია, შეიძლება თავადვე აქვთ ხელმოწერილი ან სერვერი სწორად არ აგზავნის შუალედურ სერტიფიკატებს.</label>]]></string>
+        <label>ვებსაიტები საკუთარ ნამდვილობას სერტიფიკატებით ადასტურებს. %1$s არ ენდობა <b>%2$s</b>-ს, რადგან მისი უსაფრთხოების სერტიფიკატის გამომცემი უცნობია, შეიძლება თავადვე აქვთ ხელმოწერილი ან სერვერი სათანადოდ არ აგზავნის შუალედურ სერტიფიკატებს.</label>]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">უკან დაბრუნება (სასურველია)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->

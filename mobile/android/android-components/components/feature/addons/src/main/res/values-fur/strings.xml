@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Meti dâts tes notis</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">Blocâ i contignûts in cualsisei pagjine</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Lei la tô cronologjie di navigazion</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Discjariâ files, lei e modificâ la cronologjie dai discjamâts dal navigadôr</string>
     <!-- Description for downloads_open permission. -->

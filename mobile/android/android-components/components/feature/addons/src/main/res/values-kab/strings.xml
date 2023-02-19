@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Sekcem isefka ɣer tkatut Ɣef afus</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">Sewḥel agbur ɣef yal asebter</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Ɣer amazray n tunigin</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Sader-d ifuyla, ɣeṛ daɣen beddel amazray n usader deg iminig</string>
     <!-- Description for downloads_open permission. -->

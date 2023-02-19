@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Enviar dados para área de transferência</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">Bloquear conteúdo em qualquer página</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Ler seu histórico de navegação</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Baixar arquivos, ler e modificar o histórico de downloads do navegador</string>
     <!-- Description for downloads_open permission. -->

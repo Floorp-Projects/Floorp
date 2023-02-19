@@ -1005,11 +1005,37 @@
 
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">მოთხოვნილ საიტზე არაა მხარდაჭერილი HTTPS</string>
-    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">ნაგულისხმევად, %1$s ეცდება დაუკავშირდეს HTTPS-ით, მეტი უსაფრთხოებისთვის. ამ პარამეტრის შესაცვლელად ან უკეთ გასაცნობად, იხილეთ პარამეტრები &gt; პირადულობა და უსაფრთხოება &gt; უსაფრთხოება.</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">მოთხოვნილ საიტზე არაა მხარდაჭერილი HTTPS</string>
 
-    <!-- Sessions List -->
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">ამ საიტზე მხარდაუჭერელია HTTPS</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">ნაგულისხმევად, %1$s ეცდება დაუკავშირდეს HTTPS-ით, მეტი უსაფრთხოებისთვის. ამ პარამეტრის შესაცვლელად ან უკეთ გასაცნობად, იხილეთ პარამეტრები &gt; პირადულობა და უსაფრთხოება &gt; უსაფრთხოება.</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s ცდილობს გამოიყენოს HTTPS-კავშირი, როცა კი შესაძლებელია უსაფრთხოებისთვის.
+     <a href="%2$s">ვრცლად</a> <br/><br/>
+     შესაცვლელად იხილეთ პარამეტრები > პირადულობა და უსაფრთხოება > უსაფრთხოება.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">დაუცველი კავშირი</string>
+
+    <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    ამას შესაძლოა, საიტის გაუმართაობა ან სხვა საიტად გასაღების მცდელობა იწვევდეს. <br/><br/>
+    თუ აღნიშნულ საიტს მანამდე წარმატებით უკავშირდებოდით, ხარვეზი შეიძლება დროებითი იყოს.
+    ]]></string>
+
+     <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>შესაძლოა, ვიღაც ამ საიტის სხვა საიტად გასაღებას ცდილობდეს და ჯობია, აღარ განაგრძოთ.</label>
+        <br><br>
+        <label>%1$s არ ენდობა <b>%2$s</b>-ს, რადგან მისი უსაფრთხოების სერტიფიკატის გამომცემი უცნობია, შეიძლება თავადვე აქვთ ხელმოწერილი ან სერვერი სათანადოდ არ აგზავნის შუალედურ სერტიფიკატებს.</label>
+    ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">ჩანართის დახურვა</string>
 

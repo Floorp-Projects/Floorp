@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_write_description">ປ້ອນຂໍ້ມູນເຂົ້າໄປໃນຄຣິບບອດ</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">ຂັດຂວາງເນື້ອຫາຢູ່ໃນຫນ້າຕ່າງໆ</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">ອ່ານປະຫວັດຜົນການຊອກຫາຂອງທ່ານ</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">ດາວໂຫລດໄຟລ ແລະ ອ່ານ ແລະ ແກ້ໄຂປະຫວັດການດາວໂຫລດຂອງບຣາວເຊີ</string>
     <!-- Description for downloads_open permission. -->

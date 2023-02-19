@@ -10,18 +10,18 @@
     <string name="mozac_feature_addons_permissions_sites_in_domain_description">Доступ к вашим данным для сайтов на домене %1$s</string>
     <!-- When an add-on requires access to more than 4 sites, for example the add-on requires access for 5 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
      then we will show another collapsed entry saying "Access your data on 1 other site". This entry it's for the singular case, when the add-on is only accessing one extra site. -->
-    <string name="mozac_feature_addons_permissions_one_extra_site_description" tools:ignore="PluralsCandidate">Получать доступ к вашим данным на ещё одном сайте</string>
+    <string name="mozac_feature_addons_permissions_one_extra_site_description" tools:ignore="PluralsCandidate">Доступ к вашим данным на ещё одном сайте</string>
     <!-- When an add-on requires access to more than 4 sites, for example the add-on requires access for 6 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
      then we will show another collapsed entry saying "Access your data on 2 other sites". This entry it's for the plural case, when the add-on is accessing more than one extra site.
      %1$d will be replaced by an integer indicating the number of additional hosts for which this web extension is requesting permission. -->
-    <string name="mozac_feature_addons_permissions_extra_sites_description" tools:ignore="PluralsCandidate">Получать доступ к вашим данным на ещё %1$d сайтах</string>
+    <string name="mozac_feature_addons_permissions_extra_sites_description" tools:ignore="PluralsCandidate">Доступ к вашим данным на ещё %1$d сайтах</string>
     <!-- When an add-on requires access to more than 4 domains, for example the add-on requires access for 5 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
       then we will show another collapsed entry saying "Access your data on 1 other domain". This entry it's for the singular case, when the add-on is only accessing one extra domain. -->
-    <string name="mozac_feature_addons_permissions_one_extra_domain_description" tools:ignore="PluralsCandidate">Получать доступ к вашим данным на ещё одном домене</string>
+    <string name="mozac_feature_addons_permissions_one_extra_domain_description" tools:ignore="PluralsCandidate">Доступ к вашим данным на ещё одном домене</string>
     <!-- When an add-on requires access to more than 4 domains, for example the add-on requires access for 6 domains. We will show the first 4 domains in individual entries, as in mozac_feature_addons_permissions_sites_in_domain_description,
      then we will show another collapsed entry saying "Access your data on 2 other domains". This entry it's for the plural case, when the add-on is accessing more than one extra domain.
      %1$d will be replaced by an integer indicating the number of additional domains for which this web extension is requesting permission. -->
-    <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate">Получать доступ к вашим данным на ещё %1$d доменах</string>
+    <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate">Доступ к вашим данным на ещё %1$d доменах</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">Доступ к вкладкам браузера</string>
     <!-- Description for unlimited_storage permission. -->
@@ -39,9 +39,11 @@
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Помещение данных в буфер обмена</string>
     <!-- Description for declarativeNetRequest permission. -->
-    <string name="mozac_feature_addons_permissions_declarative_net_request_description">Блокировка содержимого на любой странице</string>
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">Блокировку содержимого на любой странице</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Чтение истории браузера</string>
     <!-- Description for downloads permission. -->
-    <string name="mozac_feature_addons_permissions_downloads_description">Загрузка файлов, чтение и изменение истории загрузок браузера</string>
+    <string name="mozac_feature_addons_permissions_downloads_description">Загрузку файлов, чтение и изменение истории загрузок браузера</string>
     <!-- Description for downloads_open permission. -->
     <string name="mozac_feature_addons_permissions_downloads_open_description">Открытие файлов, загруженных на ваше устройство</string>
     <!-- Description for find permission. -->
@@ -67,7 +69,7 @@
     <!-- Description for top_sites permission. -->
     <string name="mozac_feature_addons_permissions_top_sites_description">Доступ к истории браузера</string>
     <!-- Description for devtools permission. -->
-    <string name="mozac_feature_addons_permissions_devtools_description">Разрешение инструментам разработчика получать доступ к вашим данным в открытых вкладках</string>
+    <string name="mozac_feature_addons_permissions_devtools_description">Расширение доступа инструментов разработчика к вашим данным в открытых вкладках</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Версия</string>
     <!-- The authors of an add-on. -->
