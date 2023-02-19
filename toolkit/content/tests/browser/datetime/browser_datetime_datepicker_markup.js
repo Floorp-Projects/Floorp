@@ -102,11 +102,6 @@ add_task(async function test_datepicker_markup() {
     "gridcell",
     "Days within the Calendar view are gridcells"
   );
-  Assert.equal(
-    helper.getElement(BTN_CLEAR).tagName,
-    "button",
-    "Clear control is a button"
-  );
 
   await helper.tearDown();
 });
@@ -140,11 +135,6 @@ add_task(async function test_datepicker_l10n() {
       id: "date-picker-next",
       args: null,
     },
-    {
-      selector: BTN_CLEAR,
-      id: "date-picker-clear",
-      args: null,
-    },
   ];
 
   // Check "aria-label" attributes
@@ -153,7 +143,7 @@ add_task(async function test_datepicker_l10n() {
     const l10nAttrs = document.l10n.getAttributes(el);
 
     Assert.ok(
-      el.hasAttribute("aria-label") || el.textContent,
+      helper.getElement(selector).hasAttribute("aria-label"),
       `Datepicker "${selector}" element has accessible name`
     );
     Assert.deepEqual(

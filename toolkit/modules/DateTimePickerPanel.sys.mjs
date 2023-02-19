@@ -9,7 +9,7 @@ export var DateTimePickerPanel = class {
     this.TIME_PICKER_WIDTH = "12em";
     this.TIME_PICKER_HEIGHT = "21em";
     this.DATE_PICKER_WIDTH = "23.1em";
-    this.DATE_PICKER_HEIGHT = "24em";
+    this.DATE_PICKER_HEIGHT = "20.7em";
   }
 
   get dateTimePopupFrame() {
@@ -65,12 +65,8 @@ export var DateTimePickerPanel = class {
     );
   }
 
-  closePicker(clear) {
-    if (clear) {
-      this.element.dispatchEvent(new CustomEvent("DateTimePickerValueCleared"));
-    } else {
-      this.setInputBoxValue(true);
-    }
+  closePicker() {
+    this.setInputBoxValue(true);
     this.pickerState = {};
     this.type = undefined;
     this.dateTimePopupFrame.removeEventListener("load", this, true);
@@ -315,7 +311,7 @@ export var DateTimePickerPanel = class {
         break;
       }
       case "ClosePopup": {
-        this.closePicker(aEvent.data.detail);
+        this.closePicker();
         break;
       }
     }

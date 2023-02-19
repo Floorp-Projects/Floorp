@@ -166,7 +166,7 @@ button.month-year.active::after {
 
 .month-year-view > .spinner-container {
   width: 5.5rem;
-  margin: 2rem 0.5rem;
+  margin: 0 0.5rem;
 }
 
 .order-month-year > #spinner-month,
@@ -260,23 +260,6 @@ button.month-year.active::after {
   inset: 5%;
   z-index: -10;
   border-radius: var(--border-radius);
-}
-
-#clear-button {
-  height: var(--date-picker-item-height);
-  background-color: var(--fill-color);
-  color: inherit;
-  font-size: 1.3rem;
-  margin-top: 0.8rem;
-  border: var(--border);
-  border-radius: var(--border-radius);
-  padding-inline: 1.2rem;
-}
-
-#clear-button:hover {
-  background-color: var(--selected-font-color);
-  color: var(--selected-fill-color);
-  border-color: var(--selected-fill-color);
 }
 
 #time-picker,
