@@ -223,7 +223,9 @@ async function OpenLinkInExternal(url) {
         await IOUtils.writeUTF8(outputFilePath, shellscript);
         const process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
         process.init(FileUtils.File("/bin/sh"));
-        process.runAsync([outputFilePath], 1);
+        process.runAsync([outputFilePath], 1, async () => {
+            await IOUtils.remove(outputFilePath);
+        });
     } else if (platform === "win") {
         let browsers = getBrowsersOnWindows();
         let browser;
