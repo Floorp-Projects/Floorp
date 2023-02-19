@@ -212,6 +212,31 @@ class IntentReceiverActivityTest {
     }
 
     @Test
+    fun `process intent with launchLinksInPrivateTab set to false but with external flag`() = runTest {
+        assertNull(Events.openedLink.testGetValue())
+
+        coEvery { intentProcessors.intentProcessor.process(any()) } returns false
+        coEvery { intentProcessors.privateIntentProcessor.process(any()) } returns true
+
+        val intent = Intent()
+        intent.putExtra(HomeActivity.PRIVATE_BROWSING_MODE, true)
+
+        val activity = Robolectric.buildActivity(IntentReceiverActivity::class.java, intent).get()
+        attachMocks(activity)
+        activity.processIntent(intent)
+
+        val shadow = shadowOf(activity)
+        val actualIntent = shadow.peekNextStartedActivity()
+
+        val normalProcessor = intentProcessors.intentProcessor
+        verify(exactly = 0) { normalProcessor.process(intent) }
+        verify { intentProcessors.privateIntentProcessor.process(intent) }
+        assertEquals(HomeActivity::class.java.name, actualIntent.component?.className)
+        assertTrue(actualIntent.getBooleanExtra(HomeActivity.PRIVATE_BROWSING_MODE, false))
+        assertNotNull(Events.openedLink.testGetValue())
+    }
+
+    @Test
     fun `process custom tab intent`() = runTest {
         assertNull(Events.openedLink.testGetValue())
         val intent = Intent()

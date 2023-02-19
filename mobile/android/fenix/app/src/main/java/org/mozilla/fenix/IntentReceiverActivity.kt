@@ -58,7 +58,12 @@ class IntentReceiverActivity : Activity() {
 
     fun processIntent(intent: Intent) {
         // Call process for side effects, short on the first that returns true
-        val private = settings().openLinksInAPrivateTab
+
+        var private = settings().openLinksInAPrivateTab
+        if (!private) {
+            // if PRIVATE_BROWSING_MODE is already set to true, honor that
+            private = intent.getBooleanExtra(PRIVATE_BROWSING_MODE, false)
+        }
         intent.putExtra(PRIVATE_BROWSING_MODE, private)
         if (private) {
             Events.openedLink.record(Events.OpenedLinkExtra("PRIVATE"))
