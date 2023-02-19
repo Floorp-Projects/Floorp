@@ -50,7 +50,13 @@ async function waitForBlockedPopups(numberOfPopups, { doc }) {
  *   });
  * }
  */
-async function testPropertyDeltas(aPropertyDeltas, aInstant, aPropInfo, aMsg) {
+async function testPropertyDeltas(
+  aPropertyDeltas,
+  aInstant,
+  aPropInfo,
+  aMsg,
+  aWaitForCompletion
+) {
   let msg = `[${aMsg}]`;
 
   let win = this.content.popup || this.content.wrappedJSObject;
@@ -145,6 +151,11 @@ async function testPropertyDeltas(aPropertyDeltas, aInstant, aPropInfo, aMsg) {
   };
   win.addEventListener("resize", resizeListener);
 
+  const useProperties = !Services.prefs.getBoolPref(
+    "dom.window_position_size_properties_replaceable.enabled",
+    true
+  );
+
   info("Starting property changes.");
   await new Promise(resolve => {
     let index = 0;
@@ -157,7 +168,19 @@ async function testPropertyDeltas(aPropertyDeltas, aInstant, aPropInfo, aMsg) {
 
         let targetValue = initialState[prop] + deltaObj[prop];
         info(`${pre} Setting ${prop} to ${targetValue}.`);
-        win[prop] = targetValue;
+        if (useProperties) {
+          win[prop] = targetValue;
+        } else if (sizeProps.includes(prop)) {
+          win.resizeTo(finalState.outerWidth, finalState.outerHeight);
+        } else {
+          win.moveTo(finalState.screenX, finalState.screenY);
+        }
+        if (aWaitForCompletion) {
+          await ContentTaskUtils.waitForCondition(
+            () => win[prop] == targetValue,
+            `${msg} Waiting for ${prop} to be ${targetValue}.`
+          );
+        }
       }
 
       index++;
@@ -239,10 +262,45 @@ class ResizeMoveTest {
     },
   };
 
-  constructor(aPropertyDeltas, aInstant = false, aMsg = "ResizeMoveTest") {
+  constructor(
+    aPropertyDeltas,
+    aInstant = false,
+    aMsg = "ResizeMoveTest",
+    aWaitForCompletion = false
+  ) {
     this.propertyDeltas = aPropertyDeltas;
     this.instant = aInstant;
     this.msg = aMsg;
+    this.waitForCompletion = aWaitForCompletion;
+
+    // Allows to ignore positions while testing.
+    this.ignorePositions = false;
+    // Allows to ignore only mozInnerScreenX/Y properties while testing.
+    this.ignoreMozInnerScreen = false;
+    // Allows to skip checking the restored position after testing.
+    this.ignoreRestoredPosition = false;
+
+    if (AppConstants.platform == "linux" && !SpecialPowers.isHeadless) {
+      // We can occasionally start the test while nsWindow reports a wrong
+      // client offset (gdk origin and root_origin are out of sync). This
+      // results in false expectations for the final mozInnerScreenX/Y values.
+      this.ignoreMozInnerScreen = !ResizeMoveTest.hasCleanUpTask;
+
+      let { positionProps } = ResizeMoveTest.PropInfo;
+      let resizeOnlyTest = aPropertyDeltas.every(deltaObj =>
+        positionProps.every(prop => deltaObj[prop] === undefined)
+      );
+
+      let isWayland = gfxInfo.windowProtocol == "wayland";
+      if (resizeOnlyTest && isWayland) {
+        // On Wayland we can't move the window in general. The window also
+        // doesn't necessarily open our specified position.
+        this.ignoreRestoredPosition = true;
+        // We can catch bad screenX/Y at the start of the first test in a
+        // window.
+        this.ignorePositions = !ResizeMoveTest.hasCleanUpTask;
+      }
+    }
 
     if (!ResizeMoveTest.hasCleanUpTask) {
       ResizeMoveTest.hasCleanUpTask = true;
@@ -275,10 +333,31 @@ class ResizeMoveTest {
     let testType = this.instant ? "instant" : "fanned out";
     let msg = `${aMsg} (${testType})`;
 
+    let propInfo = {};
+    for (let k in ResizeMoveTest.PropInfo) {
+      propInfo[k] = ResizeMoveTest.PropInfo[k];
+    }
+    if (this.ignoreMozInnerScreen) {
+      todo(false, `[${aMsg}] Shouldn't ignore mozInnerScreenX/Y.`);
+      propInfo.positionProps = propInfo.positionProps.filter(
+        prop => !["mozInnerScreenX", "mozInnerScreenY"].includes(prop)
+      );
+    }
+    if (this.ignorePositions) {
+      todo(false, `[${aMsg}] Shouldn't ignore position.`);
+      propInfo.positionProps = [];
+    }
+
     info(`${msg}: ` + JSON.stringify(this.propertyDeltas));
     await SpecialPowers.spawn(
       aBrowsingContext,
-      [this.propertyDeltas, this.instant, ResizeMoveTest.PropInfo, msg],
+      [
+        this.propertyDeltas,
+        this.instant,
+        propInfo,
+        msg,
+        this.waitForCompletion,
+      ],
       testPropertyDeltas
     );
   }
@@ -310,8 +389,8 @@ class ResizeMoveTest {
 
     await SpecialPowers.spawn(
       aBrowsingContext,
-      [left, top, width, height],
-      async (aLeft, aTop, aWidth, aHeight) => {
+      [left, top, width, height, this.ignoreRestoredPosition],
+      async (aLeft, aTop, aWidth, aHeight, aIgnorePosition) => {
         let win = this.content.wrappedJSObject;
 
         info("Waiting for restored size.");
@@ -322,13 +401,17 @@ class ResizeMoveTest {
         is(win.innerWidth, aWidth, "Restored width.");
         is(win.innerHeight, aHeight, "Restored height.");
 
-        info("Waiting for restored position.");
-        await ContentTaskUtils.waitForCondition(
-          () => win.screenX == aLeft && win.screenY === aTop,
-          "Waiting for restored position."
-        );
-        is(win.screenX, aLeft, "Restored screenX.");
-        is(win.screenY, aTop, "Restored screenY.");
+        if (!aIgnorePosition) {
+          info("Waiting for restored position.");
+          await ContentTaskUtils.waitForCondition(
+            () => win.screenX == aLeft && win.screenY === aTop,
+            "Waiting for restored position."
+          );
+          is(win.screenX, aLeft, "Restored screenX.");
+          is(win.screenY, aTop, "Restored screenY.");
+        } else {
+          todo(false, "Shouldn't ignore restored position.");
+        }
       }
     );
   }
