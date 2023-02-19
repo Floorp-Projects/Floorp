@@ -128,11 +128,18 @@ SVGFilterFrame* SVGFilterFrame::GetReferencedFilter() {
     this->mNoHRefURI = aHref.IsEmpty();
   };
 
-  return do_QueryFrame(SVGObserverUtils::GetAndObserveTemplate(this, GetHref));
+  nsIFrame* tframe = SVGObserverUtils::GetAndObserveTemplate(this, GetHref);
+  if (tframe) {
+    LayoutFrameType frameType = tframe->Type();
+    if (frameType == LayoutFrameType::SVGFilter) {
+      return static_cast<SVGFilterFrame*>(tframe);
+    }
+    // We don't call SVGObserverUtils::RemoveTemplateObserver and set
+    // `mNoHRefURI = false` here since we want to be invalidated if the ID
+    // specified by our href starts resolving to a different/valid element.
+  }
 
-  // We don't call SVGObserverUtils::RemoveTemplateObserver and set
-  // `mNoHRefURI = false` on failure since we want to be invalidated if the ID
-  // specified by our href starts resolving to a different/valid element.
+  return nullptr;
 }
 
 nsresult SVGFilterFrame::AttributeChanged(int32_t aNameSpaceID,
