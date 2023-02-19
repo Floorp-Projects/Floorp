@@ -251,16 +251,13 @@ let documentObserver = {
             let document_ = window_.document;
             if (window_.location.href == "chrome://browser/content/browser.xhtml") {
                 let tabContextMenu = document_.querySelector("#tabContextMenu");
-                window_.OpenLinkInExternalMenu = function (url) {
-                    OpenLinkInExternal(url);
-                }
                 let openLinkInExternal = document_.createXULElement("menuitem");
                 openLinkInExternal.id = "open-link-in-external";
                 openLinkInExternal.label = "デフォルトのブラウザーで開く";
-                openLinkInExternal.setAttribute(
-                    "oncommand",
-                    "OpenLinkInExternalMenu(TabContextMenu.contextTab.linkedBrowser.currentURI.spec);"
-                );
+                openLinkInExternal.addEventListener("command", function(e) {
+                    let window_ = e.currentTarget.ownerGlobal;
+                    OpenLinkInExternal(window_.TabContextMenu.contextTab.linkedBrowser.currentURI.spec);
+                });
                 tabContextMenu.addEventListener("popupshowing", function(e) {
                     let window_ = e.currentTarget.ownerGlobal;
                     let scheme = window_.TabContextMenu.contextTab.linkedBrowser.currentURI.scheme;
