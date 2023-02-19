@@ -15,7 +15,7 @@
 #endif
 
 #if defined(_WINDOWS)
-static char* quiet_fgets(char* buf, int length, FILE* input) {
+char* quiet_fgets(char* buf, int length, FILE* input) {
   int c;
   char* end = buf;
 

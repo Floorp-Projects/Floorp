@@ -30,7 +30,7 @@ typedef struct {
 #  include <conio.h>
 #  include <io.h>
 #  define QUIET_FGETS quiet_fgets
-static char* quiet_fgets(char* buf, int length, FILE* input);
+char* quiet_fgets(char* buf, int length, FILE* input);
 #else
 #  define QUIET_FGETS fgets
 #endif
