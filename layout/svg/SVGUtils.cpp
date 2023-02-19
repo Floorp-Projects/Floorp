@@ -42,7 +42,6 @@
 #include "mozilla/SVGForeignObjectFrame.h"
 #include "mozilla/SVGIntegrationUtils.h"
 #include "mozilla/SVGGeometryFrame.h"
-#include "mozilla/SVGImageFrame.h"
 #include "mozilla/SVGMaskFrame.h"
 #include "mozilla/SVGObserverUtils.h"
 #include "mozilla/SVGOuterSVGFrame.h"
@@ -1191,20 +1190,21 @@ bool SVGUtils::CanOptimizeOpacity(const nsIFrame* aFrame) {
   if (!aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
     return false;
   }
-  LayoutFrameType type = aFrame->Type();
-  if (type != LayoutFrameType::SVGImage &&
-      type != LayoutFrameType::SVGGeometry) {
+  auto* content = aFrame->GetContent();
+  if (!content->IsNodeOfType(nsINode::eSHAPE) &&
+      !content->IsSVGElement(nsGkAtoms::image)) {
     return false;
   }
   if (aFrame->StyleEffects()->HasFilters()) {
     return false;
   }
   // XXX The SVG WG is intending to allow fill, stroke and markers on <image>
-  if (type == LayoutFrameType::SVGImage) {
+  if (content->IsSVGElement(nsGkAtoms::image)) {
     return true;
   }
   const nsStyleSVG* style = aFrame->StyleSVG();
-  if (style->HasMarker()) {
+  if (style->HasMarker() &&
+      static_cast<SVGGeometryElement*>(content)->IsMarkable()) {
     return false;
   }
 
