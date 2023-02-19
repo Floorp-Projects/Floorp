@@ -184,6 +184,7 @@ function DatePicker(context) {
         this.context.buttonPrev,
         this.context.buttonNext,
         this.context.weekHeader.parentNode,
+        this.context.buttonClear,
       ];
       // Update MonthYear state and toggle visibility for sighted users
       // and for assistive technology:
@@ -220,10 +221,11 @@ function DatePicker(context) {
     /**
      * Use postMessage to close the picker.
      */
-    _closePopup() {
+    _closePopup(clear = false) {
       window.postMessage(
         {
           name: "ClosePopup",
+          detail: clear,
         },
         "*"
       );
@@ -303,6 +305,9 @@ function DatePicker(context) {
                 event.target.classList.add("active");
                 this.state.setMonthByOffset(1);
                 this.context.buttonNext.focus();
+              } else if (event.target == this.context.buttonClear) {
+                event.target.classList.add("active");
+                this._closePopup(/* clear = */ true);
               }
               break;
             }
@@ -312,7 +317,7 @@ function DatePicker(context) {
                 if (event.shiftKey) {
                   this.context.buttonNext.focus();
                 } else if (!event.shiftKey) {
-                  this.context.buttonPrev.focus();
+                  this.context.buttonClear.focus();
                 }
                 event.stopPropagation();
                 event.preventDefault();
@@ -327,7 +332,10 @@ function DatePicker(context) {
           event.preventDefault();
           event.target.setPointerCapture(event.pointerId);
 
-          if (event.target == this.context.buttonPrev) {
+          if (event.target == this.context.buttonClear) {
+            event.target.classList.add("active");
+            this._closePopup(/* clear = */ true);
+          } else if (event.target == this.context.buttonPrev) {
             event.target.classList.add("active");
             this.state.dateKeeper.setMonthByOffset(-1);
             this._update();
