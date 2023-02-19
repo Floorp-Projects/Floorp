@@ -218,10 +218,12 @@ async function OpenLinkInExternal(url) {
             "%u",
             `"${url.replaceAll("\\", "\\\\").replaceAll('"', '\\"').replaceAll("`", "\\`").replaceAll("$", "\\$")}"`
         );
-        await IOUtils.writeUTF8("/tmp/floorp_open_in_external.sh", shellscript);
+        let randomized = Math.random().toString(32).substring(2);
+        let outputFilePath = `/tmp/floorp_openInExternal_${randomized}.sh`;
+        await IOUtils.writeUTF8(outputFilePath, shellscript);
         const process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
         process.init(FileUtils.File("/bin/sh"));
-        process.runAsync(["/tmp/floorp_open_in_external.sh"], 1);
+        process.runAsync([outputFilePath], 1);
     } else if (platform === "win") {
         let browsers = getBrowsersOnWindows();
         let browser;
