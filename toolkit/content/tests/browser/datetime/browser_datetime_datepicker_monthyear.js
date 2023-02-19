@@ -21,7 +21,7 @@ add_task(async function test_monthyear_close_date() {
     .contentDocument;
 
   // Move focus from the selected date to the month-year toggle button:
-  await EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
+  await EventUtils.synthesizeKey("KEY_Tab", { repeat: 3 });
 
   // Test a month spinner
   await testKeyOnSpinners("KEY_Enter", pickerDoc);
@@ -51,7 +51,7 @@ add_task(async function test_monthyear_close_datetime() {
     .contentDocument;
 
   // Move focus from the selected date to the month-year toggle button:
-  await EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
+  await EventUtils.synthesizeKey("KEY_Tab", { repeat: 3 });
 
   // Test a month spinner
   await testKeyOnSpinners("KEY_Enter", pickerDoc);
@@ -79,7 +79,7 @@ add_task(async function test_monthyear_escape_date() {
     .contentDocument;
 
   // Move focus from the today's date to the month-year toggle button:
-  EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
+  EventUtils.synthesizeKey("KEY_Tab", { repeat: 3 });
 
   // Test a month spinner
   await testKeyOnSpinners("KEY_Escape", pickerDoc);
@@ -150,7 +150,7 @@ add_task(async function test_monthyear_escape_datetime() {
     .contentDocument;
 
   // Move focus from the today's date to the month-year toggle button:
-  EventUtils.synthesizeKey("KEY_Tab", { repeat: 2 });
+  EventUtils.synthesizeKey("KEY_Tab", { repeat: 3 });
 
   // Test a month spinner
   await testKeyOnSpinners("KEY_Escape", pickerDoc);

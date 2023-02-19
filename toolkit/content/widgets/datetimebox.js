@@ -395,7 +395,11 @@ this.DateTimeBoxWidget = class {
   }
 
   setValueFromPicker(aValue) {
-    this.setFieldsFromPicker(aValue);
+    if (aValue) {
+      this.setFieldsFromPicker(aValue);
+    } else {
+      this.clearInputFields();
+    }
   }
 
   advanceToNextField(aReverse) {
