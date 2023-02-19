@@ -197,6 +197,7 @@ async function getBrowsersOnLinux() {
         }
     }
     console.log(desktopInfo);
+    return desktopInfo;
 }
 
 async function OpenLinkInExternal(url) {
@@ -204,27 +205,36 @@ async function OpenLinkInExternal(url) {
     let protocol;
     if (url.startsWith("http")) protocol = "http";
     if (url.startsWith("https")) protocol = "https";
-    let browsers, browser, browserPath;
     if (platform === "linux") {
-        browsers = await getBrowsersOnLinux();
+        let desktopInfo = await getBrowsersOnLinux();
+        let browser;
         if (userSelectedBrowserId === "") {
-            browser = await getDefaultBrowserOnLinux(browsers);
+            browser = await getDefaultBrowserOnLinux(desktopInfo);
         } else {
-            browser = browsers.filter(browser => browser.desktopFileName === userSelectedBrowserId + ".desktop");
+            browser = desktopInfo[userSelectedBrowserId + ".desktop"];
         }
-        //browserPath = browser["Desktop Entry"]["Exec"]; // TODO: extract executable file path  For example: "/usr/bin/floorp %u"
+        let shellscript = "#!/bin/sh\n";
+        shellscript += browser["Desktop Entry"]["Exec"].replace(
+            "%u",
+            `"${url.replaceAll('"', '\\"').replaceAll("`", "\\`").replaceAll("$", "\\$")}"`
+        );
+        await IOUtils.writeUTF8("/tmp/floorp_open_in_external.sh", shellscript);
+        const process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
+        process.init(FileUtils.File("/bin/sh"));
+        process.runAsync(["/tmp/floorp_open_in_external.sh"], 1);
     } else if (platform === "win") {
-        browsers = getBrowsersOnWindows();
+        let browsers = getBrowsersOnWindows();
+        let browser;
         if (userSelectedBrowserId === "") {
             browser = getDefaultBrowserOnWindows(protocol, browsers);
         } else {
             browser = browsers.filter(browser => browser.keyName === userSelectedBrowserId);
         }
-        browserPath = browser["path"];
+        let browserPath = browser["path"];
+        const process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
+        process.init(FileUtils.File(browserPath));
+        process.runAsync([url], 1);
     }
-    const process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
-    process.init(FileUtils.File(browserPath));
-    process.runAsync([url], 1);
 }
 
 let seenDocuments = new WeakSet();
