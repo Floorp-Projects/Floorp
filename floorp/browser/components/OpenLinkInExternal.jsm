@@ -216,7 +216,7 @@ async function OpenLinkInExternal(url) {
         let shellscript = "#!/bin/sh\n";
         shellscript += browser["Desktop Entry"]["Exec"].replace(
             "%u",
-            `"${url.replaceAll('"', '\\"').replaceAll("`", "\\`").replaceAll("$", "\\$")}"`
+            `"${url.replaceAll("\\", "\\\\").replaceAll('"', '\\"').replaceAll("`", "\\`").replaceAll("$", "\\$")}"`
         );
         await IOUtils.writeUTF8("/tmp/floorp_open_in_external.sh", shellscript);
         const process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
