@@ -1192,7 +1192,23 @@ void gfxMacPlatformFontList::ActivateFontsFromDir(const nsACString& aDir,
     }
   } while (result != kCFURLEnumeratorEnd);
 
-  CTFontManagerRegisterFontsForURLs(urls, kCTFontManagerScopeProcess, nullptr);
+  if (!CFArrayGetCount(urls)) {
+    return;
+  }
+
+  // If CTFontManagerRegisterFontURLs is available (10.15+) use this in preference to
+  // the deprecated CTFontManagerRegisterFontsForURLs API.
+  typedef bool (^FontRegistrationHandler)(CFArrayRef, bool);
+  typedef void (*CTFontManagerRegisterFontURLsFn)(CFArrayRef, CTFontManagerScope, bool,
+                                                  FontRegistrationHandler);
+  static CTFontManagerRegisterFontURLsFn CTFontManagerRegisterFontURLsPtr =
+      (CTFontManagerRegisterFontURLsFn)dlsym(RTLD_DEFAULT, "CTFontManagerRegisterFontURLs");
+
+  if (CTFontManagerRegisterFontURLsPtr) {
+    CTFontManagerRegisterFontURLsPtr(urls, kCTFontManagerScopeProcess, false, nullptr);
+  } else {
+    CTFontManagerRegisterFontsForURLs(urls, kCTFontManagerScopeProcess, nullptr);
+  }
 }
 
 void gfxMacPlatformFontList::ReadSystemFontList(dom::SystemFontList* aList)
