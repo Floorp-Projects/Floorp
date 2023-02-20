@@ -681,7 +681,7 @@ EngineStore.prototype = {
 
   // Callback for Array's some(). A thisObj must be passed to some()
   _isSameEngine(aEngineClone) {
-    return aEngineClone.originalEngine == this.originalEngine;
+    return aEngineClone.originalEngine.id == this.originalEngine.id;
   },
 
   addEngine(aEngine) {
