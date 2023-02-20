@@ -59,5 +59,5 @@ function sendZoomKey(shortcut, times) {
 }
 
 function getCurrentZoom(toolbox) {
-  return toolbox.win.browsingContext.fullZoom;
+  return toolbox.win.windowUtils.fullZoom;
 }
