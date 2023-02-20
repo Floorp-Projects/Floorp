@@ -382,12 +382,17 @@ void InlineCachePerfSpewer::recordInstruction(MacroAssembler& masm,
   }
 
 void IonPerfSpewer::recordInstruction(MacroAssembler& masm, LInstruction* ins) {
-  if (!PerfIREnabled()) {
+  if (!PerfIREnabled() && !PerfSrcEnabled()) {
     return;
   }
 
   LNode::Opcode op = ins->op();
   UniqueChars opcodeStr;
+
+  jsbytecode* bytecodepc = nullptr;
+  if (MDefinition* mir = ins->mirRaw()) {
+    bytecodepc = mir->trackedSite()->pc();
+  }
 
 #ifdef JS_JITSPEW
   if (PerfIROpsEnabled()) {
@@ -399,7 +404,7 @@ void IonPerfSpewer::recordInstruction(MacroAssembler& masm, LInstruction* ins) {
   }
 #endif
   if (!opcodes_.emplaceBack(masm.currentOffset(), static_cast<unsigned>(op),
-                            opcodeStr)) {
+                            opcodeStr, bytecodepc)) {
     opcodes_.clear();
     AutoLockPerfSpewer lock;
     DisablePerfSpewer(lock);
@@ -665,9 +670,9 @@ void PerfSpewer::saveJitCodeIRInfo(const char* desc, JitCode* code,
 #endif
 }
 
-void PerfSpewer::saveJitCodeSourceInfo(JSScript* script, JitCode* code,
-                                       JS::JitCodeRecord* profilerRecord,
-                                       AutoLockPerfSpewer& lock) {
+void BaselinePerfSpewer::saveJitCodeSourceInfo(
+    JSScript* script, JitCode* code, JS::JitCodeRecord* profilerRecord,
+    AutoLockPerfSpewer& lock) {
   const char* filename = script->filename();
   if (!filename) {
     return;
@@ -757,6 +762,67 @@ void PerfSpewer::saveJitCodeSourceInfo(JSScript* script, JitCode* code,
   }
 }
 
+void IonPerfSpewer::saveJitCodeSourceInfo(JSScript* script, JitCode* code,
+                                          JS::JitCodeRecord* profilerRecord,
+                                          AutoLockPerfSpewer& lock) {
+  const char* filename = script->filename();
+  if (!filename) {
+    return;
+  }
+
+#ifdef JS_ION_PERF
+  bool perfProfiling = IsPerfProfiling() && FileExists(filename);
+
+  if (perfProfiling) {
+    JitDumpDebugRecord debug_record = {};
+
+    uint64_t n_records = 0;
+    for (OpcodeEntry& entry : opcodes_) {
+      if (entry.bytecodepc) {
+        n_records++;
+      }
+    }
+
+    debug_record.header.id = JIT_CODE_DEBUG_INFO;
+    debug_record.header.total_size =
+        sizeof(debug_record) +
+        n_records * (sizeof(JitDumpDebugEntry) + strlen(filename) + 1);
+    debug_record.header.timestamp = GetMonotonicTimestamp();
+    debug_record.code_addr = uint64_t(code->raw());
+    debug_record.nr_entry = n_records;
+
+    WriteToJitDumpFile(&debug_record, sizeof(debug_record), lock);
+  }
+#endif
+  uint32_t lineno = 0;
+  uint32_t colno = 0;
+
+  for (OpcodeEntry& entry : opcodes_) {
+    jsbytecode* pc = entry.bytecodepc;
+    if (!pc) {
+      continue;
+    }
+    // We could probably make this a bit faster by caching the previous pc
+    // offset, but it currently doesn't seem noticeable when testing.
+    lineno = PCToLineNumber(script, pc, &colno);
+
+    if (JS::JitCodeSourceInfo* srcInfo =
+            CreateProfilerSourceEntry(profilerRecord, lock)) {
+      srcInfo->offset = entry.offset;
+      srcInfo->lineno = lineno;
+      srcInfo->colno = colno;
+      srcInfo->filename = JS_smprintf("%s", filename);
+    }
+
+#ifdef JS_ION_PERF
+    if (perfProfiling) {
+      WriteJitDumpDebugEntry(uint64_t(code->raw()) + entry.offset, filename,
+                             lineno, colno, lock);
+    }
+#endif
+  }
+}
+
 static UniqueChars GetFunctionDesc(bool ion, JSContext* cx, JSScript* script) {
   UniqueChars funName;
   if (script->function() && script->function()->displayAtom()) {
@@ -780,6 +846,8 @@ void IonPerfSpewer::saveProfile(JSContext* cx, JSScript* script,
   UniqueChars desc = GetFunctionDesc(/*ion = */ true, cx, script);
   if (PerfIREnabled()) {
     saveJitCodeIRInfo(desc.get(), code, profilerRecord, lock);
+  } else if (PerfSrcEnabled()) {
+    saveJitCodeSourceInfo(script, code, profilerRecord, lock);
   }
 
   CollectJitCodeInfo(desc, code, profilerRecord, lock);
