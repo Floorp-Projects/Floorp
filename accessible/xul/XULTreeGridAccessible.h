@@ -56,7 +56,7 @@ class XULTreeGridAccessible : public XULTreeAccessible, public TableAccessible {
   virtual ~XULTreeGridAccessible();
 
   // XULTreeAccessible
-  virtual already_AddRefed<LocalAccessible> CreateTreeItemAccessible(
+  virtual already_AddRefed<XULTreeItemAccessibleBase> CreateTreeItemAccessible(
       int32_t aRow) const override;
 };
 
