@@ -24,6 +24,7 @@ import {
   enableBreakpoint,
   disableBreakpoint,
 } from "./modify";
+import { getOriginalLocation } from "../../utils/source-maps";
 
 import { isOriginalId } from "devtools/client/shared/source-map-loader/index";
 // this will need to be changed so that addCLientBreakpoint is removed
@@ -178,7 +179,8 @@ export function removeBreakpointsInSource(cx, source) {
  * @param {String} sourceId - the generated source id
  */
 export function updateBreakpointsForNewPrettyPrintedSource(cx, sourceId) {
-  return async ({ dispatch, getState, sourceMapLoader }) => {
+  return async thunkArgs => {
+    const { dispatch, getState } = thunkArgs;
     if (isOriginalId(sourceId)) {
       console.error("Can't update breakpoints on original sources");
       return;
@@ -188,8 +190,9 @@ export function updateBreakpointsForNewPrettyPrintedSource(cx, sourceId) {
     // the pretty-printed source.
     const newBreakpoints = await Promise.all(
       breakpoints.map(async breakpoint => {
-        const location = await sourceMapLoader.getOriginalLocation(
-          breakpoint.generatedLocation
+        const location = await getOriginalLocation(
+          breakpoint.generatedLocation,
+          thunkArgs
         );
         return { ...breakpoint, location };
       })

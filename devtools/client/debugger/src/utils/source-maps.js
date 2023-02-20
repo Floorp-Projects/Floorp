@@ -41,11 +41,11 @@ export async function getGeneratedLocation(location, thunkArgs) {
   };
 }
 
-export async function getOriginalLocation(generatedLocation, sourceMapLoader) {
+export async function getOriginalLocation(generatedLocation, thunkArgs) {
   if (isOriginalId(generatedLocation.sourceId)) {
     return location;
   }
-
+  const { sourceMapLoader } = thunkArgs;
   return sourceMapLoader.getOriginalLocation(generatedLocation);
 }
 
@@ -63,9 +63,9 @@ export async function getMappedLocation(location, thunkArgs) {
   }
 
   const generatedLocation = location;
-  const { sourceMapLoader } = thunkArgs;
-  const originalLocation = await sourceMapLoader.getOriginalLocation(
-    generatedLocation
+  const originalLocation = await getOriginalLocation(
+    generatedLocation,
+    thunkArgs
   );
 
   return { location: originalLocation, generatedLocation };
@@ -84,6 +84,5 @@ export async function getRelatedMapLocation(location, thunkArgs) {
     return getGeneratedLocation(location, thunkArgs);
   }
 
-  const { sourceMapLoader } = thunkArgs;
-  return sourceMapLoader.getOriginalLocation(location);
+  return getOriginalLocation(location, thunkArgs);
 }
