@@ -918,7 +918,7 @@ function getDocument(src) {
   const docId = task.docId;
   const fetchDocParams = {
     docId,
-    apiVersion: '3.4.97',
+    apiVersion: '3.4.110',
     data,
     password,
     disableAutoFetch,
@@ -998,9 +998,11 @@ function getUrlProp(val) {
 function getDataProp(val) {
   if (val instanceof Uint8Array && val.byteLength === val.buffer.byteLength) {
     return val;
-  } else if (typeof val === "string") {
+  }
+  if (typeof val === "string") {
     return (0, _util.stringToBytes)(val);
-  } else if (typeof val === "object" && !isNaN(val?.length) || (0, _util.isArrayBuffer)(val)) {
+  }
+  if (typeof val === "object" && !isNaN(val?.length) || (0, _util.isArrayBuffer)(val)) {
     return new Uint8Array(val);
   }
   throw new Error("Invalid PDF binary data: either TypedArray, " + "string, or array-like object is expected in the data property.");
@@ -2586,9 +2588,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.4.97';
+const version = '3.4.110';
 exports.version = version;
-const build = '22618213c';
+const build = '255e98254';
 exports.build = build;
 
 /***/ }),
@@ -2662,6 +2664,11 @@ class AnnotationStorage {
   }
   getAll() {
     return this.#storage.size > 0 ? (0, _util.objectFromMap)(this.#storage) : null;
+  }
+  setAll(obj) {
+    for (const [key, val] of Object.entries(obj)) {
+      this.setValue(key, val);
+    }
   }
   get size() {
     return this.#storage.size;
@@ -13001,8 +13008,8 @@ var _annotation_layer = __w_pdfjs_require__(26);
 var _worker_options = __w_pdfjs_require__(14);
 var _svg = __w_pdfjs_require__(29);
 var _xfa_layer = __w_pdfjs_require__(28);
-const pdfjsVersion = '3.4.97';
-const pdfjsBuild = '22618213c';
+const pdfjsVersion = '3.4.110';
+const pdfjsBuild = '255e98254';
 })();
 
 /******/ 	return __webpack_exports__;

@@ -810,7 +810,6 @@ const PDFViewerApplication = {
     if (appConfig.sidebar?.thumbnailView) {
       this.pdfThumbnailViewer = new _webPdf_thumbnail_viewer.PDFThumbnailViewer({
         container: appConfig.sidebar.thumbnailView,
-        eventBus,
         renderingQueue: pdfRenderingQueue,
         linkService: pdfLinkService,
         l10n: this.l10n,
@@ -4250,7 +4249,8 @@ function normalize(text) {
     const replace = Object.keys(CHARACTERS_TO_NORMALIZE).join("");
     const toNormalizeWithNFKC = "\u2460-\u2473" + "\u24b6-\u24ff" + "\u3244-\u32bf" + "\u32d0-\u32fe" + "\uff00-\uffef";
     const CJK = "(?:\\p{Ideographic}|[\u3040-\u30FF])";
-    const regexp = `([${replace}])|([${toNormalizeWithNFKC}])|(\\p{M}+(?:-\\n)?)|(\\S-\\n)|(${CJK}\\n)|(\\n)`;
+    const HKDiacritics = "(?:\u3099|\u309A)";
+    const regexp = `([${replace}])|([${toNormalizeWithNFKC}])|(${HKDiacritics}\\n)|(\\p{M}+(?:-\\n)?)|(\\S-\\n)|(${CJK}\\n)|(\\n)`;
     if (syllablePositions.length === 0) {
       normalizationRegex = noSyllablesRegExp = new RegExp(regexp + "|(\\u0000)", "gum");
     } else {
@@ -4269,7 +4269,7 @@ function normalize(text) {
   let shiftOrigin = 0;
   let eol = 0;
   let hasDiacritics = false;
-  normalized = normalized.replace(normalizationRegex, (match, p1, p2, p3, p4, p5, p6, p7, i) => {
+  normalized = normalized.replace(normalizationRegex, (match, p1, p2, p3, p4, p5, p6, p7, p8, i) => {
     i -= shiftOrigin;
     if (p1) {
       const replacement = CHARACTERS_TO_NORMALIZE[p1];
@@ -4294,8 +4294,22 @@ function normalize(text) {
       return replacement;
     }
     if (p3) {
-      const hasTrailingDashEOL = p3.endsWith("\n");
-      const len = hasTrailingDashEOL ? p3.length - 2 : p3.length;
+      hasDiacritics = true;
+      if (i + eol === rawDiacriticsPositions[rawDiacriticsIndex]?.[1]) {
+        ++rawDiacriticsIndex;
+      } else {
+        positions.push([i - 1 - shift + 1, shift - 1]);
+        shift -= 1;
+        shiftOrigin += 1;
+      }
+      positions.push([i - shift + 1, shift]);
+      shiftOrigin += 1;
+      eol += 1;
+      return p3.charAt(0);
+    }
+    if (p4) {
+      const hasTrailingDashEOL = p4.endsWith("\n");
+      const len = hasTrailingDashEOL ? p4.length - 2 : p4.length;
       hasDiacritics = true;
       let jj = len;
       if (i + eol === rawDiacriticsPositions[rawDiacriticsIndex]?.[1]) {
@@ -4313,24 +4327,24 @@ function normalize(text) {
         shift += 1;
         shiftOrigin += 1;
         eol += 1;
-        return p3.slice(0, len);
+        return p4.slice(0, len);
       }
-      return p3;
-    }
-    if (p4) {
-      positions.push([i - shift + 1, 1 + shift]);
-      shift += 1;
-      shiftOrigin += 1;
-      eol += 1;
-      return p4.charAt(0);
+      return p4;
     }
     if (p5) {
-      positions.push([i - shift + 1, shift]);
+      positions.push([i - shift + 1, 1 + shift]);
+      shift += 1;
       shiftOrigin += 1;
       eol += 1;
       return p5.charAt(0);
     }
     if (p6) {
+      positions.push([i - shift + 1, shift]);
+      shiftOrigin += 1;
+      eol += 1;
+      return p6.charAt(0);
+    }
+    if (p7) {
       positions.push([i - shift + 1, shift - 1]);
       shift -= 1;
       shiftOrigin += 1;
@@ -4346,7 +4360,7 @@ function normalize(text) {
       shift -= newCharLen;
       shiftOrigin += newCharLen;
     }
-    return p7;
+    return p8;
   });
   positions.push([normalized.length, shift]);
   return [normalized, positions, hasDiacritics];
@@ -6006,7 +6020,7 @@ class PDFViewer {
   #onVisibilityChange = null;
   #scaleTimeoutId = null;
   constructor(options) {
-    const viewerVersion = '3.4.97';
+    const viewerVersion = '3.4.110';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -8012,9 +8026,6 @@ class PDFPageView {
         accessibilityManager: this._accessibilityManager
       });
     }
-    if (this.xfaLayer?.div) {
-      div.append(this.xfaLayer.div);
-    }
     let renderContinueCallback = null;
     if (this.renderingQueue) {
       renderContinueCallback = cont => {
@@ -8093,6 +8104,8 @@ class PDFPageView {
           annotationStorage,
           linkService
         });
+      } else if (this.xfaLayer.div) {
+        div.append(this.xfaLayer.div);
       }
       this.#renderXfaLayer();
     }
@@ -9415,8 +9428,8 @@ var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.4.97';
-const pdfjsBuild = '22618213c';
+const pdfjsVersion = '3.4.110';
+const pdfjsBuild = '255e98254';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;
