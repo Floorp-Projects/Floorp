@@ -61,5 +61,5 @@ add_task(async function() {
 });
 
 function getZoom(win) {
-  return win.windowUtils.fullZoom;
+  return win.browsingContext.fullZoom;
 }
