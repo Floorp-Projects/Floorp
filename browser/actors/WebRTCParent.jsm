@@ -862,8 +862,30 @@ function prompt(aActor, aBrowser, aRequest) {
           let device = devices[i];
           let type = device.mediaSource;
           let name;
-          // Building screen list from available screens.
-          if (type == "screen") {
+          if (device.canRequestOsLevelPrompt) {
+            // When we share content by PipeWire add only one item to the device
+            // list. When it's selected PipeWire portal dialog is opened and
+            // user confirms actual window/screen sharing there.
+            // Don't mark it as scary as there's an extra confirmation step by
+            // PipeWire portal dialog.
+
+            isPipeWire = true;
+            let item = addDeviceToList(
+              menupopup,
+              localization.formatValueSync("webrtc-share-pipe-wire-portal"),
+              i,
+              type
+            );
+            item.deviceId = device.rawId;
+            item.mediaSource = type;
+
+            // In this case the OS sharing dialog will be the only option and
+            // can be safely pre-selected.
+            menupopup.parentNode.selectedItem = item;
+            menupopup.parentNode.disabled = true;
+            break;
+          } else if (type == "screen") {
+            // Building screen list from available screens.
             if (device.name == "Primary Monitor") {
               name = localization.formatValueSync("webrtc-share-entire-screen");
             } else {
@@ -874,28 +896,7 @@ function prompt(aActor, aBrowser, aRequest) {
             }
           } else {
             name = device.name;
-            // When we share content by PipeWire add only one item to the device
-            // list. When it's selected PipeWire portal dialog is opened and
-            // user confirms actual window/screen sharing there.
-            // Don't mark it as scary as there's an extra confirmation step by
-            // PipeWire portal dialog.
-            if (device.canRequestOsLevelPrompt) {
-              isPipeWire = true;
-              let item = addDeviceToList(
-                menupopup,
-                localization.formatValueSync("webrtc-share-pipe-wire-portal"),
-                i,
-                type
-              );
-              item.deviceId = device.rawId;
-              item.mediaSource = type;
 
-              // In this case the OS sharing dialog will be the only option and
-              // can be safely pre-selected.
-              menupopup.parentNode.selectedItem = item;
-              menupopup.parentNode.disabled = true;
-              break;
-            }
             if (type == "application") {
               // The application names returned by the platform are of the form:
               // <window count>\x1e<application name>

@@ -388,6 +388,22 @@ int32_t DesktopCaptureImpl::LazyInitDesktopCapturer() {
 
   DesktopCaptureOptions options = CreateDesktopCaptureOptions();
 
+#if defined(WEBRTC_USE_PIPEWIRE)
+  if (mozilla::StaticPrefs::media_webrtc_capture_allow_pipewire() &&
+      webrtc::DesktopCapturer::IsRunningUnderWayland()) {
+    std::unique_ptr<DesktopCapturer> capturer =
+        DesktopCapturer::CreateGenericCapturer(options);
+    if (!capturer) {
+      return -1;
+    }
+
+    mCapturer = std::make_unique<DesktopAndCursorComposer>(std::move(capturer),
+                                                           options);
+
+    return 0;
+  }
+#endif
+
   if (mDeviceType == CaptureDeviceType::Screen) {
     std::unique_ptr<DesktopCapturer> screenCapturer =
         DesktopCapturer::CreateScreenCapturer(options);
