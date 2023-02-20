@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 #include "jit/riscv64/constant/Constant-riscv64.h"
+#include "jit/riscv64/extension/base-assembler-riscv.h"
 namespace js {
 namespace jit {
 

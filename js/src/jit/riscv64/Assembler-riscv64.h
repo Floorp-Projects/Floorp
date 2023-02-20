@@ -514,6 +514,13 @@ class Assembler : public AssemblerShared,
   void break_(uint32_t code, bool break_as_stop = false);
   void nop();
   void RV_li(Register rd, intptr_t imm);
+  static int RV_li_count(int64_t imm, bool is_get_temp_reg = false);
+  void GeneralLi(Register rd, int64_t imm);
+  static int GeneralLiCount(intptr_t imm, bool is_get_temp_reg = false);
+  void RecursiveLiImpl(Register rd, intptr_t imm);
+  void RecursiveLi(Register rd, intptr_t imm);
+  static int RecursiveLiCount(intptr_t imm);
+  static int RecursiveLiImplCount(intptr_t imm);
   // Returns the number of instructions required to load the immediate
   static int li_estimate(intptr_t imm, bool is_get_temp_reg = false);
   // Loads an immediate, always using 8 instructions, regardless of the value,

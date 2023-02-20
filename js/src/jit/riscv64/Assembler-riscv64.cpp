@@ -171,6 +171,23 @@ void Assembler::copyDataRelocationTable(uint8_t* dest) {
 }
 
 void Assembler::RV_li(Register rd, int64_t imm) {
+  UseScratchRegisterScope temps(this);
+  if (RecursiveLiCount(imm) > GeneralLiCount(imm, temps.hasAvailable())) {
+    GeneralLi(rd, imm);
+  } else {
+    RecursiveLi(rd, imm);
+  }
+}
+
+int Assembler::RV_li_count(int64_t imm, bool is_get_temp_reg) {
+  if (RecursiveLiCount(imm) > GeneralLiCount(imm, is_get_temp_reg)) {
+    return GeneralLiCount(imm, is_get_temp_reg);
+  } else {
+    return RecursiveLiCount(imm);
+  }
+}
+
+void Assembler::GeneralLi(Register rd, int64_t imm) {
   // 64-bit imm is put in the register rd.
   // In most cases the imm is 32 bit and 2 instructions are generated. If a
   // temporary register is available, in the worst case, 6 instructions are
@@ -198,8 +215,8 @@ void Assembler::RV_li(Register rd, int64_t imm) {
     }
     return;
   } else {
-    // 64-bit case: divide imm into two 32-bit parts, upper and lower
     UseScratchRegisterScope temps(this);
+    // 64-bit case: divide imm into two 32-bit parts, upper and lower
     int64_t up_32 = imm >> 32;
     int64_t low_32 = imm & 0xffffffffull;
     Register temp_reg = rd;
@@ -207,6 +224,7 @@ void Assembler::RV_li(Register rd, int64_t imm) {
     if (up_32 == 0 || low_32 == 0) {
       // No temp register is needed
     } else {
+      BlockTrampolinePoolScope block_trampoline_pool(this, 0);
       temp_reg = temps.hasAvailable() ? temps.Acquire() : InvalidReg;
     }
     if (temp_reg != InvalidReg) {
@@ -319,6 +337,129 @@ void Assembler::RV_li(Register rd, int64_t imm) {
       shift_val = 0;
     }
   }
+}
+
+int Assembler::GeneralLiCount(int64_t imm, bool is_get_temp_reg) {
+  int count = 0;
+  // imitate Assembler::RV_li
+  if (is_int32(imm + 0x800)) {
+    // 32-bit case. Maximum of 2 instructions generated
+    int64_t high_20 = ((imm + 0x800) >> 12);
+    int64_t low_12 = imm << 52 >> 52;
+    if (high_20) {
+      count++;
+      if (low_12) {
+        count++;
+      }
+    } else {
+      count++;
+    }
+    return count;
+  } else {
+    // 64-bit case: divide imm into two 32-bit parts, upper and lower
+    int64_t up_32 = imm >> 32;
+    int64_t low_32 = imm & 0xffffffffull;
+    // Check if a temporary register is available
+    if (is_get_temp_reg) {
+      // keep track of hardware behavior for lower part in sim_low
+      int64_t sim_low = 0;
+      // Build lower part
+      if (low_32 != 0) {
+        int64_t high_20 = ((low_32 + 0x800) >> 12);
+        int64_t low_12 = low_32 & 0xfff;
+        if (high_20) {
+          // Adjust to 20 bits for the case of overflow
+          high_20 &= 0xfffff;
+          sim_low = ((high_20 << 12) << 32) >> 32;
+          count++;
+          if (low_12) {
+            sim_low += (low_12 << 52 >> 52) | low_12;
+            count++;
+          }
+        } else {
+          sim_low = low_12;
+          count++;
+        }
+      }
+      if (sim_low & 0x100000000) {
+        // Bit 31 is 1. Either an overflow or a negative 64 bit
+        if (up_32 == 0) {
+          // Positive number, but overflow because of the add 0x800
+          count++;
+          count++;
+          return count;
+        }
+        // low_32 is a negative 64 bit after the build
+        up_32 = (up_32 - 0xffffffff) & 0xffffffff;
+      }
+      if (up_32 == 0) {
+        return count;
+      }
+      int64_t high_20 = (up_32 + 0x800) >> 12;
+      int64_t low_12 = up_32 & 0xfff;
+      if (high_20) {
+        // Adjust to 20 bits for the case of overflow
+        high_20 &= 0xfffff;
+        count++;
+        if (low_12) {
+          count++;
+        }
+      } else {
+        count++;
+      }
+      // Put it at the bgining of register
+      count++;
+      if (low_32 != 0) {
+        count++;
+      }
+      return count;
+    }
+    // No temp register. Build imm in rd.
+    // Build upper 32 bits first in rd. Divide lower 32 bits parts and add
+    // parts to the upper part by doing shift and add.
+    // First build upper part in rd.
+    int64_t high_20 = (up_32 + 0x800) >> 12;
+    int64_t low_12 = up_32 & 0xfff;
+    if (high_20) {
+      // Adjust to 20 bits for the case of overflow
+      high_20 &= 0xfffff;
+      count++;
+      if (low_12) {
+        count++;
+      }
+    } else {
+      count++;
+    }
+    // upper part already in rd. Each part to be added to rd, has maximum of 11
+    // bits, and always starts with a 1. rd is shifted by the size of the part
+    // plus the number of zeros between the parts. Each part is added after the
+    // left shift.
+    uint32_t mask = 0x80000000;
+    int32_t i;
+    for (i = 0; i < 32; i++) {
+      if ((low_32 & mask) == 0) {
+        mask >>= 1;
+        if (i == 31) {
+          // rest is zero
+          count++;
+        }
+        continue;
+      }
+      // The first 1 seen
+      if ((i + 11) < 32) {
+        // Pick 11 bits
+        count++;
+        count++;
+        i += 10;
+        mask >>= 11;
+      } else {
+        count++;
+        count++;
+        break;
+      }
+    }
+  }
+  return count;
 }
 
 void Assembler::li_ptr(Register rd, int64_t imm) {
