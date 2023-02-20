@@ -77,7 +77,7 @@ static uint64_t gEarlyHintPreloaderId{0};
 // OngoingEarlyHints
 //=============================================================================
 
-void OngoingEarlyHints::CancelAllOngoingPreloads(const nsACString& aReason) {
+void OngoingEarlyHints::CancelAll(const nsACString& aReason) {
   for (auto& preloader : mPreloaders) {
     preloader->CancelChannel(NS_ERROR_ABORT, aReason, /* aDeleteEntry */ true);
   }

@@ -41,7 +41,7 @@ class OngoingEarlyHints final {
   bool Contains(const PreloadHashKey& aKey);
   bool Add(const PreloadHashKey& aKey, RefPtr<EarlyHintPreloader> aPreloader);
 
-  void CancelAllOngoingPreloads(const nsACString& aReason);
+  void CancelAll(const nsACString& aReason);
 
   // registers all channels and returns the ids
   void RegisterLinksAndGetConnectArgs(
