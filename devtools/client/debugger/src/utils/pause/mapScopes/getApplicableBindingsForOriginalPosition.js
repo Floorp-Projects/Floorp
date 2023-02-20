@@ -5,7 +5,7 @@
 import { positionCmp } from "./positionCmp";
 import { filterSortedArray } from "./filtering";
 import { mappingContains } from "./mappingContains";
-import { getGeneratedLocation } from "../../../source-maps";
+import { getGeneratedLocation } from "../../source-maps";
 
 export async function originalRangeStartsInside({ start, end }, thunkArgs) {
   const endPosition = await getGeneratedLocation(end, thunkArgs);

@@ -272,10 +272,9 @@ class DebuggerPanel {
     // Note that getOriginalLocation can easily return generatedLocation
     // if the location can't be mapped to any original source.
     // So that we may open either regular source or original sources here.
-    const originalLocation = await getOriginalLocation(
-      generatedLocation,
-      this.toolbox.sourceMapLoader
-    );
+    const originalLocation = await getOriginalLocation(generatedLocation, {
+      sourceMapLoader: this.toolbox.sourceMapLoader,
+    });
 
     // view-source module only forced the load of debugger in the background.
     // Now that we know we want to show a source, force displaying it in foreground.
