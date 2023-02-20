@@ -128,14 +128,6 @@ attempt was made to work around it, but `more work is needed`_.
 .. _tools we require: https://searchfox.org/mozilla-central/rev/168c45a7acc44e9904cfd4eebcb9eb080e05699c/taskcluster/scripts/misc/repack_rust.py#398
 .. _more work is needed: https://github.com/rust-lang/rust/issues/79249
 
-Python
-------
-
-Python is built from source by ``taskcluster/scripts/misc/build-cpython.sh`` on
-Linux and OSX. We use the upstream installer on Windows, through
-``taskcluster/scripts/misc/pack-cpython.sh``. In order to ensure consistency, we
-use the same version for both approaches. Note however that the Windows installer is
-not packaged for all patch versions, so there might be a slight delta there.
 
 Windows
 =======
