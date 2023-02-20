@@ -10,6 +10,7 @@ r"""Repackage ZIP archives (or directories) into MSIX App Packages.
   this is an issue with plating.
 """
 
+import functools
 import itertools
 import logging
 import os
@@ -20,6 +21,7 @@ import sys
 import time
 import urllib
 from collections import defaultdict
+from pathlib import Path
 
 import mozpack.path as mozpath
 from mach.util import get_state_dir
@@ -56,6 +58,19 @@ def log_copy_result(log, elapsed, destdir, result):
 _MSIX_ARCH = {"x86": "x86", "x86_64": "x64", "aarch64": "arm64"}
 
 
+@functools.lru_cache(maxsize=None)
+def sdk_tool_search_path():
+    from mozbuild.configure import ConfigureSandbox
+
+    sandbox = ConfigureSandbox({}, argv=["configure"])
+    sandbox.include_file(
+        str(Path(__file__).parent.parent.parent.parent.parent / "moz.configure")
+    )
+    return sandbox._value_for(sandbox["sdk_bin_path"]) + [
+        "c:/Windows/System32/WindowsPowershell/v1.0"
+    ]
+
+
 def find_sdk_tool(binary, log=None):
     if binary.lower().endswith(".exe"):
         binary = binary[:-4]
@@ -70,9 +85,7 @@ def find_sdk_tool(binary, log=None):
         )
         return mozpath.normsep(maybe)
 
-    maybe = which(
-        binary, extra_search_dirs=["c:/Windows/System32/WindowsPowershell/v1.0"]
-    )
+    maybe = which(binary, extra_search_dirs=sdk_tool_search_path())
     if maybe:
         log(
             logging.DEBUG,
@@ -81,34 +94,6 @@ def find_sdk_tool(binary, log=None):
             "Found {binary} on path: {path}",
         )
         return mozpath.normsep(maybe)
-
-    sdk = os.environ.get("WINDOWSSDKDIR") or "C:/Program Files (x86)/Windows Kits/10"
-    log(
-        logging.DEBUG,
-        "msix",
-        {"binary": binary, "sdk": sdk},
-        "Looking for {binary} in Windows SDK: {sdk}",
-    )
-
-    if sdk:
-        # Like `bin/VERSION/ARCH/tool.exe`.
-        finder = FileFinder(sdk)
-
-        # TODO: handle running on ARM.
-        is_64bits = sys.maxsize > 2 ** 32
-        arch = "x64" if is_64bits else "x86"
-
-        for p, f in finder.find(
-            "bin/**/{arch}/{binary}.exe".format(arch=arch, binary=binary)
-        ):
-            maybe = mozpath.normsep(mozpath.join(sdk, p))
-            log(
-                logging.DEBUG,
-                "msix",
-                {"binary": binary, "path": maybe},
-                "Found {binary} in Windows SDK: {path}",
-            )
-            return maybe
 
     return None
 
