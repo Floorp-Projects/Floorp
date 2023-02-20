@@ -17,6 +17,9 @@ const { ExtensionCommon } = ChromeUtils.import(
 const { AppConstants } = ChromeUtils.import(
     "resource://gre/modules/AppConstants.jsm"
 );
+const { Subprocess } = ChromeUtils.import(
+    "resource://gre/modules/Subprocess.jsm"
+);
 const platform = AppConstants.platform;
 const env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment
@@ -217,6 +220,34 @@ async function getBrowsersOnLinux() {
     return desktopFilesInfo;
 }
 
+async function getDefaultBrowserOnLinux(protocol, desktopFilesInfo = null) {
+    if (desktopFilesInfo === null) {
+        desktopFilesInfo = await getBrowsersOnLinux();
+    }
+    let output;
+    try {
+        output = await Subprocess.call({
+            command: "/usr/bin/xdg-mime",
+            arguments: ["query", "default", `x-scheme-handler/${protocol}`],
+        }).then(async (proc) => {
+            proc.stdin.close().catch(() => {
+                // It's possible that the process exists before we close stdin.
+                // In that case, we should ignore the errors.
+            });
+            await proc.wait();
+            return proc.stdout.readString();
+        });
+    } catch (e) {
+        console.error(e);
+        return null;
+    }
+    if (output === "") return null;
+    let filename = output.replace(/\n$/, "");
+    let targets = desktopFilesInfo.filter(desktopFileInfo => desktopFileInfo.filename === filename);
+    if (targets.length === 0) return null;
+    return targets[0];
+}
+
 async function OpenLinkInExternal(url) {
     let userSelectedBrowserId = Services.prefs.getStringPref("floorp.openInExternal.browserId", "");
     let protocol;
@@ -226,7 +257,7 @@ async function OpenLinkInExternal(url) {
         let desktopFilesInfo = await getBrowsersOnLinux();
         let browser;
         if (userSelectedBrowserId === "") {
-            browser = await getDefaultBrowserOnLinux(desktopInfo);
+            browser = await getDefaultBrowserOnLinux(protocol, desktopFilesInfo);
         } else {
             browser = desktopFilesInfo.filter(desktopFileInfo => desktopFileInfo.filename === userSelectedBrowserId + ".desktop")[0];
         }
