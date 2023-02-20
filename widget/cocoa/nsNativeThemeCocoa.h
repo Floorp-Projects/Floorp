@@ -167,15 +167,14 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
   };
 
   enum Widget : uint8_t {
-    eColorFill,      // mozilla::gfx::sRGBColor
-    eMenuIcon,       // MenuIconParams
-    eMenuItem,       // MenuItemParams
-    eMenuSeparator,  // MenuItemParams
-    eCheckbox,       // CheckboxOrRadioParams
-    eRadio,          // CheckboxOrRadioParams
-    eButton,         // ButtonParams
-    eDropdown,       // DropdownParams
-    eFocusOutline,
+    eColorFill,       // mozilla::gfx::sRGBColor
+    eMenuIcon,        // MenuIconParams
+    eMenuItem,        // MenuItemParams
+    eMenuSeparator,   // MenuItemParams
+    eCheckbox,        // CheckboxOrRadioParams
+    eRadio,           // CheckboxOrRadioParams
+    eButton,          // ButtonParams
+    eDropdown,        // DropdownParams
     eSpinButtons,     // SpinButtonParams
     eSpinButtonUp,    // SpinButtonParams
     eSpinButtonDown,  // SpinButtonParams
@@ -223,7 +222,6 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
     static WidgetInfo Dropdown(const DropdownParams& aParams) {
       return WidgetInfo(Widget::eDropdown, aParams);
     }
-    static WidgetInfo FocusOutline() { return WidgetInfo(Widget::eFocusOutline, false); }
     static WidgetInfo SpinButtons(const SpinButtonParams& aParams) {
       return WidgetInfo(Widget::eSpinButtons, aParams);
     }
@@ -387,7 +385,6 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
   void DrawButton(CGContextRef context, const HIRect& inBoxRect, const ButtonParams& aParams);
   void DrawTreeHeaderCell(CGContextRef context, const HIRect& inBoxRect,
                           const TreeHeaderCellParams& aParams);
-  void DrawFocusOutline(CGContextRef cgContext, const HIRect& inBoxRect);
   void DrawDropdown(CGContextRef context, const HIRect& inBoxRect, const DropdownParams& aParams);
   HIThemeButtonDrawInfo SpinButtonDrawInfo(ThemeButtonKind aKind, const SpinButtonParams& aParams);
   void DrawSpinButtons(CGContextRef context, const HIRect& inBoxRect,

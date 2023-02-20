@@ -419,14 +419,6 @@ const ToggleGTKMetrics* GetToggleMetrics(WidgetNodeType aWidgetType);
  */
 gint moz_gtk_radio_get_metrics(gint* indicator_size, gint* indicator_spacing);
 
-/** Returns the size of the focus ring for outline:auto.
- * focus_h_width:      [OUT] the horizontal width
- * focus_v_width:      [OUT] the vertical width
- *
- * returns:    MOZ_GTK_SUCCESS
- */
-gint moz_gtk_get_focus_outline_size(gint* focus_h_width, gint* focus_v_width);
-
 /** Get the horizontal padding for the menuitem widget or checkmenuitem widget.
  * horizontal_padding: [OUT] The left and right padding of the menuitem or
  * checkmenuitem
