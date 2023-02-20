@@ -105,7 +105,7 @@ void EarlyHintsService::FinalResponse(uint32_t aResponseStatus) {
 
 void EarlyHintsService::Cancel(const nsACString& aReason) {
   CollectTelemetry(Nothing());
-  mOngoingEarlyHints->CancelAllOngoingPreloads(aReason);
+  mOngoingEarlyHints->CancelAll(aReason);
 }
 
 void EarlyHintsService::RegisterLinksAndGetConnectArgs(
