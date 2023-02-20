@@ -656,6 +656,13 @@ void nsWindow::Destroy() {
     }
   }
 
+  // We need to detach accessible object here because mContainer is a custom
+  // widget and doesn't call gtk_widget_real_destroy() from destroy handler
+  // as regular widgets.
+  if (AtkObject* ac = gtk_widget_get_accessible(GTK_WIDGET(mContainer))) {
+    gtk_accessible_set_widget(GTK_ACCESSIBLE(ac), nullptr);
+  }
+
   gtk_widget_destroy(mShell);
   mShell = nullptr;
   mContainer = nullptr;
