@@ -171,7 +171,7 @@ async function getBrowsersOnLinux() {
     }
     checkDirs.push(...xdgDataDirs);
 
-    let desktopInfo = {};
+    let desktopFilesInfo = [];
     for (let checkDir of checkDirs) {
         let applications_dir_path = PathUtils.join(checkDir, "applications");
         let dir = FileUtils.File(applications_dir_path);
@@ -185,19 +185,23 @@ async function getBrowsersOnLinux() {
             }
         }
         for (let desktopFile of desktopFiles) {
-            if (!desktopInfo[desktopFile.leafName]) {
+            if (desktopFilesInfo.filter(desktopFileInfo => desktopFileInfo.filename === desktopFile.leafName).length === 0) {
+                let desktopFileInfo = {};
+                desktopFileInfo["filename"] = desktopFile.leafName;
                 try {
-                    desktopInfo[desktopFile.leafName] = 
+                    desktopFileInfo["fileInfo"] = 
                         await DesktopFileParser.parseFromPath(desktopFile.path);
                 } catch (e) {
                     console.log(`Failed to load ${desktopFile.path}`);
                     console.error(e);
+                    continue;
                 }
+                desktopFilesInfo.push(desktopFileInfo);
             }
         }
     }
-    console.log(desktopInfo);
-    return desktopInfo;
+    console.log(desktopFilesInfo);
+    return desktopFilesInfo;
 }
 
 async function OpenLinkInExternal(url) {
@@ -206,15 +210,15 @@ async function OpenLinkInExternal(url) {
     if (url.startsWith("http")) protocol = "http";
     if (url.startsWith("https")) protocol = "https";
     if (platform === "linux") {
-        let desktopInfo = await getBrowsersOnLinux();
+        let desktopFilesInfo = await getBrowsersOnLinux();
         let browser;
         if (userSelectedBrowserId === "") {
             browser = await getDefaultBrowserOnLinux(desktopInfo);
         } else {
-            browser = desktopInfo[userSelectedBrowserId + ".desktop"];
+            browser = desktopFilesInfo.filter(desktopFileInfo => desktopFileInfo.filename === userSelectedBrowserId + ".desktop")[0];
         }
         let shellscript = "#!/bin/sh\n";
-        shellscript += browser["Desktop Entry"]["Exec"].replace(
+        shellscript += browser["fileInfo"]["Desktop Entry"]["Exec"].replace(
             "%u",
             `"${url.replaceAll("\\", "\\\\").replaceAll('"', '\\"').replaceAll("`", "\\`").replaceAll("$", "\\$")}"`
         );
