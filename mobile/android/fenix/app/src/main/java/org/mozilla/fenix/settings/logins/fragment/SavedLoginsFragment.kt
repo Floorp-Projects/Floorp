@@ -18,6 +18,7 @@ import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.MenuProvider
+import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -36,6 +37,7 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.settings.logins.LoginsAction
 import org.mozilla.fenix.settings.logins.LoginsFragmentStore
+import org.mozilla.fenix.settings.logins.LoginsListState
 import org.mozilla.fenix.settings.logins.SavedLoginsSortingStrategyMenu
 import org.mozilla.fenix.settings.logins.SortingStrategy
 import org.mozilla.fenix.settings.logins.controller.LoginsListController
@@ -55,6 +57,9 @@ class SavedLoginsFragment : SecureFragment(), MenuProvider {
     private lateinit var sortLoginsMenuRoot: ConstraintLayout
     private lateinit var loginsListController: LoginsListController
     private lateinit var savedLoginsStorageController: SavedLoginsStorageController
+    private lateinit var loginState: LoginsListState
+    private var removedLoginGuid: String? = null
+    private var deletedGuid = mutableSetOf<String>()
 
     override fun onResume() {
         super.onResume()
@@ -106,9 +111,25 @@ class SavedLoginsFragment : SecureFragment(), MenuProvider {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        consumeFrom(savedLoginsStore) {
+        setFragmentResultListener(LoginDetailFragment.LOGIN_REQUEST_KEY) { _, bundle ->
+            removedLoginGuid = bundle.getString(LoginDetailFragment.LOGIN_BUNDLE_ARGS)
+            deletedGuid.add(removedLoginGuid.toString())
+        }
+        consumeFrom(savedLoginsStore) { loginsListState ->
             sortingStrategyMenu.updateMenu(savedLoginsStore.state.highlightedItem)
-            savedLoginsListView.update(it)
+
+            loginState = loginsListState
+            val currentList = loginState.filteredItems.toMutableList()
+
+            if (removedLoginGuid != null) {
+                val newList = currentList.filter { !deletedGuid.contains(it.guid) }
+
+                loginState = loginState.copy(
+                    loginList = newList,
+                    filteredItems = newList,
+                )
+            }
+            savedLoginsListView.update(loginState)
         }
     }
 
