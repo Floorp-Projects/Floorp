@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.privatemode.notification.AbstractPrivateNotificationService
+import mozilla.components.support.base.android.NotificationsDelegate
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
@@ -29,6 +30,8 @@ import java.util.Locale
 class PrivateNotificationService : AbstractPrivateNotificationService() {
 
     override val store: BrowserStore by lazy { components.core.store }
+
+    override val notificationsDelegate: NotificationsDelegate by lazy { components.notificationsDelegate }
 
     override fun NotificationCompat.Builder.buildNotification() {
         setSmallIcon(R.drawable.ic_private_browsing)

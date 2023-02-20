@@ -18,6 +18,7 @@ import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.privatemode.notification.AbstractPrivateNotificationService.Companion.ACTION_ERASE
+import mozilla.components.support.base.android.NotificationsDelegate
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
@@ -114,6 +115,8 @@ class AbstractPrivateNotificationServiceTest {
 
     private open class MockService : AbstractPrivateNotificationService() {
         override val store: BrowserStore = mock()
+        override val notificationsDelegate: NotificationsDelegate = mock()
+
         override fun NotificationCompat.Builder.buildNotification() = Unit
         override fun notifyLocaleChanged() {
             // NOOP
@@ -126,6 +129,8 @@ class AbstractPrivateNotificationServiceTest {
                 locale = null,
             ),
         )
+        override val notificationsDelegate: NotificationsDelegate = mock()
+
         override fun NotificationCompat.Builder.buildNotification() = Unit
         override fun notifyLocaleChanged() {
             // NOOP

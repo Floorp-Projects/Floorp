@@ -15,7 +15,6 @@ import android.os.IBinder
 import androidx.annotation.CallSuper
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.VISIBILITY_SECRET
-import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.NotificationManagerCompat.IMPORTANCE_LOW
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
@@ -27,6 +26,7 @@ import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.privatemode.R
 import mozilla.components.lib.state.ext.flowScoped
+import mozilla.components.support.base.android.NotificationsDelegate
 import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.ktx.android.notification.ChannelData
 import mozilla.components.support.ktx.android.notification.ensureNotificationChannelExists
@@ -53,6 +53,7 @@ abstract class AbstractPrivateNotificationService : Service() {
     private var localeScope: CoroutineScope? = null
 
     abstract val store: BrowserStore
+    abstract val notificationsDelegate: NotificationsDelegate
 
     /**
      * Customizes the private browsing notification.
@@ -104,7 +105,7 @@ abstract class AbstractPrivateNotificationService : Service() {
         val channelId = getChannelId()
 
         val notification = createNotification(channelId)
-        NotificationManagerCompat.from(applicationContext).notify(notificationId, notification)
+        notificationsDelegate.notify(notificationId = notificationId, notification = notification)
     }
 
     /**
@@ -117,6 +118,12 @@ abstract class AbstractPrivateNotificationService : Service() {
         val notificationId = getNotificationId()
         val channelId = getChannelId()
         val notification = createNotification(channelId)
+
+        if (SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notificationsDelegate.requestNotificationPermission(
+                onPermissionGranted = { refreshNotification() },
+            )
+        }
 
         startForeground(notificationId, notification)
 
