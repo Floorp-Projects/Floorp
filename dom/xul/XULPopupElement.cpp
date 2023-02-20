@@ -324,8 +324,8 @@ void XULPopupElement::SetConstraintRect(dom::DOMRectReadOnly& aRect) {
 
 bool XULPopupElement::IsWaylandDragSource() const {
 #ifdef MOZ_WAYLAND
-  nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(GetPrimaryFrame());
-  return menuPopupFrame->IsDragSource();
+  nsMenuPopupFrame* f = do_QueryFrame(GetPrimaryFrame());
+  return f && f->IsDragSource();
 #else
   return false;
 #endif
