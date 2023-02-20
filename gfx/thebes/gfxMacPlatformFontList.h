@@ -185,8 +185,13 @@ class gfxMacPlatformFontList final : public gfxPlatformFontList {
   void InitSingleFaceList() MOZ_REQUIRES(mLock);
   void InitAliasesForSingleFaceList() MOZ_REQUIRES(mLock);
 
-  // initialize system fonts
-  void InitSystemFontNames() MOZ_REQUIRES(mLock);
+  // Initialize system fonts: called from RegisterFonts thread before the
+  // font list is instantiated.
+  static void InitSystemFontNames();
+
+  // Create the gfxFontFamily entry for the system font, if needed (because
+  // it is hidden from the normal font lookup APIs).
+  void CreateSystemFontFamily() MOZ_REQUIRES(mLock);
 
   // helper function to lookup in both hidden system fonts and normal fonts
   gfxFontFamily* FindSystemFontFamily(const nsACString& aFamily)
@@ -247,13 +252,15 @@ class gfxMacPlatformFontList final : public gfxPlatformFontList {
   // default font for use with system-wide font fallback
   CTFontRef mDefaultFont;
 
-  // font families that -apple-system maps to
+  // Font families that -apple-system maps to.
   // Pre-10.11 this was always a single font family, such as Lucida Grande
   // or Helvetica Neue. For OSX 10.11, Apple uses pair of families
-  // for the UI, one for text sizes and another for display sizes
-  bool mUseSizeSensitiveSystemFont;
-  nsCString mSystemTextFontFamilyName;
-  nsCString mSystemDisplayFontFamilyName;  // only used on OSX 10.11
+  // for the UI, one for text sizes and another for display sizes.
+  // These are set up early during startup (before gfxPlatform initialization),
+  // and so locking is not required.
+  static bool sUseSizeSensitiveSystemFont;
+  static nsCString sSystemTextFontFamilyName;
+  static nsCString sSystemDisplayFontFamilyName;  // only used on OSX 10.11
 
   nsTArray<nsCString> mSingleFaceFonts;
   nsTArray<nsCString> mPreloadFonts;

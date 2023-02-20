@@ -99,6 +99,8 @@ void gfxPlatformMac::FontRegistrationCallback(void* aUnused) {
   for (const auto& dir : kLangFontsDirs) {
     gfxMacPlatformFontList::ActivateFontsFromDir(dir);
   }
+
+  gfxMacPlatformFontList::InitSystemFontNames();
 }
 
 PRThread* gfxPlatformMac::sFontRegistrationThread = nullptr;
@@ -111,15 +113,21 @@ PRThread* gfxPlatformMac::sFontRegistrationThread = nullptr;
 void gfxPlatformMac::RegisterSupplementalFonts() {
   switch (XRE_GetProcessType()) {
     case GeckoProcessType_Default:
+      sFontRegistrationThread = PR_CreateThread(
+          PR_USER_THREAD, FontRegistrationCallback, nullptr, PR_PRIORITY_NORMAL,
+          PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
+      break;
+
     case GeckoProcessType_Content:
-      // TODO: figure out if this matters to any other processes (e.g. GPU?)
+      // TODO: figure out if this matters to other process types (e.g. GPU?)
       //
-      // We prefer to activate the fonts on a separate thread, to minimize the
+      // We prefer to activate the fonts on a separate thread, to minimize
       // startup-time cost.
-      // But at least on 10.14 (Mojave), doing font registration on a separate
-      // thread in the content process seems crashy (bug 1708821), despite the
-      // CTFontManager.h header claiming that it's thread-safe. So we just do
-      // it immediately on the main thread, and accept the startup-time hit.
+      // But at least on 10.14 (Mojave), doing font registration on a
+      // separate thread in the content process seems crashy (bug 1708821),
+      // despite the CTFontManager.h header claiming that it's thread-safe.
+      // So we just do it immediately on the main thread, and accept the
+      // startup-time hit.
       if (nsCocoaFeatures::OnCatalinaOrLater()) {
         sFontRegistrationThread = PR_CreateThread(
             PR_USER_THREAD, FontRegistrationCallback, nullptr,
@@ -128,6 +136,7 @@ void gfxPlatformMac::RegisterSupplementalFonts() {
         for (const auto& dir : kLangFontsDirs) {
           gfxMacPlatformFontList::ActivateFontsFromDir(dir);
         }
+        gfxMacPlatformFontList::InitSystemFontNames();
       }
       break;
 
