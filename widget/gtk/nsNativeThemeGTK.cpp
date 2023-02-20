@@ -1130,13 +1130,36 @@ auto nsNativeThemeGTK::IsWidgetNonNative(nsIFrame* aFrame,
       aAppearance == StyleAppearance::FocusOutline) {
     return NonNative::Always;
   }
-  // We can't draw light widgets if the current GTK theme is dark or vice versa.
-  if (Theme::ThemeSupportsWidget(aFrame->PresContext(), aFrame, aAppearance) &&
-      LookAndFeel::ColorSchemeForFrame(aFrame) !=
-          LookAndFeel::ColorSchemeForChrome()) {
-    return NonNative::BecauseColorMismatch;
+
+  // If the current GTK theme color scheme matches our color-scheme, then we
+  // can draw a native widget.
+  if (LookAndFeel::ColorSchemeForFrame(aFrame) ==
+      LookAndFeel::ColorSchemeForChrome()) {
+    return NonNative::No;
   }
-  return NonNative::No;
+
+  // As an special-case, for tooltips, we check if the tooltip color is the
+  // same between the light and dark themes. If so we can get away with drawing
+  // the native widget, see bug 1817396.
+  if (aAppearance == StyleAppearance::Tooltip) {
+    auto darkColor =
+        LookAndFeel::Color(StyleSystemColor::Infotext, ColorScheme::Dark,
+                           LookAndFeel::UseStandins::No);
+    auto lightColor =
+        LookAndFeel::Color(StyleSystemColor::Infotext, ColorScheme::Light,
+                           LookAndFeel::UseStandins::No);
+    if (darkColor == lightColor) {
+      return NonNative::No;
+    }
+  }
+
+  // If the non-native theme doesn't support the widget then oh well...
+  if (NS_WARN_IF(!Theme::ThemeSupportsWidget(aFrame->PresContext(), aFrame,
+                                             aAppearance))) {
+    return NonNative::No;
+  }
+
+  return NonNative::BecauseColorMismatch;
 }
 
 LayoutDeviceIntSize nsNativeThemeGTK::GetMinimumWidgetSize(
