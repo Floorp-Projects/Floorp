@@ -193,13 +193,9 @@ export function getMappedScopes(cx, scopes, frame) {
 
 export function getMappedScopesForLocation(location) {
   return async function(thunkArgs) {
-    const { dispatch, getState, sourceMapLoader } = thunkArgs;
+    const { dispatch, getState } = thunkArgs;
     const cx = getThreadContext(getState());
-    const mappedLocation = await getMappedLocation(
-      getState(),
-      sourceMapLoader,
-      location
-    );
+    const mappedLocation = await getMappedLocation(location, thunkArgs);
     return dispatch(getMappedScopes(cx, null, mappedLocation));
   };
 }
