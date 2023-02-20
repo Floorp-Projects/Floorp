@@ -84,7 +84,6 @@ def valid_windows_sdk_dir_result(value):
 
 
 @depends(
-    c_compiler,
     target_windows_abi,
     host_windows_abi,
     windows_sdk_dir,
@@ -93,9 +92,8 @@ def valid_windows_sdk_dir_result(value):
 )
 @checking("for Windows SDK", valid_windows_sdk_dir_result)
 @imports(_from="__builtin__", _import="Exception")
-@imports(_from="textwrap", _import="dedent")
+@imports(_from="__builtin__", _import="open")
 def valid_windows_sdk_dir(
-    compiler,
     target_windows_abi,
     host_windows_abi,
     windows_sdk_dir,
@@ -110,25 +108,18 @@ def valid_windows_sdk_dir(
     for d in windows_sdk_dir:
         sdklist = get_sdk_dirs(d, "um")
         for sdk in sdklist:
-            check = dedent(
-                """\
-            #include <winsdkver.h>
-            WINVER_MAXVER
-            """
-            )
-            um_dir = os.path.join(sdk.include, "um")
-            shared_dir = os.path.join(sdk.include, "shared")
-            result = try_preprocess(
-                compiler.wrapper
-                + [compiler.compiler]
-                + compiler.flags
-                + ["-X", "-I", um_dir, "-I", shared_dir],
-                "C",
-                check,
-                onerror=lambda: "",
-            )
-            if result:
-                maxver = result.splitlines()[-1]
+            maxver = None
+            winsdkver = os.path.join(sdk.include, "um", "winsdkver.h")
+            with open(winsdkver) as fh:
+                for line in fh.readlines():
+                    if line.startswith("#define"):
+                        line = line.split(None, 2)
+                        assert line.pop(0) == "#define"
+                        if line.pop(0) == "WINVER_MAXVER":
+                            maxver = line.pop(0)
+                            break
+
+            if maxver:
                 try:
                     maxver = int(maxver, 0)
                 except Exception:
