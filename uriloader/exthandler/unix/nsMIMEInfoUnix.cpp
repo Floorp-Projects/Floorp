@@ -19,10 +19,12 @@ nsresult nsMIMEInfoUnix::LoadUriInternal(nsIURI* aURI) {
 
 NS_IMETHODIMP
 nsMIMEInfoUnix::GetHasDefaultHandler(bool* _retval) {
-  // if mDefaultApplication is set, it means the application has been set from
+  // if a default app is set, it means the application has been set from
   // either /etc/mailcap or ${HOME}/.mailcap, in which case we don't want to
   // give the GNOME answer.
-  if (mDefaultApplication) return nsMIMEInfoImpl::GetHasDefaultHandler(_retval);
+  if (GetDefaultApplication()) {
+    return nsMIMEInfoImpl::GetHasDefaultHandler(_retval);
+  }
 
   *_retval = false;
 
@@ -47,10 +49,12 @@ nsMIMEInfoUnix::GetHasDefaultHandler(bool* _retval) {
 }
 
 nsresult nsMIMEInfoUnix::LaunchDefaultWithFile(nsIFile* aFile) {
-  // if mDefaultApplication is set, it means the application has been set from
+  // if a default app is set, it means the application has been set from
   // either /etc/mailcap or ${HOME}/.mailcap, in which case we don't want to
   // give the GNOME answer.
-  if (mDefaultApplication) return nsMIMEInfoImpl::LaunchDefaultWithFile(aFile);
+  if (GetDefaultApplication()) {
+    return nsMIMEInfoImpl::LaunchDefaultWithFile(aFile);
+  }
 
   nsAutoCString nativePath;
   aFile->GetNativePath(nativePath);

@@ -79,7 +79,6 @@ NS_INTERFACE_MAP_END
 nsMIMEInfoBase::nsMIMEInfoBase(const char* aMIMEType)
     : mSchemeOrType(aMIMEType),
       mClass(eMIMEInfo),
-      mPreferredAction(nsIMIMEInfo::saveToDisk),
       mAlwaysAskBeforeHandling(
           StaticPrefs::
               browser_download_always_ask_before_handling_new_types()) {}
@@ -87,7 +86,6 @@ nsMIMEInfoBase::nsMIMEInfoBase(const char* aMIMEType)
 nsMIMEInfoBase::nsMIMEInfoBase(const nsACString& aMIMEType)
     : mSchemeOrType(aMIMEType),
       mClass(eMIMEInfo),
-      mPreferredAction(nsIMIMEInfo::saveToDisk),
       mAlwaysAskBeforeHandling(
           StaticPrefs::
               browser_download_always_ask_before_handling_new_types()) {}
@@ -100,7 +98,6 @@ nsMIMEInfoBase::nsMIMEInfoBase(const nsACString& aMIMEType)
 nsMIMEInfoBase::nsMIMEInfoBase(const nsACString& aType, HandlerClass aClass)
     : mSchemeOrType(aType),
       mClass(aClass),
-      mPreferredAction(nsIMIMEInfo::saveToDisk),
       mAlwaysAskBeforeHandling(
           StaticPrefs::
               browser_download_always_ask_before_handling_new_types() ||
@@ -462,13 +459,16 @@ nsresult nsMIMEInfoBase::LaunchWithIProcess(nsIFile* aApp, const int aArgc,
 // nsMIMEInfoImpl implementation
 NS_IMETHODIMP
 nsMIMEInfoImpl::GetDefaultDescription(nsAString& aDefaultDescription) {
-  if (mDefaultAppDescription.IsEmpty() && mDefaultApplication) {
-    // Don't want to cache this, just in case someone resets the app
-    // without changing the description....
-    mDefaultApplication->GetLeafName(aDefaultDescription);
-  } else {
-    aDefaultDescription = mDefaultAppDescription;
+  if (mDefaultAppDescription.IsEmpty()) {
+    nsCOMPtr<nsIFile> defaultApp = GetDefaultApplication();
+    if (defaultApp) {
+      // Don't want to cache this, just in case someone resets the app
+      // without changing the description....
+      defaultApp->GetLeafName(aDefaultDescription);
+      return NS_OK;
+    }
   }
+  aDefaultDescription = mDefaultAppDescription;
 
   return NS_OK;
 }
@@ -476,9 +476,10 @@ nsMIMEInfoImpl::GetDefaultDescription(nsAString& aDefaultDescription) {
 NS_IMETHODIMP
 nsMIMEInfoImpl::GetHasDefaultHandler(bool* _retval) {
   *_retval = !mDefaultAppDescription.IsEmpty();
-  if (mDefaultApplication) {
+  nsCOMPtr<nsIFile> defaultApp = GetDefaultApplication();
+  if (defaultApp) {
     bool exists;
-    *_retval = NS_SUCCEEDED(mDefaultApplication->Exists(&exists)) && exists;
+    *_retval = NS_SUCCEEDED(defaultApp->Exists(&exists)) && exists;
   }
   return NS_OK;
 }
@@ -486,11 +487,12 @@ nsMIMEInfoImpl::GetHasDefaultHandler(bool* _retval) {
 NS_IMETHODIMP
 nsMIMEInfoImpl::IsCurrentAppOSDefault(bool* _retval) {
   *_retval = false;
-  if (mDefaultApplication) {
+  nsCOMPtr<nsIFile> defaultApp = GetDefaultApplication();
+  if (defaultApp) {
     // Determine if the default executable is our executable.
     EnsureAppDetailsAvailable();
     bool isSame = false;
-    nsresult rv = mDefaultApplication->Equals(sOurAppFile, &isSame);
+    nsresult rv = defaultApp->Equals(sOurAppFile, &isSame);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -500,9 +502,12 @@ nsMIMEInfoImpl::IsCurrentAppOSDefault(bool* _retval) {
 }
 
 nsresult nsMIMEInfoImpl::LaunchDefaultWithFile(nsIFile* aFile) {
-  if (!mDefaultApplication) return NS_ERROR_FILE_NOT_FOUND;
+  nsCOMPtr<nsIFile> defaultApp = GetDefaultApplication();
+  if (!defaultApp) {
+    return NS_ERROR_FILE_NOT_FOUND;
+  }
 
-  return LaunchWithIProcess(mDefaultApplication, aFile->NativePath());
+  return LaunchWithIProcess(defaultApp, aFile->NativePath());
 }
 
 NS_IMETHODIMP
