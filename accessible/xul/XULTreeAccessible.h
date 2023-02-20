@@ -17,6 +17,7 @@ namespace mozilla {
 namespace a11y {
 
 class XULTreeGridCellAccessible;
+class XULTreeItemAccessibleBase;
 
 /*
  * A class the represents the XUL Tree widget.
@@ -76,7 +77,7 @@ class XULTreeAccessible : public AccessibleWrap {
    *
    * @param aRow         [in] the given row index
    */
-  LocalAccessible* GetTreeItemAccessible(int32_t aRow) const;
+  XULTreeItemAccessibleBase* GetTreeItemAccessible(int32_t aRow) const;
 
   /**
    * Invalidates the number of cached treeitem accessibles.
@@ -111,24 +112,18 @@ class XULTreeAccessible : public AccessibleWrap {
   /**
    * Creates tree item accessible for the given row index.
    */
-  virtual already_AddRefed<LocalAccessible> CreateTreeItemAccessible(
+  virtual already_AddRefed<XULTreeItemAccessibleBase> CreateTreeItemAccessible(
       int32_t aRow) const;
 
   RefPtr<dom::XULTreeElement> mTree;
   nsITreeView* mTreeView;
-  mutable AccessibleHashtable mAccessibleCache;
+  mutable nsRefPtrHashtable<nsPtrHashKey<const void>, XULTreeItemAccessibleBase>
+      mAccessibleCache;
 };
 
 /**
  * Base class for tree item accessibles.
  */
-
-#define XULTREEITEMBASEACCESSIBLE_IMPL_CID           \
-  { /* 1ab79ae7-766a-443c-940b-b1e6b0831dfc */       \
-    0x1ab79ae7, 0x766a, 0x443c, {                    \
-      0x94, 0x0b, 0xb1, 0xe6, 0xb0, 0x83, 0x1d, 0xfc \
-    }                                                \
-  }
 
 class XULTreeItemAccessibleBase : public AccessibleWrap {
  public:
@@ -164,9 +159,6 @@ class XULTreeItemAccessibleBase : public AccessibleWrap {
 
   // Widgets
   virtual LocalAccessible* ContainerWidget() const override;
-
-  // XULTreeItemAccessibleBase
-  NS_DECLARE_STATIC_IID_ACCESSOR(XULTREEITEMBASEACCESSIBLE_IMPL_CID)
 
   /**
    * Return row index associated with the accessible.
@@ -215,9 +207,6 @@ class XULTreeItemAccessibleBase : public AccessibleWrap {
   nsITreeView* mTreeView;
   int32_t mRow;
 };
-
-NS_DEFINE_STATIC_IID_ACCESSOR(XULTreeItemAccessibleBase,
-                              XULTREEITEMBASEACCESSIBLE_IMPL_CID)
 
 /**
  * LocalAccessible class for items for XUL tree.

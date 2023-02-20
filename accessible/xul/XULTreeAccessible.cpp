@@ -177,13 +177,12 @@ LocalAccessible* XULTreeAccessible::LocalChildAtPoint(
     return AccessibleWrap::LocalChildAtPoint(aX, aY, aWhichChild);
   }
 
-  LocalAccessible* child = GetTreeItemAccessible(cellInfo.mRow);
+  XULTreeItemAccessibleBase* child = GetTreeItemAccessible(cellInfo.mRow);
   if (aWhichChild == EWhichChildAtPoint::DeepestChild && child) {
-    // Look for accessible cell for the found item accessible.
-    RefPtr<XULTreeItemAccessibleBase> treeitem = do_QueryObject(child);
-
-    LocalAccessible* cell = treeitem->GetCellAccessible(cellInfo.mCol);
-    if (cell) child = cell;
+    LocalAccessible* cell = child->GetCellAccessible(cellInfo.mCol);
+    if (cell) {
+      return cell;
+    }
   }
 
   return child;
@@ -412,7 +411,8 @@ LocalAccessible* XULTreeAccessible::ContainerWidget() const { return nullptr; }
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeAccessible: public implementation
 
-LocalAccessible* XULTreeAccessible::GetTreeItemAccessible(int32_t aRow) const {
+XULTreeItemAccessibleBase* XULTreeAccessible::GetTreeItemAccessible(
+    int32_t aRow) const {
   if (aRow < 0 || IsDefunct() || !mTreeView) return nullptr;
 
   int32_t rowCount = 0;
@@ -421,12 +421,13 @@ LocalAccessible* XULTreeAccessible::GetTreeItemAccessible(int32_t aRow) const {
 
   void* key = reinterpret_cast<void*>(intptr_t(aRow));
   return mAccessibleCache.WithEntryHandle(
-      key, [&](auto&& entry) -> LocalAccessible* {
+      key, [&](auto&& entry) -> XULTreeItemAccessibleBase* {
         if (entry) {
           return entry->get();
         }
 
-        RefPtr<LocalAccessible> treeItem = CreateTreeItemAccessible(aRow);
+        RefPtr<XULTreeItemAccessibleBase> treeItem =
+            CreateTreeItemAccessible(aRow);
         if (treeItem) {
           entry.Insert(RefPtr{treeItem});
           Document()->BindToDocument(treeItem, nullptr);
@@ -453,7 +454,7 @@ void XULTreeAccessible::InvalidateCache(int32_t aRow, int32_t aCount) {
   // Fire destroy event for removed tree items and delete them from caches.
   for (int32_t rowIdx = aRow; rowIdx < aRow - aCount; rowIdx++) {
     void* key = reinterpret_cast<void*>(intptr_t(rowIdx));
-    LocalAccessible* treeItem = mAccessibleCache.GetWeak(key);
+    XULTreeItemAccessibleBase* treeItem = mAccessibleCache.GetWeak(key);
 
     if (treeItem) {
       RefPtr<AccEvent> event =
@@ -477,7 +478,7 @@ void XULTreeAccessible::InvalidateCache(int32_t aRow, int32_t aCount) {
 
   for (int32_t rowIdx = newRowCount; rowIdx < oldRowCount; ++rowIdx) {
     void* key = reinterpret_cast<void*>(intptr_t(rowIdx));
-    LocalAccessible* treeItem = mAccessibleCache.GetWeak(key);
+    XULTreeItemAccessibleBase* treeItem = mAccessibleCache.GetWeak(key);
 
     if (treeItem) {
       // Unbind from document, shutdown and remove from tree cache.
@@ -521,13 +522,9 @@ void XULTreeAccessible::TreeViewInvalidated(int32_t aStartRow, int32_t aEndRow,
 
   for (int32_t rowIdx = aStartRow; rowIdx <= endRow; ++rowIdx) {
     void* key = reinterpret_cast<void*>(intptr_t(rowIdx));
-    LocalAccessible* accessible = mAccessibleCache.GetWeak(key);
+    XULTreeItemAccessibleBase* treeitemAcc = mAccessibleCache.GetWeak(key);
 
-    if (accessible) {
-      RefPtr<XULTreeItemAccessibleBase> treeitemAcc =
-          do_QueryObject(accessible);
-      NS_ASSERTION(treeitemAcc, "Wrong accessible at the given key!");
-
+    if (treeitemAcc) {
       treeitemAcc->RowInvalidated(aStartCol, endCol);
     }
   }
@@ -555,9 +552,9 @@ void XULTreeAccessible::TreeViewChanged(nsITreeView* aView) {
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeAccessible: protected implementation
 
-already_AddRefed<LocalAccessible> XULTreeAccessible::CreateTreeItemAccessible(
-    int32_t aRow) const {
-  RefPtr<LocalAccessible> accessible = new XULTreeItemAccessible(
+already_AddRefed<XULTreeItemAccessibleBase>
+XULTreeAccessible::CreateTreeItemAccessible(int32_t aRow) const {
+  RefPtr<XULTreeItemAccessibleBase> accessible = new XULTreeItemAccessible(
       mContent, mDoc, const_cast<XULTreeAccessible*>(this), mTree, mTreeView,
       aRow);
 
@@ -587,9 +584,8 @@ XULTreeItemAccessibleBase::~XULTreeItemAccessibleBase() {}
 NS_IMPL_CYCLE_COLLECTION_INHERITED(XULTreeItemAccessibleBase, LocalAccessible,
                                    mTree)
 
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(XULTreeItemAccessibleBase,
-                                             LocalAccessible,
-                                             XULTreeItemAccessibleBase)
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(XULTreeItemAccessibleBase,
+                                               LocalAccessible)
 
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeItemAccessibleBase: LocalAccessible

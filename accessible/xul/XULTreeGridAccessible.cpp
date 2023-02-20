@@ -106,15 +106,12 @@ void XULTreeGridAccessible::SelectedRowIndices(nsTArray<uint32_t>* aRows) {
 
 LocalAccessible* XULTreeGridAccessible::CellAt(uint32_t aRowIndex,
                                                uint32_t aColumnIndex) {
-  LocalAccessible* row = GetTreeItemAccessible(aRowIndex);
-  if (!row) return nullptr;
+  XULTreeItemAccessibleBase* rowAcc = GetTreeItemAccessible(aRowIndex);
+  if (!rowAcc) return nullptr;
 
   RefPtr<nsTreeColumn> column =
       nsCoreUtils::GetSensibleColumnAt(mTree, aColumnIndex);
   if (!column) return nullptr;
-
-  RefPtr<XULTreeItemAccessibleBase> rowAcc = do_QueryObject(row);
-  if (!rowAcc) return nullptr;
 
   return rowAcc->GetCellAccessible(column);
 }
@@ -189,9 +186,9 @@ role XULTreeGridAccessible::NativeRole() const {
 ////////////////////////////////////////////////////////////////////////////////
 // XULTreeGridAccessible: XULTreeAccessible implementation
 
-already_AddRefed<LocalAccessible>
+already_AddRefed<XULTreeItemAccessibleBase>
 XULTreeGridAccessible::CreateTreeItemAccessible(int32_t aRow) const {
-  RefPtr<LocalAccessible> accessible = new XULTreeGridRowAccessible(
+  RefPtr<XULTreeItemAccessibleBase> accessible = new XULTreeGridRowAccessible(
       mContent, mDoc, const_cast<XULTreeGridAccessible*>(this), mTree,
       mTreeView, aRow);
 
@@ -618,7 +615,8 @@ LocalAccessible* XULTreeGridCellAccessible::GetSiblingAtOffset(
 
   if (!columnAtOffset) return nullptr;
 
-  RefPtr<XULTreeItemAccessibleBase> rowAcc = do_QueryObject(LocalParent());
+  XULTreeItemAccessibleBase* rowAcc =
+      static_cast<XULTreeItemAccessibleBase*>(LocalParent());
   return rowAcc->GetCellAccessible(columnAtOffset);
 }
 
