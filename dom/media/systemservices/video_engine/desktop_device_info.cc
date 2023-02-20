@@ -271,6 +271,17 @@ void DesktopDeviceInfoImpl::CleanUpWindowList() {
 
 void DesktopDeviceInfoImpl::InitializeWindowList() {
   DesktopCaptureOptions options;
+
+// Wayland is special and we will not get any information about windows
+// without going through xdg-desktop-portal. We will already have
+// a screen placeholder so there is no reason to build windows list.
+#if defined(WEBRTC_USE_PIPEWIRE)
+  if (mozilla::StaticPrefs::media_webrtc_capture_allow_pipewire() &&
+      webrtc::DesktopCapturer::IsRunningUnderWayland()) {
+    return;
+  }
+#endif
+
 // Help avoid an X11 deadlock, see bug 1456101.
 #ifdef MOZ_X11
   MOZ_ALWAYS_SUCCEEDS(mozilla::SyncRunnable::DispatchToThread(
@@ -388,8 +399,40 @@ void DesktopDeviceInfoImpl::CleanUpScreenList() {
   mDesktopDisplayList.clear();
 }
 
+// With PipeWire we can't select which system resource is shared so
+// we don't create a window/screen list. Instead we place these constants
+// as window name/id so frontend code can identify PipeWire backend
+// and does not try to create screen/window preview.
+
+#define PIPEWIRE_ID 0xaffffff
+#define PIPEWIRE_NAME "####_PIPEWIRE_PORTAL_####"
+
 void DesktopDeviceInfoImpl::InitializeScreenList() {
   DesktopCaptureOptions options;
+
+// Wayland is special and we will not get any information about screens
+// without going through xdg-desktop-portal so we just need a screen
+// placeholder.
+#if defined(WEBRTC_USE_PIPEWIRE)
+  if (mozilla::StaticPrefs::media_webrtc_capture_allow_pipewire() &&
+      webrtc::DesktopCapturer::IsRunningUnderWayland()) {
+    DesktopDisplayDevice* screenDevice = new DesktopDisplayDevice;
+    if (!screenDevice) {
+      return;
+    }
+
+    screenDevice->setScreenId(PIPEWIRE_ID);
+    screenDevice->setDeviceName(PIPEWIRE_NAME);
+
+    char idStr[BUFSIZ];
+    SprintfLiteral(idStr, "%ld",
+                   static_cast<long>(screenDevice->getScreenId()));
+    screenDevice->setUniqueIdName(idStr);
+    mDesktopDisplayList[screenDevice->getScreenId()] = screenDevice;
+    return;
+  }
+#endif
+
 // Help avoid an X11 deadlock, see bug 1456101.
 #ifdef MOZ_X11
   MOZ_ALWAYS_SUCCEEDS(mozilla::SyncRunnable::DispatchToThread(

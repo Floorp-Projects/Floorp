@@ -41,6 +41,8 @@ ScreenCastPortal::CaptureSourceType ScreenCastPortal::ToCaptureSourceType(
       return ScreenCastPortal::CaptureSourceType::kScreen;
     case CaptureType::kWindow:
       return ScreenCastPortal::CaptureSourceType::kWindow;
+    case CaptureType::kAnyScreenContent:
+      return ScreenCastPortal::CaptureSourceType::kAnyScreenContent;
   }
 }
 
