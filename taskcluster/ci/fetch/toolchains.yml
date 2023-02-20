@@ -619,3 +619,34 @@ symbol-scrapers:
         type: git
         repo: http://github.com/mozilla/symbol-scrapers
         revision: f61d24345d27760a5c2dc8f9370368bdaa9a4e82
+
+cpython-3.8.10:
+    description: cpython 3.8.10 source code
+    fetch:
+        type: static-url
+        url: https://www.python.org/ftp/python/3.8.10/Python-3.8.10.tgz
+        sha256: b37ac74d2cbad2590e7cd0dd2b3826c29afe89a734090a87bf8c03c45066cb65
+        size: 24720640
+        artifact-name: cpython-source.tar.zst
+        strip-components: 1
+        add-prefix: cpython-source/
+
+cpython-3.8.10.exe:
+    description: cpython 3.8.10 installer
+    fetch:
+        type: static-url
+        url: https://www.python.org/ftp/python/3.8.10/python-3.8.10-amd64.exe
+        sha256: 7628244cb53408b50639d2c1287c659f4e29d3dfdb9084b11aed5870c0c6a48a
+        size: 28296784
+        artifact-name: python-3.8.10-amd64.exe
+
+cpython-3.7.15:
+    description: cpython 3.7.15 source code
+    fetch:
+        type: static-url
+        url: https://www.python.org/ftp/python/3.7.15/Python-3.7.15.tgz
+        sha256: cf2993798ae8430f3af3a00d96d9fdf320719f4042f039380dca79967c25e436
+        size: 24033532
+        artifact-name: cpython-source.tar.zst
+        strip-components: 1
+        add-prefix: cpython-source/
