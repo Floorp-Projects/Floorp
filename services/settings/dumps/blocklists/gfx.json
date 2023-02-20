@@ -1,6 +1,58 @@
 {
   "data": [
     {
+      "os": "All",
+      "schema": 1676780361472,
+      "vendor": "0x10de",
+      "details": {
+        "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1817617",
+        "name": "Block video overlay on Nvidia too"
+      },
+      "devices": [],
+      "enabled": true,
+      "feature": "VIDEO_OVERLAY",
+      "hardware": "",
+      "driverVendor": "",
+      "versionRange": {
+        "maxVersion": "110",
+        "minVersion": ""
+      },
+      "driverVersion": "",
+      "featureStatus": "BLOCKED_DEVICE",
+      "windowProtocol": "",
+      "driverVersionMax": "",
+      "desktopEnvironment": "",
+      "driverVersionComparator": "",
+      "id": "0dee1a85-cdaa-4bf5-9300-cadfd4e2d1c6",
+      "last_modified": 1676781773899
+    },
+    {
+      "os": "All",
+      "schema": 1676684336994,
+      "vendor": "0x1002",
+      "details": {
+        "bug": "1817269",
+        "name": "AMD video overlay bugs"
+      },
+      "devices": [],
+      "enabled": true,
+      "feature": "VIDEO_OVERLAY",
+      "hardware": "",
+      "driverVendor": "",
+      "versionRange": {
+        "maxVersion": "110",
+        "minVersion": ""
+      },
+      "driverVersion": "",
+      "featureStatus": "BLOCKED_DEVICE",
+      "windowProtocol": "",
+      "driverVersionMax": "",
+      "desktopEnvironment": "",
+      "driverVersionComparator": "",
+      "id": "6fb52585-39e1-4ba0-8e35-9e2246b57a15",
+      "last_modified": 1676732928453
+    },
+    {
       "os": "Android",
       "schema": 1643797519778,
       "vendor": "Vivante Corporation",
@@ -1140,5 +1192,5 @@
       "last_modified": 1480349134090
     }
   ],
-  "timestamp": 1643818378440
+  "timestamp": 1676781773899
 }
