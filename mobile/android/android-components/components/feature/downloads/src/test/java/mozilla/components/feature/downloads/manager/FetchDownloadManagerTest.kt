@@ -284,5 +284,6 @@ class FetchDownloadManagerTest {
     class MockDownloadService : AbstractFetchDownloadService() {
         override val httpClient: Client = mock()
         override val store: BrowserStore = mock()
+        override val notificationsDelegate: NotificationsDelegate = mock()
     }
 }

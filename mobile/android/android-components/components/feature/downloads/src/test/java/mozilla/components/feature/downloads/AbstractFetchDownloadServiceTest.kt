@@ -50,6 +50,7 @@ import mozilla.components.feature.downloads.AbstractFetchDownloadService.CopyInC
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobState
 import mozilla.components.feature.downloads.DownloadNotification.NOTIFICATION_DOWNLOAD_GROUP_ID
 import mozilla.components.feature.downloads.facts.DownloadsFacts.Items.NOTIFICATION
+import mozilla.components.support.base.android.NotificationsDelegate
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.processor.CollectionProcessor
 import mozilla.components.support.test.any
@@ -117,6 +118,9 @@ class AbstractFetchDownloadServiceTest {
 
     @Mock private lateinit var client: Client
     private lateinit var browserStore: BrowserStore
+    private lateinit var notificationManagerCompat: NotificationManagerCompat
+
+    private lateinit var notificationsDelegate: NotificationsDelegate
 
     @Mock private lateinit var broadcastManager: LocalBroadcastManager
     private lateinit var service: AbstractFetchDownloadService
@@ -127,16 +131,21 @@ class AbstractFetchDownloadServiceTest {
     fun setup() {
         openMocks(this)
         browserStore = BrowserStore()
+
+        notificationManagerCompat = spy(NotificationManagerCompat.from(testContext))
+        notificationsDelegate = NotificationsDelegate(notificationManagerCompat)
         service = spy(
             object : AbstractFetchDownloadService() {
                 override val httpClient = client
                 override val store = browserStore
+                override val notificationsDelegate = this@AbstractFetchDownloadServiceTest.notificationsDelegate
             },
         )
 
         doReturn(broadcastManager).`when`(service).broadcastManager
         doReturn(testContext).`when`(service).context
         doNothing().`when`(service).useFileStream(any(), anyBoolean(), any())
+        doReturn(true).`when`(notificationManagerCompat).areNotificationsEnabled()
 
         shadowNotificationService =
             shadowOf(testContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
@@ -234,6 +243,7 @@ class AbstractFetchDownloadServiceTest {
             object : AbstractFetchDownloadService() {
                 override val httpClient = client
                 override val store = browserStore
+                override val notificationsDelegate = this@AbstractFetchDownloadServiceTest.notificationsDelegate
             },
         )
 
@@ -256,6 +266,7 @@ class AbstractFetchDownloadServiceTest {
             object : AbstractFetchDownloadService() {
                 override val httpClient = client
                 override val store = browserStore
+                override val notificationsDelegate = this@AbstractFetchDownloadServiceTest.notificationsDelegate
             },
         )
 
@@ -1366,10 +1377,13 @@ class AbstractFetchDownloadServiceTest {
         )
         val downloadJob = DownloadJobState(state = mock(), status = DOWNLOADING)
         val mockStore = mock<BrowserStore>()
+        val mockNotificationsDelegate = mock<NotificationsDelegate>()
+
         val service = spy(
             object : AbstractFetchDownloadService() {
                 override val httpClient = client
                 override val store = mockStore
+                override val notificationsDelegate = mockNotificationsDelegate
             },
         )
 
@@ -1464,6 +1478,7 @@ class AbstractFetchDownloadServiceTest {
             object : AbstractFetchDownloadService() {
                 override val httpClient = client
                 override val store = browserStore
+                override val notificationsDelegate = this@AbstractFetchDownloadServiceTest.notificationsDelegate
             },
         )
 
@@ -1483,6 +1498,7 @@ class AbstractFetchDownloadServiceTest {
             object : AbstractFetchDownloadService() {
                 override val httpClient = client
                 override val store = browserStore
+                override val notificationsDelegate = this@AbstractFetchDownloadServiceTest.notificationsDelegate
             },
         )
 
@@ -1510,6 +1526,7 @@ class AbstractFetchDownloadServiceTest {
             object : AbstractFetchDownloadService() {
                 override val httpClient = client
                 override val store = browserStore
+                override val notificationsDelegate = this@AbstractFetchDownloadServiceTest.notificationsDelegate
             },
         )
 
@@ -1542,6 +1559,7 @@ class AbstractFetchDownloadServiceTest {
             object : AbstractFetchDownloadService() {
                 override val httpClient = client
                 override val store = browserStore
+                override val notificationsDelegate = this@AbstractFetchDownloadServiceTest.notificationsDelegate
             },
         )
 
@@ -1580,6 +1598,7 @@ class AbstractFetchDownloadServiceTest {
             object : AbstractFetchDownloadService() {
                 override val httpClient = client
                 override val store = browserStore
+                override val notificationsDelegate = this@AbstractFetchDownloadServiceTest.notificationsDelegate
             },
         )
         val uniqueFile: DownloadState = mock()
@@ -1600,6 +1619,7 @@ class AbstractFetchDownloadServiceTest {
             object : AbstractFetchDownloadService() {
                 override val httpClient = client
                 override val store = browserStore
+                override val notificationsDelegate = this@AbstractFetchDownloadServiceTest.notificationsDelegate
             },
         )
         val uniqueFile: DownloadState = mock()
@@ -1628,6 +1648,7 @@ class AbstractFetchDownloadServiceTest {
             object : AbstractFetchDownloadService() {
                 override val httpClient = client
                 override val store = browserStore
+                override val notificationsDelegate = this@AbstractFetchDownloadServiceTest.notificationsDelegate
             },
         )
 
@@ -1656,6 +1677,7 @@ class AbstractFetchDownloadServiceTest {
                 object : AbstractFetchDownloadService() {
                     override val httpClient = client
                     override val store = browserStore
+                    override val notificationsDelegate = this@AbstractFetchDownloadServiceTest.notificationsDelegate
                 },
             )
 
@@ -1692,6 +1714,7 @@ class AbstractFetchDownloadServiceTest {
             object : AbstractFetchDownloadService() {
                 override val httpClient = client
                 override val store = browserStore
+                override val notificationsDelegate = this@AbstractFetchDownloadServiceTest.notificationsDelegate
             },
         )
 
@@ -1713,6 +1736,7 @@ class AbstractFetchDownloadServiceTest {
             object : AbstractFetchDownloadService() {
                 override val httpClient = client
                 override val store = browserStore
+                override val notificationsDelegate = this@AbstractFetchDownloadServiceTest.notificationsDelegate
             },
         )
         val spyContext = spy(testContext)
