@@ -77,7 +77,6 @@ var SidebarUI = {
     return (this.__title = document.getElementById("sidebar-title"));
   },
   _splitter: null,
-  _icon: null,
   _reversePositionButton: null,
   _switcherPanel: null,
   _switcherTarget: null,
