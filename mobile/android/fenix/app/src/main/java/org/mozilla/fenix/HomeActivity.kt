@@ -4,11 +4,13 @@
 
 package org.mozilla.fenix
 
+import android.app.assist.AssistContent
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.ACTION_MAIN
 import android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
 import android.content.res.Configuration
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.StrictMode
@@ -25,6 +27,7 @@ import android.view.ViewConfiguration
 import android.view.WindowManager.LayoutParams.FLAG_SECURE
 import androidx.annotation.CallSuper
 import androidx.annotation.IdRes
+import androidx.annotation.RequiresApi
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.Companion.PROTECTED
 import androidx.appcompat.app.ActionBar
@@ -46,6 +49,7 @@ import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.SearchAction
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.concept.engine.EngineSession
@@ -521,6 +525,13 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         //
         // NB: There are ways for the user to install new products without leaving the browser.
         BrowsersCache.resetAll()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    override fun onProvideAssistContent(outContent: AssistContent?) {
+        super.onProvideAssistContent(outContent)
+        val currentTabUrl = components.core.store.state.selectedTab?.content?.url
+        outContent?.webUri = currentTabUrl?.let { Uri.parse(it) }
     }
 
     private fun getBookmarkCount(node: BookmarkNode): Int {
