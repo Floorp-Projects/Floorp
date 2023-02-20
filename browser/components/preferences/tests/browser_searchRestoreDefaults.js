@@ -195,3 +195,65 @@ add_task(async function test_removeOutOfOrder() {
 
   gBrowser.removeCurrentTab();
 });
+
+add_task(async function test_removeAndRestoreMultiple() {
+  await openPreferencesViaOpenPreferencesAPI("search", { leaveOpen: true });
+
+  let doc = gBrowser.selectedBrowser.contentDocument;
+  let restoreDefaultsButton = doc.getElementById("restoreDefaultSearchEngines");
+  let tree = doc.querySelector("#engineList");
+  let removeEngineButton = doc.getElementById("removeEngineButton");
+  removeEngineButton.scrollIntoView();
+
+  let defaultEngines = await Services.search.getAppProvidedEngines();
+
+  // Remove the second and fourth engines.
+  for (let i = 0; i < 2; i++) {
+    tree.view.selection.select(i * 2 + 1);
+    let updatedPromise = SearchTestUtils.promiseSearchNotification(
+      SearchUtils.MODIFIED_TYPE.CHANGED,
+      SearchUtils.TOPIC_ENGINE_MODIFIED
+    );
+    removeEngineButton.click();
+    await updatedPromise;
+  }
+
+  // Click the restore-defaults button.
+  let updatedPromise = SearchTestUtils.promiseSearchNotification(
+    SearchUtils.MODIFIED_TYPE.CHANGED,
+    SearchUtils.TOPIC_ENGINE_MODIFIED
+  );
+  restoreDefaultsButton.click();
+  await updatedPromise;
+
+  // Remove the third engine.
+  tree.view.selection.select(3);
+  updatedPromise = SearchTestUtils.promiseSearchNotification(
+    SearchUtils.MODIFIED_TYPE.CHANGED,
+    SearchUtils.TOPIC_ENGINE_MODIFIED
+  );
+  removeEngineButton.click();
+  await updatedPromise;
+
+  // Now restore again.
+  updatedPromise = SearchTestUtils.promiseSearchNotification(
+    SearchUtils.MODIFIED_TYPE.CHANGED,
+    SearchUtils.TOPIC_ENGINE_MODIFIED
+  );
+  restoreDefaultsButton.click();
+  await updatedPromise;
+
+  // Wait for the restore-defaults button to update its state.
+  await TestUtils.waitForCondition(
+    () => restoreDefaultsButton.disabled,
+    "Waiting for the restore-defaults button to become disabled"
+  );
+
+  Assert.equal(
+    tree.view.rowCount,
+    defaultEngines.length + UrlbarUtils.LOCAL_SEARCH_MODES.length,
+    "Should have the correct amount of engines"
+  );
+
+  gBrowser.removeCurrentTab();
+});
