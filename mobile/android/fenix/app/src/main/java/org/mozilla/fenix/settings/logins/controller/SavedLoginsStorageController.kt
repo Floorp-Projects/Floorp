@@ -14,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import mozilla.components.concept.storage.EncryptedLogin
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.service.sync.logins.InvalidRecordException
@@ -70,15 +71,20 @@ open class SavedLoginsStorageController(
 
     fun add(originText: String, usernameText: String, passwordText: String) {
         var saveLoginJob: Deferred<Unit>? = null
+        var id: String? = null
         lifecycleScope.launch(ioDispatcher) {
             saveLoginJob = async {
-                add(loginEntryForAdd(originText, usernameText, passwordText))
+                id = add(loginEntryForAdd(originText, usernameText, passwordText))
             }
             saveLoginJob?.await()
             withContext(Dispatchers.Main) {
-                val directions =
-                    AddLoginFragmentDirections.actionAddLoginFragmentToSavedLoginsFragment()
-                navController.navigate(directions)
+                if (id.isNullOrEmpty()) {
+                    navController.popBackStack(R.id.savedLoginsFragment, false)
+                } else {
+                    val directions =
+                        AddLoginFragmentDirections.actionAddLoginFragmentToLoginDetailFragment(id.toString())
+                    navController.navigate(directions)
+                }
             }
         }
         saveLoginJob?.invokeOnCompletion {
@@ -88,9 +94,10 @@ open class SavedLoginsStorageController(
         }
     }
 
-    private suspend fun add(loginEntryToSave: LoginEntry) {
+    private suspend fun add(loginEntryToSave: LoginEntry): String? {
+        var encryptedLogin: EncryptedLogin? = null
         try {
-            val encryptedLogin = passwordsStorage.add(loginEntryToSave)
+            encryptedLogin = passwordsStorage.add(loginEntryToSave)
             syncAndUpdateList(passwordsStorage.decryptLogin(encryptedLogin))
         } catch (loginException: LoginsApiException) {
             Log.e(
@@ -99,6 +106,7 @@ open class SavedLoginsStorageController(
                 loginException,
             )
         }
+        return encryptedLogin?.guid
     }
 
     // Create a [LoginEntry] for the edit login dialog

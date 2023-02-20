@@ -353,7 +353,7 @@ class AddLoginFragment : Fragment(R.layout.fragment_add_login), MenuProvider {
 
     override fun onPause() {
         redirectToReAuth(
-            listOf(R.id.savedLoginsFragment),
+            listOf(R.id.loginDetailFragment, R.id.savedLoginsFragment),
             findNavController().currentDestination?.id,
             R.id.addLoginFragment,
         )

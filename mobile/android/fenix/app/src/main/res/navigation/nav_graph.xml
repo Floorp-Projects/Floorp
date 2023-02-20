@@ -473,6 +473,12 @@
             app:popUpTo="@id/editLoginFragment"
             app:popUpToInclusive="true" />
     </fragment>
+    
+    <action
+            android:id="@+id/action_loginDetailFragment_to_savedLoginsFragment"
+            app:destination="@id/savedLoginsFragment"
+            app:popUpTo="@id/savedLoginsFragment"
+            app:popUpToInclusive="true"/>
 
     <fragment
         android:id="@+id/editLoginFragment"
@@ -496,10 +502,10 @@
         android:label="@string/add_login"
         tools:layout="@layout/fragment_add_login">
         <action
-            android:id="@+id/action_addLoginFragment_to_savedLoginsFragment"
-            app:destination="@id/savedLoginsFragment"
+            android:id="@+id/action_addLoginFragment_to_loginDetailFragment"
+            app:destination="@id/loginDetailFragment"
             app:popUpTo="@id/savedLoginsFragment"
-            app:popUpToInclusive="true" />
+            app:popUpToInclusive="false" />
     </fragment>
 
     <fragment

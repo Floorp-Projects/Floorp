@@ -14,6 +14,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.addCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.MenuProvider
 import androidx.lifecycle.Lifecycle
@@ -122,6 +123,13 @@ class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail), Menu
             R.id.loginDetailFragment,
         )
         super.onPause()
+    }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        requireActivity().onBackPressedDispatcher.addCallback(this) {
+            val directions = LoginDetailFragmentDirections.actionLoginDetailFragmentToSavedLoginsFragment()
+            findNavController().navigate(directions)
+        }
     }
 
     private fun setUpPasswordReveal() {
