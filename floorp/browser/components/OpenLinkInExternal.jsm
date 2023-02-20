@@ -24,6 +24,9 @@ const env = Cc["@mozilla.org/process/environment;1"].getService(
 const { DesktopFileParser } = ChromeUtils.import(
     "resource:///modules/DesktopFileParser.jsm"
 );
+const { EscapeShell } = ChromeUtils.import(
+    "resource:///modules/EscapeShell.jsm"
+);
 
 function getBrowsersOnWindows() {
     let browsers = [];
@@ -230,7 +233,7 @@ async function OpenLinkInExternal(url) {
         let shellscript = "#!/bin/sh\n";
         shellscript += browser["fileInfo"]["Desktop Entry"]["Exec"].replace(
             "%u",
-            `"${url.replaceAll("\\", "\\\\").replaceAll('"', '\\"').replaceAll("`", "\\`").replaceAll("$", "\\$")}"`
+            EscapeShell(url)
         );
         let randomized = Math.random().toString(32).substring(2);
         let outputFilePath = `/tmp/floorp_openInExternal_${randomized}.sh`;
