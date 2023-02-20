@@ -26,6 +26,7 @@ devtools.jar:
     content/shared/components/splitter/SplitBox.css (shared/components/splitter/SplitBox.css)
     content/shared/components/List.css (shared/components/List.css)
     content/shared/components/tree/TreeView.css (shared/components/tree/TreeView.css)
+    content/shared/components/SearchModifiers.css (shared/components/SearchModifiers.css)
     content/shared/components/SidebarToggle.css (shared/components/SidebarToggle.css)
     content/shared/components/MdnLink.css (shared/components/MdnLink.css)
     content/shared/components/AppErrorBoundary.css (shared/components/AppErrorBoundary.css)

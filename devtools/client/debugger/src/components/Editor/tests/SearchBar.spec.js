@@ -29,7 +29,7 @@ function generateDefaults() {
     searchOn: true,
     symbolSearchOn: true,
     editor: {},
-    searchResults: {},
+    searchResults: { count: 0 },
     selectedSymbolType: "functions",
     selectedSource: {
       text: " text text query text",
@@ -48,6 +48,11 @@ function generateDefaults() {
     selectedResultIndex: 0,
     updateSearchResults: jest.fn(),
     doSearch: jest.fn(),
+    closeFileSearch: jest.fn(),
+    cx: {},
+    setActiveSearch: jest.fn(),
+    toggleFileSearchModifier: jest.fn(),
+    traverseResults: jest.fn(),
   };
 }
 

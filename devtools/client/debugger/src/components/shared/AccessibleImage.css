@@ -59,10 +59,6 @@
   mask-image: url(chrome://devtools/content/debugger/images/breadcrumbs-divider.svg);
 }
 
-.img.case-match {
-  mask-image: url(chrome://devtools/content/debugger/images/case-match.svg);
-}
-
 .img.close {
   mask-image: url(chrome://devtools/skin/images/close.svg);
 }
@@ -157,10 +153,6 @@ html[dir="rtl"] .img.more-tabs {
   mask-image: url(chrome://devtools/skin/images/reload.svg);
 }
 
-.img.regex-match {
-  mask-image: url(chrome://devtools/content/debugger/images/regex-match.svg);
-}
-
 .img.resume {
   mask-image: url(chrome://devtools/content/shared/images/resume.svg);
 }
@@ -191,10 +183,6 @@ html[dir="rtl"] .img.more-tabs {
 
 .img.tab {
   mask-image: url(chrome://devtools/content/debugger/images/tab.svg);
-}
-
-.img.whole-word-match {
-  mask-image: url(chrome://devtools/content/debugger/images/whole-word-match.svg);
 }
 
 .img.worker {

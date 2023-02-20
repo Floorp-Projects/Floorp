@@ -4,6 +4,7 @@
 
 /* Shared imports */
 @import url("chrome://devtools/content/shared/components/AppErrorBoundary.css");
+@import url("chrome://devtools/content/shared/components/SearchModifiers.css");
 
 /* Devtools imports */
 @import url("chrome://devtools/content/debugger/src/components/variables.css");

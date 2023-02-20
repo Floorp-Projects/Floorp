@@ -6,7 +6,6 @@ import PropTypes from "prop-types";
 import React, { Component } from "react";
 import { connect } from "../../utils/connect";
 import { CloseButton } from "../shared/Button";
-import AccessibleImage from "../shared/AccessibleImage";
 import actions from "../../actions";
 import {
   getActiveSearch,
@@ -22,13 +21,13 @@ import {
 import { removeOverlay } from "../../utils/editor";
 
 import { scrollList } from "../../utils/result-list";
-import classnames from "classnames";
 
 import SearchInput from "../shared/SearchInput";
 import "./SearchBar.css";
 
 const { PluralForm } = require("devtools/shared/plural-form");
 const { debounce } = require("devtools/shared/debounce");
+const SearchModifiers = require("devtools/client/shared/components/SearchModifiers");
 
 function getSearchShortcut() {
   return L10N.getStr("sourceSearch.search.key2");
@@ -214,62 +213,6 @@ class SearchBar extends Component {
       .replace("%d", matchIndex + 1);
   }
 
-  renderSearchModifiers = () => {
-    const { cx, modifiers, toggleFileSearchModifier, query } = this.props;
-    const { doSearch } = this;
-
-    function SearchModBtn({ modVal, className, svgName, tooltip }) {
-      const preppedClass = classnames(className, {
-        active: modifiers?.[modVal],
-      });
-      return (
-        <button
-          className={preppedClass}
-          onMouseDown={() => {
-            toggleFileSearchModifier(cx, modVal);
-            doSearch(query);
-          }}
-          onKeyDown={e => {
-            if (e.key === "Enter") {
-              toggleFileSearchModifier(cx, modVal);
-              doSearch(query);
-            }
-          }}
-          title={tooltip}
-        >
-          <AccessibleImage className={svgName} />
-        </button>
-      );
-    }
-
-    return (
-      <div className="search-modifiers">
-        <span className="pipe-divider" />
-        <span className="search-type-name">
-          {L10N.getStr("symbolSearch.searchModifier.modifiersLabel")}
-        </span>
-        <SearchModBtn
-          modVal="regexMatch"
-          className="regex-match-btn"
-          svgName="regex-match"
-          tooltip={L10N.getStr("symbolSearch.searchModifier.regex")}
-        />
-        <SearchModBtn
-          modVal="caseSensitive"
-          className="case-sensitive-btn"
-          svgName="case-match"
-          tooltip={L10N.getStr("symbolSearch.searchModifier.caseSensitive")}
-        />
-        <SearchModBtn
-          modVal="wholeWord"
-          className="whole-word-btn"
-          svgName="whole-word-match"
-          tooltip={L10N.getStr("symbolSearch.searchModifier.wholeWord")}
-        />
-      </div>
-    );
-  };
-
   shouldShowErrorEmoji() {
     const {
       query,
@@ -283,6 +226,7 @@ class SearchBar extends Component {
       searchResults: { count },
       searchOn,
       showClose = true,
+      modifiers,
     } = this.props;
 
     if (!searchOn) {
@@ -309,7 +253,13 @@ class SearchBar extends Component {
           showClose={false}
         />
         <div className="search-bottom-bar">
-          {this.renderSearchModifiers()}
+          <SearchModifiers
+            modifiers={modifiers}
+            onToggleSearchModifier={value => {
+              this.props.toggleFileSearchModifier(this.props.cx, value);
+              this.doSearch(this.state.query);
+            }}
+          />
           {showClose && (
             <React.Fragment>
               <span className="pipe-divider" />

@@ -1,0 +1,64 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Search Modifiers */
+
+.search-modifiers {
+  display: flex;
+  align-items: center;
+}
+
+.search-modifiers button {
+  padding: 2px;
+  margin: 0 3px;
+  border: none;
+  background: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 2px;
+}
+
+.search-modifiers .pipe-divider {
+  flex: none;
+  align-self: stretch;
+  width: 1px;
+  vertical-align: middle;
+  margin: 4px;
+  background-color: var(--theme-splitter-color);
+}
+
+.search-modifiers button > span {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+  background-color: transparent;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  /* do not let images shrink when used as flex children */
+  flex-shrink: 0;
+  fill: var(--theme-icon-color);
+  -moz-context-properties: fill;
+}
+
+.search-modifiers button > span.case-match {
+  background-image: url(chrome://devtools/content/debugger/images/case-match.svg);
+}
+
+.search-modifiers button  > span.regex-match {
+  background-image: url(chrome://devtools/content/debugger/images/regex-match.svg);
+}
+
+.search-modifiers button > span.whole-word-match {
+  background-image: url(chrome://devtools/content/debugger/images/whole-word-match.svg);
+}
+
+.search-modifiers button:hover {
+  fill: var(--theme-toolbar-background-hover);
+}
+
+.search-modifiers button.active > span {
+  fill: var(--theme-icon-checked-color);
+}

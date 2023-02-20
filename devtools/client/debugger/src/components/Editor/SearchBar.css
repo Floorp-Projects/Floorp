@@ -47,42 +47,6 @@
   padding: 0;
 }
 
-.search-bottom-bar .search-modifiers {
-  display: flex;
-  align-items: center;
-}
-
-.search-bottom-bar .search-modifiers button {
-  padding: 2px;
-  margin: 0 3px;
-  border: none;
-  background: none;
-  width: 20px;
-  height: 20px;
-  border-radius: 2px;
-}
-
-.search-bottom-bar .pipe-divider {
-  flex: none;
-  align-self: stretch;
-  width: 1px;
-  vertical-align: middle;
-  margin: 4px;
-  background-color: var(--theme-splitter-color);
-}
-
-.search-bottom-bar .search-modifiers .img {
-  display: block;
-}
-
-.search-bottom-bar .search-modifiers button:hover {
-  background-color: var(--theme-toolbar-background-hover);
-}
-
-.search-bottom-bar .search-modifiers button.active .img {
-  background-color: var(--theme-icon-checked-color);
-}
-
 .search-bottom-bar .search-type-toggles {
   display: flex;
   align-items: center;
