@@ -552,6 +552,12 @@ exports.isAfterPseudoElement = isAfterPseudoElement;
 
 /**
  * Get the current zoom factor applied to the container window of a given node.
+ * Container windows are used as a weakmap key to store the corresponding
+ * nsIDOMWindowUtils instance to avoid querying it every time.
+ *
+ * XXXbz Given that we now have a direct getter for the DOMWindowUtils, is
+ * this weakmap cache path any faster than just calling the getter?
+ *
  * @param {DOMNode|DOMWindow}
  *        The node for which the zoom factor should be calculated, or its
  *        owner window.
@@ -564,7 +570,7 @@ function getCurrentZoom(node) {
     throw new Error("Unable to get the zoom from the given argument.");
   }
 
-  return win.browsingContext?.fullZoom || 1.0;
+  return utilsFor(win).fullZoom;
 }
 exports.getCurrentZoom = getCurrentZoom;
 
@@ -581,7 +587,7 @@ exports.getCurrentZoom = getCurrentZoom;
  */
 function getDisplayPixelRatio(node) {
   const win = getWindowFor(node);
-  return win.devicePixelRatio / getCurrentZoom(node);
+  return win.devicePixelRatio / utilsFor(win).fullZoom;
 }
 exports.getDisplayPixelRatio = getDisplayPixelRatio;
 
