@@ -146,6 +146,7 @@ class HeadlessWidget : public nsBaseWidget {
   bool mEnabled;
   bool mVisible;
   bool mDestroyed;
+  bool mAlwaysOnTop;
   nsIWidget* mTopLevel;
   HeadlessCompositorWidget* mCompositorWidget;
   nsSizeMode mSizeMode;
