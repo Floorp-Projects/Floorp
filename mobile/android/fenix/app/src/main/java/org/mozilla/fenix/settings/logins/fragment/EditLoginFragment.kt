@@ -21,6 +21,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.google.android.material.textfield.TextInputLayout
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.ktx.android.view.hideKeyboard
@@ -155,6 +156,24 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login), MenuProvider {
         binding.usernameText.addTextChangedListener(
             object : TextWatcher {
                 override fun afterTextChanged(u: Editable?) {
+                    when {
+                        u.toString().isEmpty() -> {
+                            validUsername = false
+                            binding.clearUsernameTextButton.isVisible = false
+                            setLayoutError(
+                                context?.getString(R.string.saved_login_username_required),
+                                binding.inputLayoutUsername,
+                            )
+                        }
+
+                        else -> {
+                            validUsername = true
+                            binding.inputLayoutUsername.error = null
+                            binding.inputLayoutUsername.errorIconDrawable = null
+                            binding.inputLayoutUsername.isVisible = true
+                            binding.clearUsernameTextButton.isVisible = true
+                        }
+                    }
                     updateUsernameField()
                     findDuplicate()
                     setSaveButtonState()
@@ -180,10 +199,14 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login), MenuProvider {
                 override fun afterTextChanged(p: Editable?) {
                     when {
                         p.toString().isEmpty() -> {
+                            validPassword = false
                             passwordChanged = true
                             binding.revealPasswordButton.isVisible = false
                             binding.clearPasswordTextButton.isVisible = false
-                            setPasswordError()
+                            setLayoutError(
+                                context?.getString(R.string.saved_login_password_required),
+                                binding.inputLayoutPassword,
+                            )
                         }
                         p.toString() == oldLogin.password -> {
                             passwordChanged = false
@@ -239,10 +262,6 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login), MenuProvider {
                 // existing login was already a dupe and the username hasn't
                 // changed
                 usernameChanged = oldLogin.username != currentValue
-                validUsername = true
-                layout.error = null
-                layout.errorIconDrawable = null
-                clearButton.isVisible = true
             }
             else -> {
                 // Invalid login because it's a dupe of another one
@@ -265,10 +284,9 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login), MenuProvider {
         setSaveButtonState()
     }
 
-    private fun setPasswordError() {
-        binding.inputLayoutPassword.let { layout ->
-            validPassword = false
-            layout.error = context?.getString(R.string.saved_login_password_required)
+    private fun setLayoutError(error: String?, inputLayout: TextInputLayout) {
+        inputLayout.let { layout ->
+            layout.error = error
             layout.setErrorIconDrawable(R.drawable.mozac_ic_warning_with_bottom_padding)
             layout.setErrorIconTintList(
                 ColorStateList.valueOf(
@@ -286,7 +304,7 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login), MenuProvider {
         inflater.inflate(R.menu.login_save, menu)
     }
 
-    override fun onPrepareOptionsMenu(menu: Menu) {
+    override fun onPrepareMenu(menu: Menu) {
         val saveButton = menu.findItem(R.id.save_login_button)
         val changesMadeWithNoErrors =
             validUsername && validPassword && (usernameChanged || passwordChanged)
