@@ -111,6 +111,14 @@ interface nsIMIMEService : nsISupports {
                                   out boolean aFound);
 
     /**
+     * Update the mime info's default app information based on OS
+     * lookups.
+     * Note: normally called automatically by nsIMIMEInfo. If you find
+     * yourself needing to call this from elsewhere, file a bug instead.
+     */
+    void updateDefaultAppInfo(in nsIMIMEInfo aMIMEInfo);
+
+    /**
      * Default filename validation for getValidFileName and
      * validateFileNameForSaving where other flags are not true.
      * That is, the extension is modified to fit the content type,

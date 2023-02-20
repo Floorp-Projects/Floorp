@@ -366,28 +366,46 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(
 
   RefPtr<nsMIMEInfoWin> mimeInfo = new nsMIMEInfoWin(typeToUse);
 
-  // windows registry assumes your file extension is going to include the '.',
-  // but our APIs expect it to not be there, so make sure we normalize that bit.
-  nsAutoString fileExtToUse;
-  if (aFileExt.First() != char16_t('.')) fileExtToUse = char16_t('.');
-
-  fileExtToUse.Append(aFileExt);
-
-  // don't append the '.' for our APIs.
+  // Our extension APIs expect extensions without the '.', so normalize:
+  uint32_t dotlessIndex = aFileExt.First() != char16_t('.') ? 0 : 1;
   nsAutoCString lowerFileExt =
-      NS_ConvertUTF16toUTF8(Substring(fileExtToUse, 1));
+      NS_ConvertUTF16toUTF8(Substring(aFileExt, dotlessIndex));
   ToLowerCase(lowerFileExt);
   mimeInfo->AppendExtension(lowerFileExt);
   mozilla::StaticPrefs::browser_download_improvements_to_download_panel()
       ? mimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk)
       : mimeInfo->SetPreferredAction(nsIMIMEInfo::useSystemDefault);
 
+  if (NS_FAILED(InternalSetDefaultsOnMIME(mimeInfo))) {
+    return nullptr;
+  }
+
+  return mimeInfo.forget();
+}
+
+nsresult nsOSHelperAppService::InternalSetDefaultsOnMIME(
+    nsMIMEInfoWin* aMIMEInfo) {
+  NS_ENSURE_ARG(aMIMEInfo);
+
+  nsAutoCString primaryExt;
+  aMIMEInfo->GetPrimaryExtension(primaryExt);
+
+  if (primaryExt.IsEmpty()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // windows registry assumes your file extension is going to include the '.',
+  // but our APIs don't have it, so add it:
+  nsAutoString assocType = NS_ConvertUTF8toUTF16(primaryExt);
+  if (assocType.First() != char16_t('.')) {
+    assocType.Insert(char16_t('.'), 0);
+  }
+
   nsAutoString appInfo;
   bool found;
 
   // Retrieve the default application for this extension
-  NS_ENSURE_TRUE(mAppAssoc, nullptr);
-  nsString assocType(fileExtToUse);
+  NS_ENSURE_TRUE(mAppAssoc, NS_ERROR_NOT_AVAILABLE);
   wchar_t* pResult = nullptr;
   HRESULT hr = mAppAssoc->QueryCurrentDefault(assocType.get(), AT_FILEEXTENSION,
                                               AL_EFFECTIVE, &pResult);
@@ -403,7 +421,7 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(
   if (appInfo.EqualsLiteral("XPSViewer.Document")) found = false;
 
   if (!found) {
-    return nullptr;
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   // Get other nsIMIMEInfo fields from registry, if possible.
@@ -412,16 +430,15 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(
 
   if (NS_FAILED(GetDefaultAppInfo(appInfo, defaultDescription,
                                   getter_AddRefs(defaultApplication)))) {
-    return nullptr;
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
-  mimeInfo->SetDefaultDescription(defaultDescription);
-  mimeInfo->SetDefaultApplicationHandler(defaultApplication);
+  aMIMEInfo->SetDefaultDescription(defaultDescription);
+  aMIMEInfo->SetDefaultApplicationHandler(defaultApplication);
 
   // Grab the general description
-  GetMIMEInfoFromRegistry(appInfo, mimeInfo);
-
-  return mimeInfo.forget();
+  GetMIMEInfoFromRegistry(appInfo, aMIMEInfo);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -529,6 +546,12 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
     mi->AppendExtension(lowerFileExt);
   }
   mi.forget(aMIMEInfo);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsOSHelperAppService::UpdateDefaultAppInfo(nsIMIMEInfo* aMIMEInfo) {
+  InternalSetDefaultsOnMIME(static_cast<nsMIMEInfoWin*>(aMIMEInfo));
   return NS_OK;
 }
 

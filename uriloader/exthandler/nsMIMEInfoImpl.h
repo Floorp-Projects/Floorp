@@ -163,6 +163,7 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
   nsString mPreferredAppDescription;
   nsString mDefaultAppDescription;
   bool mAlwaysAskBeforeHandling;
+  bool mIsDefaultAppInfoFresh = false;
 };
 
 /**
@@ -194,7 +195,8 @@ class nsMIMEInfoImpl : public nsMIMEInfoBase {
    * App Services.
    */
   void SetDefaultApplication(nsIFile* aApp) {
-    if (!mDefaultApplication) mDefaultApplication = aApp;
+    mDefaultApplication = aApp;
+    mIsDefaultAppInfoFresh = true;
   }
 
  protected:
