@@ -3293,6 +3293,8 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
   // that our security checks do "the right thing"
   fileName.Trim(".");
 
+  bool urlIsFile = !!aURI && aURI->SchemeIs("file");
+
   // We get the mime service here even though we're the default implementation
   // of it, so it's possible to override only the mime service and not need to
   // reimplement the whole external helper app service itself.
@@ -3315,7 +3317,7 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
         // Only get the extension from the URL if allowed, or if this
         // is a binary type in which case the type might not be valid
         // anyway.
-        if (aAllowURLExtension || isBinaryType) {
+        if (aAllowURLExtension || isBinaryType || urlIsFile) {
           url->GetFileExtension(extension);
         }
       }
@@ -3348,11 +3350,14 @@ nsExternalHelperAppService::ValidateFileNameForSaving(
       // If this is a binary type, include the extension as a hint to get
       // the mime info. For other types, the mime type itself should be
       // sufficient.
+      // Unfortunately, on Windows, the mimetype is usually insufficient.
+      // Compensate at least on `file` URLs by trusting the extension -
+      // that's likely what we used to get the mimetype in the first place.
       // The special case for application/ogg is because that type could
       // actually be used for a video which can better be determined by the
       // extension. This is tested by browser_save_video.js.
       bool useExtension =
-          isBinaryType || aMimeType.EqualsLiteral(APPLICATION_OGG);
+          isBinaryType || urlIsFile || aMimeType.EqualsLiteral(APPLICATION_OGG);
       mimeService->GetFromTypeAndExtension(
           aMimeType, useExtension ? extension : EmptyCString(),
           getter_AddRefs(mimeInfo));
