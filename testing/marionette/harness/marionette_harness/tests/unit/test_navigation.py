@@ -317,6 +317,18 @@ class TestNavigate(BaseNavigationTestCase):
         self.marionette.restart()
 
         self.marionette.navigate(inline("<input autofocus>"))
+
+        # Per spec, autofocus candidates will be
+        # flushed by next paint, so we use rAF here to
+        # ensure the candidates are flushed.
+        self.marionette.execute_async_script(
+            """
+        const callback = arguments[arguments.length - 1];
+        window.requestAnimationFrame(function() {
+            window.requestAnimationFrame(callback);
+        });
+        """
+        )
         focus_el = self.marionette.find_element(By.CSS_SELECTOR, ":focus")
         self.assertEqual(self.marionette.get_active_element(), focus_el)
 
