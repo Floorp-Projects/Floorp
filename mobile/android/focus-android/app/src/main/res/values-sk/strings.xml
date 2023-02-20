@@ -352,7 +352,7 @@
     <string name="preference_mozilla_telemetry_summary2">Mozilla sa usiluje zbierať len údaje, ktoré potrebujeme na vylepšenie aplikácie %1$s pre všetkých.</string>
 
     <!-- In-app link (in settings) to Focus privacy notice. -->
-    <string name="preference_privacy_notice">Zásady ochrany súkromia</string>
+    <string name="preference_privacy_notice">Vyhlásenie o ochrane osobných údajov</string>
 
     <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
     <string name="preference_about">O aplikácii %1$s</string>

@@ -1017,8 +1017,26 @@
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
     <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">S wudem amezwer, %1$s yineεruḍen i tuqqna s useqdec n HTTPS i wugar n tɣellist. I usnifel n uɣewwar-a neɣ i wugar n telɣut, ddu ɣer Iɣewwaren &gt; Tabaḍnit &amp; Taɣellist &gt; Taɣellist.</string>
 
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s iɛerreḍ ad yesseqdec tuqqna HTTPS yal mi ara yili wamek i wugar n tɣellist.
+     <a href="%2$s">Issin ugar</a> <br/><br/>
+     Beddel aɣewwaṛ-a deg Iɣewwaṛen > Tabaḍnit &amp; Taɣellist.]]></string>
+
     <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Tuqqna d taraɣellsant</string>
+
+     <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    Aya yezmer ad yili d ugur deg twila n uqeddac, neɣ yezmer ad yili d ḥedd i iɛerrḍen ad yaker tamagit n uqeddac. <br/><br/>
+    Ma teqqneḍ ɣer uqeddac-a akken ilaq yakan, tuccḍa tezmer ad tili d taskudant.
+    ]]></string>
+
+     <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Ahat yella ḥedd i iɛerrḍen ad yaker tamagit n usmel, ur ilaq ara ad tkemmleḍ.</label>
+<br><br>
+<label>%1$s ur yumin ara <b>%2$s</b> acku tasiregt d tarussint, tasiregt tesɛa azmul-is, neɣ aqeddac ur d-yuzin ara tisirag timeɣta.</label>
+    ]]></string>
 
      <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->

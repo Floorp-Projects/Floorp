@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_write_description">shranjevanje podatkov na odložišče</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">Zavrni vsebino na katerikoli strani</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">branje zgodovine brskanja</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">prenašanje datotek ter branje in spreminjanje zgodovine prenosov</string>
     <!-- Description for downloads_open permission. -->

@@ -68,7 +68,9 @@
     <!-- Text for the main message -->
     <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Pridať odkaz na otvorenie súkromného prehliadania na domovskú obrazovku.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message">Spustite ďalšiu súkromnú kartu jedným ťuknutím.</string>
+    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">Spustite ďalšiu súkromnú kartu jedným ťuknutím.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message_2">Spustite svoju ďalšiu súkromnú kartu jediným ťuknutím.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Pridať skratku</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
@@ -1383,7 +1385,7 @@
     <!-- Text for the privacy notice onboarding card description. -->
     <string name="onboarding_privacy_notice_description">Firefox vám dáva kontrolu nad tým, čo zdieľate online a čo zdieľate s nami.</string>
     <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Prečítajte si naše zásady ochrany súkromia</string>
+    <string name="onboarding_privacy_notice_read_button">Prečítajte si naše Vyhlásenie o ochrane osobných údajov</string>
 
     <!-- Text for the conclusion onboarding message -->
     <string name="onboarding_conclusion_header">Ste pripravení otvoriť úžasný internet?</string>
@@ -1547,7 +1549,7 @@
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
     <string name="about_crashes">Zlyhania</string>
     <!-- About page link text to open privacy notice link -->
-    <string name="about_privacy_notice">Zásady ochrany súkromia</string>
+    <string name="about_privacy_notice">Vyhlásenie o ochrane osobných údajov</string>
     <!-- About page link text to open know your rights link -->
     <string name="about_know_your_rights">Spoznajte svoje práva</string>
     <!-- About page link text to open licensing information link -->

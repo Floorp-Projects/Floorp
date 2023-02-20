@@ -1003,11 +1003,32 @@
     <string name="preference_follow_device_theme">Ikuti tema peranti</string>
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">Situs yang Anda minta tidak mendukung HTTPS</string>
-    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">Secara baku, %1$s mencoba tersambung menggunakan HTTPS untuk meningkatkan keamanan. Untuk mengubah pengaturan ini atau untuk mempelajari lebih lanjut, buka Pengaturan &gt; Privasi &amp; Keamanan &gt; Keamanan.</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">Situs yang Anda minta tidak mendukung HTTPS</string>
 
-    <!-- Sessions List -->
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Laman ini tidak mendukung HTTPS</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Secara baku, %1$s mencoba tersambung menggunakan HTTPS untuk meningkatkan keamanan. Untuk mengubah pengaturan ini atau untuk mempelajari lebih lanjut, buka Pengaturan &gt; Privasi &amp; Keamanan &gt; Keamanan.</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s mencoba menggunakan koneksi HTTPS jika memungkinkan untuk keandalan keamanan.
+     <a href="%2$s">Pelajari lebih lanjut</a> <br/><br/>
+     Ubah setelan ini di Setelan > Privasi &amp; Keamanan > Keamanan.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Sambungan tidak aman</string>
+
+    <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[Hal ini mungkin terjadi karena masalah pada konfigurasi peladen, atau pihak tertentu mencoba menyamar menjadi peladen yang Anda tuju. <br/><br/>Jika Anda sebelumnya pernah tersambung dengan peladen ini, kesalahan ini mungkin hanya sementara.]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Seseorang mungkin berusaha menyamar menyamar laman ini dan sebaiknya Anda tidak melanjutkan.</label>
+        <br><br>
+        <label> %1$s tidak mempercayai <b>%2$s</b> karena penerbit sertifikat tidak diketahui, sertifikat ditandatangani sendiri, atau peladen tidak mengirimkan sertifikat perantara yang benar.</label>]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Tutup tab</string>
 

@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Daty do mjezyskłada kopěrować</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">Wobsah na kóždej stronje blokować</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Čitajće swoju přehladowansku historiju</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Sćehńće dataje a čitajće a změńće sćehnjensku historiju swojeho wobhladowaka</string>
     <!-- Description for downloads_open permission. -->

@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_write_description">ਕਲਿੱਪਬੋਰਡ ਵਿੱਚ ਡਾਟਾ ਇਨਪੁਟ ਕਰੋ</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">ਕਿਸੇ ਵੀ ਸਫ਼ੇ ਤੋਂ ਸਮੱਗਰੀ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਓ</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">ਤੁਹਾਡੇ ਬਰਾਊਜ਼ ਕਰਨ ਦੇ ਅਤੀਤ ਨੂੰ ਪੜ੍ਹਨ</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">ਫ਼ਾਈਲਾਂ ਡਾਊਨਲੋਡ ਕਰਨ ਅਤੇ ਬਰਾਊਜ਼ਰ ਦੇ ਡਾਊਨਲੋਡ ਅਤੀਤ ਨੂੰ ਪੜ੍ਹਨ ਅਤੇ ਸੋਧਣ</string>
     <!-- Description for downloads_open permission. -->

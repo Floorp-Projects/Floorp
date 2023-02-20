@@ -1006,12 +1006,38 @@
 
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">Wot was požadane sydło HTTPS njepodpěruje</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">Wot was požadane sydło HTTPS njepodpěruje</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Tute sydło HTTPS njepodpěruje</string>
 
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">Po standardźe %1$s pospytuje, z pomocu HTTPS za zwyšenu wěstotu zwjazać. Zo byšće tute nastajenje změnił abo wjace zhonił, dźiće k Nastajenja &gt; Priwatnosć a wěstota &gt; Wěstota.</string>
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Po standardźe %1$s pospytuje, z pomocu HTTPS za zwyšenu wěstotu zwjazać. Zo byšće tute nastajenje změnił abo wjace zhonił, dźiće k Nastajenja &gt; Priwatnosć a wěstota &gt; Wěstota.</string>
 
-    <!-- Sessions List -->
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s pospytuje HTTPS-zwisk wužiwać, hdyžkuli je móžno za wěstotu.
+ <a href="%2$s">Dalše informacije</a> <br/><br/>
+ Změńće tute nastajenje w Nastajenja > Priwatnosć a wěstota > Wěstota.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Zwisk njewěsty</string>
+
+    <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+ To móhło problem z konfiguraciju serwera być, abo něchtó pospytuje, serwer imitować. <br/><br/>
+
+ Jeli sće w zańdźenosći ze serwerom wuspěšnje zwjazany był, móže zmylk nachwilny być.
+    ]]></string>
+
+     <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Něchtó móhł spytać, sydło za swoje wudać a pokročowanje móhło riskantne być.</label>
+        <br><br>
+        <label>%1$s <b>%2$s</b> njedowěrja, dokelž jeho certifikatowy wudawar je njeznaty, certifkat je samsignowany abo serwer korektne mjezycertifikaty njesćele.</label>
+    ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Rajtark začinić</string>
 
