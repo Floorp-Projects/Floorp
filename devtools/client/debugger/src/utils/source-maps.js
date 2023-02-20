@@ -5,21 +5,30 @@
 import { isOriginalId } from "devtools/client/shared/source-map-loader/index";
 import { getSource, getLocationSource } from "../selectors";
 
-export async function getGeneratedLocation(
-  state,
-  source,
-  location,
-  sourceMapLoader
-) {
+/**
+ * For any location, return the matching generated location.
+ * If this is already a generated location, returns the same location.
+ *
+ * In additional to `SourceMapLoader.getGeneratedLocation`,
+ * this asserts that the related source is still registered in the reducer current state.
+ *
+ * @param {Object} location
+ * @param {Object} thunkArgs
+ *        Redux action thunk arguments
+ * @param {Object}
+ *        The matching generated location.
+ */
+export async function getGeneratedLocation(location, thunkArgs) {
   if (!isOriginalId(location.sourceId)) {
     return location;
   }
 
+  const { sourceMapLoader, getState } = thunkArgs;
   const { line, sourceId, column } = await sourceMapLoader.getGeneratedLocation(
     location
   );
 
-  const generatedSource = getSource(state, sourceId);
+  const generatedSource = getSource(getState(), sourceId);
   if (!generatedSource) {
     throw new Error(`Could not find generated source ${sourceId}`);
   }
@@ -40,24 +49,21 @@ export async function getOriginalLocation(generatedLocation, sourceMapLoader) {
   return sourceMapLoader.getOriginalLocation(generatedLocation);
 }
 
-export async function getMappedLocation(state, sourceMapLoader, location) {
-  const source = getLocationSource(state, location);
+export async function getMappedLocation(location, thunkArgs) {
+  const { getState } = thunkArgs;
+  const source = getLocationSource(getState(), location);
 
   if (!source) {
     throw new Error(`no source ${location.sourceId}`);
   }
 
   if (isOriginalId(location.sourceId)) {
-    const generatedLocation = await getGeneratedLocation(
-      state,
-      source,
-      location,
-      sourceMapLoader
-    );
+    const generatedLocation = await getGeneratedLocation(location, thunkArgs);
     return { location, generatedLocation };
   }
 
   const generatedLocation = location;
+  const { sourceMapLoader } = thunkArgs;
   const originalLocation = await sourceMapLoader.getOriginalLocation(
     generatedLocation
   );
@@ -73,16 +79,11 @@ export async function getMappedLocation(state, sourceMapLoader, location) {
  * If the passed location is on an original source, it gets the
  * related location in the generated source.
  */
-export async function getRelatedMapLocation(state, sourceMapLoader, location) {
-  const source = getLocationSource(state, location);
-
-  if (!source) {
-    return location;
-  }
-
+export async function getRelatedMapLocation(location, thunkArgs) {
   if (isOriginalId(location.sourceId)) {
-    return getGeneratedLocation(state, source, location, sourceMapLoader);
+    return getGeneratedLocation(location, thunkArgs);
   }
 
+  const { sourceMapLoader } = thunkArgs;
   return sourceMapLoader.getOriginalLocation(location);
 }
