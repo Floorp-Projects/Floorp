@@ -388,9 +388,6 @@ function promiseMessage(
 function promisePopupNotificationShown(aName, aAction, aWindow = window) {
   let startTime = performance.now();
   return new Promise(resolve => {
-    // In case the global webrtc indicator has stolen focus (bug 1421724)
-    aWindow.focus();
-
     aWindow.PopupNotifications.panel.addEventListener(
       "popupshown",
       function() {
