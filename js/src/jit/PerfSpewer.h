@@ -44,17 +44,10 @@ class PerfSpewer {
   struct OpcodeEntry {
     uint32_t offset = 0;
     unsigned opcode = 0;
-    jsbytecode* bytecodepc = nullptr;
 
     // This string is used to replace the opcode, to define things like
     // Prologue/Epilogue, or to add operand info.
     UniqueChars str;
-
-    OpcodeEntry(uint32_t offset_, unsigned opcode_, UniqueChars& str_,
-                jsbytecode* pc)
-        : offset(offset_), opcode(opcode_), bytecodepc(pc) {
-      str = std::move(str_);
-    }
 
     OpcodeEntry(uint32_t offset_, unsigned opcode_, UniqueChars& str_)
         : offset(offset_), opcode(opcode_) {
@@ -69,7 +62,6 @@ class PerfSpewer {
     OpcodeEntry(OpcodeEntry&& copy) {
       offset = copy.offset;
       opcode = copy.opcode;
-      bytecodepc = copy.bytecodepc;
       str = std::move(copy.str);
     }
 
@@ -93,6 +85,9 @@ class PerfSpewer {
   void saveJitCodeIRInfo(const char* desc, JitCode* code,
                          JS::JitCodeRecord* profilerRecord,
                          AutoLockPerfSpewer& lock);
+  void saveJitCodeSourceInfo(JSScript* script, JitCode* code,
+                             JS::JitCodeRecord* record,
+                             AutoLockPerfSpewer& lock);
 
   static void CollectJitCodeInfo(UniqueChars& function_name, JitCode* code,
                                  JS::JitCodeRecord*, AutoLockPerfSpewer& lock);
@@ -119,10 +114,6 @@ class IonPerfSpewer : public PerfSpewer {
  public:
   void recordInstruction(MacroAssembler& masm, LInstruction* ins);
   void saveProfile(JSContext* cx, JSScript* script, JitCode* code);
-
-  void saveJitCodeSourceInfo(JSScript* script, JitCode* code,
-                             JS::JitCodeRecord* record,
-                             AutoLockPerfSpewer& lock);
 };
 
 class BaselinePerfSpewer : public PerfSpewer {
@@ -133,10 +124,6 @@ class BaselinePerfSpewer : public PerfSpewer {
   void recordInstruction(JSContext* cx, MacroAssembler& masm, jsbytecode* pc,
                          CompilerFrameInfo& frame);
   void saveProfile(JSContext* cx, JSScript* script, JitCode* code);
-
-  void saveJitCodeSourceInfo(JSScript* script, JitCode* code,
-                             JS::JitCodeRecord* record,
-                             AutoLockPerfSpewer& lock);
 };
 
 class InlineCachePerfSpewer : public PerfSpewer {

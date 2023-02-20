@@ -3057,8 +3057,7 @@ bool BacktrackingAllocator::chooseBundleSplit(LiveBundle* bundle, bool fixed,
                                               LiveBundle* conflict) {
   bool success = false;
 
-  JitSpewIfEnabled(JitSpew_RegAlloc, "  Splitting %s ..",
-                   bundle->toString().get());
+  JitSpew(JitSpew_RegAlloc, "  Splitting %s ..", bundle->toString().get());
 
   if (!trySplitAcrossHotcode(bundle, &success)) {
     return false;
@@ -3844,9 +3843,8 @@ bool BacktrackingAllocator::createMoveGroupsFromLiveRangeTransitions() {
       LiveRange* predecessorRange =
           reg.rangeFor(start.previous(), /* preferRegister = */ true);
       if (start.subpos() == CodePosition::INPUT) {
-        JitSpewIfEnabled(JitSpew_RegAlloc, "    moveInput (%s) <- (%s)",
-                         range->toString().get(),
-                         predecessorRange->toString().get());
+        JitSpew(JitSpew_RegAlloc, "    moveInput (%s) <- (%s)",
+                range->toString().get(), predecessorRange->toString().get());
         if (!moveInput(ins->toInstruction(), predecessorRange, range,
                        reg.type())) {
           return false;
