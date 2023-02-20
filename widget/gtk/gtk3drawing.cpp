@@ -213,23 +213,6 @@ void moz_gtk_refresh() {
   ResetWidgetCache();
 }
 
-static gint moz_gtk_get_focus_outline_size(GtkStyleContext* style,
-                                           gint* focus_h_width,
-                                           gint* focus_v_width) {
-  GtkBorder border;
-  gtk_style_context_get_border(style, gtk_style_context_get_state(style),
-                               &border);
-  *focus_h_width = border.left;
-  *focus_v_width = border.top;
-  return MOZ_GTK_SUCCESS;
-}
-
-gint moz_gtk_get_focus_outline_size(gint* focus_h_width, gint* focus_v_width) {
-  GtkStyleContext* style = GetStyleContext(MOZ_GTK_ENTRY);
-  moz_gtk_get_focus_outline_size(style, focus_h_width, focus_v_width);
-  return MOZ_GTK_SUCCESS;
-}
-
 gint moz_gtk_menuitem_get_horizontal_padding(gint* horizontal_padding) {
   GtkStyleContext* style = GetStyleContext(MOZ_GTK_MENUITEM);
   gtk_style_context_get_style(style, "horizontal-padding", horizontal_padding,
@@ -933,21 +916,8 @@ static gint moz_gtk_vpaned_paint(cairo_t* cr, GdkRectangle* rect,
 static gint moz_gtk_entry_paint(cairo_t* cr, const GdkRectangle* aRect,
                                 GtkWidgetState* state, GtkStyleContext* style,
                                 WidgetNodeType widget) {
-  // StyleAppearance::FocusOutline
-  int draw_focus_outline_only = state->depressed;
   GdkRectangle rect = *aRect;
-
-  if (draw_focus_outline_only) {
-    // Inflate the given 'rect' with the focus outline size.
-    gint h, v;
-    moz_gtk_get_focus_outline_size(style, &h, &v);
-    rect.x -= h;
-    rect.width += 2 * h;
-    rect.y -= v;
-    rect.height += 2 * v;
-  } else {
-    gtk_render_background(style, cr, rect.x, rect.y, rect.width, rect.height);
-  }
+  gtk_render_background(style, cr, rect.x, rect.y, rect.width, rect.height);
 
   // Paint the border, except for 'menulist-textfield' that isn't focused:
   if (widget != MOZ_GTK_DROPDOWN_ENTRY || state->focused) {

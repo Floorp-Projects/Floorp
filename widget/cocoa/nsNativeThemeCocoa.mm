@@ -1293,20 +1293,6 @@ void nsNativeThemeCocoa::DrawDisclosureButton(CGContextRef cgContext, const HIRe
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
-void nsNativeThemeCocoa::DrawFocusOutline(CGContextRef cgContext, const HIRect& inBoxRect) {
-  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
-  NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
-  [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithCGContext:cgContext
-                                                                               flipped:YES]];
-  CGContextSaveGState(cgContext);
-  NSSetFocusRingStyle(NSFocusRingOnly);
-  NSRectFill(NSRectFromCGRect(inBoxRect));
-  CGContextRestoreGState(cgContext);
-  [NSGraphicsContext setCurrentContext:savedContext];
-
-  NS_OBJC_END_TRY_IGNORE_BLOCK;
-}
-
 typedef void (*RenderHIThemeControlFunction)(CGContextRef cgContext, const HIRect& aRenderRect,
                                              void* aData);
 
@@ -2326,9 +2312,6 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
       return Some(WidgetInfo::Button(ButtonParams{ComputeControlParams(aFrame, elementState),
                                                   ButtonType::eRegularPushButton}));
 
-    case StyleAppearance::FocusOutline:
-      return Some(WidgetInfo::FocusOutline());
-
     case StyleAppearance::MozMacHelpButton:
       return Some(WidgetInfo::Button(
           ButtonParams{ComputeControlParams(aFrame, elementState), ButtonType::eHelpButton}));
@@ -2535,13 +2518,18 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
   NS_OBJC_END_TRY_BLOCK_RETURN(Nothing());
 }
 
+static bool IsWidgetNonNative(StyleAppearance aAppearance) {
+  return nsNativeTheme::IsWidgetScrollbarPart(aAppearance) ||
+         aAppearance == StyleAppearance::FocusOutline;
+}
+
 NS_IMETHODIMP
 nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                          StyleAppearance aAppearance, const nsRect& aRect,
                                          const nsRect& aDirtyRect, DrawOverflow aDrawOverflow) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  if (IsWidgetScrollbarPart(aAppearance)) {
+  if (IsWidgetNonNative(aAppearance)) {
     return ThemeCocoa::DrawWidgetBackground(aContext, aFrame, aAppearance, aRect, aDirtyRect,
                                             aDrawOverflow);
   }
@@ -2656,10 +2644,6 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo,
         case Widget::eDropdown: {
           DropdownParams params = aWidgetInfo.Params<DropdownParams>();
           DrawDropdown(cgContext, macRect, params);
-          break;
-        }
-        case Widget::eFocusOutline: {
-          DrawFocusOutline(cgContext, macRect);
           break;
         }
         case Widget::eSpinButtons: {
@@ -2783,7 +2767,7 @@ bool nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(
     const mozilla::layers::StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager, nsIFrame* aFrame,
     StyleAppearance aAppearance, const nsRect& aRect) {
-  if (IsWidgetScrollbarPart(aAppearance)) {
+  if (IsWidgetNonNative(aAppearance)) {
     return ThemeCocoa::CreateWebRenderCommandsForWidget(aBuilder, aResources, aSc, aManager, aFrame,
                                                         aAppearance, aRect);
   }
@@ -2807,7 +2791,6 @@ bool nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(
     case StyleAppearance::Checkbox:
     case StyleAppearance::Radio:
     case StyleAppearance::Button:
-    case StyleAppearance::FocusOutline:
     case StyleAppearance::MozMacHelpButton:
     case StyleAppearance::MozMacDisclosureButtonOpen:
     case StyleAppearance::MozMacDisclosureButtonClosed:
@@ -2985,6 +2968,9 @@ bool nsNativeThemeCocoa::GetWidgetPadding(nsDeviceContext* aContext, nsIFrame* a
 
 bool nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
                                            StyleAppearance aAppearance, nsRect* aOverflowRect) {
+  if (IsWidgetNonNative(aAppearance)) {
+    return ThemeCocoa::GetWidgetOverflow(aContext, aFrame, aAppearance, aOverflowRect);
+  }
   nsIntMargin overflow;
   switch (aAppearance) {
     case StyleAppearance::Button:
@@ -3002,8 +2988,7 @@ bool nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* 
     case StyleAppearance::MozMenulistArrowButton:
     case StyleAppearance::Checkbox:
     case StyleAppearance::Radio:
-    case StyleAppearance::Tab:
-    case StyleAppearance::FocusOutline: {
+    case StyleAppearance::Tab: {
       overflow.SizeTo(kMaxFocusRingWidth, kMaxFocusRingWidth, kMaxFocusRingWidth,
                       kMaxFocusRingWidth);
       break;
@@ -3043,7 +3028,7 @@ LayoutDeviceIntSize nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPre
                                                              StyleAppearance aAppearance) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  if (IsWidgetScrollbarPart(aAppearance)) {
+  if (IsWidgetNonNative(aAppearance)) {
     return ThemeCocoa::GetMinimumWidgetSize(aPresContext, aFrame, aAppearance);
   }
 
@@ -3258,7 +3243,7 @@ nsNativeThemeCocoa::ThemeChanged() {
 
 bool nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFrame,
                                              StyleAppearance aAppearance) {
-  if (IsWidgetScrollbarPart(aAppearance)) {
+  if (IsWidgetNonNative(aAppearance)) {
     return ThemeCocoa::ThemeSupportsWidget(aPresContext, aFrame, aAppearance);
   }
   // if this is a dropdown button in a combobox the answer is always no
@@ -3349,9 +3334,6 @@ bool nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFra
       return (!LookAndFeel::UseOverlayScrollbars() && scrollFrame &&
               (!scrollFrame->GetScrollbarVisibility().isEmpty()));
     }
-
-    case StyleAppearance::FocusOutline:
-      return true;
 
     default:
       break;
