@@ -1435,8 +1435,12 @@ async function moveWindowTo(win, left, top) {
 
   // Bug 1600809: window move/resize can be async on Linux sometimes.
   // Wait so that the anchor's position is correctly measured.
-  info("Wait for window screenLeft and screenTop to be updated");
-  return waitUntil(() => win.screenLeft === left && win.screenTop === top);
+  return waitUntil(() => {
+    info(
+      `Wait for window screenLeft and screenTop to be updated: (${win.screenLeft}, ${win.screenTop})`
+    );
+    return win.screenLeft === left && win.screenTop === top;
+  });
 }
 
 function getCurrentTestFilePath() {
