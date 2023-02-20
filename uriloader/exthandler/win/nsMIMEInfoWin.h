@@ -33,6 +33,8 @@ class nsMIMEInfoWin : public nsMIMEInfoBase, public nsIPropertyBag {
   }
 
  protected:
+  nsIFile* GetDefaultApplication() { return mDefaultApplication; }
+
   virtual nsresult LoadUriInternal(nsIURI* aURI);
   virtual nsresult LaunchDefaultWithFile(nsIFile* aFile);
 

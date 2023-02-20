@@ -13,8 +13,9 @@
 
 // We override this to make sure app bundles display their pretty name (without .app suffix)
 NS_IMETHODIMP nsMIMEInfoMac::GetDefaultDescription(nsAString& aDefaultDescription) {
-  if (mDefaultApplication) {
-    nsCOMPtr<nsILocalFileMac> macFile = do_QueryInterface(mDefaultApplication);
+  nsCOMPtr<nsIFile> defaultApp = GetDefaultApplication();
+  if (defaultApp) {
+    nsCOMPtr<nsILocalFileMac> macFile = do_QueryInterface(defaultApp);
     if (macFile) {
       bool isPackage;
       (void)macFile->IsPackage(&isPackage);
@@ -49,7 +50,7 @@ nsMIMEInfoMac::LaunchWithFile(nsIFile* aFile) {
     NS_ENSURE_SUCCESS(rv, rv);
 
   } else if (mPreferredAction == useSystemDefault) {
-    application = mDefaultApplication;
+    application = GetDefaultApplication();
   } else
     return NS_ERROR_INVALID_ARG;
 
