@@ -17,8 +17,8 @@ import {
 import { createLocation } from "../utils/location";
 import { loadSourceText } from "./sources/loadSourceText";
 import {
-  getTextSearchOperation,
-  getTextSearchStatus,
+  getProjectSearchOperation,
+  getProjectSearchStatus,
 } from "../selectors/project-text-search";
 import { statusType } from "../reducers/project-text-search";
 
@@ -60,8 +60,8 @@ export function closeProjectSearch(cx) {
 export function stopOngoingSearch(cx) {
   return ({ dispatch, getState }) => {
     const state = getState();
-    const ongoingSearch = getTextSearchOperation(state);
-    const status = getTextSearchStatus(state);
+    const ongoingSearch = getProjectSearchOperation(state);
+    const status = getProjectSearchStatus(state);
     if (ongoingSearch && status !== statusType.done) {
       ongoingSearch.cancel();
       dispatch(updateSearchStatus(cx, statusType.cancelled));

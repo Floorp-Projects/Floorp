@@ -15,9 +15,9 @@ import { getRelativePath } from "../utils/sources-tree/utils";
 import { getFormattedSourceId } from "../utils/source";
 import {
   getActiveSearch,
-  getTextSearchResults,
-  getTextSearchStatus,
-  getTextSearchQuery,
+  getProjectSearchResults,
+  getProjectSearchStatus,
+  getProjectSearchQuery,
   getContext,
 } from "../selectors";
 
@@ -330,9 +330,9 @@ ProjectSearch.contextTypes = {
 const mapStateToProps = state => ({
   cx: getContext(state),
   activeSearch: getActiveSearch(state),
-  results: getTextSearchResults(state),
-  query: getTextSearchQuery(state),
-  status: getTextSearchStatus(state),
+  results: getProjectSearchResults(state),
+  query: getProjectSearchQuery(state),
+  status: getProjectSearchStatus(state),
 });
 
 export default connect(mapStateToProps, {
