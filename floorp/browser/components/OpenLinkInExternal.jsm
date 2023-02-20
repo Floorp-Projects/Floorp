@@ -196,7 +196,17 @@ async function getBrowsersOnLinux() {
                     console.error(e);
                     continue;
                 }
-                desktopFilesInfo.push(desktopFileInfo);
+                if (desktopFileInfo["fileInfo"]["Desktop Entry"]) {
+                    let mimetypes = desktopFileInfo["fileInfo"]["Desktop Entry"]["MimeType"];
+                    if (mimetypes &&
+                        (
+                            mimetypes.split(";").includes("x-scheme-handler/http") ||
+                            mimetypes.split(";").includes("x-scheme-handler/https")
+                        )
+                    ) {
+                        desktopFilesInfo.push(desktopFileInfo);
+                    }
+                }
             }
         }
     }
