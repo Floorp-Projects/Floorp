@@ -17,7 +17,6 @@ import {
   isJavaScript,
 } from "../../utils/source";
 import { isFulfilled } from "../../utils/async-value";
-import { getOriginalLocation } from "../../utils/source-maps";
 import {
   loadGeneratedSourceText,
   loadOriginalSourceText,
@@ -98,8 +97,7 @@ function createPrettySource(cx, source) {
 }
 
 function selectPrettyLocation(cx, prettySource) {
-  return async thunkArgs => {
-    const { dispatch, getState } = thunkArgs;
+  return async ({ dispatch, sourceMapLoader, getState }) => {
     let location = getSelectedLocation(getState());
 
     // If we were selecting a particular line in the minified/generated source,
@@ -109,7 +107,7 @@ function selectPrettyLocation(cx, prettySource) {
       location.line >= 1 &&
       location.sourceId == originalToGeneratedId(prettySource.id)
     ) {
-      location = await getOriginalLocation(location, thunkArgs);
+      location = await sourceMapLoader.getOriginalLocation(location);
 
       return dispatch(
         selectSpecificLocation(cx, { ...location, sourceId: prettySource.id })
