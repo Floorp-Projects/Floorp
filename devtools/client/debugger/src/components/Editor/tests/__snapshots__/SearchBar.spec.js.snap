@@ -5,6 +5,7 @@ exports[`SearchBar should render 1`] = `
   className="search-bar"
 >
   <SearchInput
+    count={0}
     expanded={false}
     handleNext={[Function]}
     handlePrev={[Function]}
@@ -27,36 +28,15 @@ exports[`SearchBar should render 1`] = `
   <div
     className="search-bottom-bar"
   >
-    <div
-      className="search-modifiers"
-    >
-      <span
-        className="pipe-divider"
-      />
-      <span
-        className="search-type-name"
-      >
-        Modifiers:
-      </span>
-      <SearchModBtn
-        className="regex-match-btn"
-        modVal="regexMatch"
-        svgName="regex-match"
-        tooltip="Regex"
-      />
-      <SearchModBtn
-        className="case-sensitive-btn"
-        modVal="caseSensitive"
-        svgName="case-match"
-        tooltip="Case sensitive"
-      />
-      <SearchModBtn
-        className="whole-word-btn"
-        modVal="wholeWord"
-        svgName="whole-word-match"
-        tooltip="Whole word"
-      />
-    </div>
+    <SearchModifiers
+      modifiers={
+        Object {
+          "get": [MockFunction],
+          "toJS": [Function],
+        }
+      }
+      onToggleSearchModifier={[Function]}
+    />
     <span
       className="pipe-divider"
     />
@@ -98,36 +78,15 @@ exports[`showErrorEmoji false if no query + no results 1`] = `
   <div
     className="search-bottom-bar"
   >
-    <div
-      className="search-modifiers"
-    >
-      <span
-        className="pipe-divider"
-      />
-      <span
-        className="search-type-name"
-      >
-        Modifiers:
-      </span>
-      <SearchModBtn
-        className="regex-match-btn"
-        modVal="regexMatch"
-        svgName="regex-match"
-        tooltip="Regex"
-      />
-      <SearchModBtn
-        className="case-sensitive-btn"
-        modVal="caseSensitive"
-        svgName="case-match"
-        tooltip="Case sensitive"
-      />
-      <SearchModBtn
-        className="whole-word-btn"
-        modVal="wholeWord"
-        svgName="whole-word-match"
-        tooltip="Whole word"
-      />
-    </div>
+    <SearchModifiers
+      modifiers={
+        Object {
+          "get": [MockFunction],
+          "toJS": [Function],
+        }
+      }
+      onToggleSearchModifier={[Function]}
+    />
     <span
       className="pipe-divider"
     />
@@ -167,36 +126,15 @@ exports[`showErrorEmoji false if query + results 1`] = `
   <div
     className="search-bottom-bar"
   >
-    <div
-      className="search-modifiers"
-    >
-      <span
-        className="pipe-divider"
-      />
-      <span
-        className="search-type-name"
-      >
-        Modifiers:
-      </span>
-      <SearchModBtn
-        className="regex-match-btn"
-        modVal="regexMatch"
-        svgName="regex-match"
-        tooltip="Regex"
-      />
-      <SearchModBtn
-        className="case-sensitive-btn"
-        modVal="caseSensitive"
-        svgName="case-match"
-        tooltip="Case sensitive"
-      />
-      <SearchModBtn
-        className="whole-word-btn"
-        modVal="wholeWord"
-        svgName="whole-word-match"
-        tooltip="Whole word"
-      />
-    </div>
+    <SearchModifiers
+      modifiers={
+        Object {
+          "get": [MockFunction],
+          "toJS": [Function],
+        }
+      }
+      onToggleSearchModifier={[Function]}
+    />
     <span
       className="pipe-divider"
     />
@@ -236,36 +174,15 @@ exports[`showErrorEmoji true if query + no results 1`] = `
   <div
     className="search-bottom-bar"
   >
-    <div
-      className="search-modifiers"
-    >
-      <span
-        className="pipe-divider"
-      />
-      <span
-        className="search-type-name"
-      >
-        Modifiers:
-      </span>
-      <SearchModBtn
-        className="regex-match-btn"
-        modVal="regexMatch"
-        svgName="regex-match"
-        tooltip="Regex"
-      />
-      <SearchModBtn
-        className="case-sensitive-btn"
-        modVal="caseSensitive"
-        svgName="case-match"
-        tooltip="Case sensitive"
-      />
-      <SearchModBtn
-        className="whole-word-btn"
-        modVal="wholeWord"
-        svgName="whole-word-match"
-        tooltip="Whole word"
-      />
-    </div>
+    <SearchModifiers
+      modifiers={
+        Object {
+          "get": [MockFunction],
+          "toJS": [Function],
+        }
+      }
+      onToggleSearchModifier={[Function]}
+    />
     <span
       className="pipe-divider"
     />
