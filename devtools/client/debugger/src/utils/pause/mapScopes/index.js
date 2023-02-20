@@ -20,6 +20,7 @@ import {
   getApplicableBindingsForOriginalPosition,
 } from "./getApplicableBindingsForOriginalPosition";
 import { getOptimizedOutGrip } from "./optimizedOut";
+import { getGeneratedLocation } from "../../source-maps";
 
 import { log } from "../../log";
 
@@ -28,8 +29,9 @@ export async function buildMappedScopes(
   content,
   frame,
   scopes,
-  { client, parserWorker, sourceMapLoader }
+  thunkArgs
 ) {
+  const { parserWorker } = thunkArgs;
   const originalAstScopes = await parserWorker.getScopes(frame.location);
   const generatedAstScopes = await parserWorker.getScopes(
     frame.generatedLocation
@@ -42,7 +44,7 @@ export async function buildMappedScopes(
   const originalRanges = await loadRangeMetadata(
     frame.location,
     originalAstScopes,
-    sourceMapLoader
+    thunkArgs
   );
 
   if (hasLineMappings(originalRanges)) {
@@ -69,8 +71,7 @@ export async function buildMappedScopes(
     originalRanges,
     originalAstScopes,
     generatedAstBindings,
-    client,
-    sourceMapLoader
+    thunkArgs
   );
 
   const globalLexicalScope = scopes
@@ -92,8 +93,7 @@ async function mapOriginalBindingsToGenerated(
   originalRanges,
   originalAstScopes,
   generatedAstBindings,
-  client,
-  sourceMapLoader
+  thunkArgs
 ) {
   const expressionLookup = {};
   const mappedOriginalScopes = [];
@@ -101,8 +101,11 @@ async function mapOriginalBindingsToGenerated(
   const cachedSourceMaps = batchScopeMappings(
     originalAstScopes,
     source,
-    sourceMapLoader
+    thunkArgs
   );
+  // Override sourceMapLoader attribute with the special cached SourceMapLoader instance
+  // in order to make it used by all functions used in this method.
+  thunkArgs = { ...thunkArgs, sourceMapLoader: cachedSourceMaps };
 
   for (const item of originalAstScopes) {
     const generatedBindings = {};
@@ -111,14 +114,13 @@ async function mapOriginalBindingsToGenerated(
       const binding = item.bindings[name];
 
       const result = await findGeneratedBinding(
-        cachedSourceMaps,
-        client,
         source,
         content,
         name,
         binding,
         originalRanges,
-        generatedAstBindings
+        generatedAstBindings,
+        thunkArgs
       );
 
       if (result) {
@@ -181,7 +183,15 @@ function hasLineMappings(ranges) {
   );
 }
 
-function batchScopeMappings(originalAstScopes, source, sourceMapLoader) {
+/**
+ * Build a special SourceMapLoader instance, based on the one passed in thunkArgs,
+ * which will both:
+ *   - preload generated ranges/locations for original locations mentioned
+ *     in originalAstScopes
+ *   - cache the requests to fetch these genereated ranges/locations
+ */
+function batchScopeMappings(originalAstScopes, source, thunkArgs) {
+  const { sourceMapLoader } = thunkArgs;
   const precalculatedRanges = new Map();
   const precalculatedLocations = new Map();
 
@@ -202,11 +212,11 @@ function batchScopeMappings(originalAstScopes, source, sourceMapLoader) {
           );
           precalculatedLocations.set(
             buildLocationKey(loc.start),
-            sourceMapLoader.getGeneratedLocation(loc.start)
+            getGeneratedLocation(loc.start, thunkArgs)
           );
           precalculatedLocations.set(
             buildLocationKey(loc.end),
-            sourceMapLoader.getGeneratedLocation(loc.end)
+            getGeneratedLocation(loc.end, thunkArgs)
           );
         }
       }
@@ -223,12 +233,13 @@ function batchScopeMappings(originalAstScopes, source, sourceMapLoader) {
       }
       return precalculatedRanges.get(key);
     },
+
     async getGeneratedLocation(pos) {
       const key = buildLocationKey(pos);
 
       if (!precalculatedLocations.has(key)) {
         log("Bad precalculated mapping");
-        return sourceMapLoader.getGeneratedLocation(pos);
+        return getGeneratedLocation(pos, thunkArgs);
       }
       return precalculatedLocations.get(key);
     },
@@ -341,14 +352,13 @@ function hasValidIdent(range, pos) {
 
 // eslint-disable-next-line complexity
 async function findGeneratedBinding(
-  sourceMapLoader,
-  client,
   source,
   content,
   name,
   originalBinding,
   originalRanges,
-  generatedAstBindings
+  generatedAstBindings,
+  thunkArgs
 ) {
   // If there are no references to the implicits, then we have no way to
   // even attempt to map it back to the original since there is no location
@@ -367,7 +377,7 @@ async function findGeneratedBinding(
       pos,
       originalBinding.type,
       locationType,
-      sourceMapLoader
+      thunkArgs
     );
     if (applicableBindings.length) {
       hadApplicableBindings = true;
@@ -384,7 +394,7 @@ async function findGeneratedBinding(
     }
     if (
       locationType !== "ref" &&
-      !(await originalRangeStartsInside(source, pos, sourceMapLoader))
+      !(await originalRangeStartsInside(pos, thunkArgs))
     ) {
       applicableBindings = [];
     }
