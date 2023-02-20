@@ -122,8 +122,7 @@ export function selectSource(cx, sourceId, sourceActorId, location = {}) {
  *        were currently selecting the other source type.
  */
 export function selectLocation(cx, location, { keepContext = true } = {}) {
-  return async thunkArgs => {
-    const { dispatch, getState, client } = thunkArgs;
+  return async ({ dispatch, getState, sourceMapLoader, client }) => {
     const currentSource = getSelectedSource(getState());
 
     if (!client) {
@@ -161,7 +160,11 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
     ) {
       // getRelatedMapLocation will just convert to the related generated/original location.
       // i.e if the original location is passed, the related generated location will be returned and vice versa.
-      location = await getRelatedMapLocation(location, thunkArgs);
+      location = await getRelatedMapLocation(
+        getState(),
+        sourceMapLoader,
+        location
+      );
       source = getLocationSource(getState(), location);
     }
 
@@ -244,14 +247,17 @@ export function selectSpecificLocation(cx, location) {
  * related location in the generated source.
  */
 export function jumpToMappedLocation(cx, location) {
-  return async function(thunkArgs) {
-    const { client, dispatch } = thunkArgs;
+  return async function({ dispatch, getState, client, sourceMapLoader }) {
     if (!client) {
       return null;
     }
 
     // Map to either an original or a generated source location
-    const pairedLocation = await getRelatedMapLocation(location, thunkArgs);
+    const pairedLocation = await getRelatedMapLocation(
+      getState(),
+      sourceMapLoader,
+      location
+    );
 
     return dispatch(selectSpecificLocation(cx, pairedLocation));
   };

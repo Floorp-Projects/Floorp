@@ -12,7 +12,6 @@ import {
 import { isFrameBlackBoxed } from "../../utils/source";
 
 import assert from "../../utils/assert";
-import { getOriginalLocation } from "../../utils/source-maps";
 
 import { isGeneratedId } from "devtools/client/shared/source-map-loader/index";
 
@@ -38,25 +37,24 @@ function getSelectedFrameId(state, thread, frames) {
   return selectedFrame?.id;
 }
 
-async function updateFrameLocation(frame, thunkArgs) {
+export function updateFrameLocation(frame, sourceMapLoader) {
   if (frame.isOriginal) {
     return Promise.resolve(frame);
   }
-  const location = await getOriginalLocation(frame.location, thunkArgs);
-  return {
+  return sourceMapLoader.getOriginalLocation(frame.location).then(loc => ({
     ...frame,
-    location,
+    location: loc,
     generatedLocation: frame.generatedLocation || frame.location,
-  };
+  }));
 }
 
-function updateFrameLocations(frames, thunkArgs) {
+function updateFrameLocations(frames, sourceMapLoader) {
   if (!frames || !frames.length) {
     return Promise.resolve(frames);
   }
 
   return Promise.all(
-    frames.map(frame => updateFrameLocation(frame, thunkArgs))
+    frames.map(frame => updateFrameLocation(frame, sourceMapLoader))
   );
 }
 
@@ -143,7 +141,7 @@ export function mapFrames(cx) {
       return;
     }
 
-    let mappedFrames = await updateFrameLocations(frames, thunkArgs);
+    let mappedFrames = await updateFrameLocations(frames, sourceMapLoader);
 
     mappedFrames = await expandFrames(mappedFrames, sourceMapLoader, getState);
 
