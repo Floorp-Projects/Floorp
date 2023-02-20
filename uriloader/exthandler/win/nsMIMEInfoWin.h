@@ -25,6 +25,8 @@ class nsMIMEInfoWin : public nsMIMEInfoBase, public nsIPropertyBag {
   NS_IMETHOD GetPossibleLocalHandlers(nsIArray** _retval) override;
   NS_IMETHOD IsCurrentAppOSDefault(bool* _retval) override;
 
+  void UpdateDefaultInfoIfStale();
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIPROPERTYBAG
 
@@ -33,7 +35,10 @@ class nsMIMEInfoWin : public nsMIMEInfoBase, public nsIPropertyBag {
   }
 
  protected:
-  nsIFile* GetDefaultApplication() { return mDefaultApplication; }
+  nsIFile* GetDefaultApplication() {
+    UpdateDefaultInfoIfStale();
+    return mDefaultApplication;
+  }
 
   virtual nsresult LoadUriInternal(nsIURI* aURI);
   virtual nsresult LaunchDefaultWithFile(nsIFile* aFile);

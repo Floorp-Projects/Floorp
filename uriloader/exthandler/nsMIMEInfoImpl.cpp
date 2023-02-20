@@ -140,10 +140,14 @@ nsMIMEInfoBase::SetPrimaryExtension(const nsACString& aExtension) {
     mExtensions.RemoveElementAt(i);
   }
   mExtensions.InsertElementAt(0, aExtension);
+  mIsDefaultAppInfoFresh = false;
   return NS_OK;
 }
 
 void nsMIMEInfoBase::AddUniqueExtension(const nsACString& aExtension) {
+  if (mExtensions.IsEmpty()) {
+    mIsDefaultAppInfoFresh = false;
+  }
   if (!aExtension.IsEmpty() &&
       !mExtensions.Contains(aExtension,
                             nsCaseInsensitiveCStringArrayComparator())) {

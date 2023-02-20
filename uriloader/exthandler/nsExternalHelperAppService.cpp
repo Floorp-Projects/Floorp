@@ -3200,6 +3200,11 @@ nsresult nsExternalHelperAppService::GetMIMEInfoFromOS(
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+nsresult nsExternalHelperAppService::UpdateDefaultAppInfo(
+    nsIMIMEInfo* aMIMEInfo) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 bool nsExternalHelperAppService::GetFileNameFromChannel(nsIChannel* aChannel,
                                                         nsAString& aFileName,
                                                         nsIURI** aURI) {

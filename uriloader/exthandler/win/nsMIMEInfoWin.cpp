@@ -343,6 +343,16 @@ nsresult nsMIMEInfoWin::LoadUriInternal(nsIURI* aURL) {
   return rv;
 }
 
+void nsMIMEInfoWin::UpdateDefaultInfoIfStale() {
+  if (!mIsDefaultAppInfoFresh) {
+    nsCOMPtr<nsIMIMEService> mime = do_GetService("@mozilla.org/mime;1");
+    if (mime) {
+      mime->UpdateDefaultAppInfo(static_cast<nsIMIMEInfo*>(this));
+    }
+    mIsDefaultAppInfoFresh = true;
+  }
+}
+
 // Given a path to a local file, return its nsILocalHandlerApp instance.
 bool nsMIMEInfoWin::GetLocalHandlerApp(const nsAString& aCommandHandler,
                                        nsCOMPtr<nsILocalHandlerApp>& aApp) {
