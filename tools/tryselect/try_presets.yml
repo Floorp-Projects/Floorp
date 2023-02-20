@@ -32,32 +32,6 @@ builds-debugopt:
     query:
         - "^build- !fuzzing !rusttests !signing !plain !asan !tsan !noopt !toolchain !upload-symbols"
 
-desktop-frontend:
-    description: >-
-        Run mochitest-browser, xpcshell, mochitest-chrome, mochitest-a11y,
-        marionette, firefox-ui-functional on all desktop platforms.
-        Excludes non-shipped/duplicate configurations like asan/tsan/msix
-        to reduce the runtime of the push as well as infra load.
-        Use with --artifact to speed up your trypush.
-        If this is green, you can be 99% sure that any frontend change will
-        stick on central.
-    selector: fuzzy
-    query:
-        # Runs 64-bit frontend-tests, plus win7. Tries to avoid running
-        # asan/tsan because they're not available as artifact builds, and
-        # rarely offer different results from debug/opt. It also avoids running
-        # msix/swr/a11y-checks/gpu/nofis/headless variants of otherwise
-        # identical tests, as again those are unlikely to show different
-        # results for frontend-only changes.
-        # This won't run 32-bit debug tests, which seems an acceptable
-        # trade-off for query complexity + runtime on infrastructure.
-        - "'browser-chrome                 'windows7 | '64 !spi !asan !tsan !msix !a11y !swr | 'linux"
-        - "'mochitest-chrome               'windows7 | '64 !spi !asan !tsan             !swr !gpu"
-        - "'xpcshell                       'windows7 | '64 !spi !asan !tsan !msix !nofis !condprof"
-        - "'browser-a11y | 'mochitest-a11y 'windows7 | '64 !spi !asan !tsan !no-cache   !swr"
-        - "'marionette                     'windows7 | '64      !asan       !source !headless !swr"
-        - "'firefox-ui-functional          'windows7 | '64      !asan !tsan"
-
 devtools:
     selector: fuzzy
     description: >-
@@ -123,16 +97,6 @@ media-full:
         - "web-platform-tests !dfpi !nofis"
         - "crashtest !wdspec !nofis"
         - "'gtest"
-
-mochitest-bc:
-    description: >-
-        Runs mochitest-browser-chrome on all Desktop platforms in both opt
-        and debug. Excludes jobs that require non-artifact builds (asan,
-        tsan, msix, etc.) and some non-default configurations. For frontend
-        only changes, use this with --artifact to speed up your trypushes.
-    query:
-        - "'browser-chrome 'windows7 | '64 !tsan !asan !msix !spi !a11y !swr | 'linux"
-    selector: fuzzy
 
 perf:
     selector: fuzzy
