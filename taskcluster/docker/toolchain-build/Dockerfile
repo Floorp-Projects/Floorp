@@ -18,6 +18,7 @@ RUN apt-get update && \
       automake \
       bison \
       build-essential \
+      cabextract \
       curl \
       clang-13 \
       cmake \
@@ -28,6 +29,10 @@ RUN apt-get update && \
       gnupg \
       jq \
       libbz2-dev \
+      libexpat1-dev \
+      libffi-dev \
+      libncursesw5-dev \
+      libsqlite3-dev \
       libssl-dev \
       libtool \
       libucl-dev \

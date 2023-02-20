@@ -1,0 +1,64 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    description: "python repack"
+    attributes:
+        local-toolchain: true
+    worker-type: b-linux-gcp
+    worker:
+        max-run-time: 7200
+    run:
+        script: build-cpython.sh
+
+linux64-python-3.7:
+    treeherder:
+        symbol: TL(python3.7)
+    run:
+        toolchain-artifact: public/build/python.tar.zst
+    fetches:
+        fetch:
+            - cpython-3.7.15
+        toolchain:
+            - linux64-clang-15
+
+linux64-python-3.8:
+    treeherder:
+        symbol: TL(python)
+    run:
+        toolchain-alias: linux64-python
+        toolchain-artifact: public/build/python.tar.zst
+    fetches:
+        fetch:
+            - cpython-3.8.10
+        toolchain:
+            - linux64-clang-15
+
+win64-python-3.8:
+    description: "cpython 3.8.10"
+    treeherder:
+        symbol: TW64(python)
+    run:
+        script: pack-cpython.sh
+        toolchain-alias: win64-python
+        toolchain-artifact: public/build/python.tar.zst
+    fetches:
+        toolchain:
+            - linux64-wine
+        fetch:
+            - cpython-3.8.10.exe
+
+macosx64-python-3.8:
+    treeherder:
+        symbol: TM(python)
+    worker-type: b-osx-1015
+    run:
+        toolchain-alias: macosx64-python
+        toolchain-artifact: public/build/python.tar.zst
+    fetches:
+        fetch:
+            - cpython-3.8.10
+        toolchain:
+            - macosx64-clang-15
+            - macosx64-sdk
