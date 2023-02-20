@@ -29,6 +29,8 @@ unified-extensions-item {
 }
 
 #unified-extensions-panel .unified-extensions-item {
+  -moz-context-properties: fill;
+  fill: currentColor;
   /* Have some spacing between items in the panel; mainly useful for when HCM is enabled. */
   padding-block: 2px;
 }
