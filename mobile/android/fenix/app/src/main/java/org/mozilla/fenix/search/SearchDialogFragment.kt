@@ -86,6 +86,7 @@ import org.mozilla.fenix.ext.getRectWithScreenLocation
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.registerForActivityResult
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.secure
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.awesomebar.AwesomeBarView
 import org.mozilla.fenix.search.awesomebar.toSearchProviderState
@@ -168,6 +169,10 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             @Deprecated("Deprecated in Java")
             override fun onBackPressed() {
                 this@SearchDialogFragment.onBackPressed()
+            }
+        }.apply {
+            if ((requireActivity() as HomeActivity).browsingModeManager.mode.isPrivate) {
+                this.secure(requireActivity())
             }
         }
     }
