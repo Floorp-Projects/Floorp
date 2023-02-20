@@ -36,7 +36,7 @@ add_task(async function() {
   // match the default browser shortcut `full-zoom-enlarge-shortcut`.
   synthesizeKeyShortcut(L10N.getStr("toolbox.zoomIn.key"));
   await waitFor(() => getZoom(devtoolsWindow) > 1);
-  is(getZoom(devtoolsWindow).toFixed(2), "1.09", "zoom level increased");
+  is(getZoom(devtoolsWindow).toFixed(2), "1.10", "zoom level increased");
 
   info("Switch tabs between about:debugging and the toolbox tab");
   gBrowser.selectedTab = tab;
@@ -47,7 +47,7 @@ add_task(async function() {
 
   is(
     getZoom(devtoolsWindow).toFixed(2),
-    "1.09",
+    "1.10",
     "zoom level was restored after switching tabs"
   );
 
@@ -61,5 +61,5 @@ add_task(async function() {
 });
 
 function getZoom(win) {
-  return win.windowUtils.fullZoom;
+  return win.browsingContext.fullZoom;
 }
