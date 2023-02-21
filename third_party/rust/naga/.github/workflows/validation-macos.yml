@@ -2,12 +2,14 @@ name: validation-macos
 on:
   pull_request:
     paths:
-    - 'tests/out/msl/*.msl'
+      - '.github/workflows/validation-macos.yml'
+      - 'tests/out/msl/*.msl'
 
 jobs:
   validate-macos:
     name: MSL
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+
       - run: make validate-msl

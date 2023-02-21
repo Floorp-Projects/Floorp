@@ -1264,11 +1264,27 @@ impl<'a, W: Write> Writer<'a, W> {
             } => (location, interpolation, sampling),
             crate::Binding::BuiltIn(built_in) => {
                 if let crate::BuiltIn::Position { invariant: true } = built_in {
-                    writeln!(
-                        self.out,
-                        "invariant {};",
-                        glsl_built_in(built_in, output, self.options.version.is_webgl())
-                    )?;
+                    match (self.options.version, self.entry_point.stage) {
+                        (
+                            Version::Embedded {
+                                version: 300,
+                                is_webgl: true,
+                            },
+                            ShaderStage::Fragment,
+                        ) => {
+                            // `invariant gl_FragCoord` is not allowed in WebGL2 and possibly
+                            // OpenGL ES in general (waiting on confirmation).
+                            //
+                            // See https://github.com/KhronosGroup/WebGL/issues/3518
+                        }
+                        _ => {
+                            writeln!(
+                                self.out,
+                                "invariant {};",
+                                glsl_built_in(built_in, output, self.options.version.is_webgl())
+                            )?;
+                        }
+                    }
                 }
                 return Ok(());
             }
@@ -1439,8 +1455,16 @@ impl<'a, W: Write> Writer<'a, W> {
             write!(this.out, " {}", &this.names[&ctx.argument_key(i as u32)])?;
 
             // Write array size
-            if let TypeInner::Array { base, size, .. } = this.module.types[arg.ty].inner {
-                this.write_array_size(base, size)?;
+            match this.module.types[arg.ty].inner {
+                TypeInner::Array { base, size, .. } => {
+                    this.write_array_size(base, size)?;
+                }
+                TypeInner::Pointer { base, .. } => {
+                    if let TypeInner::Array { base, size, .. } = this.module.types[base].inner {
+                        this.write_array_size(base, size)?;
+                    }
+                }
+                _ => {}
             }
 
             Ok(())
@@ -1559,10 +1583,7 @@ impl<'a, W: Write> Writer<'a, W> {
         if vars.peek().is_some() {
             let level = back::Level(1);
 
-            writeln!(
-                self.out,
-                "{level}if (gl_GlobalInvocationID == uvec3(0u)) {{"
-            )?;
+            writeln!(self.out, "{level}if (gl_LocalInvocationID == uvec3(0u)) {{")?;
 
             for (handle, var) in vars {
                 let name = &self.names[&NameKey::GlobalVariable(handle)];
@@ -2534,6 +2555,16 @@ impl<'a, W: Write> Writer<'a, W> {
                     crate::ImageDimension::D3 => 3,
                     crate::ImageDimension::Cube => 2,
                 };
+
+                if let crate::ImageQuery::Size { .. } = query {
+                    match components {
+                        1 => write!(self.out, "uint(")?,
+                        _ => write!(self.out, "uvec{components}(")?,
+                    }
+                } else {
+                    write!(self.out, "uint(")?;
+                }
+
                 match query {
                     crate::ImageQuery::Size { level } => {
                         match class {
@@ -2593,6 +2624,8 @@ impl<'a, W: Write> Writer<'a, W> {
                         write!(self.out, ")",)?;
                     }
                 }
+
+                write!(self.out, ")")?;
             }
             // `Unary` is pretty straightforward
             // "-" - for `Negate`
@@ -2960,6 +2993,35 @@ impl<'a, W: Write> Writer<'a, W> {
                     Mf::Transpose => "transpose",
                     Mf::Determinant => "determinant",
                     // bits
+                    Mf::CountTrailingZeros => {
+                        match *ctx.info[arg].ty.inner_with(&self.module.types) {
+                            crate::TypeInner::Vector { size, kind, .. } => {
+                                let s = back::vector_size_str(size);
+                                if let crate::ScalarKind::Uint = kind {
+                                    write!(self.out, "min(uvec{s}(findLSB(")?;
+                                    self.write_expr(arg, ctx)?;
+                                    write!(self.out, ")), uvec{s}(32u))")?;
+                                } else {
+                                    write!(self.out, "ivec{s}(min(uvec{s}(findLSB(")?;
+                                    self.write_expr(arg, ctx)?;
+                                    write!(self.out, ")), uvec{s}(32u)))")?;
+                                }
+                            }
+                            crate::TypeInner::Scalar { kind, .. } => {
+                                if let crate::ScalarKind::Uint = kind {
+                                    write!(self.out, "min(uint(findLSB(")?;
+                                    self.write_expr(arg, ctx)?;
+                                    write!(self.out, ")), 32u)")?;
+                                } else {
+                                    write!(self.out, "int(min(uint(findLSB(")?;
+                                    self.write_expr(arg, ctx)?;
+                                    write!(self.out, ")), 32u))")?;
+                                }
+                            }
+                            _ => unreachable!(),
+                        };
+                        return Ok(());
+                    }
                     Mf::CountLeadingZeros => {
                         if self.options.version.supports_integer_functions() {
                             match *ctx.info[arg].ty.inner_with(&self.module.types) {

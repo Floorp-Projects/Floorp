@@ -32,12 +32,12 @@ replace-with = "vendored-sources"
 
 [source."https://github.com/gfx-rs/naga"]
 git = "https://github.com/gfx-rs/naga"
-rev = "4b796b157cb2b67b0ab166a2238fe4e9473bfd52"
+rev = "9742f1616c3e3dd2cc9a5880616fc886c391bb9f"
 replace-with = "vendored-sources"
 
 [source."https://github.com/gfx-rs/wgpu"]
 git = "https://github.com/gfx-rs/wgpu"
-rev = "b33731c44c9dd3bfb79d889e7a699c26c3929cd3"
+rev = "74303308cd6030071889e865c40aa638214ed938"
 replace-with = "vendored-sources"
 
 [source."https://github.com/glandium/warp"]
