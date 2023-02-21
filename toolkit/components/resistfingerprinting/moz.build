@@ -24,5 +24,3 @@ EXPORTS.mozilla += [
 EXTRA_JS_MODULES += [
     "RFPHelper.jsm",
 ]
-
-REQUIRES_UNIFIED_BUILD = True
