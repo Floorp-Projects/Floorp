@@ -10,9 +10,11 @@
 
 #include "modules/rtp_rtcp/include/receive_statistics.h"
 
+#include <cstdint>
 #include <memory>
 #include <vector>
 
+#include "api/units/time_delta.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "rtc_base/random.h"
 #include "system_wrappers/include/clock.h"
@@ -576,6 +578,33 @@ TEST_P(ReceiveStatisticsTest, LastPacketReceivedTimestamp) {
   counters = receive_statistics_->GetStatistician(kSsrc1)
                  ->GetReceiveStreamDataCounters();
   EXPECT_EQ(45, counters.last_packet_received_timestamp_ms);
+}
+
+TEST_P(ReceiveStatisticsTest, SimpleJitterComputation) {
+  const int kMsPerPacket = 20;
+  const int kCodecSampleRate = 48'000;
+  const int kSamplesPerPacket = kMsPerPacket * kCodecSampleRate / 1'000;
+  const int kLateArrivalDeltaMs = 100;
+  const int kLateArrivalDeltaSamples =
+      kLateArrivalDeltaMs * kCodecSampleRate / 1'000;
+
+  packet1_.set_payload_type_frequency(kCodecSampleRate);
+  packet1_.SetSequenceNumber(1);
+  packet1_.SetTimestamp(0);
+  receive_statistics_->OnRtpPacket(packet1_);
+  packet1_.SetSequenceNumber(2);
+  packet1_.SetTimestamp(kSamplesPerPacket);
+  // Arrives 100 ms late.
+  clock_.AdvanceTimeMilliseconds(kMsPerPacket + kLateArrivalDeltaMs);
+  receive_statistics_->OnRtpPacket(packet1_);
+
+  StreamStatistician* statistician =
+      receive_statistics_->GetStatistician(kSsrc1);
+  // See jitter caluculation in https://www.rfc-editor.org/rfc/rfc3550 6.4.1.
+  const uint32_t expected_jitter = (kLateArrivalDeltaSamples) / 16;
+  EXPECT_EQ(expected_jitter, statistician->GetStats().jitter);
+  EXPECT_EQ(webrtc::TimeDelta::Seconds(expected_jitter) / kCodecSampleRate,
+            statistician->GetStats().interarrival_jitter);
 }
 
 }  // namespace
