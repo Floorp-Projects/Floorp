@@ -108,6 +108,9 @@ class StreamStatisticianImpl : public StreamStatisticianImplInterface {
   // Counter values when we sent the last report.
   int32_t last_report_cumulative_loss_;
   int64_t last_report_seq_max_;
+
+  // The sample frequency of the last received packet.
+  int last_payload_type_frequency_;
 };
 
 // Thread-safe implementation of StreamStatisticianImplInterface.

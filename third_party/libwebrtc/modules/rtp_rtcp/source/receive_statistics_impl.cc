@@ -16,6 +16,7 @@
 #include <utility>
 #include <vector>
 
+#include "api/units/time_delta.h"
 #include "modules/remote_bitrate_estimator/test/bwe_test_logging.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/report_block.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
@@ -33,8 +34,7 @@ constexpr int64_t kStatisticsProcessIntervalMs = 1000;
 
 StreamStatistician::~StreamStatistician() {}
 
-StreamStatisticianImpl::StreamStatisticianImpl(uint32_t ssrc,
-                                               Clock* clock,
+StreamStatisticianImpl::StreamStatisticianImpl(uint32_t ssrc, Clock* clock,
                                                int max_reordering_threshold)
     : ssrc_(ssrc),
       clock_(clock),
@@ -54,7 +54,8 @@ StreamStatisticianImpl::StreamStatisticianImpl(uint32_t ssrc,
       received_seq_first_(-1),
       received_seq_max_(-1),
       last_report_cumulative_loss_(0),
-      last_report_seq_max_(-1) {}
+      last_report_seq_max_(-1),
+      last_payload_type_frequency_(0) {}
 
 StreamStatisticianImpl::~StreamStatisticianImpl() = default;
 
@@ -141,6 +142,7 @@ void StreamStatisticianImpl::UpdateCounters(const RtpPacketReceived& packet) {
   }
   last_received_timestamp_ = packet.Timestamp();
   last_receive_time_ms_ = now_ms;
+  last_payload_type_frequency_ = packet.payload_type_frequency();
 }
 
 void StreamStatisticianImpl::UpdateJitter(const RtpPacketReceived& packet,
@@ -178,6 +180,12 @@ RtpReceiveStats StreamStatisticianImpl::GetStats() const {
   stats.packets_lost = cumulative_loss_;
   // Note: internal jitter value is in Q4 and needs to be scaled by 1/16.
   stats.jitter = jitter_q4_ >> 4;
+  if (last_payload_type_frequency_ > 0) {
+    // Divide value in fractional seconds by frequency to get jitter in
+    // fractional seconds.
+    stats.interarrival_jitter =
+        webrtc::TimeDelta::Seconds(stats.jitter) / last_payload_type_frequency_;
+  }
   if (receive_counters_.last_packet_received_timestamp_ms.has_value()) {
     stats.last_packet_received_timestamp_ms =
         *receive_counters_.last_packet_received_timestamp_ms +
