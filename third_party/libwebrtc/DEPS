@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': 'a1d4dce2db31d73ee1215d886a14af0019e3c2eb',
+  'chromium_revision': '9970bfaf3635bbaacf8c1fe91f809d9e4903102e',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -40,7 +40,7 @@ vars = {
 deps = {
   # TODO(kjellander): Move this to be Android-only.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@14c0da4c008a3fde1dca2387b445f7e977723d22',
+    'https://chromium.googlesource.com/chromium/src/base@1cbb338b1c607de3019251d026012c150edf1467',
   'src/build':
     'https://chromium.googlesource.com/chromium/src/build@2cf254f018ff21ecffb42da96ea818eff3afb980',
   'src/buildtools':
@@ -55,15 +55,15 @@ deps = {
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@d3c9e2716cab2e5b8a85b3a460241d2c39acd0a7',
+    'https://chromium.googlesource.com/chromium/src/testing@63ba9bd34f59344c066cf15def9ed23e6a1830b4',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@6d66db961ea902dc5fbdb2593dc52d369e866de6',
+    'https://chromium.googlesource.com/chromium/src/third_party@5f6d1ab1d78c2c2058822c00f98e4a79343bc768',
 
   'src/buildtools/linux64': {
     'packages': [
       {
         'package': 'gn/gn/linux-${{arch}}',
-        'version': 'git_revision:b9c6c19be95a3863e02f00f1fe403b2502e345b6',
+        'version': 'git_revision:57c352b2b03461c24b19c678c61d7aeacc6981f4',
       }
     ],
     'dep_type': 'cipd',
@@ -73,7 +73,7 @@ deps = {
     'packages': [
       {
         'package': 'gn/gn/mac-${{arch}}',
-        'version': 'git_revision:b9c6c19be95a3863e02f00f1fe403b2502e345b6',
+        'version': 'git_revision:57c352b2b03461c24b19c678c61d7aeacc6981f4',
       }
     ],
     'dep_type': 'cipd',
@@ -83,7 +83,7 @@ deps = {
     'packages': [
       {
         'package': 'gn/gn/windows-amd64',
-        'version': 'git_revision:b9c6c19be95a3863e02f00f1fe403b2502e345b6',
+        'version': 'git_revision:57c352b2b03461c24b19c678c61d7aeacc6981f4',
       }
     ],
     'dep_type': 'cipd',
@@ -175,7 +175,7 @@ deps = {
   'src/third_party/crc32c/src':
     'https://chromium.googlesource.com/external/github.com/google/crc32c.git@fa5ade41ee480003d9c5af6f43567ba22e4e17e6',
   'src/third_party/depot_tools':
-    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@77e64ae61ebda9e20f1eee461149e601c65b0a8f',
+    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@c950858a721bfa70ac7b4aa3faefeb42f3a3937a',
   'src/third_party/ffmpeg':
     'https://chromium.googlesource.com/chromium/third_party/ffmpeg.git@b9f01c3c54576330b2cf8918c54d5ee5be8faefe',
   'src/third_party/grpc/src': {
@@ -259,7 +259,7 @@ deps = {
 
   # Used by boringssl.
   'src/third_party/nasm': {
-      'url': 'https://chromium.googlesource.com/chromium/deps/nasm.git@9215e8e1d0fe474ffd3e16c1a07a0f97089e6224'
+      'url': 'https://chromium.googlesource.com/chromium/deps/nasm.git@5fd9246276814b5ebb7e56b821cedeecab9b674d'
   },
 
   'src/third_party/openh264/src':
@@ -292,7 +292,7 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@51ab63cbfc2cd5160f467237f980d4b814a1e117',
+    'https://chromium.googlesource.com/chromium/src/tools@72185140dd94351f8e1ed2810cb6bd6b6d79f08b',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
