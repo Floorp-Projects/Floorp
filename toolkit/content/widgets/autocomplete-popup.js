@@ -404,6 +404,7 @@
             "autofill-clear-button",
             "autofill-insecureWarning",
             "generatedPassword",
+            "generic",
             "importableLearnMore",
             "importableLogins",
             "insecureWarning",
