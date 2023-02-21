@@ -40,3 +40,5 @@ MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
 MOCHITEST_CHROME_MANIFESTS += ["tests/chrome.ini"]
 
 XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
+
+REQUIRES_UNIFIED_BUILD = True
