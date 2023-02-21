@@ -273,7 +273,7 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
    *                             with the caret point.
    * @param aEditingHost        The editing host.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditActionResult, nsresult>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CaretPoint, nsresult>
   HandleDeleteAtomicContent(HTMLEditor& aHTMLEditor, nsIContent& aAtomicContent,
                             const EditorDOMPoint& aCaretPoint,
                             const WSRunScanner& aWSRunScannerAtCaret,
@@ -1966,13 +1966,23 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAroundCollapsedRanges(
           "removable atomic content");
       return Err(NS_ERROR_FAILURE);
     }
-    Result<EditActionResult, nsresult> result = HandleDeleteAtomicContent(
+    Result<CaretPoint, nsresult> caretPointOrError = HandleDeleteAtomicContent(
         aHTMLEditor, *atomicContent, aWSRunScannerAtCaret.ScanStartRef(),
         aWSRunScannerAtCaret, aEditingHost);
+    if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
+      NS_WARNING("AutoDeleteRangesHandler::HandleDeleteAtomicContent() failed");
+      return caretPointOrError.propagateErr();
+    }
+    nsresult rv = caretPointOrError.unwrap().SuggestCaretPointTo(
+        aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
+      return Err(rv);
+    }
     NS_WARNING_ASSERTION(
-        result.isOk(),
-        "AutoDeleteRangesHandler::HandleDeleteAtomicContent() failed");
-    return result;
+        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+        "CaretPoint::SuggestCaretPointTo() failed, but ignored");
+    return EditActionResult::HandledResult();
   }
 
   if (aScanFromCaretPointResult.ReachedHRElement()) {
@@ -2439,13 +2449,23 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteHRElement(
     return canDeleteHRElement.propagateErr();
   }
   if (canDeleteHRElement.inspect()) {
-    Result<EditActionResult, nsresult> result =
+    Result<CaretPoint, nsresult> caretPointOrError =
         HandleDeleteAtomicContent(aHTMLEditor, aHRElement, aCaretPoint,
                                   aWSRunScannerAtCaret, aEditingHost);
+    if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
+      NS_WARNING("AutoDeleteRangesHandler::HandleDeleteAtomicContent() failed");
+      return caretPointOrError.propagateErr();
+    }
+    nsresult rv = caretPointOrError.unwrap().SuggestCaretPointTo(
+        aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
+      return Err(rv);
+    }
     NS_WARNING_ASSERTION(
-        result.isOk(),
-        "AutoDeleteRangesHandler::HandleDeleteAtomicContent() failed");
-    return result;
+        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+        "CaretPoint::SuggestCaretPointTo() failed, but ignored");
+    return EditActionResult::HandledResult();
   }
 
   // Go to the position after the <hr>, but to the end of the <hr> line
@@ -2562,7 +2582,7 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteAtomicContent(
   return rv;
 }
 
-Result<EditActionResult, nsresult>
+Result<CaretPoint, nsresult>
 HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAtomicContent(
     HTMLEditor& aHTMLEditor, nsIContent& aAtomicContent,
     const EditorDOMPoint& aCaretPoint, const WSRunScanner& aWSRunScannerAtCaret,
@@ -2571,7 +2591,10 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAtomicContent(
   MOZ_ASSERT(!HTMLEditUtils::IsInvisibleBRElement(aAtomicContent));
   MOZ_ASSERT(&aAtomicContent != aWSRunScannerAtCaret.GetEditingHost());
 
+  EditorDOMPoint pointToPutCaret = aCaretPoint;
   {
+    AutoTrackDOMPoint trackPointToPutCaret(aHTMLEditor.RangeUpdaterRef(),
+                                           &pointToPutCaret);
     Result<CaretPoint, nsresult> caretPointOrError =
         WhiteSpaceVisibilityKeeper::DeleteContentNodeAndJoinTextNodesAroundIt(
             aHTMLEditor, aAtomicContent, aCaretPoint, aEditingHost);
@@ -2579,46 +2602,39 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAtomicContent(
       NS_WARNING(
           "WhiteSpaceVisibilityKeeper::"
           "DeleteContentNodeAndJoinTextNodesAroundIt() failed");
-      return caretPointOrError.propagateErr();
+      return caretPointOrError;
     }
-    nsresult rv = caretPointOrError.unwrap().SuggestCaretPointTo(
-        aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
-                      SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                      SuggestCaret::AndIgnoreTrivialError});
-    if (NS_FAILED(rv)) {
-      NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
-      return Err(rv);
+    trackPointToPutCaret.FlushAndStopTracking();
+    caretPointOrError.unwrap().MoveCaretPointTo(
+        pointToPutCaret, aHTMLEditor,
+        {SuggestCaret::OnlyIfHasSuggestion,
+         SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
+    if (NS_WARN_IF(!pointToPutCaret.IsSet())) {
+      return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
     }
-    NS_WARNING_ASSERTION(
-        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-        "CaretPoint::SuggestCaretPointTo() failed, but ignored");
   }
 
-  const auto newCaretPosition =
-      aHTMLEditor.GetFirstSelectionStartPoint<EditorDOMPoint>();
-  if (MOZ_UNLIKELY(!newCaretPosition.IsSet())) {
-    NS_WARNING("There was no selection range");
-    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  {
+    AutoTrackDOMPoint trackPointToPutCaret(aHTMLEditor.RangeUpdaterRef(),
+                                           &pointToPutCaret);
+    Result<CaretPoint, nsresult> caretPointOrError =
+        aHTMLEditor.InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
+            pointToPutCaret);
+    if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
+      NS_WARNING(
+          "HTMLEditor::"
+          "InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary()"
+          " failed");
+      return caretPointOrError;
+    }
+    trackPointToPutCaret.FlushAndStopTracking();
+    caretPointOrError.unwrap().MoveCaretPointTo(
+        pointToPutCaret, aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion});
+    if (NS_WARN_IF(!pointToPutCaret.IsSet())) {
+      return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+    }
   }
-
-  Result<CaretPoint, nsresult> caretPointOrError =
-      aHTMLEditor.InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
-          newCaretPosition);
-  if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
-    NS_WARNING(
-        "HTMLEditor::InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary()"
-        " failed");
-    return caretPointOrError.propagateErr();
-  }
-  nsresult rv = caretPointOrError.unwrap().SuggestCaretPointTo(
-      aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion});
-  if (NS_FAILED(rv)) {
-    NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
-    return Err(rv);
-  }
-  NS_WARNING_ASSERTION(rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-                       "CaretPoint::SuggestCaretPointTo() failed, but ignored");
-  return EditActionResult::HandledResult();
+  return CaretPoint(std::move(pointToPutCaret));
 }
 
 bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
