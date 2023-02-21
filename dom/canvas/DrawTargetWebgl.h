@@ -407,7 +407,7 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   bool StrokeLineAccel(const Point& aStart, const Point& aEnd,
                        const Pattern& aPattern,
                        const StrokeOptions& aStrokeOptions,
-                       const DrawOptions& aOptions);
+                       const DrawOptions& aOptions, bool aClosed = false);
   void StrokeLine(const Point& aStart, const Point& aEnd,
                   const Pattern& aPattern,
                   const StrokeOptions& aStrokeOptions = StrokeOptions(),

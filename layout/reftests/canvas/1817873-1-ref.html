@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<canvas id="c" width="200" height="100"></canvas>
+<script>
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
+ctx.strokeStyle = 'green';
+ctx.lineWidth = '10';
+ctx.beginPath();
+ctx.moveTo(20, 20);
+ctx.lineTo(20, 30);
+ctx.closePath();
+ctx.stroke();
+</script>
