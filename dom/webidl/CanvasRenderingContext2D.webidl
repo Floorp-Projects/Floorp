@@ -321,6 +321,9 @@ interface mixin CanvasPathMethods {
   [LenientFloat]
   undefined rect(double x, double y, double w, double h);
 
+  [Throws]
+  undefined roundRect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h, optional (unrestricted double or DOMPointInit or sequence<(unrestricted double or DOMPointInit)>) radii = 0);
+
   [Throws, LenientFloat]
   undefined arc(double x, double y, double radius, double startAngle, double endAngle, optional boolean anticlockwise = false);
 

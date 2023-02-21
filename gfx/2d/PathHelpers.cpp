@@ -28,8 +28,8 @@ void AppendRectToPath(PathBuilder* aPathBuilder, const Rect& aRect,
 }
 
 void AppendRoundedRectToPath(PathBuilder* aPathBuilder, const Rect& aRect,
-                             const RectCornerRadii& aRadii,
-                             bool aDrawClockwise) {
+                             const RectCornerRadii& aRadii, bool aDrawClockwise,
+                             const Maybe<Matrix>& aTransform) {
   // For CW drawing, this looks like:
   //
   //  ...******0**      1    C
@@ -122,11 +122,18 @@ void AppendRoundedRectToPath(PathBuilder* aPathBuilder, const Rect& aRect,
   Point pc, p0, p1, p2, p3;
 
   if (aDrawClockwise) {
-    aPathBuilder->MoveTo(
-        Point(aRect.X() + aRadii[eCornerTopLeft].width, aRect.Y()));
+    Point pt(aRect.X() + aRadii[eCornerTopLeft].width, aRect.Y());
+    if (aTransform) {
+      pt = aTransform->TransformPoint(pt);
+    }
+    aPathBuilder->MoveTo(pt);
   } else {
-    aPathBuilder->MoveTo(Point(
-        aRect.X() + aRect.Width() - aRadii[eCornerTopRight].width, aRect.Y()));
+    Point pt(aRect.X() + aRect.Width() - aRadii[eCornerTopRight].width,
+             aRect.Y());
+    if (aTransform) {
+      pt = aTransform->TransformPoint(pt);
+    }
+    aPathBuilder->MoveTo(pt);
   }
 
   for (int i = 0; i < 4; ++i) {
@@ -154,10 +161,22 @@ void AppendRoundedRectToPath(PathBuilder* aPathBuilder, const Rect& aRect,
       p2.x = p3.x - alpha * cornerMults[i3].a * aRadii[c].width;
       p2.y = p3.y - alpha * cornerMults[i3].b * aRadii[c].height;
 
-      aPathBuilder->LineTo(p0);
-      aPathBuilder->BezierTo(p1, p2, p3);
+      if (aTransform.isNothing()) {
+        aPathBuilder->LineTo(p0);
+        aPathBuilder->BezierTo(p1, p2, p3);
+      } else {
+        const Matrix& transform = *aTransform;
+        aPathBuilder->LineTo(transform.TransformPoint(p0));
+        aPathBuilder->BezierTo(transform.TransformPoint(p1),
+                               transform.TransformPoint(p2),
+                               transform.TransformPoint(p3));
+      }
     } else {
-      aPathBuilder->LineTo(pc);
+      if (aTransform.isNothing()) {
+        aPathBuilder->LineTo(pc);
+      } else {
+        aPathBuilder->LineTo(aTransform->TransformPoint(pc));
+      }
     }
   }
 

@@ -227,10 +227,9 @@ inline already_AddRefed<Path> MakePathForRect(const DrawTarget& aDrawTarget,
  *                 start at the right of the top left edge and draw counter-
  *                 clockwise.
  */
-GFX2D_API void AppendRoundedRectToPath(PathBuilder* aPathBuilder,
-                                       const Rect& aRect,
-                                       const RectCornerRadii& aRadii,
-                                       bool aDrawClockwise = true);
+GFX2D_API void AppendRoundedRectToPath(
+    PathBuilder* aPathBuilder, const Rect& aRect, const RectCornerRadii& aRadii,
+    bool aDrawClockwise = true, const Maybe<Matrix>& aTransform = Nothing());
 
 inline already_AddRefed<Path> MakePathForRoundedRect(
     const DrawTarget& aDrawTarget, const Rect& aRect,

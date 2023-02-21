@@ -19,6 +19,9 @@ namespace dom {
 enum class CanvasWindingRule : uint8_t;
 struct DOMMatrix2DInit;
 
+class
+    UnrestrictedDoubleOrDOMPointInitOrUnrestrictedDoubleOrDOMPointInitSequence;
+
 class CanvasPath final : public nsWrapperCache {
  public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(CanvasPath)
@@ -44,6 +47,11 @@ class CanvasPath final : public nsWrapperCache {
   void ArcTo(double x1, double y1, double x2, double y2, double radius,
              ErrorResult& error);
   void Rect(double x, double y, double w, double h);
+  void RoundRect(
+      double aX, double aY, double aW, double aH,
+      const UnrestrictedDoubleOrDOMPointInitOrUnrestrictedDoubleOrDOMPointInitSequence&
+          aRadii,
+      ErrorResult& aError);
   void Arc(double x, double y, double radius, double startAngle,
            double endAngle, bool anticlockwise, ErrorResult& error);
   void Ellipse(double x, double y, double radiusX, double radiusY,
