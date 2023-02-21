@@ -113,6 +113,7 @@ let FormAutofillStatus = {
     Services.wm.addListener(this);
 
     Services.telemetry.setEventRecordingEnabled("creditcard", true);
+    Services.telemetry.setEventRecordingEnabled("address", true);
   },
 
   /**
