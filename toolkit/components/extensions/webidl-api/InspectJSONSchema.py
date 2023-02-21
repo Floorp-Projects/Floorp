@@ -3,7 +3,6 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import argparse
-import os
 import sys
 
 # Sanity check (ensure the script has been executed through `mach python`).
@@ -19,11 +18,6 @@ except ModuleNotFoundError or AttributeError:
         file=sys.stderr,
     )
     sys.exit(1)
-
-# Add the current directory to the module path (needed to be able to load
-# GenerateWebIDLBindings without having to make it recognized as a python package).
-module_dir = os.path.dirname(__file__)
-sys.path.append(module_dir)
 
 from GenerateWebIDLBindings import load_and_parse_JSONSchema, set_logging_level
 
