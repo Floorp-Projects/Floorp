@@ -34,7 +34,11 @@ class Actor extends Pool {
     // Will contain the actor's ID
     this.actorID = null;
 
-    this.requestTypes = generateRequestTypes(spec);
+    // Ensure computing requestTypes only one time per class
+    const proto = Object.getPrototypeOf(this);
+    if (!proto.requestTypes) {
+      proto.requestTypes = generateRequestTypes(spec);
+    }
 
     // Forward events to the connection.
     if (spec.events) {
