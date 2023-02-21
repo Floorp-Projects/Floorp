@@ -29,7 +29,7 @@ class PoweredByNotificationTest {
             ),
         )
 
-        val feature = PoweredByNotification(testContext, store, "session-id")
+        val feature = PoweredByNotification(testContext, store, "session-id", mockk())
         feature.onResume(mockk())
     }
 
@@ -44,13 +44,13 @@ class PoweredByNotificationTest {
             ),
         )
 
-        val feature = PoweredByNotification(testContext, store, "session-id")
+        val feature = PoweredByNotification(testContext, store, "session-id", mockk())
         feature.onResume(mockk())
     }
 
     @Test
     fun `unregister receiver on pause`() {
-        val feature = PoweredByNotification(testContext, mockk(), "session-id")
+        val feature = PoweredByNotification(testContext, mockk(), "session-id", mockk())
         feature.onPause(mockk())
     }
 }
