@@ -7,4 +7,4 @@
 == backface-both-sides.yaml backface-both-sides-ref.yaml
 == backface-vis-3d.yaml blank.yaml
 == backface-flatten.yaml blank.yaml
-fuzzy(1,19) == backface-perspective.yaml backface-perspective-ref.yaml
+== backface-perspective.yaml backface-perspective-ref.yaml
