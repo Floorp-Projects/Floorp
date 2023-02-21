@@ -245,6 +245,8 @@ bool FindTextSection(DynamicImage& image) {
 
   uint32_t num_data_sections = 0;
   const mach_section_type *data_sections = NULL;
+  uint32_t num_data_dirty_sections = 0;
+  const mach_section_type *data_dirty_sections = NULL;
   bool found_text_section = false;
   bool found_dylib_id_command = false;
   for (unsigned int i = 0; cmd && (i < header->ncmds); ++i) {
@@ -256,6 +258,19 @@ bool FindTextSection(DynamicImage& image) {
         if (!strcmp(seg->segname, "__DATA")) {
           num_data_sections = seg->nsects;
           data_sections = reinterpret_cast<const mach_section_type *>(seg + 1);
+        }
+      }
+    }
+
+    if (!data_dirty_sections) {
+      if (cmd->cmd == MachBits::segment_load_command) {
+        const mach_segment_command_type *seg =
+          reinterpret_cast<const mach_segment_command_type *>(cmd);
+
+        if (!strcmp(seg->segname, "__DATA_DIRTY")) {
+          num_data_dirty_sections = seg->nsects;
+          data_dirty_sections =
+            reinterpret_cast<const mach_section_type *>(seg + 1);
         }
       }
     }
@@ -290,7 +305,8 @@ bool FindTextSection(DynamicImage& image) {
       }
     }
 
-    if (found_dylib_id_command && found_text_section && data_sections) {
+    if (found_dylib_id_command && found_text_section &&
+        data_sections && data_dirty_sections) {
       break;
     }
 
@@ -303,15 +319,25 @@ bool FindTextSection(DynamicImage& image) {
   }
 
   // The __DYLD,__crash_info section may not be accessible in child process
-  // modules that aren't in the dyld shared cache.
-  if (is_in_shared_cache) {
+  // modules that aren't dyld or in the dyld shared cache.
+  if (image.GetIsDyld() || is_in_shared_cache) {
     for (unsigned int i = 0; i < num_data_sections; ++i) {
       if (!strcmp(data_sections[i].sectname, "__crash_info")) {
         ReadTaskMemory(image.task_,
                        data_sections[i].addr + image.slide_,
                        data_sections[i].size,
                        image.crash_info_);
-        break;
+        return retval;
+      }
+    }
+    // __crash_info might be in the __DATA_DIRTY segment.
+    for (unsigned int i = 0; i < num_data_dirty_sections; ++i) {
+      if (!strcmp(data_dirty_sections[i].sectname, "__crash_info")) {
+        ReadTaskMemory(image.task_,
+                       data_dirty_sections[i].addr + image.slide_,
+                       data_dirty_sections[i].size,
+                       image.crash_info_);
+        return retval;
       }
     }
   }
@@ -402,11 +428,73 @@ uint64_t DynamicImages::GetDyldAllImageInfosPointer() {
 // This code was written using dyld_debug.c (from Darwin) as a guide.
 
 template<typename MachBits>
+void ReadOneImageInfo(DynamicImages& images, uint64_t image_address,
+                      uint64_t file_path_address, uint64_t file_mod_date,
+                      uint64_t shared_cache_slide, bool is_dyld) {
+  typedef typename MachBits::mach_header_type mach_header_type;
+
+  // First read just the mach_header from the image in the task.
+  vector<uint8_t> mach_header_bytes;
+  if (ReadTaskMemory(images.task_,
+                     image_address,
+                     sizeof(mach_header_type),
+                     mach_header_bytes) != KERN_SUCCESS) {
+    return;  // bail on this dynamic image
+  }
+
+  mach_header_type *header =
+    reinterpret_cast<mach_header_type*>(&mach_header_bytes[0]);
+  if (header->magic != MachBits::magic) {
+    return;
+  }
+
+  cpu_subtype_t cpusubtype = (header->cpusubtype & ~CPU_SUBTYPE_MASK);
+
+  // Now determine the total amount necessary to read the header
+  // plus all of the load commands.
+  size_t header_size = sizeof(mach_header_type) + header->sizeofcmds;
+
+  if (ReadTaskMemory(images.task_,
+                     image_address,
+                     header_size,
+                     mach_header_bytes) != KERN_SUCCESS) {
+    return;
+  }
+
+  // Read the file name from the task's memory space.
+  string file_path;
+  if (file_path_address) {
+    // Although we're reading kMaxStringLength bytes, it's copied in the
+    // the DynamicImage constructor below with the correct string length,
+    // so it's not really wasting memory.
+    file_path = ReadTaskString(images.task_, file_path_address);
+  }
+
+  // Create an object representing this image and add it to our list.
+  DynamicImage *new_image;
+  new_image = new DynamicImage(&mach_header_bytes[0],
+                               header_size,
+                               image_address,
+                               file_path,
+                               static_cast<uintptr_t>(file_mod_date),
+                               images.task_,
+                               images.cpu_type_,
+                               cpusubtype,
+                               shared_cache_slide,
+                               is_dyld);
+
+  if (new_image->IsValid()) {
+    images.image_list_.push_back(DynamicImageRef(new_image));
+  } else {
+    delete new_image;
+  }
+}
+
+template<typename MachBits>
 void ReadImageInfo(DynamicImages& images,
                    uint64_t image_list_address) {
   typedef typename MachBits::dyld_image_info dyld_image_info;
   typedef typename MachBits::dyld_all_image_infos dyld_all_image_infos;
-  typedef typename MachBits::mach_header_type mach_header_type;
 
   // Read the structure inside of dyld that contains information about
   // loaded images.  We're reading from the desired task's address space.
@@ -418,8 +506,9 @@ void ReadImageInfo(DynamicImages& images,
   if (ReadTaskMemory(images.task_,
                      image_list_address,
                      sizeof(dyld_all_image_infos),
-                     dyld_all_info_bytes) != KERN_SUCCESS)
+                     dyld_all_info_bytes) != KERN_SUCCESS) {
     return;
+  }
 
   dyld_all_image_infos *dyldInfo =
     reinterpret_cast<dyld_all_image_infos*>(&dyld_all_info_bytes[0]);
@@ -430,81 +519,47 @@ void ReadImageInfo(DynamicImages& images,
   // Read an array of dyld_image_info structures each containing
   // information about a loaded image.
   vector<uint8_t> dyld_info_array_bytes;
-    if (ReadTaskMemory(images.task_,
-                       dyldInfo->infoArray,
-                       count * sizeof(dyld_image_info),
-                       dyld_info_array_bytes) != KERN_SUCCESS)
-      return;
+  if (ReadTaskMemory(images.task_,
+                     dyldInfo->infoArray,
+                     count * sizeof(dyld_image_info),
+                     dyld_info_array_bytes) != KERN_SUCCESS) {
+    return;
+  }
 
-    dyld_image_info *infoArray =
-        reinterpret_cast<dyld_image_info*>(&dyld_info_array_bytes[0]);
-    images.image_list_.reserve(count);
+  dyld_image_info *infoArray =
+    reinterpret_cast<dyld_image_info*>(&dyld_info_array_bytes[0]);
+  // Add room for dyld at the end
+  images.image_list_.reserve(count + 1);
 
-    for (int i = 0; i < count; ++i) {
-      dyld_image_info &info = infoArray[i];
+  for (int i = 0; i < count; ++i) {
+    dyld_image_info &info = infoArray[i];
+    ReadOneImageInfo<MachBits>(images, info.load_address_,
+                               info.file_path_, info.file_mod_date_,
+                               dyldInfo->sharedCacheSlide,
+                               /* is_dyld */ false);
+  }
 
-      // First read just the mach_header from the image in the task.
-      vector<uint8_t> mach_header_bytes;
-      if (ReadTaskMemory(images.task_,
-                         info.load_address_,
-                         sizeof(mach_header_type),
-                         mach_header_bytes) != KERN_SUCCESS)
-        continue;  // bail on this dynamic image
+  // Add an image for dyld itself. It doesn't appear in the standard list of
+  // modules.
+  uint64_t dyld_address = (uint64_t) dyldInfo->dyldImageLoadAddress;
+  if (dyld_address) {
+    ReadOneImageInfo<MachBits>(images, dyld_address,
+                               (uint64_t) dyldInfo->dyldPath,
+                               /* file_mod_date */ 0,
+                               dyldInfo->sharedCacheSlide,
+                               /* is_dyld */ true);
+  }
 
-      mach_header_type *header =
-          reinterpret_cast<mach_header_type*>(&mach_header_bytes[0]);
+  // sorts based on loading address
+  sort(images.image_list_.begin(), images.image_list_.end());
+  // remove duplicates - this happens in certain strange cases
+  // You can see it in DashboardClient when Google Gadgets plugin
+  // is installed.  Apple's crash reporter log and gdb "info shared"
+  // both show the same library multiple times at the same address
 
-      cpu_subtype_t cpusubtype = (header->cpusubtype & ~CPU_SUBTYPE_MASK);
-
-      // Now determine the total amount necessary to read the header
-      // plus all of the load commands.
-      size_t header_size =
-          sizeof(mach_header_type) + header->sizeofcmds;
-
-      if (ReadTaskMemory(images.task_,
-                         info.load_address_,
-                         header_size,
-                         mach_header_bytes) != KERN_SUCCESS)
-        continue;
-
-      // Read the file name from the task's memory space.
-      string file_path;
-      if (info.file_path_) {
-        // Although we're reading kMaxStringLength bytes, it's copied in the
-        // the DynamicImage constructor below with the correct string length,
-        // so it's not really wasting memory.
-        file_path = ReadTaskString(images.task_, info.file_path_);
-      }
-
-      // Create an object representing this image and add it to our list.
-      DynamicImage *new_image;
-      new_image = new DynamicImage(&mach_header_bytes[0],
-                                   header_size,
-                                   info.load_address_,
-                                   file_path,
-                                   static_cast<uintptr_t>(info.file_mod_date_),
-                                   images.task_,
-                                   images.cpu_type_,
-                                   cpusubtype,
-                                   dyldInfo->sharedCacheSlide);
-
-      if (new_image->IsValid()) {
-        images.image_list_.push_back(DynamicImageRef(new_image));
-      } else {
-        delete new_image;
-      }
-    }
-
-    // sorts based on loading address
-    sort(images.image_list_.begin(), images.image_list_.end());
-    // remove duplicates - this happens in certain strange cases
-    // You can see it in DashboardClient when Google Gadgets plugin
-    // is installed.  Apple's crash reporter log and gdb "info shared"
-    // both show the same library multiple times at the same address
-
-    vector<DynamicImageRef>::iterator it = unique(images.image_list_.begin(),
-                                                  images.image_list_.end());
-    images.image_list_.erase(it, images.image_list_.end());
+  vector<DynamicImageRef>::iterator it = unique(images.image_list_.begin(),
+                                                images.image_list_.end());
+  images.image_list_.erase(it, images.image_list_.end());
 }
 
 void DynamicImages::ReadImageInfoForTask() {

@@ -77,9 +77,14 @@ typedef struct dyld_all_image_infos32 {
   uint32_t                      infoArray;  // const struct dyld_image_info*
   uint32_t                      notification;
   bool                          processDetachedFromSharedRegion;
-  uint32_t                      padding[15];
+  // Only in version 2 (Mac OS X 10.6, iPhoneOS 2.0) and later
+  const struct mach_header*     dyldImageLoadAddress;
+  uint32_t                      padding[14];
   // Only in version 12 (Mac OS X 10.7, iOS 4.3) and later
   uint32_t                      sharedCacheSlide;
+  uint32_t                      padding1[6];
+  // Only in version 15 (macOS 10.12, iOS 10.0) and later
+  const char*                   dyldPath;
 } dyld_all_image_infos32;
 
 typedef struct dyld_all_image_infos64 {
@@ -88,9 +93,14 @@ typedef struct dyld_all_image_infos64 {
   uint64_t                      infoArray;  // const struct dyld_image_info*
   uint64_t                      notification;
   bool                          processDetachedFromSharedRegion;
-  uint64_t                      padding[15];
+  // Only in version 2 (Mac OS X 10.6, iPhoneOS 2.0) and later
+  const struct mach_header_64*  dyldImageLoadAddress;
+  uint64_t                      padding[14];
   // Only in version 12 (Mac OS X 10.7, iOS 4.3) and later
   uint64_t                      sharedCacheSlide;
+  uint64_t                      padding1[4];
+  // Only in version 15 (macOS 10.12, iOS 10.0) and later
+  const char*                   dyldPath;
 } dyld_all_image_infos64;
 
 // some typedefs to isolate 64/32 bit differences
@@ -129,7 +139,8 @@ class DynamicImage {
                mach_port_t task,
                cpu_type_t cpu_type,
                cpu_subtype_t cpu_subtype,
-               ptrdiff_t shared_cache_slide)
+               ptrdiff_t shared_cache_slide,
+               bool is_dyld)
     : header_(header, header + header_size),
       header_size_(header_size),
       load_address_(load_address),
@@ -140,6 +151,7 @@ class DynamicImage {
       version_(0),
       file_path_(file_path),
       file_mod_date_(image_mod_date),
+      is_dyld_(is_dyld),
       task_(task),
       cpu_type_(cpu_type),
       cpu_subtype_(cpu_subtype),
@@ -163,6 +175,8 @@ class DynamicImage {
 
   bool GetInDyldSharedCache()
     {return (shared_cache_slide_ && (slide_ == shared_cache_slide_));}
+
+  bool GetIsDyld() {return is_dyld_;}
 
   // Difference between GetLoadAddress() and GetVMAddr()
   ptrdiff_t GetVMAddrSlide() const {return slide_;}
@@ -231,6 +245,7 @@ class DynamicImage {
   uint32_t                version_;        // Dylib version
   string                  file_path_;     // path dyld used to load the image
   uintptr_t               file_mod_date_;  // time_t of image file
+  bool                    is_dyld_;        // Is image file dyld itself?
 
   mach_port_t             task_;
   cpu_type_t              cpu_type_;        // CPU type of task_ and image
@@ -270,6 +285,10 @@ class DynamicImageRef {
 
 // Helper function to deal with 32-bit/64-bit Mach-O differences.
 class DynamicImages;
+template<typename MachBits>
+void ReadOneImageInfo(DynamicImages& images, uint64_t image_address,
+                      uint64_t file_path_address, uint64_t file_mod_date,
+                      uint64_t shared_cache_slide, bool is_dyld);
 template<typename MachBits>
 void ReadImageInfo(DynamicImages& images, uint64_t image_list_address);
 
@@ -334,6 +353,10 @@ class DynamicImages {
   }
 
  private:
+  template<typename MachBits>
+  friend void ReadOneImageInfo(DynamicImages& images, uint64_t image_address,
+                               uint64_t file_path_address, uint64_t file_mod_date,
+                               uint64_t shared_cache_slide, bool is_dyld);
   template<typename MachBits>
   friend void ReadImageInfo(DynamicImages& images, uint64_t image_list_address);
 
