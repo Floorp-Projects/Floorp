@@ -66,6 +66,7 @@ body {
 #sectionFilters {
   display: flex;
   align-items: center;
+  margin-inline-start: 5px;
 }
 
 #stores {
