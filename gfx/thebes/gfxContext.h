@@ -486,7 +486,6 @@ class gfxContext final {
     CopyableTArray<PushedClip> pushedClips;
     CopyableTArray<Float> dashPattern;
     StrokeOptions strokeOptions;
-    RefPtr<DrawTarget> drawTarget;
     mozilla::gfx::AntialiasMode aaMode;
     bool patternTransformChanged;
     Matrix patternTransform;
@@ -523,7 +522,7 @@ class gfxContext final {
     return mStateStack[mStateStack.Length() - 1];
   }
 
-  RefPtr<DrawTarget> mDT;
+  RefPtr<DrawTarget> const mDT;
   float mCrossProcessPaintScale = 1.0f;
 };
 

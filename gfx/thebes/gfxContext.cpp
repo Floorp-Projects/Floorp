@@ -57,7 +57,6 @@ gfxContext::gfxContext(DrawTarget* aTarget, const Point& aDeviceOffset)
   }
 
   mStateStack.SetLength(1);
-  CurrentState().drawTarget = mDT;
   CurrentState().deviceOffset = aDeviceOffset;
   mDT->SetTransform(GetDTTransform());
 }
@@ -94,7 +93,7 @@ already_AddRefed<gfxContext> gfxContext::CreatePreservingTransformOrNull(
 gfxContext::~gfxContext() {
   for (int i = mStateStack.Length() - 1; i >= 0; i--) {
     for (unsigned int c = 0; c < mStateStack[i].pushedClips.Length(); c++) {
-      mStateStack[i].drawTarget->PopClip();
+      mDT->PopClip();
     }
   }
 }
@@ -157,8 +156,6 @@ void gfxContext::Restore() {
   }
 
   mStateStack.RemoveLastElement();
-
-  mDT = CurrentState().drawTarget;
 
   ChangeTransform(CurrentState().transform, false);
 }
