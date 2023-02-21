@@ -4873,14 +4873,6 @@
   value: false
   mirror: always
 
-# Whether resizer keeps aspect ratio of `<img>` or can change its width/height
-# independently.
-# TODO: Delete this pref after verifying that nobody uses this pref.
-- name: editor.resizing.preserve_ratio
-  type: bool
-  value: true
-  mirror: always
-
 # How line breakers are treated in single line editor:
 # * 0: Only remove the leading and trailing newlines.
 # * 1: Remove the first newline and all characters following it.
