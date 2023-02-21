@@ -82,6 +82,11 @@ class RtpSenderInternal : public RtpSenderInterface {
   virtual RTCError SetParametersInternalWithAllLayers(
       const RtpParameters& parameters) = 0;
 
+  // Additional checks that are specific to the Sender type
+  virtual RTCError CheckSVCParameters(const RtpParameters& parameters) {
+    return webrtc::RTCError::OK();
+  }
+
   // Returns an ID that changes every time SetTrack() is called, but
   // otherwise remains constant. Used to generate IDs for stats.
   // The special value zero means that no track is attached.
@@ -93,6 +98,11 @@ class RtpSenderInternal : public RtpSenderInterface {
       const std::vector<std::string>& rid) = 0;
 
   virtual void SetTransceiverAsStopped() = 0;
+
+  // Used by the owning transceiver to inform the sender on the currently
+  // selected codecs.
+  virtual void SetVideoCodecPreferences(
+      std::vector<cricket::VideoCodec> codec_preferences) = 0;
 };
 
 // Shared implementation for RtpSenderInternal interface.
@@ -203,6 +213,11 @@ class RtpSenderBase : public RtpSenderInternal, public ObserverInterface {
     is_transceiver_stopped_ = true;
   }
 
+  void SetVideoCodecPreferences(
+      std::vector<cricket::VideoCodec> codec_preferences) override {
+    video_codec_preferences_ = codec_preferences;
+  }
+
  protected:
   // If `set_streams_observer` is not null, it is invoked when SetStreams()
   // is called. `set_streams_observer` is not owned by this object. If not
@@ -238,6 +253,7 @@ class RtpSenderBase : public RtpSenderInternal, public ObserverInterface {
 
   std::vector<std::string> stream_ids_;
   RtpParameters init_parameters_;
+  std::vector<cricket::VideoCodec> video_codec_preferences_;
 
   // TODO(tommi): `media_channel_` and several other member variables in this
   // class (ssrc_, stopped_, etc) are accessed from more than one thread without
@@ -394,6 +410,8 @@ class VideoRtpSender : public RtpSenderBase {
   }
 
   rtc::scoped_refptr<DtmfSenderInterface> GetDtmfSender() const override;
+
+  RTCError CheckSVCParameters(const RtpParameters& parameters) override;
 
  protected:
   VideoRtpSender(rtc::Thread* worker_thread,

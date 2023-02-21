@@ -2241,6 +2241,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "peer_connection_rtp_unittest.cc",
       "peer_connection_signaling_unittest.cc",
       "peer_connection_simulcast_unittest.cc",
+      "peer_connection_svc_integrationtest.cc",
       "peer_connection_wrapper.cc",
       "peer_connection_wrapper.h",
       "proxy_unittest.cc",
