@@ -309,10 +309,6 @@ class Browsertime(Perftest):
             "true" if self.config["test_bytecode_cache"] else "false",
             "--firefox.perfStats",
             test.get("perfstats", "false"),
-            "--videoParams.convert",
-            "false",
-            "--videoParams.addTimer",
-            "false",
         ]
 
         if test.get("perfstats") == "true":
