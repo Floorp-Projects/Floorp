@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<button>click me!</button>
+<script>
+let button = document.querySelector("button");
+button.addEventListener("click", function(e) {
+  document.documentElement.requestFullscreen();
+  setTimeout(() => {
+    while(true) {
+      // slowdown event loop
+    };
+  }, 1);
+  location.href = "https://example.org/browser/dom/base/test/fullscreen/dummy_page.html";
+});
+</script>
