@@ -218,8 +218,15 @@ async function getBrowsersOnLinux() {
             }
         }
     }
-    console.log(desktopFilesInfo);
-    return desktopFilesInfo;
+    return desktopFilesInfo.sort((a, b) => {
+        if (a["filename"] < b["filename"]) {
+            return -1;
+        }
+        if (a["filename"] > b["filename"]) {
+            return 1;
+        }
+        return 0;
+    });
 }
 
 async function getDefaultBrowserOnLinux(protocol, desktopFilesInfo = null) {
