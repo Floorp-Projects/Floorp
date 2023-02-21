@@ -32,6 +32,7 @@ interface nsIAccessibleTextLeafPoint : nsISupports
   const long DIRECTION_NEXT     = 0x0;
   const long DIRECTION_PREVIOUS = 0x1;
 
+  // Keep these flags up to date with the ones in TextLeafPoint.
   const unsigned long BOUNDARY_FLAG_DEFAULT          = 0x0;
   // If current point is a matching boundary, return unchanged.
   const unsigned long BOUNDARY_FLAG_INCLUDE_ORIGIN   = 0x1;

@@ -250,8 +250,8 @@ LayoutDeviceIntRect HyperTextAccessibleBase::TextBounds(int32_t aStartOffset,
 
   // Step backwards from the point returned by ToTextLeafPoint above.
   // For our purposes, `endPoint` should be inclusive.
-  endPoint = endPoint.FindBoundary(nsIAccessibleText::BOUNDARY_CHAR,
-                                   eDirPrevious, false);
+  endPoint =
+      endPoint.FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious);
   if (endPoint < startPoint) {
     return result;
   }
@@ -285,8 +285,7 @@ int32_t HyperTextAccessibleBase::OffsetAtPoint(int32_t aX, int32_t aY,
   TextLeafPoint endPoint =
       ToTextLeafPoint(static_cast<int32_t>(CharacterCount()), true);
   endPoint =
-      endPoint.FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious,
-                            /* aIncludeOrigin */ false);
+      endPoint.FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirPrevious);
   TextLeafPoint point = startPoint;
   // XXX: We should create a TextLeafRange object for this hypertext and move
   // this search inside the TextLeafRange class.
@@ -295,8 +294,8 @@ int32_t HyperTextAccessibleBase::OffsetAtPoint(int32_t aX, int32_t aY,
   // as that might result in an infinite loop.
   if (startPoint <= endPoint) {
     for (; !point.ContainsPoint(coords.x, coords.y) && point != endPoint;
-         point = point.FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirNext,
-                                    /* aIncludeOrigin */ false)) {
+         point =
+             point.FindBoundary(nsIAccessibleText::BOUNDARY_CHAR, eDirNext)) {
     }
   }
   if (!point.ContainsPoint(coords.x, coords.y)) {
@@ -447,8 +446,9 @@ void HyperTextAccessibleBase::TextBeforeOffset(
     return;
   }
   AdjustOriginIfEndBoundary(orig, aBoundaryType);
-  TextLeafPoint end = orig.FindBoundary(aBoundaryType, eDirPrevious,
-                                        /* aIncludeOrigin */ true);
+  TextLeafPoint end =
+      orig.FindBoundary(aBoundaryType, eDirPrevious,
+                        TextLeafPoint::BoundaryFlags::eIncludeOrigin);
   bool ok;
   std::tie(ok, *aEndOffset) = TransformOffset(end.mAcc, end.mOffset,
                                               /* aIsEndOffset */ true);
@@ -527,7 +527,7 @@ void HyperTextAccessibleBase::TextAtOffset(int32_t aOffset,
     return;
   }
   start = start.FindBoundary(aBoundaryType, eDirPrevious,
-                             /* aIncludeOrigin */ true);
+                             TextLeafPoint::BoundaryFlags::eIncludeOrigin);
   bool ok;
   std::tie(ok, *aStartOffset) = TransformOffset(start.mAcc, start.mOffset,
                                                 /* aIsEndOffset */ false);

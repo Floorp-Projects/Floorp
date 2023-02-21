@@ -68,8 +68,7 @@ NS_IMETHODIMP xpcAccessibleTextLeafPoint::FindBoundary(
 
   TextLeafPoint result = thisPoint.FindBoundary(
       aBoundaryType, static_cast<nsDirection>(aDirection),
-      (aFlags & BOUNDARY_FLAG_INCLUDE_ORIGIN) != 0,
-      (aFlags & BOUNDARY_FLAG_STOP_IN_EDITABLE) != 0);
+      static_cast<TextLeafPoint::BoundaryFlags>(aFlags));
   RefPtr<xpcAccessibleTextLeafPoint> point = new xpcAccessibleTextLeafPoint(
       result ? ToXPC(result.mAcc) : nullptr, result ? result.mOffset : 0);
   point.forget(aPoint);
