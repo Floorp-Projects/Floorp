@@ -1094,18 +1094,16 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec,
   // so we don't wrongly report the reason for the previous one.
   rec->Reset();
 
-  if (StaticPrefs::network_trr_display_fallback_warning()) {
-    TRRSkippedReason heuristicResult =
-        TRRService::Get()->GetHeuristicDetectionResult();
-    if (heuristicResult != TRRSkippedReason::TRR_UNSET &&
-        heuristicResult != TRRSkippedReason::TRR_OK) {
-      rec->RecordReason(heuristicResult);
-    }
-    LOG(("NameLookup: %s heuristicResult: %d ", rec->host.get(),
-         heuristicResult));
-  }
-
   ComputeEffectiveTRRMode(rec);
+
+  // We only keep store a heuristicResult (other than
+  // TRRSkippedReason::TRR_UNSET) if the native fallback warning is enabled and
+  // we are in nsIRequest::TRR_FIRST_MODE.
+  TRRSkippedReason heuristicResult = TRRSkippedReason::TRR_UNSET;
+  if (StaticPrefs::network_trr_display_fallback_warning() &&
+      rec->mEffectiveTRRMode == nsIRequest::TRR_FIRST_MODE) {
+    heuristicResult = TRRService::Get()->GetHeuristicDetectionResult();
+  }
 
   if (!rec->mTrrServer.IsEmpty()) {
     LOG(("NameLookup: %s use trr:%s", rec->host.get(), rec->mTrrServer.get()));
@@ -1131,7 +1129,12 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec,
 
   if (rec->mEffectiveTRRMode != nsIRequest::TRR_DISABLED_MODE &&
       !((rec->flags & nsIDNSService::RESOLVE_DISABLE_TRR)) &&
-      !serviceNotReady) {
+      !serviceNotReady &&
+      // Only perform a TRR lookup if the heuristic result is unset or ok.
+      // (If the native fallback warning is enabled, a tripped heuristic result
+      // may be set.)
+      (heuristicResult == TRRSkippedReason::TRR_UNSET ||
+       heuristicResult == TRRSkippedReason::TRR_OK)) {
     rv = TrrLookup(rec, aLock);
   }
 
@@ -1151,31 +1154,41 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec,
     MOZ_ASSERT(addrRec && addrRec->mResolverType == DNSResolverType::Native);
 #endif
 
-    // Don't fallback to native if the network.trr.display_fallback_warning pref
-    // is set on TRR confirmation failure or a heuristic tripped
-    // Heuristics will only be tripped if we attempted to enable DoH
+    // We did not lookup via TRR - don't fallback to native if the
+    // network.trr.display_fallback_warning pref is set and we are in TRR first
+    // mode.
     if (StaticPrefs::network_trr_display_fallback_warning() &&
-        (rec->mTRRSkippedReason == TRRSkippedReason::TRR_NOT_CONFIRMED ||
-         (rec->mTRRSkippedReason >=
-              nsITRRSkipReason::TRR_HEURISTIC_TRIPPED_GOOGLE_SAFESEARCH &&
-          rec->mTRRSkippedReason <=
-              nsITRRSkipReason::TRR_HEURISTIC_TRIPPED_NRPT))) {
-      LOG(
-          ("NameLookup: ResolveHostComplete with status NS_ERROR_UNKNOWN_HOST "
-           "for: %s effectiveTRRmode: "
-           "%d SkippedReason: %d",
-           rec->host.get(),
-           static_cast<nsIRequest::TRRMode>(rec->mEffectiveTRRMode),
-           static_cast<int32_t>(rec->mTRRSkippedReason)));
-
-      mozilla::LinkedList<RefPtr<nsResolveHostCallback>> cbs =
-          std::move(rec->mCallbacks);
-      for (nsResolveHostCallback* c = cbs.getFirst(); c;
-           c = c->removeAndGetNext()) {
-        c->OnResolveHostComplete(this, rec, NS_ERROR_UNKNOWN_HOST);
+        rec->mEffectiveTRRMode == nsIRequest::TRR_FIRST_MODE) {
+      if (heuristicResult != TRRSkippedReason::TRR_UNSET &&
+          heuristicResult != TRRSkippedReason::TRR_OK) {
+        rec->mTRRSkippedReason = heuristicResult;
       }
 
-      return NS_OK;
+      LOG(("NameLookup: %s heuristicResult: %d ", rec->host.get(),
+           heuristicResult));
+
+      if ((rec->mTRRSkippedReason == TRRSkippedReason::TRR_NOT_CONFIRMED ||
+           (rec->mTRRSkippedReason >=
+                nsITRRSkipReason::TRR_HEURISTIC_TRIPPED_GOOGLE_SAFESEARCH &&
+            rec->mTRRSkippedReason <=
+                nsITRRSkipReason::TRR_HEURISTIC_TRIPPED_NRPT))) {
+        LOG((
+            "NameLookup: ResolveHostComplete with status NS_ERROR_UNKNOWN_HOST "
+            "for: %s effectiveTRRmode: "
+            "%d SkippedReason: %d",
+            rec->host.get(),
+            static_cast<nsIRequest::TRRMode>(rec->mEffectiveTRRMode),
+            static_cast<int32_t>(rec->mTRRSkippedReason)));
+
+        mozilla::LinkedList<RefPtr<nsResolveHostCallback>> cbs =
+            std::move(rec->mCallbacks);
+        for (nsResolveHostCallback* c = cbs.getFirst(); c;
+             c = c->removeAndGetNext()) {
+          c->OnResolveHostComplete(this, rec, NS_ERROR_UNKNOWN_HOST);
+        }
+
+        return NS_OK;
+      }
     }
 
     rv = NativeLookup(rec, aLock);
