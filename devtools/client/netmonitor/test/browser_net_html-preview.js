@@ -162,11 +162,7 @@ add_task(async function() {
           await new Promise(r =>
             elt.addEventListener("dblclick", r, { once: true })
           );
-
-          const documentViewer = docShell.contentViewer.QueryInterface(
-            SpecialPowers.Ci.nsIContentViewerEdit
-          );
-          documentViewer.copySelection();
+          EventUtils.synthesizeKey("c", { accelKey: true }, content);
         });
       }, "HTML");
     }
