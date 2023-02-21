@@ -127,8 +127,6 @@ class nsImageBoxFrame final : public nsLeafBoxFrame {
   void OnImageIsAnimated(imgIRequest* aRequest);
   void OnFrameUpdate(imgIRequest* aRequest);
 
-  nsRect mSubRect;  ///< If set, indicates that only the portion of the image
-                    ///< specified by the rect should be used.
   nsSize mIntrinsicSize;
   nsSize mImageSize;
 

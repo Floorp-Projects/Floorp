@@ -307,8 +307,7 @@ class nsTreeBodyFrame final : public nsLeafBoxFrame,
 
   // Fetch an image from the image cache.
   nsresult GetImage(int32_t aRowIndex, nsTreeColumn* aCol, bool aUseContext,
-                    ComputedStyle* aComputedStyle, bool& aAllowImageRegions,
-                    imgIContainer** aResult);
+                    ComputedStyle* aComputedStyle, imgIContainer** aResult);
 
   // Returns the size of a given image.   This size *includes* border and
   // padding.  It does not include margins.
@@ -317,12 +316,10 @@ class nsTreeBodyFrame final : public nsLeafBoxFrame,
 
   // Returns the destination size of the image, not including borders and
   // padding.
-  nsSize GetImageDestSize(ComputedStyle* aComputedStyle, bool useImageRegion,
-                          imgIContainer* image);
+  nsSize GetImageDestSize(ComputedStyle*, imgIContainer*);
 
   // Returns the source rectangle of the image to be displayed.
-  nsRect GetImageSourceRect(ComputedStyle* aComputedStyle, bool useImageRegion,
-                            imgIContainer* image);
+  nsRect GetImageSourceRect(ComputedStyle*, imgIContainer*);
 
   // Returns the height of rows in the tree.
   int32_t GetRowHeight();

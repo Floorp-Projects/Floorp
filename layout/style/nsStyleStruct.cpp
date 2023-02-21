@@ -601,8 +601,7 @@ nsChangeHint nsStyleOutline::CalcDifference(
 nsStyleList::nsStyleList(const Document& aDocument)
     : mListStylePosition(StyleListStylePosition::Outside),
       mQuotes(StyleQuotes::Auto()),
-      mListStyleImage(StyleImage::None()),
-      mImageRegion(StyleClipRectOrAuto::Auto()) {
+      mListStyleImage(StyleImage::None()) {
   MOZ_COUNT_CTOR(nsStyleList);
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -615,8 +614,7 @@ nsStyleList::nsStyleList(const nsStyleList& aSource)
     : mListStylePosition(aSource.mListStylePosition),
       mCounterStyle(aSource.mCounterStyle),
       mQuotes(aSource.mQuotes),
-      mListStyleImage(aSource.mListStyleImage),
-      mImageRegion(aSource.mImageRegion) {
+      mListStyleImage(aSource.mListStyleImage) {
   MOZ_COUNT_CTOR(nsStyleList);
 }
 
@@ -655,14 +653,6 @@ nsChangeHint nsStyleList::CalcDifference(
   // regardless of display value, so we still need to check them.
   if (mListStyleImage != aNewData.mListStyleImage) {
     return NS_STYLE_HINT_REFLOW;
-  }
-  if (mImageRegion != aNewData.mImageRegion) {
-    nsRect region = GetImageRegion();
-    nsRect newRegion = aNewData.GetImageRegion();
-    if (region.width != newRegion.width || region.height != newRegion.height) {
-      return NS_STYLE_HINT_REFLOW;
-    }
-    return NS_STYLE_HINT_VISUAL;
   }
   return hint;
 }

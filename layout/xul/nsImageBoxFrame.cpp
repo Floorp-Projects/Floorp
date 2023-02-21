@@ -69,7 +69,6 @@ using namespace mozilla::image;
 using namespace mozilla::layers;
 
 using mozilla::dom::Document;
-using mozilla::dom::Element;
 using mozilla::dom::ReferrerInfo;
 
 class nsImageBoxFrameEvent : public Runnable {
@@ -347,14 +346,12 @@ ImgDrawResult nsImageBoxFrame::PaintImage(gfxContext& aRenderingContext,
     return ImgDrawResult::TEMPORARY_ERROR;
   }
 
-  bool hasSubRect = !mUseSrcAttr && (mSubRect.width > 0 || mSubRect.height > 0);
-
   SVGImageContext svgContext;
   SVGImageContext::MaybeStoreContextPaint(svgContext, this, imgCon);
   return nsLayoutUtils::DrawSingleImage(
       aRenderingContext, PresContext(), imgCon,
       nsLayoutUtils::GetSamplingFilterForFrame(this), dest, dirty, svgContext,
-      aFlags, anchorPoint.ptrOr(nullptr), hasSubRect ? &mSubRect : nullptr);
+      aFlags, anchorPoint.ptrOr(nullptr));
 }
 
 ImgDrawResult nsImageBoxFrame::CreateWebRenderCommands(
@@ -500,13 +497,7 @@ bool nsDisplayXULImage::CreateWebRenderCommands(
   return true;
 }
 
-bool nsImageBoxFrame::CanOptimizeToImageLayer() {
-  bool hasSubRect = !mUseSrcAttr && (mSubRect.width > 0 || mSubRect.height > 0);
-  if (hasSubRect) {
-    return false;
-  }
-  return true;
-}
+bool nsImageBoxFrame::CanOptimizeToImageLayer() { return true; }
 
 const mozilla::StyleImage* nsImageBoxFrame::GetImageFromStyle(
     const ComputedStyle& aStyle) const {
@@ -545,9 +536,6 @@ void nsImageBoxFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
   nsLeafBoxFrame::DidSetComputedStyle(aOldStyle);
 
   // Fetch our subrect.
-  const nsStyleList* myList = StyleList();
-  mSubRect = myList->GetImageRegion();  // before |mSuppressStyleCheck| test!
-
   if (mUseSrcAttr || mSuppressStyleCheck) {
     return;  // No more work required, since the image isn't specified by style.
   }
@@ -575,19 +563,14 @@ void nsImageBoxFrame::GetImageSize() {
  * Ok return our dimensions
  */
 nsSize nsImageBoxFrame::GetXULPrefSize(nsBoxLayoutState& aState) {
-  nsSize size(0, 0);
+  nsSize size;
   DISPLAY_PREF_SIZE(this, size);
   if (XULNeedsRecalc(mImageSize)) {
     GetImageSize();
   }
 
-  if (!mUseSrcAttr && (mSubRect.width > 0 || mSubRect.height > 0)) {
-    size = mSubRect.Size();
-  } else {
-    size = mImageSize;
-  }
-
-  nsSize intrinsicSize = size;
+  size = mImageSize;
+  const nsSize intrinsicSize = size;
 
   nsMargin borderPadding(0, 0, 0, 0);
   GetXULBorderAndPadding(borderPadding);
