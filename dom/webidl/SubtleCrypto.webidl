@@ -163,7 +163,7 @@ dictionary JsonWebKey {
 
 [Serializable,
  SecureContext,
- Exposed=(Window,Worker)]
+ Exposed=Window]
 interface CryptoKey {
   readonly attribute KeyType type;
   readonly attribute boolean extractable;
