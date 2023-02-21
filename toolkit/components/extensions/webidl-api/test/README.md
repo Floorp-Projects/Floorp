@@ -31,11 +31,8 @@ To add a new test file to this test suite:
     `helpers` module does also enable the code coverage if the environment variable
     is detected):
     ```
-    # Import test helpers module.
-    OUR_DIR = mozpath.abspath(mozpath.dirname(__file__))
-    sys.path.append(OUR_DIR)
-
-    import helpers
+    import helpers  # Import test helpers module.
+    ...
 
     helpers.setup()
     ```

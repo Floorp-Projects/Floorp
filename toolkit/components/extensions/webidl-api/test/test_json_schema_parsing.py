@@ -4,18 +4,11 @@
 
 import json
 import os
-import sys
 from textwrap import dedent
 
-import mozpack.path as mozpath
+import helpers  # Import test helpers module.
 import mozunit
 import pytest
-
-# Import test helpers module.
-OUR_DIR = mozpath.abspath(mozpath.dirname(__file__))
-sys.path.append(OUR_DIR)
-
-import helpers
 
 helpers.setup()
 
