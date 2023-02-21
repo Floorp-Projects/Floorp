@@ -2048,7 +2048,7 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
     RefPtr<TextDrawTarget> textDrawer =
         new TextDrawTarget(aBuilder, aResources, aSc, aManager, aItem, inner,
                            /* aCallerDoesSaveRestore = */ true);
-    RefPtr<gfxContext> captureCtx = gfxContext::CreateOrNull(textDrawer);
+    UniquePtr<gfxContext> captureCtx = gfxContext::CreateOrNull(textDrawer);
 
     nsAutoString altText;
     nsCSSFrameConstructor::GetAlternateTextFor(*mContent->AsElement(), altText);

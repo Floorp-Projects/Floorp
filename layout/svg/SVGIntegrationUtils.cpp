@@ -466,7 +466,7 @@ static bool PaintMaskSurface(const PaintFramesParams& aParams,
   gfxPoint devPixelOffsetToUserSpace = nsLayoutUtils::PointToGfxPoint(
       aOffsetToUserSpace, presContext->AppUnitsPerDevPixel());
 
-  RefPtr<gfxContext> maskContext =
+  UniquePtr<gfxContext> maskContext =
       gfxContext::CreatePreservingTransformOrNull(aMaskDT);
   MOZ_ASSERT(maskContext);
 
@@ -498,7 +498,7 @@ static bool PaintMaskSurface(const PaintFramesParams& aParams,
         aMaskDT->SetTransform(tmp);
       }
     } else if (svgReset->mMask.mLayers[i].mImage.IsResolved()) {
-      gfxContextMatrixAutoSaveRestore matRestore(maskContext);
+      gfxContextMatrixAutoSaveRestore matRestore(maskContext.get());
 
       maskContext->Multiply(gfxMatrix::Translation(-devPixelOffsetToUserSpace));
       nsCSSRendering::PaintBGParams params =

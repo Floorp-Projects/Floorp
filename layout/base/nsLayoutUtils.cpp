@@ -7156,7 +7156,7 @@ static RefPtr<SourceSurface> ScaleSourceSurface(SourceSurface& aSurface,
     return nullptr;
   }
 
-  RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
+  UniquePtr<gfxContext> context = gfxContext::CreateOrNull(dt);
   MOZ_ASSERT(context);
 
   dt->DrawSurface(&aSurface, Rect(Point(), Size(aTargetSize)),

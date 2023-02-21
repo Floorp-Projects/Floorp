@@ -2258,7 +2258,7 @@ static gfxFontGroup* GetInflatedFontGroupForFrame(nsTextFrame* aFrame) {
 
 static already_AddRefed<DrawTarget> CreateReferenceDrawTarget(
     const nsTextFrame* aTextFrame) {
-  RefPtr<gfxContext> ctx =
+  UniquePtr<gfxContext> ctx =
       aTextFrame->PresShell()->CreateReferenceRenderingContext();
   RefPtr<DrawTarget> dt = ctx->GetDrawTarget();
   return dt.forget();

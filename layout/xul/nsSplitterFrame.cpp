@@ -546,9 +546,9 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
   // get our index
   nsPresContext* outerPresContext = mOuter->PresContext();
 
-  RefPtr<gfxContext> rc =
+  UniquePtr<gfxContext> rc =
       outerPresContext->PresShell()->CreateReferenceRenderingContext();
-  nsBoxLayoutState state(outerPresContext, rc);
+  nsBoxLayoutState state(outerPresContext, rc.get());
 
   mDidDrag = false;
 

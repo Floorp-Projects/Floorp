@@ -108,10 +108,10 @@ already_AddRefed<SourceSurface> OrientedImage::OrientSurface(
   }
 
   // Draw.
-  RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(target);
+  UniquePtr<gfxContext> ctx = gfxContext::CreateOrNull(target);
   MOZ_ASSERT(ctx);  // already checked the draw target above
   ctx->Multiply(OrientationMatrix(aOrientation, originalSize));
-  gfxUtils::DrawPixelSnapped(ctx, drawable, SizeDouble(originalSize),
+  gfxUtils::DrawPixelSnapped(ctx.get(), drawable, SizeDouble(originalSize),
                              ImageRegion::Create(originalSize), surfaceFormat,
                              SamplingFilter::LINEAR);
 

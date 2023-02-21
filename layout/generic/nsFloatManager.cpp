@@ -2703,7 +2703,7 @@ nsFloatManager::ShapeInfo::CreateImageShape(const StyleImage& aShapeImage,
     return nullptr;
   }
 
-  RefPtr<gfxContext> context = gfxContext::CreateOrNull(drawTarget);
+  UniquePtr<gfxContext> context = gfxContext::CreateOrNull(drawTarget);
   MOZ_ASSERT(context);  // already checked the target above
 
   ImgDrawResult result =

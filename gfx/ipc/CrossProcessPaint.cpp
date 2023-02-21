@@ -140,12 +140,12 @@ PaintFragment PaintFragment::Record(dom::BrowsingContext* aBc,
       dt->AddUserData(&sDisablePixelSnapping, (void*)0x1, nullptr);
     }
 
-    RefPtr<gfxContext> thebes = gfxContext::CreateOrNull(dt);
+    UniquePtr<gfxContext> thebes = gfxContext::CreateOrNull(dt);
     thebes->SetMatrix(Matrix::Scaling(aScale, aScale));
     thebes->SetCrossProcessPaintScale(aScale);
     RefPtr<PresShell> presShell = presContext->PresShell();
     Unused << presShell->RenderDocument(r, renderDocFlags, aBackgroundColor,
-                                        thebes);
+                                        thebes.get());
   }
 
   if (!recorder->mOutputStream.mValid) {

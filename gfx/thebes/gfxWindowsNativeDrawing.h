@@ -11,7 +11,7 @@
 #include "gfxContext.h"
 #include "gfxWindowsSurface.h"
 
-class gfxWindowsNativeDrawing {
+class MOZ_STACK_CLASS gfxWindowsNativeDrawing {
  public:
   /* Flags for notifying this class what kind of operations the native
    * drawing supports
@@ -79,7 +79,7 @@ class gfxWindowsNativeDrawing {
   void PaintToContext();
 
  private:
-  RefPtr<gfxContext> mContext;
+  gfxContext* mContext;
   gfxRect mNativeRect;
   uint32_t mNativeDrawFlags;
 

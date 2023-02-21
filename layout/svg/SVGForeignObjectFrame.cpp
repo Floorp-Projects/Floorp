@@ -464,13 +464,13 @@ void SVGForeignObjectFrame::DoReflow() {
   }
 
   // initiate a synchronous reflow here and now:
-  RefPtr<gfxContext> renderingContext =
+  UniquePtr<gfxContext> renderingContext =
       presContext->PresShell()->CreateReferenceRenderingContext();
 
   mInReflow = true;
 
   WritingMode wm = kid->GetWritingMode();
-  ReflowInput reflowInput(presContext, kid, renderingContext,
+  ReflowInput reflowInput(presContext, kid, renderingContext.get(),
                           LogicalSize(wm, ISize(wm), NS_UNCONSTRAINEDSIZE));
   ReflowOutput desiredSize(reflowInput);
   nsReflowStatus status;

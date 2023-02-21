@@ -23,13 +23,13 @@ using namespace mozilla::gfx;
 
 gfxAlphaBoxBlur::~gfxAlphaBoxBlur() = default;
 
-already_AddRefed<gfxContext> gfxAlphaBoxBlur::Init(gfxContext* aDestinationCtx,
-                                                   const gfxRect& aRect,
-                                                   const IntSize& aSpreadRadius,
-                                                   const IntSize& aBlurRadius,
-                                                   const gfxRect* aDirtyRect,
-                                                   const gfxRect* aSkipRect,
-                                                   bool aUseHardwareAccel) {
+UniquePtr<gfxContext> gfxAlphaBoxBlur::Init(gfxContext* aDestinationCtx,
+                                            const gfxRect& aRect,
+                                            const IntSize& aSpreadRadius,
+                                            const IntSize& aBlurRadius,
+                                            const gfxRect* aDirtyRect,
+                                            const gfxRect* aSkipRect,
+                                            bool aUseHardwareAccel) {
   DrawTarget* refDT = aDestinationCtx->GetDrawTarget();
   Maybe<Rect> dirtyRect = aDirtyRect ? Some(ToRect(*aDirtyRect)) : Nothing();
   Maybe<Rect> skipRect = aSkipRect ? Some(ToRect(*aSkipRect)) : Nothing();
@@ -40,10 +40,10 @@ already_AddRefed<gfxContext> gfxAlphaBoxBlur::Init(gfxContext* aDestinationCtx,
     return nullptr;
   }
 
-  RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
+  UniquePtr<gfxContext> context = gfxContext::CreateOrNull(dt);
   MOZ_ASSERT(context);  // already checked for target above
   context->SetMatrix(Matrix::Translation(-mBlur.GetRect().TopLeft()));
-  return context.forget();
+  return context;
 }
 
 already_AddRefed<DrawTarget> gfxAlphaBoxBlur::InitDrawTarget(

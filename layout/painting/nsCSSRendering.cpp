@@ -4687,14 +4687,15 @@ gfxContext* nsContextBoxBlur::Init(const nsRect& aRect, nscoord aSpreadRadius,
   bool useHardwareAccel = !(aFlags & DISABLE_HARDWARE_ACCELERATION_BLUR);
   if (aSkipRect) {
     gfxRect skipRect = transform.TransformBounds(*aSkipRect);
-    mContext =
+    mOwnedContext =
         mAlphaBoxBlur.Init(aDestinationCtx, rect, spreadRadius, blurRadius,
                            &dirtyRect, &skipRect, useHardwareAccel);
   } else {
-    mContext =
+    mOwnedContext =
         mAlphaBoxBlur.Init(aDestinationCtx, rect, spreadRadius, blurRadius,
                            &dirtyRect, nullptr, useHardwareAccel);
   }
+  mContext = mOwnedContext.get();
 
   if (mContext) {
     // we don't need to blur if skipRect is equal to rect

@@ -338,7 +338,7 @@ already_AddRefed<SourceSurface> SVGPatternFrame::PaintPattern(
   }
   dt->ClearRect(Rect(0, 0, surfaceSize.width, surfaceSize.height));
 
-  RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(dt);
+  UniquePtr<gfxContext> ctx = gfxContext::CreateOrNull(dt);
   MOZ_ASSERT(ctx);  // already checked the draw target above
 
   if (aGraphicOpacity != 1.0f) {

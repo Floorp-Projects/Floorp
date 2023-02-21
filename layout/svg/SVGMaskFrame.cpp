@@ -78,7 +78,7 @@ already_AddRefed<SourceSurface> SVGMaskFrame::GetMaskForMaskedFrame(
     return nullptr;
   }
 
-  RefPtr<gfxContext> tmpCtx =
+  UniquePtr<gfxContext> tmpCtx =
       gfxContext::CreatePreservingTransformOrNull(maskDT);
   MOZ_ASSERT(tmpCtx);  // already checked the draw target above
 

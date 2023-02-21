@@ -589,7 +589,7 @@ nsresult nsPageSequenceFrame::PrePrintNextSheet(nsITimerCallback* aCallback,
 
       mCalledBeginPage = true;
 
-      RefPtr<gfxContext> renderingContext = dc->CreateRenderingContext();
+      UniquePtr<gfxContext> renderingContext = dc->CreateRenderingContext();
       NS_ENSURE_TRUE(renderingContext, NS_ERROR_OUT_OF_MEMORY);
 
       DrawTarget* drawTarget = renderingContext->GetDrawTarget();
@@ -684,12 +684,12 @@ nsresult nsPageSequenceFrame::PrintNextSheet() {
          mCurrentSheetIdx));
 
   // CreateRenderingContext can fail
-  RefPtr<gfxContext> gCtx = dc->CreateRenderingContext();
+  UniquePtr<gfxContext> gCtx = dc->CreateRenderingContext();
   NS_ENSURE_TRUE(gCtx, NS_ERROR_OUT_OF_MEMORY);
 
   nsRect drawingRect(nsPoint(0, 0), currentSheetFrame->GetSize());
   nsRegion drawingRegion(drawingRect);
-  nsLayoutUtils::PaintFrame(gCtx, currentSheetFrame, drawingRegion,
+  nsLayoutUtils::PaintFrame(gCtx.get(), currentSheetFrame, drawingRegion,
                             NS_RGBA(0, 0, 0, 0),
                             nsDisplayListBuilderMode::PaintForPrinting,
                             nsLayoutUtils::PaintFrameFlags::SyncDecodeImages);

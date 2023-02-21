@@ -307,11 +307,11 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
             break;
         }
 
-        RefPtr<gfxContext> thebesContext = gfxContext::CreateOrNull(dt);
+        UniquePtr<gfxContext> thebesContext = gfxContext::CreateOrNull(dt);
         MOZ_ASSERT(thebesContext);  // already checked draw target above
 
         {
-          AutoLayerManagerSetup setupLayerManager(this, thebesContext,
+          AutoLayerManagerSetup setupLayerManager(this, thebesContext.get(),
                                                   doubleBuffering);
           result = listener->PaintWindow(this, region);
         }

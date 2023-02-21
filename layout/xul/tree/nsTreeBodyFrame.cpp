@@ -213,14 +213,15 @@ nscoord nsTreeBodyFrame::CalcMaxRowWidth() {
   nscoord rowWidth;
   nsTreeColumn* col;
 
-  RefPtr<gfxContext> rc = PresShell()->CreateReferenceRenderingContext();
+  UniquePtr<gfxContext> rc = PresShell()->CreateReferenceRenderingContext();
 
   for (int32_t row = 0; row < mRowCount; ++row) {
     rowWidth = 0;
 
     for (col = mColumns->GetFirstColumn(); col; col = col->GetNext()) {
       nscoord desiredWidth, currentWidth;
-      nsresult rv = GetCellWidth(row, col, rc, desiredWidth, currentWidth);
+      nsresult rv =
+          GetCellWidth(row, col, rc.get(), desiredWidth, currentWidth);
       if (NS_FAILED(rv)) {
         MOZ_ASSERT_UNREACHABLE("invalid column");
         continue;
@@ -1004,7 +1005,7 @@ nsresult nsTreeBodyFrame::GetCoordsForCellItem(int32_t aRow, nsTreeColumn* aCol,
     // interfere with our computations.
     AdjustForBorderPadding(cellContext, cellRect);
 
-    RefPtr<gfxContext> rc =
+    UniquePtr<gfxContext> rc =
         presContext->PresShell()->CreateReferenceRenderingContext();
 
     // Now we'll start making our way across the cell, starting at the edge of
@@ -1263,7 +1264,7 @@ nsCSSAnonBoxPseudoStaticAtom* nsTreeBodyFrame::GetItemWithinCellAt(
   bool isRTL = StyleVisibility()->mDirection == StyleDirection::Rtl;
 
   nsPresContext* presContext = PresContext();
-  RefPtr<gfxContext> rc =
+  UniquePtr<gfxContext> rc =
       presContext->PresShell()->CreateReferenceRenderingContext();
 
   if (aColumn->IsPrimary()) {
@@ -1504,9 +1505,9 @@ nsresult nsTreeBodyFrame::IsCellCropped(int32_t aRow, nsTreeColumn* aCol,
 
   if (!aCol) return NS_ERROR_INVALID_ARG;
 
-  RefPtr<gfxContext> rc = PresShell()->CreateReferenceRenderingContext();
+  UniquePtr<gfxContext> rc = PresShell()->CreateReferenceRenderingContext();
 
-  rv = GetCellWidth(aRow, aCol, rc, desiredSize, currentSize);
+  rv = GetCellWidth(aRow, aCol, rc.get(), desiredSize, currentSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *_retval = desiredSize > currentSize;

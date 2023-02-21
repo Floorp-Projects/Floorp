@@ -57,9 +57,20 @@ class gfxContext final {
   typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
   typedef mozilla::gfx::Size Size;
 
-  NS_INLINE_DECL_REFCOUNTING(gfxContext)
-
  public:
+  /**
+   * Initialize this context from a DrawTarget.
+   * Strips any transform from aTarget.
+   * aTarget will be flushed in the gfxContext's destructor.  Use the static
+   * ContextForDrawTargetNoTransform() when you want this behavior, as that
+   * version deals with null DrawTarget better.
+   */
+  explicit gfxContext(
+      mozilla::gfx::DrawTarget* aTarget,
+      const mozilla::gfx::Point& aDeviceOffset = mozilla::gfx::Point());
+
+  ~gfxContext();
+
   /**
    * Initialize this context from a DrawTarget.
    * Strips any transform from aTarget.
@@ -67,7 +78,7 @@ class gfxContext final {
    * If aTarget is null or invalid, nullptr is returned.  The caller
    * is responsible for handling this scenario as appropriate.
    */
-  static already_AddRefed<gfxContext> CreateOrNull(
+  static mozilla::UniquePtr<gfxContext> CreateOrNull(
       mozilla::gfx::DrawTarget* aTarget,
       const mozilla::gfx::Point& aDeviceOffset = mozilla::gfx::Point());
 
@@ -78,7 +89,7 @@ class gfxContext final {
    * If aTarget is null or invalid, nullptr is returned.  The caller
    * is responsible for handling this scenario as appropriate.
    */
-  static already_AddRefed<gfxContext> CreatePreservingTransformOrNull(
+  static mozilla::UniquePtr<gfxContext> CreatePreservingTransformOrNull(
       mozilla::gfx::DrawTarget* aTarget);
 
   mozilla::gfx::DrawTarget* GetDrawTarget() { return mDT; }
@@ -438,18 +449,6 @@ class gfxContext final {
 #endif
 
  private:
-  /**
-   * Initialize this context from a DrawTarget.
-   * Strips any transform from aTarget.
-   * aTarget will be flushed in the gfxContext's destructor.  Use the static
-   * ContextForDrawTargetNoTransform() when you want this behavior, as that
-   * version deals with null DrawTarget better.
-   */
-  explicit gfxContext(
-      mozilla::gfx::DrawTarget* aTarget,
-      const mozilla::gfx::Point& aDeviceOffset = mozilla::gfx::Point());
-  ~gfxContext();
-
   friend class PatternFromState;
   friend class GlyphBufferAzure;
 
@@ -543,7 +542,7 @@ class gfxContextAutoSaveRestore {
   ~gfxContextAutoSaveRestore() { Restore(); }
 
   void SetContext(gfxContext* aContext) {
-    NS_ASSERTION(!mContext, "Not going to call Restore() on some context!!!");
+    MOZ_ASSERT(!mContext, "no context?");
     mContext = aContext;
     mContext->Save();
   }
