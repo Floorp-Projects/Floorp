@@ -44,6 +44,7 @@ class WindowSurfaceProvider final {
    */
 #ifdef MOZ_WAYLAND
   void Initialize(RefPtr<nsWindow> aWidget);
+  void Initialize(GtkCompositorWidget* aCompositorWidget);
 #endif
 #ifdef MOZ_X11
   void Initialize(Window aWindow, Visual* aVisual, int aDepth, bool aIsShaped);
@@ -80,6 +81,9 @@ class WindowSurfaceProvider final {
   mozilla::Atomic<bool> mWindowSurfaceValid;
 #ifdef MOZ_WAYLAND
   RefPtr<nsWindow> mWidget;
+  // WindowSurfaceProvider is owned by GtkCompositorWidget so we don't need
+  // to reference it.
+  GtkCompositorWidget* mCompositorWidget = nullptr;
 #endif
 #ifdef MOZ_X11
   bool mIsShaped;

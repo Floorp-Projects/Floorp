@@ -48,7 +48,7 @@ GtkCompositorWidget::GtkCompositorWidget(
 #endif
 #if defined(MOZ_WAYLAND)
   if (GdkIsWaylandDisplay()) {
-    ConfigureWaylandBackend(mWidget);
+    ConfigureWaylandBackend();
     LOG("GtkCompositorWidget::GtkCompositorWidget() [%p] mWidget %p "
         "mIsRenderingSuspended %d\n",
         (void*)mWidget.get(), (void*)mWidget, !!mIsRenderingSuspended);
@@ -178,8 +178,8 @@ void GtkCompositorWidget::DisableRendering() {
 }
 
 #if defined(MOZ_WAYLAND)
-bool GtkCompositorWidget::ConfigureWaylandBackend(RefPtr<nsWindow> aWindow) {
-  mProvider.Initialize(aWindow);
+bool GtkCompositorWidget::ConfigureWaylandBackend() {
+  mProvider.Initialize(this);
   return true;
 }
 #endif
@@ -221,7 +221,7 @@ void GtkCompositorWidget::EnableRendering(const uintptr_t aXWindow,
 #if defined(MOZ_WAYLAND)
   if (GdkIsWaylandDisplay()) {
     LOG("  configure widget %p\n", mWidget.get());
-    if (!ConfigureWaylandBackend(mWidget)) {
+    if (!ConfigureWaylandBackend()) {
       return;
     }
   }
