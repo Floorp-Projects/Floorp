@@ -43,6 +43,10 @@ void gfxConfigManager::Init() {
                   mWrShaderCache);
   mWrOptimizedShaders =
       StaticPrefs::gfx_webrender_use_optimized_shaders_AtStartup();
+  mWrScissoredCacheClearsEnabled =
+      StaticPrefs::gfx_webrender_scissored_cache_clears_enabled_AtStartup();
+  mWrScissoredCacheClearsForceEnabled = StaticPrefs::
+      gfx_webrender_scissored_cache_clears_force_enabled_AtStartup();
 #ifdef XP_WIN
   mWrForceAngle = StaticPrefs::gfx_webrender_force_angle_AtStartup();
   mWrForceAngleNoGPUProcess = StaticPrefs::
@@ -85,6 +89,8 @@ void gfxConfigManager::Init() {
       &gfxConfig::GetFeature(Feature::WEBRENDER_SHADER_CACHE);
   mFeatureWrOptimizedShaders =
       &gfxConfig::GetFeature(Feature::WEBRENDER_OPTIMIZED_SHADERS);
+  mFeatureWrScissoredCacheClears =
+      &gfxConfig::GetFeature(Feature::WEBRENDER_SCISSORED_CACHE_CLEARS);
 
   mFeatureHwCompositing = &gfxConfig::GetFeature(Feature::HW_COMPOSITING);
 #ifdef XP_WIN
@@ -140,6 +146,7 @@ void gfxConfigManager::ConfigureWebRender() {
   MOZ_ASSERT(mFeatureWrPartial);
   MOZ_ASSERT(mFeatureWrShaderCache);
   MOZ_ASSERT(mFeatureWrOptimizedShaders);
+  MOZ_ASSERT(mFeatureWrScissoredCacheClears);
   MOZ_ASSERT(mFeatureHwCompositing);
   MOZ_ASSERT(mFeatureGPUProcess);
 
@@ -332,6 +339,15 @@ void gfxConfigManager::ConfigureWebRender() {
                                              "WebRender disabled",
                                              "FEATURE_FAILURE_WR_DISABLED"_ns);
   }
+
+  mFeatureWrScissoredCacheClears->SetDefault(mWrScissoredCacheClearsEnabled,
+                                             FeatureStatus::Disabled,
+                                             "User disabled via pref");
+  if (mWrScissoredCacheClearsForceEnabled) {
+    mFeatureWrScissoredCacheClears->UserForceEnable("Force enabled by pref");
+  }
+  ConfigureFromBlocklist(nsIGfxInfo::FEATURE_WEBRENDER_SCISSORED_CACHE_CLEARS,
+                         mFeatureWrScissoredCacheClears);
 }
 
 }  // namespace gfx

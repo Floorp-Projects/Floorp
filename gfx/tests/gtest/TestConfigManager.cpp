@@ -24,6 +24,7 @@ class MockGfxInfo final : public nsIGfxInfo {
   int32_t mStatusWrShaderCache;
   int32_t mStatusWrOptimizedShaders;
   int32_t mStatusWrPartialPresent;
+  int32_t mStatusWrScissoredCacheClears;
   int32_t mMaxRefreshRate;
   bool mHasMixedRefreshRate;
   Maybe<bool> mHasBattery;
@@ -37,6 +38,7 @@ class MockGfxInfo final : public nsIGfxInfo {
         mStatusWrShaderCache(nsIGfxInfo::FEATURE_STATUS_OK),
         mStatusWrOptimizedShaders(nsIGfxInfo::FEATURE_STATUS_OK),
         mStatusWrPartialPresent(nsIGfxInfo::FEATURE_STATUS_OK),
+        mStatusWrScissoredCacheClears(nsIGfxInfo::FEATURE_STATUS_OK),
         mMaxRefreshRate(-1),
         mHasMixedRefreshRate(false),
         mHasBattery(Some(false)),
@@ -60,6 +62,9 @@ class MockGfxInfo final : public nsIGfxInfo {
         break;
       case nsIGfxInfo::FEATURE_WEBRENDER_PARTIAL_PRESENT:
         *_retval = mStatusWrPartialPresent;
+        break;
+      case nsIGfxInfo::FEATURE_WEBRENDER_SCISSORED_CACHE_CLEARS:
+        *_retval = mStatusWrScissoredCacheClears;
         break;
       default:
         return NS_ERROR_NOT_IMPLEMENTED;
@@ -257,6 +262,7 @@ class GfxConfigManager : public ::testing::Test, public gfxConfigManager {
     mFeatureWrPartial = &mFeatures.mWrPartial;
     mFeatureWrShaderCache = &mFeatures.mWrShaderCache;
     mFeatureWrOptimizedShaders = &mFeatures.mWrOptimizedShaders;
+    mFeatureWrScissoredCacheClears = &mFeatures.mWrScissoredCacheClears;
     mFeatureHwCompositing = &mFeatures.mHwCompositing;
     mFeatureGPUProcess = &mFeatures.mGPUProcess;
   }
@@ -282,6 +288,7 @@ class GfxConfigManager : public ::testing::Test, public gfxConfigManager {
     mWrForceAngle = true;
     mWrDCompWinEnabled = true;
     mWrCompositorDCompRequired = true;
+    mWrScissoredCacheClearsEnabled = true;
     ++mHwStretchingSupport.mBoth;
     mIsWin10OrLater = true;
     mIsNightly = true;
@@ -296,6 +303,7 @@ class GfxConfigManager : public ::testing::Test, public gfxConfigManager {
     mFeatures.mWrPartial.Reset();
     mFeatures.mWrShaderCache.Reset();
     mFeatures.mWrOptimizedShaders.Reset();
+    mFeatures.mWrScissoredCacheClears.Reset();
     mFeatures.mHwCompositing.Reset();
     mFeatures.mD3D11HwAngle.Reset();
     mFeatures.mD3D11Compositing.Reset();
@@ -310,6 +318,7 @@ class GfxConfigManager : public ::testing::Test, public gfxConfigManager {
     FeatureState mWrPartial;
     FeatureState mWrShaderCache;
     FeatureState mWrOptimizedShaders;
+    FeatureState mWrScissoredCacheClears;
     FeatureState mHwCompositing;
     FeatureState mD3D11HwAngle;
     FeatureState mD3D11Compositing;
@@ -332,6 +341,7 @@ TEST_F(GfxConfigManager, WebRenderDefault) {
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
@@ -348,6 +358,7 @@ TEST_F(GfxConfigManager, WebRenderDefaultRelease) {
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
@@ -364,6 +375,7 @@ TEST_F(GfxConfigManager, WebRenderNoPartialPresent) {
   EXPECT_FALSE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
@@ -395,6 +407,7 @@ TEST_F(GfxConfigManager, WebRenderScaledResolutionWithHwStretching) {
   EXPECT_TRUE(mFeatures.mWrDComp.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
@@ -412,6 +425,7 @@ TEST_F(GfxConfigManager, WebRenderScaledResolutionNoHwStretching) {
   EXPECT_TRUE(mFeatures.mWrDComp.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
@@ -428,6 +442,7 @@ TEST_F(GfxConfigManager, WebRenderEnabledWithDisableHwCompositingNoWr) {
   EXPECT_TRUE(mFeatures.mWrDComp.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
@@ -446,6 +461,7 @@ TEST_F(GfxConfigManager, WebRenderDisabledWithDisableHwCompositingNoWr) {
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_FALSE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_FALSE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
@@ -464,6 +480,7 @@ TEST_F(GfxConfigManager, WebRenderDisabledWithAllowSoftwareGPUProcess) {
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_FALSE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
@@ -480,6 +497,7 @@ TEST_F(GfxConfigManager, WebRenderSafeMode) {
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
@@ -496,6 +514,7 @@ TEST_F(GfxConfigManager, WebRenderEarlierThanWindows10) {
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
@@ -512,6 +531,7 @@ TEST_F(GfxConfigManager, WebRenderDCompDisabled) {
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
@@ -529,6 +549,7 @@ TEST_F(GfxConfigManager, WebRenderDCompNotRequired) {
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
@@ -545,6 +566,7 @@ TEST_F(GfxConfigManager, WebRenderForceAngleDisabled) {
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
@@ -561,6 +583,7 @@ TEST_F(GfxConfigManager, WebRenderD3D11HwAngleDisabled) {
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_FALSE(mFeatures.mD3D11HwAngle.IsEnabled());
@@ -578,6 +601,7 @@ TEST_F(GfxConfigManager, WebRenderD3D11HwAngleAndForceAngleDisabled) {
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_FALSE(mFeatures.mD3D11HwAngle.IsEnabled());
@@ -594,6 +618,7 @@ TEST_F(GfxConfigManager, WebRenderGPUProcessDisabled) {
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_FALSE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
@@ -614,6 +639,7 @@ TEST_F(GfxConfigManager, WebRenderIntelBatteryNoHwStretchingNotNightly) {
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
@@ -632,6 +658,7 @@ TEST_F(GfxConfigManager, WebRenderNvidiaHighMixedRefreshRateNightly) {
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
@@ -650,6 +677,7 @@ TEST_F(GfxConfigManager, WebRenderNvidiaHighMixedRefreshRateNotNightly) {
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
@@ -666,6 +694,7 @@ TEST_F(GfxConfigManager, WebRenderNvidiaHighRefreshRateNotNightly) {
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
@@ -683,6 +712,7 @@ TEST_F(GfxConfigManager, WebRenderNvidiaLowMixedRefreshRateNotNightly) {
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
@@ -699,6 +729,7 @@ TEST_F(GfxConfigManager, WebRenderSofwareAndNotQualified) {
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
@@ -716,6 +747,7 @@ TEST_F(GfxConfigManager, WebRenderForceEnabledEnvvar) {
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
@@ -733,6 +765,7 @@ TEST_F(GfxConfigManager, WebRenderSoftwareAllowedForceEnabledPref) {
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
@@ -751,6 +784,7 @@ TEST_F(GfxConfigManager, WebRenderForceSoftwareForceEnabledEnvvar) {
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
@@ -769,6 +803,7 @@ TEST_F(GfxConfigManager, WebRenderSoftwareReleaseWindowsGPUProcessDisabled) {
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_FALSE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
@@ -789,6 +824,7 @@ TEST_F(GfxConfigManager, WebRenderSoftwareReleaseGPUProcessDisabled) {
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_FALSE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
@@ -804,6 +840,7 @@ TEST_F(GfxConfigManager, WebRenderShaderCacheDisabled) {
   EXPECT_TRUE(mFeatures.mWrDComp.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
@@ -820,6 +857,61 @@ TEST_F(GfxConfigManager, WebRenderShaderCacheBlocked) {
   EXPECT_TRUE(mFeatures.mWrDComp.IsEnabled());
   EXPECT_FALSE(mFeatures.mWrShaderCache.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrScissoredCacheClears.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
+  EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
+  EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
+  EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
+}
+
+TEST_F(GfxConfigManager, WebRenderScissoredCacheClearsDisabled) {
+  mWrScissoredCacheClearsEnabled = false;
+  ConfigureWebRender();
+
+  EXPECT_TRUE(mFeatures.mWr.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrCompositor.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrAngle.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrDComp.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrShaderCache.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrScissoredCacheClears.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
+  EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
+  EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
+  EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
+}
+
+TEST_F(GfxConfigManager, WebRenderScissoredCacheClearsBlocked) {
+  mMockGfxInfo->mStatusWrScissoredCacheClears =
+      nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+  ConfigureWebRender();
+
+  EXPECT_TRUE(mFeatures.mWr.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrCompositor.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrAngle.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrDComp.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrShaderCache.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrScissoredCacheClears.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
+  EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
+  EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
+  EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
+}
+
+TEST_F(GfxConfigManager, WebRenderScissoredCacheClearsForceEnabled) {
+  mWrScissoredCacheClearsForceEnabled = false;
+  mMockGfxInfo->mStatusWrScissoredCacheClears =
+      nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+  ConfigureWebRender();
+
+  EXPECT_TRUE(mFeatures.mWr.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrCompositor.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrAngle.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrDComp.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrShaderCache.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrScissoredCacheClears.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
