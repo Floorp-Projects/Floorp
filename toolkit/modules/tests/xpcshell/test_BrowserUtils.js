@@ -222,7 +222,7 @@ add_task(async function test_shouldShowCookieBannersPromo() {
   Preferences.resetBranch("browser.promo.cookiebanners");
 });
 
-add_task(function test_getShareableURL() {
+add_task(function test_isShareableURL() {
   // Some test suites, specifically android, don't have this setup properly -- so we add it manually
   if (!Preferences.get("services.sync.engine.tabs.filteredSchemes")) {
     Preferences.set(
@@ -231,27 +231,22 @@ add_task(function test_getShareableURL() {
     );
   }
   // Empty shouldn't be sendable
-  Assert.ok(!BrowserUtils.getShareableURL(""));
+  Assert.ok(!BrowserUtils.isShareableURL(""));
   // Valid
-  let good = Services.io.newURI("https://mozilla.org");
-  Assert.ok(BrowserUtils.getShareableURL(good).equals(good));
+  Assert.ok(
+    BrowserUtils.isShareableURL(Services.io.newURI("https://mozilla.org"))
+  );
   // Invalid
   Assert.ok(
-    !BrowserUtils.getShareableURL(Services.io.newURI("file://path/to/pdf.pdf"))
+    !BrowserUtils.isShareableURL(Services.io.newURI("file://path/to/pdf.pdf"))
   );
 
   // Invalid
   Assert.ok(
-    !BrowserUtils.getShareableURL(
+    !BrowserUtils.isShareableURL(
       Services.io.newURI(
         "data:application/json;base64,ewogICJ0eXBlIjogIm1haW4i=="
       )
     )
   );
-
-  // Reader mode:
-  let readerUrl = Services.io.newURI(
-    "about:reader?url=" + encodeURIComponent("http://foo.com/")
-  );
-  Assert.equal(BrowserUtils.getShareableURL(readerUrl).spec, "http://foo.com/");
 });

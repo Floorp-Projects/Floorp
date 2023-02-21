@@ -4730,7 +4730,7 @@ let gShareUtils = {
     if (AppConstants.platform == "win") {
       // We disable the item on Windows, as there's no submenu.
       // On macOS, we handle this inside the menupopup.
-      shareURL.hidden = !BrowserUtils.getShareableURL(browser.currentURI);
+      shareURL.hidden = !BrowserUtils.isShareableURL(browser.currentURI);
     }
   },
 
@@ -4785,12 +4785,9 @@ let gShareUtils = {
     let urlToShare = null;
     let titleToShare = null;
 
-    if (browser) {
-      let maybeToShare = BrowserUtils.getShareableURL(browser.currentURI);
-      if (maybeToShare) {
-        urlToShare = maybeToShare;
-        titleToShare = browser.contentTitle;
-      }
+    if (browser && BrowserUtils.isShareableURL(browser.currentURI)) {
+      urlToShare = browser.currentURI;
+      titleToShare = browser.contentTitle;
     }
     return { urlToShare, titleToShare };
   },
