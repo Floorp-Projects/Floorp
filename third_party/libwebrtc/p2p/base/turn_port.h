@@ -233,9 +233,7 @@ class TurnPort : public Port {
   // return true if entry was created (i.e channel_number consumed).
   bool CreateOrRefreshEntry(Connection* conn, int channel_number);
 
-  bool CreateOrRefreshEntry(const rtc::SocketAddress& addr,
-                            int channel_number,
-                            absl::string_view remote_ufrag);
+  bool CreateOrRefreshEntry(const rtc::SocketAddress& addr, int channel_number);
 
   rtc::DiffServCodePoint StunDscpValue() const override;
 

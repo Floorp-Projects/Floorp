@@ -740,9 +740,6 @@ void P2PTransportChannel::ParseFieldTrials(
   if (field_trials->IsEnabled("WebRTC-ExtraICEPing")) {
     RTC_LOG(LS_INFO) << "Set WebRTC-ExtraICEPing: Enabled";
   }
-  if (field_trials->IsEnabled("WebRTC-TurnAddMultiMapping")) {
-    RTC_LOG(LS_INFO) << "Set WebRTC-TurnAddMultiMapping: Enabled";
-  }
 
   webrtc::StructParametersParser::Create(
       // go/skylift-light
