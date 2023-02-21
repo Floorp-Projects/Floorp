@@ -1326,10 +1326,10 @@ class WhiteSpaceVisibilityKeeper final {
   WhiteSpaceVisibilityKeeper(WhiteSpaceVisibilityKeeper&& aOther) = delete;
 
   /**
-   * DeleteInvisibleASCIIWhiteSpaces() removes invisible leading white-spaces
-   * and trailing white-spaces if there are around aPoint.
+   * Remove invisible leading white-spaces and trailing white-spaces if there
+   * are around aPoint.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<CaretPoint, nsresult>
   DeleteInvisibleASCIIWhiteSpaces(HTMLEditor& aHTMLEditor,
                                   const EditorDOMPoint& aPoint);
 
