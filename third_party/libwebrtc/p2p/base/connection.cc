@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "absl/algorithm/container.h"
+#include "absl/strings/escaping.h"
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
 #include "p2p/base/port_allocator.h"
@@ -474,22 +475,20 @@ void Connection::OnReadPacket(const char* data,
     rtc::LoggingSeverity sev = (!writable() ? rtc::LS_INFO : rtc::LS_VERBOSE);
     switch (msg->integrity()) {
       case StunMessage::IntegrityStatus::kNotSet:
-        // Late computation of integrity status, but not an error.
+        // This packet did not come through Port processing?
+        // TODO(bugs.webrtc.org/14578): Clean up this situation.
         msg->ValidateMessageIntegrity(remote_candidate().password());
         break;
       case StunMessage::IntegrityStatus::kIntegrityOk:
         if (remote_candidate().password() != msg->password()) {
-          // Password has changed. Recheck message.
-          // TODO(crbug.com/1177125): Redesign logic to check only once.
-          msg->RevalidateMessageIntegrity(remote_candidate().password());
+          // TODO(bugs.webrtc.org/14578): Do a better thing
+          RTC_LOG(LS_INFO) << "STUN code error - Different passwords, old = "
+                           << absl::CHexEscape(msg->password()) << ", new "
+                           << absl::CHexEscape(remote_candidate().password());
         }
         break;
-      case StunMessage::IntegrityStatus::kIntegrityBad:
-        // Possibly we have a new password to try.
-        // TODO(crbug.com/1177125): Redesign logic to check only once.
-        msg->RevalidateMessageIntegrity(remote_candidate().password());
-        break;
       default:
+        // kIntegrityBad and kNoIntegrity.
         // This shouldn't happen.
         RTC_DCHECK_NOTREACHED();
         break;
