@@ -9660,6 +9660,18 @@ void nsWindow::SetEGLNativeWindowSize(
 }
 #endif
 
+LayoutDeviceIntSize nsWindow::GetMozContainerSize() {
+  LayoutDeviceIntSize size(0, 0);
+  if (mContainer) {
+    GtkAllocation allocation;
+    gtk_widget_get_allocation(GTK_WIDGET(mContainer), &allocation);
+    double scale = FractionalScaleFactor();
+    size.width = round(allocation.width * scale);
+    size.height = round(allocation.height * scale);
+  }
+  return size;
+}
+
 nsWindow* nsWindow::GetWindow(GdkWindow* window) {
   return get_window_for_gdk_window(window);
 }
