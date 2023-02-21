@@ -386,16 +386,16 @@ class MOZ_STACK_CLASS WSRunScanner final {
    * text when caret is at aPoint.
    */
   static Result<EditorDOMRangeInTexts, nsresult>
-  GetRangeInTextNodesToForwardDeleteFrom(Element* aEditingHost,
-                                         const EditorDOMPoint& aPoint);
+  GetRangeInTextNodesToForwardDeleteFrom(const EditorDOMPoint& aPoint,
+                                         const Element& aEditingHost);
 
   /**
    * GetRangeInTextNodesToBackspaceFrom() returns the range to remove text
    * when caret is at aPoint.
    */
   static Result<EditorDOMRangeInTexts, nsresult>
-  GetRangeInTextNodesToBackspaceFrom(Element* aEditingHost,
-                                     const EditorDOMPoint& aPoint);
+  GetRangeInTextNodesToBackspaceFrom(const EditorDOMPoint& aPoint,
+                                     const Element& aEditingHost);
 
   /**
    * GetRangesForDeletingAtomicContent() returns the range to delete
