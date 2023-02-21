@@ -979,6 +979,13 @@ class Raptor(
         # Extra arguments
         if args is not None:
             options += args
+        if os.getenv("PERF_FLAGS"):
+            for option in os.getenv("PERF_FLAGS").split():
+                if "=" in option:
+                    kw_option, value = option.split("=")
+                    kw_options[kw_option] = value
+                else:
+                    options.extend(["--" + option])
 
         if self.config.get("run_local", False):
             options.extend(["--run-local"])
