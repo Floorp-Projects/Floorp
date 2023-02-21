@@ -9,6 +9,8 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/RTCPeerConnectionBinding.h"
 
+#include <vector>
+
 namespace mozilla {
 class PeerConnectionImpl;
 
