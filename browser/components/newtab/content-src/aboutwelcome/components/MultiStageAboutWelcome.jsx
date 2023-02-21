@@ -314,7 +314,7 @@ export class WelcomeScreen extends React.PureComponent {
     if (type === "SHOW_FIREFOX_ACCOUNTS") {
       let params = {
         ...BASE_PARAMS,
-        utm_term: `aboutwelcome-${UTMTerm}-screen`,
+        utm_term: `${UTMTerm}-screen`,
       };
       if (action.addFlowParams && flowParams) {
         params = {
@@ -325,7 +325,7 @@ export class WelcomeScreen extends React.PureComponent {
       data = { ...data, extraParams: params };
     } else if (type === "OPEN_URL") {
       let url = new URL(data.args);
-      addUtmParams(url, `aboutwelcome-${UTMTerm}-screen`);
+      addUtmParams(url, `${UTMTerm}-screen`);
       if (action.addFlowParams && flowParams) {
         url.searchParams.append("device_id", flowParams.deviceId);
         url.searchParams.append("flow_id", flowParams.flowId);
