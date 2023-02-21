@@ -169,7 +169,7 @@ add_task(async function test_extension_page_sameprocess_navigation() {
   });
 
   if (
-    Services.appinfo.fissionAutostart &&
+    Services.appinfo.sessionHistoryInParent &&
     WebExtensionPolicy.isExtensionProcess
   ) {
     // When the extension are running in the main process while the webpages run
@@ -294,8 +294,8 @@ add_task(async function test_extension_page_context_navigated_to_web_page() {
     // https://searchfox.org/mozilla-central/rev/24c1cdc33ccce692612276cd0d3e9a44f6c22fd3/dom/base/nsFrameLoaderOwner.cpp#185-196
     // ).
     equal(active, undefined, "extension page context should not exist anymore");
-  } else if (Services.appinfo.fissionAutostart) {
-    // When fission is enabled and the extensions runs in their own child extension
+  } else if (Services.appinfo.sessionHistoryInParent) {
+    // When SHIP is enabled and the extensions runs in their own child extension
     // process, the BFCache is managed entirely from the parent process and the
     // extension page is expected to be able to enter the BFCache.
     equal(

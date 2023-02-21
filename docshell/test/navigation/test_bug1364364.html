@@ -14,7 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1364364
   let testWin, testDoc;
   async function test() {
     SimpleTest.waitForExplicitFinish();
-    if (SpecialPowers.Services.appinfo.fissionAutostart) {
+    if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
       // This test relies on the possibility to modify the bfcached document.
       // The new implementation is more restricted and thus works only
       // when the bfcached browsing context is the only top level one

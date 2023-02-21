@@ -98,7 +98,7 @@ const blockBFCacheTests = [
   },
 ];
 
-if (SpecialPowers.Services.appinfo.sessionHistoryInParent) {
+if (SpecialPowers.Services.appinfo.fission) {
   blockBFCacheTests.push({
     name: "Loading OOP iframe",
     test: () => {
