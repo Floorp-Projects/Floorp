@@ -76,7 +76,14 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
 
     @property
     def browsertime_args(self):
-        args_list = ["--viewPort", "1366x695"]
+        args_list = [
+            "--viewPort",
+            "1366x695",
+            "--videoParams.convert",
+            "false",
+            "--videoParams.addTimer",
+            "false",
+        ]
 
         if self.config["app"] == "chrome-m":
             args_list.extend(
