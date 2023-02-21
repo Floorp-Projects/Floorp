@@ -461,7 +461,7 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
 
     if (type === "SHOW_FIREFOX_ACCOUNTS") {
       let params = { ..._asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_5__.BASE_PARAMS,
-        utm_term: `aboutwelcome-${UTMTerm}-screen`
+        utm_term: `${UTMTerm}-screen`
       };
 
       if (action.addFlowParams && flowParams) {
@@ -475,7 +475,7 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
       };
     } else if (type === "OPEN_URL") {
       let url = new URL(data.args);
-      (0,_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_5__.addUtmParams)(url, `aboutwelcome-${UTMTerm}-screen`);
+      (0,_asrouter_templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_5__.addUtmParams)(url, `${UTMTerm}-screen`);
 
       if (action.addFlowParams && flowParams) {
         url.searchParams.append("device_id", flowParams.deviceId);
@@ -2173,14 +2173,14 @@ class AboutWelcome extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
 
 function ComputeTelemetryInfo(welcomeContent, experimentId, branchId) {
   let messageId = welcomeContent.template === "return_to_amo" ? `RTAMO_DEFAULT_WELCOME_${welcomeContent.type.toUpperCase()}` : "DEFAULT_ID";
-  let UTMTerm = "default";
+  let UTMTerm = "aboutwelcome-default";
 
   if (welcomeContent.id) {
     messageId = welcomeContent.id.toUpperCase();
   }
 
   if (experimentId && branchId) {
-    UTMTerm = `${experimentId}-${branchId}`.toLowerCase();
+    UTMTerm = `aboutwelcome-${experimentId}-${branchId}`.toLowerCase();
   }
 
   return {

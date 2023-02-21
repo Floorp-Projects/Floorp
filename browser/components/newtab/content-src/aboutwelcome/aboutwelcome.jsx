@@ -89,14 +89,14 @@ function ComputeTelemetryInfo(welcomeContent, experimentId, branchId) {
     welcomeContent.template === "return_to_amo"
       ? `RTAMO_DEFAULT_WELCOME_${welcomeContent.type.toUpperCase()}`
       : "DEFAULT_ID";
-  let UTMTerm = "default";
+  let UTMTerm = "aboutwelcome-default";
 
   if (welcomeContent.id) {
     messageId = welcomeContent.id.toUpperCase();
   }
 
   if (experimentId && branchId) {
-    UTMTerm = `${experimentId}-${branchId}`.toLowerCase();
+    UTMTerm = `aboutwelcome-${experimentId}-${branchId}`.toLowerCase();
   }
   return {
     messageId,

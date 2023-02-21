@@ -456,7 +456,7 @@ describe("MultiStageAboutWelcome module", () => {
               utm_campaign: "firstrun",
               utm_medium: "referral",
               utm_source: "activity-stream",
-              utm_term: "aboutwelcome-you_tee_emm-screen",
+              utm_term: "you_tee_emm-screen",
             },
           },
           type: "SHOW_FIREFOX_ACCOUNTS",

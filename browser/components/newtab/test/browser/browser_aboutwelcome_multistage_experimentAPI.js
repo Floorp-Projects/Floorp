@@ -584,7 +584,7 @@ add_task(async function test_multistage_aboutwelcome_utm_term() {
 
   Assert.equal(
     actionCall.args[1].data.args,
-    "https://www.mozilla.org/?utm_source=activity-stream&utm_campaign=firstrun&utm_medium=referral&utm_term=aboutwelcome-test-screen",
+    "https://www.mozilla.org/?utm_source=activity-stream&utm_campaign=firstrun&utm_medium=referral&utm_term=test-screen",
     "UTMTerm set in mobile"
   );
 
