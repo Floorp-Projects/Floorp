@@ -809,6 +809,7 @@ if (rtc_include_tests) {
       ":video_stream_buffer_controller",
       ":video_stream_decoder_impl",
       ":video_stream_encoder_impl",
+      ":video_stream_encoder_interface",
       "../api:create_frame_generator",
       "../api:fake_frame_decryptor",
       "../api:fake_frame_encryptor",

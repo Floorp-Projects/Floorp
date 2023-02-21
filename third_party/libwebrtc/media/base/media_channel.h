@@ -605,6 +605,7 @@ struct VideoSenderInfo : public MediaSenderInfo {
   uint32_t huge_frames_sent = 0;
   uint32_t aggregated_huge_frames_sent = 0;
   absl::optional<std::string> rid;
+  absl::optional<bool> power_efficient_encoder;
 };
 
 struct VideoReceiverInfo : public MediaReceiverInfo {
@@ -612,6 +613,7 @@ struct VideoReceiverInfo : public MediaReceiverInfo {
   ~VideoReceiverInfo();
   std::vector<SsrcGroup> ssrc_groups;
   std::string decoder_implementation_name;
+  absl::optional<bool> power_efficient_decoder;
   int packets_concealed = 0;
   int firs_sent = 0;
   int plis_sent = 0;

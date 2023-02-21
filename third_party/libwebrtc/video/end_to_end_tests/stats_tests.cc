@@ -101,6 +101,8 @@ TEST_F(StatsEndToEndTest, GetStats) {
         send_stats_filled_["DecoderImplementationName"] |=
             stats.decoder_implementation_name ==
             test::FakeDecoder::kImplementationName;
+        receive_stats_filled_["PowerEfficientDecoder"] =
+            stats.power_efficient_decoder.has_value();
         receive_stats_filled_["RenderDelayAsHighAsExpected"] |=
             stats.render_delay_ms >= kExpectedRenderDelayMs;
 
@@ -159,6 +161,9 @@ TEST_F(StatsEndToEndTest, GetStats) {
       send_stats_filled_["EncoderImplementationName"] |=
           stats.encoder_implementation_name ==
           test::FakeEncoder::kImplementationName;
+
+      send_stats_filled_["PowerEfficientEncoder"] |=
+          stats.power_efficient_encoder == true;
 
       for (const auto& kv : stats.substreams) {
         if (expected_send_ssrcs_.find(kv.first) == expected_send_ssrcs_.end())
