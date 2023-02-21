@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '25ae710d52ac8d8d7578e26edd2cd1acf37a7671',
+  'chromium_revision': '09cc07c4533b1913b322ca8fa8a20eeaca12f257',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -40,7 +40,7 @@ vars = {
 deps = {
   # TODO(kjellander): Move this to be Android-only.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@d3664350d6f41d4c4f9ce5210a576b0f96ca5f9a',
+    'https://chromium.googlesource.com/chromium/src/base@4bd018dd45128078c5e74d4499ff4ce76bd140f6',
   'src/build':
     'https://chromium.googlesource.com/chromium/src/build@1d0c54336b00243ea6f2f0cff769e306531b4bd2',
   'src/buildtools':
@@ -51,13 +51,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@1465f12e67b6fd10b8f068e110671262de4a6e6f',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@67814b22efea2a04f1c5c709bb80d8d4d711a92f',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@c2854ca1fe40de4a564c66c20894d4a59b23e15e',
+    'https://chromium.googlesource.com/chromium/src/testing@17a229d7d11d34d5e4f3d24163be28350b115e72',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@c3fac8dca54fe5a0fe2cd779ba84c74855b280f6',
+    'https://chromium.googlesource.com/chromium/src/third_party@290dc05fdbe92a03766316d4182b3419f344433f',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -105,7 +105,7 @@ deps = {
   'src/buildtools/third_party/libc++/trunk':
     'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxx.git@de4575635003f3af708e1ae3cb05c0b219aa58b4',
   'src/buildtools/third_party/libc++abi/trunk':
-    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxxabi.git@9572e56a12c88c011d504a707ca94952be4664f9',
+    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxxabi.git@685c4ad257da543bdf9e3a391c28b3e4ac1f8aac',
   'src/buildtools/third_party/libunwind/trunk':
     'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libunwind.git@1111799723f6a003e6f52202b9bf84387c552081',
 
@@ -187,7 +187,7 @@ deps = {
       'condition': 'checkout_linux',
   },
   'src/third_party/freetype/src':
-    'https://chromium.googlesource.com/chromium/src/third_party/freetype2.git@5182264a40e70ff31be0a0ec8a0d5ffb5f65582e',
+    'https://chromium.googlesource.com/chromium/src/third_party/freetype2.git@8493877e78596cf7fe8eb008708070e3852d104a',
   'src/third_party/harfbuzz-ng/src':
     'https://chromium.googlesource.com/external/github.com/harfbuzz/harfbuzz.git@56c467093598ec559a7148b61e112e9de52b7076',
   'src/third_party/google_benchmark/src': {
@@ -243,7 +243,7 @@ deps = {
       'condition': 'checkout_android',
   },
   'src/third_party/perfetto':
-    'https://android.googlesource.com/platform/external/perfetto.git@a44f85ffb667c4b69b6717f8b656c27b90d93b05',
+    'https://android.googlesource.com/platform/external/perfetto.git@d905018c08900932c36d228953cf1c0dc8fdf31f',
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@9d6d0624d7943a09cc0be9df1a7402522989ac1a',
   'src/third_party/libyuv':
@@ -292,7 +292,7 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@6c5b918001879bb23273117df443a054b7fb5f28',
+    'https://chromium.googlesource.com/chromium/src/tools@579821d4f9ee53b11f05ff2323f56bf41abaa6d4',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
@@ -369,7 +369,7 @@ deps = {
     'packages': [
       {
           'package': 'chromium/third_party/androidx',
-          'version': '904AOJizpni7pUzLC0rW57hAs0k1gQPPnwmoCPwvQ0EC',
+          'version': 'iMCJS_4q6z9bSKJVJVw5ZR9qdI_5iZilsQytJhVNWz8C',
       },
     ],
     'condition': 'checkout_android',
