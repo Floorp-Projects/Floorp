@@ -280,6 +280,12 @@ config("common_config") {
     defines += [ "WEBRTC_ENABLE_PROTOBUF=0" ]
   }
 
+  if (rtc_strict_field_trials) {
+    defines += [ "WEBRTC_STRICT_FIELD_TRIALS=1" ]
+  } else {
+    defines += [ "WEBRTC_STRICT_FIELD_TRIALS=0" ]
+  }
+
   if (rtc_include_internal_audio_device) {
     defines += [ "WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE" ]
   }

@@ -18,7 +18,8 @@
 
 namespace webrtc {
 namespace {
-const char kDummyExperiment[] = "WebRTC-DummyExperiment";
+
+constexpr char kDummyExperiment[] = "WebRTC-DummyExperiment";
 
 struct DummyExperiment {
   FieldTrialFlag enabled = FieldTrialFlag("Enabled");
@@ -28,6 +29,8 @@ struct DummyExperiment {
   FieldTrialParameter<bool> ping = FieldTrialParameter<bool>("p", 0);
   FieldTrialParameter<std::string> hash =
       FieldTrialParameter<std::string>("h", "a80");
+
+  field_trial::ScopedGlobalFieldTrialsForTesting g{{kDummyExperiment}};
 
   explicit DummyExperiment(absl::string_view field_trial) {
     ParseFieldTrial({&enabled, &factor, &retries, &size, &ping, &hash},
