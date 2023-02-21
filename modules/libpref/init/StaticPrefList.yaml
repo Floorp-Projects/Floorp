@@ -4912,14 +4912,6 @@
   value: false
   mirror: always
 
-# Whether inserting <div> when typing Enter in a block element which can
-# contain <div>.  If false, inserts <br> instead.
-# TODO: Delete this pref after verifying nobody uses this pref.
-- name: editor.use_div_for_default_newlines
-  type: bool
-  value: true
-  mirror: always
-
 # Whether enabling blink compatible white-space normalizer or keep using
 # Gecko's traditional white-space normalizer.
 - name: editor.white_space_normalization.blink_compatible
