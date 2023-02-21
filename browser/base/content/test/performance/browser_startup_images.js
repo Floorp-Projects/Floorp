@@ -41,9 +41,10 @@ const knownUnshownImages = [
   },
 
   {
+    // bug 1817360 fixes this.
     file: "resource://gre-resources/broken-image.png",
-    platforms: ["win", "macosx"],
-    intermittentNotLoaded: ["win", "macosx"],
+    platforms: ["linux", "win", "macosx"],
+    intermittentNotLoaded: ["linux", "win", "macosx"],
   },
 
   {

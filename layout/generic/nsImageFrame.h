@@ -108,6 +108,7 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
     return mKind == Kind::ImageLoadingContent;
   }
 
+  void UpdateXULImage();
   const mozilla::StyleImage* GetImageFromStyle() const;
 
 #ifdef ACCESSIBILITY
@@ -189,6 +190,8 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   enum class Kind : uint8_t {
     // For an nsImageLoadingContent.
     ImageLoadingContent,
+    // For a <xul:image> element.
+    XULImage,
     // For css 'content: url(..)' on non-generated content.
     ContentProperty,
     // For a child of a ::before / ::after pseudo-element that had an url() item
@@ -204,6 +207,7 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
 
  private:
   friend nsIFrame* NS_NewImageFrame(mozilla::PresShell*, ComputedStyle*);
+  friend nsIFrame* NS_NewXULImageFrame(mozilla::PresShell*, ComputedStyle*);
   friend nsIFrame* NS_NewImageFrameForContentProperty(mozilla::PresShell*,
                                                       ComputedStyle*);
   friend nsIFrame* NS_NewImageFrameForGeneratedContentIndex(mozilla::PresShell*,
@@ -388,7 +392,8 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
 
   RefPtr<nsImageListener> mListener;
 
-  // An image request created for content: url(..) or list-style-image.
+  // An image request created for content: url(..), list-style-image, or
+  // <xul:image>.
   RefPtr<imgRequestProxy> mOwnedRequest;
 
   nsCOMPtr<imgIContainer> mImage;
