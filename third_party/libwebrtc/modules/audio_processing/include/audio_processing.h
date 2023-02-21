@@ -51,18 +51,6 @@ class EchoDetector;
 class CustomAudioAnalyzer;
 class CustomProcessing;
 
-// Use to enable experimental gain control (AGC). At startup the experimental
-// AGC moves the microphone volume up to `startup_min_volume` if the current
-// microphone volume is set too low. The value is clamped to its operating range
-// [12, 255]. Here, 255 maps to 100%.
-//
-// Must be provided through AudioProcessingBuilder().Create(config).
-#if defined(WEBRTC_CHROMIUM_BUILD)
-static constexpr int kAgcStartupMinVolume = 85;
-#else
-static constexpr int kAgcStartupMinVolume = 0;
-#endif  // defined(WEBRTC_CHROMIUM_BUILD)
-
 // The Audio Processing Module (APM) provides a collection of voice processing
 // components designed for real-time communications software.
 //
@@ -286,8 +274,8 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
       // Enables the analog gain controller functionality.
       struct AnalogGainController {
         bool enabled = true;
-        // TODO(bugs.webrtc.org/1275566): Describe `startup_min_volume`.
-        int startup_min_volume = kAgcStartupMinVolume;
+        // TODO(bugs.webrtc.org/7494): Deprecated. Stop using and remove.
+        int startup_min_volume = 0;
         // Lowest analog microphone level that will be applied in response to
         // clipping.
         int clipped_level_min = 70;
