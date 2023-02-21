@@ -94,7 +94,6 @@ import org.mozilla.fenix.ext.areNotificationsEnabledSafe
 import org.mozilla.fenix.ext.breadcrumb
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.hasTopDestination
-import org.mozilla.fenix.ext.isNotificationChannelEnabled
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.setNavigationIcon
 import org.mozilla.fenix.ext.settings
@@ -116,7 +115,6 @@ import org.mozilla.fenix.library.recentlyclosed.RecentlyClosedFragmentDirections
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.onboarding.DefaultBrowserNotificationWorker
 import org.mozilla.fenix.onboarding.FenixOnboarding
-import org.mozilla.fenix.onboarding.MARKETING_CHANNEL_ID
 import org.mozilla.fenix.onboarding.ReEngagementNotificationWorker
 import org.mozilla.fenix.onboarding.ensureMarketingChannelExists
 import org.mozilla.fenix.perf.MarkersActivityLifecycleCallbacks
@@ -435,15 +433,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             // that we should not rely on the application being killed between user sessions.
             components.appStore.dispatch(AppAction.ResumedMetricsAction)
 
-            with(applicationContext) {
-                // Only set up Workers if notifications are enabled
-                val notificationManagerCompat = NotificationManagerCompat.from(this)
-                if (notificationManagerCompat.isNotificationChannelEnabled(MARKETING_CHANNEL_ID)) {
-                    DefaultBrowserNotificationWorker.setDefaultBrowserNotificationIfNeeded(this)
-                    ReEngagementNotificationWorker.setReEngagementNotificationIfNeeded(this)
-                    MessageNotificationWorker.setMessageNotificationWorker(this)
-                }
-            }
+            DefaultBrowserNotificationWorker.setDefaultBrowserNotificationIfNeeded(applicationContext)
+            ReEngagementNotificationWorker.setReEngagementNotificationIfNeeded(applicationContext)
+            MessageNotificationWorker.setMessageNotificationWorker(applicationContext)
         }
 
         // This was done in order to refresh search engines when app is running in background
