@@ -2075,6 +2075,21 @@ sidebar:
       - 'firefox'
     record_in_processes:
       - 'main'
+  link:
+    bug_numbers:
+      - 1815706
+    description: >
+      The number of history items opened from the History sidebar.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - rtestard@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
 
 os.environment:
   is_admin_without_uac:

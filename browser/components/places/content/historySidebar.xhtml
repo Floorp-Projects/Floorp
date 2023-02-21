@@ -84,8 +84,8 @@
         hidecolumnpicker="true"
         context="placesContext"
         singleclickopens="true"
-        onclick="selectLink(event);"
-        onkeypress="selectLink(event);"
+        onclick="PlacesUIUtils.onSidebarTreeClick(event, updateHistoryTelemetry);"
+        onkeypress="PlacesUIUtils.onSidebarTreeKeyPress(event, updateHistoryTelemetry);"
         onmousemove="PlacesUIUtils.onSidebarTreeMouseMove(event);"
         onmouseout="PlacesUIUtils.setMouseoverURL('', window);">
     <treecols>
