@@ -25,13 +25,10 @@ NS_INTERFACE_MAP_END
 
 Grid::Grid(nsISupports* aParent, nsGridContainerFrame* aFrame)
     : mParent(do_QueryInterface(aParent)),
-      mFrame(aFrame),
       mRows(new GridDimension(this)),
       mCols(new GridDimension(this)) {
   MOZ_ASSERT(aFrame,
              "Should never be instantiated with a null nsGridContainerFrame");
-
-  aFrame->SetProperty(nsGridContainerFrame::GridFragmentInfo(), this);
 
   // Construct areas first, because lines may need to reference them
   // to extract additional names for boundary lines.
@@ -83,14 +80,7 @@ Grid::Grid(nsISupports* aParent, nsGridContainerFrame* aFrame)
   mCols->SetLineInfo(columnTrackInfo, columnLineInfo, mAreas, false);
 }
 
-Grid::~Grid() {
-  // If mFrame is still alive, clear the property that points back to us.
-  if (mFrame.IsAlive()) {
-    mFrame->RemoveProperty(nsGridContainerFrame::GridFragmentInfo());
-  }
-
-  // Our member variables are correctly handled by default destruction.
-}
+Grid::~Grid() = default;
 
 JSObject* Grid::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return Grid_Binding::Wrap(aCx, this, aGivenProto);
