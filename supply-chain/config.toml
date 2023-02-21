@@ -988,10 +988,6 @@ criteria = "safe-to-deploy"
 version = "0.5.3"
 criteria = "safe-to-deploy"
 
-[[exemptions.renderdoc-sys]]
-version = "0.7.1"
-criteria = "safe-to-deploy"
-
 [[exemptions.replace_with]]
 version = "0.1.7"
 criteria = "safe-to-deploy"

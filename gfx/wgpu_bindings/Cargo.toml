@@ -20,7 +20,7 @@ git = "https://github.com/gfx-rs/wgpu"
 rev = "b33731c44c9dd3bfb79d889e7a699c26c3929cd3"
 #Note: "replay" shouldn't ideally be needed,
 # but it allows us to serialize everything across IPC.
-features = ["replay", "trace", "serial-pass", "strict_asserts", "wgsl", "renderdoc"]
+features = ["replay", "trace", "serial-pass", "strict_asserts", "wgsl"]
 
 # We want the wgpu-core Metal backend on macOS and iOS.
 # (We should consider also enabling "vulkan" for Vulkan Portability.)
