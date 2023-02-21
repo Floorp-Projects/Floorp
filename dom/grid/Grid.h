@@ -38,6 +38,7 @@ class Grid : public nsISupports, public nsWrapperCache {
 
  protected:
   nsCOMPtr<Element> mParent;
+  WeakFrame mFrame;
   RefPtr<GridDimension> mRows;
   RefPtr<GridDimension> mCols;
   nsTArray<RefPtr<GridArea>> mAreas;
