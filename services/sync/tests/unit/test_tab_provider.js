@@ -42,4 +42,11 @@ add_task(async function test_getAllTabs() {
   tabs = await provider.getAllTabs(true);
   _("Ordered: " + JSON.stringify(tabs));
   equal(tabs[0].lastUsed > tabs[1].lastUsed, true);
+
+  // reader mode URLs are provided.
+  provider.getWindowEnumerator = mockGetWindowEnumerator.bind(this, [
+    "about:reader?url=http%3A%2F%2Ffoo.com%2F",
+  ]);
+  tabs = await provider.getAllTabs(true);
+  equal(tabs[0].urlHistory[0], "http://foo.com/");
 });
