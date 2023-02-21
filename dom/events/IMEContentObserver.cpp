@@ -269,7 +269,9 @@ bool IMEContentObserver::InitWithEditor(nsPresContext& aPresContext,
     return false;
   }
 
-  if (const nsRange* selRange = mSelection->GetRangeAt(0)) {
+  if (mEditorBase->IsTextEditor()) {
+    mRootElement = mEditorBase->GetRoot();  // The anonymous <div>
+  } else if (const nsRange* selRange = mSelection->GetRangeAt(0)) {
     if (NS_WARN_IF(!selRange->GetStartContainer())) {
       return false;
     }
