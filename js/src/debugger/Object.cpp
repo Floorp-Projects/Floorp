@@ -1419,6 +1419,11 @@ struct DebuggerObject::PromiseReactionRecordBuilder
   bool pushGenerator(JSContext* cx,
                      Handle<AbstractGeneratorObject*> unwrappedGenerator) {
     Rooted<DebuggerFrame*> frame(cx);
+    if (unwrappedGenerator->isClosed()) {
+      // If the generator is closed, we can't generate a DebuggerFrame for it,
+      // so we ignore it.
+      return true;
+    }
     return dbg->getFrame(cx, unwrappedGenerator, &frame) && push(cx, frame);
   }
 
