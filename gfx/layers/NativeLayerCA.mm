@@ -1395,7 +1395,7 @@ bool NativeLayerCA::ApplyChanges(WhichRepresentation aRepresentation,
   return GetRepresentation(aRepresentation)
       .ApplyChanges(aUpdate, mSize, mIsOpaque, mPosition, mTransform, mDisplayRect, mClipRect,
                     mBackingScale, mSurfaceIsFlipped, mSamplingFilter, mSpecializeVideo, surface,
-                    mColor, mIsDRM);
+                    mColor, mIsDRM, IsVideo());
 }
 
 CALayer* NativeLayerCA::UnderlyingCALayer(WhichRepresentation aRepresentation) {
@@ -1421,18 +1421,22 @@ static NSString* NSStringForOSType(OSType type) {
   NSLog(@"Surface values are %@.\n", surfaceValues);
   CFRelease(surfaceValues);
 
-  CGColorSpaceRef colorSpace = CVImageBufferGetColorSpace(aBuffer);
-  NSLog(@"ColorSpace is %@.\n", colorSpace);
+  if (aBuffer) {
+    CGColorSpaceRef colorSpace = CVImageBufferGetColorSpace(aBuffer);
+    NSLog(@"ColorSpace is %@.\n", colorSpace);
 
-  CFDictionaryRef bufferAttachments =
-      CVBufferGetAttachments(aBuffer, kCVAttachmentMode_ShouldPropagate);
-  NSLog(@"Buffer attachments are %@.\n", bufferAttachments);
+    CFDictionaryRef bufferAttachments =
+        CVBufferGetAttachments(aBuffer, kCVAttachmentMode_ShouldPropagate);
+    NSLog(@"Buffer attachments are %@.\n", bufferAttachments);
+  }
 
-  OSType codec = CMFormatDescriptionGetMediaSubType(aFormat);
-  NSLog(@"Codec is %@.\n", NSStringForOSType(codec));
+  if (aFormat) {
+    OSType codec = CMFormatDescriptionGetMediaSubType(aFormat);
+    NSLog(@"Codec is %@.\n", NSStringForOSType(codec));
 
-  CFDictionaryRef extensions = CMFormatDescriptionGetExtensions(aFormat);
-  NSLog(@"Format extensions are %@.\n", extensions);
+    CFDictionaryRef extensions = CMFormatDescriptionGetExtensions(aFormat);
+    NSLog(@"Format extensions are %@.\n", extensions);
+  }
 }
 
 bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
@@ -1515,8 +1519,9 @@ bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
       CFTypeRefPtr<CMVideoFormatDescriptionRef>::WrapUnderCreateRule(formatDescription);
 
 #ifdef NIGHTLY_BUILD
-  if (StaticPrefs::gfx_core_animation_specialize_video_log()) {
+  if (mLogNextVideoSurface && StaticPrefs::gfx_core_animation_specialize_video_log()) {
     LogSurface(aSurfaceRef, pixelBuffer, formatDescription);
+    mLogNextVideoSurface = false;
   }
 #endif
 
@@ -1573,7 +1578,8 @@ bool NativeLayerCA::Representation::ApplyChanges(
     const IntPoint& aPosition, const Matrix4x4& aTransform, const IntRect& aDisplayRect,
     const Maybe<IntRect>& aClipRect, float aBackingScale, bool aSurfaceIsFlipped,
     gfx::SamplingFilter aSamplingFilter, bool aSpecializeVideo,
-    CFTypeRefPtr<IOSurfaceRef> aFrontSurface, CFTypeRefPtr<CGColorRef> aColor, bool aIsDRM) {
+    CFTypeRefPtr<IOSurfaceRef> aFrontSurface, CFTypeRefPtr<CGColorRef> aColor, bool aIsDRM,
+    bool aIsVideo) {
   // If we have an OnlyVideo update, handle it and early exit.
   if (aUpdate == UpdateType::OnlyVideo) {
     // If we don't have any updates to do, exit early with success. This is
@@ -1637,6 +1643,12 @@ bool NativeLayerCA::Representation::ApplyChanges(
       mWrappingCALayer.backgroundColor = aColor.get();
     } else {
       if (aSpecializeVideo) {
+#ifdef NIGHTLY_BUILD
+        if (aIsVideo && StaticPrefs::gfx_core_animation_specialize_video_log()) {
+          NSLog(@"VIDEO_LOG: Rebuilding video layer with AVSampleBufferDisplayLayer.");
+          mLogNextVideoSurface = true;
+        }
+#endif
         mContentCALayer = [[AVSampleBufferDisplayLayer layer] retain];
         CMTimebaseRef timebase;
 #ifdef CMTIMEBASE_USE_SOURCE_TERMINOLOGY
@@ -1648,6 +1660,12 @@ bool NativeLayerCA::Representation::ApplyChanges(
         [(AVSampleBufferDisplayLayer*)mContentCALayer setControlTimebase:timebase];
         CFRelease(timebase);
       } else {
+#ifdef NIGHTLY_BUILD
+        if (aIsVideo && StaticPrefs::gfx_core_animation_specialize_video_log()) {
+          NSLog(@"VIDEO_LOG: Rebuilding video layer with CALayer.");
+          mLogNextVideoSurface = true;
+        }
+#endif
         mContentCALayer = [[CALayer layer] retain];
       }
       mContentCALayer.position = NSZeroPoint;
@@ -1805,6 +1823,12 @@ bool NativeLayerCA::Representation::ApplyChanges(
         return false;
       }
     } else {
+#ifdef NIGHTLY_BUILD
+      if (mLogNextVideoSurface && StaticPrefs::gfx_core_animation_specialize_video_log()) {
+        LogSurface(surface, nullptr, nullptr);
+        mLogNextVideoSurface = false;
+      }
+#endif
       mContentCALayer.contents = (id)surface;
     }
   }

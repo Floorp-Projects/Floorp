@@ -351,16 +351,14 @@ class NativeLayerCA : public NativeLayer {
     // a partial update, the return value will indicate if all the needed
     // changes were able to be applied under these restrictions. A false return
     // value indicates an All update is necessary.
-    bool ApplyChanges(UpdateType aUpdate, const gfx::IntSize& aSize,
-                      bool aIsOpaque, const gfx::IntPoint& aPosition,
-                      const gfx::Matrix4x4& aTransform,
-                      const gfx::IntRect& aDisplayRect,
-                      const Maybe<gfx::IntRect>& aClipRect, float aBackingScale,
-                      bool aSurfaceIsFlipped,
-                      gfx::SamplingFilter aSamplingFilter,
-                      bool aSpecializeVideo,
-                      CFTypeRefPtr<IOSurfaceRef> aFrontSurface,
-                      CFTypeRefPtr<CGColorRef> aColor, bool aIsDRM);
+    bool ApplyChanges(
+        UpdateType aUpdate, const gfx::IntSize& aSize, bool aIsOpaque,
+        const gfx::IntPoint& aPosition, const gfx::Matrix4x4& aTransform,
+        const gfx::IntRect& aDisplayRect, const Maybe<gfx::IntRect>& aClipRect,
+        float aBackingScale, bool aSurfaceIsFlipped,
+        gfx::SamplingFilter aSamplingFilter, bool aSpecializeVideo,
+        CFTypeRefPtr<IOSurfaceRef> aFrontSurface,
+        CFTypeRefPtr<CGColorRef> aColor, bool aIsDRM, bool aIsVideo);
 
     // Return whether any aspects of this layer representation have been mutated
     // since the last call to ApplyChanges, i.e. whether ApplyChanges needs to
@@ -377,6 +375,10 @@ class NativeLayerCA : public NativeLayer {
     CALayer* mWrappingCALayer = nullptr;      // strong
     CALayer* mContentCALayer = nullptr;       // strong
     CALayer* mOpaquenessTintLayer = nullptr;  // strong
+
+#ifdef NIGHTLY_BUILD
+    bool mLogNextVideoSurface = false;
+#endif
 
     bool mMutatedPosition : 1;
     bool mMutatedTransform : 1;
