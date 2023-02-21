@@ -1862,30 +1862,6 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
         /* aForceInDataDoc = */ false);
   }
 
-  // FIXME(emilio): Why is this needed? The element shouldn't even be styled in
-  // the first place, we should style it properly eventually.
-  //
-  // This check is rather broken:
-  //
-  //  * Should use GetComposedDoc() to account for shadow DOM.
-  //  * The GetEffectSet check is broken and only really works if pseudoType ==
-  //    PseudoStyleType::NotPseudo.
-  //
-  // Removing this chunk of code causes failures in test_restyles.html. Some of
-  // them look benign, but another one at least looks like a real bug.
-  if (aParent.IsInUncomposedDoc() && MayHaveAnimations()) {
-    PseudoStyleType pseudoType = GetPseudoElementType();
-    if ((pseudoType == PseudoStyleType::NotPseudo ||
-         AnimationUtils::IsSupportedPseudoForAnimations(pseudoType)) &&
-        EffectSet::Get(this, pseudoType)) {
-      if (nsPresContext* presContext = aContext.OwnerDoc().GetPresContext()) {
-        presContext->EffectCompositor()->RequestRestyle(
-            this, pseudoType, EffectCompositor::RestyleType::Standard,
-            EffectCompositor::CascadeLevel::Animations);
-      }
-    }
-  }
-
   // XXXbz script execution during binding can trigger some of these
   // postcondition asserts....  But we do want that, since things will
   // generally be quite broken when that happens.
@@ -1973,14 +1949,6 @@ void Element::UnbindFromTree(bool aNullParent) {
   // FIXME(emilio): Why not clearing the effect set as well?
   if (auto* data = GetAnimationData()) {
     data->ClearAllAnimationCollections();
-    if (document) {
-      if (nsPresContext* presContext = document->GetPresContext()) {
-        // We have to clear all pending restyle requests for the animations on
-        // this element to avoid unnecessary restyles if/when we re-attach this
-        // element.
-        presContext->EffectCompositor()->ClearRestyleRequestsFor(this);
-      }
-    }
   }
 
   if (aNullParent) {

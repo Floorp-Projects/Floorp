@@ -895,6 +895,11 @@ bool EffectCompositor::PreTraverseInSubtree(ServoTraversalFlags aFlags,
         continue;
       }
 
+      if (target.mElement->GetComposedDoc() != mPresContext->Document()) {
+        iter.Remove();
+        continue;
+      }
+
       // We need to post restyle hints even if the target is not in EffectSet to
       // ensure the final restyling for removed animations.
       // We can't call PostRestyleEvent directly here since we are still in the
