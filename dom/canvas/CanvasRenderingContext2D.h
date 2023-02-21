@@ -364,6 +364,11 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   void ArcTo(double aX1, double aY1, double aX2, double aY2, double aRadius,
              mozilla::ErrorResult& aError) override;
   void Rect(double aX, double aY, double aW, double aH) override;
+  void RoundRect(
+      double aX, double aY, double aW, double aH,
+      const UnrestrictedDoubleOrDOMPointInitOrUnrestrictedDoubleOrDOMPointInitSequence&
+          aRadii,
+      ErrorResult& aError);
   void Arc(double aX, double aY, double aRadius, double aStartAngle,
            double aEndAngle, bool aAnticlockwise,
            mozilla::ErrorResult& aError) override;

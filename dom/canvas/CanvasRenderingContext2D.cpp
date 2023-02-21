@@ -3178,6 +3178,195 @@ void CanvasRenderingContext2D::Rect(double aX, double aY, double aW,
   }
 }
 
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-roundrect
+static void RoundRectImpl(
+    PathBuilder* aPathBuilder, const Maybe<Matrix>& aTransform, double aX,
+    double aY, double aW, double aH,
+    const UnrestrictedDoubleOrDOMPointInitOrUnrestrictedDoubleOrDOMPointInitSequence&
+        aRadii,
+    ErrorResult& aError) {
+  // Step 1. If any of x, y, w, or h are infinite or NaN, then return.
+  if (!IsFinite(aX) || !IsFinite(aY) || !IsFinite(aW) || !IsFinite(aH)) {
+    return;
+  }
+
+  nsTArray<OwningUnrestrictedDoubleOrDOMPointInit> radii;
+  // Step 2. If radii is an unrestricted double or DOMPointInit, then set radii
+  // to « radii ».
+  if (aRadii.IsUnrestrictedDouble()) {
+    radii.AppendElement()->SetAsUnrestrictedDouble() =
+        aRadii.GetAsUnrestrictedDouble();
+  } else if (aRadii.IsDOMPointInit()) {
+    radii.AppendElement()->SetAsDOMPointInit() = aRadii.GetAsDOMPointInit();
+  } else {
+    radii = aRadii.GetAsUnrestrictedDoubleOrDOMPointInitSequence();
+    // Step 3. If radii is not a list of size one, two, three, or
+    // four, then throw a RangeError.
+    if (radii.Length() < 1 || radii.Length() > 4) {
+      aError.ThrowRangeError("Can have between 1 and 4 radii");
+      return;
+    }
+  }
+
+  // Step 4. Let normalizedRadii be an empty list.
+  AutoTArray<Size, 4> normalizedRadii;
+
+  // Step 5. For each radius of radii:
+  for (const auto& radius : radii) {
+    // Step 5.1. If radius is a DOMPointInit:
+    if (radius.IsDOMPointInit()) {
+      const DOMPointInit& point = radius.GetAsDOMPointInit();
+      // Step 5.1.1. If radius["x"] or radius["y"] is infinite or NaN, then
+      // return.
+      if (!IsFinite(point.mX) || !IsFinite(point.mY)) {
+        return;
+      }
+
+      // Step 5.1.2. If radius["x"] or radius["y"] is negative, then
+      // throw a RangeError.
+      if (point.mX < 0 || point.mY < 0) {
+        aError.ThrowRangeError("Radius can not be negative");
+        return;
+      }
+
+      // Step 5.1.3. Otherwise, append radius to
+      // normalizedRadii.
+      normalizedRadii.AppendElement(
+          Size(gfx::Float(point.mX), gfx::Float(point.mY)));
+      continue;
+    }
+
+    // Step 5.2. If radius is a unrestricted double:
+    double r = radius.GetAsUnrestrictedDouble();
+    // Step 5.2.1. If radius is infinite or NaN, then return.
+    if (!IsFinite(r)) {
+      return;
+    }
+
+    // Step 5.2.2. If radius is negative, then throw a RangeError.
+    if (r < 0) {
+      aError.ThrowRangeError("Radius can not be negative");
+      return;
+    }
+
+    // Step 5.2.3. Otherwise append «[ "x" → radius, "y" → radius ]» to
+    // normalizedRadii.
+    normalizedRadii.AppendElement(Size(gfx::Float(r), gfx::Float(r)));
+  }
+
+  // Step 6. Let upperLeft, upperRight, lowerRight, and lowerLeft be null.
+  Size upperLeft, upperRight, lowerRight, lowerLeft;
+
+  if (normalizedRadii.Length() == 4) {
+    // Step 7. If normalizedRadii's size is 4, then set upperLeft to
+    // normalizedRadii[0], set upperRight to normalizedRadii[1], set lowerRight
+    // to normalizedRadii[2], and set lowerLeft to normalizedRadii[3].
+    upperLeft = normalizedRadii[0];
+    upperRight = normalizedRadii[1];
+    lowerRight = normalizedRadii[2];
+    lowerLeft = normalizedRadii[3];
+  } else if (normalizedRadii.Length() == 3) {
+    // Step 8. If normalizedRadii's size is 3, then set upperLeft to
+    // normalizedRadii[0], set upperRight and lowerLeft to normalizedRadii[1],
+    // and set lowerRight to normalizedRadii[2].
+    upperLeft = normalizedRadii[0];
+    upperRight = normalizedRadii[1];
+    lowerRight = normalizedRadii[2];
+    lowerLeft = normalizedRadii[1];
+  } else if (normalizedRadii.Length() == 2) {
+    // Step 9. If normalizedRadii's size is 2, then set upperLeft and lowerRight
+    // to normalizedRadii[0] and set upperRight and lowerLeft to
+    // normalizedRadii[1].
+    upperLeft = normalizedRadii[0];
+    upperRight = normalizedRadii[1];
+    lowerRight = normalizedRadii[0];
+    lowerLeft = normalizedRadii[1];
+  } else {
+    // Step 10. If normalizedRadii's size is 1, then set upperLeft, upperRight,
+    // lowerRight, and lowerLeft to normalizedRadii[0].
+    MOZ_ASSERT(normalizedRadii.Length() == 1);
+    upperLeft = normalizedRadii[0];
+    upperRight = normalizedRadii[0];
+    lowerRight = normalizedRadii[0];
+    lowerLeft = normalizedRadii[0];
+  }
+
+  // This is not as specified but copied from Chrome.
+  // XXX Maybe if we implemented Step 12 (the path algorithm) per
+  // spec this wouldn't be needed?
+  Float x(aX), y(aY), w(aW), h(aH);
+  bool clockwise = true;
+  if (w < 0) {
+    // Horizontal flip
+    clockwise = false;
+    x += w;
+    w = -w;
+    std::swap(upperLeft, upperRight);
+    std::swap(lowerLeft, lowerRight);
+  }
+
+  if (h < 0) {
+    // Vertical flip
+    clockwise = !clockwise;
+    y += h;
+    h = -h;
+    std::swap(upperLeft, lowerLeft);
+    std::swap(upperRight, lowerRight);
+  }
+
+  // Step 11. Corner curves must not overlap. Scale all radii to prevent this:
+  // Step 11.1. Let top be upperLeft["x"] + upperRight["x"].
+  Float top = upperLeft.width + upperRight.width;
+  // Step 11.2. Let right be upperRight["y"] + lowerRight["y"].
+  Float right = upperRight.height + lowerRight.height;
+  // Step 11.3. Let bottom be lowerRight["x"] + lowerLeft["x"].
+  Float bottom = lowerRight.width + lowerLeft.width;
+  // Step 11.4. Let left be upperLeft["y"] + lowerLeft["y"].
+  Float left = upperLeft.height + lowerLeft.height;
+  // Step 11.5. Let scale be the minimum value of the ratios w / top, h / right,
+  // w / bottom, h / left.
+  Float scale = std::min({w / top, h / right, w / bottom, h / left});
+  // Step 11.6. If scale is less than 1, then set the x and y members of
+  // upperLeft, upperRight, lowerLeft, and lowerRight to their current values
+  // multiplied by scale.
+  if (scale < 1.0f) {
+    upperLeft = upperLeft * scale;
+    upperRight = upperRight * scale;
+    lowerLeft = lowerLeft * scale;
+    lowerRight = lowerRight * scale;
+  }
+
+  // Step 12. Create a new subpath:
+  // Step 13. Mark the subpath as closed.
+  // Note: Implemented by AppendRoundedRectToPath, which is shared with CSS
+  // borders etc.
+  gfx::Rect rect{x, y, w, h};
+  RectCornerRadii cornerRadii(upperLeft, upperRight, lowerRight, lowerLeft);
+  AppendRoundedRectToPath(aPathBuilder, rect, cornerRadii, clockwise,
+                          aTransform);
+
+  // Step 14. Create a new subpath with the point (x, y) as the only point in
+  // the subpath.
+  // XXX We don't seem to be doing this for ::Rect either?
+}
+
+void CanvasRenderingContext2D::RoundRect(
+    double aX, double aY, double aW, double aH,
+    const UnrestrictedDoubleOrDOMPointInitOrUnrestrictedDoubleOrDOMPointInitSequence&
+        aRadii,
+    ErrorResult& aError) {
+  EnsureWritablePath();
+
+  PathBuilder* builder = mPathBuilder;
+  Maybe<Matrix> transform = Nothing();
+  if (!builder) {
+    builder = mDSPathBuilder;
+    transform = Some(mTarget->GetTransform());
+  }
+
+  RoundRectImpl(builder, transform, aX, aY, aW, aH, aRadii, aError);
+}
+
 void CanvasRenderingContext2D::Ellipse(double aX, double aY, double aRadiusX,
                                        double aRadiusY, double aRotation,
                                        double aStartAngle, double aEndAngle,
@@ -5971,6 +6160,16 @@ void CanvasPath::Rect(double aX, double aY, double aW, double aH) {
   LineTo(aX + aW, aY + aH);
   LineTo(aX, aY + aH);
   ClosePath();
+}
+
+void CanvasPath::RoundRect(
+    double aX, double aY, double aW, double aH,
+    const UnrestrictedDoubleOrDOMPointInitOrUnrestrictedDoubleOrDOMPointInitSequence&
+        aRadii,
+    ErrorResult& aError) {
+  EnsurePathBuilder();
+
+  RoundRectImpl(mPathBuilder, Nothing(), aX, aY, aW, aH, aRadii, aError);
 }
 
 void CanvasPath::Arc(double aX, double aY, double aRadius, double aStartAngle,
