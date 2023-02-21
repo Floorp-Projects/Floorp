@@ -3047,7 +3047,7 @@ void PresShell::RestyleForAnimation(Element* aElement, RestyleHint aHint) {
   // Now that we no longer have separate non-animation and animation
   // restyles, this method having a distinct identity is less important,
   // but it still seems useful to offer as a "more public" API and as a
-  // chokepoint for these restyles to go through.
+  // checkpoint for these restyles to go through.
   mPresContext->RestyleManager()->PostRestyleEvent(aElement, aHint,
                                                    nsChangeHint(0));
 }

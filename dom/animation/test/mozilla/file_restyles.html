@@ -1212,9 +1212,11 @@ waitForAllPaints(() => {
 
     document.body.appendChild(div);
 
+    await waitForNextFrame();
     markers = await observeStyling(5);
+
     is(markers.length, 5,
-       'Animation on re-attached to the document begins to update style');
+       'Animation on re-attached to the document begins to update style, got ' + markers.length);
 
     await ensureElementRemoval(div);
   });
@@ -1337,9 +1339,11 @@ waitForAllPaints(() => {
 
     const markers = await observeStyling(5);
 
-    is(markers.length, 0,
+    // We possibly expect one restyle from the initial animation compose, in
+    // order to update animations, but nothing else.
+    ok(markers.length <= 1,
        'Animation running on the main-thread while computed timing is not ' +
-       'changed should never cause restyles');
+       'changed should not cause extra restyles, got ' + markers.length);
     await ensureElementRemoval(div);
   });
 
@@ -2001,15 +2005,19 @@ waitForAllPaints(() => {
                                     easing: 'step-end' });
 
     const FLUSH_LAYOUT = SpecialPowers.DOMWindowUtils.FLUSH_LAYOUT;
-    const isWebRender =
-      SpecialPowers.DOMWindowUtils.layerManagerType.startsWith('WebRender');
     ok(SpecialPowers.DOMWindowUtils.needsFlush(FLUSH_LAYOUT),
-       'Flush layout is needed for the appended div');
+       'Flush is needed for the appended div');
+
     await waitForAnimationReadyToRestyle(animation);
 
-    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
+    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor, "Shouldn't be running in the compositor");
+
+    // We expect one restyle from the initial animation compose.
+    await waitForNextFrame();
+
+    ok(!SpecialPowers.wrap(animation).isRunningOnCompositor, "Still shouldn't be running in the compositor");
     ok(!SpecialPowers.DOMWindowUtils.needsFlush(FLUSH_LAYOUT),
-       'No further flush layout needed');
+       'No further layout flush needed');
 
     await ensureElementRemoval(div);
   });
