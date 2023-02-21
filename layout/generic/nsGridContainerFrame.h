@@ -18,6 +18,9 @@
 
 namespace mozilla {
 class PresShell;
+namespace dom {
+class Grid;
+}
 }  // namespace mozilla
 
 /**
@@ -212,6 +215,18 @@ class nsGridContainerFrame final : public nsContainerFrame,
     const ComputedGridLineInfo* info = GetProperty(GridRowLineInfo());
     MOZ_ASSERT(info, "Property generation wasn't requested.");
     return info;
+  }
+
+  /**
+   * This property is set by the creation of a dom::Grid object, and cleared by
+   * its destructor. Since the Grid object manages the lifecycle, the property
+   * itself is set without a destructor. The property is also cleared whenever
+   * new grid computed info is generated during reflow, ensuring that we aren't
+   * holding a stale dom::Grid object.
+   */
+  NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(GridFragmentInfo, mozilla::dom::Grid)
+  mozilla::dom::Grid* GetGridFragmentInfo() {
+    return GetProperty(GridFragmentInfo());
   }
 
   struct AtomKey {
