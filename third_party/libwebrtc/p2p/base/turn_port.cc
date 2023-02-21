@@ -1207,11 +1207,6 @@ bool TurnPort::EntryExists(TurnEntry* e) {
   return absl::c_linear_search(entries_, e);
 }
 
-bool TurnPort::CreateOrRefreshEntry(const rtc::SocketAddress& addr,
-                                    int channel_number) {
-  return CreateOrRefreshEntry(addr, channel_number, "");
-}
-
 bool TurnPort::CreateOrRefreshEntry(Connection* conn, int channel_number) {
   return CreateOrRefreshEntry(conn->remote_candidate().address(),
                               channel_number,
