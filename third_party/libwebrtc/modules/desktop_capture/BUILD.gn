@@ -95,6 +95,66 @@ if (rtc_include_tests) {
     }
   }
 
+  if ((is_linux || is_chromeos) && rtc_use_pipewire) {
+    rtc_test("shared_screencast_stream_test") {
+      testonly = true
+
+      sources = [
+        "linux/wayland/shared_screencast_stream_unittest.cc",
+        "linux/wayland/test/fake_screencast_stream.cc",
+        "linux/wayland/test/fake_screencast_stream.h",
+      ]
+
+      configs += [
+        ":gio",
+        ":pipewire",
+        ":gbm",
+        ":egl",
+        ":epoxy",
+        ":libdrm",
+      ]
+
+      deps = [
+        ":desktop_capture",
+        ":desktop_capture_mock",
+        ":primitives",
+        "../../rtc_base:checks",
+        "../../rtc_base:logging",
+        "../../rtc_base:random",
+        "../../rtc_base:timeutils",
+
+        # TODO(bugs.webrtc.org/9987): Remove this dep on rtc_base:rtc_base once
+        # rtc_base:threading is fully defined.
+        "../../rtc_base:rtc_base",
+        "../../rtc_base:task_queue_for_test",
+        "../../rtc_base:threading",
+        "../../system_wrappers",
+        "../../test:test_main",
+        "../../test:test_support",
+        "//api/units:time_delta",
+        "//rtc_base:rtc_event",
+      ]
+
+      if (!rtc_link_pipewire) {
+        deps += [ ":pipewire_stubs" ]
+      }
+
+      public_configs = [ ":pipewire_config" ]
+    }
+
+    group("pipewire_shared_screencast_stream_test") {
+      testonly = true
+
+      deps = [ ":shared_screencast_stream_test" ]
+
+      data = [
+        "../../third_party/pipewire",
+        "linux/wayland/test/shared_screencast_stream_test.py",
+        "${root_out_dir}/shared_screencast_stream_test",
+      ]
+    }
+  }
+
   rtc_library("desktop_capture_unittests") {
     testonly = true
 

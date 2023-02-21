@@ -80,6 +80,14 @@
     "label": "//pc:peerconnection_unittests",
     "type": "console_test_launcher",
   },
+  "pipewire_shared_screencast_stream_test": {
+    "label":
+    "//modules/desktop_capture:pipewire_shared_screencast_stream_test",
+    "type":
+    "script",
+    "script":
+    "//modules/desktop_capture/linux/wayland/test/shared_screencast_stream_test.py",
+  },
   "rtc_media_unittests": {
     "label": "//media:rtc_media_unittests",
     "type": "console_test_launcher",
