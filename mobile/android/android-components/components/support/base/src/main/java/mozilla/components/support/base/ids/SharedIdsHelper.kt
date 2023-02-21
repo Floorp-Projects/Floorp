@@ -4,7 +4,6 @@
 
 package mozilla.components.support.base.ids
 
-import android.app.Notification
 import android.app.NotificationManager
 import android.content.Context
 import androidx.annotation.VisibleForTesting
@@ -41,26 +40,6 @@ object SharedIdsHelper {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun clear(context: Context) = ids.clear(context)
-}
-
-/**
- * Post a notification to be shown in the status bar.
- *
- * Uses a unique [String] tag instead of an [Int] id like [NotificationManager.notify].
- * This will replace the previous notification with the same tag. See also: [SharedIdsHelper] for more details.
- */
-fun NotificationManager.notify(context: Context, tag: String, notification: Notification) {
-    notify(tag, SharedIdsHelper.getIdForTag(context, tag), notification)
-}
-
-/**
- * Post a notification to be shown in the status bar.
- *
- * Uses a unique [String] tag instead of an [Int] id like [NotificationManagerCompat.notify].
- * This will replace the previous notification with the same tag. See also: [SharedIdsHelper] for more details.
- */
-fun NotificationManagerCompat.notify(context: Context, tag: String, notification: Notification) {
-    notify(tag, SharedIdsHelper.getIdForTag(context, tag), notification)
 }
 
 /**
