@@ -27,4 +27,5 @@ This is the nascent documentation of the Firefox front-end code.
    touchbar/index
    components/uitour/docs/index
    branding/docs/index
-   components/storybook/docs/index
+   components/storybook/docs/README.storybook.stories
+   components/storybook/docs/README.reusable-widgets.stories
