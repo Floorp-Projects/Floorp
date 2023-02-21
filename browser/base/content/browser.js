@@ -10271,8 +10271,8 @@ var gCookieBannerHandlingExperiment = {
 
     // Set prefs to enable the service to detect banners, needed to trigger
     // the onboarding doorhanger.
-    Services.prefs.setIntPref("cookiebanners.service.mode", 3);
-    Services.prefs.setIntPref("cookiebanners.service.mode.privateBrowsing", 3);
+    Services.prefs.setIntPref("cookiebanners.service.mode", 1);
+    Services.prefs.setIntPref("cookiebanners.service.mode.privateBrowsing", 1);
 
     // Set prefs to show the about:preferences UI, but hide the protections
     // panel UI.
