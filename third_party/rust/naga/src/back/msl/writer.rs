@@ -1453,24 +1453,21 @@ impl<W: Write> Writer<W> {
                     self.put_image_size_query(
                         image,
                         level.map(LevelOfDetail::Direct),
-                        crate::ScalarKind::Sint,
+                        crate::ScalarKind::Uint,
                         context,
                     )?;
                 }
                 crate::ImageQuery::NumLevels => {
-                    write!(self.out, "int(")?;
                     self.put_expression(image, context, false)?;
-                    write!(self.out, ".get_num_mip_levels())")?;
+                    write!(self.out, ".get_num_mip_levels()")?;
                 }
                 crate::ImageQuery::NumLayers => {
-                    write!(self.out, "int(")?;
                     self.put_expression(image, context, false)?;
-                    write!(self.out, ".get_array_size())")?;
+                    write!(self.out, ".get_array_size()")?;
                 }
                 crate::ImageQuery::NumSamples => {
-                    write!(self.out, "int(")?;
                     self.put_expression(image, context, false)?;
-                    write!(self.out, ".get_num_samples())")?;
+                    write!(self.out, ".get_num_samples()")?;
                 }
             },
             crate::Expression::Unary { op, expr } => {
@@ -1689,6 +1686,7 @@ impl<W: Write> Writer<W> {
                     Mf::Transpose => "transpose",
                     Mf::Determinant => "determinant",
                     // bits
+                    Mf::CountTrailingZeros => "ctz",
                     Mf::CountLeadingZeros => "clz",
                     Mf::CountOneBits => "popcount",
                     Mf::ReverseBits => "reverse_bits",
@@ -3635,7 +3633,7 @@ impl<W: Write> Writer<W> {
                 is_first_argument = false;
             }
 
-            let mut global_invocation_id = None;
+            let mut local_invocation_id = None;
 
             // Then pass the remaining arguments not included in the varyings
             // struct.
@@ -3662,8 +3660,8 @@ impl<W: Write> Writer<W> {
                     &self.names[name_key]
                 };
 
-                if binding == &crate::Binding::BuiltIn(crate::BuiltIn::GlobalInvocationId) {
-                    global_invocation_id = Some(name_key);
+                if binding == &crate::Binding::BuiltIn(crate::BuiltIn::LocalInvocationId) {
+                    local_invocation_id = Some(name_key);
                 }
 
                 let ty_name = TypeContext {
@@ -3689,7 +3687,7 @@ impl<W: Write> Writer<W> {
             let need_workgroup_variables_initialization =
                 self.need_workgroup_variables_initialization(options, ep, module, fun_info);
 
-            if need_workgroup_variables_initialization && global_invocation_id.is_none() {
+            if need_workgroup_variables_initialization && local_invocation_id.is_none() {
                 let separator = if is_first_argument {
                     is_first_argument = false;
                     ' '
@@ -3698,7 +3696,7 @@ impl<W: Write> Writer<W> {
                 };
                 writeln!(
                     self.out,
-                    "{separator} {NAMESPACE}::uint3 __global_invocation_id [[thread_position_in_grid]]"
+                    "{separator} {NAMESPACE}::uint3 __local_invocation_id [[thread_position_in_threadgroup]]"
                 )?;
             }
 
@@ -3788,7 +3786,7 @@ impl<W: Write> Writer<W> {
                     module,
                     mod_info,
                     fun_info,
-                    global_invocation_id,
+                    local_invocation_id,
                 )?;
             }
 
@@ -4077,7 +4075,7 @@ mod workgroup_mem_init {
             module: &crate::Module,
             module_info: &valid::ModuleInfo,
             fun_info: &valid::FunctionInfo,
-            global_invocation_id: Option<&NameKey>,
+            local_invocation_id: Option<&NameKey>,
         ) -> BackendResult {
             let level = back::Level(1);
 
@@ -4086,9 +4084,9 @@ mod workgroup_mem_init {
                 "{}if ({}::all({} == {}::uint3(0u))) {{",
                 level,
                 NAMESPACE,
-                global_invocation_id
+                local_invocation_id
                     .map(|name_key| self.names[name_key].as_str())
-                    .unwrap_or("__global_invocation_id"),
+                    .unwrap_or("__local_invocation_id"),
                 NAMESPACE,
             )?;
 

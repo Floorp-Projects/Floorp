@@ -711,36 +711,22 @@ impl<'w> BlockContext<'w> {
                             .get_constant_scalar(crate::ScalarValue::Float(1.0), width);
 
                         if let Some(size) = maybe_size {
-                            let value = LocalType::Value {
+                            let ty = LocalType::Value {
                                 vector_size: Some(size),
                                 kind: crate::ScalarKind::Float,
                                 width,
                                 pointer_space: None,
-                            };
-
-                            let result_type_id = self.get_type_id(LookupType::Local(value));
+                            }
+                            .into();
 
                             self.temp_list.clear();
                             self.temp_list.resize(size as _, arg1_id);
 
-                            let id = self.gen_id();
-                            block.body.push(Instruction::constant_composite(
-                                result_type_id,
-                                id,
-                                &self.temp_list,
-                            ));
-                            arg1_id = id;
+                            arg1_id = self.writer.get_constant_composite(ty, &self.temp_list);
 
-                            self.temp_list.clear();
-                            self.temp_list.resize(size as _, arg2_id);
+                            self.temp_list.fill(arg2_id);
 
-                            let id = self.gen_id();
-                            block.body.push(Instruction::constant_composite(
-                                result_type_id,
-                                id,
-                                &self.temp_list,
-                            ));
-                            arg2_id = id;
+                            arg2_id = self.writer.get_constant_composite(ty, &self.temp_list);
                         }
 
                         MathOp::Custom(Instruction::ext_inst(
@@ -888,30 +874,70 @@ impl<'w> BlockContext<'w> {
                         id,
                         arg0_id,
                     )),
+                    Mf::CountTrailingZeros => {
+                        let uint = crate::ScalarValue::Uint(32);
+                        let uint_id = match *arg_ty {
+                            crate::TypeInner::Vector { size, width, .. } => {
+                                let ty = LocalType::Value {
+                                    vector_size: Some(size),
+                                    kind: crate::ScalarKind::Uint,
+                                    width,
+                                    pointer_space: None,
+                                }
+                                .into();
+
+                                self.temp_list.clear();
+                                self.temp_list.resize(
+                                    size as _,
+                                    self.writer.get_constant_scalar(uint, width),
+                                );
+
+                                self.writer.get_constant_composite(ty, &self.temp_list)
+                            }
+                            crate::TypeInner::Scalar { width, .. } => {
+                                self.writer.get_constant_scalar(uint, width)
+                            }
+                            _ => unreachable!(),
+                        };
+
+                        let lsb_id = self.gen_id();
+                        block.body.push(Instruction::ext_inst(
+                            self.writer.gl450_ext_inst_id,
+                            spirv::GLOp::FindILsb,
+                            result_type_id,
+                            lsb_id,
+                            &[arg0_id],
+                        ));
+
+                        MathOp::Custom(Instruction::ext_inst(
+                            self.writer.gl450_ext_inst_id,
+                            spirv::GLOp::UMin,
+                            result_type_id,
+                            id,
+                            &[uint_id, lsb_id],
+                        ))
+                    }
                     Mf::CountLeadingZeros => {
                         let int = crate::ScalarValue::Sint(31);
 
                         let (int_type_id, int_id) = match *arg_ty {
                             crate::TypeInner::Vector { size, width, .. } => {
-                                let ty = self.get_type_id(LookupType::Local(LocalType::Value {
+                                let ty = LocalType::Value {
                                     vector_size: Some(size),
                                     kind: crate::ScalarKind::Sint,
                                     width,
                                     pointer_space: None,
-                                }));
+                                }
+                                .into();
 
                                 self.temp_list.clear();
                                 self.temp_list
                                     .resize(size as _, self.writer.get_constant_scalar(int, width));
 
-                                let id = self.gen_id();
-                                block.body.push(Instruction::constant_composite(
-                                    ty,
-                                    id,
-                                    &self.temp_list,
-                                ));
-
-                                (ty, id)
+                                (
+                                    self.get_type_id(ty),
+                                    self.writer.get_constant_composite(ty, &self.temp_list),
+                                )
                             }
                             crate::TypeInner::Scalar { width, .. } => (
                                 self.get_type_id(LookupType::Local(LocalType::Value {
@@ -925,33 +951,22 @@ impl<'w> BlockContext<'w> {
                             _ => unreachable!(),
                         };
 
+                        let msb_id = self.gen_id();
                         block.body.push(Instruction::ext_inst(
                             self.writer.gl450_ext_inst_id,
                             spirv::GLOp::FindUMsb,
                             int_type_id,
-                            id,
+                            msb_id,
                             &[arg0_id],
                         ));
 
-                        let sub_id = self.gen_id();
-                        block.body.push(Instruction::binary(
+                        MathOp::Custom(Instruction::binary(
                             spirv::Op::ISub,
-                            int_type_id,
-                            sub_id,
-                            int_id,
+                            result_type_id,
                             id,
-                        ));
-
-                        if let Some(crate::ScalarKind::Uint) = arg_scalar_kind {
-                            block.body.push(Instruction::unary(
-                                spirv::Op::Bitcast,
-                                result_type_id,
-                                self.gen_id(),
-                                sub_id,
-                            ));
-                        }
-
-                        return Ok(());
+                            int_id,
+                            msb_id,
+                        ))
                     }
                     Mf::CountOneBits => MathOp::Custom(Instruction::unary(
                         spirv::Op::BitCount,
@@ -1127,22 +1142,18 @@ impl<'w> BlockContext<'w> {
                             let zero_scalar_id = self.writer.get_constant_scalar(value, src_width);
                             let zero_id = match src_size {
                                 Some(size) => {
-                                    let vector_type_id =
-                                        self.get_type_id(LookupType::Local(LocalType::Value {
-                                            vector_size: Some(size),
-                                            kind: src_kind,
-                                            width: src_width,
-                                            pointer_space: None,
-                                        }));
-                                    let components = [zero_scalar_id; 4];
+                                    let ty = LocalType::Value {
+                                        vector_size: Some(size),
+                                        kind: src_kind,
+                                        width: src_width,
+                                        pointer_space: None,
+                                    }
+                                    .into();
 
-                                    let zero_id = self.gen_id();
-                                    block.body.push(Instruction::composite_construct(
-                                        vector_type_id,
-                                        zero_id,
-                                        &components[..size as usize],
-                                    ));
-                                    zero_id
+                                    self.temp_list.clear();
+                                    self.temp_list.resize(size as _, zero_scalar_id);
+
+                                    self.writer.get_constant_composite(ty, &self.temp_list)
                                 }
                                 None => zero_scalar_id,
                             };
@@ -1168,28 +1179,25 @@ impl<'w> BlockContext<'w> {
                             let scalar1_id = self.writer.get_constant_scalar(val1, dst_width);
                             let (accept_id, reject_id) = match src_size {
                                 Some(size) => {
-                                    let vector_type_id =
-                                        self.get_type_id(LookupType::Local(LocalType::Value {
-                                            vector_size: Some(size),
-                                            kind,
-                                            width: dst_width,
-                                            pointer_space: None,
-                                        }));
-                                    let components0 = [scalar0_id; 4];
-                                    let components1 = [scalar1_id; 4];
+                                    let ty = LocalType::Value {
+                                        vector_size: Some(size),
+                                        kind,
+                                        width: dst_width,
+                                        pointer_space: None,
+                                    }
+                                    .into();
 
-                                    let vec0_id = self.gen_id();
-                                    block.body.push(Instruction::composite_construct(
-                                        vector_type_id,
-                                        vec0_id,
-                                        &components0[..size as usize],
-                                    ));
-                                    let vec1_id = self.gen_id();
-                                    block.body.push(Instruction::composite_construct(
-                                        vector_type_id,
-                                        vec1_id,
-                                        &components1[..size as usize],
-                                    ));
+                                    self.temp_list.clear();
+                                    self.temp_list.resize(size as _, scalar0_id);
+
+                                    let vec0_id =
+                                        self.writer.get_constant_composite(ty, &self.temp_list);
+
+                                    self.temp_list.fill(scalar1_id);
+
+                                    let vec1_id =
+                                        self.writer.get_constant_composite(ty, &self.temp_list);
+
                                     (vec1_id, vec0_id)
                                 }
                                 None => (scalar1_id, scalar0_id),
