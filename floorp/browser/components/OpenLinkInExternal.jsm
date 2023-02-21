@@ -204,16 +204,17 @@ async function getBrowsersOnLinux() {
                     console.error(e);
                     continue;
                 }
-                if (desktopFileInfo["fileInfo"]["Desktop Entry"]) {
-                    let mimetypes = desktopFileInfo["fileInfo"]["Desktop Entry"]["MimeType"];
-                    if (mimetypes &&
-                        (
-                            mimetypes.split(";").includes("x-scheme-handler/http") ||
-                            mimetypes.split(";").includes("x-scheme-handler/https")
-                        )
-                    ) {
-                        desktopFilesInfo.push(desktopFileInfo);
-                    }
+                if (!desktopFileInfo["fileInfo"]["Desktop Entry"]) continue;
+                if (!desktopFileInfo["fileInfo"]["Desktop Entry"]["Exec"]) continue;
+                if (!desktopFileInfo["fileInfo"]["Desktop Entry"]["Name"]) continue;
+                let mimetypes = desktopFileInfo["fileInfo"]["Desktop Entry"]["MimeType"];
+                if (mimetypes &&
+                    (
+                        mimetypes.split(";").includes("x-scheme-handler/http") ||
+                        mimetypes.split(";").includes("x-scheme-handler/https")
+                    )
+                ) {
+                    desktopFilesInfo.push(desktopFileInfo);
                 }
             }
         }
