@@ -65,8 +65,10 @@ namespace google_breakpad {
 
 #if defined(__LP64__) && __LP64__
 #define LC_SEGMENT_ARCH LC_SEGMENT_64
+#define MH_MAGIC_ARCH MH_MAGIC_64
 #else
 #define LC_SEGMENT_ARCH LC_SEGMENT
+#define MH_MAGIC_ARCH MH_MAGIC
 #endif
 
 // constructor when generating from within the crashed process
@@ -79,10 +81,14 @@ MinidumpGenerator::MinidumpGenerator()
       crashing_task_(mach_task_self()),
       handler_thread_(mach_thread_self()),
       cpu_type_(DynamicImages::GetNativeCPUType()),
+      dyldImageLoadAddress_(NULL),
+      dyldSlide_(0),
+      dyldPath_(),
       task_context_(NULL),
       dynamic_images_(NULL),
       memory_blocks_(&allocator_) {
   GatherSystemInformation();
+  GatherCurrentProcessDyldInformation();
 }
 
 // constructor when generating from a different process than the
@@ -97,6 +103,9 @@ MinidumpGenerator::MinidumpGenerator(mach_port_t crashing_task,
       crashing_task_(crashing_task),
       handler_thread_(handler_thread),
       cpu_type_(DynamicImages::GetNativeCPUType()),
+      dyldImageLoadAddress_(NULL),
+      dyldSlide_(0),
+      dyldPath_(),
       task_context_(NULL),
       dynamic_images_(NULL),
       memory_blocks_(&allocator_) {
@@ -109,6 +118,9 @@ MinidumpGenerator::MinidumpGenerator(mach_port_t crashing_task,
   }
 
   GatherSystemInformation();
+  // This constructor is used when creating a crash server, but the crash
+  // server may also be the crashing process.
+  GatherCurrentProcessDyldInformation();
 }
 
 MinidumpGenerator::~MinidumpGenerator() {
@@ -190,6 +202,56 @@ void MinidumpGenerator::GatherSystemInformation() {
   os_major_version_ = IntegerValueAtIndex(product_str, 0);
   os_minor_version_ = IntegerValueAtIndex(product_str, 1);
   os_build_number_ = IntegerValueAtIndex(product_str, 2);
+}
+
+// static
+uint64_t
+MinidumpGenerator::GetCurrentProcessModuleSlide(breakpad_mach_header* mh,
+                                                uint64_t shared_cache_slide) {
+  if (!mh || (mh->magic != MH_MAGIC_ARCH)) {
+    return 0;
+  }
+
+  if ((mh->flags & MH_SHAREDCACHE) != 0) {
+    return shared_cache_slide;
+  }
+
+  uint64_t slide = 0;
+
+  uint32_t num_commands = mh->ncmds;
+  breakpad_mach_segment_command* cmd = (breakpad_mach_segment_command*)
+    ((uintptr_t)mh + sizeof(breakpad_mach_header));
+  for (uint32_t i = 0; i < num_commands; ++i) {
+    if (cmd->cmd != LC_SEGMENT_ARCH) {
+      break;
+    }
+    if (!cmd->fileoff && cmd->filesize) {
+      slide = (uintptr_t)mh - cmd->vmaddr;
+      break;
+    }
+    cmd = (breakpad_mach_segment_command*) ((uintptr_t)cmd + cmd->cmdsize);
+  }
+
+  return slide;
+}
+
+void MinidumpGenerator::GatherCurrentProcessDyldInformation() {
+  task_dyld_info_data_t task_dyld_info;
+  mach_msg_type_number_t count = TASK_DYLD_INFO_COUNT;
+  if (task_info(mach_task_self(), TASK_DYLD_INFO,
+                (task_info_t)&task_dyld_info, &count) != KERN_SUCCESS) {
+    return;
+  }
+
+  dyld_all_image_infos_self* aii = (dyld_all_image_infos_self*)
+    task_dyld_info.all_image_info_addr;
+  breakpad_mach_header* mh = (breakpad_mach_header*) aii->dyldImageLoadAddress;
+  if (!mh || (mh->magic != MH_MAGIC_ARCH)) {
+    return;
+  }
+  dyldImageLoadAddress_ = mh;
+  dyldPath_ = string(aii->dyldPath);
+  dyldSlide_ = GetCurrentProcessModuleSlide(mh, aii->sharedCacheSlide);
 }
 
 void MinidumpGenerator::SetTaskContext(breakpad_ucontext_t *task_context) {
@@ -1323,6 +1385,7 @@ bool MinidumpGenerator::WriteSystemInfoStream(
   return true;
 }
 
+// If index == INT_MAX, we're being asked to write dyld in the crashed process.
 bool MinidumpGenerator::WriteModuleStream(unsigned int index,
                                           MDRawModule *module) {
   if (dynamic_images_) {
@@ -1366,13 +1429,17 @@ bool MinidumpGenerator::WriteModuleStream(unsigned int index,
 
     if (!WriteCVRecord(module, image->GetCPUType(), image->GetCPUSubtype(),
         name.c_str(), /* in_memory */ false, /* out_of_process */ true,
-        image->GetInDyldSharedCache())) {
+        image->GetIsDyld() || image->GetInDyldSharedCache())) {
       return false;
     }
   } else {
     // Getting module info in the crashed process
     const breakpad_mach_header *header;
-    header = (breakpad_mach_header*)_dyld_get_image_header(index);
+    if (index == INT_MAX) {
+      header = dyldImageLoadAddress_;
+    } else {
+      header = (breakpad_mach_header*)_dyld_get_image_header(index);
+    }
     if (!header)
       return false;
 
@@ -1390,9 +1457,19 @@ bool MinidumpGenerator::WriteModuleStream(unsigned int index,
 
     int cpu_type = header->cputype;
     int cpu_subtype = (header->cpusubtype & ~CPU_SUBTYPE_MASK);
-    bool in_dyld_shared_cache = ((header->flags & MH_SHAREDCACHE) != 0);
-    unsigned long slide = _dyld_get_image_vmaddr_slide(index);
-    const char* name = _dyld_get_image_name(index);
+    bool dyld_or_in_dyld_shared_cache;
+    unsigned long slide;
+    const char* name;
+    if (index == INT_MAX) {
+      dyld_or_in_dyld_shared_cache = true;
+      slide = dyldSlide_;
+      name = dyldPath_.c_str();
+    } else {
+      dyld_or_in_dyld_shared_cache =
+        ((header->flags & MH_SHAREDCACHE) != 0);
+      slide = _dyld_get_image_vmaddr_slide(index);
+      name = _dyld_get_image_name(index);
+    }
     const struct load_command *cmd =
         reinterpret_cast<const struct load_command *>(header + 1);
 
@@ -1419,7 +1496,8 @@ bool MinidumpGenerator::WriteModuleStream(unsigned int index,
           in_memory = true;
 #endif
           if (!WriteCVRecord(module, cpu_type, cpu_subtype, name, in_memory,
-                             /* out_of_process */ false, in_dyld_shared_cache)) {
+                             /* out_of_process */ false,
+                             dyld_or_in_dyld_shared_cache)) {
             return false;
           }
 
@@ -1479,7 +1557,7 @@ void MinidumpGenerator::RecoverExceptionDataFromExcCrash(
 
 bool MinidumpGenerator::WriteCVRecord(MDRawModule *module, int cpu_type, int cpu_subtype,
                                       const char *module_path, bool in_memory,
-                                      bool out_of_process, bool in_dyld_shared_cache) {
+                                      bool out_of_process, bool dyld_or_in_dyld_shared_cache) {
   TypedMDRVA<MDCVInfoPDB70> cv(&writer_);
 
   // Only return the last path component of the full module path
@@ -1523,15 +1601,15 @@ bool MinidumpGenerator::WriteCVRecord(MDRawModule *module, int cpu_type, int cpu
   // We're always called in the main process. But the crashing process might
   // be either the same process or a different one (a child process). If it's
   // a child process, the modules we'll be looking at are in that process's
-  // memory space, to which we generally don't have access. But because the
-  // dyld shared cache is loaded into all processes, we do have access to
-  // child process modules that are in the dyld shared cache. So it's fine to
-  // look at these modules, but we must prevent ourselves from trying to
-  // child process modules that aren't in the dyld shared cache. This resolves
+  // memory space, to which we generally don't have access. But because dyld
+  // and the dyld shared cache are loaded into all processes, we do have
+  // access (in child processes) to dyld and modules in the dyld shared cache.
+  // So it's fine to look at these modules. But we must prevent ourselves from
+  // trying to access other child process modules. This resolves
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1676102.
   while (true) {
     if (in_memory) {
-      if (out_of_process && !in_dyld_shared_cache) {
+      if (out_of_process && !dyld_or_in_dyld_shared_cache) {
         break;
       }
       MacFileUtilities::MachoID macho(module_path,
@@ -1590,12 +1668,18 @@ bool MinidumpGenerator::WriteModuleListStream(
       dynamic_images_->GetImageCount() :
       _dyld_image_count();
 
-  if (!list.AllocateObjectAndArray(image_count, MD_MODULE_SIZE))
+  // module_count is one higher when we're in the crashed process, to make
+  // room for dyld, which isn't in the standard list of modules. If
+  // dynamic_images_ exists (and we're in a different process than the
+  // crashed process), we've already added dyld to it.
+  uint32_t module_count = dynamic_images_ ? image_count : image_count + 1;
+
+  if (!list.AllocateObjectAndArray(module_count, MD_MODULE_SIZE))
     return false;
 
   module_list_stream->stream_type = MD_MODULE_LIST_STREAM;
   module_list_stream->location = list.location();
-  list.get()->number_of_modules = static_cast<uint32_t>(image_count);
+  list.get()->number_of_modules = static_cast<uint32_t>(module_count);
 
   // Write out the executable module as the first one
   MDRawModule module;
@@ -1607,6 +1691,17 @@ bool MinidumpGenerator::WriteModuleListStream(
 
   list.CopyIndexAfterObject(0, &module, MD_MODULE_SIZE);
   int destinationIndex = 1;  // Write all other modules after this one
+
+  if (!dynamic_images_) {
+    // If we're in the crashed process we need to write dyld explicitly,
+    // since it's not included in the standard list. index == INT_MAX signals
+    // our intentions to WriteModuleStream().
+    if (!WriteModuleStream(INT_MAX, &module)) {
+      return false;
+    }
+
+    list.CopyIndexAfterObject(destinationIndex++, &module, MD_MODULE_SIZE);
+  }
 
   for (uint32_t i = 0; i < image_count; ++i) {
     if (i != executableIndex) {
@@ -1702,7 +1797,7 @@ bool MinidumpGenerator::WriteCrashInfoRecord(MDLocationDescriptor *location,
                                              const char *crash_info,
                                              unsigned long crash_info_size,
                                              bool out_of_process,
-                                             bool in_dyld_shared_cache) {
+                                             bool dyld_or_in_dyld_shared_cache) {
   TypedMDRVA<MDRawMacCrashInfoRecord> info(&writer_);
 
   // Only write crash info records for modules that actually have
@@ -1711,8 +1806,8 @@ bool MinidumpGenerator::WriteCrashInfoRecord(MDLocationDescriptor *location,
     return false;
   }
   // We generally don't have access to modules in another process's memory
-  // space if they're not in the dyld shared cache.
-  if (out_of_process && !in_dyld_shared_cache) {
+  // space if the module isn't dyld and isn't in the dyld shared cache.
+  if (out_of_process && !dyld_or_in_dyld_shared_cache) {
     return false;
   }
 
@@ -1851,7 +1946,9 @@ bool MinidumpGenerator::WriteCrashInfoStream(
 
   uint32_t image_count = dynamic_images_ ?
                          dynamic_images_->GetImageCount() :
-                         _dyld_image_count();
+                         // Leave room for dyld, which isn't among the images
+                         // counted by _dyld_image_count().
+                         _dyld_image_count() + 1;
   uint32_t crash_info_count = 0;
   for (uint32_t i = 0; (i < image_count) &&
                        (crash_info_count < MAC_CRASH_INFOS_MAX); ++i) {
@@ -1872,35 +1969,48 @@ bool MinidumpGenerator::WriteCrashInfoStream(
                                  (image->GetCrashInfo()),
                                image->GetCrashInfoSize(),
                                /* out_of_process */ true,
-                               image->GetInDyldSharedCache())) {
+                               image->GetInDyldSharedCache() ||
+                                 image->GetIsDyld())) {
         list_ptr->records[crash_info_count] = location;
         ++crash_info_count;
       }
     } else {
       // Getting crash info in the crashed process
-      const breakpad_mach_header *header =
-        (breakpad_mach_header*) _dyld_get_image_header(i);
-      if (!header) {
+      const breakpad_mach_header *header;
+      // dyld isn't in our list of images, so tack it onto the end.
+      if (i == image_count - 1) {
+        header = dyldImageLoadAddress_;
+      } else {
+        header = (breakpad_mach_header*) _dyld_get_image_header(i);
+      }
+      if (!header || (header->magic != MH_MAGIC_ARCH)) {
         continue;
       }
-#ifdef __LP64__
-      if (header->magic != MH_MAGIC_64) {
-        continue;
-      }
-#else
-      if (header->magic != MH_MAGIC) {
-        continue;
-      }
-#endif
 
-      bool in_dyld_shared_cache = ((header->flags & MH_SHAREDCACHE) != 0);
-      unsigned long slide = _dyld_get_image_vmaddr_slide(i);
-      const char *module_path = _dyld_get_image_name(i);
+      unsigned long slide;
+      const char *module_path;
+      bool dyld_or_in_dyld_shared_cache;
+      if (i == image_count - 1) {
+        slide = dyldSlide_;
+        module_path = dyldPath_.c_str();
+        dyld_or_in_dyld_shared_cache = true;
+      } else {
+        slide = _dyld_get_image_vmaddr_slide(i);
+        module_path = _dyld_get_image_name(i);
+        dyld_or_in_dyld_shared_cache =
+          ((header->flags & MH_SHAREDCACHE) != 0);
+      }
 
       getsectdata_size_type crash_info_size = 0;
       const char *crash_info =
         getsectdatafromheader_func(header, "__DATA", "__crash_info",
                                    &crash_info_size);
+      // __crash_info might be in the __DATA_DIRTY segment.
+      if (!crash_info) {
+        crash_info =
+          getsectdatafromheader_func(header, "__DATA_DIRTY", "__crash_info",
+                                     &crash_info_size);
+      }
       if (crash_info) {
         crash_info += slide;
       }
@@ -1909,7 +2019,7 @@ bool MinidumpGenerator::WriteCrashInfoStream(
       // __DATA,__crash_info section, or if it's empty of useful data.
       if (WriteCrashInfoRecord(&location, module_path, crash_info,
                                crash_info_size, /* out_of_process */ false,
-                               in_dyld_shared_cache)) {
+                               dyld_or_in_dyld_shared_cache)) {
         list_ptr->records[crash_info_count] = location;
         ++crash_info_count;
       }
