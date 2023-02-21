@@ -1608,7 +1608,7 @@ random-if(d2d) fuzzy-if(winWidget&&!d2d,0-20,0-118) fuzzy-if(!Android,0-2,0-550)
 random-if(d2d) fuzzy-if(winWidget&&!d2d,0-20,0-116) fuzzy-if(!Android,0-2,0-650) == 635373-3.html 635373-3-ref.html
 == 635639-1.html 635639-1-ref.html
 == 635639-2.html 635639-2-ref.html
-random == 637597-1.html 637597-1-ref.html # bug 637597 was never really fixed!
+== 637597-1.html 637597-1-ref.html
 fuzzy(0-1,0-19) == 637852-1.html 637852-1-ref.html
 fuzzy(0-3,0-19) == 637852-2.html 637852-2-ref.html
 fuzzy-if(Android,0-8,0-500) == 637852-3.html 637852-3-ref.html
