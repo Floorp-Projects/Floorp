@@ -57,13 +57,6 @@ bool RenderCompositorSWGL::MakeCurrent() {
 }
 
 bool RenderCompositorSWGL::BeginFrame() {
-  mRenderWidgetSize = Some(mWidget->GetClientSize());
-#ifdef MOZ_WAYLAND
-  if (mLastRenderWidgetSize != mRenderWidgetSize.value()) {
-    mLastRenderWidgetSize = mRenderWidgetSize.value();
-    mRequestFullRender = true;
-  }
-#endif
   // Set up a temporary region representing the entire window surface in case a
   // dirty region is not supplied.
   ClearMappedBuffer();
@@ -248,10 +241,7 @@ void RenderCompositorSWGL::CommitMappedBuffer(bool aDirty) {
   ClearMappedBuffer();
 }
 
-void RenderCompositorSWGL::CancelFrame() {
-  CommitMappedBuffer(false);
-  mRenderWidgetSize = Nothing();
-}
+void RenderCompositorSWGL::CancelFrame() { CommitMappedBuffer(false); }
 
 RenderedFrameId RenderCompositorSWGL::EndFrame(
     const nsTArray<DeviceIntRect>& aDirtyRects) {
@@ -260,7 +250,6 @@ RenderedFrameId RenderCompositorSWGL::EndFrame(
   // to EndRemoteDrawingInRegion as for StartRemoteDrawingInRegion.
   RenderedFrameId frameId = GetNextRenderFrameId();
   CommitMappedBuffer();
-  mRenderWidgetSize = Nothing();
   return frameId;
 }
 
@@ -289,11 +278,7 @@ bool RenderCompositorSWGL::Resume() {
 }
 
 LayoutDeviceIntSize RenderCompositorSWGL::GetBufferSize() {
-  // If we're between BeginFrame() and EndFrame()/CancelFrame() calls
-  // return recent rendering size instead of actual underlying widget
-  // size. It prevents possible rendering artifacts if widget size was changed.
-  return mRenderWidgetSize ? mRenderWidgetSize.value()
-                           : mWidget->GetClientSize();
+  return mWidget->GetClientSize();
 }
 
 void RenderCompositorSWGL::GetCompositorCapabilities(

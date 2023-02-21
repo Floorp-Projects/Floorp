@@ -63,16 +63,10 @@ class RenderCompositorSWGL : public RenderCompositor {
   void* mContext = nullptr;
   RefPtr<gfx::DrawTarget> mDT;
   LayoutDeviceIntRegion mDirtyRegion;
-  // Keep consistent buffer size between BeginFrame and EndFrame/CancelFrame
-  // calls to make sure we don't change buffer size during rendering.
-  Maybe<LayoutDeviceIntSize> mRenderWidgetSize;
   RefPtr<gfx::DataSourceSurface> mSurface;
   uint8_t* mMappedData = nullptr;
   int32_t mMappedStride = 0;
 #ifdef MOZ_WAYLAND
-  // On Wayland we need to request full render if widget size is changed
-  // because SW rendering backend reallocates and clears target surface.
-  LayoutDeviceIntSize mLastRenderWidgetSize;
   bool mRequestFullRender = false;
 #endif
 

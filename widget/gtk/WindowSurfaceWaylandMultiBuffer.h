@@ -24,8 +24,7 @@ using gfx::DrawTarget;
 // and related management
 class WindowSurfaceWaylandMB : public WindowSurface {
  public:
-  WindowSurfaceWaylandMB(RefPtr<nsWindow> aWindow,
-                         GtkCompositorWidget* aCompositorWidget);
+  explicit WindowSurfaceWaylandMB(RefPtr<nsWindow> aWindow);
   ~WindowSurfaceWaylandMB() = default;
 
   // Lock() / Commit() are called by gecko when Firefox
@@ -54,16 +53,11 @@ class WindowSurfaceWaylandMB : public WindowSurface {
   void HandlePartialUpdate(const MutexAutoLock& aProofOfLock,
                            const LayoutDeviceIntRegion& aInvalidRegion);
   void IncrementBufferAge(const MutexAutoLock& aProofOfLock);
-  // Return true if window size was updated.
-  bool MaybeUpdateWindowSize();
 
   mozilla::Mutex mSurfaceLock MOZ_UNANNOTATED;
 
   RefPtr<nsWindow> mWindow;
-  // WindowSurfaceWaylandMB is owned by GtkCompositorWidget so we can't
-  // reference it.
-  GtkCompositorWidget* mCompositorWidget;
-  LayoutDeviceIntSize mWindowSize;
+  LayoutDeviceIntSize mMozContainerSize;
 
   RefPtr<WaylandBufferSHM> mInProgressBuffer;
   RefPtr<WaylandBufferSHM> mFrontBuffer;
