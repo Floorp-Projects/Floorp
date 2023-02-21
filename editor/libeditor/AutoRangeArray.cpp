@@ -429,7 +429,7 @@ AutoRangeArray::ShrinkRangesIfStartFromOrEndAfterAtomicContent(
 
   bool changed = false;
   for (auto& range : mRanges) {
-    MOZ_ASSERT(!range->IsInSelection(),
+    MOZ_ASSERT(!range->IsInAnySelection(),
                "Changing range in selection may cause running script");
     Result<bool, nsresult> result =
         WSRunScanner::ShrinkRangeIfStartsFromOrEndsAfterAtomicContent(
@@ -939,7 +939,7 @@ AutoRangeArray::SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
 
       // Correct the range.
       // The new end parent becomes the parent node of the text.
-      MOZ_ASSERT(!range->IsInSelection());
+      MOZ_ASSERT(!range->IsInAnySelection());
       range->SetEnd(unwrappedSplitAtEndResult.AtNextContent<EditorRawDOMPoint>()
                         .ToRawRangeBoundary(),
                     ignoredError);
