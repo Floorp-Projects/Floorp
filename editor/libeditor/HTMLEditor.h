@@ -1232,10 +1232,8 @@ class HTMLEditor final : public EditorBase,
 
   /**
    * InitializeInsertingElement is a callback type of methods which inserts
-   * an element into the DOM tree.  This is called immediately before or
-   * after inserting aNewElement into the DOM tree (depending on
-   * "editor.initialize_element_before_connect" pref whether this is called
-   * before or after inserting the element).
+   * an element into the DOM tree.  This is called immediately before inserting
+   * aNewElement into the DOM tree.
    *
    * @param aHTMLEditor     The HTML editor which modifies the DOM tree.
    * @param aNewElement     The new element which will be or was inserted into
@@ -1280,10 +1278,10 @@ class HTMLEditor final : public EditorBase,
    *                            Note that this point will be invalid once this
    *                            method inserts the new element.
    * @param aInitializer        A function to initialize the new element before
-   *                            or after (depends on the pref) connecting the
-   *                            element into the DOM tree. Note that this should
-   *                            not touch outside given element because doing it
-   *                            would break range updater's result.
+   *                            connecting the element into the DOM tree. Note
+   *                            that this should not touch outside given element
+   *                            because doing it would break range updater's
+   *                            result.
    * @return                    The created new element node and candidate caret
    *                            position.
    */
@@ -1365,10 +1363,10 @@ class HTMLEditor final : public EditorBase,
    *                            split point.
    * @param aEditingHost        The editing host with which we're handling it.
    * @param aInitializer        A function to initialize the new element before
-   *                            or after (depends on the pref) connecting the
-   *                            element into the DOM tree. Note that this should
-   *                            not touch outside given element because doing it
-   *                            would break range updater's result.
+   *                            connecting the element into the DOM tree. Note
+   *                            that this should not touch outside given element
+   *                            because doing it would break range updater's
+   *                            result.
    * @return                    If succeeded, returns the new element node and
    *                            suggesting point to put caret.
    */

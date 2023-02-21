@@ -4840,13 +4840,6 @@
   value: "#FFFFFF"
   mirror: never
 
-# Whether editor initializes attributes and/or child nodes of newly inserting
-# element before or after connecting to the DOM tree.
-- name: editor.initialize_element_before_connect
-  type: bool
-  value: true
-  mirror: always
-
 # Use compatible range computation when applying inline style.  This is used
 # for making it possible to backout with Normandy Pref Rollout.
 - name: editor.inline_style.range.compatible_with_the_other_browsers
