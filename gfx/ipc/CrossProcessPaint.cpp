@@ -118,6 +118,10 @@ PaintFragment PaintFragment::Record(dom::BrowsingContext* aBc,
   RefPtr<DrawTarget> dt = Factory::CreateRecordingDrawTarget(
       recorder, referenceDt,
       IntRect(IntPoint(0, 0), surfaceSize.ToUnknownSize()));
+  if (!dt || !dt->IsValid()) {
+    PF_LOG("Failed to create drawTarget.\n");
+    return PaintFragment{};
+  }
 
   RenderDocumentFlags renderDocFlags = RenderDocumentFlags::None;
   if (!(aFlags & CrossProcessPaintFlags::DrawView)) {
@@ -140,12 +144,12 @@ PaintFragment PaintFragment::Record(dom::BrowsingContext* aBc,
       dt->AddUserData(&sDisablePixelSnapping, (void*)0x1, nullptr);
     }
 
-    UniquePtr<gfxContext> thebes = gfxContext::CreateOrNull(dt);
-    thebes->SetMatrix(Matrix::Scaling(aScale, aScale));
-    thebes->SetCrossProcessPaintScale(aScale);
+    gfxContext thebes(dt);
+    thebes.SetMatrix(Matrix::Scaling(aScale, aScale));
+    thebes.SetCrossProcessPaintScale(aScale);
     RefPtr<PresShell> presShell = presContext->PresShell();
     Unused << presShell->RenderDocument(r, renderDocFlags, aBackgroundColor,
-                                        thebes.get());
+                                        &thebes);
   }
 
   if (!recorder->mOutputStream.mValid) {

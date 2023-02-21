@@ -255,8 +255,7 @@ std::pair<ImgDrawResult, RefPtr<SourceSurface>> ClippedImage::GetFrameInternal(
                             RefPtr<SourceSurface>());
     }
 
-    UniquePtr<gfxContext> ctx = gfxContext::CreateOrNull(target);
-    MOZ_ASSERT(ctx);  // already checked the draw target above
+    gfxContext ctx(target);
 
     // Create our callback.
     RefPtr<DrawSingleTileCallback> drawTileCallback =
@@ -266,7 +265,7 @@ std::pair<ImgDrawResult, RefPtr<SourceSurface>> ClippedImage::GetFrameInternal(
         new gfxCallbackDrawable(drawTileCallback, aSize);
 
     // Actually draw. The callback will end up invoking DrawSingleTile.
-    gfxUtils::DrawPixelSnapped(ctx.get(), drawable, SizeDouble(aSize),
+    gfxUtils::DrawPixelSnapped(&ctx, drawable, SizeDouble(aSize),
                                ImageRegion::Create(aSize),
                                SurfaceFormat::OS_RGBA, SamplingFilter::LINEAR,
                                imgIContainer::FLAG_CLAMP);

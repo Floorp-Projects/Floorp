@@ -1651,7 +1651,9 @@ gfxContext* DisplayListBuilder::GetTextContext(
   if (!mCachedTextDT) {
     mCachedTextDT = new layout::TextDrawTarget(*this, aResources, aSc, aManager,
                                                aItem, aBounds);
-    mCachedContext = gfxContext::CreateOrNull(mCachedTextDT, aDeviceOffset);
+    if (mCachedTextDT->IsValid()) {
+      mCachedContext = MakeUnique<gfxContext>(mCachedTextDT, aDeviceOffset);
+    }
   } else {
     mCachedTextDT->Reinitialize(aResources, aSc, aManager, aItem, aBounds);
     mCachedContext->SetDeviceOffset(aDeviceOffset);

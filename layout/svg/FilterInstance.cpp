@@ -636,18 +636,16 @@ void FilterInstance::BuildSourcePaint(SourceInfo* aSource,
     return;
   }
 
-  UniquePtr<gfxContext> ctx = gfxContext::CreateOrNull(offscreenDT);
-  MOZ_ASSERT(ctx);  // already checked the draw target above
-  gfxContextAutoSaveRestore saver(ctx.get());
+  gfxContext ctx(offscreenDT);
+  gfxContextAutoSaveRestore saver(&ctx);
 
-  ctx->SetMatrixDouble(mPaintTransform *
-                       gfxMatrix::Translation(-neededRect.TopLeft()));
+  ctx.SetMatrixDouble(mPaintTransform *
+                      gfxMatrix::Translation(-neededRect.TopLeft()));
   GeneralPattern pattern;
   if (aSource == &mFillPaint) {
-    SVGUtils::MakeFillPatternFor(mTargetFrame, ctx.get(), &pattern, aImgParams);
+    SVGUtils::MakeFillPatternFor(mTargetFrame, &ctx, &pattern, aImgParams);
   } else if (aSource == &mStrokePaint) {
-    SVGUtils::MakeStrokePatternFor(mTargetFrame, ctx.get(), &pattern,
-                                   aImgParams);
+    SVGUtils::MakeStrokePatternFor(mTargetFrame, &ctx, &pattern, aImgParams);
   }
 
   if (pattern.GetPattern()) {
@@ -708,13 +706,12 @@ void FilterInstance::BuildSourceImage(DrawTarget* aDest,
   // space to device space and back again). However, that would make the
   // code more complex while being hard to get right without introducing
   // subtle bugs, and in practice it probably makes no real difference.)
-  UniquePtr<gfxContext> ctx = gfxContext::CreateOrNull(offscreenDT);
-  MOZ_ASSERT(ctx);  // already checked the draw target above
+  gfxContext ctx(offscreenDT);
   gfxMatrix devPxToCssPxTM = SVGUtils::GetCSSPxToDevPxMatrix(mTargetFrame);
   DebugOnly<bool> invertible = devPxToCssPxTM.Invert();
   MOZ_ASSERT(invertible);
-  ctx->SetMatrixDouble(devPxToCssPxTM * mPaintTransform *
-                       gfxMatrix::Translation(-neededRect.TopLeft()));
+  ctx.SetMatrixDouble(devPxToCssPxTM * mPaintTransform *
+                      gfxMatrix::Translation(-neededRect.TopLeft()));
 
   auto imageFlags = aImgParams.imageFlags;
   if (mTargetFrame->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
@@ -725,7 +722,7 @@ void FilterInstance::BuildSourceImage(DrawTarget* aDest,
     imageFlags &= ~imgIContainer::FLAG_HIGH_QUALITY_SCALING;
   }
   imgDrawingParams imgParams(imageFlags);
-  mPaintCallback(*ctx, imgParams, &mPaintTransform, &dirty);
+  mPaintCallback(ctx, imgParams, &mPaintTransform, &dirty);
   aImgParams.result = imgParams.result;
 
   mSourceGraphic.mSourceSurface = offscreenDT->Snapshot();
