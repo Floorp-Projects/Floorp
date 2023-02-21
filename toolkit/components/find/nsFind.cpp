@@ -987,6 +987,4 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
     DEBUG_FIND_PRINTF("NOT: %c == %c\n", c, patc);
     EndPartialMatch();
   }
-
-  return NS_OK;
 }
