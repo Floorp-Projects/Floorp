@@ -3,18 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-import sys
 import types
 from textwrap import dedent
 
-import mozpack.path as mozpath
+import helpers  # Import test helpers module.
 import mozunit
-
-# Import test helpers module.
-OUR_DIR = mozpath.abspath(mozpath.dirname(__file__))
-sys.path.append(OUR_DIR)
-
-import helpers
 
 helpers.setup()
 
