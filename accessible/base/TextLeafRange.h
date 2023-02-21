@@ -194,6 +194,8 @@ class TextLeafPoint final {
  private:
   bool IsEmptyLastLine() const;
 
+  bool IsDocEdge(nsDirection aDirection) const;
+
   char16_t GetChar() const;
 
   TextLeafPoint FindLineStartSameRemoteAcc(nsDirection aDirection,

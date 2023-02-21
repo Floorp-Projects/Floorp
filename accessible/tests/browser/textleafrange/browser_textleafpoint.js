@@ -117,11 +117,7 @@ the <strong>big</strong> rug.</p>
       BOUNDARY_WORD_END,
       DIRECTION_NEXT,
       expectedWordEndSequence,
-      "Forward BOUNDARY_WORD_END sequence is correct",
-      {
-        // XXX: Includes first point in doc which is not a word end
-        todo: true,
-      }
+      "Forward BOUNDARY_WORD_END sequence is correct"
     );
 
     testBoundarySequence(
@@ -129,11 +125,7 @@ the <strong>big</strong> rug.</p>
       BOUNDARY_WORD_END,
       DIRECTION_PREVIOUS,
       [readablePoint(firstPoint), ...expectedWordEndSequence].reverse(),
-      "Backward BOUNDARY_WORD_END sequence is correct",
-      {
-        // XXX: Doesn't include last point in doc which is a word end
-        todo: true,
-      }
+      "Backward BOUNDARY_WORD_END sequence is correct"
     );
 
     const expectedLineStartSequence = [
@@ -265,9 +257,8 @@ on a <span style="display: block;">rug</span></p>
     <li>Three</li>
   </ul>`,
   function(browser, docAcc) {
-    const container = findAccessibleChildByID(docAcc, "p");
-    const firstPoint = createTextLeafPoint(container, 0);
-    const lastPoint = createTextLeafPoint(container, kTextEndOffset);
+    const firstPoint = createTextLeafPoint(docAcc, 0);
+    const lastPoint = createTextLeafPoint(docAcc, kTextEndOffset);
 
     const expectedParagraphStart = [
       ["A bug\non a ", 0],
@@ -283,11 +274,22 @@ on a <span style="display: block;">rug</span></p>
       BOUNDARY_PARAGRAPH,
       DIRECTION_NEXT,
       [...expectedParagraphStart, readablePoint(lastPoint)],
-      "Forward BOUNDARY_PARAGRAPH sequence is correct",
-      {
-        // XXX: Missing the first paragraph start.
-        todo: true,
-      }
+      "Forward BOUNDARY_PARAGRAPH sequence is correct"
+    );
+
+    const paragraphStart = createTextLeafPoint(
+      findAccessibleChildByID(docAcc, "p2").firstChild,
+      0
+    );
+    const wordEnd = paragraphStart.findBoundary(
+      BOUNDARY_WORD_END,
+      DIRECTION_NEXT,
+      BOUNDARY_FLAG_INCLUDE_ORIGIN
+    );
+    testPointEqual(
+      wordEnd,
+      paragraphStart,
+      "The word end from the previous block is the first point in this block"
     );
   },
   { chrome: true, topLevel: isCacheEnabled, iframe: false, remoteIframe: false }
