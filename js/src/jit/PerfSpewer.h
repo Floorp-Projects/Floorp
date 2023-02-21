@@ -27,11 +27,6 @@ namespace js::jit {
 
 using ProfilerJitCodeVector = Vector<JS::JitCodeRecord, 0, SystemAllocPolicy>;
 
-#ifdef JS_ION_PERF
-void CheckPerf();
-#else
-inline void CheckPerf() {}
-#endif
 void ResetPerfSpewer(bool enabled);
 
 class MBasicBlock;
@@ -87,6 +82,8 @@ class PerfSpewer {
 
  public:
   PerfSpewer() = default;
+
+  static void Init();
 
   void recordOffset(MacroAssembler& masm, const char*);
 

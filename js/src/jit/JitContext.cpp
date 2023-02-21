@@ -130,7 +130,7 @@ bool jit::InitializeJit() {
     }
   }
 
-  CheckPerf();
+  PerfSpewer::Init();
   return true;
 }
 
