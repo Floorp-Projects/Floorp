@@ -3,6 +3,13 @@
 
 "use strict";
 
+const { TelemetryTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/TelemetryTestUtils.sys.mjs"
+);
+const { UrlbarTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/UrlbarTestUtils.sys.mjs"
+);
+
 const TEST_ROOT = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
   "http://example.com"
@@ -143,6 +150,22 @@ class ScreenshotsHelper {
     await BrowserTestUtils.waitForCondition(async () => {
       let state = await this.getOverlayState();
       return state === newState;
+    }, `Waiting for state change to ${newState}`);
+  }
+
+  async getHoverElementRect() {
+    return ContentTask.spawn(this.browser, null, async () => {
+      let screenshotsChild = content.windowGlobalChild.getActor(
+        "ScreenshotsComponent"
+      );
+      return screenshotsChild._overlay.stateHandler.getHoverElementBoxRect();
+    });
+  }
+
+  async waitForHoverElementRect() {
+    return TestUtils.waitForCondition(async () => {
+      let rect = await this.getHoverElementRect();
+      return rect;
     });
   }
 
@@ -222,6 +245,23 @@ class ScreenshotsHelper {
     // the middle of the copy button is last X - 230 and last Y + 30.
     // Ex. 500, 500 would be 270, 530
     mouse.click(this.endX - 230, this.endY + 30);
+  }
+
+  async clickTestPageElement() {
+    let rect = await ContentTask.spawn(this.browser, [], async () => {
+      let ele = content.document.getElementById("testPageElement");
+      return ele.getBoundingClientRect();
+    });
+
+    let x = Math.floor(rect.x + rect.width / 2);
+    let y = Math.floor(rect.y + rect.height / 2);
+
+    mouse.move(x, y);
+    await this.waitForHoverElementRect();
+    mouse.down(x, y);
+    await this.waitForStateChange("draggingReady");
+    mouse.up(x, y);
+    await this.waitForStateChange("selected");
   }
 
   async zoomBrowser(zoom) {
@@ -497,4 +537,50 @@ function getContentDevicePixelRatio(browser) {
   return SpecialPowers.spawn(browser, [], async function() {
     return content.window.devicePixelRatio;
   });
+}
+
+async function clearAllTelemetryEvents() {
+  // Clear everything.
+  info("Clearing all telemetry events");
+  await TestUtils.waitForCondition(() => {
+    Services.telemetry.clearEvents();
+    let events = Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+      true
+    );
+    let content = events.content;
+    let parent = events.parent;
+
+    return (!content && !parent) || (!content.length && !parent.length);
+  });
+}
+
+async function waitForScreenshotsEventCount(count, process = "parent") {
+  await TestUtils.waitForCondition(
+    () => {
+      let events = TelemetryTestUtils.getEvents(
+        { category: "screenshots" },
+        { process }
+      );
+
+      info(`Got ${events?.length} event(s)`);
+      info(`Actual events: ${JSON.stringify(events, null, 2)}`);
+      return events.length === count ? events : null;
+    },
+    `Waiting for ${count} ${process} event(s).`,
+    200,
+    100
+  );
+}
+
+async function assertScreenshotsEvents(expectedEvents, process = "parent") {
+  info(`Expected events: ${JSON.stringify(expectedEvents, null, 2)}`);
+  // Make sure we have recorded the correct number of events
+  await waitForScreenshotsEventCount(expectedEvents.length, process);
+
+  TelemetryTestUtils.assertEvents(
+    expectedEvents,
+    { category: "screenshots", clear: true },
+    { process }
+  );
 }

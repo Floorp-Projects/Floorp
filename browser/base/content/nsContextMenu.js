@@ -1497,7 +1497,11 @@ class nsContextMenu {
 
   takeScreenshot() {
     if (SCREENSHOT_BROWSER_COMPONENT) {
-      Services.obs.notifyObservers(window, "menuitem-screenshot", true);
+      Services.obs.notifyObservers(
+        window,
+        "menuitem-screenshot",
+        "context_menu"
+      );
     } else {
       Services.obs.notifyObservers(
         null,

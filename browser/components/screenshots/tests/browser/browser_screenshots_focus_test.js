@@ -3,6 +3,11 @@
 
 "use strict";
 
+const SCREENSHOTS_EVENTS = [
+  { category: "screenshots", method: "started", object: "toolbar_button" },
+  { category: "screenshots", method: "canceled", object: "escape" },
+];
+
 add_task(async function testPanelFocused() {
   await BrowserTestUtils.withNewTab(
     {
@@ -10,6 +15,7 @@ add_task(async function testPanelFocused() {
       url: TEST_PAGE,
     },
     async browser => {
+      await clearAllTelemetryEvents();
       let helper = new ScreenshotsHelper(browser);
 
       helper.triggerUIFromToolbar();
@@ -29,6 +35,12 @@ add_task(async function testPanelFocused() {
         screenshotsButtons.activeElement,
         "Visible button is focused"
       );
+
+      EventUtils.synthesizeKey("KEY_Escape");
+
+      await helper.waitForOverlayClosed();
+
+      await assertScreenshotsEvents(SCREENSHOTS_EVENTS);
     }
   );
 });
