@@ -36,7 +36,6 @@ FRAME_CLASSES = [
     Frame("nsHTMLFramesetBorderFrame", "None", LEAF),
     Frame("nsHTMLFramesetFrame", "FrameSet", LEAF),
     Frame("nsHTMLScrollFrame", "Scroll", NOT_LEAF),
-    Frame("nsImageBoxFrame", "ImageBox", LEAF),
     Frame("nsImageControlFrame", "ImageControl", LEAF),
     Frame("nsImageFrame", "Image", DYNAMIC_LEAF),
     Frame("nsInlineFrame", "Inline", NOT_LEAF),

@@ -1883,8 +1883,7 @@ nsresult nsTreeBodyFrame::GetImage(int32_t aRowIndex, nsTreeColumn* aCol,
 
       // NOTE(heycam): If it's an SVG image, and we need to want the image to
       // able to respond to media query changes, it needs to be added to the
-      // document's ImageTracker (like nsImageBoxFrame does).  For now, assume
-      // we don't need this.
+      // document's ImageTracker.  For now, assume we don't need this.
     }
     listener->UnsuppressInvalidation();
 
