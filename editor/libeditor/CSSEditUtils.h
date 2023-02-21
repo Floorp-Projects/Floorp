@@ -146,14 +146,6 @@ class CSSEditUtils final {
   static void GetDefaultBackgroundColor(nsAString& aColor);
 
   /**
-   * Get the default length unit used for CSS Indent/Outdent.
-   *
-   * @param aLengthUnit    [OUT] The default length unit as it is defined in
-   *                             prefs.
-   */
-  static void GetDefaultLengthUnit(nsAString& aLengthUnit);
-
-  /**
    * Returns the list of values for the CSS equivalences to
    * the passed HTML style for the passed node.
    *

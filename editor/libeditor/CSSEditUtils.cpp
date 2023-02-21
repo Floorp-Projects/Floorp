@@ -639,17 +639,6 @@ void CSSEditUtils::GetDefaultBackgroundColor(nsAString& aColor) {
   }
 }
 
-// Get the default length unit used for CSS Indent/Outdent
-
-// static
-void CSSEditUtils::GetDefaultLengthUnit(nsAString& aLengthUnit) {
-  // XXX Why don't you validate the pref value?
-  if (MOZ_UNLIKELY(NS_FAILED(Preferences::GetString(
-          "editor.css.default_length_unit", aLengthUnit)))) {
-    aLengthUnit.AssignLiteral("px");
-  }
-}
-
 // static
 void CSSEditUtils::ParseLength(const nsAString& aString, float* aValue,
                                nsAtom** aUnit) {
