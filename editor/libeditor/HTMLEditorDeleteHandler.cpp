@@ -2188,16 +2188,19 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     startToDelete = range->StartRef();
     endToDelete = range->EndRef();
   }
-  nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints(
-      aHTMLEditor, &startToDelete, &endToDelete);
-  if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
-    return Err(NS_ERROR_EDITOR_DESTROYED);
-  }
-  if (NS_FAILED(rv)) {
-    NS_WARNING(
-        "WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints() "
-        "failed");
-    return Err(rv);
+
+  {
+    Result<CaretPoint, nsresult> caretPointOrError =
+        WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints(
+            aHTMLEditor, &startToDelete, &endToDelete);
+    if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
+      NS_WARNING(
+          "WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints() "
+          "failed");
+      return caretPointOrError.propagateErr();
+    }
+    // Ignore caret position because we'll set caret position below
+    caretPointOrError.unwrap().IgnoreCaretPointSuggestion();
   }
   if (aHTMLEditor.MayHaveMutationEventListeners(
           NS_EVENT_BITS_MUTATION_NODEREMOVED |
@@ -2222,7 +2225,7 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
     return caretPointOrError.propagateErr();
   }
-  rv = caretPointOrError.inspect().SuggestCaretPointTo(
+  nsresult rv = caretPointOrError.inspect().SuggestCaretPointTo(
       aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
                     SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
                     SuggestCaret::AndIgnoreTrivialError});
@@ -3393,15 +3396,18 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteNonCollapsedRanges(
   // surrounding white-space in preparation to delete selection.
   if (!aHTMLEditor.IsInPlaintextMode()) {
     {
-      AutoTransactionsConserveSelection dontChangeMySelection(aHTMLEditor);
       AutoTrackDOMRange firstRangeTracker(aHTMLEditor.RangeUpdaterRef(),
                                           &aRangesToDelete.FirstRangeRef());
-      nsresult rv = WhiteSpaceVisibilityKeeper::PrepareToDeleteRange(
-          aHTMLEditor, EditorDOMRange(aRangesToDelete.FirstRangeRef()));
-      if (NS_FAILED(rv)) {
+      Result<CaretPoint, nsresult> caretPointOrError =
+          WhiteSpaceVisibilityKeeper::PrepareToDeleteRange(
+              aHTMLEditor, EditorDOMRange(aRangesToDelete.FirstRangeRef()));
+      if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
         NS_WARNING("WhiteSpaceVisibilityKeeper::PrepareToDeleteRange() failed");
-        return Err(rv);
+        return caretPointOrError.propagateErr();
       }
+      // Ignore caret point suggestion because there was
+      // AutoTransactionsConserveSelection.
+      caretPointOrError.unwrap().IgnoreCaretPointSuggestion();
     }
     if (NS_WARN_IF(!aRangesToDelete.FirstRangeRef()->IsPositioned()) ||
         (aHTMLEditor.MayHaveMutationEventListeners() &&
