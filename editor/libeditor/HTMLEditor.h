@@ -1681,7 +1681,7 @@ class HTMLEditor final : public EditorBase,
     RemoveAllEmptyInlineAncestors,
   };
   template <typename EditorDOMPointType>
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CaretPoint, nsresult>
   DeleteTextAndTextNodesWithTransaction(
       const EditorDOMPointType& aStartPoint,
       const EditorDOMPointType& aEndPoint,
