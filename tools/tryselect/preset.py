@@ -10,6 +10,16 @@ import subprocess
 import yaml
 
 
+# Ensure strings with ' like fzf query strings get double-quoted:
+def represent_str(self, data):
+    if "'" in data:
+        return self.represent_scalar("tag:yaml.org,2002:str", data, style='"')
+    return self.represent_scalar("tag:yaml.org,2002:str", data)
+
+
+yaml.SafeDumper.add_representer(str, represent_str)
+
+
 class PresetHandler:
     def __init__(self, path):
         self.path = path
