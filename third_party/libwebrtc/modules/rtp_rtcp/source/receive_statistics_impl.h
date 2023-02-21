@@ -65,6 +65,7 @@ class StreamStatisticianImpl : public StreamStatisticianImplInterface {
   bool IsRetransmitOfOldPacket(const RtpPacketReceived& packet,
                                int64_t now_ms) const;
   void UpdateJitter(const RtpPacketReceived& packet, int64_t receive_time_ms);
+  void ReviseFrequencyAndJitter(int payload_type_frequency);
   // Updates StreamStatistician for out of order packets.
   // Returns true if packet considered to be out of order.
   bool UpdateOutOfOrder(const RtpPacketReceived& packet,
