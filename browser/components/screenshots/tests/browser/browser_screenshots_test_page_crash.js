@@ -14,11 +14,25 @@ add_task(async function test_fullpageScreenshot() {
 
       // click toolbar button so UI shows
       helper.triggerUIFromToolbar();
-      await helper.waitForOverlay();
 
       let panel = gBrowser.selectedBrowser.ownerDocument.querySelector(
         "#screenshotsPagePanel"
       );
+      await BrowserTestUtils.waitForMutationCondition(
+        panel,
+        { attributes: true },
+        () => {
+          return BrowserTestUtils.is_visible(panel);
+        }
+      );
+      ok(BrowserTestUtils.is_visible(panel), "Panel buttons are visible");
+
+      await ContentTask.spawn(browser, null, async () => {
+        let screenshotsChild = content.windowGlobalChild.getActor(
+          "ScreenshotsComponent"
+        );
+        Assert.ok(screenshotsChild._overlay._initialized, "The overlay exists");
+      });
 
       let waitForPanelHide = BrowserTestUtils.waitForMutationCondition(
         panel,

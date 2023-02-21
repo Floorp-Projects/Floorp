@@ -180,11 +180,9 @@ const DEFAULT_ACTIONS = {
       return !lazy.BrowserWindowTracker.getTopWindow().gScreenshots.shouldScreenshotsButtonBeDisabled();
     },
     onPick: () => {
-      Services.obs.notifyObservers(
-        lazy.BrowserWindowTracker.getTopWindow(),
-        "menuitem-screenshot",
-        "quick_actions"
-      );
+      lazy.BrowserWindowTracker.getTopWindow()
+        .document.getElementById("Browser:Screenshot")
+        .doCommand();
       return { focusContent: true };
     },
   },
