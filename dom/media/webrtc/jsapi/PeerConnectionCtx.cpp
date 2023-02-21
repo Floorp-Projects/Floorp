@@ -490,14 +490,6 @@ PeerConnectionImpl* PeerConnectionCtx::GetPeerConnection(
   return iterator->second;
 }
 
-template <typename Function>
-void PeerConnectionCtx::ForEachPeerConnection(Function&& aFunction) const {
-  MOZ_ASSERT(NS_IsMainThread());
-  for (const auto& pair : mPeerConnections) {
-    aFunction(pair.second);
-  }
-}
-
 void PeerConnectionCtx::ClearClosedStats() {
   for (auto& [id, pc] : mPeerConnections) {
     Unused << id;
