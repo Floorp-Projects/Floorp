@@ -40,6 +40,7 @@ class ExceptionHandlerTest {
                 shouldPrompt = CrashReporter.Prompt.NEVER,
                 services = listOf(service),
                 scope = scope,
+                notificationsDelegate = mock(),
             ),
         )
 
@@ -78,6 +79,7 @@ class ExceptionHandlerTest {
                 },
             ),
             scope = scope,
+            notificationsDelegate = mock(),
         ).install(testContext)
 
         val handler = ExceptionHandler(

@@ -12,6 +12,7 @@ import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
@@ -86,6 +87,7 @@ class SendCrashTelemetryServiceTest {
                     },
                 ),
                 scope = scope,
+                notificationsDelegate = mock(),
             ),
         ).install(testContext)
         val originalCrash = Crash.NativeCodeCrash(

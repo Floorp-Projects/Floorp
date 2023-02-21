@@ -60,6 +60,7 @@ class CrashReporterActivityTest {
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service),
             scope = scope,
+            notificationsDelegate = mock(),
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Hello World"), arrayListOf())
@@ -84,6 +85,7 @@ class CrashReporterActivityTest {
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service),
             scope = scope,
+            notificationsDelegate = mock(),
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Hello World"), arrayListOf())
@@ -111,6 +113,7 @@ class CrashReporterActivityTest {
                 theme = android.R.style.Theme_DeviceDefault, // Yolo!
             ),
             services = listOf(mock()),
+            notificationsDelegate = mock(),
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Hello World"), arrayListOf())
@@ -129,6 +132,7 @@ class CrashReporterActivityTest {
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service),
             scope = scope,
+            notificationsDelegate = mock(),
         ).install(testContext)
 
         val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Hello World"), arrayListOf())
@@ -156,6 +160,7 @@ class CrashReporterActivityTest {
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service),
             scope = scope,
+            notificationsDelegate = mock(),
         ).install(testContext)
 
         val crash = Crash.NativeCodeCrash(
@@ -180,6 +185,7 @@ class CrashReporterActivityTest {
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service),
             scope = scope,
+            notificationsDelegate = mock(),
         ).install(testContext)
 
         val crash = Crash.NativeCodeCrash(
@@ -204,6 +210,7 @@ class CrashReporterActivityTest {
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
             services = listOf(service),
             scope = scope,
+            notificationsDelegate = mock(),
         ).install(testContext)
 
         val crash = Crash.NativeCodeCrash(

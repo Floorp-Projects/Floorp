@@ -10,11 +10,11 @@ import android.app.PendingIntent
 import android.content.Context
 import android.os.Build
 import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.lib.crash.R
 import mozilla.components.lib.crash.prompt.CrashPrompt
+import mozilla.components.support.base.android.NotificationsDelegate
 import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.utils.PendingIntentUtils
 
@@ -29,6 +29,7 @@ internal class CrashNotification(
     private val context: Context,
     private val crash: Crash,
     private val configuration: CrashReporter.PromptConfiguration,
+    private val notificationsDelegate: NotificationsDelegate,
 ) {
     fun show() {
         val pendingIntent = PendingIntent.getActivity(
@@ -67,8 +68,7 @@ internal class CrashNotification(
             .setAutoCancel(true)
             .build()
 
-        NotificationManagerCompat.from(context)
-            .notify(NOTIFICATION_TAG, NOTIFICATION_ID, notification)
+        notificationsDelegate.notify(NOTIFICATION_TAG, NOTIFICATION_ID, notification)
     }
 
     companion object {

@@ -7,15 +7,19 @@ package mozilla.components.lib.crash.notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import androidx.core.app.NotificationManagerCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.CrashReporter
+import mozilla.components.support.base.android.NotificationsDelegate
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.spy
 import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
@@ -109,6 +113,10 @@ class CrashNotificationTest {
         assertEquals(0, shadowNotificationManager.size())
 
         val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Boom"), arrayListOf())
+        val notificationManagerCompat = spy(NotificationManagerCompat.from(testContext))
+        val notificationsDelegate = NotificationsDelegate(notificationManagerCompat)
+
+        whenever(notificationManagerCompat.areNotificationsEnabled()).thenReturn(true)
 
         val crashNotification = CrashNotification(
             testContext,
@@ -116,6 +124,7 @@ class CrashNotificationTest {
             CrashReporter.PromptConfiguration(
                 appName = "TestApp",
             ),
+            notificationsDelegate = notificationsDelegate,
         )
         crashNotification.show()
 
@@ -126,5 +135,38 @@ class CrashNotificationTest {
         )
 
         assertEquals(1, shadowNotificationManager.size())
+    }
+
+    @Test
+    fun `not showing notification when permission is denied`() {
+        val notificationManager = testContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val shadowNotificationManager = shadowOf(notificationManager)
+
+        assertEquals(0, shadowNotificationManager.notificationChannels.size)
+        assertEquals(0, shadowNotificationManager.size())
+
+        val crash = Crash.UncaughtExceptionCrash(0, RuntimeException("Boom"), arrayListOf())
+        val notificationManagerCompat = spy(NotificationManagerCompat.from(testContext))
+        val notificationsDelegate = spy(NotificationsDelegate(notificationManagerCompat))
+
+        whenever(notificationManagerCompat.areNotificationsEnabled()).thenReturn(false)
+
+        val crashNotification = CrashNotification(
+            testContext,
+            crash,
+            CrashReporter.PromptConfiguration(
+                appName = "TestApp",
+            ),
+            notificationsDelegate = notificationsDelegate,
+        )
+        crashNotification.show()
+
+        assertEquals(1, shadowNotificationManager.notificationChannels.size)
+        assertEquals(
+            "Crashes",
+            (shadowNotificationManager.notificationChannels[0] as NotificationChannel).name,
+        )
+
+        assertEquals(0, shadowNotificationManager.size())
     }
 }

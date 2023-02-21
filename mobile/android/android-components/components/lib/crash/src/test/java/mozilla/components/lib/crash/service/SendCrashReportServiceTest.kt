@@ -97,6 +97,7 @@ class SendCrashReportServiceTest {
                     },
                 ),
                 scope = scope,
+                notificationsDelegate = mock(),
             ),
         ).install(testContext)
         val originalCrash = Crash.NativeCodeCrash(

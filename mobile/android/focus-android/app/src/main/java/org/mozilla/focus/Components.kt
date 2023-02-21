@@ -208,7 +208,7 @@ class Components(
 
     val customTabsUseCases: CustomTabsUseCases by lazy { CustomTabsUseCases(store, sessionUseCases.loadUrl) }
 
-    val crashReporter: CrashReporter by lazy { createCrashReporter(context) }
+    val crashReporter: CrashReporter by lazy { createCrashReporter(context, notificationsDelegate) }
 
     val metrics: GleanMetricsService by lazy { GleanMetricsService(context) }
 
@@ -237,7 +237,7 @@ class Components(
     }
 }
 
-private fun createCrashReporter(context: Context): CrashReporter {
+private fun createCrashReporter(context: Context, notificationsDelegate: NotificationsDelegate): CrashReporter {
     val services = mutableListOf<CrashReporterService>()
 
     if (BuildConfig.SENTRY_TOKEN.isNotEmpty()) {
@@ -293,6 +293,7 @@ private fun createCrashReporter(context: Context): CrashReporter {
         shouldPrompt = CrashReporter.Prompt.ALWAYS,
         enabled = true,
         nonFatalCrashIntent = pendingIntent,
+        notificationsDelegate = notificationsDelegate,
     )
 }
 

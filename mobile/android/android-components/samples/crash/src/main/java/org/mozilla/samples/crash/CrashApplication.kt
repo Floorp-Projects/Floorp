@@ -9,6 +9,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import androidx.core.app.NotificationManagerCompat
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -23,6 +24,7 @@ import mozilla.components.service.glean.BuildInfo
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.net.ConceptFetchHttpUploader
+import mozilla.components.support.base.android.NotificationsDelegate
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.utils.PendingIntentUtils
@@ -52,6 +54,14 @@ class CrashApplication : Application() {
         // We want the log messages of all builds to go to Android logcat
         Log.addSink(AndroidLogSink())
 
+        val notificationManagerCompat = NotificationManagerCompat.from(applicationContext)
+
+        val notificationsDelegate: NotificationsDelegate by lazy {
+            NotificationsDelegate(
+                notificationManagerCompat,
+            )
+        }
+
         crashReporter = CrashReporter(
             context = this,
             services = listOf(
@@ -67,6 +77,7 @@ class CrashApplication : Application() {
             ),
             nonFatalCrashIntent = createNonFatalPendingIntent(this),
             enabled = true,
+            notificationsDelegate = notificationsDelegate,
         ).install(this)
 
         // Initialize Glean for recording by the GleanCrashReporterService

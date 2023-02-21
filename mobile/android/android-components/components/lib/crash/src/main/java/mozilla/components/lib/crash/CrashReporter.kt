@@ -29,6 +29,7 @@ import mozilla.components.lib.crash.service.CrashReporterService
 import mozilla.components.lib.crash.service.CrashTelemetryService
 import mozilla.components.lib.crash.service.SendCrashReportService
 import mozilla.components.lib.crash.service.SendCrashTelemetryService
+import mozilla.components.support.base.android.NotificationsDelegate
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -92,6 +93,7 @@ class CrashReporter(
     private val nonFatalCrashIntent: PendingIntent? = null,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO),
     private val maxBreadCrumbs: Int = 30,
+    private val notificationsDelegate: NotificationsDelegate,
 ) : CrashReporting {
     private val database: CrashDatabase by lazy { CrashDatabase.get(context) }
 
@@ -255,7 +257,7 @@ class CrashReporter(
             // activity here. So instead we fallback to just showing a notification
             // https://developer.android.com/preview/privacy/background-activity-starts
             logger.info("Showing notification")
-            val notification = CrashNotification(context, crash, promptConfiguration)
+            val notification = CrashNotification(context, crash, promptConfiguration, notificationsDelegate)
             notification.show()
         } else {
             logger.info("Showing prompt")

@@ -464,6 +464,7 @@ open class DefaultComponents(private val applicationContext: Context) {
                     }
                 },
             ),
+            notificationsDelegate = notificationsDelegate,
         ).install(applicationContext)
     }
 }
