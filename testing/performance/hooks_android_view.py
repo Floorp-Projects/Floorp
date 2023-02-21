@@ -33,7 +33,7 @@ COMMON_OPTIONS = [
     ("firefox.android.intentArgument", URL),
 ]
 
-NIGHTLY_SIM_ROUTE = "mobile.v2.fenix.nightly-simulation"
+NIGHTLY_SIM_ROUTE = "mobile.v3.firefox-android.apks.fenix-nightly-simulation"
 ROUTE_SUFFIX = "artifacts/public/build/{architecture}/target.apk"
 
 build_generator = None

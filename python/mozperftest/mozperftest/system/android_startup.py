@@ -34,13 +34,13 @@ TEST_URI = "https://example.com"
 BASE_URL_DICT = {
     PROD_FENIX: (
         "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
-        "mobile.v2.fenix.nightly.{date}.latest.{architecture}/artifacts/"
+        "mobile.v3.firefox-android.apks.fenix-nightly.{date}.latest.{architecture}/artifacts/"
         "public%2Fbuild%2F{architecture}%2Ftarget.apk"
     ),
     PROD_FENIX
     + "-latest": (
         "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
-        "mobile.v2.fenix.nightly.latest.{architecture}/artifacts/"
+        "mobile.v3.firefox-android.apks.fenix-nightly.latest.{architecture}/artifacts/"
         "public%2Fbuild%2F{architecture}%2Ftarget.apk"
     ),
     PROD_FOCUS: (
