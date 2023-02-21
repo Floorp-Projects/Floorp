@@ -1059,6 +1059,17 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
     mMaybeInDeadKeySequence = false;
   }
 
+  if (aEvent->type == GDK_KEY_RELEASE) {
+    if (const GdkEventKey* pendingKeyPressEvent =
+            mPostingKeyEvents.GetCorrespondingKeyPressEvent(aEvent)) {
+      MOZ_LOG(gIMELog, LogLevel::Warning,
+              ("0x%p   OnKeyEvent(), forgetting a pending GDK_KEY_PRESS event "
+               "because GDK_KEY_RELEASE for the event is handled",
+               this));
+      mPostingKeyEvents.RemoveEvent(pendingKeyPressEvent);
+    }
+  }
+
   MOZ_LOG(
       gIMELog, LogLevel::Debug,
       ("0x%p   OnKeyEvent(), succeeded, filterThisEvent=%s "
@@ -1615,6 +1626,21 @@ void IMContextWrapper::OnStartCompositionCallback(GtkIMContext* aContext,
 }
 
 void IMContextWrapper::OnStartCompositionNative(GtkIMContext* aContext) {
+  // IME may synthesize composition asynchronously after filtering a
+  // GDK_KEY_PRESS event.  In that case, we should handle composition with
+  // emulating the usual case, i.e., this is called in the stack of
+  // OnKeyEvent().
+  Maybe<AutoRestore<GdkEventKey*>> maybeRestoreProcessingKeyEvent;
+  if (!mProcessingKeyEvent && !mPostingKeyEvents.IsEmpty()) {
+    GdkEventKey* keyEvent = mPostingKeyEvents.GetFirstEvent();
+    if (keyEvent && keyEvent->type == GDK_KEY_PRESS &&
+        KeymapWrapper::ComputeDOMKeyNameIndex(keyEvent) ==
+            KEY_NAME_INDEX_USE_STRING) {
+      maybeRestoreProcessingKeyEvent.emplace(mProcessingKeyEvent);
+      mProcessingKeyEvent = mPostingKeyEvents.GetFirstEvent();
+    }
+  }
+
   MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p OnStartCompositionNative(aContext=0x%p), "
            "current context=0x%p, mComposingContext=0x%p",
@@ -1702,6 +1728,21 @@ void IMContextWrapper::OnChangeCompositionCallback(GtkIMContext* aContext,
 }
 
 void IMContextWrapper::OnChangeCompositionNative(GtkIMContext* aContext) {
+  // IME may synthesize composition asynchronously after filtering a
+  // GDK_KEY_PRESS event.  In that case, we should handle composition with
+  // emulating the usual case, i.e., this is called in the stack of
+  // OnKeyEvent().
+  Maybe<AutoRestore<GdkEventKey*>> maybeRestoreProcessingKeyEvent;
+  if (!mProcessingKeyEvent && !mPostingKeyEvents.IsEmpty()) {
+    GdkEventKey* keyEvent = mPostingKeyEvents.GetFirstEvent();
+    if (keyEvent && keyEvent->type == GDK_KEY_PRESS &&
+        KeymapWrapper::ComputeDOMKeyNameIndex(keyEvent) ==
+            KEY_NAME_INDEX_USE_STRING) {
+      maybeRestoreProcessingKeyEvent.emplace(mProcessingKeyEvent);
+      mProcessingKeyEvent = mPostingKeyEvents.GetFirstEvent();
+    }
+  }
+
   MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p OnChangeCompositionNative(aContext=0x%p), "
            "mComposingContext=0x%p",
@@ -1832,6 +1873,21 @@ void IMContextWrapper::OnCommitCompositionNative(GtkIMContext* aContext,
   const gchar emptyStr = 0;
   const gchar* commitString = aUTF8Char ? aUTF8Char : &emptyStr;
   NS_ConvertUTF8toUTF16 utf16CommitString(commitString);
+
+  // IME may synthesize composition asynchronously after filtering a
+  // GDK_KEY_PRESS event.  In that case, we should handle composition with
+  // emulating the usual case, i.e., this is called in the stack of
+  // OnKeyEvent().
+  Maybe<AutoRestore<GdkEventKey*>> maybeRestoreProcessingKeyEvent;
+  if (!mProcessingKeyEvent && !mPostingKeyEvents.IsEmpty()) {
+    GdkEventKey* keyEvent = mPostingKeyEvents.GetFirstEvent();
+    if (keyEvent && keyEvent->type == GDK_KEY_PRESS &&
+        KeymapWrapper::ComputeDOMKeyNameIndex(keyEvent) ==
+            KEY_NAME_INDEX_USE_STRING) {
+      maybeRestoreProcessingKeyEvent.emplace(mProcessingKeyEvent);
+      mProcessingKeyEvent = mPostingKeyEvents.GetFirstEvent();
+    }
+  }
 
   MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p OnCommitCompositionNative(aContext=0x%p), "
