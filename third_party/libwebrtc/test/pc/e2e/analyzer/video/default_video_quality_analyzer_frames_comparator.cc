@@ -434,6 +434,7 @@ void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparison(
     stats->ssim.AddSample(
         StatsSample(ssim, frame_stats.received_time, metadata));
   }
+  stats->capture_frame_rate.AddEvent(frame_stats.captured_time);
 
   // Compute dropped phase for dropped frame
   if (comparison.type == FrameComparisonType::kDroppedFrame) {

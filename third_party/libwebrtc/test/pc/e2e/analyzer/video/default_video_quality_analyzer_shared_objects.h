@@ -125,6 +125,7 @@ struct StreamStats {
   SamplesStatsCounter total_delay_incl_transport_ms;
   // Time between frames out from renderer.
   SamplesStatsCounter time_between_rendered_frames_ms;
+  SamplesRateCounter capture_frame_rate;
   SamplesRateCounter encode_frame_rate;
   SamplesStatsCounter encode_time_ms;
   SamplesStatsCounter decode_time_ms;

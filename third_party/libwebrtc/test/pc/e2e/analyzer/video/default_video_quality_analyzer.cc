@@ -1050,6 +1050,12 @@ void DefaultVideoQualityAnalyzer::ReportResults(
 
   if (options_.report_detailed_frame_stats) {
     metrics_logger_->LogSingleValueMetric(
+        "capture_frame_rate", test_case_name,
+        stats.capture_frame_rate.IsEmpty()
+            ? 0
+            : stats.capture_frame_rate.GetEventsPerSecond(),
+        Unit::kHertz, ImprovementDirection::kBiggerIsBetter, metric_metadata);
+    metrics_logger_->LogSingleValueMetric(
         "num_encoded_frames", test_case_name, frame_counters.encoded,
         Unit::kCount, ImprovementDirection::kBiggerIsBetter, metric_metadata);
     metrics_logger_->LogSingleValueMetric(
