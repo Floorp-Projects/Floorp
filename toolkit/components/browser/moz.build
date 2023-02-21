@@ -39,3 +39,5 @@ EXPORTS += [
     "nsEmbedCID.h",
     "nsWebBrowser.h",
 ]
+
+REQUIRES_UNIFIED_BUILD = True
