@@ -8919,11 +8919,6 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
     // since this bit is only set by accessing a ChromeOnly property, and
     // therefore can't unduly slow down normal web browsing.
 
-    // Clear our GridFragmentInfo property, which might be holding a stale
-    // dom::Grid object built from previously-computed info. This will
-    // ensure that the next call to GetGridFragments will create a new one.
-    RemoveProperty(GridFragmentInfo());
-
     // Now that we know column and row sizes and positions, set
     // the ComputedGridTrackInfo and related properties
 
