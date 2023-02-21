@@ -315,14 +315,12 @@ static bool GenerateAndPushTextMask(nsIFrame* aFrame, gfxContext* aContext,
   if (!maskDT || !maskDT->IsValid()) {
     return false;
   }
-  UniquePtr<gfxContext> maskCtx =
-      gfxContext::CreatePreservingTransformOrNull(maskDT);
-  MOZ_ASSERT(maskCtx);
-  maskCtx->Multiply(Matrix::Translation(bounds.TopLeft().ToUnknownPoint()));
+  gfxContext maskCtx(maskDT, /* aPreserveTransform */ true);
+  maskCtx.Multiply(Matrix::Translation(bounds.TopLeft().ToUnknownPoint()));
 
   // Shade text shape into mask A8 surface.
   nsLayoutUtils::PaintFrame(
-      maskCtx.get(), aFrame, nsRect(nsPoint(0, 0), aFrame->GetSize()),
+      &maskCtx, aFrame, nsRect(nsPoint(0, 0), aFrame->GetSize()),
       NS_RGB(255, 255, 255), nsDisplayListBuilderMode::GenerateGlyph);
 
   // Push the generated mask into aContext, so that the caller can pop and
@@ -5066,9 +5064,9 @@ void nsDisplayBlendMode::Paint(nsDisplayListBuilder* aBuilder,
     return;
   }
 
-  UniquePtr<gfxContext> ctx = gfxContext::CreatePreservingTransformOrNull(temp);
+  gfxContext ctx(temp, /* aPreserveTransform */ true);
 
-  GetChildren()->Paint(aBuilder, ctx.get(),
+  GetChildren()->Paint(aBuilder, &ctx,
                        mFrame->PresContext()->AppUnitsPerDevPixel());
 
   // Draw the temporary DT to the real destination, applying the blend mode, but
@@ -6869,8 +6867,7 @@ void nsDisplayTransform::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
   untransformedDT->SetTransform(
       Matrix::Translation(-Point(pixelBounds.X(), pixelBounds.Y())));
 
-  UniquePtr<gfxContext> groupTarget =
-      gfxContext::CreatePreservingTransformOrNull(untransformedDT);
+  gfxContext groupTarget(untransformedDT, /* aPreserveTransform */ true);
 
   if (aPolygon) {
     RefPtr<gfx::Path> path =
@@ -6878,7 +6875,7 @@ void nsDisplayTransform::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
     aCtx->GetDrawTarget()->PushClip(path);
   }
 
-  GetChildren()->Paint(aBuilder, groupTarget.get(),
+  GetChildren()->Paint(aBuilder, &groupTarget,
                        mFrame->PresContext()->AppUnitsPerDevPixel());
 
   if (aPolygon) {

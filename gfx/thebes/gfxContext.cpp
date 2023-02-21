@@ -52,18 +52,24 @@ PatternFromState::operator mozilla::gfx::Pattern&() {
 
 gfxContext::gfxContext(DrawTarget* aTarget, const Point& aDeviceOffset)
     : mPathIsRect(false), mTransformChanged(false), mDT(aTarget) {
-  if (!aTarget) {
-    gfxCriticalError() << "Don't create a gfxContext without a DrawTarget";
-  }
-
   mStateStack.SetLength(1);
   CurrentState().deviceOffset = aDeviceOffset;
   mDT->SetTransform(GetDTTransform());
 }
 
+gfxContext::gfxContext(DrawTarget* aTarget, bool aPreserveTransform)
+    : mPathIsRect(false), mTransformChanged(false), mDT(aTarget) {
+  mStateStack.SetLength(1);
+  if (aPreserveTransform) {
+    SetMatrix(aTarget->GetTransform());
+  } else {
+    mDT->SetTransform(GetDTTransform());
+  }
+}
+
 /* static */
-UniquePtr<gfxContext> gfxContext::CreateOrNull(
-    DrawTarget* aTarget, const mozilla::gfx::Point& aDeviceOffset) {
+UniquePtr<gfxContext> gfxContext::CreateOrNull(DrawTarget* aTarget,
+                                               const Point& aDeviceOffset) {
   if (!aTarget || !aTarget->IsValid()) {
     gfxCriticalNote << "Invalid target in gfxContext::CreateOrNull "
                     << hexa(aTarget);
@@ -71,23 +77,6 @@ UniquePtr<gfxContext> gfxContext::CreateOrNull(
   }
 
   return MakeUnique<gfxContext>(aTarget, aDeviceOffset);
-}
-
-/* static */
-UniquePtr<gfxContext> gfxContext::CreatePreservingTransformOrNull(
-    DrawTarget* aTarget) {
-  if (!aTarget || !aTarget->IsValid()) {
-    gfxCriticalNote
-        << "Invalid target in gfxContext::CreatePreservingTransformOrNull "
-        << hexa(aTarget);
-    return nullptr;
-  }
-
-  auto transform = aTarget->GetTransform();
-  auto result = MakeUnique<gfxContext>(aTarget);
-  result->SetMatrix(transform);
-
-  return result;
 }
 
 gfxContext::~gfxContext() {

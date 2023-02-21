@@ -208,19 +208,21 @@ void FallbackRenderer::EndTransactionWithList(nsDisplayListBuilder* aBuilder,
   RefPtr<DrawTarget> dest =
       gfxPlatform::GetPlatform()->CreateDrawTargetForBackend(
           backend, dt->GetSize(), dt->GetFormat());
-  UniquePtr<gfxContext> ctx = gfxContext::CreatePreservingTransformOrNull(dest);
+  if (dest) {
+    gfxContext ctx(dest, /* aPreserveTransform */ true);
 
-  nsRegion opaque = aList->GetOpaqueRegion(aBuilder);
-  if (opaque.Contains(aList->GetComponentAlphaBounds(aBuilder))) {
-    dest->SetPermitSubpixelAA(true);
+    nsRegion opaque = aList->GetOpaqueRegion(aBuilder);
+    if (opaque.Contains(aList->GetComponentAlphaBounds(aBuilder))) {
+      dest->SetPermitSubpixelAA(true);
+    }
+
+    aList->Paint(aBuilder, &ctx, aAppUnitsPerDevPixel);
+
+    RefPtr<SourceSurface> snapshot = dest->Snapshot();
+    dt->DrawSurface(snapshot, Rect(dest->GetRect()), Rect(dest->GetRect()),
+                    DrawSurfaceOptions(),
+                    DrawOptions(1.0f, CompositionOp::OP_SOURCE));
   }
-
-  aList->Paint(aBuilder, ctx.get(), aAppUnitsPerDevPixel);
-
-  RefPtr<SourceSurface> snapshot = dest->Snapshot();
-  dt->DrawSurface(snapshot, Rect(dest->GetRect()), Rect(dest->GetRect()),
-                  DrawSurfaceOptions(),
-                  DrawOptions(1.0f, CompositionOp::OP_SOURCE));
   mAnimationReadyTime = TimeStamp::Now();
 }
 
