@@ -191,7 +191,7 @@ class DegradedCall : public Call, private PacketReceiver {
   };
 
   void SetClientBitratePreferences(
-      const webrtc::BitrateSettings& preferences) override {}
+      const webrtc::BitrateSettings& preferences) override;
   void UpdateSendNetworkConfig();
   void UpdateReceiveNetworkConfig();
 
