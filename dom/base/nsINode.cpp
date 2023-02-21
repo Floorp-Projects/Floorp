@@ -436,8 +436,6 @@ Element* nsINode::GetAnonymousRootElementOfTextEditor(
     return nullptr;
   }
 
-  MOZ_ASSERT(!textEditor->IsHTMLEditor(),
-             "If it were an HTML editor, needs to use GetRootElement()");
   Element* rootElement = textEditor->GetRoot();
   if (aTextEditor) {
     textEditor.forget(aTextEditor);
@@ -558,10 +556,16 @@ nsIContent* nsINode::GetSelectionRootContent(PresShell* aPresShell) {
     return nullptr;
   }
 
-  if (AsContent()->HasIndependentSelection()) {
-    // This node should be a descendant of input/textarea editor.
-    Element* anonymousDivElement = GetAnonymousRootElementOfTextEditor();
-    if (anonymousDivElement) {
+  if (AsContent()->HasIndependentSelection() || IsInNativeAnonymousSubtree()) {
+    // This node should be an inclusive descendant of input/textarea editor.
+    // In that case, the anonymous <div> for TextEditor should be always the
+    // selection root.
+    // FIXME: If Selection for the document is collapsed in <input> or
+    // <textarea>, returning anonymous <div> may make the callers confused.
+    // Perhaps, we should do this only when this is in the native anonymous
+    // subtree unless the callers explicitly want to retrieve the anonymous
+    // <div> from a text control element.
+    if (Element* anonymousDivElement = GetAnonymousRootElementOfTextEditor()) {
       return anonymousDivElement;
     }
   }
