@@ -4101,7 +4101,6 @@ class HTMLEditor final : public EditorBase,
 
   MOZ_CAN_RUN_SCRIPT nsresult StartMoving();
   MOZ_CAN_RUN_SCRIPT nsresult SetFinalPosition(int32_t aX, int32_t aY);
-  void AddPositioningOffset(int32_t& aX, int32_t& aY);
   void SnapToGrid(int32_t& newX, int32_t& newY) const;
   nsresult GrabberClicked();
   MOZ_CAN_RUN_SCRIPT nsresult EndMoving();

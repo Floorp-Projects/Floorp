@@ -4873,14 +4873,6 @@
   value: false
   mirror: always
 
-# When an element becomes absolutely positioned, this offset is applied to
-# both `left` and `top`.
-# TODO: Delete this pref after verifying that nobody uses this pref.
-- name: editor.positioning.offset
-  type: int32_t
-  value: 0
-  mirror: always
-
 # Whether resizer keeps aspect ratio of `<img>` or can change its width/height
 # independently.
 # TODO: Delete this pref after verifying that nobody uses this pref.
