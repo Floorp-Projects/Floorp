@@ -2024,19 +2024,6 @@ async function updateBookmark(
         syncChangeDelta
       );
     }
-    // Remove the Sync orphan annotation from reparented items. We don't
-    // notify annotation observers about this because this is a temporary,
-    // internal anno that's only used by Sync.
-    await db.executeCached(
-      `DELETE FROM moz_items_annos
-       WHERE anno_attribute_id = (SELECT id FROM moz_anno_attributes
-                                  WHERE name = :orphanAnno) AND
-             item_id = :id`,
-      {
-        orphanAnno: lazy.PlacesSyncUtils.bookmarks.SYNC_PARENT_ANNO,
-        id: item._id,
-      }
-    );
   }
 
   // If the parent changed, update related non-enumerable properties.
@@ -2652,11 +2639,6 @@ function removeBookmarks(items, options) {
           items,
           db.variableLimit
         )) {
-          // We don't go through the annotations service for this cause otherwise
-          // we'd get a pointless onItemChanged notification and it would also
-          // set lastModified to an unexpected value.
-          await removeAnnotationsForItems(db, chunk);
-
           // Remove the bookmarks.
           await db.executeCached(
             `DELETE FROM moz_bookmarks
@@ -2971,56 +2953,6 @@ function validateBookmarkObject(name, input, behavior) {
 }
 
 /**
- * Removes any orphan annotation entries.
- *
- * @param db
- *        the Sqlite.sys.mjs connection handle.
- */
-var removeOrphanAnnotations = async function(db) {
-  await db.executeCached(
-    `DELETE FROM moz_items_annos
-     WHERE id IN (SELECT a.id from moz_items_annos a
-                  LEFT JOIN moz_bookmarks b ON a.item_id = b.id
-                  WHERE b.id ISNULL)
-    `
-  );
-  await db.executeCached(
-    `DELETE FROM moz_anno_attributes
-     WHERE id IN (SELECT n.id from moz_anno_attributes n
-                  LEFT JOIN moz_annos a1 ON a1.anno_attribute_id = n.id
-                  LEFT JOIN moz_items_annos a2 ON a2.anno_attribute_id = n.id
-                  WHERE a1.id ISNULL AND a2.id ISNULL)
-    `
-  );
-};
-
-/**
- * Removes annotations for a given item.
- *
- * @param db
- *        the Sqlite.sys.mjs connection handle.
- * @param items
- *        The items for which to remove annotations.
- */
-var removeAnnotationsForItems = async function(db, items) {
-  // Remove the annotations.
-  let itemIds = items.map(item => item._id);
-  await db.executeCached(
-    `DELETE FROM moz_items_annos
-     WHERE item_id IN (${lazy.PlacesUtils.sqlBindPlaceholders(itemIds)})`,
-    itemIds
-  );
-  await db.executeCached(
-    `DELETE FROM moz_anno_attributes
-     WHERE id IN (SELECT n.id from moz_anno_attributes n
-                  LEFT JOIN moz_annos a1 ON a1.anno_attribute_id = n.id
-                  LEFT JOIN moz_items_annos a2 ON a2.anno_attribute_id = n.id
-                  WHERE a1.id ISNULL AND a2.id ISNULL)
-    `
-  );
-};
-
-/**
  * Updates lastModified for all the ancestors of a given folder GUID.
  *
  * @param db
@@ -3133,9 +3065,6 @@ var removeFoldersContents = async function(db, folderGuids, options) {
   // Bump the change counter for all tagged bookmarks when removing tag
   // folders.
   await addSyncChangesForRemovedTagFolders(db, itemsRemoved, syncChangeDelta);
-
-  // Cleanup orphans.
-  await removeOrphanAnnotations(db);
 
   // TODO (Bug 1087576): this may leave orphan tags behind.
 

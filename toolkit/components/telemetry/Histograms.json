@@ -7231,16 +7231,6 @@
     "bug_numbers": [1811209],
     "description": "PLACES: Time to recalculate frecency for a chunk of pages (ms)"
   },
-  "PLACES_ANNOS_BOOKMARKS_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "thunderbird"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "low": 50,
-    "high": 5000,
-    "n_buckets": 10,
-    "description": "PLACES: Number of bookmarks annotations"
-  },
   "PLACES_ANNOS_PAGES_COUNT": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "thunderbird"],

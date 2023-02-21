@@ -25,7 +25,6 @@ async function cleanDatabase() {
       await db.executeCached("DELETE FROM moz_historyvisits");
       await db.executeCached("DELETE FROM moz_anno_attributes");
       await db.executeCached("DELETE FROM moz_annos");
-      await db.executeCached("DELETE FROM moz_items_annos");
       await db.executeCached("DELETE FROM moz_inputhistory");
       await db.executeCached("DELETE FROM moz_keywords");
       await db.executeCached("DELETE FROM moz_icons");
@@ -179,73 +178,10 @@ tests.push({
 });
 
 tests.push({
-  name: "A.2",
-  desc: "Remove obsolete annotations from moz_items_annos",
-
-  _obsoleteSyncAttribute: "sync/children",
-  _obsoleteGuidAttribute: "placesInternal/GUID",
-  _obsoleteWeaveAttribute: "weave/test",
-  _placeId: null,
-  _bookmarkId: null,
-
-  async setup() {
-    // Add a place to ensure place_id = 1 is valid.
-    this._placeId = await addPlace();
-    // Add a bookmark.
-    this._bookmarkId = await addBookmark(
-      this._placeId,
-      PlacesUtils.bookmarks.TYPE_BOOKMARK
-    );
-    await PlacesUtils.withConnectionWrapper("setup", async db => {
-      await db.executeTransaction(async () => {
-        // Add an obsolete attribute.
-        await db.executeCached(
-          `INSERT INTO moz_anno_attributes (name)
-           VALUES (:anno1), (:anno2), (:anno3)`,
-          {
-            anno1: this._obsoleteSyncAttribute,
-            anno2: this._obsoleteGuidAttribute,
-            anno3: this._obsoleteWeaveAttribute,
-          }
-        );
-        await db.executeCached(
-          `INSERT INTO moz_items_annos (item_id, anno_attribute_id)
-           SELECT :item_id, id
-           FROM moz_anno_attributes
-           WHERE name IN (:anno1, :anno2, :anno3)`,
-          {
-            item_id: this._bookmarkId,
-            anno1: this._obsoleteSyncAttribute,
-            anno2: this._obsoleteGuidAttribute,
-            anno3: this._obsoleteWeaveAttribute,
-          }
-        );
-      });
-    });
-  },
-
-  async check() {
-    // Check that the obsolete annotations have been removed.
-    let db = await PlacesUtils.promiseDBConnection();
-    let rows = await db.executeCached(
-      `SELECT id FROM moz_anno_attributes
-       WHERE name IN (:anno1, :anno2, :anno3)`,
-      {
-        anno1: this._obsoleteSyncAttribute,
-        anno2: this._obsoleteGuidAttribute,
-        anno3: this._obsoleteWeaveAttribute,
-      }
-    );
-    Assert.equal(rows.length, 0);
-  },
-});
-
-tests.push({
   name: "A.3",
   desc: "Remove unused attributes",
 
   _usedPageAttribute: "usedPage",
-  _usedItemAttribute: "usedItem",
   _unusedAttribute: "unused",
   _placeId: null,
   _bookmarkId: null,
@@ -263,11 +199,10 @@ tests.push({
         // Add a used attribute and an unused one.
         await db.executeCached(
           `INSERT INTO moz_anno_attributes (name)
-           VALUES (:anno1), (:anno2), (:anno3)`,
+           VALUES (:anno1), (:anno2)`,
           {
             anno1: this._usedPageAttribute,
-            anno2: this._usedItemAttribute,
-            anno3: this._unusedAttribute,
+            anno2: this._unusedAttribute,
           }
         );
         await db.executeCached(
@@ -276,14 +211,6 @@ tests.push({
           {
             place_id: this._placeId,
             anno: this._usedPageAttribute,
-          }
-        );
-        await db.executeCached(
-          `INSERT INTO moz_items_annos (item_id, anno_attribute_id)
-           VALUES(:item_id, (SELECT id FROM moz_anno_attributes WHERE name = :anno))`,
-          {
-            item_id: this._bookmarkId,
-            anno: this._usedItemAttribute,
           }
         );
       });
@@ -297,13 +224,6 @@ tests.push({
       "SELECT id FROM moz_anno_attributes WHERE name = :anno",
       {
         anno: this._usedPageAttribute,
-      }
-    );
-    Assert.equal(rows.length, 1);
-    rows = await db.executeCached(
-      "SELECT id FROM moz_anno_attributes WHERE name = :anno",
-      {
-        anno: this._usedItemAttribute,
       }
     );
     Assert.equal(rows.length, 1);
@@ -1537,131 +1457,6 @@ tests.push({
     rows = await db.executeCached(
       "SELECT place_id FROM moz_inputhistory WHERE place_id = :place_id",
       { place_id: this._invalidPlaceId }
-    );
-    Assert.equal(rows.length, 0);
-  },
-});
-
-// ------------------------------------------------------------------------------
-
-tests.push({
-  name: "H.1",
-  desc: "Remove item annos with an invalid attribute",
-
-  _usedItemAttribute: "usedItem",
-  _bookmarkId: null,
-  _placeId: null,
-
-  async setup() {
-    // Add a place to ensure place_id = 1 is valid
-    this._placeId = await addPlace();
-    // Insert a bookmark
-    this._bookmarkId = await addBookmark(
-      this._placeId,
-      PlacesUtils.bookmarks.TYPE_BOOKMARK
-    );
-    await PlacesUtils.withConnectionWrapper("setup", async db => {
-      await db.executeTransaction(async () => {
-        // Add a used attribute.
-        await db.executeCached(
-          "INSERT INTO moz_anno_attributes (name) VALUES (:anno)",
-          { anno: this._usedItemAttribute }
-        );
-        await db.executeCached(
-          `INSERT INTO moz_items_annos (item_id, anno_attribute_id)
-           VALUES(:item_id, (SELECT id FROM moz_anno_attributes WHERE name = :anno))`,
-          { item_id: this._bookmarkId, anno: this._usedItemAttribute }
-        );
-        // Add an annotation with a nonexistent attribute
-        await db.executeCached(
-          "INSERT INTO moz_items_annos (item_id, anno_attribute_id) VALUES(:item_id, 1337)",
-          { item_id: this._bookmarkId }
-        );
-      });
-    });
-  },
-
-  async check() {
-    let db = await PlacesUtils.promiseDBConnection();
-    // Check that used attribute is still there
-    let rows = await db.executeCached(
-      "SELECT id FROM moz_anno_attributes WHERE name = :anno",
-      { anno: this._usedItemAttribute }
-    );
-    Assert.equal(rows.length, 1);
-    // check that annotation with valid attribute is still there
-    rows = await db.executeCached(
-      `SELECT id FROM moz_items_annos WHERE anno_attribute_id = (SELECT id FROM moz_anno_attributes WHERE name = :anno)`,
-      { anno: this._usedItemAttribute }
-    );
-    Assert.equal(rows.length, 1);
-    // Check that annotation with bogus attribute has been removed
-    rows = await db.executeCached(
-      "SELECT id FROM moz_items_annos WHERE anno_attribute_id = 1337"
-    );
-    Assert.equal(rows.length, 0);
-  },
-});
-
-// ------------------------------------------------------------------------------
-
-tests.push({
-  name: "H.2",
-  desc: "Remove orphan item annotations",
-
-  _usedItemAttribute: "usedItem",
-  _bookmarkId: null,
-  _invalidBookmarkId: 8888,
-  _placeId: null,
-
-  async setup() {
-    // Add a place to ensure place_id = 1 is valid
-    this._placeId = await addPlace();
-    // Insert a bookmark
-    this._bookmarkId = await addBookmark(
-      this._placeId,
-      PlacesUtils.bookmarks.TYPE_BOOKMARK
-    );
-    await PlacesUtils.withConnectionWrapper("setup", async db => {
-      await db.executeTransaction(async () => {
-        // Add a used attribute.
-        await db.executeCached(
-          "INSERT INTO moz_anno_attributes (name) VALUES (:anno)",
-          { anno: this._usedItemAttribute }
-        );
-        await db.executeCached(
-          `INSERT INTO moz_items_annos (item_id, anno_attribute_id)
-           VALUES (:item_id, (SELECT id FROM moz_anno_attributes WHERE name = :anno))`,
-          { item_id: this._bookmarkId, anno: this._usedItemAttribute }
-        );
-        // Add an annotation to a nonexistent item
-        await db.executeCached(
-          `INSERT INTO moz_items_annos (item_id, anno_attribute_id)
-           VALUES (:item_id, (SELECT id FROM moz_anno_attributes WHERE name = :anno))`,
-          { item_id: this._invalidBookmarkId, anno: this._usedItemAttribute }
-        );
-      });
-    });
-  },
-
-  async check() {
-    let db = await PlacesUtils.promiseDBConnection();
-    // Check that used attribute is still there
-    let rows = await db.executeCached(
-      "SELECT id FROM moz_anno_attributes WHERE name = :anno",
-      { anno: this._usedItemAttribute }
-    );
-    Assert.equal(rows.length, 1);
-    // check that annotation with valid attribute is still there
-    rows = await db.executeCached(
-      `SELECT id FROM moz_items_annos
-       WHERE anno_attribute_id = (SELECT id FROM moz_anno_attributes WHERE name = :anno)`,
-      { anno: this._usedItemAttribute }
-    );
-    Assert.equal(rows.length, 1);
-    // Check that an annotation to a nonexistent page has been removed
-    rows = await db.executeCached(
-      "SELECT id FROM moz_items_annos WHERE item_id = 8888"
     );
     Assert.equal(rows.length, 0);
   },
