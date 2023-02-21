@@ -259,8 +259,17 @@ async function OpenLinkInExternal(url) {
         let browser;
         if (userSelectedBrowserId === "") {
             browser = await getDefaultBrowserOnLinux(protocol, desktopFilesInfo);
+            if (browser === null) {
+                Services.prompt.asyncAlert(null, null, "Error", "Default browser does not exist or is not configured.");
+                return;
+            }
         } else {
-            browser = desktopFilesInfo.filter(desktopFileInfo => desktopFileInfo.filename === userSelectedBrowserId + ".desktop")[0];
+            let targets = desktopFilesInfo.filter(desktopFileInfo => desktopFileInfo.filename === userSelectedBrowserId + ".desktop");
+            if (targets.length === 0) {
+                Services.prompt.asyncAlert(null, null, "Error", "The selected browser does not exist.");
+                return;
+            }
+            browser = targets[0];
         }
         let shellscript = "#!/bin/sh\n";
         shellscript += browser["fileInfo"]["Desktop Entry"]["Exec"].replace(
@@ -280,8 +289,17 @@ async function OpenLinkInExternal(url) {
         let browser;
         if (userSelectedBrowserId === "") {
             browser = getDefaultBrowserOnWindows(protocol, browsers);
+            if (browser === null) {
+                Services.prompt.asyncAlert(null, null, "Error", "Default browser does not exist or is not configured.");
+                return;
+            }
         } else {
-            browser = browsers.filter(browser => browser.keyName === userSelectedBrowserId);
+            let targets = browsers.filter(browser => browser.keyName === userSelectedBrowserId);
+            if (targets.length === 0) {
+                Services.prompt.asyncAlert(null, null, "Error", "The selected browser does not exist.");
+                return;
+            }
+            browser = targets[0];
         }
         let browserPath = browser["path"];
         const process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
