@@ -17,6 +17,7 @@
 #include "mozilla/GUniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WidgetUtilsGtk.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/net/DNS.h"
 #include "prenv.h"
@@ -238,10 +239,12 @@ gboolean g_app_info_launch_uris_openbsd(GAppInfo* mApp, const char* uri,
                                         GAppLaunchContext* context,
                                         GError** error) {
   gchar* path = g_filename_from_uri(uri, NULL, NULL);
+  auto releasePath = MakeScopeExit([&] { g_free(path); });
   const gchar* bin = g_app_info_get_executable(mApp);
   if (!bin) {
-    g_warning("no executable found for %s, maybe not unveiled ?",
-              g_app_info_get_name(mApp));
+    g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                "no executable found for %s, maybe not unveiled ?",
+                g_app_info_get_name(mApp));
     return FALSE;
   }
   g_debug("spawning %s %s for %s", bin, path, uri);
@@ -266,20 +269,27 @@ gboolean g_app_info_launch_default_for_uri_openbsd(const char* uri,
   gboolean result_uncertain;
   gchar* path = g_filename_from_uri(uri, NULL, NULL);
   gchar* content_type = g_content_type_guess(path, NULL, 0, &result_uncertain);
+  auto release = MakeScopeExit([&] {
+    g_free(path);
+    g_free(content_type);
+  });
   if (content_type != NULL && !result_uncertain) {
     g_debug("content type for %s: %s", uri, content_type);
     GAppInfo* app_info = g_app_info_get_default_for_type(content_type, false);
+    auto releaseAppInfo = MakeScopeExit([&] {
+      if (app_info) g_object_unref(app_info);
+    });
     if (!app_info) {
-      g_warning("Could not find default handler for content type %s",
-                content_type);
-      g_free(content_type);
+      g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                  "Could not find default handler for content type %s",
+                  content_type);
       return FALSE;
     } else {
-      g_free(content_type);
       return g_app_info_launch_uris_openbsd(app_info, uri, context, error);
     }
   } else {
-    g_warning("Could not find content type for URI: %s", uri);
+    g_set_error(error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                "Could not find content type for URI: %s", uri);
     return FALSE;
   }
 }
