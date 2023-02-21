@@ -1984,6 +1984,17 @@ PtrInfo* CCGraphBuilder::AddNode(void* aPtr,
 
   PtrInfoCache::Entry cached = mGraphCache.Lookup(aPtr);
   if (cached) {
+#ifdef DEBUG
+    if (cached.Data()->mParticipant != aParticipant) {
+      auto* parti1 = cached.Data()->mParticipant;
+      auto* parti2 = aParticipant;
+      NS_WARNING(
+          nsPrintfCString("cached participant: %s; AddNode participant: %s\n",
+                          parti1 ? parti1->ClassName() : "null",
+                          parti2 ? parti2->ClassName() : "null")
+              .get());
+    }
+#endif
     MOZ_ASSERT(cached.Data()->mParticipant == aParticipant,
                "nsCycleCollectionParticipant shouldn't change!");
     return cached.Data();
