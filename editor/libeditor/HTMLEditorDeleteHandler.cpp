@@ -67,10 +67,12 @@ using ScanLineBreak = HTMLEditUtils::ScanLineBreak;
 using TableBoundary = HTMLEditUtils::TableBoundary;
 using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
 
-template nsresult HTMLEditor::DeleteTextAndTextNodesWithTransaction(
+template Result<CaretPoint, nsresult>
+HTMLEditor::DeleteTextAndTextNodesWithTransaction(
     const EditorDOMPoint& aStartPoint, const EditorDOMPoint& aEndPoint,
     TreatEmptyTextNodes aTreatEmptyTextNodes);
-template nsresult HTMLEditor::DeleteTextAndTextNodesWithTransaction(
+template Result<CaretPoint, nsresult>
+HTMLEditor::DeleteTextAndTextNodesWithTransaction(
     const EditorDOMPointInText& aStartPoint,
     const EditorDOMPointInText& aEndPoint,
     TreatEmptyTextNodes aTreatEmptyTextNodes);
@@ -4629,11 +4631,11 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteRangesWithTransaction(
 }
 
 template <typename EditorDOMPointType>
-nsresult HTMLEditor::DeleteTextAndTextNodesWithTransaction(
+Result<CaretPoint, nsresult> HTMLEditor::DeleteTextAndTextNodesWithTransaction(
     const EditorDOMPointType& aStartPoint, const EditorDOMPointType& aEndPoint,
     TreatEmptyTextNodes aTreatEmptyTextNodes) {
   if (NS_WARN_IF(!aStartPoint.IsSet()) || NS_WARN_IF(!aEndPoint.IsSet())) {
-    return NS_ERROR_INVALID_ARG;
+    return Err(NS_ERROR_INVALID_ARG);
   }
 
   // MOOSE: this routine needs to be modified to preserve the integrity of the
@@ -4641,11 +4643,11 @@ nsresult HTMLEditor::DeleteTextAndTextNodesWithTransaction(
 
   if (aStartPoint == aEndPoint) {
     // Nothing to delete
-    return NS_OK;
+    return CaretPoint(EditorDOMPoint());
   }
 
   RefPtr<Element> editingHost = ComputeEditingHost();
-  auto deleteEmptyContentNodeWithTransaction =
+  auto DeleteEmptyContentNodeWithTransaction =
       [this, &aTreatEmptyTextNodes, &editingHost](nsIContent& aContent)
           MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION -> nsresult {
     OwningNonNull<nsIContent> nodeToRemove = aContent;
@@ -4669,32 +4671,21 @@ nsresult HTMLEditor::DeleteTextAndTextNodesWithTransaction(
     if (aTreatEmptyTextNodes !=
             TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries &&
         aStartPoint.IsStartOfContainer() && aEndPoint.IsEndOfContainer()) {
-      nsresult rv = deleteEmptyContentNodeWithTransaction(
+      nsresult rv = DeleteEmptyContentNodeWithTransaction(
           MOZ_KnownLive(*aStartPoint.template ContainerAs<Text>()));
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                           "deleteEmptyContentNodeWithTransaction() failed");
-      return rv;
+      if (NS_FAILED(rv)) {
+        NS_WARNING("deleteEmptyContentNodeWithTransaction() failed");
+        return Err(rv);
+      }
+      return CaretPoint(EditorDOMPoint());
     }
     RefPtr<Text> textNode = aStartPoint.template ContainerAs<Text>();
     Result<CaretPoint, nsresult> caretPointOrError =
         DeleteTextWithTransaction(*textNode, aStartPoint.Offset(),
                                   aEndPoint.Offset() - aStartPoint.Offset());
-    if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
-      NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
-      return caretPointOrError.unwrapErr();
-    }
-    nsresult rv = caretPointOrError.inspect().SuggestCaretPointTo(
-        *this, {SuggestCaret::OnlyIfHasSuggestion,
-                SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                SuggestCaret::AndIgnoreTrivialError});
-    if (NS_FAILED(rv)) {
-      NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
-      return rv;
-    }
-    NS_WARNING_ASSERTION(
-        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-        "CaretPoint::SuggestCaretPointTo() failed, but ignored");
-    return NS_OK;
+    NS_WARNING_ASSERTION(caretPointOrError.isOk(),
+                         "HTMLEditor::DeleteTextWithTransaction() failed");
+    return caretPointOrError;
   }
 
   RefPtr<nsRange> range =
@@ -4702,14 +4693,14 @@ nsresult HTMLEditor::DeleteTextAndTextNodesWithTransaction(
                       aEndPoint.ToRawRangeBoundary(), IgnoreErrors());
   if (!range) {
     NS_WARNING("nsRange::Create() failed");
-    return NS_ERROR_FAILURE;
+    return Err(NS_ERROR_FAILURE);
   }
 
   // Collect editable text nodes in the given range.
   AutoTArray<OwningNonNull<Text>, 16> arrayOfTextNodes;
   DOMIterator iter;
   if (NS_FAILED(iter.Init(*range))) {
-    return NS_OK;  // Nothing to delete in the range.
+    return CaretPoint(EditorDOMPoint());  // Nothing to delete in the range.
   }
   iter.AppendNodesToArray(
       +[](nsINode& aNode, void*) {
@@ -4717,6 +4708,7 @@ nsresult HTMLEditor::DeleteTextAndTextNodesWithTransaction(
         return HTMLEditUtils::IsSimplyEditableNode(aNode);
       },
       arrayOfTextNodes);
+  EditorDOMPoint pointToPutCaret;
   for (OwningNonNull<Text>& textNode : arrayOfTextNodes) {
     if (textNode == aStartPoint.GetContainer()) {
       if (aStartPoint.IsEndOfContainer()) {
@@ -4725,33 +4717,29 @@ nsresult HTMLEditor::DeleteTextAndTextNodesWithTransaction(
       if (aStartPoint.IsStartOfContainer() &&
           aTreatEmptyTextNodes !=
               TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries) {
-        nsresult rv = deleteEmptyContentNodeWithTransaction(
+        AutoTrackDOMPoint trackPointToPutCaret(RangeUpdaterRef(),
+                                               &pointToPutCaret);
+        nsresult rv = DeleteEmptyContentNodeWithTransaction(
             MOZ_KnownLive(*aStartPoint.template ContainerAs<Text>()));
         if (NS_FAILED(rv)) {
-          NS_WARNING("deleteEmptyContentNodeWithTransaction() failed");
-          return rv;
+          NS_WARNING("DeleteEmptyContentNodeWithTransaction() failed");
+          return Err(rv);
         }
         continue;
       }
+      AutoTrackDOMPoint trackPointToPutCaret(RangeUpdaterRef(),
+                                             &pointToPutCaret);
       Result<CaretPoint, nsresult> caretPointOrError =
           DeleteTextWithTransaction(MOZ_KnownLive(textNode),
                                     aStartPoint.Offset(),
                                     textNode->Length() - aStartPoint.Offset());
       if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
         NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
-        return caretPointOrError.unwrapErr();
+        return caretPointOrError;
       }
-      nsresult rv = caretPointOrError.inspect().SuggestCaretPointTo(
-          *this, {SuggestCaret::OnlyIfHasSuggestion,
-                  SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                  SuggestCaret::AndIgnoreTrivialError});
-      if (NS_FAILED(rv)) {
-        NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
-        return rv;
-      }
-      NS_WARNING_ASSERTION(
-          rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-          "CaretPoint::SuggestCaretPointTo() failed, but ignored");
+      trackPointToPutCaret.FlushAndStopTracking();
+      caretPointOrError.unwrap().MoveCaretPointTo(
+          pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
       continue;
     }
 
@@ -4762,41 +4750,38 @@ nsresult HTMLEditor::DeleteTextAndTextNodesWithTransaction(
       if (aEndPoint.IsEndOfContainer() &&
           aTreatEmptyTextNodes !=
               TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries) {
-        nsresult rv = deleteEmptyContentNodeWithTransaction(
+        AutoTrackDOMPoint trackPointToPutCaret(RangeUpdaterRef(),
+                                               &pointToPutCaret);
+        nsresult rv = DeleteEmptyContentNodeWithTransaction(
             MOZ_KnownLive(*aEndPoint.template ContainerAs<Text>()));
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                             "deleteEmptyContentNodeWithTransaction() failed");
-        return rv;
+                             "DeleteEmptyContentNodeWithTransaction() failed");
+        return Err(rv);
       }
+      AutoTrackDOMPoint trackPointToPutCaret(RangeUpdaterRef(),
+                                             &pointToPutCaret);
       Result<CaretPoint, nsresult> caretPointOrError =
           DeleteTextWithTransaction(MOZ_KnownLive(textNode), 0,
                                     aEndPoint.Offset());
       if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
         NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
-        return caretPointOrError.unwrapErr();
+        return caretPointOrError;
       }
-      nsresult rv = caretPointOrError.inspect().SuggestCaretPointTo(
-          *this, {SuggestCaret::OnlyIfHasSuggestion,
-                  SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                  SuggestCaret::AndIgnoreTrivialError});
-      if (NS_FAILED(rv)) {
-        NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
-        return rv;
-      }
-      NS_WARNING_ASSERTION(rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-                           "CaretPoint::SuggestCaretPointTo() failed");
-      return NS_OK;
+      trackPointToPutCaret.FlushAndStopTracking();
+      caretPointOrError.unwrap().MoveCaretPointTo(
+          pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
+      return CaretPoint(pointToPutCaret);
     }
 
     nsresult rv =
-        deleteEmptyContentNodeWithTransaction(MOZ_KnownLive(textNode));
+        DeleteEmptyContentNodeWithTransaction(MOZ_KnownLive(textNode));
     if (NS_FAILED(rv)) {
-      NS_WARNING("deleteEmptyContentNodeWithTransaction() failed");
-      return rv;
+      NS_WARNING("DeleteEmptyContentNodeWithTransaction() failed");
+      return Err(rv);
     }
   }
 
-  return NS_OK;
+  return CaretPoint(pointToPutCaret);
 }
 
 Result<EditorDOMPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::

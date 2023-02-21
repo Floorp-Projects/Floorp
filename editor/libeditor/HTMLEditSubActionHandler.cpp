@@ -3018,13 +3018,26 @@ HTMLEditor::DeleteTextAndNormalizeSurroundingWhiteSpaces(
               ? endToDelete
               : EditorDOMPointInText(endToDelete.ContainerAs<Text>(), 0);
       if (startToDelete != endToDeleteExceptReplaceRange) {
-        nsresult rv = DeleteTextAndTextNodesWithTransaction(
-            startToDelete, endToDeleteExceptReplaceRange, aTreatEmptyTextNodes);
-        if (NS_FAILED(rv)) {
+        Result<CaretPoint, nsresult> caretPointOrError =
+            DeleteTextAndTextNodesWithTransaction(startToDelete,
+                                                  endToDeleteExceptReplaceRange,
+                                                  aTreatEmptyTextNodes);
+        if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
           NS_WARNING(
               "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
+          return caretPointOrError.propagateErr();
+        }
+        nsresult rv = caretPointOrError.unwrap().SuggestCaretPointTo(
+            *this, {SuggestCaret::OnlyIfHasSuggestion,
+                    SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
+                    SuggestCaret::AndIgnoreTrivialError});
+        if (NS_FAILED(rv)) {
+          NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
           return Err(rv);
         }
+        NS_WARNING_ASSERTION(
+            rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+            "CaretPoint::SuggestCaretPointTo() failed, but ignored");
         if (normalizedWhiteSpacesInLastNode.IsEmpty()) {
           break;  // There is no more text which we need to delete.
         }
