@@ -2058,10 +2058,6 @@ void AudioProcessingImpl::WriteAecDumpConfigMessage(bool forced) {
   std::string experiments_description = "";
   // TODO(peah): Add semicolon-separated concatenations of experiment
   // descriptions for other submodules.
-  if (config_.gain_controller1.analog_gain_controller.clipped_level_min !=
-      kClippedLevelMin) {
-    experiments_description += "AgcClippingLevelExperiment;";
-  }
   if (!!submodules_.capture_post_processor) {
     experiments_description += "CapturePostProcessor;";
   }
