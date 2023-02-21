@@ -190,6 +190,15 @@ fn prepare_prim_for_render(
         // and mask generation.
         let should_update_clip_task = match prim_instance.kind {
             PrimitiveInstanceKind::Rectangle { ref mut use_legacy_path, .. } => {
+
+                // In this first patch, ensure that we never take the legacy path so
+                // that we can land the bulk of the patch without risking back outs.
+                // The second part of the patch enables the new path and also updates
+                // the test expectations.
+                *use_legacy_path = true;
+                true
+
+                /*
                 if prim_instance.vis.clip_chain.needs_mask {
                     *use_legacy_path = true;
                 } else {
@@ -197,6 +206,7 @@ fn prepare_prim_for_render(
                 }
 
                 *use_legacy_path
+                */
             }
             _ => true,
         };
