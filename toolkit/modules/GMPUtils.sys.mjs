@@ -122,6 +122,7 @@ export var GMPPrefs = {
   KEY_PLUGIN_VISIBLE: "media.{0}.visible",
   KEY_PLUGIN_ABI: "media.{0}.abi",
   KEY_PLUGIN_FORCE_SUPPORTED: "media.{0}.forceSupported",
+  KEY_PLUGIN_ALLOW_X64_ON_ARM64: "media.{0}.allow-x64-plugin-on-arm64",
   KEY_URL: "media.gmp-manager.url",
   KEY_URL_OVERRIDE: "media.gmp-manager.url.override",
   KEY_CERT_CHECKATTRS: "media.gmp-manager.cert.checkAttributes",
