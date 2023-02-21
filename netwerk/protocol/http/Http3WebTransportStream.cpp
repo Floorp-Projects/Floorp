@@ -164,7 +164,10 @@ NS_IMETHODIMP Http3WebTransportStream::OnInputStreamReady(
       ("Http3WebTransportStream::OnInputStreamReady [this=%p stream=%p "
        "state=%d]",
        this, aStream, mSendState));
-  MOZ_ASSERT(mSendState == WAITING_DATA);
+  if (mSendState == SEND_DONE) {
+    // already closed
+    return NS_OK;
+  }
 
   mSendState = SENDING;
   mSession->StreamHasDataToWrite(this);
@@ -527,6 +530,9 @@ void Http3WebTransportStream::Close(nsresult aResult) {
     mReceiveStreamPipeOut->AsyncWait(nullptr, 0, 0, nullptr);
     mReceiveStreamPipeOut->CloseWithStatus(aResult);
   }
+  mSendState = SEND_DONE;
+  mRecvState = RECV_DONE;
+  mSession = nullptr;
 }
 
 void Http3WebTransportStream::SendFin() {
@@ -534,7 +540,7 @@ void Http3WebTransportStream::SendFin() {
   LOG(("Http3WebTransportStream::SendFin [this=%p mSendState=%d]", this,
        mSendState));
 
-  if (mSendFin) {
+  if (mSendFin || !mSession) {
     // Already closed.
     return;
   }
@@ -566,7 +572,7 @@ void Http3WebTransportStream::Reset(uint8_t aErrorCode) {
   LOG(("Http3WebTransportStream::Reset [this=%p, mSendState=%d]", this,
        mSendState));
 
-  if (mResetError) {
+  if (mResetError || !mSession) {
     // The stream is already reset.
     return;
   }
@@ -611,7 +617,7 @@ void Http3WebTransportStream::SendStopSending(uint8_t aErrorCode) {
     return;
   }
 
-  if (mStopSendingError) {
+  if (mStopSendingError || !mSession) {
     return;
   }
 

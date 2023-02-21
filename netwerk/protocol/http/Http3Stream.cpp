@@ -23,6 +23,12 @@
 namespace mozilla {
 namespace net {
 
+Http3StreamBase::Http3StreamBase(nsAHttpTransaction* trans,
+                                 Http3Session* session)
+    : mTransaction(trans), mSession(session) {}
+
+Http3StreamBase::~Http3StreamBase() = default;
+
 Http3Stream::Http3Stream(nsAHttpTransaction* httpTransaction,
                          Http3Session* session, const ClassOfService& cos,
                          uint64_t bcId)
@@ -43,6 +49,8 @@ Http3Stream::Http3Stream(nsAHttpTransaction* httpTransaction,
 void Http3Stream::Close(nsresult aResult) {
   mRecvState = RECV_DONE;
   mTransaction->Close(aResult);
+  // Clear the mSession to break the cycle.
+  mSession = nullptr;
 }
 
 bool Http3Stream::GetHeadersString(const char* buf, uint32_t avail,

@@ -20,8 +20,7 @@ class Http3WebTransportStream;
 
 class Http3StreamBase : public SupportsWeakPtr, public ARefBase {
  public:
-  Http3StreamBase(nsAHttpTransaction* trans, Http3Session* session)
-      : mTransaction(trans), mSession(session) {}
+  Http3StreamBase(nsAHttpTransaction* trans, Http3Session* session);
 
   virtual Http3WebTransportSession* GetHttp3WebTransportSession() = 0;
   virtual Http3WebTransportStream* GetHttp3WebTransportStream() = 0;
@@ -54,10 +53,11 @@ class Http3StreamBase : public SupportsWeakPtr, public ARefBase {
   virtual void SetRecvdReset() { mResetRecv = true; }
 
  protected:
-  ~Http3StreamBase() = default;
+  ~Http3StreamBase();
+
   uint64_t mStreamId{UINT64_MAX};
   RefPtr<nsAHttpTransaction> mTransaction;
-  Http3Session* mSession;
+  RefPtr<Http3Session> mSession;
   bool mQueued{false};
   bool mFin{false};
   bool mResetRecv{false};
