@@ -842,6 +842,32 @@ static void JNI_PeerConnection_NewGetStats(
   ExtractNativePC(jni, j_pc)->GetStats(callback.get());
 }
 
+static void JNI_PeerConnection_NewGetStatsSender(
+    JNIEnv* jni,
+    const JavaParamRef<jobject>& j_pc,
+    jlong native_sender,
+    const JavaParamRef<jobject>& j_callback) {
+  auto callback =
+      rtc::make_ref_counted<RTCStatsCollectorCallbackWrapper>(jni, j_callback);
+  ExtractNativePC(jni, j_pc)->GetStats(
+      rtc::scoped_refptr<RtpSenderInterface>(
+          reinterpret_cast<RtpSenderInterface*>(native_sender)),
+      rtc::scoped_refptr<RTCStatsCollectorCallbackWrapper>(callback.get()));
+}
+
+static void JNI_PeerConnection_NewGetStatsReceiver(
+    JNIEnv* jni,
+    const JavaParamRef<jobject>& j_pc,
+    jlong native_receiver,
+    const JavaParamRef<jobject>& j_callback) {
+  auto callback =
+      rtc::make_ref_counted<RTCStatsCollectorCallbackWrapper>(jni, j_callback);
+  ExtractNativePC(jni, j_pc)->GetStats(
+      rtc::scoped_refptr<RtpReceiverInterface>(
+          reinterpret_cast<RtpReceiverInterface*>(native_receiver)),
+      rtc::scoped_refptr<RTCStatsCollectorCallbackWrapper>(callback.get()));
+}
+
 static jboolean JNI_PeerConnection_SetBitrate(
     JNIEnv* jni,
     const JavaParamRef<jobject>& j_pc,

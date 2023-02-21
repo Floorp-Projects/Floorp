@@ -931,6 +931,23 @@ public class PeerConnectionEndToEndTest {
     assertTrue(offeringPC.setBitrate(100000, 5000000, 500000000));
     assertFalse(offeringPC.setBitrate(3, 2, 1));
 
+    // Test getStats by Sender interface
+    offeringExpectations.expectNewStatsCallback();
+    offeringPC.getStats(videoSender, offeringExpectations);
+    assertTrue(offeringExpectations.waitForAllExpectationsToBeSatisfied(DEFAULT_TIMEOUT_SECONDS));
+
+    // Test getStats by Receiver interface
+    RtpReceiver videoReceiver = null;
+    for (RtpReceiver receiver : answeringPC.getReceivers()) {
+      if (receiver.track().kind().equals("video")) {
+        videoReceiver = receiver;
+      }
+    }
+    assertNotNull(videoReceiver);
+    answeringExpectations.expectNewStatsCallback();
+    answeringPC.getStats(videoReceiver, answeringExpectations);
+    assertTrue(answeringExpectations.waitForAllExpectationsToBeSatisfied(DEFAULT_TIMEOUT_SECONDS));
+
     // Free the Java-land objects and collect them.
     shutdownPC(offeringPC, offeringExpectations);
     offeringPC = null;
