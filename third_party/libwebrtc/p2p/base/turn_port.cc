@@ -653,7 +653,12 @@ int TurnPort::SendTo(const void* data,
   if (!entry) {
     RTC_LOG(LS_ERROR) << "Did not find the TurnEntry for address "
                       << addr.ToSensitiveString();
-    return 0;
+    // Although not finding an entry isn't a socket error, at this level we need
+    // to return SOCKET_ERROR (-1) and for ease of troubleshooting/debugging
+    // assign a value to `error_` that makes some semantic sense. In this case
+    // we pick EADDRNOTAVAIL (10049 on Windows, 9903 in errno.h).
+    error_ = EADDRNOTAVAIL;
+    return SOCKET_ERROR;
   }
 
   if (!ready()) {
@@ -666,6 +671,7 @@ int TurnPort::SendTo(const void* data,
   CopyPortInformationToPacketInfo(&modified_options.info_signaled_after_sent);
   int sent = entry->Send(data, size, payload, modified_options);
   if (sent <= 0) {
+    error_ = socket_->GetError();
     return SOCKET_ERROR;
   }
 
