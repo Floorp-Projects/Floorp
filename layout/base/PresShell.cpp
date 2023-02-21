@@ -3517,10 +3517,12 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
   }
 
   ScrollMode scrollMode = ScrollMode::Instant;
-  bool autoBehaviorIsSmooth = aFrameAsScrollable->IsSmoothScroll();
-  bool smoothScroll =
-      (aScrollFlags & ScrollFlags::ScrollSmooth) ||
-      ((aScrollFlags & ScrollFlags::ScrollSmoothAuto) && autoBehaviorIsSmooth);
+  // Use "auto" or "smooth" from the scroll flags as the preferred scroll
+  // behavior. If the user has disabled smooth scrolls, the following call
+  // should indicate that we should not conduct a smooth scroll.
+  bool smoothScroll = aFrameAsScrollable->IsSmoothScroll(
+      (aScrollFlags & ScrollFlags::ScrollSmooth) ? ScrollBehavior::Smooth
+                                                 : ScrollBehavior::Auto);
   if (smoothScroll) {
     scrollMode = ScrollMode::SmoothMsd;
   }
