@@ -231,9 +231,6 @@ class TurnPort : public Port {
 
   // NOTE: This method needs to be accessible for StunPort
   // return true if entry was created (i.e channel_number consumed).
-  // TODO(tommi): Remove this method in favor of the one that accepts a
-  // `Connection` pointer.
-  bool CreateOrRefreshEntry(const rtc::SocketAddress& addr, int channel_number);
   bool CreateOrRefreshEntry(Connection* conn, int channel_number);
 
   bool CreateOrRefreshEntry(const rtc::SocketAddress& addr,
