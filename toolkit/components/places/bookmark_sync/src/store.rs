@@ -16,8 +16,6 @@ use xpcom::interfaces::{mozISyncedBookmarksMerger, nsINavBookmarksService};
 use crate::driver::{AbortController, Driver};
 use crate::error::{Error, Result};
 
-pub const LMANNO_FEEDURI: &'static str = "livemark/feedURI";
-
 extern "C" {
     fn NS_NavBookmarksTotalSyncChanges() -> i64;
 }
@@ -321,15 +319,11 @@ impl<'s> dogear::Store for Store<'s> {
                     b.syncStatus, b.lastModified / 1000 AS localModified,
                     IFNULL(b.title, '') AS title,
                     (SELECT h.url FROM moz_places h WHERE h.id = b.fk) AS url,
-                    EXISTS(SELECT 1 FROM moz_items_annos a
-                           JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id
-                           WHERE a.item_id = b.id AND
-                                 n.name = '{}') AS isLivemark
+                    0 AS isLivemark
              FROM moz_bookmarks b
              JOIN moz_bookmarks p ON p.id = b.parent
              WHERE b.guid <> '{}'
              ORDER BY b.parent, b.position",
-            LMANNO_FEEDURI,
             dogear::ROOT_GUID,
         ))?;
         while let Some(step) = items_statement.step()? {
