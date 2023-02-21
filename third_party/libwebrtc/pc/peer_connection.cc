@@ -1075,7 +1075,14 @@ PeerConnection::AddTransceiver(
         "Attempted to set an unimplemented parameter of RtpParameters.");
   }
 
-  auto result = cricket::CheckRtpParametersValues(parameters);
+  std::vector<cricket::VideoCodec> codecs;
+  if (media_type == cricket::MEDIA_TYPE_VIDEO) {
+    // Gather the current codec capabilities to allow checking scalabilityMode
+    // against supported values.
+    codecs = context_->media_engine()->video().send_codecs(false);
+  }
+
+  auto result = cricket::CheckRtpParametersValues(parameters, codecs);
   if (!result.ok()) {
     LOG_AND_RETURN_ERROR(result.type(), result.message());
   }

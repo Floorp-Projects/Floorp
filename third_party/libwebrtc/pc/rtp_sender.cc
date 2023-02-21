@@ -200,7 +200,7 @@ RTCError RtpSenderBase::SetParametersInternal(const RtpParameters& parameters) {
   }
   if (!media_channel_ || !ssrc_) {
     auto result = cricket::CheckRtpParametersInvalidModificationAndValues(
-        init_parameters_, parameters);
+        init_parameters_, parameters, video_codec_preferences_);
     if (result.ok()) {
       init_parameters_ = parameters;
     }
@@ -208,13 +208,22 @@ RTCError RtpSenderBase::SetParametersInternal(const RtpParameters& parameters) {
   }
   return worker_thread_->BlockingCall([&] {
     RtpParameters rtp_parameters = parameters;
+    RtpParameters old_parameters = media_channel_->GetRtpSendParameters(ssrc_);
     if (!disabled_rids_.empty()) {
       // Need to add the inactive layers.
-      RtpParameters old_parameters =
-          media_channel_->GetRtpSendParameters(ssrc_);
       rtp_parameters = RestoreEncodingLayers(parameters, disabled_rids_,
                                              old_parameters.encodings);
     }
+
+    auto result = cricket::CheckRtpParametersInvalidModificationAndValues(
+        old_parameters, rtp_parameters);
+    if (!result.ok())
+      return result;
+
+    result = CheckSVCParameters(rtp_parameters);
+    if (!result.ok())
+      return result;
+
     return media_channel_->SetRtpSendParameters(ssrc_, rtp_parameters);
   });
 }
@@ -231,7 +240,7 @@ RTCError RtpSenderBase::SetParametersInternalWithAllLayers(
   }
   if (!media_channel_ || !ssrc_) {
     auto result = cricket::CheckRtpParametersInvalidModificationAndValues(
-        init_parameters_, parameters);
+        init_parameters_, parameters, video_codec_preferences_);
     if (result.ok()) {
       init_parameters_ = parameters;
     }
@@ -723,6 +732,22 @@ void VideoRtpSender::ClearSend() {
   // deleted.
   worker_thread_->BlockingCall(
       [&] { video_media_channel()->SetVideoSend(ssrc_, nullptr, nullptr); });
+}
+
+RTCError VideoRtpSender::CheckSVCParameters(const RtpParameters& parameters) {
+  cricket::VideoCodec codec;
+  video_media_channel()->GetSendCodec(&codec);
+
+  // Match the currently used codec against the codec preferences to gather
+  // the SVC capabilities.
+  std::vector<cricket::VideoCodec> codecs;
+  for (const auto& codec_preference : video_codec_preferences_) {
+    if (codec.Matches(codec_preference)) {
+      codecs.push_back(codec_preference);
+    }
+  }
+
+  return cricket::CheckScalabilityModeValues(parameters, codecs);
 }
 
 }  // namespace webrtc

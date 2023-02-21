@@ -2285,9 +2285,14 @@ void WebRtcVideoChannel::WebRtcVideoSendStream::SetSendParameters(
 webrtc::RTCError WebRtcVideoChannel::WebRtcVideoSendStream::SetRtpParameters(
     const webrtc::RtpParameters& new_parameters) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
+  // This is checked higher in the stack (RtpSender), so this is only checking
+  // for users accessing the private APIs or tests, not specification
+  // conformance.
+  // TODO(orphis): Migrate tests to later make this a DCHECK only
   webrtc::RTCError error = CheckRtpParametersInvalidModificationAndValues(
       rtp_parameters_, new_parameters);
   if (!error.ok()) {
+    // Error is propagated to the callback at a higher level
     return error;
   }
 
