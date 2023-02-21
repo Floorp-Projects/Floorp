@@ -319,6 +319,7 @@ nsresult Http3WebTransportSession::OnWriteSegment(char* buf, uint32_t count,
 }
 
 void Http3WebTransportSession::Close(nsresult aResult) {
+  LOG(("Http3WebTransportSession::Close %p", this));
   if (mListener) {
     mListener->OnSessionClosed(0, ""_ns);
     mListener = nullptr;
@@ -330,6 +331,7 @@ void Http3WebTransportSession::Close(nsresult aResult) {
   mRecvState = RECV_DONE;
 
   mSession->CloseWebTransportConn();
+  mSession = nullptr;
 }
 
 void Http3WebTransportSession::OnSessionClosed(uint32_t aStatus,
