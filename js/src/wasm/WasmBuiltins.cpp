@@ -652,10 +652,11 @@ bool wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter,
              "unwinding clears the trapping state");
 
   // In case of no handler, exit wasm via ret().
-  // FailFP signals to wasm stub to do a failure return.
+  // FailInstanceReg signals to wasm stub to do a failure return.
   rfe->kind = ExceptionResumeKind::Wasm;
-  rfe->framePointer = (uint8_t*)wasm::FailFP;
+  rfe->framePointer = (uint8_t*)iter.unwoundCallerFP();
   rfe->stackPointer = (uint8_t*)iter.unwoundAddressOfReturnAddress();
+  rfe->instance = (Instance*)FailInstanceReg;
   rfe->target = nullptr;
   return false;
 }

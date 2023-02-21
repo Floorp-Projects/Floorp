@@ -3478,6 +3478,7 @@ void MacroAssemblerARMCompat::handleFailureWithHandlerTail(
            scratch);
     ma_ldr(Address(sp, ResumeFromException::offsetOfStackPointer()), sp,
            scratch);
+    ma_mov(Imm32(int32_t(wasm::FailInstanceReg)), InstanceReg);
   }
   as_dtr(IsLoad, 32, PostIndex, pc, DTRAddr(sp, DtrOffImm(4)));
 

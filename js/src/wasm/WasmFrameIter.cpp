@@ -60,8 +60,8 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
       lineOrBytecode_(0),
       fp_(fp ? fp : activation->wasmExitFP()),
       instance_(nullptr),
-      unwoundJitCallerFP_(nullptr),
-      unwoundJitFrameType_(jit::FrameType(-1)),
+      unwoundCallerFP_(nullptr),
+      unwoundJitFrameType_(),
       unwind_(Unwind::False),
       unwoundAddressOfReturnAddress_(nullptr),
       resumePCinCurrentFrame_(nullptr) {
@@ -97,7 +97,7 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
   // was Ion, we can just skip the wasm frames.
 
   popFrame();
-  MOZ_ASSERT(!done() || unwoundJitCallerFP_);
+  MOZ_ASSERT(!done() || unwoundCallerFP_);
 }
 
 bool WasmFrameIter::done() const {
@@ -160,11 +160,11 @@ void WasmFrameIter::popFrame() {
     // Mark the frame as such.
     AssertDirectJitCall(fp_->jitEntryCaller());
 
-    unwoundJitCallerFP_ = fp_->jitEntryCaller();
-    unwoundJitFrameType_ = FrameType::Exit;
+    unwoundCallerFP_ = fp_->jitEntryCaller();
+    unwoundJitFrameType_.emplace(FrameType::Exit);
 
     if (unwind_ == Unwind::True) {
-      activation_->setJSExitFP(unwoundJitCallerFP());
+      activation_->setJSExitFP(unwoundCallerFP());
       unwoundAddressOfReturnAddress_ = fp_->addressOfReturnAddress();
     }
 
@@ -183,6 +183,9 @@ void WasmFrameIter::popFrame() {
   resumePCinCurrentFrame_ = returnAddress;
 
   if (codeRange_->isInterpEntry()) {
+    // Interpreter entry has a simple frame, record FP from it.
+    unwoundCallerFP_ = reinterpret_cast<uint8_t*>(fp_);
+
     fp_ = nullptr;
     code_ = nullptr;
     codeRange_ = nullptr;
@@ -211,15 +214,15 @@ void WasmFrameIter::popFrame() {
     //
     // The next value of FP is just a regular jit frame used as a marker to
     // know that we should transition to a JSJit frame iterator.
-    unwoundJitCallerFP_ = reinterpret_cast<uint8_t*>(fp_);
-    unwoundJitFrameType_ = FrameType::JSJitToWasm;
+    unwoundCallerFP_ = reinterpret_cast<uint8_t*>(fp_);
+    unwoundJitFrameType_.emplace(FrameType::JSJitToWasm);
 
     fp_ = nullptr;
     code_ = nullptr;
     codeRange_ = nullptr;
 
     if (unwind_ == Unwind::True) {
-      activation_->setJSExitFP(unwoundJitCallerFP());
+      activation_->setJSExitFP(unwoundCallerFP());
       unwoundAddressOfReturnAddress_ = prevFP->addressOfReturnAddress();
     }
 
@@ -332,10 +335,14 @@ DebugFrame* WasmFrameIter::debugFrame() const {
   return DebugFrame::from(fp_);
 }
 
+bool WasmFrameIter::hasUnwoundJitFrame() const {
+  return unwoundCallerFP_ && unwoundJitFrameType_.isSome();
+}
+
 jit::FrameType WasmFrameIter::unwoundJitFrameType() const {
-  MOZ_ASSERT(unwoundJitCallerFP_);
-  MOZ_ASSERT(unwoundJitFrameType_ != jit::FrameType(-1));
-  return unwoundJitFrameType_;
+  MOZ_ASSERT(unwoundCallerFP_);
+  MOZ_ASSERT(unwoundJitFrameType_.isSome());
+  return *unwoundJitFrameType_;
 }
 
 uint8_t* WasmFrameIter::resumePCinCurrentFrame() const {
@@ -1348,11 +1355,6 @@ bool js::wasm::StartUnwinding(const RegisterState& registers,
         // We've popped FP but still have to return. Similar to the
         // |offsetFromEntry < PushedFP| case above, the JIT frame is now
         // incomplete and we can't unwind.
-        return false;
-      }
-      // On the error return path, FP might be set to FailFP. Ignore these
-      // transient frames.
-      if (intptr_t(fp) == (FailFP & ~ExitFPTag)) {
         return false;
       }
       // Set fixedFP to the address of the JitFrameLayout on the stack.

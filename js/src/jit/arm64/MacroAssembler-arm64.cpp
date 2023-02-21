@@ -365,6 +365,7 @@ void MacroAssemblerCompat::handleFailureWithHandlerTail(Label* profilerExitTail,
       MemOperand(PseudoStackPointer64,
                  ResumeFromException::offsetOfStackPointer()));
   syncStackPtr();
+  Mov(x23, int64_t(wasm::FailInstanceReg));
   ret();
 
   // Found a wasm catch handler, restore state and jump to it.
