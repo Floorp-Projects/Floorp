@@ -66,8 +66,8 @@ class WasmFrameIter {
   unsigned lineOrBytecode_;
   Frame* fp_;
   Instance* instance_;
-  uint8_t* unwoundJitCallerFP_;
-  jit::FrameType unwoundJitFrameType_;
+  uint8_t* unwoundCallerFP_;
+  mozilla::Maybe<jit::FrameType> unwoundJitFrameType_;
   Unwind unwind_;
   void** unwoundAddressOfReturnAddress_;
   uint8_t* resumePCinCurrentFrame_;
@@ -93,7 +93,8 @@ class WasmFrameIter {
   bool debugEnabled() const;
   DebugFrame* debugFrame() const;
   jit::FrameType unwoundJitFrameType() const;
-  uint8_t* unwoundJitCallerFP() const { return unwoundJitCallerFP_; }
+  bool hasUnwoundJitFrame() const;
+  uint8_t* unwoundCallerFP() const { return unwoundCallerFP_; }
   Frame* frame() const { return fp_; }
   Instance* instance() const { return instance_; }
 

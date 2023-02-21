@@ -32,10 +32,10 @@ static const unsigned MaxResultsForJitInlineCall = MaxResultsForJitEntry;
 // returned in registers.
 static const unsigned MaxRegisterResults = 1;
 
-// A magic value of the FramePointer to indicate after a return to the entry
+// A magic value of the InstanceReg to indicate after a return to the entry
 // stub that an exception has been caught and that we should throw.
 
-static const unsigned FailFP = 0xbad;
+static const unsigned FailInstanceReg = 0xbad;
 
 // The following thresholds were derived from a microbenchmark. If we begin to
 // ship this optimization for more platforms, we will need to extend this list.

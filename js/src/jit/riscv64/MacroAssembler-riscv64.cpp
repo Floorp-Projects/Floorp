@@ -2012,6 +2012,7 @@ void MacroAssemblerRiscv64Compat::handleFailureWithHandlerTail(
           FramePointer);
   loadPtr(Address(StackPointer, ResumeFromException::offsetOfStackPointer()),
           StackPointer);
+  ma_li(InstanceReg, ImmWord(wasm::FailInstanceReg));
   ret();
 
   // Found a wasm catch handler, restore state and jump to it.
