@@ -166,18 +166,14 @@ HTMLEditor::InitializeInsertingElement HTMLEditor::DoNothingForNewElement =
 HTMLEditor::InitializeInsertingElement HTMLEditor::InsertNewBRElement =
     [](HTMLEditor& aHTMLEditor, Element& aNewElement, const EditorDOMPoint&)
         MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-          const auto withTransaction = aNewElement.IsInComposedDoc()
-                                           ? WithTransaction::Yes
-                                           : WithTransaction::No;
+          MOZ_ASSERT(!aNewElement.IsInComposedDoc());
           Result<CreateElementResult, nsresult> createBRElementResult =
-              aHTMLEditor.InsertBRElement(withTransaction,
+              aHTMLEditor.InsertBRElement(WithTransaction::No,
                                           EditorDOMPoint(&aNewElement, 0u));
           if (MOZ_UNLIKELY(createBRElementResult.isErr())) {
             NS_WARNING_ASSERTION(
                 createBRElementResult.isOk(),
-                nsPrintfCString("HTMLEditor::InsertBRElement(%s) failed",
-                                ToString(withTransaction).c_str())
-                    .get());
+                "HTMLEditor::InsertBRElement(WithTransaction::No) failed");
             return createBRElementResult.unwrapErr();
           }
           createBRElementResult.unwrap().IgnoreCaretPointSuggestion();
@@ -189,18 +185,14 @@ Result<CreateElementResult, nsresult>
 HTMLEditor::AppendNewElementToInsertingElement(
     HTMLEditor& aHTMLEditor, const nsStaticAtom& aTagName, Element& aNewElement,
     const InitializeInsertingElement& aInitializer) {
-  const auto withTransaction = aNewElement.IsInComposedDoc()
-                                   ? WithTransaction::Yes
-                                   : WithTransaction::No;
+  MOZ_ASSERT(!aNewElement.IsInComposedDoc());
   Result<CreateElementResult, nsresult> createNewElementResult =
       aHTMLEditor.CreateAndInsertElement(
-          withTransaction, const_cast<nsStaticAtom&>(aTagName),
+          WithTransaction::No, const_cast<nsStaticAtom&>(aTagName),
           EditorDOMPoint(&aNewElement, 0u), aInitializer);
   NS_WARNING_ASSERTION(
       createNewElementResult.isOk(),
-      nsPrintfCString("HTMLEditor::CreateAndInsertElement(%s) failed",
-                      ToString(withTransaction).c_str())
-          .get());
+      "HTMLEditor::CreateAndInsertElement(WithTransaction::No) failed");
   return createNewElementResult;
 }
 
@@ -209,6 +201,7 @@ Result<CreateElementResult, nsresult>
 HTMLEditor::AppendNewElementWithBRToInsertingElement(
     HTMLEditor& aHTMLEditor, const nsStaticAtom& aTagName,
     Element& aNewElement) {
+  MOZ_ASSERT(!aNewElement.IsInComposedDoc());
   Result<CreateElementResult, nsresult> createNewElementWithBRResult =
       HTMLEditor::AppendNewElementToInsertingElement(
           aHTMLEditor, aTagName, aNewElement, HTMLEditor::InsertNewBRElement);
@@ -606,28 +599,25 @@ NS_IMETHODIMP HTMLEditor::SetDocumentCharacterSet(
           EditorDOMPoint(primaryHeadElement, 0),
           [&aCharacterSet](HTMLEditor&, Element& aMetaElement,
                            const EditorDOMPoint&) {
-            DebugOnly<nsresult> rvIgnored = aMetaElement.SetAttr(
-                kNameSpaceID_None, nsGkAtoms::httpEquiv, u"Content-Type"_ns,
-                aMetaElement.IsInComposedDoc());
+            MOZ_ASSERT(!aMetaElement.IsInComposedDoc());
+            DebugOnly<nsresult> rvIgnored =
+                aMetaElement.SetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv,
+                                     u"Content-Type"_ns, false);
             NS_WARNING_ASSERTION(
                 NS_SUCCEEDED(rvIgnored),
-                nsPrintfCString(
-                    "Element::SetAttr(nsGkAtoms::httpEquiv, \"Content-Type\", "
-                    "%s) failed, but ignored",
-                    aMetaElement.IsInComposedDoc() ? "true" : "false")
-                    .get());
+                "Element::SetAttr(nsGkAtoms::httpEquiv, \"Content-Type\", "
+                "false) failed, but ignored");
             rvIgnored =
                 aMetaElement.SetAttr(kNameSpaceID_None, nsGkAtoms::content,
                                      u"text/html;charset="_ns +
                                          NS_ConvertASCIItoUTF16(aCharacterSet),
-                                     aMetaElement.IsInComposedDoc());
+                                     false);
             NS_WARNING_ASSERTION(
                 NS_SUCCEEDED(rvIgnored),
                 nsPrintfCString(
                     "Element::SetAttr(nsGkAtoms::content, "
-                    "\"text/html;charset=%s\", %s) failed, but ignored",
-                    nsPromiseFlatCString(aCharacterSet).get(),
-                    aMetaElement.IsInComposedDoc() ? "true" : "false")
+                    "\"text/html;charset=%s\", false) failed, but ignored",
+                    nsPromiseFlatCString(aCharacterSet).get())
                     .get());
             return NS_OK;
           });
@@ -3347,12 +3337,10 @@ Result<CreateElementResult, nsresult> HTMLEditor::CreateAndInsertElement(
     }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "EditorBase::MarkElementDirty() failed, but ignored");
-    if (StaticPrefs::editor_initialize_element_before_connect()) {
-      rv = aInitializer(*this, *newElement, aPointToInsert);
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "aInitializer failed");
-      if (NS_WARN_IF(Destroyed())) {
-        return Err(NS_ERROR_EDITOR_DESTROYED);
-      }
+    rv = aInitializer(*this, *newElement, aPointToInsert);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "aInitializer failed");
+    if (NS_WARN_IF(Destroyed())) {
+      return Err(NS_ERROR_EDITOR_DESTROYED);
     }
     RefPtr<InsertNodeTransaction> transaction =
         InsertNodeTransaction::Create(*this, *newElement, aPointToInsert);
@@ -3405,21 +3393,6 @@ Result<CreateElementResult, nsresult> HTMLEditor::CreateAndInsertElement(
   if (MOZ_LIKELY(createNewElementResult.inspect().GetNewNode())) {
     TopLevelEditSubActionDataRef().DidCreateElement(
         *this, *createNewElementResult.inspect().GetNewNode());
-  }
-
-  if (!StaticPrefs::editor_initialize_element_before_connect() &&
-      MOZ_LIKELY(createNewElementResult.inspect().GetNewNode())) {
-    // MOZ_KnownLive because it's grabbed by createNewElementResult.
-    nsresult rv = aInitializer(
-        *this, MOZ_KnownLive(*createNewElementResult.inspect().GetNewNode()),
-        aPointToInsert);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "aInitializer failed");
-    if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
-      return Err(NS_ERROR_EDITOR_DESTROYED);
-    }
-    if (NS_FAILED(rv)) {
-      return Err(rv);
-    }
   }
 
   return createNewElementResult;

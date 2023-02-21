@@ -7341,18 +7341,14 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AlignBlockContentsWithDivElement(
           // MOZ_CAN_RUN_SCRIPT_BOUNDARY due to bug 1758868
           [&aAlignType](HTMLEditor& aHTMLEditor, Element& aDivElement,
                         const EditorDOMPoint&) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+            MOZ_ASSERT(!aDivElement.IsInComposedDoc());
             // If aDivElement has not been connected yet, we do not need
             // transaction of setting align attribute here.
             nsresult rv = aHTMLEditor.SetAttributeOrEquivalent(
-                &aDivElement, nsGkAtoms::align, aAlignType,
-                !aDivElement.IsInComposedDoc());
-            NS_WARNING_ASSERTION(
-                NS_SUCCEEDED(rv),
-                nsPrintfCString(
-                    "EditorBase::SetAttributeOrEquivalent(nsGkAtoms:: "
-                    "align, \"...\", %s) failed",
-                    !aDivElement.IsInComposedDoc() ? "true" : "false")
-                    .get());
+                &aDivElement, nsGkAtoms::align, aAlignType, false);
+            NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                                 "EditorBase::SetAttributeOrEquivalent("
+                                 "nsGkAtoms::align, \"...\", false) failed");
             return rv;
           });
   if (MOZ_UNLIKELY(createNewDivElementResult.isErr())) {
