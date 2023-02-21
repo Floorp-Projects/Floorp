@@ -233,15 +233,14 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
       AutoRangeArray& aRangesToDelete, const Element& aEditingHost) const;
 
   /**
-   * HandleDeleteCollapsedSelectionAtWhiteSpaces() handles deletion of
-   * collapsed selection at white-spaces in a text node.
+   * Handles deletion of collapsed selection at white-spaces in a text node.
    *
    * @param aDirectionAndAmount Direction of the deletion.
    * @param aPointToDelete      The point to delete.  I.e., typically, caret
    *                            position.
    * @param aEditingHost        The editing host.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditActionResult, nsresult>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CaretPoint, nsresult>
   HandleDeleteCollapsedSelectionAtWhiteSpaces(
       HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
       const EditorDOMPoint& aPointToDelete, const Element& aEditingHost);
@@ -1903,15 +1902,26 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAroundCollapsedRanges(
 
   if (aScanFromCaretPointResult.InCollapsibleWhiteSpaces() ||
       aScanFromCaretPointResult.ReachedPreformattedLineBreak()) {
-    Result<EditActionResult, nsresult> result =
+    Result<CaretPoint, nsresult> caretPointOrError =
         HandleDeleteCollapsedSelectionAtWhiteSpaces(
             aHTMLEditor, aDirectionAndAmount,
             aWSRunScannerAtCaret.ScanStartRef(), aEditingHost);
+    if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
+      NS_WARNING(
+          "AutoDeleteRangesHandler::"
+          "HandleDeleteCollapsedSelectionAtWhiteSpaces() failed");
+      return caretPointOrError.propagateErr();
+    }
+    nsresult rv = caretPointOrError.unwrap().SuggestCaretPointTo(
+        aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
+      return Err(rv);
+    }
     NS_WARNING_ASSERTION(
-        result.isOk(),
-        "AutoDeleteRangesHandler::HandleDeleteCollapsedSelectionAtWhiteSpaces()"
-        " failed");
-    return result;
+        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+        "CaretPoint::SuggestCaretPointTo() failed, but ignored");
+    return EditActionResult::HandledResult();
   }
 
   if (aScanFromCaretPointResult.InNonCollapsibleCharacters()) {
@@ -2104,13 +2114,14 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteTextAroundCollapsedRanges(
   return caretPointOrError;
 }
 
-Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
+Result<CaretPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     HandleDeleteCollapsedSelectionAtWhiteSpaces(
         HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
         const EditorDOMPoint& aPointToDelete, const Element& aEditingHost) {
   MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
   MOZ_ASSERT(!StaticPrefs::editor_white_space_normalization_blink_compatible());
 
+  EditorDOMPoint pointToPutCaret;
   if (aDirectionAndAmount == nsIEditor::eNext) {
     Result<CaretPoint, nsresult> caretPointOrError =
         WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
@@ -2118,19 +2129,12 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
       NS_WARNING(
           "WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace() failed");
-      return caretPointOrError.propagateErr();
+      return caretPointOrError;
     }
-    nsresult rv = caretPointOrError.unwrap().SuggestCaretPointTo(
-        aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
-                      SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                      SuggestCaret::AndIgnoreTrivialError});
-    if (NS_FAILED(rv)) {
-      NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
-      return Err(rv);
-    }
-    NS_WARNING_ASSERTION(
-        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-        "CaretPoint::SuggestCaretPointTo() failed, but ignored");
+    caretPointOrError.unwrap().MoveCaretPointTo(
+        pointToPutCaret, aHTMLEditor,
+        {SuggestCaret::OnlyIfHasSuggestion,
+         SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
   } else {
     Result<CaretPoint, nsresult> caretPointOrError =
         WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace(
@@ -2138,19 +2142,12 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
       NS_WARNING(
           "WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace() failed");
-      return caretPointOrError.propagateErr();
+      return caretPointOrError;
     }
-    nsresult rv = caretPointOrError.unwrap().SuggestCaretPointTo(
-        aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
-                      SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                      SuggestCaret::AndIgnoreTrivialError});
-    if (NS_FAILED(rv)) {
-      NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
-      return Err(rv);
-    }
-    NS_WARNING_ASSERTION(
-        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-        "CaretPoint::SuggestCaretPointTo() failed, but ignored");
+    caretPointOrError.unwrap().MoveCaretPointTo(
+        pointToPutCaret, aHTMLEditor,
+        {SuggestCaret::OnlyIfHasSuggestion,
+         SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
   }
   const auto newCaretPosition =
       aHTMLEditor.GetFirstSelectionStartPoint<EditorDOMPoint>();
@@ -2165,17 +2162,11 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     NS_WARNING(
         "HTMLEditor::InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary()"
         " failed");
-    return caretPointOrError.propagateErr();
+    return caretPointOrError;
   }
-  nsresult rv = caretPointOrError.unwrap().SuggestCaretPointTo(
-      aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion});
-  if (NS_FAILED(rv)) {
-    NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
-    return Err(rv);
-  }
-  NS_WARNING_ASSERTION(rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-                       "CaretPoint::SuggestCaretPointTo() failed, but ignored");
-  return EditActionResult::HandledResult();
+  caretPointOrError.unwrap().MoveCaretPointTo(
+      pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
+  return CaretPoint(std::move(pointToPutCaret));
 }
 
 Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
