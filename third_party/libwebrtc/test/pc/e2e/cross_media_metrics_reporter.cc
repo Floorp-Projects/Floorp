@@ -47,7 +47,7 @@ void CrossMediaMetricsReporter::OnStatsReports(
       sync_group_stats;
   for (const auto& stat : inbound_stats) {
     auto media_source_stat =
-        report->GetAs<RTCMediaStreamTrackStats>(*stat->track_id);
+        report->GetAs<DEPRECATED_RTCMediaStreamTrackStats>(*stat->track_id);
     if (stat->estimated_playout_timestamp.ValueOrDefault(0.) > 0 &&
         media_source_stat->track_identifier.is_defined()) {
       sync_group_stats[reporter_helper_->GetSyncGroupLabelFromTrackId(
@@ -78,9 +78,11 @@ void CrossMediaMetricsReporter::OnStatsReports(
     // it only once.
     if (stats_info_.find(sync_group) == stats_info_.end()) {
       auto audio_source_stat =
-          report->GetAs<RTCMediaStreamTrackStats>(*audio_stat->track_id);
+          report->GetAs<DEPRECATED_RTCMediaStreamTrackStats>(
+              *audio_stat->track_id);
       auto video_source_stat =
-          report->GetAs<RTCMediaStreamTrackStats>(*video_stat->track_id);
+          report->GetAs<DEPRECATED_RTCMediaStreamTrackStats>(
+              *video_stat->track_id);
       // *_source_stat->track_identifier is always defined here because we
       // checked it while grouping stats.
       stats_info_[sync_group].audio_stream_label =

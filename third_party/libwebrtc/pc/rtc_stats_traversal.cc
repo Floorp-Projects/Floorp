@@ -91,11 +91,13 @@ std::vector<const std::string*> GetStatsReferencedIds(const RTCStats& stats) {
     const auto& local_or_remote_candidate =
         static_cast<const RTCIceCandidateStats&>(stats);
     AddIdIfDefined(local_or_remote_candidate.transport_id, &neighbor_ids);
-  } else if (type == RTCMediaStreamStats::kType) {
-    const auto& stream = static_cast<const RTCMediaStreamStats&>(stats);
+  } else if (type == DEPRECATED_RTCMediaStreamStats::kType) {
+    const auto& stream =
+        static_cast<const DEPRECATED_RTCMediaStreamStats&>(stats);
     AddIdsIfDefined(stream.track_ids, &neighbor_ids);
-  } else if (type == RTCMediaStreamTrackStats::kType) {
-    const auto& track = static_cast<const RTCMediaStreamTrackStats&>(stats);
+  } else if (type == DEPRECATED_RTCMediaStreamTrackStats::kType) {
+    const auto& track =
+        static_cast<const DEPRECATED_RTCMediaStreamTrackStats&>(stats);
     AddIdIfDefined(track.media_source_id, &neighbor_ids);
   } else if (type == RTCPeerConnectionStats::kType) {
     // RTCPeerConnectionStats does not have any neighbor references.

@@ -286,35 +286,36 @@ class RTC_EXPORT RTCRemoteIceCandidateStats final
   const char* type() const override;
 };
 
-// https://w3c.github.io/webrtc-stats/#dom-rtcmediastreamstats
-// TODO(https://crbug.com/webrtc/14172): Deprecate and remove.
-class RTC_EXPORT RTCMediaStreamStats final : public RTCStats {
+// TODO(https://crbug.com/webrtc/14419): Delete this class, it's deprecated.
+class RTC_EXPORT DEPRECATED_RTCMediaStreamStats final : public RTCStats {
  public:
   WEBRTC_RTCSTATS_DECL();
 
-  RTCMediaStreamStats(const std::string& id, int64_t timestamp_us);
-  RTCMediaStreamStats(std::string&& id, int64_t timestamp_us);
-  RTCMediaStreamStats(const RTCMediaStreamStats& other);
-  ~RTCMediaStreamStats() override;
+  DEPRECATED_RTCMediaStreamStats(const std::string& id, int64_t timestamp_us);
+  DEPRECATED_RTCMediaStreamStats(std::string&& id, int64_t timestamp_us);
+  DEPRECATED_RTCMediaStreamStats(const DEPRECATED_RTCMediaStreamStats& other);
+  ~DEPRECATED_RTCMediaStreamStats() override;
 
   RTCStatsMember<std::string> stream_identifier;
   RTCStatsMember<std::vector<std::string>> track_ids;
 };
+using RTCMediaStreamStats [[deprecated("bugs.webrtc.org/14419")]] =
+    DEPRECATED_RTCMediaStreamStats;
 
-// TODO(https://crbug.com/webrtc/14175): Deprecate and remove in favor of
-// RTCMediaSourceStats/RTCOutboundRtpStreamStats and RTCInboundRtpStreamStats.
-class RTC_EXPORT RTCMediaStreamTrackStats final : public RTCStats {
+// TODO(https://crbug.com/webrtc/14175): Delete this class, it's deprecated.
+class RTC_EXPORT DEPRECATED_RTCMediaStreamTrackStats final : public RTCStats {
  public:
   WEBRTC_RTCSTATS_DECL();
 
-  RTCMediaStreamTrackStats(const std::string& id,
-                           int64_t timestamp_us,
-                           const char* kind);
-  RTCMediaStreamTrackStats(std::string&& id,
-                           int64_t timestamp_us,
-                           const char* kind);
-  RTCMediaStreamTrackStats(const RTCMediaStreamTrackStats& other);
-  ~RTCMediaStreamTrackStats() override;
+  DEPRECATED_RTCMediaStreamTrackStats(const std::string& id,
+                                      int64_t timestamp_us,
+                                      const char* kind);
+  DEPRECATED_RTCMediaStreamTrackStats(std::string&& id,
+                                      int64_t timestamp_us,
+                                      const char* kind);
+  DEPRECATED_RTCMediaStreamTrackStats(
+      const DEPRECATED_RTCMediaStreamTrackStats& other);
+  ~DEPRECATED_RTCMediaStreamTrackStats() override;
 
   RTCStatsMember<std::string> track_identifier;
   RTCStatsMember<std::string> media_source_id;
@@ -362,6 +363,8 @@ class RTC_EXPORT RTCMediaStreamTrackStats final : public RTCStats {
   RTCNonStandardStatsMember<double> total_freezes_duration;
   RTCNonStandardStatsMember<double> total_pauses_duration;
 };
+using RTCMediaStreamTrackStats [[deprecated("bugs.webrtc.org/14175")]] =
+    DEPRECATED_RTCMediaStreamTrackStats;
 
 // https://w3c.github.io/webrtc-stats/#pcstats-dict*
 class RTC_EXPORT RTCPeerConnectionStats final : public RTCStats {
