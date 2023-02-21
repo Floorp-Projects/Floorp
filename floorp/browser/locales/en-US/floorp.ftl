@@ -647,3 +647,9 @@ update-portable-notification-success-message = Update succeeded! Hope you enjoy 
 update-portable-notification-failed-title = Update failed.
 update-portable-notification-failed-redirector-message = Update failed. Restarting your browser may solve the problem.
 update-portable-notification-failed-prepare-message = Failed to prepare update.
+
+##################################################################### Open link in external ###############################################################
+open-link-in-external-tab-context-menu = Open in another browser
+open-link-in-external-tab-dialog-title-error = Error
+open-link-in-external-tab-dialog-message-default-browser-not-found = Default browser does not exist or is not configured.
+open-link-in-external-tab-dialog-message-selected-browser-not-found = The selected browser does not exist.

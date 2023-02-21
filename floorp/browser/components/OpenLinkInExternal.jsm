@@ -24,6 +24,7 @@ const platform = AppConstants.platform;
 const env = Cc["@mozilla.org/process/environment;1"].getService(
     Ci.nsIEnvironment
 );
+const L10N = new Localization(["browser/floorp.ftl"]);
 const { DesktopFileParser } = ChromeUtils.import(
     "resource:///modules/DesktopFileParser.jsm"
 );
@@ -260,13 +261,23 @@ async function OpenLinkInExternal(url) {
         if (userSelectedBrowserId === "") {
             browser = await getDefaultBrowserOnLinux(protocol, desktopFilesInfo);
             if (browser === null) {
-                Services.prompt.asyncAlert(null, null, "Error", "Default browser does not exist or is not configured.");
+                Services.prompt.asyncAlert(
+                    null,
+                    null,
+                    await L10N.formatValue("open-link-in-external-tab-dialog-title-error"),
+                    await L10N.formatValue("open-link-in-external-tab-dialog-message-default-browser-not-found")
+                );
                 return;
             }
         } else {
             let targets = desktopFilesInfo.filter(desktopFileInfo => desktopFileInfo.filename === userSelectedBrowserId + ".desktop");
             if (targets.length === 0) {
-                Services.prompt.asyncAlert(null, null, "Error", "The selected browser does not exist.");
+                Services.prompt.asyncAlert(
+                    null,
+                    null,
+                    await L10N.formatValue("open-link-in-external-tab-dialog-title-error"),
+                    await L10N.formatValue("open-link-in-external-tab-dialog-message-selected-browser-not-found")
+                );
                 return;
             }
             browser = targets[0];
@@ -290,13 +301,23 @@ async function OpenLinkInExternal(url) {
         if (userSelectedBrowserId === "") {
             browser = getDefaultBrowserOnWindows(protocol, browsers);
             if (browser === null) {
-                Services.prompt.asyncAlert(null, null, "Error", "Default browser does not exist or is not configured.");
+                Services.prompt.asyncAlert(
+                    null,
+                    null,
+                    await L10N.formatValue("open-link-in-external-tab-dialog-title-error"),
+                    await L10N.formatValue("open-link-in-external-tab-dialog-message-default-browser-not-found")
+                );
                 return;
             }
         } else {
             let targets = browsers.filter(browser => browser.keyName === userSelectedBrowserId);
             if (targets.length === 0) {
-                Services.prompt.asyncAlert(null, null, "Error", "The selected browser does not exist.");
+                Services.prompt.asyncAlert(
+                    null,
+                    null,
+                    await L10N.formatValue("open-link-in-external-tab-dialog-title-error"),
+                    await L10N.formatValue("open-link-in-external-tab-dialog-message-selected-browser-not-found")
+                );
                 return;
             }
             browser = targets[0];
@@ -310,7 +331,7 @@ async function OpenLinkInExternal(url) {
 
 let seenDocuments = new WeakSet();
 let documentObserver = {
-    observe(doc) {
+    async observe(doc) {
         if (
             ExtensionCommon.instanceOf(doc, "HTMLDocument") &&
             !seenDocuments.has(doc)
@@ -322,7 +343,7 @@ let documentObserver = {
                 let tabContextMenu = document_.querySelector("#tabContextMenu");
                 let openLinkInExternal = document_.createXULElement("menuitem");
                 openLinkInExternal.id = "open-link-in-external";
-                openLinkInExternal.label = "デフォルトのブラウザーで開く";
+                openLinkInExternal.label = await L10N.formatValue("open-link-in-external-tab-context-menu");
                 openLinkInExternal.addEventListener("command", function(e) {
                     let window_ = e.currentTarget.ownerGlobal;
                     OpenLinkInExternal(window_.TabContextMenu.contextTab.linkedBrowser.currentURI.spec);
