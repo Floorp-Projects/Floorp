@@ -159,6 +159,13 @@ ABSL_FLAG(bool, disable_preview, false, "Disable decoded video preview.");
 
 ABSL_FLAG(bool, disable_decoding, false, "Disable video decoding.");
 
+ABSL_FLAG(int,
+          extend_run_time_duration,
+          0,
+          "Extends the run time of the receiving client after the last RTP "
+          "packet has been delivered. Typically useful to let the last few "
+          "frames be decoded and rendered. Duration given in seconds.");
+
 namespace {
 bool ValidatePayloadType(int32_t payload_type) {
   return payload_type > 0 && payload_type <= 127;
@@ -605,9 +612,10 @@ class RtpReplayer final {
         }
       }
     }
-    // One more call to SleepOrAdvanceTime is required to process the last
+    // Note that even when `extend_run_time_duration` is zero
+    // `SleepOrAdvanceTime` should still be called in order to process the last
     // delivered packet when running in simulated time.
-    SleepOrAdvanceTime(0);
+    SleepOrAdvanceTime(absl::GetFlag(FLAGS_extend_run_time_duration) * 1000);
 
     fprintf(stderr, "num_packets: %d\n", num_packets);
 
@@ -672,6 +680,7 @@ int main(int argc, char* argv[]) {
   RTC_CHECK(ValidateRtpHeaderExtensionId(
       absl::GetFlag(FLAGS_transmission_offset_id)));
   RTC_CHECK(ValidateInputFilenameNotEmpty(absl::GetFlag(FLAGS_input_file)));
+  RTC_CHECK_GE(absl::GetFlag(FLAGS_extend_run_time_duration), 0);
 
   rtc::ThreadManager::Instance()->WrapCurrentThread();
   webrtc::test::RunTest(webrtc::RtpReplay);
