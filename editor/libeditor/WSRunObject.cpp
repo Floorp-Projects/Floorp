@@ -4298,7 +4298,7 @@ WSRunScanner::ShrinkRangeIfStartsFromOrEndsAfterAtomicContent(
     const HTMLEditor& aHTMLEditor, nsRange& aRange,
     const Element* aEditingHost) {
   MOZ_ASSERT(aRange.IsPositioned());
-  MOZ_ASSERT(!aRange.IsInSelection(),
+  MOZ_ASSERT(!aRange.IsInAnySelection(),
              "Changing range in selection may cause running script");
 
   if (NS_WARN_IF(!aRange.GetStartContainer()) ||

@@ -814,6 +814,7 @@ class Selection final : public nsSupportsWeakReference,
   void Disconnect();
 
   struct StyledRanges {
+    explicit StyledRanges(Selection& aSelection) : mSelection(aSelection) {}
     void Clear();
 
     StyledRange* FindRangeData(nsRange* aRange);
@@ -871,8 +872,8 @@ class Selection final : public nsSupportsWeakReference,
      *                  it. Hence it'll always be in [0, mRanges.Length()).
      *                  This is nothing only when the method returns an error.
      */
-    MOZ_CAN_RUN_SCRIPT nsresult MaybeAddRangeAndTruncateOverlaps(
-        nsRange* aRange, Maybe<size_t>* aOutIndex, Selection& aSelection);
+    MOZ_CAN_RUN_SCRIPT nsresult
+    MaybeAddRangeAndTruncateOverlaps(nsRange* aRange, Maybe<size_t>* aOutIndex);
 
     /**
      * GetCommonEditingHost() returns common editing host of all
@@ -929,9 +930,11 @@ class Selection final : public nsSupportsWeakReference,
     // a possible solution, allowing the calculation of the overlap interval in
     // O(log n) time, though this would require rebalancing and other overhead.
     Elements mRanges;
+
+    Selection& mSelection;
   };
 
-  StyledRanges mStyledRanges;
+  StyledRanges mStyledRanges{*this};
 
   RefPtr<nsRange> mAnchorFocusRange;
   RefPtr<nsFrameSelection> mFrameSelection;
