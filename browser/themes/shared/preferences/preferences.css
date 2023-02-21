@@ -1409,7 +1409,7 @@ richlistitem .text-link:hover {
   content: url("chrome://browser/content/preferences/web-appearance-dark.svg")
 }
 
-.web-appearance-choice img:dir(rtl) {
+.web-appearance-choice img:-moz-locale-dir(rtl) {
   transform: scaleX(-1);
 }
 
