@@ -110,12 +110,13 @@ var GMPUtils = {
 
   _expectedABI(aPlugin) {
     let defaultABI = UpdateUtils.ABI;
+    let expectedABIs = [defaultABI];
     if (aPlugin.id == WIDEVINE_ID && this._isWindowsOnARM64()) {
-      // On Windows on aarch64, we need the x86 plugin,
-      // as there's no native aarch64 plugins yet.
-      defaultABI = defaultABI.replace(/aarch64/g, "x86");
+      // On Windows on aarch64, we may use either the x86 or the ARM64 plugin
+      // as we are still shipping the former to release.
+      expectedABIs.push(defaultABI.replace(/aarch64/g, "x86"));
     }
-    return defaultABI;
+    return expectedABIs.join(",");
   },
 };
 
@@ -131,6 +132,7 @@ var GMPPrefs = {
   KEY_PLUGIN_LAST_INSTALL_FAILED: "media.{0}.lastInstallFailed",
   KEY_PLUGIN_LAST_INSTALL_START: "media.{0}.lastInstallStart",
   KEY_PLUGIN_LAST_UPDATE: "media.{0}.lastUpdate",
+  KEY_PLUGIN_HASHVALUE: "media.{0}.hashValue",
   KEY_PLUGIN_VERSION: "media.{0}.version",
   KEY_PLUGIN_AUTOUPDATE: "media.{0}.autoupdate",
   KEY_PLUGIN_VISIBLE: "media.{0}.visible",

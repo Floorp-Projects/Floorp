@@ -79,6 +79,7 @@ add_task(async function test_prefs() {
   GMPPrefs.setInt(GMPPrefs.KEY_PLUGIN_VERSION, 4, addon2);
   GMPPrefs.setBool(GMPPrefs.KEY_PLUGIN_AUTOUPDATE, false, addon2);
   GMPPrefs.setBool(GMPPrefs.KEY_CERT_CHECKATTRS, true);
+  GMPPrefs.setString(GMPPrefs.KEY_PLUGIN_HASHVALUE, "5", addon1);
 
   Assert.equal(GMPPrefs.getString(GMPPrefs.KEY_URL), "http://not-really-used");
   Assert.equal(
@@ -98,6 +99,10 @@ add_task(async function test_prefs() {
   );
   Assert.ok(GMPPrefs.getBool(GMPPrefs.KEY_CERT_CHECKATTRS));
   GMPPrefs.setBool(GMPPrefs.KEY_PLUGIN_AUTOUPDATE, true, addon2);
+  Assert.equal(
+    GMPPrefs.getString(GMPPrefs.KEY_PLUGIN_HASHVALUE, "", addon1),
+    "5"
+  );
 });
 
 /**
@@ -1009,6 +1014,10 @@ async function test_checkForAddons_installAddon(
     // Make sure the prefs are set correctly
     Assert.ok(
       !!GMPPrefs.getInt(GMPPrefs.KEY_PLUGIN_LAST_UPDATE, "", gmpAddon.id)
+    );
+    Assert.equal(
+      GMPPrefs.getString(GMPPrefs.KEY_PLUGIN_HASHVALUE, "", gmpAddon.id),
+      expectedDigest
     );
     Assert.equal(
       GMPPrefs.getString(GMPPrefs.KEY_PLUGIN_VERSION, "", gmpAddon.id),
