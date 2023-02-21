@@ -940,11 +940,10 @@ nsresult nsBaseDragService::DrawDragForImage(
             destSize, SurfaceFormat::B8G8R8A8);
     if (!dt || !dt->IsValid()) return NS_ERROR_FAILURE;
 
-    UniquePtr<gfxContext> ctx = gfxContext::CreateOrNull(dt);
-    if (!ctx) return NS_ERROR_FAILURE;
+    gfxContext ctx(dt);
 
     ImgDrawResult res = imgContainer->Draw(
-        ctx.get(), destSize, ImageRegion::Create(destSize),
+        &ctx, destSize, ImageRegion::Create(destSize),
         imgIContainer::FRAME_CURRENT, SamplingFilter::GOOD, SVGImageContext(),
         imgIContainer::FLAG_SYNC_DECODE, 1.0);
     if (res == ImgDrawResult::BAD_IMAGE || res == ImgDrawResult::BAD_ARGS ||

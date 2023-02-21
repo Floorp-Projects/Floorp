@@ -656,10 +656,14 @@ struct DIGroup {
 
     RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(
         recorder, dummyDt, mLayerBounds.ToUnknownRect());
-    // Setup the gfxContext
-    UniquePtr<gfxContext> context = gfxContext::CreateOrNull(dt);
-    context->SetMatrix(Matrix::Scaling(mScale).PostTranslate(
-        mResidualOffset.x, mResidualOffset.y));
+    if (!dt || !dt->IsValid()) {
+      gfxCriticalNote << "Failed to create drawTarget for blob image";
+      return;
+    }
+
+    gfxContext context(dt);
+    context.SetMatrix(Matrix::Scaling(mScale).PostTranslate(mResidualOffset.x,
+                                                            mResidualOffset.y));
 
     GP("mInvalidRect: %d %d %d %d\n", mInvalidRect.x, mInvalidRect.y,
        mInvalidRect.width, mInvalidRect.height);
@@ -673,7 +677,7 @@ struct DIGroup {
       return;
     }
 
-    PaintItemRange(aGrouper, aStartItem, aEndItem, context.get(), recorder,
+    PaintItemRange(aGrouper, aStartItem, aEndItem, &context, recorder,
                    rootManager, aResources);
 
     // XXX: set this correctly perhaps using
@@ -2291,12 +2295,11 @@ static void PaintItemByDrawTarget(nsDisplayItem* aItem, gfx::DrawTarget* aDT,
                                   nsDisplayListBuilder* aDisplayListBuilder,
                                   const gfx::MatrixScales& aScale,
                                   Maybe<gfx::DeviceColor>& aHighlight) {
-  MOZ_ASSERT(aDT);
+  MOZ_ASSERT(aDT && aDT->IsValid());
 
   // XXX Why is this ClearRect() needed?
   aDT->ClearRect(Rect(visibleRect));
-  UniquePtr<gfxContext> context = gfxContext::CreateOrNull(aDT);
-  MOZ_ASSERT(context);
+  gfxContext context(aDT);
 
   switch (aItem->GetType()) {
     case DisplayItemType::TYPE_SVG_WRAPPER:
@@ -2310,12 +2313,12 @@ static void PaintItemByDrawTarget(nsDisplayItem* aItem, gfx::DrawTarget* aDT,
         break;
       }
 
-      context->SetMatrix(context->CurrentMatrix().PreScale(aScale).PreTranslate(
+      context.SetMatrix(context.CurrentMatrix().PreScale(aScale).PreTranslate(
           -aOffset.x, -aOffset.y));
       if (aDisplayListBuilder->IsPaintingToWindow()) {
         aItem->Frame()->AddStateBits(NS_FRAME_PAINTED_THEBES);
       }
-      aItem->AsPaintedDisplayItem()->Paint(aDisplayListBuilder, context.get());
+      aItem->AsPaintedDisplayItem()->Paint(aDisplayListBuilder, &context);
       break;
   }
 
@@ -2781,17 +2784,19 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
         BackendType::SKIA, IntSize(1, 1), SurfaceFormat::A8);
     RefPtr<DrawTarget> dt = Factory::CreateRecordingDrawTarget(
         recorder, dummyDt, IntRect(IntPoint(0, 0), size));
+    if (!dt || !dt->IsValid()) {
+      gfxCriticalNote << "Failed to create drawTarget for blob mask image";
+      return Nothing();
+    }
 
-    UniquePtr<gfxContext> context = gfxContext::CreateOrNull(dt);
-    MOZ_ASSERT(context);
-
-    context->SetMatrix(context->CurrentMatrix()
-                           .PreTranslate(-itemRect.x, -itemRect.y)
-                           .PreScale(scale));
+    gfxContext context(dt);
+    context.SetMatrix(context.CurrentMatrix()
+                          .PreTranslate(-itemRect.x, -itemRect.y)
+                          .PreScale(scale));
 
     bool maskPainted = false;
     bool maskIsComplete = aMaskItem->PaintMask(
-        aDisplayListBuilder, context.get(), shouldHandleOpacity, &maskPainted);
+        aDisplayListBuilder, &context, shouldHandleOpacity, &maskPainted);
     if (!maskPainted) {
       return Nothing();
     }

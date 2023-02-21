@@ -153,8 +153,7 @@ UniquePtr<gfxContext> nsDeviceContext::CreateRenderingContextCommon(
 
   dt->AddUserData(&sDisablePixelSnapping, (void*)0x1, nullptr);
 
-  UniquePtr<gfxContext> pContext = gfxContext::CreateOrNull(dt);
-  MOZ_ASSERT(pContext);  // already checked draw target above
+  auto pContext = MakeUnique<gfxContext>(dt);
 
   gfxMatrix transform;
   transform.PreTranslate(mPrintingTranslate);

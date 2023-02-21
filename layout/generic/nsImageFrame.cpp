@@ -2048,14 +2048,18 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
     RefPtr<TextDrawTarget> textDrawer =
         new TextDrawTarget(aBuilder, aResources, aSc, aManager, aItem, inner,
                            /* aCallerDoesSaveRestore = */ true);
-    UniquePtr<gfxContext> captureCtx = gfxContext::CreateOrNull(textDrawer);
+    MOZ_ASSERT(textDrawer->IsValid());
+    if (textDrawer->IsValid()) {
+      gfxContext captureCtx(textDrawer);
 
-    nsAutoString altText;
-    nsCSSFrameConstructor::GetAlternateTextFor(*mContent->AsElement(), altText);
-    DisplayAltText(PresContext(), *captureCtx.get(), altText, inner);
+      nsAutoString altText;
+      nsCSSFrameConstructor::GetAlternateTextFor(*mContent->AsElement(),
+                                                 altText);
+      DisplayAltText(PresContext(), captureCtx, altText, inner);
 
-    textDrawer->TerminateShadows();
-    textDrawResult = !textDrawer->CheckHasUnsupportedFeatures();
+      textDrawer->TerminateShadows();
+      textDrawResult = !textDrawer->CheckHasUnsupportedFeatures();
+    }
   }
 
   // Purposely ignore local DrawResult because we handled it not being success

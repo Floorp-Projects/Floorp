@@ -226,15 +226,14 @@ Maybe<BlobImageKeyData> BlobSurfaceProvider::RecordDrawing(
     mSVGDocumentWrapper->UpdateViewportBounds(viewportSize);
     mSVGDocumentWrapper->FlushImageTransformInvalidation();
 
-    UniquePtr<gfxContext> ctx = gfxContext::CreateOrNull(dt);
-    MOZ_ASSERT(ctx);  // Already checked the draw target above.
+    gfxContext ctx(dt);
 
     nsRect svgRect;
     auto auPerDevPixel = presContext->AppUnitsPerDevPixel();
     if (size != viewportSize) {
       auto scaleX = double(size.width) / viewportSize.width;
       auto scaleY = double(size.height) / viewportSize.height;
-      ctx->SetMatrix(Matrix::Scaling(float(scaleX), float(scaleY)));
+      ctx.SetMatrix(Matrix::Scaling(float(scaleX), float(scaleY)));
 
       auto scaledVisibleRect = IntRectToRect(imageRect);
       scaledVisibleRect.Scale(float(auPerDevPixel / scaleX),
@@ -261,7 +260,7 @@ Maybe<BlobImageKeyData> BlobSurfaceProvider::RecordDrawing(
 
     presShell->RenderDocument(svgRect, renderDocFlags,
                               NS_RGBA(0, 0, 0, 0),  // transparent
-                              ctx.get());
+                              &ctx);
   }
 
   recorder->FlushItem(imageRectOrigin);

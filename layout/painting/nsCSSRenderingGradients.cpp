@@ -1155,12 +1155,13 @@ bool nsCSSGradientRenderer::TryPaintTilesWithExtendMode(
       return false;
     }
 
-    UniquePtr<gfxContext> tileContext = gfxContext::CreateOrNull(tileTarget);
+    {
+      gfxContext tileContext(tileTarget);
 
-    tileContext->SetPattern(aGradientPattern);
-    tileContext->Paint();
+      tileContext.SetPattern(aGradientPattern);
+      tileContext.Paint();
+    }
 
-    tileContext = nullptr;
     tileSurface = tileTarget->Snapshot();
     tileTarget = nullptr;
   }

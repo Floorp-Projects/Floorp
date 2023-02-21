@@ -4995,7 +4995,7 @@ void CanvasRenderingContext2D::DrawDirectlyToCanvas(
              "Need positive source width and height");
 
   AdjustedTarget tempTarget(this, aBounds->IsEmpty() ? nullptr : aBounds);
-  if (!tempTarget) {
+  if (!tempTarget || !tempTarget->IsValid()) {
     return;
   }
 
@@ -5021,17 +5021,13 @@ void CanvasRenderingContext2D::DrawDirectlyToCanvas(
   // the matrix even though this is a temp gfxContext.
   AutoRestoreTransform autoRestoreTransform(mTarget);
 
-  UniquePtr<gfxContext> context = gfxContext::CreateOrNull(tempTarget);
-  if (!context) {
-    gfxDevCrash(LogReason::InvalidContext) << "Canvas context problem";
-    return;
-  }
-  context->SetMatrixDouble(
+  gfxContext context(tempTarget);
+  context.SetMatrixDouble(
       contextMatrix
           .PreScale(1.0 / contextScale.xScale, 1.0 / contextScale.yScale)
           .PreTranslate(aDest.x - aSrc.x, aDest.y - aSrc.y));
 
-  context->SetOp(tempTarget.UsedOperation());
+  context.SetOp(tempTarget.UsedOperation());
 
   // FLAG_CLAMP is added for increased performance, since we never tile here.
   uint32_t modifiedFlags = aImage.mDrawingFlags | imgIContainer::FLAG_CLAMP;
@@ -5041,7 +5037,7 @@ void CanvasRenderingContext2D::DrawDirectlyToCanvas(
   SVGImageContext svgContext(Some(sz));
 
   auto result = aImage.mImgContainer->Draw(
-      context.get(), scaledImageSize,
+      &context, scaledImageSize,
       ImageRegion::Create(gfxRect(aSrc.x, aSrc.y, aSrc.width, aSrc.height)),
       aImage.mWhichFrame, SamplingFilter::GOOD, svgContext, modifiedFlags,
       CurrentState().globalAlpha);
@@ -5219,7 +5215,7 @@ void CanvasRenderingContext2D::DrawWindow(nsGlobalWindowInner& aWindow,
     return;
   }
 
-  UniquePtr<gfxContext> thebes;
+  Maybe<gfxContext> thebes;
   RefPtr<DrawTarget> drawDT;
   // Rendering directly is faster and can be done if mTarget supports Azure
   // and does not need alpha blending.
@@ -5237,10 +5233,8 @@ void CanvasRenderingContext2D::DrawWindow(nsGlobalWindowInner& aWindow,
   }
   if (op == CompositionOp::OP_OVER &&
       (!mBufferProvider || !mBufferProvider->IsShared())) {
-    thebes = gfxContext::CreateOrNull(mTarget);
-    MOZ_ASSERT(thebes);  // already checked the draw target above
-                         // (in SupportsAzureContentForDrawTarget)
-    thebes->SetMatrix(matrix);
+    thebes.emplace(mTarget);
+    thebes.ref().SetMatrix(matrix);
   } else {
     IntSize dtSize = IntSize::Ceil(sw, sh);
     if (!Factory::AllowedSurfaceSize(dtSize)) {
@@ -5261,15 +5255,15 @@ void CanvasRenderingContext2D::DrawWindow(nsGlobalWindowInner& aWindow,
       return;
     }
 
-    thebes = gfxContext::CreateOrNull(drawDT);
-    MOZ_ASSERT(thebes);  // alrady checked the draw target above
-    thebes->SetMatrix(Matrix::Scaling(matrix._11, matrix._22));
+    thebes.emplace(drawDT);
+    thebes.ref().SetMatrix(Matrix::Scaling(matrix._11, matrix._22));
   }
+  MOZ_ASSERT(thebes.isSome());
 
   RefPtr<PresShell> presShell = presContext->PresShell();
 
   Unused << presShell->RenderDocument(r, renderDocFlags, backgroundColor,
-                                      thebes.get());
+                                      &thebes.ref());
   // If this canvas was contained in the drawn window, the pre-transaction
   // callback may have returned its DT. If so, we must reacquire it here.
   EnsureTarget(discardContent ? &drawRect : nullptr);

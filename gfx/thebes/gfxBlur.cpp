@@ -36,12 +36,11 @@ UniquePtr<gfxContext> gfxAlphaBoxBlur::Init(gfxContext* aDestinationCtx,
   RefPtr<DrawTarget> dt = InitDrawTarget(
       refDT, ToRect(aRect), aSpreadRadius, aBlurRadius,
       dirtyRect.ptrOr(nullptr), skipRect.ptrOr(nullptr), aUseHardwareAccel);
-  if (!dt) {
+  if (!dt || !dt->IsValid()) {
     return nullptr;
   }
 
-  UniquePtr<gfxContext> context = gfxContext::CreateOrNull(dt);
-  MOZ_ASSERT(context);  // already checked for target above
+  auto context = MakeUnique<gfxContext>(dt);
   context->SetMatrix(Matrix::Translation(-mBlur.GetRect().TopLeft()));
   return context;
 }

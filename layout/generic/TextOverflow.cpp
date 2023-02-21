@@ -270,8 +270,12 @@ bool nsDisplayTextOverflowMarker::CreateWebRenderCommands(
   // Run the rendering algorithm to capture the glyphs and shadows
   RefPtr<TextDrawTarget> textDrawer =
       new TextDrawTarget(aBuilder, aResources, aSc, aManager, this, bounds);
-  UniquePtr<gfxContext> captureCtx = gfxContext::CreateOrNull(textDrawer);
-  Paint(aDisplayListBuilder, captureCtx.get());
+  MOZ_ASSERT(textDrawer->IsValid());
+  if (!textDrawer->IsValid()) {
+    return false;
+  }
+  gfxContext captureCtx(textDrawer);
+  Paint(aDisplayListBuilder, &captureCtx);
   textDrawer->TerminateShadows();
 
   return textDrawer->Finish();
