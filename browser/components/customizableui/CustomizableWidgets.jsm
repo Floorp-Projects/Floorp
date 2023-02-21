@@ -494,7 +494,8 @@ if (!lazy.screenshotsDisabled) {
       if (lazy.SCREENSHOT_BROWSER_COMPONENT) {
         Services.obs.notifyObservers(
           aEvent.currentTarget.ownerGlobal,
-          "menuitem-screenshot"
+          "menuitem-screenshot",
+          "toolbar_button"
         );
       } else {
         Services.obs.notifyObservers(

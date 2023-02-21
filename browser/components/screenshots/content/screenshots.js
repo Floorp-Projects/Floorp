@@ -5,10 +5,6 @@
 
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 ChromeUtils.defineESModuleGetters(this, {
   Downloads: "resource://gre/modules/Downloads.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
@@ -52,6 +48,7 @@ class ScreenshotsUI extends HTMLElement {
   async handleEvent(event) {
     if (event.type == "click" && event.currentTarget == this._cancelButton) {
       this.close();
+      ScreenshotsUtils.recordTelemetryEvent("canceled", "preview_cancel", {});
     } else if (
       event.type == "click" &&
       event.currentTarget == this._copyButton
@@ -86,12 +83,16 @@ class ScreenshotsUI extends HTMLElement {
     );
 
     this.close();
+
+    ScreenshotsUtils.recordTelemetryEvent("download", "preview_download", {});
   }
 
   saveToClipboard(dataUrl) {
     ScreenshotsUtils.copyScreenshot(dataUrl);
 
     this.close();
+
+    ScreenshotsUtils.recordTelemetryEvent("copy", "preview_copy", {});
   }
 }
 customElements.define("screenshots-ui", ScreenshotsUI);
