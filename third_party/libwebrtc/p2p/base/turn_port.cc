@@ -1206,6 +1206,12 @@ bool TurnPort::CreateOrRefreshEntry(const rtc::SocketAddress& addr,
   return CreateOrRefreshEntry(addr, channel_number, "");
 }
 
+bool TurnPort::CreateOrRefreshEntry(Connection* conn, int channel_number) {
+  return CreateOrRefreshEntry(conn->remote_candidate().address(),
+                              channel_number,
+                              conn->remote_candidate().username());
+}
+
 bool TurnPort::CreateOrRefreshEntry(const rtc::SocketAddress& addr,
                                     int channel_number,
                                     absl::string_view remote_ufrag) {
@@ -1214,33 +1220,34 @@ bool TurnPort::CreateOrRefreshEntry(const rtc::SocketAddress& addr,
     entry = new TurnEntry(this, channel_number, addr, remote_ufrag);
     entries_.push_back(entry);
     return true;
-  } else {
-    if (entry->destruction_timestamp()) {
-      // Destruction should have only been scheduled (indicated by
-      // destruction_timestamp being set) if there were no connections using
-      // this address.
-      RTC_DCHECK(!GetConnection(addr));
-      // Resetting the destruction timestamp will ensure that any queued
-      // destruction tasks, when executed, will see that the timestamp doesn't
-      // match and do nothing. We do this because (currently) there's not a
-      // convenient way to cancel queued tasks.
-      entry->reset_destruction_timestamp();
-    } else {
-      // The only valid reason for destruction not being scheduled is that
-      // there's still one connection.
-      RTC_DCHECK(GetConnection(addr));
-    }
+  }
 
-    if (field_trials().IsEnabled("WebRTC-TurnAddMultiMapping")) {
-      if (entry->get_remote_ufrag() != remote_ufrag) {
-        RTC_LOG(LS_INFO) << ToString()
-                         << ": remote ufrag updated."
-                            " Sending new permission request";
-        entry->set_remote_ufrag(remote_ufrag);
-        entry->SendCreatePermissionRequest(0);
-      }
+  if (entry->destruction_timestamp()) {
+    // Destruction should have only been scheduled (indicated by
+    // destruction_timestamp being set) if there were no connections using
+    // this address.
+    RTC_DCHECK(!GetConnection(addr));
+    // Resetting the destruction timestamp will ensure that any queued
+    // destruction tasks, when executed, will see that the timestamp doesn't
+    // match and do nothing. We do this because (currently) there's not a
+    // convenient way to cancel queued tasks.
+    entry->reset_destruction_timestamp();
+  } else {
+    // The only valid reason for destruction not being scheduled is that
+    // there's still one connection.
+    RTC_DCHECK(GetConnection(addr));
+  }
+
+  if (field_trials().IsEnabled("WebRTC-TurnAddMultiMapping")) {
+    if (entry->get_remote_ufrag() != remote_ufrag) {
+      RTC_LOG(LS_INFO) << ToString()
+                       << ": remote ufrag updated."
+                          " Sending new permission request";
+      entry->set_remote_ufrag(remote_ufrag);
+      entry->SendCreatePermissionRequest(0);
     }
   }
+
   return false;
 }
 
