@@ -10906,9 +10906,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::ChangeMarginStart(
   RefPtr<nsAtom> unit;
   CSSEditUtils::ParseLength(value, &f, getter_AddRefs(unit));
   if (!f) {
-    nsAutoString defaultLengthUnit;
-    CSSEditUtils::GetDefaultLengthUnit(defaultLengthUnit);
-    unit = NS_Atomize(defaultLengthUnit);
+    unit = nsGkAtoms::px;
   }
   int8_t multiplier = aChangeMargin == ChangeMargin::Increase ? 1 : -1;
   if (nsGkAtoms::in == unit) {
