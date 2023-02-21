@@ -3231,16 +3231,22 @@ static inline bool IsThinLine(const Matrix& aTransform,
 bool DrawTargetWebgl::StrokeLineAccel(const Point& aStart, const Point& aEnd,
                                       const Pattern& aPattern,
                                       const StrokeOptions& aStrokeOptions,
-                                      const DrawOptions& aOptions) {
+                                      const DrawOptions& aOptions,
+                                      bool aClosed) {
   // Approximating a wide line as a rectangle works only with certain cap styles
   // in the general case (butt or square). However, if the line width is
   // sufficiently thin, we can either ignore the round cap (or treat it like
   // square for zero-length lines) without causing objectionable artifacts.
+  // Lines may sometimes be used in closed paths that immediately reverse back,
+  // in which case we need to use mLineJoin instead of mLineCap to determine the
+  // actual cap used.
+  CapStyle capStyle =
+      aClosed ? (aStrokeOptions.mLineJoin == JoinStyle::ROUND ? CapStyle::ROUND
+                                                              : CapStyle::BUTT)
+              : aStrokeOptions.mLineCap;
   if (mWebglValid && SupportsPattern(aPattern) &&
-      (aStrokeOptions.mLineCap == CapStyle::BUTT ||
-       aStrokeOptions.mLineCap == CapStyle::SQUARE ||
-       (aStrokeOptions.mLineCap == CapStyle::ROUND &&
-        IsThinLine(GetTransform(), aStrokeOptions))) &&
+      (capStyle != CapStyle::ROUND ||
+       IsThinLine(GetTransform(), aStrokeOptions)) &&
       aStrokeOptions.mDashPattern == nullptr && aStrokeOptions.mLineWidth > 0) {
     // Treat the line as a rectangle whose center-line is the supplied line and
     // for which the height is the supplied line width. Generate a matrix that
@@ -3254,7 +3260,7 @@ bool DrawTargetWebgl::StrokeLineAccel(const Point& aStart, const Point& aEnd,
     float scale = aStrokeOptions.mLineWidth;
     if (dirLen == 0.0f) {
       // If the line is zero-length, then only a cap is rendered.
-      switch (aStrokeOptions.mLineCap) {
+      switch (capStyle) {
         case CapStyle::BUTT:
           // The cap doesn't extend beyond the line so nothing is drawn.
           return true;
@@ -3271,7 +3277,7 @@ bool DrawTargetWebgl::StrokeLineAccel(const Point& aStart, const Point& aEnd,
       // Make the scale map to a single unit length.
       scale /= dirLen;
       dirY = Point(-dirX.y, dirX.x) * scale;
-      if (aStrokeOptions.mLineCap == CapStyle::SQUARE) {
+      if (capStyle == CapStyle::SQUARE) {
         // Offset the start by half a unit.
         start -= (dirX * scale) * 0.5f;
         // Ensure the extent also accounts for the start and end cap.
@@ -3331,11 +3337,13 @@ void DrawTargetWebgl::Stroke(const Path* aPath, const Pattern& aPattern,
     skiaPath.getVerbs(verbs, numVerbs);
     if (verbs[0] == SkPath::kMove_Verb && verbs[1] == SkPath::kLine_Verb &&
         (numVerbs < 3 || verbs[2] == SkPath::kClose_Verb)) {
+      bool closed = numVerbs >= 3;
       Point start = SkPointToPoint(skiaPath.getPoint(0));
       Point end = SkPointToPoint(skiaPath.getPoint(1));
-      if (StrokeLineAccel(start, end, aPattern, aStrokeOptions, aOptions)) {
-        if (numVerbs >= 3) {
-          StrokeLineAccel(end, start, aPattern, aStrokeOptions, aOptions);
+      if (StrokeLineAccel(start, end, aPattern, aStrokeOptions, aOptions,
+                          closed)) {
+        if (closed) {
+          StrokeLineAccel(end, start, aPattern, aStrokeOptions, aOptions, true);
         }
         return;
       }
