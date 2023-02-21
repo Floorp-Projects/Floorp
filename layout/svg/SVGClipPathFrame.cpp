@@ -232,14 +232,8 @@ already_AddRefed<SourceSurface> SVGClipPathFrame::GetClipMask(
     return nullptr;
   }
 
-  UniquePtr<gfxContext> maskContext =
-      gfxContext::CreatePreservingTransformOrNull(maskDT);
-  if (!maskContext) {
-    gfxCriticalError() << "SVGClipPath context problem " << gfx::hexa(maskDT);
-    return nullptr;
-  }
-
-  PaintClipMask(*maskContext, aClippedFrame, aMatrix, aExtraMask);
+  gfxContext maskContext(maskDT, /* aPreserveTransform */ true);
+  PaintClipMask(maskContext, aClippedFrame, aMatrix, aExtraMask);
 
   RefPtr<SourceSurface> surface = maskDT->Snapshot();
   return surface.forget();

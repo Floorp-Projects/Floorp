@@ -59,15 +59,17 @@ class gfxContext final {
 
  public:
   /**
-   * Initialize this context from a DrawTarget.
-   * Strips any transform from aTarget.
-   * aTarget will be flushed in the gfxContext's destructor.  Use the static
-   * ContextForDrawTargetNoTransform() when you want this behavior, as that
-   * version deals with null DrawTarget better.
+   * Initialize this context from a DrawTarget, which must be non-null.
+   * Strips any transform from aTarget, unless aPreserveTransform is true.
+   * aTarget will be flushed in the gfxContext's destructor.
    */
+  MOZ_NONNULL(2)
   explicit gfxContext(
       mozilla::gfx::DrawTarget* aTarget,
       const mozilla::gfx::Point& aDeviceOffset = mozilla::gfx::Point());
+
+  MOZ_NONNULL(2)
+  gfxContext(mozilla::gfx::DrawTarget* aTarget, bool aPreserveTransform);
 
   ~gfxContext();
 
@@ -81,16 +83,6 @@ class gfxContext final {
   static mozilla::UniquePtr<gfxContext> CreateOrNull(
       mozilla::gfx::DrawTarget* aTarget,
       const mozilla::gfx::Point& aDeviceOffset = mozilla::gfx::Point());
-
-  /**
-   * Create a new gfxContext wrapping aTarget and preserving aTarget's
-   * transform. Note that the transform is moved from aTarget to the resulting
-   * gfxContext, aTarget will no longer have its transform.
-   * If aTarget is null or invalid, nullptr is returned.  The caller
-   * is responsible for handling this scenario as appropriate.
-   */
-  static mozilla::UniquePtr<gfxContext> CreatePreservingTransformOrNull(
-      mozilla::gfx::DrawTarget* aTarget);
 
   mozilla::gfx::DrawTarget* GetDrawTarget() { return mDT; }
 

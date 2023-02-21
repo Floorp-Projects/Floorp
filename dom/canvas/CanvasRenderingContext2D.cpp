@@ -3857,14 +3857,8 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
       return;
     }
 
-    UniquePtr<gfxContext> thebes =
-        gfxContext::CreatePreservingTransformOrNull(target);
-    if (!thebes) {
-      // If CreatePreservingTransformOrNull returns null, it will also have
-      // issued a gfxCriticalNote already, so here we'll just bail out.
-      return;
-    }
-    gfxTextRun::DrawParams params(thebes.get());
+    gfxContext thebes(target, /* aPreserveTransform */ true);
+    gfxTextRun::DrawParams params(&thebes);
 
     params.allowGDI = false;
 

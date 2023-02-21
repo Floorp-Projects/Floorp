@@ -3852,7 +3852,7 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
   if (!dt || !dt->IsValid()) {
     return FALSE;
   }
-  UniquePtr<gfxContext> ctx;
+  Maybe<gfxContext> ctx;
   IntRect boundsRect = region.GetBounds().ToUnknownRect();
   IntPoint offset(0, 0);
   if (dt->GetSize() == boundsRect.Size()) {
@@ -3878,12 +3878,11 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
       return FALSE;
     }
     destDT->SetTransform(Matrix::Translation(-boundsRect.TopLeft()));
-    ctx = gfxContext::CreatePreservingTransformOrNull(destDT);
+    ctx.emplace(destDT, /* aPreserveTransform */ true);
   } else {
     gfxUtils::ClipToRegion(dt, region.ToUnknownRegion());
-    ctx = gfxContext::CreatePreservingTransformOrNull(dt);
+    ctx.emplace(dt, /* aPreserveTransform */ true);
   }
-  MOZ_ASSERT(ctx);  // checked both dt and destDT valid draw target above
 
 #  if 0
     // NOTE: Paint flashing region would be wrong for cairo, since
@@ -3908,7 +3907,8 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
         // reused SHM image. See bug 1258086.
         dt->ClearRect(Rect(boundsRect));
       }
-      AutoLayerManagerSetup setupLayerManager(this, ctx.get(), layerBuffering);
+      AutoLayerManagerSetup setupLayerManager(
+          this, ctx.isNothing() ? nullptr : &ctx.ref(), layerBuffering);
       painted = listener->PaintWindow(this, region);
 
       // Re-get the listener since the will paint notification might have
@@ -3936,7 +3936,7 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
     }
   }
 
-  ctx = nullptr;
+  ctx.reset();
   dt->PopClip();
 
 #endif  // MOZ_X11
