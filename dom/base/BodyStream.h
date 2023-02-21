@@ -140,20 +140,8 @@ class BodyStream final : public nsIInputStreamCallback,
     // This is the beginning state before any reading operation.
     eInitializing,
 
-    // RequestDataCallback has not been called yet. We haven't started to read
-    // data from the stream yet.
-    eWaiting,
-
-    // We are reading data in a separate I/O thread.
-    eReading,
-
-    // We are ready to write something in the JS Buffer.
-    eWriting,
-
-    // After a writing, we want to check if the stream is closed. After the
-    // check, we go back to eWaiting. If a reading request happens in the
-    // meantime, we move to eReading state.
-    eChecking,
+    // Stream is initialized and being consumed.
+    eInitialized,
 
     // Operation completed.
     eClosed,
@@ -166,6 +154,9 @@ class BodyStream final : public nsIInputStreamCallback,
   nsCOMPtr<nsIGlobalObject> mGlobal;
   RefPtr<BodyStreamHolder> mStreamHolder;
   nsCOMPtr<nsIEventTarget> mOwningEventTarget;
+  // Same as mGlobal but set to nullptr on OnInputStreamReady (on the owning
+  // thread).
+  RefPtr<Promise> mPullPromise;
 
   // This is the original inputStream received during the CTOR. It will be
   // converted into an nsIAsyncInputStream and stored into mInputStream at the
