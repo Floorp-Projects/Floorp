@@ -1120,7 +1120,11 @@ export class NetworkObserver {
   #isFromCache(httpActivity) {
     const { channel } = httpActivity;
     if (channel instanceof Ci.nsICacheInfoChannel) {
-      return channel.isFromCache();
+      try {
+        return channel.isFromCache();
+      } catch (e) {
+        // Bug 1817750: isFromCache() can throw when called after onStopRequest.
+      }
     }
 
     return false;
