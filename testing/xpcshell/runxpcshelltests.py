@@ -1543,6 +1543,9 @@ class XPCShellTests(object):
         self.mozInfo = fixedInfo
 
         self.mozInfo["fission"] = prefs.get("fission.autostart", True)
+        self.mozInfo["sessionHistoryInParent"] = self.mozInfo["fission"] or prefs.get(
+            "fission.sessionHistoryInParent", False
+        )
 
         self.mozInfo["serviceworker_e10s"] = True
 

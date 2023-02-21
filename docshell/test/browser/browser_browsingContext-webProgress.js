@@ -28,20 +28,20 @@ add_task(async function() {
   await loaded;
 
   const firstPageBrowsingContext = browser.browsingContext;
-  const isFissionAndBfcacheInParentEnabled =
-    SpecialPowers.useRemoteSubframes &&
+  const isBfcacheInParentEnabled =
+    SpecialPowers.Services.appinfo.sessionHistoryInParent &&
     SpecialPowers.Services.prefs.getBoolPref("fission.bfcacheInParent");
-  if (isFissionAndBfcacheInParentEnabled) {
+  if (isBfcacheInParentEnabled) {
     isnot(
       aboutBlankBrowsingContext,
       firstPageBrowsingContext,
-      "With fission and bfcache in parent, navigations spawn a new BrowsingContext"
+      "With bfcache in parent, navigations spawn a new BrowsingContext"
     );
   } else {
     is(
       aboutBlankBrowsingContext,
       firstPageBrowsingContext,
-      "Without fission or bfcache in parent, navigations reuse the same BrowsingContext"
+      "Without bfcache in parent, navigations reuse the same BrowsingContext"
     );
   }
 
@@ -113,17 +113,17 @@ add_task(async function() {
   await loaded;
 
   const secondPageBrowsingContext = browser.browsingContext;
-  if (isFissionAndBfcacheInParentEnabled) {
+  if (isBfcacheInParentEnabled) {
     isnot(
       firstPageBrowsingContext,
       secondPageBrowsingContext,
-      "With fission and bfcache in parent, navigations spawn a new BrowsingContext"
+      "With bfcache in parent, navigations spawn a new BrowsingContext"
     );
   } else {
     is(
       firstPageBrowsingContext,
       secondPageBrowsingContext,
-      "Without fission or bfcache in parent, navigations reuse the same BrowsingContext"
+      "Without bfcache in parent, navigations reuse the same BrowsingContext"
     );
   }
   {

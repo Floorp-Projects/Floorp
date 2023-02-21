@@ -105,7 +105,7 @@ async function openURIInPrivateTab(uri) {
   );
 
   if (
-    SpecialPowers.Services.prefs.getBoolPref("fission.bfcacheInParent") &&
+    SpecialPowers.Services.appinfo.sessionHistoryInParent &&
     currRemoteType == prevRemoteType &&
     uri == "about:blank"
   ) {

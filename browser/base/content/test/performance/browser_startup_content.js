@@ -58,7 +58,7 @@ const known_scripts = {
   ]),
 };
 
-if (!gFissionBrowser) {
+if (!Services.appinfo.sessionHistoryInParent) {
   known_scripts.modules.add(
     "resource:///modules/sessionstore/ContentSessionStore.sys.mjs"
   );
