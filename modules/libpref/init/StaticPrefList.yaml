@@ -4840,15 +4840,6 @@
   value: "#FFFFFF"
   mirror: never
 
-# Allow or disallow to delete `<hr>` element when caret is at start of
-# following line of the element.  If false, Backspace from start of following
-# line of an `<hr>` element causes moving caret to immediatly after the `<hr>`
-# element, and then, another Backspace can delete it.
-- name: editor.hr_element.allow_to_delete_from_following_line
-  type: bool
-  value: true
-  mirror: always
-
 # Whether editor initializes attributes and/or child nodes of newly inserting
 # element before or after connecting to the DOM tree.
 - name: editor.initialize_element_before_connect
