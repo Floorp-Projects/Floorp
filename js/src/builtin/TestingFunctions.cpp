@@ -9247,6 +9247,10 @@ void js::FuzzilliHashObject(JSContext* cx, JSObject* obj) {
 
 void js::FuzzilliHashObjectInl(JSContext* cx, JSObject* obj, uint32_t* out) {
   *out = 0;
+  if (!js::SupportDifferentialTesting()) {
+    return;
+  }
+
   RootedValue v(cx);
   v.setObject(*obj);
 
