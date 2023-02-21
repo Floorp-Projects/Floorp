@@ -2341,7 +2341,6 @@ void ScrollFrameHelper::AsyncScroll::InitSmoothScroll(
   mAnimationPhysics->Update(aTime, aDestination, aCurrentVelocity);
 }
 
-/* static */
 bool ScrollFrameHelper::IsSmoothScrollingEnabled() {
   return StaticPrefs::general_smoothScroll();
 }
@@ -8416,13 +8415,6 @@ bool ScrollFrameHelper::SmoothScrollVisual(
 }
 
 bool ScrollFrameHelper::IsSmoothScroll(dom::ScrollBehavior aBehavior) const {
-  // The user smooth scrolling preference should be honored for any requested
-  // smooth scrolls. A requested smooth scroll when smooth scrolling is
-  // disabled should be equivalent to an instant scroll.
-  if (!ScrollFrameHelper::IsSmoothScrollingEnabled()) {
-    return false;
-  }
-
   if (aBehavior == dom::ScrollBehavior::Smooth) {
     return true;
   }

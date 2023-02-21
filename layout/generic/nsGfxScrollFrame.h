@@ -150,7 +150,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   void PostScrolledAreaEvent();
   MOZ_CAN_RUN_SCRIPT void FireScrolledAreaEvent();
 
-  static bool IsSmoothScrollingEnabled();
+  bool IsSmoothScrollingEnabled();
 
   /**
    * @note This method might destroy the frame, pres shell and other objects.
