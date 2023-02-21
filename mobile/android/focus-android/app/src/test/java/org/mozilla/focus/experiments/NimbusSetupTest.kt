@@ -18,10 +18,8 @@ class NimbusSetupTest {
 
     @Test
     fun `WHEN error is non-reportable THEN return false`() {
-        val error1 = NimbusException.ResponseException("ResponseException")
-        val error2 = NimbusException.RequestException("RequestException")
+        val error = NimbusException.ClientException("ResponseException")
 
-        assertFalse(error1.isReportableError())
-        assertFalse(error2.isReportableError())
+        assertFalse(error.isReportableError())
     }
 }

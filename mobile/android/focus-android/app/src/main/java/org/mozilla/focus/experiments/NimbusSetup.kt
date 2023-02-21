@@ -117,9 +117,7 @@ fun getNimbusAppName(): String {
  */
 fun NimbusException.isReportableError(): Boolean {
     return when (this) {
-        is NimbusException.RequestException,
-        is NimbusException.ResponseException,
-        -> false
+        is NimbusException.ClientException -> false
         else -> true
     }
 }
