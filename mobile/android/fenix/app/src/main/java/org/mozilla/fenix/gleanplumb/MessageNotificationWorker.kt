@@ -147,7 +147,8 @@ class MessageNotificationWorker(
          * Initialize the [Worker] to begin polling Nimbus.
          */
         fun setMessageNotificationWorker(context: Context) {
-            val featureConfig = FxNimbus.features.messaging.value()
+            val messaging = FxNimbus.features.messaging
+            val featureConfig = messaging.value()
             val notificationConfig = featureConfig.notificationConfig
             val pollingInterval = notificationConfig.refreshInterval.toLong()
 
@@ -159,8 +160,13 @@ class MessageNotificationWorker(
             val instanceWorkManager = WorkManager.getInstance(context)
             instanceWorkManager.enqueueUniquePeriodicWork(
                 MESSAGE_WORK_NAME,
-                // We want to keep any existing scheduled work.
-                ExistingPeriodicWorkPolicy.KEEP,
+                // We want to keep any existing scheduled work, unless
+                // when we're under test.
+                if (messaging.isUnderTest()) {
+                    ExistingPeriodicWorkPolicy.REPLACE
+                } else {
+                    ExistingPeriodicWorkPolicy.KEEP
+                },
                 messageWorkRequest,
             )
         }
