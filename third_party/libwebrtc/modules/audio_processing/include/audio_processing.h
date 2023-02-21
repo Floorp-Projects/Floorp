@@ -62,7 +62,6 @@ static constexpr int kAgcStartupMinVolume = 85;
 #else
 static constexpr int kAgcStartupMinVolume = 0;
 #endif  // defined(WEBRTC_CHROMIUM_BUILD)
-static constexpr int kClippedLevelMin = 70;
 
 // The Audio Processing Module (APM) provides a collection of voice processing
 // components designed for real-time communications software.
@@ -291,7 +290,7 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
         int startup_min_volume = kAgcStartupMinVolume;
         // Lowest analog microphone level that will be applied in response to
         // clipping.
-        int clipped_level_min = kClippedLevelMin;
+        int clipped_level_min = 70;
         // If true, an adaptive digital gain is applied.
         bool enable_digital_adaptive = true;
         // Amount the microphone level is lowered with every clipping event.
