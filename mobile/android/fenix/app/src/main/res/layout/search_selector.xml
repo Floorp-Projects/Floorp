@@ -13,7 +13,7 @@
         android:layout_width="40dp"
         android:layout_height="28dp"
         android:layout_marginHorizontal="8dp"
-        app:cardBackgroundColor="@color/photonWhite"
+        app:cardBackgroundColor="?attr/layer2"
         app:cardCornerRadius="4dp"
         app:cardElevation="0dp">
 
@@ -41,7 +41,7 @@
                 android:layout_height="6dp"
                 android:importantForAccessibility="no"
                 app:srcCompat="@drawable/ic_chevron_down_6"
-                app:tint="@color/photonBlack"
+                app:tint="?attr/textPrimary"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent" />
