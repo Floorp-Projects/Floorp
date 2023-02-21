@@ -18,7 +18,7 @@ function getSelectRect() {
     x = resolution * (x - offsetX.value);
     y = resolution * (y - offsetY.value);
 
-    let fullZoom = SpecialPowers.getFullZoom(window);
+    let fullZoom = SpecialPowers.getDOMWindowUtils(window).fullZoom;
     rect = {
       left: x * fullZoom,
       top: y * fullZoom,

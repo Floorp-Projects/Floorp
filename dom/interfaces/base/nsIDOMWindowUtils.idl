@@ -1182,6 +1182,14 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute Node nodeObservedByIMEContentObserver;
 
   /**
+   * Get the current zoom factor.
+   * This is _approximately_ the same as nsIContentViewer.fullZoom,
+   * but takes into account Gecko's quantization of the zoom factor, which is
+   * implemented by adjusting the (integer) number of appUnits per devPixel.
+   */
+  readonly attribute float fullZoom;
+
+  /**
    * Dispatches aEvent as a synthesized trusted event for tests via the
    * PresShell object of the window's document.
    * The event is dispatched to aTarget, which should be an object
