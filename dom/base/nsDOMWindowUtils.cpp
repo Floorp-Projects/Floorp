@@ -2251,20 +2251,6 @@ nsDOMWindowUtils::GetViewId(Element* aElement, nsViewID* aResult) {
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-NS_IMETHODIMP
-nsDOMWindowUtils::GetFullZoom(float* aFullZoom) {
-  *aFullZoom = 1.0f;
-
-  nsPresContext* presContext = GetPresContext();
-  if (!presContext) {
-    return NS_OK;
-  }
-
-  *aFullZoom = presContext->DeviceContext()->GetFullZoom();
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsDOMWindowUtils::DispatchDOMEventViaPresShellForTesting(
     nsINode* aTarget, Event* aEvent, bool* aRetVal) {
   NS_ENSURE_STATE(aEvent);
