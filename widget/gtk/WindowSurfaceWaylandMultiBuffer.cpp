@@ -14,6 +14,7 @@
 #include "gfx2DGlue.h"
 #include "gfxPlatform.h"
 #include "MozContainer.h"
+#include "GtkCompositorWidget.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/ScopeExit.h"
@@ -152,11 +153,28 @@ using gfx::DataSourceSurface;
 
 #define BACK_BUFFER_NUM 3
 
-WindowSurfaceWaylandMB::WindowSurfaceWaylandMB(RefPtr<nsWindow> aWindow)
+WindowSurfaceWaylandMB::WindowSurfaceWaylandMB(
+    RefPtr<nsWindow> aWindow, GtkCompositorWidget* aCompositorWidget)
     : mSurfaceLock("WindowSurfaceWayland lock"),
       mWindow(std::move(aWindow)),
+      mCompositorWidget(aCompositorWidget),
       mFrameInProcess(false),
       mCallbackRequested(false) {}
+
+bool WindowSurfaceWaylandMB::MaybeUpdateWindowSize() {
+  // We want to get window size from compositor widget as it matches window
+  // size used by parent RenderCompositorSWGL rendrer.
+  // For main thread rendering mCompositorWidget is not available so get
+  // window size directly from nsWindow.
+  LayoutDeviceIntSize newWindowSize = mCompositorWidget
+                                          ? mCompositorWidget->GetClientSize()
+                                          : mWindow->GetClientSize();
+  if (mWindowSize != newWindowSize) {
+    mWindowSize = newWindowSize;
+    return true;
+  }
+  return false;
+}
 
 already_AddRefed<DrawTarget> WindowSurfaceWaylandMB::Lock(
     const LayoutDeviceIntRegion& aInvalidRegion) {
@@ -176,11 +194,9 @@ already_AddRefed<DrawTarget> WindowSurfaceWaylandMB::Lock(
 
   CollectPendingSurfaces(lock);
 
-  LayoutDeviceIntSize newMozContainerSize = mWindow->GetMozContainerSize();
-  if (mMozContainerSize != newMozContainerSize) {
-    mMozContainerSize = newMozContainerSize;
-    LOGWAYLAND("  new MozContainer size [%d x %d]", mMozContainerSize.width,
-               mMozContainerSize.height);
+  if (MaybeUpdateWindowSize()) {
+    LOGWAYLAND("  new window size [%d x %d]", mWindowSize.width,
+               mWindowSize.height);
     if (mInProgressBuffer) {
       ReturnBufferToPool(lock, mInProgressBuffer);
       mInProgressBuffer = nullptr;
@@ -196,7 +212,7 @@ already_AddRefed<DrawTarget> WindowSurfaceWaylandMB::Lock(
     if (mFrontBuffer && !mFrontBuffer->IsAttached()) {
       mInProgressBuffer = mFrontBuffer;
     } else {
-      mInProgressBuffer = ObtainBufferFromPool(lock, mMozContainerSize);
+      mInProgressBuffer = ObtainBufferFromPool(lock, mWindowSize);
       if (!mInProgressBuffer) {
         return nullptr;
       }
@@ -257,9 +273,9 @@ void WindowSurfaceWaylandMB::Commit(
   gfx::IntRect invalidRect = aInvalidRegion.GetBounds().ToUnknownRect();
   LOGWAYLAND(
       "WindowSurfaceWaylandMB::Commit [%p] damage rect [%d, %d] -> [%d x %d] "
-      "MozContainer [%d x %d]\n",
+      "Window [%d x %d]\n",
       (void*)mWindow.get(), invalidRect.x, invalidRect.y, invalidRect.width,
-      invalidRect.height, mMozContainerSize.width, mMozContainerSize.height);
+      invalidRect.height, mWindowSize.width, mWindowSize.height);
 #endif
 
   if (!mInProgressBuffer) {
@@ -341,7 +357,7 @@ void WindowSurfaceWaylandMB::ReturnBufferToPool(
     const RefPtr<WaylandBufferSHM>& aBuffer) {
   if (aBuffer->IsAttached()) {
     mPendingBuffers.AppendElement(aBuffer);
-  } else if (aBuffer->IsMatchingSize(mMozContainerSize)) {
+  } else if (aBuffer->IsMatchingSize(mWindowSize)) {
     mAvailableBuffers.AppendElement(aBuffer);
   }
   mInUseBuffers.RemoveElement(aBuffer);
@@ -365,7 +381,7 @@ void WindowSurfaceWaylandMB::CollectPendingSurfaces(
     const MutexAutoLock& aProofOfLock) {
   mPendingBuffers.RemoveElementsBy([&](auto& buffer) {
     if (!buffer->IsAttached()) {
-      if (buffer->IsMatchingSize(mMozContainerSize)) {
+      if (buffer->IsMatchingSize(mWindowSize)) {
         mAvailableBuffers.AppendElement(std::move(buffer));
       }
       return true;
