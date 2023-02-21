@@ -134,24 +134,17 @@ class BodyStream final : public nsIInputStreamCallback,
 
   void ReleaseObjects();
 
+  // The closed state should ultimately be managed by the source algorithms
+  // class. See also bug 1815997.
+  bool IsClosed() { return !mStreamHolder; }
+
   // Common methods
-
-  enum State {
-    // This is the beginning state before any reading operation.
-    eInitializing,
-
-    // Stream is initialized and being consumed.
-    eInitialized,
-
-    // Operation completed.
-    eClosed,
-  };
-
-  State mState;
 
   // mGlobal is set on creation, and isn't modified off the owning thread.
   // It isn't set to nullptr until ReleaseObjects() runs.
   nsCOMPtr<nsIGlobalObject> mGlobal;
+  // Same for mStreamHolder. mStreamHolder being nullptr means the stream is
+  // closed.
   RefPtr<BodyStreamHolder> mStreamHolder;
   nsCOMPtr<nsIEventTarget> mOwningEventTarget;
   // Same as mGlobal but set to nullptr on OnInputStreamReady (on the owning
