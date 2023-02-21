@@ -1,16 +1,11 @@
 "use strict";
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { ExtensionPermissions } = ChromeUtils.import(
-  "resource://gre/modules/ExtensionPermissions.jsm"
-);
-
-add_task(async function setup() {
-  // Bug 1646182: Force ExtensionPermissions to run in rkv mode, because this
-  // test does not make sense with the legacy method (which will be removed in
-  // the above bug).
-  await ExtensionPermissions._uninit();
-});
+const {
+  ExtensionPermissions,
+  OLD_JSON_FILENAME,
+  OLD_RKV_DIRNAME,
+  RKV_DIRNAME,
+} = ChromeUtils.import("resource://gre/modules/ExtensionPermissions.jsm");
 
 const GOOD_JSON_FILE = {
   "wikipedia@search.mozilla.org": {
@@ -33,16 +28,15 @@ const BAD_JSON_FILE = {
 
 const BAD_FILE = "what is this { } {";
 
-const gOldSettingsJSON = do_get_profile().clone();
-gOldSettingsJSON.append("extension-preferences.json");
+const gOldJSONPath = FileUtils.getDir("ProfD", [OLD_JSON_FILENAME]).path;
+const gOldRkvPath = FileUtils.getDir("ProfD", [OLD_RKV_DIRNAME]).path;
+const gNewRkvPath = FileUtils.getDir("ProfD", [RKV_DIRNAME]).path;
 
 async function test_file(json, extensionIds, expected, fileDeleted) {
   await ExtensionPermissions._resetVersion();
   await ExtensionPermissions._uninit();
 
-  await OS.File.writeAtomic(gOldSettingsJSON.path, json, {
-    encoding: "utf-8",
-  });
+  await IOUtils.writeUTF8(gOldJSONPath, json);
 
   for (let extensionId of extensionIds) {
     let permissions = await ExtensionPermissions.get(extensionId);
@@ -50,11 +44,28 @@ async function test_file(json, extensionIds, expected, fileDeleted) {
   }
 
   Assert.equal(
-    await OS.File.exists(gOldSettingsJSON.path),
+    await IOUtils.exists(gOldJSONPath),
     !fileDeleted,
     "old file was deleted"
   );
+
+  Assert.ok(
+    await IOUtils.exists(gNewRkvPath),
+    "found the store at the new rkv path"
+  );
+
+  Assert.ok(
+    !(await IOUtils.exists(gOldRkvPath)),
+    "expect old rkv path to not exist"
+  );
 }
+
+add_setup(async () => {
+  // Bug 1646182: Force ExtensionPermissions to run in rkv mode, because this
+  // test does not make sense with the legacy method (which will be removed in
+  // the above bug).
+  await ExtensionPermissions._uninit();
+});
 
 add_task(async function test_migrate_good_json() {
   let expected = {
@@ -83,7 +94,7 @@ add_task(async function test_migrate_bad_json() {
     expected,
     /* fileDeleted */ false
   );
-  await OS.File.remove(gOldSettingsJSON.path);
+  await IOUtils.remove(gOldJSONPath);
 });
 
 add_task(async function test_migrate_bad_file() {
@@ -95,5 +106,5 @@ add_task(async function test_migrate_bad_file() {
     expected,
     /* fileDeleted */ false
   );
-  await OS.File.remove(gOldSettingsJSON.path);
+  await IOUtils.remove(gOldJSONPath);
 });
