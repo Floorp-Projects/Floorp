@@ -87,7 +87,14 @@ WebExtAPIValidator = jsonschema.validators.extend(
 WebExtAPIValidator.META_SCHEMA["definitions"]["simpleTypes"]["enum"].append("any")
 
 
-def run_diff(diff_cmd, left_name, left_text, right_name, right_text):
+def run_diff(
+    diff_cmd,
+    left_name,
+    left_text,
+    right_name,
+    right_text,
+    always_return_diff_output=True,
+):
     """
     Creates two temporary files and run the given `diff_cmd` to generate a diff
     between the two temporary files (used to generate diffs related to the JSON
@@ -122,7 +129,7 @@ def run_diff(diff_cmd, left_name, left_text, right_name, right_text):
                     capture_output=True,
                 ).stdout.decode("utf-8")
 
-    if len(diff_output) == 0:
+    if always_return_diff_output and len(diff_output) == 0:
         return "Diff empty: both files have the exact same content."
 
     return diff_output
@@ -933,6 +940,7 @@ class APIEntry:
             json.dumps(browser_schema_data, indent=True),
             "%s-mobile" % self.api_path_string,
             json.dumps(mobile_schema_data, indent=True),
+            always_return_diff_output=False,
         )
 
         if len(json_diff.strip()) == 0:
@@ -940,7 +948,7 @@ class APIEntry:
 
         # Print a diff of the browser vs. mobile JSON schema.
         print("\n\n## API schema desktop vs. mobile for %s\n\n" % self.api_path_string)
-        print("```\n%s\n```" % json_diff)
+        print("```diff\n%s\n```" % json_diff)
 
     def get_schema_data(self, schema_group=None):
         """
