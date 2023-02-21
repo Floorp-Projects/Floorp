@@ -686,7 +686,8 @@ Result<EditActionResult, nsresult> WhiteSpaceVisibilityKeeper::
             MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(
                 aHTMLEditor,
                 EditorDOMRange(EditorDOMPoint::AtEndOf(aLeftBlockElement),
-                               EditorDOMPoint(&aRightBlockElement, 0)));
+                               EditorDOMPoint(&aRightBlockElement, 0)),
+                aEditingHost);
     if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
       NS_WARNING(
           "WhiteSpaceVisibilityKeeper::"
@@ -1435,7 +1436,7 @@ WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace(
     {
       Result<CaretPoint, nsresult> caretPointOrError =
           WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints(
-              aHTMLEditor, &startToDelete, &endToDelete);
+              aHTMLEditor, &startToDelete, &endToDelete, aEditingHost);
       if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
         NS_WARNING(
             "WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints() "
@@ -1473,7 +1474,7 @@ WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace(
     {
       Result<CaretPoint, nsresult> caretPointOrError =
           WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints(
-              aHTMLEditor, &startToDelete, &endToDelete);
+              aHTMLEditor, &startToDelete, &endToDelete, aEditingHost);
       if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
         NS_WARNING(
             "WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints() "
@@ -1546,7 +1547,7 @@ WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
     {
       Result<CaretPoint, nsresult> caretPointOrError =
           WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints(
-              aHTMLEditor, &startToDelete, &endToDelete);
+              aHTMLEditor, &startToDelete, &endToDelete, aEditingHost);
       if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
         NS_WARNING(
             "WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints() "
@@ -1584,7 +1585,7 @@ WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
     {
       Result<CaretPoint, nsresult> caretPointOrError =
           WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints(
-              aHTMLEditor, &startToDelete, &endToDelete);
+              aHTMLEditor, &startToDelete, &endToDelete, aEditingHost);
       if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
         NS_WARNING(
             "WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints() "
@@ -1626,79 +1627,71 @@ WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
 }
 
 // static
-nsresult WhiteSpaceVisibilityKeeper::DeleteContentNodeAndJoinTextNodesAroundIt(
+Result<CaretPoint, nsresult>
+WhiteSpaceVisibilityKeeper::DeleteContentNodeAndJoinTextNodesAroundIt(
     HTMLEditor& aHTMLEditor, nsIContent& aContentToDelete,
-    const EditorDOMPoint& aCaretPoint) {
+    const EditorDOMPoint& aCaretPoint, const Element& aEditingHost) {
   EditorDOMPoint atContent(&aContentToDelete);
   if (!atContent.IsSet()) {
     NS_WARNING("Deleting content node was an orphan node");
-    return NS_ERROR_FAILURE;
+    return Err(NS_ERROR_FAILURE);
   }
   if (!HTMLEditUtils::IsRemovableNode(aContentToDelete)) {
     NS_WARNING("Deleting content node wasn't removable");
-    return NS_ERROR_FAILURE;
+    return Err(NS_ERROR_FAILURE);
   }
   Result<CaretPoint, nsresult> caretPointOrError = WhiteSpaceVisibilityKeeper::
       MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(
-          aHTMLEditor, EditorDOMRange(atContent, atContent.NextPoint()));
+          aHTMLEditor, EditorDOMRange(atContent, atContent.NextPoint()),
+          aEditingHost);
   if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
     NS_WARNING(
         "WhiteSpaceVisibilityKeeper::"
         "MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange() failed");
-    return caretPointOrError.unwrapErr();
+    return caretPointOrError;
   }
-  nsresult rv = caretPointOrError.unwrap().SuggestCaretPointTo(
-      aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
-                    SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                    SuggestCaret::AndIgnoreTrivialError});
-  if (NS_FAILED(rv)) {
-    NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
-    return rv;
-  }
-  NS_WARNING_ASSERTION(rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-                       "CaretPoint::SuggestCaretPointTo() failed, but ignored");
 
   nsCOMPtr<nsIContent> previousEditableSibling =
       HTMLEditUtils::GetPreviousSibling(
           aContentToDelete, {WalkTreeOption::IgnoreNonEditableNode});
   // Delete the node, and join like nodes if appropriate
-  rv = aHTMLEditor.DeleteNodeWithTransaction(aContentToDelete);
+  nsresult rv = aHTMLEditor.DeleteNodeWithTransaction(aContentToDelete);
   if (NS_FAILED(rv)) {
     NS_WARNING("EditorBase::DeleteNodeWithTransaction() failed");
-    return rv;
+    caretPointOrError.unwrap().IgnoreCaretPointSuggestion();
+    return Err(rv);
   }
   // Are they both text nodes?  If so, join them!
   // XXX This may cause odd behavior if there is non-editable nodes
   //     around the atomic content.
   if (!aCaretPoint.IsInTextNode() || !previousEditableSibling ||
       !previousEditableSibling->IsText()) {
-    return NS_OK;
+    return caretPointOrError;
   }
 
   nsIContent* nextEditableSibling = HTMLEditUtils::GetNextSibling(
       *previousEditableSibling, {WalkTreeOption::IgnoreNonEditableNode});
   if (aCaretPoint.GetContainer() != nextEditableSibling) {
-    return NS_OK;
+    return caretPointOrError;
   }
+
+  caretPointOrError.unwrap().IgnoreCaretPointSuggestion();
+
   EditorDOMPoint atFirstChildOfRightNode;
   rv = aHTMLEditor.JoinNearestEditableNodesWithTransaction(
       *previousEditableSibling, MOZ_KnownLive(*aCaretPoint.ContainerAs<Text>()),
       &atFirstChildOfRightNode);
   if (NS_FAILED(rv)) {
     NS_WARNING("HTMLEditor::JoinNearestEditableNodesWithTransaction() failed");
-    return rv;
+    return Err(rv);
   }
   if (!atFirstChildOfRightNode.IsSet()) {
     NS_WARNING(
         "HTMLEditor::JoinNearestEditableNodesWithTransaction() didn't return "
         "right node position");
-    return NS_ERROR_FAILURE;
+    return Err(NS_ERROR_FAILURE);
   }
-  // Fix up selection
-  rv = aHTMLEditor.CollapseSelectionTo(atFirstChildOfRightNode);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::CollapseSelectionTo() failed");
-  return rv;
+  return CaretPoint(std::move(atFirstChildOfRightNode));
 }
 
 template <typename PT, typename CT>
@@ -2355,7 +2348,8 @@ WSRunScanner::TextFragmentData::VisibleWhiteSpacesDataRef() const {
 // static
 Result<CaretPoint, nsresult> WhiteSpaceVisibilityKeeper::
     MakeSureToKeepVisibleStateOfWhiteSpacesAroundDeletingRange(
-        HTMLEditor& aHTMLEditor, const EditorDOMRange& aRangeToDelete) {
+        HTMLEditor& aHTMLEditor, const EditorDOMRange& aRangeToDelete,
+        const Element& aEditingHost) {
   if (NS_WARN_IF(!aRangeToDelete.IsPositionedAndValid()) ||
       NS_WARN_IF(!aRangeToDelete.IsInContentNodes())) {
     return Err(NS_ERROR_INVALID_ARG);
@@ -2368,13 +2362,12 @@ Result<CaretPoint, nsresult> WhiteSpaceVisibilityKeeper::
       NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT |
       NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED);
 
-  RefPtr<Element> editingHost = aHTMLEditor.ComputeEditingHost();
   TextFragmentData textFragmentDataAtStart(rangeToDelete.StartRef(),
-                                           editingHost);
+                                           &aEditingHost);
   if (NS_WARN_IF(!textFragmentDataAtStart.IsInitialized())) {
     return Err(NS_ERROR_FAILURE);
   }
-  TextFragmentData textFragmentDataAtEnd(rangeToDelete.EndRef(), editingHost);
+  TextFragmentData textFragmentDataAtEnd(rangeToDelete.EndRef(), &aEditingHost);
   if (NS_WARN_IF(!textFragmentDataAtEnd.IsInitialized())) {
     return Err(NS_ERROR_FAILURE);
   }
@@ -2470,7 +2463,7 @@ Result<CaretPoint, nsresult> WhiteSpaceVisibilityKeeper::
     if (mayBecomeUnexpectedDOMTree) {
       // If focus is changed by mutation event listeners, we should stop
       // handling this edit action.
-      if (editingHost != aHTMLEditor.ComputeEditingHost()) {
+      if (&aEditingHost != aHTMLEditor.ComputeEditingHost()) {
         NS_WARNING("Active editing host was changed");
         return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
       }
@@ -2482,9 +2475,9 @@ Result<CaretPoint, nsresult> WhiteSpaceVisibilityKeeper::
       // should retrieve the latest data for avoiding to delete/replace
       // unexpected range.
       textFragmentDataAtStart =
-          TextFragmentData(rangeToDelete.StartRef(), editingHost);
+          TextFragmentData(rangeToDelete.StartRef(), &aEditingHost);
       textFragmentDataAtEnd =
-          TextFragmentData(rangeToDelete.EndRef(), editingHost);
+          TextFragmentData(rangeToDelete.EndRef(), &aEditingHost);
     }
   }
   ReplaceRangeData replaceRangeDataAtStart =
