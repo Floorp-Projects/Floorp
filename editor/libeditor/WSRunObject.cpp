@@ -3956,13 +3956,13 @@ WSRunScanner::ComputeRangeInTextNodesContainingInvisibleWhiteSpaces(
 
 // static
 Result<EditorDOMRangeInTexts, nsresult>
-WSRunScanner::GetRangeInTextNodesToBackspaceFrom(Element* aEditingHost,
-                                                 const EditorDOMPoint& aPoint) {
+WSRunScanner::GetRangeInTextNodesToBackspaceFrom(const EditorDOMPoint& aPoint,
+                                                 const Element& aEditingHost) {
   // Corresponding to computing delete range part of
   // `WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace()`
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
-  TextFragmentData textFragmentDataAtCaret(aPoint, aEditingHost);
+  TextFragmentData textFragmentDataAtCaret(aPoint, &aEditingHost);
   if (NS_WARN_IF(!textFragmentDataAtCaret.IsInitialized())) {
     return Err(NS_ERROR_FAILURE);
   }
@@ -4028,11 +4028,11 @@ WSRunScanner::GetRangeInTextNodesToBackspaceFrom(Element* aEditingHost,
   // And also delete invisible white-spaces if they become visible.
   TextFragmentData textFragmentDataAtStart =
       rangeToDelete.StartRef() != aPoint
-          ? TextFragmentData(rangeToDelete.StartRef(), aEditingHost)
+          ? TextFragmentData(rangeToDelete.StartRef(), &aEditingHost)
           : textFragmentDataAtCaret;
   TextFragmentData textFragmentDataAtEnd =
       rangeToDelete.EndRef() != aPoint
-          ? TextFragmentData(rangeToDelete.EndRef(), aEditingHost)
+          ? TextFragmentData(rangeToDelete.EndRef(), &aEditingHost)
           : textFragmentDataAtCaret;
   if (NS_WARN_IF(!textFragmentDataAtStart.IsInitialized()) ||
       NS_WARN_IF(!textFragmentDataAtEnd.IsInitialized())) {
@@ -4049,12 +4049,12 @@ WSRunScanner::GetRangeInTextNodesToBackspaceFrom(Element* aEditingHost,
 // static
 Result<EditorDOMRangeInTexts, nsresult>
 WSRunScanner::GetRangeInTextNodesToForwardDeleteFrom(
-    Element* aEditingHost, const EditorDOMPoint& aPoint) {
+    const EditorDOMPoint& aPoint, const Element& aEditingHost) {
   // Corresponding to computing delete range part of
   // `WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace()`
   MOZ_ASSERT(aPoint.IsSetAndValid());
 
-  TextFragmentData textFragmentDataAtCaret(aPoint, aEditingHost);
+  TextFragmentData textFragmentDataAtCaret(aPoint, &aEditingHost);
   if (NS_WARN_IF(!textFragmentDataAtCaret.IsInitialized())) {
     return Err(NS_ERROR_FAILURE);
   }
@@ -4120,11 +4120,11 @@ WSRunScanner::GetRangeInTextNodesToForwardDeleteFrom(
   // And also delete invisible white-spaces if they become visible.
   TextFragmentData textFragmentDataAtStart =
       rangeToDelete.StartRef() != aPoint
-          ? TextFragmentData(rangeToDelete.StartRef(), aEditingHost)
+          ? TextFragmentData(rangeToDelete.StartRef(), &aEditingHost)
           : textFragmentDataAtCaret;
   TextFragmentData textFragmentDataAtEnd =
       rangeToDelete.EndRef() != aPoint
-          ? TextFragmentData(rangeToDelete.EndRef(), aEditingHost)
+          ? TextFragmentData(rangeToDelete.EndRef(), &aEditingHost)
           : textFragmentDataAtCaret;
   if (NS_WARN_IF(!textFragmentDataAtStart.IsInitialized()) ||
       NS_WARN_IF(!textFragmentDataAtEnd.IsInitialized())) {
