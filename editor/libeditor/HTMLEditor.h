@@ -1505,12 +1505,11 @@ class HTMLEditor final : public EditorBase,
                                       const Element& aEditingHost);
 
   /**
-   * InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary() determines if
-   * aPointToInsert is start of a hard line and end of the line (i.e, the
-   * line is empty) and the line ends with block boundary, inserts a `<br>`
-   * element.
+   * Determine if aPointToInsert is start of a hard line and end of the line
+   * (i.e, in an empty line) and the line ends with block boundary, inserts a
+   * `<br>` element.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CaretPoint, nsresult>
   InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
       const EditorDOMPoint& aPointToInsert);
 
