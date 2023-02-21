@@ -16,7 +16,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=574663
 
 </div>
 <pre id="test">
-<script type="application/javascript">
+<script>
 
 /** Test for Bug 574663 **/
 
@@ -77,11 +77,11 @@ function sendTouchpadScrollMotion(scrollbox, direction, ctrl, momentum, callback
   // pattern is scroll (twice), then scroll back (twice), it's possible that the
   // first scroll back event is sufficient to return the scrollbox to its minimal
   // scrollTop position, and so the second event doesn't scroll any further.
-  const initialZoom = winUtils.fullZoom;
+  const initialZoom = SpecialPowers.getFullZoom(window);
   const initialScroll = scrollbox.scrollTop;
 
   const effectOfWheelEvent = SimpleTest.promiseWaitForCondition(() => {
-    return ((winUtils.fullZoom != initialZoom) || (scrollbox.scrollTop != initialScroll));
+    return ((SpecialPowers.getFullZoom(window) != initialZoom) || (scrollbox.scrollTop != initialScroll));
   }, "Mouse wheel should have caused us to either zoom or scroll.");
 
   synthesizeWheel(scrollbox, 10, 10, event, win);
@@ -137,21 +137,21 @@ function runTest() {
     function nextTest() {
       let [ctrlKey, isMomentum] = outstandingTests.shift();
       let scrollTopBefore = scrollbox.scrollTop;
-      let zoomFactorBefore = winUtils.fullZoom;
+      let zoomFactorBefore = SpecialPowers.getFullZoom(window);
 
       let check = function() {
         if (!ctrlKey) {
           let postfix = isMomentum ? ", even after releasing the touchpad" : "";
           // Normal scroll: scroll
-          is(winUtils.fullZoom, zoomFactorBefore, "Normal scrolling shouldn't change zoom" + postfix);
+          is(SpecialPowers.getFullZoom(window), zoomFactorBefore, "Normal scrolling shouldn't change zoom" + postfix);
           isnot(scrollbox.scrollTop, scrollTopBefore,
              "Normal scrolling should scroll" + postfix);
         } else {
           if (!isMomentum) {
-            isnot(winUtils.fullZoom, zoomFactorBefore, "Ctrl-scrolling should zoom while the user is touching the touchpad");
+            isnot(SpecialPowers.getFullZoom(window), zoomFactorBefore, "Ctrl-scrolling should zoom while the user is touching the touchpad");
             is(scrollbox.scrollTop, scrollTopBefore, "Ctrl-scrolling shouldn't scroll while the user is touching the touchpad");
           } else {
-            is(winUtils.fullZoom, zoomFactorBefore, "Momentum scrolling shouldn't zoom, even when pressing Ctrl");
+            is(SpecialPowers.getFullZoom(window), zoomFactorBefore, "Momentum scrolling shouldn't zoom, even when pressing Ctrl");
             isnot(scrollbox.scrollTop, scrollTopBefore,
                "Momentum scrolling should scroll, even when pressing Ctrl");
           }
