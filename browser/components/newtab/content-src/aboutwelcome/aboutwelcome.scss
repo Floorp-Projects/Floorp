@@ -1646,8 +1646,7 @@ html {
       }
 
       .attrib-text,
-      .secondary-cta.top,
-      .dismiss-button {
+      .secondary-cta.top {
         opacity: 0;
       }
     }
@@ -1668,11 +1667,6 @@ html {
     .screen:not(.dialog-initial):not([pos='corner']) {
       .steps:not(.progress-bar) {
         opacity: 0.2;
-      }
-
-      .dismiss-button {
-        opacity: 0;
-        translate: 0 calc(-1 * var(--translate));
       }
     }
 
@@ -1705,8 +1699,7 @@ html {
         translate: 0 var(--translate);
       }
 
-      .main-content,
-      .dismiss-button {
+      .main-content {
         opacity: 0;
         translate: 0 var(--translate);
         transition-delay: 0.2s;
@@ -1747,8 +1740,7 @@ html {
       .checkbox-container,
       .secondary,
       .secondary-cta:not(.top),
-      .cta-link,
-      .dismiss-button {
+      .cta-link {
         opacity: 0;
         translate: 0 var(--translate);
         transition-delay: 0.3s;
