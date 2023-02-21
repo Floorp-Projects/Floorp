@@ -404,8 +404,6 @@ const HistorySyncUtils = (PlacesSyncUtils.history = Object.freeze({
 }));
 
 const BookmarkSyncUtils = (PlacesSyncUtils.bookmarks = Object.freeze({
-  SYNC_PARENT_ANNO: "sync/parent",
-
   SYNC_ID_META_KEY: "sync/bookmarks/syncId",
   LAST_SYNC_META_KEY: "sync/bookmarks/lastSync",
   WIPE_REMOTE_META_KEY: "sync/bookmarks/wipeRemote",
@@ -1983,7 +1981,7 @@ async function setBookmarksSyncId(db, newSyncId) {
 }
 
 // Bumps the change counter and sets the given sync status for all bookmarks,
-// removes all orphan annos, and drops stale tombstones.
+// and drops stale tombstones.
 async function resetAllSyncStatuses(db, syncStatus) {
   await db.execute(
     `
@@ -1991,16 +1989,6 @@ async function resetAllSyncStatuses(db, syncStatus) {
     SET syncChangeCounter = 1,
         syncStatus = :syncStatus`,
     { syncStatus }
-  );
-
-  // The orphan anno isn't meaningful after a restore, disconnect, or node
-  // reassignment.
-  await db.execute(
-    `
-    DELETE FROM moz_items_annos
-    WHERE anno_attribute_id = (SELECT id FROM moz_anno_attributes
-                               WHERE name = :orphanAnno)`,
-    { orphanAnno: BookmarkSyncUtils.SYNC_PARENT_ANNO }
   );
 
   // Drop stale tombstones.
