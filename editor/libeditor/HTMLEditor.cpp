@@ -294,10 +294,7 @@ HTMLEditor::HTMLEditor(const Document& aDocument)
       mPositionedObjectBorderLeft(0),
       mPositionedObjectBorderTop(0),
       mGridSize(0),
-      mDefaultParagraphSeparator(
-          StaticPrefs::editor_use_div_for_default_newlines()
-              ? ParagraphSeparator::div
-              : ParagraphSeparator::br) {}
+      mDefaultParagraphSeparator(ParagraphSeparator::div) {}
 
 HTMLEditor::~HTMLEditor() {
   // Collect the data of `beforeinput` event only when it's enabled because
