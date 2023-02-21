@@ -938,6 +938,9 @@ const std::string& ProduceIceCandidateStats(int64_t timestamp_us,
     } else {
       // We don't expect to know the adapter type of remote candidates.
       RTC_DCHECK_EQ(rtc::ADAPTER_TYPE_UNKNOWN, candidate.network_type());
+      RTC_DCHECK_EQ(0, candidate.relay_protocol().compare(""));
+      RTC_DCHECK_EQ(rtc::ADAPTER_TYPE_UNKNOWN,
+                    candidate.underlying_type_for_vpn());
     }
     candidate_stats->ip = candidate.address().ipaddr().ToString();
     candidate_stats->address = candidate.address().ipaddr().ToString();
