@@ -34,7 +34,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
-  ReaderMode: "resource://gre/modules/ReaderMode.jsm",
   TabsStore: "resource://gre/modules/RustTabs.jsm",
 });
 
@@ -378,10 +377,6 @@ export const TabProvider = {
               !lazy.TABS_FILTERED_SCHEMES.has(Services.io.extractScheme(url));
 
         let url = tab.linkedBrowser.currentURI?.spec;
-        // Special case for reader mode.
-        if (url && url.startsWith("about:reader?")) {
-          url = lazy.ReaderMode.getOriginalUrl(url);
-        }
         // We ignore the tab completely if the current entry url is
         // not acceptable (we need something accurate to open).
         if (!acceptable(url)) {
