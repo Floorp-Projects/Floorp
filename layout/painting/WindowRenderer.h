@@ -275,7 +275,7 @@ class FallbackRenderer : public WindowRenderer {
                               int32_t aAppUnitsPerDevPixel,
                               EndTransactionFlags aFlags);
 
-  RefPtr<gfxContext> mTarget;
+  gfxContext* mTarget;
   layers::BufferMode mBufferMode;
 };
 

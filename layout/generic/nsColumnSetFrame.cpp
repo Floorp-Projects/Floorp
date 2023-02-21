@@ -73,13 +73,13 @@ bool nsDisplayColumnRule::CreateWebRenderCommands(
     const StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
-  RefPtr<gfxContext> screenRefCtx = gfxContext::CreateOrNull(
+  UniquePtr<gfxContext> screenRefCtx = gfxContext::CreateOrNull(
       gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget().get());
 
   bool dummy;
   static_cast<nsColumnSetFrame*>(mFrame)->CreateBorderRenderers(
-      mBorderRenderers, screenRefCtx, GetBounds(aDisplayListBuilder, &dummy),
-      ToReferenceFrame());
+      mBorderRenderers, screenRefCtx.get(),
+      GetBounds(aDisplayListBuilder, &dummy), ToReferenceFrame());
 
   if (mBorderRenderers.IsEmpty()) {
     return true;

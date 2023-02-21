@@ -232,7 +232,7 @@ already_AddRefed<SourceSurface> SVGClipPathFrame::GetClipMask(
     return nullptr;
   }
 
-  RefPtr<gfxContext> maskContext =
+  UniquePtr<gfxContext> maskContext =
       gfxContext::CreatePreservingTransformOrNull(maskDT);
   if (!maskContext) {
     gfxCriticalError() << "SVGClipPath context problem " << gfx::hexa(maskDT);

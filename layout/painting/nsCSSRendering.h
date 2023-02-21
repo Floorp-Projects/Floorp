@@ -942,7 +942,8 @@ class nsContextBoxBlur {
                                      bool aConstrainSpreadRadius = true);
 
   gfxAlphaBoxBlur mAlphaBoxBlur;
-  RefPtr<gfxContext> mContext;
+  mozilla::UniquePtr<gfxContext> mOwnedContext;
+  gfxContext* mContext;  // may be either mOwnedContext or mDestinationContext
   gfxContext* mDestinationCtx;
 
   /* This is true if the blur already has it's content transformed

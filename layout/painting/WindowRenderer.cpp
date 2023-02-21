@@ -208,14 +208,14 @@ void FallbackRenderer::EndTransactionWithList(nsDisplayListBuilder* aBuilder,
   RefPtr<DrawTarget> dest =
       gfxPlatform::GetPlatform()->CreateDrawTargetForBackend(
           backend, dt->GetSize(), dt->GetFormat());
-  RefPtr<gfxContext> ctx = gfxContext::CreatePreservingTransformOrNull(dest);
+  UniquePtr<gfxContext> ctx = gfxContext::CreatePreservingTransformOrNull(dest);
 
   nsRegion opaque = aList->GetOpaqueRegion(aBuilder);
   if (opaque.Contains(aList->GetComponentAlphaBounds(aBuilder))) {
     dest->SetPermitSubpixelAA(true);
   }
 
-  aList->Paint(aBuilder, ctx, aAppUnitsPerDevPixel);
+  aList->Paint(aBuilder, ctx.get(), aAppUnitsPerDevPixel);
 
   RefPtr<SourceSurface> snapshot = dest->Snapshot();
   dt->DrawSurface(snapshot, Rect(dest->GetRect()), Rect(dest->GetRect()),

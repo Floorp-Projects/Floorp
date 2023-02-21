@@ -20,7 +20,7 @@ namespace layout {
 
 PrintTranslator::PrintTranslator(nsDeviceContext* aDeviceContext)
     : mDeviceContext(aDeviceContext) {
-  RefPtr<gfxContext> context =
+  UniquePtr<gfxContext> context =
       mDeviceContext->CreateReferenceRenderingContext();
   mBaseDT = context->GetDrawTarget();
 }
@@ -71,7 +71,7 @@ bool PrintTranslator::TranslateRecording(PRFileDescStream& aRecording) {
 already_AddRefed<DrawTarget> PrintTranslator::CreateDrawTarget(
     ReferencePtr aRefPtr, const gfx::IntSize& aSize,
     gfx::SurfaceFormat aFormat) {
-  RefPtr<gfxContext> context = mDeviceContext->CreateRenderingContext();
+  UniquePtr<gfxContext> context = mDeviceContext->CreateRenderingContext();
   if (!context) {
     NS_WARNING("Failed to create rendering context for print.");
     return nullptr;

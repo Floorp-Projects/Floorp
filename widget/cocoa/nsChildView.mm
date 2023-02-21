@@ -1316,7 +1316,7 @@ bool nsChildView::PaintWindow(LayoutDeviceIntRegion aRegion) {
 bool nsChildView::PaintWindowInDrawTarget(gfx::DrawTarget* aDT,
                                           const LayoutDeviceIntRegion& aRegion,
                                           const gfx::IntSize& aSurfaceSize) {
-  RefPtr<gfxContext> targetContext = gfxContext::CreateOrNull(aDT);
+  UniquePtr<gfxContext> targetContext = gfxContext::CreateOrNull(aDT);
   MOZ_ASSERT(targetContext);
 
   // Set up the clip region and clear existing contents in the backing surface.
@@ -1330,7 +1330,7 @@ bool nsChildView::PaintWindowInDrawTarget(gfx::DrawTarget* aDT,
 
   nsAutoRetainCocoaObject kungFuDeathGrip(mView);
   if (GetWindowRenderer()->GetBackendType() == LayersBackend::LAYERS_NONE) {
-    nsBaseWidget::AutoLayerManagerSetup setupLayerManager(this, targetContext,
+    nsBaseWidget::AutoLayerManagerSetup setupLayerManager(this, targetContext.get(),
                                                           BufferMode::BUFFER_NONE);
     return PaintWindow(aRegion);
   }

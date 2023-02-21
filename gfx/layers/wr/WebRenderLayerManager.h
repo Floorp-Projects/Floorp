@@ -254,7 +254,7 @@ class WebRenderLayerManager final : public WindowRenderer {
   // we send a message to our remote side to capture the actual pixels
   // being drawn to the default target, and then copy those pixels
   // back to mTarget.
-  RefPtr<gfxContext> mTarget;
+  gfxContext* mTarget;
 
   // See equivalent field in ClientLayerManager
   uint32_t mPaintSequenceNumber;

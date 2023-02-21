@@ -684,11 +684,11 @@ class DisplayListBuilder final {
 
   Maybe<SideBits> GetContainingFixedPosSideBits(const ActiveScrolledRoot* aAsr);
 
-  already_AddRefed<gfxContext> GetTextContext(
-      wr::IpcResourceUpdateQueue& aResources,
-      const layers::StackingContextHelper& aSc,
-      layers::RenderRootStateManager* aManager, nsDisplayItem* aItem,
-      nsRect& aBounds, const gfx::Point& aDeviceOffset);
+  gfxContext* GetTextContext(wr::IpcResourceUpdateQueue& aResources,
+                             const layers::StackingContextHelper& aSc,
+                             layers::RenderRootStateManager* aManager,
+                             nsDisplayItem* aItem, nsRect& aBounds,
+                             const gfx::Point& aDeviceOffset);
 
   // Try to avoid using this when possible.
   wr::WrState* Raw() { return mWrState; }
@@ -771,7 +771,7 @@ class DisplayListBuilder final {
   Maybe<wr::LayoutRect> mSuspendedClipChainLeaf;
 
   RefPtr<layout::TextDrawTarget> mCachedTextDT;
-  RefPtr<gfxContext> mCachedContext;
+  mozilla::UniquePtr<gfxContext> mCachedContext;
 
   FixedPosScrollTargetTracker* mActiveFixedPosTracker;
 

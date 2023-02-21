@@ -317,7 +317,7 @@ class nsAutoRetainUIKitObject {
   // Create Cairo objects.
   RefPtr<gfxQuartzSurface> targetSurface;
 
-  RefPtr<gfxContext> targetContext;
+  UniquePtrPtr<gfxContext> targetContext;
   if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(gfx::BackendType::CAIRO)) {
     // This is dead code unless you mess with prefs, but keep it around for
     // debugging.

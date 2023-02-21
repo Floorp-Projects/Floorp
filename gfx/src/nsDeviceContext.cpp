@@ -116,16 +116,15 @@ void nsDeviceContext::Init(nsIWidget* aWidget) {
 }
 
 // XXX This is only for printing. We should make that obvious in the name.
-already_AddRefed<gfxContext> nsDeviceContext::CreateRenderingContext() {
+UniquePtr<gfxContext> nsDeviceContext::CreateRenderingContext() {
   return CreateRenderingContextCommon(/* not a reference context */ false);
 }
 
-already_AddRefed<gfxContext>
-nsDeviceContext::CreateReferenceRenderingContext() {
+UniquePtr<gfxContext> nsDeviceContext::CreateReferenceRenderingContext() {
   return CreateRenderingContextCommon(/* a reference context */ true);
 }
 
-already_AddRefed<gfxContext> nsDeviceContext::CreateRenderingContextCommon(
+UniquePtr<gfxContext> nsDeviceContext::CreateRenderingContextCommon(
     bool aWantReferenceContext) {
   MOZ_ASSERT(IsPrinterContext());
   MOZ_ASSERT(mWidth > 0 && mHeight > 0);
@@ -154,14 +153,14 @@ already_AddRefed<gfxContext> nsDeviceContext::CreateRenderingContextCommon(
 
   dt->AddUserData(&sDisablePixelSnapping, (void*)0x1, nullptr);
 
-  RefPtr<gfxContext> pContext = gfxContext::CreateOrNull(dt);
+  UniquePtr<gfxContext> pContext = gfxContext::CreateOrNull(dt);
   MOZ_ASSERT(pContext);  // already checked draw target above
 
   gfxMatrix transform;
   transform.PreTranslate(mPrintingTranslate);
   transform.PreScale(mPrintingScale, mPrintingScale);
   pContext->SetMatrixDouble(transform);
-  return pContext.forget();
+  return pContext;
 }
 
 uint32_t nsDeviceContext::GetDepth() {

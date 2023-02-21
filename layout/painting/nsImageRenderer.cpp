@@ -474,7 +474,8 @@ ImgDrawResult nsImageRenderer::Draw(nsPresContext* aPresContext,
   SamplingFilter samplingFilter =
       nsLayoutUtils::GetSamplingFilterForFrame(mForFrame);
   ImgDrawResult result = ImgDrawResult::SUCCESS;
-  RefPtr<gfxContext> ctx = &aRenderingContext;
+  gfxContext* ctx = &aRenderingContext;
+  UniquePtr<gfxContext> tempCtx;
   IntRect tmpDTRect;
 
   if (ctx->CurrentOp() != CompositionOp::OP_OVER ||
@@ -493,7 +494,8 @@ ImgDrawResult nsImageRenderer::Draw(nsPresContext* aPresContext,
     }
     tempDT->SetTransform(ctx->GetDrawTarget()->GetTransform() *
                          Matrix::Translation(-tmpDTRect.TopLeft()));
-    ctx = gfxContext::CreatePreservingTransformOrNull(tempDT);
+    tempCtx = gfxContext::CreatePreservingTransformOrNull(tempDT);
+    ctx = tempCtx.get();
     if (!ctx) {
       gfxDevCrash(LogReason::InvalidContext)
           << "ImageRenderer::Draw problem " << gfx::hexa(tempDT);

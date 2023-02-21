@@ -590,7 +590,7 @@ class PresShell final : public nsStubDocumentObserver,
    * be rendered to, but is suitable for measuring text and performing
    * other non-rendering operations. Guaranteed to return non-null.
    */
-  already_AddRefed<gfxContext> CreateReferenceRenderingContext();
+  mozilla::UniquePtr<gfxContext> CreateReferenceRenderingContext();
 
   /**
    * Scrolls the view of the document so that the given area of a frame

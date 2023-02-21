@@ -508,7 +508,7 @@ class MixModeBlender {
 
     mTargetOffset = drawRect.TopLeft();
 
-    return mTargetCtx;
+    return mTargetCtx.get();
   }
 
   void BlendToTarget() {
@@ -564,7 +564,7 @@ class MixModeBlender {
 
   nsIFrame* mFrame;
   gfxContext* mSourceCtx;
-  RefPtr<gfxContext> mTargetCtx;
+  UniquePtr<gfxContext> mTargetCtx;
   IntPoint mTargetOffset;
 };
 

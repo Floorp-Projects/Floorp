@@ -1643,7 +1643,7 @@ DisplayListBuilder::FixedPosScrollTargetTracker::GetSideBitsForASR(
   return aAsr == mAsr ? Some(mSideBits) : Nothing();
 }
 
-already_AddRefed<gfxContext> DisplayListBuilder::GetTextContext(
+gfxContext* DisplayListBuilder::GetTextContext(
     wr::IpcResourceUpdateQueue& aResources,
     const layers::StackingContextHelper& aSc,
     layers::RenderRootStateManager* aManager, nsDisplayItem* aItem,
@@ -1658,8 +1658,7 @@ already_AddRefed<gfxContext> DisplayListBuilder::GetTextContext(
     mCachedContext->SetMatrix(gfx::Matrix());
   }
 
-  RefPtr<gfxContext> tmp = mCachedContext;
-  return tmp.forget();
+  return mCachedContext.get();
 }
 
 void DisplayListBuilder::PushInheritedClipChain(

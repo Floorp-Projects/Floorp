@@ -302,10 +302,10 @@ bool nsDisplayXULTextBox::CreateWebRenderCommands(
   RefPtr<mozilla::layout::TextDrawTarget> textDrawer =
       new mozilla::layout::TextDrawTarget(aBuilder, aResources, aSc, aManager,
                                           this, bounds);
-  RefPtr<gfxContext> captureCtx =
+  UniquePtr<gfxContext> captureCtx =
       gfxContext::CreateOrNull(textDrawer, deviceOffset);
 
-  Paint(aDisplayListBuilder, captureCtx);
+  Paint(aDisplayListBuilder, captureCtx.get());
   textDrawer->TerminateShadows();
 
   return textDrawer->Finish();
@@ -469,7 +469,7 @@ void nsTextBoxFrame::DrawText(gfxContext& aRenderingContext,
     }
   }
 
-  RefPtr<gfxContext> refContext =
+  UniquePtr<gfxContext> refContext =
       PresShell()->CreateReferenceRenderingContext();
   DrawTarget* refDrawTarget = refContext->GetDrawTarget();
 

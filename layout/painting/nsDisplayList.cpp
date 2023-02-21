@@ -315,14 +315,14 @@ static bool GenerateAndPushTextMask(nsIFrame* aFrame, gfxContext* aContext,
   if (!maskDT || !maskDT->IsValid()) {
     return false;
   }
-  RefPtr<gfxContext> maskCtx =
+  UniquePtr<gfxContext> maskCtx =
       gfxContext::CreatePreservingTransformOrNull(maskDT);
   MOZ_ASSERT(maskCtx);
   maskCtx->Multiply(Matrix::Translation(bounds.TopLeft().ToUnknownPoint()));
 
   // Shade text shape into mask A8 surface.
   nsLayoutUtils::PaintFrame(
-      maskCtx, aFrame, nsRect(nsPoint(0, 0), aFrame->GetSize()),
+      maskCtx.get(), aFrame, nsRect(nsPoint(0, 0), aFrame->GetSize()),
       NS_RGB(255, 255, 255), nsDisplayListBuilderMode::GenerateGlyph);
 
   // Push the generated mask into aContext, so that the caller can pop and
@@ -5066,9 +5066,9 @@ void nsDisplayBlendMode::Paint(nsDisplayListBuilder* aBuilder,
     return;
   }
 
-  RefPtr<gfxContext> ctx = gfxContext::CreatePreservingTransformOrNull(temp);
+  UniquePtr<gfxContext> ctx = gfxContext::CreatePreservingTransformOrNull(temp);
 
-  GetChildren()->Paint(aBuilder, ctx,
+  GetChildren()->Paint(aBuilder, ctx.get(),
                        mFrame->PresContext()->AppUnitsPerDevPixel());
 
   // Draw the temporary DT to the real destination, applying the blend mode, but
@@ -6869,7 +6869,7 @@ void nsDisplayTransform::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
   untransformedDT->SetTransform(
       Matrix::Translation(-Point(pixelBounds.X(), pixelBounds.Y())));
 
-  RefPtr<gfxContext> groupTarget =
+  UniquePtr<gfxContext> groupTarget =
       gfxContext::CreatePreservingTransformOrNull(untransformedDT);
 
   if (aPolygon) {
@@ -6878,7 +6878,7 @@ void nsDisplayTransform::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
     aCtx->GetDrawTarget()->PushClip(path);
   }
 
-  GetChildren()->Paint(aBuilder, groupTarget,
+  GetChildren()->Paint(aBuilder, groupTarget.get(),
                        mFrame->PresContext()->AppUnitsPerDevPixel());
 
   if (aPolygon) {
@@ -7543,8 +7543,8 @@ bool nsDisplayText::CreateWebRenderCommands(
     bounds = bounds.Intersect(visible);
   }
 
-  RefPtr<gfxContext> textDrawer = aBuilder.GetTextContext(
-      aResources, aSc, aManager, this, bounds, deviceOffset);
+  gfxContext* textDrawer = aBuilder.GetTextContext(aResources, aSc, aManager,
+                                                   this, bounds, deviceOffset);
 
   aBuilder.StartGroup(this);
 

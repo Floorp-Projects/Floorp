@@ -62,7 +62,7 @@ gfxContext::gfxContext(DrawTarget* aTarget, const Point& aDeviceOffset)
 }
 
 /* static */
-already_AddRefed<gfxContext> gfxContext::CreateOrNull(
+UniquePtr<gfxContext> gfxContext::CreateOrNull(
     DrawTarget* aTarget, const mozilla::gfx::Point& aDeviceOffset) {
   if (!aTarget || !aTarget->IsValid()) {
     gfxCriticalNote << "Invalid target in gfxContext::CreateOrNull "
@@ -70,12 +70,11 @@ already_AddRefed<gfxContext> gfxContext::CreateOrNull(
     return nullptr;
   }
 
-  RefPtr<gfxContext> result = new gfxContext(aTarget, aDeviceOffset);
-  return result.forget();
+  return MakeUnique<gfxContext>(aTarget, aDeviceOffset);
 }
 
 /* static */
-already_AddRefed<gfxContext> gfxContext::CreatePreservingTransformOrNull(
+UniquePtr<gfxContext> gfxContext::CreatePreservingTransformOrNull(
     DrawTarget* aTarget) {
   if (!aTarget || !aTarget->IsValid()) {
     gfxCriticalNote
@@ -84,10 +83,11 @@ already_AddRefed<gfxContext> gfxContext::CreatePreservingTransformOrNull(
     return nullptr;
   }
 
-  Matrix transform = aTarget->GetTransform();
-  RefPtr<gfxContext> result = new gfxContext(aTarget);
+  auto transform = aTarget->GetTransform();
+  auto result = MakeUnique<gfxContext>(aTarget);
   result->SetMatrix(transform);
-  return result.forget();
+
+  return result;
 }
 
 gfxContext::~gfxContext() {

@@ -2645,14 +2645,14 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP nsDocumentViewer::GetContentSize(
     aMaxHeight = std::min(aMaxHeight, constraints.mMaxSize.height);
     aMaxWidth = std::min(aMaxWidth, constraints.mMaxSize.width);
 
-    RefPtr<gfxContext> rcx(presShell->CreateReferenceRenderingContext());
+    UniquePtr<gfxContext> rcx(presShell->CreateReferenceRenderingContext());
     const nscoord minISize = wm.IsVertical() ? constraints.mMinSize.height
                                              : constraints.mMinSize.width;
     const nscoord maxISize = wm.IsVertical() ? aMaxHeight : aMaxWidth;
     if (aPrefWidth) {
-      prefISize = std::max(root->GetMinISize(rcx), aPrefWidth);
+      prefISize = std::max(root->GetMinISize(rcx.get()), aPrefWidth);
     } else {
-      prefISize = root->GetPrefISize(rcx);
+      prefISize = root->GetPrefISize(rcx.get());
     }
     prefISize = std::max(minISize, std::min(prefISize, maxISize));
   }

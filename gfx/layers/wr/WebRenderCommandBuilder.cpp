@@ -657,7 +657,7 @@ struct DIGroup {
     RefPtr<gfx::DrawTarget> dt = gfx::Factory::CreateRecordingDrawTarget(
         recorder, dummyDt, mLayerBounds.ToUnknownRect());
     // Setup the gfxContext
-    RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
+    UniquePtr<gfxContext> context = gfxContext::CreateOrNull(dt);
     context->SetMatrix(Matrix::Scaling(mScale).PostTranslate(
         mResidualOffset.x, mResidualOffset.y));
 
@@ -673,7 +673,7 @@ struct DIGroup {
       return;
     }
 
-    PaintItemRange(aGrouper, aStartItem, aEndItem, context, recorder,
+    PaintItemRange(aGrouper, aStartItem, aEndItem, context.get(), recorder,
                    rootManager, aResources);
 
     // XXX: set this correctly perhaps using
@@ -2295,7 +2295,7 @@ static void PaintItemByDrawTarget(nsDisplayItem* aItem, gfx::DrawTarget* aDT,
 
   // XXX Why is this ClearRect() needed?
   aDT->ClearRect(Rect(visibleRect));
-  RefPtr<gfxContext> context = gfxContext::CreateOrNull(aDT);
+  UniquePtr<gfxContext> context = gfxContext::CreateOrNull(aDT);
   MOZ_ASSERT(context);
 
   switch (aItem->GetType()) {
@@ -2315,7 +2315,7 @@ static void PaintItemByDrawTarget(nsDisplayItem* aItem, gfx::DrawTarget* aDT,
       if (aDisplayListBuilder->IsPaintingToWindow()) {
         aItem->Frame()->AddStateBits(NS_FRAME_PAINTED_THEBES);
       }
-      aItem->AsPaintedDisplayItem()->Paint(aDisplayListBuilder, context);
+      aItem->AsPaintedDisplayItem()->Paint(aDisplayListBuilder, context.get());
       break;
   }
 
@@ -2782,7 +2782,7 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
     RefPtr<DrawTarget> dt = Factory::CreateRecordingDrawTarget(
         recorder, dummyDt, IntRect(IntPoint(0, 0), size));
 
-    RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
+    UniquePtr<gfxContext> context = gfxContext::CreateOrNull(dt);
     MOZ_ASSERT(context);
 
     context->SetMatrix(context->CurrentMatrix()
@@ -2791,7 +2791,7 @@ Maybe<wr::ImageMask> WebRenderCommandBuilder::BuildWrMaskImage(
 
     bool maskPainted = false;
     bool maskIsComplete = aMaskItem->PaintMask(
-        aDisplayListBuilder, context, shouldHandleOpacity, &maskPainted);
+        aDisplayListBuilder, context.get(), shouldHandleOpacity, &maskPainted);
     if (!maskPainted) {
       return Nothing();
     }

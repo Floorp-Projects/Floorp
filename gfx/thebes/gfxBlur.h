@@ -77,13 +77,11 @@ class gfxAlphaBoxBlur final {
    * @param aUseHardwareAccel Flag to state whether or not we can use hardware
    *  acceleration to speed up this blur.
    */
-  already_AddRefed<gfxContext> Init(gfxContext* aDestinationCtx,
-                                    const gfxRect& aRect,
-                                    const mozilla::gfx::IntSize& aSpreadRadius,
-                                    const mozilla::gfx::IntSize& aBlurRadius,
-                                    const gfxRect* aDirtyRect,
-                                    const gfxRect* aSkipRect,
-                                    bool aUseHardwareAccel = true);
+  mozilla::UniquePtr<gfxContext> Init(
+      gfxContext* aDestinationCtx, const gfxRect& aRect,
+      const mozilla::gfx::IntSize& aSpreadRadius,
+      const mozilla::gfx::IntSize& aBlurRadius, const gfxRect* aDirtyRect,
+      const gfxRect* aSkipRect, bool aUseHardwareAccel = true);
 
   already_AddRefed<DrawTarget> InitDrawTarget(
       const mozilla::gfx::DrawTarget* aReferenceDT,

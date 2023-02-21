@@ -150,11 +150,12 @@ DynamicImage::GetFrameAtSize(const IntSize& aSize, uint32_t aWhichFrame,
         << "DynamicImage::GetFrame failed in CreateOffscreenContentDrawTarget";
     return nullptr;
   }
-  RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
+  UniquePtr<gfxContext> context = gfxContext::CreateOrNull(dt);
   MOZ_ASSERT(context);  // already checked the draw target above
 
-  auto result = Draw(context, aSize, ImageRegion::Create(aSize), aWhichFrame,
-                     SamplingFilter::POINT, SVGImageContext(), aFlags, 1.0);
+  auto result =
+      Draw(context.get(), aSize, ImageRegion::Create(aSize), aWhichFrame,
+           SamplingFilter::POINT, SVGImageContext(), aFlags, 1.0);
 
   return result == ImgDrawResult::SUCCESS ? dt->Snapshot() : nullptr;
 }

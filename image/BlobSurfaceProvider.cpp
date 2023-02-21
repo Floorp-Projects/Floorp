@@ -226,7 +226,7 @@ Maybe<BlobImageKeyData> BlobSurfaceProvider::RecordDrawing(
     mSVGDocumentWrapper->UpdateViewportBounds(viewportSize);
     mSVGDocumentWrapper->FlushImageTransformInvalidation();
 
-    RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(dt);
+    UniquePtr<gfxContext> ctx = gfxContext::CreateOrNull(dt);
     MOZ_ASSERT(ctx);  // Already checked the draw target above.
 
     nsRect svgRect;
@@ -261,7 +261,7 @@ Maybe<BlobImageKeyData> BlobSurfaceProvider::RecordDrawing(
 
     presShell->RenderDocument(svgRect, renderDocFlags,
                               NS_RGBA(0, 0, 0, 0),  // transparent
-                              ctx);
+                              ctx.get());
   }
 
   recorder->FlushItem(imageRectOrigin);

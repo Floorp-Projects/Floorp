@@ -5124,7 +5124,7 @@ void SVGTextFrame::DoReflow() {
     return;
   }
 
-  RefPtr<gfxContext> renderingContext =
+  UniquePtr<gfxContext> renderingContext =
       presContext->PresShell()->CreateReferenceRenderingContext();
 
   if (UpdateFontSizeScaleFactor()) {
@@ -5133,9 +5133,9 @@ void SVGTextFrame::DoReflow() {
     kid->MarkIntrinsicISizesDirty();
   }
 
-  nscoord inlineSize = kid->GetPrefISize(renderingContext);
+  nscoord inlineSize = kid->GetPrefISize(renderingContext.get());
   WritingMode wm = kid->GetWritingMode();
-  ReflowInput reflowInput(presContext, kid, renderingContext,
+  ReflowInput reflowInput(presContext, kid, renderingContext.get(),
                           LogicalSize(wm, inlineSize, NS_UNCONSTRAINEDSIZE));
   ReflowOutput desiredSize(reflowInput);
   nsReflowStatus status;

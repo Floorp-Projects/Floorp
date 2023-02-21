@@ -3857,14 +3857,14 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
       return;
     }
 
-    RefPtr<gfxContext> thebes =
+    UniquePtr<gfxContext> thebes =
         gfxContext::CreatePreservingTransformOrNull(target);
     if (!thebes) {
       // If CreatePreservingTransformOrNull returns null, it will also have
       // issued a gfxCriticalNote already, so here we'll just bail out.
       return;
     }
-    gfxTextRun::DrawParams params(thebes);
+    gfxTextRun::DrawParams params(thebes.get());
 
     params.allowGDI = false;
 
@@ -5027,7 +5027,7 @@ void CanvasRenderingContext2D::DrawDirectlyToCanvas(
   // the matrix even though this is a temp gfxContext.
   AutoRestoreTransform autoRestoreTransform(mTarget);
 
-  RefPtr<gfxContext> context = gfxContext::CreateOrNull(tempTarget);
+  UniquePtr<gfxContext> context = gfxContext::CreateOrNull(tempTarget);
   if (!context) {
     gfxDevCrash(LogReason::InvalidContext) << "Canvas context problem";
     return;
@@ -5047,7 +5047,7 @@ void CanvasRenderingContext2D::DrawDirectlyToCanvas(
   SVGImageContext svgContext(Some(sz));
 
   auto result = aImage.mImgContainer->Draw(
-      context, scaledImageSize,
+      context.get(), scaledImageSize,
       ImageRegion::Create(gfxRect(aSrc.x, aSrc.y, aSrc.width, aSrc.height)),
       aImage.mWhichFrame, SamplingFilter::GOOD, svgContext, modifiedFlags,
       CurrentState().globalAlpha);
@@ -5225,7 +5225,7 @@ void CanvasRenderingContext2D::DrawWindow(nsGlobalWindowInner& aWindow,
     return;
   }
 
-  RefPtr<gfxContext> thebes;
+  UniquePtr<gfxContext> thebes;
   RefPtr<DrawTarget> drawDT;
   // Rendering directly is faster and can be done if mTarget supports Azure
   // and does not need alpha blending.
@@ -5275,7 +5275,7 @@ void CanvasRenderingContext2D::DrawWindow(nsGlobalWindowInner& aWindow,
   RefPtr<PresShell> presShell = presContext->PresShell();
 
   Unused << presShell->RenderDocument(r, renderDocFlags, backgroundColor,
-                                      thebes);
+                                      thebes.get());
   // If this canvas was contained in the drawn window, the pre-transaction
   // callback may have returned its DT. If so, we must reacquire it here.
   EnsureTarget(discardContent ? &drawRect : nullptr);

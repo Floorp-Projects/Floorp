@@ -3080,9 +3080,9 @@ void PresShell::ClearFrameRefs(nsIFrame* aFrame) {
   }
 }
 
-already_AddRefed<gfxContext> PresShell::CreateReferenceRenderingContext() {
+UniquePtr<gfxContext> PresShell::CreateReferenceRenderingContext() {
   nsDeviceContext* devCtx = mPresContext->DeviceContext();
-  RefPtr<gfxContext> rc;
+  UniquePtr<gfxContext> rc;
   if (mPresContext->IsScreen()) {
     rc = gfxContext::CreateOrNull(
         gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget().get());
@@ -3093,7 +3093,7 @@ already_AddRefed<gfxContext> PresShell::CreateReferenceRenderingContext() {
     rc = devCtx->CreateReferenceRenderingContext();
   }
 
-  return rc ? rc.forget() : nullptr;
+  return rc;
 }
 
 // https://html.spec.whatwg.org/#scroll-to-the-fragment-identifier
@@ -5121,7 +5121,7 @@ already_AddRefed<SourceSurface> PresShell::PaintRangePaintInfo(
     return nullptr;
   }
 
-  RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(dt);
+  UniquePtr<gfxContext> ctx = gfxContext::CreateOrNull(dt);
   MOZ_ASSERT(ctx);  // already checked the draw target above
 
   if (aRegion) {
@@ -5176,7 +5176,7 @@ already_AddRefed<SourceSurface> PresShell::PaintRangePaintInfo(
     ctx->SetMatrixDouble(initialTM.PreTranslate(rootOffset));
     aArea.MoveBy(-rangeInfo->mRootOffset.x, -rangeInfo->mRootOffset.y);
     nsRegion visible(aArea);
-    rangeInfo->mList.PaintRoot(&rangeInfo->mBuilder, ctx,
+    rangeInfo->mList.PaintRoot(&rangeInfo->mBuilder, ctx.get(),
                                nsDisplayList::PAINT_DEFAULT, Nothing());
     aArea.MoveBy(rangeInfo->mRootOffset.x, rangeInfo->mRootOffset.y);
   }
@@ -9536,7 +9536,7 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
              "non-root frames");
 
   // CreateReferenceRenderingContext can return nullptr
-  RefPtr<gfxContext> rcx(CreateReferenceRenderingContext());
+  UniquePtr<gfxContext> rcx(CreateReferenceRenderingContext());
 
 #ifdef DEBUG
   mCurrentReflowRoot = target;
@@ -9564,7 +9564,7 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
   // Don't pass size directly to the reflow input, since a
   // constrained height implies page/column breaking.
   LogicalSize reflowSize(wm, size.ISize(wm), NS_UNCONSTRAINEDSIZE);
-  ReflowInput reflowInput(mPresContext, target, rcx, reflowSize,
+  ReflowInput reflowInput(mPresContext, target, rcx.get(), reflowSize,
                           ReflowInput::InitFlag::CallerWillInit);
   reflowInput.mOrthogonalLimit = size.BSize(wm);
 
@@ -11507,11 +11507,11 @@ PresShell::WindowSizeConstraints PresShell::GetWindowSizeConstraints() {
     return {minSize, maxSize};
   }
   if (rootFrame->IsXULBoxFrame()) {
-    RefPtr<gfxContext> rcx(CreateReferenceRenderingContext());
+    UniquePtr<gfxContext> rcx(CreateReferenceRenderingContext());
     if (!rcx) {
       return {minSize, maxSize};
     }
-    nsBoxLayoutState state(mPresContext, rcx);
+    nsBoxLayoutState state(mPresContext, rcx.get());
     minSize = rootFrame->GetXULMinSize(state);
     maxSize = rootFrame->GetXULMaxSize(state);
   } else {

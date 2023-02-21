@@ -494,7 +494,7 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer* aImage, ui
       return NS_ERROR_FAILURE;
     }
 
-    RefPtr<gfxContext> context = gfxContext::CreateOrNull(drawTarget);
+    UniquePtr<gfxContext> context = gfxContext::CreateOrNull(drawTarget);
     MOZ_ASSERT(context);
 
     SVGImageContext svgContext;
@@ -502,7 +502,7 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer* aImage, ui
       SVGImageContext::MaybeStoreContextPaint(svgContext, *aPresContext, *aComputedStyle, aImage);
     }
     mozilla::image::ImgDrawResult res =
-        aImage->Draw(context, scaledSize, ImageRegion::Create(scaledSize), aWhichFrame,
+        aImage->Draw(context.get(), scaledSize, ImageRegion::Create(scaledSize), aWhichFrame,
                      SamplingFilter::POINT, svgContext, imgIContainer::FLAG_SYNC_DECODE, 1.0);
 
     if (res != mozilla::image::ImgDrawResult::SUCCESS) {

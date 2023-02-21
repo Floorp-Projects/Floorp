@@ -1427,12 +1427,12 @@ nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
     return NS_OK;
   }
 
-  RefPtr<gfxContext> ctx = aContext;
-  gfxContextMatrixAutoSaveRestore save(ctx);
+  gfxContextMatrixAutoSaveRestore save(aContext);
 
   double themeScale = GetThemeDpiScaleFactor(aFrame);
   if (themeScale != 1.0) {
-    ctx->SetMatrix(ctx->CurrentMatrix().PreScale(themeScale, themeScale));
+    aContext->SetMatrix(
+        aContext->CurrentMatrix().PreScale(themeScale, themeScale));
   }
 
   gfxFloat p2a = gfxFloat(aFrame->PresContext()->AppUnitsPerDevPixel());
@@ -1446,7 +1446,7 @@ nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
   dr.Scale(1.0 / (p2a * themeScale));
 
   gfxWindowsNativeDrawing nativeDrawing(
-      ctx, dr, GetWidgetNativeDrawingFlags(aAppearance));
+      aContext, dr, GetWidgetNativeDrawingFlags(aAppearance));
 
 RENDER_AGAIN:
 
@@ -3109,10 +3109,8 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(
   tr.Scale(1.0 / p2a);
   dr.Scale(1.0 / p2a);
 
-  RefPtr<gfxContext> ctx = aContext;
-
   gfxWindowsNativeDrawing nativeDrawing(
-      ctx, dr, GetWidgetNativeDrawingFlags(aAppearance));
+      aContext, dr, GetWidgetNativeDrawingFlags(aAppearance));
 
 RENDER_AGAIN:
 
