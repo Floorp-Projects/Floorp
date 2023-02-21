@@ -143,6 +143,39 @@ config = {
             "check_uptake": True,
             "platforms": ["osx"],
         },
+        "langpack": {
+            "product-name": "Firefox-%(version)s-langpack-SSL",
+            "check_uptake": True,
+            "platforms": [
+                "linux",
+                "linux64",
+                "osx",
+                "win",
+                "win64",
+            ],
+        },
+        "langpack-latest": {
+            "product-name": "Firefox-esr-langpack-latest-SSL",
+            "check_uptake": True,
+            "platforms": [
+                "linux",
+                "linux64",
+                "osx",
+                "win",
+                "win64",
+            ],
+        },
+        "langpack-latest-next": {
+            "product-name": "Firefox-esr-next-langpack-latest-SSL",
+            "check_uptake": True,
+            "platforms": [
+                "linux",
+                "linux64",
+                "osx",
+                "win",
+                "win64",
+            ],
+        },
         "complete-mar": {
             "product-name": "Firefox-%(version)s-Complete",
             "check_uptake": True,
