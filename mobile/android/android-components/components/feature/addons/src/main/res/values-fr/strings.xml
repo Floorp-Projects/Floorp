@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Ajouter des données dans le presse-papiers</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">Bloquer du contenu sur n’importe quelle page</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Lire votre historique de navigation</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Télécharger des fichiers, et consulter et modifier l’historique des téléchargements du navigateur</string>
     <!-- Description for downloads_open permission. -->

@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_write_description">クリップボードへのデータ入力</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">任意のページのコンテンツをブロックする</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">閲覧履歴の読み取り</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">ファイルのダウンロードおよびブラウザーのダウンロード履歴の読み取りと変更</string>
     <!-- Description for downloads_open permission. -->

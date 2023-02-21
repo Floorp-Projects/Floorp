@@ -392,7 +392,7 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s peut essayer de refuser automatiquement les demandes de dépôt de cookies sur les sites compatibles.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title">Finies les bannières de cookies !</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_title">Fini les bannières de cookies !</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Rejette automatiquement les demandes de cookies, lorsque cela est possible. Sinon, accepte tous les cookies pour supprimer les bannières de cookies.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->

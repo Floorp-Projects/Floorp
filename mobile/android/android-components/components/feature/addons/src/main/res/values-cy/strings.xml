@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Mewnbynnu data i’r clipfwrdd</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">Rhwystro cynnwys ar unrhyw dudalen</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Darllen eich hanes pori</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Llwytho ffeiliau i lawr a darllen a newid hanes llwytho i lawr y porwr</string>
     <!-- Description for downloads_open permission. -->

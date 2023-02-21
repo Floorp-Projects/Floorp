@@ -1010,12 +1010,37 @@
 
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">U situ richiestu ùn permette micca u modu HTTPS</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">U situ richiestu ùn permette micca u modu HTTPS</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Stu situ ùn permette micca u modu HTTPS</string>
 
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">Per aumentà a sicurità, l’ozzione predefinita di %1$s hè di fà un tentativu autumaticu di cunnessione impieghendu HTTPS. Per cambià sta definizione, o per sapene di più, andate in Preferenze &gt; Vita privata è sicurità &gt; Sicurità.</string>
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Per aumentà a sicurità, l’ozzione predefinita di %1$s hè di fà un tentativu autumaticu di cunnessione impieghendu HTTPS. Per cambià sta definizione, o per sapene di più, andate in Preferenze &gt; Vita privata è sicurità &gt; Sicurità.</string>
 
-    <!-- Sessions List -->
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[Per una sicurità più forte, %1$s prova d’impiegà una cunnessione HTTPS quand’ella hè pussibule.
+     <a href="%2$s">Per sapene di più</a> <br/><br/>
+     Cambiate sta definizione in Preferenze > Vita privata è sicurità > Sicurità.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Cunnessione micca assicurata</string>
+
+     <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    Stu penseru pò pruvene da a cunfigurazione di u servitore, osinnò ghjè qualchissia forse chì prova d’impatruniscesi di u servitore. <br/><br/>
+    S’è vo avete dighjà riesciutu à cunnettevi à stu servitore, u sbagliu pò esse timpurariu.
+    ]]></string>
+
+     <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Qualchissia puderia pruvà d’impatruniscesi di u situ web è cuntinuà puderia esse periculosu.</label>
+        <br><br>
+        <label>%1$s ùn hà micca fidanza in <b>%2$s</b> perchè l’emettore di u so certificatu hè scunnisciutu, u certificatu hè firmatu daperellu, o ancu u servitore ùn manda micca certificati intermediarii curretti.</label>
+    ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Chjode l’unghjetta</string>
 

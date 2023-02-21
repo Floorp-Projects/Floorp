@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Aghjunghje dati in u preme’papei</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">Bluccà u cuntenutu nant’à qualsiasi pagina</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Leghje a vostra cronolugia di navigazione</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Scaricà schedarii, è leghje è mudificà a cronolugia di i scaricamenti di u navigatore</string>
     <!-- Description for downloads_open permission. -->
