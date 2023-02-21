@@ -25,6 +25,7 @@ class gfxConfigManager {
         mFeatureWrPartial(nullptr),
         mFeatureWrShaderCache(nullptr),
         mFeatureWrOptimizedShaders(nullptr),
+        mFeatureWrScissoredCacheClears(nullptr),
         mFeatureHwCompositing(nullptr),
         mFeatureD3D11HwAngle(nullptr),
         mFeatureD3D11Compositing(nullptr),
@@ -39,6 +40,8 @@ class gfxConfigManager {
         mWrForcePartialPresent(false),
         mWrPartialPresent(false),
         mWrOptimizedShaders(false),
+        mWrScissoredCacheClearsEnabled(false),
+        mWrScissoredCacheClearsForceEnabled(false),
         mGPUProcessAllowSoftware(false),
         mWrEnvForceEnabled(false),
         mScaledResolution(false),
@@ -66,6 +69,7 @@ class gfxConfigManager {
   FeatureState* mFeatureWrPartial;
   FeatureState* mFeatureWrShaderCache;
   FeatureState* mFeatureWrOptimizedShaders;
+  FeatureState* mFeatureWrScissoredCacheClears;
 
   FeatureState* mFeatureHwCompositing;
   FeatureState* mFeatureD3D11HwAngle;
@@ -87,6 +91,8 @@ class gfxConfigManager {
   bool mWrPartialPresent;
   Maybe<bool> mWrShaderCache;
   bool mWrOptimizedShaders;
+  bool mWrScissoredCacheClearsEnabled;
+  bool mWrScissoredCacheClearsForceEnabled;
   bool mGPUProcessAllowSoftware;
 
   /**

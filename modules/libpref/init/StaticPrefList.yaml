@@ -6477,6 +6477,16 @@
 #endif
   mirror: once
 
+- name: gfx.webrender.scissored-cache-clears.enabled
+  type: bool
+  value: true
+  mirror: once
+
+- name: gfx.webrender.scissored-cache-clears.force-enabled
+  type: bool
+  value: false
+  mirror: once
+
 - name: gfx.webrender.compositor.force-enabled
   type: bool
   value: false
