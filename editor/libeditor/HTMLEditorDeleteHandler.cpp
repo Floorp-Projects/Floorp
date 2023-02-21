@@ -249,15 +249,16 @@ class MOZ_STACK_CLASS HTMLEditor::AutoDeleteRangesHandler final {
    * Handle deletion of collapsed selection in a text node.
    *
    * @param aDirectionAndAmount Direction of the deletion.
-   * @param aPointToDelete      The point in a text node to delete character(s).
-   *                            Caller must guarantee that this is in a text
-   *                            node.
+   * @param aRangesToDelete     Computed selection ranges to delete.
+   * @param aPointAtDeletingChar   The visible char position which you want to
+   *                               delete.
    * @param aEditingHost        The editing host.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<EditActionResult, nsresult>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CaretPoint, nsresult>
   HandleDeleteCollapsedSelectionAtVisibleChar(
       HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
-      const EditorDOMPoint& aPointToDelete, const Element& aEditingHost);
+      AutoRangeArray& aRangesToDelete,
+      const EditorDOMPoint& aPointAtDeletingChar, const Element& aEditingHost);
 
   /**
    * Handle deletion of atomic elements like <br>, <hr>, <img>, <input>, etc and
@@ -1928,15 +1929,26 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAroundCollapsedRanges(
     if (NS_WARN_IF(!aScanFromCaretPointResult.GetContent()->IsText())) {
       return Err(NS_ERROR_FAILURE);
     }
-    Result<EditActionResult, nsresult> result =
+    Result<CaretPoint, nsresult> caretPointOrError =
         HandleDeleteCollapsedSelectionAtVisibleChar(
-            aHTMLEditor, aDirectionAndAmount,
+            aHTMLEditor, aDirectionAndAmount, aRangesToDelete,
             aScanFromCaretPointResult.Point<EditorDOMPoint>(), aEditingHost);
-    NS_WARNING_ASSERTION(result.isOk(),
-                         "AutoDeleteRangesHandler::"
-                         "HandleDeleteCollapsedSelectionAtVisibleChar() "
-                         "failed");
-    return result;
+    if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
+      NS_WARNING(
+          "AutoDeleteRangesHandler::"
+          "HandleDeleteCollapsedSelectionAtVisibleChar() failed");
+      return caretPointOrError.propagateErr();
+    }
+    nsresult rv = caretPointOrError.unwrap().SuggestCaretPointTo(
+        aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion});
+    if (NS_FAILED(rv)) {
+      NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
+      return Err(rv);
+    }
+    NS_WARNING_ASSERTION(
+        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+        "CaretPoint::SuggestCaretPointTo() failed, but ignored");
+    return EditActionResult::HandledResult();
   }
 
   if (aScanFromCaretPointResult.ReachedSpecialContent() ||
@@ -2169,23 +2181,32 @@ Result<CaretPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
   return CaretPoint(std::move(pointToPutCaret));
 }
 
-Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
+Result<CaretPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     HandleDeleteCollapsedSelectionAtVisibleChar(
         HTMLEditor& aHTMLEditor, nsIEditor::EDirection aDirectionAndAmount,
-        const EditorDOMPoint& aPointToDelete, const Element& aEditingHost) {
+        AutoRangeArray& aRangesToDelete,
+        const EditorDOMPoint& aPointAtDeletingChar,
+        const Element& aEditingHost) {
   MOZ_ASSERT(aHTMLEditor.IsTopLevelEditSubActionDataAvailable());
   MOZ_ASSERT(!StaticPrefs::editor_white_space_normalization_blink_compatible());
-  MOZ_ASSERT(aPointToDelete.IsSet());
-  MOZ_ASSERT(aPointToDelete.IsInTextNode());
+  MOZ_ASSERT(aPointAtDeletingChar.IsSet());
+  MOZ_ASSERT(aPointAtDeletingChar.IsInTextNode());
 
-  OwningNonNull<Text> visibleTextNode = *aPointToDelete.ContainerAs<Text>();
+  OwningNonNull<Text> visibleTextNode =
+      *aPointAtDeletingChar.ContainerAs<Text>();
   EditorDOMPoint startToDelete, endToDelete;
+  // FIXME: This does not care grapheme cluster of complicate character
+  // sequence like Emoji.
+  // TODO: Investigate what happens if a grapheme cluster which should be
+  // delete once is split to multiple text nodes.
+  // TODO: We should stop using this path, instead, we should extend the range
+  // before calling this method.
   if (aDirectionAndAmount == nsIEditor::ePrevious) {
-    if (MOZ_UNLIKELY(aPointToDelete.IsStartOfContainer())) {
+    if (MOZ_UNLIKELY(aPointAtDeletingChar.IsStartOfContainer())) {
       return Err(NS_ERROR_UNEXPECTED);
     }
-    startToDelete = aPointToDelete.PreviousPoint();
-    endToDelete = aPointToDelete;
+    startToDelete = aPointAtDeletingChar.PreviousPoint();
+    endToDelete = aPointAtDeletingChar;
     // Bug 1068979: delete both codepoints if surrogate pair
     if (!startToDelete.IsStartOfContainer()) {
       const nsTextFragment* text = &visibleTextNode->TextFragment();
@@ -2195,15 +2216,15 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
       }
     }
   } else {
-    RefPtr<const nsRange> range = aHTMLEditor.SelectionRef().GetRangeAt(0);
-    if (NS_WARN_IF(!range) ||
-        NS_WARN_IF(range->GetStartContainer() !=
-                   aPointToDelete.GetContainer()) ||
-        NS_WARN_IF(range->GetEndContainer() != aPointToDelete.GetContainer())) {
+    if (NS_WARN_IF(aRangesToDelete.Ranges().IsEmpty()) ||
+        NS_WARN_IF(aRangesToDelete.FirstRangeRef()->GetStartContainer() !=
+                   aPointAtDeletingChar.GetContainer()) ||
+        NS_WARN_IF(aRangesToDelete.FirstRangeRef()->GetEndContainer() !=
+                   aPointAtDeletingChar.GetContainer())) {
       return Err(NS_ERROR_FAILURE);
     }
-    startToDelete = range->StartRef();
-    endToDelete = range->EndRef();
+    startToDelete = aRangesToDelete.FirstRangeRef()->StartRef();
+    endToDelete = aRangesToDelete.FirstRangeRef()->EndRef();
   }
 
   {
@@ -2219,6 +2240,7 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     // Ignore caret position because we'll set caret position below
     caretPointOrError.unwrap().IgnoreCaretPointSuggestion();
   }
+
   if (aHTMLEditor.MayHaveMutationEventListeners(
           NS_EVENT_BITS_MUTATION_NODEREMOVED |
           NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT |
@@ -2235,7 +2257,10 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
+  EditorDOMPoint pointToPutCaret = startToDelete;
   {
+    AutoTrackDOMPoint trackPointToPutCaret(aHTMLEditor.RangeUpdaterRef(),
+                                           &pointToPutCaret);
     Result<CaretPoint, nsresult> caretPointOrError =
         aHTMLEditor.DeleteTextWithTransaction(
             visibleTextNode, startToDelete.Offset(),
@@ -2244,17 +2269,11 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
       NS_WARNING("HTMLEditor::DeleteTextWithTransaction() failed");
       return caretPointOrError.propagateErr();
     }
-    nsresult rv = caretPointOrError.inspect().SuggestCaretPointTo(
-        aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
-                      SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                      SuggestCaret::AndIgnoreTrivialError});
-    if (NS_FAILED(rv)) {
-      NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
-      return Err(rv);
-    }
-    NS_WARNING_ASSERTION(
-        rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-        "CaretPoint::SuggestCaretPointTo() failed, but ignored");
+    trackPointToPutCaret.FlushAndStopTracking();
+    caretPointOrError.unwrap().MoveCaretPointTo(
+        pointToPutCaret, aHTMLEditor,
+        {SuggestCaret::OnlyIfHasSuggestion,
+         SuggestCaret::OnlyIfTransactionsAllowedToDoIt});
   }
 
   // XXX When Backspace key is pressed, Chromium removes following empty
@@ -2269,21 +2288,21 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
   //     following empty text nodes and the first character of the
   //     non-empty text node.  For now, we should keep our traditional
   //     behavior same as Chromium for backward compatibility.
-
-  nsresult rv =
-      DeleteNodeIfInvisibleAndEditableTextNode(aHTMLEditor, visibleTextNode);
-  if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-    return Err(NS_ERROR_EDITOR_DESTROYED);
+  {
+    AutoTrackDOMPoint trackPointToPutCaret(aHTMLEditor.RangeUpdaterRef(),
+                                           &pointToPutCaret);
+    nsresult rv =
+        DeleteNodeIfInvisibleAndEditableTextNode(aHTMLEditor, visibleTextNode);
+    if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
+      return Err(NS_ERROR_EDITOR_DESTROYED);
+    }
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "AutoDeleteRangesHandler::DeleteNodeIfInvisibleAndEditableTextNode() "
+        "failed, but ignored");
   }
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rv),
-      "AutoDeleteRangesHandler::DeleteNodeIfInvisibleAndEditableTextNode() "
-      "failed, but ignored");
 
-  const auto newCaretPosition =
-      aHTMLEditor.GetFirstSelectionStartPoint<EditorDOMPoint>();
-  if (MOZ_UNLIKELY(!newCaretPosition.IsSet())) {
-    NS_WARNING("There was no selection range");
+  if (NS_WARN_IF(!pointToPutCaret.IsSet())) {
     return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
@@ -2291,29 +2310,24 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
   //     that we should use EditorDOMPoint::AtEndOf(visibleTextNode)
   //     instead.  (Perhaps, we don't and/or shouldn't need to do this
   //     if the text node is preformatted.)
+  AutoTrackDOMPoint trackPointToPutCaret(aHTMLEditor.RangeUpdaterRef(),
+                                         &pointToPutCaret);
   Result<CaretPoint, nsresult> caretPointOrError =
       aHTMLEditor.InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
-          newCaretPosition);
+          pointToPutCaret);
   if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
     NS_WARNING(
         "HTMLEditor::InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary()"
         " failed");
     return caretPointOrError.propagateErr();
   }
-  rv = caretPointOrError.unwrap().SuggestCaretPointTo(
-      aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion});
-  if (NS_FAILED(rv)) {
-    NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
-    return Err(rv);
-  }
-  NS_WARNING_ASSERTION(rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-                       "CaretPoint::SuggestCaretPointTo() failed, but ignored");
-
+  trackPointToPutCaret.FlushAndStopTracking();
+  caretPointOrError.unwrap().MoveCaretPointTo(
+      pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
   // Remember that we did a ranged delete for the benefit of
   // AfterEditInner().
   aHTMLEditor.TopLevelEditSubActionDataRef().mDidDeleteNonCollapsedRange = true;
-
-  return EditActionResult::HandledResult();
+  return CaretPoint(std::move(pointToPutCaret));
 }
 
 Result<bool, nsresult>
