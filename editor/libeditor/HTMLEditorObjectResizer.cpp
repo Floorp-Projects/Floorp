@@ -676,8 +676,7 @@ nsresult HTMLEditor::StartResizing(Element& aHandleElement) {
       "Element::SetAttr(nsGkAtoms::_moz_activated, true) failed");
 
   // do we want to preserve ratio or not?
-  const bool preserveRatio = StaticPrefs::editor_resizing_preserve_ratio() &&
-                             HTMLEditUtils::IsImage(mResizedObject);
+  const bool preserveRatio = HTMLEditUtils::IsImage(mResizedObject);
 
   // the way we change the position/size of the shadow depends on
   // the handle
