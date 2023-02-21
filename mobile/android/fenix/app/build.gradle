@@ -848,20 +848,6 @@ if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopsrcd
     apply from: "${topsrcdir}/substitute-local-geckoview.gradle"
 }
 
-def acSrcDir = null
-if (gradle.hasProperty('localProperties.autoPublish.android-components.dir')) {
-  acSrcDir = gradle.getProperty('localProperties.autoPublish.android-components.dir')
-} else if (gradle.hasProperty('localProperties.branchBuild.android-components.dir')) {
-  acSrcDir = gradle.getProperty('localProperties.branchBuild.android-components.dir')
-}
-if (acSrcDir) {
-    if (acSrcDir.startsWith("/")) {
-        apply from: "${acSrcDir}/substitute-local-ac.gradle"
-    } else {
-        apply from: "../${acSrcDir}/substitute-local-ac.gradle"
-    }
-}
-
 def appServicesSrcDir = null
 if (gradle.hasProperty('localProperties.autoPublish.application-services.dir')) {
   appServicesSrcDir = gradle.getProperty('localProperties.autoPublish.application-services.dir')

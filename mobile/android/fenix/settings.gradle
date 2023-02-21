@@ -133,7 +133,6 @@ def runCmd(cmd, workingDir, successMessage, captureStdout=true) {
 
 Properties localProperties = null
 String settingAppServicesPath = "autoPublish.application-services.dir"
-String settingAndroidComponentsPath = "autoPublish.android-components.dir"
 String settingGleanPath = "autoPublish.glean.dir"
 
 if (file('local.properties').canRead()) {
@@ -163,21 +162,6 @@ if (localProperties != null) {
         runCmd(publishAppServicesCmd, appServicesLocalPath, "Published application-services for local development.", false)
     } else {
         log("Disabled auto-publication of application-services. Enable it by settings '$settingAppServicesPath' in local.properties")
-    }
-
-    String androidComponentsLocalPath = localProperties.getProperty(settingAndroidComponentsPath)
-
-    if (androidComponentsLocalPath != null) {
-        log("Enabling automatic publication of android-components from: $androidComponentsLocalPath")
-        // As above, hacks to execute .py files on Windows.
-        def publishAcCmd = [];
-        if (System.properties['os.name'].toLowerCase().contains('windows')) {
-            publishAcCmd << "py";
-        }
-        publishAcCmd << "./automation/publish_to_maven_local_if_modified.py";
-        runCmd(publishAcCmd, androidComponentsLocalPath, "Published android-components for local development.", false)
-    } else {
-        log("Disabled auto-publication of android-components. Enable it by settings '$settingAndroidComponentsPath' in local.properties")
     }
 
     String gleanLocalPath = localProperties.getProperty(settingGleanPath)

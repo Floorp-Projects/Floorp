@@ -195,15 +195,13 @@ To set the raptor manifest flag in Nightly, Beta and Release variants, add the f
 raptorEnabled
 ```
 
-### Auto-publication workflow for android-components and application-services
+### Auto-publication workflow for application-services and glean
 If you're making changes to these projects and want to test them in Fenix, auto-publication workflow is the fastest, most reliable
 way to do that.
 
-In `local.properties`, specify a relative path to your local `android-components` and/or `application-services` projects. E.g.:
-- `autoPublish.android-components.dir=../firefox-android/android-components`
+In `local.properties`, specify a relative path to your local `glean` and/or `application-services` projects. E.g.:
+- `autoPublish.glean.dir=../glean`
 - `autoPublish.application-services.dir=../application-services`
-
-*Note that the Android Components project was already migrated to the new [firefox-android](https://github.com/mozilla-mobile/firefox-android) repository. Therefore, this auto publication workflow won't be neccessary for Android Components once Fenix is integrated in the new repository as well.*
 
 Once these flags are set, your Fenix builds will include any local modifications present in these projects.
 
