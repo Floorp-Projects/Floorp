@@ -13,7 +13,6 @@
 
 #include <stdio.h>
 
-#include <list>
 #include <map>
 #include <memory>
 #include <set>
@@ -239,7 +238,6 @@ class TurnPort : public Port {
   void Close();
 
  private:
-  typedef std::list<TurnEntry*> EntryList;
   typedef std::map<rtc::Socket::Option, int> SocketOptionsMap;
   typedef std::set<rtc::SocketAddress> AttemptedServerSet;
 
@@ -296,8 +294,6 @@ class TurnPort : public Port {
   bool HasPermission(const rtc::IPAddress& ipaddr) const;
   TurnEntry* FindEntry(const rtc::SocketAddress& address) const;
   TurnEntry* FindEntry(int channel_id) const;
-  bool EntryExists(TurnEntry* e);
-  void DestroyEntry(TurnEntry* entry);
 
   // Marks the connection with remote address `address` failed and
   // pruned (a.k.a. write-timed-out). Returns true if a connection is found.
@@ -333,7 +329,7 @@ class TurnPort : public Port {
   std::string hash_;   // Digest of username:realm:password
 
   int next_channel_number_;
-  EntryList entries_;
+  std::vector<std::unique_ptr<TurnEntry>> entries_;
 
   PortState state_;
   // By default the value will be set to 0. This value will be used in
