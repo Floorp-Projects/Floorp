@@ -175,7 +175,7 @@ void RemoveSsrcsAndKeepMsids(cricket::SessionDescription* desc);
 // metrics we're interested in are already available in "inbound-rtp".
 int FindFirstMediaStatsIndexByKind(
     const std::string& kind,
-    const std::vector<const webrtc::RTCMediaStreamTrackStats*>&
+    const std::vector<const webrtc::DEPRECATED_RTCMediaStreamTrackStats*>&
         media_stats_vec);
 
 class TaskQueueMetronome : public webrtc::Metronome {

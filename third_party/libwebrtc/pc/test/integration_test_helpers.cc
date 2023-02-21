@@ -46,7 +46,7 @@ void RemoveSsrcsAndKeepMsids(cricket::SessionDescription* desc) {
 
 int FindFirstMediaStatsIndexByKind(
     const std::string& kind,
-    const std::vector<const webrtc::RTCMediaStreamTrackStats*>&
+    const std::vector<const webrtc::DEPRECATED_RTCMediaStreamTrackStats*>&
         media_stats_vec) {
   for (size_t i = 0; i < media_stats_vec.size(); i++) {
     if (media_stats_vec[i]->kind.ValueToString() == kind) {
