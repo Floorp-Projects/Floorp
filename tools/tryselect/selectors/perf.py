@@ -520,6 +520,18 @@ class PerfParser(CompareParser):
                 "metavar": "",
             },
         ],
+        [
+            ["--extra-args"],
+            {
+                "nargs": "*",
+                "type": str,
+                "default": [],
+                "dest": "extra_args",
+                "help": "Set the extra args "
+                "(e.x, --extra-args verbose post-startup-delay=1)",
+                "metavar": "",
+            },
+        ],
     ]
 
     def get_tasks(base_cmd, queries, query_arg=None, candidate_tasks=None):
@@ -1230,6 +1242,10 @@ class PerfParser(CompareParser):
         if len(selected_tasks) == 0:
             print("No tasks selected")
             return None
+
+        if kwargs.get("extra_args", []):
+            args = " ".join(kwargs["extra_args"])
+            try_config["env"] = {"PERF_FLAGS": args}
 
         return PerfParser.perf_push_to_try(
             selected_tasks,
