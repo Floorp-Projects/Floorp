@@ -1203,7 +1203,7 @@ fuzzy(0-1,0-34360) == 461512-1.html 461512-1-ref.html
 == 462844-3.html 462844-ref.html
 == 462844-4.html 462844-ref.html
 == 463204-1.html 463204-1-ref.html
-fuzzy-if(!useDrawSnapshot,16-16,3345-4100) == chrome://reftest/content/bugs/463217-1.xhtml chrome://reftest/content/bugs/463217-1-ref.xhtml
+== chrome://reftest/content/bugs/463217-1.xhtml chrome://reftest/content/bugs/463217-1-ref.xhtml
 == 463952-1.html 463952-1-ref.html
 == 464811-1.html 464811-1-ref.html
 == 465574-1.html 465574-1-ref.html # bug 421436

@@ -708,13 +708,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList {
   nsChangeHint CalcDifference(const nsStyleList& aNewData,
                               const nsStyleDisplay& aOldDisplay) const;
 
-  nsRect GetImageRegion() const {
-    if (!mImageRegion.IsRect()) {
-      return nsRect();
-    }
-    return mImageRegion.AsRect().ToLayoutRect(0);
-  }
-
   already_AddRefed<nsIURI> GetListStyleImageURI() const;
 
   mozilla::StyleListStylePosition mListStylePosition;
@@ -722,9 +715,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList {
   mozilla::CounterStylePtr mCounterStyle;
   mozilla::StyleQuotes mQuotes;
   mozilla::StyleImage mListStyleImage;
-
-  // the rect to use within an image.
-  mozilla::StyleClipRectOrAuto mImageRegion;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePage {

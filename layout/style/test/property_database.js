@@ -2872,14 +2872,6 @@ var gCSSProperties = {
     other_values: ["1"],
     invalid_values: [],
   },
-  "-moz-image-region": {
-    domProp: "MozImageRegion",
-    inherited: true,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["auto"],
-    other_values: ["rect(3px 20px 15px 4px)", "rect(17px, 21px, 33px, 2px)"],
-    invalid_values: ["rect(17px, 21px, 33, 2px)"],
-  },
   "margin-inline": {
     domProp: "marginInline",
     inherited: false,

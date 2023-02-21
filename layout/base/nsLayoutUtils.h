@@ -1951,17 +1951,12 @@ class nsLayoutUtils {
    *                            variety.
    *   @param aAnchor           If non-null, a point which we will ensure
    *                            is pixel-aligned in the output.
-   *   @param aSourceArea       If non-null, this area is extracted from
-   *                            the image and drawn in aDest. It's
-   *                            in appunits. For best results it should
-   *                            be aligned with image pixels.
    */
   static ImgDrawResult DrawSingleImage(
       gfxContext& aContext, nsPresContext* aPresContext, imgIContainer* aImage,
       SamplingFilter aSamplingFilter, const nsRect& aDest, const nsRect& aDirty,
       const mozilla::SVGImageContext& aSVGContext, uint32_t aImageFlags,
-      const nsPoint* aAnchorPoint = nullptr,
-      const nsRect* aSourceArea = nullptr);
+      const nsPoint* aAnchorPoint = nullptr);
 
   /**
    * Given an imgIContainer, this method attempts to obtain an intrinsic
