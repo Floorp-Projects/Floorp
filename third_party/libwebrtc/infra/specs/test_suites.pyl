@@ -183,6 +183,12 @@
       'voip_unittests': {},
       'webrtc_nonparallel_tests': {},
     },
+    'linux_desktop_specific_tests': {
+      'pipewire_shared_screencast_stream_test': {
+        'args': ['.'],
+        'mixins': ['resultdb-gtest-json-format'],
+      },
+    },
     'more_configs_tests': {
       'peerconnection_unittests': {
         'swarming': {
@@ -224,6 +230,21 @@
     'desktop_tests_with_video_capture': [
       'desktop_tests',
       'video_capture_tests',
+    ],
+    'linux_desktop_tests_tryserver': [
+      'desktop_tests',
+      'linux_desktop_specific_tests',
+      'video_capture_tests_tryserver',
+      'webrtc_perf_tests_tryserver',
+    ],
+    'linux_desktop_tests_with_video_capture': [
+      'desktop_tests',
+      'linux_desktop_specific_tests',
+      'video_capture_tests',
+    ],
+    'linux_tests': [
+      'desktop_tests',
+      'linux_desktop_specific_tests',
     ],
   },
 }

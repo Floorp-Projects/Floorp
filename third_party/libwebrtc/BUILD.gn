@@ -106,6 +106,9 @@ if (!build_with_chromium && !build_with_mozilla) {
           "tools_webrtc/perf:webrtc_dashboard_upload",
         ]
       }
+      if ((is_linux || is_chromeos) && rtc_use_pipewire) {
+        deps += [ "modules/desktop_capture:shared_screencast_stream_test" ]
+      }
     }
     if (target_os == "android") {
       deps += [ "tools_webrtc:binary_version_check" ]

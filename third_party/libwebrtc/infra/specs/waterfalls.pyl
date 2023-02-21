@@ -83,7 +83,7 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'linux_tests',
         },
       },
       'Linux MSan': {
@@ -91,6 +91,9 @@
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
           'isolated_scripts': 'desktop_tests',
+          # TODO(crbug.com/webrtc/14568): use 'linux_tests'
+          # Fails on "MemorySanitizer: use-of-uninitialized-value in
+          # libpipewire-0.3.so"
         },
       },
       'Linux Tsan v2': {
@@ -98,20 +101,23 @@
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
           'isolated_scripts': 'desktop_tests',
+          # TODO(crbug.com/webrtc/14568): use 'linux_tests'
+          # Fails on "ThreadSanitizer: data race on vptr (ctor/dtor vs
+          # virtual call) in shared_screencast_stream_test"
         },
       },
       'Linux UBSan': {
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'linux_tests',
         },
       },
       'Linux UBSan vptr': {
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'linux_tests',
         },
       },
       'Linux32 Debug': {
@@ -135,7 +141,7 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'linux_tests',
         },
       },
       'Linux64 Debug (ARM)': {},
@@ -143,7 +149,7 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'desktop_tests_with_video_capture',
+          'isolated_scripts': 'linux_desktop_tests_with_video_capture',
         },
       },
       'Linux64 Release (ARM)': {},
@@ -466,7 +472,7 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'linux_tests',
         },
       },
       'linux_compile_arm64_dbg': {},
@@ -479,7 +485,7 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'linux_tests',
         },
       },
       'linux_libfuzzer_rel': {},
@@ -487,7 +493,7 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'linux_tests',
         },
       },
       'linux_more_configs': {
@@ -502,13 +508,16 @@
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
           'isolated_scripts': 'desktop_tests',
+          # TODO(crbug.com/webrtc/14568): use 'linux_tests'
+          # Fails on "MemorySanitizer: use-of-uninitialized-value in
+          # libpipewire-0.3.so"
         },
       },
       'linux_rel': {
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'desktop_tests_tryserver',
+          'isolated_scripts': 'linux_desktop_tests_tryserver',
         },
       },
       'linux_tsan2': {
@@ -516,20 +525,23 @@
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
           'isolated_scripts': 'desktop_tests',
+          # TODO(crbug.com/webrtc/14568): use 'linux_tests'
+          # Fails on "ThreadSanitizer: data race on vptr (ctor/dtor vs
+          # virtual call) in shared_screencast_stream_test"
         },
       },
       'linux_ubsan': {
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'linux_tests',
         },
       },
       'linux_ubsan_vptr': {
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'linux_tests',
         },
       },
       'linux_x86_dbg': {

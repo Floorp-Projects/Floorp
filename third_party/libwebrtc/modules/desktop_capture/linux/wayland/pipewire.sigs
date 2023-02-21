@@ -31,6 +31,8 @@ pw_stream * pw_stream_new(pw_core *core, const char *name, pw_properties *props)
 int pw_stream_queue_buffer(pw_stream *stream, pw_buffer *buffer);
 int pw_stream_set_active(pw_stream *stream, bool active);
 int pw_stream_update_params(pw_stream *stream, const spa_pod **params, uint32_t n_params);
+uint32_t pw_stream_get_node_id(pw_stream *stream);
+pw_stream_state pw_stream_get_state(pw_stream *stream, const char **error);
 
 // thread-loop.h
 void pw_thread_loop_destroy(pw_thread_loop *loop);
