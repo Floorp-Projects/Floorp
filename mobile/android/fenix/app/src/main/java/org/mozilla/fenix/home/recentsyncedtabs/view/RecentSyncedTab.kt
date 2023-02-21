@@ -86,7 +86,6 @@ fun RecentSyncedTab(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp)
             .combinedClickable(
                 onClick = { tab?.let { onRecentSyncedTabClick(tab) } },
                 onLongClick = { isDropdownExpanded = true },
