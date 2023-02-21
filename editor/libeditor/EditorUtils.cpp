@@ -413,7 +413,7 @@ nsINode* EditorDOMRangeBase<
  *****************************************************************************/
 
 nsresult CaretPoint::SuggestCaretPointTo(
-    const EditorBase& aEditorBase, const SuggestCaretOptions& aOptions) const {
+    EditorBase& aEditorBase, const SuggestCaretOptions& aOptions) const {
   mHandledCaretPoint = true;
   if (!mCaretPoint.IsSet()) {
     if (aOptions.contains(SuggestCaret::OnlyIfHasSuggestion)) {

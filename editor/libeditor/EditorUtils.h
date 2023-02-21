@@ -66,7 +66,7 @@ class MOZ_STACK_CLASS CaretPoint {
    * Suggest caret position to aEditorBase.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult SuggestCaretPointTo(
-      const EditorBase& aEditorBase, const SuggestCaretOptions& aOptions) const;
+      EditorBase& aEditorBase, const SuggestCaretOptions& aOptions) const;
 
   /**
    * IgnoreCaretPointSuggestion() should be called if the method does not want
