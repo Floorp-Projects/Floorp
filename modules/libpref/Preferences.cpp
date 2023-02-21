@@ -4921,23 +4921,6 @@ nsresult Preferences::InitInitialObjects(bool aIsStartup) {
     NS_WARNING("Error parsing application default preferences.");
   }
 
-#if defined(MOZ_WIDGET_GTK)
-  // Under Flatpak/Snap package, load /etc/firefox/defaults/pref/*.js.
-  if (mozilla::widget::IsRunningUnderFlatpakOrSnap()) {
-    nsCOMPtr<nsIFile> defaultSnapPrefDir;
-    rv = NS_GetSpecialDirectory(NS_OS_SYSTEM_CONFIG_DIR,
-                                getter_AddRefs(defaultSnapPrefDir));
-    NS_ENSURE_SUCCESS(rv, rv);
-    defaultSnapPrefDir->AppendNative("defaults"_ns);
-    defaultSnapPrefDir->AppendNative("pref"_ns);
-
-    rv = pref_LoadPrefsInDir(defaultSnapPrefDir, nullptr, 0);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Error parsing application default preferences under Snap.");
-    }
-  }
-#endif
-
   // Load jar:$app/omni.jar!/defaults/preferences/*.js
   // or jar:$gre/omni.jar!/defaults/preferences/*.js.
   RefPtr<nsZipArchive> appJarReader = Omnijar::GetReader(Omnijar::APP);
@@ -5009,6 +4992,24 @@ nsresult Preferences::InitInitialObjects(bool aIsStartup) {
       pref_LoadPrefsInDir(path, nullptr, 0);
     }
   }
+
+#if defined(MOZ_WIDGET_GTK)
+  // To ensure the system-wide preferences are not overwritten by
+  // firefox/browser/defauts/preferences/*.js we need to load
+  // the /etc/firefox/defaults/pref/*.js settings as last.
+  // Under Flatpak, the NS_OS_SYSTEM_CONFIG_DIR points to /app/etc/firefox
+  nsCOMPtr<nsIFile> defaultSystemPrefDir;
+  rv = NS_GetSpecialDirectory(NS_OS_SYSTEM_CONFIG_DIR,
+                              getter_AddRefs(defaultSystemPrefDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+  defaultSystemPrefDir->AppendNative("defaults"_ns);
+  defaultSystemPrefDir->AppendNative("pref"_ns);
+
+  rv = pref_LoadPrefsInDir(defaultSystemPrefDir, nullptr, 0);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Error parsing application default preferences.");
+  }
+#endif
 
   if (XRE_IsParentProcess()) {
     SetupTelemetryPref();
