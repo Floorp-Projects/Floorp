@@ -619,7 +619,8 @@ void EmulatedEndpointImpl::OnPacketReceived(EmulatedIpPacket packet) {
     // process: one peer closed connection, second still sending data.
     RTC_LOG(LS_INFO) << "Drop packet: no receiver registered in "
                      << options_.log_name << "; id=" << options_.id
-                     << " on port " << packet.to.port();
+                     << " on port " << packet.to.port()
+                     << ". Packet source: " << packet.from.ToString();
     stats_builder_.OnPacketDropped(packet.from.ipaddr(),
                                    DataSize::Bytes(packet.ip_packet_size()),
                                    options_.stats_gathering_mode);
