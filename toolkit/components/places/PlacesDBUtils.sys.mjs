@@ -376,25 +376,12 @@ export var PlacesDBUtils = {
         )`,
       },
 
-      // A.2 remove obsolete annotations from moz_items_annos.
-      {
-        query: `DELETE FROM moz_items_annos
-        WHERE type = 4 OR anno_attribute_id IN (
-          SELECT id FROM moz_anno_attributes
-          WHERE name = 'sync/children'
-             OR name = 'placesInternal/GUID'
-             OR name BETWEEN 'weave/' AND 'weave0'
-        )`,
-      },
-
       // A.3 remove unused attributes.
       {
         query: `DELETE FROM moz_anno_attributes WHERE id IN (
           SELECT id FROM moz_anno_attributes n
           WHERE NOT EXISTS
               (SELECT id FROM moz_annos WHERE anno_attribute_id = n.id LIMIT 1)
-            AND NOT EXISTS
-              (SELECT id FROM moz_items_annos WHERE anno_attribute_id = n.id LIMIT 1)
         )`,
       },
 
@@ -706,26 +693,6 @@ export var PlacesDBUtils = {
           SELECT place_id FROM moz_inputhistory i
           WHERE NOT EXISTS
             (SELECT id FROM moz_places WHERE id = i.place_id LIMIT 1)
-        )`,
-      },
-
-      // MOZ_ITEMS_ANNOS
-      // H.1 remove item annos with an invalid attribute
-      {
-        query: `DELETE FROM moz_items_annos WHERE id IN (
-          SELECT id FROM moz_items_annos t
-          WHERE NOT EXISTS
-            (SELECT id FROM moz_anno_attributes
-              WHERE id = t.anno_attribute_id LIMIT 1)
-        )`,
-      },
-
-      // H.2 remove orphan item annos
-      {
-        query: `DELETE FROM moz_items_annos WHERE id IN (
-          SELECT id FROM moz_items_annos t
-          WHERE NOT EXISTS
-            (SELECT id FROM moz_bookmarks WHERE id = t.item_id LIMIT 1)
         )`,
       },
 
@@ -1195,11 +1162,6 @@ export var PlacesDBUtils = {
           let info = await IOUtils.stat(faviconsDbPath);
           return parseInt(info.size / BYTES_PER_MEBIBYTE);
         },
-      },
-
-      {
-        histogram: "PLACES_ANNOS_BOOKMARKS_COUNT",
-        query: "SELECT count(*) FROM moz_items_annos",
       },
 
       {
