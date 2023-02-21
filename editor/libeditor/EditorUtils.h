@@ -280,6 +280,9 @@ class MOZ_STACK_CLASS InsertTextResult final : public CaretPoint {
         mEndOfInsertedText(std::move(aEndOfInsertedText)) {
     UnmarkAsHandledCaretPoint();
   }
+  InsertTextResult(InsertTextResult&& aOther, EditorDOMPoint&& aCaretPoint)
+      : CaretPoint(std::move(aCaretPoint)),
+        mEndOfInsertedText(std::move(aOther.mEndOfInsertedText)) {}
 
   [[nodiscard]] bool Handled() const { return mEndOfInsertedText.IsSet(); }
   const EditorDOMPointInText& EndOfInsertedTextRef() const {

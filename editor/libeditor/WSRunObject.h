@@ -1501,9 +1501,11 @@ class WhiteSpaceVisibilityKeeper final {
   template <typename EditorDOMPointType>
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<InsertTextResult, nsresult>
   InsertText(HTMLEditor& aHTMLEditor, const nsAString& aStringToInsert,
-             const EditorDOMPointType& aPointToInsert) {
+             const EditorDOMPointType& aPointToInsert,
+             const Element& aEditingHost) {
     return WhiteSpaceVisibilityKeeper::ReplaceText(
-        aHTMLEditor, aStringToInsert, EditorDOMRange(aPointToInsert));
+        aHTMLEditor, aStringToInsert, EditorDOMRange(aPointToInsert),
+        aEditingHost);
   }
 
   /**
@@ -1516,7 +1518,8 @@ class WhiteSpaceVisibilityKeeper final {
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<InsertTextResult, nsresult>
   ReplaceText(HTMLEditor& aHTMLEditor, const nsAString& aStringToInsert,
-              const EditorDOMRange& aRangeToBeReplaced);
+              const EditorDOMRange& aRangeToBeReplaced,
+              const Element& aEditingHost);
 
   /**
    * DeletePreviousWhiteSpace() deletes previous white-space of aPoint.

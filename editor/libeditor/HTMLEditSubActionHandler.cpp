@@ -1183,14 +1183,15 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleInsertText(
     Result<InsertTextResult, nsresult> replaceTextResult =
         WhiteSpaceVisibilityKeeper::ReplaceText(
             *this, aInsertionString,
-            EditorDOMRange(compositionStartPoint, compositionEndPoint));
+            EditorDOMRange(compositionStartPoint, compositionEndPoint),
+            *editingHost);
     if (MOZ_UNLIKELY(replaceTextResult.isErr())) {
       NS_WARNING("WhiteSpaceVisibilityKeeper::ReplaceText() failed");
       return replaceTextResult.propagateErr();
     }
-    MOZ_ASSERT(
-        !replaceTextResult.inspect().HasCaretPointSuggestion(),
-        "Assuming CompositionTransaction set caret by itself, but it didn't?");
+    // CompositionTransaction should've set selection so that we should ignore
+    // caret suggestion.
+    replaceTextResult.unwrap().IgnoreCaretPointSuggestion();
 
     compositionStartPoint = GetFirstIMESelectionStartPoint<EditorDOMPoint>();
     compositionEndPoint = GetLastIMESelectionEndPoint<EditorDOMPoint>();
@@ -1338,8 +1339,8 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleInsertText(
         // is it a tab?
         if (subStr.Equals(tabStr)) {
           Result<InsertTextResult, nsresult> insertTextResult =
-              WhiteSpaceVisibilityKeeper::InsertText(*this, spacesStr,
-                                                     currentPoint);
+              WhiteSpaceVisibilityKeeper::InsertText(
+                  *this, spacesStr, currentPoint, *editingHost);
           if (MOZ_UNLIKELY(insertTextResult.isErr())) {
             NS_WARNING("WhiteSpaceVisibilityKeeper::InsertText() failed");
             return insertTextResult.propagateErr();
@@ -1404,8 +1405,8 @@ Result<EditActionResult, nsresult> HTMLEditor::HandleInsertText(
               "Perhaps, newBRElement has been moved or removed unexpectedly");
         } else {
           Result<InsertTextResult, nsresult> insertTextResult =
-              WhiteSpaceVisibilityKeeper::InsertText(*this, subStr,
-                                                     currentPoint);
+              WhiteSpaceVisibilityKeeper::InsertText(
+                  *this, subStr, currentPoint, *editingHost);
           if (MOZ_UNLIKELY(insertTextResult.isErr())) {
             NS_WARNING("WhiteSpaceVisibilityKeeper::InsertText() failed");
             return insertTextResult.propagateErr();
