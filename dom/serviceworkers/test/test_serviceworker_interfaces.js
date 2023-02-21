@@ -147,8 +147,6 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "Crypto",
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  "CryptoKey",
-  // IMPORTANT: Do not change this list without review from a DOM peer!
   "CustomEvent",
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "Directory",
