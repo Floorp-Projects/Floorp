@@ -18,6 +18,7 @@
 #include "nsPrintfCString.h"
 #include "mozilla/Logging.h"
 #include "../../base/IPv6Utils.h"
+#include "../LinkServiceCommon.h"
 #include "../NetworkLinkServiceDefines.h"
 
 #include "mozilla/Base64.h"
@@ -1808,11 +1809,8 @@ void NetlinkService::CalculateNetworkID() {
   bool found6 = CalculateIDForFamily(AF_INET6, &sha1);
 
   if (found4 || found6) {
-    // This 'addition' could potentially be a fixed number from the
-    // profile or something.
-    nsAutoCString addition("local-rubbish");
     nsAutoCString output;
-    sha1.update(addition.get(), addition.Length());
+    SeedNetworkId(sha1);
     uint8_t digest[SHA1Sum::kHashSize];
     sha1.finish(digest);
     nsAutoCString newString(reinterpret_cast<char*>(digest),

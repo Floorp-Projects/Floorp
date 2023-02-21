@@ -15,3 +15,9 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
 
 elif CONFIG["OS_ARCH"] == "Linux":
     DIRS += ["linux", "netlink"]
+
+SOURCES += [
+    "LinkServiceCommon.cpp",
+]
+
+FINAL_LIBRARY = "xul"
