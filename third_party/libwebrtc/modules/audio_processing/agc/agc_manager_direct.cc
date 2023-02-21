@@ -87,10 +87,6 @@ absl::optional<int> GetMinMicLevelOverride() {
   }
 }
 
-int ClampLevel(int mic_level, int min_mic_level) {
-  return rtc::SafeClamp(mic_level, min_mic_level, kMaxMicLevel);
-}
-
 int LevelFromGainError(int gain_error, int level, int min_mic_level) {
   RTC_DCHECK_GE(level, 0);
   RTC_DCHECK_LE(level, kMaxMicLevel);
@@ -164,7 +160,6 @@ int GetSpeechLevelErrorDb(float speech_level_dbfs, float speech_probability) {
 }  // namespace
 
 MonoAgc::MonoAgc(ApmDataDumper* data_dumper,
-                 int startup_min_level,
                  int clipped_level_min,
                  bool disable_digital_adaptive,
                  int min_mic_level)
@@ -176,7 +171,6 @@ MonoAgc::MonoAgc(ApmDataDumper* data_dumper,
       target_compression_(kDefaultCompressionGain),
       compression_(target_compression_),
       compression_accumulator_(compression_),
-      startup_min_level_(ClampLevel(startup_min_level, min_mic_level_)),
       clipped_level_min_(clipped_level_min) {}
 
 MonoAgc::~MonoAgc() = default;
@@ -347,9 +341,8 @@ int MonoAgc::CheckVolumeAndReset() {
   }
   RTC_DLOG(LS_INFO) << "[agc] Initial GetMicVolume()=" << level;
 
-  int minLevel = startup_ ? startup_min_level_ : min_mic_level_;
-  if (level < minLevel) {
-    level = minLevel;
+  if (level < min_mic_level_) {
+    level = min_mic_level_;
     RTC_DLOG(LS_INFO) << "[agc] Initial volume too low, raising to " << level;
     recommended_input_volume_ = level;
   }
@@ -504,15 +497,12 @@ AgcManagerDirect::AgcManagerDirect(int num_capture_channels,
                    << " (overridden: "
                    << (min_mic_level_override_.has_value() ? "yes" : "no")
                    << ")";
-  RTC_LOG(LS_INFO) << "[agc] Startup min volume: "
-                   << analog_config.startup_min_volume;
   for (size_t ch = 0; ch < channel_agcs_.size(); ++ch) {
     ApmDataDumper* data_dumper_ch = ch == 0 ? data_dumper_.get() : nullptr;
 
     channel_agcs_[ch] = std::make_unique<MonoAgc>(
-        data_dumper_ch, analog_config.startup_min_volume,
-        analog_config.clipped_level_min, disable_digital_adaptive_,
-        min_mic_level);
+        data_dumper_ch, analog_config.clipped_level_min,
+        disable_digital_adaptive_, min_mic_level);
   }
   RTC_DCHECK(!channel_agcs_.empty());
   RTC_DCHECK_GT(clipped_level_step_, 0);
