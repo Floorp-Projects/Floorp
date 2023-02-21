@@ -712,6 +712,8 @@ rtc_source_set("rtc_stats_api") {
     "../rtc_base/system:rtc_export",
     "units:timestamp",
   ]
+
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_library("audio_options_api") {

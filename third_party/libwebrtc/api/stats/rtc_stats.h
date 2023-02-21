@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/types/optional.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/system/rtc_export.h"
 #include "rtc_base/system/rtc_export_template.h"
@@ -260,7 +261,7 @@ class RTCStatsMemberInterface {
   virtual Type type() const = 0;
   virtual bool is_sequence() const = 0;
   virtual bool is_string() const = 0;
-  bool is_defined() const { return is_defined_; }
+  virtual bool is_defined() const = 0;
   // Is this part of the stats spec? Used so that chromium can easily filter
   // out anything unstandardized.
   virtual bool is_standardized() const = 0;
@@ -296,13 +297,11 @@ class RTCStatsMemberInterface {
   }
 
  protected:
-  RTCStatsMemberInterface(const char* name, bool is_defined)
-      : name_(name), is_defined_(is_defined) {}
+  explicit RTCStatsMemberInterface(const char* name) : name_(name) {}
 
   virtual bool IsEqual(const RTCStatsMemberInterface& other) const = 0;
 
   const char* const name_;
-  bool is_defined_;
 };
 
 // Template implementation of `RTCStatsMemberInterface`.
@@ -312,70 +311,58 @@ template <typename T>
 class RTCStatsMember : public RTCStatsMemberInterface {
  public:
   explicit RTCStatsMember(const char* name)
-      : RTCStatsMemberInterface(name,
-                                /*is_defined=*/false),
-        value_() {}
+      : RTCStatsMemberInterface(name), value_() {}
   RTCStatsMember(const char* name, const T& value)
-      : RTCStatsMemberInterface(name,
-                                /*is_defined=*/true),
-        value_(value) {}
+      : RTCStatsMemberInterface(name), value_(value) {}
   RTCStatsMember(const char* name, T&& value)
-      : RTCStatsMemberInterface(name,
-                                /*is_defined=*/true),
-        value_(std::move(value)) {}
-  RTCStatsMember(const RTCStatsMember<T>& other)
-      : RTCStatsMemberInterface(other.name_, other.is_defined_),
-        value_(other.value_) {}
-  RTCStatsMember(RTCStatsMember<T>&& other)
-      : RTCStatsMemberInterface(other.name_, other.is_defined_),
-        value_(std::move(other.value_)) {}
+      : RTCStatsMemberInterface(name), value_(std::move(value)) {}
+  explicit RTCStatsMember(const RTCStatsMember<T>& other)
+      : RTCStatsMemberInterface(other.name_), value_(other.value_) {}
+  explicit RTCStatsMember(RTCStatsMember<T>&& other)
+      : RTCStatsMemberInterface(other.name_), value_(std::move(other.value_)) {}
 
   static Type StaticType();
   Type type() const override { return StaticType(); }
   bool is_sequence() const override;
   bool is_string() const override;
+  bool is_defined() const override { return value_.has_value(); }
   bool is_standardized() const override { return true; }
   std::string ValueToString() const override;
   std::string ValueToJson() const override;
 
   template <typename U>
   inline T ValueOrDefault(U default_value) const {
-    if (is_defined()) {
-      return *(*this);
-    }
-    return default_value;
+    return value_.value_or(default_value);
   }
 
   // Assignment operators.
   T& operator=(const T& value) {
     value_ = value;
-    is_defined_ = true;
-    return value_;
+    return value_.value();
   }
   T& operator=(const T&& value) {
     value_ = std::move(value);
-    is_defined_ = true;
-    return value_;
+    return value_.value();
   }
 
   // Value getters.
   T& operator*() {
-    RTC_DCHECK(is_defined_);
-    return value_;
+    RTC_DCHECK(value_);
+    return *value_;
   }
   const T& operator*() const {
-    RTC_DCHECK(is_defined_);
-    return value_;
+    RTC_DCHECK(value_);
+    return *value_;
   }
 
   // Value getters, arrow operator.
   T* operator->() {
-    RTC_DCHECK(is_defined_);
-    return &value_;
+    RTC_DCHECK(value_);
+    return &(*value_);
   }
   const T* operator->() const {
-    RTC_DCHECK(is_defined_);
-    return &value_;
+    RTC_DCHECK(value_);
+    return &(*value_);
   }
 
  protected:
@@ -386,15 +373,11 @@ class RTCStatsMember : public RTCStatsMemberInterface {
       return false;
     const RTCStatsMember<T>& other_t =
         static_cast<const RTCStatsMember<T>&>(other);
-    if (!is_defined_)
-      return !other_t.is_defined();
-    if (!other.is_defined())
-      return false;
     return value_ == other_t.value_;
   }
 
  private:
-  T value_;
+  absl::optional<T> value_;
 };
 
 namespace rtc_stats_internal {
