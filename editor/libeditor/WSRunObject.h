@@ -1522,21 +1522,24 @@ class WhiteSpaceVisibilityKeeper final {
               const Element& aEditingHost);
 
   /**
-   * DeletePreviousWhiteSpace() deletes previous white-space of aPoint.
-   * This automatically keeps visibility of white-spaces around aPoint.
-   * E.g., may remove invisible leading white-spaces.
+   * Delete previous white-space of aPoint.  This automatically keeps visibility
+   * of white-spaces around aPoint. E.g., may remove invisible leading
+   * white-spaces.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult DeletePreviousWhiteSpace(
-      HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPoint);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<CaretPoint, nsresult>
+  DeletePreviousWhiteSpace(HTMLEditor& aHTMLEditor,
+                           const EditorDOMPoint& aPoint,
+                           const Element& aEditingHost);
 
   /**
-   * DeleteInclusiveNextWhiteSpace() delete inclusive next white-space of
-   * aPoint.  This automatically keeps visiblity of white-spaces around aPoint.
-   * E.g., may remove invisible trailing white-spaces.
+   * Delete inclusive next white-space of aPoint.  This automatically keeps
+   * visiblity of white-spaces around aPoint. E.g., may remove invisible
+   * trailing white-spaces.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT static Result<CaretPoint, nsresult>
   DeleteInclusiveNextWhiteSpace(HTMLEditor& aHTMLEditor,
-                                const EditorDOMPoint& aPoint);
+                                const EditorDOMPoint& aPoint,
+                                const Element& aEditingHost);
 
   /**
    * DeleteContentNodeAndJoinTextNodesAroundIt() deletes aContentToDelete and

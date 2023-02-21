@@ -1403,18 +1403,19 @@ Result<InsertTextResult, nsresult> WhiteSpaceVisibilityKeeper::ReplaceText(
 }
 
 // static
-nsresult WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace(
-    HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPoint) {
-  Element* editingHost = aHTMLEditor.ComputeEditingHost();
-  TextFragmentData textFragmentDataAtDeletion(aPoint, editingHost);
+Result<CaretPoint, nsresult>
+WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace(
+    HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPoint,
+    const Element& aEditingHost) {
+  TextFragmentData textFragmentDataAtDeletion(aPoint, &aEditingHost);
   if (NS_WARN_IF(!textFragmentDataAtDeletion.IsInitialized())) {
-    return NS_ERROR_FAILURE;
+    return Err(NS_ERROR_FAILURE);
   }
   const EditorDOMPointInText atPreviousCharOfStart =
       textFragmentDataAtDeletion.GetPreviousEditableCharPoint(aPoint);
   if (!atPreviousCharOfStart.IsSet() ||
       atPreviousCharOfStart.IsEndOfContainer()) {
-    return NS_OK;
+    return CaretPoint(EditorDOMPoint());
   }
 
   // If the char is a collapsible white-space or a non-collapsible new line
@@ -1439,7 +1440,7 @@ nsresult WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace(
         NS_WARNING(
             "WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints() "
             "failed");
-        return caretPointOrError.unwrapErr();
+        return caretPointOrError;
       }
       caretPointOrError.unwrap().MoveCaretPointTo(
           pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
@@ -1456,25 +1457,13 @@ nsresult WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace(
       if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
         NS_WARNING(
             "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
-        return caretPointOrError.propagateErr();
+        return caretPointOrError;
       }
       trackPointToPutCaret.FlushAndStopTracking();
       caretPointOrError.unwrap().MoveCaretPointTo(
           pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
     }
-
-    if (pointToPutCaret.IsSet() &&
-        aHTMLEditor.AllowsTransactionsToChangeSelection()) {
-      nsresult rv = aHTMLEditor.CollapseSelectionTo(pointToPutCaret);
-      if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
-        NS_WARNING("HTMLEditor::CollapseSelectionTo() failed");
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv),
-          "HTMLEditor::CollapseSelectionTo() failed, but ignored");
-    }
-    return NS_OK;
+    return CaretPoint(std::move(pointToPutCaret));
   }
 
   if (atPreviousCharOfStart.IsCharCollapsibleNBSP()) {
@@ -1489,7 +1478,7 @@ nsresult WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace(
         NS_WARNING(
             "WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints() "
             "failed");
-        return caretPointOrError.unwrapErr();
+        return caretPointOrError;
       }
       caretPointOrError.unwrap().MoveCaretPointTo(
           pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
@@ -1506,61 +1495,39 @@ nsresult WhiteSpaceVisibilityKeeper::DeletePreviousWhiteSpace(
       if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
         NS_WARNING(
             "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
-        return caretPointOrError.propagateErr();
+        return caretPointOrError;
       }
       trackPointToPutCaret.FlushAndStopTracking();
       caretPointOrError.unwrap().MoveCaretPointTo(
           pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
     }
-
-    if (pointToPutCaret.IsSet() &&
-        aHTMLEditor.AllowsTransactionsToChangeSelection()) {
-      nsresult rv = aHTMLEditor.CollapseSelectionTo(pointToPutCaret);
-      if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
-        NS_WARNING("HTMLEditor::CollapseSelectionTo() failed");
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv),
-          "HTMLEditor::CollapseSelectionTo() failed, but ignored");
-    }
-    return NS_OK;
+    return CaretPoint(std::move(pointToPutCaret));
   }
 
   Result<CaretPoint, nsresult> caretPointOrError =
       aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
           atPreviousCharOfStart, atPreviousCharOfStart.NextPoint(),
           HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
-  if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
-    NS_WARNING("HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
-    return caretPointOrError.propagateErr();
-  }
-  nsresult rv = caretPointOrError.unwrap().SuggestCaretPointTo(
-      aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
-                    SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                    SuggestCaret::AndIgnoreTrivialError});
-  if (NS_FAILED(rv)) {
-    NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
-    return rv;
-  }
-  NS_WARNING_ASSERTION(rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-                       "CaretPoint::SuggestCaretPointTo() failed, but ignored");
-  return NS_OK;
+  NS_WARNING_ASSERTION(
+      caretPointOrError.isOk(),
+      "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
+  return caretPointOrError;
 }
 
 // static
-nsresult WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
-    HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPoint) {
-  Element* editingHost = aHTMLEditor.ComputeEditingHost();
-  TextFragmentData textFragmentDataAtDeletion(aPoint, editingHost);
+Result<CaretPoint, nsresult>
+WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
+    HTMLEditor& aHTMLEditor, const EditorDOMPoint& aPoint,
+    const Element& aEditingHost) {
+  TextFragmentData textFragmentDataAtDeletion(aPoint, &aEditingHost);
   if (NS_WARN_IF(!textFragmentDataAtDeletion.IsInitialized())) {
-    return NS_ERROR_FAILURE;
+    return Err(NS_ERROR_FAILURE);
   }
   auto atNextCharOfStart =
       textFragmentDataAtDeletion
           .GetInclusiveNextEditableCharPoint<EditorDOMPointInText>(aPoint);
   if (!atNextCharOfStart.IsSet() || atNextCharOfStart.IsEndOfContainer()) {
-    return NS_OK;
+    return CaretPoint(EditorDOMPoint());
   }
 
   // If the char is a collapsible white-space or a non-collapsible new line
@@ -1584,7 +1551,7 @@ nsresult WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
         NS_WARNING(
             "WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints() "
             "failed");
-        return caretPointOrError.unwrapErr();
+        return caretPointOrError;
       }
       caretPointOrError.unwrap().MoveCaretPointTo(
           pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
@@ -1601,25 +1568,13 @@ nsresult WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
       if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
         NS_WARNING(
             "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
-        return caretPointOrError.propagateErr();
+        return caretPointOrError;
       }
       trackPointToPutCaret.FlushAndStopTracking();
       caretPointOrError.unwrap().MoveCaretPointTo(
           pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
     }
-
-    if (pointToPutCaret.IsSet() &&
-        aHTMLEditor.AllowsTransactionsToChangeSelection()) {
-      nsresult rv = aHTMLEditor.CollapseSelectionTo(pointToPutCaret);
-      if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
-        NS_WARNING("HTMLEditor::CollapseSelectionTo() failed");
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv),
-          "HTMLEditor::CollapseSelectionTo() failed, but ignored");
-    }
-    return NS_OK;
+    return CaretPoint(std::move(pointToPutCaret));
   }
 
   if (atNextCharOfStart.IsCharCollapsibleNBSP()) {
@@ -1634,7 +1589,7 @@ nsresult WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
         NS_WARNING(
             "WhiteSpaceVisibilityKeeper::PrepareToDeleteRangeAndTrackPoints() "
             "failed");
-        return caretPointOrError.unwrapErr();
+        return caretPointOrError;
       }
       caretPointOrError.unwrap().MoveCaretPointTo(
           pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
@@ -1651,46 +1606,23 @@ nsresult WhiteSpaceVisibilityKeeper::DeleteInclusiveNextWhiteSpace(
       if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
         NS_WARNING(
             "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
-        return caretPointOrError.propagateErr();
+        return caretPointOrError;
       }
       trackPointToPutCaret.FlushAndStopTracking();
       caretPointOrError.unwrap().MoveCaretPointTo(
           pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
     }
-
-    if (pointToPutCaret.IsSet() &&
-        aHTMLEditor.AllowsTransactionsToChangeSelection()) {
-      nsresult rv = aHTMLEditor.CollapseSelectionTo(pointToPutCaret);
-      if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
-        NS_WARNING("HTMLEditor::CollapseSelectionTo() failed");
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      NS_WARNING_ASSERTION(
-          NS_SUCCEEDED(rv),
-          "HTMLEditor::CollapseSelectionTo() failed, but ignored");
-    }
-    return NS_OK;
+    return CaretPoint(std::move(pointToPutCaret));
   }
 
   Result<CaretPoint, nsresult> caretPointOrError =
       aHTMLEditor.DeleteTextAndTextNodesWithTransaction(
           atNextCharOfStart, atNextCharOfStart.NextPoint(),
           HTMLEditor::TreatEmptyTextNodes::KeepIfContainerOfRangeBoundaries);
-  if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
-    NS_WARNING("HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
-    return caretPointOrError.propagateErr();
-  }
-  nsresult rv = caretPointOrError.unwrap().SuggestCaretPointTo(
-      aHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
-                    SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
-                    SuggestCaret::AndIgnoreTrivialError});
-  if (NS_FAILED(rv)) {
-    NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
-    return rv;
-  }
-  NS_WARNING_ASSERTION(rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
-                       "CaretPoint::SuggestCaretPointTo() failed, but ignored");
-  return NS_OK;
+  NS_WARNING_ASSERTION(
+      caretPointOrError.isOk(),
+      "HTMLEditor::DeleteTextAndTextNodesWithTransaction() failed");
+  return caretPointOrError;
 }
 
 // static
