@@ -37,6 +37,8 @@ using ::cricket::NominationMode;
 using ::cricket::WrappingActiveIceController;
 
 using ::testing::_;
+using ::testing::ElementsAreArray;
+using ::testing::IsEmpty;
 using ::testing::NiceMock;
 using ::testing::Ref;
 using ::testing::Return;
@@ -132,7 +134,8 @@ TEST(WrappingActiveIceControllerTest, HandlesImmediateSwitchRequest) {
       .WillOnce(Return(switch_result));
   EXPECT_CALL(agent, SwitchSelectedConnection(kConnection, reason))
       .InSequence(check_then_switch);
-  EXPECT_CALL(agent, ForgetLearnedStateForConnections(conns_to_forget));
+  EXPECT_CALL(agent, ForgetLearnedStateForConnections(
+                         ElementsAreArray(conns_to_forget)));
 
   EXPECT_TRUE(controller.OnImmediateSwitchRequest(reason, kConnection));
 
@@ -146,7 +149,7 @@ TEST(WrappingActiveIceControllerTest, HandlesImmediateSwitchRequest) {
               SortAndSwitchConnection(IceSwitchReason::ICE_CONTROLLER_RECHECK))
       .InSequence(recheck_sort)
       .WillOnce(Return(IceControllerInterface::SwitchResult{}));
-  EXPECT_CALL(agent, ForgetLearnedStateForConnections(kEmptyConnsList));
+  EXPECT_CALL(agent, ForgetLearnedStateForConnections(IsEmpty()));
 
   clock.AdvanceTime(kTick);
 }
@@ -180,7 +183,7 @@ TEST(WrappingActiveIceControllerTest, HandlesImmediateSortAndSwitchRequest) {
   EXPECT_CALL(*wrapped, PruneConnections())
       .InSequence(sort_and_switch)
       .WillOnce(Return(conns_to_prune));
-  EXPECT_CALL(agent, PruneConnections(conns_to_prune))
+  EXPECT_CALL(agent, PruneConnections(ElementsAreArray(conns_to_prune)))
       .InSequence(sort_and_switch);
 
   controller.OnImmediateSortAndSwitchRequest(reason);
@@ -198,8 +201,7 @@ TEST(WrappingActiveIceControllerTest, HandlesImmediateSortAndSwitchRequest) {
   EXPECT_CALL(*wrapped, PruneConnections())
       .InSequence(recheck_sort)
       .WillOnce(Return(kEmptyConnsList));
-  EXPECT_CALL(agent, PruneConnections(kEmptyConnsList))
-      .InSequence(recheck_sort);
+  EXPECT_CALL(agent, PruneConnections(IsEmpty())).InSequence(recheck_sort);
 
   clock.AdvanceTime(kTick);
 }
