@@ -5405,6 +5405,17 @@ TEST_F(WebRtcVideoChannelTest, GetStatsReportsEncoderImplementationName) {
             info.senders[0].encoder_implementation_name);
 }
 
+TEST_F(WebRtcVideoChannelTest, GetStatsReportsPowerEfficientEncoder) {
+  FakeVideoSendStream* stream = AddSendStream();
+  webrtc::VideoSendStream::Stats stats;
+  stats.power_efficient_encoder = true;
+  stream->SetStats(stats);
+
+  cricket::VideoMediaInfo info;
+  ASSERT_TRUE(channel_->GetStats(&info));
+  EXPECT_TRUE(info.senders[0].power_efficient_encoder);
+}
+
 TEST_F(WebRtcVideoChannelTest, GetStatsReportsCpuOveruseMetrics) {
   FakeVideoSendStream* stream = AddSendStream();
   webrtc::VideoSendStream::Stats stats;
@@ -6152,6 +6163,7 @@ TEST_F(WebRtcVideoChannelTest, GetStatsTranslatesDecodeStatsCorrectly) {
   stats.total_decode_time = webrtc::TimeDelta::Millis(16);
   stats.total_assembly_time = webrtc::TimeDelta::Millis(4);
   stats.frames_assembled_from_multiple_packets = 2;
+  stats.power_efficient_decoder = true;
   stream->SetStats(stats);
 
   cricket::VideoMediaInfo info;
@@ -6183,6 +6195,7 @@ TEST_F(WebRtcVideoChannelTest, GetStatsTranslatesDecodeStatsCorrectly) {
   EXPECT_EQ(stats.total_assembly_time, info.receivers[0].total_assembly_time);
   EXPECT_EQ(stats.frames_assembled_from_multiple_packets,
             info.receivers[0].frames_assembled_from_multiple_packets);
+  EXPECT_TRUE(info.receivers[0].power_efficient_decoder);
 }
 
 TEST_F(WebRtcVideoChannelTest,
