@@ -602,6 +602,15 @@ bool TextLeafPoint::operator<=(const TextLeafPoint& aPoint) const {
   return *this == aPoint || *this < aPoint;
 }
 
+bool TextLeafPoint::IsDocEdge(nsDirection aDirection) const {
+  if (aDirection == eDirPrevious) {
+    return mOffset == 0 && !PrevLeaf(mAcc);
+  }
+
+  return mOffset == static_cast<int32_t>(nsAccUtils::TextLength(mAcc)) &&
+         !NextLeaf(mAcc);
+}
+
 bool TextLeafPoint::IsEmptyLastLine() const {
   if (mAcc->IsHTMLBr() && mOffset == 1) {
     return true;
@@ -1103,10 +1112,10 @@ TextLeafPoint TextLeafPoint::FindWordEnd(nsDirection aDirection,
       return *this;  // Can't go any further.
     }
     prevIsSpace = prev.IsSpace();
-    if ((aFlags & BoundaryFlags::eIncludeOrigin) && origIsSpace &&
-        !prevIsSpace) {
-      // The origin is space, but the previous character is not. This means
-      // we're at the end of a word.
+    if ((aFlags & BoundaryFlags::eIncludeOrigin) &&
+        (origIsSpace || IsDocEdge(eDirNext)) && !prevIsSpace) {
+      // The origin is space or end of document, but the previous
+      // character is not. This means we're at the end of a word.
       return *this;
     }
   }
@@ -1129,8 +1138,15 @@ TextLeafPoint TextLeafPoint::FindWordEnd(nsDirection aDirection,
     }
   }
   if (aDirection == eDirNext) {
+    BoundaryFlags flags = aFlags;
+    if (IsDocEdge(eDirPrevious)) {
+      // If this is the start of the doc don't be inclusive in the word-start
+      // search because there is no preceding block where this could be a
+      // word-end for.
+      flags &= ~BoundaryFlags::eIncludeOrigin;
+    }
     boundary = boundary.FindBoundary(nsIAccessibleText::BOUNDARY_WORD_START,
-                                     eDirNext, aFlags);
+                                     eDirNext, flags);
   }
   // At this point, boundary is either the start of a word or at a space. A
   // word ends at the beginning of consecutive space. Therefore, skip back to
@@ -1152,6 +1168,11 @@ TextLeafPoint TextLeafPoint::FindWordEnd(nsDirection aDirection,
 
 TextLeafPoint TextLeafPoint::FindParagraphSameAcc(nsDirection aDirection,
                                                   bool aIncludeOrigin) const {
+  if (aIncludeOrigin && IsDocEdge(eDirPrevious)) {
+    // The top of the document is a paragraph boundary.
+    return *this;
+  }
+
   if (mAcc->IsTextLeaf() &&
       // We don't want to copy strings unnecessarily. See below for the context
       // of these individual conditions.
