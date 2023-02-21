@@ -1397,13 +1397,13 @@ struct DebuggerObject::PromiseReactionRecordBuilder
   bool asyncFunction(
       JSContext* cx,
       Handle<AsyncFunctionGeneratorObject*> unwrappedGenerator) override {
-    return pushGenerator(cx, unwrappedGenerator);
+    return maybePushGenerator(cx, unwrappedGenerator);
   }
 
   bool asyncGenerator(
       JSContext* cx,
       Handle<AsyncGeneratorObject*> unwrappedGenerator) override {
-    return pushGenerator(cx, unwrappedGenerator);
+    return maybePushGenerator(cx, unwrappedGenerator);
   }
 
  private:
@@ -1416,8 +1416,8 @@ struct DebuggerObject::PromiseReactionRecordBuilder
     return NewbornArrayPush(cx, records, recordVal);
   }
 
-  bool pushGenerator(JSContext* cx,
-                     Handle<AbstractGeneratorObject*> unwrappedGenerator) {
+  bool maybePushGenerator(JSContext* cx,
+                          Handle<AbstractGeneratorObject*> unwrappedGenerator) {
     Rooted<DebuggerFrame*> frame(cx);
     if (unwrappedGenerator->isClosed()) {
       // If the generator is closed, we can't generate a DebuggerFrame for it,
