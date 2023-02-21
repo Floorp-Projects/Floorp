@@ -265,6 +265,7 @@ def build_one_stage(
                 # because it doesn't allow to use a sysroot for that during the cmake
                 # checks.
                 cmake_args += ["-DCAN_TARGET_i386=1"]
+            cmake_args += ["-DLLVM_ENABLE_TERMINFO=OFF"]
         if is_windows(target):
             cmake_args.insert(-1, "-DLLVM_EXPORT_SYMBOLS_FOR_PLUGINS=ON")
             cmake_args.insert(-1, "-DLLVM_USE_CRT_RELEASE=MT")
