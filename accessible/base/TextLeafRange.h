@@ -89,19 +89,22 @@ class TextLeafPoint final {
    */
   TextLeafPoint ActualizeCaret(bool aAdjustAtEndOfLine = true) const;
 
+  enum class BoundaryFlags : uint32_t {
+    eDefaultBoundaryFlags = 0,
+    // Return point unchanged if it is at the given boundary type.
+    eIncludeOrigin = 1 << 0,
+    // If current point is in editable, return point within samme editable.
+    eStopInEditable = 1 << 1,
+  };
+
   /**
    * Find a boundary (word start, line start, etc.) in a specific direction.
    * If no boundary is found, the start/end of the document is returned
    * (depending on the direction).
-   * If aIncludeorigin is true and this is at a boundary, this will be
-   * returned unchanged.
-   * If aStopInEditable is true the boundary returned will be within the
-   * current editable (if this point is in an editable).
    */
-  TextLeafPoint FindBoundary(AccessibleTextBoundary aBoundaryType,
-                             nsDirection aDirection,
-                             bool aIncludeOrigin = false,
-                             bool aStopInEditable = false) const;
+  TextLeafPoint FindBoundary(
+      AccessibleTextBoundary aBoundaryType, nsDirection aDirection,
+      BoundaryFlags aFlags = BoundaryFlags::eDefaultBoundaryFlags) const;
 
   /**
    * These two functions find a line start boundary within the same
@@ -203,10 +206,8 @@ class TextLeafPoint final {
   TextLeafPoint FindLineStartSameAcc(nsDirection aDirection,
                                      bool aIncludeOrigin) const;
 
-  TextLeafPoint FindLineEnd(nsDirection aDirection, bool aIncludeOrigin,
-                            bool aStopInEditable) const;
-  TextLeafPoint FindWordEnd(nsDirection aDirection, bool aIncludeOrigin,
-                            bool aStopInEditable) const;
+  TextLeafPoint FindLineEnd(nsDirection aDirection, BoundaryFlags aFlags) const;
+  TextLeafPoint FindWordEnd(nsDirection aDirection, BoundaryFlags aFlags) const;
 
   TextLeafPoint FindParagraphSameAcc(nsDirection aDirection,
                                      bool aIncludeOrigin) const;
@@ -221,6 +222,8 @@ class TextLeafPoint final {
   TextLeafPoint FindSpellingErrorSameAcc(nsDirection aDirection,
                                          bool aIncludeOrigin) const;
 };
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(TextLeafPoint::BoundaryFlags)
 
 /**
  * Represents a range of accessible text.
