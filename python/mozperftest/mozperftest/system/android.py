@@ -14,7 +14,7 @@ from mozperftest.utils import download_file
 
 _ROOT_URL = "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
 _FENIX_NIGHTLY_BUILDS = (
-    "mobile.v2.fenix.nightly.latest.{architecture}"
+    "mobile.v3.firefox-android.apks.fenix-nightly.latest.{architecture}"
     "/artifacts/public/build/{architecture}/target.apk"
 )
 _GV_BUILDS = "gecko.v2.mozilla-central.shippable.latest.mobile.android-"
