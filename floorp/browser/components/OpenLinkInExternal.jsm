@@ -156,8 +156,9 @@ function getDefaultBrowserOnWindows(protocol, browsers = null) {
         Ci.nsIWindowsRegKey.ACCESS_READ
     );
     let regValue = key.readStringValue("ProgID");
-    let browser = browsers.filter(browser => browser["urlAssociations"][protocol] === regValue)[0];
-    return browser;
+    let targets = browsers.filter(browser => browser["urlAssociations"][protocol] === regValue);
+    if (targets.length === 0) return null;
+    return targets[0];
 }
 
 async function getBrowsersOnLinux() {
