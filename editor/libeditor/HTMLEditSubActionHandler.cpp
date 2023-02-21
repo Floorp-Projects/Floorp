@@ -452,15 +452,25 @@ nsresult HTMLEditor::OnEndHandlingTopLevelEditSubActionInternal() {
         NS_WARNING("There was no selection range");
         return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
       }
-      nsresult rv = InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
-          newCaretPosition);
-      if (NS_FAILED(rv)) {
+      Result<CaretPoint, nsresult> caretPointOrError =
+          InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
+              newCaretPosition);
+      if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
         NS_WARNING(
             "HTMLEditor::"
             "InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary() "
             "failed");
+        return caretPointOrError.unwrapErr();
+      }
+      nsresult rv = caretPointOrError.unwrap().SuggestCaretPointTo(
+          *this, {SuggestCaret::OnlyIfHasSuggestion});
+      if (NS_FAILED(rv)) {
+        NS_WARNING("CaretPoint::SuggestCaretPointTo() failed");
         return rv;
       }
+      NS_WARNING_ASSERTION(
+          rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
+          "CaretPoint::SuggestCaretPointTo() failed, but ignored");
     }
 
     // add in any needed <br>s, and remove any unneeded ones.
@@ -3133,13 +3143,14 @@ HTMLEditor::DeleteTextAndNormalizeSurroundingWhiteSpaces(
   {
     AutoTrackDOMPoint trackingNewCaretPosition(RangeUpdaterRef(),
                                                &newCaretPosition);
-    nsresult rv = InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
-        newCaretPosition);
-    if (NS_FAILED(rv)) {
+    Result<CaretPoint, nsresult> caretPointOrError =
+        InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
+            newCaretPosition);
+    if (MOZ_UNLIKELY(caretPointOrError.isErr())) {
       NS_WARNING(
           "HTMLEditor::"
           "InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary() failed");
-      return Err(rv);
+      return caretPointOrError;
     }
   }
   if (!newCaretPosition.IsSetAndValid()) {
@@ -3149,38 +3160,39 @@ HTMLEditor::DeleteTextAndNormalizeSurroundingWhiteSpaces(
   return CaretPoint(std::move(newCaretPosition));
 }
 
-nsresult HTMLEditor::InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
+Result<CaretPoint, nsresult>
+HTMLEditor::InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
     const EditorDOMPoint& aPointToInsert) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aPointToInsert.IsSet());
 
   if (!aPointToInsert.IsInContentNode()) {
-    return NS_OK;
+    return CaretPoint(EditorDOMPoint());
   }
 
   // If container of the point is not in a block, we don't need to put a
   // `<br>` element here.
   if (!HTMLEditUtils::IsBlockElement(
           *aPointToInsert.ContainerAs<nsIContent>())) {
-    return NS_OK;
+    return CaretPoint(EditorDOMPoint());
   }
 
   WSRunScanner wsRunScanner(ComputeEditingHost(), aPointToInsert);
   // If the point is not start of a hard line, we don't need to put a `<br>`
   // element here.
   if (!wsRunScanner.StartsFromHardLineBreak()) {
-    return NS_OK;
+    return CaretPoint(EditorDOMPoint());
   }
   // If the point is not end of a hard line or the hard line does not end with
   // block boundary, we don't need to put a `<br>` element here.
   if (!wsRunScanner.EndsByBlockBoundary()) {
-    return NS_OK;
+    return CaretPoint(EditorDOMPoint());
   }
 
   // If we cannot insert a `<br>` element here, do nothing.
   if (!HTMLEditUtils::CanNodeContain(*aPointToInsert.GetContainer(),
                                      *nsGkAtoms::br)) {
-    return NS_OK;
+    return CaretPoint(EditorDOMPoint());
   }
 
   Result<CreateElementResult, nsresult> insertBRElementResult = InsertBRElement(
@@ -3188,12 +3200,9 @@ nsresult HTMLEditor::InsertBRElementIfHardLineIsEmptyAndEndsWithBlockBoundary(
   if (MOZ_UNLIKELY(insertBRElementResult.isErr())) {
     NS_WARNING(
         "HTMLEditor::InsertBRElement(WithTransaction::Yes, ePrevious) failed");
-    return insertBRElementResult.unwrapErr();
+    return insertBRElementResult.propagateErr();
   }
-  nsresult rv = insertBRElementResult.inspect().SuggestCaretPointTo(*this, {});
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "CreateElementResult::SuggestCaretPointTo() failed");
-  return rv;
+  return CaretPoint(insertBRElementResult.unwrap().UnwrapCaretPoint());
 }
 
 Result<EditActionResult, nsresult>
