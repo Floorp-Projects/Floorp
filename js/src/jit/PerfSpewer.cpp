@@ -35,14 +35,33 @@
 #include "vm/BytecodeUtil.h"
 #include "vm/MutexIDs.h"
 
+#ifdef XP_WIN
+#  include <windef.h>
+#  include <codecvt>
+#  include <evntprov.h>
+#  include <locale>
+#  include <string>
+#  include <Windows.h>
+
+const GUID PROVIDER_JSCRIPT9 = {
+    0x57277741,
+    0x3638,
+    0x4a4b,
+    {0xbd, 0xba, 0x0a, 0xc6, 0xe4, 0x5d, 0xa5, 0x6c}};
+const EVENT_DESCRIPTOR MethodLoad = {0x9, 0x0, 0x0, 0x4, 0xa, 0x1, 0x1};
+
+static REGHANDLE sETWRegistrationHandle = NULL;
+
+static std::atomic<bool> etwCollection = false;
+#endif
+
 using namespace js;
 using namespace js::jit;
 
 enum class PerfModeType { None, Function, Source, IR, IROperands };
 
 static std::atomic<bool> geckoProfiling = false;
-
-static PerfModeType PerfMode = PerfModeType::None;
+static std::atomic<PerfModeType> PerfMode = PerfModeType::None;
 
 // Mutex to guard access to the profiler vectors and jitdump file if perf
 // profiling is enabled.
@@ -189,7 +208,7 @@ static bool openJitDump() {
   return true;
 }
 
-void js::jit::CheckPerf() {
+static void CheckPerf() {
   static bool PerfChecked = false;
 
   if (!PerfChecked) {
@@ -239,10 +258,51 @@ void js::jit::CheckPerf() {
 }
 #endif
 
+#ifdef XP_WIN
+void NTAPI ETWEnableCallback(LPCGUID aSourceId, ULONG aIsEnabled, UCHAR aLevel,
+                             ULONGLONG aMatchAnyKeyword,
+                             ULONGLONG aMatchAllKeyword,
+                             PEVENT_FILTER_DESCRIPTOR aFilterData,
+                             PVOID aCallbackContext) {
+  // This is called on a CRT worker thread. This means this might race with
+  // our main thread, but that is okay.
+  etwCollection = aIsEnabled;
+  PerfMode = aIsEnabled ? PerfModeType::Function : PerfModeType::None;
+}
+
+void RegisterETW() {
+  static bool sHasRegisteredETW = false;
+  if (!sHasRegisteredETW) {
+    if (getenv("ETW_ENABLED")) {
+      EventRegister(&PROVIDER_JSCRIPT9,  // GUID that identifies the provider
+                    ETWEnableCallback,   // Callback for enabling collection
+                    NULL,                // Context not used
+                    &sETWRegistrationHandle  // Used when calling EventWrite
+                                             // and EventUnregister
+      );
+    }
+    sHasRegisteredETW = true;
+  }
+}
+#endif
+
+/* static */
+void PerfSpewer::Init() {
+#ifdef JS_ION_PERF
+  CheckPerf();
+#endif
+#ifdef XP_WIN
+  RegisterETW();
+#endif
+}
+
 static void DisablePerfSpewer(AutoLockPerfSpewer& lock) {
   fprintf(stderr, "Warning: Disabling PerfSpewer.");
 
   geckoProfiling = false;
+#ifdef XP_WIN
+  etwCollection = false;
+#endif
   PerfMode = PerfModeType::None;
 #ifdef JS_ION_PERF
   long page_size = sysconf(_SC_PAGESIZE);
@@ -576,6 +636,50 @@ void PerfSpewer::CollectJitCodeInfo(UniqueChars& function_name, void* code_addr,
     WriteToJitDumpFile(function_name.get(), strlen(function_name.get()) + 1,
                        lock);
     WriteToJitDumpFile(code_addr, code_size, lock);
+  }
+#endif
+#ifdef XP_WIN
+  if (etwCollection) {
+    void* scriptContextId = NULL;
+    uint32_t flags = 0;
+    uint64_t map = 0;
+    uint64_t assembly = 0;
+    uint32_t line_col = 0;
+    uint32_t method = 0;
+
+    int name_len = strlen(function_name.get());
+    std::wstring name(name_len + 1, '\0');
+    if (MultiByteToWideChar(CP_UTF8, 0, function_name.get(), name_len,
+                            name.data(), name.size()) == 0) {
+      DisablePerfSpewer(lock);
+      return;
+    }
+
+    EVENT_DATA_DESCRIPTOR EventData[10];
+
+    EventDataDescCreate(&EventData[0], &scriptContextId, sizeof(PVOID));
+    EventDataDescCreate(&EventData[1], &code_addr, sizeof(PVOID));
+    EventDataDescCreate(&EventData[2], &code_size, sizeof(unsigned __int64));
+    EventDataDescCreate(&EventData[3], &method, sizeof(uint32_t));
+    EventDataDescCreate(&EventData[4], &flags, sizeof(const unsigned short));
+    EventDataDescCreate(&EventData[5], &map, sizeof(const unsigned short));
+    EventDataDescCreate(&EventData[6], &assembly, sizeof(unsigned __int64));
+    EventDataDescCreate(&EventData[7], &line_col, sizeof(const unsigned int));
+    EventDataDescCreate(&EventData[8], &line_col, sizeof(const unsigned int));
+    EventDataDescCreate(&EventData[9], name.c_str(),
+                        sizeof(wchar_t) * (name.length() + 1));
+
+    ULONG result = EventWrite(
+        sETWRegistrationHandle,  // From EventRegister
+        &MethodLoad,             // EVENT_DESCRIPTOR generated from the manifest
+        (ULONG)10,               // Size of the array of EVENT_DATA_DESCRIPTORs
+        EventData  // Array of descriptors that contain the event data
+    );
+
+    if (result != ERROR_SUCCESS) {
+      DisablePerfSpewer(lock);
+      return;
+    }
   }
 #endif
 
