@@ -289,9 +289,6 @@
   border: none;
   height: 100%;
   width: 100%;
-  /* Avoid the previewed content from being interactive */
-  -moz-user-focus: ignore;
-  user-select: none;
 }
 
 /* The editor container should only become a flex item when inside a container

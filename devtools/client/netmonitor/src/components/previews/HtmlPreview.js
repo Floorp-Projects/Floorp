@@ -27,6 +27,14 @@ class HTMLPreview extends Component {
     this.iframe = iframe;
     iframe.setAttribute("type", "content");
     iframe.setAttribute("remote", "true");
+
+    // For some reason, when we try to select some text,
+    // a drag of the whole page is initiated.
+    // Workaround this by canceling any start of drag.
+    iframe.addEventListener("dragstart", e => e.preventDefault(), {
+      capture: true,
+    });
+
     // Bug 1800916 allow interaction with the preview page until
     // we find a way to prevent navigation without preventing copy paste from it.
     //
