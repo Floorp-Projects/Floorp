@@ -126,7 +126,12 @@ class PeerConnectionCtx {
                          PeerConnectionImpl* aPeerConnection);
   PeerConnectionImpl* GetPeerConnection(const std::string& aKey) const;
   template <typename Function>
-  void ForEachPeerConnection(Function&& aFunction) const;
+  void ForEachPeerConnection(Function&& aFunction) const {
+    MOZ_ASSERT(NS_IsMainThread());
+    for (const auto& pair : mPeerConnections) {
+      aFunction(pair.second);
+    }
+  }
 
   void ClearClosedStats();
 
