@@ -35,5 +35,3 @@ FINAL_LIBRARY = "xul"
 
 with Files("**"):
     BUG_COMPONENT = ("Toolkit", "Autocomplete")
-
-REQUIRES_UNIFIED_BUILD = True
