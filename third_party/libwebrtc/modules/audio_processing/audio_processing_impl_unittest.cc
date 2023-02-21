@@ -132,17 +132,15 @@ class TestRenderPreProcessor : public CustomProcessing {
 };
 
 // Creates a simple `AudioProcessing` instance for APM input volume testing
-// with analog and digital AGC enabled and minimum volume `startup_min_volume`
-// at the startup.
-rtc::scoped_refptr<AudioProcessing> CreateApmForInputVolumeTest(
-    int startup_min_volume) {
+// with analog and digital AGC enabled.
+rtc::scoped_refptr<AudioProcessing> CreateApmForInputVolumeTest() {
   webrtc::AudioProcessing::Config config;
   // Enable AGC1 analog.
   config.gain_controller1.enabled = true;
   config.gain_controller1.analog_gain_controller.enabled = true;
-  config.gain_controller1.analog_gain_controller.startup_min_volume =
-      startup_min_volume;
-  // Enable AGC2 digital.
+  // Enable AGC2 adaptive digital.
+  config.gain_controller1.analog_gain_controller.enable_digital_adaptive =
+      false;
   config.gain_controller2.enabled = true;
   config.gain_controller2.adaptive_digital.enabled = true;
 
@@ -197,16 +195,14 @@ std::string GetMinMicLevelExperimentFieldTrial(absl::optional<int> value) {
 // TODO(webrtc:7494): Remove the fieldtrial from the input volume tests when
 // "WebRTC-Audio-2ndAgcMinMicLevelExperiment" is removed.
 class InputVolumeStartupParameterizedTest
-    : public ::testing::TestWithParam<
-          std::tuple<int, int, absl::optional<int>>> {
+    : public ::testing::TestWithParam<std::tuple<int, absl::optional<int>>> {
  protected:
   InputVolumeStartupParameterizedTest()
       : field_trials_(
-            GetMinMicLevelExperimentFieldTrial(std::get<2>(GetParam()))) {}
-  int GetMinStartupVolume() const { return std::get<0>(GetParam()); }
-  int GetStartupVolume() const { return std::get<1>(GetParam()); }
+            GetMinMicLevelExperimentFieldTrial(std::get<1>(GetParam()))) {}
+  int GetStartupVolume() const { return std::get<0>(GetParam()); }
   int GetMinVolume() const {
-    return std::get<2>(GetParam()).value_or(kMinInputVolume);
+    return std::get<1>(GetParam()).value_or(kMinInputVolume);
   }
 
  private:
@@ -938,11 +934,9 @@ TEST(ApmWithSubmodulesExcludedTest, ToggleTransientSuppressor) {
 TEST_P(InputVolumeStartupParameterizedTest,
        VerifyStartupMinVolumeAppliedAtStartup) {
   const int applied_startup_input_volume = GetStartupVolume();
-  const int startup_min_volume = GetMinStartupVolume();
-  const int min_volume = std::max(startup_min_volume, GetMinVolume());
   const int expected_volume =
-      std::max(applied_startup_input_volume, min_volume);
-  auto apm(CreateApmForInputVolumeTest(startup_min_volume));
+      std::max(applied_startup_input_volume, GetMinVolume());
+  auto apm = CreateApmForInputVolumeTest();
 
   const int recommended_input_volume =
       ProcessInputVolume(*apm, /*num_frames=*/1, applied_startup_input_volume);
@@ -955,11 +949,10 @@ TEST_P(InputVolumeStartupParameterizedTest,
 // "WebRTC-Audio-2ndAgcMinMicLevelExperiment" is enabled.
 TEST_P(InputVolumeNotZeroParameterizedTest,
        VerifyMinVolumeMaybeAppliedAfterManualVolumeAdjustments) {
-  constexpr int kStartupMinVolume = 0;
   const int applied_startup_input_volume = GetStartupVolume();
   const int applied_input_volume = GetVolume();
   const int expected_volume = std::max(applied_input_volume, GetMinVolume());
-  auto apm(CreateApmForInputVolumeTest(kStartupMinVolume));
+  auto apm = CreateApmForInputVolumeTest();
 
   ProcessInputVolume(*apm, /*num_frames=*/1, applied_startup_input_volume);
   const int recommended_input_volume =
@@ -977,10 +970,9 @@ TEST_P(InputVolumeNotZeroParameterizedTest,
 // adjusted to zero.
 TEST_P(InputVolumeZeroParameterizedTest,
        VerifyMinVolumeNotAppliedAfterManualVolumeAdjustments) {
-  constexpr int kStartupMinVolume = 0;
   constexpr int kZeroVolume = 0;
   const int applied_startup_input_volume = GetStartupVolume();
-  auto apm(CreateApmForInputVolumeTest(kStartupMinVolume));
+  auto apm = CreateApmForInputVolumeTest();
 
   const int recommended_input_volume_after_startup =
       ProcessInputVolume(*apm, /*num_frames=*/1, applied_startup_input_volume);
@@ -995,10 +987,9 @@ TEST_P(InputVolumeZeroParameterizedTest,
 // before it is automatically adjusted.
 TEST_P(InputVolumeNotZeroParameterizedTest,
        VerifyMinVolumeAppliedAfterAutomaticVolumeAdjustments) {
-  constexpr int kStartupMinVolume = 0;
   const int applied_startup_input_volume = GetStartupVolume();
   const int applied_input_volume = GetVolume();
-  auto apm(CreateApmForInputVolumeTest(kStartupMinVolume));
+  auto apm = CreateApmForInputVolumeTest();
 
   ProcessInputVolume(*apm, /*num_frames=*/1, applied_startup_input_volume);
   const int recommended_input_volume =
@@ -1014,10 +1005,9 @@ TEST_P(InputVolumeNotZeroParameterizedTest,
 // before it is automatically adjusted.
 TEST_P(InputVolumeZeroParameterizedTest,
        VerifyMinVolumeNotAppliedAfterAutomaticVolumeAdjustments) {
-  constexpr int kStartupMinVolume = 0;
   constexpr int kZeroVolume = 0;
   const int applied_startup_input_volume = GetStartupVolume();
-  auto apm(CreateApmForInputVolumeTest(kStartupMinVolume));
+  auto apm = CreateApmForInputVolumeTest();
 
   const int recommended_input_volume_after_startup =
       ProcessInputVolume(*apm, /*num_frames=*/1, applied_startup_input_volume);
@@ -1030,8 +1020,7 @@ TEST_P(InputVolumeZeroParameterizedTest,
 
 INSTANTIATE_TEST_SUITE_P(AudioProcessingImplTest,
                          InputVolumeStartupParameterizedTest,
-                         ::testing::Combine(::testing::Values(0, 5, 15),
-                                            ::testing::Values(0, 5, 30),
+                         ::testing::Combine(::testing::Values(0, 5, 30),
                                             ::testing::Values(absl::nullopt,
                                                               20)));
 
