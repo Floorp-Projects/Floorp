@@ -14,12 +14,11 @@
   fill: currentColor;
   width: 30px;
   min-width: 30px;
-  margin-inline: 0;
+  margin: 0;
 }
 
 .menu {
   position: absolute;
-  top: 30px;
   inset-inline-end: 0;
   margin: 0;
   padding: 5px 0;
@@ -60,7 +59,7 @@
 }
 
 .menuitem-button:focus-visible {
-  outline-offset: -2px;
+  outline-offset: var(--in-content-focus-outline-inset);
 }
 
 .menuitem-separator {
