@@ -1145,6 +1145,23 @@ TEST_F(PeerConnectionRtpTestUnifiedPlan, AddTrackReusesTransceiver) {
   EXPECT_EQ(audio_track, sender->track());
 }
 
+TEST_F(PeerConnectionRtpTestUnifiedPlan,
+       AddTrackWithSendEncodingDoesNotReuseTransceiver) {
+  auto caller = CreatePeerConnection();
+
+  auto transceiver = caller->AddTransceiver(cricket::MEDIA_TYPE_AUDIO);
+  auto audio_track = caller->CreateAudioTrack("a");
+  RtpEncodingParameters encoding;
+  auto sender = caller->AddTrack(audio_track, {}, {encoding});
+  ASSERT_TRUE(sender);
+
+  auto transceivers = caller->pc()->GetTransceivers();
+  ASSERT_EQ(2u, transceivers.size());
+  EXPECT_EQ(transceiver, transceivers[0]);
+  EXPECT_NE(sender, transceiver->sender());
+  EXPECT_EQ(audio_track, sender->track());
+}
+
 // Test that adding two tracks to a new PeerConnection creates two
 // RtpTransceivers in the same order.
 TEST_F(PeerConnectionRtpTestUnifiedPlan, TwoAddTrackCreatesTwoTransceivers) {
