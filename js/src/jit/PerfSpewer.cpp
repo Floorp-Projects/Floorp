@@ -41,7 +41,7 @@
 #  include <evntprov.h>
 #  include <locale>
 #  include <string>
-#  include <Windows.h>
+#  include <windows.h>
 
 const GUID PROVIDER_JSCRIPT9 = {
     0x57277741,
