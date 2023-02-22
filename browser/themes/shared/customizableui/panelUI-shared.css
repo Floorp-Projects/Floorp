@@ -759,10 +759,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
   list-style-image: url(chrome://browser/skin/fxa/monitor.svg);
 }
 
-#PanelUI-fxa-menu-connect-device-button {
-  list-style-image: url(chrome://browser/skin/fxa/add-device.svg);
-}
-
 :root:not([fxastatus="signedin"]) #PanelUI-fxa-menu-connect-device-button {
   color: var(--panel-disabled-color);
 }
