@@ -2322,7 +2322,10 @@ this.VideoControlsImplWidget = class {
 
         // Used to decide if updating the scrubber progress will make a visible
         // change (ie. make it move by at least one pixel).
-        scrubberWidth: 0,
+        // The default value is set to Infinity so that any small change is
+        // assumed to cause a visible change until updateReflowedDimensions
+        // has been called. (See bug 1817604)
+        scrubberWidth: Infinity,
       },
 
       updateReflowedDimensions() {
