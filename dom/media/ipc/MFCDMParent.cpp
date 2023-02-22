@@ -282,6 +282,19 @@ static MF_MEDIAKEYS_REQUIREMENT ToMFRequirement(
   }
 };
 
+static inline LPCWSTR InitDataTypeToString(const nsAString& aInitDataType) {
+  // The strings are defined in https://www.w3.org/TR/eme-initdata-registry/
+  if (aInitDataType.EqualsLiteral("webm")) {
+    return L"webm";
+  } else if (aInitDataType.EqualsLiteral("cenc")) {
+    return L"cenc";
+  } else if (aInitDataType.EqualsLiteral("keyids")) {
+    return L"keyids";
+  } else {
+    return L"unknown";
+  }
+}
+
 static HRESULT BuildCDMAccessConfig(
     const MFCDMInitParamsIPDL& aParams,
     Microsoft::WRL::ComPtr<IPropertyStore>& aConfig) {
@@ -289,9 +302,25 @@ static HRESULT BuildCDMAccessConfig(
       mksc;  // EME MediaKeySystemConfiguration
   MFCDM_RETURN_IF_FAILED(PSCreateMemoryPropertyStore(IID_PPV_ARGS(&mksc)));
 
+  // If we don't set `MF_EME_INITDATATYPES` then we won't be able to create
+  // CDM module on Windows 10, which is not documented officially.
+  BSTR* initDataTypeArray =
+      (BSTR*)CoTaskMemAlloc(sizeof(BSTR) * aParams.initDataTypes().Length());
+  for (size_t i = 0; i < aParams.initDataTypes().Length(); i++) {
+    initDataTypeArray[i] =
+        SysAllocString(InitDataTypeToString(aParams.initDataTypes()[i]));
+  }
+  AutoPropVar initDataTypes;
+  PROPVARIANT* var = initDataTypes.Receive();
+  var->vt = VT_VECTOR | VT_BSTR;
+  var->cabstr.cElems = static_cast<ULONG>(aParams.initDataTypes().Length());
+  var->cabstr.pElems = initDataTypeArray;
+  MFCDM_RETURN_IF_FAILED(
+      mksc->SetValue(MF_EME_INITDATATYPES, initDataTypes.get()));
+
   // Empty 'audioCapabilities'.
   AutoPropVar audioCapabilities;
-  PROPVARIANT* var = audioCapabilities.Receive();
+  var = audioCapabilities.Receive();
   var->vt = VT_VARIANT | VT_VECTOR;
   var->capropvar.cElems = 0;
   MFCDM_RETURN_IF_FAILED(
@@ -301,8 +330,8 @@ static HRESULT BuildCDMAccessConfig(
   Microsoft::WRL::ComPtr<IPropertyStore>
       mksmc;  // EME MediaKeySystemMediaCapability
   MFCDM_RETURN_IF_FAILED(PSCreateMemoryPropertyStore(IID_PPV_ARGS(&mksmc)));
-  AutoPropVar robustness;
   if (aParams.hwSecure()) {
+    AutoPropVar robustness;
     var = robustness.Receive();
     var->vt = VT_BSTR;
     var->bstrVal = SysAllocString(L"HW_SECURE_ALL");
@@ -405,6 +434,7 @@ mozilla::ipc::IPCResult MFCDMParent::RecvInit(
       NS_ConvertUTF16toUTF8(aParams.origin()).get(),
       RequirementToStr(aParams.distinctiveID()),
       RequirementToStr(aParams.persistentState()), aParams.hwSecure());
+  MOZ_ASSERT(mFactory->IsTypeSupported(mKeySystem.get(), nullptr));
 
   // Get access object to CDM.
   Microsoft::WRL::ComPtr<IPropertyStore> accessConfig;
