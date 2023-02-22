@@ -1,0 +1,53 @@
+# Version of this schema
+schema: 1
+
+bugzilla:
+  # Bugzilla product and component for this directory and subdirectories
+  product: Firefox
+  component: Translation
+
+# Document the source of externally hosted code
+origin:
+
+  # Short name of the package/library
+  name: fasttext
+
+  description: The JavaScript emscripten worker to run fastText
+
+  # Full URL for the package's homepage/etc
+  # Usually different from repository url
+  url: https://github.com/facebookresearch/fastText
+
+  # Human-readable identifier for this version/release
+  # Generally "version NNN", "tag SSS", "bookmark SSS"
+  release: v0.9.2
+
+  # Revision to pull in
+  # Must be a long or short commit SHA (long preferred)
+  revision: 3697152e0fd772d9185697fdbd4a1d340ca5571d 
+
+  # The package's license, where possible using the mnemonic from
+  # https://spdx.org/licenses/
+  # Multiple licenses can be specified (as a YAML list)
+  # A "LICENSE" file must exist containing the full license text
+  license: MIT
+
+  notes: >
+    This code was generated from the fastText repository on the following revision:
+    3697152e0fd772d9185697fdbd4a1d340ca5571d
+
+    https://github.com/facebookresearch/fastText
+
+
+    In order to generate code that is usable by Firefox, you need to add the following
+    directive to the EMCXXFLAGS variable in the Makefile before running `make wasm`:
+    
+    -s "DYNAMIC_EXECUTION=0"
+
+    The fasttext.js file is modified by adding the `loadModelBinary()` function.
+
+    The fasttext_wasm.js is modified to declare a top-level function instead of
+    exporting a variable called FastTextModule, and is also minified to reduce its size.
+
+
+

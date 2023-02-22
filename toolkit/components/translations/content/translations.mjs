@@ -8,7 +8,8 @@
 
 /* global AT_getSupportedLanguages, AT_log, AT_getScriptDirection,
    AT_getAppLocale, AT_logError, AT_destroyTranslationsEngine,
-   AT_createTranslationsEngine, AT_translate */
+   AT_createTranslationsEngine, AT_createLanguageIdEngine, 
+   AT_translate, AT_identifyLanguage */
 
 /**
  * The model and controller for initializing about:translations.
@@ -57,6 +58,21 @@ class TranslationsState {
     this.supportedLanguages = AT_getSupportedLanguages();
     this.ui = new TranslationsUI(this);
     this.ui.setup();
+  }
+
+  /**
+   * Identifies the human language in which the message is written and logs the result.
+   *
+   * @param {string} message
+   */
+  async identifyLanguage(message) {
+    const start = performance.now();
+    const { languageLabel, confidence } = await AT_identifyLanguage(message);
+    const duration = performance.now() - start;
+    AT_log(
+      `[ ${languageLabel.slice(-2)}(${(confidence * 100).toFixed(2)}%) ]`,
+      `Source language identified in ${duration / 1000} seconds`
+    );
   }
 
   /**
@@ -173,6 +189,7 @@ class TranslationsState {
    */
   setMessageToTranslate(message) {
     if (message !== this.messageToTranslate) {
+      this.identifyLanguage(message);
       this.messageToTranslate = message;
       this.maybeRequestTranslation();
     }
@@ -210,6 +227,10 @@ class TranslationsUI {
   setup() {
     this.setupDropdowns();
     this.setupTextarea();
+    const start = performance.now();
+    AT_createLanguageIdEngine();
+    const duration = performance.now() - start;
+    AT_log(`Created LanguageIdEngine in ${duration / 1000} seconds`);
   }
 
   /**
