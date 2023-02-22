@@ -110,17 +110,6 @@ mozilla::ipc::IPCResult FetchChild::RecvOnResponseEnd(ResponseEndArgs&& aArgs) {
   MOZ_ASSERT(mWorkerRef->Private());
   mWorkerRef->Private()->AssertIsOnWorkerThread();
 
-  if (aArgs.timing().isSome()) {
-    const auto& timing = aArgs.timing().ref();
-    RefPtr<PerformanceStorage> performanceStorage =
-        mWorkerRef->Private()->GetPerformanceStorage();
-    if (performanceStorage) {
-      performanceStorage->AddEntry(
-          timing.entryName(), timing.initiatorType(),
-          MakeUnique<PerformanceTimingData>(timing.timingData()));
-    }
-  }
-
   if (aArgs.endReason() == FetchDriverObserver::eAborted) {
     FETCH_LOG(
         ("FetchChild::RecvOnResponseEnd [%p] endReason is eAborted", this));

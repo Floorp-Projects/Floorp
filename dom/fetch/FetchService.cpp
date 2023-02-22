@@ -242,7 +242,7 @@ void FetchService::FetchInstance::Cancel() {
       InternalResponse::NetworkError(NS_ERROR_DOM_ABORT_ERR), __func__);
 
   mPromises->ResolveResponseEndPromise(
-      ResponseEndArgs(FetchDriverObserver::eAborted, Nothing()), __func__);
+      ResponseEndArgs(FetchDriverObserver::eAborted), __func__);
 }
 
 void FetchService::FetchInstance::OnResponseEnd(
@@ -251,27 +251,10 @@ void FetchService::FetchInstance::OnResponseEnd(
   FETCH_LOG(("FetchInstance::OnResponseEnd [%p] %s", this,
              aReason == eAborted ? "eAborted" : "eNetworking"));
 
-  // Get response timing form FetchDriver
-  Maybe<ResponseTiming> responseTiming;
-  if (aReason != eAborted) {
-    ResponseTiming timing;
-    UniquePtr<PerformanceTimingData> performanceTiming(
-        mFetchDriver->GetPerformanceTimingData(timing.initiatorType(),
-                                               timing.entryName()));
-    if (performanceTiming != nullptr) {
-      timing.timingData() = performanceTiming->ToIPC();
-      if (!mIsWorkerFetch) {
-        // Force replace initiatorType for ServiceWorkerNavgationPreload.
-        timing.initiatorType() = u"navigation"_ns;
-      }
-      responseTiming = Some(timing);
-    }
-  }
-
   if (mIsWorkerFetch) {
     FlushConsoleReport();
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-        __func__, [endArgs = ResponseEndArgs(aReason, responseTiming),
+        __func__, [endArgs = ResponseEndArgs(aReason),
                    actorID = mArgs.as<WorkerFetchArgs>().mActorID]() {
           FETCH_LOG(("FetchInstance::OnResponseEnd, Runnable"));
           RefPtr<FetchParent> actor = FetchParent::GetActorByID(actorID);
@@ -286,8 +269,7 @@ void FetchService::FetchInstance::OnResponseEnd(
   MOZ_ASSERT(mPromises);
 
   // Resolve the ResponseEndPromise
-  mPromises->ResolveResponseEndPromise(ResponseEndArgs(aReason, responseTiming),
-                                       __func__);
+  mPromises->ResolveResponseEndPromise(ResponseEndArgs(aReason), __func__);
 
   if (aReason == eAborted) {
     return;
@@ -418,7 +400,7 @@ RefPtr<FetchServicePromises> FetchService::NetworkErrorResponse(nsresult aRv) {
   promises->ResolveResponseAvailablePromise(InternalResponse::NetworkError(aRv),
                                             __func__);
   promises->ResolveResponseEndPromise(
-      ResponseEndArgs(FetchDriverObserver::eAborted, Nothing()), __func__);
+      ResponseEndArgs(FetchDriverObserver::eAborted), __func__);
   return promises;
 }
 
