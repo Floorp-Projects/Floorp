@@ -18,6 +18,13 @@ struct ParamTraits<nsIFilePicker::Mode>
           nsIFilePicker::Mode::modeGetFolder> {};
 
 template <>
+struct ParamTraits<nsIFilePicker::CaptureTarget>
+    : public ContiguousEnumSerializerInclusive<
+          nsIFilePicker::CaptureTarget,
+          nsIFilePicker::CaptureTarget::captureNone,
+          nsIFilePicker::CaptureTarget::captureEnv> {};
+
+template <>
 struct ParamTraits<nsIFilePicker::ResultCode>
     : public ContiguousEnumSerializerInclusive<
           nsIFilePicker::ResultCode, nsIFilePicker::ResultCode::returnOK,

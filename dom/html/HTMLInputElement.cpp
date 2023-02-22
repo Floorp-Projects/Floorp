@@ -181,10 +181,10 @@ static const nsAttrValue::EnumTable* kInputDefaultType =
     &kInputTypeTable[ArrayLength(kInputTypeTable) - 2];
 
 static const nsAttrValue::EnumTable kCaptureTable[] = {
-    {"user", static_cast<int16_t>(nsIFilePicker::captureUser)},
-    {"environment", static_cast<int16_t>(nsIFilePicker::captureEnv)},
-    {"", static_cast<int16_t>(nsIFilePicker::captureDefault)},
-    {nullptr, static_cast<int16_t>(nsIFilePicker::captureNone)}};
+    {"user", nsIFilePicker::captureUser},
+    {"environment", nsIFilePicker::captureEnv},
+    {"", nsIFilePicker::captureDefault},
+    {nullptr, nsIFilePicker::captureNone}};
 
 static const nsAttrValue::EnumTable* kCaptureDefault = &kCaptureTable[2];
 
@@ -831,7 +831,8 @@ nsresult HTMLInputElement::InitFilePicker(FilePickerType aType) {
       const nsAttrValue* captureVal =
           GetParsedAttr(nsGkAtoms::capture, kNameSpaceID_None);
       if (captureVal) {
-        filePicker->SetCapture(captureVal->GetEnumValue());
+        filePicker->SetCapture(static_cast<nsIFilePicker::CaptureTarget>(
+            captureVal->GetEnumValue()));
       }
     }
   } else {

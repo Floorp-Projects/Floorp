@@ -245,12 +245,16 @@ NS_IMETHODIMP nsBaseFilePicker::AppendRawFilter(const nsAString& aFilter) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBaseFilePicker::GetCapture(int16_t* aCapture) {
-  *aCapture = 0;
+NS_IMETHODIMP nsBaseFilePicker::GetCapture(
+    nsIFilePicker::CaptureTarget* aCapture) {
+  *aCapture = nsIFilePicker::CaptureTarget::captureNone;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBaseFilePicker::SetCapture(int16_t aCapture) { return NS_OK; }
+NS_IMETHODIMP nsBaseFilePicker::SetCapture(
+    nsIFilePicker::CaptureTarget aCapture) {
+  return NS_OK;
+}
 
 // Set the filter index
 NS_IMETHODIMP nsBaseFilePicker::GetFilterIndex(int32_t* aFilterIndex) {
