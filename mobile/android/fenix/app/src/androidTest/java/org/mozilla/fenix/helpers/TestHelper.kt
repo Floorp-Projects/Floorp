@@ -476,4 +476,14 @@ object TestHelper {
             testBlock()
         }
     }
+
+    fun putAppToBackground() {
+        mDevice.pressRecentApps()
+        mDevice.findObject(UiSelector().resourceId("$packageName:id/container")).waitUntilGone(waitingTime)
+    }
+
+    fun bringAppToForeground() {
+        mDevice.pressRecentApps()
+        mDevice.findObject(UiSelector().resourceId("$packageName:id/container")).waitForExists(waitingTime)
+    }
 }

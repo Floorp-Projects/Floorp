@@ -88,19 +88,14 @@ class SettingsSubMenuAutofillRobot {
         }
     }
 
-    fun verifySavedCreditCardsSection(vararg savedCreditCardsLastDigits: String) {
+    fun verifySavedCreditCardsSection(creditCardLastDigits: String, creditCardExpiryDate: String) {
         assertItemWithDescriptionExists(navigateBackButton)
         assertItemContainingTextExists(
             savedCreditCardsToolbarTitle,
             addCreditCardButton,
+            itemContainingText(creditCardLastDigits),
+            itemContainingText(creditCardExpiryDate),
         )
-        for (creditCardLastDigits in savedCreditCardsLastDigits) {
-            assertTrue(
-                mDevice.findObject(
-                    UiSelector().textContains(creditCardLastDigits),
-                ).waitForExists(waitingTime),
-            )
-        }
     }
 
     fun verifyAddressesAutofillToggle(enabled: Boolean) =
@@ -315,6 +310,20 @@ class SettingsSubMenuAutofillRobot {
         manageSavedCreditCardsButton.waitForExists(waitingTime)
     }
 
+    fun clearCreditCardNumber() =
+        creditCardNumberTextInput.also {
+            it.waitForExists(waitingTime)
+            it.clearTextField()
+        }
+
+    fun clearNameOnCreditCard() =
+        nameOnCreditCardTextInput.also {
+            it.waitForExists(waitingTime)
+            it.clearTextField()
+        }
+
+    fun clickToolbarSaveCreditCardButton() = toolbarSaveCreditCardButton.click()
+
     fun verifyEditCreditCardView(
         cardNumber: String,
         cardName: String,
@@ -350,6 +359,14 @@ class SettingsSubMenuAutofillRobot {
 
         assertItemContainingTextExists(deleteCreditCardButton)
     }
+
+    fun verifyEditCreditCardToolbarTitle() = assertItemContainingTextExists(editCreditCardToolbarTitle)
+
+    fun verifyCreditCardNumberErrorMessage() =
+        assertItemContainingTextExists(itemContainingText(getStringResource(R.string.credit_cards_number_validation_error_message)))
+
+    fun verifyNameOnCreditCardErrorMessage() =
+        assertItemContainingTextExists(itemContainingText(getStringResource(R.string.credit_cards_name_on_card_validation_error_message)))
 
     class Transition {
         fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
