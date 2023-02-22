@@ -7,6 +7,7 @@
 
 #include "IPCClientCertsParent.h"
 
+#include "mozilla/SyncRunnable.h"
 #include "mozilla/ipc/BackgroundParent.h"
 
 namespace mozilla::psm {
@@ -19,7 +20,19 @@ IPCClientCertsParent::IPCClientCertsParent() = default;
 // private keys (because these are potential client certificates).
 mozilla::ipc::IPCResult IPCClientCertsParent::RecvFindObjects(
     nsTArray<IPCClientCertObject>* aObjects) {
-  UniqueCERTCertList certList(psm::FindClientCertificatesWithPrivateKeys());
+  nsCOMPtr<nsIEventTarget> socketThread(
+      do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID));
+  if (!socketThread) {
+    return IPC_OK();
+  }
+  // Look for client certificates on the socket thread.
+  UniqueCERTCertList certList;
+  mozilla::SyncRunnable::DispatchToThread(
+      socketThread, NS_NewRunnableFunction(
+                        "IPCClientCertsParent::RecvFindObjects", [&certList]() {
+                          certList =
+                              psm::FindClientCertificatesWithPrivateKeys();
+                        }));
   if (!certList) {
     return IPC_OK();
   }
