@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const peer = new RTCPeerConnection()
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: true,
+    fake: true,
+    peerIdentity: 'name',
+  })
+  stream.getTracks().forEach((track) => peer.addTrack(track, stream))
+  const offer = await peer.createOffer({})
+  await peer.setLocalDescription(offer)
+  await peer.setRemoteDescription(offer)
+  document.documentElement.removeAttribute("class");
+})
+</script>
+</head>
+</html>
