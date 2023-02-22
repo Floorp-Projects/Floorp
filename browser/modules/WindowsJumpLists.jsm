@@ -613,6 +613,14 @@ var WinTaskbarJumpList = {
     this._pbBuilder.delete();
   },
 
+  QueryInterface: ChromeUtils.generateQI([
+    "nsINamed",
+    "nsIObserver",
+    "nsITimerCallback",
+  ]),
+
+  name: "WinTaskbarJumpList",
+
   notify: function WTBJL_notify(aTimer) {
     // Add idle observer on the first notification so it doesn't hit startup.
     this._updateIdleObserver();

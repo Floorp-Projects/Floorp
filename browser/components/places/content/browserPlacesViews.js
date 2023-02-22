@@ -919,6 +919,7 @@ class PlacesToolbar extends PlacesViewBase {
   ];
 
   QueryInterface = ChromeUtils.generateQI([
+    "nsINamed",
     "nsITimerCallback",
     ...PlacesViewBase.interfaces,
   ]);
@@ -1631,6 +1632,10 @@ class PlacesToolbar extends PlacesViewBase {
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     timer.initWithCallback(this, aTime, timer.TYPE_ONE_SHOT);
     return timer;
+  }
+
+  get name() {
+    return "PlacesToolbar";
   }
 
   notify(aTimer) {
