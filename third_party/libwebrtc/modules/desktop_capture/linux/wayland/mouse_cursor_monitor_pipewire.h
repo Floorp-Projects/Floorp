@@ -14,10 +14,13 @@
 #include <memory>
 
 #include "api/scoped_refptr.h"
+#include "api/sequence_checker.h"
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capture_types.h"
+#include "modules/desktop_capture/linux/wayland/shared_screencast_stream.h"
 #include "modules/desktop_capture/mouse_cursor.h"
 #include "modules/desktop_capture/mouse_cursor_monitor.h"
+#include "rtc_base/system/no_unique_address.h"
 
 namespace webrtc {
 
@@ -30,9 +33,10 @@ class MouseCursorMonitorPipeWire : public MouseCursorMonitor {
   void Init(Callback* callback, Mode mode) override;
   void Capture() override;
 
-  DesktopCaptureOptions options_;
-  Callback* callback_ = nullptr;
-  Mode mode_  = SHAPE_AND_POSITION;
+  DesktopCaptureOptions options_ RTC_GUARDED_BY(sequence_checker_);
+  Callback* callback_ RTC_GUARDED_BY(sequence_checker_) = nullptr;
+  Mode mode_ RTC_GUARDED_BY(sequence_checker_) = SHAPE_AND_POSITION;
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker sequence_checker_;
 };
 
 }  // namespace webrtc

@@ -14,7 +14,6 @@
 
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer.h"
-#include "modules/desktop_capture/linux/wayland/shared_screencast_stream.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 
@@ -23,11 +22,13 @@ namespace webrtc {
 MouseCursorMonitorPipeWire::MouseCursorMonitorPipeWire(
     const DesktopCaptureOptions& options)
     : options_(options) {
+  sequence_checker_.Detach();
 }
 
 MouseCursorMonitorPipeWire::~MouseCursorMonitorPipeWire() {}
 
 void MouseCursorMonitorPipeWire::Init(Callback* callback, Mode mode) {
+  RTC_DCHECK_RUN_ON(&sequence_checker_);
   RTC_DCHECK(!callback_);
   RTC_DCHECK(callback);
 
@@ -36,6 +37,7 @@ void MouseCursorMonitorPipeWire::Init(Callback* callback, Mode mode) {
 }
 
 void MouseCursorMonitorPipeWire::Capture() {
+  RTC_DCHECK_RUN_ON(&sequence_checker_);
   RTC_DCHECK(callback_);
 
   std::unique_ptr<MouseCursor> mouse_cursor =
