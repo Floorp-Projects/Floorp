@@ -44,8 +44,6 @@ protocol PFetch {
 
     async OnCSPViolationEvent(nsString aJSON);
 
-    async OnReportPerformanceTiming(ResponseTiming aTiming);
-
     async __delete__(nsresult aResult);
 };
 

@@ -17,8 +17,6 @@ protocol PFetchEventOp {
  parent:
   async PreloadResponse(ParentToParentInternalResponse aResponse);
 
-  async PreloadResponseTiming(ResponseTiming aTiming);
-
   async PreloadResponseEnd(ResponseEndArgs aArgs);
 
  child:

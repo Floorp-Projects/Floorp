@@ -77,19 +77,11 @@ void FetchEventOpProxyChild::Initialize(
         MakeRefPtr<FetchEventPreloadResponseAvailablePromise::Private>(
             __func__);
     mPreloadResponseAvailablePromise->UseSynchronousTaskDispatch(__func__);
+
     if (aArgs.preloadResponse().isSome()) {
       mPreloadResponseAvailablePromise->Resolve(
           InternalResponse::FromIPC(aArgs.preloadResponse().ref()), __func__);
     }
-
-    mPreloadResponseTimingPromise =
-        MakeRefPtr<FetchEventPreloadResponseTimingPromise::Private>(__func__);
-    mPreloadResponseTimingPromise->UseSynchronousTaskDispatch(__func__);
-    if (aArgs.preloadResponseTiming().isSome()) {
-      mPreloadResponseTimingPromise->Resolve(
-          aArgs.preloadResponseTiming().ref(), __func__);
-    }
-
     mPreloadResponseEndPromise =
         MakeRefPtr<FetchEventPreloadResponseEndPromise::Private>(__func__);
     mPreloadResponseEndPromise->UseSynchronousTaskDispatch(__func__);
@@ -107,11 +99,10 @@ void FetchEventOpProxyChild::Initialize(
   auto callback = [self](const ServiceWorkerOpResult& aResult) {
     // FetchEventOp could finish before NavigationPreload fetch finishes.
     // If NavigationPreload is available in FetchEvent, caching FetchEventOp
-    // result until RecvPreloadResponseEnd is called, such that the preload
-    // response could be completed.
+    // result until RecvPreloadResponseEnd is called, such that the response's
+    // ResourceTiming could be recorded in worker's performanceStorage.
     if (self->mPreloadResponseEndPromise &&
         !self->mPreloadResponseEndPromise->IsResolved() &&
-        self->mPreloadResponseTimingPromise->IsResolved() &&
         self->mPreloadResponseAvailablePromise->IsResolved()) {
       self->mCachedOpResult = Some(aResult);
       return;
@@ -191,11 +182,6 @@ FetchEventOpProxyChild::GetPreloadResponseAvailablePromise() {
   return mPreloadResponseAvailablePromise;
 }
 
-RefPtr<FetchEventPreloadResponseTimingPromise>
-FetchEventOpProxyChild::GetPreloadResponseTimingPromise() {
-  return mPreloadResponseTimingPromise;
-}
-
 RefPtr<FetchEventPreloadResponseEndPromise>
 FetchEventOpProxyChild::GetPreloadResponseEndPromise() {
   return mPreloadResponseEndPromise;
@@ -210,16 +196,6 @@ mozilla::ipc::IPCResult FetchEventOpProxyChild::RecvPreloadResponse(
   mPreloadResponseAvailablePromise->Resolve(
       InternalResponse::FromIPC(aResponse), __func__);
 
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult FetchEventOpProxyChild::RecvPreloadResponseTiming(
-    ResponseTiming&& aTiming) {
-  // Receiving this message implies that navigation preload is enabled, so
-  // Initialize() should have created this promise.
-  MOZ_ASSERT(mPreloadResponseTimingPromise);
-
-  mPreloadResponseTimingPromise->Resolve(std::move(aTiming), __func__);
   return IPC_OK();
 }
 
@@ -267,12 +243,8 @@ void FetchEventOpProxyChild::ActorDestroy(ActorDestroyReason) {
         InternalResponse::NetworkError(NS_ERROR_DOM_ABORT_ERR), __func__);
   }
 
-  if (mPreloadResponseTimingPromise) {
-    mPreloadResponseTimingPromise->Resolve(ResponseTiming(), __func__);
-  }
-
   if (mPreloadResponseEndPromise) {
-    ResponseEndArgs args(FetchDriverObserver::eAborted);
+    ResponseEndArgs args(FetchDriverObserver::eAborted, Nothing());
     mPreloadResponseEndPromise->Resolve(args, __func__);
   }
 

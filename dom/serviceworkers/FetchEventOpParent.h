@@ -39,15 +39,12 @@ class FetchEventOpParent final : public PFetchEventOpParent {
   mozilla::ipc::IPCResult RecvPreloadResponse(
       ParentToParentInternalResponse&& aResponse);
 
-  mozilla::ipc::IPCResult RecvPreloadResponseTiming(ResponseTiming&& aTiming);
-
   mozilla::ipc::IPCResult RecvPreloadResponseEnd(ResponseEndArgs&& aArgs);
 
   void ActorDestroy(ActorDestroyReason) override;
 
   struct Pending {
     Maybe<ParentToParentInternalResponse> mPreloadResponse;
-    Maybe<ResponseTiming> mTiming;
     Maybe<ResponseEndArgs> mEndArgs;
   };
 

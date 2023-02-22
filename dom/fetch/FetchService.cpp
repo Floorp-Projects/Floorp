@@ -40,23 +40,15 @@ mozilla::LazyLogModule gFetchLog("Fetch");
 FetchServicePromises::FetchServicePromises()
     : mAvailablePromise(
           MakeRefPtr<FetchServiceResponseAvailablePromise::Private>(__func__)),
-      mTimingPromise(
-          MakeRefPtr<FetchServiceResponseTimingPromise::Private>(__func__)),
       mEndPromise(
           MakeRefPtr<FetchServiceResponseEndPromise::Private>(__func__)) {
   mAvailablePromise->UseSynchronousTaskDispatch(__func__);
-  mTimingPromise->UseSynchronousTaskDispatch(__func__);
   mEndPromise->UseSynchronousTaskDispatch(__func__);
 }
 
 RefPtr<FetchServiceResponseAvailablePromise>
 FetchServicePromises::GetResponseAvailablePromise() {
   return mAvailablePromise;
-}
-
-RefPtr<FetchServiceResponseTimingPromise>
-FetchServicePromises::GetResponseTimingPromise() {
-  return mTimingPromise;
 }
 
 RefPtr<FetchServiceResponseEndPromise>
@@ -75,20 +67,6 @@ void FetchServicePromises::RejectResponseAvailablePromise(
     const CopyableErrorResult&& aError, const char* aMethodName) {
   if (mAvailablePromise) {
     mAvailablePromise->Reject(aError, aMethodName);
-  }
-}
-
-void FetchServicePromises::ResolveResponseTimingPromise(
-    ResponseTiming&& aTiming, const char* aMethodName) {
-  if (mTimingPromise) {
-    mTimingPromise->Resolve(std::move(aTiming), aMethodName);
-  }
-}
-
-void FetchServicePromises::RejectResponseTimingPromise(
-    const CopyableErrorResult&& aError, const char* aMethodName) {
-  if (mTimingPromise) {
-    mTimingPromise->Reject(aError, aMethodName);
   }
 }
 
@@ -263,10 +241,8 @@ void FetchService::FetchInstance::Cancel() {
   mPromises->ResolveResponseAvailablePromise(
       InternalResponse::NetworkError(NS_ERROR_DOM_ABORT_ERR), __func__);
 
-  mPromises->ResolveResponseTimingPromise(ResponseTiming(), __func__);
-
   mPromises->ResolveResponseEndPromise(
-      ResponseEndArgs(FetchDriverObserver::eAborted), __func__);
+      ResponseEndArgs(FetchDriverObserver::eAborted, Nothing()), __func__);
 }
 
 void FetchService::FetchInstance::OnResponseEnd(
@@ -275,10 +251,27 @@ void FetchService::FetchInstance::OnResponseEnd(
   FETCH_LOG(("FetchInstance::OnResponseEnd [%p] %s", this,
              aReason == eAborted ? "eAborted" : "eNetworking"));
 
+  // Get response timing form FetchDriver
+  Maybe<ResponseTiming> responseTiming;
+  if (aReason != eAborted) {
+    ResponseTiming timing;
+    UniquePtr<PerformanceTimingData> performanceTiming(
+        mFetchDriver->GetPerformanceTimingData(timing.initiatorType(),
+                                               timing.entryName()));
+    if (performanceTiming != nullptr) {
+      timing.timingData() = performanceTiming->ToIPC();
+      if (!mIsWorkerFetch) {
+        // Force replace initiatorType for ServiceWorkerNavgationPreload.
+        timing.initiatorType() = u"navigation"_ns;
+      }
+      responseTiming = Some(timing);
+    }
+  }
+
   if (mIsWorkerFetch) {
     FlushConsoleReport();
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-        __func__, [endArgs = ResponseEndArgs(aReason),
+        __func__, [endArgs = ResponseEndArgs(aReason, responseTiming),
                    actorID = mArgs.as<WorkerFetchArgs>().mActorID]() {
           FETCH_LOG(("FetchInstance::OnResponseEnd, Runnable"));
           RefPtr<FetchParent> actor = FetchParent::GetActorByID(actorID);
@@ -292,13 +285,9 @@ void FetchService::FetchInstance::OnResponseEnd(
 
   MOZ_ASSERT(mPromises);
 
-  // If ResponseTimingPromise is not resolved, it means the fetch is aborted.
-  // Resolving ResponseTimingPromise with an emtpy ResponseTiming.
-  if (!mPromises->GetResponseTimingPromise()->IsResolved()) {
-    mPromises->ResolveResponseTimingPromise(ResponseTiming(), __func__);
-  }
   // Resolve the ResponseEndPromise
-  mPromises->ResolveResponseEndPromise(ResponseEndArgs(aReason), __func__);
+  mPromises->ResolveResponseEndPromise(ResponseEndArgs(aReason, responseTiming),
+                                       __func__);
 
   if (aReason == eAborted) {
     return;
@@ -399,43 +388,6 @@ void FetchService::FetchInstance::FlushConsoleReport() {
   }
 }
 
-void FetchService::FetchInstance::OnReportPerformanceTiming() {
-  FETCH_LOG(("FetchInstance::OnReportPerformanceTiming [%p]", this));
-  MOZ_ASSERT(mFetchDriver);
-  MOZ_ASSERT(mPromises);
-
-  if (mPromises->GetResponseTimingPromise()->IsResolved()) {
-    return;
-  }
-
-  ResponseTiming timing;
-  UniquePtr<PerformanceTimingData> performanceTiming(
-      mFetchDriver->GetPerformanceTimingData(timing.initiatorType(),
-                                             timing.entryName()));
-  if (!performanceTiming) {
-    return;
-  }
-  timing.timingData() = performanceTiming->ToIPC();
-  // Force replace initiatorType for ServiceWorkerNavgationPreload.
-  if (!mIsWorkerFetch) {
-    timing.initiatorType() = u"navigation"_ns;
-  } else {
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-        __func__,
-        [actorID = mArgs.as<WorkerFetchArgs>().mActorID, timing = timing]() {
-          FETCH_LOG(("FetchInstance::OnReportPerformanceTiming, Runnable"));
-          RefPtr<FetchParent> actor = FetchParent::GetActorByID(actorID);
-          if (actor) {
-            actor->OnReportPerformanceTiming(std::move(timing));
-          }
-        });
-    MOZ_ALWAYS_SUCCEEDS(mArgs.as<WorkerFetchArgs>().mEventTarget->Dispatch(
-        r, nsIThread::DISPATCH_NORMAL));
-  }
-
-  mPromises->ResolveResponseTimingPromise(std::move(timing), __func__);
-}
-
 // FetchService
 
 NS_IMPL_ISUPPORTS(FetchService, nsIObserver)
@@ -465,9 +417,8 @@ RefPtr<FetchServicePromises> FetchService::NetworkErrorResponse(nsresult aRv) {
   RefPtr<FetchServicePromises> promises = MakeRefPtr<FetchServicePromises>();
   promises->ResolveResponseAvailablePromise(InternalResponse::NetworkError(aRv),
                                             __func__);
-  promises->ResolveResponseTimingPromise(ResponseTiming(), __func__);
   promises->ResolveResponseEndPromise(
-      ResponseEndArgs(FetchDriverObserver::eAborted), __func__);
+      ResponseEndArgs(FetchDriverObserver::eAborted, Nothing()), __func__);
   return promises;
 }
 

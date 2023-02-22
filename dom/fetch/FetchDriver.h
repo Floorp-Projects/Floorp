@@ -76,8 +76,6 @@ class FetchDriverObserver {
   // NeedOnDataAvailable() returned true when called in OnStartRequest().
   virtual void OnDataAvailable() = 0;
 
-  virtual void OnReportPerformanceTiming() {}
-
  protected:
   virtual ~FetchDriverObserver() = default;
 

@@ -40,9 +40,6 @@ class FetchChild final : public PFetchChild, public AbortFollower {
 
   mozilla::ipc::IPCResult RecvOnCSPViolationEvent(const nsAString& aJSon);
 
-  mozilla::ipc::IPCResult RecvOnReportPerformanceTiming(
-      ResponseTiming&& aTiming);
-
   void SetCSPEventListener(nsICSPEventListener* aListener);
 
   static RefPtr<FetchChild> Create(WorkerPrivate* aWorkerPrivate,
