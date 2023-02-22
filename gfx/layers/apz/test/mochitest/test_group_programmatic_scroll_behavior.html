@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Various programmatic scroll tests that spawn in new windows</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+let smoothScrollEnabled = [["general.smoothScroll", true]];
+let smoothScrollDisabled = [["general.smoothScroll", false]];
+
+var subtests = [
+  {"file": "helper_programmatic_scroll_behavior.html?action=scrollIntoView", "prefs": smoothScrollEnabled},
+  {"file": "helper_programmatic_scroll_behavior.html?action=scrollIntoView", "prefs": smoothScrollDisabled},
+  {"file": "helper_programmatic_scroll_behavior.html?action=scrollBy", "prefs": smoothScrollEnabled},
+  {"file": "helper_programmatic_scroll_behavior.html?action=scrollBy", "prefs": smoothScrollDisabled},
+  {"file": "helper_programmatic_scroll_behavior.html?action=scrollTo", "prefs": smoothScrollEnabled},
+  {"file": "helper_programmatic_scroll_behavior.html?action=scrollTo", "prefs": smoothScrollDisabled},
+  {"file": "helper_programmatic_scroll_behavior.html?action=scroll", "prefs": smoothScrollEnabled},
+  {"file": "helper_programmatic_scroll_behavior.html?action=scroll", "prefs": smoothScrollDisabled},
+];
+
+if (isApzEnabled()) {
+  SimpleTest.waitForExplicitFinish();
+  window.onload = function() {
+    runSubtestsSeriallyInFreshWindows(subtests)
+    .then(SimpleTest.finish, SimpleTest.finishWithFailure);
+  };
+}
+
+  </script>
+</head>
+<body>
+</body>
+</html>
