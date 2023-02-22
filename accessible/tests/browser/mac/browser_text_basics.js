@@ -109,6 +109,22 @@ function testLines(
   );
 }
 
+function* markerIterator(macDoc, reverse = false) {
+  let m = macDoc.getAttributeValue(
+    reverse ? "AXEndTextMarker" : "AXStartTextMarker"
+  );
+  let c = 0;
+  while (m) {
+    yield [m, c++];
+    m = macDoc.getParameterizedAttributeValue(
+      reverse
+        ? "AXPreviousTextMarkerForTextMarker"
+        : "AXNextTextMarkerForTextMarker",
+      m
+    );
+  }
+}
+
 // Tests consistency in text markers between:
 // 1. "Linked list" forward navagation
 // 2. Getting markers by index
@@ -119,59 +135,21 @@ function testMarkerIntegrity(accDoc, expectedMarkerValues) {
     Ci.nsIAccessibleMacInterface
   );
 
-  let count = 0;
-
   // Iterate forward with "AXNextTextMarkerForTextMarker"
-  let marker = macDoc.getAttributeValue("AXStartTextMarker");
-  while (marker) {
-    let index = macDoc.getParameterizedAttributeValue(
+  let prevMarker;
+  let count = 0;
+  for (let [marker, index] of markerIterator(macDoc)) {
+    count++;
+    let markerIndex = macDoc.getParameterizedAttributeValue(
       "AXIndexForTextMarker",
       marker
     );
     is(
+      markerIndex,
       index,
-      count,
-      `Correct index in "AXNextTextMarkerForTextMarker": ${count}`
+      `Correct index in "AXNextTextMarkerForTextMarker": ${index}`
     );
-
-    testWords(
-      macDoc,
-      marker,
-      `At index ${count}`,
-      ...expectedMarkerValues[count].words
-    );
-    testLines(
-      macDoc,
-      marker,
-      `At index ${count}`,
-      ...expectedMarkerValues[count].lines
-    );
-    testUIElement(
-      macDoc,
-      marker,
-      `At index ${count}`,
-      ...expectedMarkerValues[count].element
-    );
-    testParagraph(
-      macDoc,
-      marker,
-      `At index ${count}`,
-      expectedMarkerValues[count].paragraph
-    );
-    testStyleRun(
-      macDoc,
-      marker,
-      `At index ${count}`,
-      expectedMarkerValues[count].style
-    );
-
-    let prevMarker = marker;
-    marker = macDoc.getParameterizedAttributeValue(
-      "AXNextTextMarkerForTextMarker",
-      marker
-    );
-
-    if (marker) {
+    if (prevMarker) {
       let range = macDoc.getParameterizedAttributeValue(
         "AXTextMarkerRangeForUnorderedTextMarkers",
         [prevMarker, marker]
@@ -182,34 +160,76 @@ function testMarkerIntegrity(accDoc, expectedMarkerValues) {
           range
         ),
         1,
-        "marker moved one character"
+        `[${index}] marker moved one character`
       );
     }
+    prevMarker = marker;
 
-    count++;
+    testWords(
+      macDoc,
+      marker,
+      `At index ${index}`,
+      ...expectedMarkerValues[index].words
+    );
+    testLines(
+      macDoc,
+      marker,
+      `At index ${index}`,
+      ...expectedMarkerValues[index].lines
+    );
+    testUIElement(
+      macDoc,
+      marker,
+      `At index ${index}`,
+      ...expectedMarkerValues[index].element
+    );
+    testParagraph(
+      macDoc,
+      marker,
+      `At index ${index}`,
+      expectedMarkerValues[index].paragraph
+    );
+    testStyleRun(
+      macDoc,
+      marker,
+      `At index ${index}`,
+      expectedMarkerValues[index].style
+    );
   }
+
+  is(expectedMarkerValues.length, count, `Correct marker count: ${count}`);
 
   // Use "AXTextMarkerForIndex" to retrieve all text markers
   for (let i = 0; i < count; i++) {
-    marker = macDoc.getParameterizedAttributeValue("AXTextMarkerForIndex", i);
+    let marker = macDoc.getParameterizedAttributeValue(
+      "AXTextMarkerForIndex",
+      i
+    );
     let index = macDoc.getParameterizedAttributeValue(
       "AXIndexForTextMarker",
       marker
     );
     is(index, i, `Correct index in "AXTextMarkerForIndex": ${i}`);
+
+    if (i == count - 1) {
+      ok(
+        !macDoc.getParameterizedAttributeValue(
+          "AXNextTextMarkerForTextMarker",
+          marker
+        ),
+        "Iterated through all markers"
+      );
+    }
   }
 
-  ok(
-    !macDoc.getParameterizedAttributeValue(
-      "AXNextTextMarkerForTextMarker",
-      marker
-    ),
-    "Iterated through all markers"
-  );
+  count = expectedMarkerValues.length;
 
   // Iterate backward with "AXPreviousTextMarkerForTextMarker"
-  marker = macDoc.getAttributeValue("AXEndTextMarker");
-  while (marker) {
+  for (let [marker] of markerIterator(macDoc, true)) {
+    if (count <= 0) {
+      ok(false, "Exceeding marker count");
+      break;
+    }
     count--;
     let index = macDoc.getParameterizedAttributeValue(
       "AXIndexForTextMarker",
@@ -220,25 +240,36 @@ function testMarkerIntegrity(accDoc, expectedMarkerValues) {
       count,
       `Correct index in "AXPreviousTextMarkerForTextMarker": ${count}`
     );
-    marker = macDoc.getParameterizedAttributeValue(
-      "AXPreviousTextMarkerForTextMarker",
-      marker
-    );
   }
 
   is(count, 0, "Iterated backward through all text markers");
 }
 
 addAccessibleTask("mac/doc_textmarker_test.html", async (browser, accDoc) => {
-  const expectedMarkerValues = await SpecialPowers.spawn(
-    browser,
-    [],
-    async () => {
-      return content.wrappedJSObject.EXPECTED;
-    }
-  );
+  const expectedValues = await SpecialPowers.spawn(browser, [], async () => {
+    return content.wrappedJSObject.EXPECTED;
+  });
 
-  testMarkerIntegrity(accDoc, expectedMarkerValues);
+  if (isCacheEnabled) {
+    // Some changes in expected results when cache is enabled
+    // These are more correct return values (or at least not more incorrect)
+    expectedValues[231].words[1] = "Skip'";
+    expectedValues[248].lines[0] = expectedValues[248].lines[1] = "These ";
+    expectedValues[252].lines[0] = expectedValues[252].lines[1] = "are ";
+    expectedValues[255].lines[0] = expectedValues[255].lines[1] = "my ";
+    expectedValues[261].words[0] = expectedValues[261].words[1] = "awards,";
+    expectedValues[263].lines[0] = expectedValues[263].lines[1] = "awards, ";
+    expectedValues[269].words[0] = expectedValues[269].words[1] = "Mother.";
+    expectedValues[271].lines[0] = expectedValues[271].lines[1] = "Mother. ";
+    expectedValues[276].lines[0] = expectedValues[276].lines[1] = "From ";
+    expectedValues[269].paragraph = "These are my awards, Mother. From Army.";
+    expectedValues[283].words[0] = "deceived";
+    expectedValues[295].paragraph = "I deceived you, mom.";
+    expectedValues[295].words[0] = "";
+    expectedValues[297].words[0] = " ";
+  }
+
+  testMarkerIntegrity(accDoc, expectedValues);
 });
 
 // Test text marker lesser-than operator
@@ -315,5 +346,35 @@ addAccessibleTask(
     children.forEach((child, index) => {
       is(child.getAttributeValue("AXValue"), expectedTitles[index]);
     });
+  }
+);
+
+addAccessibleTask(
+  `<a href="#">link</a> <input id="input" value="hello">`,
+  async (browser, accDoc) => {
+    let macDoc = accDoc.nativeInterface.QueryInterface(
+      Ci.nsIAccessibleMacInterface
+    );
+
+    let input = getNativeInterface(accDoc, "input");
+    let range = macDoc.getParameterizedAttributeValue(
+      "AXTextMarkerRangeForUIElement",
+      input
+    );
+
+    let firstMarkerInInput = macDoc.getParameterizedAttributeValue(
+      "AXStartTextMarkerForTextMarkerRange",
+      range
+    );
+
+    let leftWordRange = macDoc.getParameterizedAttributeValue(
+      "AXLeftWordTextMarkerRangeForTextMarker",
+      firstMarkerInInput
+    );
+    let str = macDoc.getParameterizedAttributeValue(
+      "AXStringForTextMarkerRange",
+      leftWordRange
+    );
+    is(str, "hello", "Left word at start of input should be right word");
   }
 );

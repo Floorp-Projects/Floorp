@@ -22,6 +22,10 @@ bool ParallelMarker::mark(SliceBudget& sliceBudget) {
   {
     AutoLockHelperThreadState lock;
     MOZ_ASSERT(workerCount() <= HelperThreadState().maxGCParallelThreads(lock));
+
+    // TODO: Even if the thread limits checked above are correct, there may not
+    // be enough threads available to start our mark tasks immediately due to
+    // other runtimes in the same process running GC.
   }
 #endif
 

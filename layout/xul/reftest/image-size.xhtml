@@ -90,5 +90,13 @@
   <image src="image4x3.png" style="min-height: 88px; padding: 8px;"/>
   <image src="image4x3.png" style="min-width: 90px; min-height: 76px; padding: 8px;"/>
   <image src="image4x3.png" style="min-width: 112px; min-height: 76px; padding: 8px;"/>
+  <image id="dyn-1" src="image4x3.png" style="border: 1px solid green"/>
+  <image id="dyn-2" style="list-style-image: url(image4x3.png); border: 1px solid green"/>
 </hbox>
+<script>
+  window.addEventListener("load", function() {
+    document.getElementById("dyn-1").removeAttribute("src");
+    document.getElementById("dyn-2").style.listStyleImage = "";
+  });
+</script>
 </window>

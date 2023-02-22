@@ -434,7 +434,7 @@ impl RenderTarget {
 
     /// Returns true if this texture was used within `threshold` frames of
     /// the current frame.
-    pub fn used_recently(&self, current_frame_id: FrameId, threshold: usize) -> bool {
+    pub fn used_recently(&self, current_frame_id: FrameId, threshold: u64) -> bool {
         self.last_frame_used + threshold >= current_frame_id
     }
 }
@@ -1823,7 +1823,7 @@ impl ResourceCache {
         &mut self,
         total_bytes_threshold: usize,
         total_bytes_red_line_threshold: usize,
-        frames_threshold: usize,
+        frames_threshold: u64,
     ) {
         // Get the total GPU memory size used by the current render target pool
         let mut rt_pool_size_in_bytes: usize = self.render_target_pool

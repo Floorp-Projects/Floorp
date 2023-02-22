@@ -29,8 +29,9 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIStyleSheetService"
 );
 
-// Query selector for selectable elements in tip and dynamic results.
-const SELECTABLE_ELEMENT_SELECTOR = "[role=button], [selectable]";
+// Query selector for selectable elements in results.
+const SELECTABLE_ELEMENT_SELECTOR =
+  "[role=button]:not([unselectable]), [selectable]";
 
 const ZERO_PREFIX_HISTOGRAM_DWELL_TIME = "FX_URLBAR_ZERO_PREFIX_DWELL_TIME_MS";
 const ZERO_PREFIX_SCALAR_ABANDONMENT = "urlbar.zeroprefix.abandonment";
@@ -1342,12 +1343,26 @@ export class UrlbarView {
       this.#addRowButton(item, {
         name: "menu",
         l10n: { id: "urlbar-result-menu-button" },
+        attributes: lazy.UrlbarPrefs.get("resultMenu.keyboardAccessible")
+          ? null
+          : {
+              unselectable: true,
+            },
       });
     }
   }
 
-  #addRowButton(item, { name, l10n, url }) {
+  #addRowButton(item, { name, l10n, url, attributes }) {
     let button = this.#createElement("span");
+    if (attributes) {
+      for (let [attrName, attrVal] of Object.entries(attributes)) {
+        if (typeof attrVal == "boolean") {
+          button.toggleAttribute(attrName, attrVal);
+        } else if (attrVal != null) {
+          button.setAttribute(attrName, attrVal);
+        }
+      }
+    }
     button.id = `${item.id}-button-${name}`;
     button.classList.add("urlbarView-button", "urlbarView-button-" + name);
     button.setAttribute("role", "button");

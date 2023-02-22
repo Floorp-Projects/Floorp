@@ -422,9 +422,6 @@ nsresult Http3WebTransportStream::OnWriteSegment(char* buf, uint32_t count,
     case READING: {
       rv = mSession->ReadResponseData(mStreamId, buf, count, countWritten,
                                       &mFin);
-      if (NS_FAILED(rv)) {
-        break;
-      }
       if (*countWritten == 0) {
         if (mFin) {
           mRecvState = RECV_DONE;
@@ -492,7 +489,7 @@ nsresult Http3WebTransportStream::WriteSegments() {
     rv = mReceiveStreamPipeOut->WriteSegments(WritePipeSegment, this,
                                               nsIOService::gDefaultSegmentSize,
                                               &countWrittenSingle);
-    LOG(("Http3Stream::WriteSegments rv=0x%" PRIx32
+    LOG(("Http3WebTransportStream::WriteSegments rv=0x%" PRIx32
          " countWrittenSingle=%" PRIu32 " socketin=%" PRIx32 " [this=%p]",
          static_cast<uint32_t>(rv), countWrittenSingle,
          static_cast<uint32_t>(mSocketInCondition), this));
@@ -504,13 +501,17 @@ nsresult Http3WebTransportStream::WriteSegments() {
     } else if (NS_FAILED(mSocketInCondition)) {
       if (mSocketInCondition != NS_BASE_STREAM_WOULD_BLOCK) {
         rv = mSocketInCondition;
+        if (rv == NS_BASE_STREAM_CLOSED) {
+          mReceiveStreamPipeOut->Close();
+          rv = NS_OK;
+        }
       }
       again = false;
     }
     // read more from the socket until error...
   } while (again && gHttpHandler->Active());
 
-  return NS_OK;
+  return rv;
 }
 
 bool Http3WebTransportStream::Done() const {

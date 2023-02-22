@@ -13,45 +13,6 @@
 
 // Put any other stuff relative to this test folder below.
 
-function expectNotifications(checkAllArgs) {
-  let notifications = [];
-  let observer = new Proxy(NavBookmarkObserver, {
-    get(target, name) {
-      if (name == "check") {
-        PlacesUtils.bookmarks.removeObserver(observer);
-        return expectedNotifications =>
-          Assert.deepEqual(notifications, expectedNotifications);
-      }
-
-      if (name.startsWith("onItem")) {
-        return (...origArgs) => {
-          let args = Array.from(origArgs, arg => {
-            if (arg && arg instanceof Ci.nsIURI) {
-              return URL.fromURI(arg);
-            }
-            if (arg && typeof arg == "number" && arg >= Date.now() * 1000) {
-              return PlacesUtils.toDate(arg);
-            }
-            return arg;
-          });
-          if (checkAllArgs) {
-            notifications.push({ name, arguments: args });
-          } else {
-            notifications.push({ name, arguments: { guid: args[5] } });
-          }
-        };
-      }
-
-      if (name in target) {
-        return target[name];
-      }
-      return undefined;
-    },
-  });
-  PlacesUtils.bookmarks.addObserver(observer);
-  return observer;
-}
-
 function expectPlacesObserverNotifications(
   types,
   checkAllArgs = true,

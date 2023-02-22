@@ -1023,6 +1023,7 @@ pref("javascript.options.mem.gc_incremental_slice_ms", 5);
 pref("javascript.options.mem.gc_compacting", true);
 
 // JSGC_PARALLEL_MARKING_ENABLED
+// This only applies to the main runtime and does not affect workers.
 pref("javascript.options.mem.gc_parallel_marking", false);
 
 // JSGC_HIGH_FREQUENCY_TIME_LIMIT

@@ -44,15 +44,15 @@
  *      An URL cannot be longer than DB_URL_LENGTH_MAX, methods will throw if a
  *      longer value is provided.
  *
- * Each successful operation notifies through the nsINavBookmarksObserver
+ * Each successful operation notifies through the PlacesObservers
  * interface.  To listen to such notifications you must register using
- * nsINavBookmarksService addObserver and removeObserver methods.
+ * PlacesUtils.observers.addListener and PlacesUtils.observers.removeListener
+ * methods.
  * Note that bookmark addition or order changes won't notify bookmark-moved for
  * items that have their indexes changed.
  * Similarly, lastModified changes not done explicitly (like changing another
- * property) won't fire an onItemChanged notification for the lastModified
- * property.
- * @see nsINavBookmarkObserver
+ * property) won't fire a bookmark-time-changed notification.
+ * @see PlacesObservers
  */
 
 const lazy = {};

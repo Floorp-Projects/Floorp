@@ -687,13 +687,6 @@ enum CachedBool { eCachedBoolMiss, eCachedTrue, eCachedFalse };
   return nsCocoaUtils::ToNSString(title);
 }
 
-enum CheckedState {
-  kUncheckable = -1,
-  kUnchecked = 0,
-  kChecked = 1,
-  kMixed = 2
-};
-
 - (int)checkedValue {
   uint64_t state = [self
       stateWithMask:(states::CHECKABLE | states::CHECKED | states::MIXED)];

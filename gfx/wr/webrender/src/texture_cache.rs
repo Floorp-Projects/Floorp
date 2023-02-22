@@ -1155,7 +1155,7 @@ impl TextureCache {
         &self,
         budget_type: BudgetType,
         eviction_count: usize,
-    ) -> Option<usize> {
+    ) -> Option<u64> {
 
         let threshold = self.get_eviction_threshold(budget_type);
         let bytes_allocated = self.bytes_allocated[budget_type as usize];
@@ -1240,7 +1240,7 @@ impl TextureCache {
             profile.set(profiler::TEXTURE_CACHE_EVICTION_COUNT, eviction_count);
             profile.set(
                 profiler::TEXTURE_CACHE_YOUNGEST_EVICTION,
-                self.now.frame_id().as_usize() - youngest_evicted.as_usize()
+                self.now.frame_id().as_u64() - youngest_evicted.as_u64()
             );
         }
     }

@@ -38,4 +38,6 @@ interface nsIAccessibleTextLeafPoint : nsISupports
   const unsigned long BOUNDARY_FLAG_INCLUDE_ORIGIN   = 0x1;
   // Do not search past end of editables.
   const unsigned long BOUNDARY_FLAG_STOP_IN_EDITABLE = 0x2;
+  // Skip over list items in searches and don't consider them line or paragraph starts.
+  const unsigned long BOUNDARY_FLAG_SKIP_LIST_ITEM_MARKER = 0x4;
 };

@@ -12,6 +12,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Region: "resource://gre/modules/Region.sys.mjs",
 });
 
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  ReaderMode: "resource://gre/modules/ReaderMode.jsm",
+});
+
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "INVALID_SHAREABLE_SCHEMES",
@@ -222,18 +226,24 @@ export var BrowserUtils = {
     return uri.asciiHost || uri.spec;
   },
 
-  isShareableURL(url) {
+  // Given a URL returns a (possibly transformed) URL suitable for sharing, or null if
+  // no such URL can be obtained.
+  getShareableURL(url) {
     if (!url) {
-      return false;
+      return null;
     }
 
+    // Carve out an exception for about:reader.
+    if (url.spec.startsWith("about:reader?")) {
+      url = Services.io.newURI(lazy.ReaderMode.getOriginalUrl(url.spec));
+    }
     // Disallow sharing URLs with more than 65535 characters.
     if (url.spec.length > 65535) {
-      return false;
+      return null;
     }
     // Use the same preference as synced tabs to disable what kind
     // of tabs we can send to another device
-    return !lazy.INVALID_SHAREABLE_SCHEMES.has(url.scheme);
+    return lazy.INVALID_SHAREABLE_SCHEMES.has(url.scheme) ? null : url;
   },
 
   /**

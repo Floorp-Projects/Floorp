@@ -8,6 +8,7 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerRange.h"
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
@@ -1924,15 +1925,15 @@ inline bool MarkStack::ensureSpace(size_t count) {
 }
 
 MOZ_NEVER_INLINE bool MarkStack::enlarge(size_t count) {
-  size_t newCapacity = capacity() * 2;
+  size_t required = capacity() + count;
+  size_t newCapacity = mozilla::RoundUpPow2(required);
 
 #ifdef JS_GC_ZEAL
   newCapacity = std::min(newCapacity, maxCapacity_.ref());
-#endif
-
-  if (newCapacity < capacity() + count) {
+  if (newCapacity < required) {
     return false;
   }
+#endif
 
   return resize(newCapacity);
 }

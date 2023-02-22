@@ -600,6 +600,10 @@ void nsImageFrame::UpdateXULImage() {
       }
     }
   }
+
+  if (!mOwnedRequest) {
+    UpdateImage(nullptr, nullptr);
+  }
 }
 
 void nsImageFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
