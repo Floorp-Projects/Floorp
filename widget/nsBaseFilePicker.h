@@ -53,7 +53,7 @@ class nsBaseFilePicker : public nsIFilePicker {
 
  protected:
   virtual void InitNative(nsIWidget* aParent, const nsAString& aTitle) = 0;
-  virtual nsresult Show(int16_t* _retval) = 0;
+  virtual nsresult Show(nsIFilePicker::ResultCode* _retval) = 0;
 
   bool mAddToRecentDocs;
   nsCOMPtr<nsIFile> mDisplayDirectory;

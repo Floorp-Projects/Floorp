@@ -8,7 +8,10 @@ include protocol PBrowser;
 
 include IPCBlob;
 
+include "mozilla/dom/FilePickerMessageUtils.h";
+
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
+using nsIFilePicker::ResultCode from "nsIFilePicker.h";
 
 namespace mozilla {
 namespace dom {
@@ -43,7 +46,7 @@ parent:
                int16_t capture);
 
 child:
-    async __delete__(MaybeInputData data, int16_t result);
+    async __delete__(MaybeInputData data, ResultCode result);
 };
 
 } // namespace dom

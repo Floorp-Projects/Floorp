@@ -25,7 +25,8 @@ NS_IMPL_ISUPPORTS(FilePickerParent::FilePickerShownCallback,
                   nsIFilePickerShownCallback);
 
 NS_IMETHODIMP
-FilePickerParent::FilePickerShownCallback::Done(int16_t aResult) {
+FilePickerParent::FilePickerShownCallback::Done(
+    nsIFilePicker::ResultCode aResult) {
   if (mFilePickerParent) {
     mFilePickerParent->Done(aResult);
   }
@@ -170,7 +171,7 @@ void FilePickerParent::SendFilesOrDirectories(
   Unused << Send__delete__(this, inblobs, mResult);
 }
 
-void FilePickerParent::Done(int16_t aResult) {
+void FilePickerParent::Done(nsIFilePicker::ResultCode aResult) {
   mResult = aResult;
 
   if (mResult != nsIFilePicker::returnOK) {

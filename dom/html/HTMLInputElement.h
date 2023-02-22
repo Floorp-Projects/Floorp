@@ -1639,7 +1639,7 @@ class HTMLInputElement final : public TextControlElement,
                               nsIFilePicker* aFilePicker);
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD Done(int16_t aResult) override;
+    NS_IMETHOD Done(nsIFilePicker::ResultCode aResult) override;
 
    private:
     nsCOMPtr<nsIFilePicker> mFilePicker;

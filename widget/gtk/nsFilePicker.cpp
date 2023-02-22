@@ -333,7 +333,7 @@ nsFilePicker::GetFiles(nsISimpleEnumerator** aFiles) {
   return NS_ERROR_FAILURE;
 }
 
-nsresult nsFilePicker::Show(int16_t* aReturn) {
+nsresult nsFilePicker::Show(nsIFilePicker::ResultCode* aReturn) {
   NS_ENSURE_ARG_POINTER(aReturn);
 
   nsresult rv = Open(nullptr);
@@ -560,7 +560,7 @@ bool nsFilePicker::WarnForNonReadableFile(void* file_chooser) {
 void nsFilePicker::Done(void* file_chooser, gint response) {
   mRunning = false;
 
-  int16_t result;
+  nsIFilePicker::ResultCode result;
   switch (response) {
     case GTK_RESPONSE_OK:
     case GTK_RESPONSE_ACCEPT:

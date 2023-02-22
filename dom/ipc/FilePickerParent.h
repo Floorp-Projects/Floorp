@@ -25,7 +25,7 @@ class FilePickerParent : public PFilePickerParent {
 
   virtual ~FilePickerParent();
 
-  void Done(int16_t aResult);
+  void Done(nsIFilePicker::ResultCode aResult);
 
   struct BlobImplOrString {
     RefPtr<BlobImpl> mBlobImpl;
@@ -87,7 +87,7 @@ class FilePickerParent : public PFilePickerParent {
 
   nsString mTitle;
   int16_t mMode;
-  int16_t mResult;
+  nsIFilePicker::ResultCode mResult;
 };
 
 }  // namespace mozilla::dom
