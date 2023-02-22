@@ -2091,6 +2091,53 @@ sidebar:
     record_in_processes:
       - 'main'
 
+library:
+  link:
+    bug_numbers:
+      - 1815906
+    description: >
+      The number of history items opened from the Library window
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - firefox-view-engineers@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+  opened:
+    bug_numbers:
+      - 1815906
+    description: >
+      The number of times the Library window was opened
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - firefox-view-engineers@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+  search:
+    bug_numbers:
+      - 1815906
+    description: >
+      The number of history-specific searches made from the Library window
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - firefox-view-engineers@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
 os.environment:
   is_admin_without_uac:
     bug_numbers:

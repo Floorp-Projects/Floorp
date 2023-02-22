@@ -1113,7 +1113,7 @@ export var PlacesUIUtils = {
    * @param {object} view
    *          The current view that contains the node or nodes selected for
    *          opening
-   * @param {Function=} updateTelemetryFn
+   * @param {Function=} [updateTelemetryFn]
    *          Optional function to call if telemetry needs to be updated
    */
   openMultipleLinksInTabs(nodeOrNodes, event, view, updateTelemetryFn = null) {

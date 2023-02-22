@@ -9,18 +9,18 @@ const { TelemetryTestUtils } = ChromeUtils.import(
 );
 const firstNodeIndex = 0;
 
-function mockPromptService(response) {
-  let promptService = {
-    // The prompt returns 1 for cancelled and 0 for accepted.
-    _response: response,
-    QueryInterface: ChromeUtils.generateQI(["nsIPromptService"]),
-    confirmEx: () => promptService._response,
+// The prompt returns 1 for cancelled and 0 for accepted.
+let gResponse = 1;
+(function replacePromptService() {
+  let originalPromptService = Services.prompt;
+  Services.prompt = {
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIPromptService]),
+    confirmEx: () => gResponse,
   };
-
-  Services.prompt = promptService;
-
-  return promptService;
-}
+  registerCleanupFunction(() => {
+    Services.prompt = originalPromptService;
+  });
+})();
 
 add_setup(async function() {
   await PlacesUtils.history.clear();
@@ -65,7 +65,7 @@ add_task(async function test_click_multiple_history_entries() {
     // if a user tries to open all history items and they cancel opening
     // those items in new tabs (due to max tab limit warning),
     // no telemetry should be recorded
-    mockPromptService(1);
+    gResponse = 1;
     await SpecialPowers.pushPrefEnv({
       set: [["browser.tabs.maxOpenBeforeWarn", 4]],
     });
@@ -80,7 +80,7 @@ add_task(async function test_click_multiple_history_entries() {
 
     // if they proceed with opening history multiple history items despite the warning,
     // telemetry should be recorded
-    mockPromptService(0);
+    gResponse = 0;
     synthesizeClickOnSelectedTreeCell(tree, { button: 1 });
 
     TelemetryTestUtils.assertKeyedScalar(
@@ -91,9 +91,6 @@ add_task(async function test_click_multiple_history_entries() {
     );
   });
 
-  // reset the mockPromptService
-  let { prompt } = Services;
-  Services.prompt = prompt;
   await SpecialPowers.popPrefEnv();
 
   while (gBrowser.tabs.length > 1) {
