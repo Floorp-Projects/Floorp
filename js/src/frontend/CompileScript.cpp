@@ -7,6 +7,7 @@
 #include "js/experimental/CompileScript.h"
 
 #include "frontend/BytecodeCompilation.h"  // frontend::CompileGlobalScriptToStencil
+#include "frontend/BytecodeCompiler.h"  // frontend::ParseModuleToStencil
 #include "frontend/CompilationStencil.h"  // frontend::{CompilationStencil,CompilationInput}
 #include "frontend/FrontendContext.h"    // frontend::FrontendContext
 #include "frontend/ScopeBindingCache.h"  // frontend::NoScopeBindingCache
@@ -53,6 +54,33 @@ static already_AddRefed<JS::Stencil> CompileGlobalScriptToStencilImpl(
   return stencil_.forget();
 }
 
+template <typename CharT>
+static already_AddRefed<JS::Stencil> CompileModuleScriptToStencilImpl(
+    JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& optionsInput,
+    JS::NativeStackLimit stackLimit, JS::SourceText<CharT>& srcBuf,
+    js::UniquePtr<js::frontend::CompilationInput>& stencilInput) {
+  JS::CompileOptions options(nullptr, optionsInput);
+  options.setModule();
+
+  stencilInput =
+      fc->getAllocator()->make_unique<frontend::CompilationInput>(options);
+  if (!stencilInput) {
+    return nullptr;
+  }
+
+  NoScopeBindingCache scopeCache;
+  js::LifoAlloc tempLifoAlloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
+  RefPtr<JS::Stencil> stencil =
+      ParseModuleToStencil(nullptr, fc, stackLimit, tempLifoAlloc,
+                           *stencilInput, &scopeCache, srcBuf);
+  if (!stencil) {
+    return nullptr;
+  }
+
+  // Convert the UniquePtr to a RefPtr and increment the count (to 1).
+  return stencil.forget();
+}
+
 already_AddRefed<JS::Stencil> JS::CompileGlobalScriptToStencil(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
     JS::NativeStackLimit stackLimit, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
@@ -66,6 +94,22 @@ already_AddRefed<JS::Stencil> JS::CompileGlobalScriptToStencil(
     JS::NativeStackLimit stackLimit, JS::SourceText<char16_t>& srcBuf,
     js::UniquePtr<js::frontend::CompilationInput>& stencilInput) {
   return CompileGlobalScriptToStencilImpl(fc, options, stackLimit, srcBuf,
+                                          stencilInput);
+}
+
+already_AddRefed<JS::Stencil> JS::CompileModuleScriptToStencil(
+    JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& optionsInput,
+    JS::NativeStackLimit stackLimit, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
+    js::UniquePtr<js::frontend::CompilationInput>& stencilInput) {
+  return CompileModuleScriptToStencilImpl(fc, optionsInput, stackLimit, srcBuf,
+                                          stencilInput);
+}
+
+already_AddRefed<JS::Stencil> JS::CompileModuleScriptToStencil(
+    JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& optionsInput,
+    JS::NativeStackLimit stackLimit, JS::SourceText<char16_t>& srcBuf,
+    js::UniquePtr<js::frontend::CompilationInput>& stencilInput) {
+  return CompileModuleScriptToStencilImpl(fc, optionsInput, stackLimit, srcBuf,
                                           stencilInput);
 }
 
