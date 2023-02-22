@@ -20,6 +20,8 @@ class ColorPickerParent : public PColorPickerParent {
         mInitialColor(aInitialColor),
         mDefaultColors(aDefaultColors.Clone()) {}
 
+  NS_INLINE_DECL_REFCOUNTING(ColorPickerParent, final)
+
   virtual mozilla::ipc::IPCResult RecvOpen() override;
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 

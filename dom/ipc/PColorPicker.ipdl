@@ -10,7 +10,7 @@ include protocol PBrowser;
 namespace mozilla {
 namespace dom {
 
-[ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
+[ChildImpl=virtual, ParentImpl=virtual]
 protocol PColorPicker
 {
     manager PBrowser;

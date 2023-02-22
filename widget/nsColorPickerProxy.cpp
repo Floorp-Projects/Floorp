@@ -23,7 +23,6 @@ nsColorPickerProxy::Init(mozIDOMWindowProxy* aParent, const nsAString& aTitle,
 
   browserChild->SendPColorPickerConstructor(this, aTitle, aInitialColor,
                                             aDefaultColors);
-  NS_ADDREF_THIS();
   return NS_OK;
 }
 
