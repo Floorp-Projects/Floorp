@@ -2505,17 +2505,6 @@
   value: @IS_NOT_NIGHTLY_BUILD@
   mirror: always
 
-# Whether wheel event target's should be grouped. When enabled, all wheel
-# events that occur in a given wheel transaction have the same event target.
-- name: dom.event.wheel-event-groups.enabled
-  type: bool
-#if defined(NIGHTLY_BUILD)
-  value: true
-#else
-  value: false
-#endif
-  mirror: always
-
 # Whether WheelEvent should return pixels instead of lines for
 # WheelEvent.deltaX/Y/Z, when deltaMode hasn't been checked.
 #

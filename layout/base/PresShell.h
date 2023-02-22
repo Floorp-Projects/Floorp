@@ -2209,16 +2209,6 @@ class PresShell final : public nsStubDocumentObserver,
        */
       void UpdateTouchEventTarget(WidgetGUIEvent* aGUIEvent);
 
-      /**
-       * UpdateWheelEventTarget() updates mFrame, mPresShell, and mContent if
-       * aGUIEvent is a wheel event and aGUIEvent should be grouped with prior
-       * wheel events.
-       *
-       * @param aGUIEvent       The handled event.  If it's not a wheel event,
-       *                        this method does nothing.
-       */
-      void UpdateWheelEventTarget(WidgetGUIEvent* aGUIEvent);
-
       RefPtr<PresShell> mPresShell;
       nsIFrame* mFrame = nullptr;
       nsCOMPtr<nsIContent> mContent;

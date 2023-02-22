@@ -2,10 +2,9 @@
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=1013412
-https://bugzilla.mozilla.org/show_bug.cgi?id=1168182
 -->
 <head>
-  <title>Test for Bug 1013412 and 1168182</title>
+  <title>Test for Bug 1013412</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/paint_listener.js"></script>
   <script src="/tests/SimpleTest/EventUtils.js"></script>
@@ -45,10 +44,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1168182
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1013412">Mozilla Bug 1013412</a>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1168182">Mozilla Bug 1168182</a>
 <p id="display"></p>
 <div id="content">
-  <p>Scrolling the page should be async and scrolling over the dark circle should scroll the page and avoid rotating the white ball.</p>
+  <p>Scrolling the page should be async, but scrolling over the dark circle should not scroll the page and instead rotate the white ball.</p>
   <div id="scroller">
    <div id="scrollbox">
     <div id="circle"></div>
@@ -57,6 +55,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1168182
 </div>
 <pre id="test">
 <script type="application/javascript">
+
+/** Test for Bug 1013412 **/
 
 var rotation = 0;
 var rotationAdjusted = false;
@@ -80,8 +80,7 @@ document.getElementById("scrollbox").addEventListener("wheel", function (e) {
 var iteration = 0;
 function runTest() {
   var content = document.getElementById('content');
-  // enough iterations that we would scroll to the bottom of 'content'
-  if (iteration < 300 && content.scrollTop != content.scrollTopMax) {
+  if (iteration < 300) { // enough iterations that we would scroll to the bottom of 'content'
     iteration++;
     sendWheelAndPaint(content, 100, 10,
                      { deltaMode: WheelEvent.DOM_DELTA_LINE,
@@ -90,8 +89,8 @@ function runTest() {
     return;
   }
   var scrollbox = document.getElementById('scrollbox');
-  is(content.scrollTop, content.scrollTopMax, "We should have scrolled to the bottom of the scrollframe");
-  is(rotationAdjusted, false, "The rotation should not have been adjusted");
+  is(content.scrollTop < content.scrollTopMax, true, "We should not have scrolled to the bottom of the scrollframe");
+  is(rotationAdjusted, true, "The rotation should have been adjusted");
   SimpleTest.finish();
 }
 
@@ -99,11 +98,7 @@ function startTest() {
   // If we allow smooth scrolling the "smooth" scrolling may cause the page to
   // glide past the scrollbox (which is supposed to stop the scrolling) and so
   // we might end up at the bottom of the page.
-  SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false],
-                                     ["test.events.async.enabled", true],
-                                     ["mousewheel.transaction.timeout", 100000],
-                                     ["dom.event.wheel-event-groups.enabled", true]]},
-                            runTest);
+  SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false], ["test.events.async.enabled", true]]}, runTest);
 }
 
 SimpleTest.waitForExplicitFinish();

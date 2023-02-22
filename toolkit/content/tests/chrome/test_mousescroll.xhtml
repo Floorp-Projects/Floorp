@@ -277,13 +277,7 @@ async function prepareRunningTests()
 function* testBody()
 {
   yield* testRichListbox("richlistbox");
-
-  // Perform a mousedown to ensure the wheel transaction from the previous test
-  // does not impact the next test.
-  synthesizeMouse(document.scrollingElement, 0, 0, {type: "mousedown"}, window);
   yield* testArrowScrollbox("hscrollbox");
-
-  synthesizeMouse(document.scrollingElement, -1, -1, {type: "mousedown"}, window);
   yield* testArrowScrollbox("vscrollbox");
 }
 
