@@ -649,6 +649,9 @@ update-portable-notification-failed-redirector-message = Update failed. Restarti
 update-portable-notification-failed-prepare-message = Failed to prepare update.
 
 ##################################################################### Open link in external ###############################################################
+open-link-in-external-select-browser-option = Choose the browser you want to open in "Open in another browser"
+open-link-in-external-select-browser-option-default =
+ .label = Default browser
 open-link-in-external-tab-context-menu = Open in another browser
 open-link-in-external-tab-dialog-title-error = Error
 open-link-in-external-tab-dialog-message-default-browser-not-found = Default browser does not exist or is not configured.

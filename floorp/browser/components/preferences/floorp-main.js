@@ -40,6 +40,7 @@ Preferences.addAll([
   { id: "floorp.tabs.showPinnedTabsTitle", type: "bool" },
   { id: "floorp.browser.tabbar.multirow.max.enabled", type: "bool"},
   { id: "floorp.browser.tabbar.multirow.newtab-inside.enabled", type: "bool"},
+  { id: "floorp.openLinkInExternal.browserId", type: "string" },
 ]);
 
 window.addEventListener("pageshow", async function() {
