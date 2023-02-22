@@ -113,20 +113,6 @@ static bool MustBeAccessible(nsIContent* aContent, DocAccessible* aDocument) {
     return true;
   }
 
-  // If the frame has been transformed, and the content has any children, we
-  // should create an Accessible so that we can account for the transform when
-  // calculating the Accessible's bounds using the parent process cache.
-  // Ditto for content which is position: fixed or sticky.
-  // However, don't do this for XUL widgets, as this breaks XUL a11y code
-  // expectations in some cases. XUL widgets are only used in the parent
-  // process and can't be cached anyway.
-  if (aContent->HasChildren() && !aContent->IsXULElement() &&
-      (frame->IsTransformed() || frame->IsStickyPositioned() ||
-       (frame->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
-        nsLayoutUtils::IsReallyFixedPos(frame)))) {
-    return true;
-  }
-
   if (aContent->IsElement()) {
     uint32_t attrCount = aContent->AsElement()->GetAttrCount();
     for (uint32_t attrIdx = 0; attrIdx < attrCount; attrIdx++) {
@@ -161,6 +147,34 @@ static bool MustBeAccessible(nsIContent* aContent, DocAccessible* aDocument) {
   }
 
   return false;
+}
+
+/**
+ * Return true if the element must be a generic Accessible, even if it has been
+ * marked presentational with role="presentation", etc. MustBeAccessible causes
+ * an Accessible to be created as if it weren't marked presentational at all;
+ * e.g. <table role="presentation" tabindex="0"> will expose roles::TABLE and
+ * support TableAccessibleBase. In contrast, this function causes a generic
+ * Accessible to be created; e.g. <table role="presentation" style="position:
+ * fixed;"> will expose roles::TEXT_CONTAINER and will not support
+ * TableAccessibleBase. This is necessary in certain cases for the
+ * RemoteAccessible cache.
+ */
+static bool MustBeGenericAccessible(nsIContent* aContent,
+                                    DocAccessible* aDocument) {
+  nsIFrame* frame = aContent->GetPrimaryFrame();
+  MOZ_ASSERT(frame);
+  // If the frame has been transformed, and the content has any children, we
+  // should create an Accessible so that we can account for the transform when
+  // calculating the Accessible's bounds using the parent process cache.
+  // Ditto for content which is position: fixed or sticky.
+  // However, don't do this for XUL widgets, as this breaks XUL a11y code
+  // expectations in some cases. XUL widgets are only used in the parent
+  // process and can't be cached anyway.
+  return aContent->HasChildren() && !aContent->IsXULElement() &&
+         (frame->IsTransformed() || frame->IsStickyPositioned() ||
+          (frame->StyleDisplay()->mPosition == StylePositionProperty::Fixed &&
+           nsLayoutUtils::IsReallyFixedPos(frame)));
 }
 
 bool nsAccessibilityService::ShouldCreateImgAccessible(
@@ -1111,14 +1125,23 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
 
   const nsRoleMapEntry* roleMapEntry = aria::GetRoleMap(content->AsElement());
 
-  // If the element is focusable or global ARIA attribute is applied to it or
-  // it is referenced by ARIA relationship then treat role="presentation" on
-  // the element as the role is not there.
   if (roleMapEntry && (roleMapEntry->Is(nsGkAtoms::presentation) ||
                        roleMapEntry->Is(nsGkAtoms::none))) {
-    if (!MustBeAccessible(content, document)) return nullptr;
-
-    roleMapEntry = nullptr;
+    if (MustBeAccessible(content, document)) {
+      // If the element is focusable, a global ARIA attribute is applied to it
+      // or it is referenced by an ARIA relationship, then treat
+      // role="presentation" on the element as if the role is not there.
+      roleMapEntry = nullptr;
+    } else if (MustBeGenericAccessible(content, document)) {
+      // Clear roleMapEntry so that we use the generic role specified below.
+      // Otherwise, we'd expose roles::NOTHING as specified for presentation in
+      // ARIAMap.
+      roleMapEntry = nullptr;
+      newAcc = new EnumRoleHyperTextAccessible<roles::TEXT_CONTAINER>(content,
+                                                                      document);
+    } else {
+      return nullptr;
+    }
   }
 
   if (!newAcc && content->IsHTMLElement()) {  // HTML accessibles
@@ -1303,6 +1326,9 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
       // Interesting generic non-HTML container
       newAcc = new AccessibleWrap(content, document);
     }
+  } else if (!newAcc && MustBeGenericAccessible(content, document)) {
+    newAcc = new EnumRoleHyperTextAccessible<roles::TEXT_CONTAINER>(content,
+                                                                    document);
   }
 
   if (newAcc) {

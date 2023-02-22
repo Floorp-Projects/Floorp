@@ -131,7 +131,7 @@ addAccessibleTask(
 </div>
   `,
   async function(browser, docAcc) {
-    const tree = { SECTION: [{ PARAGRAPH: [{ TEXT_LEAF: [] }] }] };
+    const tree = { TEXT_CONTAINER: [{ PARAGRAPH: [{ TEXT_LEAF: [] }] }] };
 
     const divWithTransform = findAccessibleChildByID(docAcc, "container")
       .firstChild;
@@ -159,7 +159,7 @@ addAccessibleTask(
   `,
   async function(browser, docAcc) {
     let divToTransform = findAccessibleChildByID(docAcc, "div-to-transform");
-    ok(!divToTransform, "There should not be a section accessible.");
+    ok(!divToTransform, "There should not be a div accessible.");
 
     // Translate the div.
     await invokeContentTask(browser, [], () => {
@@ -171,7 +171,7 @@ addAccessibleTask(
     // Verify that the SECTION accessible appeared after we gave it a transform.
     divToTransform = findAccessibleChildByID(docAcc, "div-to-transform");
     const tree = {
-      SECTION: [{ PARAGRAPH: [{ TEXT_LEAF: [] }] }],
+      TEXT_CONTAINER: [{ PARAGRAPH: [{ TEXT_LEAF: [] }] }],
     };
     testAccessibleTree(divToTransform, tree);
 
