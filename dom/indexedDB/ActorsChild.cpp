@@ -1376,22 +1376,6 @@ bool BackgroundDatabaseChild::DeallocPBackgroundIDBDatabaseFileChild(
   return true;
 }
 
-PBackgroundIDBDatabaseRequestChild*
-BackgroundDatabaseChild::AllocPBackgroundIDBDatabaseRequestChild(
-    const DatabaseRequestParams& aParams) {
-  MOZ_CRASH(
-      "PBackgroundIDBDatabaseRequestChild actors should be manually "
-      "constructed!");
-}
-
-bool BackgroundDatabaseChild::DeallocPBackgroundIDBDatabaseRequestChild(
-    PBackgroundIDBDatabaseRequestChild* aActor) {
-  MOZ_ASSERT(aActor);
-
-  delete static_cast<BackgroundDatabaseRequestChild*>(aActor);
-  return true;
-}
-
 already_AddRefed<PBackgroundIDBVersionChangeTransactionChild>
 BackgroundDatabaseChild::AllocPBackgroundIDBVersionChangeTransactionChild(
     const uint64_t aCurrentVersion, const uint64_t aRequestedVersion,
@@ -1566,73 +1550,6 @@ BackgroundDatabaseChild::RecvCloseAfterInvalidationComplete() {
 
   if (mDatabase) {
     mDatabase->DispatchTrustedEvent(nsDependentString(kCloseEventType));
-  }
-
-  return IPC_OK();
-}
-
-/*******************************************************************************
- * BackgroundDatabaseRequestChild
- ******************************************************************************/
-
-BackgroundDatabaseRequestChild::BackgroundDatabaseRequestChild(
-    IDBDatabase* aDatabase, MovingNotNull<RefPtr<IDBRequest>> aRequest)
-    : BackgroundRequestChildBase(std::move(aRequest)), mDatabase(aDatabase) {
-  // Can't assert owning thread here because IPDL has not yet set our manager!
-  MOZ_ASSERT(aDatabase);
-  aDatabase->AssertIsOnOwningThread();
-
-  MOZ_COUNT_CTOR(indexedDB::BackgroundDatabaseRequestChild);
-}
-
-BackgroundDatabaseRequestChild::~BackgroundDatabaseRequestChild() {
-  MOZ_COUNT_DTOR(indexedDB::BackgroundDatabaseRequestChild);
-}
-
-void BackgroundDatabaseRequestChild::HandleResponse(nsresult aResponse) {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(NS_FAILED(aResponse));
-  MOZ_ASSERT(NS_ERROR_GET_MODULE(aResponse) == NS_ERROR_MODULE_DOM_INDEXEDDB);
-
-  mRequest->Reset();
-
-  DispatchErrorEvent(mRequest, aResponse);
-}
-
-void BackgroundDatabaseRequestChild::HandleResponse(
-    const CreateFileRequestResponse& aResponse) {
-  AssertIsOnOwningThread();
-
-  mRequest->Reset();
-
-  auto mutableFileActor =
-      static_cast<BackgroundMutableFileChild*>(aResponse.mutableFileChild());
-  MOZ_ASSERT(mutableFileActor);
-
-  mutableFileActor->EnsureDOMObject();
-
-  SetResultAndDispatchSuccessEvent(mRequest, nullptr,
-                                   *WrapNotNull(static_cast<IDBMutableFile*>(
-                                       mutableFileActor->GetDOMObject())));
-
-  mutableFileActor->ReleaseDOMObject();
-}
-
-mozilla::ipc::IPCResult BackgroundDatabaseRequestChild::Recv__delete__(
-    const DatabaseRequestResponse& aResponse) {
-  AssertIsOnOwningThread();
-
-  switch (aResponse.type()) {
-    case DatabaseRequestResponse::Tnsresult:
-      HandleResponse(aResponse.get_nsresult());
-      break;
-
-    case DatabaseRequestResponse::TCreateFileRequestResponse:
-      HandleResponse(aResponse.get_CreateFileRequestResponse());
-      break;
-
-    default:
-      return IPC_FAIL(this, "Unknown response type!");
   }
 
   return IPC_OK();

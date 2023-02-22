@@ -13,7 +13,6 @@
 #include "mozilla/dom/IDBTransaction.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBCursorChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBDatabaseChild.h"
-#include "mozilla/dom/indexedDB/PBackgroundIDBDatabaseRequestChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBFactoryChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBFactoryRequestChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBRequestChild.h"
@@ -262,12 +261,6 @@ class BackgroundDatabaseChild final : public PBackgroundIDBDatabaseChild {
   bool DeallocPBackgroundIDBDatabaseFileChild(
       PBackgroundIDBDatabaseFileChild* aActor) const;
 
-  PBackgroundIDBDatabaseRequestChild* AllocPBackgroundIDBDatabaseRequestChild(
-      const DatabaseRequestParams& aParams);
-
-  bool DeallocPBackgroundIDBDatabaseRequestChild(
-      PBackgroundIDBDatabaseRequestChild* aActor);
-
   already_AddRefed<PBackgroundIDBVersionChangeTransactionChild>
   AllocPBackgroundIDBVersionChangeTransactionChild(uint64_t aCurrentVersion,
                                                    uint64_t aRequestedVersion,
@@ -290,32 +283,6 @@ class BackgroundDatabaseChild final : public PBackgroundIDBDatabaseChild {
   mozilla::ipc::IPCResult RecvInvalidate();
 
   mozilla::ipc::IPCResult RecvCloseAfterInvalidationComplete();
-};
-
-class BackgroundDatabaseRequestChild final
-    : public BackgroundRequestChildBase,
-      public PBackgroundIDBDatabaseRequestChild {
-  friend class BackgroundDatabaseChild;
-  friend IDBDatabase;
-
-  RefPtr<IDBDatabase> mDatabase;
-
- private:
-  // Only created by IDBDatabase.
-  BackgroundDatabaseRequestChild(IDBDatabase* aDatabase,
-                                 MovingNotNull<RefPtr<IDBRequest>> aRequest);
-
-  // Only destroyed by BackgroundDatabaseChild.
-  ~BackgroundDatabaseRequestChild();
-
-  void HandleResponse(nsresult aResponse);
-
-  void HandleResponse(const CreateFileRequestResponse& aResponse);
-
- public:
-  // IPDL methods are only called by IPDL.
-  mozilla::ipc::IPCResult Recv__delete__(
-      const DatabaseRequestResponse& aResponse);
 };
 
 class BackgroundVersionChangeTransactionChild;
