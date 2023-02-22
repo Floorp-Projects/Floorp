@@ -76,8 +76,7 @@
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
 #include "js/Date.h"
-#include "js/experimental/CodeCoverage.h"  // js::GetCodeCoverageSummary
-#include "js/experimental/CompileScript.h"  // JS::ParseGlobalScript, JS::PrepareForInstantiate
+#include "js/experimental/CodeCoverage.h"      // js::GetCodeCoverageSummary
 #include "js/experimental/JSStencil.h"         // JS::Stencil
 #include "js/experimental/PCCountProfiling.h"  // JS::{Start,Stop}PCCountProfiling, JS::PurgePCCounts, JS::GetPCCountScript{Count,Summary,Contents}
 #include "js/experimental/TypedData.h"         // JS_GetObjectAsUint8Array
@@ -6289,33 +6288,10 @@ static bool ParseCompileOptionsForModule(JSContext* cx,
   return true;
 }
 
-static bool ParseCompileOptionsForInstantiate(JSContext* cx,
-                                              JS::CompileOptions& options,
-                                              JS::Handle<JSObject*> opts,
-                                              bool& prepareForInstantiate) {
-  JS::Rooted<JS::Value> v(cx);
-
-  if (!JS_GetProperty(cx, opts, "prepareForInstantiate", &v)) {
-    return false;
-  }
-  if (!v.isUndefined()) {
-    prepareForInstantiate = JS::ToBoolean(v);
-  } else {
-    prepareForInstantiate = false;
-  }
-
-  return true;
-}
-
 static bool CompileToStencil(JSContext* cx, uint32_t argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   if (!args.requireAtLeast(cx, "compileToStencil", 1)) {
-    return false;
-  }
-  if (!args[0].isString()) {
-    const char* typeName = InformalValueTypeName(args[0]);
-    JS_ReportErrorASCII(cx, "expected string to parse, got %s", typeName);
     return false;
   }
 
@@ -6339,7 +6315,6 @@ static bool CompileToStencil(JSContext* cx, uint32_t argc, Value* vp) {
   RootedString sourceMapURL(cx);
   UniqueChars fileNameBytes;
   bool isModule = false;
-  bool prepareForInstantiate = false;
   if (args.length() == 2) {
     if (!args[1].isObject()) {
       JS_ReportErrorASCII(
@@ -6355,40 +6330,24 @@ static bool CompileToStencil(JSContext* cx, uint32_t argc, Value* vp) {
     if (!ParseCompileOptionsForModule(cx, options, opts, isModule)) {
       return false;
     }
-    if (!ParseCompileOptionsForInstantiate(cx, options, opts,
-                                           prepareForInstantiate)) {
-      return false;
-    }
     if (!js::ParseSourceOptions(cx, opts, &displayURL, &sourceMapURL)) {
       return false;
     }
   }
 
-  AutoReportFrontendContext fc(cx);
   RefPtr<JS::Stencil> stencil;
-  UniquePtr<js::frontend::CompilationInput> stencilInput;
   if (isModule) {
-    stencil = JS::CompileModuleScriptToStencil(
-        &fc, options, cx->stackLimitForCurrentPrincipal(), srcBuf,
-        stencilInput);
+    stencil = JS::CompileModuleScriptToStencil(cx, options, srcBuf);
   } else {
-    stencil = JS::CompileGlobalScriptToStencil(
-        &fc, options, cx->stackLimitForCurrentPrincipal(), srcBuf,
-        stencilInput);
+    stencil = JS::CompileGlobalScriptToStencil(cx, options, srcBuf);
   }
   if (!stencil) {
     return false;
   }
 
+  AutoReportFrontendContext fc(cx);
   if (!SetSourceOptions(cx, &fc, stencil->source, displayURL, sourceMapURL)) {
     return false;
-  }
-
-  JS::InstantiationStorage storage;
-  if (prepareForInstantiate) {
-    if (!JS::PrepareForInstantiate(&fc, *stencilInput, *stencil, storage)) {
-      return false;
-    }
   }
 
   Rooted<js::StencilObject*> stencilObj(
@@ -6529,8 +6488,8 @@ static bool CompileToStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   UniquePtr<frontend::ExtensibleCompilationStencil> stencil;
   if (isModule) {
     stencil = frontend::ParseModuleToExtensibleStencil(
-        cx, &fc, cx->stackLimitForCurrentPrincipal(), cx->tempLifoAlloc(),
-        input.get(), &scopeCache, srcBuf);
+        cx, &fc, cx->stackLimitForCurrentPrincipal(), input.get(), &scopeCache,
+        srcBuf);
   } else {
     stencil = frontend::CompileGlobalScriptToExtensibleStencil(
         cx, &fc, cx->stackLimitForCurrentPrincipal(), input.get(), &scopeCache,

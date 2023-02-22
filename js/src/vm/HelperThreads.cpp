@@ -757,9 +757,8 @@ void CompileModuleToStencilTask<Unit>::parse(JSContext* cx,
   }
 
   frontend::NoScopeBindingCache scopeCache;
-  stencil_ =
-      frontend::ParseModuleToStencil(cx, fc, stackLimit, cx->tempLifoAlloc(),
-                                     *stencilInput_, &scopeCache, data);
+  stencil_ = frontend::ParseModuleToStencil(cx, fc, stackLimit, *stencilInput_,
+                                            &scopeCache, data);
   if (!stencil_) {
     return;
   }

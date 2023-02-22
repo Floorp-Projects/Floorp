@@ -33,19 +33,19 @@ struct ExtensibleCompilationStencil;
 class ScopeBindingCache;
 
 extern already_AddRefed<CompilationStencil> CompileGlobalScriptToStencil(
-    JSContext* maybeCx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
     js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
     ScopeBindingCache* scopeCache, JS::SourceText<char16_t>& srcBuf,
     ScopeKind scopeKind);
 
 extern already_AddRefed<CompilationStencil> CompileGlobalScriptToStencil(
-    JSContext* maybeCx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
     js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
     ScopeBindingCache* scopeCache, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
     ScopeKind scopeKind);
 
 extern UniquePtr<ExtensibleCompilationStencil>
-CompileGlobalScriptToExtensibleStencil(JSContext* maybeCx, FrontendContext* fc,
+CompileGlobalScriptToExtensibleStencil(JSContext* cx, FrontendContext* fc,
                                        JS::NativeStackLimit stackLimit,
                                        CompilationInput& input,
                                        ScopeBindingCache* scopeCache,
@@ -54,7 +54,7 @@ CompileGlobalScriptToExtensibleStencil(JSContext* maybeCx, FrontendContext* fc,
 
 extern UniquePtr<ExtensibleCompilationStencil>
 CompileGlobalScriptToExtensibleStencil(
-    JSContext* maybeCx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
+    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
     CompilationInput& input, ScopeBindingCache* scopeCache,
     JS::SourceText<mozilla::Utf8Unit>& srcBuf, ScopeKind scopeKind);
 
@@ -64,7 +64,7 @@ CompileGlobalScriptToExtensibleStencil(
 // PrepareForInstantiate is GC-free operation that can be performed
 // off-main-thread without parse global.
 [[nodiscard]] extern bool PrepareForInstantiate(
-    JSContext* maybeCx, FrontendContext* fc, CompilationInput& input,
+    JSContext* cx, FrontendContext* fc, CompilationInput& input,
     const CompilationStencil& stencil, CompilationGCOutput& gcOutput);
 
 [[nodiscard]] extern bool InstantiateStencils(JSContext* cx,
