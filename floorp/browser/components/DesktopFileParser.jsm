@@ -52,7 +52,7 @@ const DesktopFileParser = {
     },
     getCurrentLanguageNameProperty(desktopFileInfo) {
         let lang_env = env.get("LANG");
-        if (lang_env !=== "") {
+        if (lang_env !== "") {
             let lang_env_without_codeset;
             let lang_env_without_codeset_and_modifier;
             let lang_env_without_country_and_codeset;
