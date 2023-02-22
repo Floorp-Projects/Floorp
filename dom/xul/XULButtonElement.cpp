@@ -444,16 +444,18 @@ void XULButtonElement::PostHandleEventForMenus(
             // If we're open we never deselect. PopupClosed will do as needed.
             return false;
           }
-          auto* menubar = XULMenuBarElement::FromNode(*parent);
-          if (!menubar) {
-            // Don't de-select when not in the menubar.
-            // NOTE(emilio): Behavior from before bug 1811466 is equivalent to
-            // returning true here, consider flipping this.
+          if (auto* menubar = XULMenuBarElement::FromNode(*parent)) {
+            // De-select when exiting a menubar item, if the menubar wasn't
+            // activated by keyboard.
+            return !menubar->IsActiveByKeyboard();
+          }
+          if (IsOnMenuList()) {
+            // Don't de-select if on a menu-list. That matches Chromium and our
+            // historical Windows behavior, see bug 1197913.
             return false;
           }
-          // De-select when exiting a menubar item, if the menubar wasn't
-          // activated by keyboard.
-          return !menubar->IsActiveByKeyboard();
+          // De-select elsewhere.
+          return true;
         }();
 
         if (shouldDeactivate) {
