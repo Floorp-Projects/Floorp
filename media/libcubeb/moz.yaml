@@ -16,6 +16,8 @@ vendoring:
   url: https://github.com/mozilla/cubeb
   source-hosting: github
   vendor-directory: media/libcubeb
+  patches:
+    - 0001-disable-aaudio-before-android-31.patch
   skip-vendoring-steps:
     - update-moz-build
   exclude:
