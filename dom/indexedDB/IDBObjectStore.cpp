@@ -15,7 +15,6 @@
 #include "IDBFactory.h"
 #include "IDBIndex.h"
 #include "IDBKeyRange.h"
-#include "IDBMutableFile.h"
 #include "IDBRequest.h"
 #include "IDBTransaction.h"
 #include "IndexedDatabase.h"
@@ -359,7 +358,7 @@ JSObject* CopyingStructuredCloneReadCallback(
       case SCTAG_DOM_MUTABLEFILE:
         MOZ_ASSERT(file.Type() == StructuredCloneFileBase::eMutableFile);
 
-        return WrapAsJSObject(aCx, file.MutableMutableFile());
+        return nullptr;
 
       default:
         // This cannot be reached due to the if condition before.
@@ -760,7 +759,6 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
             switch (file.Type()) {
               case StructuredCloneFileBase::eBlob: {
                 MOZ_ASSERT(file.HasBlob());
-                MOZ_ASSERT(!file.HasMutableFile());
 
                 PBackgroundIDBDatabaseFileChild* const fileActor =
                     database.GetOrCreateFileActorForBlob(file.MutableBlob());
@@ -778,7 +776,6 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
               case StructuredCloneFileBase::eWasmBytecode:
               case StructuredCloneFileBase::eWasmCompiled: {
                 MOZ_ASSERT(file.HasBlob());
-                MOZ_ASSERT(!file.HasMutableFile());
 
                 PBackgroundIDBDatabaseFileChild* const fileActor =
                     database.GetOrCreateFileActorForBlob(file.MutableBlob());
