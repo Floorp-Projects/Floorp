@@ -45,12 +45,14 @@ function isActive(item) {
   return item.hasAttribute("_moz-menuactive");
 }
 
-function activateItem(item) {
+async function activateItem(item) {
   info(`Activating ${item.id}`);
   ok(!isActive(item), "Shouldn't be already active");
-  let promise = waitForEvent(item, "DOMMenuItemActive");
-  synthesizeMouseAtCenter(item, { type: "mousemove" });
-  return promise;
+  let activated = waitForEvent(item, "DOMMenuItemActive");
+  synthesizeMouse(item, 5, 5, { type: "mousemove" });
+  await new Promise(r => setTimeout(r, 0));
+  synthesizeMouse(item, 7, 7, { type: "mousemove" });
+  await activated;
 }
 
 add_task(async function() {
