@@ -7,8 +7,6 @@
 
 #import "LegacyTextMarker.h"
 
-#import "MacUtils.h"
-
 #include "DocAccessible.h"
 #include "DocAccessibleParent.h"
 #include "AccAttributes.h"
@@ -20,42 +18,6 @@
 
 namespace mozilla {
 namespace a11y {
-
-struct OpaqueLegacyTextMarker {
-  OpaqueLegacyTextMarker(uintptr_t aDoc, uintptr_t aID, int32_t aOffset)
-      : mDoc(aDoc), mID(aID), mOffset(aOffset) {}
-  OpaqueLegacyTextMarker() {}
-  uintptr_t mDoc;
-  uintptr_t mID;
-  int32_t mOffset;
-};
-
-// LegacyTextMarker
-
-LegacyTextMarker::LegacyTextMarker(Accessible* aDoc,
-                                   AXTextMarkerRef aTextMarker) {
-  MOZ_ASSERT(aDoc);
-  OpaqueLegacyTextMarker opaqueMarker;
-  if (aTextMarker &&
-      AXTextMarkerGetLength(aTextMarker) == sizeof(OpaqueLegacyTextMarker)) {
-    memcpy(&opaqueMarker, AXTextMarkerGetBytePtr(aTextMarker),
-           sizeof(OpaqueLegacyTextMarker));
-    if (utils::DocumentExists(aDoc, opaqueMarker.mDoc)) {
-      Accessible* doc = reinterpret_cast<Accessible*>(opaqueMarker.mDoc);
-      if (doc->IsRemote()) {
-        mContainer = doc->AsRemote()->AsDoc()->GetAccessible(opaqueMarker.mID);
-      } else {
-        mContainer = doc->AsLocal()->AsDoc()->GetAccessibleByUniqueID(
-            reinterpret_cast<void*>(opaqueMarker.mID));
-      }
-    }
-
-    mOffset = opaqueMarker.mOffset;
-  } else {
-    mContainer = nullptr;
-    mOffset = 0;
-  }
-}
 
 LegacyTextMarker LegacyTextMarker::MarkerFromIndex(Accessible* aRoot,
                                                    int32_t aIndex) {
@@ -76,32 +38,6 @@ LegacyTextMarker LegacyTextMarker::MarkerFromIndex(Accessible* aRoot,
   }
 
   return LegacyTextMarker();
-}
-
-AXTextMarkerRef LegacyTextMarker::CreateAXTextMarker() {
-  if (!IsValid()) {
-    return nil;
-  }
-
-  Accessible* doc;
-  if (mContainer->IsRemote()) {
-    doc = mContainer->AsRemote()->Document();
-  } else {
-    doc = mContainer->AsLocal()->Document();
-  }
-
-  uintptr_t identifier =
-      mContainer->IsRemote()
-          ? mContainer->AsRemote()->ID()
-          : reinterpret_cast<uintptr_t>(mContainer->AsLocal()->UniqueID());
-
-  OpaqueLegacyTextMarker opaqueMarker(reinterpret_cast<uintptr_t>(doc),
-                                      identifier, mOffset);
-  AXTextMarkerRef cf_text_marker = AXTextMarkerCreate(
-      kCFAllocatorDefault, reinterpret_cast<const UInt8*>(&opaqueMarker),
-      sizeof(OpaqueLegacyTextMarker));
-
-  return (__bridge AXTextMarkerRef)[(__bridge id)(cf_text_marker)autorelease];
 }
 
 bool LegacyTextMarker::operator<(const LegacyTextMarker& aPoint) const {
@@ -245,7 +181,7 @@ static uint32_t CharacterCount(Accessible* aContainer) {
   return 0;
 }
 
-LegacyTextMarkerRange LegacyTextMarker::Range(EWhichRange aRangeType) {
+LegacyTextMarkerRange LegacyTextMarker::Range(EWhichRange aRangeType) const {
   MOZ_ASSERT(mContainer);
   if (mContainer->IsRemote()) {
     int32_t startOffset = 0, endOffset = 0;
@@ -290,24 +226,6 @@ Accessible* LegacyTextMarker::Leaf() {
 
 // LegacyTextMarkerRange
 
-LegacyTextMarkerRange::LegacyTextMarkerRange(
-    Accessible* aDoc, AXTextMarkerRangeRef aTextMarkerRange) {
-  if (!aTextMarkerRange ||
-      CFGetTypeID(aTextMarkerRange) != AXTextMarkerRangeGetTypeID()) {
-    return;
-  }
-
-  AXTextMarkerRef start_marker(
-      AXTextMarkerRangeCopyStartMarker(aTextMarkerRange));
-  AXTextMarkerRef end_marker(AXTextMarkerRangeCopyEndMarker(aTextMarkerRange));
-
-  mStart = LegacyTextMarker(aDoc, start_marker);
-  mEnd = LegacyTextMarker(aDoc, end_marker);
-
-  CFRelease(start_marker);
-  CFRelease(end_marker);
-}
-
 LegacyTextMarkerRange::LegacyTextMarkerRange(Accessible* aAccessible) {
   if (aAccessible->IsHyperText()) {
     // The accessible is a hypertext. Initialize range to its inner text range.
@@ -328,19 +246,6 @@ LegacyTextMarkerRange::LegacyTextMarkerRange(Accessible* aAccessible) {
                            &mEnd.mOffset);
     }
   }
-}
-
-AXTextMarkerRangeRef LegacyTextMarkerRange::CreateAXTextMarkerRange() {
-  if (!IsValid()) {
-    return nil;
-  }
-
-  AXTextMarkerRangeRef cf_text_marker_range =
-      AXTextMarkerRangeCreate(kCFAllocatorDefault, mStart.CreateAXTextMarker(),
-                              mEnd.CreateAXTextMarker());
-
-  return (__bridge AXTextMarkerRangeRef)[(__bridge id)(
-      cf_text_marker_range)autorelease];
 }
 
 NSString* LegacyTextMarkerRange::Text() const {

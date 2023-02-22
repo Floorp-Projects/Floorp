@@ -17,6 +17,7 @@ EXPORTS.mozilla.a11y += [
 UNIFIED_SOURCES += [
     "AccessibleWrap.mm",
     "DocAccessibleWrap.mm",
+    "GeckoTextMarker.mm",
     "HyperTextAccessibleWrap.mm",
     "LegacyTextMarker.mm",
     "MacUtils.mm",
