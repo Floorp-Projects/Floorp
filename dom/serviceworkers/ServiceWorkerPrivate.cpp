@@ -937,7 +937,7 @@ nsresult ServiceWorkerPrivate::SendFetchEvent(
           mInfo->ScriptSpec(), request, nsString(aClientId),
           nsString(aResultingClientId), isNonSubresourceRequest,
           preloadNavigation, mInfo->TestingInjectCancellation()),
-      Nothing(), Nothing());
+      Nothing(), Nothing(), Nothing());
 
   if (mInfo->State() == ServiceWorkerState::Activating) {
     UniquePtr<PendingFunctionalEvent> pendingEvent =
