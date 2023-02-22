@@ -39,7 +39,7 @@ pub type FastHashSet<K> = HashSet<K, BuildHasherDefault<FxHasher>>;
 #[derive(Copy, Clone, Hash, MallocSizeOf, PartialEq, PartialOrd, Debug, Eq, Ord)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct FrameId(usize);
+pub struct FrameId(u64);
 
 impl FrameId {
     /// Returns a FrameId corresponding to the first frame.
@@ -53,8 +53,8 @@ impl FrameId {
         FrameId(0)
     }
 
-    /// Returns the backing usize for this FrameId.
-    pub fn as_usize(&self) -> usize {
+    /// Returns the backing u64 for this FrameId.
+    pub fn as_u64(&self) -> u64 {
         self.0
     }
 
@@ -74,16 +74,16 @@ impl Default for FrameId {
     }
 }
 
-impl ::std::ops::Add<usize> for FrameId {
+impl ::std::ops::Add<u64> for FrameId {
     type Output = Self;
-    fn add(self, other: usize) -> FrameId {
+    fn add(self, other: u64) -> FrameId {
         FrameId(self.0 + other)
     }
 }
 
-impl ::std::ops::Sub<usize> for FrameId {
+impl ::std::ops::Sub<u64> for FrameId {
     type Output = Self;
-    fn sub(self, other: usize) -> FrameId {
+    fn sub(self, other: u64) -> FrameId {
         assert!(self.0 >= other, "Underflow subtracting FrameIds");
         FrameId(self.0 - other)
     }
