@@ -15,6 +15,7 @@
 #include "util/NativeStack.h"            // GetNativeStackBase
 
 using namespace js;
+using namespace js::frontend;
 
 JS_PUBLIC_API FrontendContext* JS::NewFrontendContext() {
   MOZ_ASSERT(JS::detail::libraryInitState == JS::detail::InitState::Running,
@@ -52,8 +53,6 @@ static already_AddRefed<JS::Stencil> ParseGlobalScriptImpl(
   return stencil_.forget();
 }
 
-// TODO bug 1773319 alloc instantiation storage
-
 already_AddRefed<JS::Stencil> JS::ParseGlobalScript(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
     JS::NativeStackLimit stackLimit, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
@@ -66,4 +65,18 @@ already_AddRefed<JS::Stencil> JS::ParseGlobalScript(
     JS::NativeStackLimit stackLimit, JS::SourceText<char16_t>& srcBuf,
     js::UniquePtr<js::frontend::CompilationInput>& stencilInput) {
   return ParseGlobalScriptImpl(fc, options, stackLimit, srcBuf, stencilInput);
+}
+
+bool JS::PrepareForInstantiate(JS::FrontendContext* fc, CompilationInput& input,
+                               JS::Stencil& stencil,
+                               JS::InstantiationStorage& storage) {
+  if (!storage.gcOutput_) {
+    storage.gcOutput_ =
+        fc->getAllocator()->new_<js::frontend::CompilationGCOutput>();
+    if (!storage.gcOutput_) {
+      return false;
+    }
+  }
+  return CompilationStencil::prepareForInstantiate(fc, input.atomCache, stencil,
+                                                   *storage.gcOutput_);
 }

@@ -26,6 +26,7 @@ static void dump(const T& data) {
 
 BEGIN_TEST(testParseScript) {
   CHECK(testCompile());
+  CHECK(testPrepareForInstantiate());
 
   return true;
 }
@@ -80,6 +81,43 @@ bool testCompile() {
   }
 
   // TODO bug 1773319 check failure is propagated out
+
+  return true;
+}
+
+// TODO bug 1773319 check failure cases
+// TODO bug 1773319 test module compile
+
+bool testPrepareForInstantiate() {
+  static constexpr std::u16string_view src_16 =
+      u"function f() { return {'field': 42};}; f()['field']\n";
+
+  JS::CompileOptions options(cx);
+
+  JS::SourceText<char16_t> buf16;
+  CHECK(buf16.init(cx, src_16.data(), src_16.length(),
+                   JS::SourceOwnership::Borrowed));
+
+  JS::FrontendContext* fc = JS::NewFrontendContext();
+  auto destroyFc =
+      mozilla::MakeScopeExit([fc] { JS::DestroyFrontendContext(fc); });
+
+  js::UniquePtr<js::frontend::CompilationInput> stencilInput;
+  RefPtr<JS::Stencil> stencil = ParseGlobalScript(
+      fc, options, cx->stackLimitForCurrentPrincipal(), buf16, stencilInput);
+  CHECK(stencil);
+  CHECK(stencil->scriptData.size() == 2);
+  CHECK(stencil->scopeData.size() == 1);       // function f
+  CHECK(stencil->parserAtomData.size() == 1);  // 'field'
+  CHECK(stencilInput);
+  CHECK(stencilInput->atomCache.empty());
+
+  JS::InstantiationStorage storage;
+  CHECK(JS::PrepareForInstantiate(fc, *stencilInput, *stencil, storage));
+  CHECK(stencilInput->atomCache.size() == 1);  // 'field'
+  CHECK(storage.isValid());
+  // TODO storage.gcOutput_ is private, so there isn't a good way to check the
+  // scripData and scopeData capacities
 
   return true;
 }

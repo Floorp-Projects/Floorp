@@ -43,6 +43,10 @@ extern JS_PUBLIC_API already_AddRefed<JS::Stencil> ParseGlobalScript(
     JS::NativeStackLimit stackLimit, JS::SourceText<char16_t>& srcBuf,
     js::UniquePtr<js::frontend::CompilationInput>& stencilInput);
 
+extern JS_PUBLIC_API bool PrepareForInstantiate(
+    JS::FrontendContext* fc, js::frontend::CompilationInput& input,
+    JS::Stencil& stencil, JS::InstantiationStorage& storage);
+
 }  // namespace JS
 
 #endif  // js_experimental_ParseScript_h
