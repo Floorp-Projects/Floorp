@@ -30,15 +30,16 @@ JS_PUBLIC_API void JS::DestroyFrontendContext(FrontendContext* fc) {
 template <typename CharT>
 static already_AddRefed<JS::Stencil> ParseGlobalScriptImpl(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
-    JS::NativeStackLimit stackLimit, JS::SourceText<CharT>& srcBuf) {
+    JS::NativeStackLimit stackLimit, JS::SourceText<CharT>& srcBuf,
+    js::UniquePtr<js::frontend::CompilationInput>& stencilInput) {
   ScopeKind scopeKind = ScopeKind::Global;
   // TODO bug 1773319 nonsyntactic scope
 
   JS::SourceText<CharT> data(std::move(srcBuf));
 
-  UniquePtr<frontend::CompilationInput> stencilInput_ =
+  stencilInput =
       fc->getAllocator()->make_unique<frontend::CompilationInput>(options);
-  if (!stencilInput_) {
+  if (!stencilInput) {
     return nullptr;
   }
 
@@ -46,7 +47,7 @@ static already_AddRefed<JS::Stencil> ParseGlobalScriptImpl(
   LifoAlloc tempLifoAlloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
   RefPtr<frontend::CompilationStencil> stencil_ =
       frontend::CompileGlobalScriptToStencil(nullptr, fc, stackLimit,
-                                             tempLifoAlloc, *stencilInput_,
+                                             tempLifoAlloc, *stencilInput,
                                              &scopeCache, data, scopeKind);
   return stencil_.forget();
 }
@@ -55,13 +56,14 @@ static already_AddRefed<JS::Stencil> ParseGlobalScriptImpl(
 
 already_AddRefed<JS::Stencil> JS::ParseGlobalScript(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
-    JS::NativeStackLimit stackLimit,
-    JS::SourceText<mozilla::Utf8Unit>& srcBuf) {
-  return ParseGlobalScriptImpl(fc, options, stackLimit, srcBuf);
+    JS::NativeStackLimit stackLimit, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
+    js::UniquePtr<js::frontend::CompilationInput>& stencilInput) {
+  return ParseGlobalScriptImpl(fc, options, stackLimit, srcBuf, stencilInput);
 }
 
 already_AddRefed<JS::Stencil> JS::ParseGlobalScript(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
-    JS::NativeStackLimit stackLimit, JS::SourceText<char16_t>& srcBuf) {
-  return ParseGlobalScriptImpl(fc, options, stackLimit, srcBuf);
+    JS::NativeStackLimit stackLimit, JS::SourceText<char16_t>& srcBuf,
+    js::UniquePtr<js::frontend::CompilationInput>& stencilInput) {
+  return ParseGlobalScriptImpl(fc, options, stackLimit, srcBuf, stencilInput);
 }
