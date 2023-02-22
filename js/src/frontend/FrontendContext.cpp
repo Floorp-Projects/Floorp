@@ -9,6 +9,7 @@
 #include "gc/GC.h"
 #include "js/AllocPolicy.h"         // js::ReportOutOfMemory
 #include "js/friend/StackLimits.h"  // js::ReportOverRecursed
+#include "js/Modules.h"
 #include "util/DifferentialTesting.h"
 #include "vm/JSContext.h"
 
@@ -29,6 +30,16 @@ FrontendContext::~FrontendContext() {
     MOZ_ASSERT(nameCollectionPool_);
     js_delete(nameCollectionPool_);
   }
+}
+
+bool FrontendContext::setSupportedImportAssertions(
+    const JS::ImportAssertionVector& supportedImportAssertions) {
+  MOZ_ASSERT(supportedImportAssertions_.empty());
+  if (!supportedImportAssertions_.appendAll(supportedImportAssertions)) {
+    ReportOutOfMemory();
+    return false;
+  }
+  return true;
 }
 
 bool FrontendContext::allocateOwnedPool() {
