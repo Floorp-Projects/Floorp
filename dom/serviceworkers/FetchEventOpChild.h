@@ -82,8 +82,6 @@ class FetchEventOpChild final : public PFetchEventOpChild {
   bool mWasSent = false;
   MozPromiseRequestHolder<FetchServiceResponseAvailablePromise>
       mPreloadResponseAvailablePromiseRequestHolder;
-  MozPromiseRequestHolder<FetchServiceResponseTimingPromise>
-      mPreloadResponseTimingPromiseRequestHolder;
   MozPromiseRequestHolder<FetchServiceResponseEndPromise>
       mPreloadResponseEndPromiseRequestHolder;
   RefPtr<FetchServicePromises> mPreloadResponseReadyPromises;

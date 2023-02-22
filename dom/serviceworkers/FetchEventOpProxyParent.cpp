@@ -118,15 +118,11 @@ ParentToParentFetchEventRespondWithResult ToParentToParent(
   MOZ_ASSERT(aReal);
 
   ParentToChildServiceWorkerFetchEventOpArgs copyArgs(aArgs.common(), Nothing(),
-                                                      Nothing(), Nothing());
+                                                      Nothing());
   if (aArgs.preloadResponse().isSome()) {
     // Convert the preload response to ParentToChildInternalResponse.
     copyArgs.preloadResponse() = Some(ToParentToChild(
         aArgs.preloadResponse().ref(), WrapNotNull(aManager->Manager())));
-  }
-
-  if (aArgs.preloadResponseTiming().isSome()) {
-    copyArgs.preloadResponseTiming() = aArgs.preloadResponseTiming();
   }
 
   if (aArgs.preloadResponseEndArgs().isSome()) {

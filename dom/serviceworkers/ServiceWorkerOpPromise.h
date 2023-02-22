@@ -34,9 +34,6 @@ using FetchEventRespondWithPromise =
 using FetchEventPreloadResponseAvailablePromise =
     MozPromise<SafeRefPtr<InternalResponse>, int, true>;
 
-using FetchEventPreloadResponseTimingPromise =
-    MozPromise<ResponseTiming, int, true>;
-
 using FetchEventPreloadResponseEndPromise =
     MozPromise<ResponseEndArgs, int, true>;
 

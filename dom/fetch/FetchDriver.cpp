@@ -1367,12 +1367,6 @@ FetchDriver::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
   RefPtr<AlternativeDataStreamListener> altDataListener =
       std::move(mAltDataListener);
 
-  // For PFetch and ServiceWorker navigationPreload, resource timing should be
-  // reported before the body stream closing.
-  if (mObserver) {
-    mObserver->OnReportPerformanceTiming();
-  }
-
   // We need to check mObserver, which is nulled by FailWithNetworkError(),
   // because in the case of "error" redirect mode, aStatusCode may be NS_OK but
   // mResponse will definitely be null so we must not take the else branch.

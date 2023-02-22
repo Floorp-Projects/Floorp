@@ -38,9 +38,6 @@ class FetchEventOpProxyChild final : public PFetchEventOpProxyChild {
   RefPtr<FetchEventPreloadResponseAvailablePromise>
   GetPreloadResponseAvailablePromise();
 
-  RefPtr<FetchEventPreloadResponseTimingPromise>
-  GetPreloadResponseTimingPromise();
-
   RefPtr<FetchEventPreloadResponseEndPromise> GetPreloadResponseEndPromise();
 
  private:
@@ -48,8 +45,6 @@ class FetchEventOpProxyChild final : public PFetchEventOpProxyChild {
 
   mozilla::ipc::IPCResult RecvPreloadResponse(
       ParentToChildInternalResponse&& aResponse);
-
-  mozilla::ipc::IPCResult RecvPreloadResponseTiming(ResponseTiming&& aTiming);
 
   mozilla::ipc::IPCResult RecvPreloadResponseEnd(ResponseEndArgs&& aArgs);
 
@@ -65,8 +60,6 @@ class FetchEventOpProxyChild final : public PFetchEventOpProxyChild {
 
   RefPtr<FetchEventPreloadResponseAvailablePromise::Private>
       mPreloadResponseAvailablePromise;
-  RefPtr<FetchEventPreloadResponseTimingPromise::Private>
-      mPreloadResponseTimingPromise;
   RefPtr<FetchEventPreloadResponseEndPromise::Private>
       mPreloadResponseEndPromise;
 

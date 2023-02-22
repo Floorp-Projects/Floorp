@@ -70,8 +70,6 @@ class FetchParent final : public PFetchParent {
 
   void OnCSPViolationEvent(const nsAString& aJSON);
 
-  void OnReportPerformanceTiming(const ResponseTiming&& aTiming);
-
  private:
   ~FetchParent();
 

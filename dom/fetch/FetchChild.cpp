@@ -110,6 +110,17 @@ mozilla::ipc::IPCResult FetchChild::RecvOnResponseEnd(ResponseEndArgs&& aArgs) {
   MOZ_ASSERT(mWorkerRef->Private());
   mWorkerRef->Private()->AssertIsOnWorkerThread();
 
+  if (aArgs.timing().isSome()) {
+    const auto& timing = aArgs.timing().ref();
+    RefPtr<PerformanceStorage> performanceStorage =
+        mWorkerRef->Private()->GetPerformanceStorage();
+    if (performanceStorage) {
+      performanceStorage->AddEntry(
+          timing.entryName(), timing.initiatorType(),
+          MakeUnique<PerformanceTimingData>(timing.timingData()));
+    }
+  }
+
   if (aArgs.endReason() == FetchDriverObserver::eAborted) {
     FETCH_LOG(
         ("FetchChild::RecvOnResponseEnd [%p] endReason is eAborted", this));
@@ -250,27 +261,6 @@ mozilla::ipc::IPCResult FetchChild::RecvOnCSPViolationEvent(
   if (mCSPEventListener) {
     Unused << NS_WARN_IF(
         NS_FAILED(mCSPEventListener->OnCSPViolationEvent(aJSON)));
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult FetchChild::RecvOnReportPerformanceTiming(
-    ResponseTiming&& aTiming) {
-  FETCH_LOG(("FetchChild::RecvOnReportPerformanceTiming [%p]", this));
-  if (mIsShutdown) {
-    return IPC_OK();
-  }
-  // Shutdown has not been called, so mWorkerRef->Private() should be still
-  // alive.
-  MOZ_ASSERT(mWorkerRef->Private());
-  mWorkerRef->Private()->AssertIsOnWorkerThread();
-
-  RefPtr<PerformanceStorage> performanceStorage =
-      mWorkerRef->Private()->GetPerformanceStorage();
-  if (performanceStorage) {
-    performanceStorage->AddEntry(
-        aTiming.entryName(), aTiming.initiatorType(),
-        MakeUnique<PerformanceTimingData>(aTiming.timingData()));
   }
   return IPC_OK();
 }
