@@ -294,3 +294,168 @@ on a <span style="display: block;">rug</span></p>
   },
   { chrome: true, topLevel: isCacheEnabled, iframe: false, remoteIframe: false }
 );
+
+// Test for skipping list item bullets.
+addAccessibleTask(
+  `<ul>
+    <li>One</li>
+    <li>Two</li>
+    <li style="white-space: pre-line;">Three
+Four</li>
+  </ul>`,
+  function(browser, docAcc) {
+    const firstPoint = createTextLeafPoint(docAcc, 0);
+    const lastPoint = createTextLeafPoint(docAcc, kTextEndOffset);
+
+    const firstNonMarkerPoint = firstPoint.findBoundary(
+      BOUNDARY_CHAR,
+      DIRECTION_NEXT,
+      BOUNDARY_FLAG_SKIP_LIST_ITEM_MARKER | BOUNDARY_FLAG_INCLUDE_ORIGIN
+    );
+    Assert.deepEqual(
+      readablePoint(firstNonMarkerPoint),
+      ["One", 0],
+      "First non-marker point is correct"
+    );
+
+    const expectedParagraphStart = [
+      ["One", 0],
+      ["Two", 0],
+      ["Three\nFour", 0],
+      ["Three\nFour", 6],
+    ];
+
+    testBoundarySequence(
+      firstPoint,
+      BOUNDARY_PARAGRAPH,
+      DIRECTION_NEXT,
+      [...expectedParagraphStart, readablePoint(lastPoint)],
+      "Forward BOUNDARY_PARAGRAPH skipping list item markers sequence is correct",
+      { flags: BOUNDARY_FLAG_SKIP_LIST_ITEM_MARKER }
+    );
+
+    testBoundarySequence(
+      lastPoint,
+      BOUNDARY_PARAGRAPH,
+      DIRECTION_PREVIOUS,
+      [...expectedParagraphStart].reverse(),
+      "Backward BOUNDARY_PARAGRAPH skipping list item markers sequence is correct",
+      { flags: BOUNDARY_FLAG_SKIP_LIST_ITEM_MARKER }
+    );
+
+    const expectedCharSequence = [
+      ["One", 0],
+      ["One", 1],
+      ["One", 2],
+      ["Two", 0],
+      ["Two", 1],
+      ["Two", 2],
+      ["Three\nFour", 0],
+      ["Three\nFour", 1],
+      ["Three\nFour", 2],
+      ["Three\nFour", 3],
+      ["Three\nFour", 4],
+      ["Three\nFour", 5],
+      ["Three\nFour", 6],
+      ["Three\nFour", 7],
+      ["Three\nFour", 8],
+      ["Three\nFour", 9],
+      ["Three\nFour", 10],
+    ];
+    testBoundarySequence(
+      firstPoint,
+      BOUNDARY_CHAR,
+      DIRECTION_NEXT,
+      expectedCharSequence,
+      "Forward BOUNDARY_CHAR skipping list item markers sequence is correct",
+      { flags: BOUNDARY_FLAG_SKIP_LIST_ITEM_MARKER }
+    );
+
+    testBoundarySequence(
+      lastPoint,
+      BOUNDARY_CHAR,
+      DIRECTION_PREVIOUS,
+      [...expectedCharSequence].reverse(),
+      "Backward BOUNDARY_CHAR skipping list item markers sequence is correct",
+      { flags: BOUNDARY_FLAG_SKIP_LIST_ITEM_MARKER }
+    );
+
+    const expectedWordStartSequence = [
+      ["One", 0],
+      ["Two", 0],
+      ["Three\nFour", 0],
+      ["Three\nFour", 6],
+    ];
+    testBoundarySequence(
+      firstPoint,
+      BOUNDARY_WORD_START,
+      DIRECTION_NEXT,
+      [...expectedWordStartSequence, readablePoint(lastPoint)],
+      "Forward BOUNDARY_WORD_START skipping list item markers sequence is correct",
+      { flags: BOUNDARY_FLAG_SKIP_LIST_ITEM_MARKER }
+    );
+
+    testBoundarySequence(
+      lastPoint,
+      BOUNDARY_WORD_START,
+      DIRECTION_PREVIOUS,
+      [...expectedWordStartSequence].reverse(),
+      "Backward BOUNDARY_WORD_START skipping list item markers sequence is correct",
+      { flags: BOUNDARY_FLAG_SKIP_LIST_ITEM_MARKER }
+    );
+
+    const expectedWordEndSequence = [
+      ["Two", 0],
+      ["Three\nFour", 0],
+      ["Three\nFour", 5],
+      ["Three\nFour", 10],
+    ];
+    testBoundarySequence(
+      firstPoint,
+      BOUNDARY_WORD_END,
+      DIRECTION_NEXT,
+      expectedWordEndSequence,
+      "Forward BOUNDARY_WORD_END skipping list item markers sequence is correct",
+      { flags: BOUNDARY_FLAG_SKIP_LIST_ITEM_MARKER }
+    );
+
+    testBoundarySequence(
+      lastPoint,
+      BOUNDARY_WORD_END,
+      DIRECTION_PREVIOUS,
+      [
+        readablePoint(firstNonMarkerPoint),
+        ...expectedWordEndSequence,
+      ].reverse(),
+      "Backward BOUNDARY_WORD_END skipping list item markers sequence is correct",
+      { flags: BOUNDARY_FLAG_SKIP_LIST_ITEM_MARKER }
+    );
+
+    const expectedLineStartSequence = [
+      ["One", 0],
+      ["Two", 0],
+      ["Three\nFour", 0],
+      ["Three\nFour", 6],
+    ];
+    testBoundarySequence(
+      firstPoint,
+      BOUNDARY_LINE_START,
+      DIRECTION_NEXT,
+      // Add last point in doc
+      [...expectedLineStartSequence, readablePoint(lastPoint)],
+      "Forward BOUNDARY_LINE_START skipping list item markers sequence is correct",
+      { flags: BOUNDARY_FLAG_SKIP_LIST_ITEM_MARKER }
+    );
+
+    testBoundarySequence(
+      lastPoint,
+      BOUNDARY_LINE_START,
+      DIRECTION_PREVIOUS,
+      // Add last point in doc
+      [...expectedLineStartSequence].reverse(),
+      "Backward BOUNDARY_LINE_START skipping list item markers sequence is correct",
+      { flags: BOUNDARY_FLAG_SKIP_LIST_ITEM_MARKER }
+    );
+  },
+  { chrome: true, topLevel: isCacheEnabled, iframe: false, remoteIframe: false }
+);

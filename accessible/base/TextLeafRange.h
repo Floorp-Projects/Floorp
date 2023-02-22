@@ -95,6 +95,9 @@ class TextLeafPoint final {
     eIncludeOrigin = 1 << 0,
     // If current point is in editable, return point within samme editable.
     eStopInEditable = 1 << 1,
+    // Skip over list items in searches and don't consider them line or
+    // paragraph starts.
+    eIgnoreListItemMarker = 1 << 2,
   };
 
   /**
@@ -187,14 +190,17 @@ class TextLeafPoint final {
 
   bool IsSpace() const;
 
-  bool IsParagraphStart() const {
-    return mOffset == 0 && FindParagraphSameAcc(eDirPrevious, true);
+  bool IsParagraphStart(bool aIgnoreListItemMarker = false) const {
+    return mOffset == 0 &&
+           FindParagraphSameAcc(eDirPrevious, true, aIgnoreListItemMarker);
   }
 
  private:
   bool IsEmptyLastLine() const;
 
   bool IsDocEdge(nsDirection aDirection) const;
+
+  bool IsLeafAfterListItemMarker() const;
 
   char16_t GetChar() const;
 
@@ -206,13 +212,15 @@ class TextLeafPoint final {
    *is local or remote.
    */
   TextLeafPoint FindLineStartSameAcc(nsDirection aDirection,
-                                     bool aIncludeOrigin) const;
+                                     bool aIncludeOrigin,
+                                     bool aIgnoreListItemMarker = false) const;
 
   TextLeafPoint FindLineEnd(nsDirection aDirection, BoundaryFlags aFlags) const;
   TextLeafPoint FindWordEnd(nsDirection aDirection, BoundaryFlags aFlags) const;
 
   TextLeafPoint FindParagraphSameAcc(nsDirection aDirection,
-                                     bool aIncludeOrigin) const;
+                                     bool aIncludeOrigin,
+                                     bool aIgnoreListItemMarker = false) const;
 
   bool IsInSpellingError() const;
 
@@ -223,6 +231,11 @@ class TextLeafPoint final {
    */
   TextLeafPoint FindSpellingErrorSameAcc(nsDirection aDirection,
                                          bool aIncludeOrigin) const;
+
+  // Return the point immediately succeeding or preceding this leaf depending
+  // on given direction.
+  TextLeafPoint NeighborLeafPoint(nsDirection aDirection, bool aIsEditable,
+                                  bool aIgnoreListItemMarker) const;
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(TextLeafPoint::BoundaryFlags)
