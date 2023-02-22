@@ -110,6 +110,15 @@ bool UtilityProcessChild::Init(mozilla::ipc::UntypedEndpoint&& aEndpoint,
 
   mSandbox = (SandboxingKind)aSandboxingKind;
 
+  // At the moment, only ORB uses JSContext in the
+  // Utility Process and ORB uses GENERIC_UTILITY
+  if (mSandbox == SandboxingKind::GENERIC_UTILITY) {
+    JS::DisableJitBackend();
+    if (!JS_Init()) {
+      return false;
+    }
+  }
+
   profiler_set_process_name(nsCString("Utility Process"));
 
   // Notify the parent process that we have finished our init and that it can
@@ -117,9 +126,12 @@ bool UtilityProcessChild::Init(mozilla::ipc::UntypedEndpoint&& aEndpoint,
   SendInitCompleted();
 
   RunOnShutdown(
-      [] {
+      [sandboxKind = mSandbox] {
         StaticMutexAutoLock lock(sUtilityProcessChildMutex);
         sUtilityProcessChild = nullptr;
+        if (sandboxKind == SandboxingKind::GENERIC_UTILITY) {
+          JS_ShutDown();
+        }
       },
       ShutdownPhase::XPCOMShutdownFinal);
 
