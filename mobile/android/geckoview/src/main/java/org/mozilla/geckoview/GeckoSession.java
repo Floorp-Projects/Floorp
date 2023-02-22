@@ -3589,16 +3589,6 @@ public class GeckoSession {
        */
       public final @NonNull String text;
 
-      /**
-       * The bounds of the current selection in client coordinates. Use {@link
-       * GeckoSession#getClientToScreenMatrix} to perform transformation to screen coordinates.
-       *
-       * @deprecated Use {@link #screenRect}.
-       */
-      @Deprecated
-      @DeprecationSchedule(id = "selection-fission", version = 112)
-      public final @Nullable RectF clientRect;
-
       /** The bounds of the current selection in screen coordinates. */
       public final @Nullable RectF screenRect;
 
@@ -3618,7 +3608,6 @@ public class GeckoSession {
                 | (bundle.getBoolean("editable") ? SelectionActionDelegate.FLAG_IS_EDITABLE : 0)
                 | (bundle.getBoolean("password") ? SelectionActionDelegate.FLAG_IS_PASSWORD : 0);
         text = bundle.getString("selection");
-        clientRect = bundle.getRectF("clientRect");
         screenRect = bundle.getRectF("screenRect");
         availableActions = actions;
         mActionId = bundle.getString("actionId");
@@ -3629,7 +3618,6 @@ public class GeckoSession {
       protected Selection() {
         flags = 0;
         text = "";
-        clientRect = null;
         screenRect = null;
         availableActions = new HashSet<>();
         mActionId = null;

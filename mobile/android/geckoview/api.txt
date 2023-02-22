@@ -394,8 +394,6 @@ package org.mozilla.geckoview {
     field protected boolean mRepopulatedMenu;
     field @Nullable protected GeckoSession.SelectionActionDelegate.Selection mSelection;
     field @Nullable protected GeckoSession mSession;
-    field @Deprecated @DeprecationSchedule(id="selection-fission",version=112) @NonNull protected final Matrix mTempMatrix;
-    field @Deprecated @DeprecationSchedule(id="selection-fission",version=112) @NonNull protected final RectF mTempRect;
     field protected final boolean mUseFloatingToolbar;
   }
 
@@ -1542,7 +1540,6 @@ package org.mozilla.geckoview {
     method @AnyThread public void selectAll();
     method @AnyThread public void unselect();
     field @NonNull public final Collection<String> availableActions;
-    field @Deprecated @DeprecationSchedule(id="selection-fission",version=112) @Nullable public final RectF clientRect;
     field public final int flags;
     field @Nullable public final RectF screenRect;
     field @NonNull public final String text;
