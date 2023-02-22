@@ -66,6 +66,7 @@ union MFCDMCapabilitiesResult {
 // For Init()
 struct MFCDMInitParamsIPDL {
   nsString origin;
+  nsString[] initDataTypes;
   Requirement distinctiveID;
   Requirement persistentState;
   bool hwSecure;

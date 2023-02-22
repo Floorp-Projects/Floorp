@@ -440,10 +440,7 @@ already_AddRefed<CDMProxy> MediaKeys::CreateCDMProxy() {
 #endif
 #ifdef MOZ_WMF_CDM
       if (IsPlayReadyKeySystem(mKeySystem)) {
-    proxy = new WMFCDMProxy(
-        this, mKeySystem,
-        mConfig.mDistinctiveIdentifier == MediaKeysRequirement::Required,
-        mConfig.mPersistentState == MediaKeysRequirement::Required);
+    proxy = new WMFCDMProxy(this, mKeySystem, mConfig);
   } else
 #endif
   {

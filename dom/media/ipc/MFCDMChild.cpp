@@ -152,7 +152,7 @@ already_AddRefed<PromiseType> MFCDMChild::InvokeAsync(
 }
 
 RefPtr<MFCDMChild::InitPromise> MFCDMChild::Init(
-    const nsAString& aOrigin,
+    const nsAString& aOrigin, const CopyableTArray<nsString>& aInitDataTypes,
     const KeySystemConfig::Requirement aPersistentState,
     const KeySystemConfig::Requirement aDistinctiveID, const bool aHWSecure) {
   MOZ_ASSERT(mManagerThread);
@@ -166,7 +166,7 @@ RefPtr<MFCDMChild::InitPromise> MFCDMChild::Init(
     return InitPromise::CreateAndReject(mState, __func__);
   }
 
-  MFCDMInitParamsIPDL params{nsString(aOrigin), aDistinctiveID,
+  MFCDMInitParamsIPDL params{nsString(aOrigin), aInitDataTypes, aDistinctiveID,
                              aPersistentState, aHWSecure};
   auto doSend = [self = RefPtr{this}, this, params]() {
     SendInit(params)
