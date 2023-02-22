@@ -5,18 +5,6 @@
   position: absolute;
   transition: opacity 0.5s ease;
   z-index: 2147483645;
-  outline: none;
-  --feature-callout-focus-outline-color: #0061E0;
-}
-@media (prefers-color-scheme: dark) {
-  .onboardingContainer.featureCallout {
-    --feature-callout-focus-outline-color: #0DF;
-  }
-}
-@media (prefers-contrast) {
-  .onboardingContainer.featureCallout {
-    --feature-callout-focus-outline-color: -moz-DialogText;
-  }
 }
 .onboardingContainer.featureCallout.hidden {
   opacity: 0;
@@ -32,7 +20,6 @@
   height: fit-content;
   min-height: unset;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  overflow: visible;
 }
 .onboardingContainer.featureCallout .screen[pos=callout] .logo-container {
   display: flex;
@@ -191,7 +178,9 @@
   width: 24px;
   height: 24px;
   transform: rotate(45deg);
-  transform-style: preserve-3d;
+}
+.onboardingContainer.featureCallout.callout-arrow:dir(rtl)::before, .onboardingContainer.featureCallout.callout-arrow:dir(rtl)::after {
+  transform: rotate(315deg);
 }
 .onboardingContainer.featureCallout.callout-arrow::before {
   z-index: 2147483647;
@@ -204,37 +193,56 @@
 }
 .onboardingContainer.featureCallout.callout-arrow::after {
   background: transparent;
-  outline: 1px solid #CFCFD8;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   z-index: -1;
 }
 .onboardingContainer.featureCallout.arrow-top::before, .onboardingContainer.featureCallout.arrow-top::after {
-  top: -11px;
+  top: -12px;
   inset-inline-start: calc(50% - 12px);
 }
+.onboardingContainer.featureCallout.arrow-top::before {
+  border-top: 1px solid #CFCFD8;
+  border-inline-start: 1px solid #CFCFD8;
+}
 .onboardingContainer.featureCallout.arrow-bottom::before, .onboardingContainer.featureCallout.arrow-bottom::after {
-  bottom: -11px;
+  top: calc(100% - 12px);
   inset-inline-start: calc(50% - 12px);
+}
+.onboardingContainer.featureCallout.arrow-bottom::before {
+  border-inline-end: 1px solid #CFCFD8;
+  border-bottom: 1px solid #CFCFD8;
 }
 .onboardingContainer.featureCallout.arrow-inline-end::before, .onboardingContainer.featureCallout.arrow-inline-end::after {
   top: calc(50% - 12px);
-  inset-inline-end: -11px;
+  inset-inline-start: calc(100% - 12px);
+}
+.onboardingContainer.featureCallout.arrow-inline-end::before {
+  border-top: 1px solid #CFCFD8;
+  border-inline-end: 1px solid #CFCFD8;
 }
 .onboardingContainer.featureCallout.arrow-inline-start::before, .onboardingContainer.featureCallout.arrow-inline-start::after {
   top: calc(50% - 12px);
-  inset-inline-start: -11px;
+  inset-inline-start: -12px;
+}
+.onboardingContainer.featureCallout.arrow-inline-start::before {
+  border-bottom: 1px solid #CFCFD8;
+  border-inline-start: 1px solid #CFCFD8;
 }
 .onboardingContainer.featureCallout.arrow-top-end::before, .onboardingContainer.featureCallout.arrow-top-end::after {
-  top: -11px;
+  top: -12px;
   inset-inline-end: 12px;
 }
+.onboardingContainer.featureCallout.arrow-top-end::before {
+  border-top: 1px solid #CFCFD8;
+  border-inline-start: 1px solid #CFCFD8;
+}
 .onboardingContainer.featureCallout.arrow-top-start::before, .onboardingContainer.featureCallout.arrow-top-start::after {
-  top: -11px;
+  top: -12px;
   inset-inline-start: 12px;
 }
-.onboardingContainer.featureCallout:focus-visible .screen[pos=callout] .section-main .main-content, .onboardingContainer.featureCallout:focus-visible.callout-arrow::after {
-  outline: 2px solid var(--feature-callout-focus-outline-color);
-  border-color: transparent;
+.onboardingContainer.featureCallout.arrow-top-start::before {
+  border-top: 1px solid #CFCFD8;
+  border-inline-start: 1px solid #CFCFD8;
 }
 
 html {
