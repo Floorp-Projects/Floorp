@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PBackgroundFileHandle;
 include protocol PBackgroundIDBDatabase;
 
 include "mozilla/dom/filehandle/SerializationHelpers.h";
@@ -20,12 +19,8 @@ sync protocol PBackgroundMutableFile
 {
   manager PBackgroundIDBDatabase;
 
-  manages PBackgroundFileHandle;
-
 parent:
   async DeleteMe();
-
-  async PBackgroundFileHandle(FileMode mode);
 
   // Use only for testing!
   sync GetFileId()

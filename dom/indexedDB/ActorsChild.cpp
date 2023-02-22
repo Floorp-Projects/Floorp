@@ -11,7 +11,6 @@
 #include "IDBDatabase.h"
 #include "IDBEvents.h"
 #include "IDBFactory.h"
-#include "IDBFileHandle.h"
 #include "IDBIndex.h"
 #include "IDBMutableFile.h"
 #include "IDBObjectStore.h"
@@ -1712,23 +1711,6 @@ void BackgroundMutableFileChild::ActorDestroy(ActorDestroyReason aWhy) {
   }
 }
 
-PBackgroundFileHandleChild*
-BackgroundMutableFileChild::AllocPBackgroundFileHandleChild(
-    const FileMode& aMode) {
-  MOZ_CRASH(
-      "PBackgroundFileHandleChild actors should be manually "
-      "constructed!");
-}
-
-bool BackgroundMutableFileChild::DeallocPBackgroundFileHandleChild(
-    PBackgroundFileHandleChild* aActor) const {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(aActor);
-
-  delete static_cast<BackgroundFileHandleChild*>(aActor);
-  return true;
-}
-
 /*******************************************************************************
  * BackgroundRequestChild
  ******************************************************************************/
@@ -2959,82 +2941,6 @@ nsresult DelayedActionRunnable<T>::Cancel() {
   Run();
 
   return NS_OK;
-}
-
-/*******************************************************************************
- * BackgroundFileHandleChild
- ******************************************************************************/
-
-BackgroundFileHandleChild::BackgroundFileHandleChild(IDBFileHandle* aFileHandle)
-    : mTemporaryStrongFileHandle(aFileHandle), mFileHandle(aFileHandle) {
-  MOZ_ASSERT(aFileHandle);
-  aFileHandle->AssertIsOnOwningThread();
-
-  MOZ_COUNT_CTOR(BackgroundFileHandleChild);
-}
-
-BackgroundFileHandleChild::~BackgroundFileHandleChild() {
-  AssertIsOnOwningThread();
-
-  MOZ_COUNT_DTOR(BackgroundFileHandleChild);
-}
-
-#ifdef DEBUG
-
-void BackgroundFileHandleChild::AssertIsOnOwningThread() const {
-  static_cast<BackgroundMutableFileChild*>(Manager())->AssertIsOnOwningThread();
-}
-
-#endif  // DEBUG
-
-void BackgroundFileHandleChild::SendDeleteMeInternal() {
-  AssertIsOnOwningThread();
-
-  if (mFileHandle) {
-    NoteActorDestroyed();
-
-    MOZ_ALWAYS_TRUE(PBackgroundFileHandleChild::SendDeleteMe());
-  }
-}
-
-void BackgroundFileHandleChild::NoteActorDestroyed() {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT_IF(mTemporaryStrongFileHandle, mFileHandle);
-
-  if (mFileHandle) {
-    mFileHandle->ClearBackgroundActor();
-
-    // Normally this would be DEBUG-only but NoteActorDestroyed is also called
-    // from SendDeleteMeInternal. In that case we're going to receive an
-    // actual ActorDestroy call later and we don't want to touch a dead
-    // object.
-    mTemporaryStrongFileHandle = nullptr;
-    mFileHandle = nullptr;
-  }
-}
-
-void BackgroundFileHandleChild::NoteComplete() {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT_IF(mFileHandle, mTemporaryStrongFileHandle);
-
-  mTemporaryStrongFileHandle = nullptr;
-}
-
-void BackgroundFileHandleChild::ActorDestroy(ActorDestroyReason aWhy) {
-  AssertIsOnOwningThread();
-
-  NoteActorDestroyed();
-}
-
-mozilla::ipc::IPCResult BackgroundFileHandleChild::RecvComplete(
-    const bool aAborted) {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mFileHandle);
-
-  mFileHandle->FireCompleteOrAbortEvents(aAborted);
-
-  NoteComplete();
-  return IPC_OK();
 }
 
 /*******************************************************************************
