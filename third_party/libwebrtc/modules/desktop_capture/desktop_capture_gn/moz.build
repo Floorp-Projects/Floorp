@@ -105,8 +105,11 @@ if CONFIG["OS_TARGET"] == "Linux":
         "rt"
     ]
 
+    SOURCES += [
+        "/third_party/libwebrtc/modules/desktop_capture/mouse_cursor_monitor_linux.cc"
+    ]
+
     UNIFIED_SOURCES += [
-        "/third_party/libwebrtc/modules/desktop_capture/mouse_cursor_monitor_linux.cc",
         "/third_party/libwebrtc/modules/desktop_capture/screen_capturer_linux.cc",
         "/third_party/libwebrtc/modules/desktop_capture/window_capturer_linux.cc"
     ]
@@ -137,6 +140,10 @@ if CONFIG["OS_TARGET"] == "OpenBSD":
         "Xtst"
     ]
 
+    SOURCES += [
+        "/third_party/libwebrtc/modules/desktop_capture/mouse_cursor_monitor_linux.cc"
+    ]
+
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/x11/screen_capturer_x11.cc",
@@ -148,7 +155,6 @@ if CONFIG["OS_TARGET"] == "OpenBSD":
         "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_error_trap.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_server_pixel_buffer.cc",
         "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_window_property.cc",
-        "/third_party/libwebrtc/modules/desktop_capture/mouse_cursor_monitor_linux.cc",
         "/third_party/libwebrtc/modules/desktop_capture/screen_capturer_linux.cc",
         "/third_party/libwebrtc/modules/desktop_capture/window_capturer_linux.cc"
     ]
