@@ -45,9 +45,6 @@ captures/
 # Keystore files
 *.jks
 
-# Compiled python code
-*.pyc
-
 # OS X
 .DS_Store
 
@@ -64,6 +61,25 @@ test_artifacts/
 /build/test-tools/google-cloud-sdk/
 /build/test-tools/*.jar
 /build/test-tools/*.gz
+
+# Screenshots
+fastlane/
+
+# Secrets files, e.g. tokens
+.adjust_token
+.sentry_token
+.mls_token
+.nimbus
+.wallpaper_url
+.pocket_consumer_key
+
+# Python Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+venv/
+
+# Web extensions: manifest.json files are generated
+manifest.json
 
 # Xcode
 *.pbxuser
