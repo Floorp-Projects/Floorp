@@ -306,7 +306,6 @@
     <ID>UndocumentedPublicFunction:FocusDialog.kt$@Composable fun FocusDialogSample()</ID>
     <ID>UndocumentedPublicFunction:FocusDialog.kt$@Preview( name = "dark theme", showBackground = true, backgroundColor = 0xFF393473, uiMode = Configuration.UI_MODE_NIGHT_MASK, ) @Composable fun DialogTitlePreviewDark()</ID>
     <ID>UndocumentedPublicFunction:FocusDialog.kt$@Preview( name = "light theme", showBackground = true, backgroundColor = 0xFFFBFBFE, uiMode = Configuration.UI_MODE_NIGHT_NO, ) @Composable fun DialogTitlePreviewLight()</ID>
-    <ID>UndocumentedPublicFunction:FocusSnackbar.kt$FocusSnackbar$fun setAction(text: String, action: () -&gt; Unit)</ID>
     <ID>UndocumentedPublicFunction:FocusSnackbar.kt$FocusSnackbar$fun setText(text: String)</ID>
     <ID>UndocumentedPublicFunction:FocusTheme.kt$fun phoneDimensions()</ID>
     <ID>UndocumentedPublicFunction:FocusTheme.kt$fun tabletDimensions()</ID>

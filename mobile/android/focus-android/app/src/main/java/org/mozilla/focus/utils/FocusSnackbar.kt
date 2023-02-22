@@ -4,6 +4,7 @@
 
 package org.mozilla.focus.utils
 
+import android.content.Context
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
@@ -33,12 +34,15 @@ class FocusSnackbar private constructor(
         binding.snackbarText.text = text
     }
 
-    fun setAction(text: String, action: () -> Unit) = apply {
+    /**
+     * Sets an action to be performed on clicking [FocusSnackbar]'s action button.
+     */
+    fun setAction(text: String, action: (Context) -> Unit) = apply {
         binding.snackbarAction.apply {
             setText(text)
             isVisible = true
             setOnClickListener {
-                action.invoke()
+                action.invoke(it.context)
                 dismiss()
             }
         }
