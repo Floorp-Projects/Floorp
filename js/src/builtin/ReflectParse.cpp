@@ -3750,7 +3750,7 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
       return false;
     }
   } else {
-    ModuleBuilder builder(cx, &fc, &parser);
+    ModuleBuilder builder(&fc, &parser);
 
     uint32_t len = chars.length();
     SourceExtent extent =
