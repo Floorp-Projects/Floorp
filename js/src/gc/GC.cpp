@@ -1040,10 +1040,10 @@ bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
       break;
     case JSGC_COMPACTING_ENABLED:
       compactingEnabled = value != 0;
-      updateMarkersVector();
       break;
     case JSGC_PARALLEL_MARKING_ENABLED:
       parallelMarkingEnabled = value != 0;
+      updateMarkersVector();
       break;
     case JSGC_INCREMENTAL_WEAKMAP_ENABLED:
       for (auto& marker : markers) {
@@ -1127,10 +1127,10 @@ void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
       break;
     case JSGC_COMPACTING_ENABLED:
       compactingEnabled = TuningDefaults::CompactingEnabled;
-      updateMarkersVector();
       break;
     case JSGC_PARALLEL_MARKING_ENABLED:
       parallelMarkingEnabled = TuningDefaults::ParallelMarkingEnabled;
+      updateMarkersVector();
       break;
     case JSGC_INCREMENTAL_WEAKMAP_ENABLED:
       for (auto& marker : markers) {
