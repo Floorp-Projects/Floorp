@@ -13,6 +13,9 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v112
+- Added `GeckoSession.LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE`, see ([bug 1809269]({{bugzilla}}1809269)).
+
 ## v111
 
 - Removed deprecated [`SelectionActionDelegate.Selection.clientRect`][111.10], [`BasicSelectionActionDelegate.mTempMatrix`][111.11] and  [`BasicSelectionActionDelegate.mTempRect`][111.12], ([bug 1801615]({{bugzilla}}1801615))
@@ -1318,4 +1321,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 5c6f2bfdee45037ef4de5b47ecf3c775b738a9ed
+[api-version]: e6608eb2026e3779678c2ae2b72b4abf403f73ca
