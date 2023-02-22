@@ -370,6 +370,24 @@ void FetchService::FetchInstance::FlushConsoleReport() {
   }
 }
 
+void FetchService::FetchInstance::OnReportPerformanceTiming() {
+  FETCH_LOG(("FetchInstance::OnReportPerformanceTiming [%p]", this));
+  MOZ_ASSERT(mFetchDriver);
+
+  ResponseTiming timing;
+  UniquePtr<PerformanceTimingData> performanceTiming(
+      mFetchDriver->GetPerformanceTimingData(timing.initiatorType(),
+                                             timing.entryName()));
+  if (!performanceTiming) {
+    return;
+  }
+  timing.timingData() = performanceTiming->ToIPC();
+  // Force replace initiatorType for ServiceWorkerNavgationPreload.
+  if (!mIsWorkerFetch) {
+    timing.initiatorType() = u"navigation"_ns;
+  }
+}
+
 // FetchService
 
 NS_IMPL_ISUPPORTS(FetchService, nsIObserver)
