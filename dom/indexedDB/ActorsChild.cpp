@@ -12,7 +12,6 @@
 #include "IDBEvents.h"
 #include "IDBFactory.h"
 #include "IDBIndex.h"
-#include "IDBMutableFile.h"
 #include "IDBObjectStore.h"
 #include "IDBRequest.h"
 #include "IDBTransaction.h"
@@ -190,9 +189,7 @@ void DispatchSuccessEvent(const NotNull<RefPtr<IDBRequest>>& aRequest,
                           const RefPtr<Event>& aEvent);
 
 template <class T>
-std::enable_if_t<std::is_same_v<T, IDBDatabase> ||
-                     std::is_same_v<T, IDBCursor> ||
-                     std::is_same_v<T, IDBMutableFile>,
+std::enable_if_t<std::is_same_v<T, IDBDatabase> || std::is_same_v<T, IDBCursor>,
                  nsresult>
 GetResult(JSContext* aCx, T* aDOMObject, JS::MutableHandle<JS::Value> aResult) {
   if (!aDOMObject) {

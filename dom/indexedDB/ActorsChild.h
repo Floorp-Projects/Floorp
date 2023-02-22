@@ -40,8 +40,6 @@ namespace dom {
 class IDBCursor;
 class IDBDatabase;
 class IDBFactory;
-class IDBFileRequest;
-class IDBMutableFile;
 class IDBOpenDBRequest;
 class IDBRequest;
 class IndexedDatabaseManager;
