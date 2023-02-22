@@ -11,6 +11,17 @@ $background-dark: rgb(28, 27, 34);
   position: absolute;
   transition: opacity 0.5s ease;
   z-index: $max-z-index - 2;
+  outline: none;
+  // sync with --in-content-focus-outline-color from common-shared.css
+  --feature-callout-focus-outline-color: #0061E0;
+
+  @media (prefers-color-scheme: dark) {
+    --feature-callout-focus-outline-color: #0DF;
+  }
+
+  @media (prefers-contrast) {
+    --feature-callout-focus-outline-color: -moz-DialogText;
+  }
 
   &.hidden {
     opacity: 0;
@@ -34,6 +45,7 @@ $background-dark: rgb(28, 27, 34);
       height: fit-content;
       min-height: unset;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      overflow: visible;
 
       .logo-container {
         display: flex;
@@ -205,7 +217,12 @@ $background-dark: rgb(28, 27, 34);
 
   $arrow-size: 24px;
   $arrow-inset-size: math.div($arrow-size, 2);
-  $arrow-border: 1px solid #CFCFD8;
+  // the arrow already overlaps the callout by 12px (see above), but to account
+  // for different pixel scaling factors, we can overlap by 1px more, since the
+  // border is drawn underneath the callout (on ::after). this is either added
+  // to or subtracted from absolute coordinates, depending on the inset's sign.
+  $arrow-overlap-inset: -$arrow-inset-size + 1px;
+  $arrow-outline: 1px solid #CFCFD8;
 
   // applied to all callout arrow foreground and background
   &.callout-arrow::before,
@@ -215,11 +232,8 @@ $background-dark: rgb(28, 27, 34);
     width: $arrow-size;
     height: $arrow-size;
     transform: rotate(45deg);
-  }
-
-  &.callout-arrow:dir(rtl)::before,
-  &.callout-arrow:dir(rtl)::after {
-    transform: rotate(315deg);
+    // keep the border crisp under transformation
+    transform-style: preserve-3d;
   }
 
   // color for all arrow foreground
@@ -234,6 +248,7 @@ $background-dark: rgb(28, 27, 34);
   // styles for all arrow backgrounds
   &.callout-arrow::after {
     background: transparent;
+    outline: $arrow-outline;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     z-index: -1;
   }
@@ -241,78 +256,50 @@ $background-dark: rgb(28, 27, 34);
   // up arrow positioning
   &.arrow-top::before,
   &.arrow-top::after {
-    top: -$arrow-inset-size;
+    top: $arrow-overlap-inset;
     inset-inline-start: calc(50% - $arrow-inset-size);
-  }
-
-  // up arrow foreground
-  &.arrow-top::before {
-    border-top: $arrow-border;
-    border-inline-start: $arrow-border;
   }
 
   // down arrow positioning
   &.arrow-bottom::before,
   &.arrow-bottom::after {
-    top: calc(100% - $arrow-inset-size);
+    bottom: $arrow-overlap-inset;
     inset-inline-start: calc(50% - $arrow-inset-size);
-  }
-
-  // down arrow foreground
-  &.arrow-bottom::before {
-    border-inline-end: $arrow-border;
-    border-bottom: $arrow-border;
   }
 
   // end arrow positioning
   &.arrow-inline-end::before,
   &.arrow-inline-end::after {
     top: calc(50% - $arrow-inset-size);
-    inset-inline-start: calc(100% - $arrow-inset-size);
-  }
-
-  // end arrow foreground
-  &.arrow-inline-end::before {
-    border-top: $arrow-border;
-    border-inline-end: $arrow-border;
+    inset-inline-end: $arrow-overlap-inset;
   }
 
   // start arrow positioning
   &.arrow-inline-start::before,
   &.arrow-inline-start::after {
     top: calc(50% - $arrow-inset-size);
-    inset-inline-start: -$arrow-inset-size;
-  }
-
-  // start arrow foreground
-  &.arrow-inline-start::before {
-    border-bottom: $arrow-border;
-    border-inline-start: $arrow-border;
+    inset-inline-start: $arrow-overlap-inset;
   }
 
   // top-end arrow positioning
   &.arrow-top-end::before,
   &.arrow-top-end::after {
-    top: -$arrow-inset-size;
+    top: $arrow-overlap-inset;
     inset-inline-end: $arrow-inset-size;
-  }
-
-  // top-end arrow foreground
-  &.arrow-top-end::before {
-    border-top: $arrow-border;
-    border-inline-start: $arrow-border;
   }
 
   // top-start arrow positioning
   &.arrow-top-start::before,
   &.arrow-top-start::after {
-    top: -$arrow-inset-size;
+    top: $arrow-overlap-inset;
     inset-inline-start: $arrow-inset-size;
   }
 
-  // top-start arrow foreground
-  &.arrow-top-start::before {
-    border-top: $arrow-border;
-    border-inline-start: $arrow-border;
+  &:focus-visible {
+    .screen[pos="callout"] .section-main .main-content,
+    &.callout-arrow::after {
+      outline: 2px solid var(--feature-callout-focus-outline-color);
+      border-color: transparent;
+    }
   }
 }
