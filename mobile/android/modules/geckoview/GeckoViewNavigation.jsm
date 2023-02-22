@@ -83,6 +83,9 @@ function convertFlags(aFlags) {
   if (aFlags & (1 << 6)) {
     navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
   }
+  if (aFlags & (1 << 7)) {
+    navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE;
+  }
   return navFlags;
 }
 

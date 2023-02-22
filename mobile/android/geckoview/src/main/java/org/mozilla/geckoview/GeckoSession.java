@@ -1712,7 +1712,8 @@ public class GeckoSession {
         LOAD_FLAGS_EXTERNAL,
         LOAD_FLAGS_ALLOW_POPUPS,
         LOAD_FLAGS_FORCE_ALLOW_DATA_URI,
-        LOAD_FLAGS_REPLACE_HISTORY
+        LOAD_FLAGS_REPLACE_HISTORY,
+        LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE,
       })
   public @interface LoadFlags {}
 
@@ -1748,6 +1749,9 @@ public class GeckoSession {
 
   /** This flag specifies that any existing history entry should be replaced. */
   public static final int LOAD_FLAGS_REPLACE_HISTORY = 1 << 6;
+
+  /** This load should bypass the NavigationDelegate.onLoadRequest. */
+  public static final int LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE = 1 << 7;
 
   /**
    * Filter headers according to the CORS safelisted rules.
@@ -2045,7 +2049,7 @@ public class GeckoSession {
             false, /* hasUserGesture */
             true /* isDirectNavigation */);
 
-    shouldLoadUri(loadRequest)
+    shouldLoadUri(loadRequest, loadFlags)
         .getOrAccept(
             allowOrDeny -> {
               if (allowOrDeny == AllowOrDeny.DENY) {
@@ -2103,9 +2107,10 @@ public class GeckoSession {
     load(new Loader().uri(uri));
   }
 
-  private GeckoResult<AllowOrDeny> shouldLoadUri(final NavigationDelegate.LoadRequest request) {
+  private GeckoResult<AllowOrDeny> shouldLoadUri(
+      final NavigationDelegate.LoadRequest request, final int loadFlags) {
     final NavigationDelegate delegate = mNavigationHandler.getDelegate();
-    if (delegate == null) {
+    if (delegate == null || (loadFlags & LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE) != 0) {
       return GeckoResult.allow();
     }
 

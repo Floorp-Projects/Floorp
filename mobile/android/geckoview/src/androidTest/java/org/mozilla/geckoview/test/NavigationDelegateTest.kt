@@ -3076,4 +3076,25 @@ class NavigationDelegateTest : BaseSessionTest() {
         }, sessionRule.env.defaultTimeoutMillis)
         mainSession.evaluateJS("if (!imageLoaded) throw imageLoaded")
     }
+
+    @Test
+    fun bypassLoadUriDelegate() {
+        val testUri = "https://www.mozilla.org"
+
+        mainSession.load(
+            Loader()
+                .uri(testUri)
+                .flags(GeckoSession.LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE)
+        )
+        mainSession.waitForPageStop()
+
+        sessionRule.forCallbacksDuringWait(
+            object : NavigationDelegate {
+                @AssertCalled(false)
+                override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
+                    return null
+                }
+            }
+        )
+    }
 }
