@@ -6,8 +6,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _GeckoTextMarker_H_
-#define _GeckoTextMarker_H_
+#ifndef _LegacyTextMarker_H_
+#define _LegacyTextMarker_H_
 
 #include <ApplicationServices/ApplicationServices.h>
 #include <Foundation/Foundation.h>
@@ -20,21 +20,21 @@ namespace mozilla {
 namespace a11y {
 
 class Accessible;
-class GeckoTextMarkerRange;
+class LegacyTextMarkerRange;
 
-class GeckoTextMarker final {
+class LegacyTextMarker final {
  public:
-  GeckoTextMarker(Accessible* aContainer, int32_t aOffset)
+  LegacyTextMarker(Accessible* aContainer, int32_t aOffset)
       : mContainer(aContainer), mOffset(aOffset) {}
 
-  GeckoTextMarker(const GeckoTextMarker& aPoint)
+  LegacyTextMarker(const LegacyTextMarker& aPoint)
       : mContainer(aPoint.mContainer), mOffset(aPoint.mOffset) {}
 
-  GeckoTextMarker(Accessible* aDoc, AXTextMarkerRef aTextMarker);
+  LegacyTextMarker(Accessible* aDoc, AXTextMarkerRef aTextMarker);
 
-  GeckoTextMarker() : mContainer(nullptr), mOffset(0) {}
+  LegacyTextMarker() : mContainer(nullptr), mOffset(0) {}
 
-  static GeckoTextMarker MarkerFromIndex(Accessible* aRoot, int32_t aIndex);
+  static LegacyTextMarker MarkerFromIndex(Accessible* aRoot, int32_t aIndex);
 
   AXTextMarkerRef CreateAXTextMarker();
 
@@ -43,15 +43,15 @@ class GeckoTextMarker final {
   bool Previous();
 
   // Return a range with the given type relative to this marker.
-  GeckoTextMarkerRange Range(EWhichRange aRangeType);
+  LegacyTextMarkerRange Range(EWhichRange aRangeType);
 
   Accessible* Leaf();
 
   bool IsValid() const { return !!mContainer; };
 
-  bool operator<(const GeckoTextMarker& aPoint) const;
+  bool operator<(const LegacyTextMarker& aPoint) const;
 
-  bool operator==(const GeckoTextMarker& aPoint) const {
+  bool operator==(const LegacyTextMarker& aPoint) const {
     return mContainer == aPoint.mContainer && mOffset == aPoint.mOffset;
   }
 
@@ -69,17 +69,18 @@ class GeckoTextMarker final {
   bool IsEditableRoot();
 };
 
-class GeckoTextMarkerRange final {
+class LegacyTextMarkerRange final {
  public:
-  GeckoTextMarkerRange(const GeckoTextMarker& aStart,
-                       const GeckoTextMarker& aEnd)
+  LegacyTextMarkerRange(const LegacyTextMarker& aStart,
+                        const LegacyTextMarker& aEnd)
       : mStart(aStart), mEnd(aEnd) {}
 
-  GeckoTextMarkerRange() {}
+  LegacyTextMarkerRange() {}
 
-  GeckoTextMarkerRange(Accessible* aDoc, AXTextMarkerRangeRef aTextMarkerRange);
+  LegacyTextMarkerRange(Accessible* aDoc,
+                        AXTextMarkerRangeRef aTextMarkerRange);
 
-  explicit GeckoTextMarkerRange(Accessible* aAccessible);
+  explicit LegacyTextMarkerRange(Accessible* aAccessible);
 
   AXTextMarkerRangeRef CreateAXTextMarkerRange();
 
@@ -117,9 +118,13 @@ class GeckoTextMarkerRange final {
    */
   bool Crop(Accessible* aContainer);
 
-  GeckoTextMarker mStart;
-  GeckoTextMarker mEnd;
+  LegacyTextMarker mStart;
+  LegacyTextMarker mEnd;
 };
+
+// XXX: Temporary for next patch so we don't have to do a massive rename.
+typedef LegacyTextMarker GeckoTextMarker;
+typedef LegacyTextMarkerRange GeckoTextMarkerRange;
 
 }  // namespace a11y
 }  // namespace mozilla

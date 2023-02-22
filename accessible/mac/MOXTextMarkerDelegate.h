@@ -8,7 +8,7 @@
 #import <Cocoa/Cocoa.h>
 
 #import "MOXAccessibleProtocol.h"
-#import "GeckoTextMarker.h"
+#import "LegacyTextMarker.h"
 
 @interface MOXTextMarkerDelegate : NSObject <MOXTextMarkerSupport> {
   mozilla::a11y::Accessible* mGeckoDocAccessible;

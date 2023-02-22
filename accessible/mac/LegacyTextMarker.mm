@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#import "GeckoTextMarker.h"
+#import "LegacyTextMarker.h"
 
 #import "MacUtils.h"
 
@@ -21,25 +21,25 @@
 namespace mozilla {
 namespace a11y {
 
-struct OpaqueGeckoTextMarker {
-  OpaqueGeckoTextMarker(uintptr_t aDoc, uintptr_t aID, int32_t aOffset)
+struct OpaqueLegacyTextMarker {
+  OpaqueLegacyTextMarker(uintptr_t aDoc, uintptr_t aID, int32_t aOffset)
       : mDoc(aDoc), mID(aID), mOffset(aOffset) {}
-  OpaqueGeckoTextMarker() {}
+  OpaqueLegacyTextMarker() {}
   uintptr_t mDoc;
   uintptr_t mID;
   int32_t mOffset;
 };
 
-// GeckoTextMarker
+// LegacyTextMarker
 
-GeckoTextMarker::GeckoTextMarker(Accessible* aDoc,
-                                 AXTextMarkerRef aTextMarker) {
+LegacyTextMarker::LegacyTextMarker(Accessible* aDoc,
+                                   AXTextMarkerRef aTextMarker) {
   MOZ_ASSERT(aDoc);
-  OpaqueGeckoTextMarker opaqueMarker;
+  OpaqueLegacyTextMarker opaqueMarker;
   if (aTextMarker &&
-      AXTextMarkerGetLength(aTextMarker) == sizeof(OpaqueGeckoTextMarker)) {
+      AXTextMarkerGetLength(aTextMarker) == sizeof(OpaqueLegacyTextMarker)) {
     memcpy(&opaqueMarker, AXTextMarkerGetBytePtr(aTextMarker),
-           sizeof(OpaqueGeckoTextMarker));
+           sizeof(OpaqueLegacyTextMarker));
     if (utils::DocumentExists(aDoc, opaqueMarker.mDoc)) {
       Accessible* doc = reinterpret_cast<Accessible*>(opaqueMarker.mDoc);
       if (doc->IsRemote()) {
@@ -57,8 +57,8 @@ GeckoTextMarker::GeckoTextMarker(Accessible* aDoc,
   }
 }
 
-GeckoTextMarker GeckoTextMarker::MarkerFromIndex(Accessible* aRoot,
-                                                 int32_t aIndex) {
+LegacyTextMarker LegacyTextMarker::MarkerFromIndex(Accessible* aRoot,
+                                                   int32_t aIndex) {
   if (aRoot->IsRemote()) {
     int32_t offset = 0;
     uint64_t containerID = 0;
@@ -66,19 +66,19 @@ GeckoTextMarker GeckoTextMarker::MarkerFromIndex(Accessible* aRoot,
     Unused << ipcDoc->GetPlatformExtension()->SendOffsetAtIndex(
         aRoot->AsRemote()->ID(), aIndex, &containerID, &offset);
     RemoteAccessible* container = ipcDoc->GetAccessible(containerID);
-    return GeckoTextMarker(container, offset);
+    return LegacyTextMarker(container, offset);
   } else if (auto htWrap = static_cast<HyperTextAccessibleWrap*>(
                  aRoot->AsLocal()->AsHyperText())) {
     int32_t offset = 0;
     HyperTextAccessible* container = nullptr;
     htWrap->OffsetAtIndex(aIndex, &container, &offset);
-    return GeckoTextMarker(container, offset);
+    return LegacyTextMarker(container, offset);
   }
 
-  return GeckoTextMarker();
+  return LegacyTextMarker();
 }
 
-AXTextMarkerRef GeckoTextMarker::CreateAXTextMarker() {
+AXTextMarkerRef LegacyTextMarker::CreateAXTextMarker() {
   if (!IsValid()) {
     return nil;
   }
@@ -95,16 +95,16 @@ AXTextMarkerRef GeckoTextMarker::CreateAXTextMarker() {
           ? mContainer->AsRemote()->ID()
           : reinterpret_cast<uintptr_t>(mContainer->AsLocal()->UniqueID());
 
-  OpaqueGeckoTextMarker opaqueMarker(reinterpret_cast<uintptr_t>(doc),
-                                     identifier, mOffset);
+  OpaqueLegacyTextMarker opaqueMarker(reinterpret_cast<uintptr_t>(doc),
+                                      identifier, mOffset);
   AXTextMarkerRef cf_text_marker = AXTextMarkerCreate(
       kCFAllocatorDefault, reinterpret_cast<const UInt8*>(&opaqueMarker),
-      sizeof(OpaqueGeckoTextMarker));
+      sizeof(OpaqueLegacyTextMarker));
 
   return (__bridge AXTextMarkerRef)[(__bridge id)(cf_text_marker)autorelease];
 }
 
-bool GeckoTextMarker::operator<(const GeckoTextMarker& aPoint) const {
+bool LegacyTextMarker::operator<(const LegacyTextMarker& aPoint) const {
   if (mContainer == aPoint.mContainer) return mOffset < aPoint.mOffset;
 
   // Build the chain of parents
@@ -161,7 +161,7 @@ bool GeckoTextMarker::operator<(const GeckoTextMarker& aPoint) const {
   return false;
 }
 
-bool GeckoTextMarker::IsEditableRoot() {
+bool LegacyTextMarker::IsEditableRoot() {
   uint64_t state = mContainer->IsRemote() ? mContainer->AsRemote()->State()
                                           : mContainer->AsLocal()->State();
   if ((state & states::EDITABLE) == 0) {
@@ -181,7 +181,7 @@ bool GeckoTextMarker::IsEditableRoot() {
   return (state & states::EDITABLE) == 0;
 }
 
-bool GeckoTextMarker::Next() {
+bool LegacyTextMarker::Next() {
   if (mContainer->IsRemote()) {
     int32_t nextOffset = 0;
     uint64_t nextContainerID = 0;
@@ -207,7 +207,7 @@ bool GeckoTextMarker::Next() {
   return false;
 }
 
-bool GeckoTextMarker::Previous() {
+bool LegacyTextMarker::Previous() {
   if (mContainer->IsRemote()) {
     int32_t prevOffset = 0;
     uint64_t prevContainerID = 0;
@@ -245,7 +245,7 @@ static uint32_t CharacterCount(Accessible* aContainer) {
   return 0;
 }
 
-GeckoTextMarkerRange GeckoTextMarker::Range(EWhichRange aRangeType) {
+LegacyTextMarkerRange LegacyTextMarker::Range(EWhichRange aRangeType) {
   MOZ_ASSERT(mContainer);
   if (mContainer->IsRemote()) {
     int32_t startOffset = 0, endOffset = 0;
@@ -255,9 +255,10 @@ GeckoTextMarkerRange GeckoTextMarker::Range(EWhichRange aRangeType) {
         mContainer->AsRemote()->ID(), mOffset, aRangeType, &startContainerID,
         &startOffset, &endContainerID, &endOffset);
     if (success) {
-      return GeckoTextMarkerRange(
-          GeckoTextMarker(ipcDoc->GetAccessible(startContainerID), startOffset),
-          GeckoTextMarker(ipcDoc->GetAccessible(endContainerID), endOffset));
+      return LegacyTextMarkerRange(
+          LegacyTextMarker(ipcDoc->GetAccessible(startContainerID),
+                           startOffset),
+          LegacyTextMarker(ipcDoc->GetAccessible(endContainerID), endOffset));
     }
   } else if (auto htWrap = ContainerAsHyperTextWrap()) {
     int32_t startOffset = 0, endOffset = 0;
@@ -265,14 +266,14 @@ GeckoTextMarkerRange GeckoTextMarker::Range(EWhichRange aRangeType) {
     HyperTextAccessible* endContainer = nullptr;
     htWrap->RangeAt(mOffset, aRangeType, &startContainer, &startOffset,
                     &endContainer, &endOffset);
-    return GeckoTextMarkerRange(GeckoTextMarker(startContainer, startOffset),
-                                GeckoTextMarker(endContainer, endOffset));
+    return LegacyTextMarkerRange(LegacyTextMarker(startContainer, startOffset),
+                                 LegacyTextMarker(endContainer, endOffset));
   }
 
-  return GeckoTextMarkerRange(GeckoTextMarker(), GeckoTextMarker());
+  return LegacyTextMarkerRange(LegacyTextMarker(), LegacyTextMarker());
 }
 
-Accessible* GeckoTextMarker::Leaf() {
+Accessible* LegacyTextMarker::Leaf() {
   MOZ_ASSERT(mContainer);
   if (mContainer->IsRemote()) {
     uint64_t leafID = 0;
@@ -287,9 +288,9 @@ Accessible* GeckoTextMarker::Leaf() {
   return mContainer;
 }
 
-// GeckoTextMarkerRange
+// LegacyTextMarkerRange
 
-GeckoTextMarkerRange::GeckoTextMarkerRange(
+LegacyTextMarkerRange::LegacyTextMarkerRange(
     Accessible* aDoc, AXTextMarkerRangeRef aTextMarkerRange) {
   if (!aTextMarkerRange ||
       CFGetTypeID(aTextMarkerRange) != AXTextMarkerRangeGetTypeID()) {
@@ -300,23 +301,23 @@ GeckoTextMarkerRange::GeckoTextMarkerRange(
       AXTextMarkerRangeCopyStartMarker(aTextMarkerRange));
   AXTextMarkerRef end_marker(AXTextMarkerRangeCopyEndMarker(aTextMarkerRange));
 
-  mStart = GeckoTextMarker(aDoc, start_marker);
-  mEnd = GeckoTextMarker(aDoc, end_marker);
+  mStart = LegacyTextMarker(aDoc, start_marker);
+  mEnd = LegacyTextMarker(aDoc, end_marker);
 
   CFRelease(start_marker);
   CFRelease(end_marker);
 }
 
-GeckoTextMarkerRange::GeckoTextMarkerRange(Accessible* aAccessible) {
+LegacyTextMarkerRange::LegacyTextMarkerRange(Accessible* aAccessible) {
   if (aAccessible->IsHyperText()) {
     // The accessible is a hypertext. Initialize range to its inner text range.
-    mStart = GeckoTextMarker(aAccessible, 0);
-    mEnd = GeckoTextMarker(aAccessible, (CharacterCount(aAccessible)));
+    mStart = LegacyTextMarker(aAccessible, 0);
+    mEnd = LegacyTextMarker(aAccessible, (CharacterCount(aAccessible)));
   } else {
     // The accessible is not a hypertext (maybe a text leaf?). Initialize range
     // to its offsets in its container.
-    mStart = GeckoTextMarker(aAccessible->Parent(), 0);
-    mEnd = GeckoTextMarker(aAccessible->Parent(), 0);
+    mStart = LegacyTextMarker(aAccessible->Parent(), 0);
+    mEnd = LegacyTextMarker(aAccessible->Parent(), 0);
     if (mStart.mContainer->IsRemote()) {
       DocAccessibleParent* ipcDoc = mStart.mContainer->AsRemote()->Document();
       Unused << ipcDoc->GetPlatformExtension()->SendRangeOfChild(
@@ -329,7 +330,7 @@ GeckoTextMarkerRange::GeckoTextMarkerRange(Accessible* aAccessible) {
   }
 }
 
-AXTextMarkerRangeRef GeckoTextMarkerRange::CreateAXTextMarkerRange() {
+AXTextMarkerRangeRef LegacyTextMarkerRange::CreateAXTextMarkerRange() {
   if (!IsValid()) {
     return nil;
   }
@@ -342,7 +343,7 @@ AXTextMarkerRangeRef GeckoTextMarkerRange::CreateAXTextMarkerRange() {
       cf_text_marker_range)autorelease];
 }
 
-NSString* GeckoTextMarkerRange::Text() const {
+NSString* LegacyTextMarkerRange::Text() const {
   nsAutoString text;
   if (mStart.mContainer->IsRemote() && mEnd.mContainer->IsRemote()) {
     DocAccessibleParent* ipcDoc = mStart.mContainer->AsRemote()->Document();
@@ -356,7 +357,7 @@ NSString* GeckoTextMarkerRange::Text() const {
   return nsCocoaUtils::ToNSString(text);
 }
 
-NSAttributedString* GeckoTextMarkerRange::AttributedText() const {
+NSAttributedString* LegacyTextMarkerRange::AttributedText() const {
   NSMutableAttributedString* str =
       [[[NSMutableAttributedString alloc] init] autorelease];
 
@@ -406,7 +407,7 @@ NSAttributedString* GeckoTextMarkerRange::AttributedText() const {
   return str;
 }
 
-int32_t GeckoTextMarkerRange::Length() const {
+int32_t LegacyTextMarkerRange::Length() const {
   int32_t length = 0;
   if (mStart.mContainer->IsRemote() && mEnd.mContainer->IsRemote()) {
     DocAccessibleParent* ipcDoc = mStart.mContainer->AsRemote()->Document();
@@ -421,7 +422,7 @@ int32_t GeckoTextMarkerRange::Length() const {
   return length;
 }
 
-NSValue* GeckoTextMarkerRange::Bounds() const {
+NSValue* LegacyTextMarkerRange::Bounds() const {
   LayoutDeviceIntRect rect;
   if (mStart.mContainer->IsRemote() && mEnd.mContainer->IsRemote()) {
     DocAccessibleParent* ipcDoc = mStart.mContainer->AsRemote()->Document();
@@ -445,7 +446,7 @@ NSValue* GeckoTextMarkerRange::Bounds() const {
   return [NSValue valueWithRect:r];
 }
 
-void GeckoTextMarkerRange::Select() const {
+void LegacyTextMarkerRange::Select() const {
   if (mStart.mContainer->IsRemote() && mEnd.mContainer->IsRemote()) {
     DocAccessibleParent* ipcDoc = mStart.mContainer->AsRemote()->Document();
     Unused << ipcDoc->GetPlatformExtension()->SendSelectRange(
@@ -458,9 +459,9 @@ void GeckoTextMarkerRange::Select() const {
   }
 }
 
-bool GeckoTextMarkerRange::Crop(Accessible* aContainer) {
-  GeckoTextMarker containerStart(aContainer, 0);
-  GeckoTextMarker containerEnd(aContainer, CharacterCount(aContainer));
+bool LegacyTextMarkerRange::Crop(Accessible* aContainer) {
+  LegacyTextMarker containerStart(aContainer, 0);
+  LegacyTextMarker containerEnd(aContainer, CharacterCount(aContainer));
 
   if (mEnd < containerStart || containerEnd < mStart) {
     // The range ends before the container, or starts after it.
