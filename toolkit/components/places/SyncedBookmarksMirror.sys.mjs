@@ -29,7 +29,7 @@
  *   the server to match the merged tree.
  *
  * - `BookmarkObserverRecorder` records all changes made to Places during the
- *   merge, then dispatches `nsINavBookmarkObserver` notifications. Places uses
+ *   merge, then dispatches `PlacesObservers` notifications. Places uses
  *   these notifications to update the UI and internal caches. We can't dispatch
  *   during the merge because observers won't see the changes until the merge
  *   transaction commits and the database is consistent again.
