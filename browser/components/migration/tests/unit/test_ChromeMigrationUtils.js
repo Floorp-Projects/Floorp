@@ -6,7 +6,9 @@ const { ChromeMigrationUtils } = ChromeUtils.importESModule(
 
 // Setup chrome user data path for all platforms.
 ChromeMigrationUtils.getDataPath = () => {
-  return do_get_file("Library/Application Support/Google/Chrome/").path;
+  return Promise.resolve(
+    do_get_file("Library/Application Support/Google/Chrome/").path
+  );
 };
 
 add_task(async function test_getExtensionList_function() {

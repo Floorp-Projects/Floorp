@@ -51,7 +51,7 @@ export var ChromeMigrationUtils = {
     if (profileId === undefined) {
       profileId = await this.getLastUsedProfileId();
     }
-    let path = this.getExtensionPath(profileId);
+    let path = await this.getExtensionPath(profileId);
     let extensionList = [];
     try {
       for (const child of await IOUtils.getChildren(path)) {
@@ -86,7 +86,7 @@ export var ChromeMigrationUtils = {
     }
     let extensionInformation = null;
     try {
-      let manifestPath = this.getExtensionPath(profileId);
+      let manifestPath = await this.getExtensionPath(profileId);
       manifestPath = PathUtils.join(manifestPath, extensionId);
       // If there are multiple sub-directories in the extension directory,
       // read the files in the latest directory.
@@ -164,7 +164,7 @@ export var ChromeMigrationUtils = {
         if (!this._extensionLocaleStrings[profileId]) {
           this._extensionLocaleStrings[profileId] = {};
         }
-        let localeFilePath = this.getExtensionPath(profileId);
+        let localeFilePath = await this.getExtensionPath(profileId);
         localeFilePath = PathUtils.join(localeFilePath, extensionId);
         let directories = await this._getSortedByVersionSubDirectoryNames(
           localeFilePath
@@ -206,7 +206,7 @@ export var ChromeMigrationUtils = {
     if (profileId === undefined) {
       profileId = await this.getLastUsedProfileId();
     }
-    let extensionPath = this.getExtensionPath(profileId);
+    let extensionPath = await this.getExtensionPath(profileId);
     let isInstalled = await IOUtils.exists(
       PathUtils.join(extensionPath, extensionId)
     );
@@ -233,7 +233,7 @@ export var ChromeMigrationUtils = {
     let localState = null;
     try {
       let localStatePath = PathUtils.join(
-        this.getDataPath(dataPath),
+        await this.getDataPath(dataPath),
         "Local State"
       );
       localState = JSON.parse(await IOUtils.readUTF8(localStatePath));
@@ -253,8 +253,8 @@ export var ChromeMigrationUtils = {
    * @param {string} profileId - The user profile's ID.
    * @returns {string} The path of Chrome extension directory.
    */
-  getExtensionPath(profileId) {
-    return PathUtils.join(this.getDataPath(), profileId, "Extensions");
+  async getExtensionPath(profileId) {
+    return PathUtils.join(await this.getDataPath(), profileId, "Extensions");
   },
 
   /**
@@ -264,80 +264,73 @@ export var ChromeMigrationUtils = {
    *                                     Defaults to "Chrome".
    * @returns {string} The path of application data directory.
    */
-  getDataPath(chromeProjectName = "Chrome") {
+  async getDataPath(chromeProjectName = "Chrome") {
     const SUB_DIRECTORIES = {
       win: {
-        Brave: ["BraveSoftware", "Brave-Browser"],
-        Chrome: ["Google", "Chrome"],
-        "Chrome Beta": ["Google", "Chrome Beta"],
-        Chromium: ["Chromium"],
-        Canary: ["Google", "Chrome SxS"],
-        Edge: ["Microsoft", "Edge"],
-        "Edge Beta": ["Microsoft", "Edge Beta"],
-        "360 SE": ["360se6"],
-        Opera: ["Opera Software", "Opera Stable"],
-        "Opera GX": ["Opera Software", "Opera GX Stable"],
-        Vivaldi: ["Vivaldi"],
+        Brave: [
+          ["LocalAppData", "BraveSoftware", "Brave-Browser", "User Data"],
+        ],
+        Chrome: [["LocalAppData", "Google", "Chrome", "User Data"]],
+        "Chrome Beta": [["LocalAppData", "Google", "Chrome Beta", "User Data"]],
+        Chromium: [["LocalAppData", "Chromium", "User Data"]],
+        Canary: [["LocalAppData", "Google", "Chrome SxS", "User Data"]],
+        Edge: [["LocalAppData", "Microsoft", "Edge", "User Data"]],
+        "Edge Beta": [["LocalAppData", "Microsoft", "Edge Beta", "User Data"]],
+        "360 SE": [["AppData", "360se6", "User Data"]],
+        Opera: [["AppData", "Opera Software", "Opera Stable"]],
+        "Opera GX": [["AppData", "Opera Software", "Opera GX Stable"]],
+        Vivaldi: [["LocalAppData", "Vivaldi", "User Data"]],
       },
       macosx: {
-        Brave: ["BraveSoftware", "Brave-Browser"],
-        Chrome: ["Google", "Chrome"],
-        Chromium: ["Chromium"],
-        Canary: ["Google", "Chrome Canary"],
-        Edge: ["Microsoft Edge"],
-        "Edge Beta": ["Microsoft Edge Beta"],
-        "Opera GX": ["com.operasoftware.OperaGX"],
-        Opera: ["com.operasoftware.Opera"],
-        Vivaldi: ["Vivaldi"],
+        Brave: [
+          ["ULibDir", "Application Support", "BraveSoftware", "Brave-Browser"],
+        ],
+        Chrome: [["ULibDir", "Application Support", "Google", "Chrome"]],
+        Chromium: [["ULibDir", "Application Support", "Chromium"]],
+        Canary: [["ULibDir", "Application Support", "Google", "Chrome Canary"]],
+        Edge: [["ULibDir", "Application Support", "Microsoft Edge"]],
+        "Edge Beta": [
+          ["ULibDir", "Application Support", "Microsoft Edge Beta"],
+        ],
+        "Opera GX": [
+          ["ULibDir", "Application Support", "com.operasoftware.OperaGX"],
+        ],
+        Opera: [["ULibDir", "Application Support", "com.operasoftware.Opera"]],
+        Vivaldi: [["ULibDir", "Application Support", "Vivaldi"]],
       },
       linux: {
-        Brave: ["BraveSoftware", "Brave-Browser"],
-        Chrome: ["google-chrome"],
-        "Chrome Beta": ["google-chrome-beta"],
-        "Chrome Dev": ["google-chrome-unstable"],
-        Chromium: ["chromium"],
+        Brave: [["Home", ".config", "BraveSoftware", "Brave-Browser"]],
+        Chrome: [["Home", ".config", "google-chrome"]],
+        "Chrome Beta": [["Home", ".config", "google-chrome-beta"]],
+        "Chrome Dev": [["Home", ".config", "google-chrome-unstable"]],
+        Chromium: [
+          ["Home", ".config", "chromium"],
+          ["Home", "snap", "chromium", "common", "chromium"],
+        ],
         // Opera GX is not available on Linux.
         // Canary is not available on Linux.
         // Edge is not available on Linux.
-        Opera: ["opera"],
-        Vivaldi: ["vivaldi"],
+        Opera: [["Home", ".config", "opera"]],
+        Vivaldi: [["Home", ".config", "vivaldi"]],
       },
     };
-    let subfolders = SUB_DIRECTORIES[AppConstants.platform][chromeProjectName];
-    if (!subfolders) {
+    let options = SUB_DIRECTORIES[AppConstants.platform][chromeProjectName];
+    if (!options) {
       return null;
     }
 
-    let rootDir;
-    if (AppConstants.platform == "win") {
-      if (
-        chromeProjectName === "360 SE" ||
-        chromeProjectName === "Opera" ||
-        chromeProjectName === "Opera GX"
-      ) {
-        rootDir = "AppData";
-      } else {
-        rootDir = "LocalAppData";
+    for (let subfolders of options) {
+      let rootDir = subfolders[0];
+      try {
+        let targetPath = Services.dirsvc.get(rootDir, Ci.nsIFile).path;
+        targetPath = PathUtils.join(targetPath, ...subfolders.slice(1));
+        if (await IOUtils.exists(targetPath)) {
+          return targetPath;
+        }
+      } catch (ex) {
+        // The path logic here shouldn't error, so log it:
+        console.error(ex);
       }
-      if (chromeProjectName != "Opera" && chromeProjectName != "Opera GX") {
-        subfolders = subfolders.concat(["User Data"]);
-      }
-    } else if (AppConstants.platform == "macosx") {
-      rootDir = "ULibDir";
-      subfolders = ["Application Support"].concat(subfolders);
-    } else {
-      rootDir = "Home";
-      subfolders = [".config"].concat(subfolders);
-    }
-    try {
-      let target = Services.dirsvc.get(rootDir, Ci.nsIFile);
-      for (let subfolder of subfolders) {
-        target.append(subfolder);
-      }
-      return target.path;
-    } catch (ex) {
-      // The path logic here shouldn't error, so log it:
-      console.error(ex);
     }
     return null;
   },

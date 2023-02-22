@@ -25,6 +25,9 @@ var { TestUtils } = ChromeUtils.importESModule(
 var { PlacesTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/PlacesTestUtils.sys.mjs"
 );
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
 
 ChromeUtils.defineESModuleGetters(this, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
@@ -121,4 +124,16 @@ function registerFakePath(key, file) {
       dirsvc.set(key, originalFile);
     }
   });
+}
+
+function getRootPath() {
+  let dirKey;
+  if (AppConstants.platform == "win") {
+    dirKey = "LocalAppData";
+  } else if (AppConstants.platform == "macosx") {
+    dirKey = "ULibDir";
+  } else {
+    dirKey = "Home";
+  }
+  return Services.dirsvc.get(dirKey, Ci.nsIFile).path;
 }
