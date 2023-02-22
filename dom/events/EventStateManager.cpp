@@ -2745,7 +2745,7 @@ nsIFrame* EventStateManager::ComputeScrollTargetAndMayAdjustWheelEvent(
     // out of the frame, or when more than "mousewheel.transaction.timeout"
     // milliseconds have passed after the last operation, even if the mouse
     // hasn't moved.
-    nsIFrame* lastScrollFrame = WheelTransaction::GetTargetFrame();
+    nsIFrame* lastScrollFrame = WheelTransaction::GetScrollTargetFrame();
     if (lastScrollFrame) {
       nsIScrollableFrame* scrollableFrame =
           lastScrollFrame->GetScrollTargetFrame();
@@ -2927,7 +2927,9 @@ void EventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
   MOZ_ASSERT(scrollFrame);
 
   AutoWeakFrame scrollFrameWeak(scrollFrame);
-  if (!WheelTransaction::WillHandleDefaultAction(aEvent, scrollFrameWeak)) {
+  AutoWeakFrame eventFrameWeak(mCurrentTarget);
+  if (!WheelTransaction::WillHandleDefaultAction(aEvent, scrollFrameWeak,
+                                                 eventFrameWeak)) {
     return;
   }
 
@@ -3727,6 +3729,14 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         case WheelPrefs::ACTION_NONE:
         default:
           bool allDeltaOverflown = false;
+          if (wheelEvent->mDeltaX != 0.0 || wheelEvent->mDeltaY != 0.0) {
+            if (frameToScroll) {
+              WheelTransaction::WillHandleDefaultAction(
+                  wheelEvent, frameToScroll, mCurrentTarget);
+            } else {
+              WheelTransaction::EndTransaction();
+            }
+          }
           if (wheelEvent->mFlags.mHandledByAPZ) {
             if (wheelEvent->mCanTriggerSwipe) {
               // For events that can trigger swipes, APZ needs to know whether
@@ -5868,6 +5878,7 @@ void EventStateManager::ContentRemoved(Document* aDocument,
       IMEStateManager::OnRemoveContent(*presContext,
                                        MOZ_KnownLive(*aContent->AsElement()));
     }
+    WheelTransaction::OnRemoveElement(aContent);
   }
 
   // inform the focus manager that the content is being removed. If this

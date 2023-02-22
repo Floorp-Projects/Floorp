@@ -48,7 +48,6 @@ async function scrollWheelOver(element, deltaY) {
 async function test() {
   var outer = document.getElementById("outer-frame");
   var inner = document.getElementById("inner-frame");
-  var innerContent = document.getElementById("inner-content");
 
   // Register a wheel event listener that records the target of
   // the last wheel event, so that we can make assertions about it.
@@ -62,7 +61,7 @@ async function test() {
   }
 
   // Verify that this has brought |inner| under the wheel.
-  is(lastWheelTarget, innerContent, "'inner-content' should have been brought under the wheel");
+  is(lastWheelTarget, outer, "'outer' should sill be the wheel event target");
   window.removeEventListener("wheel", wheelTargetRecorder);
 
   // Immediately after, scroll it back up a bit.
@@ -129,7 +128,9 @@ SimpleTest.waitForExplicitFinish();
 // inputs since this test is specifically testing things related to wheel
 // transactions.
 pushPrefs([["general.smoothScroll", false],
-           ["apz.test.mac.synth_wheel_input", true]])
+           ["apz.test.mac.synth_wheel_input", true],
+           ["mousewheel.transaction.timeout", 100000],
+           ["dom.event.wheel-event-groups", true]])
 .then(waitUntilApzStable)
 .then(test)
 .then(SimpleTest.finish, SimpleTest.finishWithFailure);

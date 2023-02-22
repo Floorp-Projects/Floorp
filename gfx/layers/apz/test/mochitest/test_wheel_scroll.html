@@ -2,9 +2,10 @@
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=1013412
+https://bugzilla.mozilla.org/show_bug.cgi?id=1168182
 -->
 <head>
-  <title>Test for Bug 1013412</title>
+  <title>Test for Bug 1013412 and 1168182</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/EventUtils.js"></script>
   <script src="/tests/SimpleTest/paint_listener.js"></script>
@@ -45,7 +46,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1013412
   </style>
 </head>
 <body>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1161206">Mozilla Bug 1161206</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1013412">Mozilla Bug 1013412</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1168182">Mozilla Bug 1168182</a>
 <p id="display"></p>
 <div id="content">
   <p>Scrolling the page should be async, but scrolling over the dark circle should not scroll the page and instead rotate the white ball.</p>
@@ -79,12 +81,13 @@ document.getElementById("scrollbox").addEventListener("wheel", function(e) {
 
 async function test() {
   var content = document.getElementById("content");
-  for (let i = 0; i < 300; i++) { // enough iterations that we would scroll to the bottom of 'content'
+  // enough iterations that we would scroll to the bottom of 'content'
+  for (let i = 0; i < 300 && content.scrollTop != content.scrollTopMax; i++) {
     await promiseNativeWheelAndWaitForWheelEvent(content, 100, 150, 0, -5);
   }
   is(content.scrollTop > 0, true, "We should have scrolled down somewhat");
-  is(content.scrollTop < content.scrollTopMax, true, "We should not have scrolled to the bottom of the scrollframe");
-  is(rotationAdjusted, true, "The rotation should have been adjusted");
+  is(content.scrollTop, content.scrollTopMax, "We should have scrolled to the bottom of the scrollframe");
+  is(rotationAdjusted, false, "The rotation should not have been adjusted");
 }
 
 SimpleTest.waitForExplicitFinish();
@@ -92,7 +95,9 @@ SimpleTest.waitForExplicitFinish();
 // If we allow smooth scrolling the "smooth" scrolling may cause the page to
 // glide past the scrollbox (which is supposed to stop the scrolling) and so
 // we might end up at the bottom of the page.
-pushPrefs([["general.smoothScroll", false]])
+pushPrefs([["general.smoothScroll", false],
+           ["mousewheel.transaction.timeout", 100000],
+           ["dom.event.wheel-event-groups", true]])
 .then(waitUntilApzStable)
 .then(test)
 .then(SimpleTest.finish, SimpleTest.finishWithFailure);
