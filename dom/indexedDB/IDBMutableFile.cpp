@@ -32,17 +32,14 @@ using namespace mozilla::dom::indexedDB;
 using namespace mozilla::dom::quota;
 
 IDBMutableFile::IDBMutableFile(IDBDatabase* aDatabase,
-                               BackgroundMutableFileChild* aActor,
                                const nsAString& aName, const nsAString& aType)
     : DOMEventTargetHelper(aDatabase),
       mDatabase(aDatabase),
-      mBackgroundActor(aActor),
       mName(aName),
       mType(aType),
       mInvalidated(false) {
   MOZ_ASSERT(aDatabase);
   aDatabase->AssertIsOnOwningThread();
-  MOZ_ASSERT(aActor);
 
   mDatabase->NoteLiveMutableFile(*this);
 }
@@ -51,11 +48,6 @@ IDBMutableFile::~IDBMutableFile() {
   AssertIsOnOwningThread();
 
   mDatabase->NoteFinishedMutableFile(*this);
-
-  if (mBackgroundActor) {
-    mBackgroundActor->SendDeleteMeInternal();
-    MOZ_ASSERT(!mBackgroundActor, "SendDeleteMeInternal should have cleared!");
-  }
 }
 
 #ifdef DEBUG
@@ -70,13 +62,7 @@ void IDBMutableFile::AssertIsOnOwningThread() const {
 int64_t IDBMutableFile::GetFileId() const {
   AssertIsOnOwningThread();
 
-  int64_t fileId;
-  if (!mBackgroundActor ||
-      NS_WARN_IF(!mBackgroundActor->SendGetFileId(&fileId))) {
-    return -1;
-  }
-
-  return fileId;
+  return -1;
 }
 
 void IDBMutableFile::Invalidate() {
