@@ -242,7 +242,7 @@ mozilla::ipc::IPCResult FilePickerParent::RecvOpen(
     nsTArray<nsString>&& aFilters, nsTArray<nsString>&& aFilterNames,
     nsTArray<nsString>&& aRawFilters, const nsString& aDisplayDirectory,
     const nsString& aDisplaySpecialDirectory, const nsString& aOkButtonLabel,
-    const int16_t& aCapture) {
+    const nsIFilePicker::CaptureTarget& aCapture) {
   if (!CreateFilePicker()) {
     Unused << Send__delete__(this, void_t(), nsIFilePicker::returnCancel);
     return IPC_OK();

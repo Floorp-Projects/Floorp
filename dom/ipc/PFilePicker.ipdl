@@ -11,6 +11,7 @@ include IPCBlob;
 include "mozilla/dom/FilePickerMessageUtils.h";
 
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
+using nsIFilePicker::CaptureTarget from "nsIFilePicker.h";
 using nsIFilePicker::ResultCode from "nsIFilePicker.h";
 
 namespace mozilla {
@@ -43,7 +44,7 @@ parent:
                nsString defaultExtension, nsString[] filters, nsString[] filterNames,
                nsString[] rawFilters, nsString displayDirectory,
                nsString displaySpecialDirectory, nsString okButtonLabel,
-               int16_t capture);
+               CaptureTarget capture);
 
 child:
     async __delete__(MaybeInputData data, ResultCode result);

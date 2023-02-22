@@ -42,7 +42,7 @@ class FilePickerParent : public PFilePickerParent {
       nsTArray<nsString>&& aFilters, nsTArray<nsString>&& aFilterNames,
       nsTArray<nsString>&& aRawFilters, const nsString& aDisplayDirectory,
       const nsString& aDisplaySpecialDirectory, const nsString& aOkButtonLabel,
-      const int16_t& aCapture);
+      const nsIFilePicker::CaptureTarget& aCapture);
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 

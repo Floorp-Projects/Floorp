@@ -54,13 +54,13 @@ nsFilePickerProxy::AppendFilter(const nsAString& aTitle,
 }
 
 NS_IMETHODIMP
-nsFilePickerProxy::GetCapture(int16_t* aCapture) {
+nsFilePickerProxy::GetCapture(nsIFilePicker::CaptureTarget* aCapture) {
   *aCapture = mCapture;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFilePickerProxy::SetCapture(int16_t aCapture) {
+nsFilePickerProxy::SetCapture(nsIFilePicker::CaptureTarget aCapture) {
   mCapture = aCapture;
   return NS_OK;
 }
