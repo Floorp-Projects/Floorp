@@ -97,7 +97,7 @@ export class ChromeProfileMigrator extends MigratorBase {
     if (this._chromeUserDataPath) {
       return this._chromeUserDataPath;
     }
-    let path = lazy.ChromeMigrationUtils.getDataPath(
+    let path = await lazy.ChromeMigrationUtils.getDataPath(
       this._chromeUserDataPathSuffix
     );
     let exists = await IOUtils.exists(path);

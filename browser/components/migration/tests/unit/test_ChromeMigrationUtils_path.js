@@ -1,28 +1,56 @@
 "use strict";
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
 const { ChromeMigrationUtils } = ChromeUtils.importESModule(
   "resource:///modules/ChromeMigrationUtils.sys.mjs"
 );
 
-function getRootPath() {
-  let dirKey;
-  if (AppConstants.platform == "win") {
-    dirKey = "LocalAppData";
-  } else if (AppConstants.platform == "macosx") {
-    dirKey = "ULibDir";
+const SUB_DIRECTORIES = {
+  win: {
+    Chrome: ["Google", "Chrome", "User Data"],
+    Chromium: ["Chromium", "User Data"],
+    Canary: ["Google", "Chrome SxS", "User Data"],
+  },
+  macosx: {
+    Chrome: ["Application Support", "Google", "Chrome"],
+    Chromium: ["Application Support", "Chromium"],
+    Canary: ["Application Support", "Google", "Chrome Canary"],
+  },
+  linux: {
+    Chrome: [".config", "google-chrome"],
+    Chromium: [".config", "chromium"],
+    Canary: [],
+  },
+};
+
+add_task(async function setup_fakePaths() {
+  let pathId;
+  if (AppConstants.platform == "macosx") {
+    pathId = "ULibDir";
+  } else if (AppConstants.platform == "win") {
+    pathId = "LocalAppData";
   } else {
-    dirKey = "Home";
+    pathId = "Home";
   }
-  return Services.dirsvc.get(dirKey, Ci.nsIFile).path;
-}
+
+  registerFakePath(pathId, do_get_file("chromefiles/", true));
+});
 
 add_task(async function test_getDataPath_function() {
-  let chromeUserDataPath = ChromeMigrationUtils.getDataPath("Chrome");
-  let chromiumUserDataPath = ChromeMigrationUtils.getDataPath("Chromium");
-  let canaryUserDataPath = ChromeMigrationUtils.getDataPath("Canary");
+  let projects = ["Chrome", "Chromium", "Canary"];
+  let rootPath = getRootPath();
+
+  for (let project of projects) {
+    let subfolders = SUB_DIRECTORIES[AppConstants.platform][project];
+
+    await IOUtils.makeDirectory(PathUtils.join(rootPath, ...subfolders), {
+      createAncestor: true,
+      ignoreExisting: true,
+    });
+  }
+
+  let chromeUserDataPath = await ChromeMigrationUtils.getDataPath("Chrome");
+  let chromiumUserDataPath = await ChromeMigrationUtils.getDataPath("Chromium");
+  let canaryUserDataPath = await ChromeMigrationUtils.getDataPath("Canary");
   if (AppConstants.platform == "win") {
     Assert.equal(
       chromeUserDataPath,
@@ -76,7 +104,7 @@ add_task(async function test_getDataPath_function() {
 });
 
 add_task(async function test_getExtensionPath_function() {
-  let extensionPath = ChromeMigrationUtils.getExtensionPath("Default");
+  let extensionPath = await ChromeMigrationUtils.getExtensionPath("Default");
   let expectedPath;
   if (AppConstants.platform == "win") {
     expectedPath = PathUtils.join(
