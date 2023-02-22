@@ -191,6 +191,8 @@ urlbar:
           `UrlbarProviderQuickSuggest`, `RemoteTabs`, `SearchSuggestions`,
           `UrlbarProviderSearchTips`, `TabToSearch`, `TokenAliasEngines`,
           `UrlbarProviderTopSites`, `UnitConversion` and `UnifiedComplete`.
+          If engagement_type is `drop_go` or `paste_go`, this will be null
+          because no results are shown.
         type: string
       engagement_type:
         description: >
