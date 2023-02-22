@@ -47,7 +47,7 @@
       }
     });
 
-    var w = window.open("fetch/index.html");
+    var w = window.open("fetch/index.html?orbEnabled");
     return p;
   }
 
@@ -68,6 +68,8 @@
     ["dom.serviceWorkers.exemptFromPerDomainMax", true],
     ["dom.serviceWorkers.enabled", true],
     ["dom.serviceWorkers.testing.enabled", true],
+    ["browser.opaqueResponseBlocking", true],
+    ["browser.opaqueResponseBlocking.javascriptValidator", true]
   ]}, runTest);
 </script>
 </pre>
