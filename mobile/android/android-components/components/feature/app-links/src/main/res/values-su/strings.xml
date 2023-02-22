@@ -4,6 +4,8 @@
     <string name="mozac_feature_applinks_open_in">Buka di…</string>
     <!-- The description to warn users that their private browsing session changes  -->
     <string name="mozac_feature_applinks_confirm_dialog_title">Buka dina aplikasi? Réngkak anjeun bisa jadi henteu nyamuni.</string>
+    <!-- The title of the prompt that warns users their normal browsing session is trying to open another app  -->
+    <string name="mozac_feature_applinks_normal_confirm_dialog_title">Buka di séjén aplikasi</string>
     <!-- Opens the selected time -->
     <string name="mozac_feature_applinks_confirm_dialog_confirm">Buka</string>
     <!-- Cancels the prompt -->

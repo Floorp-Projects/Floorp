@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Asupkeun data ti papan klip</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">Peungpeuk kontén dina kaca mana waé</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Baca jujutan langlangan anjeun</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Undeur berkas sarta baca jeung ropéa jujutan undeur panyungsi</string>
     <!-- Description for downloads_open permission. -->
