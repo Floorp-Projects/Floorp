@@ -62,6 +62,24 @@ mozilla::ipc::IPCResult FetchEventOpParent::RecvPreloadResponse(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult FetchEventOpParent::RecvPreloadResponseTiming(
+    ResponseTiming&& aTiming) {
+  AssertIsOnBackgroundThread();
+
+  mState.match(
+      [&aTiming](Pending& aPending) {
+        MOZ_ASSERT(aPending.mTiming.isNothing());
+        aPending.mTiming = Some(std::move(aTiming));
+      },
+      [&aTiming](Started& aStarted) {
+        Unused << aStarted.mFetchEventOpProxyParent->SendPreloadResponseTiming(
+            std::move(aTiming));
+      },
+      [](const Finished&) {});
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult FetchEventOpParent::RecvPreloadResponseEnd(
     ResponseEndArgs&& aArgs) {
   AssertIsOnBackgroundThread();

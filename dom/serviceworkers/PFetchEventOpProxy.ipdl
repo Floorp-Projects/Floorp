@@ -25,6 +25,8 @@ protocol PFetchEventOpProxy {
  child:
   async PreloadResponse(ParentToChildInternalResponse aResponse);
 
+  async PreloadResponseTiming(ResponseTiming aTiming);
+
   async PreloadResponseEnd(ResponseEndArgs aArgs);
 };
 
