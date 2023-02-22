@@ -339,7 +339,7 @@ async function OpenLinkInExternal(url) {
 
 let seenDocuments = new WeakSet();
 let documentObserver = {
-    async observe(doc) {
+    observe(doc) {
         if (
             ExtensionCommon.instanceOf(doc, "HTMLDocument") &&
             !seenDocuments.has(doc)
@@ -348,54 +348,59 @@ let documentObserver = {
             let window_ = doc.defaultView;
             let document_ = window_.document;
             if (window_.location.href == "chrome://browser/content/browser.xhtml") {
-                let tabContextMenu = document_.querySelector("#tabContextMenu");
-                let openLinkInExternal = document_.createXULElement("menuitem");
-                openLinkInExternal.id = "open-link-in-external";
-                openLinkInExternal.label = await L10N.formatValue("open-link-in-external-tab-context-menu");
-                openLinkInExternal.addEventListener("command", function(e) {
-                    let window_ = e.currentTarget.ownerGlobal;
-                    OpenLinkInExternal(window_.TabContextMenu.contextTab.linkedBrowser.currentURI.spec);
-                });
-                tabContextMenu.addEventListener("popupshowing", function(e) {
-                    let window_ = e.currentTarget.ownerGlobal;
-                    let scheme = window_.TabContextMenu.contextTab.linkedBrowser.currentURI.scheme;
-                    e.currentTarget.querySelector("#open-link-in-external").hidden = !/https?/.test(scheme);
-                });
-                tabContextMenu.querySelector("#context_sendTabToDevice")
-                    .insertAdjacentElement("afterend", openLinkInExternal);
+                (async () => {
+                    let tabContextMenu = document_.querySelector("#tabContextMenu");
+                    let openLinkInExternal = document_.createXULElement("menuitem");
+                    openLinkInExternal.id = "open-link-in-external";
+                    openLinkInExternal.label = await L10N.formatValue("open-link-in-external-tab-context-menu");
+                    openLinkInExternal.addEventListener("command", function(e) {
+                        let window_ = e.currentTarget.ownerGlobal;
+                        OpenLinkInExternal(window_.TabContextMenu.contextTab.linkedBrowser.currentURI.spec);
+                    });
+                    tabContextMenu.addEventListener("popupshowing", function(e) {
+                        let window_ = e.currentTarget.ownerGlobal;
+                        let scheme = window_.TabContextMenu.contextTab.linkedBrowser.currentURI.scheme;
+                        e.currentTarget.querySelector("#open-link-in-external").hidden = !/https?/.test(scheme);
+                    });
+                    tabContextMenu.querySelector("#context_sendTabToDevice")
+                        .insertAdjacentElement("afterend", openLinkInExternal);
+                })();
             } else if (window_.location.href.startsWith("chrome://browser/content/preferences/preferences.xhtml") ||
                        window_.location.href.startsWith("about:preferences")) {
-                let browsers = [];
-                if (platform === "linux") {
-                    let desktopFilesInfo = await getBrowsersOnLinux();
-                    for (let desktopFileInfo of desktopFilesInfo) {
-                        browsers.push({
-                            name: DesktopFileParser.getCurrentLanguageNameProperty(desktopFileInfo),
-                            id: desktopFileInfo["filename"].replace(/\.desktop$/, ""),
-                        });
+                window_.addEventListener("pageshow", async function() {
+                    await window_.gMainPane.initialized;
+                    let browsers = [];
+                    if (platform === "linux") {
+                        let desktopFilesInfo = await getBrowsersOnLinux();
+                        for (let desktopFileInfo of desktopFilesInfo) {
+                            browsers.push({
+                                name: DesktopFileParser.getCurrentLanguageNameProperty(desktopFileInfo),
+                                id: desktopFileInfo["filename"].replace(/\.desktop$/, ""),
+                            });
+                        }
+                    } else if (platform === "win") {
+                        let startMenusInternet = getBrowsersOnWindows();
+                        for (let startMenuInternet of startMenusInternet) {
+                            browsers.push({
+                                name: startMenuInternet["name"],
+                                id: startMenuInternet["keyName"],
+                            });
+                        }
                     }
-                } else if (platform === "win") {
-                    let startMenusInternet = getBrowsersOnWindows();
-                    for (let startMenuInternet of startMenusInternet) {
-                        browsers.push({
-                            name: startMenuInternet["name"],
-                            id: startMenuInternet["keyName"],
-                        });
+
+                    let options = document_.querySelector("#openLinkInExternalSelectBrowser > menupopup");
+                    for (let browser of browsers) {
+                        let elem = document_.createXULElement("menuitem");
+                        elem.setAttribute("value", browser.id);
+                        elem.setAttribute("label", browser.name);
+                        options.appendChild(elem);
                     }
-                }
 
-                let options = document_.querySelector("#openLinkInExternalSelectBrowser > menupopup");
-                for (let browser of browsers) {
-                    let elem = document_.createXULElement("menuitem");
-                    elem.setAttribute("value", browser.id);
-                    elem.setAttribute("label", browser.name);
-                    options.appendChild(elem);
-                }
-
-                // Triggers a command event and updates the display.
-                options.querySelector(
-                    `[value="${Services.prefs.getStringPref("floorp.openLinkInExternal.browserId", "")}"]`
-                ).dispatchEvent(new Event("command"));
+                    // Triggers a command event and updates the display.
+                    options.querySelector(
+                        `[value="${Services.prefs.getStringPref("floorp.openLinkInExternal.browserId", "")}"]`
+                    ).dispatchEvent(new Event("command"));
+                }, { once: true });
             }
         }
     },
