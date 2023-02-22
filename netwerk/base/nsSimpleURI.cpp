@@ -297,12 +297,9 @@ nsSimpleURI::GetScheme(nsACString& result) {
   return NS_OK;
 }
 
-nsresult nsSimpleURI::SetScheme(const nsACString& input) {
-  // Strip tabs, newlines, carriage returns from input
-  nsAutoCString scheme(input);
-  scheme.StripTaggedASCII(ASCIIMask::MaskCRLFTab());
-
-  if (!net_IsValidScheme(scheme)) {
+nsresult nsSimpleURI::SetScheme(const nsACString& scheme) {
+  const nsPromiseFlatCString& flat = PromiseFlatCString(scheme);
+  if (!net_IsValidScheme(flat)) {
     NS_WARNING("the given url scheme contains invalid characters");
     return NS_ERROR_MALFORMED_URI;
   }
@@ -468,12 +465,6 @@ nsresult nsSimpleURI::SetRef(const nsACString& aRef) {
     // Empty string means to remove ref completely.
     mIsRefValid = false;
     mRef.Truncate();  // invariant: mRef should be empty when it's not valid
-
-    // Trim trailing invalid chars when ref and query are removed
-    if (mRef.IsEmpty() && mQuery.IsEmpty()) {
-      TrimTrailingCharactersFromPath();
-    }
-
     return NS_OK;
   }
 
@@ -720,12 +711,6 @@ nsresult nsSimpleURI::SetQuery(const nsACString& aQuery) {
     // Empty string means to remove query completely.
     mIsQueryValid = false;
     mQuery.Truncate();  // invariant: mQuery should be empty when it's not valid
-
-    // Trim trailing invalid chars when ref and query are removed
-    if (mRef.IsEmpty() && mQuery.IsEmpty()) {
-      TrimTrailingCharactersFromPath();
-    }
-
     return NS_OK;
   }
 
@@ -744,22 +729,6 @@ nsresult nsSimpleURI::SetQuery(const nsACString& aQuery) {
 nsresult nsSimpleURI::SetQueryWithEncoding(const nsACString& aQuery,
                                            const Encoding* aEncoding) {
   return SetQuery(aQuery);
-}
-
-void nsSimpleURI::TrimTrailingCharactersFromPath() {
-  const auto* start = mPath.BeginReading();
-  const auto* end = mPath.EndReading();
-
-  auto charFilter = [](char c) { return static_cast<uint8_t>(c) > 0x20; };
-  const auto* newEnd =
-      std::find_if(std::reverse_iterator<decltype(end)>(end),
-                   std::reverse_iterator<decltype(start)>(start), charFilter)
-          .base();
-
-  auto trailCount = std::distance(newEnd, end);
-  if (trailCount) {
-    mPath.Truncate(mPath.Length() - trailCount);
-  }
 }
 
 // Queries this list of interfaces. If none match, it queries mURI.

@@ -98,7 +98,6 @@ class nsSimpleURI : public nsIURI, public nsISerializable, public nsISizeOf {
   virtual nsresult CloneInternal(RefHandlingEnum refHandlingMode,
                                  const nsACString& newRef, nsIURI** result);
 
-  void TrimTrailingCharactersFromPath();
   nsresult EscapeAndSetPathQueryRef(const nsACString& aPath);
   nsresult SetPathQueryRefInternal(const nsACString& aPath);
 
