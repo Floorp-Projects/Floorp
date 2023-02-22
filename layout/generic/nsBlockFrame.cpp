@@ -2647,22 +2647,10 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
   // See: https://www.w3.org/TR/css-break-3/#btw-blocks
   const nsPresContext* const presCtx = aState.mPresContext;
   const bool canBreakForPageNames =
-      aState.mReflowInput.mFlags.mCanHaveClassABreakpoints &&
       aState.mReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE &&
+      presCtx->IsPaginated() && StaticPrefs::layout_css_named_pages_enabled() &&
       presCtx->GetPresShell()->GetRootFrame()->GetWritingMode().IsVertical() ==
           GetWritingMode().IsVertical();
-
-  // ReflowInput.mFlags.mCanHaveClassABreakpoints should respect the named
-  // pages pref and presCtx->IsPaginated, so we did not explicitly check these
-  // above when setting canBreakForPageNames.
-  if (canBreakForPageNames) {
-    MOZ_ASSERT(presCtx->IsPaginated(),
-               "canBreakForPageNames should not be set during non-paginated "
-               "reflow");
-    MOZ_ASSERT(StaticPrefs::layout_css_named_pages_enabled(),
-               "canBreakForPageNames should not be set when "
-               "layout.css.named_pages.enabled is false");
-  }
 
   // Reflow the lines that are already ours
   for (; line != line_end; ++line, aState.AdvanceToNextLine()) {
