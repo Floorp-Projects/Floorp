@@ -14,7 +14,7 @@
 #include "TextLeafAccessible.h"
 
 #import "mozTextAccessible.h"
-#import "LegacyTextMarker.h"
+#import "GeckoTextMarker.h"
 #import "MOXTextMarkerDelegate.h"
 
 using namespace mozilla;
@@ -156,7 +156,7 @@ inline NSString* ToNSString(id aValue) {
   }
 
   GeckoTextMarkerRange fromStartToSelection(
-      GeckoTextMarker(mGeckoAccessible, 0), selection.mStart);
+      GeckoTextMarker(mGeckoAccessible, 0), selection.Start());
 
   return [NSValue valueWithRange:NSMakeRange(fromStartToSelection.Length(),
                                              selection.Length())];
@@ -407,38 +407,39 @@ inline NSString* ToNSString(id aValue) {
   return [self moxValue] == nil || [super moxIgnoreWithParent:parent];
 }
 
+static GeckoTextMarkerRange TextMarkerSubrange(Accessible* aAccessible,
+                                               NSValue* aRange) {
+  GeckoTextMarkerRange textMarkerRange(aAccessible);
+  GeckoTextMarker start = textMarkerRange.Start();
+  GeckoTextMarker end = textMarkerRange.End();
+
+  NSRange r = [aRange rangeValue];
+  start.Offset() += r.location;
+  end.Offset() = start.Offset() + r.location + r.length;
+
+  return GeckoTextMarkerRange(start, end);
+}
+
 - (NSString*)moxStringForRange:(NSValue*)range {
   MOZ_ASSERT(mGeckoAccessible);
-
-  NSRange r = [range rangeValue];
-  GeckoTextMarkerRange textMarkerRange(mGeckoAccessible);
-  textMarkerRange.mStart.mOffset += r.location;
-  textMarkerRange.mEnd.mOffset =
-      textMarkerRange.mStart.mOffset + r.location + r.length;
+  GeckoTextMarkerRange textMarkerRange =
+      TextMarkerSubrange(mGeckoAccessible, range);
 
   return textMarkerRange.Text();
 }
 
 - (NSAttributedString*)moxAttributedStringForRange:(NSValue*)range {
   MOZ_ASSERT(mGeckoAccessible);
-
-  NSRange r = [range rangeValue];
-  GeckoTextMarkerRange textMarkerRange(mGeckoAccessible);
-  textMarkerRange.mStart.mOffset += r.location;
-  textMarkerRange.mEnd.mOffset =
-      textMarkerRange.mStart.mOffset + r.location + r.length;
+  GeckoTextMarkerRange textMarkerRange =
+      TextMarkerSubrange(mGeckoAccessible, range);
 
   return textMarkerRange.AttributedText();
 }
 
 - (NSValue*)moxBoundsForRange:(NSValue*)range {
   MOZ_ASSERT(mGeckoAccessible);
-
-  NSRange r = [range rangeValue];
-  GeckoTextMarkerRange textMarkerRange(mGeckoAccessible);
-
-  textMarkerRange.mStart.mOffset += r.location;
-  textMarkerRange.mEnd.mOffset = textMarkerRange.mStart.mOffset + r.length;
+  GeckoTextMarkerRange textMarkerRange =
+      TextMarkerSubrange(mGeckoAccessible, range);
 
   return textMarkerRange.Bounds();
 }

@@ -11,6 +11,7 @@
 #import "MacUtils.h"
 #import "mozView.h"
 #import "MOXSearchInfo.h"
+#import "MOXTextMarkerDelegate.h"
 #import "MOXWebAreaAccessible.h"
 #import "mozTextAccessible.h"
 #import "mozRootAccessible.h"
@@ -26,6 +27,7 @@
 #include "mozilla/dom/BrowserParent.h"
 #include "OuterDocAccessible.h"
 #include "nsChildView.h"
+#include "xpcAccessibleMacInterface.h"
 
 #include "nsRect.h"
 #include "nsCocoaUtils.h"
