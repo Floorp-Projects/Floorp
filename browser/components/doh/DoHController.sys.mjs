@@ -610,7 +610,9 @@ export const DoHController = {
         break;
       case NATIVE_FALLBACK_WARNING_PREF:
       case NATIVE_FALLBACK_WARNING_HEURISTIC_LIST_PREF:
-        this.runHeuristics("native-fallback-warning-changed");
+        if (this._heuristicsAreEnabled) {
+          await this.runHeuristics("native-fallback-warning-pref-changed");
+        }
         break;
     }
   },
