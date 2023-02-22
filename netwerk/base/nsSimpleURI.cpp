@@ -297,9 +297,12 @@ nsSimpleURI::GetScheme(nsACString& result) {
   return NS_OK;
 }
 
-nsresult nsSimpleURI::SetScheme(const nsACString& scheme) {
-  const nsPromiseFlatCString& flat = PromiseFlatCString(scheme);
-  if (!net_IsValidScheme(flat)) {
+nsresult nsSimpleURI::SetScheme(const nsACString& input) {
+  // Strip tabs, newlines, carriage returns from input
+  nsAutoCString scheme(input);
+  scheme.StripTaggedASCII(ASCIIMask::MaskCRLFTab());
+
+  if (!net_IsValidScheme(scheme)) {
     NS_WARNING("the given url scheme contains invalid characters");
     return NS_ERROR_MALFORMED_URI;
   }
