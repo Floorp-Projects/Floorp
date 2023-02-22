@@ -26,6 +26,7 @@ static void dump(const T& data) {
 
 BEGIN_TEST(testCompileScript) {
   CHECK(testCompile());
+  CHECK(testNonsyntacticCompile());
   CHECK(testCompileModule());
   CHECK(testPrepareForInstantiate());
 
@@ -98,6 +99,36 @@ bool testCompile() {
     CHECK(error.lineno == 1);
     CHECK(error.column == 9);
   }
+
+  return true;
+}
+
+bool testNonsyntacticCompile() {
+  const char* chars =
+      "function f() { return x; }"
+      "f();";
+
+  JS::SourceText<mozilla::Utf8Unit> srcBuf;
+  CHECK(srcBuf.init(cx, chars, strlen(chars), JS::SourceOwnership::Borrowed));
+
+  JS::CompileOptions options(cx);
+  options.setNonSyntacticScope(true);
+
+  JS::FrontendContext* fc = JS::NewFrontendContext();
+  CHECK(fc);
+  auto destroyFc =
+      mozilla::MakeScopeExit([fc] { JS::DestroyFrontendContext(fc); });
+
+  js::UniquePtr<js::frontend::CompilationInput> stencilInput;
+  RefPtr<JS::Stencil> stencil = CompileGlobalScriptToStencil(
+      fc, options, cx->stackLimitForCurrentPrincipal(), srcBuf, stencilInput);
+  CHECK(stencil);
+
+  JS::InstantiateOptions instantiateOptions(options);
+  JS::RootedScript script(
+      cx, JS::InstantiateGlobalStencil(cx, instantiateOptions, stencil));
+  CHECK(script);
+  CHECK(script->hasNonSyntacticScope());
 
   return true;
 }
