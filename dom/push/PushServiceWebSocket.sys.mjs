@@ -121,6 +121,9 @@ const STATE_WAITING_FOR_HELLO = 2;
 const STATE_READY = 3;
 
 export var PushServiceWebSocket = {
+  QueryInterface: ChromeUtils.generateQI(["nsINamed", "nsIObserver"]),
+  name: "PushServiceWebSocket",
+
   _mainPushService: null,
   _serverURI: null,
   _currentlyRegistering: new Set(),

@@ -531,6 +531,10 @@ nsPlacesExpiration.prototype = {
     }
   },
 
+  // nsINamed
+
+  name: "nsPlacesExpiration",
+
   // nsITimerCallback
 
   notify() {
@@ -929,8 +933,9 @@ nsPlacesExpiration.prototype = {
   classID: Components.ID("705a423f-2f69-42f3-b9fe-1517e0dee56f"),
 
   QueryInterface: ChromeUtils.generateQI([
+    "nsINamed",
     "nsIObserver",
-    "nsITimerCallback",
     "nsISupportsWeakReference",
+    "nsITimerCallback",
   ]),
 };
