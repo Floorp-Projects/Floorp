@@ -11,10 +11,6 @@ const systemPrincipal = Components.Constructor(
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { normalize, dirname } = ChromeUtils.import(
-  "resource://gre/modules/osfile/ospath_unix.jsm"
-);
-
 const lazy = {};
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -593,4 +589,52 @@ export function Loader(options) {
   };
 
   return Object.create(null, returnObj);
+}
+
+// NB: These methods are from the UNIX implementation of OS.Path. Refactoring
+//     this module to not use path methods on stringly-typed URIs is
+//     non-trivial.
+function dirname(path) {
+  let index = path.lastIndexOf("/");
+  if (index == -1) {
+    return ".";
+  }
+  while (index >= 0 && path[index] == "/") {
+    --index;
+  }
+  return path.slice(0, index + 1);
+}
+
+function normalize(path) {
+  const stack = [];
+  let absolute;
+  if (path.length >= 0 && path[0] == "/") {
+    absolute = true;
+  } else {
+    absolute = false;
+  }
+  path.split("/").forEach(function(v) {
+    switch (v) {
+      case "":
+      case ".": // fallthrough
+        break;
+      case "..":
+        if (!stack.length) {
+          if (absolute) {
+            throw new Error("Path is ill-formed: attempting to go past root");
+          } else {
+            stack.push("..");
+          }
+        } else if (stack[stack.length - 1] == "..") {
+          stack.push("..");
+        } else {
+          stack.pop();
+        }
+        break;
+      default:
+        stack.push(v);
+    }
+  });
+  const string = stack.join("/");
+  return absolute ? "/" + string : string;
 }

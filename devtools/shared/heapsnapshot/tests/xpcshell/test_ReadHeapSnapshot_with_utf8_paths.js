@@ -3,22 +3,21 @@
 
 // Test that we can read core dumps with a UTF8 path into HeapSnapshot instances.
 /* eslint-disable strict */
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 add_task(async function() {
   const fileNameWithRussianCharacters =
     "Снимок памяти Click.ru 08.06.2020 (Firefox dump).fxsnapshot";
-  const filePathWithRussianCharacters = OS.Path.join(
-    OS.Constants.Path.tmpDir,
+  const filePathWithRussianCharacters = PathUtils.join(
+    PathUtils.tempDir,
     fileNameWithRussianCharacters
   );
 
   const filePath = ChromeUtils.saveHeapSnapshot({ globals: [this] });
   ok(true, "Should be able to save a snapshot.");
 
-  await OS.File.copy(filePath, filePathWithRussianCharacters);
+  await IOUtils.copy(filePath, filePathWithRussianCharacters);
 
   ok(
-    await OS.File.exists(filePathWithRussianCharacters),
+    await IOUtils.exists(filePathWithRussianCharacters),
     `We could copy the file to the expected path ${filePathWithRussianCharacters}`
   );
 
