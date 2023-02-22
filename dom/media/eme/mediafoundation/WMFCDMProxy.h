@@ -24,8 +24,7 @@ class WMFCDMProxy : public CDMProxy {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WMFCDMProxy, override)
 
   WMFCDMProxy(dom::MediaKeys* aKeys, const nsAString& aKeySystem,
-              bool aDistinctiveIdentifierRequired,
-              bool aPersistentStateRequired);
+              const dom::MediaKeySystemConfiguration& aConfig);
 
   // CDMProxy interface
   void Init(PromiseId aPromiseId, const nsAString& aOrigin,
@@ -117,6 +116,8 @@ class WMFCDMProxy : public CDMProxy {
   RefPtr<WMFCDMImpl> mCDM;
 
   MozPromiseRequestHolder<MFCDMChild::SessionPromise> mCreateSessionRequest;
+
+  const dom::MediaKeySystemConfiguration mConfig;
 };
 
 }  // namespace mozilla

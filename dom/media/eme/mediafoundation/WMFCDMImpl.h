@@ -37,8 +37,9 @@ class WMFCDMImpl final {
   using InitPromise = GenericPromise;
   struct InitParams {
     nsString mOrigin;
-    bool mPersistentState;
-    bool mDistinctiveID;
+    CopyableTArray<nsString> mInitDataTypes;
+    bool mPersistentStateRequired;
+    bool mDistinctiveIdentifierRequired;
     bool mHWSecure;
   };
 

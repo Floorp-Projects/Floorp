@@ -12,10 +12,12 @@
 namespace mozilla {
 
 WMFCDMProxy::WMFCDMProxy(dom::MediaKeys* aKeys, const nsAString& aKeySystem,
-                         bool aDistinctiveIdentifierRequired,
-                         bool aPersistentStateRequired)
-    : CDMProxy(aKeys, aKeySystem, aDistinctiveIdentifierRequired,
-               aPersistentStateRequired) {
+                         const dom::MediaKeySystemConfiguration& aConfig)
+    : CDMProxy(
+          aKeys, aKeySystem,
+          aConfig.mDistinctiveIdentifier == dom::MediaKeysRequirement::Required,
+          aConfig.mPersistentState == dom::MediaKeysRequirement::Required),
+      mConfig(aConfig) {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
@@ -35,9 +37,9 @@ void WMFCDMProxy::Init(PromiseId aPromiseId, const nsAString& aOrigin,
   }
 
   mCDM = MakeRefPtr<WMFCDMImpl>(mKeySystem);
-  WMFCDMImpl::InitParams params{nsString(aOrigin), mPersistentStateRequired,
-                                mDistinctiveIdentifierRequired,
-                                false /* HW secure? */};
+  WMFCDMImpl::InitParams params{
+      nsString(aOrigin), mConfig.mInitDataTypes, mPersistentStateRequired,
+      mDistinctiveIdentifierRequired, false /* HW secure? */};
   mCDM->Init(params)->Then(
       mMainThread, __func__,
       [self = RefPtr{this}, this, aPromiseId](const bool) {
