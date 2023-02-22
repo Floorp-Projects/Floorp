@@ -97,59 +97,35 @@ function testClone() {
     });
 }
 
-function testCloneUnfiltered(orbEnabled) {
+function testCloneUnfiltered() {
   var url =
     "http://example.com/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?status=200";
+  return fetch(url, { mode: "no-cors" }).then(function(response) {
+    // By default the chrome-only function should not be available.
+    is(response.type, "opaque", "response should be opaque");
+    is(
+      response.cloneUnfiltered,
+      undefined,
+      "response.cloneUnfiltered should be undefined"
+    );
 
-  // Due to the test step and the fact this script is imported by worker,
-  // so we had to do some extra parsing to get whether orbEnabled has
-  // been provided.
-  // location.search could be something like: ?script=test_response.js?orbEnabled
-  var isORBEnabled;
-  if (orbEnabled !== undefined) {
-    // Window Context
-    isORBEnabled = orbEnabled;
-  } else {
-    // Worker Context
-    const params = new URLSearchParams(location.search);
-    isORBEnabled = params.has("orbEnabled");
-  }
+    // When the test is run in a worker context we can't actually try to use
+    // the chrome-only function.  SpecialPowers is not defined.
+    if (typeof SpecialPowers !== "object") {
+      return;
+    }
 
-  return fetch(url, { mode: "no-cors" })
-    .then(function(response) {
-      // By default the chrome-only function should not be available.
-      ok(!isORBEnabled, "This request should be blocked when ORB is enabled");
-      is(response.type, "opaque", "response should be opaque");
-      is(
-        response.cloneUnfiltered,
-        undefined,
-        "response.cloneUnfiltered should be undefined"
-      );
-
-      // When the test is run in a worker context we can't actually try to use
-      // the chrome-only function.  SpecialPowers is not defined.
-      if (typeof SpecialPowers !== "object") {
-        return;
-      }
-
-      // With a chrome code, however, should be able to get an unfiltered response.
-      var chromeResponse = SpecialPowers.wrap(response);
-      is(
-        typeof chromeResponse.cloneUnfiltered,
-        "function",
-        "chromeResponse.cloneFiltered should be a function"
-      );
-      var unfiltered = chromeResponse.cloneUnfiltered();
-      is(unfiltered.type, "default", "unfiltered response should be default");
-      is(unfiltered.status, 200, "unfiltered response should have 200 status");
-    })
-    .catch(function(e) {
-      ok(
-        isORBEnabled,
-        "This request should not be blocked when ORB is disabled"
-      );
-      is(e.name, "TypeError", "ORB should throw TypeError");
-    });
+    // With a chrome code, however, should be able to get an unfiltered response.
+    var chromeResponse = SpecialPowers.wrap(response);
+    is(
+      typeof chromeResponse.cloneUnfiltered,
+      "function",
+      "chromeResponse.cloneFiltered should be a function"
+    );
+    var unfiltered = chromeResponse.cloneUnfiltered();
+    is(unfiltered.type, "default", "unfiltered response should be default");
+    is(unfiltered.status, 200, "unfiltered response should have 200 status");
+  });
 }
 
 function testError() {
@@ -360,33 +336,7 @@ function runTest() {
       .then(testBodyUsed)
       .then(testBodyExtraction)
       .then(testClone)
-      .then(async function() {
-        const inWindowContext = typeof SpecialPowers === "object";
-        // We want to use SpecialPowers to flip the prefs directly
-        // if we are in window context.
-        if (inWindowContext) {
-          return SpecialPowers.pushPrefEnv({
-            set: [
-              ["browser.opaqueResponseBlocking", true],
-              ["browser.opaqueResponseBlocking.javascriptValidator", true],
-            ],
-          })
-            .then(function() {
-              return testCloneUnfiltered(true);
-            })
-            .then(function() {
-              return SpecialPowers.pushPrefEnv({
-                set: [["browser.opaqueResponseBlocking", false]],
-              });
-            })
-            .then(function() {
-              return testCloneUnfiltered(false);
-            });
-        }
-        // Worker Context uses query strings to determine the
-        // status of ORB.
-        return testCloneUnfiltered();
-      })
+      .then(testCloneUnfiltered)
       // Put more promise based tests here.
       .catch(function(e) {
         dump("### ### " + e + "\n");

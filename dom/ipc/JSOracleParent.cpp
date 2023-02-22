@@ -28,16 +28,7 @@ void JSOracleParent::WithJSOracle(
       });
 }
 
-void JSOracleParent::ActorDestroy(ActorDestroyReason aReason) {
-  // Given an actor can only be bound to one process,
-  // if the utility process crashes and we create a new one,
-  // we can't reuse the same JSOracleParent instance for it,
-  // so we always create a new JSOracleParent to replace
-  // the existing one.
-  if (aReason == ActorDestroyReason::AbnormalShutdown) {
-    sOracleSingleton = new JSOracleParent();
-  }
-}
+void JSOracleParent::ActorDestroy(ActorDestroyReason aReason) {}
 
 /* static */
 JSOracleParent* JSOracleParent::GetSingleton() {

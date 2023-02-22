@@ -65,93 +65,33 @@
 
 <div class="column">
 <h2>Quirks</h2>
-<div id="quirks-placeholder"></div>
+<iframe id="quirks" src="ccd-quirks.html"></iframe>
 </div>
 
 <div class="column">
 <h2>Standards</h2>
-<div id="standards-placeholder"></div>
+<iframe id="standards" src="ccd-standards.html"></iframe>
 </div>
 
 <script type="application/javascript">
 
-const COLOR = {red: "rgb(255, 0, 0)", lime: "rgb(0, 255, 0)"};
-
-// Cross origin requests with text/html as the contentType.
-// These requests will be blocked by ORB (when ORB is enabled),
-// thus the color of the element is not going to be changed.
-const BLOCKED_BY_ORB = ["JD1i", "JD1l", "JD2i", "JD2l"];
-
 /** Test for Bug 524223 **/
 function check_iframe(ifr) {
-  var doc = ifr.contentDocument;
-  var cases = doc.getElementsByTagName("p");
+    var doc = ifr.contentDocument;
+    var cases = doc.getElementsByTagName("p");
+    for (var i = 0; i < cases.length; i++) {
+	var color = doc.defaultView.getComputedStyle(cases[i])
+	    .getPropertyValue("background-color");
 
-  for (var i = 0; i < cases.length; i++) {
-	  var color = doc.defaultView.getComputedStyle(cases[i])
-        .getPropertyValue("background-color");
-
-    var id = cases[i].id;
-    // only 'quirks' can have requests that are blocked by ORB.
-    if (BLOCKED_BY_ORB.includes(id) && ifr.id === "quirks") {
-	    is(color, COLOR.red, ifr.id + " " + id);
-    } else {
-	    is(color, COLOR.lime, ifr.id + " " + id);
+	is(color, "rgb(0, 255, 0)", ifr.id + " " + cases[i].id);
     }
-  }
 }
 
 SimpleTest.waitForExplicitFinish();
-
-function insertIFrames(src, id) {
-  const quirks = document.createElement("iframe");
-  quirks.src = "ccd-quirks.html";
-  quirks.id = "quirks";
-  document.getElementById("quirks-placeholder").replaceWith(quirks);
-
-  const standards = document.createElement("iframe");
-  standards.src = "ccd-standards.html";
-  standards.id = "standards";
-  document.getElementById("standards-placeholder").replaceWith(standards);
-}
-
-var hasQuirksLoaded = false;
-var hasStandardsLoaded = false;
-
-function quirksLoaded() {
-  hasQuirksLoaded = true;
-  MaybeRunTest();
-}
-
-function standardsLoaded() {
-  hasStandardsLoaded = true;
-  MaybeRunTest();
-}
-
-function runTest() {
-  check_iframe(document.getElementById("quirks"));
-  check_iframe(document.getElementById("standards"));
-}
-
-function MaybeRunTest() {
-  if (!hasQuirksLoaded || !hasStandardsLoaded) {
-      return;
-  }
-
-  runTest();
-  SimpleTest.finish();
-}
-
-window.onload = async function() {
-  await SpecialPowers.pushPrefEnv(
-    {
-      set: [
-        ['browser.opaqueResponseBlocking', true],
-        ['browser.opaqueResponseBlocking.javascriptValidator', true],
-      ],
-    }
-  );
-  insertIFrames();
+window.onload = function() {
+    check_iframe(document.getElementById("quirks"));
+    check_iframe(document.getElementById("standards"));
+    SimpleTest.finish();
 };
 </script>
 </body>
