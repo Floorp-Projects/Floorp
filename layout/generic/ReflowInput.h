@@ -562,6 +562,10 @@ struct ReflowInput : public SizeComputationInput {
     // children's block-size (after reflowing them).
     // https://drafts.csswg.org/css-sizing-4/#aspect-ratio-minimum
     bool mIsBSizeSetByAspectRatio : 1;
+
+    // If true, then children of this frame can generate class A breakpoints
+    // for paginated reflow.
+    bool mCanHaveClassABreakpoints : 1;
   };
   Flags mFlags;
 

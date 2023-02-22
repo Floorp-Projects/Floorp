@@ -140,6 +140,9 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext, nsIFrame* aFrame,
   if (!aFlags.contains(InitFlag::CallerWillInit)) {
     Init(aPresContext);
   }
+  // If we encounter a PageContent frame, this will be flipped on and the pref
+  // layout.css.named-pages.enabled will be checked.
+  mFlags.mCanHaveClassABreakpoints = false;
 }
 
 // Initialize a reflow input for a child frame's reflow. Some state
@@ -198,6 +201,49 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
   mFlags.mDummyParentReflowInput = false;
   mFlags.mStaticPosIsCBOrigin = aFlags.contains(InitFlag::StaticPosIsCBOrigin);
   mFlags.mIOffsetsNeedCSSAlign = mFlags.mBOffsetsNeedCSSAlign = false;
+
+  // aPresContext->IsPaginated() and the named pages pref should have been
+  // checked when constructing the root ReflowInput.
+  if (aParentReflowInput.mFlags.mCanHaveClassABreakpoints) {
+    MOZ_ASSERT(aPresContext->IsPaginated(),
+               "mCanHaveClassABreakpoints set during non-paginated reflow.");
+    MOZ_ASSERT(StaticPrefs::layout_css_named_pages_enabled(),
+               "mCanHaveClassABreakpoints should not be set when "
+               "layout.css.named_pages.enabled is false");
+  }
+
+  {
+    using mozilla::LayoutFrameType;
+    switch (mFrame->Type()) {
+      case LayoutFrameType::PageContent:
+        // PageContent requires paginated reflow.
+        MOZ_ASSERT(aPresContext->IsPaginated(),
+                   "nsPageContentFrame should not be in non-paginated reflow");
+        MOZ_ASSERT(!mFlags.mCanHaveClassABreakpoints,
+                   "mFlags.mCanHaveClassABreakpoints should have been "
+                   "initalized to false before we found nsPageContentFrame");
+        mFlags.mCanHaveClassABreakpoints =
+            StaticPrefs::layout_css_named_pages_enabled();
+        break;
+      case LayoutFrameType::Block:          // FALLTHROUGH
+      case LayoutFrameType::Canvas:         // FALLTHROUGH
+      case LayoutFrameType::FlexContainer:  // FALLTHROUGH
+      case LayoutFrameType::GridContainer:
+        // This frame type can have class A breakpoints, inherit this flag
+        // from the parent (this is done for all flags during construction).
+        // This also includes Canvas frames, as each PageContent frame always
+        // has exactly one child which is a Canvas frame.
+        // Do NOT include the subclasses of BlockFrame here, as the ones for
+        // which this could be applicable (ColumnSetWrapper and the MathML
+        // frames) cannot have class A breakpoints.
+        MOZ_ASSERT(mFlags.mCanHaveClassABreakpoints ==
+                   aParentReflowInput.mFlags.mCanHaveClassABreakpoints);
+        break;
+      default:
+        mFlags.mCanHaveClassABreakpoints = false;
+        break;
+    }
+  }
 
   if (aFlags.contains(InitFlag::DummyParentReflowInput) ||
       (mParentReflowInput->mFlags.mDummyParentReflowInput &&
