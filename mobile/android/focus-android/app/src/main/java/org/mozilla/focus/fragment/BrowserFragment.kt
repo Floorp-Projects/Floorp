@@ -926,7 +926,7 @@ class BrowserFragment :
             },
             showConnectionInfo = ::showConnectionInfo,
             showCookieBannerExceptionsDetailsPanel = ::showCookieBannerExceptionDetailsPanel,
-        ).also { currentEtp -> currentEtp.show() }
+        ).also { currentEtp -> context?.let { currentEtp.show() } }
     }
 
     private fun reloadCurrentTab() {
