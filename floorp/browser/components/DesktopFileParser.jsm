@@ -7,7 +7,10 @@ const EXPORTED_SYMBOLS = ["DesktopFileParser"];
 
 
 const { FileUtils } = ChromeUtils.import(
-  "resource://gre/modules/FileUtils.jsm"
+    "resource://gre/modules/FileUtils.jsm"
+);
+const env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
 );
 
 const DesktopFileParser = {
@@ -46,5 +49,53 @@ const DesktopFileParser = {
             }
         }
         return parsed;
+    },
+    getCurrentLanguageNameProperty(desktopFileInfo) {
+        let lang_env = env.get("LANG");
+        if (lang_env !=== "") {
+            let lang_env_without_codeset;
+            let lang_env_without_codeset_and_modifier;
+            let lang_env_without_country_and_codeset;
+            let lang_env_without_country_and_codeset_and_modifier;
+            {
+                let lang = lang_env.match(/^[a-zA-Z\_]+/);
+                let modifier = lang_env.match(/@[a-zA-Z\_]+$/);
+                if (lang) {
+                    lang_env_without_codeset = lang[0];
+                    lang_env_without_codeset_and_modifier = lang[0];
+                    lang_env_without_country_and_codeset = lang[0].split("_")[0];
+                    lang_env_without_country_and_codeset_and_modifier = lang[0].split("_")[0];
+                    if (modifier) {
+                        lang_env_without_codeset += modifier[0];
+                        lang_env_without_country_and_codeset += modifier[0];
+                    }
+                }
+            }
+            if (lang_env_without_codeset) {
+                let name_value = desktopFileInfo["fileInfo"]["Desktop Entry"][`Name[${lang_env_without_codeset}]`];
+                if (name_value) {
+                    return name_value;
+                }
+            }
+            if (lang_env_without_codeset_and_modifier) {
+                let name_value = desktopFileInfo["fileInfo"]["Desktop Entry"][`Name[${lang_env_without_codeset_and_modifier}]`];
+                if (name_value) {
+                    return name_value;
+                }
+            }
+            if (lang_env_without_country_and_codeset) {
+                let name_value = desktopFileInfo["fileInfo"]["Desktop Entry"][`Name[${lang_env_without_country_and_codeset}]`];
+                if (name_value) {
+                    return name_value;
+                }
+            }
+            if (lang_env_without_country_and_codeset_and_modifier) {
+                let name_value = desktopFileInfo["fileInfo"]["Desktop Entry"][`Name[${lang_env_without_country_and_codeset_and_modifier}]`];
+                if (name_value) {
+                    return name_value;
+                }
+            }
+        }
+        return desktopFileInfo["fileInfo"]["Desktop Entry"]["Name"];
     }
 };
