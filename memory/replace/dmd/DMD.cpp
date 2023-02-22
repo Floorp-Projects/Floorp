@@ -636,7 +636,7 @@ static uint32_t gGCStackTraceTableWhenSizeExceeds = 4 * 1024;
     // when it is called during static initialization (see bug 1241684).
     //
     // This code is cribbed from the Gecko Profiler, which also uses
-    // FramePointerStackWalk() on Win32: Registers::SyncPopulate() for the
+    // FramePointerStackWalk() on Win32: REGISTERS_SYNC_POPULATE() for the
     // frame pointer, and GetStackTop() for the stack end.
     CONTEXT context;
     RtlCaptureContext(&context);
@@ -650,7 +650,7 @@ static uint32_t gGCStackTraceTableWhenSizeExceeds = 4 * 1024;
     // changes in libunwind.
     //
     // This code is cribbed from the Gecko Profiler, which also uses
-    // FramePointerStackWalk() on Mac: Registers::SyncPopulate() for the frame
+    // FramePointerStackWalk() on Mac: REGISTERS_SYNC_POPULATE() for the frame
     // pointer, and GetStackTop() for the stack end.
 #  pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wframe-address"

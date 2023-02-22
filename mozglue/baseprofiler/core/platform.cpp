@@ -17,7 +17,7 @@
 //   call (profiler_get_backtrace()). It involves writing a stack trace and
 //   little else into a temporary ProfileBuffer, and wrapping that up in a
 //   ProfilerBacktrace that can be subsequently used in a marker. The sampling
-//   is done on-thread, and so Registers::SyncPopulate() is used to get the
+//   is done on-thread, and so REGISTERS_SYNC_POPULATE() is used to get the
 //   register values.
 //
 // - A "backtrace" sample is the simplest kind. It is done in response to an
@@ -105,7 +105,7 @@
 // No stack-walking in baseprofiler on linux, android, bsd.
 // APIs now make it easier to capture backtraces from the Base Profiler, which
 // is currently not supported on these platform, and would lead to a MOZ_CRASH
-// in Registers::SyncPopulate(). `#if 0` added in bug 1658232, follow-up bugs
+// in REGISTERS_SYNC_POPULATE(). `#if 0` added in bug 1658232, follow-up bugs
 // should be referenced in meta bug 1557568.
 #if 0
 // Android builds use the ARM Exception Handling ABI to unwind.
@@ -1246,16 +1246,11 @@ class Registers {
  public:
   Registers() : mPC{nullptr}, mSP{nullptr}, mFP{nullptr}, mLR{nullptr} {}
 
-#if defined(HAVE_NATIVE_UNWIND)
-  // Fills in mPC, mSP, mFP, mLR, and mContext for a synchronous sample.
-  void SyncPopulate();
-#endif
-
   void Clear() { memset(this, 0, sizeof(*this)); }
 
   // These fields are filled in by
   // Sampler::SuspendAndSampleAndResumeThread() for periodic and backtrace
-  // samples, and by SyncPopulate() for synchronous samples.
+  // samples, and by REGISTERS_SYNC_POPULATE for synchronous samples.
   Address mPC;  // Instruction pointer.
   Address mSP;  // Stack pointer.
   Address mFP;  // Frame pointer.
@@ -3667,7 +3662,7 @@ bool profiler_capture_backtrace_into(ProfileChunkedBuffer& aChunkedBuffer,
 
   Registers regs;
 #if defined(HAVE_NATIVE_UNWIND)
-  regs.SyncPopulate();
+  REGISTERS_SYNC_POPULATE(regs);
 #else
   regs.Clear();
 #endif
@@ -3801,7 +3796,7 @@ void profiler_suspend_and_sample_thread(BaseProfilerThreadId aThreadId,
         // Sampling the current thread, do NOT suspend it!
         Registers regs;
 #if defined(HAVE_NATIVE_UNWIND)
-        regs.SyncPopulate();
+        REGISTERS_SYNC_POPULATE(regs);
 #else
         regs.Clear();
 #endif
