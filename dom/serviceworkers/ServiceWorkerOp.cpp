@@ -1706,13 +1706,6 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
             GetCurrentSerialEventTarget(), __func__,
             [self, performanceStorage,
              globalObjectAsSupports](ResponseEndArgs&& aArgs) {
-              if (aArgs.timing().isSome() && performanceStorage) {
-                performanceStorage->AddEntry(
-                    aArgs.timing().ref().entryName(),
-                    aArgs.timing().ref().initiatorType(),
-                    MakeUnique<PerformanceTimingData>(
-                        aArgs.timing().ref().timingData()));
-              }
               if (aArgs.endReason() == FetchDriverObserver::eAborted) {
                 self->mPreloadResponse->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
               }
