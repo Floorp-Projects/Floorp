@@ -12,6 +12,7 @@
 #endif
 
 #include "DatabaseFileInfo.h"
+#include "IDBMutableFile.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBSharedTypes.h"
 #include "mozilla/dom/DOMStringList.h"
@@ -50,6 +51,14 @@ inline StructuredCloneFileParent::StructuredCloneFileParent(
     : StructuredCloneFileBase{aType}, mContents{Some(std::move(aFileInfo))} {
   MOZ_ASSERT(**mContents);
   MOZ_COUNT_CTOR(StructuredCloneFileParent);
+}
+
+inline StructuredCloneFileChild::StructuredCloneFileChild(
+    RefPtr<IDBMutableFile> aMutableFile)
+    : StructuredCloneFileBase{eMutableFile},
+      mContents{std::move(aMutableFile)} {
+  MOZ_ASSERT(mContents->as<RefPtr<IDBMutableFile>>());
+  MOZ_COUNT_CTOR(StructuredCloneFileChild);
 }
 
 #ifdef NS_BUILD_REFCNT_LOGGING

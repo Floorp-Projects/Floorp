@@ -13,6 +13,7 @@
 #include "mozilla/dom/IDBTransaction.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBCursorChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBDatabaseChild.h"
+#include "mozilla/dom/indexedDB/PBackgroundIDBDatabaseRequestChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBFactoryChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBFactoryRequestChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBRequestChild.h"
@@ -20,6 +21,9 @@
 #include "mozilla/dom/indexedDB/PBackgroundIDBTransactionChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBVersionChangeTransactionChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsChild.h"
+#include "mozilla/dom/PBackgroundFileHandleChild.h"
+#include "mozilla/dom/PBackgroundFileRequestChild.h"
+#include "mozilla/dom/PBackgroundMutableFileChild.h"
 #include "mozilla/InitializedOnce.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
@@ -40,6 +44,9 @@ namespace dom {
 class IDBCursor;
 class IDBDatabase;
 class IDBFactory;
+class IDBFileHandle;
+class IDBFileRequest;
+class IDBMutableFile;
 class IDBOpenDBRequest;
 class IDBRequest;
 class IndexedDatabaseManager;
@@ -255,6 +262,12 @@ class BackgroundDatabaseChild final : public PBackgroundIDBDatabaseChild {
   bool DeallocPBackgroundIDBDatabaseFileChild(
       PBackgroundIDBDatabaseFileChild* aActor) const;
 
+  PBackgroundIDBDatabaseRequestChild* AllocPBackgroundIDBDatabaseRequestChild(
+      const DatabaseRequestParams& aParams);
+
+  bool DeallocPBackgroundIDBDatabaseRequestChild(
+      PBackgroundIDBDatabaseRequestChild* aActor);
+
   already_AddRefed<PBackgroundIDBVersionChangeTransactionChild>
   AllocPBackgroundIDBVersionChangeTransactionChild(uint64_t aCurrentVersion,
                                                    uint64_t aRequestedVersion,
@@ -266,12 +279,43 @@ class BackgroundDatabaseChild final : public PBackgroundIDBDatabaseChild {
       const uint64_t& aCurrentVersion, const uint64_t& aRequestedVersion,
       const int64_t& aNextObjectStoreId, const int64_t& aNextIndexId) override;
 
+  PBackgroundMutableFileChild* AllocPBackgroundMutableFileChild(
+      const nsString& aName, const nsString& aType) const;
+
+  bool DeallocPBackgroundMutableFileChild(PBackgroundMutableFileChild* aActor);
+
   mozilla::ipc::IPCResult RecvVersionChange(uint64_t aOldVersion,
                                             Maybe<uint64_t> aNewVersion);
 
   mozilla::ipc::IPCResult RecvInvalidate();
 
   mozilla::ipc::IPCResult RecvCloseAfterInvalidationComplete();
+};
+
+class BackgroundDatabaseRequestChild final
+    : public BackgroundRequestChildBase,
+      public PBackgroundIDBDatabaseRequestChild {
+  friend class BackgroundDatabaseChild;
+  friend IDBDatabase;
+
+  RefPtr<IDBDatabase> mDatabase;
+
+ private:
+  // Only created by IDBDatabase.
+  BackgroundDatabaseRequestChild(IDBDatabase* aDatabase,
+                                 MovingNotNull<RefPtr<IDBRequest>> aRequest);
+
+  // Only destroyed by BackgroundDatabaseChild.
+  ~BackgroundDatabaseRequestChild();
+
+  void HandleResponse(nsresult aResponse);
+
+  void HandleResponse(const CreateFileRequestResponse& aResponse);
+
+ public:
+  // IPDL methods are only called by IPDL.
+  mozilla::ipc::IPCResult Recv__delete__(
+      const DatabaseRequestResponse& aResponse);
 };
 
 class BackgroundVersionChangeTransactionChild;
@@ -401,6 +445,55 @@ class BackgroundVersionChangeTransactionChild final
       const OpenCursorParams& aParams);
 
   bool DeallocPBackgroundIDBCursorChild(PBackgroundIDBCursorChild* aActor);
+};
+
+class BackgroundMutableFileChild final : public PBackgroundMutableFileChild {
+  friend class BackgroundDatabaseChild;
+  friend IDBMutableFile;
+
+  RefPtr<IDBMutableFile> mTemporaryStrongMutableFile;
+  IDBMutableFile* mMutableFile;
+  nsString mName;
+  nsString mType;
+
+ public:
+  void AssertIsOnOwningThread() const
+#ifdef DEBUG
+      ;
+#else
+  {
+  }
+#endif
+
+  void EnsureDOMObject();
+
+  IDBMutableFile* GetDOMObject() const {
+    AssertIsOnOwningThread();
+    return mMutableFile;
+  }
+
+  void ReleaseDOMObject();
+
+  bool SendDeleteMe() = delete;
+
+ private:
+  // Only constructed by BackgroundDatabaseChild.
+  BackgroundMutableFileChild(const nsAString& aName, const nsAString& aType);
+
+  // Only destroyed by BackgroundDatabaseChild.
+  ~BackgroundMutableFileChild();
+
+  void SendDeleteMeInternal();
+
+ public:
+  // IPDL methods are only called by IPDL.
+  void ActorDestroy(ActorDestroyReason aWhy) override;
+
+  PBackgroundFileHandleChild* AllocPBackgroundFileHandleChild(
+      const FileMode& aMode);
+
+  bool DeallocPBackgroundFileHandleChild(
+      PBackgroundFileHandleChild* aActor) const;
 };
 
 class BackgroundRequestChild final : public BackgroundRequestChildBase,
@@ -598,6 +691,96 @@ class BackgroundCursorChild final : public BackgroundCursorChildBase {
                     const Key& aCurrentObjectStoreKey) = delete;
 
   bool SendDeleteMe() = delete;
+};
+
+class BackgroundFileHandleChild : public PBackgroundFileHandleChild {
+  friend class BackgroundMutableFileChild;
+  friend IDBMutableFile;
+
+  // mTemporaryStrongFileHandle is strong and is only valid until the end of
+  // NoteComplete() member function or until the NoteActorDestroyed() member
+  // function is called.
+  RefPtr<IDBFileHandle> mTemporaryStrongFileHandle;
+
+  // mFileHandle is weak and is valid until the NoteActorDestroyed() member
+  // function is called.
+  IDBFileHandle* mFileHandle;
+
+ public:
+  void AssertIsOnOwningThread() const
+#ifdef DEBUG
+      ;
+#else
+  {
+  }
+#endif
+
+  void SendDeleteMeInternal();
+
+  bool SendDeleteMe() = delete;
+
+ private:
+  // Only created by IDBMutableFile.
+  explicit BackgroundFileHandleChild(IDBFileHandle* aFileHandle);
+
+  ~BackgroundFileHandleChild();
+
+  void NoteActorDestroyed();
+
+  void NoteComplete();
+
+ public:
+  // IPDL methods are only called by IPDL.
+  void ActorDestroy(ActorDestroyReason aWhy) override;
+
+  mozilla::ipc::IPCResult RecvComplete(bool aAborted);
+
+  PBackgroundFileRequestChild* AllocPBackgroundFileRequestChild(
+      const FileRequestParams& aParams);
+
+  bool DeallocPBackgroundFileRequestChild(PBackgroundFileRequestChild* aActor);
+};
+
+class BackgroundFileRequestChild final : public PBackgroundFileRequestChild {
+  friend class BackgroundFileHandleChild;
+  friend IDBFileHandle;
+
+  RefPtr<IDBFileRequest> mFileRequest;
+  RefPtr<IDBFileHandle> mFileHandle;
+  bool mActorDestroyed;
+
+ public:
+  void AssertIsOnOwningThread() const
+#ifdef DEBUG
+      ;
+#else
+  {
+  }
+#endif
+
+ private:
+  // Only created by IDBFileHandle.
+  explicit BackgroundFileRequestChild(IDBFileRequest* aFileRequest);
+
+  // Only destroyed by BackgroundFileHandleChild.
+  ~BackgroundFileRequestChild();
+
+  void HandleResponse(nsresult aResponse);
+
+  void HandleResponse(const nsCString& aResponse);
+
+  void HandleResponse(const FileRequestMetadata& aResponse);
+
+  void HandleResponse(JS::Handle<JS::Value> aResponse);
+
+ public:
+  // IPDL methods are only called by IPDL.
+  void ActorDestroy(ActorDestroyReason aWhy) override;
+
+  mozilla::ipc::IPCResult Recv__delete__(const FileRequestResponse& aResponse);
+
+  mozilla::ipc::IPCResult RecvProgress(uint64_t aProgress,
+                                       uint64_t aProgressMax);
 };
 
 class BackgroundUtilsChild final : public PBackgroundIndexedDBUtilsChild {
