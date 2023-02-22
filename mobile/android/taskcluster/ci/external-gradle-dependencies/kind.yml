@@ -79,7 +79,7 @@ tasks:
                 - mozilla-detekt-rules:test
                 - mozilla-lint-rules:test
             resources:
-                - fenix/buildSrc/src/main/java/Dependencies.kt
+                - fenix/buildSrc/src/main/java/FenixDependencies.kt
 
     test-components:
         attributes:
