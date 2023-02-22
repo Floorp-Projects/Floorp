@@ -27,12 +27,11 @@ class IDBFileRequest final : public DOMRequest {
 
   nsString mEncoding;
 
-  bool mWrapAsDOMRequest;
   bool mHasEncoding;
 
  public:
-  [[nodiscard]] static RefPtr<IDBFileRequest> Create(IDBFileHandle* aFileHandle,
-                                                     bool aWrapAsDOMRequest);
+  [[nodiscard]] static RefPtr<IDBFileRequest> Create(
+      IDBFileHandle* aFileHandle);
 
   void SetEncoding(const nsAString& aEncoding) {
     mEncoding = aEncoding;
@@ -72,11 +71,6 @@ class IDBFileRequest final : public DOMRequest {
     return mFileHandle;
   }
 
-  IDBFileHandle* GetLockedFile() const {
-    AssertIsOnOwningThread();
-    return GetFileHandle();
-  }
-
   IMPL_EVENT_HANDLER(progress)
 
   void AssertIsOnOwningThread() const {
@@ -91,10 +85,12 @@ class IDBFileRequest final : public DOMRequest {
 
   // nsWrapperCache
   virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+                               JS::Handle<JSObject*> aGivenProto) override {
+    return nullptr;
+  }
 
  private:
-  IDBFileRequest(IDBFileHandle* aFileHandle, bool aWrapAsDOMRequest);
+  explicit IDBFileRequest(IDBFileHandle* aFileHandle);
 
   ~IDBFileRequest();
 };

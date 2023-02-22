@@ -10,7 +10,6 @@
 #include "js/RootingAPI.h"
 #include "jsapi.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/dom/IDBFileRequestBinding.h"
 #include "mozilla/dom/ProgressEvent.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/EventDispatcher.h"
@@ -23,11 +22,9 @@ namespace mozilla::dom {
 
 using namespace mozilla::dom::indexedDB;
 
-IDBFileRequest::IDBFileRequest(IDBFileHandle* aFileHandle,
-                               bool aWrapAsDOMRequest)
+IDBFileRequest::IDBFileRequest(IDBFileHandle* aFileHandle)
     : DOMRequest(aFileHandle->GetOwnerGlobal()),
       mFileHandle(aFileHandle),
-      mWrapAsDOMRequest(aWrapAsDOMRequest),
       mHasEncoding(false) {
   MOZ_ASSERT(aFileHandle);
   aFileHandle->AssertIsOnOwningThread();
@@ -36,12 +33,11 @@ IDBFileRequest::IDBFileRequest(IDBFileHandle* aFileHandle,
 IDBFileRequest::~IDBFileRequest() { AssertIsOnOwningThread(); }
 
 // static
-RefPtr<IDBFileRequest> IDBFileRequest::Create(IDBFileHandle* aFileHandle,
-                                              bool aWrapAsDOMRequest) {
+RefPtr<IDBFileRequest> IDBFileRequest::Create(IDBFileHandle* aFileHandle) {
   MOZ_ASSERT(aFileHandle);
   aFileHandle->AssertIsOnOwningThread();
 
-  return new IDBFileRequest(aFileHandle, aWrapAsDOMRequest);
+  return new IDBFileRequest(aFileHandle);
 }
 
 void IDBFileRequest::FireProgressEvent(uint64_t aLoaded, uint64_t aTotal) {
@@ -76,17 +72,6 @@ void IDBFileRequest::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
 
   aVisitor.mCanHandle = true;
   aVisitor.SetParentTarget(mFileHandle, false);
-}
-
-// virtual
-JSObject* IDBFileRequest::WrapObject(JSContext* aCx,
-                                     JS::Handle<JSObject*> aGivenProto) {
-  AssertIsOnOwningThread();
-
-  if (mWrapAsDOMRequest) {
-    return DOMRequest::WrapObject(aCx, aGivenProto);
-  }
-  return IDBFileRequest_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 }  // namespace mozilla::dom
