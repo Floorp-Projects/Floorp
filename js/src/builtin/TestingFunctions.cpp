@@ -6527,8 +6527,8 @@ static bool CompileToStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
   UniquePtr<frontend::ExtensibleCompilationStencil> stencil;
   if (isModule) {
     stencil = frontend::ParseModuleToExtensibleStencil(
-        cx, &fc, cx->stackLimitForCurrentPrincipal(), input.get(), &scopeCache,
-        srcBuf);
+        cx, &fc, cx->stackLimitForCurrentPrincipal(), cx->tempLifoAlloc(),
+        input.get(), &scopeCache, srcBuf);
   } else {
     stencil = frontend::CompileGlobalScriptToExtensibleStencil(
         cx, &fc, cx->stackLimitForCurrentPrincipal(), input.get(), &scopeCache,
