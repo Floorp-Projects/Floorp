@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Imported for side-effects.
+import { html } from "lit.all.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "browser/components/migration/content/migration-wizard.mjs";
 import { MigrationWizardConstants } from "chrome://browser/content/migration/migration-wizard-constants.mjs";
@@ -72,29 +73,21 @@ const FAKE_BROWSER_LIST = [
   },
 ];
 
-const Template = ({ state, dialogMode }) => {
-  let wiz = document.createElement("migration-wizard");
-  wiz.toggleAttribute("dialog-mode", dialogMode);
-  wiz.setState(state);
-
-  let card = document.createElement("div");
-  card.classList.add("card", "card-no-hover");
-  card.style.width = "fit-content";
-  card.append(wiz);
-
-  let style = document.createElement("style");
-  style.textContent = `
+const Template = ({ state, dialogMode }) => html`
+  <style>
     @media (prefers-reduced-motion: no-preference) {
       migration-wizard::part(progress-spinner) {
         mask: url(./migration/progress-mask.svg);
       }
     }
-  `;
+  </style>
 
-  card.prepend(style);
-
-  return card;
-};
+  <div class="card card-no-hover" style="width: fit-content">
+    <migration-wizard ?dialog-mode=${dialogMode} .state=${state}>
+      <!-- <panel-list></panel-list> -->
+    </migration-wizard>
+  </div>
+`;
 
 export const MainSelectorVariant1 = Template.bind({});
 MainSelectorVariant1.args = {
