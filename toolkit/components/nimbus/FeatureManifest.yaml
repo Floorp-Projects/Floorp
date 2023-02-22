@@ -952,6 +952,9 @@ cookieBannerHandling:
     desktopCfrVariant:
       type: int
       description: Which variant of the doorhanger the user should receive. 0=unenrolled; 1=control; 2=A; 3=B
+    retargetingDelayInDays:
+      type: int
+      description: How many days to wait before attempting to show the doorhanger a second time.
 
 accessibilityCache:
   description: Caches all accessibility information from all documents in the Firefox main process.
