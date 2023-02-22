@@ -6,7 +6,7 @@
 
 #include "WindowsLocationProvider.h"
 #include "WindowsLocationParent.h"
-#include "WindowsUtilsParent.h"
+#include "mozilla/dom/WindowsUtilsParent.h"
 #include "GeolocationPosition.h"
 #include "nsComponentManagerUtils.h"
 #include "mozilla/ipc/UtilityProcessManager.h"

@@ -47,7 +47,7 @@ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     ]
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     LOCAL_INCLUDES += [
-        "/dom/system/windows",
+        "/dom/system/windows/location",
     ]
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     if CONFIG["MOZ_GPSD"]:
