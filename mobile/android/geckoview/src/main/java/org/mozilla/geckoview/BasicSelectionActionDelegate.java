@@ -13,10 +13,8 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.Rect;
-import android.graphics.RectF;
 import android.os.Build;
 import android.os.TransactionTooLargeException;
 import android.text.TextUtils;
@@ -72,14 +70,6 @@ public class BasicSelectionActionDelegate
 
   protected final @NonNull Activity mActivity;
   protected final boolean mUseFloatingToolbar;
-
-  @Deprecated
-  @DeprecationSchedule(id = "selection-fission", version = 112)
-  protected final @NonNull Matrix mTempMatrix = new Matrix();
-
-  @Deprecated
-  @DeprecationSchedule(id = "selection-fission", version = 112)
-  protected final @NonNull RectF mTempRect = new RectF();
 
   private boolean mExternalActionsEnabled;
 
@@ -476,10 +466,6 @@ public class BasicSelectionActionDelegate
     if (mSelection == null || mSelection.screenRect == null) {
       return;
     }
-
-    // mTempMatrix and mTempRect are deprecated.
-    mSession.getClientToScreenMatrix(mTempMatrix);
-    mTempMatrix.mapRect(mTempRect, mSelection.clientRect);
 
     mSelection.screenRect.roundOut(outRect);
   }
