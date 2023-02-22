@@ -21,25 +21,9 @@ interface RTCIceCandidate {
   [Throws]
   constructor(optional RTCIceCandidateInit candidateInitDict = {});
 
-  readonly attribute DOMString candidate;
-  readonly attribute DOMString? sdpMid;
-  readonly attribute unsigned short? sdpMLineIndex;
-/*
-  readonly attribute DOMString? foundation;
-  readonly attribute RTCIceComponent? component;
-  readonly attribute unsigned long? priority;
-  readonly attribute DOMString? address;
-  readonly attribute RTCIceProtocol? protocol;
-  readonly attribute unsigned short? port;
-  readonly attribute RTCIceCandidateType? type;
-  readonly attribute RTCIceTcpCandidateType? tcpType;
-  readonly attribute DOMString? relatedAddress;
-  readonly attribute unsigned short? relatedPort;
-*/
-  readonly attribute DOMString? usernameFragment;
-/*
-  readonly attribute RTCIceServerTransportProtocol? relayProtocol;
-  readonly attribute DOMString? url;
-*/
+  attribute DOMString       candidate;
+  attribute DOMString?      sdpMid;
+  attribute unsigned short? sdpMLineIndex;
+  attribute DOMString? usernameFragment;
   [Default] object toJSON();
 };
