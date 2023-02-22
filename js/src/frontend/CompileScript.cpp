@@ -29,6 +29,12 @@ JS_PUBLIC_API void JS::DestroyFrontendContext(FrontendContext* fc) {
   return js::DestroyFrontendContext(fc);
 }
 
+JS_PUBLIC_API bool JS::SetSupportedImportAssertions(
+    FrontendContext* fc,
+    const JS::ImportAssertionVector& supportedImportAssertions) {
+  return fc->setSupportedImportAssertions(supportedImportAssertions);
+}
+
 template <typename CharT>
 static already_AddRefed<JS::Stencil> CompileGlobalScriptToStencilImpl(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
