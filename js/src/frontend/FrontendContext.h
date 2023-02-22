@@ -226,6 +226,14 @@ class ManualReportFrontendContext : public FrontendContext {
   }
 };
 
+// Create function for FrontendContext, which is manually allocated and
+// exclusively owned.
+extern FrontendContext* NewFrontendContext();
+
+// Destroy function for FrontendContext, which was allocated with
+// NewFrontendContext.
+extern void DestroyFrontendContext(FrontendContext* fc);
+
 }  // namespace js
 
 #endif /* frontend_FrontendContext_h */
