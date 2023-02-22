@@ -8,34 +8,51 @@
 #import "GeckoTextMarker.h"
 
 #import "MacUtils.h"
+
 #include "DocAccessibleParent.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 
 namespace mozilla {
 namespace a11y {
 
 struct TextMarkerData {
-  TextMarkerData(uintptr_t aDoc, uintptr_t aID, int32_t aOffset)
-      : mDoc(aDoc), mID(aID), mOffset(aOffset) {}
+  TextMarkerData(uintptr_t aDoc, uintptr_t aID, int32_t aOffset, bool aLegacy)
+      : mDoc(aDoc), mID(aID), mOffset(aOffset), mLegacy(aLegacy) {}
   TextMarkerData() {}
   uintptr_t mDoc;
   uintptr_t mID;
   int32_t mOffset;
+  bool mLegacy;
 };
 
 // LegacyTextMarker
 
-GeckoTextMarker::GeckoTextMarker() { mLegacyTextMarker = LegacyTextMarker(); }
+GeckoTextMarker::GeckoTextMarker() {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    mLegacy = false;
+    mCachedTextMarker = CachedTextMarker();
+  } else {
+    mLegacy = true;
+    mLegacyTextMarker = LegacyTextMarker();
+  }
+}
 
 GeckoTextMarker::GeckoTextMarker(Accessible* aContainer, int32_t aOffset) {
-  int32_t offset = aOffset;
-  if (aOffset == nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT) {
-    offset = aContainer->IsRemote() ? aContainer->AsRemote()->CharacterCount()
-                                    : aContainer->AsLocal()
-                                          ->Document()
-                                          ->AsHyperText()
-                                          ->CharacterCount();
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    mLegacy = false;
+    mCachedTextMarker = CachedTextMarker(aContainer, aOffset);
+  } else {
+    mLegacy = true;
+    int32_t offset = aOffset;
+    if (aOffset == nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT) {
+      offset = aContainer->IsRemote() ? aContainer->AsRemote()->CharacterCount()
+                                      : aContainer->AsLocal()
+                                            ->Document()
+                                            ->AsHyperText()
+                                            ->CharacterCount();
+    }
+    mLegacyTextMarker = LegacyTextMarker(aContainer, offset);
   }
-  mLegacyTextMarker = LegacyTextMarker(aContainer, offset);
 }
 
 GeckoTextMarker GeckoTextMarker::MarkerFromAXTextMarker(
@@ -53,6 +70,8 @@ GeckoTextMarker GeckoTextMarker::MarkerFromAXTextMarker(
   TextMarkerData markerData;
   memcpy(&markerData, AXTextMarkerGetBytePtr(aTextMarker),
          sizeof(TextMarkerData));
+  MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup() ==
+             !markerData.mLegacy);
 
   if (!utils::DocumentExists(aDoc, markerData.mDoc)) {
     return GeckoTextMarker();
@@ -78,6 +97,10 @@ GeckoTextMarker GeckoTextMarker::MarkerFromAXTextMarker(
 
 GeckoTextMarker GeckoTextMarker::MarkerFromIndex(Accessible* aRoot,
                                                  int32_t aIndex) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return GeckoTextMarker(CachedTextMarker::MarkerFromIndex(aRoot, aIndex));
+  }
+
   return GeckoTextMarker(LegacyTextMarker::MarkerFromIndex(aRoot, aIndex));
 }
 
@@ -86,11 +109,13 @@ AXTextMarkerRef GeckoTextMarker::CreateAXTextMarker() {
     return nil;
   }
 
-  Accessible* acc = mLegacyTextMarker.mContainer;
-  int32_t offset = mLegacyTextMarker.mOffset;
+  Accessible* acc =
+      mLegacy ? mLegacyTextMarker.mContainer : mCachedTextMarker.mPoint.mAcc;
+  int32_t offset =
+      mLegacy ? mLegacyTextMarker.mOffset : mCachedTextMarker.mPoint.mOffset;
   Accessible* doc = nsAccUtils::DocumentFor(acc);
-  TextMarkerData markerData(reinterpret_cast<uintptr_t>(doc), acc->ID(),
-                            offset);
+  TextMarkerData markerData(reinterpret_cast<uintptr_t>(doc), acc->ID(), offset,
+                            mLegacy);
   AXTextMarkerRef cf_text_marker = AXTextMarkerCreate(
       kCFAllocatorDefault, reinterpret_cast<const UInt8*>(&markerData),
       sizeof(TextMarkerData));
@@ -99,35 +124,75 @@ AXTextMarkerRef GeckoTextMarker::CreateAXTextMarker() {
 }
 
 GeckoTextMarkerRange GeckoTextMarker::LeftWordRange() const {
-  return GeckoTextMarkerRange(mLegacyTextMarker.Range(EWhichRange::eLeftWord));
+  if (mLegacy) {
+    return GeckoTextMarkerRange(
+        mLegacyTextMarker.Range(EWhichRange::eLeftWord));
+  } else {
+    return GeckoTextMarkerRange(mCachedTextMarker.LeftWordRange());
+  }
 }
 
 GeckoTextMarkerRange GeckoTextMarker::RightWordRange() const {
-  return GeckoTextMarkerRange(mLegacyTextMarker.Range(EWhichRange::eRightWord));
+  if (mLegacy) {
+    return GeckoTextMarkerRange(
+        mLegacyTextMarker.Range(EWhichRange::eRightWord));
+  } else {
+    return GeckoTextMarkerRange(mCachedTextMarker.RightWordRange());
+  }
 }
 
 GeckoTextMarkerRange GeckoTextMarker::LeftLineRange() const {
-  return GeckoTextMarkerRange(mLegacyTextMarker.Range(EWhichRange::eLeftLine));
+  if (mLegacy) {
+    return GeckoTextMarkerRange(
+        mLegacyTextMarker.Range(EWhichRange::eLeftLine));
+  } else {
+    return GeckoTextMarkerRange(mCachedTextMarker.LeftLineRange());
+  }
 }
 
 GeckoTextMarkerRange GeckoTextMarker::RightLineRange() const {
-  return GeckoTextMarkerRange(mLegacyTextMarker.Range(EWhichRange::eRightLine));
+  if (mLegacy) {
+    return GeckoTextMarkerRange(
+        mLegacyTextMarker.Range(EWhichRange::eRightLine));
+  } else {
+    return GeckoTextMarkerRange(mCachedTextMarker.RightLineRange());
+  }
 }
 
 GeckoTextMarkerRange GeckoTextMarker::ParagraphRange() const {
-  return GeckoTextMarkerRange(mLegacyTextMarker.Range(EWhichRange::eParagraph));
+  if (mLegacy) {
+    return GeckoTextMarkerRange(
+        mLegacyTextMarker.Range(EWhichRange::eParagraph));
+  } else {
+    return GeckoTextMarkerRange(mCachedTextMarker.ParagraphRange());
+  }
 }
 
 GeckoTextMarkerRange GeckoTextMarker::StyleRange() const {
-  return GeckoTextMarkerRange(mLegacyTextMarker.Range(EWhichRange::eStyle));
+  if (mLegacy) {
+    return GeckoTextMarkerRange(mLegacyTextMarker.Range(EWhichRange::eStyle));
+  } else {
+    return GeckoTextMarkerRange(mCachedTextMarker.StyleRange());
+  }
 }
 
 GeckoTextMarkerRange::GeckoTextMarkerRange() {
-  mLegacyTextMarkerRange = LegacyTextMarkerRange();
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    mLegacy = false;
+    mCachedTextMarkerRange = CachedTextMarkerRange();
+  } else {
+    mLegacy = true;
+    mLegacyTextMarkerRange = LegacyTextMarkerRange();
+  }
 }
 
 GeckoTextMarkerRange::GeckoTextMarkerRange(Accessible* aAccessible) {
-  mLegacyTextMarkerRange = LegacyTextMarkerRange(aAccessible);
+  mLegacy = !StaticPrefs::accessibility_cache_enabled_AtStartup();
+  if (mLegacy) {
+    mLegacyTextMarkerRange = LegacyTextMarkerRange(aAccessible);
+  } else {
+    mCachedTextMarkerRange = CachedTextMarkerRange(aAccessible);
+  }
 }
 
 GeckoTextMarkerRange GeckoTextMarkerRange::MarkerRangeFromAXTextMarkerRange(
@@ -145,6 +210,7 @@ GeckoTextMarkerRange GeckoTextMarkerRange::MarkerRangeFromAXTextMarkerRange(
       GeckoTextMarker::MarkerFromAXTextMarker(aDoc, start_marker);
   GeckoTextMarker end =
       GeckoTextMarker::MarkerFromAXTextMarker(aDoc, end_marker);
+  MOZ_ASSERT(start.mLegacy == end.mLegacy);
 
   CFRelease(start_marker);
   CFRelease(end_marker);
@@ -158,8 +224,13 @@ AXTextMarkerRangeRef GeckoTextMarkerRange::CreateAXTextMarkerRange() {
   }
 
   GeckoTextMarker start, end;
-  start = GeckoTextMarker(mLegacyTextMarkerRange.mStart);
-  end = GeckoTextMarker(mLegacyTextMarkerRange.mEnd);
+  if (mLegacy) {
+    start = GeckoTextMarker(mLegacyTextMarkerRange.mStart);
+    end = GeckoTextMarker(mLegacyTextMarkerRange.mEnd);
+  } else {
+    start = GeckoTextMarker(mCachedTextMarkerRange.mRange.Start());
+    end = GeckoTextMarker(mCachedTextMarkerRange.mRange.End());
+  }
 
   AXTextMarkerRangeRef cf_text_marker_range =
       AXTextMarkerRangeCreate(kCFAllocatorDefault, start.CreateAXTextMarker(),

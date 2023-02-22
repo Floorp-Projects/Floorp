@@ -90,6 +90,20 @@ static nsTHashMap<nsPtrHashKey<mozilla::a11y::Accessible>,
   CFRetain(mCaret);
 }
 
+mozAccessible* GetEditableNativeFromGeckoAccessible(Accessible* aAcc) {
+  // The gecko accessible may not have a native accessible so we need
+  // to walk up the parent chain to find the nearest one.
+  // This happens when caching is enabled and the text marker's accessible
+  // may be a text leaf that is pruned from the platform.
+  for (Accessible* acc = aAcc; acc; acc = acc->Parent()) {
+    if (mozAccessible* mozAcc = GetNativeFromGeckoAccessible(acc)) {
+      return [mozAcc moxEditableAncestor];
+    }
+  }
+
+  return nil;
+}
+
 // This returns an info object to pass with AX SelectedTextChanged events.
 // It uses the current and previous caret position to make decisions
 // regarding which attributes to add to the info object.
@@ -123,7 +137,7 @@ static nsTHashMap<nsPtrHashKey<mozilla::a11y::Accessible>,
   }
 
   mozAccessible* caretEditable =
-      [GetNativeFromGeckoAccessible(caretMarker.Acc()) moxEditableAncestor];
+      GetEditableNativeFromGeckoAccessible(caretMarker.Acc());
 
   if (!caretEditable && stateChangeType == AXTextStateChangeTypeSelectionMove) {
     // If we are not in an editable, VO expects AXTextStateSync to be present
@@ -137,7 +151,7 @@ static nsTHashMap<nsPtrHashKey<mozilla::a11y::Accessible>,
   }
 
   mozAccessible* prevCaretEditable =
-      [GetNativeFromGeckoAccessible(prevCaretMarker.Acc()) moxEditableAncestor];
+      GetEditableNativeFromGeckoAccessible(prevCaretMarker.Acc());
 
   if (prevCaretEditable != caretEditable) {
     // If the caret goes in or out of an editable, consider the
