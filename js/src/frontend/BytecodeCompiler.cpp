@@ -312,7 +312,7 @@ template <typename Unit>
     return false;
   }
 
-  // TODO bug 1773339 maybeCx nullptr could crash here
+  // TODO bug 1773319 maybeCx nullptr could crash here
   if (input.options.populateDelazificationCache() &&
       !maybeCx->isHelperThreadContext()) {
     BorrowingCompilationStencil borrowingStencil(compiler.stencil());

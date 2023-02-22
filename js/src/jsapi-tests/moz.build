@@ -89,6 +89,7 @@ UNIFIED_SOURCES += [
     "testOOM.cpp",
     "testParseJSON.cpp",
     "testParserAtom.cpp",
+    "testParseScript.cpp",
     "testPersistentRooted.cpp",
     "testPreserveJitCode.cpp",
     "testPrintf.cpp",
