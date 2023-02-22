@@ -512,6 +512,8 @@ pref("browser.urlbar.resultMenu", true);
 #else
 pref("browser.urlbar.resultMenu", false);
 #endif
+// Allow the result menu button to be reached with the Tab key.
+pref("browser.urlbar.resultMenu.keyboardAccessible", true);
 
 // If true, we show tail suggestions when available.
 pref("browser.urlbar.richSuggestions.tail", true);

@@ -3,13 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define NOTIFY_BOOKMARKS_OBSERVERS(canFire, array, method)     \
-  PR_BEGIN_MACRO                                               \
-  if (canFire) {                                               \
-    ENUMERATE_WEAKARRAY(array, nsINavBookmarkObserver, method) \
-  }                                                            \
-  PR_END_MACRO;
-
 #define PLACES_FACTORY_SINGLETON_IMPLEMENTATION(_className, _sInstance)     \
   _className* _className::_sInstance = nullptr;                             \
                                                                             \

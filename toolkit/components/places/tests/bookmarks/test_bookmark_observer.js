@@ -13,9 +13,6 @@ var gBookmarksObserver = {
     return this.deferred.promise;
   },
 
-  // Even though this isn't technically testing nsINavBookmarkObserver,
-  // this is the simplest place to keep this. Once all of the notifications
-  // are converted, we can just rename the file.
   validateEvents(events) {
     Assert.greaterOrEqual(this.expected.length, events.length);
     for (let event of events) {

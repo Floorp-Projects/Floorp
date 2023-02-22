@@ -725,18 +725,6 @@ function do_compare_arrays(a1, a2, sorted) {
 }
 
 /**
- * Generic nsINavBookmarkObserver that doesn't implement anything, but provides
- * dummy methods to prevent errors about an object not having a certain method.
- */
-function NavBookmarkObserver() {}
-
-NavBookmarkObserver.prototype = {
-  onItemRemoved() {},
-  onItemChanged() {},
-  QueryInterface: ChromeUtils.generateQI(["nsINavBookmarkObserver"]),
-};
-
-/**
  * Generic nsINavHistoryResultObserver that doesn't implement anything, but
  * provides dummy methods to prevent errors about an object not having a certain
  * method.

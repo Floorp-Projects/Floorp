@@ -47,7 +47,7 @@ pub const GPU_CACHE_INITIAL_HEIGHT: i32 = 20;
 const NEW_ROWS_PER_RESIZE: i32 = 10;
 
 /// The number of frames an entry can go unused before being evicted.
-const FRAMES_BEFORE_EVICTION: usize = 10;
+const FRAMES_BEFORE_EVICTION: u64 = 10;
 
 /// The ratio of utilized blocks to total blocks for which we start the clock
 /// on reclaiming memory.

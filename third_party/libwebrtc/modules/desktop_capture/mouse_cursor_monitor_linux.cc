@@ -48,7 +48,6 @@ MouseCursorMonitor* MouseCursorMonitor::CreateForScreen(
 // static
 std::unique_ptr<MouseCursorMonitor> MouseCursorMonitor::Create(
     const DesktopCaptureOptions& options) {
-
 #if defined(WEBRTC_USE_PIPEWIRE)
   if (options.allow_pipewire() && DesktopCapturer::IsRunningUnderWayland() &&
       options.screencast_stream()) {

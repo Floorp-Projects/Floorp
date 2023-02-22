@@ -8,9 +8,9 @@ Bug 1812120 - Disable the AAudio backend when running on Android <= 30. r?kineti
 
 Differential Revision: https://phabricator.services.mozilla.com/D168979
 
-diff --git a/media/libcubeb/src/cubeb_aaudio.cpp b/media/libcubeb/src/cubeb_aaudio.cpp
---- a/media/libcubeb/src/cubeb_aaudio.cpp
-+++ b/media/libcubeb/src/cubeb_aaudio.cpp
+diff --git a/src/cubeb_aaudio.cpp b/src/cubeb_aaudio.cpp
+--- a/src/cubeb_aaudio.cpp
++++ b/src/cubeb_aaudio.cpp
 @@ -6,16 +6,17 @@
   */
  #include "cubeb-internal.h"

@@ -131,11 +131,13 @@ addAccessibleTask(
 </div>
   `,
   async function(browser, docAcc) {
-    const tree = { SECTION: [{ PARAGRAPH: [{ TEXT_LEAF: [] }] }] };
+    const tree = { TEXT_CONTAINER: [{ PARAGRAPH: [{ TEXT_LEAF: [] }] }] };
 
-    const divWithTransform = findAccessibleChildByID(docAcc, "div-transform");
+    const divWithTransform = findAccessibleChildByID(docAcc, "container")
+      .firstChild;
     testAccessibleTree(divWithTransform, tree);
-    await testBoundsWithContent(docAcc, "container", browser);
+    // testBoundsWithContent takes an id, but divWithTransform doesn't have one,
+    // so we can't test the bounds for it.
 
     // An accessible should still be created, even if the role is "presentation."
     const divPresentational = findAccessibleChildByID(
@@ -157,7 +159,7 @@ addAccessibleTask(
   `,
   async function(browser, docAcc) {
     let divToTransform = findAccessibleChildByID(docAcc, "div-to-transform");
-    ok(!divToTransform, "There should not be a section accessible.");
+    ok(!divToTransform, "There should not be a div accessible.");
 
     // Translate the div.
     await invokeContentTask(browser, [], () => {
@@ -169,7 +171,7 @@ addAccessibleTask(
     // Verify that the SECTION accessible appeared after we gave it a transform.
     divToTransform = findAccessibleChildByID(docAcc, "div-to-transform");
     const tree = {
-      SECTION: [{ PARAGRAPH: [{ TEXT_LEAF: [] }] }],
+      TEXT_CONTAINER: [{ PARAGRAPH: [{ TEXT_LEAF: [] }] }],
     };
     testAccessibleTree(divToTransform, tree);
 

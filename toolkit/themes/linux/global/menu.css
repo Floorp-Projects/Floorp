@@ -150,28 +150,35 @@ menulist > menupopup > :is(menuitem, menucaption, menu) {
   margin: 0 1px !important;
 }
 
-
 menulist > menupopup > :is(menuitem, menucaption, menu) > .menu-iconic-left {
   display: none;
 }
 
-/* ::::: checkbox menuitem ::::: */
+@media (-moz-non-native-content-theme) {
+  menuitem:is([type="checkbox"], [checked="true"]) .menu-iconic-icon {
+    appearance: auto;
+    -moz-default-appearance: checkbox;
+  }
 
-menuitem:is([type="checkbox"], [checked="true"]) {
-  appearance: auto !important;
-  -moz-default-appearance: checkmenuitem !important;
+  menuitem[type="radio"] .menu-iconic-icon {
+    appearance: auto;
+    -moz-default-appearance: radio;
+  }
 }
 
-/* ::::: radio menuitem ::::: */
+@media not (-moz-non-native-content-theme) {
+  menuitem:is([type="checkbox"], [checked="true"]) {
+    appearance: auto;
+    -moz-default-appearance: checkmenuitem;
+  }
 
-menuitem[type="radio"] {
-  appearance: auto !important;
-  -moz-default-appearance: radiomenuitem !important;
-}
+  menuitem[type="radio"] {
+    appearance: auto;
+    -moz-default-appearance: radiomenuitem;
+  }
 
-/* ::::: menuseparator ::::: */
-
-menuseparator {
-  appearance: auto;
-  -moz-default-appearance: menuseparator;
+  menuseparator {
+    appearance: auto;
+    -moz-default-appearance: menuseparator;
+  }
 }

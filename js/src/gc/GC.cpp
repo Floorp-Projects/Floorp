@@ -1040,10 +1040,11 @@ bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
       break;
     case JSGC_COMPACTING_ENABLED:
       compactingEnabled = value != 0;
-      updateMarkersVector();
       break;
     case JSGC_PARALLEL_MARKING_ENABLED:
-      parallelMarkingEnabled = value != 0;
+      // Not supported on workers.
+      parallelMarkingEnabled = rt->isMainRuntime() && value != 0;
+      updateMarkersVector();
       break;
     case JSGC_INCREMENTAL_WEAKMAP_ENABLED:
       for (auto& marker : markers) {
@@ -1127,10 +1128,10 @@ void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
       break;
     case JSGC_COMPACTING_ENABLED:
       compactingEnabled = TuningDefaults::CompactingEnabled;
-      updateMarkersVector();
       break;
     case JSGC_PARALLEL_MARKING_ENABLED:
       parallelMarkingEnabled = TuningDefaults::ParallelMarkingEnabled;
+      updateMarkersVector();
       break;
     case JSGC_INCREMENTAL_WEAKMAP_ENABLED:
       for (auto& marker : markers) {
@@ -1316,6 +1317,13 @@ void GCRuntime::updateHelperThreadCount() {
     return;
   }
 
+  // Number of extra threads required during parallel marking to ensure we can
+  // start the necessary marking tasks. Background free and background
+  // allocation may already be running and we want to avoid these tasks blocking
+  // marking. In real configurations there will be enough threads that this
+  // won't affect anything.
+  static constexpr size_t SpareThreadsDuringParallelMarking = 2;
+
   // The count of helper threads used for GC tasks is process wide. Don't set it
   // for worker JS runtimes.
   if (rt->parentRuntime) {
@@ -1329,9 +1337,11 @@ void GCRuntime::updateHelperThreadCount() {
                                  size_t(1), maxHelperThreads.ref());
 
   // Calculate the overall target thread count taking into account the separate
-  // parameter for parallel marking threads.
+  // parameter for parallel marking threads. Add spare threads to avoid blocking
+  // parallel marking when there is other GC work happening.
   size_t targetCount =
-      std::max(helperThreadCount.ref(), markingThreadCount.ref());
+      std::max(helperThreadCount.ref(),
+               markingThreadCount.ref() + SpareThreadsDuringParallelMarking);
 
   // Attempt to create extra threads if possible. This is not supported when
   // using an external thread pool.
@@ -1341,9 +1351,12 @@ void GCRuntime::updateHelperThreadCount() {
   // Limit all thread counts based on the number of threads available, which may
   // be fewer than requested.
   size_t availableThreadCount = GetHelperThreadCount();
+  MOZ_ASSERT(availableThreadCount != 0);
   targetCount = std::min(targetCount, availableThreadCount);
   helperThreadCount = std::min(helperThreadCount.ref(), availableThreadCount);
-  markingThreadCount = std::min(markingThreadCount.ref(), availableThreadCount);
+  markingThreadCount =
+      std::min(markingThreadCount.ref(),
+               availableThreadCount - SpareThreadsDuringParallelMarking);
 
   // Update the maximum number of threads that will be used for GC work.
   HelperThreadState().setGCParallelThreadCount(targetCount, lock);

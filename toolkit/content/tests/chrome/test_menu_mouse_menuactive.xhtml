@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Menu Activation Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <label id="label" value="label" context="contextmenu"/>
+  <menupopup id="contextmenu">
+    <menuitem id="item1" label="Item 1"/>
+    <menuitem id="item2" label="Item 2"/>
+  </menupopup>
+  <script><![CDATA[
+
+function waitForEvent(subject, eventName) {
+  return new Promise(resolve => {
+    subject.addEventListener(eventName, function listener(event) {
+      if (event.target == subject) {
+        subject.removeEventListener(eventName, listener);
+        resolve();
+      }
+    });
+  });
+}
+
+const menu = document.getElementById("contextmenu");
+const label = document.getElementById("label");
+const item1 = document.getElementById("item1");
+const item2 = document.getElementById("item2");
+
+function openContextMenu() {
+  // Open the first level of the context menu
+  let promise = waitForEvent(menu, "popupshown");
+  synthesizeMouseAtCenter(label, {
+    type: "contextmenu",
+    button: 2,
+  });
+  return promise;
+}
+
+function isActive(item) {
+  return item.hasAttribute("_moz-menuactive");
+}
+
+async function activateItem(item) {
+  info(`Activating ${item.id}`);
+  ok(!isActive(item), "Shouldn't be already active");
+  let activated = waitForEvent(item, "DOMMenuItemActive");
+  synthesizeMouse(item, 5, 5, { type: "mousemove" });
+  await new Promise(r => setTimeout(r, 0));
+  synthesizeMouse(item, 7, 7, { type: "mousemove" });
+  await activated;
+}
+
+add_task(async function() {
+  // Disable macOS native context menus, since we can't control activation of those here.
+  await SpecialPowers.pushPrefEnv({ set: [["widget.macos.native-context-menus", false]] });
+  info(`Opening context-menu`);
+  await openContextMenu();
+  is(menu.state, "open", "Menu should be open");
+
+  await activateItem(item1);
+  ok(isActive(item1), "item1 should be active");
+  ok(!isActive(item2), "item2 should be inactive");
+
+  await activateItem(item2);
+  ok(isActive(item2), "item2 should be active");
+  ok(!isActive(item1), "item1 should be inactive");
+
+  await activateItem(item1);
+  ok(isActive(item1), "item1 should be active");
+  ok(!isActive(item2), "item2 should be inactive");
+
+  info(`Leaving context-menu`);
+
+  let deactivated = waitForEvent(item1, "DOMMenuItemInactive");
+  synthesizeMouse(label, 0, 0, { type: "mousemove" });
+
+  await deactivated;
+  ok(!isActive(item1), "item1 should be inactive");
+  ok(!isActive(item2), "item2 should be inactive");
+
+  is(menu.state, "open", "Menu should still be open");
+  menu.hidePopup();
+});
+
+  ]]></script>
+</window>
