@@ -40,7 +40,6 @@ UNIFIED_SOURCES += [
     "BytecodeSection.cpp",
     "CallOrNewEmitter.cpp",
     "CForEmitter.cpp",
-    "CompileScript.cpp",
     "DefaultEmitter.cpp",
     "DoWhileEmitter.cpp",
     "ElemOpEmitter.cpp",

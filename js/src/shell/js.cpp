@@ -5417,7 +5417,7 @@ static bool DumpAST(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
   if (goal == frontend::ParseGoal::Script) {
     pn = parser.parse();
   } else {
-    ModuleBuilder builder(&fc, &parser);
+    ModuleBuilder builder(cx, &fc, &parser);
 
     SourceExtent extent = SourceExtent::makeGlobalExtent(length);
     ModuleSharedContext modulesc(&fc, options, builder, extent);
@@ -5458,8 +5458,8 @@ template <typename Unit>
         srcBuf, ScopeKind::Global);
   } else {
     stencil = frontend::ParseModuleToExtensibleStencil(
-        cx, &fc, cx->stackLimitForCurrentPrincipal(), cx->tempLifoAlloc(),
-        input.get(), &scopeCache, srcBuf);
+        cx, &fc, cx->stackLimitForCurrentPrincipal(), input.get(), &scopeCache,
+        srcBuf);
   }
 
   if (!stencil) {
