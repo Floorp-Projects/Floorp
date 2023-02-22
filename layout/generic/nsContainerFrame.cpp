@@ -1150,16 +1150,32 @@ void nsContainerFrame::ReflowOverflowContainerChildren(
       LogicalSize availSpace(wm, prevRect.ISize(wm),
                              aReflowInput.AvailableSize(wm).BSize(wm));
       ReflowOutput desiredSize(aReflowInput);
-      ReflowInput frameState(aPresContext, aReflowInput, frame, availSpace);
-      nsReflowStatus frameStatus;
 
-      // Reflow
+      StyleSizeOverrides sizeOverride;
+      if (frame->IsFlexItem()) {
+        // A flex item's size is determined by the flex algorithm, not solely by
+        // its style. Thus, the following overrides are necessary.
+        //
+        // Use the overflow container flex item's prev-in-flow inline-size since
+        // this continuation's inline-size is the same.
+        sizeOverride.mStyleISize.emplace(
+            StyleSize::LengthPercentage(LengthPercentage::FromAppUnits(
+                frame->StylePosition()->mBoxSizing == StyleBoxSizing::Border
+                    ? prevRect.ISize(wm)
+                    : prevInFlow->ContentSize(wm).ISize(wm))));
+
+        // An overflow container's block-size must be 0.
+        sizeOverride.mStyleBSize.emplace(
+            StyleSize::LengthPercentage(LengthPercentage::FromAppUnits(0)));
+      }
+      ReflowInput reflowInput(aPresContext, aReflowInput, frame, availSpace,
+                              Nothing(), {}, sizeOverride);
+
       LogicalPoint pos(wm, prevRect.IStart(wm), 0);
-      ReflowChild(frame, aPresContext, desiredSize, frameState, wm, pos,
+      nsReflowStatus frameStatus;
+      ReflowChild(frame, aPresContext, desiredSize, reflowInput, wm, pos,
                   containerSize, aFlags, frameStatus, &tracker);
-      // XXXfr Do we need to override any shrinkwrap effects here?
-      // e.g. desiredSize.Width() = prevRect.width;
-      FinishReflowChild(frame, aPresContext, desiredSize, &frameState, wm, pos,
+      FinishReflowChild(frame, aPresContext, desiredSize, &reflowInput, wm, pos,
                         containerSize, aFlags);
 
       // Handle continuations
