@@ -167,6 +167,19 @@ export class MigrationWizard extends HTMLElement {
   }
 
   /**
+   * This setter can be used in the event that the MigrationWizard is being
+   * inserted via Lit, and the caller wants to set state declaratively using
+   * a property expression.
+   *
+   * @param {object} state
+   *   The state object to pass to setState.
+   * @see MigrationWizard.setState.
+   */
+  set state(state) {
+    this.setState(state);
+  }
+
+  /**
    * This is the main entrypoint for updating the state and appearance of
    * the wizard.
    *
