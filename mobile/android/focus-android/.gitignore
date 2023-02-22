@@ -41,9 +41,6 @@ captures/
 # Keystore files
 *.jks
 
-# Local checkout of localization files
-l10n-repo/
-
 # Compiled python code
 *.pyc
 

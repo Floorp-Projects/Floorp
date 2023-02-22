@@ -45,9 +45,6 @@ captures/
 # Keystore files
 *.jks
 
-# Local checkout of localization files
-l10n-repo/
-
 # Compiled python code
 *.pyc
 
@@ -60,7 +57,7 @@ jacoco.exec
 #Gihub Bot Token
 .github_token
 
-# UI test artifacts 
+# UI test artifacts
 .firebase_token*
 results/
 test_artifacts/

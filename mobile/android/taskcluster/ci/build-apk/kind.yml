@@ -529,7 +529,6 @@ tasks:
             shipping-product: fenix
         include-release-version: true
         include-shippable-secrets: true
-        filter-incomplete-translations: true
         run:
             gradle-build-type: beta
             gradle-build-name: fenixBeta
@@ -553,7 +552,6 @@ tasks:
             shipping-product: fenix
         include-release-version: true
         include-shippable-secrets: true
-        filter-incomplete-translations: true
         run:
             gradle-build-type: release
             gradle-build-name: fenixRelease
