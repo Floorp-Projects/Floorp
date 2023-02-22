@@ -498,18 +498,9 @@ static void PlatformInit(PSLockRef aLock) {}
 #endif
 
 #if defined(HAVE_NATIVE_UNWIND)
-// Context used by synchronous samples. It's safe to have a single one because
-// only one synchronous sample can be taken at a time (due to
-// profiler_get_backtrace()'s PSAutoLock).
-// ucontext_t sSyncUContext;
-
-void Registers::SyncPopulate() {
-  // TODO port getcontext from breakpad, if profiler_get_backtrace is needed.
-  MOZ_CRASH("profiler_get_backtrace() unsupported");
-  // if (!getcontext(&sSyncUContext)) {
-  //   PopulateRegsFromContext(*this, &sSyncUContext);
-  // }
-}
+// TODO port getcontext from breakpad, if profiler_get_backtrace is needed.
+#  define REGISTERS_SYNC_POPULATE(regs) \
+    MOZ_CRASH("profiler_get_backtrace() unsupported");
 #endif
 
 }  // namespace baseprofiler

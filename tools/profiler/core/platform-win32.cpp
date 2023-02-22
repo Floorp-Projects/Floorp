@@ -475,11 +475,10 @@ void SamplerThread::Stop(PSLockRef aLock) {
 static void PlatformInit(PSLockRef aLock) {}
 
 #if defined(HAVE_NATIVE_UNWIND)
-void Registers::SyncPopulate() {
-  CONTEXT context;
-  RtlCaptureContext(&context);
-  PopulateRegsFromContext(*this, &context);
-}
+#  define REGISTERS_SYNC_POPULATE(regs) \
+    CONTEXT context;                    \
+    RtlCaptureContext(&context);        \
+    PopulateRegsFromContext(regs, &context);
 #endif
 
 #if defined(GP_PLAT_amd64_windows)
