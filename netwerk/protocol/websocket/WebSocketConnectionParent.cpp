@@ -52,9 +52,8 @@ mozilla::ipc::IPCResult WebSocketConnectionParent::RecvOnError(
   LOG(("WebSocketConnectionParent::RecvOnError %p\n", this));
   MOZ_ASSERT(mBackgroundThread->IsOnCurrentThread());
 
-  if (mListener) {
-    mListener->OnError(aStatus);
-  }
+  MOZ_ASSERT(mListener);
+  mListener->OnError(aStatus);
   return IPC_OK();
 }
 
@@ -73,9 +72,8 @@ mozilla::ipc::IPCResult WebSocketConnectionParent::RecvOnTCPClosed() {
   LOG(("WebSocketConnectionParent::RecvOnTCPClosed %p\n", this));
   MOZ_ASSERT(mBackgroundThread->IsOnCurrentThread());
 
-  if (mListener) {
-    mListener->OnTCPClosed();
-  }
+  MOZ_ASSERT(mListener);
+  mListener->OnTCPClosed();
   return IPC_OK();
 }
 
@@ -84,13 +82,13 @@ mozilla::ipc::IPCResult WebSocketConnectionParent::RecvOnDataReceived(
   LOG(("WebSocketConnectionParent::RecvOnDataReceived %p\n", this));
   MOZ_ASSERT(mBackgroundThread->IsOnCurrentThread());
 
-  if (mListener) {
-    uint8_t* buffer = const_cast<uint8_t*>(aData.Elements());
-    nsresult rv = mListener->OnDataReceived(buffer, aData.Length());
-    if (NS_FAILED(rv)) {
-      mListener->OnError(rv);
-    }
+  MOZ_ASSERT(mListener);
+  uint8_t* buffer = const_cast<uint8_t*>(aData.Elements());
+  nsresult rv = mListener->OnDataReceived(buffer, aData.Length());
+  if (NS_FAILED(rv)) {
+    mListener->OnError(rv);
   }
+
   return IPC_OK();
 }
 
@@ -125,11 +123,7 @@ void WebSocketConnectionParent::Close() {
 
   mClosed = true;
 
-  RefPtr<WebSocketConnectionParent> self = this;
-  auto task = [self{std::move(self)}]() {
-    Unused << self->Send__delete__(self);
-    self->mListener = nullptr;
-  };
+  auto task = [self = RefPtr{this}]() { Unused << self->Send__delete__(self); };
 
   if (mBackgroundThread->IsOnCurrentThread()) {
     task();
@@ -185,9 +179,9 @@ void WebSocketConnectionParent::DrainSocketData() {
   MOZ_ASSERT(mBackgroundThread->IsOnCurrentThread());
 
   if (!CanSend()) {
-    if (mListener) {
-      mListener->OnError(NS_ERROR_NOT_AVAILABLE);
-    }
+    MOZ_ASSERT(mListener);
+    mListener->OnError(NS_ERROR_NOT_AVAILABLE);
+
     return;
   }
 
