@@ -865,6 +865,36 @@ class DefaultTabsTrayControllerTest {
         verify { controller.handleNavigateToBrowser() }
     }
 
+    @Test
+    fun `GIVEN a normal tab is selected WHEN the last private tab is deleted THEN that private tab is removed and an undo snackbar is shown and original normal tab is still displayed`() {
+        val currentTab = TabSessionState(content = ContentState(url = "https://simulate.com", private = false), id = "currentTab")
+        val privateTab = TabSessionState(content = ContentState(url = "https://mozilla.com", private = true), id = "privateTab")
+        var showUndoSnackbarForTabInvoked = false
+        var navigateToHomeAndDeleteSessionInvoked = false
+        browserStore = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(currentTab, privateTab),
+                selectedTabId = currentTab.id,
+            ),
+        )
+        val controller = spyk(
+            createController(
+                showUndoSnackbarForTab = {
+                    showUndoSnackbarForTabInvoked = true
+                },
+                navigateToHomeAndDeleteSession = {
+                    navigateToHomeAndDeleteSessionInvoked = true
+                },
+            ),
+        )
+
+        controller.handleTabSelected(currentTab, "source")
+        controller.handleTabDeletion("privateTab")
+
+        assertTrue(showUndoSnackbarForTabInvoked)
+        assertFalse(navigateToHomeAndDeleteSessionInvoked)
+    }
+
     private fun createController(
         navigateToHomeAndDeleteSession: (String) -> Unit = { },
         selectTabPosition: (Int, Boolean) -> Unit = { _, _ -> },
