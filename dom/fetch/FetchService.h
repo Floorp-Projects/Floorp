@@ -142,6 +142,7 @@ class FetchService final : public nsIObserver {
     bool NeedOnDataAvailable() override;
     void OnDataAvailable() override;
     void FlushConsoleReport() override;
+    void OnReportPerformanceTiming() override;
 
    private:
     ~FetchInstance() = default;
