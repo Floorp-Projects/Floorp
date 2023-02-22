@@ -10,6 +10,9 @@ url = "https://chromium.googlesource.com/chromiumos/third_party/rust_crates/+/ma
 [imports.embark]
 url = "https://raw.githubusercontent.com/EmbarkStudios/rust-ecosystem/main/audits.toml"
 
+[imports.mozilla]
+url = "https://raw.githubusercontent.com/mozilla/supply-chain/main/audits.toml"
+
 [policy.audioipc-client]
 criteria = []
 notes = "Going away very soon in bug 1697845"
@@ -452,10 +455,6 @@ criteria = "safe-to-deploy"
 version = "0.11.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.either]]
-version = "1.6.1"
-criteria = "safe-to-deploy"
-
 [[exemptions.enumset]]
 version = "1.0.11"
 criteria = "safe-to-deploy"
@@ -686,10 +685,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.khronos_api]]
 version = "3.1.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.lazy_static]]
-version = "1.4.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.lazycell]]
