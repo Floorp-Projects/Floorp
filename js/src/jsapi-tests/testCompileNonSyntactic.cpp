@@ -48,7 +48,7 @@ struct OffThreadTask {
   OffThreadToken* token;
 };
 
-BEGIN_TEST(testCompileScript) {
+BEGIN_TEST(testCompileNonsyntactic) {
   CHECK(testCompile(true));
 
   CHECK(testCompile(false));
@@ -111,4 +111,4 @@ bool testCompile(bool nonSyntactic) {
 
   return true;
 }
-END_TEST(testCompileScript);
+END_TEST(testCompileNonsyntactic);
