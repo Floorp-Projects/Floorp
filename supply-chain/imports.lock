@@ -307,3 +307,20 @@ version = "0.6.0"
 who = "Johan Andersson <opensource@embark-studios.com>"
 criteria = "safe-to-run"
 version = "0.6.0"
+
+[[audits.mozilla.audits.either]]
+who = "Nika Layzell <nika@thelayzells.com>"
+criteria = "safe-to-deploy"
+version = "1.6.1"
+notes = """
+Straightforward crate providing the Either enum and trait implementations with
+no unsafe code.
+"""
+aggregated-from = "https://raw.githubusercontent.com/mozilla/cargo-vet/main/supply-chain/audits.toml"
+
+[[audits.mozilla.audits.lazy_static]]
+who = "Nika Layzell <nika@thelayzells.com>"
+criteria = "safe-to-deploy"
+version = "1.4.0"
+notes = "I have read over the macros, and audited the unsafe code."
+aggregated-from = "https://raw.githubusercontent.com/mozilla/cargo-vet/main/supply-chain/audits.toml"
