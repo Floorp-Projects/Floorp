@@ -132,11 +132,11 @@ ModuleObject* CompileModule(JSContext* cx, FrontendContext* fc,
 // Parse a module of the given source.  This is an internal API; if you want to
 // compile a module as a user, use CompileModule above.
 already_AddRefed<CompilationStencil> ParseModuleToStencil(
-    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
+    JSContext* maybeCx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
     js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
     ScopeBindingCache* scopeCache, JS::SourceText<char16_t>& srcBuf);
 already_AddRefed<CompilationStencil> ParseModuleToStencil(
-    JSContext* cx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
+    JSContext* maybeCx, FrontendContext* fc, JS::NativeStackLimit stackLimit,
     js::LifoAlloc& tempLifoAlloc, CompilationInput& input,
     ScopeBindingCache* scopeCache, JS::SourceText<mozilla::Utf8Unit>& srcBuf);
 

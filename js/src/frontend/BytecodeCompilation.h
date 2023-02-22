@@ -72,13 +72,13 @@ CompileGlobalScriptToExtensibleStencil(
                                               const CompilationStencil& stencil,
                                               CompilationGCOutput& gcOutput);
 
-extern JSScript* CompileGlobalScript(JSContext* maybeCx, FrontendContext* fc,
+extern JSScript* CompileGlobalScript(JSContext* cx, FrontendContext* fc,
                                      JS::NativeStackLimit stackLimit,
                                      const JS::ReadOnlyCompileOptions& options,
                                      JS::SourceText<char16_t>& srcBuf,
                                      ScopeKind scopeKind);
 
-extern JSScript* CompileGlobalScript(JSContext* maybeCx, FrontendContext* fc,
+extern JSScript* CompileGlobalScript(JSContext* cx, FrontendContext* fc,
                                      JS::NativeStackLimit stackLimit,
                                      const JS::ReadOnlyCompileOptions& options,
                                      JS::SourceText<mozilla::Utf8Unit>& srcBuf,
