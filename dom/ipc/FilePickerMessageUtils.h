@@ -12,6 +12,12 @@
 
 namespace IPC {
 template <>
+struct ParamTraits<nsIFilePicker::Mode>
+    : public ContiguousEnumSerializerInclusive<
+          nsIFilePicker::Mode, nsIFilePicker::Mode::modeOpen,
+          nsIFilePicker::Mode::modeGetFolder> {};
+
+template <>
 struct ParamTraits<nsIFilePicker::ResultCode>
     : public ContiguousEnumSerializerInclusive<
           nsIFilePicker::ResultCode, nsIFilePicker::ResultCode::returnOK,

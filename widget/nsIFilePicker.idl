@@ -17,10 +17,12 @@ interface nsIFilePickerShownCallback;
 [scriptable, uuid(9285b984-02d3-46b4-9514-7da8c471a747)]
 interface nsIFilePicker : nsISupports
 {
-  const short modeOpen        = 0;              // Load a file or directory
-  const short modeSave        = 1;              // Save a file or directory
-  const short modeGetFolder   = 2;              // Select a folder/directory
-  const short modeOpenMultiple= 3;              // Load multiple files
+  cenum Mode: 16 {
+    modeOpen        = 0,                        // Load a file or directory
+    modeSave        = 1,                        // Save a file or directory
+    modeGetFolder   = 2,                        // Select a folder/directory
+    modeOpenMultiple= 3,                        // Load multiple files
+  };
 
   cenum ResultCode: 16 {
     returnOK        = 0,                        // User hit Ok, process selection
@@ -66,7 +68,7 @@ interface nsIFilePicker : nsISupports
   * @param      mode     load, save, or get folder
   *
   */
-  void init(in mozIDOMWindowProxy parent, in AString title, in short mode);
+  void init(in mozIDOMWindowProxy parent, in AString title, in nsIFilePicker_Mode mode);
 
  /**
   * Append to the  filter list with things from the predefined list
@@ -195,7 +197,7 @@ interface nsIFilePicker : nsISupports
   * The picker's mode, as set by the 'mode' argument passed to init()
   * (one of the modeOpen et. al. constants specified above).
   */
-  readonly attribute short mode;
+  readonly attribute nsIFilePicker_Mode mode;
 
   /**
    * If set to non-empty string, the nsIFilePicker implementation

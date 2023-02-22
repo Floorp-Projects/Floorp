@@ -20,7 +20,7 @@ namespace mozilla::dom {
 
 class FilePickerParent : public PFilePickerParent {
  public:
-  FilePickerParent(const nsString& aTitle, const int16_t& aMode)
+  FilePickerParent(const nsString& aTitle, const nsIFilePicker::Mode& aMode)
       : mTitle(aTitle), mMode(aMode), mResult(nsIFilePicker::returnOK) {}
 
   virtual ~FilePickerParent();
@@ -86,7 +86,7 @@ class FilePickerParent : public PFilePickerParent {
   nsCOMPtr<nsIFilePicker> mFilePicker;
 
   nsString mTitle;
-  int16_t mMode;
+  nsIFilePicker::Mode mMode;
   nsIFilePicker::ResultCode mResult;
 };
 

@@ -100,7 +100,8 @@ class nsBaseFilePicker::AsyncShowFilePicker : public mozilla::Runnable {
 class nsBaseFilePickerEnumerator : public nsSimpleEnumerator {
  public:
   nsBaseFilePickerEnumerator(nsPIDOMWindowOuter* aParent,
-                             nsISimpleEnumerator* iterator, int16_t aMode)
+                             nsISimpleEnumerator* iterator,
+                             nsIFilePicker::Mode aMode)
       : mIterator(iterator),
         mParent(aParent->GetCurrentInnerWindow()),
         mMode(aMode) {}
@@ -138,7 +139,7 @@ class nsBaseFilePickerEnumerator : public nsSimpleEnumerator {
  private:
   nsCOMPtr<nsISimpleEnumerator> mIterator;
   nsCOMPtr<nsPIDOMWindowInner> mParent;
-  int16_t mMode;
+  nsIFilePicker::Mode mMode;
 };
 
 nsBaseFilePicker::nsBaseFilePicker()
@@ -147,7 +148,8 @@ nsBaseFilePicker::nsBaseFilePicker()
 nsBaseFilePicker::~nsBaseFilePicker() = default;
 
 NS_IMETHODIMP nsBaseFilePicker::Init(mozIDOMWindowProxy* aParent,
-                                     const nsAString& aTitle, int16_t aMode) {
+                                     const nsAString& aTitle,
+                                     nsIFilePicker::Mode aMode) {
   MOZ_ASSERT(aParent,
              "Null parent passed to filepicker, no file "
              "picker for you!");
@@ -355,7 +357,7 @@ nsBaseFilePicker::SetAddToRecentDocs(bool aFlag) {
 }
 
 NS_IMETHODIMP
-nsBaseFilePicker::GetMode(int16_t* aMode) {
+nsBaseFilePicker::GetMode(nsIFilePicker::Mode* aMode) {
   *aMode = mMode;
   return NS_OK;
 }

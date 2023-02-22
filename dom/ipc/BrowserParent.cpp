@@ -1281,8 +1281,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
 }
 #endif
 
-PFilePickerParent* BrowserParent::AllocPFilePickerParent(const nsString& aTitle,
-                                                         const int16_t& aMode) {
+PFilePickerParent* BrowserParent::AllocPFilePickerParent(
+    const nsString& aTitle, const nsIFilePicker::Mode& aMode) {
   return new FilePickerParent(aTitle, aMode);
 }
 

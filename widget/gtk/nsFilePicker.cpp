@@ -50,7 +50,7 @@ nsIFile* nsFilePicker::mPrevDisplayDirectory = nullptr;
 
 void nsFilePicker::Shutdown() { NS_IF_RELEASE(mPrevDisplayDirectory); }
 
-static GtkFileChooserAction GetGtkFileChooserAction(int16_t aMode) {
+static GtkFileChooserAction GetGtkFileChooserAction(nsIFilePicker::Mode aMode) {
   GtkFileChooserAction action;
 
   switch (aMode) {
@@ -398,6 +398,10 @@ nsFilePicker::Open(nsIFilePickerShownCallback* aCallback) {
     case nsIFilePicker::modeSave:
       gtk_file_chooser_set_current_name(GTK_FILE_CHOOSER(file_chooser),
                                         defaultName.get());
+      break;
+
+    default:
+      /* no additional setup needed */
       break;
   }
 

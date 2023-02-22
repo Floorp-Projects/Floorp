@@ -25,6 +25,7 @@
 #include "nsIAuthPromptProvider.h"
 #include "nsIBrowserDOMWindow.h"
 #include "nsIDOMEventListener.h"
+#include "nsIFilePicker.h"
 #include "nsIRemoteTab.h"
 #include "nsIWidget.h"
 #include "nsTArray.h"
@@ -595,7 +596,7 @@ class BrowserParent final : public PBrowserParent,
       const ScrollableLayerGuid& aGuid, uint64_t aInputBlockId);
 
   PFilePickerParent* AllocPFilePickerParent(const nsString& aTitle,
-                                            const int16_t& aMode);
+                                            const nsIFilePicker::Mode& aMode);
 
   bool DeallocPFilePickerParent(PFilePickerParent* actor);
 
