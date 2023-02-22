@@ -1,13 +1,11 @@
 defaults pref(layout.css.named-pages.enabled,true)
 
-== page-name-abspos-001.html page-name-abspos-001-ref.html
-fails == page-name-abspos-002.html page-name-abspos-002-ref.html # bug 1816570
-fails == page-name-abspos-003.html page-name-abspos-003-ref.html # bug 1816570
+# https://bugzilla.mozilla.org/1764437
+== page-name-display-none-child.html page-name-display-none-child-ref.html
 == page-name-canvas-001.html page-name-canvas-001-ref.html
 == page-name-canvas-002.html page-name-canvas-002-ref.html
 == page-name-canvas-003.html page-name-canvas-003-ref.html
 == page-name-canvas-004.html page-name-canvas-004-ref.html
-== page-name-display-none-child.html page-name-display-none-child-ref.html
 == page-name-fixed-pos-001.html page-name-fixed-pos-001-ref.html
 == page-name-flex-001.html page-name-flex-001-ref.html
 == page-name-flex-002.html page-name-flex-002-ref.html
@@ -15,8 +13,6 @@ fails == page-name-abspos-003.html page-name-abspos-003-ref.html # bug 1816570
 # This is affected by https://bugzilla.mozilla.org/1663079, however we can
 # still expect this to behave the same with break-after and page name breaks.
 == page-name-flex-004.html page-name-flex-004-ref.html
-== page-name-float-001.html page-name-float-001-ref.html
-fails == page-name-float-002.html page-name-float-002-ref.html # bug 1816570
 == page-name-img-001.html page-name-img-001-ref.html
 == page-name-img-002.html page-name-img-002-ref.html
 == page-name-img-003.html page-name-img-003-ref.html

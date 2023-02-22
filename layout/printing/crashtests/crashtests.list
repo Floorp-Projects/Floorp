@@ -9,4 +9,3 @@ load 1748277.html # Bug 1751260
 load 1758199-1.html
 pref(layout.css.named-pages.enabled,true) load 1804571.html
 pref(layout.css.named-pages.enabled,true) load 1804798.html
-pref(layout.css.named-pages.enabled,true) load 1804794.html
