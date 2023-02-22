@@ -5458,8 +5458,8 @@ template <typename Unit>
         srcBuf, ScopeKind::Global);
   } else {
     stencil = frontend::ParseModuleToExtensibleStencil(
-        cx, &fc, cx->stackLimitForCurrentPrincipal(), input.get(), &scopeCache,
-        srcBuf);
+        cx, &fc, cx->stackLimitForCurrentPrincipal(), cx->tempLifoAlloc(),
+        input.get(), &scopeCache, srcBuf);
   }
 
   if (!stencil) {
