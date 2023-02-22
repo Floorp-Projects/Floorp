@@ -36,7 +36,7 @@ _DEB_ARCH = {
 _DEB_DIST = "jessie"
 
 
-def repackage_deb(infile, output, template_dir, arch):
+def repackage_deb(infile, output, template_dir, arch, version, build_number):
 
     if not tarfile.is_tarfile(infile):
         raise Exception("Input file %s is not a valid tarfile." % infile)
@@ -58,16 +58,20 @@ def repackage_deb(infile, output, template_dir, arch):
             dict(section="App", value="CodeName", fallback="Name"),
             dict(section="App", value="Vendor"),
             dict(section="App", value="RemotingName"),
-            dict(section="App", value="Version"),
             dict(section="App", value="BuildID"),
         )
         app_name = next(values)
-        displayname = next(values)
+        display_name = next(values)
         vendor = next(values)
-        remotingname = next(values)
-        version = next(values)
-        buildid = next(values)
-        timestamp = datetime.datetime.strptime(buildid, "%Y%m%d%H%M%S")
+        remoting_name = next(values)
+        build_id = next(values)
+        timestamp = datetime.datetime.strptime(build_id, "%Y%m%d%H%M%S")
+        if "a" in version:
+            # We append the buildid to the alpha version to tell nightlies apart
+            deb_pkg_version = f"{version}~{build_id}"
+        else:
+            # With other release flavors we opt for the release's build number
+            deb_pkg_version = f"{version}~build{build_number}"
 
         os.mkdir(mozpath.join(extract_dir, "debian"))
         shutil.copy(
@@ -75,9 +79,9 @@ def repackage_deb(infile, output, template_dir, arch):
             mozpath.join(extract_dir, "debian", "rules"),
         )
         defines = {
-            "DEB_DESCRIPTION": f"{vendor} {displayname}",
-            "DEB_PKG_NAME": remotingname.lower(),
-            "DEB_PKG_VERSION": f"{version}.{buildid}",
+            "DEB_DESCRIPTION": f"{vendor} {display_name}",
+            "DEB_PKG_NAME": remoting_name.lower(),
+            "DEB_PKG_VERSION": deb_pkg_version,
             "DEB_CHANGELOG_DATE": format_datetime(timestamp),
         }
 

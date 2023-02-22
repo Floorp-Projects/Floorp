@@ -239,6 +239,10 @@ PACKAGE_FORMATS = {
             "{architecture}",
             "--templates",
             "browser/installer/linux/debian",
+            "--version",
+            "{version_display}",
+            "--build-number",
+            "{build_number}",
         ],
         "inputs": {
             "input": "target{archive_format}",
@@ -405,10 +409,11 @@ def make_job_description(config, jobs):
             attributes["repackage_type"] = "repackage-deb"
             description = (
                 "Repackaging the '{build_platform}/{build_type}' "
-                "build into a '.deb' package"
+                "{version} build into a '.deb' package"
             ).format(
                 build_platform=attributes.get("build_platform"),
                 build_type=attributes.get("build_type"),
+                version=config.params["version"],
             )
 
         _fetch_subst_locale = "en-US"
@@ -433,6 +438,7 @@ def make_job_description(config, jobs):
                 "architecture": architecture(build_platform),
                 "version_display": config.params["version"],
                 "mar-channel-id": attributes["mar-channel-id"],
+                "build_number": config.params["build_number"],
             }
             # Allow us to replace `args` as well, but specifying things expanded in mozharness
             # without breaking .format and without allowing unknown through.
@@ -551,6 +557,10 @@ def make_job_description(config, jobs):
                     "linux64-mkbom",
                 ]
             )
+
+        if "shipping-phase" in job:
+            task["shipping-phase"] = job["shipping-phase"]
+
         yield task
 
 

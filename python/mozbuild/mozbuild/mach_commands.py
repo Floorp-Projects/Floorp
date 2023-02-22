@@ -2232,16 +2232,32 @@ def repackage(command_context):
 @SubCommand(
     "repackage", "deb", description="Repackage a tar file into a .deb for Linux"
 )
-@CommandArgument("--input", "-i", type=str, required=True, help="Input filename")
-@CommandArgument("--output", "-o", type=str, required=True, help="Output filename")
+@CommandArgument(
+    "--input", "-i", type=str, required=True, help="Input tarfile filename"
+)
+@CommandArgument("--output", "-o", type=str, required=True, help="Output .deb filename")
 @CommandArgument("--arch", type=str, required=True, help="One of ['x86', 'x86_64']")
+@CommandArgument(
+    "--version",
+    type=str,
+    required=True,
+    help="The Firefox version used to create the installer",
+)
+@CommandArgument(
+    "--build-number",
+    type=str,
+    required=True,
+    help="The release's build number",
+)
 @CommandArgument(
     "--templates",
     type=str,
     required=True,
     help="Location of the templates used to generate the debian/ directory files",
 )
-def repackage_deb(command_context, input, output, arch, templates):
+def repackage_deb(
+    command_context, input, output, arch, version, build_number, templates
+):
     if not os.path.exists(input):
         print("Input file does not exist: %s" % input)
         return 1
@@ -2253,7 +2269,7 @@ def repackage_deb(command_context, input, output, arch, templates):
 
     from mozbuild.repackaging.deb import repackage_deb
 
-    repackage_deb(input, output, template_dir, arch)
+    repackage_deb(input, output, template_dir, arch, version, build_number)
 
 
 @SubCommand("repackage", "dmg", description="Repackage a tar file into a .dmg for OSX")
