@@ -13,7 +13,7 @@
 #include "XULTabAccessible.h"
 #include "HTMLFormControlAccessible.h"
 
-#include "nsObjCExceptions.h"
+#include "nsCocoaUtils.h"
 #include "mozilla/FloatingPoint.h"
 
 using namespace mozilla::a11y;
