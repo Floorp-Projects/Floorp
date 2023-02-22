@@ -33,7 +33,7 @@ class AutoTextRun {
  public:
   typedef mozilla::gfx::DrawTarget DrawTarget;
 
-  AutoTextRun(nsFontMetrics* aMetrics, DrawTarget* aDrawTarget,
+  AutoTextRun(const nsFontMetrics* aMetrics, DrawTarget* aDrawTarget,
               const char* aString, int32_t aLength) {
     mTextRun = aMetrics->GetThebesFontGroup()->MakeTextRun(
         reinterpret_cast<const uint8_t*>(aString), aLength, aDrawTarget,
@@ -41,18 +41,18 @@ class AutoTextRun {
         nsTextFrameUtils::Flags(), nullptr);
   }
 
-  AutoTextRun(nsFontMetrics* aMetrics, DrawTarget* aDrawTarget,
+  AutoTextRun(const nsFontMetrics* aMetrics, DrawTarget* aDrawTarget,
               const char16_t* aString, int32_t aLength) {
     mTextRun = aMetrics->GetThebesFontGroup()->MakeTextRun(
         aString, aLength, aDrawTarget, aMetrics->AppUnitsPerDevPixel(),
         ComputeFlags(aMetrics), nsTextFrameUtils::Flags(), nullptr);
   }
 
-  gfxTextRun* get() { return mTextRun.get(); }
-  gfxTextRun* operator->() { return mTextRun.get(); }
+  gfxTextRun* get() const { return mTextRun.get(); }
+  gfxTextRun* operator->() const { return mTextRun.get(); }
 
  private:
-  static gfx::ShapedTextFlags ComputeFlags(nsFontMetrics* aMetrics) {
+  static gfx::ShapedTextFlags ComputeFlags(const nsFontMetrics* aMetrics) {
     gfx::ShapedTextFlags flags = gfx::ShapedTextFlags();
     if (aMetrics->GetTextRunRTL()) {
       flags |= gfx::ShapedTextFlags::TEXT_IS_RTL;
@@ -158,40 +158,41 @@ void nsFontMetrics::Destroy() { mPresContext = nullptr; }
 #define CEIL_TO_TWIPS(x) (nscoord) ceil((x)*mP2A)
 
 static const gfxFont::Metrics& GetMetrics(
-    nsFontMetrics* aFontMetrics, nsFontMetrics::FontOrientation aOrientation) {
+    const nsFontMetrics* aFontMetrics,
+    nsFontMetrics::FontOrientation aOrientation) {
   RefPtr<gfxFont> font =
       aFontMetrics->GetThebesFontGroup()->GetFirstValidFont();
   return font->GetMetrics(aOrientation);
 }
 
-static const gfxFont::Metrics& GetMetrics(nsFontMetrics* aFontMetrics) {
+static const gfxFont::Metrics& GetMetrics(const nsFontMetrics* aFontMetrics) {
   return GetMetrics(aFontMetrics, aFontMetrics->Orientation());
 }
 
-nscoord nsFontMetrics::XHeight() {
+nscoord nsFontMetrics::XHeight() const {
   return ROUND_TO_TWIPS(GetMetrics(this).xHeight);
 }
 
-nscoord nsFontMetrics::CapHeight() {
+nscoord nsFontMetrics::CapHeight() const {
   return ROUND_TO_TWIPS(GetMetrics(this).capHeight);
 }
 
-nscoord nsFontMetrics::SuperscriptOffset() {
+nscoord nsFontMetrics::SuperscriptOffset() const {
   return ROUND_TO_TWIPS(GetMetrics(this).emHeight *
                         NS_FONT_SUPERSCRIPT_OFFSET_RATIO);
 }
 
-nscoord nsFontMetrics::SubscriptOffset() {
+nscoord nsFontMetrics::SubscriptOffset() const {
   return ROUND_TO_TWIPS(GetMetrics(this).emHeight *
                         NS_FONT_SUBSCRIPT_OFFSET_RATIO);
 }
 
-void nsFontMetrics::GetStrikeout(nscoord& aOffset, nscoord& aSize) {
+void nsFontMetrics::GetStrikeout(nscoord& aOffset, nscoord& aSize) const {
   aOffset = ROUND_TO_TWIPS(GetMetrics(this).strikeoutOffset);
   aSize = ROUND_TO_TWIPS(GetMetrics(this).strikeoutSize);
 }
 
-void nsFontMetrics::GetUnderline(nscoord& aOffset, nscoord& aSize) {
+void nsFontMetrics::GetUnderline(nscoord& aOffset, nscoord& aSize) const {
   aOffset = ROUND_TO_TWIPS(mFontGroup->GetUnderlineOffset());
   aSize = ROUND_TO_TWIPS(GetMetrics(this).underlineSize);
 }
@@ -213,49 +214,49 @@ static gfxFloat ComputeMaxAscent(const gfxFont::Metrics& aMetrics) {
   return floor(aMetrics.maxAscent + 0.5);
 }
 
-nscoord nsFontMetrics::InternalLeading() {
+nscoord nsFontMetrics::InternalLeading() const {
   return ROUND_TO_TWIPS(GetMetrics(this).internalLeading);
 }
 
-nscoord nsFontMetrics::ExternalLeading() {
+nscoord nsFontMetrics::ExternalLeading() const {
   return ROUND_TO_TWIPS(GetMetrics(this).externalLeading);
 }
 
-nscoord nsFontMetrics::EmHeight() {
+nscoord nsFontMetrics::EmHeight() const {
   return ROUND_TO_TWIPS(GetMetrics(this).emHeight);
 }
 
-nscoord nsFontMetrics::EmAscent() {
+nscoord nsFontMetrics::EmAscent() const {
   return ROUND_TO_TWIPS(GetMetrics(this).emAscent);
 }
 
-nscoord nsFontMetrics::EmDescent() {
+nscoord nsFontMetrics::EmDescent() const {
   return ROUND_TO_TWIPS(GetMetrics(this).emDescent);
 }
 
-nscoord nsFontMetrics::MaxHeight() {
+nscoord nsFontMetrics::MaxHeight() const {
   return CEIL_TO_TWIPS(ComputeMaxAscent(GetMetrics(this))) +
          CEIL_TO_TWIPS(ComputeMaxDescent(GetMetrics(this), mFontGroup));
 }
 
-nscoord nsFontMetrics::MaxAscent() {
+nscoord nsFontMetrics::MaxAscent() const {
   return CEIL_TO_TWIPS(ComputeMaxAscent(GetMetrics(this)));
 }
 
-nscoord nsFontMetrics::MaxDescent() {
+nscoord nsFontMetrics::MaxDescent() const {
   return CEIL_TO_TWIPS(ComputeMaxDescent(GetMetrics(this), mFontGroup));
 }
 
-nscoord nsFontMetrics::MaxAdvance() {
+nscoord nsFontMetrics::MaxAdvance() const {
   return CEIL_TO_TWIPS(GetMetrics(this).maxAdvance);
 }
 
-nscoord nsFontMetrics::AveCharWidth() {
+nscoord nsFontMetrics::AveCharWidth() const {
   // Use CEIL instead of ROUND for consistency with GetMaxAdvance
   return CEIL_TO_TWIPS(GetMetrics(this).aveCharWidth);
 }
 
-nscoord nsFontMetrics::SpaceWidth() {
+nscoord nsFontMetrics::SpaceWidth() const {
   // For vertical text with mixed or sideways orientation, we want the
   // width of a horizontal space (even if we're using vertical line-spacing
   // metrics, as with "writing-mode:vertical-*;text-orientation:mixed").
@@ -267,19 +268,20 @@ nscoord nsFontMetrics::SpaceWidth() {
           .spaceWidth);
 }
 
-int32_t nsFontMetrics::GetMaxStringLength() {
-  const gfxFont::Metrics& m = GetMetrics(this);
-  const double x = 32767.0 / std::max(1.0, m.maxAdvance);
+int32_t nsFontMetrics::GetMaxStringLength() const {
+  const double x = 32767.0 / std::max(1.0, GetMetrics(this).maxAdvance);
   int32_t len = (int32_t)floor(x);
   return std::max(1, len);
 }
 
 nscoord nsFontMetrics::GetWidth(const char* aString, uint32_t aLength,
-                                DrawTarget* aDrawTarget) {
-  if (aLength == 0) return 0;
-
-  if (aLength == 1 && aString[0] == ' ') return SpaceWidth();
-
+                                DrawTarget* aDrawTarget) const {
+  if (aLength == 0) {
+    return 0;
+  }
+  if (aLength == 1 && aString[0] == ' ') {
+    return SpaceWidth();
+  }
   StubPropertyProvider provider;
   AutoTextRun textRun(this, aDrawTarget, aString, aLength);
   if (textRun.get()) {
@@ -290,11 +292,13 @@ nscoord nsFontMetrics::GetWidth(const char* aString, uint32_t aLength,
 }
 
 nscoord nsFontMetrics::GetWidth(const char16_t* aString, uint32_t aLength,
-                                DrawTarget* aDrawTarget) {
-  if (aLength == 0) return 0;
-
-  if (aLength == 1 && aString[0] == ' ') return SpaceWidth();
-
+                                DrawTarget* aDrawTarget) const {
+  if (aLength == 0) {
+    return 0;
+  }
+  if (aLength == 1 && aString[0] == ' ') {
+    return SpaceWidth();
+  }
   StubPropertyProvider provider;
   AutoTextRun textRun(this, aDrawTarget, aString, aLength);
   if (textRun.get()) {
@@ -306,9 +310,11 @@ nscoord nsFontMetrics::GetWidth(const char16_t* aString, uint32_t aLength,
 
 // Draw a string using this font handle on the surface passed in.
 void nsFontMetrics::DrawString(const char* aString, uint32_t aLength,
-                               nscoord aX, nscoord aY, gfxContext* aContext) {
-  if (aLength == 0) return;
-
+                               nscoord aX, nscoord aY,
+                               gfxContext* aContext) const {
+  if (aLength == 0) {
+    return;
+  }
   StubPropertyProvider provider;
   AutoTextRun textRun(this, aContext->GetDrawTarget(), aString, aLength);
   if (!textRun.get()) {
@@ -328,11 +334,12 @@ void nsFontMetrics::DrawString(const char* aString, uint32_t aLength,
   textRun->Draw(range, pt, params);
 }
 
-void nsFontMetrics::DrawString(const char16_t* aString, uint32_t aLength,
-                               nscoord aX, nscoord aY, gfxContext* aContext,
-                               DrawTarget* aTextRunConstructionDrawTarget) {
-  if (aLength == 0) return;
-
+void nsFontMetrics::DrawString(
+    const char16_t* aString, uint32_t aLength, nscoord aX, nscoord aY,
+    gfxContext* aContext, DrawTarget* aTextRunConstructionDrawTarget) const {
+  if (aLength == 0) {
+    return;
+  }
   StubPropertyProvider provider;
   AutoTextRun textRun(this, aTextRunConstructionDrawTarget, aString, aLength);
   if (!textRun.get()) {
@@ -353,10 +360,11 @@ void nsFontMetrics::DrawString(const char16_t* aString, uint32_t aLength,
 }
 
 static nsBoundingMetrics GetTextBoundingMetrics(
-    nsFontMetrics* aMetrics, const char16_t* aString, uint32_t aLength,
+    const nsFontMetrics* aMetrics, const char16_t* aString, uint32_t aLength,
     mozilla::gfx::DrawTarget* aDrawTarget, gfxFont::BoundingBoxType aType) {
-  if (aLength == 0) return nsBoundingMetrics();
-
+  if (aLength == 0) {
+    return nsBoundingMetrics();
+  }
   StubPropertyProvider provider;
   AutoTextRun textRun(aMetrics, aDrawTarget, aString, aLength);
   nsBoundingMetrics m;
@@ -373,15 +381,14 @@ static nsBoundingMetrics GetTextBoundingMetrics(
   return m;
 }
 
-nsBoundingMetrics nsFontMetrics::GetBoundingMetrics(const char16_t* aString,
-                                                    uint32_t aLength,
-                                                    DrawTarget* aDrawTarget) {
+nsBoundingMetrics nsFontMetrics::GetBoundingMetrics(
+    const char16_t* aString, uint32_t aLength, DrawTarget* aDrawTarget) const {
   return GetTextBoundingMetrics(this, aString, aLength, aDrawTarget,
                                 gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS);
 }
 
 nsBoundingMetrics nsFontMetrics::GetInkBoundsForInkOverflow(
-    const char16_t* aString, uint32_t aLength, DrawTarget* aDrawTarget) {
+    const char16_t* aString, uint32_t aLength, DrawTarget* aDrawTarget) const {
   return GetTextBoundingMetrics(this, aString, aLength, aDrawTarget,
                                 gfxFont::LOOSE_INK_EXTENTS);
 }
