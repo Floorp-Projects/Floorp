@@ -4,11 +4,7 @@
 
 "use strict";
 
-/* import-globals-from ../../mochitest/role.js */
-loadScripts(
-  { name: "layout.js", dir: MOCHITESTS_DIR },
-  { name: "role.js", dir: MOCHITESTS_DIR }
-);
+loadScripts({ name: "layout.js", dir: MOCHITESTS_DIR });
 requestLongerTimeout(2);
 
 const appUnitsPerDevPixel = 60;
@@ -324,17 +320,13 @@ addAccessibleTask(
  */
 addAccessibleTask(
   `
-<table id="fixed" role="presentation" style="position: fixed;">
-  <tr><th>fixed</th></tr>
-</table>
+<div id="fixed" role="presentation" style="position: fixed;">fixed</div>
 <div id="mutate" role="presentation">mutate</div>
 <hr style="height: 200vh;">
 <p>bottom</p>
   `,
   async function(browser, docAcc) {
-    const fixed = findAccessibleChildByID(docAcc, "fixed");
-    ok(fixed, "fixed is accessible");
-    isnot(fixed.role, ROLE_TABLE, "fixed doesn't have ROLE_TABLE");
+    ok(findAccessibleChildByID(docAcc, "fixed"), "fixed is accessible");
     ok(!findAccessibleChildByID(docAcc, "mutate"), "mutate inaccessible");
     info("Setting position: fixed on mutate");
     let shown = waitForEvent(EVENT_SHOW, "mutate");
