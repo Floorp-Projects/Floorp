@@ -10,28 +10,45 @@ add_setup(async function() {
 add_task(async function test_history() {
   const TEST_URL = "https://remove.me/from_urlbar/";
   await PlacesTestUtils.addVisits(TEST_URL);
-
   registerCleanupFunction(async function() {
     await PlacesUtils.history.clear();
   });
 
-  let promiseVisitRemoved = PlacesTestUtils.waitForNotification(
-    "page-removed",
-    events => events[0].url === TEST_URL
+  const resultIndex = 1;
+  let result;
+  let startQuery = async () => {
+    await UrlbarTestUtils.promisePopupClose(window);
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "from_urlbar",
+    });
+    result = await UrlbarTestUtils.getDetailsOfResultAt(window, resultIndex);
+    Assert.equal(result.url, TEST_URL, "Found the expected result");
+    gURLBar.view.selectedRowIndex = resultIndex;
+  };
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.resultMenu.keyboardAccessible", false]],
+  });
+  await startQuery();
+  EventUtils.synthesizeKey("KEY_Tab");
+  isnot(
+    UrlbarTestUtils.getSelectedElement(window),
+    UrlbarTestUtils.getButtonForResultIndex(window, "menu", resultIndex),
+    "Tab key skips over menu button with resultMenu.keyboardAccessible pref set to false"
+  );
+  await SpecialPowers.popPrefEnv();
+  await startQuery();
+  EventUtils.synthesizeKey("KEY_Tab");
+  is(
+    UrlbarTestUtils.getSelectedElement(window),
+    UrlbarTestUtils.getButtonForResultIndex(window, "menu", resultIndex),
+    "Tab key doesn't skip over menu button with resultMenu.keyboardAccessible pref reset to true"
   );
 
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "from_urlbar",
-  });
-
-  const resultIndex = 1;
-  let result = await UrlbarTestUtils.getDetailsOfResultAt(window, resultIndex);
-  Assert.equal(result.url, TEST_URL, "Found the expected result");
-
   info("Checking that Space activates the menu button");
+  await startQuery();
   await UrlbarTestUtils.openResultMenu(window, {
-    resultIndex,
     activationKey: " ",
   });
   gURLBar.view.resultMenu.hidePopup();
@@ -42,38 +59,29 @@ add_task(async function test_history() {
     Services.urlFormatter.formatURLPref("app.support.baseURL") +
       "awesome-bar-result-menu"
   );
-  await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "L", {
-    resultIndex,
-  });
+  await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "L");
   info("Waiting for Learn more link to open in a new tab");
   await tabOpenPromise;
   gBrowser.removeCurrentTab();
 
   info("Restarting query in order to remove history entry via the menu");
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: "from_urlbar",
-  });
-  result = await UrlbarTestUtils.getDetailsOfResultAt(window, resultIndex);
-  Assert.equal(result.url, TEST_URL, "Found the expected result again");
-
+  await startQuery();
+  let promiseVisitRemoved = PlacesTestUtils.waitForNotification(
+    "page-removed",
+    events => events[0].url === TEST_URL
+  );
   let expectedResultCount = UrlbarTestUtils.getResultCount(window) - 1;
 
-  await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "R", {
-    resultIndex,
-  });
-
+  await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "R");
   const removeEvents = await promiseVisitRemoved;
   Assert.ok(
     removeEvents[0].isRemovedFromStore,
     "isRemovedFromStore should be true"
   );
-
   await TestUtils.waitForCondition(
     () => UrlbarTestUtils.getResultCount(window) == expectedResultCount,
     "Waiting for the result to disappear"
   );
-
   for (let i = 0; i < expectedResultCount; i++) {
     let details = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
     Assert.notEqual(

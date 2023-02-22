@@ -350,6 +350,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Enable three-dot options button and menu for eligible results.
   ["resultMenu", false],
 
+  // Allow the result menu button to be reached with the Tab key.
+  ["resultMenu.keyboardAccessible", true],
+
   // When using switch to tabs, if set to true this will move the tab into the
   // active window.
   ["switchTabs.adoptIntoActiveWindow", false],
