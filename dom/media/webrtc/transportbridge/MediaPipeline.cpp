@@ -1496,6 +1496,8 @@ class MediaPipelineReceiveVideo::PipelineListener
 
   void SetPrivatePrincipal(PrincipalHandle aHandle) {
     MutexAutoLock lock(mMutex);
+    MOZ_DIAGNOSTIC_ASSERT(mForceDropFrames !=
+                          (PrincipalPrivacy::Private == mPrivacy));
     if (mPrivacy == PrincipalPrivacy::Private) {
       return;
     }
