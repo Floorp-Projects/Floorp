@@ -35,9 +35,9 @@ XPCOMUtils.defineLazyGetter(lazy, "console", () => {
 });
 
 /**
- * @typedef {import("../translations").ModelRecord} ModelRecord
+ * @typedef {import("../translations").TranslationModelRecord} TranslationModelRecord
  * @typedef {import("../translations").RemoteSettingsClient} RemoteSettingsClient
- * @typedef {import("../translations").LanguageModelFiles} LanguageModelFiles
+ * @typedef {import("../translations").LanguageTranslationModelFiles} LanguageTranslationModelFiles
  * @typedef {import("../translations").WasmRecord} WasmRecord
  */
 
@@ -49,18 +49,18 @@ XPCOMUtils.defineLazyGetter(lazy, "console", () => {
  */
 export class TranslationsParent extends JSWindowActorParent {
   /**
-   * A map of the ModelRecord["id"] to the record of the model in Remote Settings.
+   * A map of the TranslationModelRecord["id"] to the record of the model in Remote Settings.
    * Used to coordinate the downloads. See `getLanguagePair`
    *
-   * @type {Map<string, ModelRecord>}
+   * @type {Map<string, TranslationModelRecord>}
    */
-  #modelRecords = new Map();
+  #translationModelRecords = new Map();
 
   /** @type {RemoteSettingsClient | null} */
-  #modelsRemoteClient = null;
+  #translationModelsRemoteClient = null;
 
   /** @type {RemoteSettingsClient | null} */
-  #wasmRemoteClient = null;
+  #translationsWasmRemoteClient = null;
 
   /**
    * The translation engine can be mocked for testing.
@@ -74,9 +74,9 @@ export class TranslationsParent extends JSWindowActorParent {
       case "Translations:GetBergamotWasmArrayBuffer": {
         return this.#getBergamotWasmArrayBuffer();
       }
-      case "Translations:GetLanguageModelFiles": {
+      case "Translations:GetLanguageTranslationModelFiles": {
         const { fromLanguage, toLanguage } = data;
-        const files = await this.getLanguageModelFiles(
+        const files = await this.getLanguageTranslationModelFiles(
           fromLanguage,
           toLanguage
         );
@@ -86,8 +86,8 @@ export class TranslationsParent extends JSWindowActorParent {
         }
         // No matching model was found, try to pivot between English.
         const [files1, files2] = await Promise.all([
-          this.getLanguageModelFiles(fromLanguage, PIVOT_LANGUAGE),
-          this.getLanguageModelFiles(PIVOT_LANGUAGE, toLanguage),
+          this.getLanguageTranslationModelFiles(fromLanguage, PIVOT_LANGUAGE),
+          this.getLanguageTranslationModelFiles(PIVOT_LANGUAGE, toLanguage),
         ]);
         if (!files1 || !files2) {
           throw new Error(
@@ -112,7 +112,7 @@ export class TranslationsParent extends JSWindowActorParent {
     const languages = new Set();
     const languagePairs =
       TranslationsParent.#mockedLanguagePairs ??
-      (await this.#getModelRecords()).values();
+      (await this.#getTranslationModelRecords()).values();
     for (const { fromLang } of languagePairs) {
       languages.add(fromLang);
     }
@@ -134,9 +134,9 @@ export class TranslationsParent extends JSWindowActorParent {
    *
    * @returns {RemoteSettingsClient}
    */
-  #getModelsRemoteClient() {
-    if (this.#modelsRemoteClient) {
-      return this.#modelsRemoteClient;
+  #getTranslationModelsRemoteClient() {
+    if (this.#translationModelsRemoteClient) {
+      return this.#translationModelsRemoteClient;
     }
 
     /** @type {RemoteSettingsClient} */
@@ -158,7 +158,7 @@ export class TranslationsParent extends JSWindowActorParent {
       // Remove all the deleted records.
       for (const record of deleted) {
         await client.attachments.deleteDownloaded(record);
-        this.#modelRecords.delete(record.id);
+        this.#translationModelRecords.delete(record.id);
       }
 
       // Pre-emptively remove the old downloads, and set the new updated record.
@@ -166,13 +166,13 @@ export class TranslationsParent extends JSWindowActorParent {
         await client.attachments.deleteDownloaded(oldRecord);
         // The language pairs should be the same on the update, but use the old
         // record just in case.
-        this.#modelRecords.delete(oldRecord.id);
-        this.#modelRecords.set(newRecord.id, newRecord);
+        this.#translationModelRecords.delete(oldRecord.id);
+        this.#translationModelRecords.set(newRecord.id, newRecord);
       }
 
       // Add the new records, but don't download any attachments.
       for (const record of created) {
-        this.#modelRecords.set(record.id, record);
+        this.#translationModelRecords.set(record.id, record);
       }
     });
 
@@ -183,22 +183,22 @@ export class TranslationsParent extends JSWindowActorParent {
    * Lazily initializes the model records, and returns the cached ones if they
    * were already retrieved.
    *
-   * @returns {Promise<Map<string, ModelRecord>>}
+   * @returns {Promise<Map<string, TranslationModelRecord>>}
    */
-  async #getModelRecords() {
-    if (this.#modelRecords.size > 0) {
-      return this.#modelRecords;
+  async #getTranslationModelRecords() {
+    if (this.#translationModelRecords.size > 0) {
+      return this.#translationModelRecords;
     }
 
     const now = Date.now();
-    const client = this.#getModelsRemoteClient();
+    const client = this.#getTranslationModelsRemoteClient();
 
     // Load the models. If no data is present, then there will be an initial sync.
     // Rely on Remote Settings for the syncing strategy for receiving updates.
     lazy.console.log(`Getting remote language models.`);
 
-    /** @type {ModelRecord[]} */
-    const records = await client.get({
+    /** @type {TranslationModelRecord[]} */
+    const translationModelRecords = await client.get({
       // Pull the records from the network so that we never get an empty list.
       syncIfEmpty: true,
       // TODO (Bug 1813779) - We should consider the verification process. For now do the
@@ -206,17 +206,17 @@ export class TranslationsParent extends JSWindowActorParent {
       verifySignature: true,
     });
 
-    for (const modelRecord of records) {
-      this.#modelRecords.set(modelRecord.id, modelRecord);
+    for (const record of translationModelRecords) {
+      this.#translationModelRecords.set(record.id, record);
     }
 
     const duration = (Date.now() - now) / 1000;
     lazy.console.log(
       `Remote language models loaded in ${duration} seconds.`,
-      records
+      translationModelRecords
     );
 
-    return this.#modelRecords;
+    return this.#translationModelRecords;
   }
 
   /**
@@ -224,9 +224,9 @@ export class TranslationsParent extends JSWindowActorParent {
    *
    * @returns {RemoteSettingsClient}
    */
-  #getWasmRemoteClient() {
-    if (this.#wasmRemoteClient) {
-      return this.#wasmRemoteClient;
+  #getTranslationsWasmRemoteClient() {
+    if (this.#translationsWasmRemoteClient) {
+      return this.#translationsWasmRemoteClient;
     }
     /** @type {RemoteSettingsClient} */
     const client = lazy.RemoteSettings("translations-wasm");
@@ -253,7 +253,7 @@ export class TranslationsParent extends JSWindowActorParent {
       // Do nothing for the created records.
     });
 
-    this.#wasmRemoteClient = client;
+    this.#translationsWasmRemoteClient = client;
     return client;
   }
 
@@ -268,7 +268,7 @@ export class TranslationsParent extends JSWindowActorParent {
    */
   async #getBergamotWasmArrayBuffer() {
     const start = Date.now();
-    const client = this.#getWasmRemoteClient();
+    const client = this.#getTranslationsWasmRemoteClient();
 
     // Load the wasm binary from remote settings, if it hasn't been already.
     lazy.console.log(`Getting remote bergamot-translator wasm records.`);
@@ -325,22 +325,22 @@ export class TranslationsParent extends JSWindowActorParent {
    * @param {string} fromLanguage
    * @param {string} toLanguage
    * @param {boolean} withQualityEstimation
-   * @returns {null | LanguageModelFiles}
+   * @returns {null | LanguageTranslationModelFiles}
    */
-  async getLanguageModelFiles(
+  async getLanguageTranslationModelFiles(
     fromLanguage,
     toLanguage,
     withQualityEstimation = false
   ) {
-    const client = this.#getModelsRemoteClient();
+    const client = this.#getTranslationModelsRemoteClient();
 
     lazy.console.log(
       `Beginning model downloads: "${fromLanguage}" to "${toLanguage}"`
     );
 
-    const records = [...(await this.#getModelRecords()).values()];
+    const records = [...(await this.#getTranslationModelRecords()).values()];
 
-    /** @type {LanguageModelFiles} */
+    /** @type {LanguageTranslationModelFiles} */
     let results;
 
     // Use Promise.all to download (or retrieve from cache) the model files in parallel.
@@ -372,8 +372,9 @@ export class TranslationsParent extends JSWindowActorParent {
           record,
         };
 
+        const duration = Date.now() - start;
         lazy.console.log(
-          `Model fetched in ${(Date.now() - start) / 1000} seconds:`,
+          `Translation model fetched in ${duration / 1000} seconds:`,
           record.fromLang,
           record.toLang,
           record.fileType

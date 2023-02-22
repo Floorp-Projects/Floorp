@@ -7,7 +7,7 @@
 // allow for the page to get access to additional privileged features.
 
 /* global AT_getSupportedLanguages, AT_log, AT_getScriptDirection,
-   AT_getAppLocale, AT_logError, AT_destroyEngine,
+   AT_getAppLocale, AT_logError, AT_destroyTranslationsEngine,
    AT_createTranslationsEngine, AT_translate */
 
 /**
@@ -51,7 +51,7 @@ class TranslationsState {
    *
    * @type {null | Promise<TranslationsEngine>}
    */
-  engine = null;
+  translationsEngine = null;
 
   constructor() {
     this.supportedLanguages = AT_getSupportedLanguages();
@@ -65,20 +65,30 @@ class TranslationsState {
   async maybeRequestTranslation() {
     // The contents of "this" can change between async steps, store a local variable
     // binding of these values.
-    const { fromLanguage, toLanguage, messageToTranslate, engine } = this;
+    const {
+      fromLanguage,
+      toLanguage,
+      messageToTranslate,
+      translationsEngine,
+    } = this;
 
-    if (!fromLanguage || !toLanguage || !messageToTranslate || !engine) {
+    if (
+      !fromLanguage ||
+      !toLanguage ||
+      !messageToTranslate ||
+      !translationsEngine
+    ) {
       // Not everything is set for translation.
       this.ui.updateTranslation("");
       return;
     }
 
     // Ensure the engine is ready to go.
-    await engine;
+    await translationsEngine;
 
     // Check if the configuration has changed between each async step.
     const isStale = () =>
-      this.engine !== engine ||
+      this.translationsEngine !== translationsEngine ||
       this.fromLanguage !== fromLanguage ||
       this.toLanguage !== toLanguage ||
       this.messageToTranslate !== messageToTranslate;
@@ -109,10 +119,10 @@ class TranslationsState {
     if (!this.fromLanguage || !this.toLanguage) {
       // A from or to language could have been removed. Don't do any more translations
       // with it.
-      if (this.engine) {
+      if (this.translationsEngine) {
         // The engine is no longer needed.
-        AT_destroyEngine();
-        this.engine = null;
+        AT_destroyTranslationsEngine();
+        this.translationsEngine = null;
       }
       return;
     }
@@ -122,14 +132,14 @@ class TranslationsState {
       `Rebuilding the translations worker for "${this.fromLanguage}" to "${this.toLanguage}"`
     );
 
-    this.engine = AT_createTranslationsEngine(
+    this.translationsEngine = AT_createTranslationsEngine(
       this.fromLanguage,
       this.toLanguage
     );
     this.maybeRequestTranslation();
 
     try {
-      await this.engine;
+      await this.translationsEngine;
       const duration = performance.now() - start;
       AT_log(`Rebuilt the TranslationsEngine in ${duration / 1000} seconds`);
       // TODO (Bug 1813781) - Report this error in the UI.

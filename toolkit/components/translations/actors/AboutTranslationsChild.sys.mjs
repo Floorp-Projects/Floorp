@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyGetter(lazy, "console", () => {
  */
 export class AboutTranslationsChild extends JSWindowActorChild {
   /** @type {TranslationsEngine | null} */
-  engine = null;
+  translationsEngine = null;
 
   handleEvent(event) {
     if (event.type === "DOMDocElementInserted") {
@@ -101,7 +101,7 @@ export class AboutTranslationsChild extends JSWindowActorChild {
       "AT_getSupportedLanguages",
       "AT_createTranslationsEngine",
       "AT_translate",
-      "AT_destroyEngine",
+      "AT_destroyTranslationsEngine",
       "AT_getScriptDirection",
     ];
     for (const name of fns) {
@@ -155,15 +155,15 @@ export class AboutTranslationsChild extends JSWindowActorChild {
    * @returns {Promise<void>}
    */
   AT_createTranslationsEngine(fromLanguage, toLanguage) {
-    if (this.engine) {
-      this.engine.terminate();
-      this.engine = null;
+    if (this.translationsEngine) {
+      this.translationsEngine.terminate();
+      this.translationsEngine = null;
     }
     return this.#convertToContentPromise(
       this.#getTranslationsChild()
         .createTranslationsEngine(fromLanguage, toLanguage)
         .then(engine => {
-          this.engine = engine;
+          this.translationsEngine = engine;
         })
     );
   }
@@ -173,13 +173,13 @@ export class AboutTranslationsChild extends JSWindowActorChild {
    * @returns {Promise<string[]>}
    */
   AT_translate(messageBatch) {
-    if (!this.engine) {
+    if (!this.translationsEngine) {
       throw new this.contentWindow.Error(
         "The translations engine was not created."
       );
     }
     return this.#convertToContentPromise(
-      this.engine
+      this.translationsEngine
         .translate(messageBatch)
         .then(translations => Cu.cloneInto(translations, this.contentWindow))
     );
@@ -188,10 +188,10 @@ export class AboutTranslationsChild extends JSWindowActorChild {
   /**
    * This is not strictly necessary, but could free up resources quicker.
    */
-  AT_destroyEngine() {
-    if (this.engine) {
-      this.engine.terminate();
-      this.engine = null;
+  AT_destroyTranslationsEngine() {
+    if (this.translationsEngine) {
+      this.translationsEngine.terminate();
+      this.translationsEngine = null;
     }
   }
 

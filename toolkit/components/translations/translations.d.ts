@@ -27,7 +27,7 @@ export interface Attachment {
 /**
  * The JSON that is synced from Remote Settings for the translation models.
  */
-export interface ModelRecord {
+export interface TranslationModelRecord {
   // The full model name, e.g. "lex.50.50.deen.s2t.bin"
   name: string;
   // The BCP 47 language tag, e.g. "de"
@@ -183,35 +183,35 @@ interface RemoteSettingsClient {
 /**
  * A single language model file.
  */
-interface LanguageModelFile {
+interface LanguageTranslationModelFile {
   buffer: ArrayBuffer,
-  record: ModelRecord,
+  record: TranslationModelRecord,
 }
 
 /**
  * The files necessary to run the translations, these will be sent to the Bergamot
  * translation engine.
  */
-interface LanguageModelFiles {
+interface LanguageTranslationModelFiles {
   // The machine learning language model.
-  model: LanguageModelFile,
+  model: LanguageTranslationModelFile,
   // The lexical shortlist that limits possible output of the decoder and makes
   // inference faster.
-  lex: LanguageModelFile,
+  lex: LanguageTranslationModelFile,
   // A model that can generate a translation quality estimation.
-  qualityModel?: LanguageModelFile,
+  qualityModel?: LanguageTranslationModelFile,
 
   // There is either a single vocab file:
-  vocab?: LanguageModelFile,
+  vocab?: LanguageTranslationModelFile,
 
   // Or there are two:
-  srcvocab?: LanguageModelFile,
-  trgvocab?: LanguageModelFile,
+  srcvocab?: LanguageTranslationModelFile,
+  trgvocab?: LanguageTranslationModelFile,
 };
 
 /**
  * This is the type that is generated when the models are loaded into wasm aligned memory.
  */
-type LanguageModelFilesAligned = {
-  [K in keyof LanguageModelFiles]: AlignedMemory
+type LanguageTranslationModelFilesAligned = {
+  [K in keyof LanguageTranslationModelFiles]: AlignedMemory
 };
