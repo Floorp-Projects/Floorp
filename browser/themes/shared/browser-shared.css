@@ -998,19 +998,18 @@ popupnotificationcontent {
    * swipe gesture reached to the point where history navigation will be
    * triggered.
    */
-  .swipe-nav-icon path {
-    fill: var(--swipe-nav-icon-accent-color);
-    stroke: var(--swipe-nav-icon-primary-color);;
-  }
-  .swipe-nav-icon.will-navigate > path {
-    stroke: var(--swipe-nav-icon-accent-color);
-  }
-  .swipe-nav-icon.will-navigate > path:first-of-type {
+  .swipe-nav-icon-circle-outline,
+  .swipe-nav-icon-arrow {
     fill: var(--swipe-nav-icon-primary-color);
   }
-  @media (prefers-contrast) {
-    .swipe-nav-icon.will-navigate > path:not(:first-of-type) {
-      fill: var(--swipe-nav-icon-accent-color);
-    }
+  .swipe-nav-icon-circle {
+    fill: var(--swipe-nav-icon-accent-color);
+  }
+  .swipe-nav-icon.will-navigate > .swipe-nav-icon-circle-outline,
+  .swipe-nav-icon.will-navigate > .swipe-nav-icon-arrow {
+    fill: var(--swipe-nav-icon-accent-color);
+  }
+  .swipe-nav-icon.will-navigate > .swipe-nav-icon-circle {
+    fill: var(--swipe-nav-icon-primary-color);
   }
 }
