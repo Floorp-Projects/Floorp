@@ -99,9 +99,6 @@ class LookAndFeel {
     // Should menu items blink when they're chosen?
     ChosenMenuItemsShouldBlink,
 
-    // Whether to always show access keys and focus rings.
-    ShowKeyboardCues,
-
     /*
      * A Boolean value to determine whether the Windows accent color
      * should be applied to the title bar.

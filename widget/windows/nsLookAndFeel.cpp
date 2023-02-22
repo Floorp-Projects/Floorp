@@ -482,12 +482,6 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::WindowsDefaultTheme:
       aResult = nsUXThemeData::IsDefaultWindowTheme();
       break;
-    case IntID::ShowKeyboardCues: {
-      BOOL show = FALSE;
-      ::SystemParametersInfoW(SPI_GETKEYBOARDCUES, 0, &show, 0);
-      aResult = show;
-      break;
-    }
     case IntID::DWMCompositor:
       aResult = gfxWindowsPlatform::GetPlatform()->DwmCompositionEnabled();
       break;

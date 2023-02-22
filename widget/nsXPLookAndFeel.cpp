@@ -147,7 +147,6 @@ static const char sIntPrefs[][45] = {
     "ui.treeScrollLinesMax",
     "accessibility.tabfocus",  // Weird one...
     "ui.chosenMenuItemsShouldBlink",
-    "ui.showKeyboardCues",
     "ui.windowsAccentColorInTitlebar",
     "ui.windowsDefaultTheme",
     "ui.dwmCompositor",

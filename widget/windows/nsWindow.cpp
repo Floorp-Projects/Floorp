@@ -5275,7 +5275,7 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_SETTINGCHANGE: {
       if (wParam == SPI_SETCLIENTAREAANIMATION ||
-          wParam == SPI_SETKEYBOARDCUES || wParam == SPI_SETKEYBOARDDELAY) {
+          wParam == SPI_SETKEYBOARDDELAY) {
         // These need to update LookAndFeel cached values.
         // They affect reduced motion settings / caret blink count / and
         // keyboard cues, so no need to invalidate style / layout.
