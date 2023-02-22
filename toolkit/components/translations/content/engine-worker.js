@@ -6,7 +6,7 @@
 
 /**
  * @typedef {import("../translations").Bergamot} Bergamot
- * @typedef {import("../translations").LanguageModelFiles} LanguageModelFiles
+ * @typedef {import("../translations").LanguageTranslationModelFiles} LanguageTranslationModelFiles
  */
 
 /* global loadBergamot */
@@ -53,7 +53,7 @@ async function initialize({ data }) {
       fromLanguage,
       toLanguage,
       bergamotWasmArrayBuffer,
-      languageModelFiles,
+      languageTranslationModelFiles,
       isLoggingEnabled,
     } = data;
 
@@ -68,8 +68,10 @@ async function initialize({ data }) {
         '"Worker initialization missing "bergamotWasmArrayBuffer"'
       );
     }
-    if (!languageModelFiles) {
-      throw new Error('"Worker initialization missing "languageModelFiles"');
+    if (!languageTranslationModelFiles) {
+      throw new Error(
+        '"Worker initialization missing "languageTranslationModelFiles"'
+      );
     }
 
     if (isLoggingEnabled) {
@@ -84,7 +86,7 @@ async function initialize({ data }) {
       fromLanguage,
       toLanguage,
       bergamot,
-      languageModelFiles
+      languageTranslationModelFiles
     );
     postMessage({ type: "initialization-success" });
   } catch (error) {
@@ -112,9 +114,14 @@ class TranslationsEngineWorker {
    * @param {string} fromLanguage
    * @param {string} toLanguage
    * @param {Bergamot} bergamot
-   * @param {Array<LanguageModelFiles>} languageModelFiles
+   * @param {Array<LanguageTranslationModelFiles>} languageTranslationModelFiles
    */
-  constructor(fromLanguage, toLanguage, bergamot, languageModelFiles) {
+  constructor(
+    fromLanguage,
+    toLanguage,
+    bergamot,
+    languageTranslationModelFiles
+  ) {
     /** @type {string} */
     this.fromLanguage = fromLanguage;
     /** @type {string} */
@@ -122,11 +129,12 @@ class TranslationsEngineWorker {
     /** @type {Bergamot} */
     this.bergamot = bergamot;
     /** @type {Bergamot["TranslationModel"][]} */
-    this.languageModels = languageModelFiles.map(languageModelFiles =>
-      BergamotUtils.constructSingleTranslationModel(
-        bergamot,
-        languageModelFiles
-      )
+    this.languageTranslationModels = languageTranslationModelFiles.map(
+      languageTranslationModelFiles =>
+        BergamotUtils.constructSingleTranslationModel(
+          bergamot,
+          languageTranslationModelFiles
+        )
     );
 
     /** @type {Bergamot["BlockingService"]} */
@@ -193,16 +201,16 @@ class TranslationsEngineWorker {
       /** @type {Bergamot["VectorResponse"]} */
       let responses;
 
-      if (this.languageModels.length === 1) {
+      if (this.languageTranslationModels.length === 1) {
         responses = this.translationService.translate(
-          this.languageModels[0],
+          this.languageTranslationModels[0],
           messages,
           options
         );
-      } else if (this.languageModels.length === 2) {
+      } else if (this.languageTranslationModels.length === 2) {
         responses = this.translationService.translateViaPivoting(
-          this.languageModels[0],
-          this.languageModels[1],
+          this.languageTranslationModels[0],
+          this.languageTranslationModels[1],
           messages,
           options
         );
@@ -233,10 +241,13 @@ class BergamotUtils {
    * Construct a single translation model.
    *
    * @param {Bergamot} bergamot
-   * @param {LanguageModelFiles} languageModelFiles
+   * @param {LanguageTranslationModelFiles} languageTranslationModelFiles
    * @returns {Bergamot["TranslationModel"]}
    */
-  static constructSingleTranslationModel(bergamot, languageModelFiles) {
+  static constructSingleTranslationModel(
+    bergamot,
+    languageTranslationModelFiles
+  ) {
     log(`Constructing translation model.`);
 
     const {
@@ -246,7 +257,10 @@ class BergamotUtils {
       qualityModel,
       srcvocab,
       trgvocab,
-    } = BergamotUtils.allocateModelMemory(bergamot, languageModelFiles);
+    } = BergamotUtils.allocateModelMemory(
+      bergamot,
+      languageTranslationModelFiles
+    );
 
     // Transform the bytes to mb, like "10.2mb"
     const getMemory = memory => `${Math.floor(memory.size() / 100_000) / 10}mb`;
@@ -287,7 +301,7 @@ class BergamotUtils {
       "cpu-threads": "0",
       quiet: "true",
       "quiet-translation": "true",
-      "gemm-precision": languageModelFiles.model.record.name.endsWith(
+      "gemm-precision": languageTranslationModelFiles.model.record.name.endsWith(
         "intgemm8.bin"
       )
         ? "int8shiftAll"
@@ -312,14 +326,16 @@ class BergamotUtils {
    * to. This function copies over the model blobs into this memory space.
    *
    * @param {Bergamot} bergamot
-   * @param {LanguageModelFiles} languageModelFiles
-   * @returns {LanguageModelFilesAligned}
+   * @param {LanguageTranslationModelFiles} languageTranslationModelFiles
+   * @returns {LanguageTranslationModelFilesAligned}
    */
-  static allocateModelMemory(bergamot, languageModelFiles) {
-    /** @type {LanguageModelFilesAligned} */
+  static allocateModelMemory(bergamot, languageTranslationModelFiles) {
+    /** @type {LanguageTranslationModelFilesAligned} */
     const results = {};
 
-    for (const [fileType, file] of Object.entries(languageModelFiles)) {
+    for (const [fileType, file] of Object.entries(
+      languageTranslationModelFiles
+    )) {
       const alignment = MODEL_FILE_ALIGNMENTS[fileType];
       if (!alignment) {
         throw new Error(`Unknown file type: "${fileType}"`);
