@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBackgroundIDBDatabaseFile;
-include protocol PBackgroundIDBDatabaseRequest;
 include protocol PBackgroundIDBFactory;
 include protocol PBackgroundIDBTransaction;
 include protocol PBackgroundIDBVersionChangeTransaction;
@@ -25,24 +24,12 @@ namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
-struct CreateFileParams
-{
-  nsString name;
-  nsString type;
-};
-
-union DatabaseRequestParams
-{
-  CreateFileParams;
-};
-
 [ManualDealloc, ChildImpl="indexedDB::BackgroundDatabaseChild", ParentImpl=virtual]
 sync protocol PBackgroundIDBDatabase
 {
   manager PBackgroundIDBFactory;
 
   manages PBackgroundIDBDatabaseFile;
-  manages PBackgroundIDBDatabaseRequest;
   manages PBackgroundIDBTransaction;
   manages PBackgroundIDBVersionChangeTransaction;
   manages PBackgroundMutableFile;
@@ -55,8 +42,6 @@ parent:
   async Close();
 
   async PBackgroundIDBDatabaseFile(IPCBlob blob);
-
-  async PBackgroundIDBDatabaseRequest(DatabaseRequestParams params);
 
   async PBackgroundIDBTransaction(nsString[] objectStoreNames, Mode mode);
 

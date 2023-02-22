@@ -112,7 +112,6 @@
 #include "mozilla/dom/indexedDB/PBackgroundIDBDatabase.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBDatabaseFileParent.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBDatabaseParent.h"
-#include "mozilla/dom/indexedDB/PBackgroundIDBDatabaseRequestParent.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBFactory.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBFactoryParent.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBFactoryRequestParent.h"
@@ -2224,7 +2223,6 @@ class Database final
   const nsString mFilePath;
   const Maybe<const CipherKey> mKey;
   uint32_t mActiveMutableFileCount;
-  uint32_t mPendingCreateFileOpCount;
   int64_t mDirectoryLockId;
   const uint32_t mTelemetryId;
   const PersistenceType mPersistenceType;
@@ -2333,10 +2331,6 @@ class Database final
 
   void NoteInactiveMutableFile();
 
-  void NotePendingCreateFileOp();
-
-  void NoteCompletedCreateFileOp();
-
   void SetActorAlive();
 
   void MapBlob(const IPCBlob& aIPCBlob, SafeRefPtr<DatabaseFileInfo> aFileInfo);
@@ -2413,8 +2407,6 @@ class Database final
 
   void CleanupMetadata();
 
-  bool VerifyRequestParams(const DatabaseRequestParams& aParams) const;
-
   // IPDL methods are only called by IPDL.
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -2423,16 +2415,6 @@ class Database final
 
   bool DeallocPBackgroundIDBDatabaseFileParent(
       PBackgroundIDBDatabaseFileParent* aActor) override;
-
-  PBackgroundIDBDatabaseRequestParent* AllocPBackgroundIDBDatabaseRequestParent(
-      const DatabaseRequestParams& aParams) override;
-
-  mozilla::ipc::IPCResult RecvPBackgroundIDBDatabaseRequestConstructor(
-      PBackgroundIDBDatabaseRequestParent* aActor,
-      const DatabaseRequestParams& aParams) override;
-
-  bool DeallocPBackgroundIDBDatabaseRequestParent(
-      PBackgroundIDBDatabaseRequestParent* aActor) override;
 
   already_AddRefed<PBackgroundIDBTransactionParent>
   AllocPBackgroundIDBTransactionParent(
@@ -3439,79 +3421,6 @@ class DeleteDatabaseOp::VersionChangeOp final : public DatabaseOperationBase {
   void RunOnOwningThread();
 
   NS_DECL_NSIRUNNABLE
-};
-
-class DatabaseOp : public DatabaseOperationBase,
-                   public PBackgroundIDBDatabaseRequestParent {
- protected:
-  SafeRefPtr<Database> mDatabase;
-
-  enum class State {
-    // Just created on the PBackground thread, dispatched to the main thread.
-    // Next step is DatabaseWork.
-    Initial,
-
-    // Waiting to do/doing work on the QuotaManager IO thread. Next step is
-    // SendingResults.
-    DatabaseWork,
-
-    // Waiting to send/sending results on the PBackground thread. Next step is
-    // Completed.
-    SendingResults,
-
-    // All done.
-    Completed
-  };
-
-  State mState;
-
- public:
-  void RunImmediately() {
-    MOZ_ASSERT(mState == State::Initial);
-
-    Unused << this->Run();
-  }
-
- protected:
-  DatabaseOp(SafeRefPtr<Database> aDatabase);
-
-  ~DatabaseOp() override {
-    MOZ_ASSERT_IF(OperationMayProceed(),
-                  mState == State::Initial || mState == State::Completed);
-  }
-
-  nsresult SendToIOThread();
-
-  // Methods that subclasses must implement.
-  virtual nsresult DoDatabaseWork() = 0;
-
-  virtual void SendResults() = 0;
-
-  // Common nsIRunnable implementation that subclasses may not override.
-  NS_IMETHOD
-  Run() final;
-
-  // IPDL methods.
-  void ActorDestroy(ActorDestroyReason aWhy) override;
-};
-
-class CreateFileOp final : public DatabaseOp {
-  const CreateFileParams mParams;
-
-  LazyInitializedOnce<const SafeRefPtr<DatabaseFileInfo>> mFileInfo;
-
- public:
-  CreateFileOp(SafeRefPtr<Database> aDatabase,
-               const DatabaseRequestParams& aParams);
-
- private:
-  ~CreateFileOp() override = default;
-
-  mozilla::Result<RefPtr<MutableFile>, nsresult> CreateMutableFile();
-
-  nsresult DoDatabaseWork() override;
-
-  void SendResults() override;
 };
 
 class VersionChangeTransactionOp : public TransactionDatabaseOperationBase {
@@ -9495,7 +9404,6 @@ Database::Database(SafeRefPtr<Factory> aFactory,
       mFilePath(mMetadata->mFilePath),
       mKey(aMaybeKey),
       mActiveMutableFileCount(0),
-      mPendingCreateFileOpCount(0),
       mTelemetryId(aTelemetryId),
       mPersistenceType(mMetadata->mCommonMetadata.persistenceType()),
       mChromeWriteAccessAllowed(aChromeWriteAccessAllowed),
@@ -9636,23 +9544,6 @@ void Database::NoteInactiveMutableFile() {
   MOZ_ASSERT(mActiveMutableFileCount > 0);
 
   --mActiveMutableFileCount;
-
-  MaybeCloseConnection();
-}
-
-void Database::NotePendingCreateFileOp() {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mDirectoryLock);
-  MOZ_ASSERT(mPendingCreateFileOpCount < UINT32_MAX);
-
-  ++mPendingCreateFileOpCount;
-}
-
-void Database::NoteCompletedCreateFileOp() {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mPendingCreateFileOpCount > 0);
-
-  --mPendingCreateFileOpCount;
 
   MaybeCloseConnection();
 }
@@ -9818,8 +9709,8 @@ bool Database::CloseInternal() {
 void Database::MaybeCloseConnection() {
   AssertIsOnBackgroundThread();
 
-  if (!mTransactions.Count() && !mActiveMutableFileCount &&
-      !mPendingCreateFileOpCount && IsClosed() && mDirectoryLock) {
+  if (!mTransactions.Count() && !mActiveMutableFileCount && IsClosed() &&
+      mDirectoryLock) {
     nsCOMPtr<nsIRunnable> callback =
         NewRunnableMethod("dom::indexedDB::Database::ConnectionClosedCallback",
                           this, &Database::ConnectionClosedCallback);
@@ -9835,7 +9726,6 @@ void Database::ConnectionClosedCallback() {
   MOZ_ASSERT(mClosed);
   MOZ_ASSERT(!mTransactions.Count());
   MOZ_ASSERT(!mActiveMutableFileCount);
-  MOZ_ASSERT(!mPendingCreateFileOpCount);
 
   mDirectoryLock = nullptr;
 
@@ -9873,22 +9763,6 @@ void Database::CleanupMetadata() {
 
   // Match the IncreaseBusyCount in OpenDatabaseOp::EnsureDatabaseActor().
   DecreaseBusyCount();
-}
-
-bool Database::VerifyRequestParams(const DatabaseRequestParams& aParams) const {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aParams.type() != DatabaseRequestParams::T__None);
-
-  switch (aParams.type()) {
-    case DatabaseRequestParams::TCreateFileParams: {
-      return false;
-    }
-
-    default:
-      MOZ_CRASH("Should never get here!");
-  }
-
-  return true;
 }
 
 void Database::ActorDestroy(ActorDestroyReason aWhy) {
@@ -9932,72 +9806,6 @@ bool Database::DeallocPBackgroundIDBDatabaseFileParent(
   MOZ_ASSERT(aActor);
 
   RefPtr<DatabaseFile> actor = dont_AddRef(static_cast<DatabaseFile*>(aActor));
-  return true;
-}
-
-PBackgroundIDBDatabaseRequestParent*
-Database::AllocPBackgroundIDBDatabaseRequestParent(
-    const DatabaseRequestParams& aParams) {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aParams.type() != DatabaseRequestParams::T__None);
-
-  // TODO: Check here that the database has not been closed?
-
-#ifdef DEBUG
-  // Always verify parameters in DEBUG builds!
-  bool trustParams = false;
-#else
-  PBackgroundParent* backgroundActor = GetBackgroundParent();
-  MOZ_ASSERT(backgroundActor);
-
-  bool trustParams = !BackgroundParent::IsOtherProcessActor(backgroundActor);
-#endif
-
-  if (NS_AUUF_OR_WARN_IF(!trustParams && !VerifyRequestParams(aParams))) {
-    return nullptr;
-  }
-
-  RefPtr<DatabaseOp> actor;
-
-  switch (aParams.type()) {
-    case DatabaseRequestParams::TCreateFileParams: {
-      actor = new CreateFileOp(SafeRefPtrFromThis(), aParams);
-
-      NotePendingCreateFileOp();
-      break;
-    }
-
-    default:
-      MOZ_CRASH("Should never get here!");
-  }
-
-  MOZ_ASSERT(actor);
-
-  // Transfer ownership to IPDL.
-  return actor.forget().take();
-}
-
-mozilla::ipc::IPCResult Database::RecvPBackgroundIDBDatabaseRequestConstructor(
-    PBackgroundIDBDatabaseRequestParent* aActor,
-    const DatabaseRequestParams& aParams) {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
-  MOZ_ASSERT(aParams.type() != DatabaseRequestParams::T__None);
-
-  auto* op = static_cast<DatabaseOp*>(aActor);
-
-  op->RunImmediately();
-
-  return IPC_OK();
-}
-
-bool Database::DeallocPBackgroundIDBDatabaseRequestParent(
-    PBackgroundIDBDatabaseRequestParent* aActor) {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
-
-  // Transfer ownership back from IPDL.
-  RefPtr<DatabaseOp> op = dont_AddRef(static_cast<DatabaseOp*>(aActor));
   return true;
 }
 
@@ -17727,220 +17535,6 @@ void TransactionBase::CommitOp::TransactionFinishedAfterUnblock() {
   // that is tied to an actor. Do this to make our assertions happy.
   NoteActorDestroyed();
 #endif
-}
-
-DatabaseOp::DatabaseOp(SafeRefPtr<Database> aDatabase)
-    : DatabaseOperationBase(aDatabase->GetLoggingInfo()->Id(),
-                            aDatabase->GetLoggingInfo()->NextRequestSN()),
-      mDatabase(std::move(aDatabase)),
-      mState(State::Initial) {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mDatabase);
-}
-
-nsresult DatabaseOp::SendToIOThread() {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::Initial);
-
-  if (!OperationMayProceed()) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-
-  QuotaManager* const quotaManager = QuotaManager::Get();
-  if (NS_WARN_IF(!quotaManager)) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-
-  // Must set this before dispatching otherwise we will race with the IO thread.
-  mState = State::DatabaseWork;
-
-  nsresult rv = quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DatabaseOp::Run() {
-  const auto handleError = [this](const nsresult rv) {
-    if (mState != State::SendingResults) {
-      SetFailureCodeIfUnset(rv);
-
-      // Must set mState before dispatching otherwise we will race with the
-      // owning thread.
-      mState = State::SendingResults;
-
-      MOZ_ALWAYS_SUCCEEDS(
-          mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
-    }
-  };
-
-  switch (mState) {
-    case State::Initial:
-      QM_TRY(MOZ_TO_RESULT(SendToIOThread()), NS_OK, handleError);
-      break;
-
-    case State::DatabaseWork:
-      QM_TRY(MOZ_TO_RESULT(DoDatabaseWork()), NS_OK, handleError);
-      break;
-
-    case State::SendingResults:
-      SendResults();
-      break;
-
-    default:
-      MOZ_CRASH("Bad state!");
-  }
-
-  return NS_OK;
-}
-
-void DatabaseOp::ActorDestroy(ActorDestroyReason aWhy) {
-  AssertIsOnBackgroundThread();
-
-  NoteActorDestroyed();
-}
-
-CreateFileOp::CreateFileOp(SafeRefPtr<Database> aDatabase,
-                           const DatabaseRequestParams& aParams)
-    : DatabaseOp(std::move(aDatabase)),
-      mParams(aParams.get_CreateFileParams()) {
-  MOZ_ASSERT(aParams.type() == DatabaseRequestParams::TCreateFileParams);
-}
-
-Result<RefPtr<MutableFile>, nsresult> CreateFileOp::CreateMutableFile() {
-  const nsCOMPtr<nsIFile> file = (*mFileInfo)->GetFileForFileInfo();
-  QM_TRY(OkIf(file), Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR),
-         IDB_REPORT_INTERNAL_ERR_LAMBDA);
-
-  const RefPtr<MutableFile> mutableFile =
-      MutableFile::Create(file, mDatabase.clonePtr(), mFileInfo->clonePtr());
-  QM_TRY(OkIf(mutableFile), Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR),
-         IDB_REPORT_INTERNAL_ERR_LAMBDA);
-
-  // Transfer ownership to IPDL.
-  mutableFile->SetActorAlive();
-
-  QM_TRY(OkIf(mDatabase->SendPBackgroundMutableFileConstructor(
-             mutableFile, mParams.name(), mParams.type())),
-         Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR),
-         IDB_REPORT_INTERNAL_ERR_LAMBDA);
-
-  return mutableFile;
-}
-
-nsresult CreateFileOp::DoDatabaseWork() {
-  AssertIsOnIOThread();
-  MOZ_ASSERT(mState == State::DatabaseWork);
-
-  AUTO_PROFILER_LABEL("CreateFileOp::DoDatabaseWork", DOM);
-
-  if (NS_WARN_IF(QuotaManager::IsShuttingDown()) || !OperationMayProceed()) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-
-  DatabaseFileManager& fileManager = mDatabase->GetFileManager();
-
-  mFileInfo.init(fileManager.CreateFileInfo());
-  if (NS_WARN_IF(!*mFileInfo)) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-
-  const int64_t fileId = (*mFileInfo)->Id();
-
-  const auto journalDirectory = fileManager.EnsureJournalDirectory();
-  if (NS_WARN_IF(!journalDirectory)) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-
-  const auto journalFile = fileManager.GetFileForId(journalDirectory, fileId);
-  if (NS_WARN_IF(!journalFile)) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-
-  nsresult rv = journalFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  const auto fileDirectory = fileManager.GetDirectory();
-  if (NS_WARN_IF(!fileDirectory)) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-
-  const auto file = fileManager.GetFileForId(fileDirectory, fileId);
-  if (NS_WARN_IF(!file)) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
-
-  rv = file->Create(nsIFile::NORMAL_FILE_TYPE, 0644);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // Must set mState before dispatching otherwise we will race with the owning
-  // thread.
-  mState = State::SendingResults;
-
-  rv = mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-void CreateFileOp::SendResults() {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::SendingResults);
-
-  if (!IsActorDestroyed() && !mDatabase->IsInvalidated()) {
-    const auto response = [this]() -> DatabaseRequestResponse {
-      if (HasFailed()) {
-        return ClampResultCode(ResultCode());
-      }
-
-      auto res = [this]() -> DatabaseRequestResponse {
-        QM_TRY_RETURN(
-            CreateMutableFile().andThen(
-                [](const auto& mutableFile)
-                    -> mozilla::Result<CreateFileRequestResponse, nsresult> {
-                  // We successfully created a mutable file so use its actor
-                  // as the success result for this request.
-                  return CreateFileRequestResponse{mutableFile, nullptr};
-                }),
-            ClampResultCode(tryTempError));
-      }();
-#ifdef DEBUG
-      if (res.type() == DatabaseRequestResponse::Tnsresult) {
-        SetFailureCode(res.get_nsresult());
-      }
-#endif
-      return res;
-    }();
-
-    Unused << PBackgroundIDBDatabaseRequestParent::Send__delete__(this,
-                                                                  response);
-  }
-
-  // XXX: "Complete" in CompletedCreateFileOp and State::Completed mean
-  // different things, and State::Completed should only be reached after
-  // notifying the database. Either should probably be renamed to avoid
-  // confusion.
-  mDatabase->NoteCompletedCreateFileOp();
-
-  mState = State::Completed;
 }
 
 nsresult VersionChangeTransactionOp::SendSuccessResult() {
