@@ -21,7 +21,6 @@
 #include "mozilla/dom/indexedDB/PBackgroundIDBVersionChangeTransactionChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsChild.h"
 #include "mozilla/dom/PBackgroundFileHandleChild.h"
-#include "mozilla/dom/PBackgroundFileRequestChild.h"
 #include "mozilla/dom/PBackgroundMutableFileChild.h"
 #include "mozilla/InitializedOnce.h"
 #include "mozilla/UniquePtr.h"
@@ -701,53 +700,6 @@ class BackgroundFileHandleChild : public PBackgroundFileHandleChild {
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   mozilla::ipc::IPCResult RecvComplete(bool aAborted);
-
-  PBackgroundFileRequestChild* AllocPBackgroundFileRequestChild(
-      const FileRequestParams& aParams);
-
-  bool DeallocPBackgroundFileRequestChild(PBackgroundFileRequestChild* aActor);
-};
-
-class BackgroundFileRequestChild final : public PBackgroundFileRequestChild {
-  friend class BackgroundFileHandleChild;
-  friend IDBFileHandle;
-
-  RefPtr<IDBFileRequest> mFileRequest;
-  RefPtr<IDBFileHandle> mFileHandle;
-  bool mActorDestroyed;
-
- public:
-  void AssertIsOnOwningThread() const
-#ifdef DEBUG
-      ;
-#else
-  {
-  }
-#endif
-
- private:
-  // Only created by IDBFileHandle.
-  explicit BackgroundFileRequestChild(IDBFileRequest* aFileRequest);
-
-  // Only destroyed by BackgroundFileHandleChild.
-  ~BackgroundFileRequestChild();
-
-  void HandleResponse(nsresult aResponse);
-
-  void HandleResponse(const nsCString& aResponse);
-
-  void HandleResponse(const FileRequestMetadata& aResponse);
-
-  void HandleResponse(JS::Handle<JS::Value> aResponse);
-
- public:
-  // IPDL methods are only called by IPDL.
-  void ActorDestroy(ActorDestroyReason aWhy) override;
-
-  mozilla::ipc::IPCResult Recv__delete__(const FileRequestResponse& aResponse);
-
-  mozilla::ipc::IPCResult RecvProgress(uint64_t aProgress,
-                                       uint64_t aProgressMax);
 };
 
 class BackgroundUtilsChild final : public PBackgroundIndexedDBUtilsChild {

@@ -22,7 +22,6 @@ UNIFIED_SOURCES += [
 
 IPDL_SOURCES += [
     "PBackgroundFileHandle.ipdl",
-    "PBackgroundFileRequest.ipdl",
     "PBackgroundMutableFile.ipdl",
 ]
 
