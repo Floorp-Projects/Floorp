@@ -14,15 +14,9 @@
 #include "HTMLFormControlAccessible.h"
 
 #include "nsObjCExceptions.h"
+#include "mozilla/FloatingPoint.h"
 
 using namespace mozilla::a11y;
-
-enum CheckboxValue {
-  // these constants correspond to the values in the OS
-  kUnchecked = 0,
-  kChecked = 1,
-  kMixed = 2
-};
 
 @implementation mozButtonAccessible
 
@@ -224,7 +218,8 @@ enum CheckboxValue {
   double min = mGeckoAccessible->MinValue();
   double max = mGeckoAccessible->MaxValue();
 
-  if ((IsNaN(min) || value >= min) && (IsNaN(max) || value <= max)) {
+  if ((mozilla::IsNaN(min) || value >= min) &&
+      (mozilla::IsNaN(max) || value <= max)) {
     if (LocalAccessible* acc = mGeckoAccessible->AsLocal()) {
       acc->SetCurValue(value);
     } else {
