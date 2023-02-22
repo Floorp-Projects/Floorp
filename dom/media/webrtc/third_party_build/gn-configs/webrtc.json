@@ -54,6 +54,7 @@
     "third_party/libwebrtc/modules/desktop_capture/fallback_desktop_capturer_wrapper.cc",
     "third_party/libwebrtc/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc",
     "third_party/libwebrtc/modules/desktop_capture/linux/wayland/moz_base_capturer_pipewire.cc",
+    "third_party/libwebrtc/modules/desktop_capture/mouse_cursor_monitor_linux.cc",
     "third_party/libwebrtc/modules/desktop_capture/win/screen_capturer_win_gdi.cc",
     "third_party/libwebrtc/modules/pacing/prioritized_packet_queue.cc",
     "third_party/libwebrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_single_stream.cc",
