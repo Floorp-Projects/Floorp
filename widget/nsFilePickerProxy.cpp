@@ -120,7 +120,7 @@ nsFilePickerProxy::GetFiles(nsISimpleEnumerator** aFiles) {
   return NS_ERROR_FAILURE;
 }
 
-nsresult nsFilePickerProxy::Show(int16_t* aReturn) {
+nsresult nsFilePickerProxy::Show(nsIFilePicker::ResultCode* aReturn) {
   MOZ_ASSERT(false, "Show is unimplemented; use Open");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -146,7 +146,7 @@ nsFilePickerProxy::Open(nsIFilePickerShownCallback* aCallback) {
 }
 
 mozilla::ipc::IPCResult nsFilePickerProxy::Recv__delete__(
-    const MaybeInputData& aData, const int16_t& aResult) {
+    const MaybeInputData& aData, const nsIFilePicker::ResultCode& aResult) {
   nsPIDOMWindowInner* inner =
       mParent ? mParent->GetCurrentInnerWindow() : nullptr;
 

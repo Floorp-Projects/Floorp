@@ -181,12 +181,12 @@ NSView* nsFilePicker::GetAccessoryView() {
 }
 
 // Display the file dialog
-nsresult nsFilePicker::Show(int16_t* retval) {
+nsresult nsFilePicker::Show(ResultCode* retval) {
   NS_ENSURE_ARG_POINTER(retval);
 
   *retval = returnCancel;
 
-  int16_t userClicksOK = returnCancel;
+  ResultCode userClicksOK = returnCancel;
 
   mFiles.Clear();
   nsCOMPtr<nsIFile> theFile;
@@ -256,10 +256,11 @@ static void UpdatePanelFileTypes(NSOpenPanel* aPanel, NSArray* aFilters) {
 @end
 
 // Use OpenPanel to do a GetFile. Returns |returnOK| if the user presses OK in the dialog.
-int16_t nsFilePicker::GetLocalFiles(bool inAllowMultiple, nsCOMArray<nsIFile>& outFiles) {
+nsIFilePicker::ResultCode nsFilePicker::GetLocalFiles(bool inAllowMultiple,
+                                                      nsCOMArray<nsIFile>& outFiles) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  int16_t retVal = (int16_t)returnCancel;
+  ResultCode retVal = nsIFilePicker::returnCancel;
   NSOpenPanel* thePanel = [NSOpenPanel openPanel];
 
   SetShowHiddenFileState(thePanel);
@@ -351,15 +352,15 @@ int16_t nsFilePicker::GetLocalFiles(bool inAllowMultiple, nsCOMArray<nsIFile>& o
 
   return retVal;
 
-  NS_OBJC_END_TRY_BLOCK_RETURN(0);
+  NS_OBJC_END_TRY_BLOCK_RETURN(nsIFilePicker::returnOK);
 }
 
 // Use OpenPanel to do a GetFolder. Returns |returnOK| if the user presses OK in the dialog.
-int16_t nsFilePicker::GetLocalFolder(nsIFile** outFile) {
+nsIFilePicker::ResultCode nsFilePicker::GetLocalFolder(nsIFile** outFile) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
   NS_ASSERTION(outFile, "this protected member function expects a null initialized out pointer");
 
-  int16_t retVal = (int16_t)returnCancel;
+  ResultCode retVal = nsIFilePicker::returnCancel;
   NSOpenPanel* thePanel = [NSOpenPanel openPanel];
 
   SetShowHiddenFileState(thePanel);
@@ -402,15 +403,15 @@ int16_t nsFilePicker::GetLocalFolder(nsIFile** outFile) {
 
   return retVal;
 
-  NS_OBJC_END_TRY_BLOCK_RETURN(0);
+  NS_OBJC_END_TRY_BLOCK_RETURN(nsIFilePicker::returnOK);
 }
 
 // Returns |returnOK| if the user presses OK in the dialog.
-int16_t nsFilePicker::PutLocalFile(nsIFile** outFile) {
+nsIFilePicker::ResultCode nsFilePicker::PutLocalFile(nsIFile** outFile) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
   NS_ASSERTION(outFile, "this protected member function expects a null initialized out pointer");
 
-  int16_t retVal = returnCancel;
+  ResultCode retVal = nsIFilePicker::returnCancel;
   NSSavePanel* thePanel = [NSSavePanel savePanel];
 
   SetShowHiddenFileState(thePanel);
@@ -493,7 +494,7 @@ int16_t nsFilePicker::PutLocalFile(nsIFile** outFile) {
 
   return retVal;
 
-  NS_OBJC_END_TRY_BLOCK_RETURN(0);
+  NS_OBJC_END_TRY_BLOCK_RETURN(nsIFilePicker::returnCancel);
 }
 
 NSArray* nsFilePicker::GetFilterList() {

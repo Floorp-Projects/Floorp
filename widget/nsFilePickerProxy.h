@@ -57,12 +57,13 @@ class nsFilePickerProxy : public nsBaseFilePicker,
 
   // PFilePickerChild
   virtual mozilla::ipc::IPCResult Recv__delete__(
-      const MaybeInputData& aData, const int16_t& aResult) override;
+      const MaybeInputData& aData,
+      const nsIFilePicker::ResultCode& aResult) override;
 
  private:
   ~nsFilePickerProxy();
   void InitNative(nsIWidget*, const nsAString&) override;
-  nsresult Show(int16_t* aReturn) override;
+  nsresult Show(nsIFilePicker::ResultCode* aReturn) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

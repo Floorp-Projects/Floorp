@@ -80,7 +80,7 @@ class nsBaseFilePicker::AsyncShowFilePicker : public mozilla::Runnable {
     // It's possible that some widget implementations require GUI operations
     // to be on the main thread, so that's why we're not dispatching to another
     // thread and calling back to the main after it's done.
-    int16_t result = nsIFilePicker::returnCancel;
+    nsIFilePicker::ResultCode result = nsIFilePicker::returnCancel;
     nsresult rv = mFilePicker->Show(&result);
     if (NS_FAILED(rv)) {
       NS_ERROR("FilePicker's Show() implementation failed!");

@@ -11,17 +11,8 @@ interface nsIURI;
 interface mozIDOMWindowProxy;
 interface nsISimpleEnumerator;
 
-[scriptable, function, uuid(0d79adad-b244-49A5-9997-2a8cad93fc44)]
-interface nsIFilePickerShownCallback : nsISupports
-{
- /**
-  * Callback which is called when a filepicker is shown and a result
-  * is returned.
-  *
-  * @param aResult One of returnOK, returnCancel, or returnReplace
-  */
-  void done(in short aResult);
-};
+// Declared in this file, below.
+interface nsIFilePickerShownCallback;
 
 [scriptable, uuid(9285b984-02d3-46b4-9514-7da8c471a747)]
 interface nsIFilePicker : nsISupports
@@ -31,9 +22,11 @@ interface nsIFilePicker : nsISupports
   const short modeGetFolder   = 2;              // Select a folder/directory
   const short modeOpenMultiple= 3;              // Load multiple files
 
-  const short returnOK        = 0;              // User hit Ok, process selection
-  const short returnCancel    = 1;              // User hit cancel, ignore selection
-  const short returnReplace   = 2;              // User acknowledged file already exists so ok to replace, process selection
+  cenum ResultCode: 16 {
+    returnOK        = 0,                        // User hit Ok, process selection
+    returnCancel    = 1,                        // User hit cancel, ignore selection
+    returnReplace   = 2,                        // User acknowledged file already exists so ok to replace, process selection
+  };
 
   const long filterAll        = 0x001;          // *.*
   const long filterHTML       = 0x002;          // *.html; *.htm
@@ -212,4 +205,16 @@ interface nsIFilePicker : nsISupports
   attribute AString okButtonLabel;
 
   attribute short capture;
+};
+
+[scriptable, function, uuid(0d79adad-b244-49A5-9997-2a8cad93fc44)]
+interface nsIFilePickerShownCallback : nsISupports
+{
+ /**
+  * Callback which is called when a filepicker is shown and a result
+  * is returned.
+  *
+  * @param aResult One of returnOK, returnCancel, or returnReplace
+  */
+  void done(in nsIFilePicker_ResultCode aResult);
 };

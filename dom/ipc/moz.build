@@ -55,6 +55,7 @@ EXPORTS.mozilla.dom += [
     "CSPMessageUtils.h",
     "DocShellMessageUtils.h",
     "EffectsInfo.h",
+    "FilePickerMessageUtils.h",
     "FilePickerParent.h",
     "InProcessChild.h",
     "InProcessParent.h",

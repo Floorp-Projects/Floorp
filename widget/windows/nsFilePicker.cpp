@@ -364,7 +364,7 @@ bool nsFilePicker::ShowFilePicker(const nsString& aInitialDir) {
 ///////////////////////////////////////////////////////////////////////////////
 // nsIFilePicker impl.
 
-nsresult nsFilePicker::ShowW(int16_t* aReturnVal) {
+nsresult nsFilePicker::ShowW(nsIFilePicker::ResultCode* aReturnVal) {
   NS_ENSURE_ARG_POINTER(aReturnVal);
 
   *aReturnVal = returnCancel;
@@ -398,7 +398,7 @@ nsresult nsFilePicker::ShowW(int16_t* aReturnVal) {
 
   RememberLastUsedDirectory();
 
-  int16_t retValue = returnOK;
+  nsIFilePicker::ResultCode retValue = returnOK;
   if (mMode == modeSave) {
     // Windows does not return resultReplace, we must check if file
     // already exists.
@@ -415,7 +415,9 @@ nsresult nsFilePicker::ShowW(int16_t* aReturnVal) {
   return NS_OK;
 }
 
-nsresult nsFilePicker::Show(int16_t* aReturnVal) { return ShowW(aReturnVal); }
+nsresult nsFilePicker::Show(nsIFilePicker::ResultCode* aReturnVal) {
+  return ShowW(aReturnVal);
+}
 
 NS_IMETHODIMP
 nsFilePicker::GetFile(nsIFile** aFile) {
