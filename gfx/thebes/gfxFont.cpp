@@ -2079,7 +2079,7 @@ void gfxFont::DrawOneGlyph(uint32_t aGlyphID, const gfx::Point& aPt,
     LayoutDeviceRect extents =
         LayoutDeviceRect::FromUnknownRect(aBuffer.mFontParams.fontExtents);
     extents.MoveBy(LayoutDevicePoint::FromUnknownPoint(devPt));
-    if (!extents.Intersects(textDrawer->GeckoClipRect())) {
+    if (!extents.Intersects(runParams.clipRect)) {
       return;
     }
   }
