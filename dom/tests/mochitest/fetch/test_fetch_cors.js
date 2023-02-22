@@ -80,7 +80,7 @@ function testNoCorsCtor() {
 
 var corsServerPath =
   "/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?";
-function testModeNoCors() {
+function testModeNoCors(withoutORB) {
   // Fetch spec, section 4, step 4, response tainting should be set opaque, so
   // that fetching leads to an opaque filtered response in step 8.
   var r = new Request("http://example.com" + corsServerPath + "status=200", {
@@ -89,12 +89,19 @@ function testModeNoCors() {
   return fetch(r).then(
     function(res) {
       ok(
+        withoutORB,
+        "no-cors Request fetch with invalid javascript content should be blocked when ORB is enabled"
+      );
+      ok(
         isOpaqueResponse(res),
         "no-cors Request fetch should result in opaque response"
       );
     },
     function(e) {
-      ok(false, "no-cors Request fetch should not error");
+      ok(
+        !withoutORB,
+        "no-cors Request fetch with invalid javascript content should not be blocked when ORB is not enabled"
+      );
     }
   );
 }
@@ -1202,22 +1209,23 @@ function testModeNoCorsCredentials(withoutORB) {
   var tests = [
     {
       // Initialize by setting a cookie.
-      pass: 1,
+      pass: withoutORB,
       setCookie: cookieStr,
       withCred: "include",
+      bypassORB: true,
     },
     {
-      pass: 1,
+      pass: withoutORB,
       noCookie: 1,
       withCred: "omit",
     },
     {
-      pass: 1,
+      pass: withoutORB,
       noCookie: 1,
       withCred: "same-origin",
     },
     {
-      pass: 1,
+      pass: withoutORB,
       cookie: cookieStr,
       withCred: "include",
     },
@@ -1704,25 +1712,29 @@ function testCORSRedirects() {
   return Promise.all(fetches);
 }
 
-function testNoCORSRedirects() {
+function testNoCORSRedirects(withoutORB) {
   var origin = "http://mochi.test:8888";
 
   var tests = [
-    { pass: 1, method: "GET", hops: [{ server: "http://example.com" }] },
     {
-      pass: 1,
+      pass: withoutORB,
+      method: "GET",
+      hops: [{ server: "http://example.com" }],
+    },
+    {
+      pass: withoutORB,
       method: "GET",
       hops: [{ server: origin }, { server: "http://example.com" }],
     },
     {
-      pass: 1,
+      pass: withoutORB,
       method: "GET",
       // Must use a simple header due to no-cors header restrictions.
       headers: { "accept-language": "en-us" },
       hops: [{ server: origin }, { server: "http://example.com" }],
     },
     {
-      pass: 1,
+      pass: withoutORB,
       method: "GET",
       hops: [
         { server: origin },
@@ -1731,7 +1743,7 @@ function testNoCORSRedirects() {
       ],
     },
     {
-      pass: 1,
+      pass: withoutORB,
       method: "POST",
       body: "upload body here",
       hops: [{ server: origin }, { server: "http://example.com" }],
@@ -1868,10 +1880,10 @@ function runTest() {
 
   return promise
     .then(testModeSameOrigin)
-    .then(testModeNoCors)
     .then(testModeCors)
     .then(testSameOriginCredentials)
     .then(testCrossOriginCredentials)
+    .then(testCORSRedirects)
     .then(function() {
       return SpecialPowers.pushPrefEnv({
         set: [["browser.opaqueResponseBlocking", false]],
@@ -1881,15 +1893,28 @@ function runTest() {
       return testModeNoCorsCredentials(1); // Without ORB
     })
     .then(function() {
+      return testModeNoCors(1); // Without ORB
+    })
+    .then(function() {
+      return testNoCORSRedirects(1); // Without ORB
+    })
+    .then(function() {
       return SpecialPowers.pushPrefEnv({
-        set: [["browser.opaqueResponseBlocking", true]],
+        set: [
+          ["browser.opaqueResponseBlocking", true],
+          ["browser.opaqueResponseBlocking.javascriptValidator", true],
+        ],
       });
     })
     .then(() => {
       return testModeNoCorsCredentials(0); // With ORB
     })
-    .then(testCORSRedirects)
-    .then(testNoCORSRedirects)
+    .then(function() {
+      return testModeNoCors(0); // With ORB
+    })
+    .then(() => {
+      return testNoCORSRedirects(0); // With ORB
+    })
     .then(testReferrer);
   // Put more promise based tests here.
 }
