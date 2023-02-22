@@ -14,7 +14,7 @@
 #include "TextLeafAccessible.h"
 
 #import "mozTextAccessible.h"
-#import "GeckoTextMarker.h"
+#import "LegacyTextMarker.h"
 #import "MOXTextMarkerDelegate.h"
 
 using namespace mozilla;
