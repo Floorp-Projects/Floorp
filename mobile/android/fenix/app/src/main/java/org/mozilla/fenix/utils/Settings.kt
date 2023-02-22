@@ -702,13 +702,13 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     val enabledTotalCookieProtection: Boolean
-        get() = Config.channel.isNightlyOrDebug || mr2022Sections[Mr2022Section.TCP_FEATURE] == true
+        get() = mr2022Sections[Mr2022Section.TCP_FEATURE] == true
 
     /**
      * Indicates if the total cookie protection CRF feature is enabled.
      */
     val enabledTotalCookieProtectionCFR: Boolean
-        get() = Config.channel.isNightlyOrDebug || mr2022Sections[Mr2022Section.TCP_CFR] == true
+        get() = mr2022Sections[Mr2022Section.TCP_CFR] == true
 
     /**
      * Indicates if the total cookie protection CRF should be shown.

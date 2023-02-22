@@ -81,8 +81,8 @@ features:
             "sync-cfr": true,
             "wallpapers-selection-tool": true,
             "jump-back-in-cfr": true,
-            "tcp-cfr": false,
-            "tcp-feature": false,
+            "tcp-cfr": true,
+            "tcp-feature": true,
           }
     defaults:
       - channel: developer
