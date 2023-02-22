@@ -10,6 +10,7 @@
 #include "js/RootingAPI.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/IDBRequestBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/DOMEventTargetHelper.h"
@@ -33,7 +34,6 @@ class ErrorResult;
 
 namespace dom {
 
-class DOMException;
 class IDBCursor;
 class IDBDatabase;
 class IDBFactory;
