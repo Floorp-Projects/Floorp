@@ -31,6 +31,7 @@
 #include "mozilla/TextUtils.h"
 #include "nsAttrValueInlines.h"
 #include "nsCRTGlue.h"
+#include "nsIFilePicker.h"
 #include "nsNetUtil.h"
 #include "nsQueryObject.h"
 
@@ -454,12 +455,12 @@ HTMLInputElement::nsFilePickerShownCallback::Done(
         u"cancel"_ns, CanBubble::eYes, Cancelable::eNo);
   }
 
-  int16_t mode;
+  nsIFilePicker::Mode mode;
   mFilePicker->GetMode(&mode);
 
   // Collect new selected filenames
   nsTArray<OwningFileOrDirectory> newFilesOrDirectories;
-  if (mode == static_cast<int16_t>(nsIFilePicker::modeOpenMultiple)) {
+  if (mode == nsIFilePicker::modeOpenMultiple) {
     nsCOMPtr<nsISimpleEnumerator> iter;
     nsresult rv =
         mFilePicker->GetDomFileOrDirectoryEnumerator(getter_AddRefs(iter));
@@ -485,8 +486,8 @@ HTMLInputElement::nsFilePickerShownCallback::Done(
       element->SetAsFile() = domBlob->ToFile();
     }
   } else {
-    MOZ_ASSERT(mode == static_cast<int16_t>(nsIFilePicker::modeOpen) ||
-               mode == static_cast<int16_t>(nsIFilePicker::modeGetFolder));
+    MOZ_ASSERT(mode == nsIFilePicker::modeOpen ||
+               mode == nsIFilePicker::modeGetFolder);
     nsCOMPtr<nsISupports> tmp;
     nsresult rv = mFilePicker->GetDomFileOrDirectory(getter_AddRefs(tmp));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -494,7 +495,7 @@ HTMLInputElement::nsFilePickerShownCallback::Done(
     // Show a prompt to get user confirmation before allowing folder access.
     // This is to prevent sites from tricking the user into uploading files.
     // See Bug 1338637.
-    if (mode == static_cast<int16_t>(nsIFilePicker::modeGetFolder)) {
+    if (mode == nsIFilePicker::modeGetFolder) {
       nsCOMPtr<nsIPromptCollection> prompter =
           do_GetService("@mozilla.org/embedcomp/prompt-collection;1");
       if (!prompter) {
@@ -803,14 +804,14 @@ nsresult HTMLInputElement::InitFilePicker(FilePickerType aType) {
       do_CreateInstance("@mozilla.org/filepicker;1");
   if (!filePicker) return NS_ERROR_FAILURE;
 
-  int16_t mode;
+  nsIFilePicker::Mode mode;
 
   if (aType == FILE_PICKER_DIRECTORY) {
-    mode = static_cast<int16_t>(nsIFilePicker::modeGetFolder);
+    mode = nsIFilePicker::modeGetFolder;
   } else if (HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)) {
-    mode = static_cast<int16_t>(nsIFilePicker::modeOpenMultiple);
+    mode = nsIFilePicker::modeOpenMultiple;
   } else {
-    mode = static_cast<int16_t>(nsIFilePicker::modeOpen);
+    mode = nsIFilePicker::modeOpen;
   }
 
   nsresult rv = filePicker->Init(win, title, mode);

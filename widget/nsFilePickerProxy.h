@@ -34,7 +34,7 @@ class nsFilePickerProxy : public nsBaseFilePicker,
 
   // nsIFilePicker (less what's in nsBaseFilePicker)
   NS_IMETHOD Init(mozIDOMWindowProxy* aParent, const nsAString& aTitle,
-                  int16_t aMode) override;
+                  nsIFilePicker::Mode aMode) override;
   NS_IMETHOD AppendFilter(const nsAString& aTitle,
                           const nsAString& aFilter) override;
   NS_IMETHOD GetCapture(int16_t* aCapture) override;

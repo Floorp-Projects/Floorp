@@ -25,7 +25,7 @@ nsFilePickerProxy::~nsFilePickerProxy() = default;
 
 NS_IMETHODIMP
 nsFilePickerProxy::Init(mozIDOMWindowProxy* aParent, const nsAString& aTitle,
-                        int16_t aMode) {
+                        nsIFilePicker::Mode aMode) {
   BrowserChild* browserChild = BrowserChild::GetFrom(aParent);
   if (!browserChild) {
     return NS_ERROR_FAILURE;

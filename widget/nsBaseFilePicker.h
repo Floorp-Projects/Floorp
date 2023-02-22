@@ -26,7 +26,7 @@ class nsBaseFilePicker : public nsIFilePicker {
   virtual ~nsBaseFilePicker();
 
   NS_IMETHOD Init(mozIDOMWindowProxy* aParent, const nsAString& aTitle,
-                  int16_t aMode) override;
+                  nsIFilePicker::Mode aMode) override;
 
   NS_IMETHOD Open(nsIFilePickerShownCallback* aCallback) override;
   NS_IMETHOD AppendFilters(int32_t filterMask) override;
@@ -43,7 +43,7 @@ class nsBaseFilePicker : public nsIFilePicker {
       const nsAString& aDisplayDirectory) override;
   NS_IMETHOD GetAddToRecentDocs(bool* aFlag) override;
   NS_IMETHOD SetAddToRecentDocs(bool aFlag) override;
-  NS_IMETHOD GetMode(int16_t* aMode) override;
+  NS_IMETHOD GetMode(nsIFilePicker::Mode* aMode) override;
   NS_IMETHOD SetOkButtonLabel(const nsAString& aLabel) override;
   NS_IMETHOD GetOkButtonLabel(nsAString& aLabel) override;
 
@@ -60,7 +60,7 @@ class nsBaseFilePicker : public nsIFilePicker {
   nsString mDisplaySpecialDirectory;
 
   nsCOMPtr<nsPIDOMWindowOuter> mParent;
-  int16_t mMode;
+  nsIFilePicker::Mode mMode;
   nsString mOkButtonLabel;
   nsTArray<nsString> mRawFilters;
 };
