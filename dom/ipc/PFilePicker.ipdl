@@ -17,16 +17,8 @@ using nsIFilePicker::ResultCode from "nsIFilePicker.h";
 namespace mozilla {
 namespace dom {
 
-struct InputBlobs
-{
-  IPCBlob[] blobs;
-};
-
-struct InputDirectory
-{
-  nsString directoryPath;
-};
-
+struct InputBlobs { IPCBlob[] blobs; };
+struct InputDirectory { nsString directoryPath; };
 union MaybeInputData
 {
   InputBlobs;
@@ -34,7 +26,7 @@ union MaybeInputData
   void_t;
 };
 
-[ManualDealloc, ChildImpl=virtual]
+[ChildImpl=virtual]
 protocol PFilePicker
 {
   manager PBrowser;

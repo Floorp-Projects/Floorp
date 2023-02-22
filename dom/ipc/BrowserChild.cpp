@@ -2175,30 +2175,6 @@ bool BrowserChild::DeallocPDocAccessibleChild(
 }
 #endif
 
-PColorPickerChild* BrowserChild::AllocPColorPickerChild(
-    const nsAString&, const nsAString&, const nsTArray<nsString>&) {
-  MOZ_CRASH("unused");
-  return nullptr;
-}
-
-bool BrowserChild::DeallocPColorPickerChild(PColorPickerChild* aColorPicker) {
-  nsColorPickerProxy* picker = static_cast<nsColorPickerProxy*>(aColorPicker);
-  NS_RELEASE(picker);
-  return true;
-}
-
-PFilePickerChild* BrowserChild::AllocPFilePickerChild(const nsAString&,
-                                                      const int16_t&) {
-  MOZ_CRASH("unused");
-  return nullptr;
-}
-
-bool BrowserChild::DeallocPFilePickerChild(PFilePickerChild* actor) {
-  nsFilePickerProxy* filePicker = static_cast<nsFilePickerProxy*>(actor);
-  NS_RELEASE(filePicker);
-  return true;
-}
-
 RefPtr<VsyncMainChild> BrowserChild::GetVsyncChild() {
   // Initializing mVsyncChild here turns on per-BrowserChild Vsync for a
   // given platform. Note: this only makes sense if nsWindow returns a
