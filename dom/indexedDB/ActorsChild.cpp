@@ -11,7 +11,9 @@
 #include "IDBDatabase.h"
 #include "IDBEvents.h"
 #include "IDBFactory.h"
+#include "IDBFileHandle.h"
 #include "IDBIndex.h"
+#include "IDBMutableFile.h"
 #include "IDBObjectStore.h"
 #include "IDBRequest.h"
 #include "IDBTransaction.h"
@@ -189,7 +191,9 @@ void DispatchSuccessEvent(const NotNull<RefPtr<IDBRequest>>& aRequest,
                           const RefPtr<Event>& aEvent);
 
 template <class T>
-std::enable_if_t<std::is_same_v<T, IDBDatabase> || std::is_same_v<T, IDBCursor>,
+std::enable_if_t<std::is_same_v<T, IDBDatabase> ||
+                     std::is_same_v<T, IDBCursor> ||
+                     std::is_same_v<T, IDBMutableFile>,
                  nsresult>
 GetResult(JSContext* aCx, T* aDOMObject, JS::MutableHandle<JS::Value> aResult) {
   if (!aDOMObject) {
@@ -337,13 +341,13 @@ auto DeserializeStructuredCloneFiles(
             aForPreprocess,
             serializedFile.type() == StructuredCloneFileBase::eStructuredClone);
 
-        const NullableBlob& blob = serializedFile.file();
+        const BlobOrMutableFile& blobOrMutableFile = serializedFile.file();
 
         switch (serializedFile.type()) {
           case StructuredCloneFileBase::eBlob: {
-            MOZ_ASSERT(blob.type() == NullableBlob::TIPCBlob);
+            MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::TIPCBlob);
 
-            const IPCBlob& ipcBlob = blob.get_IPCBlob();
+            const IPCBlob& ipcBlob = blobOrMutableFile.get_IPCBlob();
 
             const RefPtr<BlobImpl> blobImpl =
                 IPCBlobUtils::Deserialize(ipcBlob);
@@ -356,11 +360,45 @@ auto DeserializeStructuredCloneFiles(
             return {StructuredCloneFileBase::eBlob, std::move(blob)};
           }
 
+          case StructuredCloneFileBase::eMutableFile: {
+            MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t ||
+                       blobOrMutableFile.type() ==
+                           BlobOrMutableFile::TPBackgroundMutableFileChild);
+
+            switch (blobOrMutableFile.type()) {
+              case BlobOrMutableFile::Tnull_t:
+                return StructuredCloneFileChild{
+                    StructuredCloneFileBase::eMutableFile};
+
+              case BlobOrMutableFile::TPBackgroundMutableFileChild: {
+                auto* const actor = static_cast<BackgroundMutableFileChild*>(
+                    blobOrMutableFile.get_PBackgroundMutableFileChild());
+                MOZ_ASSERT(actor);
+
+                actor->EnsureDOMObject();
+
+                auto* const mutableFile =
+                    static_cast<IDBMutableFile*>(actor->GetDOMObject());
+                MOZ_ASSERT(mutableFile);
+
+                auto file = StructuredCloneFileChild{mutableFile};
+
+                actor->ReleaseDOMObject();
+
+                return file;
+              }
+
+              default:
+                MOZ_CRASH("Should never get here!");
+            }
+          }
+
           case StructuredCloneFileBase::eStructuredClone: {
             if (aForPreprocess) {
-              MOZ_ASSERT(blob.type() == NullableBlob::TIPCBlob);
+              MOZ_ASSERT(blobOrMutableFile.type() ==
+                         BlobOrMutableFile::TIPCBlob);
 
-              const IPCBlob& ipcBlob = blob.get_IPCBlob();
+              const IPCBlob& ipcBlob = blobOrMutableFile.get_IPCBlob();
 
               const RefPtr<BlobImpl> blobImpl =
                   IPCBlobUtils::Deserialize(ipcBlob);
@@ -373,24 +411,22 @@ auto DeserializeStructuredCloneFiles(
               return {StructuredCloneFileBase::eStructuredClone,
                       std::move(blob)};
             }
-            MOZ_ASSERT(blob.type() == NullableBlob::Tnull_t);
+            MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t);
 
             return StructuredCloneFileChild{
                 StructuredCloneFileBase::eStructuredClone};
           }
 
-          case StructuredCloneFileBase::eMutableFile:
           case StructuredCloneFileBase::eWasmBytecode:
           case StructuredCloneFileBase::eWasmCompiled: {
-            MOZ_ASSERT(blob.type() == NullableBlob::Tnull_t);
+            MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t);
 
             return StructuredCloneFileChild{serializedFile.type()};
 
             // Don't set mBlob, support for storing WebAssembly.Modules has been
             // removed in bug 1469395. Support for de-serialization of
-            // WebAssembly.Modules has been removed in bug 1561876. Support for
-            // MutableFile has been removed in bug 1500343. Full removal is
-            // tracked in bug 1487479.
+            // WebAssembly.Modules has been removed in bug 1561876. Full removal
+            // is tracked in bug 1487479.
           }
 
           default:
@@ -591,6 +627,184 @@ PRFileDesc* GetFileDescriptorFromStream(nsIInputStream* aStream) {
   MOZ_ASSERT(fileDesc);
 
   return fileDesc;
+}
+
+class MOZ_STACK_CLASS AutoSetCurrentFileHandle final {
+  using BackgroundChildImpl = mozilla::ipc::BackgroundChildImpl;
+
+  IDBFileHandle* const mFileHandle;
+  IDBFileHandle* mPreviousFileHandle;
+  IDBFileHandle** mThreadLocalSlot;
+
+ public:
+  explicit AutoSetCurrentFileHandle(IDBFileHandle* aFileHandle)
+      : mFileHandle(aFileHandle),
+        mPreviousFileHandle(nullptr),
+        mThreadLocalSlot(nullptr) {
+    if (aFileHandle) {
+      BackgroundChildImpl::ThreadLocal* threadLocal =
+          BackgroundChildImpl::GetThreadLocalForCurrentThread();
+      MOZ_ASSERT(threadLocal);
+
+      // Hang onto this location for resetting later.
+      mThreadLocalSlot = &threadLocal->mCurrentFileHandle;
+
+      // Save the current value.
+      mPreviousFileHandle = *mThreadLocalSlot;
+
+      // Set the new value.
+      *mThreadLocalSlot = aFileHandle;
+    }
+  }
+
+  ~AutoSetCurrentFileHandle() {
+    MOZ_ASSERT_IF(mThreadLocalSlot, mFileHandle);
+    MOZ_ASSERT_IF(mThreadLocalSlot, *mThreadLocalSlot == mFileHandle);
+
+    if (mThreadLocalSlot) {
+      // Reset old value.
+      *mThreadLocalSlot = mPreviousFileHandle;
+    }
+  }
+
+  IDBFileHandle* FileHandle() const { return mFileHandle; }
+};
+
+template <typename T>
+void SetFileHandleResultAndDispatchSuccessEvent(
+    const RefPtr<IDBFileRequest>& aFileRequest,
+    const RefPtr<IDBFileHandle>& aFileHandle, T* aPtr);
+
+namespace detail {
+nsresult GetFileHandleResult(const RefPtr<IDBFileRequest>& aFileRequest,
+                             JSContext* aCx, const nsCString* aString,
+                             JS::MutableHandle<JS::Value> aResult) {
+  const nsCString& data = *aString;
+
+  nsresult rv;
+
+  if (!aFileRequest->HasEncoding()) {
+    JS::Rooted<JSObject*> arrayBuffer(aCx);
+    rv = nsContentUtils::CreateArrayBuffer(aCx, data, arrayBuffer.address());
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR;
+    }
+
+    aResult.setObject(*arrayBuffer);
+    return NS_OK;
+  }
+
+  // Try the API argument.
+  const Encoding* encoding = Encoding::ForLabel(aFileRequest->GetEncoding());
+  if (!encoding) {
+    // API argument failed. Since we are dealing with a file system file,
+    // we don't have a meaningful type attribute for the blob available,
+    // so proceeding to the next step, which is defaulting to UTF-8.
+    encoding = UTF_8_ENCODING;
+  }
+
+  nsString tmpString;
+  std::tie(rv, std::ignore) = encoding->Decode(data, tmpString);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR;
+  }
+
+  if (NS_WARN_IF(!xpc::StringToJsval(aCx, tmpString, aResult))) {
+    return NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR;
+  }
+
+  return NS_OK;
+}
+
+nsresult GetFileHandleResult(const RefPtr<IDBFileRequest>& /*aFileRequest*/,
+                             JSContext* aCx,
+                             const FileRequestMetadata* aMetadata,
+                             JS::MutableHandle<JS::Value> aResult) {
+  JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
+  if (NS_WARN_IF(!obj)) {
+    return NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR;
+  }
+
+  const Maybe<uint64_t>& size = aMetadata->size();
+  if (size.isSome()) {
+    JS::Rooted<JS::Value> number(aCx, JS_NumberValue(size.value()));
+
+    if (NS_WARN_IF(!JS_DefineProperty(aCx, obj, "size", number, 0))) {
+      return NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR;
+    }
+  }
+
+  const Maybe<int64_t>& lastModified = aMetadata->lastModified();
+  if (lastModified.isSome()) {
+    JS::Rooted<JSObject*> date(
+        aCx, JS::NewDateObject(aCx, JS::TimeClip(lastModified.value())));
+    if (NS_WARN_IF(!date)) {
+      return NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR;
+    }
+
+    if (NS_WARN_IF(!JS_DefineProperty(aCx, obj, "lastModified", date, 0))) {
+      return NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR;
+    }
+  }
+
+  aResult.setObject(*obj);
+  return NS_OK;
+}
+
+nsresult GetFileHandleResult(const RefPtr<IDBFileRequest>& /*aFileRequest*/,
+                             JSContext* aCx,
+                             const JS::Handle<JS::Value>* aValue,
+                             JS::MutableHandle<JS::Value> aResult) {
+  aResult.set(*aValue);
+  return NS_OK;
+}
+}  // namespace detail
+
+void DispatchFileHandleErrorEvent(IDBFileRequest* aFileRequest,
+                                  nsresult aErrorCode,
+                                  IDBFileHandle* aFileHandle) {
+  MOZ_ASSERT(aFileRequest);
+  aFileRequest->AssertIsOnOwningThread();
+  MOZ_ASSERT(NS_FAILED(aErrorCode));
+  MOZ_ASSERT(NS_ERROR_GET_MODULE(aErrorCode) == NS_ERROR_MODULE_DOM_FILEHANDLE);
+  MOZ_ASSERT(aFileHandle);
+
+  const RefPtr<IDBFileRequest> fileRequest = aFileRequest;
+  const RefPtr<IDBFileHandle> fileHandle = aFileHandle;
+
+  AutoSetCurrentFileHandle ascfh(aFileHandle);
+
+  fileRequest->FireError(aErrorCode);
+
+  MOZ_ASSERT(fileHandle->IsOpen() || fileHandle->IsAborted());
+}
+
+template <typename T>
+void SetFileHandleResultAndDispatchSuccessEvent(
+    const RefPtr<IDBFileRequest>& aFileRequest,
+    const RefPtr<IDBFileHandle>& aFileHandle, T* aPtr) {
+  MOZ_ASSERT(aFileRequest);
+  MOZ_ASSERT(aFileHandle);
+  MOZ_ASSERT(aPtr);
+
+  auto autoFileHandle = AutoSetCurrentFileHandle{aFileHandle};
+
+  aFileRequest->AssertIsOnOwningThread();
+
+  if (aFileHandle->IsAborted()) {
+    aFileRequest->FireError(NS_ERROR_DOM_FILEHANDLE_ABORT_ERR);
+    return;
+  }
+
+  MOZ_ASSERT(aFileHandle->IsOpen());
+
+  aFileRequest->SetResult(
+      [aFileRequest, aPtr](JSContext* aCx,
+                           JS::MutableHandle<JS::Value> aResult) {
+        return detail::GetFileHandleResult(aFileRequest, aCx, aPtr, aResult);
+      });
+
+  MOZ_ASSERT(aFileHandle->IsOpen() || aFileHandle->IsAborted());
 }
 
 auto GetKeyOperator(const IDBCursorDirection aDirection) {
@@ -1162,6 +1376,22 @@ bool BackgroundDatabaseChild::DeallocPBackgroundIDBDatabaseFileChild(
   return true;
 }
 
+PBackgroundIDBDatabaseRequestChild*
+BackgroundDatabaseChild::AllocPBackgroundIDBDatabaseRequestChild(
+    const DatabaseRequestParams& aParams) {
+  MOZ_CRASH(
+      "PBackgroundIDBDatabaseRequestChild actors should be manually "
+      "constructed!");
+}
+
+bool BackgroundDatabaseChild::DeallocPBackgroundIDBDatabaseRequestChild(
+    PBackgroundIDBDatabaseRequestChild* aActor) {
+  MOZ_ASSERT(aActor);
+
+  delete static_cast<BackgroundDatabaseRequestChild*>(aActor);
+  return true;
+}
+
 already_AddRefed<PBackgroundIDBVersionChangeTransactionChild>
 BackgroundDatabaseChild::AllocPBackgroundIDBVersionChangeTransactionChild(
     const uint64_t aCurrentVersion, const uint64_t aRequestedVersion,
@@ -1235,6 +1465,22 @@ BackgroundDatabaseChild::RecvPBackgroundIDBVersionChangeTransactionConstructor(
       *database, std::move(upgradeNeededEvent));
 
   return IPC_OK();
+}
+
+PBackgroundMutableFileChild*
+BackgroundDatabaseChild::AllocPBackgroundMutableFileChild(
+    const nsString& aName, const nsString& aType) const {
+  AssertIsOnOwningThread();
+
+  return new BackgroundMutableFileChild(aName, aType);
+}
+
+bool BackgroundDatabaseChild::DeallocPBackgroundMutableFileChild(
+    PBackgroundMutableFileChild* aActor) {
+  MOZ_ASSERT(aActor);
+
+  delete static_cast<BackgroundMutableFileChild*>(aActor);
+  return true;
 }
 
 mozilla::ipc::IPCResult BackgroundDatabaseChild::RecvVersionChange(
@@ -1320,6 +1566,73 @@ BackgroundDatabaseChild::RecvCloseAfterInvalidationComplete() {
 
   if (mDatabase) {
     mDatabase->DispatchTrustedEvent(nsDependentString(kCloseEventType));
+  }
+
+  return IPC_OK();
+}
+
+/*******************************************************************************
+ * BackgroundDatabaseRequestChild
+ ******************************************************************************/
+
+BackgroundDatabaseRequestChild::BackgroundDatabaseRequestChild(
+    IDBDatabase* aDatabase, MovingNotNull<RefPtr<IDBRequest>> aRequest)
+    : BackgroundRequestChildBase(std::move(aRequest)), mDatabase(aDatabase) {
+  // Can't assert owning thread here because IPDL has not yet set our manager!
+  MOZ_ASSERT(aDatabase);
+  aDatabase->AssertIsOnOwningThread();
+
+  MOZ_COUNT_CTOR(indexedDB::BackgroundDatabaseRequestChild);
+}
+
+BackgroundDatabaseRequestChild::~BackgroundDatabaseRequestChild() {
+  MOZ_COUNT_DTOR(indexedDB::BackgroundDatabaseRequestChild);
+}
+
+void BackgroundDatabaseRequestChild::HandleResponse(nsresult aResponse) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(NS_FAILED(aResponse));
+  MOZ_ASSERT(NS_ERROR_GET_MODULE(aResponse) == NS_ERROR_MODULE_DOM_INDEXEDDB);
+
+  mRequest->Reset();
+
+  DispatchErrorEvent(mRequest, aResponse);
+}
+
+void BackgroundDatabaseRequestChild::HandleResponse(
+    const CreateFileRequestResponse& aResponse) {
+  AssertIsOnOwningThread();
+
+  mRequest->Reset();
+
+  auto mutableFileActor =
+      static_cast<BackgroundMutableFileChild*>(aResponse.mutableFileChild());
+  MOZ_ASSERT(mutableFileActor);
+
+  mutableFileActor->EnsureDOMObject();
+
+  SetResultAndDispatchSuccessEvent(mRequest, nullptr,
+                                   *WrapNotNull(static_cast<IDBMutableFile*>(
+                                       mutableFileActor->GetDOMObject())));
+
+  mutableFileActor->ReleaseDOMObject();
+}
+
+mozilla::ipc::IPCResult BackgroundDatabaseRequestChild::Recv__delete__(
+    const DatabaseRequestResponse& aResponse) {
+  AssertIsOnOwningThread();
+
+  switch (aResponse.type()) {
+    case DatabaseRequestResponse::Tnsresult:
+      HandleResponse(aResponse.get_nsresult());
+      break;
+
+    case DatabaseRequestResponse::TCreateFileRequestResponse:
+      HandleResponse(aResponse.get_CreateFileRequestResponse());
+      break;
+
+    default:
+      return IPC_FAIL(this, "Unknown response type!");
   }
 
   return IPC_OK();
@@ -1582,6 +1895,98 @@ bool BackgroundVersionChangeTransactionChild::DeallocPBackgroundIDBCursorChild(
   MOZ_ASSERT(aActor);
 
   delete aActor;
+  return true;
+}
+
+/*******************************************************************************
+ * BackgroundMutableFileChild
+ ******************************************************************************/
+
+BackgroundMutableFileChild::BackgroundMutableFileChild(const nsAString& aName,
+                                                       const nsAString& aType)
+    : mMutableFile(nullptr), mName(aName), mType(aType) {
+  // Can't assert owning thread here because IPDL has not yet set our manager!
+  MOZ_COUNT_CTOR(indexedDB::BackgroundMutableFileChild);
+}
+
+BackgroundMutableFileChild::~BackgroundMutableFileChild() {
+  MOZ_COUNT_DTOR(indexedDB::BackgroundMutableFileChild);
+}
+
+#ifdef DEBUG
+
+void BackgroundMutableFileChild::AssertIsOnOwningThread() const {
+  static_cast<BackgroundDatabaseChild*>(Manager())->AssertIsOnOwningThread();
+}
+
+#endif  // DEBUG
+
+void BackgroundMutableFileChild::EnsureDOMObject() {
+  AssertIsOnOwningThread();
+
+  if (mTemporaryStrongMutableFile) {
+    return;
+  }
+
+  auto database =
+      static_cast<BackgroundDatabaseChild*>(Manager())->GetDOMObject();
+  MOZ_ASSERT(database);
+
+  mTemporaryStrongMutableFile =
+      new IDBMutableFile(database, this, mName, mType);
+
+  MOZ_ASSERT(mTemporaryStrongMutableFile);
+  mTemporaryStrongMutableFile->AssertIsOnOwningThread();
+
+  mMutableFile = mTemporaryStrongMutableFile;
+}
+
+void BackgroundMutableFileChild::ReleaseDOMObject() {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mTemporaryStrongMutableFile);
+  mTemporaryStrongMutableFile->AssertIsOnOwningThread();
+  MOZ_ASSERT(mMutableFile == mTemporaryStrongMutableFile);
+
+  mTemporaryStrongMutableFile = nullptr;
+}
+
+void BackgroundMutableFileChild::SendDeleteMeInternal() {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(!mTemporaryStrongMutableFile);
+
+  if (mMutableFile) {
+    mMutableFile->ClearBackgroundActor();
+    mMutableFile = nullptr;
+
+    MOZ_ALWAYS_TRUE(PBackgroundMutableFileChild::SendDeleteMe());
+  }
+}
+
+void BackgroundMutableFileChild::ActorDestroy(ActorDestroyReason aWhy) {
+  AssertIsOnOwningThread();
+
+  if (mMutableFile) {
+    mMutableFile->ClearBackgroundActor();
+#ifdef DEBUG
+    mMutableFile = nullptr;
+#endif
+  }
+}
+
+PBackgroundFileHandleChild*
+BackgroundMutableFileChild::AllocPBackgroundFileHandleChild(
+    const FileMode& aMode) {
+  MOZ_CRASH(
+      "PBackgroundFileHandleChild actors should be manually "
+      "constructed!");
+}
+
+bool BackgroundMutableFileChild::DeallocPBackgroundFileHandleChild(
+    PBackgroundFileHandleChild* aActor) const {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(aActor);
+
+  delete static_cast<BackgroundFileHandleChild*>(aActor);
   return true;
 }
 
@@ -2815,6 +3220,237 @@ nsresult DelayedActionRunnable<T>::Cancel() {
   Run();
 
   return NS_OK;
+}
+
+/*******************************************************************************
+ * BackgroundFileHandleChild
+ ******************************************************************************/
+
+BackgroundFileHandleChild::BackgroundFileHandleChild(IDBFileHandle* aFileHandle)
+    : mTemporaryStrongFileHandle(aFileHandle), mFileHandle(aFileHandle) {
+  MOZ_ASSERT(aFileHandle);
+  aFileHandle->AssertIsOnOwningThread();
+
+  MOZ_COUNT_CTOR(BackgroundFileHandleChild);
+}
+
+BackgroundFileHandleChild::~BackgroundFileHandleChild() {
+  AssertIsOnOwningThread();
+
+  MOZ_COUNT_DTOR(BackgroundFileHandleChild);
+}
+
+#ifdef DEBUG
+
+void BackgroundFileHandleChild::AssertIsOnOwningThread() const {
+  static_cast<BackgroundMutableFileChild*>(Manager())->AssertIsOnOwningThread();
+}
+
+#endif  // DEBUG
+
+void BackgroundFileHandleChild::SendDeleteMeInternal() {
+  AssertIsOnOwningThread();
+
+  if (mFileHandle) {
+    NoteActorDestroyed();
+
+    MOZ_ALWAYS_TRUE(PBackgroundFileHandleChild::SendDeleteMe());
+  }
+}
+
+void BackgroundFileHandleChild::NoteActorDestroyed() {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT_IF(mTemporaryStrongFileHandle, mFileHandle);
+
+  if (mFileHandle) {
+    mFileHandle->ClearBackgroundActor();
+
+    // Normally this would be DEBUG-only but NoteActorDestroyed is also called
+    // from SendDeleteMeInternal. In that case we're going to receive an
+    // actual ActorDestroy call later and we don't want to touch a dead
+    // object.
+    mTemporaryStrongFileHandle = nullptr;
+    mFileHandle = nullptr;
+  }
+}
+
+void BackgroundFileHandleChild::NoteComplete() {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT_IF(mFileHandle, mTemporaryStrongFileHandle);
+
+  mTemporaryStrongFileHandle = nullptr;
+}
+
+void BackgroundFileHandleChild::ActorDestroy(ActorDestroyReason aWhy) {
+  AssertIsOnOwningThread();
+
+  NoteActorDestroyed();
+}
+
+mozilla::ipc::IPCResult BackgroundFileHandleChild::RecvComplete(
+    const bool aAborted) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mFileHandle);
+
+  mFileHandle->FireCompleteOrAbortEvents(aAborted);
+
+  NoteComplete();
+  return IPC_OK();
+}
+
+PBackgroundFileRequestChild*
+BackgroundFileHandleChild::AllocPBackgroundFileRequestChild(
+    const FileRequestParams& aParams) {
+  MOZ_CRASH(
+      "PBackgroundFileRequestChild actors should be manually "
+      "constructed!");
+}
+
+bool BackgroundFileHandleChild::DeallocPBackgroundFileRequestChild(
+    PBackgroundFileRequestChild* aActor) {
+  MOZ_ASSERT(aActor);
+
+  delete static_cast<BackgroundFileRequestChild*>(aActor);
+  return true;
+}
+
+/*******************************************************************************
+ * BackgroundFileRequestChild
+ ******************************************************************************/
+
+BackgroundFileRequestChild::BackgroundFileRequestChild(
+    IDBFileRequest* aFileRequest)
+    : mFileRequest(aFileRequest),
+      mFileHandle(aFileRequest->GetFileHandle()),
+      mActorDestroyed(false) {
+  MOZ_ASSERT(aFileRequest);
+  aFileRequest->AssertIsOnOwningThread();
+  MOZ_ASSERT(mFileHandle);
+  mFileHandle->AssertIsOnOwningThread();
+
+  MOZ_COUNT_CTOR(BackgroundFileRequestChild);
+}
+
+BackgroundFileRequestChild::~BackgroundFileRequestChild() {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(!mFileHandle);
+
+  MOZ_COUNT_DTOR(BackgroundFileRequestChild);
+}
+
+#ifdef DEBUG
+
+void BackgroundFileRequestChild::AssertIsOnOwningThread() const {
+  MOZ_ASSERT(mFileRequest);
+  mFileRequest->AssertIsOnOwningThread();
+}
+
+#endif  // DEBUG
+
+void BackgroundFileRequestChild::HandleResponse(nsresult aResponse) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(NS_FAILED(aResponse));
+  MOZ_ASSERT(NS_ERROR_GET_MODULE(aResponse) == NS_ERROR_MODULE_DOM_FILEHANDLE);
+  MOZ_ASSERT(mFileHandle);
+
+  DispatchFileHandleErrorEvent(mFileRequest, aResponse, mFileHandle);
+}
+
+void BackgroundFileRequestChild::HandleResponse(const nsCString& aResponse) {
+  AssertIsOnOwningThread();
+
+  SetFileHandleResultAndDispatchSuccessEvent(mFileRequest, mFileHandle,
+                                             &aResponse);
+}
+
+void BackgroundFileRequestChild::HandleResponse(
+    const FileRequestMetadata& aResponse) {
+  AssertIsOnOwningThread();
+
+  SetFileHandleResultAndDispatchSuccessEvent(mFileRequest, mFileHandle,
+                                             &aResponse);
+}
+
+void BackgroundFileRequestChild::HandleResponse(
+    const JS::Handle<JS::Value> aResponse) {
+  AssertIsOnOwningThread();
+
+  SetFileHandleResultAndDispatchSuccessEvent(mFileRequest, mFileHandle,
+                                             &aResponse);
+}
+
+void BackgroundFileRequestChild::ActorDestroy(ActorDestroyReason aWhy) {
+  AssertIsOnOwningThread();
+
+  MOZ_ASSERT(!mActorDestroyed);
+
+  mActorDestroyed = true;
+
+  if (mFileHandle) {
+    mFileHandle->AssertIsOnOwningThread();
+
+    mFileHandle->OnRequestFinished(/* aActorDestroyedNormally */
+                                   aWhy == Deletion);
+
+#ifdef DEBUG
+    mFileHandle = nullptr;
+#endif
+  }
+}
+
+mozilla::ipc::IPCResult BackgroundFileRequestChild::Recv__delete__(
+    const FileRequestResponse& aResponse) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mFileRequest);
+  MOZ_ASSERT(mFileHandle);
+
+  if (mFileHandle->IsAborted()) {
+    // Always handle an "error" with ABORT_ERR if the file handle was aborted,
+    // even if the request succeeded or failed with another error.
+    HandleResponse(NS_ERROR_DOM_FILEHANDLE_ABORT_ERR);
+  } else {
+    switch (aResponse.type()) {
+      case FileRequestResponse::Tnsresult:
+        HandleResponse(aResponse.get_nsresult());
+        break;
+
+      case FileRequestResponse::TFileRequestReadResponse:
+        HandleResponse(aResponse.get_FileRequestReadResponse().data());
+        break;
+
+      case FileRequestResponse::TFileRequestWriteResponse:
+      case FileRequestResponse::TFileRequestTruncateResponse:
+      case FileRequestResponse::TFileRequestFlushResponse:
+        HandleResponse(JS::UndefinedHandleValue);
+        break;
+
+      case FileRequestResponse::TFileRequestGetMetadataResponse:
+        HandleResponse(
+            aResponse.get_FileRequestGetMetadataResponse().metadata());
+        break;
+
+      default:
+        return IPC_FAIL(this, "Unknown response type!");
+    }
+  }
+
+  mFileHandle->OnRequestFinished(/* aActorDestroyedNormally */ true);
+
+  // Null this out so that we don't try to call OnRequestFinished() again in
+  // ActorDestroy.
+  mFileHandle = nullptr;
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult BackgroundFileRequestChild::RecvProgress(
+    const uint64_t aProgress, const uint64_t aProgressMax) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mFileRequest);
+
+  mFileRequest->FireProgressEvent(aProgress, aProgressMax);
+
+  return IPC_OK();
 }
 
 /*******************************************************************************

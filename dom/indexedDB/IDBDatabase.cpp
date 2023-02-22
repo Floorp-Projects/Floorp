@@ -9,6 +9,7 @@
 #include "IDBEvents.h"
 #include "IDBFactory.h"
 #include "IDBIndex.h"
+#include "IDBMutableFile.h"
 #include "IDBObjectStore.h"
 #include "IDBRequest.h"
 #include "IDBTransaction.h"
@@ -267,6 +268,7 @@ void IDBDatabase::CloseInternal() {
 void IDBDatabase::InvalidateInternal() {
   AssertIsOnOwningThread();
 
+  InvalidateMutableFiles();
   AbortTransactions(/* aShouldWarn */ true);
 
   CloseInternal();
@@ -836,6 +838,37 @@ void IDBDatabase::ExpireFileActors(bool aExpireAll) {
     }
   } else {
     MOZ_ASSERT(!mFileActors.Count());
+  }
+}
+
+void IDBDatabase::NoteLiveMutableFile(IDBMutableFile& aMutableFile) {
+  AssertIsOnOwningThread();
+  aMutableFile.AssertIsOnOwningThread();
+  MOZ_ASSERT(!mLiveMutableFiles.Contains(&aMutableFile));
+
+  mLiveMutableFiles.AppendElement(WrapNotNullUnchecked(&aMutableFile));
+}
+
+void IDBDatabase::NoteFinishedMutableFile(IDBMutableFile& aMutableFile) {
+  AssertIsOnOwningThread();
+  aMutableFile.AssertIsOnOwningThread();
+
+  // It's ok if this is called after we cleared the array, so don't assert that
+  // aMutableFile is in the list.
+
+  mLiveMutableFiles.RemoveElement(&aMutableFile);
+}
+
+void IDBDatabase::InvalidateMutableFiles() {
+  AssertIsOnOwningThread();
+
+  if (!mLiveMutableFiles.IsEmpty()) {
+    for (uint32_t count = mLiveMutableFiles.Length(), index = 0; index < count;
+         index++) {
+      mLiveMutableFiles[index]->Invalidate();
+    }
+
+    mLiveMutableFiles.Clear();
   }
 }
 

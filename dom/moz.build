@@ -46,6 +46,7 @@ DIRS += [
     "events",
     "fetch",
     "file",
+    "filehandle",
     "filesystem",
     "flex",
     "fs",
