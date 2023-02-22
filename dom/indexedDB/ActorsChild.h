@@ -20,7 +20,6 @@
 #include "mozilla/dom/indexedDB/PBackgroundIDBTransactionChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBVersionChangeTransactionChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsChild.h"
-#include "mozilla/dom/PBackgroundMutableFileChild.h"
 #include "mozilla/InitializedOnce.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
@@ -269,11 +268,6 @@ class BackgroundDatabaseChild final : public PBackgroundIDBDatabaseChild {
       const uint64_t& aCurrentVersion, const uint64_t& aRequestedVersion,
       const int64_t& aNextObjectStoreId, const int64_t& aNextIndexId) override;
 
-  PBackgroundMutableFileChild* AllocPBackgroundMutableFileChild(
-      const nsString& aName, const nsString& aType) const;
-
-  bool DeallocPBackgroundMutableFileChild(PBackgroundMutableFileChild* aActor);
-
   mozilla::ipc::IPCResult RecvVersionChange(uint64_t aOldVersion,
                                             Maybe<uint64_t> aNewVersion);
 
@@ -409,49 +403,6 @@ class BackgroundVersionChangeTransactionChild final
       const OpenCursorParams& aParams);
 
   bool DeallocPBackgroundIDBCursorChild(PBackgroundIDBCursorChild* aActor);
-};
-
-class BackgroundMutableFileChild final : public PBackgroundMutableFileChild {
-  friend class BackgroundDatabaseChild;
-  friend IDBMutableFile;
-
-  RefPtr<IDBMutableFile> mTemporaryStrongMutableFile;
-  IDBMutableFile* mMutableFile;
-  nsString mName;
-  nsString mType;
-
- public:
-  void AssertIsOnOwningThread() const
-#ifdef DEBUG
-      ;
-#else
-  {
-  }
-#endif
-
-  void EnsureDOMObject();
-
-  IDBMutableFile* GetDOMObject() const {
-    AssertIsOnOwningThread();
-    return mMutableFile;
-  }
-
-  void ReleaseDOMObject();
-
-  bool SendDeleteMe() = delete;
-
- private:
-  // Only constructed by BackgroundDatabaseChild.
-  BackgroundMutableFileChild(const nsAString& aName, const nsAString& aType);
-
-  // Only destroyed by BackgroundDatabaseChild.
-  ~BackgroundMutableFileChild();
-
-  void SendDeleteMeInternal();
-
- public:
-  // IPDL methods are only called by IPDL.
-  void ActorDestroy(ActorDestroyReason aWhy) override;
 };
 
 class BackgroundRequestChild final : public BackgroundRequestChildBase,

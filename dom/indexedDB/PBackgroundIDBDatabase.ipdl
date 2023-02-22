@@ -6,7 +6,6 @@ include protocol PBackgroundIDBDatabaseFile;
 include protocol PBackgroundIDBFactory;
 include protocol PBackgroundIDBTransaction;
 include protocol PBackgroundIDBVersionChangeTransaction;
-include protocol PBackgroundMutableFile;
 
 include IPCBlob;
 include InputStreamParams;
@@ -32,7 +31,6 @@ sync protocol PBackgroundIDBDatabase
   manages PBackgroundIDBDatabaseFile;
   manages PBackgroundIDBTransaction;
   manages PBackgroundIDBVersionChangeTransaction;
-  manages PBackgroundMutableFile;
 
 parent:
   async DeleteMe();
@@ -58,8 +56,6 @@ child:
                                                uint64_t requestedVersion,
                                                int64_t nextObjectStoreId,
                                                int64_t nextIndexId);
-
-  async PBackgroundMutableFile(nsString name, nsString type);
 };
 
 } // namespace indexedDB
