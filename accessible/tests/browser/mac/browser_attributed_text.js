@@ -66,7 +66,7 @@ addAccessibleTask(
 
 // Test misspelling in text area
 addAccessibleTask(
-  `<textarea id="t">hello worlf</textarea>`,
+  `<textarea id="t">hello worlf, i love you</textarea>`,
   async (browser, accDoc) => {
     let textArea = getNativeInterface(accDoc, "t");
     let spellDone = waitForEvent(EVENT_TEXT_ATTRIBUTE_CHANGED, "t");
@@ -85,7 +85,7 @@ addAccessibleTask(
         NSRange(...range)
       );
 
-      if (attributedText.length != 2) {
+      if (attributedText.length != 3) {
         spellDone = waitForEvent(EVENT_TEXT_ATTRIBUTE_CHANGED, "t");
       } else {
         break;
