@@ -635,6 +635,11 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowColumns(
             aReflowInput.mParentReflowInput->mFrame->HasAnyStateBits(
                 NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR);
         if (isNestedMulticol) {
+          if (aConfig.mForceAuto) {
+            // If we are forced to fill columns sequentially, force fit the
+            // content whether we are at top of page or not.
+            return true;
+          }
           if (aReflowInput.mFlags.mIsTopOfPage) {
             // If this is the last balancing reflow in a nested multicol, we
             // want to force fit content to avoid infinite loops.
