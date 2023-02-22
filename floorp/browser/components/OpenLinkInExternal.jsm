@@ -259,7 +259,7 @@ async function getDefaultBrowserOnLinux(protocol, desktopFilesInfo = null) {
 }
 
 async function OpenLinkInExternal(url) {
-    let userSelectedBrowserId = Services.prefs.getStringPref("floorp.openInExternal.browserId", "");
+    let userSelectedBrowserId = Services.prefs.getStringPref("floorp.openLinkInExternal.browserId", "");
     let protocol;
     if (url.startsWith("http")) protocol = "http";
     if (url.startsWith("https")) protocol = "https";
