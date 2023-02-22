@@ -49,6 +49,13 @@ XPCOMUtils.defineLazyGetter(lazy, "console", () => {
  */
 export class TranslationsParent extends JSWindowActorParent {
   /**
+   * The remote settings client that retrieves the language-identification model binary.
+   *
+   * @type {RemoteSettingsClient | null}
+   */
+  #languageIdModelsRemoteClient = null;
+
+  /**
    * A map of the TranslationModelRecord["id"] to the record of the model in Remote Settings.
    * Used to coordinate the downloads. See `getLanguagePair`
    *
@@ -73,6 +80,12 @@ export class TranslationsParent extends JSWindowActorParent {
     switch (name) {
       case "Translations:GetBergamotWasmArrayBuffer": {
         return this.#getBergamotWasmArrayBuffer();
+      }
+      case "Translations:GetLanguageIdModelArrayBuffer": {
+        return this.#getLanguageIdModelArrayBuffer();
+      }
+      case "Translations:GetLanguageIdWasmArrayBuffer": {
+        return this.#getLanguageIdWasmArrayBuffer();
       }
       case "Translations:GetLanguageTranslationModelFiles": {
         const { fromLanguage, toLanguage } = data;
@@ -101,6 +114,121 @@ export class TranslationsParent extends JSWindowActorParent {
       }
     }
     return undefined;
+  }
+
+  /**
+   * Retrieves the language-identification model binary from remote settings.
+   *
+   * @returns {Promise<ArrayBuffer>}
+   */
+  async #getLanguageIdModelArrayBuffer() {
+    lazy.console.log("Getting language-identification model array buffer.");
+    const now = Date.now();
+    const client = this.#getLanguageIdModelRemoteClient();
+
+    /** @type {ModelRecord[]} */
+    const modelRecords = await client.get({
+      // Pull the records from the network so that we never get an empty list.
+      syncIfEmpty: true,
+      // TODO (Bug 1813779) - We should consider the verification process. For now do the
+      // slow/safe thing of always verifying the signature.
+      verifySignature: true,
+    });
+
+    if (modelRecords.length === 0) {
+      throw new Error(
+        "Unable to get language-identification model record from remote settings"
+      );
+    }
+
+    if (modelRecords.length > 1) {
+      lazy.console.error(
+        "Expected the language-identification model collection to have only 1 record.",
+        modelRecords
+      );
+    }
+
+    /** @type {{buffer: ArrayBuffer}} */
+    const { buffer } = await client.attachments.download(modelRecords[0]);
+
+    const duration = (Date.now() - now) / 1000;
+    lazy.console.log(
+      `Remote language-identification model loaded in ${duration} seconds.`
+    );
+
+    return buffer;
+  }
+
+  /**
+   * Initializes the RemoteSettingsClient for the language-identification model binary.
+   *
+   * @returns {RemoteSettingsClient}
+   */
+  #getLanguageIdModelRemoteClient() {
+    if (this.#languageIdModelsRemoteClient) {
+      return this.#languageIdModelsRemoteClient;
+    }
+
+    /** @type {RemoteSettingsClient} */
+    const client = lazy.RemoteSettings("translations-identification-models");
+    bypassSignatureVerificationIfDev(client);
+
+    this.#languageIdModelsRemoteClient = client;
+    return client;
+  }
+
+  /**
+   * Retrieves the language-identification wasm binary from remote settings.
+   *
+   * @returns {Promise<ArrayBuffer>}
+   */
+  async #getLanguageIdWasmArrayBuffer() {
+    const start = Date.now();
+    const client = this.#getTranslationsWasmRemoteClient();
+
+    // Load the wasm binary from remote settings, if it hasn't been already.
+    lazy.console.log(`Getting remote language-identification wasm binary.`);
+
+    /** @type {WasmRecord[]} */
+    const wasmRecords = await client.get({
+      // Pull the records from the network so that we never get an empty list.
+      syncIfEmpty: true,
+      // TODO (Bug 1813779) - We should consider the verification process. For now do the
+      // slow/safe thing of always verifying the signature.
+      verifySignature: true,
+      // Only get the fasttext-wasm record.
+      filters: { name: "fasttext-wasm" },
+    });
+
+    if (wasmRecords.length === 0) {
+      // The remote settings client provides an empty list of records when there is
+      // an error.
+      throw new Error(
+        "Unable to get language-identification wasm binary from Remote Settings."
+      );
+    }
+
+    if (wasmRecords.length > 1) {
+      lazy.console.error(
+        "Expected the language-identification wasm collection to only have 1 record.",
+        wasmRecords
+      );
+    }
+
+    // Unlike the models, greedily download the wasm. It will pull it from a locale
+    // cache on disk if it's already been downloaded. Do not retain a copy, as
+    // this will be running in the parent process. It's not worth holding onto
+    // this much memory, so reload it every time it is needed.
+
+    /** @type {{buffer: ArrayBuffer}} */
+    const { buffer } = await client.attachments.download(wasmRecords[0]);
+
+    const duration = (Date.now() - start) / 1000;
+    lazy.console.log(
+      `Remote language-identification wasm binary loaded in ${duration} seconds.`
+    );
+
+    return buffer;
   }
 
   /**
@@ -281,7 +409,7 @@ export class TranslationsParent extends JSWindowActorParent {
       // slow/safe thing of always verifying the signature.
       verifySignature: true,
       // Only get the bergamot-translator record.
-      filter: { name: "bergamot-translator" },
+      filters: { name: "bergamot-translator" },
     });
 
     if (wasmRecords.length === 0) {
