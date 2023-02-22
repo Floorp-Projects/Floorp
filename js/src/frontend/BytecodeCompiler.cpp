@@ -312,8 +312,7 @@ template <typename Unit>
     return false;
   }
 
-  // TODO bug 1773319 maybeCx nullptr could crash here
-  if (input.options.populateDelazificationCache() &&
+  if (input.options.populateDelazificationCache() && maybeCx &&
       !maybeCx->isHelperThreadContext()) {
     BorrowingCompilationStencil borrowingStencil(compiler.stencil());
     StartOffThreadDelazification(maybeCx, input.options, borrowingStencil);
