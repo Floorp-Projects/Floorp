@@ -1966,6 +1966,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.6.0 -> 1.7.0"
 
+[[audits.regex]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "1.7.0 -> 1.7.1"
+
 [[audits.regex-syntax]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"

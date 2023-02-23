@@ -228,3 +228,21 @@ replace!(
     bytes!(&std::borrow::Cow::<'_, [u8]>::Owned(vec![b'Z'])),
     "age: Z6"
 );
+
+#[test]
+fn replacen_no_captures() {
+    let re = regex!(r"[0-9]");
+    assert_eq!(
+        re.replacen(text!("age: 1234"), 2, t!("Z")),
+        text!("age: ZZ34")
+    );
+}
+
+#[test]
+fn replacen_with_captures() {
+    let re = regex!(r"([0-9])");
+    assert_eq!(
+        re.replacen(text!("age: 1234"), 2, t!("${1}Z")),
+        text!("age: 1Z2Z34")
+    );
+}

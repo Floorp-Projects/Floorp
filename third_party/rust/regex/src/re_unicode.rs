@@ -554,12 +554,12 @@ impl Regex {
             let mut new = String::with_capacity(text.len());
             let mut last_match = 0;
             for (i, m) in it {
-                if limit > 0 && i >= limit {
-                    break;
-                }
                 new.push_str(&text[last_match..m.start()]);
                 new.push_str(&rep);
                 last_match = m.end();
+                if limit > 0 && i >= limit - 1 {
+                    break;
+                }
             }
             new.push_str(&text[last_match..]);
             return Cow::Owned(new);
@@ -574,14 +574,14 @@ impl Regex {
         let mut new = String::with_capacity(text.len());
         let mut last_match = 0;
         for (i, cap) in it {
-            if limit > 0 && i >= limit {
-                break;
-            }
             // unwrap on 0 is OK because captures only reports matches
             let m = cap.get(0).unwrap();
             new.push_str(&text[last_match..m.start()]);
             rep.replace_append(&cap, &mut new);
             last_match = m.end();
+            if limit > 0 && i >= limit - 1 {
+                break;
+            }
         }
         new.push_str(&text[last_match..]);
         Cow::Owned(new)
