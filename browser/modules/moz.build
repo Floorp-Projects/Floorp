@@ -148,6 +148,7 @@ EXTRA_JS_MODULES += [
     "TabsList.jsm",
     "TabUnloader.jsm",
     "TransientPrefs.jsm",
+    "URILoadingHelper.sys.mjs",
     "webrtcUI.jsm",
     "ZoomUI.jsm",
 ]

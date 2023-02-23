@@ -2808,7 +2808,7 @@ function openLocation(event) {
   }
 
   // If there's an open browser window, redirect the command there.
-  let win = getTopWin();
+  let win = URILoadingHelper.getTargetWindow(window);
   if (win) {
     win.focus();
     win.openLocation();
@@ -3947,7 +3947,7 @@ const BrowserSearch = {
       window.location.href != AppConstants.BROWSER_CHROME_URL ||
       gURLBar.readOnly
     ) {
-      let win = getTopWin({ skipPopups: true });
+      let win = URILoadingHelper.getTopWin(window, { skipPopups: true });
       if (win) {
         // If there's an open browser window, it should handle this command
         win.focus();
