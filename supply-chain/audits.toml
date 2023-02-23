@@ -1147,6 +1147,11 @@ criteria = "safe-to-deploy"
 delta = "52.0.1 -> 52.2.0"
 notes = "Maintained by the Glean team at Mozilla"
 
+[[audits.glob]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.3.0 -> 0.3.1"
+
 [[audits.goblin]]
 who = "Jan-Erik Rediger <jrediger@mozilla.com>"
 criteria = "safe-to-deploy"

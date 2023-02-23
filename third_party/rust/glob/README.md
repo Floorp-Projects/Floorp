@@ -3,9 +3,9 @@ glob
 
 Support for matching file paths against Unix shell style patterns.
 
-[![Build Status](https://travis-ci.org/rust-lang-nursery/glob.svg?branch=master)](https://travis-ci.org/rust-lang-nursery/glob)
+[![Continuous integration](https://github.com/rust-lang/glob/actions/workflows/rust.yml/badge.svg)](https://github.com/rust-lang/glob/actions/workflows/rust.yml)
 
-[Documentation](https://doc.rust-lang.org/glob)
+[Documentation](https://docs.rs/glob)
 
 ## Usage
 
@@ -13,7 +13,7 @@ To use `glob`, add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-glob = "0.3.0"
+glob = "0.3.1"
 ```
 
 And add this to your crate root:

@@ -58,10 +58,16 @@
 #![doc(
     html_logo_url = "https://www.rust-lang.org/logos/rust-logo-128x128-blk-v2.png",
     html_favicon_url = "https://www.rust-lang.org/favicon.ico",
-    html_root_url = "https://docs.rs/glob/0.3.0"
+    html_root_url = "https://docs.rs/glob/0.3.1"
 )]
 #![deny(missing_docs)]
-#![cfg_attr(all(test, windows), feature(std_misc))]
+
+#[cfg(test)]
+#[macro_use]
+extern crate doc_comment;
+
+#[cfg(test)]
+doctest!("../README.md");
 
 use std::cmp;
 use std::error::Error;
@@ -85,6 +91,7 @@ use PatternToken::{AnyChar, AnyRecursiveSequence, AnySequence, AnyWithin, Char};
 /// `GlobError` is returned to express this.
 ///
 /// See the `glob` function for more details.
+#[derive(Debug)]
 pub struct Paths {
     dir_patterns: Vec<Pattern>,
     require_dir: bool,
@@ -170,7 +177,6 @@ pub fn glob(pattern: &str) -> Result<Paths, PatternError> {
 pub fn glob_with(pattern: &str, options: MatchOptions) -> Result<Paths, PatternError> {
     #[cfg(windows)]
     fn check_windows_verbatim(p: &Path) -> bool {
-        use std::path::Prefix;
         match p.components().next() {
             Some(Component::Prefix(ref p)) => p.kind().is_verbatim(),
             _ => false,
@@ -287,10 +293,12 @@ impl GlobError {
 }
 
 impl Error for GlobError {
+    #[allow(deprecated)]
     fn description(&self) -> &str {
         self.error.description()
     }
 
+    #[allow(unknown_lints, bare_trait_objects)]
     fn cause(&self) -> Option<&Error> {
         Some(&self.error)
     }
@@ -588,11 +596,12 @@ impl Pattern {
                             });
                         };
 
-                        let tokens_len = tokens.len();
-
                         if is_valid {
                             // collapse consecutive AnyRecursiveSequence to a
                             // single one
+
+                            let tokens_len = tokens.len();
+
                             if !(tokens_len > 1 && tokens[tokens_len - 1] == AnyRecursiveSequence) {
                                 is_recursive = true;
                                 tokens.push(AnyRecursiveSequence);
@@ -961,7 +970,7 @@ fn chars_eq(a: char, b: char, case_sensitive: bool) -> bool {
 
 /// Configuration options to modify the behaviour of `Pattern::matches_with(..)`.
 #[allow(missing_copy_implementations)]
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct MatchOptions {
     /// Whether or not patterns should be matched in a case-sensitive manner.
     /// This currently only considers upper/lower case relationships between
@@ -996,6 +1005,11 @@ impl MatchOptions {
     ///     require_literal_leading_dot: false
     /// }
     /// ```
+    ///
+    /// # Note
+    /// The behavior of this method doesn't match `default()`'s. This returns
+    /// `case_sensitive` as `true` while `default()` does it as `false`.
+    // FIXME: Consider unity the behavior with `default()` in a next major release.
     pub fn new() -> Self {
         Self {
             case_sensitive: true,
@@ -1078,12 +1092,21 @@ mod test {
         #[cfg(windows)]
         fn win() {
             use std::env::current_dir;
-            use std::ffi::AsOsStr;
+            use std::path::Component;
 
             // check windows absolute paths with host/device components
             let root_with_device = current_dir()
                 .ok()
-                .and_then(|p| p.prefix().map(|p| p.join("*")))
+                .and_then(|p| {
+                    match p.components().next().unwrap() {
+                        Component::Prefix(prefix_component) => {
+                            let path = Path::new(prefix_component.as_os_str());
+                            path.join("*");
+                            Some(path.to_path_buf())
+                        }
+                        _ => panic!("no prefix in this path"),
+                    }
+                })
                 .unwrap();
             // FIXME (#9639): This needs to handle non-utf8 paths
             assert!(glob(root_with_device.as_os_str().to_str().unwrap())
