@@ -2161,7 +2161,7 @@
 # Whether CanvasRenderingContext2D.mozTextStyle is enabled.
 - name: dom.mozTextStyle.enabled
   type: bool
-  value: @IS_NOT_EARLY_BETA_OR_EARLIER@
+  value: false
   mirror: always
 
 # Allow cut/copy
