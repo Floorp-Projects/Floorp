@@ -34,7 +34,7 @@ COMMON_OPTIONS = [
 ]
 
 NIGHTLY_SIM_ROUTE = "mobile.v3.firefox-android.apks.fenix-nightly-simulation"
-ROUTE_SUFFIX = "artifacts/public/build/{architecture}/target.apk"
+ROUTE_SUFFIX = "artifacts/public/build/fenix/{architecture}/target.apk"
 
 build_generator = None
 
