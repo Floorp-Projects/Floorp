@@ -12,6 +12,10 @@ permalink: /changelog/
 * **tooling-glean-gradle:**
   * ⚠️ **This is a breaking change**: This wrapper of the Glean plugin is no longer needed and has been removed. Consuming applications can directly depend on the [Glean Gradle plugin](https://github.com/mozilla/glean/tree/main/gradle-plugin/).
 
+* **lib-crash-sentry-legacy**
+  * ⚠️ **This is a breaking change**: This component has been removed. Consumers should use the newer `lib-crash-sentry` component instead.
+
+
 # 111.0.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/v110.0.0...v111.0.0)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/v111.0.0/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)

@@ -72,7 +72,6 @@ existing_tasks:
   beetmover-release-lib-auth: ZEfQdgt3TECsnqT3cJfPSw
   beetmover-release-lib-crash: X3fr4z-bQQ-tQnEYZ0_74w
   beetmover-release-lib-crash-sentry: EQbF5o6oQrKuAum5nLxqCg
-  beetmover-release-lib-crash-sentry-legacy: TyX_dIkwSg6YLNBwQuYCGg
   beetmover-release-lib-dataprotect: ZJIw__IRSBCK7zm1qdH0aQ
   beetmover-release-lib-fetch-httpurlconnection: G7nBHpt8QfOzEJ2nv3GiyA
   beetmover-release-lib-fetch-okhttp: TgZBP7OlRuqBjCSou6Coxg
@@ -183,7 +182,6 @@ existing_tasks:
   build-components-lib-auth: Aa-Hn5ZXSGC5s4_PlOOvhA
   build-components-lib-crash: ZfWa6rayT5Oh4JJOXDiwBg
   build-components-lib-crash-sentry: Y5Ru-GVHSKeEnkLuer7cfA
-  build-components-lib-crash-sentry-legacy: FE5KSCo1TJyNIaiEDZ2F2A
   build-components-lib-dataprotect: UzW0rQnwR0m5bKN0nljScw
   build-components-lib-fetch-httpurlconnection: Ldx2oYSjSpWyx2PUSghRSQ
   build-components-lib-fetch-okhttp: EfDrWICQSyGeJ0S3CxpxkQ
@@ -257,7 +255,6 @@ existing_tasks:
   build-components-release-lib-auth: avV0zb7vTyOdHIvSDKdp0Q
   build-components-release-lib-crash: H2jp5DvxSZ2_yYwfX38xrQ
   build-components-release-lib-crash-sentry: QZqQ2ONlS-qIACn5Xvz-4w
-  build-components-release-lib-crash-sentry-legacy: IzbPPEEOR1m3Jj9subpviA
   build-components-release-lib-dataprotect: ZZUk3yE1QkSApYPM1juLOA
   build-components-release-lib-fetch-httpurlconnection: EYP07KNVTF-bnUsUQNCxhQ
   build-components-release-lib-fetch-okhttp: Bf3jko87RCSX4niD-ao_WQ
@@ -440,7 +437,6 @@ existing_tasks:
   signing-release-lib-auth: Tfb146QvR7O9rD8OZO8Clw
   signing-release-lib-crash: Yt-uhi7JT5-ngIFJK-Hpdg
   signing-release-lib-crash-sentry: FHUbXSD-RnayNLj_nREakg
-  signing-release-lib-crash-sentry-legacy: NAE2Yvg6Sb2_MpHMeOyHMg
   signing-release-lib-dataprotect: bdPZeK5QR0-xj1FqU6nD0A
   signing-release-lib-fetch-httpurlconnection: KFARLNGTQ6O_LuPe61mdOg
   signing-release-lib-fetch-okhttp: PNZbOLXxQ-yDbtwpTRFtGQ

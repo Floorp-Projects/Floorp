@@ -769,16 +769,6 @@ projects:
     - support-ktx
     - support-test
     - support-utils
-  lib-crash-sentry-legacy:
-    description: A crash reporter for a hosted version of Sentry that uses lib-crash.
-    path: components/lib/crash-sentry-legacy
-    publish: true
-    upstream_dependencies:
-    - lib-crash
-    - support-base
-    - support-ktx
-    - support-test
-    - support-utils
   lib-dataprotect:
     description: A component using AndroidKeyStore to protect user data.
     path: components/lib/dataprotect
