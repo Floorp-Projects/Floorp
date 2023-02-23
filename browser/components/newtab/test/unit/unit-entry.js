@@ -580,6 +580,9 @@ const TEST_GLOBAL = {
       onUpdate() {},
       off() {},
     },
+    cookieBannerHandling: {
+      getVariable() {},
+    },
   },
   TelemetryEnvironment: {
     setExperimentActive() {},
