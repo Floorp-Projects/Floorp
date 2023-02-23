@@ -19,6 +19,7 @@ fn header_map_fuzz() {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct Fuzz {
     // The magic seed that makes the test case reproducible
     seed: [u8; 32],
@@ -281,6 +282,8 @@ fn gen_header_name(g: &mut StdRng) -> HeaderName {
         header::ALT_SVC,
         header::AUTHORIZATION,
         header::CACHE_CONTROL,
+        header::CACHE_STATUS,
+        header::CDN_CACHE_CONTROL,
         header::CONNECTION,
         header::CONTENT_DISPOSITION,
         header::CONTENT_ENCODING,

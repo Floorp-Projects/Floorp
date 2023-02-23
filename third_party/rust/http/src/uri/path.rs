@@ -1,6 +1,6 @@
 use std::convert::TryFrom;
 use std::str::FromStr;
-use std::{cmp, fmt, str};
+use std::{cmp, fmt, hash, str};
 
 use bytes::Bytes;
 
@@ -339,6 +339,12 @@ impl fmt::Display for PathAndQuery {
         } else {
             write!(fmt, "/")
         }
+    }
+}
+
+impl hash::Hash for PathAndQuery {
+    fn hash<H: hash::Hasher>(&self, state: &mut H) {
+        self.data.hash(state);
     }
 }
 
