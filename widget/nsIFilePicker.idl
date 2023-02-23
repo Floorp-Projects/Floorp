@@ -18,10 +18,10 @@ interface nsIFilePickerShownCallback;
 interface nsIFilePicker : nsISupports
 {
   cenum Mode: 16 {
-    modeOpen        = 0,                        // Load a file or directory
-    modeSave        = 1,                        // Save a file or directory
-    modeGetFolder   = 2,                        // Select a folder/directory
-    modeOpenMultiple= 3,                        // Load multiple files
+    modeOpen         = 0,                        // Load a file or directory
+    modeSave         = 1,                        // Save a file or directory
+    modeGetFolder    = 2,                        // Select a folder/directory
+    modeOpenMultiple = 3,                        // Load multiple files
   };
 
   cenum ResultCode: 16 {
