@@ -376,6 +376,7 @@ let documentObserver = {
                             browsers.push({
                                 name: DesktopFileParser.getCurrentLanguageNameProperty(desktopFileInfo),
                                 id: desktopFileInfo["filename"].replace(/\.desktop$/, ""),
+                                tooltiptext: desktopFileInfo["fileInfo"]["Desktop Entry"]["Exec"]
                             });
                         }
                     } else if (platform === "win") {
@@ -384,6 +385,7 @@ let documentObserver = {
                             browsers.push({
                                 name: startMenuInternet["name"],
                                 id: startMenuInternet["keyName"],
+                                tooltiptext: startMenuInternet["path"],
                             });
                         }
                     }
@@ -393,6 +395,7 @@ let documentObserver = {
                         let elem = document_.createXULElement("menuitem");
                         elem.setAttribute("value", browser.id);
                         elem.setAttribute("label", browser.name);
+                        elem.setAttribute("tooltiptext", browser.tooltiptext);
                         options.appendChild(elem);
                     }
 
