@@ -25,9 +25,13 @@ pypi:pyasn1==0.4.8
 pypi:pyasn1-modules==0.2.8
 pypi:Pygments==2.7.1
 pypi:pyparsing==2.4.7
+# for autodoc
+pypi:pytest==7.2.1
 pypi:python-dateutil==2.8.2
 pypi:python-frontmatter==0.5.0
 pypi:pytz==2020.1
+# for autodoc
+pypi:pywatchman==1.4.1
 pypi:redo==2.0.3
 pypi:s3transfer==0.3.3
 pypi:scandir==1.10.0
