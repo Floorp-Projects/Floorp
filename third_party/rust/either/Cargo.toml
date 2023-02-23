@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.36"
 name = "either"
-version = "1.8.0"
+version = "1.8.1"
 authors = ["bluss"]
 description = """
 The enum `Either` with variants `Left` and `Right` is a general purpose sum type with two cases.
@@ -28,7 +28,7 @@ categories = [
     "data-structures",
     "no-std",
 ]
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/bluss/either"
 
 [package.metadata.release]
