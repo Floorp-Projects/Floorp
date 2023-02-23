@@ -11,7 +11,7 @@
 
 [package]
 name = "android_logger"
-version = "0.11.1"
+version = "0.11.3"
 authors = ["The android_logger Developers"]
 description = """
 A logging implementation for `log` which hooks to android log output.
@@ -31,7 +31,7 @@ repository = "https://github.com/Nercury/android_logger-rs"
 version = "0.2"
 
 [dependencies.env_logger]
-version = "0.9"
+version = "0.10"
 default-features = false
 
 [dependencies.log]
