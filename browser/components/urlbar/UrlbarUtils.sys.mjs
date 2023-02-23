@@ -1978,16 +1978,21 @@ export class UrlbarQueryContext {
    * @param {string} [searchString]
    *   Usually this is just the context's search string, but if you need to
    *   fetch remote results based on a modified version, you can pass it here.
+   * @param {boolean} [allowEmptySearchString]
+   *   Whether to check for the minimum length of the search string.
    * @returns {boolean}
    *   Whether remote results are allowed.
    */
-  allowRemoteResults(searchString = this.searchString) {
+  allowRemoteResults(
+    searchString = this.searchString,
+    allowEmptySearchString = false
+  ) {
     if (this.prohibitRemoteResults) {
       return false;
     }
 
     // We're unlikely to get useful remote results for a single character.
-    if (searchString.length < 2) {
+    if (searchString.length < 2 && !allowEmptySearchString) {
       return false;
     }
 

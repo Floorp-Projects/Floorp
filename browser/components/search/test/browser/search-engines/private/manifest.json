@@ -12,6 +12,7 @@
   "chrome_settings_overrides": {
     "search_provider": {
       "name": "private",
+      "keyword": "@private",
       "search_url": "https://example.com",
       "suggest_url": "https://example.com?search={searchTerms}"
     }

@@ -17,8 +17,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   SearchSuggestionController:
     "resource://gre/modules/SearchSuggestionController.sys.mjs",
-
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
+  UrlbarProviderTopSites: "resource:///modules/UrlbarProviderTopSites.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.sys.mjs",
@@ -91,10 +91,11 @@ class ProviderSearchSuggestions extends UrlbarProvider {
     }
 
     // No suggestions for empty search strings, unless we are restricting to
-    // search.
+    // search or showing trending suggestions.
     if (
       !queryContext.trimmedSearchString &&
-      !this._isTokenOrRestrictionPresent(queryContext)
+      !this._isTokenOrRestrictionPresent(queryContext) &&
+      !this.#shouldFetchTrending(queryContext)
     ) {
       return false;
     }
@@ -176,7 +177,11 @@ class ProviderSearchSuggestions extends UrlbarProvider {
       return false;
     }
 
-    // TODO (Bug 1626964): Support zero prefix suggestions.
+    // Allow remote suggestions if trending suggestions are enabled.
+    if (this.#shouldFetchTrending(queryContext)) {
+      return true;
+    }
+
     if (!searchString.trim()) {
       return false;
     }
@@ -199,7 +204,10 @@ class ProviderSearchSuggestions extends UrlbarProvider {
       return false;
     }
 
-    return queryContext.allowRemoteResults(searchString);
+    return queryContext.allowRemoteResults(
+      searchString,
+      lazy.UrlbarPrefs.get("trending.featureGate")
+    );
   }
 
   /**
@@ -291,6 +299,9 @@ class ProviderSearchSuggestions extends UrlbarProvider {
    * @returns {number} The provider's priority for the given query.
    */
   getPriority(queryContext) {
+    if (this.#shouldFetchTrending(queryContext)) {
+      return lazy.UrlbarProviderTopSites.PRIORITY;
+    }
     return 0;
   }
 
@@ -336,7 +347,8 @@ class ProviderSearchSuggestions extends UrlbarProvider {
       engine,
       queryContext.userContextId,
       this._isTokenOrRestrictionPresent(queryContext),
-      false
+      false,
+      this.#shouldFetchTrending(queryContext)
     );
 
     // See `SearchSuggestionsController.fetch` documentation for a description
@@ -495,6 +507,26 @@ class ProviderSearchSuggestions extends UrlbarProvider {
     }
 
     return null;
+  }
+
+  /**
+   * Whether we should show trending suggestions. These are shown when the
+   * user enters a specific engines searchMode when enabled, the
+   * seperate `requireSearchMode` pref controls whether they are visible
+   * when the urlbar is first opened without any search mode.
+   *
+   * @param {UrlbarQueryContext} queryContext
+   *   The query context object.
+   * @returns {boolean}
+   *   Whether we should fetch trending results.
+   */
+  #shouldFetchTrending(queryContext) {
+    return (
+      queryContext.searchString == "" &&
+      lazy.UrlbarPrefs.get("trending.featureGate") &&
+      (queryContext.searchMode ||
+        !lazy.UrlbarPrefs.get("trending.requireSearchMode"))
+    );
   }
 }
 

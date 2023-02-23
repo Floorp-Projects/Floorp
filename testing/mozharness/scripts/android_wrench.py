@@ -41,11 +41,15 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
         # the path here, rather than using something like self.device.test_root,
         # because it needs to be kept in sync with the path hard-coded inside
         # the wrench source code.
-        self.wrench_dir = (
-            "/storage/emulated/0/Android/data/org.mozilla.wrench/files/wrench"
-        )
+        self.wrench_dir = "/data/data/org.mozilla.wrench/files/wrench"
 
         super(AndroidWrench, self).__init__()
+
+        # Override AndroidMixin's use_root to ensure we use run-as instead of
+        # root to push and pull files from the device, as the latter fails due
+        # to permission errors on recent Android versions.
+        self.use_root = False
+
         if self.device_serial is None:
             # Running on an emulator.
             self._is_emulator = True

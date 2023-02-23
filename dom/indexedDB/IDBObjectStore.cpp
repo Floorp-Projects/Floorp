@@ -15,7 +15,6 @@
 #include "IDBFactory.h"
 #include "IDBIndex.h"
 #include "IDBKeyRange.h"
-#include "IDBMutableFile.h"
 #include "IDBRequest.h"
 #include "IDBTransaction.h"
 #include "IndexedDatabase.h"
@@ -37,7 +36,6 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/IDBMutableFileBinding.h"
 #include "mozilla/dom/IDBObjectStoreBinding.h"
 #include "mozilla/dom/MemoryBlobImpl.h"
 #include "mozilla/dom/StreamBlobImpl.h"
@@ -273,27 +271,6 @@ bool CopyingStructuredCloneWriteCallback(JSContext* aCx,
     }
   }
 
-  {
-    IDBMutableFile* mutableFile;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(IDBMutableFile, &obj, mutableFile))) {
-      if (cloneInfo->mFiles.Length() > size_t(UINT32_MAX)) {
-        MOZ_ASSERT(false,
-                   "Fix the structured clone data to use a bigger type!");
-        return false;
-      }
-
-      const uint32_t index = cloneInfo->mFiles.Length();
-
-      if (!JS_WriteUint32Pair(aWriter, SCTAG_DOM_MUTABLEFILE, index)) {
-        return false;
-      }
-
-      cloneInfo->mFiles.EmplaceBack(mutableFile);
-
-      return true;
-    }
-  }
-
   return StructuredCloneHolder::WriteFullySerializableObjects(aCx, aWriter,
                                                               aObj);
 }
@@ -381,7 +358,7 @@ JSObject* CopyingStructuredCloneReadCallback(
       case SCTAG_DOM_MUTABLEFILE:
         MOZ_ASSERT(file.Type() == StructuredCloneFileBase::eMutableFile);
 
-        return WrapAsJSObject(aCx, file.MutableMutableFile());
+        return nullptr;
 
       default:
         // This cannot be reached due to the if condition before.
@@ -782,7 +759,6 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
             switch (file.Type()) {
               case StructuredCloneFileBase::eBlob: {
                 MOZ_ASSERT(file.HasBlob());
-                MOZ_ASSERT(!file.HasMutableFile());
 
                 PBackgroundIDBDatabaseFileChild* const fileActor =
                     database.GetOrCreateFileActorForBlob(file.MutableBlob());
@@ -791,28 +767,15 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
                   return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
                 }
 
-                return FileAddInfo{fileActor, StructuredCloneFileBase::eBlob};
-              }
-
-              case StructuredCloneFileBase::eMutableFile: {
-                MOZ_ASSERT(file.HasMutableFile());
-                MOZ_ASSERT(!file.HasBlob());
-
-                PBackgroundMutableFileChild* const mutableFileActor =
-                    file.MutableFile().GetBackgroundActor();
-                if (NS_WARN_IF(!mutableFileActor)) {
-                  IDB_REPORT_INTERNAL_ERR();
-                  return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-                }
-
-                return FileAddInfo{mutableFileActor,
-                                   StructuredCloneFileBase::eMutableFile};
+                FileAddInfo info{};
+                info.fileChild() = fileActor;
+                info.type() = StructuredCloneFileBase::eBlob;
+                return info;
               }
 
               case StructuredCloneFileBase::eWasmBytecode:
               case StructuredCloneFileBase::eWasmCompiled: {
                 MOZ_ASSERT(file.HasBlob());
-                MOZ_ASSERT(!file.HasMutableFile());
 
                 PBackgroundIDBDatabaseFileChild* const fileActor =
                     database.GetOrCreateFileActorForBlob(file.MutableBlob());
@@ -821,7 +784,10 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
                   return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
                 }
 
-                return FileAddInfo{fileActor, file.Type()};
+                FileAddInfo info{};
+                info.fileChild() = fileActor;
+                info.type() = file.Type();
+                return info;
               }
 
               default:
