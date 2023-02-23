@@ -1,3 +1,19 @@
+1.7.1 (2023-01-09)
+==================
+This release was done principally to try and fix the doc.rs rendering for the
+regex crate.
+
+Performance improvements:
+
+* [PERF #930](https://github.com/rust-lang/regex/pull/930):
+  Optimize `replacen`. This also applies to `replace`, but not `replace_all`.
+
+Bug fixes:
+
+* [BUG #945](https://github.com/rust-lang/regex/issues/945):
+  Maybe fix rustdoc rendering by just bumping a new release?
+
+
 1.7.0 (2022-11-05)
 ==================
 This release principally includes an upgrade to Unicode 15.
