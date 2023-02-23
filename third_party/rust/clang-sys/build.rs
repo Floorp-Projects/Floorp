@@ -19,6 +19,10 @@ extern crate glob;
 
 use std::path::Path;
 
+#[macro_use]
+#[path = "build/macros.rs"]
+pub mod macros;
+
 #[path = "build/common.rs"]
 pub mod common;
 #[path = "build/dynamic.rs"]
@@ -54,6 +58,7 @@ fn main() {
     }
 
     let out = env::var("OUT_DIR").unwrap();
+    copy("build/macros.rs", &Path::new(&out).join("macros.rs"));
     copy("build/common.rs", &Path::new(&out).join("common.rs"));
     copy("build/dynamic.rs", &Path::new(&out).join("dynamic.rs"));
 }
