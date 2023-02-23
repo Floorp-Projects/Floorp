@@ -169,8 +169,10 @@
 //!
 //! The Encoding Standard doesn't specify encoders for UTF-16LE and UTF-16BE,
 //! __so this crate does not provide encoders for those encodings__!
-//! Along with the replacement encoding, their _output encoding_ is UTF-8,
-//! so you get an UTF-8 encoder if you request an encoder for them.
+//! Along with the replacement encoding, their _output encoding_ (i.e. the
+//! encoding used for form submission and error handling in the query string
+//! of URLs) is UTF-8, so you get an UTF-8 encoder if you request an encoder
+//! for them.
 //!
 //! Additionally, the Encoding Standard factors BOM handling into wrapper
 //! algorithms so that BOM handling isn't part of the definition of the
@@ -197,6 +199,10 @@
 //! by this crate. The Encoding Standard doesn't define any UTF-32
 //! family encodings, since they aren't necessary for consuming Web
 //! content.
+//!
+//! While gb18030 is capable of representing U+FEFF, the Encoding
+//! Standard does not treat the gb18030 byte representation of U+FEFF
+//! as a BOM, so neither does this crate.
 //!
 //! ## ISO-8859-1
 //!
@@ -257,7 +263,8 @@
 //! Normalizing text into Unicode Normalization Form C prior to encoding text
 //! into a legacy encoding minimizes unmappable characters. Text can be
 //! normalized to Unicode Normalization Form C using the
-//! [`unic-normal`](https://crates.io/crates/unic-normal) crate.
+//! [`icu_normalizer`](https://crates.io/crates/icu_normalizer) crate, which
+//! is part of [ICU4X](https://icu4x.unicode.org/).
 //!
 //! The exception is windows-1258, which after normalizing to Unicode
 //! Normalization Form C requires tone marks to be decomposed in order to
@@ -282,10 +289,10 @@
 //! The C API (header file generated at `target/include/encoding_rs.h` when
 //! building encoding_rs) can, in turn, be wrapped for use from C++. Such a
 //! C++ wrapper can re-create the non-streaming API in C++ for C++ callers.
-//! The C binding comes with a [C++14 wrapper][2] that uses standard library +
+//! The C binding comes with a [C++17 wrapper][2] that uses standard library +
 //! [GSL][3] types and that recreates the non-streaming API in C++ on top of
-//! the streaming API. A C++ wrapper with XPCOM/MFBT types is being developed
-//! as part of Mozilla [bug 1261841][4].
+//! the streaming API. A C++ wrapper with XPCOM/MFBT types is available as
+//! [`mozilla::Encoding`][4].
 //!
 //! The `Encoding` type is common to both the streaming and non-streaming
 //! modes. In the streaming mode, decoding operations are performed with a
@@ -297,7 +304,7 @@
 //! [1]: https://github.com/hsivonen/encoding_c
 //! [2]: https://github.com/hsivonen/encoding_c/blob/master/include/encoding_rs_cpp.h
 //! [3]: https://github.com/Microsoft/GSL/
-//! [4]: https://bugzilla.mozilla.org/show_bug.cgi?id=encoding_rs
+//! [4]: https://searchfox.org/mozilla-central/source/intl/Encoding.h
 //!
 //! # Memory management
 //!
@@ -682,7 +689,7 @@
 //! for discussion about the UTF-16 family.
 
 #![no_std]
-#![cfg_attr(feature = "simd-accel", feature(stdsimd, core_intrinsics))]
+#![cfg_attr(feature = "simd-accel", feature(core_intrinsics))]
 
 #[cfg(feature = "alloc")]
 #[cfg_attr(test, macro_use)]
@@ -2922,7 +2929,10 @@ impl Encoding {
     }
 
     /// Returns the _output encoding_ of this encoding. This is UTF-8 for
-    /// UTF-16BE, UTF-16LE and replacement and the encoding itself otherwise.
+    /// UTF-16BE, UTF-16LE, and replacement and the encoding itself otherwise.
+    ///
+    /// _Note:_ The _output encoding_ concept is needed for form submission and
+    /// error handling in the query strings of URLs in the Web Platform.
     ///
     /// Available via the C wrapper.
     #[inline]
@@ -2938,6 +2948,8 @@ impl Encoding {
     /// malformed sequences replaced with the REPLACEMENT CHARACTER when the
     /// entire input is available as a single buffer (i.e. the end of the
     /// buffer marks the end of the stream).
+    ///
+    /// The BOM, if any, does not appear in the output.
     ///
     /// This method implements the (non-streaming version of) the
     /// [_decode_](https://encoding.spec.whatwg.org/#decode) spec concept.
@@ -2984,6 +2996,8 @@ impl Encoding {
     /// malformed sequences replaced with the REPLACEMENT CHARACTER when the
     /// entire input is available as a single buffer (i.e. the end of the
     /// buffer marks the end of the stream).
+    ///
+    /// Only an initial byte sequence that is a BOM for this encoding is removed.
     ///
     /// When invoked on `UTF_8`, this method implements the (non-streaming
     /// version of) the
@@ -3217,10 +3231,11 @@ impl Encoding {
         }
     }
 
-    /// Encode complete input to `Cow<'a, [u8]>` with unmappable characters
-    /// replaced with decimal numeric character references when the entire input
-    /// is available as a single buffer (i.e. the end of the buffer marks the
-    /// end of the stream).
+    /// Encode complete input to `Cow<'a, [u8]>` using the
+    /// [_output encoding_](Encoding::output_encoding) of this encoding with
+    /// unmappable characters replaced with decimal numeric character references
+    /// when the entire input is available as a single buffer (i.e. the end of
+    /// the buffer marks the end of the stream).
     ///
     /// This method implements the (non-streaming version of) the
     /// [_encode_](https://encoding.spec.whatwg.org/#encode) spec concept. For
@@ -3230,8 +3245,8 @@ impl Encoding {
     /// method on `UTF_8`.
     ///
     /// The second item in the returned tuple is the encoding that was actually
-    /// used (which may differ from this encoding thanks to some encodings
-    /// having UTF-8 as their output encoding).
+    /// used (*which may differ from this encoding thanks to some encodings
+    /// having UTF-8 as their output encoding*).
     ///
     /// The third item in the returned tuple indicates whether there were
     /// unmappable characters (that were replaced with HTML numeric character
@@ -3320,7 +3335,8 @@ impl Encoding {
     /// Instantiates a new decoder for this encoding with BOM sniffing enabled.
     ///
     /// BOM sniffing may cause the returned decoder to morph into a decoder
-    /// for UTF-8, UTF-16LE or UTF-16BE instead of this encoding.
+    /// for UTF-8, UTF-16LE or UTF-16BE instead of this encoding. The BOM
+    /// does not appear in the output.
     ///
     /// Available via the C wrapper.
     #[inline]
@@ -3358,7 +3374,11 @@ impl Encoding {
         Decoder::new(self, self.new_variant_decoder(), BomHandling::Off)
     }
 
-    /// Instantiates a new encoder for the output encoding of this encoding.
+    /// Instantiates a new encoder for the [_output encoding_](Encoding::output_encoding)
+    /// of this encoding.
+    ///
+    /// _Note:_ The output encoding of UTF-16BE, UTF-16LE, and replacement is UTF-8. There
+    /// is no encoder for UTF-16BE, UTF-16LE, and replacement themselves.
     ///
     /// Available via the C wrapper.
     #[inline]
