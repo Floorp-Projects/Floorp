@@ -11,7 +11,7 @@
 
 [package]
 name = "num_cpus"
-version = "1.14.0"
+version = "1.15.0"
 authors = ["Sean McArthur <sean@seanmonstar.com>"]
 description = "Get the number of CPUs on a machine."
 documentation = "https://docs.rs/num_cpus"
@@ -26,7 +26,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/seanmonstar/num_cpus"
 
 [target."cfg(all(any(target_arch = \"x86_64\", target_arch = \"aarch64\"), target_os = \"hermit\"))".dependencies.hermit-abi]
-version = "0.1.3"
+version = "0.2.6"
 
 [target."cfg(not(windows))".dependencies.libc]
 version = "0.2.26"

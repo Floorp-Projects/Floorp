@@ -133,6 +133,9 @@ nom = { path = "build/rust/nom" }
 # Patch nix 0.24 to 0.25
 nix = { path = "build/rust/nix" }
 
+# Patch hermit-abi 0.1 to 0.2
+hermit-abi = { path = "build/rust/hermit-abi" }
+
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 autocfg = { path = "third_party/rust/autocfg" }
 
