@@ -50,6 +50,7 @@ fn expand_derive_arbitrary(input: syn::DeriveInput) -> Result<TokenStream> {
                 static #recursive_count: std::cell::Cell<u32> = std::cell::Cell::new(0);
             }
 
+            #[automatically_derived]
             impl #impl_generics arbitrary::Arbitrary<#lifetime_without_bounds> for #name #ty_generics #where_clause {
                 #arbitrary_method
                 #size_hint_method

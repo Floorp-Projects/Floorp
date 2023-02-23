@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.63.0"
 name = "derive_arbitrary"
-version = "1.2.1"
+version = "1.2.3"
 authors = [
     "The Rust-Fuzz Project Developers",
     "Nick Fitzgerald <fitzgen@gmail.com>",

@@ -100,6 +100,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
 delta = "1.1.3 -> 1.2.0"
 
+[[audits.arbitrary]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-run"
+delta = "1.2.0 -> 1.2.3"
+
 [[audits.ash]]
 who = "Jim Blandy <jimb@red-bean.com>"
 criteria = "safe-to-deploy"
@@ -545,6 +550,11 @@ delta = "1.1.1 -> 1.1.3"
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
 delta = "1.1.3 -> 1.2.1"
+
+[[audits.derive_arbitrary]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-run"
+delta = "1.2.1 -> 1.2.3"
 
 [[audits.devd-rs]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"

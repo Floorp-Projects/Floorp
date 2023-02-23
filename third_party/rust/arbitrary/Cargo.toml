@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.63.0"
 name = "arbitrary"
-version = "1.2.0"
+version = "1.2.3"
 authors = [
     "The Rust-Fuzz Project Developers",
     "Nick Fitzgerald <fitzgen@gmail.com>",
@@ -32,7 +32,6 @@ keywords = [
 categories = ["development-tools::testing"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rust-fuzz/arbitrary/"
-resolver = "1"
 
 [[example]]
 name = "derive_enum"
@@ -44,7 +43,7 @@ path = "./tests/derive.rs"
 required-features = ["derive"]
 
 [dependencies.derive_arbitrary]
-version = "1.1.6"
+version = "1.2.3"
 optional = true
 
 [features]
