@@ -487,6 +487,11 @@ void EarlyHintPreloader::OnParentReady(nsIParentChannel* aParent,
   MOZ_ASSERT(aParent);
   LOG(("EarlyHintPreloader::OnParentReady [this=%p]\n", this));
 
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (obs) {
+    obs->NotifyObservers(mChannel, "earlyhints-connectback", nullptr);
+  }
+
   mParent = aParent;
   mChannelId = aChannelId;
 

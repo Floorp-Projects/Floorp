@@ -6,13 +6,12 @@ function handleRequest(request, response) {
   let asset = qs.get("as");
   let hinted = qs.get("hinted") === "1";
   let httpCode = qs.get("code");
-
-  let url = `early_hint_asset.sjs?as=${asset}`;
   let uuid = qs.get("uuid");
+  let cached = qs.get("cached") === "1";
 
-  if (uuid) {
-    url = `early_hint_asset.sjs?as=${asset}&uuid=${uuid}`;
-  }
+  let url = `early_hint_asset.sjs?as=${asset}${uuid ? `&uuid=${uuid}` : ""}${
+    cached ? "&cached=1" : ""
+  }`;
 
   // write to raw socket
   response.seizePower();
