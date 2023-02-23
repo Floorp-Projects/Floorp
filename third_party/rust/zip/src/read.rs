@@ -348,7 +348,9 @@ impl<R: Read + io::Seek> ZipArchive<R> {
             Some(locator64) => {
                 // If we got here, this is indeed a ZIP64 file.
 
-                if footer.disk_number as u32 != locator64.disk_with_central_directory {
+                if !footer.record_too_small()
+                    && footer.disk_number as u32 != locator64.disk_with_central_directory
+                {
                     return unsupported_zip_error(
                         "Support for multi-disk files is not implemented",
                     );
@@ -401,7 +403,7 @@ impl<R: Read + io::Seek> ZipArchive<R> {
     pub fn new(mut reader: R) -> ZipResult<ZipArchive<R>> {
         let (footer, cde_start_pos) = spec::CentralDirectoryEnd::find_and_parse(&mut reader)?;
 
-        if footer.disk_number != footer.disk_with_central_directory {
+        if !footer.record_too_small() && footer.disk_number != footer.disk_with_central_directory {
             return unsupported_zip_error("Support for multi-disk files is not implemented");
         }
 
@@ -461,7 +463,7 @@ impl<R: Read + io::Seek> ZipArchive<R> {
             } else {
                 if let Some(p) = outpath.parent() {
                     if !p.exists() {
-                        fs::create_dir_all(&p)?;
+                        fs::create_dir_all(p)?;
                     }
                 }
                 let mut outfile = fs::File::create(&outpath)?;
@@ -681,11 +683,11 @@ pub(crate) fn central_header_to_zip_file<R: Read + io::Seek>(
     reader.read_exact(&mut file_comment_raw)?;
 
     let file_name = match is_utf8 {
-        true => String::from_utf8_lossy(&*file_name_raw).into_owned(),
+        true => String::from_utf8_lossy(&file_name_raw).into_owned(),
         false => file_name_raw.clone().from_cp437(),
     };
     let file_comment = match is_utf8 {
-        true => String::from_utf8_lossy(&*file_comment_raw).into_owned(),
+        true => String::from_utf8_lossy(&file_comment_raw).into_owned(),
         false => file_comment_raw.from_cp437(),
     };
 
@@ -920,12 +922,12 @@ impl<'a> ZipFile<'a> {
         self.data.compression_method
     }
 
-    /// Get the size of the file in the archive
+    /// Get the size of the file, in bytes, in the archive
     pub fn compressed_size(&self) -> u64 {
         self.data.compressed_size
     }
 
-    /// Get the size of the file when uncompressed
+    /// Get the size of the file, in bytes, when uncompressed
     pub fn size(&self) -> u64 {
         self.data.uncompressed_size
     }
@@ -1085,7 +1087,7 @@ pub fn read_zipfile_from_stream<'a, R: io::Read>(
     reader.read_exact(&mut extra_field)?;
 
     let file_name = match is_utf8 {
-        true => String::from_utf8_lossy(&*file_name_raw).into_owned(),
+        true => String::from_utf8_lossy(&file_name_raw).into_owned(),
         false => file_name_raw.clone().from_cp437(),
     };
 
@@ -1129,7 +1131,7 @@ pub fn read_zipfile_from_stream<'a, R: io::Read>(
         return unsupported_zip_error("The file length is not available in the local header");
     }
 
-    let limit_reader = (reader as &'a mut dyn io::Read).take(result.compressed_size as u64);
+    let limit_reader = (reader as &'a mut dyn io::Read).take(result.compressed_size);
 
     let result_crc32 = result.crc32;
     let result_compression_method = result.compression_method;

@@ -13,7 +13,7 @@ fn end_to_end() {
     for &method in SUPPORTED_COMPRESSION_METHODS {
         let file = &mut Cursor::new(Vec::new());
 
-        println!("Writing file with {} compression", method);
+        println!("Writing file with {method} compression");
         write_test_archive(file, method).expect("Couldn't write test zip archive");
 
         println!("Checking file contents");

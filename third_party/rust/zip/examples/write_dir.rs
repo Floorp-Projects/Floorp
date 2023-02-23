@@ -54,8 +54,8 @@ fn real_main() -> i32 {
             continue;
         }
         match doit(src_dir, dst_file, method.unwrap()) {
-            Ok(_) => println!("done: {} written to {}", src_dir, dst_file),
-            Err(e) => println!("Error: {:?}", e),
+            Ok(_) => println!("done: {src_dir} written to {dst_file}"),
+            Err(e) => println!("Error: {e:?}"),
         }
     }
 
@@ -84,18 +84,18 @@ where
         // Write file or directory explicitly
         // Some unzip tools unzip files with directory paths correctly, some do not!
         if path.is_file() {
-            println!("adding file {:?} as {:?} ...", path, name);
+            println!("adding file {path:?} as {name:?} ...");
             #[allow(deprecated)]
             zip.start_file_from_path(name, options)?;
             let mut f = File::open(path)?;
 
             f.read_to_end(&mut buffer)?;
-            zip.write_all(&*buffer)?;
+            zip.write_all(&buffer)?;
             buffer.clear();
         } else if !name.as_os_str().is_empty() {
             // Only if not root! Avoids path spec / warning
             // and mapname conversion failed error on unzip
-            println!("adding dir {:?} as {:?} ...", path, name);
+            println!("adding dir {path:?} as {name:?} ...");
             #[allow(deprecated)]
             zip.add_directory_from_path(name, options)?;
         }
@@ -114,7 +114,7 @@ fn doit(
     }
 
     let path = Path::new(dst_file);
-    let file = File::create(&path).unwrap();
+    let file = File::create(path).unwrap();
 
     let walkdir = WalkDir::new(src_dir);
     let it = walkdir.into_iter();

@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "zip"
-version = "0.6.3"
+version = "0.6.4"
 authors = [
     "Mathijs van de Nes <git@mathijs.vd-nes.nl>",
     "Marli Frost <marli@frost.red>",
@@ -21,6 +21,7 @@ authors = [
 description = """
 Library to support the reading and writing of zip files.
 """
+readme = "README.md"
 keywords = [
     "zip",
     "archive",
@@ -74,14 +75,12 @@ optional = true
 
 [dependencies.time]
 version = "0.3.7"
-features = [
-    "formatting",
-    "macros",
-]
+features = ["std"]
 optional = true
+default-features = false
 
 [dependencies.zstd]
-version = "0.11.0"
+version = "0.11.2"
 optional = true
 
 [dev-dependencies.bencher]
@@ -89,6 +88,13 @@ version = "0.1.5"
 
 [dev-dependencies.getrandom]
 version = "0.2.5"
+
+[dev-dependencies.time]
+version = "0.3.7"
+features = [
+    "formatting",
+    "macros",
+]
 
 [dev-dependencies.walkdir]
 version = "2.3.2"

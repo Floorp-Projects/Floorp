@@ -14,8 +14,8 @@ fn real_main() -> i32 {
 
     let filename = &*args[1];
     match doit(filename) {
-        Ok(_) => println!("File written to {}", filename),
-        Err(e) => println!("Error: {:?}", e),
+        Ok(_) => println!("File written to {filename}"),
+        Err(e) => println!("Error: {e:?}"),
     }
 
     0
@@ -23,7 +23,7 @@ fn real_main() -> i32 {
 
 fn doit(filename: &str) -> zip::result::ZipResult<()> {
     let path = std::path::Path::new(filename);
-    let file = std::fs::File::create(&path).unwrap();
+    let file = std::fs::File::create(path).unwrap();
 
     let mut zip = zip::ZipWriter::new(file);
 

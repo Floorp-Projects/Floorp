@@ -17,10 +17,7 @@ fn generate_random_archive(count_files: usize, file_size: usize) -> Vec<u8> {
     let bytes = vec![0u8; file_size];
 
     for i in 0..count_files {
-        let name = format!(
-            "file_deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef_{}.dat",
-            i
-        );
+        let name = format!("file_deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef_{i}.dat");
         writer.start_file(name, options).unwrap();
         writer.write_all(&bytes).unwrap();
     }

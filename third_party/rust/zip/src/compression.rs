@@ -141,7 +141,7 @@ impl CompressionMethod {
 impl fmt::Display for CompressionMethod {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // Just duplicate what the Debug format looks like, i.e, the enum key:
-        write!(f, "{:?}", self)
+        write!(f, "{self:?}")
     }
 }
 
@@ -195,8 +195,8 @@ mod test {
     #[test]
     fn to_display_fmt() {
         fn check_match(method: CompressionMethod) {
-            let debug_str = format!("{:?}", method);
-            let display_str = format!("{}", method);
+            let debug_str = format!("{method:?}");
+            let display_str = format!("{method}");
             assert_eq!(debug_str, display_str);
         }
 
