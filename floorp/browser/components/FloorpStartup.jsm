@@ -60,19 +60,18 @@ let isUpdated = false;
 async function onFinalUIStartup() {
     Services.obs.removeObserver(onFinalUIStartup, "final-ui-startup");
 
-        IOUtils.exists(OS.Path.join(OS.Constants.Path.profileDir, "newtabImages")).then(
-            (data)=>{
-                if(!data) IOUtils.makeDirectory(OS.Path.join(OS.Constants.Path.profileDir, "newtabImages"))
-            }
-        )
+    IOUtils.exists(OS.Path.join(OS.Constants.Path.profileDir, "newtabImages"))
+        .then((data) => {
+            if(!data) IOUtils.makeDirectory(OS.Path.join(OS.Constants.Path.profileDir, "newtabImages"))
+        })
 
     // Write CSS.
     
     IOUtils.exists(OS.Path.join(OS.Constants.Path.profileDir, "chrome")).then((data) => {
-    if (!data) {
-        let userChromecssPath = OS.Path.join(OS.Constants.Path.profileDir, "chrome");
-        let uccpth = OS.Path.join(userChromecssPath, 'userChrome.css')
-        IOUtils.writeUTF8(uccpth,`
+        if (!data) {
+            let userChromecssPath = OS.Path.join(OS.Constants.Path.profileDir, "chrome");
+            let uccpth = OS.Path.join(userChromecssPath, 'userChrome.css')
+            IOUtils.writeUTF8(uccpth,`
 /*************************************************************************************************************************************************************************************************************************************************************
 
 "userChrome.css" is a custom CSS file that can be used to specify CSS style rules for Floorp's interface (NOT internal site) using "chrome" privileges.
@@ -98,8 +97,8 @@ Quote: https://userChrome.org | https://github.com/topics/userchrome
 }
 `);
 
-        let ucconpth = OS.Path.join(userChromecssPath, 'userContent.css')
-        IOUtils.writeUTF8(ucconpth,`
+            let ucconpth = OS.Path.join(userChromecssPath, 'userContent.css')
+            IOUtils.writeUTF8(ucconpth,`
 /*************************************************************************************************************************************************************************************************************************************************************
  
 "userContent.css" is a custom CSS file that can be used to specify CSS style rules for Floorp's intenal site using "chrome" privileges.
@@ -121,7 +120,8 @@ NOTE: You can use the userContent.css file without change preferences (about:con
 /* Please write your custom CSS under this line*/
 `);
 
-    }});
+        }
+    });
 
     if (isFirstRun) {
         try {
@@ -204,4 +204,9 @@ if (Services.prefs.getBoolPref("floorp.isPortable", false)) {
 // Load Tab Sleep feature
 try {
     ChromeUtils.import("resource:///modules/TabSleep.jsm");
+} catch (e) { console.error(e) }
+
+// Load OpenLinkInExternal feature
+try {
+    ChromeUtils.import("resource:///modules/OpenLinkInExternal.jsm");
 } catch (e) { console.error(e) }

@@ -271,20 +271,29 @@
 
     </radiogroup>
 
-  <label><html:h2 data-l10n-id="other-preference"/></label>
-  <hbox align="center">
-    <checkbox preference="floorp.enable.dualtheme"
-              id="dualtheme_enable" data-l10n-id="dualtheme-enable"/> 
-    <label class="learnMore" is="text-link" href="https://blog.ablaze.one/2449/2022-10-10/" data-l10n-id="do-not-track-learn-more"></label>
-  </hbox>
+    <label><html:h2 data-l10n-id="other-preference"/></label>
+    <hbox align="center">
+      <checkbox preference="floorp.enable.dualtheme"
+                id="dualtheme_enable" data-l10n-id="dualtheme-enable"/> 
+      <label class="learnMore" is="text-link" href="https://blog.ablaze.one/2449/2022-10-10/" data-l10n-id="do-not-track-learn-more"></label>
+    </hbox>
 
 #ifdef XP_WIN
-  <hbox align="center">
-    <checkbox preference="floorp.material.effect.enable"
-              id="micaforeveryone" data-l10n-id="material-effect"/>
-    <label class="learnMore" is="text-link" href="https://support.ablaze.one/articles/floorp/mica-for-everyone" data-l10n-id="do-not-track-learn-more"></label>
-  </hbox>
+    <hbox align="center">
+      <checkbox preference="floorp.material.effect.enable"
+                id="micaforeveryone" data-l10n-id="material-effect"/>
+      <label class="learnMore" is="text-link" href="https://support.ablaze.one/articles/floorp/mica-for-everyone" data-l10n-id="do-not-track-learn-more"></label>
+    </hbox>
 #endif
+
+    <hbox>
+      <description flex="1" data-l10n-id="open-link-in-external-select-browser-option"/>
+      <menulist id="openLinkInExternalSelectBrowser" preference="floorp.openLinkInExternal.browserId">
+        <menupopup>
+          <menuitem value="" data-l10n-id="open-link-in-external-select-browser-option-default"/>
+        </menupopup>
+      </menulist>
+    </hbox>
 
     <label>
       <html:h2 data-l10n-id="preferences-theme-appearance-header"/>
