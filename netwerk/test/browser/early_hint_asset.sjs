@@ -10,12 +10,17 @@ function handleRequest(request, response) {
     count.normal += 1;
   }
   setSharedState("earlyHintCount", JSON.stringify(count));
-  response.setHeader("Cache-Control", "no-cache", false);
 
   let content = "";
   Cu.importGlobalProperties(["URLSearchParams"]);
   let qs = new URLSearchParams(request.queryString);
   let asset = qs.get("as");
+
+  if (qs.get("cached") === "1") {
+    response.setHeader("Cache-Control", "max-age=604800", false);
+  } else {
+    response.setHeader("Cache-Control", "no-cache", false);
+  }
 
   if (asset === "image") {
     response.setHeader("Content-Type", "image/png", false);
