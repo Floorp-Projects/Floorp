@@ -6357,6 +6357,48 @@ For the sample commands found below, note that the capitalization used is import
         - ✅
 
 
+   .. list-table:: **test-windows11-64-2009-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-xperf**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-xperf-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows11-64-2009-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-xperf**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+      * - **talos-xperf-swr**
+        - ✅
+        - ✅
+        - ❌
+        - ✅
+
+
 
 .. dropdown:: tp5o
    :container: + anchor-id-tp5o

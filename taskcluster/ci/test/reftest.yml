@@ -60,8 +60,8 @@ crashtest:
                     macosx101.*64-qr/debug: built-projects
                     linux.*-64-qr/debug: built-projects
                     linux.*-64(-tsan|-asan)-qr/opt: built-projects
-                    windows10-64-2004-asan-qr/opt: built-projects
-                    windows10-64-2004-qr/debug: built-projects
+                    windows.*-asan-qr/opt: built-projects
+                    windows1.*-64.*-qr/debug: built-projects
                     default: []
             no-fission:
                 by-test-platform:
@@ -105,9 +105,9 @@ jsreftest:
         by-test-platform:
             android-hw.*\/debug: 12
             android-hw.*/(opt|pgo)?: 6
+            windows.*-asan-qr/opt: 3
+            windows.*-ccov-qr/opt: 5
             windows.*\/opt: 2
-            windows10-64-2004-asan-qr/opt: 3
-            windows10-64-2004-ccov-qr/opt: 5
             linux.*64-ccov.*/.*: 5
             linux1804-64-qr/opt: 4
             linux1804-64-qr/debug: 5
@@ -150,11 +150,12 @@ reftest:
             macosx101.*-64-shippable(-qr)?/opt: 3
             macosx101.*-64/debug: 4
             macosx101.*-64(-ccov.*|-qr)/debug: 6
-            windows.*/opt: 2
-            windows10-64-2004.*/debug: 4
-            windows10-32.*/debug: 6
-            windows10-64-2004-asan-qr/opt: 3
-            windows10-64-2004-ccov-qr/opt: 9
+            windows.*64.*/debug: 4
+            windows.*32.*/debug: 6
+            windows.*-ccov-qr/opt: 9
+            windows10.*asan.*: 3
+            windows10.*/opt: 2
+            windows11.*/opt: 3
             default: 8
     variants:
         - no-fission
@@ -177,7 +178,7 @@ reftest:
                     linux1804-64-qr/debug: built-projects
                     linux1804-64(-asan|-tsan)-qr/opt: built-projects
                     macosx101.*64-qr/debug: built-projects
-                    windows10-64-2004(-asan)?-qr/opt: built-projects
+                    windows.*-asan-qr/opt: built-projects
                     windows7-32(?:-shippable)?-qr/opt: built-projects
                     default: []
             no-fission:
@@ -194,9 +195,9 @@ reftest:
                     default: built-projects
     max-run-time:
         by-test-platform:
-            windows10-32-mingwclang-qr/debug: 5400
-            windows10-64-2004-ccov.*/.*: 5400
-            windows10-64-2004-asan-qr/opt: 5400
+            windows.*-32-mingwclang-qr/debug: 5400
+            windows.*-ccov.*/.*: 5400
+            windows.*-asan-qr/opt: 5400
             macosx.*64-ccov.*/.*: 5400
             default: 3600
     mozharness:
@@ -204,11 +205,10 @@ reftest:
             by-test-platform:
                 android-em.*: false
                 macosx.*64/opt: false
-                windows10-64-2004.*/opt: false
+                windows.*/opt: false
                 default: true
     tier:
         by-test-platform:
-            android-hw-.*-qr/.*: 2
             android-em-7.0-x86_64-qr/debug-isolated-process: 3
             default: default
 
