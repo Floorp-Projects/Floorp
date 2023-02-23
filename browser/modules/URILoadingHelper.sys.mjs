@@ -29,7 +29,7 @@ export const URILoadingHelper = {
       return;
     }
 
-    var aFromChrome = params.fromChrome;
+    var aForceForeground = params.forceForeground;
     var aAllowThirdPartyFixup = params.allowThirdPartyFixup;
     var aPostData = params.postData;
     var aCharset = params.charset;
@@ -326,7 +326,7 @@ export const URILoadingHelper = {
       // `where` is "tab" or "tabshifted", so we'll load the link in a new tab.
       loadInBackground = aInBackground;
       if (loadInBackground == null) {
-        loadInBackground = aFromChrome
+        loadInBackground = aForceForeground
           ? false
           : Services.prefs.getBoolPref("browser.tabs.loadInBackground");
       }
@@ -506,7 +506,7 @@ export const URILoadingHelper = {
    * @param {Event | Object} event Event or JSON object representing an Event
    * @param {Boolean | Object} aIgnoreButton
    *                           Boolean or object with the same properties as
-   *                           accepted by openUILinkIn, plus "ignoreButton"
+   *                           accepted by openLinkIn, plus "ignoreButton"
    *                           and "ignoreAlt".
    * @param {Boolean} aIgnoreAlt
    * @param {Boolean} aAllowThirdPartyFixup
@@ -529,7 +529,7 @@ export const URILoadingHelper = {
     if (aIgnoreButton && typeof aIgnoreButton == "object") {
       params = aIgnoreButton;
 
-      // don't forward "ignoreButton" and "ignoreAlt" to openUILinkIn
+      // don't forward "ignoreButton" and "ignoreAlt" to openLinkIn
       aIgnoreButton = params.ignoreButton;
       aIgnoreAlt = params.ignoreAlt;
       delete params.ignoreButton;
@@ -550,66 +550,43 @@ export const URILoadingHelper = {
     }
 
     let where = BrowserUtils.whereToOpenLink(event, aIgnoreButton, aIgnoreAlt);
-    this.openUILinkIn(window, url, where, params);
+    params.forceForeground ??= true;
+    this.openLinkIn(window, url, where, params);
   },
 
-  /* openUILinkIn opens a URL in a place specified by the parameter |where|.
+  /* openTrustedLinkIn will attempt to open the given URI using the SystemPrincipal
+   * as the trigeringPrincipal, unless a more specific Principal is provided.
    *
-   * |where| can be:
-   *  "current"     current tab            (if there aren't any browser windows, then in a new window instead)
-   *  "tab"         new tab                (if there aren't any browser windows, then in a new window instead)
-   *  "tabshifted"  same as "tab" but in background if default is to select new tabs, and vice versa
-   *  "window"      new window
-   *  "save"        save to disk (with no filename hint!)
-   *
-   * DEPRECATION WARNING:
-   * USE        -> openTrustedLinkIn(url, where, aParams) if the source is always
-   *                     a user event on a user- or product-specified URL (as
-   *                     opposed to URLs provided by a webpage)
-   * USE        -> openWebLinkIn(url, where, aParams) if the URI should be loaded
-   *                     with a specific triggeringPrincipal, for instance, if
-   *                     the url was supplied by web content.
-   * DEPRECATED -> openUILinkIn(url, where, AllowThirdPartyFixup, aPostData, ...)
-   *
-   *
-   * allowThirdPartyFixup controls whether third party services such as Google's
-   * I Feel Lucky are allowed to interpret this URL. This parameter may be
-   * undefined, which is treated as false.
-   *
-   * Instead of aAllowThirdPartyFixup, you may also pass an object with any of
-   * these properties:
-   *   allowThirdPartyFixup (boolean)
-   *   fromChrome           (boolean)
-   *   postData             (nsIInputStream)
-   *   referrerInfo         (nsIReferrerInfo)
-   *   relatedToCurrent     (boolean)
-   *   skipTabAnimation     (boolean)
-   *   allowPinnedTabHostChange (boolean)
-   *   allowPopups          (boolean)
-   *   userContextId        (unsigned int)
-   *   targetBrowser        (XUL browser)
+   * Otherwise, parameters are the same as openLinkIn, but we will set `forceForeground`
+   * to true.
    */
-  openUILinkIn(
-    window,
-    url,
-    where,
-    aAllowThirdPartyFixup,
-    aPostData,
-    aReferrerInfo
-  ) {
-    var params;
-
-    if (typeof aAllowThirdPartyFixup == "object") {
-      params = aAllowThirdPartyFixup;
+  openTrustedLinkIn(window, url, where, params = {}) {
+    if (!params.triggeringPrincipal) {
+      params.triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
     }
-    if (!params || !params.triggeringPrincipal) {
-      throw new Error(
-        "Required argument triggeringPrincipal missing within openUILinkIn"
+
+    params.forceForeground ??= true;
+    this.openLinkIn(window, url, where, params);
+  },
+
+  /* openWebLinkIn will attempt to open the given URI using the NullPrincipal
+   * as the triggeringPrincipal, unless a more specific Principal is provided.
+   *
+   * Otherwise, parameters are the same as openLinkIn, but we will set `forceForeground`
+   * to true.
+   */
+  openWebLinkIn(window, url, where, params = {}) {
+    if (!params.triggeringPrincipal) {
+      params.triggeringPrincipal = Services.scriptSecurityManager.createNullPrincipal(
+        {}
       );
     }
-
-    params.fromChrome = params.fromChrome ?? true;
-
+    if (params.triggeringPrincipal.isSystemPrincipal) {
+      throw new Error(
+        "System principal should never be passed into openWebLinkIn()"
+      );
+    }
+    params.forceForeground ??= true;
     this.openLinkIn(window, url, where, params);
   },
 };
