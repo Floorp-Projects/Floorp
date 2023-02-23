@@ -3006,12 +3006,12 @@ void gfxPlatform::InitWebGPUConfig() {
   nsCString message;
   nsCString failureId;
   if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_WEBGPU, &message, failureId)) {
-    feature.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
-
     if (StaticPrefs::gfx_webgpu_ignore_blocklist_AtStartup()) {
       feature.UserForceEnable(
           "Ignoring blocklist entry because of gfx.webgpu.force-enabled:true.");
     }
+
+    feature.Disable(FeatureStatus::Blocklisted, message.get(), failureId);
   }
 
 #ifdef RELEASE_OR_BETA
