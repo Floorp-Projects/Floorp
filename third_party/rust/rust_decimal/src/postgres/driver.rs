@@ -237,6 +237,20 @@ mod test {
     }
 
     #[test]
+    fn read_very_small_numeric_type() {
+        let mut client = match Client::connect(&get_postgres_url(), NoTls) {
+            Ok(x) => x,
+            Err(err) => panic!("{:#?}", err),
+        };
+        let result: Decimal = match client.query("SELECT 1e-130::NUMERIC(130, 0)", &[]) {
+            Ok(x) => x.iter().next().unwrap().get(0),
+            Err(err) => panic!("error - {:#?}", err),
+        };
+        // We compare this to zero since it is so small that it is effectively zero
+        assert_eq!(Decimal::ZERO, result);
+    }
+
+    #[test]
     fn read_numeric_type() {
         let mut client = match Client::connect(&get_postgres_url(), NoTls) {
             Ok(x) => x,

@@ -2860,6 +2860,12 @@ fn it_converts_from_u128() {
 }
 
 #[test]
+fn it_converts_from_str() {
+    assert_eq!(Decimal::try_from("1").unwrap(), Decimal::ONE);
+    assert_eq!(Decimal::try_from("10").unwrap(), Decimal::TEN);
+}
+
+#[test]
 fn it_converts_from_f32() {
     use num_traits::FromPrimitive;
 
