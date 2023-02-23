@@ -3086,19 +3086,6 @@ bool HttpBaseChannel::ShouldBlockOpaqueResponse() const {
     }
   }
 
-  uint32_t httpsOnlyStatus = mLoadInfo->GetHttpsOnlyStatus();
-  if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_BYPASS_ORB) {
-    LOGORB("No block: HTTPS_ONLY_BYPASS_ORB");
-    return false;
-  }
-
-  bool isInDevToolsContext;
-  mLoadInfo->GetIsInDevToolsContext(&isInDevToolsContext);
-  if (isInDevToolsContext) {
-    LOGORB("No block: Request created by devtools");
-    return false;
-  }
-
   return true;
 }
 

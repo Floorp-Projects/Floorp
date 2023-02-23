@@ -39,9 +39,6 @@ void JSValidatorParent::IsOpaqueResponseAllowed(
               Tie(data, result) = aResult.ResolveValue();
               aCallback(std::move(data), result);
             } else {
-              // For cases like the Utility Process crashes, the promise will be
-              // rejected due to sending failures, and we'll block the request
-              // since we can't validate it.
               aCallback(Nothing(), ValidatorResult::Failure);
             }
           });

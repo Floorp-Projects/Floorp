@@ -11,7 +11,6 @@
 #include "mozilla/RandomNum.h"
 #include "mozilla/TaggedAnonymousMemory.h"
 
-#include "jit/JitOptions.h"
 #include "js/HeapAPI.h"
 #include "js/Utility.h"
 #include "util/Memory.h"
@@ -403,12 +402,10 @@ void InitMemorySubsystem() {
     numAddressBits = 32;
 #endif
 #ifdef RLIMIT_AS
-    if (jit::HasJitBackend()) {
-      rlimit as_limit;
-      if (getrlimit(RLIMIT_AS, &as_limit) == 0 &&
-          as_limit.rlim_max != RLIM_INFINITY) {
-        virtualMemoryLimit = as_limit.rlim_max;
-      }
+    rlimit as_limit;
+    if (getrlimit(RLIMIT_AS, &as_limit) == 0 &&
+        as_limit.rlim_max != RLIM_INFINITY) {
+      virtualMemoryLimit = as_limit.rlim_max;
     }
 #endif
   }
