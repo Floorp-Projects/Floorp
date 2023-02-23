@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Inert tree update test</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script src="../common.js"></script>
+  <script src="../promisified-events.js"></script>
+  <script src="../role.js"></script>
+
+  <script>
+    async function doTest() {
+      const inertContainer = getAccessible("inertContainer");
+      const inertTree = { SECTION: [ // inertContainer
+        { PARAGRAPH: [{ TEXT_LEAF: [] }] }, // before
+        { PARAGRAPH: [{ TEXT_LEAF: [] }] }, // after
+      ]};
+      testAccessibleTree(inertContainer, inertTree);
+
+      info("Unsetting inert");
+      let reordered = waitForEvent(EVENT_REORDER, inertContainer);
+      const inertNode = getNode("inert");
+      inertNode.inert = false;
+      await reordered;
+      testAccessibleTree(inertContainer, { SECTION: [ // inertContainer
+        { PARAGRAPH: [{ TEXT_LEAF: [] }] }, // before
+        { SECTION: [ // inert
+          { TEXT_LEAF: [] },
+          { PUSHBUTTON: [] },
+        ] },
+        { PARAGRAPH: [{ TEXT_LEAF: [] }] }, // after
+      ]});
+
+      info("Setting inert");
+      reordered = waitForEvent(EVENT_REORDER, inertContainer);
+      inertNode.inert = true;
+      await reordered;
+      testAccessibleTree(inertContainer, inertTree);
+
+      const noDialogTree = { SECTION: [ // dialogContainer
+        { TEXT_LEAF: [] }
+      ] };
+      testAccessibleTree("dialogContainer", noDialogTree);
+
+      info("Showing modal dialog");
+      reordered = waitForEvent(EVENT_REORDER, document);
+      const dialogNode = getNode("dialog");
+      dialogNode.showModal();
+      await reordered;
+      // The dialog makes everything else in the document inert.
+      testAccessibleTree(document, { DOCUMENT: [
+        { DIALOG: [
+          { PUSHBUTTON: [] }
+        ] }
+      ] });
+
+      info("Closing dialog");
+      reordered = waitForEvent(EVENT_REORDER, document);
+      dialogNode.close();
+      await reordered;
+      testAccessibleTree("dialogContainer", noDialogTree);
+
+      const fullscreenTree = { SECTION: [ // fullscreen
+        { PUSHBUTTON: [] }
+      ] };
+      const notFullscreenTree = { SECTION: [ // fullscreenContainer
+        { SECTION: [
+          { PUSHBUTTON: [] } // requestFullscreen
+        ] },
+        fullscreenTree,
+      ] };
+      testAccessibleTree("fullscreenContainer", notFullscreenTree);
+
+      info("Requesting fullscreen");
+      reordered = waitForEvent(EVENT_REORDER, document);
+      // Fullscreen must be requested by a user input event.
+      synthesizeMouseAtCenter(getNode("requestFullscreen"), {});
+      await reordered;
+      // Fullscreen makes everything else in the document inert.
+      testAccessibleTree(document, { DOCUMENT: [
+        fullscreenTree
+      ] });
+
+      info("Exiting fullscreen");
+      reordered = waitForEvent(EVENT_REORDER, document);
+      document.exitFullscreen();
+      await reordered;
+      testAccessibleTree("fullscreenContainer", notFullscreenTree);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="inertContainer">
+    <p>before</p>
+    <div id="inert" inert>inert <button></button></div>
+    <p>after</p>
+  </div>
+
+  <div id="dialogContainer">
+    dialogContainer
+    <dialog id="dialog"><button></button></dialog>
+  </div>
+
+  <div id="fullscreenContainer">
+    <div>
+      <button id="requestFullscreen"
+          onclick="document.getElementById('fullscreen').requestFullscreen();">
+      </button>
+    </div>
+    <div id="fullscreen"><button></button></div>
+  </div>
+
+  <div id="eventdump"></div>
+</body>
+</html>
