@@ -16,10 +16,10 @@ job-defaults:
                 by-test-platform:
                     android-hw.*-aarch64.*/.*:
                         index: mobile.v3.firefox-android.apks.fenix-nightly.latest.arm64-v8a
-                        name: build/arm64-v8a/target.apk
+                        name: build/fenix/arm64-v8a/target.apk
                     default:
                         index: mobile.v3.firefox-android.apks.fenix-nightly.latest.armeabi-v7a
-                        name: build/armeabi-v7a/target.apk
+                        name: build/fenix/armeabi-v7a/target.apk
             refbrow:
                 by-test-platform:
                     android-hw.*-aarch64.*/.*:
