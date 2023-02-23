@@ -2302,6 +2302,7 @@ struct MOZ_STACK_CLASS TextRunDrawParams {
   gfxFont::Spacing* spacing = nullptr;
   gfxTextRunDrawCallbacks* callbacks = nullptr;
   mozilla::SVGContextPaint* runContextPaint = nullptr;
+  mozilla::layout::TextDrawTarget* textDrawer = nullptr;
   mozilla::LayoutDeviceRect clipRect;
   mozilla::gfx::Float direction = 1.0f;
   double devPerApp = 1.0;
