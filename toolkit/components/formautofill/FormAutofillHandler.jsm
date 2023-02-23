@@ -94,9 +94,6 @@ class FormAutofillSection {
       "Creating new credit card section with flowId =",
       this.flowId
     );
-
-    lazy.AutofillTelemetry.recordDetectedSectionCount(this);
-    lazy.AutofillTelemetry.recordFormInteractionEvent("detected", this);
   }
 
   /*
@@ -765,6 +762,9 @@ class FormAutofillAddressSection extends FormAutofillSection {
     super(fieldDetails, winUtils);
 
     this._cacheValue.oneLineStreetAddress = null;
+
+    lazy.AutofillTelemetry.recordDetectedSectionCount(this);
+    lazy.AutofillTelemetry.recordFormInteractionEvent("detected", this);
   }
 
   isValidSection() {
@@ -1006,6 +1006,9 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
     if (!this.isValidSection()) {
       return;
     }
+
+    lazy.AutofillTelemetry.recordDetectedSectionCount(this);
+    lazy.AutofillTelemetry.recordFormInteractionEvent("detected", this);
 
     // Check whether the section is in an <iframe>; and, if so,
     // watch for the <iframe> to pagehide.
