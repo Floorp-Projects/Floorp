@@ -20,13 +20,41 @@ Released YYYY-MM-DD.
 
 ### Fixed
 
-* TODO (or remove section if none)
+* (Included in `arbitrary_derive`  1.2.1) Fixed bug in Derive macro around `no_std` path uses [#131](https://github.com/rust-fuzz/arbitrary/pull/131)
 
 ### Security
 
 * TODO (or remove section if none)
 
 --------------------------------------------------------------------------------
+
+## 1.2.3
+
+Released 2023-01-20.
+
+### Fixed
+
+* The `derive(Arbitrary)` will now annotate the generated `impl`s with a `#[automatically_derived]`
+  attribute to indicate to e.g. clippy that lints should not fire for the code within the derived
+  implementation.
+
+## 1.2.2
+
+Released 2023-01-03.
+
+### Fixed
+
+* Ensured that `arbitrary` and `derive_arbitrary` versions are synced up so that
+  they don't, e.g., emit generated code that depends on newer versions of
+  `arbitrary` than the one currently in
+  use. [#134](https://github.com/rust-fuzz/arbitrary/issues/134)
+
+## 1.2.1
+
+### Fixed
+
+* Fixed an issue where `std::thread_local!` macro invocations in derive code
+  were not fully prefixed, causing confusing build errors in certain situations.
 
 ## 1.2.0
 
