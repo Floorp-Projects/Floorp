@@ -45,35 +45,11 @@ BASE_URL_DICT = {
     ),
     PROD_FOCUS: (
         "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
-        "mobile.v3.firefox-android.apks.focus-nightly.{date}.latest.{architecture}/artifacts/"
-        "public%2Fbuild%2Fapp-focus-{architecture}-nightly-unsigned.apk"
-    ),  # Despite the URL including "unsigned", these are actually signed builds.
-    PROD_FOCUS
-    + "-latest": (
-        "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
-        "mobile.v3.firefox-android.apks.focus-nightly.{date}.latest.{architecture}/artifacts/"
-        "public%2Fbuild%2Fapp-focus-{architecture}-nightly-unsigned.apk"
-    ),  # Despite the URL including "unsigned", these are actually signed builds.
-    PROD_FOCUS
-    + "-v2": (
-        "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
-        "mobile.v3.firefox-android.apks.focus-nightly.{date}.latest.{architecture}/artifacts/"
-        "public%2Fbuild%2Ffocus%2F{architecture}%2Ftarget.apk"
-    ),
-    PROD_FOCUS
-    + "-v2-latest": (
-        "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
-        "mobile.v3.firefox-android.apks.focus-nightly.{date}.latest.{architecture}/artifacts/"
-        "public%2Fbuild%2Ffocus%2F{architecture}%2Ftarget.apk"
-    ),
-    PROD_FOCUS
-    + "-v3": (
-        "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
         "mobile.v3.firefox-android.apks.focus-nightly.{date}.latest.{architecture}"
         "/artifacts/public%2Fbuild%2Ffocus%2F{architecture}%2Ftarget.apk"
     ),
     PROD_FOCUS
-    + "-v3-latest": (
+    + "-latest": (
         "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
         "mobile.v3.firefox-android.apks.focus-nightly.latest.{architecture}"
         "/artifacts/public%2Fbuild%2Ffocus%2F{architecture}%2Ftarget.apk"
