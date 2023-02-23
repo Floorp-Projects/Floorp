@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+<style>
+  #grid {
+    display: grid;
+    width: 100px;
+    height: 100px;
+  }
+
+  .cellOriginal {
+    grid-column-end: span 2;
+  }
+
+  .cellChanged {
+    grid-column-end: span 5;
+  }
+</style>
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+function runTests() {
+  const grid = document.getElementById("grid");
+  const cell = document.getElementById("cell");
+
+  const gridA = grid.getGridFragments()[0];
+
+  // Check that grid fragments are equal across reflows.
+  document.documentElement.offsetHeight; // Flush layout.
+  const gridB = grid.getGridFragments()[0];
+  is(gridB, gridA, "Grid fragments should be the same across reflows.");
+
+  // Check that grid fragments are different when styles are different.
+  cell.classList.replace("cellOriginal", "cellChanged");
+  const gridC = grid.getGridFragments()[0];
+  isnot(gridC, gridA, "Grids with different styles should have different fragments.");
+
+  // Check that changing a grid to a matching style results in different fragments.
+  cell.classList.replace("cellChanged", "cellOriginal");
+  const gridD = grid.getGridFragments()[0];
+  isnot(gridD, gridA, "Grids changed to the same styles should have different fragments.");
+
+  SimpleTest.finish();
+}
+</script>
+</head>
+<body onLoad="runTests();">
+<div id="grid">
+  <div id="cell" class="cellOriginal"></div>
+</div>
+</body>
+</html>
