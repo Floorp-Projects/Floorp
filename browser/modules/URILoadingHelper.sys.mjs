@@ -29,37 +29,42 @@ export const URILoadingHelper = {
       return;
     }
 
-    var aForceForeground = params.forceForeground;
-    var aAllowThirdPartyFixup = params.allowThirdPartyFixup;
-    var aPostData = params.postData;
-    var aCharset = params.charset;
-    var aReferrerInfo = params.referrerInfo
-      ? params.referrerInfo
-      : new lazy.ReferrerInfo(Ci.nsIReferrerInfo.EMPTY, true, null);
-    var aRelatedToCurrent = params.relatedToCurrent;
-    var aAllowInheritPrincipal = !!params.allowInheritPrincipal;
-    var aForceAllowDataURI = params.forceAllowDataURI;
-    var aInBackground = params.inBackground;
-    var aInitiatingDoc = params.initiatingDoc;
-    var aIsPrivate = params.private;
-    var aForceNonPrivate = params.forceNonPrivate;
-    var aSkipTabAnimation = params.skipTabAnimation;
-    var aAllowPinnedTabHostChange = !!params.allowPinnedTabHostChange;
-    var aAllowPopups = !!params.allowPopups;
-    var aUserContextId = params.userContextId;
-    var aIndicateErrorPageLoad = params.indicateErrorPageLoad;
-    var aPrincipal = params.originPrincipal;
-    var aStoragePrincipal = params.originStoragePrincipal;
-    var aTriggeringPrincipal = params.triggeringPrincipal;
-    var aTriggeringRemoteType = params.triggeringRemoteType;
-    var aCsp = params.csp;
-    var aForceAboutBlankViewerInCurrent = params.forceAboutBlankViewerInCurrent;
-    var aResolveOnNewTabCreated = params.resolveOnNewTabCreated;
-    // This callback will be called with the content browser once it's created.
-    var aResolveOnContentBrowserReady = params.resolveOnContentBrowserCreated;
-    var aGlobalHistoryOptions = params.globalHistoryOptions;
+    let {
+      allowThirdPartyFixup,
+      postData,
+      charset,
+      referrerInfo,
+      relatedToCurrent,
+      allowInheritPrincipal,
+      forceAllowDataURI,
+      initiatingDoc,
+      forceNonPrivate,
+      skipTabAnimation,
+      allowPinnedTabHostChange,
+      allowPopups,
+      userContextId,
+      indicateErrorPageLoad,
+      triggeringPrincipal,
+      originPrincipal,
+      originStoragePrincipal,
+      triggeringRemoteType,
+      csp,
+      forceAboutBlankViewerInCurrent,
+      resolveOnNewTabCreated,
+      // This callback will be called with the content browser once it's created.
+      resolveOnContentBrowserCreated,
+      globalHistoryOptions,
+    } = params;
 
-    if (!aTriggeringPrincipal) {
+    if (!referrerInfo) {
+      referrerInfo = new lazy.ReferrerInfo(
+        Ci.nsIReferrerInfo.EMPTY,
+        true,
+        null
+      );
+    }
+
+    if (!triggeringPrincipal) {
       throw new Error("Must load with a triggering Principal");
     }
 
@@ -72,14 +77,14 @@ export const URILoadingHelper = {
           null,
           true,
           true,
-          aReferrerInfo,
+          referrerInfo,
           null,
           null,
           params.isContentWindowPrivate,
-          aPrincipal
+          originPrincipal
         );
       } else {
-        if (!aInitiatingDoc) {
+        if (!initiatingDoc) {
           console.error(
             "openUILink/openLinkIn was called with " +
               "where == 'save' but without initiatingDoc.  See bug 814264."
@@ -93,9 +98,9 @@ export const URILoadingHelper = {
           null,
           true,
           true,
-          aReferrerInfo,
+          referrerInfo,
           null,
-          aInitiatingDoc
+          initiatingDoc
         );
       }
       return;
@@ -106,16 +111,16 @@ export const URILoadingHelper = {
     if (where == "current" && params.targetBrowser) {
       w = params.targetBrowser.ownerGlobal;
     } else {
-      w = this.getTargetWindow(window, { forceNonPrivate: aForceNonPrivate });
+      w = this.getTargetWindow(window, { forceNonPrivate });
     }
     // We don't want to open tabs in popups, so try to find a non-popup window in
     // that case.
     if ((where == "tab" || where == "tabshifted") && w && !w.toolbar.visible) {
       w = this.getTargetWindow(window, {
         skipPopups: true,
-        forceNonPrivate: aForceNonPrivate,
+        forceNonPrivate,
       });
-      aRelatedToCurrent = false;
+      relatedToCurrent = false;
     }
 
     // Teach the principal about the right OA to use, e.g. in case when
@@ -126,31 +131,31 @@ export const URILoadingHelper = {
     function useOAForPrincipal(principal) {
       if (principal && principal.isContentPrincipal) {
         let attrs = {
-          userContextId: aUserContextId,
+          userContextId,
           privateBrowsingId:
-            aIsPrivate || (w && PrivateBrowsingUtils.isWindowPrivate(w)),
+            params.private || (w && PrivateBrowsingUtils.isWindowPrivate(w)),
           firstPartyDomain: principal.originAttributes.firstPartyDomain,
         };
         return Services.scriptSecurityManager.principalWithOA(principal, attrs);
       }
       return principal;
     }
-    aPrincipal = useOAForPrincipal(aPrincipal);
-    aStoragePrincipal = useOAForPrincipal(aStoragePrincipal);
-    aTriggeringPrincipal = useOAForPrincipal(aTriggeringPrincipal);
+    originPrincipal = useOAForPrincipal(originPrincipal);
+    originStoragePrincipal = useOAForPrincipal(originStoragePrincipal);
+    triggeringPrincipal = useOAForPrincipal(triggeringPrincipal);
 
     if (!w || where == "window") {
       let features = "chrome,dialog=no,all";
-      if (aIsPrivate) {
+      if (params.private) {
         features += ",private";
         // To prevent regular browsing data from leaking to private browsing sites,
         // strip the referrer when opening a new private window. (See Bug: 1409226)
-        aReferrerInfo = new lazy.ReferrerInfo(
-          aReferrerInfo.referrerPolicy,
+        referrerInfo = new lazy.ReferrerInfo(
+          referrerInfo.referrerPolicy,
           false,
-          aReferrerInfo.originalReferrer
+          referrerInfo.originalReferrer
         );
-      } else if (aForceNonPrivate) {
+      } else if (forceNonPrivate) {
         features += ",non-private";
       }
 
@@ -165,10 +170,10 @@ export const URILoadingHelper = {
       let extraOptions = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
         Ci.nsIWritablePropertyBag2
       );
-      if (aTriggeringRemoteType) {
+      if (triggeringRemoteType) {
         extraOptions.setPropertyAsACString(
           "triggeringRemoteType",
-          aTriggeringRemoteType
+          triggeringRemoteType
         );
       }
       if (params.hasValidUserGestureActivation !== undefined) {
@@ -177,21 +182,21 @@ export const URILoadingHelper = {
           params.hasValidUserGestureActivation
         );
       }
-      if (aForceAllowDataURI) {
+      if (forceAllowDataURI) {
         extraOptions.setPropertyAsBool("forceAllowDataURI", true);
       }
       if (params.fromExternal !== undefined) {
         extraOptions.setPropertyAsBool("fromExternal", params.fromExternal);
       }
-      if (aGlobalHistoryOptions?.triggeringSponsoredURL) {
+      if (globalHistoryOptions?.triggeringSponsoredURL) {
         extraOptions.setPropertyAsACString(
           "triggeringSponsoredURL",
-          aGlobalHistoryOptions.triggeringSponsoredURL
+          globalHistoryOptions.triggeringSponsoredURL
         );
-        if (aGlobalHistoryOptions.triggeringSponsoredURLVisitTimeMS) {
+        if (globalHistoryOptions.triggeringSponsoredURLVisitTimeMS) {
           extraOptions.setPropertyAsUint64(
             "triggeringSponsoredURLVisitTimeMS",
-            aGlobalHistoryOptions.triggeringSponsoredURLVisitTimeMS
+            globalHistoryOptions.triggeringSponsoredURLVisitTimeMS
           );
         }
       }
@@ -199,24 +204,24 @@ export const URILoadingHelper = {
       var allowThirdPartyFixupSupports = Cc[
         "@mozilla.org/supports-PRBool;1"
       ].createInstance(Ci.nsISupportsPRBool);
-      allowThirdPartyFixupSupports.data = aAllowThirdPartyFixup;
+      allowThirdPartyFixupSupports.data = allowThirdPartyFixup;
 
       var userContextIdSupports = Cc[
         "@mozilla.org/supports-PRUint32;1"
       ].createInstance(Ci.nsISupportsPRUint32);
-      userContextIdSupports.data = aUserContextId;
+      userContextIdSupports.data = userContextId;
 
       sa.appendElement(wuri);
       sa.appendElement(extraOptions);
-      sa.appendElement(aReferrerInfo);
-      sa.appendElement(aPostData);
+      sa.appendElement(referrerInfo);
+      sa.appendElement(postData);
       sa.appendElement(allowThirdPartyFixupSupports);
       sa.appendElement(userContextIdSupports);
-      sa.appendElement(aPrincipal);
-      sa.appendElement(aStoragePrincipal);
-      sa.appendElement(aTriggeringPrincipal);
+      sa.appendElement(originPrincipal);
+      sa.appendElement(originStoragePrincipal);
+      sa.appendElement(triggeringPrincipal);
       sa.appendElement(null); // allowInheritPrincipal
-      sa.appendElement(aCsp);
+      sa.appendElement(csp);
 
       const sourceWindow = w || window;
       let win;
@@ -261,9 +266,9 @@ export const URILoadingHelper = {
         });
       }
 
-      if (aResolveOnContentBrowserReady) {
+      if (resolveOnContentBrowserCreated) {
         waitForWindowStartup().then(() =>
-          aResolveOnContentBrowserReady(win.gBrowser.selectedBrowser)
+          resolveOnContentBrowserCreated(win.gBrowser.selectedBrowser)
         );
       }
 
@@ -303,7 +308,7 @@ export const URILoadingHelper = {
         where = "tab";
         targetBrowser = null;
       } else if (
-        !aAllowPinnedTabHostChange &&
+        !allowPinnedTabHostChange &&
         tab.pinned &&
         url != "about:crashcontent"
       ) {
@@ -324,9 +329,9 @@ export const URILoadingHelper = {
       }
     } else {
       // `where` is "tab" or "tabshifted", so we'll load the link in a new tab.
-      loadInBackground = aInBackground;
+      loadInBackground = params.inBackground;
       if (loadInBackground == null) {
-        loadInBackground = aForceForeground
+        loadInBackground = params.forceForeground
           ? false
           : Services.prefs.getBoolPref("browser.tabs.loadInBackground");
       }
@@ -338,24 +343,24 @@ export const URILoadingHelper = {
       case "current":
         let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
 
-        if (aAllowThirdPartyFixup) {
+        if (allowThirdPartyFixup) {
           flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
           flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS;
         }
         // LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL isn't supported for javascript URIs,
         // i.e. it causes them not to load at all. Callers should strip
         // "javascript:" from pasted strings to prevent blank tabs
-        if (!aAllowInheritPrincipal) {
+        if (!allowInheritPrincipal) {
           flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
         }
 
-        if (aAllowPopups) {
+        if (allowPopups) {
           flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_POPUPS;
         }
-        if (aIndicateErrorPageLoad) {
+        if (indicateErrorPageLoad) {
           flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ERROR_LOAD_CHANGES_RV;
         }
-        if (aForceAllowDataURI) {
+        if (forceAllowDataURI) {
           flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FORCE_ALLOW_DATA_URI;
         }
         if (params.fromExternal) {
@@ -364,7 +369,7 @@ export const URILoadingHelper = {
 
         let { URI_INHERITS_SECURITY_CONTEXT } = Ci.nsIProtocolHandler;
         if (
-          aForceAboutBlankViewerInCurrent &&
+          forceAboutBlankViewerInCurrent &&
           (!uriObj ||
             Services.io.getDynamicProtocolFlags(uriObj) &
               URI_INHERITS_SECURITY_CONTEXT)
@@ -372,24 +377,24 @@ export const URILoadingHelper = {
           // Unless we know for sure we're not inheriting principals,
           // force the about:blank viewer to have the right principal:
           targetBrowser.createAboutBlankContentViewer(
-            aPrincipal,
-            aStoragePrincipal
+            originPrincipal,
+            originStoragePrincipal
           );
         }
 
         targetBrowser.fixupAndLoadURIString(url, {
-          triggeringPrincipal: aTriggeringPrincipal,
-          csp: aCsp,
+          triggeringPrincipal,
+          csp,
           flags,
-          referrerInfo: aReferrerInfo,
-          postData: aPostData,
-          userContextId: aUserContextId,
+          referrerInfo,
+          postData,
+          userContextId,
           hasValidUserGestureActivation: params.hasValidUserGestureActivation,
-          globalHistoryOptions: aGlobalHistoryOptions,
-          triggeringRemoteType: aTriggeringRemoteType,
+          globalHistoryOptions,
+          triggeringRemoteType,
         });
-        if (aResolveOnContentBrowserReady) {
-          aResolveOnContentBrowserReady(targetBrowser);
+        if (resolveOnContentBrowserCreated) {
+          resolveOnContentBrowserCreated(targetBrowser);
         }
 
         // Don't focus the content area if focus is in the address bar and we're
@@ -408,34 +413,30 @@ export const URILoadingHelper = {
           !lazy.AboutNewTab.willNotifyUser;
 
         let tabUsedForLoad = w.gBrowser.addTab(url, {
-          referrerInfo: aReferrerInfo,
-          charset: aCharset,
-          postData: aPostData,
+          referrerInfo,
+          charset,
+          postData,
           inBackground: loadInBackground,
-          allowThirdPartyFixup: aAllowThirdPartyFixup,
-          relatedToCurrent: aRelatedToCurrent,
-          skipAnimation: aSkipTabAnimation,
-          userContextId: aUserContextId,
-          originPrincipal: aPrincipal,
-          originStoragePrincipal: aStoragePrincipal,
-          triggeringPrincipal: aTriggeringPrincipal,
-          allowInheritPrincipal: aAllowInheritPrincipal,
-          triggeringRemoteType: aTriggeringRemoteType,
-          csp: aCsp,
-          forceAllowDataURI: aForceAllowDataURI,
+          allowThirdPartyFixup,
+          relatedToCurrent,
+          skipAnimation: skipTabAnimation,
+          userContextId,
+          originPrincipal,
+          originStoragePrincipal,
+          triggeringPrincipal,
+          allowInheritPrincipal,
+          triggeringRemoteType,
+          csp,
+          forceAllowDataURI,
           focusUrlBar,
           openerBrowser: params.openerBrowser,
           fromExternal: params.fromExternal,
-          globalHistoryOptions: aGlobalHistoryOptions,
+          globalHistoryOptions,
         });
         targetBrowser = tabUsedForLoad.linkedBrowser;
 
-        if (aResolveOnNewTabCreated) {
-          aResolveOnNewTabCreated(targetBrowser);
-        }
-        if (aResolveOnContentBrowserReady) {
-          aResolveOnContentBrowserReady(targetBrowser);
-        }
+        resolveOnNewTabCreated?.(targetBrowser);
+        resolveOnContentBrowserCreated?.(targetBrowser);
 
         if (params.frameID != undefined && w) {
           // Only notify it as a WebExtensions' webNavigation.onCreatedNavigationTarget
