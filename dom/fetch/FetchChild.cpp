@@ -254,6 +254,27 @@ mozilla::ipc::IPCResult FetchChild::RecvOnCSPViolationEvent(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult FetchChild::RecvOnReportPerformanceTiming(
+    ResponseTiming&& aTiming) {
+  FETCH_LOG(("FetchChild::RecvOnReportPerformanceTiming [%p]", this));
+  if (mIsShutdown) {
+    return IPC_OK();
+  }
+  // Shutdown has not been called, so mWorkerRef->Private() should be still
+  // alive.
+  MOZ_ASSERT(mWorkerRef->Private());
+  mWorkerRef->Private()->AssertIsOnWorkerThread();
+
+  RefPtr<PerformanceStorage> performanceStorage =
+      mWorkerRef->Private()->GetPerformanceStorage();
+  if (performanceStorage) {
+    performanceStorage->AddEntry(
+        aTiming.entryName(), aTiming.initiatorType(),
+        MakeUnique<PerformanceTimingData>(aTiming.timingData()));
+  }
+  return IPC_OK();
+}
+
 void FetchChild::SetCSPEventListener(nsICSPEventListener* aListener) {
   MOZ_ASSERT(aListener && !mCSPEventListener);
   mCSPEventListener = aListener;
