@@ -530,14 +530,10 @@ nsresult Http2Decompressor::OutputHeader(const nsACString& name,
     }
   }
 
-  // Look for CR OR LF in value - could be smuggling Sec 10.3
-  // can map to space safely
-  for (const char* cPtr = value.BeginReading();
-       cPtr && cPtr < value.EndReading(); ++cPtr) {
-    if (*cPtr == '\r' || *cPtr == '\n') {
-      char* wPtr = const_cast<char*>(cPtr);
-      *wPtr = ' ';
-    }
+  // Look for CR, LF or NUL in value - could be smuggling (RFC7540 Sec 10.3)
+  // treat as malformed
+  if (!nsHttp::IsReasonableHeaderValue(value)) {
+    return NS_ERROR_ILLEGAL_VALUE;
   }
 
   // Status comes first

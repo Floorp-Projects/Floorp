@@ -179,10 +179,38 @@ add_task(async function do_test_http2_header() {
   Assert.equal(httpProxyConnectResponseCode, 200);
 });
 
-add_task(async function do_test_http2_invalid_response_header() {
+add_task(async function do_test_http2_invalid_response_header_name_spaces() {
   const {
     httpProxyConnectResponseCode,
-  } = await test_http2_invalid_response_header(serverPort);
+  } = await test_http2_invalid_response_header(serverPort, "name_spaces");
+  Assert.equal(httpProxyConnectResponseCode, 200);
+});
+
+add_task(
+  async function do_test_http2_invalid_response_header_value_line_feed() {
+    const {
+      httpProxyConnectResponseCode,
+    } = await test_http2_invalid_response_header(serverPort, "value_line_feed");
+    Assert.equal(httpProxyConnectResponseCode, 200);
+  }
+);
+
+add_task(
+  async function do_test_http2_invalid_response_header_value_carriage_return() {
+    const {
+      httpProxyConnectResponseCode,
+    } = await test_http2_invalid_response_header(
+      serverPort,
+      "value_carriage_return"
+    );
+    Assert.equal(httpProxyConnectResponseCode, 200);
+  }
+);
+
+add_task(async function do_test_http2_invalid_response_header_value_null() {
+  const {
+    httpProxyConnectResponseCode,
+  } = await test_http2_invalid_response_header(serverPort, "value_null");
   Assert.equal(httpProxyConnectResponseCode, 200);
 });
 
