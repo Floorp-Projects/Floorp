@@ -5331,9 +5331,9 @@ dependencies = [
 
 [[package]]
 name = "thin-vec"
-version = "0.2.7"
+version = "0.2.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d09c1b1ea9de6818eef6f364cc27b6a56bfd52168e33038d795ec8880a67a632"
+checksum = "aac81b6fd6beb5884b0cf3321b8117e6e5d47ecb6fc89f414cfdcca8b2fe2dd8"
 
 [[package]]
 name = "thiserror"
