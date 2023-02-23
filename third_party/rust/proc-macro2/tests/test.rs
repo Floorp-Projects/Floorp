@@ -1,6 +1,11 @@
-#![allow(clippy::assertions_on_result_states, clippy::non_ascii_literal)]
+#![allow(
+    clippy::assertions_on_result_states,
+    clippy::items_after_statements,
+    clippy::non_ascii_literal
+)]
 
 use proc_macro2::{Ident, Literal, Punct, Spacing, Span, TokenStream, TokenTree};
+use std::iter;
 use std::panic;
 use std::str::{self, FromStr};
 
@@ -114,6 +119,25 @@ fn literal_string() {
 #[test]
 fn literal_raw_string() {
     "r\"\r\n\"".parse::<TokenStream>().unwrap();
+
+    fn raw_string_literal_with_hashes(n: usize) -> String {
+        let mut literal = String::new();
+        literal.push('r');
+        literal.extend(iter::repeat('#').take(n));
+        literal.push('"');
+        literal.push('"');
+        literal.extend(iter::repeat('#').take(n));
+        literal
+    }
+
+    raw_string_literal_with_hashes(255)
+        .parse::<TokenStream>()
+        .unwrap();
+
+    // https://github.com/rust-lang/rust/pull/95251
+    raw_string_literal_with_hashes(256)
+        .parse::<TokenStream>()
+        .unwrap_err();
 }
 
 #[test]
