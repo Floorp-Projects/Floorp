@@ -214,13 +214,6 @@ nsThebesFontEnumerator::GetDefaultFont(const char* aLangGroup,
 }
 
 NS_IMETHODIMP
-nsThebesFontEnumerator::UpdateFontList(bool* _retval) {
-  gfxPlatform::GetPlatform()->UpdateFontList();
-  *_retval = false;  // always return false for now
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsThebesFontEnumerator::GetStandardFamilyName(const char16_t* aName,
                                               char16_t** aResult) {
   NS_ENSURE_ARG_POINTER(aResult);

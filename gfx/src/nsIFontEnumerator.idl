@@ -63,12 +63,6 @@ interface nsIFontEnumerator : nsISupports
   wstring getDefaultFont(in string aLangGroup, in string aGeneric);
 
   /**
-   * update the global font list
-   * return true if font list is changed
-   */
-  boolean updateFontList();
-
-  /**
    * get the standard family name on the system from given family
    * @param  aName family name which may be alias
    * @return the standard family name on the system, if given name does not
