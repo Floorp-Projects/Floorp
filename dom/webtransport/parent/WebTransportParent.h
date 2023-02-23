@@ -11,6 +11,7 @@
 #include "mozilla/dom/FlippedOnce.h"
 #include "mozilla/dom/PWebTransportParent.h"
 #include "mozilla/ipc/Endpoint.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsISupports.h"
 #include "nsIPrincipal.h"
 #include "nsIWebTransport.h"
@@ -21,6 +22,8 @@ enum class WebTransportReliabilityMode : uint8_t;
 
 class WebTransportParent : public PWebTransportParent,
                            public WebTransportSessionEventListener {
+  using IPCResult = mozilla::ipc::IPCResult;
+
  public:
   WebTransportParent() = default;
 
@@ -34,8 +37,12 @@ class WebTransportParent : public PWebTransportParent,
       Endpoint<PWebTransportParent>&& aParentEndpoint,
       std::function<void(Tuple<const nsresult&, const uint8_t&>)>&& aResolver);
 
-  mozilla::ipc::IPCResult RecvClose(const uint32_t& aCode,
-                                    const nsACString& aReason);
+  IPCResult RecvClose(const uint32_t& aCode, const nsACString& aReason);
+
+  IPCResult RecvCreateUnidirectionalStream(
+      CreateUnidirectionalStreamResolver&& aResolver);
+  IPCResult RecvCreateBidirectionalStream(
+      CreateBidirectionalStreamResolver&& aResolver);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

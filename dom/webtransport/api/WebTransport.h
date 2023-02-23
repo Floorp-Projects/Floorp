@@ -8,11 +8,15 @@
 #define DOM_WEBTRANSPORT_API_WEBTRANSPORT__H_
 
 #include "nsCOMPtr.h"
+#include "nsDeque.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WebTransportBinding.h"
 #include "mozilla/dom/WebTransportChild.h"
+#include "mozilla/dom/WebTransportSendStream.h"
+#include "mozilla/dom/WebTransportReceiveStream.h"
+#include "mozilla/dom/WebTransportStreams.h"
 #include "mozilla/ipc/DataPipe.h"
 
 namespace mozilla::dom {
@@ -25,6 +29,9 @@ class WritableStream;
 
 class WebTransport final : public nsISupports, public nsWrapperCache {
   friend class WebTransportIncomingStreamsAlgorithms;
+  // For mSendStreams/mReceiveStreams
+  friend class WebTransportSendStream;
+  friend class WebTransportReceiveStream;
 
  public:
   explicit WebTransport(nsIGlobalObject* aGlobal);
@@ -107,14 +114,22 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
   // each sendStream in sendStreams, error sendStream with error."
   // XXX Use nsTArray.h for now, but switch to OrderHashSet/Table for release to
   // improve remove performance (if needed)
-  nsTArray<RefPtr<WritableStream>> mSendStreams;
-  nsTArray<RefPtr<ReadableStream>> mReceiveStreams;
+  nsTArray<RefPtr<WebTransportSendStream>> mSendStreams;
+  nsTArray<RefPtr<WebTransportReceiveStream>> mReceiveStreams;
 
   WebTransportState mState;
   RefPtr<Promise> mReady;
-  RefPtr<Promise> mIncomingUnidirectionalPromise;
-  RefPtr<Promise> mIncomingBidirectionalPromise;
+  // XXX may not need to be a RefPtr, since we own it through the Streams
+  RefPtr<WebTransportIncomingStreamsAlgorithms> mIncomingBidirectionalAlgorithm;
+  RefPtr<WebTransportIncomingStreamsAlgorithms>
+      mIncomingUnidirectionalAlgorithm;
   WebTransportReliabilityMode mReliability;
+  // Incoming streams get queued here
+  nsRefPtrDeque<mozilla::ipc::DataPipeReceiver> mUnidirectionalStreams;
+  nsDeque<Tuple<RefPtr<mozilla::ipc::DataPipeReceiver>,
+                RefPtr<mozilla::ipc::DataPipeSender>>>
+      mBidirectionalStreams;
+
   // These are created in the constructor
   RefPtr<ReadableStream> mIncomingUnidirectionalStreams;
   RefPtr<ReadableStream> mIncomingBidirectionalStreams;

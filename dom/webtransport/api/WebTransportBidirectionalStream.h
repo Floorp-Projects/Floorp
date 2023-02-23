@@ -35,11 +35,8 @@ class WebTransportBidirectionalStream final : public nsISupports,
                        JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL Interface
-  // XXX spec says these should be WebTransportReceiveStream and
-  // WebTransportSendStream
-  // XXX Not implemented
-  already_AddRefed<ReadableStream> Readable() { return nullptr; }
-  already_AddRefed<WritableStream> Writable() { return nullptr; }
+  already_AddRefed<WebTransportReceiveStream> Readable() { return nullptr; }
+  already_AddRefed<WebTransportSendStream> Writable() { return nullptr; }
 
  private:
   ~WebTransportBidirectionalStream() = default;
