@@ -274,7 +274,6 @@ class nsWindow final : public nsBaseWidget {
   static guint32 sLastButtonPressTime;
 
   MozContainer* GetMozContainer() { return mContainer; }
-  LayoutDeviceIntSize GetMozContainerSize();
   GdkWindow* GetGdkWindow() const { return mGdkWindow; };
   GdkWindow* GetToplevelGdkWindow() const;
   GtkWidget* GetGtkWidget() const { return mShell; }
