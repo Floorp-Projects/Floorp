@@ -8,7 +8,7 @@
 #define DOM_WEBTRANSPORT_API_WEBTRANSPORT__H_
 
 #include "nsCOMPtr.h"
-#include "nsDeque.h"
+#include "nsTArray.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
 #include "mozilla/dom/Promise.h"
@@ -26,6 +26,9 @@ class WebTransportDatagramDuplexStream;
 class WebTransportIncomingStreamsAlgorithms;
 class ReadableStream;
 class WritableStream;
+
+using BidirectionalPair = std::pair<RefPtr<mozilla::ipc::DataPipeReceiver>,
+                                    RefPtr<mozilla::ipc::DataPipeSender>>;
 
 class WebTransport final : public nsISupports, public nsWrapperCache {
   friend class WebTransportIncomingStreamsAlgorithms;
@@ -127,11 +130,11 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
   RefPtr<WebTransportIncomingStreamsAlgorithms>
       mIncomingUnidirectionalAlgorithm;
   WebTransportReliabilityMode mReliability;
-  // Incoming streams get queued here
-  nsRefPtrDeque<mozilla::ipc::DataPipeReceiver> mUnidirectionalStreams;
-  nsDeque<Tuple<RefPtr<mozilla::ipc::DataPipeReceiver>,
-                RefPtr<mozilla::ipc::DataPipeSender>>>
-      mBidirectionalStreams;
+  // Incoming streams get queued here.  Use a TArray though it's working as
+  // a FIFO - rarely will there be more than one entry in these arrays, so
+  // the overhead of mozilla::Queue is unneeded
+  nsTArray<RefPtr<mozilla::ipc::DataPipeReceiver>> mUnidirectionalStreams;
+  nsTArray<UniquePtr<BidirectionalPair>> mBidirectionalStreams;
 
   // These are created in the constructor
   RefPtr<ReadableStream> mIncomingUnidirectionalStreams;
