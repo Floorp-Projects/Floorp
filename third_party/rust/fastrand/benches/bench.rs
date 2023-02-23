@@ -73,3 +73,26 @@ fn u32_fastrand(b: &mut Bencher) {
         sum
     })
 }
+
+#[bench]
+fn fill(b: &mut Bencher) {
+    let rng = fastrand::Rng::new();
+    b.iter(|| {
+        // Pick a size that isn't divisble by 8.
+        let mut bytes = [0u8; 367];
+        rng.fill(&mut bytes);
+        bytes
+    })
+}
+
+#[bench]
+fn fill_naive(b: &mut Bencher) {
+    let rng = fastrand::Rng::new();
+    b.iter(|| {
+        let mut bytes = [0u8; 367];
+        for item in &mut bytes {
+            *item = rng.u8(..);
+        }
+        bytes
+    })
+}

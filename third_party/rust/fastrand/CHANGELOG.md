@@ -1,3 +1,8 @@
+# Version 1.9.0
+
+- Add `Rng::fill()` (#35, #43)
+- Add `#[must_use]` to `Rng::with_seed()` (#46)
+
 # Version 1.8.0
 
 - Add `get_seed()` and `Rng::get_seed()` (#33)

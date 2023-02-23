@@ -726,6 +726,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.7.0 -> 1.8.0"
 
+[[audits.fastrand]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "1.8.0 -> 1.9.0"
+
 [[audits.filetime_win]]
 who = "Nick Alexander <nalexander@mozilla.com>"
 criteria = "safe-to-deploy"
