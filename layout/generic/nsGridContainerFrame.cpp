@@ -17,6 +17,7 @@
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/CSSAlignUtils.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/dom/Grid.h"
 #include "mozilla/dom/GridBinding.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/Maybe.h"
@@ -8918,6 +8919,13 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
     // the bit to only that sequence of calls. This is relatively harmless
     // since this bit is only set by accessing a ChromeOnly property, and
     // therefore can't unduly slow down normal web browsing.
+
+    // Clear our GridFragmentInfo property, which might be holding a stale
+    // dom::Grid object built from previously-computed info. This will
+    // ensure that the next call to GetGridFragments will create a new one.
+    if (mozilla::dom::Grid* grid = TakeProperty(GridFragmentInfo())) {
+      grid->ForgetFrame();
+    }
 
     // Now that we know column and row sizes and positions, set
     // the ComputedGridTrackInfo and related properties
