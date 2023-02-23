@@ -30,6 +30,11 @@ class WebTransportBidirectionalStream final : public nsISupports,
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(WebTransportBidirectionalStream)
 
+  static already_AddRefed<WebTransportBidirectionalStream> Create(
+      WebTransport* aWebTransport, nsIGlobalObject* aGlobal,
+      ::mozilla::ipc::DataPipeReceiver* receiver,
+      ::mozilla::ipc::DataPipeSender* sender, ErrorResult& aRv);
+
   // WebIDL Boilerplate
   nsIGlobalObject* GetParentObject() const;
 
