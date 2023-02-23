@@ -57,8 +57,6 @@ notes = "Used for testing."
 
 [policy.gkrust-shared]
 dependency-criteria = { tokio-reactor = [], tokio-threadpool = [] }
-
-[policy.gkrust_shared]
 notes = "The dependencies on tokio-reactor and tokio-threadpools are just a hack to pin the version used by audioipc-{client,server}. Suppress vetting on those for the same reasons behind the policy entries."
 
 [policy.gluesmith]
@@ -89,13 +87,13 @@ notes = "This is a pinned version of the upstream code, presumably to get a fix 
 audit-as-crates-io = true
 notes = "This is a pinned version of the upstream code, presumably to get a fix that hadn't been released yet. We should consider switching to the latest official release."
 
-[policy.mio]
-audit-as-crates-io = true
-notes = "Version 0.6.23 is a local fork of upstream which just twiddles some dependencies."
-
 [policy.mio-named-pipes]
 audit-as-crates-io = true
 notes = "We have a local fork, but this entire subtree is going away shortly anyway with the old audioipc code."
+
+[policy."mio:0.6.23"]
+audit-as-crates-io = true
+notes = "Version 0.6.23 is a local fork of upstream which just twiddles some dependencies."
 
 [policy.mozbuild]
 audit-as-crates-io = false
