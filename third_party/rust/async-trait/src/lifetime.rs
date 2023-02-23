@@ -2,7 +2,7 @@ use proc_macro2::{Span, TokenStream};
 use std::mem;
 use syn::visit_mut::{self, VisitMut};
 use syn::{
-    parse_quote_spanned, token, Expr, GenericArgument, Lifetime, Receiver, ReturnType, Type,
+    parse_quote_spanned, token, Expr, GenericArgument, Lifetime, Receiver, ReturnType, Token, Type,
     TypeBareFn, TypeImplTrait, TypeParen, TypePtr, TypeReference,
 };
 
@@ -10,22 +10,20 @@ pub struct CollectLifetimes {
     pub elided: Vec<Lifetime>,
     pub explicit: Vec<Lifetime>,
     pub name: &'static str,
-    pub default_span: Span,
 }
 
 impl CollectLifetimes {
-    pub fn new(name: &'static str, default_span: Span) -> Self {
+    pub fn new(name: &'static str) -> Self {
         CollectLifetimes {
             elided: Vec::new(),
             explicit: Vec::new(),
             name,
-            default_span,
         }
     }
 
-    fn visit_opt_lifetime(&mut self, lifetime: &mut Option<Lifetime>) {
+    fn visit_opt_lifetime(&mut self, reference: Token![&], lifetime: &mut Option<Lifetime>) {
         match lifetime {
-            None => *lifetime = Some(self.next_lifetime(None)),
+            None => *lifetime = Some(self.next_lifetime(reference.span)),
             Some(lifetime) => self.visit_lifetime(lifetime),
         }
     }
@@ -38,9 +36,8 @@ impl CollectLifetimes {
         }
     }
 
-    fn next_lifetime<S: Into<Option<Span>>>(&mut self, span: S) -> Lifetime {
+    fn next_lifetime(&mut self, span: Span) -> Lifetime {
         let name = format!("{}{}", self.name, self.elided.len());
-        let span = span.into().unwrap_or(self.default_span);
         let life = Lifetime::new(&name, span);
         self.elided.push(life.clone());
         life
@@ -49,13 +46,13 @@ impl CollectLifetimes {
 
 impl VisitMut for CollectLifetimes {
     fn visit_receiver_mut(&mut self, arg: &mut Receiver) {
-        if let Some((_, lifetime)) = &mut arg.reference {
-            self.visit_opt_lifetime(lifetime);
+        if let Some((reference, lifetime)) = &mut arg.reference {
+            self.visit_opt_lifetime(*reference, lifetime);
         }
     }
 
     fn visit_type_reference_mut(&mut self, ty: &mut TypeReference) {
-        self.visit_opt_lifetime(&mut ty.lifetime);
+        self.visit_opt_lifetime(ty.and_token, &mut ty.lifetime);
         visit_mut::visit_type_reference_mut(self, ty);
     }
 
