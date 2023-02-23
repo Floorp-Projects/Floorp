@@ -66,29 +66,23 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
             dict(section="App", value="BuildID"),
         )
         app_name = next(values)
-        display_name = next(values)
-        vendor = next(values)
-        remoting_name = next(values)
-        build_id = next(values)
-        timestamp = datetime.datetime.strptime(build_id, "%Y%m%d%H%M%S")
-        if "a" in version:
-            # We append the buildid to the alpha version to tell nightlies apart
-            deb_pkg_version = f"{version}~{build_id}"
-        else:
-            # With other release flavors we opt for the release's build number
-            deb_pkg_version = f"{version}~build{build_number}"
 
-        os.mkdir(mozpath.join(extract_dir, "debian"))
-        shutil.copy(
-            mozpath.join(template_dir, "rules"),
-            mozpath.join(extract_dir, "debian", "rules"),
-        )
-        defines = {
-            "DEB_DESCRIPTION": f"{vendor} {display_name}",
-            "DEB_PKG_NAME": remoting_name.lower(),
-            "DEB_PKG_VERSION": deb_pkg_version,
-            "DEB_CHANGELOG_DATE": format_datetime(timestamp),
+        application_ini_data = {
+            "name": app_name,
+            "display_name": next(values),
+            "vendor": next(values),
+            "remoting_name": next(values),
+            "build_id": next(values),
         }
+        application_ini_data["timestamp"] = datetime.datetime.strptime(
+            application_ini_data["build_id"], "%Y%m%d%H%M%S"
+        )
+        build_variables = _get_build_variables(
+            application_ini_data,
+            arch,
+            version=version,
+            build_number=build_number,
+        )
 
         _copy_plain_deb_config(
             input_template_dir=template_dir,
@@ -97,7 +91,7 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
         _render_deb_templates(
             input_template_dir=template_dir,
             source_dir=extract_dir,
-            build_variables=defines,
+            build_variables=build_variables,
         )
 
         with open(
@@ -113,12 +107,35 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
             source_dir=extract_dir,
             target_dir=tmpdir,
             output_file_path=output,
-            build_variables=defines,
+            build_variables=build_variables,
             arch=arch,
         )
 
     finally:
         shutil.rmtree(tmpdir)
+
+
+def _get_build_variables(
+    application_ini_data,
+    arch,
+    version,
+    build_number,
+):
+    # TODO: Use mozilla-version
+    if "a" in version:
+        # We append the buildid to the alpha version to tell nightlies apart
+        deb_pkg_version = f"{version}~{application_ini_data['build_id']}"
+    else:
+        # With other release flavors we opt for the release's build number
+        deb_pkg_version = f"{version}~build{build_number}"
+
+    return {
+        "DEB_DESCRIPTION": f"{application_ini_data['vendor']} {application_ini_data['display_name']}",
+        "DEB_PKG_NAME": application_ini_data["remoting_name"].lower(),
+        "DEB_PKG_VERSION": deb_pkg_version,
+        "DEB_CHANGELOG_DATE": format_datetime(application_ini_data["timestamp"]),
+        "DEB_ARCH_NAME": _DEB_ARCH[arch],
+    }
 
 
 def _copy_plain_deb_config(input_template_dir, source_dir):
