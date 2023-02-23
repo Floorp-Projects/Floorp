@@ -8,9 +8,8 @@
 
 // NOTE: #[cfg(feature = "proptest1")] is specified here to work with `doc_cfg`.
 
-use proptest::{arbitrary::StrategyFor, prelude::*, strategy::MapInto};
-
 use crate::{Utf8Path, Utf8PathBuf};
+use proptest::{arbitrary::StrategyFor, prelude::*, strategy::MapInto};
 
 /// The [`Arbitrary`] impl for `Utf8PathBuf` returns a path with between 0 and 8 components,
 /// joined by the [`MAIN_SEPARATOR`](std::path::MAIN_SEPARATOR) for the platform. (Each component is

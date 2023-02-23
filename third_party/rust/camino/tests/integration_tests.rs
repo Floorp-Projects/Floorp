@@ -106,7 +106,7 @@ fn test_borrow_hash() {
         let owned = Utf8PathBuf::from(path);
 
         assert_eq!(
-            hash_output(&owned),
+            hash_output(owned),
             hash_output(borrowed),
             "consistent Hash: {}",
             borrowed
