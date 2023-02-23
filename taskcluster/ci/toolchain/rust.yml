@@ -148,13 +148,13 @@ linux64-rust-static-1.67:
         ]
         toolchain-alias: linux64-rust-static
 
-linux64-rust-macos-1.61:
+linux64-rust-macos-1.65:
     description: "rust repack with macos-cross support"
     treeherder:
-        symbol: TL(rust-macos-1.61)
+        symbol: TL(rust-macos-1.65)
     run:
         arguments: [
-            '--channel', '1.61.0',
+            '--channel', '1.65.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-apple-darwin',
@@ -197,13 +197,13 @@ linux64-rust-android-1.67:
         toolchain:
             - linux64-clang-toolchain
 
-linux64-rust-windows-1.61:
+linux64-rust-windows-1.65:
     description: "rust repack with windows-cross support"
     treeherder:
-        symbol: TL(rust-win-1.61)
+        symbol: TL(rust-win-1.65)
     run:
         arguments: [
-            '--channel', '1.61.0',
+            '--channel', '1.65.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-pc-windows-msvc',
