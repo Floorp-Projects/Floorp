@@ -15,9 +15,6 @@
 }
 
 .longDescription {
-  /* 40em is the max-width of the dialog defined above.
-     18px is the horizontal padding of the dialog. */
-  width: calc(40em - 18px);
   padding-bottom: 1em;
 }
 
@@ -25,6 +22,8 @@
 #warningSupplemental,
 #headerDescription,
 .longDescription {
+  /* Don't let these affect the min horizontal size of the dialog */
+  contain: inline-size;
   white-space: pre-wrap;
 }
 
