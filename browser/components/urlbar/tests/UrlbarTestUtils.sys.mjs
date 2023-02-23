@@ -249,6 +249,7 @@ export var UrlbarTestUtils = {
       activationKey = "KEY_Enter",
     } = {}
   ) {
+    this.Assert?.ok(win.gURLBar.view.isOpen, "view should be open");
     let menuButton = this.getButtonForResultIndex(win, "menu", resultIndex);
     this.Assert?.ok(
       menuButton,
@@ -264,6 +265,7 @@ export var UrlbarTestUtils = {
     }
     if (byMouse) {
       this.EventUtils.synthesizeMouseAtCenter(menuButton, {}, win);
+      this._testScope?.info(`waiting for the menu popup to open via mouse`);
     } else {
       if (this.getSelectedElement(win) != menuButton) {
         this.EventUtils.synthesizeKey("KEY_Tab", {}, win);
@@ -274,10 +276,10 @@ export var UrlbarTestUtils = {
         `selected the menu button at result index ${resultIndex}`
       );
       this.EventUtils.synthesizeKey(activationKey, {}, win);
+      this._testScope?.info(
+        `waiting for ${activationKey} to open the menu popup`
+      );
     }
-    this._testScope?.info(
-      `waiting for ${activationKey} to open the menu popup`
-    );
     await promiseMenuOpen;
     this.Assert?.equal(
       win.gURLBar.view.resultMenu.state,

@@ -30,8 +30,9 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 // Query selector for selectable elements in results.
-const SELECTABLE_ELEMENT_SELECTOR =
-  "[role=button]:not([unselectable]), [selectable]";
+const SELECTABLE_ELEMENT_SELECTOR = "[role=button], [selectable]";
+const KEYBOARD_SELECTABLE_ELEMENT_SELECTOR =
+  "[role=button]:not([keyboard-inaccessible]), [selectable]";
 
 const ZERO_PREFIX_HISTOGRAM_DWELL_TIME = "FX_URLBAR_ZERO_PREFIX_DWELL_TIME_MS";
 const ZERO_PREFIX_SCALAR_ABANDONMENT = "urlbar.zeroprefix.abandonment";
@@ -1346,7 +1347,7 @@ export class UrlbarView {
         attributes: lazy.UrlbarPrefs.get("resultMenu.keyboardAccessible")
           ? null
           : {
-              unselectable: true,
+              "keyboard-inaccessible": true,
             },
       });
     }
@@ -2020,8 +2021,8 @@ export class UrlbarView {
     element,
     { updateInput = true, setAccessibleFocus = true } = {}
   ) {
-    if (element && !element.matches(SELECTABLE_ELEMENT_SELECTOR)) {
-      throw new Error("Element is not selectable");
+    if (element && !element.matches(KEYBOARD_SELECTABLE_ELEMENT_SELECTOR)) {
+      throw new Error("Element is not keyboard-selectable");
     }
 
     if (this.#selectedElement) {
@@ -2069,12 +2070,20 @@ export class UrlbarView {
    *
    * @param {Element} element
    *   An element in the view.
+   * @param {object} [options]
+   *   Options object.
+   * @param {boolean} [options.byMouse]
+   *   If true, include elements that are only selectable by mouse.
    * @returns {Element}
    *   The closest element that can be picked including the element itself, or
    *   null if there is no such element.
    */
-  #getClosestSelectableElement(element) {
-    let closest = element.closest(SELECTABLE_ELEMENT_SELECTOR);
+  #getClosestSelectableElement(element, { byMouse = false } = {}) {
+    let closest = element.closest(
+      byMouse
+        ? SELECTABLE_ELEMENT_SELECTOR
+        : KEYBOARD_SELECTABLE_ELEMENT_SELECTOR
+    );
     if (closest && this.#isElementVisible(closest)) {
       return closest;
     }
@@ -2090,7 +2099,7 @@ export class UrlbarView {
   }
 
   /**
-   * Returns true if the given element is selectable.
+   * Returns true if the given element is keyboard-selectable.
    *
    * @param {Element} element
    *   The element to test.
@@ -2102,7 +2111,7 @@ export class UrlbarView {
   }
 
   /**
-   * Returns the first selectable element in the view.
+   * Returns the first keyboard-selectable element in the view.
    *
    * @returns {Element}
    *   The first selectable element in the view.
@@ -2116,7 +2125,7 @@ export class UrlbarView {
   }
 
   /**
-   * Returns the last selectable element in the view.
+   * Returns the last keyboard-selectable element in the view.
    *
    * @returns {Element}
    *   The last selectable element in the view.
@@ -2130,8 +2139,8 @@ export class UrlbarView {
   }
 
   /**
-   * Returns the next selectable element after the given element.  If the
-   * element is the last selectable element, returns null.
+   * Returns the next keyboard-selectable element after the given element.  If
+   * the element is the last selectable element, returns null.
    *
    * @param {Element} element
    *   An element in the view.
@@ -2146,7 +2155,9 @@ export class UrlbarView {
     }
 
     let next = row.nextElementSibling;
-    let selectables = [...row.querySelectorAll(SELECTABLE_ELEMENT_SELECTOR)];
+    let selectables = [
+      ...row.querySelectorAll(KEYBOARD_SELECTABLE_ELEMENT_SELECTOR),
+    ];
     if (selectables.length) {
       let index = selectables.indexOf(element);
       if (index < selectables.length - 1) {
@@ -2162,8 +2173,8 @@ export class UrlbarView {
   }
 
   /**
-   * Returns the previous selectable element before the given element.  If the
-   * element is the first selectable element, returns null.
+   * Returns the previous keyboard-selectable element before the given element.
+   * If the element is the first selectable element, returns null.
    *
    * @param {Element} element
    *   An element in the view.
@@ -2178,7 +2189,9 @@ export class UrlbarView {
     }
 
     let previous = row.previousElementSibling;
-    let selectables = [...row.querySelectorAll(SELECTABLE_ELEMENT_SELECTOR)];
+    let selectables = [
+      ...row.querySelectorAll(KEYBOARD_SELECTABLE_ELEMENT_SELECTOR),
+    ];
     if (selectables.length) {
       let index = selectables.indexOf(element);
       if (index < 0) {
@@ -2843,7 +2856,9 @@ export class UrlbarView {
       return;
     }
 
-    let element = this.#getClosestSelectableElement(event.target);
+    let element = this.#getClosestSelectableElement(event.target, {
+      byMouse: true,
+    });
     if (!element) {
       // Ignore clicks on elements that can't be selected/picked.
       return;
@@ -2896,7 +2911,7 @@ export class UrlbarView {
     // ignore it.
     let element =
       event.target.nodeType === event.target.ELEMENT_NODE
-        ? this.#getClosestSelectableElement(event.target)
+        ? this.#getClosestSelectableElement(event.target, { byMouse: true })
         : null;
     if (element) {
       this.input.pickElement(element, event);
