@@ -22,16 +22,13 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.Mockito.`when`
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
-import org.robolectric.shadows.gms.Shadows
-import org.robolectric.shadows.gms.common.ShadowGoogleApiAvailability
 
 @RunWith(RobolectricTestRunner::class)
-@Config(shadows = [ShadowGoogleApiAvailability::class])
 class AbstractFirebasePushServiceTest {
 
     private val processor: PushProcessor = mock()
@@ -118,13 +115,14 @@ class AbstractFirebasePushServiceTest {
 
     @Test
     fun `service available reflects Google Play Services' availability`() {
-        val service = TestService()
+        val service = spy(TestService())
 
         // By default, service is unavailable.
         assertFalse(service.isServiceAvailable(testContext))
 
-        val shadowGoogleApiAvailability = Shadows.shadowOf(GoogleApiAvailability.getInstance())
-        shadowGoogleApiAvailability.setIsGooglePlayServicesAvailable(ConnectionResult.SUCCESS)
+        val googleApiAvailability = mock<GoogleApiAvailability>()
+        `when`(service.googleApiAvailability).thenReturn(googleApiAvailability)
+        `when`(googleApiAvailability.isGooglePlayServicesAvailable(testContext)).thenReturn(ConnectionResult.SUCCESS)
 
         assertTrue(service.isServiceAvailable(testContext))
     }

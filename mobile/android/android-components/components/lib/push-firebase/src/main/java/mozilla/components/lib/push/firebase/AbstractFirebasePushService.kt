@@ -7,6 +7,7 @@ package mozilla.components.lib.push.firebase
 import android.content.Context
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
+import com.google.android.gms.common.util.VisibleForTesting
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
@@ -35,6 +36,10 @@ abstract class AbstractFirebasePushService(
 ) : FirebaseMessagingService(), PushService {
 
     private val logger = Logger("AbstractFirebasePushService")
+
+    @VisibleForTesting
+    internal val googleApiAvailability: GoogleApiAvailability
+        get() = GoogleApiAvailability.getInstance()
 
     /**
      * Initializes Firebase and starts the messaging service if not already started and enables auto-start as well.
@@ -78,7 +83,7 @@ abstract class AbstractFirebasePushService(
             PushProcessor.requireInstance.onMessageReceived(encryptedMessage)
         } catch (e: IllegalStateException) {
             // Re-throw 'requireInstance' exceptions.
-            throw(e)
+            throw (e)
         } catch (e: Exception) {
             PushProcessor.requireInstance.onError(PushError.Rust(e))
         }
@@ -106,6 +111,6 @@ abstract class AbstractFirebasePushService(
     }
 
     override fun isServiceAvailable(context: Context): Boolean {
-        return GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS
+        return googleApiAvailability.isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS
     }
 }
