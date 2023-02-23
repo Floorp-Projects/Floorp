@@ -240,9 +240,12 @@ impl MmapInner {
         self.len
     }
 
-    pub fn advise(&self, advice: Advice) -> io::Result<()> {
+    pub fn advise(&self, advice: Advice, offset: usize, len: usize) -> io::Result<()> {
+        let alignment = (self.ptr as usize + offset) % page_size();
+        let offset = offset as isize - alignment as isize;
+        let len = len + alignment;
         unsafe {
-            if libc::madvise(self.ptr, self.len, advice as i32) != 0 {
+            if libc::madvise(self.ptr.offset(offset), len, advice as i32) != 0 {
                 Err(io::Error::last_os_error())
             } else {
                 Ok(())

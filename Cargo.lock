@@ -342,7 +342,7 @@ dependencies = [
  "iovec",
  "libc",
  "log",
- "memmap2 0.5.8",
+ "memmap2 0.5.9",
  "mio 0.8.0",
  "scopeguard",
  "serde",
@@ -3197,7 +3197,7 @@ source = "git+https://github.com/jfkthame/mapped_hyph.git?rev=c7651a0cffff41996a
 dependencies = [
  "arrayref",
  "log",
- "memmap2 0.5.8",
+ "memmap2 0.5.9",
 ]
 
 [[package]]
@@ -3249,14 +3249,14 @@ checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
 name = "memmap2"
 version = "0.2.999"
 dependencies = [
- "memmap2 0.5.8",
+ "memmap2 0.5.9",
 ]
 
 [[package]]
 name = "memmap2"
-version = "0.5.8"
+version = "0.5.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b182332558b18d807c4ce1ca8ca983b34c3ee32765e47b3f0f69b90355cc1dc"
+checksum = "2af2c65375e552a67fe3829ca63e8a7c27a378a62824594f43b2851d682b5ec2"
 dependencies = [
  "libc",
 ]
@@ -3368,7 +3368,7 @@ dependencies = [
  "goblin",
  "libc",
  "mach2",
- "memmap2 0.5.8",
+ "memmap2 0.5.9",
  "memoffset 0.7.1",
  "minidump-common",
  "nix 0.25.1",
@@ -4327,7 +4327,7 @@ dependencies = [
 name = "profiler_helper"
 version = "0.1.0"
 dependencies = [
- "memmap2 0.5.8",
+ "memmap2 0.5.9",
  "object",
  "rustc-demangle",
  "thin-vec",
