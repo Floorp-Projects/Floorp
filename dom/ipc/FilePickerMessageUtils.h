@@ -15,7 +15,7 @@ template <>
 struct ParamTraits<nsIFilePicker::Mode>
     : public ContiguousEnumSerializerInclusive<
           nsIFilePicker::Mode, nsIFilePicker::Mode::modeOpen,
-          nsIFilePicker::Mode::modeGetFolder> {};
+          nsIFilePicker::Mode::modeOpenMultiple> {};
 
 template <>
 struct ParamTraits<nsIFilePicker::CaptureTarget>
