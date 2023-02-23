@@ -425,7 +425,8 @@ add_task(async function test_forceEnrollUpdatesMessages() {
 });
 
 add_task(async function test_emptyMessage() {
-  const experiment = ExperimentFakes.recipe("empty", {
+  const experiment = ExperimentFakes.recipe(`empty_${Date.now()}`, {
+    id: "empty",
     branches: [
       {
         slug: "a",
@@ -472,6 +473,60 @@ add_task(async function test_emptyMessage() {
     [],
     "ASRouter should have loaded zero messages"
   );
+
+  await cleanup();
+});
+
+add_task(async function test_multiMessageTreatment() {
+  const featureId = "cfr";
+  // Add an array of two messages to the first branch
+  const messages = [
+    { ...MESSAGE_CONTENT, id: "multi-message-1" },
+    { ...MESSAGE_CONTENT, id: "multi-message-2" },
+  ];
+  const recipe = ExperimentFakes.recipe(`multi-message_${Date.now()}`, {
+    id: `multi-message`,
+    bucketConfig: {
+      count: 100,
+      start: 0,
+      total: 100,
+      namespace: "mochitest",
+      randomizationUnit: "normandy_id",
+    },
+    branches: [
+      {
+        slug: "control",
+        ratio: 1,
+        features: [{ featureId, value: { template: "multi", messages } }],
+      },
+    ],
+  });
+  await ExperimentTestUtils.validateExperiment(recipe);
+
+  await setup(recipe);
+  await RemoteSettingsExperimentLoader.updateRecipes();
+  await BrowserTestUtils.waitForCondition(
+    () => ExperimentAPI.getExperiment({ featureId }),
+    "ExperimentAPI should return an experiment"
+  );
+
+  await ASRouter._updateMessageProviders();
+
+  const experimentsProvider = ASRouter.state.providers.find(
+    p => p.id === "messaging-experiments"
+  );
+
+  // Clear all messages
+  ASRouter.setState(() => ({ messages: [] }));
+
+  await ASRouter.loadMessagesFromAllProviders([experimentsProvider]);
+
+  for (let message of messages) {
+    Assert.ok(
+      ASRouter.state.messages.find(m => m.id === message.id),
+      "Experiment message found in ASRouter state"
+    );
+  }
 
   await cleanup();
 });

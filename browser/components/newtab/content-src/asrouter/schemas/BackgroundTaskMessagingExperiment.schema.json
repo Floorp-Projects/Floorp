@@ -3,28 +3,12 @@
   "$id": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json",
   "title": "Messaging Experiment",
   "description": "A Firefox Messaging System message.",
-  "allOf": [
+  "oneOf": [
     {
-      "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/Message"
+      "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/TemplatedMessage"
     },
     {
-      "if": {
-        "type": "object",
-        "properties": {
-          "template": {
-            "type": "string",
-            "enum": [
-              "toast_notification"
-            ]
-          }
-        },
-        "required": [
-          "template"
-        ]
-      },
-      "then": {
-        "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/ToastNotification"
-      }
+      "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/MultiMessage"
     }
   ],
   "$defs": {
@@ -268,6 +252,55 @@
         {
           "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/localizedText"
         }
+      ]
+    },
+    "TemplatedMessage": {
+      "description": "An FxMS message of one of a variety of types.",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/Message"
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "template": {
+                "type": "string",
+                "enum": [
+                  "toast_notification"
+                ]
+              }
+            },
+            "required": [
+              "template"
+            ]
+          },
+          "then": {
+            "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/ToastNotification"
+          }
+        }
+      ]
+    },
+    "MultiMessage": {
+      "description": "An object containing an array of messages.",
+      "type": "object",
+      "properties": {
+        "template": {
+          "type": "string",
+          "const": "multi"
+        },
+        "messages": {
+          "type": "array",
+          "description": "An array of messages.",
+          "items": {
+            "$ref": "resource://activity-stream/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/TemplatedMessage"
+          }
+        }
+      },
+      "required": [
+        "template",
+        "messages"
       ]
     }
   }

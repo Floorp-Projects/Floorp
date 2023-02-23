@@ -374,8 +374,8 @@ const MessageLoaderUtils = {
       : MESSAGING_EXPERIMENTS_DEFAULT_FEATURES;
     let experiments = [];
     for (const featureId of featureIds) {
-      let featureAPI = lazy.NimbusFeatures[featureId];
-      let experimentData = lazy.ExperimentAPI.getExperimentMetaData({
+      const featureAPI = lazy.NimbusFeatures[featureId];
+      const experimentData = lazy.ExperimentAPI.getExperimentMetaData({
         featureId,
       });
 
@@ -388,41 +388,56 @@ const MessageLoaderUtils = {
         continue;
       }
 
-      let message = featureAPI.getAllVariables();
+      const featureValue = featureAPI.getAllVariables();
 
-      if (message?.id) {
-        // Cache the Nimbus feature ID on the message because there is not a 1-1
-        // correspondance between templates and features. This is used when
-        // recording expose events (see |sendTriggerMessage|).
-        message._nimbusFeature = featureId;
-        experiments.push(message);
+      // If the value is a multi-message config, add each message in the
+      // messages array. Cache the Nimbus feature ID on each message, because
+      // there is not a 1-1 correspondance between templates and features.
+      // This is used when recording expose events (see |sendTriggerMessage|).
+      const messages =
+        featureValue?.template === "multi" &&
+        Array.isArray(featureValue.messages)
+          ? featureValue.messages
+          : [featureValue];
+      for (const message of messages) {
+        if (message?.id) {
+          message._nimbusFeature = featureId;
+          experiments.push(message);
+        }
       }
 
-      if (!REACH_EVENT_GROUPS.includes(featureId)) {
+      // Add Reach messages from unenrolled sibling branches, provided we are
+      // recording Reach events for this feature. If we are in a rollout, we do
+      // not have sibling branches.
+      if (!REACH_EVENT_GROUPS.includes(featureId) || !experimentData) {
         continue;
       }
 
-      // If we are in a rollout, we do not have sibling branches.
-      if (experimentData) {
-        // Check other sibling branches for triggers, add them to the return
-        // array if found any. The `forReachEvent` label is used to identify
-        // those branches so that they would only used to record the Reach
-        // event.
-        const branches =
-          (await lazy.ExperimentAPI.getAllBranches(experimentData.slug)) || [];
-        for (const branch of branches) {
-          let branchValue = branch[featureId].value;
-          if (
-            branch.slug !== experimentData.branch.slug &&
-            branchValue?.trigger
-          ) {
-            experiments.push({
-              forReachEvent: { sent: false, group: featureId },
-              experimentSlug: experimentData.slug,
-              branchSlug: branch.slug,
-              ...branchValue,
-            });
+      // Check other sibling branches for triggers, add them to the return array
+      // if found any. The `forReachEvent` label is used to identify those
+      // branches so that they would only be used to record the Reach event.
+      const branches =
+        (await lazy.ExperimentAPI.getAllBranches(experimentData.slug)) || [];
+      for (const branch of branches) {
+        let branchValue = branch[featureId].value;
+        if (!branchValue || branch.slug === experimentData.branch.slug) {
+          continue;
+        }
+        const branchMessages =
+          branchValue?.template === "multi" &&
+          Array.isArray(branchValue.messages)
+            ? branchValue.messages
+            : [branchValue];
+        for (const message of branchMessages) {
+          if (!message?.trigger) {
+            continue;
           }
+          experiments.push({
+            forReachEvent: { sent: false, group: featureId },
+            experimentSlug: experimentData.slug,
+            branchSlug: branch.slug,
+            ...message,
+          });
         }
       }
     }
