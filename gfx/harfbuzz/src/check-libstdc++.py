@@ -19,7 +19,7 @@ stat = 0
 tested = False
 
 # harfbuzz-icu links to libstdc++ because icu does.
-for soname in ['harfbuzz', 'harfbuzz-subset', 'harfbuzz-gobject']:
+for soname in ['harfbuzz', 'harfbuzz-subset', 'harfbuzz-gobject', 'harfbuzz-cairo']:
 	for suffix in ['so', 'dylib']:
 		so = os.path.join (libs, 'lib%s.%s' % (soname, suffix))
 		if not os.path.exists (so): continue

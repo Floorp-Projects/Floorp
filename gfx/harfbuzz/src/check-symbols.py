@@ -22,7 +22,7 @@ cxxfilt = shutil.which ('c++filt')
 tested = False
 stat = 0
 
-for soname in ['harfbuzz', 'harfbuzz-subset', 'harfbuzz-icu', 'harfbuzz-gobject']:
+for soname in ['harfbuzz', 'harfbuzz-subset', 'harfbuzz-icu', 'harfbuzz-gobject', 'harfbuzz-cairo']:
 	for suffix in ['so', 'dylib']:
 		so = os.path.join (builddir, libs, 'lib%s.%s' % (soname, suffix))
 		if not os.path.exists (so): continue
