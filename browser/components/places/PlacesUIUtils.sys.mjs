@@ -1172,7 +1172,7 @@ export var PlacesUIUtils = {
 
   /**
    * Loads the node's URL in the appropriate tab or window.
-   * see also URILoadingHelper's openWebLinkIn
+   * see also openUILinkIn
    *
    * @param {object} aNode
    *        An uri result node.
@@ -1840,17 +1840,21 @@ export var PlacesUIUtils = {
           );
           break;
         case "placesCmd_open:privatewindow":
-          window.openTrustedLinkIn(this.triggerNode.link, "window", {
+          window.openUILinkIn(this.triggerNode.link, "window", {
+            triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
             private: true,
           });
           break;
         case "placesCmd_open:window":
-          window.openTrustedLinkIn(this.triggerNode.link, "window", {
+          window.openUILinkIn(this.triggerNode.link, "window", {
+            triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
             private: false,
           });
           break;
         case "placesCmd_open:tab": {
-          window.openTrustedLinkIn(this.triggerNode.link, "tab");
+          window.openUILinkIn(this.triggerNode.link, "tab", {
+            triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+          });
         }
       }
     },

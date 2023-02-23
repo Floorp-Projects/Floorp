@@ -698,7 +698,12 @@ class SearchAddons extends HTMLElement {
 
     let browser = getBrowserElement();
     let chromewin = browser.ownerGlobal;
-    chromewin.openWebLinkIn(url, "tab");
+    chromewin.openLinkIn(url, "tab", {
+      fromChrome: true,
+      triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
+        {}
+      ),
+    });
 
     AMTelemetry.recordLinkEvent({
       object: "aboutAddons",
@@ -2709,7 +2714,13 @@ class AddonCard extends HTMLElement {
           break;
         case "contribute":
           this.recordActionEvent("contribute");
-          windowRoot.ownerGlobal.openWebLinkIn(addon.contributionURL, "tab");
+          // prettier-ignore
+          windowRoot.ownerGlobal.openUILinkIn(addon.contributionURL, "tab", {
+            triggeringPrincipal:
+              Services.scriptSecurityManager.createNullPrincipal(
+                {}
+              ),
+          });
           break;
         case "preferences":
           if (getOptionsType(addon) == "tab") {

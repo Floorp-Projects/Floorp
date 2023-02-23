@@ -139,7 +139,7 @@ class TextRecognitionModal {
     this.linkEl.addEventListener("click", event => {
       event.preventDefault();
       this.openLinkIn(this.linkEl.href, "tab", {
-        forceForeground: true,
+        fromChrome: true,
         triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       });
     });
