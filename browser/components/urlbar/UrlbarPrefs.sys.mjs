@@ -402,7 +402,16 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // when the user focuses the urlbar without typing anything. If false, the
   // user must type weather-related keywords to show weather suggestions.
   ["weather.zeroPrefix", true],
+
+  // Feature gate pref for trending suggestions in the urlbar.
+  ["trending.featureGate", false],
+
+  // Whether to only show trending results when the urlbar is in search
+  // mode or when the user initially opens the urlbar without selecting
+  // an engine.
+  ["trending.requireSearchMode", true],
 ]);
+
 const PREF_OTHER_DEFAULTS = new Map([
   ["browser.fixup.dns_first_for_single_words", false],
   ["browser.search.suggest.enabled", true],
