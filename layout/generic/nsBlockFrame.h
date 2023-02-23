@@ -126,19 +126,11 @@ class nsBlockFrame : public nsContainerFrame {
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
   const nsFrameList& GetChildList(ChildListID aListID) const override;
   void GetChildLists(nsTArray<ChildList>* aLists) const override;
-  nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
-  bool GetVerticalAlignBaseline(mozilla::WritingMode aWM,
-                                nscoord* aBaseline) const override {
-    NS_ASSERTION(!aWM.IsOrthogonalTo(GetWritingMode()),
-                 "You should only call this on frames with a WM that's "
-                 "parallel to aWM");
-    nscoord lastBaseline;
-    if (GetNaturalBaselineBOffset(aWM, BaselineSharingGroup::Last,
-                                  &lastBaseline)) {
-      *aBaseline = BSize() - lastBaseline;
-      return true;
-    }
-    return false;
+  nscoord SynthesizeFallbackBaseline(
+      mozilla::WritingMode aWM,
+      BaselineSharingGroup aBaselineGroup) const override;
+  BaselineSharingGroup GetDefaultBaselineSharingGroup() const override {
+    return BaselineSharingGroup::Last;
   }
   bool GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
                                  BaselineSharingGroup aBaselineGroup,

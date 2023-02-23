@@ -61,8 +61,9 @@ class nsCheckboxRadioFrame final : public nsAtomicContainerFrame,
                                mozilla::WidgetGUIEvent* aEvent,
                                nsEventStatus* aEventStatus) override;
 
-  virtual nscoord GetLogicalBaseline(
-      mozilla::WritingMode aWritingMode) const override;
+  bool GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
+                                 BaselineSharingGroup aBaselineGroup,
+                                 nscoord* aBaseline) const override;
 
   /**
    * Respond to the request to resize and/or reflow

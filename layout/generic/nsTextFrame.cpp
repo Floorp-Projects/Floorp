@@ -10704,9 +10704,16 @@ bool nsTextFrame::IsAtEndOfLine() const {
   return HasAnyStateBits(TEXT_END_OF_LINE);
 }
 
-nscoord nsTextFrame::GetLogicalBaseline(WritingMode aWM) const {
+bool nsTextFrame::GetNaturalBaselineBOffset(WritingMode aWM,
+                                            BaselineSharingGroup aBaselineGroup,
+                                            nscoord* aBaseline) const {
+  if (aBaselineGroup == BaselineSharingGroup::Last) {
+    return false;
+  }
+
   if (!aWM.IsOrthogonalTo(GetWritingMode())) {
-    return mAscent;
+    *aBaseline = mAscent;
+    return true;
   }
 
   // When the text frame has a writing mode orthogonal to the desired
@@ -10717,9 +10724,11 @@ nscoord nsTextFrame::GetLogicalBaseline(WritingMode aWM) const {
   if (aWM.IsVerticalRL()) {
     nscoord parentDescent = parent->GetSize().width - parentAscent;
     nscoord descent = parentDescent - position.x;
-    return GetSize().width - descent;
+    *aBaseline = GetSize().width - descent;
+  } else {
+    *aBaseline = parentAscent - (aWM.IsVertical() ? position.x : position.y);
   }
-  return parentAscent - (aWM.IsVertical() ? position.x : position.y);
+  return true;
 }
 
 bool nsTextFrame::HasAnyNoncollapsedCharacters() {

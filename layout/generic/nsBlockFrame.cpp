@@ -598,14 +598,13 @@ void nsBlockFrame::InvalidateFrameWithRect(const nsRect& aRect,
                                             aRebuildDisplayItems);
 }
 
-nscoord nsBlockFrame::GetLogicalBaseline(WritingMode aWM) const {
-  auto lastBaseline = BaselineBOffset(aWM, BaselineSharingGroup::Last,
-                                      AlignmentContext::Inline);
-  return BSize(aWM) - lastBaseline;
+nscoord nsBlockFrame::SynthesizeFallbackBaseline(
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
+  return SynthesizeBaselineBOffsetFromMarginBox(aWM, aBaselineGroup);
 }
 
 bool nsBlockFrame::GetNaturalBaselineBOffset(
-    mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
     nscoord* aBaseline) const {
   if (StyleDisplay()->IsContainLayout()) {
     return false;
@@ -620,8 +619,18 @@ bool nsBlockFrame::GetNaturalBaselineBOffset(
     if (line->IsBlock()) {
       nscoord offset;
       nsIFrame* kid = line->mFirstChild;
-      if (!aWM.IsOrthogonalTo(kid->GetWritingMode()) &&
-          kid->GetVerticalAlignBaseline(aWM, &offset)) {
+      if (aWM.IsOrthogonalTo(kid->GetWritingMode())) {
+        continue;
+      }
+      if (kid->IsTableWrapperFrame()) {
+        // `<table>` in block display context does not export any baseline.
+        continue;
+      }
+      const auto kidBaselineGroup = kid->GetDefaultBaselineSharingGroup();
+      if (kid->GetNaturalBaselineBOffset(aWM, kidBaselineGroup, &offset)) {
+        if (kidBaselineGroup == BaselineSharingGroup::Last) {
+          offset = kid->BSize(aWM) - offset;
+        }
         // Ignore relative positioning for baseline calculations.
         const nsSize& sz = line->mContainerSize;
         offset += kid->GetLogicalNormalPosition(aWM, sz).B(aWM);

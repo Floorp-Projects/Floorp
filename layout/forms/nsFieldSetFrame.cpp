@@ -834,36 +834,19 @@ a11y::AccType nsFieldSetFrame::AccessibleType() {
 }
 #endif
 
-nscoord nsFieldSetFrame::GetLogicalBaseline(WritingMode aWM) const {
+BaselineSharingGroup nsFieldSetFrame::GetDefaultBaselineSharingGroup() const {
   switch (StyleDisplay()->DisplayInside()) {
     case mozilla::StyleDisplayInside::Grid:
     case mozilla::StyleDisplayInside::Flex:
-      return BaselineBOffset(aWM, BaselineSharingGroup::First,
-                             AlignmentContext::Inline);
+      return BaselineSharingGroup::First;
     default:
-      return BSize(aWM) - BaselineBOffset(aWM, BaselineSharingGroup::Last,
-                                          AlignmentContext::Inline);
+      return BaselineSharingGroup::Last;
   }
 }
 
-bool nsFieldSetFrame::GetVerticalAlignBaseline(WritingMode aWM,
-                                               nscoord* aBaseline) const {
-  if (StyleDisplay()->IsContainLayout()) {
-    // If we are layout-contained, our child 'inner' should not
-    // affect how we calculate our baseline.
-    return false;
-  }
-  nsIFrame* inner = GetInner();
-  if (MOZ_UNLIKELY(!inner)) {
-    return false;
-  }
-  MOZ_ASSERT(!inner->GetWritingMode().IsOrthogonalTo(aWM));
-  if (!inner->GetVerticalAlignBaseline(aWM, aBaseline)) {
-    return false;
-  }
-  nscoord innerBStart = inner->BStart(aWM, GetSize());
-  *aBaseline += innerBStart;
-  return true;
+nscoord nsFieldSetFrame::SynthesizeFallbackBaseline(
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
+  return SynthesizeBaselineBOffsetFromMarginBox(aWM, aBaselineGroup);
 }
 
 bool nsFieldSetFrame::GetNaturalBaselineBOffset(

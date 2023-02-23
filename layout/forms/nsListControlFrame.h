@@ -55,6 +55,10 @@ class nsListControlFrame final : public nsHTMLScrollFrame,
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsListControlFrame)
 
+  bool GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
+                                 BaselineSharingGroup aBaselineGroup,
+                                 nscoord* aBaseline) const override;
+
   // nsIFrame
   nsresult HandleEvent(nsPresContext* aPresContext,
                        mozilla::WidgetGUIEvent* aEvent,

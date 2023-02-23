@@ -309,24 +309,8 @@ void nsHTMLButtonControlFrame::ReflowButtonContents(
   aButtonDesiredSize.SetOverflowAreasToDesiredBounds();
 }
 
-bool nsHTMLButtonControlFrame::GetVerticalAlignBaseline(
-    mozilla::WritingMode aWM, nscoord* aBaseline) const {
-  nsIFrame* inner = mFrames.FirstChild();
-  if (MOZ_UNLIKELY(inner->GetWritingMode().IsOrthogonalTo(aWM))) {
-    return false;
-  }
-  if (!inner->GetVerticalAlignBaseline(aWM, aBaseline)) {
-    // <input type=color> has an empty block frame as inner frame
-    *aBaseline = inner->SynthesizeBaselineBOffsetFromBorderBox(
-        aWM, BaselineSharingGroup::First);
-  }
-  nscoord innerBStart = inner->BStart(aWM, GetSize());
-  *aBaseline += innerBStart;
-  return true;
-}
-
 bool nsHTMLButtonControlFrame::GetNaturalBaselineBOffset(
-    mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
     nscoord* aBaseline) const {
   if (StyleDisplay()->IsContainLayout()) {
     return false;
@@ -348,6 +332,21 @@ bool nsHTMLButtonControlFrame::GetNaturalBaselineBOffset(
     *aBaseline += BSize(aWM) - (innerBStart + inner->BSize(aWM));
   }
   return true;
+}
+
+BaselineSharingGroup nsHTMLButtonControlFrame::GetDefaultBaselineSharingGroup()
+    const {
+  nsIFrame* firstKid = mFrames.FirstChild();
+
+  MOZ_ASSERT(firstKid, "Button should have a child frame for its contents");
+  MOZ_ASSERT(!firstKid->GetNextSibling(),
+             "Button should have exactly one child frame");
+  return firstKid->GetDefaultBaselineSharingGroup();
+}
+
+nscoord nsHTMLButtonControlFrame::SynthesizeFallbackBaseline(
+    mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
+  return SynthesizeBaselineBOffsetFromMarginBox(aWM, aBaselineGroup);
 }
 
 nsresult nsHTMLButtonControlFrame::SetFormProperty(nsAtom* aName,

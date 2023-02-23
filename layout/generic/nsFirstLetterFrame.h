@@ -60,8 +60,9 @@ class nsFirstLetterFrame final : public nsContainerFrame {
                       nsReflowStatus& aStatus) override;
 
   virtual bool CanContinueTextRun() const override;
-  virtual nscoord GetLogicalBaseline(
-      mozilla::WritingMode aWritingMode) const override;
+  bool GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
+                                 BaselineSharingGroup aBaselineGroup,
+                                 nscoord* aBaseline) const override;
   virtual LogicalSides GetLogicalSkipSides() const override;
 
   // override of nsFrame method
