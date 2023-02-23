@@ -16,6 +16,8 @@ fn join1() {
     run(future::try_join(ok::<i32, i32>(1), ok(2)).map_ok(move |v| tx.send(v).unwrap()));
     assert_eq!(rx.recv(), Ok((1, 2)));
     assert!(rx.recv().is_err());
+
+    std::thread::sleep(std::time::Duration::from_millis(500)); // wait for background threads closed: https://github.com/rust-lang/miri/issues/1371
 }
 
 #[test]
@@ -30,6 +32,8 @@ fn join2() {
     c2.send(2).unwrap();
     assert_eq!(rx.recv(), Ok((1, 2)));
     assert!(rx.recv().is_err());
+
+    std::thread::sleep(std::time::Duration::from_millis(500)); // wait for background threads closed: https://github.com/rust-lang/miri/issues/1371
 }
 
 #[test]
@@ -43,6 +47,8 @@ fn join3() {
     assert_eq!(rx.recv(), Ok(1));
     assert!(rx.recv().is_err());
     drop(c2);
+
+    std::thread::sleep(std::time::Duration::from_millis(500)); // wait for background threads closed: https://github.com/rust-lang/miri/issues/1371
 }
 
 #[test]
@@ -56,6 +62,8 @@ fn join4() {
     assert!(rx.recv().is_ok());
     drop(c2);
     assert!(rx.recv().is_err());
+
+    std::thread::sleep(std::time::Duration::from_millis(500)); // wait for background threads closed: https://github.com/rust-lang/miri/issues/1371
 }
 
 #[test]
@@ -73,6 +81,8 @@ fn join5() {
     c3.send(3).unwrap();
     assert_eq!(rx.recv(), Ok(((1, 2), 3)));
     assert!(rx.recv().is_err());
+
+    std::thread::sleep(std::time::Duration::from_millis(500)); // wait for background threads closed: https://github.com/rust-lang/miri/issues/1371
 }
 
 #[test]
@@ -92,6 +102,8 @@ fn select1() {
     c2.send(2).unwrap();
     assert_eq!(rx.recv(), Ok(2));
     assert!(rx.recv().is_err());
+
+    std::thread::sleep(std::time::Duration::from_millis(500)); // wait for background threads closed: https://github.com/rust-lang/miri/issues/1371
 }
 
 #[test]
@@ -111,6 +123,8 @@ fn select2() {
     c2.send(2).unwrap();
     assert_eq!(rx.recv(), Ok(2));
     assert!(rx.recv().is_err());
+
+    std::thread::sleep(std::time::Duration::from_millis(500)); // wait for background threads closed: https://github.com/rust-lang/miri/issues/1371
 }
 
 #[test]
@@ -130,6 +144,8 @@ fn select3() {
     drop(c2);
     assert_eq!(rx.recv(), Ok(2));
     assert!(rx.recv().is_err());
+
+    std::thread::sleep(std::time::Duration::from_millis(500)); // wait for background threads closed: https://github.com/rust-lang/miri/issues/1371
 }
 
 #[test]
@@ -158,4 +174,6 @@ fn select4() {
     drop(tx);
 
     t.join().unwrap();
+
+    std::thread::sleep(std::time::Duration::from_millis(500)); // wait for background threads closed: https://github.com/rust-lang/miri/issues/1371
 }

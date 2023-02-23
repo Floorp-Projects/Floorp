@@ -1513,8 +1513,7 @@ pub trait StreamExt: Stream {
     /// be immediately returned.
     ///
     /// If the underlying stream ended and only a partial vector was created,
-    /// it'll be returned. Additionally if an error happens from the underlying
-    /// stream then the currently buffered items will be yielded.
+    /// it will be returned.
     ///
     /// This method is only available when the `std` or `alloc` feature of this
     /// library is activated, and it is activated by default.

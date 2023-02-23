@@ -33,6 +33,9 @@ use self::ready_to_run_queue::{Dequeue, ReadyToRunQueue};
 
 /// A set of futures which may complete in any order.
 ///
+/// See [`FuturesOrdered`](crate::stream::FuturesOrdered) for a version of this
+/// type that preserves a FIFO order.
+///
 /// This structure is optimized to manage a large number of futures.
 /// Futures managed by [`FuturesUnordered`] will only be polled when they
 /// generate wake-up notifications. This reduces the required amount of work

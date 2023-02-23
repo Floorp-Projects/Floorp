@@ -61,7 +61,6 @@ pub(super) enum PopResult<T> {
     Inconsistent,
 }
 
-#[derive(Debug)]
 struct Node<T> {
     next: AtomicPtr<Self>,
     value: Option<T>,
@@ -70,7 +69,6 @@ struct Node<T> {
 /// The multi-producer single-consumer structure. This is not cloneable, but it
 /// may be safely shared so long as it is guaranteed that there is only one
 /// popper at a time (many pushers are allowed).
-#[derive(Debug)]
 pub(super) struct Queue<T> {
     head: AtomicPtr<Node<T>>,
     tail: UnsafeCell<*mut Node<T>>,

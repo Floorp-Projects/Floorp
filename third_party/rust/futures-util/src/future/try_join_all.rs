@@ -77,6 +77,20 @@ where
 /// This function is only available when the `std` or `alloc` feature of this
 /// library is activated, and it is activated by default.
 ///
+/// # See Also
+///
+/// `try_join_all` will switch to the more powerful [`FuturesOrdered`] for performance
+/// reasons if the number of futures is large. You may want to look into using it or
+/// it's counterpart [`FuturesUnordered`][crate::stream::FuturesUnordered] directly.
+///
+/// Some examples for additional functionality provided by these are:
+///
+///  * Adding new futures to the set even after it has been started.
+///
+///  * Only polling the specific futures that have been woken. In cases where
+///    you have a lot of futures this will result in much more efficient polling.
+///
+///
 /// # Examples
 ///
 /// ```

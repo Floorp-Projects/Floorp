@@ -149,6 +149,7 @@ pub unsafe trait UnsafeFutureObj<'a, T>: 'a {
     /// provided `*mut (dyn Future<Output = T> + 'a)` into a `Pin<&mut (dyn
     /// Future<Output = T> + 'a)>` and call methods on it, non-reentrantly,
     /// until `UnsafeFutureObj::drop` is called with it.
+    #[allow(clippy::unnecessary_safety_doc)]
     fn into_raw(self) -> *mut (dyn Future<Output = T> + 'a);
 
     /// Drops the future represented by the given fat pointer.

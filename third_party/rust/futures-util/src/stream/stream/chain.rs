@@ -50,8 +50,9 @@ where
             if let Some(item) = ready!(first.poll_next(cx)) {
                 return Poll::Ready(Some(item));
             }
+
+            this.first.set(None);
         }
-        this.first.set(None);
         this.second.poll_next(cx)
     }
 

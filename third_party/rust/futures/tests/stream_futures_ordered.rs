@@ -146,3 +146,27 @@ fn queue_never_unblocked() {
     assert!(stream.poll_next_unpin(cx).is_pending());
     assert!(stream.poll_next_unpin(cx).is_pending());
 }
+
+#[test]
+fn test_push_front_negative() {
+    let (a_tx, a_rx) = oneshot::channel::<i32>();
+    let (b_tx, b_rx) = oneshot::channel::<i32>();
+    let (c_tx, c_rx) = oneshot::channel::<i32>();
+
+    let mut stream = FuturesOrdered::new();
+
+    let mut cx = noop_context();
+
+    stream.push_front(a_rx);
+    stream.push_front(b_rx);
+    stream.push_front(c_rx);
+
+    a_tx.send(1).unwrap();
+    b_tx.send(2).unwrap();
+    c_tx.send(3).unwrap();
+
+    // These should all be recieved in reverse order
+    assert_eq!(Poll::Ready(Some(Ok(3))), stream.poll_next_unpin(&mut cx));
+    assert_eq!(Poll::Ready(Some(Ok(2))), stream.poll_next_unpin(&mut cx));
+    assert_eq!(Poll::Ready(Some(Ok(1))), stream.poll_next_unpin(&mut cx));
+}

@@ -94,13 +94,11 @@ mod queue;
 #[cfg(feature = "sink")]
 mod sink_impl;
 
-#[derive(Debug)]
 struct UnboundedSenderInner<T> {
     // Channel state shared between the sender and receiver.
     inner: Arc<UnboundedInner<T>>,
 }
 
-#[derive(Debug)]
 struct BoundedSenderInner<T> {
     // Channel state shared between the sender and receiver.
     inner: Arc<BoundedInner<T>>,
@@ -122,13 +120,11 @@ impl<T> Unpin for BoundedSenderInner<T> {}
 /// The transmission end of a bounded mpsc channel.
 ///
 /// This value is created by the [`channel`](channel) function.
-#[derive(Debug)]
 pub struct Sender<T>(Option<BoundedSenderInner<T>>);
 
 /// The transmission end of an unbounded mpsc channel.
 ///
 /// This value is created by the [`unbounded`](unbounded) function.
-#[derive(Debug)]
 pub struct UnboundedSender<T>(Option<UnboundedSenderInner<T>>);
 
 trait AssertKinds: Send + Sync + Clone {}
@@ -137,7 +133,6 @@ impl AssertKinds for UnboundedSender<u32> {}
 /// The receiving end of a bounded mpsc channel.
 ///
 /// This value is created by the [`channel`](channel) function.
-#[derive(Debug)]
 pub struct Receiver<T> {
     inner: Option<Arc<BoundedInner<T>>>,
 }
@@ -145,7 +140,6 @@ pub struct Receiver<T> {
 /// The receiving end of an unbounded mpsc channel.
 ///
 /// This value is created by the [`unbounded`](unbounded) function.
-#[derive(Debug)]
 pub struct UnboundedReceiver<T> {
     inner: Option<Arc<UnboundedInner<T>>>,
 }
@@ -261,7 +255,6 @@ impl fmt::Display for TryRecvError {
 
 impl std::error::Error for TryRecvError {}
 
-#[derive(Debug)]
 struct UnboundedInner<T> {
     // Internal channel state. Consists of the number of messages stored in the
     // channel as well as a flag signalling that the channel is closed.
@@ -277,7 +270,6 @@ struct UnboundedInner<T> {
     recv_task: AtomicWaker,
 }
 
-#[derive(Debug)]
 struct BoundedInner<T> {
     // Max buffer size of the channel. If `None` then the channel is unbounded.
     buffer: usize,
@@ -300,7 +292,7 @@ struct BoundedInner<T> {
 }
 
 // Struct representation of `Inner::state`.
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 struct State {
     // `true` when the channel is open
     is_open: bool,
@@ -324,7 +316,6 @@ const MAX_CAPACITY: usize = !(OPEN_MASK);
 const MAX_BUFFER: usize = MAX_CAPACITY >> 1;
 
 // Sent to the consumer to wake up blocked producers
-#[derive(Debug)]
 struct SenderTask {
     task: Option<Waker>,
     is_parked: bool,
@@ -947,6 +938,18 @@ impl<T> Drop for BoundedSenderInner<T> {
     }
 }
 
+impl<T> fmt::Debug for Sender<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Sender").field("closed", &self.is_closed()).finish()
+    }
+}
+
+impl<T> fmt::Debug for UnboundedSender<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("UnboundedSender").field("closed", &self.is_closed()).finish()
+    }
+}
+
 /*
  *
  * ===== impl Receiver =====
@@ -1075,6 +1078,14 @@ impl<T> Stream for Receiver<T> {
             }
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        if let Some(inner) = &self.inner {
+            decode_state(inner.state.load(SeqCst)).size_hint()
+        } else {
+            (0, Some(0))
+        }
+    }
 }
 
 impl<T> Drop for Receiver<T> {
@@ -1104,6 +1115,18 @@ impl<T> Drop for Receiver<T> {
                 }
             }
         }
+    }
+}
+
+impl<T> fmt::Debug for Receiver<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let closed = if let Some(ref inner) = self.inner {
+            decode_state(inner.state.load(SeqCst)).is_closed()
+        } else {
+            false
+        };
+
+        f.debug_struct("Receiver").field("closed", &closed).finish()
     }
 }
 
@@ -1207,6 +1230,14 @@ impl<T> Stream for UnboundedReceiver<T> {
             }
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        if let Some(inner) = &self.inner {
+            decode_state(inner.state.load(SeqCst)).size_hint()
+        } else {
+            (0, Some(0))
+        }
+    }
 }
 
 impl<T> Drop for UnboundedReceiver<T> {
@@ -1236,6 +1267,18 @@ impl<T> Drop for UnboundedReceiver<T> {
                 }
             }
         }
+    }
+}
+
+impl<T> fmt::Debug for UnboundedReceiver<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let closed = if let Some(ref inner) = self.inner {
+            decode_state(inner.state.load(SeqCst)).is_closed()
+        } else {
+            false
+        };
+
+        f.debug_struct("Receiver").field("closed", &closed).finish()
     }
 }
 
@@ -1284,6 +1327,14 @@ unsafe impl<T: Send> Sync for BoundedInner<T> {}
 impl State {
     fn is_closed(&self) -> bool {
         !self.is_open && self.num_messages == 0
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        if self.is_open {
+            (self.num_messages, None)
+        } else {
+            (self.num_messages, Some(self.num_messages))
+        }
     }
 }
 
