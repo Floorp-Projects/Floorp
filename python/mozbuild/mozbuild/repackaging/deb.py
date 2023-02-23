@@ -94,12 +94,6 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
         template_filenames = [
             filename for filename in template_dir_filenames if filename.endswith(".in")
         ]
-        plain_filenames = [
-            filename
-            for filename in template_dir_filenames
-            if not filename.endswith(".in")
-        ]
-
         for filename in template_filenames:
             with open(mozpath.join(template_dir, filename)) as f:
                 template = Template(f.read())
@@ -108,11 +102,10 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
             ) as f:
                 f.write(template.substitute(defines))
 
-        for filename in plain_filenames:
-            shutil.copy(
-                mozpath.join(template_dir, filename),
-                mozpath.join(extract_dir, "debian"),
-            )
+        _copy_plain_deb_config(
+            input_template_dir=template_dir,
+            source_dir=extract_dir,
+        )
 
         with open(
             mozpath.join(extract_dir, app_name.lower(), "is-packaged-app"), "w"
@@ -133,6 +126,22 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
 
     finally:
         shutil.rmtree(tmpdir)
+
+
+def _copy_plain_deb_config(input_template_dir, source_dir):
+    template_dir_filenames = os.listdir(input_template_dir)
+    plain_filenames = [
+        mozpath.basename(filename)
+        for filename in template_dir_filenames
+        if not filename.endswith(".in")
+    ]
+    os.makedirs(mozpath.join(source_dir, "debian"), exist_ok=True)
+
+    for filename in plain_filenames:
+        shutil.copy(
+            mozpath.join(input_template_dir, filename),
+            mozpath.join(source_dir, "debian", filename),
+        )
 
 
 def _inject_deb_distribution_folder(source_dir, app_name):
