@@ -222,7 +222,7 @@ impl Utf8PathBuf {
     #[must_use]
     pub fn as_path(&self) -> &Utf8Path {
         // SAFETY: every Utf8PathBuf constructor ensures that self is valid UTF-8
-        unsafe { Utf8Path::assume_utf8(&*self.0) }
+        unsafe { Utf8Path::assume_utf8(&self.0) }
     }
 
     /// Extends `self` with `path`.
@@ -1175,10 +1175,8 @@ impl Utf8Path {
     /// assert_eq!(path.canonicalize_utf8().unwrap(), Utf8PathBuf::from("/foo/test/bar.rs"));
     /// ```
     pub fn canonicalize_utf8(&self) -> io::Result<Utf8PathBuf> {
-        self.canonicalize().and_then(|path| {
-            path.try_into()
-                .map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err))
-        })
+        self.canonicalize()
+            .and_then(|path| path.try_into().map_err(FromPathBufError::into_io_error))
     }
 
     /// Reads a symbolic link, returning the file that the link points to.
@@ -1224,10 +1222,8 @@ impl Utf8Path {
     /// let path_link = path.read_link_utf8().expect("read_link call failed");
     /// ```
     pub fn read_link_utf8(&self) -> io::Result<Utf8PathBuf> {
-        self.read_link().and_then(|path| {
-            path.try_into()
-                .map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err))
-        })
+        self.read_link()
+            .and_then(|path| path.try_into().map_err(FromPathBufError::into_io_error))
     }
 
     /// Returns an iterator over the entries within a directory.
@@ -2488,12 +2484,23 @@ impl FromPathBufError {
         self.path
     }
 
-    /// Fetch a [`FromPathError`] for more about the conversion failure.
+    /// Fetches a [`FromPathError`] for more about the conversion failure.
     ///
     /// At the moment this struct does not contain any additional information, but is provided for
     /// completeness.
     pub fn from_path_error(&self) -> FromPathError {
         self.error
+    }
+
+    /// Converts self into a [`std::io::Error`] with kind
+    /// [`InvalidData`](io::ErrorKind::InvalidData).
+    ///
+    /// Many users of `FromPathBufError` will want to convert it into an `io::Error`. This is a
+    /// convenience method to do that.
+    pub fn into_io_error(self) -> io::Error {
+        // NOTE: we don't currently implement `From<FromPathBufError> for io::Error` because we want
+        // to ensure the user actually desires that conversion.
+        io::Error::new(io::ErrorKind::InvalidData, self)
     }
 }
 
@@ -2538,6 +2545,19 @@ impl error::Error for FromPathBufError {
 /// ```
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct FromPathError(());
+
+impl FromPathError {
+    /// Converts self into a [`std::io::Error`] with kind
+    /// [`InvalidData`](io::ErrorKind::InvalidData).
+    ///
+    /// Many users of `FromPathError` will want to convert it into an `io::Error`. This is a
+    /// convenience method to do that.
+    pub fn into_io_error(self) -> io::Error {
+        // NOTE: we don't currently implement `From<FromPathBufError> for io::Error` because we want
+        // to ensure the user actually desires that conversion.
+        io::Error::new(io::ErrorKind::InvalidData, self)
+    }
+}
 
 impl fmt::Display for FromPathError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -2587,7 +2607,7 @@ impl AsRef<Path> for Utf8Path {
 
 impl AsRef<Path> for Utf8PathBuf {
     fn as_ref(&self) -> &Path {
-        &*self.0
+        &self.0
     }
 }
 
