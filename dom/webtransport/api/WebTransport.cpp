@@ -362,8 +362,12 @@ void WebTransport::ResolveWaitingConnection(
 void WebTransport::RejectWaitingConnection(nsresult aRv,
                                            WebTransportChild* aChild) {
   LOG(("Rejected connection %p %x", this, (uint32_t)aRv));
-  // https://w3c.github.io/webtransport/#webtransport-constructor
-  // (initialize WebTransport over HTTP)
+  // https://w3c.github.io/webtransport/#initialize-webtransport-over-http
+
+  // Step 10: If connection is failure, then abort the remaining steps and
+  // queue a network task with transport to run these steps:
+  // Step 10.1: If transport.[[State]] is "closed" or "failed", then abort
+  // these steps.
 
   // Step 14: If the previous step fails, abort the remaining steps and
   // queue a network task with transport to run these steps:
@@ -371,16 +375,18 @@ void WebTransport::RejectWaitingConnection(nsresult aRv,
   // these steps.
   if (mState == WebTransportState::CLOSED ||
       mState == WebTransportState::FAILED) {
+    aChild->Shutdown(true);
+    // Cleanup should have been called, which means Ready has been
+    // rejected and pulls resolved
     return;
   }
 
   // Step 14.2: Let error be the result of creating a WebTransportError with
   // "session".
   RefPtr<WebTransportError> error = new WebTransportError(
-      "WebTransport session rejected"_ns, WebTransportErrorSource::Session);
+      "WebTransport connection rejected"_ns, WebTransportErrorSource::Session);
   // Step 14.3: Cleanup transport with error.
-  ErrorResult errorresult;
-  Cleanup(error, nullptr, errorresult);
+  Cleanup(error, nullptr, IgnoreErrors());
 
   // We never set mChild, but we need to prepare it to die
   aChild->Shutdown(true);
