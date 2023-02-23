@@ -593,13 +593,13 @@ async function test_http2_header(serverPort) {
 }
 
 // Test to make sure headers with invalid characters in the name are rejected
-async function test_http2_invalid_response_header(serverPort) {
+async function test_http2_invalid_response_header(serverPort, invalid_kind) {
   return new Promise(resolve => {
     var listener = new Http2CheckListener();
     listener.finish = resolve;
     listener.shouldSucceed = false;
     var chan = makeHTTPChannel(
-      `https://localhost:${serverPort}/invalid_response_header`
+      `https://localhost:${serverPort}/invalid_response_header/${invalid_kind}`
     );
     chan.asyncOpen(listener);
   });

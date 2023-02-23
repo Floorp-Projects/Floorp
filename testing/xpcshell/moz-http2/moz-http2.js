@@ -1842,12 +1842,19 @@ function handleRequest(req, res) {
     res.write("data reached");
     res.end();
     return;
-  }
+  } else if (u.pathname.startsWith("/invalid_response_header/")) {
+    // response headers with invalid characters in the name / value (RFC7540 Sec 10.3)
+    let kind = u.pathname.slice("/invalid_response_header/".length);
+    if (kind === "name_spaces") {
+      res.setHeader("With Spaces", "Hello");
+    } else if (kind === "value_line_feed") {
+      res.setHeader("invalid-header", "line\nfeed");
+    } else if (kind === "value_carriage_return") {
+      res.setHeader("invalid-header", "carriage\rreturn");
+    } else if (kind === "value_null") {
+      res.setHeader("invalid-header", "null\0");
+    }
 
-  // response headers with invalid characters in the name
-  else if (u.pathname === "/invalid_response_header") {
-    res.setHeader("With Spaces", "Hello");
-    res.setHeader("Without-Spaces", "World");
     res.writeHead(200);
     res.end("");
     return;
