@@ -349,8 +349,9 @@ impl<'data, 'file, Elf: FileHeader, R: ReadRef<'data>> ObjectSymbol<'data>
     fn kind(&self) -> SymbolKind {
         match self.symbol.st_type() {
             elf::STT_NOTYPE if self.index.0 == 0 => SymbolKind::Null,
+            elf::STT_NOTYPE => SymbolKind::Label,
             elf::STT_OBJECT | elf::STT_COMMON => SymbolKind::Data,
-            elf::STT_FUNC => SymbolKind::Text,
+            elf::STT_FUNC | elf::STT_GNU_IFUNC => SymbolKind::Text,
             elf::STT_SECTION => SymbolKind::Section,
             elf::STT_FILE => SymbolKind::File,
             elf::STT_TLS => SymbolKind::Tls,

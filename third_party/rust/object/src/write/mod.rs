@@ -615,9 +615,8 @@ impl StandardSection {
         match self {
             StandardSection::Text => SectionKind::Text,
             StandardSection::Data => SectionKind::Data,
-            StandardSection::ReadOnlyData | StandardSection::ReadOnlyDataWithRel => {
-                SectionKind::ReadOnlyData
-            }
+            StandardSection::ReadOnlyData => SectionKind::ReadOnlyData,
+            StandardSection::ReadOnlyDataWithRel => SectionKind::ReadOnlyDataWithRel,
             StandardSection::ReadOnlyString => SectionKind::ReadOnlyString,
             StandardSection::UninitializedData => SectionKind::UninitializedData,
             StandardSection::Tls => SectionKind::Tls,

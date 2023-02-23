@@ -576,6 +576,8 @@ pub const EM_BPF: u16 = 247;
 pub const EM_CSKY: u16 = 252;
 /// Loongson LoongArch
 pub const EM_LOONGARCH: u16 = 258;
+/// Solana Binary Format
+pub const EM_SBF: u16 = 263;
 /// Digital Alpha
 pub const EM_ALPHA: u16 = 0x9026;
 
@@ -4236,12 +4238,128 @@ pub const R_AARCH64_TLSDESC: u32 = 1031;
 /// STT_GNU_IFUNC relocation.
 pub const R_AARCH64_IRELATIVE: u32 = 1032;
 
+// AVR values for `FileHeader*::e_flags`.
+
+/// Bitmask for `EF_AVR_ARCH_*`.
+pub const EF_AVR_ARCH: u32 = 0x7F;
+
+/// If set, it is assumed that the elf file uses local symbols as reference
+/// for the relocations so that linker relaxation is possible.
+pub const EF_AVR_LINKRELAX_PREPARED: u32 = 0x80;
+
+#[allow(missing_docs)]
+pub const EF_AVR_ARCH_AVR1: u32 = 1;
+#[allow(missing_docs)]
+pub const EF_AVR_ARCH_AVR2: u32 = 2;
+#[allow(missing_docs)]
+pub const EF_AVR_ARCH_AVR25: u32 = 25;
+#[allow(missing_docs)]
+pub const EF_AVR_ARCH_AVR3: u32 = 3;
+#[allow(missing_docs)]
+pub const EF_AVR_ARCH_AVR31: u32 = 31;
+#[allow(missing_docs)]
+pub const EF_AVR_ARCH_AVR35: u32 = 35;
+#[allow(missing_docs)]
+pub const EF_AVR_ARCH_AVR4: u32 = 4;
+#[allow(missing_docs)]
+pub const EF_AVR_ARCH_AVR5: u32 = 5;
+#[allow(missing_docs)]
+pub const EF_AVR_ARCH_AVR51: u32 = 51;
+#[allow(missing_docs)]
+pub const EF_AVR_ARCH_AVR6: u32 = 6;
+#[allow(missing_docs)]
+pub const EF_AVR_ARCH_AVRTINY: u32 = 100;
+#[allow(missing_docs)]
+pub const EF_AVR_ARCH_XMEGA1: u32 = 101;
+#[allow(missing_docs)]
+pub const EF_AVR_ARCH_XMEGA2: u32 = 102;
+#[allow(missing_docs)]
+pub const EF_AVR_ARCH_XMEGA3: u32 = 103;
+#[allow(missing_docs)]
+pub const EF_AVR_ARCH_XMEGA4: u32 = 104;
+#[allow(missing_docs)]
+pub const EF_AVR_ARCH_XMEGA5: u32 = 105;
+#[allow(missing_docs)]
+pub const EF_AVR_ARCH_XMEGA6: u32 = 106;
+#[allow(missing_docs)]
+pub const EF_AVR_ARCH_XMEGA7: u32 = 107;
+
 // AVR values for `Rel*::r_type`.
 
+#[allow(missing_docs)]
+pub const R_AVR_NONE: u32 = 0;
 /// Direct 32 bit
 pub const R_AVR_32: u32 = 1;
+#[allow(missing_docs)]
+pub const R_AVR_7_PCREL: u32 = 2;
+#[allow(missing_docs)]
+pub const R_AVR_13_PCREL: u32 = 3;
 /// Direct 16 bit
 pub const R_AVR_16: u32 = 4;
+#[allow(missing_docs)]
+pub const R_AVR_16_PM: u32 = 5;
+#[allow(missing_docs)]
+pub const R_AVR_LO8_LDI: u32 = 6;
+#[allow(missing_docs)]
+pub const R_AVR_HI8_LDI: u32 = 7;
+#[allow(missing_docs)]
+pub const R_AVR_HH8_LDI: u32 = 8;
+#[allow(missing_docs)]
+pub const R_AVR_LO8_LDI_NEG: u32 = 9;
+#[allow(missing_docs)]
+pub const R_AVR_HI8_LDI_NEG: u32 = 10;
+#[allow(missing_docs)]
+pub const R_AVR_HH8_LDI_NEG: u32 = 11;
+#[allow(missing_docs)]
+pub const R_AVR_LO8_LDI_PM: u32 = 12;
+#[allow(missing_docs)]
+pub const R_AVR_HI8_LDI_PM: u32 = 13;
+#[allow(missing_docs)]
+pub const R_AVR_HH8_LDI_PM: u32 = 14;
+#[allow(missing_docs)]
+pub const R_AVR_LO8_LDI_PM_NEG: u32 = 15;
+#[allow(missing_docs)]
+pub const R_AVR_HI8_LDI_PM_NEG: u32 = 16;
+#[allow(missing_docs)]
+pub const R_AVR_HH8_LDI_PM_NEG: u32 = 17;
+#[allow(missing_docs)]
+pub const R_AVR_CALL: u32 = 18;
+#[allow(missing_docs)]
+pub const R_AVR_LDI: u32 = 19;
+#[allow(missing_docs)]
+pub const R_AVR_6: u32 = 20;
+#[allow(missing_docs)]
+pub const R_AVR_6_ADIW: u32 = 21;
+#[allow(missing_docs)]
+pub const R_AVR_MS8_LDI: u32 = 22;
+#[allow(missing_docs)]
+pub const R_AVR_MS8_LDI_NEG: u32 = 23;
+#[allow(missing_docs)]
+pub const R_AVR_LO8_LDI_GS: u32 = 24;
+#[allow(missing_docs)]
+pub const R_AVR_HI8_LDI_GS: u32 = 25;
+#[allow(missing_docs)]
+pub const R_AVR_8: u32 = 26;
+#[allow(missing_docs)]
+pub const R_AVR_8_LO8: u32 = 27;
+#[allow(missing_docs)]
+pub const R_AVR_8_HI8: u32 = 28;
+#[allow(missing_docs)]
+pub const R_AVR_8_HLO8: u32 = 29;
+#[allow(missing_docs)]
+pub const R_AVR_DIFF8: u32 = 30;
+#[allow(missing_docs)]
+pub const R_AVR_DIFF16: u32 = 31;
+#[allow(missing_docs)]
+pub const R_AVR_DIFF32: u32 = 32;
+#[allow(missing_docs)]
+pub const R_AVR_LDS_STS_16: u32 = 33;
+#[allow(missing_docs)]
+pub const R_AVR_PORT6: u32 = 34;
+#[allow(missing_docs)]
+pub const R_AVR_PORT5: u32 = 35;
+#[allow(missing_docs)]
+pub const R_AVR_32_PCREL: u32 = 36;
 
 // MSP430 values for `Rel*::r_type`.
 
@@ -6121,6 +6239,14 @@ pub const R_BPF_NONE: u32 = 0;
 pub const R_BPF_64_64: u32 = 1;
 #[allow(missing_docs)]
 pub const R_BPF_64_32: u32 = 10;
+
+// SBF values `Rel*::r_type`.
+/// No reloc
+pub const R_SBF_NONE: u32 = 0;
+#[allow(missing_docs)]
+pub const R_SBF_64_64: u32 = 1;
+#[allow(missing_docs)]
+pub const R_SBF_64_32: u32 = 10;
 
 // Imagination Meta values `Rel*::r_type`.
 
