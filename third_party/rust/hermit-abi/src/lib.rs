@@ -5,23 +5,21 @@
 #![allow(clippy::missing_safety_doc)]
 #![allow(clippy::result_unit_err)]
 
-extern crate libc;
-
+pub mod errno;
 pub mod tcplistener;
 pub mod tcpstream;
+
+use core::mem::MaybeUninit;
 
 use libc::c_void;
 
 // sysmbols, which are part of the library operating system
 
-extern "Rust" {
-	fn sys_secure_rand64() -> Option<u64>;
-	fn sys_secure_rand32() -> Option<u32>;
-}
-
 extern "C" {
 	fn sys_rand() -> u32;
 	fn sys_srand(seed: u32);
+	fn sys_secure_rand32(value: *mut u32) -> i32;
+	fn sys_secure_rand64(value: *mut u64) -> i32;
 	fn sys_get_processor_count() -> usize;
 	fn sys_malloc(size: usize, align: usize) -> *mut u8;
 	fn sys_realloc(ptr: *mut u8, size: usize, align: usize, new_size: usize) -> *mut u8;
@@ -34,6 +32,13 @@ extern "C" {
 	fn sys_read(fd: i32, buf: *mut u8, len: usize) -> isize;
 	fn sys_write(fd: i32, buf: *const u8, len: usize) -> isize;
 	fn sys_close(fd: i32) -> i32;
+	fn sys_futex_wait(
+		address: *mut u32,
+		expected: u32,
+		timeout: *const timespec,
+		flags: u32,
+	) -> i32;
+	fn sys_futex_wake(address: *mut u32, count: i32) -> i32;
 	fn sys_sem_init(sem: *mut *const c_void, value: u32) -> i32;
 	fn sys_sem_destroy(sem: *const c_void) -> i32;
 	fn sys_sem_post(sem: *const c_void) -> i32;
@@ -68,8 +73,10 @@ extern "C" {
 	fn sys_unlink(name: *const i8) -> i32;
 	fn sys_network_init() -> i32;
 	fn sys_block_current_task();
+	fn sys_block_current_task_with_timeout(timeout: u64);
 	fn sys_wakeup_task(tid: Tid);
 	fn sys_get_priority() -> u8;
+	fn sys_set_priority(tid: Tid, prio: u8);
 }
 
 /// A thread handle type
@@ -101,6 +108,7 @@ pub const LOW_PRIO: Priority = Priority::from(1);
 pub struct Handle(usize);
 
 pub const NSEC_PER_SEC: u64 = 1_000_000_000;
+pub const FUTEX_RELATIVE_TIMEOUT: u32 = 1;
 pub const CLOCK_REALTIME: u64 = 1;
 pub const CLOCK_MONOTONIC: u64 = 4;
 pub const STDIN_FILENO: libc::c_int = 0;
@@ -119,7 +127,7 @@ pub fn isatty(_fd: libc::c_int) -> bool {
 	false
 }
 
-/// intialize the network stack
+/// initialize the network stack
 pub fn network_init() -> i32 {
 	unsafe { sys_network_init() }
 }
@@ -243,6 +251,33 @@ pub unsafe fn write(fd: i32, buf: *const u8, len: usize) -> isize {
 #[inline(always)]
 pub unsafe fn close(fd: i32) -> i32 {
 	sys_close(fd)
+}
+
+/// If the value at address matches the expected value, park the current thread until it is either
+/// woken up with [`futex_wake`] (returns 0) or an optional timeout elapses (returns -ETIMEDOUT).
+///
+/// Setting `timeout` to null means the function will only return if [`futex_wake`] is called.
+/// Otherwise, `timeout` is interpreted as an absolute time measured with [`CLOCK_MONOTONIC`].
+/// If [`FUTEX_RELATIVE_TIMEOUT`] is set in `flags` the timeout is understood to be relative
+/// to the current time.
+///
+/// Returns -EINVAL if `address` is null, the timeout is negative or `flags` contains unknown values.
+#[inline(always)]
+pub unsafe fn futex_wait(
+	address: *mut u32,
+	expected: u32,
+	timeout: *const timespec,
+	flags: u32,
+) -> i32 {
+	sys_futex_wait(address, expected, timeout, flags)
+}
+
+/// Wake `count` threads waiting on the futex at `address`. Returns the number of threads
+/// woken up (saturates to `i32::MAX`). If `count` is `i32::MAX`, wake up all matching
+/// waiting threads. If `count` is negative or `address` is null, returns -EINVAL.
+#[inline(always)]
+pub unsafe fn futex_wake(address: *mut u32, count: i32) -> i32 {
+	sys_futex_wake(address, count)
 }
 
 /// sem_init() initializes the unnamed semaphore at the address
@@ -459,7 +494,9 @@ pub unsafe fn srand(seed: u32) {
 /// the function returns `None`.
 #[inline(always)]
 pub unsafe fn secure_rand32() -> Option<u32> {
-	sys_secure_rand32()
+	let mut rand = MaybeUninit::uninit();
+	let res = sys_secure_rand32(rand.as_mut_ptr());
+	(res == 0).then(|| rand.assume_init())
 }
 
 /// Create a cryptographicly secure 64bit random number with the support of
@@ -467,14 +504,25 @@ pub unsafe fn secure_rand32() -> Option<u32> {
 /// the function returns `None`.
 #[inline(always)]
 pub unsafe fn secure_rand64() -> Option<u64> {
-	sys_secure_rand64()
+	let mut rand = MaybeUninit::uninit();
+	let res = sys_secure_rand64(rand.as_mut_ptr());
+	(res == 0).then(|| rand.assume_init())
 }
 
-/// Add current task to the queue of blocked tasl. After calling `block_current_task`,
+/// Add current task to the queue of blocked tasks. After calling `block_current_task`,
 /// call `yield_now` to switch to another task.
 #[inline(always)]
 pub unsafe fn block_current_task() {
 	sys_block_current_task();
+}
+
+/// Add current task to the queue of blocked tasks, but wake it when `timeout` milliseconds
+/// have elapsed.
+///
+/// After calling `block_current_task`, call `yield_now` to switch to another task.
+#[inline(always)]
+pub unsafe fn block_current_task_with_timeout(timeout: u64) {
+	sys_block_current_task_with_timeout(timeout);
 }
 
 /// Wakeup task with the thread id `tid`
@@ -487,4 +535,10 @@ pub unsafe fn wakeup_task(tid: Tid) {
 #[inline(always)]
 pub unsafe fn get_priority() -> Priority {
 	Priority::from(sys_get_priority())
+}
+
+/// Determine the priority of the current thread
+#[inline(always)]
+pub unsafe fn set_priority(tid: Tid, prio: Priority) {
+	sys_set_priority(tid, prio.into());
 }

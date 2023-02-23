@@ -1,3 +1,9 @@
+## v1.15.0
+
+### Fixes
+
+- update hermit-abi
+
 ## v1.14.0
 
 ### Features
