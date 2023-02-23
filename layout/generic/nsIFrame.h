@@ -81,6 +81,7 @@
 #include "nsDisplayItemTypes.h"
 #include "nsPresContext.h"
 #include "nsTHashSet.h"
+#include "Baseline.h"
 
 #ifdef ACCESSIBILITY
 #  include "mozilla/a11y/AccTypes.h"
@@ -346,13 +347,6 @@ class nsReflowStatus final {
 std::ostream& operator<<(std::ostream& aStream, const nsReflowStatus& aStatus);
 
 namespace mozilla {
-
-// https://drafts.csswg.org/css-align-3/#baseline-sharing-group
-enum class BaselineSharingGroup {
-  // NOTE Used as an array index so must be 0 and 1.
-  First = 0,
-  Last = 1,
-};
 
 // Loosely: https://drafts.csswg.org/css-align-3/#shared-alignment-context
 enum class AlignmentContext {
@@ -1530,50 +1524,6 @@ class nsIFrame : public nsQueryFrame {
   nscoord GetLogicalBaseline(mozilla::WritingMode aWM) const;
   nscoord GetLogicalBaseline(mozilla::WritingMode aWM,
                              BaselineSharingGroup aBaselineGroup) const;
-
-  /**
-   * Synthesize a first(last) inline-axis baseline based on our margin-box.
-   * An alphabetical baseline is at the start(end) edge and a central baseline
-   * is at the center of our block-axis margin-box (aWM tells which to use).
-   * https://drafts.csswg.org/css-align-3/#synthesize-baselines
-   * @note You should only call this on frames with a WM that's parallel to aWM.
-   * @param aWM the writing-mode of the alignment context
-   * @return an offset from our border-box block-axis start(end) edge for
-   * a first(last) baseline respectively
-   * (implemented in nsIFrameInlines.h)
-   */
-  inline nscoord SynthesizeBaselineBOffsetFromMarginBox(
-      mozilla::WritingMode aWM, BaselineSharingGroup aGroup) const;
-
-  /**
-   * Synthesize a first(last) inline-axis baseline based on our border-box.
-   * An alphabetical baseline is at the start(end) edge and a central baseline
-   * is at the center of our block-axis border-box (aWM tells which to use).
-   * https://drafts.csswg.org/css-align-3/#synthesize-baselines
-   * @note The returned value is only valid when reflow is not needed.
-   * @note You should only call this on frames with a WM that's parallel to aWM.
-   * @param aWM the writing-mode of the alignment context
-   * @return an offset from our border-box block-axis start(end) edge for
-   * a first(last) baseline respectively
-   * (implemented in nsIFrameInlines.h)
-   */
-  inline nscoord SynthesizeBaselineBOffsetFromBorderBox(
-      mozilla::WritingMode aWM, BaselineSharingGroup aGroup) const;
-
-  /**
-   * Synthesize a first(last) inline-axis baseline based on our content-box.
-   * An alphabetical baseline is at the start(end) edge and a central baseline
-   * is at the center of our block-axis content-box (aWM tells which to use).
-   * https://drafts.csswg.org/css-align-3/#synthesize-baselines
-   * @note The returned value is only valid when reflow is not needed.
-   * @note You should only call this on frames with a WM that's parallel to aWM.
-   * @param aWM the writing-mode of the alignment context
-   * @return an offset from our border-box block-axis start(end) edge for
-   * a first(last) baseline respectively
-   * (implemented in nsIFrameInlines.h)
-   */
-  inline nscoord SynthesizeBaselineBOffsetFromContentBox(
-      mozilla::WritingMode aWM, BaselineSharingGroup aGroup) const;
 
   /**
    * Return true if the frame has a first(last) inline-axis baseline per

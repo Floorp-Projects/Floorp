@@ -24,6 +24,7 @@
 #include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleConsts.h"
+#include "Baseline.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -846,7 +847,7 @@ BaselineSharingGroup nsFieldSetFrame::GetDefaultBaselineSharingGroup() const {
 
 nscoord nsFieldSetFrame::SynthesizeFallbackBaseline(
     WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
-  return SynthesizeBaselineBOffsetFromMarginBox(aWM, aBaselineGroup);
+  return Baseline::SynthesizeBOffsetFromMarginBox(this, aWM, aBaselineGroup);
 }
 
 bool nsFieldSetFrame::GetNaturalBaselineBOffset(

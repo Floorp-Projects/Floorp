@@ -152,6 +152,7 @@
 #include "nsTransitionManager.h"
 #include "nsView.h"
 #include "nsViewManager.h"
+#include "Baseline.h"
 #include "prenv.h"
 #include "RegionBuilder.h"
 #include "RetainedDisplayListBuilder.h"
@@ -5794,8 +5795,8 @@ bool nsLayoutUtils::GetFirstLinePosition(WritingMode aWM,
                0)) {
         // empty grid/flex/table container
         aResult->mBStart = 0;
-        aResult->mBaseline = aFrame->SynthesizeBaselineBOffsetFromBorderBox(
-            aWM, BaselineSharingGroup::First);
+        aResult->mBaseline = Baseline::SynthesizeBOffsetFromBorderBox(
+            aFrame, aWM, BaselineSharingGroup::First);
         aResult->mBEnd = aFrame->BSize(aWM);
         return true;
       }

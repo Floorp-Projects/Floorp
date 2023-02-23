@@ -38,6 +38,7 @@
 #include "nsPresContext.h"
 #include "nsReadableUtils.h"
 #include "nsTableWrapperFrame.h"
+#include "Baseline.h"
 
 using namespace mozilla;
 
@@ -9592,7 +9593,7 @@ nscoord nsGridContainerFrame::SynthesizeBaseline(
           child->GetNaturalBaselineBOffset(childWM, aGroup, &baseline);
       if (!result) {
         baseline =
-            child->SynthesizeBaselineBOffsetFromBorderBox(childWM, aGroup);
+            Baseline::SynthesizeBOffsetFromBorderBox(child, childWM, aGroup);
       }
     } else {
       baseline = ::SynthesizeBaselineFromBorderBox(aGroup, childWM, size);
