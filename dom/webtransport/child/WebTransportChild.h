@@ -23,7 +23,7 @@ class WebTransportChild : public PWebTransportChild {
 
   virtual void CloseAll();
 
-  virtual void Shutdown();
+  void Shutdown(bool aClose);
 
   ::mozilla::ipc::IPCResult RecvCloseAll(CloseAllResolver&& aResolver);
 
