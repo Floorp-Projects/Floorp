@@ -138,6 +138,7 @@ class BrowserToolbarCFRPresenterTest {
         val presenter = createPresenter(
             settings = mockk {
                 every { shouldShowTotalCookieProtectionCFR } returns false
+                every { shouldShowCookieBannerReEngagementDialog() } returns false
             },
         )
 
@@ -193,7 +194,10 @@ class BrowserToolbarCFRPresenterTest {
         context: Context = mockk(),
         anchor: View = mockk(),
         browserStore: BrowserStore = mockk(),
-        settings: Settings = mockk { every { shouldShowTotalCookieProtectionCFR } returns true },
+        settings: Settings = mockk {
+            every { shouldShowTotalCookieProtectionCFR } returns true
+            every { shouldShowCookieBannerReEngagementDialog() } returns false
+        },
         toolbar: BrowserToolbar = mockk(),
         sessionId: String? = null,
     ) = spyk(createPresenter(context, anchor, browserStore, settings, toolbar, sessionId)) {
@@ -211,7 +215,10 @@ class BrowserToolbarCFRPresenterTest {
         },
         anchor: View = mockk(),
         browserStore: BrowserStore = mockk(),
-        settings: Settings = mockk(relaxed = true) { every { shouldShowTotalCookieProtectionCFR } returns true },
+        settings: Settings = mockk(relaxed = true) {
+            every { shouldShowTotalCookieProtectionCFR } returns true
+            every { shouldShowCookieBannerReEngagementDialog() } returns false
+        },
         toolbar: BrowserToolbar = mockk {
             every { findViewById<View>(R.id.mozac_browser_toolbar_security_indicator) } returns anchor
         },

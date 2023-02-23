@@ -12,14 +12,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.getColor
-import androidx.navigation.findNavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.transformWhile
 import mozilla.components.browser.state.selector.findCustomTabOrSelectedTab
-import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.compose.cfr.CFRPopup
@@ -32,7 +30,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.SupportUtils.SumoTopic.TOTAL_COOKIE_PROTECTION
-import org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.dialog.CookieBannerReEngagementDialogUtils
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.Settings
 
@@ -40,6 +37,11 @@ import org.mozilla.fenix.utils.Settings
  * Vertical padding needed to improve the visual alignment of the popup and respect the UX design.
  */
 private const val CFR_TO_ANCHOR_VERTICAL_PADDING = -6
+
+/**
+ * The minimum number of opened tabs to show the CFR.
+ */
+private const val CRF_MINIMUM_NUMBER_OPENED_TABS = 5
 
 /**
  * Delegate for handling all the business logic for showing CFRs in the toolbar.
@@ -68,7 +70,7 @@ class BrowserToolbarCFRPresenter(
      */
     @Suppress("MagicNumber")
     fun start() {
-        if (settings.shouldShowTotalCookieProtectionCFR) {
+        if (shouldShowCFR()) {
             tcpCfrScope = browserStore.flowScoped { flow ->
                 flow
                     .mapNotNull { it.findCustomTabOrSelectedTab(sessionId)?.content?.progress }
@@ -84,6 +86,13 @@ class BrowserToolbarCFRPresenter(
                     }
             }
         }
+    }
+
+    private fun shouldShowCFR(): Boolean {
+        return settings.shouldShowTotalCookieProtectionCFR && (
+            !settings.shouldShowCookieBannerReEngagementDialog() ||
+                settings.openTabsCount >= CRF_MINIMUM_NUMBER_OPENED_TABS
+            )
     }
 
     /**
@@ -119,7 +128,6 @@ class BrowserToolbarCFRPresenter(
                     true -> TrackingProtection.tcpCfrExplicitDismissal.record(NoExtras())
                     false -> TrackingProtection.tcpCfrImplicitDismissal.record(NoExtras())
                 }
-                tryToShowCookieBannerDialogIfNeeded()
             },
             text = {
                 FirefoxTheme {
@@ -156,17 +164,6 @@ class BrowserToolbarCFRPresenter(
             tcpCfrPopup = this
             show()
             TrackingProtection.tcpCfrShown.record(NoExtras())
-        }
-    }
-
-    @VisibleForTesting
-    internal fun tryToShowCookieBannerDialogIfNeeded() {
-        browserStore.state.selectedTab?.let { tab ->
-            CookieBannerReEngagementDialogUtils.tryToShowReEngagementDialog(
-                settings = settings,
-                status = tab.cookieBanner,
-                navController = toolbar.findNavController(),
-            )
         }
     }
 }

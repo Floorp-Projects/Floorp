@@ -29,6 +29,7 @@ class ContextualHintsTest {
         isTCPCFREnabled = true,
         isPocketEnabled = false,
         isRecentlyVisitedFeatureEnabled = false,
+        isCookieBannerReductionDialogEnabled = false,
     )
 
     @Before
