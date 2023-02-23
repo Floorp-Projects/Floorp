@@ -244,7 +244,7 @@ void FetchEventOpProxyChild::ActorDestroy(ActorDestroyReason) {
   }
 
   if (mPreloadResponseEndPromise) {
-    ResponseEndArgs args(FetchDriverObserver::eAborted, Nothing());
+    ResponseEndArgs args(FetchDriverObserver::eAborted);
     mPreloadResponseEndPromise->Resolve(args, __func__);
   }
 
