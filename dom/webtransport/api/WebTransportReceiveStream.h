@@ -4,36 +4,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef DOM_WEBTRANSPORT_API_WEBTRANSPORTSENDSTREAM__H_
-#define DOM_WEBTRANSPORT_API_WEBTRANSPORTSENDSTREAM__H_
+#ifndef DOM_WEBTRANSPORT_API_WEBTRANSPORTRECEIVESTREAM__H_
+#define DOM_WEBTRANSPORT_API_WEBTRANSPORTRECEIVESTREAM__H_
 
 #include "mozilla/dom/ReadableStream.h"
 
-#if WEBTRANSPORT_STREAM_IMPLEMENTED
 namespace mozilla::dom {
+
 class WebTransportReceiveStream final : public ReadableStream {
- protected:
-  WebTransportReceiveStream();
-
  public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(WebTransportReceiveStream,
-                                           ReadableStream)
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(WebTransportReceiveStream,
+                                       ReadableStream)
 
+  explicit WebTransportReceiveStream(nsIGlobalObject* aGlobal);
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY static already_AddRefed<WebTransportReceiveStream>
+  Create(WebTransport* aWebTransport, nsIGlobalObject* aGlobal,
+         mozilla::ipc::DataPipeReceiver* receiver, ErrorResult& aRv);
+
+  // WebIDL Boilerplate
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
+
+  // WebIDL Interface
   already_AddRefed<Promise> GetStats();
-};
-#else
-namespace mozilla::dom {
-class WebTransportReceiveStream final : public nsISupports {
- protected:
-  WebTransportReceiveStream();
 
- public:
-  NS_DECL_ISUPPORTS
-
-  already_AddRefed<Promise> GetStats();
+ private:
+  ~WebTransportReceiveStream() override = default;
 };
-#endif
 }
 
 #endif
