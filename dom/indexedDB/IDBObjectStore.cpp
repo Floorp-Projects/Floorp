@@ -772,21 +772,6 @@ RefPtr<IDBRequest> IDBObjectStore::AddOrPut(JSContext* aCx,
                 return FileAddInfo{fileActor, StructuredCloneFileBase::eBlob};
               }
 
-              case StructuredCloneFileBase::eMutableFile: {
-                MOZ_ASSERT(file.HasMutableFile());
-                MOZ_ASSERT(!file.HasBlob());
-
-                PBackgroundMutableFileChild* const mutableFileActor =
-                    file.MutableFile().GetBackgroundActor();
-                if (NS_WARN_IF(!mutableFileActor)) {
-                  IDB_REPORT_INTERNAL_ERR();
-                  return Err(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-                }
-
-                return FileAddInfo{mutableFileActor,
-                                   StructuredCloneFileBase::eMutableFile};
-              }
-
               case StructuredCloneFileBase::eWasmBytecode:
               case StructuredCloneFileBase::eWasmCompiled: {
                 MOZ_ASSERT(file.HasBlob());

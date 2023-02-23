@@ -340,13 +340,13 @@ auto DeserializeStructuredCloneFiles(
             aForPreprocess,
             serializedFile.type() == StructuredCloneFileBase::eStructuredClone);
 
-        const BlobOrMutableFile& blobOrMutableFile = serializedFile.file();
+        const NullableBlob& blob = serializedFile.file();
 
         switch (serializedFile.type()) {
           case StructuredCloneFileBase::eBlob: {
-            MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::TIPCBlob);
+            MOZ_ASSERT(blob.type() == NullableBlob::TIPCBlob);
 
-            const IPCBlob& ipcBlob = blobOrMutableFile.get_IPCBlob();
+            const IPCBlob& ipcBlob = blob.get_IPCBlob();
 
             const RefPtr<BlobImpl> blobImpl =
                 IPCBlobUtils::Deserialize(ipcBlob);
@@ -359,45 +359,11 @@ auto DeserializeStructuredCloneFiles(
             return {StructuredCloneFileBase::eBlob, std::move(blob)};
           }
 
-          case StructuredCloneFileBase::eMutableFile: {
-            MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t ||
-                       blobOrMutableFile.type() ==
-                           BlobOrMutableFile::TPBackgroundMutableFileChild);
-
-            switch (blobOrMutableFile.type()) {
-              case BlobOrMutableFile::Tnull_t:
-                return StructuredCloneFileChild{
-                    StructuredCloneFileBase::eMutableFile};
-
-              case BlobOrMutableFile::TPBackgroundMutableFileChild: {
-                auto* const actor = static_cast<BackgroundMutableFileChild*>(
-                    blobOrMutableFile.get_PBackgroundMutableFileChild());
-                MOZ_ASSERT(actor);
-
-                actor->EnsureDOMObject();
-
-                auto* const mutableFile =
-                    static_cast<IDBMutableFile*>(actor->GetDOMObject());
-                MOZ_ASSERT(mutableFile);
-
-                auto file = StructuredCloneFileChild{mutableFile};
-
-                actor->ReleaseDOMObject();
-
-                return file;
-              }
-
-              default:
-                MOZ_CRASH("Should never get here!");
-            }
-          }
-
           case StructuredCloneFileBase::eStructuredClone: {
             if (aForPreprocess) {
-              MOZ_ASSERT(blobOrMutableFile.type() ==
-                         BlobOrMutableFile::TIPCBlob);
+              MOZ_ASSERT(blob.type() == NullableBlob::TIPCBlob);
 
-              const IPCBlob& ipcBlob = blobOrMutableFile.get_IPCBlob();
+              const IPCBlob& ipcBlob = blob.get_IPCBlob();
 
               const RefPtr<BlobImpl> blobImpl =
                   IPCBlobUtils::Deserialize(ipcBlob);
@@ -410,22 +376,24 @@ auto DeserializeStructuredCloneFiles(
               return {StructuredCloneFileBase::eStructuredClone,
                       std::move(blob)};
             }
-            MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t);
+            MOZ_ASSERT(blob.type() == NullableBlob::Tnull_t);
 
             return StructuredCloneFileChild{
                 StructuredCloneFileBase::eStructuredClone};
           }
 
+          case StructuredCloneFileBase::eMutableFile:
           case StructuredCloneFileBase::eWasmBytecode:
           case StructuredCloneFileBase::eWasmCompiled: {
-            MOZ_ASSERT(blobOrMutableFile.type() == BlobOrMutableFile::Tnull_t);
+            MOZ_ASSERT(blob.type() == NullableBlob::Tnull_t);
 
             return StructuredCloneFileChild{serializedFile.type()};
 
             // Don't set mBlob, support for storing WebAssembly.Modules has been
             // removed in bug 1469395. Support for de-serialization of
-            // WebAssembly.Modules has been removed in bug 1561876. Full removal
-            // is tracked in bug 1487479.
+            // WebAssembly.Modules has been removed in bug 1561876. Support for
+            // MutableFile has been removed in bug 1500343. Full removal is
+            // tracked in bug 1487479.
           }
 
           default:
@@ -1272,22 +1240,6 @@ BackgroundDatabaseChild::RecvPBackgroundIDBVersionChangeTransactionConstructor(
   return IPC_OK();
 }
 
-PBackgroundMutableFileChild*
-BackgroundDatabaseChild::AllocPBackgroundMutableFileChild(
-    const nsString& aName, const nsString& aType) const {
-  AssertIsOnOwningThread();
-
-  return new BackgroundMutableFileChild(aName, aType);
-}
-
-bool BackgroundDatabaseChild::DeallocPBackgroundMutableFileChild(
-    PBackgroundMutableFileChild* aActor) {
-  MOZ_ASSERT(aActor);
-
-  delete static_cast<BackgroundMutableFileChild*>(aActor);
-  return true;
-}
-
 mozilla::ipc::IPCResult BackgroundDatabaseChild::RecvVersionChange(
     const uint64_t aOldVersion, const Maybe<uint64_t> aNewVersion) {
   AssertIsOnOwningThread();
@@ -1634,81 +1586,6 @@ bool BackgroundVersionChangeTransactionChild::DeallocPBackgroundIDBCursorChild(
 
   delete aActor;
   return true;
-}
-
-/*******************************************************************************
- * BackgroundMutableFileChild
- ******************************************************************************/
-
-BackgroundMutableFileChild::BackgroundMutableFileChild(const nsAString& aName,
-                                                       const nsAString& aType)
-    : mMutableFile(nullptr), mName(aName), mType(aType) {
-  // Can't assert owning thread here because IPDL has not yet set our manager!
-  MOZ_COUNT_CTOR(indexedDB::BackgroundMutableFileChild);
-}
-
-BackgroundMutableFileChild::~BackgroundMutableFileChild() {
-  MOZ_COUNT_DTOR(indexedDB::BackgroundMutableFileChild);
-}
-
-#ifdef DEBUG
-
-void BackgroundMutableFileChild::AssertIsOnOwningThread() const {
-  static_cast<BackgroundDatabaseChild*>(Manager())->AssertIsOnOwningThread();
-}
-
-#endif  // DEBUG
-
-void BackgroundMutableFileChild::EnsureDOMObject() {
-  AssertIsOnOwningThread();
-
-  if (mTemporaryStrongMutableFile) {
-    return;
-  }
-
-  auto database =
-      static_cast<BackgroundDatabaseChild*>(Manager())->GetDOMObject();
-  MOZ_ASSERT(database);
-
-  mTemporaryStrongMutableFile =
-      new IDBMutableFile(database, this, mName, mType);
-
-  MOZ_ASSERT(mTemporaryStrongMutableFile);
-  mTemporaryStrongMutableFile->AssertIsOnOwningThread();
-
-  mMutableFile = mTemporaryStrongMutableFile;
-}
-
-void BackgroundMutableFileChild::ReleaseDOMObject() {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mTemporaryStrongMutableFile);
-  mTemporaryStrongMutableFile->AssertIsOnOwningThread();
-  MOZ_ASSERT(mMutableFile == mTemporaryStrongMutableFile);
-
-  mTemporaryStrongMutableFile = nullptr;
-}
-
-void BackgroundMutableFileChild::SendDeleteMeInternal() {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(!mTemporaryStrongMutableFile);
-
-  if (mMutableFile) {
-    mMutableFile->ClearBackgroundActor();
-    mMutableFile = nullptr;
-
-    MOZ_ALWAYS_TRUE(PBackgroundMutableFileChild::SendDeleteMe());
-  }
-}
-
-void BackgroundMutableFileChild::ActorDestroy(ActorDestroyReason aWhy) {
-  AssertIsOnOwningThread();
-
-  if (mMutableFile) {
-    mMutableFile->ClearBackgroundActor();
-#ifdef DEBUG
-    mMutableFile = nullptr;
-#endif
-  }
 }
 
 /*******************************************************************************
