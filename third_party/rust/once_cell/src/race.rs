@@ -24,8 +24,11 @@ use atomic_polyfill as atomic;
 #[cfg(not(feature = "critical-section"))]
 use core::sync::atomic;
 
-use atomic::{AtomicUsize, Ordering};
+use atomic::{AtomicPtr, AtomicUsize, Ordering};
+use core::cell::UnsafeCell;
+use core::marker::PhantomData;
 use core::num::NonZeroUsize;
+use core::ptr;
 
 /// A thread-safe cell which can be written to only once.
 #[derive(Default, Debug)]
@@ -170,6 +173,118 @@ impl OnceBool {
     fn to_usize(value: bool) -> NonZeroUsize {
         unsafe { NonZeroUsize::new_unchecked(if value { 1 } else { 2 }) }
     }
+}
+
+/// A thread-safe cell which can be written to only once.
+pub struct OnceRef<'a, T> {
+    inner: AtomicPtr<T>,
+    ghost: PhantomData<UnsafeCell<&'a T>>,
+}
+
+// TODO: Replace UnsafeCell with SyncUnsafeCell once stabilized
+unsafe impl<'a, T: Sync> Sync for OnceRef<'a, T> {}
+
+impl<'a, T> core::fmt::Debug for OnceRef<'a, T> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "OnceRef({:?})", self.inner)
+    }
+}
+
+impl<'a, T> Default for OnceRef<'a, T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<'a, T> OnceRef<'a, T> {
+    /// Creates a new empty cell.
+    pub const fn new() -> OnceRef<'a, T> {
+        OnceRef { inner: AtomicPtr::new(ptr::null_mut()), ghost: PhantomData }
+    }
+
+    /// Gets a reference to the underlying value.
+    pub fn get(&self) -> Option<&'a T> {
+        let ptr = self.inner.load(Ordering::Acquire);
+        unsafe { ptr.as_ref() }
+    }
+
+    /// Sets the contents of this cell to `value`.
+    ///
+    /// Returns `Ok(())` if the cell was empty and `Err(value)` if it was
+    /// full.
+    pub fn set(&self, value: &'a T) -> Result<(), ()> {
+        let ptr = value as *const T as *mut T;
+        let exchange =
+            self.inner.compare_exchange(ptr::null_mut(), ptr, Ordering::AcqRel, Ordering::Acquire);
+        match exchange {
+            Ok(_) => Ok(()),
+            Err(_) => Err(()),
+        }
+    }
+
+    /// Gets the contents of the cell, initializing it with `f` if the cell was
+    /// empty.
+    ///
+    /// If several threads concurrently run `get_or_init`, more than one `f` can
+    /// be called. However, all threads will return the same value, produced by
+    /// some `f`.
+    pub fn get_or_init<F>(&self, f: F) -> &'a T
+    where
+        F: FnOnce() -> &'a T,
+    {
+        enum Void {}
+        match self.get_or_try_init(|| Ok::<&'a T, Void>(f())) {
+            Ok(val) => val,
+            Err(void) => match void {},
+        }
+    }
+
+    /// Gets the contents of the cell, initializing it with `f` if
+    /// the cell was empty. If the cell was empty and `f` failed, an
+    /// error is returned.
+    ///
+    /// If several threads concurrently run `get_or_init`, more than one `f` can
+    /// be called. However, all threads will return the same value, produced by
+    /// some `f`.
+    pub fn get_or_try_init<F, E>(&self, f: F) -> Result<&'a T, E>
+    where
+        F: FnOnce() -> Result<&'a T, E>,
+    {
+        let mut ptr = self.inner.load(Ordering::Acquire);
+
+        if ptr.is_null() {
+            // TODO replace with `cast_mut` when MSRV reaches 1.65.0 (also in `set`)
+            ptr = f()? as *const T as *mut T;
+            let exchange = self.inner.compare_exchange(
+                ptr::null_mut(),
+                ptr,
+                Ordering::AcqRel,
+                Ordering::Acquire,
+            );
+            if let Err(old) = exchange {
+                ptr = old;
+            }
+        }
+
+        Ok(unsafe { &*ptr })
+    }
+
+    /// ```compile_fail
+    /// use once_cell::race::OnceRef;
+    ///
+    /// let mut l = OnceRef::new();
+    ///
+    /// {
+    ///     let y = 2;
+    ///     let mut r = OnceRef::new();
+    ///     r.set(&y).unwrap();
+    ///     core::mem::swap(&mut l, &mut r);
+    /// }
+    ///
+    /// // l now contains a dangling reference to y
+    /// eprintln!("uaf: {}", l.get().unwrap());
+    /// ```
+    fn _dummy() {}
 }
 
 #[cfg(feature = "alloc")]

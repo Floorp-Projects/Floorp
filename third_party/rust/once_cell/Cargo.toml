@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.56"
 name = "once_cell"
-version = "1.16.0"
+version = "1.17.1"
 authors = ["Aleksey Kladov <aleksey.kladov@gmail.com>"]
 exclude = [
     "*.png",
