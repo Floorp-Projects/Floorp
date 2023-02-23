@@ -4,12 +4,41 @@
 
 import os
 from contextlib import nullcontext as does_not_raise
+from unittest.mock import MagicMock, call
 
 import mozpack.path as mozpath
 import mozunit
 import pytest
 
 from mozbuild.repackaging import deb
+
+
+def test_copy_plain_deb_config(monkeypatch):
+    def mock_listdir(dir):
+        assert dir == "/template_dir"
+        return [
+            "/template_dir/debian_file1.in",
+            "/template_dir/debian_file2.in",
+            "/template_dir/debian_file3",
+            "/template_dir/debian_file4",
+        ]
+
+    monkeypatch.setattr(deb.os, "listdir", mock_listdir)
+
+    def mock_makedirs(dir, exist_ok):
+        assert dir == "/source_dir/debian"
+        assert exist_ok is True
+
+    monkeypatch.setattr(deb.os, "makedirs", mock_makedirs)
+
+    mock_copy = MagicMock()
+    monkeypatch.setattr(deb.shutil, "copy", mock_copy)
+
+    deb._copy_plain_deb_config("/template_dir", "/source_dir")
+    assert mock_copy.call_args_list == [
+        call("/template_dir/debian_file3", "/source_dir/debian/debian_file3"),
+        call("/template_dir/debian_file4", "/source_dir/debian/debian_file4"),
+    ]
 
 
 def test_inject_deb_distribution_folder(monkeypatch):
