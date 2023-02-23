@@ -24,6 +24,8 @@
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 
+using namespace mozilla::ipc;
+
 namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(WebTransport)
@@ -88,10 +90,27 @@ WebTransport::~WebTransport() {
 
 // From parent
 void WebTransport::NewBidirectionalStream(
-    const RefPtr<mozilla::ipc::DataPipeReceiver>& aIncoming,
-    const RefPtr<mozilla::ipc::DataPipeSender>& aOutgoing) {
-  LOG_VERBOSE(("NewUnidirectionalStream()"));
-  // XXX
+    const RefPtr<DataPipeReceiver>& aIncoming,
+    const RefPtr<DataPipeSender>& aOutgoing) {
+  LOG_VERBOSE(("NewBidirectionalStream()"));
+  // Create a Bidirectional stream and push it into the
+  // IncomingBidirectionalStreams stream. Must be added to the ReceiveStreams
+  // and SendStreams arrays
+
+  UniquePtr<BidirectionalPair> streams(
+      new BidirectionalPair(aIncoming, aOutgoing));
+  mBidirectionalStreams.AppendElement(std::move(streams));
+  // We need to delete them all!
+
+  // Notify something to wake up readers of IncomingReceiveStreams
+  // The callback is always set/used from the same thread (MainThread or a
+  // Worker thread).
+  if (mIncomingBidirectionalAlgorithm) {
+    RefPtr<WebTransportIncomingStreamsAlgorithms> callback =
+        mIncomingBidirectionalAlgorithm;
+    LOG(("NotifyIncomingStream"));
+    callback->NotifyIncomingStream();
+  }
 }
 
 void WebTransport::NewUnidirectionalStream(
@@ -101,7 +120,7 @@ void WebTransport::NewUnidirectionalStream(
   // IncomingUnidirectionalStreams stream. Must be added to the ReceiveStreams
   // array
 
-  mUnidirectionalStreams.Push(aStream);
+  mUnidirectionalStreams.AppendElement(aStream);
   // Notify something to wake up readers of IncomingReceiveStreams
   // The callback is always set/used from the same thread (MainThread or a
   // Worker thread).
@@ -200,16 +219,10 @@ void WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
   // SendStreams: empty ordered set
   // ReceiveStreams: empty ordered set
   // Ready: new promise
-  mReady = Promise::Create(mGlobal, aError);
-  if (NS_WARN_IF(aError.Failed())) {
-    return;
-  }
+  mReady = Promise::CreateInfallible(mGlobal);
 
   // Closed: new promise
-  mClosed = Promise::Create(mGlobal, aError);
-  if (NS_WARN_IF(aError.Failed())) {
-    return;
-  }
+  mClosed = Promise::CreateInfallible(mGlobal);
 
   PBackgroundChild* backgroundChild =
       BackgroundChild::GetOrCreateForCurrentThread();
