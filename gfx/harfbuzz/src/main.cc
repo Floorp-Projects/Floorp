@@ -220,7 +220,7 @@ layered_glyph_dump (hb_font_t *font, hb_draw_funcs_t *funcs, unsigned face_index
 	hb_glyph_extents_t extents = {0};
 	if (!hb_font_get_glyph_extents (font, gid, &extents))
 	{
-	  printf ("Skip gid: %d\n", gid);
+	  printf ("Skip gid: %u\n", gid);
 	  continue;
 	}
 
@@ -270,7 +270,7 @@ dump_glyphs (hb_font_t *font, hb_draw_funcs_t *funcs, unsigned face_index)
     hb_glyph_extents_t extents = {0};
     if (!hb_font_get_glyph_extents (font, gid, &extents))
     {
-      printf ("Skip gid: %d\n", gid);
+      printf ("Skip gid: %u\n", gid);
       continue;
     }
 
@@ -393,18 +393,18 @@ print_layout_info_using_private_api (hb_blob_t *blob)
   }
 
   unsigned num_faces = hb_face_count (blob);
-  printf ("%d font(s) found in file\n", num_faces);
+  printf ("%u font(s) found in file\n", num_faces);
   for (unsigned n_font = 0; n_font < num_faces; ++n_font)
   {
     const OpenTypeFontFace &font = ot.get_face (n_font);
-    printf ("Font %d of %d:\n", n_font, num_faces);
+    printf ("Font %u of %u:\n", n_font, num_faces);
 
     unsigned num_tables = font.get_table_count ();
-    printf ("  %d table(s) found in font\n", num_tables);
+    printf ("  %u table(s) found in font\n", num_tables);
     for (unsigned n_table = 0; n_table < num_tables; ++n_table)
     {
       const OpenTypeTable &table = font.get_table (n_table);
-      printf ("  Table %2d of %2d: %.4s (0x%08x+0x%08x)\n", n_table, num_tables,
+      printf ("  Table %2u of %2u: %.4s (0x%08x+0x%08x)\n", n_table, num_tables,
 	      (const char *) table.tag,
 	      (unsigned) table.offset,
 	      (unsigned) table.length);
@@ -419,11 +419,11 @@ print_layout_info_using_private_api (hb_blob_t *blob)
 	const GSUBGPOS &g = *reinterpret_cast<const GSUBGPOS *> (font_data + table.offset);
 
 	unsigned num_scripts = g.get_script_count ();
-	printf ("    %d script(s) found in table\n", num_scripts);
+	printf ("    %u script(s) found in table\n", num_scripts);
 	for (unsigned n_script = 0; n_script < num_scripts; ++n_script)
 	{
 	  const Script &script = g.get_script (n_script);
-	  printf ("    Script %2d of %2d: %.4s\n", n_script, num_scripts,
+	  printf ("    Script %2u of %2u: %.4s\n", n_script, num_scripts,
 		  (const char *) g.get_script_tag (n_script));
 
 	  if (!script.has_default_lang_sys ())
@@ -443,41 +443,41 @@ print_layout_info_using_private_api (hb_blob_t *blob)
 	    if (!langsys.has_required_feature ())
 	      printf ("        No required feature\n");
 	    else
-	      printf ("        Required feature index: %d\n",
+	      printf ("        Required feature index: %u\n",
 		      langsys.get_required_feature_index ());
 
 	    unsigned num_features = langsys.get_feature_count ();
-	    printf ("        %d feature(s) found in language system\n", num_features);
+	    printf ("        %u feature(s) found in language system\n", num_features);
 	    for (unsigned n_feature = 0; n_feature < num_features; ++n_feature)
 	    {
-	      printf ("        Feature index %2d of %2d: %d\n", n_feature, num_features,
+	      printf ("        Feature index %2u of %2u: %u\n", n_feature, num_features,
 		      langsys.get_feature_index (n_feature));
 	    }
 	  }
 	}
 
 	unsigned num_features = g.get_feature_count ();
-	printf ("    %d feature(s) found in table\n", num_features);
+	printf ("    %u feature(s) found in table\n", num_features);
 	for (unsigned n_feature = 0; n_feature < num_features; ++n_feature)
 	{
 	  const Feature &feature = g.get_feature (n_feature);
 	  unsigned num_lookups = feature.get_lookup_count ();
-	  printf ("    Feature %2d of %2d: %c%c%c%c\n", n_feature, num_features,
+	  printf ("    Feature %2u of %2u: %c%c%c%c\n", n_feature, num_features,
 		  HB_UNTAG (g.get_feature_tag (n_feature)));
 
-	  printf ("        %d lookup(s) found in feature\n", num_lookups);
+	  printf ("        %u lookup(s) found in feature\n", num_lookups);
 	  for (unsigned n_lookup = 0; n_lookup < num_lookups; ++n_lookup) {
-	    printf ("        Lookup index %2d of %2d: %d\n", n_lookup, num_lookups,
+	    printf ("        Lookup index %2u of %2u: %u\n", n_lookup, num_lookups,
 		    feature.get_lookup_index (n_lookup));
 	  }
 	}
 
 	unsigned num_lookups = g.get_lookup_count ();
-	printf ("    %d lookup(s) found in table\n", num_lookups);
+	printf ("    %u lookup(s) found in table\n", num_lookups);
 	for (unsigned n_lookup = 0; n_lookup < num_lookups; ++n_lookup)
 	{
 	  const Lookup &lookup = g.get_lookup (n_lookup);
-	  printf ("    Lookup %2d of %2d: type %d, props 0x%04X\n", n_lookup, num_lookups,
+	  printf ("    Lookup %2u of %2u: type %u, props 0x%04X\n", n_lookup, num_lookups,
 		  lookup.get_type (), lookup.get_props ());
 	}
 
@@ -519,7 +519,7 @@ main (int argc, char **argv)
 
   hb_blob_t *blob = hb_blob_create_from_file_or_fail (argv[1]);
   assert (blob);
-  printf ("Opened font file %s: %d bytes long\n", argv[1], hb_blob_get_length (blob));
+  printf ("Opened font file %s: %u bytes long\n", argv[1], hb_blob_get_length (blob));
 #ifndef MAIN_CC_NO_PRIVATE_API
   print_layout_info_using_private_api (blob);
 #endif

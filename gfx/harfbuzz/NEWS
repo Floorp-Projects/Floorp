@@ -1,3 +1,139 @@
+Overview of changes leading to 7.0.1
+Monday, February 20, 2023
+====================================
+- Various build and bug fixes.
+
+
+Overview of changes leading to 7.0.0
+Saturday, February 11, 2023
+====================================
+- New hb-paint API that is designed mainly to paint “COLRv1” glyphs, but can be
+  also used as a unified API to paint any of the glyph representations
+  supported by HarfBuzz (B/W outlines, color layers, or color bitmaps). 
+  (Behdad Esfahbod, Matthias Clasen)
+- New hb-cairo API for integrating with cairo graphics library. This is provided
+  as a separate harfbuzz-cairo library. (Behdad Esfahbod, Matthias Clasen)
+- Support for instancing “CFF2” table. (Behdad Esfahbod)
+- Support font emboldening. (Behdad Esfahbod)
+- Support feature ranges with AAT shaping. (Behdad Esfahbod)
+- Experimental support to cubic curves in “glyf” table, see
+  https://github.com/harfbuzz/boring-expansion-spec/blob/main/glyf1-cubicOutlines.md
+  for spec. (Behdad Esfahbod)
+- Various subsetter improvements. (Garret Rieger, Qunxin Liu, Behdad Esfahbod)
+- Various documentation improvements. 
+  (Behdad Esfahbod, Matthias Clasen, Khaled Hosny)
+- Significantly reduced memory use during shaping. (Behdad Esfahbod)
+- Greatly reduced memory use during subsetting “CFF” table. (Behdad Esfahbod)
+- New command line utility, hb-info, for querying various font information.
+  (Behdad Esfahbod, Matthias Clasen)
+- New hb-shape/hb-view options: --glyphs, --color-palette, --font-bold,
+  --font-grade, and --named-instance. (Behdad Esfahbod)
+- Miscellaneous fixes and improvements.
+  (Amir Masoud Abdol, Andres Salomon, Behdad Esfahbod, Chun-wei Fan,
+  Garret Rieger, Jens Kutilek, Khaled Hosny, Konstantin Käfer, Matthias Clasen,
+  Nirbheek Chauhan, Pedro J. Estébanez, Qunxin Liu, Sergei Trofimovich)
+
+- New API:
++HB_FONT_NO_VAR_NAMED_INSTANCE
++HB_PAINT_IMAGE_FORMAT_BGRA
++HB_PAINT_IMAGE_FORMAT_PNG
++HB_PAINT_IMAGE_FORMAT_SVG
++hb_cairo_font_face_create_for_face
++hb_cairo_font_face_create_for_font
++hb_cairo_font_face_get_face
++hb_cairo_font_face_get_font
++hb_cairo_font_face_get_scale_factor
++hb_cairo_font_face_set_font_init_func
++hb_cairo_font_face_set_scale_factor
++hb_cairo_font_init_func_t
++hb_cairo_glyphs_from_buffer
++hb_cairo_scaled_font_get_font
++hb_color_line_get_color_stops
++hb_color_line_get_color_stops_func_t
++hb_color_line_get_extend
++hb_color_line_get_extend_func_t
++hb_color_line_t
++hb_color_stop_t
++hb_draw_funcs_get_empty
++hb_draw_funcs_get_user_data
++hb_draw_funcs_set_user_data
++hb_face_collect_nominal_glyph_mapping
++hb_font_draw_glyph
++hb_font_draw_glyph_func_t
++hb_font_funcs_set_draw_glyph_func
++hb_font_funcs_set_paint_glyph_func
++hb_font_get_synthetic_bold
++hb_font_get_var_named_instance
++hb_font_paint_glyph
++hb_font_paint_glyph_func_t
++hb_font_set_synthetic_bold
++hb_map_keys
++hb_map_next
++hb_map_update
++hb_map_values
++hb_ot_color_glyph_has_paint
++hb_ot_color_has_paint
++hb_ot_layout_script_select_language2
++hb_ot_name_id_predefined_t
++hb_paint_color
++hb_paint_color_func_t
++hb_paint_composite_mode_t
++hb_paint_custom_palette_color
++hb_paint_custom_palette_color_func_t
++hb_paint_extend_t
++hb_paint_funcs_create
++hb_paint_funcs_destroy
++hb_paint_funcs_get_empty
++hb_paint_funcs_get_user_data
++hb_paint_funcs_is_immutable
++hb_paint_funcs_make_immutable
++hb_paint_funcs_reference
++hb_paint_funcs_set_color_func
++hb_paint_funcs_set_custom_palette_color_func
++hb_paint_funcs_set_image_func
++hb_paint_funcs_set_linear_gradient_func
++hb_paint_funcs_set_pop_clip_func
++hb_paint_funcs_set_pop_group_func
++hb_paint_funcs_set_pop_transform_func
++hb_paint_funcs_set_push_clip_glyph_func
++hb_paint_funcs_set_push_clip_rectangle_func
++hb_paint_funcs_set_push_group_func
++hb_paint_funcs_set_push_transform_func
++hb_paint_funcs_set_radial_gradient_func
++hb_paint_funcs_set_sweep_gradient_func
++hb_paint_funcs_set_user_data
++hb_paint_funcs_t
++hb_paint_image
++hb_paint_image_func_t
++hb_paint_linear_gradient
++hb_paint_linear_gradient_func_t
++hb_paint_pop_clip
++hb_paint_pop_clip_func_t
++hb_paint_pop_group
++hb_paint_pop_group_func_t
++hb_paint_pop_transform
++hb_paint_pop_transform_func_t
++hb_paint_push_clip_glyph
++hb_paint_push_clip_glyph_func_t
++hb_paint_push_clip_rectangle
++hb_paint_push_clip_rectangle_func_t
++hb_paint_push_group
++hb_paint_push_group_func_t
++hb_paint_push_transform
++hb_paint_push_transform_func_t
++hb_paint_radial_gradient
++hb_paint_radial_gradient_func_t
++hb_paint_sweep_gradient
++hb_paint_sweep_gradient_func_t
++hb_set_is_inverted
++hb_subset_input_keep_everything
+
+- Deprecated API:
++hb_font_funcs_set_glyph_shape_func
++hb_font_get_glyph_shape_func_t
++hb_font_get_glyph_shape
+
+
 Overview of changes leading to 6.0.0
 Friday, December 16, 2022
 ====================================

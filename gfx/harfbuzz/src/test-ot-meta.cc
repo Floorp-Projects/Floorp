@@ -54,9 +54,9 @@ main (int argc, char **argv)
   for (unsigned i = 0; i < count; ++i)
   {
     hb_blob_t *entry = hb_ot_meta_reference_entry (face, tags[i]);
-    printf ("%c%c%c%c, size: %d: %.*s\n",
+    printf ("%c%c%c%c, size: %u: %.*s\n",
 	    HB_UNTAG (tags[i]), hb_blob_get_length (entry),
-	    hb_blob_get_length (entry), hb_blob_get_data (entry, nullptr));
+	    (int) hb_blob_get_length (entry), hb_blob_get_data (entry, nullptr));
     hb_blob_destroy (entry);
   }
   free (tags);

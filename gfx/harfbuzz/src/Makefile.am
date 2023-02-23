@@ -135,6 +135,8 @@ export_symbols = -export-symbols harfbuzz.def
 harfbuzz_def_dependency = harfbuzz.def
 export_symbols_subset = -export-symbols harfbuzz-subset.def
 harfbuzz_subset_def_dependency = harfbuzz-subset.def
+export_symbols_cairo = -export-symbols harfbuzz-cairo.def
+harfbuzz_cairo_def_dependency = harfbuzz-cairo.def
 export_symbols_icu = -export-symbols harfbuzz-icu.def
 harfbuzz_icu_def_dependency = harfbuzz-icu.def
 export_symbols_gobject = -export-symbols harfbuzz-gobject.def
@@ -193,6 +195,17 @@ harfbuzz-subset.cc: Makefile.sources
 	|| ($(RM) $(srcdir)/harfbuzz-subset.cc; false)
 BUILT_SOURCES += harfbuzz-subset.cc
 
+lib_LTLIBRARIES += libharfbuzz-cairo.la
+libharfbuzz_cairo_la_LINK = $(chosen_linker) $(libharfbuzz_cairo_la_LDFLAGS)
+libharfbuzz_cairo_la_SOURCES = $(HB_CAIRO_sources)
+libharfbuzz_cairo_la_CPPFLAGS = $(HBCFLAGS) $(CAIRO_CFLAGS) $(CODE_COVERAGE_CFLAGS)
+libharfbuzz_cairo_la_LDFLAGS = $(base_link_flags) $(export_symbols_cairo) $(CODE_COVERAGE_LDFLAGS)
+libharfbuzz_cairo_la_LIBADD = $(CAIRO_LIBS) libharfbuzz.la
+EXTRA_libharfbuzz_cairo_la_DEPENDENCIES = $(harfbuzz_cairo_def_dependency)
+pkginclude_HEADERS += $(HB_CAIRO_headers)
+pkgconfig_DATA += harfbuzz-cairo.pc
+EXTRA_DIST += harfbuzz-cairo.pc.in
+
 if HAVE_ICU
 if HAVE_ICU_BUILTIN
 HBCFLAGS += $(ICU_CFLAGS)
@@ -241,6 +254,9 @@ hb-gobject-enums.%: hb-gobject-enums.%.tmpl $(HBHEADERS)
 		--template $^ | \
 	sed 's/_t_get_type/_get_type/g; s/_T (/ (/g' > "$@" \
 	|| ($(RM) "$@"; false)
+HB_HAS_GOBJECT_DEF = define HB_HAS_GOBJECT 1
+else
+HB_HAS_GOBJECT_DEF = undef HB_HAS_GOBJECT
 endif
 EXTRA_DIST += \
 	harfbuzz-gobject.pc.in \
@@ -256,11 +272,13 @@ DISTCLEANFILES += \
 
 hb-features.h: hb-features.h.in $(top_builddir)/config.status
 	$(AM_V_GEN) $(SED) \
+		-e 's/mesondefine HB_HAS_CAIRO/$(HB_HAS_CAIRO_DEF)/' \
 		-e 's/mesondefine HB_HAS_FREETYPE/$(HB_HAS_FREETYPE_DEF)/' \
 		-e 's/mesondefine HB_HAS_GDI/$(HB_HAS_GDI_DEF)/' \
 		-e 's/mesondefine HB_HAS_GDI/$(HB_HAS_GDI_DEF)/' \
 		-e 's/mesondefine HB_HAS_GRAPHITE/$(HB_HAS_GRAPHITE_DEF)/' \
 		-e 's/mesondefine HB_HAS_GLIB/$(HB_HAS_GLIB_DEF)/' \
+		-e 's/mesondefine HB_HAS_GOBJECT/$(HB_HAS_GOBJECT_DEF)/' \
 		-e 's/mesondefine HB_HAS_UNISCRIBE/$(HB_HAS_UNISCRIBE_DEF)/' \
 		-e 's/mesondefine HB_HAS_DIRECTWRITE/$(HB_HAS_DIRECTWRITE_DEF)/' \
 		-e 's/mesondefine HB_HAS_CORETEXT/$(HB_HAS_CORETEXT_DEF)/' \
@@ -293,6 +311,8 @@ harfbuzz.def: $(top_builddir)/config.status
 harfbuzz.def: $(HBHEADERS)
 	$(AM_V_GEN) $(srcdir)/gen-def.py "$@" $^
 harfbuzz-subset.def: $(HB_SUBSET_headers)
+	$(AM_V_GEN) $(srcdir)/gen-def.py "$@" $^
+harfbuzz-cairo.def: $(HB_CAIRO_headers)
 	$(AM_V_GEN) $(srcdir)/gen-def.py "$@" $^
 harfbuzz-icu.def: $(HB_ICU_headers)
 	$(AM_V_GEN) $(srcdir)/gen-def.py "$@" $^

@@ -237,16 +237,6 @@ main (int argc, char **argv)
     m.keys_ref ();
     m.values_ref ();
   }
-  /* Test more complex unique_ptr's. */
-  {
-    hb_hashmap_t<int, hb::unique_ptr<hb_hashmap_t<int, int>>> m;
-
-    m.get (0);
-    const hb::unique_ptr<hb_hashmap_t<int, int>> *v1;
-    m.has (0, &v1);
-    hb::unique_ptr<hb_hashmap_t<int, int>> *v2;
-    m.has (0, &v2);
-  }
   /* Test hashmap with complex shared_ptrs as keys. */
   {
     hb_hashmap_t<hb::shared_ptr<hb_map_t>, unsigned> m;
@@ -273,6 +263,7 @@ main (int argc, char **argv)
 
     m.set (1, bytes);
     assert (m.has (1));
+    assert (m.get (1) == hb_bytes_t {"Test"});
   }
   /* Test operators. */
   {
@@ -300,6 +291,67 @@ main (int argc, char **argv)
     hb_hashmap_t<int, hb_set_t> m;
     m.set (1, hb_set_t {1, 2, 3});
     m.reset ();
+  }
+  /* Test iteration. */
+  {
+    hb_map_t m;
+    m.set (1, 1);
+    m.set (4, 3);
+    m.set (5, 5);
+    m.set (2, 1);
+    m.set (3, 2);
+    m.set (6, 8);
+
+    hb_codepoint_t k;
+    hb_codepoint_t v;
+    unsigned pop = 0;
+    for (signed i = -1;
+	 m.next (&i, &k, &v);)
+    {
+      pop++;
+           if (k == 1) assert (v == 1);
+      else if (k == 2) assert (v == 1);
+      else if (k == 3) assert (v == 2);
+      else if (k == 4) assert (v == 3);
+      else if (k == 5) assert (v == 5);
+      else if (k == 6) assert (v == 8);
+      else assert (false);
+    }
+    assert (pop == m.get_population ());
+  }
+  /* Test update */
+  {
+    hb_map_t m1, m2;
+    m1.set (1, 2);
+    m1.set (2, 4);
+    m2.set (1, 3);
+
+    m1.update (m2);
+    assert (m1.get_population () == 2);
+    assert (m1[1] == 3);
+    assert (m1[2] == 4);
+  }
+  /* Test keys / values */
+  {
+    hb_map_t m;
+    m.set (1, 1);
+    m.set (4, 3);
+    m.set (5, 5);
+    m.set (2, 1);
+    m.set (3, 2);
+    m.set (6, 8);
+
+    hb_set_t keys;
+    hb_set_t values;
+
+    m.keys (keys);
+    m.values (values);
+
+    assert (keys.is_equal (hb_set_t ({1, 2, 3, 4, 5, 6})));
+    assert (values.is_equal (hb_set_t ({1, 1, 2, 3, 5, 8})));
+
+    assert (keys.is_equal (hb_set_t (m.keys ())));
+    assert (values.is_equal (hb_set_t (m.values ())));
   }
 
   return 0;
