@@ -56,7 +56,6 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineESModuleGetters(lazy, {
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
-  URILoadingHelper: "resource:///modules/URILoadingHelper.sys.mjs",
 });
 XPCOMUtils.defineLazyGetter(lazy, "gWidgetsBundle", function() {
   const kUrl =
@@ -272,18 +271,14 @@ CustomizeMode.prototype = {
 
   enter() {
     if (!this.window.toolbar.visible) {
-      let w = lazy.URILoadingHelper.getTargetWindow(this.window, {
-        skipPopups: true,
-      });
+      let w = this.window.getTopWin({ skipPopups: true });
       if (w) {
         w.gCustomizeMode.enter();
         return;
       }
       let obs = () => {
         Services.obs.removeObserver(obs, "browser-delayed-startup-finished");
-        w = lazy.URILoadingHelper.getTargetWindow(this.window, {
-          skipPopups: true,
-        });
+        w = this.window.getTopWin({ skipPopups: true });
         w.gCustomizeMode.enter();
       };
       Services.obs.addObserver(obs, "browser-delayed-startup-finished");

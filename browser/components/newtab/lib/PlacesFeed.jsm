@@ -233,7 +233,7 @@ class PlacesFeed {
     const params = {
       private: isPrivate,
       targetBrowser: action._target.browser,
-      forceForeground: false, // This ensure we maintain user preference for how to open new tabs.
+      fromChrome: false, // This ensure we maintain user preference for how to open new tabs.
       globalHistoryOptions: {
         triggeringSponsoredURL: action.data.sponsored_tile_id
           ? action.data.url
