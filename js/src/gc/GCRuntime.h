@@ -439,16 +439,17 @@ class GCRuntime {
   void disallowIncrementalGC() { incrementalAllowed = false; }
 
   void setIncrementalGCEnabled(bool enabled);
+
   bool isIncrementalGCEnabled() const { return incrementalGCEnabled; }
+  bool isPerZoneGCEnabled() const { return perZoneGCEnabled; }
+  bool isCompactingGCEnabled() const;
+  bool isParallelMarkingEnabled() const { return parallelMarkingEnabled; }
+
   bool isIncrementalGCInProgress() const {
     return state() != State::NotActive && !isVerifyPreBarriersEnabled();
   }
 
-  bool isPerZoneGCEnabled() const { return perZoneGCEnabled; }
-
   bool hasForegroundWork() const;
-
-  bool isCompactingGCEnabled() const;
 
   bool isShrinkingGC() const { return gcOptions() == JS::GCOptions::Shrink; }
 

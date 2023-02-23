@@ -1007,6 +1007,14 @@ void Statistics::endGC() {
   sendGCTelemetry();
 }
 
+TimeDuration Statistics::sumTotalParallelTime(PhaseKind phaseKind) const {
+  TimeDuration total;
+  for (const SliceData& slice : slices_) {
+    total += slice.totalParallelTimes[phaseKind];
+  }
+  return total;
+}
+
 void Statistics::sendGCTelemetry() {
   JSRuntime* runtime = gc->rt;
   // NOTE: "Compartmental" is term that was deprecated with the
@@ -1095,6 +1103,23 @@ void Statistics::sendGCTelemetry() {
       runtime->metrics().GC_EFFECTIVENESS(uint32_t(effectiveness));
     }
   }
+
+  // Parallel marking stats.
+  if (gc->isParallelMarkingEnabled()) {
+    TimeDuration wallTime = SumPhase(PhaseKind::PARALLEL_MARK, phaseTimes);
+    TimeDuration parallelMarkTime =
+        sumTotalParallelTime(PhaseKind::PARALLEL_MARK);
+    if (wallTime && parallelMarkTime) {
+      uint32_t threadCount = gc->markers.length();
+      double speedup = parallelMarkTime / wallTime;
+      double utilization = parallelMarkTime / (wallTime * threadCount);
+      runtime->metrics().GC_PARALLEL_MARK_SPEEDUP(uint32_t(speedup * 100.0));
+      runtime->metrics().GC_PARALLEL_MARK_UTILIZATION(
+          uint32_t(utilization * 100.0));
+      runtime->metrics().GC_PARALLEL_MARK_INTERRUPTIONS(
+          getCount(COUNT_PARALLEL_MARK_INTERRUPTIONS));
+    }
+  }
 }
 
 void Statistics::beginNurseryCollection(JS::GCReason reason) {
@@ -1118,13 +1143,15 @@ void Statistics::endNurseryCollection(JS::GCReason reason) {
 Statistics::SliceData::SliceData(const SliceBudget& budget,
                                  Maybe<Trigger> trigger, JS::GCReason reason,
                                  TimeStamp start, size_t startFaults,
-                                 gc::State initialState)
+                                 gc::State initialState,
+                                 size_t parallelMarkInterruptions)
     : budget(budget),
       reason(reason),
       trigger(trigger),
       initialState(initialState),
       start(start),
-      startFaults(startFaults) {}
+      startFaults(startFaults),
+      parallelMarkInterruptions(parallelMarkInterruptions) {}
 
 void Statistics::beginSlice(const ZoneGCStats& zoneStats, JS::GCOptions options,
                             const SliceBudget& budget, JS::GCReason reason,
@@ -1151,7 +1178,8 @@ void Statistics::beginSlice(const ZoneGCStats& zoneStats, JS::GCOptions options,
   recordedTrigger.reset();
 
   if (!slices_.emplaceBack(budget, trigger, reason, currentTime,
-                           GetPageFaultCount(), gc->state())) {
+                           GetPageFaultCount(), gc->state(),
+                           getCount(COUNT_PARALLEL_MARK_INTERRUPTIONS))) {
     // If we are OOM, set a flag to indicate we have missing slice data.
     aborted = true;
     return;
@@ -1182,6 +1210,9 @@ void Statistics::endSlice() {
     slice.end = TimeStamp::Now();
     slice.endFaults = GetPageFaultCount();
     slice.finalState = gc->state();
+    slice.parallelMarkInterruptions =
+        getCount(COUNT_PARALLEL_MARK_INTERRUPTIONS) -
+        slice.parallelMarkInterruptions;
 
     log("end slice");
 

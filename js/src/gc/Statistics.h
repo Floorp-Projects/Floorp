@@ -52,6 +52,10 @@ enum Count {
   // not collecting the atoms zone.
   COUNT_CELLS_MARKED,
 
+  // Number of times work was donated to a requesting thread during parallel
+  // marking.
+  COUNT_PARALLEL_MARK_INTERRUPTIONS,
+
   COUNT_LIMIT
 };
 
@@ -269,7 +273,7 @@ struct Statistics {
   struct SliceData {
     SliceData(const SliceBudget& budget, mozilla::Maybe<Trigger> trigger,
               JS::GCReason reason, TimeStamp start, size_t startFaults,
-              gc::State initialState);
+              gc::State initialState, size_t parallelMarkInterruptions);
 
     SliceBudget budget;
     JS::GCReason reason = JS::GCReason::NO_REASON;
@@ -284,6 +288,7 @@ struct Statistics {
     PhaseTimes phaseTimes;
     PhaseKindTimes totalParallelTimes;
     PhaseKindTimes maxParallelTimes;
+    size_t parallelMarkInterruptions;  // todo: bump to later patch
 
     TimeDuration duration() const { return end - start; }
     bool wasReset() const { return resetReason != GCAbortReason::None; }
@@ -478,6 +483,8 @@ struct Statistics {
 
   void sendGCTelemetry();
   void sendSliceTelemetry(const SliceData& slice);
+
+  TimeDuration sumTotalParallelTime(PhaseKind phaseKind) const;
 
   void recordPhaseBegin(Phase phase);
   void recordPhaseEnd(Phase phase);

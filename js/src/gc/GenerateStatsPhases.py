@@ -128,7 +128,17 @@ PhaseKindGraphRoots = [
         [
             getPhaseKind("MARK_ROOTS"),
             addPhaseKind("MARK_DELAYED", "Mark Delayed", 8),
-            getPhaseKind("JOIN_PARALLEL_TASKS"),
+            addPhaseKind(
+                "PARALLEL_MARK",
+                "Parallel marking",
+                78,
+                [
+                    getPhaseKind("JOIN_PARALLEL_TASKS"),
+                    # The following are only used for parallel phase times:
+                    addPhaseKind("PARALLEL_MARK_MARK", "Parallel marking work", 79),
+                    addPhaseKind("PARALLEL_MARK_WAIT", "Waiting for work", 80),
+                ],
+            ),
         ],
     ),
     addPhaseKind(
@@ -157,7 +167,7 @@ PhaseKindGraphRoots = [
                         "SWEEP_MARK_INCOMING_GRAY", "Mark Incoming Gray Pointers", 14
                     ),
                     addPhaseKind("SWEEP_MARK_GRAY", "Mark Gray", 15),
-                    getPhaseKind("JOIN_PARALLEL_TASKS"),
+                    getPhaseKind("PARALLEL_MARK"),
                 ],
             ),
             addPhaseKind(

@@ -277,6 +277,12 @@ class Metrics {
     }
   };
 
+  // Record an unsigned integer.
+  struct Integer {
+    using SourceType = uint32_t;
+    static uint32_t convert(SourceType sample) { return sample; }
+  };
+
   inline void addTelemetry(JSMetric id, uint32_t sample);
 
 #define DECLARE_METRIC_HELPER(NAME, TY)                \
