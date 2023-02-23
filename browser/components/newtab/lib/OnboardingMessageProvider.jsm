@@ -55,6 +55,18 @@ const L10N = new Localization([
 const HOMEPAGE_PREF = "browser.startup.homepage";
 const NEWTAB_PREF = "browser.newtabpage.enabled";
 
+/**
+ * return the retargeting delay in days for the cookiebanner nimbus experiment
+ */
+const cbhRetargetingDelay = () => {
+  const featureVal = lazy.NimbusFeatures.cookieBannerHandling.getVariable(
+    "retargetingDelayInDays"
+  );
+
+  if (!featureVal) return 1;
+  return featureVal;
+};
+
 const BASE_MESSAGES = () => [
   {
     id: "FXA_ACCOUNTS_BADGE",
@@ -962,7 +974,7 @@ const BASE_MESSAGES = () => [
       skip_address_bar_notifier: true,
     },
     frequency: {
-      custom: [{ period: 86400000, cap: 1 }],
+      custom: [{ period: 24 * 60 * 60 * 1000 * cbhRetargetingDelay(), cap: 1 }],
       lifetime: 2,
     },
     trigger: {
@@ -1010,7 +1022,7 @@ const BASE_MESSAGES = () => [
       skip_address_bar_notifier: true,
     },
     frequency: {
-      custom: [{ period: 86400000 * 2, cap: 1 }],
+      custom: [{ period: 24 * 60 * 60 * 1000 * cbhRetargetingDelay(), cap: 1 }],
       lifetime: 2,
     },
     trigger: {
@@ -1058,7 +1070,7 @@ const BASE_MESSAGES = () => [
       skip_address_bar_notifier: true,
     },
     frequency: {
-      custom: [{ period: 86400000 * 7, cap: 1 }],
+      custom: [{ period: 24 * 60 * 60 * 1000 * cbhRetargetingDelay(), cap: 1 }],
       lifetime: 2,
     },
     trigger: {
