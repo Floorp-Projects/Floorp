@@ -11967,6 +11967,24 @@
   value: "canary"
   mirror: never
 
+# Use Oblivious HTTP when making TRR requests.
+- name: network.trr.use_ohttp
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Oblivious HTTP relay URI for TRR requests.
+- name: network.trr.ohttp.relay_uri
+  type: String
+  value: ""
+  mirror: never
+
+# URI from which to fetch the configuration for the Oblivious HTTP gateway for TRR requests.
+- name: network.trr.ohttp.config_uri
+  type: String
+  value: ""
+  mirror: never
+
 # Allow the network changed event to get sent when a network topology or setup
 # change is noticed while running.
 - name: network.notify.changed

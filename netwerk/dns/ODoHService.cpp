@@ -269,7 +269,7 @@ nsresult ODoHService::UpdateODoHConfigFromURI() {
     return rv;
   }
 
-  channel->SetLoadFlags(
+  rv = channel->SetLoadFlags(
       nsIRequest::LOAD_ANONYMOUS | nsIRequest::INHIBIT_CACHING |
       nsIRequest::LOAD_BYPASS_CACHE | nsIChannel::LOAD_BYPASS_URL_CLASSIFIER);
   NS_ENSURE_SUCCESS(rv, rv);
