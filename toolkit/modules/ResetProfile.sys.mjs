@@ -91,10 +91,7 @@ export var ResetProfile = {
     if (params.learnMore) {
       win.openTrustedLinkIn(
         "https://support.mozilla.org/kb/refresh-firefox-reset-add-ons-and-settings",
-        "tab",
-        {
-          fromChrome: true,
-        }
+        "tab"
       );
       return;
     }
