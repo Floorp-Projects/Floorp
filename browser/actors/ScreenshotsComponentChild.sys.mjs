@@ -34,11 +34,11 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
     switch (event.type) {
       case "keydown":
         if (event.key === "Escape") {
-          this.requestCancelScreenshot();
+          this.requestCancelScreenshot("escape");
         }
         break;
       case "beforeunload":
-        this.requestCancelScreenshot();
+        this.requestCancelScreenshot("navigation");
         break;
       case "resize":
         if (!this._resizeTask && this._overlay?._initialized) {
@@ -61,7 +61,7 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
           event.target.visibilityState === "hidden" &&
           this._overlay?.stateHandler.getState() === "crosshairs"
         ) {
-          this.requestCancelScreenshot();
+          this.requestCancelScreenshot("navigation");
         }
         break;
     }
@@ -70,9 +70,10 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
   /**
    * Send a request to cancel the screenshot to the parent process
    */
-  requestCancelScreenshot() {
+  requestCancelScreenshot(reason) {
     this.sendAsyncMessage("Screenshots:CancelScreenshot", {
       closeOverlay: false,
+      reason,
     });
     this.endScreenshotsOverlay();
   }
@@ -259,5 +260,9 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
       devicePixelRatio: this.contentWindow.devicePixelRatio,
     };
     return rect;
+  }
+
+  recordTelemetryEvent(type, object, args) {
+    Services.telemetry.recordEvent("screenshots", type, object, null, args);
   }
 }
