@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/http/0.2.8")]
+#![doc(html_root_url = "https://docs.rs/http/0.2.9")]
 
 //! A general purpose library of common HTTP types
 //!
@@ -185,7 +185,7 @@ mod extensions;
 pub use crate::error::{Error, Result};
 pub use crate::extensions::Extensions;
 #[doc(no_inline)]
-pub use crate::header::{HeaderMap, HeaderValue};
+pub use crate::header::{HeaderMap, HeaderName, HeaderValue};
 pub use crate::method::Method;
 pub use crate::request::Request;
 pub use crate::response::Response;

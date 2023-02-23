@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.49.0"
 name = "http"
-version = "0.2.8"
+version = "0.2.9"
 authors = [
     "Alex Crichton <alex@alexcrichton.com>",
     "Carl Lerche <me@carllerche.com>",
@@ -29,31 +29,6 @@ categories = ["web-programming"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/hyperium/http"
 
-[[bench]]
-name = "header_map"
-path = "benches/header_map/mod.rs"
-
-[[bench]]
-name = "header_name"
-path = "benches/header_name.rs"
-
-[[bench]]
-name = "header_name2"
-path = "benches/header_name2.rs"
-harness = false
-
-[[bench]]
-name = "header_value"
-path = "benches/header_value.rs"
-
-[[bench]]
-name = "method"
-path = "benches/method.rs"
-
-[[bench]]
-name = "uri"
-path = "benches/uri.rs"
-
 [dependencies.bytes]
 version = "1"
 
@@ -63,14 +38,11 @@ version = "1.0.5"
 [dependencies.itoa]
 version = "1"
 
-[dev-dependencies.criterion]
-version = "0.3.2"
-
 [dev-dependencies.doc-comment]
 version = "0.3"
 
 [dev-dependencies.indexmap]
-version = "1.0"
+version = "<=1.8"
 
 [dev-dependencies.quickcheck]
 version = "0.9.0"

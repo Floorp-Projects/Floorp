@@ -345,6 +345,18 @@ standard_headers! {
     /// response.
     (CacheControl, CACHE_CONTROL, b"cache-control");
 
+    /// Indicates how caches have handled a response and its corresponding request.
+    ///
+    /// See [RFC 9211](https://www.rfc-editor.org/rfc/rfc9211.html).
+    (CacheStatus, CACHE_STATUS, b"cache-status");
+
+    /// Specifies directives that allow origin servers to control the behavior of CDN caches
+    /// interposed between them and clients separately from other caches that might handle the
+    /// response.
+    ///
+    /// See [RFC 9213](https://www.rfc-editor.org/rfc/rfc9213.html).
+    (CdnCacheControl, CDN_CACHE_CONTROL, b"cdn-cache-control");
+
     /// Controls whether or not the network connection stays open after the
     /// current transaction finishes.
     ///
