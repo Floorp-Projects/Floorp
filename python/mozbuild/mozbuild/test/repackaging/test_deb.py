@@ -9,6 +9,44 @@ from mozbuild.repackaging import deb
 
 
 @pytest.mark.parametrize(
+    "arch, is_chroot_available, expected",
+    (
+        (
+            "x86",
+            True,
+            [
+                "chroot",
+                "/srv/jessie-i386",
+                "bash",
+                "-c",
+                "cd /tmp/*/source; dpkg-buildpackage -us -uc -b --host-arch=i386",
+            ],
+        ),
+        ("x86", False, ["dpkg-buildpackage", "-us", "-uc", "-b", "--host-arch=i386"]),
+        (
+            "x86_64",
+            True,
+            [
+                "chroot",
+                "/srv/jessie-amd64",
+                "bash",
+                "-c",
+                "cd /tmp/*/source; dpkg-buildpackage -us -uc -b --host-arch=amd64",
+            ],
+        ),
+        (
+            "x86_64",
+            False,
+            ["dpkg-buildpackage", "-us", "-uc", "-b", "--host-arch=amd64"],
+        ),
+    ),
+)
+def test_get_command(monkeypatch, arch, is_chroot_available, expected):
+    monkeypatch.setattr(deb, "_is_chroot_available", lambda _: is_chroot_available)
+    assert deb._get_command(arch) == expected
+
+
+@pytest.mark.parametrize(
     "arch, does_dir_exist, expected_path, expected_result",
     (
         ("x86", False, "/srv/jessie-i386", False),

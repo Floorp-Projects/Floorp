@@ -129,22 +129,8 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
             mozpath.join(extract_dir, app_name.lower(), "distribution"),
         )
 
-        if _is_chroot_available(arch):
-            subprocess.check_call(
-                [
-                    "chroot",
-                    f"/srv/{_DEB_DIST}-{deb_arch}",
-                    "bash",
-                    "-c",
-                    f"cd /tmp/*/source; dpkg-buildpackage -us -uc -b -a{deb_arch}",
-                ]
-            )
-        else:
-            # If there's is no _DEB_DIST bootstrapped in /srv run the packaging here.
-            subprocess.check_call(
-                ["dpkg-buildpackage", "-us", "-uc", "-b", f"-a{deb_arch}"],
-                cwd=extract_dir,
-            )
+        command = _get_command(arch)
+        subprocess.check_call(command, cwd=extract_dir)
 
         deb_file_name = (
             f"{defines['DEB_PKG_NAME']}_{defines['DEB_PKG_VERSION']}_{deb_arch}.deb"
@@ -162,6 +148,36 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
 
     finally:
         shutil.rmtree(tmpdir)
+
+
+def _get_command(arch):
+    deb_arch = _DEB_ARCH[arch]
+    command = [
+        "dpkg-buildpackage",
+        # TODO: Use long options once we stop supporting Debian Jesse. They're more
+        # explicit.
+        #
+        # Long options were added in dpkg 1.18.8 which is part of Debian Stretch.
+        #
+        # https://git.dpkg.org/cgit/dpkg/dpkg.git/commit/?h=1.18.x&id=293bd243a19149165fc4fd8830b16a51d471a5e9
+        # https://packages.debian.org/stretch/dpkg-dev
+        "-us",  # --unsigned-source
+        "-uc",  # --unsigned-changes
+        "-b",  # --build=binary
+        f"--host-arch={deb_arch}",
+    ]
+
+    if _is_chroot_available(arch):
+        flattened_command = " ".join(command)
+        command = [
+            "chroot",
+            f"/srv/{_DEB_DIST}-{deb_arch}",
+            "bash",
+            "-c",
+            f"cd /tmp/*/source; {flattened_command}",
+        ]
+
+    return command
 
 
 def _is_chroot_available(arch):
