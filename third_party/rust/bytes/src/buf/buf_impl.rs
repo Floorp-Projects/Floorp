@@ -160,6 +160,7 @@ pub trait Buf {
     ///
     /// [`writev`]: http://man7.org/linux/man-pages/man2/readv.2.html
     #[cfg(feature = "std")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn chunks_vectored<'a>(&'a self, dst: &mut [IoSlice<'a>]) -> usize {
         if dst.is_empty() {
             return 0;
@@ -1183,6 +1184,7 @@ pub trait Buf {
     /// assert_eq!(&dst[..11], &b"hello world"[..]);
     /// ```
     #[cfg(feature = "std")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn reader(self) -> Reader<Self>
     where
         Self: Sized,

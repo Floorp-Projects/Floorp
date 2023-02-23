@@ -1239,6 +1239,7 @@ pub unsafe trait BufMut {
     /// assert_eq!(*buf, b"hello world"[..]);
     /// ```
     #[cfg(feature = "std")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
     fn writer(self) -> Writer<Self>
     where
         Self: Sized,
