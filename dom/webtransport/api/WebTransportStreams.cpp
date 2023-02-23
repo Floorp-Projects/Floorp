@@ -16,7 +16,6 @@
 using namespace mozilla::ipc;
 
 namespace mozilla::dom {
-
 NS_IMPL_CYCLE_COLLECTION_INHERITED(WebTransportIncomingStreamsAlgorithms,
                                    UnderlyingSourceAlgorithmsWrapper,
                                    mTransport, mCallback)
@@ -43,7 +42,6 @@ WebTransportIncomingStreamsAlgorithms::PullCallbackImpl(
   // Step 1: If transport.[[State]] is "connecting", then return the result
   // of performing the following steps upon fulfillment of
   // transport.[[Ready]]:
-
   // We don't explicitly check mState here, since we'll reject
   // mIncomingStreamPromise if we go to FAILED or CLOSED
   //
@@ -54,7 +52,7 @@ WebTransportIncomingStreamsAlgorithms::PullCallbackImpl(
   RefPtr<WebTransportIncomingStreamsAlgorithms> self(this);
   // The real work of PullCallback()
   // Step 5: Wait until there is an available incoming unidirectional stream.
-  if (mTransport->mUnidirectionalStreams.GetSize() == 0) {
+  if (mTransport->mUnidirectionalStreams.Length() == 0) {
     // We need to wait.
     // Per
     // https://streams.spec.whatwg.org/#readablestreamdefaultcontroller-pulling
@@ -86,6 +84,7 @@ WebTransportIncomingStreamsAlgorithms::PullCallbackImpl(
   return promise.forget();
 }
 
+// Note: fallible
 void WebTransportIncomingStreamsAlgorithms::BuildStream(JSContext* aCx,
                                                         ErrorResult& aRv) {
   // https://w3c.github.io/webtransport/#pullbidirectionalstream and
@@ -95,7 +94,9 @@ void WebTransportIncomingStreamsAlgorithms::BuildStream(JSContext* aCx,
   if (mUnidirectional == StreamType::Unidirectional) {
     // Step 6: Let internalStream be the result of receiving an incoming
     // unidirectional stream.
-    RefPtr<DataPipeReceiver> pipe = mTransport->mUnidirectionalStreams.Pop();
+    MOZ_ASSERT(mTransport->mUnidirectionalStreams.Length() > 0);
+    RefPtr<DataPipeReceiver> pipe = mTransport->mUnidirectionalStreams[0];
+    mTransport->mUnidirectionalStreams.RemoveElementAt(0);
 
     // Step 7.1: Let stream be the result of creating a
     // WebTransportReceiveStream with internalStream and transport
@@ -123,15 +124,49 @@ void WebTransportIncomingStreamsAlgorithms::BuildStream(JSContext* aCx,
   } else {
     // Step 6: Let internalStream be the result of receiving a bidirectional
     // stream
-    UniquePtr<Tuple<RefPtr<DataPipeReceiver>, RefPtr<DataPipeSender>>> pipes(
-        mTransport->mBidirectionalStreams.Pop());
+    MOZ_ASSERT(mTransport->mBidirectionalStreams.Length() > 0);
+    UniquePtr<BidirectionalPair> pipes =
+        std::move(mTransport->mBidirectionalStreams.ElementAt(0));
+    mTransport->mBidirectionalStreams.RemoveElementAt(0);
+    RefPtr<DataPipeReceiver> input = pipes->first.forget();
+    RefPtr<DataPipeSender> output = pipes->second.forget();
 
     // Step 7.1: Let stream be the result of creating a
     // WebTransportBidirectionalStream with internalStream and transport
+    RefPtr<WebTransportReceiveStream> readableStream =
+        WebTransportReceiveStream::Create(mTransport, mTransport->mGlobal,
+                                          input, aRv);
+    if (!readableStream) {
+      return;
+    }
+    RefPtr<WebTransportSendStream> writableStream =
+        WebTransportSendStream::Create(mTransport, mTransport->mGlobal, output,
+                                       aRv);
+    if (!writableStream) {
+      return;
+    }
+
+    auto stream = MakeRefPtr<WebTransportBidirectionalStream>(
+        mTransport->mGlobal, readableStream, writableStream);
 
     // Step 7.2 Enqueue stream to transport.[[IncomingBidirectionalStreams]].
-    // Add to ReceiveStreams
-    // mTransport->mReceiveStreams.AppendElement(stream);
+    JS::Rooted<JS::Value> jsStream(aCx);
+    if (MOZ_UNLIKELY(!ToJSValue(aCx, stream, &jsStream))) {
+      return;
+    }
+    LOG(("Enqueuing bidirectional stream\n"));
+    // EnqueueNative is CAN_RUN_SCRIPT
+    RefPtr<ReadableStream> incomingStream =
+        mTransport->mIncomingBidirectionalStreams;
+    incomingStream->EnqueueNative(aCx, jsStream, aRv);
+    if (MOZ_UNLIKELY(aRv.Failed())) {
+      return;
+    }
+    // Add to ReceiveStreams & SendStreams
+    // https://w3c.github.io/webtransport/#send-stream-procedures Step 7:
+    mTransport->mSendStreams.AppendElement(writableStream);
+    // https://w3c.github.io/webtransport/#receive-stream-procedures Step 5:
+    mTransport->mReceiveStreams.AppendElement(readableStream);
   }
   // Step 7.3: Resolve p with undefined.
 }
@@ -139,8 +174,9 @@ void WebTransportIncomingStreamsAlgorithms::BuildStream(JSContext* aCx,
 void WebTransportIncomingStreamsAlgorithms::NotifyIncomingStream() {
   if (mUnidirectional == StreamType::Unidirectional) {
     LOG(("NotifyIncomingStream: %zu Unidirectional ",
-         mTransport->mUnidirectionalStreams.GetSize()));
-    auto number = mTransport->mUnidirectionalStreams.GetSize();
+         mTransport->mUnidirectionalStreams.Length()));
+#ifdef DEBUG
+    auto number = mTransport->mUnidirectionalStreams.Length();
     MOZ_ASSERT(number > 0);
 #endif
     RefPtr<Promise> promise = mCallback.forget();
@@ -149,8 +185,9 @@ void WebTransportIncomingStreamsAlgorithms::NotifyIncomingStream() {
     }
   } else {
     LOG(("NotifyIncomingStream: %zu Bidirectional ",
-         mTransport->mBidirectionalStreams.GetSize()));
-    auto number = mTransport->mBidirectionalStreams.GetSize();
+         mTransport->mBidirectionalStreams.Length()));
+#ifdef DEBUG
+    auto number = mTransport->mBidirectionalStreams.Length();
     MOZ_ASSERT(number > 0);
 #endif
     RefPtr<Promise> promise = mCallback.forget();
