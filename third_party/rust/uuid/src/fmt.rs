@@ -42,22 +42,14 @@ impl fmt::Display for Variant {
 
 impl fmt::LowerHex for Uuid {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if f.alternate() {
-            fmt::LowerHex::fmt(self.as_simple(), f)
-        } else {
-            fmt::LowerHex::fmt(self.as_hyphenated(), f)
-        }
+        fmt::LowerHex::fmt(self.as_hyphenated(), f)
     }
 }
 
 impl fmt::UpperHex for Uuid {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if f.alternate() {
-            fmt::UpperHex::fmt(self.as_simple(), f)
-        } else {
-            fmt::UpperHex::fmt(self.as_hyphenated(), f)
-        }
+        fmt::UpperHex::fmt(self.as_hyphenated(), f)
     }
 }
 

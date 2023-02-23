@@ -72,7 +72,7 @@ define_uuid_macro! {
 /// Provides the following compilation error:
 ///
 /// ```txt
-/// error: invalid character: expected an optional prefix of `urn:uuid:` followed by 0123456789abcdefABCDEF-, found Z at 9
+/// error: invalid character: expected an optional prefix of `urn:uuid:` followed by [0-9a-fA-F-], found Z at 9
 ///     |
 ///     |     let id = uuid!("F9168C5E-ZEB2-4FAA-B6BF-329BF39FA1E4");
 ///     |                              ^

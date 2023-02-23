@@ -11,6 +11,10 @@ impl Arbitrary<'_> for Uuid {
 
         Ok(Builder::from_random_bytes(b).into_uuid())
     }
+
+    fn size_hint(depth: usize) -> (usize, Option<usize>) {
+        (16, Some(16))
+    }
 }
 
 #[cfg(test)]
