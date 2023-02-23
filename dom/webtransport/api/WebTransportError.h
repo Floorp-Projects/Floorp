@@ -16,21 +16,22 @@ class WebTransportError final : public DOMException {
   explicit WebTransportError(
       const nsACString& aMessage,
       WebTransportErrorSource aSource = WebTransportErrorSource::Stream,
-      uint8_t aCode = 0)
+      Nullable<uint8_t> aCode = Nullable<uint8_t>())
       : DOMException(NS_OK, aMessage, "WebTransportError"_ns, 0),
         mStreamErrorCode(aCode),
         mSource(aSource) {}
+
+  JSObject* WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<WebTransportError> Constructor(
       const GlobalObject& aGlobal, const WebTransportErrorInit& aInit);
 
   WebTransportErrorSource Source() { return mSource; }
-  Nullable<uint8_t> GetStreamErrorCode() const {
-    return Nullable<uint8_t>(mStreamErrorCode);
-  }
+  Nullable<uint8_t> GetStreamErrorCode() const { return mStreamErrorCode; }
 
  private:
-  uint8_t mStreamErrorCode;
+  Nullable<uint8_t> mStreamErrorCode;
   const WebTransportErrorSource mSource;
 };
 
