@@ -8,19 +8,18 @@
 #define DOM_WEBTRANSPORT_API_WEBTRANSPORTSTREAMS__H_
 
 #include "mozilla/dom/UnderlyingSourceCallbackHelpers.h"
+#include "mozilla/dom/WritableStream.h"
 
 namespace mozilla::dom {
 
 class WebTransport;
+
 class WebTransportIncomingStreamsAlgorithms
     : public UnderlyingSourceAlgorithmsWrapper {
  public:
-  WebTransportIncomingStreamsAlgorithms(Promise* aIncomingStreamPromise,
-                                        bool aUnidirectional,
-                                        WebTransport* aStream)
-      : mIncomingStreamPromise(aIncomingStreamPromise),
-        mUnidirectional(aUnidirectional),
-        mStream(aStream) {}
+  enum class StreamType : uint8_t { Unidirectional, Bidirectional };
+  WebTransportIncomingStreamsAlgorithms(StreamType aUnidirectional,
+                                        WebTransport* aTransport);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(
@@ -30,13 +29,21 @@ class WebTransportIncomingStreamsAlgorithms
       JSContext* aCx, ReadableStreamController& aController,
       ErrorResult& aRv) override;
 
+  // We call EnqueueNative, which is MOZ_CAN_RUN_SCRIPT but won't in this case
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void BuildStream(JSContext* aCx,
+                                               ErrorResult& aRv);
+
+  void NotifyIncomingStream();
+
+  void NotifyRejectAll();
+
  protected:
   ~WebTransportIncomingStreamsAlgorithms() override;
 
  private:
-  RefPtr<Promise> mIncomingStreamPromise;
-  const bool mUnidirectional;
-  RefPtr<WebTransport> mStream;
+  const StreamType mUnidirectional;
+  RefPtr<WebTransport> mTransport;
+  RefPtr<Promise> mCallback;
 };
 
 }  // namespace mozilla::dom

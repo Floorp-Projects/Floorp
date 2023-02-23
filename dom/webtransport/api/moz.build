@@ -19,6 +19,8 @@ UNIFIED_SOURCES += [
     "WebTransportBidirectionalStream.cpp",
     "WebTransportDatagramDuplexStream.cpp",
     "WebTransportError.cpp",
+    "WebTransportReceiveStream.cpp",
+    "WebTransportSendStream.cpp",
     "WebTransportStreams.cpp",
 ]
 

@@ -14,12 +14,15 @@
 #include "nsIOService.h"
 #include "nsIPrincipal.h"
 #include "nsIWebTransport.h"
+#include "nsStreamUtils.h"
+#include "nsIWebTransportStream.h"
+
+using IPCResult = mozilla::ipc::IPCResult;
 
 namespace mozilla::dom {
 
 NS_IMPL_ISUPPORTS(WebTransportParent, WebTransportSessionEventListener);
 
-using IPCResult = mozilla::ipc::IPCResult;
 using CreateWebTransportPromise =
     MozPromise<WebTransportReliabilityMode, nsresult, true>;
 WebTransportParent::~WebTransportParent() {
@@ -131,14 +134,24 @@ void WebTransportParent::ActorDestroy(ActorDestroyReason aWhy) {
 
 // We may not receive this response if the child side is destroyed without
 // `Close` or `Shutdown` being explicitly called.
-mozilla::ipc::IPCResult WebTransportParent::RecvClose(
-    const uint32_t& aCode, const nsACString& aReason) {
+IPCResult WebTransportParent::RecvClose(const uint32_t& aCode,
+                                        const nsACString& aReason) {
   LOG(("Close received, code = %u, reason = %s", aCode,
        PromiseFlatCString(aReason).get()));
   MOZ_ASSERT(!mClosed);
   mClosed.Flip();
   mWebTransport->CloseSession(aCode, aReason);
   Close();
+  return IPC_OK();
+}
+
+IPCResult WebTransportParent::RecvCreateUnidirectionalStream(
+    CreateUnidirectionalStreamResolver&& aResolver) {
+  return IPC_OK();
+}
+
+IPCResult WebTransportParent::RecvCreateBidirectionalStream(
+    CreateBidirectionalStreamResolver&& aResolver) {
   return IPC_OK();
 }
 
@@ -231,8 +244,30 @@ WebTransportParent::OnIncomingStreamAvailableInternal(
 NS_IMETHODIMP
 WebTransportParent::OnIncomingUnidirectionalStreamAvailable(
     nsIWebTransportReceiveStream* aStream) {
-  // XXX implement once DOM WebAPI supports creation of streams
-  Unused << aStream;
+  LOG(("IncomingUnidirectonalStream available"));
+  // We should be on the Socket Thread
+  RefPtr<DataPipeSender> sender;
+  RefPtr<DataPipeReceiver> receiver;
+  nsresult rv = NewDataPipe(mozilla::ipc::kDefaultDataPipeCapacity,
+                            getter_AddRefs(sender), getter_AddRefs(receiver));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIEventTarget> target = GetCurrentSerialEventTarget();
+  nsCOMPtr<nsIAsyncInputStream> stream = do_QueryInterface(aStream);
+  rv = NS_AsyncCopy(stream, sender, target, NS_ASYNCCOPY_VIA_READSEGMENTS,
+                    mozilla::ipc::kDefaultDataPipeCapacity, nullptr, nullptr);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  LOG(("Sending UnidirectionalStream pipe to content"));
+  // pass the DataPipeReceiver to the content process
+  if (!SendIncomingUnidirectionalStream(receiver)) {
+    return NS_ERROR_FAILURE;
+  }
+
   return NS_OK;
 }
 
@@ -240,6 +275,7 @@ NS_IMETHODIMP
 WebTransportParent::OnIncomingBidirectionalStreamAvailable(
     nsIWebTransportBidirectionalStream* aStream) {
   // XXX implement once DOM WebAPI supports creation of streams
+  LOG(("Sending BidirectionalStream pipe to content"));
   Unused << aStream;
   return NS_OK;
 }
