@@ -28,6 +28,9 @@ async function handle_actions(action, options) {
         case "close-browser-manager-sidebar":
             await browser.floorpActions.closeBrowserManagerSidebar();
             break;
+        case "toggle-browser-manager-sidebar":
+            await browser.floorpActions.changeBrowserManagerSidebarVisibility();
+            break;
         case "show-statusbar":
             await browser.floorpActions.showStatusbar();
             break;

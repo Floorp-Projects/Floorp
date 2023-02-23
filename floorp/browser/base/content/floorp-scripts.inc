@@ -18,7 +18,6 @@ document.addEventListener("DOMContentLoaded", () => {
     Services.scriptloader.loadSubScript("chrome://browser/content/browser-UI-custom.js", this);
     Services.scriptloader.loadSubScript("chrome://browser/content/browser-manager-sidebar.js", this);
     Services.scriptloader.loadSubScript("chrome://browser/content/browser-undo-closed-tab.js", this);
-    Services.scriptloader.loadSubScript("chrome://browser/content/browser-startup.js", this);
     Services.scriptloader.loadSubScript("chrome://browser/content/browser-statusbar.js", this);
     Services.scriptloader.loadSubScript("chrome://browser/content/browser-userChrome.js", this);
     Services.scriptloader.loadSubScript("chrome://browser/content/browser-preferences.js", this);

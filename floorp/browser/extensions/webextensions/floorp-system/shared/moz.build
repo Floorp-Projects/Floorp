@@ -21,7 +21,8 @@ FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"] += [
     "download-notification.js",
     "portable-update.js",
     "update.js",
-    "webcompat.js",
+    "webcompat_inject.js",
+    "webcompat_useragent.js",
 ]
 
 FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["_locales"]["ja"] += [
@@ -60,10 +61,6 @@ FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["qr-code"] += [
     "qr-code/popup.html",
     "qr-code/popup.js",
     "qr-code/qrcode.min.js",
-]
-
-FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["webcompat"] += [
-    "webcompat/fix-youtube-comment.js",
 ]
 
 FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["gesturefy"] += [

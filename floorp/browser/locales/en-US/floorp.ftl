@@ -221,6 +221,10 @@ linux-chrome-useragent-mode =
  .label = Spoof Chrome on Linux
 mobile-chrome-useragent-mode =
  .label = Impersonate Moblie
+use-custom-useragent-mode =
+ .label = Use Custom User Agent
+custom-useragent-value =
+  .label = Custom User Agent
 
 ## DMR UI
 download-mgr-UI =
@@ -567,8 +571,8 @@ test-content-css =
     .label = Test userContent.css
     .accesskey = W
 
-not-found-editor-path = Path to the editor was not found
-set-pref-description = This operation requires a path to the editor. Set "view_source.editor.path" in "about:config"
+not-found-editor-path = Could not find the editor path.
+set-pref-description = Set the path to the editor you want to use.
 rebuild-complete = Rebuild has been completed.
 please-enter-filename = Please enter a file name.
 confirmed-update = Confirmed the update of "{ $leafName }".
@@ -619,6 +623,9 @@ gf-floorp-open-browser-manager-sidebar-description = Open Browser Manager Sideba
 
 gf-floorp-close-browser-manager-sidebar-name = [Floorp] Close BMS
 gf-floorp-close-browser-manager-sidebar-description = Close Browser Manager Sidebar
+
+gf-floorp-toggle-browser-manager-sidebar-name = [Floorp] Toggle BMS
+gf-floorp-toggle-browser-manager-sidebar-description = Toggle Browser Manager Sidebar
 
 gf-floorp-show-statusbar-name = [Floorp] Show Status Bar
 gf-floorp-show-statusbar-description = Show Status Bar

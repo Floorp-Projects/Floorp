@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 Preferences.addAll([
-  { id: "floorp.optimized.msbutton.ope", type: "bool" },
   { id: "floorp.hide.tabbrowser-tab.enable", type: "bool" },
   { id: "floorp.optimized.verticaltab", type: "bool" },
   { id: "floorp.horizontal.tab.position.shift", type: "bool" },
@@ -122,6 +121,30 @@ window.addEventListener("pageshow", async function() {
       elem.value = Services.prefs.getIntPref(prefName, undefined);
     });
   }
+
+  {
+    function setOverrideUA(){
+      if (document.getElementById("floorpUAs").value == 5) {
+        document.getElementById("customUsergent").disabled = false;} else { document.getElementById("customUsergent").disabled = true;
+      }
+    }
+
+    setOverrideUA();
+    let prefName = "floorp.general.useragent.override";
+    let elem = document.getElementById("customUsergent");
+    elem.value = Services.prefs.getStringPref(prefName, undefined);
+
+    elem.addEventListener('change', function () {
+      Services.prefs.setStringPref(prefName, elem.value);
+      Services.prefs.setStringPref("general.useragent.override", Services.prefs.getCharPref("floorp.general.useragent.override"));
+    });
+    Services.prefs.addObserver(prefName, function () {
+      elem.value = Services.prefs.getStringPref(prefName, undefined);
+    });
+  }
+    document.getElementById("floorpUAs").addEventListener("click", function () {
+      setOverrideUA();
+  });
 
   document.getElementById("leptonButton").addEventListener("click", function () {
     window.location.href = "about:preferences#lepton";

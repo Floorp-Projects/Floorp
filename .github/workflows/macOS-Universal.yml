@@ -170,7 +170,7 @@ jobs:
     needs: integration
     runs-on: ubuntu-latest
     steps:
-    - uses: geekyeggo/delete-artifact@v1
+    - uses: geekyeggo/delete-artifact@v2
       with:
         name: |
          obj-x86_64-apple-darwin

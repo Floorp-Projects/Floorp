@@ -29,12 +29,12 @@ pref("update.id.floorp", "linux");
 
 // userAgent
 pref("floorp.browser.UserAgent", 0);
+pref("floorp.general.useragent.override", "");
 
 pref("floorp.chrome.theme.mode", -1);
 
 //ブラウザーUIのカスタマイズ設定
 pref("floorp.hide.tabbrowser-tab.enable", false); //水平タブ削除
-pref("floorp.optimized.msbutton.ope", false); //サイドボタン付きマウス操作にブラウザーを最適化
 pref("floorp.optimized.verticaltab", false); //ツリー型垂直タブ等に最適化。8.7.2 からフォーカスした際の動作は別に
 pref("floorp.horizontal.tab.position.shift", false); //水平タブ位置移動
 pref("floorp.Tree-type.verticaltab.optimization", false); //ツリー型タブのフォーカスした際の挙動を変更
@@ -73,7 +73,7 @@ pref("browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar", fal
 //新しいタブの背景の設定
 pref("browser.newtabpage.activity-stream.floorp.background.type", 1);
 pref("browser.newtabpage.activity-stream.floorp.background.images.folder", "");
-pref("browser.newtabpage.activity-stream.floorp.background.images.extensions", "png,jpg,jpeg,webp,gif,svg,tiff,tif,bmp");
+pref("browser.newtabpage.activity-stream.floorp.background.images.extensions", "png,jpg,jpeg,webp,gif,svg,tiff,tif,bmp,avif");
 
 pref("floorp.multitab.bottommode", false);
 
@@ -90,6 +90,7 @@ pref("floorp.browser.sidebar2.data", '{"data":{"1":{"url":"floorp//bmt","width":
 pref("floorp.browser.sidebar2.global.webpanel.width", 400);
 
 pref("floorp.tabsleep.enabled", false);
+pref("floorp.webcompat.enabled", true);
 
 // システムアドオンのアップデート確認先
 pref("extensions.systemAddon.update.url", "https://floorp-update.ablaze.one/systemAddon/xml/%DISPLAY_VERSION%/%OS%/update.xml");
@@ -126,7 +127,6 @@ pref("services.sync.prefs.sync.browser.tabs.warnOnClose", false, locked); //た�
 // 同期を有効にする
 pref("services.sync.prefs.sync.floorp.browser.sidebar.right", true);// サイドバーの右側を表示
 pref("services.sync.prefs.sync.floorp.browser.sidebar2.data", true);// サイドバーのデータ
-pref("services.sync.prefs.sync.floorp.optimized.msbutton.ope", true); //サイドボタン付きマウス操作にブラウザーを最適化
 pref("services.sync.prefs.sync.floorp.optimized.verticaltab", true); //ツリー型垂直タブ等に最適化。8.7.2 からフォーカスした際の動作は別に
 pref("services.sync.prefs.sync.floorp.browser.user.interface", true);// Floorp 10 系以降のインターフェーステーマ設定
 pref("services.sync.prefs.sync.floorp.browser.tabbar.settings", true);// タブの設定
@@ -241,11 +241,6 @@ pref("general.config.obscure_value", 0);
 
 //font
 pref("font.blacklist.underline_offset", "FangSong,Gulim,GulimChe,MingLiU,MingLiU-ExtB,MingLiU_HKSCS,MingLiU-HKSCS-ExtB,MS Gothic,MS Mincho,MS PGothic,MS PMincho,MS UI Gothic,PMingLiU,PMingLiU-ExtB,SimHei,SimSun,SimSun-ExtB,Hei,Kai,Apple LiGothic,Apple LiSung,Osaka,Meiryo");
-#ifdef XP_WIN
-pref("font.name-list.serif.ja", "Noto Sans JP, Yu Mincho, MS PMincho, MS Mincho, Meiryo, Yu Gothic, MS PGothic, MS Gothic");
-pref("font.name-list.sans-serif.ja", "Noto Sans JP, Meiryo, Yu Gothic, MS PGothic, MS Gothic, Yu Mincho, MS PMincho, MS Mincho");
-pref("font.name-list.monospace.ja", "Noto Sans JP, MS Gothic, MS Mincho, Meiryo, Yu Gothic, Yu Mincho, MS PGothic, MS PMincho");
-#endif
 
 // 多少のパフォーマンス改善
 pref("gfx.canvas.accelerated", true);
@@ -255,6 +250,17 @@ pref("gfx.webrender.all", true);
 #ifdef XP_WIN
 pref("dom.webshare.enabled", true);
 #endif
+
+// アドオンのバージョン制限のチェックを無効化
+pref("extensions.checkCompatibility.102.8", false);
+pref("extensions.checkCompatibility.102.9", false);
+pref("extensions.checkCompatibility.102.10", false);
+pref("extensions.checkCompatibility.102.11", false);
+pref("extensions.checkCompatibility.102.12", false);
+pref("extensions.checkCompatibility.102.13", false);
+pref("extensions.checkCompatibility.102.14", false);
+pref("extensions.checkCompatibility.102.15", false);
+pref("extensions.checkCompatibility.nightly", false);
 
 /*-----------------------------------------------------------------------------------all.js の設定-----------------------------------------------------------------------------------*/
 
