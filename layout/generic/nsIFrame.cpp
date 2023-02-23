@@ -2130,12 +2130,13 @@ nscoord nsIFrame::GetLogicalBaseline(WritingMode aWM) const {
 
 nscoord nsIFrame::GetLogicalBaseline(
     WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
-  nscoord result;
-  if (!GetNaturalBaselineBOffset(aWM, aBaselineGroup, &result)) {
-    result = SynthesizeFallbackBaseline(aWM, aBaselineGroup);
-  }
+  const auto result =
+      GetNaturalBaselineBOffset(aWM, aBaselineGroup)
+          .valueOrFrom([this, aWM, aBaselineGroup]() {
+            return SynthesizeFallbackBaseline(aWM, aBaselineGroup);
+          });
   if (aBaselineGroup == BaselineSharingGroup::Last) {
-    result = BSize(aWM) - result;
+    return BSize(aWM) - result;
   }
   return result;
 }

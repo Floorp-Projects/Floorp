@@ -77,28 +77,27 @@ class nsTextControlFrame : public nsContainerFrame,
               const ReflowInput& aReflowInput,
               nsReflowStatus& aStatus) override;
 
-  bool GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
-                                 BaselineSharingGroup aBaselineGroup,
-                                 nscoord* aBaseline) const override {
+  Maybe<nscoord> GetNaturalBaselineBOffset(
+      mozilla::WritingMode aWM,
+      BaselineSharingGroup aBaselineGroup) const override {
     if (!IsSingleLineTextControl()) {
-      return false;
+      return Nothing{};
     }
     return GetSingleLineTextControlBaseline(this, mFirstBaseline, aWM,
-                                            aBaselineGroup, aBaseline);
+                                            aBaselineGroup);
   }
 
-  static bool GetSingleLineTextControlBaseline(
+  static Maybe<nscoord> GetSingleLineTextControlBaseline(
       const nsIFrame* aFrame, nscoord aFirstBaseline, mozilla::WritingMode aWM,
-      BaselineSharingGroup aBaselineGroup, nscoord* aBaseline) {
+      BaselineSharingGroup aBaselineGroup) {
     if (aFrame->StyleDisplay()->IsContainLayout()) {
-      return false;
+      return Nothing{};
     }
     NS_ASSERTION(aFirstBaseline != NS_INTRINSIC_ISIZE_UNKNOWN,
                  "please call Reflow before asking for the baseline");
-    *aBaseline = aBaselineGroup == BaselineSharingGroup::First
-                     ? aFirstBaseline
-                     : aFrame->BSize(aWM) - aFirstBaseline;
-    return true;
+    return mozilla::Some(aBaselineGroup == BaselineSharingGroup::First
+                             ? aFirstBaseline
+                             : aFrame->BSize(aWM) - aFirstBaseline);
   }
 
   nsSize GetXULMinSize(nsBoxLayoutState&) override;

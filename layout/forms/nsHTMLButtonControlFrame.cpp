@@ -310,29 +310,27 @@ void nsHTMLButtonControlFrame::ReflowButtonContents(
   aButtonDesiredSize.SetOverflowAreasToDesiredBounds();
 }
 
-bool nsHTMLButtonControlFrame::GetNaturalBaselineBOffset(
-    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
-    nscoord* aBaseline) const {
+Maybe<nscoord> nsHTMLButtonControlFrame::GetNaturalBaselineBOffset(
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
   if (StyleDisplay()->IsContainLayout()) {
-    return false;
+    return Nothing{};
   }
 
   nsIFrame* inner = mFrames.FirstChild();
   if (MOZ_UNLIKELY(inner->GetWritingMode().IsOrthogonalTo(aWM))) {
-    return false;
+    return Nothing{};
   }
-  if (!inner->GetNaturalBaselineBOffset(aWM, aBaselineGroup, aBaseline)) {
-    // <input type=color> has an empty block frame as inner frame
-    *aBaseline =
-        Baseline::SynthesizeBOffsetFromBorderBox(inner, aWM, aBaselineGroup);
-  }
+  auto result = inner->GetNaturalBaselineBOffset(aWM, aBaselineGroup)
+                    .valueOrFrom([inner, aWM, aBaselineGroup]() {
+                      return Baseline::SynthesizeBOffsetFromBorderBox(
+                          inner, aWM, aBaselineGroup);
+                    });
+
   nscoord innerBStart = inner->BStart(aWM, GetSize());
   if (aBaselineGroup == BaselineSharingGroup::First) {
-    *aBaseline += innerBStart;
-  } else {
-    *aBaseline += BSize(aWM) - (innerBStart + inner->BSize(aWM));
+    return Some(result + innerBStart);
   }
-  return true;
+  return Some(result + BSize(aWM) - (innerBStart + inner->BSize(aWM)));
 }
 
 BaselineSharingGroup nsHTMLButtonControlFrame::GetDefaultBaselineSharingGroup()

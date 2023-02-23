@@ -366,9 +366,9 @@ class nsTextFrame : public nsIFrame {
 
   bool IsEmpty() final;
   bool IsSelfEmpty() final { return IsEmpty(); }
-  bool GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
-                                 BaselineSharingGroup aBaselineGroup,
-                                 nscoord* aBaseline) const override;
+  Maybe<nscoord> GetNaturalBaselineBOffset(
+      mozilla::WritingMode aWM,
+      BaselineSharingGroup aBaselineGroup) const override;
 
   bool HasSignificantTerminalNewline() const final;
 

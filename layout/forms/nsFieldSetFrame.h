@@ -40,9 +40,9 @@ class nsFieldSetFrame final : public nsContainerFrame {
       mozilla::WritingMode aWM,
       BaselineSharingGroup aBaselineGroup) const override;
   BaselineSharingGroup GetDefaultBaselineSharingGroup() const override;
-  bool GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
-                                 BaselineSharingGroup aBaselineGroup,
-                                 nscoord* aBaseline) const override;
+  Maybe<nscoord> GetNaturalBaselineBOffset(
+      mozilla::WritingMode aWM,
+      BaselineSharingGroup aBaselineGroup) const override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 const nsDisplayListSet& aLists) override;

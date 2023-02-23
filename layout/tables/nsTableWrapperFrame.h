@@ -67,9 +67,9 @@ class nsTableWrapperFrame : public nsContainerFrame {
   nscoord SynthesizeFallbackBaseline(
       mozilla::WritingMode aWM,
       BaselineSharingGroup aBaselineGroup) const override;
-  bool GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
-                                 BaselineSharingGroup aBaselineGroup,
-                                 nscoord* aBaseline) const override;
+  Maybe<nscoord> GetNaturalBaselineBOffset(
+      mozilla::WritingMode aWM,
+      BaselineSharingGroup aBaselineGroup) const override;
 
   virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
   virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;

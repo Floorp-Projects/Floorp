@@ -37,9 +37,8 @@ nscoord nsTableWrapperFrame::SynthesizeFallbackBaseline(
   return BSize(aWM) + marginBlockEnd;
 }
 
-bool nsTableWrapperFrame::GetNaturalBaselineBOffset(
-    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
-    nscoord* aBaseline) const {
+Maybe<nscoord> nsTableWrapperFrame::GetNaturalBaselineBOffset(
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
   // Baseline is determined by row
   // (https://drafts.csswg.org/css-align-3/#baseline-export). If the row
   // direction is going to be orthogonal to the parent's writing mode, the
@@ -47,21 +46,18 @@ bool nsTableWrapperFrame::GetNaturalBaselineBOffset(
   // instead.
   if (StyleDisplay()->IsContainLayout() ||
       GetWritingMode().IsOrthogonalTo(aWM)) {
-    return false;
+    return Nothing{};
   }
   auto* innerTable = InnerTableFrame();
-  nscoord offset;
-  if (innerTable->GetNaturalBaselineBOffset(aWM, aBaselineGroup, &offset)) {
-    auto bStart = innerTable->BStart(aWM, mRect.Size());
-    if (aBaselineGroup == BaselineSharingGroup::First) {
-      *aBaseline = offset + bStart;
-    } else {
-      auto bEnd = bStart + innerTable->BSize(aWM);
-      *aBaseline = BSize(aWM) - (bEnd - offset);
-    }
-    return true;
-  }
-  return false;
+  return innerTable->GetNaturalBaselineBOffset(aWM, aBaselineGroup)
+      .map([this, aWM, aBaselineGroup, innerTable](nscoord aBaseline) {
+        auto bStart = innerTable->BStart(aWM, mRect.Size());
+        if (aBaselineGroup == BaselineSharingGroup::First) {
+          return aBaseline + bStart;
+        }
+        auto bEnd = bStart + innerTable->BSize(aWM);
+        return BSize(aWM) - (bEnd - aBaseline);
+      });
 }
 
 nsTableWrapperFrame::nsTableWrapperFrame(ComputedStyle* aStyle,
