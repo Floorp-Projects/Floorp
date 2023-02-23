@@ -229,7 +229,7 @@ jobs:
             product: firefox
             job-name: macosx64-profile
         treeherder:
-            platform: macosx1014-64-shippable/opt
+            platform: macosx1015-64-shippable/opt
         worker-type: b-osx-1015
         worker:
             chain-of-trust: true

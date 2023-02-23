@@ -135,9 +135,6 @@ def set_treeherder_machine_platform(config, tasks):
     translation = {
         # Linux64 build platform for asan is specified differently to
         # treeherder.
-        "macosx1014-64/debug": "osx-10-14/debug",
-        "macosx1014-64/opt": "osx-10-14/opt",
-        "macosx1014-64-shippable/opt": "osx-10-14-shippable/opt",
         "macosx1100-64/opt": "osx-1100/opt",
         "macosx1100-64-shippable/opt": "osx-1100-shippable/opt",
         "win64-asan/opt": "windows10-64/asan",
@@ -638,14 +635,6 @@ def handle_tier(config, tasks):
                 "windows10-64-2004-shippable-qr/opt",
                 "windows10-64-2004-devedition-qr/opt",
                 "windows10-64-2004-asan-qr/opt",
-                "macosx1014-64/opt",
-                "macosx1014-64/debug",
-                "macosx1014-64-shippable/opt",
-                "macosx1014-64-devedition/opt",
-                "macosx1014-64-devedition-qr/opt",
-                "macosx1014-64-qr/opt",
-                "macosx1014-64-shippable-qr/opt",
-                "macosx1014-64-qr/debug",
                 "macosx1015-64/opt",
                 "macosx1015-64/debug",
                 "macosx1015-64-shippable/opt",
