@@ -118,6 +118,8 @@ extern crate std as alloc;
 #[cfg(feature = "serde")]
 mod serde;
 
+mod builder;
+
 use alloc::vec::{self, Vec};
 use core::iter::{self, FromIterator, FusedIterator};
 use core::{fmt, mem, ops, slice};
@@ -313,7 +315,7 @@ impl<T> Slab<T> {
     ///
     /// # Panics
     ///
-    /// Panics if the new capacity overflows `usize`.
+    /// Panics if the new capacity exceeds `isize::MAX` bytes.
     ///
     /// # Examples
     ///
@@ -347,7 +349,7 @@ impl<T> Slab<T> {
     ///
     /// # Panics
     ///
-    /// Panics if the new capacity overflows `usize`.
+    /// Panics if the new capacity exceeds `isize::MAX` bytes.
     ///
     /// # Examples
     ///
@@ -440,17 +442,21 @@ impl<T> Slab<T> {
         self.next = self.entries.len();
         // We can stop once we've found all vacant entries
         let mut remaining_vacant = self.entries.len() - self.len;
+        if remaining_vacant == 0 {
+            return;
+        }
+
         // Iterate in reverse order so that lower keys are at the start of
         // the vacant list. This way future shrinks are more likely to be
         // able to remove vacant entries.
         for (i, entry) in self.entries.iter_mut().enumerate().rev() {
-            if remaining_vacant == 0 {
-                break;
-            }
             if let Entry::Vacant(ref mut next) = *entry {
                 *next = self.next;
                 self.next = i;
                 remaining_vacant -= 1;
+                if remaining_vacant == 0 {
+                    break;
+                }
             }
         }
     }
@@ -686,7 +692,7 @@ impl<T> Slab<T> {
     /// ```
     pub fn get(&self, key: usize) -> Option<&T> {
         match self.entries.get(key) {
-            Some(&Entry::Occupied(ref val)) => Some(val),
+            Some(Entry::Occupied(val)) => Some(val),
             _ => None,
         }
     }
@@ -723,6 +729,10 @@ impl<T> Slab<T> {
     ///
     /// This function can be used to get two mutable references out of one slab,
     /// so that you can manipulate both of them at the same time, eg. swap them.
+    ///
+    /// # Panics
+    ///
+    /// This function will panic if `key1` and `key2` are the same.
     ///
     /// # Examples
     ///
@@ -923,7 +933,7 @@ impl<T> Slab<T> {
     ///
     /// # Panics
     ///
-    /// Panics if the number of elements in the vector overflows a `usize`.
+    /// Panics if the new storage in the vector exceeds `isize::MAX` bytes.
     ///
     /// # Examples
     ///
@@ -1178,7 +1188,7 @@ impl<T> ops::Index<usize> for Slab<T> {
     #[cfg_attr(not(slab_no_track_caller), track_caller)]
     fn index(&self, key: usize) -> &T {
         match self.entries.get(key) {
-            Some(&Entry::Occupied(ref v)) => v,
+            Some(Entry::Occupied(v)) => v,
             _ => panic!("invalid key"),
         }
     }
@@ -1260,51 +1270,12 @@ impl<T> FromIterator<(usize, T)> for Slab<T> {
         I: IntoIterator<Item = (usize, T)>,
     {
         let iterator = iterable.into_iter();
-        let mut slab = Self::with_capacity(iterator.size_hint().0);
+        let mut builder = builder::Builder::with_capacity(iterator.size_hint().0);
 
-        let mut vacant_list_broken = false;
-        let mut first_vacant_index = None;
         for (key, value) in iterator {
-            if key < slab.entries.len() {
-                // iterator is not sorted, might need to recreate vacant list
-                if let Entry::Vacant(_) = slab.entries[key] {
-                    vacant_list_broken = true;
-                    slab.len += 1;
-                }
-                // if an element with this key already exists, replace it.
-                // This is consistent with HashMap and BtreeMap
-                slab.entries[key] = Entry::Occupied(value);
-            } else {
-                if first_vacant_index.is_none() && slab.entries.len() < key {
-                    first_vacant_index = Some(slab.entries.len());
-                }
-                // insert holes as necessary
-                while slab.entries.len() < key {
-                    // add the entry to the start of the vacant list
-                    let next = slab.next;
-                    slab.next = slab.entries.len();
-                    slab.entries.push(Entry::Vacant(next));
-                }
-                slab.entries.push(Entry::Occupied(value));
-                slab.len += 1;
-            }
+            builder.pair(key, value)
         }
-        if slab.len == slab.entries.len() {
-            // no vacant entries, so next might not have been updated
-            slab.next = slab.entries.len();
-        } else if vacant_list_broken {
-            slab.recreate_vacant_list();
-        } else if let Some(first_vacant_index) = first_vacant_index {
-            let next = slab.entries.len();
-            match &mut slab.entries[first_vacant_index] {
-                Entry::Vacant(n) => *n = next,
-                _ => unreachable!(),
-            }
-        } else {
-            unreachable!()
-        }
-
-        slab
+        builder.build()
     }
 }
 

@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.31"
 name = "slab"
-version = "0.4.7"
+version = "0.4.8"
 authors = ["Carl Lerche <me@carllerche.com>"]
 exclude = ["/.*"]
 description = "Pre-allocated storage for a uniform data type"
