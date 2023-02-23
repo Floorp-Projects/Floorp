@@ -204,11 +204,11 @@ var StarUI = {
       return;
     }
 
-    await this._storeRecentlyUsedFolder(selectedFolderGuid, didChangeFolder);
     await bookmarkState.save();
     if (this._isNewBookmark) {
       this.showConfirmation();
     }
+    await this._storeRecentlyUsedFolder(selectedFolderGuid, didChangeFolder);
   },
 
   /**
