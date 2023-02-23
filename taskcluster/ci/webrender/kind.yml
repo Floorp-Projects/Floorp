@@ -422,11 +422,11 @@ jobs:
                 - 'testing/mozharness/scripts/android_*.py'
                 - 'testing/mozharness/configs/android/*.py'
 
-    android-hw-p2-debug:
-        description: Run debug wrench reftests on Android Pixel2
+    android-hw-p5-debug:
+        description: Run debug wrench reftests on Android Pixel5
         attributes:
             build_platform: android
-        worker-type: t-bitbar-gw-unit-p2
+        worker-type: t-bitbar-gw-unit-p5
         worker:
             max-run-time: 5400
             artifacts:
@@ -459,7 +459,7 @@ jobs:
                 export PYTHONPATH=$MOZ_FETCHES_DIR/mozdevice:$PYTHONPATH &&
                 python3 ${MOZHARNESS_PATH}/scripts/${MOZHARNESS_SCRIPT} --config-file ${MOZHARNESS_PATH}/configs/${MOZHARNESS_CONFIG}
         treeherder:
-            platform: android-hw-p2-8-0-arm7/debug
+            platform: android-hw-p5-13-0-arm7/debug
             symbol: WR(wrench)
         when:
             files-changed:
@@ -468,11 +468,11 @@ jobs:
                 - 'testing/mozharness/configs/android/*.py'
                 - 'testing/mozbase/mozdevice/**'
 
-    android-hw-p2-opt:
-        description: Run opt wrench reftests on Android Pixel2
+    android-hw-p5-opt:
+        description: Run opt wrench reftests on Android Pixel5
         attributes:
             build_platform: android
-        worker-type: t-bitbar-gw-unit-p2
+        worker-type: t-bitbar-gw-unit-p5
         worker:
             max-run-time: 5400
             artifacts:
@@ -505,7 +505,7 @@ jobs:
                 export PYTHONPATH=$MOZ_FETCHES_DIR/mozdevice:$PYTHONPATH &&
                 python3 ${MOZHARNESS_PATH}/scripts/${MOZHARNESS_SCRIPT} --config-file ${MOZHARNESS_PATH}/configs/${MOZHARNESS_CONFIG}
         treeherder:
-            platform: android-hw-p2-8-0-arm7/opt
+            platform: android-hw-p5-13-0-arm7/opt
             symbol: WR(wrench)
         when:
             files-changed:
