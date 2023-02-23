@@ -68,12 +68,12 @@ async function verifyError(url, fallbackWarning, testName) {
       if (args.fallbackWarning) {
         is(
           actualDataL10nID,
-          "dns-not-found-native-fallback-title",
+          "dns-not-found-native-fallback-title2",
           "Correct fallback warning error page title is set: " + args.testName
         );
       } else {
         ok(
-          actualDataL10nID != "dns-not-found-native-fallback-title",
+          actualDataL10nID != "dns-not-found-native-fallback-title2",
           "Should not show fallback warning: " + args.testName
         );
       }
