@@ -80,7 +80,7 @@ pub fn expand(input: &mut Item, is_local: bool) {
             }
         }
         Item::Impl(input) => {
-            let mut lifetimes = CollectLifetimes::new("'impl", input.impl_token.span);
+            let mut lifetimes = CollectLifetimes::new("'impl");
             lifetimes.visit_type_mut(&mut *input.self_ty);
             lifetimes.visit_path_mut(&mut input.trait_.as_mut().unwrap().1);
             let params = &input.generics.params;
@@ -119,6 +119,7 @@ pub fn expand(input: &mut Item, is_local: bool) {
 fn lint_suppress_with_body() -> Attribute {
     parse_quote! {
         #[allow(
+            clippy::async_yields_async,
             clippy::let_unit_value,
             clippy::no_effect_underscore_binding,
             clippy::shadow_same,
@@ -166,7 +167,7 @@ fn transform_sig(
         ReturnType::Type(arrow, ret) => (*arrow, quote!(#ret)),
     };
 
-    let mut lifetimes = CollectLifetimes::new("'life", default_span);
+    let mut lifetimes = CollectLifetimes::new("'life");
     for arg in sig.inputs.iter_mut() {
         match arg {
             FnArg::Receiver(arg) => lifetimes.visit_receiver_mut(arg),
@@ -297,10 +298,16 @@ fn transform_sig(
             }) => {}
             FnArg::Receiver(arg) => arg.mutability = None,
             FnArg::Typed(arg) => {
-                if let Pat::Ident(ident) = &mut *arg.pat {
-                    ident.by_ref = None;
-                    ident.mutability = None;
-                } else {
+                let type_is_reference = match *arg.ty {
+                    Type::Reference(_) => true,
+                    _ => false,
+                };
+                if let Pat::Ident(pat) = &mut *arg.pat {
+                    if pat.ident == "self" || !type_is_reference {
+                        pat.by_ref = None;
+                        pat.mutability = None;
+                    }
+                } else if !type_is_reference {
                     let positional = positional_arg(i, &arg.pat);
                     let m = mut_pat(&mut arg.pat);
                     arg.pat = parse_quote!(#m #positional);
@@ -362,6 +369,12 @@ fn transform_block(context: Context, sig: &mut Signature, block: &mut Block) {
                 quote!(let #mutability #ident = #self_token;)
             }
             FnArg::Typed(arg) => {
+                // If there is a #[cfg(...)] attribute that selectively enables
+                // the parameter, forward it to the variable.
+                //
+                // This is currently not applied to the `self` parameter.
+                let attrs = arg.attrs.iter().filter(|attr| attr.path.is_ident("cfg"));
+
                 if let Pat::Ident(PatIdent {
                     ident, mutability, ..
                 }) = &*arg.pat
@@ -370,16 +383,32 @@ fn transform_block(context: Context, sig: &mut Signature, block: &mut Block) {
                         self_span = Some(ident.span());
                         let prefixed = Ident::new("__self", ident.span());
                         quote!(let #mutability #prefixed = #ident;)
+                    } else if let Type::Reference(_) = *arg.ty {
+                        quote!()
                     } else {
-                        quote!(let #mutability #ident = #ident;)
+                        quote! {
+                            #(#attrs)*
+                            let #mutability #ident = #ident;
+                        }
                     }
+                } else if let Type::Reference(_) = *arg.ty {
+                    quote!()
                 } else {
                     let pat = &arg.pat;
                     let ident = positional_arg(i, pat);
                     if let Pat::Wild(_) = **pat {
-                        quote!(let #ident = #ident;)
+                        quote! {
+                            #(#attrs)*
+                            let #ident = #ident;
+                        }
                     } else {
-                        quote!(let #pat = #ident;)
+                        quote! {
+                            #(#attrs)*
+                            let #pat = {
+                                let #ident = #ident;
+                                #ident
+                            };
+                        }
                     }
                 }
             }
