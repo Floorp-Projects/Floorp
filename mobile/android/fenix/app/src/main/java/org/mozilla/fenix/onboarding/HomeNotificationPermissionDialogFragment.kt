@@ -6,14 +6,17 @@ package org.mozilla.fenix.onboarding
 
 import android.annotation.SuppressLint
 import android.content.pm.ActivityInfo
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.RequiresApi
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.DialogFragment
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.onboarding.view.NotificationPermissionDialogScreen
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -35,6 +38,7 @@ class HomeNotificationPermissionDialogFragment : DialogFragment() {
         activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -47,6 +51,7 @@ class HomeNotificationPermissionDialogFragment : DialogFragment() {
                     onDismiss = ::onDismiss,
                     grantNotificationPermission = {
                         ensureMarketingChannelExists(context.applicationContext)
+                        requireComponents.notificationsDelegate.requestNotificationPermission()
                         onDismiss()
                     },
                 )
