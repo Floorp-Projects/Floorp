@@ -221,7 +221,7 @@ type LanguageTranslationModelFilesAligned = {
  * to start the translations engine. These may not be available if running in tests,
  * and so the engine will be mocked.
  */
-interface EnginePayload {
+interface TranslationsEnginePayload {
   bergamotWasmArrayBuffer: ArrayBuffer,
   languageModelFiles: LanguageModelFiles[]
 }

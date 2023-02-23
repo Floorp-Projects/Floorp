@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyGetter(lazy, "console", () => {
 
 /**
  * @typedef {import("../translations").LanguageTranslationModelFiles} LanguageTranslationModelFiles
- * @typedef {import("../translations").EnginePayload} EnginePayload
+ * @typedef {import("../translations").TranslationsEnginePayload} TranslationsEnginePayload
  */
 
 export class LanguageIdEngine {
@@ -117,7 +117,7 @@ export class TranslationsEngine {
    *
    * @param {string} fromLanguage
    * @param {string} toLanguage
-   * @param {EnginePayload} enginePayload
+   * @param {TranslationsEnginePayload} enginePayload
    */
   constructor(fromLanguage, toLanguage, enginePayload) {
     /** @type {string} */
@@ -328,7 +328,7 @@ export class TranslationsChild extends JSWindowActorChild {
    *
    * @param {string} fromLanguage
    * @param {string} toLanguage
-   * @returns {null | EnginePayload}
+   * @returns {null | TranslationsEnginePayload}
    */
   async #getTranslationsEnginePayload(fromLanguage, toLanguage) {
     if (this.#isTranslationsEngineMocked) {
