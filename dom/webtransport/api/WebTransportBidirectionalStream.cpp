@@ -9,7 +9,8 @@
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebTransportBidirectionalStream, mGlobal)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebTransportBidirectionalStream, mGlobal,
+                                      mReadable, mWritable)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(WebTransportBidirectionalStream)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(WebTransportBidirectionalStream)
