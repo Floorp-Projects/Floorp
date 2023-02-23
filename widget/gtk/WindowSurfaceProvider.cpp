@@ -7,6 +7,7 @@
 #include "WindowSurfaceProvider.h"
 
 #include "gfxPlatformGtk.h"
+#include "GtkCompositorWidget.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "nsWindow.h"
@@ -41,10 +42,6 @@ WindowSurfaceProvider::WindowSurfaceProvider()
     : mWindowSurface(nullptr),
       mMutex("WindowSurfaceProvider"),
       mWindowSurfaceValid(false)
-#ifdef MOZ_WAYLAND
-      ,
-      mWidget(nullptr)
-#endif
 #ifdef MOZ_X11
       ,
       mIsShaped(false),
@@ -59,6 +56,11 @@ WindowSurfaceProvider::WindowSurfaceProvider()
 void WindowSurfaceProvider::Initialize(RefPtr<nsWindow> aWidget) {
   mWindowSurfaceValid = false;
   mWidget = std::move(aWidget);
+}
+void WindowSurfaceProvider::Initialize(GtkCompositorWidget* aCompositorWidget) {
+  mWindowSurfaceValid = false;
+  mCompositorWidget = aCompositorWidget;
+  mWidget = static_cast<nsWindow*>(aCompositorWidget->RealWidget());
 }
 #endif
 #ifdef MOZ_X11
@@ -93,7 +95,7 @@ RefPtr<WindowSurface> WindowSurfaceProvider::CreateWindowSurface() {
     if (!mWidget) {
       return nullptr;
     }
-    return MakeRefPtr<WindowSurfaceWaylandMB>(mWidget);
+    return MakeRefPtr<WindowSurfaceWaylandMB>(mWidget, mCompositorWidget);
   }
 #endif
 #ifdef MOZ_X11
