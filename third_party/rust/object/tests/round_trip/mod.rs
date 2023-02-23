@@ -231,6 +231,7 @@ fn elf_x86_64() {
 fn elf_any() {
     for (arch, endian) in [
         (Architecture::Aarch64, Endianness::Little),
+        (Architecture::Aarch64_Ilp32, Endianness::Little),
         (Architecture::Arm, Endianness::Little),
         (Architecture::Avr, Endianness::Little),
         (Architecture::Bpf, Endianness::Little),
@@ -247,6 +248,7 @@ fn elf_any() {
         (Architecture::Riscv32, Endianness::Little),
         (Architecture::Riscv64, Endianness::Little),
         (Architecture::S390x, Endianness::Big),
+        (Architecture::Sbf, Endianness::Little),
         (Architecture::Sparc64, Endianness::Big),
         (Architecture::Xtensa, Endianness::Little),
     ]

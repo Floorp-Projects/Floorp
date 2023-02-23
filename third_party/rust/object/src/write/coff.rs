@@ -355,7 +355,9 @@ impl<'a> Object<'a> {
                             | coff::IMAGE_SCN_MEM_READ
                             | coff::IMAGE_SCN_MEM_WRITE
                     }
-                    SectionKind::ReadOnlyData | SectionKind::ReadOnlyString => {
+                    SectionKind::ReadOnlyData
+                    | SectionKind::ReadOnlyDataWithRel
+                    | SectionKind::ReadOnlyString => {
                         coff::IMAGE_SCN_CNT_INITIALIZED_DATA | coff::IMAGE_SCN_MEM_READ
                     }
                     SectionKind::Debug | SectionKind::Other | SectionKind::OtherString => {

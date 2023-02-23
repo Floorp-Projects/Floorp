@@ -5,6 +5,8 @@
 pub enum Architecture {
     Unknown,
     Aarch64,
+    #[allow(non_camel_case_types)]
+    Aarch64_Ilp32,
     Arm,
     Avr,
     Bpf,
@@ -22,6 +24,7 @@ pub enum Architecture {
     Riscv32,
     Riscv64,
     S390x,
+    Sbf,
     Sparc64,
     Wasm32,
     Xtensa,
@@ -35,6 +38,7 @@ impl Architecture {
         match self {
             Architecture::Unknown => None,
             Architecture::Aarch64 => Some(AddressSize::U64),
+            Architecture::Aarch64_Ilp32 => Some(AddressSize::U32),
             Architecture::Arm => Some(AddressSize::U32),
             Architecture::Avr => Some(AddressSize::U8),
             Architecture::Bpf => Some(AddressSize::U64),
@@ -51,6 +55,7 @@ impl Architecture {
             Architecture::Riscv32 => Some(AddressSize::U32),
             Architecture::Riscv64 => Some(AddressSize::U64),
             Architecture::S390x => Some(AddressSize::U64),
+            Architecture::Sbf => Some(AddressSize::U64),
             Architecture::Sparc64 => Some(AddressSize::U64),
             Architecture::Wasm32 => Some(AddressSize::U32),
             Architecture::Xtensa => Some(AddressSize::U32),
@@ -117,6 +122,11 @@ pub enum SectionKind {
     ///
     /// Example Mach-O sections: `__TEXT/__const`, `__DATA/__const`, `__TEXT/__literal4`
     ReadOnlyData,
+    /// A read only data section with relocations.
+    ///
+    /// This is the same as either `Data` or `ReadOnlyData`, depending on the file format.
+    /// This value is only used in the API for writing files. It is never returned when reading files.
+    ReadOnlyDataWithRel,
     /// A loadable string section.
     ///
     /// Example ELF sections: `.rodata.str`

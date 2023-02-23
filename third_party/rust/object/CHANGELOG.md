@@ -2,6 +2,50 @@
 
 --------------------------------------------------------------------------------
 
+## 0.30.3
+
+Released 2023/01/23.
+
+### Added
+
+* Added `SectionKind::ReadOnlyDataWithRel` for writing.
+  [#504](https://github.com/gimli-rs/object/pull/504)
+
+--------------------------------------------------------------------------------
+
+## 0.30.2
+
+Released 2023/01/11.
+
+### Added
+
+* Added more ELF constants for AVR flags and relocations.
+  [#500](https://github.com/gimli-rs/object/pull/500)
+
+--------------------------------------------------------------------------------
+
+## 0.30.1
+
+Released 2023/01/04.
+
+### Changed
+
+* Changed `read::ElfSymbol::kind` to handle `STT_NOTYPE` and `STT_GNU_IFUNC`.
+  [#498](https://github.com/gimli-rs/object/pull/498)
+
+### Added
+
+* Added `read::CoffSymbol::raw_symbol`.
+  [#494](https://github.com/gimli-rs/object/pull/494)
+
+* Added ELF support for Solana Binary Format.
+  [#491](https://github.com/gimli-rs/object/pull/491)
+
+* Added ELF support for AArch64 ILP32.
+  [#497](https://github.com/gimli-rs/object/pull/497)
+
+--------------------------------------------------------------------------------
+
 ## 0.30.0
 
 Released 2022/11/22.

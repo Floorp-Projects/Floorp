@@ -325,6 +325,14 @@ where
     pub(crate) symbol: &'data pe::ImageSymbol,
 }
 
+impl<'data, 'file, R: ReadRef<'data>> CoffSymbol<'data, 'file, R> {
+    #[inline]
+    /// Get the raw `ImageSymbol` struct.
+    pub fn raw_symbol(&self) -> &'data pe::ImageSymbol {
+        self.symbol
+    }
+}
+
 impl<'data, 'file, R: ReadRef<'data>> read::private::Sealed for CoffSymbol<'data, 'file, R> {}
 
 impl<'data, 'file, R: ReadRef<'data>> ObjectSymbol<'data> for CoffSymbol<'data, 'file, R> {

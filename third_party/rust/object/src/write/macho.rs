@@ -51,9 +51,11 @@ impl<'a> Object<'a> {
             StandardSection::ReadOnlyData => {
                 (&b"__TEXT"[..], &b"__const"[..], SectionKind::ReadOnlyData)
             }
-            StandardSection::ReadOnlyDataWithRel => {
-                (&b"__DATA"[..], &b"__const"[..], SectionKind::ReadOnlyData)
-            }
+            StandardSection::ReadOnlyDataWithRel => (
+                &b"__DATA"[..],
+                &b"__const"[..],
+                SectionKind::ReadOnlyDataWithRel,
+            ),
             StandardSection::ReadOnlyString => (
                 &b"__TEXT"[..],
                 &b"__cstring"[..],
@@ -406,7 +408,7 @@ impl<'a> Object<'a> {
                         macho::S_ATTR_PURE_INSTRUCTIONS | macho::S_ATTR_SOME_INSTRUCTIONS
                     }
                     SectionKind::Data => 0,
-                    SectionKind::ReadOnlyData => 0,
+                    SectionKind::ReadOnlyData | SectionKind::ReadOnlyDataWithRel => 0,
                     SectionKind::ReadOnlyString => macho::S_CSTRING_LITERALS,
                     SectionKind::UninitializedData | SectionKind::Common => macho::S_ZEROFILL,
                     SectionKind::Tls => macho::S_THREAD_LOCAL_REGULAR,
