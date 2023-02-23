@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use proc_macro2::TokenStream;
-use quote::{ToTokens, TokenStreamExt};
+use quote::{quote, ToTokens, TokenStreamExt};
 use syn::Ident;
 
 use crate::ast::Fields;
@@ -10,7 +10,7 @@ use crate::codegen::{Field, FieldsGen};
 use crate::usage::{self, IdentRefSet, IdentSet, UsesTypeParams};
 
 /// A variant of the enum which is deriving `FromMeta`.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct Variant<'a> {
     /// The name which will appear in code passed to the `FromMeta` input.
     pub name_in_attr: Cow<'a, String>,
@@ -120,7 +120,7 @@ impl<'a> ToTokens for DataMatchArm<'a> {
 
             tokens.append_all(quote!(
                 #name_in_attr => {
-                    if let ::syn::Meta::List(ref __data) = *__nested {
+                    if let ::darling::export::syn::Meta::List(ref __data) = *__nested {
                         let __items = &__data.nested;
 
                         #declare_errors

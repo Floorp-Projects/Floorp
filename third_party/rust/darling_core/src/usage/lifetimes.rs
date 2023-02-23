@@ -282,6 +282,7 @@ impl UsesLifetimes for syn::TypeParamBound {
 #[cfg(test)]
 mod tests {
     use proc_macro2::Span;
+    use syn::parse_quote;
     use syn::DeriveInput;
 
     use super::UsesLifetimes;

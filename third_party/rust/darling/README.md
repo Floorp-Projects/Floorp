@@ -113,3 +113,26 @@ Darling's features are built to work well for real-world projects.
 * **Multiple-occurrence fields**: Use `#[darling(multiple)]` on a `Vec` field to allow that field to appear multiple times in the meta-item. Each occurrence will be pushed into the `Vec`.
 * **Span access**: Use `darling::util::SpannedValue` in a struct to get access to that meta item's source code span. This can be used to emit warnings that point at a specific field from your proc macro. In addition, you can use `darling::Error::write_errors` to automatically get precise error location details in most cases.
 * **"Did you mean" suggestions**: Compile errors from derived darling trait impls include suggestions for misspelled fields.
+
+## Shape Validation
+Some proc-macros only work on structs, while others need enums whose variants are either unit or newtype variants.
+Darling makes this sort of validation extremely simple.
+On the receiver that derives `FromDeriveInput`, add `#[darling(supports(...))]` and then list the shapes that your macro should accept.
+
+|Name|Description|
+|---|---|
+|`any`|Accept anything|
+|`struct_any`|Accept any struct|
+|`struct_named`|Accept structs with named fields, e.g. `struct Example { field: String }`|
+|`struct_newtype`|Accept newtype structs, e.g. `struct Example(String)`|
+|`struct_tuple`|Accept tuple structs, e.g. `struct Example(String, String)`|
+|`struct_unit`|Accept unit structs, e.g. `struct Example;`|
+|`enum_any`|Accept any enum|
+|`enum_named`|Accept enum variants with named fields|
+|`enum_newtype`|Accept newtype enum variants|
+|`enum_tuple`|Accept tuple enum variants|
+|`enum_unit`|Accept unit enum variants|
+
+Each one is additive, so listing `#[darling(supports(struct_any, enum_newtype))]` would accept all structs and any enum where every variant is a newtype variant.
+
+This can also be used when deriving `FromVariant`, without the `enum_` prefix.

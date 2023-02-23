@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "darling"
-version = "0.14.2"
+version = "0.14.3"
 authors = ["Ted Driggs <ted.driggs@outlook.com>"]
 exclude = [
     "/.travis.yml",
@@ -23,16 +23,16 @@ description = """
 A proc-macro library for reading attributes into structs when
 implementing custom derives.
 """
-documentation = "https://docs.rs/darling/0.14.2"
+documentation = "https://docs.rs/darling/0.14.3"
 readme = "README.md"
 license = "MIT"
 repository = "https://github.com/TedDriggs/darling"
 
 [dependencies.darling_core]
-version = "=0.14.2"
+version = "=0.14.3"
 
 [dependencies.darling_macro]
-version = "=0.14.2"
+version = "=0.14.3"
 
 [dev-dependencies.proc-macro2]
 version = "1.0.37"
@@ -47,6 +47,12 @@ version = "1.0.91"
 default = ["suggestions"]
 diagnostics = ["darling_core/diagnostics"]
 suggestions = ["darling_core/suggestions"]
+
+[target."cfg(compiletests)".dev-dependencies.rustversion]
+version = "1.0.9"
+
+[target."cfg(compiletests)".dev-dependencies.trybuild]
+version = "1.0.38"
 
 [badges.maintenance]
 status = "actively-developed"

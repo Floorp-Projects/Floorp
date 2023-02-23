@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::ToTokens;
+use quote::{quote, ToTokens};
 use syn::Ident;
 
 use crate::{
@@ -51,7 +51,7 @@ impl<'a> ToTokens for FromFieldImpl<'a> {
 
         self.wrap(
             quote! {
-                fn from_field(#input: &::syn::Field) -> ::darling::Result<Self> {
+                fn from_field(#input: &::darling::export::syn::Field) -> ::darling::Result<Self> {
                     #error_declaration
 
                     #grab_attrs

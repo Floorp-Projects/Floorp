@@ -1,7 +1,7 @@
 use std::{slice, vec};
 
 use proc_macro2::{Span, TokenStream};
-use quote::ToTokens;
+use quote::{quote, quote_spanned, ToTokens};
 use syn::spanned::Spanned;
 
 use crate::usage::{

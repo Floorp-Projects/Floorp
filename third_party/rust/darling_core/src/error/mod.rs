@@ -120,7 +120,17 @@ impl Error {
 
     /// Creates a new error for a struct or variant that does not adhere to the supported shape.
     pub fn unsupported_shape(shape: &str) -> Self {
-        Error::new(ErrorKind::UnsupportedShape(shape.into()))
+        Error::new(ErrorKind::UnsupportedShape {
+            observed: shape.into(),
+            expected: None,
+        })
+    }
+
+    pub fn unsupported_shape_with_expected<T: fmt::Display>(shape: &str, expected: &T) -> Self {
+        Error::new(ErrorKind::UnsupportedShape {
+            observed: shape.into(),
+            expected: Some(expected.to_string()),
+        })
     }
 
     pub fn unsupported_format(format: &str) -> Self {
@@ -344,7 +354,7 @@ impl Error {
         #[cfg(feature = "diagnostics")]
         {
             self.emit();
-            quote!()
+            TokenStream::default()
         }
 
         #[cfg(not(feature = "diagnostics"))]

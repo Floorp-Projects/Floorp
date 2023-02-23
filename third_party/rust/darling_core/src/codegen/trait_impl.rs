@@ -1,4 +1,5 @@
 use proc_macro2::TokenStream;
+use quote::quote;
 use syn::{Generics, Ident, WherePredicate};
 
 use crate::ast::{Data, Fields};

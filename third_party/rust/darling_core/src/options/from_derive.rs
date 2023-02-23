@@ -3,7 +3,7 @@ use quote::ToTokens;
 use syn::Ident;
 
 use crate::codegen::FromDeriveInputImpl;
-use crate::options::{OuterFrom, ParseAttribute, ParseData, Shape};
+use crate::options::{DeriveInputShapeSet, OuterFrom, ParseAttribute, ParseData};
 use crate::{FromMeta, Result};
 
 #[derive(Debug)]
@@ -18,7 +18,7 @@ pub struct FdiOptions {
 
     pub data: Option<Ident>,
 
-    pub supports: Option<Shape>,
+    pub supports: Option<DeriveInputShapeSet>,
 }
 
 impl FdiOptions {

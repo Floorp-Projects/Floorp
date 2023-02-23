@@ -177,6 +177,8 @@ impl<'a, P: GenericParamExt> Iterator for TypeParams<'a, P> {
 
 #[cfg(test)]
 mod tests {
+    use syn::parse_quote;
+
     use super::{GenericParam, Generics};
     use crate::FromGenerics;
 

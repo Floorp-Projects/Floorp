@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::ToTokens;
+use quote::{quote, ToTokens};
 use syn::Ident;
 
 use crate::codegen::{ExtractAttribute, OuterFromImpl, TraitImpl};
@@ -51,7 +51,7 @@ impl<'a> ToTokens for FromTypeParamImpl<'a> {
 
         self.wrap(
             quote! {
-                fn from_type_param(#input: &::syn::TypeParam) -> ::darling::Result<Self> {
+                fn from_type_param(#input: &::darling::export::syn::TypeParam) -> ::darling::Result<Self> {
                     #error_declaration
 
                     #grab_attrs

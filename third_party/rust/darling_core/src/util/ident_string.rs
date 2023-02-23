@@ -137,6 +137,8 @@ impl FromMeta for IdentString {
 
 #[cfg(test)]
 mod tests {
+    use syn::parse_quote;
+
     use super::IdentString;
 
     #[test]

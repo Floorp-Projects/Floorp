@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::ToTokens;
+use quote::{quote, ToTokens};
 
 use crate::ast::{Data, Fields, Style};
 use crate::codegen::{Field, OuterFromImpl, TraitImpl, Variant};
@@ -31,7 +31,7 @@ impl<'a> ToTokens for FromMetaImpl<'a> {
             }) if fields.len() == 1 => {
                 let ty_ident = base.ident;
                 quote!(
-                    fn from_meta(__item: &::syn::Meta) -> ::darling::Result<Self> {
+                    fn from_meta(__item: &::darling::export::syn::Meta) -> ::darling::Result<Self> {
                         ::darling::FromMeta::from_meta(__item)
                             .map_err(|e| e.with_span(&__item))
                             .map(#ty_ident)
@@ -55,7 +55,7 @@ impl<'a> ToTokens for FromMetaImpl<'a> {
                 let post_transform = base.post_transform_call();
 
                 quote!(
-                    fn from_list(__items: &[::syn::NestedMeta]) -> ::darling::Result<Self> {
+                    fn from_list(__items: &[::darling::export::syn::NestedMeta]) -> ::darling::Result<Self> {
 
                         #decls
 
@@ -91,13 +91,13 @@ impl<'a> ToTokens for FromMetaImpl<'a> {
                 };
 
                 quote!(
-                    fn from_list(__outer: &[::syn::NestedMeta]) -> ::darling::Result<Self> {
+                    fn from_list(__outer: &[::darling::export::syn::NestedMeta]) -> ::darling::Result<Self> {
                         // An enum must have exactly one value inside the parentheses if it's not a unit
                         // match arm
                         match __outer.len() {
                             0 => ::darling::export::Err(::darling::Error::too_few_items(1)),
                             1 => {
-                                if let ::syn::NestedMeta::Meta(ref __nested) = __outer[0] {
+                                if let ::darling::export::syn::NestedMeta::Meta(ref __nested) = __outer[0] {
                                     match ::darling::util::path_to_string(__nested.path()).as_ref() {
                                         #(#struct_arms)*
                                         __other => ::darling::export::Err(::darling::Error::#unknown_variant_err.with_span(__nested))

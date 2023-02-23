@@ -1,10 +1,13 @@
 use std::borrow::Cow;
 
+use syn::{parse_quote_spanned, spanned::Spanned};
+
 use crate::codegen;
 use crate::options::{Core, DefaultExpression, ParseAttribute};
+use crate::util::SpannedValue;
 use crate::{Error, FromMeta, Result};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct InputField {
     pub ident: syn::Ident,
     pub attr_name: Option<String>,
@@ -14,7 +17,7 @@ pub struct InputField {
 
     /// If `true`, generated code will not look for this field in the input meta item,
     /// instead always falling back to either `InputField::default` or `Default::default`.
-    pub skip: Option<bool>,
+    pub skip: Option<SpannedValue<bool>>,
     pub post_transform: Option<codegen::PostfixTransform>,
     pub multiple: Option<bool>,
 }
@@ -31,10 +34,14 @@ impl InputField {
             ty: &self.ty,
             default_expression: self.as_codegen_default(),
             with_path: self.with.as_ref().map_or_else(
-                || Cow::Owned(parse_quote!(::darling::FromMeta::from_meta)),
+                || {
+                    Cow::Owned(
+                        parse_quote_spanned!(self.ty.span()=> ::darling::FromMeta::from_meta),
+                    )
+                },
                 Cow::Borrowed,
             ),
-            skip: self.skip.unwrap_or_default(),
+            skip: *self.skip.unwrap_or_default(),
             post_transform: self.post_transform.as_ref(),
             multiple: self.multiple.unwrap_or_default(),
         }
@@ -46,7 +53,7 @@ impl InputField {
         self.default.as_ref().map(|expr| match *expr {
             DefaultExpression::Explicit(ref path) => codegen::DefaultExpression::Explicit(path),
             DefaultExpression::Inherit => codegen::DefaultExpression::Inherit(&self.ident),
-            DefaultExpression::Trait => codegen::DefaultExpression::Trait,
+            DefaultExpression::Trait { span } => codegen::DefaultExpression::Trait { span },
         })
     }
 
@@ -91,11 +98,7 @@ impl InputField {
         // 1. Will we look for this field in the attribute?
         // 1. Is there a locally-defined default?
         // 1. Did the parent define a default?
-        self.default = match (
-            self.skip.unwrap_or_default(),
-            self.default.is_some(),
-            parent.default.is_some(),
-        ) {
+        self.default = match (&self.skip, self.default.is_some(), parent.default.is_some()) {
             // If we have a default, use it.
             (_, true, _) => self.default,
 
@@ -104,11 +107,13 @@ impl InputField {
             (_, false, true) => Some(DefaultExpression::Inherit),
 
             // If we're skipping the field and no defaults have been expressed then we should
-            // use the ::darling::export::Default trait.
-            (true, false, false) => Some(DefaultExpression::Trait),
+            // use the ::darling::export::Default trait, and set the span to the skip keyword
+            // so that an error caused by the skipped field's type not implementing `Default`
+            // will correctly identify why darling is trying to use `Default`.
+            (Some(v), false, false) if **v => Some(DefaultExpression::Trait { span: v.span() }),
 
             // If we don't have or need a default, then leave it blank.
-            (false, false, false) => None,
+            (_, false, false) => None,
         };
 
         self

@@ -1,3 +1,6 @@
+use proc_macro2::Span;
+use syn::{parse_quote, spanned::Spanned};
+
 use crate::{Error, FromMeta, Result};
 
 mod core;
@@ -24,22 +27,31 @@ pub use self::from_variant::FromVariantOptions;
 pub use self::input_field::InputField;
 pub use self::input_variant::InputVariant;
 pub use self::outer_from::OuterFrom;
-pub use self::shape::{DataShape, Shape};
+pub use self::shape::{DataShape, DeriveInputShapeSet};
 
 /// A default/fallback expression encountered in attributes during parsing.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub enum DefaultExpression {
     /// The value should be taken from the `default` instance of the containing struct.
     /// This is not valid in container options.
     Inherit,
     Explicit(syn::Path),
-    Trait,
+    Trait {
+        /// The input span that is responsible for the use of `Default::default`.
+        span: Span,
+    },
 }
 
 #[doc(hidden)]
 impl FromMeta for DefaultExpression {
-    fn from_word() -> Result<Self> {
-        Ok(DefaultExpression::Trait)
+    // Note: This cannot use `from_word` as it needs to capture the span
+    // in the `Meta::Path` case.
+    fn from_meta(item: &syn::Meta) -> Result<Self> {
+        match item {
+            syn::Meta::Path(_) => Ok(DefaultExpression::Trait { span: item.span() }),
+            syn::Meta::List(nm) => Err(Error::unsupported_format("list").with_span(nm)),
+            syn::Meta::NameValue(nv) => Self::from_value(&nv.lit),
+        }
     }
 
     fn from_value(value: &syn::Lit) -> Result<Self> {

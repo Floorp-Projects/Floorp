@@ -2,8 +2,8 @@
 //! that they only work on - for example - structs with named fields, or newtype enum variants.
 
 use proc_macro2::TokenStream;
-use quote::{ToTokens, TokenStreamExt};
-use syn::{Meta, NestedMeta};
+use quote::{quote, ToTokens, TokenStreamExt};
+use syn::{parse_quote, Meta, NestedMeta};
 
 use crate::{Error, FromMeta, Result};
 
@@ -11,24 +11,19 @@ use crate::{Error, FromMeta, Result};
 /// to declare that it only accepts - for example - named structs, or newtype enum
 /// variants.
 ///
-/// # Usage
-/// Because `Shape` implements `FromMeta`, the name of the field where it appears is
-/// controlled by the struct that declares `Shape` as a member. That field name is
-/// shown as `ignore` below.
-///
 /// ```rust,ignore
 /// #[ignore(any, struct_named, enum_newtype)]
 /// ```
 #[derive(Debug, Clone)]
-pub struct Shape {
+pub struct DeriveInputShapeSet {
     enum_values: DataShape,
     struct_values: DataShape,
     any: bool,
 }
 
-impl Default for Shape {
+impl Default for DeriveInputShapeSet {
     fn default() -> Self {
-        Shape {
+        DeriveInputShapeSet {
             enum_values: DataShape::new("enum_"),
             struct_values: DataShape::new("struct_"),
             any: Default::default(),
@@ -36,9 +31,9 @@ impl Default for Shape {
     }
 }
 
-impl FromMeta for Shape {
+impl FromMeta for DeriveInputShapeSet {
     fn from_list(items: &[NestedMeta]) -> Result<Self> {
-        let mut new = Shape::default();
+        let mut new = DeriveInputShapeSet::default();
         for item in items {
             if let NestedMeta::Meta(Meta::Path(ref path)) = *item {
                 let ident = &path.segments.first().unwrap().ident;
@@ -65,7 +60,7 @@ impl FromMeta for Shape {
     }
 }
 
-impl ToTokens for Shape {
+impl ToTokens for DeriveInputShapeSet {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let fn_body = if self.any {
             quote!(::darling::export::Ok(()))
@@ -73,40 +68,44 @@ impl ToTokens for Shape {
             let en = &self.enum_values;
             let st = &self.struct_values;
 
-            let enum_validation = if en.supports_none() {
-                let ty = en.prefix.trim_end_matches('_');
-                quote!(return ::darling::export::Err(::darling::Error::unsupported_shape(#ty));)
-            } else {
-                quote! {
-                    fn validate_variant(data: &::syn::Fields) -> ::darling::Result<()> {
-                        #en
-                    }
-
-                    for variant in &data.variants {
-                        validate_variant(&variant.fields)?;
-                    }
-
-                    Ok(())
-                }
-            };
-
             quote! {
-                match *__body {
-                    ::syn::Data::Enum(ref data) => {
-                        #enum_validation
+                {
+                    let struct_check = #st;
+                    let enum_check = #en;
+
+                    match *__body {
+                        ::darling::export::syn::Data::Enum(ref data) => {
+                            if enum_check.is_empty() {
+                                return ::darling::export::Err(
+                                    ::darling::Error::unsupported_shape_with_expected("enum", &format!("struct with {}", struct_check))
+                                );
+                            }
+
+                            let mut variant_errors = ::darling::Error::accumulator();
+                            for variant in &data.variants {
+                                variant_errors.handle(enum_check.check(variant));
+                            }
+
+                            variant_errors.finish()
+                        }
+                        ::darling::export::syn::Data::Struct(ref struct_data) => {
+                            if struct_check.is_empty() {
+                                return ::darling::export::Err(
+                                    ::darling::Error::unsupported_shape_with_expected("struct", &format!("enum with {}", enum_check))
+                                );
+                            }
+
+                            struct_check.check(struct_data)
+                        }
+                        ::darling::export::syn::Data::Union(_) => unreachable!(),
                     }
-                    ::syn::Data::Struct(ref struct_data) => {
-                        let data = &struct_data.fields;
-                        #st
-                    }
-                    ::syn::Data::Union(_) => unreachable!(),
                 }
             }
         };
 
         tokens.append_all(quote! {
             #[allow(unused_variables)]
-            fn __validate_body(__body: &::syn::Data) -> ::darling::Result<()> {
+            fn __validate_body(__body: &::darling::export::syn::Data) -> ::darling::Result<()> {
                 #fn_body
             }
         });
@@ -124,23 +123,14 @@ pub struct DataShape {
     tuple: bool,
     unit: bool,
     any: bool,
-    /// Control whether the emitted code should be inside a function or not.
-    /// This is `true` when creating a `Shape` for `FromDeriveInput`, but false
-    /// when deriving `FromVariant`.
-    embedded: bool,
 }
 
 impl DataShape {
     fn new(prefix: &'static str) -> Self {
         DataShape {
             prefix,
-            embedded: true,
             ..Default::default()
         }
-    }
-
-    fn supports_none(&self) -> bool {
-        !(self.any || self.newtype || self.named || self.tuple || self.unit)
     }
 
     fn set_word(&mut self, word: &str) -> Result<()> {
@@ -189,51 +179,47 @@ impl FromMeta for DataShape {
 
 impl ToTokens for DataShape {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let body = if self.any {
-            quote!(::darling::export::Ok(()))
-        } else if self.supports_none() {
-            let ty = self.prefix.trim_end_matches('_');
-            quote!(::darling::export::Err(::darling::Error::unsupported_shape(#ty)))
-        } else {
-            let unit = match_arm("unit", self.unit);
-            let newtype = match_arm("newtype", self.newtype);
-            let named = match_arm("named", self.named);
-            let tuple = match_arm("tuple", self.tuple);
-            quote! {
-                match *data {
-                    ::syn::Fields::Unit => #unit,
-                    ::syn::Fields::Unnamed(ref fields) if fields.unnamed.len() == 1 => #newtype,
-                    ::syn::Fields::Unnamed(_) => #tuple,
-                    ::syn::Fields::Named(_) => #named,
-                }
-            }
-        };
+        let Self {
+            any,
+            named,
+            tuple,
+            unit,
+            newtype,
+            ..
+        } = *self;
 
-        if self.embedded {
-            body.to_tokens(tokens);
-        } else {
-            tokens.append_all(quote! {
-                fn __validate_data(data: &::syn::Fields) -> ::darling::Result<()> {
-                    #body
-                }
-            });
+        let shape_path: syn::Path = parse_quote!(::darling::util::Shape);
+
+        let mut shapes = vec![];
+        if any || named {
+            shapes.push(quote!(#shape_path::Named));
         }
-    }
-}
 
-fn match_arm(name: &'static str, is_supported: bool) -> TokenStream {
-    if is_supported {
-        quote!(::darling::export::Ok(()))
-    } else {
-        quote!(::darling::export::Err(::darling::Error::unsupported_shape(#name)))
+        if any || tuple {
+            shapes.push(quote!(#shape_path::Tuple));
+        }
+
+        if any || newtype {
+            shapes.push(quote!(#shape_path::Newtype));
+        }
+
+        if any || unit {
+            shapes.push(quote!(#shape_path::Unit));
+        }
+
+        tokens.append_all(quote! {
+            ::darling::util::ShapeSet::new(vec![#(#shapes),*])
+        });
     }
 }
 
 #[cfg(test)]
 mod tests {
     use proc_macro2::TokenStream;
+    use quote::quote;
+    use syn::parse_quote;
 
-    use super::Shape;
+    use super::DeriveInputShapeSet;
     use crate::FromMeta;
 
     /// parse a string as a syn::Meta instance.
@@ -249,20 +235,21 @@ mod tests {
 
     #[test]
     fn supports_any() {
-        let decl = fm::<Shape>(quote!(ignore(any)));
+        let decl = fm::<DeriveInputShapeSet>(quote!(ignore(any)));
         assert!(decl.any);
     }
 
     #[test]
     fn supports_struct() {
-        let decl = fm::<Shape>(quote!(ignore(struct_any, struct_newtype)));
+        let decl = fm::<DeriveInputShapeSet>(quote!(ignore(struct_any, struct_newtype)));
         assert!(decl.struct_values.any);
         assert!(decl.struct_values.newtype);
     }
 
     #[test]
     fn supports_mixed() {
-        let decl = fm::<Shape>(quote!(ignore(struct_newtype, enum_newtype, enum_tuple)));
+        let decl =
+            fm::<DeriveInputShapeSet>(quote!(ignore(struct_newtype, enum_newtype, enum_tuple)));
         assert!(decl.struct_values.newtype);
         assert!(decl.enum_values.newtype);
         assert!(decl.enum_values.tuple);

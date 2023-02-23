@@ -1,11 +1,11 @@
 use proc_macro2::TokenStream;
-use quote::ToTokens;
+use quote::{quote, ToTokens};
 use syn::Ident;
 
 use crate::{
     ast::Data,
     codegen::{ExtractAttribute, OuterFromImpl, TraitImpl},
-    options::{ForwardAttrs, Shape},
+    options::{DeriveInputShapeSet, ForwardAttrs},
     util::PathList,
 };
 
@@ -19,7 +19,7 @@ pub struct FromDeriveInputImpl<'a> {
     pub attr_names: &'a PathList,
     pub forward_attrs: Option<&'a ForwardAttrs>,
     pub from_ident: bool,
-    pub supports: Option<&'a Shape>,
+    pub supports: Option<&'a DeriveInputShapeSet>,
 }
 
 impl<'a> ToTokens for FromDeriveInputImpl<'a> {
@@ -32,7 +32,7 @@ impl<'a> ToTokens for FromDeriveInputImpl<'a> {
             if data.is_newtype() {
                 self.wrap(
                     quote!{
-                        fn from_derive_input(#input: &::syn::DeriveInput) -> ::darling::Result<Self> {
+                        fn from_derive_input(#input: &::darling::export::syn::DeriveInput) -> ::darling::Result<Self> {
                             ::darling::export::Ok(
                                 #ty_ident(::darling::FromDeriveInput::from_derive_input(#input)?)
                             ) #post_transform
@@ -82,7 +82,7 @@ impl<'a> ToTokens for FromDeriveInputImpl<'a> {
 
         self.wrap(
             quote! {
-                fn from_derive_input(#input: &::syn::DeriveInput) -> ::darling::Result<Self> {
+                fn from_derive_input(#input: &::darling::export::syn::DeriveInput) -> ::darling::Result<Self> {
                     #declare_errors
 
                     #grab_attrs
