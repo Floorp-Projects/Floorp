@@ -7826,7 +7826,7 @@ var WebAuthnPromptHelper = {
       });
     }
     let mainAction = this.buildCancelAction(mgr, tid);
-    let options = {};
+    let options = { escAction: "buttoncommand" };
     this.show(
       tid,
       "select-sign-result",
@@ -7855,6 +7855,8 @@ var WebAuthnPromptHelper = {
 
   register(mgr, { origin, tid, is_ctap2, device_selected }) {
     let mainAction = this.buildCancelAction(mgr, tid);
+    let options = { escAction: "buttoncommand" };
+    let secondaryActions = [];
     let message;
     if (is_ctap2) {
       if (device_selected) {
@@ -7865,7 +7867,15 @@ var WebAuthnPromptHelper = {
     } else {
       message = "webauthn.registerPrompt2";
     }
-    this.show(tid, "register", message, origin, mainAction);
+    this.show(
+      tid,
+      "register",
+      message,
+      origin,
+      mainAction,
+      secondaryActions,
+      options
+    );
   },
 
   registerDirect(mgr, { origin, tid }) {
@@ -7896,6 +7906,8 @@ var WebAuthnPromptHelper = {
 
   sign(mgr, { origin, tid, is_ctap2, device_selected }) {
     let mainAction = this.buildCancelAction(mgr, tid);
+    let options = { escAction: "buttoncommand" };
+    let secondaryActions = [];
     let message;
     if (is_ctap2) {
       if (device_selected) {
@@ -7906,7 +7918,15 @@ var WebAuthnPromptHelper = {
     } else {
       message = "webauthn.signPrompt2";
     }
-    this.show(tid, "sign", message, origin, mainAction);
+    this.show(
+      tid,
+      "sign",
+      message,
+      origin,
+      mainAction,
+      secondaryActions,
+      options
+    );
   },
 
   show_info(mgr, origin, tid, id, stringId) {
