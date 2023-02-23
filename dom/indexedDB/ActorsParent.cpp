@@ -10315,17 +10315,11 @@ bool TransactionBase::VerifyRequestParams(
   }
 
   for (const FileAddInfo& fileAddInfo : aParams.fileAddInfos()) {
-    const DatabaseOrMutableFile& file = fileAddInfo.file();
-    MOZ_ASSERT(file.type() != DatabaseOrMutableFile::T__None);
+    const PBackgroundIDBDatabaseFileParent* file = fileAddInfo.fileParent();
 
     switch (fileAddInfo.type()) {
       case StructuredCloneFileBase::eBlob:
-        if (NS_AUUF_OR_WARN_IF(
-                file.type() !=
-                DatabaseOrMutableFile::TPBackgroundIDBDatabaseFileParent)) {
-          return false;
-        }
-        if (NS_AUUF_OR_WARN_IF(!file.get_PBackgroundIDBDatabaseFileParent())) {
+        if (NS_AUUF_OR_WARN_IF(!file)) {
           return false;
         }
         break;
@@ -18485,16 +18479,13 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase& aTransaction) {
                        fileAddInfo.type() ==
                            StructuredCloneFileBase::eMutableFile);
 
-            const DatabaseOrMutableFile& file = fileAddInfo.file();
-
             switch (fileAddInfo.type()) {
               case StructuredCloneFileBase::eBlob: {
-                MOZ_ASSERT(
-                    file.type() ==
-                    DatabaseOrMutableFile::TPBackgroundIDBDatabaseFileParent);
+                PBackgroundIDBDatabaseFileParent* file =
+                    fileAddInfo.fileParent();
+                MOZ_ASSERT(file);
 
-                auto* const fileActor = static_cast<DatabaseFile*>(
-                    file.get_PBackgroundIDBDatabaseFileParent());
+                auto* const fileActor = static_cast<DatabaseFile*>(file);
                 MOZ_ASSERT(fileActor);
 
                 return StoredFileInfo::CreateForBlob(
