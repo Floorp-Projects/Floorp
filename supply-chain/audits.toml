@@ -284,6 +284,11 @@ criteria = "safe-to-deploy"
 version = "0.15.2"
 notes = "I reviewed the whole code base. Parser for the output of cargo-metadata, relying mostly on serde. No unsafe code used."
 
+[[audits.cargo_metadata]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.15.2 -> 0.15.3"
+
 [[audits.chardetng]]
 who = "Henri Sivonen <hsivonen@hsivonen.fi>"
 criteria = "safe-to-deploy"
