@@ -12,16 +12,18 @@ addAccessibleTask(
    <div id="info">Information.</div>
    <div id="more-info">More information.</div>`,
   async (browser, accDoc) => {
-    const isARIAControls = (id, expectedIds) =>
-      Assert.deepEqual(
+    const getAriaControls = id =>
+      JSON.stringify(
         getNativeInterface(accDoc, id)
           .getAttributeValue("AXARIAControls")
-          .map(e => e.getAttributeValue("AXDOMIdentifier")),
-        expectedIds,
-        `"${id}" has correct AXARIAControls`
+          .map(e => e.getAttributeValue("AXDOMIdentifier"))
       );
 
-    isARIAControls("info-button", ["info"]);
+    await untilCacheIs(
+      () => getAriaControls("info-button"),
+      JSON.stringify(["info"]),
+      "Info-button has correct initial controls"
+    );
 
     await SpecialPowers.spawn(browser, [], () => {
       content.document
@@ -29,9 +31,21 @@ addAccessibleTask(
         .setAttribute("aria-controls", "info more-info");
     });
 
-    isARIAControls("info-button", ["info", "more-info"]);
+    await untilCacheIs(
+      () => getAriaControls("info-button"),
+      JSON.stringify(["info", "more-info"]),
+      "Info-button has correct controls after mutation"
+    );
   }
 );
+
+function getLinkedUIElements(accDoc, id) {
+  return JSON.stringify(
+    getNativeInterface(accDoc, id)
+      .getAttributeValue("AXLinkedUIElements")
+      .map(e => e.getAttributeValue("AXDOMIdentifier"))
+  );
+}
 
 /**
  * Test aria-flowto
@@ -41,16 +55,11 @@ addAccessibleTask(
    <div id="info">Information.</div>
    <div id="more-info">More information.</div>`,
   async (browser, accDoc) => {
-    const isLinkedUIElements = (id, expectedIds) =>
-      Assert.deepEqual(
-        getNativeInterface(accDoc, id)
-          .getAttributeValue("AXLinkedUIElements")
-          .map(e => e.getAttributeValue("AXDOMIdentifier")),
-        expectedIds,
-        `"${id}" has correct AXARIAControls`
-      );
-
-    isLinkedUIElements("info-button", ["info"]);
+    await untilCacheIs(
+      () => getLinkedUIElements(accDoc, "info-button"),
+      JSON.stringify(["info"]),
+      "Info-button has correct initial linked elements"
+    );
 
     await SpecialPowers.spawn(browser, [], () => {
       content.document
@@ -58,7 +67,11 @@ addAccessibleTask(
         .setAttribute("aria-flowto", "info more-info");
     });
 
-    isLinkedUIElements("info-button", ["info", "more-info"]);
+    await untilCacheIs(
+      () => getLinkedUIElements(accDoc, "info-button"),
+      JSON.stringify(["info", "more-info"]),
+      "Info-button has correct linked elements after mutation"
+    );
   }
 );
 
@@ -70,15 +83,10 @@ addAccessibleTask(
    <input type="radio" id="dog-radio" name="animal" aria-flowto="info"><label for="dog">Dog</label>
    <div id="info">Information.</div>`,
   async (browser, accDoc) => {
-    const isLinkedUIElements = (id, expectedIds) =>
-      Assert.deepEqual(
-        getNativeInterface(accDoc, id)
-          .getAttributeValue("AXLinkedUIElements")
-          .map(e => e.getAttributeValue("AXDOMIdentifier")),
-        expectedIds,
-        `"${id}" has correct AXARIAControls`
-      );
-
-    isLinkedUIElements("dog-radio", ["cat-radio", "dog-radio", "info"]);
+    await untilCacheIs(
+      () => getLinkedUIElements(accDoc, "dog-radio"),
+      JSON.stringify(["cat-radio", "dog-radio", "info"]),
+      "dog-radio has correct linked elements"
+    );
   }
 );
