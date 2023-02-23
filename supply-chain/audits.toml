@@ -29,6 +29,11 @@ criteria = "safe-to-deploy"
 delta = "0.11.0 -> 0.11.1"
 notes = "Small crate, wrapping Android log functionality, now switched to properly using MaybeUninit"
 
+[[audits.android_logger]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.11.1 -> 0.11.3"
+
 [[audits.android_system_properties]]
 who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
