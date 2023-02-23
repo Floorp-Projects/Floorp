@@ -98,6 +98,7 @@
 #include "WorkerRef.h"
 #include "WorkerRunnable.h"
 #include "WorkerThread.h"
+#include "nsContentSecurityManager.h"
 
 #include "nsThreadManager.h"
 
@@ -5777,16 +5778,17 @@ Result<Ok, nsresult> WorkerPrivate::SetEmbedderPolicy(
     return Ok();
   }
 
-  // If owner's emebedder policy is corp_reqired, aPolicy must also be
-  // corp_reqired. But if owner's embedder policy is null, aPolicy needs not
-  // match owner's value.
-  // https://wicg.github.io/cross-origin-embedder-policy/#cascade-vs-require
+  // https://html.spec.whatwg.org/multipage/browsers.html#check-a-global-object's-embedder-policy
+  // If ownerPolicy's value is not compatible with cross-origin isolation or
+  // policy's value is compatible with cross-origin isolation, then return true.
   EnsureOwnerEmbedderPolicy();
-  if (mOwnerEmbedderPolicy.valueOr(nsILoadInfo::EMBEDDER_POLICY_NULL) !=
-      nsILoadInfo::EMBEDDER_POLICY_NULL) {
-    if (mOwnerEmbedderPolicy.valueOr(aPolicy) != aPolicy) {
-      return Err(NS_ERROR_BLOCKED_BY_POLICY);
-    }
+  nsILoadInfo::CrossOriginEmbedderPolicy ownerPolicy =
+      mOwnerEmbedderPolicy.valueOr(nsILoadInfo::EMBEDDER_POLICY_NULL);
+  if (nsContentSecurityManager::IsCompatibleWithCrossOriginIsolation(
+          ownerPolicy) &&
+      !nsContentSecurityManager::IsCompatibleWithCrossOriginIsolation(
+          aPolicy)) {
+    return Err(NS_ERROR_BLOCKED_BY_POLICY);
   }
 
   mEmbedderPolicy.emplace(aPolicy);
