@@ -516,10 +516,11 @@ class DefaultSessionControlController(
     }
 
     override fun handleReadPrivacyNoticeClicked() {
-        activity.openToBrowserAndLoad(
-            searchTermOrURL = SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE),
-            newTab = true,
-            from = BrowserDirection.FromHome,
+        activity.startActivity(
+            SupportUtils.createCustomTabIntent(
+                activity,
+                SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE),
+            ),
         )
     }
 

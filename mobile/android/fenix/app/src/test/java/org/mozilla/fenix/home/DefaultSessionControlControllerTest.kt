@@ -11,8 +11,11 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.spyk
+import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -963,14 +966,22 @@ class DefaultSessionControlControllerTest {
 
     @Test
     fun handleReadPrivacyNoticeClicked() {
+        mockkObject(SupportUtils)
+        val urlCaptor = slot<String>()
+        every { SupportUtils.createCustomTabIntent(any(), capture(urlCaptor)) } returns mockk()
+
         createController().handleReadPrivacyNoticeClicked()
+
         verify {
-            activity.openToBrowserAndLoad(
-                searchTermOrURL = SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE),
-                newTab = true,
-                from = BrowserDirection.FromHome,
+            activity.startActivity(
+                any(),
             )
         }
+        assertEquals(
+            SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE),
+            urlCaptor.captured,
+        )
+        unmockkObject(SupportUtils)
     }
 
     @Test
