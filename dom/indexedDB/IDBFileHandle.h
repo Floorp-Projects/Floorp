@@ -79,11 +79,6 @@ class IDBFileHandle final : public DOMEventTargetHelper,
     mBackgroundActor = nullptr;
   }
 
-  void StartRequest(IDBFileRequest* aFileRequest,
-                    const FileRequestParams& aParams);
-
-  void OnNewRequest();
-
   void OnRequestFinished(bool aActorDestroyedNormally);
 
   void FireCompleteOrAbortEvents(bool aAborted);
@@ -173,38 +168,6 @@ class IDBFileHandle final : public DOMEventTargetHelper,
  private:
   IDBFileHandle(IDBMutableFile* aMutableFile, FileMode aMode);
   ~IDBFileHandle();
-
-  bool CheckState(ErrorResult& aRv) const;
-
-  bool CheckStateAndArgumentsForRead(uint64_t aSize, ErrorResult& aRv);
-
-  bool CheckStateForWrite(ErrorResult& aRv);
-
-  bool CheckStateForWriteOrAppend(bool aAppend, ErrorResult& aRv);
-
-  bool CheckWindow();
-
-  [[nodiscard]] RefPtr<IDBFileRequest> Read(uint64_t aSize, bool aHasEncoding,
-                                            const nsAString& aEncoding,
-                                            ErrorResult& aRv);
-
-  [[nodiscard]] RefPtr<IDBFileRequest> WriteOrAppend(const nsAString& aValue,
-                                                     bool aAppend,
-                                                     ErrorResult& aRv);
-
-  [[nodiscard]] RefPtr<IDBFileRequest> WriteOrAppend(const ArrayBuffer& aValue,
-                                                     bool aAppend,
-                                                     ErrorResult& aRv);
-
-  [[nodiscard]] RefPtr<IDBFileRequest> WriteOrAppend(
-      const ArrayBufferView& aValue, bool aAppend, ErrorResult& aRv);
-
-  [[nodiscard]] RefPtr<IDBFileRequest> WriteOrAppend(Blob& aValue, bool aAppend,
-                                                     ErrorResult& aRv);
-
-  [[nodiscard]] RefPtr<IDBFileRequest> WriteInternal(
-      const FileRequestData& aData, uint64_t aDataLength, bool aAppend,
-      ErrorResult& aRv);
 
   void SendFinish();
 
