@@ -214,3 +214,29 @@ fn issue_1282_findtoken_char() {
   let parser = one_of::<_, _, Error<_>>(&['a', 'b', 'c'][..]);
   assert_eq!(parser("aaa"), Ok(("aa", 'a')));
 }
+
+#[test]
+fn issue_1459_clamp_capacity() {
+  use nom::character::complete::char;
+
+  // shouldn't panic
+  use nom::multi::many_m_n;
+  let mut parser = many_m_n::<_, _, (), _>(usize::MAX, usize::MAX, char('a'));
+  assert_eq!(parser("a"), Err(nom::Err::Error(())));
+
+  // shouldn't panic
+  use nom::multi::count;
+  let mut parser = count::<_, _, (), _>(char('a'), usize::MAX);
+  assert_eq!(parser("a"), Err(nom::Err::Error(())));
+}
+
+#[test]
+fn issue_1617_count_parser_returning_zero_size() {
+  use nom::{bytes::complete::tag, combinator::map, error::Error, multi::count};
+
+  // previously, `count()` panicked if the parser had type `O = ()`
+  let parser = map(tag::<_, _, Error<&str>>("abc"), |_| ());
+  // shouldn't panic
+  let result = count(parser, 3)("abcabcabcdef").expect("parsing should succeed");
+  assert_eq!(result, ("def", vec![(), (), ()]));
+}
