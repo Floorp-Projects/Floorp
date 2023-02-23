@@ -585,6 +585,12 @@ class nsTextFrame : public nsIFrame {
   struct PaintShadowParams;
   struct PaintDecorationLineParams;
 
+  struct SelectionRange {
+    const SelectionDetails* mDetails;
+    gfxTextRun::Range mRange;
+    uint32_t mPriority;
+  };
+
   // Primary frame paint method called from nsDisplayText.  Can also be used
   // to generate paths rather than paint the frame's text by passing a callback
   // object.  The private DrawText() is what applies the text to a graphics
@@ -612,14 +618,11 @@ class nsTextFrame : public nsIFrame {
       const mozilla::UniquePtr<SelectionDetails>& aDetails,
       SelectionType aSelectionType);
 
-  struct SelectionRange {
-    const SelectionDetails* mDetails;
-    gfxTextRun::Range mRange;
-  };
   SelectionTypeMask ResolveSelections(const PaintTextSelectionParams& aParams,
                                       const SelectionDetails* aDetails,
                                       nsTArray<SelectionRange>& aResult,
-                                      bool* aAnyBackgrounds) const;
+                                      SelectionType aSelectionType,
+                                      bool* aAnyBackgrounds = nullptr) const;
 
   void DrawEmphasisMarks(gfxContext* aContext, mozilla::WritingMode aWM,
                          const mozilla::gfx::Point& aTextBaselinePt,
