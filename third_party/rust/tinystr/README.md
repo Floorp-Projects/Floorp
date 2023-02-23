@@ -19,8 +19,8 @@ assert_eq!(s1, "tEsT");
 assert_eq!(s1.to_ascii_uppercase(), "TEST");
 assert_eq!(s1.to_ascii_lowercase(), "test");
 assert_eq!(s1.to_ascii_titlecase(), "Test");
-assert_eq!(s1.is_ascii_alphanumeric(), true);
-assert_eq!(s1.is_ascii_numeric(), false);
+assert!(s1.is_ascii_alphanumeric());
+assert!(!s1.is_ascii_numeric());
 
 let s2 = TinyAsciiStr::<8>::try_from_raw(*b"New York")
     .expect("Failed to parse.");
@@ -29,7 +29,7 @@ assert_eq!(s2, "New York");
 assert_eq!(s2.to_ascii_uppercase(), "NEW YORK");
 assert_eq!(s2.to_ascii_lowercase(), "new york");
 assert_eq!(s2.to_ascii_titlecase(), "New york");
-assert_eq!(s2.is_ascii_alphanumeric(), false);
+assert!(!s2.is_ascii_alphanumeric());
 ```
 
 ## Details

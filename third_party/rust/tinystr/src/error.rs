@@ -4,6 +4,9 @@
 
 use displaydoc::Display;
 
+#[cfg(feature = "std")]
+impl std::error::Error for TinyStrError {}
+
 #[derive(Display, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum TinyStrError {
