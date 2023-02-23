@@ -97,15 +97,23 @@ async function testTextRange(accDoc, browser, id, start, end) {
   );
   let hyperTextNode = findAccessibleChildByID(accDoc, id);
 
-  // test against parent-relative coords, because getBoundingClientRect
-  // is relative to the document, not the screen. this won't work on nested
-  // elements (ie. any hypertext whose parent is not the doc).
+  // Add in the doc's screen coords because getBoundingClientRect
+  // is relative to the document, not the screen. This assumes the doc's
+  // screen coords are correct. We use getBoundsInCSSPixels to avoid factoring
+  // in the DPR ourselves.
+  let x = {};
+  let y = {};
+  let w = {};
+  let h = {};
+  accDoc.getBoundsInCSSPixels(x, y, w, h);
+  r[0] += x.value;
+  r[1] += y.value;
   if (end != -1 && end - start == 1) {
     // If we're only testing a character, use this function because it calls
     // CharBounds() directly instead of TextBounds().
-    testTextPos(hyperTextNode, start, [r[0], r[1]], COORDTYPE_PARENT_RELATIVE);
+    testTextPos(hyperTextNode, start, [r[0], r[1]], COORDTYPE_SCREEN_RELATIVE);
   } else {
-    testTextBounds(hyperTextNode, start, end, r, COORDTYPE_PARENT_RELATIVE);
+    testTextBounds(hyperTextNode, start, end, r, COORDTYPE_SCREEN_RELATIVE);
   }
 }
 
@@ -473,36 +481,34 @@ X</pre>`,
   }
 );
 
-// XXX: There's a fuzziness here of about 8 pixels, implying we aren't taking into
-// account some kind of margin or padding. See bug 1809695.
-// /**
-//  * Test character bounds in an intervening inline element with margins
-//  * and with non-br line breaks
-//  */
-// addAccessibleTask(
-//   `
-//   <style>
-//     @font-face {
-//       font-family: Ahem;
-//       src: url(${CURRENT_CONTENT_DIR}e10s/fonts/Ahem.sjs);
-//     }
-//   </style>
-//   <div>hello<pre id="t" style="margin-left:100px;margin-top:30px;background-color:blue;">XX
-// XXX
-// XX
-// X</pre></div>`,
-//   async function(browser, docAcc) {
-//     await testChar(docAcc, browser, "t", 0);
-//     await testChar(docAcc, browser, "t", 3);
-//     await testChar(docAcc, browser, "t", 7);
-//     await testChar(docAcc, browser, "t", 10);
-//   },
-//   {
-//     chrome: true,
-//     topLevel: !isWinNoCache,
-//     iframe: !isWinNoCache,
-//   }
-// );
+/**
+ * Test character bounds in an intervening inline element with margins
+ * and with non-br line breaks
+ */
+addAccessibleTask(
+  `
+  <style>
+    @font-face {
+      font-family: Ahem;
+      src: url(${CURRENT_CONTENT_DIR}e10s/fonts/Ahem.sjs);
+    }
+  </style>
+  <div>hello<pre id="t" style="margin-left:100px;margin-top:30px;background-color:blue;">XX
+XXX
+XX
+X</pre></div>`,
+  async function(browser, docAcc) {
+    await testChar(docAcc, browser, "t", 0);
+    await testChar(docAcc, browser, "t", 3);
+    await testChar(docAcc, browser, "t", 7);
+    await testChar(docAcc, browser, "t", 10);
+  },
+  {
+    chrome: true,
+    topLevel: !isWinNoCache,
+    iframe: !isWinNoCache,
+  }
+);
 
 /**
  * Test text bounds in a textarea after scrolling.
