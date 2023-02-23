@@ -273,6 +273,7 @@ add_task(async function() {
   );
 
   await page.loadURL("http://example.org/?other");
+  bc = page.browsingContext;
 
   await assertLoadFired(
     bc,
