@@ -53,6 +53,7 @@ class WebTransportParent : public PWebTransportParent,
 
  private:
   using ResolveType = Tuple<const nsresult&, const uint8_t&>;
+  nsCOMPtr<nsISerialEventTarget> mSocketThread;
   std::function<void(ResolveType)> mResolver;
   FlippedOnce<false> mClosed;
   nsCOMPtr<nsIWebTransport> mWebTransport;
