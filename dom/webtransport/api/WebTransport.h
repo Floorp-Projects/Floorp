@@ -91,10 +91,12 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
                                 ErrorResult& aRv);
   already_AddRefed<WebTransportDatagramDuplexStream> GetDatagrams(
       ErrorResult& aRv);
-  already_AddRefed<Promise> CreateBidirectionalStream(ErrorResult& aError);
+  already_AddRefed<Promise> CreateBidirectionalStream(
+      const WebTransportSendStreamOptions& aOptions, ErrorResult& aRv);
+  already_AddRefed<Promise> CreateUnidirectionalStream(
+      const WebTransportSendStreamOptions& aOptions, ErrorResult& aRv);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY already_AddRefed<ReadableStream>
   IncomingBidirectionalStreams();
-  already_AddRefed<Promise> CreateUnidirectionalStream(ErrorResult& aError);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY already_AddRefed<ReadableStream>
   IncomingUnidirectionalStreams();
 
