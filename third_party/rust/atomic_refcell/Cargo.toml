@@ -11,10 +11,11 @@
 
 [package]
 name = "atomic_refcell"
-version = "0.1.8"
+version = "0.1.9"
 authors = ["Bobby Holley <bobbyholley@gmail.com>"]
 description = "Threadsafe RefCell"
 documentation = "https://docs.rs/atomic_refcell/"
+readme = "README.md"
 license = "Apache-2.0/MIT"
 repository = "https://github.com/bholley/atomic_refcell"
 
