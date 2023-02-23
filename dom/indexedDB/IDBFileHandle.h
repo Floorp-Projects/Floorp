@@ -27,10 +27,6 @@ class IDBFileRequest;
 class IDBMutableFile;
 class StringOrArrayBufferOrArrayBufferViewOrBlob;
 
-namespace indexedDB {
-class BackgroundFileHandleChild;
-}
-
 class IDBFileHandle final : public DOMEventTargetHelper,
                             public nsIRunnable,
                             public nsSupportsWeakReference {
@@ -39,8 +35,6 @@ class IDBFileHandle final : public DOMEventTargetHelper,
 
  private:
   RefPtr<IDBMutableFile> mMutableFile;
-
-  indexedDB::BackgroundFileHandleChild* mBackgroundActor;
 
   uint64_t mLocation;
 
@@ -70,14 +64,6 @@ class IDBFileHandle final : public DOMEventTargetHelper,
   {
   }
 #endif
-
-  void SetBackgroundActor(indexedDB::BackgroundFileHandleChild* aActor);
-
-  void ClearBackgroundActor() {
-    AssertIsOnOwningThread();
-
-    mBackgroundActor = nullptr;
-  }
 
   void OnRequestFinished(bool aActorDestroyedNormally);
 

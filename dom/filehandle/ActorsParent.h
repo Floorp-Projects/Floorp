@@ -36,64 +36,10 @@ namespace dom {
 
 class BlobImpl;
 class FileHandle;
-class FileHandleOp;
-
-class FileHandleThreadPool final {
-  class FileHandleQueue;
-  struct DelayedEnqueueInfo;
-  class DirectoryInfo;
-  struct StoragesCompleteCallback;
-
-  nsCOMPtr<nsIThreadPool> mThreadPool;
-  nsCOMPtr<nsIEventTarget> mOwningEventTarget;
-
-  nsClassHashtable<nsCStringHashKey, DirectoryInfo> mDirectoryInfos;
-
-  nsTArray<UniquePtr<StoragesCompleteCallback>> mCompleteCallbacks;
-
-  bool mShutdownRequested;
-  bool mShutdownComplete;
-
- public:
-  static already_AddRefed<FileHandleThreadPool> Create();
-
-#ifdef DEBUG
-  void AssertIsOnOwningThread() const;
-
-  nsIEventTarget* GetThreadPoolEventTarget() const;
-#else
-  void AssertIsOnOwningThread() const {}
-#endif
-
-  void Enqueue(FileHandle* aFileHandle, FileHandleOp* aFileHandleOp,
-               bool aFinish);
-
-  NS_INLINE_DECL_REFCOUNTING(FileHandleThreadPool)
-
-  void WaitForDirectoriesToComplete(nsTArray<nsCString>&& aDirectoryIds,
-                                    nsIRunnable* aCallback);
-
-  void Shutdown();
-
- private:
-  FileHandleThreadPool();
-
-  // Reference counted.
-  ~FileHandleThreadPool();
-
-  nsresult Init();
-
-  void Cleanup();
-
-  void FinishFileHandle(FileHandle* aFileHandle);
-
-  bool MaybeFireCallback(StoragesCompleteCallback* aCallback);
-};
 
 class BackgroundMutableFileParentBase : public PBackgroundMutableFileParent {
   friend PBackgroundMutableFileParent;
 
-  nsTHashSet<FileHandle*> mFileHandles;
   nsCString mDirectoryId;
   nsString mFileName;
   FileHandleStorage mStorage;
@@ -114,10 +60,6 @@ class BackgroundMutableFileParentBase : public PBackgroundMutableFileParent {
   const nsCString& DirectoryId() const { return mDirectoryId; }
 
   const nsString& FileName() const { return mFileName; }
-
-  bool RegisterFileHandle(FileHandle* aFileHandle);
-
-  void UnregisterFileHandle(FileHandle* aFileHandle);
 
   void SetActorAlive();
 
@@ -153,15 +95,6 @@ class BackgroundMutableFileParentBase : public PBackgroundMutableFileParent {
 
   // IPDL methods are only called by IPDL.
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
-
-  virtual PBackgroundFileHandleParent* AllocPBackgroundFileHandleParent(
-      const FileMode& aMode);
-
-  virtual mozilla::ipc::IPCResult RecvPBackgroundFileHandleConstructor(
-      PBackgroundFileHandleParent* aActor, const FileMode& aMode) override;
-
-  virtual bool DeallocPBackgroundFileHandleParent(
-      PBackgroundFileHandleParent* aActor);
 
   mozilla::ipc::IPCResult RecvDeleteMe();
 

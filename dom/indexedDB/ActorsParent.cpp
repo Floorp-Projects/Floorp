@@ -2159,12 +2159,7 @@ class WaitForTransactionsHelper final : public Runnable {
   const nsCString mDatabaseId;
   nsCOMPtr<nsIRunnable> mCallback;
 
-  enum class State {
-    Initial = 0,
-    WaitingForTransactions,
-    WaitingForFileHandles,
-    Complete
-  } mState;
+  enum class State { Initial = 0, WaitingForTransactions, Complete } mState;
 
  public:
   WaitForTransactionsHelper(const nsACString& aDatabaseId,
@@ -2189,8 +2184,6 @@ class WaitForTransactionsHelper final : public Runnable {
   }
 
   void MaybeWaitForTransactions();
-
-  void MaybeWaitForFileHandles();
 
   void CallCallback();
 
@@ -3032,12 +3025,6 @@ class MutableFile : public BackgroundMutableFileParentBase {
               SafeRefPtr<DatabaseFileInfo> aFileInfo);
 
   ~MutableFile() override;
-
-  PBackgroundFileHandleParent* AllocPBackgroundFileHandleParent(
-      const FileMode& aMode) final;
-
-  mozilla::ipc::IPCResult RecvPBackgroundFileHandleConstructor(
-      PBackgroundFileHandleParent* aActor, const FileMode& aMode) final;
 
   mozilla::ipc::IPCResult RecvGetFileId(int64_t* aFileId) override;
 };
@@ -5956,8 +5943,6 @@ StaticAutoPtr<DatabaseActorHashtable> gLiveDatabaseHashtable;
 
 StaticRefPtr<ConnectionPool> gConnectionPool;
 
-StaticRefPtr<FileHandleThreadPool> gFileHandleThreadPool;
-
 using DatabaseLoggingInfoHashtable =
     nsTHashMap<nsIDHashKey, DatabaseLoggingInfo*>;
 
@@ -6751,22 +6736,6 @@ RefPtr<mozilla::dom::quota::Client> CreateQuotaClient() {
   AssertIsOnBackgroundThread();
 
   return MakeRefPtr<QuotaClient>();
-}
-
-FileHandleThreadPool* GetFileHandleThreadPool() {
-  AssertIsOnBackgroundThread();
-
-  if (!gFileHandleThreadPool) {
-    RefPtr<FileHandleThreadPool> fileHandleThreadPool =
-        FileHandleThreadPool::Create();
-    if (NS_WARN_IF(!fileHandleThreadPool)) {
-      return nullptr;
-    }
-
-    gFileHandleThreadPool = fileHandleThreadPool;
-  }
-
-  return gFileHandleThreadPool;
 }
 
 nsresult DatabaseFileManager::AsyncDeleteFile(int64_t aFileId) {
@@ -9320,32 +9289,13 @@ void WaitForTransactionsHelper::MaybeWaitForTransactions() {
     return;
   }
 
-  MaybeWaitForFileHandles();
-}
-
-void WaitForTransactionsHelper::MaybeWaitForFileHandles() {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mState == State::Initial ||
-             mState == State::WaitingForTransactions);
-
-  RefPtr<FileHandleThreadPool> fileHandleThreadPool =
-      gFileHandleThreadPool.get();
-  if (fileHandleThreadPool) {
-    mState = State::WaitingForFileHandles;
-
-    fileHandleThreadPool->WaitForDirectoriesToComplete(
-        nsTArray<nsCString>{mDatabaseId}, this);
-    return;
-  }
-
   CallCallback();
 }
 
 void WaitForTransactionsHelper::CallCallback() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mState == State::Initial ||
-             mState == State::WaitingForTransactions ||
-             mState == State::WaitingForFileHandles);
+             mState == State::WaitingForTransactions);
 
   const nsCOMPtr<nsIRunnable> callback = std::move(mCallback);
 
@@ -9365,10 +9315,6 @@ WaitForTransactionsHelper::Run() {
       break;
 
     case State::WaitingForTransactions:
-      MaybeWaitForFileHandles();
-      break;
-
-    case State::WaitingForFileHandles:
       CallCallback();
       break;
 
@@ -12786,14 +12732,6 @@ void QuotaClient::FinalizeShutdown() {
     gConnectionPool = nullptr;
   }
 
-  RefPtr<FileHandleThreadPool> fileHandleThreadPool =
-      gFileHandleThreadPool.get();
-  if (fileHandleThreadPool) {
-    fileHandleThreadPool->Shutdown();
-
-    gFileHandleThreadPool = nullptr;
-  }
-
   if (mMaintenanceThreadPool) {
     mMaintenanceThreadPool->Shutdown();
     mMaintenanceThreadPool = nullptr;
@@ -14771,45 +14709,6 @@ already_AddRefed<BlobImpl> MutableFile::CreateBlobImpl() {
   blobImpl->SetFileId(mFileInfo->Id());
 
   return blobImpl.forget();
-}
-
-PBackgroundFileHandleParent* MutableFile::AllocPBackgroundFileHandleParent(
-    const FileMode& aMode) {
-  AssertIsOnBackgroundThread();
-
-  // Once a database is closed it must not try to open new file handles.
-  if (NS_WARN_IF(mDatabase->IsClosed())) {
-    MOZ_ASSERT_UNLESS_FUZZING(mDatabase->IsInvalidated());
-    return nullptr;
-  }
-
-  if (!gFileHandleThreadPool) {
-    RefPtr<FileHandleThreadPool> fileHandleThreadPool =
-        FileHandleThreadPool::Create();
-    if (NS_WARN_IF(!fileHandleThreadPool)) {
-      return nullptr;
-    }
-
-    gFileHandleThreadPool = fileHandleThreadPool;
-  }
-
-  return BackgroundMutableFileParentBase::AllocPBackgroundFileHandleParent(
-      aMode);
-}
-
-mozilla::ipc::IPCResult MutableFile::RecvPBackgroundFileHandleConstructor(
-    PBackgroundFileHandleParent* aActor, const FileMode& aMode) {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mDatabase->IsClosed());
-
-  if (NS_WARN_IF(mDatabase->IsInvalidated())) {
-    // This is an expected race. We don't want the child to die here, just don't
-    // actually do any work.
-    return IPC_OK();
-  }
-
-  return BackgroundMutableFileParentBase::RecvPBackgroundFileHandleConstructor(
-      aActor, aMode);
 }
 
 mozilla::ipc::IPCResult MutableFile::RecvGetFileId(int64_t* aFileId) {
