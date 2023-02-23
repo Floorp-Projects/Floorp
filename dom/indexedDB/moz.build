@@ -91,7 +91,6 @@ IPDL_SOURCES += [
     "PBackgroundIDBCursor.ipdl",
     "PBackgroundIDBDatabase.ipdl",
     "PBackgroundIDBDatabaseFile.ipdl",
-    "PBackgroundIDBDatabaseRequest.ipdl",
     "PBackgroundIDBFactory.ipdl",
     "PBackgroundIDBFactoryRequest.ipdl",
     "PBackgroundIDBRequest.ipdl",
