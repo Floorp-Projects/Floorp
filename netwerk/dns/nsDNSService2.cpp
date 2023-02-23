@@ -21,6 +21,7 @@
 #include "nsDNSPrefetch.h"
 #include "nsThreadUtils.h"
 #include "nsIProtocolProxyService.h"
+#include "nsIObliviousHttp.h"
 #include "prsystem.h"
 #include "prnetdb.h"
 #include "prmon.h"
@@ -878,6 +879,9 @@ nsDNSService::Init() {
   nsDNSPrefetch::Initialize(this);
 
   RegisterWeakMemoryReporter(this);
+
+  nsCOMPtr<nsIObliviousHttpService> ohttpService(
+      do_GetService("@mozilla.org/network/oblivious-http-service;1"));
 
   mTrrService = new TRRService();
   if (NS_FAILED(mTrrService->Init())) {

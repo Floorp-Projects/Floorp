@@ -16,18 +16,23 @@
 
 namespace mozilla::net {
 
-NS_IMPL_ISUPPORTS(ObliviousHttpChannel, nsIHttpChannel, nsIIdentChannel,
-                  nsIChannel, nsIRequest, nsIRequestObserver, nsIStreamListener,
-                  nsIUploadChannel2)
+NS_IMPL_ISUPPORTS(ObliviousHttpChannel, nsIChannel, nsIHttpChannel,
+                  nsIHttpChannelInternal, nsIIdentChannel, nsIRequest,
+                  nsIRequestObserver, nsIStreamListener, nsIUploadChannel2,
+                  nsITimedChannel)
 
 ObliviousHttpChannel::ObliviousHttpChannel(
     nsIURI* targetURI, const nsTArray<uint8_t>& encodedConfig,
     nsIHttpChannel* innerChannel)
     : mTargetURI(targetURI),
       mEncodedConfig(encodedConfig.Clone()),
-      mInnerChannel(innerChannel) {
+      mInnerChannel(innerChannel),
+      mInnerChannelInternal(do_QueryInterface(innerChannel)),
+      mInnerChannelTimed(do_QueryInterface(innerChannel)) {
   LOG(("ObliviousHttpChannel ctor [this=%p]", this));
   MOZ_ASSERT(mInnerChannel);
+  MOZ_ASSERT(mInnerChannelInternal);
+  MOZ_ASSERT(mInnerChannelTimed);
 }
 
 ObliviousHttpChannel::~ObliviousHttpChannel() {
@@ -60,17 +65,17 @@ ObliviousHttpChannel::SetTopBrowsingContextId(uint64_t aId) {
 
 NS_IMETHODIMP
 ObliviousHttpChannel::GetTransferSize(uint64_t* aTransferSize) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return mInnerChannel->GetTransferSize(aTransferSize);
 }
 
 NS_IMETHODIMP
 ObliviousHttpChannel::GetRequestSize(uint64_t* aRequestSize) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return mInnerChannel->GetRequestSize(aRequestSize);
 }
 
 NS_IMETHODIMP
 ObliviousHttpChannel::GetDecodedBodySize(uint64_t* aDecodedBodySize) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return mInnerChannel->GetDecodedBodySize(aDecodedBodySize);
 }
 
 NS_IMETHODIMP
@@ -198,6 +203,8 @@ ObliviousHttpChannel::GetResponseStatus(uint32_t* aResponseStatus) {
 
 NS_IMETHODIMP
 ObliviousHttpChannel::GetResponseStatusText(nsACString& aResponseStatusText) {
+  LOG(("ObliviousHttpChannel::GetResponseStatusText NOT IMPLEMENTED [this=%p]",
+       this));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -252,6 +259,8 @@ ObliviousHttpChannel::GetResponseHeader(const nsACString& header,
 NS_IMETHODIMP
 ObliviousHttpChannel::SetResponseHeader(const nsACString& header,
                                         const nsACString& value, bool merge) {
+  LOG(("ObliviousHttpChannel::SetResponseHeader NOT IMPLEMENTED [this=%p]",
+       this));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -290,37 +299,56 @@ ObliviousHttpChannel::GetOriginalResponseHeader(
 NS_IMETHODIMP
 ObliviousHttpChannel::VisitOriginalResponseHeaders(
     nsIHttpHeaderVisitor* aVisitor) {
+  LOG(
+      ("ObliviousHttpChannel::VisitOriginalResponseHeaders NOT IMPLEMENTED "
+       "[this=%p]",
+       this));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 ObliviousHttpChannel::ShouldStripRequestBodyHeader(const nsACString& aMethod,
                                                    bool* aResult) {
+  LOG(
+      ("ObliviousHttpChannel::ShouldStripRequestBodyHeader NOT IMPLEMENTED "
+       "[this=%p]",
+       this));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 ObliviousHttpChannel::IsNoStoreResponse(bool* _retval) {
+  LOG(("ObliviousHttpChannel::IsNoStoreResponse NOT IMPLEMENTED [this=%p]",
+       this));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 ObliviousHttpChannel::IsNoCacheResponse(bool* _retval) {
+  LOG(("ObliviousHttpChannel::IsNoCacheResponse NOT IMPLEMENTED [this=%p]",
+       this));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 ObliviousHttpChannel::IsPrivateResponse(bool* _retval) {
+  LOG(("ObliviousHttpChannel::IsPrivateResponse NOT IMPLEMENTED [this=%p]",
+       this));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 ObliviousHttpChannel::RedirectTo(nsIURI* aNewURI) {
+  LOG(("ObliviousHttpChannel::RedirectTo NOT IMPLEMENTED [this=%p]", this));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-ObliviousHttpChannel::UpgradeToSecure() { return NS_ERROR_NOT_IMPLEMENTED; }
+ObliviousHttpChannel::UpgradeToSecure() {
+  LOG(("ObliviousHttpChannel::UpgradeToSecure NOT IMPLEMENTED [this=%p]",
+       this));
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_IMETHODIMP
 ObliviousHttpChannel::GetRequestContextID(uint64_t* _retval) {
@@ -339,6 +367,8 @@ ObliviousHttpChannel::GetProtocolVersion(nsACString& aProtocolVersion) {
 
 NS_IMETHODIMP
 ObliviousHttpChannel::GetEncodedBodySize(uint64_t* aEncodedBodySize) {
+  LOG(("ObliviousHttpChannel::GetEncodedBodySize NOT IMPLEMENTED [this=%p]",
+       this));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -358,7 +388,53 @@ ObliviousHttpChannel::LogMimeTypeMismatch(const nsACString& aMessageName,
 
 void ObliviousHttpChannel::SetSource(
     mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> aSource) {
+  LOG(("ObliviousHttpChannel::SetSource NOT IMPLEMENTED [this=%p]", this));
   // NS_ERROR_NOT_IMPLEMENTED
+}
+
+void ObliviousHttpChannel::SetConnectionInfo(nsHttpConnectionInfo* aCi) {
+  if (mInnerChannelInternal) {
+    mInnerChannelInternal->SetConnectionInfo(aCi);
+  }
+}
+
+void ObliviousHttpChannel::DoDiagnosticAssertWhenOnStopNotCalledOnDestroy() {
+  if (mInnerChannelInternal) {
+    mInnerChannelInternal->DoDiagnosticAssertWhenOnStopNotCalledOnDestroy();
+  }
+}
+
+void ObliviousHttpChannel::SetIPv6Disabled() {
+  if (mInnerChannelInternal) {
+    mInnerChannelInternal->SetIPv6Disabled();
+  }
+}
+
+void ObliviousHttpChannel::SetIPv4Disabled() {
+  if (mInnerChannelInternal) {
+    mInnerChannelInternal->SetIPv4Disabled();
+  }
+}
+
+void ObliviousHttpChannel::DisableAltDataCache() {
+  if (mInnerChannelInternal) {
+    mInnerChannelInternal->DisableAltDataCache();
+  }
+}
+
+void ObliviousHttpChannel::SetAltDataForChild(bool aIsForChild) {
+  if (mInnerChannelInternal) {
+    mInnerChannelInternal->SetAltDataForChild(aIsForChild);
+  }
+}
+
+void ObliviousHttpChannel::SetCorsPreflightParameters(
+    nsTArray<nsTString<char>> const& aUnsafeHeaders,
+    bool aShouldStripRequestBodyHeader) {
+  if (mInnerChannelInternal) {
+    mInnerChannelInternal->SetCorsPreflightParameters(
+        aUnsafeHeaders, aShouldStripRequestBodyHeader);
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -411,7 +487,7 @@ ObliviousHttpChannel::GetSecurityInfo(
 
 NS_IMETHODIMP
 ObliviousHttpChannel::GetContentType(nsACString& aContentType) {
-  return mInnerChannel->GetContentType(aContentType);
+  return GetResponseHeader("content-type"_ns, aContentType);
 }
 
 NS_IMETHODIMP
@@ -441,6 +517,7 @@ ObliviousHttpChannel::SetContentLength(int64_t aContentLength) {
 
 NS_IMETHODIMP
 ObliviousHttpChannel::Open(nsIInputStream** aStream) {
+  LOG(("ObliviousHttpChannel::Open NOT IMPLEMENTED [this=%p]", this));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -459,6 +536,9 @@ ObliviousHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
     return rv;
   }
   nsAutoCString scheme;
+  if (!mTargetURI) {
+    return NS_ERROR_NULL_POINTER;
+  }
   rv = mTargetURI->GetScheme(scheme);
   if (NS_FAILED(rv)) {
     return rv;
@@ -615,15 +695,13 @@ NS_IMETHODIMP
 ObliviousHttpChannel::OnStartRequest(nsIRequest* aRequest) {
   LOG(("ObliviousHttpChannel::OnStartRequest [this=%p, request=%p]", this,
        aRequest));
-  return mStreamListener->OnStartRequest(aRequest);
+  return NS_OK;
 }
 
-NS_IMETHODIMP
-ObliviousHttpChannel::OnStopRequest(nsIRequest* aRequest,
-                                    nsresult aStatusCode) {
-  LOG(("ObliviousHttpChannel::OnStopRequest [this=%p, request=%p, status=%u]",
-       this, aRequest, (uint32_t)aStatusCode));
-
+nsresult ObliviousHttpChannel::ProcessOnStopRequest() {
+  if (mRawResponse.IsEmpty()) {
+    return NS_OK;
+  }
   nsCOMPtr<nsIObliviousHttp> obliviousHttp(
       do_GetService("@mozilla.org/network/oblivious-http;1"));
   if (!obliviousHttp) {
@@ -644,39 +722,57 @@ ObliviousHttpChannel::OnStopRequest(nsIRequest* aRequest,
   if (!bhttp) {
     return NS_ERROR_FAILURE;
   }
-  rv = bhttp->DecodeResponse(decapsulated, getter_AddRefs(mBinaryHttpResponse));
-  if (NS_FAILED(rv)) {
-    return rv;
+  return bhttp->DecodeResponse(decapsulated,
+                               getter_AddRefs(mBinaryHttpResponse));
+}
+
+void ObliviousHttpChannel::EmitOnDataAvailable() {
+  if (!mBinaryHttpResponse) {
+    return;
   }
   nsTArray<uint8_t> content;
-  rv = mBinaryHttpResponse->GetContent(content);
+  nsresult rv = mBinaryHttpResponse->GetContent(content);
   if (NS_FAILED(rv)) {
-    return rv;
+    return;
+  }
+  if (content.IsEmpty()) {
+    return;
   }
   if (content.Length() > std::numeric_limits<uint32_t>::max()) {
-    return NS_ERROR_FAILURE;
+    return;
   }
   uint32_t contentLength = (uint32_t)content.Length();
-  if (contentLength > 0) {
-    nsCOMPtr<nsIInputStream> contentStream;
-    rv = NS_NewByteInputStream(getter_AddRefs(contentStream),
-                               std::move(content));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    rv = mStreamListener->OnDataAvailable(aRequest, contentStream, 0,
-                                          contentLength);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
-  rv = mStreamListener->OnStopRequest(aRequest, aStatusCode);
+  nsCOMPtr<nsIInputStream> contentStream;
+  rv = NS_NewByteInputStream(getter_AddRefs(contentStream), std::move(content));
   if (NS_FAILED(rv)) {
-    return rv;
+    return;
   }
-  mInnerChannel = nullptr;
-  mEncapsulatedRequest = nullptr;
-  mStreamListener = nullptr;
+  rv = mStreamListener->OnDataAvailable(this, contentStream, 0, contentLength);
+  Unused << rv;
+}
+
+NS_IMETHODIMP
+ObliviousHttpChannel::OnStopRequest(nsIRequest* aRequest,
+                                    nsresult aStatusCode) {
+  LOG(("ObliviousHttpChannel::OnStopRequest [this=%p, request=%p, status=%u]",
+       this, aRequest, (uint32_t)aStatusCode));
+
+  auto releaseStreamListener = MakeScopeExit(
+      [self = RefPtr{this}]() mutable { self->mStreamListener = nullptr; });
+
+  if (NS_SUCCEEDED(aStatusCode)) {
+    bool requestSucceeded;
+    nsresult rv = mInnerChannel->GetRequestSucceeded(&requestSucceeded);
+    if (NS_SUCCEEDED(rv) && requestSucceeded) {
+      aStatusCode = ProcessOnStopRequest();
+    }
+  }
+  Unused << mStreamListener->OnStartRequest(this);
+  if (NS_SUCCEEDED(aStatusCode)) {
+    EmitOnDataAvailable();
+  }
+  Unused << mStreamListener->OnStopRequest(this, aStatusCode);
+
   return NS_OK;
 }
 
@@ -687,6 +783,10 @@ ObliviousHttpChannel::OnStopRequest(nsIRequest* aRequest,
 NS_IMETHODIMP ObliviousHttpChannel::ExplicitSetUploadStream(
     nsIInputStream* aStream, const nsACString& aContentType,
     int64_t aContentLength, const nsACString& aMethod, bool aStreamHasHeaders) {
+  // This function should only be called before AsyncOpen.
+  if (mStreamListener) {
+    return NS_ERROR_IN_PROGRESS;
+  }
   if (aMethod != "POST"_ns || aStreamHasHeaders) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -726,6 +826,8 @@ NS_IMETHODIMP ObliviousHttpChannel::GetUploadStreamHasHeaders(
 
 NS_IMETHODIMP ObliviousHttpChannel::CloneUploadStream(
     int64_t* aContentLength, nsIInputStream** _retval) {
+  LOG(("ObliviousHttpChannel::CloneUploadStream NOT IMPLEMENTED [this=%p]",
+       this));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

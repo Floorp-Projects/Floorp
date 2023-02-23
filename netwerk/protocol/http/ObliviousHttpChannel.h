@@ -10,16 +10,20 @@
 
 #include "nsIBinaryHttp.h"
 #include "nsIHttpChannel.h"
+#include "nsIHttpChannelInternal.h"
 #include "nsIObliviousHttp.h"
 #include "nsIStreamListener.h"
+#include "nsITimedChannel.h"
 #include "nsIUploadChannel2.h"
 #include "nsTHashMap.h"
 
 namespace mozilla::net {
 
 class ObliviousHttpChannel final : public nsIHttpChannel,
+                                   public nsIHttpChannelInternal,
                                    public nsIStreamListener,
-                                   public nsIUploadChannel2 {
+                                   public nsIUploadChannel2,
+                                   public nsITimedChannel {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICHANNEL
@@ -32,11 +36,16 @@ class ObliviousHttpChannel final : public nsIHttpChannel,
                        const nsTArray<uint8_t>& encodedConfig,
                        nsIHttpChannel* innerChannel);
 
-  NS_FORWARD_NSIREQUEST(mInnerChannel->)
-  NS_FORWARD_NSIIDENTCHANNEL(mInnerChannel->)
+  NS_FORWARD_SAFE_NSIREQUEST(mInnerChannel)
+  NS_FORWARD_SAFE_NSIIDENTCHANNEL(mInnerChannel)
+  NS_FORWARD_SAFE_NSIHTTPCHANNELINTERNAL(mInnerChannelInternal)
+  NS_FORWARD_SAFE_NSITIMEDCHANNEL(mInnerChannelTimed)
 
  protected:
   ~ObliviousHttpChannel();
+
+  nsresult ProcessOnStopRequest();
+  void EmitOnDataAvailable();
 
   nsCOMPtr<nsIURI> mTargetURI;
   nsTArray<uint8_t> mEncodedConfig;
@@ -46,6 +55,8 @@ class ObliviousHttpChannel final : public nsIHttpChannel,
   nsTArray<uint8_t> mContent;
 
   nsCOMPtr<nsIHttpChannel> mInnerChannel;
+  nsCOMPtr<nsIHttpChannelInternal> mInnerChannelInternal;
+  nsCOMPtr<nsITimedChannel> mInnerChannelTimed;
   nsCOMPtr<nsIObliviousHttpClientRequest> mEncapsulatedRequest;
   nsTArray<uint8_t> mRawResponse;
   nsCOMPtr<nsIBinaryHttpResponse> mBinaryHttpResponse;

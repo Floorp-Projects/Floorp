@@ -8,17 +8,36 @@
 #ifndef mozilla_net_ObliviousHttpService_h
 #define mozilla_net_ObliviousHttpService_h
 
+#include "mozilla/DataMutex.h"
+#include "nsCOMPtr.h"
 #include "nsIObliviousHttp.h"
+#include "nsIObserver.h"
+#include "nsIStreamLoader.h"
 
 namespace mozilla::net {
 
-class ObliviousHttpService final : public nsIObliviousHttpService {
+class ObliviousHttpConfig {
+ public:
+  nsCOMPtr<nsIURI> mRelayURI;
+  nsTArray<uint8_t> mEncodedConfig;
+};
+
+class ObliviousHttpService final : public nsIObliviousHttpService,
+                                   nsIObserver,
+                                   nsIStreamLoaderObserver {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBLIVIOUSHTTPSERVICE
+  NS_DECL_NSIOBSERVER
+  NS_DECL_NSISTREAMLOADEROBSERVER
+
+  ObliviousHttpService();
 
  private:
   ~ObliviousHttpService() = default;
+  void ReadPrefs(const nsACString& whichPref);
+
+  DataMutex<ObliviousHttpConfig> mTRRConfig;
 };
 
 }  // namespace mozilla::net

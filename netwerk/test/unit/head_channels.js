@@ -473,6 +473,10 @@ BinaryHttpResponse.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsIBinaryHttpResponse"]),
 };
 
+function bytesToString(bytes) {
+  return String.fromCharCode.apply(null, bytes);
+}
+
 function check_http_info(request, expected_httpVersion, expected_proxy) {
   let httpVersion = "";
   try {

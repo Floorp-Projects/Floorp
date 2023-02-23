@@ -5,10 +5,6 @@
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
-function bytesToString(bytes) {
-  return String.fromCharCode.apply(null, bytes);
-}
-
 class ObliviousHttpTestRequest {
   constructor(method, uri, headers, content) {
     this.method = method;
