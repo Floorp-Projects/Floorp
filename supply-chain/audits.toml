@@ -1251,6 +1251,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
 delta = "0.14.22 -> 0.14.23"
 
+[[audits.hyper]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-run"
+delta = "0.14.23 -> 0.14.24"
+
 [[audits.indexmap]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
