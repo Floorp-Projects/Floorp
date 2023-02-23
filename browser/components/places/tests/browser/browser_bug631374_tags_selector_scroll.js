@@ -5,6 +5,14 @@
 
 const TEST_URL = "about:buildconfig";
 
+add_task(async function test_instant_apply() {
+  await runTest(false);
+});
+
+add_task(async function test_delayed_apply() {
+  await runTest(true);
+});
+
 function scrolledIntoView(item, parentItem) {
   let itemRect = item.getBoundingClientRect();
   let parentItemRect = parentItem.getBoundingClientRect();
@@ -14,7 +22,7 @@ function scrolledIntoView(item, parentItem) {
   return pointInView(itemRect.top) || pointInView(itemRect.bottom);
 }
 
-add_task(async function() {
+async function runTest(delayedApply) {
   await PlacesUtils.bookmarks.eraseEverything();
   let tags = [
     "a",
@@ -51,34 +59,38 @@ add_task(async function() {
   });
   PlacesUtils.tagging.tagURI(uri2, tags);
 
-  let tab = await BrowserTestUtils.openNewForegroundTab({
-    gBrowser,
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.bookmarks.editDialog.delayedApply.enabled", delayedApply]],
+  });
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+  await BrowserTestUtils.openNewForegroundTab({
+    gBrowser: win.gBrowser,
     opening: TEST_URL,
     waitForStateStop: true,
   });
 
   registerCleanupFunction(async () => {
     bookmarkPanel.removeAttribute("animate");
-    await BrowserTestUtils.removeTab(tab);
+    await BrowserTestUtils.closeWindow(win);
     await PlacesUtils.bookmarks.eraseEverything();
   });
 
-  StarUI._createPanelIfNeeded();
-  let bookmarkPanel = document.getElementById("editBookmarkPanel");
+  win.StarUI._createPanelIfNeeded();
+  let bookmarkPanel = win.document.getElementById("editBookmarkPanel");
   bookmarkPanel.setAttribute("animate", false);
   let shownPromise = promisePopupShown(bookmarkPanel);
 
-  let bookmarkStar = BookmarkingUI.star;
+  let bookmarkStar = win.BookmarkingUI.star;
   bookmarkStar.click();
 
   await shownPromise;
 
   // Init panel.
-  ok(gEditItemOverlay, "gEditItemOverlay is in context");
-  ok(gEditItemOverlay.initialized, "gEditItemOverlay is initialized");
+  ok(win.gEditItemOverlay, "gEditItemOverlay is in context");
+  ok(win.gEditItemOverlay.initialized, "gEditItemOverlay is initialized");
 
-  await openTagSelector();
-  let tagsSelector = document.getElementById("editBMPanel_tagsSelector");
+  await openTagSelector(win);
+  let tagsSelector = win.document.getElementById("editBMPanel_tagsSelector");
 
   // Go by two so there is some untouched tag in the middle.
   for (let i = 8; i < tags.length; i += 2) {
@@ -97,7 +109,7 @@ add_task(async function() {
       tagsSelector,
       "BookmarkTagsSelectorUpdated"
     );
-    EventUtils.synthesizeMouseAtCenter(listItem.firstElementChild, {});
+    EventUtils.synthesizeMouseAtCenter(listItem.firstElementChild, {}, win);
     await promise;
     is(scrollTop, tagsSelector.scrollTop, "Scroll position did not change");
 
@@ -112,7 +124,7 @@ add_task(async function() {
       tagsSelector,
       "BookmarkTagsSelectorUpdated"
     );
-    EventUtils.synthesizeMouseAtCenter(newItem.firstElementChild, {});
+    EventUtils.synthesizeMouseAtCenter(newItem.firstElementChild, {}, win);
     await promise;
     is(scrollTop, tagsSelector.scrollTop, "Scroll position did not change");
   }
@@ -140,37 +152,39 @@ add_task(async function() {
       tagsSelector,
       "BookmarkTagsSelectorUpdated"
     );
-    EventUtils.synthesizeMouseAtCenter(listItem.firstElementChild, {});
+    EventUtils.synthesizeMouseAtCenter(listItem.firstElementChild, {}, win);
     await promise;
 
-    // The listbox is rebuilt, so we have to get the new element.
-    let topItem = [...tagsSelector.itemChildren].find(e => e.label == topTag);
-    ok(scrolledIntoView(topItem, tagsSelector), "Scroll position is correct");
+    if (!delayedApply) {
+      // The listbox is rebuilt, so we have to get the new element.
+      let topItem = [...tagsSelector.itemChildren].find(e => e.label == topTag);
+      ok(scrolledIntoView(topItem, tagsSelector), "Scroll position is correct");
 
-    let newItem = tagsSelector.selectedItem;
-    isnot(newItem, null, "Valid new listItem found");
-    ok(newItem.hasAttribute("checked"), "New listItem is checked " + i);
-    is(
-      tagsSelector.selectedItem.label,
-      tags[Math.min(i + 1, tags.length - 2)],
-      "The next tag is now selected"
-    );
+      let newItem = tagsSelector.selectedItem;
+      isnot(newItem, null, "Valid new listItem found");
+      ok(newItem.hasAttribute("checked"), "New listItem is checked " + i);
+      is(
+        tagsSelector.selectedItem.label,
+        tags[Math.min(i + 1, tags.length - 2)],
+        "The next tag is now selected"
+      );
+    }
   }
 
   let hiddenPromise = promisePopupHidden(bookmarkPanel);
-  let doneButton = document.getElementById("editBookmarkPanelDoneButton");
+  let doneButton = win.document.getElementById("editBookmarkPanelDoneButton");
   doneButton.click();
   await hiddenPromise;
   // Cleanup.
   await PlacesUtils.bookmarks.remove(bm1);
-});
+}
 
-function openTagSelector() {
+function openTagSelector(win) {
   let promise = BrowserTestUtils.waitForEvent(
-    document.getElementById("editBMPanel_tagsSelector"),
+    win.document.getElementById("editBMPanel_tagsSelector"),
     "BookmarkTagsSelectorUpdated"
   );
   // Open the tags selector.
-  document.getElementById("editBMPanel_tagsSelectorExpander").doCommand();
+  win.document.getElementById("editBMPanel_tagsSelectorExpander").doCommand();
   return promise;
 }

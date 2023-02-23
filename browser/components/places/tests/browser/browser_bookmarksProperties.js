@@ -303,119 +303,137 @@ gTests.push({
 // ------------------------------------------------------------------------------
 //  Bug 491269 - Test that editing folder name in bookmarks properties dialog does not accept the dialog
 
-gTests.push({
-  desc:
-    " Bug 491269 - Test that editing folder name in bookmarks properties dialog does not accept the dialog",
-  sidebar: SIDEBAR_HISTORY_ID,
-  dialogUrl: DIALOG_URL,
-  action: ACTION_ADD,
-  historyView: SIDEBAR_HISTORY_BYLASTVISITED_VIEW,
-  window: null,
+for (const delayedApply of [false, true]) {
+  const prefDesc = delayedApply ? "Delayed Apply" : "Instant Apply";
+  gTests.push({
+    desc: `Bug 491269 (${prefDesc}) - Test that editing folder name in bookmarks properties dialog does not accept the dialog`,
+    sidebar: SIDEBAR_HISTORY_ID,
+    dialogUrl: DIALOG_URL,
+    action: ACTION_ADD,
+    historyView: SIDEBAR_HISTORY_BYLASTVISITED_VIEW,
+    window: null,
 
-  async setup() {
-    // Add a visit.
-    await PlacesTestUtils.addVisits(TEST_URL);
-
-    this._addObserver = PlacesTestUtils.waitForNotification("bookmark-added");
-  },
-
-  selectNode(tree) {
-    var visitNode = tree.view.nodeForTreeIndex(0);
-    tree.selectNode(visitNode);
-    Assert.equal(
-      tree.selectedNode.uri,
-      TEST_URL,
-      "The correct visit has been selected"
-    );
-    Assert.equal(
-      tree.selectedNode.itemId,
-      -1,
-      "The selected node is not bookmarked"
-    );
-  },
-
-  async run() {
-    // Open folder selector.
-    var foldersExpander = this.window.document.getElementById(
-      "editBMPanel_foldersExpander"
-    );
-    var folderTree = this.window.gEditItemOverlay._folderTree;
-    var self = this;
-
-    let unloadPromise = new Promise(resolve => {
-      this.window.addEventListener(
-        "unload",
-        event => {
-          Assert.ok(
-            self._cleanShutdown,
-            "Dialog window should not be closed by pressing ESC in folder name textbox"
-          );
-          executeSoon(() => {
-            resolve();
-          });
-        },
-        { capture: true, once: true }
-      );
-    });
-
-    folderTree.addEventListener("DOMAttrModified", function onDOMAttrModified(
-      event
-    ) {
-      if (event.attrName != "place") {
-        return;
-      }
-      folderTree.removeEventListener("DOMAttrModified", onDOMAttrModified);
-      executeSoon(async function() {
-        await self._addObserver;
-        let bookmark = await PlacesUtils.bookmarks.fetch({ url: TEST_URL });
-        self._bookmarkGuid = bookmark.guid;
-
-        // Create a new folder.
-        var newFolderButton = self.window.document.getElementById(
-          "editBMPanel_newFolderButton"
-        );
-        newFolderButton.doCommand();
-
-        // Wait for the folder to be created and for editing to start.
-        await TestUtils.waitForCondition(
-          () => folderTree.hasAttribute("editing"),
-          "We are editing new folder name in folder tree"
-        );
-
-        // Press Escape to discard editing new folder name.
-        EventUtils.synthesizeKey("VK_ESCAPE", {}, self.window);
-        Assert.ok(
-          !folderTree.hasAttribute("editing"),
-          "We have finished editing folder name in folder tree"
-        );
-
-        self._cleanShutdown = true;
-        self._removeObserver = PlacesTestUtils.waitForNotification(
-          "bookmark-removed",
-          events => events.some(eve => eve.guid == self._bookmarkGuid)
-        );
-
-        self.window.document
-          .getElementById("bookmarkpropertiesdialog")
-          .cancelDialog();
+    async setup() {
+      await SpecialPowers.pushPrefEnv({
+        set: [
+          ["browser.bookmarks.editDialog.delayedApply.enabled", delayedApply],
+        ],
       });
-    });
-    foldersExpander.doCommand();
-    await unloadPromise;
-  },
 
-  finish() {
-    SidebarUI.hide();
-  },
+      // Add a visit.
+      await PlacesTestUtils.addVisits(TEST_URL);
+      if (!delayedApply) {
+        this._addObserver = PlacesTestUtils.waitForNotification(
+          "bookmark-added",
+          null
+        );
+      }
+    },
 
-  async cleanup() {
-    await this._removeObserver;
-    delete this._removeObserver;
-    await PlacesTestUtils.promiseAsyncUpdates();
+    selectNode(tree) {
+      var visitNode = tree.view.nodeForTreeIndex(0);
+      tree.selectNode(visitNode);
+      Assert.equal(
+        tree.selectedNode.uri,
+        TEST_URL,
+        "The correct visit has been selected"
+      );
+      Assert.equal(
+        tree.selectedNode.itemId,
+        -1,
+        "The selected node is not bookmarked"
+      );
+    },
 
-    await PlacesUtils.history.clear();
-  },
-});
+    async run() {
+      // Open folder selector.
+      var foldersExpander = this.window.document.getElementById(
+        "editBMPanel_foldersExpander"
+      );
+      var folderTree = this.window.gEditItemOverlay._folderTree;
+      var self = this;
+
+      let unloadPromise = new Promise(resolve => {
+        this.window.addEventListener(
+          "unload",
+          event => {
+            Assert.ok(
+              self._cleanShutdown,
+              "Dialog window should not be closed by pressing ESC in folder name textbox"
+            );
+            executeSoon(() => {
+              resolve();
+            });
+          },
+          { capture: true, once: true }
+        );
+      });
+
+      folderTree.addEventListener("DOMAttrModified", function onDOMAttrModified(
+        event
+      ) {
+        if (event.attrName != "place") {
+          return;
+        }
+        folderTree.removeEventListener("DOMAttrModified", onDOMAttrModified);
+        executeSoon(async function() {
+          if (!delayedApply) {
+            await self._addObserver;
+            let bookmark = await PlacesUtils.bookmarks.fetch({ url: TEST_URL });
+            self._bookmarkGuid = bookmark.guid;
+          }
+
+          // Create a new folder.
+          var newFolderButton = self.window.document.getElementById(
+            "editBMPanel_newFolderButton"
+          );
+          newFolderButton.doCommand();
+
+          // Wait for the folder to be created and for editing to start.
+          await TestUtils.waitForCondition(
+            () => folderTree.hasAttribute("editing"),
+            "We are editing new folder name in folder tree"
+          );
+
+          // Press Escape to discard editing new folder name.
+          EventUtils.synthesizeKey("VK_ESCAPE", {}, self.window);
+          Assert.ok(
+            !folderTree.hasAttribute("editing"),
+            "We have finished editing folder name in folder tree"
+          );
+
+          self._cleanShutdown = true;
+          if (!delayedApply) {
+            self._removeObserver = PlacesTestUtils.waitForNotification(
+              "bookmark-removed",
+              events => events.some(eve => eve.guid == self._bookmarkGuid)
+            );
+          }
+
+          self.window.document
+            .getElementById("bookmarkpropertiesdialog")
+            .cancelDialog();
+        });
+      });
+      foldersExpander.doCommand();
+      await unloadPromise;
+    },
+
+    finish() {
+      SidebarUI.hide();
+    },
+
+    async cleanup() {
+      if (!delayedApply) {
+        await this._removeObserver;
+        delete this._removeObserver;
+      }
+      await PlacesTestUtils.promiseAsyncUpdates();
+
+      await PlacesUtils.history.clear();
+    },
+  });
+}
 
 // ------------------------------------------------------------------------------
 
