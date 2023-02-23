@@ -675,6 +675,26 @@ impl<'bump, T: 'bump> Vec<'bump, T> {
         }
     }
 
+    /// Returns a shared reference to the allocator backing this `Vec`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bumpalo::{Bump, collections::Vec};
+    ///
+    /// // uses the same allocator as the provided `Vec`
+    /// fn add_strings<'bump>(vec: &mut Vec<'bump, &'bump str>) {
+    ///     for string in ["foo", "bar", "baz"] {
+    ///         vec.push(vec.bump().alloc_str(string));
+    ///     }
+    /// }
+    /// ```
+    #[inline]
+    #[must_use]
+    pub fn bump(&self) -> &'bump Bump {
+        self.buf.bump()
+    }
+
     /// Returns the number of elements the vector can hold without
     /// reallocating.
     ///

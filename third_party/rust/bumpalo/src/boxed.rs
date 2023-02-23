@@ -130,7 +130,7 @@ use {
             future::Future,
             hash::{Hash, Hasher},
             iter::FusedIterator,
-            mem,
+            mem::ManuallyDrop,
             ops::{Deref, DerefMut},
             pin::Pin,
             task::{Context, Poll},
@@ -280,9 +280,8 @@ impl<'a, T: ?Sized> Box<'a, T> {
     /// ```
     #[inline]
     pub fn into_raw(b: Box<'a, T>) -> *mut T {
-        let ptr = b.0 as *mut T;
-        mem::forget(b);
-        ptr
+        let mut b = ManuallyDrop::new(b);
+        b.deref_mut().0 as *mut T
     }
 
     /// Consumes and leaks the `Box`, returning a mutable reference,
@@ -662,9 +661,9 @@ impl<'a, F: ?Sized + Future + Unpin> Future for Box<'a, F> {
 
 /// This impl replaces unsize coercion.
 impl<'a, T, const N: usize> From<Box<'a, [T; N]>> for Box<'a, [T]> {
-    fn from(mut arr: Box<'a, [T; N]>) -> Box<'a, [T]> {
+    fn from(arr: Box<'a, [T; N]>) -> Box<'a, [T]> {
+        let mut arr = ManuallyDrop::new(arr);
         let ptr = core::ptr::slice_from_raw_parts_mut(arr.as_mut_ptr(), N);
-        mem::forget(arr);
         unsafe { Box::from_raw(ptr) }
     }
 }
@@ -672,10 +671,10 @@ impl<'a, T, const N: usize> From<Box<'a, [T; N]>> for Box<'a, [T]> {
 /// This impl replaces unsize coercion.
 impl<'a, T, const N: usize> TryFrom<Box<'a, [T]>> for Box<'a, [T; N]> {
     type Error = Box<'a, [T]>;
-    fn try_from(mut slice: Box<'a, [T]>) -> Result<Box<'a, [T; N]>, Box<'a, [T]>> {
+    fn try_from(slice: Box<'a, [T]>) -> Result<Box<'a, [T; N]>, Box<'a, [T]>> {
         if slice.len() == N {
+            let mut slice = ManuallyDrop::new(slice);
             let ptr = slice.as_mut_ptr() as *mut [T; N];
-            mem::forget(slice);
             Ok(unsafe { Box::from_raw(ptr) })
         } else {
             Err(slice)

@@ -1678,6 +1678,10 @@ impl Bump {
     /// on it only counting the sum of the sizes of the things
     /// you've allocated in the arena.
     ///
+    /// The allocated bytes do not include the size of bumpalo's metadata,
+    /// so the amount of memory requested from the Rust allocator is higher
+    /// than the returned value.
+    ///
     /// ## Example
     ///
     /// ```

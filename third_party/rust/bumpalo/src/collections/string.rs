@@ -798,6 +798,24 @@ impl<'bump> String<'bump> {
         String { vec: bytes }
     }
 
+    /// Returns a shared reference to the allocator backing this `String`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use bumpalo::{Bump, collections::String};
+    ///
+    /// // uses the same allocator as the provided `String`
+    /// fn copy_string<'bump>(s: &String<'bump>) -> &'bump str {
+    ///     s.bump().alloc_str(s.as_str())
+    /// }
+    /// ```
+    #[inline]
+    #[must_use]
+    pub fn bump(&self) -> &'bump Bump {
+        self.vec.bump()
+    }
+
     /// Converts a `String` into a byte vector.
     ///
     /// This consumes the `String`, so we do not need to copy its contents.
