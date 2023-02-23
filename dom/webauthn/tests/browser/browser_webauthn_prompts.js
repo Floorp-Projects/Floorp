@@ -15,7 +15,9 @@ add_task(async function test_setup_usbtoken() {
   });
 });
 add_task(test_register);
+add_task(test_register_escape);
 add_task(test_sign);
+add_task(test_sign_escape);
 add_task(test_register_direct_cancel);
 add_task(test_tab_switching);
 add_task(test_window_switching);
@@ -86,9 +88,30 @@ async function test_register() {
     .then(() => (active = false));
   await promiseNotification("webauthn-prompt-register");
 
-  // Cancel the request.
+  // Cancel the request with the button.
   ok(active, "request should still be active");
   PopupNotifications.panel.firstElementChild.button.click();
+  await request;
+
+  // Close tab.
+  await BrowserTestUtils.removeTab(tab);
+}
+
+async function test_register_escape() {
+  // Open a new tab.
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+
+  // Request a new credential and wait for the prompt.
+  let active = true;
+  let request = promiseWebAuthnMakeCredential(tab, "none", {})
+    .then(arrivingHereIsBad)
+    .catch(expectNotAllowedError)
+    .then(() => (active = false));
+  await promiseNotification("webauthn-prompt-register");
+
+  // Cancel the request by hitting escape.
+  ok(active, "request should still be active");
+  EventUtils.synthesizeKey("KEY_Escape");
   await request;
 
   // Close tab.
@@ -107,9 +130,30 @@ async function test_sign() {
     .then(() => (active = false));
   await promiseNotification("webauthn-prompt-sign");
 
-  // Cancel the request.
+  // Cancel the request with the button.
   ok(active, "request should still be active");
   PopupNotifications.panel.firstElementChild.button.click();
+  await request;
+
+  // Close tab.
+  await BrowserTestUtils.removeTab(tab);
+}
+
+async function test_sign_escape() {
+  // Open a new tab.
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
+
+  // Request a new assertion and wait for the prompt.
+  let active = true;
+  let request = promiseWebAuthnGetAssertion(tab)
+    .then(arrivingHereIsBad)
+    .catch(expectNotAllowedError)
+    .then(() => (active = false));
+  await promiseNotification("webauthn-prompt-sign");
+
+  // Cancel the request by hitting escape.
+  ok(active, "request should still be active");
+  EventUtils.synthesizeKey("KEY_Escape");
   await request;
 
   // Close tab.
