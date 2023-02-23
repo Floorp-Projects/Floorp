@@ -261,14 +261,12 @@ nsIFrame::SizeComputationResult nsRubyBaseContainerFrame::ComputeSize(
           AspectRatioUsage::None};
 }
 
-bool nsRubyBaseContainerFrame::GetNaturalBaselineBOffset(
-    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
-    nscoord* aBaseline) const {
+Maybe<nscoord> nsRubyBaseContainerFrame::GetNaturalBaselineBOffset(
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
   if (aBaselineGroup == BaselineSharingGroup::Last) {
-    return false;
+    return Nothing{};
   }
-  *aBaseline = mBaseline;
-  return true;
+  return Some(mBaseline);
 }
 
 struct nsRubyBaseContainerFrame::RubyReflowInput {

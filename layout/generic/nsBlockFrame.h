@@ -132,9 +132,9 @@ class nsBlockFrame : public nsContainerFrame {
   BaselineSharingGroup GetDefaultBaselineSharingGroup() const override {
     return BaselineSharingGroup::Last;
   }
-  bool GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
-                                 BaselineSharingGroup aBaselineGroup,
-                                 nscoord* aBaseline) const override;
+  Maybe<nscoord> GetNaturalBaselineBOffset(
+      mozilla::WritingMode aWM,
+      BaselineSharingGroup aBaselineGroup) const override;
   nscoord GetCaretBaseline() const override;
   void DestroyFrom(nsIFrame* aDestructRoot,
                    PostDestroyData& aPostDestroyData) override;

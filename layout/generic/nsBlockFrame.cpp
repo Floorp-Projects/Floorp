@@ -604,21 +604,23 @@ nscoord nsBlockFrame::SynthesizeFallbackBaseline(
   return Baseline::SynthesizeBOffsetFromMarginBox(this, aWM, aBaselineGroup);
 }
 
-bool nsBlockFrame::GetNaturalBaselineBOffset(
-    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
-    nscoord* aBaseline) const {
+Maybe<nscoord> nsBlockFrame::GetNaturalBaselineBOffset(
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
   if (StyleDisplay()->IsContainLayout()) {
-    return false;
+    return Nothing{};
   }
 
   if (aBaselineGroup == BaselineSharingGroup::First) {
-    return nsLayoutUtils::GetFirstLineBaseline(aWM, this, aBaseline);
+    nscoord result;
+    if (!nsLayoutUtils::GetFirstLineBaseline(aWM, this, &result)) {
+      return Nothing{};
+    }
+    return Some(result);
   }
 
   for (ConstReverseLineIterator line = LinesRBegin(), line_end = LinesREnd();
        line != line_end; ++line) {
     if (line->IsBlock()) {
-      nscoord offset;
       nsIFrame* kid = line->mFirstChild;
       if (aWM.IsOrthogonalTo(kid->GetWritingMode())) {
         continue;
@@ -628,26 +630,28 @@ bool nsBlockFrame::GetNaturalBaselineBOffset(
         continue;
       }
       const auto kidBaselineGroup = kid->GetDefaultBaselineSharingGroup();
-      if (kid->GetNaturalBaselineBOffset(aWM, kidBaselineGroup, &offset)) {
-        if (kidBaselineGroup == BaselineSharingGroup::Last) {
-          offset = kid->BSize(aWM) - offset;
-        }
-        // Ignore relative positioning for baseline calculations.
-        const nsSize& sz = line->mContainerSize;
-        offset += kid->GetLogicalNormalPosition(aWM, sz).B(aWM);
-        *aBaseline = BSize(aWM) - offset;
-        return true;
+      const auto kidBaseline =
+          kid->GetNaturalBaselineBOffset(aWM, kidBaselineGroup);
+      if (!kidBaseline) {
+        continue;
       }
+      auto result = *kidBaseline;
+      if (kidBaselineGroup == BaselineSharingGroup::Last) {
+        result = kid->BSize(aWM) - result;
+      }
+      // Ignore relative positioning for baseline calculations.
+      const nsSize& sz = line->mContainerSize;
+      result += kid->GetLogicalNormalPosition(aWM, sz).B(aWM);
+      return Some(BSize(aWM) - result);
     } else {
       // XXX Is this the right test?  We have some bogus empty lines
       // floating around, but IsEmpty is perhaps too weak.
       if (line->BSize() != 0 || !line->IsEmpty()) {
-        *aBaseline = BSize(aWM) - (line->BStart() + line->GetLogicalAscent());
-        return true;
+        return Some(BSize(aWM) - (line->BStart() + line->GetLogicalAscent()));
       }
     }
   }
-  return false;
+  return Nothing{};
 }
 
 nscoord nsBlockFrame::GetCaretBaseline() const {
@@ -1565,14 +1569,13 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
       LogicalRect bbox =
           marker->GetLogicalRect(wm, reflowOutput.PhysicalSize());
       const auto baselineGroup = BaselineSharingGroup::First;
-      nscoord markerBaseline;
-      if (MOZ_UNLIKELY(wm.IsOrthogonalTo(marker->GetWritingMode()) ||
-                       !marker->GetNaturalBaselineBOffset(wm, baselineGroup,
-                                                          &markerBaseline))) {
-        // ::marker has no baseline in this axis: align with its margin-box end.
-        markerBaseline =
-            bbox.BSize(wm) + marker->GetLogicalUsedMargin(wm).BEnd(wm);
+      Maybe<nscoord> result;
+      if (MOZ_LIKELY(!wm.IsOrthogonalTo(marker->GetWritingMode()))) {
+        result = marker->GetNaturalBaselineBOffset(wm, baselineGroup);
       }
+      const auto markerBaseline = result.valueOrFrom([bbox, wm, marker]() {
+        return bbox.BSize(wm) + marker->GetLogicalUsedMargin(wm).BEnd(wm);
+      });
       bbox.BStart(wm) = position.mBaseline - markerBaseline;
       marker->SetRect(wm, bbox, reflowOutput.PhysicalSize());
     }

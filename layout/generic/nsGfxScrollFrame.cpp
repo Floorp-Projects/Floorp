@@ -1347,9 +1347,8 @@ static void GetScrollableOverflowForPerspective(
   }
 }
 
-bool nsHTMLScrollFrame::GetNaturalBaselineBOffset(
-    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
-    nscoord* aBaseline) const {
+Maybe<nscoord> nsHTMLScrollFrame::GetNaturalBaselineBOffset(
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
   // Block containers that are scrollable always have a first & last baselines
   // that are synthesized from block-end margin edge.
   // Note(dshin): This behaviour is really only relevant to `inline-block`
@@ -1358,29 +1357,24 @@ bool nsHTMLScrollFrame::GetNaturalBaselineBOffset(
   // calculations of its own.
   // https://drafts.csswg.org/css-align/#baseline-export
   if (mHelper.mScrolledFrame->IsBlockFrameOrSubclass()) {
-    *aBaseline = SynthesizeFallbackBaseline(aWM, aBaselineGroup);
-    return true;
+    return Some(SynthesizeFallbackBaseline(aWM, aBaselineGroup));
   }
 
   if (StyleDisplay()->IsContainLayout()) {
-    return false;
+    return Nothing{};
   }
 
   // OK, here's where we defer to our scrolled frame.
-  nscoord scrolledBaseline;
-  if (!mHelper.mScrolledFrame->GetNaturalBaselineBOffset(aWM, aBaselineGroup,
-                                                         &scrolledBaseline)) {
-    return false;
-  }
-
-  // We have to add our border BStart thickness to whatever it returns, to
-  // produce an offset in our frame-rect's coordinate system. (We don't have to
-  // add padding, because the scrolled frame handles our padding.)
-  LogicalMargin border = GetLogicalUsedBorder(aWM);
-  const auto bSize = GetLogicalSize(aWM).BSize(aWM);
-  // Clamp the baseline to the border rect. See bug 1791069.
-  *aBaseline = std::clamp(border.BStart(aWM) + scrolledBaseline, 0, bSize);
-  return true;
+  return mHelper.mScrolledFrame->GetNaturalBaselineBOffset(aWM, aBaselineGroup)
+      .map([this, aWM](nscoord aBaseline) {
+        // We have to add our border BStart thickness to whatever it returns, to
+        // produce an offset in our frame-rect's coordinate system. (We don't
+        // have to add padding, because the scrolled frame handles our padding.)
+        LogicalMargin border = GetLogicalUsedBorder(aWM);
+        const auto bSize = GetLogicalSize(aWM).BSize(aWM);
+        // Clamp the baseline to the border rect. See bug 1791069.
+        return std::clamp(border.BStart(aWM) + aBaseline, 0, bSize);
+      });
 }
 
 void nsHTMLScrollFrame::AdjustForPerspective(nsRect& aScrollableOverflow) {

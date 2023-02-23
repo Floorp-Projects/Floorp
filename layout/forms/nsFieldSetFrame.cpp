@@ -850,29 +850,27 @@ nscoord nsFieldSetFrame::SynthesizeFallbackBaseline(
   return Baseline::SynthesizeBOffsetFromMarginBox(this, aWM, aBaselineGroup);
 }
 
-bool nsFieldSetFrame::GetNaturalBaselineBOffset(
-    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
-    nscoord* aBaseline) const {
+Maybe<nscoord> nsFieldSetFrame::GetNaturalBaselineBOffset(
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
   if (StyleDisplay()->IsContainLayout()) {
     // If we are layout-contained, our child 'inner' should not
     // affect how we calculate our baseline.
-    return false;
+    return Nothing{};
   }
   nsIFrame* inner = GetInner();
   if (MOZ_UNLIKELY(!inner)) {
-    return false;
+    return Nothing{};
   }
   MOZ_ASSERT(!inner->GetWritingMode().IsOrthogonalTo(aWM));
-  if (!inner->GetNaturalBaselineBOffset(aWM, aBaselineGroup, aBaseline)) {
-    return false;
+  const auto result = inner->GetNaturalBaselineBOffset(aWM, aBaselineGroup);
+  if (!result) {
+    return Nothing{};
   }
   nscoord innerBStart = inner->BStart(aWM, GetSize());
   if (aBaselineGroup == BaselineSharingGroup::First) {
-    *aBaseline += innerBStart;
-  } else {
-    *aBaseline += BSize(aWM) - (innerBStart + inner->BSize(aWM));
+    return Some(*result + innerBStart);
   }
-  return true;
+  return Some(*result + BSize(aWM) - (innerBStart + inner->BSize(aWM)));
 }
 
 nsIScrollableFrame* nsFieldSetFrame::GetScrollTargetFrame() const {

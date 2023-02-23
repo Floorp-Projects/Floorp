@@ -59,9 +59,8 @@ class BRFrame final : public nsIFrame {
   nscoord GetMinISize(gfxContext* aRenderingContext) override;
   nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 
-  bool GetNaturalBaselineBOffset(WritingMode aWM,
-                                 BaselineSharingGroup aBaselineGroup,
-                                 nscoord* aBaseline) const override;
+  Maybe<nscoord> GetNaturalBaselineBOffset(
+      WritingMode aWM, BaselineSharingGroup aBaselineGroup) const override;
 
   bool IsFrameOfType(uint32_t aFlags) const override {
     return nsIFrame::IsFrameOfType(
@@ -203,14 +202,12 @@ nscoord BRFrame::GetPrefISize(gfxContext* aRenderingContext) {
   return result;
 }
 
-bool BRFrame::GetNaturalBaselineBOffset(WritingMode aWM,
-                                        BaselineSharingGroup aBaselineGroup,
-                                        nscoord* aBaseline) const {
+Maybe<nscoord> BRFrame::GetNaturalBaselineBOffset(
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
   if (aBaselineGroup == BaselineSharingGroup::Last) {
-    return false;
+    return Nothing{};
   }
-  *aBaseline = mAscent;
-  return true;
+  return Some(mAscent);
 }
 
 nsIFrame::ContentOffsets BRFrame::CalcContentOffsetsFromFramePoint(

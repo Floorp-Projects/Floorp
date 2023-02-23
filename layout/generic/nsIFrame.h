@@ -1535,12 +1535,11 @@ class nsIFrame : public nsQueryFrame {
    * @note The returned value is only valid when reflow is not needed.
    * @note You should only call this on frames with a WM that's parallel to aWM.
    * @param aWM the writing-mode of the alignment context.
-   * @param aBaseline the baseline offset, only valid if the method returns true
+   * @return the baseline offset, if one exists
    */
-  virtual bool GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
-                                         BaselineSharingGroup aBaselineGroup,
-                                         nscoord* aBaseline) const {
-    return false;
+  virtual Maybe<nscoord> GetNaturalBaselineBOffset(
+      mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
+    return Nothing{};
   }
 
   /**
