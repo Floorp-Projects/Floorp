@@ -35,8 +35,6 @@ class BackgroundMutableFileChild;
 class IDBMutableFile final : public DOMEventTargetHelper {
   RefPtr<IDBDatabase> mDatabase;
 
-  indexedDB::BackgroundMutableFileChild* mBackgroundActor;
-
   nsTHashSet<IDBFileHandle*> mFileHandles;
 
   nsString mName;
@@ -46,7 +44,6 @@ class IDBMutableFile final : public DOMEventTargetHelper {
 
  public:
   IDBMutableFile(IDBDatabase* aDatabase,
-                 indexedDB::BackgroundMutableFileChild* aActor,
                  const nsAString& aName, const nsAString& aType);
 
   void AssertIsOnOwningThread() const
@@ -57,16 +54,8 @@ class IDBMutableFile final : public DOMEventTargetHelper {
   }
 #endif
 
-  indexedDB::BackgroundMutableFileChild* GetBackgroundActor() const {
-    AssertIsOnOwningThread();
-
-    return mBackgroundActor;
-  }
-
   void ClearBackgroundActor() {
     AssertIsOnOwningThread();
-
-    mBackgroundActor = nullptr;
   }
 
   const nsString& Name() const {

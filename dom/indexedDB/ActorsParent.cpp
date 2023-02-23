@@ -94,17 +94,14 @@
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/FileBlobImpl.h"
-#include "mozilla/dom/FileHandleStorage.h"
 #include "mozilla/dom/FlippedOnce.h"
 #include "mozilla/dom/IDBCursorBinding.h"
 #include "mozilla/dom/IPCBlob.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/IndexedDatabase.h"
 #include "mozilla/dom/Nullable.h"
-#include "mozilla/dom/PBackgroundMutableFileParent.h"
 #include "mozilla/dom/PContentParent.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/filehandle/ActorsParent.h"
 #include "mozilla/dom/indexedDB/IDBResult.h"
 #include "mozilla/dom/indexedDB/Key.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBCursor.h"
@@ -255,7 +252,6 @@ class DatabaseLoggingInfo;
 class DatabaseMaintenance;
 class Factory;
 class Maintenance;
-class MutableFile;
 class OpenDatabaseOp;
 class TransactionBase;
 class TransactionDatabaseOperationBase;
@@ -2205,7 +2201,6 @@ class Database final
   SafeRefPtr<DatabaseFileManager> mFileManager;
   RefPtr<DirectoryLock> mDirectoryLock;
   nsTHashSet<TransactionBase*> mTransactions;
-  nsTHashSet<MutableFile*> mMutableFiles;
   nsTHashMap<nsIDHashKey, SafeRefPtr<DatabaseFileInfo>> mMappedBlobs;
   RefPtr<DatabaseConnection> mConnection;
   const PrincipalInfo mPrincipalInfo;
@@ -2215,7 +2210,6 @@ class Database final
   const nsCString mId;
   const nsString mFilePath;
   const Maybe<const CipherKey> mKey;
-  uint32_t mActiveMutableFileCount;
   int64_t mDirectoryLockId;
   const uint32_t mTelemetryId;
   const PersistenceType mPersistenceType;
@@ -2316,14 +2310,6 @@ class Database final
 
   void UnregisterTransaction(TransactionBase& aTransaction);
 
-  bool RegisterMutableFile(MutableFile* aMutableFile);
-
-  void UnregisterMutableFile(MutableFile* aMutableFile);
-
-  void NoteActiveMutableFile();
-
-  void NoteInactiveMutableFile();
-
   void SetActorAlive();
 
   void MapBlob(const IPCBlob& aIPCBlob, SafeRefPtr<DatabaseFileInfo> aFileInfo);
@@ -2416,12 +2402,6 @@ class Database final
   mozilla::ipc::IPCResult RecvPBackgroundIDBTransactionConstructor(
       PBackgroundIDBTransactionParent* aActor,
       nsTArray<nsString>&& aObjectStoreNames, const Mode& aMode) override;
-
-  PBackgroundMutableFileParent* AllocPBackgroundMutableFileParent(
-      const nsAString& aName, const nsAString& aType) override;
-
-  bool DeallocPBackgroundMutableFileParent(
-      PBackgroundMutableFileParent* aActor) override;
 
   mozilla::ipc::IPCResult RecvDeleteMe() override;
 
@@ -2987,46 +2967,6 @@ class VersionChangeTransaction final
   mozilla::ipc::IPCResult RecvPBackgroundIDBCursorConstructor(
       PBackgroundIDBCursorParent* aActor,
       const OpenCursorParams& aParams) override;
-};
-
-class MutableFile : public BackgroundMutableFileParentBase {
-  const SafeRefPtr<Database> mDatabase;
-  const SafeRefPtr<DatabaseFileInfo> mFileInfo;
-
- public:
-  [[nodiscard]] static RefPtr<MutableFile> Create(
-      nsIFile* aFile, SafeRefPtr<Database> aDatabase,
-      SafeRefPtr<DatabaseFileInfo> aFileInfo);
-
-  const Database& GetDatabase() const {
-    AssertIsOnBackgroundThread();
-
-    return *mDatabase;
-  }
-
-  SafeRefPtr<DatabaseFileInfo> GetFileInfoPtr() const {
-    AssertIsOnBackgroundThread();
-
-    return mFileInfo.clonePtr();
-  }
-
-  void NoteActiveState() override;
-
-  void NoteInactiveState() override;
-
-  PBackgroundParent* GetBackgroundParent() const override;
-
-  already_AddRefed<nsISupports> CreateStream(bool aReadOnly) override;
-
-  already_AddRefed<BlobImpl> CreateBlobImpl() override;
-
- private:
-  MutableFile(nsIFile* aFile, SafeRefPtr<Database> aDatabase,
-              SafeRefPtr<DatabaseFileInfo> aFileInfo);
-
-  ~MutableFile() override;
-
-  mozilla::ipc::IPCResult RecvGetFileId(int64_t* aFileId) override;
 };
 
 class FactoryOp
@@ -3699,8 +3639,6 @@ class ObjectStoreAddOrPutRequestOp final : public NormalTransactionOp {
     void EnsureCipherKey();
     void AssertInvariants() const;
 
-    explicit StoredFileInfo(SafeRefPtr<DatabaseFileInfo> aFileInfo);
-
     StoredFileInfo(SafeRefPtr<DatabaseFileInfo> aFileInfo,
                    RefPtr<DatabaseFile> aFileActor);
 
@@ -3724,8 +3662,6 @@ class ObjectStoreAddOrPutRequestOp final : public NormalTransactionOp {
     StoredFileInfo(StoredFileInfo&&) = default;
 #endif
 
-    static StoredFileInfo CreateForMutableFile(
-        SafeRefPtr<DatabaseFileInfo> aFileInfo);
     static StoredFileInfo CreateForBlob(SafeRefPtr<DatabaseFileInfo> aFileInfo,
                                         RefPtr<DatabaseFile> aFileActor);
     static StoredFileInfo CreateForStructuredClone(
@@ -3843,22 +3779,6 @@ void ObjectStoreAddOrPutRequestOp::StoredFileInfo::EnsureCipherKey() {
 }
 
 ObjectStoreAddOrPutRequestOp::StoredFileInfo::StoredFileInfo(
-    SafeRefPtr<DatabaseFileInfo> aFileInfo)
-    : mFileInfo{WrapNotNull(std::move(aFileInfo))},
-      mFileActorOrInputStream{Nothing{}}
-#ifdef DEBUG
-      ,
-      mType{StructuredCloneFileBase::eMutableFile}
-#endif
-{
-  AssertIsOnBackgroundThread();
-  AssertInvariants();
-
-  EnsureCipherKey();
-  MOZ_COUNT_CTOR(ObjectStoreAddOrPutRequestOp::StoredFileInfo);
-}
-
-ObjectStoreAddOrPutRequestOp::StoredFileInfo::StoredFileInfo(
     SafeRefPtr<DatabaseFileInfo> aFileInfo, RefPtr<DatabaseFile> aFileActor)
     : mFileInfo{WrapNotNull(std::move(aFileInfo))},
       mFileActorOrInputStream{std::move(aFileActor)}
@@ -3889,12 +3809,6 @@ ObjectStoreAddOrPutRequestOp::StoredFileInfo::StoredFileInfo(
 
   EnsureCipherKey();
   MOZ_COUNT_CTOR(ObjectStoreAddOrPutRequestOp::StoredFileInfo);
-}
-
-ObjectStoreAddOrPutRequestOp::StoredFileInfo
-ObjectStoreAddOrPutRequestOp::StoredFileInfo::CreateForMutableFile(
-    SafeRefPtr<DatabaseFileInfo> aFileInfo) {
-  return StoredFileInfo{std::move(aFileInfo)};
 }
 
 ObjectStoreAddOrPutRequestOp::StoredFileInfo
@@ -9349,7 +9263,6 @@ Database::Database(SafeRefPtr<Factory> aFactory,
       mId(mMetadata->mDatabaseId),
       mFilePath(mMetadata->mFilePath),
       mKey(aMaybeKey),
-      mActiveMutableFileCount(0),
       mTelemetryId(aTelemetryId),
       mPersistenceType(mMetadata->mCommonMetadata.persistenceType()),
       mChromeWriteAccessAllowed(aChromeWriteAccessAllowed),
@@ -9413,8 +9326,6 @@ void Database::Invalidate() {
 
   QM_WARNONLY_TRY(OkIf(InvalidateAll(mTransactions)));
 
-  QM_WARNONLY_TRY(OkIf(InvalidateAll(mMutableFiles)));
-
   MOZ_ALWAYS_TRUE(CloseInternal());
 }
 
@@ -9452,44 +9363,6 @@ void Database::UnregisterTransaction(TransactionBase& aTransaction) {
   MOZ_ASSERT(mTransactions.Contains(&aTransaction));
 
   mTransactions.Remove(&aTransaction);
-
-  MaybeCloseConnection();
-}
-
-bool Database::RegisterMutableFile(MutableFile* aMutableFile) {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aMutableFile);
-  MOZ_ASSERT(!mMutableFiles.Contains(aMutableFile));
-  MOZ_ASSERT(mDirectoryLock);
-
-  if (NS_WARN_IF(!mMutableFiles.Insert(aMutableFile, fallible))) {
-    return false;
-  }
-
-  return true;
-}
-
-void Database::UnregisterMutableFile(MutableFile* aMutableFile) {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aMutableFile);
-  MOZ_ASSERT(mMutableFiles.Contains(aMutableFile));
-
-  mMutableFiles.Remove(aMutableFile);
-}
-
-void Database::NoteActiveMutableFile() {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mDirectoryLock);
-  MOZ_ASSERT(mActiveMutableFileCount < UINT32_MAX);
-
-  ++mActiveMutableFileCount;
-}
-
-void Database::NoteInactiveMutableFile() {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mActiveMutableFileCount > 0);
-
-  --mActiveMutableFileCount;
 
   MaybeCloseConnection();
 }
@@ -9655,8 +9528,7 @@ bool Database::CloseInternal() {
 void Database::MaybeCloseConnection() {
   AssertIsOnBackgroundThread();
 
-  if (!mTransactions.Count() && !mActiveMutableFileCount && IsClosed() &&
-      mDirectoryLock) {
+  if (!mTransactions.Count() && IsClosed() && mDirectoryLock) {
     nsCOMPtr<nsIRunnable> callback =
         NewRunnableMethod("dom::indexedDB::Database::ConnectionClosedCallback",
                           this, &Database::ConnectionClosedCallback);
@@ -9671,7 +9543,6 @@ void Database::ConnectionClosedCallback() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mClosed);
   MOZ_ASSERT(!mTransactions.Count());
-  MOZ_ASSERT(!mActiveMutableFileCount);
 
   mDirectoryLock = nullptr;
 
@@ -9875,25 +9746,6 @@ mozilla::ipc::IPCResult Database::RecvPBackgroundIDBTransactionConstructor(
   }
 
   return IPC_OK();
-}
-
-Database::PBackgroundMutableFileParent*
-Database::AllocPBackgroundMutableFileParent(const nsAString& aName,
-                                            const nsAString& aType) {
-  MOZ_CRASH(
-      "PBackgroundMutableFileParent actors should be constructed "
-      "manually!");
-}
-
-bool Database::DeallocPBackgroundMutableFileParent(
-    PBackgroundMutableFileParent* aActor) {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
-
-  // Transfer ownership back from IPDL.
-  RefPtr<MutableFile> mutableFile =
-      dont_AddRef(static_cast<MutableFile*>(aActor));
-  return true;
 }
 
 mozilla::ipc::IPCResult Database::RecvDeleteMe() {
@@ -10479,12 +10331,6 @@ bool TransactionBase::VerifyRequestParams(
         break;
 
       case StructuredCloneFileBase::eMutableFile: {
-        if (NS_AUUF_OR_WARN_IF(
-                file.type() !=
-                DatabaseOrMutableFile::TPBackgroundMutableFileParent)) {
-          return false;
-        }
-
         return false;
       }
 
@@ -14627,102 +14473,6 @@ void DatabaseOperationBase::AutoSetProgressHandler::Unregister() {
   mConnection = Nothing();
 }
 
-MutableFile::MutableFile(nsIFile* aFile, SafeRefPtr<Database> aDatabase,
-                         SafeRefPtr<DatabaseFileInfo> aFileInfo)
-    : BackgroundMutableFileParentBase(FILE_HANDLE_STORAGE_IDB, aDatabase->Id(),
-                                      IntToString(aFileInfo->Id()), aFile),
-      mDatabase(std::move(aDatabase)),
-      mFileInfo(std::move(aFileInfo)) {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mDatabase);
-  MOZ_ASSERT(mFileInfo);
-}
-
-MutableFile::~MutableFile() { mDatabase->UnregisterMutableFile(this); }
-
-RefPtr<MutableFile> MutableFile::Create(
-    nsIFile* aFile, SafeRefPtr<Database> aDatabase,
-    SafeRefPtr<DatabaseFileInfo> aFileInfo) {
-  AssertIsOnBackgroundThread();
-
-  RefPtr<MutableFile> newMutableFile =
-      new MutableFile(aFile, aDatabase.clonePtr(), std::move(aFileInfo));
-
-  if (!aDatabase->RegisterMutableFile(newMutableFile)) {
-    return nullptr;
-  }
-
-  return newMutableFile;
-}
-
-void MutableFile::NoteActiveState() {
-  AssertIsOnBackgroundThread();
-
-  mDatabase->NoteActiveMutableFile();
-}
-
-void MutableFile::NoteInactiveState() {
-  AssertIsOnBackgroundThread();
-
-  mDatabase->NoteInactiveMutableFile();
-}
-
-PBackgroundParent* MutableFile::GetBackgroundParent() const {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!IsActorDestroyed());
-
-  return GetDatabase().GetBackgroundParent();
-}
-
-already_AddRefed<nsISupports> MutableFile::CreateStream(bool aReadOnly) {
-  AssertIsOnBackgroundThread();
-
-  const PersistenceType persistenceType = mDatabase->Type();
-  const auto& originMetadata = mDatabase->OriginMetadata();
-
-  nsCOMPtr<nsISupports> result;
-
-  if (aReadOnly) {
-    QM_TRY_UNWRAP(
-        nsCOMPtr<nsIInputStream> stream,
-        CreateFileInputStream(persistenceType, originMetadata, Client::IDB,
-                              mFile, -1, -1, nsIFileInputStream::DEFER_OPEN),
-        nullptr);
-    result = stream;
-  } else {
-    QM_TRY_UNWRAP(nsCOMPtr<nsIRandomAccessStream> stream,
-                  CreateFileRandomAccessStream(
-                      persistenceType, originMetadata, Client::IDB, mFile, -1,
-                      -1, nsIFileRandomAccessStream::DEFER_OPEN),
-                  nullptr);
-    result = stream;
-  }
-
-  return result.forget();
-}
-
-already_AddRefed<BlobImpl> MutableFile::CreateBlobImpl() {
-  AssertIsOnBackgroundThread();
-
-  // This doesn't use CreateFileBlobImpl as mutable files cannot be encrypted.
-  auto blobImpl = MakeRefPtr<FileBlobImpl>(mFile);
-  blobImpl->SetFileId(mFileInfo->Id());
-
-  return blobImpl.forget();
-}
-
-mozilla::ipc::IPCResult MutableFile::RecvGetFileId(int64_t* aFileId) {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mFileInfo);
-
-  if (NS_WARN_IF(!StaticPrefs::dom_indexedDB_testing())) {
-    return IPC_FAIL(this, "IndexedDB must be in testing mode!");
-  }
-
-  *aFileId = mFileInfo->Id();
-  return IPC_OK();
-}
-
 FactoryOp::FactoryOp(SafeRefPtr<Factory> aFactory,
                      RefPtr<ThreadsafeContentParentHandle> aContentHandle,
                      const CommonFactoryRequestParams& aCommonParams,
@@ -18749,19 +18499,6 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase& aTransaction) {
 
                 return StoredFileInfo::CreateForBlob(
                     fileActor->GetFileInfoPtr(), fileActor);
-              }
-
-              case StructuredCloneFileBase::eMutableFile: {
-                MOZ_ASSERT(
-                    file.type() ==
-                    DatabaseOrMutableFile::TPBackgroundMutableFileParent);
-
-                auto mutableFileActor = static_cast<MutableFile*>(
-                    file.get_PBackgroundMutableFileParent());
-                MOZ_ASSERT(mutableFileActor);
-
-                return StoredFileInfo::CreateForMutableFile(
-                    mutableFileActor->GetFileInfoPtr());
               }
 
               default:
