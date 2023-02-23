@@ -13,7 +13,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/IPCBlobUtils.h"
-#include "mozilla/dom/PBackgroundFileHandle.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "nsContentUtils.h"
@@ -29,7 +28,6 @@ using namespace mozilla::ipc;
 IDBFileHandle::IDBFileHandle(IDBMutableFile* aMutableFile, FileMode aMode)
     : DOMEventTargetHelper(aMutableFile),
       mMutableFile(aMutableFile),
-      mBackgroundActor(nullptr),
       mLocation(0),
       mPendingRequestCount(0),
       mReadyState(INITIAL),
@@ -51,15 +49,8 @@ IDBFileHandle::~IDBFileHandle() {
   MOZ_ASSERT(!mPendingRequestCount);
   MOZ_ASSERT(!mCreating);
   MOZ_ASSERT(mSentFinishOrAbort);
-  MOZ_ASSERT_IF(mBackgroundActor, mFiredCompleteOrAbort);
 
   mMutableFile->UnregisterFileHandle(this);
-
-  if (mBackgroundActor) {
-    mBackgroundActor->SendDeleteMeInternal();
-
-    MOZ_ASSERT(!mBackgroundActor, "SendDeleteMeInternal should have cleared!");
-  }
 }
 
 // static
@@ -103,14 +94,6 @@ void IDBFileHandle::AssertIsOnOwningThread() const {
 }
 
 #endif  // DEBUG
-
-void IDBFileHandle::SetBackgroundActor(BackgroundFileHandleChild* aActor) {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(aActor);
-  MOZ_ASSERT(!mBackgroundActor);
-
-  mBackgroundActor = aActor;
-}
 
 void IDBFileHandle::OnRequestFinished(bool aActorDestroyedNormally) {
   AssertIsOnOwningThread();
@@ -218,9 +201,6 @@ void IDBFileHandle::SendFinish() {
   MOZ_ASSERT(!mSentFinishOrAbort);
   MOZ_ASSERT(!mPendingRequestCount);
 
-  MOZ_ASSERT(mBackgroundActor);
-  mBackgroundActor->SendFinish();
-
 #ifdef DEBUG
   mSentFinishOrAbort = true;
 #endif
@@ -231,9 +211,6 @@ void IDBFileHandle::SendAbort() {
   MOZ_ASSERT(mAborted);
   MOZ_ASSERT(IsFinishingOrDone());
   MOZ_ASSERT(!mSentFinishOrAbort);
-
-  MOZ_ASSERT(mBackgroundActor);
-  mBackgroundActor->SendAbort();
 
 #ifdef DEBUG
   mSentFinishOrAbort = true;
