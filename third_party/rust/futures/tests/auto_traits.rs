@@ -1480,10 +1480,10 @@ pub mod stream {
     assert_not_impl!(PollImmediate<PinnedStream>: Unpin);
 
     assert_impl!(ReadyChunks<SendStream<()>>: Send);
-    assert_not_impl!(ReadyChunks<SendStream>: Send);
+    assert_impl!(ReadyChunks<SendStream>: Send);
     assert_not_impl!(ReadyChunks<LocalStream>: Send);
     assert_impl!(ReadyChunks<SyncStream<()>>: Sync);
-    assert_not_impl!(ReadyChunks<SyncStream>: Sync);
+    assert_impl!(ReadyChunks<SyncStream>: Sync);
     assert_not_impl!(ReadyChunks<LocalStream>: Sync);
     assert_impl!(ReadyChunks<UnpinStream>: Unpin);
     assert_not_impl!(ReadyChunks<PinnedStream>: Unpin);

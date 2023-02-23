@@ -73,7 +73,10 @@ where
                     this.state.set(UnfoldState::Value { value: state });
                     Ok(())
                 }
-                Err(err) => Err(err),
+                Err(err) => {
+                    this.state.set(UnfoldState::Empty);
+                    Err(err)
+                }
             }
         } else {
             Ok(())

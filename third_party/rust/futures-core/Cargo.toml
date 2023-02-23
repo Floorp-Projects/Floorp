@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.36"
 name = "futures-core"
-version = "0.3.25"
+version = "0.3.26"
 description = """
 The core traits and types in for the `futures` library.
 """
@@ -29,7 +29,10 @@ rustdoc-args = [
     "docsrs",
 ]
 
-[dependencies]
+[dependencies.portable-atomic]
+version = "1"
+optional = true
+default-features = false
 
 [dev-dependencies]
 

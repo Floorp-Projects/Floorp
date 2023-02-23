@@ -390,7 +390,7 @@ impl<T> Drop for Sender<T> {
     }
 }
 
-impl<T: fmt::Debug> fmt::Debug for Sender<T> {
+impl<T> fmt::Debug for Sender<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Sender").field("complete", &self.inner.complete).finish()
     }
@@ -481,7 +481,7 @@ impl<T> Drop for Receiver<T> {
     }
 }
 
-impl<T: fmt::Debug> fmt::Debug for Receiver<T> {
+impl<T> fmt::Debug for Receiver<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Receiver").field("complete", &self.inner.complete).finish()
     }

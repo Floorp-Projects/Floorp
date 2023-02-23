@@ -19,7 +19,7 @@ pin_project! {
     struct OrderWrapper<T> {
         #[pin]
         data: T, // A future or a future's output
-        index: usize,
+        index: isize,
     }
 }
 
@@ -58,7 +58,7 @@ where
 
 /// An unbounded queue of futures.
 ///
-/// This "combinator" is similar to `FuturesUnordered`, but it imposes an order
+/// This "combinator" is similar to [`FuturesUnordered`], but it imposes a FIFO order
 /// on top of the set of futures. While futures in the set will race to
 /// completion in parallel, results will only be returned in the order their
 /// originating futures were added to the queue.
@@ -95,8 +95,8 @@ where
 pub struct FuturesOrdered<T: Future> {
     in_progress_queue: FuturesUnordered<OrderWrapper<T>>,
     queued_outputs: BinaryHeap<OrderWrapper<T::Output>>,
-    next_incoming_index: usize,
-    next_outgoing_index: usize,
+    next_incoming_index: isize,
+    next_outgoing_index: isize,
 }
 
 impl<T: Future> Unpin for FuturesOrdered<T> {}
@@ -160,13 +160,9 @@ impl<Fut: Future> FuturesOrdered<Fut> {
     /// task notifications. This future will be the next future to be returned
     /// complete.
     pub fn push_front(&mut self, future: Fut) {
-        if self.next_outgoing_index == 0 {
-            self.push_back(future)
-        } else {
-            let wrapped = OrderWrapper { data: future, index: self.next_outgoing_index - 1 };
-            self.next_outgoing_index -= 1;
-            self.in_progress_queue.push(wrapped);
-        }
+        let wrapped = OrderWrapper { data: future, index: self.next_outgoing_index - 1 };
+        self.next_outgoing_index -= 1;
+        self.in_progress_queue.push(wrapped);
     }
 }
 

@@ -380,11 +380,13 @@ fn try_join_size() {
     assert_eq!(mem::size_of_val(&fut), 48);
 }
 
+#[allow(clippy::let_underscore_future)]
 #[test]
 fn join_doesnt_require_unpin() {
     let _ = async { join!(async {}, async {}) };
 }
 
+#[allow(clippy::let_underscore_future)]
 #[test]
 fn try_join_doesnt_require_unpin() {
     let _ = async { try_join!(async { Ok::<(), ()>(()) }, async { Ok::<(), ()>(()) },) };

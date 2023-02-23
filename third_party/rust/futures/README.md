@@ -8,16 +8,16 @@
 
 <p align="center">
   <a href="https://github.com/rust-lang/futures-rs/actions?query=branch%3Amaster">
-    <img alt="Build Status" src="https://img.shields.io/github/workflow/status/rust-lang/futures-rs/CI/master">
+    <img alt="Build Status" src="https://img.shields.io/github/actions/workflow/status/rust-lang/futures-rs/ci.yml?branch=master">
   </a>
 
   <a href="https://crates.io/crates/futures">
-    <img alt="Crates.io" src="https://img.shields.io/crates/v/futures.svg">
+    <img alt="crates.io" src="https://img.shields.io/crates/v/futures.svg">
   </a>
 </p>
 
 <p align="center">
-  <a href="https://docs.rs/futures/">
+  <a href="https://docs.rs/futures">
     Documentation
   </a> | <a href="https://rust-lang.github.io/futures-rs/">
     Website
