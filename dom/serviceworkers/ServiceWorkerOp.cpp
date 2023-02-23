@@ -1271,6 +1271,7 @@ void FetchEventOp::MaybeFinished() {
     mHandled = nullptr;
     mPreloadResponse = nullptr;
     mPreloadResponseAvailablePromiseRequestHolder.DisconnectIfExists();
+    mPreloadResponseTimingPromiseRequestHolder.DisconnectIfExists();
     mPreloadResponseEndPromiseRequestHolder.DisconnectIfExists();
 
     ServiceWorkerFetchEventOpResult result(
@@ -1698,14 +1699,35 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
     RefPtr<PerformanceStorage> performanceStorage =
         aWorkerPrivate->GetPerformanceStorage();
 
+    RefPtr<FetchEventPreloadResponseTimingPromise>
+        preloadResponseTimingPromise =
+            mActor->GetPreloadResponseTimingPromise();
+    MOZ_ASSERT(preloadResponseTimingPromise);
+    preloadResponseTimingPromise
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [self, performanceStorage,
+             globalObjectAsSupports](ResponseTiming&& aTiming) {
+              if (performanceStorage && !aTiming.entryName().IsEmpty() &&
+                  aTiming.initiatorType().Equals(u"navigation"_ns)) {
+                performanceStorage->AddEntry(
+                    aTiming.entryName(), aTiming.initiatorType(),
+                    MakeUnique<PerformanceTimingData>(aTiming.timingData()));
+              }
+              self->mPreloadResponseTimingPromiseRequestHolder.Complete();
+            },
+            [self](int) {
+              self->mPreloadResponseTimingPromiseRequestHolder.Complete();
+            })
+        ->Track(mPreloadResponseTimingPromiseRequestHolder);
+
     RefPtr<FetchEventPreloadResponseEndPromise> preloadResponseEndPromise =
         mActor->GetPreloadResponseEndPromise();
     MOZ_ASSERT(preloadResponseEndPromise);
     preloadResponseEndPromise
         ->Then(
             GetCurrentSerialEventTarget(), __func__,
-            [self, performanceStorage,
-             globalObjectAsSupports](ResponseEndArgs&& aArgs) {
+            [self, globalObjectAsSupports](ResponseEndArgs&& aArgs) {
               if (aArgs.endReason() == FetchDriverObserver::eAborted) {
                 self->mPreloadResponse->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
               }

@@ -248,6 +248,24 @@ FetchEventOpChild::FetchEventOpChild(
             })
         ->Track(mPreloadResponseAvailablePromiseRequestHolder);
 
+    mPreloadResponseReadyPromises->GetResponseTimingPromise()
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [this](ResponseTiming&& aTiming) {
+              if (!mWasSent) {
+                // The actor wasn't sent yet, we can still send the preload
+                // response timing with it.
+                mArgs.preloadResponseTiming() = Some(std::move(aTiming));
+              } else {
+                SendPreloadResponseTiming(aTiming);
+              }
+              mPreloadResponseTimingPromiseRequestHolder.Complete();
+            },
+            [this](const CopyableErrorResult&) {
+              mPreloadResponseTimingPromiseRequestHolder.Complete();
+            })
+        ->Track(mPreloadResponseTimingPromiseRequestHolder);
+
     mPreloadResponseReadyPromises->GetResponseEndPromise()
         ->Then(
             GetCurrentSerialEventTarget(), __func__,
@@ -350,6 +368,7 @@ mozilla::ipc::IPCResult FetchEventOpChild::Recv__delete__(
   // FetchEvent is completed.
   // Disconnect preload response related promises and cancel the preload.
   mPreloadResponseAvailablePromiseRequestHolder.DisconnectIfExists();
+  mPreloadResponseTimingPromiseRequestHolder.DisconnectIfExists();
   mPreloadResponseEndPromiseRequestHolder.DisconnectIfExists();
   if (mPreloadResponseReadyPromises) {
     RefPtr<FetchService> fetchService = FetchService::GetInstance();
