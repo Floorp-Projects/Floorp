@@ -32,14 +32,14 @@ Compiling and running:
 
     Set command line arguments and env vars for wrench:
         adb shell
-        mkdir /storage/emulated/0/Android/data/org.mozilla.wrench/files/wrench
-        echo "load reftests/aa/rounded-rects.yaml" >/storage/emulated/0/Android/data/org.mozilla.wrench/files/wrench/args
-        echo "env: WRENCH_REFTEST_CONDITION_EMULATOR=1" >>/storage/emulated/0/Android/data/org.mozilla.wrench/files/wrench/args # If you're using the emulator
-        echo "env: WRENCH_REFTEST_CONDITION_DEVICE=1" >>/storage/emulated/0/Android/data/org.mozilla.wrench/files/wrench/args # If you're using a device
+        mkdir /data/data/org.mozilla.wrench/files/wrench
+        echo "load reftests/aa/rounded-rects.yaml" >/data/data/org.mozilla.wrench/files/wrench/args
+        echo "env: WRENCH_REFTEST_CONDITION_EMULATOR=1" >>/data/data/org.mozilla.wrench/files/wrench/args # If you're using the emulator
+        echo "env: WRENCH_REFTEST_CONDITION_DEVICE=1" >>/data/data/org.mozilla.wrench/files/wrench/args # If you're using a device
         exit
 
     Push reftests (if you need these files for what you're doing):
-        adb push reftests /storage/emulated/0/Android/data/org.mozilla.wrench/files/wrench/
+        adb push reftests /data/data/org.mozilla.wrench/files/wrench/
 
     Run the application:
         adb shell am start -n org.mozilla.wrench/android.app.NativeActivity
@@ -48,7 +48,7 @@ Compiling and running:
     Inspect the output:
         stdout and stderr will be redirected to the logcat, however, long lines will be truncated
         meaning the reftest analyzer will not work correctly. We therefore additionally redirect the
-        output to the file /storage/emulated/0/Android/data/org.mozilla.wrench/files/wrench/stdout.
+        output to the file /data/data/org.mozilla.wrench/files/wrench/stdout.
 
 Release mode:
 -------------

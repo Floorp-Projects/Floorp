@@ -491,7 +491,7 @@ fn reftest<'a>(
     #[cfg(target_os = "android")]
     let base_manifest = {
         let mut list_path = PathBuf::new();
-        list_path.push(ndk_glue::native_activity().external_data_path().to_str().unwrap());
+        list_path.push(ndk_glue::native_activity().internal_data_path().to_str().unwrap());
         list_path.push("wrench");
         list_path.push("reftests");
         list_path.push("reftest.list");
@@ -530,7 +530,7 @@ pub fn main() {
         use std::thread;
 
         let mut out_path = PathBuf::new();
-        out_path.push(ndk_glue::native_activity().external_data_path().to_str().unwrap());
+        out_path.push(ndk_glue::native_activity().internal_data_path().to_str().unwrap());
         out_path.push("wrench");
         out_path.push("stdout");
         let mut out_file = File::create(&out_path).expect("Failed to create stdout file");
@@ -578,7 +578,7 @@ pub fn main() {
         .arg_required_else_help(true);
 
     // On android devices, attempt to read command line arguments from a text
-    // file located at <external_data_dir>/wrench/args.
+    // file located at <internal_data_dir>/wrench/args.
     #[cfg(target_os = "android")]
     let args = {
         // get full backtraces by default because it's hard to request
@@ -588,7 +588,7 @@ pub fn main() {
         let mut args = vec!["wrench".to_string()];
 
         let mut args_path = PathBuf::new();
-        args_path.push(ndk_glue::native_activity().external_data_path().to_str().unwrap());
+        args_path.push(ndk_glue::native_activity().internal_data_path().to_str().unwrap());
         args_path.push("wrench");
         args_path.push("args");
 

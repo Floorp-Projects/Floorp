@@ -72,3 +72,4 @@ min_sdk_version = 18
 
 [package.metadata.android.application]
 label = "Wrench"
+debuggable = true
