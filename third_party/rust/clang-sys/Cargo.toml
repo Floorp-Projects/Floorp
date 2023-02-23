@@ -11,7 +11,7 @@
 
 [package]
 name = "clang-sys"
-version = "1.4.0"
+version = "1.6.0"
 authors = ["Kyle Mayes <kyle@mayeses.com>"]
 build = "build.rs"
 links = "clang"
@@ -37,6 +37,15 @@ default-features = false
 [dependencies.libloading]
 version = "0.7"
 optional = true
+
+[dev-dependencies.glob]
+version = "0.3"
+
+[dev-dependencies.serial_test]
+version = "1"
+
+[dev-dependencies.tempdir]
+version = "0.3"
 
 [build-dependencies.glob]
 version = "0.3"

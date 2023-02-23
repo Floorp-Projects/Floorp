@@ -175,7 +175,9 @@ macro_rules! link {
         /// * a `libclang` shared library could not be found
         /// * the `libclang` shared library could not be opened
         pub fn load_manually() -> Result<SharedLibrary, String> {
+            #[allow(dead_code)]
             mod build {
+                include!(concat!(env!("OUT_DIR"), "/macros.rs"));
                 pub mod common { include!(concat!(env!("OUT_DIR"), "/common.rs")); }
                 pub mod dynamic { include!(concat!(env!("OUT_DIR"), "/dynamic.rs")); }
             }

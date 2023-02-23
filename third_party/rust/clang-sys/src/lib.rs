@@ -327,6 +327,8 @@ cenum! {
         const CXCursor_ConceptSpecializationExpr = 153,
         /// Only produced by `libclang` 15.0 and later.
         const CXCursor_RequiresExpr = 154,
+        /// Only produced by `libclang` 16.0 and later.
+        const CXCursor_CXXParenListInitExpr = 155,
         const CXCursor_UnexposedStmt = 200,
         const CXCursor_LabelStmt = 201,
         const CXCursor_CompoundStmt = 202,
@@ -490,6 +492,8 @@ cenum! {
         const CXCursor_OMPParallelMaskedTaskLoopDirective = 303,
         /// Only produced by `libclang` 15.0 and later.
         const CXCursor_OMPParallelMaskedTaskLoopSimdDirective = 304,
+        /// Only produced by `libclang` 16.0 and later.
+        const CXCursor_OMPErrorDirective = 305,
         #[cfg(not(feature="clang_15_0"))]
         const CXCursor_TranslationUnit = 300,
         #[cfg(feature="clang_15_0")]
@@ -1752,9 +1756,18 @@ link! {
     #[cfg(feature = "clang_3_8")]
     pub fn clang_CXXField_isMutable(cursor: CXCursor) -> c_uint;
     pub fn clang_CXXMethod_isConst(cursor: CXCursor) -> c_uint;
+    /// Only available on `libclang` 16.0 and later.
+    #[cfg(feature = "clang_16_0")]
+    pub fn clang_CXXMethod_isCopyAssignmentOperator(cursor: CXCursor) -> c_uint;
     /// Only available on `libclang` 3.9 and later.
     #[cfg(feature = "clang_3_9")]
     pub fn clang_CXXMethod_isDefaulted(cursor: CXCursor) -> c_uint;
+    /// Only available on `libclang` 16.0 and later.
+    #[cfg(feature = "clang_16_0")]
+    pub fn clang_CXXMethod_isDeleted(cursor: CXCursor) -> c_uint;
+    /// Only available on `libclang` 16.0 and later.
+    #[cfg(feature = "clang_16_0")]
+    pub fn clang_CXXMethod_isMoveAssignmentOperator(cursor: CXCursor) -> c_uint;
     pub fn clang_CXXMethod_isPureVirtual(cursor: CXCursor) -> c_uint;
     pub fn clang_CXXMethod_isStatic(cursor: CXCursor) -> c_uint;
     pub fn clang_CXXMethod_isVirtual(cursor: CXCursor) -> c_uint;
@@ -2134,6 +2147,9 @@ link! {
     pub fn clang_getLocation(tu: CXTranslationUnit, file: CXFile, line: c_uint, column: c_uint) -> CXSourceLocation;
     pub fn clang_getLocationForOffset(tu: CXTranslationUnit, file: CXFile, offset: c_uint) -> CXSourceLocation;
     pub fn clang_getModuleForFile(tu: CXTranslationUnit, file: CXFile) -> CXModule;
+    /// Only available on `libclang` 16.0 and later.
+    #[cfg(feature = "clang_16_0")]
+    pub fn clang_getNonReferenceType(type_: CXType) -> CXType;
     pub fn clang_getNullCursor() -> CXCursor;
     pub fn clang_getNullLocation() -> CXSourceLocation;
     pub fn clang_getNullRange() -> CXSourceRange;
@@ -2171,9 +2187,6 @@ link! {
     /// Only available on `libclang` 16.0 and later.
     #[cfg(feature = "clang_16_0")]
     pub fn clang_getUnqualifiedType(type_: CXType) -> CXType;
-    /// Only available on `libclang` 16.0 and later.
-    #[cfg(feature = "clang_16_0")]
-    pub fn clang_getNonReferenceType(type_: CXType) -> CXType;
     pub fn clang_getTypeDeclaration(type_: CXType) -> CXCursor;
     pub fn clang_getTypeKindSpelling(type_: CXTypeKind) -> CXString;
     pub fn clang_getTypeSpelling(type_: CXType) -> CXString;
