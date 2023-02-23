@@ -51,6 +51,7 @@ use core::cell::UnsafeCell;
 use core::fmt;
 use core::ops::{Deref, DerefMut};
 use core::sync::atomic::{AtomicBool, Ordering};
+use core::marker::PhantomData;
 
 /// A light-weight lock guarded by an atomic boolean.
 ///
@@ -167,6 +168,7 @@ impl<T> TryLock<T> {
             Some(Locked {
                 lock: self,
                 order: unlock_order,
+                _p: PhantomData,
             })
         } else {
             None
@@ -224,6 +226,8 @@ impl<T: fmt::Debug> fmt::Debug for TryLock<T> {
 pub struct Locked<'a, T: 'a> {
     lock: &'a TryLock<T>,
     order: Ordering,
+    /// Suppresses Send and Sync autotraits for `struct Locked`.
+    _p: PhantomData<*mut T>,
 }
 
 impl<'a, T> Deref for Locked<'a, T> {
