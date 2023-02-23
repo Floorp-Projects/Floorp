@@ -1729,7 +1729,9 @@ nsresult nsStandardURL::SetSpecWithEncoding(const nsACString& input,
 }
 
 nsresult nsStandardURL::SetScheme(const nsACString& input) {
-  const nsPromiseFlatCString& scheme = PromiseFlatCString(input);
+  // Strip tabs, newlines, carriage returns from input
+  nsAutoCString scheme(input);
+  scheme.StripTaggedASCII(ASCIIMask::MaskCRLFTab());
 
   LOG(("nsStandardURL::SetScheme [scheme=%s]\n", scheme.get()));
 
