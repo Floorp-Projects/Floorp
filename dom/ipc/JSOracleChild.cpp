@@ -15,28 +15,6 @@ using namespace mozilla::dom;
 
 static mozilla::StaticRefPtr<JSOracleChild> sOracleSingletonChild;
 
-static mozilla::StaticAutoPtr<JSContextHolder> sJSContextHolder;
-
-/* static */
-void JSContextHolder::MaybeInit() {
-  if (!sJSContextHolder) {
-    sJSContextHolder = new JSContextHolder();
-    ClearOnShutdown(&sJSContextHolder);
-  }
-}
-
-/* static */
-JSContext* JSOracleChild::JSContext() {
-  MOZ_ASSERT(sJSContextHolder);
-  return sJSContextHolder->mCx;
-}
-
-/* static */
-JSObject* JSOracleChild::JSObject() {
-  MOZ_ASSERT(sJSContextHolder);
-  return sJSContextHolder->mGlobal;
-}
-
 JSOracleChild* JSOracleChild::GetSingleton() {
   MOZ_ASSERT(NS_IsMainThread());
   if (!sOracleSingletonChild) {
@@ -52,6 +30,5 @@ already_AddRefed<PJSValidatorChild> JSOracleChild::AllocPJSValidatorChild() {
 
 void JSOracleChild::Start(Endpoint<PJSOracleChild>&& aEndpoint) {
   DebugOnly<bool> ok = std::move(aEndpoint).Bind(this);
-  JSContextHolder::MaybeInit();
   MOZ_ASSERT(ok);
 }
