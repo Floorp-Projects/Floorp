@@ -35,7 +35,7 @@ void WebTransportParent::Create(
     // Sequence<WebTransportHash>* aServerCertHashes,
     Endpoint<PWebTransportParent>&& aParentEndpoint,
     std::function<void(Tuple<const nsresult&, const uint8_t&>)>&& aResolver) {
-  LOG(("Created WebTransportParent %s %s %s congestion=%s",
+  LOG(("Created WebTransportParent %p %s %s %s congestion=%s", this,
        NS_ConvertUTF16toUTF8(aURL).get(),
        aDedicated ? "Dedicated" : "AllowPooling",
        aRequireUnreliable ? "RequireUnreliable" : "",
@@ -61,19 +61,16 @@ void WebTransportParent::Create(
     return;
   }
 
-  RefPtr<WebTransportParent> parent = new WebTransportParent();
-  MOZ_ASSERT(parent);
-
   MOZ_DIAGNOSTIC_ASSERT(mozilla::net::gIOService);
-  nsresult rv = mozilla::net::gIOService->NewWebTransport(
-      getter_AddRefs(parent->mWebTransport));
+  nsresult rv =
+      mozilla::net::gIOService->NewWebTransport(getter_AddRefs(mWebTransport));
   if (NS_FAILED(rv)) {
     aResolver(ResolveType(
         rv, static_cast<uint8_t>(WebTransportReliabilityMode::Pending)));
     return;
   }
 
-  parent->mOwningEventTarget = GetCurrentSerialEventTarget();
+  mOwningEventTarget = GetCurrentSerialEventTarget();
 
   MOZ_ASSERT(aPrincipal);
   nsCOMPtr<nsIURI> uri;
@@ -87,9 +84,10 @@ void WebTransportParent::Create(
 
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
       "WebTransport AsyncConnect",
-      [self = RefPtr{parent}, uri = std::move(uri),
+      [self = RefPtr{this}, uri = std::move(uri),
        principal = RefPtr{aPrincipal},
        flags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL] {
+        LOG(("WebTransport %p AsyncConnect", self.get()));
         self->mWebTransport->AsyncConnect(uri, principal, flags, self);
       });
 
@@ -102,7 +100,7 @@ void WebTransportParent::Create(
 
   InvokeAsync(sts, __func__,
               [parentEndpoint = std::move(aParentEndpoint), runnable = r,
-               resolver = std::move(aResolver), p = RefPtr{parent}]() mutable {
+               resolver = std::move(aResolver), p = RefPtr{this}]() mutable {
                 p->mResolver = resolver;
 
                 LOG(("Binding parent endpoint"));
@@ -118,7 +116,7 @@ void WebTransportParent::Create(
               })
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [p = RefPtr{parent}](
+          [p = RefPtr{this}](
               const CreateWebTransportPromise::ResolveOrRejectValue& aValue) {
             if (aValue.IsReject()) {
               p->mResolver(ResolveType(
@@ -136,7 +134,7 @@ void WebTransportParent::ActorDestroy(ActorDestroyReason aWhy) {
 // `Close` or `Shutdown` being explicitly called.
 IPCResult WebTransportParent::RecvClose(const uint32_t& aCode,
                                         const nsACString& aReason) {
-  LOG(("Close received, code = %u, reason = %s", aCode,
+  LOG(("Close for %p received, code = %u, reason = %s", this, aCode,
        PromiseFlatCString(aReason).get()));
   MOZ_ASSERT(!mClosed);
   mClosed.Flip();
@@ -163,7 +161,8 @@ WebTransportParent::OnSessionReady(uint64_t aSessionId) {
   MOZ_ASSERT(mOwningEventTarget);
   MOZ_ASSERT(!mOwningEventTarget->IsOnCurrentThread());
 
-  LOG(("Created web transport session, sessionID = %" PRIu64 "", aSessionId));
+  LOG(("Created web transport session, sessionID = %" PRIu64 ", for %p",
+       aSessionId, this));
 
   mOwningEventTarget->Dispatch(NS_NewRunnableFunction(
       "WebTransportParent::OnSessionReady", [self = RefPtr{this}] {
@@ -194,30 +193,39 @@ WebTransportParent::OnSessionReady(uint64_t aSessionId) {
 NS_IMETHODIMP
 WebTransportParent::OnSessionClosed(const uint32_t aErrorCode,
                                     const nsACString& aReason) {
-  LOG(("Creating web transport session failed code= %u, reason= %s", aErrorCode,
-       PromiseFlatCString(aReason).get()));
+  LOG(("webtransport %p session creation failed code= %u, reason= %s", this,
+       aErrorCode, PromiseFlatCString(aReason).get()));
   nsresult rv = NS_OK;
 
-  if (aErrorCode != 0) {
-    // currently we just know if session was closed gracefully or not.
-    // we need better error propagation from lower-levels of http3
-    // webtransport session and it's subsequent error mapping to DOM.
-    // XXX See Bug 1806834
-    rv = NS_ERROR_FAILURE;
-  }
   MOZ_ASSERT(mOwningEventTarget);
   MOZ_ASSERT(!mOwningEventTarget->IsOnCurrentThread());
 
-  mOwningEventTarget->Dispatch(NS_NewRunnableFunction(
-      "WebTransportParent::OnSessionClosed",
-      [self = RefPtr{this}, result = rv] {
-        if (!self->IsClosed() && self->mResolver) {
-          self->mResolver(ResolveType(
-              result, static_cast<uint8_t>(
-                          WebTransportReliabilityMode::Supports_unreliable)));
-          self->mResolver = nullptr;
-        }
-      }));
+  // currently we just know if session was closed gracefully or not.
+  // we need better error propagation from lower-levels of http3
+  // webtransport session and it's subsequent error mapping to DOM.
+  // XXX See Bug 1806834
+  if (mResolver) {
+    // we know we haven't gone Ready yet
+    rv = NS_ERROR_FAILURE;
+    mOwningEventTarget->Dispatch(NS_NewRunnableFunction(
+        "WebTransportParent::OnSessionClosed",
+        [self = RefPtr{this}, result = rv] {
+          if (!self->IsClosed() && self->mResolver) {
+            self->mResolver(ResolveType(
+                result, static_cast<uint8_t>(
+                            WebTransportReliabilityMode::Supports_unreliable)));
+          }
+        }));
+  } else {
+    // https://w3c.github.io/webtransport/#web-transport-termination
+    // Step 1: Let cleanly be a boolean representing whether the HTTP/3
+    // stream associated with the CONNECT request that initiated
+    // transport.[[Session]] is in the "Data Recvd" state. [QUIC]
+    // XXX not calculated yet
+    // Tell the content side we were closed by the server
+    Unused << SendRemoteClosed(/*XXX*/ true, aErrorCode, aReason);
+    // Let the other end shut down the IPC channel after RecvClose()
+  }
 
   return NS_OK;
 }
@@ -244,7 +252,9 @@ WebTransportParent::OnIncomingStreamAvailableInternal(
 NS_IMETHODIMP
 WebTransportParent::OnIncomingUnidirectionalStreamAvailable(
     nsIWebTransportReceiveStream* aStream) {
-  LOG(("IncomingUnidirectonalStream available"));
+  // Note: we need to hold a reference to the stream if we want to get stats,
+  // etc
+  LOG(("%p IncomingUnidirectonalStream available", this));
   // We should be on the Socket Thread
   RefPtr<DataPipeSender> sender;
   RefPtr<DataPipeReceiver> receiver;
@@ -262,7 +272,7 @@ WebTransportParent::OnIncomingUnidirectionalStreamAvailable(
     return rv;
   }
 
-  LOG(("Sending UnidirectionalStream pipe to content"));
+  LOG(("%p Sending UnidirectionalStream pipe to content", this));
   // pass the DataPipeReceiver to the content process
   if (!SendIncomingUnidirectionalStream(receiver)) {
     return NS_ERROR_FAILURE;
@@ -275,7 +285,7 @@ NS_IMETHODIMP
 WebTransportParent::OnIncomingBidirectionalStreamAvailable(
     nsIWebTransportBidirectionalStream* aStream) {
   // XXX implement once DOM WebAPI supports creation of streams
-  LOG(("Sending BidirectionalStream pipe to content"));
+  LOG(("%p Sending BidirectionalStream pipe to content", this));
   Unused << aStream;
   return NS_OK;
 }
