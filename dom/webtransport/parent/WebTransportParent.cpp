@@ -143,13 +143,155 @@ IPCResult WebTransportParent::RecvClose(const uint32_t& aCode,
   return IPC_OK();
 }
 
+class ReceiveStream final : public nsIWebTransportStreamCallback {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIWEBTRANSPORTSTREAMCALLBACK
+
+  ReceiveStream(
+      WebTransportParent::CreateUnidirectionalStreamResolver&& aResolver,
+      nsCOMPtr<nsISerialEventTarget>& aSocketThread)
+      : mUniResolver(aResolver), mSocketThread(aSocketThread) {}
+  ReceiveStream(
+      WebTransportParent::CreateBidirectionalStreamResolver&& aResolver,
+      nsCOMPtr<nsISerialEventTarget>& aSocketThread)
+      : mBiResolver(aResolver), mSocketThread(aSocketThread) {}
+
+ private:
+  ~ReceiveStream() = default;
+  std::function<void(::mozilla::ipc::DataPipeSender*)> mUniResolver;
+  WebTransportParent::CreateBidirectionalStreamResolver mBiResolver;
+  nsCOMPtr<nsISerialEventTarget> mSocketThread;
+};
+
+NS_IMPL_ISUPPORTS(ReceiveStream, nsIWebTransportStreamCallback)
+
+// nsIWebTransportStreamCallback:
+NS_IMETHODIMP ReceiveStream::OnBidirectionalStreamReady(
+    nsIWebTransportBidirectionalStream* aStream) {
+  LOG(("Bidirectional stream ready!"));
+  MOZ_ASSERT(mSocketThread->IsOnCurrentThread());
+
+  RefPtr<mozilla::ipc::DataPipeSender> inputsender;
+  RefPtr<mozilla::ipc::DataPipeReceiver> inputreceiver;
+  nsresult rv =
+      NewDataPipe(mozilla::ipc::kDefaultDataPipeCapacity,
+                  getter_AddRefs(inputsender), getter_AddRefs(inputreceiver));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mBiResolver(rv);
+    return rv;
+  }
+
+  nsCOMPtr<nsIAsyncInputStream> inputStream;
+  aStream->GetInputStream(getter_AddRefs(inputStream));
+  MOZ_ASSERT(inputStream);
+  rv = NS_AsyncCopy(inputStream, inputsender, mSocketThread,
+                    NS_ASYNCCOPY_VIA_WRITESEGMENTS,  // can we use READSEGMENTS?
+                    mozilla::ipc::kDefaultDataPipeCapacity, nullptr, nullptr);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mBiResolver(rv);
+    return rv;
+  }
+
+  RefPtr<mozilla::ipc::DataPipeSender> outputsender;
+  RefPtr<mozilla::ipc::DataPipeReceiver> outputreceiver;
+  rv =
+      NewDataPipe(mozilla::ipc::kDefaultDataPipeCapacity,
+                  getter_AddRefs(outputsender), getter_AddRefs(outputreceiver));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mBiResolver(rv);
+    return rv;
+  }
+
+  nsCOMPtr<nsIAsyncOutputStream> outputStream;
+  aStream->GetOutputStream(getter_AddRefs(outputStream));
+  MOZ_ASSERT(outputStream);
+  rv = NS_AsyncCopy(outputreceiver, outputStream, mSocketThread,
+                    NS_ASYNCCOPY_VIA_READSEGMENTS,
+                    mozilla::ipc::kDefaultDataPipeCapacity, nullptr, nullptr);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mBiResolver(rv);
+    return rv;
+  }
+
+  LOG(("Returning BidirectionalStream pipe to content"));
+  mBiResolver(BidirectionalStream(inputreceiver, outputsender));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ReceiveStream::OnUnidirectionalStreamReady(nsIWebTransportSendStream* aStream) {
+  LOG(("Unidirectional stream ready!"));
+  // We should be on the Socket Thread
+  MOZ_ASSERT(mSocketThread->IsOnCurrentThread());
+
+  RefPtr<::mozilla::ipc::DataPipeSender> sender;
+  RefPtr<::mozilla::ipc::DataPipeReceiver> receiver;
+  nsresult rv = NewDataPipe(mozilla::ipc::kDefaultDataPipeCapacity,
+                            getter_AddRefs(sender), getter_AddRefs(receiver));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mUniResolver(nullptr);
+    return rv;
+  }
+
+  nsCOMPtr<nsIAsyncOutputStream> outputStream;
+  aStream->GetOutputStream(getter_AddRefs(outputStream));
+  MOZ_ASSERT(outputStream);
+  rv = NS_AsyncCopy(receiver, outputStream, mSocketThread,
+                    NS_ASYNCCOPY_VIA_READSEGMENTS,
+                    mozilla::ipc::kDefaultDataPipeCapacity, nullptr, nullptr);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mUniResolver(nullptr);
+    return rv;
+  }
+
+  LOG(("Returning UnidirectionalStream pipe to content"));
+  // pass the DataPipeSender to the content process
+  mUniResolver(sender);
+  return NS_OK;
+}
+
+JS_HAZ_CAN_RUN_SCRIPT NS_IMETHODIMP ReceiveStream::OnError(uint8_t aError) {
+  nsresult rv = aError == nsIWebTransport::INVALID_STATE_ERROR
+                    ? NS_ERROR_DOM_INVALID_STATE_ERR
+                    : NS_ERROR_FAILURE;
+  if (mUniResolver) {
+    mUniResolver(nullptr);
+  } else if (mBiResolver) {
+    mBiResolver(rv);
+  }
+  return NS_OK;
+}
+
 IPCResult WebTransportParent::RecvCreateUnidirectionalStream(
-    CreateUnidirectionalStreamResolver&& aResolver) {
+    Maybe<int64_t> aSendOrder, CreateUnidirectionalStreamResolver&& aResolver) {
+  LOG(("%s for %p received, useSendOrder=%d, sendOrder=%" PRIi64, __func__,
+       this, aSendOrder.isSome(),
+       aSendOrder.isSome() ? aSendOrder.value() : 0));
+
+  RefPtr<ReceiveStream> callback =
+      new ReceiveStream(std::move(aResolver), mSocketThread);
+  nsresult rv;
+  rv = mWebTransport->CreateOutgoingUnidirectionalStream(callback);
+  if (NS_FAILED(rv)) {
+    callback->OnError(0);  // XXX
+  }
   return IPC_OK();
 }
 
 IPCResult WebTransportParent::RecvCreateBidirectionalStream(
-    CreateBidirectionalStreamResolver&& aResolver) {
+    Maybe<int64_t> aSendOrder, CreateBidirectionalStreamResolver&& aResolver) {
+  LOG(("%s for %p received, useSendOrder=%d, sendOrder=%" PRIi64, __func__,
+       this, aSendOrder.isSome(),
+       aSendOrder.isSome() ? aSendOrder.value() : 0));
+
+  RefPtr<ReceiveStream> callback =
+      new ReceiveStream(std::move(aResolver), mSocketThread);
+  nsresult rv;
+  rv = mWebTransport->CreateOutgoingBidirectionalStream(callback);
+  if (NS_FAILED(rv)) {
+    callback->OnError(0);  // XXX
+  }
   return IPC_OK();
 }
 

@@ -40,9 +40,10 @@ class WebTransportParent : public PWebTransportParent,
   IPCResult RecvClose(const uint32_t& aCode, const nsACString& aReason);
 
   IPCResult RecvCreateUnidirectionalStream(
+      Maybe<int64_t> aSendOrder,
       CreateUnidirectionalStreamResolver&& aResolver);
   IPCResult RecvCreateBidirectionalStream(
-      CreateBidirectionalStreamResolver&& aResolver);
+      Maybe<int64_t> aSendOrder, CreateBidirectionalStreamResolver&& aResolver);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

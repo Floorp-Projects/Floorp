@@ -10,8 +10,13 @@ include PBackgroundSharedTypes;
 namespace mozilla {
 namespace dom {
 struct BidirectionalStream {
-  DataPipeReceiver incoming;
+  DataPipeReceiver inStream;
   DataPipeSender outStream;
+};
+
+union BidirectionalStreamResponse {
+  nsresult;
+  BidirectionalStream;
 };
 
 async protocol PWebTransport
@@ -21,10 +26,10 @@ async protocol PWebTransport
    * TODO: documentation
    */
   async Close(uint32_t code, nsCString reason);
-  async CreateUnidirectionalStream()
+  async CreateUnidirectionalStream(int64_t? sendOrder)
       returns(DataPipeSender sender);
-  async CreateBidirectionalStream()
-      returns(BidirectionalStream pipes);
+  async CreateBidirectionalStream(int64_t? sendOrder)
+      returns(BidirectionalStreamResponse response);
 
  child:
 
