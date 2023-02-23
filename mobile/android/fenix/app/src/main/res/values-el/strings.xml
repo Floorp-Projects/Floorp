@@ -73,7 +73,7 @@
     <!-- Text for the main message -->
     <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Προσθέστε συντόμευση για άνοιγμα ιδιωτικών καρτελών από την αρχική οθόνη.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message">Εκκινήστε την επόμενη ιδιωτική καρτέλα με ένα πάτημα.</string>
+    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">Εκκινήστε την επόμενη ιδιωτική καρτέλα με ένα πάτημα.</string>
     <!-- Text for the positive button -->
     <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Προσθήκη συντόμευσης</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
@@ -381,6 +381,8 @@
     <string name="reduce_cookie_banner_dialog_not_now_button">Όχι τώρα</string>
     <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
     <string name="reduce_cookie_banner_dialog_snackbar_text">Θα βλέπετε λιγότερα αιτήματα cookie</string>
+    <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Απόρριψη αναδυόμενων παραθύρων</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Μείωση μπάνερ cookie</string>
 

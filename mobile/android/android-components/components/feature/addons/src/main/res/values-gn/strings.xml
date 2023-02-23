@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Emoinge mba’ekuaarã kuatiajokohápe</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">Ejoko tetepy oimeraẽva kuatiaroguépe</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Emoñe’ẽ ne ñeikundaha rapykuere</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Emboguejy marandurenda, emoñe’ẽ ha emoambue kundahára ñemboguejy rembiasakue</string>
     <!-- Description for downloads_open permission. -->

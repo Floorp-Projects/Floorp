@@ -551,6 +551,10 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">Ya\'sa</string>
 
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">Uve’ k’ujb’a’mal kan tuk ijaje’ tuk’ u kach’ub’al tetze’ aq’al uva’ ye’xhib’il kuxh la kanon</string>
+
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
 
@@ -705,6 +709,15 @@
     <!-- Preference for altering the microphone access for all websites -->
     <string name="preference_phone_feature_microphone">Alb’al yol</string>
 
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Majel ve´t ivatz</string>
+
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">K´ulel ve´te´</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Ootzi ka´te</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Eesamal ve\'t el ta\'n USB/Wi-Fi</string>
 
@@ -756,7 +769,7 @@
 
     <!-- Tracking protection bottom sheet -->
 
-    <!-- Promote SearchWidget Dialog -->
+     <!-- Promote SearchWidget Dialog -->
 
     !-- Content description (not visible, for screen readers etc.): This is the description for
     picture of search widget from promote search widget dialog. --&gt;

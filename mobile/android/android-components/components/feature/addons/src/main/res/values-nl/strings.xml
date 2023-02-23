@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Gegevens op het klembord plaatsen</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">Inhoud op elke pagina blokkeren</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Uw navigatiegeschiedenis lezen</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Bestanden downloaden en downloadgeschiedenis van de browser lezen en aanpassen</string>
     <!-- Description for downloads_open permission. -->

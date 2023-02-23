@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Apondre de donadas al quichapapièrs</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">Blocar lo contengut sus quina pagina que siá</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Legir l’istoric de navegacion</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Telecargar de fichièrs, consultar e modificar l’istoric dels telecargaments del navigator</string>
     <!-- Description for downloads_open permission. -->

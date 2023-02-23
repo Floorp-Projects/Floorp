@@ -580,7 +580,7 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarnamalardı jasırıw ushı
     <string name="addon_not_supported_error">Qosımshanı qollap-quwatlamaydı</string>
 
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed">Qosımsha álleqashan ornatılǵan</string>
+    <string name="addon_already_installed">Qosımsha álle qashan ornatılǵan</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -1918,7 +1918,7 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarnamalardı jasırıw ushı
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Házir sóyleń</string>
     <!--  The error message in edit login view when a duplicate username exists. -->
-    <string name="saved_login_duplicate">Bul paydalanıwshı atındaǵı login álleqashan bar</string>
+    <string name="saved_login_duplicate">Bul paydalanıwshı atındaǵı login álle qashan bar</string>
     <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
     <string name="add_login_hostname_hint_text">https://www.example.com</string>
 

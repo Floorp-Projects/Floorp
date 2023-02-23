@@ -447,11 +447,11 @@
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Acessibilidade</string>
     <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Servidor personalizado de Conta Firefox</string>
+    <string name="preferences_override_fxa_server">Servidor personalizado de conta Firefox</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Servidor personalizado de sincronização</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Servidor de Conta Firefox/Sync alterado. Saindo do aplicativo para aplicar as mudanças…</string>
+    <string name="toast_override_fxa_sync_server_done">Modificado o servidor de conta/sincronização Firefox. Saindo do aplicativo para aplicar as mudanças…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Conta</string>
     <!-- Preference for changing where the toolbar is positioned -->
