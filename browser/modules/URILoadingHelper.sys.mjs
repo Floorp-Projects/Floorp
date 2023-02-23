@@ -22,8 +22,290 @@ XPCOMUtils.defineLazyGetter(lazy, "ReferrerInfo", () =>
   )
 );
 
+function saveLink(window, url, params) {
+  if ("isContentWindowPrivate" in params) {
+    window.saveURL(
+      url,
+      null,
+      null,
+      null,
+      true,
+      true,
+      params.referrerInfo,
+      null,
+      null,
+      params.isContentWindowPrivate,
+      params.originPrincipal
+    );
+  } else {
+    if (!params.initiatingDoc) {
+      console.error(
+        "openUILink/openLinkIn was called with " +
+          "where == 'save' but without initiatingDoc.  See bug 814264."
+      );
+      return;
+    }
+    window.saveURL(
+      url,
+      null,
+      null,
+      null,
+      true,
+      true,
+      params.referrerInfo,
+      null,
+      params.initiatingDoc
+    );
+  }
+}
+
+function openInWindow(url, params, sourceWindow) {
+  let {
+    referrerInfo,
+    forceNonPrivate,
+    triggeringRemoteType,
+    forceAllowDataURI,
+    globalHistoryOptions,
+    allowThirdPartyFixup,
+    userContextId,
+    postData,
+    originPrincipal,
+    originStoragePrincipal,
+    triggeringPrincipal,
+    csp,
+    resolveOnContentBrowserCreated,
+  } = params;
+  let features = "chrome,dialog=no,all";
+  if (params.private) {
+    features += ",private";
+    // To prevent regular browsing data from leaking to private browsing sites,
+    // strip the referrer when opening a new private window. (See Bug: 1409226)
+    referrerInfo = new lazy.ReferrerInfo(
+      referrerInfo.referrerPolicy,
+      false,
+      referrerInfo.originalReferrer
+    );
+  } else if (forceNonPrivate) {
+    features += ",non-private";
+  }
+
+  // This propagates to window.arguments.
+  var sa = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+
+  var wuri = Cc["@mozilla.org/supports-string;1"].createInstance(
+    Ci.nsISupportsString
+  );
+  wuri.data = url;
+
+  let extraOptions = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
+    Ci.nsIWritablePropertyBag2
+  );
+  if (triggeringRemoteType) {
+    extraOptions.setPropertyAsACString(
+      "triggeringRemoteType",
+      triggeringRemoteType
+    );
+  }
+  if (params.hasValidUserGestureActivation !== undefined) {
+    extraOptions.setPropertyAsBool(
+      "hasValidUserGestureActivation",
+      params.hasValidUserGestureActivation
+    );
+  }
+  if (forceAllowDataURI) {
+    extraOptions.setPropertyAsBool("forceAllowDataURI", true);
+  }
+  if (params.fromExternal !== undefined) {
+    extraOptions.setPropertyAsBool("fromExternal", params.fromExternal);
+  }
+  if (globalHistoryOptions?.triggeringSponsoredURL) {
+    extraOptions.setPropertyAsACString(
+      "triggeringSponsoredURL",
+      globalHistoryOptions.triggeringSponsoredURL
+    );
+    if (globalHistoryOptions.triggeringSponsoredURLVisitTimeMS) {
+      extraOptions.setPropertyAsUint64(
+        "triggeringSponsoredURLVisitTimeMS",
+        globalHistoryOptions.triggeringSponsoredURLVisitTimeMS
+      );
+    }
+  }
+
+  var allowThirdPartyFixupSupports = Cc[
+    "@mozilla.org/supports-PRBool;1"
+  ].createInstance(Ci.nsISupportsPRBool);
+  allowThirdPartyFixupSupports.data = allowThirdPartyFixup;
+
+  var userContextIdSupports = Cc[
+    "@mozilla.org/supports-PRUint32;1"
+  ].createInstance(Ci.nsISupportsPRUint32);
+  userContextIdSupports.data = userContextId;
+
+  sa.appendElement(wuri);
+  sa.appendElement(extraOptions);
+  sa.appendElement(referrerInfo);
+  sa.appendElement(postData);
+  sa.appendElement(allowThirdPartyFixupSupports);
+  sa.appendElement(userContextIdSupports);
+  sa.appendElement(originPrincipal);
+  sa.appendElement(originStoragePrincipal);
+  sa.appendElement(triggeringPrincipal);
+  sa.appendElement(null); // allowInheritPrincipal
+  sa.appendElement(csp);
+
+  let win;
+
+  // Returns a promise that will be resolved when the new window's startup is finished.
+  function waitForWindowStartup() {
+    return new Promise(resolve => {
+      const delayedStartupObserver = aSubject => {
+        if (aSubject == win) {
+          Services.obs.removeObserver(
+            delayedStartupObserver,
+            "browser-delayed-startup-finished"
+          );
+          resolve();
+        }
+      };
+      Services.obs.addObserver(
+        delayedStartupObserver,
+        "browser-delayed-startup-finished"
+      );
+    });
+  }
+
+  if (params.frameID != undefined && sourceWindow) {
+    // Only notify it as a WebExtensions' webNavigation.onCreatedNavigationTarget
+    // event if it contains the expected frameID params.
+    // (e.g. we should not notify it as a onCreatedNavigationTarget if the user is
+    // opening a new window using the keyboard shortcut).
+    const sourceTabBrowser = sourceWindow.gBrowser.selectedBrowser;
+    waitForWindowStartup().then(() => {
+      Services.obs.notifyObservers(
+        {
+          wrappedJSObject: {
+            url,
+            createdTabBrowser: win.gBrowser.selectedBrowser,
+            sourceTabBrowser,
+            sourceFrameID: params.frameID,
+          },
+        },
+        "webNavigation-createdNavigationTarget"
+      );
+    });
+  }
+
+  if (resolveOnContentBrowserCreated) {
+    waitForWindowStartup().then(() =>
+      resolveOnContentBrowserCreated(win.gBrowser.selectedBrowser)
+    );
+  }
+
+  win = Services.ww.openWindow(
+    sourceWindow,
+    AppConstants.BROWSER_CHROME_URL,
+    null,
+    features,
+    sa
+  );
+}
+
+function openInCurrentTab(targetBrowser, url, uriObj, params) {
+  let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+
+  if (params.allowThirdPartyFixup) {
+    flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+    flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS;
+  }
+  // LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL isn't supported for javascript URIs,
+  // i.e. it causes them not to load at all. Callers should strip
+  // "javascript:" from pasted strings to prevent blank tabs
+  if (!params.allowInheritPrincipal) {
+    flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
+  }
+
+  if (params.allowPopups) {
+    flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_POPUPS;
+  }
+  if (params.indicateErrorPageLoad) {
+    flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ERROR_LOAD_CHANGES_RV;
+  }
+  if (params.forceAllowDataURI) {
+    flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FORCE_ALLOW_DATA_URI;
+  }
+  if (params.fromExternal) {
+    flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL;
+  }
+
+  let { URI_INHERITS_SECURITY_CONTEXT } = Ci.nsIProtocolHandler;
+  if (
+    params.forceAboutBlankViewerInCurrent &&
+    (!uriObj ||
+      Services.io.getDynamicProtocolFlags(uriObj) &
+        URI_INHERITS_SECURITY_CONTEXT)
+  ) {
+    // Unless we know for sure we're not inheriting principals,
+    // force the about:blank viewer to have the right principal:
+    targetBrowser.createAboutBlankContentViewer(
+      params.originPrincipal,
+      params.originStoragePrincipal
+    );
+  }
+
+  let {
+    triggeringPrincipal,
+    csp,
+    referrerInfo,
+    postData,
+    userContextId,
+    hasValidUserGestureActivation,
+    globalHistoryOptions,
+    triggeringRemoteType,
+  } = params;
+
+  targetBrowser.fixupAndLoadURIString(url, {
+    triggeringPrincipal,
+    csp,
+    flags,
+    referrerInfo,
+    postData,
+    userContextId,
+    hasValidUserGestureActivation,
+    globalHistoryOptions,
+    triggeringRemoteType,
+  });
+  params.resolveOnContentBrowserCreated?.(targetBrowser);
+}
+
+function updatePrincipals(window, params) {
+  let { userContextId } = params;
+  // Teach the principal about the right OA to use, e.g. in case when
+  // opening a link in a new private window, or in a new container tab.
+  // Please note we do not have to do that for SystemPrincipals and we
+  // can not do it for NullPrincipals since NullPrincipals are only
+  // identical if they actually are the same object (See Bug: 1346759)
+  function useOAForPrincipal(principal) {
+    if (principal && principal.isContentPrincipal) {
+      let privateBrowsingId =
+        params.private ||
+        (window && PrivateBrowsingUtils.isWindowPrivate(window));
+      let attrs = {
+        userContextId,
+        privateBrowsingId,
+        firstPartyDomain: principal.originAttributes.firstPartyDomain,
+      };
+      return Services.scriptSecurityManager.principalWithOA(principal, attrs);
+    }
+    return principal;
+  }
+  params.originPrincipal = useOAForPrincipal(params.originPrincipal);
+  params.originStoragePrincipal = useOAForPrincipal(
+    params.originStoragePrincipal
+  );
+  params.triggeringPrincipal = useOAForPrincipal(params.triggeringPrincipal);
+}
+
 export const URILoadingHelper = {
-  /* eslint-disable complexity */
   openLinkIn(window, url, where, params) {
     if (!where || !url) {
       return;
@@ -33,31 +315,30 @@ export const URILoadingHelper = {
       allowThirdPartyFixup,
       postData,
       charset,
-      referrerInfo,
       relatedToCurrent,
       allowInheritPrincipal,
       forceAllowDataURI,
-      initiatingDoc,
       forceNonPrivate,
       skipTabAnimation,
       allowPinnedTabHostChange,
-      allowPopups,
       userContextId,
-      indicateErrorPageLoad,
       triggeringPrincipal,
       originPrincipal,
       originStoragePrincipal,
       triggeringRemoteType,
       csp,
-      forceAboutBlankViewerInCurrent,
       resolveOnNewTabCreated,
       // This callback will be called with the content browser once it's created.
       resolveOnContentBrowserCreated,
       globalHistoryOptions,
     } = params;
 
-    if (!referrerInfo) {
-      referrerInfo = new lazy.ReferrerInfo(
+    // We want to overwrite some things for convenience when passing it to other
+    // methods. To avoid impacting callers, copy the params.
+    params = Object.assign({}, params);
+
+    if (!params.referrerInfo) {
+      params.referrerInfo = new lazy.ReferrerInfo(
         Ci.nsIReferrerInfo.EMPTY,
         true,
         null
@@ -69,40 +350,7 @@ export const URILoadingHelper = {
     }
 
     if (where == "save") {
-      if ("isContentWindowPrivate" in params) {
-        window.saveURL(
-          url,
-          null,
-          null,
-          null,
-          true,
-          true,
-          referrerInfo,
-          null,
-          null,
-          params.isContentWindowPrivate,
-          originPrincipal
-        );
-      } else {
-        if (!initiatingDoc) {
-          console.error(
-            "openUILink/openLinkIn was called with " +
-              "where == 'save' but without initiatingDoc.  See bug 814264."
-          );
-          return;
-        }
-        window.saveURL(
-          url,
-          null,
-          null,
-          null,
-          true,
-          true,
-          referrerInfo,
-          null,
-          initiatingDoc
-        );
-      }
+      saveLink(window, url, params);
       return;
     }
 
@@ -123,163 +371,10 @@ export const URILoadingHelper = {
       relatedToCurrent = false;
     }
 
-    // Teach the principal about the right OA to use, e.g. in case when
-    // opening a link in a new private window, or in a new container tab.
-    // Please note we do not have to do that for SystemPrincipals and we
-    // can not do it for NullPrincipals since NullPrincipals are only
-    // identical if they actually are the same object (See Bug: 1346759)
-    function useOAForPrincipal(principal) {
-      if (principal && principal.isContentPrincipal) {
-        let attrs = {
-          userContextId,
-          privateBrowsingId:
-            params.private || (w && PrivateBrowsingUtils.isWindowPrivate(w)),
-          firstPartyDomain: principal.originAttributes.firstPartyDomain,
-        };
-        return Services.scriptSecurityManager.principalWithOA(principal, attrs);
-      }
-      return principal;
-    }
-    originPrincipal = useOAForPrincipal(originPrincipal);
-    originStoragePrincipal = useOAForPrincipal(originStoragePrincipal);
-    triggeringPrincipal = useOAForPrincipal(triggeringPrincipal);
+    updatePrincipals(w, params);
 
     if (!w || where == "window") {
-      let features = "chrome,dialog=no,all";
-      if (params.private) {
-        features += ",private";
-        // To prevent regular browsing data from leaking to private browsing sites,
-        // strip the referrer when opening a new private window. (See Bug: 1409226)
-        referrerInfo = new lazy.ReferrerInfo(
-          referrerInfo.referrerPolicy,
-          false,
-          referrerInfo.originalReferrer
-        );
-      } else if (forceNonPrivate) {
-        features += ",non-private";
-      }
-
-      // This propagates to window.arguments.
-      var sa = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
-
-      var wuri = Cc["@mozilla.org/supports-string;1"].createInstance(
-        Ci.nsISupportsString
-      );
-      wuri.data = url;
-
-      let extraOptions = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
-        Ci.nsIWritablePropertyBag2
-      );
-      if (triggeringRemoteType) {
-        extraOptions.setPropertyAsACString(
-          "triggeringRemoteType",
-          triggeringRemoteType
-        );
-      }
-      if (params.hasValidUserGestureActivation !== undefined) {
-        extraOptions.setPropertyAsBool(
-          "hasValidUserGestureActivation",
-          params.hasValidUserGestureActivation
-        );
-      }
-      if (forceAllowDataURI) {
-        extraOptions.setPropertyAsBool("forceAllowDataURI", true);
-      }
-      if (params.fromExternal !== undefined) {
-        extraOptions.setPropertyAsBool("fromExternal", params.fromExternal);
-      }
-      if (globalHistoryOptions?.triggeringSponsoredURL) {
-        extraOptions.setPropertyAsACString(
-          "triggeringSponsoredURL",
-          globalHistoryOptions.triggeringSponsoredURL
-        );
-        if (globalHistoryOptions.triggeringSponsoredURLVisitTimeMS) {
-          extraOptions.setPropertyAsUint64(
-            "triggeringSponsoredURLVisitTimeMS",
-            globalHistoryOptions.triggeringSponsoredURLVisitTimeMS
-          );
-        }
-      }
-
-      var allowThirdPartyFixupSupports = Cc[
-        "@mozilla.org/supports-PRBool;1"
-      ].createInstance(Ci.nsISupportsPRBool);
-      allowThirdPartyFixupSupports.data = allowThirdPartyFixup;
-
-      var userContextIdSupports = Cc[
-        "@mozilla.org/supports-PRUint32;1"
-      ].createInstance(Ci.nsISupportsPRUint32);
-      userContextIdSupports.data = userContextId;
-
-      sa.appendElement(wuri);
-      sa.appendElement(extraOptions);
-      sa.appendElement(referrerInfo);
-      sa.appendElement(postData);
-      sa.appendElement(allowThirdPartyFixupSupports);
-      sa.appendElement(userContextIdSupports);
-      sa.appendElement(originPrincipal);
-      sa.appendElement(originStoragePrincipal);
-      sa.appendElement(triggeringPrincipal);
-      sa.appendElement(null); // allowInheritPrincipal
-      sa.appendElement(csp);
-
-      const sourceWindow = w || window;
-      let win;
-
-      // Returns a promise that will be resolved when the new window's startup is finished.
-      function waitForWindowStartup() {
-        return new Promise(resolve => {
-          const delayedStartupObserver = aSubject => {
-            if (aSubject == win) {
-              Services.obs.removeObserver(
-                delayedStartupObserver,
-                "browser-delayed-startup-finished"
-              );
-              resolve();
-            }
-          };
-          Services.obs.addObserver(
-            delayedStartupObserver,
-            "browser-delayed-startup-finished"
-          );
-        });
-      }
-
-      if (params.frameID != undefined && sourceWindow) {
-        // Only notify it as a WebExtensions' webNavigation.onCreatedNavigationTarget
-        // event if it contains the expected frameID params.
-        // (e.g. we should not notify it as a onCreatedNavigationTarget if the user is
-        // opening a new window using the keyboard shortcut).
-        const sourceTabBrowser = sourceWindow.gBrowser.selectedBrowser;
-        waitForWindowStartup().then(() => {
-          Services.obs.notifyObservers(
-            {
-              wrappedJSObject: {
-                url,
-                createdTabBrowser: win.gBrowser.selectedBrowser,
-                sourceTabBrowser,
-                sourceFrameID: params.frameID,
-              },
-            },
-            "webNavigation-createdNavigationTarget"
-          );
-        });
-      }
-
-      if (resolveOnContentBrowserCreated) {
-        waitForWindowStartup().then(() =>
-          resolveOnContentBrowserCreated(win.gBrowser.selectedBrowser)
-        );
-      }
-
-      win = Services.ww.openWindow(
-        sourceWindow,
-        AppConstants.BROWSER_CHROME_URL,
-        null,
-        features,
-        sa
-      );
-
+      openInWindow(url, params, w || window);
       return;
     }
 
@@ -341,61 +436,7 @@ export const URILoadingHelper = {
 
     switch (where) {
       case "current":
-        let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-
-        if (allowThirdPartyFixup) {
-          flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
-          flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS;
-        }
-        // LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL isn't supported for javascript URIs,
-        // i.e. it causes them not to load at all. Callers should strip
-        // "javascript:" from pasted strings to prevent blank tabs
-        if (!allowInheritPrincipal) {
-          flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
-        }
-
-        if (allowPopups) {
-          flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_POPUPS;
-        }
-        if (indicateErrorPageLoad) {
-          flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ERROR_LOAD_CHANGES_RV;
-        }
-        if (forceAllowDataURI) {
-          flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FORCE_ALLOW_DATA_URI;
-        }
-        if (params.fromExternal) {
-          flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL;
-        }
-
-        let { URI_INHERITS_SECURITY_CONTEXT } = Ci.nsIProtocolHandler;
-        if (
-          forceAboutBlankViewerInCurrent &&
-          (!uriObj ||
-            Services.io.getDynamicProtocolFlags(uriObj) &
-              URI_INHERITS_SECURITY_CONTEXT)
-        ) {
-          // Unless we know for sure we're not inheriting principals,
-          // force the about:blank viewer to have the right principal:
-          targetBrowser.createAboutBlankContentViewer(
-            originPrincipal,
-            originStoragePrincipal
-          );
-        }
-
-        targetBrowser.fixupAndLoadURIString(url, {
-          triggeringPrincipal,
-          csp,
-          flags,
-          referrerInfo,
-          postData,
-          userContextId,
-          hasValidUserGestureActivation: params.hasValidUserGestureActivation,
-          globalHistoryOptions,
-          triggeringRemoteType,
-        });
-        if (resolveOnContentBrowserCreated) {
-          resolveOnContentBrowserCreated(targetBrowser);
-        }
+        openInCurrentTab(targetBrowser, url, uriObj, params);
 
         // Don't focus the content area if focus is in the address bar and we're
         // loading the New Tab page.
@@ -413,7 +454,7 @@ export const URILoadingHelper = {
           !lazy.AboutNewTab.willNotifyUser;
 
         let tabUsedForLoad = w.gBrowser.addTab(url, {
-          referrerInfo,
+          referrerInfo: params.referrerInfo,
           charset,
           postData,
           inBackground: loadInBackground,
