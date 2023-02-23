@@ -15,6 +15,30 @@ import pytest
 from mozbuild.repackaging import deb
 
 
+def test_extract_application_ini_data():
+    with tempfile.TemporaryDirectory() as d:
+        with open(os.path.join(d, "application.ini"), "w") as f:
+            f.write(
+                """
+[App]
+Vendor=Mozilla
+Name=Firefox
+RemotingName=firefox-nightly-try
+CodeName=Firefox Nightly
+BuildID=20230222000000
+"""
+            )
+
+        assert deb._extract_application_ini_data(d) == {
+            "name": "Firefox",
+            "display_name": "Firefox Nightly",
+            "vendor": "Mozilla",
+            "remoting_name": "firefox-nightly-try",
+            "build_id": "20230222000000",
+            "timestamp": datetime.datetime(2023, 2, 22),
+        }
+
+
 @pytest.mark.parametrize(
     "version, build_number, expected_deb_pkg_version",
     (

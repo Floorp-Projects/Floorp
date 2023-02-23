@@ -14,7 +14,6 @@ from string import Template
 
 import mozfile
 import mozpack.path as mozpath
-from mozpack.files import FileFinder
 
 from mozbuild.repackaging.application_ini import get_application_ini_values
 
@@ -56,27 +55,7 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
     extract_dir = os.path.join(tmpdir, "source")
     try:
         mozfile.extract_tarball(infile, extract_dir)
-        finder = FileFinder(extract_dir)
-        values = get_application_ini_values(
-            finder,
-            dict(section="App", value="Name"),
-            dict(section="App", value="CodeName", fallback="Name"),
-            dict(section="App", value="Vendor"),
-            dict(section="App", value="RemotingName"),
-            dict(section="App", value="BuildID"),
-        )
-        app_name = next(values)
-
-        application_ini_data = {
-            "name": app_name,
-            "display_name": next(values),
-            "vendor": next(values),
-            "remoting_name": next(values),
-            "build_id": next(values),
-        }
-        application_ini_data["timestamp"] = datetime.datetime.strptime(
-            application_ini_data["build_id"], "%Y%m%d%H%M%S"
-        )
+        application_ini_data = _extract_application_ini_data(extract_dir)
         build_variables = _get_build_variables(
             application_ini_data,
             arch,
@@ -94,6 +73,7 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
             build_variables=build_variables,
         )
 
+        app_name = application_ini_data["name"]
         with open(
             mozpath.join(extract_dir, app_name.lower(), "is-packaged-app"), "w"
         ) as f:
@@ -113,6 +93,28 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
 
     finally:
         shutil.rmtree(tmpdir)
+
+
+def _extract_application_ini_data(application_director):
+    values = get_application_ini_values(
+        application_director,
+        dict(section="App", value="Name"),
+        dict(section="App", value="CodeName", fallback="Name"),
+        dict(section="App", value="Vendor"),
+        dict(section="App", value="RemotingName"),
+        dict(section="App", value="BuildID"),
+    )
+
+    data = {
+        "name": next(values),
+        "display_name": next(values),
+        "vendor": next(values),
+        "remoting_name": next(values),
+        "build_id": next(values),
+    }
+    data["timestamp"] = datetime.datetime.strptime(data["build_id"], "%Y%m%d%H%M%S")
+
+    return data
 
 
 def _get_build_variables(
