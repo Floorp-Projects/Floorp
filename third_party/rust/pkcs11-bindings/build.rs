@@ -36,6 +36,7 @@ fn main() {
         .allowlist_var("CK_UNAVAILABLE_INFORMATION")
         .allowlist_var("CK_EFFECTIVELY_INFINITE")
         .allowlist_var("CK_INVALID_HANDLE")
+        .allowlist_var("CKP_PUBLIC_CERTIFICATES_TOKEN")
         .allowlist_var("CKA_.*")
         .allowlist_var("CKC_.*")
         .allowlist_var("CKD_.*")
