@@ -15,6 +15,7 @@
 #include "nsProxyRelease.h"
 #include "nsSocketTransportService2.h"
 #include "mozilla/Logging.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_network.h"
 
 namespace mozilla::net {
@@ -67,6 +68,14 @@ nsresult WebTransportSessionProxy::AsyncConnect(
     MutexAutoLock lock(mMutex);
     mListener = aListener;
   }
+  auto cleanup = MakeScopeExit([self = RefPtr<WebTransportSessionProxy>(this)] {
+    MutexAutoLock lock(self->mMutex);
+    self->mListener->OnSessionClosed(0, ""_ns);  // TODO: find a better error.
+    self->mChannel = nullptr;
+    self->mListener = nullptr;
+    self->ChangeState(WebTransportSessionProxyState::DONE);
+  });
+
   nsSecurityFlags flags = nsILoadInfo::SEC_COOKIES_OMIT | aSecurityFlags;
   nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL |
                           nsIRequest::LOAD_BYPASS_CACHE |
@@ -100,11 +109,8 @@ nsresult WebTransportSessionProxy::AsyncConnect(
   }
 
   rv = mChannel->AsyncOpen(this);
-  if (NS_FAILED(rv)) {
-    MutexAutoLock lock(mMutex);
-    mChannel = nullptr;
-    mListener = nullptr;
-    ChangeState(WebTransportSessionProxyState::DONE);
+  if (NS_SUCCEEDED(rv)) {
+    cleanup.release();
   }
   return rv;
 }
@@ -512,7 +518,7 @@ WebTransportSessionProxy::OnStopRequest(nsIRequest* aRequest,
       case WebTransportSessionProxyState::INIT:
       case WebTransportSessionProxyState::ACTIVE:
       case WebTransportSessionProxyState::NEGOTIATING:
-        MOZ_ASSERT(false, "OnStotRequest cannot be called in this state.");
+        MOZ_ASSERT(false, "OnStopRequest cannot be called in this state.");
         break;
       case WebTransportSessionProxyState::CLOSE_CALLBACK_PENDING:
         reason = mReason;
