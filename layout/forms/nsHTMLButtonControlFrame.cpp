@@ -16,6 +16,7 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsNameSpaceManager.h"
 #include "nsDisplayList.h"
+#include "Baseline.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -323,7 +324,7 @@ bool nsHTMLButtonControlFrame::GetNaturalBaselineBOffset(
   if (!inner->GetNaturalBaselineBOffset(aWM, aBaselineGroup, aBaseline)) {
     // <input type=color> has an empty block frame as inner frame
     *aBaseline =
-        inner->SynthesizeBaselineBOffsetFromBorderBox(aWM, aBaselineGroup);
+        Baseline::SynthesizeBOffsetFromBorderBox(inner, aWM, aBaselineGroup);
   }
   nscoord innerBStart = inner->BStart(aWM, GetSize());
   if (aBaselineGroup == BaselineSharingGroup::First) {
@@ -346,7 +347,7 @@ BaselineSharingGroup nsHTMLButtonControlFrame::GetDefaultBaselineSharingGroup()
 
 nscoord nsHTMLButtonControlFrame::SynthesizeFallbackBaseline(
     mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
-  return SynthesizeBaselineBOffsetFromMarginBox(aWM, aBaselineGroup);
+  return Baseline::SynthesizeBOffsetFromMarginBox(this, aWM, aBaselineGroup);
 }
 
 nsresult nsHTMLButtonControlFrame::SetFormProperty(nsAtom* aName,

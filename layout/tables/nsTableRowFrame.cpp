@@ -25,6 +25,7 @@
 #include "nsCOMPtr.h"
 #include "nsDisplayList.h"
 #include "nsIFrameInlines.h"
+#include "Baseline.h"
 #include <algorithm>
 
 #ifdef ACCESSIBILITY
@@ -418,8 +419,8 @@ nscoord nsTableRowFrame::GetRowBaseline(WritingMode aWM) {
   nscoord ascent = 0;
   for (nsIFrame* childFrame : mFrames) {
     MOZ_ASSERT(childFrame->IsTableCellFrame());
-    nscoord s = childFrame->SynthesizeBaselineBOffsetFromContentBox(
-        aWM, BaselineSharingGroup::First);
+    nscoord s = Baseline::SynthesizeBOffsetFromContentBox(
+        childFrame, aWM, BaselineSharingGroup::First);
     ascent = std::max(ascent, s);
   }
   return ascent;

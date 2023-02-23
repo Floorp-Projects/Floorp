@@ -63,6 +63,7 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/Telemetry.h"
 #include "nsFlexContainerFrame.h"
+#include "Baseline.h"
 
 #include "nsBidiPresUtils.h"
 
@@ -600,7 +601,7 @@ void nsBlockFrame::InvalidateFrameWithRect(const nsRect& aRect,
 
 nscoord nsBlockFrame::SynthesizeFallbackBaseline(
     WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
-  return SynthesizeBaselineBOffsetFromMarginBox(aWM, aBaselineGroup);
+  return Baseline::SynthesizeBOffsetFromMarginBox(this, aWM, aBaselineGroup);
 }
 
 bool nsBlockFrame::GetNaturalBaselineBOffset(
