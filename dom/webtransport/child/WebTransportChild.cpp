@@ -10,13 +10,14 @@
 
 namespace mozilla::dom {
 
-void WebTransportChild::Shutdown() {
-  if (!CanSend()) {
+void WebTransportChild::Shutdown(bool aClose) {
+  LOG(("WebTransportChild::Shutdown() for %p (%p)", this, mTransport));
+  mTransport = nullptr;
+  if (!aClose || !CanSend()) {
     return;
   }
 
   Close();
-  mTransport = nullptr;
 }
 
 void WebTransportChild::CloseAll() {

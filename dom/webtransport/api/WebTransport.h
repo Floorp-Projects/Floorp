@@ -83,10 +83,11 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
   already_AddRefed<Promise> Ready() { return do_AddRef(mReady); }
   WebTransportReliabilityMode Reliability();
   WebTransportCongestionControl CongestionControl();
-  already_AddRefed<Promise> Closed();
+  already_AddRefed<Promise> Closed() { return do_AddRef(mClosed); }
   MOZ_CAN_RUN_SCRIPT void Close(const WebTransportCloseInfo& aOptions,
                                 ErrorResult& aRv);
-  already_AddRefed<WebTransportDatagramDuplexStream> Datagrams();
+  already_AddRefed<WebTransportDatagramDuplexStream> GetDatagrams(
+      ErrorResult& aRv);
   already_AddRefed<Promise> CreateBidirectionalStream(ErrorResult& aError);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY already_AddRefed<ReadableStream>
   IncomingBidirectionalStreams();

@@ -73,7 +73,7 @@ interface WebTransport {
   readonly attribute Promise<WebTransportCloseInfo> closed;
   [Throws] undefined close(optional WebTransportCloseInfo closeInfo = {});
 
-  readonly attribute WebTransportDatagramDuplexStream datagrams;
+  [Throws] readonly attribute WebTransportDatagramDuplexStream datagrams;
 
   [NewObject]
   Promise<WebTransportBidirectionalStream> createBidirectionalStream();
