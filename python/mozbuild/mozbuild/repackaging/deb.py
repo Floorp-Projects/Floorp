@@ -52,39 +52,26 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
     else:
         tmpdir = tempfile.mkdtemp()
 
-    extract_dir = os.path.join(tmpdir, "source")
+    source_dir = os.path.join(tmpdir, "source")
     try:
-        mozfile.extract_tarball(infile, extract_dir)
-        application_ini_data = _extract_application_ini_data(extract_dir)
+        mozfile.extract_tarball(infile, source_dir)
+        application_ini_data = _extract_application_ini_data(source_dir)
         build_variables = _get_build_variables(
-            application_ini_data,
-            arch,
-            version=version,
-            build_number=build_number,
+            application_ini_data, arch, version, build_number
         )
 
-        _copy_plain_deb_config(
-            input_template_dir=template_dir,
-            source_dir=extract_dir,
-        )
-        _render_deb_templates(
-            input_template_dir=template_dir,
-            source_dir=extract_dir,
-            build_variables=build_variables,
-        )
+        _copy_plain_deb_config(template_dir, source_dir)
+        _render_deb_templates(template_dir, source_dir, build_variables)
 
         app_name = application_ini_data["name"]
         with open(
-            mozpath.join(extract_dir, app_name.lower(), "is-packaged-app"), "w"
+            mozpath.join(source_dir, app_name.lower(), "is-packaged-app"), "w"
         ) as f:
             f.write("This is a packaged app.\n")
 
-        _inject_deb_distribution_folder(
-            source_dir=extract_dir,
-            app_name=app_name,
-        )
+        _inject_deb_distribution_folder(source_dir, app_name)
         _generate_deb_archive(
-            source_dir=extract_dir,
+            source_dir,
             target_dir=tmpdir,
             output_file_path=output,
             build_variables=build_variables,
