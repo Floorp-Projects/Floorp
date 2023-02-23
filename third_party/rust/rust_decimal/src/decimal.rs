@@ -1770,7 +1770,7 @@ impl_try_from_decimal!(u128, Decimal::to_u128, integer_docs!(true));
 // See https://github.com/rust-lang/rustfmt/issues/5062 for more information.
 #[rustfmt::skip]
 macro_rules! impl_try_from_primitive {
-    ($TFrom:ty, $conversion_fn:path) => {
+    ($TFrom:ty, $conversion_fn:path $(, $err:expr)?) => {
         #[doc = concat!(
             "Try to convert a `",
             stringify!($TFrom),
@@ -1781,14 +1781,15 @@ macro_rules! impl_try_from_primitive {
 
             #[inline]
             fn try_from(t: $TFrom) -> Result<Self, Error> {
-                $conversion_fn(t).ok_or_else(|| Error::ConversionTo("Decimal".into()))
+                $conversion_fn(t) $( .ok_or_else(|| $err) )?
             }
         }
     };
 }
 
-impl_try_from_primitive!(f32, Self::from_f32);
-impl_try_from_primitive!(f64, Self::from_f64);
+impl_try_from_primitive!(f32, Self::from_f32, Error::ConversionTo("Decimal".into()));
+impl_try_from_primitive!(f64, Self::from_f64, Error::ConversionTo("Decimal".into()));
+impl_try_from_primitive!(&str, core::str::FromStr::from_str);
 
 macro_rules! impl_from {
     ($T:ty, $from_ty:path) => {

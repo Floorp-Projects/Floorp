@@ -1,4 +1,4 @@
-use crate::constants::{POWERS_10, U32_MASK};
+use crate::constants::{MAX_PRECISION_U32, POWERS_10, U32_MASK};
 
 /// Rescales the given decimal to new scale.
 /// e.g. with 1.23 and new scale 3 rescale the value to 1.230
@@ -10,7 +10,7 @@ pub(crate) fn rescale_internal(value: &mut [u32; 3], value_scale: &mut u32, new_
     }
 
     if is_all_zero(value) {
-        *value_scale = new_scale;
+        *value_scale = new_scale.min(MAX_PRECISION_U32);
         return;
     }
 
@@ -299,29 +299,42 @@ mod test {
         }
 
         let tests = &[
-            ("1", 0, "1"),
-            ("1", 1, "1.0"),
-            ("1", 5, "1.00000"),
-            ("1", 10, "1.0000000000"),
-            ("1", 20, "1.00000000000000000000"),
-            ("0.6386554621848739495798319328", 27, "0.638655462184873949579831933"),
+            ("1", 0, "1", 0),
+            ("1", 1, "1.0", 1),
+            ("1", 5, "1.00000", 5),
+            ("1", 10, "1.0000000000", 10),
+            ("1", 20, "1.00000000000000000000", 20),
             (
-                "843.65000000",                  // Scale 8
-                25,                              // 25
-                "843.6500000000000000000000000", // 25
+                "0.6386554621848739495798319328",
+                27,
+                "0.638655462184873949579831933",
+                27,
             ),
             (
-                "843.65000000",                     // Scale 8
-                30,                                 // 30
-                "843.6500000000000000000000000000", // 28
+                "843.65000000", // Scale 8
+                25,
+                "843.6500000000000000000000000",
+                25,
             ),
+            (
+                "843.65000000", // Scale 8
+                30,
+                "843.6500000000000000000000000",
+                25, // Only fits 25
+            ),
+            ("0", 130, "0.000000000000000000000000000000", 28),
         ];
 
-        for &(value_raw, new_scale, expected_value) in tests {
+        for &(value_raw, new_scale, expected_value, expected_scale) in tests {
             let (expected_value, _) = extract(expected_value);
             let (mut value, mut value_scale) = extract(value_raw);
             rescale_internal(&mut value, &mut value_scale, new_scale);
             assert_eq!(value, expected_value);
+            assert_eq!(
+                value_scale, expected_scale,
+                "value: {}, requested scale: {}",
+                value_raw, new_scale
+            );
         }
     }
 

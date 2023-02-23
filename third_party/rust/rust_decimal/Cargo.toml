@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.60"
 name = "rust_decimal"
-version = "1.27.0"
+version = "1.28.1"
 authors = ["Paul Mason <paul@form1.co.nz>"]
 build = "build.rs"
 exclude = ["tests/generated/*"]
@@ -53,7 +53,7 @@ version = "0.7"
 default-features = false
 
 [dependencies.borsh]
-version = "0.9"
+version = "0.10.0"
 optional = true
 default-features = false
 
@@ -137,7 +137,7 @@ version = "1.0"
 default-features = false
 
 [dev-dependencies.criterion]
-version = "0.3"
+version = "0.4.0"
 default-features = false
 
 [dev-dependencies.csv]
@@ -223,6 +223,7 @@ rkyv-safe = [
 ]
 rocket-traits = ["rocket"]
 rust-fuzz = ["arbitrary"]
+serde = ["dep:serde"]
 serde-arbitrary-precision = ["serde-with-arbitrary-precision"]
 serde-bincode = ["serde-str"]
 serde-float = ["serde-with-float"]
