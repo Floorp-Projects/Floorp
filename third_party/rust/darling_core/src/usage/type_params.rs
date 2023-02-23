@@ -247,7 +247,7 @@ impl UsesTypeParams for syn::TypeParamBound {
 #[cfg(test)]
 mod tests {
     use proc_macro2::Span;
-    use syn::{DeriveInput, Ident};
+    use syn::{parse_quote, DeriveInput, Ident};
 
     use super::UsesTypeParams;
     use crate::usage::IdentSet;

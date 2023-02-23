@@ -99,6 +99,7 @@ pub mod export {
     pub use core::default::Default;
     pub use core::option::Option::{self, None, Some};
     pub use core::result::Result::{self, Err, Ok};
+    pub use darling_core::syn;
     pub use std::string::ToString;
     pub use std::vec::Vec;
 }

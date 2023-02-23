@@ -1,2 +1,2 @@
 msrv = "1.31.0"
-blacklisted-names = [] # we want to be able to use placeholder names in tests
+disallowed-names = [] # we want to be able to use placeholder names in tests

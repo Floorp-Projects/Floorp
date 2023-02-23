@@ -1,3 +1,4 @@
+use syn::spanned::Spanned;
 use syn::{Field, Ident, Meta};
 
 use crate::options::{Core, DefaultExpression, ForwardAttrs, ParseAttribute, ParseData};
@@ -50,7 +51,11 @@ impl ParseAttribute for OuterFrom {
         } else if path.is_ident("from_ident") {
             // HACK: Declaring that a default is present will cause fields to
             // generate correct code, but control flow isn't that obvious.
-            self.container.default = Some(DefaultExpression::Trait);
+            self.container.default = Some(DefaultExpression::Trait {
+                // Use the span of the `from_ident` keyword so that errors in generated code
+                // caused by this will point back to the correct location.
+                span: path.span(),
+            });
             self.from_ident = true;
         } else {
             return self.container.parse_nested(mi);

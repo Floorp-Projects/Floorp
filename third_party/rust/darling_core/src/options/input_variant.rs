@@ -5,7 +5,7 @@ use crate::codegen;
 use crate::options::{Core, InputField, ParseAttribute};
 use crate::{Error, FromMeta, Result};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct InputVariant {
     ident: syn::Ident,
     attr_name: Option<String>,

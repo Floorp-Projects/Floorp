@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.14.3 (February 3, 2023)
+
+- Re-export `syn` from `darling` to avoid requiring that consuming crates have a `syn` dependency.
+- Change `<SpannedValue<T> as FromMeta>` impl to more precisely capture the _value_ span, as opposed to the span of the entire item.
+- Add `darling::util::{AsShape, Shape, ShapeSet}` to improve "shape" validation for structs and variants. [#222](https://github.com/TedDriggs/issues/222)
+
 ## v0.14.2 (October 26, 2022)
 
 - Derived impls of `FromMeta` will now error on literals, rather than silently ignoring them. [#193](https://github.com/TedDriggs/darling/pull/193)

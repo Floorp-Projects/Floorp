@@ -1,4 +1,4 @@
-use quote::{ToTokens, TokenStreamExt};
+use quote::{quote, ToTokens, TokenStreamExt};
 use syn::{Ident, Path};
 
 /// A method invocation applied to a value.
