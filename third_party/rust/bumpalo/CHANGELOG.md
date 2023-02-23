@@ -28,6 +28,23 @@ Released YYYY-MM-DD.
 
 --------------------------------------------------------------------------------
 
+## 3.12.0
+
+Released 2023-01-17.
+
+### Added
+
+* Added the `bumpalo::boxed::Box::bump` and `bumpalo::collections::String::bump`
+  getters to get the underlying `Bump` that a string or box was allocated into.
+
+### Changed
+
+* Some uses of `Box` that MIRI did not previously consider as UB are now
+  reported as UB, and `bumpalo`'s internals have been adjusted to avoid the new
+  UB.
+
+--------------------------------------------------------------------------------
+
 ## 3.11.1
 
 Released 2022-10-18.

@@ -248,6 +248,11 @@ safe-to-run. If we needed safe-to-deploy for this in m-c I'd ask Nick to re-
 certify this version, but we don't, so this is fine for now.
 """
 
+[[audits.bumpalo]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-run"
+delta = "3.11.1 -> 3.12.0"
+
 [[audits.bytes]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
