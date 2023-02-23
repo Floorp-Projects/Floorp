@@ -119,21 +119,10 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
         ) as f:
             f.write("This is a packaged app.\n")
 
-        distro_dir_checkout = mozpath.join(tmpdir, "deb")
-        subprocess.run(
-            [
-                "git",
-                "clone",
-                "https://github.com/mozilla-partners/deb.git",
-                distro_dir_checkout,
-            ],
-            check=True,
+        _inject_deb_distribution_folder(
+            source_dir=extract_dir,
+            app_name=app_name,
         )
-        shutil.copytree(
-            mozpath.join(distro_dir_checkout, "desktop/deb/distribution"),
-            mozpath.join(extract_dir, app_name.lower(), "distribution"),
-        )
-
         _generate_deb_archive(
             source_dir=extract_dir,
             target_dir=tmpdir,
@@ -144,6 +133,22 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
 
     finally:
         shutil.rmtree(tmpdir)
+
+
+def _inject_deb_distribution_folder(source_dir, app_name):
+    with tempfile.TemporaryDirectory() as git_clone_dir:
+        subprocess.check_call(
+            [
+                "git",
+                "clone",
+                "https://github.com/mozilla-partners/deb.git",
+                git_clone_dir,
+            ],
+        )
+        shutil.copytree(
+            mozpath.join(git_clone_dir, "desktop/deb/distribution"),
+            mozpath.join(source_dir, app_name.lower(), "distribution"),
+        )
 
 
 def _generate_deb_archive(

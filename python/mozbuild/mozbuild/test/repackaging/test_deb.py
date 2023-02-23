@@ -2,12 +2,32 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import os
 from contextlib import nullcontext as does_not_raise
 
+import mozpack.path as mozpath
 import mozunit
 import pytest
 
 from mozbuild.repackaging import deb
+
+
+def test_inject_deb_distribution_folder(monkeypatch):
+    def mock_check_call(command):
+        global clone_dir
+        clone_dir = command[-1]
+        os.makedirs(os.path.join(clone_dir, "desktop/deb/distribution"))
+
+    monkeypatch.setattr(deb.subprocess, "check_call", mock_check_call)
+
+    def mock_copytree(source_tree, destination_tree):
+        global clone_dir
+        assert source_tree == mozpath.join(clone_dir, "desktop/deb/distribution")
+        assert destination_tree == "/source_dir/firefox/distribution"
+
+    monkeypatch.setattr(deb.shutil, "copytree", mock_copytree)
+
+    deb._inject_deb_distribution_folder("/source_dir", "Firefox")
 
 
 @pytest.mark.parametrize(
