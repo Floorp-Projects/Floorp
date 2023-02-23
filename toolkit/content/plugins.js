@@ -33,11 +33,9 @@ RPMSendQuery("RequestPlugins", {}).then(aPlugins => {
   fragment.appendChild(enabledplugins);
 
   var deprecation = document.createElement("p");
-  var deprecationLink = document.createElement("a");
-  let deprecationLink_href =
-    Services.urlFormatter.formatURLPref("app.support.baseURL") + "npapi";
+  let deprecationLink = document.createElement("a", { is: "moz-support-link" });
   deprecationLink.setAttribute("data-l10n-name", "deprecation-link");
-  deprecationLink.setAttribute("href", deprecationLink_href);
+  deprecationLink.setAttribute("support-page", "npapi");
   deprecation.appendChild(deprecationLink);
   deprecation.setAttribute("class", "notice");
   document.l10n.setAttributes(deprecation, "deprecation-description");
