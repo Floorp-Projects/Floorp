@@ -18,8 +18,8 @@ serde_json = "1.0"
 
 You may be looking for:
 
-- [JSON API documentation](https://docs.serde.rs/serde_json/)
-- [Serde API documentation](https://docs.serde.rs/serde/)
+- [JSON API documentation](https://docs.rs/serde_json)
+- [Serde API documentation](https://docs.rs/serde)
 - [Detailed documentation about Serde](https://serde.rs/)
 - [Setting up `#[derive(Serialize, Deserialize)]`](https://serde.rs/derive.html)
 - [Release notes](https://github.com/serde-rs/json/releases)
@@ -126,7 +126,7 @@ without quotation marks involves converting from a JSON string to a Rust string
 with [`as_str()`] or avoiding the use of `Value` as described in the following
 section.
 
-[`as_str()`]: https://docs.serde.rs/serde_json/enum.Value.html#method.as_str
+[`as_str()`]: https://docs.rs/serde_json/1/serde_json/enum.Value.html#method.as_str
 
 The `Value` representation is sufficient for very basic tasks but can be tedious
 to work with for anything more significant. Error handling is verbose to
@@ -363,14 +363,14 @@ For JSON support in Serde without a memory allocator, please see the
 
 [`serde-json-core`]: https://github.com/rust-embedded-community/serde-json-core
 
-[value]: https://docs.serde.rs/serde_json/value/enum.Value.html
-[from_str]: https://docs.serde.rs/serde_json/de/fn.from_str.html
-[from_slice]: https://docs.serde.rs/serde_json/de/fn.from_slice.html
-[from_reader]: https://docs.serde.rs/serde_json/de/fn.from_reader.html
-[to_string]: https://docs.serde.rs/serde_json/ser/fn.to_string.html
-[to_vec]: https://docs.serde.rs/serde_json/ser/fn.to_vec.html
-[to_writer]: https://docs.serde.rs/serde_json/ser/fn.to_writer.html
-[macro]: https://docs.serde.rs/serde_json/macro.json.html
+[value]: https://docs.rs/serde_json/1/serde_json/value/enum.Value.html
+[from_str]: https://docs.rs/serde_json/1/serde_json/de/fn.from_str.html
+[from_slice]: https://docs.rs/serde_json/1/serde_json/de/fn.from_slice.html
+[from_reader]: https://docs.rs/serde_json/1/serde_json/de/fn.from_reader.html
+[to_string]: https://docs.rs/serde_json/1/serde_json/ser/fn.to_string.html
+[to_vec]: https://docs.rs/serde_json/1/serde_json/ser/fn.to_vec.html
+[to_writer]: https://docs.rs/serde_json/1/serde_json/ser/fn.to_writer.html
+[macro]: https://docs.rs/serde_json/1/serde_json/macro.json.html
 
 <br>
 
