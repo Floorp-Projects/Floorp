@@ -1,3 +1,5 @@
+#[cfg(span_locations)]
+use crate::location::LineColumn;
 use crate::parse::{self, Cursor};
 use crate::rcvec::{RcVec, RcVecBuilder, RcVecIntoIter, RcVecMut};
 use crate::{Delimiter, Spacing, TokenTree};
@@ -232,7 +234,7 @@ impl Debug for TokenStream {
 
 #[cfg(use_proc_macro)]
 impl From<proc_macro::TokenStream> for TokenStream {
-    fn from(inner: proc_macro::TokenStream) -> TokenStream {
+    fn from(inner: proc_macro::TokenStream) -> Self {
         inner
             .to_string()
             .parse()
@@ -242,7 +244,7 @@ impl From<proc_macro::TokenStream> for TokenStream {
 
 #[cfg(use_proc_macro)]
 impl From<TokenStream> for proc_macro::TokenStream {
-    fn from(inner: TokenStream) -> proc_macro::TokenStream {
+    fn from(inner: TokenStream) -> Self {
         inner
             .to_string()
             .parse()
@@ -251,7 +253,7 @@ impl From<TokenStream> for proc_macro::TokenStream {
 }
 
 impl From<TokenTree> for TokenStream {
-    fn from(tree: TokenTree) -> TokenStream {
+    fn from(tree: TokenTree) -> Self {
         let mut stream = RcVecBuilder::new();
         push_token_from_proc_macro(stream.as_mut(), tree);
         TokenStream {
@@ -330,12 +332,6 @@ impl Debug for SourceFile {
             .field("is_real", &self.is_real())
             .finish()
     }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct LineColumn {
-    pub line: usize,
-    pub column: usize,
 }
 
 #[cfg(span_locations)]

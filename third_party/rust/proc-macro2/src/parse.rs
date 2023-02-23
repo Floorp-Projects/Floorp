@@ -472,6 +472,10 @@ fn raw_string(input: Cursor) -> Result<Cursor, Reject> {
             _ => return Err(Reject),
         }
     }
+    if n > 255 {
+        // https://github.com/rust-lang/rust/pull/95251
+        return Err(Reject);
+    }
     while let Some((i, ch)) = chars.next() {
         match ch {
             '"' if input.rest[i + 1..].starts_with(&input.rest[..n]) => {
