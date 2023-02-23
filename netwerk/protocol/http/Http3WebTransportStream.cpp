@@ -272,7 +272,6 @@ nsresult Http3WebTransportStream::OnReadSegment(const char* buf, uint32_t count,
              "error=0x%" PRIx32 ".",
              this, static_cast<uint32_t>(rv)));
         mStreamReadyCallback(Err(rv));
-        mStreamReadyCallback = nullptr;
         break;
       }
 
@@ -287,13 +286,11 @@ nsresult Http3WebTransportStream::OnReadSegment(const char* buf, uint32_t count,
              this, static_cast<uint32_t>(rv)));
         mSendState = SEND_DONE;
         mStreamReadyCallback(Err(rv));
-        mStreamReadyCallback = nullptr;
         break;
       }
 
       // Successfully activated.
       mStreamReadyCallback(RefPtr{this});
-      mStreamReadyCallback = nullptr;
       break;
     case SENDING: {
       rv = mSession->SendRequestBody(mStreamId, buf, count, countRead);
@@ -303,20 +300,9 @@ nsresult Http3WebTransportStream::OnReadSegment(const char* buf, uint32_t count,
            this, static_cast<uint32_t>(rv)));
       mTotalSent += *countRead;
     } break;
-    case WAITING_DATA:
-      // Still waiting
-      LOG3((
-          "Http3WebTransportStream::OnReadSegment %p Still waiting for data...",
-          this));
-      break;
-    case SEND_DONE:
-      LOG3(("Http3WebTransportStream::OnReadSegment %p called after SEND_DONE ",
-            this));
+    default:
       MOZ_ASSERT(false, "We are done sending this request!");
-      MOZ_ASSERT(mStreamReadyCallback);
       rv = NS_ERROR_UNEXPECTED;
-      mStreamReadyCallback(Err(rv));
-      mStreamReadyCallback = nullptr;
       break;
   }
 

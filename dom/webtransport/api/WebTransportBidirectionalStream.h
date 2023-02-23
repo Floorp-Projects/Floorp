@@ -22,18 +22,11 @@ namespace mozilla::dom {
 class WebTransportBidirectionalStream final : public nsISupports,
                                               public nsWrapperCache {
  public:
-  explicit WebTransportBidirectionalStream(nsIGlobalObject* aGlobal,
-                                           WebTransportReceiveStream* aReadable,
-                                           WebTransportSendStream* aWritable)
-      : mGlobal(aGlobal), mReadable(aReadable), mWritable(aWritable) {}
+  explicit WebTransportBidirectionalStream(nsIGlobalObject* aGlobal)
+      : mGlobal(aGlobal) {}
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(WebTransportBidirectionalStream)
-
-  static already_AddRefed<WebTransportBidirectionalStream> Create(
-      WebTransport* aWebTransport, nsIGlobalObject* aGlobal,
-      ::mozilla::ipc::DataPipeReceiver* receiver,
-      ::mozilla::ipc::DataPipeSender* sender, ErrorResult& aRv);
 
   // WebIDL Boilerplate
   nsIGlobalObject* GetParentObject() const;
@@ -42,19 +35,16 @@ class WebTransportBidirectionalStream final : public nsISupports,
                        JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL Interface
-  already_AddRefed<WebTransportReceiveStream> Readable() const {
-    return do_AddRef(mReadable);
-  }
-  already_AddRefed<WebTransportSendStream> Writable() const {
-    return do_AddRef(mWritable);
-  }
+  // XXX spec says these should be WebTransportReceiveStream and
+  // WebTransportSendStream
+  // XXX Not implemented
+  already_AddRefed<ReadableStream> Readable() { return nullptr; }
+  already_AddRefed<WritableStream> Writable() { return nullptr; }
 
  private:
   ~WebTransportBidirectionalStream() = default;
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
-  RefPtr<WebTransportReceiveStream> mReadable;
-  RefPtr<WebTransportSendStream> mWritable;
 };
 
 }  // namespace mozilla::dom

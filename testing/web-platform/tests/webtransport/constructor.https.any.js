@@ -1,7 +1,6 @@
 // META: global=window,worker
 // META: script=/common/get-host-info.sub.js
 // META: script=resources/webtransport-test-helpers.sub.js
-// META: script=/common/utils.js
 
 const BAD_URLS = [
   null,
@@ -34,8 +33,7 @@ const OPTIONS = [
 
 for (const options of OPTIONS) {
   promise_test(async t => {
-    const id = token();
-    const wt = new WebTransport(webtransport_url(`client-close.py?token=${id}`), options );
+    const wt = new WebTransport(`https://${HOST}:0/`, options );
     await wt.ready;
     wt.close();
   }, "WebTransport constructor should allow options " + JSON.stringify(options));

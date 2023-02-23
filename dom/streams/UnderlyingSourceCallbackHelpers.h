@@ -10,7 +10,6 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/UnderlyingSourceBinding.h"
-#include "nsIAsyncInputStream.h"
 #include "nsISupports.h"
 #include "nsISupportsImpl.h"
 
@@ -23,13 +22,10 @@
  * WebIDL as if they were methods. So we have to preserve the underlying object
  * to use as the This value on invocation.
  */
-enum class nsresult : uint32_t;
-
 namespace mozilla::dom {
 
 class BodyStreamHolder;
 class ReadableStreamController;
-class ReadableStream;
 
 class UnderlyingSourceAlgorithmsBase : public nsISupports {
  public:
@@ -157,78 +153,6 @@ class UnderlyingSourceAlgorithmsWrapper
     // cancelAlgorithm is optional, return null by default
     return nullptr;
   }
-};
-
-class InputToReadableStreamAlgorithms final
-    : public UnderlyingSourceAlgorithmsWrapper,
-      public nsIInputStreamCallback {
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIINPUTSTREAMCALLBACK
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(InputToReadableStreamAlgorithms,
-                                           UnderlyingSourceAlgorithmsWrapper)
-
-  InputToReadableStreamAlgorithms(nsIAsyncInputStream* aInput,
-                                  ReadableStream* aStream)
-      : mState(eInitializing),
-        mOwningEventTarget(GetCurrentSerialEventTarget()),
-        mInput(aInput),
-        mStream(aStream) {}
-
-  // Streams algorithms
-
-  already_AddRefed<Promise> PullCallbackImpl(
-      JSContext* aCx, ReadableStreamController& aController,
-      ErrorResult& aRv) override;
-
-  void ReleaseObjects() override;
-
- private:
-  ~InputToReadableStreamAlgorithms() override = default;
-
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void CloseAndReleaseObjects(
-      JSContext* aCx, ReadableStream* aStream);
-
-  void WriteIntoReadRequestBuffer(JSContext* aCx, ReadableStream* aStream,
-                                  JS::Handle<JSObject*> aBuffer,
-                                  uint32_t aLength, uint32_t* aByteWritten);
-
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void EnqueueChunkWithSizeIntoStream(
-      JSContext* aCx, ReadableStream* aStream, uint64_t aAvailableData,
-      ErrorResult& aRv);
-  void ErrorPropagation(JSContext* aCx, ReadableStream* aStream,
-                        nsresult aError);
-
-  // Common methods
-
-  enum State {
-    // This is the beginning state before any reading operation.
-    eInitializing,
-
-    // RequestDataCallback has not been called yet. We haven't started to read
-    // data from the stream yet.
-    eWaiting,
-
-    // We are reading data in a separate I/O thread.
-    eReading,
-
-    // We are ready to write something in the JS Buffer.
-    eWriting,
-
-    // After a writing, we want to check if the stream is closed. After the
-    // check, we go back to eWaiting. If a reading request happens in the
-    // meantime, we move to eReading state.
-    eChecking,
-
-    // Operation completed.
-    eClosed,
-  };
-
-  State mState;
-
-  nsCOMPtr<nsIEventTarget> mOwningEventTarget;
-
-  nsCOMPtr<nsIAsyncInputStream> mInput;
-  RefPtr<ReadableStream> mStream;
 };
 
 }  // namespace mozilla::dom

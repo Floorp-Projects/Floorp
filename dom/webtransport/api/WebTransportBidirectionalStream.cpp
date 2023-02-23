@@ -9,10 +9,7 @@
 
 namespace mozilla::dom {
 
-using namespace mozilla::ipc;
-
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebTransportBidirectionalStream, mGlobal,
-                                      mReadable, mWritable)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebTransportBidirectionalStream, mGlobal)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(WebTransportBidirectionalStream)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(WebTransportBidirectionalStream)
@@ -30,35 +27,6 @@ nsIGlobalObject* WebTransportBidirectionalStream::GetParentObject() const {
 JSObject* WebTransportBidirectionalStream::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return WebTransportBidirectionalStream_Binding::Wrap(aCx, this, aGivenProto);
-}
-
-// static
-already_AddRefed<WebTransportBidirectionalStream>
-WebTransportBidirectionalStream::Create(WebTransport* aWebTransport,
-                                        nsIGlobalObject* aGlobal,
-                                        DataPipeReceiver* receiver,
-                                        DataPipeSender* sender,
-                                        ErrorResult& aRv) {
-  // https://w3c.github.io/webtransport/#pullbidirectionalstream (and
-  // createBidirectionalStream)
-
-  // Step 7.1: Let stream be the result of creating a
-  // WebTransportBidirectionalStream with internalStream and transport
-  RefPtr<WebTransportReceiveStream> readableStream =
-      WebTransportReceiveStream::Create(aWebTransport, aGlobal, receiver, aRv);
-  if (!readableStream) {
-    return nullptr;
-  }
-  RefPtr<WebTransportSendStream> writableStream =
-      WebTransportSendStream::Create(aWebTransport, aGlobal, sender, aRv);
-  if (!writableStream) {
-    return nullptr;
-    ;
-  }
-
-  auto stream = MakeRefPtr<WebTransportBidirectionalStream>(
-      aGlobal, readableStream, writableStream);
-  return stream.forget();
 }
 
 // WebIDL Interface
