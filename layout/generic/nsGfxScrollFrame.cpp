@@ -4207,7 +4207,21 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   nscoord radii[8];
   const bool haveRadii = mOuter->GetPaddingBoxBorderRadii(radii);
   if (mIsRoot) {
-    clipRect.SizeTo(nsLayoutUtils::CalculateCompositionSizeForFrame(mOuter));
+    clipRect.SizeTo(nsLayoutUtils::CalculateCompositionSizeForFrame(
+        mOuter, true /* aSubtractScrollbars */,
+        nullptr /* aOverrideScrollPortSize */,
+        // With the dynamic toolbar, this CalculateCompositionSizeForFrame call
+        // basically expands the region being covered up by the dynamic toolbar,
+        // but if the root scroll container is not scrollable, e.g. the root
+        // element has `overflow: hidden` or `position: fixed`, the function
+        // doesn't expand the region since expanding the region in such cases
+        // will prevent the content from restoring zooming to 1.0 zoom level
+        // such as bug 1652190. That said, this `clipRect` which will be used
+        // for the async zoom container needs to be expanded because zoomed-in
+        // contents can be scrollable __visually__ so that the region under the
+        // dynamic toolbar area will be revealed.
+        nsLayoutUtils::IncludeDynamicToolbar::Force));
+
     // The composition size is essentially in visual coordinates.
     // If we are hit-testing in layout coordinates, transform the clip rect
     // to layout coordinates to match.
