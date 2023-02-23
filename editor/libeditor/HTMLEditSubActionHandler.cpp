@@ -33,6 +33,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/RangeUtils.h"
 #include "mozilla/StaticPrefs_editor.h"  // for StaticPrefs::editor_*
 #include "mozilla/TextComposition.h"
@@ -223,6 +224,19 @@ void HTMLEditor::OnStartToHandleTopLevelEditSubAction(
       !aRv.Failed(),
       "EditorBase::OnStartToHandleTopLevelEditSubAction() failed");
 
+  // Let's work with the latest layout information after (maybe) dispatching
+  // `beforeinput` event.
+  RefPtr<Document> document = GetDocument();
+  if (NS_WARN_IF(!document)) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+  document->FlushPendingNotifications(FlushType::Frames);
+  if (NS_WARN_IF(Destroyed())) {
+    aRv.Throw(NS_ERROR_EDITOR_DESTROYED);
+    return;
+  }
+
   // Remember where our selection was before edit action took place:
   const auto atCompositionStart =
       GetFirstIMESelectionStartPoint<EditorRawDOMPoint>();
@@ -288,11 +302,6 @@ void HTMLEditor::OnStartToHandleTopLevelEditSubAction(
   }
 
   // Stabilize the document against contenteditable count changes
-  Document* document = GetDocument();
-  if (NS_WARN_IF(!document)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
   if (document->GetEditingState() == Document::EditingState::eContentEditable) {
     document->ChangeContentEditableCount(nullptr, +1);
     TopLevelEditSubActionDataRef().mRestoreContentEditableCount = true;
