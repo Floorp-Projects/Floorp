@@ -4324,7 +4324,7 @@ notificationbar:
     record_in_processes:
       - 'main'
 
-# The following section contains scalars for the Screenshots extension.
+# The following section contains scalars for Screenshots.
 screenshots:
   download:
     bug_numbers:

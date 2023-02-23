@@ -3,14 +3,6 @@
 
 "use strict";
 
-const SCREENSHOTS_EVENTS = [
-  { category: "screenshots", method: "started", object: "toolbar_button" },
-  { category: "screenshots", method: "download", object: "overlay_download" },
-  { category: "screenshots", method: "started", object: "toolbar_button" },
-  { category: "screenshots", method: "selected", object: "visible" },
-  { category: "screenshots", method: "download", object: "preview_download" },
-];
-
 const MockFilePicker = SpecialPowers.MockFilePicker;
 
 add_setup(async function() {
@@ -77,7 +69,6 @@ add_task(async function test_download_without_filepicker() {
       url: TEST_PAGE,
     },
     async browser => {
-      await clearAllTelemetryEvents();
       let helper = new ScreenshotsHelper(browser);
 
       helper.triggerUIFromToolbar();
@@ -92,46 +83,6 @@ add_task(async function test_download_without_filepicker() {
       ok(download.succeeded, "Download should succeed");
 
       await publicDownloads.removeFinished();
-
-      await waitForScreenshotsEventCount(2);
-
-      helper.triggerUIFromToolbar();
-      await helper.waitForOverlay();
-
-      let screenshotReady = TestUtils.topicObserved(
-        "screenshots-preview-ready"
-      );
-
-      let panel = gBrowser.selectedBrowser.ownerDocument.querySelector(
-        "#screenshotsPagePanel"
-      );
-
-      // click the visible page button in panel
-      let visiblePageButton = panel
-        .querySelector("screenshots-buttons")
-        .shadowRoot.querySelector(".visible-page");
-      visiblePageButton.click();
-
-      let dialog = helper.getDialog();
-
-      await screenshotReady;
-
-      let downloadButton = dialog._frame.contentDocument.querySelector(
-        ".highlight-button-download"
-      );
-      ok(downloadButton, "Got the download button");
-
-      // click download button on dialog box
-      downloadButton.click();
-
-      info("wait for download to finish");
-      download = await downloadFinishedPromise;
-
-      ok(download.succeeded, "Download should succeed");
-
-      await publicDownloads.removeFinished();
-
-      await assertScreenshotsEvents(SCREENSHOTS_EVENTS);
     }
   );
 });

@@ -3675,6 +3675,7 @@ firefoxview:
     expiry_version: "never"
     release_channel_collection: opt-out
 
+
 search:
   engine:
     objects: ["change_default", "change_private"]
@@ -3720,93 +3721,3 @@ cookie_banner:
       no_rule: There is no cookie banner rule for the reloading domain.
       has_cookie_rule: There is a matching cookie rule for the reloading domain.
       has_click_rule: There is a matching click rule for the reloading domain.
-
-screenshots:
-  download:
-    objects: ["overlay_download", "preview_download"]
-    description: >
-      Recorded when a user downloads a screenshot from the overlay or the preview.
-    notification_emails:
-      - screenshots-dev@mozilla.org
-    products:
-      - "firefox"
-    record_in_processes:
-      - main
-    bug_numbers:
-      - 1801019
-    expiry_version: "never"
-    release_channel_collection: opt-out
-  copy:
-    objects: ["overlay_copy", "preview_copy"]
-    description: >
-      Recorded when a user copies a screenshot from the overlay or the preview.
-    notification_emails:
-      - screenshots-dev@mozilla.org
-    products:
-      - "firefox"
-    record_in_processes:
-      - main
-    bug_numbers:
-      - 1801019
-    expiry_version: "never"
-    release_channel_collection: opt-out
-  selected:
-    objects: ["element", "region_selection", "visible", "full_page"]
-    description: >
-      Recorded when a user selects a region by hand, selects an element, selects the save visible, or selects save full page.
-      Note that this is recorded independent of whether or not the screenshot is saved.
-    notification_emails:
-      - screenshots-dev@mozilla.org
-    products:
-      - "firefox"
-    record_in_processes:
-      - main
-      - content
-    bug_numbers:
-      - 1801019
-    expiry_version: "never"
-    release_channel_collection: opt-out
-  started:
-    objects: ["toolbar_button", "shortcut", "context_menu", "quick_actions", "preview_retry", "overlay_retry"]
-    description: >
-      Recorded when a user opens the screenshots ui.
-    notification_emails:
-      - screenshots-dev@mozilla.org
-    products:
-      - "firefox"
-    record_in_processes:
-      - main
-      - content
-    bug_numbers:
-      - 1801019
-    expiry_version: "never"
-    release_channel_collection: opt-out
-  canceled:
-    objects: ["toolbar_button", "shortcut", "context_menu", "quick_actions", "preview_cancel", "overlay_cancel", "escape", "navigation"]
-    description: >
-      Recorded when a user closes the screenshots ui. The screenshots ui is closed after
-      copying/downloading but we do not record that as canceling the screenshots ui.
-    notification_emails:
-      - screenshots-dev@mozilla.org
-    products:
-      - "firefox"
-    record_in_processes:
-      - main
-    bug_numbers:
-      - 1801019
-    expiry_version: "never"
-    release_channel_collection: opt-out
-  failed:
-    objects: ["screenshot_too_large"]
-    description: >
-      Recorded when a screenshot is too big to capture and we have to crop the screenshot.
-    notification_emails:
-      - screenshots-dev@mozilla.org
-    products:
-      - "firefox"
-    record_in_processes:
-      - main
-    bug_numbers:
-      - 1801019
-    expiry_version: "never"
-    release_channel_collection: opt-out

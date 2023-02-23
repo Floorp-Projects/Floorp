@@ -61,8 +61,6 @@ const MIN_DETECT_WIDTH = 100;
 let MAX_DETECT_HEIGHT = 700;
 let MAX_DETECT_WIDTH = 1000;
 
-const REGION_CHANGE_THRESHOLD = 5;
-
 const doNotAutoselectTags = {
   H1: true,
   H2: true,
@@ -189,19 +187,16 @@ class AnonymousContentOverlay {
    * Add required event listeners to the overlay
    */
   addEventListeners() {
-    let cancelScreenshotsFunciton = () => {
-      this.screenshotsChild.requestCancelScreenshot("overlay_cancel");
-    };
     this.addEventListenerForElement(
       "screenshots-cancel-button",
       "click",
-      cancelScreenshotsFunciton
+      (event, targetId) => {
+        this.screenshotsChild.requestCancelScreenshot();
+      }
     );
-    this.addEventListenerForElement(
-      "cancel",
-      "click",
-      cancelScreenshotsFunciton
-    );
+    this.addEventListenerForElement("cancel", "click", (event, targetId) => {
+      this.screenshotsChild.requestCancelScreenshot();
+    });
     this.addEventListenerForElement("copy", "click", (event, targetId) => {
       this.screenshotsChild.requestCopyScreenshot(
         this.screenshotsContainer.getSelectionLayerBoxDimensions()
@@ -540,7 +535,6 @@ class StateHandler {
   #lastY;
   #screenshotsContainer;
   #screenshotsChild;
-  #previousDimensions;
 
   constructor(screenshotsContainer, screenshotsChild) {
     this.#state = "crosshairs";
@@ -551,23 +545,12 @@ class StateHandler {
   }
 
   setState(newState) {
-    if (this.#state === "selected" && newState === "crosshairs") {
-      this.#screenshotsChild.recordTelemetryEvent(
-        "started",
-        "overlay_retry",
-        {}
-      );
-    }
     this.#state = newState;
     this.start();
   }
 
   getState() {
     return this.#state;
-  }
-
-  getHoverElementBoxRect() {
-    return this.#screenshotsContainer.hoverElementBoxRect;
   }
 
   /**
@@ -691,7 +674,6 @@ class StateHandler {
     this.#screenshotsContainer.hideSelectionLayer();
     this.#screenshotsContainer.showPreviewLayer();
     this.#screenshotsChild.showPanel();
-    this.#previousDimensions = null;
   }
 
   /**
@@ -938,7 +920,6 @@ class StateHandler {
       this.#screenshotsContainer.updateSelectionBoxFromRect(scrollX, scrollY);
       this.#screenshotsContainer.drawSelectionBox();
       this.setState("selected");
-      this.#screenshotsChild.recordTelemetryEvent("selected", "element", {});
     } else {
       this.setState("crosshairs");
     }
@@ -956,26 +937,6 @@ class StateHandler {
     });
     this.#screenshotsContainer.sortSelectionLayerBoxCoords();
     this.setState("selected");
-
-    let {
-      width,
-      height,
-    } = this.#screenshotsContainer.getSelectionLayerBoxDimensions();
-
-    if (
-      !this.#previousDimensions ||
-      (Math.abs(this.#previousDimensions.width - width) >
-        REGION_CHANGE_THRESHOLD &&
-        Math.abs(this.#previousDimensions.height - height) >
-          REGION_CHANGE_THRESHOLD)
-    ) {
-      this.#screenshotsChild.recordTelemetryEvent(
-        "selected",
-        "region_selection",
-        {}
-      );
-    }
-    this.#previousDimensions = { width, height };
   }
 
   /**
