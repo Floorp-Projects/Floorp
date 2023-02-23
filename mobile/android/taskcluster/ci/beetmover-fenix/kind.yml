@@ -34,7 +34,7 @@ task-template:
         by-level:
             '3':
                 by-build-type:
-                    'fenix-nightly': "project:mobile:fenix:releng:beetmover:bucket:nightly"
-                    (fenix-release|fenix-beta): "project:mobile:fenix:releng:beetmover:bucket:release"
-                    default: "project:mobile:fenix:releng:beetmover:bucket:dep"
-            default: "project:mobile:fenix:releng:beetmover:bucket:dep"
+                    'fenix-nightly': "project:mobile:firefox-android:releng:beetmover:bucket:nightly"
+                    (fenix-release|fenix-beta): "project:mobile:firefox-android:releng:beetmover:bucket:release"
+                    default: "project:mobile:firefox-android:releng:beetmover:bucket:dep"
+            default: "project:mobile:firefox-android:releng:beetmover:bucket:dep"
