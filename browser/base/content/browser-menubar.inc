@@ -504,7 +504,7 @@
                           hidden="true"/>
                 <menuitem id="helpPolicySupport"
                           hidden="true"
-                          oncommand="openUILinkIn(Services.policies.getSupportMenu().URL.href, 'tab', {triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})});"/>
+                          oncommand="openTrustedLinkIn(Services.policies.getSupportMenu().URL.href, 'tab');"/>
               </menupopup>
           </menu>
         </menubar>

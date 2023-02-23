@@ -282,7 +282,7 @@ describe("PlacesFeed", () => {
       assert.equal(url, "https://foo.com");
       assert.equal(where, "window");
       assert.propertyVal(params, "private", false);
-      assert.propertyVal(params, "fromChrome", false);
+      assert.propertyVal(params, "forceForeground", false);
     });
     it("should call openTrustedLinkIn with the correct url, where, params and privacy args on OPEN_PRIVATE_WINDOW", () => {
       const openTrustedLinkIn = sinon.stub();
@@ -299,7 +299,7 @@ describe("PlacesFeed", () => {
       assert.equal(url, "https://foo.com");
       assert.equal(where, "window");
       assert.propertyVal(params, "private", true);
-      assert.propertyVal(params, "fromChrome", false);
+      assert.propertyVal(params, "forceForeground", false);
     });
     it("should call openTrustedLinkIn with the correct url, where and params on OPEN_LINK", () => {
       const openTrustedLinkIn = sinon.stub();
@@ -320,7 +320,7 @@ describe("PlacesFeed", () => {
       assert.equal(url, "https://foo.com");
       assert.equal(where, "current");
       assert.propertyVal(params, "private", false);
-      assert.propertyVal(params, "fromChrome", false);
+      assert.propertyVal(params, "forceForeground", false);
     });
     it("should open link with referrer on OPEN_LINK", () => {
       const openTrustedLinkIn = sinon.stub();

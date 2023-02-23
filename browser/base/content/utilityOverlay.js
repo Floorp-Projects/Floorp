@@ -120,64 +120,12 @@ function whereToOpenLink(e, ignoreButton, ignoreAlt) {
   return BrowserUtils.whereToOpenLink(e, ignoreButton, ignoreAlt);
 }
 
-/* openTrustedLinkIn will attempt to open the given URI using the SystemPrincipal
- * as the trigeringPrincipal, unless a more specific Principal is provided.
- *
- * See openUILinkIn for a discussion of parameters
- */
-function openTrustedLinkIn(url, where, aParams) {
-  var params = aParams;
-
-  if (!params) {
-    params = {};
-  }
-
-  if (!params.triggeringPrincipal) {
-    params.triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-  }
-
-  openUILinkIn(url, where, params);
+function openTrustedLinkIn(url, where, params) {
+  URILoadingHelper.openTrustedLinkIn(window, url, where, params);
 }
 
-/* openWebLinkIn will attempt to open the given URI using the NullPrincipal
- * as the triggeringPrincipal, unless a more specific Principal is provided.
- *
- * See openUILinkIn for a discussion of parameters
- */
 function openWebLinkIn(url, where, params) {
-  if (!params) {
-    params = {};
-  }
-
-  if (!params.triggeringPrincipal) {
-    params.triggeringPrincipal = Services.scriptSecurityManager.createNullPrincipal(
-      {}
-    );
-  }
-  if (params.triggeringPrincipal.isSystemPrincipal) {
-    throw new Error(
-      "System principal should never be passed into openWebLinkIn()"
-    );
-  }
-
-  openUILinkIn(url, where, params);
-}
-
-function openUILinkIn(
-  url,
-  where,
-  aAllowThirdPartyFixup,
-  aPostData,
-  aReferrerInfo
-) {
-  return URILoadingHelper.openUILinkIn(
-    window,
-    url,
-    where,
-    aAllowThirdPartyFixup,
-    aPostData,
-    aReferrerInfo
-  );
+  URILoadingHelper.openWebLinkIn(window, url, where, params);
 }
 
 function openLinkIn(url, where, params) {

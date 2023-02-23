@@ -420,9 +420,7 @@ class _QuickSuggest {
     switch (params.choice) {
       case ONBOARDING_CHOICE.LEARN_MORE_1:
       case ONBOARDING_CHOICE.LEARN_MORE_2:
-        win.openTrustedLinkIn(this.HELP_URL, "tab", {
-          fromChrome: true,
-        });
+        win.openTrustedLinkIn(this.HELP_URL, "tab");
         break;
       case ONBOARDING_CHOICE.ACCEPT_2:
       case ONBOARDING_CHOICE.REJECT_2:
