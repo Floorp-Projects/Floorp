@@ -13,7 +13,7 @@
 edition = "2018"
 rust-version = "1.48.0"
 name = "toml"
-version = "0.5.10"
+version = "0.5.11"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 include = [
     "src/**/*",

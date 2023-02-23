@@ -1271,30 +1271,20 @@ impl<'a> Deserializer<'a> {
         }
     }
 
-    /// The `Deserializer::end` method should be called after a value has been
-    /// fully deserialized.  This allows the `Deserializer` to validate that the
-    /// input stream is at the end or that it only has trailing
-    /// whitespace/comments.
+    #[doc(hidden)]
+    #[deprecated(since = "0.5.11")]
     pub fn end(&mut self) -> Result<(), Error> {
         Ok(())
     }
 
-    /// Historical versions of toml-rs accidentally allowed a newline after a
-    /// table definition, but the TOML spec requires a newline after a table
-    /// definition header.
-    ///
-    /// This option can be set to `false` (the default is `true`) to emulate
-    /// this behavior for backwards compatibility with older toml-rs versions.
+    #[doc(hidden)]
+    #[deprecated(since = "0.5.11")]
     pub fn set_require_newline_after_table(&mut self, require: bool) {
         self.require_newline_after_table = require;
     }
 
-    /// Historical versions of toml-rs accidentally allowed a duplicate table
-    /// header after a longer table header was previously defined. This is
-    /// invalid according to the TOML spec, however.
-    ///
-    /// This option can be set to `true` (the default is `false`) to emulate
-    /// this behavior for backwards compatibility with older toml-rs versions.
+    #[doc(hidden)]
+    #[deprecated(since = "0.5.11")]
     pub fn set_allow_duplicate_after_longer_table(&mut self, allow: bool) {
         self.allow_duplciate_after_longer_table = allow;
     }
