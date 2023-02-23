@@ -1,10 +1,6 @@
-<html>
-<head>
-  <title>Picker window</title>
-</head>
-<body>
+<!doctype html>
+<title>Picker window</title>
 <form name="form1">
-<input type="file" name="uploadbox">
+  <input type="file" name="uploadbox" id="uploadbox" onclick="window.clicked = true;">
+  <input type="file" name="multiple" id="multiple" multiple onclick="window.clicked = true">
 </form>
-</body>
-</html>

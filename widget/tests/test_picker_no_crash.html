@@ -1,36 +1,30 @@
 <!DOCTYPE HTML>
-<html>
-<head>
-  <title>Test for crashes when the parent window of a file picker is closed via script</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
+<title>Test for crashes when the parent window of a file picker is closed via script</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<script>
+SimpleTest.requestFlakyTimeout("testing we don't crash");
 
-<script type="application/javascript">
-
-SimpleTest.waitForExplicitFinish();
-SimpleTest.requestFlakyTimeout("untriaged");
-
-var childWindow;
-
-function testStepOne() {
-  childWindow = window.browsingContext.topChromeWindow.open("window_picker_no_crash_child.html", "childWindow", "width=300,height=150");
-  SimpleTest.waitForFocus(testStepTwo, childWindow);
-}
-
-function testStepTwo() {
-  childWindow.document.form1.uploadbox.click();
-  // This should not crash the browser
+async function testPicker(id) {
+  let childWindow = window.open("window_picker_no_crash_child.html", "childWindow", "width=500,height=500");
+  await SimpleTest.promiseFocus(childWindow);
+  ok(!childWindow.clicked, "Shouldn't have clicked");
+  synthesizeMouseAtCenter(childWindow.document.getElementById(id), {}, childWindow);
+  ok(childWindow.clicked, "Should have clicked");
   childWindow.close();
-  setTimeout(testStepThree, 5000);
 }
 
-function testStepThree() {
+add_task(async function test_simple() {
+  await testPicker("uploadbox");
+});
+
+add_task(async function test_multiple() {
+  await testPicker("multiple");
+});
+
+add_task(async function wait() {
+  await new Promise(r => setTimeout(r, 1000));
   ok(true, "browser didn't crash");
-  SimpleTest.finish();
-}
-
-SimpleTest.waitForFocus(testStepOne);
+});
 </script>
-</body>
-</html>
