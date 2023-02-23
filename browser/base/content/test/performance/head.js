@@ -273,6 +273,15 @@ function disableFxaBadge() {
   });
 }
 
+function rectInBoundingClientRect(r, bcr) {
+  return (
+    bcr.x <= r.x1 &&
+    bcr.y <= r.y1 &&
+    bcr.x + bcr.width >= r.x2 &&
+    bcr.y + bcr.height >= r.y2
+  );
+}
+
 async function getBookmarksToolbarRect() {
   // Temporarily open the bookmarks toolbar to measure its rect
   let bookmarksToolbar = gNavToolbox.querySelector("#PersonalToolbar");

@@ -8,16 +8,6 @@
  * on the first window opened during startup.
  */
 
-function rectInElement(element, r) {
-  let el = element.getBoundingClientRect();
-  return (
-    el.x <= r.x1 &&
-    el.y <= r.y1 &&
-    el.x + el.width >= r.x2 &&
-    el.y + el.height >= r.y2
-  );
-}
-
 add_task(async function() {
   let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService()
     .wrappedJSObject;
@@ -28,7 +18,9 @@ add_task(async function() {
   let frames = Cu.cloneInto(startupRecorder.data.frames, {});
   ok(!!frames.length, "Should have captured some frames.");
 
-  let firefoxViewButton = document.getElementById("firefox-view-button");
+  let firefoxViewRect = document
+    .getElementById("firefox-view-button")
+    .getBoundingClientRect();
 
   let unexpectedRects = 0;
   let alreadyFocused = false;
@@ -64,7 +56,9 @@ add_task(async function() {
           condition(r) {
             // The firefox view button is an async-decoded png.
             return (
-              r.w == 16 && r.h == 16 && rectInElement(firefoxViewButton, r)
+              r.w == 16 &&
+              r.h == 16 &&
+              rectInBoundingClientRect(r, firefoxViewRect)
             );
           },
         },

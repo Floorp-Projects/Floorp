@@ -54,6 +54,26 @@ add_task(async function() {
 
   let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
 
+  let firefoxViewRect = document
+    .getElementById("firefox-view-button")
+    .getBoundingClientRect();
+
+  function isInTabStrip(r) {
+    return (
+      r.y1 >= tabStripRect.top &&
+      r.y2 <= tabStripRect.bottom &&
+      r.x1 >= tabStripRect.left &&
+      r.x2 <= tabStripRect.right &&
+      // It would make sense for each rect to have a width smaller than
+      // a tab (ie. tabstrip.width / tabcount), but tabs are small enough
+      // that they sometimes get reported in the same rect.
+      // So we accept up to the width of n-1 tabs.
+      r.w <=
+        (gBrowser.tabs.length - 1) *
+          Math.ceil(tabStripRect.width / gBrowser.tabs.length)
+    );
+  }
+
   await withPerfObserver(
     async function() {
       let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
@@ -66,25 +86,20 @@ add_task(async function() {
       expectedReflows: EXPECTED_REFLOWS,
       frames: {
         filter: rects =>
-          rects.filter(
-            r =>
-              !(
-                // We expect plenty of changed rects within the tab strip.
-                (
-                  r.y1 >= tabStripRect.top &&
-                  r.y2 <= tabStripRect.bottom &&
-                  r.x1 >= tabStripRect.left &&
-                  r.x2 <= tabStripRect.right &&
-                  // It would make sense for each rect to have a width smaller than
-                  // a tab (ie. tabstrip.width / tabcount), but tabs are small enough
-                  // that they sometimes get reported in the same rect.
-                  // So we accept up to the width of n-1 tabs.
-                  r.w <=
-                    (gBrowser.tabs.length - 1) *
-                      Math.ceil(tabStripRect.width / gBrowser.tabs.length)
-                )
-              )
-          ),
+          rects.filter(r => {
+            if (isInTabStrip(r)) {
+              return false;
+            }
+            // See https://hg.mozilla.org/mozilla-central/rev/07438d7c2372 for rationale.
+            if (
+              r.w == 16 &&
+              r.h == 16 &&
+              rectInBoundingClientRect(r, firefoxViewRect)
+            ) {
+              return false;
+            }
+            return true;
+          }),
       },
     }
   );
