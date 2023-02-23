@@ -385,6 +385,18 @@ void FetchService::FetchInstance::OnReportPerformanceTiming() {
   // Force replace initiatorType for ServiceWorkerNavgationPreload.
   if (!mIsWorkerFetch) {
     timing.initiatorType() = u"navigation"_ns;
+  } else {
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+        __func__,
+        [actorID = mArgs.as<WorkerFetchArgs>().mActorID, timing = timing]() {
+          FETCH_LOG(("FetchInstance::OnReportPerformanceTiming, Runnable"));
+          RefPtr<FetchParent> actor = FetchParent::GetActorByID(actorID);
+          if (actor) {
+            actor->OnReportPerformanceTiming(std::move(timing));
+          }
+        });
+    MOZ_ALWAYS_SUCCEEDS(mArgs.as<WorkerFetchArgs>().mEventTarget->Dispatch(
+        r, nsIThread::DISPATCH_NORMAL));
   }
 }
 

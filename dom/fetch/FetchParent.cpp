@@ -292,6 +292,14 @@ void FetchParent::OnFlushConsoleReport(
   Unused << SendOnFlushConsoleReport(aReports);
 }
 
+void FetchParent::OnReportPerformanceTiming(const ResponseTiming&& aTiming) {
+  FETCH_LOG(("FetchParent::OnReportPerformanceTiming [%p]", this));
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!mActorDestroyed);
+
+  Unused << SendOnReportPerformanceTiming(aTiming);
+}
+
 void FetchParent::ActorDestroy(ActorDestroyReason aReason) {
   FETCH_LOG(("FetchParent::ActorDestroy [%p]", this));
   AssertIsOnBackgroundThread();
