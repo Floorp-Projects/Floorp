@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import tempfile
 from contextlib import nullcontext as does_not_raise
 from unittest.mock import MagicMock, call
 
@@ -39,6 +40,25 @@ def test_copy_plain_deb_config(monkeypatch):
         call("/template_dir/debian_file3", "/source_dir/debian/debian_file3"),
         call("/template_dir/debian_file4", "/source_dir/debian/debian_file4"),
     ]
+
+
+def test_render_deb_templates():
+    with tempfile.TemporaryDirectory() as template_dir, tempfile.TemporaryDirectory() as source_dir:
+        with open(os.path.join(template_dir, "debian_file1.in"), "w") as f:
+            f.write("${some_build_variable}")
+
+        with open(os.path.join(template_dir, "debian_file2.in"), "w") as f:
+            f.write("Some hardcoded value")
+
+        deb._render_deb_templates(
+            template_dir, source_dir, {"some_build_variable": "some_value"}
+        )
+
+        with open(os.path.join(source_dir, "debian", "debian_file1")) as f:
+            assert f.read() == "some_value"
+
+        with open(os.path.join(source_dir, "debian", "debian_file2")) as f:
+            assert f.read() == "Some hardcoded value"
 
 
 def test_inject_deb_distribution_folder(monkeypatch):
