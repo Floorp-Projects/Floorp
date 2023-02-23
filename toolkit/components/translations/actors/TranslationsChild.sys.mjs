@@ -15,6 +15,7 @@ XPCOMUtils.defineLazyGetter(lazy, "console", () => {
 
 /**
  * @typedef {import("../translations").LanguageTranslationModelFiles} LanguageTranslationModelFiles
+ * @typedef {import("../translations").EnginePayload} EnginePayload
  */
 
 export class LanguageIdEngine {
@@ -116,15 +117,9 @@ export class TranslationsEngine {
    *
    * @param {string} fromLanguage
    * @param {string} toLanguage
-   * @param {ArrayBuffer} bergamotWasmArrayBuffer
-   * @param {LanguageTranslationModelFiles[]} languageTranslationModelFiles
+   * @param {EnginePayload} enginePayload
    */
-  constructor(
-    fromLanguage,
-    toLanguage,
-    bergamotWasmArrayBuffer,
-    languageTranslationModelFiles
-  ) {
+  constructor(fromLanguage, toLanguage, enginePayload) {
     /** @type {string} */
     this.fromLanguage = fromLanguage;
     /** @type {string} */
@@ -151,8 +146,7 @@ export class TranslationsEngine {
       type: "initialize",
       fromLanguage,
       toLanguage,
-      bergamotWasmArrayBuffer,
-      languageTranslationModelFiles,
+      enginePayload,
       messageId: this.#messageId++,
       isLoggingEnabled:
         Services.prefs.getCharPref("browser.translations.logLevel") === "All",
@@ -220,9 +214,20 @@ export class TranslationsChild extends JSWindowActorChild {
   #bergamotWasmArrayBuffer = null;
 
   /**
+   * The translations engine could be mocked for tests, since the wasm and the language
+   * models must be downloaded from Remote Settings.
+   */
+  #isTranslationsEngineMocked = false;
+
+  /**
    * @returns {Promise<ArrayBuffer>}
    */
   async #getBergamotWasmArrayBuffer() {
+    if (this.#isTranslationsEngineMocked) {
+      throw new Error(
+        "The engine is mocked, the Bergamot wasm is not available."
+      );
+    }
     let arrayBuffer = this.#bergamotWasmArrayBuffer;
     if (!arrayBuffer) {
       arrayBuffer = await this.sendQuery(
@@ -257,6 +262,11 @@ export class TranslationsChild extends JSWindowActorChild {
    * @returns {Promise<LanguageTranslationModelFiles[]>}
    */
   async #getLanguageTranslationModelFiles(fromLanguage, toLanguage) {
+    if (this.#isTranslationsEngineMocked) {
+      throw new Error(
+        "The engine is mocked, there are no language model files available."
+      );
+    }
     return this.sendQuery("Translations:GetLanguageTranslationModelFiles", {
       fromLanguage,
       toLanguage,
@@ -269,6 +279,21 @@ export class TranslationsChild extends JSWindowActorChild {
   handleEvent(event) {
     // TODO
     lazy.console.log("TranslationsChild observed a pageshow event.");
+  }
+
+  /**
+   * Receive a message from the parent.
+   *
+   * @param {{ name: string, data: any }} message
+   */
+  receiveMessage(message) {
+    switch (message.name) {
+      case "Translations:IsMocked":
+        this.#isTranslationsEngineMocked = message.data;
+        break;
+      default:
+        lazy.console.warn("Unknown message.");
+    }
   }
 
   /**
@@ -299,25 +324,39 @@ export class TranslationsChild extends JSWindowActorChild {
   }
 
   /**
+   * The engine is not avialable in tests.
+   *
+   * @param {string} fromLanguage
+   * @param {string} toLanguage
+   * @returns {null | EnginePayload}
+   */
+  async #getTranslationsEnginePayload(fromLanguage, toLanguage) {
+    if (this.#isTranslationsEngineMocked) {
+      return null;
+    }
+    const [bergamotWasmArrayBuffer, languageModelFiles] = await Promise.all([
+      this.#getBergamotWasmArrayBuffer(),
+      this.#getLanguageTranslationModelFiles(fromLanguage, toLanguage),
+    ]);
+    return { bergamotWasmArrayBuffer, languageModelFiles };
+  }
+
+  /**
    * Construct and initialize the Translations Engine.
    *
    * @param {string} fromLanguage
    * @param {string} toLanguage
    */
   async createTranslationsEngine(fromLanguage, toLanguage) {
-    const [
-      bergamotWasmArrayBuffer,
-      languageTranslationModelFiles,
-    ] = await Promise.all([
-      this.#getBergamotWasmArrayBuffer(),
-      this.#getLanguageTranslationModelFiles(fromLanguage, toLanguage),
-    ]);
+    const enginePayload = await this.#getTranslationsEnginePayload(
+      fromLanguage,
+      toLanguage
+    );
 
     const engine = new TranslationsEngine(
       fromLanguage,
       toLanguage,
-      bergamotWasmArrayBuffer,
-      languageTranslationModelFiles
+      enginePayload
     );
 
     await engine.isReady;

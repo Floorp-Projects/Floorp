@@ -76,6 +76,12 @@ export class TranslationsParent extends JSWindowActorParent {
    */
   static #mockedLanguagePairs = null;
 
+  actorCreated() {
+    if (TranslationsParent.#mockedLanguagePairs) {
+      this.sendAsyncMessage("Translations:IsMocked", true);
+    }
+  }
+
   async receiveMessage({ name, data }) {
     switch (name) {
       case "Translations:GetBergamotWasmArrayBuffer": {
@@ -557,12 +563,18 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
-   * For testing purposes, allow the Translations Engine to be mocked.
-   * @param {Array<{ fromLang: string, toLang: string }>} languagePairs
+   * For testing purposes, allow the Translations Engine to be mocked. If called
+   * with `null` the mock is removed.
+   *
+   * @param {null | Array<{ fromLang: string, toLang: string }>} languagePairs
    */
-  mock(languagePairs) {
-    lazy.console.log("Mocking language pairs", languagePairs);
+  static mock(languagePairs) {
     TranslationsParent.#mockedLanguagePairs = languagePairs;
+    if (languagePairs) {
+      lazy.console.log("Mocking language pairs", languagePairs);
+    } else {
+      lazy.console.log("Removing language pair mocks");
+    }
   }
 }
 

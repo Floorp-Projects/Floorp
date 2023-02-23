@@ -33,29 +33,23 @@ const MODEL_FILE_ALIGNMENTS = {
   trgvocab: 64,
 };
 
-// Wait for the initialization request.
-addEventListener("message", initialize);
-
 /**
  * Initialize the engine, and get it ready to handle translation requests.
  * The "initialize" message must be received before any other message handling
  * requests will be processed.
  */
-async function initialize({ data }) {
+addEventListener("message", handleInitializationMessage);
+
+async function handleInitializationMessage({ data }) {
   if (data.type !== "initialize") {
-    throw new Error(
+    console.error(
       "The TranslationEngine worker received a message before it was initialized."
     );
+    return;
   }
 
   try {
-    const {
-      fromLanguage,
-      toLanguage,
-      bergamotWasmArrayBuffer,
-      languageTranslationModelFiles,
-      isLoggingEnabled,
-    } = data;
+    const { fromLanguage, toLanguage, enginePayload, isLoggingEnabled } = data;
 
     if (!fromLanguage) {
       throw new Error('Worker initialization missing "fromLanguage"');
@@ -63,31 +57,30 @@ async function initialize({ data }) {
     if (!toLanguage) {
       throw new Error('Worker initialization missing "toLanguage"');
     }
-    if (!bergamotWasmArrayBuffer) {
-      throw new Error(
-        '"Worker initialization missing "bergamotWasmArrayBuffer"'
-      );
-    }
-    if (!languageTranslationModelFiles) {
-      throw new Error(
-        '"Worker initialization missing "languageTranslationModelFiles"'
-      );
-    }
 
     if (isLoggingEnabled) {
       // Respect the "browser.translations.logLevel" preference.
       _isLoggingEnabled = true;
     }
 
-    const bergamot = await BergamotUtils.initializeWasm(
-      bergamotWasmArrayBuffer
-    );
-    new TranslationsEngineWorker(
-      fromLanguage,
-      toLanguage,
-      bergamot,
-      languageTranslationModelFiles
-    );
+    let engine;
+    if (enginePayload) {
+      const { bergamotWasmArrayBuffer, languageModelFiles } = enginePayload;
+      const bergamot = await BergamotUtils.initializeWasm(
+        bergamotWasmArrayBuffer
+      );
+      engine = new Engine(
+        fromLanguage,
+        toLanguage,
+        bergamot,
+        languageModelFiles
+      );
+    } else {
+      // The engine is testing mode, and no Bergamot wasm is available.
+      engine = new MockedEngine(fromLanguage, toLanguage);
+    }
+
+    handleMessages(engine);
     postMessage({ type: "initialization-success" });
   } catch (error) {
     // TODO (Bug 1813781) - Handle this error in the UI.
@@ -95,13 +88,55 @@ async function initialize({ data }) {
     postMessage({ type: "initialization-error", error: error?.message });
   }
 
-  removeEventListener("message", initialize);
+  removeEventListener("message", handleInitializationMessage);
 }
 
 /**
- * The TranslationsEngineWorker is created once for a language pair. The
- * initialization process copies the ArrayBuffers for the language buffers from
- * JS-managed ArrayBuffers, to aligned internal memory for the wasm heap.
+ * Sets up the message handling for the worker.
+ *
+ * @param {Engine | MockedEngine} engine
+ */
+function handleMessages(engine) {
+  addEventListener("message", ({ data }) => {
+    try {
+      if (data.type === "initialize") {
+        throw new Error("The Translations engine must not be re-initialized.");
+      }
+      log("Received message", data);
+
+      switch (data.type) {
+        case "translation-request": {
+          const { messageBatch, messageId } = data;
+          try {
+            const translations = engine.translate(messageBatch);
+            postMessage({
+              type: "translation-response",
+              translations,
+              messageId,
+            });
+          } catch (error) {
+            console.error(error);
+            postMessage({
+              type: "translation-error",
+              messageId,
+            });
+          }
+          break;
+        }
+        default:
+          console.warn("Unknown message type:", data.type);
+      }
+    } catch (error) {
+      // Ensure the unexpected errors are surfaced in the console.
+      console.error(error);
+    }
+  });
+}
+
+/**
+ * The Engine is created once for a language pair. The initialization process copies the
+ * ArrayBuffers for the language buffers from JS-managed ArrayBuffers, to aligned
+ * internal memory for the wasm heap.
  *
  * After this the ArrayBuffers are discarded and GC'd. This file should be managed
  * from the TranslationsEngine class on the main thread.
@@ -109,7 +144,7 @@ async function initialize({ data }) {
  * This class starts listening for messages only after the Bergamot engine has been
  * fully initialized.
  */
-class TranslationsEngineWorker {
+class Engine {
   /**
    * @param {string} fromLanguage
    * @param {string} toLanguage
@@ -142,41 +177,6 @@ class TranslationsEngineWorker {
       // Caching is disabled (see https://github.com/mozilla/firefox-translations/issues/288)
       cacheSize: 0,
     });
-
-    addEventListener("message", this.onMessage.bind(this));
-  }
-
-  /**
-   * Any message after the initialization message.
-   */
-  onMessage({ data }) {
-    if (data.type === "initialize") {
-      throw new Error("The Translations engine must not be re-initialized.");
-    }
-    log("Received message", data);
-
-    switch (data.type) {
-      case "translation-request": {
-        const { messageBatch, messageId } = data;
-        try {
-          const translations = this.translate(messageBatch);
-          postMessage({
-            type: "translation-response",
-            translations,
-            messageId,
-          });
-        } catch (error) {
-          console.error(error);
-          postMessage({
-            type: "translation-error",
-            messageId,
-          });
-        }
-        break;
-      }
-      default:
-        console.warn("Unknown message type:", data.type);
-    }
   }
 
   /**
@@ -451,5 +451,36 @@ class BergamotUtils {
       });
     }
     return { messages, options };
+  }
+}
+
+/**
+ * For testing purposes, provide a fully mocked engine. This allows for easy integration
+ * testing of the UI, without having to rely on downloading remote models and remote
+ * wasm binaries.
+ */
+class MockedEngine {
+  /**
+   * @param {string} fromLanguage
+   * @param {string} toLanguage
+   */
+  constructor(fromLanguage, toLanguage) {
+    /** @type {string} */
+    this.fromLanguage = fromLanguage;
+    /** @type {string} */
+    this.toLanguage = toLanguage;
+  }
+
+  /**
+   * Create a fake translation of the text.
+   *
+   * @param {string[]} messageBatch
+   * @returns {string}
+   */
+  translate(messageBatch) {
+    return messageBatch.map(
+      message =>
+        `${message.toUpperCase()} [${this.fromLanguage} to ${this.toLanguage}]`
+    );
   }
 }
