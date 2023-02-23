@@ -21,8 +21,8 @@
 //! assert_eq!(s1.to_ascii_uppercase(), "TEST");
 //! assert_eq!(s1.to_ascii_lowercase(), "test");
 //! assert_eq!(s1.to_ascii_titlecase(), "Test");
-//! assert_eq!(s1.is_ascii_alphanumeric(), true);
-//! assert_eq!(s1.is_ascii_numeric(), false);
+//! assert!(s1.is_ascii_alphanumeric());
+//! assert!(!s1.is_ascii_numeric());
 //!
 //! let s2 = TinyAsciiStr::<8>::try_from_raw(*b"New York")
 //!     .expect("Failed to parse.");
@@ -31,7 +31,7 @@
 //! assert_eq!(s2.to_ascii_uppercase(), "NEW YORK");
 //! assert_eq!(s2.to_ascii_lowercase(), "new york");
 //! assert_eq!(s2.to_ascii_titlecase(), "New york");
-//! assert_eq!(s2.is_ascii_alphanumeric(), false);
+//! assert!(!s2.is_ascii_alphanumeric());
 //! ```
 //!
 //! # Details
@@ -52,7 +52,7 @@
 //! [`ICU4X`]: ../icu/index.html
 
 // https://github.com/unicode-org/icu4x/blob/main/docs/process/boilerplate.md#library-annotations
-#![cfg_attr(not(test), no_std)]
+#![cfg_attr(not(any(test, feature = "std")), no_std)]
 #![cfg_attr(
     not(test),
     deny(

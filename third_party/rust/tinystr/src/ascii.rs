@@ -138,11 +138,6 @@ impl<const N: usize> TinyAsciiStr<N> {
     #[inline]
     #[must_use]
     pub const fn as_bytes(&self) -> &[u8] {
-        /// core::slice::from_raw_parts(a, b) = core::mem::transmute((a, b)) hack
-        /// ```compile_fail
-        /// const unsafe fn canary() { core::slice::from_raw_parts(0 as *const u8, 0); }
-        /// ```
-        const _: () = ();
         // Safe because `self.bytes.as_slice()` pointer-casts to `&[u8]`,
         // and changing the length of that slice to self.len() < N is safe.
         unsafe { core::mem::transmute((self.bytes.as_slice().as_ptr(), self.len())) }
@@ -668,7 +663,7 @@ mod test {
     use rand::seq::SliceRandom;
     use rand::SeedableRng;
 
-    const STRINGS: &[&str] = &[
+    const STRINGS: [&str; 26] = [
         "Latn",
         "laTn",
         "windows",
@@ -723,8 +718,8 @@ mod test {
         T: core::fmt::Debug + core::cmp::PartialEq,
     {
         for s in STRINGS
-            .iter()
-            .map(|s| s.to_string())
+            .into_iter()
+            .map(str::to_owned)
             .chain(gen_strings(100, &[3, 4, 5, 8, 12]))
         {
             let t = match TinyAsciiStr::<N>::from_str(&s) {
@@ -930,7 +925,7 @@ mod test {
                         .map(|c| c.to_ascii_lowercase())
                         .collect::<String>()
                 },
-                |t: TinyAsciiStr<N>| TinyAsciiStr::to_ascii_lowercase(t).to_string(),
+                |t: TinyAsciiStr<N>| TinyAsciiStr::to_ascii_lowercase(t).as_str().to_owned(),
             )
         }
         check::<2>();
@@ -954,7 +949,7 @@ mod test {
                     unsafe { r.as_bytes_mut()[0].make_ascii_uppercase() };
                     r
                 },
-                |t: TinyAsciiStr<N>| TinyAsciiStr::to_ascii_titlecase(t).to_string(),
+                |t: TinyAsciiStr<N>| TinyAsciiStr::to_ascii_titlecase(t).as_str().to_owned(),
             )
         }
         check::<2>();
@@ -974,7 +969,7 @@ mod test {
                         .map(|c| c.to_ascii_uppercase())
                         .collect::<String>()
                 },
-                |t: TinyAsciiStr<N>| TinyAsciiStr::to_ascii_uppercase(t).to_string(),
+                |t: TinyAsciiStr<N>| TinyAsciiStr::to_ascii_uppercase(t).as_str().to_owned(),
             )
         }
         check::<2>();
