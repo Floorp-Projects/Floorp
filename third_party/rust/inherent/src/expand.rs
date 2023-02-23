@@ -4,6 +4,7 @@ use quote::{quote, quote_spanned};
 use syn::{FnArg, Ident, ImplItem, ImplItemMethod, Item, Pat, Path, Stmt, Visibility};
 
 pub fn inherent(mut input: TraitImpl) -> TokenStream {
+    let impl_token = &input.impl_token;
     let generics = &input.generics;
     let where_clause = &input.generics.where_clause;
     let trait_ = &input.trait_;
@@ -34,10 +35,10 @@ pub fn inherent(mut input: TraitImpl) -> TokenStream {
         })
         .collect();
 
+    let body = quote_spanned!(input.brace_token.span=> { #(#fwd_methods)* });
+
     quote! {
-        impl #generics #ty #where_clause {
-            #(#fwd_methods)*
-        }
+        #impl_token #generics #ty #where_clause #body
 
         #input
     }
