@@ -20,6 +20,8 @@ import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.CookieBannerHandlingStatus
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
+import mozilla.components.concept.engine.EngineSession.LoadUrlFlags.Companion.EXTERNAL
+import mozilla.components.concept.engine.EngineSession.LoadUrlFlags.Companion.LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE
 import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
@@ -1765,7 +1767,7 @@ class GeckoEngineSessionTest {
 
         assertEquals("sample:about", interceptorCalledWithUri)
         verify(geckoSession).load(
-            GeckoSession.Loader().uri("https://mozilla.org").flags(LoadUrlFlags.EXTERNAL),
+            GeckoSession.Loader().uri("https://mozilla.org").flags(EXTERNAL + LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE),
         )
     }
 

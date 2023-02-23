@@ -18,6 +18,8 @@ import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSession.LoadUrlFlags.Companion.EXTERNAL
+import mozilla.components.concept.engine.EngineSession.LoadUrlFlags.Companion.LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE
 import mozilla.components.feature.app.links.AppLinksUseCases.Companion.ENGINE_SUPPORTED_SCHEMES
 import mozilla.components.feature.app.links.RedirectDialogFragment.Companion.FRAGMENT_TAG
 import mozilla.components.feature.session.SessionUseCases
@@ -149,7 +151,11 @@ class AppLinksFeature(
     internal fun loadUrlIfSchemeSupported(tab: SessionState, url: String) {
         val schemeSupported = engineSupportedSchemes.contains(Uri.parse(url).scheme)
         if (schemeSupported) {
-            loadUrlUseCase?.invoke(url, tab.id, EngineSession.LoadUrlFlags.none())
+            loadUrlUseCase?.invoke(
+                url = url,
+                sessionId = tab.id,
+                flags = EngineSession.LoadUrlFlags.select(EXTERNAL, LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE),
+            )
         }
     }
 
