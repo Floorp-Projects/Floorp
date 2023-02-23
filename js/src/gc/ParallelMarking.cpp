@@ -8,6 +8,7 @@
 
 #include "gc/GCLock.h"
 #include "gc/ParallelWork.h"
+#include "vm/GeckoProfiler.h"
 #include "vm/HelperThreadState.h"
 #include "vm/Runtime.h"
 
@@ -233,6 +234,11 @@ bool ParallelMarkTask::requestWork(AutoLockGC& lock) {
 }
 
 void ParallelMarkTask::waitUntilResumed(AutoLockGC& lock) {
+  GeckoProfilerRuntime& profiler = gc->rt->geckoProfiler();
+  if (profiler.enabled()) {
+    profiler.markEvent("Parallel marking wait start", "");
+  }
+
   pm->addTaskToWaitingList(this, lock);
 
   // Set isWaiting flag and wait for another thread to clear it and resume us.
@@ -247,6 +253,10 @@ void ParallelMarkTask::waitUntilResumed(AutoLockGC& lock) {
   } while (isWaiting);
 
   MOZ_ASSERT(!pm->isTaskInWaitingList(this, lock));
+
+  if (profiler.enabled()) {
+    profiler.markEvent("Parallel marking wait end", "");
+  }
 }
 
 void ParallelMarkTask::resume(const AutoLockGC& lock) {
@@ -328,4 +338,9 @@ void ParallelMarker::donateWorkFrom(GCMarker* src) {
   waitingTask->resume(lock);
 
   gc->stats().count(gcstats::COUNT_PARALLEL_MARK_INTERRUPTIONS);
+
+  GeckoProfilerRuntime& profiler = gc->rt->geckoProfiler();
+  if (profiler.enabled()) {
+    profiler.markEvent("Parallel marking donated work", "");
+  }
 }
