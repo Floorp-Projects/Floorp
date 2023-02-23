@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import datetime
 import os
 import tempfile
 from contextlib import nullcontext as does_not_raise
@@ -12,6 +13,37 @@ import mozunit
 import pytest
 
 from mozbuild.repackaging import deb
+
+
+@pytest.mark.parametrize(
+    "version, build_number, expected_deb_pkg_version",
+    (
+        ("112.0a1", 1, "112.0a1~20230222000000"),
+        ("112.0b1", 1, "112.0b1~build1"),
+        ("112.0", 2, "112.0~build2"),
+    ),
+)
+def test_get_build_variables(version, build_number, expected_deb_pkg_version):
+    application_ini_data = {
+        "name": "Firefox",
+        "display_name": "Firefox",
+        "vendor": "Mozilla",
+        "remoting_name": "firefox-nightly-try",
+        "build_id": "20230222000000",
+        "timestamp": datetime.datetime(2023, 2, 22),
+    }
+    assert deb._get_build_variables(
+        application_ini_data,
+        "x86",
+        version,
+        build_number,
+    ) == {
+        "DEB_DESCRIPTION": "Mozilla Firefox",
+        "DEB_PKG_NAME": "firefox-nightly-try",
+        "DEB_PKG_VERSION": expected_deb_pkg_version,
+        "DEB_CHANGELOG_DATE": "Wed, 22 Feb 2023 00:00:00 -0000",
+        "DEB_ARCH_NAME": "i386",
+    }
 
 
 def test_copy_plain_deb_config(monkeypatch):
