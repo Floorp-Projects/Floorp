@@ -581,4 +581,85 @@ class DynamicToolbarTest : BaseSessionTest() {
             assertScreenshotResult(it.capturePixels(), reference)
         }
     }
+
+    @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
+    @Test
+    fun zoomedOverflowHidden() {
+        // Set ui.scrollbarFadeBeginDelay value to 0 to hide the overlayed scrollbars
+        // immediately.
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
+                "ui.scrollbarFadeBeginDelay" to 0
+            )
+        )
+
+        val reference = getComparisonScreenshot(SCREEN_WIDTH, SCREEN_HEIGHT)
+
+        val dynamicToolbarMaxHeight = SCREEN_HEIGHT / 2
+        sessionRule.display?.run { setDynamicToolbarMaxHeight(dynamicToolbarMaxHeight) }
+
+        // Set active since setVerticalClipping call affects only for foreground tab.
+        mainSession.setActive(true)
+
+        mainSession.loadTestPath(BaseSessionTest.FIXED_BOTTOM)
+        mainSession.waitForPageStop()
+
+        // Change the body background color to match the reference image's background color.
+        mainSession.evaluateJS("document.body.style.background = 'rgb(0, 128, 0)'")
+
+        // Zoom in the content so that the content's visual viewport can be scrollable.
+        mainSession.setResolutionAndScaleTo(10.0f)
+
+        // Simulate the dynamic toolbar being hidden by the scroll
+        sessionRule.display?.run { setVerticalClipping(-dynamicToolbarMaxHeight) }
+
+        mainSession.flushApzRepaints()
+
+        sessionRule.display?.let {
+            assertScreenshotResult(it.capturePixels(), reference)
+        }
+    }
+
+    @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
+    @Test
+    fun zoomedPositionFixedRoot() {
+        // Set ui.scrollbarFadeBeginDelay value to 0 to hide the overlayed scrollbars
+        // immediately.
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
+                "ui.scrollbarFadeBeginDelay" to 0
+            )
+        )
+
+        val reference = getComparisonScreenshot(SCREEN_WIDTH, SCREEN_HEIGHT)
+
+        val dynamicToolbarMaxHeight = SCREEN_HEIGHT / 2
+        sessionRule.display?.run { setDynamicToolbarMaxHeight(dynamicToolbarMaxHeight) }
+
+        // Set active since setVerticalClipping call affects only for forground tab.
+        mainSession.setActive(true)
+
+        mainSession.loadTestPath(BaseSessionTest.FIXED_BOTTOM)
+        mainSession.waitForPageStop()
+
+        // Change the body background color to match the reference image's background color.
+        mainSession.evaluateJS("document.body.style.background = 'rgb(0, 128, 0)'")
+
+        // Change the root `overlow` style to make it scrollable and change the position style
+        // to `fixed` so that the root container is not scrollable.
+        mainSession.evaluateJS("document.body.style.overflow = 'scroll'")
+        mainSession.evaluateJS("document.documentElement.style.position = 'fixed'")
+
+        // Zoom in the content so that the content's visual viewport can be scrollable.
+        mainSession.setResolutionAndScaleTo(10.0f)
+
+        // Simulate the dynamic toolbar being hidden by the scroll
+        sessionRule.display?.run { setVerticalClipping(-dynamicToolbarMaxHeight) }
+
+        mainSession.flushApzRepaints()
+
+        sessionRule.display?.let {
+            assertScreenshotResult(it.capturePixels(), reference)
+        }
+    }
 }
