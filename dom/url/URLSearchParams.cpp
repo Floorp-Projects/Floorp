@@ -102,8 +102,6 @@ void URLSearchParams::ParseInput(const nsACString& aInput) {
   mParams->ParseInput(aInput);
 }
 
-uint32_t URLSearchParams::Size() const { return mParams->Length(); }
-
 void URLSearchParams::Get(const nsAString& aName, nsString& aRetval) {
   return mParams->Get(aName, aRetval);
 }
