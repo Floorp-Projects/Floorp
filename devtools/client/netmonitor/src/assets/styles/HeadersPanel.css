@@ -30,9 +30,9 @@
   padding: 0;
 }
 
-.network-monitor .headers-panel-container #block-button.devtools-button {
+.network-monitor .headers-panel-container .devtools-button:is(#block-button, #edit-resend-button) {
   height: 19px;
-  padding: 0 2px 1px;
+  padding: 0 2px;
 }
 
 .network-monitor .headers-panel-container .devtools-button:not(:hover) {
