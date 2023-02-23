@@ -32,6 +32,9 @@
     "webExtension": {
       "$ref": "#/definitions/webExtension"
     },
+    "urls": {
+      "$ref": "#/definitions/urls"
+    },
     "params": {
       "$ref": "#/definitions/params"
     },
@@ -312,6 +315,30 @@
         }
       }
     },
+    "urls": {
+      "type": "object",
+      "description": "Urls pertaining to this engine",
+      "properties": {
+        "trending": {
+          "type": "object",
+          "description": "Details of the url used to fetch trending suggestions",
+          "properties": {
+            "fullPath": {
+              "type": "string",
+              "title": "fullPath",
+              "format": "uri",
+              "description": "The url used to retrieve trending suggestions"
+            },
+            "query": {
+              "type": "string",
+              "title": "query",
+              "description": "The query parameters to send in a trending suggestions request",
+              "pattern": "^[a-zA-Z0-9.-]{0,100}$"
+            }
+          }
+        }
+      }
+    },
     "regionDetails": {
       "type": "array",
       "title": "Regions",
@@ -403,6 +430,9 @@
         },
         "webextension": {
           "$ref": "#/definitions/webExtension"
+        },
+        "urls": {
+          "$ref": "#/definitions/urls"
         },
         "sendAttributionRequest": {
           "$ref": "#/definitions/sendAttributionRequest"

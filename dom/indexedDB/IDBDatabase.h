@@ -31,7 +31,6 @@ namespace dom {
 class Blob;
 class DOMStringList;
 class IDBFactory;
-class IDBMutableFile;
 class IDBObjectStore;
 struct IDBObjectStoreParameters;
 class IDBOpenDBRequest;
@@ -74,9 +73,6 @@ class IDBDatabase final : public DOMEventTargetHelper {
       mFileActors;
 
   RefPtr<Observer> mObserver;
-
-  // Weak refs, IDBMutableFile strongly owns this IDBDatabase object.
-  nsTArray<NotNull<IDBMutableFile*>> mLiveMutableFiles;
 
   bool mClosed;
   bool mInvalidated;
@@ -159,10 +155,6 @@ class IDBDatabase final : public DOMEventTargetHelper {
 
   void NoteInactiveTransaction();
 
-  void NoteLiveMutableFile(IDBMutableFile& aMutableFile);
-
-  void NoteFinishedMutableFile(IDBMutableFile& aMutableFile);
-
   [[nodiscard]] RefPtr<DOMStringList> ObjectStoreNames() const;
 
   [[nodiscard]] RefPtr<IDBObjectStore> CreateObjectStore(
@@ -233,8 +225,6 @@ class IDBDatabase final : public DOMEventTargetHelper {
   void RefreshSpec(bool aMayDelete);
 
   void ExpireFileActors(bool aExpireAll);
-
-  void InvalidateMutableFiles();
 
   void NoteInactiveTransactionDelayed();
 

@@ -1013,6 +1013,18 @@ export class SearchEngine {
       this._urls.push(url);
     }
 
+    if (configuration?.urls?.trending) {
+      let trending = this._getEngineURLFromMetaData(
+        lazy.SearchUtils.URL_TYPE.TRENDING_JSON,
+        {
+          method: "GET",
+          template: decodeURI(configuration.urls.trending.fullPath),
+          getParams: configuration.urls.trending.query,
+        }
+      );
+      this._urls.push(trending);
+    }
+
     if (details.encoding) {
       this._queryCharset = details.encoding;
     }
@@ -1424,7 +1436,10 @@ export class SearchEngine {
       return null;
     }
 
-    if (!searchTerms) {
+    if (
+      !searchTerms &&
+      responseType != lazy.SearchUtils.URL_TYPE.TRENDING_JSON
+    ) {
       // Return a dummy submission object with our searchForm attribute
       return new Submission(lazy.SearchUtils.makeURI(this.searchForm));
     }

@@ -2161,7 +2161,7 @@
 # Whether CanvasRenderingContext2D.mozTextStyle is enabled.
 - name: dom.mozTextStyle.enabled
   type: bool
-  value: @IS_NOT_EARLY_BETA_OR_EARLIER@
+  value: false
   mirror: always
 
 # Allow cut/copy
@@ -2630,12 +2630,6 @@
 # Allow the content process to create a File from a path. This is allowed just
 # on parent process, on 'file' Content process, or for testing.
 - name: dom.file.createInChild
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-# Whether or not File Handle is enabled.
-- name: dom.fileHandle.enabled
   type: RelaxedAtomicBool
   value: false
   mirror: always
