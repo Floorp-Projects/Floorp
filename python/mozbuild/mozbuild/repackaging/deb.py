@@ -43,7 +43,7 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
 
     deb_arch = _DEB_ARCH[arch]
 
-    if os.path.isdir(f"/srv/{_DEB_DIST}-{deb_arch}"):
+    if _is_chroot_available(arch):
         tmpdir = tempfile.mkdtemp(dir=f"/srv/{_DEB_DIST}-{deb_arch}/tmp")
     else:
         tmpdir = tempfile.mkdtemp()
@@ -129,7 +129,7 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
             mozpath.join(extract_dir, app_name.lower(), "distribution"),
         )
 
-        if os.path.isdir(f"/srv/{_DEB_DIST}-{deb_arch}"):
+        if _is_chroot_available(arch):
             subprocess.check_call(
                 [
                     "chroot",
@@ -162,3 +162,8 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
 
     finally:
         shutil.rmtree(tmpdir)
+
+
+def _is_chroot_available(arch):
+    deb_arch = _DEB_ARCH[arch]
+    return os.path.isdir(f"/srv/{_DEB_DIST}-{deb_arch}")
