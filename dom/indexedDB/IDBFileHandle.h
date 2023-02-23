@@ -151,41 +151,6 @@ class IDBFileHandle final : public DOMEventTargetHelper,
     }
   }
 
-  [[nodiscard]] RefPtr<IDBFileRequest> GetMetadata(
-      const IDBFileMetadataParameters& aParameters, ErrorResult& aRv);
-
-  [[nodiscard]] RefPtr<IDBFileRequest> ReadAsArrayBuffer(uint64_t aSize,
-                                                         ErrorResult& aRv) {
-    AssertIsOnOwningThread();
-    return Read(aSize, false, VoidString(), aRv);
-  }
-
-  [[nodiscard]] RefPtr<IDBFileRequest> ReadAsText(uint64_t aSize,
-                                                  const nsAString& aEncoding,
-                                                  ErrorResult& aRv) {
-    AssertIsOnOwningThread();
-    return Read(aSize, true, aEncoding, aRv);
-  }
-
-  [[nodiscard]] RefPtr<IDBFileRequest> Write(
-      const StringOrArrayBufferOrArrayBufferViewOrBlob& aValue,
-      ErrorResult& aRv) {
-    AssertIsOnOwningThread();
-    return WriteOrAppend(aValue, false, aRv);
-  }
-
-  [[nodiscard]] RefPtr<IDBFileRequest> Append(
-      const StringOrArrayBufferOrArrayBufferViewOrBlob& aValue,
-      ErrorResult& aRv) {
-    AssertIsOnOwningThread();
-    return WriteOrAppend(aValue, true, aRv);
-  }
-
-  [[nodiscard]] RefPtr<IDBFileRequest> Truncate(const Optional<uint64_t>& aSize,
-                                                ErrorResult& aRv);
-
-  [[nodiscard]] RefPtr<IDBFileRequest> Flush(ErrorResult& aRv);
-
   void Abort(ErrorResult& aRv);
 
   IMPL_EVENT_HANDLER(complete)
@@ -201,7 +166,9 @@ class IDBFileHandle final : public DOMEventTargetHelper,
 
   // WrapperCache
   virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+                               JS::Handle<JSObject*> aGivenProto) override {
+    return nullptr;
+  }
 
  private:
   IDBFileHandle(IDBMutableFile* aMutableFile, FileMode aMode);
@@ -220,10 +187,6 @@ class IDBFileHandle final : public DOMEventTargetHelper,
   [[nodiscard]] RefPtr<IDBFileRequest> Read(uint64_t aSize, bool aHasEncoding,
                                             const nsAString& aEncoding,
                                             ErrorResult& aRv);
-
-  [[nodiscard]] RefPtr<IDBFileRequest> WriteOrAppend(
-      const StringOrArrayBufferOrArrayBufferViewOrBlob& aValue, bool aAppend,
-      ErrorResult& aRv);
 
   [[nodiscard]] RefPtr<IDBFileRequest> WriteOrAppend(const nsAString& aValue,
                                                      bool aAppend,
