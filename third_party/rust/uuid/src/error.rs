@@ -134,7 +134,7 @@ impl fmt::Display for Error {
             ErrorKind::Char {
                 character, index, ..
             } => {
-                write!(f, "invalid character: expected an optional prefix of `urn:uuid:` followed by [0-9a-zA-Z], found `{}` at {}", character, index)
+                write!(f, "invalid character: expected an optional prefix of `urn:uuid:` followed by [0-9a-fA-F-], found `{}` at {}", character, index)
             }
             ErrorKind::SimpleLength { len } => {
                 write!(

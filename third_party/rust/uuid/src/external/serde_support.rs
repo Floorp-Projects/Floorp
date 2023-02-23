@@ -302,7 +302,7 @@ mod serde_tests {
     fn test_de_failure() {
         serde_test::assert_de_tokens_error::<Readable<Uuid>>(
             &[Token::Str("hello_world")],
-            "UUID parsing failed: invalid character: expected an optional prefix of `urn:uuid:` followed by [0-9a-zA-Z], found `h` at 1",
+            "UUID parsing failed: invalid character: expected an optional prefix of `urn:uuid:` followed by [0-9a-fA-F-], found `h` at 1",
         );
 
         serde_test::assert_de_tokens_error::<Compact<Uuid>>(

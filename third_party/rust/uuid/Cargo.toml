@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "uuid"
-version = "1.2.2"
+version = "1.3.0"
 authors = [
     "Ashley Mannix<ashleymannix@live.com.au>",
     "Christopher Armstrong",
@@ -115,7 +115,7 @@ version = "2"
 optional = true
 
 [dependencies.uuid-macro-internal]
-version = "1.2.2"
+version = "1.3.0"
 optional = true
 package = "uuid-macro-internal"
 
@@ -181,7 +181,7 @@ package = "wasm-bindgen"
 version = "0.3"
 
 [target."cfg(windows)".dev-dependencies.windows-sys]
-version = "0.42.0"
+version = "0.45.0"
 features = ["Win32_System_Com"]
 
 [badges.is-it-maintained-issue-resolution]
