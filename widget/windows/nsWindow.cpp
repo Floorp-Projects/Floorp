@@ -5257,18 +5257,8 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
         break;
       }
 
-      nsresult rv;
-      bool didChange = false;
-
       // update the global font list
-      nsCOMPtr<nsIFontEnumerator> fontEnum =
-          do_GetService("@mozilla.org/gfx/fontenumerator;1", &rv);
-      if (NS_SUCCEEDED(rv)) {
-        fontEnum->UpdateFontList(&didChange);
-        if (didChange) {
-          gfxPlatform::ForceGlobalReflow(gfxPlatform::NeedsReframe::Yes);
-        }
-      }  // if (NS_SUCCEEDED(rv))
+      gfxPlatform::GetPlatform()->UpdateFontList();
     } break;
 
     case WM_SETTINGCHANGE: {
