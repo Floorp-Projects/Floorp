@@ -14,6 +14,7 @@ from string import Template
 
 import mozfile
 import mozpack.path as mozpath
+from mozilla_version.gecko import GeckoVersion
 
 from mozbuild.repackaging.application_ini import get_application_ini_values
 
@@ -107,16 +108,16 @@ def _extract_application_ini_data(application_director):
 def _get_build_variables(
     application_ini_data,
     arch,
-    version,
+    version_string,
     build_number,
 ):
-    # TODO: Use mozilla-version
-    if "a" in version:
-        # We append the buildid to the alpha version to tell nightlies apart
-        deb_pkg_version = f"{version}~{application_ini_data['build_id']}"
-    else:
-        # With other release flavors we opt for the release's build number
-        deb_pkg_version = f"{version}~build{build_number}"
+    version = GeckoVersion.parse(version_string)
+    # Nightlies don't have build numbers
+    deb_pkg_version = (
+        f"{version}~{application_ini_data['build_id']}"
+        if version.is_nightly
+        else f"{version}~build{build_number}"
+    )
 
     return {
         "DEB_DESCRIPTION": f"{application_ini_data['vendor']} {application_ini_data['display_name']}",
