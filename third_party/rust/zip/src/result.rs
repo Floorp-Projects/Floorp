@@ -44,9 +44,9 @@ impl From<io::Error> for ZipError {
 impl fmt::Display for ZipError {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            ZipError::Io(err) => write!(fmt, "{}", err),
-            ZipError::InvalidArchive(err) => write!(fmt, "invalid Zip archive: {}", err),
-            ZipError::UnsupportedArchive(err) => write!(fmt, "unsupported Zip archive: {}", err),
+            ZipError::Io(err) => write!(fmt, "{err}"),
+            ZipError::InvalidArchive(err) => write!(fmt, "invalid Zip archive: {err}"),
+            ZipError::UnsupportedArchive(err) => write!(fmt, "unsupported Zip archive: {err}"),
             ZipError::FileNotFound => write!(fmt, "specified file not found in archive"),
         }
     }
@@ -81,3 +81,18 @@ impl From<ZipError> for io::Error {
         io::Error::new(io::ErrorKind::Other, err)
     }
 }
+
+/// Error type for time parsing
+#[derive(Debug)]
+pub struct DateTimeRangeError;
+
+impl fmt::Display for DateTimeRangeError {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            fmt,
+            "a date could not be represented within the bounds the MS-DOS date range (1980-2107)"
+        )
+    }
+}
+
+impl Error for DateTimeRangeError {}

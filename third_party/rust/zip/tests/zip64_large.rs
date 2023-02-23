@@ -205,7 +205,7 @@ fn zip64_large() {
 
         match file.read_exact(&mut buf) {
             Ok(()) => println!("The first {} bytes are: {:?}", buf.len(), buf),
-            Err(e) => println!("Could not read the file: {:?}", e),
+            Err(e) => println!("Could not read the file: {e:?}"),
         };
     }
 }

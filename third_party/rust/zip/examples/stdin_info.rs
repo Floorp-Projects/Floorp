@@ -20,12 +20,12 @@ fn real_main() -> i32 {
                 );
                 match file.read(&mut buf) {
                     Ok(n) => println!("The first {} bytes are: {:?}", n, &buf[0..n]),
-                    Err(e) => println!("Could not read the file: {:?}", e),
+                    Err(e) => println!("Could not read the file: {e:?}"),
                 };
             }
             Ok(None) => break,
             Err(e) => {
-                println!("Error encountered while reading zip: {:?}", e);
+                println!("Error encountered while reading zip: {e:?}");
                 return 1;
             }
         }

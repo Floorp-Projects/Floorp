@@ -12,7 +12,7 @@ fn real_main() -> i32 {
         return 1;
     }
     let fname = std::path::Path::new(&*args[1]);
-    let file = fs::File::open(&fname).unwrap();
+    let file = fs::File::open(fname).unwrap();
 
     let mut archive = zip::ZipArchive::new(file).unwrap();
 
@@ -26,7 +26,7 @@ fn real_main() -> i32 {
         {
             let comment = file.comment();
             if !comment.is_empty() {
-                println!("File {} comment: {}", i, comment);
+                println!("File {i} comment: {comment}");
             }
         }
 
@@ -42,7 +42,7 @@ fn real_main() -> i32 {
             );
             if let Some(p) = outpath.parent() {
                 if !p.exists() {
-                    fs::create_dir_all(&p).unwrap();
+                    fs::create_dir_all(p).unwrap();
                 }
             }
             let mut outfile = fs::File::create(&outpath).unwrap();
