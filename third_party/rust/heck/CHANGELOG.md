@@ -1,3 +1,9 @@
+# 0.4.1
+
+Improvements:
+
+- Add Train-Case support
+
 # 0.4.0
 
 Breaking changes:

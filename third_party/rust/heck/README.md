@@ -37,6 +37,7 @@ indicators are dropped, except insofar as CamelCase capitalizes the first word.
 5. SHOUTY_SNAKE_CASE
 6. Title Case
 7. SHOUTY-KEBAB-CASE
+8. Train-Case
 
 ## Contributing
 
