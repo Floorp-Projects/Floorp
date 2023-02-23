@@ -37,6 +37,14 @@ add_task(async function test_history() {
     UrlbarTestUtils.getButtonForResultIndex(window, "menu", resultIndex),
     "Tab key skips over menu button with resultMenu.keyboardAccessible pref set to false"
   );
+  info(
+    "Checking that the mouse can still activate the menu button with resultMenu.keyboardAccessible = false"
+  );
+  await UrlbarTestUtils.openResultMenu(window, {
+    byMouse: true,
+    resultIndex,
+  });
+  gURLBar.view.resultMenu.hidePopup();
   await SpecialPowers.popPrefEnv();
   await startQuery();
   EventUtils.synthesizeKey("KEY_Tab");
