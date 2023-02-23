@@ -579,10 +579,11 @@ void gfxTextRun::Draw(const Range aRange, const gfx::Point aPt,
   bool skipDrawing =
       !mDontSkipDrawing && (mFontGroup ? mFontGroup->ShouldSkipDrawing()
                                        : mReleasedFontGroupSkippedDrawing);
+  auto* textDrawer = aParams.context->GetTextDrawer();
   if (aParams.drawMode & DrawMode::GLYPH_FILL) {
     DeviceColor currentColor;
     if (aParams.context->GetDeviceColor(currentColor) && currentColor.a == 0 &&
-        !aParams.context->GetTextDrawer()) {
+        !textDrawer) {
       skipDrawing = true;
     }
   }
@@ -610,7 +611,7 @@ void gfxTextRun::Draw(const Range aRange, const gfx::Point aPt,
   bool mayNeedBuffering =
       aParams.drawMode & DrawMode::GLYPH_FILL &&
       aParams.context->HasNonOpaqueNonTransparentColor(currentColor) &&
-      !aParams.context->GetTextDrawer();
+      !textDrawer;
 
   // If we need to double-buffer, we'll need to measure the text first to
   // get the bounds of the area of interest. Ideally we'd do that just for
@@ -641,10 +642,11 @@ void gfxTextRun::Draw(const Range aRange, const gfx::Point aPt,
   params.paintSVGGlyphs =
       !aParams.callbacks || aParams.callbacks->mShouldPaintSVGGlyphs;
   params.dt = aParams.context->GetDrawTarget();
-  params.allowGDI = aParams.allowGDI;
-  if (auto* textDrawer = params.context->GetTextDrawer()) {
+  params.textDrawer = textDrawer;
+  if (textDrawer) {
     params.clipRect = textDrawer->GeckoClipRect();
   }
+  params.allowGDI = aParams.allowGDI;
 
   GlyphRunIterator iter(this, aRange);
   gfxFloat advance = 0.0;
