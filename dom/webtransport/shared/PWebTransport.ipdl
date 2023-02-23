@@ -31,6 +31,8 @@ async protocol PWebTransport
   async IncomingUnidirectionalStream(DataPipeReceiver receive);
   async IncomingBidirectionalStream(DataPipeReceiver receive, DataPipeSender send);
 
+  async RemoteClosed(bool cleanly, uint32_t code, nsCString reason);
+
   async CloseAll()
       returns(nsresult rv);
 };
