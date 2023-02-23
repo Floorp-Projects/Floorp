@@ -218,9 +218,6 @@ class WritableStream : public nsISupports, public nsWrapperCache {
 
   already_AddRefed<WritableStreamDefaultWriter> GetWriter(ErrorResult& aRv);
 
- protected:
-  nsCOMPtr<nsIGlobalObject> mGlobal;
-
   // Internal Slots:
  private:
   bool mBackpressure = false;
@@ -241,6 +238,7 @@ class WritableStream : public nsISupports, public nsWrapperCache {
   RefPtr<WritableStreamDefaultWriter> mWriter;
   nsTArray<RefPtr<Promise>> mWriteRequests;
 
+  nsCOMPtr<nsIGlobalObject> mGlobal;
   HoldDropJSObjectsCaller mHoldDropCaller;
 };
 

@@ -23,13 +23,9 @@ class WebTransportChild : public PWebTransportChild {
 
   virtual void CloseAll();
 
-  void Shutdown(bool aClose);
+  virtual void Shutdown();
 
   ::mozilla::ipc::IPCResult RecvCloseAll(CloseAllResolver&& aResolver);
-
-  ::mozilla::ipc::IPCResult RecvRemoteClosed(const bool& aCleanly,
-                                             const uint32_t& aCode,
-                                             const nsACString& aReason);
 
   ::mozilla::ipc::IPCResult RecvIncomingBidirectionalStream(
       const RefPtr<mozilla::ipc::DataPipeReceiver>& aIncoming,

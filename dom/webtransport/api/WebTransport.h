@@ -8,15 +8,11 @@
 #define DOM_WEBTRANSPORT_API_WEBTRANSPORT__H_
 
 #include "nsCOMPtr.h"
-#include "nsTArray.h"
 #include "nsISupports.h"
 #include "nsWrapperCache.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WebTransportBinding.h"
 #include "mozilla/dom/WebTransportChild.h"
-#include "mozilla/dom/WebTransportSendStream.h"
-#include "mozilla/dom/WebTransportReceiveStream.h"
-#include "mozilla/dom/WebTransportStreams.h"
 #include "mozilla/ipc/DataPipe.h"
 
 namespace mozilla::dom {
@@ -27,14 +23,8 @@ class WebTransportIncomingStreamsAlgorithms;
 class ReadableStream;
 class WritableStream;
 
-using BidirectionalPair = std::pair<RefPtr<mozilla::ipc::DataPipeReceiver>,
-                                    RefPtr<mozilla::ipc::DataPipeSender>>;
-
 class WebTransport final : public nsISupports, public nsWrapperCache {
   friend class WebTransportIncomingStreamsAlgorithms;
-  // For mSendStreams/mReceiveStreams
-  friend class WebTransportSendStream;
-  friend class WebTransportReceiveStream;
 
  public:
   explicit WebTransport(nsIGlobalObject* aGlobal);
@@ -52,7 +42,7 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
                                         ErrorResult& aError);
   void ResolveWaitingConnection(WebTransportReliabilityMode aReliability,
                                 WebTransportChild* aChild);
-  void RejectWaitingConnection(nsresult aRv, WebTransportChild* aChild);
+  void RejectWaitingConnection(nsresult aRv);
   bool ParseURL(const nsAString& aURL) const;
   // this calls CloseNative(), which doesn't actually run script.   See bug
   // 1810942
@@ -68,8 +58,6 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
   void NewUnidirectionalStream(
       const RefPtr<mozilla::ipc::DataPipeReceiver>& aStream);
 
-  void RemoteClosed(bool aCleanly, const uint32_t& aCode,
-                    const nsACString& aReason);
   // WebIDL Boilerplate
   nsIGlobalObject* GetParentObject() const;
 
@@ -86,17 +74,14 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
   already_AddRefed<Promise> Ready() { return do_AddRef(mReady); }
   WebTransportReliabilityMode Reliability();
   WebTransportCongestionControl CongestionControl();
-  already_AddRefed<Promise> Closed() { return do_AddRef(mClosed); }
+  already_AddRefed<Promise> Closed();
   MOZ_CAN_RUN_SCRIPT void Close(const WebTransportCloseInfo& aOptions,
                                 ErrorResult& aRv);
-  already_AddRefed<WebTransportDatagramDuplexStream> GetDatagrams(
-      ErrorResult& aRv);
-  already_AddRefed<Promise> CreateBidirectionalStream(
-      const WebTransportSendStreamOptions& aOptions, ErrorResult& aRv);
-  already_AddRefed<Promise> CreateUnidirectionalStream(
-      const WebTransportSendStreamOptions& aOptions, ErrorResult& aRv);
+  already_AddRefed<WebTransportDatagramDuplexStream> Datagrams();
+  already_AddRefed<Promise> CreateBidirectionalStream(ErrorResult& aError);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY already_AddRefed<ReadableStream>
   IncomingBidirectionalStreams();
+  already_AddRefed<Promise> CreateUnidirectionalStream(ErrorResult& aError);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY already_AddRefed<ReadableStream>
   IncomingUnidirectionalStreams();
 
@@ -122,22 +107,14 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
   // each sendStream in sendStreams, error sendStream with error."
   // XXX Use nsTArray.h for now, but switch to OrderHashSet/Table for release to
   // improve remove performance (if needed)
-  nsTArray<RefPtr<WebTransportSendStream>> mSendStreams;
-  nsTArray<RefPtr<WebTransportReceiveStream>> mReceiveStreams;
+  nsTArray<RefPtr<WritableStream>> mSendStreams;
+  nsTArray<RefPtr<ReadableStream>> mReceiveStreams;
 
   WebTransportState mState;
   RefPtr<Promise> mReady;
-  // XXX may not need to be a RefPtr, since we own it through the Streams
-  RefPtr<WebTransportIncomingStreamsAlgorithms> mIncomingBidirectionalAlgorithm;
-  RefPtr<WebTransportIncomingStreamsAlgorithms>
-      mIncomingUnidirectionalAlgorithm;
+  RefPtr<Promise> mIncomingUnidirectionalPromise;
+  RefPtr<Promise> mIncomingBidirectionalPromise;
   WebTransportReliabilityMode mReliability;
-  // Incoming streams get queued here.  Use a TArray though it's working as
-  // a FIFO - rarely will there be more than one entry in these arrays, so
-  // the overhead of mozilla::Queue is unneeded
-  nsTArray<RefPtr<mozilla::ipc::DataPipeReceiver>> mUnidirectionalStreams;
-  nsTArray<UniquePtr<BidirectionalPair>> mBidirectionalStreams;
-
   // These are created in the constructor
   RefPtr<ReadableStream> mIncomingUnidirectionalStreams;
   RefPtr<ReadableStream> mIncomingBidirectionalStreams;

@@ -9,28 +9,31 @@
 
 #include "mozilla/dom/WritableStream.h"
 
+#if WEBTRANSPORT_STREAM_IMPLEMENTED
 namespace mozilla::dom {
-
 class WebTransportSendStream final : public WritableStream {
+ protected:
+  WebTransportSendStream();
+
  public:
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(WebTransportSendStream, WritableStream)
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(WebTransportSendStream,
+                                           WritableStream)
 
-  explicit WebTransportSendStream(nsIGlobalObject* aGlobal);
-
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY static already_AddRefed<WebTransportSendStream>
-  Create(WebTransport* aWebTransport, nsIGlobalObject* aGlobal,
-         mozilla::ipc::DataPipeSender* sender, ErrorResult& aRv);
-
-  // WebIDL Boilerplate
-  JSObject* WrapObject(JSContext* aCx,
-                       JS::Handle<JSObject*> aGivenProto) override;
-
-  // WebIDL Interface
   already_AddRefed<Promise> GetStats();
-
- private:
-  ~WebTransportSendStream() override = default;
 };
-}  // namespace mozilla::dom
+#else
+namespace mozilla::dom {
+class WebTransportSendStream final : public nsISupports {
+ protected:
+  WebTransportSendStream();
+
+ public:
+  NS_DECL_ISUPPORTS
+
+  already_AddRefed<Promise> GetStats();
+};
+#endif
+}
 
 #endif

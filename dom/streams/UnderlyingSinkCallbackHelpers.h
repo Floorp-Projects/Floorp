@@ -7,15 +7,12 @@
 #ifndef mozilla_dom_UnderlyingSinkCallbackHelpers_h
 #define mozilla_dom_UnderlyingSinkCallbackHelpers_h
 
-#include "mozilla/Maybe.h"
-#include "mozilla/Buffer.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/UnderlyingSinkBinding.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"
 #include "nsISupportsImpl.h"
-#include "nsIAsyncOutputStream.h"
 
 /*
  * See the comment in UnderlyingSourceCallbackHelpers.h!
@@ -154,47 +151,6 @@ class UnderlyingSinkAlgorithmsWrapper : public UnderlyingSinkAlgorithmsBase {
     // (abortAlgorithm is optional, give null by default)
     return nullptr;
   }
-};
-
-class WritableStreamToOutput final : public UnderlyingSinkAlgorithmsWrapper,
-                                     public nsIOutputStreamCallback {
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIOUTPUTSTREAMCALLBACK
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(WritableStreamToOutput,
-                                           UnderlyingSinkAlgorithmsBase)
-
-  WritableStreamToOutput(nsIGlobalObject* aParent,
-                         nsIAsyncOutputStream* aOutput)
-      : mWritten(0), mParent(aParent), mOutput(aOutput) {}
-
-  // Streams algorithms
-
-  already_AddRefed<Promise> WriteCallback(
-      JSContext* aCx, JS::Handle<JS::Value> aChunk,
-      WritableStreamDefaultController& aController, ErrorResult& aRv) override;
-
-  // No CloseCallbackImpl() since ReleaseObjects() will call Close()
-
-  already_AddRefed<Promise> AbortCallbackImpl(
-      JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
-      ErrorResult& aRv) override;
-
-  void ReleaseObjects() override;
-
- private:
-  ~WritableStreamToOutput() override = default;
-
-  void ClearData() {
-    mData = Nothing();
-    mPromise = nullptr;
-    mWritten = 0;
-  }
-
-  uint32_t mWritten;
-  nsCOMPtr<nsIGlobalObject> mParent;
-  nsCOMPtr<nsIAsyncOutputStream> mOutput;
-  RefPtr<Promise> mPromise;  // Resolved when entirely written
-  Maybe<Buffer<uint8_t>> mData;
 };
 
 }  // namespace mozilla::dom
