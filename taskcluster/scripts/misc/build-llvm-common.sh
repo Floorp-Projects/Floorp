@@ -129,6 +129,7 @@ case "$target" in
     -DCMAKE_LINKER=$MOZ_FETCHES_DIR/clang/bin/ld.lld
     -DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=lld
     -DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=lld
+    -DLLVM_ENABLE_TERMINFO=OFF
   "
   ;;
 *-pc-windows-msvc)
