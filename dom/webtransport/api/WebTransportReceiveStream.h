@@ -32,6 +32,6 @@ class WebTransportReceiveStream final : public ReadableStream {
  private:
   ~WebTransportReceiveStream() override = default;
 };
-}
+}  // namespace mozilla::dom
 
 #endif

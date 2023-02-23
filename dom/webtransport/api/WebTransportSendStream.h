@@ -31,6 +31,6 @@ class WebTransportSendStream final : public WritableStream {
  private:
   ~WebTransportSendStream() override = default;
 };
-}
+}  // namespace mozilla::dom
 
 #endif
