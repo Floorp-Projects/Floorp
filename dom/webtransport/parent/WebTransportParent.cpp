@@ -94,11 +94,10 @@ void WebTransportParent::Create(
   // Bind to SocketThread for IPC - connection creation/destruction must
   // hit MainThread, but keep all other traffic on SocketThread.  Note that
   // we must call aResolver() on this (PBackground) thread.
-  nsCOMPtr<nsISerialEventTarget> sts =
-      do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
+  mSocketThread = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
-  InvokeAsync(sts, __func__,
+  InvokeAsync(mSocketThread, __func__,
               [parentEndpoint = std::move(aParentEndpoint), runnable = r,
                resolver = std::move(aResolver), p = RefPtr{this}]() mutable {
                 p->mResolver = resolver;
@@ -111,6 +110,7 @@ void WebTransportParent::Create(
                 // IPC now holds a ref to parent
                 // Send connection to the server via MainThread
                 NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL);
+
                 return CreateWebTransportPromise::CreateAndResolve(
                     WebTransportReliabilityMode::Supports_unreliable, __func__);
               })
@@ -193,8 +193,6 @@ WebTransportParent::OnSessionReady(uint64_t aSessionId) {
 NS_IMETHODIMP
 WebTransportParent::OnSessionClosed(const uint32_t aErrorCode,
                                     const nsACString& aReason) {
-  LOG(("webtransport %p session creation failed code= %u, reason= %s", this,
-       aErrorCode, PromiseFlatCString(aReason).get()));
   nsresult rv = NS_OK;
 
   MOZ_ASSERT(mOwningEventTarget);
@@ -205,6 +203,8 @@ WebTransportParent::OnSessionClosed(const uint32_t aErrorCode,
   // webtransport session and it's subsequent error mapping to DOM.
   // XXX See Bug 1806834
   if (mResolver) {
+    LOG(("webtransport %p session creation failed code= %u, reason= %s", this,
+         aErrorCode, PromiseFlatCString(aReason).get()));
     // we know we haven't gone Ready yet
     rv = NS_ERROR_FAILURE;
     mOwningEventTarget->Dispatch(NS_NewRunnableFunction(
@@ -222,9 +222,15 @@ WebTransportParent::OnSessionClosed(const uint32_t aErrorCode,
     // stream associated with the CONNECT request that initiated
     // transport.[[Session]] is in the "Data Recvd" state. [QUIC]
     // XXX not calculated yet
-    // Tell the content side we were closed by the server
-    Unused << SendRemoteClosed(/*XXX*/ true, aErrorCode, aReason);
-    // Let the other end shut down the IPC channel after RecvClose()
+    LOG(("webtransport %p session remote closed code= %u, reason= %s", this,
+         aErrorCode, PromiseFlatCString(aReason).get()));
+    mSocketThread->Dispatch(NS_NewRunnableFunction(
+        __func__,
+        [self = RefPtr{this}, aErrorCode, reason = nsCString{aReason}]() {
+          // Tell the content side we were closed by the server
+          Unused << self->SendRemoteClosed(/*XXX*/ true, aErrorCode, reason);
+          // Let the other end shut down the IPC channel after RecvClose()
+        }));
   }
 
   return NS_OK;
@@ -274,9 +280,7 @@ WebTransportParent::OnIncomingUnidirectionalStreamAvailable(
 
   LOG(("%p Sending UnidirectionalStream pipe to content", this));
   // pass the DataPipeReceiver to the content process
-  if (!SendIncomingUnidirectionalStream(receiver)) {
-    return NS_ERROR_FAILURE;
-  }
+  Unused << SendIncomingUnidirectionalStream(receiver);
 
   return NS_OK;
 }

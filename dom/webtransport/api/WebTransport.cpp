@@ -74,6 +74,7 @@ WebTransport::WebTransport(nsIGlobalObject* aGlobal)
 WebTransport::~WebTransport() {
   // Should be empty by this point, because we should always have run cleanup:
   // https://w3c.github.io/webtransport/#webtransport-procedures
+  LOG(("~WebTransport() for %p", this));
   MOZ_ASSERT(mSendStreams.IsEmpty());
   MOZ_ASSERT(mReceiveStreams.IsEmpty());
   // If this WebTransport was destroyed without being closed properly, make
@@ -81,7 +82,7 @@ WebTransport::~WebTransport() {
   // Since child has a raw ptr to us, we MUST call Shutdown() before we're
   // destroyed
   if (mChild) {
-    mChild->Shutdown();
+    mChild->Shutdown(true);
   }
 }
 
@@ -99,8 +100,6 @@ void WebTransport::NewUnidirectionalStream(
   // Create a Unidirectional stream and push it into the
   // IncomingUnidirectionalStreams stream. Must be added to the ReceiveStreams
   // array
-  //    RefPtr<ReadableStream> stream = CreateReadableByteStream(cx, global,
-  //    algorithm, aRV);
 
   mUnidirectionalStreams.Push(aStream);
   // Notify something to wake up readers of IncomingReceiveStreams
@@ -109,6 +108,7 @@ void WebTransport::NewUnidirectionalStream(
   if (mIncomingUnidirectionalAlgorithm) {
     RefPtr<WebTransportIncomingStreamsAlgorithms> callback =
         mIncomingUnidirectionalAlgorithm;
+    LOG(("NotifyIncomingStream"));
     callback->NotifyIncomingStream();
   }
 }
@@ -330,7 +330,6 @@ void WebTransport::ResolveWaitingConnection(
   if (mState != WebTransportState::CONNECTING) {
     // Step 17.1.1: In parallel, terminate session.
     // Step 17.1.2: abort these steps
-    aChild->Shutdown();
     // Cleanup should have been called, which means Ready has been rejected
     return;
   }
@@ -358,7 +357,6 @@ void WebTransport::RejectWaitingConnection(nsresult aRv,
   // these steps.
   if (mState == WebTransportState::CLOSED ||
       mState == WebTransportState::FAILED) {
-    aChild->Shutdown();
     return;
   }
 
@@ -371,7 +369,7 @@ void WebTransport::RejectWaitingConnection(nsresult aRv,
   Cleanup(error, nullptr, errorresult);
 
   // We never set mChild, but we need to prepare it to die
-  aChild->Shutdown();
+  aChild->Shutdown(true);
 }
 
 bool WebTransport::ParseURL(const nsAString& aURL) const {
@@ -406,16 +404,6 @@ WebTransportReliabilityMode WebTransport::Reliability() { return mReliability; }
 WebTransportCongestionControl WebTransport::CongestionControl() {
   // XXX not implemented
   return WebTransportCongestionControl::Default;
-}
-
-already_AddRefed<Promise> WebTransport::Closed() {
-  ErrorResult error;
-  RefPtr<Promise> promise = Promise::Create(GetParentObject(), error);
-  if (error.Failed()) {
-    return nullptr;
-  }
-  promise->MaybeResolve(mState == WebTransportState::CLOSED);
-  return promise.forget();
 }
 
 void WebTransport::RemoteClosed(bool aCleanly, const uint32_t& aCode,
@@ -499,6 +487,7 @@ void WebTransport::Close(const WebTransportCloseInfo& aOptions,
                   RewindToPriorUTF8Codepoint(aOptions.mReason.get(), 1024u)));
   } else {
     mChild->SendClose(aOptions.mCloseCode, aOptions.mReason);
+    LOG(("Close sent"));
   }
 
   // Step 9: Cleanup transport with AbortError and closeInfo. (sets mState to
@@ -507,19 +496,19 @@ void WebTransport::Close(const WebTransportCloseInfo& aOptions,
       new WebTransportError("close()"_ns, WebTransportErrorSource::Session,
                             DOMException_Binding::ABORT_ERR);
   Cleanup(error, &aOptions, aRv);
+  LOG(("Cleanup done"));
 
   // The other side will call `Close()` for us now, make sure we don't call it
   // in our destructor.
-  // This also causes IPC to drop the reference to us, allowing us to be
-  // GC'd (spec 5.8)
-  // Cleanup() clears the algorithm member vars
-  mChild->Shutdown();
+  mChild->Shutdown(false);
   mChild = nullptr;
+  LOG(("Close done"));
 }
 
-already_AddRefed<WebTransportDatagramDuplexStream> WebTransport::Datagrams() {
+already_AddRefed<WebTransportDatagramDuplexStream> WebTransport::GetDatagrams(
+    ErrorResult& aError) {
   LOG(("Datagrams() called"));
-  // XXX not implemented
+  aError.Throw(NS_ERROR_NOT_IMPLEMENTED);
   return nullptr;
 }
 
@@ -561,6 +550,7 @@ void WebTransport::Cleanup(WebTransportError* aError,
   // transport.[[IncomingUnidirectionalStreams]].
   // Step 7: Set transport.[[SendStreams]] to an empty set.
   // Step 8: Set transport.[[ReceiveStreams]] to an empty set.
+  LOG(("Cleanup started"));
   nsTArray<RefPtr<WebTransportSendStream>> sendStreams;
   sendStreams.SwapElements(mSendStreams);
   nsTArray<RefPtr<WebTransportReceiveStream>> receiveStreams;
@@ -596,6 +586,7 @@ void WebTransport::Cleanup(WebTransportError* aError,
   // Step 12:
   if (aCloseInfo) {
     // 12.1: Resolve closed with closeInfo.
+    LOG(("Resolving mClosed with closeinfo"));
     mClosed->MaybeResolve(aCloseInfo);
     // 12.2: Assert: ready is settled.
     MOZ_ASSERT(mReady->State() != Promise::PromiseState::Pending);
@@ -609,6 +600,7 @@ void WebTransport::Cleanup(WebTransportError* aError,
   } else {
     // Step 13
     // 13.1: Reject closed with error
+    LOG(("Rejecting mClosed"));
     mClosed->MaybeReject(errorValue);
     // 13.2: Reject ready with error
     mReady->MaybeReject(errorValue);
