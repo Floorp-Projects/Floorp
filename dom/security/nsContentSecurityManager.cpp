@@ -1834,6 +1834,13 @@ void nsContentSecurityManager::GetSerializedOrigin(
   aOrigin->GetAsciiOrigin(aSerializedOrigin);
 }
 
+// https://html.spec.whatwg.org/multipage/browsers.html#compatible-with-cross-origin-isolation
+bool nsContentSecurityManager::IsCompatibleWithCrossOriginIsolation(
+    nsILoadInfo::CrossOriginEmbedderPolicy aPolicy) {
+  return aPolicy == nsILoadInfo::EMBEDDER_POLICY_CREDENTIALLESS ||
+         aPolicy == nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP;
+}
+
 // ==== nsIContentSecurityManager implementation =====
 
 NS_IMETHODIMP
