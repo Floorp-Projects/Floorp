@@ -85,10 +85,10 @@
 //! # untyped_example().unwrap();
 //! ```
 //!
-//! [macro]: https://docs.serde.rs/serde_json/macro.json.html
-//! [from_str]: https://docs.serde.rs/serde_json/de/fn.from_str.html
-//! [from_slice]: https://docs.serde.rs/serde_json/de/fn.from_slice.html
-//! [from_reader]: https://docs.serde.rs/serde_json/de/fn.from_reader.html
+//! [macro]: crate::json
+//! [from_str]: crate::de::from_str
+//! [from_slice]: crate::de::from_slice
+//! [from_reader]: crate::de::from_reader
 
 use crate::error::Error;
 use crate::io;

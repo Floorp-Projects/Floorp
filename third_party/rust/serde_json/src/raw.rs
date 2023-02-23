@@ -112,7 +112,7 @@ use serde::ser::{Serialize, SerializeStruct, Serializer};
 ///     raw_value: Box<RawValue>,
 /// }
 /// ```
-#[repr(C)]
+#[cfg_attr(not(doc), repr(transparent))]
 #[cfg_attr(docsrs, doc(cfg(feature = "raw_value")))]
 pub struct RawValue {
     json: str,

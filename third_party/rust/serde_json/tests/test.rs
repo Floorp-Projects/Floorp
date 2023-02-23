@@ -2180,6 +2180,27 @@ fn test_integer128() {
     ]);
 }
 
+#[test]
+fn test_integer128_to_value() {
+    let signed = &[i128::from(i64::min_value()), i128::from(u64::max_value())];
+    let unsigned = &[0, u128::from(u64::max_value())];
+
+    for integer128 in signed {
+        let expected = integer128.to_string();
+        assert_eq!(to_value(integer128).unwrap().to_string(), expected);
+    }
+
+    for integer128 in unsigned {
+        let expected = integer128.to_string();
+        assert_eq!(to_value(integer128).unwrap().to_string(), expected);
+    }
+
+    if !cfg!(feature = "arbitrary_precision") {
+        let err = to_value(u128::from(u64::max_value()) + 1).unwrap_err();
+        assert_eq!(err.to_string(), "number out of range");
+    }
+}
+
 #[cfg(feature = "raw_value")]
 #[test]
 fn test_borrowed_raw_value() {
