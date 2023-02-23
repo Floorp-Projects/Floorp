@@ -1,3 +1,18 @@
+# 1.4.0 (January 31, 2023)
+
+### Added
+
+- Make `IntoIter` constructor public (#581)
+
+### Fixed
+
+- Avoid large reallocations when freezing `BytesMut` (#592)
+
+### Documented
+
+- Document which functions require `std` (#591)
+- Fix duplicate "the the" typos (#585)
+
 # 1.3.0 (November 20, 2022)
 
 ### Added

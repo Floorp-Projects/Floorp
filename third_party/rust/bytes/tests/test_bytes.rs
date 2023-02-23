@@ -1163,3 +1163,48 @@ fn test_bytes_into_vec_promotable_even() {
     assert_eq!(Vec::from(b2), vec[20..]);
     assert_eq!(Vec::from(b1), vec[..20]);
 }
+
+#[test]
+fn test_bytes_vec_conversion() {
+    let mut vec = Vec::with_capacity(10);
+    vec.extend(b"abcdefg");
+    let b = Bytes::from(vec);
+    let v = Vec::from(b);
+    assert_eq!(v.len(), 7);
+    assert_eq!(v.capacity(), 10);
+
+    let mut b = Bytes::from(v);
+    b.advance(1);
+    let v = Vec::from(b);
+    assert_eq!(v.len(), 6);
+    assert_eq!(v.capacity(), 10);
+    assert_eq!(v.as_slice(), b"bcdefg");
+}
+
+#[test]
+fn test_bytes_mut_conversion() {
+    let mut b1 = BytesMut::with_capacity(10);
+    b1.extend(b"abcdefg");
+    let b2 = Bytes::from(b1);
+    let v = Vec::from(b2);
+    assert_eq!(v.len(), 7);
+    assert_eq!(v.capacity(), 10);
+
+    let mut b = Bytes::from(v);
+    b.advance(1);
+    let v = Vec::from(b);
+    assert_eq!(v.len(), 6);
+    assert_eq!(v.capacity(), 10);
+    assert_eq!(v.as_slice(), b"bcdefg");
+}
+
+#[test]
+fn test_bytes_capacity_len() {
+    for cap in 0..100 {
+        for len in 0..=cap {
+            let mut v = Vec::with_capacity(cap);
+            v.resize(len, 0);
+            let _ = Bytes::from(v);
+        }
+    }
+}
