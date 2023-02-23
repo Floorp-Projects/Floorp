@@ -1,11 +1,10 @@
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen_test::*;
+#[cfg(all(target_family = "wasm", not(target_os = "wasi")))]
+use wasm_bindgen_test::wasm_bindgen_test as test;
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_family = "wasm", not(target_os = "wasi")))]
 wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
 #[test]
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
 fn bool() {
     for x in &[false, true] {
         while fastrand::bool() != *x {}
@@ -13,7 +12,6 @@ fn bool() {
 }
 
 #[test]
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
 fn u8() {
     for x in 0..10 {
         while fastrand::u8(..10) != x {}
@@ -25,7 +23,6 @@ fn u8() {
 }
 
 #[test]
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
 fn i8() {
     for x in -128..-120 {
         while fastrand::i8(..-120) != x {}
@@ -37,7 +34,6 @@ fn i8() {
 }
 
 #[test]
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
 fn u32() {
     for n in 1u32..10_000 {
         let n = n.wrapping_mul(n);
@@ -51,7 +47,6 @@ fn u32() {
 }
 
 #[test]
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
 fn u64() {
     for n in 1u64..10_000 {
         let n = n.wrapping_mul(n);
@@ -66,7 +61,6 @@ fn u64() {
 }
 
 #[test]
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
 fn u128() {
     for n in 1u128..10_000 {
         let n = n.wrapping_mul(n);
@@ -82,7 +76,18 @@ fn u128() {
 }
 
 #[test]
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
+fn fill() {
+    let r = fastrand::Rng::new();
+    let mut a = [0u8; 64];
+    let mut b = [0u8; 64];
+
+    r.fill(&mut a);
+    r.fill(&mut b);
+
+    assert_ne!(a, b);
+}
+
+#[test]
 fn rng() {
     let r = fastrand::Rng::new();
 
@@ -96,7 +101,6 @@ fn rng() {
 }
 
 #[test]
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
 fn rng_init() {
     let a = fastrand::Rng::new();
     let b = fastrand::Rng::new();
@@ -108,7 +112,6 @@ fn rng_init() {
 }
 
 #[test]
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen_test)]
 fn with_seed() {
     let a = fastrand::Rng::with_seed(7);
     let b = fastrand::Rng::new();
