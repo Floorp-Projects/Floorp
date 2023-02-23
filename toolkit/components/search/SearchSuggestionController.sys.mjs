@@ -150,10 +150,15 @@ export class SearchSuggestionController {
    * Determines whether the given engine offers search suggestions.
    *
    * @param {nsISearchEngine} engine - The search engine
+   * @param {boolean} fetchTrending - Whether we should fetch trending suggestions.
    * @returns {boolean} True if the engine offers suggestions and false otherwise.
    */
-  static engineOffersSuggestions(engine) {
-    return engine.supportsResponseType(lazy.SearchUtils.URL_TYPE.SUGGEST_JSON);
+  static engineOffersSuggestions(engine, fetchTrending) {
+    return engine.supportsResponseType(
+      fetchTrending
+        ? lazy.SearchUtils.URL_TYPE.TRENDING_JSON
+        : lazy.SearchUtils.URL_TYPE.SUGGEST_JSON
+    );
   }
 
   /**
@@ -219,6 +224,7 @@ export class SearchSuggestionController {
    *   suggestions to the ones registered under the given engine.
    * @param {boolean} dedupeRemoteAndLocal - whether to remove remote
    *   suggestions that dupe local suggestions
+   * @param {boolean} fetchTrending - Whether we should fetch trending suggestions.
    *
    * @returns {Promise<FetchResult>}
    */
@@ -228,7 +234,8 @@ export class SearchSuggestionController {
     engine,
     userContextId = 0,
     restrictToEngine = false,
-    dedupeRemoteAndLocal = true
+    dedupeRemoteAndLocal = true,
+    fetchTrending = false
   ) {
     // There is no smart filtering from previous results here (as there is when
     // looking through history/form data) because the result set returned by the
@@ -262,6 +269,7 @@ export class SearchSuggestionController {
       dedupeRemoteAndLocal,
       engine,
       engineId: engine?.identifier || "other",
+      fetchTrending,
       privateMode,
       request: null,
       restrictToEngine,
@@ -272,17 +280,17 @@ export class SearchSuggestionController {
     });
 
     // Fetch local results from Form History, if requested.
-    if (this.maxLocalResults) {
+    if (this.maxLocalResults && !fetchTrending) {
       context.awaitingLocalResults = true;
       promises.push(this.#fetchFormHistory(context));
     }
     // Fetch remote results from Search Service, if requested.
     if (
-      searchTerm &&
+      (searchTerm || fetchTrending) &&
       this.suggestionsEnabled &&
       (!privateMode || this.suggestionsInPrivateBrowsingEnabled) &&
       this.maxRemoteResults &&
-      SearchSuggestionController.engineOffersSuggestions(engine)
+      SearchSuggestionController.engineOffersSuggestions(engine, fetchTrending)
     ) {
       promises.push(this.#fetchRemote(context));
     }
@@ -454,7 +462,9 @@ export class SearchSuggestionController {
     let request = (context.request = new XMLHttpRequest());
     let submission = context.engine.getSubmission(
       context.searchString,
-      lazy.SearchUtils.URL_TYPE.SUGGEST_JSON
+      context.searchString
+        ? lazy.SearchUtils.URL_TYPE.SUGGEST_JSON
+        : lazy.SearchUtils.URL_TYPE.TRENDING_JSON
     );
     let method = submission.postData ? "POST" : "GET";
     request.open(method, submission.uri.spec, true);
@@ -575,7 +585,7 @@ export class SearchSuggestionController {
     try {
       if (
         !Array.isArray(serverResults) ||
-        !serverResults[0] ||
+        serverResults[0] == undefined ||
         (context.searchString.localeCompare(serverResults[0], undefined, {
           sensitivity: "base",
         }) &&

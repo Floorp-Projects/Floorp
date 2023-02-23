@@ -146,6 +146,7 @@ export var SearchUtils = {
     SUGGEST_JSON: "application/x-suggestions+json",
     SEARCH: "text/html",
     OPENSEARCH: "application/opensearchdescription+xml",
+    TRENDING_JSON: "application/x-trending+json",
   },
 
   ENGINES_URLS: {
