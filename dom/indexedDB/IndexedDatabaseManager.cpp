@@ -49,7 +49,6 @@
 #include "mozilla/dom/IDBFactoryBinding.h"
 #include "mozilla/dom/IDBIndexBinding.h"
 #include "mozilla/dom/IDBKeyRangeBinding.h"
-#include "mozilla/dom/IDBMutableFileBinding.h"
 #include "mozilla/dom/IDBObjectStoreBinding.h"
 #include "mozilla/dom/IDBOpenDBRequestBinding.h"
 #include "mozilla/dom/IDBRequestBinding.h"
@@ -352,7 +351,6 @@ bool IndexedDatabaseManager::ResolveSandboxBinding(JSContext* aCx) {
       !IDBIndex_Binding::GetConstructorObject(aCx) ||
       !IDBKeyRange_Binding::GetConstructorObject(aCx) ||
       !IDBLocaleAwareKeyRange_Binding::GetConstructorObject(aCx) ||
-      !IDBMutableFile_Binding::GetConstructorObject(aCx) ||
       !IDBObjectStore_Binding::GetConstructorObject(aCx) ||
       !IDBOpenDBRequest_Binding::GetConstructorObject(aCx) ||
       !IDBRequest_Binding::GetConstructorObject(aCx) ||

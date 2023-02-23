@@ -102,24 +102,14 @@ class IDBMutableFile final : public DOMEventTargetHelper {
 
   void AbortFileHandles();
 
-  // WebIDL
-  void GetName(nsString& aName) const { aName = mName; }
-
-  void GetType(nsString& aType) const { aType = mType; }
-
-  IDBDatabase* Database() const;
-
-  [[nodiscard]] RefPtr<IDBFileHandle> Open(FileMode aMode, ErrorResult& aError);
-
-  IMPL_EVENT_HANDLER(abort)
-  IMPL_EVENT_HANDLER(error)
-
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBMutableFile, DOMEventTargetHelper)
 
   // nsWrapperCache
   virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+                               JS::Handle<JSObject*> aGivenProto) override {
+    return nullptr;
+  }
 
  private:
   ~IDBMutableFile();

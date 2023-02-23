@@ -37,7 +37,6 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/IDBMutableFileBinding.h"
 #include "mozilla/dom/IDBObjectStoreBinding.h"
 #include "mozilla/dom/MemoryBlobImpl.h"
 #include "mozilla/dom/StreamBlobImpl.h"
@@ -268,27 +267,6 @@ bool CopyingStructuredCloneWriteCallback(JSContext* aCx,
       }
 
       cloneInfo->mFiles.EmplaceBack(StructuredCloneFileBase::eBlob, blob);
-
-      return true;
-    }
-  }
-
-  {
-    IDBMutableFile* mutableFile;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(IDBMutableFile, &obj, mutableFile))) {
-      if (cloneInfo->mFiles.Length() > size_t(UINT32_MAX)) {
-        MOZ_ASSERT(false,
-                   "Fix the structured clone data to use a bigger type!");
-        return false;
-      }
-
-      const uint32_t index = cloneInfo->mFiles.Length();
-
-      if (!JS_WriteUint32Pair(aWriter, SCTAG_DOM_MUTABLEFILE, index)) {
-        return false;
-      }
-
-      cloneInfo->mFiles.EmplaceBack(mutableFile);
 
       return true;
     }

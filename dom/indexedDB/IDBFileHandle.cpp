@@ -12,7 +12,6 @@
 #include "IDBMutableFile.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/IDBFileHandleBinding.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/PBackgroundFileHandle.h"
 #include "mozilla/EventDispatcher.h"
@@ -33,7 +32,7 @@ RefPtr<IDBFileRequest> GenerateFileRequest(IDBFileHandle* aFileHandle) {
   MOZ_ASSERT(aFileHandle);
   aFileHandle->AssertIsOnOwningThread();
 
-  return IDBFileRequest::Create(aFileHandle, /* aWrapAsDOMRequest */ false);
+  return IDBFileRequest::Create(aFileHandle);
 }
 
 }  // namespace
@@ -249,126 +248,6 @@ void IDBFileHandle::Abort() {
   }
 }
 
-RefPtr<IDBFileRequest> IDBFileHandle::GetMetadata(
-    const IDBFileMetadataParameters& aParameters, ErrorResult& aRv) {
-  AssertIsOnOwningThread();
-
-  // Common state checking
-  if (!CheckState(aRv)) {
-    return nullptr;
-  }
-
-  // Argument checking for get metadata.
-  if (!aParameters.mSize && !aParameters.mLastModified) {
-    aRv.ThrowTypeError("Either size or lastModified should be true.");
-    return nullptr;
-  }
-
-  // Do nothing if the window is closed
-  if (!CheckWindow()) {
-    return nullptr;
-  }
-
-  FileRequestGetMetadataParams params;
-  params.size() = aParameters.mSize;
-  params.lastModified() = aParameters.mLastModified;
-
-  auto fileRequest = GenerateFileRequest(this);
-
-  StartRequest(fileRequest, params);
-
-  return fileRequest;
-}
-
-RefPtr<IDBFileRequest> IDBFileHandle::Truncate(const Optional<uint64_t>& aSize,
-                                               ErrorResult& aRv) {
-  AssertIsOnOwningThread();
-
-  // State checking for write
-  if (!CheckStateForWrite(aRv)) {
-    return nullptr;
-  }
-
-  // Getting location and additional state checking for truncate
-  uint64_t location;
-  if (aSize.WasPassed()) {
-    // Cannot use UINT64_MAX as the truncation size, as this is used as a
-    // special value for the location to mark append mode. This is not really of
-    // practical relevance, as a file cannot actually have a size that large.
-
-    // XXX: Remove this check when removing the use of UINT64_MAX as a special
-    // value for the location to mark append mode?
-    if (aSize.Value() == UINT64_MAX) {
-      aRv.ThrowTypeError("UINT64_MAX is not a valid size");
-      return nullptr;
-    }
-    location = aSize.Value();
-  } else {
-    // Fail if we are in append mode.
-
-    // XXX: Is it really ok that truncate with a size parameter works when in
-    // append mode, but one without a size parameter does not?
-    if (mLocation == UINT64_MAX) {
-      aRv.Throw(NS_ERROR_DOM_FILEHANDLE_NOT_ALLOWED_ERR);
-      return nullptr;
-    }
-    location = mLocation;
-  }
-
-  // Do nothing if the window is closed
-  if (!CheckWindow()) {
-    return nullptr;
-  }
-
-  FileRequestTruncateParams params;
-  params.offset() = location;
-
-  auto fileRequest = GenerateFileRequest(this);
-
-  StartRequest(fileRequest, params);
-
-  if (aSize.WasPassed()) {
-    mLocation = aSize.Value();
-  }
-
-  return fileRequest;
-}
-
-RefPtr<IDBFileRequest> IDBFileHandle::Flush(ErrorResult& aRv) {
-  AssertIsOnOwningThread();
-
-  // State checking for write
-  if (!CheckStateForWrite(aRv)) {
-    return nullptr;
-  }
-
-  // Do nothing if the window is closed
-  if (!CheckWindow()) {
-    return nullptr;
-  }
-
-  FileRequestFlushParams params;
-
-  auto fileRequest = GenerateFileRequest(this);
-
-  StartRequest(fileRequest, params);
-
-  return fileRequest;
-}
-
-void IDBFileHandle::Abort(ErrorResult& aRv) {
-  AssertIsOnOwningThread();
-
-  // This method is special enough for not using generic state checking methods.
-
-  if (IsFinishingOrDone()) {
-    aRv.Throw(NS_ERROR_DOM_FILEHANDLE_NOT_ALLOWED_ERR);
-    return;
-  }
-
-  Abort();
-}
-
 bool IDBFileHandle::CheckState(ErrorResult& aRv) const {
   if (!IsOpen()) {
     aRv.Throw(NS_ERROR_DOM_FILEHANDLE_INACTIVE_ERR);
@@ -470,27 +349,6 @@ RefPtr<IDBFileRequest> IDBFileHandle::Read(uint64_t aSize, bool aHasEncoding,
   mLocation += aSize;
 
   return fileRequest;
-}
-
-RefPtr<IDBFileRequest> IDBFileHandle::WriteOrAppend(
-    const StringOrArrayBufferOrArrayBufferViewOrBlob& aValue, bool aAppend,
-    ErrorResult& aRv) {
-  AssertIsOnOwningThread();
-
-  if (aValue.IsString()) {
-    return WriteOrAppend(aValue.GetAsString(), aAppend, aRv);
-  }
-
-  if (aValue.IsArrayBuffer()) {
-    return WriteOrAppend(aValue.GetAsArrayBuffer(), aAppend, aRv);
-  }
-
-  if (aValue.IsArrayBufferView()) {
-    return WriteOrAppend(aValue.GetAsArrayBufferView(), aAppend, aRv);
-  }
-
-  MOZ_ASSERT(aValue.IsBlob());
-  return WriteOrAppend(aValue.GetAsBlob(), aAppend, aRv);
 }
 
 RefPtr<IDBFileRequest> IDBFileHandle::WriteOrAppend(const nsAString& aValue,
@@ -730,14 +588,6 @@ void IDBFileHandle::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
 
   aVisitor.mCanHandle = true;
   aVisitor.SetParentTarget(mMutableFile, false);
-}
-
-// virtual
-JSObject* IDBFileHandle::WrapObject(JSContext* aCx,
-                                    JS::Handle<JSObject*> aGivenProto) {
-  AssertIsOnOwningThread();
-
-  return IDBFileHandle_Binding::Wrap(aCx, this, aGivenProto);
 }
 
 }  // namespace mozilla::dom

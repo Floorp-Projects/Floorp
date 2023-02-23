@@ -16,7 +16,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/IDBMutableFileBinding.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBSharedTypes.h"
 #include "mozilla/dom/quota/FileStreams.h"
 #include "mozilla/dom/quota/QuotaManager.h"
@@ -139,37 +138,6 @@ void IDBMutableFile::AbortFileHandles() {
   }
 }
 
-IDBDatabase* IDBMutableFile::Database() const {
-  AssertIsOnOwningThread();
-
-  return mDatabase;
-}
-
-RefPtr<IDBFileHandle> IDBMutableFile::Open(FileMode aMode,
-                                           ErrorResult& aError) {
-  AssertIsOnOwningThread();
-
-  if (QuotaManager::IsShuttingDown() || mDatabase->IsClosed() || !GetOwner()) {
-    aError.Throw(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
-    return nullptr;
-  }
-
-  auto fileHandle = IDBFileHandle::Create(this, aMode);
-  if (NS_WARN_IF(!fileHandle)) {
-    aError.Throw(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
-    return nullptr;
-  }
-
-  BackgroundFileHandleChild* actor = new BackgroundFileHandleChild(fileHandle);
-
-  MOZ_ALWAYS_TRUE(
-      mBackgroundActor->SendPBackgroundFileHandleConstructor(actor, aMode));
-
-  fileHandle->SetBackgroundActor(actor);
-
-  return fileHandle;
-}
-
 NS_IMPL_ADDREF_INHERITED(IDBMutableFile, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(IDBMutableFile, DOMEventTargetHelper)
 
@@ -190,10 +158,5 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBMutableFile,
 
   // Don't unlink mDatabase!
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-JSObject* IDBMutableFile::WrapObject(JSContext* aCx,
-                                     JS::Handle<JSObject*> aGivenProto) {
-  return IDBMutableFile_Binding::Wrap(aCx, this, aGivenProto);
-}
 
 }  // namespace mozilla::dom
