@@ -33,8 +33,7 @@ async function test_bookmarks_toolbar_visibility({ newTabEnabled }) {
   let newWindowOpened = BrowserTestUtils.domWindowOpened();
   let beforeShown = TestUtils.topicObserved("browser-window-before-show");
 
-  let triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-  openUILinkIn(url, "window", { triggeringPrincipal });
+  openTrustedLinkIn(url, "window");
 
   let newWin = await newWindowOpened;
   let slowSiteLoaded = BrowserTestUtils.firstBrowserLoaded(newWin, false);
