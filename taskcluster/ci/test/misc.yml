@@ -247,7 +247,7 @@ test-coverage-gpu:
             default: []
     tier:
         by-test-platform:
-            windows10-64-asan.*: 3
+            windows.*asan.*: 3
             default: 2
     mozharness:
         script:

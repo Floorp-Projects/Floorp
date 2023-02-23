@@ -52,6 +52,22 @@ Awsy tests
             * awsy-base: integration, mozilla-beta, mozilla-central, mozilla-release
             * awsy-base-dmd: None
 
+      * test-windows11-32-2009-qr/opt
+            * awsy-base: None
+            * awsy-base-dmd: None
+
+      * test-windows11-32-2009-shippable-qr/opt
+            * awsy-base: None
+            * awsy-base-dmd: None
+
+      * test-windows11-64-2009-qr/opt
+            * awsy-base: None
+            * awsy-base-dmd: None
+
+      * test-windows11-64-2009-shippable-qr/opt
+            * awsy-base: integration, mozilla-beta, mozilla-central, mozilla-release
+            * awsy-base-dmd: None
+
 
 .. dropdown:: dmd (FF)
    :container: + anchor-id-dmd-Awsy-tests
@@ -91,6 +107,22 @@ Awsy tests
             * awsy-base-dmd: None
             * awsy-dmd: None
 
+      * test-windows11-32-2009-qr/opt
+            * awsy-base-dmd: None
+            * awsy-dmd: None
+
+      * test-windows11-32-2009-shippable-qr/opt
+            * awsy-base-dmd: None
+            * awsy-dmd: None
+
+      * test-windows11-64-2009-qr/opt
+            * awsy-base-dmd: None
+            * awsy-dmd: None
+
+      * test-windows11-64-2009-shippable-qr/opt
+            * awsy-base-dmd: None
+            * awsy-dmd: None
+
 
 .. dropdown:: tp5 (FF)
    :container: + anchor-id-tp5-Awsy-tests
@@ -113,6 +145,14 @@ Awsy tests
       * test-windows10-64-2004-qr/opt
 
       * test-windows10-64-2004-shippable-qr/opt
+
+      * test-windows11-32-2009-qr/opt
+
+      * test-windows11-32-2009-shippable-qr/opt
+
+      * test-windows11-64-2009-qr/opt
+
+      * test-windows11-64-2009-shippable-qr/opt
 
 
 .. dropdown:: tp6 (FF)
@@ -143,6 +183,18 @@ Awsy tests
             * awsy-tp6: None
 
       * test-windows10-64-2004-shippable-qr/opt
+            * awsy-tp6: integration, mozilla-beta, mozilla-central, mozilla-release
+
+      * test-windows11-32-2009-qr/opt
+            * awsy-tp6: None
+
+      * test-windows11-32-2009-shippable-qr/opt
+            * awsy-tp6: None
+
+      * test-windows11-64-2009-qr/opt
+            * awsy-tp6: None
+
+      * test-windows11-64-2009-shippable-qr/opt
             * awsy-tp6: integration, mozilla-beta, mozilla-central, mozilla-release
 
 
