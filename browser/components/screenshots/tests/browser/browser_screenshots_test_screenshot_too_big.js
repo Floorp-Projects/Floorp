@@ -3,20 +3,12 @@
 
 "use strict";
 
-const SCREENSHOTS_EVENTS = [
-  { category: "screenshots", method: "failed", object: "screenshot_too_large" },
-  { category: "screenshots", method: "failed", object: "screenshot_too_large" },
-  { category: "screenshots", method: "failed", object: "screenshot_too_large" },
-  { category: "screenshots", method: "failed", object: "screenshot_too_large" },
-];
-
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 ChromeUtils.defineESModuleGetters(this, {
   ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
 });
 
 add_task(async function test_screenshot_too_large_cropped() {
-  await clearAllTelemetryEvents();
   const screenshotsLocalization = new Localization(
     ["browser/screenshots.ftl"],
     true
@@ -79,6 +71,4 @@ add_task(async function test_screenshot_too_large_cropped() {
   );
 
   showAlertMessageStub.restore();
-
-  await assertScreenshotsEvents(SCREENSHOTS_EVENTS);
 });

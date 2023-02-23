@@ -105,11 +105,18 @@ add_task(async function test_visibleScreenshotScrolled() {
 
       // click toolbar button so panel shows
       helper.triggerUIFromToolbar();
-      await helper.waitForOverlay();
 
       let panel = gBrowser.selectedBrowser.ownerDocument.querySelector(
         "#screenshotsPagePanel"
       );
+      await BrowserTestUtils.waitForMutationCondition(
+        panel,
+        { attributes: true },
+        () => {
+          return BrowserTestUtils.is_visible(panel);
+        }
+      );
+      ok(BrowserTestUtils.is_visible(panel), "Panel buttons are visible");
 
       let screenshotReady = TestUtils.topicObserved(
         "screenshots-preview-ready"
@@ -193,11 +200,18 @@ add_task(async function test_visibleScreenshotScrolled() {
 
       // click toolbar button so panel shows
       helper.triggerUIFromToolbar();
-      await helper.waitForOverlay();
 
       let panel = gBrowser.selectedBrowser.ownerDocument.querySelector(
         "#screenshotsPagePanel"
       );
+      await BrowserTestUtils.waitForMutationCondition(
+        panel,
+        { attributes: true },
+        () => {
+          return BrowserTestUtils.is_visible(panel);
+        }
+      );
+      ok(BrowserTestUtils.is_visible(panel), "Panel buttons are visible");
 
       let screenshotReady = TestUtils.topicObserved(
         "screenshots-preview-ready"
@@ -281,11 +295,18 @@ add_task(async function test_visibleScreenshotScrolled() {
 
       // click toolbar button so panel shows
       helper.triggerUIFromToolbar();
-      await helper.waitForOverlay();
 
       let panel = gBrowser.selectedBrowser.ownerDocument.querySelector(
         "#screenshotsPagePanel"
       );
+      await BrowserTestUtils.waitForMutationCondition(
+        panel,
+        { attributes: true },
+        () => {
+          return BrowserTestUtils.is_visible(panel);
+        }
+      );
+      ok(BrowserTestUtils.is_visible(panel), "Panel buttons are visible");
 
       let screenshotReady = TestUtils.topicObserved(
         "screenshots-preview-ready"
