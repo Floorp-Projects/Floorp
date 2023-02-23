@@ -83,6 +83,7 @@ use camino::Utf8PathBuf;
 use derive_builder::Builder;
 use std::collections::HashMap;
 use std::env;
+use std::ffi::OsString;
 use std::fmt;
 use std::hash::Hash;
 use std::path::PathBuf;
@@ -592,6 +593,9 @@ pub struct MetadataCommand {
     /// Arbitrary command line flags to pass to `cargo`.  These will be added
     /// to the end of the command line invocation.
     other_options: Vec<String>,
+    /// Arbitrary environment variables to set when running `cargo`.  These will be merged into
+    /// the calling environment, overriding any which clash.
+    env: HashMap<OsString, OsString>,
     /// Show stderr
     verbose: bool,
 }
@@ -689,6 +693,32 @@ impl MetadataCommand {
         self
     }
 
+    /// Arbitrary environment variables to set when running `cargo`.  These will be merged into
+    /// the calling environment, overriding any which clash.
+    ///
+    /// Some examples of when you may want to use this:
+    /// 1. Setting cargo config values without needing a .cargo/config.toml file, e.g. to set
+    ///    `CARGO_NET_GIT_FETCH_WITH_CLI=true`
+    /// 2. To specify a custom path to RUSTC if your rust toolchain components aren't laid out in
+    ///    the way cargo expects by default.
+    ///
+    /// ```no_run
+    /// # use cargo_metadata::{CargoOpt, MetadataCommand};
+    /// MetadataCommand::new()
+    ///     .env("CARGO_NET_GIT_FETCH_WITH_CLI", "true")
+    ///     .env("RUSTC", "/path/to/rustc")
+    ///     // ...
+    ///     # ;
+    /// ```
+    pub fn env<K: Into<OsString>, V: Into<OsString>>(
+        &mut self,
+        key: K,
+        val: V,
+    ) -> &mut MetadataCommand {
+        self.env.insert(key.into(), val.into());
+        self
+    }
+
     /// Set whether to show stderr
     pub fn verbose(&mut self, verbose: bool) -> &mut MetadataCommand {
         self.verbose = verbose;
@@ -728,6 +758,8 @@ impl MetadataCommand {
             cmd.arg("--manifest-path").arg(manifest_path.as_os_str());
         }
         cmd.args(&self.other_options);
+
+        cmd.envs(&self.env);
 
         cmd
     }
