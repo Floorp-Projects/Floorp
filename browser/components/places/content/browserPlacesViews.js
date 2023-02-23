@@ -742,7 +742,7 @@ class PlacesViewBase {
       aPopup._endOptOpenAllInTabs.setAttribute(
         "oncommand",
         "PlacesUIUtils.openMultipleLinksInTabs(this.parentNode._placesNode, event, " +
-          "PlacesUIUtils.getViewForNode(this), PlacesSearchBox.updateHistorySearchTelemetry);"
+          "PlacesUIUtils.getViewForNode(this));"
       );
       aPopup._endOptOpenAllInTabs.setAttribute(
         "label",
