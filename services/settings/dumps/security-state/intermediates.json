@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "schema": 1677077287265,
+      "derHash": "I9Xvv7Qc57HzC6uKj2Svhe27XXpJwI1hbeTEfK2wNZc=",
+      "subject": "CN=AC Defesa GR3 OV TLS CA 2023,O=Ministerio da Defesa,C=BR",
+      "subjectDN": "MFMxCzAJBgNVBAYTAkJSMR0wGwYDVQQKExRNaW5pc3RlcmlvIGRhIERlZmVzYTElMCMGA1UEAxMcQUMgRGVmZXNhIEdSMyBPViBUTFMgQ0EgMjAyMw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "070ca649687ff8d8d65eb2fc849039d78d53c35aa858fd6834dfabafd0e4926d",
+        "size": 1979,
+        "filename": "JPQfz4gF4tV93sa-MJsA3c25wQwVyzqUpnntaX6CmPw=.pem",
+        "location": "security-state-staging/intermediates/ca789bde-0e50-4330-beb7-cf5e9a10080a.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "JPQfz4gF4tV93sa+MJsA3c25wQwVyzqUpnntaX6CmPw=",
+      "crlite_enrolled": false,
+      "id": "23216a63-e4b0-428f-9b42-8b677af4ef7b",
+      "last_modified": 1677077823452
+    },
+    {
       "schema": 1675997293717,
       "derHash": "9OJr6wJ5Io2W1HsF33RK5s5qrYiKO3V9JJ6z0i0n9MY=",
       "subject": "CN=Namirial OV SSL CA 2023,O=Namirial S.p.A,C=IT",
@@ -27415,5 +27433,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1675997823498
+  "timestamp": 1677077823452
 }
