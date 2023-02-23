@@ -3531,7 +3531,16 @@ void Element::GetGridFragments(nsTArray<RefPtr<Grid>>& aResult) {
   // If we get a nsGridContainerFrame from the prior call,
   // all the next-in-flow frames will also be nsGridContainerFrames.
   while (frame) {
-    aResult.AppendElement(new Grid(this, frame));
+    // Get the existing Grid object, if it exists. This object is
+    // guaranteed to be up-to-date because GetGridFrameWithComputedInfo
+    // will delete an existing one when regenerating grid info.
+    Grid* gridFragment = frame->GetGridFragmentInfo();
+    if (!gridFragment) {
+      // Grid constructor will add itself as a property to frame, and
+      // its unlink method will remove itself if the frame still exists.
+      gridFragment = new Grid(this, frame);
+    }
+    aResult.AppendElement(gridFragment);
     frame = static_cast<nsGridContainerFrame*>(frame->GetNextInFlow());
   }
 }

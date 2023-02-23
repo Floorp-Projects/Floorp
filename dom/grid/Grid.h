@@ -32,12 +32,15 @@ class Grid : public nsISupports, public nsWrapperCache {
                                JS::Handle<JSObject*> aGivenProto) override;
   Element* GetParentObject() { return mParent; }
 
+  void ForgetFrame();
+
   GridDimension* Rows() const;
   GridDimension* Cols() const;
   void GetAreas(nsTArray<RefPtr<GridArea>>& aAreas) const;
 
  protected:
   nsCOMPtr<Element> mParent;
+  WeakFrame mFrame;
   RefPtr<GridDimension> mRows;
   RefPtr<GridDimension> mCols;
   nsTArray<RefPtr<GridArea>> mAreas;

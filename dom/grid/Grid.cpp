@@ -15,9 +15,21 @@
 
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Grid, mParent, mRows, mCols, mAreas)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(Grid)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Grid)
+  tmp->ForgetFrame();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent, mRows, mCols, mAreas)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Grid)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent, mRows, mCols, mAreas)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Grid)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Grid)
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Grid)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -25,10 +37,13 @@ NS_INTERFACE_MAP_END
 
 Grid::Grid(nsISupports* aParent, nsGridContainerFrame* aFrame)
     : mParent(do_QueryInterface(aParent)),
+      mFrame(aFrame),
       mRows(new GridDimension(this)),
       mCols(new GridDimension(this)) {
   MOZ_ASSERT(aFrame,
              "Should never be instantiated with a null nsGridContainerFrame");
+
+  aFrame->SetProperty(nsGridContainerFrame::GridFragmentInfo(), this);
 
   // Construct areas first, because lines may need to reference them
   // to extract additional names for boundary lines.
@@ -84,6 +99,13 @@ Grid::~Grid() = default;
 
 JSObject* Grid::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
   return Grid_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+void Grid::ForgetFrame() {
+  if (mFrame.IsAlive()) {
+    mFrame->RemoveProperty(nsGridContainerFrame::GridFragmentInfo());
+    mFrame.Clear(mFrame->PresContext()->GetPresShell());
+  }
 }
 
 GridDimension* Grid::Rows() const { return mRows; }
