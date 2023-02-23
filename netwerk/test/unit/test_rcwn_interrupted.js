@@ -84,9 +84,9 @@ function run_test() {
     var chan2 = make_channel(URL + "/content");
     chan2
       .QueryInterface(Ci.nsIRaceCacheWithNetwork)
-      .test_delayCacheEntryOpeningBy(30);
+      .test_delayCacheEntryOpeningBy(200);
+    chan2.QueryInterface(Ci.nsIRaceCacheWithNetwork).test_triggerNetwork(50);
     chan2.asyncOpen(new ChannelListener(secondTimeThrough, null));
-    chan2.QueryInterface(Ci.nsIRaceCacheWithNetwork).test_triggerNetwork(20);
   });
 
   do_test_pending();

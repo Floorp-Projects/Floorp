@@ -22,8 +22,10 @@ interface nsIRaceCacheWithNetwork : nsISupports
 
   /**
    * Triggers network activity after given timeout. If timeout is 0, network
-   * activity is triggered immediately. If the cache.asyncOpenURI callbacks
-   * have already been called, the network activity may have already been triggered
+   * activity is triggered immediately if asyncOpen has already been called.
+   * Otherwise the delayed timer will be set when the normal call to
+   * TriggerNetwork is made. If the cache.asyncOpenURI callbacks have already
+   * been called, the network activity may have already been triggered
    * or the content may have already been delivered from the cache, so this
    * operation will have no effect.
    *
