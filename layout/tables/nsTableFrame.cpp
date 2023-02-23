@@ -3512,13 +3512,12 @@ nscoord nsTableFrame::GetRowSpacing(int32_t aStartRowIndex,
   return GetRowSpacing() * (aEndRowIndex - aStartRowIndex);
 }
 
-/* virtual */
-nscoord nsTableFrame::GetLogicalBaseline(WritingMode aWM) const {
-  nscoord baseline;
-  if (!GetNaturalBaselineBOffset(aWM, BaselineSharingGroup::First, &baseline)) {
-    baseline = BSize(aWM);
+nscoord nsTableFrame::SynthesizeFallbackBaseline(
+    mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
+  if (aBaselineGroup == BaselineSharingGroup::Last) {
+    return 0;
   }
-  return baseline;
+  return BSize(aWM);
 }
 
 /* virtual */

@@ -26,35 +26,42 @@
 using namespace mozilla;
 using namespace mozilla::layout;
 
-nscoord nsTableWrapperFrame::GetFallbackLogicalBaseline(
-    mozilla::WritingMode aWritingMode) const {
+nscoord nsTableWrapperFrame::SynthesizeFallbackBaseline(
+    mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
   // Our fallback baseline is the block-end margin-edge, with respect to the
   // given writing mode.
-  return BSize(aWritingMode) +
-         GetLogicalUsedMargin(aWritingMode).BEnd(aWritingMode);
+  const auto marginBlockEnd = GetLogicalUsedMargin(aWM).BEnd(aWM);
+  if (aBaselineGroup == BaselineSharingGroup::Last) {
+    return -marginBlockEnd;
+  }
+  return BSize(aWM) + marginBlockEnd;
 }
 
-/* virtual */
-nscoord nsTableWrapperFrame::GetLogicalBaseline(
-    WritingMode aWritingMode) const {
+bool nsTableWrapperFrame::GetNaturalBaselineBOffset(
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+    nscoord* aBaseline) const {
   // Baseline is determined by row
   // (https://drafts.csswg.org/css-align-3/#baseline-export). If the row
   // direction is going to be orthogonal to the parent's writing mode, the
   // resulting baseline wouldn't be valid, so we use the fallback baseline
   // instead.
   if (StyleDisplay()->IsContainLayout() ||
-      GetWritingMode().IsOrthogonalTo(aWritingMode)) {
-    return GetFallbackLogicalBaseline(aWritingMode);
+      GetWritingMode().IsOrthogonalTo(aWM)) {
+    return false;
   }
-
-  nsIFrame* kid = mFrames.FirstChild();
-  if (!kid) {
-    MOZ_ASSERT_UNREACHABLE("no inner table");
-    return GetFallbackLogicalBaseline(aWritingMode);
+  auto* innerTable = InnerTableFrame();
+  nscoord offset;
+  if (innerTable->GetNaturalBaselineBOffset(aWM, aBaselineGroup, &offset)) {
+    auto bStart = innerTable->BStart(aWM, mRect.Size());
+    if (aBaselineGroup == BaselineSharingGroup::First) {
+      *aBaseline = offset + bStart;
+    } else {
+      auto bEnd = bStart + innerTable->BSize(aWM);
+      *aBaseline = BSize(aWM) - (bEnd - offset);
+    }
+    return true;
   }
-
-  return kid->GetLogicalBaseline(aWritingMode) +
-         kid->BStart(aWritingMode, mRect.Size());
+  return false;
 }
 
 nsTableWrapperFrame::nsTableWrapperFrame(ComputedStyle* aStyle,

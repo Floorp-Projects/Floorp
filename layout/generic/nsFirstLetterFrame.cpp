@@ -425,8 +425,14 @@ void nsFirstLetterFrame::DrainOverflowFrames(nsPresContext* aPresContext) {
   }
 }
 
-nscoord nsFirstLetterFrame::GetLogicalBaseline(WritingMode aWritingMode) const {
-  return mBaseline;
+bool nsFirstLetterFrame::GetNaturalBaselineBOffset(
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+    nscoord* aBaseline) const {
+  if (aBaselineGroup == BaselineSharingGroup::Last) {
+    return false;
+  }
+  *aBaseline = mBaseline;
+  return true;
 }
 
 LogicalSides nsFirstLetterFrame::GetLogicalSkipSides() const {

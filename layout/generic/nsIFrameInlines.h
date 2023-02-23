@@ -184,23 +184,6 @@ nscoord nsIFrame::SynthesizeBaselineBOffsetFromContentBox(
                                             : bp.BEnd(aWM);
 }
 
-nscoord nsIFrame::BaselineBOffset(mozilla::WritingMode aWM,
-                                  BaselineSharingGroup aBaselineGroup,
-                                  AlignmentContext aAlignmentContext) const {
-  MOZ_ASSERT(!aWM.IsOrthogonalTo(GetWritingMode()));
-  nscoord baseline;
-  if (GetNaturalBaselineBOffset(aWM, aBaselineGroup, &baseline)) {
-    return baseline;
-  }
-  if (aAlignmentContext == AlignmentContext::Inline) {
-    return SynthesizeBaselineBOffsetFromMarginBox(aWM, aBaselineGroup);
-  }
-  if (aAlignmentContext == AlignmentContext::Table) {
-    return SynthesizeBaselineBOffsetFromContentBox(aWM, aBaselineGroup);
-  }
-  return SynthesizeBaselineBOffsetFromBorderBox(aWM, aBaselineGroup);
-}
-
 void nsIFrame::PropagateWritingModeToSelfAndAncestors(
     mozilla::WritingMode aWM) {
   MOZ_ASSERT(IsCanvasFrame());

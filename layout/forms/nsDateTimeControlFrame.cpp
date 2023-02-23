@@ -65,7 +65,7 @@ nscoord nsDateTimeControlFrame::GetPrefISize(gfxContext* aRenderingContext) {
 }
 
 bool nsDateTimeControlFrame::GetNaturalBaselineBOffset(
-    mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup,
     nscoord* aBaseline) const {
   return nsTextControlFrame::GetSingleLineTextControlBaseline(
       this, mFirstBaseline, aWM, aBaselineGroup, aBaseline);

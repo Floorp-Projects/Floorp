@@ -64,29 +64,12 @@ class nsTableWrapperFrame : public nsContainerFrame {
   void BuildDisplayListForInnerTable(nsDisplayListBuilder* aBuilder,
                                      const nsDisplayListSet& aLists);
 
-  virtual nscoord GetLogicalBaseline(
-      mozilla::WritingMode aWritingMode) const override;
-
+  nscoord SynthesizeFallbackBaseline(
+      mozilla::WritingMode aWM,
+      BaselineSharingGroup aBaselineGroup) const override;
   bool GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
                                  BaselineSharingGroup aBaselineGroup,
-                                 nscoord* aBaseline) const override {
-    if (StyleDisplay()->IsContainLayout()) {
-      return false;
-    }
-    auto innerTable = InnerTableFrame();
-    nscoord offset;
-    if (innerTable->GetNaturalBaselineBOffset(aWM, aBaselineGroup, &offset)) {
-      auto bStart = innerTable->BStart(aWM, mRect.Size());
-      if (aBaselineGroup == BaselineSharingGroup::First) {
-        *aBaseline = offset + bStart;
-      } else {
-        auto bEnd = bStart + innerTable->BSize(aWM);
-        *aBaseline = BSize(aWM) - (bEnd - offset);
-      }
-      return true;
-    }
-    return false;
-  }
+                                 nscoord* aBaseline) const override;
 
   virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
   virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
@@ -292,8 +275,6 @@ class nsTableWrapperFrame : public nsContainerFrame {
       nscoord aBSizeOccupiedByCaption) const;
 
  private:
-  nscoord GetFallbackLogicalBaseline(mozilla::WritingMode aWritingMode) const;
-
   nsFrameList mCaptionFrames;
 };
 
