@@ -32,6 +32,8 @@ class ServiceWorkerDescriptor;
 using FetchServiceResponse = SafeRefPtr<InternalResponse>;
 using FetchServiceResponseAvailablePromise =
     MozPromise<FetchServiceResponse, CopyableErrorResult, true>;
+using FetchServiceResponseTimingPromise =
+    MozPromise<ResponseTiming, CopyableErrorResult, true>;
 using FetchServiceResponseEndPromise =
     MozPromise<ResponseEndArgs, CopyableErrorResult, true>;
 
@@ -42,12 +44,17 @@ class FetchServicePromises final {
   FetchServicePromises();
 
   RefPtr<FetchServiceResponseAvailablePromise> GetResponseAvailablePromise();
+  RefPtr<FetchServiceResponseTimingPromise> GetResponseTimingPromise();
   RefPtr<FetchServiceResponseEndPromise> GetResponseEndPromise();
 
   void ResolveResponseAvailablePromise(FetchServiceResponse&& aResponse,
                                        const char* aMethodName);
   void RejectResponseAvailablePromise(const CopyableErrorResult&& aError,
                                       const char* aMethodName);
+  void ResolveResponseTimingPromise(ResponseTiming&& aTiming,
+                                    const char* aMethodName);
+  void RejectResponseTimingPromise(const CopyableErrorResult&& aError,
+                                   const char* aMethodName);
   void ResolveResponseEndPromise(ResponseEndArgs&& aArgs,
                                  const char* aMethodName);
   void RejectResponseEndPromise(const CopyableErrorResult&& aError,
@@ -57,6 +64,7 @@ class FetchServicePromises final {
   ~FetchServicePromises() = default;
 
   RefPtr<FetchServiceResponseAvailablePromise::Private> mAvailablePromise;
+  RefPtr<FetchServiceResponseTimingPromise::Private> mTimingPromise;
   RefPtr<FetchServiceResponseEndPromise::Private> mEndPromise;
 };
 
