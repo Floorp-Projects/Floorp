@@ -3,6 +3,10 @@
 
 "use strict";
 
+const { TranslationsParent } = ChromeUtils.importESModule(
+  "resource://gre/actors/TranslationsParent.sys.mjs"
+);
+
 /**
  * The mochitest runs in the parent process. This function opens up a new tab,
  * opens up about:translations, and passes the test requirements into the content process.
@@ -61,10 +65,7 @@ async function openAboutTranslations({
 
   // Before loading about:translations, handle any mocking of the actor.
   if (languagePairs) {
-    const translations = tab.linkedBrowser.browsingContext.currentWindowGlobal.getActor(
-      "Translations"
-    );
-    translations.mock(languagePairs);
+    TranslationsParent.mock(languagePairs);
   }
 
   // Now load the about:translations page, since the actor could be mocked.
@@ -78,11 +79,7 @@ async function openAboutTranslations({
   );
 
   if (languagePairs) {
-    // Revert the mock.
-    const translations = tab.linkedBrowser.browsingContext.currentWindowGlobal.getActor(
-      "Translations"
-    );
-    translations.mock(null);
+    TranslationsParent.mock(null);
   }
   BrowserTestUtils.removeTab(tab);
   await SpecialPowers.popPrefEnv();

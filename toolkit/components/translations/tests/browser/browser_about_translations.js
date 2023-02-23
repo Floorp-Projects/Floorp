@@ -146,3 +146,76 @@ add_task(async function test_about_translations_dropdowns() {
     },
   });
 });
+
+/**
+ * Test that the UI actually translates text, but use a mocked translations engine.
+ * The results of the "translation" will be modifying the text to be full width latin
+ * characters, so that the results visually appear modified.
+ */
+add_task(async function test_about_translations_translations() {
+  await openAboutTranslations({
+    languagePairs: [
+      { fromLang: "en", toLang: "fr" },
+      { fromLang: "fr", toLang: "en" },
+      // This is not a bi-directional translation.
+      { fromLang: "is", toLang: "en" },
+    ],
+    runInPage: async ({ selectors }) => {
+      const { document } = content;
+
+      /** @type {HTMLSelectElement} */
+      const fromSelect = document.querySelector(selectors.fromLanguageSelect);
+      /** @type {HTMLSelectElement} */
+      const toSelect = document.querySelector(selectors.toLanguageSelect);
+      /** @type {HTMLTextAreaElement} */
+      const translationTextarea = document.querySelector(
+        selectors.translationTextarea
+      );
+      /** @type {HTMLDivElement} */
+      const translationResult = document.querySelector(
+        selectors.translationResult
+      );
+
+      async function assertTranslationResult(translation) {
+        try {
+          await ContentTaskUtils.waitForCondition(
+            () => translation === translationResult.innerText,
+            `Waiting for: "${translation}"`
+          );
+        } catch (error) {
+          // The result wasn't found, but the assertion below will report the error.
+          console.error(error);
+        }
+
+        is(
+          translation,
+          translationResult.innerText,
+          "The text runs through the mocked translations engine."
+        );
+      }
+
+      toSelect.value = "fr";
+      toSelect.dispatchEvent(new Event("input"));
+      translationTextarea.value = "Text to translate.";
+      translationTextarea.dispatchEvent(new Event("input"));
+
+      // The mocked translations make the text uppercase and reports the models used.
+      await assertTranslationResult("TEXT TO TRANSLATE. [en to fr]");
+
+      // Blank out the "to" select so it doesn't try to translate between is to fr.
+      toSelect.value = "";
+      toSelect.dispatchEvent(new Event("input"));
+
+      fromSelect.value = "is";
+      fromSelect.dispatchEvent(new Event("input"));
+      toSelect.value = "en";
+      toSelect.dispatchEvent(new Event("input"));
+      translationTextarea.value = "This is the second translation.";
+      translationTextarea.dispatchEvent(new Event("input"));
+
+      await assertTranslationResult(
+        "THIS IS THE SECOND TRANSLATION. [is to en]"
+      );
+    },
+  });
+});
