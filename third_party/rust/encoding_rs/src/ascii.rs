@@ -40,14 +40,12 @@ cfg_if! {
     } else {
         #[allow(dead_code)]
         #[inline(always)]
-        // Unsafe to match the intrinsic, which is needlessly unsafe.
-        unsafe fn unlikely(b: bool) -> bool {
+        fn unlikely(b: bool) -> bool {
             b
         }
         #[allow(dead_code)]
         #[inline(always)]
-        // Unsafe to match the intrinsic, which is needlessly unsafe.
-        unsafe fn likely(b: bool) -> bool {
+        fn likely(b: bool) -> bool {
             b
         }
     }
