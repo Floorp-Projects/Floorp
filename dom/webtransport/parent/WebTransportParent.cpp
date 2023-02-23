@@ -88,7 +88,10 @@ void WebTransportParent::Create(
        principal = RefPtr{aPrincipal},
        flags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL] {
         LOG(("WebTransport %p AsyncConnect", self.get()));
-        self->mWebTransport->AsyncConnect(uri, principal, flags, self);
+        if (NS_FAILED(self->mWebTransport->AsyncConnect(uri, principal, flags,
+                                                        self))) {
+          LOG(("AsyncConnect failure; we should get OnSessionClosed"));
+        }
       });
 
   // Bind to SocketThread for IPC - connection creation/destruction must
@@ -313,6 +316,12 @@ WebTransportParent::OnSessionReady(uint64_t aSessionId) {
               NS_OK, static_cast<uint8_t>(
                          WebTransportReliabilityMode::Supports_unreliable)));
           self->mResolver = nullptr;
+        } else {
+          if (self->IsClosed()) {
+            LOG(("Session already closed at OnSessionReady %p", self.get()));
+          } else {
+            LOG(("No resolver at OnSessionReady %p", self.get()));
+          }
         }
       }));
 
