@@ -1338,6 +1338,22 @@ void NativeLayerCA::NotifySurfaceReady() {
   IOSurfaceDecrementUseCount(mInProgressSurface->mSurface.get());
   mFrontSurface = std::move(mInProgressSurface);
   mFrontSurface->mInvalidRegion.SubOut(mInProgressUpdateRegion.extract());
+
+  // Bug 1818540: We have a rounding error in our invalid region calculation
+  // somewhere. It's either in the update region that we receive from WebRender,
+  // or somewhere in this class's invalid region computation. Until we solve
+  // that, we might be left with a one-pixel tall or wide invalid region on the
+  // front surface, which will hit either the assert at the end of this function,
+  // or the assert in HandlePartialUpdate. There is no evidence that we are
+  // actually missing one pixel tall or wide strips from our updates and filling
+  // them with bad pixels. So to solve this problem for now, we check for a
+  // degenerate invalid region and clear it. Fixing Bug 1818540 will remove this
+  // cleanup and the asserts in this function and in HandlePartialUpdate.
+  IntRect frontSurfaceInvalidBounds = mFrontSurface->mInvalidRegion.GetBounds();
+  if (frontSurfaceInvalidBounds.width <= 1 || frontSurfaceInvalidBounds.height <= 1) {
+    mFrontSurface->mInvalidRegion.SetEmpty();
+  }
+
   ForAllRepresentations([&](Representation& r) { r.mMutatedFrontSurface = true; });
 
   MOZ_RELEASE_ASSERT(mInProgressDisplayRect);
