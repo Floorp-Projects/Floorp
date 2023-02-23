@@ -2,10 +2,52 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from contextlib import nullcontext as does_not_raise
+
 import mozunit
 import pytest
 
 from mozbuild.repackaging import deb
+
+
+@pytest.mark.parametrize(
+    "does_path_exits, expectation",
+    (
+        (True, does_not_raise()),
+        (False, pytest.raises(deb.NoDebPackageFound)),
+    ),
+)
+def test_generate_deb_archive(
+    monkeypatch,
+    does_path_exits,
+    expectation,
+):
+    monkeypatch.setattr(deb, "_get_command", lambda _: ["mock_command"])
+    monkeypatch.setattr(deb.subprocess, "check_call", lambda *_, **__: None)
+
+    def mock_exists(path):
+        assert path == "/target_dir/firefox_111.0_amd64.deb"
+        return does_path_exits
+
+    monkeypatch.setattr(deb.os.path, "exists", mock_exists)
+
+    def mock_move(source_path, destination_path):
+        assert source_path == "/target_dir/firefox_111.0_amd64.deb"
+        assert destination_path == "/output/target.deb"
+
+    monkeypatch.setattr(deb.shutil, "move", mock_move)
+
+    with expectation:
+        deb._generate_deb_archive(
+            source_dir="/source_dir",
+            target_dir="/target_dir",
+            output_file_path="/output/target.deb",
+            build_variables={
+                "DEB_PKG_NAME": "firefox",
+                "DEB_PKG_VERSION": "111.0",
+            },
+            arch="x86_64",
+        )
 
 
 @pytest.mark.parametrize(

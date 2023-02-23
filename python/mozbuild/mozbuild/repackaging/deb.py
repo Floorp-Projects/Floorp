@@ -19,8 +19,13 @@ from mozpack.files import FileFinder
 from mozbuild.repackaging.application_ini import get_application_ini_values
 
 
-class NoPackageFound(Exception):
+class NoDebPackageFound(Exception):
     """Raised when no .deb is found after calling dpkg-buildpackage"""
+
+    def __init__(self, deb_file_path) -> None:
+        super().__init__(
+            f"No {deb_file_path} package found after calling dpkg-buildpackage"
+        )
 
 
 _DEB_ARCH = {
@@ -129,25 +134,32 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
             mozpath.join(extract_dir, app_name.lower(), "distribution"),
         )
 
-        command = _get_command(arch)
-        subprocess.check_call(command, cwd=extract_dir)
-
-        deb_file_name = (
-            f"{defines['DEB_PKG_NAME']}_{defines['DEB_PKG_VERSION']}_{deb_arch}.deb"
+        _generate_deb_archive(
+            source_dir=extract_dir,
+            target_dir=tmpdir,
+            output_file_path=output,
+            build_variables=defines,
+            arch=arch,
         )
-        deb_file_path = mozpath.join(tmpdir, deb_file_name)
-
-        if not os.path.exists(deb_file_path):
-            raise NoPackageFound(
-                f"No {deb_file_name} package found after calling dpkg-buildpackage"
-            )
-
-        subprocess.check_call(["dpkg-deb", "--info", deb_file_path])
-
-        shutil.move(deb_file_path, output)
 
     finally:
         shutil.rmtree(tmpdir)
+
+
+def _generate_deb_archive(
+    source_dir, target_dir, output_file_path, build_variables, arch
+):
+    command = _get_command(arch)
+    subprocess.check_call(command, cwd=source_dir)
+    deb_arch = _DEB_ARCH[arch]
+    deb_file_name = f"{build_variables['DEB_PKG_NAME']}_{build_variables['DEB_PKG_VERSION']}_{deb_arch}.deb"
+    deb_file_path = mozpath.join(target_dir, deb_file_name)
+
+    if not os.path.exists(deb_file_path):
+        raise NoDebPackageFound(deb_file_path)
+
+    subprocess.check_call(["dpkg-deb", "--info", deb_file_path])
+    shutil.move(deb_file_path, output_file_path)
 
 
 def _get_command(arch):
