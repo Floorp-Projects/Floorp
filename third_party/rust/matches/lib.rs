@@ -1,4 +1,37 @@
 #![no_std]
+//! A macro to evaluate, as a boolean, whether an expression matches a pattern.
+//!
+//! For users who build using only Rust 1.42 and newer, consider using [`std::matches`], which
+//! is included in the [standard library prelude] and thus is automatically in scope.
+//!
+//! [`std::matches`]: core::matches
+//! [standard library prelude]: https://doc.rust-lang.org/stable/reference/names/preludes.html
+//!
+//! # Examples
+//!
+//! ```
+//! #[macro_use]
+//! extern crate matches;
+//!
+//! #[derive(Debug)]
+//! pub enum Foo<T> {
+//!     A,
+//!     B(T),
+//! }
+//!
+//! impl<T> Foo<T> {
+//!     pub fn is_b(&self) -> bool {
+//!         matches!(*self, Foo::B(_))
+//!     }
+//! }
+//!
+//! impl<T: core::fmt::Debug> Foo<T> {
+//!     pub fn assert_is_b(&self) {
+//!         assert_matches!(&self, Foo::B(_));
+//!     }
+//! }
+//! # fn main() { }
+//! ```
 
 /// Check if an expression matches a refutable pattern.
 ///
