@@ -49,7 +49,7 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
                                         ErrorResult& aError);
   void ResolveWaitingConnection(WebTransportReliabilityMode aReliability,
                                 WebTransportChild* aChild);
-  void RejectWaitingConnection(nsresult aRv);
+  void RejectWaitingConnection(nsresult aRv, WebTransportChild* aChild);
   bool ParseURL(const nsAString& aURL) const;
   // this calls CloseNative(), which doesn't actually run script.   See bug
   // 1810942
@@ -65,6 +65,8 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
   void NewUnidirectionalStream(
       const RefPtr<mozilla::ipc::DataPipeReceiver>& aStream);
 
+  void RemoteClosed(bool aCleanly, const uint32_t& aCode,
+                    const nsACString& aReason);
   // WebIDL Boilerplate
   nsIGlobalObject* GetParentObject() const;
 

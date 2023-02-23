@@ -307,7 +307,7 @@ void WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
                LOG(("isreject: %d nsresult 0x%x", aResult.IsReject(),
                     (uint32_t)rv));
                if (NS_FAILED(rv)) {
-                 self->RejectWaitingConnection(rv);
+                 self->RejectWaitingConnection(rv, child);
                } else {
                  // This will process anything waiting for the connection to
                  // complete;
@@ -330,8 +330,11 @@ void WebTransport::ResolveWaitingConnection(
   if (mState != WebTransportState::CONNECTING) {
     // Step 17.1.1: In parallel, terminate session.
     // Step 17.1.2: abort these steps
+    aChild->Shutdown();
+    // Cleanup should have been called, which means Ready has been rejected
     return;
   }
+
   mChild = aChild;
   // Step 17.2: Set transport.[[State]] to "connected".
   mState = WebTransportState::CONNECTED;
@@ -343,7 +346,8 @@ void WebTransport::ResolveWaitingConnection(
   mReady->MaybeResolveWithUndefined();
 }
 
-void WebTransport::RejectWaitingConnection(nsresult aRv) {
+void WebTransport::RejectWaitingConnection(nsresult aRv,
+                                           WebTransportChild* aChild) {
   LOG(("Rejected connection %p %x", this, (uint32_t)aRv));
   // https://w3c.github.io/webtransport/#webtransport-constructor
   // (initialize WebTransport over HTTP)
@@ -354,6 +358,7 @@ void WebTransport::RejectWaitingConnection(nsresult aRv) {
   // these steps.
   if (mState == WebTransportState::CLOSED ||
       mState == WebTransportState::FAILED) {
+    aChild->Shutdown();
     return;
   }
 
@@ -365,8 +370,8 @@ void WebTransport::RejectWaitingConnection(nsresult aRv) {
   ErrorResult errorresult;
   Cleanup(error, nullptr, errorresult);
 
-  // We never set mChild, so we aren't holding a reference that blocks GC
-  // (spec 5.8)
+  // We never set mChild, but we need to prepare it to die
+  aChild->Shutdown();
 }
 
 bool WebTransport::ParseURL(const nsAString& aURL) const {
@@ -411,6 +416,41 @@ already_AddRefed<Promise> WebTransport::Closed() {
   }
   promise->MaybeResolve(mState == WebTransportState::CLOSED);
   return promise.forget();
+}
+
+void WebTransport::RemoteClosed(bool aCleanly, const uint32_t& aCode,
+                                const nsACString& aReason) {
+  LOG(("Server closed: cleanly: %d, code %u, reason %s", aCleanly, aCode,
+       PromiseFlatCString(aReason).get()));
+  // Step 2 of https://w3c.github.io/webtransport/#web-transport-termination
+  // We calculate cleanly on the parent
+  // Step 2.1: If transport.[[State]] is "closed" or "failed", abort these
+  // steps.
+  if (mState == WebTransportState::CLOSED ||
+      mState == WebTransportState::FAILED) {
+    return;
+  }
+  // Step 2.2: Let error be the result of creating a WebTransportError with
+  // "session".
+  RefPtr<WebTransportError> error = new WebTransportError(
+      "remote WebTransport close"_ns, WebTransportErrorSource::Session);
+  // Step 2.3: If cleanly is false, then cleanup transport with error, and
+  // abort these steps.
+  ErrorResult errorresult;
+  if (!aCleanly) {
+    Cleanup(error, nullptr, errorresult);
+    return;
+  }
+  // Step 2.4: Let closeInfo be a new WebTransportCloseInfo.
+  // Step 2.5: If code is given, set closeInfo’s closeCode to code.
+  // Step 2.6: If reasonBytes is given, set closeInfo’s reason to reasonBytes,
+  // UTF-8 decoded.
+  WebTransportCloseInfo closeinfo;
+  closeinfo.mCloseCode = aCode;
+  closeinfo.mReason = aReason;
+
+  // Step 2.7: Cleanup transport with error and closeInfo.
+  Cleanup(error, &closeinfo, errorresult);
 }
 
 void WebTransport::Close(const WebTransportCloseInfo& aOptions,
