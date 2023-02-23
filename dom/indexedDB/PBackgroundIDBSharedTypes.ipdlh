@@ -161,14 +161,9 @@ union OpenCursorParams
   IndexOpenKeyCursorParams;
 };
 
-union DatabaseOrMutableFile
-{
-  PBackgroundIDBDatabaseFile;
-};
-
 struct FileAddInfo
 {
-  DatabaseOrMutableFile file;
+  PBackgroundIDBDatabaseFile file;
   FileType type;
 };
 
