@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.56"
 name = "rayon-core"
-version = "1.10.1"
+version = "1.10.2"
 authors = [
     "Niko Matsakis <niko@alum.mit.edu>",
     "Josh Stone <cuviper@gmail.com>",
@@ -37,7 +37,6 @@ repository = "https://github.com/rayon-rs/rayon"
 [[test]]
 name = "stack_overflow_crash"
 path = "tests/stack_overflow_crash.rs"
-harness = false
 
 [[test]]
 name = "double_init_fail"
