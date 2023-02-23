@@ -77,15 +77,7 @@ class HTMLEditUtils final {
   /**
    * Return true if inclusive flat tree ancestor has `inert` state.
    */
-  static bool ContentIsInert(const nsIContent& aContent) {
-    for (const Element* element :
-         aContent.InclusiveFlatTreeAncestorsOfType<Element>()) {
-      if (element->State().HasState(dom::ElementState::INERT)) {
-        return true;
-      }
-    }
-    return false;
-  }
+  static bool ContentIsInert(const nsIContent& aContent);
 
   /**
    * IsNeverContentEditableElementByUser() returns true if the element's content
