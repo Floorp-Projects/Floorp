@@ -770,6 +770,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   nsCOMPtr<nsITimer> mCacheOpenTimer;
   std::function<void(nsHttpChannel*)> mCacheOpenFunc;
   uint32_t mCacheOpenDelay = 0;
+  uint32_t mNetworkTriggerDelay = 0;
 
   // We need to remember which is the source of the response we are using.
   enum ResponseSource {
