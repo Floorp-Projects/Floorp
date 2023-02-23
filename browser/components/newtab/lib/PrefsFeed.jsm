@@ -231,8 +231,7 @@ this.PrefsFeed = class PrefsFeed {
         for(let elem of imagesPath){
           if(!str.test(elem)) continue
           let filePath = Services.io.newFileURI(FileUtils.File(elem)).asciiSpec
-          let fileBlob = URL.createObjectURL(await (await fetch(filePath)).blob())
-          imagesDataPath.push(fileBlob)
+          imagesDataPath.push(filePath)
         }
         
       }

@@ -14259,15 +14259,32 @@ const Search_Search = (0,external_ReactRedux_namespaceObject.connect)(state => (
 const imgLength = 100;
 function Background(props) {
   let imgSrc = "";
-  if (props.className == "random_image") [imgSrc] = (0,external_React_namespaceObject.useState)(`chrome://browser/skin/newtabbg-${Math.floor(Math.random() * imgLength)}.webp`);
-  if (props.className == "selected_folder" && props.imageList != undefined) imgSrc = props.imageList.length != 0 ? props.imageList[Math.floor(Math.random() * props.imageList.length)] : "";
+  let fileImgSrc = "";
+  let setFileImgSrc = "";
+  let imageSrc = "";
+
+  if (props.className == "random_image") {
+    [imgSrc] = (0,external_React_namespaceObject.useState)(`chrome://browser/skin/newtabbg-${Math.floor(Math.random() * imgLength)}.webp`);
+    imageSrc = imgSrc;
+  }
+
+  if (props.className == "selected_folder" && props.imageList != undefined) {
+    [fileImgSrc, setFileImgSrc] = (0,external_React_namespaceObject.useState)(props.imageList.length != 0 ? props.imageList[Math.floor(Math.random() * props.imageList.length)] : "");
+
+    if (props.imageList.indexOf(fileImgSrc) == -1) {
+      if (fileImgSrc != "" || props.imageList.length != 0) setFileImgSrc(props.imageList.length != 0 ? props.imageList[Math.floor(Math.random() * props.imageList.length)] : ""); //[fileImgSrc,setFileImgSrc] = useState(props.imageList.length != 0 ? props.imageList[Math.floor(Math.random() * props.imageList.length)] : "")
+    }
+
+    imageSrc = fileImgSrc;
+  }
+
   return /*#__PURE__*/external_React_default().createElement("div", {
     id: "background_back",
     className: props.className
   }, /*#__PURE__*/external_React_default().createElement("div", {
     id: "background",
     style: {
-      "--background-url": `url(${imgSrc})`
+      "--background-url": `url(${imageSrc})`
     }
   }));
 }
