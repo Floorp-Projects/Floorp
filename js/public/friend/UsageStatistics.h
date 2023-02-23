@@ -63,7 +63,10 @@ class JS_PUBLIC_API JSObject;
   _(DESERIALIZE_BYTES, MemoryDistribution)      \
   _(DESERIALIZE_ITEMS, QuantityDistribution)    \
   _(DESERIALIZE_US, TimeDuration_US)            \
-  _(GC_EFFECTIVENESS, MemoryDistribution)
+  _(GC_EFFECTIVENESS, MemoryDistribution)       \
+  _(GC_PARALLEL_MARK_SPEEDUP, Integer)          \
+  _(GC_PARALLEL_MARK_UTILIZATION, Percentage)   \
+  _(GC_PARALLEL_MARK_INTERRUPTIONS, Integer)
 
 // clang-format off
 #define ENUM_DEF(NAME, _) NAME,

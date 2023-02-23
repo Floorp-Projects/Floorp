@@ -102,9 +102,13 @@ void js::GCParallelTask::joinWithLockHeld(AutoLockHelperThreadState& lock,
   }
 
   if (isIdle(lock)) {
-    if (phaseKind != gcstats::PhaseKind::NONE) {
-      gc->stats().recordParallelPhase(phaseKind, duration());
-    }
+    recordDuration();
+  }
+}
+
+void GCParallelTask::recordDuration() {
+  if (phaseKind != gcstats::PhaseKind::NONE) {
+    gc->stats().recordParallelPhase(phaseKind, duration_);
   }
 }
 
@@ -135,16 +139,6 @@ void js::GCParallelTask::cancelDispatchedTask(AutoLockHelperThreadState& lock) {
   MOZ_ASSERT(isInList());
   remove();
   setIdle(lock);
-}
-
-static inline TimeDuration TimeSince(TimeStamp prev) {
-  TimeStamp now = TimeStamp::Now();
-  // Sadly this happens sometimes.
-  MOZ_ASSERT(now >= prev);
-  if (now < prev) {
-    now = prev;
-  }
-  return now - prev;
 }
 
 void js::GCParallelTask::runFromMainThread(AutoLockHelperThreadState& lock) {

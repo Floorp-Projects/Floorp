@@ -1128,6 +1128,42 @@
     "bug_numbers": [1778621, 1801012],
     "description": "The number of queued GCs, collected each time GCs are (de)queued)"
   },
+  "GC_PARALLEL_MARK_SPEEDUP": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 50,
+    "high": 800,
+    "n_buckets": 50,
+    "bug_numbers": [1817741],
+    "description": "Ratio of total helper thread time spent marking to main thread time for parallel marking, scaled by 100."
+  },
+  "GC_PARALLEL_MARK_UTILIZATION": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 1,
+    "high": 100,
+    "n_buckets": 50,
+    "bug_numbers": [1817741],
+    "description": "Ratio of helper thread time spent marking to total helper thread time for parallel marking."
+  },
+  "GC_PARALLEL_MARK_INTERRUPTIONS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 1,
+    "high": 500,
+    "n_buckets": 50,
+    "bug_numbers": [1817741],
+    "description": "Number of interruptions/donations per slice during parallel marking."
+  },
   "DESERIALIZE_BYTES": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],

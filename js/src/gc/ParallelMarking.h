@@ -9,6 +9,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/DoublyLinkedList.h"
+#include "mozilla/TimeStamp.h"
 
 #include "gc/GCMarker.h"
 #include "js/HeapAPI.h"
@@ -86,6 +87,10 @@ class alignas(TypicalCacheLineSize) ParallelMarkTask
   ~ParallelMarkTask();
 
   void run(AutoLockHelperThreadState& lock) override;
+
+  void recordDuration() override;
+
+ private:
   void markOrRequestWork(AutoLockGC& lock);
   bool tryMarking(AutoLockGC& lock);
   bool requestWork(AutoLockGC& lock);
@@ -93,7 +98,6 @@ class alignas(TypicalCacheLineSize) ParallelMarkTask
   void waitUntilResumed(AutoLockGC& lock);
   void resume(const AutoLockGC& lock);
 
- private:
   bool hasWork() const;
 
   // The following fields are only accessed by the marker thread:
@@ -104,6 +108,10 @@ class alignas(TypicalCacheLineSize) ParallelMarkTask
   ConditionVariable resumed;
 
   GCLockData<bool> isWaiting;
+
+  // Length of time this task spent blocked waiting for work.
+  MainThreadOrGCTaskData<mozilla::TimeDuration> markTime;
+  MainThreadOrGCTaskData<mozilla::TimeDuration> waitTime;
 };
 
 }  // namespace gc
