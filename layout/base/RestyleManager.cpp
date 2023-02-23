@@ -2657,7 +2657,8 @@ static ServoPostTraversalFlags SendA11yNotifications(
   }
 
   bool needsNotify = false;
-  bool isVisible = aNewStyle.StyleVisibility()->IsVisible();
+  const bool isVisible = aNewStyle.StyleVisibility()->IsVisible() &&
+                         !aNewStyle.StyleUI()->IsInert();
   if (aFlags & Flags::SendA11yNotificationsIfShown) {
     if (!isVisible) {
       // Propagate the sending-if-shown flag to descendants.
@@ -2670,7 +2671,8 @@ static ServoPostTraversalFlags SendA11yNotifications(
   } else {
     // If we shouldn't skip in any case, we need to check whether our
     // own visibility has changed.
-    bool wasVisible = aOldStyle.StyleVisibility()->IsVisible();
+    const bool wasVisible = aOldStyle.StyleVisibility()->IsVisible() &&
+                            !aOldStyle.StyleUI()->IsInert();
     needsNotify = wasVisible != isVisible;
   }
 

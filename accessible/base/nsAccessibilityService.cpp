@@ -1008,34 +1008,42 @@ LocalAccessible* nsAccessibilityService::CreateAccessible(
     return nullptr;
   }
 
-  // Check frame and its visibility. Note, visibility: hidden frame allows
-  // visible elements in subtree.
+  // Check frame and its visibility.
   nsIFrame* frame = content->GetPrimaryFrame();
-  if (!frame || !frame->StyleVisibility()->IsVisible()) {
-    // display:contents element doesn't have a frame, but retains the semantics.
-    // All its children are unaffected.
-    if (nsCoreUtils::CanCreateAccessibleWithoutFrame(content)) {
-      const MarkupMapInfo* markupMap = GetMarkupMapInfoFor(content);
-      if (markupMap && markupMap->new_func) {
-        RefPtr<LocalAccessible> newAcc =
-            markupMap->new_func(content->AsElement(), aContext);
-        if (newAcc) {
-          document->BindToDocument(newAcc,
-                                   aria::GetRoleMap(content->AsElement()));
-        }
-        return newAcc;
-      }
+  if (frame) {
+    // If invisible or inert, we don't create an accessible, but we don't mark
+    // it with aIsSubtreeHidden = true, since visibility: hidden frame allows
+    // visible elements in subtree, and inert elements allow non-inert
+    // elements.
+    if (!frame->StyleVisibility()->IsVisible() || frame->StyleUI()->IsInert()) {
       return nullptr;
     }
-
-    if (aIsSubtreeHidden && !frame) *aIsSubtreeHidden = true;
-
+  } else if (nsCoreUtils::CanCreateAccessibleWithoutFrame(content)) {
+    // display:contents element doesn't have a frame, but retains the
+    // semantics. All its children are unaffected.
+    const MarkupMapInfo* markupMap = GetMarkupMapInfoFor(content);
+    if (markupMap && markupMap->new_func) {
+      RefPtr<LocalAccessible> newAcc =
+          markupMap->new_func(content->AsElement(), aContext);
+      if (newAcc) {
+        document->BindToDocument(newAcc,
+                                 aria::GetRoleMap(content->AsElement()));
+      }
+      return newAcc;
+    }
+    return nullptr;
+  } else {
+    if (aIsSubtreeHidden) {
+      *aIsSubtreeHidden = true;
+    }
     return nullptr;
   }
 
   if (frame->IsHiddenByContentVisibilityOnAnyAncestor(
           nsIFrame::IncludeContentVisibility::Hidden)) {
-    if (aIsSubtreeHidden) *aIsSubtreeHidden = true;
+    if (aIsSubtreeHidden) {
+      *aIsSubtreeHidden = true;
+    }
     return nullptr;
   }
 
