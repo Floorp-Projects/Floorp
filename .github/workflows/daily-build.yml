@@ -311,7 +311,6 @@ jobs:
           cp ./browser/branding/beta/locales/en-US/brand.ftl $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.ftl
           cp ./browser/branding/beta/locales/en-US/brand.properties $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.properties
         done
-        sed -i 's/browser\/branding\/official/browser\/branding\/beta/' ./browser/locales/l10n.toml
 
     - name: Build 🔨
       run: |
@@ -447,7 +446,6 @@ jobs:
           cp ./browser/branding/beta/locales/en-US/brand.ftl $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.ftl
           cp ./browser/branding/beta/locales/en-US/brand.properties $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.properties
         done
-        sed -i 's/browser\/branding\/official/browser\/branding\/beta/' ./browser/locales/l10n.toml
 
     - name: Build 🔨
       run: |

@@ -179,9 +179,16 @@ void nsPrintSettingsWin::InitWithInitializer(
     return;
   }
 
+  auto* devmode =
+      reinterpret_cast<const DEVMODEW*>(aSettings.mDevmodeWStorage.Elements());
+  if (devmode->dmSize != sizeof(DEVMODEW) ||
+      devmode->dmSize + devmode->dmDriverExtra >
+          aSettings.mDevmodeWStorage.Length()) {
+    return;
+  }
+
   // SetDevMode copies the DEVMODE.
-  SetDevMode(const_cast<DEVMODEW*>(reinterpret_cast<const DEVMODEW*>(
-      aSettings.mDevmodeWStorage.Elements())));
+  SetDevMode(const_cast<DEVMODEW*>(devmode));
 
   if (mDevMode->dmFields & DM_SCALE) {
     // Since we do the scaling, grab the DEVMODE value and reset it back to 100.

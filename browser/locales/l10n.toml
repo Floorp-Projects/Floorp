@@ -149,6 +149,9 @@ locales = [
 [[includes]]
     path = "devtools/client/locales/l10n.toml"
 
+[[includes]]
+    path = "floorp/browser/locales/l10n.toml"
+
 [[paths]]
     reference = "devtools/startup/locales/en-US/**"
     l10n = "{l}devtools/startup/**"

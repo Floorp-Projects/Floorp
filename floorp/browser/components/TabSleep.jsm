@@ -15,7 +15,7 @@ const { clearInterval, setInterval } = ChromeUtils.import(
 
 const TAB_SLEEP_ENABLED_PREF = "floorp.tabsleep.enabled";
 const TAB_SLEEP_TESTMODE_ENABLED_PREF = "floorp.tabsleep.testmode.enabled";
-const TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF = "floorp.tabsleep.tabTimeoutSeconds";
+const TAB_SLEEP_TAB_TIMEOUT_MINUTES_PREF = "floorp.tabsleep.tabTimeoutMinutes";
 
 const EXCLUDE_URL_PATTERNS = [
     "auth",
@@ -209,7 +209,7 @@ function tabObserve(callback) {
 }
 
 let tabSleepEnabled = false;
-let TAB_TIMEOUT_SECONDS;
+let TAB_TIMEOUT_MINUTES;
 let tabObserve_ = null;
 let interval = null;
 let isTestMode = false;
@@ -304,10 +304,10 @@ function enableTabSleep() {
             }
             if (!target) continue;
             if (
-                ((new Date()).getTime() - nativeTab.lastAccessed) > (TAB_TIMEOUT_SECONDS * 1000) &&
+                ((new Date()).getTime() - nativeTab.lastAccessed) > (TAB_TIMEOUT_MINUTES * 60 * 1000) &&
                 (
                     typeof nativeTab.lastActivity === "undefined" ||
-                    ((new Date()).getTime() - nativeTab.lastActivity) > (TAB_TIMEOUT_SECONDS * 1000)
+                    ((new Date()).getTime() - nativeTab.lastActivity) > (TAB_TIMEOUT_MINUTES * 60 * 1000)
                 )
             ) {
                 let linkedPanel = nativeTab.linkedPanel;
@@ -331,6 +331,17 @@ function disableTabSleep() {
     }
 }
 
+// Migrate pref
+const TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF = "floorp.tabsleep.tabTimeoutSeconds";
+if (Services.prefs.prefHasUserValue(TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF)) {
+    let oldPrefValue = Services.prefs.getIntPref(TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF, null);
+    if (oldPrefValue) {
+        let newPrefValue = Math.floor(oldPrefValue / 60);
+        Services.prefs.setIntPref(TAB_SLEEP_TAB_TIMEOUT_MINUTES_PREF, newPrefValue);
+        Services.prefs.clearUserPref(TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF);
+    }
+}
+
 {
     let isEnabled = Services.prefs.getBoolPref(TAB_SLEEP_ENABLED_PREF, false);
     isTestMode = Services.prefs.getBoolPref(TAB_SLEEP_TESTMODE_ENABLED_PREF, false);
@@ -339,16 +350,16 @@ function disableTabSleep() {
     let systemMemoryGB = systemMemory / 1024 / 1024 / 1024;
     console.log(`Tab Sleep: System Memory (GB) => ${systemMemoryGB}`);
 
-    let tabTimeoutSecondsDefault = Math.floor(60 * (systemMemoryGB * 5));
+    let tabTimeoutMinutesDefault = Math.floor(systemMemoryGB * 5);
     Services.prefs.getDefaultBranch(null)
-        .setIntPref(TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF, tabTimeoutSecondsDefault);
+        .setIntPref(TAB_SLEEP_TAB_TIMEOUT_MINUTES_PREF, tabTimeoutMinutesDefault);
 
-    let timeoutSecondsPrefHandle = function() {
-        TAB_TIMEOUT_SECONDS = Services.prefs.getIntPref(TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF, tabTimeoutSecondsDefault);
-        console.log(`Tab Sleep: TAB_TIMEOUT_SECONDS => ${TAB_TIMEOUT_SECONDS}`);
+    let timeoutMinutesPrefHandle = function() {
+        TAB_TIMEOUT_MINUTES = Services.prefs.getIntPref(TAB_SLEEP_TAB_TIMEOUT_MINUTES_PREF, tabTimeoutMinutesDefault);
+        console.log(`Tab Sleep: TAB_TIMEOUT_MINUTES => ${TAB_TIMEOUT_MINUTES}`);
     };
-    timeoutSecondsPrefHandle();
-    Services.prefs.addObserver(TAB_SLEEP_TAB_TIMEOUT_SECONDS_PREF, timeoutSecondsPrefHandle);
+    timeoutMinutesPrefHandle();
+    Services.prefs.addObserver(TAB_SLEEP_TAB_TIMEOUT_MINUTES_PREF, timeoutMinutesPrefHandle);
 
     if (isEnabled) {
         enableTabSleep();
