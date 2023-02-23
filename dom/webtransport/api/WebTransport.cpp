@@ -6,6 +6,7 @@
 
 #include "WebTransport.h"
 
+#include "WebTransportBidirectionalStream.h"
 #include "mozilla/RefPtr.h"
 #include "nsUTF8Utils.h"
 #include "nsIURL.h"
@@ -526,10 +527,61 @@ already_AddRefed<WebTransportDatagramDuplexStream> WebTransport::GetDatagrams(
 }
 
 already_AddRefed<Promise> WebTransport::CreateBidirectionalStream(
-    ErrorResult& aError) {
+    const WebTransportSendStreamOptions& aOptions, ErrorResult& aRv) {
   LOG(("CreateBidirectionalStream() called"));
-  aError.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
+  // https://w3c.github.io/webtransport/#dom-webtransport-createbidirectionalstream
+  RefPtr<Promise> promise = Promise::CreateInfallible(GetParentObject());
+
+  // Step 2: If transport.[[State]] is "closed" or "failed", return a new
+  // rejected promise with an InvalidStateError.
+  if (mState == WebTransportState::CLOSED ||
+      mState == WebTransportState::FAILED) {
+    aRv.ThrowInvalidStateError("WebTransport close or failed");
+    return nullptr;
+  }
+
+  // Step 3: Let sendOrder be options's sendOrder.
+  Maybe<int64_t> sendOrder;
+  if (!aOptions.mSendOrder.IsNull()) {
+    sendOrder = Some(aOptions.mSendOrder.Value());
+  }
+  // Step 4: Let p be a new promise.
+  // Step 5: Run the following steps in parallel, but abort them whenever
+  // transport’s [[State]] becomes "closed" or "failed", and instead queue
+  // a network task with transport to reject p with an InvalidStateError.
+
+  // Ask the parent to create the stream and send us the DataPipeSender/Receiver
+  // pair
+  mChild->SendCreateBidirectionalStream(
+      sendOrder,
+      [self = RefPtr{this}, promise](
+          BidirectionalStreamResponse&& aPipes) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+        LOG(("CreateBidirectionalStream response"));
+        // Step 5.2.1: If transport.[[State]] is "closed" or "failed",
+        // reject p with an InvalidStateError and abort these steps.
+        if (self->mState == WebTransportState::CLOSED ||
+            self->mState == WebTransportState::FAILED) {
+          promise->MaybeRejectWithInvalidStateError(
+              "Transport close/errored before CreateBidirectional finished");
+          return;
+        }
+        ErrorResult error;
+        RefPtr<WebTransportBidirectionalStream> newStream =
+            WebTransportBidirectionalStream::Create(
+                self, self->mGlobal,
+                aPipes.get_BidirectionalStream().inStream(),
+                aPipes.get_BidirectionalStream().outStream(), error);
+        LOG(("Returning a bidirectionalStream"));
+        promise->MaybeResolve(newStream);
+      },
+      [self = RefPtr{this}, promise](mozilla::ipc::ResponseRejectReason) {
+        LOG(("CreateBidirectionalStream reject"));
+        promise->MaybeRejectWithInvalidStateError(
+            "Transport close/errored before CreateBidirectional started");
+      });
+
+  // Step 6: return p
+  return promise.forget();
 }
 
 already_AddRefed<ReadableStream> WebTransport::IncomingBidirectionalStreams() {
@@ -537,10 +589,74 @@ already_AddRefed<ReadableStream> WebTransport::IncomingBidirectionalStreams() {
 }
 
 already_AddRefed<Promise> WebTransport::CreateUnidirectionalStream(
-    ErrorResult& aError) {
+    const WebTransportSendStreamOptions& aOptions, ErrorResult& aRv) {
   LOG(("CreateUnidirectionalStream() called"));
-  aError.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
+  // https://w3c.github.io/webtransport/#dom-webtransport-createunidirectionalstream
+  // Step 2: If transport.[[State]] is "closed" or "failed", return a new
+  // rejected promise with an InvalidStateError.
+  if (mState == WebTransportState::CLOSED ||
+      mState == WebTransportState::FAILED) {
+    aRv.ThrowInvalidStateError("WebTransport close or failed");
+    return nullptr;
+  }
+
+  // Step 3: Let sendOrder be options's sendOrder.
+  Maybe<int64_t> sendOrder;
+  if (!aOptions.mSendOrder.IsNull()) {
+    sendOrder = Some(aOptions.mSendOrder.Value());
+  }
+  // Step 4: Let p be a new promise.
+  RefPtr<Promise> promise = Promise::CreateInfallible(GetParentObject());
+
+  // Step 5: Run the following steps in parallel, but abort them whenever
+  // transport’s [[State]] becomes "closed" or "failed", and instead queue
+  // a network task with transport to reject p with an InvalidStateError.
+
+  // Ask the parent to create the stream and send us the DataPipeSender
+  mChild->SendCreateUnidirectionalStream(
+      sendOrder,
+      [self = RefPtr{this},
+       promise](RefPtr<::mozilla::ipc::DataPipeSender>&& aPipe)
+          MOZ_CAN_RUN_SCRIPT_BOUNDARY {
+            LOG(("CreateUnidirectionalStream response"));
+            // Step 5.1: Let internalStream be the result of creating an
+            // outgoing unidirectional stream with transport.[[Session]].
+            // Step 5.2: Queue a network task with transport to run the
+            // following steps:
+            // Step 5.2.1 If transport.[[State]] is "closed" or "failed",
+            // reject p with an InvalidStateError and abort these steps.
+            if (self->mState == WebTransportState::CLOSED ||
+                self->mState == WebTransportState::FAILED) {
+              promise->MaybeRejectWithInvalidStateError(
+                  "Transport close/errored during CreateUnidirectional");
+              return;
+            }
+
+            // Step 5.2.2.: Let stream be the result of creating a
+            // WebTransportSendStream with internalStream, transport, and
+            // sendOrder.
+            ErrorResult error;
+            RefPtr<WebTransportSendStream> writableStream =
+                WebTransportSendStream::Create(self, self->mGlobal, aPipe,
+                                               error);
+            if (!writableStream) {
+              promise->MaybeReject(std::move(error));
+              return;
+            }
+            LOG(("Returning a writableStream"));
+            // https://w3c.github.io/webtransport/#send-stream-procedures step 7
+            self->mSendStreams.AppendElement(writableStream);
+            // Step 5.2.3: Resolve p with stream.
+            promise->MaybeResolve(writableStream);
+          },
+      [self = RefPtr{this}, promise](mozilla::ipc::ResponseRejectReason) {
+        LOG(("CreateUnidirectionalStream reject"));
+        promise->MaybeRejectWithInvalidStateError(
+            "Transport close/errored during CreateUnidirectional");
+      });
+
+  // Step 6: return p
+  return promise.forget();
 }
 
 already_AddRefed<ReadableStream> WebTransport::IncomingUnidirectionalStreams() {
@@ -600,7 +716,7 @@ void WebTransport::Cleanup(WebTransportError* aError,
   if (aCloseInfo) {
     // 12.1: Resolve closed with closeInfo.
     LOG(("Resolving mClosed with closeinfo"));
-    mClosed->MaybeResolve(aCloseInfo);
+    mClosed->MaybeResolve(*aCloseInfo);
     // 12.2: Assert: ready is settled.
     MOZ_ASSERT(mReady->State() != Promise::PromiseState::Pending);
     // 12.3: Close incomingBidirectionalStreams

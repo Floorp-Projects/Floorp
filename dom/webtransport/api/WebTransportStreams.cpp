@@ -131,23 +131,9 @@ void WebTransportIncomingStreamsAlgorithms::BuildStream(JSContext* aCx,
     RefPtr<DataPipeReceiver> input = pipes->first.forget();
     RefPtr<DataPipeSender> output = pipes->second.forget();
 
-    // Step 7.1: Let stream be the result of creating a
-    // WebTransportBidirectionalStream with internalStream and transport
-    RefPtr<WebTransportReceiveStream> readableStream =
-        WebTransportReceiveStream::Create(mTransport, mTransport->mGlobal,
-                                          input, aRv);
-    if (!readableStream) {
-      return;
-    }
-    RefPtr<WebTransportSendStream> writableStream =
-        WebTransportSendStream::Create(mTransport, mTransport->mGlobal, output,
-                                       aRv);
-    if (!writableStream) {
-      return;
-    }
-
-    auto stream = MakeRefPtr<WebTransportBidirectionalStream>(
-        mTransport->mGlobal, readableStream, writableStream);
+    RefPtr<WebTransportBidirectionalStream> stream =
+        WebTransportBidirectionalStream::Create(mTransport, mTransport->mGlobal,
+                                                input, output, aRv);
 
     // Step 7.2 Enqueue stream to transport.[[IncomingBidirectionalStreams]].
     JS::Rooted<JS::Value> jsStream(aCx);
@@ -162,11 +148,6 @@ void WebTransportIncomingStreamsAlgorithms::BuildStream(JSContext* aCx,
     if (MOZ_UNLIKELY(aRv.Failed())) {
       return;
     }
-    // Add to ReceiveStreams & SendStreams
-    // https://w3c.github.io/webtransport/#send-stream-procedures Step 7:
-    mTransport->mSendStreams.AppendElement(writableStream);
-    // https://w3c.github.io/webtransport/#receive-stream-procedures Step 5:
-    mTransport->mReceiveStreams.AppendElement(readableStream);
   }
   // Step 7.3: Resolve p with undefined.
 }
