@@ -163,7 +163,6 @@ add_task(async function enter_search_mode_key() {
     true,
     "Actions are shown in search mode"
   );
-  await SpecialPowers.popPrefEnv();
   await UrlbarTestUtils.exitSearchMode(window);
   await UrlbarTestUtils.promisePopupClose(window);
   EventUtils.synthesizeKey("KEY_Escape");
