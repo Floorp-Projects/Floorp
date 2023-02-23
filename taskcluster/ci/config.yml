@@ -646,6 +646,16 @@ workers:
             implementation: generic-worker
             os: windows
             worker-type: '{alias}'
+        t-win11-64(|-gpu-s|-source):
+            provisioner: '{trust-domain}-t'
+            implementation: generic-worker
+            os: windows
+            worker-type: '{alias}'
+        win11-64-2009(|-gpu|-ssd|-source|-ssd-gpu):
+            provisioner: 'gecko-t'
+            implementation: generic-worker
+            os: windows
+            worker-type: '{alias}'
         t-win7-32-gpu:
             provisioner: '{trust-domain}-t'
             implementation: generic-worker

@@ -145,6 +145,58 @@ WINDOWS_WORKER_TYPES = {
         "virtual": "win10-64-2004",
         "virtual-with-gpu": "win10-64-2004-gpu",
     },
+    "windows11-32-2009-mingwclang-qr": {
+        "virtual": "win11-64-2009",
+        "virtual-with-gpu": "win11-64-2009-gpu",
+    },
+    "windows11-32-2009-qr": {
+        "virtual": "win11-64-2009",
+        "virtual-with-gpu": "win11-64-2009-gpu",
+    },
+    "windows11-32-2009-shippable-qr": {
+        "virtual": "win11-64-2009",
+        "virtual-with-gpu": "win11-64-2009-gpu",
+    },
+    "windows11-64-2009": {
+        "virtual": "win11-64-2009",
+        "virtual-with-gpu": "win11-64-2009-gpu",
+    },
+    "windows11-64-2009-ccov": {
+        "virtual": "win11-64-2009-ssd",
+        "virtual-with-gpu": "win11-64-2009-ssd-gpu",
+    },
+    "windows11-64-2009-ccov-qr": {
+        "virtual": "win11-64-2009-ssd",
+        "virtual-with-gpu": "win11-64-2009-ssd-gpu",
+    },
+    "windows11-64-2009-devedition": {
+        "virtual": "win11-64-2009",
+        "virtual-with-gpu": "win11-64-2009-gpu",
+    },
+    "windows11-64-2009-shippable": {
+        "virtual": "win11-64-2009",
+        "virtual-with-gpu": "win11-64-2009-gpu",
+    },
+    "windows11-64-2009-qr": {
+        "virtual": "win11-64-2009",
+        "virtual-with-gpu": "win11-64-2009-gpu",
+    },
+    "windows11-64-2009-shippable-qr": {
+        "virtual": "win11-64-2009",
+        "virtual-with-gpu": "win11-64-2009-gpu",
+    },
+    "windows11-64-2009-devedition-qr": {
+        "virtual": "win11-64-2009",
+        "virtual-with-gpu": "win11-64-2009-gpu",
+    },
+    "windows11-64-2009-asan-qr": {
+        "virtual": "win11-64-2009",
+        "virtual-with-gpu": "win11-64-2009-gpu",
+    },
+    "windows11-64-2009-mingwclang-qr": {
+        "virtual": "win11-64-2009",
+        "virtual-with-gpu": "win11-64-2009-gpu",
+    },
 }
 
 # os x worker types keyed by test-platform
@@ -199,7 +251,7 @@ def set_worker_type(config, tasks):
                 ]
                 if task[
                     "virtualization"
-                ] == "virtual-with-gpu" and test_platform.startswith("windows10"):
+                ] == "virtual-with-gpu" and test_platform.startswith("windows1"):
                     # add in `--requires-gpu` to the mozharness options
                     task["mozharness"]["extra-options"].append("--requires-gpu")
 

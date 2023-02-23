@@ -51,7 +51,7 @@ web-platform-tests:
             macosx.*/debug: 18
             windows.*32.*/opt: 12
             windows.*/debug: 14
-            windows10-64-2004-ccov.*/opt: 14
+            windows.*-ccov.*/opt: 14
             default: 10
     max-run-time:
         by-test-platform:
@@ -69,14 +69,14 @@ web-platform-tests:
         by-variant:
             webrender-sw:
                 by-test-platform:
-                    (linux1804|windows10)-32.*/.*: []
+                    .*-32.*/.*: []
                     linux.*64-qr/debug: built-projects
-                    windows10-64-2004-qr/debug: built-projects
+                    windows.*-qr/debug: built-projects
                     android-em-7.0-x86_64-qr/debug: []
                     default: []
             webrender-sw+no-fission:
                 by-test-platform:
-                    (linux1804|windows10)-32.*/.*: []
+                    .*-32.*/.*: []
                     android-em-7.0-x86_64-qr/debug: built-projects
                     linux.*64-qr/debug: built-projects
                     default: []
@@ -137,7 +137,7 @@ web-platform-tests-reftest:
     treeherder-symbol: W(Wr)
     virtualization:
         by-test-platform:
-            windows10-64-2004.*-qr/.*: virtual-with-gpu
+            windows.*-qr/.*: virtual-with-gpu
             default: virtual
     chunks:
         by-test-platform:
@@ -157,9 +157,9 @@ web-platform-tests-reftest:
         by-variant:
             webrender-sw:
                 by-test-platform:
-                    (linux1804|windows10)-32.*/.*: []
+                    .*-32.*/.*: []
                     linux.*64-qr/debug: built-projects
-                    windows10-64-2004-qr/debug: built-projects
+                    windows.*-qr/debug: built-projects
                     default: []
             webrender-sw+no-fission:
                 by-test-platform:
@@ -248,9 +248,9 @@ web-platform-tests-wdspec:
             webrender-sw:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: []
-                    (linux1804|windows10)-32.*/.*: []
+                    .*-32.*/.*: []
                     linux.*64-qr/debug: built-projects
-                    windows10-64-2004-qr/debug: built-projects
+                    windows.*-qr/debug: built-projects
                     default: []
             headless:
                 by-test-platform:
@@ -320,10 +320,10 @@ web-platform-tests-crashtest:
             webrender-sw:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
-                    (linux1804|windows10)-32.*/.*: []
+                    .*-32.*/.*: []
                     linux.*64-qr/debug: built-projects
                     macosx101.*64-qr/debug: built-projects
-                    windows10-64-2004-qr/debug: built-projects
+                    windows.*-qr/debug: built-projects
                     default: []
             webrender-sw+no-fission:
                 by-test-platform:
@@ -361,9 +361,9 @@ web-platform-tests-print-reftest:
             webrender-sw:
                 by-test-platform:
                     android.*: []
-                    (linux1804|windows10)-32.*/.*: []
+                    .*-32.*/.*: []
                     linux.*64-qr/debug: built-projects
-                    windows10-64-2004-qr/debug: built-projects
+                    windows.*-qr/debug: built-projects
                     default: []
             webrender-sw+no-fission:
                 by-test-platform:

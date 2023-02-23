@@ -147,7 +147,7 @@ webrender-dcomp-disabled:
     expiration: "2023-09-01"
     suffix: "wr-dc0"
     when:
-        $eval: '"windows10" in task["test-platform"]'
+        $eval: '"windows1" in task["test-platform"]'
     merge:
         mozharness:
             extra-options:
@@ -163,7 +163,7 @@ webrender-dcomp-present:  # Default variant ends up like this.
     expiration: "2023-09-01"
     suffix: "wr-dc1-p"
     when:
-        $eval: '"windows10" in task["test-platform"]'
+        $eval: '"windows1" in task["test-platform"]'
     merge:
         mozharness:
             extra-options:
@@ -179,7 +179,7 @@ webrender-dcomp-overlays:
     expiration: "2023-09-01"
     suffix: "wr-dc2-o"
     when:
-        $eval: '"windows10" in task["test-platform"]'
+        $eval: '"windows1" in task["test-platform"]'
     merge:
         mozharness:
             extra-options:
@@ -195,7 +195,7 @@ webrender-dcomp-compositing:
     expiration: "2023-09-01"
     suffix: "wr-dc3-c"
     when:
-        $eval: '"windows10" in task["test-platform"]'
+        $eval: '"windows1" in task["test-platform"]'
     merge:
         mozharness:
             extra-options:
@@ -244,7 +244,7 @@ wmf-media-engine:
     component: "Core::Audio/Video:Playback"
     expiration: "2023-04-10"
     when:
-        $eval: '"windows10" in task["test-platform"]'
+        $eval: '"windows1" in task["test-platform"]'
     suffix: "wmfme"
     replace:
         tier: 2
@@ -271,7 +271,7 @@ msix:
     expiration: "never"
     suffix: "msix"
     when:
-        $eval: '"windows10-64" in task["test-platform"] && "opt" in task["test-platform"] && !("asan" in task["test-platform"]) && !("ccov" in task["test-platform"])'
+        $eval: '"windows1" in task["test-platform"] && "-64" in task["test-platform"] && "opt" in task["test-platform"] && !("asan" in task["test-platform"]) && !("ccov" in task["test-platform"])'
     merge:
         mozharness:
             extra-options:
