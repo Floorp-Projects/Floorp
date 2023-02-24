@@ -1332,7 +1332,7 @@ TEST_P(PeerConnectionInterfaceTest, CreatePeerConnectionWithPooledCandidates) {
   server.uri = kStunAddressOnly;
   config.servers.push_back(server);
   config.type = PeerConnectionInterface::kRelay;
-  config.disable_ipv6 = true;
+  config.DEPRECATED_disable_ipv6 = true;
   config.tcp_candidate_policy =
       PeerConnectionInterface::kTcpCandidatePolicyDisabled;
   config.candidate_network_policy =
@@ -3827,7 +3827,7 @@ TEST(RTCConfigurationTest, ComparisonOperators) {
   EXPECT_NE(a, f);
 
   PeerConnectionInterface::RTCConfiguration g;
-  g.disable_ipv6 = true;
+  g.DEPRECATED_disable_ipv6 = true;
   EXPECT_NE(a, g);
 
   PeerConnectionInterface::RTCConfiguration h(

@@ -428,7 +428,10 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
 
     // If set to true, don't gather IPv6 ICE candidates.
     // TODO(https://crbug.com/webrtc/14608): Delete this flag.
-    bool disable_ipv6 = false;
+    union {
+      bool DEPRECATED_disable_ipv6 = false;
+      bool ABSL_DEPRECATED("https://crbug.com/webrtc/14608") disable_ipv6;
+    };
 
     // If set to true, don't gather IPv6 ICE candidates on Wi-Fi.
     // Only intended to be used on specific devices. Certain phones disable IPv6
