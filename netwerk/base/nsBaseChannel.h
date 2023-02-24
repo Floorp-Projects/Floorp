@@ -11,6 +11,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/net/NeckoTargetHolder.h"
 #include "mozilla/net/PrivateBrowsingChannel.h"
+#include "nsCOMPtr.h"
 #include "nsHashPropertyBag.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIChannel.h"
@@ -27,7 +28,6 @@
 #include "nsInputStreamPump.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
-#include "nsCOMPtr.h"
 
 class nsIInputStream;
 class nsICancelable;

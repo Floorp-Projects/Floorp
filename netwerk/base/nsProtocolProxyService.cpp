@@ -56,7 +56,6 @@ extern const char kProxyType_SOCKS[];
 extern const char kProxyType_SOCKS4[];
 extern const char kProxyType_SOCKS5[];
 extern const char kProxyType_DIRECT[];
-extern const char kProxyType_PROXY[];
 
 #undef LOG
 #define LOG(args) MOZ_LOG(gProxyLog, LogLevel::Debug, args)
