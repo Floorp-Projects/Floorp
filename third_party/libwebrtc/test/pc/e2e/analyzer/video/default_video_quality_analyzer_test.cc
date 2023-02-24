@@ -553,10 +553,10 @@ TEST(DefaultVideoQualityAnalyzerTest, NormalScenario2Receivers) {
     EXPECT_GE(it->second.encode_time_ms.GetMin(), 20);
     ASSERT_FALSE(it->second.decode_time_ms.IsEmpty());
     EXPECT_GE(it->second.decode_time_ms.GetMin(), 30);
-    ASSERT_FALSE(it->second.resolution_of_rendered_frame.IsEmpty());
-    EXPECT_GE(it->second.resolution_of_rendered_frame.GetMin(),
+    ASSERT_FALSE(it->second.resolution_of_decoded_frame.IsEmpty());
+    EXPECT_GE(it->second.resolution_of_decoded_frame.GetMin(),
               kFrameWidth * kFrameHeight - 1);
-    EXPECT_LE(it->second.resolution_of_rendered_frame.GetMax(),
+    EXPECT_LE(it->second.resolution_of_decoded_frame.GetMax(),
               kFrameWidth * kFrameHeight + 1);
   }
   {
@@ -566,10 +566,10 @@ TEST(DefaultVideoQualityAnalyzerTest, NormalScenario2Receivers) {
     EXPECT_GE(it->second.encode_time_ms.GetMin(), 20);
     ASSERT_FALSE(it->second.decode_time_ms.IsEmpty());
     EXPECT_GE(it->second.decode_time_ms.GetMin(), 30);
-    ASSERT_FALSE(it->second.resolution_of_rendered_frame.IsEmpty());
-    EXPECT_GE(it->second.resolution_of_rendered_frame.GetMin(),
+    ASSERT_FALSE(it->second.resolution_of_decoded_frame.IsEmpty());
+    EXPECT_GE(it->second.resolution_of_decoded_frame.GetMin(),
               kFrameWidth * kFrameHeight - 1);
-    EXPECT_LE(it->second.resolution_of_rendered_frame.GetMax(),
+    EXPECT_LE(it->second.resolution_of_decoded_frame.GetMax(),
               kFrameWidth * kFrameHeight + 1);
   }
 }

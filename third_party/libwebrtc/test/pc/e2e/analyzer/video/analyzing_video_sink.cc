@@ -30,6 +30,7 @@
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
+namespace {
 
 using VideoSubscription = ::webrtc::webrtc_pc_e2e::
     PeerConnectionE2EQualityTestFixture::VideoSubscription;
@@ -37,6 +38,35 @@ using VideoResolution = ::webrtc::webrtc_pc_e2e::
     PeerConnectionE2EQualityTestFixture::VideoResolution;
 using VideoConfig =
     ::webrtc::webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::VideoConfig;
+
+// Scales video frame to `required_resolution` if necessary. Crashes if video
+// frame and `required_resolution` have different aspect ratio.
+VideoFrame ScaleVideoFrame(const VideoFrame& frame,
+                           VideoResolution required_resolution) {
+  if (required_resolution.width() == static_cast<size_t>(frame.width()) &&
+      required_resolution.height() == static_cast<size_t>(frame.height())) {
+    return frame;
+  }
+
+  RTC_CHECK_LE(std::abs(static_cast<double>(required_resolution.width()) /
+                            required_resolution.height() -
+                        static_cast<double>(frame.width()) / frame.height()),
+               2 * std::numeric_limits<double>::epsilon())
+      << "Received frame has different aspect ratio compared to requested "
+      << "video resolution: required resolution="
+      << required_resolution.ToString()
+      << "; actual resolution=" << frame.width() << "x" << frame.height();
+
+  rtc::scoped_refptr<I420Buffer> scaled_buffer(I420Buffer::Create(
+      required_resolution.width(), required_resolution.height()));
+  scaled_buffer->ScaleFrom(*frame.video_frame_buffer()->ToI420());
+
+  VideoFrame scaled_frame = frame;
+  scaled_frame.set_video_frame_buffer(scaled_buffer);
+  return scaled_frame;
+}
+
+}  // namespace
 
 AnalyzingVideoSink::AnalyzingVideoSink(absl::string_view peer_name,
                                        Clock* clock,
@@ -78,23 +108,30 @@ void AnalyzingVideoSink::OnFrame(const VideoFrame& frame) {
     // This is dummy frame, so we  don't need to process it further.
     return;
   }
-  // Copy entire video frame including video buffer to ensure that analyzer
-  // won't hold any WebRTC internal buffers.
+
+  if (frame.id() == VideoFrame::kNotSetId) {
+    // If frame ID is unknown we can't get required render resolution, so pass
+    // to the analyzer in the actual resolution of the frame.
+    AnalyzeFrame(frame);
+  } else {
+    std::string stream_label = analyzer_->GetStreamLabel(frame.id());
+    SinksDescriptor* sinks_descriptor = PopulateSinks(stream_label);
+    RTC_CHECK(sinks_descriptor != nullptr);
+
+    VideoFrame scaled_frame =
+        ScaleVideoFrame(frame, sinks_descriptor->resolution);
+    AnalyzeFrame(scaled_frame);
+    for (auto& sink : sinks_descriptor->sinks) {
+      sink->OnFrame(scaled_frame);
+    }
+  }
+}
+
+void AnalyzingVideoSink::AnalyzeFrame(const VideoFrame& frame) {
   VideoFrame frame_copy = frame;
   frame_copy.set_video_frame_buffer(
       I420Buffer::Copy(*frame.video_frame_buffer()->ToI420()));
   analyzer_->OnFrameRendered(peer_name_, frame_copy);
-
-  if (frame.id() != VideoFrame::kNotSetId) {
-    std::string stream_label = analyzer_->GetStreamLabel(frame.id());
-    SinksDescriptor* sinks_descriptor = PopulateSinks(stream_label);
-    if (sinks_descriptor == nullptr) {
-      return;
-    }
-    for (auto& sink : sinks_descriptor->sinks) {
-      sink->OnFrame(frame);
-    }
-  }
 }
 
 AnalyzingVideoSink::SinksDescriptor* AnalyzingVideoSink::PopulateSinks(

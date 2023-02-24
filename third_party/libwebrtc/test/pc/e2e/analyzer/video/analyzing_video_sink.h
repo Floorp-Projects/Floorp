@@ -66,6 +66,10 @@ class AnalyzingVideoSink : public rtc::VideoSinkInterface<VideoFrame> {
     std::vector<std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>>> sinks;
   };
 
+  // Creates full copy of the frame to free any frame owned internal buffers and
+  // passes created copy to analyzer. Uses `I420Buffer` to represent frame
+  // content.
+  void AnalyzeFrame(const VideoFrame& frame);
   // Populates sink for specified stream and caches them in `stream_sinks_`.
   SinksDescriptor* PopulateSinks(absl::string_view stream_label);
 
