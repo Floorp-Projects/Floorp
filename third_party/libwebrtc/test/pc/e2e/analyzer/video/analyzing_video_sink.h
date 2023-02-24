@@ -66,9 +66,15 @@ class AnalyzingVideoSink : public rtc::VideoSinkInterface<VideoFrame> {
     std::vector<std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>>> sinks;
   };
 
-  // Creates full copy of the frame to free any frame owned internal buffers and
-  // passes created copy to analyzer. Uses `I420Buffer` to represent frame
-  // content.
+  // Scales video frame to `required_resolution` if necessary. Crashes if video
+  // frame and `required_resolution` have different aspect ratio.
+  VideoFrame ScaleVideoFrame(
+      const VideoFrame& frame,
+      const PeerConnectionE2EQualityTestFixture::VideoResolution&
+          required_resolution);
+  // Creates full copy of the frame to free any frame owned internal buffers
+  // and passes created copy to analyzer. Uses `I420Buffer` to represent
+  // frame content.
   void AnalyzeFrame(const VideoFrame& frame);
   // Populates sink for specified stream and caches them in `stream_sinks_`.
   SinksDescriptor* PopulateSinks(absl::string_view stream_label);
