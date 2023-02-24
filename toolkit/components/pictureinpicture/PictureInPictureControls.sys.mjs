@@ -11,6 +11,7 @@ export const KEYBOARD_CONTROLS = {
   VOLUME: 1 << 2,
   SEEK: 1 << 3,
   CLOSE: 1 << 4,
+  LIVE_SEEK: 1 << 5,
 };
 
 // These are the possible toggle positions along the right side of
