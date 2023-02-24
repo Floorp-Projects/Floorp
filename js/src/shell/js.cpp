@@ -11173,15 +11173,6 @@ int main(int argc, char** argv) {
     JS_SetAccumulateTelemetryCallback(cx, AccumulateTelemetryDataCallback);
   }
 
-  size_t nurseryBytes = op.getIntOption("nursery-size") * 1024L * 1024L;
-  if (nurseryBytes == 0) {
-    fprintf(stderr, "Error: --nursery-size parameter must be non-zero.\n");
-    fprintf(stderr,
-            "The nursery can be disabled by passing the --no-ggc option.\n");
-    return EXIT_FAILURE;
-  }
-  JS_SetGCParameter(cx, JSGC_MAX_NURSERY_BYTES, nurseryBytes);
-
   auto destroyCx = MakeScopeExit([cx] { JS_DestroyContext(cx); });
 
   UniquePtr<ShellContext> sc = MakeUnique<ShellContext>(cx);
@@ -11208,13 +11199,6 @@ int main(int argc, char** argv) {
 
   if (!SetContextOptions(cx, op)) {
     return 1;
-  }
-
-  JS_SetGCParameter(cx, JSGC_MAX_BYTES, 0xffffffff);
-
-  size_t availMemMB = op.getIntOption("available-memory");
-  if (availMemMB > 0) {
-    JS_SetGCParametersBasedOnAvailableMemory(cx, availMemMB);
   }
 
   JS_SetTrustedPrincipals(cx, &ShellPrincipals::fullyTrusted);
@@ -11254,26 +11238,6 @@ int main(int argc, char** argv) {
     CancelOffThreadJobsForRuntime(cx);
   });
 
-  if (const char* opt = op.getStringOption("nursery-strings")) {
-    if (strcmp(opt, "on") == 0) {
-      cx->runtime()->gc.nursery().enableStrings();
-    } else if (strcmp(opt, "off") == 0) {
-      cx->runtime()->gc.nursery().disableStrings();
-    } else {
-      MOZ_CRASH("invalid option value for --nursery-strings, must be on/off");
-    }
-  }
-
-  if (const char* opt = op.getStringOption("nursery-bigints")) {
-    if (strcmp(opt, "on") == 0) {
-      cx->runtime()->gc.nursery().enableBigInts();
-    } else if (strcmp(opt, "off") == 0) {
-      cx->runtime()->gc.nursery().disableBigInts();
-    } else {
-      MOZ_CRASH("invalid option value for --nursery-bigints, must be on/off");
-    }
-  }
-
   // The file content should stay alive as long as Worker thread can be
   // initialized.
   JS::SelfHostedCache xdrSpan = nullptr;
@@ -11310,28 +11274,6 @@ int main(int argc, char** argv) {
   }
 
   EnvironmentPreparer environmentPreparer(cx);
-
-  bool incrementalGC = !op.getBoolOption("no-incremental-gc");
-  JS_SetGCParameter(cx, JSGC_INCREMENTAL_GC_ENABLED, incrementalGC);
-
-  if (op.getBoolOption("enable-parallel-marking")) {
-    JS_SetGCParameter(cx, JSGC_PARALLEL_MARKING_ENABLED, true);
-  }
-  int32_t markingThreads = op.getIntOption("marking-threads");
-  if (markingThreads > 0) {
-    JS_SetGCParameter(cx, JSGC_MARKING_THREAD_COUNT, markingThreads);
-  }
-
-  JS_SetGCParameter(cx, JSGC_SLICE_TIME_BUDGET_MS, 5);
-
-  JS_SetGCParameter(cx, JSGC_PER_ZONE_GC_ENABLED, true);
-
-  for (MultiStringRange args = op.getMultiStringOption("gc-param");
-       !args.empty(); args.popFront()) {
-    if (!SetGCParameterFromArg(cx, args.front())) {
-      return EXIT_FAILURE;
-    }
-  }
 
   JS::SetProcessLargeAllocationFailureCallback(my_LargeAllocFailCallback);
 
@@ -12497,6 +12439,64 @@ bool SetContextJITOptions(JSContext* cx, const OptionParser& op) {
 }
 
 bool SetContextGCOptions(JSContext* cx, const OptionParser& op) {
+  JS_SetGCParameter(cx, JSGC_MAX_BYTES, 0xffffffff);
+
+  size_t nurseryBytes = op.getIntOption("nursery-size") * 1024L * 1024L;
+  if (nurseryBytes == 0) {
+    fprintf(stderr, "Error: --nursery-size parameter must be non-zero.\n");
+    fprintf(stderr,
+            "The nursery can be disabled by passing the --no-ggc option.\n");
+    return false;
+  }
+  JS_SetGCParameter(cx, JSGC_MAX_NURSERY_BYTES, nurseryBytes);
+
+  size_t availMemMB = op.getIntOption("available-memory");
+  if (availMemMB > 0) {
+    JS_SetGCParametersBasedOnAvailableMemory(cx, availMemMB);
+  }
+
+  if (const char* opt = op.getStringOption("nursery-strings")) {
+    if (strcmp(opt, "on") == 0) {
+      cx->runtime()->gc.nursery().enableStrings();
+    } else if (strcmp(opt, "off") == 0) {
+      cx->runtime()->gc.nursery().disableStrings();
+    } else {
+      MOZ_CRASH("invalid option value for --nursery-strings, must be on/off");
+    }
+  }
+
+  if (const char* opt = op.getStringOption("nursery-bigints")) {
+    if (strcmp(opt, "on") == 0) {
+      cx->runtime()->gc.nursery().enableBigInts();
+    } else if (strcmp(opt, "off") == 0) {
+      cx->runtime()->gc.nursery().disableBigInts();
+    } else {
+      MOZ_CRASH("invalid option value for --nursery-bigints, must be on/off");
+    }
+  }
+
+  bool incrementalGC = !op.getBoolOption("no-incremental-gc");
+  JS_SetGCParameter(cx, JSGC_INCREMENTAL_GC_ENABLED, incrementalGC);
+
+  if (op.getBoolOption("enable-parallel-marking")) {
+    JS_SetGCParameter(cx, JSGC_PARALLEL_MARKING_ENABLED, true);
+  }
+  int32_t markingThreads = op.getIntOption("marking-threads");
+  if (markingThreads > 0) {
+    JS_SetGCParameter(cx, JSGC_MARKING_THREAD_COUNT, markingThreads);
+  }
+
+  JS_SetGCParameter(cx, JSGC_SLICE_TIME_BUDGET_MS, 5);
+
+  JS_SetGCParameter(cx, JSGC_PER_ZONE_GC_ENABLED, true);
+
+  for (MultiStringRange args = op.getMultiStringOption("gc-param");
+       !args.empty(); args.popFront()) {
+    if (!SetGCParameterFromArg(cx, args.front())) {
+      return false;
+    }
+  }
+
 #ifdef DEBUG
   dumpEntrainedVariables = op.getBoolOption("dump-entrained-variables");
 #endif
