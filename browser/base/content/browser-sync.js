@@ -9,6 +9,12 @@ const { UIState } = ChromeUtils.importESModule(
   "resource://services-sync/UIState.sys.mjs"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExperimentAPI",
+  "resource://nimbus/ExperimentAPI.jsm"
+);
+
 ChromeUtils.defineESModuleGetters(this, {
   EnsureFxAccountsWebChannel:
     "resource://gre/modules/FxAccountsWebChannel.sys.mjs",
@@ -789,9 +795,26 @@ var gSync = {
     let fxaStatus = document.documentElement.getAttribute("fxastatus");
 
     if (fxaStatus == "not_configured") {
-      this.openFxAEmailFirstPageFromFxaMenu(
-        PanelMultiView.getViewNode(document, "PanelUI-fxa")
-      );
+      let extraParams = {};
+      let fxaButtonVisibilityExperiment =
+        ExperimentAPI.getExperimentMetaData({
+          featureId: "fxaButtonVisibility",
+        }) ??
+        ExperimentAPI.getRolloutMetaData({
+          featureId: "fxaButtonVisibility",
+        });
+      if (fxaButtonVisibilityExperiment) {
+        extraParams = {
+          entrypoint_experiment: fxaButtonVisibilityExperiment.slug,
+          entrypoint_variation: fxaButtonVisibilityExperiment.branch.slug,
+        };
+      }
+
+      let panel =
+        anchor.id == "appMenu-fxa-label2"
+          ? PanelMultiView.getViewNode(document, "PanelUI-fxa")
+          : undefined;
+      this.openFxAEmailFirstPageFromFxaMenu(panel, extraParams);
       PanelUI.hide();
       return;
     }
@@ -1187,21 +1210,24 @@ var gSync = {
     }
   },
 
-  async openFxAEmailFirstPage(entryPoint) {
+  async openFxAEmailFirstPage(entryPoint, extraParams = {}) {
     if (!(await FxAccounts.canConnectAccount())) {
       return;
     }
-    const url = await FxAccounts.config.promiseConnectAccountURI(entryPoint);
+    const url = await FxAccounts.config.promiseConnectAccountURI(
+      entryPoint,
+      extraParams
+    );
     switchToTabHavingURI(url, true, { replaceQueryString: true });
   },
 
-  async openFxAEmailFirstPageFromFxaMenu(panel = undefined) {
+  async openFxAEmailFirstPageFromFxaMenu(panel = undefined, extraParams = {}) {
     this.emitFxaToolbarTelemetry("login", panel);
     let entryPoint = "fxa_discoverability_native";
     if (panel) {
       entryPoint = "fxa_app_menu";
     }
-    this.openFxAEmailFirstPage(entryPoint);
+    this.openFxAEmailFirstPage(entryPoint, extraParams);
   },
 
   async openFxAManagePage(entryPoint) {
