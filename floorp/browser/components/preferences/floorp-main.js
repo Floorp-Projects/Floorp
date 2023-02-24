@@ -45,7 +45,7 @@ Preferences.addAll([
 
 window.addEventListener("pageshow", async function() {
   await gMainPane.initialized;
-  const needreboot = document.getElementsByClassName("needeboot");
+  const needreboot = document.getElementsByClassName("needreboot");
   for (let i = 0; i < needreboot.length; i++) {
     needreboot[i].addEventListener("click", function () {
       if (!Services.prefs.getBoolPref("floorp.enable.auto.restart", false)) {
