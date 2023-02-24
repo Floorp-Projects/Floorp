@@ -14,7 +14,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatDialogFragment
-import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.setFragmentResultListener
@@ -40,6 +39,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.databinding.ComponentTabstray2Binding
+import org.mozilla.fenix.databinding.ComponentTabstray3Binding
 import org.mozilla.fenix.databinding.ComponentTabstrayFabBinding
 import org.mozilla.fenix.databinding.FragmentTabTrayDialogBinding
 import org.mozilla.fenix.databinding.TabsTrayTabCounter2Binding
@@ -108,6 +108,11 @@ class TabsTrayFragment : AppCompatDialogFragment() {
     @Suppress("VariableNaming")
     internal var _fabButtonBinding: ComponentTabstrayFabBinding? = null
     private val fabButtonBinding get() = _fabButtonBinding!!
+
+    @VisibleForTesting
+    @Suppress("VariableNaming")
+    internal var _tabsTrayComposeBinding: ComponentTabstray3Binding? = null
+    private val tabsTrayComposeBinding get() = _tabsTrayComposeBinding!!
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -186,20 +191,25 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             controller = tabsTrayController,
         )
 
-        return if (requireContext().settings().enableTabsTrayToCompose) {
-            ComposeView(requireContext()).apply {
-                setContent {
-                    FirefoxTheme {
-                        TabsTray()
-                    }
+        _tabsTrayDialogBinding = FragmentTabTrayDialogBinding.inflate(
+            inflater,
+            container,
+            false,
+        )
+
+        if (requireContext().settings().enableTabsTrayToCompose) {
+            _tabsTrayComposeBinding = ComponentTabstray3Binding.inflate(
+                inflater,
+                tabsTrayDialogBinding.root,
+                true,
+            )
+
+            tabsTrayComposeBinding.root.setContent {
+                FirefoxTheme {
+                    TabsTray()
                 }
             }
         } else {
-            _tabsTrayDialogBinding = FragmentTabTrayDialogBinding.inflate(
-                inflater,
-                container,
-                false,
-            )
             _tabsTrayBinding = ComponentTabstray2Binding.inflate(
                 inflater,
                 tabsTrayDialogBinding.root,
@@ -210,9 +220,9 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                 tabsTrayDialogBinding.root,
                 true,
             )
-
-            tabsTrayDialogBinding.root
         }
+
+        return tabsTrayDialogBinding.root
     }
 
     override fun onStart() {
@@ -234,6 +244,27 @@ class TabsTrayFragment : AppCompatDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
         TabsTray.opened.record(NoExtras())
 
+        val rootView = if (requireContext().settings().enableTabsTrayToCompose) {
+            tabsTrayComposeBinding.root
+        } else {
+            tabsTrayBinding.tabWrapper
+        }
+        trayBehaviorManager = TabSheetBehaviorManager(
+            behavior = BottomSheetBehavior.from(rootView),
+            orientation = resources.configuration.orientation,
+            maxNumberOfTabs = max(
+                requireContext().components.core.store.state.normalTabs.size,
+                requireContext().components.core.store.state.privateTabs.size,
+            ),
+            numberForExpandingTray = if (requireContext().settings().gridTabView) {
+                EXPAND_AT_GRID_SIZE
+            } else {
+                EXPAND_AT_LIST_SIZE
+            },
+            navigationInteractor = navigationInteractor,
+            displayMetrics = requireContext().resources.displayMetrics,
+        )
+
         if (!requireContext().settings().enableTabsTrayToCompose) {
             val activity = activity as HomeActivity
 
@@ -254,22 +285,6 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                 TabsTray.closed.record(NoExtras())
                 dismissAllowingStateLoss()
             }
-
-            trayBehaviorManager = TabSheetBehaviorManager(
-                behavior = BottomSheetBehavior.from(tabsTrayBinding.tabWrapper),
-                orientation = resources.configuration.orientation,
-                maxNumberOfTabs = max(
-                    requireContext().components.core.store.state.normalTabs.size,
-                    requireContext().components.core.store.state.privateTabs.size,
-                ),
-                numberForExpandingTray = if (requireContext().settings().gridTabView) {
-                    EXPAND_AT_GRID_SIZE
-                } else {
-                    EXPAND_AT_LIST_SIZE
-                },
-                navigationInteractor = navigationInteractor,
-                displayMetrics = requireContext().resources.displayMetrics,
-            )
 
             tabsTrayCtaBinding.set(
                 feature = TabsTrayInfoBannerBinding(

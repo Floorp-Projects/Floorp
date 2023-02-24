@@ -8,7 +8,6 @@ import android.content.res.Configuration
 import android.util.DisplayMetrics
 import android.view.View
 import androidx.annotation.VisibleForTesting
-import androidx.constraintlayout.widget.ConstraintLayout
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN
 import mozilla.components.support.ktx.android.util.dpToPx
@@ -28,7 +27,7 @@ import mozilla.components.support.ktx.android.util.dpToPx
  * @param displayMetrics [DisplayMetrics] used for adapting resources to the current display.
  */
 internal class TabSheetBehaviorManager(
-    private val behavior: BottomSheetBehavior<ConstraintLayout>,
+    private val behavior: BottomSheetBehavior<View>,
     orientation: Int,
     private val maxNumberOfTabs: Int,
     private val numberForExpandingTray: Int,
@@ -86,7 +85,7 @@ internal class TabSheetBehaviorManager(
 
 @VisibleForTesting
 internal class TraySheetBehaviorCallback(
-    @get:VisibleForTesting internal val behavior: BottomSheetBehavior<ConstraintLayout>,
+    @get:VisibleForTesting internal val behavior: BottomSheetBehavior<View>,
     @get:VisibleForTesting internal val trayInteractor: NavigationInteractor,
 ) : BottomSheetBehavior.BottomSheetCallback() {
 
