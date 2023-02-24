@@ -81,7 +81,7 @@ class TurnPort : public Port {
     return absl::WrapUnique(
         new TurnPort(args.network_thread, args.socket_factory, args.network,
                      socket, args.username, args.password, *args.server_address,
-                     args.config->credentials, args.config->priority,
+                     args.config->credentials, args.relative_priority,
                      args.config->tls_alpn_protocols,
                      args.config->tls_elliptic_curves, args.turn_customizer,
                      args.config->tls_cert_verifier, args.field_trials));
@@ -100,7 +100,7 @@ class TurnPort : public Port {
         new TurnPort(args.network_thread, args.socket_factory, args.network,
                      min_port, max_port, args.username, args.password,
                      *args.server_address, args.config->credentials,
-                     args.config->priority, args.config->tls_alpn_protocols,
+                     args.relative_priority, args.config->tls_alpn_protocols,
                      args.config->tls_elliptic_curves, args.turn_customizer,
                      args.config->tls_cert_verifier, args.field_trials));
   }

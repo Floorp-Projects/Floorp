@@ -251,7 +251,7 @@ class BasicPortAllocatorTestBase : public ::testing::Test,
   void AddTurnServers(const rtc::SocketAddress& udp_turn,
                       const rtc::SocketAddress& tcp_turn) {
     RelayServerConfig turn_server = CreateTurnServers(udp_turn, tcp_turn);
-    allocator_->AddTurnServer(turn_server);
+    allocator_->AddTurnServerForTesting(turn_server);
   }
 
   bool CreateSession(int component) {
@@ -1818,7 +1818,7 @@ TEST_F(BasicPortAllocatorTestWithRealClock,
   turn_server.credentials = credentials;
   turn_server.ports.push_back(
       ProtocolAddress(rtc::SocketAddress("localhost", 3478), PROTO_UDP));
-  allocator_->AddTurnServer(turn_server);
+  allocator_->AddTurnServerForTesting(turn_server);
 
   allocator_->set_step_delay(kMinimumStepDelay);
   allocator_->set_flags(allocator().flags() |
@@ -2494,6 +2494,29 @@ TEST_F(BasicPortAllocatorTest, TestDoNotUseTurnServerAsStunSever) {
   port_config.AddRelay(turn_servers);
 
   EXPECT_EQ(1U, port_config.StunServers().size());
+}
+
+// Test that candidates from different servers get assigned a unique local
+// preference (the middle 16 bits of the priority)
+TEST_F(BasicPortAllocatorTest, AssignsUniqueLocalPreferencetoRelayCandidates) {
+  allocator_->SetCandidateFilter(CF_RELAY);
+  allocator_->AddTurnServerForTesting(
+      CreateTurnServers(kTurnUdpIntAddr, SocketAddress()));
+  allocator_->AddTurnServerForTesting(
+      CreateTurnServers(kTurnUdpIntAddr, SocketAddress()));
+  allocator_->AddTurnServerForTesting(
+      CreateTurnServers(kTurnUdpIntAddr, SocketAddress()));
+
+  AddInterface(kClientAddr);
+  ASSERT_TRUE(CreateSession(ICE_CANDIDATE_COMPONENT_RTP));
+  session_->StartGettingPorts();
+  ASSERT_TRUE_SIMULATED_WAIT(candidate_allocation_done_,
+                             kDefaultAllocationTimeout, fake_clock);
+  EXPECT_EQ(3u, candidates_.size());
+  EXPECT_GT((candidates_[0].priority() >> 8) & 0xFFFF,
+            (candidates_[1].priority() >> 8) & 0xFFFF);
+  EXPECT_GT((candidates_[1].priority() >> 8) & 0xFFFF,
+            (candidates_[2].priority() >> 8) & 0xFFFF);
 }
 
 // Test that no more than allocator.max_ipv6_networks() IPv6 networks are used
