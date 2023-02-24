@@ -208,5 +208,7 @@ try {
 
 // Load OpenLinkInExternal feature
 try {
-    ChromeUtils.import("resource:///modules/OpenLinkInExternal.jsm");
+    if (AppConstants.platform === "win" || AppConstants.platform === "linux") {
+        ChromeUtils.import("resource:///modules/OpenLinkInExternal.jsm");
+    }
 } catch (e) { console.error(e) }
