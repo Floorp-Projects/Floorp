@@ -97,6 +97,7 @@ ProbeControllerConfig::ProbeControllerConfig(
       network_state_probe_duration("network_state_probe_duration",
                                    TimeDelta::Millis(15)),
 
+      probe_on_max_allocated_bitrate_change("probe_max_allocation", true),
       first_allocation_probe_scale("alloc_p1", 1),
       second_allocation_probe_scale("alloc_p2", 2),
       allocation_allow_further_probing("alloc_probe_further", false),
@@ -111,7 +112,8 @@ ProbeControllerConfig::ProbeControllerConfig(
   ParseFieldTrial(
       {&first_exponential_probe_scale, &second_exponential_probe_scale,
        &further_exponential_probe_scale, &further_probe_threshold,
-       &alr_probing_interval, &alr_probe_scale, &first_allocation_probe_scale,
+       &alr_probing_interval, &alr_probe_scale,
+       &probe_on_max_allocated_bitrate_change, &first_allocation_probe_scale,
        &second_allocation_probe_scale, &allocation_allow_further_probing,
        &min_probe_duration, &network_state_estimate_probing_interval,
        &probe_if_estimate_lower_than_network_state_estimate_ratio,
@@ -210,7 +212,8 @@ std::vector<ProbeClusterConfig> ProbeController::OnMaxTotalAllocatedBitrate(
   const bool in_alr = alr_start_time_.has_value();
   const bool allow_allocation_probe = in_alr;
 
-  if (state_ == State::kProbingComplete &&
+  if (config_.probe_on_max_allocated_bitrate_change &&
+      state_ == State::kProbingComplete &&
       max_total_allocated_bitrate != max_total_allocated_bitrate_ &&
       estimated_bitrate_ < max_bitrate_ &&
       estimated_bitrate_ < max_total_allocated_bitrate &&
@@ -364,10 +367,6 @@ std::vector<ProbeClusterConfig> ProbeController::RequestProbe(
   return std::vector<ProbeClusterConfig>();
 }
 
-void ProbeController::SetMaxBitrate(DataRate max_bitrate) {
-  max_bitrate_ = max_bitrate;
-}
-
 void ProbeController::SetNetworkStateEstimate(
     webrtc::NetworkStateEstimate estimate) {
   network_estimate_ = estimate;
@@ -463,8 +462,12 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
     DataRate network_estimate = network_estimate_
                                     ? network_estimate_->link_capacity_upper
                                     : DataRate::PlusInfinity();
+    DataRate max_probe_rate =
+        max_total_allocated_bitrate_.IsZero()
+            ? max_bitrate_
+            : std::min(max_total_allocated_bitrate_, max_bitrate_);
     if (std::min(network_estimate, estimated_bitrate_) >
-        config_.skip_if_estimate_larger_than_fraction_of_max * max_bitrate_) {
+        config_.skip_if_estimate_larger_than_fraction_of_max * max_probe_rate) {
       return {};
     }
   }
