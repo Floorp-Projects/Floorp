@@ -171,19 +171,14 @@ html {
   }
 
   // Handle conditional display of steps indicator
-  // Don't show on corner screen or when there's
-  // only one centered screen
-  .main-content .no-steps,
-  .screen {
-    &[pos='corner'],
-    &[pos='center'].dialog-initial.dialog-last {
-      .main-content {
-        padding-bottom: 48px;
-      }
+  // Don't show when there's only one screen
+  .main-content .no-steps {
+    .main-content {
+      padding-bottom: 48px;
+    }
 
-      .steps {
-        display: none;
-      }
+    .steps {
+      display: none;
     }
   }
 
@@ -399,6 +394,10 @@ html {
           padding-inline: 35px 20px;
           padding-block: 120px 0;
           box-shadow: none;
+
+          &.no-steps {
+            padding-bottom: 48px;
+          }
 
           &:dir(rtl) {
             border-radius: 8px 0 0 8px;
@@ -1393,122 +1392,6 @@ html {
     fill: #FFA437;
   }
 
-  [pos='corner'] {
-    min-width: $container-min-width;
-
-    .section-secondary {
-      display: flex;
-      flex-direction: column;
-      margin-inline-start: 6vw;
-
-      .message-text {
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-
-        .spacer-top {
-          flex: 1;
-        }
-
-        .spacer-bottom {
-          flex: 1;
-        }
-
-        h1 {
-          color: #FFF;
-          font-weight: bold;
-          font-size: clamp(48px, 7vw, 104px);
-          line-height: 1em;
-          margin: 0 6px;
-          max-width: 5em;
-          text-align: initial;
-          white-space: pre-wrap;
-          text-shadow: 0 4px 8px rgba(0, 0, 0, 0.35);
-        }
-      }
-
-      .attrib-text {
-        height: 18px;
-        margin-bottom: 25px;
-        text-align: initial;
-        font-size: 12px;
-        line-height: 18px;
-        color: #F9F9FB;
-        text-shadow: 0 0 7px rgba(0, 0, 0, 0.6);
-        transition-delay: 0.5s;
-      }
-    }
-
-    .section-main {
-      z-index: 1;
-
-      .main-content {
-        background: transparent;
-        box-shadow: none;
-        display: flex;
-        position: absolute;
-        height: auto;
-        width: 350px;
-        bottom: 0;
-        inset-inline-end: 30px;
-        overflow: visible;
-        transition: var(--transition);
-      }
-
-      .brand-logo {
-        margin-top: 0;
-        transition-delay: 1.2s;
-      }
-
-      .primary,
-      .secondary-cta:not(.top) {
-        transition-delay: 1.7s;
-      }
-
-      .secondary-cta.top {
-        transition-delay: 0.5s;
-      }
-
-      .welcome-text {
-        transition-delay: 1.2s;
-
-        h2 {
-          margin: 10px 6px;
-        }
-      }
-    }
-
-    // Position noodles on first screen
-    // and show solid L for corner positioned screen
-    .solid-L {
-      display: block;
-      width: 1300px;
-      height: 1050px;
-      bottom: -390px;
-      inset-inline-end: -640px;
-      transform: rotate(-80deg);
-      transition-delay: 0.5s;
-    }
-
-    .orange-L {
-      width: 466px;
-      height: 356px;
-      bottom: 270px;
-      inset-inline-end: -245px;
-      transition-delay: 0.8s;
-    }
-
-    .purple-C {
-      width: 467px;
-      height: 382px;
-      bottom: -100px;
-      inset-inline-end: 125px;
-      transform: rotate(-75deg);
-      transition-delay: 0.8s;
-    }
-  }
-
   .screen-1 {
     .section-main {
       z-index: 1;
@@ -1573,7 +1456,7 @@ html {
   }
 
   // Delays for transitioning-in of intermediate screens
-  .screen:not(.dialog-initial):not([pos='corner']) {
+  .screen:not(.dialog-initial) {
     .tiles-theme-section,
     .colorway-text {
       transition-delay: 0.2s;
@@ -1633,25 +1516,8 @@ html {
       scale: var(--scale);
     }
 
-    [pos='corner'] {
-      .brand-logo,
-      .welcome-text,
-      .primary,
-      .checkbox-container,
-      .secondary,
-      .secondary-cta:not(.top),
-      .message-text {
-        opacity: 0;
-        translate: 0 var(--translate);
-      }
-
-      .attrib-text,
-      .secondary-cta.top {
-        opacity: 0;
-      }
-    }
-
     .dialog-initial {
+
       .main-content,
       .dismiss-button {
         translate: 0 calc(-2 * var(--translate));
@@ -1664,13 +1530,7 @@ html {
       }
     }
 
-    .screen:not(.dialog-initial):not([pos='corner']) {
-      .steps:not(.progress-bar) {
-        opacity: 0.2;
-      }
-    }
-
-    .screen:not([pos='corner']) {
+    .screen {
       .welcome-text,
       .tiles-theme-section,
       .colorway-text,
@@ -1681,6 +1541,12 @@ html {
       .cta-link {
         opacity: 0;
         translate: 0 calc(-1 * var(--translate));
+      }
+
+      &:not(.dialog-initial) {
+        .steps:not(.progress-bar) {
+          opacity: 0.2;
+        }
       }
     }
   }
@@ -1693,30 +1559,7 @@ html {
       transition-delay: 0.2s;
     }
 
-    [pos='corner'] {
-      .message-text {
-        opacity: 0;
-        translate: 0 var(--translate);
-      }
-
-      .main-content {
-        opacity: 0;
-        translate: 0 var(--translate);
-        transition-delay: 0.2s;
-      }
-
-      .solid-L {
-        transition-delay: 0.4s;
-      }
-
-      .attrib-text,
-      .secondary-cta.top {
-        opacity: 0;
-        transition-delay: 0.2s;
-      }
-    }
-
-    .screen:not(.dialog-last):not([pos='corner']) {
+    .screen:not(.dialog-last) {
       .main-content {
         overflow: hidden;
       }

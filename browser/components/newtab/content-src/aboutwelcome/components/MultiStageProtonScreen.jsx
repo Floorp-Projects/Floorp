@@ -46,9 +46,9 @@ export const MultiStageProtonScreen = props => {
       setActiveMultiSelect={props.setActiveMultiSelect}
       totalNumberOfScreens={props.totalNumberOfScreens}
       handleAction={props.handleAction}
-      isFirstCenteredScreen={props.isFirstCenteredScreen}
-      isLastCenteredScreen={props.isLastCenteredScreen}
-      stepOrder={props.stepOrder}
+      isFirstScreen={props.isFirstScreen}
+      isLastScreen={props.isLastScreen}
+      isSingleScreen={props.isSingleScreen}
       previousOrder={props.previousOrder}
       autoAdvance={props.autoAdvance}
       isRtamo={props.isRtamo}
@@ -132,8 +132,8 @@ export class ProtonScreen extends React.PureComponent {
   }
 
   getScreenClassName(
-    isFirstCenteredScreen,
-    isLastCenteredScreen,
+    isFirstScreen,
+    isLastScreen,
     includeNoodles,
     isVideoOnboarding
   ) {
@@ -141,8 +141,8 @@ export class ProtonScreen extends React.PureComponent {
 
     if (isVideoOnboarding) return "with-video";
 
-    return `${isFirstCenteredScreen ? `dialog-initial` : ``} ${
-      isLastCenteredScreen ? `dialog-last` : ``
+    return `${isFirstScreen ? `dialog-initial` : ``} ${
+      isLastScreen ? `dialog-last` : ``
     } ${includeNoodles ? `with-noodles` : ``} ${screenClass}`;
   }
 
@@ -291,7 +291,7 @@ export class ProtonScreen extends React.PureComponent {
           />
         ) : (
           <StepsIndicator
-            order={this.props.stepOrder}
+            order={this.props.order}
             totalNumberOfScreens={total}
           />
         )}
@@ -346,16 +346,15 @@ export class ProtonScreen extends React.PureComponent {
       content,
       isRtamo,
       isTheme,
-      isFirstCenteredScreen,
-      isLastCenteredScreen,
+      isFirstScreen,
+      isLastScreen,
+      isSingleScreen,
     } = this.props;
     const includeNoodles = content.has_noodles;
     // The default screen position is "center"
     const isCenterPosition = content.position === "center" || !content.position;
     const hideStepsIndicator =
-      autoAdvance ||
-      content?.video_container ||
-      (isFirstCenteredScreen && isLastCenteredScreen);
+      autoAdvance || content?.video_container || isSingleScreen;
     const textColorClass = content.text_color
       ? `${content.text_color}-text`
       : "";
@@ -363,8 +362,8 @@ export class ProtonScreen extends React.PureComponent {
     // by checking if screen order is even or odd.
     const screenClassName = isCenterPosition
       ? this.getScreenClassName(
-          isFirstCenteredScreen,
-          isLastCenteredScreen,
+          isFirstScreen,
+          isLastScreen,
           includeNoodles,
           content?.video_container
         )
@@ -372,8 +371,8 @@ export class ProtonScreen extends React.PureComponent {
 
     return (
       <main
-        className={`screen ${this.props.id ||
-          ""} ${screenClassName} ${textColorClass}`}
+        className={`screen ${this.props.id || ""}
+          ${screenClassName} ${textColorClass}`}
         role="alertdialog"
         pos={content.position || "center"}
         tabIndex="-1"
