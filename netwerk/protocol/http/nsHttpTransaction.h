@@ -294,6 +294,17 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
   bool HandleWebTransportResponse(uint16_t aStatus);
 
+  void MaybeRefreshSecurityInfo() {
+    MutexAutoLock lock(mLock);
+    if (mConnection) {
+      nsCOMPtr<nsITLSSocketControl> tlsSocketControl;
+      mConnection->GetTLSSocketControl(getter_AddRefs(tlsSocketControl));
+      if (tlsSocketControl) {
+        tlsSocketControl->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
+      }
+    }
+  }
+
  private:
   class UpdateSecurityCallbacks : public Runnable {
    public:
