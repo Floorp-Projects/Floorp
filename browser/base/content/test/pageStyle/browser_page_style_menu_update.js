@@ -1,8 +1,9 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 "use strict";
 
-const PAGE =
-  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-  "http://example.com/browser/browser/base/content/test/general/page_style_sample.html";
+const PAGE = WEB_ROOT + "page_style_sample.html";
 
 /**
  * Tests that the Page Style menu shows the currently
@@ -16,7 +17,7 @@ add_task(async function() {
   );
   let browser = tab.linkedBrowser;
   BrowserTestUtils.loadURIString(browser, PAGE);
-  await promiseStylesheetsLoaded(tab, 18);
+  await promiseStylesheetsLoaded(browser, 18);
 
   let menupopup = document.getElementById("pageStyleMenu").menupopup;
   gPageStyleMenu.fillPopup(menupopup);
