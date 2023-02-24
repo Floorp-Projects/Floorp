@@ -78,6 +78,17 @@ add_task(async function test_cached_contentscript_on_document_start() {
     },
   });
 
+  // Error messages, in roughly the order they appear above.
+  let expectedMessages = [
+    "Error: Object exception",
+    "uncaught exception: String exception",
+    "ReferenceError: undefinedSymbol is not defined",
+    "SyntaxError: expected expression, got ')'",
+    "uncaught exception: rejected promise",
+    "Error: async function exception",
+    "ReferenceError: asyncUndefinedSymbol is not defined",
+  ];
+
   await extension.startup();
 
   // Load a first page in order to be able to register a console listener in the content process.
@@ -85,41 +96,53 @@ add_task(async function test_cached_contentscript_on_document_start() {
   let contentPage = await ExtensionTestUtils.loadContentPage(TEST_URL_1);
 
   // Listen to the errors logged in the content process.
-  ContentTask.spawn(contentPage.browser, {}, () => {
-    this.collectedErrors = [];
+  let errorsPromise = ContentTask.spawn(contentPage.browser, {}, async () => {
+    return new Promise(resolve => {
+      function listener(error0) {
+        let error = error0.QueryInterface(Ci.nsIScriptError);
 
-    this.consoleErrorListener = error => {
-      error.QueryInterface(Ci.nsIScriptError);
-      // Ignore errors from ExtensionContent.jsm
-      if (error.innerWindowID) {
+        // Ignore errors from ExtensionContent.jsm
+        if (!error.innerWindowID) {
+          return;
+        }
+
         this.collectedErrors.push({
           innerWindowID: error.innerWindowID,
           message: error.errorMessage,
         });
+        if (this.collectedErrors.length == 7) {
+          Services.console.unregisterListener(this);
+          resolve(this.collectedErrors);
+        }
       }
-    };
-
-    Services.console.registerListener(this.consoleErrorListener);
+      listener.collectedErrors = [];
+      Services.console.registerListener(listener);
+    });
   });
 
   // Reload the page and check that the cached content script is still able to
   // run on document_start.
   await contentPage.loadURL(TEST_URL_2);
 
+  let errors = await errorsPromise;
+
   await extension.awaitMessage("content-script-loaded");
 
-  const errors = await ContentTask.spawn(contentPage.browser, {}, () => {
-    Services.console.unregisterListener(this.consoleErrorListener);
-    return this.collectedErrors;
-  });
   equal(errors.length, 7);
+  let messages = [];
   for (const { innerWindowID, message } of errors) {
     equal(
       innerWindowID,
       contentPage.browser.innerWindowID,
       `Message ${message} has the innerWindowID set`
     );
+
+    messages.push(message);
   }
+
+  messages.sort();
+  expectedMessages.sort();
+  Assert.deepEqual(messages, expectedMessages, "Got the expected errors");
 
   await extension.unload();
 
