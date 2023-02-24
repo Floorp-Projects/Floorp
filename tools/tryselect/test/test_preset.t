@@ -221,7 +221,7 @@ Queries can be appended to presets
       dry_run: true
       no_artifact: true
       query:
-      - '''foo'
+      - "'foo"
       rebuild: 5
       selector: fuzzy
     foo:
@@ -253,7 +253,7 @@ Queries can be appended to presets
     dry_run: true
     no_artifact: true
     query:
-    - '''foo'
+    - "'foo"
     rebuild: 5
     selector: fuzzy
   foo:
@@ -334,7 +334,7 @@ settings; everything else uses dashes.)
     dry_run: true
     no_artifact: true
     query:
-    - '''foo'
+    - "'foo"
     rebuild: 5
     selector: fuzzy
   foo:
@@ -353,7 +353,7 @@ settings; everything else uses dashes.)
     gecko_profile_features: nostacksampling,cpu
     no_artifact: true
     query:
-    - '''foo'
+    - "'foo"
     rebuild: 5
     selector: fuzzy
 
