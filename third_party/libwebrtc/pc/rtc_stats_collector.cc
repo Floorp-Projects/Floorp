@@ -1727,6 +1727,15 @@ void RTCStatsCollector::ProduceIceCandidateAndPairStats_n(
             info.sent_ping_requests_total -
             info.sent_ping_requests_before_first_response);
 
+        if (info.last_data_received) {
+          candidate_pair_stats->last_packet_received_timestamp =
+              static_cast<double>(info.last_data_received->ms());
+        }
+        if (info.last_data_sent) {
+          candidate_pair_stats->last_packet_sent_timestamp =
+              static_cast<double>(info.last_data_sent->ms());
+        }
+
         report->AddStats(std::move(candidate_pair_stats));
       }
 

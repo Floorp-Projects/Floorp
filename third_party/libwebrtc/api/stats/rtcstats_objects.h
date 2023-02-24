@@ -222,6 +222,8 @@ class RTC_EXPORT RTCIceCandidatePairStats final : public RTCStats {
   RTCStatsMember<uint64_t> consent_requests_sent;
   RTCStatsMember<uint64_t> packets_discarded_on_send;
   RTCStatsMember<uint64_t> bytes_discarded_on_send;
+  RTCStatsMember<double> last_packet_received_timestamp;
+  RTCStatsMember<double> last_packet_sent_timestamp;
 };
 
 // https://w3c.github.io/webrtc-stats/#icecandidate-dict*
