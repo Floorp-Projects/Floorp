@@ -91,7 +91,10 @@ UrlClassifierFeatureEmailTrackingProtection::MaybeCreate(nsIChannel* aChannel) {
        aChannel));
 
   // Check if the email tracking protection is enabled.
-  if (!StaticPrefs::privacy_trackingprotection_emailtracking_enabled()) {
+  if (!StaticPrefs::privacy_trackingprotection_emailtracking_enabled() &&
+      !(NS_UsePrivateBrowsing(aChannel) &&
+        StaticPrefs::
+            privacy_trackingprotection_emailtracking_pbmode_enabled())) {
     return nullptr;
   }
 
