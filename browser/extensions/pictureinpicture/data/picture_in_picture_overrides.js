@@ -118,6 +118,11 @@ let AVAILABLE_PIP_OVERRIDES;
       "https://*.laracasts.com/*": { policy: TOGGLE_POLICIES.ONE_QUARTER },
     },
 
+    msn: {
+      "https://*.msn.com/*": {
+        visibilityThreshold: 0.7,
+      },
+    },
     mxplayer: {
       "https://*.mxplayer.in/*": {
         videoWrapperScriptPath: "video-wrappers/videojsWrapper.js",
