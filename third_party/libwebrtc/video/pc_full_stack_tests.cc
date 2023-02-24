@@ -97,10 +97,8 @@ std::vector<PCFullStackTestParams> ParameterizedTestParams() {
           // Use the network thread as worker thread.
           // Use the worker thread for sending packets.
           // https://bugs.chromium.org/p/webrtc/issues/detail?id=14502
-          {// TODO(webrtc:14502): Enable field trial soon but let it first run a
-           // couple of times to get a baseline..
-           // .use_network_thread_as_worker_thread = true,
-           // .field_trials = "WebRTC-SendPacketsOnWorkerThread/Enabled/",
+          {.use_network_thread_as_worker_thread = true,
+           .field_trials = "WebRTC-SendPacketsOnWorkerThread/Enabled/",
            .test_case_name_postfix = "_ReducedThreads"}};
 }
 
