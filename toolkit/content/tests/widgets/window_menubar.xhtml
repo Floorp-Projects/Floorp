@@ -930,6 +930,20 @@ var popupTests = [
   },
 },
 
+
+// bug 1818241
+{
+  testname: "Shortcut navigation on mouse-activated menubar",
+  events: [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu", "DOMMenuItemInactive filemenu", "DOMMenuBarInactive menubar" ],
+  async test() {
+    synthesizeMouse(document.getElementById("filemenu"), 8, 8, { type: "mousemove" });
+    await new Promise(r => setTimeout(r, 0));
+    synthesizeKey("F");
+    await new Promise(r => setTimeout(r, 0));
+    synthesizeMouse(document.getElementById("outside"), 8, 8, { type: "mousemove" });
+  },
+},
+
 {
   testname: "Trying to activate menubar without activatable items shouldn't crash",
   events: [ "TestDone menubar" ],
