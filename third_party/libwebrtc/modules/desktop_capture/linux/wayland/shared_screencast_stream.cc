@@ -36,6 +36,7 @@ using modules_desktop_capture_linux_wayland::StubPathMap;
 namespace webrtc {
 
 const int kBytesPerPixel = 4;
+const int kVideoDamageRegionCount = 16;
 
 #if defined(WEBRTC_DLOPEN_PIPEWIRE)
 const char kPipeWireLib[] = "libpipewire-0.3.so.0";
@@ -88,6 +89,9 @@ class SharedScreenCastStreamPrivate {
                              uint32_t width = 0,
                              uint32_t height = 0);
   void UpdateScreenCastStreamResolution(uint32_t width, uint32_t height);
+  void SetUseDamageRegion(bool use_damage_region) {
+    use_damage_region_ = use_damage_region;
+  }
   void SetObserver(SharedScreenCastStream::Observer* observer) {
     observer_ = observer;
   }
@@ -101,6 +105,11 @@ class SharedScreenCastStreamPrivate {
   void StopAndCleanupStream();
 
   SharedScreenCastStream::Observer* observer_ = nullptr;
+
+  // Track damage region updates that were reported since the last time
+  // frame was captured
+  DesktopRegion damage_region_;
+
   uint32_t pw_stream_node_id_ = 0;
 
   DesktopSize stream_size_ = {};
@@ -141,6 +150,8 @@ class SharedScreenCastStreamPrivate {
   webrtc::Mutex resolution_lock_;
   // Resolution changes are processed during buffer processing.
   bool pending_resolution_change_ RTC_GUARDED_BY(&resolution_lock_) = false;
+
+  bool use_damage_region_ = true;
 
   // event handlers
   pw_core_events pw_core_events_ = {};
@@ -294,9 +305,10 @@ void SharedScreenCastStreamPrivate::OnStreamParamChanged(
   params.push_back(reinterpret_cast<spa_pod*>(spa_pod_builder_add_object(
       &builder, SPA_TYPE_OBJECT_ParamMeta, SPA_PARAM_Meta, SPA_PARAM_META_type,
       SPA_POD_Id(SPA_META_VideoDamage), SPA_PARAM_META_size,
-      SPA_POD_CHOICE_RANGE_Int(sizeof(struct spa_meta_region) * 16,
-                               sizeof(struct spa_meta_region) * 1,
-                               sizeof(struct spa_meta_region) * 16))));
+      SPA_POD_CHOICE_RANGE_Int(
+          sizeof(struct spa_meta_region) * kVideoDamageRegionCount,
+          sizeof(struct spa_meta_region) * 1,
+          sizeof(struct spa_meta_region) * kVideoDamageRegionCount))));
 
   pw_stream_update_params(that->pw_stream_, params.data(), params.size());
 }
@@ -585,7 +597,13 @@ SharedScreenCastStreamPrivate::CaptureFrame() {
     return std::unique_ptr<SharedDesktopFrame>{};
   }
 
-  return queue_.current_frame()->Share();
+  std::unique_ptr<SharedDesktopFrame> frame = queue_.current_frame()->Share();
+  if (use_damage_region_) {
+    frame->mutable_updated_region()->Swap(&damage_region_);
+    damage_region_.Clear();
+  }
+
+  return frame;
 }
 
 std::unique_ptr<MouseCursor> SharedScreenCastStreamPrivate::CaptureCursor() {
@@ -844,12 +862,37 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
     }
   }
 
-  queue_.current_frame()->mutable_updated_region()->SetRect(
-      DesktopRect::MakeSize(queue_.current_frame()->size()));
-
   // For testing purpose
   if (observer_) {
     observer_->OnDesktopFrameChanged();
+  }
+
+  if (use_damage_region_) {
+    const struct spa_meta* video_damage = static_cast<struct spa_meta*>(
+        spa_buffer_find_meta(spa_buffer, SPA_META_VideoDamage));
+    if (video_damage) {
+      spa_meta_region* meta_region;
+
+      queue_.current_frame()->mutable_updated_region()->Clear();
+
+      spa_meta_for_each(meta_region, video_damage) {
+        // Skip empty regions
+        if (meta_region->region.size.width == 0 ||
+            meta_region->region.size.height == 0) {
+          continue;
+        }
+
+        damage_region_.AddRect(DesktopRect::MakeXYWH(
+            meta_region->region.position.x, meta_region->region.position.y,
+            meta_region->region.size.width, meta_region->region.size.height));
+      }
+    } else {
+      damage_region_.SetRect(
+          DesktopRect::MakeSize(queue_.current_frame()->size()));
+    }
+  } else {
+    queue_.current_frame()->mutable_updated_region()->SetRect(
+        DesktopRect::MakeSize(queue_.current_frame()->size()));
   }
 }
 
@@ -889,6 +932,10 @@ bool SharedScreenCastStream::StartScreenCastStream(uint32_t stream_node_id,
 void SharedScreenCastStream::UpdateScreenCastStreamResolution(uint32_t width,
                                                               uint32_t height) {
   private_->UpdateScreenCastStreamResolution(width, height);
+}
+
+void SharedScreenCastStream::SetUseDamageRegion(bool use_damage_region) {
+  private_->SetUseDamageRegion(use_damage_region);
 }
 
 void SharedScreenCastStream::SetObserver(
