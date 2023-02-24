@@ -9,7 +9,7 @@ def should_throw(parser, harness, message, code):
     try:
         parser.parse(code)
         parser.finish()
-    except:
+    except Exception:
         threw = True
 
     harness.ok(threw, "Should have thrown: %s" % message)
