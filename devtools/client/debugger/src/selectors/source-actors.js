@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { asSettled } from "../utils/async-value";
-
 /**
  * Tells if a given Source Actor is registered in the redux store
  *
@@ -61,7 +59,7 @@ export function getSourceActorsForThread(state, threadActorIDs) {
  *        List of all the breakable lines.
  */
 export function getSourceActorBreakableLines(state, sourceActorId) {
-  return asSettled(state.sourceActors.mutableBreakableLines.get(sourceActorId));
+  return state.sourceActors.mutableBreakableLines.get(sourceActorId);
 }
 
 // Used by sources selectors
@@ -92,11 +90,11 @@ export function getBreakableLinesForSourceActors(
     const breakableLines = state.sourceActors.mutableBreakableLines.get(
       sourceActorId
     );
-    if (breakableLines && breakableLines.state == "fulfilled") {
+    if (breakableLines) {
       if (isHTML) {
-        allBreakableLines.push(...breakableLines.value);
+        allBreakableLines.push(...breakableLines);
       } else {
-        return breakableLines.value;
+        return breakableLines;
       }
     }
   }
