@@ -184,10 +184,7 @@
       'webrtc_nonparallel_tests': {},
     },
     'linux_desktop_specific_tests': {
-      'pipewire_shared_screencast_stream_test': {
-        'args': ['.'],
-        'mixins': ['resultdb-gtest-json-format'],
-      },
+      'shared_screencast_stream_test': {},
     },
     'more_configs_tests': {
       'peerconnection_unittests': {

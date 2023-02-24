@@ -7,43 +7,19 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 """
-This script is the wrapper that runs the "shared_screencast_screen" test.
+This script is a wrapper that loads "pipewire" library.
 """
 
-import argparse
-import json
 import os
 import subprocess
 import sys
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-# Get rid of "modules/desktop_capture/linux/wayland/test"
-ROOT_DIR = os.path.normpath(
-    os.path.join(SCRIPT_DIR, os.pardir, os.pardir, os.pardir, os.pardir,
-                 os.pardir))
-
-
-def _ParseArgs():
-  parser = argparse.ArgumentParser(
-      description='Run shared_screencast_screen test.')
-  parser.add_argument('build_dir',
-                      help='Path to the build directory (e.g. out/Release).')
-  parser.add_argument(
-      '--isolated-script-test-output',
-      default=None,
-      help='Path to output JSON file which Chromium infra requires.')
-  # Unused args
-  # We just need to avoid passing these to the test
-  parser.add_argument(
-      '--isolated-script-test-perf-output',
-      default=None,
-      help='Path to store perf results in histogram proto format.')
-
-  return parser.parse_known_args()
+_SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+_SRC_DIR = os.path.dirname(_SCRIPT_DIR)
 
 
 def _GetPipeWireDir():
-  pipewire_dir = os.path.join(ROOT_DIR, 'third_party', 'pipewire',
+  pipewire_dir = os.path.join(_SRC_DIR, 'third_party', 'pipewire',
                               'linux-amd64')
 
   if not os.path.isdir(pipewire_dir):
@@ -72,11 +48,10 @@ def _ConfigurePipeWirePaths(path):
 
 
 def main():
-  args, extra_args = _ParseArgs()
-
   pipewire_dir = _GetPipeWireDir()
 
   if pipewire_dir is None:
+    print('configure-pipewire: Couldn\'t find directory %s' % pipewire_dir)
     return 1
 
   _ConfigurePipeWirePaths(pipewire_dir)
@@ -85,19 +60,10 @@ def main():
   pipewire_media_session_process = subprocess.Popen(["pipewire-media-session"],
                                                     stdout=None)
 
-  test_command = os.path.join(args.build_dir, 'shared_screencast_stream_test')
-  pipewire_test_process = subprocess.run([test_command] + extra_args,
-                                         stdout=True,
-                                         check=False)
-
-  return_value = pipewire_test_process.returncode
+  return_value = subprocess.call(sys.argv[1:])
 
   pipewire_media_session_process.terminate()
   pipewire_process.terminate()
-
-  if args.isolated_script_test_output:
-    with open(args.isolated_script_test_output, 'w') as f:
-      json.dump({"version": 3}, f)
 
   return return_value
 

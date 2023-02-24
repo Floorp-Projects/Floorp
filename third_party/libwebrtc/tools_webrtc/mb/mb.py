@@ -102,6 +102,9 @@ class WebRTCMetaBuildWrapper(mb.MetaBuildWrapper):
             vpython_exe, '../../tools_webrtc/ensure_webcam_is_running.py'
         ]
         extra_files.append('../../tools_webrtc/ensure_webcam_is_running.py')
+      if isolate_map[target].get('use_pipewire', False):
+        cmdline += [vpython_exe, '../../tools_webrtc/configure_pipewire.py']
+        extra_files.append('../../tools_webrtc/configure_pipewire.py')
 
       # is_linux uses use_ozone and x11 by default.
       use_x11 = is_linux
