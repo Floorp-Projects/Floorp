@@ -235,6 +235,7 @@ bool InitOptionParser(OptionParser& op);
 bool SetGlobalOptionsPreJSInit(const OptionParser& op);
 bool SetGlobalOptionsPostJSInit(const OptionParser& op);
 bool SetContextOptions(JSContext* cx, const OptionParser& op);
+bool SetContextWasmOptions(JSContext* cx, const OptionParser& op);
 
 #ifdef FUZZING_JS_FUZZILLI
 #  define REPRL_CRFD 100
@@ -12025,50 +12026,10 @@ bool SetGlobalOptionsPostJSInit(const OptionParser& op) {
 }
 
 bool SetContextOptions(JSContext* cx, const OptionParser& op) {
-  enableAsmJS = !op.getBoolOption("no-asmjs");
-
-  enableWasm = true;
-  enableWasmBaseline = true;
-  enableWasmOptimizing = true;
-
-  if (const char* str = op.getStringOption("wasm-compiler")) {
-    if (strcmp(str, "none") == 0) {
-      enableWasm = false;
-    } else if (strcmp(str, "baseline") == 0) {
-      MOZ_ASSERT(enableWasmBaseline);
-      enableWasmOptimizing = false;
-    } else if (strcmp(str, "optimizing") == 0 ||
-               strcmp(str, "optimized") == 0) {
-      enableWasmBaseline = false;
-      MOZ_ASSERT(enableWasmOptimizing);
-    } else if (strcmp(str, "baseline+optimizing") == 0 ||
-               strcmp(str, "baseline+optimized") == 0) {
-      MOZ_ASSERT(enableWasmBaseline);
-      MOZ_ASSERT(enableWasmOptimizing);
-    } else if (strcmp(str, "ion") == 0) {
-      enableWasmBaseline = false;
-      enableWasmOptimizing = true;
-    } else if (strcmp(str, "baseline+ion") == 0) {
-      MOZ_ASSERT(enableWasmBaseline);
-      enableWasmOptimizing = true;
-    } else {
-      return OptionFailure("wasm-compiler", str);
-    }
+  if (!SetContextWasmOptions(cx, op)) {
+    return false;
   }
 
-#define WASM_DEFAULT_FEATURE(NAME, LOWER_NAME, COMPILE_PRED, COMPILER_PRED, \
-                             FLAG_PRED, SHELL, ...)                         \
-  enableWasm##NAME = !op.getBoolOption("no-wasm-" SHELL);
-#define WASM_EXPERIMENTAL_FEATURE(NAME, LOWER_NAME, COMPILE_PRED,       \
-                                  COMPILER_PRED, FLAG_PRED, SHELL, ...) \
-  enableWasm##NAME = op.getBoolOption("wasm-" SHELL);
-  JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_DEFAULT_FEATURE,
-                       WASM_EXPERIMENTAL_FEATURE);
-#undef WASM_DEFAULT_FEATURE
-#undef WASM_EXPERIMENTAL_FEATURE
-
-  enableWasmVerbose = op.getBoolOption("wasm-verbose");
-  enableTestWasmAwaitTier2 = op.getBoolOption("test-wasm-await-tier2");
   enableSourcePragmas = !op.getBoolOption("no-source-pragmas");
   enableAsyncStacks = !op.getBoolOption("no-async-stacks");
   enableAsyncStackCaptureDebuggeeOnly =
@@ -12093,18 +12054,6 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   useFdlibmForSinCosTan = op.getBoolOption("use-fdlibm-for-sin-cos-tan");
 
   JS::ContextOptionsRef(cx)
-      .setAsmJS(enableAsmJS)
-      .setWasm(enableWasm)
-      .setWasmForTrustedPrinciples(enableWasm)
-      .setWasmBaseline(enableWasmBaseline)
-      .setWasmIon(enableWasmOptimizing)
-
-#define WASM_FEATURE(NAME, ...) .setWasm##NAME(enableWasm##NAME)
-          JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
-#undef WASM_FEATURE
-
-      .setWasmVerbose(enableWasmVerbose)
-      .setTestWasmAwaitTier2(enableTestWasmAwaitTier2)
       .setSourcePragmas(enableSourcePragmas)
       .setAsyncStack(enableAsyncStacks)
       .setAsyncStackCaptureDebuggeeOnly(enableAsyncStackCaptureDebuggeeOnly)
@@ -12494,6 +12443,62 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     cx->runtime()->gc.getZealBits(&gZealBits, &gZealFrequency, &nextScheduled);
   }
 #endif
+
+  return true;
+}
+
+bool SetContextWasmOptions(JSContext* cx, const OptionParser& op) {
+  enableAsmJS = !op.getBoolOption("no-asmjs");
+
+  enableWasm = true;
+  enableWasmBaseline = true;
+  enableWasmOptimizing = true;
+
+  if (const char* str = op.getStringOption("wasm-compiler")) {
+    if (strcmp(str, "none") == 0) {
+      enableWasm = false;
+    } else if (strcmp(str, "baseline") == 0) {
+      MOZ_ASSERT(enableWasmBaseline);
+      enableWasmOptimizing = false;
+    } else if (strcmp(str, "optimizing") == 0 ||
+               strcmp(str, "optimized") == 0) {
+      enableWasmBaseline = false;
+      MOZ_ASSERT(enableWasmOptimizing);
+    } else if (strcmp(str, "baseline+optimizing") == 0 ||
+               strcmp(str, "baseline+optimized") == 0) {
+      MOZ_ASSERT(enableWasmBaseline);
+      MOZ_ASSERT(enableWasmOptimizing);
+    } else if (strcmp(str, "ion") == 0) {
+      enableWasmBaseline = false;
+      enableWasmOptimizing = true;
+    } else if (strcmp(str, "baseline+ion") == 0) {
+      MOZ_ASSERT(enableWasmBaseline);
+      enableWasmOptimizing = true;
+    } else {
+      return OptionFailure("wasm-compiler", str);
+    }
+  }
+
+#define WASM_DEFAULT_FEATURE(NAME, LOWER_NAME, COMPILE_PRED, COMPILER_PRED, \
+                             FLAG_PRED, SHELL, ...)                         \
+  enableWasm##NAME = !op.getBoolOption("no-wasm-" SHELL);
+#define WASM_EXPERIMENTAL_FEATURE(NAME, LOWER_NAME, COMPILE_PRED,       \
+                                  COMPILER_PRED, FLAG_PRED, SHELL, ...) \
+  enableWasm##NAME = op.getBoolOption("wasm-" SHELL);
+  JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_DEFAULT_FEATURE,
+                       WASM_EXPERIMENTAL_FEATURE);
+#undef WASM_DEFAULT_FEATURE
+#undef WASM_EXPERIMENTAL_FEATURE
+
+  enableWasmVerbose = op.getBoolOption("wasm-verbose");
+  enableTestWasmAwaitTier2 = op.getBoolOption("test-wasm-await-tier2");
+
+  JS::ContextOptionsRef(cx)
+      .setAsmJS(enableAsmJS)
+      .setWasm(enableWasm)
+      .setWasmForTrustedPrinciples(enableWasm)
+      .setWasmBaseline(enableWasmBaseline)
+      .setWasmIon(enableWasmOptimizing);
 
   return true;
 }
