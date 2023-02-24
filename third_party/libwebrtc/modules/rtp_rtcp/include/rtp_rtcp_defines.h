@@ -239,9 +239,6 @@ enum class RtpPacketMediaType : size_t {
 };
 
 struct RtpPacketSendInfo {
- public:
-  RtpPacketSendInfo() = default;
-
   uint16_t transport_sequence_number = 0;
   absl::optional<uint32_t> media_ssrc;
   uint16_t rtp_sequence_number = 0;  // Only valid if `media_ssrc` is set.
