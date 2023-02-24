@@ -617,10 +617,10 @@ function run() {
     expression_should_be_known(feature + ": 1.5dppx");
     expression_should_be_known(feature + ": 1.5x");
     expression_should_be_known(feature + ": 2.0dppx");
-    expression_should_be_known(feature + ": 0dpi");
-    expression_should_be_known(feature + ": -3dpi");
-    expression_should_be_known(feature + ": 0dppx");
-    expression_should_be_known(feature + ": 0x");
+    expression_should_not_be_known(feature + ": 0dpi");
+    expression_should_not_be_known(feature + ": -3dpi");
+    expression_should_not_be_known(feature + ": 0dppx");
+    expression_should_not_be_known(feature + ": 0x");
   }
 
   // Find the resolution using max-resolution
