@@ -653,6 +653,7 @@ rtc_library("create_frame_generator") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
+if (!build_with_mozilla) {
 rtc_library("create_peer_connection_quality_test_frame_generator") {
   visibility = [ "*" ]
   testonly = true
@@ -668,6 +669,7 @@ rtc_library("create_peer_connection_quality_test_frame_generator") {
     "test/pclf:media_configuration",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
 }
 
 rtc_source_set("libjingle_logging_api") {
