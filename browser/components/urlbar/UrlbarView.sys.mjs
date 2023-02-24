@@ -1211,6 +1211,41 @@ export class UrlbarView {
     item._elements.set("url", url);
   }
 
+  /**
+   * @param {Element} node
+   *   The element to set attributes on.
+   * @param {object} attributes
+   *   Attribute names to values mapping.  For each name-value pair, an
+   *   attribute is set on the element, except for `null` as a value which
+   *   signals an attribute should be removed, and `undefined` in which case
+   *   the attribute won't be set nor removed. The `id` attribute is reserved
+   *   and cannot be set here.
+   */
+  #setDynamicAttributes(node, attributes) {
+    if (!attributes) {
+      return;
+    }
+    for (let [name, value] of Object.entries(attributes)) {
+      if (name == "id") {
+        // IDs are managed externally to ensure they are unique.
+        console.error(
+          `Not setting id="${value}", as dynamic attributes may not include IDs.`
+        );
+        continue;
+      }
+      if (value === undefined) {
+        continue;
+      }
+      if (value === null) {
+        node.removeAttribute(name);
+      } else if (typeof value == "boolean") {
+        node.toggleAttribute(name, value);
+      } else {
+        node.setAttribute(name, value);
+      }
+    }
+  }
+
   #createRowContentForDynamicType(item, result) {
     let { dynamicType } = result.payload;
     let provider = lazy.UrlbarProvidersManager.getProvider(result.providerName);
@@ -1230,24 +1265,14 @@ export class UrlbarView {
   }
 
   #buildViewForDynamicType(type, parentNode, elementsByName, template) {
+    // Set attributes on parentNode.
+    this.#setDynamicAttributes(parentNode, template.attributes);
     // Add classes to parentNode's classList.
     if (template.classList) {
       parentNode.classList.add(...template.classList);
     }
     if (template.overflowable) {
       parentNode.classList.add("urlbarView-overflowable");
-    }
-    // Set attributes on parentNode.
-    for (let [name, value] of Object.entries(template.attributes || {})) {
-      if (name == "id") {
-        // We do not allow dynamic results to set IDs for their Nodes. IDs are
-        // managed by the view to ensure they are unique.
-        console.error(
-          "Dynamic results are prohibited from setting their own IDs."
-        );
-        continue;
-      }
-      parentNode.setAttribute(name, value);
     }
     if (template.name) {
       parentNode.setAttribute("name", template.name);
@@ -1355,15 +1380,7 @@ export class UrlbarView {
 
   #addRowButton(item, { name, l10n, url, attributes }) {
     let button = this.#createElement("span");
-    if (attributes) {
-      for (let [attrName, attrVal] of Object.entries(attributes)) {
-        if (typeof attrVal == "boolean") {
-          button.toggleAttribute(attrName, attrVal);
-        } else if (attrVal != null) {
-          button.setAttribute(attrName, attrVal);
-        }
-      }
-    }
+    this.#setDynamicAttributes(button, attributes);
     button.id = `${item.id}-button-${name}`;
     button.classList.add("urlbarView-button", "urlbarView-button-" + name);
     button.setAttribute("role", "button");
@@ -1733,23 +1750,11 @@ export class UrlbarView {
     // Update each node in the view by name.
     for (let [nodeName, update] of Object.entries(viewUpdate)) {
       let node = item.querySelector(`#${item.id}-${nodeName}`);
-      for (let [attrName, value] of Object.entries(update.attributes || {})) {
-        if (attrName == "id") {
-          // We do not allow dynamic results to set IDs for their Nodes. IDs are
-          // managed by the view to ensure they are unique.
-          console.error(
-            "Dynamic results are prohibited from setting their own IDs."
-          );
-          continue;
+      this.#setDynamicAttributes(node, update.attributes);
+      if (update.style) {
+        for (let [styleName, value] of Object.entries(update.style)) {
+          node.style[styleName] = value;
         }
-        if (value === null) {
-          node.removeAttribute(attrName);
-        } else {
-          node.setAttribute(attrName, value);
-        }
-      }
-      for (let [styleName, value] of Object.entries(update.style || {})) {
-        node.style[styleName] = value;
       }
       if (update.l10n) {
         if (update.l10n.cacheable) {
