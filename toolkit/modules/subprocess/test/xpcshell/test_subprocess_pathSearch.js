@@ -6,7 +6,7 @@ const PYTHON_BIN = PathUtils.filename(PYTHON);
 const PYTHON_DIR = PathUtils.parent(PYTHON);
 
 const DOES_NOT_EXIST = PathUtils.join(
-  PathUtils.osTempDir,
+  PathUtils.tempDir,
   "ThisPathDoesNotExist"
 );
 

@@ -33,12 +33,5 @@ self.onmessage = async function(message) {
     "PathUtils.getTempDir() in a worker should match PathUtils.tempDir on main thread"
   );
 
-  const osTempDir = await PathUtils.getOSTempDir();
-  is(
-    osTempDir,
-    expected.osTempDir,
-    "PathUtils.getOSTempDir() in a worker should match PathUtils.osTempDir on main thread"
-  );
-
   finish();
 };

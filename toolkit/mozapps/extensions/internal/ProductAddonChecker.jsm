@@ -419,7 +419,7 @@ function downloadFile(url, options = { httpsOnlyNoUpgrade: false }) {
       }
       (async function() {
         const path = await IOUtils.createUniqueFile(
-          PathUtils.osTempDir,
+          PathUtils.tempDir,
           "tmpaddon"
         );
         logger.info(`Downloaded file will be saved to ${path}`);

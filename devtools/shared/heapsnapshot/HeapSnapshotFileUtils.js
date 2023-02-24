@@ -28,7 +28,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 function getHeapSnapshotFileTemplate() {
-  return PathUtils.join(PathUtils.osTempDir, `${Date.now()}.fxsnapshot`);
+  return PathUtils.join(PathUtils.tempDir, `${Date.now()}.fxsnapshot`);
 }
 
 /**
@@ -63,7 +63,7 @@ exports.getHeapSnapshotTempFilePath = function(snapshotId) {
   if (!isValidSnapshotFileId(snapshotId)) {
     return null;
   }
-  return PathUtils.join(PathUtils.osTempDir, snapshotId + ".fxsnapshot");
+  return PathUtils.join(PathUtils.tempDir, snapshotId + ".fxsnapshot");
 };
 
 /**

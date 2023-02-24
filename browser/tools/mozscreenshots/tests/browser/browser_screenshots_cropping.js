@@ -80,7 +80,7 @@ async function cropAndCompare(window, src, expected, test, region, subregions) {
 add_task(async function crop() {
   const window = Services.wm.getMostRecentWindow("navigator:browser");
 
-  const tmp = PathUtils.osTempDir;
+  const tmp = PathUtils.tempDir;
   is(
     await cropAndCompare(
       window,

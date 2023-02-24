@@ -93,8 +93,6 @@ class PathUtils final {
                                      ErrorResult& aErr);
   static void GetTempDirSync(const GlobalObject&, nsString& aResult,
                              ErrorResult& aErr);
-  static void GetOSTempDirSync(const GlobalObject&, nsString& aResult,
-                               ErrorResult& aErr);
   static void GetXulLibraryPathSync(const GlobalObject&, nsString& aResult,
                                     ErrorResult& aErr);
 
@@ -104,8 +102,6 @@ class PathUtils final {
       const GlobalObject& aGlobal, ErrorResult& aErr);
   static already_AddRefed<Promise> GetTempDirAsync(const GlobalObject& aGlobal,
                                                    ErrorResult& aErr);
-  static already_AddRefed<Promise> GetOSTempDirAsync(
-      const GlobalObject& aGlobal, ErrorResult& aErr);
   static already_AddRefed<Promise> GetXulLibraryPathAsync(
       const GlobalObject& aGlobal, ErrorResult& aErr);
 
@@ -135,13 +131,9 @@ class PathUtils::DirectoryCache final {
      */
     LocalProfile,
     /**
-     * The temporary directory for the process.
-     */
-    Temp,
-    /**
      * The OS temporary directory.
      */
-    OSTemp,
+    Temp,
     /**
      * The libxul path.
      */
@@ -255,8 +247,9 @@ class PathUtils::DirectoryCache final {
   DirectoryArray<MozPromiseHolder<PopulateDirectoriesPromise>> mPromises;
 
   static constexpr DirectoryArray<const char*> kDirectoryNames{
-      NS_APP_USER_PROFILE_50_DIR,      NS_APP_USER_PROFILE_LOCAL_50_DIR,
-      NS_APP_CONTENT_PROCESS_TEMP_DIR, NS_OS_TEMP_DIR,
+      NS_APP_USER_PROFILE_50_DIR,
+      NS_APP_USER_PROFILE_LOCAL_50_DIR,
+      NS_OS_TEMP_DIR,
       NS_XPCOM_LIBRARY_FILE,
   };
 };
