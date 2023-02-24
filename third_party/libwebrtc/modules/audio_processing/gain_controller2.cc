@@ -95,23 +95,6 @@ GainController2::GainController2(const Agc2Config& config,
 
 GainController2::~GainController2() = default;
 
-void GainController2::Initialize(int sample_rate_hz, int num_channels) {
-  RTC_DCHECK(sample_rate_hz == AudioProcessing::kSampleRate8kHz ||
-             sample_rate_hz == AudioProcessing::kSampleRate16kHz ||
-             sample_rate_hz == AudioProcessing::kSampleRate32kHz ||
-             sample_rate_hz == AudioProcessing::kSampleRate48kHz);
-  // TODO(bugs.webrtc.org/7494): Initialize `fixed_gain_applier_`.
-  limiter_.SetSampleRate(sample_rate_hz);
-  if (vad_) {
-    vad_->Initialize(sample_rate_hz);
-  }
-  if (adaptive_digital_controller_) {
-    adaptive_digital_controller_->Initialize(sample_rate_hz, num_channels);
-  }
-  data_dumper_.InitiateNewSetOfRecordings();
-  calls_since_last_limiter_log_ = 0;
-}
-
 void GainController2::SetFixedGainDb(float gain_db) {
   const float gain_factor = DbToRatio(gain_db);
   if (fixed_gain_applier_.GetGainFactor() != gain_factor) {

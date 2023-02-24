@@ -41,9 +41,6 @@ class GainController2 {
   GainController2& operator=(const GainController2&) = delete;
   ~GainController2();
 
-  // Detects and handles changes of sample rate and/or number of channels.
-  void Initialize(int sample_rate_hz, int num_channels);
-
   // Sets the fixed digital gain.
   void SetFixedGainDb(float gain_db);
 
