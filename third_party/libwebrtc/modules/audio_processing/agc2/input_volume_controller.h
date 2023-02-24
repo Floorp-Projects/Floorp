@@ -208,6 +208,8 @@ class MonoInputVolumeController {
 
   void ActivateLogging() { log_to_histograms_ = true; }
 
+  int clipped_level_min() const { return clipped_level_min_; }
+
   // Only used for testing.
   int min_mic_level() const { return min_mic_level_; }
 
