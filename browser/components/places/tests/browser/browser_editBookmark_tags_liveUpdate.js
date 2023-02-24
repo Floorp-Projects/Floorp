@@ -1,9 +1,11 @@
 "use strict";
 
+let win;
+
 async function checkTagsSelector(aAvailableTags, aCheckedTags) {
   let tags = await PlacesUtils.bookmarks.fetchTags();
   is(tags.length, aAvailableTags.length, "Check tags list");
-  let tagsSelector = document.getElementById("editBMPanel_tagsSelector");
+  let tagsSelector = win.document.getElementById("editBMPanel_tagsSelector");
   let children = tagsSelector.children;
   is(
     children.length,
@@ -21,7 +23,7 @@ async function checkTagsSelector(aAvailableTags, aCheckedTags) {
 }
 
 async function promiseTagSelectorUpdated(task) {
-  let tagsSelector = document.getElementById("editBMPanel_tagsSelector");
+  let tagsSelector = win.document.getElementById("editBMPanel_tagsSelector");
 
   let promise = BrowserTestUtils.waitForEvent(
     tagsSelector,
@@ -32,16 +34,28 @@ async function promiseTagSelectorUpdated(task) {
   return promise;
 }
 
+add_setup(async function() {
+  // Behavior is exclusive to instant apply mode.
+  // We do not expect the tags selector to "live update" with delayed apply.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.bookmarks.editDialog.delayedApply.enabled", false]],
+  });
+  win = await BrowserTestUtils.openNewBrowserWindow();
+  registerCleanupFunction(async () => {
+    await BrowserTestUtils.closeWindow(win);
+  });
+});
+
 add_task(async function() {
   const TEST_URI = Services.io.newURI("http://www.test.me/");
   const TEST_URI2 = Services.io.newURI("http://www.test.again.me/");
   const TEST_TAG = "test-tag";
 
-  ok(gEditItemOverlay, "Sanity check: gEditItemOverlay is in context");
+  ok(win.gEditItemOverlay, "Sanity check: gEditItemOverlay is in context");
 
   // Open the tags selector.
-  StarUI._createPanelIfNeeded();
-  document.getElementById("editBMPanel_tagsSelectorRow").hidden = false;
+  win.StarUI._createPanelIfNeeded();
+  win.document.getElementById("editBMPanel_tagsSelectorRow").hidden = false;
 
   // Add a bookmark.
   let bm = await PlacesUtils.bookmarks.insert({
@@ -54,7 +68,7 @@ add_task(async function() {
 
   // Init panel.
   let node = await PlacesUIUtils.promiseNodeLikeFromFetchInfo(bm);
-  await gEditItemOverlay.initPanel({ node });
+  await win.gEditItemOverlay.initPanel({ node });
 
   // Add a tag.
   await promiseTagSelectorUpdated(() =>
@@ -67,7 +81,7 @@ add_task(async function() {
     "Correctly added tag to a single bookmark"
   );
   Assert.equal(
-    document.getElementById("editBMPanel_tagsField").value,
+    win.document.getElementById("editBMPanel_tagsField").value,
     TEST_TAG,
     "Editing a single bookmark shows the added tag."
   );
@@ -83,7 +97,7 @@ add_task(async function() {
     "The tag has been removed"
   );
   Assert.equal(
-    document.getElementById("editBMPanel_tagsField").value,
+    win.document.getElementById("editBMPanel_tagsField").value,
     "",
     "Editing a single bookmark should not show any tag"
   );
@@ -99,7 +113,7 @@ add_task(async function() {
   });
 
   // Init panel with multiple uris.
-  await gEditItemOverlay.initPanel({ uris: [TEST_URI, TEST_URI2] });
+  await win.gEditItemOverlay.initPanel({ uris: [TEST_URI, TEST_URI2] });
 
   // Add a tag to the first uri.
   await promiseTagSelectorUpdated(() =>
@@ -111,7 +125,7 @@ add_task(async function() {
     "Correctly added a tag to the first bookmark."
   );
   Assert.equal(
-    document.getElementById("editBMPanel_tagsField").value,
+    win.document.getElementById("editBMPanel_tagsField").value,
     "",
     "Editing multiple bookmarks without matching tags should not show any tag."
   );
@@ -127,7 +141,7 @@ add_task(async function() {
     "Correctly added a tag to the second bookmark."
   );
   Assert.equal(
-    document.getElementById("editBMPanel_tagsField").value,
+    win.document.getElementById("editBMPanel_tagsField").value,
     TEST_TAG,
     "Editing multiple bookmarks should show matching tags."
   );
@@ -143,7 +157,7 @@ add_task(async function() {
     "Correctly removed tag from the first bookmark."
   );
   Assert.equal(
-    document.getElementById("editBMPanel_tagsField").value,
+    win.document.getElementById("editBMPanel_tagsField").value,
     "",
     "Editing multiple bookmarks without matching tags should not show any tag."
   );
@@ -159,14 +173,14 @@ add_task(async function() {
     "Correctly removed tag from the second bookmark."
   );
   Assert.equal(
-    document.getElementById("editBMPanel_tagsField").value,
+    win.document.getElementById("editBMPanel_tagsField").value,
     "",
     "Editing multiple bookmarks without matching tags should not show any tag."
   );
   await checkTagsSelector([], []);
 
   // Init panel with a nsIURI entry.
-  await gEditItemOverlay.initPanel({ uris: [TEST_URI] });
+  await win.gEditItemOverlay.initPanel({ uris: [TEST_URI] });
 
   // Add a tag.
   await promiseTagSelectorUpdated(() =>
@@ -178,7 +192,7 @@ add_task(async function() {
     "Correctly added tag to the first entry."
   );
   Assert.equal(
-    document.getElementById("editBMPanel_tagsField").value,
+    win.document.getElementById("editBMPanel_tagsField").value,
     TEST_TAG,
     "Editing a single nsIURI entry shows the added tag."
   );
@@ -194,14 +208,14 @@ add_task(async function() {
     "Correctly removed tag from the nsIURI entry."
   );
   Assert.equal(
-    document.getElementById("editBMPanel_tagsField").value,
+    win.document.getElementById("editBMPanel_tagsField").value,
     "",
     "Editing a single nsIURI entry should not show any tag."
   );
   await checkTagsSelector([], []);
 
   // Init panel with multiple nsIURI entries.
-  await gEditItemOverlay.initPanel({ uris: [TEST_URI, TEST_URI2] });
+  await win.gEditItemOverlay.initPanel({ uris: [TEST_URI, TEST_URI2] });
 
   // Add a tag to the first entry.
   await promiseTagSelectorUpdated(() =>
@@ -213,7 +227,7 @@ add_task(async function() {
     "Tag correctly added."
   );
   Assert.equal(
-    document.getElementById("editBMPanel_tagsField").value,
+    win.document.getElementById("editBMPanel_tagsField").value,
     "",
     "Editing multiple nsIURIs without matching tags should not show any tag."
   );
@@ -229,7 +243,7 @@ add_task(async function() {
     "Tag correctly added."
   );
   Assert.equal(
-    document.getElementById("editBMPanel_tagsField").value,
+    win.document.getElementById("editBMPanel_tagsField").value,
     TEST_TAG,
     "Editing multiple nsIURIs should show matching tags."
   );
@@ -245,7 +259,7 @@ add_task(async function() {
     "Correctly removed tag from the first entry."
   );
   Assert.equal(
-    document.getElementById("editBMPanel_tagsField").value,
+    win.document.getElementById("editBMPanel_tagsField").value,
     "",
     "Editing multiple nsIURIs without matching tags should not show any tag."
   );
@@ -261,7 +275,7 @@ add_task(async function() {
     "Correctly removed tag from the second entry."
   );
   Assert.equal(
-    document.getElementById("editBMPanel_tagsField").value,
+    win.document.getElementById("editBMPanel_tagsField").value,
     "",
     "Editing multiple nsIURIs without matching tags should not show any tag."
   );

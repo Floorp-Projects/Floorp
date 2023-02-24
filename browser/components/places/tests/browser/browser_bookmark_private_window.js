@@ -27,6 +27,10 @@ add_task(async function test_add_bookmark_from_private_window() {
   win.StarUI._createPanelIfNeeded();
   let bookmarkPanel = win.document.getElementById("editBookmarkPanel");
   let shownPromise = promisePopupShown(bookmarkPanel);
+  let bookmarkAddedPromise = PlacesTestUtils.waitForNotification(
+    "bookmark-added",
+    events => events.some(({ url }) => url === TEST_URL)
+  );
   let bookmarkStar = win.BookmarkingUI.star;
   bookmarkStar.click();
   await shownPromise;
@@ -43,6 +47,7 @@ add_task(async function test_add_bookmark_from_private_window() {
   let doneButton = win.document.getElementById("editBookmarkPanelDoneButton");
   doneButton.click();
   await hiddenPromise;
+  await bookmarkAddedPromise;
 
   let bm = await PlacesUtils.bookmarks.fetch({ url: TEST_URL });
   Assert.equal(

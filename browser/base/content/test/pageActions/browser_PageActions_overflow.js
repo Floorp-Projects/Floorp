@@ -108,7 +108,9 @@ add_task(async function bookmark() {
 
   // The bookmark button should read "Bookmark Current Tab…" and not be starred.
   let bookmarkButton = win.document.getElementById("pageAction-panel-bookmark");
-  Assert.equal(bookmarkButton.label, "Bookmark Current Tab…");
+  await TestUtils.waitForCondition(
+    () => bookmarkButton.label === "Bookmark Current Tab…"
+  );
   Assert.ok(!bookmarkButton.hasAttribute("starred"));
 
   // Click the button.
@@ -126,7 +128,9 @@ add_task(async function bookmark() {
   await promisePageActionPanelOpen(win);
 
   // The bookmark button should now read "Edit This Bookmark…" and be starred.
-  Assert.equal(bookmarkButton.label, "Edit This Bookmark…");
+  await TestUtils.waitForCondition(
+    () => bookmarkButton.label === "Edit This Bookmark…"
+  );
   Assert.ok(bookmarkButton.hasAttribute("starred"));
   Assert.equal(bookmarkButton.getAttribute("starred"), "true");
 
@@ -152,7 +156,9 @@ add_task(async function bookmark() {
   await promisePageActionPanelOpen(win);
 
   // The bookmark button should read "Bookmark Current Tab…" and not be starred.
-  Assert.equal(bookmarkButton.label, "Bookmark Current Tab…");
+  await TestUtils.waitForCondition(
+    () => bookmarkButton.label === "Bookmark Current Tab…"
+  );
   Assert.ok(!bookmarkButton.hasAttribute("starred"));
 
   // Done.

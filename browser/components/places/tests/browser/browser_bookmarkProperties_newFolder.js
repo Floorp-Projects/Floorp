@@ -31,6 +31,10 @@ add_setup(async function() {
 });
 
 add_task(async function test_newFolder() {
+  let newBookmarkObserver = PlacesTestUtils.waitForNotification(
+    "bookmark-added",
+    events => events.some(({ url }) => url === TEST_URL)
+  );
   await clickBookmarkStar();
 
   // Open folder selector.
@@ -94,6 +98,8 @@ add_task(async function test_newFolder() {
     "Should have the new folder title"
   );
 
+  await hideBookmarksPanel();
+  await newBookmarkObserver;
   let bookmark = await PlacesUtils.bookmarks.fetch({ url: TEST_URL });
 
   Assert.equal(
@@ -101,6 +107,4 @@ add_task(async function test_newFolder() {
     newFolderGuid,
     "The bookmark should be parented by the new folder"
   );
-
-  await hideBookmarksPanel();
 });
