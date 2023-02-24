@@ -56,41 +56,25 @@ int FindFirstMediaStatsIndexByKind(
   return -1;
 }
 
-TaskQueueMetronome::TaskQueueMetronome(TaskQueueFactory* factory,
-                                       TimeDelta tick_period)
-    : tick_period_(tick_period),
-      queue_(factory->CreateTaskQueue("MetronomeQueue",
-                                      TaskQueueFactory::Priority::HIGH)) {
-  tick_task_ = RepeatingTaskHandle::Start(queue_.Get(), [this] {
-    MutexLock lock(&mutex_);
-    for (auto* listener : listeners_) {
-      listener->OnTickTaskQueue()->PostTask([listener] { listener->OnTick(); });
-    }
-    return tick_period_;
-  });
-}
+TaskQueueMetronome::TaskQueueMetronome(TimeDelta tick_period)
+    : tick_period_(tick_period) {}
 
-TaskQueueMetronome::~TaskQueueMetronome() {
-  RTC_DCHECK(listeners_.empty());
-  rtc::Event stop_event;
-  queue_.PostTask([this, &stop_event] {
-    tick_task_.Stop();
-    stop_event.Set();
-  });
-  stop_event.Wait(TimeDelta::Seconds(1));
-}
-
-void TaskQueueMetronome::AddListener(TickListener* listener) {
-  MutexLock lock(&mutex_);
-  auto [it, inserted] = listeners_.insert(listener);
-  RTC_DCHECK(inserted);
-}
-
-void TaskQueueMetronome::RemoveListener(TickListener* listener) {
-  MutexLock lock(&mutex_);
-  auto it = listeners_.find(listener);
-  RTC_DCHECK(it != listeners_.end());
-  listeners_.erase(it);
+void TaskQueueMetronome::RequestCallOnNextTick(
+    absl::AnyInvocable<void() &&> callback) {
+  callbacks_.push_back(std::move(callback));
+  // Only schedule a tick callback for the first `callback` addition.
+  // Schedule on the current task queue to comply with RequestCallOnNextTick
+  // requirements.
+  if (callbacks_.size() == 1) {
+    TaskQueueBase::Current()->PostDelayedTask(
+        [this] {
+          std::vector<absl::AnyInvocable<void() &&>> callbacks;
+          callbacks_.swap(callbacks);
+          for (auto& callback : callbacks)
+            std::move(callback)();
+        },
+        tick_period_);
+  }
 }
 
 TimeDelta TaskQueueMetronome::TickPeriod() const {
