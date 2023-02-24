@@ -77,13 +77,10 @@
 #  include "UIKitDirProvider.h"
 #endif
 
-#if defined(MOZ_SANDBOX)
+#if defined(MOZ_CONTENT_TEMP_DIR)
 #  include "mozilla/SandboxSettings.h"
 #  include "nsID.h"
 #  include "mozilla/Unused.h"
-#  if defined(XP_WIN)
-#    include "sandboxBroker.h"
-#  endif
 #endif
 
 #if defined(XP_MACOSX)
@@ -96,7 +93,7 @@
 
 #define PREF_OVERRIDE_DIRNAME "preferences"
 
-#if defined(MOZ_SANDBOX)
+#if defined(MOZ_CONTENT_TEMP_DIR)
 static already_AddRefed<nsIFile> GetProcessSandboxTempDir(
     GeckoProcessType type);
 static nsresult DeleteDirIfExists(nsIFile* dir);
@@ -446,7 +443,7 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
     bool unused;
     rv = dirsvc->GetFile("XCurProcD", &unused, getter_AddRefs(file));
   }
-#if defined(MOZ_SANDBOX)
+#if defined(MOZ_CONTENT_TEMP_DIR)
   else if (!strcmp(aProperty, NS_APP_CONTENT_PROCESS_TEMP_DIR)) {
     if (!mContentTempDir) {
       rv = LoadContentProcessTempDir();
@@ -454,7 +451,7 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
     }
     rv = mContentTempDir->Clone(getter_AddRefs(file));
   }
-#endif  // defined(MOZ_SANDBOX)
+#endif  // defined(MOZ_CONTENT_TEMP_DIR)
   else if (!strcmp(aProperty, NS_APP_USER_CHROME_DIR)) {
     // We need to allow component, xpt, and chrome registration to
     // occur prior to the profile-after-change notification.
@@ -500,15 +497,9 @@ static void LoadDirIntoArray(nsIFile* dir, const char* const* aAppendList,
   }
 }
 
-#if defined(MOZ_SANDBOX)
+#if defined(MOZ_CONTENT_TEMP_DIR)
 
-static const char* GetProcessTempBaseDirKey() {
-#  if defined(XP_WIN)
-  return NS_WIN_LOW_INTEGRITY_TEMP_BASE;
-#  else
-  return NS_OS_TEMP_DIR;
-#  endif
-}
+static const char* GetProcessTempBaseDirKey() { return NS_OS_TEMP_DIR; }
 
 //
 // Sets mContentTempDir so that it refers to the appropriate temp dir.
@@ -664,7 +655,7 @@ static nsresult DeleteDirIfExists(nsIFile* dir) {
   return NS_OK;
 }
 
-#endif  // defined(MOZ_SANDBOX)
+#endif  // defined(MOZ_CONTENT_TEMP_DIR)
 
 static const char* const kAppendPrefDir[] = {"defaults", "preferences",
                                              nullptr};
@@ -838,7 +829,7 @@ nsXREDirProvider::DoStartup() {
 
     obsSvc->NotifyObservers(nullptr, "profile-initial-state", nullptr);
 
-#if defined(MOZ_SANDBOX)
+#if defined(MOZ_CONTENT_TEMP_DIR)
     // Makes sure the content temp dir has been loaded if it hasn't been
     // already. In the parent this ensures it has been created before we attempt
     // to start any content processes.
@@ -878,11 +869,11 @@ void nsXREDirProvider::DoShutdown() {
   gDataDirProfileLocal = nullptr;
   gDataDirProfile = nullptr;
 
+#if defined(MOZ_CONTENT_TEMP_DIR)
   if (XRE_IsParentProcess()) {
-#if defined(MOZ_SANDBOX)
     mozilla::Unused << DeleteDirIfExists(mContentProcessSandboxTempDir);
-#endif
   }
+#endif
 }
 
 #ifdef XP_WIN

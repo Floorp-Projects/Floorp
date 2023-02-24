@@ -659,12 +659,6 @@ nsresult GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
       }
       return rv;
     }
-#  if defined(MOZ_SANDBOX)
-    case Win_LocalAppdataLow: {
-      GUID localAppDataLowGuid = FOLDERID_LocalAppDataLow;
-      return GetKnownFolder(&localAppDataLowGuid, aFile);
-    }
-#  endif
 #  if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
     case Win_Documents: {
       return GetLibrarySaveToPath(CSIDL_MYDOCUMENTS, FOLDERID_DocumentsLibrary,

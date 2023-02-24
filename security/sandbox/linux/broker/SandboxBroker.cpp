@@ -62,6 +62,7 @@ SandboxBroker::SandboxBroker(UniquePtr<const Policy> aPolicy, int aChildPid,
     mFileDesc = -1;
     aClientFd = -1;
   }
+#if defined(MOZ_CONTENT_TEMP_DIR)
   nsCOMPtr<nsIFile> tmpDir;
   nsresult rv = NS_GetSpecialDirectory(NS_APP_CONTENT_PROCESS_TEMP_DIR,
                                        getter_AddRefs(tmpDir));
@@ -71,6 +72,7 @@ SandboxBroker::SandboxBroker(UniquePtr<const Policy> aPolicy, int aChildPid,
       mContentTempPath.Truncate();
     }
   }
+#endif
 }
 
 UniquePtr<SandboxBroker> SandboxBroker::Create(
@@ -561,6 +563,7 @@ size_t SandboxBroker::ConvertRelativePath(char* aPath, size_t aBufSize,
   return aPathLen;
 }
 
+#if defined(MOZ_CONTENT_TEMP_DIR)
 size_t SandboxBroker::RemapTempDirs(char* aPath, size_t aBufSize,
                                     size_t aPathLen) {
   nsAutoCString path(aPath);
@@ -588,6 +591,7 @@ size_t SandboxBroker::RemapTempDirs(char* aPath, size_t aBufSize,
 
   return aPathLen;
 }
+#endif
 
 nsCString SandboxBroker::ReverseSymlinks(const nsACString& aPath) {
   // Revert any symlinks we previously resolved.
@@ -663,6 +667,7 @@ void SandboxBroker::ThreadMain(void) {
   // before the main thread loop starts
   bool permissive = SandboxInfo::Get().Test(SandboxInfo::kPermissive);
 
+#if defined(MOZ_CONTENT_TEMP_DIR)
   // Find the current temporary directory
   nsCOMPtr<nsIFile> tmpDir;
   nsresult rv =
@@ -692,6 +697,7 @@ void SandboxBroker::ThreadMain(void) {
       mTempPath.Truncate();
     }
   }
+#endif
 
   while (true) {
     struct iovec ios[2];
@@ -785,11 +791,13 @@ void SandboxBroker::ThreadMain(void) {
       perms = mPolicy->Lookup(nsDependentCString(pathBuf, pathLen));
 
       // We don't have permissions on the requested dir.
+#if defined(MOZ_CONTENT_TEMP_DIR)
       if (!perms) {
         // Was it a tempdir that we can remap?
         pathLen = RemapTempDirs(pathBuf, sizeof(pathBuf), pathLen);
         perms = mPolicy->Lookup(nsDependentCString(pathBuf, pathLen));
       }
+#endif
       if (!perms) {
         // Did we arrive from a symlink in a path that is not writable?
         // Then try to figure out the original path and see if that is
