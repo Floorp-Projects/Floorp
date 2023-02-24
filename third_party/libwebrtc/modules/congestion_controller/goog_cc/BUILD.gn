@@ -27,6 +27,7 @@ rtc_library("goog_cc") {
     ":alr_detector",
     ":delay_based_bwe",
     ":estimators",
+    ":loss_based_bwe_v2",
     ":probe_controller",
     ":pushback_controller",
     ":send_side_bwe",
