@@ -70,6 +70,8 @@ class DefaultAudioQualityAnalyzer : public AudioQualityAnalyzerInterface {
 
   mutable Mutex lock_;
   std::map<std::string, AudioStreamStats> streams_stats_ RTC_GUARDED_BY(lock_);
+  std::map<std::string, TrackIdStreamInfoMap::StreamInfo> stream_info_
+      RTC_GUARDED_BY(lock_);
   std::map<std::string, StatsSample> last_stats_sample_ RTC_GUARDED_BY(lock_);
 };
 

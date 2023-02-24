@@ -488,6 +488,7 @@ if (!build_with_chromium) {
         ":default_audio_quality_analyzer",
         ":default_video_quality_analyzer",
         ":media_helper",
+        ":metric_metadata_keys",
         ":peer_configurer",
         ":peer_connection_quality_test_params",
         ":sdp_changer",
@@ -832,7 +833,10 @@ if (!build_with_chromium) {
       "../../../api:track_id_stream_info_map",
       "../../../rtc_base:macromagic",
     ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/strings",
+      "//third_party/abseil-cpp/absl/types:optional",
+    ]
   }
 
   rtc_library("default_audio_quality_analyzer") {
@@ -844,6 +848,7 @@ if (!build_with_chromium) {
     ]
 
     deps = [
+      ":metric_metadata_keys",
       "../..:perf_test",
       "../../../api:audio_quality_analyzer_api",
       "../../../api:rtc_stats_api",
@@ -1066,6 +1071,7 @@ if (!build_with_chromium) {
       "stats_based_network_quality_metrics_reporter.h",
     ]
     deps = [
+      ":metric_metadata_keys",
       "../..:perf_test",
       "../../../api:array_view",
       "../../../api:network_emulation_manager_api",
@@ -1098,6 +1104,7 @@ if (!build_with_chromium) {
       "cross_media_metrics_reporter.h",
     ]
     deps = [
+      ":metric_metadata_keys",
       "../..:perf_test",
       "../../../api:network_emulation_manager_api",
       "../../../api:peer_connection_quality_test_fixture_api",
