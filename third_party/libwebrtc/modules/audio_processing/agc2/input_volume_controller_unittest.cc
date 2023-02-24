@@ -44,7 +44,6 @@ constexpr float kClippedRatioThreshold = 0.1f;
 constexpr int kClippedWaitFrames = 300;
 constexpr float kHighSpeechProbability = 0.7f;
 constexpr float kSpeechLevel = -25.0f;
-constexpr int kMaxDigitalGainDb = 12;
 
 constexpr float kMinSample = std::numeric_limits<int16_t>::min();
 constexpr float kMaxSample = std::numeric_limits<int16_t>::max();
@@ -71,7 +70,8 @@ std::unique_ptr<InputVolumeController> CreateInputVolumeController(
       .clipped_ratio_threshold = clipped_ratio_threshold,
       .clipped_wait_frames = clipped_wait_frames,
       .enable_clipping_predictor = enable_clipping_predictor,
-      .max_digital_gain_db = kMaxDigitalGainDb,
+      .target_range_max_dbfs = -18,
+      .target_range_min_dbfs = -30,
   };
 
   return std::make_unique<InputVolumeController>(/*num_capture_channels=*/1,
@@ -262,7 +262,8 @@ constexpr InputVolumeControllerConfig GetInputVolumeControllerTestConfig() {
       .clipped_ratio_threshold = kClippedRatioThreshold,
       .clipped_wait_frames = kClippedWaitFrames,
       .enable_clipping_predictor = kDefaultClippingPredictorConfig.enabled,
-      .max_digital_gain_db = kMaxDigitalGainDb,
+      .target_range_max_dbfs = -18,
+      .target_range_min_dbfs = -30,
   };
   return config;
 }

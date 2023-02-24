@@ -54,8 +54,17 @@ class InputVolumeController final {
     int clipped_wait_frames = 300;
     // Enables clipping prediction functionality.
     bool enable_clipping_predictor = false;
-    // Maximum digital gain used before input volume is adjusted.
-    int max_digital_gain_db = 30;
+    // Speech level target range (dBFS). If the speech level is in the range
+    // [`target_range_min_dbfs`, `target_range_max_dbfs`], no input volume
+    // adjustments are done based on the speech level. For speech levels below
+    // and above the range, the targets `target_range_min_dbfs` and
+    // `target_range_max_dbfs` are used, respectively. The example values
+    // `target_range_max_dbfs` -18 and `target_range_min_dbfs` -48 refer to a
+    // configuration where the zero-digital-gain target is -18 dBFS and the
+    // digital gain control is expected to compensate for speech level errors
+    // up to -30 dB.
+    int target_range_max_dbfs = -18;
+    int target_range_min_dbfs = -48;
   };
 
   // Ctor. `num_capture_channels` specifies the number of channels for the audio
@@ -77,15 +86,15 @@ class InputVolumeController final {
   // TODO(bugs.webrtc.org/7494): Add argument for the applied input volume and
   // remove `set_stream_analog_level()`.
   // Analyzes `audio` before `Process()` is called so that the analysis can be
-  // performed before external digital processing operations take place (e.g.,
-  // echo cancellation). The analysis consists of input clipping detection and
+  // performed before digital processing operations take place (e.g., echo
+  // cancellation). The analysis consists of input clipping detection and
   // prediction (if enabled). Must be called after `set_stream_analog_level()`.
   void AnalyzePreProcess(const AudioBuffer& audio_buffer);
 
-  // Chooses a digital compression gain and the new input volume to recommend.
-  // Must be called after `AnalyzePreProcess()`. `speech_probability`
-  // (range [0.0f, 1.0f]) and `speech_level_dbfs` (range [-90.f, 30.0f]) are
-  // used to compute the RMS error.
+  // Adjusts the recommended input volume upwards/downwards based on
+  // `speech_level_dbfs`. Must be called after `AnalyzePreProcess()`. The value
+  // of `speech_probability` is expected to be in the range [0.0f, 1.0f] and
+  // `speech_level_dbfs` in the the range [-90.f, 30.0f].
   void Process(absl::optional<float> speech_probability,
                absl::optional<float> speech_level_dbfs);
 
@@ -179,6 +188,13 @@ class InputVolumeController final {
   const bool use_clipping_predictor_step_;
   float clipping_rate_log_;
   int clipping_rate_log_counter_;
+
+  // Target range minimum and maximum. If the seech level is in the range
+  // [`target_range_min_dbfs`, `target_range_max_dbfs`], no volume adjustments
+  // take place. Instead, the digital gain controller is assumed to adapt to
+  // compensate for the speech level RMS error.
+  const int target_range_max_dbfs_;
+  const int target_range_min_dbfs_;
 };
 
 // TODO(bugs.webrtc.org/7494): Use applied/recommended input volume naming
@@ -187,8 +203,7 @@ class MonoInputVolumeController {
  public:
   MonoInputVolumeController(int startup_min_level,
                             int clipped_level_min,
-                            int min_mic_level,
-                            int max_digital_gain_db);
+                            int min_mic_level);
   ~MonoInputVolumeController();
   MonoInputVolumeController(const MonoInputVolumeController&) = delete;
   MonoInputVolumeController& operator=(const MonoInputVolumeController&) =
@@ -205,9 +220,10 @@ class MonoInputVolumeController {
   // `set_stream_analog_level()`.
   void HandleClipping(int clipped_level_step);
 
-  // Updates the recommended input volume based on the estimated speech level
-  // RMS error. Must be called after `HandleClipping()`.
-  void Process(absl::optional<int> rms_error);
+  // Adjusts the recommended input volume upwards/downwards depending on whether
+  // `rms_error_dbfs` is positive or negative. Must be called after
+  // `HandleClipping()`.
+  void Process(absl::optional<int> rms_error_dbfs);
 
   // Returns the recommended input volume. Must be called after `Process()`.
   int recommended_analog_level() const { return recommended_input_volume_; }
@@ -228,11 +244,13 @@ class MonoInputVolumeController {
   void SetMaxLevel(int level);
 
   int CheckVolumeAndReset();
-  void UpdateGain(int rms_error_db);
+
+  // Updates the recommended input volume. If the volume slider needs to be
+  // moved, we check first if the user has adjusted it, in which case we take no
+  // action and cache the updated level.
+  void UpdateInputVolume(int rms_error_dbfs);
 
   const int min_mic_level_;
-
-  const int max_digital_gain_db_;
 
   int level_ = 0;
   int max_level_;
