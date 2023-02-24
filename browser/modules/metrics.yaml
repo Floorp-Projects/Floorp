@@ -72,28 +72,6 @@ browser.engagement:
     no_lint:
       - BASELINE_PING
 
-  profile_count:
-    type: quantity
-    unit: profiles
-    description: |
-      Windows only count of the browser profiles on the current system. This
-      counts profiles that have been used across all Windows user accounts on
-      machine since this probe was added. The value persists across installs.
-      A value of 0 is reported if there is an error determining the correct
-      count. Unset on other platforms.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1813195
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1647422#c8
-    data_sensitivity:
-      - technical
-    notification_emails:
-      - pmcmanis@mozilla.com
-      - rtestard@mozilla.com
-    send_in_pings:
-      - metrics
-    expires: never
-
 ping.centre:
   send_failures:
     type: counter
