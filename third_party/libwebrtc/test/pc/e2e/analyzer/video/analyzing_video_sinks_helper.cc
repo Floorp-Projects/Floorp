@@ -15,15 +15,12 @@
 #include <utility>
 
 #include "absl/strings/string_view.h"
-#include "api/test/peerconnection_quality_test_fixture.h"
+#include "api/test/pclf/media_configuration.h"
 #include "api/test/video/video_frame_writer.h"
 #include "rtc_base/synchronization/mutex.h"
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
-
-using VideoConfig =
-    ::webrtc::webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::VideoConfig;
 
 void AnalyzingVideoSinksHelper::AddConfig(absl::string_view sender_peer_name,
                                           VideoConfig config) {

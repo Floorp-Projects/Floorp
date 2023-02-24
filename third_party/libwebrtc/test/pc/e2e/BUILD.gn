@@ -170,8 +170,8 @@ if (!build_with_chromium) {
     ]
     deps = [
       ":encoded_image_data_injector_api",
-      "../../../api:peer_connection_quality_test_fixture_api",
       "../../../api:video_quality_analyzer_api",
+      "../../../api/test/pclf:media_configuration",
       "../../../api/video:encoded_image",
       "../../../api/video:video_frame",
       "../../../api/video:video_rtp_headers",
@@ -208,7 +208,7 @@ if (!build_with_chromium) {
         "analyzer/video/analyzing_video_sinks_helper.h",
       ]
       deps = [
-        "../../../api:peer_connection_quality_test_fixture_api",
+        "../../../api/test/pclf:media_configuration",
         "../../../api/test/video:video_frame_writer",
         "../../../rtc_base:macromagic",
         "../../../rtc_base/synchronization:mutex",
@@ -231,9 +231,9 @@ if (!build_with_chromium) {
         ":video_dumping",
         "../..:fixed_fps_video_frame_writer_adapter",
         "../..:test_renderer",
-        "../../../api:peer_connection_quality_test_fixture_api",
         "../../../api:video_quality_analyzer_api",
         "../../../api/numerics",
+        "../../../api/test/pclf:media_configuration",
         "../../../api/test/video:video_frame_writer",
         "../../../api/units:timestamp",
         "../../../api/video:video_frame",
@@ -268,9 +268,9 @@ if (!build_with_chromium) {
         "../..:fixed_fps_video_frame_writer_adapter",
         "../..:test_renderer",
         "../../../api:array_view",
-        "../../../api:peer_connection_quality_test_fixture_api",
         "../../../api:stats_observer_interface",
         "../../../api:video_quality_analyzer_api",
+        "../../../api/test/pclf:media_configuration",
         "../../../api/video:video_frame",
         "../../../api/video:video_rtp_headers",
         "../../../api/video_codecs:video_codecs_api",
@@ -297,7 +297,7 @@ if (!build_with_chromium) {
         "echo/echo_emulation.h",
       ]
       deps = [
-        "../../../api:peer_connection_quality_test_fixture_api",
+        "../../../api/test/pclf:media_configuration",
         "../../../modules/audio_device:audio_device_impl",
         "../../../rtc_base:swap_queue",
       ]
@@ -315,10 +315,10 @@ if (!build_with_chromium) {
         "../../../api:frame_generator_api",
         "../../../api:function_view",
         "../../../api:libjingle_peerconnection_api",
-        "../../../api:peer_connection_quality_test_fixture_api",
         "../../../api:scoped_refptr",
         "../../../api:sequence_checker",
         "../../../api/task_queue:pending_task_safety_flag",
+        "../../../api/test/pclf:media_configuration",
         "../../../api/test/pclf:media_quality_test_params",
         "../../../api/test/pclf:peer_configurer",
         "../../../modules/audio_processing:api",
@@ -352,6 +352,7 @@ if (!build_with_chromium) {
         "../../../api:time_controller",
         "../../../api/rtc_event_log:rtc_event_log_factory",
         "../../../api/task_queue:default_task_queue_factory",
+        "../../../api/test/pclf:media_configuration",
         "../../../api/test/pclf:media_quality_test_params",
         "../../../api/test/pclf:peer_configurer",
         "../../../api/transport:field_trial_based_config",
@@ -388,7 +389,7 @@ if (!build_with_chromium) {
         "../../../api:create_frame_generator",
         "../../../api:frame_generator_api",
         "../../../api:media_stream_interface",
-        "../../../api:peer_connection_quality_test_fixture_api",
+        "../../../api/test/pclf:media_configuration",
         "../../../api/test/pclf:peer_configurer",
         "../../../api/video:video_frame",
         "../../../pc:session_description",
@@ -468,6 +469,7 @@ if (!build_with_chromium) {
         "../../../api/task_queue",
         "../../../api/test/metrics:metric",
         "../../../api/test/metrics:metrics_logger",
+        "../../../api/test/pclf:media_configuration",
         "../../../api/test/pclf:media_quality_test_params",
         "../../../api/test/pclf:peer_configurer",
         "../../../api/units:time_delta",
@@ -519,7 +521,7 @@ if (!build_with_chromium) {
       deps = [
         ":analyzing_video_sinks_helper",
         "../..:test_support",
-        "../../../api:peer_connection_quality_test_fixture_api",
+        "../../../api/test/pclf:media_configuration",
       ]
       absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
     }
@@ -535,8 +537,8 @@ if (!build_with_chromium) {
         "../..:video_test_support",
         "../../../api:create_frame_generator",
         "../../../api:frame_generator_api",
-        "../../../api:peer_connection_quality_test_fixture_api",
         "../../../api:scoped_refptr",
+        "../../../api/test/pclf:media_configuration",
         "../../../api/units:time_delta",
         "../../../api/units:timestamp",
         "../../../api/video:video_frame",
@@ -586,6 +588,8 @@ if (!build_with_chromium) {
         "../../../api/audio_codecs:builtin_audio_decoder_factory",
         "../../../api/audio_codecs:builtin_audio_encoder_factory",
         "../../../api/test/metrics:global_metrics_logger_and_exporter",
+        "../../../api/test/pclf:media_configuration",
+        "../../../api/test/pclf:media_quality_test_params",
         "../../../api/video_codecs:builtin_video_decoder_factory",
         "../../../api/video_codecs:builtin_video_encoder_factory",
         "../../../call:simulated_network",
@@ -626,6 +630,8 @@ if (!build_with_chromium) {
         "../../../api:peer_connection_quality_test_fixture_api",
         "../../../api/test/metrics:metrics_logger",
         "../../../api/test/metrics:stdout_metrics_exporter",
+        "../../../api/test/pclf:media_configuration",
+        "../../../api/test/pclf:media_quality_test_params",
         "../../../api/units:time_delta",
       ]
     }
@@ -642,6 +648,8 @@ if (!build_with_chromium) {
         "../../../api:network_emulation_manager_api",
         "../../../api:peer_connection_quality_test_fixture_api",
         "../../../api/test/metrics:global_metrics_logger_and_exporter",
+        "../../../api/test/pclf:media_configuration",
+        "../../../api/test/pclf:media_quality_test_params",
         "../../../api/units:time_delta",
         "../../../rtc_base:timeutils",
       ]
@@ -1082,8 +1090,8 @@ if (!build_with_chromium) {
     deps = [
       "../../../api:array_view",
       "../../../api:libjingle_peerconnection_api",
-      "../../../api:peer_connection_quality_test_fixture_api",
       "../../../api:rtp_parameters",
+      "../../../api/test/pclf:media_configuration",
       "../../../media:rtc_media_base",
       "../../../p2p:rtc_p2p",
       "../../../pc:sdp_utils",

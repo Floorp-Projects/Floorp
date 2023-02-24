@@ -58,6 +58,9 @@
 namespace webrtc {
 namespace webrtc_pc_e2e {
 
+constexpr size_t kDefaultSlidesWidth = 1850;
+constexpr size_t kDefaultSlidesHeight = 1110;
+
 // The index of required capturing device in OS provided list of video
 // devices. On Linux and Windows the list will be obtained via
 // webrtc::VideoCaptureModule::DeviceInfo, on Mac OS via
@@ -83,16 +86,12 @@ enum class CapturingDeviceIndex : size_t {};
 // `duration` must be less or equal to
 // `ScreenShareConfig::slide_change_interval`.
 struct ScrollingParams {
-  ScrollingParams(TimeDelta duration,
-                  size_t source_width,
-                  size_t source_height);
-
   // Duration of scrolling.
   TimeDelta duration;
   // Width of source slides video.
-  size_t source_width;
+  size_t source_width = kDefaultSlidesWidth;
   // Height of source slides video.
-  size_t source_height;
+  size_t source_height = kDefaultSlidesHeight;
 };
 
 // Contains screen share video stream properties.

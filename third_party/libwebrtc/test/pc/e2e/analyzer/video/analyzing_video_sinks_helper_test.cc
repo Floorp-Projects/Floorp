@@ -14,7 +14,7 @@
 #include <utility>
 
 #include "absl/types/optional.h"
-#include "api/test/peerconnection_quality_test_fixture.h"
+#include "api/test/pclf/media_configuration.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
@@ -23,9 +23,6 @@ namespace webrtc_pc_e2e {
 namespace {
 
 using ::testing::Eq;
-
-using VideoConfig =
-    ::webrtc::webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::VideoConfig;
 
 // Asserts equality of the main fields of the video config. We don't compare
 // the full config due to the lack of equality definition for a lot of subtypes.

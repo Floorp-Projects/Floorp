@@ -17,6 +17,8 @@
 #include "api/test/metrics/metrics_logger.h"
 #include "api/test/metrics/stdout_metrics_exporter.h"
 #include "api/test/network_emulation_manager.h"
+#include "api/test/pclf/media_configuration.h"
+#include "api/test/pclf/media_quality_test_params.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
 #include "api/units/time_delta.h"
 #include "test/gmock.h"
@@ -37,16 +39,8 @@ using ::webrtc::test::Metric;
 using ::webrtc::test::MetricsExporter;
 using ::webrtc::test::StdoutMetricsExporter;
 using ::webrtc::test::Unit;
-using RunParams =
-    ::webrtc::webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::RunParams;
-using VideoConfig =
-    ::webrtc::webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::VideoConfig;
-using AudioConfig =
-    ::webrtc::webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::AudioConfig;
 using PeerConfigurer = ::webrtc::webrtc_pc_e2e::
     PeerConnectionE2EQualityTestFixture::PeerConfigurer;
-using VideoCodecConfig = ::webrtc::webrtc_pc_e2e::
-    PeerConnectionE2EQualityTestFixture::VideoCodecConfig;
 
 // Adds a peer with some audio and video (the client should not care about
 // details about audio and video configs).

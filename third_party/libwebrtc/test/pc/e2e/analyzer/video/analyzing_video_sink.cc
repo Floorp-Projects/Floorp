@@ -16,7 +16,7 @@
 #include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "api/test/peerconnection_quality_test_fixture.h"
+#include "api/test/pclf/media_configuration.h"
 #include "api/test/video/video_frame_writer.h"
 #include "api/units/timestamp.h"
 #include "api/video/i420_buffer.h"
@@ -31,13 +31,6 @@
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
-
-using VideoSubscription = ::webrtc::webrtc_pc_e2e::
-    PeerConnectionE2EQualityTestFixture::VideoSubscription;
-using VideoResolution = ::webrtc::webrtc_pc_e2e::
-    PeerConnectionE2EQualityTestFixture::VideoResolution;
-using VideoConfig =
-    ::webrtc::webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::VideoConfig;
 
 AnalyzingVideoSink::AnalyzingVideoSink(absl::string_view peer_name,
                                        Clock* clock,

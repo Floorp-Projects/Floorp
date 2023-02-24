@@ -17,7 +17,7 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
-#include "api/test/peerconnection_quality_test_fixture.h"
+#include "api/test/pclf/media_configuration.h"
 #include "api/test/video_quality_analyzer_interface.h"
 #include "api/video/video_frame.h"
 #include "api/video_codecs/sdp_video_format.h"
@@ -50,9 +50,8 @@ namespace webrtc_pc_e2e {
 class QualityAnalyzingVideoEncoder : public VideoEncoder,
                                      public EncodedImageCallback {
  public:
-  using EmulatedSFUConfigMap = std::map<
-      std::string,
-      absl::optional<PeerConnectionE2EQualityTestFixture::EmulatedSFUConfig>>;
+  using EmulatedSFUConfigMap =
+      std::map<std::string, absl::optional<EmulatedSFUConfig>>;
 
   QualityAnalyzingVideoEncoder(absl::string_view peer_name,
                                std::unique_ptr<VideoEncoder> delegate,

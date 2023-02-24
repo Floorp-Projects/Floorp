@@ -19,6 +19,7 @@
 #include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
 #include "api/array_view.h"
+#include "api/test/pclf/media_configuration.h"
 #include "api/video/i420_buffer.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
@@ -38,8 +39,6 @@ namespace {
 
 using EmulatedSFUConfigMap =
     ::webrtc::webrtc_pc_e2e::QualityAnalyzingVideoEncoder::EmulatedSFUConfigMap;
-using VideoSubscription = ::webrtc::webrtc_pc_e2e::
-    PeerConnectionE2EQualityTestFixture::VideoSubscription;
 
 class AnalyzingFramePreprocessor
     : public test::TestVideoCapturer::FramePreprocessor {
@@ -150,7 +149,7 @@ VideoQualityAnalyzerInjectionHelper::CreateVideoSink(
 std::unique_ptr<AnalyzingVideoSink>
 VideoQualityAnalyzerInjectionHelper::CreateVideoSink(
     absl::string_view peer_name,
-    const PeerConnectionE2EQualityTestFixture::VideoSubscription& subscription,
+    const VideoSubscription& subscription,
     bool report_infra_metrics) {
   return std::make_unique<AnalyzingVideoSink>(peer_name, clock_, *analyzer_,
                                               sinks_helper_, subscription,

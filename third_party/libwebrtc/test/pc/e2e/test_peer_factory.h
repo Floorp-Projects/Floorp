@@ -18,6 +18,7 @@
 
 #include "absl/strings/string_view.h"
 #include "api/rtc_event_log/rtc_event_log_factory.h"
+#include "api/test/pclf/media_configuration.h"
 #include "api/test/pclf/media_quality_test_params.h"
 #include "api/test/pclf/peer_configurer.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
@@ -31,13 +32,12 @@ namespace webrtc {
 namespace webrtc_pc_e2e {
 
 struct RemotePeerAudioConfig {
-  explicit RemotePeerAudioConfig(
-      PeerConnectionE2EQualityTestFixture::AudioConfig config)
+  explicit RemotePeerAudioConfig(AudioConfig config)
       : sampling_frequency_in_hz(config.sampling_frequency_in_hz),
         output_file_name(config.output_dump_file_name) {}
 
   static absl::optional<RemotePeerAudioConfig> Create(
-      absl::optional<PeerConnectionE2EQualityTestFixture::AudioConfig> config);
+      absl::optional<AudioConfig> config);
 
   int sampling_frequency_in_hz;
   absl::optional<std::string> output_file_name;
@@ -70,8 +70,7 @@ class TestPeerFactory {
       std::unique_ptr<PeerConfigurerImpl> configurer,
       std::unique_ptr<MockPeerConnectionObserver> observer,
       absl::optional<RemotePeerAudioConfig> remote_audio_config,
-      absl::optional<PeerConnectionE2EQualityTestFixture::EchoEmulationConfig>
-          echo_emulation_config);
+      absl::optional<EchoEmulationConfig> echo_emulation_config);
 
  private:
   rtc::Thread* signaling_thread_;

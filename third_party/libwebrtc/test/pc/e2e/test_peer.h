@@ -22,9 +22,9 @@
 #include "api/set_remote_description_observer_interface.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "api/test/frame_generator_interface.h"
+#include "api/test/pclf/media_configuration.h"
 #include "api/test/pclf/media_quality_test_params.h"
 #include "api/test/pclf/peer_configurer.h"
-#include "api/test/peerconnection_quality_test_fixture.h"
 #include "pc/peer_connection_wrapper.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/synchronization/mutex.h"
@@ -41,12 +41,11 @@ class TestPeer final : public StatsProvider {
   const Params& params() const { return params_; }
 
   ConfigurableParams configurable_params() const;
-  void AddVideoConfig(PeerConnectionE2EQualityTestFixture::VideoConfig config);
+  void AddVideoConfig(VideoConfig config);
   // Removes video config with specified name. Crashes if the config with
   // specified name isn't found.
   void RemoveVideoConfig(absl::string_view stream_label);
-  void SetVideoSubscription(
-      PeerConnectionE2EQualityTestFixture::VideoSubscription subscription);
+  void SetVideoSubscription(VideoSubscription subscription);
 
   void GetStats(RTCStatsCollectorCallback* callback) override;
 

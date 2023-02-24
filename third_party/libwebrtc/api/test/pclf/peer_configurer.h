@@ -24,6 +24,7 @@
 #include "api/rtc_event_log/rtc_event_log_factory_interface.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "api/test/create_peer_connection_quality_test_frame_generator.h"
+#include "api/test/pclf/media_configuration.h"
 #include "api/test/pclf/media_quality_test_params.h"
 #include "api/test/peer_network_dependencies.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
@@ -45,7 +46,7 @@ class PeerConfigurerImpl final
  public:
   using VideoSource =
       absl::variant<std::unique_ptr<test::FrameGeneratorInterface>,
-                    PeerConnectionE2EQualityTestFixture::CapturingDeviceIndex>;
+                    CapturingDeviceIndex>;
 
   explicit PeerConfigurerImpl(
       const PeerNetworkDependencies& network_dependencies);
@@ -116,25 +117,21 @@ class PeerConfigurerImpl final
 
   // Add new video stream to the call that will be sent from this peer.
   // Default implementation of video frames generator will be used.
-  PeerConfigurer* AddVideoConfig(
-      PeerConnectionE2EQualityTestFixture::VideoConfig config) override;
+  PeerConfigurer* AddVideoConfig(VideoConfig config) override;
   // Add new video stream to the call that will be sent from this peer with
   // provided own implementation of video frames generator.
   PeerConfigurer* AddVideoConfig(
-      PeerConnectionE2EQualityTestFixture::VideoConfig config,
+      VideoConfig config,
       std::unique_ptr<test::FrameGeneratorInterface> generator) override;
   // Add new video stream to the call that will be sent from this peer.
   // Capturing device with specified index will be used to get input video.
   PeerConfigurer* AddVideoConfig(
-      PeerConnectionE2EQualityTestFixture::VideoConfig config,
-      PeerConnectionE2EQualityTestFixture::CapturingDeviceIndex
-          capturing_device_index) override;
+      VideoConfig config,
+      CapturingDeviceIndex capturing_device_index) override;
   // Sets video subscription for the peer. By default subscription will
   // include all streams with `VideoSubscription::kSameAsSendStream`
   // resolution. To override this behavior use this method.
-  PeerConfigurer* SetVideoSubscription(
-      PeerConnectionE2EQualityTestFixture::VideoSubscription subscription)
-      override;
+  PeerConfigurer* SetVideoSubscription(VideoSubscription subscription) override;
   // Set the list of video codecs used by the peer during the test. These
   // codecs will be negotiated in SDP during offer/answer exchange. The order
   // of these codecs during negotiation will be the same as in `video_codecs`.
@@ -142,12 +139,10 @@ class PeerConfigurerImpl final
   // be negotiated. If some of specified codecs won't be found, the test will
   // crash.
   PeerConfigurer* SetVideoCodecs(
-      std::vector<PeerConnectionE2EQualityTestFixture::VideoCodecConfig>
-          video_codecs) override;
+      std::vector<VideoCodecConfig> video_codecs) override;
   // Set the audio stream for the call from this peer. If this method won't
   // be invoked, this peer will send no audio.
-  PeerConfigurer* SetAudioConfig(
-      PeerConnectionE2EQualityTestFixture::AudioConfig config) override;
+  PeerConfigurer* SetAudioConfig(AudioConfig config) override;
 
   // Set if ULP FEC should be used or not. False by default.
   PeerConfigurer* SetUseUlpFEC(bool value) override;
