@@ -15,16 +15,7 @@ add_task(async function test_fullpageScreenshot() {
       // click toolbar button so UI shows
       helper.triggerUIFromToolbar();
 
-      let panel = gBrowser.selectedBrowser.ownerDocument.querySelector(
-        "#screenshotsPagePanel"
-      );
-      await BrowserTestUtils.waitForMutationCondition(
-        panel,
-        { attributes: true },
-        () => {
-          return BrowserTestUtils.is_visible(panel);
-        }
-      );
+      let panel = await helper.waitForPanel(gBrowser.selectedBrowser);
       ok(BrowserTestUtils.is_visible(panel), "Panel buttons are visible");
 
       await ContentTask.spawn(browser, null, async () => {

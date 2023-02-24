@@ -48,6 +48,10 @@
     disconnectedCallback() {
       document.l10n.disconnectRoot(this.shadowRoot);
     }
+
+    focusFirst(focusOptions) {
+      this.shadowRoot.querySelector("button:enabled").focus(focusOptions);
+    }
   }
   customElements.define("screenshots-buttons", ScreenshotsButtons, {
     extends: "toolbar",

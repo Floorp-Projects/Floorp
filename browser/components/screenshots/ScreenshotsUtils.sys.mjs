@@ -52,7 +52,7 @@ export class ScreenshotsComponentParent extends JSWindowActorParent {
         );
         break;
       case "Screenshots:ShowPanel":
-        ScreenshotsUtils.createOrDisplayButtons(browser);
+        ScreenshotsUtils.openPanel(browser);
         break;
       case "Screenshots:HidePanel":
         ScreenshotsUtils.closePanel(browser);
@@ -97,6 +97,7 @@ export var ScreenshotsUtils = {
     }
   },
   handleEvent(event) {
+    // We need to add back Escape to hide behavior as we have set noautohide="true"
     if (event.type === "keydown" && event.key === "Escape") {
       this.closePanel(event.view.gBrowser.selectedBrowser, true);
     }
@@ -162,13 +163,20 @@ export var ScreenshotsUtils = {
     return actor;
   },
   /**
-   * Open the panel buttons and call child actor to open the overlay
+   * Open the panel buttons
    * @param browser The current browser
    */
-  openPanel(browser) {
-    let actor = this.getActor(browser);
-    actor.sendQuery("Screenshots:ShowOverlay");
+  async openPanel(browser) {
     this.createOrDisplayButtons(browser);
+    let buttonsPanel = this.panelForBrowser(browser);
+    if (buttonsPanel.state !== "open") {
+      await new Promise(resolve => {
+        buttonsPanel.addEventListener("popupshown", resolve, { once: true });
+      });
+    }
+    buttonsPanel
+      .querySelector("screenshots-buttons")
+      .focusFirst({ focusVisible: true });
   },
   /**
    * Close the panel and call child actor to close the overlay
@@ -178,9 +186,7 @@ export var ScreenshotsUtils = {
    * Defaults to false. Will be false when called from didDestroy.
    */
   async closePanel(browser, closeOverlay = false) {
-    let buttonsPanel = browser.ownerDocument.querySelector(
-      "#screenshotsPagePanel"
-    );
+    let buttonsPanel = this.panelForBrowser(browser);
     if (buttonsPanel && buttonsPanel.state !== "closed") {
       buttonsPanel.hidePopup();
     }
@@ -197,20 +203,16 @@ export var ScreenshotsUtils = {
    * @param browser The current browser.
    */
   async togglePanelAndOverlay(browser) {
-    let buttonsPanel = browser.ownerDocument.querySelector(
-      "#screenshotsPagePanel"
-    );
+    let buttonsPanel = this.panelForBrowser(browser);
     let isOverlayShowing = await this.getActor(browser).sendQuery(
       "Screenshots:isOverlayShowing"
     );
     if (buttonsPanel && (isOverlayShowing || buttonsPanel.state !== "closed")) {
-      buttonsPanel.hidePopup();
-      let actor = this.getActor(browser);
-      return actor.sendQuery("Screenshots:HideOverlay");
+      return this.closePanel(browser, true);
     }
     let actor = this.getActor(browser);
     actor.sendQuery("Screenshots:ShowOverlay");
-    return this.createOrDisplayButtons(browser);
+    return this.openPanel(browser);
   },
   /**
    * Gets the screenshots dialog box
@@ -251,6 +253,9 @@ export var ScreenshotsUtils = {
     }
     return false;
   },
+  panelForBrowser(browser) {
+    return browser.ownerDocument.querySelector("#screenshotsPagePanel");
+  },
   /**
    * If the buttons panel does not exist then we will replace the buttons
    * panel template with the buttons panel then open the buttons panel and
@@ -259,12 +264,16 @@ export var ScreenshotsUtils = {
    */
   createOrDisplayButtons(browser) {
     let doc = browser.ownerDocument;
-    let buttonsPanel = doc.querySelector("#screenshotsPagePanel");
+    let buttonsPanel = this.panelForBrowser(browser);
+
     if (!buttonsPanel) {
       let template = doc.querySelector("#screenshotsPagePanelTemplate");
       let clone = template.content.cloneNode(true);
       template.replaceWith(clone);
       buttonsPanel = doc.querySelector("#screenshotsPagePanel");
+    } else if (buttonsPanel.state !== "closed") {
+      // early return if the panel is already open
+      return;
     }
 
     buttonsPanel.ownerDocument.addEventListener("keydown", this);
