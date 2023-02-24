@@ -885,9 +885,20 @@ if (current_os == "linux" || is_android) {
   rtc_library("swcodecs_jni") {
     visibility = [ "*" ]
     allow_poison = [ "software_video_codecs" ]
+    sources = [
+      "src/jni/software_video_decoder_factory.cc",
+      "src/jni/software_video_encoder_factory.cc",
+    ]
     deps = [
+      ":base_jni",
+      ":generated_swcodecs_jni",
       ":libvpx_vp8_jni",
       ":libvpx_vp9_jni",
+      ":native_api_jni",
+      ":video_jni",
+      "../../api/video_codecs:builtin_video_decoder_factory",
+      "../../api/video_codecs:builtin_video_encoder_factory",
+      "../../api/video_codecs:video_codecs_api",
     ]
   }
 
@@ -1353,6 +1364,16 @@ if (current_os == "linux" || is_android) {
     jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
   }
 
+  generate_jni("generated_swcodecs_jni") {
+    sources = [
+      "api/org/webrtc/SoftwareVideoDecoderFactory.java",
+      "api/org/webrtc/SoftwareVideoEncoderFactory.java",
+    ]
+
+    namespace = "webrtc::jni"
+    jni_generator_include = "//sdk/android/src/jni/jni_generator_helper.h"
+  }
+
   generate_jni("generated_peerconnection_jni") {
     sources = [
       "api/org/webrtc/AddIceObserver.java",
@@ -1471,6 +1492,8 @@ if (is_android) {
         "instrumentationtests/src/org/webrtc/RtcCertificatePemTest.java",
         "instrumentationtests/src/org/webrtc/RtpSenderTest.java",
         "instrumentationtests/src/org/webrtc/RtpTransceiverTest.java",
+        "instrumentationtests/src/org/webrtc/SoftwareVideoDecoderFactoryTest.java",
+        "instrumentationtests/src/org/webrtc/SoftwareVideoEncoderFactoryTest.java",
         "instrumentationtests/src/org/webrtc/SurfaceTextureHelperTest.java",
         "instrumentationtests/src/org/webrtc/SurfaceViewRendererOnMeasureTest.java",
         "instrumentationtests/src/org/webrtc/TestConstants.java",
