@@ -30,7 +30,6 @@
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
-namespace {
 
 using VideoSubscription = ::webrtc::webrtc_pc_e2e::
     PeerConnectionE2EQualityTestFixture::VideoSubscription;
@@ -38,35 +37,6 @@ using VideoResolution = ::webrtc::webrtc_pc_e2e::
     PeerConnectionE2EQualityTestFixture::VideoResolution;
 using VideoConfig =
     ::webrtc::webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::VideoConfig;
-
-// Scales video frame to `required_resolution` if necessary. Crashes if video
-// frame and `required_resolution` have different aspect ratio.
-VideoFrame ScaleVideoFrame(const VideoFrame& frame,
-                           VideoResolution required_resolution) {
-  if (required_resolution.width() == static_cast<size_t>(frame.width()) &&
-      required_resolution.height() == static_cast<size_t>(frame.height())) {
-    return frame;
-  }
-
-  RTC_CHECK_LE(std::abs(static_cast<double>(required_resolution.width()) /
-                            required_resolution.height() -
-                        static_cast<double>(frame.width()) / frame.height()),
-               2 * std::numeric_limits<double>::epsilon())
-      << "Received frame has different aspect ratio compared to requested "
-      << "video resolution: required resolution="
-      << required_resolution.ToString()
-      << "; actual resolution=" << frame.width() << "x" << frame.height();
-
-  rtc::scoped_refptr<I420Buffer> scaled_buffer(I420Buffer::Create(
-      required_resolution.width(), required_resolution.height()));
-  scaled_buffer->ScaleFrom(*frame.video_frame_buffer()->ToI420());
-
-  VideoFrame scaled_frame = frame;
-  scaled_frame.set_video_frame_buffer(scaled_buffer);
-  return scaled_frame;
-}
-
-}  // namespace
 
 AnalyzingVideoSink::AnalyzingVideoSink(absl::string_view peer_name,
                                        Clock* clock,
@@ -93,6 +63,13 @@ void AnalyzingVideoSink::UpdateSubscription(
           subscription_.GetResolutionForPeer(it->second.sender_peer_name);
       if (!new_requested_resolution.has_value() ||
           (*new_requested_resolution != it->second.resolution)) {
+        RTC_LOG(LS_INFO) << peer_name_ << ": Subscribed resolution for stream "
+                         << it->first << " from " << it->second.sender_peer_name
+                         << " was updated from "
+                         << it->second.resolution.ToString() << " to "
+                         << new_requested_resolution->ToString()
+                         << ". Repopulating all video sinks and recreating "
+                         << "requested video writers";
         writers_to_close.insert(it->second.video_frame_writer);
         it = stream_sinks_.erase(it);
       } else {
@@ -127,6 +104,36 @@ void AnalyzingVideoSink::OnFrame(const VideoFrame& frame) {
   }
 }
 
+VideoFrame AnalyzingVideoSink::ScaleVideoFrame(
+    const VideoFrame& frame,
+    const VideoResolution& required_resolution) {
+  if (required_resolution.width() == static_cast<size_t>(frame.width()) &&
+      required_resolution.height() == static_cast<size_t>(frame.height())) {
+    return frame;
+  }
+
+  // We allow some difference in the aspect ration because when decoder
+  // downscales video stream it may round up some dimensions to make them even,
+  // ex: 960x540 -> 480x270 -> 240x136 instead of 240x135.
+  RTC_CHECK_LE(std::abs(static_cast<double>(required_resolution.width()) /
+                            required_resolution.height() -
+                        static_cast<double>(frame.width()) / frame.height()),
+               0.1)
+      << peer_name_
+      << ": Received frame has too different aspect ratio compared to "
+      << "requested video resolution: required resolution="
+      << required_resolution.ToString()
+      << "; actual resolution=" << frame.width() << "x" << frame.height();
+
+  rtc::scoped_refptr<I420Buffer> scaled_buffer(I420Buffer::Create(
+      required_resolution.width(), required_resolution.height()));
+  scaled_buffer->ScaleFrom(*frame.video_frame_buffer()->ToI420());
+
+  VideoFrame scaled_frame = frame;
+  scaled_frame.set_video_frame_buffer(scaled_buffer);
+  return scaled_frame;
+}
+
 void AnalyzingVideoSink::AnalyzeFrame(const VideoFrame& frame) {
   VideoFrame frame_copy = frame;
   frame_copy.set_video_frame_buffer(
@@ -157,6 +164,12 @@ AnalyzingVideoSink::SinksDescriptor* AnalyzingVideoSink::PopulateSinks(
     RTC_LOG(LS_ERROR) << peer_name_ << " received stream " << stream_label
                       << " from " << sender_peer_name
                       << " for which they were not subscribed";
+    resolution = config.GetResolution();
+  }
+  if (!resolution->IsRegular()) {
+    RTC_LOG(LS_ERROR) << peer_name_ << " received stream " << stream_label
+                      << " from " << sender_peer_name
+                      << " for which resolution wasn't resolved";
     resolution = config.GetResolution();
   }
 

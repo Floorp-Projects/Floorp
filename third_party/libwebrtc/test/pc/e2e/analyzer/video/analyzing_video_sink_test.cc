@@ -183,8 +183,53 @@ TEST_F(AnalyzingVideoSinkTest, VideoFramesAreDumpedCorrectly) {
 }
 
 TEST_F(AnalyzingVideoSinkTest,
-       FallbackOnConfigResolutionIfNoSucscriptionProvided) {
+       FallbackOnConfigResolutionIfNoSubscriptionProvided) {
   VideoSubscription subscription;
+  VideoConfig video_config("alice_video", /*width=*/320, /*height=*/240,
+                           /*fps=*/30);
+  video_config.output_dump_options = VideoDumpOptions(test_directory_);
+
+  ExampleVideoQualityAnalyzer analyzer;
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      CreateFrameGenerator(/*width=*/320, /*height=*/240);
+  VideoFrame frame = CreateFrame(*frame_generator);
+  frame.set_id(analyzer.OnFrameCaptured("alice", "alice_video", frame));
+
+  {
+    // `helper` and `sink` has to be destroyed so all frames will be written
+    // to the disk.
+    AnalyzingVideoSinksHelper helper;
+    helper.AddConfig("alice", video_config);
+    AnalyzingVideoSink sink("bob", Clock::GetRealTimeClock(), analyzer, helper,
+                            subscription);
+    sink.OnFrame(frame);
+  }
+
+  EXPECT_THAT(analyzer.frames_rendered(), Eq(static_cast<uint64_t>(1)));
+
+  test::Y4mFrameReaderImpl frame_reader(
+      test::JoinFilename(test_directory_, "alice_video_bob_320x240_30.y4m"),
+      /*width=*/320,
+      /*height=*/240);
+  ASSERT_TRUE(frame_reader.Init());
+  EXPECT_THAT(frame_reader.NumberOfFrames(), Eq(1));
+  rtc::scoped_refptr<I420Buffer> actual_frame = frame_reader.ReadFrame();
+  rtc::scoped_refptr<I420BufferInterface> expected_frame =
+      frame.video_frame_buffer()->ToI420();
+  double psnr = I420PSNR(*expected_frame, *actual_frame);
+  double ssim = I420SSIM(*expected_frame, *actual_frame);
+  // Frames should be equal.
+  EXPECT_DOUBLE_EQ(ssim, 1.00);
+  EXPECT_DOUBLE_EQ(psnr, 48);
+
+  ExpectOutputFilesCount(1);
+}
+
+TEST_F(AnalyzingVideoSinkTest,
+       FallbackOnConfigResolutionIfNoSubscriptionIsNotResolved) {
+  VideoSubscription subscription;
+  subscription.SubscribeToAllPeers(
+      VideoResolution(VideoResolution::Spec::kMaxFromSender));
   VideoConfig video_config("alice_video", /*width=*/320, /*height=*/240,
                            /*fps=*/30);
   video_config.output_dump_options = VideoDumpOptions(test_directory_);
@@ -296,6 +341,116 @@ TEST_F(AnalyzingVideoSinkTest,
   }
 
   ExpectOutputFilesCount(2);
+}
+
+TEST_F(AnalyzingVideoSinkTest,
+       VideoFramesAreDumpedCorrectlyWhenSubscriptionChangedOnTheSameOne) {
+  VideoSubscription subscription_before;
+  subscription_before.SubscribeToPeer(
+      "alice", VideoResolution(/*width=*/640, /*height=*/360, /*fps=*/30));
+  VideoSubscription subscription_after;
+  subscription_after.SubscribeToPeer(
+      "alice", VideoResolution(/*width=*/640, /*height=*/360, /*fps=*/30));
+  VideoConfig video_config("alice_video", /*width=*/640, /*height=*/360,
+                           /*fps=*/30);
+  video_config.output_dump_options = VideoDumpOptions(test_directory_);
+
+  ExampleVideoQualityAnalyzer analyzer;
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      CreateFrameGenerator(/*width=*/640, /*height=*/360);
+  VideoFrame frame_before = CreateFrame(*frame_generator);
+  frame_before.set_id(
+      analyzer.OnFrameCaptured("alice", "alice_video", frame_before));
+  VideoFrame frame_after = CreateFrame(*frame_generator);
+  frame_after.set_id(
+      analyzer.OnFrameCaptured("alice", "alice_video", frame_after));
+
+  {
+    // `helper` and `sink` has to be destroyed so all frames will be written
+    // to the disk.
+    AnalyzingVideoSinksHelper helper;
+    helper.AddConfig("alice", video_config);
+    AnalyzingVideoSink sink("bob", Clock::GetRealTimeClock(), analyzer, helper,
+                            subscription_before);
+    sink.OnFrame(frame_before);
+
+    sink.UpdateSubscription(subscription_after);
+    sink.OnFrame(frame_after);
+  }
+
+  EXPECT_THAT(analyzer.frames_rendered(), Eq(static_cast<uint64_t>(2)));
+
+  {
+    test::Y4mFrameReaderImpl frame_reader(
+        test::JoinFilename(test_directory_, "alice_video_bob_640x360_30.y4m"),
+        /*width=*/640,
+        /*height=*/360);
+    ASSERT_TRUE(frame_reader.Init());
+    EXPECT_THAT(frame_reader.NumberOfFrames(), Eq(2));
+    // Read the first frame.
+    rtc::scoped_refptr<I420Buffer> actual_frame = frame_reader.ReadFrame();
+    rtc::scoped_refptr<I420BufferInterface> expected_frame =
+        frame_before.video_frame_buffer()->ToI420();
+    // Frames should be equal.
+    EXPECT_DOUBLE_EQ(I420SSIM(*expected_frame, *actual_frame), 1.00);
+    EXPECT_DOUBLE_EQ(I420PSNR(*expected_frame, *actual_frame), 48);
+    // Read the second frame.
+    actual_frame = frame_reader.ReadFrame();
+    expected_frame = frame_after.video_frame_buffer()->ToI420();
+    // Frames should be equal.
+    EXPECT_DOUBLE_EQ(I420SSIM(*expected_frame, *actual_frame), 1.00);
+    EXPECT_DOUBLE_EQ(I420PSNR(*expected_frame, *actual_frame), 48);
+  }
+
+  ExpectOutputFilesCount(1);
+}
+
+TEST_F(AnalyzingVideoSinkTest, SmallDiviationsInAspectRationAreAllowed) {
+  VideoSubscription subscription;
+  subscription.SubscribeToPeer(
+      "alice", VideoResolution(/*width=*/480, /*height=*/270, /*fps=*/30));
+  VideoConfig video_config("alice_video", /*width=*/480, /*height=*/270,
+                           /*fps=*/30);
+  video_config.output_dump_options = VideoDumpOptions(test_directory_);
+
+  ExampleVideoQualityAnalyzer analyzer;
+  // Generator produces downscaled frames with a bit different aspect ration.
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      CreateFrameGenerator(/*width=*/240, /*height=*/136);
+  VideoFrame frame = CreateFrame(*frame_generator);
+  frame.set_id(analyzer.OnFrameCaptured("alice", "alice_video", frame));
+
+  {
+    // `helper` and `sink` has to be destroyed so all frames will be written
+    // to the disk.
+    AnalyzingVideoSinksHelper helper;
+    helper.AddConfig("alice", video_config);
+    AnalyzingVideoSink sink("bob", Clock::GetRealTimeClock(), analyzer, helper,
+                            subscription);
+    sink.OnFrame(frame);
+  }
+
+  EXPECT_THAT(analyzer.frames_rendered(), Eq(static_cast<uint64_t>(1)));
+
+  {
+    test::Y4mFrameReaderImpl frame_reader(
+        test::JoinFilename(test_directory_, "alice_video_bob_480x270_30.y4m"),
+        /*width=*/480,
+        /*height=*/270);
+    ASSERT_TRUE(frame_reader.Init());
+    EXPECT_THAT(frame_reader.NumberOfFrames(), Eq(1));
+    // Read the first frame.
+    rtc::scoped_refptr<I420Buffer> actual_frame = frame_reader.ReadFrame();
+    rtc::scoped_refptr<I420BufferInterface> expected_frame =
+        frame.video_frame_buffer()->ToI420();
+    // Actual frame is upscaled version of the expected. But because rendered
+    // resolution is equal to the actual frame size we need to upscale expected
+    // during comparison and then they have to be the same.
+    EXPECT_DOUBLE_EQ(I420SSIM(*actual_frame, *expected_frame), 1);
+    EXPECT_DOUBLE_EQ(I420PSNR(*actual_frame, *expected_frame), 48);
+  }
+
+  ExpectOutputFilesCount(1);
 }
 
 TEST_F(AnalyzingVideoSinkTest, VideoFramesIdsAreDumpedWhenRequested) {
