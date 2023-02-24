@@ -34,6 +34,7 @@ class RTC_EXPORT SharedScreenCastStream
     virtual void OnCursorShapeChanged() = 0;
     virtual void OnDesktopFrameChanged() = 0;
     virtual void OnFailedToProcessBuffer() = 0;
+    virtual void OnStreamConfigured() = 0;
 
    protected:
     Observer() = default;

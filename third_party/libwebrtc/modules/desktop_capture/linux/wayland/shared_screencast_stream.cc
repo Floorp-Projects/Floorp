@@ -224,6 +224,10 @@ void SharedScreenCastStreamPrivate::OnStreamStateChanged(
       RTC_LOG(LS_ERROR) << "PipeWire stream state error: " << error_message;
       break;
     case PW_STREAM_STATE_PAUSED:
+      if (that->observer_ && old_state != PW_STREAM_STATE_STREAMING) {
+        that->observer_->OnStreamConfigured();
+      }
+      break;
     case PW_STREAM_STATE_STREAMING:
     case PW_STREAM_STATE_UNCONNECTED:
     case PW_STREAM_STATE_CONNECTING:
