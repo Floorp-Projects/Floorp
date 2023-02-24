@@ -16,6 +16,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Types.h"
 #include "mozilla/WindowsDllBlocklist.h"
+#include "mozilla/WindowsStackCookie.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 
 #include "DllBlocklistInit.h"
@@ -50,6 +51,13 @@ static LauncherVoidResultWithLineInfo InitializeDllBlocklistOOPInternal(
     const GeckoProcessType aProcessType) {
   CrossProcessDllInterceptor intcpt(aTransferMgr.RemoteProcess());
   intcpt.Init(L"ntdll.dll");
+
+#  if defined(DEBUG) && defined(_M_X64) && !defined(__MINGW64__)
+  // This debug check preserves compatibility with third-parties (see bug
+  // 1733532).
+  MOZ_ASSERT(!HasStackCookieCheck(
+      reinterpret_cast<uintptr_t>(&freestanding::patched_NtMapViewOfSection)));
+#  endif  // #if defined(DEBUG) && defined(_M_X64) && !defined(__MINGW64__)
 
   bool ok = freestanding::stub_NtMapViewOfSection.SetDetour(
       aTransferMgr, intcpt, "NtMapViewOfSection",

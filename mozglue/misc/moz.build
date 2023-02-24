@@ -81,6 +81,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
         "WindowsEnumProcessModules.h",
         "WindowsMapRemoteView.h",
         "WindowsProcessMitigations.h",
+        "WindowsStackCookie.h",
         "WindowsUnwindInfo.h",
     ]
     EXPORTS.mozilla.glue += [

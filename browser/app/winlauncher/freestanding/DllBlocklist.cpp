@@ -364,25 +364,15 @@ NTSTATUS NTAPI patched_LdrLoadDll(PWCHAR aDllPath, PULONG aFlags,
 
 CrossProcessDllInterceptor::FuncHookType<NtMapViewOfSectionPtr>
     stub_NtMapViewOfSection;
+constexpr DWORD kPageExecutable = PAGE_EXECUTE | PAGE_EXECUTE_READ |
+                                  PAGE_EXECUTE_READWRITE |
+                                  PAGE_EXECUTE_WRITECOPY;
 
-NTSTATUS NTAPI patched_NtMapViewOfSection(
-    HANDLE aSection, HANDLE aProcess, PVOID* aBaseAddress, ULONG_PTR aZeroBits,
-    SIZE_T aCommitSize, PLARGE_INTEGER aSectionOffset, PSIZE_T aViewSize,
-    SECTION_INHERIT aInheritDisposition, ULONG aAllocationType,
-    ULONG aProtectionFlags) {
-  // We always map first, then we check for additional info after.
-  NTSTATUS stubStatus = stub_NtMapViewOfSection(
-      aSection, aProcess, aBaseAddress, aZeroBits, aCommitSize, aSectionOffset,
-      aViewSize, aInheritDisposition, aAllocationType, aProtectionFlags);
-  if (!NT_SUCCESS(stubStatus)) {
-    return stubStatus;
-  }
-
-  if (aProcess != nt::kCurrentProcess) {
-    // We're only interested in mapping for the current process.
-    return stubStatus;
-  }
-
+// All the code for patched_NtMapViewOfSection that relies on stack buffers
+// (e.g. mbi and sectionFileName) should be put in this helper function (see
+// bug 1733532).
+MOZ_NEVER_INLINE NTSTATUS AfterMapExecutableViewOfSection(
+    HANDLE aProcess, PVOID* aBaseAddress, NTSTATUS aStubStatus) {
   // Do a query to see if the memory is MEM_IMAGE. If not, continue
   MEMORY_BASIC_INFORMATION mbi;
   NTSTATUS ntStatus =
@@ -397,11 +387,8 @@ NTSTATUS NTAPI patched_NtMapViewOfSection(
   // We check for the AllocationProtect, not the Protect field because
   // the first section of a mapped image is always PAGE_READONLY even
   // when it's mapped as an executable.
-  constexpr DWORD kPageExecutable = PAGE_EXECUTE | PAGE_EXECUTE_READ |
-                                    PAGE_EXECUTE_READWRITE |
-                                    PAGE_EXECUTE_WRITECOPY;
   if (!(mbi.Type & MEM_IMAGE) || !(mbi.AllocationProtect & kPageExecutable)) {
-    return stubStatus;
+    return aStubStatus;
   }
 
   // Get the section name
@@ -443,7 +430,7 @@ NTSTATUS NTAPI patched_NtMapViewOfSection(
       // use it to bypass CIG.  In a sandbox process, this addition fails
       // because we cannot map the section to a writable region, but it's
       // ignorable because the paths have been added by the browser process.
-      Unused << gSharedSection.AddDependentModule(sectionFileName);
+      Unused << SharedSection::AddDependentModule(sectionFileName);
 
       bool attemptToBlockViaRedirect;
 #if defined(NIGHTLY_BUILD)
@@ -511,17 +498,49 @@ NTSTATUS NTAPI patched_NtMapViewOfSection(
 
   if (nt::RtlGetProcessHeap()) {
     ModuleLoadFrame::NotifySectionMap(
-        nt::AllocatedUnicodeString(sectionFileName), *aBaseAddress, stubStatus,
+        nt::AllocatedUnicodeString(sectionFileName), *aBaseAddress, aStubStatus,
         loadStatus, isInjectedDependent);
   }
 
   if (loadStatus == ModuleLoadInfo::Status::Loaded ||
       loadStatus == ModuleLoadInfo::Status::Redirected) {
-    return stubStatus;
+    return aStubStatus;
   }
 
   ::NtUnmapViewOfSection(aProcess, *aBaseAddress);
   return STATUS_ACCESS_DENIED;
+}
+
+// To preserve compatibility with third-parties, calling into this function
+// must not use stack buffers when reached through Thread32Next (see bug
+// 1733532). Therefore, all code relying on stack buffers should be put in the
+// dedicated helper function AfterMapExecutableViewOfSection.
+NTSTATUS NTAPI patched_NtMapViewOfSection(
+    HANDLE aSection, HANDLE aProcess, PVOID* aBaseAddress, ULONG_PTR aZeroBits,
+    SIZE_T aCommitSize, PLARGE_INTEGER aSectionOffset, PSIZE_T aViewSize,
+    SECTION_INHERIT aInheritDisposition, ULONG aAllocationType,
+    ULONG aProtectionFlags) {
+  // We always map first, then we check for additional info after.
+  NTSTATUS stubStatus = stub_NtMapViewOfSection(
+      aSection, aProcess, aBaseAddress, aZeroBits, aCommitSize, aSectionOffset,
+      aViewSize, aInheritDisposition, aAllocationType, aProtectionFlags);
+  if (!NT_SUCCESS(stubStatus)) {
+    return stubStatus;
+  }
+
+  if (aProcess != nt::kCurrentProcess) {
+    // We're only interested in mapping for the current process.
+    return stubStatus;
+  }
+
+  if (!(aProtectionFlags & kPageExecutable)) {
+    // Bail out early if an executable mapping was not asked. In particular,
+    // we will not use stack buffers during calls to Thread32Next, which can
+    // result in crashes with third-party software (see bug 1733532).
+    return stubStatus;
+  }
+
+  return AfterMapExecutableViewOfSection(aProcess, aBaseAddress, stubStatus);
 }
 
 }  // namespace freestanding
