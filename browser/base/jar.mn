@@ -49,7 +49,6 @@ browser.jar:
         content/browser/browser-fullZoom.js                 (content/browser-fullZoom.js)
         content/browser/browser-gestureSupport.js           (content/browser-gestureSupport.js)
         content/browser/browser-pageActions.js              (content/browser-pageActions.js)
-        content/browser/browser-pagestyle.js                (content/browser-pagestyle.js)
         content/browser/browser-places.js                   (content/browser-places.js)
         content/browser/browser-safebrowsing.js             (content/browser-safebrowsing.js)
         content/browser/browser-sidebar.js                  (content/browser-sidebar.js)
