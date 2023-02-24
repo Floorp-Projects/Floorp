@@ -380,7 +380,7 @@ std::string GetCodecIdAndMaybeCreateCodecStats(
       std::make_unique<RTCCodecStats>(codec_id, timestamp_us));
   codec_stats->payload_type = payload_type;
   codec_stats->mime_type = codec_params.mime_type();
-  if (codec_params.clock_rate) {
+  if (codec_params.clock_rate.has_value()) {
     codec_stats->clock_rate = static_cast<uint32_t>(*codec_params.clock_rate);
   }
   if (codec_params.num_channels) {
@@ -419,17 +419,17 @@ void SetInboundRTPStreamStatsFromMediaReceiverInfo(
       static_cast<int32_t>(media_receiver_info.packets_lost);
   inbound_stats->jitter_buffer_delay =
       media_receiver_info.jitter_buffer_delay_seconds;
-  if (media_receiver_info.jitter_buffer_target_delay_seconds) {
+  if (media_receiver_info.jitter_buffer_target_delay_seconds.has_value()) {
     inbound_stats->jitter_buffer_target_delay =
         *media_receiver_info.jitter_buffer_target_delay_seconds;
   }
-  if (media_receiver_info.jitter_buffer_minimum_delay_seconds) {
+  if (media_receiver_info.jitter_buffer_minimum_delay_seconds.has_value()) {
     inbound_stats->jitter_buffer_minimum_delay =
         *media_receiver_info.jitter_buffer_minimum_delay_seconds;
   }
   inbound_stats->jitter_buffer_emitted_count =
       media_receiver_info.jitter_buffer_emitted_count;
-  if (media_receiver_info.nacks_sent) {
+  if (media_receiver_info.nacks_sent.has_value()) {
     inbound_stats->nack_count = *media_receiver_info.nacks_sent;
   }
 }
@@ -482,11 +482,11 @@ std::unique_ptr<RTCInboundRTPStreamStats> CreateInboundAudioStreamStats(
       voice_receiver_info.total_output_duration;
   // `fir_count`, `pli_count` and `sli_count` are only valid for video and are
   // purposefully left undefined for audio.
-  if (voice_receiver_info.last_packet_received_timestamp_ms) {
+  if (voice_receiver_info.last_packet_received_timestamp_ms.has_value()) {
     inbound_audio->last_packet_received_timestamp = static_cast<double>(
         *voice_receiver_info.last_packet_received_timestamp_ms);
   }
-  if (voice_receiver_info.estimated_playout_ntp_timestamp_ms) {
+  if (voice_receiver_info.estimated_playout_ntp_timestamp_ms.has_value()) {
     // TODO(bugs.webrtc.org/10529): Fix time origin.
     inbound_audio->estimated_playout_timestamp = static_cast<double>(
         *voice_receiver_info.estimated_playout_ntp_timestamp_ms);
@@ -551,7 +551,7 @@ CreateRemoteOutboundAudioStreamStats(
   stats->remote_timestamp = static_cast<double>(
       voice_receiver_info.last_sender_report_remote_timestamp_ms.value());
   stats->reports_sent = voice_receiver_info.sender_reports_reports_count;
-  if (voice_receiver_info.round_trip_time) {
+  if (voice_receiver_info.round_trip_time.has_value()) {
     stats->round_trip_time =
         voice_receiver_info.round_trip_time->seconds<double>();
   }
@@ -607,7 +607,7 @@ void SetInboundRTPStreamStatsFromVideoReceiverInfo(
   if (video_receiver_info.framerate_decoded > 0) {
     inbound_video->frames_per_second = video_receiver_info.framerate_decoded;
   }
-  if (video_receiver_info.qp_sum) {
+  if (video_receiver_info.qp_sum.has_value()) {
     inbound_video->qp_sum = *video_receiver_info.qp_sum;
   }
   if (video_receiver_info.timing_frame_info.has_value()) {
@@ -637,11 +637,11 @@ void SetInboundRTPStreamStatsFromVideoReceiverInfo(
   inbound_video->min_playout_delay =
       static_cast<double>(video_receiver_info.min_playout_delay_ms) /
       rtc::kNumMillisecsPerSec;
-  if (video_receiver_info.last_packet_received_timestamp_ms) {
+  if (video_receiver_info.last_packet_received_timestamp_ms.has_value()) {
     inbound_video->last_packet_received_timestamp = static_cast<double>(
         *video_receiver_info.last_packet_received_timestamp_ms);
   }
-  if (video_receiver_info.estimated_playout_ntp_timestamp_ms) {
+  if (video_receiver_info.estimated_playout_ntp_timestamp_ms.has_value()) {
     // TODO(bugs.webrtc.org/10529): Fix time origin if needed.
     inbound_video->estimated_playout_timestamp = static_cast<double>(
         *video_receiver_info.estimated_playout_ntp_timestamp_ms);
@@ -694,7 +694,7 @@ void SetOutboundRTPStreamStatsFromVoiceSenderInfo(
   outbound_audio->mid = mid;
   outbound_audio->media_type = "audio";
   outbound_audio->kind = "audio";
-  if (voice_sender_info.target_bitrate &&
+  if (voice_sender_info.target_bitrate.has_value() &&
       *voice_sender_info.target_bitrate > 0) {
     outbound_audio->target_bitrate = *voice_sender_info.target_bitrate;
   }
@@ -739,10 +739,10 @@ void SetOutboundRTPStreamStatsFromVideoSenderInfo(
       static_cast<uint32_t>(video_sender_info.firs_rcvd);
   outbound_video->pli_count =
       static_cast<uint32_t>(video_sender_info.plis_rcvd);
-  if (video_sender_info.qp_sum)
+  if (video_sender_info.qp_sum.has_value())
     outbound_video->qp_sum = *video_sender_info.qp_sum;
-  if (video_sender_info.target_bitrate &&
-      video_sender_info.target_bitrate > 0) {
+  if (video_sender_info.target_bitrate.has_value() &&
+      *video_sender_info.target_bitrate > 0) {
     outbound_video->target_bitrate = *video_sender_info.target_bitrate;
   }
   outbound_video->frames_encoded = video_sender_info.frames_encoded;
@@ -781,7 +781,7 @@ void SetOutboundRTPStreamStatsFromVideoSenderInfo(
     outbound_video->encoder_implementation =
         video_sender_info.encoder_implementation_name;
   }
-  if (video_sender_info.rid) {
+  if (video_sender_info.rid.has_value()) {
     outbound_video->rid = *video_sender_info.rid;
   }
 }
@@ -971,10 +971,10 @@ const std::string& ProduceIceCandidateStats(int64_t timestamp_us,
 template <typename StatsType>
 void SetAudioProcessingStats(StatsType* stats,
                              const AudioProcessingStats& apm_stats) {
-  if (apm_stats.echo_return_loss) {
+  if (apm_stats.echo_return_loss.has_value()) {
     stats->echo_return_loss = *apm_stats.echo_return_loss;
   }
-  if (apm_stats.echo_return_loss_enhancement) {
+  if (apm_stats.echo_return_loss_enhancement.has_value()) {
     stats->echo_return_loss_enhancement =
         *apm_stats.echo_return_loss_enhancement;
   }
@@ -1694,7 +1694,7 @@ void RTCStatsCollector::ProduceIceCandidateAndPairStats_n(
         candidate_pair_stats->total_round_trip_time =
             static_cast<double>(info.total_round_trip_time_ms) /
             rtc::kNumMillisecsPerSec;
-        if (info.current_round_trip_time_ms) {
+        if (info.current_round_trip_time_ms.has_value()) {
           candidate_pair_stats->current_round_trip_time =
               static_cast<double>(*info.current_round_trip_time_ms) /
               rtc::kNumMillisecsPerSec;
@@ -1727,7 +1727,7 @@ void RTCStatsCollector::ProduceIceCandidateAndPairStats_n(
             info.sent_ping_requests_total -
             info.sent_ping_requests_before_first_response);
 
-        if (info.last_data_received) {
+        if (info.last_data_received.has_value()) {
           candidate_pair_stats->last_packet_received_timestamp =
               static_cast<double>(info.last_data_received->ms());
         }
