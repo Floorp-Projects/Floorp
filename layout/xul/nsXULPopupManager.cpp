@@ -2217,7 +2217,8 @@ bool nsXULPopupManager::HandleShortcutNavigation(KeyboardEvent& aKeyEvent,
     return true;
   }
 
-  if (mActiveMenuBar) {
+  // Only do shortcut navigation when the menubar is activated via keyboard.
+  if (mActiveMenuBar && mActiveMenuBar->IsActiveByKeyboard()) {
     RefPtr menubar = mActiveMenuBar;
     if (RefPtr result = menubar->FindMenuWithShortcut(aKeyEvent)) {
       result->OpenMenuPopup(true);
