@@ -128,7 +128,7 @@ class NetEq {
 
     std::string ToString() const;
 
-    int sample_rate_hz = 16000;  // Initial value. Will change with input data.
+    int sample_rate_hz = 48000;  // Initial value. Will change with input data.
     bool enable_post_decode_vad = false;
     size_t max_packets_in_buffer = 200;
     int max_delay_ms = 0;
