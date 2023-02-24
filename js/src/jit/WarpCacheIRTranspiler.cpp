@@ -154,6 +154,9 @@ class MOZ_RAII WarpCacheIRTranspiler : public WarpBuilderShared {
   const JSJitInfo* jitInfoStubField(uint32_t offset) {
     return reinterpret_cast<const JSJitInfo*>(readStubWord(offset));
   }
+  JSNative jsnativeStubField(uint32_t offset) {
+    return reinterpret_cast<JSNative>(readStubWord(offset));
+  }
   JS::ExpandoAndGeneration* expandoAndGenerationField(uint32_t offset) {
     return reinterpret_cast<JS::ExpandoAndGeneration*>(readStubWord(offset));
   }
@@ -5028,6 +5031,58 @@ bool WarpCacheIRTranspiler::emitCallInlinedFunction(ObjOperandId calleeId,
   }
   return emitCallFunction(calleeId, argcId, mozilla::Nothing(), flags,
                           CallKind::Scripted);
+}
+
+bool WarpCacheIRTranspiler::emitCallClassHook(ObjOperandId calleeId,
+                                              Int32OperandId argcId,
+                                              CallFlags flags,
+                                              uint32_t argcFixed,
+                                              uint32_t targetOffset) {
+  MDefinition* callee = getOperand(calleeId);
+  JSNative target = jsnativeStubField(targetOffset);
+
+#ifdef DEBUG
+  MDefinition* argc = getOperand(argcId);
+  MOZ_ASSERT(argc->toConstant()->toInt32() ==
+             static_cast<int32_t>(callInfo_->argc()));
+#endif
+
+  if (!updateCallInfo(callee, flags)) {
+    return false;
+  }
+
+  MOZ_ASSERT(callInfo_->argFormat() == CallInfo::ArgFormat::Standard);
+  MOZ_ASSERT(flags.getArgFormat() == CallFlags::ArgFormat::Standard);
+
+  // Callees can be from any realm. If this changes, we should update
+  // MCallClassHook::maybeCrossRealm.
+  MOZ_ASSERT(!flags.isSameRealm());
+
+  auto* call = MCallClassHook::New(alloc(), target, callInfo_->argc(),
+                                   callInfo_->constructing());
+  if (!call) {
+    return false;
+  }
+
+  if (callInfo_->ignoresReturnValue()) {
+    call->setIgnoresReturnValue();
+  }
+
+  call->initCallee(callInfo_->callee());
+  call->addArg(0, callInfo_->thisArg());
+
+  for (uint32_t i = 0; i < callInfo_->argc(); i++) {
+    call->addArg(i + 1, callInfo_->getArg(i));
+  }
+
+  if (callInfo_->constructing()) {
+    call->addArg(1 + callInfo_->argc(), callInfo_->getNewTarget());
+  }
+
+  addEffectful(call);
+  pushResult(call);
+
+  return resumeAfter(call);
 }
 
 bool WarpCacheIRTranspiler::emitCallWasmFunction(

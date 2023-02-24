@@ -483,7 +483,7 @@ void LIRGenerator::visitImplicitThis(MImplicitThis* ins) {
   assignSafepoint(lir, ins);
 }
 
-bool LIRGenerator::lowerCallArguments(MCall* call) {
+bool LIRGenerator::lowerCallArguments(MCallBase* call) {
   uint32_t argc = call->numStackArgs();
 
   // Align the arguments of a call such that the callee would keep the same
@@ -572,6 +572,33 @@ void LIRGenerator::visitCall(MCall* call) {
         LCallGeneric(useRegisterAtStart(call->getCallee()),
                      tempFixed(CallTempReg0), tempFixed(CallTempReg1));
   }
+  defineReturn(lir, call);
+  assignSafepoint(lir, call);
+}
+
+void LIRGenerator::visitCallClassHook(MCallClassHook* call) {
+  MDefinition* callee = call->getCallee();
+  MOZ_ASSERT(callee->type() == MIRType::Object);
+
+  // In case of oom, skip the rest of the allocations.
+  if (!lowerCallArguments(call)) {
+    abort(AbortReason::Alloc, "OOM: LIRGenerator::visitCallClassHook");
+    return;
+  }
+
+  Register cxReg, numReg, vpReg, tmpReg;
+  GetTempRegForIntArg(0, 0, &cxReg);
+  GetTempRegForIntArg(1, 0, &numReg);
+  GetTempRegForIntArg(2, 0, &vpReg);
+
+  // Even though this is just a temp reg, use the same API to avoid
+  // register collisions.
+  mozilla::DebugOnly<bool> ok = GetTempRegForIntArg(3, 0, &tmpReg);
+  MOZ_ASSERT(ok, "How can we not have four temp registers?");
+
+  auto* lir = new (alloc())
+      LCallClassHook(useRegisterAtStart(callee), tempFixed(cxReg),
+                     tempFixed(numReg), tempFixed(vpReg), tempFixed(tmpReg));
   defineReturn(lir, call);
   assignSafepoint(lir, call);
 }

@@ -101,6 +101,9 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   inline OutOfLineCode* oolCallVM(LInstruction* ins, const ArgSeq& args,
                                   const StoreOutputTo& out);
 
+  template <typename LCallIns>
+  void emitCallNative(LCallIns* call, JSNative native);
+
  public:
   CodeGenerator(MIRGenerator* gen, LIRGraph* graph,
                 MacroAssembler* masm = nullptr);

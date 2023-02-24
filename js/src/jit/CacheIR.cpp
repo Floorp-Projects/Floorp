@@ -10756,8 +10756,8 @@ AttachDecision CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
     return AttachDecision::NoAction;
   }
 
-  // Verify that spread calls have a reasonable number of arguments.
-  if (isSpread && args_.length() > JIT_ARGS_LENGTH_MAX) {
+  // We don't support spread calls in the transpiler yet.
+  if (isSpread) {
     return AttachDecision::NoAction;
   }
 

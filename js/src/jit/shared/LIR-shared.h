@@ -447,12 +447,6 @@ class LJSCallInstructionHelper
       : LCallInstructionHelper<Defs, Operands, Temps>(opcode) {}
 
  public:
-  uint32_t paddedNumStackArgs() const {
-    if (JitStackValueAlignment > 1) {
-      return AlignBytes(mir()->numStackArgs(), JitStackValueAlignment);
-    }
-    return mir()->numStackArgs();
-  }
   MCall* mir() const { return this->mir_->toCall(); }
 
   bool hasSingleTarget() const { return getSingleTarget() != nullptr; }
@@ -515,6 +509,35 @@ class LCallNative : public LJSCallInstructionHelper<BOX_PIECES, 0, 4> {
     // Temporary registers.
     setTemp(3, tmpreg);
   }
+
+  const LDefinition* getArgContextReg() { return getTemp(0); }
+  const LDefinition* getArgUintNReg() { return getTemp(1); }
+  const LDefinition* getArgVpReg() { return getTemp(2); }
+  const LDefinition* getTempReg() { return getTemp(3); }
+};
+
+class LCallClassHook : public LCallInstructionHelper<BOX_PIECES, 1, 4> {
+ public:
+  LIR_HEADER(CallClassHook)
+
+  LCallClassHook(const LAllocation& callee, const LDefinition& argContext,
+                 const LDefinition& argUintN, const LDefinition& argVp,
+                 const LDefinition& tmpreg)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(0, callee);
+
+    // Registers used for callWithABI().
+    setTemp(0, argContext);
+    setTemp(1, argUintN);
+    setTemp(2, argVp);
+
+    // Temporary registers.
+    setTemp(3, tmpreg);
+  }
+
+  MCallClassHook* mir() const { return mir_->toCallClassHook(); }
+
+  const LAllocation* getCallee() { return this->getOperand(0); }
 
   const LDefinition* getArgContextReg() { return getTemp(0); }
   const LDefinition* getArgUintNReg() { return getTemp(1); }
