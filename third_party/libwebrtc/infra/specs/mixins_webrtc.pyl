@@ -184,6 +184,11 @@
       }
     }
   },
+  'fuchsia': {
+    '$mixin_append': {
+      'args': ['--', '--undefok=use-vulkan']
+    }
+  },
   'resultdb-gtest-json-format': {
     '$mixin_append': {
       'args': [

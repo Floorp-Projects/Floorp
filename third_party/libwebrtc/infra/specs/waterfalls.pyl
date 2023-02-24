@@ -67,9 +67,10 @@
       'Android64 Builder x64 (dbg)': {},
       'Fuchsia Release': {
         'os_type': 'linux',
-        'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
+        'mixins':
+        ['linux-bionic', 'x86-64', 'resultdb-json-format', 'fuchsia'],
         'test_suites': {
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'fuchsia_compatible_tests',
         },
       },
       'Linux (more configs)': {
@@ -458,9 +459,10 @@
       'android_compile_x86_rel': {},
       'fuchsia_rel': {
         'os_type': 'linux',
-        'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
-        'test_suties': {
-          'isolateds_scripts': 'desktop_tests',
+        'mixins':
+        ['linux-bionic', 'x86-64', 'resultdb-json-format', 'fuchsia'],
+        'test_suites': {
+          'isolated_scripts': 'fuchsia_compatible_tests',
         },
       },
       'ios_compile_arm64_dbg': {},
