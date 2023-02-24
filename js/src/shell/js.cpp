@@ -237,6 +237,7 @@ bool SetGlobalOptionsPostJSInit(const OptionParser& op);
 bool SetContextOptions(JSContext* cx, const OptionParser& op);
 bool SetContextWasmOptions(JSContext* cx, const OptionParser& op);
 bool SetContextJITOptions(JSContext* cx, const OptionParser& op);
+bool SetContextGCOptions(JSContext* cx, const OptionParser& op);
 
 #ifdef FUZZING_JS_FUZZILLI
 #  define REPRL_CRFD 100
@@ -12027,7 +12028,8 @@ bool SetGlobalOptionsPostJSInit(const OptionParser& op) {
 }
 
 bool SetContextOptions(JSContext* cx, const OptionParser& op) {
-  if (!SetContextWasmOptions(cx, op) || !SetContextJITOptions(cx, op)) {
+  if (!SetContextWasmOptions(cx, op) || !SetContextJITOptions(cx, op) ||
+      !SetContextGCOptions(cx, op)) {
     return false;
   }
 
@@ -12078,21 +12080,6 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableDisassemblyDumps = op.getBoolOption('D');
   cx->runtime()->profilingScripts =
       enableCodeCoverage || enableDisassemblyDumps;
-
-#ifdef DEBUG
-  dumpEntrainedVariables = op.getBoolOption("dump-entrained-variables");
-#endif
-
-#ifdef JS_GC_ZEAL
-  const char* zealStr = op.getStringOption("gc-zeal");
-  if (zealStr) {
-    if (!cx->runtime()->gc.parseAndSetZeal(zealStr)) {
-      return false;
-    }
-    uint32_t nextScheduled;
-    cx->runtime()->gc.getZealBits(&gZealBits, &gZealFrequency, &nextScheduled);
-  }
-#endif
 
   return true;
 }
@@ -12504,6 +12491,25 @@ bool SetContextJITOptions(JSContext* cx, const OptionParser& op) {
     jit::Simulator::StopSimAt = stopAt;
   }
 #  endif
+#endif
+
+  return true;
+}
+
+bool SetContextGCOptions(JSContext* cx, const OptionParser& op) {
+#ifdef DEBUG
+  dumpEntrainedVariables = op.getBoolOption("dump-entrained-variables");
+#endif
+
+#ifdef JS_GC_ZEAL
+  const char* zealStr = op.getStringOption("gc-zeal");
+  if (zealStr) {
+    if (!cx->runtime()->gc.parseAndSetZeal(zealStr)) {
+      return false;
+    }
+    uint32_t nextScheduled;
+    cx->runtime()->gc.getZealBits(&gZealBits, &gZealFrequency, &nextScheduled);
+  }
 #endif
 
   return true;
