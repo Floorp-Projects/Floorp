@@ -16,8 +16,6 @@ add_task(async function testPanelFocused() {
 
       await helper.waitForOverlay();
 
-      EventUtils.synthesizeKey("KEY_Tab");
-
       let screenshotsButtons = gBrowser.selectedBrowser.ownerDocument
         .querySelector("#screenshotsPagePanel")
         .querySelector("screenshots-buttons").shadowRoot;

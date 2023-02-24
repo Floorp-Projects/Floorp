@@ -67,27 +67,22 @@ class ScreenshotsHelper {
   }
 
   async waitForPanel() {
-    return BrowserTestUtils.waitForCondition(async () => {
-      return gBrowser.selectedBrowser.ownerDocument.querySelector(
-        "#screenshotsPagePanel"
-      );
-    });
-  }
-
-  async waitForOverlay() {
     let panel = gBrowser.selectedBrowser.ownerDocument.querySelector(
       "#screenshotsPagePanel"
     );
-    if (!panel) {
-      panel = await this.waitForPanel();
-    }
-    await BrowserTestUtils.waitForMutationCondition(
-      panel,
-      { attributes: true },
-      () => {
-        return BrowserTestUtils.is_visible(panel);
+    await BrowserTestUtils.waitForCondition(async () => {
+      if (!panel) {
+        panel = gBrowser.selectedBrowser.ownerDocument.querySelector(
+          "#screenshotsPagePanel"
+        );
       }
-    );
+      return panel?.state === "open" && BrowserTestUtils.is_visible(panel);
+    });
+    return panel;
+  }
+
+  async waitForOverlay() {
+    const panel = await this.waitForPanel();
     ok(BrowserTestUtils.is_visible(panel), "Panel buttons are visible");
 
     await BrowserTestUtils.waitForCondition(async () => {
