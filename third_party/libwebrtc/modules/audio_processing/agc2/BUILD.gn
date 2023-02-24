@@ -426,9 +426,13 @@ rtc_library("input_volume_stats_reporter") {
     "../../../rtc_base:gtest_prod",
     "../../../rtc_base:logging",
     "../../../rtc_base:safe_minmax",
+    "../../../rtc_base:stringutils",
     "../../../system_wrappers:metrics",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("input_volume_stats_reporter_unittests") {
@@ -436,7 +440,9 @@ rtc_library("input_volume_stats_reporter_unittests") {
   sources = [ "input_volume_stats_reporter_unittest.cc" ]
   deps = [
     ":input_volume_stats_reporter",
+    "../../../rtc_base:stringutils",
     "../../../system_wrappers:metrics",
     "../../../test:test_support",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
