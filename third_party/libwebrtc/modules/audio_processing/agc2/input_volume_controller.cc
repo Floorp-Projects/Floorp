@@ -197,19 +197,9 @@ void MonoInputVolumeController::Process(
     CheckVolumeAndReset();
   }
 
-  int rms_error = 0;
-  bool update_gain = false;
-  if (rms_error_override.has_value()) {
-    if (is_first_frame_ || frames_since_update_gain_ < kOverrideWaitFrames) {
-      update_gain = false;
-    } else {
-      rms_error = *rms_error_override;
-      update_gain = true;
-    }
-  }
-
-  if (update_gain) {
-    UpdateGain(rms_error);
+  if (rms_error_override.has_value() && !is_first_frame_ &&
+      frames_since_update_gain_ >= kOverrideWaitFrames) {
+    UpdateGain(*rms_error_override);
   }
 
   is_first_frame_ = false;
