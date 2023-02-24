@@ -163,17 +163,12 @@ int GetSpeechLevelErrorDb(float speech_level_dbfs, float speech_probability) {
 
 }  // namespace
 
-MonoInputVolumeController::MonoInputVolumeController(
-    int startup_min_level,
-    int clipped_level_min,
-    bool disable_digital_adaptive,
-    int min_mic_level,
-    int max_digital_gain_db,
-    int min_digital_gain_db)
+MonoInputVolumeController::MonoInputVolumeController(int startup_min_level,
+                                                     int clipped_level_min,
+                                                     int min_mic_level,
+                                                     int max_digital_gain_db)
     : min_mic_level_(min_mic_level),
-      disable_digital_adaptive_(disable_digital_adaptive),
       max_digital_gain_db_(max_digital_gain_db),
-      min_digital_gain_db_(min_digital_gain_db),
       max_level_(kMaxMicLevel),
       startup_min_level_(ClampLevel(startup_min_level, min_mic_level_)),
       clipped_level_min_(clipped_level_min) {}
@@ -337,12 +332,7 @@ void MonoInputVolumeController::UpdateGain(int rms_error_db) {
   frames_since_update_gain_ = 0;
 
   int raw_digital_gain = 0;
-  if (!disable_digital_adaptive_) {
-    rms_error += min_digital_gain_db_;
-
-    raw_digital_gain =
-        rtc::SafeClamp(rms_error, min_digital_gain_db_, max_digital_gain_db_);
-  }
+  raw_digital_gain = rtc::SafeClamp(rms_error, 0, max_digital_gain_db_);
 
   const int residual_gain =
       rtc::SafeClamp(rms_error - raw_digital_gain, -kMaxResidualGainChange,
@@ -366,7 +356,6 @@ InputVolumeController::InputVolumeController(int num_capture_channels,
       min_mic_level_override_(GetMinMicLevelOverride()),
       use_min_channel_level_(!UseMaxAnalogChannelLevel()),
       num_capture_channels_(num_capture_channels),
-      disable_digital_adaptive_(!config.digital_adaptive_follows),
       frames_since_clipped_(config.clipped_wait_frames),
       capture_output_used_(true),
       clipped_level_step_(config.clipped_level_step),
@@ -393,9 +382,8 @@ InputVolumeController::InputVolumeController(int num_capture_channels,
 
   for (auto& controller : channel_controllers_) {
     controller = std::make_unique<MonoInputVolumeController>(
-        config.startup_min_volume, config.clipped_level_min,
-        disable_digital_adaptive_, min_mic_level, config.max_digital_gain_db,
-        config.min_digital_gain_db);
+        config.startup_min_volume, config.clipped_level_min, min_mic_level,
+        config.max_digital_gain_db);
   }
 
   RTC_DCHECK(!channel_controllers_.empty());

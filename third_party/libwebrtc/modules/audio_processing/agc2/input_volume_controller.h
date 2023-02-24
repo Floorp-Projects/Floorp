@@ -43,8 +43,6 @@ class InputVolumeController final {
     // Lowest analog microphone level that will be applied in response to
     // clipping.
     int clipped_level_min = 70;
-    // If true, an adaptive digital gain is applied.
-    bool digital_adaptive_follows = true;
     // Amount the microphone level is lowered with every clipping event.
     // Limited to (0, 255].
     int clipped_level_step = 15;
@@ -56,10 +54,8 @@ class InputVolumeController final {
     int clipped_wait_frames = 300;
     // Enables clipping prediction functionality.
     bool enable_clipping_predictor = false;
-    // Minimum and maximum digital gain used before input volume is
-    // adjusted.
+    // Maximum digital gain used before input volume is adjusted.
     int max_digital_gain_db = 30;
-    int min_digital_gain_db = 0;
   };
 
   // Ctor. `num_capture_channels` specifies the number of channels for the audio
@@ -158,9 +154,6 @@ class InputVolumeController final {
   const bool use_min_channel_level_;
   const int num_capture_channels_;
 
-  // TODO(webrtc:7494): Replace with `digital_adaptive_follows_`.
-  const bool disable_digital_adaptive_;
-
   int frames_since_clipped_;
 
   // TODO(bugs.webrtc.org/7494): Create a separate member for the applied input
@@ -194,10 +187,8 @@ class MonoInputVolumeController {
  public:
   MonoInputVolumeController(int startup_min_level,
                             int clipped_level_min,
-                            bool disable_digital_adaptive,
                             int min_mic_level,
-                            int max_digital_gain_db,
-                            int min_digital_gain_db);
+                            int max_digital_gain_db);
   ~MonoInputVolumeController();
   MonoInputVolumeController(const MonoInputVolumeController&) = delete;
   MonoInputVolumeController& operator=(const MonoInputVolumeController&) =
@@ -241,10 +232,7 @@ class MonoInputVolumeController {
 
   const int min_mic_level_;
 
-  // TODO(webrtc:7494): Replace with `digital_adaptive_follows_`.
-  const bool disable_digital_adaptive_;
   const int max_digital_gain_db_;
-  const int min_digital_gain_db_;
 
   int level_ = 0;
   int max_level_;
