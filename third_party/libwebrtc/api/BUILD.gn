@@ -663,9 +663,9 @@ rtc_library("create_peer_connection_quality_test_frame_generator") {
   deps = [
     ":create_frame_generator",
     ":frame_generator_api",
-    ":peer_connection_quality_test_fixture_api",
     "../rtc_base:checks",
     "../test:fileutils",
+    "test/pclf:media_configuration",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }

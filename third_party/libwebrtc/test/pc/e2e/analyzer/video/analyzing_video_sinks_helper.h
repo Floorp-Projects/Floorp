@@ -20,7 +20,7 @@
 
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "api/test/peerconnection_quality_test_fixture.h"
+#include "api/test/pclf/media_configuration.h"
 #include "api/test/video/video_frame_writer.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
@@ -34,11 +34,9 @@ class AnalyzingVideoSinksHelper {
  public:
   // Adds config in the registry. If config with such stream label was
   // registered before, the new value will override the old one.
-  void AddConfig(absl::string_view sender_peer_name,
-                 PeerConnectionE2EQualityTestFixture::VideoConfig config);
-  absl::optional<
-      std::pair<std::string, PeerConnectionE2EQualityTestFixture::VideoConfig>>
-  GetPeerAndConfig(absl::string_view stream_label);
+  void AddConfig(absl::string_view sender_peer_name, VideoConfig config);
+  absl::optional<std::pair<std::string, VideoConfig>> GetPeerAndConfig(
+      absl::string_view stream_label);
   // Removes video config for specified stream label. If there are no know video
   // config for such stream label - does nothing.
   void RemoveConfig(absl::string_view stream_label);
@@ -63,10 +61,8 @@ class AnalyzingVideoSinksHelper {
 
  private:
   Mutex mutex_;
-  std::map<
-      std::string,
-      std::pair<std::string, PeerConnectionE2EQualityTestFixture::VideoConfig>>
-      video_configs_ RTC_GUARDED_BY(mutex_);
+  std::map<std::string, std::pair<std::string, VideoConfig>> video_configs_
+      RTC_GUARDED_BY(mutex_);
   std::list<std::unique_ptr<test::VideoFrameWriter>> video_writers_
       RTC_GUARDED_BY(mutex_);
 };

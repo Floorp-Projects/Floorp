@@ -15,22 +15,13 @@
 #include "absl/types/variant.h"
 #include "api/media_stream_interface.h"
 #include "api/test/create_frame_generator.h"
+#include "api/test/pclf/media_configuration.h"
 #include "test/frame_generator_capturer.h"
 #include "test/platform_video_capturer.h"
 #include "test/testsupport/file_utils.h"
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
-namespace {
-
-using VideoConfig =
-    ::webrtc::webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::VideoConfig;
-using AudioConfig =
-    ::webrtc::webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::AudioConfig;
-using CapturingDeviceIndex = ::webrtc::webrtc_pc_e2e::
-    PeerConnectionE2EQualityTestFixture::CapturingDeviceIndex;
-
-}  // namespace
 
 void MediaHelper::MaybeAddAudio(TestPeer* peer) {
   if (!peer->params().audio_config) {

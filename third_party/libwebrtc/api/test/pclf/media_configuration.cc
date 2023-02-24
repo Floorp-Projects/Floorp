@@ -44,14 +44,6 @@ void AppendResolution(const VideoResolution& resolution,
 
 }  // namespace
 
-ScrollingParams::ScrollingParams(TimeDelta duration,
-                                 size_t source_width,
-                                 size_t source_height)
-    : duration(duration),
-      source_width(source_width),
-      source_height(source_height) {
-  RTC_CHECK_GT(duration.ms(), 0);
-}
 ScreenShareConfig::ScreenShareConfig(TimeDelta slide_change_interval)
     : slide_change_interval(slide_change_interval) {
   RTC_CHECK_GT(slide_change_interval.ms(), 0);

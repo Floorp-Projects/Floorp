@@ -22,6 +22,7 @@
 #include "api/rtc_event_log_output_file.h"
 #include "api/scoped_refptr.h"
 #include "api/test/metrics/metric.h"
+#include "api/test/pclf/media_configuration.h"
 #include "api/test/time_controller.h"
 #include "api/test/video_quality_analyzer_interface.h"
 #include "pc/sdp_utils.h"
@@ -49,8 +50,6 @@ namespace {
 
 using ::webrtc::test::ImprovementDirection;
 using ::webrtc::test::Unit;
-using VideoConfig =
-    ::webrtc::webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::VideoConfig;
 
 constexpr TimeDelta kDefaultTimeout = TimeDelta::Seconds(10);
 constexpr char kSignalThreadName[] = "signaling_thread";

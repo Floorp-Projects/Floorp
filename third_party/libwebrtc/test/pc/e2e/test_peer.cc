@@ -15,16 +15,12 @@
 #include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
 #include "api/scoped_refptr.h"
+#include "api/test/pclf/media_configuration.h"
 #include "modules/audio_processing/include/audio_processing.h"
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
 namespace {
-
-using VideoSubscription = ::webrtc::webrtc_pc_e2e::
-    PeerConnectionE2EQualityTestFixture::VideoSubscription;
-using VideoConfig =
-    ::webrtc::webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::VideoConfig;
 
 class SetRemoteDescriptionCallback
     : public webrtc::SetRemoteDescriptionObserverInterface {

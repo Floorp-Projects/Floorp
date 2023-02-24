@@ -13,6 +13,8 @@
 #include <set>
 
 #include "absl/strings/string_view.h"
+#include "api/test/pclf/media_configuration.h"
+#include "api/test/pclf/media_quality_test_params.h"
 #include "api/test/peer_network_dependencies.h"
 #include "modules/video_coding/svc/create_scalability_structure.h"
 #include "modules/video_coding/svc/scalability_mode_util.h"
@@ -23,10 +25,6 @@ namespace webrtc {
 namespace webrtc_pc_e2e {
 namespace {
 
-using AudioConfig = PeerConnectionE2EQualityTestFixture::AudioConfig;
-using VideoConfig = PeerConnectionE2EQualityTestFixture::VideoConfig;
-using RunParams = PeerConnectionE2EQualityTestFixture::RunParams;
-using VideoCodecConfig = PeerConnectionE2EQualityTestFixture::VideoCodecConfig;
 using PeerConfigurer = PeerConnectionE2EQualityTestFixture::PeerConfigurer;
 
 // List of default names of generic participants according to
@@ -111,34 +109,31 @@ PeerConfigurer* PeerConfigurerImpl::SetSSLCertificateVerifier(
   return this;
 }
 
-PeerConfigurer* PeerConfigurerImpl::AddVideoConfig(
-    PeerConnectionE2EQualityTestFixture::VideoConfig config) {
+PeerConfigurer* PeerConfigurerImpl::AddVideoConfig(VideoConfig config) {
   video_sources_.push_back(
       CreateSquareFrameGenerator(config, /*type=*/absl::nullopt));
   configurable_params_->video_configs.push_back(std::move(config));
   return this;
 }
 PeerConfigurer* PeerConfigurerImpl::AddVideoConfig(
-    PeerConnectionE2EQualityTestFixture::VideoConfig config,
+    VideoConfig config,
     std::unique_ptr<test::FrameGeneratorInterface> generator) {
   configurable_params_->video_configs.push_back(std::move(config));
   video_sources_.push_back(std::move(generator));
   return this;
 }
-PeerConfigurer* PeerConfigurerImpl::AddVideoConfig(
-    PeerConnectionE2EQualityTestFixture::VideoConfig config,
-    PeerConnectionE2EQualityTestFixture::CapturingDeviceIndex index) {
+PeerConfigurer* PeerConfigurerImpl::AddVideoConfig(VideoConfig config,
+                                                   CapturingDeviceIndex index) {
   configurable_params_->video_configs.push_back(std::move(config));
   video_sources_.push_back(index);
   return this;
 }
 PeerConfigurer* PeerConfigurerImpl::SetVideoSubscription(
-    PeerConnectionE2EQualityTestFixture::VideoSubscription subscription) {
+    VideoSubscription subscription) {
   configurable_params_->video_subscription = std::move(subscription);
   return this;
 }
-PeerConfigurer* PeerConfigurerImpl::SetAudioConfig(
-    PeerConnectionE2EQualityTestFixture::AudioConfig config) {
+PeerConfigurer* PeerConfigurerImpl::SetAudioConfig(AudioConfig config) {
   params_->audio_config = std::move(config);
   return this;
 }
@@ -200,8 +195,7 @@ PeerConfigurer* PeerConfigurerImpl::SetBitrateSettings(
   return this;
 }
 PeerConfigurer* PeerConfigurerImpl::SetVideoCodecs(
-    std::vector<PeerConnectionE2EQualityTestFixture::VideoCodecConfig>
-        video_codecs) {
+    std::vector<VideoCodecConfig> video_codecs) {
   params_->video_codecs = std::move(video_codecs);
   return this;
 }
@@ -301,9 +295,7 @@ void PeerParamsPreprocessor::SetDefaultValuesForMissingParams(
   }
 
   if (params->video_codecs.empty()) {
-    params->video_codecs.push_back(
-        PeerConnectionE2EQualityTestFixture::VideoCodecConfig(
-            cricket::kVp8CodecName));
+    params->video_codecs.push_back(VideoCodecConfig(cricket::kVp8CodecName));
   }
 }
 
