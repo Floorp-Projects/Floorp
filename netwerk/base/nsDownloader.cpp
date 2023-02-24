@@ -4,6 +4,7 @@
 
 #include "nsDownloader.h"
 #include "nsIInputStream.h"
+#include "nsIOutputStream.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsNetUtil.h"
