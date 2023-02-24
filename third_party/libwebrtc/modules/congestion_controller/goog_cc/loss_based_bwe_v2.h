@@ -57,7 +57,7 @@ class LossBasedBweV2 {
   bool IsReady() const;
 
   // Returns `DataRate::PlusInfinity` if no BWE can be calculated.
-  Result GetLossBasedResult(DataRate delay_based_limit) const;
+  Result GetLossBasedResult() const;
 
   void SetAcknowledgedBitrate(DataRate acknowledged_bitrate);
   void SetBandwidthEstimate(DataRate bandwidth_estimate);
@@ -139,9 +139,8 @@ class LossBasedBweV2 {
 
   // Returns `0.0` if not enough loss statistics have been received.
   double GetAverageReportedLossRatio() const;
-  std::vector<ChannelParameters> GetCandidates(
-      DataRate delay_based_estimate) const;
-  DataRate GetCandidateBandwidthUpperBound(DataRate delay_based_estimate) const;
+  std::vector<ChannelParameters> GetCandidates() const;
+  DataRate GetCandidateBandwidthUpperBound() const;
   Derivatives GetDerivatives(const ChannelParameters& channel_parameters) const;
   double GetFeasibleInherentLoss(
       const ChannelParameters& channel_parameters) const;
@@ -193,6 +192,7 @@ class LossBasedBweV2 {
   DataRate max_bitrate_ = DataRate::PlusInfinity();
   LossBasedState current_state_ = LossBasedState::kDelayBasedEstimate;
   DataRate probe_bitrate_ = DataRate::PlusInfinity();
+  DataRate delay_based_estimate_ = DataRate::PlusInfinity();
 };
 
 }  // namespace webrtc
