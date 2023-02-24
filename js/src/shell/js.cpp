@@ -232,6 +232,7 @@ using mozilla::Utf8Unit;
 using mozilla::Variant;
 
 bool InitOptionParser(OptionParser& op);
+bool SetGlobalOptionsPreJSInit(const OptionParser& op);
 
 #ifdef FUZZING_JS_FUZZILLI
 #  define REPRL_CRFD 100
@@ -11590,81 +11591,9 @@ int main(int argc, char** argv) {
     return EXIT_SUCCESS;
   }
 
-  // Note: DisableJitBackend must be called before JS_InitWithFailureDiagnostic.
-  if (op.getBoolOption("no-jit-backend")) {
-    JS::DisableJitBackend();
+  if (!SetGlobalOptionsPreJSInit(op)) {
+    return EXIT_FAILURE;
   }
-
-#if defined(JS_CODEGEN_ARM)
-  if (const char* str = op.getStringOption("arm-hwcap")) {
-    jit::SetARMHwCapFlagsString(str);
-  }
-
-  int32_t fill = op.getIntOption("arm-asm-nop-fill");
-  if (fill >= 0) {
-    jit::Assembler::NopFill = fill;
-  }
-
-  int32_t poolMaxOffset = op.getIntOption("asm-pool-max-offset");
-  if (poolMaxOffset >= 5 && poolMaxOffset <= 1024) {
-    jit::Assembler::AsmPoolMaxOffset = poolMaxOffset;
-  }
-#endif
-
-  // Fish around in `op` for various important compiler-configuration flags
-  // and make sure they get handed on to any child processes we might create.
-  // See bug 1700900.  Semantically speaking, this is all rather dubious:
-  //
-  // * What set of flags need to be propagated in order to guarantee that the
-  //   child produces code that is "compatible" (in whatever sense) with that
-  //   produced by the parent?  This isn't always easy to determine.
-  //
-  // * There's nothing that ensures that flags given to the child are
-  //   presented in the same order that they exist in the parent's `argv[]`.
-  //   That could be a problem in the case where two flags with contradictory
-  //   meanings are given, and they are presented to the child in the opposite
-  //   order.  For example: --wasm-compiler=optimizing --wasm-compiler=baseline.
-
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-  MOZ_ASSERT(!js::jit::CPUFlagsHaveBeenComputed());
-
-  if (op.getBoolOption("no-sse3")) {
-    js::jit::CPUInfo::SetSSE3Disabled();
-    if (!sCompilerProcessFlags.append("--no-sse3")) {
-      return EXIT_FAILURE;
-    }
-  }
-  if (op.getBoolOption("no-ssse3")) {
-    js::jit::CPUInfo::SetSSSE3Disabled();
-    if (!sCompilerProcessFlags.append("--no-ssse3")) {
-      return EXIT_FAILURE;
-    }
-  }
-  if (op.getBoolOption("no-sse4") || op.getBoolOption("no-sse41")) {
-    js::jit::CPUInfo::SetSSE41Disabled();
-    if (!sCompilerProcessFlags.append("--no-sse41")) {
-      return EXIT_FAILURE;
-    }
-  }
-  if (op.getBoolOption("no-sse42")) {
-    js::jit::CPUInfo::SetSSE42Disabled();
-    if (!sCompilerProcessFlags.append("--no-sse42")) {
-      return EXIT_FAILURE;
-    }
-  }
-  if (op.getBoolOption("no-avx")) {
-    js::jit::CPUInfo::SetAVXDisabled();
-    if (!sCompilerProcessFlags.append("--no-avx")) {
-      return EXIT_FAILURE;
-    }
-  }
-  if (op.getBoolOption("enable-avx")) {
-    js::jit::CPUInfo::SetAVXEnabled();
-    if (!sCompilerProcessFlags.append("--enable-avx")) {
-      return EXIT_FAILURE;
-    }
-  }
-#endif
 
   // Start the engine.
   if (const char* message = JS_InitWithFailureDiagnostic()) {
@@ -12476,6 +12405,86 @@ bool InitOptionParser(OptionParser& op) {
 
   op.setArgTerminatesOptions("script", true);
   op.setArgCapturesRest("scriptArgs");
+
+  return true;
+}
+
+bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
+  // Note: DisableJitBackend must be called before JS_InitWithFailureDiagnostic.
+  if (op.getBoolOption("no-jit-backend")) {
+    JS::DisableJitBackend();
+  }
+
+#if defined(JS_CODEGEN_ARM)
+  if (const char* str = op.getStringOption("arm-hwcap")) {
+    jit::SetARMHwCapFlagsString(str);
+  }
+
+  int32_t fill = op.getIntOption("arm-asm-nop-fill");
+  if (fill >= 0) {
+    jit::Assembler::NopFill = fill;
+  }
+
+  int32_t poolMaxOffset = op.getIntOption("asm-pool-max-offset");
+  if (poolMaxOffset >= 5 && poolMaxOffset <= 1024) {
+    jit::Assembler::AsmPoolMaxOffset = poolMaxOffset;
+  }
+#endif
+
+  // Fish around in `op` for various important compiler-configuration flags
+  // and make sure they get handed on to any child processes we might create.
+  // See bug 1700900.  Semantically speaking, this is all rather dubious:
+  //
+  // * What set of flags need to be propagated in order to guarantee that the
+  //   child produces code that is "compatible" (in whatever sense) with that
+  //   produced by the parent? This isn't always easy to determine.
+  //
+  // * There's nothing that ensures that flags given to the child are
+  //   presented in the same order that they exist in the parent's `argv[]`.
+  //   That could be a problem in the case where two flags with contradictory
+  //   meanings are given, and they are presented to the child in the opposite
+  //   order.  For example: --wasm-compiler=optimizing --wasm-compiler=baseline.
+
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+  MOZ_ASSERT(!js::jit::CPUFlagsHaveBeenComputed());
+
+  if (op.getBoolOption("no-sse3")) {
+    js::jit::CPUInfo::SetSSE3Disabled();
+    if (!sCompilerProcessFlags.append("--no-sse3")) {
+      return false;
+    }
+  }
+  if (op.getBoolOption("no-ssse3")) {
+    js::jit::CPUInfo::SetSSSE3Disabled();
+    if (!sCompilerProcessFlags.append("--no-ssse3")) {
+      return false;
+    }
+  }
+  if (op.getBoolOption("no-sse4") || op.getBoolOption("no-sse41")) {
+    js::jit::CPUInfo::SetSSE41Disabled();
+    if (!sCompilerProcessFlags.append("--no-sse41")) {
+      return false;
+    }
+  }
+  if (op.getBoolOption("no-sse42")) {
+    js::jit::CPUInfo::SetSSE42Disabled();
+    if (!sCompilerProcessFlags.append("--no-sse42")) {
+      return false;
+    }
+  }
+  if (op.getBoolOption("no-avx")) {
+    js::jit::CPUInfo::SetAVXDisabled();
+    if (!sCompilerProcessFlags.append("--no-avx")) {
+      return false;
+    }
+  }
+  if (op.getBoolOption("enable-avx")) {
+    js::jit::CPUInfo::SetAVXEnabled();
+    if (!sCompilerProcessFlags.append("--enable-avx")) {
+      return false;
+    }
+  }
+#endif
 
   return true;
 }
