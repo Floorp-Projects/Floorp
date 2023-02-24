@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
+#include "api/numerics/samples_stats_counter.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
 #include "api/test/video/video_frame_writer.h"
 #include "api/test/video_quality_analyzer_interface.h"
@@ -33,13 +34,24 @@ namespace webrtc_pc_e2e {
 // A sink to inject video quality analyzer as a sink into WebRTC.
 class AnalyzingVideoSink : public rtc::VideoSinkInterface<VideoFrame> {
  public:
+  struct Stats {
+    // Time required to scale video frame to the requested rendered resolution.
+    // Collected only for frames with ID set and iff `report_infra_stats` is
+    // true.
+    SamplesStatsCounter scaling_tims_ms;
+    // Time required to process single video frame. Collected only for frames
+    // with ID set and iff `report_infra_stats` is true.
+    SamplesStatsCounter analyzing_sink_processing_time_ms;
+  };
+
   AnalyzingVideoSink(
       absl::string_view peer_name,
       Clock* clock,
       VideoQualityAnalyzerInterface& analyzer,
       AnalyzingVideoSinksHelper& sinks_helper,
       const PeerConnectionE2EQualityTestFixture::VideoSubscription&
-          subscription);
+          subscription,
+      bool report_infra_stats);
 
   // Updates subscription used by this peer to render received video.
   void UpdateSubscription(
@@ -47,6 +59,8 @@ class AnalyzingVideoSink : public rtc::VideoSinkInterface<VideoFrame> {
           subscription);
 
   void OnFrame(const VideoFrame& frame) override;
+
+  Stats stats() const;
 
  private:
   struct SinksDescriptor {
@@ -71,23 +85,26 @@ class AnalyzingVideoSink : public rtc::VideoSinkInterface<VideoFrame> {
   VideoFrame ScaleVideoFrame(
       const VideoFrame& frame,
       const PeerConnectionE2EQualityTestFixture::VideoResolution&
-          required_resolution);
+          required_resolution) RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
   // Creates full copy of the frame to free any frame owned internal buffers
   // and passes created copy to analyzer. Uses `I420Buffer` to represent
   // frame content.
   void AnalyzeFrame(const VideoFrame& frame);
   // Populates sink for specified stream and caches them in `stream_sinks_`.
-  SinksDescriptor* PopulateSinks(absl::string_view stream_label);
+  SinksDescriptor* PopulateSinks(absl::string_view stream_label)
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   const std::string peer_name_;
+  const bool report_infra_stats_;
   Clock* const clock_;
   VideoQualityAnalyzerInterface* const analyzer_;
   AnalyzingVideoSinksHelper* const sinks_helper_;
 
-  Mutex mutex_;
+  mutable Mutex mutex_;
   PeerConnectionE2EQualityTestFixture::VideoSubscription subscription_
       RTC_GUARDED_BY(mutex_);
   std::map<std::string, SinksDescriptor> stream_sinks_ RTC_GUARDED_BY(mutex_);
+  Stats stats_ RTC_GUARDED_BY(mutex_);
 };
 
 }  // namespace webrtc_pc_e2e

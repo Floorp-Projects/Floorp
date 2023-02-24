@@ -150,10 +150,11 @@ VideoQualityAnalyzerInjectionHelper::CreateVideoSink(
 std::unique_ptr<AnalyzingVideoSink>
 VideoQualityAnalyzerInjectionHelper::CreateVideoSink(
     absl::string_view peer_name,
-    const PeerConnectionE2EQualityTestFixture::VideoSubscription&
-        subscription) {
+    const PeerConnectionE2EQualityTestFixture::VideoSubscription& subscription,
+    bool report_infra_metrics) {
   return std::make_unique<AnalyzingVideoSink>(peer_name, clock_, *analyzer_,
-                                              sinks_helper_, subscription);
+                                              sinks_helper_, subscription,
+                                              report_infra_metrics);
 }
 
 void VideoQualityAnalyzerInjectionHelper::Start(

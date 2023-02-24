@@ -77,12 +77,15 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
   // `output_dump_file_name` in its VideoConfig, which was used for
   // CreateFramePreprocessor(...), then video also will be written
   // into that file.
+  // TODO(titovartem): Remove method with `peer_name` only parameter.
   std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>> CreateVideoSink(
       absl::string_view peer_name);
+  // TODO(titovartem): Remove default value for `report_infra_metrics`.
   std::unique_ptr<AnalyzingVideoSink> CreateVideoSink(
       absl::string_view peer_name,
       const PeerConnectionE2EQualityTestFixture::VideoSubscription&
-          subscription);
+          subscription,
+      bool report_infra_metrics = false);
 
   void Start(std::string test_case_name,
              rtc::ArrayView<const std::string> peer_names,
