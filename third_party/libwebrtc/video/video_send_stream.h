@@ -92,6 +92,7 @@ class VideoSendStream : public webrtc::VideoSendStream {
 
   void StopPermanentlyAndGetRtpStates(RtpStateMap* rtp_state_map,
                                       RtpPayloadStateMap* payload_state_map);
+  void GenerateKeyFrame() override;
 
  private:
   friend class test::VideoSendStreamPeer;

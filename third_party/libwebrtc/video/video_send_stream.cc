@@ -343,5 +343,11 @@ void VideoSendStream::DeliverRtcp(const uint8_t* packet, size_t length) {
   send_stream_.DeliverRtcp(packet, length);
 }
 
+void VideoSendStream::GenerateKeyFrame() {
+  if (video_stream_encoder_) {
+    video_stream_encoder_->SendKeyFrame();
+  }
+}
+
 }  // namespace internal
 }  // namespace webrtc

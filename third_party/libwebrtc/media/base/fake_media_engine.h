@@ -462,7 +462,8 @@ class FakeVideoMediaChannel : public RtpHelper<VideoMediaChannel> {
       std::function<void(const webrtc::RecordableEncodedFrame&)> callback)
       override;
   void ClearRecordableEncodedFrameCallback(uint32_t ssrc) override;
-  void GenerateKeyFrame(uint32_t ssrc) override;
+  void RequestRecvKeyFrame(uint32_t ssrc) override;
+  void GenerateSendKeyFrame(uint32_t ssrc) override;
 
  private:
   bool SetRecvCodecs(const std::vector<VideoCodec>& codecs);

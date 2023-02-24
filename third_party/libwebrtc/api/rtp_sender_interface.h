@@ -104,6 +104,9 @@ class RTC_EXPORT RtpSenderInterface : public rtc::RefCountInterface {
       std::unique_ptr<VideoEncoderFactory::EncoderSelectorInterface>
           encoder_selector) = 0;
 
+  // TODO(crbug.com/1354101): make pure virtual again after Chrome roll.
+  virtual RTCError GenerateKeyFrame() { return RTCError::OK(); }
+
  protected:
   ~RtpSenderInterface() override = default;
 };
