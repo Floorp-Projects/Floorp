@@ -171,7 +171,8 @@
  * adjustments to align it with the toggle arrow and fit its width to its
  * contents. */
 .objectBox-jsonml-wrapper {
-  display: inline-block;
+  display: inline-flex;
+  flex-direction: column;
   width: fit-content;
   word-break: break-word;
   line-height: normal;
