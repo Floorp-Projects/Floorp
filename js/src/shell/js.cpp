@@ -236,6 +236,7 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op);
 bool SetGlobalOptionsPostJSInit(const OptionParser& op);
 bool SetContextOptions(JSContext* cx, const OptionParser& op);
 bool SetContextWasmOptions(JSContext* cx, const OptionParser& op);
+bool SetContextJITOptions(JSContext* cx, const OptionParser& op);
 
 #ifdef FUZZING_JS_FUZZILLI
 #  define REPRL_CRFD 100
@@ -12026,7 +12027,7 @@ bool SetGlobalOptionsPostJSInit(const OptionParser& op) {
 }
 
 bool SetContextOptions(JSContext* cx, const OptionParser& op) {
-  if (!SetContextWasmOptions(cx, op)) {
+  if (!SetContextWasmOptions(cx, op) || !SetContextJITOptions(cx, op)) {
     return false;
   }
 
@@ -12061,6 +12062,98 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 
   JS::SetUseFdlibmForSinCosTan(useFdlibmForSinCosTan);
 
+  if (const char* str = op.getStringOption("shared-memory")) {
+    if (strcmp(str, "off") == 0) {
+      enableSharedMemory = false;
+    } else if (strcmp(str, "on") == 0) {
+      enableSharedMemory = true;
+    } else {
+      return OptionFailure("shared-memory", str);
+    }
+  }
+
+  reportWarnings = op.getBoolOption('w');
+  compileOnly = op.getBoolOption('c');
+  printTiming = op.getBoolOption('b');
+  enableDisassemblyDumps = op.getBoolOption('D');
+  cx->runtime()->profilingScripts =
+      enableCodeCoverage || enableDisassemblyDumps;
+
+#ifdef DEBUG
+  dumpEntrainedVariables = op.getBoolOption("dump-entrained-variables");
+#endif
+
+#ifdef JS_GC_ZEAL
+  const char* zealStr = op.getStringOption("gc-zeal");
+  if (zealStr) {
+    if (!cx->runtime()->gc.parseAndSetZeal(zealStr)) {
+      return false;
+    }
+    uint32_t nextScheduled;
+    cx->runtime()->gc.getZealBits(&gZealBits, &gZealFrequency, &nextScheduled);
+  }
+#endif
+
+  return true;
+}
+
+bool SetContextWasmOptions(JSContext* cx, const OptionParser& op) {
+  enableAsmJS = !op.getBoolOption("no-asmjs");
+
+  enableWasm = true;
+  enableWasmBaseline = true;
+  enableWasmOptimizing = true;
+
+  if (const char* str = op.getStringOption("wasm-compiler")) {
+    if (strcmp(str, "none") == 0) {
+      enableWasm = false;
+    } else if (strcmp(str, "baseline") == 0) {
+      MOZ_ASSERT(enableWasmBaseline);
+      enableWasmOptimizing = false;
+    } else if (strcmp(str, "optimizing") == 0 ||
+               strcmp(str, "optimized") == 0) {
+      enableWasmBaseline = false;
+      MOZ_ASSERT(enableWasmOptimizing);
+    } else if (strcmp(str, "baseline+optimizing") == 0 ||
+               strcmp(str, "baseline+optimized") == 0) {
+      MOZ_ASSERT(enableWasmBaseline);
+      MOZ_ASSERT(enableWasmOptimizing);
+    } else if (strcmp(str, "ion") == 0) {
+      enableWasmBaseline = false;
+      enableWasmOptimizing = true;
+    } else if (strcmp(str, "baseline+ion") == 0) {
+      MOZ_ASSERT(enableWasmBaseline);
+      enableWasmOptimizing = true;
+    } else {
+      return OptionFailure("wasm-compiler", str);
+    }
+  }
+
+#define WASM_DEFAULT_FEATURE(NAME, LOWER_NAME, COMPILE_PRED, COMPILER_PRED, \
+                             FLAG_PRED, SHELL, ...)                         \
+  enableWasm##NAME = !op.getBoolOption("no-wasm-" SHELL);
+#define WASM_EXPERIMENTAL_FEATURE(NAME, LOWER_NAME, COMPILE_PRED,       \
+                                  COMPILER_PRED, FLAG_PRED, SHELL, ...) \
+  enableWasm##NAME = op.getBoolOption("wasm-" SHELL);
+  JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_DEFAULT_FEATURE,
+                       WASM_EXPERIMENTAL_FEATURE);
+#undef WASM_DEFAULT_FEATURE
+#undef WASM_EXPERIMENTAL_FEATURE
+
+  enableWasmVerbose = op.getBoolOption("wasm-verbose");
+  enableTestWasmAwaitTier2 = op.getBoolOption("test-wasm-await-tier2");
+
+  JS::ContextOptionsRef(cx)
+      .setAsmJS(enableAsmJS)
+      .setWasm(enableWasm)
+      .setWasmForTrustedPrinciples(enableWasm)
+      .setWasmBaseline(enableWasmBaseline)
+      .setWasmIon(enableWasmOptimizing);
+
+  return true;
+}
+
+bool SetContextJITOptions(JSContext* cx, const OptionParser& op) {
   // Check --fast-warmup first because it sets default warm-up thresholds. These
   // thresholds can then be overridden below by --ion-eager and other flags.
   if (op.getBoolOption("fast-warmup")) {
@@ -12340,16 +12433,6 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     return false;
   }
 
-  if (const char* str = op.getStringOption("shared-memory")) {
-    if (strcmp(str, "off") == 0) {
-      enableSharedMemory = false;
-    } else if (strcmp(str, "on") == 0) {
-      enableSharedMemory = true;
-    } else {
-      return OptionFailure("shared-memory", str);
-    }
-  }
-
   if (op.getBoolOption("disable-bailout-loop-check")) {
     jit::JitOptions.disableBailoutLoopCheck = true;
   }
@@ -12422,83 +12505,6 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   }
 #  endif
 #endif
-  reportWarnings = op.getBoolOption('w');
-  compileOnly = op.getBoolOption('c');
-  printTiming = op.getBoolOption('b');
-  enableDisassemblyDumps = op.getBoolOption('D');
-  cx->runtime()->profilingScripts =
-      enableCodeCoverage || enableDisassemblyDumps;
-
-#ifdef DEBUG
-  dumpEntrainedVariables = op.getBoolOption("dump-entrained-variables");
-#endif
-
-#ifdef JS_GC_ZEAL
-  const char* zealStr = op.getStringOption("gc-zeal");
-  if (zealStr) {
-    if (!cx->runtime()->gc.parseAndSetZeal(zealStr)) {
-      return false;
-    }
-    uint32_t nextScheduled;
-    cx->runtime()->gc.getZealBits(&gZealBits, &gZealFrequency, &nextScheduled);
-  }
-#endif
-
-  return true;
-}
-
-bool SetContextWasmOptions(JSContext* cx, const OptionParser& op) {
-  enableAsmJS = !op.getBoolOption("no-asmjs");
-
-  enableWasm = true;
-  enableWasmBaseline = true;
-  enableWasmOptimizing = true;
-
-  if (const char* str = op.getStringOption("wasm-compiler")) {
-    if (strcmp(str, "none") == 0) {
-      enableWasm = false;
-    } else if (strcmp(str, "baseline") == 0) {
-      MOZ_ASSERT(enableWasmBaseline);
-      enableWasmOptimizing = false;
-    } else if (strcmp(str, "optimizing") == 0 ||
-               strcmp(str, "optimized") == 0) {
-      enableWasmBaseline = false;
-      MOZ_ASSERT(enableWasmOptimizing);
-    } else if (strcmp(str, "baseline+optimizing") == 0 ||
-               strcmp(str, "baseline+optimized") == 0) {
-      MOZ_ASSERT(enableWasmBaseline);
-      MOZ_ASSERT(enableWasmOptimizing);
-    } else if (strcmp(str, "ion") == 0) {
-      enableWasmBaseline = false;
-      enableWasmOptimizing = true;
-    } else if (strcmp(str, "baseline+ion") == 0) {
-      MOZ_ASSERT(enableWasmBaseline);
-      enableWasmOptimizing = true;
-    } else {
-      return OptionFailure("wasm-compiler", str);
-    }
-  }
-
-#define WASM_DEFAULT_FEATURE(NAME, LOWER_NAME, COMPILE_PRED, COMPILER_PRED, \
-                             FLAG_PRED, SHELL, ...)                         \
-  enableWasm##NAME = !op.getBoolOption("no-wasm-" SHELL);
-#define WASM_EXPERIMENTAL_FEATURE(NAME, LOWER_NAME, COMPILE_PRED,       \
-                                  COMPILER_PRED, FLAG_PRED, SHELL, ...) \
-  enableWasm##NAME = op.getBoolOption("wasm-" SHELL);
-  JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_DEFAULT_FEATURE,
-                       WASM_EXPERIMENTAL_FEATURE);
-#undef WASM_DEFAULT_FEATURE
-#undef WASM_EXPERIMENTAL_FEATURE
-
-  enableWasmVerbose = op.getBoolOption("wasm-verbose");
-  enableTestWasmAwaitTier2 = op.getBoolOption("test-wasm-await-tier2");
-
-  JS::ContextOptionsRef(cx)
-      .setAsmJS(enableAsmJS)
-      .setWasm(enableWasm)
-      .setWasmForTrustedPrinciples(enableWasm)
-      .setWasmBaseline(enableWasmBaseline)
-      .setWasmIon(enableWasmOptimizing);
 
   return true;
 }
