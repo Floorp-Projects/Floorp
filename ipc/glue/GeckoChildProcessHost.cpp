@@ -421,14 +421,16 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
   }
   sGeckoChildProcessHosts->insertBack(this);
 #if defined(MOZ_SANDBOX) && defined(XP_LINUX)
-  // The content process needs the content temp dir:
   if (aProcessType == GeckoProcessType_Content) {
+#  if defined(MOZ_CONTENT_TEMP_DIR)
+    // The content process needs the content temp dir:
     nsCOMPtr<nsIFile> contentTempDir;
     nsresult rv = NS_GetSpecialDirectory(NS_APP_CONTENT_PROCESS_TEMP_DIR,
                                          getter_AddRefs(contentTempDir));
     if (NS_SUCCEEDED(rv)) {
       contentTempDir->GetNativePath(mTmpDirName);
     }
+#  endif
   } else if (aProcessType == GeckoProcessType_RDD) {
     // The RDD process makes limited use of EGL.  If Mesa's shader
     // cache is enabled and the directory isn't explicitly set, then

@@ -74,18 +74,15 @@
 
 #define NS_APP_PERMISSION_PARENT_DIR "permissionDBPDir"
 
-#if defined(MOZ_SANDBOX)
+#if defined(MOZ_CONTENT_TEMP_DIR)
 //
 // NS_APP_CONTENT_PROCESS_TEMP_DIR refers to a directory that is read and
 // write accessible from a sandboxed content process. The key may be used in
 // either process, but the directory is intended to be used for short-lived
 // files that need to be saved to the filesystem by the content process and
 // don't need to survive browser restarts. The directory is reset on startup.
-// The key is only valid when MOZ_SANDBOX is defined. When
-// MOZ_SANDBOX is defined, the directory the key refers to differs
-// depending on whether or not content sandboxing is enabled.
 //
-// When MOZ_SANDBOX is defined and sandboxing is enabled (versus
+// When MOZ_CONTENT_TEMP_DIR is defined and sandboxing is enabled (versus
 // manually disabled via prefs), the content process replaces NS_OS_TEMP_DIR
 // with NS_APP_CONTENT_PROCESS_TEMP_DIR so that legacy code in content
 // attempting to write to NS_OS_TEMP_DIR will write to
@@ -100,9 +97,6 @@
 // NS_APP_CONTENT_PROCESS_TEMP_DIR, but that should not be relied upon.
 //
 #  define NS_APP_CONTENT_PROCESS_TEMP_DIR "ContentTmpD"
-#else
-// Otherwise NS_APP_CONTENT_PROCESS_TEMP_DIR must match NS_OS_TEMP_DIR.
-#  define NS_APP_CONTENT_PROCESS_TEMP_DIR "TmpD"
 #endif  // defined(MOZ_SANDBOX)
 
 #endif  // nsAppDirectoryServiceDefs_h___

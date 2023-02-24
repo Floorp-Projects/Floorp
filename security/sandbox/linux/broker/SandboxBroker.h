@@ -144,8 +144,10 @@ class SandboxBroker final : private SandboxBrokerCommon,
   int mFileDesc;
   const int mChildPid;
   const UniquePtr<const Policy> mPolicy;
+#if defined(MOZ_CONTENT_TEMP_DIR)
   nsCString mTempPath;
   nsCString mContentTempPath;
+#endif
 
   typedef nsTHashMap<nsCStringHashKey, nsCString> PathMap;
   PathMap mSymlinkMap;
@@ -157,8 +159,10 @@ class SandboxBroker final : private SandboxBrokerCommon,
   // Remap relative paths to absolute paths.
   size_t ConvertRelativePath(char* aPath, size_t aBufSize, size_t aPathLen);
   size_t RealPath(char* aPath, size_t aBufSize, size_t aPathLen);
+#if defined(MOZ_CONTENT_TEMP_DIR)
   // Remap references to /tmp and friends to the content process tempdir
   size_t RemapTempDirs(char* aPath, size_t aBufSize, size_t aPathLen);
+#endif
   nsCString ReverseSymlinks(const nsACString& aPath);
   // Retrieves permissions for the path the original symlink sits in.
   int SymlinkPermissions(const char* aPath, const size_t aPathLen);
