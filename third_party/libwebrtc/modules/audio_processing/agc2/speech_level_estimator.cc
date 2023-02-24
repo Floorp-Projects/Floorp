@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/audio_processing/agc2/adaptive_mode_level_estimator.h"
+#include "modules/audio_processing/agc2/speech_level_estimator.h"
 
 #include "modules/audio_processing/agc2/agc2_common.h"
 #include "modules/audio_processing/logging/apm_data_dumper.h"
@@ -32,19 +32,19 @@ float GetInitialSpeechLevelEstimateDbfs(
 
 }  // namespace
 
-bool AdaptiveModeLevelEstimator::LevelEstimatorState::operator==(
-    const AdaptiveModeLevelEstimator::LevelEstimatorState& b) const {
+bool SpeechLevelEstimator::LevelEstimatorState::operator==(
+    const SpeechLevelEstimator::LevelEstimatorState& b) const {
   return time_to_confidence_ms == b.time_to_confidence_ms &&
          level_dbfs.numerator == b.level_dbfs.numerator &&
          level_dbfs.denominator == b.level_dbfs.denominator;
 }
 
-float AdaptiveModeLevelEstimator::LevelEstimatorState::Ratio::GetRatio() const {
+float SpeechLevelEstimator::LevelEstimatorState::Ratio::GetRatio() const {
   RTC_DCHECK_NE(denominator, 0.f);
   return numerator / denominator;
 }
 
-AdaptiveModeLevelEstimator::AdaptiveModeLevelEstimator(
+SpeechLevelEstimator::SpeechLevelEstimator(
     ApmDataDumper* apm_data_dumper,
     const AudioProcessing::Config::GainController2::AdaptiveDigital& config)
     : apm_data_dumper_(apm_data_dumper),
@@ -57,9 +57,9 @@ AdaptiveModeLevelEstimator::AdaptiveModeLevelEstimator(
   Reset();
 }
 
-void AdaptiveModeLevelEstimator::Update(float rms_dbfs,
-                                        float peak_dbfs,
-                                        float speech_probability) {
+void SpeechLevelEstimator::Update(float rms_dbfs,
+                                  float peak_dbfs,
+                                  float speech_probability) {
   RTC_DCHECK_GT(rms_dbfs, -150.0f);
   RTC_DCHECK_LT(rms_dbfs, 50.0f);
   RTC_DCHECK_GT(peak_dbfs, -150.0f);
@@ -113,7 +113,7 @@ void AdaptiveModeLevelEstimator::Update(float rms_dbfs,
   DumpDebugData();
 }
 
-bool AdaptiveModeLevelEstimator::IsConfident() const {
+bool SpeechLevelEstimator::IsConfident() const {
   if (adjacent_speech_frames_threshold_ == 1) {
     // Ignore `reliable_state_` when a single frame is enough to update the
     // level estimate (because it is not used).
@@ -129,21 +129,21 @@ bool AdaptiveModeLevelEstimator::IsConfident() const {
           preliminary_state_.time_to_confidence_ms == 0);
 }
 
-void AdaptiveModeLevelEstimator::Reset() {
+void SpeechLevelEstimator::Reset() {
   ResetLevelEstimatorState(preliminary_state_);
   ResetLevelEstimatorState(reliable_state_);
   level_dbfs_ = initial_speech_level_dbfs_;
   num_adjacent_speech_frames_ = 0;
 }
 
-void AdaptiveModeLevelEstimator::ResetLevelEstimatorState(
+void SpeechLevelEstimator::ResetLevelEstimatorState(
     LevelEstimatorState& state) const {
   state.time_to_confidence_ms = kLevelEstimatorTimeToConfidenceMs;
   state.level_dbfs.numerator = initial_speech_level_dbfs_;
   state.level_dbfs.denominator = 1.0f;
 }
 
-void AdaptiveModeLevelEstimator::DumpDebugData() const {
+void SpeechLevelEstimator::DumpDebugData() const {
   apm_data_dumper_->DumpRaw(
       "agc2_adaptive_level_estimator_num_adjacent_speech_frames",
       num_adjacent_speech_frames_);
