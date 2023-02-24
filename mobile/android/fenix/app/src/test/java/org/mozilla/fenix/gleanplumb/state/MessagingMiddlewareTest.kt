@@ -4,18 +4,12 @@
 
 package org.mozilla.fenix.gleanplumb.state
 
-import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.spyk
-import io.mockk.verify
-import mozilla.components.lib.state.MiddlewareContext
-import mozilla.components.service.glean.testing.GleanTestRule
+import kotlinx.coroutines.test.advanceUntilIdle
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
-import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
@@ -23,277 +17,217 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 import org.mozilla.fenix.components.AppStore
-import org.mozilla.fenix.components.appstate.AppAction
-import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.ConsumeMessageToShow
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.Evaluate
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.MessageClicked
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.MessageDismissed
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.Restore
-import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.UpdateMessageToShow
-import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.UpdateMessages
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.gleanplumb.Message
 import org.mozilla.fenix.gleanplumb.MessagingState
 import org.mozilla.fenix.gleanplumb.NimbusMessagingController
 import org.mozilla.fenix.gleanplumb.NimbusMessagingStorage
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.nimbus.MessageData
 import org.mozilla.fenix.nimbus.MessageSurfaceId
 import org.mozilla.fenix.nimbus.StyleData
 
-@RunWith(FenixRobolectricTestRunner::class)
 class MessagingMiddlewareTest {
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
     private val coroutineScope = coroutinesTestRule.scope
-    private lateinit var appStore: AppStore
-    private lateinit var middleware: MessagingMiddleware
     private lateinit var messagingStorage: NimbusMessagingStorage
-    private lateinit var messagingController: NimbusMessagingController
-    private lateinit var middlewareContext: MiddlewareContext<AppState, AppAction>
-
-    @get:Rule
-    val gleanTestRule = GleanTestRule(testContext)
+    private lateinit var controller: NimbusMessagingController
 
     @Before
     fun setUp() {
-        appStore = mockk(relaxed = true)
         messagingStorage = mockk(relaxed = true)
-        messagingController = spyk(NimbusMessagingController(messagingStorage) { 0L })
-        middlewareContext = mockk(relaxed = true)
-        every { middlewareContext.store } returns appStore
-
-        middleware = MessagingMiddleware(
-            messagingStorage,
-            messagingController,
-            coroutineScope,
-        )
+        controller = NimbusMessagingController(messagingStorage) { 0 }
     }
 
     @Test
-    fun `WHEN Restore THEN get messages from the storage and UpdateMessages`() = runTestOnMain {
-        val messages: List<Message> = emptyList()
+    fun `WHEN restored THEN get messages from the storage`() = runTestOnMain {
+        val store = AppStore(
+            AppState(
+                messaging = MessagingState(
+                    messages = emptyList(),
+                ),
+            ),
+            listOf(
+                MessagingMiddleware(messagingStorage, controller, coroutineScope),
+            ),
+        )
+        val message = createMessage()
 
-        coEvery { messagingStorage.getMessages() } returns messages
+        coEvery { messagingStorage.getMessages() } returns listOf(message)
 
-        middleware.invoke(middlewareContext, {}, Restore)
+        store.dispatch(Restore)
+        store.waitUntilIdle()
+        advanceUntilIdle()
 
-        verify { appStore.dispatch(UpdateMessages(messages)) }
+        assertEquals(listOf(message), store.state.messaging.messages)
     }
 
     @Test
     fun `WHEN Evaluate THEN getNextMessage from the storage and UpdateMessageToShow`() = runTestOnMain {
-        val message: Message = mockk(relaxed = true)
-        val appState: AppState = mockk(relaxed = true)
-        val messagingState: MessagingState = mockk(relaxed = true)
+        val message = createMessage()
+        val store = AppStore(
+            AppState(
+                messaging = MessagingState(
+                    messages = listOf(
+                        message,
+                    ),
+                ),
+            ),
+            listOf(
+                MessagingMiddleware(messagingStorage, controller, coroutineScope),
+            ),
+        )
 
-        every { messagingState.messages } returns listOf(message)
-        every { appState.messaging } returns messagingState
-        every { middlewareContext.state } returns appState
-        every { messagingStorage.getNextMessage(MessageSurfaceId.HOMESCREEN, any()) } returns message
+        every {
+            messagingStorage.getNextMessage(
+                MessageSurfaceId.HOMESCREEN,
+                any(),
+            )
+        } returns message
 
-        middleware.invoke(middlewareContext, {}, Evaluate(MessageSurfaceId.HOMESCREEN))
+        assertEquals(0, store.state.messaging.messageToShow.size)
 
-        verify { middlewareContext.dispatch(UpdateMessageToShow(message)) }
+        store.dispatch(Evaluate(MessageSurfaceId.HOMESCREEN))
+        store.waitUntilIdle()
+
+        // UpdateMessageToShow to causes messageToShow to append
+        assertEquals(1, store.state.messaging.messageToShow.size)
     }
 
     @Test
     fun `WHEN MessageClicked THEN update storage`() = runTestOnMain {
-        val message = Message(
-            "control-id",
-            mockk(relaxed = true),
-            action = "action",
-            mockk(relaxed = true),
-            listOf("trigger"),
-            Message.Metadata("same-id"),
+        val message = createMessage()
+        val store = AppStore(
+            AppState(
+                messaging = MessagingState(
+                    messages = listOf(message),
+                ),
+            ),
+            listOf(
+                MessagingMiddleware(messagingStorage, controller, coroutineScope),
+            ),
         )
-        val appState: AppState = mockk(relaxed = true)
-        val messagingState: MessagingState = mockk(relaxed = true)
 
-        every { messagingState.messages } returns emptyList()
-        every { appState.messaging } returns messagingState
-        every { middlewareContext.state } returns appState
+        assertEquals(message, store.state.messaging.messages.first())
 
-        middleware.invoke(middlewareContext, {}, MessageClicked(message))
+        store.dispatch(MessageClicked(message))
+        store.waitUntilIdle()
 
-        coVerify { messagingController.onMessageClicked(message.metadata) }
-        coVerify { messagingStorage.updateMetadata(message.metadata.copy(pressed = true)) }
-        verify { middlewareContext.dispatch(UpdateMessages(emptyList())) }
+        assertTrue(store.state.messaging.messages.isEmpty())
+        coVerify { messagingStorage.updateMetadata(createMetadata(pressed = true)) }
     }
 
     @Test
     fun `WHEN MessageDismissed THEN update storage`() = runTestOnMain {
-        val message = Message(
-            "control-id",
-            mockk(relaxed = true),
-            action = "action",
-            mockk(relaxed = true),
-            listOf("trigger"),
-            Message.Metadata("same-id"),
+        val metadata = createMetadata(displayCount = 1, "same-id")
+        val message = createMessage(metadata)
+        val store = AppStore(
+            AppState(
+                messaging = MessagingState(
+                    messages = listOf(message),
+                ),
+            ),
+            listOf(
+                MessagingMiddleware(messagingStorage, controller, coroutineScope),
+            ),
         )
-        val appState: AppState = mockk(relaxed = true)
-        val messagingState: MessagingState = mockk(relaxed = true)
+        store.dispatch(MessageDismissed(message))
+        store.waitUntilIdle()
 
-        every { messagingState.messages } returns emptyList()
-        every { appState.messaging } returns messagingState
-        every { middlewareContext.state } returns appState
-
-        middleware.invoke(
-            middlewareContext,
-            {},
-            MessageDismissed(message),
-        )
-
-        coVerify { messagingController.onMessageDismissed(message.metadata) }
-        coVerify { messagingStorage.updateMetadata(message.metadata.copy(dismissed = true)) }
-        verify { middlewareContext.dispatch(UpdateMessages(emptyList())) }
+        assertTrue(store.state.messaging.messages.isEmpty())
+        coVerify { messagingStorage.updateMetadata(metadata.copy(dismissed = true)) }
     }
 
     @Test
-    fun `GIVEN a expiring message WHEN MessageDisplayed THEN update storage`() = runTestOnMain {
-        val message = Message(
-            "control-id",
-            mockk(relaxed = true),
-            action = "action",
-            mockk(relaxed = true),
-            listOf("trigger"),
-            Message.Metadata("same-id"),
-        )
-        val appState: AppState = mockk(relaxed = true)
-        val messagingState: MessagingState = mockk(relaxed = true)
-        val spiedMiddleware = spyk(middleware)
-
-        every { messagingState.messages } returns emptyList()
-        every { appState.messaging } returns messagingState
-        every { middlewareContext.state } returns appState
-
-        spiedMiddleware.onMessagedDisplayed(message, middlewareContext)
-
-        verify { messagingController.updateMessageAsDisplayed(message) }
-        coVerify { messagingController.onMessageDisplayed(any()) }
-        coVerify { messagingStorage.updateMetadata(message.metadata.copy(displayCount = 1)) }
-        verify { middlewareContext.dispatch(UpdateMessages(emptyList())) }
-    }
-
-    @Test
-    fun `WHEN onMessageDismissed THEN updateMetadata,removeMessage , UpdateMessages and removeMessageToShowIfNeeded`() = runTestOnMain {
-        val message = Message(
-            "control-id",
-            mockk(relaxed = true),
-            action = "action",
-            mockk(relaxed = true),
-            listOf("trigger"),
-            Message.Metadata("same-id"),
+    fun `WHEN onMessageDismissed THEN remove the message from storage and state`() = runTestOnMain {
+        val message = createMessage(createMetadata(displayCount = 1))
+        val store = AppStore(
+            AppState(
+                messaging = MessagingState(
+                    messages = listOf(
+                        message,
+                    ),
+                    messageToShow = mapOf(message.surface to message),
+                ),
+            ),
+            listOf(
+                MessagingMiddleware(messagingStorage, controller, coroutineScope),
+            ),
         )
 
-        val spiedMiddleware = spyk(middleware)
+        store.dispatch(MessageDismissed(message))
+        store.waitUntilIdle()
 
-        every { spiedMiddleware.removeMessage(middlewareContext, message) } returns emptyList()
-        every { spiedMiddleware.consumeMessageToShowIfNeeded(middlewareContext, message) } just Runs
-
-        spiedMiddleware.onMessageDismissed(middlewareContext, message)
-
-        coVerify { messagingController.onMessageDismissed(message.metadata) }
-        coVerify { messagingStorage.updateMetadata(message.metadata.copy(dismissed = true)) }
-        verify { middlewareContext.dispatch(UpdateMessages(emptyList())) }
-        verify { spiedMiddleware.removeMessage(middlewareContext, message) }
-    }
-
-    @Test
-    fun `WHEN removeMessage THEN remove the message`() = runTestOnMain {
-        val message = Message(
-            "control-id",
-            mockk(relaxed = true),
-            action = "action",
-            mockk(relaxed = true),
-            listOf("trigger"),
-            Message.Metadata("same-id"),
-        )
-        val messages = listOf(message)
-        val appState: AppState = mockk(relaxed = true)
-        val messagingState: MessagingState = mockk(relaxed = true)
-
-        every { messagingState.messages } returns messages
-        every { appState.messaging } returns messagingState
-        every { middlewareContext.state } returns appState
-
-        val results = middleware.removeMessage(middlewareContext, message)
-
-        assertTrue(results.isEmpty())
+        // removeMessages causes messages size to be 0
+        assertEquals(0, store.state.messaging.messages.size)
+        // consumeMessageToShowIfNeeded causes messageToShow map size to be 0
+        assertEquals(0, store.state.messaging.messageToShow.size)
     }
 
     @Test
     fun `WHEN consumeMessageToShowIfNeeded THEN consume the message`() = runTestOnMain {
-        val message = Message(
-            "control-id",
-            MessageData(),
-            action = "action",
-            mockk(relaxed = true),
-            listOf("trigger"),
-            Message.Metadata("same-id"),
+        val message = createMessage()
+        val store = AppStore(
+            AppState(
+                messaging = MessagingState(
+                    messages = listOf(
+                        message,
+                    ),
+                    messageToShow = mapOf(message.surface to message),
+                ),
+            ),
+            listOf(
+                MessagingMiddleware(messagingStorage, controller, coroutineScope),
+            ),
         )
-        val appState: AppState = mockk(relaxed = true)
-        val messagingState: MessagingState = mockk(relaxed = true)
 
-        every { messagingState.messageToShow } returns mapOf(message.surface to message)
-        every { appState.messaging } returns messagingState
-        every { middlewareContext.state } returns appState
+        store.dispatch(MessageClicked(message))
+        store.waitUntilIdle()
 
-        middleware.consumeMessageToShowIfNeeded(middlewareContext, message)
-
-        verify { middlewareContext.dispatch(ConsumeMessageToShow(message.surface)) }
+        assertTrue(store.state.messaging.messages.isEmpty())
+        assertTrue(store.state.messaging.messageToShow.isEmpty())
     }
 
     @Test
     fun `WHEN updateMessage THEN update available messages`() = runTestOnMain {
-        val oldMessage = Message(
-            "oldMessage",
-            MessageData(),
-            action = "action",
-            mockk(relaxed = true),
-            listOf("trigger"),
-            Message.Metadata("same-id", pressed = false),
+        val message = createMessage()
+        val store = AppStore(
+            AppState(
+                messaging = MessagingState(
+                    messages = listOf(
+                        message,
+                    ),
+                ),
+            ),
+            listOf(
+                MessagingMiddleware(messagingStorage, controller, coroutineScope),
+            ),
         )
 
-        val updatedMessage = Message(
-            "oldMessage",
-            MessageData(),
-            action = "action",
-            mockk(relaxed = true),
-            listOf("trigger"),
-            Message.Metadata("same-id", pressed = true),
-        )
+        every {
+            messagingStorage.getNextMessage(
+                MessageSurfaceId.HOMESCREEN,
+                any(),
+            )
+        } returns message
 
-        val spiedMiddleware = spyk(middleware)
+        store.dispatch(Evaluate(MessageSurfaceId.HOMESCREEN))
+        store.waitUntilIdle()
 
-        val appState: AppState = mockk(relaxed = true)
-        val messagingState: MessagingState = mockk(relaxed = true)
-
-        every { messagingState.messages } returns listOf(oldMessage)
-        every { messagingState.messageToShow } returns mapOf(oldMessage.surface to oldMessage)
-        every { appState.messaging } returns messagingState
-        every { middlewareContext.state } returns appState
-
-        val results = spiedMiddleware.updateMessage(middlewareContext, oldMessage, updatedMessage)
-
-        verify { middlewareContext.dispatch(UpdateMessageToShow(updatedMessage)) }
-
-        assertTrue(results.size == 1)
-        assertTrue(results.first().metadata.pressed)
+        assertEquals(1, store.state.messaging.messages.first().metadata.displayCount)
     }
 
     @Test
     fun `WHEN evaluate THEN update displayCount without altering message order`() = runTestOnMain {
-        val messageMetadata1 = Message.Metadata("same-id", displayCount = 0)
-        val message1 =
-            Message("message1", mockk(relaxed = true), "", StyleData(), emptyList(), messageMetadata1)
+        val message1 = createMessage()
         val message2 = message1.copy(id = "message2", action = "action2")
         // An updated message1 that has been displayed once.
-        val messageDisplayed1 = message1.copy(metadata = messageMetadata1.copy(displayCount = 1))
-        val messagingStorage: NimbusMessagingStorage = mockk(relaxed = true)
-        val controller = NimbusMessagingController(messagingStorage) { 0 }
+        val messageDisplayed1 = message1.copy(metadata = createMetadata(displayCount = 1))
         val store = AppStore(
             AppState(
                 messaging = MessagingState(
@@ -323,69 +257,88 @@ class MessagingMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN a message with that not surpassed the maxDisplayCount WHEN onMessagedDisplayed THEN update the available messages and the updateMetadata`() = runTestOnMain {
-        val style: StyleData = mockk(relaxed = true)
-        val oldMessageData: MessageData = mockk(relaxed = true)
-        val oldMessage = Message(
-            "oldMessage",
-            oldMessageData,
-            action = "action",
-            style,
-            listOf("trigger"),
-            Message.Metadata("same-id", displayCount = 0),
+    fun `GIVEN a message has not surpassed the maxDisplayCount WHEN evaluate THEN update the message displayCount`() = runTestOnMain {
+        val message = createMessage()
+        // An updated message that has been displayed once.
+        val messageDisplayed = message.copy(metadata = createMetadata(displayCount = 1))
+        val store = AppStore(
+            AppState(
+                messaging = MessagingState(
+                    messages = listOf(
+                        message,
+                    ),
+                ),
+            ),
+            listOf(
+                MessagingMiddleware(messagingStorage, controller, coroutineScope),
+            ),
         )
-        val updatedMessage = oldMessage.copy(metadata = oldMessage.metadata.copy(displayCount = 1))
-        val spiedMiddleware = spyk(middleware)
 
-        every { style.maxDisplayCount } returns 2
         every {
-            spiedMiddleware.updateMessage(
-                middlewareContext,
-                oldMessage,
-                updatedMessage,
+            messagingStorage.getNextMessage(
+                MessageSurfaceId.HOMESCREEN,
+                any(),
             )
-        } returns emptyList()
+        } returns message
 
-        spiedMiddleware.onMessagedDisplayed(oldMessage, middlewareContext)
+        store.dispatch(Evaluate(MessageSurfaceId.HOMESCREEN))
+        store.waitUntilIdle()
 
-        verify { spiedMiddleware.updateMessage(middlewareContext, oldMessage, updatedMessage) }
-        verify { messagingController.updateMessageAsDisplayed(oldMessage) }
-        verify { middlewareContext.dispatch(UpdateMessages(emptyList())) }
-        coVerify { messagingController.onMessageDisplayed(updatedMessage) }
-        coVerify { messagingStorage.updateMetadata(updatedMessage.metadata) }
+        assertEquals(messageDisplayed.metadata.displayCount, store.state.messaging.messages[0].metadata.displayCount)
     }
 
     @Test
     fun `GIVEN a message with that surpassed the maxDisplayCount WHEN onMessagedDisplayed THEN remove the message and consume it`() = runTestOnMain {
-        val style: StyleData = mockk(relaxed = true)
-        val oldMessageData: MessageData = mockk(relaxed = true)
-        val oldMessage = Message(
-            "oldMessage",
-            oldMessageData,
-            action = "action",
-            style,
-            listOf("trigger"),
-            Message.Metadata("same-id", displayCount = 0),
+        val message = createMessage(createMetadata(displayCount = 6))
+        val store = AppStore(
+            AppState(
+                messaging = MessagingState(
+                    messages = listOf(
+                        message,
+                    ),
+                    messageToShow = mapOf(message.surface to message),
+                ),
+            ),
+            listOf(
+                MessagingMiddleware(messagingStorage, controller, coroutineScope),
+            ),
         )
-        val updatedMessage = oldMessage.copy(metadata = oldMessage.metadata.copy(displayCount = 1))
-        val spiedMiddleware = spyk(middleware)
 
-        every { style.maxDisplayCount } returns 1
         every {
-            spiedMiddleware.consumeMessageToShowIfNeeded(
-                middlewareContext,
-                oldMessage,
+            messagingStorage.getNextMessage(
+                MessageSurfaceId.HOMESCREEN,
+                any(),
             )
-        } just Runs
-        every { spiedMiddleware.removeMessage(middlewareContext, oldMessage) } returns emptyList()
+        } returns message
 
-        spiedMiddleware.onMessagedDisplayed(oldMessage, middlewareContext)
+        store.dispatch(Evaluate(MessageSurfaceId.HOMESCREEN))
+        store.waitUntilIdle()
 
-        verify { messagingController.updateMessageAsDisplayed(oldMessage) }
-        verify { spiedMiddleware.consumeMessageToShowIfNeeded(middlewareContext, oldMessage) }
-        verify { spiedMiddleware.removeMessage(middlewareContext, oldMessage) }
-        verify { middlewareContext.dispatch(UpdateMessages(emptyList())) }
-        coVerify { messagingController.onMessageDisplayed(updatedMessage) }
-        coVerify { messagingStorage.updateMetadata(updatedMessage.metadata) }
+        assertEquals(0, store.state.messaging.messages.size)
+        assertEquals(0, store.state.messaging.messageToShow.size)
     }
 }
+private fun createMessage(
+    metadata: Message.Metadata = createMetadata(),
+    messageId: String = "control-id",
+    data: MessageData = mockk(relaxed = true),
+    action: String = "action",
+    styleData: StyleData = StyleData(),
+    triggers: List<String> = listOf("triggers"),
+) = Message(messageId, data, action, styleData, triggers, metadata)
+
+private fun createMetadata(
+    displayCount: Int = 0,
+    id: String = "same-id",
+    pressed: Boolean = false,
+    dismissed: Boolean = false,
+    lastTimeShown: Long = 0L,
+    latestBootIdentifier: String? = null,
+) = Message.Metadata(
+    id,
+    displayCount,
+    pressed,
+    dismissed,
+    lastTimeShown,
+    latestBootIdentifier,
+)

@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.gleanplumb.state
 
-import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -68,8 +67,7 @@ class MessagingMiddleware(
         next(action)
     }
 
-    @VisibleForTesting
-    internal fun onMessagedDisplayed(
+    private fun onMessagedDisplayed(
         oldMessage: Message,
         context: AppStoreMiddlewareContext,
     ) {
@@ -86,8 +84,7 @@ class MessagingMiddleware(
         }
     }
 
-    @VisibleForTesting
-    internal fun onMessageDismissed(
+    private fun onMessageDismissed(
         context: AppStoreMiddlewareContext,
         message: Message,
     ) {
@@ -99,8 +96,7 @@ class MessagingMiddleware(
         }
     }
 
-    @VisibleForTesting
-    internal fun onMessageClicked(
+    private fun onMessageClicked(
         message: Message,
         context: AppStoreMiddlewareContext,
     ) {
@@ -114,8 +110,7 @@ class MessagingMiddleware(
         consumeMessageToShowIfNeeded(context, message)
     }
 
-    @VisibleForTesting
-    internal fun consumeMessageToShowIfNeeded(
+    private fun consumeMessageToShowIfNeeded(
         context: AppStoreMiddlewareContext,
         message: Message,
     ) {
@@ -125,16 +120,14 @@ class MessagingMiddleware(
         }
     }
 
-    @VisibleForTesting
-    internal fun removeMessage(
+    private fun removeMessage(
         context: AppStoreMiddlewareContext,
         message: Message,
     ): List<Message> {
         return context.state.messaging.messages.filter { it.id != message.id }
     }
 
-    @VisibleForTesting
-    internal fun updateMessage(
+    private fun updateMessage(
         context: AppStoreMiddlewareContext,
         oldMessage: Message,
         updatedMessage: Message,
