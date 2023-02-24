@@ -664,14 +664,6 @@ partial namespace ChromeUtils {
    */
   [ChromeOnly]
   readonly attribute unsigned long aliveUtilityProcesses;
-
-  /**
-   * Get a list of all possible Utility process Actor Names ; mostly useful to
-   * perform testing and ensure about:processes display is sound and misses no
-   * actor name.
-   */
-  [ChromeOnly]
-  sequence<UTF8String> getAllPossibleUtilityActorNames();
 };
 
 /*

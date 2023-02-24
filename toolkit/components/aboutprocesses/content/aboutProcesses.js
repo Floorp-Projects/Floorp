@@ -861,9 +861,19 @@ var View = {
     }
   },
 
-  utilityActorNameToFluentName(actorName) {
+  displayUtilityActorRow(data, parent) {
+    const cellCount = 2;
+    // The actor name is expected to be unique within a given utility process.
+    let rowId = "u:" + parent.pid + data.actorName;
+    let row = this._getOrCreateRow(rowId, cellCount);
+    row.actor = data;
+    row.className = "actor";
+
+    // Column: name
+    let nameCell = row.firstChild;
     let fluentName;
-    switch (actorName) {
+    let fluentArgs = {};
+    switch (data.actorName) {
       case "audioDecoder_Generic":
         fluentName = "about-processes-utility-actor-audio-decoder-generic";
         break;
@@ -880,33 +890,10 @@ var View = {
         fluentName = "about-processes-utility-actor-mf-media-engine";
         break;
 
-      case "jSOracle":
-        fluentName = "about-processes-utility-actor-js-oracle";
-        break;
-
-      case "windowsUtils":
-        fluentName = "about-processes-utility-actor-windows-utils";
-        break;
-
       default:
         fluentName = "about-processes-utility-actor-unknown";
         break;
     }
-    return fluentName;
-  },
-
-  displayUtilityActorRow(data, parent) {
-    const cellCount = 2;
-    // The actor name is expected to be unique within a given utility process.
-    let rowId = "u:" + parent.pid + data.actorName;
-    let row = this._getOrCreateRow(rowId, cellCount);
-    row.actor = data;
-    row.className = "actor";
-
-    // Column: name
-    let nameCell = row.firstChild;
-    let fluentName = this.utilityActorNameToFluentName(data.actorName);
-    let fluentArgs = {};
     this._fillCell(nameCell, {
       fluentName,
       fluentArgs,
