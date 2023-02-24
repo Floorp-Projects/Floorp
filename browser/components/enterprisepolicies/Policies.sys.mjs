@@ -993,18 +993,6 @@ export var Policies = {
           param.Locked
         );
       }
-      if ("EmailTracking" in param) {
-        PoliciesUtils.setDefaultPref(
-          "privacy.trackingprotection.emailtracking.enabled",
-          param.EmailTracking,
-          param.Locked
-        );
-        PoliciesUtils.setDefaultPref(
-          "privacy.trackingprotection.emailtracking.pbmode.enabled",
-          param.EmailTracking,
-          param.Locked
-        );
-      }
       if ("Exceptions" in param) {
         addAllowDenyPermissions("trackingprotection", param.Exceptions);
       }

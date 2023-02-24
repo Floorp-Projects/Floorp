@@ -448,9 +448,6 @@
         "Fingerprinting": {
           "type": "boolean"
         },
-        "EmailTracking": {
-          "type": "boolean"
-        },
         "Exceptions": {
           "type": "array",
           "strict": false,
