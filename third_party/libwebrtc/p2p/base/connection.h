@@ -316,9 +316,21 @@ class Connection : public CandidatePairInterface {
   Port* PortForTest() { return port_.get(); }
   const Port* PortForTest() const { return port_.get(); }
 
+  std::unique_ptr<IceMessage> BuildPingRequestForTest() {
+    RTC_DCHECK_RUN_ON(network_thread_);
+    return BuildPingRequest();
+  }
+
   // Public for unit tests.
   uint32_t acked_nomination() const;
   void set_remote_nomination(uint32_t remote_nomination);
+
+  const std::string& remote_password_for_test() const {
+    return remote_candidate().password();
+  }
+  void set_remote_password_for_test(absl::string_view pwd) {
+    remote_candidate_.set_password(pwd);
+  }
 
  protected:
   // A ConnectionRequest is a simple STUN ping used to determine writability.

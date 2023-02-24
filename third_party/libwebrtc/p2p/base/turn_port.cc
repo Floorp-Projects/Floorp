@@ -687,6 +687,16 @@ bool TurnPort::CanHandleIncomingPacketsFrom(
   return server_address_.address == addr;
 }
 
+void TurnPort::SendBindingErrorResponse(StunMessage* message,
+                                        const rtc::SocketAddress& addr,
+                                        int error_code,
+                                        absl::string_view reason) {
+  if (!GetConnection(addr))
+    return;
+
+  Port::SendBindingErrorResponse(message, addr, error_code, reason);
+}
+
 bool TurnPort::HandleIncomingPacket(rtc::AsyncPacketSocket* socket,
                                     const char* data,
                                     size_t size,

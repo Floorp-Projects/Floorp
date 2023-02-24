@@ -12972,3 +12972,5 @@ libwebrtc updated from /home/pehrsons/dev/moz-libwebrtc commit mozpatches on 202
 libwebrtc updated from /home/pehrsons/dev/moz-libwebrtc commit mozpatches on 2023-02-24T16:00:09.546299.
 # ./mach python dom/media/webrtc/third_party_build/vendor-libwebrtc.py --from-local /home/pehrsons/dev/moz-libwebrtc --commit mozpatches libwebrtc
 libwebrtc updated from /home/pehrsons/dev/moz-libwebrtc commit mozpatches on 2023-02-24T16:01:16.026055.
+# ./mach python dom/media/webrtc/third_party_build/vendor-libwebrtc.py --from-local /home/pehrsons/dev/moz-libwebrtc --commit mozpatches libwebrtc
+libwebrtc updated from /home/pehrsons/dev/moz-libwebrtc commit mozpatches on 2023-02-24T16:02:53.773364.
