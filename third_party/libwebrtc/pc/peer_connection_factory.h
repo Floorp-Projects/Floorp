@@ -46,10 +46,6 @@
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 
-namespace cricket {
-class ChannelManager;
-}
-
 namespace rtc {
 class BasicNetworkManager;
 class BasicPacketSocketFactory;

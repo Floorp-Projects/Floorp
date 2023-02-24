@@ -46,7 +46,6 @@ class ConnectionContext;
 
 namespace cricket {
 
-class ChannelManager;
 class MediaEngineInterface;
 
 // Default RTCP CNAME for unit tests.

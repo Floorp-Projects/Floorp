@@ -84,10 +84,6 @@
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/weak_ptr.h"
 
-namespace cricket {
-class ChannelManager;
-}
-
 namespace webrtc {
 
 // PeerConnection is the implementation of the PeerConnection object as defined
