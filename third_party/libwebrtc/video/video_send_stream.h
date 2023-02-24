@@ -13,6 +13,7 @@
 
 #include <map>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "api/fec_controller.h"
@@ -92,7 +93,7 @@ class VideoSendStream : public webrtc::VideoSendStream {
 
   void StopPermanentlyAndGetRtpStates(RtpStateMap* rtp_state_map,
                                       RtpPayloadStateMap* payload_state_map);
-  void GenerateKeyFrame() override;
+  void GenerateKeyFrame(const std::vector<std::string>& rids) override;
 
  private:
   friend class test::VideoSendStreamPeer;

@@ -194,7 +194,7 @@ class FakeVideoSendStream final
   rtc::VideoSourceInterface<webrtc::VideoFrame>* source() const {
     return source_;
   }
-  void GenerateKeyFrame() override {}
+  void GenerateKeyFrame(const std::vector<std::string>& rids) override {}
 
  private:
   // rtc::VideoSinkInterface<VideoFrame> implementation.

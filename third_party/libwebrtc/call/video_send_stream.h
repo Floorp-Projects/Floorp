@@ -253,7 +253,7 @@ class VideoSendStream {
 
   virtual Stats GetStats() = 0;
 
-  virtual void GenerateKeyFrame() = 0;
+  virtual void GenerateKeyFrame(const std::vector<std::string>& rids) = 0;
 
  protected:
   virtual ~VideoSendStream() {}

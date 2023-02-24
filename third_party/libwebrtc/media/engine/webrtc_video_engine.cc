@@ -2828,10 +2828,11 @@ void WebRtcVideoChannel::WebRtcVideoSendStream::RecreateWebRtcStream() {
   }
 }
 
-void WebRtcVideoChannel::WebRtcVideoSendStream::GenerateKeyFrame() {
+void WebRtcVideoChannel::WebRtcVideoSendStream::GenerateKeyFrame(
+    const std::vector<std::string>& rids) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   if (stream_ != NULL) {
-    stream_->GenerateKeyFrame();
+    stream_->GenerateKeyFrame(rids);
   } else {
     RTC_LOG(LS_WARNING)
         << "Absent send stream; ignoring request to generate keyframe.";
@@ -3572,11 +3573,13 @@ void WebRtcVideoChannel::RequestRecvKeyFrame(uint32_t ssrc) {
   }
 }
 
-void WebRtcVideoChannel::GenerateSendKeyFrame(uint32_t ssrc) {
+void WebRtcVideoChannel::GenerateSendKeyFrame(
+    uint32_t ssrc,
+    const std::vector<std::string>& rids) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   auto it = send_streams_.find(ssrc);
   if (it != send_streams_.end()) {
-    it->second->GenerateKeyFrame();
+    it->second->GenerateKeyFrame(rids);
   } else {
     RTC_LOG(LS_ERROR)
         << "Absent send stream; ignoring key frame generation for ssrc "

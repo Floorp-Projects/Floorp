@@ -343,9 +343,24 @@ void VideoSendStream::DeliverRtcp(const uint8_t* packet, size_t length) {
   send_stream_.DeliverRtcp(packet, length);
 }
 
-void VideoSendStream::GenerateKeyFrame() {
+void VideoSendStream::GenerateKeyFrame(const std::vector<std::string>& rids) {
+  // Map rids to layers. If rids is empty, generate a keyframe for all layers.
+  std::vector<VideoFrameType> next_frames(config_.rtp.ssrcs.size(),
+                                          VideoFrameType::kVideoFrameKey);
+  if (!config_.rtp.rids.empty() && !rids.empty()) {
+    std::fill(next_frames.begin(), next_frames.end(),
+              VideoFrameType::kVideoFrameDelta);
+    for (const auto& rid : rids) {
+      for (size_t i = 0; i < config_.rtp.rids.size(); i++) {
+        if (config_.rtp.rids[i] == rid) {
+          next_frames[i] = VideoFrameType::kVideoFrameKey;
+          break;
+        }
+      }
+    }
+  }
   if (video_stream_encoder_) {
-    video_stream_encoder_->SendKeyFrame();
+    video_stream_encoder_->SendKeyFrame(next_frames);
   }
 }
 

@@ -596,7 +596,8 @@ rtc::scoped_refptr<DtmfSenderInterface> AudioRtpSender::GetDtmfSender() const {
   return dtmf_sender_proxy_;
 }
 
-RTCError AudioRtpSender::GenerateKeyFrame() {
+RTCError AudioRtpSender::GenerateKeyFrame(
+    const std::vector<std::string>& rids) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   RTC_DLOG(LS_ERROR) << "Tried to get generate a key frame for audio.";
   return RTCError(RTCErrorType::UNSUPPORTED_OPERATION,
@@ -693,11 +694,15 @@ rtc::scoped_refptr<DtmfSenderInterface> VideoRtpSender::GetDtmfSender() const {
   return nullptr;
 }
 
-RTCError VideoRtpSender::GenerateKeyFrame() {
+RTCError VideoRtpSender::GenerateKeyFrame(
+    const std::vector<std::string>& rids) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
+  // TODO(crbug.com/1354101): check that rids are a subset of this senders rids
+  // (or empty).
   if (video_media_channel() && ssrc_ && !stopped_) {
-    worker_thread_->PostTask(
-        [&] { video_media_channel()->GenerateSendKeyFrame(ssrc_); });
+    worker_thread_->PostTask([&, rids] {
+      video_media_channel()->GenerateSendKeyFrame(ssrc_, rids);
+    });
   } else {
     RTC_LOG(LS_WARNING) << "Tried to generate key frame for sender that is "
                            "stopped or has no media channel.";

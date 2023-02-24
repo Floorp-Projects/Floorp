@@ -97,8 +97,10 @@ class VideoStreamEncoderInterface {
   // resolution. Should be replaced by a construction time setting.
   virtual void SetStartBitrate(int start_bitrate_bps) = 0;
 
-  // Request a key frame. Used for signalling from the remote receiver.
-  virtual void SendKeyFrame() = 0;
+  // Request a key frame. Used for signalling from the remote receiver with
+  // no arguments and for RTCRtpSender.generateKeyFrame with a list of
+  // rids/layers.
+  virtual void SendKeyFrame(const std::vector<VideoFrameType>& layers = {}) = 0;
 
   // Inform the encoder that a loss has occurred.
   virtual void OnLossNotification(
