@@ -120,7 +120,7 @@ How frecency for a page is calculated
         a2[bonus = unvisited_bonus + bookmarked + typed]
         a3{bonus > 0?}
         end0[Frecency = 0]
-        end1["frecency = fist_bucket_weight * (bonus / 100)"]
+        end1["frecency = age_bucket_weight * (bonus / 100)"]
         a4[Sum points of all sampled visits]
         a5{points > 0?}
         end2[frecency = -1]
@@ -129,7 +129,7 @@ How frecency for a page is calculated
             sub0[bonus = visit_type_bonus]
             sub1{bookmarked?}
             sub2[add bookmark bonus]
-            sub3["score = bucket_weight * (bonus / 100)"]
+            sub3["score = age_bucket_weight * (bonus / 100)"]
             sub0 --> sub1
             sub1 -- yes --> sub2
             sub1 -- no --> sub3
@@ -147,37 +147,60 @@ How frecency for a page is calculated
         a5 -- no --> end2
         a5 -- yes --> end3
 
-1. If the page is visited, get a sample of `NUM_VISITS` most recent visits.
+1. If the page is visited, get a sample of ``NUM_VISITS`` most recent visits.
 2. For each visit get a transition bonus, depending on the visit type.
 3. If the page is bookmarked, add to the bonus an additional bookmark bonus.
 4. If the bonus is positive, get a bucket weight depending on the visit date.
-5. Calculate points for the visit as `weight * (bonus / 100)`.
+5. Calculate points for the visit as ``age_bucket_weight * (bonus / 100)``.
 6. Sum points for all the sampled visits.
-7. If the points sum is zero, return a `-1` frecency, it will still appear in the UI.
-   Otherwise, frecency is `visitCount * points / NUM_VISITS`.
+7. If the points sum is zero, return a ``-1`` frecency, it will still appear in the UI.
+   Otherwise, frecency is ``visitCount * points / NUM_VISITS``.
 8. If the page is unvisited and not bookmarked, or it’s a bookmarked place-query,
-   return a `0` frecency, to hide it from the UI.
+   return a ``0`` frecency, to hide it from the UI.
 9. If it’s bookmarked, add the bookmark bonus.
 10. If it’s also a typed page, add the typed bonus.
-11. Frecency is `weight-of-bucket * (bonus / 100)`
+11. Frecency is ``age_bucket_weight * (bonus / 100)``
 
 When frecency for a page is calculated
 --------------------------------------
 
+Operations that may influence the frecency score are:
+
+* Adding visits
+* Removing visits
+* Adding bookmarks
+* Removing bookmarks
+* Changing the url of a bookmark
+
 Frecency is recalculated:
 
-* immediately, when a new visit is added. The user expectation here is that the
-  page appears in search results after being visited.
-* in background on idle times, in any other case. In most cases having a
+* Immediately, when a new visit is added. The user expectation here is that the
+  page appears in search results after being visited. This is also valid for
+  any History API that allows to add visits.
+* In background on idle times, in any other case. In most cases having a
   temporarily stale value is not a problem, the main concern would be privacy
   when removing history of a page, but removing whole history will either
   completely remove the page or, if it's bookmarked, it will still be relevant.
+  In this case, when a change influencing frecency happens, the ``recalc_frecency``
+  database field for the page is set to ``1``.
 
 Recalculation is done by the `PlacesFrecencyRecalculator <https://searchfox.org/mozilla-central/source/toolkit/components/places/PlacesFrecencyRecalculator.sys.mjs>`_ module.
+The Recalculator periodically polls a variable (``PlacesUtils.history.shouldStartFrecencyRecalculation``)
+that states whether there’s anything to recalculate. If a recalculation is
+necessary a DeferredTask is armed, that will look for a user idle opportunity
+in the next 5 minutes, otherwise it will run when that time elapses.
+To preserve energy, when the user is idle for more than 5 minutes, the polling
+is interrupted until the user is back.
+
+The recalculation task is also armed on the ``idle-daily`` notification.
+
+When the task is executed, it recalculates frecency of a chunk of pages. If
+there are more pages left to recalculate, the task is re-armed. After frecency
+of a page is recalculated, its ``recalc_frecency`` field is set back to ``0``.
 
 Frecency is also decayed daily during the idle-daily global notification, by
-multiplying all the scores by a decay rate  of `0.975`. This guarantees entries
-not receiving new visits or bookmarks will age and lose relevancy.
+multiplying all the scores by a decay rate  of ``0.975`` (half-life of 28 days).
+This guarantees entries not receiving new visits or bookmarks lose relevancy.
 
 
 Adaptive Input History
@@ -192,14 +215,15 @@ them appear as having an infinite frecency.
 
 When the user types a given string, and picks a result from the address bar, that
 relation is stored and increases a use_count field for the given string.
-The use_count field asymptotically approaches a max of `10` (the update is done as `use_count * .9 + 1`).
+The use_count field asymptotically approaches a max of ``10`` (the update is
+done as ``use_count * .9 + 1``).
 
 On querying, all the search strings that start with the input string are matched,
-a rank is calculated per each page as `ROUND(MAX(use_count) * (1 + (input = :search_string)), 1)`,
+a rank is calculated per each page as ``ROUND(MAX(use_count) * (1 + (input = :search_string)), 1)``,
 so that results perfectly matching the search string appear at the top.
 Results with the same rank are additionally sorted by descending frecency.
 
 On daily idles, when frecency is decayed, also input history gets decayed, in
-particular the use_count field is multiplied by a decay rate  of `0.975`.
-After decaying, any entry that has a `use_count < 0.975^90 (= 0.1)` is removed,
+particular the use_count field is multiplied by a decay rate  of ``0.975``.
+After decaying, any entry that has a ``use_count < 0.975^90 (= 0.1)`` is removed,
 thus entries are removed if unused for 90 days.
