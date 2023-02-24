@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Almasıw buferine maǵlıwmatlardı kirgiziw</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">Qálegen bettegi kontentti bloklaw</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Brauzer tariyxın kórsetiw</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Fayllardı júklew hám brauzer tariyxında júklengenlerdi oqıw hám ózgertiw</string>
     <!-- Description for downloads_open permission. -->

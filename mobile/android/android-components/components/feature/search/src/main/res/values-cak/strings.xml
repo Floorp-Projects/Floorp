@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Tikanöx</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Tikanöx pan ajk\'amaya\'l</string>
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Tikanöx chi ch\'ab\'äl</string>
+</resources>

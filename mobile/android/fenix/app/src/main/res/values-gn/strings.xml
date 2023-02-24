@@ -395,7 +395,11 @@
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_title">¡Opáma banners kookie rehegua!</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Emboyke pya’e kookie mba’ejerure ikatu vove. Péicha ndoikóirõ, emoneĩ opaite kookie emboyke hag̃ua kookie marandu’i.</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Omboykese ijehegui umi kookie mba’ejerure, ikatu vove.</string>
+    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_2">Emoneĩ %1$s omboyke hag̃ua ijehegui kookie mba’ejerure ikatu vove.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Ani ko’ág̃a</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
@@ -404,10 +408,16 @@
     <string name="reduce_cookie_banner_dialog_snackbar_text">Ehecha’ivéta kookie mba’ejerure</string>
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Ehecha’ive kookie ovetã iñapysẽva</string>
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Embohovái pya’e kookie marandu’i iñapysẽva eikundahaporã hag̃ua. %1$s omboykéta mba’ejerure ikatúramo térã omoneĩmbáta ndaha’éirõ.</string>
+    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">Embohovái pya’e kookie umi marandu’i iñapysẽva eikundahaporã hag̃ua. %1$s omboykéta umi mba’ejerure ikatúramo.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Emboyke ovetã iñapysẽva</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Kookie Banner Ñemomichĩ</string>
+    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">¿Emoneĩ %1$s tomboyke kookie mba’ejerure ñemoneĩva tendagua ikatúrõ térã emoneĩ kookiepe jeike ikatu vove?</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">¿Emoneĩ %1$s tomboyke kookie mba’ejerure ñemoneĩgua tendápe ikatúrõ?</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
