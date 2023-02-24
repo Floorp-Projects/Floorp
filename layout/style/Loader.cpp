@@ -48,6 +48,7 @@
 #include "nsGkAtoms.h"
 #include "nsIThreadInternal.h"
 #include "nsINetworkPredictor.h"
+#include "nsQueryActor.h"
 #include "nsStringStream.h"
 #include "mozilla/dom/MediaList.h"
 #include "mozilla/dom/ShadowRoot.h"
@@ -1616,6 +1617,17 @@ void Loader::NotifyObservers(SheetLoadData& aData, nsresult aStatus) {
     if (aData.BlocksLoadEvent()) {
       DecrementOngoingLoadCount();
     }
+  }
+  if (!aData.mTitle.IsEmpty() && NS_SUCCEEDED(aStatus)) {
+    nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
+        "Loader::NotifyObservers - Create PageStyle actor",
+         [doc = mDocument] {
+          // Force creating the page style actor, if available.
+          // This will no-op if no actor with this name is registered (outside
+          // of desktop Firefox).
+          nsCOMPtr<nsISupports> pageStyleActor = do_QueryActor("PageStyle", doc);
+          Unused << pageStyleActor;
+        }));
   }
 
   if (aData.mMustNotify) {
