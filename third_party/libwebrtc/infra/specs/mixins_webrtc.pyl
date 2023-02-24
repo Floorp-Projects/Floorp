@@ -173,6 +173,14 @@
       ],
     }
   },
+  'redfin': {
+    'swarming': {
+      'dimensions': {
+        'device_type': 'redfin',
+        'os': 'Android'
+      }
+    }
+  },
   'resultdb-gtest-json-format': {
     '$mixin_append': {
       'args': [

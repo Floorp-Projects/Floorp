@@ -127,6 +127,7 @@
       'Perf Android32 (M Nexus5)': 'release_bot_x64',
       'Perf Android64 (M Nexus5X)': 'release_bot_x64',
       'Perf Android64 (O Pixel2)': 'release_bot_x64',
+      'Perf Android64 (R Pixel5)': 'release_bot_x64',
       'Perf Linux Bionic': 'release_bot_x64',
       'Perf Linux Trusty': 'release_bot_x64',
       'Perf Mac 11': 'release_bot_x64',
