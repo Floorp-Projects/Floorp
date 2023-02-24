@@ -11,6 +11,7 @@
 #ifndef TEST_PC_E2E_ANALYZER_VIDEO_DEFAULT_VIDEO_QUALITY_ANALYZER_SHARED_OBJECTS_H_
 #define TEST_PC_E2E_ANALYZER_VIDEO_DEFAULT_VIDEO_QUALITY_ANALYZER_SHARED_OBJECTS_H_
 
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <ostream>
@@ -182,6 +183,16 @@ struct AnalyzerStats {
   // Count of frames in flight in analyzer measured when new comparison is added
   // and after analyzer was stopped.
   SamplesStatsCounter frames_in_flight_left_count;
+
+  // Next metrics are collected and reported iff
+  // `DefaultVideoQualityAnalyzerOptions::report_infra_metrics` is true.
+  SamplesStatsCounter on_frame_captured_processing_time_ms;
+  SamplesStatsCounter on_frame_pre_encode_processing_time_ms;
+  SamplesStatsCounter on_frame_encoded_processing_time_ms;
+  SamplesStatsCounter on_frame_pre_decode_processing_time_ms;
+  SamplesStatsCounter on_frame_decoded_processing_time_ms;
+  SamplesStatsCounter on_frame_rendered_processing_time_ms;
+  SamplesStatsCounter on_decoder_error_processing_time_ms;
 };
 
 struct StatsKey {
@@ -245,6 +256,9 @@ struct DefaultVideoQualityAnalyzerOptions {
   // Tells DefaultVideoQualityAnalyzer if detailed frame stats should be
   // reported.
   bool report_detailed_frame_stats = false;
+  // Tells DefaultVideoQualityAnalyzer if infra metrics related to the
+  // performance and stability of the analyzer itself should be reported.
+  bool report_infra_metrics = false;
   // If true DefaultVideoQualityAnalyzer will try to adjust frames before
   // computing PSNR and SSIM for them. In some cases picture may be shifted by
   // a few pixels after the encode/decode step. Those difference is invisible

@@ -21,16 +21,12 @@
 #include <vector>
 
 #include "api/array_view.h"
-#include "api/numerics/samples_stats_counter.h"
 #include "api/test/metrics/metrics_logger.h"
 #include "api/test/video_quality_analyzer_interface.h"
 #include "api/units/data_size.h"
 #include "api/units/timestamp.h"
 #include "api/video/encoded_image.h"
 #include "api/video/video_frame.h"
-#include "api/video/video_frame_type.h"
-#include "rtc_base/event.h"
-#include "rtc_base/platform_thread.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/thread_annotations.h"
 #include "system_wrappers/include/clock.h"
