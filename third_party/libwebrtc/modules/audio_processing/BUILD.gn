@@ -421,6 +421,7 @@ if (rtc_include_tests) {
         "agc2:input_volume_controller_unittests",
         "agc2:input_volume_stats_reporter_unittests",
         "agc2:noise_estimator_unittests",
+        "agc2:speech_level_estimator_unittest",
         "agc2:test_utils",
         "agc2:vad_wrapper_unittests",
         "agc2/rnn_vad:unittests",
