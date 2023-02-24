@@ -484,6 +484,7 @@ TEST_F(PhysicalSocketTest, TestSocketRecvTimestampIPv6ScmExperiment) {
   webrtc::test::ScopedFieldTrials trial("WebRTC-SCM-Timestamp/Enabled/");
   SocketTest::TestSocketRecvTimestampIPv6();
 }
+
 // Verify that if the socket was unable to be bound to a real network interface
 // (not loopback), Bind will return an error.
 TEST_F(PhysicalSocketTest,
@@ -522,5 +523,16 @@ TEST_F(PhysicalSocketTest,
 }
 
 #endif
+
+TEST_F(PhysicalSocketTest, UdpSocketRecvTimestampUseRtcEpochIPv4ScmExperiment) {
+  MAYBE_SKIP_IPV4;
+  webrtc::test::ScopedFieldTrials trial("WebRTC-SCM-Timestamp/Enabled/");
+  SocketTest::TestUdpSocketRecvTimestampUseRtcEpochIPv4();
+}
+
+TEST_F(PhysicalSocketTest, UdpSocketRecvTimestampUseRtcEpochIPv6ScmExperiment) {
+  webrtc::test::ScopedFieldTrials trial("WebRTC-SCM-Timestamp/Enabled/");
+  SocketTest::TestUdpSocketRecvTimestampUseRtcEpochIPv6();
+}
 
 }  // namespace rtc
