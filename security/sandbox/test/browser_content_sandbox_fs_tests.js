@@ -17,37 +17,41 @@ async function createFileInHome() {
 }
 
 // Test if the content process can create a temp file, this is disallowed on
-// macOS but allowed everywhere else. Also test that the content process cannot
-// create symlinks or delete files.
+// macOS and Windows but allowed everywhere else. Also test that the content
+// process cannot create symlinks on macOS or delete files.
 async function createTempFile() {
+  // On Windows we allow access to the temp dir for DEBUG builds, because of
+  // logging that uses that dir.
+  let isOptWin = isWin() && !SpecialPowers.isDebugBuild;
+
   let browser = gBrowser.selectedBrowser;
   let path = fileInTempDir().path;
   let fileCreated = await SpecialPowers.spawn(browser, [path], createFile);
-  if (isMac()) {
-    ok(!fileCreated.ok, "creating a file in content temp is not permitted");
+  if (isMac() || isOptWin) {
+    ok(!fileCreated.ok, "creating a file in temp is not permitted");
   } else {
-    ok(!!fileCreated.ok, "creating a file in content temp is permitted");
+    ok(!!fileCreated.ok, "creating a file in temp is permitted");
   }
   // now delete the file
   let fileDeleted = await SpecialPowers.spawn(browser, [path], deleteFile);
-  if (isMac()) {
+  if (isMac() || isOptWin) {
     // On macOS we do not allow file deletion - it is not needed by the content
     // process itself, and macOS uses a different permission to control access
     // so revoking it is easy.
-    ok(!fileDeleted.ok, "deleting a file in content temp is not permitted");
+    ok(!fileDeleted.ok, "deleting a file in temp is not permitted");
+  } else {
+    ok(!!fileDeleted.ok, "deleting a file in temp is permitted");
+  }
 
+  // Test that symlink creation is not allowed on macOS.
+  if (isMac()) {
     let path = fileInTempDir().path;
     let symlinkCreated = await SpecialPowers.spawn(
       browser,
       [path],
       createSymlink
     );
-    ok(
-      !symlinkCreated.ok,
-      "created a symlink in content temp is not permitted"
-    );
-  } else {
-    ok(!!fileDeleted.ok, "deleting a file in content temp is permitted");
+    ok(!symlinkCreated.ok, "created a symlink in temp is not permitted");
   }
 }
 
