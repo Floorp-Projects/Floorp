@@ -285,6 +285,15 @@
           'gtest_tests': 'android_perf_tests',
         },
       },
+      'Perf Android64 (R Pixel5)': {
+        'mixins': [
+          'redfin', 'android-devices', 'perf-pool', 'timeout-3h',
+          'perf-output', 'has_native_resultdb_integration'
+        ],
+        'test_suites': {
+          'gtest_tests': 'android_perf_tests',
+        },
+      },
       'Perf Linux Bionic': {
         'os_type':
         'linux',
