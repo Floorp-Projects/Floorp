@@ -345,3 +345,23 @@ async function loadBadCertPage(url) {
   });
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 }
+
+/**
+ * Waits for the stylesheets to be loaded into the browser menu.
+ *
+ * @param tab
+ *        The tab that contains the webpage we're testing.
+ * @param styleSheetCount
+ *        How many stylesheets we expect to be loaded.
+ * @return Promise
+ */
+async function promiseStylesheetsLoaded(tab, styleSheetCount) {
+  let styleMenu = tab.ownerGlobal.gPageStyleMenu;
+  let permanentKey = tab.permanentKey;
+
+  await TestUtils.waitForCondition(() => {
+    let menu = styleMenu._pageStyleSheets.get(permanentKey);
+    info(`waiting for sheets: ${menu && menu.filteredStyleSheets.length}`);
+    return menu && menu.filteredStyleSheets.length >= styleSheetCount;
+  }, "waiting for style sheets to load");
+}

@@ -6,38 +6,28 @@
 var EXPORTED_SYMBOLS = ["PageStyleChild"];
 
 class PageStyleChild extends JSWindowActorChild {
-  actorCreated() {
-    // C++ can create the actor and call us here once an "interesting" link
-    // element gets added to the DOM. If pageload hasn't finished yet, just
-    // wait for that by doing nothing; the actor registration event
-    // listeners will ensure we get the pageshow event.
-    // It is also possible we get created in response to the parent
-    // sending us a message - in that case, it's still worth doing the
-    // same things here:
-    if (!this.browsingContext || !this.browsingContext.associatedWindow) {
-      return;
-    }
-    let { document } = this.browsingContext.associatedWindow;
-    if (document.readyState != "complete") {
-      return;
-    }
-    // If we've already seen a pageshow, send stylesheets now:
-    this.#collectAndSendSheets();
-  }
-
   handleEvent(event) {
-    if (event?.type != "pageshow") {
-      throw new Error("Unexpected event!");
-    }
+    // On page show, tell the parent all of the stylesheets this document has.
+    if (event.type == "pageshow") {
+      // If we are in the topmost browsing context,
+      // delete the stylesheets from the previous page.
+      if (this.browsingContext.top === this.browsingContext) {
+        this.sendAsyncMessage("PageStyle:Clear");
+      }
 
-    // On page show, tell the parent all of the stylesheets this document
-    // has. If we are in the topmost browsing context, delete the stylesheets
-    // from the previous page.
-    if (this.browsingContext.top === this.browsingContext) {
-      this.sendAsyncMessage("PageStyle:Clear");
+      let window = event.target.ownerGlobal;
+      window.requestIdleCallback(() => {
+        if (!window || window.closed) {
+          return;
+        }
+        let filteredStyleSheets = this._collectStyleSheets(window);
+        this.sendAsyncMessage("PageStyle:Add", {
+          filteredStyleSheets,
+          authorStyleDisabled: this.docShell.contentViewer.authorStyleDisabled,
+          preferredStyleSheetSet: this.document.preferredStyleSheetSet,
+        });
+      });
     }
-
-    this.#collectAndSendSheets();
   }
 
   receiveMessage(msg) {
@@ -127,28 +117,13 @@ class PageStyleChild extends JSWindowActorChild {
     }
   }
 
-  #collectAndSendSheets() {
-    let window = this.browsingContext.associatedWindow;
-    window.requestIdleCallback(() => {
-      if (!window || window.closed) {
-        return;
-      }
-      let filteredStyleSheets = this.#collectStyleSheets(window);
-      this.sendAsyncMessage("PageStyle:Add", {
-        filteredStyleSheets,
-        authorStyleDisabled: this.docShell.contentViewer.authorStyleDisabled,
-        preferredStyleSheetSet: this.document.preferredStyleSheetSet,
-      });
-    });
-  }
-
   /**
    * Get the stylesheets that have a title (and thus can be switched) in this
    * webpage.
    *
    * @param content     The window object for the page.
    */
-  #collectStyleSheets(content) {
+  _collectStyleSheets(content) {
     let result = [];
     let document = content.document;
 

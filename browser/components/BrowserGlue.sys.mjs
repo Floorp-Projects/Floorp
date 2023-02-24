@@ -646,10 +646,13 @@ let JSWINDOWACTORS = {
     child: {
       moduleURI: "resource:///actors/PageStyleChild.jsm",
       events: {
-        pageshow: { createActor: false },
+        pageshow: {},
       },
     },
 
+    // Only matching web pages, as opposed to internal about:, chrome: or
+    // resource: pages. See https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Match_patterns
+    matches: ["*://*/*", "file:///*"],
     messageManagerGroups: ["browsers"],
     allFrames: true,
   },
