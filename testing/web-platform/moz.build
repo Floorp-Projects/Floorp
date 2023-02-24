@@ -722,7 +722,7 @@ with Files("tests/webauthn/**"):
     BUG_COMPONENT = ("Core", "DOM: Web Authentication")
 
 with Files("tests/webdriver/**"):
-    BUG_COMPONENT = ("Testing", "geckodriver")
+    BUG_COMPONENT = ("Remote Protocol", "Marionette")
 
 with Files("tests/webdriver/tests/bidi/**"):
     BUG_COMPONENT = ("Remote Protocol", "WebDriver BiDi")
