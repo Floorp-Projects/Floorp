@@ -1,3 +1,6 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 "use strict";
 
 async function getColor(aSpawnTarget) {
@@ -12,11 +15,12 @@ async function insertIFrame() {
   let bc = gBrowser.selectedBrowser.browsingContext;
   let len = bc.children.length;
 
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+  const kURL =
+    WEB_ROOT.replace("example.com", "example.net") + "page_style.html";
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [kURL], function(url) {
     return new Promise(function(resolve) {
       let e = content.document.createElement("iframe");
-      e.src =
-        "http://mochi.test:8888/browser/browser/base/content/test/pageStyle/page_style.html";
+      e.src = url;
       e.onload = () => resolve();
       content.document.body.append(e);
     });
@@ -35,8 +39,7 @@ async function insertIFrame() {
 add_task(async function test_disable_style() {
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-    "http://example.com/browser/browser/base/content/test/pageStyle/page_style.html",
+    WEB_ROOT + "page_style.html",
     /* waitForLoad = */ true
   );
 
