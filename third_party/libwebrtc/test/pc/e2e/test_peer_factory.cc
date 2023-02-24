@@ -290,7 +290,7 @@ absl::optional<RemotePeerAudioConfig> RemotePeerAudioConfig::Create(
 }
 
 std::unique_ptr<TestPeer> TestPeerFactory::CreateTestPeer(
-    std::unique_ptr<PeerConfigurerImpl> configurer,
+    std::unique_ptr<PeerConfigurer> configurer,
     std::unique_ptr<MockPeerConnectionObserver> observer,
     absl::optional<RemotePeerAudioConfig> remote_audio_config,
     absl::optional<EchoEmulationConfig> echo_emulation_config) {
@@ -299,7 +299,7 @@ std::unique_ptr<TestPeer> TestPeerFactory::CreateTestPeer(
   std::unique_ptr<Params> params = configurer->ReleaseParams();
   std::unique_ptr<ConfigurableParams> configurable_params =
       configurer->ReleaseConfigurableParams();
-  std::vector<PeerConfigurerImpl::VideoSource> video_sources =
+  std::vector<PeerConfigurer::VideoSource> video_sources =
       configurer->ReleaseVideoSources();
   RTC_DCHECK(components);
   RTC_DCHECK(params);

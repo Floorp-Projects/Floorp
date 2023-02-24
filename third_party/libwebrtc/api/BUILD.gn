@@ -542,6 +542,7 @@ if (!build_with_mozilla) {
     "task_queue",
     "test/pclf:media_configuration",
     "test/pclf:media_quality_test_params",
+    "test/pclf:peer_configurer",
     "test/video:video_frame_writer",
     "transport:network_control",
     "units:time_delta",

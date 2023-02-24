@@ -16,6 +16,7 @@
 #include "api/media_stream_interface.h"
 #include "api/test/create_frame_generator.h"
 #include "api/test/pclf/media_configuration.h"
+#include "api/test/pclf/peer_configurer.h"
 #include "test/frame_generator_capturer.h"
 #include "test/platform_video_capturer.h"
 #include "test/testsupport/file_utils.h"
@@ -96,7 +97,7 @@ MediaHelper::MaybeAddVideo(TestPeer* peer) {
 
 std::unique_ptr<test::TestVideoCapturer> MediaHelper::CreateVideoCapturer(
     const VideoConfig& video_config,
-    PeerConfigurerImpl::VideoSource source,
+    PeerConfigurer::VideoSource source,
     std::unique_ptr<test::TestVideoCapturer::FramePreprocessor>
         frame_preprocessor) {
   CapturingDeviceIndex* capturing_device_index =

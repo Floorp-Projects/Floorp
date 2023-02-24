@@ -49,7 +49,7 @@ class TestPeer final : public StatsProvider {
 
   void GetStats(RTCStatsCollectorCallback* callback) override;
 
-  PeerConfigurerImpl::VideoSource ReleaseVideoSource(size_t i) {
+  PeerConfigurer::VideoSource ReleaseVideoSource(size_t i) {
     RTC_CHECK(wrapper_) << "TestPeer is already closed";
     return std::move(video_sources_[i]);
   }
@@ -156,7 +156,7 @@ class TestPeer final : public StatsProvider {
            std::unique_ptr<MockPeerConnectionObserver> observer,
            Params params,
            ConfigurableParams configurable_params,
-           std::vector<PeerConfigurerImpl::VideoSource> video_sources,
+           std::vector<PeerConfigurer::VideoSource> video_sources,
            rtc::scoped_refptr<AudioProcessing> audio_processing,
            std::unique_ptr<rtc::Thread> worker_thread);
 
@@ -176,7 +176,7 @@ class TestPeer final : public StatsProvider {
   // worker thread and network thread.
   std::unique_ptr<rtc::Thread> worker_thread_;
   std::unique_ptr<PeerConnectionWrapper> wrapper_;
-  std::vector<PeerConfigurerImpl::VideoSource> video_sources_;
+  std::vector<PeerConfigurer::VideoSource> video_sources_;
   rtc::scoped_refptr<AudioProcessing> audio_processing_;
 
   std::vector<std::unique_ptr<IceCandidateInterface>> remote_ice_candidates_;

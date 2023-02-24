@@ -38,6 +38,7 @@
 #include "api/test/frame_generator_interface.h"
 #include "api/test/pclf/media_configuration.h"
 #include "api/test/pclf/media_quality_test_params.h"
+#include "api/test/pclf/peer_configurer.h"
 #include "api/test/peer_network_dependencies.h"
 #include "api/test/simulated_network.h"
 #include "api/test/stats_observer_interface.h"
@@ -76,127 +77,7 @@ class PeerConnectionE2EQualityTestFixture {
   using VideoSubscription = ::webrtc::webrtc_pc_e2e::VideoSubscription;
   using EchoEmulationConfig = ::webrtc::webrtc_pc_e2e::EchoEmulationConfig;
   using RunParams = ::webrtc::webrtc_pc_e2e::RunParams;
-
-  // This class is used to fully configure one peer inside the call.
-  class PeerConfigurer {
-   public:
-    virtual ~PeerConfigurer() = default;
-
-    // Sets peer name that will be used to report metrics related to this peer.
-    // If not set, some default name will be assigned. All names have to be
-    // unique.
-    virtual PeerConfigurer* SetName(absl::string_view name) = 0;
-
-    // The parameters of the following 9 methods will be passed to the
-    // PeerConnectionFactoryInterface implementation that will be created for
-    // this peer.
-    virtual PeerConfigurer* SetTaskQueueFactory(
-        std::unique_ptr<TaskQueueFactory> task_queue_factory) = 0;
-    virtual PeerConfigurer* SetCallFactory(
-        std::unique_ptr<CallFactoryInterface> call_factory) = 0;
-    virtual PeerConfigurer* SetEventLogFactory(
-        std::unique_ptr<RtcEventLogFactoryInterface> event_log_factory) = 0;
-    virtual PeerConfigurer* SetFecControllerFactory(
-        std::unique_ptr<FecControllerFactoryInterface>
-            fec_controller_factory) = 0;
-    virtual PeerConfigurer* SetNetworkControllerFactory(
-        std::unique_ptr<NetworkControllerFactoryInterface>
-            network_controller_factory) = 0;
-    virtual PeerConfigurer* SetVideoEncoderFactory(
-        std::unique_ptr<VideoEncoderFactory> video_encoder_factory) = 0;
-    virtual PeerConfigurer* SetVideoDecoderFactory(
-        std::unique_ptr<VideoDecoderFactory> video_decoder_factory) = 0;
-    // Set a custom NetEqFactory to be used in the call.
-    virtual PeerConfigurer* SetNetEqFactory(
-        std::unique_ptr<NetEqFactory> neteq_factory) = 0;
-    virtual PeerConfigurer* SetAudioProcessing(
-        rtc::scoped_refptr<webrtc::AudioProcessing> audio_processing) = 0;
-    virtual PeerConfigurer* SetAudioMixer(
-        rtc::scoped_refptr<webrtc::AudioMixer> audio_mixer) = 0;
-
-    // Forces the Peerconnection to use the network thread as the worker thread.
-    // Ie, worker thread and the network thread is the same thread.
-    virtual PeerConfigurer* SetUseNetworkThreadAsWorkerThread() = 0;
-
-    // The parameters of the following 4 methods will be passed to the
-    // PeerConnectionInterface implementation that will be created for this
-    // peer.
-    virtual PeerConfigurer* SetAsyncResolverFactory(
-        std::unique_ptr<webrtc::AsyncResolverFactory>
-            async_resolver_factory) = 0;
-    virtual PeerConfigurer* SetRTCCertificateGenerator(
-        std::unique_ptr<rtc::RTCCertificateGeneratorInterface>
-            cert_generator) = 0;
-    virtual PeerConfigurer* SetSSLCertificateVerifier(
-        std::unique_ptr<rtc::SSLCertificateVerifier> tls_cert_verifier) = 0;
-    virtual PeerConfigurer* SetIceTransportFactory(
-        std::unique_ptr<IceTransportFactory> factory) = 0;
-    // Flags to set on `cricket::PortAllocator`. These flags will be added
-    // to the default ones that are presented on the port allocator.
-    // For possible values check p2p/base/port_allocator.h.
-    virtual PeerConfigurer* SetPortAllocatorExtraFlags(
-        uint32_t extra_flags) = 0;
-
-    // Add new video stream to the call that will be sent from this peer.
-    // Default implementation of video frames generator will be used.
-    virtual PeerConfigurer* AddVideoConfig(VideoConfig config) = 0;
-    // Add new video stream to the call that will be sent from this peer with
-    // provided own implementation of video frames generator.
-    virtual PeerConfigurer* AddVideoConfig(
-        VideoConfig config,
-        std::unique_ptr<test::FrameGeneratorInterface> generator) = 0;
-    // Add new video stream to the call that will be sent from this peer.
-    // Capturing device with specified index will be used to get input video.
-    virtual PeerConfigurer* AddVideoConfig(
-        VideoConfig config,
-        CapturingDeviceIndex capturing_device_index) = 0;
-    // Sets video subscription for the peer. By default subscription will
-    // include all streams with `VideoSubscription::kSameAsSendStream`
-    // resolution. To override this behavior use this method.
-    virtual PeerConfigurer* SetVideoSubscription(
-        VideoSubscription subscription) = 0;
-    // Set the list of video codecs used by the peer during the test. These
-    // codecs will be negotiated in SDP during offer/answer exchange. The order
-    // of these codecs during negotiation will be the same as in `video_codecs`.
-    // Codecs have to be available in codecs list provided by peer connection to
-    // be negotiated. If some of specified codecs won't be found, the test will
-    // crash.
-    virtual PeerConfigurer* SetVideoCodecs(
-        std::vector<VideoCodecConfig> video_codecs) = 0;
-    // Set the audio stream for the call from this peer. If this method won't
-    // be invoked, this peer will send no audio.
-    virtual PeerConfigurer* SetAudioConfig(AudioConfig config) = 0;
-
-    // Set if ULP FEC should be used or not. False by default.
-    virtual PeerConfigurer* SetUseUlpFEC(bool value) = 0;
-    // Set if Flex FEC should be used or not. False by default.
-    // Client also must enable `enable_flex_fec_support` in the `RunParams` to
-    // be able to use this feature.
-    virtual PeerConfigurer* SetUseFlexFEC(bool value) = 0;
-    // Specifies how much video encoder target bitrate should be different than
-    // target bitrate, provided by WebRTC stack. Must be greater than 0. Can be
-    // used to emulate overshooting of video encoders. This multiplier will
-    // be applied for all video encoder on both sides for all layers. Bitrate
-    // estimated by WebRTC stack will be multiplied by this multiplier and then
-    // provided into VideoEncoder::SetRates(...). 1.0 by default.
-    virtual PeerConfigurer* SetVideoEncoderBitrateMultiplier(
-        double multiplier) = 0;
-
-    // If is set, an RTCEventLog will be saved in that location and it will be
-    // available for further analysis.
-    virtual PeerConfigurer* SetRtcEventLogPath(std::string path) = 0;
-    // If is set, an AEC dump will be saved in that location and it will be
-    // available for further analysis.
-    virtual PeerConfigurer* SetAecDumpPath(std::string path) = 0;
-    virtual PeerConfigurer* SetRTCConfiguration(
-        PeerConnectionInterface::RTCConfiguration configuration) = 0;
-    virtual PeerConfigurer* SetRTCOfferAnswerOptions(
-        PeerConnectionInterface::RTCOfferAnswerOptions options) = 0;
-    // Set bitrate parameters on PeerConnection. This constraints will be
-    // applied to all summed RTP streams for this peer.
-    virtual PeerConfigurer* SetBitrateSettings(
-        BitrateSettings bitrate_settings) = 0;
-  };
+  using PeerConfigurer = ::webrtc::webrtc_pc_e2e::PeerConfigurer;
 
   // Represent an entity that will report quality metrics after test.
   class QualityMetricsReporter : public StatsObserverInterface {

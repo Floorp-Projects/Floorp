@@ -23,6 +23,7 @@
 #include "api/scoped_refptr.h"
 #include "api/test/metrics/metric.h"
 #include "api/test/pclf/media_configuration.h"
+#include "api/test/pclf/peer_configurer.h"
 #include "api/test/time_controller.h"
 #include "api/test/video_quality_analyzer_interface.h"
 #include "pc/sdp_utils.h"
@@ -40,6 +41,7 @@
 #include "test/pc/e2e/analyzer/video/video_quality_metrics_reporter.h"
 #include "test/pc/e2e/cross_media_metrics_reporter.h"
 #include "test/pc/e2e/metric_metadata_keys.h"
+#include "test/pc/e2e/peer_params_preprocessor.h"
 #include "test/pc/e2e/stats_poller.h"
 #include "test/pc/e2e/test_peer_factory.h"
 #include "test/testsupport/file_utils.h"
@@ -108,7 +110,7 @@ class FixturePeerConnectionObserver : public MockPeerConnectionObserver {
 };
 
 void ValidateP2PSimulcastParams(
-    const std::vector<std::unique_ptr<PeerConfigurerImpl>>& peers) {
+    const std::vector<std::unique_ptr<PeerConfigurer>>& peers) {
   for (size_t i = 0; i < peers.size(); ++i) {
     Params* params = peers[i]->params();
     ConfigurableParams* configurable_params = peers[i]->configurable_params();
@@ -197,7 +199,7 @@ PeerConnectionE2EQualityTest::PeerHandle* PeerConnectionE2EQualityTest::AddPeer(
     const PeerNetworkDependencies& network_dependencies,
     rtc::FunctionView<void(PeerConfigurer*)> configurer) {
   peer_configurations_.push_back(
-      std::make_unique<PeerConfigurerImpl>(network_dependencies));
+      std::make_unique<PeerConfigurer>(network_dependencies));
   configurer(peer_configurations_.back().get());
   peer_handles_.push_back(PeerHandleImpl());
   return &peer_handles_.back();
@@ -213,9 +215,9 @@ void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
   RTC_CHECK_EQ(peer_configurations_.size(), 2)
       << "Only peer to peer calls are allowed, please add 2 peers";
 
-  std::unique_ptr<PeerConfigurerImpl> alice_configurer =
+  std::unique_ptr<PeerConfigurer> alice_configurer =
       std::move(peer_configurations_[0]);
-  std::unique_ptr<PeerConfigurerImpl> bob_configurer =
+  std::unique_ptr<PeerConfigurer> bob_configurer =
       std::move(peer_configurations_[1]);
   peer_configurations_.clear();
 
