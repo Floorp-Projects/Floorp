@@ -1268,6 +1268,13 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
 
       // Firefox 110 uses schema version 71
 
+      if (currentSchemaVersion < 72) {
+        rv = MigrateV72Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 111 uses schema version 72
+
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
       // NEVER MIX UP SYNC AND ASYNC EXECUTION IN MIGRATORS, YOU MAY LOCK THE
@@ -2467,6 +2474,16 @@ nsresult Database::MigrateV71Up() {
       "DROP TABLE IF EXISTS moz_session_metadata"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  return NS_OK;
+}
+
+nsresult Database::MigrateV72Up() {
+  // Recalculate frecency of unvisited bookmarks.
+  nsresult rv = mMainConn->ExecuteSimpleSQL(
+      "UPDATE moz_places "
+      "SET recalc_frecency = 1 "
+      "WHERE foreign_count > 0 AND visit_count = 0"_ns);
+  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 
