@@ -181,6 +181,7 @@ int FindFirstMediaStatsIndexByKind(
 class TaskQueueMetronome : public webrtc::Metronome {
  public:
   explicit TaskQueueMetronome(TimeDelta tick_period);
+  ~TaskQueueMetronome() override;
 
   // webrtc::Metronome implementation.
   void RequestCallOnNextTick(absl::AnyInvocable<void() &&> callback) override;
@@ -188,7 +189,9 @@ class TaskQueueMetronome : public webrtc::Metronome {
 
  private:
   const TimeDelta tick_period_;
+  SequenceChecker sequence_checker_;
   std::vector<absl::AnyInvocable<void() &&>> callbacks_;
+  ScopedTaskSafetyDetached safety_;
 };
 
 class SignalingMessageReceiver {

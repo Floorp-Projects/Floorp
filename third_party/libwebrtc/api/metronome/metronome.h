@@ -30,21 +30,7 @@ namespace webrtc {
 // Metronome implementations must be thread-compatible.
 class RTC_EXPORT Metronome {
  public:
-  // TODO(crbug.com/1381982): remove stale classes and methods once downstream
-  // dependencies adapts.
-  class RTC_EXPORT TickListener {
-   public:
-    virtual ~TickListener() = default;
-    virtual void OnTick() = 0;
-    virtual TaskQueueBase* OnTickTaskQueue() = 0;
-  };
-
   virtual ~Metronome() = default;
-
-  // TODO(crbug.com/1381982): remove stale classes and methods once downstream
-  // dependencies adapts.
-  virtual void AddListener(TickListener* listener);
-  virtual void RemoveListener(TickListener* listener);
 
   // Requests a call to `callback` on the next tick. Scheduled callbacks are
   // executed on the same sequence as they were requested on. There are no

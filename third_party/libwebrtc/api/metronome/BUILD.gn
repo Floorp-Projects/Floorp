@@ -10,10 +10,7 @@ import("../../webrtc.gni")
 
 rtc_source_set("metronome") {
   visibility = [ "*" ]
-  sources = [
-    "metronome.cc",
-    "metronome.h",
-  ]
+  sources = [ "metronome.h" ]
   deps = [
     "../../rtc_base/system:rtc_export",
     "../task_queue",
