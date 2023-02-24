@@ -514,10 +514,6 @@ void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparison(
           StatsSample(*comparison.frame_stats.decoded_frame_width *
                           *comparison.frame_stats.decoded_frame_height,
                       frame_stats.decode_end_time, metadata));
-      stats->resolution_of_rendered_frame.AddSample(
-          StatsSample(*comparison.frame_stats.decoded_frame_width *
-                          *comparison.frame_stats.decoded_frame_height,
-                      frame_stats.decode_end_time, metadata));
     }
 
     if (frame_stats.prev_frame_rendered_time.IsFinite() &&
