@@ -880,6 +880,14 @@ var View = {
         fluentName = "about-processes-utility-actor-mf-media-engine";
         break;
 
+      case "jSOracle":
+        fluentName = "about-processes-utility-actor-js-oracle";
+        break;
+
+      case "windowsUtils":
+        fluentName = "about-processes-utility-actor-windows-utils";
+        break;
+
       default:
         fluentName = "about-processes-utility-actor-unknown";
         break;
