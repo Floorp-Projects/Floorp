@@ -71,6 +71,8 @@ class InputVolumeController final {
   InputVolumeController(const InputVolumeController&) = delete;
   InputVolumeController& operator=(const InputVolumeController&) = delete;
 
+  // TODO(webrtc:7494): Integrate initialization into ctor and remove this
+  // method.
   void Initialize();
 
   // Sets the applied input volume.

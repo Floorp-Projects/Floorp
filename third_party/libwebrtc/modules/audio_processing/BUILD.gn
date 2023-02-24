@@ -142,6 +142,7 @@ rtc_library("gain_controller2") {
     "agc2:cpu_features",
     "agc2:fixed_digital",
     "agc2:gain_applier",
+    "agc2:input_volume_controller",
     "agc2:vad_wrapper",
   ]
 }
