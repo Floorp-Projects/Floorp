@@ -390,9 +390,10 @@ std::string OpenSSLStreamAdapter::SslCipherSuiteToName(int cipher_suite) {
   }
   return SSL_CIPHER_standard_name(ssl_cipher);
 #else
+  const int openssl_cipher_id = 0x03000000L | cipher_suite;
   for (const SslCipherMapEntry* entry = kSslCipherMap; entry->rfc_name;
        ++entry) {
-    if (cipher_suite == static_cast<int>(entry->openssl_id)) {
+    if (openssl_cipher_id == static_cast<int>(entry->openssl_id)) {
       return entry->rfc_name;
     }
   }
