@@ -613,6 +613,7 @@ if (!build_with_chromium) {
         "../../../api/test/metrics:global_metrics_logger_and_exporter",
         "../../../api/test/pclf:media_configuration",
         "../../../api/test/pclf:media_quality_test_params",
+        "../../../api/test/pclf:peer_configurer",
         "../../../api/video_codecs:builtin_video_decoder_factory",
         "../../../api/video_codecs:builtin_video_encoder_factory",
         "../../../call:simulated_network",
@@ -655,6 +656,7 @@ if (!build_with_chromium) {
         "../../../api/test/metrics:stdout_metrics_exporter",
         "../../../api/test/pclf:media_configuration",
         "../../../api/test/pclf:media_quality_test_params",
+        "../../../api/test/pclf:peer_configurer",
         "../../../api/units:time_delta",
       ]
     }

@@ -19,6 +19,9 @@
 #include "api/test/frame_generator_interface.h"
 #include "api/test/metrics/global_metrics_logger_and_exporter.h"
 #include "api/test/network_emulation_manager.h"
+#include "api/test/pclf/media_configuration.h"
+#include "api/test/pclf/media_quality_test_params.h"
+#include "api/test/pclf/peer_configurer.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
 #include "api/test/simulated_network.h"
 #include "api/test/time_controller.h"
@@ -33,21 +36,14 @@
 
 namespace webrtc {
 
-using EmulatedSFUConfig =
-    webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::EmulatedSFUConfig;
-using PeerConfigurer =
-    webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::PeerConfigurer;
-using RunParams = webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::RunParams;
-using VideoConfig =
-    webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::VideoConfig;
-using AudioConfig =
-    webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::AudioConfig;
-using ScreenShareConfig =
-    webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::ScreenShareConfig;
-using VideoSimulcastConfig =
-    webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::VideoSimulcastConfig;
-using VideoCodecConfig =
-    webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::VideoCodecConfig;
+using ::webrtc::webrtc_pc_e2e::AudioConfig;
+using ::webrtc::webrtc_pc_e2e::EmulatedSFUConfig;
+using ::webrtc::webrtc_pc_e2e::PeerConfigurer;
+using ::webrtc::webrtc_pc_e2e::RunParams;
+using ::webrtc::webrtc_pc_e2e::ScreenShareConfig;
+using ::webrtc::webrtc_pc_e2e::VideoCodecConfig;
+using ::webrtc::webrtc_pc_e2e::VideoConfig;
+using ::webrtc::webrtc_pc_e2e::VideoSimulcastConfig;
 
 namespace {
 
@@ -63,10 +59,14 @@ CreateTestFixture(const std::string& test_case_name,
   auto fixture = webrtc_pc_e2e::CreatePeerConnectionE2EQualityTestFixture(
       test_case_name, time_controller, /*audio_quality_analyzer=*/nullptr,
       /*video_quality_analyzer=*/nullptr);
-  fixture->AddPeer(network_links.first->network_dependencies(),
-                   alice_configurer);
-  fixture->AddPeer(network_links.second->network_dependencies(),
-                   bob_configurer);
+  auto alice = std::make_unique<PeerConfigurer>(
+      network_links.first->network_dependencies());
+  auto bob = std::make_unique<PeerConfigurer>(
+      network_links.second->network_dependencies());
+  alice_configurer(alice.get());
+  bob_configurer(bob.get());
+  fixture->AddPeer(std::move(alice));
+  fixture->AddPeer(std::move(bob));
   fixture->AddQualityMetricsReporter(
       std::make_unique<webrtc_pc_e2e::NetworkQualityMetricsReporter>(
           network_links.first, network_links.second,

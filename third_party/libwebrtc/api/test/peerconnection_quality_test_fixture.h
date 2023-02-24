@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/macros.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -132,9 +133,18 @@ class PeerConnectionE2EQualityTestFixture {
   // `network_dependencies` are used to provide networking for peer's peer
   // connection. Members must be non-null.
   // `configurer` function will be used to configure peer in the call.
-  virtual PeerHandle* AddPeer(
+  [[deprecated("bugs.webrtc.org/14627")]] virtual PeerHandle* AddPeer(
       const PeerNetworkDependencies& network_dependencies,
-      rtc::FunctionView<void(PeerConfigurer*)> configurer) = 0;
+      rtc::FunctionView<void(PeerConfigurer*)> configurer) {
+    RTC_CHECK_NOTREACHED();
+    return nullptr;
+  }
+  // TODO(bugs.webrtc.org/14627): make pure virtual once all subclasses
+  // implement it.
+  virtual PeerHandle* AddPeer(std::unique_ptr<PeerConfigurer> configurer) {
+    RTC_CHECK_NOTREACHED();
+    return nullptr;
+  }
 
   // Runs the media quality test, which includes setting up the call with
   // configured participants, running it according to provided `run_params` and

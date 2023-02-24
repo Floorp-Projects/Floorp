@@ -19,6 +19,7 @@
 #include "api/test/network_emulation_manager.h"
 #include "api/test/pclf/media_configuration.h"
 #include "api/test/pclf/media_quality_test_params.h"
+#include "api/test/pclf/peer_configurer.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
 #include "api/units/time_delta.h"
 #include "test/gmock.h"
@@ -39,8 +40,7 @@ using ::webrtc::test::Metric;
 using ::webrtc::test::MetricsExporter;
 using ::webrtc::test::StdoutMetricsExporter;
 using ::webrtc::test::Unit;
-using PeerConfigurer = ::webrtc::webrtc_pc_e2e::
-    PeerConnectionE2EQualityTestFixture::PeerConfigurer;
+using ::webrtc::webrtc_pc_e2e::PeerConfigurer;
 
 // Adds a peer with some audio and video (the client should not care about
 // details about audio and video configs).
@@ -50,16 +50,16 @@ void AddDefaultAudioVideoPeer(
     absl::string_view video_stream_label,
     const PeerNetworkDependencies& network_dependencies,
     PeerConnectionE2EQualityTestFixture& fixture) {
-  fixture.AddPeer(network_dependencies, [&](PeerConfigurer* peer) {
-    peer->SetName(peer_name);
-    AudioConfig audio{std::string(audio_stream_label)};
-    audio.sync_group = std::string(peer_name);
-    peer->SetAudioConfig(std::move(audio));
-    VideoConfig video(std::string(video_stream_label), 320, 180, 15);
-    video.sync_group = std::string(peer_name);
-    peer->AddVideoConfig(std::move(video));
-    peer->SetVideoCodecs({VideoCodecConfig(cricket::kVp8CodecName)});
-  });
+  AudioConfig audio{std::string(audio_stream_label)};
+  audio.sync_group = std::string(peer_name);
+  VideoConfig video(std::string(video_stream_label), 320, 180, 15);
+  video.sync_group = std::string(peer_name);
+  auto peer = std::make_unique<PeerConfigurer>(network_dependencies);
+  peer->SetName(peer_name);
+  peer->SetAudioConfig(std::move(audio));
+  peer->AddVideoConfig(std::move(video));
+  peer->SetVideoCodecs({VideoCodecConfig(cricket::kVp8CodecName)});
+  fixture.AddPeer(std::move(peer));
 }
 
 // Metric fields to assert on
