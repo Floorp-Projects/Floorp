@@ -23,6 +23,7 @@
 #include "rtc_base/socket_unittest.h"
 #include "rtc_base/test_utils.h"
 #include "rtc_base/thread.h"
+#include "test/field_trial.h"
 #include "test/gtest.h"
 
 namespace rtc {
@@ -460,8 +461,9 @@ TEST_F(PhysicalSocketTest, TestGetSetOptionsIPv6) {
 
 #if defined(WEBRTC_POSIX)
 
-// We don't get recv timestamps on Mac.
 #if !defined(WEBRTC_MAC)
+// We don't get recv timestamps on Mac without the experiment
+// WebRTC-SCM-Timestamp
 TEST_F(PhysicalSocketTest, TestSocketRecvTimestampIPv4) {
   MAYBE_SKIP_IPV4;
   SocketTest::TestSocketRecvTimestampIPv4();
@@ -472,6 +474,16 @@ TEST_F(PhysicalSocketTest, TestSocketRecvTimestampIPv6) {
 }
 #endif
 
+TEST_F(PhysicalSocketTest, TestSocketRecvTimestampIPv4ScmExperiment) {
+  MAYBE_SKIP_IPV4;
+  webrtc::test::ScopedFieldTrials trial("WebRTC-SCM-Timestamp/Enabled/");
+  SocketTest::TestSocketRecvTimestampIPv4();
+}
+
+TEST_F(PhysicalSocketTest, TestSocketRecvTimestampIPv6ScmExperiment) {
+  webrtc::test::ScopedFieldTrials trial("WebRTC-SCM-Timestamp/Enabled/");
+  SocketTest::TestSocketRecvTimestampIPv6();
+}
 // Verify that if the socket was unable to be bound to a real network interface
 // (not loopback), Bind will return an error.
 TEST_F(PhysicalSocketTest,
