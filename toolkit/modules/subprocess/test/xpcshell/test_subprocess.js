@@ -526,7 +526,7 @@ add_task(async function test_subprocess_pathSearch() {
 
 add_task(async function test_subprocess_workdir() {
   let procDir = Services.dirsvc.get("CurWorkD", Ci.nsIFile).path;
-  let tmpDir = PathUtils.normalize(PathUtils.osTempDir);
+  let tmpDir = PathUtils.normalize(PathUtils.tempDir);
 
   notEqual(
     procDir,

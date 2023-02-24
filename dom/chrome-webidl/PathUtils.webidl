@@ -124,16 +124,10 @@ partial namespace PathUtils {
   readonly attribute DOMString localProfileDir;
 
   /**
-   * The temporary directory for the process.
+   * The OS temporary directory.
    */
   [Throws, BinaryName="TempDirSync"]
   readonly attribute DOMString tempDir;
-
-  /**
-   * The OS temporary directory.
-   */
-  [Throws, BinaryName="OSTempDirSync"]
-  readonly attribute DOMString osTempDir;
 
   /**
    * The libxul path.
@@ -157,16 +151,10 @@ partial namespace PathUtils {
   Promise<DOMString> getLocalProfileDir();
 
   /**
-   * The temporary directory for the process.
+   * The OS temporary directory.
    */
   [NewObject, BinaryName="GetTempDirAsync"]
   Promise<DOMString> getTempDir();
-
-  /**
-   * The OS temporary directory.
-   */
-  [NewObject, BinaryName="GetOSTempDirAsync"]
-  Promise<DOMString> getOSTempDir();
 
   /**
    * The libxul path.
