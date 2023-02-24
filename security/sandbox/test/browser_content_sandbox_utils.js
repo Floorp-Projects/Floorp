@@ -297,12 +297,12 @@ function fileInHomeDir() {
 
 // Returns a file object for a new file in the content temp dir (.../<UUID>).
 function fileInTempDir() {
-  let contentTempKey = "ContentTmpD";
+  let contentTempKey = "TmpD";
 
   // get the content temp dir, make sure it exists
   let ctmp = Services.dirsvc.get(contentTempKey, Ci.nsIFile);
-  Assert.ok(ctmp.exists(), "Content temp dir exists");
-  Assert.ok(ctmp.isDirectory(), "Content temp dir is a directory");
+  Assert.ok(ctmp.exists(), "Temp dir exists");
+  Assert.ok(ctmp.isDirectory(), "Temp dir is a directory");
 
   // build a file object for a new file in content temp
   let tempFile = ctmp.clone();
