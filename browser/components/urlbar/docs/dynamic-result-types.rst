@@ -368,7 +368,7 @@ like this:
           tag: "div",
           classList: ["day"],
           attributes: {
-            selectable: "true",
+            selectable: true,
           },
           children: [
             {
@@ -393,7 +393,7 @@ like this:
           tag: "div",
           classList: ["day"],
           attributes: {
-            selectable: "true",
+            selectable: true,
           },
           children: [
             {
