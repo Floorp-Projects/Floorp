@@ -2239,13 +2239,6 @@ TEST_F(RTCStatsCollectorTest,
   voice_receiver_info.silent_concealed_samples = 765;
   voice_receiver_info.jitter_buffer_delay_seconds = 3.456;
   voice_receiver_info.jitter_buffer_emitted_count = 13;
-  // TODO(crbug.com/webrtc/14524): These metrics have been moved from "track"
-  // stats, no need to test these here.
-  voice_receiver_info.jitter_buffer_flushes = 7;
-  voice_receiver_info.delayed_packet_outage_samples = 15;
-  voice_receiver_info.relative_packet_arrival_delay_seconds = 16;
-  voice_receiver_info.interruption_count = 7788;
-  voice_receiver_info.total_interruption_duration_ms = 778899;
 
   stats_->CreateMockRtpSendersReceiversAndChannels(
       {}, {std::make_pair(remote_audio_track.get(), voice_receiver_info)}, {},
@@ -2286,13 +2279,6 @@ TEST_F(RTCStatsCollectorTest,
   expected_remote_audio_track.silent_concealed_samples = 765;
   expected_remote_audio_track.jitter_buffer_delay = 3.456;
   expected_remote_audio_track.jitter_buffer_emitted_count = 13;
-  // TODO(crbug.com/webrtc/14524): These metrics have been moved from "track"
-  // stats, delete them.
-  expected_remote_audio_track.jitter_buffer_flushes = 7;
-  expected_remote_audio_track.delayed_packet_outage_samples = 15;
-  expected_remote_audio_track.relative_packet_arrival_delay = 16;
-  expected_remote_audio_track.interruption_count = 7788;
-  expected_remote_audio_track.total_interruption_duration = 778.899;
   ASSERT_TRUE(report->Get(expected_remote_audio_track.id()));
   EXPECT_EQ(expected_remote_audio_track,
             report->Get(expected_remote_audio_track.id())
@@ -2388,12 +2374,6 @@ TEST_F(RTCStatsCollectorTest,
   video_receiver_info_ssrc3.frames_decoded = 995;
   video_receiver_info_ssrc3.frames_dropped = 10;
   video_receiver_info_ssrc3.frames_rendered = 990;
-  // TODO(crbug.com/webrtc/14521): When removed from "track", there's no need to
-  // test these here.
-  video_receiver_info_ssrc3.freeze_count = 3;
-  video_receiver_info_ssrc3.pause_count = 2;
-  video_receiver_info_ssrc3.total_freezes_duration_ms = 1000;
-  video_receiver_info_ssrc3.total_pauses_duration_ms = 10000;
 
   stats_->CreateMockRtpSendersReceiversAndChannels(
       {}, {}, {},
@@ -2439,11 +2419,6 @@ TEST_F(RTCStatsCollectorTest,
   expected_remote_video_track_ssrc3.frames_received = 1000;
   expected_remote_video_track_ssrc3.frames_decoded = 995;
   expected_remote_video_track_ssrc3.frames_dropped = 10;
-  // TODO(crbug.com/webrtc/14521): These metrics have been moved, delete them.
-  expected_remote_video_track_ssrc3.freeze_count = 3;
-  expected_remote_video_track_ssrc3.pause_count = 2;
-  expected_remote_video_track_ssrc3.total_freezes_duration = 1;
-  expected_remote_video_track_ssrc3.total_pauses_duration = 10;
 
   ASSERT_TRUE(report->Get(expected_remote_video_track_ssrc3.id()));
   EXPECT_EQ(expected_remote_video_track_ssrc3,
