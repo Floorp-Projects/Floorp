@@ -13,7 +13,7 @@ class MozHandler extends window.MozElements.MozRichlistitem {
   static get markup() {
     return `
     <vbox pack="center">
-      <image height="32" width="32"/>
+      <html:img height="32" width="32"/>
     </vbox>
     <vbox flex="1">
       <label class="name"/>
@@ -30,7 +30,7 @@ class MozHandler extends window.MozElements.MozRichlistitem {
 
   static get inheritedAttributes() {
     return {
-      image: "src=image,disabled",
+      img: "src=image,disabled",
       ".name": "value=name,disabled",
       ".description": "value=description,disabled",
     };
