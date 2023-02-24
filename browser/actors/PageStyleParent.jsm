@@ -6,27 +6,76 @@
 var EXPORTED_SYMBOLS = ["PageStyleParent"];
 
 class PageStyleParent extends JSWindowActorParent {
+  // This has the most recent information about the content stylesheets for
+  // that actor. It's populated via the PageStyle:Add and PageStyle:Clear
+  // messages from the content process. It has the following structure:
+  //
+  // filteredStyleSheets (Array):
+  //   An Array of objects with a filtered list representing all stylesheets
+  //   that the current page offers. Each object has the following members:
+  //
+  //   title (String):
+  //     The title of the stylesheet
+  //
+  //   disabled (bool):
+  //     Whether or not the stylesheet is currently applied
+  //
+  //   href (String):
+  //     The URL of the stylesheet. Stylesheets loaded via a data URL will
+  //     have this property set to null.
+  //
+  // authorStyleDisabled (bool):
+  //   Whether or not the user currently has "No Style" selected for
+  //   the current page.
+  //
+  // preferredStyleSheetSet (bool):
+  //   Whether or not the user currently has the "Default" style selected
+  //   for the current page.
+  #styleSheetInfo = null;
+
   receiveMessage(msg) {
-    // The top browser.
+    // Check if things are alive:
     let browser = this.browsingContext.top.embedderElement;
-    if (!browser) {
+    if (!browser || browser.ownerGlobal.closed) {
       return;
     }
 
-    let permanentKey = browser.permanentKey;
-    let window = browser.ownerGlobal;
-    let styleMenu = window.gPageStyleMenu;
-    if (window.closed || !styleMenu) {
-      return;
-    }
-
+    // We always store information at the top of the frame tree.
+    let actor = this.browsingContext.top.currentWindowGlobal.getActor(
+      "PageStyle"
+    );
     switch (msg.name) {
       case "PageStyle:Add":
-        styleMenu.addBrowserStyleSheets(msg.data, permanentKey);
+        actor.addSheetInfo(msg.data);
         break;
       case "PageStyle:Clear":
-        styleMenu.clearBrowserStyleSheets(permanentKey);
+        if (actor == this) {
+          this.#styleSheetInfo = null;
+        }
         break;
     }
+  }
+
+  /**
+   * Add/append styleSheets to the _pageStyleSheets weakmap.
+   * @param newSheetData
+   *        The stylesheet data, including new stylesheets to add,
+   *        and the preferred stylesheet set for this document.
+   */
+  addSheetInfo(newSheetData) {
+    let info = this.getSheetInfo();
+    info.filteredStyleSheets.push(...newSheetData.filteredStyleSheets);
+    info.preferredStyleSheetSet ||= newSheetData.preferredStyleSheetSet;
+  }
+
+  getSheetInfo() {
+    if (!this.#styleSheetInfo) {
+      this.#styleSheetInfo = {
+        filteredStyleSheets: [],
+        authorStyleDisabled: false,
+        preferredStyleSheetSet: true,
+      };
+    }
+    return this.#styleSheetInfo;
   }
 }
