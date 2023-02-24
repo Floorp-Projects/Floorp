@@ -81,11 +81,6 @@ class RTC_EXPORT SharedScreenCastStream
 
  private:
   friend class SharedScreenCastStreamPrivate;
-  // Allows test cases to use private functionality
-  friend class PipeWireStreamTest;
-
-  // FIXME: is this a useful thing to be public?
-  explicit SharedScreenCastStream(Observer* notifier);
 
   SharedScreenCastStream(const SharedScreenCastStream&) = delete;
   SharedScreenCastStream& operator=(const SharedScreenCastStream&) = delete;

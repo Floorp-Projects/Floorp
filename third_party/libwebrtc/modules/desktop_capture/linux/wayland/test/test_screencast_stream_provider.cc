@@ -9,7 +9,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/desktop_capture/linux/wayland/test/fake_screencast_stream.h"
+#include "modules/desktop_capture/linux/wayland/test/test_screencast_stream_provider.h"
 
 #include <fcntl.h>
 #include <sys/mman.h>
@@ -37,9 +37,9 @@ const char kPipeWireLib[] = "libpipewire-0.3.so.0";
 
 constexpr int kBytesPerPixel = 4;
 
-FakeScreenCastStream::FakeScreenCastStream(Observer* observer,
-                                           uint32_t width,
-                                           uint32_t height)
+TestScreenCastStreamProvider::TestScreenCastStreamProvider(Observer* observer,
+                                                           uint32_t width,
+                                                           uint32_t height)
     : observer_(observer), width_(width), height_(height) {
 #if defined(WEBRTC_DLOPEN_PIPEWIRE)
   StubPathMap paths;
@@ -126,7 +126,7 @@ FakeScreenCastStream::FakeScreenCastStream(Observer* observer,
   return;
 }
 
-FakeScreenCastStream::~FakeScreenCastStream() {
+TestScreenCastStreamProvider::~TestScreenCastStreamProvider() {
   if (pw_main_loop_) {
     pw_thread_loop_stop(pw_main_loop_);
   }
@@ -148,7 +148,7 @@ FakeScreenCastStream::~FakeScreenCastStream() {
   }
 }
 
-void FakeScreenCastStream::RecordFrame(RgbaColor rgba_color) {
+void TestScreenCastStreamProvider::RecordFrame(RgbaColor rgba_color) {
   const char* error;
   if (pw_stream_get_state(pw_stream_, &error) != PW_STREAM_STATE_STREAMING) {
     if (error) {
@@ -195,36 +195,39 @@ void FakeScreenCastStream::RecordFrame(RgbaColor rgba_color) {
   }
 }
 
-void FakeScreenCastStream::StartStreaming() {
+void TestScreenCastStreamProvider::StartStreaming() {
   if (pw_stream_ && pw_node_id_ != 0) {
     pw_stream_set_active(pw_stream_, true);
   }
 }
 
-void FakeScreenCastStream::StopStreaming() {
+void TestScreenCastStreamProvider::StopStreaming() {
   if (pw_stream_ && pw_node_id_ != 0) {
     pw_stream_set_active(pw_stream_, false);
   }
 }
 
 // static
-void FakeScreenCastStream::OnCoreError(void* data,
-                                       uint32_t id,
-                                       int seq,
-                                       int res,
-                                       const char* message) {
-  FakeScreenCastStream* that = static_cast<FakeScreenCastStream*>(data);
+void TestScreenCastStreamProvider::OnCoreError(void* data,
+                                               uint32_t id,
+                                               int seq,
+                                               int res,
+                                               const char* message) {
+  TestScreenCastStreamProvider* that =
+      static_cast<TestScreenCastStreamProvider*>(data);
   RTC_DCHECK(that);
 
   RTC_LOG(LS_ERROR) << "PipeWire test: PipeWire remote error: " << message;
 }
 
 // static
-void FakeScreenCastStream::OnStreamStateChanged(void* data,
-                                                pw_stream_state old_state,
-                                                pw_stream_state state,
-                                                const char* error_message) {
-  FakeScreenCastStream* that = static_cast<FakeScreenCastStream*>(data);
+void TestScreenCastStreamProvider::OnStreamStateChanged(
+    void* data,
+    pw_stream_state old_state,
+    pw_stream_state state,
+    const char* error_message) {
+  TestScreenCastStreamProvider* that =
+      static_cast<TestScreenCastStreamProvider*>(data);
   RTC_DCHECK(that);
 
   switch (state) {
@@ -260,10 +263,12 @@ void FakeScreenCastStream::OnStreamStateChanged(void* data,
 }
 
 // static
-void FakeScreenCastStream::OnStreamParamChanged(void* data,
-                                                uint32_t id,
-                                                const struct spa_pod* format) {
-  FakeScreenCastStream* that = static_cast<FakeScreenCastStream*>(data);
+void TestScreenCastStreamProvider::OnStreamParamChanged(
+    void* data,
+    uint32_t id,
+    const struct spa_pod* format) {
+  TestScreenCastStreamProvider* that =
+      static_cast<TestScreenCastStreamProvider*>(data);
   RTC_DCHECK(that);
 
   RTC_LOG(LS_INFO) << "PipeWire test: PipeWire stream format changed.";
@@ -302,8 +307,10 @@ void FakeScreenCastStream::OnStreamParamChanged(void* data,
 }
 
 // static
-void FakeScreenCastStream::OnStreamAddBuffer(void* data, pw_buffer* buffer) {
-  FakeScreenCastStream* that = static_cast<FakeScreenCastStream*>(data);
+void TestScreenCastStreamProvider::OnStreamAddBuffer(void* data,
+                                                     pw_buffer* buffer) {
+  TestScreenCastStreamProvider* that =
+      static_cast<TestScreenCastStreamProvider*>(data);
   RTC_DCHECK(that);
 
   struct spa_data* spa_data = buffer->buffer->datas;
@@ -345,14 +352,17 @@ void FakeScreenCastStream::OnStreamAddBuffer(void* data, pw_buffer* buffer) {
   if (spa_data->data == MAP_FAILED) {
     RTC_LOG(LS_ERROR) << "PipeWire test: Failed to mmap memory";
   } else {
+    that->observer_->OnBufferAdded();
     RTC_LOG(LS_INFO) << "PipeWire test: Memfd created successfully: "
                      << spa_data->data << spa_data->maxsize;
   }
 }
 
 // static
-void FakeScreenCastStream::OnStreamRemoveBuffer(void* data, pw_buffer* buffer) {
-  FakeScreenCastStream* that = static_cast<FakeScreenCastStream*>(data);
+void TestScreenCastStreamProvider::OnStreamRemoveBuffer(void* data,
+                                                        pw_buffer* buffer) {
+  TestScreenCastStreamProvider* that =
+      static_cast<TestScreenCastStreamProvider*>(data);
   RTC_DCHECK(that);
 
   struct spa_buffer* spa_buffer = buffer->buffer;
@@ -363,7 +373,7 @@ void FakeScreenCastStream::OnStreamRemoveBuffer(void* data, pw_buffer* buffer) {
   }
 }
 
-uint32_t FakeScreenCastStream::PipeWireNodeId() {
+uint32_t TestScreenCastStreamProvider::PipeWireNodeId() {
   return pw_node_id_;
 }
 
