@@ -36,7 +36,7 @@ pub type KeywordParser = for<'a, 'i, 't> fn(
 pub enum Evaluator {
     Length(QueryFeatureGetter<CSSPixelLength>),
     OptionalLength(QueryFeatureGetter<Option<CSSPixelLength>>),
-    Integer(QueryFeatureGetter<i32>),
+    Integer(QueryFeatureGetter<u32>),
     Float(QueryFeatureGetter<f32>),
     BoolInteger(QueryFeatureGetter<bool>),
     /// A non-negative number ratio, such as the one from device-pixel-ratio.

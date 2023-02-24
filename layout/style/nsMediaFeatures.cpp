@@ -131,12 +131,12 @@ void Gecko_MediaFeatures_GetDeviceSize(const Document* aDocument,
   *aHeight = size.height;
 }
 
-int32_t Gecko_MediaFeatures_GetMonochromeBitsPerPixel(
+uint32_t Gecko_MediaFeatures_GetMonochromeBitsPerPixel(
     const Document* aDocument) {
   // The default bits per pixel for a monochrome device. We could propagate this
   // further to nsIPrintSettings, but Gecko doesn't actually know this value
   // from the hardware, so it seems silly to do so.
-  static constexpr int32_t kDefaultMonochromeBpp = 8;
+  static constexpr uint32_t kDefaultMonochromeBpp = 8;
 
   nsPresContext* pc = aDocument->GetPresContext();
   if (!pc) {
@@ -162,7 +162,7 @@ dom::ScreenColorGamut Gecko_MediaFeatures_ColorGamut(
   return colorGamut;
 }
 
-int32_t Gecko_MediaFeatures_GetColorDepth(const Document* aDocument) {
+uint32_t Gecko_MediaFeatures_GetColorDepth(const Document* aDocument) {
   if (Gecko_MediaFeatures_GetMonochromeBitsPerPixel(aDocument) != 0) {
     // If we're a monochrome device, then the color depth is zero.
     return 0;
@@ -170,7 +170,7 @@ int32_t Gecko_MediaFeatures_GetColorDepth(const Document* aDocument) {
 
   // Use depth of 24 when resisting fingerprinting, or when we're not being
   // rendered.
-  int32_t depth = 24;
+  uint32_t depth = 24;
 
   if (!aDocument->ShouldResistFingerprinting()) {
     if (nsDeviceContext* dx = GetDeviceContextFor(aDocument)) {
