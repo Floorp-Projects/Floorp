@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/test/pclf/media_configuration.h"
 #include "api/test/video/video_frame_writer.h"
 #include "rtc_base/gunit.h"
 #include "test/gmock.h"
@@ -23,15 +24,6 @@ namespace webrtc_pc_e2e {
 namespace {
 
 using ::testing::Eq;
-
-using VideoResolution = ::webrtc::webrtc_pc_e2e::
-    PeerConnectionE2EQualityTestFixture::VideoResolution;
-using VideoConfig =
-    ::webrtc::webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::VideoConfig;
-using VideoSubscription = ::webrtc::webrtc_pc_e2e::
-    PeerConnectionE2EQualityTestFixture::VideoSubscription;
-using VideoDumpOptions = ::webrtc::webrtc_pc_e2e::
-    PeerConnectionE2EQualityTestFixture::VideoDumpOptions;
 
 TEST(PclfVideoSubscriptionTest,
      MaxFromSenderSpecEqualIndependentOfOtherFields) {
