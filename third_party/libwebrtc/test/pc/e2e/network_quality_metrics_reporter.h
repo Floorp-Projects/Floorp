@@ -49,10 +49,10 @@ class NetworkQualityMetricsReporter
     DataSize payload_sent = DataSize::Zero();
   };
 
-  static std::unique_ptr<EmulatedNetworkStats> PopulateStats(
+  static EmulatedNetworkStats PopulateStats(
       EmulatedNetworkManagerInterface* network);
   void ReportStats(const std::string& network_label,
-                   std::unique_ptr<EmulatedNetworkStats> stats,
+                   const EmulatedNetworkStats& stats,
                    int64_t packet_loss);
   void ReportPCStats(const std::string& pc_label, const PCStats& stats);
   std::string GetTestCaseName(const std::string& network_label) const;

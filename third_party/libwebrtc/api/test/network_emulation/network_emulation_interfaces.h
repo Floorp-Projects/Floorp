@@ -62,140 +62,174 @@ class EmulatedNetworkReceiverInterface {
   virtual void OnPacketReceived(EmulatedIpPacket packet) = 0;
 };
 
-class EmulatedNetworkOutgoingStats {
- public:
-  virtual ~EmulatedNetworkOutgoingStats() = default;
+struct EmulatedNetworkOutgoingStats {
+  int64_t packets_sent = 0;
 
-  virtual int64_t PacketsSent() const = 0;
+  DataSize bytes_sent = DataSize::Zero();
 
-  virtual DataSize BytesSent() const = 0;
+  // Sizes of all sent packets if EmulatedEndpointConfig::stats_gatherming_mode
+  // was set to StatsGatheringMode::kDebug; empty otherwise.
+  SamplesStatsCounter sent_packets_size;
 
-  // Returns the timestamped sizes of all sent packets if
-  // EmulatedEndpointConfig::stats_gatherming_mode was set to
-  // StatsGatheringMode::kDebug; otherwise, the returned value will be empty.
-  // Returned reference is valid until the next call to a non-const method.
-  virtual const SamplesStatsCounter& SentPacketsSizeCounter() const = 0;
+  DataSize first_sent_packet_size = DataSize::Zero();
 
-  virtual DataSize FirstSentPacketSize() const = 0;
+  // Time of the first packet sent or infinite value if no packets were sent.
+  Timestamp first_packet_sent_time = Timestamp::PlusInfinity();
 
-  // Returns time of the first packet sent or infinite value if no packets were
-  // sent.
-  virtual Timestamp FirstPacketSentTime() const = 0;
-
-  // Returns time of the last packet sent or infinite value if no packets were
-  // sent.
-  virtual Timestamp LastPacketSentTime() const = 0;
+  // Time of the last packet sent or infinite value if no packets were sent.
+  Timestamp last_packet_sent_time = Timestamp::MinusInfinity();
 
   // Returns average send rate. Requires that at least 2 packets were sent.
-  virtual DataRate AverageSendRate() const = 0;
+  DataRate AverageSendRate() const;
 };
 
-class EmulatedNetworkIncomingStats {
- public:
-  virtual ~EmulatedNetworkIncomingStats() = default;
-
+struct EmulatedNetworkIncomingStats {
   // Total amount of packets received with or without destination.
-  virtual int64_t PacketsReceived() const = 0;
+  int64_t packets_received = 0;
+
   // Total amount of bytes in received packets.
-  virtual DataSize BytesReceived() const = 0;
-  // Returns the timestamped sizes of all received packets if
+  DataSize bytes_received = DataSize::Zero();
+
+  // Sizes of all received packets if
   // EmulatedEndpointConfig::stats_gatherming_mode was set to
-  // StatsGatheringMode::kDebug; otherwise, the returned value will be empty.
-  // Returned reference is valid until the next call to a non-const method.
-  virtual const SamplesStatsCounter& ReceivedPacketsSizeCounter() const = 0;
+  // StatsGatheringMode::kDebug; empty otherwise.
+  SamplesStatsCounter received_packets_size;
+
   // Total amount of packets that were received, but no destination was found.
-  virtual int64_t PacketsDropped() const = 0;
-  // Total amount of bytes in dropped packets.
-  virtual DataSize BytesDropped() const = 0;
-  // Returns the timestamped sizes of all packets that were received,
-  // but no destination was found if
+  int64_t packets_discarded_no_receiver = 0;
+
+  // Total amount of bytes in discarded packets.
+  DataSize bytes_discarded_no_receiver = DataSize::Zero();
+
+  // Sizes of all packets that were received, but no destination was found if
   // EmulatedEndpointConfig::stats_gatherming_mode was set to
-  // StatsGatheringMode::kDebug; otherwise, the returned value will be empty.
-  // Returned reference is valid until the next call to a non-const method.
-  virtual const SamplesStatsCounter& DroppedPacketsSizeCounter() const = 0;
+  // StatsGatheringMode::kDebug; empty otherwise.
+  SamplesStatsCounter packets_discarded_no_receiver_size;
 
-  virtual DataSize FirstReceivedPacketSize() const = 0;
+  DataSize first_received_packet_size = DataSize::Zero();
 
-  // Returns time of the first packet received or infinite value if no packets
-  // were received.
-  virtual Timestamp FirstPacketReceivedTime() const = 0;
+  // Time of the first packet received or infinite value if no packets were
+  // received.
+  Timestamp first_packet_received_time = Timestamp::PlusInfinity();
 
-  // Returns time of the last packet received or infinite value if no packets
-  // were received.
-  virtual Timestamp LastPacketReceivedTime() const = 0;
+  // Time of the last packet received or infinite value if no packets were
+  // received.
+  Timestamp last_packet_received_time = Timestamp::MinusInfinity();
 
-  virtual DataRate AverageReceiveRate() const = 0;
+  DataRate AverageReceiveRate() const;
 };
 
-class EmulatedNetworkStats {
- public:
-  virtual ~EmulatedNetworkStats() = default;
+struct EmulatedNetworkStats {
+  int64_t PacketsSent() const { return overall_outgoing_stats.packets_sent; }
 
-  // List of IP addresses that were used to send data considered in this stats
-  // object.
-  virtual std::vector<rtc::IPAddress> LocalAddresses() const = 0;
+  DataSize BytesSent() const { return overall_outgoing_stats.bytes_sent; }
 
-  virtual int64_t PacketsSent() const = 0;
-
-  virtual DataSize BytesSent() const = 0;
   // Returns the timestamped sizes of all sent packets if
   // EmulatedEndpointConfig::stats_gatherming_mode was set to
   // StatsGatheringMode::kDebug; otherwise, the returned value will be empty.
   // Returned reference is valid until the next call to a non-const method.
-  virtual const SamplesStatsCounter& SentPacketsSizeCounter() const = 0;
-  // Returns the timestamped duration between packet was received on
-  // network interface and was dispatched to the network in microseconds if
-  // EmulatedEndpointConfig::stats_gatherming_mode was set to
-  // StatsGatheringMode::kDebug; otherwise, the returned value will be empty.
-  // Returned reference is valid until the next call to a non-const method.
-  virtual const SamplesStatsCounter& SentPacketsQueueWaitTimeUs() const = 0;
+  const SamplesStatsCounter& SentPacketsSizeCounter() const {
+    return overall_outgoing_stats.sent_packets_size;
+  }
 
-  virtual DataSize FirstSentPacketSize() const = 0;
+  DataSize FirstSentPacketSize() const {
+    return overall_outgoing_stats.first_sent_packet_size;
+  }
+
   // Returns time of the first packet sent or infinite value if no packets were
   // sent.
-  virtual Timestamp FirstPacketSentTime() const = 0;
+  Timestamp FirstPacketSentTime() const {
+    return overall_outgoing_stats.first_packet_sent_time;
+  }
+
   // Returns time of the last packet sent or infinite value if no packets were
   // sent.
-  virtual Timestamp LastPacketSentTime() const = 0;
+  Timestamp LastPacketSentTime() const {
+    return overall_outgoing_stats.last_packet_sent_time;
+  }
 
-  virtual DataRate AverageSendRate() const = 0;
+  DataRate AverageSendRate() const {
+    return overall_outgoing_stats.AverageSendRate();
+  }
+
   // Total amount of packets received regardless of the destination address.
-  virtual int64_t PacketsReceived() const = 0;
+  int64_t PacketsReceived() const {
+    return overall_incoming_stats.packets_received;
+  }
+
   // Total amount of bytes in received packets.
-  virtual DataSize BytesReceived() const = 0;
+  DataSize BytesReceived() const {
+    return overall_incoming_stats.bytes_received;
+  }
+
   // Returns the timestamped sizes of all received packets if
   // EmulatedEndpointConfig::stats_gatherming_mode was set to
   // StatsGatheringMode::kDebug; otherwise, the returned value will be empty.
   // Returned reference is valid until the next call to a non-const method.
-  virtual const SamplesStatsCounter& ReceivedPacketsSizeCounter() const = 0;
+  const SamplesStatsCounter& ReceivedPacketsSizeCounter() const {
+    return overall_incoming_stats.received_packets_size;
+  }
+
   // Total amount of packets that were received, but no destination was found.
-  virtual int64_t PacketsDropped() const = 0;
+  int64_t PacketsDiscardedNoReceiver() const {
+    return overall_incoming_stats.packets_discarded_no_receiver;
+  }
+
   // Total amount of bytes in dropped packets.
-  virtual DataSize BytesDropped() const = 0;
+  DataSize BytesDiscardedNoReceiver() const {
+    return overall_incoming_stats.bytes_discarded_no_receiver;
+  }
+
   // Returns counter with timestamped sizes of all packets that were received,
   // but no destination was found if
   // EmulatedEndpointConfig::stats_gatherming_mode was set to
   // StatsGatheringMode::kDebug; otherwise, the returned value will be empty.
   // Returned reference is valid until the next call to a non-const method.
-  virtual const SamplesStatsCounter& DroppedPacketsSizeCounter() const = 0;
+  const SamplesStatsCounter& PacketsDiscardedNoReceiverSizeCounter() const {
+    return overall_incoming_stats.packets_discarded_no_receiver_size;
+  }
 
-  virtual DataSize FirstReceivedPacketSize() const = 0;
+  DataSize FirstReceivedPacketSize() const {
+    return overall_incoming_stats.first_received_packet_size;
+  }
+
   // Returns time of the first packet received or infinite value if no packets
   // were received.
-  virtual Timestamp FirstPacketReceivedTime() const = 0;
+  Timestamp FirstPacketReceivedTime() const {
+    return overall_incoming_stats.first_packet_received_time;
+  }
+
   // Returns time of the last packet received or infinite value if no packets
   // were received.
-  virtual Timestamp LastPacketReceivedTime() const = 0;
+  Timestamp LastPacketReceivedTime() const {
+    return overall_incoming_stats.last_packet_received_time;
+  }
 
-  virtual DataRate AverageReceiveRate() const = 0;
+  DataRate AverageReceiveRate() const {
+    return overall_incoming_stats.AverageReceiveRate();
+  }
 
-  virtual std::map<rtc::IPAddress,
-                   std::unique_ptr<EmulatedNetworkOutgoingStats>>
-  OutgoingStatsPerDestination() const = 0;
+  // List of IP addresses that were used to send data considered in this stats
+  // object.
+  std::vector<rtc::IPAddress> local_addresses;
 
-  virtual std::map<rtc::IPAddress,
-                   std::unique_ptr<EmulatedNetworkIncomingStats>>
-  IncomingStatsPerSource() const = 0;
+  // Overall outgoing stats for all IP addresses which were requested.
+  EmulatedNetworkOutgoingStats overall_outgoing_stats;
+
+  // Overall incoming stats for all IP addresses from which data was received
+  // on requested interfaces.
+  EmulatedNetworkIncomingStats overall_incoming_stats;
+
+  std::map<rtc::IPAddress, EmulatedNetworkOutgoingStats>
+      outgoing_stats_per_destination;
+  std::map<rtc::IPAddress, EmulatedNetworkIncomingStats>
+      incoming_stats_per_source;
+
+  // Duration between packet was received on network interface and was
+  // dispatched to the network in microseconds if
+  // EmulatedEndpointConfig::stats_gatherming_mode was set to
+  // StatsGatheringMode::kDebug; empty otherwise.
+  SamplesStatsCounter sent_packets_queue_wait_time_us;
 };
 
 // EmulatedEndpoint is an abstraction for network interface on device. Instances
