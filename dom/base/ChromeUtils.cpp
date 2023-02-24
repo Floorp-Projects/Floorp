@@ -1744,4 +1744,14 @@ unsigned ChromeUtils::AliveUtilityProcesses(const GlobalObject&) {
       mozilla::ipc::UtilityProcessManager::GetIfExists();
   return utilityProcessManager ? utilityProcessManager->AliveProcesses() : 0;
 }
+
+/* static */
+void ChromeUtils::GetAllPossibleUtilityActorNames(GlobalObject& aGlobal,
+                                                  nsTArray<nsCString>& aNames) {
+  aNames.Clear();
+  for (size_t i = 0; i < WebIDLUtilityActorNameValues::Count; ++i) {
+    auto idlName = static_cast<UtilityActorName>(i);
+    aNames.AppendElement(WebIDLUtilityActorNameValues::GetString(idlName));
+  }
+}
 }  // namespace mozilla::dom
