@@ -87,9 +87,12 @@ ProbeControllerConfig::ProbeControllerConfig(
       alr_probe_scale("alr_scale", 2),
       network_state_estimate_probing_interval("network_state_interval",
                                               TimeDelta::PlusInfinity()),
-      network_state_estimate_fast_rampup_rate("network_state_fast_rampup_rate",
-                                              0),
-      network_state_estimate_drop_down_rate("network_state_drop_down_rate", 0),
+      probe_if_estimate_lower_than_network_state_estimate_ratio(
+          "est_lower_than_network_ratio",
+          0),
+      estimate_lower_than_network_state_estimate_probing_interval(
+          "est_lower_than_network_interval",
+          TimeDelta::Seconds(3)),
       network_state_probe_scale("network_state_scale", 1.0),
       network_state_probe_duration("network_state_probe_duration",
                                    TimeDelta::Millis(15)),
@@ -111,10 +114,10 @@ ProbeControllerConfig::ProbeControllerConfig(
        &alr_probing_interval, &alr_probe_scale, &first_allocation_probe_scale,
        &second_allocation_probe_scale, &allocation_allow_further_probing,
        &min_probe_duration, &network_state_estimate_probing_interval,
-       &network_state_estimate_fast_rampup_rate,
-       &network_state_estimate_drop_down_rate, &network_state_probe_scale,
-       &network_state_probe_duration, &min_probe_packets_sent,
-       &limit_probe_target_rate_to_loss_bwe,
+       &probe_if_estimate_lower_than_network_state_estimate_ratio,
+       &estimate_lower_than_network_state_estimate_probing_interval,
+       &network_state_probe_scale, &network_state_probe_duration,
+       &min_probe_packets_sent, &limit_probe_target_rate_to_loss_bwe,
        &skip_if_estimate_larger_than_fraction_of_max},
       key_value_config->Lookup("WebRTC-Bwe-ProbingConfiguration"));
 
@@ -367,24 +370,6 @@ void ProbeController::SetMaxBitrate(DataRate max_bitrate) {
 
 void ProbeController::SetNetworkStateEstimate(
     webrtc::NetworkStateEstimate estimate) {
-  if (config_.network_state_estimate_fast_rampup_rate > 0 &&
-      estimated_bitrate_ < estimate.link_capacity_upper &&
-      (!network_estimate_ ||
-       estimate.link_capacity_upper >=
-           config_.network_state_estimate_fast_rampup_rate *
-               network_estimate_->link_capacity_upper)) {
-    send_probe_on_next_process_interval_ = true;
-  }
-  if (config_.network_state_estimate_drop_down_rate > 0 && network_estimate_ &&
-      !estimate.link_capacity_upper.IsZero() &&
-      (estimated_bitrate_ > estimate.link_capacity_upper ||
-       bwe_limited_due_to_packet_loss_) &&
-      estimate.link_capacity_upper <=
-          config_.network_state_estimate_drop_down_rate *
-              network_estimate_->link_capacity_upper) {
-    send_probe_on_next_process_interval_ = true;
-  }
-
   network_estimate_ = estimate;
 }
 
@@ -405,7 +390,6 @@ void ProbeController::Reset(Timestamp at_time) {
   time_of_last_large_drop_ = now;
   bitrate_before_last_large_drop_ = DataRate::Zero();
   max_total_allocated_bitrate_ = DataRate::Zero();
-  send_probe_on_next_process_interval_ = false;
 }
 
 bool ProbeController::TimeForAlrProbe(Timestamp at_time) const {
@@ -419,13 +403,34 @@ bool ProbeController::TimeForAlrProbe(Timestamp at_time) const {
 }
 
 bool ProbeController::TimeForNetworkStateProbe(Timestamp at_time) const {
-  if (config_.network_state_estimate_probing_interval->IsFinite() &&
-      network_estimate_ && network_estimate_->link_capacity_upper.IsFinite() &&
-      estimated_bitrate_ < network_estimate_->link_capacity_upper) {
+  if (!network_estimate_ ||
+      network_estimate_->link_capacity_upper.IsInfinite()) {
+    return false;
+  }
+
+  bool probe_due_to_low_estimate =
+      !bwe_limited_due_to_packet_loss_ &&
+      estimated_bitrate_ <
+          config_.probe_if_estimate_lower_than_network_state_estimate_ratio *
+              network_estimate_->link_capacity_upper;
+  if (probe_due_to_low_estimate &&
+      config_.estimate_lower_than_network_state_estimate_probing_interval
+          ->IsFinite()) {
+    Timestamp next_probe_time =
+        time_last_probing_initiated_ +
+        config_.estimate_lower_than_network_state_estimate_probing_interval;
+    return at_time >= next_probe_time;
+  }
+
+  bool periodic_probe =
+      estimated_bitrate_ < network_estimate_->link_capacity_upper;
+  if (periodic_probe &&
+      config_.network_state_estimate_probing_interval->IsFinite()) {
     Timestamp next_probe_time = time_last_probing_initiated_ +
                                 config_.network_state_estimate_probing_interval;
     return at_time >= next_probe_time;
   }
+
   return false;
 }
 
@@ -443,8 +448,7 @@ std::vector<ProbeClusterConfig> ProbeController::Process(Timestamp at_time) {
   if (estimated_bitrate_.IsZero() || state_ != State::kProbingComplete) {
     return {};
   }
-  if (send_probe_on_next_process_interval_ || TimeForAlrProbe(at_time) ||
-      TimeForNetworkStateProbe(at_time)) {
+  if (TimeForAlrProbe(at_time) || TimeForNetworkStateProbe(at_time)) {
     return InitiateProbing(
         at_time, {estimated_bitrate_ * config_.alr_probe_scale}, true);
   }
@@ -490,8 +494,6 @@ std::vector<ProbeClusterConfig> ProbeController::InitiateProbing(
     max_probe_bitrate =
         std::min(max_probe_bitrate, max_total_allocated_bitrate_ * 2);
   }
-
-  send_probe_on_next_process_interval_ = false;
 
   std::vector<ProbeClusterConfig> pending_probes;
   for (DataRate bitrate : bitrates_to_probe) {
