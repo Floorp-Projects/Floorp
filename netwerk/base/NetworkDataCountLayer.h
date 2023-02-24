@@ -8,6 +8,8 @@
 #define NetworkDataCountLayer_h__
 
 #include "prerror.h"
+#include "prio.h"
+#include "ErrorList.h"
 
 namespace mozilla {
 namespace net {

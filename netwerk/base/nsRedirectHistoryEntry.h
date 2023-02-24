@@ -5,6 +5,8 @@
 #ifndef nsRedirectHistoryEntry_h__
 #define nsRedirectHistoryEntry_h__
 
+#include "nsCOMPtr.h"
+#include "nsString.h"
 #include "nsIRedirectHistoryEntry.h"
 
 class nsIURI;
