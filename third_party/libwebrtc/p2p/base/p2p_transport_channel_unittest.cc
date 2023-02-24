@@ -2737,8 +2737,8 @@ TEST_P(P2PTransportChannelMultihomedTest, TestFailoverWithManyConnections) {
   RelayServerConfig turn_server;
   turn_server.credentials = kRelayCredentials;
   turn_server.ports.push_back(ProtocolAddress(kTurnTcpIntAddr, PROTO_TCP));
-  GetAllocator(0)->AddTurnServer(turn_server);
-  GetAllocator(1)->AddTurnServer(turn_server);
+  GetAllocator(0)->AddTurnServerForTesting(turn_server);
+  GetAllocator(1)->AddTurnServerForTesting(turn_server);
   // Enable IPv6
   SetAllocatorFlags(
       0, PORTALLOCATOR_ENABLE_IPV6 | PORTALLOCATOR_ENABLE_IPV6_ON_WIFI);
@@ -5238,7 +5238,7 @@ TEST_P(P2PTransportChannelMostLikelyToWorkFirstTest, TestTcpTurn) {
   RelayServerConfig config;
   config.credentials = kRelayCredentials;
   config.ports.push_back(ProtocolAddress(kTurnTcpIntAddr, PROTO_TCP));
-  allocator()->AddTurnServer(config);
+  allocator()->AddTurnServerForTesting(config);
 
   P2PTransportChannel& ch = StartTransportChannel(true, 500, &field_trials_);
   EXPECT_TRUE_WAIT(ch.ports().size() == 3, kDefaultTimeout);
