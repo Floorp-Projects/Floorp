@@ -12,9 +12,10 @@
 namespace mozilla {
 namespace extensions {
 
-class ExtensionsChild final : public nsISupports, public PExtensionsChild {
+class ExtensionsChild final : public nsIObserver, public PExtensionsChild {
  public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
 
   static already_AddRefed<ExtensionsChild> GetSingleton();
 
