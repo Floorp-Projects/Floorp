@@ -4177,3 +4177,6 @@ pref("cookiebanners.listService.testSkipRemoteSettings", false);
 // The domains we will block from installing SitePermsAddons. Comma-separated
 // full domains: any subdomains of the domains listed will also be allowed.
 pref("dom.sitepermsaddon-provider.separatedBlocklistedDomains", "shopee.co.th,alipay.com,miravia.es");
+
+// Log level for logger in URLQueryStrippingListService
+pref("privacy.query_stripping.listService.logLevel", "Error");

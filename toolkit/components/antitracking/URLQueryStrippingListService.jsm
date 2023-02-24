@@ -4,6 +4,10 @@
 
 "use strict";
 
+const { XPCOMUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/XPCOMUtils.sys.mjs"
+);
+
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -12,17 +16,30 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 const COLLECTION_NAME = "query-stripping";
 const SHARED_DATA_KEY = "URLQueryStripping";
-
 const PREF_STRIP_LIST_NAME = "privacy.query_stripping.strip_list";
 const PREF_ALLOW_LIST_NAME = "privacy.query_stripping.allow_list";
 const PREF_TESTING_ENABLED = "privacy.query_stripping.testing";
 
+XPCOMUtils.defineLazyGetter(lazy, "logger", () => {
+  return console.createInstance({
+    prefix: "URLQueryStrippingListService",
+    maxLogLevelPref: "privacy.query_stripping.listService.logLevel",
+  });
+});
+
 class URLQueryStrippingListService {
+  classId = Components.ID("{afff16f0-3fd2-4153-9ccd-c6d9abd879e4}");
+  QueryInterface = ChromeUtils.generateQI(["nsIURLQueryStrippingListService"]);
+
+  #isInitialized = false;
+  #pendingInit = null;
+  #initResolver;
+
+  #rs;
+  #onSyncCallback;
+
   constructor() {
-    this.classID = Components.ID("{afff16f0-3fd2-4153-9ccd-c6d9abd879e4}");
-    this.QueryInterface = ChromeUtils.generateQI([
-      "nsIURLQueryStrippingListService",
-    ]);
+    lazy.logger.debug("constructor");
     this.observers = new Set();
     this.prefStripList = new Set();
     this.prefAllowList = new Set();
@@ -32,23 +49,49 @@ class URLQueryStrippingListService {
       Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
   }
 
-  async _init() {
+  #onSync(event) {
+    lazy.logger.debug("onSync", event);
+    let {
+      data: { current },
+    } = event;
+    this._onRemoteSettingsUpdate(current);
+  }
+
+  async #init() {
+    // If there is already an init pending wait for it to complete.
+    if (this.#pendingInit) {
+      lazy.logger.debug("#init: Waiting for pending init");
+      await this.#pendingInit;
+      return;
+    }
+
+    if (this.#isInitialized) {
+      lazy.logger.debug("#init: Skip, already initialized");
+      return;
+    }
+    // Create a promise that resolves when init is complete. This allows us to
+    // handle incoming init calls while we're still initializing.
+    this.#pendingInit = new Promise(initResolve => {
+      this.#initResolver = initResolve;
+    });
+    this.#isInitialized = true;
+
+    lazy.logger.debug("#init: Run");
+
     // We can only access the remote settings in the parent process. For content
     // processes, we will use sharedData to sync the list to content processes.
     if (this.isParentProcess) {
-      let rs = lazy.RemoteSettings(COLLECTION_NAME);
+      this.#rs = lazy.RemoteSettings(COLLECTION_NAME);
 
-      rs.on("sync", event => {
-        let {
-          data: { current },
-        } = event;
-        this._onRemoteSettingsUpdate(current);
-      });
+      if (!this.#onSyncCallback) {
+        this.#onSyncCallback = this.#onSync.bind(this);
+        this.#rs.on("sync", this.#onSyncCallback);
+      }
 
       // Get the initially available entries for remote settings.
       let entries;
       try {
-        entries = await rs.get();
+        entries = await this.#rs.get();
       } catch (e) {}
       this._onRemoteSettingsUpdate(entries || []);
     } else {
@@ -76,9 +119,31 @@ class URLQueryStrippingListService {
     Services.prefs.addObserver(PREF_ALLOW_LIST_NAME, this);
 
     Services.obs.addObserver(this, "xpcom-shutdown");
+
+    this.#initResolver();
+    this.#pendingInit = null;
   }
 
-  async _shutdown() {
+  async #shutdown() {
+    // Ensure any pending init is done before shutdown.
+    if (this.#pendingInit) {
+      await this.#pendingInit;
+    }
+
+    // Already shut down.
+    if (!this.#isInitialized) {
+      return;
+    }
+    this.#isInitialized = false;
+
+    lazy.logger.debug("#shutdown");
+
+    // Unregister RemoteSettings listener (if it was registered).
+    if (this.#onSyncCallback) {
+      this.#rs.off("sync", this.#onSyncCallback);
+      this.#onSyncCallback = null;
+    }
+
     Services.obs.removeObserver(this, "xpcom-shutdown");
     Services.prefs.removeObserver(PREF_STRIP_LIST_NAME, this);
     Services.prefs.removeObserver(PREF_ALLOW_LIST_NAME, this);
@@ -133,10 +198,6 @@ class URLQueryStrippingListService {
     this._notifyObservers();
   }
 
-  async _ensureInit() {
-    await this._initPromise;
-  }
-
   _getListFromSharedData() {
     let data = Services.cpmm.sharedData.get(SHARED_DATA_KEY);
 
@@ -161,6 +222,15 @@ class URLQueryStrippingListService {
 
     let observers = observer ? [observer] : this.observers;
 
+    if (observer || this.observers.size) {
+      lazy.logger.debug("_notifyObservers", {
+        observerCount: observers.length,
+        runObserverAfterRegister: observer != null,
+        stripEntriesAsString,
+        allowEntriesAsString,
+      });
+    }
+
     for (let obs of observers) {
       obs.onQueryStrippingListUpdate(
         stripEntriesAsString,
@@ -169,37 +239,33 @@ class URLQueryStrippingListService {
     }
   }
 
-  init() {
-    if (this.initialized) {
-      return;
-    }
+  async registerAndRunObserver(observer) {
+    lazy.logger.debug("registerAndRunObserver", {
+      isInitialized: this.#isInitialized,
+      pendingInit: this.#pendingInit,
+    });
 
-    this.initialized = true;
-    this._initPromise = this._init();
+    await this.#init();
+    this.observers.add(observer);
+    this._notifyObservers(observer);
   }
 
-  registerAndRunObserver(observer) {
-    let addAndRunObserver = _ => {
-      this.observers.add(observer);
-      this._notifyObservers(observer);
-    };
-
-    if (this.initialized) {
-      addAndRunObserver();
-      return;
-    }
-
-    this._ensureInit().then(addAndRunObserver);
-  }
-
-  unregisterObserver(observer) {
+  async unregisterObserver(observer) {
     this.observers.delete(observer);
+
+    if (!this.observers.size) {
+      lazy.logger.debug("Last observer unregistered, shutting down...");
+      await this.#shutdown();
+    }
   }
 
-  clearLists() {
+  async clearLists() {
     if (!this.isParentProcess) {
       return;
     }
+
+    // Ensure init.
+    await this.#init();
 
     // Clear the lists of remote settings.
     this._onRemoteSettingsUpdate([]);
@@ -211,9 +277,10 @@ class URLQueryStrippingListService {
   }
 
   observe(subject, topic, data) {
+    lazy.logger.debug("observe", { topic, data });
     switch (topic) {
       case "xpcom-shutdown":
-        this._shutdown();
+        this.#shutdown();
         break;
       case "nsPref:changed":
         let prefValue = Services.prefs.getStringPref(data, "");
@@ -236,6 +303,14 @@ class URLQueryStrippingListService {
     let data = this._getListFromSharedData();
     this._onRemoteSettingsUpdate(data);
     this._notifyObservers();
+  }
+
+  async testWaitForInit() {
+    if (this.#pendingInit) {
+      await this.#pendingInit;
+    }
+
+    return this.#isInitialized;
   }
 }
 
