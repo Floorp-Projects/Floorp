@@ -72,6 +72,8 @@ class URLSearchParams final : public nsISupports, public nsWrapperCache {
 
   void Serialize(nsAString& aValue) const;
 
+  uint32_t Size() const;
+
   void Get(const nsAString& aName, nsString& aRetval);
 
   void GetAll(const nsAString& aName, nsTArray<nsString>& aRetval);
