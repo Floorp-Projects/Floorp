@@ -508,6 +508,9 @@
 - name: CallDOMNative
   gen_boilerplate: false
 
+- name: CallClassHook
+  gen_boilerplate: false
+
 - name: Bail
 
 - name: Unreachable

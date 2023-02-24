@@ -66,7 +66,7 @@ class LIRGenerator final : public LIRGeneratorSpecific {
   LInstructionHelper<1, 1, 0>* allocateAbs(MAbs* ins, LAllocation input);
   void definePhis();
 
-  [[nodiscard]] bool lowerCallArguments(MCall* call);
+  [[nodiscard]] bool lowerCallArguments(MCallBase* call);
 
   friend class LIRGeneratorShared;
   void visitInstructionDispatch(MInstruction* ins);

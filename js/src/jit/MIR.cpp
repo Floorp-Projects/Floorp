@@ -1718,6 +1718,20 @@ const JSJitInfo* MCallDOMNative::getJitInfo() const {
   return getSingleTarget()->jitInfo();
 }
 
+MCallClassHook* MCallClassHook::New(TempAllocator& alloc, JSNative target,
+                                    uint32_t argc, bool constructing) {
+  auto* ins = new (alloc) MCallClassHook(target, constructing);
+
+  // Add callee + |this| + (if constructing) newTarget.
+  uint32_t numOperands = 2 + argc + constructing;
+
+  if (!ins->init(alloc, numOperands)) {
+    return nullptr;
+  }
+
+  return ins;
+}
+
 MDefinition* MStringLength::foldsTo(TempAllocator& alloc) {
   if (string()->isConstant()) {
     JSString* str = string()->toConstant()->toString();
@@ -2261,7 +2275,7 @@ bool MPhi::typeIncludes(MDefinition* def) {
   return this->mightBeType(def->type());
 }
 
-void MCall::addArg(size_t argnum, MDefinition* arg) {
+void MCallBase::addArg(size_t argnum, MDefinition* arg) {
   // The operand vector is initialized in reverse order by WarpBuilder.
   // It cannot be checked for consistency until all arguments are added.
   // FixedList doesn't initialize its elements, so do an unchecked init.

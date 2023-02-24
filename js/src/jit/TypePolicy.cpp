@@ -808,7 +808,12 @@ template bool ObjectPolicy<3>::staticAdjustInputs(TempAllocator& alloc,
                                                   MInstruction* ins);
 
 bool CallPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
-  MCall* call = ins->toCall();
+  MCallBase* call;
+  if (ins->isCall()) {
+    call = ins->toCall();
+  } else {
+    call = ins->toCallClassHook();
+  }
 
   MDefinition* func = call->getCallee();
   if (func->type() != MIRType::Object) {
@@ -827,7 +832,7 @@ bool CallPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
     if (!alloc.ensureBallast()) {
       return false;
     }
-    EnsureOperandNotFloat32(alloc, call, MCall::IndexOfStackArg(i));
+    EnsureOperandNotFloat32(alloc, call, MCallBase::IndexOfStackArg(i));
   }
 
   return true;

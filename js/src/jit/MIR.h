@@ -2289,12 +2289,52 @@ class WrappedFunction : public TempObject {
 
 enum class DOMObjectKind : uint8_t { Proxy, Native };
 
-class MCall : public MVariadicInstruction, public CallPolicy::Data {
- private:
+class MCallBase : public MVariadicInstruction, public CallPolicy::Data {
+ protected:
   // The callee, this, and the actual arguments are all operands of MCall.
   static const size_t CalleeOperandIndex = 0;
   static const size_t NumNonArgumentOperands = 1;
 
+  explicit MCallBase(Opcode op) : MVariadicInstruction(op) {}
+
+ public:
+  void initCallee(MDefinition* func) { initOperand(CalleeOperandIndex, func); }
+  MDefinition* getCallee() const { return getOperand(CalleeOperandIndex); }
+
+  void replaceCallee(MInstruction* newfunc) {
+    replaceOperand(CalleeOperandIndex, newfunc);
+  }
+
+  void addArg(size_t argnum, MDefinition* arg);
+
+  MDefinition* getArg(uint32_t index) const {
+    return getOperand(NumNonArgumentOperands + index);
+  }
+
+  // The number of stack arguments is the max between the number of formal
+  // arguments and the number of actual arguments. The number of stack
+  // argument includes the |undefined| padding added in case of underflow.
+  // Includes |this|.
+  uint32_t numStackArgs() const {
+    return numOperands() - NumNonArgumentOperands;
+  }
+  uint32_t paddedNumStackArgs() const {
+    if (JitStackValueAlignment > 1) {
+      return AlignBytes(numStackArgs(), JitStackValueAlignment);
+    }
+    return numStackArgs();
+  }
+
+  static size_t IndexOfThis() { return NumNonArgumentOperands; }
+  static size_t IndexOfArgument(size_t index) {
+    return NumNonArgumentOperands + index + 1;  // +1 to skip |this|.
+  }
+  static size_t IndexOfStackArg(size_t index) {
+    return NumNonArgumentOperands + index;
+  }
+};
+
+class MCall : public MCallBase {
  protected:
   // Monomorphic cache for MCalls with a single JSFunction target.
   WrappedFunction* target_;
@@ -2314,7 +2354,7 @@ class MCall : public MVariadicInstruction, public CallPolicy::Data {
 
   MCall(WrappedFunction* target, uint32_t numActualArgs, bool construct,
         bool ignoresReturnValue)
-      : MVariadicInstruction(classOpcode),
+      : MCallBase(classOpcode),
         target_(target),
         numActualArgs_(numActualArgs),
         construct_(construct),
@@ -2332,8 +2372,6 @@ class MCall : public MVariadicInstruction, public CallPolicy::Data {
                     bool ignoresReturnValue, bool isDOMCall,
                     mozilla::Maybe<DOMObjectKind> objectKind);
 
-  void initCallee(MDefinition* func) { initOperand(CalleeOperandIndex, func); }
-
   bool needsClassCheck() const { return needsClassCheck_; }
   void disableClassCheck() { needsClassCheck_ = false; }
 
@@ -2346,39 +2384,12 @@ class MCall : public MVariadicInstruction, public CallPolicy::Data {
     needsThisCheck_ = true;
   }
 
-  MDefinition* getCallee() const { return getOperand(CalleeOperandIndex); }
-  void replaceCallee(MInstruction* newfunc) {
-    replaceOperand(CalleeOperandIndex, newfunc);
-  }
-
-  void addArg(size_t argnum, MDefinition* arg);
-
-  MDefinition* getArg(uint32_t index) const {
-    return getOperand(NumNonArgumentOperands + index);
-  }
-
-  static size_t IndexOfThis() { return NumNonArgumentOperands; }
-  static size_t IndexOfArgument(size_t index) {
-    return NumNonArgumentOperands + index + 1;  // +1 to skip |this|.
-  }
-  static size_t IndexOfStackArg(size_t index) {
-    return NumNonArgumentOperands + index;
-  }
-
   // For monomorphic callsites.
   WrappedFunction* getSingleTarget() const { return target_; }
 
   bool isConstructing() const { return construct_; }
 
   bool ignoresReturnValue() const { return ignoresReturnValue_; }
-
-  // The number of stack arguments is the max between the number of formal
-  // arguments and the number of actual arguments. The number of stack
-  // argument includes the |undefined| padding added in case of underflow.
-  // Includes |this|.
-  uint32_t numStackArgs() const {
-    return numOperands() - NumNonArgumentOperands;
-  }
 
   // Does not include |this|.
   uint32_t numActualArgs() const { return numActualArgs_; }
@@ -2435,6 +2446,42 @@ class MCallDOMNative : public MCall {
   virtual bool isCallDOMNative() const override { return true; }
 
   virtual void computeMovable() override;
+};
+
+// Used to invoke a JSClass call/construct hook.
+class MCallClassHook : public MCallBase {
+  const JSNative target_;
+  bool constructing_ : 1;
+  bool ignoresReturnValue_ : 1;
+
+  MCallClassHook(JSNative target, bool constructing)
+      : MCallBase(classOpcode),
+        target_(target),
+        constructing_(constructing),
+        ignoresReturnValue_(false) {
+    setResultType(MIRType::Value);
+  }
+
+ public:
+  INSTRUCTION_HEADER(CallClassHook)
+  static MCallClassHook* New(TempAllocator& alloc, JSNative target,
+                             uint32_t argc, bool constructing);
+
+  JSNative target() const { return target_; }
+  bool isConstructing() const { return constructing_; }
+
+  uint32_t numActualArgs() const {
+    uint32_t thisAndNewTarget = 1 + constructing_;
+    MOZ_ASSERT(numStackArgs() >= thisAndNewTarget);
+    return numStackArgs() - thisAndNewTarget;
+  }
+
+  bool maybeCrossRealm() const { return true; }
+
+  bool ignoresReturnValue() const { return ignoresReturnValue_; }
+  void setIgnoresReturnValue() { ignoresReturnValue_ = true; }
+
+  bool possiblyCalls() const override { return true; }
 };
 
 // fun.apply(self, arguments)
