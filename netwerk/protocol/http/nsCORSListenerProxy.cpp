@@ -914,6 +914,12 @@ nsresult nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
+  // Introduced for DevTools in order to allow overriding some requests
+  // with the content of data: URIs.
+  if (loadInfo->GetAllowInsecureRedirectToDataURI() && uri->SchemeIs("data")) {
+    return NS_OK;
+  }
+
   // exempt data URIs from the same origin check.
   if (aAllowDataURI == DataURIHandling::Allow && originalURI == uri) {
     if (uri->SchemeIs("data")) {

@@ -155,6 +155,21 @@ class NetworkParentActor extends Actor {
     }
     this.networkEventWatcher.setPersist(enabled);
   }
+
+  override(url, path) {
+    if (!this.networkEventWatcher) {
+      throw new Error("Not listening for network events");
+    }
+    this.networkEventWatcher.override(url, path);
+    return {};
+  }
+
+  removeOverride(url) {
+    if (!this.networkEventWatcher) {
+      throw new Error("Not listening for network events");
+    }
+    this.networkEventWatcher.removeOverride(url);
+  }
 }
 
 exports.NetworkParentActor = NetworkParentActor;

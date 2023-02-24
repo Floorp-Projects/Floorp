@@ -12,6 +12,7 @@ DevToolsModules(
     "ChannelMap.sys.mjs",
     "NetworkHelper.sys.mjs",
     "NetworkObserver.sys.mjs",
+    "NetworkOverride.sys.mjs",
     "NetworkResponseListener.sys.mjs",
     "NetworkThrottleManager.sys.mjs",
     "NetworkUtils.sys.mjs",

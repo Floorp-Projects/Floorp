@@ -65,6 +65,17 @@ const networkParentSpec = generateActorSpec({
       },
       response: {},
     },
+    override: {
+      request: {
+        url: Arg(0, "string"),
+        path: Arg(1, "string"),
+      },
+    },
+    removeOverride: {
+      request: {
+        url: Arg(0, "string"),
+      },
+    },
   },
 });
 
