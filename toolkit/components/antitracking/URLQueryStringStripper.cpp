@@ -19,7 +19,13 @@
 #include "nsURLHelper.h"
 
 namespace {
+
 mozilla::StaticRefPtr<mozilla::URLQueryStringStripper> gQueryStringStripper;
+static const char kQueryStrippingEnabledPref[] =
+    "privacy.query_stripping.enabled";
+static const char kQueryStrippingEnabledPBMPref[] =
+    "privacy.query_stripping.enabled.pbmode";
+
 }  // namespace
 
 namespace mozilla {
@@ -29,17 +35,33 @@ NS_IMPL_ISUPPORTS(URLQueryStringStripper, nsIURLQueryStrippingListObserver)
 URLQueryStringStripper* URLQueryStringStripper::GetOrCreate() {
   if (!gQueryStringStripper) {
     gQueryStringStripper = new URLQueryStringStripper();
-    gQueryStringStripper->Init();
+    // Check initial pref state and enable service. We can pass nullptr, because
+    // OnPrefChange doesn't rely on the args.
+    URLQueryStringStripper::OnPrefChange(nullptr, nullptr);
 
     RunOnShutdown(
         [&] {
-          gQueryStringStripper->Shutdown();
+          DebugOnly<nsresult> rv = gQueryStringStripper->Shutdown();
+          NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                               "URLQueryStringStripper::Shutdown failed");
           gQueryStringStripper = nullptr;
         },
         ShutdownPhase::XPCOMShutdown);
   }
 
   return gQueryStringStripper;
+}
+
+URLQueryStringStripper::URLQueryStringStripper() {
+  mIsInitialized = false;
+
+  nsresult rv = Preferences::RegisterCallback(
+      &URLQueryStringStripper::OnPrefChange, kQueryStrippingEnabledPBMPref);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  rv = Preferences::RegisterCallback(&URLQueryStringStripper::OnPrefChange,
+                                     kQueryStrippingEnabledPref);
+  NS_ENSURE_SUCCESS_VOID(rv);
 }
 
 /* static */
@@ -64,20 +86,48 @@ uint32_t URLQueryStringStripper::Strip(nsIURI* aURI, bool aIsPBM,
   return stripper->StripQueryString(aURI, aOutput);
 }
 
-void URLQueryStringStripper::Init() {
-  mService = do_GetService("@mozilla.org/query-stripping-list-service;1");
-  NS_ENSURE_TRUE_VOID(mService);
+// static
+void URLQueryStringStripper::OnPrefChange(const char* aPref, void* aData) {
+  MOZ_ASSERT(gQueryStringStripper);
 
-  mService->Init();
-  mService->RegisterAndRunObserver(this);
+  bool prefEnablesComponent =
+      StaticPrefs::privacy_query_stripping_enabled() ||
+      StaticPrefs::privacy_query_stripping_enabled_pbmode();
+  if (prefEnablesComponent) {
+    gQueryStringStripper->Init();
+  } else {
+    gQueryStringStripper->Shutdown();
+  }
 }
 
-void URLQueryStringStripper::Shutdown() {
+nsresult URLQueryStringStripper::Init() {
+  if (mIsInitialized) {
+    return NS_OK;
+  }
+  mIsInitialized = true;
+
+  mListService = do_GetService("@mozilla.org/query-stripping-list-service;1");
+  NS_ENSURE_TRUE(mListService, NS_ERROR_FAILURE);
+
+  return mListService->RegisterAndRunObserver(gQueryStringStripper);
+}
+
+nsresult URLQueryStringStripper::Shutdown() {
+  if (!mIsInitialized) {
+    return NS_OK;
+  }
+  mIsInitialized = false;
+
   mList.Clear();
   mAllowList.Clear();
 
-  mService->UnregisterObserver(this);
-  mService = nullptr;
+  MOZ_ASSERT(mListService);
+  mListService = do_GetService("@mozilla.org/query-stripping-list-service;1");
+
+  mListService->UnregisterObserver(this);
+  mListService = nullptr;
+
+  return NS_OK;
 }
 
 uint32_t URLQueryStringStripper::StripQueryString(nsIURI* aURI,
@@ -174,6 +224,16 @@ URLQueryStringStripper::OnQueryStrippingListUpdate(
   PopulateStripList(aStripList);
   PopulateAllowList(aAllowList);
   return NS_OK;
+}
+
+// static
+void URLQueryStringStripper::TestGetStripList(nsACString& aStripList) {
+  aStripList.Truncate();
+
+  StringJoinAppend(aStripList, " "_ns, GetOrCreate()->mList,
+                   [](auto& aResult, const auto& aValue) {
+                     aResult.Append(NS_ConvertUTF16toUTF8(aValue));
+                   });
 }
 
 }  // namespace mozilla

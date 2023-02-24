@@ -33,11 +33,6 @@ interface nsIURLQueryStrippingListObserver : nsISupports
 interface nsIURLQueryStrippingListService : nsISupports
 {
   /**
-   * Initialize the URL query stripping list service.
-   */
-  void init();
-
-  /**
    * Register a new observer to query stripping list updates. When the observer
    * is registered it is called immediately once. Afterwards it will be called
    * whenever the specified pref changes or when remote settings for
@@ -64,4 +59,13 @@ interface nsIURLQueryStrippingListService : nsISupports
    * Note that this is for testing purpose.
    */
   void clearLists();
+
+  /**
+   * Test-only method used to wait for the list service to initialize fully.
+   * Resolves once the service has reached a fully disabled (false) or fully
+   * enabled state (true).
+   * May also be called when the service is already fully initialized or
+   * disabled, in this case it will resolve immediately.
+   */
+  Promise testWaitForInit();
 };

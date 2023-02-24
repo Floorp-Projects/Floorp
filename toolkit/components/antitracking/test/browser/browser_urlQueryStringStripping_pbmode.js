@@ -15,12 +15,32 @@ const TEST_QUERY_STRING = "paramToStrip1=123&paramToKeep=456";
 const TEST_QUERY_STRING_STRIPPED = "paramToKeep=456";
 const TEST_URI_WITH_QUERY = TEST_URI + "?" + TEST_QUERY_STRING;
 
+let listService;
+
+async function waitForListServiceInit(strippingEnabled) {
+  info("Waiting for nsIURLQueryStrippingListService to be initialized.");
+  let isInitialized = await listService.testWaitForInit();
+  is(
+    isInitialized,
+    strippingEnabled,
+    "nsIURLQueryStrippingListService should be initialized when the feature is enabled."
+  );
+}
+
 add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.query_stripping.strip_list", "paramToStrip1 paramToStrip2"],
+      ["privacy.query_stripping.listService.logLevel", "Debug"],
     ],
   });
+
+  // Get the list service so we can wait for it to be fully initialized before running tests.
+  listService = Cc["@mozilla.org/query-stripping-list-service;1"].getService(
+    Ci.nsIURLQueryStrippingListService
+  );
+  // Here we don't care about the actual enabled state, we just want any init to be done so we get reliable starting conditions.
+  await listService.testWaitForInit();
 });
 
 add_task(async function test() {
@@ -55,6 +75,8 @@ add_task(async function test() {
               expectedQueryString,
             })
         );
+
+        await waitForListServiceInit(enableStripPBM || enableStrip);
 
         let tabBrowser = testPBM ? pbWindow.gBrowser : normalWindow.gBrowser;
         await BrowserTestUtils.withNewTab(
