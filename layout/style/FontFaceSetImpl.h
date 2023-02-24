@@ -79,6 +79,8 @@ class FontFaceSetImpl : public nsISupports, public gfxUserFontSet {
 
   explicit FontFaceSetImpl(FontFaceSet* aOwner);
 
+  void DestroyLoaders();
+
  public:
   virtual void Destroy();
   virtual bool IsOnOwningThread() = 0;
