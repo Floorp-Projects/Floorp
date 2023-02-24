@@ -83,9 +83,7 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          # TODO(crbug.com/webrtc/14644): Replace desktop_tests by linux_tests
-          # when the failing pipewire tests are ignored on sanitizers.
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'linux_tests',
         },
       },
       'Linux MSan': {
@@ -95,8 +93,6 @@
           # TODO(crbug.com/webrtc/14568): Using 'linux_tests'
           # fails on "MemorySanitizer: use-of-uninitialized-value in
           # libpipewire-0.3.so."
-          # TODO(crbug.com/webrtc/14644): Replace desktop_tests by linux_tests
-          # when the failing pipewire tests are ignored on sanitizers.
           'isolated_scripts': 'desktop_tests',
         },
       },
@@ -107,8 +103,6 @@
           # TODO(crbug.com/webrtc/14568): Using 'linux_tests'
           # fails on "ThreadSanitizer: data race on vptr (ctor/dtor vs
           # virtual call) in shared_screencast_stream_test."
-          # TODO(crbug.com/webrtc/14644): Replace desktop_tests by linux_tests
-          # when the failing pipewire tests are ignored on sanitizers.
           'isolated_scripts': 'desktop_tests',
         },
       },
@@ -116,18 +110,14 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          # TODO(crbug.com/webrtc/14644): Replace desktop_tests by linux_tests
-          # when the failing pipewire tests are ignored on sanitizers.
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'linux_tests',
         },
       },
       'Linux UBSan vptr': {
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          # TODO(crbug.com/webrtc/14644): Replace desktop_tests by linux_tests
-          # when the failing pipewire tests are ignored on sanitizers.
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'linux_tests',
         },
       },
       'Linux32 Debug': {
@@ -509,9 +499,7 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          # TODO(crbug.com/webrtc/14644): Replace desktop_tests by linux_tests
-          # when the failing pipewire tests are ignored on sanitizers.
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'linux_tests',
         },
       },
       'linux_compile_arm64_dbg': {},
@@ -549,8 +537,6 @@
           # TODO(crbug.com/webrtc/14568): Using 'linux_tests'
           # fails on "MemorySanitizer: use-of-uninitialized-value in
           # libpipewire-0.3.so."
-          # TODO(crbug.com/webrtc/14644): Replace desktop_tests by linux_tests
-          # when the failing pipewire tests are ignored on sanitizers.
           'isolated_scripts': 'desktop_tests',
         },
       },
@@ -568,8 +554,6 @@
           # TODO(crbug.com/webrtc/14568): Using 'linux_tests'
           # fails on "ThreadSanitizer: data race on vptr (ctor/dtor vs
           # virtual call) in shared_screencast_stream_test."
-          # TODO(crbug.com/webrtc/14644): Replace desktop_tests by linux_tests
-          # when the failing pipewire tests are ignored on sanitizers.
           'isolated_scripts': 'desktop_tests',
         },
       },
@@ -577,18 +561,14 @@
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          # TODO(crbug.com/webrtc/14644): Replace desktop_tests by linux_tests
-          # when the failing pipewire tests are ignored on sanitizers.
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'linux_tests',
         },
       },
       'linux_ubsan_vptr': {
         'os_type': 'linux',
         'mixins': ['linux-bionic', 'x86-64', 'resultdb-json-format'],
         'test_suites': {
-          # TODO(crbug.com/webrtc/14644): Replace desktop_tests by linux_tests
-          # when the failing pipewire tests are ignored on sanitizers.
-          'isolated_scripts': 'desktop_tests',
+          'isolated_scripts': 'linux_tests',
         },
       },
       'linux_x86_dbg': {

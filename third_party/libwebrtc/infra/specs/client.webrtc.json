@@ -3410,6 +3410,27 @@
         "test_id_prefix": "ninja://:rtc_unittests/"
       },
       {
+        "isolate_name": "shared_screencast_stream_test",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "shared_screencast_stream_test",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Ubuntu-18.04"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://modules/desktop_capture:shared_screencast_stream_test/"
+      },
+      {
         "isolate_name": "slow_peer_connection_unittests",
         "merge": {
           "args": [],
@@ -4709,6 +4730,27 @@
         "test_id_prefix": "ninja://:rtc_unittests/"
       },
       {
+        "isolate_name": "shared_screencast_stream_test",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "shared_screencast_stream_test",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Ubuntu-18.04"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://modules/desktop_capture:shared_screencast_stream_test/"
+      },
+      {
         "isolate_name": "slow_peer_connection_unittests",
         "merge": {
           "args": [],
@@ -5140,6 +5182,27 @@
           "shards": 6
         },
         "test_id_prefix": "ninja://:rtc_unittests/"
+      },
+      {
+        "isolate_name": "shared_screencast_stream_test",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "shared_screencast_stream_test",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Ubuntu-18.04"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://modules/desktop_capture:shared_screencast_stream_test/"
       },
       {
         "isolate_name": "slow_peer_connection_unittests",
@@ -6359,32 +6422,6 @@
         "test_id_prefix": "ninja://pc:peerconnection_unittests/"
       },
       {
-        "args": [
-          ".",
-          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
-        ],
-        "isolate_name": "pipewire_shared_screencast_stream_test",
-        "merge": {
-          "args": [],
-          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
-        },
-        "name": "pipewire_shared_screencast_stream_test",
-        "resultdb": {
-          "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
-          "result_format": "gtest_json"
-        },
-        "swarming": {
-          "can_use_on_swarming_builders": true,
-          "dimension_sets": [
-            {
-              "cpu": "x86-64",
-              "os": "Ubuntu-18.04"
-            }
-          ]
-        },
-        "test_id_prefix": "ninja://modules/desktop_capture:pipewire_shared_screencast_stream_test/"
-      },
-      {
         "isolate_name": "rtc_media_unittests",
         "merge": {
           "args": [],
@@ -6468,6 +6505,27 @@
           "shards": 6
         },
         "test_id_prefix": "ninja://:rtc_unittests/"
+      },
+      {
+        "isolate_name": "shared_screencast_stream_test",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "shared_screencast_stream_test",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Ubuntu-18.04"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://modules/desktop_capture:shared_screencast_stream_test/"
       },
       {
         "isolate_name": "slow_peer_connection_unittests",
@@ -6819,32 +6877,6 @@
         "test_id_prefix": "ninja://pc:peerconnection_unittests/"
       },
       {
-        "args": [
-          ".",
-          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
-        ],
-        "isolate_name": "pipewire_shared_screencast_stream_test",
-        "merge": {
-          "args": [],
-          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
-        },
-        "name": "pipewire_shared_screencast_stream_test",
-        "resultdb": {
-          "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
-          "result_format": "gtest_json"
-        },
-        "swarming": {
-          "can_use_on_swarming_builders": true,
-          "dimension_sets": [
-            {
-              "cpu": "x86-64",
-              "os": "Ubuntu-18.04"
-            }
-          ]
-        },
-        "test_id_prefix": "ninja://modules/desktop_capture:pipewire_shared_screencast_stream_test/"
-      },
-      {
         "isolate_name": "rtc_media_unittests",
         "merge": {
           "args": [],
@@ -6928,6 +6960,27 @@
           "shards": 6
         },
         "test_id_prefix": "ninja://:rtc_unittests/"
+      },
+      {
+        "isolate_name": "shared_screencast_stream_test",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "shared_screencast_stream_test",
+        "resultdb": {
+          "result_format": "json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Ubuntu-18.04"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://modules/desktop_capture:shared_screencast_stream_test/"
       },
       {
         "isolate_name": "slow_peer_connection_unittests",

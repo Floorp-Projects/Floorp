@@ -139,19 +139,8 @@ if (rtc_include_tests) {
         deps += [ ":pipewire_stubs" ]
       }
 
+      data = [ "../../third_party/pipewire" ]
       public_configs = [ ":pipewire_config" ]
-    }
-
-    group("pipewire_shared_screencast_stream_test") {
-      testonly = true
-
-      deps = [ ":shared_screencast_stream_test" ]
-
-      data = [
-        "../../third_party/pipewire",
-        "linux/wayland/test/shared_screencast_stream_test.py",
-        "${root_out_dir}/shared_screencast_stream_test",
-      ]
     }
   }
 
