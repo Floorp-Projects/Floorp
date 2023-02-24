@@ -30,7 +30,7 @@ pdfjs:
     notification_emails:
       - cdenizet@mozilla.com
       - mcastelluccio@mozilla.com
-    expires: 113
+    expires: never
   buttons:
     type: labeled_counter
     labels:
@@ -62,7 +62,7 @@ pdfjs:
     notification_emails:
       - cdenizet@mozilla.com
       - mcastelluccio@mozilla.com
-    expires: 113
+    expires: never
   used:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1566882
