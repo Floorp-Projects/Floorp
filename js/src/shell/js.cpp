@@ -234,6 +234,7 @@ using mozilla::Variant;
 bool InitOptionParser(OptionParser& op);
 bool SetGlobalOptionsPreJSInit(const OptionParser& op);
 bool SetGlobalOptionsPostJSInit(const OptionParser& op);
+bool SetContextOptions(JSContext* cx, const OptionParser& op);
 
 #ifdef FUZZING_JS_FUZZILLI
 #  define REPRL_CRFD 100
@@ -10634,480 +10635,6 @@ auto minVal(T a, Ts... args) {
   return true;
 }
 
-static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
-  enableAsmJS = !op.getBoolOption("no-asmjs");
-
-  enableWasm = true;
-  enableWasmBaseline = true;
-  enableWasmOptimizing = true;
-
-  if (const char* str = op.getStringOption("wasm-compiler")) {
-    if (strcmp(str, "none") == 0) {
-      enableWasm = false;
-    } else if (strcmp(str, "baseline") == 0) {
-      MOZ_ASSERT(enableWasmBaseline);
-      enableWasmOptimizing = false;
-    } else if (strcmp(str, "optimizing") == 0 ||
-               strcmp(str, "optimized") == 0) {
-      enableWasmBaseline = false;
-      MOZ_ASSERT(enableWasmOptimizing);
-    } else if (strcmp(str, "baseline+optimizing") == 0 ||
-               strcmp(str, "baseline+optimized") == 0) {
-      MOZ_ASSERT(enableWasmBaseline);
-      MOZ_ASSERT(enableWasmOptimizing);
-    } else if (strcmp(str, "ion") == 0) {
-      enableWasmBaseline = false;
-      enableWasmOptimizing = true;
-    } else if (strcmp(str, "baseline+ion") == 0) {
-      MOZ_ASSERT(enableWasmBaseline);
-      enableWasmOptimizing = true;
-    } else {
-      return OptionFailure("wasm-compiler", str);
-    }
-  }
-
-#define WASM_DEFAULT_FEATURE(NAME, LOWER_NAME, COMPILE_PRED, COMPILER_PRED, \
-                             FLAG_PRED, SHELL, ...)                         \
-  enableWasm##NAME = !op.getBoolOption("no-wasm-" SHELL);
-#define WASM_EXPERIMENTAL_FEATURE(NAME, LOWER_NAME, COMPILE_PRED,       \
-                                  COMPILER_PRED, FLAG_PRED, SHELL, ...) \
-  enableWasm##NAME = op.getBoolOption("wasm-" SHELL);
-  JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_DEFAULT_FEATURE,
-                       WASM_EXPERIMENTAL_FEATURE);
-#undef WASM_DEFAULT_FEATURE
-#undef WASM_EXPERIMENTAL_FEATURE
-
-  enableWasmVerbose = op.getBoolOption("wasm-verbose");
-  enableTestWasmAwaitTier2 = op.getBoolOption("test-wasm-await-tier2");
-  enableSourcePragmas = !op.getBoolOption("no-source-pragmas");
-  enableAsyncStacks = !op.getBoolOption("no-async-stacks");
-  enableAsyncStackCaptureDebuggeeOnly =
-      op.getBoolOption("async-stacks-capture-debuggee-only");
-  enableWeakRefs = !op.getBoolOption("disable-weak-refs");
-  enableToSource = !op.getBoolOption("disable-tosource");
-  enablePropertyErrorMessageFix =
-      !op.getBoolOption("disable-property-error-message-fix");
-  enableIteratorHelpers = op.getBoolOption("enable-iterator-helpers");
-  enableShadowRealms = op.getBoolOption("enable-shadow-realms");
-#ifdef NIGHTLY_BUILD
-  enableArrayGrouping = op.getBoolOption("enable-array-grouping");
-  enableArrayFromAsync = op.getBoolOption("enable-array-from-async");
-#endif
-#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
-  enableChangeArrayByCopy = op.getBoolOption("enable-change-array-by-copy");
-#endif
-#ifdef ENABLE_NEW_SET_METHODS
-  enableNewSetMethods = op.getBoolOption("enable-new-set-methods");
-#endif
-  enableImportAssertions = op.getBoolOption("enable-import-assertions");
-  useFdlibmForSinCosTan = op.getBoolOption("use-fdlibm-for-sin-cos-tan");
-
-  JS::ContextOptionsRef(cx)
-      .setAsmJS(enableAsmJS)
-      .setWasm(enableWasm)
-      .setWasmForTrustedPrinciples(enableWasm)
-      .setWasmBaseline(enableWasmBaseline)
-      .setWasmIon(enableWasmOptimizing)
-
-#define WASM_FEATURE(NAME, ...) .setWasm##NAME(enableWasm##NAME)
-          JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
-#undef WASM_FEATURE
-
-      .setWasmVerbose(enableWasmVerbose)
-      .setTestWasmAwaitTier2(enableTestWasmAwaitTier2)
-      .setSourcePragmas(enableSourcePragmas)
-      .setAsyncStack(enableAsyncStacks)
-      .setAsyncStackCaptureDebuggeeOnly(enableAsyncStackCaptureDebuggeeOnly)
-      .setImportAssertions(enableImportAssertions);
-
-  JS::SetUseFdlibmForSinCosTan(useFdlibmForSinCosTan);
-
-  // Check --fast-warmup first because it sets default warm-up thresholds. These
-  // thresholds can then be overridden below by --ion-eager and other flags.
-  if (op.getBoolOption("fast-warmup")) {
-    jit::JitOptions.setFastWarmUp();
-  }
-
-  if (op.getBoolOption("no-ion-for-main-context")) {
-    JS::ContextOptionsRef(cx).setDisableIon();
-  }
-
-  if (const char* str = op.getStringOption("cache-ir-stubs")) {
-    if (strcmp(str, "on") == 0) {
-      jit::JitOptions.disableCacheIR = false;
-    } else if (strcmp(str, "off") == 0) {
-      jit::JitOptions.disableCacheIR = true;
-    } else {
-      return OptionFailure("cache-ir-stubs", str);
-    }
-  }
-
-  if (const char* str = op.getStringOption("spectre-mitigations")) {
-    if (strcmp(str, "on") == 0) {
-      jit::JitOptions.spectreIndexMasking = true;
-      jit::JitOptions.spectreObjectMitigations = true;
-      jit::JitOptions.spectreStringMitigations = true;
-      jit::JitOptions.spectreValueMasking = true;
-      jit::JitOptions.spectreJitToCxxCalls = true;
-    } else if (strcmp(str, "off") == 0) {
-      jit::JitOptions.spectreIndexMasking = false;
-      jit::JitOptions.spectreObjectMitigations = false;
-      jit::JitOptions.spectreStringMitigations = false;
-      jit::JitOptions.spectreValueMasking = false;
-      jit::JitOptions.spectreJitToCxxCalls = false;
-    } else {
-      return OptionFailure("spectre-mitigations", str);
-    }
-  }
-
-  if (const char* str = op.getStringOption("ion-scalar-replacement")) {
-    if (strcmp(str, "on") == 0) {
-      jit::JitOptions.disableScalarReplacement = false;
-    } else if (strcmp(str, "off") == 0) {
-      jit::JitOptions.disableScalarReplacement = true;
-    } else {
-      return OptionFailure("ion-scalar-replacement", str);
-    }
-  }
-
-  if (op.getStringOption("ion-shared-stubs")) {
-    // Dead option, preserved for now for potential fuzzer interaction.
-  }
-
-  if (const char* str = op.getStringOption("ion-gvn")) {
-    if (strcmp(str, "off") == 0) {
-      jit::JitOptions.disableGvn = true;
-    } else if (strcmp(str, "on") != 0 && strcmp(str, "optimistic") != 0 &&
-               strcmp(str, "pessimistic") != 0) {
-      // We accept "pessimistic" and "optimistic" as synonyms for "on"
-      // for backwards compatibility.
-      return OptionFailure("ion-gvn", str);
-    }
-  }
-
-  if (const char* str = op.getStringOption("ion-licm")) {
-    if (strcmp(str, "on") == 0) {
-      jit::JitOptions.disableLicm = false;
-    } else if (strcmp(str, "off") == 0) {
-      jit::JitOptions.disableLicm = true;
-    } else {
-      return OptionFailure("ion-licm", str);
-    }
-  }
-
-  if (const char* str = op.getStringOption("ion-edgecase-analysis")) {
-    if (strcmp(str, "on") == 0) {
-      jit::JitOptions.disableEdgeCaseAnalysis = false;
-    } else if (strcmp(str, "off") == 0) {
-      jit::JitOptions.disableEdgeCaseAnalysis = true;
-    } else {
-      return OptionFailure("ion-edgecase-analysis", str);
-    }
-  }
-
-  if (const char* str = op.getStringOption("ion-pruning")) {
-    if (strcmp(str, "on") == 0) {
-      jit::JitOptions.disablePruning = false;
-    } else if (strcmp(str, "off") == 0) {
-      jit::JitOptions.disablePruning = true;
-    } else {
-      return OptionFailure("ion-pruning", str);
-    }
-  }
-
-  if (const char* str = op.getStringOption("ion-range-analysis")) {
-    if (strcmp(str, "on") == 0) {
-      jit::JitOptions.disableRangeAnalysis = false;
-    } else if (strcmp(str, "off") == 0) {
-      jit::JitOptions.disableRangeAnalysis = true;
-    } else {
-      return OptionFailure("ion-range-analysis", str);
-    }
-  }
-
-  if (const char* str = op.getStringOption("ion-sink")) {
-    if (strcmp(str, "on") == 0) {
-      jit::JitOptions.disableSink = false;
-    } else if (strcmp(str, "off") == 0) {
-      jit::JitOptions.disableSink = true;
-    } else {
-      return OptionFailure("ion-sink", str);
-    }
-  }
-
-  if (const char* str = op.getStringOption("ion-optimize-shapeguards")) {
-    if (strcmp(str, "on") == 0) {
-      jit::JitOptions.disableRedundantShapeGuards = false;
-    } else if (strcmp(str, "off") == 0) {
-      jit::JitOptions.disableRedundantShapeGuards = true;
-    } else {
-      return OptionFailure("ion-optimize-shapeguards", str);
-    }
-  }
-
-  if (const char* str = op.getStringOption("ion-instruction-reordering")) {
-    if (strcmp(str, "on") == 0) {
-      jit::JitOptions.disableInstructionReordering = false;
-    } else if (strcmp(str, "off") == 0) {
-      jit::JitOptions.disableInstructionReordering = true;
-    } else {
-      return OptionFailure("ion-instruction-reordering", str);
-    }
-  }
-
-  if (op.getBoolOption("ion-check-range-analysis")) {
-    jit::JitOptions.checkRangeAnalysis = true;
-  }
-
-  if (op.getBoolOption("ion-extra-checks")) {
-    jit::JitOptions.runExtraChecks = true;
-  }
-
-  if (const char* str = op.getStringOption("ion-inlining")) {
-    if (strcmp(str, "on") == 0) {
-      jit::JitOptions.disableInlining = false;
-    } else if (strcmp(str, "off") == 0) {
-      jit::JitOptions.disableInlining = true;
-    } else {
-      return OptionFailure("ion-inlining", str);
-    }
-  }
-
-  if (const char* str = op.getStringOption("ion-osr")) {
-    if (strcmp(str, "on") == 0) {
-      jit::JitOptions.osr = true;
-    } else if (strcmp(str, "off") == 0) {
-      jit::JitOptions.osr = false;
-    } else {
-      return OptionFailure("ion-osr", str);
-    }
-  }
-
-  if (const char* str = op.getStringOption("ion-limit-script-size")) {
-    if (strcmp(str, "on") == 0) {
-      jit::JitOptions.limitScriptSize = true;
-    } else if (strcmp(str, "off") == 0) {
-      jit::JitOptions.limitScriptSize = false;
-    } else {
-      return OptionFailure("ion-limit-script-size", str);
-    }
-  }
-
-  int32_t warmUpThreshold = op.getIntOption("ion-warmup-threshold");
-  if (warmUpThreshold >= 0) {
-    jit::JitOptions.setNormalIonWarmUpThreshold(warmUpThreshold);
-  }
-
-  warmUpThreshold = op.getIntOption("baseline-warmup-threshold");
-  if (warmUpThreshold >= 0) {
-    jit::JitOptions.baselineJitWarmUpThreshold = warmUpThreshold;
-  }
-
-  warmUpThreshold = op.getIntOption("trial-inlining-warmup-threshold");
-  if (warmUpThreshold >= 0) {
-    jit::JitOptions.trialInliningWarmUpThreshold = warmUpThreshold;
-  }
-
-  warmUpThreshold = op.getIntOption("regexp-warmup-threshold");
-  if (warmUpThreshold >= 0) {
-    jit::JitOptions.regexpWarmUpThreshold = warmUpThreshold;
-  }
-
-  if (op.getBoolOption("baseline-eager")) {
-    jit::JitOptions.setEagerBaselineCompilation();
-  }
-
-  if (op.getBoolOption("blinterp")) {
-    jit::JitOptions.baselineInterpreter = true;
-  }
-
-  if (op.getBoolOption("no-blinterp")) {
-    jit::JitOptions.baselineInterpreter = false;
-  }
-
-  warmUpThreshold = op.getIntOption("blinterp-warmup-threshold");
-  if (warmUpThreshold >= 0) {
-    jit::JitOptions.baselineInterpreterWarmUpThreshold = warmUpThreshold;
-  }
-
-  if (op.getBoolOption("blinterp-eager")) {
-    jit::JitOptions.baselineInterpreterWarmUpThreshold = 0;
-  }
-
-  if (op.getBoolOption("no-baseline")) {
-    jit::JitOptions.baselineJit = false;
-  }
-
-  if (op.getBoolOption("no-ion")) {
-    jit::JitOptions.ion = false;
-  }
-
-  if (op.getBoolOption("no-native-regexp")) {
-    jit::JitOptions.nativeRegExp = false;
-  }
-
-  if (op.getBoolOption("trace-regexp-parser")) {
-    jit::JitOptions.trace_regexp_parser = true;
-  }
-  if (op.getBoolOption("trace-regexp-assembler")) {
-    jit::JitOptions.trace_regexp_assembler = true;
-  }
-  if (op.getBoolOption("trace-regexp-interpreter")) {
-    jit::JitOptions.trace_regexp_bytecodes = true;
-  }
-  if (op.getBoolOption("trace-regexp-peephole")) {
-    jit::JitOptions.trace_regexp_peephole_optimization = true;
-  }
-
-  if (op.getBoolOption("less-debug-code")) {
-    jit::JitOptions.lessDebugCode = true;
-  }
-
-  int32_t inliningEntryThreshold = op.getIntOption("inlining-entry-threshold");
-  if (inliningEntryThreshold > 0) {
-    jit::JitOptions.inliningEntryThreshold = inliningEntryThreshold;
-  }
-
-  int32_t smallFunctionLength = op.getIntOption("small-function-length");
-  if (smallFunctionLength > 0) {
-    jit::JitOptions.smallFunctionMaxBytecodeLength = smallFunctionLength;
-  }
-
-  if (const char* str = op.getStringOption("ion-regalloc")) {
-    jit::JitOptions.forcedRegisterAllocator = jit::LookupRegisterAllocator(str);
-    if (!jit::JitOptions.forcedRegisterAllocator.isSome()) {
-      return OptionFailure("ion-regalloc", str);
-    }
-  }
-
-  if (op.getBoolOption("ion-eager")) {
-    jit::JitOptions.setEagerIonCompilation();
-  }
-
-  offthreadCompilation = true;
-  if (const char* str = op.getStringOption("ion-offthread-compile")) {
-    if (strcmp(str, "off") == 0) {
-      offthreadCompilation = false;
-    } else if (strcmp(str, "on") != 0) {
-      return OptionFailure("ion-offthread-compile", str);
-    }
-  }
-  cx->runtime()->setOffthreadIonCompilationEnabled(offthreadCompilation);
-
-  if (op.getStringOption("ion-parallel-compile")) {
-    fprintf(stderr,
-            "--ion-parallel-compile is deprecated. Please use "
-            "--ion-offthread-compile instead.\n");
-    return false;
-  }
-
-  if (const char* str = op.getStringOption("shared-memory")) {
-    if (strcmp(str, "off") == 0) {
-      enableSharedMemory = false;
-    } else if (strcmp(str, "on") == 0) {
-      enableSharedMemory = true;
-    } else {
-      return OptionFailure("shared-memory", str);
-    }
-  }
-
-  if (op.getBoolOption("disable-bailout-loop-check")) {
-    jit::JitOptions.disableBailoutLoopCheck = true;
-  }
-
-  if (op.getBoolOption("enable-watchtower")) {
-    jit::JitOptions.enableWatchtowerMegamorphic = true;
-  }
-  if (op.getBoolOption("disable-watchtower")) {
-    jit::JitOptions.enableWatchtowerMegamorphic = false;
-  }
-
-  if (const char* str = op.getStringOption("ion-iterator-indices")) {
-    if (strcmp(str, "on") == 0) {
-      jit::JitOptions.disableIteratorIndices = false;
-    } else if (strcmp(str, "off") == 0) {
-      jit::JitOptions.disableIteratorIndices = true;
-    } else {
-      return OptionFailure("ion-iterator-indices", str);
-    }
-  }
-
-#if defined(JS_SIMULATOR_ARM)
-  if (op.getBoolOption("arm-sim-icache-checks")) {
-    jit::SimulatorProcess::ICacheCheckingDisableCount = 0;
-  }
-
-  int32_t stopAt = op.getIntOption("arm-sim-stop-at");
-  if (stopAt >= 0) {
-    jit::Simulator::StopSimAt = stopAt;
-  }
-#elif defined(JS_SIMULATOR_MIPS32) || defined(JS_SIMULATOR_MIPS64)
-  if (op.getBoolOption("mips-sim-icache-checks")) {
-    jit::SimulatorProcess::ICacheCheckingDisableCount = 0;
-  }
-
-  int32_t stopAt = op.getIntOption("mips-sim-stop-at");
-  if (stopAt >= 0) {
-    jit::Simulator::StopSimAt = stopAt;
-  }
-#elif defined(JS_SIMULATOR_LOONG64)
-  if (op.getBoolOption("loong64-sim-icache-checks")) {
-    jit::SimulatorProcess::ICacheCheckingDisableCount = 0;
-  }
-
-  int32_t stopAt = op.getIntOption("loong64-sim-stop-at");
-  if (stopAt >= 0) {
-    jit::Simulator::StopSimAt = stopAt;
-  }
-#endif
-
-#ifdef DEBUG
-#  ifdef JS_CODEGEN_RISCV64
-  if (op.getBoolOption("riscv-debug")) {
-    jit::Assembler::FLAG_riscv_debug = true;
-  }
-#  endif
-#  ifdef JS_SIMULATOR_RISCV64
-  if (op.getBoolOption("trace-sim")) {
-    jit::Simulator::FLAG_trace_sim = true;
-  }
-  if (op.getBoolOption("debug-sim")) {
-    jit::Simulator::FLAG_debug_sim = true;
-  }
-  if (op.getBoolOption("riscv-trap-to-simulator-debugger")) {
-    jit::Simulator::FLAG_riscv_trap_to_simulator_debugger = true;
-  }
-  int32_t stopAt = op.getIntOption("riscv-sim-stop-at");
-  if (stopAt >= 0) {
-    jit::Simulator::StopSimAt = stopAt;
-  }
-#  endif
-#endif
-  reportWarnings = op.getBoolOption('w');
-  compileOnly = op.getBoolOption('c');
-  printTiming = op.getBoolOption('b');
-  enableDisassemblyDumps = op.getBoolOption('D');
-  cx->runtime()->profilingScripts =
-      enableCodeCoverage || enableDisassemblyDumps;
-
-#ifdef DEBUG
-  dumpEntrainedVariables = op.getBoolOption("dump-entrained-variables");
-#endif
-
-#ifdef JS_GC_ZEAL
-  const char* zealStr = op.getStringOption("gc-zeal");
-  if (zealStr) {
-    if (!cx->runtime()->gc.parseAndSetZeal(zealStr)) {
-      return false;
-    }
-    uint32_t nextScheduled;
-    cx->runtime()->gc.getZealBits(&gZealBits, &gZealFrequency, &nextScheduled);
-  }
-#endif
-
-  return true;
-}
-
 static void SetWorkerContextOptions(JSContext* cx) {
   // Copy option values from the main thread.
   JS::ContextOptionsRef(cx)
@@ -12493,6 +12020,480 @@ bool SetGlobalOptionsPostJSInit(const OptionParser& op) {
   if (cpuCount >= 0 && !SetFakeCPUCount(cpuCount)) {
     return false;
   }
+
+  return true;
+}
+
+bool SetContextOptions(JSContext* cx, const OptionParser& op) {
+  enableAsmJS = !op.getBoolOption("no-asmjs");
+
+  enableWasm = true;
+  enableWasmBaseline = true;
+  enableWasmOptimizing = true;
+
+  if (const char* str = op.getStringOption("wasm-compiler")) {
+    if (strcmp(str, "none") == 0) {
+      enableWasm = false;
+    } else if (strcmp(str, "baseline") == 0) {
+      MOZ_ASSERT(enableWasmBaseline);
+      enableWasmOptimizing = false;
+    } else if (strcmp(str, "optimizing") == 0 ||
+               strcmp(str, "optimized") == 0) {
+      enableWasmBaseline = false;
+      MOZ_ASSERT(enableWasmOptimizing);
+    } else if (strcmp(str, "baseline+optimizing") == 0 ||
+               strcmp(str, "baseline+optimized") == 0) {
+      MOZ_ASSERT(enableWasmBaseline);
+      MOZ_ASSERT(enableWasmOptimizing);
+    } else if (strcmp(str, "ion") == 0) {
+      enableWasmBaseline = false;
+      enableWasmOptimizing = true;
+    } else if (strcmp(str, "baseline+ion") == 0) {
+      MOZ_ASSERT(enableWasmBaseline);
+      enableWasmOptimizing = true;
+    } else {
+      return OptionFailure("wasm-compiler", str);
+    }
+  }
+
+#define WASM_DEFAULT_FEATURE(NAME, LOWER_NAME, COMPILE_PRED, COMPILER_PRED, \
+                             FLAG_PRED, SHELL, ...)                         \
+  enableWasm##NAME = !op.getBoolOption("no-wasm-" SHELL);
+#define WASM_EXPERIMENTAL_FEATURE(NAME, LOWER_NAME, COMPILE_PRED,       \
+                                  COMPILER_PRED, FLAG_PRED, SHELL, ...) \
+  enableWasm##NAME = op.getBoolOption("wasm-" SHELL);
+  JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_DEFAULT_FEATURE,
+                       WASM_EXPERIMENTAL_FEATURE);
+#undef WASM_DEFAULT_FEATURE
+#undef WASM_EXPERIMENTAL_FEATURE
+
+  enableWasmVerbose = op.getBoolOption("wasm-verbose");
+  enableTestWasmAwaitTier2 = op.getBoolOption("test-wasm-await-tier2");
+  enableSourcePragmas = !op.getBoolOption("no-source-pragmas");
+  enableAsyncStacks = !op.getBoolOption("no-async-stacks");
+  enableAsyncStackCaptureDebuggeeOnly =
+      op.getBoolOption("async-stacks-capture-debuggee-only");
+  enableWeakRefs = !op.getBoolOption("disable-weak-refs");
+  enableToSource = !op.getBoolOption("disable-tosource");
+  enablePropertyErrorMessageFix =
+      !op.getBoolOption("disable-property-error-message-fix");
+  enableIteratorHelpers = op.getBoolOption("enable-iterator-helpers");
+  enableShadowRealms = op.getBoolOption("enable-shadow-realms");
+#ifdef NIGHTLY_BUILD
+  enableArrayGrouping = op.getBoolOption("enable-array-grouping");
+  enableArrayFromAsync = op.getBoolOption("enable-array-from-async");
+#endif
+#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
+  enableChangeArrayByCopy = op.getBoolOption("enable-change-array-by-copy");
+#endif
+#ifdef ENABLE_NEW_SET_METHODS
+  enableNewSetMethods = op.getBoolOption("enable-new-set-methods");
+#endif
+  enableImportAssertions = op.getBoolOption("enable-import-assertions");
+  useFdlibmForSinCosTan = op.getBoolOption("use-fdlibm-for-sin-cos-tan");
+
+  JS::ContextOptionsRef(cx)
+      .setAsmJS(enableAsmJS)
+      .setWasm(enableWasm)
+      .setWasmForTrustedPrinciples(enableWasm)
+      .setWasmBaseline(enableWasmBaseline)
+      .setWasmIon(enableWasmOptimizing)
+
+#define WASM_FEATURE(NAME, ...) .setWasm##NAME(enableWasm##NAME)
+          JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
+#undef WASM_FEATURE
+
+      .setWasmVerbose(enableWasmVerbose)
+      .setTestWasmAwaitTier2(enableTestWasmAwaitTier2)
+      .setSourcePragmas(enableSourcePragmas)
+      .setAsyncStack(enableAsyncStacks)
+      .setAsyncStackCaptureDebuggeeOnly(enableAsyncStackCaptureDebuggeeOnly)
+      .setImportAssertions(enableImportAssertions);
+
+  JS::SetUseFdlibmForSinCosTan(useFdlibmForSinCosTan);
+
+  // Check --fast-warmup first because it sets default warm-up thresholds. These
+  // thresholds can then be overridden below by --ion-eager and other flags.
+  if (op.getBoolOption("fast-warmup")) {
+    jit::JitOptions.setFastWarmUp();
+  }
+
+  if (op.getBoolOption("no-ion-for-main-context")) {
+    JS::ContextOptionsRef(cx).setDisableIon();
+  }
+
+  if (const char* str = op.getStringOption("cache-ir-stubs")) {
+    if (strcmp(str, "on") == 0) {
+      jit::JitOptions.disableCacheIR = false;
+    } else if (strcmp(str, "off") == 0) {
+      jit::JitOptions.disableCacheIR = true;
+    } else {
+      return OptionFailure("cache-ir-stubs", str);
+    }
+  }
+
+  if (const char* str = op.getStringOption("spectre-mitigations")) {
+    if (strcmp(str, "on") == 0) {
+      jit::JitOptions.spectreIndexMasking = true;
+      jit::JitOptions.spectreObjectMitigations = true;
+      jit::JitOptions.spectreStringMitigations = true;
+      jit::JitOptions.spectreValueMasking = true;
+      jit::JitOptions.spectreJitToCxxCalls = true;
+    } else if (strcmp(str, "off") == 0) {
+      jit::JitOptions.spectreIndexMasking = false;
+      jit::JitOptions.spectreObjectMitigations = false;
+      jit::JitOptions.spectreStringMitigations = false;
+      jit::JitOptions.spectreValueMasking = false;
+      jit::JitOptions.spectreJitToCxxCalls = false;
+    } else {
+      return OptionFailure("spectre-mitigations", str);
+    }
+  }
+
+  if (const char* str = op.getStringOption("ion-scalar-replacement")) {
+    if (strcmp(str, "on") == 0) {
+      jit::JitOptions.disableScalarReplacement = false;
+    } else if (strcmp(str, "off") == 0) {
+      jit::JitOptions.disableScalarReplacement = true;
+    } else {
+      return OptionFailure("ion-scalar-replacement", str);
+    }
+  }
+
+  if (op.getStringOption("ion-shared-stubs")) {
+    // Dead option, preserved for now for potential fuzzer interaction.
+  }
+
+  if (const char* str = op.getStringOption("ion-gvn")) {
+    if (strcmp(str, "off") == 0) {
+      jit::JitOptions.disableGvn = true;
+    } else if (strcmp(str, "on") != 0 && strcmp(str, "optimistic") != 0 &&
+               strcmp(str, "pessimistic") != 0) {
+      // We accept "pessimistic" and "optimistic" as synonyms for "on"
+      // for backwards compatibility.
+      return OptionFailure("ion-gvn", str);
+    }
+  }
+
+  if (const char* str = op.getStringOption("ion-licm")) {
+    if (strcmp(str, "on") == 0) {
+      jit::JitOptions.disableLicm = false;
+    } else if (strcmp(str, "off") == 0) {
+      jit::JitOptions.disableLicm = true;
+    } else {
+      return OptionFailure("ion-licm", str);
+    }
+  }
+
+  if (const char* str = op.getStringOption("ion-edgecase-analysis")) {
+    if (strcmp(str, "on") == 0) {
+      jit::JitOptions.disableEdgeCaseAnalysis = false;
+    } else if (strcmp(str, "off") == 0) {
+      jit::JitOptions.disableEdgeCaseAnalysis = true;
+    } else {
+      return OptionFailure("ion-edgecase-analysis", str);
+    }
+  }
+
+  if (const char* str = op.getStringOption("ion-pruning")) {
+    if (strcmp(str, "on") == 0) {
+      jit::JitOptions.disablePruning = false;
+    } else if (strcmp(str, "off") == 0) {
+      jit::JitOptions.disablePruning = true;
+    } else {
+      return OptionFailure("ion-pruning", str);
+    }
+  }
+
+  if (const char* str = op.getStringOption("ion-range-analysis")) {
+    if (strcmp(str, "on") == 0) {
+      jit::JitOptions.disableRangeAnalysis = false;
+    } else if (strcmp(str, "off") == 0) {
+      jit::JitOptions.disableRangeAnalysis = true;
+    } else {
+      return OptionFailure("ion-range-analysis", str);
+    }
+  }
+
+  if (const char* str = op.getStringOption("ion-sink")) {
+    if (strcmp(str, "on") == 0) {
+      jit::JitOptions.disableSink = false;
+    } else if (strcmp(str, "off") == 0) {
+      jit::JitOptions.disableSink = true;
+    } else {
+      return OptionFailure("ion-sink", str);
+    }
+  }
+
+  if (const char* str = op.getStringOption("ion-optimize-shapeguards")) {
+    if (strcmp(str, "on") == 0) {
+      jit::JitOptions.disableRedundantShapeGuards = false;
+    } else if (strcmp(str, "off") == 0) {
+      jit::JitOptions.disableRedundantShapeGuards = true;
+    } else {
+      return OptionFailure("ion-optimize-shapeguards", str);
+    }
+  }
+
+  if (const char* str = op.getStringOption("ion-instruction-reordering")) {
+    if (strcmp(str, "on") == 0) {
+      jit::JitOptions.disableInstructionReordering = false;
+    } else if (strcmp(str, "off") == 0) {
+      jit::JitOptions.disableInstructionReordering = true;
+    } else {
+      return OptionFailure("ion-instruction-reordering", str);
+    }
+  }
+
+  if (op.getBoolOption("ion-check-range-analysis")) {
+    jit::JitOptions.checkRangeAnalysis = true;
+  }
+
+  if (op.getBoolOption("ion-extra-checks")) {
+    jit::JitOptions.runExtraChecks = true;
+  }
+
+  if (const char* str = op.getStringOption("ion-inlining")) {
+    if (strcmp(str, "on") == 0) {
+      jit::JitOptions.disableInlining = false;
+    } else if (strcmp(str, "off") == 0) {
+      jit::JitOptions.disableInlining = true;
+    } else {
+      return OptionFailure("ion-inlining", str);
+    }
+  }
+
+  if (const char* str = op.getStringOption("ion-osr")) {
+    if (strcmp(str, "on") == 0) {
+      jit::JitOptions.osr = true;
+    } else if (strcmp(str, "off") == 0) {
+      jit::JitOptions.osr = false;
+    } else {
+      return OptionFailure("ion-osr", str);
+    }
+  }
+
+  if (const char* str = op.getStringOption("ion-limit-script-size")) {
+    if (strcmp(str, "on") == 0) {
+      jit::JitOptions.limitScriptSize = true;
+    } else if (strcmp(str, "off") == 0) {
+      jit::JitOptions.limitScriptSize = false;
+    } else {
+      return OptionFailure("ion-limit-script-size", str);
+    }
+  }
+
+  int32_t warmUpThreshold = op.getIntOption("ion-warmup-threshold");
+  if (warmUpThreshold >= 0) {
+    jit::JitOptions.setNormalIonWarmUpThreshold(warmUpThreshold);
+  }
+
+  warmUpThreshold = op.getIntOption("baseline-warmup-threshold");
+  if (warmUpThreshold >= 0) {
+    jit::JitOptions.baselineJitWarmUpThreshold = warmUpThreshold;
+  }
+
+  warmUpThreshold = op.getIntOption("trial-inlining-warmup-threshold");
+  if (warmUpThreshold >= 0) {
+    jit::JitOptions.trialInliningWarmUpThreshold = warmUpThreshold;
+  }
+
+  warmUpThreshold = op.getIntOption("regexp-warmup-threshold");
+  if (warmUpThreshold >= 0) {
+    jit::JitOptions.regexpWarmUpThreshold = warmUpThreshold;
+  }
+
+  if (op.getBoolOption("baseline-eager")) {
+    jit::JitOptions.setEagerBaselineCompilation();
+  }
+
+  if (op.getBoolOption("blinterp")) {
+    jit::JitOptions.baselineInterpreter = true;
+  }
+
+  if (op.getBoolOption("no-blinterp")) {
+    jit::JitOptions.baselineInterpreter = false;
+  }
+
+  warmUpThreshold = op.getIntOption("blinterp-warmup-threshold");
+  if (warmUpThreshold >= 0) {
+    jit::JitOptions.baselineInterpreterWarmUpThreshold = warmUpThreshold;
+  }
+
+  if (op.getBoolOption("blinterp-eager")) {
+    jit::JitOptions.baselineInterpreterWarmUpThreshold = 0;
+  }
+
+  if (op.getBoolOption("no-baseline")) {
+    jit::JitOptions.baselineJit = false;
+  }
+
+  if (op.getBoolOption("no-ion")) {
+    jit::JitOptions.ion = false;
+  }
+
+  if (op.getBoolOption("no-native-regexp")) {
+    jit::JitOptions.nativeRegExp = false;
+  }
+
+  if (op.getBoolOption("trace-regexp-parser")) {
+    jit::JitOptions.trace_regexp_parser = true;
+  }
+  if (op.getBoolOption("trace-regexp-assembler")) {
+    jit::JitOptions.trace_regexp_assembler = true;
+  }
+  if (op.getBoolOption("trace-regexp-interpreter")) {
+    jit::JitOptions.trace_regexp_bytecodes = true;
+  }
+  if (op.getBoolOption("trace-regexp-peephole")) {
+    jit::JitOptions.trace_regexp_peephole_optimization = true;
+  }
+
+  if (op.getBoolOption("less-debug-code")) {
+    jit::JitOptions.lessDebugCode = true;
+  }
+
+  int32_t inliningEntryThreshold = op.getIntOption("inlining-entry-threshold");
+  if (inliningEntryThreshold > 0) {
+    jit::JitOptions.inliningEntryThreshold = inliningEntryThreshold;
+  }
+
+  int32_t smallFunctionLength = op.getIntOption("small-function-length");
+  if (smallFunctionLength > 0) {
+    jit::JitOptions.smallFunctionMaxBytecodeLength = smallFunctionLength;
+  }
+
+  if (const char* str = op.getStringOption("ion-regalloc")) {
+    jit::JitOptions.forcedRegisterAllocator = jit::LookupRegisterAllocator(str);
+    if (!jit::JitOptions.forcedRegisterAllocator.isSome()) {
+      return OptionFailure("ion-regalloc", str);
+    }
+  }
+
+  if (op.getBoolOption("ion-eager")) {
+    jit::JitOptions.setEagerIonCompilation();
+  }
+
+  offthreadCompilation = true;
+  if (const char* str = op.getStringOption("ion-offthread-compile")) {
+    if (strcmp(str, "off") == 0) {
+      offthreadCompilation = false;
+    } else if (strcmp(str, "on") != 0) {
+      return OptionFailure("ion-offthread-compile", str);
+    }
+  }
+  cx->runtime()->setOffthreadIonCompilationEnabled(offthreadCompilation);
+
+  if (op.getStringOption("ion-parallel-compile")) {
+    fprintf(stderr,
+            "--ion-parallel-compile is deprecated. Please use "
+            "--ion-offthread-compile instead.\n");
+    return false;
+  }
+
+  if (const char* str = op.getStringOption("shared-memory")) {
+    if (strcmp(str, "off") == 0) {
+      enableSharedMemory = false;
+    } else if (strcmp(str, "on") == 0) {
+      enableSharedMemory = true;
+    } else {
+      return OptionFailure("shared-memory", str);
+    }
+  }
+
+  if (op.getBoolOption("disable-bailout-loop-check")) {
+    jit::JitOptions.disableBailoutLoopCheck = true;
+  }
+
+  if (op.getBoolOption("enable-watchtower")) {
+    jit::JitOptions.enableWatchtowerMegamorphic = true;
+  }
+  if (op.getBoolOption("disable-watchtower")) {
+    jit::JitOptions.enableWatchtowerMegamorphic = false;
+  }
+
+  if (const char* str = op.getStringOption("ion-iterator-indices")) {
+    if (strcmp(str, "on") == 0) {
+      jit::JitOptions.disableIteratorIndices = false;
+    } else if (strcmp(str, "off") == 0) {
+      jit::JitOptions.disableIteratorIndices = true;
+    } else {
+      return OptionFailure("ion-iterator-indices", str);
+    }
+  }
+
+#if defined(JS_SIMULATOR_ARM)
+  if (op.getBoolOption("arm-sim-icache-checks")) {
+    jit::SimulatorProcess::ICacheCheckingDisableCount = 0;
+  }
+
+  int32_t stopAt = op.getIntOption("arm-sim-stop-at");
+  if (stopAt >= 0) {
+    jit::Simulator::StopSimAt = stopAt;
+  }
+#elif defined(JS_SIMULATOR_MIPS32) || defined(JS_SIMULATOR_MIPS64)
+  if (op.getBoolOption("mips-sim-icache-checks")) {
+    jit::SimulatorProcess::ICacheCheckingDisableCount = 0;
+  }
+
+  int32_t stopAt = op.getIntOption("mips-sim-stop-at");
+  if (stopAt >= 0) {
+    jit::Simulator::StopSimAt = stopAt;
+  }
+#elif defined(JS_SIMULATOR_LOONG64)
+  if (op.getBoolOption("loong64-sim-icache-checks")) {
+    jit::SimulatorProcess::ICacheCheckingDisableCount = 0;
+  }
+
+  int32_t stopAt = op.getIntOption("loong64-sim-stop-at");
+  if (stopAt >= 0) {
+    jit::Simulator::StopSimAt = stopAt;
+  }
+#endif
+
+#ifdef DEBUG
+#  ifdef JS_CODEGEN_RISCV64
+  if (op.getBoolOption("riscv-debug")) {
+    jit::Assembler::FLAG_riscv_debug = true;
+  }
+#  endif
+#  ifdef JS_SIMULATOR_RISCV64
+  if (op.getBoolOption("trace-sim")) {
+    jit::Simulator::FLAG_trace_sim = true;
+  }
+  if (op.getBoolOption("debug-sim")) {
+    jit::Simulator::FLAG_debug_sim = true;
+  }
+  if (op.getBoolOption("riscv-trap-to-simulator-debugger")) {
+    jit::Simulator::FLAG_riscv_trap_to_simulator_debugger = true;
+  }
+  int32_t stopAt = op.getIntOption("riscv-sim-stop-at");
+  if (stopAt >= 0) {
+    jit::Simulator::StopSimAt = stopAt;
+  }
+#  endif
+#endif
+  reportWarnings = op.getBoolOption('w');
+  compileOnly = op.getBoolOption('c');
+  printTiming = op.getBoolOption('b');
+  enableDisassemblyDumps = op.getBoolOption('D');
+  cx->runtime()->profilingScripts =
+      enableCodeCoverage || enableDisassemblyDumps;
+
+#ifdef DEBUG
+  dumpEntrainedVariables = op.getBoolOption("dump-entrained-variables");
+#endif
+
+#ifdef JS_GC_ZEAL
+  const char* zealStr = op.getStringOption("gc-zeal");
+  if (zealStr) {
+    if (!cx->runtime()->gc.parseAndSetZeal(zealStr)) {
+      return false;
+    }
+    uint32_t nextScheduled;
+    cx->runtime()->gc.getZealBits(&gZealBits, &gZealFrequency, &nextScheduled);
+  }
+#endif
 
   return true;
 }
