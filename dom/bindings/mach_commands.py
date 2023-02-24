@@ -5,11 +5,7 @@
 import os
 import sys
 
-from mach.decorators import (
-    CommandArgument,
-    Command,
-)
-
+from mach.decorators import Command, CommandArgument
 from mozbuild.util import mkdir
 
 

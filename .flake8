@@ -3,7 +3,11 @@ max-line-length = 99
 exclude =
     # These paths should be triaged and either fixed or moved to the list below.
     devtools/shared,
-    dom/bindings,
+    dom/bindings/Codegen.py,
+    dom/bindings/parser/WebIDL.py,
+    dom/bindings/parser/tests/test_arraybuffer.py,
+    dom/bindings/parser/tests/test_securecontext_extended_attribute.py,
+    gfx/tests,
     ipc/ipdl/ipdl,
     layout/base/tests/marionette,
     layout/reftests/border-image,

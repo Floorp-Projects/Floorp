@@ -1,6 +1,3 @@
-import WebIDL
-
-
 def WebIDLTest(parser, harness):
     parser.parse(
         """
@@ -28,8 +25,8 @@ def WebIDLTest(parser, harness):
             };
         """
         )
-        results = parser.finish()
-    except:
+        parser.finish()
+    except Exception:
         threw = True
 
     harness.ok(threw, "Should not allow non-callback parent of callback interface")
@@ -46,8 +43,8 @@ def WebIDLTest(parser, harness):
             };
         """
         )
-        results = parser.finish()
-    except:
+        parser.finish()
+    except Exception:
         threw = True
 
     harness.ok(threw, "Should not allow callback parent of non-callback interface")

@@ -33,8 +33,8 @@ def WebIDLTest(parser, harness):
           };
         """
         )
-        results = parser.finish()
-    except:
+        parser.finish()
+    except Exception:
         threw = True
 
     harness.ok(
@@ -54,8 +54,8 @@ def WebIDLTest(parser, harness):
           };
         """
         )
-        results = parser.finish()
-    except:
+        parser.finish()
+    except Exception:
         threw = True
 
     harness.ok(
@@ -73,8 +73,8 @@ def WebIDLTest(parser, harness):
           };
         """
         )
-        results = parser.finish()
-    except:
+        parser.finish()
+    except Exception:
         threw = True
 
     harness.ok(
@@ -96,8 +96,8 @@ def WebIDLTest(parser, harness):
           };
         """
         )
-        results = parser.finish()
-    except:
+        parser.finish()
+    except Exception:
         threw = True
 
     harness.ok(
@@ -119,8 +119,8 @@ def WebIDLTest(parser, harness):
           };
         """
         )
-        results = parser.finish()
-    except:
+        parser.finish()
+    except Exception:
         threw = True
 
     harness.ok(
