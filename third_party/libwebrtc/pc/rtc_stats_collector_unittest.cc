@@ -2758,6 +2758,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCOutboundRTPStreamStats_Audio) {
   voice_media_info.senders[0].local_stats.push_back(cricket::SsrcSenderInfo());
   voice_media_info.senders[0].local_stats[0].ssrc = 1;
   voice_media_info.senders[0].packets_sent = 2;
+  voice_media_info.senders[0].total_packet_send_delay = TimeDelta::Seconds(1);
   voice_media_info.senders[0].retransmitted_packets_sent = 20;
   voice_media_info.senders[0].payload_bytes_sent = 3;
   voice_media_info.senders[0].header_and_padding_bytes_sent = 12;
@@ -2795,6 +2796,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCOutboundRTPStreamStats_Audio) {
   expected_audio.transport_id = "TTransportName1";
   expected_audio.codec_id = "COTTransportName1_42";
   expected_audio.packets_sent = 2;
+  expected_audio.total_packet_send_delay = 1;
   expected_audio.retransmitted_packets_sent = 20;
   expected_audio.bytes_sent = 3;
   expected_audio.header_bytes_sent = 12;
@@ -3192,6 +3194,7 @@ TEST_F(RTCStatsCollectorTest, CollectNoStreamRTCOutboundRTPStreamStats_Audio) {
   voice_media_info.senders[0].local_stats.push_back(cricket::SsrcSenderInfo());
   voice_media_info.senders[0].local_stats[0].ssrc = 1;
   voice_media_info.senders[0].packets_sent = 2;
+  voice_media_info.senders[0].total_packet_send_delay = TimeDelta::Seconds(0.5);
   voice_media_info.senders[0].retransmitted_packets_sent = 20;
   voice_media_info.senders[0].payload_bytes_sent = 3;
   voice_media_info.senders[0].header_and_padding_bytes_sent = 4;
@@ -3228,6 +3231,7 @@ TEST_F(RTCStatsCollectorTest, CollectNoStreamRTCOutboundRTPStreamStats_Audio) {
   expected_audio.transport_id = "TTransportName1";
   expected_audio.codec_id = "COTTransportName1_42";
   expected_audio.packets_sent = 2;
+  expected_audio.total_packet_send_delay = 0.5;
   expected_audio.retransmitted_packets_sent = 20;
   expected_audio.bytes_sent = 3;
   expected_audio.header_bytes_sent = 4;

@@ -810,6 +810,7 @@ CallSendStatistics ChannelSend::GetRTCPStatistics() const {
   stats.retransmitted_bytes_sent = rtp_stats.retransmitted.payload_bytes;
   stats.packetsSent =
       rtp_stats.transmitted.packets + rtx_stats.transmitted.packets;
+  stats.total_packet_send_delay = rtp_stats.transmitted.total_packet_delay;
   stats.retransmitted_packets_sent = rtp_stats.retransmitted.packets;
   stats.report_block_datas = rtp_rtcp_->GetLatestReportBlockData();
 

@@ -998,6 +998,8 @@ class RTCStatsReportVerifier {
     verifier.TestMemberIsOptionalIDReference(
         outbound_stream.remote_id, RTCRemoteInboundRtpStreamStats::kType);
     verifier.TestMemberIsNonNegative<uint32_t>(outbound_stream.packets_sent);
+    verifier.TestMemberIsNonNegative<double>(
+        outbound_stream.total_packet_send_delay);
     verifier.TestMemberIsNonNegative<uint64_t>(
         outbound_stream.retransmitted_packets_sent);
     verifier.TestMemberIsNonNegative<uint64_t>(outbound_stream.bytes_sent);
@@ -1013,8 +1015,6 @@ class RTCStatsReportVerifier {
           outbound_stream.total_encode_time);
       verifier.TestMemberIsNonNegative<uint64_t>(
           outbound_stream.total_encoded_bytes_target);
-      verifier.TestMemberIsNonNegative<double>(
-          outbound_stream.total_packet_send_delay);
       verifier.TestMemberIsDefined(outbound_stream.quality_limitation_reason);
       verifier.TestMemberIsDefined(
           outbound_stream.quality_limitation_durations);
@@ -1047,8 +1047,6 @@ class RTCStatsReportVerifier {
       verifier.TestMemberIsUndefined(outbound_stream.total_encode_time);
       verifier.TestMemberIsUndefined(
           outbound_stream.total_encoded_bytes_target);
-      // TODO(https://crbug.com/webrtc/10635): Implement for audio as well.
-      verifier.TestMemberIsUndefined(outbound_stream.total_packet_send_delay);
       verifier.TestMemberIsUndefined(outbound_stream.quality_limitation_reason);
       verifier.TestMemberIsUndefined(
           outbound_stream.quality_limitation_durations);
