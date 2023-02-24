@@ -53,6 +53,7 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   LoginRecipesContent: "resource://gre/modules/LoginRecipes.jsm",
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.jsm",
+  SignUpFormRuleset: "resource://gre/modules/SignUpFormRuleset.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -485,6 +486,11 @@ class LoginFormState {
   #cachedIsInferredLoginForm = new WeakMap();
 
   /**
+   * Caches the scores when running the SignUpFormRuleset against a form
+   */
+  #cachedSignUpFormScore = new WeakMap();
+
+  /**
    * Records the mock username field when its associated form is submitted.
    */
   mockUsernameOnlyField = null;
@@ -595,6 +601,30 @@ class LoginFormState {
     }
 
     return result;
+  }
+
+  /**
+   * Determine if the form is a sign-up form.
+   * This is done by running the rules of the Fathom SignUpFormRuleset against the form and calucating a score between 0 and 1.
+   * It's considered a sign-up form, if the score is higher than the confidence threshold (default=0.75)
+   *
+   * @param {HTMLFormElement} formElement
+   * @returns {boolean} returns true if the calculcated score is higher than the confidenceThreshold
+   */
+  isProbablyASignUpForm(formElement) {
+    if (!HTMLFormElement.isInstance(formElement)) {
+      return 0;
+    }
+    const threshold = lazy.LoginHelper.signupDetectionConfidenceThreshold;
+    let score = this.#cachedSignUpFormScore.get(formElement);
+    if (score) {
+      return score >= threshold;
+    }
+    const { rules, type } = lazy.SignUpFormRuleset;
+    const results = rules.against(formElement);
+    score = results.get(formElement).scoreFor(type);
+    this.#cachedSignUpFormScore.set(formElement, score);
+    return score > threshold;
   }
 
   /**
@@ -2795,13 +2825,21 @@ class LoginManagerChild extends JSWindowActorChild {
 
     let scenario;
 
-    if (this.#relayIsAvailableOrEnabled()) {
-      // For "sign up" scenarios we expect an email like username and
-      // a password field with autocomplete=new-password
-      if (usernameField && passwordACFieldName == "new-password") {
+    // For SignUpFormScenario we expect an email like username
+    if (this.#relayIsAvailableOrEnabled() && usernameField) {
+      // Sign-up detection ruleset requires a <form>.
+      // When form.rootElement is not a form, fall back on the heuristic that
+      // assumes a form/document and a passwordField with autocomplete new-password
+      if (
+        HTMLFormElement.isInstance(form.rootElement) &&
+        lazy.LoginHelper.signupDetectionEnabled
+      ) {
+        if (docState.isProbablyASignUpForm(form.rootElement)) {
+          scenario = new SignUpFormScenario(usernameField, passwordField);
+        }
+      } else if (passwordACFieldName == "new-password") {
         scenario = new SignUpFormScenario(usernameField, passwordField);
       }
-
       if (scenario) {
         docState.setScenario(form.rootElement, scenario);
         lazy.gFormFillService.markAsLoginManagerField(usernameField);
@@ -3151,7 +3189,6 @@ class LoginManagerChild extends JSWindowActorChild {
       });
     }
   }
-
   #relayIsAvailableOrEnabled() {
     const value = Services.prefs.getStringPref("signon.firefoxRelay.feature");
     return value === "available" || value === "enabled";
