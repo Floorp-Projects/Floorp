@@ -17,6 +17,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
+#include "api/array_view.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "rtc_base/buffer_queue.h"
 #include "rtc_base/checks.h"
@@ -165,7 +166,9 @@ class SSLDummyStreamBase : public rtc::StreamInterface,
                          int* error) override {
     rtc::StreamResult r;
 
-    r = in_->Read(buffer, buffer_len, read, error);
+    r = in_->Read(
+        rtc::MakeArrayView(reinterpret_cast<uint8_t*>(buffer), buffer_len),
+        *read, *error);
     if (r == rtc::SR_BLOCK)
       return rtc::SR_BLOCK;
     if (r == rtc::SR_EOS)
@@ -201,17 +204,15 @@ class SSLDummyStreamBase : public rtc::StreamInterface,
   }
 
   // Write to the outgoing FifoBuffer
-  rtc::StreamResult WriteData(const void* data,
-                              size_t data_len,
-                              size_t* written,
-                              int* error) {
-    return out_->Write(data, data_len, written, error);
+  rtc::StreamResult WriteData(rtc::ArrayView<const uint8_t> data,
+                              size_t& written,
+                              int& error) {
+    return out_->Write(data, written, error);
   }
 
-  rtc::StreamResult Write(const void* data,
-                          size_t data_len,
-                          size_t* written,
-                          int* error) override;
+  rtc::StreamResult Write(rtc::ArrayView<const uint8_t> data,
+                          size_t& written,
+                          int& error) override;
 
   void Close() override {
     RTC_LOG(LS_INFO) << "Closing outbound stream";
@@ -649,17 +650,17 @@ class SSLStreamAdapterTestBase : public ::testing::Test,
   rtc::StreamResult DataWritten(SSLDummyStreamBase* from,
                                 const void* data,
                                 size_t data_len,
-                                size_t* written,
-                                int* error) {
+                                size_t& written,
+                                int& error) {
     // Randomly drop loss_ percent of packets
     if (rtc::CreateRandomId() % 100 < static_cast<uint32_t>(loss_)) {
       RTC_LOG(LS_VERBOSE) << "Randomly dropping packet, size=" << data_len;
-      *written = data_len;
+      written = data_len;
       return rtc::SR_SUCCESS;
     }
     if (dtls_ && (data_len > mtu_)) {
       RTC_LOG(LS_VERBOSE) << "Dropping packet > mtu, size=" << data_len;
-      *written = data_len;
+      written = data_len;
       return rtc::SR_SUCCESS;
     }
 
@@ -667,17 +668,19 @@ class SSLStreamAdapterTestBase : public ::testing::Test,
     // handshake packets and we damage the last byte to keep the header
     // intact but break the MAC.
     if (damage_ && (*static_cast<const unsigned char*>(data) == 23)) {
-      std::vector<char> buf(data_len);
+      std::vector<uint8_t> buf(data_len);
 
       RTC_LOG(LS_VERBOSE) << "Damaging packet";
 
       memcpy(&buf[0], data, data_len);
       buf[data_len - 1]++;
-
-      return from->WriteData(&buf[0], data_len, written, error);
+      return from->WriteData(rtc::MakeArrayView(&buf[0], data_len), written,
+                             error);
     }
 
-    return from->WriteData(data, data_len, written, error);
+    return from->WriteData(
+        rtc::MakeArrayView(reinterpret_cast<const uint8_t*>(data), data_len),
+        written, error);
   }
 
   void SetDelay(int delay) { delay_ = delay; }
@@ -838,7 +841,7 @@ class SSLStreamAdapterTestTLS
     size_t position, tosend, size;
     rtc::StreamResult rv;
     size_t sent;
-    char block[kBlockSize];
+    uint8_t block[kBlockSize];
 
     send_stream_.GetSize(&size);
     if (!size)
@@ -848,7 +851,8 @@ class SSLStreamAdapterTestTLS
       send_stream_.GetPosition(&position);
       if (send_stream_.Read(block, sizeof(block), &tosend, nullptr) !=
           rtc::SR_EOS) {
-        rv = client_ssl_->Write(block, tosend, &sent, 0);
+        int error;
+        rv = client_ssl_->Write(rtc::MakeArrayView(block, tosend), sent, error);
 
         if (rv == rtc::SR_SUCCESS) {
           send_stream_.SetPosition(position + sent);
@@ -871,13 +875,13 @@ class SSLStreamAdapterTestTLS
   }
 
   void ReadData(rtc::StreamInterface* stream) override {
-    char buffer[1600];
+    uint8_t buffer[1600];
     size_t bread;
     int err2;
     rtc::StreamResult r;
 
     for (;;) {
-      r = stream->Read(buffer, sizeof(buffer), &bread, &err2);
+      r = stream->Read(buffer, bread, err2);
 
       if (r == rtc::SR_ERROR || r == rtc::SR_EOS) {
         // Unfortunately, errors are the way that the stream adapter
@@ -930,7 +934,7 @@ class SSLStreamAdapterTestDTLSBase : public SSLStreamAdapterTestBase {
   }
 
   void WriteData() override {
-    unsigned char* packet = new unsigned char[1600];
+    uint8_t* packet = new uint8_t[1600];
 
     while (sent_ < count_) {
       unsigned int rand_state = sent_;
@@ -942,7 +946,9 @@ class SSLStreamAdapterTestDTLSBase : public SSLStreamAdapterTestBase {
       }
 
       size_t sent;
-      rtc::StreamResult rv = client_ssl_->Write(packet, packet_size_, &sent, 0);
+      int error;
+      rtc::StreamResult rv = client_ssl_->Write(
+          rtc::MakeArrayView(packet, packet_size_), sent, error);
       if (rv == rtc::SR_SUCCESS) {
         RTC_LOG(LS_VERBOSE) << "Sent: " << sent_;
         sent_++;
@@ -959,13 +965,13 @@ class SSLStreamAdapterTestDTLSBase : public SSLStreamAdapterTestBase {
   }
 
   void ReadData(rtc::StreamInterface* stream) override {
-    unsigned char buffer[2000];
+    uint8_t buffer[2000];
     size_t bread;
     int err2;
     rtc::StreamResult r;
 
     for (;;) {
-      r = stream->Read(buffer, 2000, &bread, &err2);
+      r = stream->Read(buffer, bread, err2);
 
       if (r == rtc::SR_ERROR) {
         // Unfortunately, errors are the way that the stream adapter
@@ -1037,22 +1043,22 @@ class SSLStreamAdapterTestDTLS
       : SSLStreamAdapterTestDTLSBase(cert_pem, private_key_pem) {}
 };
 
-rtc::StreamResult SSLDummyStreamBase::Write(const void* data,
-                                            size_t data_len,
-                                            size_t* written,
-                                            int* error) {
-  RTC_LOG(LS_VERBOSE) << "Writing to loopback " << data_len;
+rtc::StreamResult SSLDummyStreamBase::Write(rtc::ArrayView<const uint8_t> data,
+                                            size_t& written,
+                                            int& error) {
+  RTC_LOG(LS_VERBOSE) << "Writing to loopback " << data.size();
 
   if (first_packet_) {
     first_packet_ = false;
     if (test_base_->GetLoseFirstPacket()) {
-      RTC_LOG(LS_INFO) << "Losing initial packet of length " << data_len;
-      *written = data_len;  // Fake successful writing also to writer.
+      RTC_LOG(LS_INFO) << "Losing initial packet of length " << data.size();
+      written = data.size();  // Fake successful writing also to writer.
       return rtc::SR_SUCCESS;
     }
   }
 
-  return test_base_->DataWritten(this, data, data_len, written, error);
+  return test_base_->DataWritten(this, data.data(), data.size(), written,
+                                 error);
 }
 
 class SSLStreamAdapterTestDTLSFromPEMStrings : public SSLStreamAdapterTestDTLS {
@@ -1169,15 +1175,16 @@ TEST_P(SSLStreamAdapterTestTLS, ReadWriteAfterClose) {
   client_ssl_->Close();
 
   rtc::StreamResult rv;
-  char block[kBlockSize];
+  uint8_t block[kBlockSize];
   size_t dummy;
+  int error;
 
   // It's an error to write after closed.
-  rv = client_ssl_->Write(block, sizeof(block), &dummy, nullptr);
+  rv = client_ssl_->Write(block, dummy, error);
   ASSERT_EQ(rtc::SR_ERROR, rv);
 
   // But after closed read gives you EOS.
-  rv = client_ssl_->Read(block, sizeof(block), &dummy, nullptr);
+  rv = client_ssl_->Read(block, dummy, error);
   ASSERT_EQ(rtc::SR_EOS, rv);
 }
 
