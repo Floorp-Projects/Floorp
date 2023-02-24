@@ -185,6 +185,38 @@ rtc_source_set("gain_map") {
 
 rtc_library("input_volume_controller") {
   sources = [
+    "input_volume_controller.cc",
+    "input_volume_controller.h",
+  ]
+
+  configs += [ "..:apm_debug_dump" ]
+
+  deps = [
+    ":clipping_predictor",
+    ":gain_map",
+    "..:api",
+    "..:apm_logging",
+    "..:audio_buffer",
+    "..:audio_frame_view",
+    "../../../api:array_view",
+    "../../../common_audio",
+    "../../../common_audio:common_audio_c",
+    "../../../rtc_base:checks",
+    "../../../rtc_base:gtest_prod",
+    "../../../rtc_base:logging",
+    "../../../rtc_base:safe_minmax",
+    "../../../system_wrappers:field_trial",
+    "../../../system_wrappers:metrics",
+    "../agc:gain_control_interface",
+    "../agc:level_estimation",
+    "../vad",
+  ]
+
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
+
+rtc_library("speech_probability_buffer") {
+  sources = [
     "speech_probability_buffer.cc",
     "speech_probability_buffer.h",
   ]
@@ -357,7 +389,7 @@ rtc_library("input_volume_controller_unittests") {
   deps = [
     ":clipping_predictor",
     ":gain_map",
-    ":input_volume_controller",
+    ":speech_probability_buffer",
     "../../../rtc_base:checks",
     "../../../rtc_base:random",
     "../../../rtc_base:safe_conversions",
