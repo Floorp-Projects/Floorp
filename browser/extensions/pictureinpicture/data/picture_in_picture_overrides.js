@@ -23,11 +23,11 @@ let AVAILABLE_PIP_OVERRIDES;
     //
     // "https://*.youtube.com/*": {
     //   policy: TOGGLE_POLICIES.THREE_QUARTERS,
-    //   keyboardControls: KEYBOARD_CONTROLS.PLAY_PAUSE | KEYBOARD_CONTROLS.VOLUME,
+    //   disabledKeyboardControls: KEYBOARD_CONTROLS.PLAY_PAUSE | KEYBOARD_CONTROLS.VOLUME,
     // },
     // "https://*.twitch.tv/mikeconley_dot_ca/*": {
     //   policy: TOGGLE_POLICIES.TOP,
-    //   keyboardControls: KEYBOARD_CONTROLS.NONE,
+    //   disabledKeyboardControls: KEYBOARD_CONTROLS.ALL,
     // },
 
     tests: {
