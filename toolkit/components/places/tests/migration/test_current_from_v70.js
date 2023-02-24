@@ -77,7 +77,7 @@ add_task(async function database_is_valid() {
   );
 
   const db = await PlacesUtils.promiseDBConnection();
-  Assert.equal(await db.getSchemaVersion(), 71);
+  Assert.equal(await db.getSchemaVersion(), CURRENT_SCHEMA_VERSION);
 
   let rows = await db.execute("SELECT guid, foreign_count FROM moz_places");
   for (let row of rows) {
