@@ -2059,6 +2059,70 @@ TEST(DefaultVideoQualityAnalyzerTest,
   EXPECT_GE(stats.encode_time_ms.GetAverage(), 10);
 }
 
+TEST(DefaultVideoQualityAnalyzerTest, InfraMetricsAreReportedWhenRequested) {
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
+                                       /*type=*/absl::nullopt,
+                                       /*num_squares=*/absl::nullopt);
+
+  DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
+  options.report_infra_metrics = true;
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(), options);
+  analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
+                 kAnalyzerMaxThreadsCount);
+
+  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video", {"bob"},
+                            /*frames_count=*/1, *frame_generator);
+
+  // Give analyzer some time to process frames on async thread. The computations
+  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
+  // means we have an issue!
+  SleepMs(100);
+  analyzer.Stop();
+
+  AnalyzerStats stats = analyzer.GetAnalyzerStats();
+  EXPECT_EQ(stats.on_frame_captured_processing_time_ms.NumSamples(), 1);
+  EXPECT_EQ(stats.on_frame_pre_encode_processing_time_ms.NumSamples(), 1);
+  EXPECT_EQ(stats.on_frame_encoded_processing_time_ms.NumSamples(), 1);
+  EXPECT_EQ(stats.on_frame_pre_decode_processing_time_ms.NumSamples(), 1);
+  EXPECT_EQ(stats.on_frame_decoded_processing_time_ms.NumSamples(), 1);
+  EXPECT_EQ(stats.on_frame_rendered_processing_time_ms.NumSamples(), 1);
+  EXPECT_EQ(stats.on_decoder_error_processing_time_ms.NumSamples(), 0);
+}
+
+TEST(DefaultVideoQualityAnalyzerTest, InfraMetricsNotCollectedByDefault) {
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
+                                       /*type=*/absl::nullopt,
+                                       /*num_squares=*/absl::nullopt);
+
+  DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
+  options.report_infra_metrics = false;
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(), options);
+  analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
+                 kAnalyzerMaxThreadsCount);
+
+  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video", {"bob"},
+                            /*frames_count=*/1, *frame_generator);
+
+  // Give analyzer some time to process frames on async thread. The computations
+  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
+  // means we have an issue!
+  SleepMs(100);
+  analyzer.Stop();
+
+  AnalyzerStats stats = analyzer.GetAnalyzerStats();
+  EXPECT_EQ(stats.on_frame_captured_processing_time_ms.NumSamples(), 0);
+  EXPECT_EQ(stats.on_frame_pre_encode_processing_time_ms.NumSamples(), 0);
+  EXPECT_EQ(stats.on_frame_encoded_processing_time_ms.NumSamples(), 0);
+  EXPECT_EQ(stats.on_frame_pre_decode_processing_time_ms.NumSamples(), 0);
+  EXPECT_EQ(stats.on_frame_decoded_processing_time_ms.NumSamples(), 0);
+  EXPECT_EQ(stats.on_frame_rendered_processing_time_ms.NumSamples(), 0);
+  EXPECT_EQ(stats.on_decoder_error_processing_time_ms.NumSamples(), 0);
+}
+
 class DefaultVideoQualityAnalyzerTimeBetweenFreezesTest
     : public TestWithParam<bool> {};
 
