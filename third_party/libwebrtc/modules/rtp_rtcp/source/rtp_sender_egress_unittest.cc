@@ -154,8 +154,8 @@ class RtpSenderEgressTest : public ::testing::TestWithParam<TestConfig> {
     return std::make_unique<RtpSenderEgress>(DefaultConfig(), &packet_history_);
   }
 
-  RtpRtcp::Configuration DefaultConfig() {
-    RtpRtcp::Configuration config;
+  RtpRtcpInterface::Configuration DefaultConfig() {
+    RtpRtcpInterface::Configuration config;
     config.clock = clock_;
     config.outgoing_transport = &transport_;
     config.local_media_ssrc = kSsrc;
