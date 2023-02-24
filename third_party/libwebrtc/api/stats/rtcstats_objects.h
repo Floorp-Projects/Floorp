@@ -353,10 +353,6 @@ class RTC_EXPORT DEPRECATED_RTCMediaStreamTrackStats final : public RTCStats {
   RTCNonStandardStatsMember<double> relative_packet_arrival_delay;
   RTCNonStandardStatsMember<uint32_t> interruption_count;
   RTCNonStandardStatsMember<double> total_interruption_duration;
-  // Non-standard video-only members.
-  // https://w3c.github.io/webrtc-provisional-stats/#dom-rtcvideoreceiverstats
-  RTCNonStandardStatsMember<double> total_frames_duration;
-  RTCNonStandardStatsMember<double> sum_squared_frame_durations;
   // TODO(crbug.com/webrtc/14521): These metrics have been moved, delete them.
   RTCNonStandardStatsMember<uint32_t> freeze_count;
   RTCNonStandardStatsMember<uint32_t> pause_count;

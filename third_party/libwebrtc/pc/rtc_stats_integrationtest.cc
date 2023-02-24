@@ -595,10 +595,6 @@ class RTCStatsReportVerifier {
             media_stream_track.frames_decoded);
         verifier.TestMemberIsNonNegative<uint32_t>(
             media_stream_track.frames_dropped);
-        verifier.TestMemberIsNonNegative<double>(
-            media_stream_track.total_frames_duration);
-        verifier.TestMemberIsNonNegative<double>(
-            media_stream_track.sum_squared_frame_durations);
         // TODO(crbug.com/webrtc/14521): These metrics have been moved, delete
         // them from "track".
         verifier.TestMemberIsNonNegative<uint32_t>(
@@ -623,10 +619,6 @@ class RTCStatsReportVerifier {
         verifier.TestMemberIsUndefined(media_stream_track.frames_received);
         verifier.TestMemberIsUndefined(media_stream_track.frames_decoded);
         verifier.TestMemberIsUndefined(media_stream_track.frames_dropped);
-        verifier.TestMemberIsUndefined(
-            media_stream_track.total_frames_duration);
-        verifier.TestMemberIsUndefined(
-            media_stream_track.sum_squared_frame_durations);
         // TODO(crbug.com/webrtc/14521): These metrics have been moved, delete
         // them from "track".
         verifier.TestMemberIsUndefined(media_stream_track.freeze_count);
@@ -747,9 +739,6 @@ class RTCStatsReportVerifier {
       verifier.TestMemberIsUndefined(media_stream_track.frames_received);
       verifier.TestMemberIsUndefined(media_stream_track.frames_decoded);
       verifier.TestMemberIsUndefined(media_stream_track.frames_dropped);
-      verifier.TestMemberIsUndefined(media_stream_track.total_frames_duration);
-      verifier.TestMemberIsUndefined(
-          media_stream_track.sum_squared_frame_durations);
       // Audio-only members
       // TODO(hbos): `echo_return_loss` and `echo_return_loss_enhancement` are
       // flaky on msan bot (sometimes defined, sometimes undefined). Should the
