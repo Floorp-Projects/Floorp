@@ -1,6 +1,10 @@
 "use strict";
 
-add_task(async function() {
+async function add_folder_default_button(delayedApply) {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.bookmarks.editDialog.delayedApply.enabled", delayedApply]],
+  });
+
   info(
     "Bug 475529 - Add is the default button for the new folder dialog + " +
       "Bug 1206376 - Changing properties of a new bookmark while adding it " +
@@ -33,16 +37,25 @@ add_task(async function() {
         tree.controller.doCommand("placesCmd_new:folder");
       },
       async function test(dialogWin) {
-        let promiseTitleChangeNotification = PlacesTestUtils.waitForNotification(
-          "bookmark-title-changed",
-          events => events.some(e => e.title === "n")
-        );
+        const notifications = delayedApply
+          ? [
+              PlacesTestUtils.waitForNotification("bookmark-added", events =>
+                events.some(e => e.title === "n")
+              ),
+              PlacesTestUtils.waitForNotification("bookmark-moved", null),
+            ]
+          : [
+              PlacesTestUtils.waitForNotification(
+                "bookmark-title-changed",
+                events => events.some(e => e.title === "n")
+              ),
+            ];
 
         fillBookmarkTextField("editBMPanel_namePicker", "n", dialogWin, false);
 
         // Confirm and close the dialog.
         EventUtils.synthesizeKey("VK_RETURN", {}, dialogWin);
-        await promiseTitleChangeNotification;
+        await Promise.all(notifications);
 
         let newFolder = await PlacesUtils.bookmarks.fetch({
           parentGuid: PlacesUtils.bookmarks.unfiledGuid,
@@ -63,4 +76,12 @@ add_task(async function() {
       }
     );
   });
+}
+
+add_task(async function add_folder_default_button_instant_apply() {
+  await add_folder_default_button(false);
+});
+
+add_task(async function add_folder_default_button_delayed_apply() {
+  await add_folder_default_button(true);
 });

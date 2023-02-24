@@ -508,6 +508,7 @@ var BookmarkPropertiesPanel = {
       ? undefined
       : await PlacesUtils.promiseItemId(parentGuid);
     return Object.freeze({
+      index,
       itemId,
       bookmarkGuid: itemGuid,
       title: this._title,
