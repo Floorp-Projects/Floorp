@@ -286,6 +286,7 @@
     </hbox>
 #endif
 
+#if defined(XP_WIN) || defined(XP_LINUX)
     <hbox>
       <description flex="1" data-l10n-id="open-link-in-external-select-browser-option"/>
       <menulist id="openLinkInExternalSelectBrowser" preference="floorp.openLinkInExternal.browserId">
@@ -294,6 +295,7 @@
         </menupopup>
       </menulist>
     </hbox>
+#endif
 
     <label>
       <html:h2 data-l10n-id="preferences-theme-appearance-header"/>
