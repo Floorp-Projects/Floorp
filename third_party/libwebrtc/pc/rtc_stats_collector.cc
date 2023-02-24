@@ -654,6 +654,10 @@ void SetInboundRTPStreamStatsFromVideoReceiverInfo(
     inbound_video->decoder_implementation =
         video_receiver_info.decoder_implementation_name;
   }
+  if (video_receiver_info.power_efficient_decoder.has_value()) {
+    inbound_video->power_efficient_decoder =
+        video_receiver_info.power_efficient_decoder.value();
+  }
 }
 
 // Provides the media independent counters and information (both audio and
@@ -783,6 +787,10 @@ void SetOutboundRTPStreamStatsFromVideoSenderInfo(
   }
   if (video_sender_info.rid.has_value()) {
     outbound_video->rid = *video_sender_info.rid;
+  }
+  if (video_sender_info.power_efficient_encoder.has_value()) {
+    outbound_video->power_efficient_encoder =
+        video_sender_info.power_efficient_encoder.value();
   }
 }
 

@@ -496,6 +496,8 @@ class RTC_EXPORT RTCInboundRTPStreamStats final
   // TimingFrameInfo::ToString().
   // TODO(https://crbug.com/webrtc/14586): Unship or standardize this metric.
   RTCStatsMember<std::string> goog_timing_frame_info;
+  RTCRestrictedStatsMember<bool, StatExposureCriteria::kHardwareCapability>
+      power_efficient_decoder;
   // Non-standard audio metrics.
   RTCNonStandardStatsMember<uint64_t> jitter_buffer_flushes;
   RTCNonStandardStatsMember<uint64_t> delayed_packet_outage_samples;
@@ -553,6 +555,8 @@ class RTC_EXPORT RTCOutboundRTPStreamStats final : public RTCRTPStreamStats {
   RTCStatsMember<uint32_t> nack_count;
   RTCStatsMember<uint64_t> qp_sum;
   RTCStatsMember<bool> active;
+  RTCRestrictedStatsMember<bool, StatExposureCriteria::kHardwareCapability>
+      power_efficient_encoder;
 };
 
 // https://w3c.github.io/webrtc-stats/#remoteinboundrtpstats-dict*
