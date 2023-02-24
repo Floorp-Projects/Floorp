@@ -81,7 +81,6 @@ class nsContentSecurityManager : public nsIContentSecurityManager,
 
  private:
   static nsresult CheckChannel(nsIChannel* aChannel);
-  static nsresult CheckFTPSubresourceLoad(nsIChannel* aChannel);
   static nsresult CheckAllowLoadInSystemPrivilegedContext(nsIChannel* aChannel);
   static nsresult CheckAllowLoadInPrivilegedAboutContext(nsIChannel* aChannel);
   static nsresult CheckChannelHasProtocolSecurityFlag(nsIChannel* aChannel);

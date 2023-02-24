@@ -54,7 +54,6 @@ TEST(SecureContext, IsOriginPotentiallyTrustworthyWithContentPrincipal)
       {"ws://example.com/", false},
       {"wss://example.com/", true},
       {"file:///xyzzy", true},
-      {"ftp://example.com", false},
       {"about:config", false},
       {"http://localhost", true},
       {"http://localhost.localhost", true},

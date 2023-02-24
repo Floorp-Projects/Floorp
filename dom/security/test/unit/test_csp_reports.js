@@ -293,23 +293,4 @@ function run_test() {
       false
     );
   });
-
-  // test scheme of ftp:
-  makeTest(
-    8,
-    { "blocked-uri": "ftp://blocked.test/profile.png" },
-    false,
-    function(csp) {
-      // shouldLoad creates and sends out the report here.
-      csp.shouldLoad(
-        Ci.nsIContentPolicy.TYPE_SCRIPT,
-        null, // nsICSPEventListener
-        NetUtil.newURI("ftp://blocked.test/profile.png"),
-        null,
-        true,
-        null,
-        false
-      );
-    }
-  );
 }
