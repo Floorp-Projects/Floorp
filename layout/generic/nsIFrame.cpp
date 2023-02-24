@@ -2174,6 +2174,22 @@ AutoTArray<nsIFrame::ChildList, 4> nsIFrame::CrossDocChildLists() {
   return childLists;
 }
 
+nsIFrame::CaretBlockAxisMetrics nsIFrame::GetCaretBlockAxisMetrics(
+    mozilla::WritingMode aWM, const nsFontMetrics& aFM) const {
+  // Note(dshin): Ultimately, this does something highly similar (But still
+  // different) to `nsLayoutUtils::GetFirstLinePosition`.
+  const auto baseline = GetCaretBaseline();
+  nscoord ascent = 0, descent = 0;
+  ascent = aFM.MaxAscent();
+  descent = aFM.MaxDescent();
+  const nscoord height = ascent + descent;
+  if (aWM.IsVertical() && aWM.IsLineInverted()) {
+    return CaretBlockAxisMetrics{.mOffset = baseline - descent,
+                                 .mExtent = height};
+  }
+  return CaretBlockAxisMetrics{.mOffset = baseline - ascent, .mExtent = height};
+}
+
 const nsAtom* nsIFrame::ComputePageValue() const {
   if (!StaticPrefs::layout_css_named_pages_enabled()) {
     return nsGkAtoms::_empty;

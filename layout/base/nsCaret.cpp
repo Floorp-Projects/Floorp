@@ -259,28 +259,14 @@ nsRect nsCaret::GetGeometryForFrame(nsIFrame* aFrame, int32_t aFrameOffset,
   }
   NS_ASSERTION(!frame->HasAnyStateBits(NS_FRAME_IN_REFLOW),
                "We should not be in the middle of reflow");
-  nscoord baseline = frame->GetCaretBaseline();
-  nscoord ascent = 0, descent = 0;
+  WritingMode wm = aFrame->GetWritingMode();
   RefPtr<nsFontMetrics> fm =
       nsLayoutUtils::GetInflatedFontMetricsForFrame(aFrame);
-  NS_ASSERTION(fm, "We should be able to get the font metrics");
-  if (fm) {
-    ascent = fm->MaxAscent();
-    descent = fm->MaxDescent();
-  }
-  nscoord height = ascent + descent;
-  WritingMode wm = aFrame->GetWritingMode();
+  const auto caretBlockAxisMetrics = frame->GetCaretBlockAxisMetrics(wm, *fm);
+  nscoord inlineOffset = 0;
   bool vertical = wm.IsVertical();
-  if (vertical) {
-    if (wm.IsLineInverted()) {
-      framePos.x = baseline - descent;
-    } else {
-      framePos.x = baseline - ascent;
-    }
-  } else {
-    framePos.y = baseline - ascent;
-  }
-  Metrics caretMetrics = ComputeMetrics(aFrame, aFrameOffset, height);
+  Metrics caretMetrics =
+      ComputeMetrics(aFrame, aFrameOffset, caretBlockAxisMetrics.mExtent);
 
   nsTextFrame* textFrame = do_QueryFrame(aFrame);
   if (textFrame) {
@@ -301,16 +287,26 @@ nsRect nsCaret::GetGeometryForFrame(nsIFrame* aFrame, int32_t aFrameOffset,
       if (textRunDirIsReverseOfFrame != textRun->IsSidewaysLeft()) {
         int dir = wm.IsBidiLTR() ? -1 : 1;
         if (vertical) {
-          framePos.y += dir * caretMetrics.mCaretWidth;
+          inlineOffset = dir * caretMetrics.mCaretWidth;
         } else {
-          framePos.x += dir * caretMetrics.mCaretWidth;
+          inlineOffset = dir * caretMetrics.mCaretWidth;
         }
       }
     }
   }
 
-  rect = nsRect(framePos, vertical ? nsSize(height, caretMetrics.mCaretWidth)
-                                   : nsSize(caretMetrics.mCaretWidth, height));
+  if (vertical) {
+    framePos.x = caretBlockAxisMetrics.mOffset;
+    framePos.y += inlineOffset;
+  } else {
+    framePos.x += inlineOffset;
+    framePos.y = caretBlockAxisMetrics.mOffset;
+  }
+
+  rect = nsRect(framePos, vertical ? nsSize(caretBlockAxisMetrics.mExtent,
+                                            caretMetrics.mCaretWidth)
+                                   : nsSize(caretMetrics.mCaretWidth,
+                                            caretBlockAxisMetrics.mExtent));
 
   // Clamp the inline-position to be within our scroll frame. If we don't, then
   // it clips us, and we don't appear at all. See bug 335560.
