@@ -18,22 +18,22 @@ namespace {
 
 constexpr int kFramesIn60Seconds = 6000;
 
-class AnalogGainStatsReporterTest : public ::testing::Test {
+class InputVolumeStatsReporterTest : public ::testing::Test {
  public:
-  AnalogGainStatsReporterTest() {}
+  InputVolumeStatsReporterTest() {}
 
  protected:
   void SetUp() override { metrics::Reset(); }
 };
 
-TEST_F(AnalogGainStatsReporterTest, CheckLogLevelUpdateStatsEmpty) {
-  AnalogGainStatsReporter stats_reporter;
-  constexpr int kMicLevel = 10;
-  stats_reporter.UpdateStatistics(kMicLevel);
+TEST_F(InputVolumeStatsReporterTest, CheckLogVolumeUpdateStatsEmpty) {
+  InputVolumeStatsReporter stats_reporter;
+  constexpr int kInputVolume = 10;
+  stats_reporter.UpdateStatistics(kInputVolume);
   // Update almost until the periodic logging and reset.
   for (int i = 0; i < kFramesIn60Seconds - 2; i += 2) {
-    stats_reporter.UpdateStatistics(kMicLevel + 2);
-    stats_reporter.UpdateStatistics(kMicLevel);
+    stats_reporter.UpdateStatistics(kInputVolume + 2);
+    stats_reporter.UpdateStatistics(kInputVolume);
   }
   EXPECT_METRIC_THAT(metrics::Samples("WebRTC.Audio.ApmAnalogGainUpdateRate"),
                      ::testing::ElementsAre());
@@ -52,19 +52,19 @@ TEST_F(AnalogGainStatsReporterTest, CheckLogLevelUpdateStatsEmpty) {
       ::testing::ElementsAre());
 }
 
-TEST_F(AnalogGainStatsReporterTest, CheckLogLevelUpdateStatsNotEmpty) {
-  AnalogGainStatsReporter stats_reporter;
-  constexpr int kMicLevel = 10;
-  stats_reporter.UpdateStatistics(kMicLevel);
+TEST_F(InputVolumeStatsReporterTest, CheckLogVolumeUpdateStatsNotEmpty) {
+  InputVolumeStatsReporter stats_reporter;
+  constexpr int kInputVolume = 10;
+  stats_reporter.UpdateStatistics(kInputVolume);
   // Update until periodic logging.
   for (int i = 0; i < kFramesIn60Seconds; i += 2) {
-    stats_reporter.UpdateStatistics(kMicLevel + 2);
-    stats_reporter.UpdateStatistics(kMicLevel);
+    stats_reporter.UpdateStatistics(kInputVolume + 2);
+    stats_reporter.UpdateStatistics(kInputVolume);
   }
   // Update until periodic logging.
   for (int i = 0; i < kFramesIn60Seconds; i += 2) {
-    stats_reporter.UpdateStatistics(kMicLevel + 3);
-    stats_reporter.UpdateStatistics(kMicLevel);
+    stats_reporter.UpdateStatistics(kInputVolume + 3);
+    stats_reporter.UpdateStatistics(kInputVolume);
   }
   EXPECT_METRIC_THAT(
       metrics::Samples("WebRTC.Audio.ApmAnalogGainUpdateRate"),
@@ -89,77 +89,80 @@ TEST_F(AnalogGainStatsReporterTest, CheckLogLevelUpdateStatsNotEmpty) {
 }
 }  // namespace
 
-TEST_F(AnalogGainStatsReporterTest, CheckLevelUpdateStatsForEmptyStats) {
-  AnalogGainStatsReporter stats_reporter;
-  const auto& update_stats = stats_reporter.level_update_stats();
+TEST_F(InputVolumeStatsReporterTest, CheckVolumeUpdateStatsForEmptyStats) {
+  InputVolumeStatsReporter stats_reporter;
+  const auto& update_stats = stats_reporter.volume_update_stats();
   EXPECT_EQ(update_stats.num_decreases, 0);
   EXPECT_EQ(update_stats.sum_decreases, 0);
   EXPECT_EQ(update_stats.num_increases, 0);
   EXPECT_EQ(update_stats.sum_increases, 0);
 }
 
-TEST_F(AnalogGainStatsReporterTest, CheckLevelUpdateStatsAfterNoGainChange) {
-  constexpr int kMicLevel = 10;
-  AnalogGainStatsReporter stats_reporter;
-  stats_reporter.UpdateStatistics(kMicLevel);
-  stats_reporter.UpdateStatistics(kMicLevel);
-  stats_reporter.UpdateStatistics(kMicLevel);
-  const auto& update_stats = stats_reporter.level_update_stats();
+TEST_F(InputVolumeStatsReporterTest,
+       CheckVolumeUpdateStatsAfterNoVolumeChange) {
+  constexpr int kInputVolume = 10;
+  InputVolumeStatsReporter stats_reporter;
+  stats_reporter.UpdateStatistics(kInputVolume);
+  stats_reporter.UpdateStatistics(kInputVolume);
+  stats_reporter.UpdateStatistics(kInputVolume);
+  const auto& update_stats = stats_reporter.volume_update_stats();
   EXPECT_EQ(update_stats.num_decreases, 0);
   EXPECT_EQ(update_stats.sum_decreases, 0);
   EXPECT_EQ(update_stats.num_increases, 0);
   EXPECT_EQ(update_stats.sum_increases, 0);
 }
 
-TEST_F(AnalogGainStatsReporterTest, CheckLevelUpdateStatsAfterGainIncrease) {
-  constexpr int kMicLevel = 10;
-  AnalogGainStatsReporter stats_reporter;
-  stats_reporter.UpdateStatistics(kMicLevel);
-  stats_reporter.UpdateStatistics(kMicLevel + 4);
-  stats_reporter.UpdateStatistics(kMicLevel + 5);
-  const auto& update_stats = stats_reporter.level_update_stats();
+TEST_F(InputVolumeStatsReporterTest,
+       CheckVolumeUpdateStatsAfterVolumeIncrease) {
+  constexpr int kInputVolume = 10;
+  InputVolumeStatsReporter stats_reporter;
+  stats_reporter.UpdateStatistics(kInputVolume);
+  stats_reporter.UpdateStatistics(kInputVolume + 4);
+  stats_reporter.UpdateStatistics(kInputVolume + 5);
+  const auto& update_stats = stats_reporter.volume_update_stats();
   EXPECT_EQ(update_stats.num_decreases, 0);
   EXPECT_EQ(update_stats.sum_decreases, 0);
   EXPECT_EQ(update_stats.num_increases, 2);
   EXPECT_EQ(update_stats.sum_increases, 5);
 }
 
-TEST_F(AnalogGainStatsReporterTest, CheckLevelUpdateStatsAfterGainDecrease) {
-  constexpr int kMicLevel = 10;
-  AnalogGainStatsReporter stats_reporter;
-  stats_reporter.UpdateStatistics(kMicLevel);
-  stats_reporter.UpdateStatistics(kMicLevel - 4);
-  stats_reporter.UpdateStatistics(kMicLevel - 5);
-  const auto& stats_update = stats_reporter.level_update_stats();
+TEST_F(InputVolumeStatsReporterTest,
+       CheckVolumeUpdateStatsAfterVolumeDecrease) {
+  constexpr int kInputVolume = 10;
+  InputVolumeStatsReporter stats_reporter;
+  stats_reporter.UpdateStatistics(kInputVolume);
+  stats_reporter.UpdateStatistics(kInputVolume - 4);
+  stats_reporter.UpdateStatistics(kInputVolume - 5);
+  const auto& stats_update = stats_reporter.volume_update_stats();
   EXPECT_EQ(stats_update.num_decreases, 2);
   EXPECT_EQ(stats_update.sum_decreases, 5);
   EXPECT_EQ(stats_update.num_increases, 0);
   EXPECT_EQ(stats_update.sum_increases, 0);
 }
 
-TEST_F(AnalogGainStatsReporterTest, CheckLevelUpdateStatsAfterReset) {
-  AnalogGainStatsReporter stats_reporter;
-  constexpr int kMicLevel = 10;
-  stats_reporter.UpdateStatistics(kMicLevel);
+TEST_F(InputVolumeStatsReporterTest, CheckVolumeUpdateStatsAfterReset) {
+  InputVolumeStatsReporter stats_reporter;
+  constexpr int kInputVolume = 10;
+  stats_reporter.UpdateStatistics(kInputVolume);
   // Update until the periodic reset.
   for (int i = 0; i < kFramesIn60Seconds - 2; i += 2) {
-    stats_reporter.UpdateStatistics(kMicLevel + 2);
-    stats_reporter.UpdateStatistics(kMicLevel);
+    stats_reporter.UpdateStatistics(kInputVolume + 2);
+    stats_reporter.UpdateStatistics(kInputVolume);
   }
-  const auto& stats_before_reset = stats_reporter.level_update_stats();
+  const auto& stats_before_reset = stats_reporter.volume_update_stats();
   EXPECT_EQ(stats_before_reset.num_decreases, kFramesIn60Seconds / 2 - 1);
   EXPECT_EQ(stats_before_reset.sum_decreases, kFramesIn60Seconds - 2);
   EXPECT_EQ(stats_before_reset.num_increases, kFramesIn60Seconds / 2 - 1);
   EXPECT_EQ(stats_before_reset.sum_increases, kFramesIn60Seconds - 2);
-  stats_reporter.UpdateStatistics(kMicLevel + 2);
-  const auto& stats_during_reset = stats_reporter.level_update_stats();
+  stats_reporter.UpdateStatistics(kInputVolume + 2);
+  const auto& stats_during_reset = stats_reporter.volume_update_stats();
   EXPECT_EQ(stats_during_reset.num_decreases, 0);
   EXPECT_EQ(stats_during_reset.sum_decreases, 0);
   EXPECT_EQ(stats_during_reset.num_increases, 0);
   EXPECT_EQ(stats_during_reset.sum_increases, 0);
-  stats_reporter.UpdateStatistics(kMicLevel);
-  stats_reporter.UpdateStatistics(kMicLevel + 3);
-  const auto& stats_after_reset = stats_reporter.level_update_stats();
+  stats_reporter.UpdateStatistics(kInputVolume);
+  stats_reporter.UpdateStatistics(kInputVolume + 3);
+  const auto& stats_after_reset = stats_reporter.volume_update_stats();
   EXPECT_EQ(stats_after_reset.num_decreases, 1);
   EXPECT_EQ(stats_after_reset.sum_decreases, 2);
   EXPECT_EQ(stats_after_reset.num_increases, 1);
