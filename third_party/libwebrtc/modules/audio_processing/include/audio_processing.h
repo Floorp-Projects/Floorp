@@ -357,6 +357,15 @@ class RTC_EXPORT AudioProcessing : public rtc::RefCountInterface {
         float max_gain_change_db_per_second = 3.0f;
         float max_output_noise_level_dbfs = -50.0f;
       } adaptive_digital;
+
+      // Enables input volume control in AGC2.
+      struct InputVolumeController {
+        bool operator==(const InputVolumeController& rhs) const;
+        bool operator!=(const InputVolumeController& rhs) const {
+          return !(*this == rhs);
+        }
+        bool enabled = false;
+      } input_volume_controller;
     } gain_controller2;
 
     std::string ToString() const;

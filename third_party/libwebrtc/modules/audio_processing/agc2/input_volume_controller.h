@@ -17,46 +17,61 @@
 
 #include "absl/types/optional.h"
 #include "api/array_view.h"
-#include "modules/audio_processing/agc/agc.h"
 #include "modules/audio_processing/agc2/clipping_predictor.h"
 #include "modules/audio_processing/audio_buffer.h"
 #include "modules/audio_processing/include/audio_processing.h"
-#include "modules/audio_processing/logging/apm_data_dumper.h"
 #include "rtc_base/gtest_prod_util.h"
 
 namespace webrtc {
 
-class RecommendedInputVolumeEstimator;
-class GainControl;
+class MonoInputVolumeController;
 
-// Adaptive Gain Controller (AGC) that controls the input volume and a digital
-// gain. The input volume controller recommends what volume to use, handles
-// volume changes and clipping. In particular, it handles changes triggered by
-// the user (e.g., volume set to zero by a HW mute button). The digital
-// controller chooses and applies the digital compression gain.
-// This class is not thread-safe.
+// Input volume controller that controls the input volume. The input volume
+// controller recommends what volume to use, handles volume changes and
+// clipping. In particular, it handles changes triggered by the user (e.g.,
+// volume set to zero by a HW mute button). The digital controller chooses and
+// applies the digital compression gain. This class is not thread-safe.
 // TODO(bugs.webrtc.org/7494): Use applied/recommended input volume naming
 // convention.
 class InputVolumeController final {
  public:
+  // Config for the constructor.
+  struct Config {
+    bool enabled = false;
+    // TODO(bugs.webrtc.org/1275566): Describe `startup_min_volume`.
+    int startup_min_volume = 0;
+    // Lowest analog microphone level that will be applied in response to
+    // clipping.
+    int clipped_level_min = 70;
+    // If true, an adaptive digital gain is applied.
+    bool digital_adaptive_follows = true;
+    // Amount the microphone level is lowered with every clipping event.
+    // Limited to (0, 255].
+    int clipped_level_step = 15;
+    // Proportion of clipped samples required to declare a clipping event.
+    // Limited to (0.f, 1.f).
+    float clipped_ratio_threshold = 0.1f;
+    // Time in frames to wait after a clipping event before checking again.
+    // Limited to values higher than 0.
+    int clipped_wait_frames = 300;
+    // Enables clipping prediction functionality.
+    bool enable_clipping_predictor = false;
+    // Minimum and maximum digital gain used before input volume is
+    // adjusted.
+    int max_digital_gain_db = 30;
+    int min_digital_gain_db = 0;
+  };
+
   // Ctor. `num_capture_channels` specifies the number of channels for the audio
   // passed to `AnalyzePreProcess()` and `Process()`. Clamps
-  // `analog_config.startup_min_level` in the [12, 255] range.
-  InputVolumeController(
-      int num_capture_channels,
-      const AudioProcessing::Config::GainController1::AnalogGainController&
-          analog_config);
+  // `config.startup_min_level` in the [12, 255] range.
+  InputVolumeController(int num_capture_channels, const Config& config);
 
   ~InputVolumeController();
   InputVolumeController(const InputVolumeController&) = delete;
   InputVolumeController& operator=(const InputVolumeController&) = delete;
 
   void Initialize();
-
-  // Configures `gain_control` to work as a fixed digital controller so that the
-  // adaptive part is only handled by this gain controller. Must be called if
-  // `gain_control` is also used to avoid the side-effects of running two AGCs.
-  void SetupDigitalGainControl(GainControl& gain_control) const;
 
   // Sets the applied input volume.
   void set_stream_analog_level(int level);
@@ -69,19 +84,12 @@ class InputVolumeController final {
   // prediction (if enabled). Must be called after `set_stream_analog_level()`.
   void AnalyzePreProcess(const AudioBuffer& audio_buffer);
 
-  // Processes `audio_buffer`. Chooses a digital compression gain and the new
-  // input volume to recommend. Must be called after `AnalyzePreProcess()`. If
-  // `speech_probability` (range [0.0f, 1.0f]) and `speech_level_dbfs` (range
-  // [-90.f, 30.0f]) are given, uses them to override the estimated RMS error.
-  // TODO(webrtc:7494): This signature is needed for testing purposes, unify
-  // the signatures when the clean-up is done.
-  void Process(const AudioBuffer& audio_buffer,
-               absl::optional<float> speech_probability,
+  // Chooses a digital compression gain and the new input volume to recommend.
+  // Must be called after `AnalyzePreProcess()`. `speech_probability`
+  // (range [0.0f, 1.0f]) and `speech_level_dbfs` (range [-90.f, 30.0f]) are
+  // used to compute the RMS error.
+  void Process(absl::optional<float> speech_probability,
                absl::optional<float> speech_level_dbfs);
-
-  // Processes `audio_buffer`. Chooses a digital compression gain and the new
-  // input volume to recommend. Must be called after `AnalyzePreProcess()`.
-  void Process(const AudioBuffer& audio_buffer);
 
   // TODO(bugs.webrtc.org/7494): Return recommended input volume and remove
   // `recommended_analog_level()`.
@@ -138,25 +146,17 @@ class InputVolumeController final {
                            UnusedClippingPredictionsProduceEqualAnalogLevels);
   FRIEND_TEST_ALL_PREFIXES(InputVolumeControllerParametrizedTest,
                            EmptyRmsErrorOverrideHasNoEffect);
-  FRIEND_TEST_ALL_PREFIXES(InputVolumeControllerParametrizedTest,
-                           NonEmptyRmsErrorOverrideHasEffect);
-
-  // Ctor that creates a single channel AGC and by injecting `agc`.
-  // `agc` will be owned by this class; hence, do not delete it.
-  InputVolumeController(
-      const AudioProcessing::Config::GainController1::AnalogGainController&
-          analog_config,
-      Agc* agc);
 
   void AggregateChannelLevels();
 
   const bool analog_controller_enabled_;
 
   const absl::optional<int> min_mic_level_override_;
-  std::unique_ptr<ApmDataDumper> data_dumper_;
   static std::atomic<int> instance_counter_;
   const bool use_min_channel_level_;
   const int num_capture_channels_;
+
+  // TODO(webrtc:7494): Replace with `digital_adaptive_follows_`.
   const bool disable_digital_adaptive_;
 
   int frames_since_clipped_;
@@ -178,8 +178,7 @@ class InputVolumeController final {
   const float clipped_ratio_threshold_;
   const int clipped_wait_frames_;
 
-  std::vector<std::unique_ptr<RecommendedInputVolumeEstimator>> channel_agcs_;
-  std::vector<absl::optional<int>> new_compressions_to_set_;
+  std::vector<std::unique_ptr<MonoInputVolumeController>> channel_controllers_;
 
   const std::unique_ptr<ClippingPredictor> clipping_predictor_;
   const bool use_clipping_predictor_step_;
@@ -189,18 +188,18 @@ class InputVolumeController final {
 
 // TODO(bugs.webrtc.org/7494): Use applied/recommended input volume naming
 // convention.
-class RecommendedInputVolumeEstimator {
+class MonoInputVolumeController {
  public:
-  RecommendedInputVolumeEstimator(ApmDataDumper* data_dumper,
-                                  int startup_min_level,
-                                  int clipped_level_min,
-                                  bool disable_digital_adaptive,
-                                  int min_mic_level);
-  ~RecommendedInputVolumeEstimator();
-  RecommendedInputVolumeEstimator(const RecommendedInputVolumeEstimator&) =
+  MonoInputVolumeController(int startup_min_level,
+                            int clipped_level_min,
+                            bool disable_digital_adaptive,
+                            int min_mic_level,
+                            int max_digital_gain_db,
+                            int min_digital_gain_db);
+  ~MonoInputVolumeController();
+  MonoInputVolumeController(const MonoInputVolumeController&) = delete;
+  MonoInputVolumeController& operator=(const MonoInputVolumeController&) =
       delete;
-  RecommendedInputVolumeEstimator& operator=(
-      const RecommendedInputVolumeEstimator&) = delete;
 
   void Initialize();
   void HandleCaptureOutputUsedChange(bool capture_output_used);
@@ -213,25 +212,16 @@ class RecommendedInputVolumeEstimator {
   // `set_stream_analog_level()`.
   void HandleClipping(int clipped_level_step);
 
-  // Analyzes `audio`, requests the RMS error from AGC, updates the recommended
-  // input volume based on the estimated speech level and, if enabled, updates
-  // the (digital) compression gain to be applied by `agc_`. Must be called
-  // after `HandleClipping()`. If `rms_error_override` has a value, RMS error
-  // from AGC is overridden by it.
-  void Process(rtc::ArrayView<const int16_t> audio,
-               absl::optional<int> rms_error_override);
+  // Updates the recommended input volume based on the estimated speech level
+  // RMS error. Must be called after `HandleClipping()`.
+  void Process(absl::optional<int> rms_error_override);
 
   // Returns the recommended input volume. Must be called after `Process()`.
   int recommended_analog_level() const { return recommended_input_volume_; }
 
-  float voice_probability() const { return agc_->voice_probability(); }
   void ActivateLogging() { log_to_histograms_ = true; }
-  absl::optional<int> new_compression() const {
-    return new_compression_to_set_;
-  }
 
   // Only used for testing.
-  void set_agc(Agc* agc) { agc_.reset(agc); }
   int min_mic_level() const { return min_mic_level_; }
   int startup_min_level() const { return startup_min_level_; }
 
@@ -240,29 +230,27 @@ class RecommendedInputVolumeEstimator {
   // by the user, in which case no action is taken.
   void SetLevel(int new_level);
 
-  // Set the maximum input volume the AGC is allowed to apply. Also updates the
-  // maximum compression gain to compensate. The volume must be at least
-  // `kClippedLevelMin`.
+  // Set the maximum input volume the input volume controller is allowed to
+  // apply. The volume must be at least `kClippedLevelMin`.
   void SetMaxLevel(int level);
 
   int CheckVolumeAndReset();
   void UpdateGain(int rms_error_db);
-  void UpdateCompressor();
 
   const int min_mic_level_;
+
+  // TODO(webrtc:7494): Replace with `digital_adaptive_follows_`.
   const bool disable_digital_adaptive_;
-  std::unique_ptr<Agc> agc_;
+  const int max_digital_gain_db_;
+  const int min_digital_gain_db_;
+
   int level_ = 0;
   int max_level_;
-  int max_compression_gain_;
-  int target_compression_;
-  int compression_;
-  float compression_accumulator_;
+
   bool capture_output_used_ = true;
   bool check_volume_on_next_process_ = true;
   bool startup_ = true;
   int startup_min_level_;
-  int calls_since_last_gain_log_ = 0;
 
   // TODO(bugs.webrtc.org/7494): Create a separate member for the applied
   // input volume.
@@ -272,13 +260,12 @@ class RecommendedInputVolumeEstimator {
   // recommended input volume.
   int recommended_input_volume_ = 0;
 
-  absl::optional<int> new_compression_to_set_;
   bool log_to_histograms_ = false;
+
   const int clipped_level_min_;
 
   // Frames since the last `UpdateGain()` call.
   int frames_since_update_gain_ = 0;
-  // Set to true for the first frame after startup and reset, otherwise false.
   bool is_first_frame_ = true;
 };
 
