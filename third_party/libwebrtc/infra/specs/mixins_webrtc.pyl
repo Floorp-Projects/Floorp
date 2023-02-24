@@ -60,6 +60,7 @@
         'iPhone X',
         '--version',
         '12.4',
+        '--undefok=write-compiled-tests-json-to-writable-path',
       ],
       'swarming': {
         'named_caches': [
@@ -78,6 +79,7 @@
         'iPhone X',
         '--version',
         '13.6',
+        '--undefok=write-compiled-tests-json-to-writable-path',
       ],
       'swarming': {
         'named_caches': [
@@ -96,6 +98,7 @@
         'iPhone X',
         '--version',
         '14.5',
+        '--undefok=write-compiled-tests-json-to-writable-path',
       ],
       'swarming': {
         'named_caches': [

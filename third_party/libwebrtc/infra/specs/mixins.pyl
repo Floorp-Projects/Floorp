@@ -93,7 +93,10 @@
   },
   'ios-simulator-12.4': {
     '$mixin_append': {
-      'args': ['--platform', 'iPhone X', '--version', '12.4'],
+      'args': [
+        '--platform', 'iPhone X', '--version', '12.4',
+        '--undefok=write-compiled-tests-json-to-writable-path'
+      ],
       'swarming': {
         'named_caches': [{
           'name': 'runtime_ios_12_4',
@@ -104,7 +107,10 @@
   },
   'ios-simulator-13.6': {
     '$mixin_append': {
-      'args': ['--platform', 'iPhone X', '--version', '13.6'],
+      'args': [
+        '--platform', 'iPhone X', '--version', '13.6',
+        '--undefok=write-compiled-tests-json-to-writable-path'
+      ],
       'swarming': {
         'named_caches': [{
           'name': 'runtime_ios_13_6',
@@ -115,7 +121,10 @@
   },
   'ios-simulator-14.5': {
     '$mixin_append': {
-      'args': ['--platform', 'iPhone X', '--version', '14.5'],
+      'args': [
+        '--platform', 'iPhone X', '--version', '14.5',
+        '--undefok=write-compiled-tests-json-to-writable-path'
+      ],
       'swarming': {
         'named_caches': [{
           'name': 'runtime_ios_14_5',
