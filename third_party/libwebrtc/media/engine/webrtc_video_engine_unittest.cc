@@ -5824,6 +5824,91 @@ TEST_F(WebRtcVideoChannelTest, GetPerLayerStatsReportForSubStreams) {
   EXPECT_EQ(sender.rid, absl::nullopt);
 }
 
+TEST_F(WebRtcVideoChannelTest,
+       OutboundRtpIsActiveComesFromMatchingEncodingInSimulcast) {
+  constexpr uint32_t kSsrc1 = 123u;
+  constexpr uint32_t kSsrc2 = 456u;
+
+  // Create simulcast stream from both SSRCs.
+  // `kSsrc1` is the "main" ssrc used for getting parameters.
+  FakeVideoSendStream* stream =
+      AddSendStream(cricket::CreateSimStreamParams("cname", {kSsrc1, kSsrc2}));
+
+  webrtc::RtpParameters parameters = channel_->GetRtpSendParameters(kSsrc1);
+  ASSERT_EQ(2u, parameters.encodings.size());
+  parameters.encodings[0].active = false;
+  parameters.encodings[1].active = true;
+  channel_->SetRtpSendParameters(kSsrc1, parameters);
+
+  // Fill in dummy stats.
+  auto stats = GetInitialisedStats();
+  stats.substreams[kSsrc1];
+  stats.substreams[kSsrc2];
+  stream->SetStats(stats);
+
+  // GetStats() and ensure `active` matches `encodings` for each SSRC.
+  cricket::VideoMediaInfo video_media_info;
+  ASSERT_TRUE(channel_->GetStats(&video_media_info));
+  ASSERT_EQ(video_media_info.senders.size(), 2u);
+  ASSERT_TRUE(video_media_info.senders[0].active.has_value());
+  EXPECT_FALSE(video_media_info.senders[0].active.value());
+  ASSERT_TRUE(video_media_info.senders[1].active.has_value());
+  EXPECT_TRUE(video_media_info.senders[1].active.value());
+}
+
+TEST_F(WebRtcVideoChannelTest, OutboundRtpIsActiveComesFromAnyEncodingInSvc) {
+  cricket::VideoSendParameters send_parameters;
+  send_parameters.codecs.push_back(GetEngineCodec("VP9"));
+  ASSERT_TRUE(channel_->SetSendParameters(send_parameters));
+
+  constexpr uint32_t kSsrc1 = 123u;
+  constexpr uint32_t kSsrc2 = 456u;
+  constexpr uint32_t kSsrc3 = 789u;
+
+  // Configuring SVC is done the same way that simulcast is configured, the only
+  // difference is that the VP9 codec is used. This triggers special hacks that
+  // we depend on because we don't have a proper SVC API yet.
+  FakeVideoSendStream* stream = AddSendStream(
+      cricket::CreateSimStreamParams("cname", {kSsrc1, kSsrc2, kSsrc3}));
+  // Expect that we got SVC.
+  EXPECT_EQ(stream->GetEncoderConfig().number_of_streams, 1u);
+  webrtc::VideoCodecVP9 vp9_settings;
+  ASSERT_TRUE(stream->GetVp9Settings(&vp9_settings));
+  EXPECT_EQ(vp9_settings.numberOfSpatialLayers, 3u);
+
+  webrtc::RtpParameters parameters = channel_->GetRtpSendParameters(kSsrc1);
+  ASSERT_EQ(3u, parameters.encodings.size());
+  parameters.encodings[0].active = false;
+  parameters.encodings[1].active = true;
+  parameters.encodings[2].active = false;
+  channel_->SetRtpSendParameters(kSsrc1, parameters);
+
+  // Fill in dummy stats.
+  auto stats = GetInitialisedStats();
+  stats.substreams[kSsrc1];
+  stream->SetStats(stats);
+
+  // GetStats() and ensure `active` is true if ANY encoding is active.
+  cricket::VideoMediaInfo video_media_info;
+  ASSERT_TRUE(channel_->GetStats(&video_media_info));
+  ASSERT_EQ(video_media_info.senders.size(), 1u);
+  // Middle layer is active.
+  ASSERT_TRUE(video_media_info.senders[0].active.has_value());
+  EXPECT_TRUE(video_media_info.senders[0].active.value());
+
+  parameters = channel_->GetRtpSendParameters(kSsrc1);
+  ASSERT_EQ(3u, parameters.encodings.size());
+  parameters.encodings[0].active = false;
+  parameters.encodings[1].active = false;
+  parameters.encodings[2].active = false;
+  channel_->SetRtpSendParameters(kSsrc1, parameters);
+  ASSERT_TRUE(channel_->GetStats(&video_media_info));
+  ASSERT_EQ(video_media_info.senders.size(), 1u);
+  // No layer is active.
+  ASSERT_TRUE(video_media_info.senders[0].active.has_value());
+  EXPECT_FALSE(video_media_info.senders[0].active.value());
+}
+
 TEST_F(WebRtcVideoChannelTest, MediaSubstreamMissingProducesEmpyStats) {
   FakeVideoSendStream* stream = AddSendStream();
 
