@@ -65,6 +65,23 @@ TEST(PacketArrivalMapTest, InsertsWithGaps) {
   EXPECT_EQ(map.clamp(100), 46);
 }
 
+TEST(PacketArrivalMapTest, FindNextAtOrAfterWithGaps) {
+  PacketArrivalTimeMap map;
+
+  map.AddPacket(42, Timestamp::Zero());
+  map.AddPacket(45, Timestamp::Millis(11));
+  EXPECT_EQ(map.begin_sequence_number(), 42);
+  EXPECT_EQ(map.end_sequence_number(), 46);
+
+  PacketArrivalTimeMap::PacketArrivalTime packet = map.FindNextAtOrAfter(42);
+  EXPECT_EQ(packet.arrival_time, Timestamp::Zero());
+  EXPECT_EQ(packet.sequence_number, 42);
+
+  packet = map.FindNextAtOrAfter(43);
+  EXPECT_EQ(packet.arrival_time, Timestamp::Millis(11));
+  EXPECT_EQ(packet.sequence_number, 45);
+}
+
 TEST(PacketArrivalMapTest, InsertsWithinBuffer) {
   PacketArrivalTimeMap map;
 

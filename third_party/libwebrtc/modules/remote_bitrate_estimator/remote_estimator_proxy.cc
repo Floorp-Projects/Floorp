@@ -291,10 +291,11 @@ RemoteEstimatorProxy::MaybeBuildFeedbackPacket(
   int64_t next_sequence_number = begin_sequence_number_inclusive;
 
   for (int64_t seq = start_seq; seq < end_seq; ++seq) {
-    Timestamp arrival_time = packet_arrival_times_.get(seq);
-    if (arrival_time < Timestamp::Zero()) {
-      // Packet not received.
-      continue;
+    PacketArrivalTimeMap::PacketArrivalTime packet =
+        packet_arrival_times_.FindNextAtOrAfter(seq);
+    seq = packet.sequence_number;
+    if (seq >= end_seq) {
+      break;
     }
 
     if (feedback_packet == nullptr) {
@@ -306,12 +307,12 @@ RemoteEstimatorProxy::MaybeBuildFeedbackPacket(
       // shall be the time of the first received packet in the feedback.
       feedback_packet->SetBase(
           static_cast<uint16_t>(begin_sequence_number_inclusive & 0xFFFF),
-          arrival_time);
+          packet.arrival_time);
       feedback_packet->SetFeedbackSequenceNumber(feedback_packet_count_++);
     }
 
     if (!feedback_packet->AddReceivedPacket(static_cast<uint16_t>(seq & 0xFFFF),
-                                            arrival_time)) {
+                                            packet.arrival_time)) {
       // Could not add timestamp, feedback packet might be full. Return and
       // try again with a fresh packet.
       break;
