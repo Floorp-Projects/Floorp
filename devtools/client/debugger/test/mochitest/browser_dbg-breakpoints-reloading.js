@@ -25,7 +25,7 @@ add_task(async function() {
 
   await addBreakpointViaGutter(dbg, 1);
 
-  await reload(dbg);
+  const onReloaded = reload(dbg);
   await waitForPaused(dbg);
 
   info("Assert that the source is not long.js");
@@ -60,6 +60,9 @@ add_task(async function() {
 
   await resume(dbg);
 
+  info("Wait for reload to complete after resume");
+  await onReloaded;
+
   // remove breakpoints so they do not affect other
   // tests.
   await removeBreakpoint(dbg, source.id, 56);
@@ -78,7 +81,7 @@ add_task(async function() {
   await addBreakpointViaGutter(dbg, 22);
   await addBreakpointViaGutter(dbg, 27);
 
-  await reload(dbg, "doc-scripts.html");
+  const onReloaded = reload(dbg, "doc-scripts.html");
   await waitForPaused(dbg);
 
   const source = findSource(dbg, "doc-scripts.html");
@@ -105,6 +108,9 @@ add_task(async function() {
   await assertBreakpoint(dbg, 27);
 
   await resume(dbg);
+
+  info("Wait for reload to complete after resume");
+  await onReloaded;
 
   await removeBreakpoint(dbg, source.id, 22);
   await removeBreakpoint(dbg, source.id, 27);

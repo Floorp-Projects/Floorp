@@ -105,7 +105,7 @@ add_task(async function testBreakpointInFunctionRelocation() {
   info(
     "Reload should change the source content to CONTENT 2 i.e 2 functions foo() and bar()"
   );
-  await reload(dbg);
+  const onReloaded = reload(dbg);
   await waitForPaused(dbg);
 
   source = findSource(dbg, "script.js");
@@ -130,6 +130,8 @@ add_task(async function testBreakpointInFunctionRelocation() {
   );
 
   await resume(dbg);
+  info("Wait for reload to complete after resume");
+  await onReloaded;
 
   info(
     "Reload should change the source content to CONTENT 3 i.e comments and 1 function bar()"
