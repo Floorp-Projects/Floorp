@@ -249,8 +249,7 @@
     'bwe_test_logging_x64': ['debug_bot', 'x64', 'bwe_test_logging'],
     'bwe_test_logging_x86': ['debug_bot', 'x86', 'bwe_test_logging'],
     'codesearch_gen_linux_bot': ['openh264', 'debug_bot', 'minimal_symbols'],
-    # TODO(kjellander): Restore Goma for this when crbug.com/726706 is fixed.
-    'debug_bot_arm': ['openh264', 'debug', 'arm'],
+    'debug_bot_arm': ['openh264', 'debug_bot', 'arm'],
     'debug_bot_arm64': ['openh264', 'debug_bot', 'arm64'],
     'debug_bot_x64': ['openh264', 'debug_bot', 'x64'],
     'debug_bot_x86': ['openh264', 'debug_bot', 'x86'],
