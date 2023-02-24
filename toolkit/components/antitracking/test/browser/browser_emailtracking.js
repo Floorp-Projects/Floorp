@@ -10,7 +10,6 @@ add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.trackingprotection.enabled", false],
-      ["privacy.trackingprotection.pbmode.enabled", false],
       ["privacy.trackingprotection.annotate_channels", false],
       ["privacy.trackingprotection.cryptomining.enabled", false],
       ["privacy.trackingprotection.emailtracking.enabled", true],
@@ -49,24 +48,12 @@ function runTest(obj) {
           "privacy.trackingprotection.emailtracking.enabled",
           obj.protectionEnabled,
         ],
-        [
-          "privacy.trackingprotection.emailtracking.pbmode.enabled",
-          obj.protectionPrivateEnabled,
-        ],
       ],
     });
 
-    let win;
-
-    if (obj.testPrivate) {
-      win = await BrowserTestUtils.openNewBrowserWindow({ private: true });
-    } else {
-      win = window;
-    }
-
     info("Creating a non-tracker top-level context");
-    let tab = BrowserTestUtils.addTab(win.gBrowser, TEST_TOP_PAGE);
-    let browser = tab.linkedBrowser;
+    let tab = BrowserTestUtils.addTab(gBrowser, TEST_TOP_PAGE);
+    let browser = gBrowser.getBrowserForTab(tab);
     await BrowserTestUtils.browserLoaded(browser);
 
     info("The non-tracker page opens an email tracker iframe");
@@ -122,9 +109,6 @@ function runTest(obj) {
     }
 
     BrowserTestUtils.removeTab(tab);
-    if (obj.testPrivate) {
-      await BrowserTestUtils.closeWindow(win);
-    }
     await SpecialPowers.popPrefEnv();
   });
 }
@@ -133,7 +117,6 @@ runTest({
   testName:
     "EmailTracking-dataCollection feature enabled but not considered for tracking detection.",
   protectionEnabled: false,
-  protectionPrivateEnabled: false,
   loading: true,
   expectedLogItems: [
     [
@@ -147,36 +130,8 @@ runTest({
 runTest({
   testName: "Emailtracking-protection feature enabled.",
   protectionEnabled: true,
-  protectionPrivateEnabled: true,
   loading: false,
   expectedLogItems: [
     [Ci.nsIWebProgressListener.STATE_BLOCKED_EMAILTRACKING_CONTENT, true, 2],
-  ],
-});
-
-runTest({
-  testName:
-    "Emailtracking-protection feature enabled for private windows and doesn't block in normal windows",
-  protectionEnabled: false,
-  protectionPrivateEnabled: true,
-  loading: true,
-  expectedLogItems: [
-    [
-      Ci.nsIWebProgressListener.STATE_LOADED_EMAILTRACKING_LEVEL_1_CONTENT,
-      true,
-      2,
-    ],
-  ],
-});
-
-runTest({
-  testName:
-    "Emailtracking-protection feature enabled for private windows and block in private windows",
-  testPrivate: true,
-  protectionEnabled: true,
-  protectionPrivateEnabled: true,
-  loading: false,
-  expectedLogItems: [
-    [Ci.nsIWebProgressListener.STATE_BLOCKED_EMAILTRACKING_CONTENT, true, 1],
   ],
 });

@@ -95,15 +95,12 @@ const POLICIES_TESTS = [
       EnableTrackingProtection: {
         Cryptomining: true,
         Fingerprinting: true,
-        EmailTracking: true,
         Locked: true,
       },
     },
     lockedPrefs: {
       "privacy.trackingprotection.cryptomining.enabled": true,
       "privacy.trackingprotection.fingerprinting.enabled": true,
-      "privacy.trackingprotection.emailtracking.enabled": true,
-      "privacy.trackingprotection.emailtracking.pbmode.enabled": true,
     },
   },
 

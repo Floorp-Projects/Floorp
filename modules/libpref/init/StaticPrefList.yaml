@@ -12737,16 +12737,10 @@
   value: true
   mirror: always
 
-# Block 3rd party emailtracking resources in all mode.
+# Block 3rd party emailtracking resources.
 - name: privacy.trackingprotection.emailtracking.enabled
   type: bool
   value: @IS_NIGHTLY_BUILD@
-  mirror: always
-
-# Block 3rd party emailtracking resources in Private Browsing mode.
-- name: privacy.trackingprotection.emailtracking.pbmode.enabled
-  type: bool
-  value: true
   mirror: always
 
 # Collecting 3rd party emailtracking telemetry.
