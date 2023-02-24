@@ -252,8 +252,6 @@ void JavaToNativeRTCConfiguration(
 
   rtc_config->turn_customizer = GetNativeTurnCustomizer(jni, j_turn_customizer);
 
-  rtc_config->disable_ipv6 =
-      Java_RTCConfiguration_getDisableIpv6(jni, j_rtc_config);
   rtc_config->media_config.enable_dscp =
       Java_RTCConfiguration_getEnableDscp(jni, j_rtc_config);
   rtc_config->media_config.video.enable_cpu_adaptation =

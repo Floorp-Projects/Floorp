@@ -97,11 +97,6 @@ RTC_OBJC_EXPORT
 @property(nonatomic, assign) RTCCandidateNetworkPolicy candidateNetworkPolicy;
 @property(nonatomic, assign) RTCContinualGatheringPolicy continualGatheringPolicy;
 
-/** If set to YES, don't gather IPv6 ICE candidates.
- *  Default is NO.
- */
-@property(nonatomic, assign) BOOL disableIPV6;
-
 /** If set to YES, don't gather IPv6 ICE candidates on Wi-Fi.
  *  Only intended to be used on specific devices. Certain phones disable IPv6
  *  when the screen is turned off and it would be better to just disable the

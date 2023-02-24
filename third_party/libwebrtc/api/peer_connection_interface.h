@@ -427,8 +427,7 @@ class RTC_EXPORT PeerConnectionInterface : public rtc::RefCountInterface {
     //////////////////////////////////////////////////////////////////////////
 
     // If set to true, don't gather IPv6 ICE candidates.
-    // TODO(https://crbug.com/1315576): Remove the ability to set it in Chromium
-    // and delete this flag.
+    // TODO(https://crbug.com/webrtc/14608): Delete this flag.
     bool disable_ipv6 = false;
 
     // If set to true, don't gather IPv6 ICE candidates on Wi-Fi.
