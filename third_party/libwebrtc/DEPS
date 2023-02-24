@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': 'c192181684260d0a4621c682b78cbc8ce1795fe8',
+  'chromium_revision': '479fa7f596460c9c8715e895fdad111e034d80e5',
 
   # Keep the Chromium default of generating location tags.
   'generate_location_tags': True,
@@ -37,30 +37,30 @@ vars = {
 deps = {
   # TODO(kjellander): Move this to be Android-only.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@b6a09b31bf7169e30493146ce20ac62c3540fbec',
+    'https://chromium.googlesource.com/chromium/src/base@edcc0275f8099adc328a268553735bfa175551e4',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@34ffc9108e792681ca4877244998bcd8b67fdac9',
+    'https://chromium.googlesource.com/chromium/src/build@8907941989aa75fc9ca0559fe47846431004d048',
   'src/buildtools':
-    'https://chromium.googlesource.com/chromium/src/buildtools@c50c0de42448407ffc9bb00b720ff7e1edbda6c3',
+    'https://chromium.googlesource.com/chromium/src/buildtools@7f385a95b713d7d3529f5b832dc1c7d713a65e2d',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
   'src/examples/androidtests/third_party/gradle': {
     'url': 'https://chromium.googlesource.com/external/github.com/gradle/gradle.git@f2d1fb54a951d8b11d25748e4711bec8d128d7e3',
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@8b62a2122d9cbdb17830540030a8993773f44458',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@2827fcb271755133b92ff278a2dc14b5f14b695b',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@d6e0d9a8be1261328b2dc4e7e389491c47bfcc7b',
+    'https://chromium.googlesource.com/chromium/src/testing@247f9492008d766902e0d4b8daf5496d97a3e70e',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@185ea9afbf7ffd477cab55ca21623df895256224',
+    'https://chromium.googlesource.com/chromium/src/third_party@04800a5585451712427fb8f5e9a2a36d3cfec6f1',
 
   'src/buildtools/linux64': {
     'packages': [
       {
         'package': 'gn/gn/linux-${{arch}}',
-        'version': 'git_revision:11dc0b1f438bd26380774e9d50fd4c63f346d41a',
+        'version': 'git_revision:a4d67be044b42963de801001e7146f9657c7fad4',
       }
     ],
     'dep_type': 'cipd',
@@ -70,7 +70,7 @@ deps = {
     'packages': [
       {
         'package': 'gn/gn/mac-${{arch}}',
-        'version': 'git_revision:11dc0b1f438bd26380774e9d50fd4c63f346d41a',
+        'version': 'git_revision:a4d67be044b42963de801001e7146f9657c7fad4',
       }
     ],
     'dep_type': 'cipd',
@@ -80,7 +80,7 @@ deps = {
     'packages': [
       {
         'package': 'gn/gn/windows-amd64',
-        'version': 'git_revision:11dc0b1f438bd26380774e9d50fd4c63f346d41a',
+        'version': 'git_revision:a4d67be044b42963de801001e7146f9657c7fad4',
       }
     ],
     'dep_type': 'cipd',
@@ -99,9 +99,9 @@ deps = {
   'src/buildtools/clang_format/script':
     'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/clang/tools/clang-format.git@8b525d2747f2584fc35d8c7e612e66f377858df7',
   'src/buildtools/third_party/libc++/trunk':
-    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxx.git@37a5b4fbc296902bcc9878222c78f8f1239eb27f',
+    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxx.git@b093b39e7b745f4245fbafa5f387086e732ec8ff',
   'src/buildtools/third_party/libc++abi/trunk':
-    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxxabi.git@c7b6fcf28a2e46ef282dfce88fbfb211a08a0715',
+    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxxabi.git@8dd405113a4f3694e910b79785dd7fb7535a888a',
   'src/buildtools/third_party/libunwind/trunk':
     'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libunwind.git@aabcd8753678f1536e15eb6385a948470debdae4',
 
@@ -171,7 +171,7 @@ deps = {
   'src/third_party/crc32c/src':
     'https://chromium.googlesource.com/external/github.com/google/crc32c.git@fa5ade41ee480003d9c5af6f43567ba22e4e17e6',
   'src/third_party/depot_tools':
-    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@6f2321d1de694d4ca56784ba8b5634f9ca74b3a6',
+    'https://chromium.googlesource.com/chromium/tools/depot_tools.git@9f38b63b4e343d9600d2dc173ab4f59d14ab6713',
   'src/third_party/ffmpeg':
     'https://chromium.googlesource.com/chromium/third_party/ffmpeg.git@b9f01c3c54576330b2cf8918c54d5ee5be8faefe',
   'src/third_party/flatbuffers/src':
@@ -279,7 +279,7 @@ deps = {
       'packages': [
           {
               'package': 'chromium/third_party/r8',
-              'version': 'IX2rED7eRTrkn8ic1_nOE1NE6XY19Px1YxsqwNfCNq4C',
+              'version': 'nZ7XBCAvVQaWVGQ5BLbVxRo-_KDC3r-9kQTcPquc2t8C',
           },
       ],
       'condition': 'checkout_android',
@@ -290,7 +290,7 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@37735dcbaa3dc52422746f90dfe45f693c45e0fd',
+    'https://chromium.googlesource.com/chromium/src/tools@f3b857ab034e5d62f525b5c3bead920627f832d2',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
@@ -367,7 +367,7 @@ deps = {
     'packages': [
       {
           'package': 'chromium/third_party/androidx',
-          'version': 'zb-sVbF1SiYz0bi0xxvkrNO_6dQ8pvss2AsPb0wewXMC',
+          'version': 'DRqe-W5-XlO2ZySLCwsYKy7iqIaQ77O-Y91txXGY_hMC',
       },
     ],
     'condition': 'checkout_android',
@@ -468,7 +468,7 @@ deps = {
       'packages': [
           {
               'package': 'chromium/third_party/turbine',
-              'version': 'rrpgWQ-uylo8c5IPgUVP464LwcVOmt29MqwsR59O_zkC',
+              'version': 'HqLybI_r3dCgRJywsqJ3xkp2D6vQAI4-8D7zdqNiyxcC',
           },
       ],
       'condition': 'checkout_android',
