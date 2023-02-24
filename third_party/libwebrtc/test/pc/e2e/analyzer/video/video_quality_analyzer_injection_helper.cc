@@ -24,6 +24,7 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/string_builder.h"
 #include "system_wrappers/include/clock.h"
+#include "test/pc/e2e/analyzer/video/analyzing_video_sink.h"
 #include "test/pc/e2e/analyzer/video/quality_analyzing_video_decoder.h"
 #include "test/pc/e2e/analyzer/video/quality_analyzing_video_encoder.h"
 #include "test/pc/e2e/analyzer/video/simulcast_dummy_buffer_helper.h"
@@ -37,6 +38,8 @@ namespace {
 
 using EmulatedSFUConfigMap =
     ::webrtc::webrtc_pc_e2e::QualityAnalyzingVideoEncoder::EmulatedSFUConfigMap;
+using VideoSubscription = ::webrtc::webrtc_pc_e2e::
+    PeerConnectionE2EQualityTestFixture::VideoSubscription;
 
 class AnalyzingFramePreprocessor
     : public test::TestVideoCapturer::FramePreprocessor {
@@ -128,6 +131,7 @@ VideoQualityAnalyzerInjectionHelper::CreateFramePreprocessor(
         test::VideoRenderer::Create((*config.stream_label + "-capture").c_str(),
                                     config.width, config.height)));
   }
+  sinks_helper_.AddConfig(peer_name, config);
   {
     MutexLock lock(&mutex_);
     known_video_configs_.insert({*config.stream_label, config});
@@ -140,7 +144,16 @@ VideoQualityAnalyzerInjectionHelper::CreateFramePreprocessor(
 std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>>
 VideoQualityAnalyzerInjectionHelper::CreateVideoSink(
     absl::string_view peer_name) {
-  return std::make_unique<AnalyzingVideoSink>(peer_name, this);
+  return std::make_unique<AnalyzingVideoSink2>(peer_name, this);
+}
+
+std::unique_ptr<AnalyzingVideoSink>
+VideoQualityAnalyzerInjectionHelper::CreateVideoSink(
+    absl::string_view peer_name,
+    const PeerConnectionE2EQualityTestFixture::VideoSubscription&
+        subscription) {
+  return std::make_unique<AnalyzingVideoSink>(peer_name, clock_, *analyzer_,
+                                              sinks_helper_, subscription);
 }
 
 void VideoQualityAnalyzerInjectionHelper::Start(
@@ -181,6 +194,7 @@ void VideoQualityAnalyzerInjectionHelper::Stop() {
     video_writer->Close();
   }
   video_writers_.clear();
+  sinks_helper_.Clear();
 }
 
 void VideoQualityAnalyzerInjectionHelper::OnFrame(absl::string_view peer_name,

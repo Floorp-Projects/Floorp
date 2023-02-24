@@ -29,6 +29,8 @@
 #include "api/video_codecs/video_encoder_factory.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "system_wrappers/include/clock.h"
+#include "test/pc/e2e/analyzer/video/analyzing_video_sink.h"
+#include "test/pc/e2e/analyzer/video/analyzing_video_sinks_helper.h"
 #include "test/pc/e2e/analyzer/video/encoded_image_data_injector.h"
 #include "test/pc/e2e/analyzer/video/quality_analyzing_video_encoder.h"
 #include "test/test_video_capturer.h"
@@ -77,6 +79,10 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
   // into that file.
   std::unique_ptr<rtc::VideoSinkInterface<VideoFrame>> CreateVideoSink(
       absl::string_view peer_name);
+  std::unique_ptr<AnalyzingVideoSink> CreateVideoSink(
+      absl::string_view peer_name,
+      const PeerConnectionE2EQualityTestFixture::VideoSubscription&
+          subscription);
 
   void Start(std::string test_case_name,
              rtc::ArrayView<const std::string> peer_names,
@@ -101,12 +107,13 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
   void Stop();
 
  private:
-  class AnalyzingVideoSink final : public rtc::VideoSinkInterface<VideoFrame> {
+  // Deprecated, to be removed when old API isn't used anymore.
+  class AnalyzingVideoSink2 final : public rtc::VideoSinkInterface<VideoFrame> {
    public:
-    explicit AnalyzingVideoSink(absl::string_view peer_name,
-                                VideoQualityAnalyzerInjectionHelper* helper)
+    explicit AnalyzingVideoSink2(absl::string_view peer_name,
+                                 VideoQualityAnalyzerInjectionHelper* helper)
         : peer_name_(peer_name), helper_(helper) {}
-    ~AnalyzingVideoSink() override = default;
+    ~AnalyzingVideoSink2() override = default;
 
     void OnFrame(const VideoFrame& frame) override {
       helper_->OnFrame(peer_name_, frame);
@@ -147,6 +154,7 @@ class VideoQualityAnalyzerInjectionHelper : public StatsObserverInterface {
 
   std::vector<std::unique_ptr<test::VideoFrameWriter>> video_writers_;
 
+  AnalyzingVideoSinksHelper sinks_helper_;
   Mutex mutex_;
   int peers_count_ RTC_GUARDED_BY(mutex_);
   // Map from stream label to the video config.
