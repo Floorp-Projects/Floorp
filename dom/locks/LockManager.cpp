@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/LockManager.h"
+#include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/locks/LockManagerChild.h"
 #include "mozilla/dom/locks/LockRequestChild.h"
@@ -96,7 +97,13 @@ static bool ValidateRequestArguments(const nsAString& name,
       return false;
     }
     if (options.mSignal.Value().Aborted()) {
-      aRv.ThrowAbortError("The lock request is aborted");
+      AutoEntryScript aes(options.mSignal.Value().GetParentObject(),
+                          "LockManager::Request");
+      JSContext* cx = aes.cx();
+      JS::Rooted<JS::Value> reason(cx);
+      options.mSignal.Value().GetReason(cx, &reason);
+      aRv.MightThrowJSException();
+      aRv.ThrowJSException(cx, reason);
       return false;
     }
   }
