@@ -1621,11 +1621,12 @@ void Loader::NotifyObservers(SheetLoadData& aData, nsresult aStatus) {
   if (!aData.mTitle.IsEmpty() && NS_SUCCEEDED(aStatus)) {
     nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
         "Loader::NotifyObservers - Create PageStyle actor",
-         [doc = RefPtr{mDocument}] {
+        [doc = RefPtr{mDocument}] {
           // Force creating the page style actor, if available.
           // This will no-op if no actor with this name is registered (outside
           // of desktop Firefox).
-          nsCOMPtr<nsISupports> pageStyleActor = do_QueryActor("PageStyle", doc);
+          nsCOMPtr<nsISupports> pageStyleActor =
+              do_QueryActor("PageStyle", doc);
           Unused << pageStyleActor;
         }));
   }
