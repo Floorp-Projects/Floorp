@@ -7,7 +7,6 @@
 
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
-#include "nsIClassInfoImpl.h"
 #include "nsSimpleNestedURI.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"

@@ -6,12 +6,10 @@
 #define NetworkConnectivityService_h_
 
 #include "nsINetworkConnectivityService.h"
-#include "nsCOMPtr.h"
 #include "nsIObserver.h"
 #include "nsIDNSListener.h"
 #include "nsIStreamListener.h"
 #include "mozilla/net/DNS.h"
-#include "mozilla/Mutex.h"
 
 namespace mozilla {
 namespace net {

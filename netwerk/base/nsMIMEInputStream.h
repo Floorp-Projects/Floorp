@@ -11,9 +11,6 @@
 #ifndef _nsMIMEInputStream_h_
 #define _nsMIMEInputStream_h_
 
-#include "ErrorList.h"
-#include "nsID.h"
-
 #define NS_MIMEINPUTSTREAM_CONTRACTID "@mozilla.org/network/mime-input-stream;1"
 #define NS_MIMEINPUTSTREAM_CID                       \
   { /* 58a1c31c-1dd2-11b2-a3f6-d36949d48268 */       \

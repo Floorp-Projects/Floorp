@@ -8,13 +8,11 @@
 #define IOActivityMonitor_h___
 
 #include "mozilla/dom/ChromeUtilsBinding.h"
-#include "mozilla/Mutex.h"
 #include "nsCOMPtr.h"
 #include "nscore.h"
 #include "nsClassHashtable.h"
 #include "nsTHashMap.h"
 #include "nsHashKeys.h"
-#include "nsINamed.h"
 #include "nsISupports.h"
 #include "prinrval.h"
 #include "prio.h"

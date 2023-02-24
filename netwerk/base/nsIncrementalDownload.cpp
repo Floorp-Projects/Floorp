@@ -29,7 +29,6 @@
 #include <algorithm>
 #include "nsIContentPolicy.h"
 #include "nsContentUtils.h"
-#include "mozilla/Logging.h"
 #include "mozilla/UniquePtr.h"
 
 // Default values used to initialize a nsIncrementalDownload object.
@@ -43,10 +42,6 @@
 
 using namespace mozilla;
 using namespace mozilla::net;
-
-static LazyLogModule gIDLog("IncrementalDownload");
-#undef LOG
-#define LOG(args) MOZ_LOG(gIDLog, mozilla::LogLevel::Debug, args)
 
 //-----------------------------------------------------------------------------
 

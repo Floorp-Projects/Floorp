@@ -12,7 +12,6 @@
 #include "nsUnknownDecoder.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsMimeTypes.h"
-#include "nsICancelable.h"
 #include "nsIChannelEventSink.h"
 #include "nsIStreamConverterService.h"
 #include "nsChannelClassifier.h"
