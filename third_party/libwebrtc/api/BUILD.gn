@@ -510,10 +510,7 @@ rtc_source_set("peer_connection_quality_test_fixture_api") {
 if (!build_with_mozilla) {
   visibility = [ "*" ]
   testonly = true
-  sources = [
-    "test/peerconnection_quality_test_fixture.cc",
-    "test/peerconnection_quality_test_fixture.h",
-  ]
+  sources = [ "test/peerconnection_quality_test_fixture.h" ]
 
   deps = [
     ":array_view",
@@ -543,6 +540,8 @@ if (!build_with_mozilla) {
     "audio:audio_mixer_api",
     "rtc_event_log",
     "task_queue",
+    "test/pclf:media_configuration",
+    "test/pclf:media_quality_test_params",
     "test/video:video_frame_writer",
     "transport:network_control",
     "units:time_delta",
@@ -1331,6 +1330,7 @@ if (rtc_include_tests) {
       "../test:rtc_expect_death",
       "../test:test_support",
       "task_queue:task_queue_default_factory_unittests",
+      "test/pclf:media_configuration",
       "test/video:video_frame_writer",
       "transport:field_trial_based_config",
       "units:time_delta",
