@@ -91,6 +91,8 @@ pref("floorp.browser.sidebar2.global.webpanel.width", 400);
 
 pref("floorp.tabsleep.enabled", false);
 pref("floorp.webcompat.enabled", true);
+pref("floorp.openLinkInExternal.enabled", false);
+pref("floorp.openLinkInExternal.browserId", "");
 
 // システムアドオンのアップデート確認先
 pref("extensions.systemAddon.update.url", "https://floorp-update.ablaze.one/systemAddon/xml/%DISPLAY_VERSION%/%OS%/update.xml");
