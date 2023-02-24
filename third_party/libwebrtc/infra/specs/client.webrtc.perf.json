@@ -153,6 +153,154 @@
       }
     ]
   },
+  "Perf Android32 (O Pixel2)": {
+    "gtest_tests": [
+      {
+        "args": [
+          ".",
+          "--remove",
+          "--android",
+          "--adb-path",
+          "../../third_party/android_sdk/public/platform-tools/adb",
+          "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb"
+        ],
+        "merge": {
+          "args": [
+            "--test-suite",
+            "low_bandwidth_audio_perf_test"
+          ],
+          "script": "//tools_webrtc/perf/process_perf_results.py"
+        },
+        "resultdb": {
+          "enable": true,
+          "has_native_resultdb_integration": true
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "android_devices": "1",
+              "device_type": "walleye",
+              "os": "Android",
+              "pool": "WebRTC-perf"
+            }
+          ],
+          "hard_timeout": 10800,
+          "idempotent": false,
+          "io_timeout": 10800
+        },
+        "test": "low_bandwidth_audio_perf_test",
+        "test_id_prefix": "ninja://audio:low_bandwidth_audio_perf_test/"
+      },
+      {
+        "args": [
+          "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb",
+          "--nologs"
+        ],
+        "merge": {
+          "args": [
+            "--test-suite",
+            "webrtc_perf_tests"
+          ],
+          "script": "//tools_webrtc/perf/process_perf_results.py"
+        },
+        "resultdb": {
+          "enable": true,
+          "has_native_resultdb_integration": true
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "android_devices": "1",
+              "device_type": "walleye",
+              "os": "Android",
+              "pool": "WebRTC-perf"
+            }
+          ],
+          "hard_timeout": 10800,
+          "idempotent": false,
+          "io_timeout": 10800
+        },
+        "test": "webrtc_perf_tests",
+        "test_id_prefix": "ninja://:webrtc_perf_tests/"
+      }
+    ]
+  },
+  "Perf Android32 (R Pixel5)": {
+    "gtest_tests": [
+      {
+        "args": [
+          ".",
+          "--remove",
+          "--android",
+          "--adb-path",
+          "../../third_party/android_sdk/public/platform-tools/adb",
+          "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb"
+        ],
+        "merge": {
+          "args": [
+            "--test-suite",
+            "low_bandwidth_audio_perf_test"
+          ],
+          "script": "//tools_webrtc/perf/process_perf_results.py"
+        },
+        "resultdb": {
+          "enable": true,
+          "has_native_resultdb_integration": true
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "android_devices": "1",
+              "device_type": "redfin",
+              "os": "Android",
+              "pool": "WebRTC-perf"
+            }
+          ],
+          "hard_timeout": 10800,
+          "idempotent": false,
+          "io_timeout": 10800
+        },
+        "test": "low_bandwidth_audio_perf_test",
+        "test_id_prefix": "ninja://audio:low_bandwidth_audio_perf_test/"
+      },
+      {
+        "args": [
+          "--isolated-script-test-perf-output=${ISOLATED_OUTDIR}/perftest-output.pb",
+          "--nologs"
+        ],
+        "merge": {
+          "args": [
+            "--test-suite",
+            "webrtc_perf_tests"
+          ],
+          "script": "//tools_webrtc/perf/process_perf_results.py"
+        },
+        "resultdb": {
+          "enable": true,
+          "has_native_resultdb_integration": true
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "android_devices": "1",
+              "device_type": "redfin",
+              "os": "Android",
+              "pool": "WebRTC-perf"
+            }
+          ],
+          "hard_timeout": 10800,
+          "idempotent": false,
+          "io_timeout": 10800
+        },
+        "test": "webrtc_perf_tests",
+        "test_id_prefix": "ninja://:webrtc_perf_tests/"
+      }
+    ]
+  },
   "Perf Android64 (M Nexus5X)": {
     "gtest_tests": [
       {

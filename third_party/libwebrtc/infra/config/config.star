@@ -712,6 +712,8 @@ android_builder("Android32 Builder arm", "Android|arm|size", perf_cat = "Android
 android_try_job("android_compile_arm_rel")
 perf_builder("Perf Android32 (M Nexus5)", "Android|arm|Tester|M Nexus5", triggered_by = ["Android32 Builder arm"])
 perf_builder("Perf Android32 (M AOSP Nexus6)", "Android|arm|Tester|M AOSP Nexus6", triggered_by = ["Android32 Builder arm"])
+perf_builder("Perf Android32 (O Pixel2)", "Android|arm|Tester|O Pixel2", triggered_by = ["Android32 Builder arm"])
+perf_builder("Perf Android32 (R Pixel5)", "Android|arm|Tester|R Pixel5", triggered_by = ["Android32 Builder arm"])
 android_try_job("android_compile_arm64_dbg", cq = None)
 android_try_job("android_arm64_dbg", cq = None)
 android_builder("Android64 (M Nexus5X)", "Android|arm64|rel")
