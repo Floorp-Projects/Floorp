@@ -483,7 +483,9 @@ class RTC_EXPORT RTCInboundRTPStreamStats final
   RTCStatsMember<double> estimated_playout_timestamp;
   // Only implemented for video.
   // TODO(https://crbug.com/webrtc/14178): Also implement for audio.
-  RTCStatsMember<std::string> decoder_implementation;
+  RTCRestrictedStatsMember<std::string,
+                           StatExposureCriteria::kHardwareCapability>
+      decoder_implementation;
   // FIR and PLI counts are only defined for |kind == "video"|.
   RTCStatsMember<uint32_t> fir_count;
   RTCStatsMember<uint32_t> pli_count;
@@ -548,7 +550,9 @@ class RTC_EXPORT RTCOutboundRTPStreamStats final : public RTCRTPStreamStats {
   RTCStatsMember<std::string> content_type;
   // Only implemented for video.
   // TODO(https://crbug.com/webrtc/14178): Implement for audio as well.
-  RTCStatsMember<std::string> encoder_implementation;
+  RTCRestrictedStatsMember<std::string,
+                           StatExposureCriteria::kHardwareCapability>
+      encoder_implementation;
   // FIR and PLI counts are only defined for |kind == "video"|.
   RTCStatsMember<uint32_t> fir_count;
   RTCStatsMember<uint32_t> pli_count;
