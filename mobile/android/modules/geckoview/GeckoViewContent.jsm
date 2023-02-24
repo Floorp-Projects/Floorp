@@ -17,6 +17,7 @@ class GeckoViewContent extends GeckoViewModule {
       "GeckoView:ClearMatches",
       "GeckoView:DisplayMatches",
       "GeckoView:FindInPage",
+      "GeckoView:HasCookieBannerRuleForBrowsingContextTree",
       "GeckoView:RestoreState",
       "GeckoView:ContainsFormData",
       "GeckoView:ScrollBy",
@@ -193,6 +194,9 @@ class GeckoViewContent extends GeckoViewModule {
       case "GeckoView:IsPdfJs":
         aCallback.onSuccess(this.isPdfJs);
         break;
+      case "GeckoView:HasCookieBannerRuleForBrowsingContextTree":
+        this._hasCookieBannerRuleForBrowsingContextTree(aCallback);
+        break;
     }
   }
 
@@ -301,6 +305,13 @@ class GeckoViewContent extends GeckoViewModule {
 
   async _containsFormData(aCallback) {
     aCallback.onSuccess(await this.actor.containsFormData());
+  }
+
+  async _hasCookieBannerRuleForBrowsingContextTree(aCallback) {
+    const { browsingContext } = this.actor;
+    aCallback.onSuccess(
+      Services.cookieBanners.hasRuleForBrowsingContextTree(browsingContext)
+    );
   }
 
   _findInPage(aData, aCallback) {
