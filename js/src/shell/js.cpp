@@ -10454,39 +10454,6 @@ auto minVal(T a, Ts... args) {
 [[nodiscard]] static bool ProcessArgs(JSContext* cx, OptionParser* op) {
   ShellContext* sc = GetShellContext(cx);
 
-#ifdef JS_ENABLE_SMOOSH
-  if (op->getBoolOption("smoosh")) {
-    JS::ContextOptionsRef(cx).setTrySmoosh(true);
-    js::frontend::InitSmoosh();
-  }
-
-  if (const char* filename = op->getStringOption("not-implemented-watchfile")) {
-    FILE* out = fopen(filename, "a");
-    MOZ_RELEASE_ASSERT(out);
-    setbuf(out, nullptr);  // Make unbuffered
-    cx->runtime()->parserWatcherFile.init(out);
-    JS::ContextOptionsRef(cx).setTrackNotImplemented(true);
-  }
-#endif
-
-  if (const char* mode = op->getStringOption("delazification-mode")) {
-    if (strcmp(mode, "on-demand") == 0) {
-      defaultDelazificationMode = JS::DelazificationOption::OnDemandOnly;
-    } else if (strcmp(mode, "concurrent-df") == 0) {
-      defaultDelazificationMode =
-          JS::DelazificationOption::ConcurrentDepthFirst;
-    } else if (strcmp(mode, "eager") == 0) {
-      defaultDelazificationMode =
-          JS::DelazificationOption::ParseEverythingEagerly;
-    } else if (strcmp(mode, "concurrent-df+on-demand") == 0 ||
-               strcmp(mode, "on-demand+concurrent-df") == 0) {
-      defaultDelazificationMode =
-          JS::DelazificationOption::CheckConcurrentWithOnDemand;
-    } else {
-      return OptionFailure("delazification-mode", mode);
-    }
-  }
-
   /* |scriptArgs| gets bound on the global before any code is run. */
   if (!BindScriptArgs(cx, op)) {
     return false;
@@ -11957,6 +11924,39 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableDisassemblyDumps = op.getBoolOption('D');
   cx->runtime()->profilingScripts =
       enableCodeCoverage || enableDisassemblyDumps;
+
+#ifdef JS_ENABLE_SMOOSH
+  if (op.getBoolOption("smoosh")) {
+    JS::ContextOptionsRef(cx).setTrySmoosh(true);
+    js::frontend::InitSmoosh();
+  }
+
+  if (const char* filename = op.getStringOption("not-implemented-watchfile")) {
+    FILE* out = fopen(filename, "a");
+    MOZ_RELEASE_ASSERT(out);
+    setbuf(out, nullptr);  // Make unbuffered
+    cx->runtime()->parserWatcherFile.init(out);
+    JS::ContextOptionsRef(cx).setTrackNotImplemented(true);
+  }
+#endif
+
+  if (const char* mode = op.getStringOption("delazification-mode")) {
+    if (strcmp(mode, "on-demand") == 0) {
+      defaultDelazificationMode = JS::DelazificationOption::OnDemandOnly;
+    } else if (strcmp(mode, "concurrent-df") == 0) {
+      defaultDelazificationMode =
+          JS::DelazificationOption::ConcurrentDepthFirst;
+    } else if (strcmp(mode, "eager") == 0) {
+      defaultDelazificationMode =
+          JS::DelazificationOption::ParseEverythingEagerly;
+    } else if (strcmp(mode, "concurrent-df+on-demand") == 0 ||
+               strcmp(mode, "on-demand+concurrent-df") == 0) {
+      defaultDelazificationMode =
+          JS::DelazificationOption::CheckConcurrentWithOnDemand;
+    } else {
+      return OptionFailure("delazification-mode", mode);
+    }
+  }
 
   return true;
 }
