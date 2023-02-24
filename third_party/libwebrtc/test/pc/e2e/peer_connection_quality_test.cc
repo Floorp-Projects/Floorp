@@ -48,8 +48,8 @@ namespace {
 
 using ::webrtc::test::ImprovementDirection;
 using ::webrtc::test::Unit;
-using VideoConfig = PeerConnectionE2EQualityTestFixture::VideoConfig;
-using VideoCodecConfig = PeerConnectionE2EQualityTestFixture::VideoCodecConfig;
+using VideoConfig =
+    ::webrtc::webrtc_pc_e2e::PeerConnectionE2EQualityTestFixture::VideoConfig;
 
 constexpr TimeDelta kDefaultTimeout = TimeDelta::Seconds(10);
 constexpr char kSignalThreadName[] = "signaling_thread";
@@ -262,11 +262,15 @@ void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
       RemotePeerAudioConfig::Create(bob_configurer->params()->audio_config);
   absl::optional<RemotePeerAudioConfig> bob_remote_audio_config =
       RemotePeerAudioConfig::Create(alice_configurer->params()->audio_config);
-  // Copy Alice and Bob video configs and names to correctly pass them into
-  // lambdas.
+  // Copy Alice and Bob video configs, subscriptions and names to correctly pass
+  // them into lambdas.
+  VideoSubscription alice_subscription =
+      alice_configurer->configurable_params()->video_subscription;
   std::vector<VideoConfig> alice_video_configs =
       alice_configurer->configurable_params()->video_configs;
   std::string alice_name = alice_configurer->params()->name.value();
+  VideoSubscription bob_subscription =
+      alice_configurer->configurable_params()->video_subscription;
   std::vector<VideoConfig> bob_video_configs =
       bob_configurer->configurable_params()->video_configs;
   std::string bob_name = bob_configurer->params()->name.value();
@@ -277,18 +281,20 @@ void PeerConnectionE2EQualityTest::Run(RunParams run_params) {
   alice_ = test_peer_factory.CreateTestPeer(
       std::move(alice_configurer),
       std::make_unique<FixturePeerConnectionObserver>(
-          [this, bob_video_configs, alice_name](
+          [this, alice_name, alice_subscription, bob_video_configs](
               rtc::scoped_refptr<RtpTransceiverInterface> transceiver) {
-            OnTrackCallback(alice_name, transceiver, bob_video_configs);
+            OnTrackCallback(alice_name, alice_subscription, transceiver,
+                            bob_video_configs);
           },
           [this]() { StartVideo(alice_video_sources_); }),
       alice_remote_audio_config, run_params.echo_emulation_config);
   bob_ = test_peer_factory.CreateTestPeer(
       std::move(bob_configurer),
       std::make_unique<FixturePeerConnectionObserver>(
-          [this, alice_video_configs,
-           bob_name](rtc::scoped_refptr<RtpTransceiverInterface> transceiver) {
-            OnTrackCallback(bob_name, transceiver, alice_video_configs);
+          [this, bob_name, bob_subscription, alice_video_configs](
+              rtc::scoped_refptr<RtpTransceiverInterface> transceiver) {
+            OnTrackCallback(bob_name, bob_subscription, transceiver,
+                            alice_video_configs);
           },
           [this]() { StartVideo(bob_video_sources_); }),
       bob_remote_audio_config, run_params.echo_emulation_config);
@@ -448,6 +454,7 @@ std::string PeerConnectionE2EQualityTest::GetFieldTrials(
 
 void PeerConnectionE2EQualityTest::OnTrackCallback(
     absl::string_view peer_name,
+    VideoSubscription peer_subscription,
     rtc::scoped_refptr<RtpTransceiverInterface> transceiver,
     std::vector<VideoConfig> remote_video_configs) {
   const rtc::scoped_refptr<MediaStreamTrackInterface>& track =

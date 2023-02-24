@@ -32,6 +32,7 @@ class VideoFrameIdsWriter final : public test::VideoFrameWriter {
   explicit VideoFrameIdsWriter(absl::string_view file_name)
       : file_name_(file_name) {
     output_file_ = fopen(file_name_.c_str(), "wb");
+    RTC_LOG(LS_INFO) << "Writing VideoFrame IDs into " << file_name_;
     RTC_CHECK(output_file_ != nullptr)
         << "Failed to open file to dump frame ids for writing: " << file_name_;
   }
@@ -50,6 +51,7 @@ class VideoFrameIdsWriter final : public test::VideoFrameWriter {
 
   void Close() override {
     if (output_file_ != nullptr) {
+      RTC_LOG(LS_INFO) << "Closing file for VideoFrame IDs: " << file_name_;
       fclose(output_file_);
       output_file_ = nullptr;
     }
