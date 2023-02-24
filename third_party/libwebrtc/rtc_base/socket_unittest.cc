@@ -14,6 +14,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 
 #include "absl/memory/memory.h"
@@ -219,6 +221,15 @@ void SocketTest::TestSocketRecvTimestampIPv4() {
 void SocketTest::TestSocketRecvTimestampIPv6() {
   MAYBE_SKIP_IPV6;
   SocketRecvTimestamp(kIPv6Loopback);
+}
+
+void SocketTest::TestUdpSocketRecvTimestampUseRtcEpochIPv4() {
+  UdpSocketRecvTimestampUseRtcEpoch(kIPv4Loopback);
+}
+
+void SocketTest::TestUdpSocketRecvTimestampUseRtcEpochIPv6() {
+  MAYBE_SKIP_IPV6;
+  UdpSocketRecvTimestampUseRtcEpoch(kIPv6Loopback);
 }
 
 // For unbound sockets, GetLocalAddress / GetRemoteAddress return AF_UNSPEC
@@ -1103,4 +1114,30 @@ void SocketTest::SocketRecvTimestamp(const IPAddress& loopback) {
   EXPECT_NEAR(system_time_diff, recv_timestamp_diff, 10000);
 }
 
+void SocketTest::UdpSocketRecvTimestampUseRtcEpoch(const IPAddress& loopback) {
+  SocketAddress empty = EmptySocketAddressWithFamily(loopback.family());
+  std::unique_ptr<Socket> socket(
+      socket_factory_->CreateSocket(loopback.family(), SOCK_DGRAM));
+  ASSERT_EQ(socket->Bind(SocketAddress(loopback, 0)), 0);
+  SocketAddress address = socket->GetLocalAddress();
+  socket = nullptr;
+
+  auto client1 = std::make_unique<TestClient>(
+      absl::WrapUnique(AsyncUDPSocket::Create(socket_factory_, address)));
+  auto client2 = std::make_unique<TestClient>(
+      absl::WrapUnique(AsyncUDPSocket::Create(socket_factory_, empty)));
+
+  SocketAddress addr2;
+  client2->SendTo("foo", 3, address);
+  std::unique_ptr<TestClient::Packet> packet_1 = client1->NextPacket(10000);
+  ASSERT_TRUE(packet_1 != nullptr);
+  EXPECT_NEAR(packet_1->packet_time_us, rtc::TimeMicros(), 1000'000);
+
+  Thread::SleepMs(100);
+  client2->SendTo("bar", 3, address);
+  std::unique_ptr<TestClient::Packet> packet_2 = client1->NextPacket(10000);
+  ASSERT_TRUE(packet_2 != nullptr);
+  EXPECT_GT(packet_2->packet_time_us, packet_1->packet_time_us);
+  EXPECT_NEAR(packet_2->packet_time_us, rtc::TimeMicros(), 1000'000);
+}
 }  // namespace rtc
