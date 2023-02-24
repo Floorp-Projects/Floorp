@@ -17,7 +17,7 @@
 #include <utility>
 
 #include "absl/types/optional.h"
-#include "api/transport/field_trial_based_config.h"
+#include "api/field_trials_registry.h"
 #include "api/units/time_delta.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/rtcp_packet.h"
@@ -157,7 +157,7 @@ struct TestConfig {
   bool with_overhead = false;
 };
 
-class FieldTrialConfig : public FieldTrialsView {
+class FieldTrialConfig : public FieldTrialsRegistry {
  public:
   static FieldTrialConfig GetFromTestConfig(const TestConfig& config) {
     FieldTrialConfig trials;
@@ -170,14 +170,14 @@ class FieldTrialConfig : public FieldTrialsView {
 
   void SetOverHeadEnabled(bool enabled) { overhead_enabled_ = enabled; }
 
-  std::string Lookup(absl::string_view key) const override {
+ private:
+  std::string GetValue(absl::string_view key) const override {
     if (key == "WebRTC-SendSideBwe-WithOverhead") {
       return overhead_enabled_ ? "Enabled" : "Disabled";
     }
     return "";
   }
 
- private:
   bool overhead_enabled_;
 };
 

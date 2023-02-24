@@ -604,6 +604,7 @@ if (rtc_include_tests) {
       ":rtp_rtcp_legacy",
       "../../api:array_view",
       "../../api:create_time_controller",
+      "../../api:field_trials_registry",
       "../../api:libjingle_peerconnection_api",
       "../../api:mock_frame_encryptor",
       "../../api:rtp_headers",
