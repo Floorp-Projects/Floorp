@@ -3021,6 +3021,104 @@ static bool NewObjectWithAddPropertyHook(JSContext* cx, unsigned argc,
   return true;
 }
 
+static bool NewObjectWithCallHook(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  static auto hookShared = [](JSContext* cx, CallArgs& args) {
+    Rooted<PlainObject*> obj(cx, NewPlainObject(cx));
+    if (!obj) {
+      return false;
+    }
+
+    // Define |this|. We can't expose the MagicValue to JS, so we use
+    // "<is_constructing>" in that case.
+    Rooted<Value> thisv(cx, args.thisv());
+    if (thisv.isMagic(JS_IS_CONSTRUCTING)) {
+      JSString* str = NewStringCopyZ<CanGC>(cx, "<is_constructing>");
+      if (!str) {
+        return false;
+      }
+      thisv.setString(str);
+    }
+    if (!DefineDataProperty(cx, obj, cx->names().this_, thisv,
+                            JSPROP_ENUMERATE)) {
+      return false;
+    }
+
+    // Define |callee|.
+    if (!DefineDataProperty(cx, obj, cx->names().callee, args.calleev(),
+                            JSPROP_ENUMERATE)) {
+      return false;
+    }
+
+    // Define |arguments| array.
+    Rooted<ArrayObject*> arr(
+        cx, NewDenseCopiedArray(cx, args.length(), args.array()));
+    if (!arr) {
+      return false;
+    }
+    Rooted<Value> arrVal(cx, ObjectValue(*arr));
+    if (!DefineDataProperty(cx, obj, cx->names().arguments, arrVal,
+                            JSPROP_ENUMERATE)) {
+      return false;
+    }
+
+    // Define |newTarget| if constructing.
+    if (args.isConstructing()) {
+      const char* propName = "newTarget";
+      Rooted<JSAtom*> name(cx, Atomize(cx, propName, strlen(propName)));
+      if (!name) {
+        return false;
+      }
+      Rooted<PropertyKey> key(cx, NameToId(name->asPropertyName()));
+      if (!DefineDataProperty(cx, obj, key, args.newTarget(),
+                              JSPROP_ENUMERATE)) {
+        return false;
+      }
+    }
+
+    args.rval().setObject(*obj);
+    return true;
+  };
+
+  static auto callHook = [](JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(!args.isConstructing());
+    return hookShared(cx, args);
+  };
+  static auto constructHook = [](JSContext* cx, unsigned argc, Value* vp) {
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.isConstructing());
+    return hookShared(cx, args);
+  };
+
+  static const JSClassOps classOps = {
+      nullptr,        // addProperty
+      nullptr,        // delProperty
+      nullptr,        // enumerate
+      nullptr,        // newEnumerate
+      nullptr,        // resolve
+      nullptr,        // mayResolve
+      nullptr,        // finalize
+      callHook,       // call
+      constructHook,  // construct
+      nullptr,        // trace
+  };
+  static const JSClass cls = {
+      "ObjectWithCallHook",
+      0,
+      &classOps,
+  };
+
+  Rooted<JSObject*> obj(cx, JS_NewObject(cx, &cls));
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
 static constexpr JSClass ObjectWithManyReservedSlotsClass = {
     "ObjectWithManyReservedSlots", JSCLASS_HAS_RESERVED_SLOTS(40)};
 
@@ -8194,6 +8292,11 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  Returns a new object with an addProperty JSClass hook. This hook\n"
 "  increments the value of the _propertiesAdded data property on the object\n"
 "  when a new property is added."),
+
+    JS_FN_HELP("newObjectWithCallHook", NewObjectWithCallHook, 0, 0,
+"newObjectWithCallHook()",
+"  Returns a new object with call/construct JSClass hooks. These hooks return\n"
+"  a new object that contains the Values supplied by the caller."),
 
     JS_FN_HELP("newObjectWithManyReservedSlots", NewObjectWithManyReservedSlots, 0, 0,
 "newObjectWithManyReservedSlots()",
