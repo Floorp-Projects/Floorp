@@ -171,7 +171,7 @@
         'mixins': ['xcode_parallelization']
       },
       'svc_tests': {
-        'mixins': ['shards-4'],
+        'mixins': ['shards-4', 'cores-12'],
       },
       'system_wrappers_unittests': {},
       'test_support_unittests': {},
