@@ -148,7 +148,7 @@ TEST(ProbeControllerTest, InitiatesProbingOnMaxBitrateIncrease) {
   EXPECT_EQ(probes[0].target_data_rate.bps(), kMaxBitrate.bps() + 100);
 }
 
-TEST(ProbeControllerTest, ProbesOnMaxBitrateIncreaseOnlyWhenInAlr) {
+TEST(ProbeControllerTest, ProbesOnMaxAllocatedBitrateIncreaseOnlyWhenInAlr) {
   ProbeControllerFixture fixture;
   std::unique_ptr<ProbeController> probe_controller =
       fixture.CreateController();
@@ -173,6 +173,30 @@ TEST(ProbeControllerTest, ProbesOnMaxBitrateIncreaseOnlyWhenInAlr) {
   probe_controller->SetAlrStartTimeMs(absl::nullopt);
   probes = probe_controller->OnMaxTotalAllocatedBitrate(
       kMaxBitrate + DataRate::BitsPerSec(2), fixture.CurrentTime());
+  EXPECT_TRUE(probes.empty());
+}
+
+TEST(ProbeControllerTest, CanDisableProbingOnMaxTotalAllocatedBitrateIncrease) {
+  ProbeControllerFixture fixture(
+      "WebRTC-Bwe-ProbingConfiguration/"
+      "probe_max_allocation:false/");
+  std::unique_ptr<ProbeController> probe_controller =
+      fixture.CreateController();
+
+  auto probes = probe_controller->SetBitrates(
+      kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
+  probes = probe_controller->SetEstimatedBitrate(
+      kMaxBitrate - DataRate::BitsPerSec(1),
+      /*bwe_limited_due_to_packet_loss=*/false, fixture.CurrentTime());
+  fixture.AdvanceTime(kExponentialProbingTimeout);
+  probes = probe_controller->Process(fixture.CurrentTime());
+  ASSERT_TRUE(probes.empty());
+  probe_controller->SetAlrStartTimeMs(fixture.CurrentTime().ms());
+
+  // Do no probe, since probe_max_allocation:false.
+  probe_controller->SetAlrStartTimeMs(fixture.CurrentTime().ms());
+  probes = probe_controller->OnMaxTotalAllocatedBitrate(
+      kMaxBitrate + DataRate::BitsPerSec(1), fixture.CurrentTime());
   EXPECT_TRUE(probes.empty());
 }
 
@@ -787,8 +811,39 @@ TEST(ProbeControllerTest, SkipAlrProbeIfEstimateLargerThanMaxProbe) {
   EXPECT_TRUE(probes.empty());
 
   // But if the max rate increase, A new probe is sent.
-  probe_controller->SetMaxBitrate(2 * kMaxBitrate);
+  probes = probe_controller->SetBitrates(
+      kMinBitrate, kStartBitrate, 2 * kMaxBitrate, fixture.CurrentTime());
+  EXPECT_FALSE(probes.empty());
+}
+
+TEST(ProbeControllerTest,
+     SkipAlrProbeIfEstimateLargerThanFractionOfMaxAllocated) {
+  ProbeControllerFixture fixture(
+      "WebRTC-Bwe-ProbingConfiguration/"
+      "skip_if_est_larger_than_fraction_of_max:1.0/");
+  std::unique_ptr<ProbeController> probe_controller =
+      fixture.CreateController();
+  probe_controller->EnablePeriodicAlrProbing(true);
+  auto probes = probe_controller->SetBitrates(
+      kMinBitrate, kStartBitrate, kMaxBitrate, fixture.CurrentTime());
+  ASSERT_FALSE(probes.empty());
+  probes = probe_controller->SetEstimatedBitrate(
+      kMaxBitrate / 2, /*bwe_limited_due_to_packet_loss=*/false,
+      fixture.CurrentTime());
+
+  fixture.AdvanceTime(TimeDelta::Seconds(10));
+  probe_controller->SetAlrStartTimeMs(fixture.CurrentTime().ms());
+  probes = probe_controller->OnMaxTotalAllocatedBitrate(kMaxBitrate / 2,
+                                                        fixture.CurrentTime());
+  // No probes since total allocated is not higher than the current estimate.
+  EXPECT_TRUE(probes.empty());
+  fixture.AdvanceTime(TimeDelta::Seconds(2));
   probes = probe_controller->Process(fixture.CurrentTime());
+  EXPECT_TRUE(probes.empty());
+
+  // But if the max allocated increase, A new probe is sent.
+  probes = probe_controller->OnMaxTotalAllocatedBitrate(
+      kMaxBitrate / 2 + DataRate::BitsPerSec(1), fixture.CurrentTime());
   EXPECT_FALSE(probes.empty());
 }
 

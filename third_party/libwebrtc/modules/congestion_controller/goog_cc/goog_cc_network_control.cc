@@ -118,8 +118,7 @@ GoogCcNetworkController::GoogCcNetworkController(NetworkControllerConfig config,
           config.stream_based_config.min_total_allocated_bitrate.value_or(
               DataRate::Zero())),
       max_padding_rate_(config.stream_based_config.max_padding_rate.value_or(
-          DataRate::Zero())),
-      max_total_allocated_bitrate_(DataRate::Zero()) {
+          DataRate::Zero())) {
   RTC_DCHECK(config.constraints.at_time.IsFinite());
   ParseFieldTrial(
       {&safe_reset_on_route_change_, &safe_reset_acknowledged_rate_},
@@ -192,8 +191,6 @@ NetworkControlUpdate GoogCcNetworkController::OnProcessInterval(
           *total_bitrate, msg.at_time);
       update.probe_cluster_configs.insert(update.probe_cluster_configs.end(),
                                           probes.begin(), probes.end());
-
-      max_total_allocated_bitrate_ = *total_bitrate;
     }
     initial_config_.reset();
   }
@@ -287,17 +284,12 @@ NetworkControlUpdate GoogCcNetworkController::OnStreamsConfig(
   if (msg.requests_alr_probing) {
     probe_controller_->EnablePeriodicAlrProbing(*msg.requests_alr_probing);
   }
-  if (msg.max_total_allocated_bitrate &&
-      *msg.max_total_allocated_bitrate != max_total_allocated_bitrate_) {
-    if (rate_control_settings_.TriggerProbeOnMaxAllocatedBitrateChange()) {
-      update.probe_cluster_configs =
-          probe_controller_->OnMaxTotalAllocatedBitrate(
-              *msg.max_total_allocated_bitrate, msg.at_time);
-    } else {
-      probe_controller_->SetMaxBitrate(*msg.max_total_allocated_bitrate);
-    }
-    max_total_allocated_bitrate_ = *msg.max_total_allocated_bitrate;
+  if (msg.max_total_allocated_bitrate) {
+    update.probe_cluster_configs =
+        probe_controller_->OnMaxTotalAllocatedBitrate(
+            *msg.max_total_allocated_bitrate, msg.at_time);
   }
+
   bool pacing_changed = false;
   if (msg.pacing_factor && *msg.pacing_factor != pacing_factor_) {
     pacing_factor_ = *msg.pacing_factor;
