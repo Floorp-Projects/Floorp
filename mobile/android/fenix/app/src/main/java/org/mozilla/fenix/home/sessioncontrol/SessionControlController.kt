@@ -41,6 +41,7 @@ import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator
+import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.AppStore
@@ -627,6 +628,14 @@ class DefaultSessionControlController(
             appStore.dispatch(
                 AppAction.ModeChange(Mode.fromBrowsingMode(newMode)),
             )
+
+            if (navController.currentDestination?.id == R.id.searchDialogFragment) {
+                navController.navigate(
+                    BrowserFragmentDirections.actionGlobalSearchDialog(
+                        sessionId = null,
+                    ),
+                )
+            }
         }
     }
 
