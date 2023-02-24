@@ -71,30 +71,6 @@ if (!build_with_chromium) {
     }
   }
 
-  rtc_library("peer_connection_quality_test_params") {
-    visibility = [ "*" ]
-    testonly = true
-    sources = [ "peer_connection_quality_test_params.h" ]
-
-    deps = [
-      "../../../api:callfactory_api",
-      "../../../api:fec_controller_api",
-      "../../../api:field_trials_view",
-      "../../../api:libjingle_peerconnection_api",
-      "../../../api:packet_socket_factory",
-      "../../../api:peer_connection_quality_test_fixture_api",
-      "../../../api/audio:audio_mixer_api",
-      "../../../api/rtc_event_log",
-      "../../../api/task_queue",
-      "../../../api/transport:network_control",
-      "../../../api/video_codecs:video_codecs_api",
-      "../../../modules/audio_processing:api",
-      "../../../p2p:rtc_p2p",
-      "../../../rtc_base",
-      "../../../rtc_base:threading",
-    ]
-  }
-
   rtc_library("encoded_image_data_injector_api") {
     visibility = [ "*" ]
     testonly = true
@@ -333,8 +309,6 @@ if (!build_with_chromium) {
         "test_peer.h",
       ]
       deps = [
-        ":peer_configurer",
-        ":peer_connection_quality_test_params",
         ":stats_provider",
         "../../../api:frame_generator_api",
         "../../../api:function_view",
@@ -343,6 +317,8 @@ if (!build_with_chromium) {
         "../../../api:scoped_refptr",
         "../../../api:sequence_checker",
         "../../../api/task_queue:pending_task_safety_flag",
+        "../../../api/test/pclf:media_quality_test_params",
+        "../../../api/test/pclf:peer_configurer",
         "../../../modules/audio_processing:api",
         "../../../pc:peerconnection_wrapper",
         "../../../rtc_base:logging",
@@ -365,8 +341,6 @@ if (!build_with_chromium) {
       ]
       deps = [
         ":echo_emulation",
-        ":peer_configurer",
-        ":peer_connection_quality_test_params",
         ":quality_analyzing_video_encoder",
         ":test_peer",
         ":video_quality_analyzer_injection_helper",
@@ -376,6 +350,8 @@ if (!build_with_chromium) {
         "../../../api:time_controller",
         "../../../api/rtc_event_log:rtc_event_log_factory",
         "../../../api/task_queue:default_task_queue_factory",
+        "../../../api/test/pclf:media_quality_test_params",
+        "../../../api/test/pclf:peer_configurer",
         "../../../api/transport:field_trial_based_config",
         "../../../api/video_codecs:builtin_video_decoder_factory",
         "../../../api/video_codecs:builtin_video_encoder_factory",
@@ -402,7 +378,6 @@ if (!build_with_chromium) {
         "media/test_video_capturer_video_track_source.h",
       ]
       deps = [
-        ":peer_configurer",
         ":test_peer",
         ":video_quality_analyzer_injection_helper",
         "../..:fileutils",
@@ -412,6 +387,7 @@ if (!build_with_chromium) {
         "../../../api:frame_generator_api",
         "../../../api:media_stream_interface",
         "../../../api:peer_connection_quality_test_fixture_api",
+        "../../../api/test/pclf:peer_configurer",
         "../../../api/video:video_frame",
         "../../../pc:session_description",
         "../../../pc:video_track_source",
@@ -422,31 +398,8 @@ if (!build_with_chromium) {
     rtc_library("peer_configurer") {
       visibility = [ "*" ]
       testonly = true
-      sources = [
-        "peer_configurer.cc",
-        "peer_configurer.h",
-      ]
-      deps = [
-        ":peer_connection_quality_test_params",
-        "../..:fileutils",
-        "../../../api:callfactory_api",
-        "../../../api:create_peer_connection_quality_test_frame_generator",
-        "../../../api:fec_controller_api",
-        "../../../api:packet_socket_factory",
-        "../../../api:peer_connection_quality_test_fixture_api",
-        "../../../api/audio:audio_mixer_api",
-        "../../../api/rtc_event_log",
-        "../../../api/task_queue",
-        "../../../api/transport:network_control",
-        "../../../api/video_codecs:video_codecs_api",
-        "../../../modules/audio_processing:api",
-        "../../../modules/video_coding/svc:scalability_mode_util",
-        "../../../modules/video_coding/svc:scalability_structures",
-        "../../../rtc_base",
-        "../../../rtc_base:macromagic",
-        "../../../rtc_base:threading",
-      ]
-      absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+      sources = [ "peer_configurer.h" ]
+      deps = [ "../../../api/test/pclf:peer_configurer" ]
     }
 
     rtc_library("test_activities_executor") {
@@ -489,8 +442,6 @@ if (!build_with_chromium) {
         ":default_video_quality_analyzer",
         ":media_helper",
         ":metric_metadata_keys",
-        ":peer_configurer",
-        ":peer_connection_quality_test_params",
         ":sdp_changer",
         ":single_process_encoded_image_data_injector",
         ":stats_poller",
@@ -515,6 +466,8 @@ if (!build_with_chromium) {
         "../../../api/task_queue",
         "../../../api/test/metrics:metric",
         "../../../api/test/metrics:metrics_logger",
+        "../../../api/test/pclf:media_quality_test_params",
+        "../../../api/test/pclf:peer_configurer",
         "../../../api/units:time_delta",
         "../../../api/units:timestamp",
         "../../../pc:pc_test_utils",

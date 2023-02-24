@@ -18,13 +18,13 @@
 
 #include "absl/strings/string_view.h"
 #include "api/rtc_event_log/rtc_event_log_factory.h"
+#include "api/test/pclf/media_quality_test_params.h"
+#include "api/test/pclf/peer_configurer.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
 #include "api/test/time_controller.h"
 #include "modules/audio_device/include/test_audio_device.h"
 #include "rtc_base/task_queue.h"
 #include "test/pc/e2e/analyzer/video/video_quality_analyzer_injection_helper.h"
-#include "test/pc/e2e/peer_configurer.h"
-#include "test/pc/e2e/peer_connection_quality_test_params.h"
 #include "test/pc/e2e/test_peer.h"
 
 namespace webrtc {

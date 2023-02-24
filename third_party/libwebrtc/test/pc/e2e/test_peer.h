@@ -22,12 +22,12 @@
 #include "api/set_remote_description_observer_interface.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "api/test/frame_generator_interface.h"
+#include "api/test/pclf/media_quality_test_params.h"
+#include "api/test/pclf/peer_configurer.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
 #include "pc/peer_connection_wrapper.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "test/pc/e2e/peer_configurer.h"
-#include "test/pc/e2e/peer_connection_quality_test_params.h"
 #include "test/pc/e2e/stats_provider.h"
 
 namespace webrtc {

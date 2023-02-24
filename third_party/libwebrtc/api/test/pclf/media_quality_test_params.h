@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2022 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -7,8 +7,8 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef TEST_PC_E2E_PEER_CONNECTION_QUALITY_TEST_PARAMS_H_
-#define TEST_PC_E2E_PEER_CONNECTION_QUALITY_TEST_PARAMS_H_
+#ifndef API_TEST_PCLF_MEDIA_QUALITY_TEST_PARAMS_H_
+#define API_TEST_PCLF_MEDIA_QUALITY_TEST_PARAMS_H_
 
 #include <cstddef>
 #include <memory>
@@ -159,4 +159,4 @@ struct ConfigurableParams {
 }  // namespace webrtc_pc_e2e
 }  // namespace webrtc
 
-#endif  // TEST_PC_E2E_PEER_CONNECTION_QUALITY_TEST_PARAMS_H_
+#endif  // API_TEST_PCLF_MEDIA_QUALITY_TEST_PARAMS_H_
