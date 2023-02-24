@@ -3,15 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { DeferredTask } from "resource://gre/modules/DeferredTask.sys.mjs";
-
 import { TelemetryControllerBase } from "resource://gre/modules/TelemetryControllerBase.sys.mjs";
-
-// Delay before intializing telemetry (ms)
-const TELEMETRY_DELAY =
-  Services.prefs.getIntPref("toolkit.telemetry.initDelay", 60) * 1000;
-// Delay before initializing telemetry if we're testing (ms)
-const TELEMETRY_TEST_DELAY = 1;
 
 export var TelemetryController = Object.freeze({
   /**
@@ -68,16 +60,8 @@ var Impl = {
     }
     Services.telemetry.earlyInit();
 
-    // FIXME: This is a terrible abuse of DeferredTask.
-    let delayedTask = new DeferredTask(
-      () => {
-        Services.telemetry.delayedInit();
-      },
-      testing ? TELEMETRY_TEST_DELAY : TELEMETRY_DELAY,
-      testing ? 0 : undefined
-    );
-
-    delayedTask.arm();
+    let options = testing ? { timeout: 0 } : {};
+    ChromeUtils.idleDispatch(() => Services.telemetry.delayedInit(), options);
   },
 
   /**
