@@ -665,6 +665,8 @@ void SetOutboundRTPStreamStatsFromMediaSenderInfo(
   outbound_stats->ssrc = media_sender_info.ssrc();
   outbound_stats->packets_sent =
       static_cast<uint32_t>(media_sender_info.packets_sent);
+  outbound_stats->total_packet_send_delay =
+      media_sender_info.total_packet_send_delay.seconds<double>();
   outbound_stats->retransmitted_packets_sent =
       media_sender_info.retransmitted_packets_sent;
   outbound_stats->bytes_sent =
@@ -674,7 +676,6 @@ void SetOutboundRTPStreamStatsFromMediaSenderInfo(
   outbound_stats->retransmitted_bytes_sent =
       media_sender_info.retransmitted_bytes_sent;
   outbound_stats->nack_count = media_sender_info.nacks_rcvd;
-
   if (media_sender_info.active.has_value()) {
     outbound_stats->active = *media_sender_info.active;
   }
@@ -764,8 +765,6 @@ void SetOutboundRTPStreamStatsFromVideoSenderInfo(
   }
   outbound_video->frames_sent = video_sender_info.frames_sent;
   outbound_video->huge_frames_sent = video_sender_info.huge_frames_sent;
-  outbound_video->total_packet_send_delay =
-      video_sender_info.total_packet_send_delay.seconds<double>();
   outbound_video->quality_limitation_reason =
       QualityLimitationReasonToRTCQualityLimitationReason(
           video_sender_info.quality_limitation_reason);
