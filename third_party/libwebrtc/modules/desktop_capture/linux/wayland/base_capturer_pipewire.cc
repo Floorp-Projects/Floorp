@@ -42,6 +42,8 @@ BaseCapturerPipeWire::BaseCapturerPipeWire(
       is_screencast_portal_(false),
       portal_(std::move(portal)) {
   source_id_ = RestoreTokenManager::GetInstance().GetUnusedId();
+  options_.screencast_stream()->SetUseDamageRegion(
+      options_.pipewire_use_damage_region());
 }
 
 BaseCapturerPipeWire::~BaseCapturerPipeWire() {
