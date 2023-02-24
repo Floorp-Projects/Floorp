@@ -498,7 +498,9 @@ add_task(async function test_mobile_promo_pref() {
     });
 
     // reset the dismissed pref, which should case the promo to get shown
-    await SpecialPowers.popPrefEnv();
+    await SpecialPowers.pushPrefEnv({
+      set: [[MOBILE_PROMO_DISMISSED_PREF, false]],
+    });
     await waitForElementVisible(
       browser,
       "#tab-pickup-container > .promo-box",
@@ -760,6 +762,5 @@ add_task(async function test_close_device_connected_tab() {
 
   // cleanup time
   await tearDown(sandbox);
-  await SpecialPowers.popPrefEnv();
   await BrowserTestUtils.closeWindow(win);
 });

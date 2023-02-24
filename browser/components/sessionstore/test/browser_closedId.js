@@ -42,6 +42,7 @@ add_task(async function test_closedId_order() {
             },
             closedId: 0,
             closedAt: Date.now() - 100,
+            title: "Example",
           },
           {
             state: {
@@ -54,6 +55,7 @@ add_task(async function test_closedId_order() {
             },
             closedId: 1,
             closedAt: Date.now() - 50,
+            title: "about:mozilla",
           },
           {
             state: {
@@ -66,6 +68,7 @@ add_task(async function test_closedId_order() {
             },
             closedId: 2,
             closedAt: Date.now(),
+            title: "Example",
           },
         ],
       },
