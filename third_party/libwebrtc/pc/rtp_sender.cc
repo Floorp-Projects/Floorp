@@ -697,9 +697,21 @@ rtc::scoped_refptr<DtmfSenderInterface> VideoRtpSender::GetDtmfSender() const {
 RTCError VideoRtpSender::GenerateKeyFrame(
     const std::vector<std::string>& rids) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  // TODO(crbug.com/1354101): check that rids are a subset of this senders rids
-  // (or empty).
   if (video_media_channel() && ssrc_ && !stopped_) {
+    auto parameters = GetParameters();
+    for (const auto& rid : rids) {
+      if (rid.empty()) {
+        LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
+                             "Attempted to specify an empty rid.");
+      }
+      if (!absl::c_any_of(parameters.encodings,
+                          [&rid](const RtpEncodingParameters& parameters) {
+                            return parameters.rid == rid;
+                          })) {
+        LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
+                             "Attempted to specify a rid not configured.");
+      }
+    }
     worker_thread_->PostTask([&, rids] {
       video_media_channel()->GenerateSendKeyFrame(ssrc_, rids);
     });
