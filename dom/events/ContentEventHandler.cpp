@@ -1710,8 +1710,6 @@ ContentEventHandler::GetLineBreakerRectBefore(nsIFrame* aFrame) {
   // height are 0 in quirks mode if it's not an empty line.  So, we cannot
   // use frame rect information even if it's a <br> frame.
 
-  FrameRelativeRect result(aFrame);
-
   RefPtr<nsFontMetrics> fontMetrics =
       nsLayoutUtils::GetInflatedFontMetricsForFrame(frameForFontMetrics);
   if (NS_WARN_IF(!fontMetrics)) {
@@ -1719,18 +1717,10 @@ ContentEventHandler::GetLineBreakerRectBefore(nsIFrame* aFrame) {
   }
 
   const WritingMode kWritingMode = frameForFontMetrics->GetWritingMode();
-  nscoord baseline = aFrame->GetCaretBaseline();
-  if (kWritingMode.IsVertical()) {
-    if (kWritingMode.IsLineInverted()) {
-      result.mRect.x = baseline - fontMetrics->MaxDescent();
-    } else {
-      result.mRect.x = baseline - fontMetrics->MaxAscent();
-    }
-    result.mRect.width = fontMetrics->MaxHeight();
-  } else {
-    result.mRect.y = baseline - fontMetrics->MaxAscent();
-    result.mRect.height = fontMetrics->MaxHeight();
-  }
+
+  auto caretBlockAxisMetrics =
+      aFrame->GetCaretBlockAxisMetrics(kWritingMode, *fontMetrics);
+  nscoord inlineOffset = 0;
 
   // If aFrame isn't a <br> frame, caret should be at outside of it because
   // the line break is before its open tag.  For example, case of
@@ -1747,20 +1737,26 @@ ContentEventHandler::GetLineBreakerRectBefore(nsIFrame* aFrame) {
   // However, this is a hack for unusual scenario.  This hack shouldn't be
   // used as far as possible.
   if (!aFrame->IsBrFrame()) {
-    if (kWritingMode.IsVertical()) {
-      if (kWritingMode.IsLineInverted()) {
-        // above of top-left corner of aFrame.
-        result.mRect.x = 0;
-      } else {
-        // above of top-right corner of aFrame.
-        result.mRect.x = aFrame->GetRect().XMost() - result.mRect.width;
-      }
-      result.mRect.y = -aFrame->PresContext()->AppUnitsPerDevPixel();
+    if (kWritingMode.IsVertical() && !kWritingMode.IsLineInverted()) {
+      // above of top-right corner of aFrame.
+      caretBlockAxisMetrics.mOffset =
+          aFrame->GetRect().XMost() - caretBlockAxisMetrics.mExtent;
     } else {
-      // left of top-left corner of aFrame.
-      result.mRect.x = -aFrame->PresContext()->AppUnitsPerDevPixel();
-      result.mRect.y = 0;
+      // above (For vertical) or left (For horizontal) of top-left corner of
+      // aFrame.
+      caretBlockAxisMetrics.mOffset = 0;
     }
+    inlineOffset = -aFrame->PresContext()->AppUnitsPerDevPixel();
+  }
+  FrameRelativeRect result(aFrame);
+  if (kWritingMode.IsVertical()) {
+    result.mRect.x = caretBlockAxisMetrics.mOffset;
+    result.mRect.y = inlineOffset;
+    result.mRect.width = caretBlockAxisMetrics.mExtent;
+  } else {
+    result.mRect.x = inlineOffset;
+    result.mRect.y = caretBlockAxisMetrics.mOffset;
+    result.mRect.height = caretBlockAxisMetrics.mExtent;
   }
   return result;
 }

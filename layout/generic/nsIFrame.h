@@ -1542,16 +1542,17 @@ class nsIFrame : public nsQueryFrame {
     return Nothing{};
   }
 
+  struct CaretBlockAxisMetrics {
+    nscoord mOffset = 0;
+    nscoord mExtent = 0;
+  };
   /**
-   * Get the position of the baseline on which the caret needs to be placed,
-   * relative to the top of the frame.  This is mostly needed for frames
-   * which return a baseline from GetBaseline which is not useful for
-   * caret positioning.
+   * Get the offset (Block start of the caret) and extent of the caret in this
+   * frame. The returned offset is corrected for vertical & line-inverted
+   * writing modes.
    */
-  virtual nscoord GetCaretBaseline() const {
-    return GetLogicalBaseline(GetWritingMode());
-  }
-
+  CaretBlockAxisMetrics GetCaretBlockAxisMetrics(mozilla::WritingMode,
+                                                 const nsFontMetrics&) const;
   // Gets the page-name value to be used for the page that contains this frame
   // during paginated reflow.
   const nsAtom* ComputePageValue() const MOZ_NONNULL_RETURN;
@@ -1584,6 +1585,16 @@ class nsIFrame : public nsQueryFrame {
   NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(VisibilityStateProperty, uint32_t);
 
  protected:
+  /**
+   * Get the position of the baseline on which the caret needs to be placed,
+   * relative to the top of the frame.  This is mostly needed for frames
+   * which return a baseline from GetBaseline which is not useful for
+   * caret positioning.
+   */
+  virtual nscoord GetCaretBaseline() const {
+    return GetLogicalBaseline(GetWritingMode());
+  }
+
   /**
    * Subclasses can call this method to enable visibility tracking for this
    * frame.
