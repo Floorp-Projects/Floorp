@@ -744,18 +744,15 @@ JSAtom* js::AtomizeString(JSContext* cx, JSString* str) {
   JS::Latin1Char flattenRope[StringToAtomCache::MinStringLength];
   mozilla::Maybe<StringToAtomCache::AtomTableKey> key;
   size_t length = str->length();
-  if (!str->isLinear() && length < StringToAtomCache::MinStringLength &&
+  if (str->isRope() && length < StringToAtomCache::MinStringLength &&
       str->hasLatin1Chars()) {
     StringSegmentRange<StringToAtomCache::MinStringLength> iter(cx);
     if (iter.init(str)) {
-      JS::AutoCheckCannotGC nogc;
       size_t index = 0;
       do {
         const JSLinearString* s = iter.front();
-        size_t len = s->length();
-        const JS::Latin1Char* latinChars = s->latin1Chars(nogc);
-        memcpy(flattenRope + index, latinChars, len);
-        index += len;
+        CopyChars(flattenRope + index, *s);
+        index += s->length();
       } while (iter.popFront() && !iter.empty());
 
       if (JSAtom* atom = cx->caches().stringToAtomCache.lookupWithRopeChars(
