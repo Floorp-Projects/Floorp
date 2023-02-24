@@ -54,8 +54,6 @@ bool SandboxBroker::sRunningFromNetworkDrive = false;
 // Cached special directories used for adding policy rules.
 static UniquePtr<nsString> sBinDir;
 static UniquePtr<nsString> sProfileDir;
-static UniquePtr<nsString> sContentTempDir;
-static UniquePtr<nsString> sRoamingAppDataDir;
 static UniquePtr<nsString> sLocalAppDataDir;
 #ifdef ENABLE_SYSTEM_EXTENSION_DIRS
 static UniquePtr<nsString> sUserExtensionsDir;
@@ -160,9 +158,6 @@ void SandboxBroker::GeckoDependentInitialize() {
 
     CacheDirAndAutoClear(dirSvc, NS_GRE_DIR, &sBinDir);
     CacheDirAndAutoClear(dirSvc, NS_APP_USER_PROFILE_50_DIR, &sProfileDir);
-    CacheDirAndAutoClear(dirSvc, NS_APP_CONTENT_PROCESS_TEMP_DIR,
-                         &sContentTempDir);
-    CacheDirAndAutoClear(dirSvc, NS_WIN_APPDATA_DIR, &sRoamingAppDataDir);
     CacheDirAndAutoClear(dirSvc, NS_WIN_LOCAL_APPDATA_DIR, &sLocalAppDataDir);
 #ifdef ENABLE_SYSTEM_EXTENSION_DIRS
     CacheDirAndAutoClear(dirSvc, XRE_USER_SYS_EXTENSION_DIR,
@@ -762,13 +757,6 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
   result = mPolicy->SetDelayedProcessMitigations(mitigations);
   MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
                      "Invalid flags for SetDelayedProcessMitigations.");
-
-  // Add rule to allow read / write access to content temp dir. If for some
-  // reason the addition of the content temp failed, this will give write access
-  // to the normal TEMP dir. However such failures should be pretty rare and
-  // without this printing will not currently work.
-  AddCachedDirRule(mPolicy, sandbox::TargetPolicy::FILES_ALLOW_ANY,
-                   sContentTempDir, u"\\*"_ns);
 
   // We still have edge cases where the child at low integrity can't read some
   // files, so add a rule to allow read access to everything when required.
