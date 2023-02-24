@@ -87,24 +87,56 @@ FontFaceSetImpl::~FontFaceSetImpl() {
   Destroy();
 }
 
+void FontFaceSetImpl::DestroyLoaders() {
+  mMutex.AssertCurrentThreadIn();
+  if (mLoaders.IsEmpty()) {
+    return;
+  }
+  if (NS_IsMainThread()) {
+    for (const auto& key : mLoaders.Keys()) {
+      key->Cancel();
+    }
+    mLoaders.Clear();
+    return;
+  }
+
+  class DestroyLoadersRunnable final : public Runnable {
+   public:
+    explicit DestroyLoadersRunnable(FontFaceSetImpl* aFontFaceSet)
+        : Runnable("FontFaceSetImpl::DestroyLoaders"),
+          mFontFaceSet(aFontFaceSet) {}
+
+   protected:
+    ~DestroyLoadersRunnable() override = default;
+
+    NS_IMETHOD Run() override {
+      RecursiveMutexAutoLock lock(mFontFaceSet->mMutex);
+      mFontFaceSet->DestroyLoaders();
+      return NS_OK;
+    }
+
+    // We need to save a reference to the FontFaceSetImpl because the
+    // loaders contain a non-owning reference to it.
+    RefPtr<FontFaceSetImpl> mFontFaceSet;
+  };
+
+  auto runnable = MakeRefPtr<DestroyLoadersRunnable>(this);
+  NS_DispatchToMainThread(runnable);
+}
+
 void FontFaceSetImpl::Destroy() {
   nsTArray<FontFaceRecord> nonRuleFaces;
   nsRefPtrHashtable<nsCStringHashKey, gfxUserFontFamily> fontFamilies;
 
   {
     RecursiveMutexAutoLock lock(mMutex);
-    for (const auto& key : mLoaders.Keys()) {
-      key->Cancel();
-    }
-
-    mLoaders.Clear();
+    DestroyLoaders();
     nonRuleFaces = std::move(mNonRuleFaces);
     fontFamilies = std::move(mFontFamilies);
     mOwner = nullptr;
   }
 
-  gfxPlatformFontList* fp = gfxPlatformFontList::PlatformFontList();
-  if (fp) {
+  if (gfxPlatformFontList* fp = gfxPlatformFontList::PlatformFontList()) {
     fp->RemoveUserFontSet(this);
   }
 }
