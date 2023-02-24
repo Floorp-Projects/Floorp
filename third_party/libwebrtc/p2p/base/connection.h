@@ -442,7 +442,8 @@ class Connection : public CandidatePairInterface {
   IceCandidatePairState state_ RTC_GUARDED_BY(network_thread_);
   // Time duration to switch from receiving to not receiving.
   absl::optional<int> receiving_timeout_ RTC_GUARDED_BY(network_thread_);
-  int64_t time_created_ms_ RTC_GUARDED_BY(network_thread_);
+  const int64_t time_created_ms_ RTC_GUARDED_BY(network_thread_);
+  const int64_t delta_internal_unix_epoch_ms_ RTC_GUARDED_BY(network_thread_);
   int num_pings_sent_ RTC_GUARDED_BY(network_thread_) = 0;
 
   absl::optional<webrtc::IceCandidatePairDescription> log_description_

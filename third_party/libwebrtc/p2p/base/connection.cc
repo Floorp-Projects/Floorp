@@ -235,6 +235,7 @@ Connection::Connection(rtc::WeakPtr<Port> port,
       last_ping_response_received_(0),
       state_(IceCandidatePairState::WAITING),
       time_created_ms_(rtc::TimeMillis()),
+      delta_internal_unix_epoch_ms_(rtc::TimeUTCMillis() - rtc::TimeMillis()),
       field_trials_(&kDefaultFieldTrials),
       rtt_estimate_(DEFAULT_RTT_ESTIMATE_HALF_TIME_MS) {
   RTC_DCHECK_RUN_ON(network_thread_);
@@ -1526,6 +1527,14 @@ ConnectionInfo Connection::stats() {
   stats_.total_round_trip_time_ms = total_round_trip_time_ms_;
   stats_.current_round_trip_time_ms = current_round_trip_time_ms_;
   stats_.remote_candidate = remote_candidate();
+  if (last_data_received_ > 0) {
+    stats_.last_data_received = webrtc::Timestamp::Millis(
+        last_data_received_ + delta_internal_unix_epoch_ms_);
+  }
+  if (last_send_data_ > 0) {
+    stats_.last_data_sent = webrtc::Timestamp::Millis(
+        last_send_data_ + delta_internal_unix_epoch_ms_);
+  }
   return stats_;
 }
 

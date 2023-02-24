@@ -185,7 +185,9 @@ WEBRTC_RTCSTATS_IMPL(RTCIceCandidatePairStats, RTCStats, "candidate-pair",
     &responses_sent,
     &consent_requests_sent,
     &packets_discarded_on_send,
-    &bytes_discarded_on_send)
+    &bytes_discarded_on_send,
+    &last_packet_received_timestamp,
+    &last_packet_sent_timestamp)
 // clang-format on
 
 RTCIceCandidatePairStats::RTCIceCandidatePairStats(const std::string& id,
@@ -216,7 +218,9 @@ RTCIceCandidatePairStats::RTCIceCandidatePairStats(std::string&& id,
       responses_sent("responsesSent"),
       consent_requests_sent("consentRequestsSent"),
       packets_discarded_on_send("packetsDiscardedOnSend"),
-      bytes_discarded_on_send("bytesDiscardedOnSend") {}
+      bytes_discarded_on_send("bytesDiscardedOnSend"),
+      last_packet_received_timestamp("lastPacketReceivedTimestamp"),
+      last_packet_sent_timestamp("lastPacketSentTimestamp") {}
 
 RTCIceCandidatePairStats::RTCIceCandidatePairStats(
     const RTCIceCandidatePairStats& other) = default;

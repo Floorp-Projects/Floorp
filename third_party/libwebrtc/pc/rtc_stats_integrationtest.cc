@@ -516,6 +516,8 @@ class RTCStatsReportVerifier {
     verifier.TestMemberIsNonNegative<uint64_t>(candidate_pair.responses_sent);
     verifier.TestMemberIsNonNegative<uint64_t>(
         candidate_pair.consent_requests_sent);
+    verifier.TestMemberIsDefined(candidate_pair.last_packet_received_timestamp);
+    verifier.TestMemberIsDefined(candidate_pair.last_packet_sent_timestamp);
 
     return verifier.ExpectAllMembersSuccessfullyTested();
   }

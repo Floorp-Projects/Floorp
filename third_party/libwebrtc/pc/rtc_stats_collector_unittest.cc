@@ -1940,6 +1940,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidatePairStats) {
   connection_info.state = cricket::IceCandidatePairState::IN_PROGRESS;
   connection_info.priority = 5555;
   connection_info.nominated = false;
+  connection_info.last_data_received = Timestamp::Millis(2500);
+  connection_info.last_data_sent = Timestamp::Millis(5200);
 
   cricket::TransportChannelStats transport_channel_stats;
   transport_channel_stats.component = cricket::ICE_CANDIDATE_COMPONENT_RTP;
@@ -1974,6 +1976,9 @@ TEST_F(RTCStatsCollectorTest, CollectRTCIceCandidatePairStats) {
   expected_pair.responses_received = 4321;
   expected_pair.responses_sent = 1000;
   expected_pair.consent_requests_sent = (2222 - 2000);
+  expected_pair.last_packet_received_timestamp = 2500;
+  expected_pair.last_packet_sent_timestamp = 5200;
+
   // `expected_pair.current_round_trip_time` should be undefined because the
   // current RTT is not set.
   // `expected_pair.available_[outgoing/incoming]_bitrate` should be undefined
