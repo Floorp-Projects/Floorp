@@ -6,6 +6,10 @@
 #include "nsIClassInfoImpl.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
+#include "nsURLHelper.h"
+
+#include "mozilla/ipc/URIParams.h"
+
 namespace mozilla {
 namespace net {
 
