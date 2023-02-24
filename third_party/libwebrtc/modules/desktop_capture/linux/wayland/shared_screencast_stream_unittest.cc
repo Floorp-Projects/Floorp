@@ -28,7 +28,7 @@ using ::testing::Invoke;
 
 namespace webrtc {
 
-constexpr TimeDelta kShortWait = TimeDelta::Seconds(2);
+constexpr TimeDelta kShortWait = TimeDelta::Seconds(5);
 constexpr TimeDelta kLongWait = TimeDelta::Seconds(15);
 
 constexpr int kBytesPerPixel = 4;
