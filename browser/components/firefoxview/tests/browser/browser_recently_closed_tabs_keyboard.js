@@ -73,7 +73,6 @@ add_task(async function test_keyboard_navigation() {
     "isTabSyncSetupComplete"
   );
   setupCompleteStub.returns(true);
-
   await open_then_close(URLs[0]);
 
   await withFirefoxView({ win: window }, async browser => {
@@ -84,16 +83,19 @@ add_task(async function test_keyboard_navigation() {
     );
 
     assertPreconditions(document, summary);
+
     tab();
 
-    ok(
-      list[0].querySelector(".closed-tab-li-main").matches(":focus"),
+    Assert.equal(
+      list[0].querySelector(".closed-tab-li-main"),
+      document.activeElement,
       "The first link is focused"
     );
 
     tab(true);
-    ok(
-      summary.matches(":focus"),
+    Assert.equal(
+      summary,
+      document.activeElement,
       "The container is focused when using shift+tab in the list"
     );
   });
@@ -117,26 +119,30 @@ add_task(async function test_keyboard_navigation() {
 
     tab();
 
-    ok(
-      list[0].querySelector(".closed-tab-li-main").matches(":focus"),
+    Assert.equal(
+      list[0].querySelector(".closed-tab-li-main"),
+      document.activeElement,
       "The first link is focused"
     );
     tab();
     tab();
-    ok(
-      list[1].querySelector(".closed-tab-li-main").matches(":focus"),
+    Assert.equal(
+      list[1].querySelector(".closed-tab-li-main"),
+      document.activeElement,
       "The second link is focused"
     );
     tab(true);
     tab(true);
-    ok(
-      list[0].querySelector(".closed-tab-li-main").matches(":focus"),
+    Assert.equal(
+      list[0].querySelector(".closed-tab-li-main"),
+      document.activeElement,
       "The first link is focused again"
     );
 
     tab(true);
-    ok(
-      summary.matches(":focus"),
+    Assert.equal(
+      summary,
+      document.activeElement,
       "The container is focused when using shift+tab in the list"
     );
   });
@@ -162,32 +168,37 @@ add_task(async function test_keyboard_navigation() {
 
     tab();
 
-    ok(
-      list[0].querySelector(".closed-tab-li-main").matches(":focus"),
+    Assert.equal(
+      list[0].querySelector(".closed-tab-li-main"),
+      document.activeElement,
       "The first link is focused"
     );
     tab();
     tab();
-    ok(
-      list[1].querySelector(".closed-tab-li-main").matches(":focus"),
+    Assert.equal(
+      list[1].querySelector(".closed-tab-li-main"),
+      document.activeElement,
       "The second link is focused"
     );
     tab();
     tab();
-    ok(
-      list[2].querySelector(".closed-tab-li-main").matches(":focus"),
+    Assert.equal(
+      list[2].querySelector(".closed-tab-li-main"),
+      document.activeElement,
       "The third link is focused"
     );
     tab(true);
     tab(true);
-    ok(
-      list[1].querySelector(".closed-tab-li-main").matches(":focus"),
+    Assert.equal(
+      list[1].querySelector(".closed-tab-li-main"),
+      document.activeElement,
       "The second link is focused"
     );
     tab(true);
     tab(true);
-    ok(
-      list[0].querySelector(".closed-tab-li-main").matches(":focus"),
+    Assert.equal(
+      list[0].querySelector(".closed-tab-li-main"),
+      document.activeElement,
       "The first link is focused"
     );
   });
@@ -218,7 +229,7 @@ add_task(async function test_dismiss_tab_keyboard() {
     await dismiss_tab_keyboard(tabsList.children[0], document);
 
     Assert.equal(
-      tabsList.children[0].dataset.targetURI,
+      tabsList.children[0].dataset.targeturi,
       URLs[1],
       `First recently closed item should be ${URLs[1]}`
     );
@@ -232,7 +243,7 @@ add_task(async function test_dismiss_tab_keyboard() {
     await dismiss_tab_keyboard(tabsList.children[0], document);
 
     Assert.equal(
-      tabsList.children[0].dataset.targetURI,
+      tabsList.children[0].dataset.targeturi,
       URLs[0],
       `First recently closed item should be ${URLs[0]}`
     );
@@ -245,11 +256,14 @@ add_task(async function test_dismiss_tab_keyboard() {
 
     await dismiss_tab_keyboard(tabsList.children[0], document);
 
-    testVisibility(browser, {
-      expectedVisible: {
-        "#recently-closed-tabs-placeholder": true,
-        "ol.closed-tabs-list": false,
-      },
-    });
+    Assert.ok(
+      document.getElementById("recently-closed-tabs-placeholder"),
+      "The empty message is displayed."
+    );
+
+    Assert.ok(
+      !document.querySelector("ol.closed-tabs-list"),
+      "The recently clsoed tabs list is not displayed."
+    );
   });
 });

@@ -71,6 +71,10 @@ async function withFirefoxView(
     // reset internal state so we aren't reacting to whatever state the last invocation left behind
     TabsSetupFlowManager.resetInternalState();
   }
+  // Setting this pref allows the test to run as expected with a keyboard on MacOS
+  await win.SpecialPowers.pushPrefEnv({
+    set: [["accessibility.tabfocus", 7]],
+  });
   let tab = await openFirefoxViewTab(win);
   let originalWindow = tab.ownerGlobal;
   let result = await taskFn(tab.linkedBrowser);
@@ -87,6 +91,7 @@ async function withFirefoxView(
         "removeTab would have been called"
     );
   }
+  await win.SpecialPowers.popPrefEnv();
   if (shouldCloseWin) {
     await BrowserTestUtils.closeWindow(win);
   }

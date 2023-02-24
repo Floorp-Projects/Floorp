@@ -102,7 +102,11 @@ export class MozLitElement extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    if (!this._l10nRootConnected && document.l10n) {
+    if (
+      this.renderRoot == this.shadowRoot &&
+      !this._l10nRootConnected &&
+      document.l10n
+    ) {
       document.l10n.connectRoot(this.renderRoot);
       this._l10nRootConnected = true;
     }
