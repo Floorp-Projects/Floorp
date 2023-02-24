@@ -115,7 +115,6 @@ const char MediaConstraints::kUseRtpMux[] = "googUseRtpMUX";
 // Below constraints should be used during PeerConnection construction.
 // Google-specific constraint keys.
 const char MediaConstraints::kEnableDscp[] = "googDscp";
-const char MediaConstraints::kEnableIPv6[] = "googIPv6";
 const char MediaConstraints::kEnableVideoSuspendBelowMinBitrate[] =
     "googSuspendBelowMinBitrate";
 const char MediaConstraints::kCombinedAudioVideoBwe[] =
@@ -151,11 +150,6 @@ void CopyConstraintsIntoRtcConfiguration(
     return;
   }
 
-  bool enable_ipv6;
-  if (FindConstraint(constraints, MediaConstraints::kEnableIPv6, &enable_ipv6,
-                     nullptr)) {
-    configuration->disable_ipv6 = !enable_ipv6;
-  }
   FindConstraint(constraints, MediaConstraints::kEnableDscp,
                  &configuration->media_config.enable_dscp, nullptr);
   FindConstraint(constraints, MediaConstraints::kCpuOveruseDetection,
