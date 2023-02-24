@@ -1056,9 +1056,16 @@ this.downloads = class extends ExtensionAPIPersistent {
             }
             return OS.File.remove(item.filename, { ignoreAbsent: false }).catch(
               err => {
-                return Promise.reject({
-                  message: `Could not remove download id ${item.id} because the file doesn't exist`,
-                });
+                if (err.becauseNoSuchFile) {
+                  return Promise.reject({
+                    message: `Could not remove download id ${item.id} because the file doesn't exist`,
+                  });
+                }
+                // Unexpected other error. Throw the original error, so that it
+                // can bubble up to the global browser console, but keep it
+                // sanitized (i.e. not wrapped in ExtensionError) to avoid
+                // inadvertent disclosure of potentially sensitive information.
+                throw err;
               }
             );
           });
