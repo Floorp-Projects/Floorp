@@ -274,7 +274,7 @@ TEST_F(FakeNetworkPipeTest, ChangingCapacityWithPacketsInPipeTest) {
   std::unique_ptr<FakeNetworkPipe> pipe(
       new FakeNetworkPipe(&fake_clock_, std::move(network), &receiver));
 
-  // Add 20 packets of 1000 bytes, = 80 kb.
+  // Add 20 packets of 1000 bytes, = 160 kb.
   const int kNumPackets = 20;
   const int kPacketSize = 1000;
   SendPackets(pipe.get(), kNumPackets, kPacketSize);
