@@ -5610,11 +5610,11 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
         userMovedMouse = true;
       }
 
-      result =
-          DispatchMouseEvent(eMouseMove, wParam, lParam, false,
-                             MouseButton::ePrimary, MOUSE_INPUT_SOURCE(),
-                             mPointerEvents.GetCachedPointerInfo(msg, wParam));
       if (userMovedMouse) {
+        result = DispatchMouseEvent(
+            eMouseMove, wParam, lParam, false, MouseButton::ePrimary,
+            MOUSE_INPUT_SOURCE(),
+            mPointerEvents.GetCachedPointerInfo(msg, wParam));
         DispatchPendingEvents();
       }
     } break;
