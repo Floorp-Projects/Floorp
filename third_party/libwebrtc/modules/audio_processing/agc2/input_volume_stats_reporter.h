@@ -16,51 +16,49 @@
 
 namespace webrtc {
 
-// Analog gain statistics calculator. Computes aggregate stats based on the
-// framewise mic levels processed in `UpdateStatistics()`. Periodically logs the
-// statistics into a histogram.
-class AnalogGainStatsReporter {
+// Input volume statistics calculator. Computes aggregate stats based on the
+// framewise input volume observed by `UpdateStatistics()`. Periodically logs
+// the statistics into a histogram.
+class InputVolumeStatsReporter {
  public:
-  AnalogGainStatsReporter();
-  AnalogGainStatsReporter(const AnalogGainStatsReporter&) = delete;
-  AnalogGainStatsReporter operator=(const AnalogGainStatsReporter&) = delete;
-  ~AnalogGainStatsReporter();
+  InputVolumeStatsReporter();
+  InputVolumeStatsReporter(const InputVolumeStatsReporter&) = delete;
+  InputVolumeStatsReporter operator=(const InputVolumeStatsReporter&) = delete;
+  ~InputVolumeStatsReporter();
 
-  // Updates the stats based on the `analog_mic_level`. Periodically logs the
-  // stats into a histogram.
-  void UpdateStatistics(int analog_mic_level);
+  // Updates the stats based on `input_volume`. Periodically logs the stats into
+  // a histogram.
+  void UpdateStatistics(int input_volume);
 
  private:
-  FRIEND_TEST_ALL_PREFIXES(AnalogGainStatsReporterTest,
-                           CheckLevelUpdateStatsForEmptyStats);
-  FRIEND_TEST_ALL_PREFIXES(AnalogGainStatsReporterTest,
-                           CheckLevelUpdateStatsAfterNoGainChange);
-  FRIEND_TEST_ALL_PREFIXES(AnalogGainStatsReporterTest,
-                           CheckLevelUpdateStatsAfterGainIncrease);
-  FRIEND_TEST_ALL_PREFIXES(AnalogGainStatsReporterTest,
-                           CheckLevelUpdateStatsAfterGainDecrease);
-  FRIEND_TEST_ALL_PREFIXES(AnalogGainStatsReporterTest,
-                           CheckLevelUpdateStatsAfterReset);
+  FRIEND_TEST_ALL_PREFIXES(InputVolumeStatsReporterTest,
+                           CheckVolumeUpdateStatsForEmptyStats);
+  FRIEND_TEST_ALL_PREFIXES(InputVolumeStatsReporterTest,
+                           CheckVolumeUpdateStatsAfterNoVolumeChange);
+  FRIEND_TEST_ALL_PREFIXES(InputVolumeStatsReporterTest,
+                           CheckVolumeUpdateStatsAfterVolumeIncrease);
+  FRIEND_TEST_ALL_PREFIXES(InputVolumeStatsReporterTest,
+                           CheckVolumeUpdateStatsAfterVolumeDecrease);
+  FRIEND_TEST_ALL_PREFIXES(InputVolumeStatsReporterTest,
+                           CheckVolumeUpdateStatsAfterReset);
 
-  // Stores analog gain update stats to enable calculation of update rate and
-  // average update separately for gain increases and decreases.
-  struct LevelUpdateStats {
+  // Stores input volume update stats to enable calculation of update rate and
+  // average update separately for volume increases and decreases.
+  struct VolumeUpdateStats {
     int num_decreases = 0;
     int num_increases = 0;
     int sum_decreases = 0;
     int sum_increases = 0;
-  } level_update_stats_;
+  } volume_update_stats_;
 
   // Returns a copy of the stored statistics. Use only for testing.
-  const LevelUpdateStats level_update_stats() const {
-    return level_update_stats_;
-  }
+  VolumeUpdateStats volume_update_stats() const { return volume_update_stats_; }
 
   // Computes aggregate stat and logs them into a histogram.
-  void LogLevelUpdateStats() const;
+  void LogVolumeUpdateStats() const;
 
-  int log_level_update_stats_counter_ = 0;
-  absl::optional<int> previous_analog_mic_level_ = absl::nullopt;
+  int log_volume_update_stats_counter_ = 0;
+  absl::optional<int> previous_input_volume_ = absl::nullopt;
 };
 }  // namespace webrtc
 

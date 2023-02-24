@@ -20,9 +20,9 @@ namespace webrtc {
 namespace {
 
 constexpr int kFramesIn60Seconds = 6000;
-constexpr int kMinGain = 0;
-constexpr int kMaxGain = 255;
-constexpr int kMaxUpdate = kMaxGain - kMinGain;
+constexpr int kMinInputVolume = 0;
+constexpr int kMaxInputVolume = 255;
+constexpr int kMaxUpdate = kMaxInputVolume - kMinInputVolume;
 
 float ComputeAverageUpdate(int sum_updates, int num_updates) {
   RTC_DCHECK_GE(sum_updates, 0);
@@ -37,59 +37,50 @@ float ComputeAverageUpdate(int sum_updates, int num_updates) {
 }
 }  // namespace
 
-AnalogGainStatsReporter::AnalogGainStatsReporter() = default;
+InputVolumeStatsReporter::InputVolumeStatsReporter() = default;
 
-AnalogGainStatsReporter::~AnalogGainStatsReporter() = default;
+InputVolumeStatsReporter::~InputVolumeStatsReporter() = default;
 
-void AnalogGainStatsReporter::UpdateStatistics(int analog_mic_level) {
-  RTC_DCHECK_GE(analog_mic_level, kMinGain);
-  RTC_DCHECK_LE(analog_mic_level, kMaxGain);
-  if (previous_analog_mic_level_.has_value() &&
-      analog_mic_level != previous_analog_mic_level_.value()) {
-    const int level_change =
-        analog_mic_level - previous_analog_mic_level_.value();
-    if (level_change < 0) {
-      ++level_update_stats_.num_decreases;
-      level_update_stats_.sum_decreases -= level_change;
+void InputVolumeStatsReporter::UpdateStatistics(int input_volume) {
+  RTC_DCHECK_GE(input_volume, kMinInputVolume);
+  RTC_DCHECK_LE(input_volume, kMaxInputVolume);
+  if (previous_input_volume_.has_value() &&
+      input_volume != previous_input_volume_.value()) {
+    const int volume_change = input_volume - previous_input_volume_.value();
+    if (volume_change < 0) {
+      ++volume_update_stats_.num_decreases;
+      volume_update_stats_.sum_decreases -= volume_change;
     } else {
-      ++level_update_stats_.num_increases;
-      level_update_stats_.sum_increases += level_change;
+      ++volume_update_stats_.num_increases;
+      volume_update_stats_.sum_increases += volume_change;
     }
   }
-  // Periodically log analog gain change metrics.
-  if (++log_level_update_stats_counter_ >= kFramesIn60Seconds) {
-    LogLevelUpdateStats();
-    level_update_stats_ = {};
-    log_level_update_stats_counter_ = 0;
+  // Periodically log input volume change metrics.
+  if (++log_volume_update_stats_counter_ >= kFramesIn60Seconds) {
+    LogVolumeUpdateStats();
+    volume_update_stats_ = {};
+    log_volume_update_stats_counter_ = 0;
   }
-  previous_analog_mic_level_ = analog_mic_level;
+  previous_input_volume_ = input_volume;
 }
 
-void AnalogGainStatsReporter::LogLevelUpdateStats() const {
+void InputVolumeStatsReporter::LogVolumeUpdateStats() const {
   const float average_decrease = ComputeAverageUpdate(
-      level_update_stats_.sum_decreases, level_update_stats_.num_decreases);
+      volume_update_stats_.sum_decreases, volume_update_stats_.num_decreases);
   const float average_increase = ComputeAverageUpdate(
-      level_update_stats_.sum_increases, level_update_stats_.num_increases);
+      volume_update_stats_.sum_increases, volume_update_stats_.num_increases);
   const int num_updates =
-      level_update_stats_.num_decreases + level_update_stats_.num_increases;
+      volume_update_stats_.num_decreases + volume_update_stats_.num_increases;
   const float average_update = ComputeAverageUpdate(
-      level_update_stats_.sum_decreases + level_update_stats_.sum_increases,
+      volume_update_stats_.sum_decreases + volume_update_stats_.sum_increases,
       num_updates);
-  RTC_DLOG(LS_INFO) << "Analog gain update rate: "
-                    << "num_updates=" << num_updates
-                    << ", num_decreases=" << level_update_stats_.num_decreases
-                    << ", num_increases=" << level_update_stats_.num_increases;
-  RTC_DLOG(LS_INFO) << "Analog gain update average: "
-                    << "average_update=" << average_update
-                    << ", average_decrease=" << average_decrease
-                    << ", average_increase=" << average_increase;
   RTC_HISTOGRAM_COUNTS_LINEAR(
       /*name=*/"WebRTC.Audio.ApmAnalogGainDecreaseRate",
-      /*sample=*/level_update_stats_.num_decreases,
+      /*sample=*/volume_update_stats_.num_decreases,
       /*min=*/1,
       /*max=*/kFramesIn60Seconds,
       /*bucket_count=*/50);
-  if (level_update_stats_.num_decreases > 0) {
+  if (volume_update_stats_.num_decreases > 0) {
     RTC_HISTOGRAM_COUNTS_LINEAR(
         /*name=*/"WebRTC.Audio.ApmAnalogGainDecreaseAverage",
         /*sample=*/average_decrease,
@@ -99,11 +90,11 @@ void AnalogGainStatsReporter::LogLevelUpdateStats() const {
   }
   RTC_HISTOGRAM_COUNTS_LINEAR(
       /*name=*/"WebRTC.Audio.ApmAnalogGainIncreaseRate",
-      /*sample=*/level_update_stats_.num_increases,
+      /*sample=*/volume_update_stats_.num_increases,
       /*min=*/1,
       /*max=*/kFramesIn60Seconds,
       /*bucket_count=*/50);
-  if (level_update_stats_.num_increases > 0) {
+  if (volume_update_stats_.num_increases > 0) {
     RTC_HISTOGRAM_COUNTS_LINEAR(
         /*name=*/"WebRTC.Audio.ApmAnalogGainIncreaseAverage",
         /*sample=*/average_increase,

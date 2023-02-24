@@ -539,7 +539,7 @@ class AudioProcessingImpl : public AudioProcessing {
   RmsLevel capture_output_rms_ RTC_GUARDED_BY(mutex_capture_);
   int capture_rms_interval_counter_ RTC_GUARDED_BY(mutex_capture_) = 0;
 
-  AnalogGainStatsReporter input_volume_stats_reporter_
+  InputVolumeStatsReporter applied_input_volume_stats_reporter_
       RTC_GUARDED_BY(mutex_capture_);
 
   // Lock protection not needed.
