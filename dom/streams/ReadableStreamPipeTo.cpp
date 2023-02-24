@@ -630,9 +630,9 @@ struct PipeToReadRequest : public ReadRequest {
   explicit PipeToReadRequest(PipeToPump* aPipeToPump)
       : mPipeToPump(aPipeToPump) {}
 
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void ChunkSteps(JSContext* aCx,
-                                              JS::Handle<JS::Value> aChunk,
-                                              ErrorResult& aRv) override {
+  MOZ_CAN_RUN_SCRIPT void ChunkSteps(JSContext* aCx,
+                                     JS::Handle<JS::Value> aChunk,
+                                     ErrorResult& aRv) override {
     RefPtr<PipeToPump> pipeToPump = mPipeToPump;  // XXX known live?
     pipeToPump->OnReadFulfilled(aCx, aChunk, aRv);
   }
