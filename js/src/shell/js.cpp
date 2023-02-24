@@ -238,6 +238,7 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op);
 bool SetContextWasmOptions(JSContext* cx, const OptionParser& op);
 bool SetContextJITOptions(JSContext* cx, const OptionParser& op);
 bool SetContextGCOptions(JSContext* cx, const OptionParser& op);
+bool InitModuleLoader(JSContext* cx, const OptionParser& op);
 
 #ifdef FUZZING_JS_FUZZILLI
 #  define REPRL_CRFD 100
@@ -10459,34 +10460,6 @@ auto minVal(T a, Ts... args) {
     return false;
   }
 
-  RootedString moduleLoadPath(cx);
-  if (const char* option = op->getStringOption("module-load-path")) {
-    RootedString jspath(cx, JS_NewStringCopyZ(cx, option));
-    if (!jspath) {
-      return false;
-    }
-
-    moduleLoadPath = js::shell::ResolvePath(cx, jspath, RootRelative);
-  } else {
-    UniqueChars cwd = js::shell::GetCWD();
-    moduleLoadPath = JS_NewStringCopyZ(cx, cwd.get());
-  }
-
-  if (!moduleLoadPath) {
-    return false;
-  }
-
-  processWideModuleLoadPath = JS_EncodeStringToUTF8(cx, moduleLoadPath);
-  if (!processWideModuleLoadPath) {
-    MOZ_ASSERT(cx->isExceptionPending());
-    return false;
-  }
-
-  sc->moduleLoader = js::MakeUnique<ModuleLoader>();
-  if (!sc->moduleLoader || !sc->moduleLoader->init(cx, moduleLoadPath)) {
-    return false;
-  }
-
   MultiStringRange filePaths = op->getMultiStringOption('f');
   MultiStringRange utf16FilePaths = op->getMultiStringOption('u');
   MultiStringRange preludePaths = op->getMultiStringOption('p');
@@ -10800,13 +10773,17 @@ static int Shell(JSContext* cx, OptionParser* op) {
 
     JSAutoRealm ar(cx, glob);
 
+    ShellContext* sc = GetShellContext(cx);
+    if (!sc->moduleLoader && !InitModuleLoader(cx, *op)) {
+      return EXIT_FAILURE;
+    }
+
 #ifdef FUZZING_INTERFACES
     if (fuzzHaveModule) {
       return FuzzJSRuntimeStart(cx, &sArgc, &sArgv);
     }
 #endif
 
-    ShellContext* sc = GetShellContext(cx);
     sc->exitCode = 0;
     result = EXIT_SUCCESS;
     {
@@ -12509,6 +12486,39 @@ bool SetContextGCOptions(JSContext* cx, const OptionParser& op) {
     cx->runtime()->gc.getZealBits(&gZealBits, &gZealFrequency, &nextScheduled);
   }
 #endif
+
+  return true;
+}
+
+bool InitModuleLoader(JSContext* cx, const OptionParser& op) {
+  RootedString moduleLoadPath(cx);
+  if (const char* option = op.getStringOption("module-load-path")) {
+    RootedString jspath(cx, JS_NewStringCopyZ(cx, option));
+    if (!jspath) {
+      return false;
+    }
+
+    moduleLoadPath = js::shell::ResolvePath(cx, jspath, RootRelative);
+  } else {
+    UniqueChars cwd = js::shell::GetCWD();
+    moduleLoadPath = JS_NewStringCopyZ(cx, cwd.get());
+  }
+
+  if (!moduleLoadPath) {
+    return false;
+  }
+
+  processWideModuleLoadPath = JS_EncodeStringToUTF8(cx, moduleLoadPath);
+  if (!processWideModuleLoadPath) {
+    MOZ_ASSERT(cx->isExceptionPending());
+    return false;
+  }
+
+  ShellContext* sc = GetShellContext(cx);
+  sc->moduleLoader = js::MakeUnique<ModuleLoader>();
+  if (!sc->moduleLoader || !sc->moduleLoader->init(cx, moduleLoadPath)) {
+    return false;
+  }
 
   return true;
 }
