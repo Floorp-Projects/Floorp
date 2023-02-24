@@ -348,7 +348,6 @@ const MultiStageAboutWelcome = props => {
       });
     })();
   }, [useImportable, region]);
-  const centeredScreens = props.screens.filter(s => s.content.position !== "corner");
   const {
     negotiatedLanguage,
     langPackInstallPhase,
@@ -361,21 +360,17 @@ const MultiStageAboutWelcome = props => {
       background: props.backdrop
     } : {}
   }, screens.map((screen, order) => {
-    const isFirstCenteredScreen = (!screen.content.position || screen.content.position === "center") && screen === centeredScreens[0];
-    const isLastCenteredScreen = (!screen.content.position || screen.content.position === "center") && screen === centeredScreens[centeredScreens.length - 1];
-    /* If first screen is corner positioned, don't include it in the count for the steps indicator. This assumes corner positioning will only be used on the first screen. */
-
-    const totalNumberOfScreens = screens[0].content.position === "corner" ? screens.length - 1 : screens.length;
-    /* Don't include a starting corner screen when determining step indicator order */
-
-    const stepOrder = screens[0].content.position === "corner" ? order - 1 : order;
+    const isFirstScreen = screen === screens[0];
+    const isLastScreen = screen === screens[screens.length - 1];
+    const totalNumberOfScreens = screens.length;
+    const isSingleScreen = totalNumberOfScreens === 1;
     return index === order ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(WelcomeScreen, {
       key: screen.id + order,
       id: screen.id,
       totalNumberOfScreens: totalNumberOfScreens,
-      isFirstCenteredScreen: isFirstCenteredScreen,
-      isLastCenteredScreen: isLastCenteredScreen,
-      stepOrder: stepOrder,
+      isFirstScreen: isFirstScreen,
+      isLastScreen: isLastScreen,
+      isSingleScreen: isSingleScreen,
       order: order,
       previousOrder: previousOrder,
       content: screen.content,
@@ -571,7 +566,6 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
       content: this.props.content,
       id: this.props.id,
       order: this.props.order,
-      stepOrder: this.props.stepOrder,
       previousOrder: this.props.previousOrder,
       activeTheme: this.props.activeTheme,
       activeMultiSelect: this.props.activeMultiSelect,
@@ -582,8 +576,9 @@ class WelcomeScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCo
       langPackInstallPhase: this.props.langPackInstallPhase,
       handleAction: this.handleAction,
       messageId: this.props.messageId,
-      isFirstCenteredScreen: this.props.isFirstCenteredScreen,
-      isLastCenteredScreen: this.props.isLastCenteredScreen,
+      isFirstScreen: this.props.isFirstScreen,
+      isLastScreen: this.props.isLastScreen,
+      isSingleScreen: this.props.isSingleScreen,
       startsWithCorner: this.props.startsWithCorner,
       autoAdvance: this.props.autoAdvance
     });
@@ -755,9 +750,9 @@ const MultiStageProtonScreen = props => {
     setActiveMultiSelect: props.setActiveMultiSelect,
     totalNumberOfScreens: props.totalNumberOfScreens,
     handleAction: props.handleAction,
-    isFirstCenteredScreen: props.isFirstCenteredScreen,
-    isLastCenteredScreen: props.isLastCenteredScreen,
-    stepOrder: props.stepOrder,
+    isFirstScreen: props.isFirstScreen,
+    isLastScreen: props.isLastScreen,
+    isSingleScreen: props.isSingleScreen,
     previousOrder: props.previousOrder,
     autoAdvance: props.autoAdvance,
     isRtamo: props.isRtamo,
@@ -825,10 +820,10 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     this.mainContentHeader.focus();
   }
 
-  getScreenClassName(isFirstCenteredScreen, isLastCenteredScreen, includeNoodles, isVideoOnboarding) {
+  getScreenClassName(isFirstScreen, isLastScreen, includeNoodles, isVideoOnboarding) {
     const screenClass = `screen-${this.props.order % 2 !== 0 ? 1 : 2}`;
     if (isVideoOnboarding) return "with-video";
-    return `${isFirstCenteredScreen ? `dialog-initial` : ``} ${isLastCenteredScreen ? `dialog-last` : ``} ${includeNoodles ? `with-noodles` : ``} ${screenClass}`;
+    return `${isFirstScreen ? `dialog-initial` : ``} ${isLastScreen ? `dialog-last` : ``} ${includeNoodles ? `with-noodles` : ``} ${screenClass}`;
   }
 
   renderLogo({
@@ -942,7 +937,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       previousStep: previousStep,
       totalNumberOfScreens: total
     }) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_6__.StepsIndicator, {
-      order: this.props.stepOrder,
+      order: this.props.order,
       totalNumberOfScreens: total
     }));
   }
@@ -983,19 +978,21 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       content,
       isRtamo,
       isTheme,
-      isFirstCenteredScreen,
-      isLastCenteredScreen
+      isFirstScreen,
+      isLastScreen,
+      isSingleScreen
     } = this.props;
     const includeNoodles = content.has_noodles; // The default screen position is "center"
 
     const isCenterPosition = content.position === "center" || !content.position;
-    const hideStepsIndicator = autoAdvance || (content === null || content === void 0 ? void 0 : content.video_container) || isFirstCenteredScreen && isLastCenteredScreen;
+    const hideStepsIndicator = autoAdvance || (content === null || content === void 0 ? void 0 : content.video_container) || isSingleScreen;
     const textColorClass = content.text_color ? `${content.text_color}-text` : ""; // Assign proton screen style 'screen-1' or 'screen-2' to centered screens
     // by checking if screen order is even or odd.
 
-    const screenClassName = isCenterPosition ? this.getScreenClassName(isFirstCenteredScreen, isLastCenteredScreen, includeNoodles, content === null || content === void 0 ? void 0 : content.video_container) : "";
+    const screenClassName = isCenterPosition ? this.getScreenClassName(isFirstScreen, isLastScreen, includeNoodles, content === null || content === void 0 ? void 0 : content.video_container) : "";
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("main", {
-      className: `screen ${this.props.id || ""} ${screenClassName} ${textColorClass}`,
+      className: `screen ${this.props.id || ""}
+          ${screenClassName} ${textColorClass}`,
       role: "alertdialog",
       pos: content.position || "center",
       tabIndex: "-1",

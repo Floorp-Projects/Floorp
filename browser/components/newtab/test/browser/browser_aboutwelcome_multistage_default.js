@@ -2,11 +2,11 @@
 
 const DID_SEE_ABOUT_WELCOME_PREF = "trailhead.firstrun.didSeeAboutWelcome";
 
-const TEST_PROTON_CONTENT = [
+const TEST_DEFAULT_CONTENT = [
   {
     id: "AW_STEP1",
     content: {
-      position: "corner",
+      position: "split",
       title: "Step 1",
       primary_button: {
         label: "Next",
@@ -24,7 +24,6 @@ const TEST_PROTON_CONTENT = [
           data: { entrypoint: "test" },
         },
       },
-      has_noodles: true,
       help_text: {
         text: "Here's some sample help text",
       },
@@ -33,6 +32,7 @@ const TEST_PROTON_CONTENT = [
   {
     id: "AW_STEP2",
     content: {
+      position: "center",
       title: "Step 2",
       primary_button: {
         label: "Next",
@@ -80,7 +80,6 @@ const TEST_PROTON_CONTENT = [
           data: { source: "chrome" },
         },
       },
-      has_noodles: true,
     },
   },
   {
@@ -97,16 +96,15 @@ const TEST_PROTON_CONTENT = [
       secondary_button: {
         label: "link",
       },
-      has_noodles: true,
     },
   },
 ];
 
-const TEST_PROTON_JSON = JSON.stringify(TEST_PROTON_CONTENT);
+const TEST_DEFAULT_JSON = JSON.stringify(TEST_DEFAULT_CONTENT);
 
 async function openAboutWelcome() {
   await setAboutWelcomePref(true);
-  await setAboutWelcomeMultiStage(TEST_PROTON_JSON);
+  await setAboutWelcomeMultiStage(TEST_DEFAULT_JSON);
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -120,9 +118,9 @@ async function openAboutWelcome() {
 }
 
 /**
- * Test the multistage welcome Proton UI
+ * Test the multistage welcome default UI
  */
-add_task(async function test_multistage_aboutwelcome_proton() {
+add_task(async function test_multistage_aboutwelcome_default() {
   const sandbox = sinon.createSandbox();
   let browser = await openAboutWelcome();
   let aboutWelcomeActor = await getAboutWelcomeParent(browser);
@@ -134,7 +132,7 @@ add_task(async function test_multistage_aboutwelcome_proton() {
 
   await test_screen_content(
     browser,
-    "multistage proton step 1",
+    "multistage step 1",
     // Expected selectors:
     [
       "main.AW_STEP1",
@@ -142,6 +140,8 @@ add_task(async function test_multistage_aboutwelcome_proton() {
       "div.section-secondary",
       "span.attrib-text",
       "div.secondary-cta.top",
+      "div.steps",
+      "div.indicator.current",
     ],
     // Unexpected selectors:
     [
@@ -149,18 +149,7 @@ add_task(async function test_multistage_aboutwelcome_proton() {
       "main.AW_STEP3",
       "main.dialog-initial",
       "main.dialog-last",
-      "div.indicator.current",
     ]
-  );
-
-  // Ensure step indicator is not displayed
-  await test_element_styles(
-    browser,
-    "div.steps",
-    // Expected styles:
-    {
-      display: "none",
-    }
   );
 
   await onButtonClick(browser, "button.primary");
@@ -178,19 +167,20 @@ add_task(async function test_multistage_aboutwelcome_proton() {
 
   Assert.ok(
     clickCall.args[1].message_id === "MR_WELCOME_DEFAULT_0_AW_STEP1",
-    "AboutWelcome proton message id joined with screen id"
+    "AboutWelcome MR message id joined with screen id"
   );
 
   await test_screen_content(
     browser,
-    "multistage proton step 2",
+    "multistage step 2",
     // Expected selectors:
     [
-      "main.AW_STEP2.dialog-initial",
+      "main.AW_STEP2",
       "div.onboardingContainer",
       "div.section-main",
       "div.steps",
       "div.indicator.current",
+      "main.with-noodles",
     ],
     // Unexpected selectors:
     [
@@ -208,7 +198,7 @@ add_task(async function test_multistage_aboutwelcome_proton() {
 
   await test_screen_content(
     browser,
-    "multistage proton step 3",
+    "multistage step 3",
     // Expected selectors:
     [
       "main.AW_STEP3",
@@ -224,6 +214,7 @@ add_task(async function test_multistage_aboutwelcome_proton() {
       "main.AW_STEP1",
       "div.section-secondary",
       "main.dialog-initial",
+      "main.with-noodles",
       "main.dialog-last",
     ]
   );
@@ -232,7 +223,7 @@ add_task(async function test_multistage_aboutwelcome_proton() {
 
   await test_screen_content(
     browser,
-    "multistage proton step 4",
+    "multistage step 4",
     // Expected selectors:
     [
       "main.AW_STEP4.screen-1",
@@ -505,11 +496,12 @@ add_task(async function test_AWMultistage_Themes() {
     sandbox.restore();
   });
   await onButtonClick(browser, "button.primary");
+
   await test_screen_content(
     browser,
     "multistage proton step 2",
     // Expected selectors:
-    ["main.AW_STEP2.dialog-initial"],
+    ["main.AW_STEP2"],
     // Unexpected selectors:
     ["main.AW_STEP1"]
   );
@@ -651,7 +643,7 @@ add_task(async function test_AWMultistage_Import() {
     browser,
     "multistage proton step 2",
     // Expected selectors:
-    ["main.AW_STEP2.dialog-initial"],
+    ["main.AW_STEP2"],
     // Unexpected selectors:
     ["main.AW_STEP1"]
   );

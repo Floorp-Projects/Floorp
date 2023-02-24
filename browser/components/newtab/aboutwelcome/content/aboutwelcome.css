@@ -357,14 +357,10 @@ html {
   flex-grow: 1;
   justify-content: space-around;
 }
-.onboardingContainer .main-content .no-steps[pos=corner] .main-content, .onboardingContainer .main-content .no-steps[pos=center].dialog-initial.dialog-last .main-content,
-.onboardingContainer .screen[pos=corner] .main-content,
-.onboardingContainer .screen[pos=center].dialog-initial.dialog-last .main-content {
+.onboardingContainer .main-content .no-steps .main-content {
   padding-bottom: 48px;
 }
-.onboardingContainer .main-content .no-steps[pos=corner] .steps, .onboardingContainer .main-content .no-steps[pos=center].dialog-initial.dialog-last .steps,
-.onboardingContainer .screen[pos=corner] .steps,
-.onboardingContainer .screen[pos=center].dialog-initial.dialog-last .steps {
+.onboardingContainer .main-content .no-steps .steps {
   display: none;
 }
 .onboardingContainer .screen {
@@ -535,6 +531,9 @@ html {
   padding-inline: 35px 20px;
   padding-block: 120px 0;
   box-shadow: none;
+}
+.onboardingContainer .screen[pos=split] .section-main .main-content.no-steps {
+  padding-bottom: 48px;
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content:dir(rtl) {
   border-radius: 8px 0 0 8px;
@@ -1360,103 +1359,6 @@ html {
   -moz-context-properties: fill;
   fill: #FFA437;
 }
-.onboardingContainer [pos=corner] {
-  min-width: 700px;
-}
-.onboardingContainer [pos=corner] .section-secondary {
-  display: flex;
-  flex-direction: column;
-  margin-inline-start: 6vw;
-}
-.onboardingContainer [pos=corner] .section-secondary .message-text {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.onboardingContainer [pos=corner] .section-secondary .message-text .spacer-top {
-  flex: 1;
-}
-.onboardingContainer [pos=corner] .section-secondary .message-text .spacer-bottom {
-  flex: 1;
-}
-.onboardingContainer [pos=corner] .section-secondary .message-text h1 {
-  color: #FFF;
-  font-weight: bold;
-  font-size: clamp(48px, 7vw, 104px);
-  line-height: 1em;
-  margin: 0 6px;
-  max-width: 5em;
-  text-align: initial;
-  white-space: pre-wrap;
-  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.35);
-}
-.onboardingContainer [pos=corner] .section-secondary .attrib-text {
-  height: 18px;
-  margin-bottom: 25px;
-  text-align: initial;
-  font-size: 12px;
-  line-height: 18px;
-  color: #F9F9FB;
-  text-shadow: 0 0 7px rgba(0, 0, 0, 0.6);
-  transition-delay: 0.5s;
-}
-.onboardingContainer [pos=corner] .section-main {
-  z-index: 1;
-}
-.onboardingContainer [pos=corner] .section-main .main-content {
-  background: transparent;
-  box-shadow: none;
-  display: flex;
-  position: absolute;
-  height: auto;
-  width: 350px;
-  bottom: 0;
-  inset-inline-end: 30px;
-  overflow: visible;
-  transition: var(--transition);
-}
-.onboardingContainer [pos=corner] .section-main .brand-logo {
-  margin-top: 0;
-  transition-delay: 1.2s;
-}
-.onboardingContainer [pos=corner] .section-main .primary,
-.onboardingContainer [pos=corner] .section-main .secondary-cta:not(.top) {
-  transition-delay: 1.7s;
-}
-.onboardingContainer [pos=corner] .section-main .secondary-cta.top {
-  transition-delay: 0.5s;
-}
-.onboardingContainer [pos=corner] .section-main .welcome-text {
-  transition-delay: 1.2s;
-}
-.onboardingContainer [pos=corner] .section-main .welcome-text h2 {
-  margin: 10px 6px;
-}
-.onboardingContainer [pos=corner] .solid-L {
-  display: block;
-  width: 1300px;
-  height: 1050px;
-  bottom: -390px;
-  inset-inline-end: -640px;
-  transform: rotate(-80deg);
-  transition-delay: 0.5s;
-}
-.onboardingContainer [pos=corner] .orange-L {
-  width: 466px;
-  height: 356px;
-  bottom: 270px;
-  inset-inline-end: -245px;
-  transition-delay: 0.8s;
-}
-.onboardingContainer [pos=corner] .purple-C {
-  width: 467px;
-  height: 382px;
-  bottom: -100px;
-  inset-inline-end: 125px;
-  transform: rotate(-75deg);
-  transition-delay: 0.8s;
-}
 .onboardingContainer .screen-1 .section-main {
   z-index: 1;
   margin: auto;
@@ -1504,14 +1406,14 @@ html {
 .onboardingContainer .dialog-initial .cta-link {
   transition-delay: 1s;
 }
-.onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .tiles-theme-section,
-.onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .colorway-text {
+.onboardingContainer .screen:not(.dialog-initial) .tiles-theme-section,
+.onboardingContainer .screen:not(.dialog-initial) .colorway-text {
   transition-delay: 0.2s;
 }
-.onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .primary,
-.onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .secondary,
-.onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .secondary-cta,
-.onboardingContainer .screen:not(.dialog-initial):not([pos=corner]) .cta-link {
+.onboardingContainer .screen:not(.dialog-initial) .primary,
+.onboardingContainer .screen:not(.dialog-initial) .secondary,
+.onboardingContainer .screen:not(.dialog-initial) .secondary-cta,
+.onboardingContainer .screen:not(.dialog-initial) .cta-link {
   transition-delay: 0.4s;
 }
 .onboardingContainer .screen-2 .section-main {
@@ -1550,20 +1452,6 @@ html {
   rotate: var(--rotate);
   scale: var(--scale);
 }
-.onboardingContainer.transition-in [pos=corner] .brand-logo,
-.onboardingContainer.transition-in [pos=corner] .welcome-text,
-.onboardingContainer.transition-in [pos=corner] .primary,
-.onboardingContainer.transition-in [pos=corner] .checkbox-container,
-.onboardingContainer.transition-in [pos=corner] .secondary,
-.onboardingContainer.transition-in [pos=corner] .secondary-cta:not(.top),
-.onboardingContainer.transition-in [pos=corner] .message-text {
-  opacity: 0;
-  translate: 0 var(--translate);
-}
-.onboardingContainer.transition-in [pos=corner] .attrib-text,
-.onboardingContainer.transition-in [pos=corner] .secondary-cta.top {
-  opacity: 0;
-}
 .onboardingContainer.transition-in .dialog-initial .main-content,
 .onboardingContainer.transition-in .dialog-initial .dismiss-button {
   translate: 0 calc(-2 * var(--translate));
@@ -1573,19 +1461,19 @@ html {
   opacity: 0;
   translate: 0 calc(-1 * var(--translate));
 }
-.onboardingContainer.transition-in .screen:not(.dialog-initial):not([pos=corner]) .steps:not(.progress-bar) {
-  opacity: 0.2;
-}
-.onboardingContainer.transition-in .screen:not([pos=corner]) .welcome-text,
-.onboardingContainer.transition-in .screen:not([pos=corner]) .tiles-theme-section,
-.onboardingContainer.transition-in .screen:not([pos=corner]) .colorway-text,
-.onboardingContainer.transition-in .screen:not([pos=corner]) .primary,
-.onboardingContainer.transition-in .screen:not([pos=corner]) .checkbox-container,
-.onboardingContainer.transition-in .screen:not([pos=corner]) .secondary,
-.onboardingContainer.transition-in .screen:not([pos=corner]) .secondary-cta:not(.top),
-.onboardingContainer.transition-in .screen:not([pos=corner]) .cta-link {
+.onboardingContainer.transition-in .screen .welcome-text,
+.onboardingContainer.transition-in .screen .tiles-theme-section,
+.onboardingContainer.transition-in .screen .colorway-text,
+.onboardingContainer.transition-in .screen .primary,
+.onboardingContainer.transition-in .screen .checkbox-container,
+.onboardingContainer.transition-in .screen .secondary,
+.onboardingContainer.transition-in .screen .secondary-cta:not(.top),
+.onboardingContainer.transition-in .screen .cta-link {
   opacity: 0;
   translate: 0 calc(-1 * var(--translate));
+}
+.onboardingContainer.transition-in .screen:not(.dialog-initial) .steps:not(.progress-bar) {
+  opacity: 0.2;
 }
 .onboardingContainer.transition-out .noodle {
   opacity: 0;
@@ -1593,48 +1481,31 @@ html {
   scale: var(--scale);
   transition-delay: 0.2s;
 }
-.onboardingContainer.transition-out [pos=corner] .message-text {
-  opacity: 0;
-  translate: 0 var(--translate);
-}
-.onboardingContainer.transition-out [pos=corner] .main-content {
-  opacity: 0;
-  translate: 0 var(--translate);
-  transition-delay: 0.2s;
-}
-.onboardingContainer.transition-out [pos=corner] .solid-L {
-  transition-delay: 0.4s;
-}
-.onboardingContainer.transition-out [pos=corner] .attrib-text,
-.onboardingContainer.transition-out [pos=corner] .secondary-cta.top {
-  opacity: 0;
-  transition-delay: 0.2s;
-}
-.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .main-content {
+.onboardingContainer.transition-out .screen:not(.dialog-last) .main-content {
   overflow: hidden;
 }
-.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .welcome-text,
-.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .multi-select-container {
+.onboardingContainer.transition-out .screen:not(.dialog-last) .welcome-text,
+.onboardingContainer.transition-out .screen:not(.dialog-last) .multi-select-container {
   opacity: 0;
   translate: 0 var(--translate);
   transition-delay: 0.1s;
 }
-.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .tiles-theme-section,
-.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .colorway-text {
+.onboardingContainer.transition-out .screen:not(.dialog-last) .tiles-theme-section,
+.onboardingContainer.transition-out .screen:not(.dialog-last) .colorway-text {
   opacity: 0;
   translate: 0 var(--translate);
   transition-delay: 0.2s;
 }
-.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .primary,
-.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .checkbox-container,
-.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .secondary,
-.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .secondary-cta:not(.top),
-.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .cta-link {
+.onboardingContainer.transition-out .screen:not(.dialog-last) .primary,
+.onboardingContainer.transition-out .screen:not(.dialog-last) .checkbox-container,
+.onboardingContainer.transition-out .screen:not(.dialog-last) .secondary,
+.onboardingContainer.transition-out .screen:not(.dialog-last) .secondary-cta:not(.top),
+.onboardingContainer.transition-out .screen:not(.dialog-last) .cta-link {
   opacity: 0;
   translate: 0 var(--translate);
   transition-delay: 0.3s;
 }
-.onboardingContainer.transition-out .screen:not(.dialog-last):not([pos=corner]) .steps:not(.progress-bar) {
+.onboardingContainer.transition-out .screen:not(.dialog-last) .steps:not(.progress-bar) {
   opacity: 0.2;
   transition-delay: 0.5s;
 }

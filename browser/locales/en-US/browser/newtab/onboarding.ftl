@@ -11,6 +11,7 @@
 onboarding-welcome-header = Welcome to { -brand-short-name }
 onboarding-start-browsing-button-label = Start Browsing
 onboarding-not-now-button-label = Not now
+mr1-onboarding-get-started-primary-button-label = Get started
 
 ## Custom Return To AMO onboarding strings
 
@@ -39,80 +40,16 @@ mr1-return-to-amo-add-extension-label = Add { $addon-name }
 onboarding-welcome-steps-indicator-label =
   .aria-label = Progress: step { $current } of { $total }
 
-# "Hero Text" displayed on left side of welcome screen.
-# The "Fire" in "Fire starts here" plays on the "Fire" in "Firefox".
-# It also signals the passion users bring to Firefox, how they use
-# Firefox to pursue those passions, as well as the boldness in their
-# choice to use Firefox over a larger competitor browser.
-# An alternative title for localization is: "It starts here".
-# This text can be formatted to span multiple lines as needed.
-mr1-welcome-screen-hero-text =
-  Fire starts
-  here
-
-# Caption for background image in about:welcome. "Soraya Osorio" is the name
-# of the person and shouldn't be translated.
-# In case your language needs to adapt the nouns to a gender, Soraya is a female name (she/her).
-# You can see the picture in about:welcome in Nightly 90.
-mr1-onboarding-welcome-image-caption = Soraya Osorio — Furniture designer, Firefox fan
-
 # This button will open system settings to turn on prefers-reduced-motion
 mr1-onboarding-reduce-motion-button-label = Turn off animations
 
-## Title and primary button strings differ between platforms as they
-## match the OS' application context menu item action where Windows uses "pin"
-## and "taskbar" while macOS "keep" and "Dock" (proper noun).
-
-# Title used on welcome page when Firefox is not pinned
-mr1-onboarding-pin-header = { PLATFORM() ->
-    [macos] Keep { -brand-short-name } in your Dock for easy access
-   *[other] Pin { -brand-short-name } to your taskbar for easy access
-}
-# Primary button string used on welcome page when Firefox is not pinned.
-mr1-onboarding-pin-primary-button-label = { PLATFORM() ->
-    [macos] Keep in Dock
-   *[other] Pin to taskbar
-}
-
-## Multistage MR1 onboarding strings (about:welcome pages)
-
-# This string will be used on welcome page primary button label
-# when Firefox is both pinned and default
-mr1-onboarding-get-started-primary-button-label = Get started
-
-mr1-onboarding-welcome-header = Welcome to { -brand-short-name }
-mr1-onboarding-set-default-pin-primary-button-label =
-  Make { -brand-short-name } my primary browser
-    .title = Sets { -brand-short-name } as default browser and pins to taskbar
-
-# This string will be used on welcome page primary button label
-# when Firefox is not default but already pinned
-mr1-onboarding-set-default-only-primary-button-label =
-  Make { -brand-short-name } my default browser
-mr1-onboarding-set-default-secondary-button-label = Not now
+# String for the Firefox Accounts button
 mr1-onboarding-sign-in-button-label = Sign in
-
-## Title, subtitle and primary button string used on set default onboarding screen
-## when Firefox is not default browser
-
-mr1-onboarding-default-header =
-    Make { -brand-short-name } your default
-mr1-onboarding-default-subtitle = Put speed, safety, and privacy on autopilot.
-mr1-onboarding-default-primary-button-label = Make default browser
-
-## Multistage MR1 onboarding strings (about:welcome pages)
-
-mr1-onboarding-import-header = Bring it all with you
-mr1-onboarding-import-subtitle = Import your passwords, <br/>bookmarks, and more.
 
 # The primary import button label will depend on whether we can detect which browser was used to download Firefox.
 # Variables:
 #   $previous (Str) - Previous browser name, such as Edge, Chrome
 mr1-onboarding-import-primary-button-label-attribution = Import from { $previous }
-
-# This string will be used in cases where we can't detect the previous browser name.
-mr1-onboarding-import-primary-button-label-no-attribution = Import from previous browser
-mr1-onboarding-import-secondary-button-label = Not now
 
 mr1-onboarding-theme-header = Make it your own
 mr1-onboarding-theme-subtitle = Personalize { -brand-short-name } with a theme.

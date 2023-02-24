@@ -19,7 +19,7 @@ const PINPBM_DISABLED_PREF = "browser.startup.upgradeDialog.pinPBM.disabled";
 
 // A bunch of the helper functions here are variants of the helper functions in
 // browser_aboutwelcome_multistage_mr.js, because the onboarding
-// experimence runs in the parent process rather than elsewhere.
+// experience runs in the parent process rather than elsewhere.
 // If these start to get used in more than just the two files, it may become
 // worth refactoring them to avoid duplicated code, and hoisting them
 // into head.js.

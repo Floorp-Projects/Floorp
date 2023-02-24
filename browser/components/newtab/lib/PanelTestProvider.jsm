@@ -230,7 +230,7 @@ const MESSAGES = () => [
           content: {
             has_noodles: true,
             title: {
-              string_id: "mr1-onboarding-pin-header",
+              string_id: "mr2022-onboarding-welcome-pin-header",
             },
             logo: {
               imageURL: "chrome://browser/content/callout-tab-pickup.svg",
@@ -243,16 +243,14 @@ const MESSAGES = () => [
               alt: "sample alt text",
             },
             hero_text: {
-              string_id: "mr1-welcome-screen-hero-text",
+              string_id: "fx100-thank-you-hero-text",
             },
             help_text: {
-              text: {
-                string_id: "mr1-onboarding-welcome-image-caption",
-              },
+              text: "Some sample help text",
             },
             primary_button: {
               label: {
-                string_id: "mr1-onboarding-pin-primary-button-label",
+                string_id: "mr2022-onboarding-pin-primary-button-label",
               },
               action: {
                 navigate: true,
@@ -261,7 +259,7 @@ const MESSAGES = () => [
             },
             secondary_button: {
               label: {
-                string_id: "mr1-onboarding-set-default-secondary-button-label",
+                string_id: "onboarding-not-now-button-label",
               },
               action: {
                 navigate: true,
@@ -285,14 +283,14 @@ const MESSAGES = () => [
             title: {
               fontSize: "36px",
               fontWeight: 276,
-              string_id: "mr1-onboarding-default-header",
+              string_id: "mr2022-onboarding-set-default-title",
             },
             subtitle: {
-              string_id: "mr1-onboarding-default-subtitle",
+              string_id: "mr2022-onboarding-set-default-subtitle",
             },
             primary_button: {
               label: {
-                string_id: "mr1-onboarding-default-primary-button-label",
+                string_id: "mr2022-onboarding-set-default-primary-button-label",
               },
               action: {
                 navigate: true,
@@ -301,7 +299,7 @@ const MESSAGES = () => [
             },
             secondary_button: {
               label: {
-                string_id: "mr1-onboarding-set-default-secondary-button-label",
+                string_id: "onboarding-not-now-button-label",
               },
               action: {
                 navigate: true,
@@ -330,7 +328,7 @@ const MESSAGES = () => [
             },
             secondary_button: {
               label: {
-                string_id: "mr1-onboarding-set-default-secondary-button-label",
+                string_id: "onboarding-not-now-button-label",
               },
               action: {
                 navigate: true,
@@ -363,7 +361,7 @@ const MESSAGES = () => [
             },
             secondary_button: {
               label: {
-                string_id: "mr1-onboarding-set-default-secondary-button-label",
+                string_id: "onboarding-not-now-button-label",
               },
               action: {
                 navigate: true,

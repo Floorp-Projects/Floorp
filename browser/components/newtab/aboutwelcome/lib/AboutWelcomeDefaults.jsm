@@ -480,7 +480,7 @@ async function prepareContentForReact(content) {
     if (label?.string_id) {
       label.string_id = browserStr
         ? "mr1-onboarding-import-primary-button-label-attribution"
-        : "mr1-onboarding-import-primary-button-label-no-attribution";
+        : "mr2022-onboarding-import-primary-button-label-no-attribution";
 
       label.args = browserStr ? { previous: browserStr } : {};
     }

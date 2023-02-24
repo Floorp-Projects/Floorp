@@ -519,7 +519,7 @@ const BASE_MESSAGES = () => [
             },
             secondary_button: {
               label: {
-                string_id: "mr1-onboarding-set-default-secondary-button-label",
+                string_id: "onboarding-not-now-button-label",
               },
               action: {
                 navigate: true,

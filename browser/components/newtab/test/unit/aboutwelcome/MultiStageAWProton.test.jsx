@@ -27,10 +27,10 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.ok(wrapper.exists());
     });
 
-    it("should render secondary section for corner positioned screens", () => {
+    it("should render secondary section for split positioned screens", () => {
       const SCREEN_PROPS = {
         content: {
-          position: "corner",
+          position: "split",
           title: "test title",
           hero_text: "test subtitle",
         },
@@ -42,7 +42,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
         wrapper.find(".section-secondary h1").text(),
         "test subtitle"
       );
-      assert.equal(wrapper.find("main").prop("pos"), "corner");
+      assert.equal(wrapper.find("main").prop("pos"), "split");
     });
 
     it("should render secondary section with content background for split positioned screens", () => {
