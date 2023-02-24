@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_AUDIO_PROCESSING_AGC_ANALOG_GAIN_STATS_REPORTER_H_
-#define MODULES_AUDIO_PROCESSING_AGC_ANALOG_GAIN_STATS_REPORTER_H_
+#ifndef MODULES_AUDIO_PROCESSING_AGC2_INPUT_VOLUME_STATS_REPORTER_H_
+#define MODULES_AUDIO_PROCESSING_AGC2_INPUT_VOLUME_STATS_REPORTER_H_
 
 #include "absl/types/optional.h"
 #include "rtc_base/gtest_prod_util.h"
@@ -64,4 +64,4 @@ class AnalogGainStatsReporter {
 };
 }  // namespace webrtc
 
-#endif  // MODULES_AUDIO_PROCESSING_AGC_ANALOG_GAIN_STATS_REPORTER_H_
+#endif  // MODULES_AUDIO_PROCESSING_AGC2_INPUT_VOLUME_STATS_REPORTER_H_
