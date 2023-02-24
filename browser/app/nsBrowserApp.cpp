@@ -32,6 +32,7 @@
 #  include "LauncherProcessWin.h"
 #  include "mozilla/GeckoArgs.h"
 #  include "mozilla/mscom/ProcessRuntime.h"
+#  include "mozilla/WindowsBCryptInitialization.h"
 #  include "mozilla/WindowsDllBlocklist.h"
 #  include "mozilla/WindowsDpiInitialization.h"
 #  include "mozilla/WindowsProcessMitigations.h"
@@ -400,6 +401,12 @@ int main(int argc, char* argv[], char* envp[]) {
     auto result = mozilla::WindowsDpiInitialization();
     (void)result;  // Ignore errors since some tools block DPI calls
   }
+
+  // BCrypt initialization for the main process. This code runs too early to
+  // crash in a reportable way, so we ignore the result even in debug. If this
+  // fails, let's continue and crash later when we encounter a fatal
+  // BCryptGenRandom failure, if any.
+  mozilla::WindowsBCryptInitialization();
 
   // Once the browser process hits the main function, we no longer need
   // a writable section handle because all dependent modules have been
