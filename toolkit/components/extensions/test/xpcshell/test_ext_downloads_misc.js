@@ -293,7 +293,7 @@ async function waitForProgress(url, testFn) {
   });
 }
 
-add_task(async function setup() {
+add_setup(async () => {
   const nsIFile = Ci.nsIFile;
   downloadDir = FileUtils.getDir("TmpD", ["downloads"]);
   downloadDir.createUnique(nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
@@ -322,6 +322,10 @@ add_task(async function setup() {
 
   await extension.startup();
   await extension.awaitMessage("ready");
+
+  registerCleanupFunction(async () => {
+    await extension.unload();
+  });
 });
 
 add_task(async function test_events() {
@@ -762,16 +766,126 @@ add_task(async function test_file_removal() {
     "error",
     "removeFile() fails since the file was already removed."
   );
-  ok(
-    /file doesn't exist/.test(msg.errmsg),
+  equal(
+    msg.errmsg,
+    `Could not remove download id ${id} because the file doesn't exist`,
     "removeFile() failed on removed file."
   );
 
   msg = await runInExtension("removeFile", 1000);
-  ok(
-    /Invalid download id/.test(msg.errmsg),
+  equal(
+    msg.errmsg,
+    "Invalid download id 1000",
     "removeFile() failed due to non-existent id"
   );
+});
+
+add_task(async function test_file_removeFile_permission_failure() {
+  const inputDirname = "subdir_for_download";
+  const inputFilename = "downloaded_filename.txt";
+  const expectedDir = PathUtils.join(downloadDir.path, inputDirname);
+  const expectedPath = PathUtils.join(expectedDir, inputFilename);
+
+  let msg = await runInExtension("download", {
+    url: TXT_URL,
+    filename: `${inputDirname}/${inputFilename}`,
+  });
+  equal(msg.status, "success", "download() succeeded");
+  const id = msg.result;
+
+  msg = await runInExtension("waitForEvents", [
+    { type: "onCreated", data: { id, url: TXT_URL } },
+    {
+      type: "onChanged",
+      data: {
+        id,
+        state: {
+          previous: "in_progress",
+          current: "complete",
+        },
+      },
+    },
+  ]);
+
+  equal(msg.status, "success", "got onCreated and onChanged events");
+
+  msg = await runInExtension("search", { id });
+  equal(msg.status, "success", "search() succeeded");
+  equal(expectedPath, msg.result[0]?.filename, "Got expected filename");
+
+  async function withUndeletableFileUnix(testRemoveFile) {
+    try {
+      // Temporarily make directory unreadable/inaccessible.
+      await IOUtils.setPermissions(expectedDir, 0);
+      // Remove should fail with Unix error 13 (EACCES).
+      await testRemoveFile();
+    } finally {
+      await IOUtils.setPermissions(expectedDir, 0o777);
+    }
+  }
+  async function withUndeletableFileWin(testRemoveFile) {
+    // On Windows, a directory marked as read-only does not prevent the deletion
+    // of its content. So we need an alternative approach here.
+    let stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+      Ci.nsIFileInputStream
+    );
+    try {
+      // Open a file handle. The file cannot be deleted until it is closed.
+      stream.init(await IOUtils.getFile(expectedPath), -1, 0, 0);
+      // Remove should fail with Win error 32 (ERROR_SHARING_VIOLATION).
+      await testRemoveFile();
+    } finally {
+      stream.close();
+    }
+  }
+
+  const withUndeletableFile =
+    AppConstants.platform === "win"
+      ? withUndeletableFileWin
+      : withUndeletableFileUnix;
+
+  let consoleOutput;
+  await withUndeletableFile(async () => {
+    consoleOutput = await promiseConsoleOutput(async () => {
+      msg = await runInExtension("removeFile", id);
+    });
+  });
+
+  equal(msg.status, "error", "removeFile() fails due to missing dir perms");
+  // Verify that an unexpected error is redacted, with a useful error message
+  // logged to the console.
+  // Note: if we ever decide to make the error for permission failures more
+  // useful, try to add a new test case for unexpected errors, even if
+  // completely artificial such as mocking + breaking an internal API.
+  equal(msg.errmsg, "An unexpected error occurred", "Error message redacted");
+
+  // Note: these errors are specific to OS.File.remove. If IOUtils.remove is
+  // used instead in ext-downloads.js (bug 1772932), then the error name is
+  // going to be "NotAllowedError" on Windows and non-Windows.
+  const expectedErrorMessagePattern =
+    AppConstants.platform === "win"
+      ? // error 32 = ERROR_SHARING_VIOLATION
+        /Win error 32 during operation remove on file .*subdir.*downloaded_filename/
+      : // error 13 = EACCES
+        /Unix error 13 during operation remove on file .*subdir.*downloaded_filename/;
+  AddonTestUtils.checkMessages(consoleOutput.messages, {
+    expected: [{ message: expectedErrorMessagePattern }],
+  });
+
+  ok(await IOUtils.exists(expectedPath), "File exists before removeFile()");
+
+  msg = await runInExtension("removeFile", id);
+  equal(msg.status, "success", "removeFile() succeeded");
+
+  equal(await IOUtils.exists(expectedPath), false, "File was really removed");
+
+  // As a bonus: check that the re-created file can be deleted without issues.
+  await IOUtils.writeUTF8(expectedPath, "content here");
+
+  msg = await runInExtension("removeFile", id);
+  equal(msg.status, "success", "removeFile() succeeded after recreation");
+
+  equal(await IOUtils.exists(expectedPath), false, "File was removed again");
 });
 
 add_task(async function test_removal_of_incomplete_download() {
@@ -1066,8 +1180,4 @@ add_task(async function test_byExtension() {
     extension.id,
     "download.byExtensionId is correct"
   );
-});
-
-add_task(async function cleanup() {
-  await extension.unload();
 });
