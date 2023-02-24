@@ -6,71 +6,24 @@
 /* eslint-env mozilla/browser-window */
 
 var gPageStyleMenu = {
-  // This maps from a <browser> element (or, more specifically, a
-  // browser's permanentKey) to an Object that contains the most recent
-  // information about the browser content's stylesheets. That Object
-  // is populated via the PageStyle:StyleSheets message from the content
-  // process. The Object should have the following structure:
-  //
-  // filteredStyleSheets (Array):
-  //   An Array of objects with a filtered list representing all stylesheets
-  //   that the current page offers. Each object has the following members:
-  //
-  //   title (String):
-  //     The title of the stylesheet
-  //
-  //   disabled (bool):
-  //     Whether or not the stylesheet is currently applied
-  //
-  //   href (String):
-  //     The URL of the stylesheet. Stylesheets loaded via a data URL will
-  //     have this property set to null.
-  //
-  // authorStyleDisabled (bool):
-  //   Whether or not the user currently has "No Style" selected for
-  //   the current page.
-  //
-  // preferredStyleSheetSet (bool):
-  //   Whether or not the user currently has the "Default" style selected
-  //   for the current page.
-  //
-  _pageStyleSheets: new WeakMap(),
-
-  /**
-   * Add/append styleSheets to the _pageStyleSheets weakmap.
-   * @param styleSheets
-   *        The stylesheets to add, including the preferred
-   *        stylesheet set for this document.
-   * @param permanentKey
-   *        The permanent key of the browser that
-   *        these stylesheets come from.
-   */
-  addBrowserStyleSheets(styleSheets, permanentKey) {
-    let sheetData = this._pageStyleSheets.get(permanentKey);
-    if (!sheetData) {
-      this._pageStyleSheets.set(permanentKey, styleSheets);
-      return;
-    }
-    sheetData.filteredStyleSheets.push(...styleSheets.filteredStyleSheets);
-    sheetData.preferredStyleSheetSet =
-      sheetData.preferredStyleSheetSet || styleSheets.preferredStyleSheetSet;
-  },
-
-  clearBrowserStyleSheets(permanentKey) {
-    this._pageStyleSheets.delete(permanentKey);
-  },
-
   _getStyleSheetInfo(browser) {
-    let data = this._pageStyleSheets.get(browser.permanentKey);
-    if (!data) {
-      return {
+    let actor = browser.browsingContext.currentWindowGlobal?.getActor(
+      "PageStyle"
+    );
+    let styleSheetInfo;
+    if (actor) {
+      styleSheetInfo = actor.getSheetInfo();
+    } else {
+      // Fallback if the actor is missing or we don't have a window global.
+      // It's unlikely things will work well but let's be optimistic,
+      // rather than throwing exceptions immediately.
+      styleSheetInfo = {
         filteredStyleSheets: [],
         authorStyleDisabled: false,
         preferredStyleSheetSet: true,
       };
     }
-
-    return data;
+    return styleSheetInfo;
   },
 
   fillPopup(menuPopup) {
@@ -157,13 +110,10 @@ var gPageStyleMenu = {
    * @param title The title of the stylesheet to switch to.
    */
   switchStyleSheet(title) {
-    let { permanentKey } = gBrowser.selectedBrowser;
-    let sheetData = this._pageStyleSheets.get(permanentKey);
-    if (sheetData && sheetData.filteredStyleSheets) {
-      sheetData.authorStyleDisabled = false;
-      for (let sheet of sheetData.filteredStyleSheets) {
-        sheet.disabled = sheet.title !== title;
-      }
+    let sheetData = this._getStyleSheetInfo(gBrowser.selectedBrowser);
+    sheetData.authorStyleDisabled = false;
+    for (let sheet of sheetData.filteredStyleSheets) {
+      sheet.disabled = sheet.title !== title;
     }
     this._sendMessageToAll("PageStyle:Switch", { title });
   },
@@ -172,11 +122,8 @@ var gPageStyleMenu = {
    * Disable all stylesheets. Called with View > Page Style > No Style.
    */
   disableStyle() {
-    let { permanentKey } = gBrowser.selectedBrowser;
-    let sheetData = this._pageStyleSheets.get(permanentKey);
-    if (sheetData) {
-      sheetData.authorStyleDisabled = true;
-    }
+    let sheetData = this._getStyleSheetInfo(gBrowser.selectedBrowser);
+    sheetData.authorStyleDisabled = true;
     this._sendMessageToAll("PageStyle:Disable", {});
   },
 };
