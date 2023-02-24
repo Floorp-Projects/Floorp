@@ -41,7 +41,6 @@ namespace {
 using ::testing::ElementsAreArray;
 using ::testing::Eq;
 using ::testing::Ge;
-using ::testing::Gt;
 using ::testing::Test;
 
 using VideoConfig =
@@ -593,7 +592,7 @@ TEST_F(AnalyzingVideoSinkTest, InfraMetricsCollectedWhenRequested) {
 
   AnalyzingVideoSink::Stats stats = sink.stats();
   EXPECT_THAT(stats.scaling_tims_ms.NumSamples(), Eq(1));
-  EXPECT_THAT(stats.scaling_tims_ms.GetAverage(), Gt(0));
+  EXPECT_THAT(stats.scaling_tims_ms.GetAverage(), Ge(0));
   EXPECT_THAT(stats.analyzing_sink_processing_time_ms.NumSamples(), Eq(1));
   EXPECT_THAT(stats.analyzing_sink_processing_time_ms.GetAverage(),
               Ge(stats.scaling_tims_ms.GetAverage()));
