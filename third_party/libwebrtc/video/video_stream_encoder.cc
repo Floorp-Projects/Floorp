@@ -1981,9 +1981,10 @@ void VideoStreamEncoder::RequestRefreshFrame() {
   }));
 }
 
-void VideoStreamEncoder::SendKeyFrame() {
+void VideoStreamEncoder::SendKeyFrame(
+    const std::vector<VideoFrameType>& layers) {
   if (!encoder_queue_.IsCurrent()) {
-    encoder_queue_.PostTask([this] { SendKeyFrame(); });
+    encoder_queue_.PostTask([this, layers] { SendKeyFrame(layers); });
     return;
   }
   RTC_DCHECK_RUN_ON(&encoder_queue_);
@@ -1998,9 +1999,15 @@ void VideoStreamEncoder::SendKeyFrame() {
     return;  // Shutting down, or not configured yet.
   }
 
-  // TODO(webrtc:10615): Map keyframe request to spatial layer.
-  std::fill(next_frame_types_.begin(), next_frame_types_.end(),
-            VideoFrameType::kVideoFrameKey);
+  if (!layers.empty()) {
+    RTC_DCHECK_EQ(layers.size(), next_frame_types_.size());
+    for (size_t i = 0; i < layers.size() && i < next_frame_types_.size(); i++) {
+      next_frame_types_[i] = layers[i];
+    }
+  } else {
+    std::fill(next_frame_types_.begin(), next_frame_types_.end(),
+              VideoFrameType::kVideoFrameKey);
+  }
 }
 
 void VideoStreamEncoder::OnLossNotification(

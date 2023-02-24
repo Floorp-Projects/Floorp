@@ -926,7 +926,8 @@ class VideoMediaChannel : public MediaChannel, public Delayable {
   // RTCP feedback.
   virtual void RequestRecvKeyFrame(uint32_t ssrc) = 0;
   // Cause generation of a keyframe for `ssrc` on a sending channel.
-  virtual void GenerateSendKeyFrame(uint32_t ssrc) = 0;
+  virtual void GenerateSendKeyFrame(uint32_t ssrc,
+                                    const std::vector<std::string>& rids) = 0;
 
   virtual std::vector<webrtc::RtpSource> GetSources(uint32_t ssrc) const = 0;
 };

@@ -249,7 +249,8 @@ class WebRtcVideoChannel : public VideoMediaChannel,
       override;
   void ClearRecordableEncodedFrameCallback(uint32_t ssrc) override;
   void RequestRecvKeyFrame(uint32_t ssrc) override;
-  void GenerateSendKeyFrame(uint32_t ssrc) override;
+  void GenerateSendKeyFrame(uint32_t ssrc,
+                            const std::vector<std::string>& rids) override;
 
   void SetEncoderToPacketizerFrameTransformer(
       uint32_t ssrc,
@@ -391,7 +392,7 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     void SetEncoderToPacketizerFrameTransformer(
         rtc::scoped_refptr<webrtc::FrameTransformerInterface>
             frame_transformer);
-    void GenerateKeyFrame();
+    void GenerateKeyFrame(const std::vector<std::string>& rids);
 
    private:
     // Parameters needed to reconstruct the underlying stream.
