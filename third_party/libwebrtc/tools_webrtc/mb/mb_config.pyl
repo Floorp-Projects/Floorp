@@ -125,6 +125,8 @@
       # instead?
       'Perf Android32 (M AOSP Nexus6)': 'release_bot_x64',
       'Perf Android32 (M Nexus5)': 'release_bot_x64',
+      'Perf Android32 (O Pixel2)': 'release_bot_x64',
+      'Perf Android32 (R Pixel5)': 'release_bot_x64',
       'Perf Android64 (M Nexus5X)': 'release_bot_x64',
       'Perf Android64 (O Pixel2)': 'release_bot_x64',
       'Perf Android64 (R Pixel5)': 'release_bot_x64',
