@@ -37,8 +37,8 @@ struct ReceiverFrameStats {
   VideoFrameType frame_type = VideoFrameType::kEmptyFrame;
   DataSize encoded_image_size = DataSize::Bytes(0);
 
-  absl::optional<int> rendered_frame_width = absl::nullopt;
-  absl::optional<int> rendered_frame_height = absl::nullopt;
+  absl::optional<int> decoded_frame_width = absl::nullopt;
+  absl::optional<int> decoded_frame_height = absl::nullopt;
 
   // Can be not set if frame was dropped in the network.
   absl::optional<StreamCodecInfo> used_decoder = absl::nullopt;
@@ -101,15 +101,14 @@ class FrameInFlight {
 
   void OnFrameDecoded(size_t peer,
                       webrtc::Timestamp time,
+                      int width,
+                      int height,
                       const StreamCodecInfo& used_decoder);
   void OnDecoderError(size_t peer, const StreamCodecInfo& used_decoder);
 
   bool HasDecodeEndTime(size_t peer) const;
 
-  void OnFrameRendered(size_t peer,
-                       webrtc::Timestamp time,
-                       int width,
-                       int height);
+  void OnFrameRendered(size_t peer, webrtc::Timestamp time);
 
   bool HasRenderedTime(size_t peer) const;
 

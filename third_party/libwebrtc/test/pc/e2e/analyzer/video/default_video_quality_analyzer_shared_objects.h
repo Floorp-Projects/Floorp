@@ -142,6 +142,8 @@ struct StreamStats {
   SamplesStatsCounter freeze_time_ms;
   // Mean time between one freeze end and next freeze start.
   SamplesStatsCounter time_between_freezes_ms;
+  SamplesStatsCounter resolution_of_decoded_frame;
+  // Deprecated. Used `resolution_of_decoded_frame` instead.
   SamplesStatsCounter resolution_of_rendered_frame;
   SamplesStatsCounter target_encode_bitrate;
 

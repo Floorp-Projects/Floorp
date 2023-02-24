@@ -434,7 +434,8 @@ void DefaultVideoQualityAnalyzer::OnFrameDecoded(
   used_decoder.last_frame_id = frame.id();
   used_decoder.switched_on_at = now;
   used_decoder.switched_from_at = now;
-  it->second.OnFrameDecoded(peer_index, now, used_decoder);
+  it->second.OnFrameDecoded(peer_index, now, frame.width(), frame.height(),
+                            used_decoder);
 }
 
 void DefaultVideoQualityAnalyzer::OnFrameRendered(
@@ -490,8 +491,7 @@ void DefaultVideoQualityAnalyzer::OnFrameRendered(
   stream_frame_counters_.at(stats_key).rendered++;
 
   // Update current frame stats.
-  frame_in_flight->OnFrameRendered(peer_index, Now(), frame.width(),
-                                   frame.height());
+  frame_in_flight->OnFrameRendered(peer_index, Now());
 
   // After we received frame here we need to check if there are any dropped
   // frames between this one and last one, that was rendered for this video
@@ -1010,7 +1010,7 @@ void DefaultVideoQualityAnalyzer::ReportResults(
                              ImprovementDirection::kSmallerIsBetter,
                              metric_metadata);
   metrics_logger_->LogMetric(
-      "pixels_per_frame", test_case_name, stats.resolution_of_rendered_frame,
+      "pixels_per_frame", test_case_name, stats.resolution_of_decoded_frame,
       Unit::kCount, ImprovementDirection::kBiggerIsBetter, metric_metadata);
   metrics_logger_->LogSingleValueMetric(
       "min_psnr_dB", test_case_name,
