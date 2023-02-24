@@ -233,6 +233,7 @@ using mozilla::Variant;
 
 bool InitOptionParser(OptionParser& op);
 bool SetGlobalOptionsPreJSInit(const OptionParser& op);
+bool SetGlobalOptionsPostJSInit(const OptionParser& op);
 
 #ifdef FUZZING_JS_FUZZILLI
 #  define REPRL_CRFD 100
@@ -11604,121 +11605,32 @@ int main(int argc, char** argv) {
   // `selfHostedXDRBuffer` contains XDR buffer of the self-hosted JS.
   // A part of it is borrowed by ImmutableScriptData of the self-hosted scripts.
   //
-  // This buffer's should outlive JS_Shutdown.
+  // This buffer should outlive JS_Shutdown.
   Maybe<FileContents> selfHostedXDRBuffer;
 
   auto shutdownEngine = MakeScopeExit([] { JS_ShutDown(); });
 
+  if (!SetGlobalOptionsPostJSInit(op)) {
+    return EXIT_FAILURE;
+  }
+
   // Record aggregated telemetry data on disk. Do this as early as possible such
   // that the telemetry is recording both before starting the context and after
   // closing it.
-  if (op.getStringOption("telemetry-dir")) {
-    if (!telemetryLock) {
-      telemetryLock = js_new<Mutex>(mutexid::ShellTelemetry);
-      if (!telemetryLock) {
-        return EXIT_FAILURE;
-      }
-    }
-  }
   auto writeTelemetryResults = MakeScopeExit([&op] {
-    if (const char* dir = op.getStringOption("telemetry-dir")) {
+    if (telemetryLock) {
+      const char* dir = op.getStringOption("telemetry-dir");
       WriteTelemetryDataToDisk(dir);
       js_free(telemetryLock);
       telemetryLock = nullptr;
     }
   });
 
-  /*
-   * Allow dumping on Linux with the fuzzing flag set, even when running with
-   * the suid/sgid flag set on the shell.
-   */
-#ifdef XP_LINUX
-  if (op.getBoolOption("fuzzing-safe")) {
-    prctl(PR_SET_DUMPABLE, 1);
-  }
-#endif
-
-#ifdef DEBUG
-  /*
-   * Process OOM options as early as possible so that we can observe as many
-   * allocations as possible.
-   */
-  OOM_printAllocationCount = op.getBoolOption('O');
-#endif
-
-  if (op.getBoolOption("no-threads")) {
-    js::DisableExtraThreads();
-  }
-
-  enableCodeCoverage = op.getBoolOption("code-coverage");
-  if (enableCodeCoverage) {
-    js::EnableCodeCoverage();
-  }
-
-  // If LCov is enabled, then the default delazification mode should be changed
-  // to parse everything eagerly, such that we know the location of every
-  // instruction, to report them in the LCov summary, even if there is no uses
-  // of these instructions.
-  //
-  // Note: code coverage can be enabled either using the --code-coverage command
-  // line, or the JS_CODE_COVERAGE_OUTPUT_DIR environment variable, which is
-  // processed by JS_InitWithFailureDiagnostic.
-  if (coverage::IsLCovEnabled()) {
-    defaultDelazificationMode =
-        JS::DelazificationOption::ParseEverythingEagerly;
-  }
-
-  if (const char* xdr = op.getStringOption("selfhosted-xdr-path")) {
-    shell::selfHostedXDRPath = xdr;
-  }
-  if (const char* opt = op.getStringOption("selfhosted-xdr-mode")) {
-    if (strcmp(opt, "encode") == 0) {
-      shell::encodeSelfHostedCode = true;
-    } else if (strcmp(opt, "decode") == 0) {
-      shell::encodeSelfHostedCode = false;
-    } else if (strcmp(opt, "off") == 0) {
-      shell::selfHostedXDRPath = nullptr;
-    } else {
-      MOZ_CRASH(
-          "invalid option value for --selfhosted-xdr-mode, must be "
-          "encode/decode");
-    }
-  }
-
-#ifdef JS_WITHOUT_NSPR
-  if (!op.getMultiStringOption("dll").empty()) {
-    fprintf(stderr, "Error: --dll requires NSPR support!\n");
-    return EXIT_FAILURE;
-  }
-#else
-  AutoLibraryLoader loader;
-  MultiStringRange dllPaths = op.getMultiStringOption("dll");
-  while (!dllPaths.empty()) {
-    char* path = dllPaths.front();
-    loader.load(path);
-    dllPaths.popFront();
-  }
-#endif
-
-  if (op.getBoolOption("suppress-minidump")) {
-    js::NoteIntentionalCrash();
-  }
-
   if (!InitSharedObjectMailbox()) {
-    return 1;
+    return EXIT_FAILURE;
   }
 
   JS::SetProcessBuildIdOp(ShellBuildId);
-
-  // The fake CPU count must be set before initializing the Runtime,
-  // which spins up the thread pool.
-  int32_t cpuCount = op.getIntOption("cpu-count");  // What we're really setting
-  if (cpuCount < 0) {
-    cpuCount = op.getIntOption("thread-count");  // Legacy name
-  }
-  if (cpuCount >= 0 && !SetFakeCPUCount(cpuCount)) {
-    return 1;
-  }
 
   /* Use the same parameters as the browser in xpcjsruntime.cpp. */
   JSContext* const cx = JS_NewContext(JS::DefaultHeapMaxBytes);
@@ -12485,6 +12397,102 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
     }
   }
 #endif
+
+  return true;
+}
+
+bool SetGlobalOptionsPostJSInit(const OptionParser& op) {
+  if (op.getStringOption("telemetry-dir")) {
+    MOZ_ASSERT(!telemetryLock);
+    telemetryLock = js_new<Mutex>(mutexid::ShellTelemetry);
+    if (!telemetryLock) {
+      return false;
+    }
+  }
+
+  // Allow dumping on Linux with the fuzzing flag set, even when running with
+  // the suid/sgid flag set on the shell.
+#ifdef XP_LINUX
+  if (op.getBoolOption("fuzzing-safe")) {
+    prctl(PR_SET_DUMPABLE, 1);
+  }
+#endif
+
+#ifdef DEBUG
+  /*
+   * Process OOM options as early as possible so that we can observe as many
+   * allocations as possible.
+   */
+  OOM_printAllocationCount = op.getBoolOption('O');
+#endif
+
+  if (op.getBoolOption("no-threads")) {
+    js::DisableExtraThreads();
+  }
+
+  enableCodeCoverage = op.getBoolOption("code-coverage");
+  if (enableCodeCoverage) {
+    js::EnableCodeCoverage();
+  }
+
+  // If LCov is enabled, then the default delazification mode should be changed
+  // to parse everything eagerly, such that we know the location of every
+  // instruction, to report them in the LCov summary, even if there is no uses
+  // of these instructions.
+  //
+  // Note: code coverage can be enabled either using the --code-coverage command
+  // line, or the JS_CODE_COVERAGE_OUTPUT_DIR environment variable, which is
+  // processed by JS_InitWithFailureDiagnostic.
+  if (coverage::IsLCovEnabled()) {
+    defaultDelazificationMode =
+        JS::DelazificationOption::ParseEverythingEagerly;
+  }
+
+  if (const char* xdr = op.getStringOption("selfhosted-xdr-path")) {
+    shell::selfHostedXDRPath = xdr;
+  }
+  if (const char* opt = op.getStringOption("selfhosted-xdr-mode")) {
+    if (strcmp(opt, "encode") == 0) {
+      shell::encodeSelfHostedCode = true;
+    } else if (strcmp(opt, "decode") == 0) {
+      shell::encodeSelfHostedCode = false;
+    } else if (strcmp(opt, "off") == 0) {
+      shell::selfHostedXDRPath = nullptr;
+    } else {
+      MOZ_CRASH(
+          "invalid option value for --selfhosted-xdr-mode, must be "
+          "encode/decode");
+    }
+  }
+
+#ifdef JS_WITHOUT_NSPR
+  if (!op.getMultiStringOption("dll").empty()) {
+    fprintf(stderr, "Error: --dll requires NSPR support!\n");
+    return false;
+  }
+#else
+  AutoLibraryLoader loader;
+  MultiStringRange dllPaths = op.getMultiStringOption("dll");
+  while (!dllPaths.empty()) {
+    char* path = dllPaths.front();
+    loader.load(path);
+    dllPaths.popFront();
+  }
+#endif
+
+  if (op.getBoolOption("suppress-minidump")) {
+    js::NoteIntentionalCrash();
+  }
+
+  // The fake CPU count must be set before initializing the Runtime,
+  // which spins up the thread pool.
+  int32_t cpuCount = op.getIntOption("cpu-count");  // What we're really setting
+  if (cpuCount < 0) {
+    cpuCount = op.getIntOption("thread-count");  // Legacy name
+  }
+  if (cpuCount >= 0 && !SetFakeCPUCount(cpuCount)) {
+    return false;
+  }
 
   return true;
 }
