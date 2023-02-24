@@ -97,10 +97,16 @@ bool Agc2Config::AdaptiveDigital::operator==(
          max_output_noise_level_dbfs == rhs.max_output_noise_level_dbfs;
 }
 
+bool Agc2Config::InputVolumeController::operator==(
+    const Agc2Config::InputVolumeController& rhs) const {
+  return enabled == rhs.enabled;
+}
+
 bool Agc2Config::operator==(const Agc2Config& rhs) const {
   return enabled == rhs.enabled &&
          fixed_digital.gain_db == rhs.fixed_digital.gain_db &&
-         adaptive_digital == rhs.adaptive_digital;
+         adaptive_digital == rhs.adaptive_digital &&
+         input_volume_controller == rhs.input_volume_controller;
 }
 
 bool AudioProcessing::Config::CaptureLevelAdjustment::operator==(
@@ -204,7 +210,8 @@ std::string AudioProcessing::Config::ToString() const {
           << gain_controller2.adaptive_digital.max_gain_change_db_per_second
           << ", max_output_noise_level_dbfs: "
           << gain_controller2.adaptive_digital.max_output_noise_level_dbfs
-          << "}}";
+          << " }, input_volume_control : { enabled "
+          << gain_controller2.input_volume_controller.enabled << "}}";
   return builder.str();
 }
 
