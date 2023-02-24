@@ -251,9 +251,10 @@ class PeerConnectionE2EQualityTestFixture {
 
     // output_directory - the output directory where stream will be dumped. The
     // output files' names will be constructed as
-    // <stream_name>_<receiver_name>.<extension> for output dumps and
-    // <stream_name>.<extension> for input dumps. By default <extension> is
-    // "y4m".
+    // <stream_name>_<receiver_name>_<resolution>.<extension> for output dumps
+    // and <stream_name>_<resolution>.<extension> for input dumps.
+    // By default <extension> is "y4m". Resolution is in the format
+    // <width>x<height>_<fps>.
     // sampling_modulo - the module for the video frames to be dumped. Modulo
     // equals X means every Xth frame will be written to the dump file. The
     // value must be greater than 0. (Default: 1)
@@ -300,18 +301,22 @@ class PeerConnectionE2EQualityTestFixture {
     static std::unique_ptr<test::VideoFrameWriter> Y4mVideoFrameWriterFactory(
         absl::string_view file_name_prefix,
         const VideoResolution& resolution);
-    std::string GetInputDumpFileName(absl::string_view stream_label) const;
+    std::string GetInputDumpFileName(absl::string_view stream_label,
+                                     const VideoResolution& resolution) const;
     // Returns file name for input frame ids dump if `export_frame_ids()` is
     // true, absl::nullopt otherwise.
     absl::optional<std::string> GetInputFrameIdsDumpFileName(
-        absl::string_view stream_label) const;
+        absl::string_view stream_label,
+        const VideoResolution& resolution) const;
     std::string GetOutputDumpFileName(absl::string_view stream_label,
-                                      absl::string_view receiver) const;
+                                      absl::string_view receiver,
+                                      const VideoResolution& resolution) const;
     // Returns file name for output frame ids dump if `export_frame_ids()` is
     // true, absl::nullopt otherwise.
     absl::optional<std::string> GetOutputFrameIdsDumpFileName(
         absl::string_view stream_label,
-        absl::string_view receiver) const;
+        absl::string_view receiver,
+        const VideoResolution& resolution) const;
 
     std::string output_directory_;
     int sampling_modulo_ = 1;
@@ -384,7 +389,7 @@ class PeerConnectionE2EQualityTestFixture {
     // stream on receiver side per each receiver.
     absl::optional<VideoDumpOptions> output_dump_options;
     // If set to true uses fixed frame rate while dumping output video to the
-    // file. `fps` will be used as frame rate.
+    // file. Requested `VideoSubscription::fps()` will be used as frame rate.
     bool output_dump_use_fixed_framerate = false;
     // If true will display input and output video on the user's screen.
     bool show_on_screen = false;

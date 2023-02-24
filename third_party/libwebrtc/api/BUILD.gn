@@ -1331,6 +1331,7 @@ if (rtc_include_tests) {
       "../test:rtc_expect_death",
       "../test:test_support",
       "task_queue:task_queue_default_factory_unittests",
+      "test/video:video_frame_writer",
       "transport:field_trial_based_config",
       "units:time_delta",
       "units:timestamp",
