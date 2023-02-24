@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_DESKTOP_CAPTURE_LINUX_WAYLAND_TEST_FAKE_SCREENCAST_STREAM_H_
-#define MODULES_DESKTOP_CAPTURE_LINUX_WAYLAND_TEST_FAKE_SCREENCAST_STREAM_H_
+#ifndef MODULES_DESKTOP_CAPTURE_LINUX_WAYLAND_TEST_TEST_SCREENCAST_STREAM_PROVIDER_H_
+#define MODULES_DESKTOP_CAPTURE_LINUX_WAYLAND_TEST_TEST_SCREENCAST_STREAM_PROVIDER_H_
 
 #include <pipewire/pipewire.h>
 #include <spa/param/video/format-utils.h>
@@ -20,10 +20,11 @@
 
 namespace webrtc {
 
-class FakeScreenCastStream {
+class TestScreenCastStreamProvider {
  public:
   class Observer {
    public:
+    virtual void OnBufferAdded() = 0;
     virtual void OnFrameRecorded() = 0;
     virtual void OnStreamReady(uint32_t stream_node_id) = 0;
     virtual void OnStartStreaming() = 0;
@@ -34,10 +35,10 @@ class FakeScreenCastStream {
     virtual ~Observer() = default;
   };
 
-  explicit FakeScreenCastStream(Observer* observer,
-                                uint32_t width,
-                                uint32_t height);
-  ~FakeScreenCastStream();
+  explicit TestScreenCastStreamProvider(Observer* observer,
+                                        uint32_t width,
+                                        uint32_t height);
+  ~TestScreenCastStreamProvider();
 
   uint32_t PipeWireNodeId();
 
@@ -89,4 +90,4 @@ class FakeScreenCastStream {
 
 }  // namespace webrtc
 
-#endif  // MODULES_DESKTOP_CAPTURE_LINUX_WAYLAND_TEST_FAKE_SCREENCAST_STREAM_H_
+#endif  // MODULES_DESKTOP_CAPTURE_LINUX_WAYLAND_TEST_TEST_SCREENCAST_STREAM_PROVIDER_H_

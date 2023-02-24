@@ -101,8 +101,8 @@ if (rtc_include_tests) {
 
       sources = [
         "linux/wayland/shared_screencast_stream_unittest.cc",
-        "linux/wayland/test/fake_screencast_stream.cc",
-        "linux/wayland/test/fake_screencast_stream.h",
+        "linux/wayland/test/test_screencast_stream_provider.cc",
+        "linux/wayland/test/test_screencast_stream_provider.h",
       ]
 
       configs += [

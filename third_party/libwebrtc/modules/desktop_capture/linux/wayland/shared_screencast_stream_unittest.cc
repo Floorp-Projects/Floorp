@@ -16,7 +16,7 @@
 #include "api/units/time_delta.h"
 #include "modules/desktop_capture/desktop_capturer.h"
 #include "modules/desktop_capture/desktop_frame.h"
-#include "modules/desktop_capture/linux/wayland/test/fake_screencast_stream.h"
+#include "modules/desktop_capture/linux/wayland/test/test_screencast_stream_provider.h"
 #include "modules/desktop_capture/rgba_color.h"
 #include "rtc_base/event.h"
 #include "test/gmock.h"
@@ -29,26 +29,29 @@ using ::testing::Invoke;
 namespace webrtc {
 
 constexpr TimeDelta kShortWait = TimeDelta::Seconds(2);
-constexpr TimeDelta kLongWait = TimeDelta::Seconds(10);
+constexpr TimeDelta kLongWait = TimeDelta::Seconds(15);
 
 constexpr int kBytesPerPixel = 4;
 constexpr int32_t kWidth = 800;
 constexpr int32_t kHeight = 640;
 
 class PipeWireStreamTest : public ::testing::Test,
-                           public FakeScreenCastStream::Observer,
+                           public TestScreenCastStreamProvider::Observer,
                            public SharedScreenCastStream::Observer {
  public:
   PipeWireStreamTest()
-      : fake_screencast_stream_(
-            std::make_unique<FakeScreenCastStream>(this, kWidth, kHeight)),
-        shared_screencast_stream_(new SharedScreenCastStream()) {
+      : test_screencast_stream_provider_(
+            std::make_unique<TestScreenCastStreamProvider>(this,
+                                                           kWidth,
+                                                           kHeight)) {
+    shared_screencast_stream_ = SharedScreenCastStream::CreateDefault();
     shared_screencast_stream_->SetObserver(this);
   }
 
   ~PipeWireStreamTest() override {}
 
   // FakeScreenCastPortal::Observer
+  MOCK_METHOD(void, OnBufferAdded, (), (override));
   MOCK_METHOD(void, OnFrameRecorded, (), (override));
   MOCK_METHOD(void, OnStreamReady, (uint32_t stream_node_id), (override));
   MOCK_METHOD(void, OnStartStreaming, (), (override));
@@ -67,22 +70,31 @@ class PipeWireStreamTest : public ::testing::Test,
  protected:
   uint recorded_frames_ = 0;
   bool streaming_ = false;
-  std::unique_ptr<FakeScreenCastStream> fake_screencast_stream_;
+  std::unique_ptr<TestScreenCastStreamProvider>
+      test_screencast_stream_provider_;
   rtc::scoped_refptr<SharedScreenCastStream> shared_screencast_stream_;
 };
 
 TEST_F(PipeWireStreamTest, TestPipeWire) {
   // Set expectations for PipeWire to successfully connect both streams
   rtc::Event waitConnectEvent;
+  rtc::Event waitAddBufferEvent;
+
   EXPECT_CALL(*this, OnStreamReady(_))
       .WillOnce(Invoke(this, &PipeWireStreamTest::StartScreenCastStream));
   EXPECT_CALL(*this, OnStartStreaming).WillOnce([&waitConnectEvent] {
     waitConnectEvent.Set();
   });
+  EXPECT_CALL(*this, OnBufferAdded).WillRepeatedly([&waitAddBufferEvent] {
+    waitAddBufferEvent.Set();
+  });
 
   // Give it some time to connect, the order between these shouldn't matter, but
   // we need to be sure we are connected before we proceed to work with frames.
   waitConnectEvent.Wait(kLongWait);
+
+  // Wait for an empty buffer to be added
+  waitAddBufferEvent.Wait(kShortWait);
 
   rtc::Event frameRetrievedEvent;
   EXPECT_CALL(*this, OnFrameRecorded).Times(3);
@@ -90,9 +102,8 @@ TEST_F(PipeWireStreamTest, TestPipeWire) {
       .WillRepeatedly([&frameRetrievedEvent] { frameRetrievedEvent.Set(); });
 
   // Record a frame in FakePipeWireStream
-  RgbaColor red_color(255, 0, 0);
-  fake_screencast_stream_->RecordFrame(red_color);
-  frameRetrievedEvent.Wait(kShortWait);
+  RgbaColor red_color(0, 0, 255);
+  test_screencast_stream_provider_->RecordFrame(red_color);
 
   // Retrieve a frame from SharedScreenCastStream
   frameRetrievedEvent.Wait(kShortWait);
@@ -105,11 +116,11 @@ TEST_F(PipeWireStreamTest, TestPipeWire) {
   EXPECT_EQ(frame->rect().width(), kWidth);
   EXPECT_EQ(frame->rect().height(), kHeight);
   EXPECT_EQ(frame->stride(), frame->rect().width() * kBytesPerPixel);
-  EXPECT_EQ(frame->data()[0], static_cast<uint8_t>(red_color.ToUInt32()));
+  EXPECT_EQ(RgbaColor(frame->data()), red_color);
 
   // Test DesktopFrameQueue
   RgbaColor green_color(0, 255, 0);
-  fake_screencast_stream_->RecordFrame(green_color);
+  test_screencast_stream_provider_->RecordFrame(green_color);
   frameRetrievedEvent.Wait(kShortWait);
   std::unique_ptr<SharedDesktopFrame> frame2 =
       shared_screencast_stream_->CaptureFrame();
@@ -118,7 +129,7 @@ TEST_F(PipeWireStreamTest, TestPipeWire) {
   EXPECT_EQ(frame2->rect().width(), kWidth);
   EXPECT_EQ(frame2->rect().height(), kHeight);
   EXPECT_EQ(frame2->stride(), frame->rect().width() * kBytesPerPixel);
-  EXPECT_EQ(frame2->data()[0], static_cast<uint8_t>(green_color.ToUInt32()));
+  EXPECT_EQ(RgbaColor(frame2->data()), green_color);
 
   // Thanks to DesktopFrameQueue we should be able to have two frames shared
   EXPECT_EQ(frame->IsShared(), true);
@@ -127,13 +138,17 @@ TEST_F(PipeWireStreamTest, TestPipeWire) {
 
   // This should result into overwriting a frame in use
   rtc::Event frameRecordedEvent;
-  RgbaColor blue_color(0, 0, 255);
+  RgbaColor blue_color(255, 0, 0);
   EXPECT_CALL(*this, OnFailedToProcessBuffer).WillOnce([&frameRecordedEvent] {
     frameRecordedEvent.Set();
   });
 
-  fake_screencast_stream_->RecordFrame(blue_color);
+  test_screencast_stream_provider_->RecordFrame(blue_color);
   frameRecordedEvent.Wait(kShortWait);
+
+  // First frame should be now overwritten with blue color
+  frameRetrievedEvent.Wait(kShortWait);
+  EXPECT_EQ(RgbaColor(frame->data()), blue_color);
 
   // Test disconnection from stream
   EXPECT_CALL(*this, OnStopStreaming);

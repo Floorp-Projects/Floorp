@@ -649,14 +649,12 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
         mouse_cursor_ = std::make_unique<MouseCursor>(
             mouse_frame, DesktopVector(cursor->hotspot.x, cursor->hotspot.y));
 
-        // For testing purpose
         if (observer_) {
           observer_->OnCursorShapeChanged();
         }
       }
       mouse_cursor_position_.set(cursor->position.x, cursor->position.y);
 
-      // For testing purpose
       if (observer_) {
         observer_->OnCursorPositionChanged();
       }
@@ -734,7 +732,6 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
   }
 
   if (!src) {
-    // For testing purpose
     if (observer_) {
       observer_->OnFailedToProcessBuffer();
     }
@@ -862,7 +859,6 @@ void SharedScreenCastStreamPrivate::ProcessBuffer(pw_buffer* buffer) {
     }
   }
 
-  // For testing purpose
   if (observer_) {
     observer_->OnDesktopFrameChanged();
   }

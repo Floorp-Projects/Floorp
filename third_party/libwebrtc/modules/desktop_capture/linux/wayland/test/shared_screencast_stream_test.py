@@ -28,16 +28,16 @@ def _ParseArgs():
       description='Run shared_screencast_screen test.')
   parser.add_argument('build_dir',
                       help='Path to the build directory (e.g. out/Release).')
+  parser.add_argument(
+      '--isolated-script-test-output',
+      default=None,
+      help='Path to output JSON file which Chromium infra requires.')
   # Unused args
   # We just need to avoid passing these to the test
   parser.add_argument(
       '--isolated-script-test-perf-output',
       default=None,
       help='Path to store perf results in histogram proto format.')
-  parser.add_argument(
-      '--isolated-script-test-output',
-      default=None,
-      help='Path to output JSON file which Chromium infra requires.')
 
   return parser.parse_known_args()
 
