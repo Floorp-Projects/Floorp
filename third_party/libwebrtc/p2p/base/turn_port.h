@@ -150,6 +150,14 @@ class TurnPort : public Port {
                             int64_t packet_time_us) override;
   bool CanHandleIncomingPacketsFrom(
       const rtc::SocketAddress& addr) const override;
+
+  // Checks if a connection exists for `addr` before forwarding the call to
+  // the base class.
+  void SendBindingErrorResponse(StunMessage* message,
+                                const rtc::SocketAddress& addr,
+                                int error_code,
+                                absl::string_view reason) override;
+
   virtual void OnReadPacket(rtc::AsyncPacketSocket* socket,
                             const char* data,
                             size_t size,
