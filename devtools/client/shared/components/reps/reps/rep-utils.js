@@ -493,8 +493,9 @@ define(function(require, exports, module) {
   function cleanupStyle(userProvidedStyle, createElement) {
     // Regular expression that matches the allowed CSS property names.
     const allowedStylesRegex = new RegExp(
-      "^(?:-moz-)?(?:background|border|box|clear|color|cursor|display|float|font|line|" +
-        "margin|padding|text|transition|outline|white-space|word|writing|" +
+      "^(?:-moz-)?(?:align|background|border|box|clear|color|cursor|display|" +
+        "float|font|justify|line|margin|padding|position|text|transition" +
+        "|outline|white-space|word|writing|" +
         "(?:min-|max-)?width|(?:min-|max-)?height)"
     );
 
@@ -520,6 +521,11 @@ define(function(require, exports, module) {
           return false;
         }
 
+        if (name === "position") {
+          return ["static", "relative"].includes(
+            dummy.style.getPropertyValue(name)
+          );
+        }
         // There can be multiple call to `url()` (e.g.` background: url("path/to/image"), url("data:image/png,…");`);
         // filter out the property if the url function is called with anything that is not
         // a data URL.
