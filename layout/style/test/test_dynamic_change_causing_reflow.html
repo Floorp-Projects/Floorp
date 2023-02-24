@@ -30,10 +30,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1131371
     top: 0;
     position: absolute;
   }
-  #tableCell,
-  #tableCellWithAbsPosChild {
-    display: table-cell;
-  }
 </style>
 <div id="display">
   <div id="content">
@@ -72,10 +68,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1131371
     Something
   </button>
   <button id="buttonElemWithAbsPosChild"><div style="position:absolute"></div></button>
-  <div id="tableCell"></div>
-  <div id="tableCellWithAbsPosChild">
-    <div style="position: absolute"></div>
-  </div>
 </div>
 <pre id="test">
 <script>
@@ -92,8 +84,6 @@ const textareaElem = document.getElementById("textareaElem");
 const selectElem = document.getElementById("selectElem");
 const buttonElem = document.getElementById("buttonElem");
 const buttonElemWithAbsPosChild = document.getElementById("buttonElemWithAbsPosChild");
-const tableCell = document.getElementById("tableCell");
-const tableCellWithAbsPosChild = document.getElementById("tableCellWithAbsPosChild");
 
 for (let scroller of document.querySelectorAll(".flexScrollerWithTransformedItems")) {
   scroller.scrollLeft = 10000;
@@ -448,18 +438,6 @@ const gTestcases = [
     beforeStyle:  "position: relative; overflow: auto;",
     expectReflow: true,
   },
-  {
-    elem: tableCell,
-    afterStyle: "position: static;",
-    beforeStyle:  "position: relative;",
-    expectReflow: true,
-  },
-  {
-    elem: tableCell,
-    afterStyle: "filter: none",
-    beforeStyle:  "filter: saturate(1)",
-    expectReflow: false,
-  },
 
   // These ones do though.
   {
@@ -480,13 +458,6 @@ const gTestcases = [
     elem: elemWithAbsPosChild,
     afterStyle: "position: static; overflow: auto;",
     beforeStyle:  "position: relative; overflow: auto;",
-    expectConstruction: true,
-    expectReflow: true,
-  },
-  {
-    elem: tableCellWithAbsPosChild,
-    afterStyle: "position: static;",
-    beforeStyle:  "position: relative;",
     expectConstruction: true,
     expectReflow: true,
   },
