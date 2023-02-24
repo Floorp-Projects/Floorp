@@ -103,7 +103,10 @@ void WebTransportParent::Create(
   InvokeAsync(mSocketThread, __func__,
               [parentEndpoint = std::move(aParentEndpoint), runnable = r,
                resolver = std::move(aResolver), p = RefPtr{this}]() mutable {
-                p->mResolver = resolver;
+                {
+                  MutexAutoLock lock(p->mMutex);
+                  p->mResolver = resolver;
+                }
 
                 LOG(("Binding parent endpoint"));
                 if (!parentEndpoint.Bind(p)) {
@@ -122,9 +125,17 @@ void WebTransportParent::Create(
           [p = RefPtr{this}](
               const CreateWebTransportPromise::ResolveOrRejectValue& aValue) {
             if (aValue.IsReject()) {
-              p->mResolver(ResolveType(
-                  aValue.RejectValue(),
-                  static_cast<uint8_t>(WebTransportReliabilityMode::Pending)));
+              std::function<void(ResolveType)> resolver;
+              {
+                MutexAutoLock lock(p->mMutex);
+                resolver = std::move(p->mResolver);
+              }
+              if (resolver) {
+                resolver(
+                    ResolveType(aValue.RejectValue(),
+                                static_cast<uint8_t>(
+                                    WebTransportReliabilityMode::Pending)));
+              }
             }
           });
 }
@@ -139,8 +150,11 @@ IPCResult WebTransportParent::RecvClose(const uint32_t& aCode,
                                         const nsACString& aReason) {
   LOG(("Close for %p received, code = %u, reason = %s", this, aCode,
        PromiseFlatCString(aReason).get()));
-  MOZ_ASSERT(!mClosed);
-  mClosed.Flip();
+  {
+    MutexAutoLock lock(mMutex);
+    MOZ_ASSERT(!mClosed);
+    mClosed.Flip();
+  }
   mWebTransport->CloseSession(aCode, aReason);
   Close();
   return IPC_OK();
@@ -309,15 +323,22 @@ WebTransportParent::OnSessionReady(uint64_t aSessionId) {
   LOG(("Created web transport session, sessionID = %" PRIu64 ", for %p",
        aSessionId, this));
 
+  mSessionReady = true;
+
   mOwningEventTarget->Dispatch(NS_NewRunnableFunction(
       "WebTransportParent::OnSessionReady", [self = RefPtr{this}] {
-        if (!self->IsClosed() && self->mResolver) {
+        MutexAutoLock lock(self->mMutex);
+        if (!self->mClosed && self->mResolver) {
           self->mResolver(ResolveType(
               NS_OK, static_cast<uint8_t>(
                          WebTransportReliabilityMode::Supports_unreliable)));
           self->mResolver = nullptr;
+          if (self->mExecuteAfterResolverCallback) {
+            self->mExecuteAfterResolverCallback();
+            self->mExecuteAfterResolverCallback = nullptr;
+          }
         } else {
-          if (self->IsClosed()) {
+          if (self->mClosed) {
             LOG(("Session already closed at OnSessionReady %p", self.get()));
           } else {
             LOG(("No resolver at OnSessionReady %p", self.get()));
@@ -353,7 +374,7 @@ WebTransportParent::OnSessionClosed(const uint32_t aErrorCode,
   // we need better error propagation from lower-levels of http3
   // webtransport session and it's subsequent error mapping to DOM.
   // XXX See Bug 1806834
-  if (mResolver) {
+  if (!mSessionReady) {
     LOG(("webtransport %p session creation failed code= %u, reason= %s", this,
          aErrorCode, PromiseFlatCString(aReason).get()));
     // we know we haven't gone Ready yet
@@ -361,30 +382,49 @@ WebTransportParent::OnSessionClosed(const uint32_t aErrorCode,
     mOwningEventTarget->Dispatch(NS_NewRunnableFunction(
         "WebTransportParent::OnSessionClosed",
         [self = RefPtr{this}, result = rv] {
-          if (!self->IsClosed() && self->mResolver) {
+          MutexAutoLock lock(self->mMutex);
+          if (!self->mClosed && self->mResolver) {
             self->mResolver(ResolveType(
                 result, static_cast<uint8_t>(
                             WebTransportReliabilityMode::Supports_unreliable)));
+            self->mResolver = nullptr;
           }
         }));
   } else {
+    {
+      MutexAutoLock lock(mMutex);
+      if (mResolver) {
+        LOG(("[%p] NotifyRemoteClosed to be called later", this));
+        // NotifyRemoteClosed needs to wait until mResolver is invoked.
+        mExecuteAfterResolverCallback = [self = RefPtr{this}, aErrorCode,
+                                         reason = nsCString{aReason}]() {
+          self->NotifyRemoteClosed(aErrorCode, reason);
+        };
+        return NS_OK;
+      }
+    }
     // https://w3c.github.io/webtransport/#web-transport-termination
     // Step 1: Let cleanly be a boolean representing whether the HTTP/3
     // stream associated with the CONNECT request that initiated
     // transport.[[Session]] is in the "Data Recvd" state. [QUIC]
     // XXX not calculated yet
-    LOG(("webtransport %p session remote closed code= %u, reason= %s", this,
-         aErrorCode, PromiseFlatCString(aReason).get()));
-    mSocketThread->Dispatch(NS_NewRunnableFunction(
-        __func__,
-        [self = RefPtr{this}, aErrorCode, reason = nsCString{aReason}]() {
-          // Tell the content side we were closed by the server
-          Unused << self->SendRemoteClosed(/*XXX*/ true, aErrorCode, reason);
-          // Let the other end shut down the IPC channel after RecvClose()
-        }));
+    NotifyRemoteClosed(aErrorCode, aReason);
   }
 
   return NS_OK;
+}
+
+void WebTransportParent::NotifyRemoteClosed(uint32_t aErrorCode,
+                                            const nsACString& aReason) {
+  LOG(("webtransport %p session remote closed code= %u, reason= %s", this,
+       aErrorCode, PromiseFlatCString(aReason).get()));
+  mSocketThread->Dispatch(NS_NewRunnableFunction(
+      __func__,
+      [self = RefPtr{this}, aErrorCode, reason = nsCString{aReason}]() {
+        // Tell the content side we were closed by the server
+        Unused << self->SendRemoteClosed(/*XXX*/ true, aErrorCode, reason);
+        // Let the other end shut down the IPC channel after RecvClose()
+      }));
 }
 
 // This method is currently not used by WebTransportSessionProxy to inform of

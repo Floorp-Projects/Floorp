@@ -176,9 +176,11 @@ class WebTransportSessionProxy final : public nsIWebTransport,
   uint64_t mSessionId MOZ_GUARDED_BY(mMutex) = UINT64_MAX;
   uint32_t mCloseStatus MOZ_GUARDED_BY(mMutex) = 0;
   nsCString mReason MOZ_GUARDED_BY(mMutex);
+  bool mStopRequestCalled MOZ_GUARDED_BY(mMutex) = false;
   // This is used to store events happened before OnSessionReady.
+  // Note that these events will be dispatched to the socket thread.
   nsTArray<std::function<void()>> mPendingEvents MOZ_GUARDED_BY(mMutex);
-  nsCOMPtr<nsIEventTarget> mTarget;
+  nsCOMPtr<nsIEventTarget> mTarget MOZ_GUARDED_BY(mMutex);
 };
 
 }  // namespace mozilla::net
