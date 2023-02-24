@@ -20,20 +20,10 @@
 #include <utility>
 #include <vector>
 
+#include "modules/desktop_capture/linux/wayland/pipewire_utils.h"
 #include "rtc_base/logging.h"
 
-#if defined(WEBRTC_DLOPEN_PIPEWIRE)
-#include "modules/desktop_capture/linux/wayland/pipewire_stubs.h"
-using modules_desktop_capture_linux_wayland::InitializeStubs;
-using modules_desktop_capture_linux_wayland::kModulePipewire;
-using modules_desktop_capture_linux_wayland::StubPathMap;
-#endif  // defined(WEBRTC_DLOPEN_PIPEWIRE)
-
 namespace webrtc {
-
-#if defined(WEBRTC_DLOPEN_PIPEWIRE)
-const char kPipeWireLib[] = "libpipewire-0.3.so.0";
-#endif
 
 constexpr int kBytesPerPixel = 4;
 
@@ -41,19 +31,10 @@ TestScreenCastStreamProvider::TestScreenCastStreamProvider(Observer* observer,
                                                            uint32_t width,
                                                            uint32_t height)
     : observer_(observer), width_(width), height_(height) {
-#if defined(WEBRTC_DLOPEN_PIPEWIRE)
-  StubPathMap paths;
-
-  // Check if the PipeWire library is available.
-  paths[kModulePipewire].push_back(kPipeWireLib);
-
-  if (!InitializeStubs(paths)) {
-    RTC_LOG(LS_ERROR)
-        << "One of following libraries is missing on your system:\n"
-        << " - PipeWire (" << kPipeWireLib << ")\n";
+  if (!InitializePipeWire()) {
+    RTC_LOG(LS_ERROR) << "Unable to open PipeWire";
     return;
   }
-#endif  // defined(WEBRTC_DLOPEN_PIPEWIRE)
 
   pw_init(/*argc=*/nullptr, /*argc=*/nullptr);
 
