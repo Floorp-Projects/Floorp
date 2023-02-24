@@ -2299,7 +2299,11 @@ export class PictureInPictureChild extends JSWindowActorChild {
           break;
         case "leftArrow": /* Seek back 5 seconds */
         case "accel-leftArrow" /* Seek back 10% */:
-          if (this.isKeyDisabled(lazy.KEYBOARD_CONTROLS.SEEK)) {
+          if (
+            this.isKeyDisabled(lazy.KEYBOARD_CONTROLS.SEEK) ||
+            (isVideoStreaming &&
+              this.isKeyDisabled(lazy.KEYBOARD_CONTROLS.LIVE_SEEK))
+          ) {
             return;
           }
 
@@ -2313,7 +2317,11 @@ export class PictureInPictureChild extends JSWindowActorChild {
           break;
         case "rightArrow": /* Seek forward 5 seconds */
         case "accel-rightArrow" /* Seek forward 10% */:
-          if (this.isKeyDisabled(lazy.KEYBOARD_CONTROLS.SEEK)) {
+          if (
+            this.isKeyDisabled(lazy.KEYBOARD_CONTROLS.SEEK) ||
+            (isVideoStreaming &&
+              this.isKeyDisabled(lazy.KEYBOARD_CONTROLS.LIVE_SEEK))
+          ) {
             return;
           }
 

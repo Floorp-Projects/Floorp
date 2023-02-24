@@ -40,6 +40,7 @@ FINAL_TARGET_FILES.features["pictureinpicture@mozilla.org"]["video-wrappers"] +=
     "video-wrappers/piped.js",
     "video-wrappers/primeVideo.js",
     "video-wrappers/tubi.js",
+    "video-wrappers/twitch.js",
     "video-wrappers/videojsWrapper.js",
     "video-wrappers/voot.js",
     "video-wrappers/washingtonpost.js",
