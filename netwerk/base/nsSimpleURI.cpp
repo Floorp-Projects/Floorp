@@ -25,7 +25,6 @@
 #include "nsIClassInfoImpl.h"
 #include "nsIURIMutator.h"
 #include "mozilla/net/MozURL.h"
-#include "mozilla/StaticPrefs_network.h"
 
 using namespace mozilla::ipc;
 

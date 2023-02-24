@@ -8,7 +8,6 @@
 
 #include "prio.h"
 #include "nsASocketHandler.h"
-#include "nsCOMPtr.h"
 #include "nsIServerSocket.h"
 #include "mozilla/Mutex.h"
 
