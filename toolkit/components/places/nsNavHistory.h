@@ -278,21 +278,6 @@ class nsNavHistory final : public nsSupportsWeakReference,
     return mDefaultWeight;
   }
 
-  int32_t GetFrecencyBucketWeight(int32_t aBucketIndex) const {
-    switch (aBucketIndex) {
-      case 1:
-        return mFirstBucketWeight;
-      case 2:
-        return mSecondBucketWeight;
-      case 3:
-        return mThirdBucketWeight;
-      case 4:
-        return mFourthBucketWeight;
-      default:
-        return mDefaultWeight;
-    }
-  }
-
   int32_t GetFrecencyTransitionBonus(int32_t aTransitionType, bool aVisited,
                                      bool aRedirect = false) const {
     if (aRedirect) {
