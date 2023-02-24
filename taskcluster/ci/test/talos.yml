@@ -766,15 +766,15 @@ talos-xperf:
     run-as-administrator:
         by-test-platform:
             windows.*32.*: false
-            windows10.*64.*: true
-            windows11.*64.*: true
+            windows10-64.*: true
+            windows11-64.*: true
     variants:
         - webrender-sw
     run-on-projects:
         by-test-platform:
             windows.*-32-shippable(?:-qr)?/.*: []
-            windows10.*-shippable-qr/.*: [mozilla-beta, trunk]
-            windows11.*-shippable-qr/.*: [mozilla-beta, trunk]
+            windows10-64.*-shippable-qr/.*: [mozilla-beta, trunk]
+            windows11-64.*-shippable-qr/.*: [mozilla-beta, trunk]
             default: []
     mozharness:
         extra-options:

@@ -12,11 +12,11 @@ job-defaults:
     target:
         by-test-platform:
             android-em-7.*: geckoview-test_runner.apk
-            windows1.*-shippable-qr/opt:
+            windows10-64-2004-shippable-qr/opt:
                 by-variant:
                     msix: target.installer.msix
                     default: null
-            windows1.*-qr/opt:
+            windows10-64-2004-qr/opt:
                 by-variant:
                     msix: target.installer.msix
                     default: null
@@ -41,8 +41,11 @@ job-defaults:
         requires-signed-builds:
             by-test-platform:
                 macosx1100.*: true
-                windows.*-asan-qr/opt: false    # No XPCShell on ASAN yet
-                windows.*-mingwclang-qr/.*: false
+                windows10-64-2004-asan-qr/opt: false    # No XPCShell on ASAN yet
+                windows10-32-mingwclang-qr/opt: false
+                windows10-32-mingwclang-qr/debug: false
+                windows10-64-2004-mingwclang-qr/opt: false
+                windows10-64-2004-mingwclang-qr/debug: false
                 windows.*: true
                 default: false
 
@@ -59,9 +62,7 @@ xpcshell:
         by-variant:
             conditioned_profile:
                 by-test-platform:
-                    .*asan.*: []
-                    .*ccov.*: []
-                    (linux1804-64|windows1.*64.*)(-shippable)?-qr/opt: ['trunk']
+                    (linux1804-64|windows10-64-2004)(-shippable)?-qr/opt: ['trunk']
                     default: []
             socketprocess_networking+no-fission:
                 by-test-platform:
@@ -80,13 +81,13 @@ xpcshell:
                     default: []
             msix:
                 by-test-platform:
-                    windows1.*-shippable-qr/opt: built-projects
-                    windows1.*-qr/opt: built-projects
+                    windows10-64-2004-shippable-qr/opt: built-projects
+                    windows10-64-2004-qr/opt: built-projects
                     default: []
             default:
                 by-test-platform:
                     android.*: []
-                    windows.*-asan-qr/opt: []  # No XPCShell on ASAN yet
+                    windows10-64-2004-asan-qr/opt: []  # No XPCShell on ASAN yet
                     default: built-projects
     chunks:
         by-test-platform:
@@ -100,19 +101,20 @@ xpcshell:
             msix: 7200
             default:
                 by-test-platform:
-                    .*-ccov(-qr)?/.*: 7200
+                    .*64-ccov(-qr)?/.*: 7200
+                    .*64-2004-ccov(-qr)?/.*: 7200  # Windows 10 x64 2004 CCov specific, the line above does not catch this case.
                     .*-tsan-qr/opt: 7200
                     default: 5400
     allow-software-gl-layers: false
     tier:
         by-test-platform:
-            windows.*-asan.*: 3
+            windows10-64-2004-asan.*: 3
             android-em-7.0-x86_64-qr/debug-isolated-process: 3
             default: default
     mozharness:
         extra-options:
             by-test-platform:
-                windows1.*:
+                windows10.*:
                     - --threads=2
                 default: []
     fetches:
@@ -157,17 +159,21 @@ xpcshell-failures:
         script:
             by-test-platform:
                 macos.*: mac_unittest.py
-                windows1.*: desktop_unittest.py
+                windows10.*: desktop_unittest.py
         config:
             by-test-platform:
                 macos.*:
                     - unittests/mac_unittest.py
-                windows1.*:
+                windows10.*:
                     - unittests/win_unittest.py
         extra-options:
             by-test-platform:
                 macosx1100.*:
                     - --run-failures=apple_silicon
+                    - --timeout-as-pass
+                    - --crash-as-pass
+                windows10-32-2004.*:
+                    - --run-failures=win10_2004
                     - --timeout-as-pass
                     - --crash-as-pass
     fetches:
