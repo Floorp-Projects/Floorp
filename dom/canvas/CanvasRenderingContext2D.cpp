@@ -1558,6 +1558,12 @@ static WindowRenderer* WindowRendererFromCanvasElement(
 bool CanvasRenderingContext2D::TryAcceleratedTarget(
     RefPtr<gfx::DrawTarget>& aOutDT,
     RefPtr<layers::PersistentBufferProvider>& aOutProvider) {
+  if (!XRE_IsContentProcess()) {
+    // Only allow accelerated contexts to be created in a content process to
+    // ensure it is remoted appropriately and run on the correct parent or
+    // GPU process threads.
+    return false;
+  }
   if (mBufferProvider && mBufferProvider->IsAccelerated() &&
       mBufferProvider->RequiresRefresh()) {
     // If there is already a provider and we got here, then the provider needs
