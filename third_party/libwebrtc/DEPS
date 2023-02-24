@@ -26,9 +26,6 @@ vars = {
   'checkout_fuchsia_boot_images': "qemu.x64",
   'checkout_fuchsia': False,
 
-  # By default, do not check out the re-client binaries.
-  'checkout_reclient': False,
-
   # reclient CIPD package version
   'reclient_version': 're_client_version:0.81.1.0853992-gomaip',
 
@@ -97,7 +94,6 @@ deps = {
       }
     ],
     'dep_type': 'cipd',
-    'condition': 'checkout_reclient',
   },
 
   'src/buildtools/clang_format/script':
