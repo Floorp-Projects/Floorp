@@ -141,6 +141,7 @@ const cricket::IceParameters kIceParams[4] = {
 
 const uint64_t kLowTiebreaker = 11111;
 const uint64_t kHighTiebreaker = 22222;
+const uint64_t kTiebreakerDefault = 44444;
 
 cricket::IceConfig CreateIceConfig(
     int receiving_timeout,
@@ -300,6 +301,11 @@ class P2PTransportChannelTestBase : public ::testing::Test,
     ep2_.allocator_.reset(CreateBasicPortAllocator(
         &ep2_.network_manager_, ss_.get(), stun_servers, kTurnUdpIntAddr,
         rtc::SocketAddress()));
+
+    ep1_.SetIceTiebreaker(kTiebreakerDefault);
+    ep1_.allocator_->SetIceTiebreaker(kTiebreakerDefault);
+    ep2_.SetIceTiebreaker(kTiebreakerDefault);
+    ep2_.allocator_->SetIceTiebreaker(kTiebreakerDefault);
     webrtc::metrics::Reset();
   }
 
@@ -3476,6 +3482,7 @@ class P2PTransportChannelPingTest : public TestWithParam<std::string>,
  protected:
   void PrepareChannel(P2PTransportChannel* ch) {
     ch->SetIceRole(ICEROLE_CONTROLLING);
+    ch->SetIceTiebreaker(kTiebreakerDefault);
     ch->SetIceParameters(kIceParams[0]);
     ch->SetRemoteIceParameters(kIceParams[1]);
     ch->SignalNetworkRouteChanged.connect(
@@ -3840,6 +3847,7 @@ TEST_P(P2PTransportChannelPingTest, PingingStartedAsSoonAsPossible) {
   FakePortAllocator pa(rtc::Thread::Current(), packet_socket_factory());
   P2PTransportChannel ch("TestChannel", 1, &pa, &field_trials_);
   ch.SetIceRole(ICEROLE_CONTROLLING);
+  ch.SetIceTiebreaker(kTiebreakerDefault);
   ch.SetIceParameters(kIceParams[0]);
   ch.MaybeStartGathering();
   EXPECT_EQ_WAIT(IceGatheringState::kIceGatheringComplete, ch.gathering_state(),

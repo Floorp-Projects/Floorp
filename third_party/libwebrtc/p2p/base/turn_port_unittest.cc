@@ -95,6 +95,8 @@ static constexpr unsigned int kConnectionDestructionDelay = 1;
 // See: https://bugs.chromium.org/p/webrtc/issues/detail?id=5191
 static constexpr unsigned int kResolverTimeout = 10000;
 
+constexpr uint64_t kTiebreakerDefault = 44444;
+
 static const cricket::ProtocolAddress kTurnUdpProtoAddr(kTurnUdpIntAddr,
                                                         cricket::PROTO_UDP);
 static const cricket::ProtocolAddress kTurnTcpProtoAddr(kTurnTcpIntAddr,
@@ -293,6 +295,7 @@ class TurnPortTest : public ::testing::Test,
     }
     // This TURN port will be the controlling.
     turn_port_->SetIceRole(ICEROLE_CONTROLLING);
+    turn_port_->SetIceTiebreaker(kTiebreakerDefault);
     ConnectSignals();
 
     if (server_address.proto == cricket::PROTO_TLS) {
@@ -333,6 +336,7 @@ class TurnPortTest : public ::testing::Test,
     turn_port_ = TurnPort::Create(args, socket_.get());
     // This TURN port will be the controlling.
     turn_port_->SetIceRole(ICEROLE_CONTROLLING);
+    turn_port_->SetIceTiebreaker(kTiebreakerDefault);
     ConnectSignals();
   }
 
@@ -357,6 +361,7 @@ class TurnPortTest : public ::testing::Test,
                                 absl::nullopt, &field_trials_);
     // UDP port will be controlled.
     udp_port_->SetIceRole(ICEROLE_CONTROLLED);
+    udp_port_->SetIceTiebreaker(kTiebreakerDefault);
     udp_port_->SignalPortComplete.connect(this,
                                           &TurnPortTest::OnUdpPortComplete);
   }

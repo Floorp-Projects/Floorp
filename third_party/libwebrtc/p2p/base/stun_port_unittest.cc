@@ -59,6 +59,8 @@ static const uint32_t kIPv6StunCandidatePriority =
 static const int kInfiniteLifetime = -1;
 static const int kHighCostPortKeepaliveLifetimeMs = 2 * 60 * 1000;
 
+constexpr uint64_t kTiebreakerDefault = 44444;
+
 // A PacketSocketFactory implementation that uses a mock DnsResolver and allows
 // setting expectations on the resolver and results.
 class MockDnsResolverPacketSocketFactory
@@ -141,6 +143,7 @@ class StunPortTestBase : public ::testing::Test, public sigslot::has_slots<> {
         rtc::Thread::Current(), socket_factory(), &network_, 0, 0,
         rtc::CreateRandomString(16), rtc::CreateRandomString(22), stun_servers,
         absl::nullopt, field_trials);
+    stun_port_->SetIceTiebreaker(kTiebreakerDefault);
     stun_port_->set_stun_keepalive_delay(stun_keepalive_delay_);
     // If `stun_keepalive_lifetime_` is negative, let the stun port
     // choose its lifetime from the network type.
@@ -171,6 +174,7 @@ class StunPortTestBase : public ::testing::Test, public sigslot::has_slots<> {
         rtc::CreateRandomString(16), rtc::CreateRandomString(22), false,
         absl::nullopt, field_trials);
     ASSERT_TRUE(stun_port_ != NULL);
+    stun_port_->SetIceTiebreaker(kTiebreakerDefault);
     ServerAddresses stun_servers;
     stun_servers.insert(server_addr);
     stun_port_->set_server_addresses(stun_servers);
