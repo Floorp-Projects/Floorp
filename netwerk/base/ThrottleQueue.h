@@ -11,7 +11,6 @@
 #include "nsINamed.h"
 #include "nsIThrottledInputChannel.h"
 #include "nsITimer.h"
-#include "nsTArray.h"
 
 namespace mozilla {
 namespace net {
