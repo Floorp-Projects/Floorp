@@ -1149,6 +1149,16 @@ if (rtc_include_tests) {
     ]
   }
 
+  rtc_source_set("mock_session_description_interface") {
+    visibility = [ "*" ]
+    testonly = true
+    sources = [ "test/mock_session_description_interface.h" ]
+    deps = [
+      ":libjingle_peerconnection_api",
+      "../test:test_support",
+    ]
+  }
+
   rtc_source_set("mock_async_dns_resolver") {
     visibility = [ "*" ]
     testonly = true
@@ -1355,6 +1365,7 @@ if (rtc_include_tests) {
       ":mock_peer_connection_factory_interface",
       ":mock_peerconnectioninterface",
       ":mock_rtp",
+      ":mock_session_description_interface",
       ":mock_transformable_video_frame",
       ":mock_video_bitrate_allocator",
       ":mock_video_bitrate_allocator_factory",
