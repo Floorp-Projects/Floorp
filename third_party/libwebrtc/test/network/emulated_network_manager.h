@@ -60,6 +60,8 @@ class EmulatedNetworkManager : public rtc::NetworkManagerBase,
   }
   void GetStats(std::function<void(std::unique_ptr<EmulatedNetworkStats>)>
                     stats_callback) const override;
+  void GetStats(
+      std::function<void(EmulatedNetworkStats)> stats_callback) const override;
 
  private:
   void UpdateNetworksOnce();
