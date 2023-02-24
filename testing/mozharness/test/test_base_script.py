@@ -320,7 +320,13 @@ class TestScript(unittest.TestCase):
                     extract_to=self.tmpdir,
                 )
 
-        for archive in ("archive-setuid.tar", "archive-escape.tar"):
+        for archive in (
+            "archive-setuid.tar",
+            "archive-escape.tar",
+            "archive-link.tar",
+            "archive-link-abs.tar",
+            "archive-double-link.tar",
+        ):
             with self.assertRaises(Exception):
                 self.s.download_unpack(
                     url=os.path.join(archives_path, archive),
@@ -371,7 +377,13 @@ class TestScript(unittest.TestCase):
                     self.tmpdir,
                 )
 
-        for archive in ("archive-setuid.tar", "archive-escape.tar"):
+        for archive in (
+            "archive-setuid.tar",
+            "archive-escape.tar",
+            "archive-link.tar",
+            "archive-link-abs.tar",
+            "archive-double-link.tar",
+        ):
             with self.assertRaises(Exception):
                 self.s.unpack(os.path.join(archives_path, archive), self.tmpdir)
 

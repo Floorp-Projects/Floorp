@@ -42,10 +42,10 @@ def extract_tarball(src, dest, ignore=None):
     import tarfile
 
     def _is_within_directory(directory, target):
-        abs_directory = os.path.abspath(directory)
-        abs_target = os.path.abspath(target)
-        prefix = os.path.commonprefix([abs_directory, abs_target])
-        return prefix == abs_directory
+        real_directory = os.path.realpath(directory)
+        real_target = os.path.realpath(target)
+        prefix = os.path.commonprefix([real_directory, real_target])
+        return prefix == real_directory
 
     with tarfile.open(src) as bundle:
         namelist = []
@@ -65,6 +65,20 @@ def extract_tarball(src, dest, ignore=None):
                     """
                     )
                 )
+            if m.issym():
+                link_path = os.path.join(os.path.dirname(member_path), m.linkname)
+                if not _is_within_directory(dest, link_path):
+                    raise RuntimeError(
+                        dedent(
+                            f"""
+                    Tar bundle '{src}' may be maliciously crafted to escape the destination!
+                    The following path was detected:
+
+                      {m.name}
+                        """
+                        )
+                    )
+
             if m.mode & (stat.S_ISUID | stat.S_ISGID):
                 raise RuntimeError(
                     dedent(
