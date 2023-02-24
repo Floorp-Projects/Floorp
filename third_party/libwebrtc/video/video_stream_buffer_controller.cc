@@ -110,7 +110,6 @@ VideoStreamBufferController::VideoStreamBufferController(
   RTC_DCHECK(timing_);
   RTC_DCHECK(clock_);
   RTC_DCHECK(frame_decode_scheduler_);
-  RTC_LOG(LS_WARNING) << "Using FrameBuffer3";
 
   ParseFieldTrial({&zero_playout_delay_max_decode_queue_size_},
                   field_trials.Lookup("WebRTC-ZeroPlayoutDelay"));
