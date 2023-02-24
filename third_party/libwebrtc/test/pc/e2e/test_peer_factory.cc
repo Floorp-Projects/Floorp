@@ -15,6 +15,7 @@
 #include "absl/strings/string_view.h"
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/test/create_time_controller.h"
+#include "api/test/pclf/peer_configurer.h"
 #include "api/test/time_controller.h"
 #include "api/transport/field_trial_based_config.h"
 #include "api/video_codecs/builtin_video_decoder_factory.h"
@@ -26,7 +27,6 @@
 #include "rtc_base/thread.h"
 #include "test/pc/e2e/analyzer/video/quality_analyzing_video_encoder.h"
 #include "test/pc/e2e/echo/echo_emulation.h"
-#include "test/pc/e2e/peer_configurer.h"
 #include "test/testsupport/copy_to_file_audio_capturer.h"
 
 namespace webrtc {
