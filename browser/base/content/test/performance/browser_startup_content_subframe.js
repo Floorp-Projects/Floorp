@@ -44,9 +44,6 @@ const known_scripts = {
     // Logging related
     "resource://gre/modules/Log.sys.mjs",
 
-    // Browser front-end
-    "resource:///actors/PageStyleChild.jsm",
-
     // Telemetry
     "resource://gre/modules/TelemetryControllerBase.sys.mjs", // bug 1470339
     "resource://gre/modules/TelemetryControllerContent.sys.mjs", // bug 1470339
