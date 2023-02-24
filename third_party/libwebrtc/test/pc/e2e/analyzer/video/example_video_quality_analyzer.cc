@@ -29,6 +29,9 @@ uint16_t ExampleVideoQualityAnalyzer::OnFrameCaptured(
     const webrtc::VideoFrame& frame) {
   MutexLock lock(&lock_);
   uint16_t frame_id = next_frame_id_++;
+  if (frame_id == VideoFrame::kNotSetId) {
+    frame_id = next_frame_id_++;
+  }
   auto it = frames_in_flight_.find(frame_id);
   if (it == frames_in_flight_.end()) {
     frames_in_flight_.insert(frame_id);
