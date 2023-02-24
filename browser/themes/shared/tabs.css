@@ -448,10 +448,8 @@
   margin-inline-end: calc(var(--inline-tab-padding) / -2);
   width: 24px;
   height: 24px;
-  padding: 6px;
+  padding: 7px;
   border-radius: var(--tab-border-radius);
-  list-style-image: url(chrome://global/skin/icons/close-12.svg);
-  fill: var(--toolbarbutton-icon-fill);
 }
 
 /* The following rulesets allow showing more of the tab title */
