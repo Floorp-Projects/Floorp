@@ -364,16 +364,7 @@ WEBRTC_RTCSTATS_IMPL(DEPRECATED_RTCMediaStreamTrackStats, RTCStats, "track",
                      &silent_concealed_samples,
                      &concealment_events,
                      &inserted_samples_for_deceleration,
-                     &removed_samples_for_acceleration,
-                     &jitter_buffer_flushes,
-                     &delayed_packet_outage_samples,
-                     &relative_packet_arrival_delay,
-                     &interruption_count,
-                     &total_interruption_duration,
-                     &freeze_count,
-                     &pause_count,
-                     &total_freezes_duration,
-                     &total_pauses_duration)
+                     &removed_samples_for_acceleration)
 // clang-format on
 
 DEPRECATED_RTCMediaStreamTrackStats::DEPRECATED_RTCMediaStreamTrackStats(
@@ -413,23 +404,7 @@ DEPRECATED_RTCMediaStreamTrackStats::DEPRECATED_RTCMediaStreamTrackStats(
       silent_concealed_samples("silentConcealedSamples"),
       concealment_events("concealmentEvents"),
       inserted_samples_for_deceleration("insertedSamplesForDeceleration"),
-      removed_samples_for_acceleration("removedSamplesForAcceleration"),
-      jitter_buffer_flushes(
-          "jitterBufferFlushes",
-          {NonStandardGroupId::kRtcAudioJitterBufferMaxPackets}),
-      delayed_packet_outage_samples(
-          "delayedPacketOutageSamples",
-          {NonStandardGroupId::kRtcAudioJitterBufferMaxPackets,
-           NonStandardGroupId::kRtcStatsRelativePacketArrivalDelay}),
-      relative_packet_arrival_delay(
-          "relativePacketArrivalDelay",
-          {NonStandardGroupId::kRtcStatsRelativePacketArrivalDelay}),
-      interruption_count("interruptionCount"),
-      total_interruption_duration("totalInterruptionDuration"),
-      freeze_count("freezeCount"),
-      pause_count("pauseCount"),
-      total_freezes_duration("totalFreezesDuration"),
-      total_pauses_duration("totalPausesDuration") {
+      removed_samples_for_acceleration("removedSamplesForAcceleration") {
   RTC_DCHECK(kind == RTCMediaStreamTrackKind::kAudio ||
              kind == RTCMediaStreamTrackKind::kVideo);
 }

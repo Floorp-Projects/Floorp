@@ -1054,22 +1054,6 @@ ProduceMediaStreamTrackStatsFromVoiceReceiverInfo(
   audio_track_stats->concealment_events =
       voice_receiver_info.concealment_events;
 
-  // TODO(crbug.com/webrtc/14524): These metrics have been moved from "track"
-  // stats, delete them.
-  audio_track_stats->jitter_buffer_flushes =
-      voice_receiver_info.jitter_buffer_flushes;
-  audio_track_stats->delayed_packet_outage_samples =
-      voice_receiver_info.delayed_packet_outage_samples;
-  audio_track_stats->relative_packet_arrival_delay =
-      voice_receiver_info.relative_packet_arrival_delay_seconds;
-  audio_track_stats->interruption_count =
-      voice_receiver_info.interruption_count >= 0
-          ? voice_receiver_info.interruption_count
-          : 0;
-  audio_track_stats->total_interruption_duration =
-      static_cast<double>(voice_receiver_info.total_interruption_duration_ms) /
-      rtc::kNumMillisecsPerSec;
-
   return audio_track_stats;
 }
 
@@ -1135,17 +1119,6 @@ ProduceMediaStreamTrackStatsFromVideoReceiverInfo(
   // value as "RTCInboundRTPStreamStats.framesDecoded". https://crbug.com/659137
   video_track_stats->frames_decoded = video_receiver_info.frames_decoded;
   video_track_stats->frames_dropped = video_receiver_info.frames_dropped;
-
-  // TODO(crbug.com/webrtc/14521): These metrics have been moved, delete them
-  // from "track".
-  video_track_stats->freeze_count = video_receiver_info.freeze_count;
-  video_track_stats->pause_count = video_receiver_info.pause_count;
-  video_track_stats->total_freezes_duration =
-      static_cast<double>(video_receiver_info.total_freezes_duration_ms) /
-      rtc::kNumMillisecsPerSec;
-  video_track_stats->total_pauses_duration =
-      static_cast<double>(video_receiver_info.total_pauses_duration_ms) /
-      rtc::kNumMillisecsPerSec;
 
   return video_track_stats;
 }

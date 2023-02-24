@@ -347,17 +347,6 @@ class RTC_EXPORT DEPRECATED_RTCMediaStreamTrackStats final : public RTCStats {
   RTCStatsMember<uint64_t> concealment_events;
   RTCStatsMember<uint64_t> inserted_samples_for_deceleration;
   RTCStatsMember<uint64_t> removed_samples_for_acceleration;
-  // TODO(crbug.com/webrtc/14524): These metrics have been moved, delete them.
-  RTCNonStandardStatsMember<uint64_t> jitter_buffer_flushes;
-  RTCNonStandardStatsMember<uint64_t> delayed_packet_outage_samples;
-  RTCNonStandardStatsMember<double> relative_packet_arrival_delay;
-  RTCNonStandardStatsMember<uint32_t> interruption_count;
-  RTCNonStandardStatsMember<double> total_interruption_duration;
-  // TODO(crbug.com/webrtc/14521): These metrics have been moved, delete them.
-  RTCNonStandardStatsMember<uint32_t> freeze_count;
-  RTCNonStandardStatsMember<uint32_t> pause_count;
-  RTCNonStandardStatsMember<double> total_freezes_duration;
-  RTCNonStandardStatsMember<double> total_pauses_duration;
 };
 using RTCMediaStreamTrackStats [[deprecated("bugs.webrtc.org/14175")]] =
     DEPRECATED_RTCMediaStreamTrackStats;
