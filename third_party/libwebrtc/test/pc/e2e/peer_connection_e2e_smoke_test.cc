@@ -20,6 +20,7 @@
 #include "api/test/network_emulation_manager.h"
 #include "api/test/pclf/media_configuration.h"
 #include "api/test/pclf/media_quality_test_params.h"
+#include "api/test/pclf/peer_configurer.h"
 #include "api/test/peerconnection_quality_test_fixture.h"
 #include "call/simulated_network.h"
 #include "system_wrappers/include/field_trial.h"
@@ -41,8 +42,6 @@ namespace {
 
 class PeerConnectionE2EQualityTestSmokeTest : public ::testing::Test {
  public:
-  using PeerConfigurer = PeerConnectionE2EQualityTestFixture::PeerConfigurer;
-
   void SetUp() override {
     network_emulation_ = CreateNetworkEmulationManager();
     auto video_quality_analyzer = std::make_unique<DefaultVideoQualityAnalyzer>(
@@ -81,8 +80,11 @@ class PeerConnectionE2EQualityTestSmokeTest : public ::testing::Test {
   }
 
   void AddPeer(EmulatedNetworkManagerInterface* network,
-               rtc::FunctionView<void(PeerConfigurer*)> configurer) {
-    fixture_->AddPeer(network->network_dependencies(), configurer);
+               rtc::FunctionView<void(PeerConfigurer*)> update_configurer) {
+    auto configurer =
+        std::make_unique<PeerConfigurer>(network->network_dependencies());
+    update_configurer(configurer.get());
+    fixture_->AddPeer(std::move(configurer));
   }
 
   void RunAndCheckEachVideoStreamReceivedFrames(const RunParams& run_params) {

@@ -114,15 +114,16 @@ TEST_F(PeerConnectionE2EQualityTestTest, OutputVideoIsDumpedWhenRequested) {
   EmulatedNetworkManagerInterface* bob_network =
       network_emulation->CreateEmulatedNetworkManagerInterface({bob_endpoint});
 
-  fixture.AddPeer(
-      alice_network->network_dependencies(), [&](PeerConfigurer* peer) {
-        peer->SetName("alice");
-        VideoConfig video("alice_video", 320, 180, 15);
-        video.output_dump_options = VideoDumpOptions(test_directory_);
-        peer->AddVideoConfig(std::move(video));
-      });
-  fixture.AddPeer(bob_network->network_dependencies(),
-                  [&](PeerConfigurer* peer) { peer->SetName("bob"); });
+  VideoConfig alice_video("alice_video", 320, 180, 15);
+  alice_video.output_dump_options = VideoDumpOptions(test_directory_);
+  PeerConfigurer alice(alice_network->network_dependencies());
+  alice.SetName("alice");
+  alice.AddVideoConfig(std::move(alice_video));
+  fixture.AddPeer(std::make_unique<PeerConfigurer>(std::move(alice)));
+
+  PeerConfigurer bob(bob_network->network_dependencies());
+  bob.SetName("bob");
+  fixture.AddPeer(std::make_unique<PeerConfigurer>(std::move(bob)));
 
   fixture.Run(RunParams(TimeDelta::Seconds(2)));
 

@@ -74,6 +74,7 @@ class PeerConnectionE2EQualityTest
   PeerHandle* AddPeer(
       const PeerNetworkDependencies& network_dependencies,
       rtc::FunctionView<void(PeerConfigurer*)> configurer) override;
+  PeerHandle* AddPeer(std::unique_ptr<PeerConfigurer> configurer) override;
   void Run(RunParams run_params) override;
 
   TimeDelta GetRealTestDuration() const override {
