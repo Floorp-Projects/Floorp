@@ -10782,19 +10782,6 @@ static int Shell(JSContext* cx, OptionParser* op) {
 #endif
   });
 
-  if (op->getBoolOption("wasm-compile-and-serialize")) {
-#ifdef __wasi__
-    MOZ_CRASH("WASI doesn't support wasm");
-#else
-    if (!WasmCompileAndSerialize(cx)) {
-      // Errors have been printed directly to stderr.
-      MOZ_ASSERT(!cx->isExceptionPending());
-      return -1;
-    }
-#endif
-    return EXIT_SUCCESS;
-  }
-
 #ifdef MOZ_CODE_COVERAGE
   InstallCoverageSignalHandlers();
 #endif
@@ -11259,16 +11246,6 @@ int main(int argc, char** argv) {
     }
   }
 
-#ifndef __wasi__
-  // This must be set before self-hosted code is initialized, as self-hosted
-  // code reads the property and the property may not be changed later.
-  bool disabledHugeMemory = false;
-  if (op.getBoolOption("disable-wasm-huge-memory")) {
-    disabledHugeMemory = JS::DisableWasmHugeMemory();
-    MOZ_RELEASE_ASSERT(disabledHugeMemory);
-  }
-#endif
-
   if (!JS::InitSelfHostedCode(cx, xdrSpan, xdrWriter)) {
     return 1;
   }
@@ -11280,60 +11257,18 @@ int main(int argc, char** argv) {
   js::SetPreserveWrapperCallbacks(cx, DummyPreserveWrapperCallback,
                                   DummyHasReleasedWrapperCallback);
 
-#ifndef __wasi__
-  // --disable-wasm-huge-memory needs to be propagated.  See bug 1518210.
-  if (disabledHugeMemory &&
-      !sCompilerProcessFlags.append("--disable-wasm-huge-memory")) {
-    return EXIT_FAILURE;
-  }
-
-  // Also the following are to be propagated.
-  const char* to_propagate[] = {
-#  define WASM_DEFAULT_FEATURE(NAME, LOWER_NAME, COMPILE_PRED, COMPILER_PRED, \
-                               FLAG_PRED, SHELL, ...)                         \
-    "--no-wasm-" SHELL,
-#  define WASM_EXPERIMENTAL_FEATURE(NAME, LOWER_NAME, COMPILE_PRED,       \
-                                    COMPILER_PRED, FLAG_PRED, SHELL, ...) \
-    "--wasm-" SHELL,
-      JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_DEFAULT_FEATURE,
-                           WASM_EXPERIMENTAL_FEATURE)
-#  undef WASM_DEFAULT_FEATURE
-#  undef WASM_EXPERIMENTAL_FEATURE
-      // Compiler selection options
-      "--test-wasm-await-tier2",
-      NULL};
-  for (const char** p = &to_propagate[0]; *p; p++) {
-    if (op.getBoolOption(&(*p)[2] /* 2 => skip the leading '--' */)) {
-      if (!sCompilerProcessFlags.append(*p)) {
-        return EXIT_FAILURE;
-      }
-    }
-  }
-
-  // Also --wasm-compiler= is to be propagated.  This is tricky because it is
-  // necessary to reconstitute the --wasm-compiler=<whatever> string from its
-  // pieces, without causing a leak.  Hence it is copied into a static buffer.
-  // This is thread-unsafe, but we're in `main()` and on the process' root
-  // thread.  Also, we do this only once -- it wouldn't work properly if we
-  // handled multiple --wasm-compiler= flags in a loop.
-  const char* wasm_compiler = op.getStringOption("wasm-compiler");
-  if (wasm_compiler) {
-    size_t n_needed =
-        2 + strlen("wasm-compiler") + 1 + strlen(wasm_compiler) + 1;
-    const size_t n_avail = 128;
-    static char buf[n_avail];
-    // `n_needed` depends on the compiler name specified.  However, it can't
-    // be arbitrarily long, since previous flag-checking should have limited
-    // it to a set of known possibilities: "baseline", "ion",
-    // "baseline+ion",  Still, assert this for safety.
-    MOZ_RELEASE_ASSERT(n_needed < n_avail);
-    memset(buf, 0, sizeof(buf));
-    SprintfBuf(buf, n_avail, "--%s=%s", "wasm-compiler", wasm_compiler);
-    if (!sCompilerProcessFlags.append(buf)) {
+  if (op.getBoolOption("wasm-compile-and-serialize")) {
+#ifdef __wasi__
+    MOZ_CRASH("WASI doesn't support wasm");
+#else
+    if (!WasmCompileAndSerialize(cx)) {
+      // Errors have been printed directly to stderr.
+      MOZ_ASSERT(!cx->isExceptionPending());
       return EXIT_FAILURE;
     }
+#endif
+    return EXIT_SUCCESS;
   }
-#endif  // __wasi__
 
   result = Shell(cx, &op);
 
@@ -12078,6 +12013,69 @@ bool SetContextWasmOptions(JSContext* cx, const OptionParser& op) {
       .setWasmForTrustedPrinciples(enableWasm)
       .setWasmBaseline(enableWasmBaseline)
       .setWasmIon(enableWasmOptimizing);
+
+#ifndef __wasi__
+  // This must be set before self-hosted code is initialized, as self-hosted
+  // code reads the property and the property may not be changed later.
+  bool disabledHugeMemory = false;
+  if (op.getBoolOption("disable-wasm-huge-memory")) {
+    disabledHugeMemory = JS::DisableWasmHugeMemory();
+    MOZ_RELEASE_ASSERT(disabledHugeMemory);
+  }
+
+  // --disable-wasm-huge-memory needs to be propagated.  See bug 1518210.
+  if (disabledHugeMemory &&
+      !sCompilerProcessFlags.append("--disable-wasm-huge-memory")) {
+    return false;
+  }
+
+  // Also the following are to be propagated.
+  const char* to_propagate[] = {
+#  define WASM_DEFAULT_FEATURE(NAME, LOWER_NAME, COMPILE_PRED, COMPILER_PRED, \
+                               FLAG_PRED, SHELL, ...)                         \
+    "--no-wasm-" SHELL,
+#  define WASM_EXPERIMENTAL_FEATURE(NAME, LOWER_NAME, COMPILE_PRED,       \
+                                    COMPILER_PRED, FLAG_PRED, SHELL, ...) \
+    "--wasm-" SHELL,
+      JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_DEFAULT_FEATURE,
+                           WASM_EXPERIMENTAL_FEATURE)
+#  undef WASM_DEFAULT_FEATURE
+#  undef WASM_EXPERIMENTAL_FEATURE
+      // Compiler selection options
+      "--test-wasm-await-tier2",
+      NULL};
+  for (const char** p = &to_propagate[0]; *p; p++) {
+    if (op.getBoolOption(&(*p)[2] /* 2 => skip the leading '--' */)) {
+      if (!sCompilerProcessFlags.append(*p)) {
+        return false;
+      }
+    }
+  }
+
+  // Also --wasm-compiler= is to be propagated.  This is tricky because it is
+  // necessary to reconstitute the --wasm-compiler=<whatever> string from its
+  // pieces, without causing a leak.  Hence it is copied into a static buffer.
+  // This is thread-unsafe, but we're in `main()` and on the process' root
+  // thread.  Also, we do this only once -- it wouldn't work properly if we
+  // handled multiple --wasm-compiler= flags in a loop.
+  const char* wasm_compiler = op.getStringOption("wasm-compiler");
+  if (wasm_compiler) {
+    size_t n_needed =
+        2 + strlen("wasm-compiler") + 1 + strlen(wasm_compiler) + 1;
+    const size_t n_avail = 128;
+    static char buf[n_avail];
+    // `n_needed` depends on the compiler name specified.  However, it can't
+    // be arbitrarily long, since previous flag-checking should have limited
+    // it to a set of known possibilities: "baseline", "ion",
+    // "baseline+ion",  Still, assert this for safety.
+    MOZ_RELEASE_ASSERT(n_needed < n_avail);
+    memset(buf, 0, sizeof(buf));
+    SprintfBuf(buf, n_avail, "--%s=%s", "wasm-compiler", wasm_compiler);
+    if (!sCompilerProcessFlags.append(buf)) {
+      return false;
+    }
+  }
+#endif  // __wasi__
 
   return true;
 }
