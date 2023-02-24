@@ -788,8 +788,7 @@ mac_try_job("mac_dbg", cq = None)
 mac_try_job("mac_compile_dbg")
 mac_builder("Mac64 Release", "Mac|x64|rel")
 
-# TODO(bugs.webrtc.org/13275): Re-enable CQ.
-mac_try_job("mac_rel", cq = None)
+mac_try_job("mac_rel")
 mac_try_job("mac_compile_rel", cq = None)
 mac_builder("Mac64 Builder", ci_cat = None, perf_cat = "Mac|x64|Builder|")
 mac_builder("MacArm64 Builder", ci_cat = None, perf_cat = "Mac|arm64|Builder")
