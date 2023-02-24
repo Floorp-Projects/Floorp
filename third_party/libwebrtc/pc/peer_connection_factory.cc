@@ -110,6 +110,8 @@ PeerConnectionFactory::PeerConnectionFactory(
 
 PeerConnectionFactory::~PeerConnectionFactory() {
   RTC_DCHECK_RUN_ON(signaling_thread());
+  // Ensures the metronome is destroyed on the worker thread.
+  worker_thread()->BlockingCall([metronome = std::move(metronome_)] {});
 }
 
 void PeerConnectionFactory::SetOptions(const Options& options) {
