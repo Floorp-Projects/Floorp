@@ -86,10 +86,6 @@ absl::optional<int> GetMinMicLevelOverride() {
   }
 }
 
-int ClampLevel(int mic_level, int min_mic_level) {
-  return rtc::SafeClamp(mic_level, min_mic_level, kMaxMicLevel);
-}
-
 int LevelFromGainError(int gain_error, int level, int min_mic_level) {
   RTC_DCHECK_GE(level, 0);
   RTC_DCHECK_LE(level, kMaxMicLevel);
@@ -178,12 +174,10 @@ int GetSpeechLevelErrorDb(float speech_level_dbfs,
 
 }  // namespace
 
-MonoInputVolumeController::MonoInputVolumeController(int startup_min_level,
-                                                     int clipped_level_min,
+MonoInputVolumeController::MonoInputVolumeController(int clipped_level_min,
                                                      int min_mic_level)
     : min_mic_level_(min_mic_level),
       max_level_(kMaxMicLevel),
-      startup_min_level_(ClampLevel(startup_min_level, min_mic_level_)),
       clipped_level_min_(clipped_level_min) {}
 
 MonoInputVolumeController::~MonoInputVolumeController() = default;
@@ -316,9 +310,8 @@ int MonoInputVolumeController::CheckVolumeAndReset() {
   }
   RTC_DLOG(LS_INFO) << "[agc] Initial GetMicVolume()=" << level;
 
-  int minLevel = startup_ ? startup_min_level_ : min_mic_level_;
-  if (level < minLevel) {
-    level = minLevel;
+  if (level < min_mic_level_) {
+    level = min_mic_level_;
     RTC_DLOG(LS_INFO) << "[agc] Initial volume too low, raising to " << level;
     recommended_input_volume_ = level;
   }
@@ -379,11 +372,10 @@ InputVolumeController::InputVolumeController(int num_capture_channels,
                    << " (overridden: "
                    << (min_mic_level_override_.has_value() ? "yes" : "no")
                    << ")";
-  RTC_LOG(LS_INFO) << "[agc] Startup min volume: " << config.startup_min_volume;
 
   for (auto& controller : channel_controllers_) {
     controller = std::make_unique<MonoInputVolumeController>(
-        config.startup_min_volume, config.clipped_level_min, min_mic_level);
+        config.clipped_level_min, min_mic_level);
   }
 
   RTC_DCHECK(!channel_controllers_.empty());
