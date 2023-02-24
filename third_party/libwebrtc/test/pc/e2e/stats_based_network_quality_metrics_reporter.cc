@@ -35,6 +35,7 @@
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "system_wrappers/include/field_trial.h"
+#include "test/pc/e2e/metric_metadata_keys.h"
 
 namespace webrtc {
 namespace webrtc_pc_e2e {
@@ -252,48 +253,52 @@ void StatsBasedNetworkQualityMetricsReporter::ReportStats(
     const NetworkLayerStats& network_layer_stats,
     int64_t packet_loss,
     const Timestamp& end_time) {
+  std::map<std::string, std::string> metric_metadata{
+      {MetricMetadataKey::kPeerMetadataKey, pc_label}};
   metrics_logger_->LogSingleValueMetric(
       "bytes_discarded_no_receiver", GetTestCaseName(pc_label),
       network_layer_stats.stats->BytesDropped().bytes(), Unit::kBytes,
-      ImprovementDirection::kNeitherIsBetter);
+      ImprovementDirection::kNeitherIsBetter, metric_metadata);
   metrics_logger_->LogSingleValueMetric(
       "packets_discarded_no_receiver", GetTestCaseName(pc_label),
       network_layer_stats.stats->PacketsDropped(), Unit::kUnitless,
-      ImprovementDirection::kNeitherIsBetter);
+      ImprovementDirection::kNeitherIsBetter, metric_metadata);
 
   metrics_logger_->LogSingleValueMetric(
       "payload_bytes_received", GetTestCaseName(pc_label),
       pc_stats.payload_received.bytes(), Unit::kBytes,
-      ImprovementDirection::kNeitherIsBetter);
+      ImprovementDirection::kNeitherIsBetter, metric_metadata);
   metrics_logger_->LogSingleValueMetric(
       "payload_bytes_sent", GetTestCaseName(pc_label),
       pc_stats.payload_sent.bytes(), Unit::kBytes,
-      ImprovementDirection::kNeitherIsBetter);
+      ImprovementDirection::kNeitherIsBetter, metric_metadata);
 
   metrics_logger_->LogSingleValueMetric(
       "bytes_sent", GetTestCaseName(pc_label), pc_stats.total_sent.bytes(),
-      Unit::kBytes, ImprovementDirection::kNeitherIsBetter);
+      Unit::kBytes, ImprovementDirection::kNeitherIsBetter, metric_metadata);
   metrics_logger_->LogSingleValueMetric(
       "packets_sent", GetTestCaseName(pc_label), pc_stats.packets_sent,
-      Unit::kUnitless, ImprovementDirection::kNeitherIsBetter);
+      Unit::kUnitless, ImprovementDirection::kNeitherIsBetter, metric_metadata);
   metrics_logger_->LogSingleValueMetric(
       "average_send_rate", GetTestCaseName(pc_label),
       (pc_stats.total_sent / (end_time - start_time_)).kbps<double>(),
-      Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter);
+      Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter,
+      metric_metadata);
   metrics_logger_->LogSingleValueMetric(
       "bytes_received", GetTestCaseName(pc_label),
       pc_stats.total_received.bytes(), Unit::kBytes,
-      ImprovementDirection::kNeitherIsBetter);
+      ImprovementDirection::kNeitherIsBetter, metric_metadata);
   metrics_logger_->LogSingleValueMetric(
       "packets_received", GetTestCaseName(pc_label), pc_stats.packets_received,
-      Unit::kUnitless, ImprovementDirection::kNeitherIsBetter);
+      Unit::kUnitless, ImprovementDirection::kNeitherIsBetter, metric_metadata);
   metrics_logger_->LogSingleValueMetric(
       "average_receive_rate", GetTestCaseName(pc_label),
       (pc_stats.total_received / (end_time - start_time_)).kbps<double>(),
-      Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter);
+      Unit::kKilobitsPerSecond, ImprovementDirection::kNeitherIsBetter,
+      metric_metadata);
   metrics_logger_->LogSingleValueMetric(
       "sent_packets_loss", GetTestCaseName(pc_label), packet_loss,
-      Unit::kUnitless, ImprovementDirection::kNeitherIsBetter);
+      Unit::kUnitless, ImprovementDirection::kNeitherIsBetter, metric_metadata);
 }
 
 std::string StatsBasedNetworkQualityMetricsReporter::GetTestCaseName(
@@ -312,6 +317,8 @@ void StatsBasedNetworkQualityMetricsReporter::LogNetworkLayerStats(
   DataRate average_receive_rate = stats.stats->PacketsReceived() >= 2
                                       ? stats.stats->AverageReceiveRate()
                                       : DataRate::Zero();
+  std::map<std::string, std::string> metric_metadata{
+      {MetricMetadataKey::kPeerMetadataKey, peer_name}};
   rtc::StringBuilder log;
   log << "Raw network layer statistic for [" << peer_name << "]:\n"
       << "Local IPs:\n";
@@ -320,28 +327,28 @@ void StatsBasedNetworkQualityMetricsReporter::LogNetworkLayerStats(
     log << "  " << local_ips[i].ToString() << "\n";
   }
   if (!stats.stats->SentPacketsSizeCounter().IsEmpty()) {
-    metrics_logger_->LogMetric("sent_packets_size", GetTestCaseName(peer_name),
-                               stats.stats->SentPacketsSizeCounter(),
-                               Unit::kBytes,
-                               ImprovementDirection::kNeitherIsBetter);
+    metrics_logger_->LogMetric(
+        "sent_packets_size", GetTestCaseName(peer_name),
+        stats.stats->SentPacketsSizeCounter(), Unit::kBytes,
+        ImprovementDirection::kNeitherIsBetter, metric_metadata);
   }
   if (!stats.stats->ReceivedPacketsSizeCounter().IsEmpty()) {
     metrics_logger_->LogMetric(
         "received_packets_size", GetTestCaseName(peer_name),
         stats.stats->ReceivedPacketsSizeCounter(), Unit::kBytes,
-        ImprovementDirection::kNeitherIsBetter);
+        ImprovementDirection::kNeitherIsBetter, metric_metadata);
   }
   if (!stats.stats->DroppedPacketsSizeCounter().IsEmpty()) {
     metrics_logger_->LogMetric(
         "dropped_packets_size", GetTestCaseName(peer_name),
         stats.stats->DroppedPacketsSizeCounter(), Unit::kBytes,
-        ImprovementDirection::kNeitherIsBetter);
+        ImprovementDirection::kNeitherIsBetter, metric_metadata);
   }
   if (!stats.stats->SentPacketsQueueWaitTimeUs().IsEmpty()) {
     metrics_logger_->LogMetric(
         "sent_packets_queue_wait_time_us", GetTestCaseName(peer_name),
         stats.stats->SentPacketsQueueWaitTimeUs(), Unit::kUnitless,
-        ImprovementDirection::kNeitherIsBetter);
+        ImprovementDirection::kNeitherIsBetter, metric_metadata);
   }
 
   log << "Send statistic:\n"
@@ -365,7 +372,7 @@ void StatsBasedNetworkQualityMetricsReporter::LogNetworkLayerStats(
           "sent_packets_size",
           GetTestCaseName(peer_name + "/" + entry.first.ToString()),
           stats.stats->SentPacketsSizeCounter(), Unit::kBytes,
-          ImprovementDirection::kNeitherIsBetter);
+          ImprovementDirection::kNeitherIsBetter, metric_metadata);
     }
   }
 
@@ -392,14 +399,14 @@ void StatsBasedNetworkQualityMetricsReporter::LogNetworkLayerStats(
           "received_packets_size",
           GetTestCaseName(peer_name + "/" + entry.first.ToString()),
           stats.stats->ReceivedPacketsSizeCounter(), Unit::kBytes,
-          ImprovementDirection::kNeitherIsBetter);
+          ImprovementDirection::kNeitherIsBetter, metric_metadata);
     }
     if (!entry.second->DroppedPacketsSizeCounter().IsEmpty()) {
       metrics_logger_->LogMetric(
           "dropped_packets_size",
           GetTestCaseName(peer_name + "/" + entry.first.ToString()),
           stats.stats->DroppedPacketsSizeCounter(), Unit::kBytes,
-          ImprovementDirection::kNeitherIsBetter);
+          ImprovementDirection::kNeitherIsBetter, metric_metadata);
     }
   }
 

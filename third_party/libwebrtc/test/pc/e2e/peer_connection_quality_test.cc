@@ -38,6 +38,7 @@
 #include "test/pc/e2e/analyzer/video/video_frame_tracking_id_injector.h"
 #include "test/pc/e2e/analyzer/video/video_quality_metrics_reporter.h"
 #include "test/pc/e2e/cross_media_metrics_reporter.h"
+#include "test/pc/e2e/metric_metadata_keys.h"
 #include "test/pc/e2e/stats_poller.h"
 #include "test/pc/e2e/test_peer_factory.h"
 #include "test/testsupport/file_utils.h"
@@ -463,7 +464,7 @@ void PeerConnectionE2EQualityTest::OnTrackCallback(
       << "Expected 2 stream ids: 1st - sync group, 2nd - unique stream label";
   std::string sync_group = transceiver->receiver()->stream_ids()[0];
   std::string stream_label = transceiver->receiver()->stream_ids()[1];
-  analyzer_helper_.AddTrackToStreamMapping(track->id(), stream_label,
+  analyzer_helper_.AddTrackToStreamMapping(track->id(), peer_name, stream_label,
                                            sync_group);
   if (track->kind() != MediaStreamTrackInterface::kVideoKind) {
     return;
@@ -744,10 +745,12 @@ void PeerConnectionE2EQualityTest::TearDownCall() {
 void PeerConnectionE2EQualityTest::ReportGeneralTestResults() {
   metrics_logger_->LogSingleValueMetric(
       *alice_->params().name + "_connected", test_case_name_, alice_connected_,
-      Unit::kUnitless, ImprovementDirection::kBiggerIsBetter);
+      Unit::kUnitless, ImprovementDirection::kBiggerIsBetter,
+      {{MetricMetadataKey::kPeerMetadataKey, *alice_->params().name}});
   metrics_logger_->LogSingleValueMetric(
       *bob_->params().name + "_connected", test_case_name_, bob_connected_,
-      Unit::kUnitless, ImprovementDirection::kBiggerIsBetter);
+      Unit::kUnitless, ImprovementDirection::kBiggerIsBetter,
+      {{MetricMetadataKey::kPeerMetadataKey, *bob_->params().name}});
 }
 
 Timestamp PeerConnectionE2EQualityTest::Now() const {

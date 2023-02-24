@@ -942,7 +942,8 @@ void DefaultVideoQualityAnalyzer::ReportResults(
   std::string test_case_name = GetTestCaseName(ToMetricName(key));
   std::map<std::string, std::string> metric_metadata{
       {MetricMetadataKey::kPeerMetadataKey, peers_->name(key.sender)},
-      {MetricMetadataKey::kStreamMetadataKey, streams_.name(key.stream)},
+      {MetricMetadataKey::kVideoStreamMetadataKey, streams_.name(key.stream)},
+      {MetricMetadataKey::kSenderMetadataKey, peers_->name(key.sender)},
       {MetricMetadataKey::kReceiverMetadataKey, peers_->name(key.receiver)}};
 
   double sum_squared_interframe_delays_secs = 0;

@@ -44,6 +44,8 @@ class CrossMediaMetricsReporter
     SamplesStatsCounter audio_ahead_ms;
     SamplesStatsCounter video_ahead_ms;
 
+    TrackIdStreamInfoMap::StreamInfo audio_stream_info;
+    TrackIdStreamInfoMap::StreamInfo video_stream_info;
     std::string audio_stream_label;
     std::string video_stream_label;
   };
