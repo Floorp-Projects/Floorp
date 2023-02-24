@@ -40,7 +40,8 @@ function* runTest() {
 
   let tests = [
                // Loading URLs other than http(s) should throw 'CORS request
-               // not http' console message.
+               // not http' console message. (Even though we removed ftp support within Bug 1574475
+               // we keep this test since it tests a scheme other than http(s))
                { baseURL: "ftp://mochi.test:8888/browser/dom/security/test/cors/file_CrossSiteXHR_server.sjs",
                  method: "GET",
                },
