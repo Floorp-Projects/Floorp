@@ -43,7 +43,7 @@ class MediaHelper {
  private:
   std::unique_ptr<test::TestVideoCapturer> CreateVideoCapturer(
       const VideoConfig& video_config,
-      PeerConfigurerImpl::VideoSource source,
+      PeerConfigurer::VideoSource source,
       std::unique_ptr<test::TestVideoCapturer::FramePreprocessor>
           frame_preprocessor);
 

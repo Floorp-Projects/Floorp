@@ -11,5 +11,14 @@
 #define TEST_PC_E2E_PEER_CONFIGURER_H_
 
 #include "api/test/pclf/peer_configurer.h"
+#include "test/pc/e2e/peer_params_preprocessor.h"
+
+namespace webrtc {
+namespace webrtc_pc_e2e {
+
+using PeerConfigurerImpl = ::webrtc::webrtc_pc_e2e::PeerConfigurer;
+
+}  // namespace webrtc_pc_e2e
+}  // namespace webrtc
 
 #endif  // TEST_PC_E2E_PEER_CONFIGURER_H_

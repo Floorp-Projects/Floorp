@@ -21,7 +21,6 @@
 #include "api/test/pclf/media_configuration.h"
 #include "api/test/pclf/media_quality_test_params.h"
 #include "api/test/pclf/peer_configurer.h"
-#include "api/test/peerconnection_quality_test_fixture.h"
 #include "api/test/time_controller.h"
 #include "modules/audio_device/include/test_audio_device.h"
 #include "rtc_base/task_queue.h"
@@ -67,7 +66,7 @@ class TestPeerFactory {
   // also will setup dependencies, that are required for media analyzers
   // injection.
   std::unique_ptr<TestPeer> CreateTestPeer(
-      std::unique_ptr<PeerConfigurerImpl> configurer,
+      std::unique_ptr<PeerConfigurer> configurer,
       std::unique_ptr<MockPeerConnectionObserver> observer,
       absl::optional<RemotePeerAudioConfig> remote_audio_config,
       absl::optional<EchoEmulationConfig> echo_emulation_config);

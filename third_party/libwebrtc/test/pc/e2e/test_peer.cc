@@ -16,6 +16,7 @@
 #include "absl/strings/string_view.h"
 #include "api/scoped_refptr.h"
 #include "api/test/pclf/media_configuration.h"
+#include "api/test/pclf/peer_configurer.h"
 #include "modules/audio_processing/include/audio_processing.h"
 
 namespace webrtc {
@@ -132,7 +133,7 @@ TestPeer::TestPeer(
     std::unique_ptr<MockPeerConnectionObserver> observer,
     Params params,
     ConfigurableParams configurable_params,
-    std::vector<PeerConfigurerImpl::VideoSource> video_sources,
+    std::vector<PeerConfigurer::VideoSource> video_sources,
     rtc::scoped_refptr<AudioProcessing> audio_processing,
     std::unique_ptr<rtc::Thread> worker_thread)
     : params_(std::move(params)),
