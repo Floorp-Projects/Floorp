@@ -349,20 +349,16 @@ void MonoInputVolumeController::UpdateInputVolume(int rms_error_dbfs) {
   SetLevel(LevelFromGainError(residual_gain, level_, min_mic_level_));
 }
 
-std::atomic<int> InputVolumeController::instance_counter_(0);
-
 InputVolumeController::InputVolumeController(int num_capture_channels,
                                              const Config& config)
     : analog_controller_enabled_(config.enabled),
+      num_capture_channels_(num_capture_channels),
       min_mic_level_override_(GetMinMicLevelOverride()),
       use_min_channel_level_(!UseMaxAnalogChannelLevel()),
-      num_capture_channels_(num_capture_channels),
-      frames_since_clipped_(config.clipped_wait_frames),
       capture_output_used_(true),
       clipped_level_step_(config.clipped_level_step),
       clipped_ratio_threshold_(config.clipped_ratio_threshold),
       clipped_wait_frames_(config.clipped_wait_frames),
-      channel_controllers_(num_capture_channels),
       clipping_predictor_(CreateClippingPredictor(
           num_capture_channels,
           CreateClippingPredictorConfig(config.enable_clipping_predictor))),
@@ -370,10 +366,12 @@ InputVolumeController::InputVolumeController(int num_capture_channels,
           !!clipping_predictor_ &&
           CreateClippingPredictorConfig(config.enable_clipping_predictor)
               .use_predicted_step),
-      clipping_rate_log_(0.0f),
+      frames_since_clipped_(config.clipped_wait_frames),
       clipping_rate_log_counter_(0),
+      clipping_rate_log_(0.0f),
       target_range_max_dbfs_(config.target_range_max_dbfs),
-      target_range_min_dbfs_(config.target_range_min_dbfs) {
+      target_range_min_dbfs_(config.target_range_min_dbfs),
+      channel_controllers_(num_capture_channels) {
   RTC_LOG(LS_INFO) << "[agc] analog controller enabled: "
                    << (analog_controller_enabled_ ? "yes" : "no");
   const int min_mic_level = min_mic_level_override_.value_or(kMinMicLevel);
