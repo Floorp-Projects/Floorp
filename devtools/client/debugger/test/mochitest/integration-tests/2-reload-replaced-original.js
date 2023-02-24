@@ -64,7 +64,7 @@ addIntegrationTask(async function testReloadingRemovedOriginalSources(
   );
   const syncBp = waitForDispatch(dbg.store, "SET_BREAKPOINT");
   testServer.switchToNextVersion();
-  await reload(dbg, "new-original.js");
+  const onReloaded = reload(dbg, "new-original.js");
   await syncBp;
 
   // Assert the new breakpoint being created after reload
@@ -95,6 +95,8 @@ addIntegrationTask(async function testReloadingRemovedOriginalSources(
   }
 
   await resume(dbg);
+  info("Wait for reload to complete after resume");
+  await onReloaded;
 
   info(
     "Reload a last time to remove both original and generated sources entirely"

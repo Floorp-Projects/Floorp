@@ -18,7 +18,7 @@ add_task(async function() {
   const dbg = await initDebugger("doc-iframes.html");
 
   // test pausing in the main thread
-  await reload(dbg);
+  const onReloaded = reload(dbg);
   await waitForPaused(dbg);
   await waitForLoadedSource(dbg, "doc-iframes.html");
   assertPausedAtSourceAndLine(dbg, findSource(dbg, "doc-iframes.html").id, 11);
@@ -53,5 +53,8 @@ add_task(async function() {
     await waitForResumed(dbg);
     await waitFor(() => !dbg.toolbox.isHighlighted("jsdebugger"));
     ok(true, "Debugger is no longer highlighted when resumed");
+
+    info("Wait for reload to complete after resume");
+    await onReloaded;
   }
 });

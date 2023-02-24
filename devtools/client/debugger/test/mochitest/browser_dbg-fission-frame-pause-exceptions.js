@@ -14,7 +14,7 @@ add_task(async function() {
   info("Test pause on exceptions ignoring caught exceptions");
   await togglePauseOnExceptions(dbg, true, false);
 
-  await reload(dbg);
+  let onReloaded = reload(dbg);
   await waitForPaused(dbg);
 
   assertPausedAtSourceAndLine(
@@ -24,11 +24,13 @@ add_task(async function() {
   );
 
   await resume(dbg);
+  info("Wait for reload to complete after resume");
+  await onReloaded;
 
   info("Test pause on exceptions including caught exceptions");
   await togglePauseOnExceptions(dbg, true, true);
 
-  await reload(dbg);
+  onReloaded = reload(dbg);
   await waitForPaused(dbg);
 
   assertPausedAtSourceAndLine(
@@ -47,4 +49,6 @@ add_task(async function() {
   );
 
   await resume(dbg);
+  info("Wait for reload to complete after resume");
+  await onReloaded;
 });

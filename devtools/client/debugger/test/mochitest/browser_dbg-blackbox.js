@@ -63,7 +63,7 @@ add_task(async function testBlackBoxOnReload() {
 
   // Lets reload without any blackboxing to make all necesary postions
   // are hit.
-  await reload(dbg, file);
+  const onReloaded = reload(dbg, file);
 
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, source.id, 2);
@@ -76,6 +76,9 @@ add_task(async function testBlackBoxOnReload() {
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, source.id, 12);
   await resumeAndWaitForPauseCounter(dbg);
+
+  info("Wait for reload to complete after resume");
+  await onReloaded;
 
   assertNotPaused(dbg);
 
@@ -93,11 +96,13 @@ add_task(async function testBlackBoxOnReload() {
   ]);
   await selectBlackBoxContextMenuItem(dbg, "blackbox-lines");
 
-  await reload(dbg, file);
+  const onReloaded2 = reload(dbg, file);
 
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, source.id, 12);
   await resume(dbg);
+  info("Wait for reload to complete after resume");
+  await onReloaded2;
 
   assertNotPaused(dbg);
 });
