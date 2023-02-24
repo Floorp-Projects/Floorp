@@ -235,6 +235,7 @@
   skin/classic/browser/panic-panel/header@2x.png               (../shared/panic-panel/header@2x.png)
   skin/classic/browser/panic-panel/icons.png                   (../shared/panic-panel/icons.png)
   skin/classic/browser/panic-panel/icons@2x.png                (../shared/panic-panel/icons@2x.png)
+  skin/classic/browser/places/organizer-shared.css             (../shared/places/organizer-shared.css)
   skin/classic/browser/places/sidebar.css                      (../shared/places/sidebar.css)
   skin/classic/browser/places/bookmarksMenu.svg                (../shared/places/bookmarksMenu.svg)
   skin/classic/browser/places/bookmarksToolbar.svg             (../shared/places/bookmarksToolbar.svg)
