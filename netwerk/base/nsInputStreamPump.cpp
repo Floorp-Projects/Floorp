@@ -21,8 +21,6 @@
 #include "nsStreamUtils.h"
 #include <algorithm>
 
-static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
-
 //
 // MOZ_LOG=nsStreamPump:5
 //
