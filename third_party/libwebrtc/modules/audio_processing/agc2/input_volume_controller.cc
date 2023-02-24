@@ -440,7 +440,7 @@ void InputVolumeController::AnalyzePreProcess(const AudioBuffer& audio_buffer) {
     for (int channel = 0; channel < num_capture_channels_; ++channel) {
       const auto step = clipping_predictor_->EstimateClippedLevelStep(
           channel, recommended_input_volume_, clipped_level_step_,
-          channel_controllers_[channel]->min_mic_level(), kMaxMicLevel);
+          channel_controllers_[channel]->clipped_level_min(), kMaxMicLevel);
       if (step.has_value()) {
         predicted_step = std::max(predicted_step, step.value());
         clipping_predicted = true;
