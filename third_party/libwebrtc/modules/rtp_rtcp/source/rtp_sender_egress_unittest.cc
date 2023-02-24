@@ -15,6 +15,7 @@
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/call/transport.h"
+#include "api/field_trials_registry.h"
 #include "api/units/data_size.h"
 #include "api/units/timestamp.h"
 #include "logging/rtc_event_log/mock/mock_rtc_event_log.h"
@@ -84,21 +85,21 @@ class MockSendSideDelayObserver : public SendSideDelayObserver {
   MOCK_METHOD(void, SendSideDelayUpdated, (int, int, uint32_t), (override));
 };
 
-class FieldTrialConfig : public FieldTrialsView {
+class FieldTrialConfig : public FieldTrialsRegistry {
  public:
   FieldTrialConfig() : overhead_enabled_(false) {}
   ~FieldTrialConfig() override {}
 
   void SetOverHeadEnabled(bool enabled) { overhead_enabled_ = enabled; }
 
-  std::string Lookup(absl::string_view key) const override {
+ private:
+  std::string GetValue(absl::string_view key) const override {
     if (key == "WebRTC-SendSideBwe-WithOverhead") {
       return overhead_enabled_ ? "Enabled" : "Disabled";
     }
     return "";
   }
 
- private:
   bool overhead_enabled_;
 };
 

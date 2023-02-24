@@ -312,6 +312,10 @@ specific_include_rules = {
     "+rtc_base/thread.h",
   ],
 
+  "field_trials_registry\.h": [
+    "+rtc_base/containers/flat_set.h",
+  ],
+
   # .cc files in api/ should not be restricted in what they can #include,
   # so we re-add all the top-level directories here. (That's because .h
   # files leak their #includes to whoever's #including them, but .cc files
@@ -322,6 +326,7 @@ specific_include_rules = {
     "+common_audio",
     "+common_video",
     "+examples",
+    "+experiments",
     "+logging",
     "+media",
     "+modules",

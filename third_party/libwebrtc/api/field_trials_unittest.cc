@@ -34,6 +34,8 @@ using ::webrtc::field_trial::ScopedGlobalFieldTrialsForTesting;
 TEST(FieldTrialsTest, EmptyStringHasNoEffect) {
   ScopedGlobalFieldTrialsForTesting g({"MyCoolTrial"});
   FieldTrials f("");
+  f.RegisterKeysForTesting({"MyCoolTrial"});
+
   EXPECT_FALSE(f.IsEnabled("MyCoolTrial"));
   EXPECT_FALSE(f.IsDisabled("MyCoolTrial"));
 }
@@ -43,6 +45,8 @@ TEST(FieldTrialsTest, EnabledDisabledMustBeFirstInValue) {
       "MyCoolTrial/EnabledFoo/"
       "MyUncoolTrial/DisabledBar/"
       "AnotherTrial/BazEnabled/");
+  f.RegisterKeysForTesting({"MyCoolTrial", "MyUncoolTrial", "AnotherTrial"});
+
   EXPECT_TRUE(f.IsEnabled("MyCoolTrial"));
   EXPECT_TRUE(f.IsDisabled("MyUncoolTrial"));
   EXPECT_FALSE(f.IsEnabled("AnotherTrial"));
@@ -53,6 +57,8 @@ TEST(FieldTrialsTest, FieldTrialsDoesNotReadGlobalString) {
   static constexpr char s[] = "MyCoolTrial/Enabled/MyUncoolTrial/Disabled/";
   InitFieldTrialsFromString(s);
   FieldTrials f("");
+  f.RegisterKeysForTesting({"MyCoolTrial", "MyUncoolTrial"});
+
   EXPECT_FALSE(f.IsEnabled("MyCoolTrial"));
   EXPECT_FALSE(f.IsDisabled("MyUncoolTrial"));
 }
@@ -93,6 +99,8 @@ TEST(FieldTrialsTest, NonGlobalFieldTrialsInstanceDoesNotModifyGlobalString) {
   std::unique_ptr<FieldTrials> f =
       FieldTrials::CreateNoGlobal("SomeString/Enabled/");
   ASSERT_THAT(f, NotNull());
+  f->RegisterKeysForTesting({"SomeString"});
+
   EXPECT_TRUE(f->IsEnabled("SomeString"));
   EXPECT_FALSE(webrtc::field_trial::IsEnabled("SomeString"));
 }
@@ -104,6 +112,8 @@ TEST(FieldTrialsTest, NonGlobalFieldTrialsSupportSimultaneousInstances) {
       FieldTrials::CreateNoGlobal("SomeOtherString/Enabled/");
   ASSERT_THAT(f1, NotNull());
   ASSERT_THAT(f2, NotNull());
+  f1->RegisterKeysForTesting({"SomeString", "SomeOtherString"});
+  f2->RegisterKeysForTesting({"SomeString", "SomeOtherString"});
 
   EXPECT_TRUE(f1->IsEnabled("SomeString"));
   EXPECT_FALSE(f1->IsEnabled("SomeOtherString"));
@@ -118,6 +128,8 @@ TEST(FieldTrialsTest, GlobalAndNonGlobalFieldTrialsAreDisjoint) {
   std::unique_ptr<FieldTrials> f2 =
       FieldTrials::CreateNoGlobal("SomeOtherString/Enabled/");
   ASSERT_THAT(f2, NotNull());
+  f1.RegisterKeysForTesting({"SomeString", "SomeOtherString"});
+  f2->RegisterKeysForTesting({"SomeString", "SomeOtherString"});
 
   EXPECT_TRUE(f1.IsEnabled("SomeString"));
   EXPECT_FALSE(f1.IsEnabled("SomeOtherString"));
@@ -131,6 +143,8 @@ TEST(FieldTrialsTest, FieldTrialBasedConfigReadsGlobalString) {
   static constexpr char s[] = "MyCoolTrial/Enabled/MyUncoolTrial/Disabled/";
   InitFieldTrialsFromString(s);
   FieldTrialBasedConfig f;
+  f.RegisterKeysForTesting({"MyCoolTrial", "MyUncoolTrial"});
+
   EXPECT_TRUE(f.IsEnabled("MyCoolTrial"));
   EXPECT_TRUE(f.IsDisabled("MyUncoolTrial"));
 }

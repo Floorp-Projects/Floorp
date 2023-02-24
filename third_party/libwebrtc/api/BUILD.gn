@@ -1368,6 +1368,25 @@ if (rtc_include_tests) {
   }
 }
 
+rtc_source_set("field_trials_registry") {
+  visibility = [ "*" ]
+  sources = [
+    "field_trials_registry.cc",
+    "field_trials_registry.h",
+  ]
+  deps = [
+    ":field_trials_view",
+    "../experiments:registered_field_trials",
+    "../rtc_base:checks",
+    "../rtc_base/containers:flat_set",
+    "../rtc_base/system:rtc_export",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/algorithm:container",
+    "//third_party/abseil-cpp/absl/strings",
+  ]
+}
+
 rtc_source_set("field_trials_view") {
   visibility = [ "*" ]
   sources = [ "field_trials_view.h" ]
@@ -1388,7 +1407,7 @@ rtc_library("field_trials") {
     "field_trials.h",
   ]
   deps = [
-    ":field_trials_view",
+    ":field_trials_registry",
     "../rtc_base:checks",
     "../rtc_base/containers:flat_map",
     "../system_wrappers:field_trial",
