@@ -433,14 +433,12 @@ android.applicationVariants.all { variant ->
 
 // Generate Kotlin code for the Fenix Glean metrics.
 apply plugin: "org.mozilla.telemetry.glean-gradle-plugin"
-apply plugin: "org.mozilla.components.nimbus-gradle-plugin"
+apply plugin: "org.mozilla.appservices.nimbus-gradle-plugin"
 
 nimbus {
     // The path to the Nimbus feature manifest file
     manifestFile = "nimbus.fml.yaml"
     // The fully qualified class name for the generated features.
-    // If the classname begins with a '.' this is taken as a suffix to the app's package name
-    destinationClass = ".nimbus.FxNimbus"
     // Map from the variant name to the channel as experimenter and nimbus understand it.
     // If nimbus's channels were accurately set up well for this project, then this
     // shouldn't be needed.
@@ -455,6 +453,7 @@ nimbus {
     // and used to inform experiment configuration.
     experimenterManifest = ".experimenter.yaml"
 }
+
 configurations {
     // There's an interaction between Gradle's resolution of dependencies with different types
     // (@jar, @aar) for `implementation` and `testImplementation` and with Android Studio's built-in

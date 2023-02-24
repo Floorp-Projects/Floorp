@@ -1226,12 +1226,6 @@ projects:
     path: components/tooling/lint
     publish: false
     upstream_dependencies: []
-  tooling-nimbus-gradle:
-    artifact-type: jar
-    description: A Gradle plugin to generate code for the Nimbus Feature API.
-    path: components/tooling/nimbus-gradle-plugin
-    publish: true
-    upstream_dependencies: []
   ui-autocomplete:
     description: A set of components to provide autocomplete functionality.
     path: components/ui/autocomplete

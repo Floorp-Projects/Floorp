@@ -10,7 +10,7 @@ channels:
   - nightly
   - developer
 includes:
-  - ./messaging.fml.yaml
+  - messaging.fml.yaml
 features:
   homescreen:
     description: The homescreen that the user goes to when they press home or new tab.

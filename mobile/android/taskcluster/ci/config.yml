@@ -141,7 +141,6 @@ treeherder:
         support-webextensions: support-webextensions
         tooling-detekt: tooling-detekt
         tooling-fetch-tests: tooling-fetch-tests
-        tooling-nimbus-gradle: tooling-nimbus-gradle
         tooling-lint: tooling-lint
         ui-autocomplete: ui-autocomplete
         ui-colors: ui-colors
