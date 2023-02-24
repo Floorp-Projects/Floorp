@@ -1,6 +1,3 @@
-/* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
-
 "use strict";
 
 function fillPopupAndGetItems() {
@@ -21,6 +18,12 @@ const RED = "rgb(255, 0, 0)";
 const LIME = "rgb(0, 255, 0)";
 const BLUE = "rgb(0, 0, 255)";
 
+const WEB_ROOT = getRootDirectory(gTestPath).replace(
+  "chrome://mochitests/content",
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+  "http://example.com"
+);
+
 const kStyleSheetsInPageStyleSample = 18;
 
 /*
@@ -35,7 +38,7 @@ add_task(async function test_menu() {
   );
   let browser = tab.linkedBrowser;
   BrowserTestUtils.loadURIString(browser, WEB_ROOT + "page_style_sample.html");
-  await promiseStylesheetsLoaded(browser, kStyleSheetsInPageStyleSample);
+  await promiseStylesheetsLoaded(tab, kStyleSheetsInPageStyleSample);
 
   let menuitems = fillPopupAndGetItems();
   let items = menuitems.map(el => ({
