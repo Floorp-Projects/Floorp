@@ -47,16 +47,23 @@ class WebTransportParent : public PWebTransportParent,
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  bool IsClosed() const { return mClosed; }
-
  protected:
   virtual ~WebTransportParent();
 
  private:
+  void NotifyRemoteClosed(uint32_t aErrorCode, const nsACString& aReason);
+
   using ResolveType = Tuple<const nsresult&, const uint8_t&>;
   nsCOMPtr<nsISerialEventTarget> mSocketThread;
-  std::function<void(ResolveType)> mResolver;
-  FlippedOnce<false> mClosed;
+  Atomic<bool> mSessionReady{false};
+
+  mozilla::Mutex mMutex{"WebTransportParent::mMutex"};
+  std::function<void(ResolveType)> mResolver MOZ_GUARDED_BY(mMutex);
+  // This is needed because mResolver is resolved on the background thread and
+  // OnSessionClosed is called on the socket thread.
+  std::function<void()> mExecuteAfterResolverCallback MOZ_GUARDED_BY(mMutex);
+  FlippedOnce<false> mClosed MOZ_GUARDED_BY(mMutex);
+
   nsCOMPtr<nsIWebTransport> mWebTransport;
   nsCOMPtr<nsIEventTarget> mOwningEventTarget;
 };
