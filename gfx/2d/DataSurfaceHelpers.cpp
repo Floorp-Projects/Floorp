@@ -88,8 +88,9 @@ uint8_t* DataAtOffset(DataSourceSurface* aSurface,
              "surface size overflows - this should have been prevented when "
              "the surface was created");
 
-  uint8_t* data = aMap->mData + aPoint.y * aMap->mStride +
-                  aPoint.x * BytesPerPixel(aSurface->GetFormat());
+  uint8_t* data =
+      aMap->mData + size_t(aPoint.y) * size_t(aMap->mStride) +
+      size_t(aPoint.x) * size_t(BytesPerPixel(aSurface->GetFormat()));
 
   if (data < aMap->mData) {
     MOZ_CRASH("GFX: out-of-range data access");
