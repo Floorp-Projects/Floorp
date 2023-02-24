@@ -632,6 +632,8 @@ rtc_library("desktop_capture") {
       "linux/wayland/egl_dmabuf.h",
       "linux/wayland/mouse_cursor_monitor_pipewire.cc",
       "linux/wayland/mouse_cursor_monitor_pipewire.h",
+      "linux/wayland/pipewire_utils.cc",
+      "linux/wayland/pipewire_utils.h",
       "linux/wayland/portal_request_response.h",
       "linux/wayland/restore_token_manager.cc",
       "linux/wayland/restore_token_manager.h",
