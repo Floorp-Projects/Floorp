@@ -13,7 +13,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
   InlineSpellCheckerContent:
     "resource://gre/modules/InlineSpellCheckerContent.sys.mjs",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   SelectionUtils: "resource://gre/modules/SelectionUtils.sys.mjs",
   SpellCheckHelper: "resource://gre/modules/InlineSpellChecker.sys.mjs",
 });
@@ -732,11 +731,6 @@ export class ContextMenuChild extends JSWindowActorChild {
 
       // used for nsContextMenu.initMiscItems
       contentType: context.target.ownerDocument.contentType,
-
-      // used for nsContextMenu.saveLink
-      isPrivate: lazy.PrivateBrowsingUtils.isContentWindowPrivate(
-        context.target.ownerGlobal
-      ),
     };
 
     // used for nsContextMenu.initMediaPlayerItems

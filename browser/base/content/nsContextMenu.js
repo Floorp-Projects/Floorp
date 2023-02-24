@@ -1984,7 +1984,7 @@ class nsContextMenu {
       ? this.contentData.linkReferrerInfo
       : this.contentData.referrerInfo;
 
-    let isContentWindowPrivate = this.ownerDoc.isPrivate;
+    let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(this.browser);
     this.saveHelper(
       this.linkURL,
       this.linkTextStr,
@@ -1995,7 +1995,7 @@ class nsContextMenu {
       this.contentData.cookieJarSettings,
       this.frameOuterWindowID,
       this.linkDownload,
-      isContentWindowPrivate
+      isPrivate
     );
   }
 
@@ -2009,10 +2009,9 @@ class nsContextMenu {
   // Save URL of the clicked upon image, video, or audio.
   saveMedia() {
     let doc = this.ownerDoc;
-    let isContentWindowPrivate = this.ownerDoc.isPrivate;
+    let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(this.browser);
     let referrerInfo = this.contentData.referrerInfo;
     let cookieJarSettings = this.contentData.cookieJarSettings;
-    let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(this.browser);
     if (this.onCanvas) {
       // Bypass cache, since it's a data: URL.
       this._canvasToBlobURL(this.targetIdentifier).then(function(blobURL) {
@@ -2075,7 +2074,7 @@ class nsContextMenu {
         cookieJarSettings,
         this.frameOuterWindowID,
         defaultFileName,
-        isContentWindowPrivate
+        isPrivate
       );
     }
   }
