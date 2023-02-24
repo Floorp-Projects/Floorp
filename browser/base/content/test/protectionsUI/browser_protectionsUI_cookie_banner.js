@@ -10,6 +10,7 @@
 const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
+const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 const {
   MODE_DISABLED,
@@ -418,6 +419,8 @@ add_task(async function test_section_toggle() {
     await BrowserTestUtils.withNewTab(
       { gBrowser: win.gBrowser, url: "https://example.com" },
       async () => {
+        let clearSiteDataSpy = sinon.spy(window.SiteDataManager, "remove");
+
         await openProtectionsPanel(null, win);
         let switchEl = win.document.getElementById(
           "protections-popup-cookie-banner-switch"
@@ -435,6 +438,18 @@ add_task(async function test_section_toggle() {
         let closePromise = waitForProtectionsPopupHide(win);
         await toggleCookieBannerHandling(false, win);
         await closePromise;
+        if (testPBM) {
+          Assert.ok(
+            clearSiteDataSpy.notCalled,
+            "clearSiteData should not be called in private browsing mode"
+          );
+        } else {
+          Assert.ok(
+            clearSiteDataSpy.calledOnce,
+            "clearSiteData should be called in regular browsing mode"
+          );
+        }
+        clearSiteDataSpy.restore();
 
         await openProtectionsPanel(null, win);
         assertSwitchAndPrefState({

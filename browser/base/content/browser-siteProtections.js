@@ -1278,7 +1278,12 @@ let cookieBannerHandling = new (class {
   }
 
   async #disableCookieBannerHandling() {
-    await SiteDataManager.remove(this.#currentBaseDomain);
+    // We can't clear data during a private browsing session until bug 1818783
+    // is fixed. In the meantime, don't clear regular mode data from the cookie
+    // banner controls in a private window.
+    if (!this.#isPrivateBrowsing) {
+      await SiteDataManager.remove(this.#currentBaseDomain);
+    }
     Services.cookieBanners.setDomainPref(
       gBrowser.currentURI,
       Ci.nsICookieBannerService.MODE_DISABLED,
