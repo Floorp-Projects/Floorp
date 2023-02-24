@@ -328,10 +328,6 @@ LossBasedState SendSideBandwidthEstimation::loss_based_state() const {
   return loss_based_state_;
 }
 
-DataRate SendSideBandwidthEstimation::delay_based_limit() const {
-  return delay_based_limit_;
-}
-
 DataRate SendSideBandwidthEstimation::GetEstimatedLinkCapacity() const {
   return link_capacity_.estimate();
 }
