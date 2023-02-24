@@ -750,9 +750,15 @@ class RTCStatsReportVerifier {
     if (inbound_stream.kind.is_defined() && *inbound_stream.kind == "video") {
       verifier.TestMemberIsNonNegative<uint64_t>(inbound_stream.qp_sum);
       verifier.TestMemberIsDefined(inbound_stream.decoder_implementation);
+      verifier.TestMemberIsDefined(inbound_stream.power_efficient_decoder);
+      EXPECT_EQ(inbound_stream.power_efficient_decoder.exposure_criteria(),
+                StatExposureCriteria::kHardwareCapability);
     } else {
       verifier.TestMemberIsUndefined(inbound_stream.qp_sum);
       verifier.TestMemberIsUndefined(inbound_stream.decoder_implementation);
+      verifier.TestMemberIsUndefined(inbound_stream.power_efficient_decoder);
+      EXPECT_EQ(inbound_stream.power_efficient_decoder.exposure_criteria(),
+                StatExposureCriteria::kHardwareCapability);
     }
     verifier.TestMemberIsNonNegative<uint32_t>(inbound_stream.packets_received);
     if (inbound_stream.kind.is_defined() && *inbound_stream.kind == "audio") {
@@ -958,6 +964,9 @@ class RTCStatsReportVerifier {
       // this to be present.
       verifier.MarkMemberTested(outbound_stream.content_type, true);
       verifier.TestMemberIsDefined(outbound_stream.encoder_implementation);
+      verifier.TestMemberIsDefined(outbound_stream.power_efficient_encoder);
+      EXPECT_EQ(outbound_stream.power_efficient_encoder.exposure_criteria(),
+                StatExposureCriteria::kHardwareCapability);
       // Unless an implementation-specific amount of time has passed and at
       // least one frame has been encoded, undefined is reported. Because it
       // is hard to tell what is the case here, we treat FPS as optional.
@@ -989,6 +998,7 @@ class RTCStatsReportVerifier {
       verifier.TestMemberIsUndefined(outbound_stream.content_type);
       // TODO(hbos): Implement for audio as well.
       verifier.TestMemberIsUndefined(outbound_stream.encoder_implementation);
+      verifier.TestMemberIsUndefined(outbound_stream.power_efficient_encoder);
       verifier.TestMemberIsUndefined(outbound_stream.rid);
       verifier.TestMemberIsUndefined(outbound_stream.frames_per_second);
       verifier.TestMemberIsUndefined(outbound_stream.frame_height);
