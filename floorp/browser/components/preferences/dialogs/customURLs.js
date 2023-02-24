@@ -90,7 +90,7 @@ function encodeObjectURL(text) {
 
         }
         else if (!box_value.startsWith("http://") && !box_value.startsWith("https://")) { / * Checks if url in the sidebar contains https in the beginning of a line * /
-            if (!box_value.startsWith("file://") && !box_value.startsWith("resource://") && !box_value.startsWith("about:") && !box_value.startsWith("jar:") && !box_value.startsWith("about:") && !box_value.startsWith("chrome://")) { / * Checks if given URL is other protocol * /
+            if (!box_value.startsWith("file://") && !box_value.startsWith("resource://") && !box_value.startsWith("about:") && !box_value.startsWith("jar:") && !box_value.startsWith("about:") && !box_value.startsWith("chrome://") && !box_value.startsWith("moz-extension://")) { / * Checks if given URL is other protocol * /
                 box_value = `https://${box_value}`;
             }
         }
