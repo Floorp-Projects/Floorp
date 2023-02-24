@@ -18,6 +18,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ChannelMap: "resource://devtools/shared/network-observer/ChannelMap.sys.mjs",
   NetworkHelper:
     "resource://devtools/shared/network-observer/NetworkHelper.sys.mjs",
+  NetworkOverride:
+    "resource://devtools/shared/network-observer/NetworkOverride.sys.mjs",
   NetworkResponseListener:
     "resource://devtools/shared/network-observer/NetworkResponseListener.sys.mjs",
   NetworkThrottleManager:
@@ -102,6 +104,15 @@ export class NetworkObserver {
    * @type {Map}
    */
   #blockedURLs = new Map();
+
+  /**
+   * Map of URL to local file path in order to redirect URL
+   * to local file overrides.
+   *
+   * This will replace the content of some request with the content of local files.
+   */
+  #overrides = new Map();
+
   /**
    * Used by NetworkHelper.parseSecurityInfo to skip decoding known certificates.
    *
@@ -330,6 +341,26 @@ export class NetworkObserver {
   );
 
   /**
+   * Check if the current channel has its content being overriden
+   * by the content of some local file.
+   */
+  #checkForContentOverride(channel) {
+    const overridePath = this.#overrides.get(channel.URI.spec);
+    if (!overridePath) {
+      return false;
+    }
+
+    dump(" Override " + channel.URI.spec + " to " + overridePath + "\n");
+    try {
+      lazy.NetworkOverride.overrideChannelWithFilePath(channel, overridePath);
+    } catch (e) {
+      dump("Exception while trying to override request content: " + e + "\n");
+    }
+
+    return true;
+  }
+
+  /**
    * Observe notifications for the http-on-examine-response topic, coming from
    * the nsIObserverService.
    *
@@ -369,6 +400,8 @@ export class NetworkObserver {
           ? "blockedOrFailed:" + channel.loadInfo.requestBlockingReason
           : channel.responseStatus
       );
+
+      this.#checkForContentOverride(channel);
 
       // Read response headers and cookies.
       const responseHeaders = [];
@@ -877,6 +910,14 @@ export class NetworkObserver {
    */
   getBlockedUrls() {
     return this.#blockedURLs.keys();
+  }
+
+  override(url, path) {
+    this.#overrides.set(url, path);
+  }
+
+  removeOverride(url) {
+    this.#overrides.delete(url);
   }
 
   /**
