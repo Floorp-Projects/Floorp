@@ -106,6 +106,7 @@ static const char kVideoTracks[][32] = {"videotrack0", "videotrack1"};
 
 static const char kRecvonly[] = "recvonly";
 static const char kSendrecv[] = "sendrecv";
+constexpr uint64_t kTiebreakerDefault = 44444;
 
 // Reference SDP with a MediaStream with label "stream1" and audio track with
 // id "audio_1" and a video track with id "video_1;
@@ -734,6 +735,7 @@ class PeerConnectionInterfaceBaseTest : public ::testing::Test {
             rtc::Thread::Current(),
             std::make_unique<rtc::BasicPacketSocketFactory>(vss_.get())));
     port_allocator_ = port_allocator.get();
+    port_allocator_->SetIceTiebreaker(kTiebreakerDefault);
 
     // Create certificate generator unless DTLS constraint is explicitly set to
     // false.
