@@ -143,6 +143,8 @@ class MockVideoSendStream : public webrtc::VideoSendStream {
     return std::vector<rtc::scoped_refptr<webrtc::Resource>>();
   }
 
+  void GenerateKeyFrame() override {}
+
   virtual ~MockVideoSendStream() {}
 
   const RefPtr<MockCallWrapper> mCallWrapper;
@@ -187,7 +189,8 @@ class MockVideoReceiveStream : public webrtc::VideoReceiveStreamInterface {
 
   void SetRtcpMode(webrtc::RtcpMode mode) override {}
 
-  void SetFlexFecProtection(webrtc::RtpPacketSinkInterface* flexfec_sink) override {}
+  void SetFlexFecProtection(
+      webrtc::RtpPacketSinkInterface* flexfec_sink) override {}
 
   void SetLossNotificationEnabled(bool enabled) override {}
 
