@@ -800,31 +800,34 @@ nsresult TimerThread::AddTimer(nsTimerImpl* aTimer,
     return rv;
   }
 
-  // Awaken the timer thread if:
-  // - This timer wants to fire *before* the Timer Thread is scheduled to wake
-  //   up. We don't track this directly but we know that we will have attempted
-  //   to wake up at the timeout for the first time in our list (if it exists),
-  //   so we can use that. Note: This is true even if the timer has since been
-  //   canceled.
-  // AND/OR
-  // - The delay is 0, which is usually meant to be run as soon as possible.
-  //   Note: Even if the thread is scheduled to wake up now/soon, on some
-  //   systems there could be a significant delay compared to notifying, which
-  //   is almost immediate; and some users of 0-delay depend on it being this
-  //   fast!
-  const bool wakeUpTimerThread =
-      mWaiting &&
-      (mTimers.Length() == 0 || aTimer->mTimeout < mTimers[0].Timeout() ||
-       aTimer->mDelay.IsZero());
+  // Fire this timer immediately (and skip adding it to our timer list) if the
+  // delay is 0, which are meant to be run as soon as possible. This has less
+  // overhead than waking up the timer thread and handling it there while still
+  // maintaining timer ordering and response time.
+  const bool fireImmediately = aTimer->mDelay.IsZero();
+  if (fireImmediately) {
+    RefPtr<nsTimerImpl> timerRef(aTimer);
+    LogTimerEvent::Run run(aTimer);
+    PostTimerEvent(timerRef.forget());
+  } else {
+    // Awaken the timer thread if this timer wants to fire *before* the Timer
+    // Thread is scheduled to wake up. We don't track this directly but we know
+    // that we will have attempted to wake up at the timeout for the first time
+    // in our list (if it exists), so we can use that. Note: This is true even
+    // if the timer has since been canceled.
+    const bool wakeUpTimerThread =
+        mWaiting &&
+        (mTimers.Length() == 0 || aTimer->mTimeout < mTimers[0].Timeout());
 
-  // Add the timer to our list.
-  if (!AddTimerInternal(aTimer)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+    // Add the timer to our list.
+    if (!AddTimerInternal(aTimer)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-  if (wakeUpTimerThread) {
-    mNotified = true;
-    mMonitor.Notify();
+    if (wakeUpTimerThread) {
+      mNotified = true;
+      mMonitor.Notify();
+    }
   }
 
   if (profiler_thread_is_being_profiled_for_markers(mProfilerThreadId)) {
