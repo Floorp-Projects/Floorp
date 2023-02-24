@@ -257,7 +257,7 @@ nsMIMEInputStream::AsyncWait(nsIInputStreamCallback* aCallback, uint32_t aFlags,
 
   nsCOMPtr<nsIInputStreamCallback> callback = aCallback ? this : nullptr;
   {
-    MutexAutoLock lock(mMutex);
+    mozilla::MutexAutoLock lock(mMutex);
     if (NS_WARN_IF(mAsyncWaitCallback && aCallback &&
                    mAsyncWaitCallback != aCallback)) {
       return NS_ERROR_FAILURE;
@@ -277,7 +277,7 @@ nsMIMEInputStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
   nsCOMPtr<nsIInputStreamCallback> callback;
 
   {
-    MutexAutoLock lock(mMutex);
+    mozilla::MutexAutoLock lock(mMutex);
 
     // We have been canceled in the meanwhile.
     if (!mAsyncWaitCallback) {
@@ -413,7 +413,7 @@ nsMIMEInputStream::AsyncLengthWait(nsIInputStreamLengthCallback* aCallback,
 
   nsCOMPtr<nsIInputStreamLengthCallback> callback = aCallback ? this : nullptr;
   {
-    MutexAutoLock lock(mMutex);
+    mozilla::MutexAutoLock lock(mMutex);
     mAsyncInputStreamLengthCallback = aCallback;
   }
 
@@ -425,7 +425,7 @@ nsMIMEInputStream::OnInputStreamLengthReady(nsIAsyncInputStreamLength* aStream,
                                             int64_t aLength) {
   nsCOMPtr<nsIInputStreamLengthCallback> callback;
   {
-    MutexAutoLock lock(mMutex);
+    mozilla::MutexAutoLock lock(mMutex);
     // We have been canceled in the meanwhile.
     if (!mAsyncInputStreamLengthCallback) {
       return NS_OK;
