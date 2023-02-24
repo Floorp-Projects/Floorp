@@ -29,6 +29,8 @@ using VideoCodecConfig = ::webrtc::webrtc_pc_e2e::
     PeerConnectionE2EQualityTestFixture::VideoCodecConfig;
 using VideoSubscription = ::webrtc::webrtc_pc_e2e::
     PeerConnectionE2EQualityTestFixture::VideoSubscription;
+using VideoResolution = ::webrtc::webrtc_pc_e2e::
+    PeerConnectionE2EQualityTestFixture::VideoResolution;
 
 std::string SpecToString(
     PeerConnectionE2EQualityTestFixture::VideoResolution::VideoResolution::Spec
@@ -40,6 +42,12 @@ std::string SpecToString(
         kMaxFromSender:
       return "MaxFromSender";
   }
+}
+
+void AppendResolution(const VideoResolution& resolution,
+                      rtc::StringBuilder& builder) {
+  builder << "_" << resolution.width() << "x" << resolution.height() << "_"
+          << resolution.fps();
 }
 
 }  // namespace
@@ -152,9 +160,9 @@ std::unique_ptr<test::VideoFrameWriter> PeerConnectionE2EQualityTestFixture::
         absl::string_view stream_label,
         const VideoResolution& resolution) const {
   std::unique_ptr<test::VideoFrameWriter> writer = video_frame_writer_factory_(
-      GetInputDumpFileName(stream_label), resolution);
+      GetInputDumpFileName(stream_label, resolution), resolution);
   absl::optional<std::string> frame_ids_file =
-      GetInputFrameIdsDumpFileName(stream_label);
+      GetInputFrameIdsDumpFileName(stream_label, resolution);
   if (frame_ids_file.has_value()) {
     writer = CreateVideoFrameWithIdsWriter(std::move(writer), *frame_ids_file);
   }
@@ -167,9 +175,9 @@ std::unique_ptr<test::VideoFrameWriter> PeerConnectionE2EQualityTestFixture::
         absl::string_view receiver,
         const VideoResolution& resolution) const {
   std::unique_ptr<test::VideoFrameWriter> writer = video_frame_writer_factory_(
-      GetOutputDumpFileName(stream_label, receiver), resolution);
+      GetOutputDumpFileName(stream_label, receiver, resolution), resolution);
   absl::optional<std::string> frame_ids_file =
-      GetOutputFrameIdsDumpFileName(stream_label, receiver);
+      GetOutputFrameIdsDumpFileName(stream_label, receiver, resolution);
   if (frame_ids_file.has_value()) {
     writer = CreateVideoFrameWithIdsWriter(std::move(writer), *frame_ids_file);
   }
@@ -187,36 +195,45 @@ std::unique_ptr<test::VideoFrameWriter> PeerConnectionE2EQualityTestFixture::
 
 std::string
 PeerConnectionE2EQualityTestFixture::VideoDumpOptions::GetInputDumpFileName(
-    absl::string_view stream_label) const {
-  return test::JoinFilename(output_directory_, stream_label);
+    absl::string_view stream_label,
+    const VideoResolution& resolution) const {
+  rtc::StringBuilder file_name;
+  file_name << stream_label;
+  AppendResolution(resolution, file_name);
+  return test::JoinFilename(output_directory_, file_name.Release());
 }
 
 absl::optional<std::string> PeerConnectionE2EQualityTestFixture::
     VideoDumpOptions::GetInputFrameIdsDumpFileName(
-        absl::string_view stream_label) const {
+        absl::string_view stream_label,
+        const VideoResolution& resolution) const {
   if (!export_frame_ids_) {
     return absl::nullopt;
   }
-  return GetInputDumpFileName(stream_label) + ".frame_ids.txt";
+  return GetInputDumpFileName(stream_label, resolution) + ".frame_ids.txt";
 }
 
 std::string
 PeerConnectionE2EQualityTestFixture::VideoDumpOptions::GetOutputDumpFileName(
     absl::string_view stream_label,
-    absl::string_view receiver) const {
+    absl::string_view receiver,
+    const VideoResolution& resolution) const {
   rtc::StringBuilder file_name;
   file_name << stream_label << "_" << receiver;
+  AppendResolution(resolution, file_name);
   return test::JoinFilename(output_directory_, file_name.Release());
 }
 
 absl::optional<std::string> PeerConnectionE2EQualityTestFixture::
     VideoDumpOptions::GetOutputFrameIdsDumpFileName(
         absl::string_view stream_label,
-        absl::string_view receiver) const {
+        absl::string_view receiver,
+        const VideoResolution& resolution) const {
   if (!export_frame_ids_) {
     return absl::nullopt;
   }
-  return GetOutputDumpFileName(stream_label, receiver) + ".frame_ids.txt";
+  return GetOutputDumpFileName(stream_label, receiver, resolution) +
+         ".frame_ids.txt";
 }
 
 std::string PeerConnectionE2EQualityTestFixture::VideoDumpOptions::ToString()
