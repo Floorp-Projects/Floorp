@@ -1295,12 +1295,12 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
    * Gets any Picture-in-Picture site-specific overrides stored in the
    * sharedData struct, and returns them as an Array of two-element Arrays,
    * where the first element is a MatchPattern and the second element is an
-   * object of the form { policy, keyboardControls } (where each property
+   * object of the form { policy, disabledKeyboardControls } (where each property
    * may be missing or undefined).
    *
    * @returns {Array<Array<2>>} Array of 2-element Arrays where the first element
    * is a MatchPattern and the second element is an object with optional policy
-   * and/or keyboardControls properties.
+   * and/or disabledKeyboardControls properties.
    */
   static getSiteOverrides() {
     let result = [];
@@ -2157,7 +2157,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
    * This checks if a given keybinding has been disabled for the specific site
    * currently being viewed.
    */
-  isKeyEnabled(key) {
+  isKeyDisabled(key) {
     const video = this.getWeakVideo();
     if (!video) {
       return false;
@@ -2166,15 +2166,18 @@ export class PictureInPictureChild extends JSWindowActorChild {
     if (!documentURI) {
       return true;
     }
-    for (let [override, { keyboardControls }] of lazy.gSiteOverrides) {
-      if (keyboardControls !== undefined && override.matches(documentURI)) {
-        if (keyboardControls === lazy.KEYBOARD_CONTROLS.NONE) {
-          return false;
+    for (let [override, { disabledKeyboardControls }] of lazy.gSiteOverrides) {
+      if (
+        disabledKeyboardControls !== undefined &&
+        override.matches(documentURI)
+      ) {
+        if (disabledKeyboardControls === lazy.KEYBOARD_CONTROLS.ALL) {
+          return true;
         }
-        return keyboardControls & key;
+        return !!(disabledKeyboardControls & key);
       }
     }
-    return true;
+    return false;
   }
 
   /**
@@ -2245,7 +2248,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
     try {
       switch (keystroke) {
         case "space" /* Toggle Play / Pause */:
-          if (!this.isKeyEnabled(lazy.KEYBOARD_CONTROLS.PLAY_PAUSE)) {
+          if (this.isKeyDisabled(lazy.KEYBOARD_CONTROLS.PLAY_PAUSE)) {
             return;
           }
 
@@ -2260,14 +2263,14 @@ export class PictureInPictureChild extends JSWindowActorChild {
 
           break;
         case "accel-w" /* Close video */:
-          if (!this.isKeyEnabled(lazy.KEYBOARD_CONTROLS.CLOSE)) {
+          if (this.isKeyDisabled(lazy.KEYBOARD_CONTROLS.CLOSE)) {
             return;
           }
           this.pause();
           this.closePictureInPicture({ reason: "close-player-shortcut" });
           break;
         case "downArrow" /* Volume decrease */:
-          if (!this.isKeyEnabled(lazy.KEYBOARD_CONTROLS.VOLUME)) {
+          if (this.isKeyDisabled(lazy.KEYBOARD_CONTROLS.VOLUME)) {
             return;
           }
           oldval = this.videoWrapper.getVolume(video);
@@ -2275,7 +2278,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
           this.videoWrapper.setMuted(video, false);
           break;
         case "upArrow" /* Volume increase */:
-          if (!this.isKeyEnabled(lazy.KEYBOARD_CONTROLS.VOLUME)) {
+          if (this.isKeyDisabled(lazy.KEYBOARD_CONTROLS.VOLUME)) {
             return;
           }
           oldval = this.videoWrapper.getVolume(video);
@@ -2283,20 +2286,20 @@ export class PictureInPictureChild extends JSWindowActorChild {
           this.videoWrapper.setMuted(video, false);
           break;
         case "accel-downArrow" /* Mute */:
-          if (!this.isKeyEnabled(lazy.KEYBOARD_CONTROLS.MUTE_UNMUTE)) {
+          if (this.isKeyDisabled(lazy.KEYBOARD_CONTROLS.MUTE_UNMUTE)) {
             return;
           }
           this.videoWrapper.setMuted(video, true);
           break;
         case "accel-upArrow" /* Unmute */:
-          if (!this.isKeyEnabled(lazy.KEYBOARD_CONTROLS.MUTE_UNMUTE)) {
+          if (this.isKeyDisabled(lazy.KEYBOARD_CONTROLS.MUTE_UNMUTE)) {
             return;
           }
           this.videoWrapper.setMuted(video, false);
           break;
         case "leftArrow": /* Seek back 5 seconds */
         case "accel-leftArrow" /* Seek back 10% */:
-          if (!this.isKeyEnabled(lazy.KEYBOARD_CONTROLS.SEEK)) {
+          if (this.isKeyDisabled(lazy.KEYBOARD_CONTROLS.SEEK)) {
             return;
           }
 
@@ -2310,7 +2313,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
           break;
         case "rightArrow": /* Seek forward 5 seconds */
         case "accel-rightArrow" /* Seek forward 10% */:
-          if (!this.isKeyEnabled(lazy.KEYBOARD_CONTROLS.SEEK)) {
+          if (this.isKeyDisabled(lazy.KEYBOARD_CONTROLS.SEEK)) {
             return;
           }
 
@@ -2325,7 +2328,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
           this.videoWrapper.setCurrentTime(video, selectedTime);
           break;
         case "home" /* Seek to beginning */:
-          if (!this.isKeyEnabled(lazy.KEYBOARD_CONTROLS.SEEK)) {
+          if (this.isKeyDisabled(lazy.KEYBOARD_CONTROLS.SEEK)) {
             return;
           }
           if (!isVideoStreaming) {
@@ -2333,7 +2336,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
           }
           break;
         case "end" /* Seek to end */:
-          if (!this.isKeyEnabled(lazy.KEYBOARD_CONTROLS.SEEK)) {
+          if (this.isKeyDisabled(lazy.KEYBOARD_CONTROLS.SEEK)) {
             return;
           }
 
