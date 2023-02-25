@@ -8,9 +8,6 @@ search-header =
     .placeholder = Search addons.mozilla.org
     .searchbuttonlabel = Search
 
-search-header-shortcut =
-    .key = f
-
 ## Variables
 ##   $domain - Domain name where add-ons are available (e.g. addons.mozilla.org)
 

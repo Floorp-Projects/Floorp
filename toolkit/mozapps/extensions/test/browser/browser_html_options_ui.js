@@ -533,3 +533,90 @@ add_task(function testOptionsFullZoom() {
 add_task(function testOptionsTextZoom() {
   return testOptionsZoom("text");
 });
+
+add_task(async function testInputAndQuickFind() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      options_ui: {
+        page: "options.html",
+      },
+    },
+    files: {
+      "options.html": `
+        <html>
+          <body>
+            <input name="some-input" type="text">
+            <script src="options.js"></script>
+          </body>
+        </html>
+      `,
+      "options.js": () => {
+        let input = document.querySelector("input");
+        browser.test.assertEq(
+          "some-input",
+          input.getAttribute("name"),
+          "Expected options page input"
+        );
+        input.addEventListener("input", event => {
+          browser.test.sendMessage("input-changed", event.target.value);
+        });
+
+        browser.test.sendMessage("options-loaded", window.location.href);
+      },
+    },
+    useAddonManager: "temporary",
+  });
+  await extension.startup();
+
+  let win = await loadInitialView("extension");
+  let doc = win.document;
+
+  // Make sure we found the right card.
+  let card = getAddonCard(win, extension.id);
+  ok(card, "Found the card");
+
+  // The preferences option should be visible.
+  let preferences = card.querySelector('[action="preferences"]');
+  ok(!preferences.hidden, "The preferences option is visible");
+
+  // Open the preferences page.
+  let loaded = waitForViewLoad(win);
+  preferences.click();
+  await loaded;
+
+  // Verify we're on the preferences tab.
+  card = doc.querySelector("addon-card");
+  is(card.addon.id, extension.id, "The right page was loaded");
+
+  // Wait for the browser to load.
+  let url = await extension.awaitMessage("options-loaded");
+
+  // Check the attributes of the options browser.
+  let browser = card.querySelector("inline-options-browser browser");
+  ok(browser, "The visible view has a browser");
+  ok(card.addon.optionsURL.length, "Options URL is not empty");
+  is(
+    browser.currentURI.spec,
+    card.addon.optionsURL,
+    "The browser has the expected options URL"
+  );
+  is(url, card.addon.optionsURL, "Browser has the expected options URL loaded");
+
+  // Focus the options browser.
+  browser.focus();
+
+  // Focus the input in the options page.
+  await SpecialPowers.spawn(browser, [], () => {
+    content.document.querySelector("input").focus();
+  });
+
+  info("input in options page should be focused, typing...");
+  // Type '/'.
+  EventUtils.synthesizeKey("/");
+
+  let inputValue = await extension.awaitMessage("input-changed");
+  is(inputValue, "/", "Expected input to contain a slash");
+
+  await closeView(win);
+  await extension.unload();
+});
