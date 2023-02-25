@@ -98,7 +98,7 @@ const blockBFCacheTests = [
   },
 ];
 
-if (SpecialPowers.Services.appinfo.fission) {
+if (SpecialPowers.Services.appinfo.fissionAutostart) {
   blockBFCacheTests.push({
     name: "Loading OOP iframe",
     test: () => {
