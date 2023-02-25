@@ -36,20 +36,19 @@ class nsTableRowFrame : public nsContainerFrame {
 
   virtual ~nsTableRowFrame();
 
-  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
-                    nsIFrame* aPrevInFlow) override;
+  void Init(nsIContent* aContent, nsContainerFrame* aParent,
+            nsIFrame* aPrevInFlow) override;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot,
-                           PostDestroyData& aPostDestroyData) override;
+  void DestroyFrom(nsIFrame* aDestructRoot,
+                   PostDestroyData& aPostDestroyData) override;
 
-  /** @see nsIFrame::DidSetComputedStyle */
-  virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
+  void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
 
   void AppendFrames(ChildListID aListID, nsFrameList&& aFrameList) override;
   void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
                     const nsLineList::iterator* aPrevFrameLine,
                     nsFrameList&& aFrameList) override;
-  virtual void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
+  void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
 
   /** instantiate a new instance of nsTableRowFrame.
    * @param aPresShell the pres shell for this frame
@@ -294,26 +293,26 @@ class nsTableRowFrame : public nsContainerFrame {
   } mBits;
 
   // the desired bsize based on the content of the tallest cell in the row
-  nscoord mContentBSize;
+  nscoord mContentBSize = 0;
   // the bsize based on a style percentage bsize on either the row or any cell
   // if mHasPctBSize is set
-  nscoord mStylePctBSize;
+  nscoord mStylePctBSize = 0;
   // the bsize based on a style pixel bsize on the row or any
   // cell if mHasFixedBSize is set
-  nscoord mStyleFixedBSize;
+  nscoord mStyleFixedBSize = 0;
 
   // max-ascent and max-descent amongst all cells that have
   // 'vertical-align: baseline'
-  nscoord mMaxCellAscent;   // does include cells with rowspan > 1
-  nscoord mMaxCellDescent;  // does *not* include cells with rowspan > 1
+  nscoord mMaxCellAscent = 0;   // does include cells with rowspan > 1
+  nscoord mMaxCellDescent = 0;  // does *not* include cells with rowspan > 1
 
   // border widths in pixels in the collapsing border model of the *inner*
   // half of the border only
-  BCPixelSize mBStartBorderWidth;
-  BCPixelSize mBEndBorderWidth;
-  BCPixelSize mIEndContBorderWidth;
-  BCPixelSize mBStartContBorderWidth;
-  BCPixelSize mIStartContBorderWidth;
+  BCPixelSize mBStartBorderWidth = 0;
+  BCPixelSize mBEndBorderWidth = 0;
+  BCPixelSize mIEndContBorderWidth = 0;
+  BCPixelSize mBStartContBorderWidth = 0;
+  BCPixelSize mIStartContBorderWidth = 0;
 
   /**
    * Sets the NS_ROW_HAS_CELL_WITH_STYLE_BSIZE bit to indicate whether

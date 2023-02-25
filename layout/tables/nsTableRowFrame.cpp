@@ -126,17 +126,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 nsTableRowFrame::nsTableRowFrame(ComputedStyle* aStyle,
                                  nsPresContext* aPresContext, ClassID aID)
-    : nsContainerFrame(aStyle, aPresContext, aID),
-      mContentBSize(0),
-      mStylePctBSize(0),
-      mStyleFixedBSize(0),
-      mMaxCellAscent(0),
-      mMaxCellDescent(0),
-      mBStartBorderWidth(0),
-      mBEndBorderWidth(0),
-      mIEndContBorderWidth(0),
-      mBStartContBorderWidth(0),
-      mIStartContBorderWidth(0) {
+    : nsContainerFrame(aStyle, aPresContext, aID) {
   mBits.mRowIndex = 0;
   mBits.mHasFixedBSize = 0;
   mBits.mHasPctBSize = 0;
@@ -177,8 +167,9 @@ void nsTableRowFrame::DestroyFrom(nsIFrame* aDestructRoot,
 void nsTableRowFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   nsContainerFrame::DidSetComputedStyle(aOldComputedStyle);
 
-  if (!aOldComputedStyle)  // avoid this on init
-    return;
+  if (!aOldComputedStyle) {
+    return;  // avoid the following on init
+  }
 
 #ifdef ACCESSIBILITY
   if (nsAccessibilityService* accService = GetAccService()) {
