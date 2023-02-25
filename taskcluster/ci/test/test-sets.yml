@@ -255,6 +255,36 @@ windows10-64-2004-ccov-tests:
     - web-platform-tests-reftest
     - web-platform-tests-wdspec
 
+windows11-2009-tests:
+    - cppunit
+    - crashtest
+    - firefox-ui-functional
+    - gtest
+    - jsreftest
+    - marionette
+    - mochitest-a11y
+    - mochitest-browser-a11y
+    - mochitest-browser-chrome
+    - mochitest-browser-media
+    - mochitest-chrome
+    - mochitest-chrome-gpu
+    - mochitest-devtools-chrome
+    - mochitest-media
+    - mochitest-plain
+    - mochitest-plain-gpu
+    - mochitest-remote
+    - mochitest-webgpu
+    - mochitest-webgl1-core
+    - mochitest-webgl1-ext
+    - mochitest-webgl2-core
+    - mochitest-webgl2-ext
+    - reftest
+    - telemetry-tests-client
+    - test-verify
+    - test-verify-gpu
+    - test-verify-wpt
+    - xpcshell
+
 mingwclang-tests-debug:
     - cppunit
     - firefox-ui-functional

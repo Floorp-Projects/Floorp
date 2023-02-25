@@ -58,11 +58,11 @@ job-defaults:
         requires-signed-builds:
             by-test-platform:
                 macosx1100.*: true
-                windows10-64-2004-shippable-qr/opt:
+                windows1.*-64.*-shippable-qr/opt:
                     by-variant:
                         msix: true
                         default: false
-                windows10-64-2004-qr/opt:
+                windows1.*-64.*-qr/opt:
                     by-variant:
                         msix: true
                         default: false
