@@ -11,6 +11,7 @@
 #include "VRManagerParent.h"
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/SpinEventLoopUntil.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CanvasTranslator.h"
 #include "mozilla/layers/CompositorManagerParent.h"
 #include "mozilla/layers/ImageBridgeParent.h"
@@ -52,15 +53,27 @@ CompositorThreadHolder::CreateCompositorThread() {
   MOZ_ASSERT(!sCompositorThreadHolder,
              "The compositor thread has already been started!");
 
-  // This is 512K, which is higher than the default 256K.
-  // Increased to accommodate Mesa in bug 1753340.
+  // When the CanvasRenderer thread is disabled, WebGL may be handled on this
+  // thread, requiring a bigger stack size. See: CanvasManagerParent::Init
+  //
+  // This is 4M, which is higher than the default 256K.
+  // Increased with bug 1753349 to accommodate the `chromium/5359` branch of
+  // ANGLE, which has large peak stack usage for some pathological shader
+  // compilations.
+  //
+  // Previously increased to 512K to accommodate Mesa in bug 1753340.
   //
   // Previously increased to 320K to avoid a stack overflow in the
   // Intel Vulkan driver initialization in bug 1716120.
   //
   // Note: we only override it if it's limited already.
-  const uint32_t stackSize =
-      nsIThreadManager::DEFAULT_STACK_SIZE ? 512 << 10 : 0;
+  uint32_t stackSize = nsIThreadManager::DEFAULT_STACK_SIZE;
+  if (stackSize) {
+    stackSize = std::max(stackSize, gfxVars::SupportsThreadsafeGL() &&
+                                            !gfxVars::UseCanvasRenderThread()
+                                        ? 4096U << 10
+                                        : 512U << 10);
+  }
 
   nsCOMPtr<nsIThread> compositorThread;
   nsresult rv = NS_NewNamedThread(
