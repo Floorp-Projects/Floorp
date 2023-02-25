@@ -113,7 +113,6 @@ class GfxInfo final : public GfxInfoBase {
   bool mHasMultipleGPUs;
   bool mGlxTestError;
   bool mIsVAAPISupported;
-  bool mIsX11ThreadSafe;
 
   void AddCrashReportAnnotations();
 };
