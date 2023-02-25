@@ -700,6 +700,13 @@ export class UrlbarController {
   }
 
   /**
+   * Clear the previous query context cache.
+   */
+  clearLastQueryContextCache() {
+    this._lastQueryContextWrapper = null;
+  }
+
+  /**
    * Notifies listeners of results.
    *
    * @param {string} name Name of the notification.
@@ -1018,7 +1025,7 @@ class TelemetryEvent {
       1
     );
 
-    if (method === "engagement" && queryContext.results?.[0].autofill) {
+    if (method === "engagement" && queryContext?.results?.[0].autofill) {
       // Record autofill impressions upon engagement.
       const type = lazy.UrlbarUtils.telemetryTypeFromResult(
         queryContext.results[0]

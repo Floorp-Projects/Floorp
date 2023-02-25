@@ -191,3 +191,57 @@ add_task(async function suggested_index() {
       ]),
   });
 });
+
+add_task(async function always_empty_if_drop_go() {
+  const expected = [
+    {
+      engagement_type: "drop_go",
+      groups: "",
+      results: "",
+      n_results: 0,
+    },
+  ];
+
+  await doTest(async browser => {
+    await doDropAndGo("example.com");
+
+    assertEngagementTelemetry(expected);
+  });
+
+  await doTest(async browser => {
+    // Open the results view once.
+    await showResultByArrowDown();
+    await UrlbarTestUtils.promisePopupClose(window);
+
+    await doDropAndGo("example.com");
+
+    assertEngagementTelemetry(expected);
+  });
+});
+
+add_task(async function always_empty_if_paste_go() {
+  const expected = [
+    {
+      engagement_type: "paste_go",
+      groups: "",
+      results: "",
+      n_results: 0,
+    },
+  ];
+
+  await doTest(async browser => {
+    await doPasteAndGo("example.com");
+
+    assertEngagementTelemetry(expected);
+  });
+
+  await doTest(async browser => {
+    // Open the results view once.
+    await showResultByArrowDown();
+    await UrlbarTestUtils.promisePopupClose(window);
+
+    await doPasteAndGo("example.com");
+
+    assertEngagementTelemetry(expected);
+  });
+});

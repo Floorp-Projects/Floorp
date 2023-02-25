@@ -2808,6 +2808,7 @@ export class UrlbarInput {
       this.select();
       this.window.goDoCommand("cmd_paste");
       this.setResultForCurrentValue(null);
+      this.controller.clearLastQueryContextCache();
       this.handleCommand();
 
       this._suppressStartQuery = false;
@@ -3639,6 +3640,7 @@ export class UrlbarInput {
       // To simplify tracking of events, register an initial event for event
       // telemetry, to replace the missing input event.
       this.controller.engagementEvent.start(event);
+      this.controller.clearLastQueryContextCache();
       this.handleNavigation({ triggeringPrincipal: principal });
       // For safety reasons, in the drop case we don't want to immediately show
       // the the dropped value, instead we want to keep showing the current page
