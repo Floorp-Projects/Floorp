@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Google Inc. All rights reserved.
+ * Copyright 2023 Google Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,5 +14,17 @@
  * limitations under the License.
  */
 
-export * as BidiMapper from 'chromium-bidi/lib/cjs/bidiMapper/bidiMapper.js';
-export * as Bidi from 'chromium-bidi/lib/cjs/protocol/protocol.js';
+import {QueryHandler, QuerySelectorAll} from './QueryHandler.js';
+
+/**
+ * @internal
+ */
+export class TextQueryHandler extends QueryHandler {
+  static override querySelectorAll: QuerySelectorAll = (
+    element,
+    selector,
+    {textQuerySelectorAll}
+  ) => {
+    return textQuerySelectorAll(element, selector);
+  };
+}

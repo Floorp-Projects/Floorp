@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-import utils from './utils.js';
 import expect from 'expect';
+
 import {
   getTestState,
   setupTestBrowserHooks,
   setupTestPageAndContextHooks,
 } from './mocha-utils.js';
+import utils from './utils.js';
 
 const bigint = typeof BigInt !== 'undefined';
 
@@ -327,6 +328,20 @@ describe('Evaluation specs', function () {
           return window;
         })
       ).toBe(undefined);
+    });
+    it('should return promise as empty object', async () => {
+      const {page} = getTestState();
+
+      const result = await page.evaluate(() => {
+        return {
+          promise: new Promise(resolve => {
+            setTimeout(resolve, 1000);
+          }),
+        };
+      });
+      expect(result).toEqual({
+        promise: {},
+      });
     });
     it('should fail for circular object', async () => {
       const {page} = getTestState();

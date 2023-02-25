@@ -2,6 +2,59 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [19.7.2](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v19.7.1...puppeteer-core-v19.7.2) (2023-02-20)
+
+
+### Bug Fixes
+
+* bump chromium-bidi to a version that does not declare mitt as a peer dependency ([#9701](https://github.com/puppeteer/puppeteer/issues/9701)) ([82916c1](https://github.com/puppeteer/puppeteer/commit/82916c102b2c399093ba9019e272207b5ce81849))
+
+## [19.7.1](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v19.7.0...puppeteer-core-v19.7.1) (2023-02-15)
+
+
+### Bug Fixes
+
+* fix circularity on JSHandle interface ([#9661](https://github.com/puppeteer/puppeteer/issues/9661)) ([eb13863](https://github.com/puppeteer/puppeteer/commit/eb138635d661d3cdaf2940959fece5aca482178a))
+* make chromium-bidi an opt peer dep ([#9667](https://github.com/puppeteer/puppeteer/issues/9667)) ([c6054ac](https://github.com/puppeteer/puppeteer/commit/c6054ac1a56c08ee7bf01321878699b7b4ab4e0b))
+
+## [19.7.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v19.6.3...puppeteer-core-v19.7.0) (2023-02-13)
+
+
+### Features
+
+* add touchstart, touchmove and touchend methods ([#9622](https://github.com/puppeteer/puppeteer/issues/9622)) ([c8bb11a](https://github.com/puppeteer/puppeteer/commit/c8bb11adfcf1537032730a91baa3c36a6e324926))
+* **chromium:** roll to Chromium 111.0.5556.0 (r1095492) ([#9656](https://github.com/puppeteer/puppeteer/issues/9656)) ([df59d01](https://github.com/puppeteer/puppeteer/commit/df59d010c20644da06eb4c4e28a11c4eea164aba))
+
+
+### Bug Fixes
+
+* `page.goto` error throwing on 40x/50x responses with an empty body ([#9523](https://github.com/puppeteer/puppeteer/issues/9523)) ([#9577](https://github.com/puppeteer/puppeteer/issues/9577)) ([ddb0cc1](https://github.com/puppeteer/puppeteer/commit/ddb0cc174d2a14c0948dcdaf9bae78620937c667))
+
+## [19.6.3](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v19.6.2...puppeteer-core-v19.6.3) (2023-02-01)
+
+
+### Bug Fixes
+
+* ignore not found contexts for console messages ([#9595](https://github.com/puppeteer/puppeteer/issues/9595)) ([390685b](https://github.com/puppeteer/puppeteer/commit/390685bbe52c22b686fc0e3119b4ac7b1073c581))
+* restore WaitTask terminate  condition ([#9612](https://github.com/puppeteer/puppeteer/issues/9612)) ([e16cbc6](https://github.com/puppeteer/puppeteer/commit/e16cbc6626cffd40d0caa30801620e7293455006))
+
+## [19.6.2](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v19.6.1...puppeteer-core-v19.6.2) (2023-01-27)
+
+
+### Bug Fixes
+
+* atomically get Puppeteer utilities ([#9597](https://github.com/puppeteer/puppeteer/issues/9597)) ([050a7b0](https://github.com/puppeteer/puppeteer/commit/050a7b062415ebaf10bcb71c405143eacc4e5d4b))
+
+## [19.6.1](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v19.6.0...puppeteer-core-v19.6.1) (2023-01-26)
+
+
+### Bug Fixes
+
+* don't clean up previous browser versions ([#9568](https://github.com/puppeteer/puppeteer/issues/9568)) ([344bc2a](https://github.com/puppeteer/puppeteer/commit/344bc2af62e4068fe2cb8162d4b6c8242aac843b)), closes [#9533](https://github.com/puppeteer/puppeteer/issues/9533)
+* mimic rejection for PuppeteerUtil on early call ([#9589](https://github.com/puppeteer/puppeteer/issues/9589)) ([1980de9](https://github.com/puppeteer/puppeteer/commit/1980de91a161523c7098a79919b20e6d8d2e5d81))
+* **revert:** use LazyArg for puppeteer utilities ([#9590](https://github.com/puppeteer/puppeteer/issues/9590)) ([6edd996](https://github.com/puppeteer/puppeteer/commit/6edd99676827de2c83f7a858e4f903b1c34e7d35))
+* use LazyArg for puppeteer utilities ([#9575](https://github.com/puppeteer/puppeteer/issues/9575)) ([496658f](https://github.com/puppeteer/puppeteer/commit/496658f02945b53096483f36cb3d64556cff045e))
+
 ## [19.6.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v19.5.2...puppeteer-core-v19.6.0) (2023-01-23)
 
 

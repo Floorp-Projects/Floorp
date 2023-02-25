@@ -117,10 +117,14 @@ _OPT\.OBJ/
 
 # Ignore node_module directories and npm artifacts
 ^remote/test/puppeteer/.*\.tsbuildinfo
+^remote/test/puppeteer/.*/lib/
+^remote/test/puppeteer/.*/node_modules/
+^remote/test/puppeteer/.*/\.wireit/
+^remote/test/puppeteer/\.devcontainer/
 ^remote/test/puppeteer/\.github
 ^remote/test/puppeteer/\.husky
+^remote/test/puppeteer/\.wireit/
 ^remote/test/puppeteer/coverage/
-^remote/test/puppeteer/.devcontainer/
 ^remote/test/puppeteer/docker/
 ^remote/test/puppeteer/docs/puppeteer-core\.api\.json
 ^remote/test/puppeteer/docs/puppeteer\.api\.json

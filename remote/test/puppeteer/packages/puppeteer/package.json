@@ -1,6 +1,6 @@
 {
   "name": "puppeteer",
-  "version": "19.6.0",
+  "version": "19.7.2",
   "description": "A high-level API to control headless Chrome over the DevTools Protocol",
   "keywords": [
     "puppeteer",
@@ -34,13 +34,12 @@
     "node": ">=14.1.0"
   },
   "scripts": {
+    "build:docs": "wireit",
     "build:tsc": "wireit",
     "build:types": "wireit",
     "build": "wireit",
     "clean": "tsc -b --clean && rimraf lib",
-    "format:types": "wireit",
     "generate:package-json": "wireit",
-    "generate:sources": "wireit",
     "postinstall": "node install.js",
     "prepack": "wireit"
   },
@@ -56,61 +55,58 @@
     },
     "build": {
       "dependencies": [
-        "format:types",
-        "generate:package-json"
+        "build:tsc",
+        "build:types"
       ]
     },
     "generate:package-json": {
       "command": "tsx ../../tools/generate_module_package_json.ts lib/esm/package.json",
-      "clean": "if-file-deleted",
-      "dependencies": [
-        "build:tsc"
+      "files": [
+        "../../tools/generate_module_package_json.ts"
       ],
       "output": [
         "lib/esm/package.json"
       ]
     },
-    "build:types": {
-      "command": "api-extractor run --local",
+    "build:docs": {
+      "command": "api-extractor run --local --config \"./api-extractor.docs.json\"",
+      "files": [
+        "api-extractor.docs.json",
+        "lib/esm/puppeteer/puppeteer-core.d.ts",
+        "tsconfig.json"
+      ],
       "dependencies": [
         "build:tsc"
-      ],
-      "files": [
-        "tsconfig.json",
-        "api-extractor.json",
-        "lib/esm/puppeteer/types.d.ts"
-      ],
-      "output": [
-        "lib/types.d.ts"
-      ]
-    },
-    "format:types": {
-      "command": "eslint --cache-location .eslintcache --cache --ext=ts --no-ignore --no-eslintrc -c=../../.eslintrc.types.cjs --fix lib/types.d.ts",
-      "dependencies": [
-        "build:types"
-      ],
-      "clean": false,
-      "files": [
-        "lib/types.d.ts",
-        "../../.eslintrc.types.cjs"
-      ],
-      "output": [
-        "lib/types.d.ts"
       ]
     },
     "build:tsc": {
       "command": "tsc -b",
       "clean": "if-file-deleted",
       "dependencies": [
-        "../puppeteer-core:build"
+        "../puppeteer-core:build",
+        "generate:package-json"
       ],
       "files": [
-        "src/**",
-        "compat/**",
-        "**/tsconfig.*.json"
+        "src/**"
       ],
       "output": [
-        "lib/**"
+        "lib/{cjs,esm}/**",
+        "!lib/esm/package.json"
+      ]
+    },
+    "build:types": {
+      "command": "api-extractor run --local && eslint --cache-location .eslintcache --cache --ext=ts --no-ignore --no-eslintrc -c=../../.eslintrc.types.cjs --fix lib/types.d.ts",
+      "files": [
+        "../../.eslintrc.types.cjs",
+        "api-extractor.json",
+        "lib/esm/puppeteer/types.d.ts",
+        "tsconfig.json"
+      ],
+      "output": [
+        "lib/types.d.ts"
+      ],
+      "dependencies": [
+        "build:tsc"
       ]
     }
   },
@@ -126,6 +122,6 @@
     "https-proxy-agent": "5.0.1",
     "progress": "2.0.3",
     "proxy-from-env": "1.1.0",
-    "puppeteer-core": "19.6.0"
+    "puppeteer-core": "19.7.2"
   }
 }

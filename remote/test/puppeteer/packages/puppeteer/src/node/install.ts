@@ -15,12 +15,14 @@
  */
 
 import https, {RequestOptions} from 'https';
+import URL from 'url';
+
 import createHttpsProxyAgent, {HttpsProxyAgentOptions} from 'https-proxy-agent';
 import ProgressBar from 'progress';
 import {getProxyForUrl} from 'proxy-from-env';
 import {PuppeteerNode} from 'puppeteer-core/internal/node/PuppeteerNode.js';
 import {PUPPETEER_REVISIONS} from 'puppeteer-core/internal/revisions.js';
-import URL from 'url';
+
 import {getConfiguration} from '../getConfiguration.js';
 
 /**
@@ -94,13 +96,18 @@ export async function downloadBrowser(): Promise<void> {
       logPolitely(
         `${supportedProducts[product]} (${revisionInfo.revision}) downloaded to ${revisionInfo.folderPath}`
       );
-      localRevisions = localRevisions.filter(revision => {
+      const otherRevisions = localRevisions.filter(revision => {
         return revision !== revisionInfo.revision;
       });
-      const cleanupOldVersions = localRevisions.map(revision => {
-        return browserFetcher.remove(revision);
-      });
-      Promise.all([...cleanupOldVersions]);
+      if (otherRevisions.length) {
+        logPolitely(
+          `Other installed ${
+            supportedProducts[product]
+          } browsers in ${browserFetcher.getDownloadPath()} include: ${otherRevisions.join(
+            ', '
+          )}. Remove old revisions from ${browserFetcher.getDownloadPath()} if you don't need them.`
+        );
+      }
     }
 
     function onError(error: Error) {

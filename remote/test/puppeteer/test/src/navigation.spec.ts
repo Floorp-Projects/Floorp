@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-import utils from './utils.js';
+import {ServerResponse} from 'http';
+
 import expect from 'expect';
+import {TimeoutError} from 'puppeteer';
+import {HTTPRequest} from 'puppeteer-core/internal/common/HTTPRequest.js';
+
 import {
   getTestState,
   setupTestBrowserHooks,
   setupTestPageAndContextHooks,
 } from './mocha-utils.js';
-import {ServerResponse} from 'http';
-import {HTTPRequest} from 'puppeteer-core/internal/common/HTTPRequest.js';
-import {TimeoutError} from 'puppeteer';
+import utils from './utils.js';
 
 describe('navigation', function () {
   setupTestBrowserHooks();
@@ -303,6 +305,30 @@ describe('navigation', function () {
       const response = (await page.goto(server.PREFIX + '/not-found'))!;
       expect(response.ok()).toBe(false);
       expect(response.status()).toBe(404);
+    });
+    it('should not throw an error for a 404 response with an empty body', async () => {
+      const {page, server} = getTestState();
+
+      server.setRoute('/404-error', (_, res) => {
+        res.statusCode = 404;
+        res.end();
+      });
+
+      const response = (await page.goto(server.PREFIX + '/404-error'))!;
+      expect(response.ok()).toBe(false);
+      expect(response.status()).toBe(404);
+    });
+    it('should not throw an error for a 500 response with an empty body', async () => {
+      const {page, server} = getTestState();
+
+      server.setRoute('/500-error', (_, res) => {
+        res.statusCode = 500;
+        res.end();
+      });
+
+      const response = (await page.goto(server.PREFIX + '/500-error'))!;
+      expect(response.ok()).toBe(false);
+      expect(response.status()).toBe(500);
     });
     it('should return last response in redirect chain', async () => {
       const {page, server} = getTestState();

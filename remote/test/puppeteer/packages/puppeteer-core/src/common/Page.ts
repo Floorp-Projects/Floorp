@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-import {Protocol} from 'devtools-protocol';
 import type {Readable} from 'stream';
+
+import {Protocol} from 'devtools-protocol';
+
 import type {Browser} from '../api/Browser.js';
 import type {BrowserContext} from '../api/BrowserContext.js';
+import {ElementHandle} from '../api/ElementHandle.js';
+import {JSHandle} from '../api/JSHandle.js';
 import {
   GeolocationOptions,
   MediaFeature,
@@ -35,7 +39,9 @@ import {
   DeferredPromise,
 } from '../util/DeferredPromise.js';
 import {isErrorLike} from '../util/ErrorLike.js';
+
 import {Accessibility} from './Accessibility.js';
+import {Binding} from './Binding.js';
 import {
   CDPSession,
   CDPSessionEmittedEvents,
@@ -44,7 +50,6 @@ import {
 import {ConsoleMessage, ConsoleMessageType} from './ConsoleMessage.js';
 import {Coverage} from './Coverage.js';
 import {Dialog} from './Dialog.js';
-import {ElementHandle} from './ElementHandle.js';
 import {EmulationManager} from './EmulationManager.js';
 import {FileChooser} from './FileChooser.js';
 import {
@@ -59,7 +64,6 @@ import {HTTPResponse} from './HTTPResponse.js';
 import {Keyboard, Mouse, MouseButton, Touchscreen} from './Input.js';
 import {WaitForSelectorOptions} from './IsolatedWorld.js';
 import {MAIN_WORLD} from './IsolatedWorlds.js';
-import {JSHandle} from './JSHandle.js';
 import {
   Credentials,
   NetworkConditions,
@@ -72,7 +76,13 @@ import {TargetManagerEmittedEvents} from './TargetManager.js';
 import {TaskQueue} from './TaskQueue.js';
 import {TimeoutSettings} from './TimeoutSettings.js';
 import {Tracing} from './Tracing.js';
-import {EvaluateFunc, HandleFor, NodeFor} from './types.js';
+import {
+  BindingPayload,
+  EvaluateFunc,
+  EvaluateFuncWith,
+  HandleFor,
+  NodeFor,
+} from './types.js';
 import {
   createJSHandle,
   debugError,
@@ -83,9 +93,6 @@ import {
   importFS,
   isNumber,
   isString,
-  pageBindingDeliverErrorString,
-  pageBindingDeliverErrorValueString,
-  pageBindingDeliverResultString,
   pageBindingInitString,
   releaseObject,
   valueFromRemoteObject,
@@ -140,7 +147,7 @@ export class CDPPage extends Page {
   #frameManager: FrameManager;
   #emulationManager: EmulationManager;
   #tracing: Tracing;
-  #pageBindings = new Map<string, Function>();
+  #bindings = new Map<string, Binding>();
   #coverage: Coverage;
   #javascriptEnabled = true;
   #viewport: Viewport | null;
@@ -521,13 +528,12 @@ export class CDPPage extends Page {
   ): Promise<JSHandle<Prototype[]>> {
     const context = await this.mainFrame().executionContext();
     assert(!prototypeHandle.disposed, 'Prototype JSHandle is disposed!');
-    const remoteObject = prototypeHandle.remoteObject();
     assert(
-      remoteObject.objectId,
+      prototypeHandle.id,
       'Prototype JSHandle must not be referencing primitive value'
     );
     const response = await context._client.send('Runtime.queryObjects', {
-      prototypeObjectId: remoteObject.objectId,
+      prototypeObjectId: prototypeHandle.id,
     });
     return createJSHandle(context, response.objects) as HandleFor<Prototype[]>;
   }
@@ -535,9 +541,10 @@ export class CDPPage extends Page {
   override async $eval<
     Selector extends string,
     Params extends unknown[],
-    Func extends EvaluateFunc<
-      [ElementHandle<NodeFor<Selector>>, ...Params]
-    > = EvaluateFunc<[ElementHandle<NodeFor<Selector>>, ...Params]>
+    Func extends EvaluateFuncWith<NodeFor<Selector>, Params> = EvaluateFuncWith<
+      NodeFor<Selector>,
+      Params
+    >
   >(
     selector: Selector,
     pageFunction: Func | string,
@@ -549,9 +556,10 @@ export class CDPPage extends Page {
   override async $$eval<
     Selector extends string,
     Params extends unknown[],
-    Func extends EvaluateFunc<
-      [Array<NodeFor<Selector>>, ...Params]
-    > = EvaluateFunc<[Array<NodeFor<Selector>>, ...Params]>
+    Func extends EvaluateFuncWith<
+      Array<NodeFor<Selector>>,
+      Params
+    > = EvaluateFuncWith<Array<NodeFor<Selector>>, Params>
   >(
     selector: Selector,
     pageFunction: Func | string,
@@ -646,23 +654,29 @@ export class CDPPage extends Page {
     name: string,
     pptrFunction: Function | {default: Function}
   ): Promise<void> {
-    if (this.#pageBindings.has(name)) {
+    if (this.#bindings.has(name)) {
       throw new Error(
         `Failed to add page binding with name ${name}: window['${name}'] already exists!`
       );
     }
 
-    let exposedFunction: Function;
+    let binding: Binding;
     switch (typeof pptrFunction) {
       case 'function':
-        exposedFunction = pptrFunction;
+        binding = new Binding(
+          name,
+          pptrFunction as (...args: unknown[]) => unknown
+        );
         break;
       default:
-        exposedFunction = pptrFunction.default;
+        binding = new Binding(
+          name,
+          pptrFunction.default as (...args: unknown[]) => unknown
+        );
         break;
     }
 
-    this.#pageBindings.set(name, exposedFunction);
+    this.#bindings.set(name, binding);
 
     const expression = pageBindingInitString('exposedFun', name);
     await this.#client.send('Runtime.addBinding', {name: name});
@@ -747,10 +761,20 @@ export class CDPPage extends Page {
       // @see https://github.com/puppeteer/puppeteer/issues/3865
       return;
     }
-    const context = this.#frameManager.executionContextById(
+    const context = this.#frameManager.getExecutionContextById(
       event.executionContextId,
       this.#client
     );
+    if (!context) {
+      debugError(
+        new Error(
+          `ExecutionContext not found for a console message: ${JSON.stringify(
+            event
+          )}`
+        )
+      );
+      return;
+    }
     const values = event.args.map(arg => {
       return createJSHandle(context, arg);
     });
@@ -760,7 +784,7 @@ export class CDPPage extends Page {
   async #onBindingCalled(
     event: Protocol.Runtime.BindingCalledEvent
   ): Promise<void> {
-    let payload: {type: string; name: string; seq: number; args: unknown[]};
+    let payload: BindingPayload;
     try {
       payload = JSON.parse(event.payload);
     } catch {
@@ -768,34 +792,21 @@ export class CDPPage extends Page {
       // called before our wrapper was initialized.
       return;
     }
-    const {type, name, seq, args} = payload;
-    if (type !== 'exposedFun' || !this.#pageBindings.has(name)) {
+    const {type, name, seq, args, isTrivial} = payload;
+    if (type !== 'exposedFun') {
       return;
     }
-    let expression = null;
-    try {
-      const pageBinding = this.#pageBindings.get(name);
-      assert(pageBinding);
-      const result = await pageBinding(...args);
-      expression = pageBindingDeliverResultString(name, seq, result);
-    } catch (error) {
-      if (isErrorLike(error)) {
-        expression = pageBindingDeliverErrorString(
-          name,
-          seq,
-          error.message,
-          error.stack
-        );
-      } else {
-        expression = pageBindingDeliverErrorValueString(name, seq, error);
-      }
+
+    const context = this.#frameManager.executionContextById(
+      event.executionContextId,
+      this.#client
+    );
+    if (!context) {
+      return;
     }
-    this.#client
-      .send('Runtime.evaluate', {
-        expression,
-        contextId: event.executionContextId,
-      })
-      .catch(debugError);
+
+    const binding = this.#bindings.get(name);
+    await binding?.run(context, seq, args, isTrivial);
   }
 
   #addConsoleMessage(
@@ -811,7 +822,7 @@ export class CDPPage extends Page {
     }
     const textTokens = [];
     for (const arg of args) {
-      const remoteObject = arg.remoteObject();
+      const remoteObject = arg.remoteObject() as Protocol.Runtime.RemoteObject;
       if (remoteObject.objectId) {
         textTokens.push(arg.toString());
       } else {
@@ -1621,11 +1632,7 @@ export class CDPPage extends Page {
 
   override waitForXPath(
     xpath: string,
-    options: {
-      visible?: boolean;
-      hidden?: boolean;
-      timeout?: number;
-    } = {}
+    options: WaitForSelectorOptions = {}
   ): Promise<ElementHandle<Node> | null> {
     return this.mainFrame().waitForXPath(xpath, options);
   }
