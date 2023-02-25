@@ -183,15 +183,15 @@ private fun browsingHistorySubsection() =
 private fun browsingHistoryDescription(addresses: String) = mDevice.findObject(UiSelector().textContains("$addresses addresses"))
 
 private fun browsingHistoryCheckBox() =
-    onView(allOf(withId(R.id.checkbox), hasSibling(withText("Browsing history and site data"))))
+    onView(allOf(withId(R.id.checkbox), hasSibling(withText("Browsing history"))))
 
 private fun cookiesSubsection() =
     onView(withText(R.string.preferences_delete_browsing_data_cookies))
 
-private fun cookiesDescription() = onView(withText(R.string.preferences_delete_browsing_data_cookies_subtitle))
+private fun cookiesAndSiteDataDescription() = onView(withText(R.string.preferences_delete_browsing_data_cookies_subtitle))
 
-private fun cookiesCheckBox() =
-    onView(allOf(withId(R.id.checkbox), hasSibling(withText("Cookies"))))
+private fun cookiesAndSiteDataCheckBox() =
+    onView(allOf(withId(R.id.checkbox), hasSibling(withText("Cookies and site data"))))
 
 private fun cachedFilesSubsection() =
     onView(withText(R.string.preferences_delete_browsing_data_cached_files))
@@ -226,8 +226,8 @@ private fun assertAllOptionsAndCheckBoxes() {
     assertTrue(browsingHistoryDescription("0").waitForExists(waitingTime))
     browsingHistoryCheckBox().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
     cookiesSubsection().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-    cookiesDescription().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-    cookiesCheckBox().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    cookiesAndSiteDataDescription().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    cookiesAndSiteDataCheckBox().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
     cachedFilesSubsection().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
     cachedFilesDescription().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
     cachedFilesCheckBox().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
@@ -240,7 +240,7 @@ private fun assertAllOptionsAndCheckBoxes() {
 private fun assertAllCheckBoxesAreChecked() {
     openTabsCheckBox().assertIsChecked(true)
     browsingHistoryCheckBox().assertIsChecked(true)
-    cookiesCheckBox().assertIsChecked(true)
+    cookiesAndSiteDataCheckBox().assertIsChecked(true)
     cachedFilesCheckBox().assertIsChecked(true)
     sitePermissionsCheckBox().assertIsChecked(true)
     downloadsCheckBox().assertIsChecked(true)
@@ -264,8 +264,8 @@ private fun clickOpenTabsCheckBox() = openTabsCheckBox().click()
 private fun assertOpenTabsCheckBox(status: Boolean) = openTabsCheckBox().assertIsChecked(status)
 private fun clickBrowsingHistoryCheckBox() = browsingHistoryCheckBox().click()
 private fun assertBrowsingHistoryCheckBox(status: Boolean) = browsingHistoryCheckBox().assertIsChecked(status)
-private fun clickCookiesCheckBox() = cookiesCheckBox().click()
-private fun assertCookiesCheckBox(status: Boolean) = cookiesCheckBox().assertIsChecked(status)
+private fun clickCookiesCheckBox() = cookiesAndSiteDataCheckBox().click()
+private fun assertCookiesCheckBox(status: Boolean) = cookiesAndSiteDataCheckBox().assertIsChecked(status)
 private fun clickCachedFilesCheckBox() = cachedFilesCheckBox().click()
 private fun assertCachedFilesCheckBox(status: Boolean) = cachedFilesCheckBox().assertIsChecked(status)
 private fun clickSitePermissionsCheckBox() = sitePermissionsCheckBox().click()

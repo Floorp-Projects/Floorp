@@ -67,8 +67,8 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
         getCheckboxes().iterator().forEach {
             it.isChecked = when (it.id) {
                 R.id.open_tabs_item -> settings.deleteOpenTabs
-                R.id.browsing_data_item -> settings.deleteBrowsingHistory
-                R.id.cookies_item -> settings.deleteCookies
+                R.id.browsing_history_item -> settings.deleteBrowsingHistory
+                R.id.cookies_and_site_data_item -> settings.deleteCookies
                 R.id.cached_files_item -> settings.deleteCache
                 R.id.site_permissions_item -> settings.deleteSitePermissions
                 R.id.downloads_item -> settings.deleteDownloads
@@ -85,8 +85,8 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
     private fun updatePreference(it: DeleteBrowsingDataItem) {
         when (it.id) {
             R.id.open_tabs_item -> settings.deleteOpenTabs = it.isChecked
-            R.id.browsing_data_item -> settings.deleteBrowsingHistory = it.isChecked
-            R.id.cookies_item -> settings.deleteCookies = it.isChecked
+            R.id.browsing_history_item -> settings.deleteBrowsingHistory = it.isChecked
+            R.id.cookies_and_site_data_item -> settings.deleteCookies = it.isChecked
             R.id.cached_files_item -> settings.deleteCache = it.isChecked
             R.id.site_permissions_item -> settings.deleteSitePermissions = it.isChecked
             R.id.downloads_item -> settings.deleteDownloads = it.isChecked
@@ -163,8 +163,8 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
                 if (v.isChecked) {
                     when (i) {
                         OPEN_TABS_INDEX -> controller.deleteTabs()
-                        HISTORY_INDEX -> controller.deleteBrowsingData()
-                        COOKIES_INDEX -> controller.deleteCookies()
+                        HISTORY_INDEX -> controller.deleteBrowsingHistory()
+                        COOKIES_INDEX -> controller.deleteCookiesAndSiteData()
                         CACHED_INDEX -> controller.deleteCachedFiles()
                         PERMS_INDEX -> controller.deleteSitePermissions()
                         DOWNLOADS_INDEX -> controller.deleteDownloads()
@@ -251,12 +251,12 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
     }
 
     private fun updateHistoryCount() {
-        binding.browsingDataItem.subtitleView.text = ""
+        binding.browsingHistoryItem.subtitleView.text = ""
 
         viewLifecycleOwner.lifecycleScope.launch(IO) {
             val historyCount = requireComponents.core.historyStorage.getVisited().size
             launch(Main) {
-                binding.browsingDataItem.apply {
+                binding.browsingHistoryItem.apply {
                     subtitleView.text =
                         resources.getString(
                             R.string.preferences_delete_browsing_data_browsing_data_subtitle,
@@ -282,8 +282,8 @@ class DeleteBrowsingDataFragment : Fragment(R.layout.fragment_delete_browsing_da
     private fun getCheckboxes(): List<DeleteBrowsingDataItem> {
         return listOf(
             binding.openTabsItem,
-            binding.browsingDataItem,
-            binding.cookiesItem,
+            binding.browsingHistoryItem,
+            binding.cookiesAndSiteDataItem,
             binding.cachedFilesItem,
             binding.sitePermissionsItem,
             binding.downloadsItem,

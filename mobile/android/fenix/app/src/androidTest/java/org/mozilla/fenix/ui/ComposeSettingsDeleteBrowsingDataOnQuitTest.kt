@@ -120,7 +120,35 @@ class ComposeSettingsDeleteBrowsingDataOnQuitTest {
     }
 
     @Test
-    fun deleteHistoryAndSiteStorageOnQuitTest() {
+    fun deleteHistoryOnQuitTest() {
+        val genericPage =
+            getStorageTestAsset(mockWebServer, "generic1.html")
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openSettingsSubMenuDeleteBrowsingDataOnQuit {
+            clickDeleteBrowsingOnQuitButtonSwitch()
+            exitMenu()
+        }
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(genericPage.url) {
+        }.goToHomescreen {
+        }.openThreeDotMenu {
+            clickQuit()
+            restartApp(composeTestRule.activityRule)
+        }
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openHistory {
+            verifyEmptyHistoryView()
+            exitMenu()
+        }
+    }
+
+    @Test
+    fun deleteCookiesAndSiteDataOnQuitTest() {
         val storageWritePage =
             getStorageTestAsset(mockWebServer, "storage_write.html")
         val storageCheckPage =
@@ -143,12 +171,6 @@ class ComposeSettingsDeleteBrowsingDataOnQuitTest {
             restartApp(composeTestRule.activityRule)
         }
 
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openHistory {
-            verifyEmptyHistoryView()
-            exitMenu()
-        }
         navigationToolbar {
         }.enterURLAndEnterToBrowser(storageCheckPage.url) {
             verifyPageContent("Session storage empty")

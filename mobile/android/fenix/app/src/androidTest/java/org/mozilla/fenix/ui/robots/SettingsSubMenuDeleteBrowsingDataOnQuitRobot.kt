@@ -51,10 +51,10 @@ class SettingsSubMenuDeleteBrowsingDataOnQuitRobot {
         openTabsCheckbox
             .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-        browsingDataCheckbox
+        browsingHistoryCheckbox
             .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-        cookiesCheckbox
+        cookiesAndSiteDataCheckbox
             .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
         onView(withText(R.string.preferences_delete_browsing_data_cookies_subtitle))
@@ -107,10 +107,10 @@ private val deleteBrowsingOnQuitButton =
 private val openTabsCheckbox =
     onView(withText(R.string.preferences_delete_browsing_data_tabs_title_2))
 
-private val browsingDataCheckbox =
-    onView(withText(R.string.preferences_delete_browsing_data_browsing_data_title))
+private val browsingHistoryCheckbox =
+    onView(withText(R.string.preferences_delete_browsing_data_browsing_history_title))
 
-private val cookiesCheckbox = onView(withText(R.string.preferences_delete_browsing_data_cookies))
+private val cookiesAndSiteDataCheckbox = onView(withText(R.string.preferences_delete_browsing_data_cookies_and_site_data))
 
 private val cachedFilesCheckbox =
     onView(withText(R.string.preferences_delete_browsing_data_cached_files))

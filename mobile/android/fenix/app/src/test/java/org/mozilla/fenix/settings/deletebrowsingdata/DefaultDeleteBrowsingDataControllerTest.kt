@@ -65,12 +65,11 @@ class DefaultDeleteBrowsingDataControllerTest {
     }
 
     @Test
-    fun deleteBrowsingData() = runTestOnMain {
+    fun deleteBrowsingHistory() = runTestOnMain {
         controller = spyk(controller)
-        controller.deleteBrowsingData()
+        controller.deleteBrowsingHistory()
 
         coVerify {
-            engine.clearData(Engine.BrowsingData.select(Engine.BrowsingData.DOM_STORAGES))
             historyStorage.deleteEverything()
             store.dispatch(EngineAction.PurgeHistoryAction)
             store.dispatch(RecentlyClosedAction.RemoveAllClosedTabAction)
@@ -79,8 +78,8 @@ class DefaultDeleteBrowsingDataControllerTest {
     }
 
     @Test
-    fun deleteCookies() = runTestOnMain {
-        controller.deleteCookies()
+    fun deleteCookiesAndSiteData() = runTestOnMain {
+        controller.deleteCookiesAndSiteData()
 
         verify {
             engine.clearData(
@@ -89,6 +88,7 @@ class DefaultDeleteBrowsingDataControllerTest {
                     Engine.BrowsingData.AUTH_SESSIONS,
                 ),
             )
+            engine.clearData(Engine.BrowsingData.select(Engine.BrowsingData.DOM_STORAGES))
         }
     }
 

@@ -39,23 +39,23 @@
                 app:deleteBrowsingDataItemTitle="@string/preferences_delete_browsing_data_tabs_title_2"
                 app:deleteBrowsingDataItemSubtitle="@string/preferences_delete_browsing_data_tabs_subtitle" />
             <org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataItem
-                android:id="@+id/browsing_data_item"
+                android:id="@+id/browsing_history_item"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="?android:attr/selectableItemBackground"
                 android:clickable="true"
                 android:focusable="true"
-                app:deleteBrowsingDataItemTitle="@string/preferences_delete_browsing_data_browsing_data_title"
+                app:deleteBrowsingDataItemTitle="@string/preferences_delete_browsing_data_browsing_history_title"
                 app:deleteBrowsingDataItemSubtitle="@string/preferences_delete_browsing_data_browsing_data_subtitle" />
             <org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataItem
-                android:id="@+id/cookies_item"
+                android:id="@+id/cookies_and_site_data_item"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="?android:attr/selectableItemBackground"
                 android:clickable="true"
                 android:focusable="true"
                 android:visibility="gone"
-                app:deleteBrowsingDataItemTitle="@string/preferences_delete_browsing_data_cookies"
+                app:deleteBrowsingDataItemTitle="@string/preferences_delete_browsing_data_cookies_and_site_data"
                 app:deleteBrowsingDataItemSubtitle="@string/preferences_delete_browsing_data_cookies_subtitle" />
             <org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataItem
                 android:id="@+id/cached_files_item"

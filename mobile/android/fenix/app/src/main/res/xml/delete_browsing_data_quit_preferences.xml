@@ -22,12 +22,12 @@
         <CheckBoxPreference
             android:key="@string/pref_key_delete_browsing_history_on_quit"
             android:layout="@layout/checkbox_left_preference"
-            android:title="@string/preferences_delete_browsing_data_browsing_data_title" />
+            android:title="@string/preferences_delete_browsing_data_browsing_history_title" />
         <CheckBoxPreference
-            android:key="@string/pref_key_delete_cookies_on_quit"
+            android:key="@string/pref_key_delete_cookies_and_site_data_on_quit"
             android:layout="@layout/checkbox_left_preference"
             android:summary="@string/preferences_delete_browsing_data_cookies_subtitle"
-            android:title="@string/preferences_delete_browsing_data_cookies" />
+            android:title="@string/preferences_delete_browsing_data_cookies_and_site_data" />
         <CheckBoxPreference
             android:key="@string/pref_key_delete_caches_on_quit"
             android:layout="@layout/checkbox_left_preference"

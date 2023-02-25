@@ -56,8 +56,8 @@ fun deleteAndQuit(activity: Activity, coroutineScope: CoroutineScope, snackbar: 
 private suspend fun DeleteBrowsingDataController.deleteType(type: DeleteBrowsingDataOnQuitType) {
     when (type) {
         DeleteBrowsingDataOnQuitType.TABS -> deleteTabs()
-        DeleteBrowsingDataOnQuitType.HISTORY -> deleteBrowsingData()
-        DeleteBrowsingDataOnQuitType.COOKIES -> deleteCookies()
+        DeleteBrowsingDataOnQuitType.HISTORY -> deleteBrowsingHistory()
+        DeleteBrowsingDataOnQuitType.COOKIES -> deleteCookiesAndSiteData()
         DeleteBrowsingDataOnQuitType.CACHE -> deleteCachedFiles()
         DeleteBrowsingDataOnQuitType.PERMISSIONS -> withContext(IO) {
             deleteSitePermissions()
