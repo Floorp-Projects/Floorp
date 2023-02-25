@@ -77,6 +77,15 @@
 
 <script class="testbody" type="application/javascript">
 <![CDATA[
+
+async function moveMouseOver(id) {
+  // A single synthesized mouse move isn't always enough in some platforms.
+  let el = document.getElementById(id);
+  synthesizeMouse(el, 5, 5, { type: "mousemove" });
+  await new Promise(r => setTimeout(r, 0));
+  synthesizeMouse(el, 8, 8, { type: "mousemove" });
+}
+
 let gFilePopup;
 window.opener.SimpleTest.waitForFocus(function () {
   gFilePopup = document.getElementById("filepopup");
@@ -899,9 +908,9 @@ var popupTests = [
 {
   testname: "Menubar activation / deactivation on mouse over",
   events: [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu", "DOMMenuItemInactive filemenu", "DOMMenuBarInactive menubar" ],
-  test() {
-    synthesizeMouse(document.getElementById("filemenu"), 8, 8, { type: "mousemove" });
-    synthesizeMouse(document.getElementById("outside"), 8, 8, { type: "mousemove" });
+  async test() {
+    await moveMouseOver("filemenu");
+    await moveMouseOver("outside");
   },
 },
 
@@ -913,10 +922,10 @@ var popupTests = [
     "DOMMenuItemActive filemenu",
     /* Shouldn't deactivate the menubar nor filemenu! */
   ],
-  test() {
+  async test() {
     synthesizeKey("KEY_Alt");
-    synthesizeMouse(document.getElementById("filemenu"), 8, 8, { type: "mousemove" });
-    synthesizeMouse(document.getElementById("outside"), 8, 8, { type: "mousemove" });
+    await moveMouseOver("filemenu");
+    await moveMouseOver("outside");
   },
 },
 {
@@ -936,11 +945,9 @@ var popupTests = [
   testname: "Shortcut navigation on mouse-activated menubar",
   events: [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu", "DOMMenuItemInactive filemenu", "DOMMenuBarInactive menubar" ],
   async test() {
-    synthesizeMouse(document.getElementById("filemenu"), 8, 8, { type: "mousemove" });
-    await new Promise(r => setTimeout(r, 0));
+    await moveMouseOver("filemenu");
     synthesizeKey("F");
-    await new Promise(r => setTimeout(r, 0));
-    synthesizeMouse(document.getElementById("outside"), 8, 8, { type: "mousemove" });
+    await moveMouseOver("outside");
   },
 },
 
