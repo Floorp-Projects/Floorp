@@ -470,3 +470,26 @@ add_task(async function selected_result_suggest_non_sponsor() {
 
   cleanupQuickSuggest();
 });
+
+add_task(async function selected_result_input_field() {
+  const expected = [
+    {
+      selected_result: "input_field",
+      selected_result_subtype: "",
+      provider: null,
+      results: "",
+    },
+  ];
+
+  await doTest(async browser => {
+    await doDropAndGo("example.com");
+
+    assertEngagementTelemetry(expected);
+  });
+
+  await doTest(async browser => {
+    await doPasteAndGo("example.com");
+
+    assertEngagementTelemetry(expected);
+  });
+});
