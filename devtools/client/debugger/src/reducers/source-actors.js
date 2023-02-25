@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+import { asyncActionAsValue } from "../actions/utils/middleware/promise";
+
 /**
  * This reducer stores the list of all source actors as well their breakable lines.
  *
@@ -15,7 +17,8 @@ function initialSourceActorsState() {
     // See create.js: `createSourceActor` for the shape of the source actor objects.
     mutableSourceActors: new Map(),
 
-    // Map(Source Actor ID: string => Breakable lines: Array<Number>)
+    // Map(Source Actor ID: string => Breakable lines: object)
+    // Breakable lines object is of the form: { state: <"pending"|"fulfilled">, value: Array<Number> }
     // The array is the list of all lines where breakpoints can be set
     mutableBreakableLines: new Map(),
   };
@@ -83,6 +86,7 @@ function clearSourceActorMapURL(state, sourceActorId) {
 }
 
 function updateBreakableLines(state, action) {
+  const value = asyncActionAsValue(action);
   const { sourceActorId } = action;
 
   // Ignore breakable lines for source actors that aren't/no longer registered
@@ -90,7 +94,7 @@ function updateBreakableLines(state, action) {
     return state;
   }
 
-  state.mutableBreakableLines.set(sourceActorId, action.breakableLines);
+  state.mutableBreakableLines.set(sourceActorId, value);
   return {
     ...state,
   };

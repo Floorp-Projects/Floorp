@@ -201,8 +201,6 @@ function waitForSelectedSource(dbg, sourceOrUrl) {
     getSelectedSourceTextContent,
     getSymbols,
     getBreakableLines,
-    getSourceActorsForSource,
-    getSourceActorBreakableLines,
   } = dbg.selectors;
 
   return waitForState(
@@ -226,23 +224,7 @@ function waitForSelectedSource(dbg, sourceOrUrl) {
         }
       }
 
-      // Wait for symbols/AST to be parsed
-      if (!getSymbols(source)) {
-        return false;
-      }
-
-      // Finaly wait for breakable lines to be set
-      if (source.isHTML) {
-        // For HTML sources we need to wait for each source actor to be processed.
-        // getBreakableLines will return the aggregation without being able to know
-        // if that's complete, with all the source actors.
-        const sourceActors = getSourceActorsForSource(source.id);
-        const allSourceActorsProcessed = sourceActors.every(
-          sourceActor => !!getSourceActorBreakableLines(sourceActor.id)
-        );
-        return allSourceActorsProcessed;
-      }
-      return getBreakableLines(source.id);
+      return getSymbols(source) && getBreakableLines(source.id);
     },
     "selected source"
   );
@@ -856,35 +838,8 @@ function deleteExpression(dbg, input) {
  * @static
  */
 async function reload(dbg, ...sources) {
-  await reloadBrowser();
-  return waitForSources(dbg, ...sources);
-}
-
-// Only use this method when the page is paused by the debugger
-// during page load and we navigate away without resuming.
-//
-// In this particular scenario, the page will never be "loaded".
-// i.e. emit DOCUMENT_EVENT's dom-complete
-// And consequently, debugger panel won't emit "reloaded" event.
-async function reloadWhenPausedBeforePageLoaded(dbg, ...sources) {
-  // But we can at least listen for the next DOCUMENT_EVENT's dom-loading,
-  // which should be fired even if the page is pause the earliest.
-  const { resourceCommand } = dbg.commands;
-  const {
-    onResource: onTopLevelDomLoading,
-  } = await resourceCommand.waitForNextResource(
-    resourceCommand.TYPES.DOCUMENT_EVENT,
-    {
-      ignoreExistingResources: true,
-      predicate: resource =>
-        resource.targetFront.isTopLevel && resource.name === "dom-loading",
-    }
-  );
-
-  gBrowser.reloadTab(gBrowser.selectedTab);
-
-  info("Wait for DOCUMENT_EVENT dom-loading after reload");
-  await onTopLevelDomLoading;
+  // We aren't waiting for load as the page may not load because of a breakpoint
+  await reloadBrowser({ waitForLoad: false });
   return waitForSources(dbg, ...sources);
 }
 

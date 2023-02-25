@@ -30,7 +30,7 @@ add_task(async function() {
   await disableBreakpoint(dbg, entrySrc, 15, 0);
 
   // Test reloading the debugger
-  const onReloaded = reload(dbg, "opts.js");
+  await reload(dbg, "opts.js");
   await waitForDispatch(dbg.store, "LOAD_ORIGINAL_SOURCE_TEXT");
 
   await waitForPaused(dbg);
@@ -50,10 +50,6 @@ add_task(async function() {
     "Breakpoint is on the correct line and is disabled"
   );
   await assertBreakpoint(dbg, 15);
-
-  await resume(dbg);
-  info("Wait for reload to complete after resume");
-  await onReloaded;
 });
 
 async function waitForBreakpointCount(dbg, count) {

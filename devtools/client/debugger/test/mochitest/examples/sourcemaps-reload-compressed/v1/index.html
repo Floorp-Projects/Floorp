@@ -17,11 +17,9 @@
     </script>
 
     <!-- A second inline script, that helps cover bugs when having two distinct inline scripts -->
-    <!-- And also covers inline script with column indexes being offseted by the HTML content -->
-    <script>console.log("second inline script");</script>
+    <script>
+      console.log("second in line script");
 
-    <!-- Covers column index being shifted only for the first line and normal for the subsequent ones -->
-    <script>console.log("third inline script");
       eval(`
         function nameLessEval() {
           console.log("name-less-eval");
