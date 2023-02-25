@@ -96,10 +96,10 @@
       css: "@media (min-width >= 3px) {}",
       error: "Unexpected operator in media list.",
     }, {
-      css: "@media (device-height: -1px) {}",
+      css: "@media (device-height: three) {}",
       error: "Found invalid value for media feature.",
     }, {
-      css: "@media (min-width: -1px) {}",
+      css: "@media (min-width: foo) {}",
       error: "Found invalid value for media feature.",
     }, {
       css: "@media (min-resolution: 2) {}",
