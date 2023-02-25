@@ -208,7 +208,8 @@ urlbar:
           `search_suggest`, `top_pick`, `top_site`, `remote_tab`, `addon`,
           `general`, `suggest`, `about_page` and `suggested_index`. If the group
           did not fall into any of these, this will be `unknown` and a bug
-          should be filed to investigate it.
+          should be filed to investigate it. If engagement_type is `drop_go` or
+          `paste_go`, this will be empty string because no results are shown.
         type: string
       results:
         description: >
@@ -223,7 +224,8 @@ urlbar:
           `top_site`, `calc`, `unit`, `suggest_sponsor` and
           `suggest_non_sponsor`. If the result type did not fall into any of
           these, this will be `unknown` and a bug should be filed to investigate
-          it.
+          it. If engagement_type is `drop_go` or `paste_go`, this will be empty
+          string because no results are shown.
         type: string
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1797265
