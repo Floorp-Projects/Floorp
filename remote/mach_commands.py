@@ -50,8 +50,8 @@ def remote(command_context):
 @CommandArgument(
     "--repository",
     metavar="REPO",
-    required=True,
-    help="The (possibly remote) repository to clone from.",
+    default="https://github.com/puppeteer/puppeteer.git",
+    help="The (possibly local) repository to clone from.",
 )
 @CommandArgument(
     "--commitish",
