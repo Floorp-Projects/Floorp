@@ -17,8 +17,7 @@ add_task(async function test_fullpageScreenshot() {
       // click toolbar button so panel shows
       helper.triggerUIFromToolbar();
 
-      let panel = await helper.waitForPanel(gBrowser.selectedBrowser);
-      ok(BrowserTestUtils.is_visible(panel), "Panel buttons are visible");
+      let panel = await helper.waitForPanel();
 
       let screenshotReady = TestUtils.topicObserved(
         "screenshots-preview-ready"
@@ -103,9 +102,9 @@ add_task(async function test_fullpageScreenshotScrolled() {
 
       // click toolbar button so panel shows
       helper.triggerUIFromToolbar();
+      await helper.waitForOverlay();
 
-      let panel = await helper.waitForPanel(gBrowser.selectedBrowser);
-      ok(BrowserTestUtils.is_visible(panel), "Panel buttons are visible");
+      let panel = await helper.waitForPanel();
 
       let screenshotReady = TestUtils.topicObserved(
         "screenshots-preview-ready"
