@@ -473,13 +473,75 @@ bool NotificationController::WaitingForParent() {
 }
 
 void NotificationController::ProcessMutationEvents() {
+  // Firing an event can indirectly run script; e.g. an XPCOM event observer
+  // or querying a XUL interface. Further mutations might be queued as a result.
+  // It's important that the mutation queue and state bits from one tick don't
+  // interfere with the next tick. Otherwise, we can end up dropping events.
+  // Therefore:
+  // 1. Clear the state bits, which we only need for coalescence.
+  for (AccTreeMutationEvent* event = mFirstMutationEvent; event;
+       event = event->NextEvent()) {
+    LocalAccessible* acc = event->GetAccessible();
+    acc->SetShowEventTarget(false);
+    acc->SetHideEventTarget(false);
+    acc->SetReorderEventTarget(false);
+    // Our events are in a doubly linked list. We don't need the previous
+    // pointers any more, so clear them here to remove reference cycles.
+    event->SetPrevEvent(nullptr);
+  }
+  // 2. Keep the current queue locally, but clear the queue on the instance.
+  RefPtr<AccTreeMutationEvent> firstEvent = mFirstMutationEvent;
+  mFirstMutationEvent = mLastMutationEvent = nullptr;
+  mMutationMap.Clear();
+  mEventGeneration = 0;
+
+  // Group the show events by the parent of their target.
+  nsTHashMap<nsPtrHashKey<LocalAccessible>, nsTArray<AccTreeMutationEvent*>>
+      showEvents;
+  for (AccTreeMutationEvent* event = firstEvent; event;
+       event = event->NextEvent()) {
+    if (event->GetEventType() != nsIAccessibleEvent::EVENT_SHOW) {
+      continue;
+    }
+
+    LocalAccessible* parent = event->GetAccessible()->LocalParent();
+    showEvents.LookupOrInsert(parent).AppendElement(event);
+  }
+
+  // We need to fire show events for the children of an accessible in the order
+  // of their indices at this point.  So sort each set of events for the same
+  // container by the index of their target. We do this before firing any events
+  // because firing an event might indirectly run script which might alter the
+  // tree, breaking our sort. However, we don't actually fire the events yet.
+  for (auto iter = showEvents.Iter(); !iter.Done(); iter.Next()) {
+    struct AccIdxComparator {
+      bool LessThan(const AccTreeMutationEvent* a,
+                    const AccTreeMutationEvent* b) const {
+        int32_t aIdx = a->GetAccessible()->IndexInParent();
+        int32_t bIdx = b->GetAccessible()->IndexInParent();
+        MOZ_ASSERT(aIdx >= 0 && bIdx >= 0 && aIdx != bIdx);
+        return aIdx < bIdx;
+      }
+      bool Equals(const AccTreeMutationEvent* a,
+                  const AccTreeMutationEvent* b) const {
+        DebugOnly<int32_t> aIdx = a->GetAccessible()->IndexInParent();
+        DebugOnly<int32_t> bIdx = b->GetAccessible()->IndexInParent();
+        MOZ_ASSERT(aIdx >= 0 && bIdx >= 0 && aIdx != bIdx);
+        return false;
+      }
+    };
+
+    nsTArray<AccTreeMutationEvent*>& events = iter.Data();
+    events.Sort(AccIdxComparator());
+  }
+
   // there is no reason to fire a hide event for a child of a show event
   // target.  That can happen if something is inserted into the tree and
   // removed before the next refresh driver tick, but it should not be
   // observable outside gecko so it should be safe to coalesce away any such
   // events.  This means that it should be fine to fire all of the hide events
   // first, and then deal with any shown subtrees.
-  for (AccTreeMutationEvent* event = mFirstMutationEvent; event;
+  for (AccTreeMutationEvent* event = firstEvent; event;
        event = event->NextEvent()) {
     if (event->GetEventType() != nsIAccessibleEvent::EVENT_HIDE) {
       continue;
@@ -521,42 +583,9 @@ void NotificationController::ProcessMutationEvents() {
     }
   }
 
-  // Group the show events by the parent of their target.
-  nsTHashMap<nsPtrHashKey<LocalAccessible>, nsTArray<AccTreeMutationEvent*>>
-      showEvents;
-  for (AccTreeMutationEvent* event = mFirstMutationEvent; event;
-       event = event->NextEvent()) {
-    if (event->GetEventType() != nsIAccessibleEvent::EVENT_SHOW) {
-      continue;
-    }
-
-    LocalAccessible* parent = event->GetAccessible()->LocalParent();
-    showEvents.LookupOrInsert(parent).AppendElement(event);
-  }
-
-  // We need to fire show events for the children of an accessible in the order
-  // of their indices at this point.  So sort each set of events for the same
-  // container by the index of their target.
+  // Fire the show events we sorted earlier.
   for (auto iter = showEvents.Iter(); !iter.Done(); iter.Next()) {
-    struct AccIdxComparator {
-      bool LessThan(const AccTreeMutationEvent* a,
-                    const AccTreeMutationEvent* b) const {
-        int32_t aIdx = a->GetAccessible()->IndexInParent();
-        int32_t bIdx = b->GetAccessible()->IndexInParent();
-        MOZ_ASSERT(aIdx >= 0 && bIdx >= 0 && aIdx != bIdx);
-        return aIdx < bIdx;
-      }
-      bool Equals(const AccTreeMutationEvent* a,
-                  const AccTreeMutationEvent* b) const {
-        DebugOnly<int32_t> aIdx = a->GetAccessible()->IndexInParent();
-        DebugOnly<int32_t> bIdx = b->GetAccessible()->IndexInParent();
-        MOZ_ASSERT(aIdx >= 0 && bIdx >= 0 && aIdx != bIdx);
-        return false;
-      }
-    };
-
     nsTArray<AccTreeMutationEvent*>& events = iter.Data();
-    events.Sort(AccIdxComparator());
     for (AccTreeMutationEvent* event : events) {
       nsEventShell::FireEvent(event);
       if (!mDocument) {
@@ -576,7 +605,7 @@ void NotificationController::ProcessMutationEvents() {
   // Now we can fire the reorder events after all the show and hide events.
   for (const uint32_t reorderType : {nsIAccessibleEvent::EVENT_INNER_REORDER,
                                      nsIAccessibleEvent::EVENT_REORDER}) {
-    for (AccTreeMutationEvent* event = mFirstMutationEvent; event;
+    for (AccTreeMutationEvent* event = firstEvent; event;
          event = event->NextEvent()) {
       if (event->GetEventType() != reorderType) {
         continue;
@@ -902,38 +931,6 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
   // ensure it is updated.
   if (IPCAccessibilityActive() && mDocument) {
     mDocument->ProcessQueuedCacheUpdates();
-  }
-
-  mEventGeneration = 0;
-
-  // Now that we are done with them get rid of the events we fired.
-  RefPtr<AccTreeMutationEvent> mutEvent = std::move(mFirstMutationEvent);
-  mLastMutationEvent = nullptr;
-  mFirstMutationEvent = nullptr;
-  while (mutEvent) {
-    RefPtr<AccTreeMutationEvent> nextEvent = mutEvent->NextEvent();
-    LocalAccessible* target = mutEvent->GetAccessible();
-
-    // We need to be careful here, while it may seem that we can simply 0 all
-    // the pending event bits that is not true.  Because accessibles may be
-    // reparented they may be the target of both a hide event and a show event
-    // at the same time.
-    if (mutEvent->GetEventType() == nsIAccessibleEvent::EVENT_SHOW) {
-      target->SetShowEventTarget(false);
-    }
-
-    if (mutEvent->GetEventType() == nsIAccessibleEvent::EVENT_HIDE) {
-      target->SetHideEventTarget(false);
-    }
-
-    // However it is not possible for a reorder event target to also be the
-    // target of a show or hide, so we can just zero that.
-    target->SetReorderEventTarget(false);
-
-    mutEvent->SetPrevEvent(nullptr);
-    mutEvent->SetNextEvent(nullptr);
-    mMutationMap.RemoveEvent(mutEvent);
-    mutEvent = nextEvent;
   }
 
   if (mDocument) {
