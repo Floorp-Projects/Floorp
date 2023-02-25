@@ -48,41 +48,6 @@ using namespace mozilla::unicode;
 
 using mozilla::dom::SystemFontList;
 
-// cribbed from CTFontManager.h
-enum { kAutoActivationDisabled = 1 };
-typedef uint32_t AutoActivationSetting;
-
-// bug 567552 - disable auto-activation of fonts
-
-static void DisableFontActivation() {
-  // get the main bundle identifier
-  CFBundleRef mainBundle = ::CFBundleGetMainBundle();
-  CFStringRef mainBundleID = nullptr;
-
-  if (mainBundle) {
-    mainBundleID = ::CFBundleGetIdentifier(mainBundle);
-  }
-
-  // bug 969388 and bug 922590 - mainBundlID as null is sometimes problematic
-  if (!mainBundleID) {
-    NS_WARNING("missing bundle ID, packaging set up incorrectly");
-    return;
-  }
-
-  // if possible, fetch CTFontManagerSetAutoActivationSetting
-  void (*CTFontManagerSetAutoActivationSettingPtr)(CFStringRef,
-                                                   AutoActivationSetting);
-  CTFontManagerSetAutoActivationSettingPtr =
-      (void (*)(CFStringRef, AutoActivationSetting))dlsym(
-          RTLD_DEFAULT, "CTFontManagerSetAutoActivationSetting");
-
-  // bug 567552 - disable auto-activation of fonts
-  if (CTFontManagerSetAutoActivationSettingPtr) {
-    CTFontManagerSetAutoActivationSettingPtr(mainBundleID,
-                                             kAutoActivationDisabled);
-  }
-}
-
 // A bunch of fonts for "additional language support" are shipped in a
 // "Language Support" directory, and don't show up in the standard font
 // list returned by CTFontManagerCopyAvailableFontFamilyNames unless
@@ -138,7 +103,6 @@ void gfxPlatformMac::WaitForFontRegistration() {
 }
 
 gfxPlatformMac::gfxPlatformMac() {
-  DisableFontActivation();
   mFontAntiAliasingThreshold = ReadAntiAliasingThreshold();
 
   InitBackendPrefs(GetBackendPrefs());
