@@ -248,19 +248,12 @@ function run() {
       expression_should_be_known(feature + " " + separator + " 1px");
       expression_should_be_known(feature + " " + separator + " 0.001mm");
       expression_should_be_known(feature + " " + separator + " 100000px");
-      expression_should_be_known(feature + " " + separator + " -1px");
       if (separator == ":") {
         expression_should_be_known("min-" + feature + " " + separator + " -0");
         expression_should_be_known("max-" + feature + " " + separator + " -0");
-        expression_should_be_known("min-" + feature + " " + separator + " -1px");
-        expression_should_be_known("max-" + feature + " " + separator + " -1px");
-        expression_should_be_known(feature + " " + separator + " -0.00001mm");
-        expression_should_be_known(feature + " " + separator + " -100000em");
       } else {
         expression_should_not_be_known("min-" + feature + " " + separator + " -0");
         expression_should_not_be_known("max-" + feature + " " + separator + " -0");
-        expression_should_not_be_known("min-" + feature + " " + separator + " -1px");
-        expression_should_not_be_known("max-" + feature + " " + separator + " -1px");
         let multi_range = "0px " + separator + " " + feature + " " + separator + " 100000px"
         if (separator == "=") {
           expression_should_not_be_known(multi_range);
@@ -273,6 +266,11 @@ function run() {
       } else if (separator == "<=") {
         expression_should_not_be_known(feature + " < = 0px");
       }
+      expression_should_not_be_known(feature + " " + separator + " -1px");
+      expression_should_not_be_known("min-" + feature + " " + separator + " -1px");
+      expression_should_not_be_known("max-" + feature + " " + separator + " -1px");
+      expression_should_not_be_known(feature + " " + separator + " -0.00001mm");
+      expression_should_not_be_known(feature + " " + separator + " -100000em");
     }
   }
 
@@ -589,8 +587,8 @@ function run() {
     expression_should_be_known(feature + ": 1");
     expression_should_be_known(feature + ": 327");
     expression_should_be_known(feature + ": 0");
-    expression_should_be_known(feature + ": -1");
     expression_should_not_be_known(feature + ": 1.0");
+    expression_should_not_be_known(feature + ": -1");
     expression_should_not_be_known(feature + ": 1/1");
   }
 
@@ -617,10 +615,10 @@ function run() {
     expression_should_be_known(feature + ": 1.5dppx");
     expression_should_be_known(feature + ": 1.5x");
     expression_should_be_known(feature + ": 2.0dppx");
-    expression_should_be_known(feature + ": 0dpi");
-    expression_should_be_known(feature + ": -3dpi");
-    expression_should_be_known(feature + ": 0dppx");
-    expression_should_be_known(feature + ": 0x");
+    expression_should_not_be_known(feature + ": 0dpi");
+    expression_should_not_be_known(feature + ": -3dpi");
+    expression_should_not_be_known(feature + ": 0dppx");
+    expression_should_not_be_known(feature + ": 0x");
   }
 
   // Find the resolution using max-resolution

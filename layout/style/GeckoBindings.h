@@ -611,8 +611,8 @@ bool Gecko_MediaFeatures_WindowsNonNativeMenus(const mozilla::dom::Document*);
 
 bool Gecko_MediaFeatures_ShouldAvoidNativeTheme(const mozilla::dom::Document*);
 bool Gecko_MediaFeatures_UseOverlayScrollbars(const mozilla::dom::Document*);
-int32_t Gecko_MediaFeatures_GetColorDepth(const mozilla::dom::Document*);
-int32_t Gecko_MediaFeatures_GetMonochromeBitsPerPixel(
+uint32_t Gecko_MediaFeatures_GetColorDepth(const mozilla::dom::Document*);
+uint32_t Gecko_MediaFeatures_GetMonochromeBitsPerPixel(
     const mozilla::dom::Document*);
 mozilla::dom::ScreenColorGamut Gecko_MediaFeatures_ColorGamut(
     const mozilla::dom::Document*);
