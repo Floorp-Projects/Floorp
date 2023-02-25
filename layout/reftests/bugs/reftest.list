@@ -2134,3 +2134,4 @@ skip-if(!/^Windows\x20NT\x2010\.0/.test(http.oscpu)) != 1798297-1.html 1798297-1
 == 1803999-1.html 1803999-1-ref.html
 == 1814628-1.html 1814628-1-ref.html
 == 1814047.html 1814047-ref.html
+== 1818412-1.html 1818412-1-ref.html

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<meta charset=UTF-8>
+<style>
+@font-face{
+  font-family:Ahem;
+  src:url(../fonts/Ahem.ttf);
+}
+body{
+  margin:0;
+}
+span{
+  display:block;
+}
+span div{
+  position:absolute;
+  width:200px;
+  height:100px;
+  overflow:hidden;
+}
+div.up{
+  background:pink;
+}
+div.down{
+  top:100px;
+  background:yellow;
+}
+div.text{
+  position:absolute;
+  height:200px;
+  font:160px/1.2 Ahem;
+  padding-left:20px;
+}
+div.down div.text{
+  bottom:0px;
+}
+</style>
+<body>
+  <span>
+    <div class="up">
+      <div class="text">A</div>
+    </div>
+    <div class="down">
+      <div class="text">A</div>
+    </div>
+  </span>
+</body>
