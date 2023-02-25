@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 import {Protocol} from 'devtools-protocol';
+
+import {createDeferredPromise} from '../util/DeferredPromise.js';
+
 import {CDPSession} from './Connection.js';
 import {ConsoleMessageType} from './ConsoleMessage.js';
-import {EvaluateFunc, HandleFor} from './types.js';
 import {EventEmitter} from './EventEmitter.js';
 import {ExecutionContext} from './ExecutionContext.js';
-import {JSHandle} from './JSHandle.js';
+import {CDPJSHandle} from './JSHandle.js';
+import {EvaluateFunc, HandleFor} from './types.js';
 import {debugError} from './util.js';
-import {createDeferredPromise} from '../util/DeferredPromise.js';
 
 /**
  * @internal
  */
 export type ConsoleAPICalledCallback = (
   eventType: ConsoleMessageType,
-  handles: JSHandle[],
+  handles: CDPJSHandle[],
   trace: Protocol.Runtime.StackTrace
 ) => void;
 
@@ -93,7 +95,7 @@ export class WebWorker extends EventEmitter {
       return consoleAPICalled(
         event.type,
         event.args.map((object: Protocol.Runtime.RemoteObject) => {
-          return new JSHandle(context, object);
+          return new CDPJSHandle(context, object);
         }),
         event.stackTrace
       );

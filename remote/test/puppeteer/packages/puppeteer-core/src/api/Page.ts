@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-import {Protocol} from 'devtools-protocol';
 import type {Readable} from 'stream';
+
+import {Protocol} from 'devtools-protocol';
+
 import type {Accessibility} from '../common/Accessibility.js';
 import type {ConsoleMessage} from '../common/ConsoleMessage.js';
 import type {Coverage} from '../common/Coverage.js';
 import {Device} from '../common/Device.js';
 import type {Dialog} from '../common/Dialog.js';
-import type {ElementHandle} from '../common/ElementHandle.js';
 import {EventEmitter, Handler} from '../common/EventEmitter.js';
 import type {FileChooser} from '../common/FileChooser.js';
 import type {
@@ -39,17 +40,24 @@ import type {
   Touchscreen,
 } from '../common/Input.js';
 import type {WaitForSelectorOptions} from '../common/IsolatedWorld.js';
-import type {JSHandle} from '../common/JSHandle.js';
 import type {PuppeteerLifeCycleEvent} from '../common/LifecycleWatcher.js';
 import type {Credentials, NetworkConditions} from '../common/NetworkManager.js';
 import type {PDFOptions} from '../common/PDFOptions.js';
 import type {Viewport} from '../common/PuppeteerViewport.js';
 import type {Target} from '../common/Target.js';
 import type {Tracing} from '../common/Tracing.js';
-import type {EvaluateFunc, HandleFor, NodeFor} from '../common/types.js';
+import type {
+  EvaluateFunc,
+  EvaluateFuncWith,
+  HandleFor,
+  NodeFor,
+} from '../common/types.js';
 import type {WebWorker} from '../common/WebWorker.js';
+
 import type {Browser} from './Browser.js';
 import type {BrowserContext} from './BrowserContext.js';
+import type {ElementHandle} from './ElementHandle.js';
+import type {JSHandle} from './JSHandle.js';
 
 /**
  * @public
@@ -956,21 +964,16 @@ export class Page extends EventEmitter {
   async $eval<
     Selector extends string,
     Params extends unknown[],
-    Func extends EvaluateFunc<
-      [ElementHandle<NodeFor<Selector>>, ...Params]
-    > = EvaluateFunc<[ElementHandle<NodeFor<Selector>>, ...Params]>
+    Func extends EvaluateFuncWith<NodeFor<Selector>, Params> = EvaluateFuncWith<
+      NodeFor<Selector>,
+      Params
+    >
   >(
     selector: Selector,
     pageFunction: Func | string,
     ...args: Params
   ): Promise<Awaited<ReturnType<Func>>>;
-  async $eval<
-    Selector extends string,
-    Params extends unknown[],
-    Func extends EvaluateFunc<
-      [ElementHandle<NodeFor<Selector>>, ...Params]
-    > = EvaluateFunc<[ElementHandle<NodeFor<Selector>>, ...Params]>
-  >(): Promise<Awaited<ReturnType<Func>>> {
+  async $eval(): Promise<unknown> {
     throw new Error('Not implemented');
   }
 
@@ -1039,21 +1042,16 @@ export class Page extends EventEmitter {
   async $$eval<
     Selector extends string,
     Params extends unknown[],
-    Func extends EvaluateFunc<
-      [Array<NodeFor<Selector>>, ...Params]
-    > = EvaluateFunc<[Array<NodeFor<Selector>>, ...Params]>
+    Func extends EvaluateFuncWith<
+      Array<NodeFor<Selector>>,
+      Params
+    > = EvaluateFuncWith<Array<NodeFor<Selector>>, Params>
   >(
     selector: Selector,
     pageFunction: Func | string,
     ...args: Params
   ): Promise<Awaited<ReturnType<Func>>>;
-  async $$eval<
-    Selector extends string,
-    Params extends unknown[],
-    Func extends EvaluateFunc<
-      [Array<NodeFor<Selector>>, ...Params]
-    > = EvaluateFunc<[Array<NodeFor<Selector>>, ...Params]>
-  >(): Promise<Awaited<ReturnType<Func>>> {
+  async $$eval(): Promise<unknown> {
     throw new Error('Not implemented');
   }
 
@@ -2465,7 +2463,7 @@ export class Page extends EventEmitter {
    * @param options - Optional waiting parameters
    * @returns Promise which resolves when element specified by xpath string is
    * added to DOM. Resolves to `null` if waiting for `hidden: true` and xpath is
-   * not found in DOM.
+   * not found in DOM, otherwise resolves to `ElementHandle`.
    * @remarks
    * The optional Argument `options` have properties:
    *
@@ -2483,11 +2481,7 @@ export class Page extends EventEmitter {
    */
   waitForXPath(
     xpath: string,
-    options?: {
-      visible?: boolean;
-      hidden?: boolean;
-      timeout?: number;
-    }
+    options?: WaitForSelectorOptions
   ): Promise<ElementHandle<Node> | null>;
   waitForXPath(): Promise<ElementHandle<Node> | null> {
     throw new Error('Not implemented');

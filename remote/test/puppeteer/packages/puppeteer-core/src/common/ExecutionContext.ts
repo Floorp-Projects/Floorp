@@ -15,10 +15,21 @@
  */
 
 import {Protocol} from 'devtools-protocol';
+
+import type {ElementHandle} from '../api/ElementHandle.js';
+import {JSHandle} from '../api/JSHandle.js';
+import type PuppeteerUtil from '../injected/injected.js';
+import {AsyncIterableUtil} from '../util/AsyncIterableUtil.js';
+import {stringifyFunction} from '../util/Function.js';
+
+import {ARIAQueryHandler} from './AriaQueryHandler.js';
+import {Binding} from './Binding.js';
 import {CDPSession} from './Connection.js';
+import {CDPElementHandle} from './ElementHandle.js';
 import {IsolatedWorld} from './IsolatedWorld.js';
-import {JSHandle} from './JSHandle.js';
+import {CDPJSHandle} from './JSHandle.js';
 import {LazyArg} from './LazyArg.js';
+import {scriptInjector} from './ScriptInjector.js';
 import {EvaluateFunc, HandleFor} from './types.js';
 import {
   createJSHandle,
@@ -71,7 +82,7 @@ export class ExecutionContext {
   /**
    * @internal
    */
-  _contextName: string;
+  _contextName?: string;
 
   /**
    * @internal
@@ -84,7 +95,55 @@ export class ExecutionContext {
     this._client = client;
     this._world = world;
     this._contextId = contextPayload.id;
-    this._contextName = contextPayload.name;
+    if (contextPayload.name) {
+      this._contextName = contextPayload.name;
+    }
+  }
+
+  #puppeteerUtil?: Promise<JSHandle<PuppeteerUtil>>;
+  get puppeteerUtil(): Promise<JSHandle<PuppeteerUtil>> {
+    scriptInjector.inject(script => {
+      if (this.#puppeteerUtil) {
+        this.#puppeteerUtil.then(handle => {
+          handle.dispose();
+        });
+      }
+      this.#puppeteerUtil = Promise.all([
+        this.#installGlobalBinding(
+          new Binding(
+            '__ariaQuerySelector',
+            ARIAQueryHandler.queryOne as (...args: unknown[]) => unknown
+          )
+        ),
+        this.#installGlobalBinding(
+          new Binding('__ariaQuerySelectorAll', (async (
+            element: ElementHandle<Node>,
+            selector: string
+          ): Promise<JSHandle<Node[]>> => {
+            const results = ARIAQueryHandler.queryAll(element, selector);
+            return element.executionContext().evaluateHandle((...elements) => {
+              return elements;
+            }, ...(await AsyncIterableUtil.collect(results)));
+          }) as (...args: unknown[]) => unknown)
+        ),
+      ]).then(() => {
+        return this.evaluateHandle(script) as Promise<JSHandle<PuppeteerUtil>>;
+      });
+    }, !this.#puppeteerUtil);
+    return this.#puppeteerUtil as Promise<JSHandle<PuppeteerUtil>>;
+  }
+
+  async #installGlobalBinding(binding: Binding) {
+    try {
+      if (this._world) {
+        this._world._bindings.set(binding.name, binding);
+        await this._world._addBindingToContext(this, binding.name);
+      }
+    } catch {
+      // If the binding cannot be added, then either the browser doesn't support
+      // bindings (e.g. Firefox) or the context is broken. Either breakage is
+      // okay, so we ignore the error.
+    }
   }
 
   /**
@@ -250,29 +309,10 @@ export class ExecutionContext {
         : createJSHandle(this, remoteObject);
     }
 
-    let functionText = pageFunction.toString();
-    try {
-      new Function('(' + functionText + ')');
-    } catch (error) {
-      // This means we might have a function shorthand. Try another
-      // time prefixing 'function '.
-      if (functionText.startsWith('async ')) {
-        functionText =
-          'async function ' + functionText.substring('async '.length);
-      } else {
-        functionText = 'function ' + functionText;
-      }
-      try {
-        new Function('(' + functionText + ')');
-      } catch (error) {
-        // We tried hard to serialize, but there's a weird beast here.
-        throw new Error('Passed function is not well-serializable!');
-      }
-    }
     let callFunctionOnPromise;
     try {
       callFunctionOnPromise = this._client.send('Runtime.callFunctionOn', {
-        functionDeclaration: functionText + '\n' + suffix + '\n',
+        functionDeclaration: `${stringifyFunction(pageFunction)}\n${suffix}\n`,
         executionContextId: this._contextId,
         arguments: await Promise.all(args.map(convertArgument.bind(this))),
         returnByValue,
@@ -304,7 +344,7 @@ export class ExecutionContext {
       arg: unknown
     ): Promise<Protocol.Runtime.CallArgument> {
       if (arg instanceof LazyArg) {
-        arg = await arg.get();
+        arg = await arg.get(this);
       }
       if (typeof arg === 'bigint') {
         // eslint-disable-line valid-typeof
@@ -322,7 +362,10 @@ export class ExecutionContext {
       if (Object.is(arg, NaN)) {
         return {unserializableValue: 'NaN'};
       }
-      const objectHandle = arg && arg instanceof JSHandle ? arg : null;
+      const objectHandle =
+        arg && (arg instanceof CDPJSHandle || arg instanceof CDPElementHandle)
+          ? arg
+          : null;
       if (objectHandle) {
         if (objectHandle.executionContext() !== this) {
           throw new Error(

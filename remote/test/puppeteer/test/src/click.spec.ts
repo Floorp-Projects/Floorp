@@ -16,6 +16,7 @@
 
 import expect from 'expect';
 import {KnownDevices} from 'puppeteer';
+
 import {
   getTestState,
   setupTestBrowserHooks,
@@ -419,7 +420,7 @@ describe('Page.click', function () {
     ).toBe('Clicked');
   });
   // @see https://github.com/puppeteer/puppeteer/issues/4110
-  it.skip('should click the button with fixed position inside an iframe', async () => {
+  it('should click the button with fixed position inside an iframe', async () => {
     const {page, server} = getTestState();
 
     await page.goto(server.EMPTY_PAGE);

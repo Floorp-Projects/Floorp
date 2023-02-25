@@ -15,8 +15,11 @@
  */
 
 import {Protocol} from 'devtools-protocol';
+
+import {Page} from '../api/Page.js';
 import {assert} from '../util/assert.js';
 import {isErrorLike} from '../util/ErrorLike.js';
+
 import {CDPSession, isTargetClosedError} from './Connection.js';
 import {EventEmitter} from './EventEmitter.js';
 import {EVALUATION_SCRIPT_URL, ExecutionContext} from './ExecutionContext.js';
@@ -25,7 +28,6 @@ import {FrameTree} from './FrameTree.js';
 import {IsolatedWorld} from './IsolatedWorld.js';
 import {MAIN_WORLD, PUPPETEER_WORLD} from './IsolatedWorlds.js';
 import {NetworkManager} from './NetworkManager.js';
-import {Page} from '../api/Page.js';
 import {Target} from './Target.js';
 import {TimeoutSettings} from './TimeoutSettings.js';
 import {debugError} from './util.js';
@@ -174,10 +176,16 @@ export class FrameManager extends EventEmitter {
     contextId: number,
     session: CDPSession = this.#client
   ): ExecutionContext {
-    const key = `${session.id()}:${contextId}`;
-    const context = this.#contextIdToContext.get(key);
+    const context = this.getExecutionContextById(contextId, session);
     assert(context, 'INTERNAL ERROR: missing context with id = ' + contextId);
     return context;
+  }
+
+  getExecutionContextById(
+    contextId: number,
+    session: CDPSession = this.#client
+  ): ExecutionContext | undefined {
+    return this.#contextIdToContext.get(`${session.id()}:${contextId}`);
   }
 
   page(): Page {

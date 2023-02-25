@@ -5,6 +5,6 @@ origin:
   description: Headless Chrome Node API
   license: Apache-2.0
   name: puppeteer
-  release: e13e9647fc0d917da94af8851a09ed318fb0e07c
-  url: /Users/alexandraborovova/Projects/puppeteer
+  release: puppeteer-v19.7.2
+  url: https://github.com/puppeteer/puppeteer.git
 schema: 1
