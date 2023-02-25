@@ -51,9 +51,11 @@ static void QueryXExtensions(Display* aDisplay) {
 
 extern "C" {
 int X11Error(Display* display, XErrorEvent* event) {
+#ifdef DEBUG
   // Get an indication of how long ago the request that caused the error was
   // made.
   unsigned long age = NextRequest(display) - event->serial;
+#endif
 
   // Get a string to represent the request that caused the error.
   nsAutoCString message;
@@ -96,6 +98,7 @@ int X11Error(Display* display, XErrorEvent* event) {
   XGetErrorText(display, event->error_code, buffer, sizeof(buffer));
   notes.Append(buffer);
 
+#ifdef DEBUG
   // For requests where Xlib gets the reply synchronously, |age| will be 1
   // and the stack will include the function making the request.  For
   // asynchronous requests, the current stack will often be unrelated to the
@@ -118,7 +121,6 @@ int X11Error(Display* display, XErrorEvent* event) {
     }
   }
 
-#ifdef DEBUG
   // The resource id is unlikely to be useful in a crash report without
   // context of other ids, but add it to the debug console output.
   notes.AppendLiteral("; id=0x");
