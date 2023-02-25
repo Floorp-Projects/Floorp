@@ -644,41 +644,15 @@ class SearchAddons extends HTMLElement {
       this.append(this.input);
     }
     this.input.addEventListener("command", this);
-    document.addEventListener("keypress", this);
   }
 
   disconnectedCallback() {
     this.input.removeEventListener("command", this);
-    document.removeEventListener("keypress", this);
-  }
-
-  focus() {
-    this.input.focus();
-  }
-
-  get focusKey() {
-    return this.getAttribute("key");
   }
 
   handleEvent(e) {
     if (e.type === "command") {
       this.searchAddons(this.value);
-    } else if (e.type === "keypress") {
-      if (e.key === "/" && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        this.focus();
-      } else if (e.key == this.focusKey) {
-        if (e.altKey || e.shiftKey) {
-          return;
-        }
-
-        if (Services.appinfo.OS === "Darwin") {
-          if (e.metaKey && !e.ctrlKey) {
-            this.focus();
-          }
-        } else if (e.ctrlKey && !e.metaKey) {
-          this.focus();
-        }
-      }
     }
   }
 
@@ -1855,13 +1829,6 @@ class InlineOptionsBrowser extends HTMLElement {
     browser.setAttribute("transparent", "true");
     browser.setAttribute("forcemessagemanager", "true");
     browser.setAttribute("autocompletepopup", "PopupAutoComplete");
-
-    // The outer about:addons document listens for key presses to focus
-    // the search box when / is pressed.  But if we're focused inside an
-    // options page, don't let those keypresses steal focus.
-    browser.addEventListener("keypress", event => {
-      event.stopPropagation();
-    });
 
     let { optionsURL, optionsBrowserStyle } = addon;
     if (addon.isWebExtension) {
