@@ -2930,15 +2930,6 @@ void gfxPlatform::InitWebGLConfig() {
   }
 
   bool threadsafeGL = IsFeatureOk(nsIGfxInfo::FEATURE_THREADSAFE_GL);
-#ifdef MOZ_WIDGET_GTK
-  // Bug 1777849 - Older libX11 versions may not be safe to use in multiple
-  // threads. GLX usage may cause libX11 traffic that aggravates various race
-  // conditions. For now, mark anything other than EGL as not thread-safe,
-  // which can still be overridden by pref if necessary.
-  if (!gfxVars::UseEGL()) {
-    threadsafeGL = false;
-  }
-#endif
   threadsafeGL |= StaticPrefs::webgl_threadsafe_gl_force_enabled_AtStartup();
   threadsafeGL &= !StaticPrefs::webgl_threadsafe_gl_force_disabled_AtStartup();
   gfxVars::SetSupportsThreadsafeGL(threadsafeGL);
