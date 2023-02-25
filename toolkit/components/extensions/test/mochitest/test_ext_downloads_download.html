@@ -46,12 +46,8 @@ async function background() {
     "Should fail with a forbidden header"
   );
 
-  const absoluteFilename = SpecialPowers.Services.appinfo.OS === "WINNT"
-    ? "C:\\tmp\\file.gif"
-    : "/tmp/file.gif";
-
   await browser.test.assertRejects(
-    browser.downloads.download({url, filename: absoluteFilename}),
+    browser.downloads.download({url, filename: "/tmp/file.gif"}),
     /filename must not be an absolute path/,
     "Should fail with an absolute file path"
   );

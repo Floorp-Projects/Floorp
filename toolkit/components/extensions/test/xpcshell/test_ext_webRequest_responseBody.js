@@ -3,6 +3,7 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 /* eslint-disable no-shadow */
 
+const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { ExtensionTestCommon } = ChromeUtils.import(
   "resource://testing-common/ExtensionTestCommon.jsm"
 );
@@ -74,8 +75,8 @@ server.registerPathHandler("/lorem.html.gz", async (request, response) => {
   );
   response.setHeader("Content-Encoding", "gzip", false);
 
-  let data = await IOUtils.read(do_get_file("data/lorem.html.gz").path);
-  response.write(String.fromCharCode(...data));
+  let data = await OS.File.read(do_get_file("data/lorem.html.gz").path);
+  response.write(String.fromCharCode(...new Uint8Array(data)));
 
   response.finish();
 });

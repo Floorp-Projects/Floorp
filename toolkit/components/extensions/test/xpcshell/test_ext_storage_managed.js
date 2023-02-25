@@ -4,6 +4,10 @@ ChromeUtils.defineESModuleGetters(this, {
   MockRegistry: "resource://testing-common/MockRegistry.sys.mjs",
 });
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  OS: "resource://gre/modules/osfile.jsm",
+});
+
 const MANIFEST = {
   name: "test-storage-managed@mozilla.com",
   description: "",
@@ -40,10 +44,10 @@ add_task(async function setup() {
 
   let typeSlug =
     AppConstants.platform === "linux" ? "managed-storage" : "ManagedStorage";
-  await IOUtils.makeDirectory(PathUtils.join(tmpDir.path, typeSlug));
+  OS.File.makeDir(OS.Path.join(tmpDir.path, typeSlug));
 
-  let path = PathUtils.join(tmpDir.path, typeSlug, `${MANIFEST.name}.json`);
-  await IOUtils.writeJSON(path, MANIFEST);
+  let path = OS.Path.join(tmpDir.path, typeSlug, `${MANIFEST.name}.json`);
+  await OS.File.writeAtomic(path, JSON.stringify(MANIFEST));
 
   let registry;
   if (AppConstants.platform === "win") {
