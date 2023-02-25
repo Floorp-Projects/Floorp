@@ -1749,6 +1749,25 @@ gfxFontEntry* gfxMacPlatformFontList::LookupLocalFont(nsPresContext* aPresContex
 
   nsAutoreleasePool localPool;
 
+  // Bug 567552 - disable auto-activation of fonts on first call to
+  // LookupLocalFont.
+  static bool firstTime = true;
+  if (firstTime) {
+    firstTime = false;
+    // get the main bundle identifier
+    CFBundleRef mainBundle = ::CFBundleGetMainBundle();
+    CFStringRef mainBundleID = nullptr;
+    if (mainBundle) {
+      mainBundleID = ::CFBundleGetIdentifier(mainBundle);
+    }
+    // Bug 969388 and bug 922590 - mainBundlID as null is sometimes problematic.
+    if (!mainBundleID) {
+      NS_WARNING("missing bundle ID, packaging set up incorrectly");
+    } else {
+      CTFontManagerSetAutoActivationSetting(mainBundleID, kCTFontManagerAutoActivationDisabled);
+    }
+  }
+
   CrashReporter::AutoAnnotateCrashReport autoFontName(CrashReporter::Annotation::FontName,
                                                       aFontName);
 
