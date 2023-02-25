@@ -9,8 +9,6 @@
 "use strict";
 
 const TEST_COM_URI = `${URL_ROOT_COM}examples/doc_dbg-fission-frame-sources.html`;
-const TEST_ORG_IFRAME_URI = `${URL_ROOT_ORG_SSL}examples/doc_dbg-fission-frame-sources-frame.html`;
-const DATA_URI = "data:text/html,<title>foo</title>";
 
 add_task(async function() {
   // Load a test page with a remote frame and wait for both sources to be visible.
@@ -43,11 +41,11 @@ add_task(async function() {
     "second thread displayed is the remote thread"
   );
 
-  await addExpression(dbg, "document.location.href");
+  await addExpression(dbg, "document.location.host");
 
   is(
     getWatchExpressionValue(dbg, 1),
-    JSON.stringify(TEST_COM_URI),
+    `"example.com"`,
     "expression is evaluated on the expected thread"
   );
 
@@ -63,7 +61,7 @@ add_task(async function() {
 
   is(
     getWatchExpressionValue(dbg, 1),
-    JSON.stringify(TEST_ORG_IFRAME_URI),
+    `"example.org"`,
     "expression is evaluated on the remote origin thread"
   );
 
@@ -74,18 +72,19 @@ add_task(async function() {
 
   is(
     getWatchExpressionValue(dbg, 1),
-    JSON.stringify(TEST_COM_URI),
+    `"example.com"`,
     "expression is evaluated on the main thread again"
   );
 
   // close the threads pane so following test don't have it open
   threadsPaneEl.click();
 
-  await navigateToAbsoluteURL(dbg, DATA_URI);
+  await navigateToAbsoluteURL(dbg, "data:text/html,<title>foo</title>");
 
-  is(
+  // TOFIX: Bug 1809168 watch expressions aren't updated on navigation
+  todo_is(
     getWatchExpressionValue(dbg, 1),
-    JSON.stringify(DATA_URI),
+    `""`,
     "The location.host expression is updated after a navigaiton"
   );
 

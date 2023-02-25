@@ -77,7 +77,7 @@ add_task(async function() {
   await waitFor(() => findElement(dbg2, "codeMirror"));
 
   info("Reload to check if we hit the breakpoint added in doc-scripts.html");
-  const onReloaded = reload(dbg2);
+  reload(dbg2);
 
   await waitForDispatch(dbg2.store, "NAVIGATE");
   await waitForSelectedSource(dbg2, "doc-scripts.html");
@@ -86,7 +86,4 @@ add_task(async function() {
   const scriptSource = dbg2.selectors.getSelectedSource();
   assertPausedAtSourceAndLine(dbg2, scriptSource.id, 21);
   await resume(dbg2);
-
-  info("Wait for reload to complete after resume");
-  await onReloaded;
 });

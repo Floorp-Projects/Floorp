@@ -18,7 +18,7 @@ add_task(async function() {
   // reload.
   await addBreakpoint(dbg, "doc-scripts.html", 21);
 
-  const onReloaded = reload(dbg, "doc-scripts.html");
+  await reload(dbg, "doc-scripts.html");
 
   await waitForPaused(dbg);
 
@@ -29,8 +29,6 @@ add_task(async function() {
 
   assertPausedAtSourceAndLine(dbg, findSource(dbg, "doc-scripts.html").id, 21);
   await resume(dbg);
-  info("Wait for reload to complete after resume");
-  await onReloaded;
 
   info("Create an eval script that pauses itself.");
   invokeInTab("doEval");

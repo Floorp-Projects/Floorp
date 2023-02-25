@@ -16,11 +16,16 @@ import {
 } from "../../client/firefox/create";
 import { toggleBlackBox } from "./blackbox";
 import { syncBreakpoint } from "../breakpoints";
+import { createLocation } from "../../utils/location";
 import { loadSourceText } from "./loadSourceText";
 import { togglePrettyPrint } from "./prettyPrint";
 import { selectLocation, setBreakableLines } from "../sources";
 
-import { getRawSourceURL, isPrettyURL } from "../../utils/source";
+import {
+  getRawSourceURL,
+  isPrettyURL,
+  isInlineScript,
+} from "../../utils/source";
 import {
   getBlackBoxRanges,
   getSource,
@@ -30,6 +35,8 @@ import {
   getPendingSelectedLocation,
   getPendingBreakpointsForSource,
   getContext,
+  getSourceTextContent,
+  getSourceActor,
 } from "../../selectors";
 
 import { prefs } from "../../utils/prefs";
@@ -134,7 +141,7 @@ function checkSelectedSource(cx, sourceId) {
     if (rawPendingUrl === source.url) {
       if (isPrettyURL(pendingUrl)) {
         const prettySource = await dispatch(togglePrettyPrint(cx, source.id));
-        dispatch(checkPendingBreakpoints(cx, prettySource, null));
+        dispatch(checkPendingBreakpoints(cx, prettySource.id, null));
         return;
       }
 
@@ -150,8 +157,14 @@ function checkSelectedSource(cx, sourceId) {
   };
 }
 
-function checkPendingBreakpoints(cx, source, sourceActor) {
+function checkPendingBreakpoints(cx, sourceId, sourceActorId) {
   return async ({ dispatch, getState }) => {
+    // source may have been modified by selectLocation
+    const source = getSource(getState(), sourceId);
+    if (!source) {
+      return;
+    }
+
     const pendingBreakpoints = getPendingBreakpointsForSource(
       getState(),
       source
@@ -161,13 +174,14 @@ function checkPendingBreakpoints(cx, source, sourceActor) {
       return;
     }
 
+    const sourceActor = getSourceActor(getState(), sourceActorId);
     // load the source text if there is a pending breakpoint for it
     await dispatch(loadSourceText(cx, source, sourceActor));
-    await dispatch(setBreakableLines(cx, source, sourceActor));
+    await dispatch(setBreakableLines(cx, source.id));
 
     await Promise.all(
       pendingBreakpoints.map(bp => {
-        return dispatch(syncBreakpoint(cx, source.id, bp));
+        return dispatch(syncBreakpoint(cx, sourceId, bp));
       })
     );
   };
@@ -240,7 +254,7 @@ export function newOriginalSources(originalSourcesInfo) {
     await dispatch(checkNewSources(cx, sources));
 
     for (const source of sources) {
-      dispatch(checkPendingBreakpoints(cx, source, null));
+      dispatch(checkPendingBreakpoints(cx, source.id, null));
     }
 
     return sources;
@@ -301,6 +315,24 @@ export function newGeneratedSources(sourceResources) {
     dispatch(addSources(cx, newSources));
     dispatch(insertSourceActors(newSourceActors));
 
+    for (const newSourceActor of newSourceActors) {
+      const location = createLocation({
+        sourceId: newSourceActor.source.id,
+        sourceActorId: newSourceActor.actor,
+      });
+      // Fetch breakable lines for new HTML scripts
+      // when the HTML file has started loading
+      if (
+        isInlineScript(newSourceActor) &&
+        getSourceTextContent(getState(), location) != null
+      ) {
+        dispatch(setBreakableLines(cx, newSourceActor.source)).catch(error => {
+          if (!(error instanceof ContextError)) {
+            throw error;
+          }
+        });
+      }
+    }
     await dispatch(checkNewSources(cx, newSources));
 
     (async () => {
@@ -309,20 +341,8 @@ export function newGeneratedSources(sourceResources) {
       // We would like to sync breakpoints after we are done
       // loading source maps as sometimes generated and original
       // files share the same paths.
-      for (const sourceActor of newSourceActors) {
-        // For HTML pages, we fetch all new incoming inline script,
-        // which will be related to one dedicated source actor.
-        // Whereas, for regular sources, if we have many source actors,
-        // this is for the same URL. And code expecting to have breakable lines
-        // will request breakable lines for that particular source actor.
-        if (sourceActor.sourceObject.isHTML) {
-          await dispatch(
-            setBreakableLines(cx, sourceActor.sourceObject, sourceActor)
-          );
-        }
-        dispatch(
-          checkPendingBreakpoints(cx, sourceActor.sourceObject, sourceActor)
-        );
+      for (const { source, actor } of newSourceActors) {
+        dispatch(checkPendingBreakpoints(cx, source, actor));
       }
     })();
 
