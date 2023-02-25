@@ -162,14 +162,14 @@ urlbar:
         description: >
           The type of the result the user selected. The possible result types
           are: `autofill_about`, `autofill_adaptive`, `autofill_origin`,
-          `autofill_url`, `autofill_unknown`, `bookmark`, `history`, `keyword`,
-          `search_engine`, `search_suggest`, `search_history`, `url`, `action`,
-          `tab`, `remote_tab`, `addon`, `tip_onboard`, `tip_persist`,
-          `tip_redirect`, `tip_unknown`, `intervention_clear`,
-          `intervention_refresh`, `intervention_update`, `intervention_unknown`,
-          `tab_to_search`, `top_site`, `calc`, `unit`, `suggest_sponsor` and
-          `suggest_non_sponsor`. If the result type did not fall into any of
-          these, this will be `unknown`.
+          `autofill_url`, `autofill_unknown`, `bookmark`, `history`,
+          `input_field`, `keyword`, `search_engine`, `search_suggest`,
+          `search_history`, `url`, `action`, `tab`, `remote_tab`, `addon`,
+          `tip_onboard`, `tip_persist`, `tip_redirect`, `tip_unknown`,
+          `intervention_clear`, `intervention_refresh`, `intervention_update`,
+          `intervention_unknown`, `tab_to_search`, `top_site`, `calc`, `unit`,
+          `suggest_sponsor` and `suggest_non_sponsor`. If the result type did
+          not fall into any of these, this will be `unknown`.
         type: string
       selected_result_subtype:
         description: >
