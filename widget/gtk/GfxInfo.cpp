@@ -15,7 +15,6 @@
 #include <sys/types.h>
 #include <sys/utsname.h>
 #include <sys/wait.h>
-#include <dlfcn.h>
 
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/SSE.h"
@@ -66,7 +65,6 @@ nsresult GfxInfo::Init() {
   mHasMultipleGPUs = false;
   mGlxTestError = false;
   mIsVAAPISupported = false;
-  mIsX11ThreadSafe = false;
   return GfxInfoBase::Init();
 }
 
@@ -526,14 +524,6 @@ void GfxInfo::GetData() {
   mIsWayland = GdkIsWaylandDisplay();
   mIsXWayland = IsXWaylandProtocol();
 
-  // Bug 1777849 - LibX11 versions prior to 1.7 have a race condition if it is
-  // used in more than one thread. The symbol "XSetIOErrorExitHandler" was added
-  // to the API in version 1.7, so we check for this symbol here to verify that
-  // libX11 is safe to use in multiple threads.
-  if (!mIsWayland) {
-    mIsX11ThreadSafe = dlsym(RTLD_DEFAULT, "XSetIOErrorExitHandler") != nullptr;
-  }
-
   if (!ddxDriver.IsEmpty()) {
     PRInt32 start = 0;
     PRInt32 loc = ddxDriver.Find(";", start);
@@ -965,15 +955,6 @@ nsresult GfxInfo::GetFeatureStatusImpl(
       !mIsVAAPISupported) {
     *aStatus = nsIGfxInfo::FEATURE_BLOCKED_PLATFORM_TEST;
     aFailureId = "FEATURE_FAILURE_VIDEO_DECODING_TEST_FAILED";
-    return NS_OK;
-  }
-
-  if (aFeature == nsIGfxInfo::FEATURE_THREADSAFE_GL && !mIsWayland &&
-      !mIsX11ThreadSafe) {
-    // Bug 1777849 - LibX11 versions before 1.7 are not thread-safe, so using
-    // GLX on multiple threads is not thread-safe either.
-    *aStatus = nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION;
-    aFailureId = "FEATURE_FAILURE_THREADSAFE_GL";
     return NS_OK;
   }
 
