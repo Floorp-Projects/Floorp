@@ -8,7 +8,6 @@
 ChromeUtils.defineESModuleGetters(this, {
   MockRegistry: "resource://testing-common/MockRegistry.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 if (AppConstants.platform == "win") {
   ChromeUtils.defineESModuleGetters(this, {
     SubprocessImpl: "resource://gre/modules/subprocess/subprocess_win.sys.mjs",
@@ -32,28 +31,29 @@ const TYPE_SLUG =
   AppConstants.platform === "linux"
     ? "native-messaging-hosts"
     : "NativeMessagingHosts";
-OS.File.makeDir(OS.Path.join(tmpDir.path, TYPE_SLUG));
 
-registerCleanupFunction(() => {
-  tmpDir.remove(true);
+add_setup(async function setup() {
+  await IOUtils.makeDirectory(PathUtils.join(tmpDir.path, TYPE_SLUG));
+});
+
+registerCleanupFunction(async () => {
+  await IOUtils.remove(tmpDir.path, { recursive: true });
 });
 
 function getPath(filename) {
-  return OS.Path.join(tmpDir.path, TYPE_SLUG, filename);
+  return PathUtils.join(tmpDir.path, TYPE_SLUG, filename);
 }
 
 const ID = "native@tests.mozilla.org";
 
 async function setupHosts(scripts) {
-  const PERMS = { unixMode: 0o755 };
-
   const pythonPath = await Subprocess.pathSearch(Services.env.get("PYTHON"));
 
   async function writeManifest(script, scriptPath, path) {
     let body = `#!${pythonPath} -u\n${script.script}`;
 
-    await OS.File.writeAtomic(scriptPath, body);
-    await OS.File.setPermissions(scriptPath, PERMS);
+    await IOUtils.writeUTF8(scriptPath, body);
+    await IOUtils.setPermissions(scriptPath, 0o755);
 
     let manifest = {
       name: script.name,
@@ -67,7 +67,7 @@ async function setupHosts(scripts) {
     script._hookModifyManifest?.(manifest);
 
     let manifestPath = getPath(`${script.name}.json`);
-    await OS.File.writeAtomic(manifestPath, JSON.stringify(manifest));
+    await IOUtils.writeJSON(manifestPath, manifest);
 
     return manifestPath;
   }
@@ -115,7 +115,7 @@ async function setupHosts(scripts) {
         let scriptPath = getPath(`${script.name}.py`);
 
         let batBody = `@ECHO OFF\n${pythonPath} -u "${scriptPath}" %*\n`;
-        await OS.File.writeAtomic(batPath, batBody);
+        await IOUtils.writeUTF8(batPath, batBody);
 
         let manifestPath = await writeManifest(script, scriptPath, batPath);
 
