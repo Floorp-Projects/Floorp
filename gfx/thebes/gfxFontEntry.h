@@ -485,8 +485,9 @@ class gfxFontEntry {
   float TrackingForCSSPx(float aSize) const;
 
   mozilla::gfx::Rect GetFontExtents(float aFUnitScaleFactor) const {
+    // Flip the y-axis here to match the orientation of Gecko's coordinates.
     return mozilla::gfx::Rect(float(mXMin) * aFUnitScaleFactor,
-                              float(mYMin) * aFUnitScaleFactor,
+                              float(-mYMax) * aFUnitScaleFactor,
                               float(mXMax - mXMin) * aFUnitScaleFactor,
                               float(mYMax - mYMin) * aFUnitScaleFactor);
   }
