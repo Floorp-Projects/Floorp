@@ -31,7 +31,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   NativeManifests: "resource://gre/modules/NativeManifests.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
 });
 
 // For a graceful shutdown (i.e., when the extension is unloaded or when it
@@ -89,21 +88,26 @@ var NativeApp = class extends EventEmitter {
 
         let command = hostInfo.manifest.path;
         if (AppConstants.platform == "win") {
-          // OS.Path.join() ignores anything before the last absolute path
-          // it sees, so if command is already absolute, it remains unchanged
-          // here.  If it is relative, we get the proper absolute path here.
-          command = lazy.OS.Path.join(
-            lazy.OS.Path.dirname(hostInfo.path),
-            command
-          );
           // Normalize in case the extension used / instead of \.
           command = command.replaceAll("/", "\\");
+
+          if (!PathUtils.isAbsolute(command)) {
+            const parentPath = PathUtils.parent(
+              hostInfo.path.replaceAll("/", "\\")
+            );
+            command = PathUtils.joinRelative(parentPath, command);
+          }
+        } else if (!PathUtils.isAbsolute(command)) {
+          // Only windows supports relative paths.
+          throw new Error(
+            "NativeApp requires absolute path to command on this platform"
+          );
         }
 
         let subprocessOpts = {
           command: command,
           arguments: [hostInfo.path, context.extension.id],
-          workdir: lazy.OS.Path.dirname(command),
+          workdir: PathUtils.parent(command),
           stderr: "pipe",
           disclaim: true,
         };
