@@ -80,6 +80,8 @@ show-nav-bar-bottom =
 
 material-effect =
  .label = Allow Mica for Everyone to modify the browser design
+disable-extension-check-compatibility-option =
+ .label = Do not check for compatibility with add-ons
 other-preference = Other Preferences
 
 operation-settings = Browser Operation

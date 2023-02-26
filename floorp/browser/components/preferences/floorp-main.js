@@ -154,6 +154,34 @@ window.addEventListener("pageshow", async function() {
   document.getElementById("SetCustomURL").addEventListener("click", function () {
     window.location.href = "about:preferences#bSB";
   });
+
+  {
+    const basePrefName = "extensions.checkCompatibility";
+    const isNightlyPref = ![
+      "aurora",
+      "beta",
+      "release",
+      "esr",
+    ].includes(AppConstants.MOZ_UPDATE_CHANNEL);
+    const appVersion = Services.appinfo.version.replace(/^([^\.]+\.[0-9]+[a-z]*).*/gi, "$1");
+    const appVersionMajor = appVersion.replace(/^([^\.]+)\.[0-9]+[a-z]*/gi, "$1");
+    const prefNameNightly = `${basePrefName}.nightly`;
+    const prefNameVersion = `${basePrefName}.${appVersion}`;
+    const prefName = isNightlyPref
+      ? `${basePrefName}.nightly`
+      : `${basePrefName}.${appVersion}`;
+    let elem = document.getElementById("disableExtensionCheckCompatibility");
+    elem.value = !Services.prefs.getIntPref(prefName, true);
+    elem.addEventListener('change', function () {
+      Services.prefs.setBoolPref(prefNameNightly, !elem.checked);
+      for (let minor = 0; minor <= 15; minor++) {
+        Services.prefs.setBoolPref(`${basePrefName}.${appVersionMajor}.${minor}`, !elem.checked);
+      }
+    });
+    Services.prefs.addObserver(prefName, function () {
+      elem.checked = !Services.prefs.getBoolPref(prefName, true);
+    });
+  }
 }, { once: true });
 
 // Optimize for portable version
