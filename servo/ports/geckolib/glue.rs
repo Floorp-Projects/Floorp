@@ -4376,27 +4376,24 @@ pub extern "C" fn Servo_ComputedValues_EqualForCachedAnonymousContentStyle(
 ) -> bool {
     let mut differing_properties = a.differing_properties(b);
 
-    // Ignore any difference in -x-lang, which we can't override in the
-    // rules in minimal-xul.css, but which makes no difference for the
-    // anonymous content subtrees we cache style for.
+    // Ignore any difference in -x-lang, which we can't override in the rules in scrollbars.css,
+    // but which makes no difference for the anonymous content subtrees we cache style for.
     differing_properties.remove(LonghandId::XLang);
-    // Similarly, -x-lang can influence the font-family fallback we have for
-    // the initial font-family so remove it as well.
+    // Similarly, -x-lang can influence the font-family fallback we have for the initial
+    // font-family so remove it as well.
     differing_properties.remove(LonghandId::FontFamily);
 
-    // Ignore any difference in pref-controlled, inherited properties.  These
-    // properties may or may not be set by the 'all' declaration in the
-    // minimal-xul.css rule, depending on whether the pref was enabled at the
-    // time the UA sheets were parsed.
+    // Ignore any difference in pref-controlled, inherited properties.  These properties may or may
+    // not be set by the 'all' declaration in scrollbars.css, depending on whether the pref was
+    // enabled at the time the UA sheets were parsed.
     //
-    // If you add a new pref-controlled, inherited property, it must be defined
-    // with `has_effect_on_gecko_scrollbars=False` to declare that
-    // different values of this property on a <scrollbar> element or its
-    // descendant scrollbar part elements should have no effect on their
-    // rendering and behavior.
+    // If you add a new pref-controlled, inherited property, it must be defined with
+    // `has_effect_on_gecko_scrollbars=False` to declare that different values of this property on
+    // a <scrollbar> element or its descendant scrollbar part elements should have no effect on
+    // their rendering and behavior.
     //
-    // If you do need a pref-controlled, inherited property to have an effect
-    // on these elements, then you will need to add some checks to the
+    // If you do need a pref-controlled, inherited property to have an effect on these elements,
+    // then you will need to add some checks to the
     // nsIAnonymousContentCreator::CreateAnonymousContent implementations of
     // ScrollFrameHelper and nsScrollbarFrame to clear the AnonymousContentKey
     // if a non-initial value is used.
