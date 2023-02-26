@@ -2151,7 +2151,9 @@ already_AddRefed<CanvasGradient> CanvasRenderingContext2D::CreateRadialGradient(
 
 already_AddRefed<CanvasGradient> CanvasRenderingContext2D::CreateConicGradient(
     double aAngle, double aCx, double aCy) {
-  return MakeAndAddRef<CanvasConicGradient>(this, aAngle, Point(aCx, aCy));
+  double adjustedStartAngle = aAngle + M_PI / 2.0;
+  return MakeAndAddRef<CanvasConicGradient>(this, adjustedStartAngle,
+                                            Point(aCx, aCy));
 }
 
 already_AddRefed<CanvasPattern> CanvasRenderingContext2D::CreatePattern(
