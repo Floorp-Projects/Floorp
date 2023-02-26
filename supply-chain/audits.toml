@@ -431,6 +431,11 @@ notes = "We are pulling this package from a non crates.io source until the chang
 [[audits.cssparser-macros]]
 who = "Tiaan Louw <tlouw@mozilla.com>"
 criteria = "safe-to-deploy"
+delta = "0.6.0 -> 0.6.0@git:b196a164dcbb317016d4aa6c58c13147e6045ebb"
+
+[[audits.cssparser-macros]]
+who = "Tiaan Louw <tlouw@mozilla.com>"
+criteria = "safe-to-deploy"
 delta = "0.6.0 -> 0.6.0@git:d3670a89bae26ba3a8db4758eb7976616113987d"
 
 [[audits.cstr]]

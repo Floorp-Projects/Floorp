@@ -8,16 +8,18 @@ extern crate test;
 use encoding_rs;
 use serde_json::{self, json, Map, Value};
 
+use crate::color::{parse_color_with, FromParsedColor};
+use crate::{ColorParser, PredefinedColorSpace};
+
 #[cfg(feature = "bench")]
 use self::test::Bencher;
 
 use super::{
-    color::{rgb, rgba},
     parse_important, parse_nth, parse_one_declaration, parse_one_rule, stylesheet_encoding,
-    AbsoluteColor, AtRuleParser, BasicParseError, BasicParseErrorKind, Color, CowRcStr,
-    DeclarationListParser, DeclarationParser, Delimiter, EncodingSupport, ParseError,
-    ParseErrorKind, Parser, ParserInput, ParserState, QualifiedRuleParser, RuleListParser,
-    SourceLocation, ToCss, Token, TokenSerializationType, UnicodeRange, RGBA,
+    AtRuleParser, BasicParseError, BasicParseErrorKind, Color, CowRcStr, DeclarationListParser,
+    DeclarationParser, Delimiter, EncodingSupport, ParseError, ParseErrorKind, Parser, ParserInput,
+    ParserState, QualifiedRuleParser, RuleListParser, SourceLocation, ToCss, Token,
+    TokenSerializationType, UnicodeRange, RGBA,
 };
 
 macro_rules! JArray {
@@ -590,19 +592,19 @@ fn serialize_current_color() {
 
 #[test]
 fn serialize_rgb_full_alpha() {
-    let c = rgb(255, 230, 204);
+    let c = Color::Rgba(RGBA::new(255, 230, 204, 1.0));
     assert_eq!(c.to_css_string(), "rgb(255, 230, 204)");
 }
 
 #[test]
 fn serialize_rgba() {
-    let c = rgba(26, 51, 77, 0.125);
+    let c = Color::Rgba(RGBA::new(26, 51, 77, 0.125));
     assert_eq!(c.to_css_string(), "rgba(26, 51, 77, 0.125)");
 }
 
 #[test]
 fn serialize_rgba_two_digit_float_if_roundtrips() {
-    let c = Color::Absolute(AbsoluteColor::Rgba(RGBA::from_floats(0., 0., 0., 0.5)));
+    let c = Color::Rgba(RGBA::from_floats(0., 0., 0., 0.5));
     assert_eq!(c.to_css_string(), "rgba(0, 0, 0, 0.5)");
 }
 
@@ -895,18 +897,16 @@ impl ToJson for Color {
     fn to_json(&self) -> Value {
         match *self {
             Color::CurrentColor => "currentcolor".to_json(),
-            Color::Absolute(absolute) => match absolute {
-                AbsoluteColor::Rgba(ref rgba) => {
-                    json!([rgba.red, rgba.green, rgba.blue, rgba.alpha])
-                }
-                AbsoluteColor::Lab(ref c) => json!([c.lightness, c.a, c.b, c.alpha]),
-                AbsoluteColor::Lch(ref c) => json!([c.lightness, c.chroma, c.hue, c.alpha]),
-                AbsoluteColor::Oklab(ref c) => json!([c.lightness, c.a, c.b, c.alpha]),
-                AbsoluteColor::Oklch(ref c) => json!([c.lightness, c.chroma, c.hue, c.alpha]),
-                AbsoluteColor::ColorFunction(ref c) => {
-                    json!([c.color_space.as_str(), c.c1, c.c2, c.c3, c.alpha])
-                }
-            },
+            Color::Rgba(ref rgba) => {
+                json!([rgba.red, rgba.green, rgba.blue, rgba.alpha])
+            }
+            Color::Lab(ref c) => json!([c.lightness, c.a, c.b, c.alpha]),
+            Color::Lch(ref c) => json!([c.lightness, c.chroma, c.hue, c.alpha]),
+            Color::Oklab(ref c) => json!([c.lightness, c.a, c.b, c.alpha]),
+            Color::Oklch(ref c) => json!([c.lightness, c.chroma, c.hue, c.alpha]),
+            Color::ColorFunction(ref c) => {
+                json!([c.color_space.as_str(), c.c1, c.c2, c.c3, c.alpha])
+            }
         }
     }
 }
@@ -1509,4 +1509,122 @@ fn servo_define_css_keyword_enum() {
     }
 
     assert_eq!(UserZoom::from_ident("fixed"), Ok(UserZoom::Fixed));
+}
+
+#[test]
+fn generic_parser() {
+    #[derive(Debug, PartialEq)]
+    enum OutputType {
+        CurrentColor,
+        Rgba(u8, u8, u8, f32),
+        Lab(f32, f32, f32, f32),
+        Lch(f32, f32, f32, f32),
+        Oklab(f32, f32, f32, f32),
+        Oklch(f32, f32, f32, f32),
+        ColorFunction(PredefinedColorSpace, f32, f32, f32, f32),
+    }
+
+    impl FromParsedColor for OutputType {
+        fn from_current_color() -> Self {
+            OutputType::CurrentColor
+        }
+
+        fn from_rgba(red: u8, green: u8, blue: u8, alpha: f32) -> Self {
+            OutputType::Rgba(red, green, blue, alpha)
+        }
+
+        fn from_lab(lightness: f32, a: f32, b: f32, alpha: f32) -> Self {
+            OutputType::Lab(lightness, a, b, alpha)
+        }
+
+        fn from_lch(lightness: f32, chroma: f32, hue: f32, alpha: f32) -> Self {
+            OutputType::Lch(lightness, chroma, hue, alpha)
+        }
+
+        fn from_oklab(lightness: f32, a: f32, b: f32, alpha: f32) -> Self {
+            OutputType::Oklab(lightness, a, b, alpha)
+        }
+
+        fn from_oklch(lightness: f32, chroma: f32, hue: f32, alpha: f32) -> Self {
+            OutputType::Oklch(lightness, chroma, hue, alpha)
+        }
+
+        fn from_color_function(
+            color_space: PredefinedColorSpace,
+            c1: f32,
+            c2: f32,
+            c3: f32,
+            alpha: f32,
+        ) -> Self {
+            OutputType::ColorFunction(color_space, c1, c2, c3, alpha)
+        }
+    }
+
+    struct ComponentParser;
+    impl<'i> ColorParser<'i> for ComponentParser {
+        type Output = OutputType;
+        type Error = ();
+    }
+
+    const TESTS: &[(&str, OutputType)] = &[
+        ("currentColor", OutputType::CurrentColor),
+        ("rgb(1, 2, 3)", OutputType::Rgba(1, 2, 3, 1.0)),
+        ("rgba(1, 2, 3, 0.4)", OutputType::Rgba(1, 2, 3, 0.4)),
+        (
+            "lab(100 20 30 / 0.4)",
+            OutputType::Lab(100.0, 20.0, 30.0, 0.4),
+        ),
+        (
+            "lch(100 20 30 / 0.4)",
+            OutputType::Lch(100.0, 20.0, 30.0, 0.4),
+        ),
+        (
+            "oklab(100 20 30 / 0.4)",
+            OutputType::Oklab(100.0, 20.0, 30.0, 0.4),
+        ),
+        (
+            "oklch(100 20 30 / 0.4)",
+            OutputType::Oklch(100.0, 20.0, 30.0, 0.4),
+        ),
+        (
+            "color(srgb 0.1 0.2 0.3 / 0.4)",
+            OutputType::ColorFunction(PredefinedColorSpace::Srgb, 0.1, 0.2, 0.3, 0.4),
+        ),
+        (
+            "color(srgb-linear 0.1 0.2 0.3 / 0.4)",
+            OutputType::ColorFunction(PredefinedColorSpace::SrgbLinear, 0.1, 0.2, 0.3, 0.4),
+        ),
+        (
+            "color(display-p3 0.1 0.2 0.3 / 0.4)",
+            OutputType::ColorFunction(PredefinedColorSpace::DisplayP3, 0.1, 0.2, 0.3, 0.4),
+        ),
+        (
+            "color(a98-rgb 0.1 0.2 0.3 / 0.4)",
+            OutputType::ColorFunction(PredefinedColorSpace::A98Rgb, 0.1, 0.2, 0.3, 0.4),
+        ),
+        (
+            "color(prophoto-rgb 0.1 0.2 0.3 / 0.4)",
+            OutputType::ColorFunction(PredefinedColorSpace::ProphotoRgb, 0.1, 0.2, 0.3, 0.4),
+        ),
+        (
+            "color(rec2020 0.1 0.2 0.3 / 0.4)",
+            OutputType::ColorFunction(PredefinedColorSpace::Rec2020, 0.1, 0.2, 0.3, 0.4),
+        ),
+        (
+            "color(xyz-d50 0.1 0.2 0.3 / 0.4)",
+            OutputType::ColorFunction(PredefinedColorSpace::XyzD50, 0.1, 0.2, 0.3, 0.4),
+        ),
+        (
+            "color(xyz-d65 0.1 0.2 0.3 / 0.4)",
+            OutputType::ColorFunction(PredefinedColorSpace::XyzD65, 0.1, 0.2, 0.3, 0.4),
+        ),
+    ];
+
+    for (input, expected) in TESTS {
+        let mut input = ParserInput::new(*input);
+        let mut input = Parser::new(&mut input);
+
+        let actual: OutputType = parse_color_with(&ComponentParser, &mut input).unwrap();
+        assert_eq!(actual, *expected);
+    }
 }
