@@ -24,6 +24,9 @@ const { OS } = ChromeUtils.import(
 const { setTimeout, setInterval, clearTimeout, clearInterval } = ChromeUtils.import(
     "resource://gre/modules/Timer.jsm"
 );
+const { CustomizableUI } = ChromeUtils.import(
+    "resource:///modules/CustomizableUI.jsm"
+);
 
 // Check information about startup.
 let isFirstRun = false;
@@ -152,10 +155,15 @@ NOTE: You can use the userContent.css file without change preferences (about:con
 
     // Setup for Undo Close Tab
     if (isFirstRun) {
-        let { CustomizableUI } = ChromeUtils.import(
-            "resource:///modules/CustomizableUI.jsm"
-        );
         CustomizableUI.addWidgetToArea("undo-closed-tab", CustomizableUI.AREA_NAVBAR, -1);
+    }
+
+
+    // Migrate from "floorp.optimized.msbutton.ope" pref
+    if (Services.prefs.prefHasUserValue("floorp.optimized.msbutton.ope")) {
+        CustomizableUI.removeWidgetFromArea("forward-button");
+        CustomizableUI.removeWidgetFromArea("back-button");
+        Services.prefs.clearUserPref("floorp.optimized.msbutton.ope");
     }
 
 
