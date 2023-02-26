@@ -66,12 +66,6 @@
     <string name="private_browsing_placeholder_description_2">%1$s nuyüj ri akanoxik chuqa\' runatab\'al awokem pa k\'amaya\'l toq yatel pa ri chokoy o ri  ichinan taq wi\'. Estape\' re re\' man yatrewaj ta pan ajk\'amaya\'l o chuwäch ri niya\'on ak\'amaya\'l, yatruto\' richin nichinäx ronojel ri nab\'än pan k\'amab\'ey chuwäch jun chik winäq nrokisaj ri awokisab\'al.</string>
     <string name="private_browsing_common_myths">Ch\'ob\'on taq tzij chi rij ri ichinan okem pa k\'amaya\'l</string>
 
-    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Titz\'aqatisäx jun choj okem richin yejaq ichinan taq ruwi\' pa ri Tikirib\'äl ruwäch.</string>
-
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Titz\'aqatisäx choj okem</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Titz\'aqatisäx pa ri Rutikirib\'al ruwa</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -192,6 +186,8 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Tinuk\'</string>
 
+    <!-- Button shown on the home page that opens the Customize home settings -->
+    <string name="browser_menu_customize_home_1">Tawichinaj ri ruxaq atikirib\'al</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Rutikirib\'al ruwäch</string>
@@ -228,6 +224,11 @@
 
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Tikanöx pa kikajtz\'ik ochochib\'äl</string>
+
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">Kinuk\'ulem taq kanoxïk</string>
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Wakami tikanöx pa:</string>
 
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Tikanöx</string>

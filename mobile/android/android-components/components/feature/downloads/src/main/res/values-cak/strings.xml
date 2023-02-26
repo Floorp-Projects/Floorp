@@ -45,4 +45,9 @@
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">Man tikirel ta nijaq %1$s</string>
     <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
     <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">K\'o chi niya\' q\'ij richin ye\'ok chi kipam ri taq yakb\'äl chuqa\' taq k\'ïy k\'oxom richin yeqasäx taq yakb\'äl. Tib\'an b\'enam pa runuk\'ulem Android, tapitz\'a\' ya\'oj q\'ij chuqa\' tipitz\' ri tiya\' q\'ij.</string>
+
+    <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_accept">Keq\'at qasanïk</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the negative action. Leaves user in Private browsing -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_deny">Tik\'oje\' pa ichinan okem pa k\'amaya\'l</string>
 </resources>

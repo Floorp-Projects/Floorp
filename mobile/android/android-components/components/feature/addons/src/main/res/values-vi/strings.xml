@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Nhập dữ liệu vào bộ nhớ tạm</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">Chặn nội dung trên bất kỳ trang nào</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Đọc lịch sử duyệt web của bạn</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Tải về các tập tin và chỉnh sửa lịch sử tải về của trình duyệt</string>
     <!-- Description for downloads_open permission. -->

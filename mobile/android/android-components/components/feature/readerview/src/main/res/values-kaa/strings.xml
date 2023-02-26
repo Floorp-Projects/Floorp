@@ -16,7 +16,7 @@
     <!-- Accessible description for increasing the font size -->
     <string name="mozac_feature_readerview_font_size_increase_desc">Shrift ólshemin úlkeytiw</string>
     <!-- Color option for the background -->
-    <string name="mozac_feature_readerview_dark">Qaranǵı</string>
+    <string name="mozac_feature_readerview_dark">Qarańǵı</string>
     <!-- Accessible description for the color option -->
     <string name="mozac_feature_readerview_dark_color_scheme_desc">Qara reń gamması</string>
     <!-- Color option for the background -->

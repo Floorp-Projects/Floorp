@@ -30,16 +30,16 @@
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d интихоб шуд</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
-    <string name="tab_tray_add_new_collection">Илова кардани маҷмӯаи нав</string>
+    <string name="tab_tray_add_new_collection">Илова кардани маҷмуаи нав</string>
     <!-- Label of editable text in create collection dialog for naming a new collection  -->
     <string name="tab_tray_add_new_collection_name">Ном</string>
     <!-- Label of button in save to collection dialog for selecting a current collection  -->
-    <string name="tab_tray_select_collection">Маҷмӯаро интихоб кунед</string>
+    <string name="tab_tray_select_collection">Маҷмуаро интихоб кунед</string>
     <!-- Content description for close button while in multiselect mode in tab tray -->
     <string name="tab_tray_close_multiselect_content_description">Аз реҷаи серинтихоб баромадан</string>
 
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
-    <string name="tab_tray_collection_button_multiselect_content_description">Нигоҳ доштани варақаҳои интихобшуда дар маҷмӯа</string>
+    <string name="tab_tray_collection_button_multiselect_content_description">Нигоҳ доштани варақаҳои интихобшуда дар маҷмуа</string>
 
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Интихоб шуд</string>
@@ -66,14 +66,10 @@
     </string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Барои кушодани варақаҳои хусусӣ аз экрани асосӣ миёнбуреро илова кунед.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">Варақаи хусусии навбатиро бо як ламс оғоз кунед.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">Варақаи хусусии навбатии худро бо як ламс оғоз кунед.</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Илова кардани миёнбур</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Илова кардан ба экрани асосӣ</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -199,7 +195,7 @@
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Ҷустуҷӯ дар саҳифа</string>
     <!-- Browser menu button that saves the current tab to a collection -->
-    <string name="browser_menu_save_to_collection_2">Нигоҳ доштан дар маҷмӯа</string>
+    <string name="browser_menu_save_to_collection_2">Нигоҳ доштан дар маҷмуа</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Мубодила кардан</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
@@ -474,7 +470,7 @@
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Интихоби маълумот</string>
     <!-- Preference for data collection -->
-    <string name="preferences_data_collection">Маҷмӯаи маълумот</string>
+    <string name="preferences_data_collection">Маҷмуаи маълумот</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Ислоҳкунии дурдасти хатоҳо тавассути USB</string>
     <!-- Preference title for switch preference to show search engines -->
@@ -513,17 +509,17 @@
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
-    <string name="preferences_customize_amo_collection">Маҷмӯаи ҷузъҳои иловагии фармоишӣ</string>
+    <string name="preferences_customize_amo_collection">Маҷмуаи ҷузъҳои иловагии фармоишӣ</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">ХУБ</string>
     <!-- Button caption to abort the add-on collection configuration -->
     <string name="customize_addon_collection_cancel">Бекор кардан</string>
     <!-- Hint displayed on input field for custom collection name -->
-    <string name="customize_addon_collection_hint">Номи маҷмӯа</string>
+    <string name="customize_addon_collection_hint">Номи маҷмуа</string>
     <!-- Hint displayed on input field for custom collection user ID-->
-    <string name="customize_addon_collection_user_hint">Соҳиби маҷмӯа (ID-и корбар)</string>
+    <string name="customize_addon_collection_user_hint">Соҳиби маҷмуа (ID-и корбар)</string>
     <!-- Toast shown after confirming the custom add-on collection configuration -->
-    <string name="toast_customize_addon_collection_done">Маҷмӯаи ҷузъҳои иловагӣ тағйир ёфт. Барои татбиқ кардани тағйирот барнома бояд хомӯш карда шавад…</string>
+    <string name="toast_customize_addon_collection_done">Маҷмуаи ҷузъҳои иловагӣ тағйир ёфт. Барои татбиқ кардани тағйирот барнома бояд хомӯш карда шавад…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -869,7 +865,7 @@
     <!-- Content description for tabs tray multiselect menu -->
     <string name="tab_tray_multiselect_menu_content_description">Менюи варақаҳои интихобшуда</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
-    <string name="remove_tab_from_collection">Тоза кардани варақаҳо аз маҷмӯа</string>
+    <string name="remove_tab_from_collection">Тоза кардани варақаҳо аз маҷмуа</string>
     <!-- Text for button to enter multiselect mode in tabs tray -->
     <string name="tabs_tray_select_tabs">Варақаҳоро интихоб намоед</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -879,11 +875,11 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Менюи варақаҳои кушодашуда</string>
     <!-- Open tabs menu item to save tabs to collection -->
-    <string name="tabs_menu_save_to_collection1">Нигоҳ доштани варақаҳо дар маҷмӯа</string>
+    <string name="tabs_menu_save_to_collection1">Нигоҳ доштани варақаҳо дар маҷмуа</string>
     <!-- Text for the menu button to delete a collection -->
-    <string name="collection_delete">Нест кардани маҷмӯа</string>
+    <string name="collection_delete">Нест кардани маҷмуа</string>
     <!-- Text for the menu button to rename a collection -->
-    <string name="collection_rename">Иваз кардани номи маҷмӯа</string>
+    <string name="collection_rename">Иваз кардани номи маҷмуа</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Варақаҳои кушодашуда</string>
     <!-- Hint for adding name of a collection -->
@@ -1111,19 +1107,19 @@
 
     <!-- Collections -->
     <!-- Collections header on home fragment -->
-    <string name="collections_header">Маҷмӯаҳо</string>
+    <string name="collections_header">Маҷмуаҳо</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
-    <string name="collection_menu_button_content_description">Менюи маҷмӯаҳо</string>
+    <string name="collection_menu_button_content_description">Менюи маҷмуаҳо</string>
     <!-- Label to describe what collections are to a new user without any collections -->
     <string name="no_collections_description2">Чизҳоеро, ки ба шумо муҳиманд, ҷамъ кунед\nҶустуҷӯҳо, сомонаҳо ва варақаҳои монандро барои дастрасии фаврӣ дар оянда якҷоя кунед.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Варақаҳоро интихоб намоед</string>
     <!-- Title for the "select collection" step of the collection creator -->
-    <string name="create_collection_select_collection">Интихоб кардани маҷмӯа</string>
+    <string name="create_collection_select_collection">Интихоб кардани маҷмуа</string>
     <!-- Title for the "name collection" step of the collection creator -->
-    <string name="create_collection_name_collection">Номи маҷмӯа</string>
+    <string name="create_collection_name_collection">Номи маҷмуа</string>
     <!-- Button to add new collection for the "select collection" step of the collection creator -->
-    <string name="create_collection_add_new_collection">Илова кардани маҷмӯаи нав</string>
+    <string name="create_collection_add_new_collection">Илова кардани маҷмуаи нав</string>
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
     <string name="create_collection_select_all">Ҳамаро интихоб кардан</string>
     <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
@@ -1139,7 +1135,7 @@
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">Варақаҳо нигоҳ дошта шудад!</string>
     <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
-    <string name="create_collection_tabs_saved_new_collection">Маҷмӯа нигоҳ дошта шуд!</string>
+    <string name="create_collection_tabs_saved_new_collection">Маҷмуа нигоҳ дошта шуд!</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
     <string name="create_collection_tab_saved">Варақа нигоҳ дошта шуд!</string>
     <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
@@ -1155,7 +1151,7 @@
     <string name="create_collection_negative">Бекор кардан</string>
 
     <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
-    <string name="create_collection_default_name">Маҷмӯаи %d</string>
+    <string name="create_collection_default_name">Маҷмуаи %d</string>
 
     <!-- Share -->
     <!-- Share screen header -->
@@ -1226,9 +1222,9 @@
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
-    <string name="snackbar_collection_deleted">Маҷмӯа нест карда шуд</string>
+    <string name="snackbar_collection_deleted">Маҷмуа нест карда шуд</string>
     <!-- Text shown in snackbar when user renames a collection -->
-    <string name="snackbar_collection_renamed">Номи маҷмӯа иваз карда шуд</string>
+    <string name="snackbar_collection_renamed">Номи маҷмуа иваз карда шуд</string>
     <!-- Text shown in snackbar when user closes a tab -->
     <string name="snackbar_tab_closed">Варақа пӯшида шуд</string>
     <!-- Text shown in snackbar when user closes all tabs -->
@@ -1259,7 +1255,7 @@
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Шумо мутмаин ҳастед, ки мехоҳед %1$s-ро нест намоед?</string>
     <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
-    <string name="delete_tab_and_collection_dialog_message">Агар шумо ин варақаро нест кунед, тамоми маҷмӯа нест карда мешавад. Шумо метавонед маҷмӯаҳои навро дар вақти дилхоҳ эҷод намоед.</string>
+    <string name="delete_tab_and_collection_dialog_message">Агар шумо ин варақаро нест кунед, тамоми маҷмуа нест карда мешавад. Шумо метавонед маҷмуаҳои навро дар вақти дилхоҳ эҷод намоед.</string>
     <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
     <string name="delete_tab_and_collection_dialog_title">%1$s-ро нест мекунед?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
@@ -1363,6 +1359,8 @@
     <string name="onboarding_firefox_account_sync_is_on">Ҳамоҳангсозӣ фаъол аст</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Муҳофизати махфият ба таври пешфарз кор мекунад</string>
+    <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_old">«%1$s» маъракаҳоеро, ки шуморо дар атрофи Интернет пинҳонӣ пайгирӣ мекунанд, ба таври худкор қатъ мекунад.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">Хусусияти «Муҳофизати пурра аз кукиҳо» васоити пайгириро аз истифодаи кукиҳо қатъ мекунад, то ки онҳо шуморо дар шабака ба таври пинҳонӣ пайгирӣ накунанд.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -2047,4 +2045,6 @@
     <string name="a11y_action_label_wallpaper_collection_learn_more">барои гирифтани маълумоти бештар оид ба ин маҷмуа пайвандро кушоед</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
     <string name="a11y_action_label_read_article">мақоларо хонед</string>
+    <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
+    <string name="a11y_action_label_pocket_learn_more">барои маълумоти бештар пайвандро кушоед</string>
 </resources>

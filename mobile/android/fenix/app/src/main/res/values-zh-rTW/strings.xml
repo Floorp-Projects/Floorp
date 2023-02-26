@@ -66,14 +66,10 @@
     <string name="private_browsing_common_myths">隱私瀏覽功能的常見迷思</string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">加入捷徑，從裝置主畫面直接開啟隱私瀏覽分頁。</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">只要輕鬆一點，即可開啟新的隱私保護分頁。</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">只要輕鬆一點，即可開啟新的隱私保護分頁。</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">新增捷徑</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">新增至裝置主畫面</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -1390,6 +1386,8 @@
     <string name="onboarding_firefox_account_sync_is_on">已開啟 Sync</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">預設開啟隱私保護</string>
+    <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_old">%1$s 會自動封鎖讓大企業在網路上偷偷跟蹤您的程式。</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">「全方位 Cookie 保護」功能可防止追蹤器透過 Cookie 在網路上追蹤您。</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -2073,4 +2071,6 @@
     <string name="a11y_action_label_wallpaper_collection_learn_more">開啟鏈結，了解此收藏集的更多資訊</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
     <string name="a11y_action_label_read_article">閱讀此文章</string>
+    <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
+    <string name="a11y_action_label_pocket_learn_more">開啟能讓您了解更多資訊的鏈結</string>
 </resources>
