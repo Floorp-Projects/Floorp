@@ -56,16 +56,6 @@
      * value of vertical-align.
      */
     vertical-align: initial !important;
-
-    /* Duplicate the rules from the '*' rule above, which were clobbered by the
-     * 'all: initial' declaration.
-     *
-     * The other zero specificity rules above are on :root, and scrollbar parts
-     * cannot match :root, so no need to duplicate them.
-     */
-    -moz-user-focus: ignore;
-    display: -moz-box;
-    box-sizing: border-box;
   }
 
   /* There are other rules that set the cursor on the scrollbar, expecting them
@@ -77,9 +67,7 @@
   }
 }
 
-scrollbar,
-scrollcorner,
-resizer {
+scrollbar, scrollbarbutton, scrollcorner, slider, thumb, resizer {
   /* Force legacy XUL layout for now on scrollbars / resizers and descendants,
    * as ScrollFrameHelper relies on that (and nsScrollbarFrame is a XUL frame
    * anyways).
@@ -88,22 +76,14 @@ resizer {
    * layout.
    */
   -moz-box-layout: legacy;
-}
-
-scrollbar[orient="vertical"],
-slider[orient="vertical"],
-thumb[orient="vertical"] {
-  -moz-box-orient: vertical;
-}
-
-thumb {
-  /* Prevent -moz-user-modify declaration from designmode.css having an
-   * effect. */
+  display: -moz-box;
+  box-sizing: border-box;
+  -moz-user-focus: ignore;
+  /* Prevent -moz-user-modify declaration from designmode.css having an effect. */
   -moz-user-modify: initial;
-
-  -moz-box-align: center;
-  -moz-box-pack: center;
+  user-select: none;
 }
+
 
 /********** resizer **********/
 
@@ -163,23 +143,21 @@ resizer[dir="topright"] {
   cursor: ne-resize;
 }
 
-/********** scrollbar **********/
-
 thumb {
+  appearance: auto;
+  -moz-default-appearance: scrollbarthumb-horizontal;
   -moz-box-flex: 1;
-  display: -moz-box !important;
+  -moz-box-align: center;
+  -moz-box-pack: center;
+}
+
+thumb[orient="vertical"] {
+  -moz-default-appearance: scrollbarthumb-vertical;
+  -moz-box-orient: vertical;
 }
 
 /* Don't collapse thumb when scrollbar is disabled. */
 thumb[collapsed="true"] {
-  visibility: hidden;
-}
-
-scrollbar, scrollbarbutton, scrollcorner, slider, thumb, resizer {
-  user-select: none;
-}
-
-scrollbar[value="hidden"] {
   visibility: hidden;
 }
 
@@ -197,6 +175,11 @@ scrollbar {
 
 scrollbar[orient="vertical"] {
   -moz-default-appearance: scrollbar-vertical;
+  -moz-box-orient: vertical;
+}
+
+scrollbar[value="hidden"] {
+  visibility: hidden;
 }
 
 scrollbar[root="true"] {
@@ -222,37 +205,24 @@ slider {
 }
 
 slider[orient="vertical"] {
-  appearance: auto;
   -moz-default-appearance: scrollbartrack-vertical;
+  -moz-box-orient: vertical;
 }
 
-thumb[orient="vertical"] {
-  appearance: auto;
-  -moz-default-appearance: scrollbarthumb-vertical;
-}
-
-thumb[orient="horizontal"] {
-  appearance: auto;
-  -moz-default-appearance: scrollbarthumb-horizontal;
-}
-
-scrollbarbutton[type="increment"] {
+scrollbarbutton {
   appearance: auto;
   -moz-default-appearance: scrollbarbutton-right;
 }
 
-scrollbar[orient="vertical"] > scrollbarbutton[type="increment"] {
-  appearance: auto;
+scrollbar[orient="vertical"] > scrollbarbutton {
   -moz-default-appearance: scrollbarbutton-down;
 }
 
 scrollbarbutton[type="decrement"] {
-  appearance: auto;
   -moz-default-appearance: scrollbarbutton-left;
 }
 
 scrollbar[orient="vertical"] > scrollbarbutton[type="decrement"] {
-  appearance: auto;
   -moz-default-appearance: scrollbarbutton-up;
 }
 
