@@ -1254,7 +1254,8 @@
       "../node_modules/babel-loader/lib/index.js??ref--1!../packages/pretty-fast/pretty-fast.js": 1102,
       "../node_modules/acorn/dist/acorn.mjs": 1103,
       "../packages/pretty-fast/node_modules/acorn/dist/acorn.mjs": 1104,
-      "../node_modules/babel-loader/lib/index.js??ref--1!workers/pretty-print/pretty-fast.js": 1105
+      "../node_modules/babel-loader/lib/index.js??ref--1!workers/pretty-print/pretty-fast.js": 1105,
+      "../node_modules/acorn/dist/acorn.es.js": 1106
     },
     "usedIds": {
       "0": 0,
@@ -2362,7 +2363,8 @@
       "1102": 1102,
       "1103": 1103,
       "1104": 1104,
-      "1105": 1105
+      "1105": 1105,
+      "1106": 1106
     }
   },
   "chunks": {
@@ -2505,7 +2507,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -2526,7 +2528,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }

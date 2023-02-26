@@ -5,7 +5,6 @@
 import PropTypes from "prop-types";
 import React, { Component } from "react";
 import { connect } from "../../utils/connect";
-import { CloseButton } from "../shared/Button";
 import actions from "../../actions";
 import {
   getActiveSearch,
@@ -27,7 +26,6 @@ import "./SearchBar.css";
 
 const { PluralForm } = require("devtools/shared/plural-form");
 const { debounce } = require("devtools/shared/debounce");
-const SearchModifiers = require("devtools/client/shared/components/SearchModifiers");
 
 function getSearchShortcut() {
   return L10N.getStr("sourceSearch.search.key2");
@@ -58,7 +56,6 @@ class SearchBar extends Component {
       selectedContentLoaded: PropTypes.bool.isRequired,
       selectedSource: PropTypes.object.isRequired,
       setActiveSearch: PropTypes.func.isRequired,
-      showClose: PropTypes.bool,
       toggleFileSearchModifier: PropTypes.func.isRequired,
       traverseResults: PropTypes.func.isRequired,
     };
@@ -225,7 +222,6 @@ class SearchBar extends Component {
     const {
       searchResults: { count },
       searchOn,
-      showClose = true,
       modifiers,
     } = this.props;
 
@@ -250,23 +246,15 @@ class SearchBar extends Component {
           handleNext={e => this.traverseResults(e, false)}
           handlePrev={e => this.traverseResults(e, true)}
           shouldFocus={this.state.inputFocused}
-          showClose={false}
+          showClose={true}
+          handleClose={this.closeSearch}
+          showSearchModifiers={true}
+          modifiers={modifiers}
+          onToggleSearchModifier={value => {
+            this.props.toggleFileSearchModifier(this.props.cx, value);
+            this.doSearch(this.state.query);
+          }}
         />
-        <div className="search-bottom-bar">
-          <SearchModifiers
-            modifiers={modifiers}
-            onToggleSearchModifier={value => {
-              this.props.toggleFileSearchModifier(this.props.cx, value);
-              this.doSearch(this.state.query);
-            }}
-          />
-          {showClose && (
-            <React.Fragment>
-              <span className="pipe-divider" />
-              <CloseButton handleClick={this.closeSearch} buttonClass={"big"} />
-            </React.Fragment>
-          )}
-        </div>
       </div>
     );
   }

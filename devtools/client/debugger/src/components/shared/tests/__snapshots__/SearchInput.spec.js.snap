@@ -32,9 +32,17 @@ exports[`SearchInput renders 1`] = `
     >
       So many results
     </div>
-    <CloseButton
-      buttonClass=""
-    />
+    <div
+      className="search-buttons-bar"
+    >
+      <span
+        className="pipe-divider"
+      />
+      <CloseButton
+        buttonClass=""
+        handleClick={[MockFunction]}
+      />
+    </div>
   </div>
 </div>
 `;
@@ -97,9 +105,17 @@ exports[`SearchInput shows nav buttons 1`] = `
         />
       </button>
     </div>
-    <CloseButton
-      buttonClass=""
-    />
+    <div
+      className="search-buttons-bar"
+    >
+      <span
+        className="pipe-divider"
+      />
+      <CloseButton
+        buttonClass=""
+        handleClick={[MockFunction]}
+      />
+    </div>
   </div>
 </div>
 `;
@@ -162,9 +178,17 @@ exports[`SearchInput shows svg error emoji 1`] = `
         />
       </button>
     </div>
-    <CloseButton
-      buttonClass=""
-    />
+    <div
+      className="search-buttons-bar"
+    >
+      <span
+        className="pipe-divider"
+      />
+      <CloseButton
+        buttonClass=""
+        handleClick={[MockFunction]}
+      />
+    </div>
   </div>
 </div>
 `;
@@ -227,9 +251,17 @@ exports[`SearchInput shows svg magnifying glass 1`] = `
         />
       </button>
     </div>
-    <CloseButton
-      buttonClass=""
-    />
+    <div
+      className="search-buttons-bar"
+    >
+      <span
+        className="pipe-divider"
+      />
+      <CloseButton
+        buttonClass=""
+        handleClick={[MockFunction]}
+      />
+    </div>
   </div>
 </div>
 `;

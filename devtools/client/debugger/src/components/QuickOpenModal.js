@@ -90,6 +90,7 @@ export class QuickOpenModal extends Component {
       symbolsLoading: PropTypes.bool.isRequired,
       tabUrls: PropTypes.array.isRequired,
       toggleShortcutsModal: PropTypes.func.isRequired,
+      projectDirectoryRoot: PropTypes.string,
     };
   }
 
@@ -462,6 +463,7 @@ export class QuickOpenModal extends Component {
           handleClose={this.closeModal}
           expanded={expanded}
           showClose={false}
+          showSearchModifiers={false}
           selectedItemId={
             expanded && items[selectedIndex] ? items[selectedIndex].id : ""
           }
