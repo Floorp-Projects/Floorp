@@ -717,7 +717,9 @@ PlacesController.prototype = {
       node ? node : nodes,
       aEvent,
       this._view,
-      PlacesSearchBox.updateHistorySearchTelemetry
+      this._view.id == "placesList"
+        ? PlacesSearchBox.updateHistorySearchTelemetry
+        : null
     );
   },
 
