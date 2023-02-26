@@ -244,7 +244,6 @@ STATIC_ATOMS = [
     Atom("clear", "clear"),
     Atom("click", "click"),
     Atom("clickcount", "clickcount"),
-    Atom("clickthrough", "clickthrough"),
     Atom("movetoclick", "movetoclick"),
     Atom("clip", "clip"),
     Atom("close", "close"),
