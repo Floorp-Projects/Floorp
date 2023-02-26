@@ -19,6 +19,7 @@ import { loadSourceText } from "./sources/loadSourceText";
 import {
   getProjectSearchOperation,
   getProjectSearchStatus,
+  getTextSearchModifiers,
 } from "../selectors/project-text-search";
 import { statusType } from "../reducers/project-text-search";
 
@@ -67,6 +68,10 @@ export function stopOngoingSearch(cx) {
       dispatch(updateSearchStatus(cx, statusType.cancelled));
     }
   };
+}
+
+export function toggleProjectSearchModifier(cx, modifier) {
+  return { type: "TOGGLE_PROJECT_SEARCH_MODIFIER", cx, modifier };
 }
 
 export function searchSources(cx, query) {
@@ -136,17 +141,22 @@ export function searchSource(cx, source, sourceActor, query) {
     if (!source) {
       return;
     }
+    const state = getState();
     const location = createLocation({
       sourceId: source.id,
       sourceActorId: sourceActor ? sourceActor.actor : null,
     });
-    const content = getSettledSourceTextContent(getState(), location);
+
+    const modifiers = getTextSearchModifiers(state);
+    const content = getSettledSourceTextContent(state, location);
     let matches = [];
+
     if (content && isFulfilled(content) && content.value.type === "text") {
       matches = await searchWorker.findSourceMatches(
         source.id,
         content.value,
-        query
+        query,
+        modifiers
       );
     }
     if (!matches.length) {
