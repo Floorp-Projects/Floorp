@@ -7,44 +7,33 @@ exports[`SearchBar should render 1`] = `
   <SearchInput
     count={0}
     expanded={false}
+    handleClose={[Function]}
     handleNext={[Function]}
     handlePrev={[Function]}
     hasPrefix={false}
     isLoading={false}
+    modifiers={
+      Object {
+        "get": [MockFunction],
+        "toJS": [Function],
+      }
+    }
     onBlur={[Function]}
     onChange={[Function]}
     onFocus={[Function]}
     onHistoryScroll={[Function]}
     onKeyDown={[Function]}
+    onToggleSearchModifier={[Function]}
     placeholder="Find in file…"
     query=""
     selectedItemId=""
     shouldFocus={false}
-    showClose={false}
+    showClose={true}
     showErrorEmoji={false}
+    showSearchModifiers={true}
     size=""
     summaryMsg=""
   />
-  <div
-    className="search-bottom-bar"
-  >
-    <SearchModifiers
-      modifiers={
-        Object {
-          "get": [MockFunction],
-          "toJS": [Function],
-        }
-      }
-      onToggleSearchModifier={[Function]}
-    />
-    <span
-      className="pipe-divider"
-    />
-    <CloseButton
-      buttonClass="big"
-      handleClick={[Function]}
-    />
-  </div>
 </div>
 `;
 
@@ -57,44 +46,33 @@ exports[`showErrorEmoji false if no query + no results 1`] = `
   <SearchInput
     count={0}
     expanded={false}
+    handleClose={[Function]}
     handleNext={[Function]}
     handlePrev={[Function]}
     hasPrefix={false}
     isLoading={false}
+    modifiers={
+      Object {
+        "get": [MockFunction],
+        "toJS": [Function],
+      }
+    }
     onBlur={[Function]}
     onChange={[Function]}
     onFocus={[Function]}
     onHistoryScroll={[Function]}
     onKeyDown={[Function]}
+    onToggleSearchModifier={[Function]}
     placeholder="Find in file…"
     query=""
     selectedItemId=""
     shouldFocus={false}
-    showClose={false}
+    showClose={true}
     showErrorEmoji={false}
+    showSearchModifiers={true}
     size=""
     summaryMsg=""
   />
-  <div
-    className="search-bottom-bar"
-  >
-    <SearchModifiers
-      modifiers={
-        Object {
-          "get": [MockFunction],
-          "toJS": [Function],
-        }
-      }
-      onToggleSearchModifier={[Function]}
-    />
-    <span
-      className="pipe-divider"
-    />
-    <CloseButton
-      buttonClass="big"
-      handleClick={[Function]}
-    />
-  </div>
 </div>
 `;
 
@@ -105,44 +83,33 @@ exports[`showErrorEmoji false if query + results 1`] = `
   <SearchInput
     count={10}
     expanded={false}
+    handleClose={[Function]}
     handleNext={[Function]}
     handlePrev={[Function]}
     hasPrefix={false}
     isLoading={false}
+    modifiers={
+      Object {
+        "get": [MockFunction],
+        "toJS": [Function],
+      }
+    }
     onBlur={[Function]}
     onChange={[Function]}
     onFocus={[Function]}
     onHistoryScroll={[Function]}
     onKeyDown={[Function]}
+    onToggleSearchModifier={[Function]}
     placeholder="Find in file…"
     query="test"
     selectedItemId=""
     shouldFocus={false}
-    showClose={false}
+    showClose={true}
     showErrorEmoji={false}
+    showSearchModifiers={true}
     size=""
     summaryMsg="NaN of 10 results"
   />
-  <div
-    className="search-bottom-bar"
-  >
-    <SearchModifiers
-      modifiers={
-        Object {
-          "get": [MockFunction],
-          "toJS": [Function],
-        }
-      }
-      onToggleSearchModifier={[Function]}
-    />
-    <span
-      className="pipe-divider"
-    />
-    <CloseButton
-      buttonClass="big"
-      handleClick={[Function]}
-    />
-  </div>
 </div>
 `;
 
@@ -153,43 +120,32 @@ exports[`showErrorEmoji true if query + no results 1`] = `
   <SearchInput
     count={0}
     expanded={false}
+    handleClose={[Function]}
     handleNext={[Function]}
     handlePrev={[Function]}
     hasPrefix={false}
     isLoading={false}
+    modifiers={
+      Object {
+        "get": [MockFunction],
+        "toJS": [Function],
+      }
+    }
     onBlur={[Function]}
     onChange={[Function]}
     onFocus={[Function]}
     onHistoryScroll={[Function]}
     onKeyDown={[Function]}
+    onToggleSearchModifier={[Function]}
     placeholder="Find in file…"
     query="test"
     selectedItemId=""
     shouldFocus={false}
-    showClose={false}
+    showClose={true}
     showErrorEmoji={true}
+    showSearchModifiers={true}
     size=""
     summaryMsg="No results found"
   />
-  <div
-    className="search-bottom-bar"
-  >
-    <SearchModifiers
-      modifiers={
-        Object {
-          "get": [MockFunction],
-          "toJS": [Function],
-        }
-      }
-      onToggleSearchModifier={[Function]}
-    />
-    <span
-      className="pipe-divider"
-    />
-    <CloseButton
-      buttonClass="big"
-      handleClick={[Function]}
-    />
-  </div>
 </div>
 `;

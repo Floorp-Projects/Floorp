@@ -19,6 +19,7 @@ import {
   getProjectSearchStatus,
   getProjectSearchQuery,
   getContext,
+  getTextSearchModifiers,
 } from "../selectors";
 
 import ManagedTree from "./shared/ManagedTree";
@@ -33,11 +34,6 @@ function getFilePath(item, index) {
   return item.type === "RESULT"
     ? `${item.sourceId}-${index || "$"}`
     : `${item.sourceId}-${item.line}-${item.column}-${index || "$"}`;
-}
-
-function sanitizeQuery(query) {
-  // no '\' at end of query
-  return query.replace(/\\$/, "");
 }
 
 export class ProjectSearch extends Component {
@@ -69,6 +65,8 @@ export class ProjectSearch extends Component {
         "DONE",
         "ERROR",
       ]).isRequired,
+      modifiers: PropTypes.object,
+      toggleProjectSearchModifier: PropTypes.func,
     };
   }
 
@@ -99,7 +97,9 @@ export class ProjectSearch extends Component {
   }
 
   doSearch(searchTerm) {
-    this.props.searchSources(this.props.cx, searchTerm);
+    if (searchTerm) {
+      this.props.searchSources(this.props.cx, searchTerm);
+    }
   }
 
   toggleProjectTextSearch = e => {
@@ -164,10 +164,7 @@ export class ProjectSearch extends Component {
       return;
     }
     this.setState({ focusedItem: null });
-    const query = sanitizeQuery(this.state.inputValue);
-    if (query) {
-      this.doSearch(query);
-    }
+    this.doSearch(this.state.inputValue);
   };
 
   onHistoryScroll = query => {
@@ -286,7 +283,14 @@ export class ProjectSearch extends Component {
   }
 
   renderInput() {
-    const { cx, closeProjectSearch, status } = this.props;
+    const {
+      cx,
+      closeProjectSearch,
+      status,
+      modifiers,
+      toggleProjectSearchModifier,
+    } = this.props;
+
     return (
       <SearchInput
         query={this.state.inputValue}
@@ -301,8 +305,15 @@ export class ProjectSearch extends Component {
         onBlur={() => this.setState({ inputFocused: false })}
         onKeyDown={this.onKeyDown}
         onHistoryScroll={this.onHistoryScroll}
-        handleClose={() => closeProjectSearch(cx)}
+        showClose={true}
+        handleClose={closeProjectSearch}
         ref="searchInput"
+        showSearchModifiers={true}
+        modifiers={modifiers}
+        onToggleSearchModifier={value => {
+          toggleProjectSearchModifier(cx, value);
+          this.doSearch(this.state.inputValue);
+        }}
       />
     );
   }
@@ -333,6 +344,7 @@ const mapStateToProps = state => ({
   results: getProjectSearchResults(state),
   query: getProjectSearchQuery(state),
   status: getProjectSearchStatus(state),
+  modifiers: getTextSearchModifiers(state),
 });
 
 export default connect(mapStateToProps, {
@@ -342,4 +354,5 @@ export default connect(mapStateToProps, {
   selectSpecificLocation: actions.selectSpecificLocation,
   setActiveSearch: actions.setActiveSearch,
   doSearchForHighlight: actions.doSearchForHighlight,
+  toggleProjectSearchModifier: actions.toggleProjectSearchModifier,
 })(ProjectSearch);
