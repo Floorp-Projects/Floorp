@@ -6,10 +6,16 @@
 
 import getMatches from "./get-matches";
 
-export function findSourceMatches(sourceId, content, queryText, modifiers) {
+export function findSourceMatches(sourceId, content, queryText) {
   if (queryText == "") {
     return [];
   }
+
+  const modifiers = {
+    caseSensitive: false,
+    regexMatch: false,
+    wholeWord: false,
+  };
 
   const text = content.value;
   const lines = text.split("\n");

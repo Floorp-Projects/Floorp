@@ -86,65 +86,6 @@ add_task(async function testExpandSearchResultsToShowMatches() {
   is(getExpandedResultsCount(dbg), 367);
 });
 
-add_task(async function testSearchModifiers() {
-  const dbg = await initDebugger("doc-react.html", "App.js");
-
-  await assertProjectSearchModifier(
-    dbg,
-    "projectSearchModifiersCaseSensitive",
-    "FIELDS",
-    "case sensitive",
-    { resultWithModifierOn: 0, resultWithModifierOff: 2 }
-  );
-  await assertProjectSearchModifier(
-    dbg,
-    "projectSearchModifiersRegexMatch",
-    `\\*`,
-    "regex match",
-    { resultWithModifierOn: 12, resultWithModifierOff: 0 }
-  );
-  await assertProjectSearchModifier(
-    dbg,
-    "projectSearchModifiersWholeWordMatch",
-    "so",
-    "whole word match",
-    { resultWithModifierOn: 6, resultWithModifierOff: 5 }
-  );
-});
-
-async function assertProjectSearchModifier(
-  dbg,
-  searchModifierBtn,
-  searchTerm,
-  title,
-  expected
-) {
-  info(`Assert ${title} search modifier`);
-  await openProjectSearch(dbg);
-  type(dbg, searchTerm);
-  info(`Turn on the ${title} search modifier option`);
-  await clickElement(dbg, searchModifierBtn);
-
-  let results = await waitForSearchResults(dbg, expected.resultWithModifierOn);
-  is(
-    results.length,
-    expected.resultWithModifierOn,
-    `${results.length} results where found`
-  );
-
-  info(`Turn off the ${title} search modifier`);
-  await clickElement(dbg, searchModifierBtn);
-
-  results = await waitForSearchResults(dbg, expected.resultWithModifierOff);
-  is(
-    results.length,
-    expected.resultWithModifierOff,
-    `${results.length} results where found`
-  );
-
-  await closeProjectSearch(dbg);
-}
-
 async function selectResultMatch(dbg) {
   const select = waitForState(dbg, () => !dbg.selectors.getActiveSearch());
   await clickElement(dbg, "fileMatch");

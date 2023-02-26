@@ -13,7 +13,7 @@ exports[`ProjectSearch found no search results 1`] = `
       <SearchInput
         count={0}
         expanded={false}
-        handleClose={[MockFunction]}
+        handleClose={[Function]}
         hasPrefix={false}
         isLoading={false}
         onBlur={[Function]}
@@ -21,13 +21,11 @@ exports[`ProjectSearch found no search results 1`] = `
         onFocus={[Function]}
         onHistoryScroll={[Function]}
         onKeyDown={[Function]}
-        onToggleSearchModifier={[Function]}
         placeholder="Find in files…"
         query="foo"
         selectedItemId=""
         showClose={true}
         showErrorEmoji={true}
-        showSearchModifiers={true}
         size="big"
         summaryMsg="0 results"
       />
@@ -118,7 +116,7 @@ exports[`ProjectSearch found search results 1`] = `
         <SearchInput
           count={5}
           expanded={false}
-          handleClose={[MockFunction]}
+          handleClose={[Function]}
           hasPrefix={false}
           isLoading={false}
           onBlur={[Function]}
@@ -126,13 +124,11 @@ exports[`ProjectSearch found search results 1`] = `
           onFocus={[Function]}
           onHistoryScroll={[Function]}
           onKeyDown={[Function]}
-          onToggleSearchModifier={[Function]}
           placeholder="Find in files…"
           query="match"
           selectedItemId=""
           showClose={true}
           showErrorEmoji={false}
-          showSearchModifiers={true}
           size="big"
           summaryMsg="5 results"
         >
@@ -171,76 +167,23 @@ exports[`ProjectSearch found search results 1`] = `
               >
                 5 results
               </div>
-              <div
-                className="search-buttons-bar"
+              <CloseButton
+                buttonClass="big"
+                handleClick={[Function]}
               >
-                <SearchModifiers
-                  onToggleSearchModifier={[Function]}
+                <button
+                  className="close-btn big"
+                  onClick={[Function]}
                 >
-                  <div
-                    className="search-modifiers"
+                  <AccessibleImage
+                    className="close"
                   >
                     <span
-                      className="pipe-divider"
+                      className="img close"
                     />
-                    <span
-                      className="search-type-name"
-                    >
-                      Modifiers:
-                    </span>
-                    <button
-                      className="regex-match-btn "
-                      onKeyDown={[Function]}
-                      onMouseDown={[Function]}
-                      title="Regex"
-                    >
-                      <span
-                        className="regex-match"
-                      />
-                    </button>
-                    <button
-                      className="case-sensitive-btn "
-                      onKeyDown={[Function]}
-                      onMouseDown={[Function]}
-                      title="Case sensitive"
-                    >
-                      <span
-                        className="case-match"
-                      />
-                    </button>
-                    <button
-                      className="whole-word-btn "
-                      onKeyDown={[Function]}
-                      onMouseDown={[Function]}
-                      title="Whole word"
-                    >
-                      <span
-                        className="whole-word-match"
-                      />
-                    </button>
-                  </div>
-                </SearchModifiers>
-                <span
-                  className="pipe-divider"
-                />
-                <CloseButton
-                  buttonClass="big"
-                  handleClick={[MockFunction]}
-                >
-                  <button
-                    className="close-btn big"
-                    onClick={[MockFunction]}
-                  >
-                    <AccessibleImage
-                      className="close"
-                    >
-                      <span
-                        className="img close"
-                      />
-                    </AccessibleImage>
-                  </button>
-                </CloseButton>
-              </div>
+                  </AccessibleImage>
+                </button>
+              </CloseButton>
             </div>
           </div>
         </SearchInput>
@@ -804,7 +747,7 @@ exports[`ProjectSearch should display loading message while search is in progres
       <SearchInput
         count={0}
         expanded={false}
-        handleClose={[MockFunction]}
+        handleClose={[Function]}
         hasPrefix={false}
         isLoading={true}
         onBlur={[Function]}
@@ -812,13 +755,11 @@ exports[`ProjectSearch should display loading message while search is in progres
         onFocus={[Function]}
         onHistoryScroll={[Function]}
         onKeyDown={[Function]}
-        onToggleSearchModifier={[Function]}
         placeholder="Find in files…"
         query="match"
         selectedItemId=""
         showClose={true}
         showErrorEmoji={false}
-        showSearchModifiers={true}
         size="big"
         summaryMsg="0 results"
       />
@@ -845,7 +786,7 @@ exports[`ProjectSearch showErrorEmoji false if not done & no results 1`] = `
       <SearchInput
         count={0}
         expanded={false}
-        handleClose={[MockFunction]}
+        handleClose={[Function]}
         hasPrefix={false}
         isLoading={true}
         onBlur={[Function]}
@@ -853,13 +794,11 @@ exports[`ProjectSearch showErrorEmoji false if not done & no results 1`] = `
         onFocus={[Function]}
         onHistoryScroll={[Function]}
         onKeyDown={[Function]}
-        onToggleSearchModifier={[Function]}
         placeholder="Find in files…"
         query="foo"
         selectedItemId=""
         showClose={true}
         showErrorEmoji={false}
-        showSearchModifiers={true}
         size="big"
         summaryMsg="0 results"
       />
@@ -886,7 +825,7 @@ exports[`ProjectSearch showErrorEmoji false if not done & results 1`] = `
       <SearchInput
         count={5}
         expanded={false}
-        handleClose={[MockFunction]}
+        handleClose={[Function]}
         hasPrefix={false}
         isLoading={true}
         onBlur={[Function]}
@@ -894,13 +833,11 @@ exports[`ProjectSearch showErrorEmoji false if not done & results 1`] = `
         onFocus={[Function]}
         onHistoryScroll={[Function]}
         onKeyDown={[Function]}
-        onToggleSearchModifier={[Function]}
         placeholder="Find in files…"
         query="foo"
         selectedItemId=""
         showClose={true}
         showErrorEmoji={false}
-        showSearchModifiers={true}
         size="big"
         summaryMsg="5 results"
       />
@@ -935,7 +872,7 @@ exports[`ProjectSearch turns off shortcuts on unmount 1`] = `
       <SearchInput
         count={0}
         expanded={false}
-        handleClose={[MockFunction]}
+        handleClose={[Function]}
         hasPrefix={false}
         isLoading={false}
         onBlur={[Function]}
@@ -943,13 +880,11 @@ exports[`ProjectSearch turns off shortcuts on unmount 1`] = `
         onFocus={[Function]}
         onHistoryScroll={[Function]}
         onKeyDown={[Function]}
-        onToggleSearchModifier={[Function]}
         placeholder="Find in files…"
         query=""
         selectedItemId=""
         showClose={true}
         showErrorEmoji={true}
-        showSearchModifiers={true}
         size="big"
         summaryMsg=""
       />
@@ -971,7 +906,7 @@ exports[`ProjectSearch where <Enter> has not been pressed 1`] = `
       <SearchInput
         count={0}
         expanded={false}
-        handleClose={[MockFunction]}
+        handleClose={[Function]}
         hasPrefix={false}
         isLoading={false}
         onBlur={[Function]}
@@ -979,13 +914,11 @@ exports[`ProjectSearch where <Enter> has not been pressed 1`] = `
         onFocus={[Function]}
         onHistoryScroll={[Function]}
         onKeyDown={[Function]}
-        onToggleSearchModifier={[Function]}
         placeholder="Find in files…"
         query=""
         selectedItemId=""
         showClose={true}
         showErrorEmoji={true}
-        showSearchModifiers={true}
         size="big"
         summaryMsg=""
       />

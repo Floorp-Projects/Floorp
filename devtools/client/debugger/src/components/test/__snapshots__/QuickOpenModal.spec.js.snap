@@ -74,7 +74,6 @@ exports[`QuickOpenModal Basic render with mount & searchType = functions 1`] = `
               selectedItemId=""
               showClose={false}
               showErrorEmoji={true}
-              showSearchModifiers={false}
               size=""
               summaryMsg=""
             >
@@ -107,9 +106,6 @@ exports[`QuickOpenModal Basic render with mount & searchType = functions 1`] = `
                     placeholder="Go to file…"
                     spellCheck={false}
                     value="@"
-                  />
-                  <div
-                    className="search-buttons-bar"
                   />
                 </div>
               </div>
@@ -212,7 +208,6 @@ exports[`QuickOpenModal Basic render with mount & searchType = variables 1`] = `
               selectedItemId=""
               showClose={false}
               showErrorEmoji={true}
-              showSearchModifiers={false}
               size=""
               summaryMsg=""
             >
@@ -245,9 +240,6 @@ exports[`QuickOpenModal Basic render with mount & searchType = variables 1`] = `
                     placeholder="Go to file…"
                     spellCheck={false}
                     value="#"
-                  />
-                  <div
-                    className="search-buttons-bar"
                   />
                 </div>
               </div>
@@ -333,7 +325,6 @@ exports[`QuickOpenModal Basic render with mount 1`] = `
               selectedItemId=""
               showClose={false}
               showErrorEmoji={false}
-              showSearchModifiers={false}
               size="big"
               summaryMsg=""
             >
@@ -366,9 +357,6 @@ exports[`QuickOpenModal Basic render with mount 1`] = `
                     placeholder="Go to file…"
                     spellCheck={false}
                     value=""
-                  />
-                  <div
-                    className="search-buttons-bar"
                   />
                 </div>
               </div>
@@ -417,7 +405,6 @@ exports[`QuickOpenModal Renders when enabled 1`] = `
     selectedItemId=""
     showClose={false}
     showErrorEmoji={false}
-    showSearchModifiers={false}
     size="big"
     summaryMsg=""
   />
@@ -507,7 +494,6 @@ exports[`QuickOpenModal Simple goto search query = :abc & searchType = goto 1`] 
               selectedItemId=""
               showClose={false}
               showErrorEmoji={true}
-              showSearchModifiers={false}
               size=""
               summaryMsg="Go to line"
             >
@@ -546,9 +532,6 @@ exports[`QuickOpenModal Simple goto search query = :abc & searchType = goto 1`] 
                   >
                     Go to line
                   </div>
-                  <div
-                    className="search-buttons-bar"
-                  />
                 </div>
               </div>
             </SearchInput>
@@ -633,7 +616,6 @@ exports[`QuickOpenModal showErrorEmoji false when count + query 1`] = `
               selectedItemId=""
               showClose={false}
               showErrorEmoji={false}
-              showSearchModifiers={false}
               size="big"
               summaryMsg=""
             >
@@ -666,9 +648,6 @@ exports[`QuickOpenModal showErrorEmoji false when count + query 1`] = `
                     placeholder="Go to file…"
                     spellCheck={false}
                     value="dasdasdas"
-                  />
-                  <div
-                    className="search-buttons-bar"
                   />
                 </div>
               </div>
@@ -802,7 +781,6 @@ exports[`QuickOpenModal showErrorEmoji false when goto numeric ':2222' 1`] = `
               selectedItemId=""
               showClose={false}
               showErrorEmoji={false}
-              showSearchModifiers={false}
               size=""
               summaryMsg="Go to line"
             >
@@ -841,9 +819,6 @@ exports[`QuickOpenModal showErrorEmoji false when goto numeric ':2222' 1`] = `
                   >
                     Go to line
                   </div>
-                  <div
-                    className="search-buttons-bar"
-                  />
                 </div>
               </div>
             </SearchInput>
@@ -870,7 +845,7 @@ exports[`QuickOpenModal showErrorEmoji false when no query 1`] = `
   highlightLineRange={[MockFunction]}
   isOriginal={false}
   query=""
-  searchType="other"
+  searchType=""
   selectSpecificLocation={[MockFunction]}
   setQuickOpenQuery={[MockFunction]}
   shortcutsModalEnabled={false}
@@ -928,7 +903,6 @@ exports[`QuickOpenModal showErrorEmoji false when no query 1`] = `
               selectedItemId=""
               showClose={false}
               showErrorEmoji={false}
-              showSearchModifiers={false}
               size=""
               summaryMsg=""
             >
@@ -961,9 +935,6 @@ exports[`QuickOpenModal showErrorEmoji false when no query 1`] = `
                     placeholder="Go to file…"
                     spellCheck={false}
                     value=""
-                  />
-                  <div
-                    className="search-buttons-bar"
                   />
                 </div>
               </div>
@@ -1065,7 +1036,6 @@ exports[`QuickOpenModal showErrorEmoji true when goto not numeric ':22k22' 1`] =
               selectedItemId=""
               showClose={false}
               showErrorEmoji={true}
-              showSearchModifiers={false}
               size=""
               summaryMsg="Go to line"
             >
@@ -1104,9 +1074,6 @@ exports[`QuickOpenModal showErrorEmoji true when goto not numeric ':22k22' 1`] =
                   >
                     Go to line
                   </div>
-                  <div
-                    className="search-buttons-bar"
-                  />
                 </div>
               </div>
             </SearchInput>
@@ -1133,7 +1100,7 @@ exports[`QuickOpenModal showErrorEmoji true when no count + query 1`] = `
   highlightLineRange={[MockFunction]}
   isOriginal={false}
   query="test"
-  searchType="other"
+  searchType=""
   selectSpecificLocation={[MockFunction]}
   setQuickOpenQuery={[MockFunction]}
   shortcutsModalEnabled={false}
@@ -1191,7 +1158,6 @@ exports[`QuickOpenModal showErrorEmoji true when no count + query 1`] = `
               selectedItemId=""
               showClose={false}
               showErrorEmoji={true}
-              showSearchModifiers={false}
               size=""
               summaryMsg=""
             >
@@ -1225,9 +1191,6 @@ exports[`QuickOpenModal showErrorEmoji true when no count + query 1`] = `
                     spellCheck={false}
                     value="test"
                   />
-                  <div
-                    className="search-buttons-bar"
-                  />
                 </div>
               </div>
             </SearchInput>
@@ -1257,7 +1220,6 @@ exports[`QuickOpenModal shows loading loads with function type search 1`] = `
     selectedItemId=""
     showClose={false}
     showErrorEmoji={false}
-    showSearchModifiers={false}
     size=""
     summaryMsg="Loading…"
   />
@@ -1377,7 +1339,6 @@ exports[`QuickOpenModal updateResults on enable 2`] = `
               selectedItemId=""
               showClose={false}
               showErrorEmoji={false}
-              showSearchModifiers={false}
               size="big"
               summaryMsg=""
             >
@@ -1410,9 +1371,6 @@ exports[`QuickOpenModal updateResults on enable 2`] = `
                     placeholder="Go to file…"
                     spellCheck={false}
                     value=""
-                  />
-                  <div
-                    className="search-buttons-bar"
                   />
                 </div>
               </div>

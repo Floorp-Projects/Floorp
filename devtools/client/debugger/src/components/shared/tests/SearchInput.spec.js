@@ -20,9 +20,6 @@ describe("SearchInput", () => {
       isLoading={false}
       onChange={() => {}}
       onKeyDown={() => {}}
-      showSearchModifiers={false}
-      showClose={true}
-      handleClose={jest.fn()}
     />
   );
 

@@ -699,11 +699,9 @@ function buildQuery(originalQuery, modifiers, {
 
   if (originalQuery === "") {
     return new RegExp(originalQuery);
-  } // Remove the backslashes at the end of the query as it
-  // breaks the RegExp
+  }
 
-
-  let query = originalQuery.replace(/\\$/, ""); // If we don't want to do a regexMatch, we need to escape all regex related characters
+  let query = originalQuery; // If we don't want to do a regexMatch, we need to escape all regex related characters
   // so they would actually match.
 
   if (!regexMatch) {
@@ -748,11 +746,16 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 // Maybe reuse file search's functions?
-function findSourceMatches(sourceId, content, queryText, modifiers) {
+function findSourceMatches(sourceId, content, queryText) {
   if (queryText == "") {
     return [];
   }
 
+  const modifiers = {
+    caseSensitive: false,
+    regexMatch: false,
+    wholeWord: false
+  };
   const text = content.value;
   const lines = text.split("\n");
   return (0, _getMatches.default)(queryText, text, modifiers).map(({
