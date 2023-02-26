@@ -640,22 +640,17 @@ nsresult nsXULElement::BindToTree(BindContext& aContext, nsINode& aParent) {
 
 #ifdef DEBUG
   if (!doc.AllowXULXBL() && !doc.IsUnstyledDocument()) {
-    // To save CPU cycles and memory, non-XUL documents only load the user
-    // agent style sheet rules for a minimal set of XUL elements such as
-    // 'scrollbar' that may be created implicitly for their content (those
-    // rules being in minimal-xul.css).
+    // To save CPU cycles and memory, we don't load xul.css for other elements
+    // except scrollbars.
     //
     // This assertion makes sure no other XUL element is used in a non-XUL
     // document.
     nsAtom* tag = NodeInfo()->NameAtom();
-    MOZ_ASSERT(
-        // scrollbar parts
-        tag == nsGkAtoms::scrollbar || tag == nsGkAtoms::scrollbarbutton ||
-            tag == nsGkAtoms::scrollcorner || tag == nsGkAtoms::slider ||
-            tag == nsGkAtoms::thumb ||
-            // other
-            tag == nsGkAtoms::resizer || tag == nsGkAtoms::label,
-        "Unexpected XUL element in non-XUL doc");
+    MOZ_ASSERT(tag == nsGkAtoms::scrollbar ||
+                   tag == nsGkAtoms::scrollbarbutton ||
+                   tag == nsGkAtoms::scrollcorner || tag == nsGkAtoms::slider ||
+                   tag == nsGkAtoms::thumb || tag == nsGkAtoms::resizer,
+               "Unexpected XUL element in non-XUL doc");
   }
 #endif
 

@@ -503,7 +503,7 @@ strong {
 }
 
 .tooltip-container[type="doorhanger"] .tooltip-panel ul {
-  /* Override the display: -moz-box declaration in minimal-xul.css
+  /* Override the display: -moz-box declaration in xul.css
    * or else menu items won't stack. */
   display: block;
 }
