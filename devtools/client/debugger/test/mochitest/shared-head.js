@@ -1570,12 +1570,6 @@ const selectors = {
   projectSearchCollapsed: ".project-text-search .arrow:not(.expanded)",
   projectSearchExpandedResults: ".project-text-search .result",
   projectSearchFileResults: ".project-text-search .file-result",
-  projectSearchModifiersCaseSensitive:
-    ".project-text-search button.case-sensitive-btn",
-  projectSearchModifiersRegexMatch:
-    ".project-text-search button.regex-match-btn",
-  projectSearchModifiersWholeWordMatch:
-    ".project-text-search button.whole-word-btn",
   threadsPaneItems: ".threads-pane .thread",
   threadsPaneItem: i => `.threads-pane .thread:nth-child(${i})`,
   threadsPaneItemPause: i => `${selectors.threadsPaneItem(i)} .pause-badge`,
@@ -2381,18 +2375,10 @@ async function doProjectSearch(dbg, searchTerm) {
  * Waits for the search resluts node to render
  *
  * @param {Object} dbg
- * @param {Number} expectedResults - The expected no of results to wait for
  * @return (Array) List of search result element nodes
  */
-async function waitForSearchResults(dbg, expectedResults) {
+async function waitForSearchResults(dbg) {
   await waitForState(dbg, state => state.projectTextSearch.status === "DONE");
-  if (expectedResults) {
-    await waitUntil(
-      () =>
-        findAllElements(dbg, "projectSearchFileResults").length ==
-        expectedResults
-    );
-  }
   return findAllElements(dbg, "projectSearchFileResults");
 }
 

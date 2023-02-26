@@ -779,7 +779,7 @@ describe("QuickOpenModal", () => {
         {
           enabled: true,
           query: "test",
-          searchType: "other",
+          searchType: "",
         },
         "mount"
       );
@@ -805,7 +805,7 @@ describe("QuickOpenModal", () => {
         {
           enabled: true,
           query: "",
-          searchType: "other",
+          searchType: "",
         },
         "mount"
       );

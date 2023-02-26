@@ -11,8 +11,6 @@ import AccessibleImage from "./AccessibleImage";
 import classnames from "classnames";
 import "./SearchInput.css";
 
-const SearchModifiers = require("devtools/client/shared/components/SearchModifiers");
-
 const arrowBtn = (onClick, type, className, tooltip) => {
   const props = {
     className,
@@ -51,29 +49,24 @@ class SearchInput extends Component {
       count: PropTypes.number.isRequired,
       expanded: PropTypes.bool.isRequired,
       handleClose: PropTypes.func,
-      handleNext: PropTypes.func,
-      handlePrev: PropTypes.func,
+      handleNext: PropTypes.func.isRequired,
+      handlePrev: PropTypes.func.isRequired,
       hasPrefix: PropTypes.bool.isRequired,
       isLoading: PropTypes.bool.isRequired,
-      onBlur: PropTypes.func,
-      onChange: PropTypes.func,
-      onFocus: PropTypes.func,
-      onHistoryScroll: PropTypes.func,
-      onKeyDown: PropTypes.func,
+      onBlur: PropTypes.func.isRequired,
+      onChange: PropTypes.func.isRequired,
+      onFocus: PropTypes.func.isRequired,
+      onHistoryScroll: PropTypes.func.isRequired,
+      onKeyDown: PropTypes.func.isRequired,
       onKeyUp: PropTypes.func,
       placeholder: PropTypes.string,
       query: PropTypes.string,
       selectedItemId: PropTypes.string,
-      shouldFocus: PropTypes.bool,
+      shouldFocus: PropTypes.bool.isRequired,
       showClose: PropTypes.bool.isRequired,
       showErrorEmoji: PropTypes.bool.isRequired,
       size: PropTypes.string,
       summaryMsg: PropTypes.string,
-
-      // Search modifiers
-      showSearchModifiers: PropTypes.bool.isRequired,
-      modifiers: PropTypes.object,
-      onToggleSearchModifier: PropTypes.func,
     };
   }
 
@@ -100,6 +93,10 @@ class SearchInput extends Component {
       const selectStartPos = this.props.hasPrefix ? 1 : 0;
       input.setSelectionRange(selectStartPos, input.value.length + 1);
     }
+  }
+
+  renderSvg() {
+    return <AccessibleImage className="search" />;
   }
 
   renderArrowButtons() {
@@ -213,16 +210,6 @@ class SearchInput extends Component {
     );
   }
 
-  renderSearchModifiers() {
-    const { modifiers, onToggleSearchModifier } = this.props;
-    return (
-      <SearchModifiers
-        modifiers={modifiers}
-        onToggleSearchModifier={onToggleSearchModifier}
-      />
-    );
-  }
-
   render() {
     const {
       expanded,
@@ -235,7 +222,6 @@ class SearchInput extends Component {
       showErrorEmoji,
       size,
       showClose,
-      showSearchModifiers,
     } = this.props;
 
     const inputProps = {
@@ -266,20 +252,14 @@ class SearchInput extends Component {
           aria-owns="result-list"
           aria-expanded={expanded}
         >
-          <AccessibleImage className="search" />
+          {this.renderSvg()}
           <input {...inputProps} />
           {this.renderSpinner()}
           {this.renderSummaryMsg()}
           {this.renderNav()}
-          <div className="search-buttons-bar">
-            {showSearchModifiers && this.renderSearchModifiers()}
-            {showClose && (
-              <React.Fragment>
-                <span className="pipe-divider" />
-                <CloseButton handleClick={handleClose} buttonClass={size} />
-              </React.Fragment>
-            )}
-          </div>
+          {showClose && (
+            <CloseButton handleClick={handleClose} buttonClass={size} />
+          )}
         </div>
       </div>
     );

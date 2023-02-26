@@ -52,9 +52,7 @@ export default function buildQuery(
     return new RegExp(originalQuery);
   }
 
-  // Remove the backslashes at the end of the query as it
-  // breaks the RegExp
-  let query = originalQuery.replace(/\\$/, "");
+  let query = originalQuery;
 
   // If we don't want to do a regexMatch, we need to escape all regex related characters
   // so they would actually match.
