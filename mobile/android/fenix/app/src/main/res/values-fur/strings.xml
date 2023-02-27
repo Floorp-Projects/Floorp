@@ -65,14 +65,10 @@
     </string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Zonte une scurte par vierzi schedis privadis de tô schermade principâl.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">Vierç la prossime schede privade intune sole tocjade.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">Vierç la tô prossime schede privade intune sole tocjade.</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Zonte scurte</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Zonte a schermade principâl</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -1359,6 +1355,8 @@
     <string name="onboarding_firefox_account_sync_is_on">Sincronizazion ative</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Progjetât pe protezion de riservatece</string>
+    <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_old">%1$s al ferme in automatic lis societâts che di scuindon a cirin di stâti daûr atôr pal web.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">Caraterizât cu la Protezion totâl dai cookies par fermâ lis spiis dal doprâ i cookies che a stan daûr aes tôs ativitâts in rêt intant che tu visitis i sîts.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -2027,4 +2025,6 @@
     <string name="a11y_action_label_wallpaper_collection_learn_more">vierç il colegament par vê plui informazions su cheste racuelte</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
     <string name="a11y_action_label_read_article">lei l’articul</string>
+    <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
+    <string name="a11y_action_label_pocket_learn_more">vierzi il colegament par savê di plui</string>
 </resources>

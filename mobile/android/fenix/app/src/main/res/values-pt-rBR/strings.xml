@@ -64,14 +64,10 @@
     </string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Adicione um atalho na tela inicial do dispositivo para abrir abas privativas.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">Aba a próxima aba privativa com apenas um toque.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">Aba a próxima aba privativa com apenas um toque.</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Adicionar atalho</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Adicionar à tela inicial do dispositivo</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -1360,6 +1356,8 @@
     <string name="onboarding_firefox_account_sync_is_on">A sincronização está ativada</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Proteção de privacidade por padrão</string>
+    <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_old">O %1$s impede automaticamente que empresas sigam você secretamente pela web.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">Apresentamos a proteção total contra cookies para impedir que rastreadores usem cookies para te perseguir de um site para outro.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -2051,4 +2049,6 @@
     <string name="a11y_action_label_wallpaper_collection_learn_more">abrir link para saber mais sobre esta coleção</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
     <string name="a11y_action_label_read_article">ler o artigo</string>
+    <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
+    <string name="a11y_action_label_pocket_learn_more">abrir o link para saber mais</string>
 </resources>

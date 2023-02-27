@@ -66,14 +66,10 @@
     </string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Lisää pikakuvake avataksesi yksityisiä välilehtiä aloitusnäytöltä.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">Avaa seuraava yksityinen välilehti yhdellä napautuksella.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">Avaa seuraava yksityinen välilehti yhdellä napautuksella.</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Lisää pikavalinta</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Lisää aloitusnäytölle</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -1372,6 +1368,8 @@
     <string name="onboarding_firefox_account_sync_is_on">Sync on käytössä</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Yksityisyyden suoja oletuksena</string>
+    <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_old">%1$s estää automaattisesti yrityksiä seuraamasta sinua salaa ympäri verkkoa.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">Totaalinen evästesuoja estää seuraimia käyttämästä evästeitä vaanimiseen sivustojen välillä.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -2060,4 +2058,6 @@
     <string name="a11y_action_label_wallpaper_collection_learn_more">avataksesi linkin, josta saat lisätietoja tästä kokoelmasta</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
     <string name="a11y_action_label_read_article">lukeaksesi artikkelin</string>
+    <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
+    <string name="a11y_action_label_pocket_learn_more">avataksesi linkin ja lukeaksesi lisää</string>
 </resources>
