@@ -42,6 +42,7 @@ jobs:
         cd ../
         rm -rf chrome_tmp
         rm chrome.deb
+        echo '{"sync_promo": {"startup_count": 1, "user_skipped": true, "view_count": 1}}' > ./chrome/initial_preferences
 
     - name: Scrape
       run: |
@@ -55,6 +56,5 @@ jobs:
         echo $firefox_stable_ua
         
         # Chrome
-        ~/chrome/chrome &
         export chrome_stable_ua=`npm run --silent start ~/chrome/chrome`
         echo $chrome_stable_ua
