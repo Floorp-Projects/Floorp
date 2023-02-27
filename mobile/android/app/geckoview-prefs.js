@@ -42,9 +42,6 @@ pref("dom.capture.enabled", true);
 // Disable Web Push until we get it working
 pref("dom.push.enabled", true);
 
-// enable external storage API
-pref("dom.storageManager.enabled", true);
-
 // enable storage access API
 pref("dom.storage_access.enabled", true);
 
