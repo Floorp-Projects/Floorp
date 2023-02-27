@@ -7,6 +7,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/gtest/MozAssertions.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/intl/LocaleService.h"
 #include "mozilla/intl/OSPreferences.h"
 
 using namespace mozilla::intl;
