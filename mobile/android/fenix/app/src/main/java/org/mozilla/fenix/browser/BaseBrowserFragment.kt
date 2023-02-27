@@ -1136,8 +1136,6 @@ abstract class BaseBrowserFragment :
             updateThemeForSession(selectedTab)
         }
 
-        binding.engineView.asView().contentDescription = selectedTab.toDisplayTitle()
-
         if (browserInitialized) {
             view?.let {
                 fullScreenChanged(false)
@@ -1146,6 +1144,7 @@ abstract class BaseBrowserFragment :
                 val toolbarHeight = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
                 val context = requireContext()
                 resumeDownloadDialogState(selectedTab.id, context.components.core.store, context, toolbarHeight)
+                it.announceForAccessibility(selectedTab.toDisplayTitle())
             }
         } else {
             view?.let { view -> initializeUI(view) }

@@ -32,7 +32,6 @@
                     android:id="@+id/engineView"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:accessibilityLiveRegion="polite"
                     android:visibility="gone" />
             </mozilla.components.ui.widgets.VerticalSwipeRefreshLayout>
 
