@@ -25,7 +25,7 @@
 #include "rtc_base/win/windows_version.h"
 #endif  // defined(RTC_ENABLE_WIN_WGC)
 
-#if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
+#if defined(WEBRTC_USE_PIPEWIRE)
 #include "modules/desktop_capture/linux/wayland/base_capturer_pipewire.h"
 #endif
 
@@ -82,7 +82,7 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
   return capturer;
 }
 
-#if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
+#if defined(WEBRTC_USE_PIPEWIRE)
 // static
 std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateGenericCapturer(
     const DesktopCaptureOptions& options) {
@@ -94,7 +94,6 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateGenericCapturer(
   return capturer;
 }
 
-// static
 std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawGenericCapturer(
     const DesktopCaptureOptions& options) {
   if (options.allow_pipewire() && DesktopCapturer::IsRunningUnderWayland()) {
@@ -104,7 +103,7 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawGenericCapturer(
 
   return nullptr;
 }
-#endif  // defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
+#endif  // defined(WEBRTC_USE_PIPEWIRE)
 
 // static
 std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
