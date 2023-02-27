@@ -154,7 +154,7 @@ mod test {
 
     #[test]
     fn setting_a_long_string_records_an_error() {
-        let (glean, _t) = new_glean(None);
+        let (glean, _) = new_glean(None);
 
         let metric = TextMetric::new(CommonMetricData {
             name: "text_metric".into(),

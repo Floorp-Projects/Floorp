@@ -5,7 +5,6 @@
 use once_cell::sync::Lazy;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::RwLock;
-use std::thread;
 
 use super::{DispatchError, DispatchGuard, Dispatcher};
 
@@ -46,11 +45,6 @@ fn guard() -> DispatchGuard {
 ///
 /// [`flush_init`]: fn.flush_init.html
 pub fn launch(task: impl FnOnce() + Send + 'static) {
-    let current_thread = thread::current();
-    if let Some("glean.shutdown") = current_thread.name() {
-        log::error!("Tried to launch a task from the shutdown thread. That is forbidden.");
-    }
-
     let guard = guard();
     match guard.launch(task) {
         Ok(_) => {}
