@@ -466,9 +466,6 @@ void nsScrollbarFrame::UpdateChildrenAttributeValue(nsAtom* aAttribute,
     if (mSlider) {
       mSlider->UnsetAttr(kNameSpaceID_None, aAttribute, aNotify);
     }
-    if (mThumb && aAttribute == nsGkAtoms::disabled) {
-      mThumb->UnsetAttr(kNameSpaceID_None, nsGkAtoms::collapsed, aNotify);
-    }
     if (mUpBottomButton) {
       mUpBottomButton->UnsetAttr(kNameSpaceID_None, aAttribute, aNotify);
     }
@@ -503,10 +500,6 @@ void nsScrollbarFrame::UpdateChildrenAttributeValue(nsAtom* aAttribute,
     }
     if (mSlider) {
       mSlider->SetAttr(kNameSpaceID_None, aAttribute, value, aNotify);
-    }
-    // Set the value on "collapsed" attribute.
-    if (mThumb) {
-      mThumb->SetAttr(kNameSpaceID_None, nsGkAtoms::collapsed, value, aNotify);
     }
     if (mUpBottomButton) {
       mUpBottomButton->SetAttr(kNameSpaceID_None, aAttribute, value, aNotify);
