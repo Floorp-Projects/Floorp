@@ -6,8 +6,10 @@
 # don't add something syntactically invalid.  It will not be fun to
 # track down the bug.
 
-Types = (
-    # C types
+# C types
+# These types don't live in any namespace, so can't be imported with `using`
+# statements like normal C++ types.
+CTypes = (
     "bool",
     "char",
     "short",
@@ -15,6 +17,12 @@ Types = (
     "long",
     "float",
     "double",
+)
+
+# C++ types
+# These types must be fully qualified, and will be `typedef`-ed into IPDL
+# structs to make them readily available when used.
+Types = (
     # stdint types
     "int8_t",
     "uint8_t",

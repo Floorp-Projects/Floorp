@@ -614,7 +614,7 @@ def p_BasicType(p):
             # p[1] is CxxID. isunique = False
             p[1] = p[1] + (False,)
         loc, id, isunique = p[1]
-        p[1] = TypeSpec(loc, QualifiedId(loc, id))
+        p[1] = TypeSpec(loc, id)
         p[1].uniqueptr = isunique
     if 4 == len(p):
         p[1].array = True
@@ -637,10 +637,10 @@ def p_CxxType(p):
     """CxxType : QualifiedID
     | CxxID"""
     if isinstance(p[1], QualifiedId):
-        p[0] = TypeSpec(p[1].loc, p[1])
+        p[0] = p[1]
     else:
         loc, id = p[1]
-        p[0] = TypeSpec(loc, QualifiedId(loc, id))
+        p[0] = QualifiedId(loc, id)
 
 
 def p_QualifiedID(p):
