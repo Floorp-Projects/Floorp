@@ -20,6 +20,7 @@ else:
 FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"] += [
     "download-notification.js",
     "portable-update.js",
+    "ua_data.js",
     "update.js",
     "webcompat_inject.js",
     "webcompat_useragent.js",
