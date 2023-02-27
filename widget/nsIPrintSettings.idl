@@ -262,6 +262,11 @@ interface nsIPrintSettings : nsISupports
   [infallible] attribute boolean honorPageRuleMargins;
 
   /**
+   * Whether @page rule size should be used for the output paper size.
+   */
+  [infallible] attribute boolean usePageRuleSizeAsPaperSize;
+
+  /**
    * Whether unwritable margins should be ignored. This should be set when
    * when the user explicitly requests "Margins: None", e.g. for documents
    * where accurate scaling matters. Note: While `honorPageRuleMargins` and

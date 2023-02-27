@@ -289,6 +289,10 @@ class nsPrintJob final : public nsIWebProgressListener,
   // if there is no page-size-orientation.
   mozilla::Maybe<bool> mMaybeCSSPageLandscape;
 
+  // Indicates if the page has a specific size from @page { size }.
+  // Stores the page size if one was found.
+  mozilla::Maybe<nsSize> mMaybeCSSPageSize;
+
   // If true, indicates that we have started Printing but have not gone to the
   // timer to start printing the pages. It gets turned off right before we go
   // to the timer.

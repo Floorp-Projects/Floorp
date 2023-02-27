@@ -228,6 +228,16 @@ dictionary PrintPreviewSuccessInfo {
    * Specified orientation of the document, or "unspecified".
    */
   PrintPreviewOrientation orientation = "unspecified";
+
+  /**
+   * Specified page width of the document in inches, or null if no @page size was specified.
+   */
+  float? pageWidth = null;
+
+  /**
+   * Specified page height of the document in inches, or null if no @page size was specified.
+   */
+  float? pageHeight = null;
 };
 
 FrameLoader includes WebBrowserPersistable;

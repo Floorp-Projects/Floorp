@@ -99,6 +99,7 @@ class nsPrintSettings : public nsIPrintSettings {
   bool mShrinkToFit = true;
   bool mShowMarginGuides = false;
   bool mHonorPageRuleMargins = true;
+  bool mUsePageRuleSizeAsPaperSize = false;
   bool mIgnoreUnwriteableMargins = false;
   bool mPrintSelectionOnly = false;
 

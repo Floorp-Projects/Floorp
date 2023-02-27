@@ -3353,6 +3353,13 @@ already_AddRefed<Promise> nsFrameLoader::PrintPreview(
       } else {
         MOZ_ASSERT(info.mOrientation == Orientation::Unspecified);
       }
+      if (aInfo.pageWidth()) {
+        info.mPageWidth = aInfo.pageWidth().value();
+      }
+      if (aInfo.pageHeight()) {
+        info.mPageHeight = aInfo.pageHeight().value();
+      }
+
       promise->MaybeResolve(info);
     } else {
       promise->MaybeRejectWithUnknownError("Print preview failed");

@@ -468,7 +468,7 @@ nsresult nsPrintJob::PrintPreview(Document& aDoc,
     if (mPrintPreviewCallback) {
       // signal error
       mPrintPreviewCallback(
-          PrintPreviewResultInfo(0, 0, false, false, false, {}));
+          PrintPreviewResultInfo(0, 0, false, false, false, {}, {}, {}));
       mPrintPreviewCallback = nullptr;
     }
   }
@@ -615,7 +615,7 @@ void nsPrintJob::FirePrintingErrorEvent(nsresult aPrintError) {
   if (mPrintPreviewCallback) {
     // signal error
     mPrintPreviewCallback(
-        PrintPreviewResultInfo(0, 0, false, false, false, {}));
+        PrintPreviewResultInfo(0, 0, false, false, false, {}, {}, {}));
     mPrintPreviewCallback = nullptr;
   }
 
@@ -1379,6 +1379,16 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
       }
     }
 
+    if (mPrintSettings->GetUsePageRuleSizeAsPaperSize()) {
+      mMaybeCSSPageSize =
+          aPO->mDocument->GetPresShell()->StyleSet()->GetPageSizeForPageName(
+              firstPageName);
+      if (mMaybeCSSPageSize) {
+        pageSize = *mMaybeCSSPageSize;
+        aPO->mPresContext->SetPageSize(pageSize);
+      }
+    }
+
     // If the document has a specified CSS page-size, we rotate the page to
     // reflect this. Changing the orientation is reflected by the result of
     // FinishPrintPreview, so that the frontend can reflect this.
@@ -2009,10 +2019,20 @@ nsresult nsPrintJob::FinishPrintPreview() {
 
   if (mPrintPreviewCallback) {
     const bool hasSelection = !mDisallowSelectionPrint && mSelectionRoot;
+
+    Maybe<float> pageWidth;
+    Maybe<float> pageHeight;
+    if (mMaybeCSSPageSize) {
+      nsSize cssPageSize = *mMaybeCSSPageSize;
+      pageWidth = Some(float(cssPageSize.width) / float(AppUnitsPerCSSInch()));
+      pageHeight =
+          Some(float(cssPageSize.height) / float(AppUnitsPerCSSInch()));
+    }
+
     mPrintPreviewCallback(PrintPreviewResultInfo(
         GetPrintPreviewNumSheets(), GetRawNumPages(), GetIsEmpty(),
         hasSelection, hasSelection && mPrintObject->HasSelection(),
-        mMaybeCSSPageLandscape));
+        mMaybeCSSPageLandscape, pageWidth, pageHeight));
     mPrintPreviewCallback = nullptr;
   }
 
