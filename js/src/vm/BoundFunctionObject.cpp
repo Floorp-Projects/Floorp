@@ -147,6 +147,57 @@ SharedShape* BoundFunctionObject::assignInitialShape(
   return obj->sharedShape();
 }
 
+static MOZ_ALWAYS_INLINE bool ComputeLengthValue(
+    JSContext* cx, Handle<BoundFunctionObject*> bound, Handle<JSObject*> target,
+    size_t numBoundArgs, double* length) {
+  *length = 0.0;
+
+  // Try to avoid invoking the JSFunction resolve hook.
+  if (target->is<JSFunction>() &&
+      !target->as<JSFunction>().hasResolvedLength()) {
+    uint16_t targetLength;
+    if (!JSFunction::getUnresolvedLength(cx, target.as<JSFunction>(),
+                                         &targetLength)) {
+      return false;
+    }
+
+    if (size_t(targetLength) > numBoundArgs) {
+      *length = size_t(targetLength) - numBoundArgs;
+    }
+    return true;
+  }
+
+  // Use a fast path for getting the .length value if the target is a bound
+  // function with its initial shape.
+  Value targetLength;
+  if (target->is<BoundFunctionObject>() && target->shape() == bound->shape()) {
+    BoundFunctionObject* targetFn = &target->as<BoundFunctionObject>();
+    targetLength = targetFn->getLengthForInitialShape();
+  } else {
+    bool hasLength;
+    Rooted<PropertyKey> key(cx, NameToId(cx->names().length));
+    if (!HasOwnProperty(cx, target, key, &hasLength)) {
+      return false;
+    }
+
+    if (!hasLength) {
+      return true;
+    }
+
+    Rooted<Value> targetLengthRoot(cx);
+    if (!GetProperty(cx, target, target, key, &targetLengthRoot)) {
+      return false;
+    }
+    targetLength = targetLengthRoot;
+  }
+
+  if (targetLength.isNumber()) {
+    *length = std::max(
+        0.0, JS::ToInteger(targetLength.toNumber()) - double(numBoundArgs));
+  }
+  return true;
+}
+
 static MOZ_ALWAYS_INLINE JSAtom* AppendBoundFunctionPrefix(JSContext* cx,
                                                            JSString* str) {
   StringBuffer sb(cx);
@@ -154,6 +205,38 @@ static MOZ_ALWAYS_INLINE JSAtom* AppendBoundFunctionPrefix(JSContext* cx,
     return nullptr;
   }
   return sb.finishAtom();
+}
+
+static MOZ_ALWAYS_INLINE JSAtom* ComputeNameValue(
+    JSContext* cx, Handle<BoundFunctionObject*> bound,
+    Handle<JSObject*> target) {
+  // Try to avoid invoking the JSFunction resolve hook.
+  JSString* name = nullptr;
+  if (target->is<JSFunction>() && !target->as<JSFunction>().hasResolvedName()) {
+    JSFunction* targetFn = &target->as<JSFunction>();
+    name = targetFn->infallibleGetUnresolvedName(cx);
+  } else {
+    // Use a fast path for getting the .name value if the target is a bound
+    // function with its initial shape.
+    Value targetName;
+    if (target->is<BoundFunctionObject>() &&
+        target->shape() == bound->shape()) {
+      BoundFunctionObject* targetFn = &target->as<BoundFunctionObject>();
+      targetName = targetFn->getNameForInitialShape();
+    } else {
+      Rooted<Value> targetNameRoot(cx);
+      if (!GetProperty(cx, target, target, cx->names().name, &targetNameRoot)) {
+        return nullptr;
+      }
+      targetName = targetNameRoot;
+    }
+    if (!targetName.isString()) {
+      return cx->names().boundWithSpace;
+    }
+    name = targetName.toString();
+  }
+
+  return AppendBoundFunctionPrefix(cx, name);
 }
 
 // ES2023 20.2.3.2 Function.prototype.bind
@@ -231,44 +314,18 @@ bool BoundFunctionObject::functionBind(JSContext* cx, unsigned argc,
   // Step 4.
   double length = 0.0;
 
-  // Step 5.
-  bool hasLength;
-  Rooted<PropertyKey> key(cx, NameToId(cx->names().length));
-  if (!HasOwnProperty(cx, target, key, &hasLength)) {
+  // Steps 5-6.
+  if (!ComputeLengthValue(cx, bound, target, numBoundArgs, &length)) {
     return false;
-  }
-
-  // Step 6.
-  if (hasLength) {
-    Rooted<Value> targetLength(cx);
-    if (!GetProperty(cx, target, target, key, &targetLength)) {
-      return false;
-    }
-
-    if (targetLength.isNumber()) {
-      length = std::max(
-          0.0, JS::ToInteger(targetLength.toNumber()) - double(numBoundArgs));
-    }
   }
 
   // Step 7.
   bound->initLength(length);
 
-  // Step 8.
-  Rooted<Value> targetName(cx);
-  if (!GetProperty(cx, target, target, cx->names().name, &targetName)) {
+  // Steps 8-9.
+  JSAtom* name = ComputeNameValue(cx, bound, target);
+  if (!name) {
     return false;
-  }
-
-  // Step 9.
-  JSAtom* name;
-  if (targetName.isString()) {
-    name = AppendBoundFunctionPrefix(cx, targetName.toString());
-    if (!name) {
-      return false;
-    }
-  } else {
-    name = cx->names().boundWithSpace;
   }
 
   // Step 10.
