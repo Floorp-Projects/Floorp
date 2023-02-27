@@ -913,6 +913,12 @@ nsPlacesExpiration.prototype = {
     if (this._shuttingDown) {
       return undefined;
     }
+
+    if (!this._isIdleObserver) {
+      this._idle.addIdleObserver(this, IDLE_TIMEOUT_SECONDS);
+      this._isIdleObserver = true;
+    }
+
     let interval =
       this.status != STATUS.DIRTY
         ? this.intervalSeconds * EXPIRE_AGGRESSIVITY_MULTIPLIER
