@@ -84,6 +84,8 @@ details:not([open]) summary {
 
 .success-text {
   grid-area: status;
+  font-size: 0.81em;
+  color: var(--in-content-deemphasized-text);
 }
 
 .progress-icon {
