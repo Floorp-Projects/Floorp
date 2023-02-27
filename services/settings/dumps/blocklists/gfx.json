@@ -1,6 +1,110 @@
 {
   "data": [
     {
+      "os": "Linux",
+      "schema": 1677435863916,
+      "vendor": "0x1002",
+      "details": {
+        "bug": "1777849",
+        "name": "GLX race caused by accelerated canvas with WebGL2"
+      },
+      "devices": [],
+      "enabled": true,
+      "feature": "ACCELERATED_CANVAS2D",
+      "hardware": "",
+      "driverVendor": "",
+      "versionRange": {
+        "maxVersion": "110",
+        "minVersion": ""
+      },
+      "driverVersion": "",
+      "featureStatus": "BLOCKED_OS_VERSION",
+      "windowProtocol": "x11/all",
+      "driverVersionMax": "",
+      "desktopEnvironment": "",
+      "driverVersionComparator": "",
+      "id": "d8694183-9ab5-4f3a-a3e5-9da7b82c56da",
+      "last_modified": 1677454835335
+    },
+    {
+      "os": "Linux",
+      "schema": 1677436071083,
+      "vendor": "0x8086",
+      "details": {
+        "bug": "1777849",
+        "name": "GLX race caused by accelerated canvas with WebGL2 on Intel"
+      },
+      "devices": [],
+      "enabled": true,
+      "feature": "ACCELERATED_CANVAS2D",
+      "hardware": "",
+      "driverVendor": "",
+      "versionRange": {
+        "maxVersion": "110",
+        "minVersion": ""
+      },
+      "driverVersion": "",
+      "featureStatus": "BLOCKED_OS_VERSION",
+      "windowProtocol": "x11/all",
+      "driverVersionMax": "",
+      "desktopEnvironment": "",
+      "driverVersionComparator": "",
+      "id": "28ebdbf7-d638-481c-bb91-99c97ca4a5b2",
+      "last_modified": 1677454835330
+    },
+    {
+      "os": "Linux",
+      "schema": 1677436168726,
+      "vendor": "0x10de",
+      "details": {
+        "bug": "1777849",
+        "name": "GLX race caused by accelerated canvas with WebGL2 on Nvidia"
+      },
+      "devices": [],
+      "enabled": true,
+      "feature": "ACCELERATED_CANVAS2D",
+      "hardware": "",
+      "driverVendor": "",
+      "versionRange": {
+        "maxVersion": "110",
+        "minVersion": ""
+      },
+      "driverVersion": "",
+      "featureStatus": "BLOCKED_OS_VERSION",
+      "windowProtocol": "x11/all",
+      "driverVersionMax": "",
+      "desktopEnvironment": "",
+      "driverVersionComparator": "",
+      "id": "c0927c75-f1b0-4efc-9183-5861809858f0",
+      "last_modified": 1677454835325
+    },
+    {
+      "os": "Linux",
+      "schema": 1677436226241,
+      "vendor": "0x10de",
+      "details": {
+        "bug": "1817336",
+        "name": "Nouveau multithread race"
+      },
+      "devices": [],
+      "enabled": true,
+      "feature": "ACCELERATED_CANVAS2D",
+      "hardware": "",
+      "driverVendor": "mesa/nouveau",
+      "versionRange": {
+        "maxVersion": "110",
+        "minVersion": ""
+      },
+      "driverVersion": "",
+      "featureStatus": "BLOCKED_DRIVER_VERSION",
+      "windowProtocol": "",
+      "driverVersionMax": "",
+      "desktopEnvironment": "",
+      "driverVersionComparator": "",
+      "id": "b2a88f5c-4470-4441-9ffd-a5386a528d8b",
+      "last_modified": 1677454835320
+    },
+    {
       "os": "All",
       "schema": 1676780361472,
       "vendor": "0x10de",
@@ -1192,5 +1296,5 @@
       "last_modified": 1480349134090
     }
   ],
-  "timestamp": 1676781773899
+  "timestamp": 1677454835335
 }
