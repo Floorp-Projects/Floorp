@@ -57,5 +57,8 @@ jobs:
         echo $firefox_stable_ua
         
         # Chrome
+        ~/chrome/chrome &
+        sleep 10
+        pkill -KILL -f chrome
         export chrome_stable_ua=`npm run --silent start ~/chrome/chrome`
         echo $chrome_stable_ua
