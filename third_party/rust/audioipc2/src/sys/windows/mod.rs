@@ -47,7 +47,7 @@ static PIPE_ID: AtomicUsize = AtomicUsize::new(0);
 fn get_pipe_name() -> String {
     let pid = std::process::id();
     let pipe_id = PIPE_ID.fetch_add(1, Ordering::Relaxed);
-    format!("\\\\.\\pipe\\LOCAL\\cubeb-pipe-{}-{}", pid, pipe_id)
+    format!("\\\\.\\pipe\\LOCAL\\cubeb-pipe-{pid}-{pipe_id}")
 }
 
 impl Pipe {
