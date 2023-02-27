@@ -6,9 +6,10 @@ on:
     - cron: '0 15 * * *'
 
 jobs:
-  user-agent_scrape:
+  linux:
     if: (github.event_name == 'schedule' && github.repository == 'Floorp-Projects/Floorp') || (github.event_name != 'schedule')
-    
+
+    name: Linux
     runs-on: ubuntu-22.04
     
     steps:
@@ -55,6 +56,7 @@ jobs:
         rm msedge.deb
 
     - name: Scrape
+      id: scrape
       run: |
         cd User-Agent_Scraper
 
@@ -76,3 +78,49 @@ jobs:
         # Edge
         export msedge_stable_ua=`npm run --silent start ~/msedge/msedge`
         echo $msedge_stable_ua
+
+        echo "firefox_stable_ua=${firefox_stable_ua}" >> $GITHUB_OUTPUT
+        echo "chrome_stable_ua=${chrome_stable_ua}" >> $GITHUB_OUTPUT
+        echo "msedge_stable_ua=${msedge_stable_ua}" >> $GITHUB_OUTPUT
+
+    outputs:
+      firefox_stable_ua: ${{ steps.scrape.outputs.firefox_stable_ua }}
+      chrome_stable_ua: ${{ steps.scrape.outputs.chrome_stable_ua }}
+      msedge_stable_ua: ${{ steps.scrape.outputs.msedge_stable_ua }}
+
+  output:
+    if: (github.event_name == 'schedule' && github.repository == 'Floorp-Projects/Floorp') || (github.event_name != 'schedule')
+    needs: [linux]
+
+    name: Generate JSONP
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Generate
+      run: |
+        firefox_stable_ua_jsonp_text=(
+        'const FIREFOX_STABLE_UA = {'
+        '  "linux": "${{ needs.linux.outputs.firefox_stable_ua }}"'
+        '};'
+        )
+        for line in "${firefox_stable_ua_jsonp_text[@]}" ; do echo $line >> ua_data.js ; done
+
+        chrome_stable_ua_jsonp_text=(
+        'const CHROME_STABLE_UA = {'
+        '  "linux": "${{ needs.linux.outputs.chrome_stable_ua }}"'
+        '};'
+        )
+        for line in "${chrome_stable_ua_jsonp_text[@]}" ; do echo $line >> ua_data.js ; done
+
+        msedge_stable_ua_jsonp_text=(
+        'const MSEDGE_STABLE_UA = {'
+        '  "linux": "${{ needs.linux.outputs.msedge_stable_ua }}"'
+        '};'
+        )
+        for line in "${msedge_stable_ua_jsonp_text[@]}" ; do echo $line >> ua_data.js ; done
+
+    - name: Upload
+      uses: actions/upload-artifact@v3
+      with:
+        name: ua_data
+        path: ua_data.js
