@@ -18,9 +18,11 @@
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/printf_macros.h"
+#include "lib/jxl/base/random.h"
 #include "lib/jxl/base/thread_pool_internal.h"
 #include "lib/jxl/image_ops.h"
 #include "lib/jxl/image_test_utils.h"
+#include "lib/jxl/testing.h"
 
 #ifndef JXL_DEBUG_CONVOLVE
 #define JXL_DEBUG_CONVOLVE 0
@@ -73,7 +75,7 @@ void VerifySymmetric3(const size_t xsize, const size_t ysize, ThreadPool* pool,
   Symmetric3(in, rect, weights, pool, &out_expected);
   SlowSymmetric3(in, rect, weights, pool, &out_actual);
 
-  VerifyRelativeError(out_expected, out_actual, 1E-5f, 1E-5f);
+  JXL_ASSERT_OK(VerifyRelativeError(out_expected, out_actual, 1E-5f, 1E-5f, _));
 }
 
 // Ensures Symmetric and Separable give the same result.
@@ -90,7 +92,7 @@ void VerifySymmetric5(const size_t xsize, const size_t ysize, ThreadPool* pool,
   Separable5(in, Rect(in), WeightsSeparable5Lowpass(), pool, &out_expected);
   Symmetric5(in, rect, WeightsSymmetric5Lowpass(), pool, &out_actual);
 
-  VerifyRelativeError(out_expected, out_actual, 1E-5f, 1E-5f);
+  JXL_ASSERT_OK(VerifyRelativeError(out_expected, out_actual, 1E-5f, 1E-5f, _));
 }
 
 void VerifySeparable5(const size_t xsize, const size_t ysize, ThreadPool* pool,
@@ -107,7 +109,7 @@ void VerifySeparable5(const size_t xsize, const size_t ysize, ThreadPool* pool,
   Separable5(in, Rect(in), weights, pool, &out_expected);
   SlowSeparable5(in, rect, weights, pool, &out_actual);
 
-  VerifyRelativeError(out_expected, out_actual, 1E-5f, 1E-5f);
+  JXL_ASSERT_OK(VerifyRelativeError(out_expected, out_actual, 1E-5f, 1E-5f, _));
 }
 
 void VerifySeparable7(const size_t xsize, const size_t ysize, ThreadPool* pool,
@@ -129,7 +131,7 @@ void VerifySeparable7(const size_t xsize, const size_t ysize, ThreadPool* pool,
   SlowSeparable7(in, rect, weights, pool, &out_expected);
   Separable7(in, Rect(in), weights, pool, &out_actual);
 
-  VerifyRelativeError(out_expected, out_actual, 1E-5f, 1E-5f);
+  JXL_ASSERT_OK(VerifyRelativeError(out_expected, out_actual, 1E-5f, 1E-5f, _));
 }
 
 // For all xsize/ysize and kernels:

@@ -12,10 +12,11 @@
 #include <vector>
 
 #include "lib/jxl/ac_context.h"
-#include "lib/jxl/aux_out.h"
 #include "lib/jxl/enc_bit_writer.h"
 
 namespace jxl {
+
+struct AuxOut;
 
 // Max limit is 255 because encoding assumes numbers < 255
 // More clusters can help compression, but makes encode/decode somewhat slower

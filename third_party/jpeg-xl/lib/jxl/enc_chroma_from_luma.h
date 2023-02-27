@@ -14,8 +14,6 @@
 
 #include <vector>
 
-#include "lib/jxl/aux_out.h"
-#include "lib/jxl/aux_out_fwd.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/status.h"
@@ -33,6 +31,9 @@
 #include "lib/jxl/quant_weights.h"
 
 namespace jxl {
+
+struct AuxOut;
+class Quantizer;
 
 void ColorCorrelationMapEncodeDC(ColorCorrelationMap* map, BitWriter* writer,
                                  size_t layer, AuxOut* aux_out);

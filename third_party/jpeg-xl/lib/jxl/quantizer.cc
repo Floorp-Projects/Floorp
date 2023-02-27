@@ -125,12 +125,11 @@ Status QuantizerParams::VisitFields(Visitor* JXL_RESTRICT visitor) {
   return true;
 }
 
-Status Quantizer::Encode(BitWriter* writer, size_t layer,
-                         AuxOut* aux_out) const {
+QuantizerParams Quantizer::GetParams() const {
   QuantizerParams params;
   params.global_scale = global_scale_;
   params.quant_dc = quant_dc_;
-  return Bundle::Write(params, writer, layer, aux_out);
+  return params;
 }
 
 Status Quantizer::Decode(BitReader* reader) {

@@ -272,6 +272,22 @@ class MOZ_STACK_CLASS CallInfo {
     }
   }
 
+  // Prepend `numArgs` arguments. Calls `f(i)` for each new argument.
+  template <typename Fun>
+  [[nodiscard]] bool prependArgs(size_t numArgs, const Fun& f) {
+    size_t numArgsBefore = args_.length();
+    if (!args_.growBy(numArgs)) {
+      return false;
+    }
+    for (size_t i = numArgsBefore; i > 0; i--) {
+      args_[numArgs + i - 1] = args_[i - 1];
+    }
+    for (size_t i = 0; i < numArgs; i++) {
+      args_[i] = f(i);
+    }
+    return true;
+  }
+
   void setImplicitlyUsedUnchecked() {
     auto setFlag = [](MDefinition* def) { def->setImplicitlyUsedUnchecked(); };
     forEachCallOperand(setFlag);

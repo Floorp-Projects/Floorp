@@ -7001,6 +7001,45 @@ void CodeGenerator::visitNewTypedArrayFromArrayBuffer(
   callVM<Fn, js::NewTypedArrayWithTemplateAndBuffer>(lir);
 }
 
+void CodeGenerator::visitNewBoundFunction(LNewBoundFunction* lir) {
+  Register target = ToRegister(lir->target());
+  Register temp1 = ToRegister(lir->temp0());
+  Register temp2 = ToRegister(lir->temp1());
+
+  // Try to allocate a new BoundFunctionObject we can pass to the VM function.
+  // If this fails, we set temp1 to nullptr so we do the allocation in C++.
+  TemplateObject templateObject(lir->mir()->templateObject());
+  Label allocOk, allocFailed;
+  masm.createGCObject(temp1, temp2, templateObject, gc::DefaultHeap,
+                      &allocFailed);
+  masm.jump(&allocOk);
+
+  masm.bind(&allocFailed);
+  masm.movePtr(ImmWord(0), temp1);
+
+  masm.bind(&allocOk);
+
+  // Set temp2 to the address of the first argument on the stack.
+  // Note that the Value slots used for arguments are currently aligned for a
+  // JIT call, even though that's not strictly necessary for calling into C++.
+  uint32_t argc = lir->mir()->numStackArgs();
+  if (JitStackValueAlignment > 1) {
+    argc = AlignBytes(argc, JitStackValueAlignment);
+  }
+  uint32_t unusedStack = UnusedStackBytesForCall(argc);
+  masm.computeEffectiveAddress(Address(masm.getStackPointer(), unusedStack),
+                               temp2);
+
+  pushArg(temp1);
+  pushArg(Imm32(lir->mir()->numStackArgs()));
+  pushArg(temp2);
+  pushArg(target);
+
+  using Fn = BoundFunctionObject* (*)(JSContext*, Handle<JSObject*>, Value*,
+                                      uint32_t, Handle<BoundFunctionObject*>);
+  callVM<Fn, js::BoundFunctionObject::functionBindImpl>(lir);
+}
+
 // Out-of-line object allocation for JSOp::NewObject.
 class OutOfLineNewObject : public OutOfLineCodeBase<CodeGenerator> {
   LNewObject* lir_;
@@ -7680,6 +7719,15 @@ void CodeGenerator::visitGuardArgumentsObjectFlags(
   masm.branchTestArgumentsObjectFlags(argsObj, temp, lir->mir()->flags(),
                                       Assembler::NonZero, &bail);
   bailoutFrom(&bail, lir->snapshot());
+}
+
+void CodeGenerator::visitBoundFunctionNumArgs(LBoundFunctionNumArgs* lir) {
+  Register obj = ToRegister(lir->object());
+  Register output = ToRegister(lir->output());
+
+  masm.unboxInt32(Address(obj, BoundFunctionObject::offsetOfFlagsSlot()),
+                  output);
+  masm.rshift32(Imm32(BoundFunctionObject::NumBoundArgsShift), output);
 }
 
 void CodeGenerator::visitReturnFromCtor(LReturnFromCtor* lir) {
@@ -17003,138 +17051,6 @@ void CodeGenerator::visitNaNToZero(LNaNToZero* lir) {
     masm.branchDouble(Assembler::DoubleEqualOrUnordered, input, scratch,
                       ool->entry());
   }
-  masm.bind(ool->rejoin());
-}
-
-static void BoundFunctionLength(MacroAssembler& masm, Register target,
-                                Register targetFlagsAndArgCount,
-                                Register argCount, Register output,
-                                Label* slowPath) {
-  masm.loadFunctionLength(target, targetFlagsAndArgCount, output, slowPath);
-
-  // Compute the bound function length: Max(0, target.length - argCount).
-  Label nonNegative;
-  masm.sub32(argCount, output);
-  masm.branch32(Assembler::GreaterThanOrEqual, output, Imm32(0), &nonNegative);
-  masm.move32(Imm32(0), output);
-  masm.bind(&nonNegative);
-}
-
-static void BoundFunctionName(MacroAssembler& masm, Register target,
-                              Register targetFlags, Register output,
-                              const JSAtomState& names, Label* slowPath) {
-  Label notBoundTarget, loadName;
-  masm.branchTest32(Assembler::Zero, targetFlags,
-                    Imm32(FunctionFlags::BOUND_FUN), &notBoundTarget);
-  {
-    // Call into the VM if the target's name atom contains the bound
-    // function prefix.
-    masm.branchTest32(Assembler::NonZero, targetFlags,
-                      Imm32(FunctionFlags::HAS_BOUND_FUNCTION_NAME_PREFIX),
-                      slowPath);
-
-    // Bound functions reuse HAS_GUESSED_ATOM for
-    // HAS_BOUND_FUNCTION_NAME_PREFIX, so skip the guessed atom check below.
-    static_assert(
-        FunctionFlags::HAS_BOUND_FUNCTION_NAME_PREFIX ==
-            FunctionFlags::HAS_GUESSED_ATOM,
-        "HAS_BOUND_FUNCTION_NAME_PREFIX is shared with HAS_GUESSED_ATOM");
-    masm.jump(&loadName);
-  }
-  masm.bind(&notBoundTarget);
-
-  Label guessed, hasName;
-  masm.branchTest32(Assembler::NonZero, targetFlags,
-                    Imm32(FunctionFlags::HAS_GUESSED_ATOM), &guessed);
-
-  masm.bind(&loadName);
-  Address atom(Address(target, JSFunction::offsetOfAtom()));
-  masm.branchTestUndefined(Assembler::Equal, atom, &guessed);
-  masm.unboxString(atom, output);
-  masm.jump(&hasName);
-
-  {
-    masm.bind(&guessed);
-
-    // An absent name property defaults to the empty string.
-    masm.movePtr(ImmGCPtr(names.empty), output);
-  }
-  masm.bind(&hasName);
-}
-
-static void BoundFunctionFlagsAndArgCount(MacroAssembler& masm,
-                                          Register targetFlags, Register bound,
-                                          Register output) {
-  // Set the BOUND_FN flag and, if the target is a constructor, the
-  // CONSTRUCTOR flag.
-  Label isConstructor, boundFlagsComputed;
-  masm.load32(Address(bound, JSFunction::offsetOfFlagsAndArgCount()), output);
-  masm.branchTest32(Assembler::NonZero, targetFlags,
-                    Imm32(FunctionFlags::CONSTRUCTOR), &isConstructor);
-  {
-    masm.or32(Imm32(FunctionFlags::BOUND_FUN), output);
-    masm.jump(&boundFlagsComputed);
-  }
-  masm.bind(&isConstructor);
-  {
-    masm.or32(Imm32(FunctionFlags::BOUND_FUN | FunctionFlags::CONSTRUCTOR),
-              output);
-  }
-  masm.bind(&boundFlagsComputed);
-}
-
-void CodeGenerator::visitFinishBoundFunctionInit(
-    LFinishBoundFunctionInit* lir) {
-  Register bound = ToRegister(lir->bound());
-  Register target = ToRegister(lir->target());
-  Register argCount = ToRegister(lir->argCount());
-  Register temp0 = ToRegister(lir->temp0());
-  Register temp1 = ToRegister(lir->temp1());
-
-  using Fn = bool (*)(JSContext * cx, HandleFunction bound, HandleObject target,
-                      int32_t argCount);
-  OutOfLineCode* ool = oolCallVM<Fn, JSFunction::finishBoundFunctionInit>(
-      lir, ArgList(bound, target, argCount), StoreNothing());
-  Label* slowPath = ool->entry();
-
-  const size_t boundLengthOffset =
-      FunctionExtended::offsetOfBoundFunctionLengthSlot();
-
-  // Take the slow path if the target is not a JSFunction.
-  masm.branchTestObjIsFunction(Assembler::NotEqual, target, temp0, target,
-                               slowPath);
-
-  // Take the slow path if we'd need to adjust the [[Prototype]].
-  masm.loadObjProto(bound, temp0);
-  masm.loadObjProto(target, temp1);
-  masm.branchPtr(Assembler::NotEqual, temp0, temp1, slowPath);
-
-  // Get the function flags and arg count.
-  masm.load32(Address(target, JSFunction::offsetOfFlagsAndArgCount()), temp0);
-
-  // Functions with a SelfHostedLazyScript must be compiled with the slow-path
-  // before the function length is known. If the length or name property is
-  // resolved, it might be shadowed.
-  masm.branchTest32(
-      Assembler::NonZero, temp0,
-      Imm32(FunctionFlags::SELFHOSTLAZY | FunctionFlags::RESOLVED_NAME |
-            FunctionFlags::RESOLVED_LENGTH),
-      slowPath);
-
-  // Store the bound function's length into the extended slot.
-  BoundFunctionLength(masm, target, temp0, argCount, temp1, slowPath);
-  masm.storeValue(JSVAL_TYPE_INT32, temp1, Address(bound, boundLengthOffset));
-
-  // Store the target's name atom in the bound function as is.
-  BoundFunctionName(masm, target, temp0, temp1, gen->runtime->names(),
-                    slowPath);
-  masm.storeValue(JSVAL_TYPE_STRING, temp1,
-                  Address(bound, JSFunction::offsetOfAtom()));
-
-  // Update the bound function's flags.
-  BoundFunctionFlagsAndArgCount(masm, temp0, bound, temp1);
-  masm.store32(temp1, Address(bound, JSFunction::offsetOfFlagsAndArgCount()));
-
   masm.bind(ool->rejoin());
 }
 

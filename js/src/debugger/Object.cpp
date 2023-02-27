@@ -42,6 +42,7 @@
 #include "vm/ArrayObject.h"              // for ArrayObject
 #include "vm/AsyncFunction.h"            // for AsyncGeneratorObject
 #include "vm/AsyncIteration.h"           // for AsyncFunctionGeneratorObject
+#include "vm/BoundFunctionObject.h"      // for BoundFunctionObject
 #include "vm/BytecodeUtil.h"             // for JSDVG_SEARCH_STACK
 #include "vm/Compartment.h"              // for Compartment
 #include "vm/EnvironmentObject.h"        // for GetDebugEnvironmentForFunction
@@ -239,11 +240,6 @@ bool DebuggerObject::CallData::callableGetter() {
 }
 
 bool DebuggerObject::CallData::isBoundFunctionGetter() {
-  if (!object->isDebuggeeFunction()) {
-    args.rval().setUndefined();
-    return true;
-  }
-
   args.rval().setBoolean(object->isBoundFunction());
   return true;
 }
@@ -309,7 +305,7 @@ bool DebuggerObject::CallData::classGetter() {
 }
 
 bool DebuggerObject::CallData::nameGetter() {
-  if (!object->isFunction()) {
+  if (!object->isFunction() && !object->isBoundFunction()) {
     args.rval().setUndefined();
     return true;
   }
@@ -324,7 +320,7 @@ bool DebuggerObject::CallData::nameGetter() {
 }
 
 bool DebuggerObject::CallData::displayNameGetter() {
-  if (!object->isFunction()) {
+  if (!object->isFunction() && !object->isBoundFunction()) {
     args.rval().setUndefined();
     return true;
   }
@@ -424,7 +420,7 @@ bool DebuggerObject::CallData::environmentGetter() {
 }
 
 bool DebuggerObject::CallData::boundTargetFunctionGetter() {
-  if (!object->isDebuggeeFunction() || !object->isBoundFunction()) {
+  if (!object->isDebuggeeBoundFunction()) {
     args.rval().setUndefined();
     return true;
   }
@@ -439,7 +435,7 @@ bool DebuggerObject::CallData::boundTargetFunctionGetter() {
 }
 
 bool DebuggerObject::CallData::boundThisGetter() {
-  if (!object->isDebuggeeFunction() || !object->isBoundFunction()) {
+  if (!object->isDebuggeeBoundFunction()) {
     args.rval().setUndefined();
     return true;
   }
@@ -448,7 +444,7 @@ bool DebuggerObject::CallData::boundThisGetter() {
 }
 
 bool DebuggerObject::CallData::boundArgumentsGetter() {
-  if (!object->isDebuggeeFunction() || !object->isBoundFunction()) {
+  if (!object->isDebuggeeBoundFunction()) {
     args.rval().setUndefined();
     return true;
   }
@@ -1591,9 +1587,13 @@ bool DebuggerObject::isDebuggeeFunction() const {
 }
 
 bool DebuggerObject::isBoundFunction() const {
-  MOZ_ASSERT(isDebuggeeFunction());
+  return referent()->is<BoundFunctionObject>();
+}
 
-  return referent()->as<JSFunction>().isBoundFunction();
+bool DebuggerObject::isDebuggeeBoundFunction() const {
+  return referent()->is<BoundFunctionObject>() &&
+         owner()->observesGlobal(
+             &referent()->as<BoundFunctionObject>().global());
 }
 
 bool DebuggerObject::isArrowFunction() const {
@@ -1676,23 +1676,54 @@ bool DebuggerObject::getClassName(JSContext* cx, Handle<DebuggerObject*> object,
 }
 
 JSAtom* DebuggerObject::name(JSContext* cx) const {
-  MOZ_ASSERT(isFunction());
-
-  JSAtom* atom = referent()->as<JSFunction>().explicitName();
-  if (atom) {
-    cx->markAtom(atom);
+  if (isFunction()) {
+    JSAtom* atom = referent()->as<JSFunction>().explicitName();
+    if (atom) {
+      cx->markAtom(atom);
+    }
+    return atom;
   }
+
+  MOZ_ASSERT(isBoundFunction());
+
+  // Bound functions have a configurable `name` data property and currently
+  // don't store the original name. Try a pure lookup to get this name and if
+  // this fails use "bound".
+  Rooted<BoundFunctionObject*> bound(cx,
+                                     &referent()->as<BoundFunctionObject>());
+  JSAtom* atom = nullptr;
+  {
+    Maybe<AutoRealm> ar;
+    EnterDebuggeeObjectRealm(cx, ar, bound);
+
+    Value v;
+    bool found;
+    if (GetOwnPropertyPure(cx, bound, NameToId(cx->names().name), &v, &found) &&
+        found && v.isString()) {
+      atom = AtomizeString(cx, v.toString());
+      if (!atom) {
+        return nullptr;
+      }
+    } else {
+      atom = cx->names().bound;
+    }
+  }
+
+  cx->markAtom(atom);
   return atom;
 }
 
 JSAtom* DebuggerObject::displayName(JSContext* cx) const {
-  MOZ_ASSERT(isFunction());
-
-  JSAtom* atom = referent()->as<JSFunction>().displayAtom();
-  if (atom) {
-    cx->markAtom(atom);
+  if (isFunction()) {
+    JSAtom* atom = referent()->as<JSFunction>().displayAtom();
+    if (atom) {
+      cx->markAtom(atom);
+    }
+    return atom;
   }
-  return atom;
+
+  MOZ_ASSERT(isBoundFunction());
+  return name(cx);
 }
 
 JS::PromiseState DebuggerObject::promiseState() const {
@@ -1713,10 +1744,11 @@ bool DebuggerObject::getBoundTargetFunction(
     MutableHandle<DebuggerObject*> result) {
   MOZ_ASSERT(object->isBoundFunction());
 
-  RootedFunction referent(cx, &object->referent()->as<JSFunction>());
+  Rooted<BoundFunctionObject*> referent(
+      cx, &object->referent()->as<BoundFunctionObject>());
   Debugger* dbg = object->owner();
 
-  RootedObject target(cx, referent->getBoundFunctionTarget());
+  RootedObject target(cx, referent->getTarget());
   return dbg->wrapDebuggeeObject(cx, target, result);
 }
 
@@ -1725,10 +1757,11 @@ bool DebuggerObject::getBoundThis(JSContext* cx, Handle<DebuggerObject*> object,
                                   MutableHandleValue result) {
   MOZ_ASSERT(object->isBoundFunction());
 
-  RootedFunction referent(cx, &object->referent()->as<JSFunction>());
+  Rooted<BoundFunctionObject*> referent(
+      cx, &object->referent()->as<BoundFunctionObject>());
   Debugger* dbg = object->owner();
 
-  result.set(referent->getBoundFunctionThis());
+  result.set(referent->getBoundThis());
   return dbg->wrapDebuggeeValue(cx, result);
 }
 
@@ -1738,15 +1771,16 @@ bool DebuggerObject::getBoundArguments(JSContext* cx,
                                        MutableHandle<ValueVector> result) {
   MOZ_ASSERT(object->isBoundFunction());
 
-  RootedFunction referent(cx, &object->referent()->as<JSFunction>());
+  Rooted<BoundFunctionObject*> referent(
+      cx, &object->referent()->as<BoundFunctionObject>());
   Debugger* dbg = object->owner();
 
-  size_t length = referent->getBoundFunctionArgumentCount();
+  size_t length = referent->numBoundArgs();
   if (!result.resize(length)) {
     return false;
   }
   for (size_t i = 0; i < length; i++) {
-    result[i].set(referent->getBoundFunctionArgument(i));
+    result[i].set(referent->getBoundArg(i));
     if (!dbg->wrapDebuggeeValue(cx, result[i])) {
       return false;
     }

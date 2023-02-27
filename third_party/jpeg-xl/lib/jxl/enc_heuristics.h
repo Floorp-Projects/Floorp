@@ -8,12 +8,12 @@
 
 // Hook for custom encoder heuristics (VarDCT only for now).
 
+#include <jxl/cms_interface.h>
 #include <stddef.h>
 #include <stdint.h>
 
 #include <string>
 
-#include "lib/jxl/aux_out_fwd.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/image.h"
@@ -21,7 +21,9 @@
 
 namespace jxl {
 
+struct AuxOut;
 struct PassesEncoderState;
+class DequantMatrices;
 class ImageBundle;
 class ModularFrameEncoder;
 

@@ -3,8 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 @namespace html "http://www.w3.org/1999/xhtml";
 
-:root { -moz-box-layout: flex }
-
 #aboutDialog {
   /* Set an explicit line-height to avoid discrepancies in 'auto' spacing
      across screens with different device DPI, which may cause font metrics

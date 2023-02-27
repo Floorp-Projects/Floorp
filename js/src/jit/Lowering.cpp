@@ -202,6 +202,22 @@ void LIRGenerator::visitNewObject(MNewObject* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitNewBoundFunction(MNewBoundFunction* ins) {
+  MDefinition* target = ins->target();
+  MOZ_ASSERT(target->type() == MIRType::Object);
+
+  if (!lowerCallArguments(ins)) {
+    abort(AbortReason::Alloc, "OOM: LIRGenerator::visitNewBoundFunction");
+    return;
+  }
+
+  auto* lir = new (alloc())
+      LNewBoundFunction(useFixedAtStart(target, CallTempReg0),
+                        tempFixed(CallTempReg1), tempFixed(CallTempReg2));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitNewPlainObject(MNewPlainObject* ins) {
   LNewPlainObject* lir = new (alloc()) LNewPlainObject(temp(), temp(), temp());
   define(lir, ins);
@@ -459,6 +475,14 @@ void LIRGenerator::visitGuardArgumentsObjectFlags(
   redefine(ins, argsObj);
 }
 
+void LIRGenerator::visitBoundFunctionNumArgs(MBoundFunctionNumArgs* ins) {
+  MDefinition* obj = ins->object();
+  MOZ_ASSERT(obj->type() == MIRType::Object);
+
+  auto* lir = new (alloc()) LBoundFunctionNumArgs(useRegisterAtStart(obj));
+  define(lir, ins);
+}
+
 void LIRGenerator::visitReturnFromCtor(MReturnFromCtor* ins) {
   LReturnFromCtor* lir = new (alloc())
       LReturnFromCtor(useBox(ins->value()), useRegister(ins->object()));
@@ -483,7 +507,8 @@ void LIRGenerator::visitImplicitThis(MImplicitThis* ins) {
   assignSafepoint(lir, ins);
 }
 
-bool LIRGenerator::lowerCallArguments(MCallBase* call) {
+template <typename T>
+bool LIRGenerator::lowerCallArguments(T* call) {
   uint32_t argc = call->numStackArgs();
 
   // Align the arguments of a call such that the callee would keep the same
@@ -6037,14 +6062,6 @@ void LIRGenerator::visitDebugCheckSelfHosted(MDebugCheckSelfHosted* ins) {
   LDebugCheckSelfHosted* lir =
       new (alloc()) LDebugCheckSelfHosted(useBoxAtStart(checkVal));
   redefine(ins, checkVal);
-  add(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
-void LIRGenerator::visitFinishBoundFunctionInit(MFinishBoundFunctionInit* ins) {
-  auto lir = new (alloc()) LFinishBoundFunctionInit(
-      useRegister(ins->bound()), useRegister(ins->target()),
-      useRegister(ins->argCount()), temp(), temp());
   add(lir, ins);
   assignSafepoint(lir, ins);
 }

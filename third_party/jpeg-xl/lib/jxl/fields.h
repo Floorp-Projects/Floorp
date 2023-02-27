@@ -19,49 +19,32 @@
 #include <cmath>  // abs
 #include <cstdarg>
 
-#include "lib/jxl/aux_out_fwd.h"
 #include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/dec_bit_reader.h"
-#include "lib/jxl/enc_bit_writer.h"
 #include "lib/jxl/field_encodings.h"
 
 namespace jxl {
 
+struct AuxOut;
+struct BitWriter;
+
 // Integer coders: BitsCoder (raw), U32Coder (table), U64Coder (varint).
 
 // Reads/writes a given (fixed) number of bits <= 32.
-class BitsCoder {
- public:
-  static size_t MaxEncodedBits(const size_t bits) { return bits; }
+namespace BitsCoder {
+size_t MaxEncodedBits(size_t bits);
 
-  static Status CanEncode(const size_t bits, const uint32_t value,
-                          size_t* JXL_RESTRICT encoded_bits) {
-    *encoded_bits = bits;
-    if (value >= (1ULL << bits)) {
-      return JXL_FAILURE("Value %u too large for %" PRIu64 " bits", value,
-                         static_cast<uint64_t>(bits));
-    }
-    return true;
-  }
+Status CanEncode(size_t bits, uint32_t value,
+                 size_t* JXL_RESTRICT encoded_bits);
 
-  static uint32_t Read(const size_t bits, BitReader* JXL_RESTRICT reader) {
-    return reader->ReadBits(bits);
-  }
+uint32_t Read(size_t bits, BitReader* JXL_RESTRICT reader);
 
-  // Returns false if the value is too large to encode.
-  static Status Write(const size_t bits, const uint32_t value,
-                      BitWriter* JXL_RESTRICT writer) {
-    if (value >= (1ULL << bits)) {
-      return JXL_FAILURE("Value %d too large to encode in %" PRIu64 " bits",
-                         value, static_cast<uint64_t>(bits));
-    }
-    writer->Write(bits, value);
-    return true;
-  }
-};
+// Returns false if the value is too large to encode.
+Status Write(size_t bits, uint32_t value, BitWriter* JXL_RESTRICT writer);
+}  // namespace BitsCoder
 
 // Encodes u32 using a lookup table and/or extra bits, governed by a per-field
 // encoding `enc` which consists of four distributions `d` chosen via a 2-bit
@@ -79,54 +62,47 @@ class BitsCoder {
 //   01x -> 1..2
 //   10xx -> 3..7
 //   11xxxxxxxx -> 8..263
-class U32Coder {
- public:
-  static size_t MaxEncodedBits(U32Enc enc);
-  static Status CanEncode(U32Enc enc, uint32_t value,
-                          size_t* JXL_RESTRICT encoded_bits);
-  static uint32_t Read(U32Enc enc, BitReader* JXL_RESTRICT reader);
+namespace U32Coder {
+size_t MaxEncodedBits(U32Enc enc);
+Status CanEncode(U32Enc enc, uint32_t value, size_t* JXL_RESTRICT encoded_bits);
+uint32_t Read(U32Enc enc, BitReader* JXL_RESTRICT reader);
 
-  // Returns false if the value is too large to encode.
-  static Status Write(U32Enc enc, uint32_t value,
-                      BitWriter* JXL_RESTRICT writer);
+// Returns false if the value is too large to encode.
+Status Write(U32Enc enc, uint32_t value, BitWriter* JXL_RESTRICT writer);
 
- private:
-  static Status ChooseSelector(U32Enc enc, uint32_t value,
-                               uint32_t* JXL_RESTRICT selector,
-                               size_t* JXL_RESTRICT total_bits);
-};
+// "private"
+Status ChooseSelector(U32Enc enc, uint32_t value,
+                      uint32_t* JXL_RESTRICT selector,
+                      size_t* JXL_RESTRICT total_bits);
+}  // namespace U32Coder
 
 // Encodes 64-bit unsigned integers with a fixed distribution, taking 2 bits
 // to encode 0, 6 bits to encode 1 to 16, 10 bits to encode 17 to 272, 15 bits
 // to encode up to 4095, and on the order of log2(value) * 1.125 bits for
 // larger values.
-class U64Coder {
- public:
-  static constexpr size_t MaxEncodedBits() {
-    return 2 + 12 + 6 * (8 + 1) + (4 + 1);
-  }
+namespace U64Coder {
+constexpr size_t MaxEncodedBits() { return 2 + 12 + 6 * (8 + 1) + (4 + 1); }
 
-  static uint64_t Read(BitReader* JXL_RESTRICT reader);
+uint64_t Read(BitReader* JXL_RESTRICT reader);
 
-  // Returns false if the value is too large to encode.
-  static Status Write(uint64_t value, BitWriter* JXL_RESTRICT writer);
+// Returns false if the value is too large to encode.
+Status Write(uint64_t value, BitWriter* JXL_RESTRICT writer);
 
-  // Can always encode, but useful because it also returns bit size.
-  static Status CanEncode(uint64_t value, size_t* JXL_RESTRICT encoded_bits);
-};
+// Can always encode, but useful because it also returns bit size.
+Status CanEncode(uint64_t value, size_t* JXL_RESTRICT encoded_bits);
+}  // namespace U64Coder
 
 // IEEE 754 half-precision (binary16). Refuses to read/write NaN/Inf.
-class F16Coder {
- public:
-  static constexpr size_t MaxEncodedBits() { return 16; }
+namespace F16Coder {
+constexpr size_t MaxEncodedBits() { return 16; }
 
-  // Returns false if the bit representation is NaN or infinity
-  static Status Read(BitReader* JXL_RESTRICT reader, float* JXL_RESTRICT value);
+// Returns false if the bit representation is NaN or infinity
+Status Read(BitReader* JXL_RESTRICT reader, float* JXL_RESTRICT value);
 
-  // Returns false if the value is too large to encode.
-  static Status Write(float value, BitWriter* JXL_RESTRICT writer);
-  static Status CanEncode(float value, size_t* JXL_RESTRICT encoded_bits);
-};
+// Returns false if the value is too large to encode.
+Status Write(float value, BitWriter* JXL_RESTRICT writer);
+Status CanEncode(float value, size_t* JXL_RESTRICT encoded_bits);
+}  // namespace F16Coder
 
 // A "bundle" is a forward- and backward compatible collection of fields.
 // They are used for SizeHeader/FrameHeader/GroupHeader. Bundles can be
@@ -179,48 +155,44 @@ class F16Coder {
 //   }
 //   Note: if extensions are present, AllDefault() == false.
 
-class Bundle {
- public:
-  static constexpr size_t kMaxExtensions = 64;  // bits in u64
+namespace Bundle {
+constexpr size_t kMaxExtensions = 64;  // bits in u64
 
-  // Initializes fields to the default values. It is not recursive to nested
-  // fields, this function is intended to be called in the constructors so
-  // each nested field will already Init itself.
-  static void Init(Fields* JXL_RESTRICT fields);
+// Initializes fields to the default values. It is not recursive to nested
+// fields, this function is intended to be called in the constructors so
+// each nested field will already Init itself.
+void Init(Fields* JXL_RESTRICT fields);
 
-  // Similar to Init, but recursive to nested fields.
-  static void SetDefault(Fields* JXL_RESTRICT fields);
+// Similar to Init, but recursive to nested fields.
+void SetDefault(Fields* JXL_RESTRICT fields);
 
-  // Returns whether ALL fields (including `extensions`, if present) are equal
-  // to their default value.
-  static bool AllDefault(const Fields& fields);
+// Returns whether ALL fields (including `extensions`, if present) are equal
+// to their default value.
+bool AllDefault(const Fields& fields);
 
-  // Returns max number of bits required to encode a T.
-  static size_t MaxBits(const Fields& fields);
+// Returns max number of bits required to encode a T.
+size_t MaxBits(const Fields& fields);
 
-  // Returns whether a header's fields can all be encoded, i.e. they have a
-  // valid representation. If so, "*total_bits" is the exact number of bits
-  // required. Called by Write.
-  static Status CanEncode(const Fields& fields,
-                          size_t* JXL_RESTRICT extension_bits,
-                          size_t* JXL_RESTRICT total_bits);
+// Returns whether a header's fields can all be encoded, i.e. they have a
+// valid representation. If so, "*total_bits" is the exact number of bits
+// required. Called by Write.
+Status CanEncode(const Fields& fields, size_t* JXL_RESTRICT extension_bits,
+                 size_t* JXL_RESTRICT total_bits);
 
-  static Status Read(BitReader* reader, Fields* JXL_RESTRICT fields);
+Status Read(BitReader* reader, Fields* JXL_RESTRICT fields);
 
-  // Returns whether enough bits are available to fully read this bundle using
-  // Read. Also returns true in case of a codestream error (other than not being
-  // large enough): that means enough bits are available to determine there's an
-  // error, use Read to get such error status.
-  // NOTE: this advances the BitReader, a different one pointing back at the
-  // original bit position in the codestream must be created to use Read after
-  // this.
-  static bool CanRead(BitReader* reader, Fields* JXL_RESTRICT fields);
+// Returns whether enough bits are available to fully read this bundle using
+// Read. Also returns true in case of a codestream error (other than not being
+// large enough): that means enough bits are available to determine there's an
+// error, use Read to get such error status.
+// NOTE: this advances the BitReader, a different one pointing back at the
+// original bit position in the codestream must be created to use Read after
+// this.
+bool CanRead(BitReader* reader, Fields* JXL_RESTRICT fields);
 
-  static Status Write(const Fields& fields, BitWriter* JXL_RESTRICT writer,
-                      size_t layer, AuxOut* aux_out);
-
- private:
-};
+Status Write(const Fields& fields, BitWriter* JXL_RESTRICT writer, size_t layer,
+             AuxOut* aux_out);
+}  // namespace Bundle
 
 // Different subclasses of Visitor are passed to implementations of Fields
 // throughout their lifetime. Templates used to be used for this but dynamic
@@ -284,6 +256,121 @@ class Visitor {
   virtual Status BeginExtensions(uint64_t* JXL_RESTRICT extensions) = 0;
   virtual Status EndExtensions() = 0;
 };
+
+namespace fields_internal {
+// A bundle can be in one of three states concerning extensions: not-begun,
+// active, ended. Bundles may be nested, so we need a stack of states.
+class ExtensionStates {
+ public:
+  void Push() {
+    // Initial state = not-begun.
+    begun_ <<= 1;
+    ended_ <<= 1;
+  }
+
+  // Clears current state; caller must check IsEnded beforehand.
+  void Pop() {
+    begun_ >>= 1;
+    ended_ >>= 1;
+  }
+
+  // Returns true if state == active || state == ended.
+  Status IsBegun() const { return (begun_ & 1) != 0; }
+  // Returns true if state != not-begun && state != active.
+  Status IsEnded() const { return (ended_ & 1) != 0; }
+
+  void Begin() {
+    JXL_ASSERT(!IsBegun());
+    JXL_ASSERT(!IsEnded());
+    begun_ += 1;
+  }
+
+  void End() {
+    JXL_ASSERT(IsBegun());
+    JXL_ASSERT(!IsEnded());
+    ended_ += 1;
+  }
+
+ private:
+  // Current state := least-significant bit of begun_ and ended_.
+  uint64_t begun_ = 0;
+  uint64_t ended_ = 0;
+};
+
+// Visitors generate Init/AllDefault/Read/Write logic for all fields. Each
+// bundle's VisitFields member function calls visitor->U32 etc. We do not
+// overload operator() because a function name is easier to search for.
+
+class VisitorBase : public Visitor {
+ public:
+  explicit VisitorBase() {}
+  ~VisitorBase() override { JXL_ASSERT(depth_ == 0); }
+
+  // This is the only call site of Fields::VisitFields.
+  // Ensures EndExtensions was called.
+  Status Visit(Fields* fields) override {
+    depth_ += 1;
+    JXL_ASSERT(depth_ <= Bundle::kMaxExtensions);
+    extension_states_.Push();
+
+    const Status ok = fields->VisitFields(this);
+
+    if (ok) {
+      // If VisitFields called BeginExtensions, must also call
+      // EndExtensions.
+      JXL_ASSERT(!extension_states_.IsBegun() || extension_states_.IsEnded());
+    } else {
+      // Failed, undefined state: don't care whether EndExtensions was
+      // called.
+    }
+
+    extension_states_.Pop();
+    JXL_ASSERT(depth_ != 0);
+    depth_ -= 1;
+
+    return ok;
+  }
+
+  // For visitors accepting a const Visitor, need to const-cast so we can call
+  // the non-const Visitor::VisitFields. NOTE: C is not modified except the
+  // `all_default` field by CanEncodeVisitor.
+  Status VisitConst(const Fields& t) { return Visit(const_cast<Fields*>(&t)); }
+
+  // Derived types (overridden by InitVisitor because it is unsafe to read
+  // from *value there)
+
+  Status Bool(bool default_value, bool* JXL_RESTRICT value) override {
+    uint32_t bits = *value ? 1 : 0;
+    JXL_RETURN_IF_ERROR(Bits(1, static_cast<uint32_t>(default_value), &bits));
+    JXL_DASSERT(bits <= 1);
+    *value = bits == 1;
+    return true;
+  }
+
+  // Overridden by ReadVisitor and WriteVisitor.
+  // Called before any conditional visit based on "extensions".
+  // Overridden by ReadVisitor, CanEncodeVisitor and WriteVisitor.
+  Status BeginExtensions(uint64_t* JXL_RESTRICT extensions) override {
+    JXL_RETURN_IF_ERROR(U64(0, extensions));
+
+    extension_states_.Begin();
+    return true;
+  }
+
+  // Called after all extension fields (if any). Although non-extension
+  // fields could be visited afterward, we prefer the convention that
+  // extension fields are always the last to be visited. Overridden by
+  // ReadVisitor.
+  Status EndExtensions() override {
+    extension_states_.End();
+    return true;
+  }
+
+ private:
+  size_t depth_ = 0;  // to check nesting
+  ExtensionStates extension_states_;
+};
+}  // namespace fields_internal
 
 }  // namespace jxl
 

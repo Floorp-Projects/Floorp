@@ -199,9 +199,9 @@ std::string ToString(T n) {
   return data;
 }
 
-namespace {
-static inline uint64_t DecodeVarInt(const uint8_t* input, size_t inputSize,
-                                    size_t* pos) {
+static inline JXL_MAYBE_UNUSED uint64_t DecodeVarInt(const uint8_t* input,
+                                                     size_t inputSize,
+                                                     size_t* pos) {
   size_t i;
   uint64_t ret = 0;
   for (i = 0; *pos + i < inputSize && i < 10; ++i) {
@@ -214,8 +214,10 @@ static inline uint64_t DecodeVarInt(const uint8_t* input, size_t inputSize,
   return ret;
 }
 
-static inline bool EncodeVarInt(uint64_t value, size_t output_size,
-                                size_t* output_pos, uint8_t* output) {
+static inline JXL_MAYBE_UNUSED bool EncodeVarInt(uint64_t value,
+                                                 size_t output_size,
+                                                 size_t* output_pos,
+                                                 uint8_t* output) {
   // While more than 7 bits of data are left,
   // store 7 bits and set the next byte flag
   while (value > 127) {
@@ -230,13 +232,13 @@ static inline bool EncodeVarInt(uint64_t value, size_t output_size,
   return true;
 }
 
-static inline void EncodeVarInt(uint64_t value, PaddedBytes* data) {
+static inline JXL_MAYBE_UNUSED void EncodeVarInt(uint64_t value,
+                                                 PaddedBytes* data) {
   size_t pos = data->size();
   data->resize(data->size() + 9);
   JXL_CHECK(EncodeVarInt(value, data->size(), &pos, data->data()));
   data->resize(pos);
 }
-}  // namespace
 
 }  // namespace jxl
 

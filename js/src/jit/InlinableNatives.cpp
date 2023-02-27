@@ -195,7 +195,6 @@ bool js::jit::CanInlineNativeCrossRealm(InlinableNative native) {
     case InlinableNative::IntrinsicGuardToIteratorHelper:
     case InlinableNative::IntrinsicGuardToAsyncIteratorHelper:
     case InlinableNative::IntrinsicObjectHasPrototype:
-    case InlinableNative::IntrinsicFinishBoundFunctionInit:
     case InlinableNative::IntrinsicIsPackedArray:
     case InlinableNative::IntrinsicGuardToMapObject:
     case InlinableNative::IntrinsicGetNextMapEntryForIterator:
@@ -259,6 +258,7 @@ bool js::jit::CanInlineNativeCrossRealm(InlinableNative native) {
     case InlinableNative::DataViewSetFloat64:
     case InlinableNative::DataViewSetBigInt64:
     case InlinableNative::DataViewSetBigUint64:
+    case InlinableNative::FunctionBind:
     case InlinableNative::MapGet:
     case InlinableNative::MapHas:
     case InlinableNative::Number:

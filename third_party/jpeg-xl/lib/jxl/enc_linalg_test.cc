@@ -5,8 +5,8 @@
 
 #include "lib/jxl/enc_linalg.h"
 
-#include "gtest/gtest.h"
 #include "lib/jxl/image_test_utils.h"
+#include "lib/jxl/testing.h"
 
 namespace jxl {
 namespace {

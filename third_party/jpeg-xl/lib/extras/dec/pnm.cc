@@ -11,6 +11,7 @@
 #include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
+#include "lib/jxl/size_constraints.h"
 
 namespace jxl {
 namespace extras {
@@ -248,7 +249,7 @@ class Parser {
     if (max_val == 0 || max_val >= 65536) {
       return JXL_FAILURE("PAM: bad MAXVAL");
     }
-    // e.g When `max_val` is 1 , we want 1 bit:
+    // e.g. When `max_val` is 1 , we want 1 bit:
     header->bits_per_sample = FloorLog2Nonzero(max_val) + 1;
     if ((1u << header->bits_per_sample) - 1 != max_val)
       return JXL_FAILURE("PNM: unsupported MaxVal (expected 2^n - 1)");

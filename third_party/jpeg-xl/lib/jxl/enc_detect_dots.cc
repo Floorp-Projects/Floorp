@@ -38,7 +38,7 @@
 #endif
 
 #if JXL_DEBUG_DOT_DETECT
-#include "lib/jxl/aux_out.h"
+#include "lib/jxl/enc_aux_out.h"
 #endif
 
 HWY_BEFORE_NAMESPACE();

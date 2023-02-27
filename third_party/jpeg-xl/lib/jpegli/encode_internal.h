@@ -32,14 +32,14 @@ struct JPEGHuffmanCode {
   // The index of the Huffman code in the current set of Huffman codes. For AC
   // component Huffman codes, 0x10 is added to the index.
   int slot_id = 0;
-  // Set to true if this Huffman code is the last one within its marker segment
-  bool is_last = true;
+  boolean sent_table = FALSE;
 };
 
 // DCTCodingState: maximum number of correction bits to buffer
 const int kJPEGMaxCorrectionBits = 1u << 16;
 
 constexpr int kDefaultProgressiveLevel = 2;
+constexpr float kDefaultQuantFieldMax = 0.575f;
 
 struct HuffmanCodeTable {
   int depth[256];
@@ -72,10 +72,12 @@ struct jpeg_comp_master {
   uint8_t* next_marker_byte = nullptr;
   JpegliDataType data_type = JPEGLI_TYPE_UINT8;
   JpegliEndianness endianness = JPEGLI_NATIVE_ENDIAN;
+  jpegli::HuffmanCodeTable huff_tables[8];
   std::array<jpegli::HuffmanCodeTable, jpegli::kMaxHuffmanTables> dc_huff_table;
   std::array<jpegli::HuffmanCodeTable, jpegli::kMaxHuffmanTables> ac_huff_table;
   jpegli::RowBuffer<float> quant_field;
-  float quant_field_max;
+  float quant_field_max = jpegli::kDefaultQuantFieldMax;
+  jvirt_barray_ptr* coeff_buffers = nullptr;
 };
 
 #endif  // LIB_JPEGLI_ENCODE_INTERNAL_H_

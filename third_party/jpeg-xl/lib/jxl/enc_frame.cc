@@ -19,8 +19,6 @@
 #include "lib/jxl/ac_context.h"
 #include "lib/jxl/ac_strategy.h"
 #include "lib/jxl/ans_params.h"
-#include "lib/jxl/aux_out.h"
-#include "lib/jxl/aux_out_fwd.h"
 #include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
@@ -38,12 +36,14 @@
 #include "lib/jxl/dct_util.h"
 #include "lib/jxl/enc_adaptive_quantization.h"
 #include "lib/jxl/enc_ans.h"
+#include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_bit_writer.h"
 #include "lib/jxl/enc_cache.h"
 #include "lib/jxl/enc_chroma_from_luma.h"
 #include "lib/jxl/enc_coeff_order.h"
 #include "lib/jxl/enc_context_map.h"
 #include "lib/jxl/enc_entropy_coder.h"
+#include "lib/jxl/enc_fields.h"
 #include "lib/jxl/enc_gaborish.h"
 #include "lib/jxl/enc_group.h"
 #include "lib/jxl/enc_modular.h"
@@ -948,8 +948,9 @@ class LossyFrameEncoder {
   Status EncodeGlobalDCInfo(const FrameHeader& frame_header,
                             BitWriter* writer) const {
     // Encode quantizer DC and global scale.
+    QuantizerParams params = enc_state_->shared.quantizer.GetParams();
     JXL_RETURN_IF_ERROR(
-        enc_state_->shared.quantizer.Encode(writer, kLayerQuant, aux_out_));
+        WriteQuantizerParams(params, writer, kLayerQuant, aux_out_));
     EncodeBlockCtxMap(enc_state_->shared.block_ctx_map, writer, aux_out_);
     ColorCorrelationMapEncodeDC(&enc_state_->shared.cmap, writer, kLayerDC,
                                 aux_out_);
@@ -969,7 +970,7 @@ class LossyFrameEncoder {
     if (num_histo_bits != 0) {
       BitWriter::Allotment allotment(writer, num_histo_bits);
       writer->Write(num_histo_bits, enc_state_->shared.num_histograms - 1);
-      ReclaimAndCharge(writer, &allotment, kLayerAC, aux_out_);
+      allotment.ReclaimAndCharge(writer, kLayerAC, aux_out_);
     }
 
     for (size_t i = 0; i < enc_state_->progressive_splitter.GetNumPasses();
@@ -980,7 +981,7 @@ class LossyFrameEncoder {
           kOrderEnc, enc_state_->used_orders[i], &order_bits));
       BitWriter::Allotment allotment(writer, order_bits);
       JXL_CHECK(U32Coder::Write(kOrderEnc, enc_state_->used_orders[i], writer));
-      ReclaimAndCharge(writer, &allotment, kLayerOrder, aux_out_);
+      allotment.ReclaimAndCharge(writer, kLayerOrder, aux_out_);
       EncodeCoeffOrders(
           enc_state_->used_orders[i],
           &enc_state_->shared
@@ -1491,7 +1492,7 @@ Status EncodeFrame(const CompressParams& cparams_orig,
         !(frame_header->flags & FrameHeader::kUseDcFrame)) {
       BitWriter::Allotment allotment(output, 2);
       output->Write(2, modular_frame_encoder->extra_dc_precision[group_index]);
-      ReclaimAndCharge(output, &allotment, kLayerDC, my_aux_out);
+      allotment.ReclaimAndCharge(output, kLayerDC, my_aux_out);
       JXL_CHECK(modular_frame_encoder->EncodeStream(
           output, my_aux_out, kLayerDC,
           ModularStreamId::VarDCTDC(group_index)));
@@ -1507,7 +1508,7 @@ Status EncodeFrame(const CompressParams& cparams_orig,
         BitWriter::Allotment allotment(output, nb_bits);
         output->Write(nb_bits,
                       modular_frame_encoder->ac_metadata_size[group_index] - 1);
-        ReclaimAndCharge(output, &allotment, kLayerControlFields, my_aux_out);
+        allotment.ReclaimAndCharge(output, kLayerControlFields, my_aux_out);
       }
       JXL_CHECK(modular_frame_encoder->EncodeStream(
           output, my_aux_out, kLayerControlFields,
@@ -1555,7 +1556,7 @@ Status EncodeFrame(const CompressParams& cparams_orig,
   for (BitWriter& bw : group_codes) {
     BitWriter::Allotment allotment(&bw, 8);
     bw.ZeroPadToByte();  // end of group.
-    ReclaimAndCharge(&bw, &allotment, kLayerAC, aux_out);
+    allotment.ReclaimAndCharge(&bw, kLayerAC, aux_out);
   }
 
   std::vector<coeff_order_t>* permutation_ptr = nullptr;

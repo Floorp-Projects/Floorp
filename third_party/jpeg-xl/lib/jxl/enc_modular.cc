@@ -15,15 +15,16 @@
 #include <utility>
 #include <vector>
 
-#include "lib/jxl/aux_out.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/compressed_dc.h"
 #include "lib/jxl/dec_ans.h"
+#include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_bit_writer.h"
 #include "lib/jxl/enc_cluster.h"
+#include "lib/jxl/enc_fields.h"
 #include "lib/jxl/enc_gaborish.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/enc_patch_dictionary.h"
@@ -305,7 +306,7 @@ ModularFrameEncoder::ModularFrameEncoder(const FrameHeader& frame_header,
     : frame_dim_(frame_header.ToFrameDimensions()), cparams_(cparams_orig) {
   size_t num_streams =
       ModularStreamId::Num(frame_dim_, frame_header.passes.num_passes);
-  if (cparams_.IsLossless()) {
+  if (cparams_.ModularPartIsLossless()) {
     switch (cparams_.decoding_speed_tier) {
       case 0:
         break;
@@ -330,7 +331,7 @@ ModularFrameEncoder::ModularFrameEncoder(const FrameHeader& frame_header,
     }
   }
   if (cparams_.decoding_speed_tier >= 1 && cparams_.responsive &&
-      cparams_.IsLossless()) {
+      cparams_.ModularPartIsLossless()) {
     cparams_.options.tree_kind =
         ModularOptions::TreeKind::kTrivialTreeNoPredictor;
     cparams_.options.nb_repeats = 0;
@@ -340,7 +341,7 @@ ModularFrameEncoder::ModularFrameEncoder(const FrameHeader& frame_header,
   // use a sensible default if nothing explicit is specified:
   // Squeeze for lossy, no squeeze for lossless
   if (cparams_.responsive < 0) {
-    if (cparams_.IsLossless()) {
+    if (cparams_.ModularPartIsLossless()) {
       cparams_.responsive = 0;
     } else {
       cparams_.responsive = 1;
@@ -427,7 +428,7 @@ ModularFrameEncoder::ModularFrameEncoder(const FrameHeader& frame_header,
     delta_pred_ = cparams_.options.predictor;
     if (cparams_.lossy_palette) cparams_.options.predictor = Predictor::Zero;
   }
-  if (!cparams_.IsLossless()) {
+  if (!cparams_.ModularPartIsLossless()) {
     if (cparams_.options.predictor == Predictor::Weighted ||
         cparams_.options.predictor == Predictor::Variable ||
         cparams_.options.predictor == Predictor::Best)
@@ -636,8 +637,7 @@ Status ModularFrameEncoder::ComputeEncodingData(
         cparams_.level, max_bitdepth, level_max_bitdepth);
 
   // Set options and apply transformations
-
-  if (cparams_.butteraugli_distance > 0) {
+  if (!cparams_.ModularPartIsLossless()) {
     if (cparams_.palette_colors != 0) {
       JXL_DEBUG_V(3, "Lossy encode, not doing palette transforms");
     }
@@ -751,8 +751,8 @@ Status ModularFrameEncoder::ComputeEncodingData(
   if (cparams_.color_transform == ColorTransform::kNone && do_color &&
       gi.channel.size() - gi.nb_meta_channels >= 3 &&
       max_bitdepth + 1 < level_max_bitdepth) {
-    if (cparams_.colorspace < 0 &&
-        (!cparams_.IsLossless() || cparams_.speed_tier > SpeedTier::kHare)) {
+    if (cparams_.colorspace < 0 && (!cparams_.ModularPartIsLossless() ||
+                                    cparams_.speed_tier > SpeedTier::kHare)) {
       Transform ycocg{TransformId::kRCT};
       ycocg.rct_type = 6;
       ycocg.begin_c = gi.nb_meta_channels;
@@ -784,20 +784,32 @@ Status ModularFrameEncoder::ComputeEncodingData(
 
   std::vector<uint32_t> quants;
 
-  if (cparams_.butteraugli_distance > 0) {
+  if (!cparams_.ModularPartIsLossless()) {
     quants.resize(gi.channel.size(), 1);
-    float quality = 0.25f * cparams_.butteraugli_distance;
-    JXL_DEBUG_V(2,
-                "Adding quantization constants corresponding to distance %.3f ",
-                quality);
+    float quantizer = 0.25f;
     if (!cparams_.responsive) {
       JXL_DEBUG_V(1,
                   "Warning: lossy compression without Squeeze "
                   "transform is just color quantization.");
-      quality *= 0.1f;
+      quantizer *= 0.1f;
     }
+    float bitdepth_correction = 1.f;
     if (cparams_.color_transform != ColorTransform::kXYB) {
-      quality *= maxval / 255.f;
+      bitdepth_correction = maxval / 255.f;
+    }
+    std::vector<float> quantizers;
+    float dist = cparams_.butteraugli_distance;
+    for (size_t i = 0; i < 3; i++) {
+      quantizers.push_back(quantizer * dist * bitdepth_correction);
+    }
+    for (size_t i = 0; i < extra_channels.size(); i++) {
+      int ec_bitdepth =
+          metadata.extra_channel_info[i].bit_depth.bits_per_sample;
+      pixel_type ec_maxval = ec_bitdepth < 32 ? (1u << ec_bitdepth) - 1 : 0;
+      bitdepth_correction = ec_maxval / 255.f;
+      if (i < cparams_.ec_distance.size()) dist = cparams_.ec_distance[i];
+      if (dist < 0) dist = cparams_.butteraugli_distance;
+      quantizers.push_back(quantizer * dist * bitdepth_correction);
     }
     if (cparams_.options.nb_repeats == 0) {
       return JXL_FAILURE("nb_repeats = 0 not supported with modular lossy!");
@@ -816,14 +828,15 @@ Status ModularFrameEncoder::ComputeEncodingData(
         component = 1;
       }
       if (cparams_.color_transform == ColorTransform::kXYB && component < 3) {
-        q = quality * squeeze_quality_factor_xyb *
+        q = quantizers[component] * squeeze_quality_factor_xyb *
             squeeze_xyb_qtable[component][shift];
       } else {
         if (cparams_.colorspace != 0 && component > 0 && component < 3) {
-          q = quality * squeeze_quality_factor * squeeze_chroma_qtable[shift];
+          q = quantizers[component] * squeeze_quality_factor *
+              squeeze_chroma_qtable[shift];
         } else {
-          q = quality * squeeze_quality_factor * squeeze_luma_factor *
-              squeeze_luma_qtable[shift];
+          q = quantizers[component] * squeeze_quality_factor *
+              squeeze_luma_factor * squeeze_luma_qtable[shift];
         }
       }
       if (q < 1) q = 1;
@@ -1130,11 +1143,11 @@ Status ModularFrameEncoder::EncodeGlobalInfo(BitWriter* writer,
   // If we are using brotli, or not using modular mode.
   if (tree_tokens_.empty() || tree_tokens_[0].empty()) {
     writer->Write(1, 0);
-    ReclaimAndCharge(writer, &allotment, kLayerModularTree, aux_out);
+    allotment.ReclaimAndCharge(writer, kLayerModularTree, aux_out);
     return true;
   }
   writer->Write(1, 1);
-  ReclaimAndCharge(writer, &allotment, kLayerModularTree, aux_out);
+  allotment.ReclaimAndCharge(writer, kLayerModularTree, aux_out);
 
   // Write tree
   HistogramParams params;

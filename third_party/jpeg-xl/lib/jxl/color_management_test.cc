@@ -16,12 +16,13 @@
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/file_io.h"
+#include "lib/jxl/base/random.h"
 #include "lib/jxl/base/thread_pool_internal.h"
 #include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_xyb.h"
 #include "lib/jxl/image_test_utils.h"
 #include "lib/jxl/test_utils.h"
-#include "lib/jxl/testdata.h"
+#include "lib/jxl/testing.h"
 
 namespace jxl {
 
@@ -156,7 +157,7 @@ class ColorManagementTest
     double max_rel = 4E-7;
 #endif
     if (c.IsGray()) max_rel = 2E-5;
-    VerifyRelativeError(in, *out, max_l1, max_rel);
+    JXL_ASSERT_OK(VerifyRelativeError(in, *out, max_l1, max_rel, _));
   }
 };
 JXL_GTEST_INSTANTIATE_TEST_SUITE_P(ColorManagementTestInstantiation,
@@ -204,7 +205,8 @@ TEST_F(ColorManagementTest, sRGBChromaticity) {
 }
 
 TEST_F(ColorManagementTest, D2700Chromaticity) {
-  PaddedBytes icc = ReadTestData("jxl/color_management/sRGB-D2700.icc");
+  PaddedBytes icc =
+      jxl::test::ReadTestData("jxl/color_management/sRGB-D2700.icc");
   ColorEncoding sRGB_D2700;
   ASSERT_TRUE(sRGB_D2700.SetICC(std::move(icc)));
 
@@ -218,7 +220,8 @@ TEST_F(ColorManagementTest, D2700Chromaticity) {
 }
 
 TEST_F(ColorManagementTest, D2700ToSRGB) {
-  PaddedBytes icc = ReadTestData("jxl/color_management/sRGB-D2700.icc");
+  PaddedBytes icc =
+      jxl::test::ReadTestData("jxl/color_management/sRGB-D2700.icc");
   ColorEncoding sRGB_D2700;
   ASSERT_TRUE(sRGB_D2700.SetICC(std::move(icc)));
 

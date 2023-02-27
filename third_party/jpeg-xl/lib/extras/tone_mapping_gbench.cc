@@ -7,38 +7,33 @@
 #include "lib/extras/codec.h"
 #include "lib/extras/tone_mapping.h"
 #include "lib/jxl/enc_color_management.h"
-#include "lib/jxl/testdata.h"
 
 namespace jxl {
 
 static void BM_ToneMapping(benchmark::State& state) {
-  CodecInOut image;
-  const PaddedBytes image_bytes = ReadTestData("jxl/flower/flower.png");
-  JXL_CHECK(SetFromBytes(Span<const uint8_t>(image_bytes), &image));
+  Image3F color(2268, 1512);
+  FillImage(0.5f, &color);
 
-  // Convert to linear Rec. 2020 so that `ToneMapTo` doesn't have to and we
-  // mainly measure the tone mapping itself.
+  // Use linear Rec. 2020 so that `ToneMapTo` doesn't have to convert to it and
+  // we mainly measure the tone mapping itself.
   ColorEncoding linear_rec2020;
   linear_rec2020.SetColorSpace(ColorSpace::kRGB);
   linear_rec2020.primaries = Primaries::k2100;
   linear_rec2020.white_point = WhitePoint::kD65;
   linear_rec2020.tf.SetTransferFunction(TransferFunction::kLinear);
   JXL_CHECK(linear_rec2020.CreateICC());
-  JXL_CHECK(image.TransformTo(linear_rec2020, GetJxlCms()));
 
   for (auto _ : state) {
     state.PauseTiming();
     CodecInOut tone_mapping_input;
-    tone_mapping_input.SetFromImage(CopyImage(*image.Main().color()),
-                                    image.Main().c_current());
-    tone_mapping_input.metadata.m.SetIntensityTarget(
-        image.metadata.m.IntensityTarget());
+    tone_mapping_input.SetFromImage(CopyImage(color), linear_rec2020);
+    tone_mapping_input.metadata.m.SetIntensityTarget(255);
     state.ResumeTiming();
 
     JXL_CHECK(ToneMapTo({0.1, 100}, &tone_mapping_input));
   }
 
-  state.SetItemsProcessed(state.iterations() * image.xsize() * image.ysize());
+  state.SetItemsProcessed(state.iterations() * color.xsize() * color.ysize());
 }
 BENCHMARK(BM_ToneMapping);
 

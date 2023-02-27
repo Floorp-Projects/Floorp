@@ -14,11 +14,11 @@ BEGIN_TEST(testBoundFunction) {
   JS::RootedValue bound(cx);
   EVAL("foo.bind(1)", &bound);
 
-  JS::RootedFunction foofun(cx, JS_ValueToFunction(cx, foo));
-  JS::RootedFunction boundfun(cx, JS_ValueToFunction(cx, bound));
+  JS::Rooted<JSObject*> foofun(cx, &foo.toObject());
+  JS::Rooted<JSObject*> boundfun(cx, &bound.toObject());
 
-  CHECK(!JS_IsFunctionBound(foofun));
-  CHECK(JS_IsFunctionBound(boundfun));
+  CHECK(!JS_ObjectIsBoundFunction(foofun));
+  CHECK(JS_ObjectIsBoundFunction(boundfun));
 
   CHECK(!JS_GetBoundFunctionTarget(foofun));
   JSObject* target = JS_GetBoundFunctionTarget(boundfun);

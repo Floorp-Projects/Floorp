@@ -3978,10 +3978,10 @@
   value: 5
   mirror: always
 
-# Enable Storage API for all platforms except Android.
+# Whether the Storage API is enabled.
 - name: dom.storageManager.enabled
   type: RelaxedAtomicBool
-  value: @IS_NOT_ANDROID@
+  value: true
   mirror: always
 
 # Whether the File System API is enabled
@@ -9085,13 +9085,6 @@
   type: bool
   value: true
   mirror: always
-
-# Pref to control whether we emulate all -moz-box with modern flexbox.
-- name: layout.css.moz-box-flexbox-emulation.enabled
-  type: bool
-  value: true
-  mirror: always
-  rust: true
 
 # Pref to control whether to suspend also RefreshDriver::Tick when the page
 # itself is suspended because of some synchronous operation, like sync XHR.

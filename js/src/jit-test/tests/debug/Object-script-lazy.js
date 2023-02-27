@@ -37,8 +37,8 @@ assertEq(gDO.unwrap().parameterNames, undefined);
 
 // Similarly for g1.h, and asking for its bound function properties.
 var hDO = g2w.getOwnPropertyDescriptor('h').value;
-assertEq(hDO.unwrap().class, "Function");
-assertEq(hDO.unwrap().isBoundFunction, undefined);
+assertEq(hDO.unwrap().class, "BoundFunctionObject");
+assertEq(hDO.unwrap().isBoundFunction, true);
 assertEq(hDO.unwrap().isArrowFunction, undefined);
 assertEq(hDO.unwrap().boundTargetFunction, undefined);
 assertEq(hDO.unwrap().boundThis, undefined);
@@ -49,7 +49,7 @@ dbg.addDebuggee(g1);
 assertEq(fDO.unwrap().script instanceof Debugger.Script, true);
 assertEq(gDO.unwrap().parameterNames instanceof Array, true);
 assertEq(hDO.unwrap().isBoundFunction, true);
-assertEq(hDO.unwrap().isArrowFunction, false);
+assertEq(hDO.unwrap().isArrowFunction, undefined);
 assertEq(hDO.unwrap().boundTargetFunction, fDO.unwrap());
 assertEq(hDO.unwrap().boundThis, gDO.unwrap());
 assertEq(hDO.unwrap().boundArguments.length, 2);

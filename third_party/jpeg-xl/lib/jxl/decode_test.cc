@@ -13,7 +13,6 @@
 #include <utility>
 #include <vector>
 
-#include "gtest/gtest.h"
 #include "jxl/decode_cxx.h"
 #include "jxl/resizable_parallel_runner_cxx.h"
 #include "jxl/thread_parallel_runner_cxx.h"
@@ -27,9 +26,11 @@
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/dec_external_image.h"
+#include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_butteraugli_comparator.h"
 #include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_external_image.h"
+#include "lib/jxl/enc_fields.h"
 #include "lib/jxl/enc_file.h"
 #include "lib/jxl/enc_icc_codec.h"
 #include "lib/jxl/enc_progressive_split.h"
@@ -40,8 +41,9 @@
 #include "lib/jxl/icc_codec.h"
 #include "lib/jxl/image_metadata.h"
 #include "lib/jxl/jpeg/enc_jpeg_data.h"
+#include "lib/jxl/test_image.h"
 #include "lib/jxl/test_utils.h"
-#include "lib/jxl/testdata.h"
+#include "lib/jxl/testing.h"
 #include "lib/jxl/toc.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -439,9 +441,9 @@ PaddedBytes CreateTestJXLCodestream(Span<const uint8_t> pixels, size_t xsize,
 }
 
 JxlDecoderStatus ProcessInputIgnoreBoxes(JxlDecoder* dec) {
-  JxlDecoderStatus status;
-  while ((status = JxlDecoderProcessInput(dec)) == JXL_DEC_BOX) {
-    continue;
+  JxlDecoderStatus status = JXL_DEC_BOX;
+  while (status == JXL_DEC_BOX) {
+    status = JxlDecoderProcessInput(dec);
   }
   return status;
 }
@@ -753,7 +755,7 @@ std::vector<uint8_t> GetTestHeader(size_t xsize, size_t ysize,
   }
 
   writer.ZeroPadToByte();
-  ReclaimAndCharge(&writer, &allotment, 0, nullptr);
+  allotment.ReclaimAndCharge(&writer, 0, nullptr);
   return std::vector<uint8_t>(
       writer.GetSpan().data(),
       writer.GetSpan().data() + writer.GetSpan().size());
@@ -1615,7 +1617,7 @@ TEST(DecodeTest, PixelTestWithICCProfileLossless) {
       std::vector<uint8_t> pixels2 = jxl::DecodeWithAPI(
           dec, jxl::Span<const uint8_t>(compressed.data(), compressed.size()),
           format, /*use_callback=*/false, /*set_buffer_early=*/false,
-          /*use_resizable_runner=*/false, /*reuqire_boxes=*/false,
+          /*use_resizable_runner=*/false, /*require_boxes=*/false,
           /*expect_success=*/true);
       JxlDecoderReset(dec);
       EXPECT_EQ(num_pixels * channels * 4, pixels2.size());
@@ -1674,7 +1676,7 @@ TEST(DecodeTest, PixelTestWithICCProfileLossy) {
                                   /*pool=*/nullptr, &io1.Main()));
 
   jxl::ButteraugliParams ba;
-  EXPECT_THAT(ButteraugliDistance(io0, io1, ba, jxl::GetJxlCms(),
+  EXPECT_THAT(ButteraugliDistance(io0.frames, io1.frames, ba, jxl::GetJxlCms(),
                                   /*distmap=*/nullptr, nullptr),
               IsSlightlyBelow(0.86f));
 
@@ -1730,7 +1732,7 @@ double ButteraugliDistance(size_t xsize, size_t ysize,
       ysize, color_out,
       /*bits_per_sample=*/16, format_out,
       /*pool=*/nullptr, &out.Main()));
-  return ButteraugliDistance(in, out, jxl::ButteraugliParams(),
+  return ButteraugliDistance(in.frames, out.frames, jxl::ButteraugliParams(),
                              jxl::GetJxlCms(), nullptr, nullptr);
 }
 
@@ -1931,9 +1933,10 @@ TEST(DecodeTest, PixelTestOpaqueSrgbLossy) {
                                     /*pool=*/nullptr, &io1.Main()));
 
     jxl::ButteraugliParams ba;
-    EXPECT_THAT(ButteraugliDistance(io0, io1, ba, jxl::GetJxlCms(),
-                                    /*distmap=*/nullptr, nullptr),
-                IsSlightlyBelow(0.8f));
+    EXPECT_THAT(
+        ButteraugliDistance(io0.frames, io1.frames, ba, jxl::GetJxlCms(),
+                            /*distmap=*/nullptr, nullptr),
+        IsSlightlyBelow(0.8f));
 
     JxlDecoderDestroy(dec);
   }
@@ -1981,9 +1984,10 @@ TEST(DecodeTest, PixelTestOpaqueSrgbLossyNoise) {
                                     /*pool=*/nullptr, &io1.Main()));
 
     jxl::ButteraugliParams ba;
-    EXPECT_THAT(ButteraugliDistance(io0, io1, ba, jxl::GetJxlCms(),
-                                    /*distmap=*/nullptr, nullptr),
-                IsSlightlyBelow(2.4f));
+    EXPECT_THAT(
+        ButteraugliDistance(io0.frames, io1.frames, ba, jxl::GetJxlCms(),
+                            /*distmap=*/nullptr, nullptr),
+        IsSlightlyBelow(2.4f));
 
     JxlDecoderDestroy(dec);
   }
@@ -2038,7 +2042,7 @@ TEST(DecodeTest, ExtraBytesAfterCompressedStream) {
     } else if (box_format == kCSBF_Multi_Other_Terminated) {
       last_unknown_box_size = unk3_box_size + 8;
     } else if (box_format == kCSBF_Multi_Last_Empty_Other) {
-      // If boxes are not required, the decoder wont consume the last empty
+      // If boxes are not required, the decoder won't consume the last empty
       // jxlp box.
       last_unknown_box_size = 12 + unk3_box_size + 8;
     }
@@ -2407,7 +2411,7 @@ TEST(DecodeTest, PreviewTest) {
     // support smaller than 8x8, but jxl's ButteraugliDistance does not. Perhaps
     // move butteraugli's <8x8 handling from ButteraugliDiffmap to
     // ButteraugliComparator::Diffmap in butteraugli.cc.
-    EXPECT_LE(ButteraugliDistance(io0, io1, ba, jxl::GetJxlCms(),
+    EXPECT_LE(ButteraugliDistance(io0.frames, io1.frames, ba, jxl::GetJxlCms(),
                                   /*distmap=*/nullptr, nullptr),
               mode == jxl::kSmallPreview ? 0.7f : 1.2f);
 
@@ -2438,7 +2442,7 @@ TEST(DecodeTest, AlignTest) {
         jxl::Span<const uint8_t>(compressed.data(), compressed.size()), format,
         use_callback, /*set_buffer_early=*/false,
         /*use_resizable_runner=*/false, /*require_boxes=*/false,
-        /*expect_succes=*/true);
+        /*expect_success=*/true);
     EXPECT_EQ(expected_line_bytes * ysize, pixels2.size());
     EXPECT_EQ(0u, jxl::test::ComparePixels(pixels.data(), pixels2.data(), xsize,
                                            ysize, format_orig, format));
@@ -4752,8 +4756,8 @@ TEST_P(DecodeProgressiveTest, ProgressiveEventTest) {
             ysize, color_encoding,
             /*bits_per_sample=*/16, format,
             /*pool=*/nullptr, &io1.Main()));
-        distances[p] = ButteraugliDistance(io, io1, ba, jxl::GetJxlCms(),
-                                           nullptr, nullptr);
+        distances[p] = ButteraugliDistance(io.frames, io1.frames, ba,
+                                           jxl::GetJxlCms(), nullptr, nullptr);
         if (p == kNumPasses) break;
       }
       const float kMaxDistance[kNumPasses + 1] = {30.0f, 20.0f, 10.0f,
@@ -4823,13 +4827,13 @@ TEST(DecodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGReconstructTestCodestream)) {
 
 TEST(DecodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGReconstructionTest)) {
   const std::string jpeg_path = "jxl/flower/flower.png.im_q85_420.jpg";
-  const jxl::PaddedBytes orig = jxl::ReadTestData(jpeg_path);
+  const jxl::PaddedBytes orig = jxl::test::ReadTestData(jpeg_path);
   jxl::CodecInOut orig_io;
   ASSERT_TRUE(
       jxl::jpeg::DecodeImageJPG(jxl::Span<const uint8_t>(orig), &orig_io));
   orig_io.metadata.m.xyb_encoded = false;
   jxl::BitWriter writer;
-  ASSERT_TRUE(WriteHeaders(&orig_io.metadata, &writer, nullptr));
+  ASSERT_TRUE(WriteCodestreamHeaders(&orig_io.metadata, &writer, nullptr));
   writer.ZeroPadToByte();
   jxl::PassesEncoderState enc_state;
   jxl::CompressParams cparams;
@@ -4857,8 +4861,8 @@ TEST(DecodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGReconstructionTest)) {
 TEST(DecodeTest, JXL_TRANSCODE_JPEG_TEST(JPEGReconstructionMetadataTest)) {
   const std::string jpeg_path = "jxl/jpeg_reconstruction/1x1_exif_xmp.jpg";
   const std::string jxl_path = "jxl/jpeg_reconstruction/1x1_exif_xmp.jxl";
-  const jxl::PaddedBytes jpeg = jxl::ReadTestData(jpeg_path);
-  const jxl::PaddedBytes jxl = jxl::ReadTestData(jxl_path);
+  const jxl::PaddedBytes jpeg = jxl::test::ReadTestData(jpeg_path);
+  const jxl::PaddedBytes jxl = jxl::test::ReadTestData(jxl_path);
   VerifyJPEGReconstruction(jxl, jpeg);
 }
 
@@ -4929,7 +4933,7 @@ bool BoxTypeEquals(const std::string& type_string, JxlBoxType type) {
 
 TEST(DecodeTest, ExtentedBoxSizeTest) {
   const std::string jxl_path = "jxl/boxes/square-extended-size-container.jxl";
-  const jxl::PaddedBytes orig = jxl::ReadTestData(jxl_path);
+  const jxl::PaddedBytes orig = jxl::test::ReadTestData(jxl_path);
   JxlDecoder* dec = JxlDecoderCreate(nullptr);
 
   EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderSubscribeEvents(dec, JXL_DEC_BOX));

@@ -38,6 +38,7 @@ struct JXLCompressParams {
   std::vector<JXLOption> options;
   // Target butteraugli distance, 0.0 means lossless.
   float distance = 1.0f;
+  float alpha_distance = 1.0f;
   // If set to true, forces container mode.
   bool use_container = false;
   // Whether to enable/disable byte-exact jpeg reconstruction for jpeg inputs.

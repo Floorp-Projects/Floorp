@@ -11,8 +11,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "lib/jxl/aux_out.h"
-#include "lib/jxl/aux_out_fwd.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/status.h"
@@ -20,6 +18,8 @@
 #include "lib/jxl/enc_bit_writer.h"
 
 namespace jxl {
+
+struct AuxOut;
 
 // Should still be called if `icc.empty()` - if so, writes only 1 bit.
 Status WriteICC(const PaddedBytes& icc, BitWriter* JXL_RESTRICT writer,

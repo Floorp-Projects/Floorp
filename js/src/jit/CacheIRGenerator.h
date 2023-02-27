@@ -34,6 +34,7 @@ struct XrayJitInfo;
 
 namespace js {
 
+class BoundFunctionObject;
 class NativeObject;
 class PropertyResult;
 class ProxyObject;
@@ -509,6 +510,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachWasmCall(HandleFunction calleeFunc);
   AttachDecision tryAttachCallNative(HandleFunction calleeFunc);
   AttachDecision tryAttachCallHook(HandleObject calleeObj);
+  AttachDecision tryAttachBoundFunction(Handle<BoundFunctionObject*> calleeObj);
 
   void trackAttached(const char* name /* must be a C string literal */);
 
@@ -584,6 +586,7 @@ class MOZ_RAII InlinableNativeIRGenerator {
   AttachDecision tryAttachArrayIsArray();
   AttachDecision tryAttachDataViewGet(Scalar::Type type);
   AttachDecision tryAttachDataViewSet(Scalar::Type type);
+  AttachDecision tryAttachFunctionBind();
   AttachDecision tryAttachUnsafeGetReservedSlot(InlinableNative native);
   AttachDecision tryAttachUnsafeSetReservedSlot();
   AttachDecision tryAttachIsSuspendedGenerator();
@@ -644,7 +647,6 @@ class MOZ_RAII InlinableNativeIRGenerator {
   AttachDecision tryAttachArrayBufferByteLength(bool isPossiblyWrapped);
   AttachDecision tryAttachIsConstructing();
   AttachDecision tryAttachGetNextMapSetEntryForIterator(bool isMap);
-  AttachDecision tryAttachFinishBoundFunctionInit();
   AttachDecision tryAttachNewArrayIterator();
   AttachDecision tryAttachNewStringIterator();
   AttachDecision tryAttachNewRegExpStringIterator();

@@ -87,7 +87,6 @@
 
   --ext-theme-background-transition: background-color 0.1s cubic-bezier(.17,.67,.83,.67);
 
-  -moz-box-layout: flex;
   user-select: none;
 }
 

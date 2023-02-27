@@ -30,7 +30,7 @@ class BlendingStage : public RenderPipelineStage {
     info_ = state_.frame_header.blending_info;
     const std::vector<BlendingInfo>& ec_info =
         state_.frame_header.extra_channel_blending_info;
-    ImageBundle& bg = *state_.reference_frames[info_.source].frame;
+    const ImageBundle& bg = state_.reference_frames[info_.source].frame;
     bg_ = &bg;
     if (bg.xsize() == 0 || bg.ysize() == 0) {
       zeroes_.resize(image_xsize_, 0.f);
@@ -42,7 +42,7 @@ class BlendingStage : public RenderPipelineStage {
     } else if (std::any_of(ec_info.begin(), ec_info.end(),
                            [this](const BlendingInfo& info) {
                              const ImageBundle& bg =
-                                 *state_.reference_frames[info.source].frame;
+                                 state_.reference_frames[info.source].frame;
                              return bg.xsize() == 0 || bg.ysize() == 0;
                            })) {
       zeroes_.resize(image_xsize_, 0.f);
@@ -61,7 +61,7 @@ class BlendingStage : public RenderPipelineStage {
 
     Status ok = verify_bg_size(bg);
     for (const auto& info : ec_info) {
-      const ImageBundle& bg = *state_.reference_frames[info.source].frame;
+      const ImageBundle& bg = state_.reference_frames[info.source].frame;
       if (!!ok) ok = verify_bg_size(bg);
     }
     if (!ok) {
@@ -143,17 +143,16 @@ class BlendingStage : public RenderPipelineStage {
     for (size_t c = 0; c < num_c; ++c) {
       fg_row_ptrs_[c] = GetInputRow(input_rows, c, 0) + offset;
       if (c < 3) {
-        bg_row_ptrs_[c] =
-            bg_->xsize() != 0 && bg_->ysize() != 0
-                ? bg_->color()->ConstPlaneRow(c, bg_ypos) + bg_xpos
-                : zeroes_.data();
+        bg_row_ptrs_[c] = bg_->xsize() != 0 && bg_->ysize() != 0
+                              ? bg_->color().ConstPlaneRow(c, bg_ypos) + bg_xpos
+                              : zeroes_.data();
       } else {
         const ImageBundle& ec_bg =
-            *state_
-                 .reference_frames[state_.frame_header
-                                       .extra_channel_blending_info[c - 3]
-                                       .source]
-                 .frame;
+            state_
+                .reference_frames[state_.frame_header
+                                      .extra_channel_blending_info[c - 3]
+                                      .source]
+                .frame;
         bg_row_ptrs_[c] =
             ec_bg.xsize() != 0 && ec_bg.ysize() != 0
                 ? ec_bg.extra_channels()[c - 3].ConstRow(bg_ypos) + bg_xpos
@@ -187,16 +186,16 @@ class BlendingStage : public RenderPipelineStage {
     } else {
       for (size_t c = 0; c < 3; ++c) {
         memcpy(GetInputRow(output_rows, c, 0),
-               bg_->color()->ConstPlaneRow(c, ypos) + xpos,
+               bg_->color().ConstPlaneRow(c, ypos) + xpos,
                xsize * sizeof(float));
       }
     }
     for (size_t ec = 0; ec < extra_channel_info_->size(); ++ec) {
       const ImageBundle& ec_bg =
-          *state_
-               .reference_frames
-                   [state_.frame_header.extra_channel_blending_info[ec].source]
-               .frame;
+          state_
+              .reference_frames
+                  [state_.frame_header.extra_channel_blending_info[ec].source]
+              .frame;
       if (ec_bg.xsize() == 0 || ec_bg.ysize() == 0) {
         memset(GetInputRow(output_rows, 3 + ec, 0), 0, xsize * sizeof(float));
       } else {
@@ -212,7 +211,7 @@ class BlendingStage : public RenderPipelineStage {
  private:
   const PassesSharedState& state_;
   BlendingInfo info_;
-  ImageBundle* bg_;
+  const ImageBundle* bg_;
   Status initialized_ = true;
   size_t image_xsize_;
   size_t image_ysize_;

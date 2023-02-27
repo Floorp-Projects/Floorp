@@ -11,11 +11,10 @@
 #include <string>
 #include <vector>
 
-#include "lib/jxl/aux_out.h"
-#include "lib/jxl/aux_out_fwd.h"
 #include "lib/jxl/base/byte_order.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/enc_ans.h"
+#include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/icc_codec_common.h"
 
@@ -385,7 +384,7 @@ Status WriteICC(const PaddedBytes& icc, BitWriter* JXL_RESTRICT writer,
   std::vector<std::vector<Token>> tokens(1);
   BitWriter::Allotment allotment(writer, 128);
   JXL_RETURN_IF_ERROR(U64Coder::Write(enc.size(), writer));
-  ReclaimAndCharge(writer, &allotment, layer, aux_out);
+  allotment.ReclaimAndCharge(writer, layer, aux_out);
 
   for (size_t i = 0; i < enc.size(); i++) {
     tokens[0].emplace_back(

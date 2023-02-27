@@ -455,21 +455,6 @@ static bool intrinsic_DumpMessage(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool intrinsic_FinishBoundFunctionInit(JSContext* cx, unsigned argc,
-                                              Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 3);
-  MOZ_ASSERT(IsCallable(args[1]));
-  MOZ_RELEASE_ASSERT(args[2].isInt32());
-
-  RootedFunction bound(cx, &args[0].toObject().as<JSFunction>());
-  RootedObject targetObj(cx, &args[1].toObject());
-  int32_t argCount = args[2].toInt32();
-
-  args.rval().setUndefined();
-  return JSFunction::finishBoundFunctionInit(cx, bound, targetObj, argCount);
-}
-
 /*
  * Used to decompile values in the nearest non-builtin stack frame, falling
  * back to decompiling in the current frame. Helpful for printing higher-order
@@ -1533,8 +1518,7 @@ bool js::ReportIncompatibleSelfHostedMethod(JSContext* cx,
   MOZ_ASSERT(iter.isFunctionFrame());
 
   while (!iter.done()) {
-    MOZ_ASSERT(iter.callee(cx)->isSelfHostedOrIntrinsic() &&
-               !iter.callee(cx)->isBoundFunction());
+    MOZ_ASSERT(iter.callee(cx)->isSelfHostedOrIntrinsic());
     UniqueChars funNameBytes;
     const char* funName =
         GetFunctionNameBytes(cx, iter.callee(cx), &funNameBytes);
@@ -1858,9 +1842,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("DefineDataProperty", intrinsic_DefineDataProperty, 4, 0),
     JS_FN("DefineProperty", intrinsic_DefineProperty, 6, 0),
     JS_FN("DumpMessage", intrinsic_DumpMessage, 1, 0),
-    JS_INLINABLE_FN("FinishBoundFunctionInit",
-                    intrinsic_FinishBoundFunctionInit, 3, 0,
-                    IntrinsicFinishBoundFunctionInit),
     JS_FN("FlatStringMatch", FlatStringMatch, 2, 0),
     JS_FN("FlatStringSearch", FlatStringSearch, 2, 0),
     JS_FN("GeneratorIsRunning", intrinsic_GeneratorIsRunning, 1, 0),

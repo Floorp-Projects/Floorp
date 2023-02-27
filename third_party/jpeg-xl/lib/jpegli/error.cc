@@ -13,6 +13,14 @@
 
 namespace jpegli {
 
+bool FormatString(char* buffer, const char* format, ...) {
+  va_list args;
+  va_start(args, format);
+  vsnprintf(buffer, JMSG_LENGTH_MAX, format, args);
+  va_end(args);
+  return false;
+}
+
 const char* const kErrorMessageTable[] = {
     "Something went wrong.",
 };

@@ -166,14 +166,14 @@ install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/jxl
 include(jxl_profiler.cmake)
 
 if(BUILD_TESTING)
-# Unittests
-cmake_policy(SET CMP0057 NEW)  # https://gitlab.kitware.com/cmake/cmake/issues/18198
-include(GoogleTest)
+  cmake_policy(SET CMP0057 NEW)  # https://gitlab.kitware.com/cmake/cmake/issues/18198
+  include(GoogleTest)
+endif()
 
 # Tests for the jxl library.
 include(jxl_tests.cmake)
 
-# Google benchmark for the jxl library
-include(jxl_benchmark.cmake)
-
-endif()  # BUILD_TESTING
+if(BUILD_TESTING)
+  # Google benchmark for the jxl library
+  include(jxl_benchmark.cmake)
+endif()

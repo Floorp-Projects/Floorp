@@ -2785,8 +2785,12 @@ pref("browser.pdfjs.feature-tour", "{\"screen\":\"\",\"complete\":false}");
   pref("cookiebanners.service.mode.privateBrowsing", 1);
 #endif
 
-// Enables the cookie banner desktop UI.
-pref("cookiebanners.ui.desktop.enabled", false);
+#if defined(EARLY_BETA_OR_EARLIER)
+  // Enables the cookie banner desktop UI.
+  pref("cookiebanners.ui.desktop.enabled", true);
+#else
+  pref("cookiebanners.ui.desktop.enabled", false);
+#endif
 
 // Controls which variant of the cookie banner CFR the user is presented with.
 pref("cookiebanners.ui.desktop.cfrVariant", 0);

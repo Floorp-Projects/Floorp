@@ -1104,15 +1104,6 @@
   args:
     obj: ObjId
 
-- name: FinishBoundFunctionInitResult
-  shared: true
-  transpile: true
-  cost_estimate: 5
-  args:
-    bound: ObjId
-    target: ObjId
-    argCount: Int32Id
-
 - name: NewArrayIteratorResult
   shared: true
   transpile: true
@@ -1705,6 +1696,17 @@
     flags: CallFlagsImm
     argcFixed: UInt32Imm
 
+- name: CallBoundScriptedFunction
+  shared: false
+  transpile: true
+  cost_estimate: 3
+  args:
+    callee: ObjId
+    target: ObjId
+    argc: Int32Id
+    flags: CallFlagsImm
+    numBoundArgs: UInt32Imm
+
 - name: CallWasmFunction
   shared: false
   transpile: true
@@ -1789,6 +1791,15 @@
   custom_writer: true
   args:
     thisShape: ShapeField
+
+- name: BindFunctionResult
+  shared: false
+  transpile: true
+  cost_estimate: 5
+  args:
+    target: ObjId
+    argc: UInt32Imm
+    templateObject: ObjectField
 
 - name: LoadFixedSlotResult
   shared: false
@@ -1963,6 +1974,22 @@
   cost_estimate: 2
   args:
     obj: ObjId
+
+- name: LoadBoundFunctionNumArgs
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    obj: ObjId
+    result: Int32Id
+
+- name: LoadBoundFunctionTarget
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    obj: ObjId
+    result: ObjId
 
 - name: LoadArrayBufferByteLengthInt32Result
   shared: true

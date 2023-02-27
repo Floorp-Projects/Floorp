@@ -5,21 +5,20 @@
 
 #include <string>
 
-#include "gtest/gtest.h"
 #include "lib/extras/codec.h"
-#include "lib/jxl/aux_out.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/thread_pool_internal.h"
 #include "lib/jxl/codec_in_out.h"
 #include "lib/jxl/enc_butteraugli_comparator.h"
 #include "lib/jxl/enc_cache.h"
+#include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_file.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_test_utils.h"
 #include "lib/jxl/test_utils.h"
-#include "lib/jxl/testdata.h"
+#include "lib/jxl/testing.h"
 
 namespace jxl {
 namespace {
@@ -82,8 +81,8 @@ JXL_GTEST_INSTANTIATE_TEST_SUITE_P(
                                         /*shrink8=*/true}));
 
 TEST_P(SpeedTierTest, Roundtrip) {
-  const PaddedBytes orig =
-      ReadTestData("external/wesaturate/500px/u76c0g_bliznaca_srgb8.png");
+  const PaddedBytes orig = jxl::test::ReadTestData(
+      "external/wesaturate/500px/u76c0g_bliznaca_srgb8.png");
   CodecInOut io;
   ThreadPoolInternal pool(8);
   ASSERT_TRUE(SetFromBytes(Span<const uint8_t>(orig), &io, &pool));
@@ -98,12 +97,13 @@ TEST_P(SpeedTierTest, Roundtrip) {
   cparams.speed_tier = params.speed_tier;
 
   CodecInOut io2;
-  test::Roundtrip(&io, cparams, {}, nullptr, &io2);
+  JXL_EXPECT_OK(test::Roundtrip(&io, cparams, {}, &io2, _));
 
   // Can be 2.2 in non-hare mode.
-  EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params, GetJxlCms(),
-                                /*distmap=*/nullptr, /*pool=*/nullptr),
-            2.8);
+  EXPECT_LE(
+      ButteraugliDistance(io.frames, io2.frames, cparams.ba_params, GetJxlCms(),
+                          /*distmap=*/nullptr, /*pool=*/nullptr),
+      2.8);
 }
 }  // namespace
 }  // namespace jxl

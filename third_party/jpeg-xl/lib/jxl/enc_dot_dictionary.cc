@@ -11,7 +11,6 @@
 #include <array>
 #include <utility>
 
-#include "lib/jxl/aux_out.h"
 #include "lib/jxl/base/override.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/chroma_from_luma.h"

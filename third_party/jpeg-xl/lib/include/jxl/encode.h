@@ -1138,6 +1138,22 @@ JXL_DEPRECATED JXL_EXPORT JxlEncoderStatus
 JxlEncoderOptionsSetDistance(JxlEncoderFrameSettings*, float);
 
 /**
+ * Sets the distance level for lossy compression of extra channels.
+ * The distance is as in JxlEncoderSetFrameDistance (lower = higher quality).
+ * If not set, or if set to the special value -1, the distance that was set with
+ * JxlEncoderSetFrameDistance will be used.
+ *
+ * @param frame_settings set of options and metadata for this frame. Also
+ * includes reference to the encoder object.
+ * @param index index of the extra channel to set a distance value for.
+ * @param distance the distance value to set.
+ * @return JXL_ENC_SUCCESS if the operation was successful, JXL_ENC_ERROR
+ * otherwise.
+ */
+JXL_EXPORT JxlEncoderStatus JxlEncoderSetExtraChannelDistance(
+    JxlEncoderFrameSettings* frame_settings, size_t index, float distance);
+
+/**
  * Create a new set of encoder options, with all values initially copied from
  * the @p source options, or set to default if @p source is NULL.
  *

@@ -118,7 +118,7 @@ typedef enum {
    * input range is 0 .. 65535 and the value 65535 is mapped to 1.0 when
    * converting to float), and the decoder uses the full range to output
    * pixels. If the bit depth in the basic info is different from this, the
-   * encoder expects the values to be rescaled accordingly (e.g multiplied by
+   * encoder expects the values to be rescaled accordingly (e.g. multiplied by
    * 65535/4095 for a 12-bit image using UINT16 input data type). */
   JXL_BIT_DEPTH_FROM_PIXEL_FORMAT = 0,
 

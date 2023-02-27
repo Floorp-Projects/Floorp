@@ -18,12 +18,12 @@
 #include <vector>
 
 #include "lib/jxl/ans_common.h"
-#include "lib/jxl/aux_out.h"
-#include "lib/jxl/aux_out_fwd.h"
 #include "lib/jxl/base/bits.h"
 #include "lib/jxl/dec_ans.h"
+#include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_cluster.h"
 #include "lib/jxl/enc_context_map.h"
+#include "lib/jxl/enc_fields.h"
 #include "lib/jxl/enc_huffman.h"
 #include "lib/jxl/fast_math-inl.h"
 #include "lib/jxl/fields.h"
@@ -450,7 +450,7 @@ size_t BuildAndStoreANSEncodingData(
             &tmp_writer, 8 * alphabet_size + 8);  // safe upper bound
         BuildAndStoreHuffmanTree(histo.data(), alphabet_size, depths.data(),
                                  bits.data(), &tmp_writer);
-        ReclaimAndCharge(&tmp_writer, &allotment, 0, /*aux_out=*/nullptr);
+        allotment.ReclaimAndCharge(&tmp_writer, 0, /*aux_out=*/nullptr);
         cost = tmp_writer.BitsWritten();
       } else {
         size_t start = writer->BitsWritten();
@@ -787,7 +787,7 @@ class HistogramBuilder {
           num_symbol, log_alpha_size, use_prefix_code,
           codes->encoding_info.back().data(), writer);
       allotment.FinishedHistogram(writer);
-      ReclaimAndCharge(writer, &allotment, layer, aux_out);
+      allotment.ReclaimAndCharge(writer, layer, aux_out);
     }
     return cost;
   }
@@ -1574,7 +1574,7 @@ size_t BuildAndEncodeHistograms(const HistogramParams& params,
                                                   context_map, use_prefix_code,
                                                   writer, layer, aux_out);
   allotment.FinishedHistogram(writer);
-  ReclaimAndCharge(writer, &allotment, layer, aux_out);
+  allotment.ReclaimAndCharge(writer, layer, aux_out);
 
   if (aux_out != nullptr) {
     aux_out->layers[layer].num_clustered_histograms +=
@@ -1674,7 +1674,7 @@ void WriteTokens(const std::vector<Token>& tokens,
                  size_t layer, AuxOut* aux_out) {
   BitWriter::Allotment allotment(writer, 32 * tokens.size() + 32 * 1024 * 4);
   size_t num_extra_bits = WriteTokens(tokens, codes, context_map, writer);
-  ReclaimAndCharge(writer, &allotment, layer, aux_out);
+  allotment.ReclaimAndCharge(writer, layer, aux_out);
   if (aux_out != nullptr) {
     aux_out->layers[layer].extra_bits += num_extra_bits;
   }

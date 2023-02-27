@@ -8,7 +8,9 @@
 #include <string.h>  // memcpy
 
 #include "lib/jxl/base/byte_order.h"
+#include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/dec_bit_reader.h"
+#include "lib/jxl/enc_aux_out.h"
 
 namespace jxl {
 
@@ -38,6 +40,25 @@ void BitWriter::Allotment::FinishedHistogram(BitWriter* JXL_RESTRICT writer) {
   histogram_bits_ = writer->BitsWritten() - prev_bits_written_;
 }
 
+void BitWriter::Allotment::ReclaimAndCharge(BitWriter* JXL_RESTRICT writer,
+                                            size_t layer,
+                                            AuxOut* JXL_RESTRICT aux_out) {
+  size_t used_bits, unused_bits;
+  PrivateReclaim(writer, &used_bits, &unused_bits);
+
+#if 0
+  printf("Layer %s bits: max %" PRIuS " used %" PRIuS " unused %" PRIuS "\n",
+         LayerName(layer), MaxBits(), used_bits, unused_bits);
+#endif
+
+  // This may be a nested call with aux_out == null. Whenever we know that
+  // aux_out is null, we can call ReclaimUnused directly.
+  if (aux_out != nullptr) {
+    aux_out->layers[layer].total_bits += used_bits;
+    aux_out->layers[layer].histogram_bits += HistogramBits();
+  }
+}
+
 void BitWriter::Allotment::PrivateReclaim(BitWriter* JXL_RESTRICT writer,
                                           size_t* JXL_RESTRICT used_bits,
                                           size_t* JXL_RESTRICT unused_bits) {
@@ -64,7 +85,7 @@ void BitWriter::Allotment::PrivateReclaim(BitWriter* JXL_RESTRICT writer,
 }
 
 void BitWriter::AppendByteAligned(const Span<const uint8_t>& span) {
-  if (!span.size()) return;
+  if (span.empty()) return;
   storage_.resize(storage_.size() + span.size() + 1);  // extra zero padding
 
   // Concatenate by copying bytes because both source and destination are bytes.

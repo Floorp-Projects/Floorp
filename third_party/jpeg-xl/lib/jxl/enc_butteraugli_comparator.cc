@@ -80,17 +80,18 @@ float ButteraugliDistance(const ImageBundle& rgb0, const ImageBundle& rgb1,
   return ComputeScore(rgb0, rgb1, &comparator, cms, distmap, pool);
 }
 
-float ButteraugliDistance(const CodecInOut& rgb0, const CodecInOut& rgb1,
+float ButteraugliDistance(const std::vector<ImageBundle>& frames0,
+                          const std::vector<ImageBundle>& frames1,
                           const ButteraugliParams& params,
                           const JxlCmsInterface& cms, ImageF* distmap,
                           ThreadPool* pool) {
   JxlButteraugliComparator comparator(params, cms);
-  JXL_ASSERT(rgb0.frames.size() == rgb1.frames.size());
+  JXL_ASSERT(frames0.size() == frames1.size());
   float max_dist = 0.0f;
-  for (size_t i = 0; i < rgb0.frames.size(); ++i) {
-    max_dist =
-        std::max(max_dist, ComputeScore(rgb0.frames[i], rgb1.frames[i],
-                                        &comparator, cms, distmap, pool));
+  for (size_t i = 0; i < frames0.size(); ++i) {
+    max_dist = std::max(
+        max_dist,
+        ComputeScore(frames0[i], frames1[i], &comparator, cms, distmap, pool));
   }
   return max_dist;
 }

@@ -61,6 +61,8 @@
   _(DataViewSetBigInt64)                           \
   _(DataViewSetBigUint64)                          \
                                                    \
+  _(FunctionBind)                                  \
+                                                   \
   _(IntlGuardToCollator)                           \
   _(IntlGuardToDateTimeFormat)                     \
   _(IntlGuardToDisplayNames)                       \
@@ -167,7 +169,6 @@
   _(IntrinsicIsConstructing)                       \
   _(IntrinsicSubstringKernel)                      \
   _(IntrinsicObjectHasPrototype)                   \
-  _(IntrinsicFinishBoundFunctionInit)              \
   _(IntrinsicIsPackedArray)                        \
                                                    \
   _(IntrinsicIsSuspendedGenerator)                 \

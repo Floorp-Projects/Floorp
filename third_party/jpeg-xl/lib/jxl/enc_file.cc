@@ -11,13 +11,14 @@
 #include <utility>
 #include <vector>
 
-#include "lib/jxl/aux_out.h"
-#include "lib/jxl/aux_out_fwd.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/codec_in_out.h"
+#include "lib/jxl/coeff_order_fwd.h"
 #include "lib/jxl/color_encoding_internal.h"
+#include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_bit_writer.h"
 #include "lib/jxl/enc_cache.h"
+#include "lib/jxl/enc_fields.h"
 #include "lib/jxl/enc_frame.h"
 #include "lib/jxl/enc_icc_codec.h"
 #include "lib/jxl/frame_header.h"
@@ -81,27 +82,6 @@ Status EncodePreview(const CompressParams& cparams, const ImageBundle& ib,
   return true;
 }
 
-Status WriteHeaders(CodecMetadata* metadata, BitWriter* writer,
-                    AuxOut* aux_out) {
-  // Marker/signature
-  BitWriter::Allotment allotment(writer, 16);
-  writer->Write(8, 0xFF);
-  writer->Write(8, kCodestreamMarker);
-  ReclaimAndCharge(writer, &allotment, kLayerHeader, aux_out);
-
-  JXL_RETURN_IF_ERROR(
-      WriteSizeHeader(metadata->size, writer, kLayerHeader, aux_out));
-
-  JXL_RETURN_IF_ERROR(
-      WriteImageMetadata(metadata->m, writer, kLayerHeader, aux_out));
-
-  metadata->transform_data.nonserialized_xyb_encoded = metadata->m.xyb_encoded;
-  JXL_RETURN_IF_ERROR(
-      Bundle::Write(metadata->transform_data, writer, kLayerHeader, aux_out));
-
-  return true;
-}
-
 Status EncodeFile(const CompressParams& params, const CodecInOut* io,
                   PassesEncoderState* passes_enc_state, PaddedBytes* compressed,
                   const JxlCmsInterface& cms, AuxOut* aux_out,
@@ -119,7 +99,7 @@ Status EncodeFile(const CompressParams& params, const CodecInOut* io,
 
   std::unique_ptr<CodecMetadata> metadata = jxl::make_unique<CodecMetadata>();
   JXL_RETURN_IF_ERROR(PrepareCodecMetadataFromIO(cparams, io, metadata.get()));
-  JXL_RETURN_IF_ERROR(WriteHeaders(metadata.get(), &writer, aux_out));
+  JXL_RETURN_IF_ERROR(WriteCodestreamHeaders(metadata.get(), &writer, aux_out));
 
   // Only send ICC (at least several hundred bytes) if fields aren't enough.
   if (metadata->m.color_encoding.WantICC()) {
@@ -135,7 +115,7 @@ Status EncodeFile(const CompressParams& params, const CodecInOut* io,
   // Each frame should start on byte boundaries.
   BitWriter::Allotment allotment(&writer, 8);
   writer.ZeroPadToByte();
-  ReclaimAndCharge(&writer, &allotment, kLayerHeader, aux_out);
+  allotment.ReclaimAndCharge(&writer, kLayerHeader, aux_out);
 
   for (size_t i = 0; i < io->frames.size(); i++) {
     FrameInfo info;
@@ -151,7 +131,7 @@ Status EncodeFile(const CompressParams& params, const CodecInOut* io,
   // Clean up passes_enc_state in case it gets reused.
   for (size_t i = 0; i < 4; i++) {
     passes_enc_state->shared.dc_frames[i] = Image3F();
-    passes_enc_state->shared.reference_frames[i].storage = ImageBundle();
+    passes_enc_state->shared.reference_frames[i].frame = ImageBundle();
   }
 
   *compressed = std::move(writer).TakeBytes();

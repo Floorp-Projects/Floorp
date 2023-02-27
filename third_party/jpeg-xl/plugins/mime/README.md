@@ -1,6 +1,6 @@
 ## JPEG XL MIME type
 
-If not already installed by the [Installing section of README.md](../../README.md#installing), then it can be done manually:
+If not already installed by the [Installing section of BUILDING.md](../../BUILDING.md#installing), then it can be done manually:
 
 ### Install
 ```bash

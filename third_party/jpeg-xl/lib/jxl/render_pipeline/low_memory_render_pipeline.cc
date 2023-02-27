@@ -9,8 +9,8 @@
 #include <queue>
 #include <tuple>
 
-#include "lib/jxl/aux_out.h"
 #include "lib/jxl/base/arch_macros.h"
+#include "lib/jxl/image_ops.h"
 
 namespace jxl {
 std::pair<size_t, size_t>

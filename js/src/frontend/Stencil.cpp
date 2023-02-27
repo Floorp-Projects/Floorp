@@ -4063,9 +4063,6 @@ void js::DumpFunctionFlagsItems(js::JSONPrinter& json,
         case FunctionFlags::Flags::CONSTRUCTOR:
           json.value("CONSTRUCTOR");
           break;
-        case FunctionFlags::Flags::BOUND_FUN:
-          json.value("BOUND_FUN");
-          break;
         case FunctionFlags::Flags::LAMBDA:
           json.value("LAMBDA");
           break;
@@ -4075,8 +4072,8 @@ void js::DumpFunctionFlagsItems(js::JSONPrinter& json,
         case FunctionFlags::Flags::HAS_INFERRED_NAME:
           json.value("HAS_INFERRED_NAME");
           break;
-        case FunctionFlags::Flags::ATOM_EXTRA_FLAG:
-          json.value("ATOM_EXTRA_FLAG");
+        case FunctionFlags::Flags::HAS_GUESSED_ATOM:
+          json.value("HAS_GUESSED_ATOM");
           break;
         case FunctionFlags::Flags::RESOLVED_NAME:
           json.value("RESOLVED_NAME");

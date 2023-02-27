@@ -119,7 +119,7 @@ TEST(PrincipalSerialization, ExpandedPrincipal)
             BasePrincipal::eContentPrincipal);
   allowedDomains[1] = principal2;
 
-  OriginAttributes attrs;
+  mozilla::OriginAttributes attrs;
   RefPtr<ExpandedPrincipal> result =
       ExpandedPrincipal::Create(allowedDomains, attrs);
   ASSERT_EQ(BasePrincipal::Cast(result)->Kind(),
@@ -177,7 +177,7 @@ TEST(PrincipalSerialization, ExpandedPrincipalOA)
             BasePrincipal::eContentPrincipal);
   allowedDomains[1] = principal2;
 
-  OriginAttributes attrs;
+  mozilla::OriginAttributes attrs;
   nsAutoCString suffix("^userContextId=1");
   bool ok = attrs.PopulateFromSuffix(suffix);
   ASSERT_TRUE(ok);
