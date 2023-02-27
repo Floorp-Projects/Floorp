@@ -106,6 +106,7 @@ class VideoFrameSurface<LIBAV_VER> {
   const FFmpegLibWrapper* mLib;
   AVBufferRef* mAVHWFrameContext;
   AVBufferRef* mHWAVBuffer;
+  VASurfaceID mFFMPEGSurfaceID;
 };
 
 // VideoFramePool class is thread-safe.
@@ -124,6 +125,7 @@ class VideoFramePool<LIBAV_VER> {
  private:
   RefPtr<VideoFrameSurface<LIBAV_VER>> GetFreeVideoFrameSurface();
   bool ShouldCopySurface();
+  void CheckNewFFMPEGSurface(VASurfaceID aNewSurfaceID);
 
  private:
   // Protect mDMABufSurfaces pool access
