@@ -120,32 +120,30 @@ WorkerEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) {
 
 NS_IMETHODIMP
 WorkerEventTarget::RegisterShutdownTask(nsITargetShutdownTask* aTask) {
+  NS_ENSURE_ARG(aTask);
+
   MutexAutoLock lock(mMutex);
 
+  // If mWorkerPrivate is gone, the event target is already late during
+  // shutdown, return NS_ERROR_UNEXPECTED as documented in `nsIEventTarget.idl`.
   if (!mWorkerPrivate) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_UNEXPECTED;
   }
 
-  if (!mWorkerPrivate->RegisterShutdownTask(aTask)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
+  return mWorkerPrivate->RegisterShutdownTask(aTask);
 }
 
 NS_IMETHODIMP
 WorkerEventTarget::UnregisterShutdownTask(nsITargetShutdownTask* aTask) {
+  NS_ENSURE_ARG(aTask);
+
   MutexAutoLock lock(mMutex);
 
   if (!mWorkerPrivate) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_UNEXPECTED;
   }
 
-  if (!mWorkerPrivate->UnregisterShutdownTask(aTask)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
+  return mWorkerPrivate->UnregisterShutdownTask(aTask);
 }
 
 NS_IMETHODIMP_(bool)

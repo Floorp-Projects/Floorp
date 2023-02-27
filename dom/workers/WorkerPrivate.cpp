@@ -4146,53 +4146,48 @@ void WorkerPrivate::NotifyWorkerRefs(WorkerStatus aStatus) {
   }
 }
 
-bool WorkerPrivate::RegisterShutdownTask(nsITargetShutdownTask* aTask) {
-  MOZ_ASSERT(aTask);
+nsresult WorkerPrivate::RegisterShutdownTask(nsITargetShutdownTask* aTask) {
+  NS_ENSURE_ARG(aTask);
 
   MutexAutoLock lock(mMutex);
 
-  if (mRunShutdownTasksStarted) {
-    return false;
+  // If we've already started running shutdown tasks, don't allow registering
+  // new ones.
+  if (mShutdownTasksRun) {
+    return NS_ERROR_UNEXPECTED;
   }
 
   MOZ_ASSERT(!mShutdownTasks.Contains(aTask));
   mShutdownTasks.AppendElement(aTask);
-
-  return true;
+  return NS_OK;
 }
 
-bool WorkerPrivate::UnregisterShutdownTask(nsITargetShutdownTask* aTask) {
-  MOZ_ASSERT(aTask);
+nsresult WorkerPrivate::UnregisterShutdownTask(nsITargetShutdownTask* aTask) {
+  NS_ENSURE_ARG(aTask);
 
   MutexAutoLock lock(mMutex);
 
-  if (mRunShutdownTasksFinished) {
-    return false;
+  // We've already started running shutdown tasks, so can't unregister them
+  // anymore.
+  if (mShutdownTasksRun) {
+    return NS_ERROR_UNEXPECTED;
   }
 
-  MOZ_ASSERT(mShutdownTasks.Contains(aTask));
-  mShutdownTasks.RemoveElement(aTask);
-
-  return true;
+  return mShutdownTasks.RemoveElement(aTask) ? NS_OK : NS_ERROR_UNEXPECTED;
 }
 
 void WorkerPrivate::RunShutdownTasks() {
-  CopyableTArray<nsCOMPtr<nsITargetShutdownTask>> shutdownTasks;
+  nsTArray<nsCOMPtr<nsITargetShutdownTask>> shutdownTasks;
 
   {
     MutexAutoLock lock(mMutex);
-    shutdownTasks = mShutdownTasks;
-    mRunShutdownTasksStarted = true;
+    shutdownTasks = std::move(mShutdownTasks);
+    mShutdownTasks.Clear();
+    mShutdownTasksRun = true;
   }
 
   for (auto& task : shutdownTasks) {
     task->TargetShutdown();
-  }
-
-  {
-    MutexAutoLock lock(mMutex);
-    mShutdownTasks.Clear();
-    mRunShutdownTasksFinished = true;
   }
 }
 
