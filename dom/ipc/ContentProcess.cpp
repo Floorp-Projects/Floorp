@@ -13,6 +13,7 @@
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 #  include <stdlib.h>
 #  include "mozilla/Sandbox.h"
+#  include "mozilla/SandboxSettings.h"
 #endif
 
 #include "nsAppRunner.h"
