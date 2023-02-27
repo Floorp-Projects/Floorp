@@ -175,26 +175,10 @@ angle::Result TextureImpl::getTexImage(const gl::Context *context,
     return angle::Result::Stop;
 }
 
-angle::Result TextureImpl::getCompressedTexImage(const gl::Context *context,
-                                                 const gl::PixelPackState &packState,
-                                                 gl::Buffer *packBuffer,
-                                                 gl::TextureTarget target,
-                                                 GLint level,
-                                                 void *pixels)
-{
-    UNREACHABLE();
-    return angle::Result::Stop;
-}
-
 GLint TextureImpl::getRequiredExternalTextureImageUnits(const gl::Context *context)
 {
     UNREACHABLE();
     return 0;
-}
-
-angle::Result TextureImpl::onLabelUpdate(const gl::Context *context)
-{
-    return angle::Result::Continue;
 }
 
 }  // namespace rx

@@ -12,8 +12,6 @@
 #include "compiler/translator/tree_ops/SimplifyLoopConditions.h"
 #include "compiler/translator/tree_ops/SplitSequenceOperator.h"
 #include "compiler/translator/tree_ops/d3d/AddDefaultReturnStatements.h"
-#include "compiler/translator/tree_ops/d3d/AggregateAssignArraysInSSBOs.h"
-#include "compiler/translator/tree_ops/d3d/AggregateAssignStructsInSSBOs.h"
 #include "compiler/translator/tree_ops/d3d/ArrayReturnValueToOutParameter.h"
 #include "compiler/translator/tree_ops/d3d/BreakVariableAliasingInInnerLoops.h"
 #include "compiler/translator/tree_ops/d3d/ExpandIntegerPowExpressions.h"
@@ -37,25 +35,9 @@ TranslatorHLSL::TranslatorHLSL(sh::GLenum type, ShShaderSpec spec, ShShaderOutpu
 {}
 
 bool TranslatorHLSL::translate(TIntermBlock *root,
-                               const ShCompileOptions &compileOptions,
+                               ShCompileOptions compileOptions,
                                PerformanceDiagnostics *perfDiagnostics)
 {
-    // A few transformations leave the tree in an inconsistent state.  For example, when unfolding
-    // the short-circuit in the following function:
-    //
-    //     mediump float f(float a) { return a > 0 ? 0.0 : 1.0; }
-    //
-    // a temp variable is created to hold the result of the expression.  Currently the precision of
-    // the return value of the function is not propagated to its return expressions.  Additionally,
-    // an expression such as
-    //
-    //     cond ? gl_NumWorkGroups.x : gl_NumWorkGroups.y
-    //
-    // does not have a precision as the built-in does not specify a precision.
-    //
-    // Precision is not applicable to HLSL so fixing these issues are deferred.
-    mValidateASTOptions.validatePrecision = false;
-
     const ShBuiltInResources &resources = getResources();
     int numRenderTargets                = resources.EXT_draw_buffers ? resources.MaxDrawBuffers : 1;
     int maxDualSourceDrawBuffers =
@@ -98,24 +80,6 @@ bool TranslatorHLSL::translate(TIntermBlock *root,
     if (!SeparateArrayConstructorStatements(this, root))
     {
         return false;
-    }
-
-    if (getShaderVersion() >= 310)
-    {
-        // Do element-by-element assignments of arrays in SSBOs. This allows the D3D backend to use
-        // RWByteAddressBuffer.Load() and .Store(), which only operate on values up to 16 bytes in
-        // size. Note that this must be done before SeparateExpressionsReturningArrays.
-        if (!sh::AggregateAssignArraysInSSBOs(this, root, &getSymbolTable()))
-        {
-            return false;
-        }
-        // Do field-by-field assignment of structs in SSBOs. This allows the D3D backend to use
-        // RWByteAddressBuffer.Load() and .Store(), which only operate on values up to 16 bytes in
-        // size.
-        if (!sh::AggregateAssignStructsInSSBOs(this, root, &getSymbolTable()))
-        {
-            return false;
-        }
     }
 
     if (!SeparateExpressionsReturningArrays(this, root, &getSymbolTable()))
@@ -174,7 +138,11 @@ bool TranslatorHLSL::translate(TIntermBlock *root,
         return false;
     }
 
-    if (compileOptions.expandSelectHLSLIntegerPowExpressions)
+    bool precisionEmulation = false;
+    if (!emulatePrecisionIfNeeded(root, getInfoSink().obj, &precisionEmulation, getOutputType()))
+        return false;
+
+    if ((compileOptions & SH_EXPAND_SELECT_HLSL_INTEGER_POW_EXPRESSIONS) != 0)
     {
         if (!sh::ExpandIntegerPowExpressions(this, root, &getSymbolTable()))
         {
@@ -182,7 +150,7 @@ bool TranslatorHLSL::translate(TIntermBlock *root,
         }
     }
 
-    if (compileOptions.rewriteTexelFetchOffsetToTexelFetch)
+    if ((compileOptions & SH_REWRITE_TEXELFETCHOFFSET_TO_TEXELFETCH) != 0)
     {
         if (!sh::RewriteTexelFetchOffset(this, root, getSymbolTable(), getShaderVersion()))
         {
@@ -190,7 +158,8 @@ bool TranslatorHLSL::translate(TIntermBlock *root,
         }
     }
 
-    if (compileOptions.rewriteIntegerUnaryMinusOperator && getShaderType() == GL_VERTEX_SHADER)
+    if (((compileOptions & SH_REWRITE_INTEGER_UNARY_MINUS_OPERATOR) != 0) &&
+        getShaderType() == GL_VERTEX_SHADER)
     {
         if (!sh::RewriteUnaryMinusOperatorInt(this, root))
         {
@@ -218,7 +187,8 @@ bool TranslatorHLSL::translate(TIntermBlock *root,
     // In order to get the exact maximum of slots are available for shader resources, which would
     // been bound with StructuredBuffer, we only translate uniform block with a large array member
     // into StructuredBuffer when shader version is 300.
-    if (getShaderVersion() == 300 && compileOptions.allowTranslateUniformBlockToStructuredBuffer)
+    if (getShaderVersion() == 300 &&
+        (compileOptions & SH_ALLOW_TRANSLATE_UNIFORM_BLOCK_TO_STRUCTUREDBUFFER) != 0)
     {
         if (!sh::RecordUniformBlocksWithLargeArrayMember(root, mUniformBlockOptimizedMap,
                                                          mSlowCompilingUniformBlockSet))
@@ -227,11 +197,11 @@ bool TranslatorHLSL::translate(TIntermBlock *root,
         }
     }
 
-    sh::OutputHLSL outputHLSL(
-        getShaderType(), getShaderSpec(), getShaderVersion(), getExtensionBehavior(),
-        getSourcePath(), getOutputType(), numRenderTargets, maxDualSourceDrawBuffers, getUniforms(),
-        compileOptions, getComputeShaderLocalSize(), &getSymbolTable(), perfDiagnostics,
-        mUniformBlockOptimizedMap, mShaderStorageBlocks, isEarlyFragmentTestsSpecified());
+    sh::OutputHLSL outputHLSL(getShaderType(), getShaderSpec(), getShaderVersion(),
+                              getExtensionBehavior(), getSourcePath(), getOutputType(),
+                              numRenderTargets, maxDualSourceDrawBuffers, getUniforms(),
+                              compileOptions, getComputeShaderLocalSize(), &getSymbolTable(),
+                              perfDiagnostics, mUniformBlockOptimizedMap, mShaderStorageBlocks);
 
     outputHLSL.output(root, getInfoSink().obj);
 

@@ -18,9 +18,9 @@ class TCompiler;
 class TIntermBlock;
 class TIntermNode;
 
-[[nodiscard]] bool RunAtTheBeginningOfShader(TCompiler *compiler,
-                                             TIntermBlock *root,
-                                             TIntermNode *codeToRun);
+ANGLE_NO_DISCARD bool RunAtTheBeginningOfShader(TCompiler *compiler,
+                                                TIntermBlock *root,
+                                                TIntermNode *codeToRun);
 
 }  // namespace sh
 

@@ -126,7 +126,7 @@ bool RewriteAtomicFunctionExpressionsTraverser::IsAtomicFunctionInsideExpression
     ASSERT(node);
     // We only need to handle atomic functions with a parent that it is not block nodes. If the
     // parent node is block, it means that the atomic function is not inside an expression.
-    if (!BuiltInGroup::IsAtomicMemory(node->getOp()) || parentNode->getAsBlock())
+    if (!IsAtomicFunction(node->getOp()) || parentNode->getAsBlock())
     {
         return false;
     }
@@ -140,7 +140,7 @@ bool RewriteAtomicFunctionExpressionsTraverser::visitAggregate(Visit visit, TInt
 {
     ASSERT(visit == PostVisit);
     // Skip atomic memory functions for SSBO. They will be processed in the OutputHLSL traverser.
-    if (BuiltInGroup::IsAtomicMemory(node->getOp()) &&
+    if (IsAtomicFunction(node->getOp()) &&
         IsInShaderStorageBlock((*node->getSequence())[0]->getAsTyped()))
     {
         return false;

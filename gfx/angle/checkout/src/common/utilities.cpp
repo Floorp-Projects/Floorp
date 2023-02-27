@@ -129,28 +129,23 @@ GLenum VariableComponentType(GLenum type)
         case GL_SAMPLER_2D_RECT_ANGLE:
         case GL_SAMPLER_3D:
         case GL_SAMPLER_CUBE:
-        case GL_SAMPLER_CUBE_MAP_ARRAY:
         case GL_SAMPLER_2D_ARRAY:
         case GL_SAMPLER_EXTERNAL_OES:
         case GL_SAMPLER_2D_MULTISAMPLE:
         case GL_SAMPLER_2D_MULTISAMPLE_ARRAY:
-        case GL_INT_SAMPLER_BUFFER:
         case GL_INT_SAMPLER_2D:
         case GL_INT_SAMPLER_3D:
         case GL_INT_SAMPLER_CUBE:
-        case GL_INT_SAMPLER_CUBE_MAP_ARRAY:
         case GL_INT_SAMPLER_2D_ARRAY:
         case GL_INT_SAMPLER_2D_MULTISAMPLE:
         case GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
         case GL_UNSIGNED_INT_SAMPLER_2D:
         case GL_UNSIGNED_INT_SAMPLER_3D:
         case GL_UNSIGNED_INT_SAMPLER_CUBE:
-        case GL_UNSIGNED_INT_SAMPLER_CUBE_MAP_ARRAY:
         case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
         case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:
         case GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:
         case GL_SAMPLER_2D_SHADOW:
-        case GL_SAMPLER_BUFFER:
         case GL_SAMPLER_CUBE_SHADOW:
         case GL_SAMPLER_2D_ARRAY_SHADOW:
         case GL_INT_VEC2:
@@ -173,7 +168,6 @@ GLenum VariableComponentType(GLenum type)
         case GL_UNSIGNED_INT_IMAGE_CUBE_MAP_ARRAY:
         case GL_IMAGE_BUFFER:
         case GL_INT_IMAGE_BUFFER:
-        case GL_UNSIGNED_INT_SAMPLER_BUFFER:
         case GL_UNSIGNED_INT_IMAGE_BUFFER:
         case GL_UNSIGNED_INT_ATOMIC_COUNTER:
         case GL_SAMPLER_VIDEO_IMAGE_WEBGL:
@@ -265,7 +259,7 @@ std::string GetGLSLTypeString(GLenum type)
             return "mat4";
         default:
             UNREACHABLE();
-            return "";
+            return nullptr;
     }
 }
 
@@ -597,9 +591,6 @@ bool IsImage2DType(GLenum type)
         case GL_IMAGE_CUBE:
         case GL_INT_IMAGE_CUBE:
         case GL_UNSIGNED_INT_IMAGE_CUBE:
-        case GL_IMAGE_BUFFER:
-        case GL_INT_IMAGE_BUFFER:
-        case GL_UNSIGNED_INT_IMAGE_BUFFER:
             return false;
         default:
             UNREACHABLE();
@@ -976,21 +967,6 @@ unsigned int ArraySizeProduct(const std::vector<unsigned int> &arraySizes)
     return arraySizeProduct;
 }
 
-unsigned int InnerArraySizeProduct(const std::vector<unsigned int> &arraySizes)
-{
-    unsigned int arraySizeProduct = 1u;
-    for (size_t index = 0; index + 1 < arraySizes.size(); ++index)
-    {
-        arraySizeProduct *= arraySizes[index];
-    }
-    return arraySizeProduct;
-}
-
-unsigned int OutermostArraySize(const std::vector<unsigned int> &arraySizes)
-{
-    return arraySizes.empty() || arraySizes.back() == 0 ? 1 : arraySizes.back();
-}
-
 unsigned int ParseArrayIndex(const std::string &name, size_t *nameLengthWithoutArrayIndexOut)
 {
     ASSERT(nameLengthWithoutArrayIndexOut != nullptr);
@@ -1074,24 +1050,6 @@ unsigned int ElementTypeSize(GLenum elementType)
         default:
             UNREACHABLE();
             return 0;
-    }
-}
-
-bool IsMipmapFiltered(GLenum minFilterMode)
-{
-    switch (minFilterMode)
-    {
-        case GL_NEAREST:
-        case GL_LINEAR:
-            return false;
-        case GL_NEAREST_MIPMAP_NEAREST:
-        case GL_LINEAR_MIPMAP_NEAREST:
-        case GL_NEAREST_MIPMAP_LINEAR:
-        case GL_LINEAR_MIPMAP_LINEAR:
-            return true;
-        default:
-            UNREACHABLE();
-            return false;
     }
 }
 
@@ -1298,7 +1256,6 @@ bool IsExternalImageTarget(EGLenum target)
         case EGL_D3D11_TEXTURE_ANGLE:
         case EGL_LINUX_DMA_BUF_EXT:
         case EGL_METAL_TEXTURE_ANGLE:
-        case EGL_VULKAN_IMAGE_ANGLE:
             return true;
 
         default:
@@ -1387,101 +1344,32 @@ EGLClientBuffer GLObjectHandleToEGLClientBuffer(GLuint handle)
 
 }  // namespace gl_egl
 
-namespace angle
-{
-bool IsDrawEntryPoint(EntryPoint entryPoint)
-{
-    switch (entryPoint)
-    {
-        case EntryPoint::GLDrawArrays:
-        case EntryPoint::GLDrawArraysIndirect:
-        case EntryPoint::GLDrawArraysInstanced:
-        case EntryPoint::GLDrawArraysInstancedANGLE:
-        case EntryPoint::GLDrawArraysInstancedBaseInstance:
-        case EntryPoint::GLDrawArraysInstancedBaseInstanceANGLE:
-        case EntryPoint::GLDrawArraysInstancedEXT:
-        case EntryPoint::GLDrawElements:
-        case EntryPoint::GLDrawElementsBaseVertex:
-        case EntryPoint::GLDrawElementsBaseVertexEXT:
-        case EntryPoint::GLDrawElementsBaseVertexOES:
-        case EntryPoint::GLDrawElementsIndirect:
-        case EntryPoint::GLDrawElementsInstanced:
-        case EntryPoint::GLDrawElementsInstancedANGLE:
-        case EntryPoint::GLDrawElementsInstancedBaseInstance:
-        case EntryPoint::GLDrawElementsInstancedBaseVertex:
-        case EntryPoint::GLDrawElementsInstancedBaseVertexBaseInstance:
-        case EntryPoint::GLDrawElementsInstancedBaseVertexBaseInstanceANGLE:
-        case EntryPoint::GLDrawElementsInstancedBaseVertexEXT:
-        case EntryPoint::GLDrawElementsInstancedBaseVertexOES:
-        case EntryPoint::GLDrawElementsInstancedEXT:
-        case EntryPoint::GLDrawPixels:
-        case EntryPoint::GLDrawRangeElements:
-        case EntryPoint::GLDrawRangeElementsBaseVertex:
-        case EntryPoint::GLDrawRangeElementsBaseVertexEXT:
-        case EntryPoint::GLDrawRangeElementsBaseVertexOES:
-        case EntryPoint::GLDrawTexfOES:
-        case EntryPoint::GLDrawTexfvOES:
-        case EntryPoint::GLDrawTexiOES:
-        case EntryPoint::GLDrawTexivOES:
-        case EntryPoint::GLDrawTexsOES:
-        case EntryPoint::GLDrawTexsvOES:
-        case EntryPoint::GLDrawTexxOES:
-        case EntryPoint::GLDrawTexxvOES:
-        case EntryPoint::GLDrawTransformFeedback:
-        case EntryPoint::GLDrawTransformFeedbackInstanced:
-        case EntryPoint::GLDrawTransformFeedbackStream:
-        case EntryPoint::GLDrawTransformFeedbackStreamInstanced:
-            return true;
-        default:
-            return false;
-    }
-}
-
-bool IsDispatchEntryPoint(EntryPoint entryPoint)
-{
-    switch (entryPoint)
-    {
-        case EntryPoint::GLDispatchCompute:
-        case EntryPoint::GLDispatchComputeIndirect:
-            return true;
-        default:
-            return false;
-    }
-}
-
-bool IsClearEntryPoint(EntryPoint entryPoint)
-{
-    switch (entryPoint)
-    {
-        case EntryPoint::GLClear:
-        case EntryPoint::GLClearBufferfi:
-        case EntryPoint::GLClearBufferfv:
-        case EntryPoint::GLClearBufferiv:
-        case EntryPoint::GLClearBufferuiv:
-            return true;
-        default:
-            return false;
-    }
-}
-
-bool IsQueryEntryPoint(EntryPoint entryPoint)
-{
-    switch (entryPoint)
-    {
-        case EntryPoint::GLBeginQuery:
-        case EntryPoint::GLBeginQueryEXT:
-        case EntryPoint::GLBeginQueryIndexed:
-        case EntryPoint::GLEndQuery:
-        case EntryPoint::GLEndQueryEXT:
-        case EntryPoint::GLEndQueryIndexed:
-            return true;
-        default:
-            return false;
-    }
-}
-}  // namespace angle
-
 #if !defined(ANGLE_ENABLE_WINDOWS_UWP)
+std::string getTempPath()
+{
+#    ifdef ANGLE_PLATFORM_WINDOWS
+    char path[MAX_PATH];
+    DWORD pathLen = GetTempPathA(sizeof(path) / sizeof(path[0]), path);
+    if (pathLen == 0)
+    {
+        UNREACHABLE();
+        return std::string();
+    }
+
+    UINT unique = GetTempFileNameA(path, "sh", 0, path);
+    if (unique == 0)
+    {
+        UNREACHABLE();
+        return std::string();
+    }
+
+    return path;
+#    else
+    UNIMPLEMENTED();
+    return "";
+#    endif
+}
+
 void writeFile(const char *path, const void *content, size_t size)
 {
     FILE *file = fopen(path, "w");

@@ -52,7 +52,7 @@ CompilerImpl *Context9::createCompiler()
 
 ShaderImpl *Context9::createShader(const gl::ShaderState &data)
 {
-    return new ShaderD3D(data, mRenderer);
+    return new ShaderD3D(data, mRenderer->getFeatures(), mRenderer->getNativeExtensions());
 }
 
 ProgramImpl *Context9::createProgram(const gl::ProgramState &data)
@@ -304,16 +304,6 @@ angle::Result Context9::multiDrawArraysInstanced(const gl::Context *context,
                                                drawcount);
 }
 
-angle::Result Context9::multiDrawArraysIndirect(const gl::Context *context,
-                                                gl::PrimitiveMode mode,
-                                                const void *indirect,
-                                                GLsizei drawcount,
-                                                GLsizei stride)
-{
-    UNREACHABLE();
-    return angle::Result::Stop;
-}
-
 angle::Result Context9::multiDrawElements(const gl::Context *context,
                                           gl::PrimitiveMode mode,
                                           const GLsizei *counts,
@@ -334,17 +324,6 @@ angle::Result Context9::multiDrawElementsInstanced(const gl::Context *context,
 {
     return rx::MultiDrawElementsInstancedGeneral(this, context, mode, counts, type, indices,
                                                  instanceCounts, drawcount);
-}
-
-angle::Result Context9::multiDrawElementsIndirect(const gl::Context *context,
-                                                  gl::PrimitiveMode mode,
-                                                  gl::DrawElementsType type,
-                                                  const void *indirect,
-                                                  GLsizei drawcount,
-                                                  GLsizei stride)
-{
-    UNREACHABLE();
-    return angle::Result::Stop;
 }
 
 angle::Result Context9::multiDrawArraysInstancedBaseInstance(const gl::Context *context,
@@ -381,7 +360,7 @@ gl::GraphicsResetStatus Context9::getResetStatus()
 
 angle::Result Context9::insertEventMarker(GLsizei length, const char *marker)
 {
-    mRenderer->getAnnotator()->setMarker(/*context=*/nullptr, marker);
+    mRenderer->getAnnotator()->setMarker(marker);
     return angle::Result::Continue;
 }
 
@@ -423,8 +402,7 @@ angle::Result Context9::popDebugGroup(const gl::Context *context)
 
 angle::Result Context9::syncState(const gl::Context *context,
                                   const gl::State::DirtyBits &dirtyBits,
-                                  const gl::State::DirtyBits &bitMask,
-                                  gl::Command command)
+                                  const gl::State::DirtyBits &bitMask)
 {
     mRenderer->getStateManager()->syncState(mState, dirtyBits);
     return angle::Result::Continue;
@@ -464,11 +442,6 @@ const gl::Extensions &Context9::getNativeExtensions() const
 const gl::Limitations &Context9::getNativeLimitations() const
 {
     return mRenderer->getNativeLimitations();
-}
-
-ShPixelLocalStorageType Context9::getNativePixelLocalStorageType() const
-{
-    return mRenderer->getNativePixelLocalStorageType();
 }
 
 angle::Result Context9::dispatchCompute(const gl::Context *context,

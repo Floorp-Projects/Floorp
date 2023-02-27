@@ -15,7 +15,7 @@ bool InitializePoolIndex()
 {
     ASSERT(PoolIndex == TLS_INVALID_INDEX);
 
-    PoolIndex = CreateTLSIndex(nullptr);
+    PoolIndex = CreateTLSIndex();
     return PoolIndex != TLS_INVALID_INDEX;
 }
 

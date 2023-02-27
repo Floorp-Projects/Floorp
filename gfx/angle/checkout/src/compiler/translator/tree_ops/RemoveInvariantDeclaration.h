@@ -14,7 +14,7 @@ namespace sh
 class TCompiler;
 class TIntermNode;
 
-[[nodiscard]] bool RemoveInvariantDeclaration(TCompiler *compiler, TIntermNode *root);
+ANGLE_NO_DISCARD bool RemoveInvariantDeclaration(TCompiler *compiler, TIntermNode *root);
 
 }  // namespace sh
 

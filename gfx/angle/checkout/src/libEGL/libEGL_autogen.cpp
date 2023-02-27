@@ -22,12 +22,17 @@
 namespace
 {
 #if defined(ANGLE_USE_EGL_LOADER)
-bool gLoaded          = false;
-void *gEntryPointsLib = nullptr;
+bool gLoaded = false;
 
-GenericProc KHRONOS_APIENTRY GlobalLoad(const char *symbol)
+std::unique_ptr<angle::Library> &EntryPointsLib()
 {
-    return reinterpret_cast<GenericProc>(angle::GetLibrarySymbol(gEntryPointsLib, symbol));
+    static angle::base::NoDestructor<std::unique_ptr<angle::Library>> sEntryPointsLib;
+    return *sEntryPointsLib;
+}
+
+angle::GenericProc KHRONOS_APIENTRY GlobalLoad(const char *symbol)
+{
+    return reinterpret_cast<angle::GenericProc>(EntryPointsLib()->getSymbol(symbol));
 }
 
 void EnsureEGLLoaded()
@@ -37,17 +42,16 @@ void EnsureEGLLoaded()
         return;
     }
 
-    std::string errorOut;
-    gEntryPointsLib = OpenSystemLibraryAndGetError(ANGLE_GLESV2_LIBRARY_NAME,
-                                                   angle::SearchType::ModuleDir, &errorOut);
-    if (gEntryPointsLib)
+    EntryPointsLib().reset(
+        angle::OpenSharedLibrary(ANGLE_GLESV2_LIBRARY_NAME, angle::SearchType::ApplicationDir));
+    angle::LoadEGL_EGL(GlobalLoad);
+    if (!EGL_GetPlatformDisplay)
     {
-        LoadLibEGL_EGL(GlobalLoad);
-        gLoaded = true;
+        fprintf(stderr, "Error loading EGL entry points.\n");
     }
     else
     {
-        fprintf(stderr, "Error loading EGL entry points: %s\n", errorOut.c_str());
+        gLoaded = true;
     }
 }
 #else
@@ -495,13 +499,6 @@ EGLBoolean EGLAPIENTRY eglQueryDisplayAttribANGLE(EGLDisplay dpy,
     return EGL_QueryDisplayAttribANGLE(dpy, attribute, value);
 }
 
-// EGL_ANGLE_metal_shared_event_sync
-void *EGLAPIENTRY eglCopyMetalSharedEventANGLE(EGLDisplay dpy, EGLSyncKHR sync)
-{
-    EnsureEGLLoaded();
-    return EGL_CopyMetalSharedEventANGLE(dpy, sync);
-}
-
 // EGL_ANGLE_power_preference
 void EGLAPIENTRY eglReleaseHighPowerGPUANGLE(EGLDisplay dpy, EGLContext ctx)
 {
@@ -519,19 +516,6 @@ void EGLAPIENTRY eglHandleGPUSwitchANGLE(EGLDisplay dpy)
 {
     EnsureEGLLoaded();
     return EGL_HandleGPUSwitchANGLE(dpy);
-}
-
-void EGLAPIENTRY eglForceGPUSwitchANGLE(EGLDisplay dpy, EGLint gpuIDHigh, EGLint gpuIDLow)
-{
-    EnsureEGLLoaded();
-    return EGL_ForceGPUSwitchANGLE(dpy, gpuIDHigh, gpuIDLow);
-}
-
-// EGL_ANGLE_prepare_swap_buffers
-EGLBoolean EGLAPIENTRY eglPrepareSwapBuffersANGLE(EGLDisplay dpy, EGLSurface surface)
-{
-    EnsureEGLLoaded();
-    return EGL_PrepareSwapBuffersANGLE(dpy, surface);
 }
 
 // EGL_ANGLE_program_cache_control
@@ -615,16 +599,6 @@ EGLBoolean EGLAPIENTRY eglGetMscRateANGLE(EGLDisplay dpy,
     return EGL_GetMscRateANGLE(dpy, surface, numerator, denominator);
 }
 
-// EGL_ANGLE_vulkan_image
-EGLBoolean EGLAPIENTRY eglExportVkImageANGLE(EGLDisplay dpy,
-                                             EGLImage image,
-                                             void *vk_image,
-                                             void *vk_image_create_info)
-{
-    EnsureEGLLoaded();
-    return EGL_ExportVkImageANGLE(dpy, image, vk_image, vk_image_create_info);
-}
-
 // EGL_CHROMIUM_sync_control
 EGLBoolean EGLAPIENTRY eglGetSyncValuesCHROMIUM(EGLDisplay dpy,
                                                 EGLSurface surface,
@@ -655,28 +629,6 @@ EGLBoolean EGLAPIENTRY eglQueryDisplayAttribEXT(EGLDisplay dpy, EGLint attribute
 {
     EnsureEGLLoaded();
     return EGL_QueryDisplayAttribEXT(dpy, attribute, value);
-}
-
-// EGL_EXT_image_dma_buf_import_modifiers
-EGLBoolean EGLAPIENTRY eglQueryDmaBufFormatsEXT(EGLDisplay dpy,
-                                                EGLint max_formats,
-                                                EGLint *formats,
-                                                EGLint *num_formats)
-{
-    EnsureEGLLoaded();
-    return EGL_QueryDmaBufFormatsEXT(dpy, max_formats, formats, num_formats);
-}
-
-EGLBoolean EGLAPIENTRY eglQueryDmaBufModifiersEXT(EGLDisplay dpy,
-                                                  EGLint format,
-                                                  EGLint max_modifiers,
-                                                  EGLuint64KHR *modifiers,
-                                                  EGLBoolean *external_only,
-                                                  EGLint *num_modifiers)
-{
-    EnsureEGLLoaded();
-    return EGL_QueryDmaBufModifiersEXT(dpy, format, max_modifiers, modifiers, external_only,
-                                       num_modifiers);
 }
 
 // EGL_EXT_platform_base
@@ -774,40 +726,6 @@ EGLBoolean EGLAPIENTRY eglDestroyImageKHR(EGLDisplay dpy, EGLImageKHR image)
 {
     EnsureEGLLoaded();
     return EGL_DestroyImageKHR(dpy, image);
-}
-
-// EGL_KHR_lock_surface3
-EGLBoolean EGLAPIENTRY eglLockSurfaceKHR(EGLDisplay dpy,
-                                         EGLSurface surface,
-                                         const EGLint *attrib_list)
-{
-    EnsureEGLLoaded();
-    return EGL_LockSurfaceKHR(dpy, surface, attrib_list);
-}
-
-EGLBoolean EGLAPIENTRY eglQuerySurface64KHR(EGLDisplay dpy,
-                                            EGLSurface surface,
-                                            EGLint attribute,
-                                            EGLAttribKHR *value)
-{
-    EnsureEGLLoaded();
-    return EGL_QuerySurface64KHR(dpy, surface, attribute, value);
-}
-
-EGLBoolean EGLAPIENTRY eglUnlockSurfaceKHR(EGLDisplay dpy, EGLSurface surface)
-{
-    EnsureEGLLoaded();
-    return EGL_UnlockSurfaceKHR(dpy, surface);
-}
-
-// EGL_KHR_partial_update
-EGLBoolean EGLAPIENTRY eglSetDamageRegionKHR(EGLDisplay dpy,
-                                             EGLSurface surface,
-                                             EGLint *rects,
-                                             EGLint n_rects)
-{
-    EnsureEGLLoaded();
-    return EGL_SetDamageRegionKHR(dpy, surface, rects, n_rects);
 }
 
 // EGL_KHR_reusable_sync

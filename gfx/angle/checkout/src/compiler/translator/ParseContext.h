@@ -37,7 +37,7 @@ class TParseContext : angle::NonCopyable
                   TExtensionBehavior &ext,
                   sh::GLenum type,
                   ShShaderSpec spec,
-                  const ShCompileOptions &options,
+                  ShCompileOptions options,
                   bool checksPrecErrors,
                   TDiagnostics *diagnostics,
                   const ShBuiltInResources &resources,
@@ -76,8 +76,6 @@ class TParseContext : angle::NonCopyable
     }
 
     bool isEarlyFragmentTestsSpecified() const { return mEarlyFragmentTestsSpecified; }
-    bool hasDiscard() const { return mHasDiscard; }
-    bool isSampleQualifierSpecified() const { return mSampleQualifierSpecified; }
 
     void setLoopNestingLevel(int loopNestintLevel) { mLoopNestingLevel = loopNestintLevel; }
 
@@ -91,11 +89,6 @@ class TParseContext : angle::NonCopyable
     sh::WorkGroupSize getComputeShaderLocalSize() const;
 
     int getNumViews() const { return mNumViews; }
-
-    const std::map<int, TLayoutImageInternalFormat> &pixelLocalStorageBindings() const
-    {
-        return mPLSBindings;
-    }
 
     void enterFunctionDeclaration() { mDeclaringFunction = true; }
 
@@ -199,12 +192,6 @@ class TParseContext : angle::NonCopyable
                                         const TSourceLoc &qualifierLocation);
     void checkLocalVariableConstStorageQualifier(const TQualifierWrapperBase &qualifier);
     void checkTCSOutVarIndexIsValid(TIntermBinary *binaryExpression, const TSourceLoc &location);
-
-    void checkAdvancedBlendEquationsNotSpecified(
-        const TSourceLoc &location,
-        const AdvancedBlendEquations &advancedBlendEquations,
-        const TQualifier &qualifier);
-
     const TPragma &pragma() const { return mDirectiveHandler.pragma(); }
     const TExtensionBehavior &extensionBehavior() const
     {
@@ -217,10 +204,6 @@ class TParseContext : angle::NonCopyable
                                const char *name,
                                const char *value,
                                bool stdgl);
-
-    // For built-ins that can be redeclared, adjusts the type qualifier so transformations can
-    // identify them correctly.
-    void adjustRedeclaredBuiltInType(const ImmutableString &identifier, TType *type);
 
     // Returns true on success. *initNode may still be nullptr on success in case the initialization
     // is not needed in the AST.
@@ -506,15 +489,6 @@ class TParseContext : angle::NonCopyable
         return mTessEvaluationShaderInputPointType;
     }
 
-    const TVector<TType *> &getDeferredArrayTypesToSize() const
-    {
-        return mDeferredArrayTypesToSize;
-    }
-
-    void markShaderHasPrecise() { mHasAnyPreciseType = true; }
-    bool hasAnyPreciseType() const { return mHasAnyPreciseType; }
-    AdvancedBlendEquations getAdvancedBlendEquations() const { return mAdvancedBlendEquations; }
-
     ShShaderOutput getOutputType() const { return mOutputType; }
 
     // TODO(jmadill): make this private
@@ -591,7 +565,6 @@ class TParseContext : angle::NonCopyable
                                   int binding,
                                   int arraySize);
     void checkAtomicCounterBindingIsValid(const TSourceLoc &location, int binding);
-    void checkPixelLocalStorageBindingIsValid(const TSourceLoc &, const TType &);
 
     void checkUniformLocationInRange(const TSourceLoc &location,
                                      int objectLocationCount,
@@ -678,40 +651,6 @@ class TParseContext : angle::NonCopyable
     bool parseTessControlShaderOutputLayoutQualifier(const TTypeQualifier &typeQualifier);
     bool parseTessEvaluationShaderInputLayoutQualifier(const TTypeQualifier &typeQualifier);
 
-    // Certain operations become illegal only iff the shader declares pixel local storage uniforms.
-    enum class PLSIllegalOperations
-    {
-        // When polyfilled with shader images, pixel local storage requires early_fragment_tests,
-        // which causes discard to interact differently with the depth and stencil tests.
-        //
-        // To ensure identical behavior across all backends (some of which may not have access to
-        // early_fragment_tests), we disallow discard if pixel local storage uniforms have been
-        // declared.
-        Discard,
-
-        // ARB_fragment_shader_interlock functions cannot be called within flow control, which
-        // includes any code that might execute after a return statement. To keep things simple, and
-        // since these "interlock" calls are automatically injected by the compiler inside of
-        // main(), we disallow return from main() if pixel local storage uniforms have been
-        // declared.
-        ReturnFromMain,
-
-        // When polyfilled with shader images, pixel local storage requires early_fragment_tests,
-        // which causes assignments to gl_FragDepth(EXT) and gl_SampleMask to be ignored.
-        //
-        // To ensure identical behavior across all backends, we disallow assignment to these values
-        // if pixel local storage uniforms have been declared.
-        AssignFragDepth,
-        AssignSampleMask
-    };
-
-    // Generates an error if any pixel local storage uniforms have been declared (more specifically,
-    // if mPLSBindings is not empty).
-    //
-    // If no pixel local storage uniforms have been declared, and if the PLS extension is enabled,
-    // saves the potential error to mPLSPotentialErrors in case we encounter a PLS uniform later.
-    void errorIfPLSDeclared(const TSourceLoc &, PLSIllegalOperations);
-
     // Set to true when the last/current declarator list was started with an empty declaration. The
     // non-empty declaration error check will need to be performed if the empty declaration is
     // followed by a declarator.
@@ -732,9 +671,7 @@ class TParseContext : angle::NonCopyable
                                   // without precision, explicit or implicit.
     bool mFragmentPrecisionHighOnESSL1;  // true if highp precision is supported when compiling
                                          // ESSL1.
-    bool mEarlyFragmentTestsSpecified;   // true if |layout(early_fragment_tests) in| is specified.
-    bool mHasDiscard;                    // true if |discard| is encountered in the shader.
-    bool mSampleQualifierSpecified;      // true if the |sample| qualifier is used.
+    bool mEarlyFragmentTestsSpecified;   // true if layout(early_fragment_tests) in; is specified.
     TLayoutMatrixPacking mDefaultUniformMatrixPacking;
     TLayoutBlockStorage mDefaultUniformBlockStorage;
     TLayoutMatrixPacking mDefaultBufferMatrixPacking;
@@ -767,17 +704,8 @@ class TParseContext : angle::NonCopyable
     // keeps track whether we are declaring / defining a function
     bool mDeclaringFunction;
 
-    // keeps track whether we are declaring / defining the function main().
-    bool mDeclaringMain;
-
     // Track the state of each atomic counter binding.
     std::map<int, AtomicCounterBindingState> mAtomicCounterBindingStates;
-
-    // Track the format of each pixel local storage binding.
-    std::map<int, TLayoutImageInternalFormat> mPLSBindings;
-
-    // Potential errors to generate immediately upon encountering a pixel local storage uniform.
-    std::vector<std::tuple<const TSourceLoc, PLSIllegalOperations>> mPLSPotentialErrors;
 
     // Track the geometry shader global parameters declared in layout.
     TLayoutPrimitiveType mGeometryShaderInputPrimitiveType;
@@ -794,13 +722,6 @@ class TParseContext : angle::NonCopyable
     TLayoutTessEvaluationType mTessEvaluationShaderInputVertexSpacingType;
     TLayoutTessEvaluationType mTessEvaluationShaderInputOrderingType;
     TLayoutTessEvaluationType mTessEvaluationShaderInputPointType;
-    // List of array declarations without an explicit size that have come before layout(vertices=N).
-    // Once the vertex count is specified, these arrays are sized.
-    TVector<TType *> mDeferredArrayTypesToSize;
-    // Whether the |precise| keyword has been seen in the shader.
-    bool mHasAnyPreciseType;
-
-    AdvancedBlendEquations mAdvancedBlendEquations;
 
     // Track when we add new scope for func body in ESSL 1.00 spec
     bool mFunctionBodyNewScope;

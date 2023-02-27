@@ -2,16 +2,13 @@
 
 include("../../moz.build.common")
 
-DEFINES["ANGLE_DISABLE_POOL_ALLOC"] = True
-DEFINES["ANGLE_ENABLE_SHARE_CONTEXT_LOCK"] = "1"
 # DEFINES["ANGLE_IS_WIN"] = True
-DEFINES["ANGLE_VMA_VERSION"] = "2003000"
 # DEFINES["CERT_CHAIN_PARA_HAS_EXTRA_FIELDS"] = True
-DEFINES["CR_CLANG_REVISION"] = '"llvmorg-16-init-6578-g0d30e92f-2"'
+DEFINES["CR_CLANG_REVISION"] = '"llvmorg-13-init-9302-g897d7bce-1"'
 DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
 # DEFINES["NDEBUG"] = True
 DEFINES["NOMINMAX"] = True
-# DEFINES["NTDDI_VERSION"] = "NTDDI_WIN10_FE"
+# DEFINES["NTDDI_VERSION"] = "NTDDI_WIN10_VB"
 # DEFINES["NVALGRIND"] = True
 # DEFINES["PSAPI_VERSION"] = "2"
 DEFINES["UNICODE"] = True
@@ -21,7 +18,6 @@ DEFINES["UNICODE"] = True
 # DEFINES["WINAPI_FAMILY"] = "WINAPI_FAMILY_DESKTOP_APP"
 DEFINES["WINVER"] = "0x0A00"
 DEFINES["_ATL_NO_OPENGL"] = True
-DEFINES["_CRT_NONSTDC_NO_WARNINGS"] = True
 DEFINES["_CRT_RAND_S"] = True
 DEFINES["_CRT_SECURE_NO_DEPRECATE"] = True
 DEFINES["_HAS_EXCEPTIONS"] = "0"
@@ -31,11 +27,11 @@ DEFINES["_SECURE_ATL"] = True
 DEFINES["_UNICODE"] = True
 # DEFINES["_WIN32_WINNT"] = "0x0A00"
 # DEFINES["_WINDOWS"] = True
-DEFINES["_WINSOCK_DEPRECATED_NO_WARNINGS"] = True
 # DEFINES["__STD_C"] = True
 
 LOCAL_INCLUDES += [
     "../../checkout/include/",
+    "../../checkout/out/gen/angle/",
     "../../checkout/src/",
     "../../checkout/src/common/third_party/base/",
 ]
@@ -47,14 +43,12 @@ LOCAL_INCLUDES += [
 #     "-fcolor-diagnostics",
 #     "-fcomplete-member-pointers",
 #     "-fcrash-diagnostics-dir=../tools/clang/crashreports",
-#     "-ffile-compilation-dir=.",
-#     "-ffile-reproducible",
+#     "-fdebug-compilation-dir",
 #     "-fmerge-all-constants",
 #     "-fmsc-version=1916",
 #     "-fno-delete-null-pointer-checks",
 #     "-fno-ident",
 #     "-ftrivial-auto-var-init=pattern",
-#     "-fuse-ctor-homing",
 #     "-gcodeview-ghash",
 #     "-instcombine-lower-dbg-declare=0",
 #     "-m64",
@@ -63,7 +57,6 @@ LOCAL_INCLUDES += [
 #     "-no-canonical-prefixes",
 #     "-Wbad-function-cast",
 #     "-Wconditional-uninitialized",
-#     "-Wenum-compare-conditional",
 #     "-Wexit-time-destructors",
 #     "-Wextra-semi",
 #     "-Wextra-semi-stmt",
@@ -72,17 +65,22 @@ LOCAL_INCLUDES += [
 #     "-Wheader-hygiene",
 #     "-Wimplicit-fallthrough",
 #     "-Winconsistent-missing-destructor-override",
-#     "-Wloop-analysis",
+#     "-Wmax-tokens",
 #     "-Wmissing-field-initializers",
 #     "-Wnewline-eof",
-#     "-Wno-bitfield-constant-conversion",
+#     "-Wno-builtin-assume-aligned-alignment",
 #     "-Wno-builtin-macro-redefined",
-#     "-Wno-deprecated-builtins",
+#     "-Wno-c++11-narrowing",
+#     "-Wno-deprecated-copy",
+#     "-Wno-final-dtor-non-final-class",
 #     "-Wno-ignored-pragma-optimize",
+#     "-Wno-implicit-int-float-conversion",
 #     "-Wno-missing-field-initializers",
+#     "-Wno-non-c-typedef-for-linkage",
 #     "-Wno-nonportable-include-path",
 #     "-Wno-psabi",
 #     "-Wno-trigraphs",
+#     "-Wno-undefined-var-template",
 #     "-Wno-unneeded-internal-declaration",
 #     "-Wno-unused-parameter",
 #     "-Wnon-virtual-dtor",
@@ -90,7 +88,6 @@ LOCAL_INCLUDES += [
 #     "-Wrange-loop-analysis",
 #     "-Wredundant-parens",
 #     "-Wreturn-std-move",
-#     "-Wshadow",
 #     "-Wshadow-field",
 #     "-Wshorten-64-to-32",
 #     "-Wstrict-prototypes",
@@ -102,16 +99,16 @@ LOCAL_INCLUDES += [
 #     "-Wthread-safety",
 #     "-Wundefined-reinterpret-cast",
 #     "-Wunneeded-internal-declaration",
-#     "-Wunreachable-code-aggressive",
-#     "-Wunused-but-set-variable",
+#     "-Wunreachable-code",
+#     "-Wweak-template-vtables",
 #     "-Xclang",
+#     ".",
 #     "/bigobj",
 #     "/Brepro",
-#     "/clang:-ffp-contract=off",
 #     "/D__WRL_ENABLE_FUNCTION_STATICS__",
 #     "/FS",
 #     "/GR-",
-#     "/guard:cf",
+#     "/guard:cf,nochecks",
 #     "/Gw",
 #     "/Gy",
 #     "/MT",
@@ -119,10 +116,49 @@ LOCAL_INCLUDES += [
 #     "/Ob2",
 #     "/Oi",
 #     "/Oy-",
-#     "/std:c++17",
 #     "/TP",
 #     "/utf-8",
 #     "/W4",
+#     "/wd4091",
+#     "/wd4100",
+#     "/wd4121",
+#     "/wd4127",
+#     "/wd4200",
+#     "/wd4201",
+#     "/wd4204",
+#     "/wd4221",
+#     "/wd4244",
+#     "/wd4245",
+#     "/wd4251",
+#     "/wd4267",
+#     "/wd4275",
+#     "/wd4305",
+#     "/wd4312",
+#     "/wd4324",
+#     "/wd4351",
+#     "/wd4355",
+#     "/wd4389",
+#     "/wd4456",
+#     "/wd4457",
+#     "/wd4458",
+#     "/wd4459",
+#     "/wd4503",
+#     "/wd4505",
+#     "/wd4510",
+#     "/wd4512",
+#     "/wd4577",
+#     "/wd4589",
+#     "/wd4610",
+#     "/wd4611",
+#     "/wd4661",
+#     "/wd4701",
+#     "/wd4702",
+#     "/wd4703",
+#     "/wd4706",
+#     "/wd4715",
+#     "/wd4838",
+#     "/wd4995",
+#     "/wd4996",
 #     "/we4244",
 #     "/we4312",
 #     "/we4456",
@@ -141,9 +177,7 @@ SOURCES += [
     "../../checkout/src/image_util/copyimage.cpp",
     "../../checkout/src/image_util/imageformats.cpp",
     "../../checkout/src/image_util/loadimage.cpp",
-    "../../checkout/src/image_util/loadimage_astc.cpp",
     "../../checkout/src/image_util/loadimage_etc.cpp",
-    "../../checkout/src/image_util/loadimage_paletted.cpp",
 ]
 
 USE_LIBS += [
@@ -168,7 +202,7 @@ DIRS += [
 #     "/pdbaltpath:%_PDB%",
 #     "/PDBSourcePath:C:/dev/angle/out",
 #     "/PROFILE",
-#     "/TIMESTAMP:1664686800",
+#     "/TIMESTAMP:1619931600",
 #     "/WX",
 # ]
 

@@ -159,43 +159,4 @@ inline void Initialize4ComponentData(size_t width, size_t height, size_t depth,
     }
 }
 
-template <size_t blockWidth, size_t blockHeight>
-inline void LoadASTCToRGBA8(size_t width,
-                            size_t height,
-                            size_t depth,
-                            const uint8_t *input,
-                            size_t inputRowPitch,
-                            size_t inputDepthPitch,
-                            uint8_t *output,
-                            size_t outputRowPitch,
-                            size_t outputDepthPitch)
-{
-    LoadASTCToRGBA8Inner(width, height, depth, blockWidth, blockHeight, input, inputRowPitch,
-                         inputDepthPitch, output, outputRowPitch, outputDepthPitch);
-}
-
-template <uint32_t indexBits, uint32_t redBlueBits, uint32_t greenBits, uint32_t alphaBits>
-inline void LoadPalettedToRGBA8(size_t width,
-                                size_t height,
-                                size_t depth,
-                                const uint8_t *input,
-                                size_t inputRowPitch,
-                                size_t inputDepthPitch,
-                                uint8_t *output,
-                                size_t outputRowPitch,
-                                size_t outputDepthPitch)
-{
-    static_assert(indexBits == 4 || indexBits == 8);
-    static_assert(redBlueBits == 4 || redBlueBits == 5 || redBlueBits == 8);
-    static_assert(greenBits == 4 || greenBits == 5 || greenBits == 6 || greenBits == 8);
-    static_assert(alphaBits == 0 || alphaBits == 1 || alphaBits == 4 || alphaBits == 8);
-    constexpr uint32_t colorBits = 2 * redBlueBits + greenBits + alphaBits;
-    static_assert(colorBits == 16 || colorBits == 24 || colorBits == 32);
-
-    LoadPalettedToRGBA8Impl(width, height, depth,
-                            indexBits, redBlueBits, greenBits, alphaBits,
-                            input, inputRowPitch, inputDepthPitch,
-                            output, outputRowPitch, outputDepthPitch);
-}
-
 } // namespace angle

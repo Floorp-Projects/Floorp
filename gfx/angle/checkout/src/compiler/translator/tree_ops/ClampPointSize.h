@@ -18,10 +18,10 @@ class TCompiler;
 class TIntermBlock;
 class TSymbolTable;
 
-[[nodiscard]] bool ClampPointSize(TCompiler *compiler,
-                                  TIntermBlock *root,
-                                  float maxPointSize,
-                                  TSymbolTable *symbolTable);
+ANGLE_NO_DISCARD bool ClampPointSize(TCompiler *compiler,
+                                     TIntermBlock *root,
+                                     float maxPointSize,
+                                     TSymbolTable *symbolTable);
 
 }  // namespace sh
 

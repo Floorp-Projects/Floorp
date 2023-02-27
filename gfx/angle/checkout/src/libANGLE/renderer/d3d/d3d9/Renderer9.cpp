@@ -114,7 +114,7 @@ Renderer9::Renderer9(egl::Display *display) : RendererD3D(display), mStateManage
 
     const egl::AttributeMap &attributes = display->getAttributeMap();
     EGLint requestedDeviceType          = static_cast<EGLint>(attributes.get(
-                 EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE, EGL_PLATFORM_ANGLE_DEVICE_TYPE_HARDWARE_ANGLE));
+        EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE, EGL_PLATFORM_ANGLE_DEVICE_TYPE_HARDWARE_ANGLE));
     switch (requestedDeviceType)
     {
         case EGL_PLATFORM_ANGLE_DEVICE_TYPE_HARDWARE_ANGLE:
@@ -564,7 +564,7 @@ egl::ConfigSet Renderer9::generateConfigs()
                     config.transparentGreenValue = 0;
                     config.transparentBlueValue  = 0;
                     config.colorComponentType    = gl_egl::GLComponentTypeToEGLColorComponentType(
-                           colorBufferFormatInfo.componentType);
+                        colorBufferFormatInfo.componentType);
 
                     configs.add(config);
                 }
@@ -596,7 +596,7 @@ void Renderer9::generateDisplayExtensions(egl::DisplayExtensions *outExtensions)
     outExtensions->glTexture2DImage    = true;
     outExtensions->glRenderbufferImage = true;
 
-    outExtensions->noConfigContext = true;
+    outExtensions->flexibleSurfaceCompatibility = true;
 
     // Contexts are virtualized so textures and semaphores can be shared globally
     outExtensions->displayTextureShareGroup   = true;
@@ -605,7 +605,7 @@ void Renderer9::generateDisplayExtensions(egl::DisplayExtensions *outExtensions)
     // D3D9 can be used without an output surface
     outExtensions->surfacelessContext = true;
 
-    outExtensions->robustResourceInitializationANGLE = true;
+    outExtensions->robustResourceInitialization = true;
 }
 
 void Renderer9::startScene()
@@ -830,8 +830,8 @@ egl::Error Renderer9::validateShareHandle(const egl::Config *config,
 
     IDirect3DTexture9 *texture = nullptr;
     HRESULT result             = mDevice->CreateTexture(width, height, 1, D3DUSAGE_RENDERTARGET,
-                                                        backBufferd3dFormatInfo.texFormat, D3DPOOL_DEFAULT,
-                                                        &texture, &shareHandle);
+                                            backBufferd3dFormatInfo.texFormat, D3DPOOL_DEFAULT,
+                                            &texture, &shareHandle);
     if (FAILED(result))
     {
         return egl::EglBadParameter() << "Failed to open share handle, " << gl::FmtHR(result);
@@ -1019,16 +1019,12 @@ angle::Result Renderer9::setSamplerState(const gl::Context *context,
         mDevice->SetSamplerState(d3dSampler, D3DSAMP_MIPFILTER, d3dMipFilter);
         mDevice->SetSamplerState(d3dSampler, D3DSAMP_MAXMIPLEVEL, baseLevel);
         mDevice->SetSamplerState(d3dSampler, D3DSAMP_MIPMAPLODBIAS, static_cast<DWORD>(lodBias));
-        if (getNativeExtensions().textureFilterAnisotropicEXT)
+        if (getNativeExtensions().textureFilterAnisotropic)
         {
             DWORD maxAnisotropy = std::min(mDeviceCaps.MaxAnisotropy,
                                            static_cast<DWORD>(samplerState.getMaxAnisotropy()));
             mDevice->SetSamplerState(d3dSampler, D3DSAMP_MAXANISOTROPY, maxAnisotropy);
         }
-
-        const bool isSrgb = gl::GetSizedInternalFormatInfo(textureD3D->getBaseLevelInternalFormat())
-                                .colorEncoding == GL_SRGB;
-        mDevice->SetSamplerState(d3dSampler, D3DSAMP_SRGBTEXTURE, isSrgb);
 
         ASSERT(texture->getBorderColor().type == angle::ColorGeneric::Type::Float);
         mDevice->SetSamplerState(d3dSampler, D3DSAMP_BORDERCOLOR,
@@ -1120,9 +1116,6 @@ angle::Result Renderer9::updateState(const gl::Context *context, gl::PrimitiveMo
         ANGLE_TRY(firstColorAttachment->getRenderTarget(context, firstColorAttachment->getSamples(),
                                                         &renderTarget));
         samples = renderTarget->getSamples();
-
-        mDevice->SetRenderState(D3DRS_SRGBWRITEENABLE,
-                                renderTarget->getInternalFormat() == GL_SRGB8_ALPHA8);
     }
     gl::RasterizerState rasterizer = glState.getRasterizerState();
     rasterizer.pointDrawMode       = (drawMode == gl::PrimitiveMode::Points);
@@ -1277,8 +1270,9 @@ angle::Result Renderer9::applyRenderTarget(const gl::Context *context,
     }
     ASSERT(colorRenderTarget != nullptr);
 
-    size_t renderTargetWidth  = 0;
-    size_t renderTargetHeight = 0;
+    size_t renderTargetWidth     = 0;
+    size_t renderTargetHeight    = 0;
+    D3DFORMAT renderTargetFormat = D3DFMT_UNKNOWN;
 
     bool renderTargetChanged        = false;
     unsigned int renderTargetSerial = colorRenderTarget->getSerial();
@@ -1293,6 +1287,7 @@ angle::Result Renderer9::applyRenderTarget(const gl::Context *context,
 
         renderTargetWidth  = colorRenderTarget->getWidth();
         renderTargetHeight = colorRenderTarget->getHeight();
+        renderTargetFormat = colorRenderTarget->getD3DFormat();
 
         mAppliedRenderTargetSerial = renderTargetSerial;
         renderTargetChanged        = true;
@@ -2403,7 +2398,7 @@ unsigned int Renderer9::getReservedFragmentUniformVectors() const
 bool Renderer9::getShareHandleSupport() const
 {
     // PIX doesn't seem to support using share handles, so disable them.
-    return (mD3d9Ex != nullptr) && !gl::DebugAnnotationsActive(/*context=*/nullptr);
+    return (mD3d9Ex != nullptr) && !gl::DebugAnnotationsActive();
 }
 
 int Renderer9::getMajorShaderModel() const
@@ -2669,7 +2664,7 @@ angle::Result Renderer9::compileToExecutable(d3d::Context *context,
                                              gl::ShaderType type,
                                              const std::vector<D3DVarying> &streamOutVaryings,
                                              bool separatedOutputBuffers,
-                                             const CompilerWorkaroundsD3D &workarounds,
+                                             const angle::CompilerWorkaroundsD3D &workarounds,
                                              ShaderExecutableD3D **outExectuable)
 {
     // Transform feedback is not supported in ES2 or D3D9
@@ -2706,7 +2701,7 @@ angle::Result Renderer9::compileToExecutable(d3d::Context *context,
         flags = D3DCOMPILE_OPTIMIZATION_LEVEL3;
     }
 
-    if (gl::DebugAnnotationsActive(/*context=*/nullptr))
+    if (gl::DebugAnnotationsActive())
     {
 #ifndef NDEBUG
         flags = D3DCOMPILE_SKIP_OPTIMIZATION;
@@ -2873,68 +2868,52 @@ angle::Result Renderer9::copyImage(const gl::Context *context,
                              unpackPremultiplyAlpha, unpackUnmultiplyAlpha);
 }
 
-TextureStorage *Renderer9::createTextureStorage2D(SwapChainD3D *swapChain, const std::string &label)
+TextureStorage *Renderer9::createTextureStorage2D(SwapChainD3D *swapChain)
 {
     SwapChain9 *swapChain9 = GetAs<SwapChain9>(swapChain);
-    return new TextureStorage9_2D(this, swapChain9, label);
+    return new TextureStorage9_2D(this, swapChain9);
 }
 
 TextureStorage *Renderer9::createTextureStorageEGLImage(EGLImageD3D *eglImage,
-                                                        RenderTargetD3D *renderTargetD3D,
-                                                        const std::string &label)
+                                                        RenderTargetD3D *renderTargetD3D)
 {
-    return new TextureStorage9_EGLImage(this, eglImage, GetAs<RenderTarget9>(renderTargetD3D),
-                                        label);
-}
-
-TextureStorage *Renderer9::createTextureStorageBuffer(
-    const gl::OffsetBindingPointer<gl::Buffer> &buffer,
-    GLenum internalFormat,
-    const std::string &label)
-{
-    UNREACHABLE();
-    return nullptr;
+    return new TextureStorage9_EGLImage(this, eglImage, GetAs<RenderTarget9>(renderTargetD3D));
 }
 
 TextureStorage *Renderer9::createTextureStorageExternal(
     egl::Stream *stream,
-    const egl::Stream::GLTextureDescription &desc,
-    const std::string &label)
+    const egl::Stream::GLTextureDescription &desc)
 {
     UNIMPLEMENTED();
     return nullptr;
 }
 
 TextureStorage *Renderer9::createTextureStorage2D(GLenum internalformat,
-                                                  BindFlags bindFlags,
+                                                  bool renderTarget,
                                                   GLsizei width,
                                                   GLsizei height,
                                                   int levels,
-                                                  const std::string &label,
                                                   bool hintLevelZeroOnly)
 {
-    return new TextureStorage9_2D(this, internalformat, bindFlags.renderTarget, width, height,
-                                  levels, label);
+    return new TextureStorage9_2D(this, internalformat, renderTarget, width, height, levels);
 }
 
 TextureStorage *Renderer9::createTextureStorageCube(GLenum internalformat,
-                                                    BindFlags bindFlags,
+                                                    bool renderTarget,
                                                     int size,
                                                     int levels,
-                                                    bool hintLevelZeroOnly,
-                                                    const std::string &label)
+                                                    bool hintLevelZeroOnly)
 {
-    return new TextureStorage9_Cube(this, internalformat, bindFlags.renderTarget, size, levels,
-                                    hintLevelZeroOnly, label);
+    return new TextureStorage9_Cube(this, internalformat, renderTarget, size, levels,
+                                    hintLevelZeroOnly);
 }
 
 TextureStorage *Renderer9::createTextureStorage3D(GLenum internalformat,
-                                                  BindFlags bindFlags,
+                                                  bool renderTarget,
                                                   GLsizei width,
                                                   GLsizei height,
                                                   GLsizei depth,
-                                                  int levels,
-                                                  const std::string &label)
+                                                  int levels)
 {
     // 3D textures are not supported by the D3D9 backend.
     UNREACHABLE();
@@ -2943,12 +2922,11 @@ TextureStorage *Renderer9::createTextureStorage3D(GLenum internalformat,
 }
 
 TextureStorage *Renderer9::createTextureStorage2DArray(GLenum internalformat,
-                                                       BindFlags bindFlags,
+                                                       bool renderTarget,
                                                        GLsizei width,
                                                        GLsizei height,
                                                        GLsizei depth,
-                                                       int levels,
-                                                       const std::string &label)
+                                                       int levels)
 {
     // 2D array textures are not supported by the D3D9 backend.
     UNREACHABLE();
@@ -2961,8 +2939,7 @@ TextureStorage *Renderer9::createTextureStorage2DMultisample(GLenum internalform
                                                              GLsizei height,
                                                              int levels,
                                                              int samples,
-                                                             bool fixedSampleLocations,
-                                                             const std::string &label)
+                                                             bool fixedSampleLocations)
 {
     // 2D multisampled textures are not supported by the D3D9 backend.
     UNREACHABLE();
@@ -2976,8 +2953,7 @@ TextureStorage *Renderer9::createTextureStorage2DMultisampleArray(GLenum interna
                                                                   GLsizei depth,
                                                                   int levels,
                                                                   int samples,
-                                                                  bool fixedSampleLocations,
-                                                                  const std::string &label)
+                                                                  bool fixedSampleLocations)
 {
     // 2D multisampled textures are not supported by the D3D9 backend.
     UNREACHABLE();
@@ -3065,8 +3041,6 @@ void Renderer9::initializeFeatures(angle::FeaturesD3D *features) const
     }
     ApplyFeatureOverrides(features, mDisplay->getState());
 }
-
-void Renderer9::initializeFrontendFeatures(angle::FrontendFeatures *features) const {}
 
 DeviceImpl *Renderer9::createEGLDevice()
 {
@@ -3308,7 +3282,7 @@ std::string Renderer9::getVendorString() const
     return GetVendorString(getVendorId());
 }
 
-std::string Renderer9::getVersionString(bool includeFullVersion) const
+std::string Renderer9::getVersionString() const
 {
     std::ostringstream versionString;
     std::string driverName(mAdapterIdentifier.Driver);
@@ -3318,14 +3292,10 @@ std::string Renderer9::getVersionString(bool includeFullVersion) const
     }
     else
     {
-        versionString << "D3D9";
+        versionString << "D3D9 ";
     }
-
-    if (includeFullVersion)
-    {
-        versionString << " -";
-        versionString << GetDriverVersionString(mAdapterIdentifier.DriverVersion);
-    }
+    versionString << "-";
+    versionString << GetDriverVersionString(mAdapterIdentifier.DriverVersion);
 
     return versionString.str();
 }

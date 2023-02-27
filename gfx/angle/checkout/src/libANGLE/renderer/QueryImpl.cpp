@@ -13,9 +13,4 @@ namespace rx
 
 void QueryImpl::onDestroy(const gl::Context *context) {}
 
-angle::Result QueryImpl::onLabelUpdate(const gl::Context *context)
-{
-    return angle::Result::Continue;
-}
-
 }  // namespace rx

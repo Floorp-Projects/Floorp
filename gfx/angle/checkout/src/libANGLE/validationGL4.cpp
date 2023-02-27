@@ -11,25 +11,17 @@
 namespace gl
 {
 
-bool ValidateBeginQueryIndexed(const Context *context,
-                               angle::EntryPoint entryPoint,
-                               GLenum target,
-                               GLuint index,
-                               QueryID id)
+bool ValidateBeginQueryIndexed(const Context *context, GLenum target, GLuint index, QueryID id)
 {
     return true;
 }
 
-bool ValidateDrawTransformFeedback(const Context *context,
-                                   angle::EntryPoint entryPoint,
-                                   GLenum mode,
-                                   TransformFeedbackID id)
+bool ValidateDrawTransformFeedback(const Context *context, GLenum mode, TransformFeedbackID id)
 {
     return true;
 }
 
 bool ValidateDrawTransformFeedbackStream(const Context *context,
-                                         angle::EntryPoint entryPoint,
                                          GLenum mode,
                                          TransformFeedbackID id,
                                          GLuint stream)
@@ -37,16 +29,12 @@ bool ValidateDrawTransformFeedbackStream(const Context *context,
     return true;
 }
 
-bool ValidateEndQueryIndexed(const Context *context,
-                             angle::EntryPoint entryPoint,
-                             GLenum target,
-                             GLuint index)
+bool ValidateEndQueryIndexed(const Context *context, GLenum target, GLuint index)
 {
     return true;
 }
 
 bool ValidateGetActiveSubroutineName(const Context *context,
-                                     angle::EntryPoint entryPoint,
                                      ShaderProgramID program,
                                      GLenum shadertype,
                                      GLuint index,
@@ -58,7 +46,6 @@ bool ValidateGetActiveSubroutineName(const Context *context,
 }
 
 bool ValidateGetActiveSubroutineUniformName(const Context *context,
-                                            angle::EntryPoint entryPoint,
                                             ShaderProgramID program,
                                             GLenum shadertype,
                                             GLuint index,
@@ -70,7 +57,6 @@ bool ValidateGetActiveSubroutineUniformName(const Context *context,
 }
 
 bool ValidateGetActiveSubroutineUniformiv(const Context *context,
-                                          angle::EntryPoint entryPoint,
                                           ShaderProgramID program,
                                           GLenum shadertype,
                                           GLuint index,
@@ -81,7 +67,6 @@ bool ValidateGetActiveSubroutineUniformiv(const Context *context,
 }
 
 bool ValidateGetProgramStageiv(const Context *context,
-                               angle::EntryPoint entryPoint,
                                ShaderProgramID program,
                                GLenum shadertype,
                                GLenum pname,
@@ -91,7 +76,6 @@ bool ValidateGetProgramStageiv(const Context *context,
 }
 
 bool ValidateGetQueryIndexediv(const Context *context,
-                               angle::EntryPoint entryPoint,
                                GLenum target,
                                GLuint index,
                                GLenum pname,
@@ -101,7 +85,6 @@ bool ValidateGetQueryIndexediv(const Context *context,
 }
 
 bool ValidateGetSubroutineIndex(const Context *context,
-                                angle::EntryPoint entryPoint,
                                 ShaderProgramID program,
                                 GLenum shadertype,
                                 const GLchar *name)
@@ -110,7 +93,6 @@ bool ValidateGetSubroutineIndex(const Context *context,
 }
 
 bool ValidateGetSubroutineUniformLocation(const Context *context,
-                                          angle::EntryPoint entryPoint,
                                           ShaderProgramID program,
                                           GLenum shadertype,
                                           const GLchar *name)
@@ -119,7 +101,6 @@ bool ValidateGetSubroutineUniformLocation(const Context *context,
 }
 
 bool ValidateGetUniformSubroutineuiv(const Context *context,
-                                     angle::EntryPoint entryPoint,
                                      GLenum shadertype,
                                      GLint location,
                                      const GLuint *params)
@@ -128,7 +109,6 @@ bool ValidateGetUniformSubroutineuiv(const Context *context,
 }
 
 bool ValidateGetUniformdv(const Context *context,
-                          angle::EntryPoint entryPoint,
                           ShaderProgramID program,
                           UniformLocation location,
                           const GLdouble *params)
@@ -136,24 +116,17 @@ bool ValidateGetUniformdv(const Context *context,
     return true;
 }
 
-bool ValidatePatchParameterfv(const Context *context,
-                              angle::EntryPoint entryPoint,
-                              GLenum pname,
-                              const GLfloat *values)
+bool ValidatePatchParameterfv(const Context *context, GLenum pname, const GLfloat *values)
 {
     return true;
 }
 
-bool ValidateUniform1d(const Context *context,
-                       angle::EntryPoint entryPoint,
-                       UniformLocation location,
-                       GLdouble x)
+bool ValidateUniform1d(const Context *context, UniformLocation location, GLdouble x)
 {
     return true;
 }
 
 bool ValidateUniform1dv(const Context *context,
-                        angle::EntryPoint entryPoint,
                         UniformLocation location,
                         GLsizei count,
                         const GLdouble *value)
@@ -161,17 +134,12 @@ bool ValidateUniform1dv(const Context *context,
     return true;
 }
 
-bool ValidateUniform2d(const Context *context,
-                       angle::EntryPoint entryPoint,
-                       UniformLocation location,
-                       GLdouble x,
-                       GLdouble y)
+bool ValidateUniform2d(const Context *context, UniformLocation location, GLdouble x, GLdouble y)
 {
     return true;
 }
 
 bool ValidateUniform2dv(const Context *context,
-                        angle::EntryPoint entryPoint,
                         UniformLocation location,
                         GLsizei count,
                         const GLdouble *value)
@@ -180,7 +148,6 @@ bool ValidateUniform2dv(const Context *context,
 }
 
 bool ValidateUniform3d(const Context *context,
-                       angle::EntryPoint entryPoint,
                        UniformLocation location,
                        GLdouble x,
                        GLdouble y,
@@ -190,7 +157,6 @@ bool ValidateUniform3d(const Context *context,
 }
 
 bool ValidateUniform3dv(const Context *context,
-                        angle::EntryPoint entryPoint,
                         UniformLocation location,
                         GLsizei count,
                         const GLdouble *value)
@@ -199,7 +165,6 @@ bool ValidateUniform3dv(const Context *context,
 }
 
 bool ValidateUniform4d(const Context *context,
-                       angle::EntryPoint entryPoint,
                        UniformLocation location,
                        GLdouble x,
                        GLdouble y,
@@ -210,7 +175,6 @@ bool ValidateUniform4d(const Context *context,
 }
 
 bool ValidateUniform4dv(const Context *context,
-                        angle::EntryPoint entryPoint,
                         UniformLocation location,
                         GLsizei count,
                         const GLdouble *value)
@@ -219,7 +183,6 @@ bool ValidateUniform4dv(const Context *context,
 }
 
 bool ValidateUniformMatrix2dv(const Context *context,
-                              angle::EntryPoint entryPoint,
                               UniformLocation location,
                               GLsizei count,
                               GLboolean transpose,
@@ -229,7 +192,6 @@ bool ValidateUniformMatrix2dv(const Context *context,
 }
 
 bool ValidateUniformMatrix2x3dv(const Context *context,
-                                angle::EntryPoint entryPoint,
                                 UniformLocation location,
                                 GLsizei count,
                                 GLboolean transpose,
@@ -239,7 +201,6 @@ bool ValidateUniformMatrix2x3dv(const Context *context,
 }
 
 bool ValidateUniformMatrix2x4dv(const Context *context,
-                                angle::EntryPoint entryPoint,
                                 UniformLocation location,
                                 GLsizei count,
                                 GLboolean transpose,
@@ -249,7 +210,6 @@ bool ValidateUniformMatrix2x4dv(const Context *context,
 }
 
 bool ValidateUniformMatrix3dv(const Context *context,
-                              angle::EntryPoint entryPoint,
                               UniformLocation location,
                               GLsizei count,
                               GLboolean transpose,
@@ -259,7 +219,6 @@ bool ValidateUniformMatrix3dv(const Context *context,
 }
 
 bool ValidateUniformMatrix3x2dv(const Context *context,
-                                angle::EntryPoint entryPoint,
                                 UniformLocation location,
                                 GLsizei count,
                                 GLboolean transpose,
@@ -269,7 +228,6 @@ bool ValidateUniformMatrix3x2dv(const Context *context,
 }
 
 bool ValidateUniformMatrix3x4dv(const Context *context,
-                                angle::EntryPoint entryPoint,
                                 UniformLocation location,
                                 GLsizei count,
                                 GLboolean transpose,
@@ -279,7 +237,6 @@ bool ValidateUniformMatrix3x4dv(const Context *context,
 }
 
 bool ValidateUniformMatrix4dv(const Context *context,
-                              angle::EntryPoint entryPoint,
                               UniformLocation location,
                               GLsizei count,
                               GLboolean transpose,
@@ -289,7 +246,6 @@ bool ValidateUniformMatrix4dv(const Context *context,
 }
 
 bool ValidateUniformMatrix4x2dv(const Context *context,
-                                angle::EntryPoint entryPoint,
                                 UniformLocation location,
                                 GLsizei count,
                                 GLboolean transpose,
@@ -299,7 +255,6 @@ bool ValidateUniformMatrix4x2dv(const Context *context,
 }
 
 bool ValidateUniformMatrix4x3dv(const Context *context,
-                                angle::EntryPoint entryPoint,
                                 UniformLocation location,
                                 GLsizei count,
                                 GLboolean transpose,
@@ -309,7 +264,6 @@ bool ValidateUniformMatrix4x3dv(const Context *context,
 }
 
 bool ValidateUniformSubroutinesuiv(const Context *context,
-                                   angle::EntryPoint entryPoint,
                                    GLenum shadertype,
                                    GLsizei count,
                                    const GLuint *indices)
@@ -318,7 +272,6 @@ bool ValidateUniformSubroutinesuiv(const Context *context,
 }
 
 bool ValidateDepthRangeArrayv(const Context *context,
-                              angle::EntryPoint entryPoint,
                               GLuint first,
                               GLsizei count,
                               const GLdouble *v)
@@ -326,35 +279,22 @@ bool ValidateDepthRangeArrayv(const Context *context,
     return true;
 }
 
-bool ValidateDepthRangeIndexed(const Context *context,
-                               angle::EntryPoint entryPoint,
-                               GLuint index,
-                               GLdouble n,
-                               GLdouble f)
+bool ValidateDepthRangeIndexed(const Context *context, GLuint index, GLdouble n, GLdouble f)
 {
     return true;
 }
 
-bool ValidateGetDoublei_v(const Context *context,
-                          angle::EntryPoint entryPoint,
-                          GLenum target,
-                          GLuint index,
-                          const GLdouble *data)
+bool ValidateGetDoublei_v(const Context *context, GLenum target, GLuint index, const GLdouble *data)
 {
     return true;
 }
 
-bool ValidateGetFloati_v(const Context *context,
-                         angle::EntryPoint entryPoint,
-                         GLenum target,
-                         GLuint index,
-                         const GLfloat *data)
+bool ValidateGetFloati_v(const Context *context, GLenum target, GLuint index, const GLfloat *data)
 {
     return true;
 }
 
 bool ValidateGetVertexAttribLdv(const Context *context,
-                                angle::EntryPoint entryPoint,
                                 GLuint index,
                                 GLenum pname,
                                 const GLdouble *params)
@@ -363,7 +303,6 @@ bool ValidateGetVertexAttribLdv(const Context *context,
 }
 
 bool ValidateProgramUniform1d(const Context *context,
-                              angle::EntryPoint entryPoint,
                               ShaderProgramID program,
                               UniformLocation location,
                               GLdouble v0)
@@ -372,7 +311,6 @@ bool ValidateProgramUniform1d(const Context *context,
 }
 
 bool ValidateProgramUniform1dv(const Context *context,
-                               angle::EntryPoint entryPoint,
                                ShaderProgramID program,
                                UniformLocation location,
                                GLsizei count,
@@ -382,7 +320,6 @@ bool ValidateProgramUniform1dv(const Context *context,
 }
 
 bool ValidateProgramUniform2d(const Context *context,
-                              angle::EntryPoint entryPoint,
                               ShaderProgramID program,
                               UniformLocation location,
                               GLdouble v0,
@@ -392,7 +329,6 @@ bool ValidateProgramUniform2d(const Context *context,
 }
 
 bool ValidateProgramUniform2dv(const Context *context,
-                               angle::EntryPoint entryPoint,
                                ShaderProgramID program,
                                UniformLocation location,
                                GLsizei count,
@@ -402,7 +338,6 @@ bool ValidateProgramUniform2dv(const Context *context,
 }
 
 bool ValidateProgramUniform3d(const Context *context,
-                              angle::EntryPoint entryPoint,
                               ShaderProgramID program,
                               UniformLocation location,
                               GLdouble v0,
@@ -413,7 +348,6 @@ bool ValidateProgramUniform3d(const Context *context,
 }
 
 bool ValidateProgramUniform3dv(const Context *context,
-                               angle::EntryPoint entryPoint,
                                ShaderProgramID program,
                                UniformLocation location,
                                GLsizei count,
@@ -423,7 +357,6 @@ bool ValidateProgramUniform3dv(const Context *context,
 }
 
 bool ValidateProgramUniform4d(const Context *context,
-                              angle::EntryPoint entryPoint,
                               ShaderProgramID program,
                               UniformLocation location,
                               GLdouble v0,
@@ -435,7 +368,6 @@ bool ValidateProgramUniform4d(const Context *context,
 }
 
 bool ValidateProgramUniform4dv(const Context *context,
-                               angle::EntryPoint entryPoint,
                                ShaderProgramID program,
                                UniformLocation location,
                                GLsizei count,
@@ -445,7 +377,6 @@ bool ValidateProgramUniform4dv(const Context *context,
 }
 
 bool ValidateProgramUniformMatrix2dv(const Context *context,
-                                     angle::EntryPoint entryPoint,
                                      ShaderProgramID program,
                                      UniformLocation location,
                                      GLsizei count,
@@ -456,7 +387,6 @@ bool ValidateProgramUniformMatrix2dv(const Context *context,
 }
 
 bool ValidateProgramUniformMatrix2x3dv(const Context *context,
-                                       angle::EntryPoint entryPoint,
                                        ShaderProgramID program,
                                        UniformLocation location,
                                        GLsizei count,
@@ -467,7 +397,6 @@ bool ValidateProgramUniformMatrix2x3dv(const Context *context,
 }
 
 bool ValidateProgramUniformMatrix2x4dv(const Context *context,
-                                       angle::EntryPoint entryPoint,
                                        ShaderProgramID program,
                                        UniformLocation location,
                                        GLsizei count,
@@ -478,7 +407,6 @@ bool ValidateProgramUniformMatrix2x4dv(const Context *context,
 }
 
 bool ValidateProgramUniformMatrix3dv(const Context *context,
-                                     angle::EntryPoint entryPoint,
                                      ShaderProgramID program,
                                      UniformLocation location,
                                      GLsizei count,
@@ -489,7 +417,6 @@ bool ValidateProgramUniformMatrix3dv(const Context *context,
 }
 
 bool ValidateProgramUniformMatrix3x2dv(const Context *context,
-                                       angle::EntryPoint entryPoint,
                                        ShaderProgramID program,
                                        UniformLocation location,
                                        GLsizei count,
@@ -500,7 +427,6 @@ bool ValidateProgramUniformMatrix3x2dv(const Context *context,
 }
 
 bool ValidateProgramUniformMatrix3x4dv(const Context *context,
-                                       angle::EntryPoint entryPoint,
                                        ShaderProgramID program,
                                        UniformLocation location,
                                        GLsizei count,
@@ -511,7 +437,6 @@ bool ValidateProgramUniformMatrix3x4dv(const Context *context,
 }
 
 bool ValidateProgramUniformMatrix4dv(const Context *context,
-                                     angle::EntryPoint entryPoint,
                                      ShaderProgramID program,
                                      UniformLocation location,
                                      GLsizei count,
@@ -522,7 +447,6 @@ bool ValidateProgramUniformMatrix4dv(const Context *context,
 }
 
 bool ValidateProgramUniformMatrix4x2dv(const Context *context,
-                                       angle::EntryPoint entryPoint,
                                        ShaderProgramID program,
                                        UniformLocation location,
                                        GLsizei count,
@@ -533,7 +457,6 @@ bool ValidateProgramUniformMatrix4x2dv(const Context *context,
 }
 
 bool ValidateProgramUniformMatrix4x3dv(const Context *context,
-                                       angle::EntryPoint entryPoint,
                                        ShaderProgramID program,
                                        UniformLocation location,
                                        GLsizei count,
@@ -543,17 +466,12 @@ bool ValidateProgramUniformMatrix4x3dv(const Context *context,
     return true;
 }
 
-bool ValidateScissorArrayv(const Context *context,
-                           angle::EntryPoint entryPoint,
-                           GLuint first,
-                           GLsizei count,
-                           const GLint *v)
+bool ValidateScissorArrayv(const Context *context, GLuint first, GLsizei count, const GLint *v)
 {
     return true;
 }
 
 bool ValidateScissorIndexed(const Context *context,
-                            angle::EntryPoint entryPoint,
                             GLuint index,
                             GLint left,
                             GLint bottom,
@@ -563,49 +481,32 @@ bool ValidateScissorIndexed(const Context *context,
     return true;
 }
 
-bool ValidateScissorIndexedv(const Context *context,
-                             angle::EntryPoint entryPoint,
-                             GLuint index,
-                             const GLint *v)
+bool ValidateScissorIndexedv(const Context *context, GLuint index, const GLint *v)
 {
     return true;
 }
 
-bool ValidateVertexAttribL1d(const Context *context,
-                             angle::EntryPoint entryPoint,
-                             GLuint index,
-                             GLdouble x)
+bool ValidateVertexAttribL1d(const Context *context, GLuint index, GLdouble x)
 {
     return true;
 }
 
-bool ValidateVertexAttribL1dv(const Context *context,
-                              angle::EntryPoint entryPoint,
-                              GLuint index,
-                              const GLdouble *v)
+bool ValidateVertexAttribL1dv(const Context *context, GLuint index, const GLdouble *v)
 {
     return true;
 }
 
-bool ValidateVertexAttribL2d(const Context *context,
-                             angle::EntryPoint entryPoint,
-                             GLuint index,
-                             GLdouble x,
-                             GLdouble y)
+bool ValidateVertexAttribL2d(const Context *context, GLuint index, GLdouble x, GLdouble y)
 {
     return true;
 }
 
-bool ValidateVertexAttribL2dv(const Context *context,
-                              angle::EntryPoint entryPoint,
-                              GLuint index,
-                              const GLdouble *v)
+bool ValidateVertexAttribL2dv(const Context *context, GLuint index, const GLdouble *v)
 {
     return true;
 }
 
 bool ValidateVertexAttribL3d(const Context *context,
-                             angle::EntryPoint entryPoint,
                              GLuint index,
                              GLdouble x,
                              GLdouble y,
@@ -614,16 +515,12 @@ bool ValidateVertexAttribL3d(const Context *context,
     return true;
 }
 
-bool ValidateVertexAttribL3dv(const Context *context,
-                              angle::EntryPoint entryPoint,
-                              GLuint index,
-                              const GLdouble *v)
+bool ValidateVertexAttribL3dv(const Context *context, GLuint index, const GLdouble *v)
 {
     return true;
 }
 
 bool ValidateVertexAttribL4d(const Context *context,
-                             angle::EntryPoint entryPoint,
                              GLuint index,
                              GLdouble x,
                              GLdouble y,
@@ -633,16 +530,12 @@ bool ValidateVertexAttribL4d(const Context *context,
     return true;
 }
 
-bool ValidateVertexAttribL4dv(const Context *context,
-                              angle::EntryPoint entryPoint,
-                              GLuint index,
-                              const GLdouble *v)
+bool ValidateVertexAttribL4dv(const Context *context, GLuint index, const GLdouble *v)
 {
     return true;
 }
 
 bool ValidateVertexAttribLPointer(const Context *context,
-                                  angle::EntryPoint entryPoint,
                                   GLuint index,
                                   GLint size,
                                   GLenum type,
@@ -652,17 +545,12 @@ bool ValidateVertexAttribLPointer(const Context *context,
     return true;
 }
 
-bool ValidateViewportArrayv(const Context *context,
-                            angle::EntryPoint entryPoint,
-                            GLuint first,
-                            GLsizei count,
-                            const GLfloat *v)
+bool ValidateViewportArrayv(const Context *context, GLuint first, GLsizei count, const GLfloat *v)
 {
     return true;
 }
 
 bool ValidateViewportIndexedf(const Context *context,
-                              angle::EntryPoint entryPoint,
                               GLuint index,
                               GLfloat x,
                               GLfloat y,
@@ -672,16 +560,12 @@ bool ValidateViewportIndexedf(const Context *context,
     return true;
 }
 
-bool ValidateViewportIndexedfv(const Context *context,
-                               angle::EntryPoint entryPoint,
-                               GLuint index,
-                               const GLfloat *v)
+bool ValidateViewportIndexedfv(const Context *context, GLuint index, const GLfloat *v)
 {
     return true;
 }
 
 bool ValidateDrawArraysInstancedBaseInstance(const Context *context,
-                                             angle::EntryPoint entryPoint,
                                              PrimitiveMode mode,
                                              GLint first,
                                              GLsizei count,
@@ -692,10 +576,9 @@ bool ValidateDrawArraysInstancedBaseInstance(const Context *context,
 }
 
 bool ValidateDrawElementsInstancedBaseInstance(const Context *context,
-                                               angle::EntryPoint entryPoint,
-                                               PrimitiveMode mode,
+                                               GLenum mode,
                                                GLsizei count,
-                                               DrawElementsType type,
+                                               GLenum type,
                                                const void *indices,
                                                GLsizei instancecount,
                                                GLuint baseinstance)
@@ -704,7 +587,6 @@ bool ValidateDrawElementsInstancedBaseInstance(const Context *context,
 }
 
 bool ValidateDrawElementsInstancedBaseVertexBaseInstance(const Context *context,
-                                                         angle::EntryPoint entryPoint,
                                                          PrimitiveMode mode,
                                                          GLsizei count,
                                                          DrawElementsType type,
@@ -717,7 +599,6 @@ bool ValidateDrawElementsInstancedBaseVertexBaseInstance(const Context *context,
 }
 
 bool ValidateDrawTransformFeedbackInstanced(const Context *context,
-                                            angle::EntryPoint entryPoint,
                                             GLenum mode,
                                             TransformFeedbackID id,
                                             GLsizei instancecount)
@@ -726,7 +607,6 @@ bool ValidateDrawTransformFeedbackInstanced(const Context *context,
 }
 
 bool ValidateDrawTransformFeedbackStreamInstanced(const Context *context,
-                                                  angle::EntryPoint entryPoint,
                                                   GLenum mode,
                                                   TransformFeedbackID id,
                                                   GLuint stream,
@@ -736,7 +616,6 @@ bool ValidateDrawTransformFeedbackStreamInstanced(const Context *context,
 }
 
 bool ValidateGetActiveAtomicCounterBufferiv(const Context *context,
-                                            angle::EntryPoint entryPoint,
                                             ShaderProgramID program,
                                             GLuint bufferIndex,
                                             GLenum pname,
@@ -746,7 +625,6 @@ bool ValidateGetActiveAtomicCounterBufferiv(const Context *context,
 }
 
 bool ValidateTexStorage1D(const Context *context,
-                          angle::EntryPoint entryPoint,
                           GLenum target,
                           GLsizei levels,
                           GLenum internalformat,
@@ -756,7 +634,6 @@ bool ValidateTexStorage1D(const Context *context,
 }
 
 bool ValidateClearBufferData(const Context *context,
-                             angle::EntryPoint entryPoint,
                              GLenum target,
                              GLenum internalformat,
                              GLenum format,
@@ -767,7 +644,6 @@ bool ValidateClearBufferData(const Context *context,
 }
 
 bool ValidateClearBufferSubData(const Context *context,
-                                angle::EntryPoint entryPoint,
                                 GLenum target,
                                 GLenum internalformat,
                                 GLintptr offset,
@@ -780,7 +656,6 @@ bool ValidateClearBufferSubData(const Context *context,
 }
 
 bool ValidateGetInternalformati64v(const Context *context,
-                                   angle::EntryPoint entryPoint,
                                    GLenum target,
                                    GLenum internalformat,
                                    GLenum pname,
@@ -791,7 +666,6 @@ bool ValidateGetInternalformati64v(const Context *context,
 }
 
 bool ValidateGetProgramResourceLocationIndex(const Context *context,
-                                             angle::EntryPoint entryPoint,
                                              ShaderProgramID program,
                                              GLenum programInterface,
                                              const GLchar *name)
@@ -799,15 +673,12 @@ bool ValidateGetProgramResourceLocationIndex(const Context *context,
     return true;
 }
 
-bool ValidateInvalidateBufferData(const Context *context,
-                                  angle::EntryPoint entryPoint,
-                                  BufferID buffer)
+bool ValidateInvalidateBufferData(const Context *context, BufferID buffer)
 {
     return true;
 }
 
 bool ValidateInvalidateBufferSubData(const Context *context,
-                                     angle::EntryPoint entryPoint,
                                      BufferID buffer,
                                      GLintptr offset,
                                      GLsizeiptr length)
@@ -815,16 +686,12 @@ bool ValidateInvalidateBufferSubData(const Context *context,
     return true;
 }
 
-bool ValidateInvalidateTexImage(const Context *context,
-                                angle::EntryPoint entryPoint,
-                                TextureID texture,
-                                GLint level)
+bool ValidateInvalidateTexImage(const Context *context, TextureID texture, GLint level)
 {
     return true;
 }
 
 bool ValidateInvalidateTexSubImage(const Context *context,
-                                   angle::EntryPoint entryPoint,
                                    TextureID texture,
                                    GLint level,
                                    GLint xoffset,
@@ -838,8 +705,7 @@ bool ValidateInvalidateTexSubImage(const Context *context,
 }
 
 bool ValidateMultiDrawArraysIndirect(const Context *context,
-                                     angle::EntryPoint entryPoint,
-                                     PrimitiveMode modePacked,
+                                     GLenum mode,
                                      const void *indirect,
                                      GLsizei drawcount,
                                      GLsizei stride)
@@ -848,9 +714,8 @@ bool ValidateMultiDrawArraysIndirect(const Context *context,
 }
 
 bool ValidateMultiDrawElementsIndirect(const Context *context,
-                                       angle::EntryPoint entryPoint,
-                                       PrimitiveMode modePacked,
-                                       DrawElementsType typePacked,
+                                       GLenum mode,
+                                       GLenum type,
                                        const void *indirect,
                                        GLsizei drawcount,
                                        GLsizei stride)
@@ -859,7 +724,6 @@ bool ValidateMultiDrawElementsIndirect(const Context *context,
 }
 
 bool ValidateShaderStorageBlockBinding(const Context *context,
-                                       angle::EntryPoint entryPoint,
                                        ShaderProgramID program,
                                        GLuint storageBlockIndex,
                                        GLuint storageBlockBinding)
@@ -868,7 +732,6 @@ bool ValidateShaderStorageBlockBinding(const Context *context,
 }
 
 bool ValidateTextureView(const Context *context,
-                         angle::EntryPoint entryPoint,
                          TextureID texture,
                          GLenum target,
                          GLuint origtexture,
@@ -882,7 +745,6 @@ bool ValidateTextureView(const Context *context,
 }
 
 bool ValidateVertexAttribLFormat(const Context *context,
-                                 angle::EntryPoint entryPoint,
                                  GLuint attribindex,
                                  GLint size,
                                  GLenum type,
@@ -892,7 +754,6 @@ bool ValidateVertexAttribLFormat(const Context *context,
 }
 
 bool ValidateBindBuffersBase(const Context *context,
-                             angle::EntryPoint entryPoint,
                              GLenum target,
                              GLuint first,
                              GLsizei count,
@@ -902,7 +763,6 @@ bool ValidateBindBuffersBase(const Context *context,
 }
 
 bool ValidateBindBuffersRange(const Context *context,
-                              angle::EntryPoint entryPoint,
                               GLenum target,
                               GLuint first,
                               GLsizei count,
@@ -914,7 +774,6 @@ bool ValidateBindBuffersRange(const Context *context,
 }
 
 bool ValidateBindImageTextures(const Context *context,
-                               angle::EntryPoint entryPoint,
                                GLuint first,
                                GLsizei count,
                                const GLuint *textures)
@@ -923,7 +782,6 @@ bool ValidateBindImageTextures(const Context *context,
 }
 
 bool ValidateBindSamplers(const Context *context,
-                          angle::EntryPoint entryPoint,
                           GLuint first,
                           GLsizei count,
                           const GLuint *samplers)
@@ -932,7 +790,6 @@ bool ValidateBindSamplers(const Context *context,
 }
 
 bool ValidateBindTextures(const Context *context,
-                          angle::EntryPoint entryPoint,
                           GLuint first,
                           GLsizei count,
                           const GLuint *textures)
@@ -941,7 +798,6 @@ bool ValidateBindTextures(const Context *context,
 }
 
 bool ValidateBindVertexBuffers(const Context *context,
-                               angle::EntryPoint entryPoint,
                                GLuint first,
                                GLsizei count,
                                const BufferID *buffers,
@@ -952,7 +808,6 @@ bool ValidateBindVertexBuffers(const Context *context,
 }
 
 bool ValidateBufferStorage(const Context *context,
-                           angle::EntryPoint entryPoint,
                            BufferBinding targetPacked,
                            GLsizeiptr size,
                            const void *data,
@@ -962,7 +817,6 @@ bool ValidateBufferStorage(const Context *context,
 }
 
 bool ValidateClearTexImage(const Context *context,
-                           angle::EntryPoint entryPoint,
                            TextureID texture,
                            GLint level,
                            GLenum format,
@@ -973,7 +827,6 @@ bool ValidateClearTexImage(const Context *context,
 }
 
 bool ValidateClearTexSubImage(const Context *context,
-                              angle::EntryPoint entryPoint,
                               TextureID texture,
                               GLint level,
                               GLint xoffset,
@@ -989,16 +842,12 @@ bool ValidateClearTexSubImage(const Context *context,
     return true;
 }
 
-bool ValidateBindTextureUnit(const Context *context,
-                             angle::EntryPoint entryPoint,
-                             GLuint unit,
-                             TextureID texture)
+bool ValidateBindTextureUnit(const Context *context, GLuint unit, TextureID texture)
 {
     return true;
 }
 
 bool ValidateBlitNamedFramebuffer(const Context *context,
-                                  angle::EntryPoint entryPoint,
                                   GLuint readFramebuffer,
                                   GLuint drawFramebuffer,
                                   GLint srcX0,
@@ -1016,7 +865,6 @@ bool ValidateBlitNamedFramebuffer(const Context *context,
 }
 
 bool ValidateCheckNamedFramebufferStatus(const Context *context,
-                                         angle::EntryPoint entryPoint,
                                          FramebufferID framebuffer,
                                          GLenum target)
 {
@@ -1024,7 +872,6 @@ bool ValidateCheckNamedFramebufferStatus(const Context *context,
 }
 
 bool ValidateClearNamedBufferData(const Context *context,
-                                  angle::EntryPoint entryPoint,
                                   BufferID buffer,
                                   GLenum internalformat,
                                   GLenum format,
@@ -1035,7 +882,6 @@ bool ValidateClearNamedBufferData(const Context *context,
 }
 
 bool ValidateClearNamedBufferSubData(const Context *context,
-                                     angle::EntryPoint entryPoint,
                                      BufferID buffer,
                                      GLenum internalformat,
                                      GLintptr offset,
@@ -1048,7 +894,6 @@ bool ValidateClearNamedBufferSubData(const Context *context,
 }
 
 bool ValidateClearNamedFramebufferfi(const Context *context,
-                                     angle::EntryPoint entryPoint,
                                      FramebufferID framebuffer,
                                      GLenum buffer,
                                      GLint drawbuffer,
@@ -1059,7 +904,6 @@ bool ValidateClearNamedFramebufferfi(const Context *context,
 }
 
 bool ValidateClearNamedFramebufferfv(const Context *context,
-                                     angle::EntryPoint entryPoint,
                                      FramebufferID framebuffer,
                                      GLenum buffer,
                                      GLint drawbuffer,
@@ -1069,7 +913,6 @@ bool ValidateClearNamedFramebufferfv(const Context *context,
 }
 
 bool ValidateClearNamedFramebufferiv(const Context *context,
-                                     angle::EntryPoint entryPoint,
                                      FramebufferID framebuffer,
                                      GLenum buffer,
                                      GLint drawbuffer,
@@ -1079,7 +922,6 @@ bool ValidateClearNamedFramebufferiv(const Context *context,
 }
 
 bool ValidateClearNamedFramebufferuiv(const Context *context,
-                                      angle::EntryPoint entryPoint,
                                       FramebufferID framebuffer,
                                       GLenum buffer,
                                       GLint drawbuffer,
@@ -1088,16 +930,12 @@ bool ValidateClearNamedFramebufferuiv(const Context *context,
     return true;
 }
 
-bool ValidateClipControl(const Context *context,
-                         angle::EntryPoint entryPoint,
-                         GLenum origin,
-                         GLenum depth)
+bool ValidateClipControl(const Context *context, GLenum origin, GLenum depth)
 {
     return true;
 }
 
 bool ValidateCompressedTextureSubImage1D(const Context *context,
-                                         angle::EntryPoint entryPoint,
                                          TextureID texture,
                                          GLint level,
                                          GLint xoffset,
@@ -1110,7 +948,6 @@ bool ValidateCompressedTextureSubImage1D(const Context *context,
 }
 
 bool ValidateCompressedTextureSubImage2D(const Context *context,
-                                         angle::EntryPoint entryPoint,
                                          TextureID texture,
                                          GLint level,
                                          GLint xoffset,
@@ -1125,7 +962,6 @@ bool ValidateCompressedTextureSubImage2D(const Context *context,
 }
 
 bool ValidateCompressedTextureSubImage3D(const Context *context,
-                                         angle::EntryPoint entryPoint,
                                          TextureID texture,
                                          GLint level,
                                          GLint xoffset,
@@ -1142,7 +978,6 @@ bool ValidateCompressedTextureSubImage3D(const Context *context,
 }
 
 bool ValidateCopyNamedBufferSubData(const Context *context,
-                                    angle::EntryPoint entryPoint,
                                     GLuint readBuffer,
                                     GLuint writeBuffer,
                                     GLintptr readOffset,
@@ -1153,7 +988,6 @@ bool ValidateCopyNamedBufferSubData(const Context *context,
 }
 
 bool ValidateCopyTextureSubImage1D(const Context *context,
-                                   angle::EntryPoint entryPoint,
                                    TextureID texture,
                                    GLint level,
                                    GLint xoffset,
@@ -1165,7 +999,6 @@ bool ValidateCopyTextureSubImage1D(const Context *context,
 }
 
 bool ValidateCopyTextureSubImage2D(const Context *context,
-                                   angle::EntryPoint entryPoint,
                                    TextureID texture,
                                    GLint level,
                                    GLint xoffset,
@@ -1179,7 +1012,6 @@ bool ValidateCopyTextureSubImage2D(const Context *context,
 }
 
 bool ValidateCopyTextureSubImage3D(const Context *context,
-                                   angle::EntryPoint entryPoint,
                                    TextureID texture,
                                    GLint level,
                                    GLint xoffset,
@@ -1193,57 +1025,39 @@ bool ValidateCopyTextureSubImage3D(const Context *context,
     return true;
 }
 
-bool ValidateCreateBuffers(const Context *context,
-                           angle::EntryPoint entryPoint,
-                           GLsizei n,
-                           const BufferID *buffers)
+bool ValidateCreateBuffers(const Context *context, GLsizei n, const BufferID *buffers)
 {
     return true;
 }
 
-bool ValidateCreateFramebuffers(const Context *context,
-                                angle::EntryPoint entryPoint,
-                                GLsizei n,
-                                const GLuint *framebuffers)
+bool ValidateCreateFramebuffers(const Context *context, GLsizei n, const GLuint *framebuffers)
 {
     return true;
 }
 
-bool ValidateCreateProgramPipelines(const Context *context,
-                                    angle::EntryPoint entryPoint,
-                                    GLsizei n,
-                                    const GLuint *pipelines)
+bool ValidateCreateProgramPipelines(const Context *context, GLsizei n, const GLuint *pipelines)
 {
     return true;
 }
 
-bool ValidateCreateQueries(const Context *context,
-                           angle::EntryPoint entryPoint,
-                           GLenum target,
-                           GLsizei n,
-                           const GLuint *ids)
+bool ValidateCreateQueries(const Context *context, GLenum target, GLsizei n, const GLuint *ids)
 {
     return true;
 }
 
 bool ValidateCreateRenderbuffers(const Context *context,
-                                 angle::EntryPoint entryPoint,
                                  GLsizei n,
                                  const RenderbufferID *renderbuffers)
 {
     return true;
 }
 
-bool ValidateCreateSamplers(const Context *context,
-                            angle::EntryPoint entryPoint,
-                            GLsizei n,
-                            const GLuint *samplers)
+bool ValidateCreateSamplers(const Context *context, GLsizei n, const GLuint *samplers)
 {
     return true;
 }
 
 bool ValidateCreateTextures(const Context *context,
-                            angle::EntryPoint entryPoint,
                             GLenum target,
                             GLsizei n,
                             const GLuint *textures)
@@ -1251,40 +1065,27 @@ bool ValidateCreateTextures(const Context *context,
     return true;
 }
 
-bool ValidateCreateTransformFeedbacks(const Context *context,
-                                      angle::EntryPoint entryPoint,
-                                      GLsizei n,
-                                      const GLuint *ids)
+bool ValidateCreateTransformFeedbacks(const Context *context, GLsizei n, const GLuint *ids)
 {
     return true;
 }
 
-bool ValidateCreateVertexArrays(const Context *context,
-                                angle::EntryPoint entryPoint,
-                                GLsizei n,
-                                const VertexArrayID *arrays)
+bool ValidateCreateVertexArrays(const Context *context, GLsizei n, const VertexArrayID *arrays)
 {
     return true;
 }
 
-bool ValidateDisableVertexArrayAttrib(const Context *context,
-                                      angle::EntryPoint entryPoint,
-                                      VertexArrayID vaobj,
-                                      GLuint index)
+bool ValidateDisableVertexArrayAttrib(const Context *context, VertexArrayID vaobj, GLuint index)
 {
     return true;
 }
 
-bool ValidateEnableVertexArrayAttrib(const Context *context,
-                                     angle::EntryPoint entryPoint,
-                                     VertexArrayID vaobj,
-                                     GLuint index)
+bool ValidateEnableVertexArrayAttrib(const Context *context, VertexArrayID vaobj, GLuint index)
 {
     return true;
 }
 
 bool ValidateFlushMappedNamedBufferRange(const Context *context,
-                                         angle::EntryPoint entryPoint,
                                          BufferID buffer,
                                          GLintptr offset,
                                          GLsizeiptr length)
@@ -1292,15 +1093,12 @@ bool ValidateFlushMappedNamedBufferRange(const Context *context,
     return true;
 }
 
-bool ValidateGenerateTextureMipmap(const Context *context,
-                                   angle::EntryPoint entryPoint,
-                                   TextureID texture)
+bool ValidateGenerateTextureMipmap(const Context *context, TextureID texture)
 {
     return true;
 }
 
 bool ValidateGetCompressedTextureImage(const Context *context,
-                                       angle::EntryPoint entryPoint,
                                        TextureID texture,
                                        GLint level,
                                        GLsizei bufSize,
@@ -1310,7 +1108,6 @@ bool ValidateGetCompressedTextureImage(const Context *context,
 }
 
 bool ValidateGetCompressedTextureSubImage(const Context *context,
-                                          angle::EntryPoint entryPoint,
                                           TextureID texture,
                                           GLint level,
                                           GLint xoffset,
@@ -1326,7 +1123,6 @@ bool ValidateGetCompressedTextureSubImage(const Context *context,
 }
 
 bool ValidateGetNamedBufferParameteri64v(const Context *context,
-                                         angle::EntryPoint entryPoint,
                                          BufferID buffer,
                                          GLenum pname,
                                          const GLint64 *params)
@@ -1335,7 +1131,6 @@ bool ValidateGetNamedBufferParameteri64v(const Context *context,
 }
 
 bool ValidateGetNamedBufferParameteriv(const Context *context,
-                                       angle::EntryPoint entryPoint,
                                        BufferID buffer,
                                        GLenum pname,
                                        const GLint *params)
@@ -1344,7 +1139,6 @@ bool ValidateGetNamedBufferParameteriv(const Context *context,
 }
 
 bool ValidateGetNamedBufferPointerv(const Context *context,
-                                    angle::EntryPoint entryPoint,
                                     BufferID buffer,
                                     GLenum pname,
                                     void *const *params)
@@ -1353,7 +1147,6 @@ bool ValidateGetNamedBufferPointerv(const Context *context,
 }
 
 bool ValidateGetNamedBufferSubData(const Context *context,
-                                   angle::EntryPoint entryPoint,
                                    BufferID buffer,
                                    GLintptr offset,
                                    GLsizeiptr size,
@@ -1363,7 +1156,6 @@ bool ValidateGetNamedBufferSubData(const Context *context,
 }
 
 bool ValidateGetNamedFramebufferAttachmentParameteriv(const Context *context,
-                                                      angle::EntryPoint entryPoint,
                                                       FramebufferID framebuffer,
                                                       GLenum attachment,
                                                       GLenum pname,
@@ -1373,7 +1165,6 @@ bool ValidateGetNamedFramebufferAttachmentParameteriv(const Context *context,
 }
 
 bool ValidateGetNamedFramebufferParameteriv(const Context *context,
-                                            angle::EntryPoint entryPoint,
                                             FramebufferID framebuffer,
                                             GLenum pname,
                                             const GLint *param)
@@ -1382,7 +1173,6 @@ bool ValidateGetNamedFramebufferParameteriv(const Context *context,
 }
 
 bool ValidateGetNamedRenderbufferParameteriv(const Context *context,
-                                             angle::EntryPoint entryPoint,
                                              RenderbufferID renderbuffer,
                                              GLenum pname,
                                              const GLint *params)
@@ -1391,7 +1181,6 @@ bool ValidateGetNamedRenderbufferParameteriv(const Context *context,
 }
 
 bool ValidateGetQueryBufferObjecti64v(const Context *context,
-                                      angle::EntryPoint entryPoint,
                                       GLuint id,
                                       BufferID buffer,
                                       GLenum pname,
@@ -1401,7 +1190,6 @@ bool ValidateGetQueryBufferObjecti64v(const Context *context,
 }
 
 bool ValidateGetQueryBufferObjectiv(const Context *context,
-                                    angle::EntryPoint entryPoint,
                                     GLuint id,
                                     BufferID buffer,
                                     GLenum pname,
@@ -1411,7 +1199,6 @@ bool ValidateGetQueryBufferObjectiv(const Context *context,
 }
 
 bool ValidateGetQueryBufferObjectui64v(const Context *context,
-                                       angle::EntryPoint entryPoint,
                                        GLuint id,
                                        BufferID buffer,
                                        GLenum pname,
@@ -1421,7 +1208,6 @@ bool ValidateGetQueryBufferObjectui64v(const Context *context,
 }
 
 bool ValidateGetQueryBufferObjectuiv(const Context *context,
-                                     angle::EntryPoint entryPoint,
                                      GLuint id,
                                      BufferID buffer,
                                      GLenum pname,
@@ -1431,7 +1217,6 @@ bool ValidateGetQueryBufferObjectuiv(const Context *context,
 }
 
 bool ValidateGetTextureImage(const Context *context,
-                             angle::EntryPoint entryPoint,
                              TextureID texture,
                              GLint level,
                              GLenum format,
@@ -1443,7 +1228,6 @@ bool ValidateGetTextureImage(const Context *context,
 }
 
 bool ValidateGetTextureLevelParameterfv(const Context *context,
-                                        angle::EntryPoint entryPoint,
                                         TextureID texture,
                                         GLint level,
                                         GLenum pname,
@@ -1453,7 +1237,6 @@ bool ValidateGetTextureLevelParameterfv(const Context *context,
 }
 
 bool ValidateGetTextureLevelParameteriv(const Context *context,
-                                        angle::EntryPoint entryPoint,
                                         TextureID texture,
                                         GLint level,
                                         GLenum pname,
@@ -1463,7 +1246,6 @@ bool ValidateGetTextureLevelParameteriv(const Context *context,
 }
 
 bool ValidateGetTextureParameterIiv(const Context *context,
-                                    angle::EntryPoint entryPoint,
                                     TextureID texture,
                                     GLenum pname,
                                     const GLint *params)
@@ -1472,7 +1254,6 @@ bool ValidateGetTextureParameterIiv(const Context *context,
 }
 
 bool ValidateGetTextureParameterIuiv(const Context *context,
-                                     angle::EntryPoint entryPoint,
                                      TextureID texture,
                                      GLenum pname,
                                      const GLuint *params)
@@ -1481,7 +1262,6 @@ bool ValidateGetTextureParameterIuiv(const Context *context,
 }
 
 bool ValidateGetTextureParameterfv(const Context *context,
-                                   angle::EntryPoint entryPoint,
                                    TextureID texture,
                                    GLenum pname,
                                    const GLfloat *params)
@@ -1490,7 +1270,6 @@ bool ValidateGetTextureParameterfv(const Context *context,
 }
 
 bool ValidateGetTextureParameteriv(const Context *context,
-                                   angle::EntryPoint entryPoint,
                                    TextureID texture,
                                    GLenum pname,
                                    const GLint *params)
@@ -1499,7 +1278,6 @@ bool ValidateGetTextureParameteriv(const Context *context,
 }
 
 bool ValidateGetTextureSubImage(const Context *context,
-                                angle::EntryPoint entryPoint,
                                 TextureID texture,
                                 GLint level,
                                 GLint xoffset,
@@ -1517,7 +1295,6 @@ bool ValidateGetTextureSubImage(const Context *context,
 }
 
 bool ValidateGetTransformFeedbacki64_v(const Context *context,
-                                       angle::EntryPoint entryPoint,
                                        GLuint xfb,
                                        GLenum pname,
                                        GLuint index,
@@ -1527,7 +1304,6 @@ bool ValidateGetTransformFeedbacki64_v(const Context *context,
 }
 
 bool ValidateGetTransformFeedbacki_v(const Context *context,
-                                     angle::EntryPoint entryPoint,
                                      GLuint xfb,
                                      GLenum pname,
                                      GLuint index,
@@ -1537,7 +1313,6 @@ bool ValidateGetTransformFeedbacki_v(const Context *context,
 }
 
 bool ValidateGetTransformFeedbackiv(const Context *context,
-                                    angle::EntryPoint entryPoint,
                                     GLuint xfb,
                                     GLenum pname,
                                     const GLint *param)
@@ -1546,7 +1321,6 @@ bool ValidateGetTransformFeedbackiv(const Context *context,
 }
 
 bool ValidateGetVertexArrayIndexed64iv(const Context *context,
-                                       angle::EntryPoint entryPoint,
                                        VertexArrayID vaobj,
                                        GLuint index,
                                        GLenum pname,
@@ -1556,7 +1330,6 @@ bool ValidateGetVertexArrayIndexed64iv(const Context *context,
 }
 
 bool ValidateGetVertexArrayIndexediv(const Context *context,
-                                     angle::EntryPoint entryPoint,
                                      VertexArrayID vaobj,
                                      GLuint index,
                                      GLenum pname,
@@ -1566,7 +1339,6 @@ bool ValidateGetVertexArrayIndexediv(const Context *context,
 }
 
 bool ValidateGetVertexArrayiv(const Context *context,
-                              angle::EntryPoint entryPoint,
                               VertexArrayID vaobj,
                               GLenum pname,
                               const GLint *param)
@@ -1575,7 +1347,6 @@ bool ValidateGetVertexArrayiv(const Context *context,
 }
 
 bool ValidateGetnColorTable(const Context *context,
-                            angle::EntryPoint entryPoint,
                             GLenum target,
                             GLenum format,
                             GLenum type,
@@ -1586,7 +1357,6 @@ bool ValidateGetnColorTable(const Context *context,
 }
 
 bool ValidateGetnCompressedTexImage(const Context *context,
-                                    angle::EntryPoint entryPoint,
                                     GLenum target,
                                     GLint lod,
                                     GLsizei bufSize,
@@ -1596,7 +1366,6 @@ bool ValidateGetnCompressedTexImage(const Context *context,
 }
 
 bool ValidateGetnConvolutionFilter(const Context *context,
-                                   angle::EntryPoint entryPoint,
                                    GLenum target,
                                    GLenum format,
                                    GLenum type,
@@ -1607,7 +1376,6 @@ bool ValidateGetnConvolutionFilter(const Context *context,
 }
 
 bool ValidateGetnHistogram(const Context *context,
-                           angle::EntryPoint entryPoint,
                            GLenum target,
                            GLboolean reset,
                            GLenum format,
@@ -1619,7 +1387,6 @@ bool ValidateGetnHistogram(const Context *context,
 }
 
 bool ValidateGetnMapdv(const Context *context,
-                       angle::EntryPoint entryPoint,
                        GLenum target,
                        GLenum query,
                        GLsizei bufSize,
@@ -1629,7 +1396,6 @@ bool ValidateGetnMapdv(const Context *context,
 }
 
 bool ValidateGetnMapfv(const Context *context,
-                       angle::EntryPoint entryPoint,
                        GLenum target,
                        GLenum query,
                        GLsizei bufSize,
@@ -1639,7 +1405,6 @@ bool ValidateGetnMapfv(const Context *context,
 }
 
 bool ValidateGetnMapiv(const Context *context,
-                       angle::EntryPoint entryPoint,
                        GLenum target,
                        GLenum query,
                        GLsizei bufSize,
@@ -1649,7 +1414,6 @@ bool ValidateGetnMapiv(const Context *context,
 }
 
 bool ValidateGetnMinmax(const Context *context,
-                        angle::EntryPoint entryPoint,
                         GLenum target,
                         GLboolean reset,
                         GLenum format,
@@ -1661,7 +1425,6 @@ bool ValidateGetnMinmax(const Context *context,
 }
 
 bool ValidateGetnPixelMapfv(const Context *context,
-                            angle::EntryPoint entryPoint,
                             GLenum map,
                             GLsizei bufSize,
                             const GLfloat *values)
@@ -1670,7 +1433,6 @@ bool ValidateGetnPixelMapfv(const Context *context,
 }
 
 bool ValidateGetnPixelMapuiv(const Context *context,
-                             angle::EntryPoint entryPoint,
                              GLenum map,
                              GLsizei bufSize,
                              const GLuint *values)
@@ -1679,7 +1441,6 @@ bool ValidateGetnPixelMapuiv(const Context *context,
 }
 
 bool ValidateGetnPixelMapusv(const Context *context,
-                             angle::EntryPoint entryPoint,
                              GLenum map,
                              GLsizei bufSize,
                              const GLushort *values)
@@ -1687,16 +1448,12 @@ bool ValidateGetnPixelMapusv(const Context *context,
     return true;
 }
 
-bool ValidateGetnPolygonStipple(const Context *context,
-                                angle::EntryPoint entryPoint,
-                                GLsizei bufSize,
-                                const GLubyte *pattern)
+bool ValidateGetnPolygonStipple(const Context *context, GLsizei bufSize, const GLubyte *pattern)
 {
     return true;
 }
 
 bool ValidateGetnSeparableFilter(const Context *context,
-                                 angle::EntryPoint entryPoint,
                                  GLenum target,
                                  GLenum format,
                                  GLenum type,
@@ -1710,7 +1467,6 @@ bool ValidateGetnSeparableFilter(const Context *context,
 }
 
 bool ValidateGetnTexImage(const Context *context,
-                          angle::EntryPoint entryPoint,
                           GLenum target,
                           GLint level,
                           GLenum format,
@@ -1722,7 +1478,6 @@ bool ValidateGetnTexImage(const Context *context,
 }
 
 bool ValidateGetnUniformdv(const Context *context,
-                           angle::EntryPoint entryPoint,
                            ShaderProgramID program,
                            UniformLocation location,
                            GLsizei bufSize,
@@ -1732,7 +1487,6 @@ bool ValidateGetnUniformdv(const Context *context,
 }
 
 bool ValidateInvalidateNamedFramebufferData(const Context *context,
-                                            angle::EntryPoint entryPoint,
                                             FramebufferID framebuffer,
                                             GLsizei numAttachments,
                                             const GLenum *attachments)
@@ -1741,7 +1495,6 @@ bool ValidateInvalidateNamedFramebufferData(const Context *context,
 }
 
 bool ValidateInvalidateNamedFramebufferSubData(const Context *context,
-                                               angle::EntryPoint entryPoint,
                                                FramebufferID framebuffer,
                                                GLsizei numAttachments,
                                                const GLenum *attachments,
@@ -1753,16 +1506,12 @@ bool ValidateInvalidateNamedFramebufferSubData(const Context *context,
     return true;
 }
 
-bool ValidateMapNamedBuffer(const Context *context,
-                            angle::EntryPoint entryPoint,
-                            BufferID buffer,
-                            GLenum access)
+bool ValidateMapNamedBuffer(const Context *context, BufferID buffer, GLenum access)
 {
     return true;
 }
 
 bool ValidateMapNamedBufferRange(const Context *context,
-                                 angle::EntryPoint entryPoint,
                                  BufferID buffer,
                                  GLintptr offset,
                                  GLsizeiptr length,
@@ -1772,7 +1521,6 @@ bool ValidateMapNamedBufferRange(const Context *context,
 }
 
 bool ValidateNamedBufferData(const Context *context,
-                             angle::EntryPoint entryPoint,
                              BufferID buffer,
                              GLsizeiptr size,
                              const void *data,
@@ -1782,7 +1530,6 @@ bool ValidateNamedBufferData(const Context *context,
 }
 
 bool ValidateNamedBufferStorage(const Context *context,
-                                angle::EntryPoint entryPoint,
                                 BufferID buffer,
                                 GLsizeiptr size,
                                 const void *data,
@@ -1792,7 +1539,6 @@ bool ValidateNamedBufferStorage(const Context *context,
 }
 
 bool ValidateNamedBufferSubData(const Context *context,
-                                angle::EntryPoint entryPoint,
                                 BufferID buffer,
                                 GLintptr offset,
                                 GLsizeiptr size,
@@ -1802,7 +1548,6 @@ bool ValidateNamedBufferSubData(const Context *context,
 }
 
 bool ValidateNamedFramebufferDrawBuffer(const Context *context,
-                                        angle::EntryPoint entryPoint,
                                         FramebufferID framebuffer,
                                         GLenum buf)
 {
@@ -1810,7 +1555,6 @@ bool ValidateNamedFramebufferDrawBuffer(const Context *context,
 }
 
 bool ValidateNamedFramebufferDrawBuffers(const Context *context,
-                                         angle::EntryPoint entryPoint,
                                          FramebufferID framebuffer,
                                          GLsizei n,
                                          const GLenum *bufs)
@@ -1819,7 +1563,6 @@ bool ValidateNamedFramebufferDrawBuffers(const Context *context,
 }
 
 bool ValidateNamedFramebufferParameteri(const Context *context,
-                                        angle::EntryPoint entryPoint,
                                         FramebufferID framebuffer,
                                         GLenum pname,
                                         GLint param)
@@ -1828,7 +1571,6 @@ bool ValidateNamedFramebufferParameteri(const Context *context,
 }
 
 bool ValidateNamedFramebufferReadBuffer(const Context *context,
-                                        angle::EntryPoint entryPoint,
                                         FramebufferID framebuffer,
                                         GLenum src)
 {
@@ -1836,7 +1578,6 @@ bool ValidateNamedFramebufferReadBuffer(const Context *context,
 }
 
 bool ValidateNamedFramebufferRenderbuffer(const Context *context,
-                                          angle::EntryPoint entryPoint,
                                           FramebufferID framebuffer,
                                           GLenum attachment,
                                           GLenum renderbuffertarget,
@@ -1846,7 +1587,6 @@ bool ValidateNamedFramebufferRenderbuffer(const Context *context,
 }
 
 bool ValidateNamedFramebufferTexture(const Context *context,
-                                     angle::EntryPoint entryPoint,
                                      FramebufferID framebuffer,
                                      GLenum attachment,
                                      TextureID texture,
@@ -1856,7 +1596,6 @@ bool ValidateNamedFramebufferTexture(const Context *context,
 }
 
 bool ValidateNamedFramebufferTextureLayer(const Context *context,
-                                          angle::EntryPoint entryPoint,
                                           FramebufferID framebuffer,
                                           GLenum attachment,
                                           TextureID texture,
@@ -1867,7 +1606,6 @@ bool ValidateNamedFramebufferTextureLayer(const Context *context,
 }
 
 bool ValidateNamedRenderbufferStorage(const Context *context,
-                                      angle::EntryPoint entryPoint,
                                       RenderbufferID renderbuffer,
                                       GLenum internalformat,
                                       GLsizei width,
@@ -1877,7 +1615,6 @@ bool ValidateNamedRenderbufferStorage(const Context *context,
 }
 
 bool ValidateNamedRenderbufferStorageMultisample(const Context *context,
-                                                 angle::EntryPoint entryPoint,
                                                  RenderbufferID renderbuffer,
                                                  GLsizei samples,
                                                  GLenum internalformat,
@@ -1887,13 +1624,12 @@ bool ValidateNamedRenderbufferStorageMultisample(const Context *context,
     return true;
 }
 
-bool ValidateTextureBarrier(const Context *context, angle::EntryPoint entryPoint)
+bool ValidateTextureBarrier(const Context *context)
 {
     return true;
 }
 
 bool ValidateTextureBuffer(const Context *context,
-                           angle::EntryPoint entryPoint,
                            TextureID texture,
                            GLenum internalformat,
                            BufferID buffer)
@@ -1902,7 +1638,6 @@ bool ValidateTextureBuffer(const Context *context,
 }
 
 bool ValidateTextureBufferRange(const Context *context,
-                                angle::EntryPoint entryPoint,
                                 TextureID texture,
                                 GLenum internalformat,
                                 BufferID buffer,
@@ -1913,7 +1648,6 @@ bool ValidateTextureBufferRange(const Context *context,
 }
 
 bool ValidateTextureParameterIiv(const Context *context,
-                                 angle::EntryPoint entryPoint,
                                  TextureID texture,
                                  GLenum pname,
                                  const GLint *params)
@@ -1922,7 +1656,6 @@ bool ValidateTextureParameterIiv(const Context *context,
 }
 
 bool ValidateTextureParameterIuiv(const Context *context,
-                                  angle::EntryPoint entryPoint,
                                   TextureID texture,
                                   GLenum pname,
                                   const GLuint *params)
@@ -1931,7 +1664,6 @@ bool ValidateTextureParameterIuiv(const Context *context,
 }
 
 bool ValidateTextureParameterf(const Context *context,
-                               angle::EntryPoint entryPoint,
                                TextureID texture,
                                GLenum pname,
                                GLfloat param)
@@ -1940,7 +1672,6 @@ bool ValidateTextureParameterf(const Context *context,
 }
 
 bool ValidateTextureParameterfv(const Context *context,
-                                angle::EntryPoint entryPoint,
                                 TextureID texture,
                                 GLenum pname,
                                 const GLfloat *param)
@@ -1948,17 +1679,12 @@ bool ValidateTextureParameterfv(const Context *context,
     return true;
 }
 
-bool ValidateTextureParameteri(const Context *context,
-                               angle::EntryPoint entryPoint,
-                               TextureID texture,
-                               GLenum pname,
-                               GLint param)
+bool ValidateTextureParameteri(const Context *context, TextureID texture, GLenum pname, GLint param)
 {
     return true;
 }
 
 bool ValidateTextureParameteriv(const Context *context,
-                                angle::EntryPoint entryPoint,
                                 TextureID texture,
                                 GLenum pname,
                                 const GLint *param)
@@ -1967,7 +1693,6 @@ bool ValidateTextureParameteriv(const Context *context,
 }
 
 bool ValidateTextureStorage1D(const Context *context,
-                              angle::EntryPoint entryPoint,
                               TextureID texture,
                               GLsizei levels,
                               GLenum internalformat,
@@ -1977,7 +1702,6 @@ bool ValidateTextureStorage1D(const Context *context,
 }
 
 bool ValidateTextureStorage2D(const Context *context,
-                              angle::EntryPoint entryPoint,
                               TextureID texture,
                               GLsizei levels,
                               GLenum internalformat,
@@ -1988,7 +1712,6 @@ bool ValidateTextureStorage2D(const Context *context,
 }
 
 bool ValidateTextureStorage2DMultisample(const Context *context,
-                                         angle::EntryPoint entryPoint,
                                          TextureID texture,
                                          GLsizei samples,
                                          GLenum internalformat,
@@ -2000,7 +1723,6 @@ bool ValidateTextureStorage2DMultisample(const Context *context,
 }
 
 bool ValidateTextureStorage3D(const Context *context,
-                              angle::EntryPoint entryPoint,
                               TextureID texture,
                               GLsizei levels,
                               GLenum internalformat,
@@ -2012,7 +1734,6 @@ bool ValidateTextureStorage3D(const Context *context,
 }
 
 bool ValidateTextureStorage3DMultisample(const Context *context,
-                                         angle::EntryPoint entryPoint,
                                          TextureID texture,
                                          GLsizei samples,
                                          GLenum internalformat,
@@ -2025,7 +1746,6 @@ bool ValidateTextureStorage3DMultisample(const Context *context,
 }
 
 bool ValidateTextureSubImage1D(const Context *context,
-                               angle::EntryPoint entryPoint,
                                TextureID texture,
                                GLint level,
                                GLint xoffset,
@@ -2038,7 +1758,6 @@ bool ValidateTextureSubImage1D(const Context *context,
 }
 
 bool ValidateTextureSubImage2D(const Context *context,
-                               angle::EntryPoint entryPoint,
                                TextureID texture,
                                GLint level,
                                GLint xoffset,
@@ -2053,7 +1772,6 @@ bool ValidateTextureSubImage2D(const Context *context,
 }
 
 bool ValidateTextureSubImage3D(const Context *context,
-                               angle::EntryPoint entryPoint,
                                TextureID texture,
                                GLint level,
                                GLint xoffset,
@@ -2070,7 +1788,6 @@ bool ValidateTextureSubImage3D(const Context *context,
 }
 
 bool ValidateTransformFeedbackBufferBase(const Context *context,
-                                         angle::EntryPoint entryPoint,
                                          GLuint xfb,
                                          GLuint index,
                                          BufferID buffer)
@@ -2079,7 +1796,6 @@ bool ValidateTransformFeedbackBufferBase(const Context *context,
 }
 
 bool ValidateTransformFeedbackBufferRange(const Context *context,
-                                          angle::EntryPoint entryPoint,
                                           GLuint xfb,
                                           GLuint index,
                                           BufferID buffer,
@@ -2089,13 +1805,12 @@ bool ValidateTransformFeedbackBufferRange(const Context *context,
     return true;
 }
 
-bool ValidateUnmapNamedBuffer(const Context *context, angle::EntryPoint entryPoint, BufferID buffer)
+bool ValidateUnmapNamedBuffer(const Context *context, BufferID buffer)
 {
     return true;
 }
 
 bool ValidateVertexArrayAttribBinding(const Context *context,
-                                      angle::EntryPoint entryPoint,
                                       VertexArrayID vaobj,
                                       GLuint attribindex,
                                       GLuint bindingindex)
@@ -2104,7 +1819,6 @@ bool ValidateVertexArrayAttribBinding(const Context *context,
 }
 
 bool ValidateVertexArrayAttribFormat(const Context *context,
-                                     angle::EntryPoint entryPoint,
                                      VertexArrayID vaobj,
                                      GLuint attribindex,
                                      GLint size,
@@ -2116,7 +1830,6 @@ bool ValidateVertexArrayAttribFormat(const Context *context,
 }
 
 bool ValidateVertexArrayAttribIFormat(const Context *context,
-                                      angle::EntryPoint entryPoint,
                                       VertexArrayID vaobj,
                                       GLuint attribindex,
                                       GLint size,
@@ -2127,7 +1840,6 @@ bool ValidateVertexArrayAttribIFormat(const Context *context,
 }
 
 bool ValidateVertexArrayAttribLFormat(const Context *context,
-                                      angle::EntryPoint entryPoint,
                                       VertexArrayID vaobj,
                                       GLuint attribindex,
                                       GLint size,
@@ -2138,7 +1850,6 @@ bool ValidateVertexArrayAttribLFormat(const Context *context,
 }
 
 bool ValidateVertexArrayBindingDivisor(const Context *context,
-                                       angle::EntryPoint entryPoint,
                                        VertexArrayID vaobj,
                                        GLuint bindingindex,
                                        GLuint divisor)
@@ -2146,16 +1857,12 @@ bool ValidateVertexArrayBindingDivisor(const Context *context,
     return true;
 }
 
-bool ValidateVertexArrayElementBuffer(const Context *context,
-                                      angle::EntryPoint entryPoint,
-                                      VertexArrayID vaobj,
-                                      BufferID buffer)
+bool ValidateVertexArrayElementBuffer(const Context *context, VertexArrayID vaobj, BufferID buffer)
 {
     return true;
 }
 
 bool ValidateVertexArrayVertexBuffer(const Context *context,
-                                     angle::EntryPoint entryPoint,
                                      VertexArrayID vaobj,
                                      GLuint bindingindex,
                                      BufferID buffer,
@@ -2166,7 +1873,6 @@ bool ValidateVertexArrayVertexBuffer(const Context *context,
 }
 
 bool ValidateVertexArrayVertexBuffers(const Context *context,
-                                      angle::EntryPoint entryPoint,
                                       VertexArrayID vaobj,
                                       GLuint first,
                                       GLsizei count,
@@ -2178,7 +1884,6 @@ bool ValidateVertexArrayVertexBuffers(const Context *context,
 }
 
 bool ValidateMultiDrawArraysIndirectCount(const Context *context,
-                                          angle::EntryPoint entryPoint,
                                           GLenum mode,
                                           const void *indirect,
                                           GLintptr drawcount,
@@ -2189,7 +1894,6 @@ bool ValidateMultiDrawArraysIndirectCount(const Context *context,
 }
 
 bool ValidateMultiDrawElementsIndirectCount(const Context *context,
-                                            angle::EntryPoint entryPoint,
                                             GLenum mode,
                                             GLenum type,
                                             const void *indirect,
@@ -2201,7 +1905,6 @@ bool ValidateMultiDrawElementsIndirectCount(const Context *context,
 }
 
 bool ValidatePolygonOffsetClamp(const Context *context,
-                                angle::EntryPoint entryPoint,
                                 GLfloat factor,
                                 GLfloat units,
                                 GLfloat clamp)
@@ -2210,7 +1913,6 @@ bool ValidatePolygonOffsetClamp(const Context *context,
 }
 
 bool ValidateSpecializeShader(const Context *context,
-                              angle::EntryPoint entryPoint,
                               GLuint shader,
                               const GLchar *pEntryPoint,
                               GLuint numSpecializationConstants,

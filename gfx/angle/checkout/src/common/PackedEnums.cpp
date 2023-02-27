@@ -282,9 +282,6 @@ std::ostream &operator<<(std::ostream &os, PrimitiveMode value)
         case PrimitiveMode::LineStripAdjacency:
             os << "GL_LINE_STRIP_ADJANCENCY";
             break;
-        case PrimitiveMode::Patches:
-            os << "GL_PATCHES";
-            break;
         case PrimitiveMode::Points:
             os << "GL_POINTS";
             break;
@@ -349,51 +346,6 @@ std::ostream &operator<<(std::ostream &os, BlendEquationType value)
             break;
         case BlendEquationType::ReverseSubtract:
             os << "GL_FUNC_REVERSE_SUBTRACT";
-            break;
-        case BlendEquationType::Multiply:
-            os << "GL_MULTIPLY_KHR";
-            break;
-        case BlendEquationType::Screen:
-            os << "GL_SCREEN_KHR";
-            break;
-        case BlendEquationType::Overlay:
-            os << "GL_OVERLAY_KHR";
-            break;
-        case BlendEquationType::Darken:
-            os << "GL_DARKEN_KHR";
-            break;
-        case BlendEquationType::Lighten:
-            os << "GL_LIGHTEN_KHR";
-            break;
-        case BlendEquationType::Colordodge:
-            os << "GL_COLORDODGE_KHR";
-            break;
-        case BlendEquationType::Colorburn:
-            os << "GL_COLORBURN_KHR";
-            break;
-        case BlendEquationType::Hardlight:
-            os << "GL_HARDLIGHT_KHR";
-            break;
-        case BlendEquationType::Softlight:
-            os << "GL_SOFTLIGHT_KHR";
-            break;
-        case BlendEquationType::Difference:
-            os << "GL_DIFFERENCE_KHR";
-            break;
-        case BlendEquationType::Exclusion:
-            os << "GL_EXCLUSION_KHR";
-            break;
-        case BlendEquationType::HslHue:
-            os << "GL_HSL_HUE_KHR";
-            break;
-        case BlendEquationType::HslSaturation:
-            os << "GL_HSL_SATURATION_KHR";
-            break;
-        case BlendEquationType::HslColor:
-            os << "GL_HSL_COLOR_KHR";
-            break;
-        case BlendEquationType::HslLuminosity:
-            os << "GL_HSL_LUMINOSITY_KHR";
             break;
         default:
             os << "GL_INVALID_ENUM";
@@ -573,17 +525,6 @@ const char *ShaderTypeToString(ShaderType shaderType)
         {ShaderType::Fragment, "Fragment"},
         {ShaderType::Compute, "Compute"}};
     return kShaderTypeNameMap[shaderType];
-}
-
-bool operator<(const UniformLocation &lhs, const UniformLocation &rhs)
-{
-    return lhs.value < rhs.value;
-}
-
-bool IsEmulatedCompressedFormat(GLenum format)
-{
-    // TODO(anglebug.com/6177): Check for all formats ANGLE will use to emulate a compressed texture
-    return format == GL_RGBA || format == GL_RG || format == GL_RED;
 }
 }  // namespace gl
 

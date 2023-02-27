@@ -45,14 +45,6 @@ void InitExtensionBehavior(const ShBuiltInResources &resources, TExtensionBehavi
     {
         extBehavior[TExtension::EXT_frag_depth] = EBhUndefined;
     }
-    if (resources.EXT_primitive_bounding_box)
-    {
-        extBehavior[TExtension::EXT_primitive_bounding_box] = EBhUndefined;
-    }
-    if (resources.OES_primitive_bounding_box)
-    {
-        extBehavior[TExtension::OES_primitive_bounding_box] = EBhUndefined;
-    }
     if (resources.EXT_shader_texture_lod)
     {
         extBehavior[TExtension::EXT_shader_texture_lod] = EBhUndefined;
@@ -93,10 +85,6 @@ void InitExtensionBehavior(const ShBuiltInResources &resources, TExtensionBehavi
     {
         extBehavior[TExtension::EXT_geometry_shader] = EBhUndefined;
     }
-    if (resources.OES_geometry_shader)
-    {
-        extBehavior[TExtension::OES_geometry_shader] = EBhUndefined;
-    }
     if (resources.OES_shader_io_blocks)
     {
         extBehavior[TExtension::OES_shader_io_blocks] = EBhUndefined;
@@ -121,10 +109,6 @@ void InitExtensionBehavior(const ShBuiltInResources &resources, TExtensionBehavi
     {
         extBehavior[TExtension::OES_texture_3D] = EBhUndefined;
     }
-    if (resources.ANGLE_shader_pixel_local_storage)
-    {
-        extBehavior[TExtension::ANGLE_shader_pixel_local_storage] = EBhUndefined;
-    }
     if (resources.ANGLE_texture_multisample)
     {
         extBehavior[TExtension::ANGLE_texture_multisample] = EBhUndefined;
@@ -133,9 +117,9 @@ void InitExtensionBehavior(const ShBuiltInResources &resources, TExtensionBehavi
     {
         extBehavior[TExtension::ANGLE_multi_draw] = EBhUndefined;
     }
-    if (resources.ANGLE_base_vertex_base_instance_shader_builtin)
+    if (resources.ANGLE_base_vertex_base_instance)
     {
-        extBehavior[TExtension::ANGLE_base_vertex_base_instance_shader_builtin] = EBhUndefined;
+        extBehavior[TExtension::ANGLE_base_vertex_base_instance] = EBhUndefined;
     }
     if (resources.WEBGL_video_texture)
     {
@@ -185,19 +169,11 @@ void InitExtensionBehavior(const ShBuiltInResources &resources, TExtensionBehavi
     {
         extBehavior[TExtension::EXT_clip_cull_distance] = EBhUndefined;
     }
-    if (resources.ANDROID_extension_pack_es31a)
-    {
-        extBehavior[TExtension::ANDROID_extension_pack_es31a] = EBhUndefined;
-    }
-    if (resources.KHR_blend_equation_advanced)
-    {
-        extBehavior[TExtension::KHR_blend_equation_advanced] = EBhUndefined;
-    }
 }
 
 void ResetExtensionBehavior(const ShBuiltInResources &resources,
                             TExtensionBehavior &extBehavior,
-                            const ShCompileOptions &compileOptions)
+                            const ShCompileOptions compileOptions)
 {
     for (auto &ext : extBehavior)
     {
@@ -205,7 +181,7 @@ void ResetExtensionBehavior(const ShBuiltInResources &resources,
     }
     if (resources.ARB_texture_rectangle)
     {
-        if (compileOptions.disableARBTextureRectangle)
+        if ((compileOptions & SH_DISABLE_ARB_TEXTURE_RECTANGLE) != 0)
         {
             // Remove ARB_texture_rectangle so it can't be enabled by extension directives.
             extBehavior.erase(TExtension::ARB_texture_rectangle);

@@ -28,15 +28,9 @@ void Query::onDestroy(const Context *context)
     mQuery->onDestroy(context);
 }
 
-angle::Result Query::setLabel(const Context *context, const std::string &label)
+void Query::setLabel(const Context *context, const std::string &label)
 {
     mLabel = label;
-
-    if (mQuery)
-    {
-        return mQuery->onLabelUpdate(context);
-    }
-    return angle::Result::Continue;
 }
 
 const std::string &Query::getLabel() const

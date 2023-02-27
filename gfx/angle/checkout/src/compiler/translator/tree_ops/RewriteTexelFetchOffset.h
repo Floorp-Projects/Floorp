@@ -24,10 +24,10 @@ class TCompiler;
 class TIntermNode;
 class TSymbolTable;
 
-[[nodiscard]] bool RewriteTexelFetchOffset(TCompiler *compiler,
-                                           TIntermNode *root,
-                                           const TSymbolTable &symbolTable,
-                                           int shaderVersion);
+ANGLE_NO_DISCARD bool RewriteTexelFetchOffset(TCompiler *compiler,
+                                              TIntermNode *root,
+                                              const TSymbolTable &symbolTable,
+                                              int shaderVersion);
 
 }  // namespace sh
 

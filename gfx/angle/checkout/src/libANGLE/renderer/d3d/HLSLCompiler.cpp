@@ -8,7 +8,6 @@
 
 #include <sstream>
 
-#include "common/system_utils.h"
 #include "common/utilities.h"
 #include "libANGLE/Context.h"
 #include "libANGLE/Program.h"
@@ -221,7 +220,7 @@ angle::Result HLSLCompiler::compileToBinary(d3d::Context *context,
     ASSERT(mD3DCompileFunc);
 
 #if !defined(ANGLE_ENABLE_WINDOWS_UWP) && defined(ANGLE_ENABLE_DEBUG_TRACE)
-    std::string sourcePath = angle::CreateTemporaryFile().value();
+    std::string sourcePath = getTempPath();
     std::ostringstream stream;
     stream << "#line 2 \"" << sourcePath << "\"\n\n" << hlsl;
     std::string sourceText = stream.str();
@@ -238,6 +237,7 @@ angle::Result HLSLCompiler::compileToBinary(d3d::Context *context,
 
         {
             ANGLE_TRACE_EVENT1("gpu.angle", "D3DCompile", "source", hlsl);
+            SCOPED_ANGLE_HISTOGRAM_TIMER("GPU.ANGLE.D3DCompileMS");
             result = mD3DCompileFunc(hlsl.c_str(), hlsl.length(), gl::g_fakepath, macros, nullptr,
                                      "main", profile.c_str(), configs[i].flags, 0, &binary,
                                      &errorMessage);

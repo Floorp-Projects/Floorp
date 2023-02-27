@@ -6,6 +6,7 @@
 
 #include "compiler/translator/BuiltInFunctionEmulator.h"
 #include "angle_gl.h"
+#include "compiler/translator/StaticType.h"
 #include "compiler/translator/Symbol.h"
 #include "compiler/translator/tree_util/IntermTraverse.h"
 
@@ -32,9 +33,9 @@ class BuiltInFunctionEmulator::BuiltInFunctionEmulationMarker : public TIntermTr
 
     bool visitAggregate(Visit visit, TIntermAggregate *node) override
     {
-        // Here we handle all the math built-in functions, not just the ones that are currently
-        // identified as problematic.
-        if (!BuiltInGroup::IsMath(node->getOp()))
+        // Here we handle all the built-in functions mapped to ops, not just the ones that are
+        // currently identified as problematic.
+        if (node->isConstructor() || node->isFunctionCall())
         {
             return true;
         }

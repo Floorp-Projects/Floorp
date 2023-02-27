@@ -270,7 +270,7 @@ bool RewriteExpressionsWithShaderStorageBlockTraverser::visitAggregate(Visit vis
     }
 
     // We still need to process the ssbo as the non-first argument of atomic memory functions.
-    if (BuiltInGroup::IsAtomicMemory(node->getOp()) &&
+    if (IsAtomicFunction(node->getOp()) &&
         IsInShaderStorageBlock((*node->getSequence())[0]->getAsTyped()))
     {
         return true;
@@ -295,7 +295,7 @@ bool RewriteExpressionsWithShaderStorageBlockTraverser::visitAggregate(Visit vis
             if (node->getFunction() != nullptr)
             {
                 TQualifier qual = node->getFunction()->getParam(i)->getType().getQualifier();
-                if (qual == EvqParamInOut || qual == EvqParamOut)
+                if (qual == EvqInOut || qual == EvqOut)
                 {
                     TIntermBinary *readBackToSSBO = new TIntermBinary(
                         EOpAssign, ssboArgument->deepCopy(), argumentCopy->deepCopy());

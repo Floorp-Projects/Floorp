@@ -79,13 +79,8 @@ class BlockLayoutEncoder
     BlockMemberInfo encodeType(GLenum type,
                                const std::vector<unsigned int> &arraySizes,
                                bool isRowMajorMatrix);
-    // Advance the offset based on struct size and array dimensions.  Size can be calculated with
-    // getShaderVariableSize() or equivalent.  |enterAggregateType|/|exitAggregateType| is necessary
-    // around this call.
-    BlockMemberInfo encodeArrayOfPreEncodedStructs(size_t size,
-                                                   const std::vector<unsigned int> &arraySizes);
 
-    size_t getCurrentOffset() const;
+    size_t getCurrentOffset() const { return mCurrentOffset * kBytesPerComponent; }
     size_t getShaderVariableSize(const ShaderVariable &structVar, bool isRowMajor);
 
     // Called when entering/exiting a structure variable.

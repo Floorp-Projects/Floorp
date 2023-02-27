@@ -37,7 +37,7 @@ class GLFragColorBroadcastTraverser : public TIntermTraverser
           mShaderVersion(shaderVersion)
     {}
 
-    [[nodiscard]] bool broadcastGLFragColor(TCompiler *compiler, TIntermBlock *root);
+    ANGLE_NO_DISCARD bool broadcastGLFragColor(TCompiler *compiler, TIntermBlock *root);
 
     bool isGLFragColorUsed() const { return mGLFragColorUsed; }
 

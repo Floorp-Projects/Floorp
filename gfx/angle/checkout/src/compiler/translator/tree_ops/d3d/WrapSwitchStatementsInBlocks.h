@@ -18,7 +18,7 @@ class TCompiler;
 class TIntermBlock;
 
 // Wrap switch statements in the AST into blocks when needed. Returns true if the AST was changed.
-[[nodiscard]] bool WrapSwitchStatementsInBlocks(TCompiler *compiler, TIntermBlock *root);
+ANGLE_NO_DISCARD bool WrapSwitchStatementsInBlocks(TCompiler *compiler, TIntermBlock *root);
 
 }  // namespace sh
 

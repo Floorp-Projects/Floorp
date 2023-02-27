@@ -121,11 +121,6 @@ class ContextImpl : public GLImplFactory
                                           const GLint *firsts,
                                           const GLsizei *counts,
                                           GLsizei drawcount)                      = 0;
-    virtual angle::Result multiDrawArraysIndirect(const gl::Context *context,
-                                                  gl::PrimitiveMode mode,
-                                                  const void *indirect,
-                                                  GLsizei drawcount,
-                                                  GLsizei stride)                 = 0;
     virtual angle::Result multiDrawArraysInstanced(const gl::Context *context,
                                                    gl::PrimitiveMode mode,
                                                    const GLint *firsts,
@@ -145,12 +140,6 @@ class ContextImpl : public GLImplFactory
                                                      const GLvoid *const *indices,
                                                      const GLsizei *instanceCounts,
                                                      GLsizei drawcount)           = 0;
-    virtual angle::Result multiDrawElementsIndirect(const gl::Context *context,
-                                                    gl::PrimitiveMode mode,
-                                                    gl::DrawElementsType type,
-                                                    const void *indirect,
-                                                    GLsizei drawcount,
-                                                    GLsizei stride)               = 0;
     virtual angle::Result multiDrawArraysInstancedBaseInstance(const gl::Context *context,
                                                                gl::PrimitiveMode mode,
                                                                const GLint *firsts,
@@ -183,7 +172,6 @@ class ContextImpl : public GLImplFactory
                                          GLuint id,
                                          const std::string &message) = 0;
     virtual angle::Result popDebugGroup(const gl::Context *context)  = 0;
-    virtual angle::Result handleNoopDrawEvent();
 
     // KHR_parallel_shader_compile
     virtual void setMaxShaderCompilerThreads(GLuint count) {}
@@ -194,14 +182,10 @@ class ContextImpl : public GLImplFactory
     // EXT_shader_framebuffer_fetch_non_coherent
     virtual void framebufferFetchBarrier() {}
 
-    // KHR_blend_equation_advanced
-    virtual void blendBarrier() {}
-
     // State sync with dirty bits.
     virtual angle::Result syncState(const gl::Context *context,
                                     const gl::State::DirtyBits &dirtyBits,
-                                    const gl::State::DirtyBits &bitMask,
-                                    gl::Command command) = 0;
+                                    const gl::State::DirtyBits &bitMask) = 0;
 
     // Disjoint timer queries
     virtual GLint getGPUDisjoint() = 0;
@@ -212,11 +196,10 @@ class ContextImpl : public GLImplFactory
     virtual angle::Result onUnMakeCurrent(const gl::Context *context);
 
     // Native capabilities, unmodified by gl::Context.
-    virtual gl::Caps getNativeCaps() const                                 = 0;
-    virtual const gl::TextureCapsMap &getNativeTextureCaps() const         = 0;
-    virtual const gl::Extensions &getNativeExtensions() const              = 0;
-    virtual const gl::Limitations &getNativeLimitations() const            = 0;
-    virtual ShPixelLocalStorageType getNativePixelLocalStorageType() const = 0;
+    virtual gl::Caps getNativeCaps() const                         = 0;
+    virtual const gl::TextureCapsMap &getNativeTextureCaps() const = 0;
+    virtual const gl::Extensions &getNativeExtensions() const      = 0;
+    virtual const gl::Limitations &getNativeLimitations() const    = 0;
 
     virtual angle::Result dispatchCompute(const gl::Context *context,
                                           GLuint numGroupsX,
@@ -253,15 +236,6 @@ class ContextImpl : public GLImplFactory
     // EGL_ANGLE_power_preference implementation.
     virtual egl::Error releaseHighPowerGPU(gl::Context *context);
     virtual egl::Error reacquireHighPowerGPU(gl::Context *context);
-
-    // GL_ANGLE_vulkan_image
-    virtual angle::Result acquireTextures(const gl::Context *context,
-                                          const gl::TextureBarrierVector &textureBarriers);
-    virtual angle::Result releaseTextures(const gl::Context *context,
-                                          gl::TextureBarrierVector *textureBarriers);
-
-    // AMD_performance_monitor
-    virtual const angle::PerfMonitorCounterGroups &getPerfMonitorCounters();
 
   protected:
     const gl::State &mState;

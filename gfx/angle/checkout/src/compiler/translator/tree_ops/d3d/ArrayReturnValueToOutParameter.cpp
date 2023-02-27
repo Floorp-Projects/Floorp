@@ -26,9 +26,9 @@ constexpr const ImmutableString kReturnValueVariableName("angle_return");
 class ArrayReturnValueToOutParameterTraverser : private TIntermTraverser
 {
   public:
-    [[nodiscard]] static bool apply(TCompiler *compiler,
-                                    TIntermNode *root,
-                                    TSymbolTable *symbolTable);
+    ANGLE_NO_DISCARD static bool apply(TCompiler *compiler,
+                                       TIntermNode *root,
+                                       TSymbolTable *symbolTable);
 
   private:
     ArrayReturnValueToOutParameterTraverser(TSymbolTable *symbolTable);
@@ -114,14 +114,14 @@ void ArrayReturnValueToOutParameterTraverser::visitFunctionPrototype(TIntermFunc
         if (mChangedFunctions.find(functionId.get()) == mChangedFunctions.end())
         {
             TType *returnValueVariableType = new TType(node->getType());
-            returnValueVariableType->setQualifier(EvqParamOut);
+            returnValueVariableType->setQualifier(EvqOut);
             ChangedFunction changedFunction;
             changedFunction.returnValueVariable =
                 new TVariable(mSymbolTable, kReturnValueVariableName, returnValueVariableType,
                               SymbolType::AngleInternal);
             TFunction *func = new TFunction(mSymbolTable, node->getFunction()->name(),
                                             node->getFunction()->symbolType(),
-                                            StaticType::GetBasic<EbtVoid, EbpUndefined>(), false);
+                                            StaticType::GetBasic<EbtVoid>(), false);
             for (size_t i = 0; i < node->getFunction()->getParamCount(); ++i)
             {
                 func->addParameter(node->getFunction()->getParam(i));

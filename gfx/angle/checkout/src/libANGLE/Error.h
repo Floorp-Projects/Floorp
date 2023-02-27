@@ -51,7 +51,7 @@ class Error;
 namespace egl
 {
 
-class [[nodiscard]] Error final
+class ANGLE_NO_DISCARD Error final
 {
   public:
     explicit inline Error(EGLint errorCode);
@@ -163,7 +163,8 @@ namespace angle
 // either indicate an Error or a non-Error early exit condition such as a detected no-op.
 // Incomplete signals special cases that are neither success nor failure but require
 // special attention.
-enum class [[nodiscard]] Result{
+enum class ANGLE_NO_DISCARD Result
+{
     Continue,
     Stop,
     Incomplete,

@@ -142,12 +142,6 @@ const char *getBasicString(TBasicType t)
             return "atomic_uint";
         case EbtSamplerVideoWEBGL:
             return "samplerVideoWEBGL";
-        case EbtPixelLocalANGLE:
-            return "pixelLocalANGLE";
-        case EbtIPixelLocalANGLE:
-            return "ipixelLocalANGLE";
-        case EbtUPixelLocalANGLE:
-            return "upixelLocalANGLE";
         case EbtSubpassInput:
             return "subpassInput";
         case EbtISubpassInput:
@@ -169,9 +163,11 @@ const char *getBasicString(TBasicType t)
 // TType implementation.
 TType::TType() : TType(EbtVoid, 0, 0) {}
 
-TType::TType(TBasicType t, uint8_t ps, uint8_t ss) : TType(t, EbpUndefined, EvqGlobal, ps, ss) {}
+TType::TType(TBasicType t, unsigned char ps, unsigned char ss)
+    : TType(t, EbpUndefined, EvqGlobal, ps, ss)
+{}
 
-TType::TType(TBasicType t, TPrecision p, TQualifier q, uint8_t ps, uint8_t ss)
+TType::TType(TBasicType t, TPrecision p, TQualifier q, unsigned char ps, unsigned char ss)
     : TType(t, p, q, ps, ss, TSpan<const unsigned int>(), nullptr)
 {}
 
@@ -420,11 +416,6 @@ bool TType::isStructureContainingSamplers() const
     return mStructure ? mStructure->containsSamplers() : false;
 }
 
-bool TType::isInterfaceBlockContainingType(TBasicType t) const
-{
-    return isInterfaceBlock() ? mInterfaceBlock->containsType(t) : false;
-}
-
 bool TType::canReplaceWithConstantUnion() const
 {
     if (isArray())
@@ -636,7 +627,7 @@ void TType::setBasicType(TBasicType t)
     }
 }
 
-void TType::setPrimarySize(uint8_t ps)
+void TType::setPrimarySize(unsigned char ps)
 {
     if (primarySize != ps)
     {
@@ -646,7 +637,7 @@ void TType::setPrimarySize(uint8_t ps)
     }
 }
 
-void TType::setSecondarySize(uint8_t ss)
+void TType::setSecondarySize(unsigned char ss)
 {
     if (secondarySize != ss)
     {
@@ -707,21 +698,6 @@ void TType::toArrayBaseType()
         mArraySizesStorage->clear();
     }
     onArrayDimensionsChange(TSpan<const unsigned int>());
-}
-
-void TType::toMatrixColumnType()
-{
-    ASSERT(isMatrix());
-    primarySize   = secondarySize;
-    secondarySize = 1;
-    invalidateMangledName();
-}
-
-void TType::toComponentType()
-{
-    primarySize   = 1;
-    secondarySize = 1;
-    invalidateMangledName();
 }
 
 void TType::setInterfaceBlock(const TInterfaceBlock *interfaceBlockIn)

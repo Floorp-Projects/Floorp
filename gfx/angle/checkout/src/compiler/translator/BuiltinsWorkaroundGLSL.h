@@ -14,10 +14,10 @@
 namespace sh
 {
 
-[[nodiscard]] bool ShaderBuiltinsWorkaround(TCompiler *compiler,
-                                            TIntermBlock *root,
-                                            TSymbolTable *symbolTable,
-                                            const ShCompileOptions &compileOptions);
+ANGLE_NO_DISCARD bool ShaderBuiltinsWorkaround(TCompiler *compiler,
+                                               TIntermBlock *root,
+                                               TSymbolTable *symbolTable,
+                                               ShCompileOptions compileOptions);
 
 }  // namespace sh
 

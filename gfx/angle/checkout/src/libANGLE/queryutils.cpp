@@ -8,8 +8,6 @@
 
 #include "libANGLE/queryutils.h"
 
-#include <algorithm>
-
 #include "common/utilities.h"
 
 #include "libANGLE/Buffer.h"
@@ -88,6 +86,7 @@ void ConvertFromColor(const ColorGeneric &color, GLfloat *outParams)
     }
     else
     {
+        ASSERT(color.type == ColorGeneric::Type::Float);
         color.colorF.writeData(outParams);
     }
 }
@@ -97,6 +96,7 @@ void ConvertFromColor(const ColorGeneric &color, GLint *outParams)
 {
     if (isPureInteger)
     {
+        ASSERT(color.type == ColorGeneric::Type::Int);
         outParams[0] = color.colorI.red;
         outParams[1] = color.colorI.green;
         outParams[2] = color.colorI.blue;
@@ -104,6 +104,7 @@ void ConvertFromColor(const ColorGeneric &color, GLint *outParams)
     }
     else
     {
+        ASSERT(color.type == ColorGeneric::Type::Float);
         outParams[0] = floatToNormalized<GLint>(color.colorF.red);
         outParams[1] = floatToNormalized<GLint>(color.colorF.green);
         outParams[2] = floatToNormalized<GLint>(color.colorF.blue);
@@ -116,12 +117,11 @@ void ConvertFromColor(const ColorGeneric &color, GLuint *outParams)
 {
     if (isPureInteger)
     {
-        constexpr unsigned int kMinValue = 0;
-
-        outParams[0] = std::max(color.colorUI.red, kMinValue);
-        outParams[1] = std::max(color.colorUI.green, kMinValue);
-        outParams[2] = std::max(color.colorUI.blue, kMinValue);
-        outParams[3] = std::max(color.colorUI.alpha, kMinValue);
+        ASSERT(color.type == ColorGeneric::Type::UInt);
+        outParams[0] = color.colorUI.red;
+        outParams[1] = color.colorUI.green;
+        outParams[2] = color.colorUI.blue;
+        outParams[3] = color.colorUI.alpha;
     }
     else
     {
@@ -214,7 +214,7 @@ void QueryTexLevelParameterBase(const Texture *texture,
             break;
         case GL_RESOURCE_INITIALIZED_ANGLE:
             *params = CastFromGLintStateValue<ParamType>(
-                pname, texture->initState(GL_NONE, ImageIndex::MakeFromTarget(target, level)) ==
+                pname, texture->initState(ImageIndex::MakeFromTarget(target, level)) ==
                            InitState::Initialized);
             break;
         case GL_TEXTURE_BUFFER_DATA_STORE_BINDING:
@@ -369,9 +369,6 @@ void QueryTexParameterBase(const Context *context,
             *params = CastFromGLintStateValue<ParamType>(
                 pname, texture->getRequiredTextureImageUnits(context));
             break;
-        case GL_TEXTURE_PROTECTED_EXT:
-            *params = CastFromGLintStateValue<ParamType>(pname, texture->hasProtectedContent());
-            break;
         default:
             UNREACHABLE();
             break;
@@ -481,9 +478,6 @@ void SetTexParameterBase(Context *context, Texture *texture, GLenum pname, const
         case GL_RESOURCE_INITIALIZED_ANGLE:
             texture->setInitState(ConvertToBool(params[0]) ? InitState::Initialized
                                                            : InitState::MayNeedInit);
-            break;
-        case GL_TEXTURE_PROTECTED_EXT:
-            texture->setProtectedContent(context, (params[0] == GL_TRUE));
             break;
         default:
             UNREACHABLE();
@@ -1119,21 +1113,6 @@ bool IsTextureEnvEnumParameter(TextureEnvParameter pname)
     }
 }
 
-void GetShaderProgramId(ProgramPipeline *programPipeline, ShaderType shaderType, GLint *params)
-{
-    ASSERT(params);
-
-    *params = 0;
-    if (programPipeline)
-    {
-        const Program *program = programPipeline->getShaderProgram(shaderType);
-        if (program)
-        {
-            *params = program->id().value;
-        }
-    }
-}
-
 }  // namespace
 
 void QueryFramebufferAttachmentParameteriv(const Context *context,
@@ -1469,7 +1448,7 @@ void QueryRenderbufferiv(const Context *context,
             *params = static_cast<GLint>(renderbuffer->getImplementationColorReadType(context));
             break;
         case GL_RESOURCE_INITIALIZED_ANGLE:
-            *params = (renderbuffer->initState(GL_NONE, ImageIndex()) == InitState::Initialized);
+            *params = (renderbuffer->initState(ImageIndex()) == InitState::Initialized);
             break;
         default:
             UNREACHABLE();
@@ -1490,7 +1469,7 @@ void QueryShaderiv(const Context *context, Shader *shader, GLenum pname, GLint *
             *params = shader->isFlaggedForDeletion();
             return;
         case GL_COMPILE_STATUS:
-            *params = shader->isCompiled(context) ? GL_TRUE : GL_FALSE;
+            *params = shader->isCompiled() ? GL_TRUE : GL_FALSE;
             return;
         case GL_COMPLETION_STATUS_KHR:
             if (context->isContextLost())
@@ -1503,13 +1482,13 @@ void QueryShaderiv(const Context *context, Shader *shader, GLenum pname, GLint *
             }
             return;
         case GL_INFO_LOG_LENGTH:
-            *params = shader->getInfoLogLength(context);
+            *params = shader->getInfoLogLength();
             return;
         case GL_SHADER_SOURCE_LENGTH:
             *params = shader->getSourceLength();
             return;
         case GL_TRANSLATED_SHADER_SOURCE_LENGTH_ANGLE:
-            *params = shader->getTranslatedSourceWithDebugInfoLength(context);
+            *params = shader->getTranslatedSourceWithDebugInfoLength();
             return;
         default:
             UNREACHABLE();
@@ -1705,9 +1684,6 @@ void QueryFramebufferParameteriv(const Framebuffer *framebuffer, GLenum pname, G
         case GL_FRAMEBUFFER_DEFAULT_LAYERS_EXT:
             *params = framebuffer->getDefaultLayers();
             break;
-        case GL_FRAMEBUFFER_FLIP_Y_MESA:
-            *params = ConvertToGLBoolean(framebuffer->getFlipY());
-            break;
         default:
             UNREACHABLE();
             break;
@@ -1861,9 +1837,6 @@ void SetFramebufferParameteri(const Context *context,
             break;
         case GL_FRAMEBUFFER_DEFAULT_LAYERS_EXT:
             framebuffer->setDefaultLayers(param);
-            break;
-        case GL_FRAMEBUFFER_FLIP_Y_MESA:
-            framebuffer->setFlipY(ConvertToBool(param));
             break;
         default:
             UNREACHABLE();
@@ -2033,8 +2006,7 @@ GLuint QueryProgramResourceIndex(const Program *program,
     }
 }
 
-void QueryProgramResourceName(const Context *context,
-                              const Program *program,
+void QueryProgramResourceName(const Program *program,
                               GLenum programInterface,
                               GLuint index,
                               GLsizei bufSize,
@@ -2064,7 +2036,7 @@ void QueryProgramResourceName(const Context *context,
             break;
 
         case GL_UNIFORM_BLOCK:
-            program->getActiveUniformBlockName(context, {index}, bufSize, length, name);
+            program->getActiveUniformBlockName({index}, bufSize, length, name);
             break;
 
         case GL_TRANSFORM_FEEDBACK_VARYING:
@@ -2221,10 +2193,6 @@ angle::Result SetMemoryObjectParameteriv(const Context *context,
             ANGLE_TRY(memoryObject->setDedicatedMemory(context, ConvertToBool(params[0])));
             break;
 
-        case GL_PROTECTED_MEMORY_OBJECT_EXT:
-            ANGLE_TRY(memoryObject->setProtectedMemory(context, ConvertToBool(params[0])));
-            break;
-
         default:
             UNREACHABLE();
     }
@@ -2238,10 +2206,6 @@ void QueryMemoryObjectParameteriv(const MemoryObject *memoryObject, GLenum pname
     {
         case GL_DEDICATED_MEMORY_OBJECT_EXT:
             *params = memoryObject->isDedicatedMemory();
-            break;
-
-        case GL_PROTECTED_MEMORY_OBJECT_EXT:
-            *params = memoryObject->isProtectedMemory();
             break;
 
         default:
@@ -2442,34 +2406,18 @@ void SetMaterialParameters(GLES1State *state,
                            MaterialParameter pname,
                            const GLfloat *params)
 {
-    // Note: Ambient and diffuse colors are inherited from glColor when COLOR_MATERIAL is enabled,
-    // and can only be modified by this function if that is disabled:
-    //
-    // > the replaced values remain until changed by either sending a new color or by setting a
-    // > new material value when COLOR_MATERIAL is not currently enabled, to override that
-    // particular value.
-
     MaterialParameters &material = state->materialParameters();
     switch (pname)
     {
         case MaterialParameter::Ambient:
-            if (!state->isColorMaterialEnabled())
-            {
-                material.ambient = ColorF::fromData(params);
-            }
+            material.ambient = ColorF::fromData(params);
             break;
         case MaterialParameter::Diffuse:
-            if (!state->isColorMaterialEnabled())
-            {
-                material.diffuse = ColorF::fromData(params);
-            }
+            material.diffuse = ColorF::fromData(params);
             break;
         case MaterialParameter::AmbientAndDiffuse:
-            if (!state->isColorMaterialEnabled())
-            {
-                material.ambient = ColorF::fromData(params);
-                material.diffuse = ColorF::fromData(params);
-            }
+            material.ambient = ColorF::fromData(params);
+            material.diffuse = ColorF::fromData(params);
             break;
         case MaterialParameter::Specular:
             material.specular = ColorF::fromData(params);
@@ -3074,7 +3022,6 @@ unsigned int GetTexParameterCount(GLenum pname)
         case GL_TEXTURE_SRGB_DECODE_EXT:
         case GL_DEPTH_STENCIL_TEXTURE_MODE:
         case GL_TEXTURE_NATIVE_ID_ANGLE:
-        case GL_REQUIRED_TEXTURE_IMAGE_UNITS_OES:
             return 1;
         default:
             return 0;
@@ -3089,7 +3036,6 @@ bool GetQueryParameterInfo(const State &glState,
     const Caps &caps             = glState.getCaps();
     const Extensions &extensions = glState.getExtensions();
     GLint clientMajorVersion     = glState.getClientMajorVersion();
-    EGLenum clientType           = glState.getClientType();
 
     // Please note: the query type returned for DEPTH_CLEAR_VALUE in this implementation
     // is FLOAT rather than INT, as would be suggested by the GL ES 2.0 spec. This is due
@@ -3181,7 +3127,7 @@ bool GetQueryParameterInfo(const State &glState,
         }
         case GL_PACK_REVERSE_ROW_ORDER_ANGLE:
         {
-            if (!extensions.packReverseRowOrderANGLE)
+            if (!extensions.packReverseRowOrder)
             {
                 return false;
             }
@@ -3192,7 +3138,7 @@ bool GetQueryParameterInfo(const State &glState,
         case GL_MAX_RECTANGLE_TEXTURE_SIZE_ANGLE:
         case GL_TEXTURE_BINDING_RECTANGLE_ANGLE:
         {
-            if (!extensions.textureRectangleANGLE)
+            if (!extensions.textureRectangle)
             {
                 return false;
             }
@@ -3203,7 +3149,7 @@ bool GetQueryParameterInfo(const State &glState,
         case GL_MAX_DRAW_BUFFERS_EXT:
         case GL_MAX_COLOR_ATTACHMENTS_EXT:
         {
-            if ((clientMajorVersion < 3) && !extensions.drawBuffersEXT)
+            if ((clientMajorVersion < 3) && !extensions.drawBuffers)
             {
                 return false;
             }
@@ -3243,16 +3189,6 @@ bool GetQueryParameterInfo(const State &glState,
             *numParams = 1;
             return true;
         }
-        case GL_COLOR_LOGIC_OP:
-        {
-            if (!extensions.logicOpANGLE)
-            {
-                return false;
-            }
-            *type      = GL_BOOL;
-            *numParams = 1;
-            return true;
-        }
         case GL_COLOR_WRITEMASK:
         {
             *type      = GL_BOOL;
@@ -3285,7 +3221,7 @@ bool GetQueryParameterInfo(const State &glState,
             return true;
         }
         case GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT:
-            if (!extensions.textureFilterAnisotropicEXT)
+            if (!extensions.textureFilterAnisotropic)
             {
                 return false;
             }
@@ -3293,7 +3229,7 @@ bool GetQueryParameterInfo(const State &glState,
             *numParams = 1;
             return true;
         case GL_TIMESTAMP_EXT:
-            if (!extensions.disjointTimerQueryEXT)
+            if (!extensions.disjointTimerQuery)
             {
                 return false;
             }
@@ -3301,7 +3237,7 @@ bool GetQueryParameterInfo(const State &glState,
             *numParams = 1;
             return true;
         case GL_GPU_DISJOINT_EXT:
-            if (!extensions.disjointTimerQueryEXT)
+            if (!extensions.disjointTimerQuery)
             {
                 return false;
             }
@@ -3309,7 +3245,7 @@ bool GetQueryParameterInfo(const State &glState,
             *numParams = 1;
             return true;
         case GL_COVERAGE_MODULATION_CHROMIUM:
-            if (!extensions.framebufferMixedSamplesCHROMIUM)
+            if (!extensions.framebufferMixedSamples)
             {
                 return false;
             }
@@ -3317,7 +3253,7 @@ bool GetQueryParameterInfo(const State &glState,
             *numParams = 1;
             return true;
         case GL_TEXTURE_BINDING_EXTERNAL_OES:
-            if (!extensions.EGLStreamConsumerExternalNV && !extensions.EGLImageExternalOES)
+            if (!extensions.eglStreamConsumerExternalNV && !extensions.eglImageExternalOES)
             {
                 return false;
             }
@@ -3329,7 +3265,7 @@ bool GetQueryParameterInfo(const State &glState,
             {
                 break;
             }
-            if (!extensions.clipDistanceAPPLE && !extensions.clipCullDistanceEXT)
+            if (!extensions.clipDistanceAPPLE)
             {
                 // NOTE(hqle): if client version is 1. GL_MAX_CLIP_DISTANCES_EXT is equal
                 // to GL_MAX_CLIP_PLANES which is a valid enum.
@@ -3356,42 +3292,13 @@ bool GetQueryParameterInfo(const State &glState,
             *type      = GL_INT;
             *numParams = 1;
             return true;
-        case GL_PRIMITIVE_BOUNDING_BOX:
-            if (!extensions.primitiveBoundingBoxAny())
-            {
-                return false;
-            }
-            *type      = GL_FLOAT;
-            *numParams = 8;
-            return true;
-        case GL_SHADING_RATE_QCOM:
-            if (!extensions.shadingRateQCOM)
-            {
-                return false;
-            }
-            *type      = GL_INT;
-            *numParams = 1;
-            return true;
     }
 
-    if (clientType == EGL_OPENGL_API ||
-        (clientType == EGL_OPENGL_ES_API && glState.getClientVersion() >= Version(3, 2)))
+    if (glState.getClientType() == EGL_OPENGL_API)
     {
         switch (pname)
         {
             case GL_CONTEXT_FLAGS:
-            {
-                *type      = GL_INT;
-                *numParams = 1;
-                return true;
-            }
-        }
-    }
-
-    if (clientType == EGL_OPENGL_API)
-    {
-        switch (pname)
-        {
             case GL_CONTEXT_PROFILE_MASK:
             {
                 *type      = GL_INT;
@@ -3401,7 +3308,7 @@ bool GetQueryParameterInfo(const State &glState,
         }
     }
 
-    if (extensions.debugKHR)
+    if (extensions.debug)
     {
         switch (pname)
         {
@@ -3424,7 +3331,7 @@ bool GetQueryParameterInfo(const State &glState,
         }
     }
 
-    if (extensions.multisampleCompatibilityEXT)
+    if (extensions.multisampleCompatibility)
     {
         switch (pname)
         {
@@ -3436,7 +3343,7 @@ bool GetQueryParameterInfo(const State &glState,
         }
     }
 
-    if (extensions.bindGeneratesResourceCHROMIUM)
+    if (extensions.bindGeneratesResource)
     {
         switch (pname)
         {
@@ -3447,7 +3354,7 @@ bool GetQueryParameterInfo(const State &glState,
         }
     }
 
-    if (extensions.clientArraysANGLE)
+    if (extensions.clientArrays)
     {
         switch (pname)
         {
@@ -3458,7 +3365,7 @@ bool GetQueryParameterInfo(const State &glState,
         }
     }
 
-    if (extensions.sRGBWriteControlEXT)
+    if (extensions.sRGBWriteControl)
     {
         switch (pname)
         {
@@ -3469,39 +3376,30 @@ bool GetQueryParameterInfo(const State &glState,
         }
     }
 
-    if (extensions.robustResourceInitializationANGLE &&
-        pname == GL_ROBUST_RESOURCE_INITIALIZATION_ANGLE)
+    if (extensions.robustResourceInitialization && pname == GL_ROBUST_RESOURCE_INITIALIZATION_ANGLE)
     {
         *type      = GL_BOOL;
         *numParams = 1;
         return true;
     }
 
-    if (extensions.programCacheControlANGLE && pname == GL_PROGRAM_CACHE_ENABLED_ANGLE)
+    if (extensions.programCacheControl && pname == GL_PROGRAM_CACHE_ENABLED_ANGLE)
     {
         *type      = GL_BOOL;
         *numParams = 1;
         return true;
     }
 
-    if (extensions.parallelShaderCompileKHR && pname == GL_MAX_SHADER_COMPILER_THREADS_KHR)
+    if (extensions.parallelShaderCompile && pname == GL_MAX_SHADER_COMPILER_THREADS_KHR)
     {
         *type      = GL_INT;
         *numParams = 1;
         return true;
     }
 
-    if (extensions.blendFuncExtendedEXT && pname == GL_MAX_DUAL_SOURCE_DRAW_BUFFERS_EXT)
+    if (extensions.blendFuncExtended && pname == GL_MAX_DUAL_SOURCE_DRAW_BUFFERS_EXT)
     {
         *type      = GL_INT;
-        *numParams = 1;
-        return true;
-    }
-
-    if (extensions.robustFragmentShaderOutputANGLE &&
-        pname == GL_ROBUST_FRAGMENT_SHADER_OUTPUT_ANGLE)
-    {
-        *type      = GL_BOOL;
         *numParams = 1;
         return true;
     }
@@ -3540,7 +3438,7 @@ bool GetQueryParameterInfo(const State &glState,
         case GL_PACK_ROW_LENGTH:
         case GL_PACK_SKIP_ROWS:
         case GL_PACK_SKIP_PIXELS:
-            if ((clientMajorVersion < 3) && !extensions.packSubimageNV)
+            if ((clientMajorVersion < 3) && !extensions.packSubimage)
             {
                 return false;
             }
@@ -3550,7 +3448,7 @@ bool GetQueryParameterInfo(const State &glState,
         case GL_UNPACK_ROW_LENGTH:
         case GL_UNPACK_SKIP_ROWS:
         case GL_UNPACK_SKIP_PIXELS:
-            if ((clientMajorVersion < 3) && !extensions.unpackSubimageEXT)
+            if ((clientMajorVersion < 3) && !extensions.unpackSubimage)
             {
                 return false;
             }
@@ -3578,8 +3476,8 @@ bool GetQueryParameterInfo(const State &glState,
         {
             static_assert(GL_MAX_SAMPLES_ANGLE == GL_MAX_SAMPLES,
                           "GL_MAX_SAMPLES_ANGLE not equal to GL_MAX_SAMPLES");
-            if ((clientMajorVersion < 3) && !(extensions.framebufferMultisampleANGLE ||
-                                              extensions.multisampledRenderToTextureEXT))
+            if ((clientMajorVersion < 3) &&
+                !(extensions.framebufferMultisample || extensions.multisampledRenderToTexture))
             {
                 return false;
             }
@@ -3616,7 +3514,7 @@ bool GetQueryParameterInfo(const State &glState,
 
     if (pname >= GL_DRAW_BUFFER0_EXT && pname <= GL_DRAW_BUFFER15_EXT)
     {
-        if ((glState.getClientVersion() < Version(3, 0)) && !extensions.drawBuffersEXT)
+        if ((glState.getClientVersion() < Version(3, 0)) && !extensions.drawBuffers)
         {
             return false;
         }
@@ -3625,14 +3523,7 @@ bool GetQueryParameterInfo(const State &glState,
         return true;
     }
 
-    if ((extensions.multiview2OVR || extensions.multiviewOVR) && pname == GL_MAX_VIEWS_OVR)
-    {
-        *type      = GL_INT;
-        *numParams = 1;
-        return true;
-    }
-
-    if (extensions.provokingVertexANGLE && pname == GL_PROVOKING_VERTEX)
+    if ((extensions.multiview2 || extensions.multiview) && pname == GL_MAX_VIEWS_OVR)
     {
         *type      = GL_INT;
         *numParams = 1;
@@ -3804,7 +3695,7 @@ bool GetQueryParameterInfo(const State &glState,
         }
     }
 
-    if (extensions.requestExtensionANGLE)
+    if (extensions.requestExtension)
     {
         switch (pname)
         {
@@ -3815,7 +3706,7 @@ bool GetQueryParameterInfo(const State &glState,
         }
     }
 
-    if (extensions.textureMultisampleANGLE)
+    if (extensions.textureMultisample)
     {
         switch (pname)
         {
@@ -3850,23 +3741,6 @@ bool GetQueryParameterInfo(const State &glState,
             case GL_TEXTURE_BUFFER_OFFSET_ALIGNMENT:
             case GL_MAX_TEXTURE_BUFFER_SIZE:
                 *type      = GL_INT;
-                *numParams = 1;
-                return true;
-        }
-    }
-
-    if (extensions.shaderPixelLocalStorageANGLE)
-    {
-        switch (pname)
-        {
-            case GL_MAX_PIXEL_LOCAL_STORAGE_PLANES_ANGLE:
-            case GL_MAX_COLOR_ATTACHMENTS_WITH_ACTIVE_PIXEL_LOCAL_STORAGE_ANGLE:
-            case GL_MAX_COMBINED_DRAW_BUFFERS_AND_PIXEL_LOCAL_STORAGE_PLANES_ANGLE:
-                *type      = GL_INT;
-                *numParams = 1;
-                return true;
-            case GL_PIXEL_LOCAL_STORAGE_ACTIVE_ANGLE:
-                *type      = GL_BOOL;
                 *numParams = 1;
                 return true;
         }
@@ -3946,7 +3820,7 @@ bool GetQueryParameterInfo(const State &glState,
             return true;
     }
 
-    if (extensions.geometryShaderAny())
+    if (extensions.geometryShader)
     {
         switch (pname)
         {
@@ -4046,7 +3920,15 @@ void QueryProgramPipelineiv(const Context *context,
         {
             // the name of the current program object for the vertex shader type of the program
             // pipeline object is returned in params
-            GetShaderProgramId(programPipeline, ShaderType::Vertex, params);
+            *params = 0;
+            if (programPipeline)
+            {
+                const Program *program = programPipeline->getShaderProgram(ShaderType::Vertex);
+                if (program)
+                {
+                    *params = program->id().value;
+                }
+            }
             break;
         }
 
@@ -4054,23 +3936,15 @@ void QueryProgramPipelineiv(const Context *context,
         {
             // the name of the current program object for the fragment shader type of the program
             // pipeline object is returned in params
-            GetShaderProgramId(programPipeline, ShaderType::Fragment, params);
-            break;
-        }
-
-        case GL_TESS_CONTROL_SHADER:
-        {
-            // the name of the current program object for the tessellation control shader type of
-            // the program pipeline object is returned in params
-            GetShaderProgramId(programPipeline, ShaderType::TessControl, params);
-            break;
-        }
-
-        case GL_TESS_EVALUATION_SHADER:
-        {
-            // the name of the current program object for the tessellation evaluation shader type of
-            // the program pipeline object is returned in params
-            GetShaderProgramId(programPipeline, ShaderType::TessEvaluation, params);
+            *params = 0;
+            if (programPipeline)
+            {
+                const Program *program = programPipeline->getShaderProgram(ShaderType::Fragment);
+                if (program)
+                {
+                    *params = program->id().value;
+                }
+            }
             break;
         }
 
@@ -4078,15 +3952,15 @@ void QueryProgramPipelineiv(const Context *context,
         {
             // the name of the current program object for the compute shader type of the program
             // pipeline object is returned in params
-            GetShaderProgramId(programPipeline, ShaderType::Compute, params);
-            break;
-        }
-
-        case GL_GEOMETRY_SHADER:
-        {
-            // the name of the current program object for the geometry shader type of the program
-            // pipeline object is returned in params
-            GetShaderProgramId(programPipeline, ShaderType::Geometry, params);
+            *params = 0;
+            if (programPipeline)
+            {
+                const Program *program = programPipeline->getShaderProgram(ShaderType::Compute);
+                if (program)
+                {
+                    *params = program->id().value;
+                }
+            }
             break;
         }
 
@@ -4244,9 +4118,6 @@ void QueryConfigAttrib(const Config *config, EGLint attribute, EGLint *value)
         case EGL_FRAMEBUFFER_TARGET_ANDROID:
             *value = config->framebufferTarget;
             break;
-        case EGL_MATCH_FORMAT_KHR:
-            *value = config->matchFormat;
-            break;
         default:
             UNREACHABLE();
             break;
@@ -4282,9 +4153,6 @@ void QueryContextAttrib(const gl::Context *context, EGLint attribute, EGLint *va
         case EGL_CONTEXT_PRIORITY_LEVEL_IMG:
             *value = static_cast<EGLint>(context->getContextPriority());
             break;
-        case EGL_PROTECTED_CONTENT_EXT:
-            *value = context->getState().hasProtectedContent();
-            break;
         default:
             UNREACHABLE();
             break;
@@ -4293,7 +4161,7 @@ void QueryContextAttrib(const gl::Context *context, EGLint attribute, EGLint *va
 
 egl::Error QuerySurfaceAttrib(const Display *display,
                               const gl::Context *context,
-                              Surface *surface,
+                              const Surface *surface,
                               EGLint attribute,
                               EGLint *value)
 {
@@ -4376,6 +4244,9 @@ egl::Error QuerySurfaceAttrib(const Display *display,
         case EGL_FIXED_SIZE_ANGLE:
             *value = surface->isFixedSize();
             break;
+        case EGL_FLEXIBLE_SURFACE_COMPATIBILITY_SUPPORTED_ANGLE:
+            *value = surface->flexibleSurfaceCompatibilityRequested();
+            break;
         case EGL_SURFACE_ORIENTATION_ANGLE:
             *value = surface->getOrientation();
             break;
@@ -4391,33 +4262,6 @@ egl::Error QuerySurfaceAttrib(const Display *display,
         case EGL_BUFFER_AGE_EXT:
             ANGLE_TRY(surface->getBufferAge(context, value));
             break;
-        case EGL_BITMAP_PITCH_KHR:
-            *value = surface->getBitmapPitch();
-            break;
-        case EGL_BITMAP_ORIGIN_KHR:
-            *value = surface->getBitmapOrigin();
-            break;
-        case EGL_BITMAP_PIXEL_RED_OFFSET_KHR:
-            *value = surface->getRedOffset();
-            break;
-        case EGL_BITMAP_PIXEL_GREEN_OFFSET_KHR:
-            *value = surface->getGreenOffset();
-            break;
-        case EGL_BITMAP_PIXEL_BLUE_OFFSET_KHR:
-            *value = surface->getBlueOffset();
-            break;
-        case EGL_BITMAP_PIXEL_ALPHA_OFFSET_KHR:
-            *value = surface->getAlphaOffset();
-            break;
-        case EGL_BITMAP_PIXEL_LUMINANCE_OFFSET_KHR:
-            *value = surface->getLuminanceOffset();
-            break;
-        case EGL_BITMAP_PIXEL_SIZE_KHR:
-            *value = surface->getBitmapPixelSize();
-            break;
-        case EGL_PROTECTED_CONTENT_EXT:
-            *value = surface->hasProtectedContent();
-            break;
         default:
             UNREACHABLE();
             break;
@@ -4425,49 +4269,7 @@ egl::Error QuerySurfaceAttrib(const Display *display,
     return NoError();
 }
 
-egl::Error QuerySurfaceAttrib64KHR(const Display *display,
-                                   const gl::Context *context,
-                                   const Surface *surface,
-                                   EGLint attribute,
-                                   EGLAttribKHR *value)
-{
-    switch (attribute)
-    {
-        case EGL_BITMAP_PITCH_KHR:
-            *value = static_cast<EGLAttribKHR>(surface->getBitmapPitch());
-            break;
-        case EGL_BITMAP_ORIGIN_KHR:
-            *value = static_cast<EGLAttribKHR>(surface->getBitmapOrigin());
-            break;
-        case EGL_BITMAP_PIXEL_RED_OFFSET_KHR:
-            *value = static_cast<EGLAttribKHR>(surface->getRedOffset());
-            break;
-        case EGL_BITMAP_PIXEL_GREEN_OFFSET_KHR:
-            *value = static_cast<EGLAttribKHR>(surface->getGreenOffset());
-            break;
-        case EGL_BITMAP_PIXEL_BLUE_OFFSET_KHR:
-            *value = static_cast<EGLAttribKHR>(surface->getBlueOffset());
-            break;
-        case EGL_BITMAP_PIXEL_ALPHA_OFFSET_KHR:
-            *value = static_cast<EGLAttribKHR>(surface->getAlphaOffset());
-            break;
-        case EGL_BITMAP_PIXEL_LUMINANCE_OFFSET_KHR:
-            *value = static_cast<EGLAttribKHR>(surface->getLuminanceOffset());
-            break;
-        case EGL_BITMAP_PIXEL_SIZE_KHR:
-            *value = static_cast<EGLAttribKHR>(surface->getBitmapPixelSize());
-            break;
-        case EGL_BITMAP_POINTER_KHR:
-            *value = surface->getBitmapPointer();
-            break;
-        default:
-            UNREACHABLE();
-            break;
-    }
-    return NoError();
-}
-
-egl::Error SetSurfaceAttrib(Surface *surface, EGLint attribute, EGLint value)
+void SetSurfaceAttrib(Surface *surface, EGLint attribute, EGLint value)
 {
     switch (attribute)
     {
@@ -4489,15 +4291,10 @@ egl::Error SetSurfaceAttrib(Surface *surface, EGLint attribute, EGLint value)
         case EGL_TIMESTAMPS_ANDROID:
             surface->setTimestampsEnabled(value != EGL_FALSE);
             break;
-        case EGL_FRONT_BUFFER_AUTO_REFRESH_ANDROID:
-            return surface->setAutoRefreshEnabled(value == EGL_TRUE);
-        case EGL_RENDER_BUFFER:
-            return surface->setRenderBuffer(value);
         default:
             UNREACHABLE();
             break;
     }
-    return NoError();
 }
 
 Error GetSyncAttrib(Display *display, Sync *sync, EGLint attribute, EGLint *value)

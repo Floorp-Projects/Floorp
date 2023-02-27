@@ -122,7 +122,7 @@ void TVersionGLSL::visitFunctionPrototype(TIntermFunctionPrototype *node)
         if (type.isArray())
         {
             TQualifier qualifier = type.getQualifier();
-            if ((qualifier == EvqParamOut) || (qualifier == EvqParamInOut))
+            if ((qualifier == EvqOut) || (qualifier == EvqInOut))
             {
                 ensureVersionIsAtLeast(GLSL_VERSION_120);
                 break;

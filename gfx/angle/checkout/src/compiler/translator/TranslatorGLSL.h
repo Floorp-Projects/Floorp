@@ -19,17 +19,17 @@ class TranslatorGLSL : public TCompiler
 
   protected:
     void initBuiltInFunctionEmulator(BuiltInFunctionEmulator *emu,
-                                     const ShCompileOptions &compileOptions) override;
+                                     ShCompileOptions compileOptions) override;
 
-    [[nodiscard]] bool translate(TIntermBlock *root,
-                                 const ShCompileOptions &compileOptions,
-                                 PerformanceDiagnostics *perfDiagnostics) override;
+    ANGLE_NO_DISCARD bool translate(TIntermBlock *root,
+                                    ShCompileOptions compileOptions,
+                                    PerformanceDiagnostics *perfDiagnostics) override;
     bool shouldFlattenPragmaStdglInvariantAll() override;
-    bool shouldCollectVariables(const ShCompileOptions &compileOptions) override;
+    bool shouldCollectVariables(ShCompileOptions compileOptions) override;
 
   private:
     void writeVersion(TIntermNode *root);
-    void writeExtensionBehavior(TIntermNode *root, const ShCompileOptions &compileOptions);
+    void writeExtensionBehavior(TIntermNode *root, ShCompileOptions compileOptions);
     void conditionallyOutputInvariantDeclaration(const char *builtinVaryingName);
 };
 
