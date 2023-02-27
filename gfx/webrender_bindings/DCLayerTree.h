@@ -353,6 +353,7 @@ class DCSurfaceVideo : public DCSurface {
   bool mFailedYuvSwapChain = false;
   RefPtr<RenderTextureHost> mRenderTextureHost;
   RefPtr<RenderTextureHost> mPrevTexture;
+  int mSlowPresentCount = 0;
 };
 
 /**
