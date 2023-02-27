@@ -634,17 +634,17 @@ class alignas(uint32_t) ImmutableScriptData final : public TrailingArray {
 //       entries. This allows for fast finalization by decrementing the
 //       ref-count directly without doing a hash-table lookup.
 class SharedImmutableScriptData {
+  static constexpr uint32_t IsExternalFlag = 0x80000000;
+  static constexpr uint32_t RefCountBits = 0x7FFFFFFF;
+
   // This class is reference counted as follows: each pointer from a JSScript
   // counts as one reference plus there may be one reference from the shared
   // script data table.
-  mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent> refCount_ = {};
+  mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent>
+      refCountAndExternalFlags_ = {};
 
- public:
-  bool isExternal = false;
-
- private:
-  ImmutableScriptData* isd_ = nullptr;
   mozilla::HashNumber hash_;
+  ImmutableScriptData* isd_ = nullptr;
 
   // End of fields.
 
@@ -657,8 +657,12 @@ class SharedImmutableScriptData {
   ~SharedImmutableScriptData() { reset(); }
 
  private:
+  bool isExternal() const { return refCountAndExternalFlags_ & IsExternalFlag; }
+  void setIsExternal() { refCountAndExternalFlags_ |= IsExternalFlag; }
+  void unsetIsExternal() { refCountAndExternalFlags_ &= RefCountBits; }
+
   void reset() {
-    if (isd_ && !isExternal) {
+    if (isd_ && !isExternal()) {
       js_delete(isd_);
     }
     isd_ = nullptr;
@@ -674,11 +678,18 @@ class SharedImmutableScriptData {
   // ImmutableScriptData.
   struct Hasher;
 
-  uint32_t refCount() const { return refCount_; }
-  void AddRef() { refCount_++; }
+  uint32_t refCount() const { return refCountAndExternalFlags_ & RefCountBits; }
+  void AddRef() { refCountAndExternalFlags_++; }
+
+ private:
+  uint32_t decrementRef() {
+    MOZ_ASSERT(refCount() != 0);
+    return --refCountAndExternalFlags_ & RefCountBits;
+  }
+
+ public:
   void Release() {
-    MOZ_ASSERT(refCount_ != 0);
-    uint32_t remain = --refCount_;
+    uint32_t remain = decrementRef();
     if (remain == 0) {
       reset();
       js_free(this);
@@ -697,7 +708,7 @@ class SharedImmutableScriptData {
       FrontendContext* fc, js::UniquePtr<ImmutableScriptData>&& isd);
 
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
-    size_t isdSize = isExternal ? 0 : mallocSizeOf(isd_);
+    size_t isdSize = isExternal() ? 0 : mallocSizeOf(isd_);
     return mallocSizeOf(this) + isdSize;
   }
 
@@ -718,7 +729,7 @@ class SharedImmutableScriptData {
   void setOwn(js::UniquePtr<ImmutableScriptData>&& isd) {
     MOZ_ASSERT(!isd_);
     isd_ = isd.release();
-    isExternal = false;
+    unsetIsExternal();
 
     hash_ = calculateHash();
   }
@@ -727,7 +738,7 @@ class SharedImmutableScriptData {
               mozilla::HashNumber hash) {
     MOZ_ASSERT(!isd_);
     isd_ = isd.release();
-    isExternal = false;
+    unsetIsExternal();
 
     MOZ_ASSERT(hash == calculateHash());
     hash_ = hash;
@@ -736,7 +747,7 @@ class SharedImmutableScriptData {
   void setExternal(ImmutableScriptData* isd) {
     MOZ_ASSERT(!isd_);
     isd_ = isd;
-    isExternal = true;
+    setIsExternal();
 
     hash_ = calculateHash();
   }
@@ -744,7 +755,7 @@ class SharedImmutableScriptData {
   void setExternal(ImmutableScriptData* isd, mozilla::HashNumber hash) {
     MOZ_ASSERT(!isd_);
     isd_ = isd;
-    isExternal = true;
+    setIsExternal();
 
     MOZ_ASSERT(hash == calculateHash());
     hash_ = hash;
