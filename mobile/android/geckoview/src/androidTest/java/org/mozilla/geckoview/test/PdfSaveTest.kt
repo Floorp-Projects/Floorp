@@ -8,7 +8,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import org.hamcrest.Matchers.equalTo
 import org.junit.Assert.assertFalse
-import org.junit.Assume.assumeThat
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -17,8 +16,6 @@ import org.junit.runner.RunWith
 class PdfSaveTest : BaseSessionTest() {
 
     @Test fun savePdf() {
-        assumeThat(sessionRule.env.isNightly, equalTo(true))
-
         mainSession.loadTestPath(TRACEMONKEY_PDF_PATH)
         mainSession.waitForPageStop()
 
