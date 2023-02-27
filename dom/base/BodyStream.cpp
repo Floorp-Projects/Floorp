@@ -471,12 +471,15 @@ BodyStream::OnInputStreamReady(nsIAsyncInputStream* aStream) {
     return NS_OK;
   }
 
-  mPullPromise->MaybeResolveWithUndefined();
-  mPullPromise = nullptr;
-
   // The previous call can execute JS (even up to running a nested event
-  // loop), so |mState| can't be asserted to have any particular value, even
-  // if the previous call succeeds.
+  // loop, including calling this OnInputStreamReady again before it ends, see
+  // the above nsAutoMicroTask), so |mPullPromise| can't be asserted to have any
+  // particular value, even if the previous call succeeds.
+  MOZ_ASSERT_IF(!mPullPromise, IsClosed());
+  if (mPullPromise) {
+    mPullPromise->MaybeResolveWithUndefined();
+    mPullPromise = nullptr;
+  }
 
   return NS_OK;
 }
