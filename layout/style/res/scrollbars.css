@@ -4,162 +4,6 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* Rules required for style caching of anonymous content scrollbar parts */
-@supports -moz-bool-pref("layout.css.cached-scrollbar-styles.enabled") {
-  :is(scrollcorner, resizer, scrollbar, scrollbarbutton, slider):where(:-moz-native-anonymous) {
-    /* All scrollbar parts must not inherit any properties from the scrollable
-     * element (except for visibility and pointer-events), for the anonymous
-     * content style caching system to work.
-     */
-    all: initial;
-    visibility: inherit;
-    pointer-events: inherit;
-
-    /* These properties are not included in 'all'. */
-    -moz-context-properties: initial;
-    -moz-control-character-visibility: initial;
-    -moz-font-smoothing-background-color: initial;
-    -moz-min-font-size-ratio: initial;
-
-    /* -moz-box-layout: initial; is not included in 'all' but it's not needed,
-     * because we explicitly specify it below for the top level scrollbar parts
-     * (and it inherits through to the rest).
-     */
-
-    math-depth: initial;
-    /* As long as inert implies pointer-events: none as it does now, we're
-     * good. */
-    -moz-inert: initial;
-
-    /* Using initial is not sufficient for direction, since its initial value can
-     * depend on the document's language.
-     *
-     * LTR is what we want for all scrollbar parts anyway, so that e.g. we don't
-     * reverse the rendering of a horizontal scrollbar.
-     */
-    direction: ltr;
-
-    /* Similarly for font properties, whose initial values depend on the
-     * document's language.  Scrollbar parts don't have any text or rely on
-     * font metrics.
-     */
-    font: 16px sans-serif;
-
-    /* The initial value of justify-items is `legacy`, which makes it depend on
-     * the parent style.
-     *
-     * Reset it to something else.
-     */
-    justify-items: start;
-
-    /* Avoid `object > *` rule in html.css from setting a useless, non-initial
-     * value of vertical-align.
-     */
-    vertical-align: initial !important;
-  }
-
-  /* There are other rules that set the cursor on the scrollbar, expecting them
-   * to inherit into its children. Explicitly inherit it, overriding the
-   * 'all: initial;' declaration above.
-   */
-  :is(scrollbarbutton, slider, thumb):where(:-moz-native-anonymous) {
-    cursor: inherit;
-  }
-}
-
-scrollbar, scrollbarbutton, scrollcorner, slider, thumb, resizer {
-  /* Force legacy XUL layout for now on scrollbars / resizers and descendants,
-   * as ScrollFrameHelper relies on that (and nsScrollbarFrame is a XUL frame
-   * anyways).
-   *
-   * TODO: Eventually we should rewrite scrollbars so that they don't use XUL
-   * layout.
-   */
-  -moz-box-layout: legacy;
-  display: -moz-box;
-  box-sizing: border-box;
-  -moz-user-focus: ignore;
-  /* Prevent -moz-user-modify declaration from designmode.css having an effect. */
-  -moz-user-modify: initial;
-  user-select: none;
-}
-
-
-/********** resizer **********/
-
-resizer {
-  position: relative;
-  z-index: 2147483647;
-  /* Widget gets decide on its own whether or not the native theme should apply,
-     based on the context/OS theme. If it does not, SVG background will kick in. */
-  appearance: auto;
-  -moz-default-appearance: resizer;
-
-  /* native resizer should never flip on its own;
-     we will flip it (or the SVG background) with CSS transform below. */
-  direction: ltr;
-  writing-mode: initial;
-
-  background: url("chrome://global/skin/icons/resizer.svg") no-repeat;
-  background-size: 100% 100%;
-  cursor: se-resize;
-  width: 15px;
-  height: 15px;
-}
-
-/* bottomstart/bottomend is supported in XUL window only */
-resizer[dir="bottom"][flip],
-resizer[dir="bottomleft"],
-resizer[dir="bottomstart"]:-moz-locale-dir(ltr),
-resizer[dir="bottomend"]:-moz-locale-dir(rtl) {
-  transform: scaleX(-1);
-}
-
-resizer[dir="bottomleft"],
-resizer[dir="bottomstart"]:-moz-locale-dir(ltr),
-resizer[dir="bottomend"]:-moz-locale-dir(rtl) {
-  cursor: sw-resize;
-}
-
-resizer[dir="top"],
-resizer[dir="bottom"] {
-  cursor: ns-resize;
-}
-
-resizer[dir="left"] {
-  transform: scaleX(-1);
-}
-
-resizer[dir="left"],
-resizer[dir="right"] {
-  cursor: ew-resize;
-}
-
-resizer[dir="topleft"] {
-  cursor: nw-resize;
-}
-
-resizer[dir="topright"] {
-  cursor: ne-resize;
-}
-
-thumb {
-  appearance: auto;
-  -moz-default-appearance: scrollbarthumb-horizontal;
-  -moz-box-flex: 1;
-  -moz-box-align: center;
-  -moz-box-pack: center;
-}
-
-thumb[orient="vertical"] {
-  -moz-default-appearance: scrollbarthumb-vertical;
-  -moz-box-orient: vertical;
-}
-
-scrollbar[disabled="true"] thumb {
-  visibility: hidden;
-}
-
 @media (-moz-platform: android) {
   scrollbar, resizer, scrollcorner {
     pointer-events: none;
@@ -174,7 +18,6 @@ scrollbar {
 
 scrollbar[orient="vertical"] {
   -moz-default-appearance: scrollbar-vertical;
-  -moz-box-orient: vertical;
 }
 
 scrollbar[root="true"] {
@@ -200,24 +43,37 @@ slider {
 }
 
 slider[orient="vertical"] {
+  appearance: auto;
   -moz-default-appearance: scrollbartrack-vertical;
-  -moz-box-orient: vertical;
 }
 
-scrollbarbutton {
+thumb[orient="vertical"] {
+  appearance: auto;
+  -moz-default-appearance: scrollbarthumb-vertical;
+}
+
+thumb[orient="horizontal"] {
+  appearance: auto;
+  -moz-default-appearance: scrollbarthumb-horizontal;
+}
+
+scrollbarbutton[type="increment"] {
   appearance: auto;
   -moz-default-appearance: scrollbarbutton-right;
 }
 
-scrollbar[orient="vertical"] > scrollbarbutton {
+scrollbar[orient="vertical"] > scrollbarbutton[type="increment"] {
+  appearance: auto;
   -moz-default-appearance: scrollbarbutton-down;
 }
 
 scrollbarbutton[type="decrement"] {
+  appearance: auto;
   -moz-default-appearance: scrollbarbutton-left;
 }
 
 scrollbar[orient="vertical"] > scrollbarbutton[type="decrement"] {
+  appearance: auto;
   -moz-default-appearance: scrollbarbutton-up;
 }
 
@@ -226,28 +82,4 @@ scrollcorner {
   -moz-default-appearance: scrollcorner;
   width: 16px;
   cursor: default;
-}
-
-@media (-moz-scrollbar-start-backward: 0) {
-  scrollbarbutton[sbattr="scrollbar-up-top"] {
-    display: none;
-  }
-}
-
-@media (-moz-scrollbar-start-forward: 0) {
-  scrollbarbutton[sbattr="scrollbar-down-top"] {
-    display: none;
-  }
-}
-
-@media (-moz-scrollbar-end-backward: 0) {
-  scrollbarbutton[sbattr="scrollbar-up-bottom"] {
-    display: none;
-  }
-}
-
-@media (-moz-scrollbar-end-forward: 0) {
-  scrollbarbutton[sbattr="scrollbar-down-bottom"] {
-    display: none;
-  }
 }

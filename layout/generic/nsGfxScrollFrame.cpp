@@ -5669,6 +5669,7 @@ already_AddRefed<Element> ScrollFrameHelper::MakeScrollbar(
 
   e->SetAttr(kNameSpaceID_None, nsGkAtoms::orient, kOrientValues[aVertical],
              false);
+  e->SetAttr(kNameSpaceID_None, nsGkAtoms::clickthrough, u"always"_ns, false);
 
   if (mIsRoot) {
     e->SetProperty(nsGkAtoms::docLevelNativeAnonymousContent,
@@ -5845,6 +5846,8 @@ nsresult ScrollFrameHelper::CreateAnonymousContent(
         NS_WARNING("only resizable types should have resizers");
     }
     mResizerContent->SetAttr(kNameSpaceID_None, nsGkAtoms::dir, dir, false);
+    mResizerContent->SetAttr(kNameSpaceID_None, nsGkAtoms::clickthrough,
+                             u"always"_ns, false);
     aElements.AppendElement(mResizerContent);
   }
 

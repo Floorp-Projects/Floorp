@@ -659,6 +659,7 @@
 
       this.setAttribute("hidevscroll", "true");
       this.setAttribute("hidehscroll", "true");
+      this.setAttribute("clickthrough", "never");
 
       this.initializeAttributeInheritance();
 
