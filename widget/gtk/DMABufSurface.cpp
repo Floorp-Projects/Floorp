@@ -104,9 +104,14 @@ bool DMABufSurface::IsGlobalRefSet() const {
 }
 
 void DMABufSurface::GlobalRefRelease() {
-  MOZ_ASSERT(mGlobalRefCountFd);
+  LOGDMABUF(("DMABufSurface::GlobalRefRelease UID %d", mUID));
   uint64_t counter;
+  MOZ_ASSERT(mGlobalRefCountFd);
   if (read(mGlobalRefCountFd, &counter, sizeof(counter)) != sizeof(counter)) {
+    if (errno == EAGAIN) {
+      LOGDMABUF(
+          ("  GlobalRefRelease failed: already zero reference! UID %d", mUID));
+    }
     // EAGAIN means the refcount is already zero. It happens when we release
     // last reference to the surface.
     if (errno != EAGAIN) {
@@ -118,6 +123,7 @@ void DMABufSurface::GlobalRefRelease() {
 }
 
 void DMABufSurface::GlobalRefAdd() {
+  LOGDMABUF(("DMABufSurface::GlobalRefAdd UID %d", mUID));
   MOZ_ASSERT(mGlobalRefCountFd);
   uint64_t counter = 1;
   if (write(mGlobalRefCountFd, &counter, sizeof(counter)) != sizeof(counter)) {
@@ -129,6 +135,8 @@ void DMABufSurface::GlobalRefAdd() {
 
 void DMABufSurface::GlobalRefCountCreate() {
   MOZ_ASSERT(!mGlobalRefCountFd);
+  // Create global ref count initialized to 0,
+  // i.e. is not referenced after create.
   mGlobalRefCountFd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK | EFD_SEMAPHORE);
   if (mGlobalRefCountFd < 0) {
     NS_WARNING(nsPrintfCString("Failed to create dmabuf global ref count: %s",
@@ -142,14 +150,12 @@ void DMABufSurface::GlobalRefCountCreate() {
 void DMABufSurface::GlobalRefCountImport(int aFd) {
   MOZ_ASSERT(!mGlobalRefCountFd);
   mGlobalRefCountFd = aFd;
-}
-
-int DMABufSurface::GlobalRefCountExport() {
   if (mGlobalRefCountFd) {
     GlobalRefAdd();
   }
-  return mGlobalRefCountFd;
 }
+
+int DMABufSurface::GlobalRefCountExport() { return mGlobalRefCountFd; }
 
 void DMABufSurface::GlobalRefCountDelete() {
   if (mGlobalRefCountFd) {
