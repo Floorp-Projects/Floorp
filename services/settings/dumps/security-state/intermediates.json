@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "schema": 1677228491917,
+      "derHash": "KuBib5pD7bKwoi1BDrBsSC75glY6cXokcofFBNeb+YA=",
+      "subject": "CN=Vitalwerks Internet Solutions\\, No-IP TLS ICA,O=Vitalwerks Internet Solutions\\, LLC,C=US",
+      "subjectDN": "MHExCzAJBgNVBAYTAlVTMSswKQYDVQQKEyJWaXRhbHdlcmtzIEludGVybmV0IFNvbHV0aW9ucywgTExDMTUwMwYDVQQDEyxWaXRhbHdlcmtzIEludGVybmV0IFNvbHV0aW9ucywgTm8tSVAgVExTIElDQQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "278a462ecdf4df1a609a6367ba3729e2ba033f164e121bcb23da609e65f9abdf",
+        "size": 2097,
+        "filename": "N6n5EY_gXyOOq-YM483B1KNDkNWuz0gGk0ykPaFW6fc=.pem",
+        "location": "security-state-staging/intermediates/952bd502-791e-4261-b4e5-03edaa55f023.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "N6n5EY/gXyOOq+YM483B1KNDkNWuz0gGk0ykPaFW6fc=",
+      "crlite_enrolled": false,
+      "id": "63a47a6b-3034-4b86-a9eb-5ee45a852017",
+      "last_modified": 1677229023629
+    },
+    {
       "schema": 1677077287265,
       "derHash": "I9Xvv7Qc57HzC6uKj2Svhe27XXpJwI1hbeTEfK2wNZc=",
       "subject": "CN=AC Defesa GR3 OV TLS CA 2023,O=Ministerio da Defesa,C=BR",
@@ -27433,5 +27451,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1677077823452
+  "timestamp": 1677229023629
 }
