@@ -10726,7 +10726,7 @@
 #if defined(XP_WIN)
 - name: media.webrtc.capture.allow-directx
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 - name: media.webrtc.capture.allow-wgc
