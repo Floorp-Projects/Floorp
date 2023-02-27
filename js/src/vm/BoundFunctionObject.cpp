@@ -205,11 +205,28 @@ static MOZ_ALWAYS_INLINE bool ComputeLengthValue(
 
 static MOZ_ALWAYS_INLINE JSAtom* AppendBoundFunctionPrefix(JSContext* cx,
                                                            JSString* str) {
+  auto& cache = cx->zone()->boundPrefixCache();
+
+  JSAtom* strAtom = str->isAtom() ? &str->asAtom() : nullptr;
+  if (strAtom) {
+    if (auto p = cache.lookup(strAtom)) {
+      return p->value();
+    }
+  }
+
   StringBuffer sb(cx);
   if (!sb.append("bound ") || !sb.append(str)) {
     return nullptr;
   }
-  return sb.finishAtom();
+  JSAtom* atom = sb.finishAtom();
+  if (!atom) {
+    return nullptr;
+  }
+
+  if (strAtom) {
+    (void)cache.putNew(strAtom, atom);
+  }
+  return atom;
 }
 
 static MOZ_ALWAYS_INLINE JSAtom* ComputeNameValue(
