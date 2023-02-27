@@ -28,9 +28,6 @@ user_pref("security.remote_settings.intermediates.enabled", false);
 // all processes would run at low priority, which is not desirable, so we
 // disable the process priority manager entirely here.
 user_pref("dom.ipc.processPriorityManager.enabled", false);
-// Avoid idle-daily notifications, to avoid expensive operations that may
-// cause unexpected test timeouts.
-user_pref("idle.lastDailyNotification", -1);
 // Bug 455077 - Ensure we use sRGB as the output profile for test consistency.
 user_pref("gfx.color_management.force_srgb", true);
 user_pref("gfx.color_management.mode", 1);

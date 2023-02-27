@@ -87,3 +87,6 @@ user_pref("telemetry.fog.test.localhost_port", -1);
 //
 // We test the relevant overlay scrollbar code-paths on Android.
 user_pref("widget.gtk.overlay-scrollbars.enabled", false);
+// Generally, we don't want daily idle tasks run during tests. Specific tests
+// can re-enable if needed.
+user_pref("idle.lastDailyNotification", -1);
