@@ -100,27 +100,27 @@ jobs:
       run: |
         firefox_stable_ua_jsonp_text=(
         'const FIREFOX_STABLE_UA = {'
-        "  \"win\": \"$(echo "${{ needs.linux.outputs.firefox_stable_ua }}" | sed s/X11; Linux x86_64/Windows NT 10.0; Win64; x64/)\","
+        "  \"win\": \"$(echo "${{ needs.linux.outputs.firefox_stable_ua }}" | sed "s/X11; Linux x86_64/Windows NT 10.0; Win64; x64/")\","
         '  "linux": "${{ needs.linux.outputs.firefox_stable_ua }}",'
-        "  \"mac\": \"$(echo "${{ needs.linux.outputs.firefox_stable_ua }}" | sed s/X11; Linux x86_64/Macintosh; Intel Mac OS X 10.15/)\","
+        "  \"mac\": \"$(echo "${{ needs.linux.outputs.firefox_stable_ua }}" | sed "s/X11; Linux x86_64/Macintosh; Intel Mac OS X 10.15/")\","
         '};'
         )
         for line in "${firefox_stable_ua_jsonp_text[@]}" ; do echo $line >> ua_data.js ; done
 
         chrome_stable_ua_jsonp_text=(
         'const CHROME_STABLE_UA = {'
-        "  \"win\": \"$(echo "${{ needs.linux.outputs.chrome_stable_ua }}" | sed s/X11; Linux x86_64/Windows NT 10.0; Win64; x64/)\","
+        "  \"win\": \"$(echo "${{ needs.linux.outputs.chrome_stable_ua }}" | sed "s/X11; Linux x86_64/Windows NT 10.0; Win64; x64/")\","
         '  "linux": "${{ needs.linux.outputs.chrome_stable_ua }}",'
-        "  \"mac\": \"$(echo "${{ needs.linux.outputs.chrome_stable_ua }}" | sed s/X11; Linux x86_64/Macintosh; Intel Mac OS X 10_15_7/)\","
+        "  \"mac\": \"$(echo "${{ needs.linux.outputs.chrome_stable_ua }}" | sed "s/X11; Linux x86_64/Macintosh; Intel Mac OS X 10_15_7/")\","
         '};'
         )
         for line in "${chrome_stable_ua_jsonp_text[@]}" ; do echo $line >> ua_data.js ; done
 
         msedge_stable_ua_jsonp_text=(
         'const MSEDGE_STABLE_UA = {'
-        "  \"win\": \"$(echo "${{ needs.linux.outputs.msedge_stable_ua }}" | sed s/X11; Linux x86_64/Windows NT 10.0; Win64; x64/)\","
+        "  \"win\": \"$(echo "${{ needs.linux.outputs.msedge_stable_ua }}" | sed "s/X11; Linux x86_64/Windows NT 10.0; Win64; x64/")\","
         '  "linux": "${{ needs.linux.outputs.msedge_stable_ua }}",'
-        "  \"mac\": \"$(echo "${{ needs.linux.outputs.msedge_stable_ua }}" | sed s/X11; Linux x86_64/Macintosh; Intel Mac OS X 10_15_7/)\","
+        "  \"mac\": \"$(echo "${{ needs.linux.outputs.msedge_stable_ua }}" | sed "s/X11; Linux x86_64/Macintosh; Intel Mac OS X 10_15_7/")\","
         '};'
         )
         for line in "${msedge_stable_ua_jsonp_text[@]}" ; do echo $line >> ua_data.js ; done
