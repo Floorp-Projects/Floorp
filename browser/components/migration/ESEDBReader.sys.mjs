@@ -76,8 +76,7 @@ export const ESE = {};
 ESE.JET_ERR = ctypes.long;
 ESE.JET_PCWSTR = ctypes.char16_t.ptr;
 // The ESE header calls this JET_API_PTR, but because it isn't ever used as a
-// pointer and because OS.File code implies that the name you give a type
-// matters, I opted for a different name.
+// pointer, I opted for a different name.
 // Note that this is defined differently on 32 vs. 64-bit in the header.
 ESE.JET_API_ITEM =
   ctypes.voidptr_t.size == 4 ? ctypes.unsigned_long : ctypes.uint64_t;
