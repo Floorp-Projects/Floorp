@@ -73,9 +73,6 @@ export const TabsSetupFlowManager = new (class {
     this.syncIsWorking = true;
     this.syncIsConnected = lazy.UIState.get().syncEnabled;
     this.didFxaTabOpen = false;
-    // keep track of tab-pickup-container instance visibilities
-    this._viewVisibilityStates = new Map();
-    this._noTabsVisibleFromAddedDeviceTimestamp = 0;
 
     this.registerSetupState({
       uiStateIndex: 0,
@@ -219,14 +216,6 @@ export const TabsSetupFlowManager = new (class {
     Services.obs.removeObserver(this, FXA_DEVICE_CONNECTED);
     Services.obs.removeObserver(this, FXA_DEVICE_DISCONNECTED);
   }
-  get hasVisibleViews() {
-    return Array.from(this._viewVisibilityStates.values()).reduce(
-      (hasVisible, visibility) => {
-        return hasVisible || visibility == "visible";
-      },
-      false
-    );
-  }
   get currentSetupState() {
     return this.setupState.get(this._currentSetupStateName);
   }
@@ -308,14 +297,11 @@ export const TabsSetupFlowManager = new (class {
         break;
       case TOPIC_DEVICELIST_UPDATED:
         this.logger.debug("Handling observer notification:", topic, data);
-        const { deviceStateChanged, deviceAdded } = await this.refreshDevices();
-        if (deviceStateChanged) {
+        if (await this.refreshDevices()) {
+          this.logger.debug(
+            "refreshDevices made changes, calling maybeUpdateUI"
+          );
           this.maybeUpdateUI(true);
-        }
-        if (deviceAdded && this.secondaryDeviceConnected) {
-          this.logger.debug("device was added");
-          this._newlyAddedDeviceTabsPending = true;
-          this.startWaitingForNewDeviceTabs();
         }
         break;
       case FXA_DEVICE_CONNECTED:
@@ -355,22 +341,6 @@ export const TabsSetupFlowManager = new (class {
     }
   }
 
-  updateViewVisiblity(instanceId, visibility) {
-    this.logger.debug(
-      `updateViewVisiblity for instance: ${instanceId}, visibility: ${visibility}`
-    );
-    if (visibility == "unloaded") {
-      this._viewVisibilityStates.delete(instanceId);
-    } else {
-      this._viewVisibilityStates.set(instanceId, visibility);
-    }
-    // If we're currently waiting for tabs from a newly-added device
-    // we may want to start the empty-tabs visible timer
-    if (this._newlyAddedDeviceTabsPending && this.hasVisibleViews) {
-      this.startWaitingForNewDeviceTabs();
-    }
-  }
-
   get waitingForTabs() {
     return (
       // signed in & at least 1 other device is sycning indicates there's something to wait for
@@ -387,36 +357,10 @@ export const TabsSetupFlowManager = new (class {
     }
   }
 
-  async stopWaitingForTabs() {
+  stopWaitingForTabs() {
     if (this._waitingForTabs) {
       this._waitingForTabs = false;
       Services.obs.notifyObservers(null, TOPIC_SETUPSTATE_CHANGED);
-    }
-    this.logger.debug(
-      "stopWaitingForTabs, have _noTabsVisibleFromAddedDeviceTimestamp?",
-      this._noTabsVisibleFromAddedDeviceTimestamp
-    );
-    const recentTabs = await lazy.SyncedTabs.getRecentTabs(1);
-    if (!recentTabs.length) {
-      // we are still waiting for some tabs to show...
-      return;
-    }
-    this._newlyAddedDeviceTabsPending = false;
-    if (this._noTabsVisibleFromAddedDeviceTimestamp) {
-      // If we were waiting for tabs from a newly-added device, record
-      // the time elapsed
-      const elapsed = Date.now() - this._noTabsVisibleFromAddedDeviceTimestamp;
-      this._noTabsVisibleFromAddedDeviceTimestamp = 0;
-      this.logger.debug(
-        "stopWaitingForTabs, resetting _noTabsVisibleFromAddedDeviceTimestamp and recording telemetry:",
-        Math.round(elapsed / 1000)
-      );
-      Services.telemetry.recordEvent(
-        "firefoxview",
-        "synced_tabs_empty",
-        "since_device_added",
-        Math.round(elapsed / 1000).toString()
-      );
     }
   }
 
@@ -445,8 +389,7 @@ export const TabsSetupFlowManager = new (class {
 
     // When SyncedTabs has resolved the getRecentTabs promise,
     // we also know we can update devices-related internal state
-    const { deviceStateChanged } = await this.refreshDevices();
-    if (deviceStateChanged) {
+    if (await this.refreshDevices()) {
       this.logger.debug(
         "onSignedInChange, after refreshDevices, calling maybeUpdateUI"
       );
@@ -482,28 +425,6 @@ export const TabsSetupFlowManager = new (class {
     }
   }
 
-  async startWaitingForNewDeviceTabs() {
-    // don't start a timer if all tab-pickup-container views are currently hidden
-    if (!this.hasVisibleViews) {
-      return;
-    }
-    // if we're already waiting for tabs, don't reset
-    if (this._noTabsVisibleFromAddedDeviceTimestamp) {
-      return;
-    }
-
-    // take a timestamp whenever the latest device is added and we have 0 tabs to show,
-    // allowing us to track how long we show an empty list after a new device is added
-    const hasRecentTabs = (await lazy.SyncedTabs.getRecentTabs(1)).length;
-    if (this.hasVisibleViews && !hasRecentTabs) {
-      this._noTabsVisibleFromAddedDeviceTimestamp = Date.now();
-      this.logger.debug(
-        "New device added, storing timestamp:",
-        this._noTabsVisibleFromAddedDeviceTimestamp
-      );
-    }
-  }
-
   async refreshDevices() {
     // If current device not found in recent device list, refresh device list
     if (
@@ -517,15 +438,13 @@ export const TabsSetupFlowManager = new (class {
     // compare new values to the previous values
     const mobileDeviceConnected = this.mobileDeviceConnected;
     const secondaryDeviceConnected = this.secondaryDeviceConnected;
-    const oldDevicesCount = this._deviceStateSnapshot?.devicesCount ?? 0;
-    const devicesCount = lazy.fxAccounts.device?.recentDeviceList?.length ?? 0;
 
     this.logger.debug(
       `refreshDevices, mobileDeviceConnected: ${mobileDeviceConnected}, `,
       `secondaryDeviceConnected: ${secondaryDeviceConnected}`
     );
 
-    let deviceStateChanged =
+    let didDeviceStateChange =
       this._deviceStateSnapshot.mobileDeviceConnected !=
         mobileDeviceConnected ||
       this._deviceStateSnapshot.secondaryDeviceConnected !=
@@ -547,9 +466,8 @@ export const TabsSetupFlowManager = new (class {
     this._deviceStateSnapshot = {
       mobileDeviceConnected,
       secondaryDeviceConnected,
-      devicesCount,
     };
-    if (deviceStateChanged) {
+    if (didDeviceStateChange) {
       this.logger.debug("refreshDevices: device state did change");
       if (!secondaryDeviceConnected) {
         this.logger.debug(
@@ -560,10 +478,7 @@ export const TabsSetupFlowManager = new (class {
     } else {
       this.logger.debug("refreshDevices: no device state change");
     }
-    return {
-      deviceStateChanged,
-      deviceAdded: oldDevicesCount < devicesCount,
-    };
+    return didDeviceStateChange;
   }
 
   maybeUpdateUI(forceUpdate = false) {
