@@ -258,6 +258,13 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   // Cache for Function.prototype.toString. Purged on GC.
   js::MainThreadOrGCTaskData<js::FunctionToStringCache> functionToStringCache_;
 
+  // Cache for Function.prototype.bind mapping an atom `name` to atom
+  // `"bound " + name`. Purged on GC.
+  using BoundPrefixCache =
+      js::HashMap<JSAtom*, JSAtom*, js::PointerHasher<JSAtom*>,
+                  js::SystemAllocPolicy>;
+  js::MainThreadData<BoundPrefixCache> boundPrefixCache_;
+
   // Information about Shapes and BaseShapes.
   js::MainThreadData<js::ShapeZone> shapeZone_;
 
@@ -518,6 +525,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::FunctionToStringCache& functionToStringCache() {
     return functionToStringCache_.ref();
   }
+
+  BoundPrefixCache& boundPrefixCache() { return boundPrefixCache_.ref(); }
 
   js::ShapeZone& shapeZone() { return shapeZone_.ref(); }
 

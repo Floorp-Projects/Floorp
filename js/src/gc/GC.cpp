@@ -2272,6 +2272,7 @@ void GCRuntime::purgeRuntime() {
     zone->purgeAtomCache();
     zone->externalStringCache().purge();
     zone->functionToStringCache().purge();
+    zone->boundPrefixCache().clearAndCompact();
     zone->shapeZone().purgeShapeCaches(rt->gcContext());
   }
 
