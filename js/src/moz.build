@@ -582,7 +582,6 @@ selfhosted_inputs = [
     "builtin/BigInt.js",
     "builtin/Date.js",
     "builtin/Error.js",
-    "builtin/Function.js",
     "builtin/Generator.js",
     "builtin/Iterator.js",
     "builtin/Map.js",
