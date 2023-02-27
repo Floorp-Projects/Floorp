@@ -367,15 +367,31 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsComputedDOMStyle)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+// We can skip the nsComputedDOMStyle if it has no wrapper and its
+// element is skippable, because it will have no outgoing edges, so
+// it can't be part of a cycle.
+
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsComputedDOMStyle)
+  if (!tmp->GetWrapperPreserveColor()) {
+    return !tmp->mElement ||
+           mozilla::dom::FragmentOrElement::CanSkip(tmp->mElement, true);
+  }
   return tmp->HasKnownLiveWrapper();
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsComputedDOMStyle)
+  if (!tmp->GetWrapperPreserveColor()) {
+    return !tmp->mElement ||
+           mozilla::dom::FragmentOrElement::CanSkipInCC(tmp->mElement);
+  }
   return tmp->HasKnownLiveWrapper();
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsComputedDOMStyle)
+  if (!tmp->GetWrapperPreserveColor()) {
+    return !tmp->mElement ||
+           mozilla::dom::FragmentOrElement::CanSkipThis(tmp->mElement);
+  }
   return tmp->HasKnownLiveWrapper();
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
