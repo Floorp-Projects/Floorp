@@ -122,6 +122,8 @@ nsPrintSettingsService::SerializeToPrintData(nsIPrintSettings* aSettings,
 
   data->ignoreUnwriteableMargins() = aSettings->GetIgnoreUnwriteableMargins();
   data->honorPageRuleMargins() = aSettings->GetHonorPageRuleMargins();
+  data->usePageRuleSizeAsPaperSize() =
+      aSettings->GetUsePageRuleSizeAsPaperSize();
   data->showMarginGuides() = aSettings->GetShowMarginGuides();
   data->printSelectionOnly() = aSettings->GetPrintSelectionOnly();
 
@@ -196,6 +198,7 @@ nsPrintSettingsService::DeserializeToPrintSettings(const PrintData& data,
   settings->SetPrintBGColors(data.printBGColors());
   settings->SetPrintBGImages(data.printBGImages());
   settings->SetHonorPageRuleMargins(data.honorPageRuleMargins());
+  settings->SetUsePageRuleSizeAsPaperSize(data.usePageRuleSizeAsPaperSize());
   settings->SetIgnoreUnwriteableMargins(data.ignoreUnwriteableMargins());
   settings->SetShowMarginGuides(data.showMarginGuides());
   settings->SetPrintSelectionOnly(data.printSelectionOnly());

@@ -12600,6 +12600,12 @@
   value: false
   mirror: always
 
+# Whether we use the CSS @page size as the paper size in PDF output.
+- name: print.save_as_pdf.use_page_rule_size_as_paper_size.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # The default DPI for printing.
 #
 # For PDF-based output, DPI should ideally be irrelevant, but in fact it is not

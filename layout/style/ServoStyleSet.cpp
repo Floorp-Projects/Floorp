@@ -689,6 +689,16 @@ Maybe<StylePageSizeOrientation> ServoStyleSet::GetDefaultPageSizeOrientation(
   return Nothing();
 }
 
+Maybe<nsSize> ServoStyleSet::GetPageSizeForPageName(const nsAtom* aPageName) {
+  const RefPtr<ComputedStyle> style = ResolvePageContentStyle(aPageName);
+  const StylePageSize& pageSize = style->StylePage()->mSize;
+  if (pageSize.IsSize()) {
+    return Some(nsSize{pageSize.AsSize().width.ToAppUnits(),
+                       pageSize.AsSize().height.ToAppUnits()});
+  }
+  return Nothing();
+}
+
 void ServoStyleSet::AppendAllNonDocumentAuthorSheets(
     nsTArray<StyleSheet*>& aArray) const {
   EnumerateShadowRoots(*mDocument, [&](ShadowRoot& aShadowRoot) {

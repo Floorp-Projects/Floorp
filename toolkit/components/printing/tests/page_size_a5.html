@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>At-Page Size: A5</title>
+<style>
+  body {
+    margin: 0;
+  }
+  .rect {
+      /* An outlined rect that is 1inch smaller in each dimension,
+         to help visualize if the output page is the right size or not: */
+      width: calc(148mm - 1in - 4px);
+      height: calc(210mm - 1in - 4px);
+      border: 2px solid black;
+  }
+  @page {
+    size: A5;  /* 5-7/8 x 8-1/4 in or 148 x 210 mm */
+    margin: 0.5in;
+  }
+</style>
+</head>
+<body>
+  <div class="rect">
+    <h3>Expectation:</h3>
+    If you print-preview using the "Save to PDF" page target, you should see an
+    A5-size sheet of paper by default, just 1 inch wider (0.5in margins) than the black-outlined
+    box.
+  </div>
+</body>
+</html>

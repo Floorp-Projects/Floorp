@@ -171,6 +171,10 @@ struct PrintPreviewResultInfo
   // If present, indicates if the page should be printed landscape when true or
   // portrait when false;
   bool? printLandscape;
+  // The at-page specified page width or null when no width is provided.
+  float? pageWidth;
+  // The at-page specified page height or null when no height is provided.
+  float? pageHeight;
 };
 
 /**

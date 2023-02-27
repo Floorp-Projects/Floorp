@@ -518,6 +518,16 @@ NS_IMETHODIMP nsPrintSettings::SetHonorPageRuleMargins(bool aHonor) {
   return NS_OK;
 }
 
+NS_IMETHODIMP nsPrintSettings::GetUsePageRuleSizeAsPaperSize(bool* aResult) {
+  *aResult = mUsePageRuleSizeAsPaperSize;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPrintSettings::SetUsePageRuleSizeAsPaperSize(bool aHonor) {
+  mUsePageRuleSizeAsPaperSize = aHonor;
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsPrintSettings::GetIgnoreUnwriteableMargins(bool* aResult) {
   *aResult = mIgnoreUnwriteableMargins;
   return NS_OK;
@@ -765,6 +775,10 @@ nsresult nsPrintSettings::EquivalentTo(nsIPrintSettings* aPrintSettings,
   if (GetHonorPageRuleMargins() != aPrintSettings->GetHonorPageRuleMargins()) {
     return NS_OK;
   }
+  if (GetUsePageRuleSizeAsPaperSize() !=
+      aPrintSettings->GetUsePageRuleSizeAsPaperSize()) {
+    return NS_OK;
+  }
   if (GetIgnoreUnwriteableMargins() !=
       aPrintSettings->GetIgnoreUnwriteableMargins()) {
     return NS_OK;
@@ -875,6 +889,7 @@ nsPrintSettings& nsPrintSettings::operator=(const nsPrintSettings& rhs) {
   mShrinkToFit = rhs.mShrinkToFit;
   mShowMarginGuides = rhs.mShowMarginGuides;
   mHonorPageRuleMargins = rhs.mHonorPageRuleMargins;
+  mUsePageRuleSizeAsPaperSize = rhs.mUsePageRuleSizeAsPaperSize;
   mIgnoreUnwriteableMargins = rhs.mIgnoreUnwriteableMargins;
   mPrintSelectionOnly = rhs.mPrintSelectionOnly;
   mPaperId = rhs.mPaperId;
