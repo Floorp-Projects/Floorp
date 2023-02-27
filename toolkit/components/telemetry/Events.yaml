@@ -3597,6 +3597,20 @@ firefoxview:
       - 1789641
     expiry_version: "never"
     release_channel_collection: opt-out
+  synced_tabs_empty:
+    objects: ["since_device_added"]
+    description: >
+      Records the time elapsed in seconds that the Tab Pickup empty message is displayed after a new device was added
+    notification_emails:
+      - firefox-view-engineers@mozilla.com
+    products:
+      - "firefox"
+    record_in_processes:
+      - main
+    bug_numbers:
+      - 1809661
+    expiry_version: "120"
+    release_channel_collection: opt-out
   closed_tabs_open:
     objects: ["tabs"]
     description: >
