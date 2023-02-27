@@ -303,13 +303,10 @@ class JSFunction : public js::NativeObject {
   void setResolvedLength() { setFlags(flags().setResolvedLength()); }
   void setResolvedName() { setFlags(flags().setResolvedName()); }
 
-  static bool getUnresolvedLength(JSContext* cx, js::HandleFunction fun,
-                                  uint16_t* length);
+  static inline bool getUnresolvedLength(JSContext* cx, js::HandleFunction fun,
+                                         uint16_t* length);
 
-  JSAtom* infallibleGetUnresolvedName(JSContext* cx);
-
-  static bool getUnresolvedName(JSContext* cx, js::HandleFunction fun,
-                                js::MutableHandleValue v);
+  inline JSAtom* infallibleGetUnresolvedName(JSContext* cx);
 
   JSAtom* explicitName() const {
     return (hasInferredName() || hasGuessedAtom()) ? nullptr : rawAtom();
@@ -474,8 +471,8 @@ class JSFunction : public js::NativeObject {
     return static_cast<JSScript*>(nativeJitInfoOrInterpretedScript());
   }
 
-  static bool getLength(JSContext* cx, js::HandleFunction fun,
-                        uint16_t* length);
+  static inline bool getLength(JSContext* cx, js::HandleFunction fun,
+                               uint16_t* length);
 
   js::Scope* enclosingScope() const { return baseScript()->enclosingScope(); }
 
