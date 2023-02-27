@@ -42,6 +42,9 @@ class DMABUFTextureData : public TextureData {
 
   bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
+  void GetSubDescriptor(
+      RemoteDecoderVideoSubDescriptor* const aOutDesc) override;
+
   void Deallocate(LayersIPCChannel*) override;
 
   void Forget(LayersIPCChannel*) override;
