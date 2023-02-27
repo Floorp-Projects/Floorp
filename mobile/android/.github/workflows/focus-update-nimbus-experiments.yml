@@ -31,7 +31,7 @@ jobs:
           branch: automation/update-focus-nimbus-experiments
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
-        if: steps.update-experiments-json.outputs.changed == 1 && steps.update-experiments-json.outputs.changed-branch == 1
+        if: steps.update-experiments-json.outputs.changed == 1 && steps.update-experiments-json.outputs.changed-branch >= 1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           path: focus-android
