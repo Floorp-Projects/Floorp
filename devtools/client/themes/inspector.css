@@ -174,7 +174,7 @@ window {
   right: 0;
 }
 
-/* Override `-moz-user-focus:ignore;` from toolkit/content/minimal-xul.css */
+/* Override `-moz-user-focus:ignore;` from toolkit/content/xul.css */
 .inspector-tabpanel > * {
   -moz-user-focus: normal;
 }
