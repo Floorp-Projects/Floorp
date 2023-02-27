@@ -42,8 +42,6 @@ jobs:
         cd ../
         rm -rf chrome_tmp
         rm chrome.deb
-        sudo mkdir -p /etc/opt/chrome
-        echo '{"sync_promo": {"startup_count": 1, "user_skipped": true, "view_count": 1}}' | sudo tee /etc/opt/chrome/initial_preferences
 
     - name: Scrape
       run: |
@@ -58,7 +56,8 @@ jobs:
         
         # Chrome
         ~/chrome/chrome &
-        sleep 10
+        sleep 5
         pkill -KILL -f chrome
+        sleep 5
         export chrome_stable_ua=`npm run --silent start ~/chrome/chrome`
         echo $chrome_stable_ua
