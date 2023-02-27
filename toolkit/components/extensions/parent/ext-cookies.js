@@ -521,7 +521,7 @@ this.cookies = class extends ExtensionAPIPersistent {
         get: function(details) {
           validateFirstPartyDomain(details);
 
-          // FIXME: We don't sort by length of path and creation time.
+          // TODO bug 1818968: We don't sort by length of path and creation time.
           let allowed = ["url", "name"];
           for (let cookie of query(details, allowed, context)) {
             return Promise.resolve(convertCookie(cookie));
