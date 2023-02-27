@@ -25,10 +25,10 @@ class TCompiler;
 class TIntermBlock;
 
 #ifdef ANGLE_ENABLE_GLSL
-[[nodiscard]] bool RewriteRepeatedAssignToSwizzled(TCompiler *compiler, TIntermBlock *root);
+ANGLE_NO_DISCARD bool RewriteRepeatedAssignToSwizzled(TCompiler *compiler, TIntermBlock *root);
 #else
-[[nodiscard]] ANGLE_INLINE bool RewriteRepeatedAssignToSwizzled(TCompiler *compiler,
-                                                                TIntermBlock *root)
+ANGLE_NO_DISCARD ANGLE_INLINE bool RewriteRepeatedAssignToSwizzled(TCompiler *compiler,
+                                                                   TIntermBlock *root)
 {
     UNREACHABLE();
     return false;

@@ -13,7 +13,6 @@
 #include "common/PackedEnums.h"
 #include "common/angleutils.h"
 #include "libANGLE/AttributeMap.h"
-#include "libANGLE/Error.h"
 
 #include <deque>
 #include <string>
@@ -27,8 +26,8 @@ class LabeledObject
 {
   public:
     virtual ~LabeledObject() {}
-    virtual angle::Result setLabel(const Context *context, const std::string &label) = 0;
-    virtual const std::string &getLabel() const                                      = 0;
+    virtual void setLabel(const Context *context, const std::string &label) = 0;
+    virtual const std::string &getLabel() const                             = 0;
 };
 
 class Debug : angle::NonCopyable
@@ -54,15 +53,13 @@ class Debug : angle::NonCopyable
                        GLuint id,
                        GLenum severity,
                        const std::string &message,
-                       gl::LogSeverity logSeverity,
-                       angle::EntryPoint entryPoint) const;
+                       gl::LogSeverity logSeverity) const;
     void insertMessage(GLenum source,
                        GLenum type,
                        GLuint id,
                        GLenum severity,
                        std::string &&message,
-                       gl::LogSeverity logSeverity,
-                       angle::EntryPoint entryPoint) const;
+                       gl::LogSeverity logSeverity) const;
 
     void setMessageControl(GLenum source,
                            GLenum type,

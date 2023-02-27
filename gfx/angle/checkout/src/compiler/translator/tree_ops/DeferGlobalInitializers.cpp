@@ -38,7 +38,6 @@ void GetDeferredInitializers(TIntermDeclaration *declaration,
                              bool initializeUninitializedGlobals,
                              bool canUseLoopsToInitialize,
                              bool highPrecisionSupported,
-                             bool forceDeferGlobalInitializers,
                              TIntermSequence *deferredInitializersOut,
                              std::vector<const TVariable *> *variablesToReplaceOut,
                              TSymbolTable *symbolTable)
@@ -54,8 +53,7 @@ void GetDeferredInitializers(TIntermDeclaration *declaration,
         ASSERT(symbolNode);
         TIntermTyped *expression = init->getRight();
 
-        if (expression->getQualifier() != EvqConst || !expression->hasConstantValue() ||
-            forceDeferGlobalInitializers)
+        if (expression->getQualifier() != EvqConst || !expression->hasConstantValue())
         {
             // For variables which are not constant, defer their real initialization until
             // after we initialize uniforms.
@@ -111,7 +109,7 @@ void InsertInitCallToMain(TIntermBlock *root,
 
     TFunction *initGlobalsFunction =
         new TFunction(symbolTable, kInitGlobalsString, SymbolType::AngleInternal,
-                      StaticType::GetBasic<EbtVoid, EbpUndefined>(), false);
+                      StaticType::GetBasic<EbtVoid>(), false);
 
     TIntermFunctionPrototype *initGlobalsFunctionPrototype =
         CreateInternalFunctionPrototypeNode(*initGlobalsFunction);
@@ -135,7 +133,6 @@ bool DeferGlobalInitializers(TCompiler *compiler,
                              bool initializeUninitializedGlobals,
                              bool canUseLoopsToInitialize,
                              bool highPrecisionSupported,
-                             bool forceDeferGlobalInitializers,
                              TSymbolTable *symbolTable)
 {
     TIntermSequence deferredInitializers;
@@ -150,8 +147,7 @@ bool DeferGlobalInitializers(TCompiler *compiler,
         {
             GetDeferredInitializers(declaration, initializeUninitializedGlobals,
                                     canUseLoopsToInitialize, highPrecisionSupported,
-                                    forceDeferGlobalInitializers, &deferredInitializers,
-                                    &variablesToReplace, symbolTable);
+                                    &deferredInitializers, &variablesToReplace, symbolTable);
         }
     }
 

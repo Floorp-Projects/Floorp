@@ -48,7 +48,7 @@ std::string GetExecutableDirectory()
     return (lastPathSepLoc != std::string::npos) ? executablePath.substr(0, lastPathSepLoc) : "";
 }
 
-double GetCurrentSystemTime()
+double GetCurrentTime()
 {
     mach_timebase_info_data_t timebaseInfo;
     mach_timebase_info(&timebaseInfo);

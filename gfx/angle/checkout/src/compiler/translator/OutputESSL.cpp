@@ -9,10 +9,25 @@
 namespace sh
 {
 
-TOutputESSL::TOutputESSL(TCompiler *compiler,
-                         TInfoSinkBase &objSink,
-                         const ShCompileOptions &compileOptions)
-    : TOutputGLSLBase(compiler, objSink, compileOptions)
+TOutputESSL::TOutputESSL(TInfoSinkBase &objSink,
+                         ShArrayIndexClampingStrategy clampingStrategy,
+                         ShHashFunction64 hashFunction,
+                         NameMap &nameMap,
+                         TSymbolTable *symbolTable,
+                         sh::GLenum shaderType,
+                         int shaderVersion,
+                         bool forceHighp,
+                         ShCompileOptions compileOptions)
+    : TOutputGLSLBase(objSink,
+                      clampingStrategy,
+                      hashFunction,
+                      nameMap,
+                      symbolTable,
+                      shaderType,
+                      shaderVersion,
+                      SH_ESSL_OUTPUT,
+                      compileOptions),
+      mForceHighp(forceHighp)
 {}
 
 bool TOutputESSL::writeVariablePrecision(TPrecision precision)
@@ -20,13 +35,11 @@ bool TOutputESSL::writeVariablePrecision(TPrecision precision)
     if (precision == EbpUndefined)
         return false;
 
-    if (precision == EbpHigh && !isHighPrecisionSupported())
-    {
-        precision = EbpMedium;
-    }
-
     TInfoSinkBase &out = objSink();
-    out << getPrecisionString(precision);
+    if (mForceHighp)
+        out << getPrecisionString(EbpHigh);
+    else
+        out << getPrecisionString(precision);
     return true;
 }
 
@@ -36,7 +49,7 @@ ImmutableString TOutputESSL::translateTextureFunction(const ImmutableString &nam
     // Check WEBGL_video_texture invocation first.
     if (name == "textureVideoWEBGL")
     {
-        if (option.takeVideoTextureAsExternalOES)
+        if (option & SH_TAKE_VIDEO_TEXTURE_AS_EXTERNAL_OES)
         {
             // TODO(http://anglebug.com/3889): Implement external image situation.
             UNIMPLEMENTED();

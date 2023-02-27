@@ -13,7 +13,6 @@
 #include "compiler/translator/Compiler.h"
 #include "compiler/translator/SymbolTable.h"
 
-class TIntermBlock;
 class TIntermTyped;
 class TIntermSymbol;
 class TVariable;
@@ -24,28 +23,41 @@ namespace sh
 class SpecConst
 {
   public:
-    SpecConst(TSymbolTable *symbolTable, const ShCompileOptions &compileOptions, GLenum shaderType);
+    SpecConst(TSymbolTable *symbolTable, ShCompileOptions compileOptions, GLenum shaderType);
     virtual ~SpecConst();
 
+    // Line rasterizaton emulation
+    TIntermSymbol *getLineRasterEmulation();
+
     // Flip/rotation
-    // Returns a boolean: should X and Y be swapped?
-    TIntermTyped *getSwapXY();
+    TIntermTyped *getMultiplierXForDFdx();
+    TIntermTyped *getMultiplierYForDFdx();
+    TIntermTyped *getMultiplierXForDFdy();
+    TIntermTyped *getMultiplierYForDFdy();
+    TIntermTyped *getFragRotationMatrix();
+    TIntermTyped *getFlipXY();
+    TIntermTyped *getNegFlipXY();
+    TIntermTyped *getFlipY();
+    TIntermTyped *getFragRotationMultiplyFlipXY();
 
-    // Dither emulation
-    TIntermTyped *getDither();
+    // Half render area
+    TIntermBinary *getHalfRenderArea();
 
-    void declareSpecConsts(TIntermBlock *root);
+    void outputLayoutString(TInfoSinkBase &sink) const;
     SpecConstUsageBits getSpecConstUsageBits() const { return mUsageBits; }
 
+    static bool IsSpecConstName(const ImmutableString &name);
+
   private:
-    TIntermSymbol *getRotation();
+    TIntermSymbol *getFlipRotation();
+    TIntermTyped *getNegFlipY();
+    TIntermSymbol *getDrawableWidth();
+    TIntermSymbol *getDrawableHeight();
+    TIntermTyped *getHalfRenderAreaRotationMatrix();
 
     // If unsupported, this should be set to null.
     TSymbolTable *mSymbolTable;
-    const ShCompileOptions &mCompileOptions;
-
-    TVariable *mSurfaceRotationVar;
-    TVariable *mDitherVar;
+    ShCompileOptions mCompileOptions;
 
     // Bit is set if YFlip or Rotation has been used
     SpecConstUsageBits mUsageBits;

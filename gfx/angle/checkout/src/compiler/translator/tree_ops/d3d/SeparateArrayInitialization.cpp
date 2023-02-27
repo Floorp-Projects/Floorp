@@ -30,7 +30,7 @@ namespace
 class SeparateArrayInitTraverser : private TIntermTraverser
 {
   public:
-    [[nodiscard]] static bool apply(TCompiler *compiler, TIntermNode *root);
+    ANGLE_NO_DISCARD static bool apply(TCompiler *compiler, TIntermNode *root);
 
   private:
     SeparateArrayInitTraverser();

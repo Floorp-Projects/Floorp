@@ -269,6 +269,7 @@
                               GLint border, GLsizei imageSize, const void *data);                  \
     void compressedTexSubImage1D(GLenum target, GLint level, GLint xoffset, GLsizei width,         \
                                  GLenum format, GLsizei imageSize, const void *data);              \
+    void getCompressedTexImage(GLenum target, GLint level, void *img);                             \
     void loadTransposeMatrixd(const GLdouble *m);                                                  \
     void loadTransposeMatrixf(const GLfloat *m);                                                   \
     void multTransposeMatrixd(const GLdouble *m);                                                  \

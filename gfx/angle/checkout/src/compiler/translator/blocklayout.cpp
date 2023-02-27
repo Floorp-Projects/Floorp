@@ -199,35 +199,6 @@ BlockMemberInfo BlockLayoutEncoder::encodeType(GLenum type,
     return memberInfo;
 }
 
-BlockMemberInfo BlockLayoutEncoder::encodeArrayOfPreEncodedStructs(
-    size_t size,
-    const std::vector<unsigned int> &arraySizes)
-{
-    const unsigned int innerArraySizeProduct = gl::InnerArraySizeProduct(arraySizes);
-    const unsigned int outermostArraySize    = gl::OutermostArraySize(arraySizes);
-
-    // The size of struct is expected to be already aligned appropriately.
-    const size_t arrayStride = size * innerArraySizeProduct;
-
-    const BlockMemberInfo memberInfo(static_cast<int>(mCurrentOffset * kBytesPerComponent),
-                                     static_cast<int>(arrayStride), -1, false);
-
-    angle::base::CheckedNumeric<size_t> checkedOffset(arrayStride);
-    checkedOffset *= outermostArraySize;
-    checkedOffset /= kBytesPerComponent;
-    checkedOffset += mCurrentOffset;
-    mCurrentOffset = checkedOffset.ValueOrDefault(std::numeric_limits<size_t>::max());
-
-    return memberInfo;
-}
-
-size_t BlockLayoutEncoder::getCurrentOffset() const
-{
-    angle::base::CheckedNumeric<size_t> checkedOffset(mCurrentOffset);
-    checkedOffset *= kBytesPerComponent;
-    return checkedOffset.ValueOrDefault(std::numeric_limits<size_t>::max());
-}
-
 size_t BlockLayoutEncoder::getShaderVariableSize(const ShaderVariable &structVar, bool isRowMajor)
 {
     size_t currentOffset = mCurrentOffset;
@@ -255,13 +226,7 @@ size_t BlockLayoutEncoder::GetBlockRegisterElement(const BlockMemberInfo &info)
 
 void BlockLayoutEncoder::align(size_t baseAlignment)
 {
-    angle::base::CheckedNumeric<size_t> checkedOffset(mCurrentOffset);
-    checkedOffset += baseAlignment;
-    checkedOffset -= 1;
-    angle::base::CheckedNumeric<size_t> checkedAlignmentOffset = checkedOffset;
-    checkedAlignmentOffset %= baseAlignment;
-    checkedOffset -= checkedAlignmentOffset.ValueOrDefault(std::numeric_limits<size_t>::max());
-    mCurrentOffset = checkedOffset.ValueOrDefault(std::numeric_limits<size_t>::max());
+    mCurrentOffset = rx::roundUp<size_t>(mCurrentOffset, baseAlignment);
 }
 
 // StubBlockEncoder implementation.
@@ -324,7 +289,7 @@ void Std140BlockEncoder::getBlockLayoutInfo(GLenum type,
         baseAlignment              = ComponentAlignment(numComponents);
     }
 
-    align(baseAlignment);
+    mCurrentOffset = rx::roundUp(mCurrentOffset, baseAlignment);
 
     *matrixStrideOut = matrixStride;
     *arrayStrideOut  = arrayStride;
@@ -338,23 +303,16 @@ void Std140BlockEncoder::advanceOffset(GLenum type,
 {
     if (!arraySizes.empty())
     {
-        angle::base::CheckedNumeric<size_t> checkedOffset(arrayStride);
-        checkedOffset *= gl::ArraySizeProduct(arraySizes);
-        checkedOffset += mCurrentOffset;
-        mCurrentOffset = checkedOffset.ValueOrDefault(std::numeric_limits<size_t>::max());
+        mCurrentOffset += arrayStride * gl::ArraySizeProduct(arraySizes);
     }
     else if (gl::IsMatrixType(type))
     {
-        angle::base::CheckedNumeric<size_t> checkedOffset(matrixStride);
-        checkedOffset *= gl::MatrixRegisterCount(type, isRowMajorMatrix);
-        checkedOffset += mCurrentOffset;
-        mCurrentOffset = checkedOffset.ValueOrDefault(std::numeric_limits<size_t>::max());
+        const int numRegisters = gl::MatrixRegisterCount(type, isRowMajorMatrix);
+        mCurrentOffset += matrixStride * numRegisters;
     }
     else
     {
-        angle::base::CheckedNumeric<size_t> checkedOffset(mCurrentOffset);
-        checkedOffset += gl::VariableComponentCount(type);
-        mCurrentOffset = checkedOffset.ValueOrDefault(std::numeric_limits<size_t>::max());
+        mCurrentOffset += gl::VariableComponentCount(type);
     }
 }
 

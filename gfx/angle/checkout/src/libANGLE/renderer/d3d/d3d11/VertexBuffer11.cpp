@@ -55,11 +55,11 @@ angle::Result VertexBuffer11::initialize(const gl::Context *context,
 
         if (dynamicUsage)
         {
-            mBuffer.setInternalName("VertexBuffer11(dynamic)");
+            mBuffer.setDebugName("VertexBuffer11 (dynamic)");
         }
         else
         {
-            mBuffer.setInternalName("VertexBuffer11(static)");
+            mBuffer.setDebugName("VertexBuffer11 (static)");
         }
     }
 

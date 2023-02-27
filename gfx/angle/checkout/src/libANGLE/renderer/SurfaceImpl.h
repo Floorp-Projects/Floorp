@@ -41,6 +41,8 @@ using SupportedCompositorTimings = angle::PackedEnumBitSet<CompositorTiming>;
 
 namespace rx
 {
+class FramebufferImpl;
+
 class SurfaceImpl : public FramebufferAttachmentObjectImpl
 {
   public:
@@ -48,10 +50,11 @@ class SurfaceImpl : public FramebufferAttachmentObjectImpl
     ~SurfaceImpl() override;
     virtual void destroy(const egl::Display *display) {}
 
-    virtual egl::Error initialize(const egl::Display *display) = 0;
+    virtual egl::Error initialize(const egl::Display *display)                           = 0;
+    virtual FramebufferImpl *createDefaultFramebuffer(const gl::Context *context,
+                                                      const gl::FramebufferState &state) = 0;
     virtual egl::Error makeCurrent(const gl::Context *context);
     virtual egl::Error unMakeCurrent(const gl::Context *context);
-    virtual egl::Error prepareSwap(const gl::Context *);
     virtual egl::Error swap(const gl::Context *context) = 0;
     virtual egl::Error swapWithDamage(const gl::Context *context,
                                       const EGLint *rects,
@@ -91,11 +94,6 @@ class SurfaceImpl : public FramebufferAttachmentObjectImpl
     virtual EGLint isPostSubBufferSupported() const = 0;
     virtual EGLint getSwapBehavior() const          = 0;
 
-    virtual egl::Error attachToFramebuffer(const gl::Context *context,
-                                           gl::Framebuffer *framebuffer)   = 0;
-    virtual egl::Error detachFromFramebuffer(const gl::Context *context,
-                                             gl::Framebuffer *framebuffer) = 0;
-
     // Used to query color format from pbuffers created from D3D textures.
     virtual const angle::Format *getD3DTextureColorFormat() const;
 
@@ -112,20 +110,6 @@ class SurfaceImpl : public FramebufferAttachmentObjectImpl
                                           const EGLint *timestamps,
                                           EGLnsecsANDROID *values) const;
     virtual egl::Error getBufferAge(const gl::Context *context, EGLint *age);
-
-    // EGL_ANDROID_front_buffer_auto_refresh
-    virtual egl::Error setAutoRefreshEnabled(bool enabled);
-
-    // EGL_KHR_lock_surface3
-    virtual egl::Error lockSurface(const egl::Display *display,
-                                   EGLint usageHint,
-                                   bool preservePixels,
-                                   uint8_t **bufferPtrOut,
-                                   EGLint *bufferPitchOut);
-    virtual egl::Error unlockSurface(const egl::Display *display, bool preservePixels);
-    virtual EGLint origin() const;
-
-    virtual egl::Error setRenderBuffer(EGLint renderBuffer);
 
   protected:
     const egl::SurfaceState &mState;

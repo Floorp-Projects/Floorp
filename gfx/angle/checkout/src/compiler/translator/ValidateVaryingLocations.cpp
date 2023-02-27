@@ -79,8 +79,9 @@ int GetInterfaceBlockLocationCount(const TType &varyingType, bool ignoreVaryingA
     return totalLocation;
 }
 
-int GetLocationCount(const TType &varyingType, bool ignoreVaryingArraySize)
+int GetLocationCount(const TIntermSymbol *varying, bool ignoreVaryingArraySize)
 {
+    const TType &varyingType = varying->getType();
     ASSERT(!varyingType.isInterfaceBlock());
 
     if (varyingType.getStruct() != nullptr)
@@ -266,7 +267,7 @@ void ValidateShaderInterfaceAndAssignLocations(TDiagnostics *diagnostics,
         }
         else
         {
-            const int elementCount = GetLocationCount(varying->getType(), ignoreVaryingArraySize);
+            const int elementCount = GetLocationCount(varying, ignoreVaryingArraySize);
             MarkVaryingLocations(diagnostics, varying, nullptr, location, elementCount,
                                  &locationMap);
         }
@@ -343,8 +344,9 @@ void ValidateVaryingLocationsTraverser::validate(TDiagnostics *diagnostics)
 
 }  // anonymous namespace
 
-unsigned int CalculateVaryingLocationCount(const TType &varyingType, GLenum shaderType)
+unsigned int CalculateVaryingLocationCount(TIntermSymbol *varying, GLenum shaderType)
 {
+    const TType &varyingType          = varying->getType();
     const TQualifier qualifier        = varyingType.getQualifier();
     const bool ignoreVaryingArraySize = ShouldIgnoreVaryingArraySize(qualifier, shaderType);
 
@@ -353,7 +355,7 @@ unsigned int CalculateVaryingLocationCount(const TType &varyingType, GLenum shad
         return GetInterfaceBlockLocationCount(varyingType, ignoreVaryingArraySize);
     }
 
-    return GetLocationCount(varyingType, ignoreVaryingArraySize);
+    return GetLocationCount(varying, ignoreVaryingArraySize);
 }
 
 bool ValidateVaryingLocations(TIntermBlock *root, TDiagnostics *diagnostics, GLenum shaderType)

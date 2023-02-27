@@ -83,7 +83,14 @@ class PackedEnumMap
         // We use a for loop instead of range-for to work around a limitation in MSVC.
         for (const InitPair *it = init.begin(); it != init.end(); ++it)
         {
+#if (__cplusplus < 201703L)
+            // This horrible const_cast pattern is necessary to work around a constexpr limitation.
+            // See https://stackoverflow.com/q/34199774/ . Note that it should be fixed with C++17.
+            const_cast<T &>(const_cast<const Storage &>(
+                mPrivateData)[static_cast<UnderlyingType>(it->first)]) = it->second;
+#else
             mPrivateData[static_cast<UnderlyingType>(it->first)] = it->second;
+#endif
         }
     }
 
@@ -334,72 +341,23 @@ enum class BlendEquationType
     Unused          = 3,
     Subtract        = 4,  // GLenum == 0x800A
     ReverseSubtract = 5,  // GLenum == 0x800B
-
-    Multiply   = 6,   // GLenum == 0x9294
-    Screen     = 7,   // GLenum == 0x9295
-    Overlay    = 8,   // GLenum == 0x9296
-    Darken     = 9,   // GLenum == 0x9297
-    Lighten    = 10,  // GLenum == 0x9298
-    Colordodge = 11,  // GLenum == 0x9299
-    Colorburn  = 12,  // GLenum == 0x929A
-    Hardlight  = 13,  // GLenum == 0x929B
-    Softlight  = 14,  // GLenum == 0x929C
-    Unused2    = 15,
-    Difference = 16,  // GLenum == 0x929E
-    Unused3    = 17,
-    Exclusion  = 18,  // GLenum == 0x92A0
-
-    HslHue        = 19,  // GLenum == 0x92AD
-    HslSaturation = 20,  // GLenum == 0x92AE
-    HslColor      = 21,  // GLenum == 0x92AF
-    HslLuminosity = 22,  // GLenum == 0x92B0
-
-    InvalidEnum = 23,
-    EnumCount   = InvalidEnum
+    InvalidEnum     = 6,
+    EnumCount       = 6
 };
-
-using BlendEquationBitSet = angle::PackedEnumBitSet<gl::BlendEquationType>;
 
 template <>
 constexpr BlendEquationType FromGLenum<BlendEquationType>(GLenum from)
 {
-    if (from <= GL_FUNC_REVERSE_SUBTRACT)
-    {
-        const GLenum scaled = (from - GL_FUNC_ADD);
-        return (scaled == static_cast<GLenum>(BlendEquationType::Unused))
-                   ? BlendEquationType::InvalidEnum
-                   : static_cast<BlendEquationType>(scaled);
-    }
-    if (from <= GL_EXCLUSION_KHR)
-    {
-        const GLenum scaled =
-            (from - GL_MULTIPLY_KHR + static_cast<uint32_t>(BlendEquationType::Multiply));
-        return (scaled == static_cast<GLenum>(BlendEquationType::Unused2) ||
-                scaled == static_cast<GLenum>(BlendEquationType::Unused3))
-                   ? BlendEquationType::InvalidEnum
-                   : static_cast<BlendEquationType>(scaled);
-    }
-    if (from <= GL_HSL_LUMINOSITY_KHR)
-    {
-        return static_cast<BlendEquationType>(from - GL_HSL_HUE_KHR +
-                                              static_cast<uint32_t>(BlendEquationType::HslHue));
-    }
-    return BlendEquationType::InvalidEnum;
+    const GLenum scaled = (from - GL_FUNC_ADD);
+    return (scaled == static_cast<GLenum>(BlendEquationType::Unused) ||
+            scaled >= static_cast<GLenum>(BlendEquationType::EnumCount))
+               ? BlendEquationType::InvalidEnum
+               : static_cast<BlendEquationType>(scaled);
 }
 
 constexpr GLenum ToGLenum(BlendEquationType from)
 {
-    if (from <= BlendEquationType::ReverseSubtract)
-    {
-        return static_cast<GLenum>(from) + GL_FUNC_ADD;
-    }
-    if (from <= BlendEquationType::Exclusion)
-    {
-        return static_cast<GLenum>(from) - static_cast<GLenum>(BlendEquationType::Multiply) +
-               GL_MULTIPLY_KHR;
-    }
-    return static_cast<GLenum>(from) - static_cast<GLenum>(BlendEquationType::HslHue) +
-           GL_HSL_HUE_KHR;
+    return static_cast<GLenum>(from) + GL_FUNC_ADD;
 }
 
 ANGLE_VALIDATE_PACKED_ENUM(BlendEquationType, Add, GL_FUNC_ADD);
@@ -407,21 +365,6 @@ ANGLE_VALIDATE_PACKED_ENUM(BlendEquationType, Min, GL_MIN);
 ANGLE_VALIDATE_PACKED_ENUM(BlendEquationType, Max, GL_MAX);
 ANGLE_VALIDATE_PACKED_ENUM(BlendEquationType, Subtract, GL_FUNC_SUBTRACT);
 ANGLE_VALIDATE_PACKED_ENUM(BlendEquationType, ReverseSubtract, GL_FUNC_REVERSE_SUBTRACT);
-ANGLE_VALIDATE_PACKED_ENUM(BlendEquationType, Multiply, GL_MULTIPLY_KHR);
-ANGLE_VALIDATE_PACKED_ENUM(BlendEquationType, Screen, GL_SCREEN_KHR);
-ANGLE_VALIDATE_PACKED_ENUM(BlendEquationType, Overlay, GL_OVERLAY_KHR);
-ANGLE_VALIDATE_PACKED_ENUM(BlendEquationType, Darken, GL_DARKEN_KHR);
-ANGLE_VALIDATE_PACKED_ENUM(BlendEquationType, Lighten, GL_LIGHTEN_KHR);
-ANGLE_VALIDATE_PACKED_ENUM(BlendEquationType, Colordodge, GL_COLORDODGE_KHR);
-ANGLE_VALIDATE_PACKED_ENUM(BlendEquationType, Colorburn, GL_COLORBURN_KHR);
-ANGLE_VALIDATE_PACKED_ENUM(BlendEquationType, Hardlight, GL_HARDLIGHT_KHR);
-ANGLE_VALIDATE_PACKED_ENUM(BlendEquationType, Softlight, GL_SOFTLIGHT_KHR);
-ANGLE_VALIDATE_PACKED_ENUM(BlendEquationType, Difference, GL_DIFFERENCE_KHR);
-ANGLE_VALIDATE_PACKED_ENUM(BlendEquationType, Exclusion, GL_EXCLUSION_KHR);
-ANGLE_VALIDATE_PACKED_ENUM(BlendEquationType, HslHue, GL_HSL_HUE_KHR);
-ANGLE_VALIDATE_PACKED_ENUM(BlendEquationType, HslSaturation, GL_HSL_SATURATION_KHR);
-ANGLE_VALIDATE_PACKED_ENUM(BlendEquationType, HslColor, GL_HSL_COLOR_KHR);
-ANGLE_VALIDATE_PACKED_ENUM(BlendEquationType, HslLuminosity, GL_HSL_LUMINOSITY_KHR);
 
 std::ostream &operator<<(std::ostream &os, BlendEquationType value);
 
@@ -834,14 +777,10 @@ struct UniformLocation
     int value;
 };
 
-bool operator<(const UniformLocation &lhs, const UniformLocation &rhs);
-
 struct UniformBlockIndex
 {
     uint32_t value;
 };
-
-bool IsEmulatedCompressedFormat(GLenum format);
 }  // namespace gl
 
 namespace egl

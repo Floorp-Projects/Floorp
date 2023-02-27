@@ -58,8 +58,6 @@ void Subject::resetObservers()
 }
 
 // ObserverBinding implementation.
-ObserverBinding::ObserverBinding() : ObserverBindingBase(nullptr, 0), mSubject(nullptr) {}
-
 ObserverBinding::ObserverBinding(ObserverInterface *observer, SubjectIndex index)
     : ObserverBindingBase(observer, index), mSubject(nullptr)
 {
@@ -71,23 +69,13 @@ ObserverBinding::~ObserverBinding()
     reset();
 }
 
-ObserverBinding::ObserverBinding(const ObserverBinding &other)
-    : ObserverBindingBase(other), mSubject(nullptr)
-{
-    bind(other.mSubject);
-}
+ObserverBinding::ObserverBinding(const ObserverBinding &other) = default;
 
-ObserverBinding &ObserverBinding::operator=(const ObserverBinding &other)
-{
-    reset();
-    ObserverBindingBase::operator=(other);
-    bind(other.mSubject);
-    return *this;
-}
+ObserverBinding &ObserverBinding::operator=(const ObserverBinding &other) = default;
 
 void ObserverBinding::bind(Subject *subject)
 {
-    ASSERT(getObserver() || !subject);
+    ASSERT(getObserver());
     if (mSubject)
     {
         mSubject->removeObserver(this);

@@ -83,7 +83,7 @@ bool DecompressBlobCacheData(const uint8_t *compressedData,
 
     uLong destLen = uncompressedSize;
     int zResult   = zlib_internal::GzipUncompressHelper(
-          uncompressedData->data(), &destLen, compressedData, static_cast<uLong>(compressedSize));
+        uncompressedData->data(), &destLen, compressedData, static_cast<uLong>(compressedSize));
 
     if (zResult != Z_OK)
     {
@@ -110,7 +110,6 @@ void BlobCache::put(const BlobCache::Key &key, angle::MemoryBuffer &&value)
 {
     if (areBlobCacheFuncsSet())
     {
-        std::scoped_lock<std::mutex> lock(mBlobCacheMutex);
         // Store the result in the application's cache
         mSetBlobFunc(key.data(), key.size(), value.data(), value.size());
     }
@@ -120,34 +119,17 @@ void BlobCache::put(const BlobCache::Key &key, angle::MemoryBuffer &&value)
     }
 }
 
-bool BlobCache::compressAndPut(const BlobCache::Key &key,
-                               angle::MemoryBuffer &&uncompressedValue,
-                               size_t *compressedSize)
-{
-    angle::MemoryBuffer compressedValue;
-    if (!CompressBlobCacheData(uncompressedValue.size(), uncompressedValue.data(),
-                               &compressedValue))
-    {
-        return false;
-    }
-    if (compressedSize != nullptr)
-        *compressedSize = compressedValue.size();
-    put(key, std::move(compressedValue));
-    return true;
-}
-
 void BlobCache::putApplication(const BlobCache::Key &key, const angle::MemoryBuffer &value)
 {
+    std::lock_guard<std::mutex> lock(mBlobCacheMutex);
     if (areBlobCacheFuncsSet())
     {
-        std::scoped_lock<std::mutex> lock(mBlobCacheMutex);
         mSetBlobFunc(key.data(), key.size(), value.data(), value.size());
     }
 }
 
 void BlobCache::populate(const BlobCache::Key &key, angle::MemoryBuffer &&value, CacheSource source)
 {
-    std::scoped_lock<std::mutex> lock(mBlobCacheMutex);
     CacheEntry newEntry;
     newEntry.first  = std::move(value);
     newEntry.second = source;
@@ -164,7 +146,6 @@ bool BlobCache::get(angle::ScratchBuffer *scratchBuffer,
     // Look into the application's cache, if there is such a cache
     if (areBlobCacheFuncsSet())
     {
-        std::scoped_lock<std::mutex> lock(mBlobCacheMutex);
         EGLsizeiANDROID valueSize = mGetBlobFunc(key.data(), key.size(), nullptr, 0);
         if (valueSize <= 0)
         {
@@ -198,16 +179,30 @@ bool BlobCache::get(angle::ScratchBuffer *scratchBuffer,
         return true;
     }
 
-    std::scoped_lock<std::mutex> lock(mBlobCacheMutex);
     // Otherwise we are doing caching internally, so try to find it there
     const CacheEntry *entry;
     bool result = mBlobCache.get(key, &entry);
 
     if (result)
     {
+        if (entry->second == CacheSource::Memory)
+        {
+            ANGLE_HISTOGRAM_ENUMERATION("GPU.ANGLE.ProgramCache.CacheResult", kCacheHitMemory,
+                                        kCacheResultMax);
+        }
+        else
+        {
+            ANGLE_HISTOGRAM_ENUMERATION("GPU.ANGLE.ProgramCache.CacheResult", kCacheHitDisk,
+                                        kCacheResultMax);
+        }
 
         *valueOut      = BlobCache::Value(entry->first.data(), entry->first.size());
         *bufferSizeOut = entry->first.size();
+    }
+    else
+    {
+        ANGLE_HISTOGRAM_ENUMERATION("GPU.ANGLE.ProgramCache.CacheResult", kCacheMiss,
+                                    kCacheResultMax);
     }
 
     return result;
@@ -215,7 +210,6 @@ bool BlobCache::get(angle::ScratchBuffer *scratchBuffer,
 
 bool BlobCache::getAt(size_t index, const BlobCache::Key **keyOut, BlobCache::Value *valueOut)
 {
-    std::scoped_lock<std::mutex> lock(mBlobCacheMutex);
     const CacheEntry *valueBuf;
     bool result = mBlobCache.getAt(index, keyOut, &valueBuf);
     if (result)
@@ -225,49 +219,19 @@ bool BlobCache::getAt(size_t index, const BlobCache::Key **keyOut, BlobCache::Va
     return result;
 }
 
-BlobCache::GetAndDecompressResult BlobCache::getAndDecompress(
-    angle::ScratchBuffer *scratchBuffer,
-    const BlobCache::Key &key,
-    angle::MemoryBuffer *uncompressedValueOut)
-{
-    ASSERT(uncompressedValueOut);
-
-    Value compressedValue;
-    size_t compressedSize;
-    if (!get(scratchBuffer, key, &compressedValue, &compressedSize))
-    {
-        return GetAndDecompressResult::NotFound;
-    }
-
-    {
-        // This needs to be locked because `DecompressBlobCacheData` is reading shared memory from
-        // `compressedValue.data()`.
-        std::scoped_lock<std::mutex> lock(mBlobCacheMutex);
-        if (!DecompressBlobCacheData(compressedValue.data(), compressedSize, uncompressedValueOut))
-        {
-            return GetAndDecompressResult::DecompressFailure;
-        }
-    }
-
-    return GetAndDecompressResult::GetSuccess;
-}
-
 void BlobCache::remove(const BlobCache::Key &key)
 {
-    std::scoped_lock<std::mutex> lock(mBlobCacheMutex);
     mBlobCache.eraseByKey(key);
 }
 
 void BlobCache::setBlobCacheFuncs(EGLSetBlobFuncANDROID set, EGLGetBlobFuncANDROID get)
 {
-    std::scoped_lock<std::mutex> lock(mBlobCacheMutex);
     mSetBlobFunc = set;
     mGetBlobFunc = get;
 }
 
 bool BlobCache::areBlobCacheFuncsSet() const
 {
-    std::scoped_lock<std::mutex> lock(mBlobCacheMutex);
     // Either none or both of the callbacks should be set.
     ASSERT((mSetBlobFunc != nullptr) == (mGetBlobFunc != nullptr));
 

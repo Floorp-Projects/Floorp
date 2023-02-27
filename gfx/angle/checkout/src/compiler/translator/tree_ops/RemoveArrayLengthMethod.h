@@ -30,7 +30,7 @@ namespace sh
 class TCompiler;
 class TIntermBlock;
 
-[[nodiscard]] bool RemoveArrayLengthMethod(TCompiler *compiler, TIntermBlock *root);
+ANGLE_NO_DISCARD bool RemoveArrayLengthMethod(TCompiler *compiler, TIntermBlock *root);
 
 }  // namespace sh
 

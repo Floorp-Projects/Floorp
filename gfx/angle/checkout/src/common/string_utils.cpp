@@ -12,7 +12,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <algorithm>
-#include <cctype>
 #include <fstream>
 #include <sstream>
 
@@ -207,31 +206,6 @@ bool EndsWith(const char *str, const char *suffix)
     return EndsWithSuffix(str, strlen(str), suffix, strlen(suffix));
 }
 
-bool ContainsToken(const std::string &tokenStr, char delimiter, const std::string &token)
-{
-    if (token.empty())
-    {
-        return false;
-    }
-    // Compare token with all sub-strings terminated by delimiter or end of string
-    std::string::size_type start = 0u;
-    do
-    {
-        std::string::size_type end = tokenStr.find(delimiter, start);
-        if (end == std::string::npos)
-        {
-            end = tokenStr.length();
-        }
-        const std::string::size_type length = end - start;
-        if (length == token.length() && tokenStr.compare(start, length, token) == 0)
-        {
-            return true;
-        }
-        start = end + 1u;
-    } while (start < tokenStr.size());
-    return false;
-}
-
 void ToLower(std::string *str)
 {
     for (char &ch : *str)
@@ -261,42 +235,6 @@ bool ReplaceSubstring(std::string *str,
     return true;
 }
 
-int ReplaceAllSubstrings(std::string *str,
-                         const std::string &substring,
-                         const std::string &replacement)
-{
-    int count = 0;
-    while (ReplaceSubstring(str, substring, replacement))
-    {
-        count++;
-    }
-    return count;
-}
-
-std::string ToCamelCase(const std::string &str)
-{
-    std::string result;
-
-    bool lastWasUnderscore = false;
-    for (char c : str)
-    {
-        if (c == '_')
-        {
-            lastWasUnderscore = true;
-            continue;
-        }
-
-        if (lastWasUnderscore)
-        {
-            c                 = static_cast<char>(std::toupper(c));
-            lastWasUnderscore = false;
-        }
-        result += c;
-    }
-
-    return result;
-}
-
 std::vector<std::string> GetStringsFromEnvironmentVarOrAndroidProperty(const char *varName,
                                                                        const char *propertyName,
                                                                        const char *separator)
@@ -314,28 +252,28 @@ std::vector<std::string> GetCachedStringsFromEnvironmentVarOrAndroidProperty(
     return SplitString(environment, separator, TRIM_WHITESPACE, SPLIT_WANT_NONEMPTY);
 }
 
-// glob can have * as wildcard
-bool NamesMatchWithWildcard(const char *glob, const char *name)
+// reference name can have *.
+bool NamesMatchWithWildcard(const char *ref, const char *testName)
 {
-    // Find the first * in glob.
-    const char *firstWildcard = strchr(glob, '*');
+    // Find the first * in ref.
+    const char *firstWildcard = strchr(ref, '*');
 
     // If there are no wildcards, match the strings precisely.
     if (firstWildcard == nullptr)
     {
-        return strcmp(glob, name) == 0;
+        return strcmp(ref, testName) == 0;
     }
 
     // Otherwise, match up to the wildcard first.
-    size_t preWildcardLen = firstWildcard - glob;
-    if (strncmp(glob, name, preWildcardLen) != 0)
+    size_t preWildcardLen = firstWildcard - ref;
+    if (strncmp(ref, testName, preWildcardLen) != 0)
     {
         return false;
     }
 
-    const char *postWildcardRef = glob + preWildcardLen + 1;
+    const char *postWildcardRef = ref + preWildcardLen + 1;
 
-    // As a small optimization, if the wildcard is the last character in glob, accept the match
+    // As a small optimization, if the wildcard is the last character in ref, accept the match
     // already.
     if (postWildcardRef[0] == '\0')
     {
@@ -343,9 +281,9 @@ bool NamesMatchWithWildcard(const char *glob, const char *name)
     }
 
     // Try to match the wildcard with a number of characters.
-    for (size_t matchSize = 0; name[matchSize] != '\0'; ++matchSize)
+    for (size_t matchSize = 0; testName[matchSize] != '\0'; ++matchSize)
     {
-        if (NamesMatchWithWildcard(postWildcardRef, name + matchSize))
+        if (NamesMatchWithWildcard(postWildcardRef, testName + matchSize))
         {
             return true;
         }

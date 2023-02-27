@@ -460,21 +460,6 @@ EXPORTS
     glTranslatex
     glVertexPointer
 
-    ; GL_AMD_performance_monitor
-    glBeginPerfMonitorAMD
-    glDeletePerfMonitorsAMD
-    glEndPerfMonitorAMD
-    glGenPerfMonitorsAMD
-    glGetPerfMonitorCounterDataAMD
-    glGetPerfMonitorCounterInfoAMD
-    glGetPerfMonitorCounterStringAMD
-    glGetPerfMonitorCountersAMD
-    glGetPerfMonitorGroupStringAMD
-    glGetPerfMonitorGroupsAMD
-    glSelectPerfMonitorCountersAMD
-
-    ; GL_ANDROID_extension_pack_es31a
-
     ; GL_ANGLE_base_vertex_base_instance
     glDrawArraysInstancedBaseInstanceANGLE
     glDrawElementsInstancedBaseVertexBaseInstanceANGLE
@@ -485,8 +470,6 @@ EXPORTS
     glCopySubTexture3DANGLE
     glCopyTexture3DANGLE
 
-    ; GL_ANGLE_depth_texture
-
     ; GL_ANGLE_framebuffer_blit
     glBlitFramebufferANGLE
 
@@ -494,7 +477,6 @@ EXPORTS
     glRenderbufferStorageMultisampleANGLE
 
     ; GL_ANGLE_get_image
-    glGetCompressedTexImageANGLE
     glGetRenderbufferImageANGLE
     glGetTexImageANGLE
 
@@ -506,9 +488,6 @@ EXPORTS
     glDrawArraysInstancedANGLE
     glDrawElementsInstancedANGLE
     glVertexAttribDivisorANGLE
-
-    ; GL_ANGLE_logic_op
-    glLogicOpANGLE
 
     ; GL_ANGLE_memory_object_flags
     glTexStorageMemFlags2DANGLE
@@ -524,8 +503,6 @@ EXPORTS
     glMultiDrawArraysInstancedANGLE
     glMultiDrawElementsANGLE
     glMultiDrawElementsInstancedANGLE
-
-    ; GL_ANGLE_pack_reverse_row_order
 
     ; GL_ANGLE_program_binary
 
@@ -602,21 +579,8 @@ EXPORTS
     glTexSubImage2DRobustANGLE
     glTexSubImage3DRobustANGLE
 
-    ; GL_ANGLE_robust_resource_initialization
-
     ; GL_ANGLE_semaphore_fuchsia
     glImportSemaphoreZirconHandleANGLE
-
-    ; GL_ANGLE_shader_pixel_local_storage
-    glBeginPixelLocalStorageANGLE
-    glEndPixelLocalStorageANGLE
-    glFramebufferMemorylessPixelLocalStorageANGLE
-    glFramebufferTexturePixelLocalStorageANGLE
-    glPixelLocalStorageBarrierANGLE
-
-    ; GL_ANGLE_texture_compression_dxt3
-
-    ; GL_ANGLE_texture_compression_dxt5
 
     ; GL_ANGLE_texture_external_update
     glInvalidateTextureANGLE
@@ -627,18 +591,8 @@ EXPORTS
     glSampleMaskiANGLE
     glTexStorage2DMultisampleANGLE
 
-    ; GL_ANGLE_texture_usage
-
     ; GL_ANGLE_translated_shader_source
     glGetTranslatedShaderSourceANGLE
-
-    ; GL_ANGLE_vulkan_image
-    glAcquireTexturesANGLE
-    glReleaseTexturesANGLE
-
-    ; GL_APPLE_clip_distance
-
-    ; GL_ARB_sync
 
     ; GL_CHROMIUM_bind_uniform_location
     glBindUniformLocationCHROMIUM
@@ -658,16 +612,7 @@ EXPORTS
 
     ; GL_EXT_EGL_image_array
 
-    ; GL_EXT_EGL_image_storage
-    glEGLImageTargetTexStorageEXT
-    glEGLImageTargetTextureStorageEXT
-
     ; GL_EXT_YUV_target
-
-    ; GL_EXT_base_instance
-    glDrawArraysInstancedBaseInstanceEXT
-    glDrawElementsInstancedBaseInstanceEXT
-    glDrawElementsInstancedBaseVertexBaseInstanceEXT
 
     ; GL_EXT_blend_func_extended
     glBindFragDataLocationEXT
@@ -675,19 +620,11 @@ EXPORTS
     glGetFragDataIndexEXT
     glGetProgramResourceLocationIndexEXT
 
-    ; GL_EXT_blend_minmax
-
     ; GL_EXT_buffer_storage
     glBufferStorageEXT
 
     ; GL_EXT_clip_control
     glClipControlEXT
-
-    ; GL_EXT_clip_cull_distance
-
-    ; GL_EXT_color_buffer_float
-
-    ; GL_EXT_color_buffer_half_float
 
     ; GL_EXT_copy_image
     glCopyImageSubDataEXT
@@ -741,12 +678,8 @@ EXPORTS
     glBufferStorageExternalEXT
     glNamedBufferStorageExternalEXT
 
-    ; GL_EXT_float_blend
-
     ; GL_EXT_geometry_shader
     glFramebufferTextureEXT
-
-    ; GL_EXT_gpu_shader5
 
     ; GL_EXT_instanced_arrays
     glDrawArraysInstancedEXT
@@ -774,24 +707,14 @@ EXPORTS
     ; GL_EXT_memory_object_fd
     glImportMemoryFdEXT
 
-    ; GL_EXT_multi_draw_indirect
-    glMultiDrawArraysIndirectEXT
-    glMultiDrawElementsIndirectEXT
-
     ; GL_EXT_multisampled_render_to_texture
     glFramebufferTexture2DMultisampleEXT
     glRenderbufferStorageMultisampleEXT
-
-    ; GL_EXT_multisampled_render_to_texture2
 
     ; GL_EXT_occlusion_query_boolean
 
     ; GL_EXT_primitive_bounding_box
     glPrimitiveBoundingBoxEXT
-
-    ; GL_EXT_protected_textures
-
-    ; GL_EXT_pvrtc_sRGB
 
     ; GL_EXT_read_format_bgra
 
@@ -802,8 +725,6 @@ EXPORTS
     glReadnPixelsEXT
 
     ; GL_EXT_sRGB
-
-    ; GL_EXT_sRGB_write_control
 
     ; GL_EXT_semaphore
     glDeleteSemaphoresEXT
@@ -863,18 +784,10 @@ EXPORTS
     glUseProgramStagesEXT
     glValidateProgramPipelineEXT
 
-    ; GL_EXT_shader_framebuffer_fetch
-
     ; GL_EXT_shader_framebuffer_fetch_non_coherent
     glFramebufferFetchBarrierEXT
 
     ; GL_EXT_shader_io_blocks
-
-    ; GL_EXT_shader_non_constant_global_initializers
-
-    ; GL_EXT_shader_texture_lod
-
-    ; GL_EXT_shadow_samplers
 
     ; GL_EXT_tessellation_shader
     glPatchParameteriEXT
@@ -909,30 +822,14 @@ EXPORTS
 
     ; GL_EXT_texture_format_BGRA8888
 
-    ; GL_EXT_texture_format_sRGB_override
-
-    ; GL_EXT_texture_norm16
-
-    ; GL_EXT_texture_rg
-
     ; GL_EXT_texture_sRGB_R8
 
     ; GL_EXT_texture_sRGB_RG8
-
-    ; GL_EXT_texture_sRGB_decode
 
     ; GL_EXT_texture_storage
     glTexStorage1DEXT
     glTexStorage2DEXT
     glTexStorage3DEXT
-
-    ; GL_EXT_texture_type_2_10_10_10_REV
-
-    ; GL_EXT_unpack_subimage
-
-    ; GL_IMG_texture_compression_pvrtc
-
-    ; GL_IMG_texture_compression_pvrtc2
 
     ; GL_KHR_blend_equation_advanced
     glBlendBarrierKHR
@@ -950,22 +847,8 @@ EXPORTS
     glPopDebugGroupKHR
     glPushDebugGroupKHR
 
-    ; GL_KHR_no_error
-
     ; GL_KHR_parallel_shader_compile
     glMaxShaderCompilerThreadsKHR
-
-    ; GL_KHR_robust_buffer_access_behavior
-
-    ; GL_KHR_texture_compression_astc_hdr
-
-    ; GL_KHR_texture_compression_astc_ldr
-
-    ; GL_KHR_texture_compression_astc_sliced_3d
-
-    ; GL_MESA_framebuffer_flip_y
-    glFramebufferParameteriMESA
-    glGetFramebufferParameterivMESA
 
     ; GL_NV_fence
     glDeleteFencesNV
@@ -979,38 +862,16 @@ EXPORTS
     ; GL_NV_framebuffer_blit
     glBlitFramebufferNV
 
-    ; GL_NV_pixel_buffer_object
-
-    ; GL_NV_read_depth
-
-    ; GL_NV_read_depth_stencil
-
-    ; GL_NV_read_stencil
-
-    ; GL_NV_robustness_video_memory_purge
-
-    ; GL_NV_shader_noperspective_interpolation
-
     ; GL_OES_EGL_image
     glEGLImageTargetRenderbufferStorageOES
     glEGLImageTargetTexture2DOES
 
-    ; GL_OES_EGL_image_external
-
-    ; GL_OES_EGL_image_external_essl3
-
     ; GL_OES_compressed_ETC1_RGB8_texture
-
-    ; GL_OES_compressed_paletted_texture
 
     ; GL_OES_copy_image
     glCopyImageSubDataOES
 
-    ; GL_OES_depth24
-
     ; GL_OES_depth32
-
-    ; GL_OES_depth_texture
 
     ; GL_OES_draw_buffers_indexed
     glBlendEquationSeparateiOES
@@ -1037,10 +898,6 @@ EXPORTS
     glDrawTexxOES
     glDrawTexxvOES
 
-    ; GL_OES_element_index_uint
-
-    ; GL_OES_fbo_render_mipmap
-
     ; GL_OES_framebuffer_object
     glBindFramebufferOES
     glBindRenderbufferOES
@@ -1058,9 +915,6 @@ EXPORTS
     glIsRenderbufferOES
     glRenderbufferStorageOES
 
-    ; GL_OES_geometry_shader
-    glFramebufferTextureOES
-
     ; GL_OES_get_program_binary
     glGetProgramBinaryOES
     glProgramBinaryOES
@@ -1076,35 +930,16 @@ EXPORTS
     glMatrixIndexPointerOES
     glWeightPointerOES
 
-    ; GL_OES_packed_depth_stencil
-
     ; GL_OES_point_size_array
     glPointSizePointerOES
-
-    ; GL_OES_point_sprite
-
-    ; GL_OES_primitive_bounding_box
-    glPrimitiveBoundingBoxOES
 
     ; GL_OES_query_matrix
     glQueryMatrixxOES
 
-    ; GL_OES_rgb8_rgba8
-
     ; GL_OES_sample_shading
     glMinSampleShadingOES
 
-    ; GL_OES_sample_variables
-
-    ; GL_OES_shader_image_atomic
-
     ; GL_OES_shader_io_blocks
-
-    ; GL_OES_shader_multisample_interpolation
-
-    ; GL_OES_standard_derivatives
-
-    ; GL_OES_surfaceless_context
 
     ; GL_OES_texture_3D
     glCompressedTexImage3DOES
@@ -1128,8 +963,6 @@ EXPORTS
     glTexBufferOES
     glTexBufferRangeOES
 
-    ; GL_OES_texture_compression_astc
-
     ; GL_OES_texture_cube_map
     glGetTexGenfvOES
     glGetTexGenivOES
@@ -1143,15 +976,7 @@ EXPORTS
 
     ; GL_OES_texture_cube_map_array
 
-    ; GL_OES_texture_float
-
-    ; GL_OES_texture_float_linear
-
     ; GL_OES_texture_half_float
-
-    ; GL_OES_texture_half_float_linear
-
-    ; GL_OES_texture_npot
 
     ; GL_OES_texture_stencil8
 
@@ -1164,17 +989,793 @@ EXPORTS
     glGenVertexArraysOES
     glIsVertexArrayOES
 
-    ; GL_OES_vertex_half_float
-
-    ; GL_OES_vertex_type_10_10_10_2
-
     ; GL_OVR_multiview
     glFramebufferTextureMultiviewOVR
 
     ; GL_OVR_multiview2
 
-    ; GL_QCOM_shading_rate
-    glShadingRateQCOM
+    ; EGL_ANGLE_explicit_context
+    glActiveShaderProgramContextANGLE
+    glActiveShaderProgramEXTContextANGLE
+    glActiveTextureContextANGLE
+    glAlphaFuncContextANGLE
+    glAlphaFuncxContextANGLE
+    glAttachShaderContextANGLE
+    glBeginQueryContextANGLE
+    glBeginQueryEXTContextANGLE
+    glBeginTransformFeedbackContextANGLE
+    glBindAttribLocationContextANGLE
+    glBindBufferContextANGLE
+    glBindBufferBaseContextANGLE
+    glBindBufferRangeContextANGLE
+    glBindFragDataLocationEXTContextANGLE
+    glBindFragDataLocationIndexedEXTContextANGLE
+    glBindFramebufferContextANGLE
+    glBindFramebufferOESContextANGLE
+    glBindImageTextureContextANGLE
+    glBindProgramPipelineContextANGLE
+    glBindProgramPipelineEXTContextANGLE
+    glBindRenderbufferContextANGLE
+    glBindRenderbufferOESContextANGLE
+    glBindSamplerContextANGLE
+    glBindTextureContextANGLE
+    glBindTransformFeedbackContextANGLE
+    glBindUniformLocationCHROMIUMContextANGLE
+    glBindVertexArrayContextANGLE
+    glBindVertexArrayOESContextANGLE
+    glBindVertexBufferContextANGLE
+    glBlendBarrierContextANGLE
+    glBlendBarrierKHRContextANGLE
+    glBlendColorContextANGLE
+    glBlendEquationContextANGLE
+    glBlendEquationSeparateContextANGLE
+    glBlendEquationSeparateiContextANGLE
+    glBlendEquationSeparateiEXTContextANGLE
+    glBlendEquationSeparateiOESContextANGLE
+    glBlendEquationiContextANGLE
+    glBlendEquationiEXTContextANGLE
+    glBlendEquationiOESContextANGLE
+    glBlendFuncContextANGLE
+    glBlendFuncSeparateContextANGLE
+    glBlendFuncSeparateiContextANGLE
+    glBlendFuncSeparateiEXTContextANGLE
+    glBlendFuncSeparateiOESContextANGLE
+    glBlendFunciContextANGLE
+    glBlendFunciEXTContextANGLE
+    glBlendFunciOESContextANGLE
+    glBlitFramebufferContextANGLE
+    glBlitFramebufferANGLEContextANGLE
+    glBlitFramebufferNVContextANGLE
+    glBufferDataContextANGLE
+    glBufferStorageEXTContextANGLE
+    glBufferStorageExternalEXTContextANGLE
+    glBufferStorageMemEXTContextANGLE
+    glBufferSubDataContextANGLE
+    glCheckFramebufferStatusContextANGLE
+    glCheckFramebufferStatusOESContextANGLE
+    glClearContextANGLE
+    glClearBufferfiContextANGLE
+    glClearBufferfvContextANGLE
+    glClearBufferivContextANGLE
+    glClearBufferuivContextANGLE
+    glClearColorContextANGLE
+    glClearColorxContextANGLE
+    glClearDepthfContextANGLE
+    glClearDepthxContextANGLE
+    glClearStencilContextANGLE
+    glClientActiveTextureContextANGLE
+    glClientWaitSyncContextANGLE
+    glClipControlEXTContextANGLE
+    glClipPlanefContextANGLE
+    glClipPlanexContextANGLE
+    glColor4fContextANGLE
+    glColor4ubContextANGLE
+    glColor4xContextANGLE
+    glColorMaskContextANGLE
+    glColorMaskiContextANGLE
+    glColorMaskiEXTContextANGLE
+    glColorMaskiOESContextANGLE
+    glColorPointerContextANGLE
+    glCompileShaderContextANGLE
+    glCompressedCopyTextureCHROMIUMContextANGLE
+    glCompressedTexImage2DContextANGLE
+    glCompressedTexImage2DRobustANGLEContextANGLE
+    glCompressedTexImage3DContextANGLE
+    glCompressedTexImage3DOESContextANGLE
+    glCompressedTexImage3DRobustANGLEContextANGLE
+    glCompressedTexSubImage2DContextANGLE
+    glCompressedTexSubImage2DRobustANGLEContextANGLE
+    glCompressedTexSubImage3DContextANGLE
+    glCompressedTexSubImage3DOESContextANGLE
+    glCompressedTexSubImage3DRobustANGLEContextANGLE
+    glCopyBufferSubDataContextANGLE
+    glCopyImageSubDataContextANGLE
+    glCopyImageSubDataEXTContextANGLE
+    glCopyImageSubDataOESContextANGLE
+    glCopySubTexture3DANGLEContextANGLE
+    glCopySubTextureCHROMIUMContextANGLE
+    glCopyTexImage2DContextANGLE
+    glCopyTexSubImage2DContextANGLE
+    glCopyTexSubImage3DContextANGLE
+    glCopyTexSubImage3DOESContextANGLE
+    glCopyTexture3DANGLEContextANGLE
+    glCopyTextureCHROMIUMContextANGLE
+    glCoverageModulationCHROMIUMContextANGLE
+    glCreateMemoryObjectsEXTContextANGLE
+    glCreateProgramContextANGLE
+    glCreateShaderContextANGLE
+    glCreateShaderProgramvContextANGLE
+    glCreateShaderProgramvEXTContextANGLE
+    glCullFaceContextANGLE
+    glCurrentPaletteMatrixOESContextANGLE
+    glDebugMessageCallbackContextANGLE
+    glDebugMessageCallbackKHRContextANGLE
+    glDebugMessageControlContextANGLE
+    glDebugMessageControlKHRContextANGLE
+    glDebugMessageInsertContextANGLE
+    glDebugMessageInsertKHRContextANGLE
+    glDeleteBuffersContextANGLE
+    glDeleteFencesNVContextANGLE
+    glDeleteFramebuffersContextANGLE
+    glDeleteFramebuffersOESContextANGLE
+    glDeleteMemoryObjectsEXTContextANGLE
+    glDeleteProgramContextANGLE
+    glDeleteProgramPipelinesContextANGLE
+    glDeleteProgramPipelinesEXTContextANGLE
+    glDeleteQueriesContextANGLE
+    glDeleteQueriesEXTContextANGLE
+    glDeleteRenderbuffersContextANGLE
+    glDeleteRenderbuffersOESContextANGLE
+    glDeleteSamplersContextANGLE
+    glDeleteSemaphoresEXTContextANGLE
+    glDeleteShaderContextANGLE
+    glDeleteSyncContextANGLE
+    glDeleteTexturesContextANGLE
+    glDeleteTransformFeedbacksContextANGLE
+    glDeleteVertexArraysContextANGLE
+    glDeleteVertexArraysOESContextANGLE
+    glDepthFuncContextANGLE
+    glDepthMaskContextANGLE
+    glDepthRangefContextANGLE
+    glDepthRangexContextANGLE
+    glDetachShaderContextANGLE
+    glDisableContextANGLE
+    glDisableClientStateContextANGLE
+    glDisableExtensionANGLEContextANGLE
+    glDisableVertexAttribArrayContextANGLE
+    glDisableiContextANGLE
+    glDisableiEXTContextANGLE
+    glDisableiOESContextANGLE
+    glDiscardFramebufferEXTContextANGLE
+    glDispatchComputeContextANGLE
+    glDispatchComputeIndirectContextANGLE
+    glDrawArraysContextANGLE
+    glDrawArraysIndirectContextANGLE
+    glDrawArraysInstancedContextANGLE
+    glDrawArraysInstancedANGLEContextANGLE
+    glDrawArraysInstancedBaseInstanceANGLEContextANGLE
+    glDrawArraysInstancedEXTContextANGLE
+    glDrawBuffersContextANGLE
+    glDrawBuffersEXTContextANGLE
+    glDrawElementsContextANGLE
+    glDrawElementsBaseVertexContextANGLE
+    glDrawElementsBaseVertexEXTContextANGLE
+    glDrawElementsBaseVertexOESContextANGLE
+    glDrawElementsIndirectContextANGLE
+    glDrawElementsInstancedContextANGLE
+    glDrawElementsInstancedANGLEContextANGLE
+    glDrawElementsInstancedBaseVertexContextANGLE
+    glDrawElementsInstancedBaseVertexBaseInstanceANGLEContextANGLE
+    glDrawElementsInstancedBaseVertexEXTContextANGLE
+    glDrawElementsInstancedBaseVertexOESContextANGLE
+    glDrawElementsInstancedEXTContextANGLE
+    glDrawRangeElementsContextANGLE
+    glDrawRangeElementsBaseVertexContextANGLE
+    glDrawRangeElementsBaseVertexEXTContextANGLE
+    glDrawRangeElementsBaseVertexOESContextANGLE
+    glDrawTexfOESContextANGLE
+    glDrawTexfvOESContextANGLE
+    glDrawTexiOESContextANGLE
+    glDrawTexivOESContextANGLE
+    glDrawTexsOESContextANGLE
+    glDrawTexsvOESContextANGLE
+    glDrawTexxOESContextANGLE
+    glDrawTexxvOESContextANGLE
+    glEGLImageTargetRenderbufferStorageOESContextANGLE
+    glEGLImageTargetTexture2DOESContextANGLE
+    glEnableContextANGLE
+    glEnableClientStateContextANGLE
+    glEnableVertexAttribArrayContextANGLE
+    glEnableiContextANGLE
+    glEnableiEXTContextANGLE
+    glEnableiOESContextANGLE
+    glEndQueryContextANGLE
+    glEndQueryEXTContextANGLE
+    glEndTransformFeedbackContextANGLE
+    glFenceSyncContextANGLE
+    glFinishContextANGLE
+    glFinishFenceNVContextANGLE
+    glFlushContextANGLE
+    glFlushMappedBufferRangeContextANGLE
+    glFlushMappedBufferRangeEXTContextANGLE
+    glFogfContextANGLE
+    glFogfvContextANGLE
+    glFogxContextANGLE
+    glFogxvContextANGLE
+    glFramebufferFetchBarrierEXTContextANGLE
+    glFramebufferParameteriContextANGLE
+    glFramebufferRenderbufferContextANGLE
+    glFramebufferRenderbufferOESContextANGLE
+    glFramebufferTextureContextANGLE
+    glFramebufferTexture2DContextANGLE
+    glFramebufferTexture2DMultisampleEXTContextANGLE
+    glFramebufferTexture2DOESContextANGLE
+    glFramebufferTexture3DOESContextANGLE
+    glFramebufferTextureEXTContextANGLE
+    glFramebufferTextureLayerContextANGLE
+    glFramebufferTextureMultiviewOVRContextANGLE
+    glFrontFaceContextANGLE
+    glFrustumfContextANGLE
+    glFrustumxContextANGLE
+    glGenBuffersContextANGLE
+    glGenFencesNVContextANGLE
+    glGenFramebuffersContextANGLE
+    glGenFramebuffersOESContextANGLE
+    glGenProgramPipelinesContextANGLE
+    glGenProgramPipelinesEXTContextANGLE
+    glGenQueriesContextANGLE
+    glGenQueriesEXTContextANGLE
+    glGenRenderbuffersContextANGLE
+    glGenRenderbuffersOESContextANGLE
+    glGenSamplersContextANGLE
+    glGenSemaphoresEXTContextANGLE
+    glGenTexturesContextANGLE
+    glGenTransformFeedbacksContextANGLE
+    glGenVertexArraysContextANGLE
+    glGenVertexArraysOESContextANGLE
+    glGenerateMipmapContextANGLE
+    glGenerateMipmapOESContextANGLE
+    glGetActiveAttribContextANGLE
+    glGetActiveUniformContextANGLE
+    glGetActiveUniformBlockNameContextANGLE
+    glGetActiveUniformBlockivContextANGLE
+    glGetActiveUniformBlockivRobustANGLEContextANGLE
+    glGetActiveUniformsivContextANGLE
+    glGetAttachedShadersContextANGLE
+    glGetAttribLocationContextANGLE
+    glGetBooleani_vContextANGLE
+    glGetBooleani_vRobustANGLEContextANGLE
+    glGetBooleanvContextANGLE
+    glGetBooleanvRobustANGLEContextANGLE
+    glGetBufferParameteri64vContextANGLE
+    glGetBufferParameteri64vRobustANGLEContextANGLE
+    glGetBufferParameterivContextANGLE
+    glGetBufferParameterivRobustANGLEContextANGLE
+    glGetBufferPointervContextANGLE
+    glGetBufferPointervOESContextANGLE
+    glGetBufferPointervRobustANGLEContextANGLE
+    glGetClipPlanefContextANGLE
+    glGetClipPlanexContextANGLE
+    glGetDebugMessageLogContextANGLE
+    glGetDebugMessageLogKHRContextANGLE
+    glGetErrorContextANGLE
+    glGetFenceivNVContextANGLE
+    glGetFixedvContextANGLE
+    glGetFloatvContextANGLE
+    glGetFloatvRobustANGLEContextANGLE
+    glGetFragDataIndexEXTContextANGLE
+    glGetFragDataLocationContextANGLE
+    glGetFramebufferAttachmentParameterivContextANGLE
+    glGetFramebufferAttachmentParameterivOESContextANGLE
+    glGetFramebufferAttachmentParameterivRobustANGLEContextANGLE
+    glGetFramebufferParameterivContextANGLE
+    glGetFramebufferParameterivRobustANGLEContextANGLE
+    glGetGraphicsResetStatusContextANGLE
+    glGetGraphicsResetStatusEXTContextANGLE
+    glGetInteger64i_vContextANGLE
+    glGetInteger64i_vRobustANGLEContextANGLE
+    glGetInteger64vContextANGLE
+    glGetInteger64vEXTContextANGLE
+    glGetInteger64vRobustANGLEContextANGLE
+    glGetIntegeri_vContextANGLE
+    glGetIntegeri_vRobustANGLEContextANGLE
+    glGetIntegervContextANGLE
+    glGetIntegervRobustANGLEContextANGLE
+    glGetInternalformativContextANGLE
+    glGetInternalformativRobustANGLEContextANGLE
+    glGetLightfvContextANGLE
+    glGetLightxvContextANGLE
+    glGetMaterialfvContextANGLE
+    glGetMaterialxvContextANGLE
+    glGetMemoryObjectParameterivEXTContextANGLE
+    glGetMultisamplefvContextANGLE
+    glGetMultisamplefvANGLEContextANGLE
+    glGetMultisamplefvRobustANGLEContextANGLE
+    glGetObjectLabelContextANGLE
+    glGetObjectLabelEXTContextANGLE
+    glGetObjectLabelKHRContextANGLE
+    glGetObjectPtrLabelContextANGLE
+    glGetObjectPtrLabelKHRContextANGLE
+    glGetPointervContextANGLE
+    glGetPointervKHRContextANGLE
+    glGetPointervRobustANGLERobustANGLEContextANGLE
+    glGetProgramBinaryContextANGLE
+    glGetProgramBinaryOESContextANGLE
+    glGetProgramInfoLogContextANGLE
+    glGetProgramInterfaceivContextANGLE
+    glGetProgramInterfaceivRobustANGLEContextANGLE
+    glGetProgramPipelineInfoLogContextANGLE
+    glGetProgramPipelineInfoLogEXTContextANGLE
+    glGetProgramPipelineivContextANGLE
+    glGetProgramPipelineivEXTContextANGLE
+    glGetProgramResourceIndexContextANGLE
+    glGetProgramResourceLocationContextANGLE
+    glGetProgramResourceLocationIndexEXTContextANGLE
+    glGetProgramResourceNameContextANGLE
+    glGetProgramResourceivContextANGLE
+    glGetProgramivContextANGLE
+    glGetProgramivRobustANGLEContextANGLE
+    glGetQueryObjecti64vEXTContextANGLE
+    glGetQueryObjecti64vRobustANGLEContextANGLE
+    glGetQueryObjectivEXTContextANGLE
+    glGetQueryObjectivRobustANGLEContextANGLE
+    glGetQueryObjectui64vEXTContextANGLE
+    glGetQueryObjectui64vRobustANGLEContextANGLE
+    glGetQueryObjectuivContextANGLE
+    glGetQueryObjectuivEXTContextANGLE
+    glGetQueryObjectuivRobustANGLEContextANGLE
+    glGetQueryivContextANGLE
+    glGetQueryivEXTContextANGLE
+    glGetQueryivRobustANGLEContextANGLE
+    glGetRenderbufferImageANGLEContextANGLE
+    glGetRenderbufferParameterivContextANGLE
+    glGetRenderbufferParameterivOESContextANGLE
+    glGetRenderbufferParameterivRobustANGLEContextANGLE
+    glGetSamplerParameterIivContextANGLE
+    glGetSamplerParameterIivEXTContextANGLE
+    glGetSamplerParameterIivOESContextANGLE
+    glGetSamplerParameterIivRobustANGLEContextANGLE
+    glGetSamplerParameterIuivContextANGLE
+    glGetSamplerParameterIuivEXTContextANGLE
+    glGetSamplerParameterIuivOESContextANGLE
+    glGetSamplerParameterIuivRobustANGLEContextANGLE
+    glGetSamplerParameterfvContextANGLE
+    glGetSamplerParameterfvRobustANGLEContextANGLE
+    glGetSamplerParameterivContextANGLE
+    glGetSamplerParameterivRobustANGLEContextANGLE
+    glGetSemaphoreParameterui64vEXTContextANGLE
+    glGetShaderInfoLogContextANGLE
+    glGetShaderPrecisionFormatContextANGLE
+    glGetShaderSourceContextANGLE
+    glGetShaderivContextANGLE
+    glGetShaderivRobustANGLEContextANGLE
+    glGetStringContextANGLE
+    glGetStringiContextANGLE
+    glGetSyncivContextANGLE
+    glGetTexEnvfvContextANGLE
+    glGetTexEnvivContextANGLE
+    glGetTexEnvxvContextANGLE
+    glGetTexGenfvOESContextANGLE
+    glGetTexGenivOESContextANGLE
+    glGetTexGenxvOESContextANGLE
+    glGetTexImageANGLEContextANGLE
+    glGetTexLevelParameterfvContextANGLE
+    glGetTexLevelParameterfvANGLEContextANGLE
+    glGetTexLevelParameterfvRobustANGLEContextANGLE
+    glGetTexLevelParameterivContextANGLE
+    glGetTexLevelParameterivANGLEContextANGLE
+    glGetTexLevelParameterivRobustANGLEContextANGLE
+    glGetTexParameterIivContextANGLE
+    glGetTexParameterIivEXTContextANGLE
+    glGetTexParameterIivOESContextANGLE
+    glGetTexParameterIivRobustANGLEContextANGLE
+    glGetTexParameterIuivContextANGLE
+    glGetTexParameterIuivEXTContextANGLE
+    glGetTexParameterIuivOESContextANGLE
+    glGetTexParameterIuivRobustANGLEContextANGLE
+    glGetTexParameterfvContextANGLE
+    glGetTexParameterfvRobustANGLEContextANGLE
+    glGetTexParameterivContextANGLE
+    glGetTexParameterivRobustANGLEContextANGLE
+    glGetTexParameterxvContextANGLE
+    glGetTransformFeedbackVaryingContextANGLE
+    glGetTranslatedShaderSourceANGLEContextANGLE
+    glGetUniformBlockIndexContextANGLE
+    glGetUniformIndicesContextANGLE
+    glGetUniformLocationContextANGLE
+    glGetUniformfvContextANGLE
+    glGetUniformfvRobustANGLEContextANGLE
+    glGetUniformivContextANGLE
+    glGetUniformivRobustANGLEContextANGLE
+    glGetUniformuivContextANGLE
+    glGetUniformuivRobustANGLEContextANGLE
+    glGetUnsignedBytei_vEXTContextANGLE
+    glGetUnsignedBytevEXTContextANGLE
+    glGetVertexAttribIivContextANGLE
+    glGetVertexAttribIivRobustANGLEContextANGLE
+    glGetVertexAttribIuivContextANGLE
+    glGetVertexAttribIuivRobustANGLEContextANGLE
+    glGetVertexAttribPointervContextANGLE
+    glGetVertexAttribPointervRobustANGLEContextANGLE
+    glGetVertexAttribfvContextANGLE
+    glGetVertexAttribfvRobustANGLEContextANGLE
+    glGetVertexAttribivContextANGLE
+    glGetVertexAttribivRobustANGLEContextANGLE
+    glGetnUniformfvContextANGLE
+    glGetnUniformfvEXTContextANGLE
+    glGetnUniformfvRobustANGLEContextANGLE
+    glGetnUniformivContextANGLE
+    glGetnUniformivEXTContextANGLE
+    glGetnUniformivRobustANGLEContextANGLE
+    glGetnUniformuivContextANGLE
+    glGetnUniformuivRobustANGLEContextANGLE
+    glHintContextANGLE
+    glImportMemoryFdEXTContextANGLE
+    glImportMemoryZirconHandleANGLEContextANGLE
+    glImportSemaphoreFdEXTContextANGLE
+    glImportSemaphoreZirconHandleANGLEContextANGLE
+    glInsertEventMarkerEXTContextANGLE
+    glInvalidateFramebufferContextANGLE
+    glInvalidateSubFramebufferContextANGLE
+    glInvalidateTextureANGLEContextANGLE
+    glIsBufferContextANGLE
+    glIsEnabledContextANGLE
+    glIsEnablediContextANGLE
+    glIsEnablediEXTContextANGLE
+    glIsEnablediOESContextANGLE
+    glIsFenceNVContextANGLE
+    glIsFramebufferContextANGLE
+    glIsFramebufferOESContextANGLE
+    glIsMemoryObjectEXTContextANGLE
+    glIsProgramContextANGLE
+    glIsProgramPipelineContextANGLE
+    glIsProgramPipelineEXTContextANGLE
+    glIsQueryContextANGLE
+    glIsQueryEXTContextANGLE
+    glIsRenderbufferContextANGLE
+    glIsRenderbufferOESContextANGLE
+    glIsSamplerContextANGLE
+    glIsSemaphoreEXTContextANGLE
+    glIsShaderContextANGLE
+    glIsSyncContextANGLE
+    glIsTextureContextANGLE
+    glIsTransformFeedbackContextANGLE
+    glIsVertexArrayContextANGLE
+    glIsVertexArrayOESContextANGLE
+    glLabelObjectEXTContextANGLE
+    glLightModelfContextANGLE
+    glLightModelfvContextANGLE
+    glLightModelxContextANGLE
+    glLightModelxvContextANGLE
+    glLightfContextANGLE
+    glLightfvContextANGLE
+    glLightxContextANGLE
+    glLightxvContextANGLE
+    glLineWidthContextANGLE
+    glLineWidthxContextANGLE
+    glLinkProgramContextANGLE
+    glLoadIdentityContextANGLE
+    glLoadMatrixfContextANGLE
+    glLoadMatrixxContextANGLE
+    glLoadPaletteFromModelViewMatrixOESContextANGLE
+    glLogicOpContextANGLE
+    glLoseContextCHROMIUMContextANGLE
+    glMapBufferOESContextANGLE
+    glMapBufferRangeContextANGLE
+    glMapBufferRangeEXTContextANGLE
+    glMaterialfContextANGLE
+    glMaterialfvContextANGLE
+    glMaterialxContextANGLE
+    glMaterialxvContextANGLE
+    glMatrixIndexPointerOESContextANGLE
+    glMatrixModeContextANGLE
+    glMaxShaderCompilerThreadsKHRContextANGLE
+    glMemoryBarrierContextANGLE
+    glMemoryBarrierByRegionContextANGLE
+    glMemoryObjectParameterivEXTContextANGLE
+    glMinSampleShadingContextANGLE
+    glMinSampleShadingOESContextANGLE
+    glMultMatrixfContextANGLE
+    glMultMatrixxContextANGLE
+    glMultiDrawArraysANGLEContextANGLE
+    glMultiDrawArraysInstancedANGLEContextANGLE
+    glMultiDrawArraysInstancedBaseInstanceANGLEContextANGLE
+    glMultiDrawElementsANGLEContextANGLE
+    glMultiDrawElementsBaseVertexEXTContextANGLE
+    glMultiDrawElementsInstancedANGLEContextANGLE
+    glMultiDrawElementsInstancedBaseVertexBaseInstanceANGLEContextANGLE
+    glMultiTexCoord4fContextANGLE
+    glMultiTexCoord4xContextANGLE
+    glNamedBufferStorageExternalEXTContextANGLE
+    glNormal3fContextANGLE
+    glNormal3xContextANGLE
+    glNormalPointerContextANGLE
+    glObjectLabelContextANGLE
+    glObjectLabelKHRContextANGLE
+    glObjectPtrLabelContextANGLE
+    glObjectPtrLabelKHRContextANGLE
+    glOrthofContextANGLE
+    glOrthoxContextANGLE
+    glPatchParameteriContextANGLE
+    glPatchParameteriEXTContextANGLE
+    glPauseTransformFeedbackContextANGLE
+    glPixelStoreiContextANGLE
+    glPointParameterfContextANGLE
+    glPointParameterfvContextANGLE
+    glPointParameterxContextANGLE
+    glPointParameterxvContextANGLE
+    glPointSizeContextANGLE
+    glPointSizePointerOESContextANGLE
+    glPointSizexContextANGLE
+    glPolygonOffsetContextANGLE
+    glPolygonOffsetxContextANGLE
+    glPopDebugGroupContextANGLE
+    glPopDebugGroupKHRContextANGLE
+    glPopGroupMarkerEXTContextANGLE
+    glPopMatrixContextANGLE
+    glPrimitiveBoundingBoxContextANGLE
+    glPrimitiveBoundingBoxEXTContextANGLE
+    glProgramBinaryContextANGLE
+    glProgramBinaryOESContextANGLE
+    glProgramParameteriContextANGLE
+    glProgramParameteriEXTContextANGLE
+    glProgramUniform1fContextANGLE
+    glProgramUniform1fEXTContextANGLE
+    glProgramUniform1fvContextANGLE
+    glProgramUniform1fvEXTContextANGLE
+    glProgramUniform1iContextANGLE
+    glProgramUniform1iEXTContextANGLE
+    glProgramUniform1ivContextANGLE
+    glProgramUniform1ivEXTContextANGLE
+    glProgramUniform1uiContextANGLE
+    glProgramUniform1uiEXTContextANGLE
+    glProgramUniform1uivContextANGLE
+    glProgramUniform1uivEXTContextANGLE
+    glProgramUniform2fContextANGLE
+    glProgramUniform2fEXTContextANGLE
+    glProgramUniform2fvContextANGLE
+    glProgramUniform2fvEXTContextANGLE
+    glProgramUniform2iContextANGLE
+    glProgramUniform2iEXTContextANGLE
+    glProgramUniform2ivContextANGLE
+    glProgramUniform2ivEXTContextANGLE
+    glProgramUniform2uiContextANGLE
+    glProgramUniform2uiEXTContextANGLE
+    glProgramUniform2uivContextANGLE
+    glProgramUniform2uivEXTContextANGLE
+    glProgramUniform3fContextANGLE
+    glProgramUniform3fEXTContextANGLE
+    glProgramUniform3fvContextANGLE
+    glProgramUniform3fvEXTContextANGLE
+    glProgramUniform3iContextANGLE
+    glProgramUniform3iEXTContextANGLE
+    glProgramUniform3ivContextANGLE
+    glProgramUniform3ivEXTContextANGLE
+    glProgramUniform3uiContextANGLE
+    glProgramUniform3uiEXTContextANGLE
+    glProgramUniform3uivContextANGLE
+    glProgramUniform3uivEXTContextANGLE
+    glProgramUniform4fContextANGLE
+    glProgramUniform4fEXTContextANGLE
+    glProgramUniform4fvContextANGLE
+    glProgramUniform4fvEXTContextANGLE
+    glProgramUniform4iContextANGLE
+    glProgramUniform4iEXTContextANGLE
+    glProgramUniform4ivContextANGLE
+    glProgramUniform4ivEXTContextANGLE
+    glProgramUniform4uiContextANGLE
+    glProgramUniform4uiEXTContextANGLE
+    glProgramUniform4uivContextANGLE
+    glProgramUniform4uivEXTContextANGLE
+    glProgramUniformMatrix2fvContextANGLE
+    glProgramUniformMatrix2fvEXTContextANGLE
+    glProgramUniformMatrix2x3fvContextANGLE
+    glProgramUniformMatrix2x3fvEXTContextANGLE
+    glProgramUniformMatrix2x4fvContextANGLE
+    glProgramUniformMatrix2x4fvEXTContextANGLE
+    glProgramUniformMatrix3fvContextANGLE
+    glProgramUniformMatrix3fvEXTContextANGLE
+    glProgramUniformMatrix3x2fvContextANGLE
+    glProgramUniformMatrix3x2fvEXTContextANGLE
+    glProgramUniformMatrix3x4fvContextANGLE
+    glProgramUniformMatrix3x4fvEXTContextANGLE
+    glProgramUniformMatrix4fvContextANGLE
+    glProgramUniformMatrix4fvEXTContextANGLE
+    glProgramUniformMatrix4x2fvContextANGLE
+    glProgramUniformMatrix4x2fvEXTContextANGLE
+    glProgramUniformMatrix4x3fvContextANGLE
+    glProgramUniformMatrix4x3fvEXTContextANGLE
+    glProvokingVertexANGLEContextANGLE
+    glPushDebugGroupContextANGLE
+    glPushDebugGroupKHRContextANGLE
+    glPushGroupMarkerEXTContextANGLE
+    glPushMatrixContextANGLE
+    glQueryCounterEXTContextANGLE
+    glQueryMatrixxOESContextANGLE
+    glReadBufferContextANGLE
+    glReadPixelsContextANGLE
+    glReadPixelsRobustANGLEContextANGLE
+    glReadnPixelsContextANGLE
+    glReadnPixelsEXTContextANGLE
+    glReadnPixelsRobustANGLEContextANGLE
+    glReleaseShaderCompilerContextANGLE
+    glRenderbufferStorageContextANGLE
+    glRenderbufferStorageMultisampleContextANGLE
+    glRenderbufferStorageMultisampleANGLEContextANGLE
+    glRenderbufferStorageMultisampleEXTContextANGLE
+    glRenderbufferStorageOESContextANGLE
+    glRequestExtensionANGLEContextANGLE
+    glResumeTransformFeedbackContextANGLE
+    glRotatefContextANGLE
+    glRotatexContextANGLE
+    glSampleCoverageContextANGLE
+    glSampleCoveragexContextANGLE
+    glSampleMaskiContextANGLE
+    glSampleMaskiANGLEContextANGLE
+    glSamplerParameterIivContextANGLE
+    glSamplerParameterIivEXTContextANGLE
+    glSamplerParameterIivOESContextANGLE
+    glSamplerParameterIivRobustANGLEContextANGLE
+    glSamplerParameterIuivContextANGLE
+    glSamplerParameterIuivEXTContextANGLE
+    glSamplerParameterIuivOESContextANGLE
+    glSamplerParameterIuivRobustANGLEContextANGLE
+    glSamplerParameterfContextANGLE
+    glSamplerParameterfvContextANGLE
+    glSamplerParameterfvRobustANGLEContextANGLE
+    glSamplerParameteriContextANGLE
+    glSamplerParameterivContextANGLE
+    glSamplerParameterivRobustANGLEContextANGLE
+    glScalefContextANGLE
+    glScalexContextANGLE
+    glScissorContextANGLE
+    glSemaphoreParameterui64vEXTContextANGLE
+    glSetFenceNVContextANGLE
+    glShadeModelContextANGLE
+    glShaderBinaryContextANGLE
+    glShaderSourceContextANGLE
+    glSignalSemaphoreEXTContextANGLE
+    glStencilFuncContextANGLE
+    glStencilFuncSeparateContextANGLE
+    glStencilMaskContextANGLE
+    glStencilMaskSeparateContextANGLE
+    glStencilOpContextANGLE
+    glStencilOpSeparateContextANGLE
+    glTestFenceNVContextANGLE
+    glTexBufferContextANGLE
+    glTexBufferEXTContextANGLE
+    glTexBufferOESContextANGLE
+    glTexBufferRangeContextANGLE
+    glTexBufferRangeEXTContextANGLE
+    glTexBufferRangeOESContextANGLE
+    glTexCoordPointerContextANGLE
+    glTexEnvfContextANGLE
+    glTexEnvfvContextANGLE
+    glTexEnviContextANGLE
+    glTexEnvivContextANGLE
+    glTexEnvxContextANGLE
+    glTexEnvxvContextANGLE
+    glTexGenfOESContextANGLE
+    glTexGenfvOESContextANGLE
+    glTexGeniOESContextANGLE
+    glTexGenivOESContextANGLE
+    glTexGenxOESContextANGLE
+    glTexGenxvOESContextANGLE
+    glTexImage2DContextANGLE
+    glTexImage2DExternalANGLEContextANGLE
+    glTexImage2DRobustANGLEContextANGLE
+    glTexImage3DContextANGLE
+    glTexImage3DOESContextANGLE
+    glTexImage3DRobustANGLEContextANGLE
+    glTexParameterIivContextANGLE
+    glTexParameterIivEXTContextANGLE
+    glTexParameterIivOESContextANGLE
+    glTexParameterIivRobustANGLEContextANGLE
+    glTexParameterIuivContextANGLE
+    glTexParameterIuivEXTContextANGLE
+    glTexParameterIuivOESContextANGLE
+    glTexParameterIuivRobustANGLEContextANGLE
+    glTexParameterfContextANGLE
+    glTexParameterfvContextANGLE
+    glTexParameterfvRobustANGLEContextANGLE
+    glTexParameteriContextANGLE
+    glTexParameterivContextANGLE
+    glTexParameterivRobustANGLEContextANGLE
+    glTexParameterxContextANGLE
+    glTexParameterxvContextANGLE
+    glTexStorage1DEXTContextANGLE
+    glTexStorage2DContextANGLE
+    glTexStorage2DEXTContextANGLE
+    glTexStorage2DMultisampleContextANGLE
+    glTexStorage2DMultisampleANGLEContextANGLE
+    glTexStorage3DContextANGLE
+    glTexStorage3DEXTContextANGLE
+    glTexStorage3DMultisampleContextANGLE
+    glTexStorage3DMultisampleOESContextANGLE
+    glTexStorageMem2DEXTContextANGLE
+    glTexStorageMem2DMultisampleEXTContextANGLE
+    glTexStorageMem3DEXTContextANGLE
+    glTexStorageMem3DMultisampleEXTContextANGLE
+    glTexStorageMemFlags2DANGLEContextANGLE
+    glTexStorageMemFlags2DMultisampleANGLEContextANGLE
+    glTexStorageMemFlags3DANGLEContextANGLE
+    glTexStorageMemFlags3DMultisampleANGLEContextANGLE
+    glTexSubImage2DContextANGLE
+    glTexSubImage2DRobustANGLEContextANGLE
+    glTexSubImage3DContextANGLE
+    glTexSubImage3DOESContextANGLE
+    glTexSubImage3DRobustANGLEContextANGLE
+    glTransformFeedbackVaryingsContextANGLE
+    glTranslatefContextANGLE
+    glTranslatexContextANGLE
+    glUniform1fContextANGLE
+    glUniform1fvContextANGLE
+    glUniform1iContextANGLE
+    glUniform1ivContextANGLE
+    glUniform1uiContextANGLE
+    glUniform1uivContextANGLE
+    glUniform2fContextANGLE
+    glUniform2fvContextANGLE
+    glUniform2iContextANGLE
+    glUniform2ivContextANGLE
+    glUniform2uiContextANGLE
+    glUniform2uivContextANGLE
+    glUniform3fContextANGLE
+    glUniform3fvContextANGLE
+    glUniform3iContextANGLE
+    glUniform3ivContextANGLE
+    glUniform3uiContextANGLE
+    glUniform3uivContextANGLE
+    glUniform4fContextANGLE
+    glUniform4fvContextANGLE
+    glUniform4iContextANGLE
+    glUniform4ivContextANGLE
+    glUniform4uiContextANGLE
+    glUniform4uivContextANGLE
+    glUniformBlockBindingContextANGLE
+    glUniformMatrix2fvContextANGLE
+    glUniformMatrix2x3fvContextANGLE
+    glUniformMatrix2x4fvContextANGLE
+    glUniformMatrix3fvContextANGLE
+    glUniformMatrix3x2fvContextANGLE
+    glUniformMatrix3x4fvContextANGLE
+    glUniformMatrix4fvContextANGLE
+    glUniformMatrix4x2fvContextANGLE
+    glUniformMatrix4x3fvContextANGLE
+    glUnmapBufferContextANGLE
+    glUnmapBufferOESContextANGLE
+    glUseProgramContextANGLE
+    glUseProgramStagesContextANGLE
+    glUseProgramStagesEXTContextANGLE
+    glValidateProgramContextANGLE
+    glValidateProgramPipelineContextANGLE
+    glValidateProgramPipelineEXTContextANGLE
+    glVertexAttrib1fContextANGLE
+    glVertexAttrib1fvContextANGLE
+    glVertexAttrib2fContextANGLE
+    glVertexAttrib2fvContextANGLE
+    glVertexAttrib3fContextANGLE
+    glVertexAttrib3fvContextANGLE
+    glVertexAttrib4fContextANGLE
+    glVertexAttrib4fvContextANGLE
+    glVertexAttribBindingContextANGLE
+    glVertexAttribDivisorContextANGLE
+    glVertexAttribDivisorANGLEContextANGLE
+    glVertexAttribDivisorEXTContextANGLE
+    glVertexAttribFormatContextANGLE
+    glVertexAttribI4iContextANGLE
+    glVertexAttribI4ivContextANGLE
+    glVertexAttribI4uiContextANGLE
+    glVertexAttribI4uivContextANGLE
+    glVertexAttribIFormatContextANGLE
+    glVertexAttribIPointerContextANGLE
+    glVertexAttribPointerContextANGLE
+    glVertexBindingDivisorContextANGLE
+    glVertexPointerContextANGLE
+    glViewportContextANGLE
+    glWaitSemaphoreEXTContextANGLE
+    glWaitSyncContextANGLE
+    glWeightPointerOESContextANGLE
 
     ; EGL 1.0
     EGL_ChooseConfig
@@ -1260,17 +1861,10 @@ EXPORTS
     EGL_QueryDisplayAttribANGLE
     EGL_QueryStringiANGLE
 
-    ; EGL_ANGLE_metal_shared_event_sync
-    EGL_CopyMetalSharedEventANGLE
-
     ; EGL_ANGLE_power_preference
-    EGL_ForceGPUSwitchANGLE
     EGL_HandleGPUSwitchANGLE
     EGL_ReacquireHighPowerGPUANGLE
     EGL_ReleaseHighPowerGPUANGLE
-
-    ; EGL_ANGLE_prepare_swap_buffers
-    EGL_PrepareSwapBuffersANGLE
 
     ; EGL_ANGLE_program_cache_control
     EGL_ProgramCacheGetAttribANGLE
@@ -1291,9 +1885,6 @@ EXPORTS
     ; EGL_ANGLE_sync_control_rate
     EGL_GetMscRateANGLE
 
-    ; EGL_ANGLE_vulkan_image
-    EGL_ExportVkImageANGLE
-
     ; EGL_CHROMIUM_sync_control
     EGL_GetSyncValuesCHROMIUM
 
@@ -1301,10 +1892,6 @@ EXPORTS
     EGL_QueryDeviceAttribEXT
     EGL_QueryDeviceStringEXT
     EGL_QueryDisplayAttribEXT
-
-    ; EGL_EXT_image_dma_buf_import_modifiers
-    EGL_QueryDmaBufFormatsEXT
-    EGL_QueryDmaBufModifiersEXT
 
     ; EGL_EXT_platform_base
     EGL_CreatePlatformPixmapSurfaceEXT
@@ -1325,14 +1912,6 @@ EXPORTS
     ; EGL_KHR_image
     EGL_CreateImageKHR
     EGL_DestroyImageKHR
-
-    ; EGL_KHR_lock_surface3
-    EGL_LockSurfaceKHR
-    EGL_QuerySurface64KHR
-    EGL_UnlockSurfaceKHR
-
-    ; EGL_KHR_partial_update
-    EGL_SetDamageRegionKHR
 
     ; EGL_KHR_reusable_sync
     EGL_SignalSyncKHR

@@ -56,50 +56,6 @@ class RefCountObject : angle::NonCopyable
 };
 
 template <class ObjectType, typename ContextT, typename ErrorT = angle::Result>
-class RefCountObjectReleaser : angle::NonCopyable
-{
-  public:
-    using ContextType = ContextT;
-    using ErrorType   = ErrorT;
-
-    RefCountObjectReleaser() {}
-    RefCountObjectReleaser(const ContextType *context, ObjectType *object)
-        : mContext(context), mObject(object)
-    {}
-
-    RefCountObjectReleaser(RefCountObjectReleaser &&other)
-        : mContext(other.mContext), mObject(other.mObject)
-    {
-        other.mContext = nullptr;
-        other.mObject  = nullptr;
-    }
-
-    RefCountObjectReleaser &operator=(RefCountObjectReleaser &&other)
-    {
-        mContext = other.mContext;
-        mObject  = other.mObject;
-
-        other.mContext = nullptr;
-        other.mObject  = nullptr;
-
-        return *this;
-    }
-
-    ~RefCountObjectReleaser()
-    {
-        if (mObject)
-        {
-            reinterpret_cast<RefCountObject<ContextType, ErrorType> *>(mObject)->release(mContext);
-            mObject = nullptr;
-        }
-    }
-
-  private:
-    const ContextType *mContext = nullptr;
-    ObjectType *mObject         = nullptr;
-};
-
-template <class ObjectType, typename ContextT, typename ErrorT = angle::Result>
 class BindingPointer
 {
   public:
@@ -137,8 +93,7 @@ class BindingPointer
         ASSERT(mObject == nullptr);
     }
 
-    RefCountObjectReleaser<ObjectType, ContextType, ErrorT> set(const ContextType *context,
-                                                                ObjectType *newObject)
+    void set(const ContextType *context, ObjectType *newObject)
     {
         // addRef first in case newObject == mObject and this is the last reference to it.
         if (newObject != nullptr)
@@ -150,7 +105,10 @@ class BindingPointer
         // Otherwise the object could still be referenced when its destructor is called.
         ObjectType *oldObject = mObject;
         mObject               = newObject;
-        return RefCountObjectReleaser<ObjectType, ContextType, ErrorT>(context, oldObject);
+        if (oldObject != nullptr)
+        {
+            reinterpret_cast<RefCountObject<ContextType, ErrorType> *>(oldObject)->release(context);
+        }
     }
 
     void assign(ObjectType *object) { mObject = object; }
@@ -229,7 +187,8 @@ class OffsetBindingPointer : public BindingPointer<ObjectType>
     void set(const ContextType *context, ObjectType *newObject, GLintptr offset, GLsizeiptr size)
     {
         set(context, newObject);
-        updateOffsetAndSize(newObject, offset, size);
+        mOffset = offset;
+        mSize   = size;
     }
 
     GLintptr getOffset() const { return mOffset; }
@@ -245,16 +204,10 @@ class OffsetBindingPointer : public BindingPointer<ObjectType>
         return !(*this == other);
     }
 
-    void assign(ObjectType *newObject, GLintptr offset, GLsizeiptr size)
+    void assign(ObjectType *object, GLintptr offset, GLsizeiptr size)
     {
-        assign(newObject);
-        updateOffsetAndSize(newObject, offset, size);
-    }
-
-  private:
-    ANGLE_INLINE void updateOffsetAndSize(ObjectType *newObject, GLintptr offset, GLsizeiptr size)
-    {
-        if (newObject)
+        assign(object);
+        if (object)
         {
             mOffset = offset;
             mSize   = size;
@@ -266,6 +219,7 @@ class OffsetBindingPointer : public BindingPointer<ObjectType>
         }
     }
 
+  private:
     // Delete the unparameterized functions. This forces an explicit offset and size.
     using BindingPointer<ObjectType>::set;
     using BindingPointer<ObjectType>::assign;
@@ -315,9 +269,6 @@ namespace egl
 class Display;
 
 using RefCountObject = angle::RefCountObject<Display, Error>;
-
-template <class ObjectType>
-using RefCountObjectReleaser = angle::RefCountObjectReleaser<ObjectType, Display, Error>;
 
 template <class ObjectType>
 using BindingPointer = angle::BindingPointer<ObjectType, Display, Error>;

@@ -278,15 +278,17 @@ class FramebufferManager
     void invalidateFramebufferCompletenessCache() const;
 
     Framebuffer *checkFramebufferAllocation(rx::GLImplFactory *factory,
-                                            const Context *context,
-                                            FramebufferID handle)
+                                            const Caps &caps,
+                                            FramebufferID handle,
+                                            egl::ShareGroup *shareGroup)
     {
-        return checkObjectAllocation(factory, handle, context);
+        return checkObjectAllocation<const Caps &>(factory, handle, caps, shareGroup);
     }
 
     static Framebuffer *AllocateNewObject(rx::GLImplFactory *factory,
                                           FramebufferID handle,
-                                          const Context *context);
+                                          const Caps &caps,
+                                          egl::ShareGroup *shareGroup);
     static void DeleteObject(const Context *context, Framebuffer *framebuffer);
 
   protected:

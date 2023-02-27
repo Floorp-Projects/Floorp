@@ -57,24 +57,6 @@ void AddZeroInitSequence(const TIntermTyped *initializedNode,
         AddStructZeroInitSequence(initializedNode, canUseLoopsToInitialize, highPrecisionSupported,
                                   initSequenceOut, symbolTable);
     }
-    else if (initializedNode->getType().isInterfaceBlock())
-    {
-        const TType &type                     = initializedNode->getType();
-        const TInterfaceBlock &interfaceBlock = *type.getInterfaceBlock();
-        const TFieldList &fieldList           = interfaceBlock.fields();
-        for (size_t fieldIndex = 0; fieldIndex < fieldList.size(); ++fieldIndex)
-        {
-            const TField &field         = *fieldList[fieldIndex];
-            TIntermTyped *fieldIndexRef = CreateIndexNode(static_cast<int>(fieldIndex));
-            TIntermTyped *fieldReference =
-                new TIntermBinary(TOperator::EOpIndexDirectInterfaceBlock,
-                                  initializedNode->deepCopy(), fieldIndexRef);
-            TIntermTyped *fieldZero = CreateZeroNode(*field.type());
-            TIntermTyped *assignment =
-                new TIntermBinary(TOperator::EOpAssign, fieldReference, fieldZero);
-            initSequenceOut->push_back(assignment);
-        }
-    }
     else
     {
         initSequenceOut->push_back(CreateZeroInitAssignment(initializedNode));
@@ -187,14 +169,14 @@ void InsertInitCode(TCompiler *compiler,
                     bool canUseLoopsToInitialize,
                     bool highPrecisionSupported)
 {
-    for (const ShaderVariable &var : variables)
+    for (const auto &var : variables)
     {
         // Note that tempVariableName will reference a short-lived char array here - that's fine
         // since we're only using it to find symbols.
         ImmutableString tempVariableName(var.name.c_str(), var.name.length());
 
         TIntermTyped *initializedSymbol = nullptr;
-        if (var.isBuiltIn() && !symbolTable->findUserDefined(tempVariableName))
+        if (var.isBuiltIn())
         {
             initializedSymbol =
                 ReferenceBuiltInVariable(tempVariableName, *symbolTable, shaderVersion);
@@ -213,30 +195,7 @@ void InsertInitCode(TCompiler *compiler,
         }
         else
         {
-            if (tempVariableName != "")
-            {
-                initializedSymbol = ReferenceGlobalVariable(tempVariableName, *symbolTable);
-            }
-            else
-            {
-                // Must be a nameless interface block.
-                ASSERT(var.structOrBlockName != "");
-                const TSymbol *symbol = symbolTable->findGlobal(var.structOrBlockName);
-                ASSERT(symbol && symbol->isInterfaceBlock());
-                const TInterfaceBlock *block = static_cast<const TInterfaceBlock *>(symbol);
-
-                for (const TField *field : block->fields())
-                {
-                    initializedSymbol = ReferenceGlobalVariable(field->name(), *symbolTable);
-
-                    TIntermSequence initCode;
-                    CreateInitCode(initializedSymbol, canUseLoopsToInitialize,
-                                   highPrecisionSupported, &initCode, symbolTable);
-                    mainBody->insert(mainBody->begin(), initCode.begin(), initCode.end());
-                }
-                // Already inserted init code in this case
-                continue;
-            }
+            initializedSymbol = ReferenceGlobalVariable(tempVariableName, *symbolTable);
         }
         ASSERT(initializedSymbol != nullptr);
 

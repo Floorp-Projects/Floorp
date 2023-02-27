@@ -36,16 +36,24 @@ Overlay::Overlay(rx::GLImplFactory *factory)
 {}
 Overlay::~Overlay() = default;
 
-void Overlay::init()
+angle::Result Overlay::init(const Context *context)
 {
     initOverlayWidgets();
-    mLastPerSecondUpdate = angle::GetCurrentSystemTime();
+    mLastPerSecondUpdate = angle::GetCurrentTime();
 
     ASSERT(std::all_of(
         mState.mOverlayWidgets.begin(), mState.mOverlayWidgets.end(),
         [](const std::unique_ptr<overlay::Widget> &widget) { return widget.get() != nullptr; }));
 
     enableOverlayWidgetsFromEnvironment();
+
+    bool success = false;
+    ANGLE_TRY(mImplementation->init(context, &success));
+    if (!success)
+    {
+        mState.mEnabledWidgetCount = 0;
+    }
+    return angle::Result::Continue;
 }
 
 void Overlay::destroy(const gl::Context *context)
@@ -61,14 +69,11 @@ void Overlay::enableOverlayWidgetsFromEnvironment()
 
     for (const std::pair<const char *, WidgetId> &widgetName : kWidgetNames)
     {
-        for (const std::string &enabledWidget : enabledWidgets)
+        if (std::find(enabledWidgets.begin(), enabledWidgets.end(), widgetName.first) !=
+            enabledWidgets.end())
         {
-            if (angle::NamesMatchWithWildcard(enabledWidget.c_str(), widgetName.first))
-            {
-                mState.mOverlayWidgets[widgetName.second]->enabled = true;
-                ++mState.mEnabledWidgetCount;
-                break;
-            }
+            mState.mOverlayWidgets[widgetName.second]->enabled = true;
+            ++mState.mEnabledWidgetCount;
         }
     }
 }
@@ -79,7 +84,7 @@ void Overlay::onSwap() const
     getPerSecondWidget(WidgetId::FPS)->add(1);
 
     // Update per second values every second.
-    double currentTime = angle::GetCurrentSystemTime();
+    double currentTime = angle::GetCurrentTime();
     double timeDiff    = currentTime - mLastPerSecondUpdate;
     if (timeDiff >= 1.0)
     {

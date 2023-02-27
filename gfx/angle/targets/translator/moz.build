@@ -2,20 +2,16 @@
 
 include("../../moz.build.common")
 
-DEFINES["ANGLE_DISABLE_POOL_ALLOC"] = True
-DEFINES["ANGLE_ENABLE_APPLE_WORKAROUNDS"] = True
 DEFINES["ANGLE_ENABLE_ESSL"] = True
 DEFINES["ANGLE_ENABLE_GLSL"] = True
 DEFINES["ANGLE_ENABLE_HLSL"] = True
-DEFINES["ANGLE_ENABLE_SHARE_CONTEXT_LOCK"] = "1"
 # DEFINES["ANGLE_IS_WIN"] = True
-DEFINES["ANGLE_VMA_VERSION"] = "2003000"
 # DEFINES["CERT_CHAIN_PARA_HAS_EXTRA_FIELDS"] = True
-DEFINES["CR_CLANG_REVISION"] = '"llvmorg-16-init-6578-g0d30e92f-2"'
+DEFINES["CR_CLANG_REVISION"] = '"llvmorg-13-init-9302-g897d7bce-1"'
 DEFINES["DYNAMIC_ANNOTATIONS_ENABLED"] = "0"
 # DEFINES["NDEBUG"] = True
 DEFINES["NOMINMAX"] = True
-# DEFINES["NTDDI_VERSION"] = "NTDDI_WIN10_FE"
+# DEFINES["NTDDI_VERSION"] = "NTDDI_WIN10_VB"
 # DEFINES["NVALGRIND"] = True
 # DEFINES["PSAPI_VERSION"] = "2"
 DEFINES["UNICODE"] = True
@@ -25,7 +21,6 @@ DEFINES["UNICODE"] = True
 # DEFINES["WINAPI_FAMILY"] = "WINAPI_FAMILY_DESKTOP_APP"
 DEFINES["WINVER"] = "0x0A00"
 DEFINES["_ATL_NO_OPENGL"] = True
-DEFINES["_CRT_NONSTDC_NO_WARNINGS"] = True
 DEFINES["_CRT_RAND_S"] = True
 DEFINES["_CRT_SECURE_NO_DEPRECATE"] = True
 DEFINES["_HAS_EXCEPTIONS"] = "0"
@@ -35,11 +30,11 @@ DEFINES["_SECURE_ATL"] = True
 DEFINES["_UNICODE"] = True
 # DEFINES["_WIN32_WINNT"] = "0x0A00"
 # DEFINES["_WINDOWS"] = True
-DEFINES["_WINSOCK_DEPRECATED_NO_WARNINGS"] = True
 # DEFINES["__STD_C"] = True
 
 LOCAL_INCLUDES += [
     "../../checkout/include/",
+    "../../checkout/out/gen/angle/",
     "../../checkout/src/",
     "../../checkout/src/common/third_party/base/",
 ]
@@ -51,14 +46,12 @@ LOCAL_INCLUDES += [
 #     "-fcolor-diagnostics",
 #     "-fcomplete-member-pointers",
 #     "-fcrash-diagnostics-dir=../tools/clang/crashreports",
-#     "-ffile-compilation-dir=.",
-#     "-ffile-reproducible",
+#     "-fdebug-compilation-dir",
 #     "-fmerge-all-constants",
 #     "-fmsc-version=1916",
 #     "-fno-delete-null-pointer-checks",
 #     "-fno-ident",
 #     "-ftrivial-auto-var-init=pattern",
-#     "-fuse-ctor-homing",
 #     "-gcodeview-ghash",
 #     "-instcombine-lower-dbg-declare=0",
 #     "-m64",
@@ -67,7 +60,6 @@ LOCAL_INCLUDES += [
 #     "-no-canonical-prefixes",
 #     "-Wbad-function-cast",
 #     "-Wconditional-uninitialized",
-#     "-Wenum-compare-conditional",
 #     "-Wexit-time-destructors",
 #     "-Wextra-semi",
 #     "-Wextra-semi-stmt",
@@ -76,17 +68,22 @@ LOCAL_INCLUDES += [
 #     "-Wheader-hygiene",
 #     "-Wimplicit-fallthrough",
 #     "-Winconsistent-missing-destructor-override",
-#     "-Wloop-analysis",
+#     "-Wmax-tokens",
 #     "-Wmissing-field-initializers",
 #     "-Wnewline-eof",
-#     "-Wno-bitfield-constant-conversion",
+#     "-Wno-builtin-assume-aligned-alignment",
 #     "-Wno-builtin-macro-redefined",
-#     "-Wno-deprecated-builtins",
+#     "-Wno-c++11-narrowing",
+#     "-Wno-deprecated-copy",
+#     "-Wno-final-dtor-non-final-class",
 #     "-Wno-ignored-pragma-optimize",
+#     "-Wno-implicit-int-float-conversion",
 #     "-Wno-missing-field-initializers",
+#     "-Wno-non-c-typedef-for-linkage",
 #     "-Wno-nonportable-include-path",
 #     "-Wno-psabi",
 #     "-Wno-trigraphs",
+#     "-Wno-undefined-var-template",
 #     "-Wno-unneeded-internal-declaration",
 #     "-Wno-unused-parameter",
 #     "-Wnon-virtual-dtor",
@@ -94,7 +91,6 @@ LOCAL_INCLUDES += [
 #     "-Wrange-loop-analysis",
 #     "-Wredundant-parens",
 #     "-Wreturn-std-move",
-#     "-Wshadow",
 #     "-Wshadow-field",
 #     "-Wshorten-64-to-32",
 #     "-Wstrict-prototypes",
@@ -106,16 +102,16 @@ LOCAL_INCLUDES += [
 #     "-Wthread-safety",
 #     "-Wundefined-reinterpret-cast",
 #     "-Wunneeded-internal-declaration",
-#     "-Wunreachable-code-aggressive",
-#     "-Wunused-but-set-variable",
+#     "-Wunreachable-code",
+#     "-Wweak-template-vtables",
 #     "-Xclang",
+#     ".",
 #     "/bigobj",
 #     "/Brepro",
-#     "/clang:-ffp-contract=off",
 #     "/D__WRL_ENABLE_FUNCTION_STATICS__",
 #     "/FS",
 #     "/GR-",
-#     "/guard:cf",
+#     "/guard:cf,nochecks",
 #     "/Gw",
 #     "/Gy",
 #     "/MT",
@@ -123,11 +119,50 @@ LOCAL_INCLUDES += [
 #     "/Ob2",
 #     "/Oi",
 #     "/Oy-",
-#     "/std:c++17",
 #     "/TP",
 #     "/utf-8",
 #     "/W4",
+#     "/wd4091",
+#     "/wd4100",
+#     "/wd4121",
+#     "/wd4127",
+#     "/wd4200",
+#     "/wd4201",
+#     "/wd4204",
+#     "/wd4221",
+#     "/wd4244",
+#     "/wd4245",
+#     "/wd4251",
+#     "/wd4267",
+#     "/wd4275",
+#     "/wd4305",
+#     "/wd4312",
+#     "/wd4324",
+#     "/wd4351",
+#     "/wd4355",
+#     "/wd4389",
+#     "/wd4456",
+#     "/wd4457",
+#     "/wd4458",
+#     "/wd4459",
+#     "/wd4503",
+#     "/wd4505",
+#     "/wd4510",
+#     "/wd4512",
+#     "/wd4577",
+#     "/wd4589",
+#     "/wd4610",
+#     "/wd4611",
+#     "/wd4661",
+#     "/wd4701",
+#     "/wd4702",
+#     "/wd4703",
+#     "/wd4706",
+#     "/wd4715",
 #     "/wd4718",
+#     "/wd4838",
+#     "/wd4995",
+#     "/wd4996",
 #     "/we4244",
 #     "/we4312",
 #     "/we4456",
@@ -145,7 +180,6 @@ LOCAL_INCLUDES += [
 SOURCES += [
     "../../checkout/src/compiler/translator/ASTMetadataHLSL.cpp",
     "../../checkout/src/compiler/translator/AtomicCounterFunctionHLSL.cpp",
-    "../../checkout/src/compiler/translator/BaseTypes.cpp",
     "../../checkout/src/compiler/translator/blocklayout.cpp",
     "../../checkout/src/compiler/translator/blocklayoutHLSL.cpp",
     "../../checkout/src/compiler/translator/BuiltInFunctionEmulator.cpp",
@@ -169,6 +203,7 @@ SOURCES += [
     "../../checkout/src/compiler/translator/glslang_tab_autogen.cpp",
     "../../checkout/src/compiler/translator/HashNames.cpp",
     "../../checkout/src/compiler/translator/ImageFunctionHLSL.cpp",
+    "../../checkout/src/compiler/translator/ImmutableString_autogen.cpp",
     "../../checkout/src/compiler/translator/ImmutableString_ESSL_autogen.cpp",
     "../../checkout/src/compiler/translator/ImmutableStringBuilder.cpp",
     "../../checkout/src/compiler/translator/InfoSink.cpp",
@@ -193,23 +228,15 @@ SOURCES += [
     "../../checkout/src/compiler/translator/StructureHLSL.cpp",
     "../../checkout/src/compiler/translator/Symbol.cpp",
     "../../checkout/src/compiler/translator/SymbolTable.cpp",
+    "../../checkout/src/compiler/translator/SymbolTable_autogen.cpp",
     "../../checkout/src/compiler/translator/SymbolTable_ESSL_autogen.cpp",
     "../../checkout/src/compiler/translator/SymbolUniqueId.cpp",
     "../../checkout/src/compiler/translator/TextureFunctionHLSL.cpp",
     "../../checkout/src/compiler/translator/TranslatorESSL.cpp",
     "../../checkout/src/compiler/translator/TranslatorGLSL.cpp",
     "../../checkout/src/compiler/translator/TranslatorHLSL.cpp",
-    "../../checkout/src/compiler/translator/tree_ops/apple/AddAndTrueToLoopCondition.cpp",
-    "../../checkout/src/compiler/translator/tree_ops/apple/RewriteDoWhile.cpp",
-    "../../checkout/src/compiler/translator/tree_ops/apple/RewriteRowMajorMatrices.cpp",
-    "../../checkout/src/compiler/translator/tree_ops/apple/RewriteUnaryMinusOperatorFloat.cpp",
-    "../../checkout/src/compiler/translator/tree_ops/apple/UnfoldShortCircuitAST.cpp",
-    "../../checkout/src/compiler/translator/tree_ops/ClampIndirectIndices.cpp",
     "../../checkout/src/compiler/translator/tree_ops/ClampPointSize.cpp",
-    "../../checkout/src/compiler/translator/tree_ops/ConvertUnsupportedConstructorsToFunctionCalls.cpp",
     "../../checkout/src/compiler/translator/tree_ops/d3d/AddDefaultReturnStatements.cpp",
-    "../../checkout/src/compiler/translator/tree_ops/d3d/AggregateAssignArraysInSSBOs.cpp",
-    "../../checkout/src/compiler/translator/tree_ops/d3d/AggregateAssignStructsInSSBOs.cpp",
     "../../checkout/src/compiler/translator/tree_ops/d3d/ArrayReturnValueToOutParameter.cpp",
     "../../checkout/src/compiler/translator/tree_ops/d3d/BreakVariableAliasingInInnerLoops.cpp",
     "../../checkout/src/compiler/translator/tree_ops/d3d/ExpandIntegerPowExpressions.cpp",
@@ -228,44 +255,38 @@ SOURCES += [
     "../../checkout/src/compiler/translator/tree_ops/DeferGlobalInitializers.cpp",
     "../../checkout/src/compiler/translator/tree_ops/EmulateGLFragColorBroadcast.cpp",
     "../../checkout/src/compiler/translator/tree_ops/EmulateMultiDrawShaderBuiltins.cpp",
+    "../../checkout/src/compiler/translator/tree_ops/EmulatePrecision.cpp",
     "../../checkout/src/compiler/translator/tree_ops/FoldExpressions.cpp",
     "../../checkout/src/compiler/translator/tree_ops/ForcePrecisionQualifier.cpp",
     "../../checkout/src/compiler/translator/tree_ops/gl/ClampFragDepth.cpp",
+    "../../checkout/src/compiler/translator/tree_ops/gl/mac/AddAndTrueToLoopCondition.cpp",
+    "../../checkout/src/compiler/translator/tree_ops/gl/mac/RewriteDoWhile.cpp",
+    "../../checkout/src/compiler/translator/tree_ops/gl/mac/RewriteRowMajorMatrices.cpp",
+    "../../checkout/src/compiler/translator/tree_ops/gl/mac/RewriteUnaryMinusOperatorFloat.cpp",
+    "../../checkout/src/compiler/translator/tree_ops/gl/mac/UnfoldShortCircuitAST.cpp",
+    "../../checkout/src/compiler/translator/tree_ops/gl/RecordConstantPrecision.cpp",
     "../../checkout/src/compiler/translator/tree_ops/gl/RegenerateStructNames.cpp",
     "../../checkout/src/compiler/translator/tree_ops/gl/RewriteRepeatedAssignToSwizzled.cpp",
     "../../checkout/src/compiler/translator/tree_ops/gl/UseInterfaceBlockFields.cpp",
+    "../../checkout/src/compiler/translator/tree_ops/gl/VectorizeVectorScalarArithmetic.cpp",
     "../../checkout/src/compiler/translator/tree_ops/InitializeVariables.cpp",
-    "../../checkout/src/compiler/translator/tree_ops/MonomorphizeUnsupportedFunctions.cpp",
-    "../../checkout/src/compiler/translator/tree_ops/NameNamelessUniformBuffers.cpp",
     "../../checkout/src/compiler/translator/tree_ops/PruneEmptyCases.cpp",
     "../../checkout/src/compiler/translator/tree_ops/PruneNoOps.cpp",
-    "../../checkout/src/compiler/translator/tree_ops/RecordConstantPrecision.cpp",
     "../../checkout/src/compiler/translator/tree_ops/RemoveArrayLengthMethod.cpp",
-    "../../checkout/src/compiler/translator/tree_ops/RemoveAtomicCounterBuiltins.cpp",
     "../../checkout/src/compiler/translator/tree_ops/RemoveDynamicIndexing.cpp",
-    "../../checkout/src/compiler/translator/tree_ops/RemoveInactiveInterfaceVariables.cpp",
     "../../checkout/src/compiler/translator/tree_ops/RemoveInvariantDeclaration.cpp",
     "../../checkout/src/compiler/translator/tree_ops/RemoveUnreferencedVariables.cpp",
-    "../../checkout/src/compiler/translator/tree_ops/RewriteArrayOfArrayOfOpaqueUniforms.cpp",
-    "../../checkout/src/compiler/translator/tree_ops/RewriteAtomicCounters.cpp",
-    "../../checkout/src/compiler/translator/tree_ops/RewriteCubeMapSamplersAs2DArray.cpp",
-    "../../checkout/src/compiler/translator/tree_ops/RewriteDfdy.cpp",
-    "../../checkout/src/compiler/translator/tree_ops/RewritePixelLocalStorage.cpp",
-    "../../checkout/src/compiler/translator/tree_ops/RewriteStructSamplers.cpp",
     "../../checkout/src/compiler/translator/tree_ops/RewriteTexelFetchOffset.cpp",
     "../../checkout/src/compiler/translator/tree_ops/ScalarizeVecAndMatConstructorArgs.cpp",
     "../../checkout/src/compiler/translator/tree_ops/SeparateDeclarations.cpp",
-    "../../checkout/src/compiler/translator/tree_ops/SeparateStructFromUniformDeclarations.cpp",
     "../../checkout/src/compiler/translator/tree_ops/SimplifyLoopConditions.cpp",
     "../../checkout/src/compiler/translator/tree_ops/SplitSequenceOperator.cpp",
     "../../checkout/src/compiler/translator/tree_util/DriverUniform.cpp",
     "../../checkout/src/compiler/translator/tree_util/FindFunction.cpp",
     "../../checkout/src/compiler/translator/tree_util/FindMain.cpp",
-    "../../checkout/src/compiler/translator/tree_util/FindPreciseNodes.cpp",
     "../../checkout/src/compiler/translator/tree_util/FindSymbolNode.cpp",
     "../../checkout/src/compiler/translator/tree_util/IntermNode_util.cpp",
     "../../checkout/src/compiler/translator/tree_util/IntermNodePatternMatcher.cpp",
-    "../../checkout/src/compiler/translator/tree_util/IntermRebuild.cpp",
     "../../checkout/src/compiler/translator/tree_util/IntermTraverse.cpp",
     "../../checkout/src/compiler/translator/tree_util/ReplaceArrayOfMatrixVarying.cpp",
     "../../checkout/src/compiler/translator/tree_util/ReplaceClipCullDistanceVariable.cpp",
@@ -286,10 +307,10 @@ SOURCES += [
     "../../checkout/src/compiler/translator/ValidateMaxParameters.cpp",
     "../../checkout/src/compiler/translator/ValidateOutputs.cpp",
     "../../checkout/src/compiler/translator/ValidateSwitch.cpp",
-    "../../checkout/src/compiler/translator/ValidateTypeSizeLimitations.cpp",
     "../../checkout/src/compiler/translator/ValidateVaryingLocations.cpp",
     "../../checkout/src/compiler/translator/VariablePacker.cpp",
     "../../checkout/src/compiler/translator/VersionGLSL.cpp",
+    "../../checkout/src/third_party/compiler/ArrayBoundsClamper.cpp",
 ]
 
 USE_LIBS += [
@@ -316,7 +337,7 @@ DIRS += [
 #     "/pdbaltpath:%_PDB%",
 #     "/PDBSourcePath:C:/dev/angle/out",
 #     "/PROFILE",
-#     "/TIMESTAMP:1664686800",
+#     "/TIMESTAMP:1619931600",
 #     "/WX",
 # ]
 

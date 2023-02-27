@@ -22,21 +22,16 @@ const size_t kDefaultMaxProgramCacheMemoryBytes = 0;
 enum
 {
     // Implementation upper limits, real maximums depend on the hardware
-
-    // Only up to 32x MSAA supported.
-    IMPLEMENTATION_MAX_SAMPLE_MASK_WORDS = 1,
-    IMPLEMENTATION_MAX_SAMPLES           = 32,
+    MAX_SAMPLE_MASK_WORDS = 2,
 
     MAX_VERTEX_ATTRIBS         = 16,
     MAX_VERTEX_ATTRIB_BINDINGS = 16,
 
+    // Implementation upper limits, real maximums depend on the hardware
     IMPLEMENTATION_MAX_VARYING_VECTORS = 32,
     IMPLEMENTATION_MAX_DRAW_BUFFERS    = 8,
     IMPLEMENTATION_MAX_FRAMEBUFFER_ATTACHMENTS =
         IMPLEMENTATION_MAX_DRAW_BUFFERS + 2,  // 2 extra for depth and/or stencil buffers
-
-    // The vast majority of devices support only one dual-source draw buffer
-    IMPLEMENTATION_MAX_DUAL_SOURCE_DRAW_BUFFERS = 1,
 
     IMPLEMENTATION_MAX_VERTEX_SHADER_UNIFORM_BUFFERS   = 16,
     IMPLEMENTATION_MAX_GEOMETRY_SHADER_UNIFORM_BUFFERS = 16,
@@ -86,15 +81,11 @@ enum
     // Implementation upper limits, real maximums depend on the hardware.
     IMPLEMENTATION_MAX_SHADER_STORAGE_BUFFER_BINDINGS = 64,
 
-    // Implementation upper limits of max number of clip distances (minimum required per spec)
-    IMPLEMENTATION_MAX_CLIP_DISTANCES = 8,
+    // Implementation upper limits of max number of clip distances
+    IMPLEMENTATION_MAX_CLIP_DISTANCES = 32,
 
     // Implementation upper limit for layered framebuffer layer count
     IMPLEMENTATION_MAX_FRAMEBUFFER_LAYERS = 256,
-
-    // ANGLE_shader_pixel_local_storage: keep the maximum number of supported planes reasonably
-    // similar on all platforms.
-    IMPLEMENTATION_MAX_PIXEL_LOCAL_STORAGE_PLANES = 8,
 };
 
 namespace limits
@@ -113,11 +104,6 @@ constexpr uint32_t kMinimumComputeStorageBuffers = 4;
 constexpr uint32_t kMinimumShaderUniformBlocks = 12;
 // Table 6.31 MAX_VERTEX_OUTPUT_COMPONENTS minimum value = 64
 constexpr uint32_t kMinimumVertexOutputComponents = 64;
-
-// OpenGL ES 3.2+ Minimum Values
-// Table 21.42 TEXTURE_BUFFER_OFFSET_ALIGNMENT minimum value = 256
-constexpr uint32_t kMinTextureBufferOffsetAlignment = 256;
-
 }  // namespace limits
 
 }  // namespace gl

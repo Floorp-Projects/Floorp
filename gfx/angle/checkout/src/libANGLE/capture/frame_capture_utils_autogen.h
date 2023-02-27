@@ -17,7 +17,6 @@ namespace angle
 {
 enum class ParamType
 {
-    TAHardwareBufferConstPointer,
     TAlphaTestFunc,
     TBufferBinding,
     TBufferID,
@@ -25,36 +24,8 @@ enum class ParamType
     TBufferIDPointer,
     TBufferUsage,
     TClientVertexArrayType,
-    TCompositorTiming,
     TCullFaceMode,
     TDrawElementsType,
-    TEGLAttrib,
-    TEGLAttribKHR,
-    TEGLBoolean,
-    TEGLClientBuffer,
-    TEGLConfig,
-    TEGLContext,
-    TEGLDEBUGPROCKHR,
-    TEGLDeviceEXT,
-    TEGLDisplay,
-    TEGLFrameTokenANGLE,
-    TEGLGetBlobFuncANDROID,
-    TEGLImage,
-    TEGLLabelKHR,
-    TEGLNativeDisplayType,
-    TEGLNativePixmapType,
-    TEGLNativeWindowType,
-    TEGLObjectKHR,
-    TEGLSetBlobFuncANDROID,
-    TEGLStreamKHR,
-    TEGLSurface,
-    TEGLSync,
-    TEGLTime,
-    TEGLTimeKHR,
-    TEGLenum,
-    TEGLint,
-    TEGLnsecsANDROID,
-    TEGLuint64KHR,
     TFenceNVID,
     TFenceNVIDConstPointer,
     TFenceNVIDPointer,
@@ -124,7 +95,6 @@ enum class ParamType
     TMemoryObjectID,
     TMemoryObjectIDConstPointer,
     TMemoryObjectIDPointer,
-    TObjectType,
     TPointParameter,
     TPrimitiveMode,
     TProgramPipelineID,
@@ -156,7 +126,6 @@ enum class ParamType
     TTextureIDPointer,
     TTextureTarget,
     TTextureType,
-    TTimestamp,
     TTransformFeedbackID,
     TTransformFeedbackIDConstPointer,
     TTransformFeedbackIDPointer,
@@ -166,18 +135,16 @@ enum class ParamType
     TVertexArrayIDConstPointer,
     TVertexArrayIDPointer,
     TVertexAttribType,
-    TcharConstPointer,
     TvoidConstPointer,
     TvoidConstPointerPointer,
     TvoidPointer,
     TvoidPointerPointer,
 };
 
-constexpr uint32_t kParamTypeCount = 154;
+constexpr uint32_t kParamTypeCount = 122;
 
 union ParamValue
 {
-    const AHardwareBuffer *AHardwareBufferConstPointerVal;
     gl::AlphaTestFunc AlphaTestFuncVal;
     gl::BufferBinding BufferBindingVal;
     gl::BufferID BufferIDVal;
@@ -185,36 +152,8 @@ union ParamValue
     gl::BufferID *BufferIDPointerVal;
     gl::BufferUsage BufferUsageVal;
     gl::ClientVertexArrayType ClientVertexArrayTypeVal;
-    egl::CompositorTiming CompositorTimingVal;
     gl::CullFaceMode CullFaceModeVal;
     gl::DrawElementsType DrawElementsTypeVal;
-    EGLAttrib EGLAttribVal;
-    EGLAttribKHR EGLAttribKHRVal;
-    EGLBoolean EGLBooleanVal;
-    EGLClientBuffer EGLClientBufferVal;
-    EGLConfig EGLConfigVal;
-    EGLContext EGLContextVal;
-    EGLDEBUGPROCKHR EGLDEBUGPROCKHRVal;
-    EGLDeviceEXT EGLDeviceEXTVal;
-    EGLDisplay EGLDisplayVal;
-    EGLFrameTokenANGLE EGLFrameTokenANGLEVal;
-    EGLGetBlobFuncANDROID EGLGetBlobFuncANDROIDVal;
-    EGLImage EGLImageVal;
-    EGLLabelKHR EGLLabelKHRVal;
-    EGLNativeDisplayType EGLNativeDisplayTypeVal;
-    EGLNativePixmapType EGLNativePixmapTypeVal;
-    EGLNativeWindowType EGLNativeWindowTypeVal;
-    EGLObjectKHR EGLObjectKHRVal;
-    EGLSetBlobFuncANDROID EGLSetBlobFuncANDROIDVal;
-    EGLStreamKHR EGLStreamKHRVal;
-    EGLSurface EGLSurfaceVal;
-    EGLSync EGLSyncVal;
-    EGLTime EGLTimeVal;
-    EGLTimeKHR EGLTimeKHRVal;
-    EGLenum EGLenumVal;
-    EGLint EGLintVal;
-    EGLnsecsANDROID EGLnsecsANDROIDVal;
-    EGLuint64KHR EGLuint64KHRVal;
     gl::FenceNVID FenceNVIDVal;
     const gl::FenceNVID *FenceNVIDConstPointerVal;
     gl::FenceNVID *FenceNVIDPointerVal;
@@ -284,7 +223,6 @@ union ParamValue
     gl::MemoryObjectID MemoryObjectIDVal;
     const gl::MemoryObjectID *MemoryObjectIDConstPointerVal;
     gl::MemoryObjectID *MemoryObjectIDPointerVal;
-    egl::ObjectType ObjectTypeVal;
     gl::PointParameter PointParameterVal;
     gl::PrimitiveMode PrimitiveModeVal;
     gl::ProgramPipelineID ProgramPipelineIDVal;
@@ -316,7 +254,6 @@ union ParamValue
     gl::TextureID *TextureIDPointerVal;
     gl::TextureTarget TextureTargetVal;
     gl::TextureType TextureTypeVal;
-    egl::Timestamp TimestampVal;
     gl::TransformFeedbackID TransformFeedbackIDVal;
     const gl::TransformFeedbackID *TransformFeedbackIDConstPointerVal;
     gl::TransformFeedbackID *TransformFeedbackIDPointerVal;
@@ -326,7 +263,6 @@ union ParamValue
     const gl::VertexArrayID *VertexArrayIDConstPointerVal;
     gl::VertexArrayID *VertexArrayIDPointerVal;
     gl::VertexAttribType VertexAttribTypeVal;
-    const char *charConstPointerVal;
     const void *voidConstPointerVal;
     const void *const *voidConstPointerPointerVal;
     void *voidPointerVal;
@@ -335,13 +271,6 @@ union ParamValue
 
 template <ParamType PType, typename T>
 T GetParamVal(const ParamValue &value);
-
-template <>
-inline const AHardwareBuffer *GetParamVal<ParamType::TAHardwareBufferConstPointer,
-                                          const AHardwareBuffer *>(const ParamValue &value)
-{
-    return value.AHardwareBufferConstPointerVal;
-}
 
 template <>
 inline gl::AlphaTestFunc GetParamVal<ParamType::TAlphaTestFunc, gl::AlphaTestFunc>(
@@ -392,13 +321,6 @@ GetParamVal<ParamType::TClientVertexArrayType, gl::ClientVertexArrayType>(const 
 }
 
 template <>
-inline egl::CompositorTiming GetParamVal<ParamType::TCompositorTiming, egl::CompositorTiming>(
-    const ParamValue &value)
-{
-    return value.CompositorTimingVal;
-}
-
-template <>
 inline gl::CullFaceMode GetParamVal<ParamType::TCullFaceMode, gl::CullFaceMode>(
     const ParamValue &value)
 {
@@ -410,177 +332,6 @@ inline gl::DrawElementsType GetParamVal<ParamType::TDrawElementsType, gl::DrawEl
     const ParamValue &value)
 {
     return value.DrawElementsTypeVal;
-}
-
-template <>
-inline EGLAttrib GetParamVal<ParamType::TEGLAttrib, EGLAttrib>(const ParamValue &value)
-{
-    return value.EGLAttribVal;
-}
-
-template <>
-inline EGLAttribKHR GetParamVal<ParamType::TEGLAttribKHR, EGLAttribKHR>(const ParamValue &value)
-{
-    return value.EGLAttribKHRVal;
-}
-
-template <>
-inline EGLBoolean GetParamVal<ParamType::TEGLBoolean, EGLBoolean>(const ParamValue &value)
-{
-    return value.EGLBooleanVal;
-}
-
-template <>
-inline EGLClientBuffer GetParamVal<ParamType::TEGLClientBuffer, EGLClientBuffer>(
-    const ParamValue &value)
-{
-    return value.EGLClientBufferVal;
-}
-
-template <>
-inline EGLConfig GetParamVal<ParamType::TEGLConfig, EGLConfig>(const ParamValue &value)
-{
-    return value.EGLConfigVal;
-}
-
-template <>
-inline EGLContext GetParamVal<ParamType::TEGLContext, EGLContext>(const ParamValue &value)
-{
-    return value.EGLContextVal;
-}
-
-template <>
-inline EGLDEBUGPROCKHR GetParamVal<ParamType::TEGLDEBUGPROCKHR, EGLDEBUGPROCKHR>(
-    const ParamValue &value)
-{
-    return value.EGLDEBUGPROCKHRVal;
-}
-
-template <>
-inline EGLDeviceEXT GetParamVal<ParamType::TEGLDeviceEXT, EGLDeviceEXT>(const ParamValue &value)
-{
-    return value.EGLDeviceEXTVal;
-}
-
-template <>
-inline EGLDisplay GetParamVal<ParamType::TEGLDisplay, EGLDisplay>(const ParamValue &value)
-{
-    return value.EGLDisplayVal;
-}
-
-template <>
-inline EGLFrameTokenANGLE GetParamVal<ParamType::TEGLFrameTokenANGLE, EGLFrameTokenANGLE>(
-    const ParamValue &value)
-{
-    return value.EGLFrameTokenANGLEVal;
-}
-
-template <>
-inline EGLGetBlobFuncANDROID GetParamVal<ParamType::TEGLGetBlobFuncANDROID, EGLGetBlobFuncANDROID>(
-    const ParamValue &value)
-{
-    return value.EGLGetBlobFuncANDROIDVal;
-}
-
-template <>
-inline EGLImage GetParamVal<ParamType::TEGLImage, EGLImage>(const ParamValue &value)
-{
-    return value.EGLImageVal;
-}
-
-template <>
-inline EGLLabelKHR GetParamVal<ParamType::TEGLLabelKHR, EGLLabelKHR>(const ParamValue &value)
-{
-    return value.EGLLabelKHRVal;
-}
-
-template <>
-inline EGLNativeDisplayType GetParamVal<ParamType::TEGLNativeDisplayType, EGLNativeDisplayType>(
-    const ParamValue &value)
-{
-    return value.EGLNativeDisplayTypeVal;
-}
-
-template <>
-inline EGLNativePixmapType GetParamVal<ParamType::TEGLNativePixmapType, EGLNativePixmapType>(
-    const ParamValue &value)
-{
-    return value.EGLNativePixmapTypeVal;
-}
-
-template <>
-inline EGLNativeWindowType GetParamVal<ParamType::TEGLNativeWindowType, EGLNativeWindowType>(
-    const ParamValue &value)
-{
-    return value.EGLNativeWindowTypeVal;
-}
-
-template <>
-inline EGLObjectKHR GetParamVal<ParamType::TEGLObjectKHR, EGLObjectKHR>(const ParamValue &value)
-{
-    return value.EGLObjectKHRVal;
-}
-
-template <>
-inline EGLSetBlobFuncANDROID GetParamVal<ParamType::TEGLSetBlobFuncANDROID, EGLSetBlobFuncANDROID>(
-    const ParamValue &value)
-{
-    return value.EGLSetBlobFuncANDROIDVal;
-}
-
-template <>
-inline EGLStreamKHR GetParamVal<ParamType::TEGLStreamKHR, EGLStreamKHR>(const ParamValue &value)
-{
-    return value.EGLStreamKHRVal;
-}
-
-template <>
-inline EGLSurface GetParamVal<ParamType::TEGLSurface, EGLSurface>(const ParamValue &value)
-{
-    return value.EGLSurfaceVal;
-}
-
-template <>
-inline EGLSync GetParamVal<ParamType::TEGLSync, EGLSync>(const ParamValue &value)
-{
-    return value.EGLSyncVal;
-}
-
-template <>
-inline EGLTime GetParamVal<ParamType::TEGLTime, EGLTime>(const ParamValue &value)
-{
-    return value.EGLTimeVal;
-}
-
-template <>
-inline EGLTimeKHR GetParamVal<ParamType::TEGLTimeKHR, EGLTimeKHR>(const ParamValue &value)
-{
-    return value.EGLTimeKHRVal;
-}
-
-template <>
-inline EGLenum GetParamVal<ParamType::TEGLenum, EGLenum>(const ParamValue &value)
-{
-    return value.EGLenumVal;
-}
-
-template <>
-inline EGLint GetParamVal<ParamType::TEGLint, EGLint>(const ParamValue &value)
-{
-    return value.EGLintVal;
-}
-
-template <>
-inline EGLnsecsANDROID GetParamVal<ParamType::TEGLnsecsANDROID, EGLnsecsANDROID>(
-    const ParamValue &value)
-{
-    return value.EGLnsecsANDROIDVal;
-}
-
-template <>
-inline EGLuint64KHR GetParamVal<ParamType::TEGLuint64KHR, EGLuint64KHR>(const ParamValue &value)
-{
-    return value.EGLuint64KHRVal;
 }
 
 template <>
@@ -1031,12 +782,6 @@ inline gl::MemoryObjectID *GetParamVal<ParamType::TMemoryObjectIDPointer, gl::Me
 }
 
 template <>
-inline egl::ObjectType GetParamVal<ParamType::TObjectType, egl::ObjectType>(const ParamValue &value)
-{
-    return value.ObjectTypeVal;
-}
-
-template <>
 inline gl::PointParameter GetParamVal<ParamType::TPointParameter, gl::PointParameter>(
     const ParamValue &value)
 {
@@ -1250,12 +995,6 @@ inline gl::TextureType GetParamVal<ParamType::TTextureType, gl::TextureType>(
 }
 
 template <>
-inline egl::Timestamp GetParamVal<ParamType::TTimestamp, egl::Timestamp>(const ParamValue &value)
-{
-    return value.TimestampVal;
-}
-
-template <>
 inline gl::TransformFeedbackID
 GetParamVal<ParamType::TTransformFeedbackID, gl::TransformFeedbackID>(const ParamValue &value)
 {
@@ -1320,12 +1059,6 @@ inline gl::VertexAttribType GetParamVal<ParamType::TVertexAttribType, gl::Vertex
 }
 
 template <>
-inline const char *GetParamVal<ParamType::TcharConstPointer, const char *>(const ParamValue &value)
-{
-    return value.charConstPointerVal;
-}
-
-template <>
 inline const void *GetParamVal<ParamType::TvoidConstPointer, const void *>(const ParamValue &value)
 {
     return value.voidConstPointerVal;
@@ -1362,8 +1095,6 @@ T AccessParamValue(ParamType paramType, const ParamValue &value)
 {
     switch (paramType)
     {
-        case ParamType::TAHardwareBufferConstPointer:
-            return GetParamVal<ParamType::TAHardwareBufferConstPointer, T>(value);
         case ParamType::TAlphaTestFunc:
             return GetParamVal<ParamType::TAlphaTestFunc, T>(value);
         case ParamType::TBufferBinding:
@@ -1378,66 +1109,10 @@ T AccessParamValue(ParamType paramType, const ParamValue &value)
             return GetParamVal<ParamType::TBufferUsage, T>(value);
         case ParamType::TClientVertexArrayType:
             return GetParamVal<ParamType::TClientVertexArrayType, T>(value);
-        case ParamType::TCompositorTiming:
-            return GetParamVal<ParamType::TCompositorTiming, T>(value);
         case ParamType::TCullFaceMode:
             return GetParamVal<ParamType::TCullFaceMode, T>(value);
         case ParamType::TDrawElementsType:
             return GetParamVal<ParamType::TDrawElementsType, T>(value);
-        case ParamType::TEGLAttrib:
-            return GetParamVal<ParamType::TEGLAttrib, T>(value);
-        case ParamType::TEGLAttribKHR:
-            return GetParamVal<ParamType::TEGLAttribKHR, T>(value);
-        case ParamType::TEGLBoolean:
-            return GetParamVal<ParamType::TEGLBoolean, T>(value);
-        case ParamType::TEGLClientBuffer:
-            return GetParamVal<ParamType::TEGLClientBuffer, T>(value);
-        case ParamType::TEGLConfig:
-            return GetParamVal<ParamType::TEGLConfig, T>(value);
-        case ParamType::TEGLContext:
-            return GetParamVal<ParamType::TEGLContext, T>(value);
-        case ParamType::TEGLDEBUGPROCKHR:
-            return GetParamVal<ParamType::TEGLDEBUGPROCKHR, T>(value);
-        case ParamType::TEGLDeviceEXT:
-            return GetParamVal<ParamType::TEGLDeviceEXT, T>(value);
-        case ParamType::TEGLDisplay:
-            return GetParamVal<ParamType::TEGLDisplay, T>(value);
-        case ParamType::TEGLFrameTokenANGLE:
-            return GetParamVal<ParamType::TEGLFrameTokenANGLE, T>(value);
-        case ParamType::TEGLGetBlobFuncANDROID:
-            return GetParamVal<ParamType::TEGLGetBlobFuncANDROID, T>(value);
-        case ParamType::TEGLImage:
-            return GetParamVal<ParamType::TEGLImage, T>(value);
-        case ParamType::TEGLLabelKHR:
-            return GetParamVal<ParamType::TEGLLabelKHR, T>(value);
-        case ParamType::TEGLNativeDisplayType:
-            return GetParamVal<ParamType::TEGLNativeDisplayType, T>(value);
-        case ParamType::TEGLNativePixmapType:
-            return GetParamVal<ParamType::TEGLNativePixmapType, T>(value);
-        case ParamType::TEGLNativeWindowType:
-            return GetParamVal<ParamType::TEGLNativeWindowType, T>(value);
-        case ParamType::TEGLObjectKHR:
-            return GetParamVal<ParamType::TEGLObjectKHR, T>(value);
-        case ParamType::TEGLSetBlobFuncANDROID:
-            return GetParamVal<ParamType::TEGLSetBlobFuncANDROID, T>(value);
-        case ParamType::TEGLStreamKHR:
-            return GetParamVal<ParamType::TEGLStreamKHR, T>(value);
-        case ParamType::TEGLSurface:
-            return GetParamVal<ParamType::TEGLSurface, T>(value);
-        case ParamType::TEGLSync:
-            return GetParamVal<ParamType::TEGLSync, T>(value);
-        case ParamType::TEGLTime:
-            return GetParamVal<ParamType::TEGLTime, T>(value);
-        case ParamType::TEGLTimeKHR:
-            return GetParamVal<ParamType::TEGLTimeKHR, T>(value);
-        case ParamType::TEGLenum:
-            return GetParamVal<ParamType::TEGLenum, T>(value);
-        case ParamType::TEGLint:
-            return GetParamVal<ParamType::TEGLint, T>(value);
-        case ParamType::TEGLnsecsANDROID:
-            return GetParamVal<ParamType::TEGLnsecsANDROID, T>(value);
-        case ParamType::TEGLuint64KHR:
-            return GetParamVal<ParamType::TEGLuint64KHR, T>(value);
         case ParamType::TFenceNVID:
             return GetParamVal<ParamType::TFenceNVID, T>(value);
         case ParamType::TFenceNVIDConstPointer:
@@ -1576,8 +1251,6 @@ T AccessParamValue(ParamType paramType, const ParamValue &value)
             return GetParamVal<ParamType::TMemoryObjectIDConstPointer, T>(value);
         case ParamType::TMemoryObjectIDPointer:
             return GetParamVal<ParamType::TMemoryObjectIDPointer, T>(value);
-        case ParamType::TObjectType:
-            return GetParamVal<ParamType::TObjectType, T>(value);
         case ParamType::TPointParameter:
             return GetParamVal<ParamType::TPointParameter, T>(value);
         case ParamType::TPrimitiveMode:
@@ -1640,8 +1313,6 @@ T AccessParamValue(ParamType paramType, const ParamValue &value)
             return GetParamVal<ParamType::TTextureTarget, T>(value);
         case ParamType::TTextureType:
             return GetParamVal<ParamType::TTextureType, T>(value);
-        case ParamType::TTimestamp:
-            return GetParamVal<ParamType::TTimestamp, T>(value);
         case ParamType::TTransformFeedbackID:
             return GetParamVal<ParamType::TTransformFeedbackID, T>(value);
         case ParamType::TTransformFeedbackIDConstPointer:
@@ -1660,8 +1331,6 @@ T AccessParamValue(ParamType paramType, const ParamValue &value)
             return GetParamVal<ParamType::TVertexArrayIDPointer, T>(value);
         case ParamType::TVertexAttribType:
             return GetParamVal<ParamType::TVertexAttribType, T>(value);
-        case ParamType::TcharConstPointer:
-            return GetParamVal<ParamType::TcharConstPointer, T>(value);
         case ParamType::TvoidConstPointer:
             return GetParamVal<ParamType::TvoidConstPointer, T>(value);
         case ParamType::TvoidConstPointerPointer:
@@ -1671,19 +1340,10 @@ T AccessParamValue(ParamType paramType, const ParamValue &value)
         case ParamType::TvoidPointerPointer:
             return GetParamVal<ParamType::TvoidPointerPointer, T>(value);
     }
-    UNREACHABLE();
-    return T();
 }
 
 template <ParamType PType, typename T>
 void SetParamVal(T valueIn, ParamValue *valueOut);
-
-template <>
-inline void SetParamVal<ParamType::TAHardwareBufferConstPointer>(const AHardwareBuffer *valueIn,
-                                                                 ParamValue *valueOut)
-{
-    valueOut->AHardwareBufferConstPointerVal = valueIn;
-}
 
 template <>
 inline void SetParamVal<ParamType::TAlphaTestFunc>(gl::AlphaTestFunc valueIn, ParamValue *valueOut)
@@ -1730,13 +1390,6 @@ inline void SetParamVal<ParamType::TClientVertexArrayType>(gl::ClientVertexArray
 }
 
 template <>
-inline void SetParamVal<ParamType::TCompositorTiming>(egl::CompositorTiming valueIn,
-                                                      ParamValue *valueOut)
-{
-    valueOut->CompositorTimingVal = valueIn;
-}
-
-template <>
 inline void SetParamVal<ParamType::TCullFaceMode>(gl::CullFaceMode valueIn, ParamValue *valueOut)
 {
     valueOut->CullFaceModeVal = valueIn;
@@ -1747,174 +1400,6 @@ inline void SetParamVal<ParamType::TDrawElementsType>(gl::DrawElementsType value
                                                       ParamValue *valueOut)
 {
     valueOut->DrawElementsTypeVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLAttrib>(EGLAttrib valueIn, ParamValue *valueOut)
-{
-    valueOut->EGLAttribVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLAttribKHR>(EGLAttribKHR valueIn, ParamValue *valueOut)
-{
-    valueOut->EGLAttribKHRVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLBoolean>(EGLBoolean valueIn, ParamValue *valueOut)
-{
-    valueOut->EGLBooleanVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLClientBuffer>(EGLClientBuffer valueIn, ParamValue *valueOut)
-{
-    valueOut->EGLClientBufferVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLConfig>(EGLConfig valueIn, ParamValue *valueOut)
-{
-    valueOut->EGLConfigVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLContext>(EGLContext valueIn, ParamValue *valueOut)
-{
-    valueOut->EGLContextVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLDEBUGPROCKHR>(EGLDEBUGPROCKHR valueIn, ParamValue *valueOut)
-{
-    valueOut->EGLDEBUGPROCKHRVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLDeviceEXT>(EGLDeviceEXT valueIn, ParamValue *valueOut)
-{
-    valueOut->EGLDeviceEXTVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLDisplay>(EGLDisplay valueIn, ParamValue *valueOut)
-{
-    valueOut->EGLDisplayVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLFrameTokenANGLE>(EGLFrameTokenANGLE valueIn,
-                                                        ParamValue *valueOut)
-{
-    valueOut->EGLFrameTokenANGLEVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLGetBlobFuncANDROID>(EGLGetBlobFuncANDROID valueIn,
-                                                           ParamValue *valueOut)
-{
-    valueOut->EGLGetBlobFuncANDROIDVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLImage>(EGLImage valueIn, ParamValue *valueOut)
-{
-    valueOut->EGLImageVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLLabelKHR>(EGLLabelKHR valueIn, ParamValue *valueOut)
-{
-    valueOut->EGLLabelKHRVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLNativeDisplayType>(EGLNativeDisplayType valueIn,
-                                                          ParamValue *valueOut)
-{
-    valueOut->EGLNativeDisplayTypeVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLNativePixmapType>(EGLNativePixmapType valueIn,
-                                                         ParamValue *valueOut)
-{
-    valueOut->EGLNativePixmapTypeVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLNativeWindowType>(EGLNativeWindowType valueIn,
-                                                         ParamValue *valueOut)
-{
-    valueOut->EGLNativeWindowTypeVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLObjectKHR>(EGLObjectKHR valueIn, ParamValue *valueOut)
-{
-    valueOut->EGLObjectKHRVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLSetBlobFuncANDROID>(EGLSetBlobFuncANDROID valueIn,
-                                                           ParamValue *valueOut)
-{
-    valueOut->EGLSetBlobFuncANDROIDVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLStreamKHR>(EGLStreamKHR valueIn, ParamValue *valueOut)
-{
-    valueOut->EGLStreamKHRVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLSurface>(EGLSurface valueIn, ParamValue *valueOut)
-{
-    valueOut->EGLSurfaceVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLSync>(EGLSync valueIn, ParamValue *valueOut)
-{
-    valueOut->EGLSyncVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLTime>(EGLTime valueIn, ParamValue *valueOut)
-{
-    valueOut->EGLTimeVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLTimeKHR>(EGLTimeKHR valueIn, ParamValue *valueOut)
-{
-    valueOut->EGLTimeKHRVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLenum>(EGLenum valueIn, ParamValue *valueOut)
-{
-    valueOut->EGLenumVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLint>(EGLint valueIn, ParamValue *valueOut)
-{
-    valueOut->EGLintVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLnsecsANDROID>(EGLnsecsANDROID valueIn, ParamValue *valueOut)
-{
-    valueOut->EGLnsecsANDROIDVal = valueIn;
-}
-
-template <>
-inline void SetParamVal<ParamType::TEGLuint64KHR>(EGLuint64KHR valueIn, ParamValue *valueOut)
-{
-    valueOut->EGLuint64KHRVal = valueIn;
 }
 
 template <>
@@ -2356,12 +1841,6 @@ inline void SetParamVal<ParamType::TMemoryObjectIDPointer>(gl::MemoryObjectID *v
 }
 
 template <>
-inline void SetParamVal<ParamType::TObjectType>(egl::ObjectType valueIn, ParamValue *valueOut)
-{
-    valueOut->ObjectTypeVal = valueIn;
-}
-
-template <>
 inline void SetParamVal<ParamType::TPointParameter>(gl::PointParameter valueIn,
                                                     ParamValue *valueOut)
 {
@@ -2568,12 +2047,6 @@ inline void SetParamVal<ParamType::TTextureType>(gl::TextureType valueIn, ParamV
 }
 
 template <>
-inline void SetParamVal<ParamType::TTimestamp>(egl::Timestamp valueIn, ParamValue *valueOut)
-{
-    valueOut->TimestampVal = valueIn;
-}
-
-template <>
 inline void SetParamVal<ParamType::TTransformFeedbackID>(gl::TransformFeedbackID valueIn,
                                                          ParamValue *valueOut)
 {
@@ -2637,12 +2110,6 @@ inline void SetParamVal<ParamType::TVertexAttribType>(gl::VertexAttribType value
 }
 
 template <>
-inline void SetParamVal<ParamType::TcharConstPointer>(const char *valueIn, ParamValue *valueOut)
-{
-    valueOut->charConstPointerVal = valueIn;
-}
-
-template <>
 inline void SetParamVal<ParamType::TvoidConstPointer>(const void *valueIn, ParamValue *valueOut)
 {
     valueOut->voidConstPointerVal = valueIn;
@@ -2678,9 +2145,6 @@ void InitParamValue(ParamType paramType, T valueIn, ParamValue *valueOut)
 {
     switch (paramType)
     {
-        case ParamType::TAHardwareBufferConstPointer:
-            SetParamVal<ParamType::TAHardwareBufferConstPointer>(valueIn, valueOut);
-            break;
         case ParamType::TAlphaTestFunc:
             SetParamVal<ParamType::TAlphaTestFunc>(valueIn, valueOut);
             break;
@@ -2702,95 +2166,11 @@ void InitParamValue(ParamType paramType, T valueIn, ParamValue *valueOut)
         case ParamType::TClientVertexArrayType:
             SetParamVal<ParamType::TClientVertexArrayType>(valueIn, valueOut);
             break;
-        case ParamType::TCompositorTiming:
-            SetParamVal<ParamType::TCompositorTiming>(valueIn, valueOut);
-            break;
         case ParamType::TCullFaceMode:
             SetParamVal<ParamType::TCullFaceMode>(valueIn, valueOut);
             break;
         case ParamType::TDrawElementsType:
             SetParamVal<ParamType::TDrawElementsType>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLAttrib:
-            SetParamVal<ParamType::TEGLAttrib>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLAttribKHR:
-            SetParamVal<ParamType::TEGLAttribKHR>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLBoolean:
-            SetParamVal<ParamType::TEGLBoolean>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLClientBuffer:
-            SetParamVal<ParamType::TEGLClientBuffer>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLConfig:
-            SetParamVal<ParamType::TEGLConfig>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLContext:
-            SetParamVal<ParamType::TEGLContext>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLDEBUGPROCKHR:
-            SetParamVal<ParamType::TEGLDEBUGPROCKHR>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLDeviceEXT:
-            SetParamVal<ParamType::TEGLDeviceEXT>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLDisplay:
-            SetParamVal<ParamType::TEGLDisplay>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLFrameTokenANGLE:
-            SetParamVal<ParamType::TEGLFrameTokenANGLE>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLGetBlobFuncANDROID:
-            SetParamVal<ParamType::TEGLGetBlobFuncANDROID>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLImage:
-            SetParamVal<ParamType::TEGLImage>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLLabelKHR:
-            SetParamVal<ParamType::TEGLLabelKHR>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLNativeDisplayType:
-            SetParamVal<ParamType::TEGLNativeDisplayType>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLNativePixmapType:
-            SetParamVal<ParamType::TEGLNativePixmapType>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLNativeWindowType:
-            SetParamVal<ParamType::TEGLNativeWindowType>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLObjectKHR:
-            SetParamVal<ParamType::TEGLObjectKHR>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLSetBlobFuncANDROID:
-            SetParamVal<ParamType::TEGLSetBlobFuncANDROID>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLStreamKHR:
-            SetParamVal<ParamType::TEGLStreamKHR>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLSurface:
-            SetParamVal<ParamType::TEGLSurface>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLSync:
-            SetParamVal<ParamType::TEGLSync>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLTime:
-            SetParamVal<ParamType::TEGLTime>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLTimeKHR:
-            SetParamVal<ParamType::TEGLTimeKHR>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLenum:
-            SetParamVal<ParamType::TEGLenum>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLint:
-            SetParamVal<ParamType::TEGLint>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLnsecsANDROID:
-            SetParamVal<ParamType::TEGLnsecsANDROID>(valueIn, valueOut);
-            break;
-        case ParamType::TEGLuint64KHR:
-            SetParamVal<ParamType::TEGLuint64KHR>(valueIn, valueOut);
             break;
         case ParamType::TFenceNVID:
             SetParamVal<ParamType::TFenceNVID>(valueIn, valueOut);
@@ -2999,9 +2379,6 @@ void InitParamValue(ParamType paramType, T valueIn, ParamValue *valueOut)
         case ParamType::TMemoryObjectIDPointer:
             SetParamVal<ParamType::TMemoryObjectIDPointer>(valueIn, valueOut);
             break;
-        case ParamType::TObjectType:
-            SetParamVal<ParamType::TObjectType>(valueIn, valueOut);
-            break;
         case ParamType::TPointParameter:
             SetParamVal<ParamType::TPointParameter>(valueIn, valueOut);
             break;
@@ -3095,9 +2472,6 @@ void InitParamValue(ParamType paramType, T valueIn, ParamValue *valueOut)
         case ParamType::TTextureType:
             SetParamVal<ParamType::TTextureType>(valueIn, valueOut);
             break;
-        case ParamType::TTimestamp:
-            SetParamVal<ParamType::TTimestamp>(valueIn, valueOut);
-            break;
         case ParamType::TTransformFeedbackID:
             SetParamVal<ParamType::TTransformFeedbackID>(valueIn, valueOut);
             break;
@@ -3124,9 +2498,6 @@ void InitParamValue(ParamType paramType, T valueIn, ParamValue *valueOut)
             break;
         case ParamType::TVertexAttribType:
             SetParamVal<ParamType::TVertexAttribType>(valueIn, valueOut);
-            break;
-        case ParamType::TcharConstPointer:
-            SetParamVal<ParamType::TcharConstPointer>(valueIn, valueOut);
             break;
         case ParamType::TvoidConstPointer:
             SetParamVal<ParamType::TvoidConstPointer>(valueIn, valueOut);
@@ -3170,88 +2541,6 @@ enum class ResourceIDType
 
 ResourceIDType GetResourceIDTypeFromParamType(ParamType paramType);
 const char *GetResourceIDTypeName(ResourceIDType resourceIDType);
-
-template <typename ResourceType>
-struct GetResourceIDTypeFromType;
-
-template <>
-struct GetResourceIDTypeFromType<gl::BufferID>
-{
-    static constexpr ResourceIDType IDType = ResourceIDType::Buffer;
-};
-
-template <>
-struct GetResourceIDTypeFromType<gl::FenceNVID>
-{
-    static constexpr ResourceIDType IDType = ResourceIDType::FenceNV;
-};
-
-template <>
-struct GetResourceIDTypeFromType<gl::FramebufferID>
-{
-    static constexpr ResourceIDType IDType = ResourceIDType::Framebuffer;
-};
-
-template <>
-struct GetResourceIDTypeFromType<gl::MemoryObjectID>
-{
-    static constexpr ResourceIDType IDType = ResourceIDType::MemoryObject;
-};
-
-template <>
-struct GetResourceIDTypeFromType<gl::ProgramPipelineID>
-{
-    static constexpr ResourceIDType IDType = ResourceIDType::ProgramPipeline;
-};
-
-template <>
-struct GetResourceIDTypeFromType<gl::QueryID>
-{
-    static constexpr ResourceIDType IDType = ResourceIDType::Query;
-};
-
-template <>
-struct GetResourceIDTypeFromType<gl::RenderbufferID>
-{
-    static constexpr ResourceIDType IDType = ResourceIDType::Renderbuffer;
-};
-
-template <>
-struct GetResourceIDTypeFromType<gl::SamplerID>
-{
-    static constexpr ResourceIDType IDType = ResourceIDType::Sampler;
-};
-
-template <>
-struct GetResourceIDTypeFromType<gl::SemaphoreID>
-{
-    static constexpr ResourceIDType IDType = ResourceIDType::Semaphore;
-};
-
-template <>
-struct GetResourceIDTypeFromType<gl::ShaderProgramID>
-{
-    static constexpr ResourceIDType IDType = ResourceIDType::ShaderProgram;
-};
-
-template <>
-struct GetResourceIDTypeFromType<gl::TextureID>
-{
-    static constexpr ResourceIDType IDType = ResourceIDType::Texture;
-};
-
-template <>
-struct GetResourceIDTypeFromType<gl::TransformFeedbackID>
-{
-    static constexpr ResourceIDType IDType = ResourceIDType::TransformFeedback;
-};
-
-template <>
-struct GetResourceIDTypeFromType<gl::VertexArrayID>
-{
-    static constexpr ResourceIDType IDType = ResourceIDType::VertexArray;
-};
-
 }  // namespace angle
 
 #endif  // LIBANGLE_FRAME_CAPTURE_UTILS_AUTOGEN_H_

@@ -18,8 +18,7 @@ MemoryObject::MemoryObject(rx::GLImplFactory *factory, MemoryObjectID id)
     : RefCountObject(factory->generateSerial(), id),
       mImplementation(factory->createMemoryObject()),
       mImmutable(false),
-      mDedicatedMemory(false),
-      mProtectedMemory(false)
+      mDedicatedMemory(false)
 {}
 
 MemoryObject::~MemoryObject() {}
@@ -33,13 +32,6 @@ angle::Result MemoryObject::setDedicatedMemory(const Context *context, bool dedi
 {
     ANGLE_TRY(mImplementation->setDedicatedMemory(context, dedicatedMemory));
     mDedicatedMemory = dedicatedMemory;
-    return angle::Result::Continue;
-}
-
-angle::Result MemoryObject::setProtectedMemory(const Context *context, bool protectedMemory)
-{
-    ANGLE_TRY(mImplementation->setProtectedMemory(context, protectedMemory));
-    mProtectedMemory = protectedMemory;
     return angle::Result::Continue;
 }
 

@@ -39,8 +39,6 @@ class Compiler final : public RefCountObjectNoID
     void putInstance(ShCompilerInstance &&instance);
     ShShaderOutput getShaderOutputType() const { return mOutputType; }
 
-    static ShShaderSpec SelectShaderSpec(const State &state);
-
   private:
     ~Compiler() override;
     std::unique_ptr<rx::CompilerImpl> mImplementation;
@@ -63,8 +61,7 @@ class ShCompilerInstance final : public angle::NonCopyable
 
     ShHandle getHandle();
     ShaderType getShaderType() const;
-    ShBuiltInResources getBuiltInResources() const;
-    const std::string &getBuiltinResourcesString() const;
+    const std::string &getBuiltinResourcesString();
     ShShaderOutput getShaderOutputType() const;
 
   private:

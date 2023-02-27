@@ -16,7 +16,6 @@
 #include "angle_gl.h"
 #include "common/android_util.h"
 #include "libANGLE/Caps.h"
-#include "libANGLE/Config.h"
 #include "libANGLE/Error.h"
 #include "libANGLE/Version.h"
 #include "libANGLE/VertexAttribute.h"
@@ -30,7 +29,7 @@ struct FormatType final
 {
     FormatType();
     FormatType(GLenum format_, GLenum type_);
-    FormatType(const FormatType &other)            = default;
+    FormatType(const FormatType &other) = default;
     FormatType &operator=(const FormatType &other) = default;
 
     bool operator<(const FormatType &other) const;
@@ -67,7 +66,6 @@ ANGLE_INLINE GLenum GetNonLinearFormat(const GLenum format)
             return GL_SRGB8_ALPHA8;
         case GL_RGB8:
         case GL_BGRX8_ANGLEX:
-        case GL_RGBX8_ANGLE:
             return GL_SRGB8;
         case GL_RGBA16F:
             return GL_RGBA16F;
@@ -140,44 +138,42 @@ struct InternalFormat
 
     GLuint computePixelBytes(GLenum formatType) const;
 
-    [[nodiscard]] bool computeBufferRowLength(uint32_t width, uint32_t *resultOut) const;
-    [[nodiscard]] bool computeBufferImageHeight(uint32_t height, uint32_t *resultOut) const;
+    ANGLE_NO_DISCARD bool computeBufferRowLength(uint32_t width, uint32_t *resultOut) const;
+    ANGLE_NO_DISCARD bool computeBufferImageHeight(uint32_t height, uint32_t *resultOut) const;
 
-    [[nodiscard]] bool computeRowPitch(GLenum formatType,
-                                       GLsizei width,
-                                       GLint alignment,
-                                       GLint rowLength,
-                                       GLuint *resultOut) const;
-    [[nodiscard]] bool computeDepthPitch(GLsizei height,
-                                         GLint imageHeight,
-                                         GLuint rowPitch,
-                                         GLuint *resultOut) const;
-    [[nodiscard]] bool computeDepthPitch(GLenum formatType,
-                                         GLsizei width,
-                                         GLsizei height,
-                                         GLint alignment,
-                                         GLint rowLength,
-                                         GLint imageHeight,
-                                         GLuint *resultOut) const;
+    ANGLE_NO_DISCARD bool computeRowPitch(GLenum formatType,
+                                          GLsizei width,
+                                          GLint alignment,
+                                          GLint rowLength,
+                                          GLuint *resultOut) const;
+    ANGLE_NO_DISCARD bool computeDepthPitch(GLsizei height,
+                                            GLint imageHeight,
+                                            GLuint rowPitch,
+                                            GLuint *resultOut) const;
+    ANGLE_NO_DISCARD bool computeDepthPitch(GLenum formatType,
+                                            GLsizei width,
+                                            GLsizei height,
+                                            GLint alignment,
+                                            GLint rowLength,
+                                            GLint imageHeight,
+                                            GLuint *resultOut) const;
 
-    [[nodiscard]] bool computePalettedImageRowPitch(GLsizei width, GLuint *resultOut) const;
+    ANGLE_NO_DISCARD bool computeCompressedImageSize(const Extents &size, GLuint *resultOut) const;
 
-    [[nodiscard]] bool computeCompressedImageSize(const Extents &size, GLuint *resultOut) const;
+    ANGLE_NO_DISCARD std::pair<GLuint, GLuint> getCompressedImageMinBlocks() const;
 
-    [[nodiscard]] std::pair<GLuint, GLuint> getCompressedImageMinBlocks() const;
+    ANGLE_NO_DISCARD bool computeSkipBytes(GLenum formatType,
+                                           GLuint rowPitch,
+                                           GLuint depthPitch,
+                                           const PixelStoreStateBase &state,
+                                           bool is3D,
+                                           GLuint *resultOut) const;
 
-    [[nodiscard]] bool computeSkipBytes(GLenum formatType,
-                                        GLuint rowPitch,
-                                        GLuint depthPitch,
-                                        const PixelStoreStateBase &state,
-                                        bool is3D,
-                                        GLuint *resultOut) const;
-
-    [[nodiscard]] bool computePackUnpackEndByte(GLenum formatType,
-                                                const Extents &size,
-                                                const PixelStoreStateBase &state,
-                                                bool is3D,
-                                                GLuint *resultOut) const;
+    ANGLE_NO_DISCARD bool computePackUnpackEndByte(GLenum formatType,
+                                                   const Extents &size,
+                                                   const PixelStoreStateBase &state,
+                                                   bool is3D,
+                                                   GLuint *resultOut) const;
 
     bool isLUMA() const;
     GLenum getReadPixelsFormat(const Extensions &extensions) const;
@@ -233,9 +229,6 @@ struct InternalFormat
     GLuint compressedBlockWidth;
     GLuint compressedBlockHeight;
     GLuint compressedBlockDepth;
-
-    bool paletted;
-    GLuint paletteBits;
 
     GLenum format;
     GLenum type;
@@ -299,9 +292,6 @@ const InternalFormatInfoMap &GetInternalFormatMap();
 
 int GetAndroidHardwareBufferFormatFromChannelSizes(const egl::AttributeMap &attribMap);
 
-GLenum GetConfigColorBufferFormat(const egl::Config *config);
-GLenum GetConfigDepthStencilBufferFormat(const egl::Config *config);
-
 ANGLE_INLINE int GetNativeVisualID(const InternalFormat &internalFormat)
 {
     int nativeVisualId = 0;
@@ -309,10 +299,6 @@ ANGLE_INLINE int GetNativeVisualID(const InternalFormat &internalFormat)
     nativeVisualId =
         angle::android::GLInternalFormatToNativePixelFormat(internalFormat.internalFormat);
 #endif
-#if defined(ANGLE_PLATFORM_LINUX) && defined(ANGLE_USES_GBM)
-    nativeVisualId = angle::GLInternalFormatToGbmFourCCFormat(internalFormat.internalFormat);
-#endif
-
     return nativeVisualId;
 }
 
@@ -368,7 +354,6 @@ angle::FormatID GetVertexFormatID(const VertexAttribute &attrib, VertexAttribTyp
 angle::FormatID GetCurrentValueFormatID(VertexAttribType currentValueType);
 const VertexFormat &GetVertexFormatFromID(angle::FormatID vertexFormatID);
 size_t GetVertexFormatSize(angle::FormatID vertexFormatID);
-angle::FormatID ConvertFormatSignedness(const angle::Format &format);
 
 ANGLE_INLINE bool IsS3TCFormat(const GLenum format)
 {
@@ -404,21 +389,6 @@ ANGLE_INLINE bool IsRGTCFormat(const GLenum format)
     }
 }
 
-ANGLE_INLINE bool IsBPTCFormat(const GLenum format)
-{
-    switch (format)
-    {
-        case GL_COMPRESSED_RGBA_BPTC_UNORM_EXT:
-        case GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM_EXT:
-        case GL_COMPRESSED_RGB_BPTC_SIGNED_FLOAT_EXT:
-        case GL_COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_EXT:
-            return true;
-
-        default:
-            return false;
-    }
-}
-
 ANGLE_INLINE bool IsASTC2DFormat(const GLenum format)
 {
     if ((format >= GL_COMPRESSED_RGBA_ASTC_4x4_KHR &&
@@ -429,18 +399,6 @@ ANGLE_INLINE bool IsASTC2DFormat(const GLenum format)
         return true;
     }
     return false;
-}
-
-ANGLE_INLINE bool IsETC1Format(const GLenum format)
-{
-    switch (format)
-    {
-        case GL_ETC1_RGB8_OES:
-            return true;
-
-        default:
-            return false;
-    }
 }
 
 ANGLE_INLINE bool IsETC2EACFormat(const GLenum format)
@@ -477,25 +435,6 @@ ANGLE_INLINE bool IsPVRTC1Format(const GLenum format)
         case GL_COMPRESSED_SRGB_PVRTC_4BPPV1_EXT:
         case GL_COMPRESSED_SRGB_ALPHA_PVRTC_2BPPV1_EXT:
         case GL_COMPRESSED_SRGB_ALPHA_PVRTC_4BPPV1_EXT:
-            return true;
-
-        default:
-            return false;
-    }
-}
-
-ANGLE_INLINE bool IsBGRAFormat(const GLenum internalFormat)
-{
-    switch (internalFormat)
-    {
-        case GL_BGRA8_EXT:
-        case GL_BGRA4_ANGLEX:
-        case GL_BGR5_A1_ANGLEX:
-        case GL_BGRA8_SRGB_ANGLEX:
-        case GL_BGRX8_ANGLEX:
-        case GL_RGBX8_ANGLE:
-        case GL_BGR565_ANGLEX:
-        case GL_BGR10_A2_ANGLEX:
             return true;
 
         default:
@@ -546,32 +485,6 @@ ANGLE_INLINE ComponentType GetVertexAttributeComponentType(bool pureInteger, Ver
         return ComponentType::Float;
     }
 }
-
-constexpr std::size_t kMaxYuvPlaneCount = 3;
-template <typename T>
-using YuvPlaneArray = std::array<T, kMaxYuvPlaneCount>;
-
-struct YuvFormatInfo
-{
-    // Sized types only.
-    YuvFormatInfo(GLenum internalFormat, const Extents &yPlaneExtent);
-
-    GLenum glInternalFormat;
-    uint32_t planeCount;
-    YuvPlaneArray<uint32_t> planeBpp;
-    YuvPlaneArray<Extents> planeExtent;
-    YuvPlaneArray<uint32_t> planePitch;
-    YuvPlaneArray<uint32_t> planeSize;
-    YuvPlaneArray<uint32_t> planeOffset;
-};
-
-bool IsYuvFormat(GLenum format);
-uint32_t GetPlaneCount(GLenum format);
-uint32_t GetYPlaneBpp(GLenum format);
-uint32_t GetChromaPlaneBpp(GLenum format);
-void GetSubSampleFactor(GLenum format,
-                        int *horizontalSubsampleFactor,
-                        int *verticalSubsampleFactor);
 }  // namespace gl
 
 #endif  // LIBANGLE_FORMATUTILS_H_

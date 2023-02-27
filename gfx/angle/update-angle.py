@@ -154,15 +154,12 @@ is_clang = true
 is_debug = false
 angle_build_all = false
 angle_enable_abseil = false
-angle_enable_apple_translator_workarounds = true
 angle_enable_essl = true
 angle_enable_gl = false
-angle_enable_gl_desktop_frontend = false
+angle_enable_gl_desktop = false
 angle_enable_glsl = true
 angle_enable_null = false
-angle_enable_share_context_lock = true
 angle_enable_vulkan = false
-angle_has_astc_encoder = false
 use_custom_libcxx = false
 """[
     1:
@@ -247,9 +244,7 @@ def append_arr(dest, name, vals, indent=0):
 REGISTERED_DEFINES = {
     "ADLER32_SIMD_SSSE3": False,
     "ANGLE_CAPTURE_ENABLED": True,
-    "ANGLE_DISABLE_POOL_ALLOC": True,
     "ANGLE_EGL_LIBRARY_NAME": False,
-    "ANGLE_ENABLE_APPLE_WORKAROUNDS": True,
     "ANGLE_ENABLE_D3D11": True,
     "ANGLE_ENABLE_D3D11_COMPOSITOR_NATIVE_WINDOW": True,
     "ANGLE_ENABLE_D3D9": True,
@@ -260,21 +255,13 @@ REGISTERED_DEFINES = {
     "ANGLE_ENABLE_ESSL": True,
     "ANGLE_ENABLE_GLSL": True,
     "ANGLE_ENABLE_HLSL": True,
-    "ANGLE_ENABLE_SHARE_CONTEXT_LOCK": True,
     "ANGLE_GENERATE_SHADER_DEBUG_INFO": True,
     "ANGLE_GLESV2_LIBRARY_NAME": True,
-    "ANGLE_HAS_ASTCENC": True,
     "ANGLE_HAS_VULKAN_SYSTEM_INFO": False,
     "ANGLE_IS_64_BIT_CPU": False,
     "ANGLE_IS_WIN": False,
     "ANGLE_PRELOADED_D3DCOMPILER_MODULE_NAMES": False,
-    "ANGLE_SHARED_LIBVULKAN": True,
-    "ANGLE_USE_CUSTOM_LIBVULKAN": True,
     "ANGLE_USE_EGL_LOADER": True,
-    "ANGLE_VK_LAYERS_DIR": True,
-    "ANGLE_VK_MOCK_ICD_JSON": True,
-    "ANGLE_VMA_VERSION": True,
-    "ASTCENC_DECOMPRESS_ONLY": True,
     "CERT_CHAIN_PARA_HAS_EXTRA_FIELDS": False,
     "CHROMIUM_BUILD": False,
     "COMPONENT_BUILD": False,
@@ -335,7 +322,6 @@ REGISTERED_DEFINES = {
     "_USING_V110_SDK71_": False,
     "_WIN32_WINNT": False,
     "_WINDOWS": False,
-    "_WINSOCK_DEPRECATED_NO_WARNINGS": True,
     "__STD_C": False,
     # clang specific
     "CR_CLANG_REVISION": True,

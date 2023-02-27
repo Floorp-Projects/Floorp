@@ -28,121 +28,66 @@ uint64_t IdentifierHashFunc(const char* name, size_t len) {
 
 static ShCompileOptions ChooseValidatorCompileOptions(
     const ShBuiltInResources& resources, const mozilla::gl::GLContext* gl) {
-  ShCompileOptions options = {};
-  options.variables = true;
-  options.enforcePackingRestrictions = true;
-  options.objectCode = true;
-  options.initGLPosition = true;
-  options.initializeUninitializedLocals = true;
-  options.initOutputVariables = true;
+  ShCompileOptions options = SH_VARIABLES | SH_ENFORCE_PACKING_RESTRICTIONS |
+                             SH_OBJECT_CODE | SH_INIT_GL_POSITION |
+                             SH_INITIALIZE_UNINITIALIZED_LOCALS |
+                             SH_INIT_OUTPUT_VARIABLES;
 
 #ifdef XP_MACOSX
-  options.removeInvariantAndCentroidForESSL3 = true;
+  options |= SH_REMOVE_INVARIANT_AND_CENTROID_FOR_ESSL3;
 #else
   // We want to do this everywhere, but to do this on Mac, we need
   // to do it only on Mac OSX > 10.6 as this causes the shader
   // compiler in 10.6 to crash
-  options.clampIndirectArrayBounds = true;
+  options |= SH_CLAMP_INDIRECT_ARRAY_BOUNDS;
 #endif
 
   if (gl->WorkAroundDriverBugs()) {
 #ifdef XP_MACOSX
     // Work around https://bugs.webkit.org/show_bug.cgi?id=124684,
     // https://chromium.googlesource.com/angle/angle/+/5e70cf9d0b1bb
-    options.unfoldShortCircuit = true;
+    options |= SH_UNFOLD_SHORT_CIRCUIT;
 
     // Work around that Mac drivers handle struct scopes incorrectly.
-    options.regenerateStructNames = true;
-    options.initOutputVariables = true;
+    options |= SH_REGENERATE_STRUCT_NAMES;
+    options |= SH_INIT_OUTPUT_VARIABLES;
 
     if (gl->Vendor() == gl::GLVendor::Intel) {
       // Work around that Intel drivers on Mac OSX handle for-loop incorrectly.
-      options.addAndTrueToLoopCondition = true;
+      options |= SH_ADD_AND_TRUE_TO_LOOP_CONDITION;
 
-      options.rewriteTexelFetchOffsetToTexelFetch = true;
+      options |= SH_REWRITE_TEXELFETCHOFFSET_TO_TEXELFETCH;
     }
 #endif
 
     if (!gl->IsANGLE() && gl->Vendor() == gl::GLVendor::Intel) {
       // Failures on at least Windows+Intel+OGL on:
       // conformance/glsl/constructors/glsl-construct-mat2.html
-      options.scalarizeVecAndMatConstructorArgs = true;
+      options |= SH_SCALARIZE_VEC_AND_MAT_CONSTRUCTOR_ARGS;
     }
   }
 
   if (StaticPrefs::webgl_all_angle_options()) {
-    // NOTE: The following attempts exhaustively set every member of
-    // `ShCompileOptions`, following the order of members defined in
-    // `ShaderLang.h`.
-    options.objectCode = true;
-    options.variables = true;
-    options.sourcePath = false;
-    options.intermediateTree = false;
-    options.validateAST = true;
-    options.validateLoopIndexing = true;
-    options.lineDirectives = false;
-    options.removeInvariantAndCentroidForESSL3 = false;
-    options.emulateAbsIntFunction = true;
-    options.enforcePackingRestrictions = true;
-    options.clampIndirectArrayBounds = true;
-    options.limitExpressionComplexity = false;
-    options.limitCallStackDepth = false;
-    options.initGLPosition = true;
-    options.unfoldShortCircuit = true;
-    options.initOutputVariables = true;
-    options.scalarizeVecAndMatConstructorArgs = true;
-    options.regenerateStructNames = true;
-    options.rewriteDoWhileLoops = true;
-    options.expandSelectHLSLIntegerPowExpressions = false;
-    options.flattenPragmaSTDGLInvariantAll = true;
-    options.HLSLGetDimensionsIgnoresBaseLevel = false;
-    options.rewriteTexelFetchOffsetToTexelFetch = true;
-    options.addAndTrueToLoopCondition = true;
-    options.rewriteIntegerUnaryMinusOperator = true;
-    options.emulateIsnanFloatFunction = true;
-    options.useUnusedStandardSharedBlocks = true;
-    options.rewriteFloatUnaryMinusOperator = true;
-    options.emulateAtan2FloatFunction = true;
-    options.initializeUninitializedLocals = true;
-    options.initializeBuiltinsForInstancedMultiview = true;
-    options.selectViewInNvGLSLVertexShader = true;
-    options.clampPointSize = true;
-    options.addAdvancedBlendEquationsEmulation = true;
-    options.dontUseLoopsToInitializeVariables = true;
-    options.skipD3DConstantRegisterZero = true;
-    options.clampFragDepth = true;
-    options.rewriteRepeatedAssignToSwizzled = true;
-    options.emulateGLDrawID = true;
-    options.initSharedVariables = true;
-    options.forceAtomicValueResolution = true;
-    options.emulateGLBaseVertexBaseInstance = true;
-    options.emulateSeamfulCubeMapSampling = true;
-    options.takeVideoTextureAsExternalOES = true;
-    options.addBaseVertexToVertexID = true;
-    options.removeDynamicIndexingOfSwizzledVector = true;
-    options.allowTranslateUniformBlockToStructuredBuffer = true;
-    options.addVulkanYUVLayoutQualifier = true;
-    options.disableARBTextureRectangle = true;
-    options.rewriteRowMajorMatrices = true;
-    options.ignorePrecisionQualifiers = true;
-    options.addVulkanDepthCorrection = true;
-    options.forceShaderPrecisionHighpToMediump = true;
-    options.useSpecializationConstant = true;
-    options.addVulkanXfbEmulationSupportCode = true;
-    options.addVulkanXfbExtensionSupportCode = true;
-    options.initFragmentOutputVariables = true;
-    options.generateSpirvThroughGlslang = true;
-    options.addExplicitBoolCasts = true;
-    options.roundOutputAfterDithering = true;
-    options.precisionSafeDivision = true;
-    options.passHighpToPackUnormSnormBuiltins = true;
+    options = -1;
+
+    options ^= SH_INTERMEDIATE_TREE;
+    options ^= SH_LINE_DIRECTIVES;
+    options ^= SH_SOURCE_PATH;
+
+    options ^= SH_LIMIT_EXPRESSION_COMPLEXITY;
+    options ^= SH_LIMIT_CALL_STACK_DEPTH;
+
+    options ^= SH_EXPAND_SELECT_HLSL_INTEGER_POW_EXPRESSIONS;
+    options ^= SH_HLSL_GET_DIMENSIONS_IGNORES_BASE_LEVEL;
+
+    options ^= SH_REMOVE_INVARIANT_AND_CENTROID_FOR_ESSL3;
   }
 
   if (resources.MaxExpressionComplexity > 0) {
-    options.limitExpressionComplexity = true;
+    options |= SH_LIMIT_EXPRESSION_COMPLEXITY;
   }
   if (resources.MaxCallStackDepth > 0) {
-    options.limitCallStackDepth = true;
+    options |= SH_LIMIT_CALL_STACK_DEPTH;
   }
 
   return options;

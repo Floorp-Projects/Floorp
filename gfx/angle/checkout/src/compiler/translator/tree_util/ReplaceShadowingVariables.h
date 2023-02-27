@@ -18,9 +18,9 @@ class TCompiler;
 class TIntermBlock;
 class TSymbolTable;
 
-[[nodiscard]] bool ReplaceShadowingVariables(TCompiler *compiler,
-                                             TIntermBlock *root,
-                                             TSymbolTable *symbolTable);
+ANGLE_NO_DISCARD bool ReplaceShadowingVariables(TCompiler *compiler,
+                                                TIntermBlock *root,
+                                                TSymbolTable *symbolTable);
 }  // namespace sh
 
 #endif  // COMPILER_TRANSLATOR_TREEUTIL_REPLACESHADOWINGVARIABLES_H_

@@ -34,8 +34,6 @@ class SamplerImpl : angle::NonCopyable
     }
     virtual angle::Result syncState(const gl::Context *context, const bool dirty) = 0;
 
-    angle::Result onLabelUpdate(const gl::Context *context) { return angle::Result::Continue; }
-
   protected:
     const gl::SamplerState &mState;
 };
