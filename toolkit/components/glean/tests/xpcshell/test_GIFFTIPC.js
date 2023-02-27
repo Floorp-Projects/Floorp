@@ -101,7 +101,7 @@ add_task({ skip_if: () => runningInParent }, async function run_child_stuff() {
 
   // Has to be different from aLabeledCounter so the error we record doesn't
   // get in the way.
-  Glean.testOnlyIpc.anotherLabeledCounter.InvalidLabel.add(INVALID_COUNTERS);
+  Glean.testOnlyIpc.anotherLabeledCounter["1".repeat(72)].add(INVALID_COUNTERS);
 
   Glean.testOnlyIpc.irate.addToNumerator(IRATE_NUMERATOR);
   Glean.testOnlyIpc.irate.addToDenominator(IRATE_DENOMINATOR);
@@ -221,7 +221,7 @@ add_task(
     );
     Assert.deepEqual(
       {
-        InvalidLabel: INVALID_COUNTERS,
+        ["1".repeat(72)]: INVALID_COUNTERS,
       },
       value
     );

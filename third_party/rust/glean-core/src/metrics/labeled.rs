@@ -13,7 +13,7 @@ use crate::Glean;
 
 const MAX_LABELS: usize = 16;
 const OTHER_LABEL: &str = "__other__";
-const MAX_LABEL_LENGTH: usize = 61;
+const MAX_LABEL_LENGTH: usize = 71;
 
 /// A labeled counter.
 pub type LabeledCounter = LabeledMetric<CounterMetric>;
@@ -23,66 +23,6 @@ pub type LabeledBoolean = LabeledMetric<BooleanMetric>;
 
 /// A labeled string.
 pub type LabeledString = LabeledMetric<StringMetric>;
-
-/// Checks whether the given label is sane.
-///
-/// The check corresponds to the following regular expression:
-///
-/// ```text
-/// ^[a-z_][a-z0-9_-]{0,29}(\\.[a-z_][a-z0-9_-]{0,29})*$
-/// ```
-///
-/// We do a manul check here instead of using a regex,
-/// because the regex crate adds to the binary size significantly,
-/// and the Glean SDK doesn't use regular expressions anywhere else.
-///
-/// Some examples of good and bad labels:
-///
-/// Good:
-/// * `this.is.fine`
-/// * `this_is_fine_too`
-/// * `this.is_still_fine`
-/// * `thisisfine`
-/// * `_.is_fine`
-/// * `this.is-fine`
-/// * `this-is-fine`
-/// Bad:
-/// * `this.is.not_fine_due_tu_the_length_being_too_long_i_thing.i.guess`
-/// * `1.not_fine`
-/// * `this.$isnotfine`
-/// * `-.not_fine`
-fn matches_label_regex(value: &str) -> bool {
-    let mut iter = value.chars();
-
-    loop {
-        // Match the first letter in the word.
-        match iter.next() {
-            Some('_') | Some('a'..='z') => (),
-            _ => return false,
-        };
-
-        // Match subsequent letters in the word.
-        let mut count = 0;
-        loop {
-            match iter.next() {
-                // We are done, so the whole expression is valid.
-                None => return true,
-                // Valid characters.
-                Some('_') | Some('-') | Some('a'..='z') | Some('0'..='9') => (),
-                // We ended a word, so iterate over the outer loop again.
-                Some('.') => break,
-                // An invalid character
-                _ => return false,
-            }
-            count += 1;
-            // We allow 30 characters per word, but the first one is handled
-            // above outside of this loop, so we have a maximum of 29 here.
-            if count == 29 {
-                return false;
-            }
-        }
-    }
-}
 
 /// A labeled metric.
 ///
@@ -338,8 +278,8 @@ pub fn validate_dynamic_label(
         );
         record_error(glean, meta, ErrorType::InvalidLabel, msg, None);
         true
-    } else if !matches_label_regex(label) {
-        let msg = format!("label must be snake_case, got '{}'", label);
+    } else if label.chars().any(|c| !c.is_ascii() || c.is_ascii_control()) {
+        let msg = format!("label must be printable ascii, got '{}'", label);
         record_error(glean, meta, ErrorType::InvalidLabel, msg, None);
         true
     } else {

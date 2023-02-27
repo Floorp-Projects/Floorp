@@ -154,12 +154,12 @@ add_task({ skip_if: () => runningInParent }, async function run_child_stuff() {
   Glean.jogIpc.jogLabeledCounter.label_1.add(COUNTERS_1);
   Glean.jogIpc.jogLabeledCounter.label_2.add(COUNTERS_2);
 
-  Glean.jogIpc.jogLabeledCounterErr.InvalidLabel.add(INVALID_COUNTERS);
+  Glean.jogIpc.jogLabeledCounterErr["1".repeat(72)].add(INVALID_COUNTERS);
 
   Glean.jogIpc.jogLabeledCounterWithLabels.label_1.add(COUNTERS_1);
   Glean.jogIpc.jogLabeledCounterWithLabels.label_2.add(COUNTERS_2);
 
-  Glean.jogIpc.jogLabeledCounterWithLabelsErr.InvalidLabel.add(
+  Glean.jogIpc.jogLabeledCounterWithLabelsErr["1".repeat(72)].add(
     INVALID_COUNTERS
   );
 

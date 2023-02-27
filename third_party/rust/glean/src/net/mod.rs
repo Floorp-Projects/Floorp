@@ -7,17 +7,15 @@
 //! This doesn't perform the actual upload but rather handles
 //! retries, upload limitations and error tracking.
 
-use std::sync::{
-    atomic::{AtomicBool, Ordering},
-    Arc,
-};
-use std::thread;
+use std::sync::{atomic::Ordering, Arc, Mutex};
+use std::thread::{self, JoinHandle};
 use std::time::Duration;
 
 use glean_core::upload::PingUploadTask;
 pub use glean_core::upload::{PingRequest, UploadResult, UploadTaskAction};
 
 pub use http_uploader::*;
+use thread_state::{AtomicState, State};
 
 mod http_uploader;
 
@@ -45,7 +43,8 @@ pub(crate) struct UploadManager {
 struct Inner {
     server_endpoint: String,
     uploader: Box<dyn PingUploader + 'static>,
-    thread_running: AtomicBool,
+    thread_running: AtomicState,
+    handle: Mutex<Option<JoinHandle<()>>>,
 }
 
 impl UploadManager {
@@ -63,7 +62,8 @@ impl UploadManager {
             inner: Arc::new(Inner {
                 server_endpoint,
                 uploader: new_uploader,
-                thread_running: AtomicBool::new(false),
+                thread_running: AtomicState::new(State::Stopped),
+                handle: Mutex::new(None),
             }),
         }
     }
@@ -76,7 +76,12 @@ impl UploadManager {
         if self
             .inner
             .thread_running
-            .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+            .compare_exchange(
+                State::Stopped,
+                State::Running,
+                Ordering::SeqCst,
+                Ordering::SeqCst,
+            )
             .is_err()
         {
             return;
@@ -84,7 +89,9 @@ impl UploadManager {
 
         let inner = Arc::clone(&self.inner);
 
-        thread::Builder::new()
+        // Need to lock before we start so that noone thinks we're not running.
+        let mut handle = self.inner.handle.lock().unwrap();
+        let thread = thread::Builder::new()
             .name("glean.upload".into())
             .spawn(move || {
                 log::trace!("Started glean.upload thread");
@@ -101,8 +108,14 @@ impl UploadManager {
                             let result = inner.uploader.upload(upload_url, request.body, headers);
                             // Process the upload response.
                             match glean_core::glean_process_ping_upload_response(doc_id, result) {
-                                UploadTaskAction::Next => continue,
+                                UploadTaskAction::Next => (),
                                 UploadTaskAction::End => break,
+                            }
+
+                            let status = inner.thread_running.load(Ordering::SeqCst);
+                            // asked to shut down. let's do it.
+                            if status == State::ShuttingDown {
+                                break;
                             }
                         }
                         PingUploadTask::Wait { time } => {
@@ -117,9 +130,92 @@ impl UploadManager {
                     }
                 }
 
-                // Clear the running flag to signal that this thread is done.
-                inner.thread_running.store(false, Ordering::SeqCst);
+                // Clear the running flag to signal that this thread is done,
+                // but only if there's no shutdown thread.
+                let _ = inner.thread_running.compare_exchange(
+                    State::Running,
+                    State::Stopped,
+                    Ordering::SeqCst,
+                    Ordering::SeqCst,
+                );
             })
             .expect("Failed to spawn Glean's uploader thread");
+        *handle = Some(thread);
+    }
+
+    pub(crate) fn shutdown(&self) {
+        // mark as shutting down.
+        self.inner
+            .thread_running
+            .store(State::ShuttingDown, Ordering::SeqCst);
+
+        // take the thread handle out.
+        let mut handle = self.inner.handle.lock().unwrap();
+        let thread = handle.take();
+
+        if let Some(thread) = thread {
+            thread
+                .join()
+                .expect("couldn't join on the uploader thread.");
+        }
+    }
+}
+
+mod thread_state {
+    use std::sync::atomic::{AtomicU8, Ordering};
+
+    #[derive(Debug, PartialEq)]
+    #[repr(u8)]
+    pub enum State {
+        Stopped = 0,
+        Running = 1,
+        ShuttingDown = 2,
+    }
+
+    #[derive(Debug)]
+    pub struct AtomicState(AtomicU8);
+
+    impl AtomicState {
+        const fn to_u8(val: State) -> u8 {
+            val as u8
+        }
+
+        fn from_u8(val: u8) -> State {
+            #![allow(non_upper_case_globals)]
+            const U8_Stopped: u8 = State::Stopped as u8;
+            const U8_Running: u8 = State::Running as u8;
+            const U8_ShuttingDown: u8 = State::ShuttingDown as u8;
+            match val {
+                U8_Stopped => State::Stopped,
+                U8_Running => State::Running,
+                U8_ShuttingDown => State::ShuttingDown,
+                _ => panic!("Invalid enum discriminant"),
+            }
+        }
+
+        pub const fn new(v: State) -> AtomicState {
+            AtomicState(AtomicU8::new(Self::to_u8(v)))
+        }
+
+        pub fn load(&self, order: Ordering) -> State {
+            Self::from_u8(self.0.load(order))
+        }
+
+        pub fn store(&self, val: State, order: Ordering) {
+            self.0.store(Self::to_u8(val), order)
+        }
+
+        pub fn compare_exchange(
+            &self,
+            current: State,
+            new: State,
+            success: Ordering,
+            failure: Ordering,
+        ) -> Result<State, State> {
+            self.0
+                .compare_exchange(Self::to_u8(current), Self::to_u8(new), success, failure)
+                .map(Self::from_u8)
+                .map_err(Self::from_u8)
+        }
     }
 }

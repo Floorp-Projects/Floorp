@@ -161,7 +161,7 @@ fn seq_number_must_be_sequential() {
 
 #[test]
 fn clear_pending_pings() {
-    let (mut glean, _) = new_glean(None);
+    let (mut glean, _t) = new_glean(None);
     let ping_maker = PingMaker::new();
     let ping_type = PingType::new("store1", true, false, vec![]);
     glean.register_ping_type(&ping_type);
@@ -190,7 +190,7 @@ fn clear_pending_pings() {
 fn no_pings_submitted_if_upload_disabled() {
     // Regression test, bug 1603571
 
-    let (mut glean, _) = new_glean(None);
+    let (mut glean, _t) = new_glean(None);
     let ping_type = PingType::new("store1", true, true, vec![]);
     glean.register_ping_type(&ping_type);
 
@@ -207,7 +207,7 @@ fn no_pings_submitted_if_upload_disabled() {
 
 #[test]
 fn metadata_is_correctly_added_when_necessary() {
-    let (mut glean, _) = new_glean(None);
+    let (mut glean, _t) = new_glean(None);
     glean.set_debug_view_tag("valid-tag");
     let ping_type = PingType::new("store1", true, true, vec![]);
     glean.register_ping_type(&ping_type);

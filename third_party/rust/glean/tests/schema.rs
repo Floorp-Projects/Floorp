@@ -13,8 +13,8 @@ use serde_json::Value;
 use glean::net::UploadResult;
 use glean::private::*;
 use glean::{
-    traits, ClientInfoMetrics, CommonMetricData, Configuration, ConfigurationBuilder,
-    HistogramType, MemoryUnit, TimeUnit,
+    traits, ClientInfoMetrics, CommonMetricData, ConfigurationBuilder, HistogramType, MemoryUnit,
+    TimeUnit,
 };
 
 const SCHEMA_JSON: &str = include_str!("../../../glean.1.schema.json");
@@ -45,32 +45,10 @@ impl traits::ExtraKeys for SomeExtras {
     }
 }
 
-// Create a new instance of Glean with a temporary directory.
-// We need to keep the `TempDir` alive, so that it's not deleted before we stop using it.
-fn new_glean(configuration: Option<Configuration>) -> tempfile::TempDir {
-    let dir = tempfile::tempdir().unwrap();
-    let tmpname = dir.path().to_path_buf();
-
-    let cfg = match configuration {
-        Some(c) => c,
-        None => ConfigurationBuilder::new(true, tmpname, GLOBAL_APPLICATION_ID)
-            .with_server_endpoint("invalid-test-host")
-            .build(),
-    };
-
-    let client_info = ClientInfoMetrics {
-        app_build: env!("CARGO_PKG_VERSION").to_string(),
-        app_display_version: env!("CARGO_PKG_VERSION").to_string(),
-        channel: Some("testing".to_string()),
-    };
-
-    glean::initialize(cfg, client_info);
-
-    dir
-}
-
 #[test]
 fn validate_against_schema() {
+    let _ = env_logger::builder().try_init();
+
     let schema = load_schema();
 
     let (s, r) = crossbeam_channel::bounded::<Vec<u8>>(1);
@@ -101,7 +79,14 @@ fn validate_against_schema() {
         .with_server_endpoint("invalid-test-host")
         .with_uploader(ValidatingUploader { sender: s })
         .build();
-    let _ = new_glean(Some(cfg));
+
+    let client_info = ClientInfoMetrics {
+        app_build: env!("CARGO_PKG_VERSION").to_string(),
+        app_display_version: env!("CARGO_PKG_VERSION").to_string(),
+        channel: Some("testing".to_string()),
+    };
+
+    glean::initialize(cfg, client_info);
 
     const PING_NAME: &str = "test-ping";
 

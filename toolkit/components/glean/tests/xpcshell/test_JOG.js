@@ -381,7 +381,9 @@ add_task(async function test_jog_labeled_boolean_works() {
   Assert.equal(false, Glean.jogCat.jogLabeledBool.label_2.testGetValue());
   // What about invalid/__other__?
   Assert.equal(undefined, Glean.jogCat.jogLabeledBool.__other__.testGetValue());
-  Glean.jogCat.jogLabeledBool.InvalidLabel.set(true);
+  Glean.jogCat.jogLabeledBool.NowValidLabel.set(true);
+  Assert.ok(Glean.jogCat.jogLabeledBool.NowValidLabel.testGetValue());
+  Glean.jogCat.jogLabeledBool["1".repeat(72)].set(true);
   Assert.throws(
     () => Glean.jogCat.jogLabeledBool.__other__.testGetValue(),
     /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
@@ -450,7 +452,7 @@ add_task(async function test_jog_labeled_counter_works() {
     undefined,
     Glean.jogCat.jogLabeledCounter.__other__.testGetValue()
   );
-  Glean.jogCat.jogLabeledCounter.InvalidLabel.add(1);
+  Glean.jogCat.jogLabeledCounter["1".repeat(72)].add(1);
   Assert.throws(
     () => Glean.jogCat.jogLabeledCounter.__other__.testGetValue(),
     /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
@@ -488,7 +490,7 @@ add_task(async function test_jog_labeled_counter_with_static_labels_works() {
     undefined,
     Glean.jogCat.jogLabeledCounterWithLabels.__other__.testGetValue()
   );
-  Glean.jogCat.jogLabeledCounterWithLabels.InvalidLabel.add(1);
+  Glean.jogCat.jogLabeledCounterWithLabels["1".repeat(72)].add(1);
   // TODO:(bug 1766515) - This should throw.
   /*Assert.throws(
     () => Glean.jogCat.jogLabeledCounterWithLabels.__other__.testGetValue(),
@@ -524,7 +526,7 @@ add_task(async function test_jog_labeled_string_works() {
     undefined,
     Glean.jogCat.jogLabeledString.__other__.testGetValue()
   );
-  Glean.jogCat.jogLabeledString.InvalidLabel.set("valid");
+  Glean.jogCat.jogLabeledString["1".repeat(72)].set("valid");
   Assert.throws(
     () => Glean.jogCat.jogLabeledString.__other__.testGetValue(),
     /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/
@@ -561,7 +563,7 @@ add_task(async function test_jog_labeled_string_with_labels_works() {
     undefined,
     Glean.jogCat.jogLabeledStringWithLabels.__other__.testGetValue()
   );
-  Glean.jogCat.jogLabeledStringWithLabels.InvalidLabel.set("valid");
+  Glean.jogCat.jogLabeledStringWithLabels["1".repeat(72)].set("valid");
   // TODO:(bug 1766515) - This should throw.
   /*Assert.throws(
     () => Glean.jogCat.jogLabeledStringWithLabels.__other__.testGetValue(),
