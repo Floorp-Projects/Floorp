@@ -106,7 +106,7 @@ def _get_secret_index(task_name):
     product_name = task_name.split("-")[0]
     secret_name = task_name[len(product_name) + 1:]
     secret_project_name = "focus-android" if product_name in ("focus", "klar") else product_name
-    return f'project/mobile/{secret_project_name}/{secret_name}'
+    return f'project/mobile/firefox-android/{secret_project_name}/{secret_name}'
 
 
 @transforms.add

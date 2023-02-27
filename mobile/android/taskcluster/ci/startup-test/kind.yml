@@ -29,7 +29,7 @@ task-defaults:
         using: run-commands
         use-caches: false
         secrets:
-            - name: project/mobile/fenix/firebase
+            - name: project/mobile/firefox-android/fenix/firebase
               key: firebaseToken
               path: .firebase_token.json
               json: true
