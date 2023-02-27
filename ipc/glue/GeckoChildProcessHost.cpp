@@ -392,7 +392,7 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
                                              bool aIsFileContent)
     : mProcessType(aProcessType),
       mIsFileContent(aIsFileContent),
-      mMonitor("mozilla.ipc.GeckChildProcessHost.mMonitor"),
+      mMonitor("mozilla.ipc.GeckoChildProcessHost.mMonitor"),
       mLaunchOptions(MakeUnique<base::LaunchOptions>()),
       mInitialChannelId(nsID::GenerateUUID()),
       mProcessState(CREATING_CHANNEL),
@@ -406,6 +406,7 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
       mEnableSandboxLogging(false),
       mSandboxLevel(0),
 #endif
+      mHandleLock("mozilla.ipc.GeckoChildProcessHost.mHandleLock"),
       mChildProcessHandle(0),
 #if defined(MOZ_WIDGET_COCOA)
       mChildTask(MACH_PORT_NULL),
@@ -458,29 +459,33 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
 
   MOZ_COUNT_DTOR(GeckoChildProcessHost);
 
+  {
+    mozilla::AutoWriteLock hLock(mHandleLock);
 #if defined(MOZ_WIDGET_COCOA)
-  if (mChildTask != MACH_PORT_NULL)
-    mach_port_deallocate(mach_task_self(), mChildTask);
+    if (mChildTask != MACH_PORT_NULL) {
+      mach_port_deallocate(mach_task_self(), mChildTask);
+    }
 #endif
 
-  if (mChildProcessHandle != 0) {
+    if (mChildProcessHandle != 0) {
 #if defined(XP_WIN)
-    CrashReporter::DeregisterChildCrashAnnotationFileDescriptor(
-        base::GetProcId(mChildProcessHandle));
+      CrashReporter::DeregisterChildCrashAnnotationFileDescriptor(
+          base::GetProcId(mChildProcessHandle));
 #else
-    CrashReporter::DeregisterChildCrashAnnotationFileDescriptor(
-        mChildProcessHandle);
+      CrashReporter::DeregisterChildCrashAnnotationFileDescriptor(
+          mChildProcessHandle);
 #endif
 
-    ProcessWatcher::EnsureProcessTerminated(
-        mChildProcessHandle
+      ProcessWatcher::EnsureProcessTerminated(
+          mChildProcessHandle
 #ifdef NS_FREE_PERMANENT_DATA
-        // If we're doing leak logging, shutdown can be slow.
-        ,
-        false  // don't "force"
+          // If we're doing leak logging, shutdown can be slow.
+          ,
+          false  // don't "force"
 #endif
-    );
-    mChildProcessHandle = 0;
+      );
+      mChildProcessHandle = 0;
+    }
   }
 
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)
@@ -490,6 +495,26 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
   }
 #endif
 }
+
+base::ProcessHandle GeckoChildProcessHost::GetChildProcessHandle() {
+  mozilla::AutoReadLock handleLock(mHandleLock);
+  return mChildProcessHandle;
+}
+
+base::ProcessId GeckoChildProcessHost::GetChildProcessId() {
+  mozilla::AutoReadLock handleLock(mHandleLock);
+  if (!mChildProcessHandle) {
+    return 0;
+  }
+  return base::GetProcId(mChildProcessHandle);
+}
+
+#ifdef XP_MACOSX
+task_t GeckoChildProcessHost::GetChildTask() {
+  mozilla::AutoReadLock handleLock(mHandleLock);
+  return mChildTask;
+}
+#endif
 
 void GeckoChildProcessHost::RemoveFromProcessList() {
   StaticMutexAutoLock lock(sMutex);
@@ -723,34 +748,37 @@ bool GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts) {
               IOThread(), __func__,
               [this](LaunchResults&& aResults) {
                 {
-                  if (!OpenPrivilegedHandle(base::GetProcId(aResults.mHandle))
+                  {
+                    mozilla::AutoWriteLock handleLock(mHandleLock);
+                    if (!OpenPrivilegedHandle(base::GetProcId(aResults.mHandle))
 #ifdef XP_WIN
-                      // If we failed in opening the process handle, try harder
-                      // by duplicating one.
-                      && !::DuplicateHandle(
-                             ::GetCurrentProcess(), aResults.mHandle,
-                             ::GetCurrentProcess(), &mChildProcessHandle,
-                             PROCESS_DUP_HANDLE | PROCESS_TERMINATE |
-                                 PROCESS_QUERY_INFORMATION | PROCESS_VM_READ |
-                                 SYNCHRONIZE,
-                             FALSE, 0)
+                        // If we failed in opening the process handle, try
+                        // harder by duplicating one.
+                        && !::DuplicateHandle(
+                               ::GetCurrentProcess(), aResults.mHandle,
+                               ::GetCurrentProcess(), &mChildProcessHandle,
+                               PROCESS_DUP_HANDLE | PROCESS_TERMINATE |
+                                   PROCESS_QUERY_INFORMATION | PROCESS_VM_READ |
+                                   SYNCHRONIZE,
+                               FALSE, 0)
 #endif  // XP_WIN
-                  ) {
-                    MOZ_CRASH("cannot open handle to child process");
-                  }
-                  // The original handle is no longer needed; it must
-                  // be closed to prevent a resource leak.
-                  base::CloseProcessHandle(aResults.mHandle);
-                  // FIXME (bug 1720523): define a cross-platform
-                  // "safe" invalid value to use in places like this.
-                  aResults.mHandle = 0;
+                    ) {
+                      MOZ_CRASH("cannot open handle to child process");
+                    }
+                    // The original handle is no longer needed; it must
+                    // be closed to prevent a resource leak.
+                    base::CloseProcessHandle(aResults.mHandle);
+                    // FIXME (bug 1720523): define a cross-platform
+                    // "safe" invalid value to use in places like this.
+                    aResults.mHandle = 0;
 
 #ifdef XP_MACOSX
-                  this->mChildTask = aResults.mChildTask;
-                  if (mNodeChannel) {
-                    mNodeChannel->SetMachTaskPort(this->mChildTask);
-                  }
+                    this->mChildTask = aResults.mChildTask;
+                    if (mNodeChannel) {
+                      mNodeChannel->SetMachTaskPort(this->mChildTask);
+                    }
 #endif
+                  }
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
                   this->mSandboxBroker = std::move(aResults.mSandboxBroker);
 #endif
@@ -764,7 +792,7 @@ bool GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts) {
                   lock.Notify();
                 }
                 return ProcessHandlePromise::CreateAndResolve(
-                    mChildProcessHandle, __func__);
+                    GetChildProcessHandle(), __func__);
               },
               [this](const LaunchError aError) {
                 // WaitUntilConnected might be waiting for us to signal.
@@ -828,7 +856,7 @@ bool GeckoChildProcessHost::WaitForProcessHandle() {
   while (mProcessState < PROCESS_CREATED) {
     lock.Wait();
   }
-  MOZ_ASSERT(mProcessState == PROCESS_ERROR || mChildProcessHandle);
+  MOZ_ASSERT(mProcessState == PROCESS_ERROR || GetChildProcessHandle());
 
   return mProcessState < PROCESS_ERROR;
 }
@@ -857,6 +885,7 @@ void GeckoChildProcessHost::InitializeChannel(
 }
 
 void GeckoChildProcessHost::SetAlreadyDead() {
+  mozilla::AutoWriteLock handleLock(mHandleLock);
   if (mChildProcessHandle &&
       mChildProcessHandle != base::kInvalidProcessHandle) {
     base::CloseProcessHandle(mChildProcessHandle);
@@ -1625,8 +1654,11 @@ bool GeckoChildProcessHost::OpenPrivilegedHandle(base::ProcessId aPid) {
 }
 
 void GeckoChildProcessHost::OnChannelConnected(base::ProcessId peer_pid) {
-  if (!OpenPrivilegedHandle(peer_pid)) {
-    MOZ_CRASH("can't open handle to child process");
+  {
+    mozilla::AutoWriteLock hLock(mHandleLock);
+    if (!OpenPrivilegedHandle(peer_pid)) {
+      MOZ_CRASH("can't open handle to child process");
+    }
   }
   MonitorAutoLock lock(mMonitor);
   mProcessState = PROCESS_CONNECTED;
