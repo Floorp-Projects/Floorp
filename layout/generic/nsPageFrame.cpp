@@ -642,14 +642,21 @@ nsSize nsPageFrame::ComputePageSize() const {
           ? this
           : static_cast<nsPageFrame*>(FirstContinuation());
   const StylePageSize& pageSize = frame->PageContentFrame()->StylePage()->mSize;
-
+  nsSize size = PresContext()->GetPageSize();
   if (pageSize.IsSize()) {
-    // Use the specified size
-    return nsSize{pageSize.AsSize().width.ToAppUnits(),
-                  pageSize.AsSize().height.ToAppUnits()};
+    // Use the specified size,
+    // ignoring sizes that include a zero width or height.
+    // These are also ignored in ServoStyleSet::GetPageSizeForPageName()
+    // when getting the paper size.
+    nscoord cssPageWidth = pageSize.AsSize().width.ToAppUnits();
+    nscoord cssPageHeight = pageSize.AsSize().height.ToAppUnits();
+    if (cssPageWidth > 0 && cssPageHeight > 0) {
+      return nsSize{cssPageWidth, cssPageHeight};
+    }
+    // Invalid size; just return the default
+    return size;
   }
 
-  nsSize size = PresContext()->GetPageSize();
   if (pageSize.IsOrientation()) {
     // Ensure the correct orientation is applied.
     if (pageSize.AsOrientation() == StylePageSizeOrientation::Portrait) {

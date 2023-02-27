@@ -677,11 +677,15 @@ Maybe<StylePageSizeOrientation> ServoStyleSet::GetDefaultPageSizeOrientation(
   if (pageSize.IsSize()) {
     const CSSCoord w = pageSize.AsSize().width.ToCSSPixels();
     const CSSCoord h = pageSize.AsSize().height.ToCSSPixels();
-    if (w > h) {
-      return Some(StylePageSizeOrientation::Landscape);
-    }
-    if (w < h) {
-      return Some(StylePageSizeOrientation::Portrait);
+    // Sizes that include a zero width or height will be ignored
+    // when getting the page size.
+    if (w > 0 && h > 0) {
+      if (w > h) {
+        return Some(StylePageSizeOrientation::Landscape);
+      }
+      if (w < h) {
+        return Some(StylePageSizeOrientation::Portrait);
+      }
     }
   } else {
     MOZ_ASSERT(pageSize.IsAuto(), "Impossible page size");
@@ -693,8 +697,16 @@ Maybe<nsSize> ServoStyleSet::GetPageSizeForPageName(const nsAtom* aPageName) {
   const RefPtr<ComputedStyle> style = ResolvePageContentStyle(aPageName);
   const StylePageSize& pageSize = style->StylePage()->mSize;
   if (pageSize.IsSize()) {
-    return Some(nsSize{pageSize.AsSize().width.ToAppUnits(),
-                       pageSize.AsSize().height.ToAppUnits()});
+    nscoord cssPageWidth = pageSize.AsSize().width.ToAppUnits();
+    nscoord cssPageHeight = pageSize.AsSize().height.ToAppUnits();
+    // Ignoring sizes that include a zero width or height.
+    // These are also ignored in nsPageFrame::ComputePageSize()
+    // when calculating the scaling for a page size.
+    // In bug 1807985, we might add similar handling for @page margin/size
+    // combinations that produce a zero-sized page-content box.
+    if (cssPageWidth > 0 && cssPageHeight > 0) {
+      return Some(nsSize{cssPageWidth, cssPageHeight});
+    }
   }
   return Nothing();
 }
