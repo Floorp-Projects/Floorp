@@ -1709,6 +1709,28 @@ bool WarpCacheIRTranspiler::emitLoadArgumentsObjectLength(
   return defineOperand(resultId, length);
 }
 
+bool WarpCacheIRTranspiler::emitLoadBoundFunctionNumArgs(
+    ObjOperandId objId, Int32OperandId resultId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* numArgs = MBoundFunctionNumArgs::New(alloc(), obj);
+  add(numArgs);
+
+  return defineOperand(resultId, numArgs);
+}
+
+bool WarpCacheIRTranspiler::emitLoadBoundFunctionTarget(ObjOperandId objId,
+                                                        ObjOperandId resultId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* target = MLoadFixedSlotAndUnbox::New(
+      alloc(), obj, BoundFunctionObject::targetSlot(), MUnbox::Mode::Infallible,
+      MIRType::Object);
+  add(target);
+
+  return defineOperand(resultId, target);
+}
+
 bool WarpCacheIRTranspiler::emitArrayFromArgumentsObjectResult(
     ObjOperandId objId, uint32_t shapeOffset) {
   MDefinition* obj = getOperand(objId);
@@ -5071,6 +5093,68 @@ bool WarpCacheIRTranspiler::emitCallClassHook(ObjOperandId calleeId,
   addEffectful(call);
   pushResult(call);
 
+  return resumeAfter(call);
+}
+
+bool WarpCacheIRTranspiler::emitCallBoundScriptedFunction(
+    ObjOperandId calleeId, ObjOperandId targetId, Int32OperandId argcId,
+    CallFlags flags, uint32_t numBoundArgs) {
+  MDefinition* callee = getOperand(calleeId);
+  MDefinition* target = getOperand(targetId);
+
+  MOZ_ASSERT(callInfo_->argFormat() == CallInfo::ArgFormat::Standard);
+  MOZ_ASSERT(!callInfo_->constructing());
+
+  callInfo_->setCallee(target);
+  updateArgumentsFromOperands();
+
+  auto* thisv = MLoadFixedSlot::New(alloc(), callee,
+                                    BoundFunctionObject::boundThisSlot());
+  add(thisv);
+  callInfo_->thisArg()->setImplicitlyUsedUnchecked();
+  callInfo_->setThis(thisv);
+
+  bool usingInlineBoundArgs =
+      numBoundArgs <= BoundFunctionObject::MaxInlineBoundArgs;
+
+  MElements* elements = nullptr;
+  if (!usingInlineBoundArgs) {
+    auto* boundArgs = MLoadFixedSlot::New(
+        alloc(), callee, BoundFunctionObject::firstInlineBoundArgSlot());
+    add(boundArgs);
+    elements = MElements::New(alloc(), boundArgs);
+    add(elements);
+  }
+
+  auto loadBoundArg = [&](size_t index) {
+    MInstruction* arg;
+    if (usingInlineBoundArgs) {
+      size_t slot = BoundFunctionObject::firstInlineBoundArgSlot() + index;
+      arg = MLoadFixedSlot::New(alloc(), callee, slot);
+    } else {
+      arg = MLoadElement::New(alloc(), elements, constant(Int32Value(index)));
+    }
+    add(arg);
+    return arg;
+  };
+  if (!callInfo_->prependArgs(numBoundArgs, loadBoundArg)) {
+    return false;
+  }
+
+  WrappedFunction* wrappedTarget = maybeCallTarget(target, CallKind::Scripted);
+
+  MCall* call =
+      makeCall(*callInfo_, /* needsThisCheck = */ false, wrappedTarget);
+  if (!call) {
+    return false;
+  }
+
+  if (flags.isSameRealm()) {
+    call->setNotCrossRealm();
+  }
+
+  addEffectful(call);
+  pushResult(call);
   return resumeAfter(call);
 }
 

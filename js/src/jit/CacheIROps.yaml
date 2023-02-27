@@ -1698,7 +1698,7 @@
 
 - name: CallBoundScriptedFunction
   shared: false
-  transpile: false
+  transpile: true
   cost_estimate: 3
   args:
     callee: ObjId
@@ -1977,7 +1977,7 @@
 
 - name: LoadBoundFunctionNumArgs
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 1
   args:
     obj: ObjId
@@ -1985,7 +1985,7 @@
 
 - name: LoadBoundFunctionTarget
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 1
   args:
     obj: ObjId
