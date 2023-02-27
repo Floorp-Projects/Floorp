@@ -63,20 +63,24 @@ async function test() {
   // A scrollend event should be posted after the refresh driver has ticked.
   is(scrollendCount, 1, "A scrollend event should be triggered after instant scroll");
 
-  scrollendCount = 0;
+  // If smooth scrolls are enabled, repeat the test with a smooth scroll.
+  if (SpecialPowers.getBoolPref("general.smoothScroll")) {
 
-  let smoothScrollTransformEndPromise = promiseTransformEnd();
+    scrollendCount = 0;
 
-  // Call the scrollTo function with behavior: smooth to trigger a programmatic
-  // scroll that should require some form of async transform.
-  scrollTo({ top: 1000, left: 0, behavior: "smooth" });
+    let smoothScrollTransformEndPromise = promiseTransformEnd();
 
-  // Ensure the smooth scroll transform has finished.
-  await smoothScrollTransformEndPromise;
+    // Call the scrollTo function with behavior: smooth to trigger a programmatic
+    // scroll that should require some form of async transform.
+    scrollTo({ top: 1000, left: 0, behavior: "smooth" });
 
-  await promiseFrame();
+    // Ensure the smooth scroll transform has finished.
+    await smoothScrollTransformEndPromise;
 
-  is(scrollendCount, 1, "A scrollend event should be triggered after smooth scroll");
+    await promiseFrame();
+
+    is(scrollendCount, 1, "A scrollend event should be triggered after smooth scroll");
+  }
 }
 waitUntilApzStable()
 .then(test)
