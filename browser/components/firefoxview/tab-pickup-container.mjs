@@ -20,6 +20,7 @@ class TabPickupContainer extends HTMLDetailsElement {
     this._currentSetupStateIndex = -1;
     this.errorState = null;
     this.tabListAdded = null;
+    this._id = Math.floor(Math.random() * 10e6);
   }
   get setupContainerElem() {
     return this.querySelector(".sync-setup-container");
@@ -41,7 +42,7 @@ class TabPickupContainer extends HTMLDetailsElement {
   connectedCallback() {
     this.addEventListener("click", this);
     this.addEventListener("toggle", this);
-    this.addEventListener("visibilitychange", this);
+    this.ownerDocument.addEventListener("visibilitychange", this);
     Services.obs.addObserver(this.boundObserve, TOPIC_SETUPSTATE_CHANGED);
 
     for (let elem of this.querySelectorAll("a[data-support-url]")) {
@@ -54,6 +55,7 @@ class TabPickupContainer extends HTMLDetailsElement {
     // when its safe to assume the custom-element's methods will be available
     this.tabListAdded = this.promiseChildAdded();
     this.update();
+    this.onVisibilityChange();
   }
 
   promiseChildAdded() {
@@ -73,6 +75,8 @@ class TabPickupContainer extends HTMLDetailsElement {
   }
 
   cleanup() {
+    TabsSetupFlowManager.updateViewVisiblity(this._id, "unloaded");
+    this.ownerDocument?.removeEventListener("visibilitychange", this);
     Services.obs.removeObserver(this.boundObserve, TOPIC_SETUPSTATE_CHANGED);
   }
 
@@ -83,6 +87,7 @@ class TabPickupContainer extends HTMLDetailsElement {
   handleEvent(event) {
     if (event.type == "toggle") {
       onToggleContainer(this);
+      this.onVisibilityChange();
       return;
     }
     if (event.type == "click" && event.target.dataset.action) {
@@ -130,11 +135,21 @@ class TabPickupContainer extends HTMLDetailsElement {
       }
     }
     // Returning to fxview seems like a likely time for a device check
-    if (
-      event.type == "visibilitychange" &&
-      document.visibilityState === "visible"
-    ) {
+    if (event.type == "visibilitychange") {
+      this.onVisibilityChange();
+    }
+  }
+  onVisibilityChange() {
+    const isVisible = document.visibilityState == "visible";
+    const isOpen = this.open;
+    if (isVisible && isOpen) {
       this.update();
+      TabsSetupFlowManager.updateViewVisiblity(this._id, "visible");
+    } else {
+      TabsSetupFlowManager.updateViewVisiblity(
+        this._id,
+        isVisible ? "closed" : "hidden"
+      );
     }
   }
 
