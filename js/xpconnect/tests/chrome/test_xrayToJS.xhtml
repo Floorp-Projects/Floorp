@@ -130,6 +130,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     ok(!Object.getOwnPropertyNames(foopyFunction).includes('prototype'), "Should not list prototype");
     ok(Object.getOwnPropertyNames(iwin.Array).includes('prototype'), "Should list prototype for standard constructor");
 
+    // Test BoundFunction.
+    iwin.eval('var boundFoopyFunction = foopyFunction.bind(null, 1)');
+    var boundFoopyFunction = Cu.unwaiveXrays(Cu.waiveXrays(iwin).boundFoopyFunction);
+    is(boundFoopyFunction.name, "bound namedFoopyFunction", "bound .name works over Xrays");
+    is(boundFoopyFunction.length, 2, "bound .length works over Xrays");
+    is(JSON.stringify(Object.getOwnPropertyNames(boundFoopyFunction).sort()), '["length","name"]', "Should list length and name");
+    // Mutate .name, it's just a data property.
+    iwin.eval('Object.defineProperty(boundFoopyFunction, "name", {value: "foobar", configurable: true, writable: true});');
+    is(boundFoopyFunction.name, "foobar", "mutated .name works over Xrays");
+    iwin.eval('boundFoopyFunction.name = 123;');
+    is(boundFoopyFunction.name, undefined, "only support string for .name");
+    iwin.eval('delete boundFoopyFunction.name');
+    is(boundFoopyFunction.name, undefined, "deleted .name works over Xrays");
+    // Mutate .length.
+    iwin.eval('Object.defineProperty(boundFoopyFunction, "length", {value: 456, configurable: true, writable: true});');
+    is(boundFoopyFunction.length, 456, "mutated .length works over Xrays");
+    iwin.eval('boundFoopyFunction.length = "bar";');
+    is(boundFoopyFunction.length, undefined, "only support number for .length");
+
     // Test proxies.
     var targetObject = new iwin.Object();
     targetObject.foo = 9;

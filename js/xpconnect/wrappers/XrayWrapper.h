@@ -211,7 +211,8 @@ class JSXrayTraits : public XrayTraits {
     if (!holder) {
       return false;
     }
-    if (xpc::JSXrayTraits::getProtoKey(holder) == JSProto_Function) {
+    JSProtoKey key = xpc::JSXrayTraits::getProtoKey(holder);
+    if (key == JSProto_Function || key == JSProto_BoundFunction) {
       return baseInstance.call(cx, wrapper, args);
     }
 
