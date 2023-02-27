@@ -573,6 +573,16 @@ bool CacheStorage::HasStorageAccess(UseCounter aLabel,
       SetUseCounter(aLabelWorker);
     }
   }
+
+  // Deny storage access for private browsing.
+  if (nsIPrincipal* principal = mGlobal->PrincipalOrNull()) {
+    if (!principal->IsSystemPrincipal() &&
+        principal->GetPrivateBrowsingId() !=
+            nsIScriptSecurityManager::DEFAULT_PRIVATE_BROWSING_ID) {
+      return false;
+    }
+  }
+
   return access > StorageAccess::ePrivateBrowsing ||
          (StaticPrefs::
               privacy_partition_always_partition_third_party_non_cookie_storage() &&
