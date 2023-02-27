@@ -125,9 +125,18 @@ class BoundFunctionObject : public NativeObject {
   static SharedShape* assignInitialShape(JSContext* cx,
                                          Handle<BoundFunctionObject*> obj);
 
+  static BoundFunctionObject* functionBindImpl(
+      JSContext* cx, Handle<JSObject*> target, Value* args, uint32_t argc,
+      Handle<BoundFunctionObject*> maybeBound);
+
+  static BoundFunctionObject* createTemplateObject(JSContext* cx);
+
   static constexpr size_t offsetOfFlagsSlot() {
     return getFixedSlotOffset(FlagsSlot);
   }
+
+  static constexpr size_t boundThisSlot() { return BoundThisSlot; }
+  static constexpr size_t firstInlineBoundArgSlot() { return BoundArg0Slot; }
 };
 
 };  // namespace js

@@ -2010,6 +2010,9 @@ bool CacheIRCompiler::emitGuardClass(ObjOperandId objId, GuardClassKind kind) {
     case GuardClassKind::Map:
       clasp = &MapObject::class_;
       break;
+    case GuardClassKind::BoundFunction:
+      clasp = &BoundFunctionObject::class_;
+      break;
     case GuardClassKind::JSFunction:
       MOZ_CRASH("JSFunction handled before switch");
   }

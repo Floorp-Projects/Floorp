@@ -263,6 +263,38 @@ static MOZ_ALWAYS_INLINE JSAtom* ComputeNameValue(
 
 // ES2023 20.2.3.2 Function.prototype.bind
 // https://tc39.es/ecma262/#sec-function.prototype.bind
+// static
+bool BoundFunctionObject::functionBind(JSContext* cx, unsigned argc,
+                                       Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Steps 1-2.
+  if (!IsCallable(args.thisv())) {
+    ReportIncompatibleMethod(cx, args, &FunctionClass);
+    return false;
+  }
+
+  if (MOZ_UNLIKELY(args.length() > ARGS_LENGTH_MAX)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TOO_MANY_ARGUMENTS);
+    return false;
+  }
+
+  Rooted<JSObject*> target(cx, &args.thisv().toObject());
+
+  BoundFunctionObject* bound =
+      functionBindImpl(cx, target, args.array(), args.length(), nullptr);
+  if (!bound) {
+    return false;
+  }
+
+  // Step 11.
+  args.rval().setObject(*bound);
+  return true;
+}
+
+// ES2023 20.2.3.2 Function.prototype.bind
+// https://tc39.es/ecma262/#sec-function.prototype.bind
 //
 // ES2023 10.4.1.3 BoundFunctionCreate
 // https://tc39.es/ecma262/#sec-boundfunctioncreate
@@ -271,57 +303,64 @@ static MOZ_ALWAYS_INLINE JSAtom* ComputeNameValue(
 // performance reasons.
 //
 // static
-bool BoundFunctionObject::functionBind(JSContext* cx, unsigned argc,
-                                       Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
+BoundFunctionObject* BoundFunctionObject::functionBindImpl(
+    JSContext* cx, Handle<JSObject*> target, Value* args, uint32_t argc,
+    Handle<BoundFunctionObject*> maybeBound) {
+  MOZ_ASSERT(target->isCallable());
 
-  // ES2023 20.2.3.2 Function.prototype.bind
-  // Steps 1-2.
-  if (MOZ_UNLIKELY(!IsCallable(args.thisv()))) {
-    ReportIncompatibleMethod(cx, args, &FunctionClass);
-    return false;
-  }
+  // Make sure the arguments on the stack are rooted when we're called directly
+  // from JIT code.
+  RootedExternalValueArray argsRoot(cx, argc, args);
 
-  size_t numBoundArgs = args.length() > 0 ? args.length() - 1 : 0;
-  if (MOZ_UNLIKELY(numBoundArgs > ARGS_LENGTH_MAX)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_TOO_MANY_ARGUMENTS);
-    return false;
-  }
-
-  Rooted<JSObject*> target(cx, &args.thisv().toObject());
-
-  // ES2023 10.4.1.3 BoundFunctionCreate
-  // Step 1.
-  Rooted<JSObject*> proto(cx);
-  if (!GetPrototype(cx, target, &proto)) {
-    return false;
-  }
+  size_t numBoundArgs = argc > 0 ? argc - 1 : 0;
+  MOZ_ASSERT(numBoundArgs <= ARGS_LENGTH_MAX, "ensured by callers");
 
   // If this assertion fails, make sure we use the correct AllocKind and that we
   // use all of its slots (consider increasing MaxInlineBoundArgs).
   constexpr gc::AllocKind allocKind = gc::AllocKind::OBJECT8_BACKGROUND;
   static_assert(gc::GetGCKindSlots(allocKind) == SlotCount);
 
-  // Steps 2-5.
+  // ES2023 10.4.1.3 BoundFunctionCreate
+  // Steps 1-5.
   Rooted<BoundFunctionObject*> bound(cx);
-  if (proto == &cx->global()->getFunctionPrototype() &&
-      cx->global()->maybeBoundFunctionShapeWithDefaultProto()) {
-    Rooted<SharedShape*> shape(
-        cx, cx->global()->maybeBoundFunctionShapeWithDefaultProto());
-    JSObject* obj = NativeObject::create(cx, allocKind, gc::DefaultHeap, shape);
-    if (!obj) {
-      return false;
+  if (maybeBound) {
+    // We allocated a bound function in JIT code. In the uncommon case of the
+    // target not having Function.prototype as proto, we have to set the right
+    // proto here.
+    bound = maybeBound;
+    if (MOZ_UNLIKELY(bound->staticPrototype() != target->staticPrototype())) {
+      Rooted<JSObject*> proto(cx, target->staticPrototype());
+      if (!SetPrototype(cx, bound, proto)) {
+        return nullptr;
+      }
     }
-    bound = &obj->as<BoundFunctionObject>();
   } else {
-    bound = NewObjectWithGivenProto<BoundFunctionObject>(cx, proto);
-    if (!bound) {
-      return false;
+    // Step 1.
+    Rooted<JSObject*> proto(cx);
+    if (!GetPrototype(cx, target, &proto)) {
+      return nullptr;
     }
-    if (!SharedShape::ensureInitialCustomShape<BoundFunctionObject>(cx,
-                                                                    bound)) {
-      return false;
+
+    // Steps 2-5.
+    if (proto == &cx->global()->getFunctionPrototype() &&
+        cx->global()->maybeBoundFunctionShapeWithDefaultProto()) {
+      Rooted<SharedShape*> shape(
+          cx, cx->global()->maybeBoundFunctionShapeWithDefaultProto());
+      JSObject* obj =
+          NativeObject::create(cx, allocKind, gc::DefaultHeap, shape);
+      if (!obj) {
+        return nullptr;
+      }
+      bound = &obj->as<BoundFunctionObject>();
+    } else {
+      bound = NewObjectWithGivenProto<BoundFunctionObject>(cx, proto);
+      if (!bound) {
+        return nullptr;
+      }
+      if (!SharedShape::ensureInitialCustomShape<BoundFunctionObject>(cx,
+                                                                      bound)) {
+        return nullptr;
+      }
     }
   }
 
@@ -335,16 +374,18 @@ bool BoundFunctionObject::functionBind(JSContext* cx, unsigned argc,
   bound->initReservedSlot(TargetSlot, ObjectValue(*target));
 
   // Step 8.
-  bound->initReservedSlot(BoundThisSlot, args.get(0));
+  if (argc > 0) {
+    bound->initReservedSlot(BoundThisSlot, args[0]);
+  }
 
   if (numBoundArgs <= MaxInlineBoundArgs) {
     for (size_t i = 0; i < numBoundArgs; i++) {
       bound->initReservedSlot(BoundArg0Slot + i, args[i + 1]);
     }
   } else {
-    ArrayObject* arr = NewDenseCopiedArray(cx, numBoundArgs, args.array() + 1);
+    ArrayObject* arr = NewDenseCopiedArray(cx, numBoundArgs, args + 1);
     if (!arr) {
-      return false;
+      return nullptr;
     }
     bound->initReservedSlot(BoundArg0Slot, ObjectValue(*arr));
   }
@@ -355,7 +396,7 @@ bool BoundFunctionObject::functionBind(JSContext* cx, unsigned argc,
 
   // Steps 5-6.
   if (!ComputeLengthValue(cx, bound, target, numBoundArgs, &length)) {
-    return false;
+    return nullptr;
   }
 
   // Step 7.
@@ -364,15 +405,28 @@ bool BoundFunctionObject::functionBind(JSContext* cx, unsigned argc,
   // Steps 8-9.
   JSAtom* name = ComputeNameValue(cx, bound, target);
   if (!name) {
-    return false;
+    return nullptr;
   }
 
   // Step 10.
   bound->initName(name);
 
   // Step 11.
-  args.rval().setObject(*bound);
-  return true;
+  return bound;
+}
+
+// static
+BoundFunctionObject* BoundFunctionObject::createTemplateObject(JSContext* cx) {
+  Rooted<JSObject*> proto(cx, &cx->global()->getFunctionPrototype());
+  Rooted<BoundFunctionObject*> bound(
+      cx, NewTenuredObjectWithGivenProto<BoundFunctionObject>(cx, proto));
+  if (!bound) {
+    return nullptr;
+  }
+  if (!SharedShape::ensureInitialCustomShape<BoundFunctionObject>(cx, bound)) {
+    return nullptr;
+  }
+  return bound;
 }
 
 static const JSClassOps classOps = {

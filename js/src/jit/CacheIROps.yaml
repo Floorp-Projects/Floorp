@@ -1781,6 +1781,15 @@
   args:
     thisShape: ShapeField
 
+- name: BindFunctionResult
+  shared: false
+  transpile: true
+  cost_estimate: 5
+  args:
+    target: ObjId
+    argc: UInt32Imm
+    templateObject: ObjectField
+
 - name: LoadFixedSlotResult
   shared: false
   transpile: true

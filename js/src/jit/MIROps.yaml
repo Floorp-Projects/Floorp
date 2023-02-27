@@ -286,6 +286,9 @@
 - name: ArrayState
   gen_boilerplate: false
 
+- name: NewBoundFunction
+  gen_boilerplate: false
+
 # Setting __proto__ in an object literal.
 - name: MutateProto
   operands:

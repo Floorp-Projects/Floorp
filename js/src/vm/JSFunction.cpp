@@ -27,6 +27,7 @@
 #include "frontend/BytecodeCompilation.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/FrontendContext.h"  // AutoReportFrontendContext, ManualReportFrontendContext
+#include "jit/InlinableNatives.h"
 #include "jit/Ion.h"
 #include "js/CallNonGenericMethod.h"
 #include "js/CompilationAndEvaluation.h"
@@ -1012,7 +1013,8 @@ static const JSFunctionSpec function_methods[] = {
     JS_FN(js_toString_str, fun_toString, 0, 0),
     JS_FN(js_apply_str, fun_apply, 2, 0),
     JS_FN(js_call_str, fun_call, 1, 0),
-    JS_FN("bind", BoundFunctionObject::functionBind, 1, 0),
+    JS_INLINABLE_FN("bind", BoundFunctionObject::functionBind, 1, 0,
+                    FunctionBind),
     JS_SYM_FN(hasInstance, fun_symbolHasInstance, 1,
               JSPROP_READONLY | JSPROP_PERMANENT),
     JS_FS_END};

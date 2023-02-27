@@ -213,6 +213,14 @@
   call_instruction: true
   mir_op: true
 
+- name: NewBoundFunction
+  result_type: WordSized
+  operands:
+    target: WordSized
+  call_instruction: true
+  num_temps: 2
+  mir_op: true
+
 - name: NewObject
   gen_boilerplate: false
 

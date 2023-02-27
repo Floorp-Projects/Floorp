@@ -3430,6 +3430,42 @@ bool BaselineCacheIRCompiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
   return true;
 }
 
+bool BaselineCacheIRCompiler::emitBindFunctionResult(
+    ObjOperandId targetId, uint32_t argc, uint32_t templateObjectOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegister scratch(allocator, masm);
+
+  Register target = allocator.useRegister(masm, targetId);
+
+  AutoStubFrame stubFrame(*this);
+  stubFrame.enter(masm, scratch);
+
+  // Push the arguments in reverse order.
+  for (uint32_t i = 0; i < argc; i++) {
+    Address argAddress(FramePointer,
+                       BaselineStubFrameLayout::Size() + i * sizeof(Value));
+    masm.pushValue(argAddress);
+  }
+  masm.moveStackPtrTo(scratch.get());
+
+  masm.Push(ImmWord(0));  // nullptr for maybeBound
+  masm.Push(Imm32(argc));
+  masm.Push(scratch);
+  masm.Push(target);
+
+  using Fn = BoundFunctionObject* (*)(JSContext*, Handle<JSObject*>, Value*,
+                                      uint32_t, Handle<BoundFunctionObject*>);
+  callVM<Fn, BoundFunctionObject::functionBindImpl>(masm);
+
+  stubFrame.leave(masm);
+  masm.storeCallPointerResult(scratch);
+
+  masm.tagValue(JSVAL_TYPE_OBJECT, scratch, output.valueReg());
+  return true;
+}
+
 bool BaselineCacheIRCompiler::emitCloseIterScriptedResult(
     ObjOperandId iterId, ObjOperandId calleeId, CompletionKind kind,
     uint32_t calleeNargs) {
