@@ -46,7 +46,6 @@ linux1804-64-qr/opt:
         - mochitest-webgpu
         - web-platform-tests
         - web-platform-tests-backlog
-        - linux-talos-flex
         - talos
         - browsertime
 
@@ -59,7 +58,6 @@ linux1804-64-shippable-qr/opt:
         - mochitest-webgpu
         - web-platform-tests
         - web-platform-tests-backlog
-        - linux-talos-flex
         - talos
         - talos-profiling
         - browsertime

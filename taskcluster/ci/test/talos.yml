@@ -219,38 +219,6 @@ talos-dromaeojs-profiling:
             - --suite=dromaeojs
             - --gecko-profile
 
-talos-flex:
-    description: Talos XUL flexbox emulation enabled
-    try-name: flex
-    treeherder-symbol: T(f)
-    tier: 2
-    run-on-projects:
-        by-test-platform:
-            windows.*-32.*: []
-            (linux|windows10-64|macos)(?!.*shippable).*: []
-            (linux|windows10-64|macos)(?!.*-qr).*: []
-            default: [mozilla-central]
-    max-run-time: 1800
-    mozharness:
-        extra-options:
-            - --suite=flex
-
-talos-flex-profiling:
-    description: Talos XUL flexbox emulation enabled with gecko profiling
-    try-name: flex-prof
-    treeherder-symbol: T-Prof(f)
-    tier: 3
-    run-on-projects:
-        by-test-platform:
-            windows.*-32.*: []
-            (linux|windows10-64|macos)(?!.*shippable).*: []
-            default: [mozilla-central]
-    max-run-time: 1800
-    mozharness:
-        extra-options:
-            - --suite=flex
-            - --gecko-profile
-
 talos-g1:
     description: Talos g1
     try-name: g1

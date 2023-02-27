@@ -60,7 +60,6 @@ figure out what suites and tests are available to run.
     #  bcv                          (basic_compositor_video)
     #  chromez                      (about_preferences_basic:tresize)
     #  dromaeojs                    (dromaeo_css:kraken)
-    #  flex                         (tart_flex:ts_paint_flex)
     # ...
 
     # Run all of the tests in the "bcv" test suite:
@@ -106,7 +105,6 @@ platform and test suites of your choosing.
     | test-windows10-64/opt-talos-webgl-gli-e10s
     | test-linux64-shippable/opt-talos-tp5o-e10s
     | test-linux64-shippable/opt-talos-svgr-e10s
-    | test-linux64-shippable/opt-talos-flex-e10s
     | test-linux64-shippable/opt-talos-damp-e10s
     > test-windows7-32/opt-talos-webgl-gli-e10s
     | test-linux64-shippable/opt-talos-bcv-e10s
