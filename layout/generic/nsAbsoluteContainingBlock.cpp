@@ -672,14 +672,14 @@ void nsAbsoluteContainingBlock::ResolveAutoMarginsAfterLayout(
   LogicalMargin offsetsInWM = aOffsets.ConvertTo(wm, outerWM);
 
   // No need to substract border sizes because aKidSize has it included
-  // already
-  nscoord availMarginSpace = aLogicalCBSize->BSize(wm) - kidSizeInWM.BSize(wm) -
-                             offsetsInWM.BStartEnd(wm) -
-                             marginInWM.BStartEnd(wm);
-
-  if (availMarginSpace < 0) {
-    availMarginSpace = 0;
-  }
+  // already. Also, if any offset is auto, the auto margin resolves to zero.
+  // https://drafts.csswg.org/css-position-3/#abspos-margins
+  const bool autoOffset = offsetsInWM.BEnd(wm) == NS_AUTOOFFSET ||
+                          offsetsInWM.BStart(wm) == NS_AUTOOFFSET;
+  nscoord availMarginSpace =
+      autoOffset ? 0
+                 : aLogicalCBSize->BSize(wm) - kidSizeInWM.BSize(wm) -
+                       offsetsInWM.BStartEnd(wm) - marginInWM.BStartEnd(wm);
 
   const auto& styleMargin = aKidReflowInput.mStyleMargin;
   if (wm.IsOrthogonalTo(outerWM)) {
