@@ -172,8 +172,11 @@ void MFMediaEngineParent::CreateMediaEngine() {
 
 #ifdef MOZ_WMF_CDM
   // TODO : set the content protection manager to IMFMediaEngineProtectedContent
-  RETURN_VOID_IF_FAILED(MakeAndInitialize<MFContentProtectionManager>(
-      &mContentProtectionManager));
+  // TODO : only create this for the encrypted content.
+  if (StaticPrefs::media_eme_playready_enabled()) {
+    RETURN_VOID_IF_FAILED(MakeAndInitialize<MFContentProtectionManager>(
+        &mContentProtectionManager));
+  }
 #endif
 
   LOG("Created media engine successfully");
