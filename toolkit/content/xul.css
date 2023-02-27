@@ -3,12 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * A minimal set of rules for the XUL elements that may be implicitly created
- * as part of HTML/SVG documents (e.g. scrollbars) can be found over in
- * minimal-xul.css.  Rules for everything else related to XUL can be found in
- * this file.  Make sure you choose the correct style sheet when adding new
- * rules.  (This split of the XUL rules is to minimize memory use and improve
- * performance in HTML/SVG documents.)
+ * Rules for everything related to XUL except scrollbars can be found in this
+ * file.
  *
  * This file should also not contain any app specific styling.  Defaults for
  * widgets of a particular application should be in that application's style
@@ -18,6 +14,22 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
 @namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */
+
+* {
+  -moz-user-focus: ignore;
+  display: -moz-box;
+  box-sizing: border-box;
+}
+
+/* hide the content and destroy the frame */
+[hidden="true"] {
+  display: none;
+}
+
+/* hide the content, but don't destroy the frames */
+[collapsed="true"] {
+  visibility: collapse;
+}
 
 /* TODO: investigate unifying these two root selectors
  * https://bugzilla.mozilla.org/show_bug.cgi?id=1592344
