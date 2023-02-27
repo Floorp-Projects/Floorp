@@ -60,7 +60,6 @@ talos-profiling:
     - talos-chrome-profiling
     # - talos-damp-profiling - Disabled b/c of Bug 1597734
     - talos-dromaeojs-profiling
-    # - talos-flex-profiling - Disabled b/c of Bug 1597736
     - talos-g1-profiling
     - talos-g3-profiling
     - talos-g4-profiling
@@ -182,9 +181,6 @@ linux1804-ccov-tests:
     # to run it on ccov builds, so we have this set that has it and which runs
     # on ccov builds.
     - jittest
-
-linux-talos-flex:
-    - talos-flex
 
 # Windows
 

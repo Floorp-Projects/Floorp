@@ -193,12 +193,6 @@ class ts_paint_heavy(ts_paint):
 
 
 @register_test()
-class ts_paint_flex(ts_paint):
-    preferences = {"layout.css.moz-box-flexbox-emulation.enabled": True}
-    pine = False
-
-
-@register_test()
 class startup_about_home_paint(ts_paint):
     """
     Tests loading about:home on startup with the about:home startup cache
@@ -570,12 +564,6 @@ class tart(PageloaderTest):
     }
     filters = filter.ignore_first.prepare(1) + filter.median.prepare()
     unit = "ms"
-    pine = False
-
-
-@register_test()
-class tart_flex(tart):
-    preferences = {"layout.css.moz-box-flexbox-emulation.enabled": True}
     pine = False
 
 

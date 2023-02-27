@@ -693,10 +693,6 @@ suites:
                     * 27;newtab-open-preload-yes.half.TART;3.14;2.96;2.97;8.37;2.98;3.00;2.96;3.05;3.12;3.48;3.07;3.23;3.05;2.88;2.92;3.06;2.90;3.01;3.19;2.90;3.18;3.11;3.04;3.16;3.21
                     * 28;newtab-open-preload-yes.all.TART;5.10;4.60;4.63;8.94;5.01;4.69;4.63;4.67;4.93;5.43;4.78;5.12;4.77;4.65;4.50;4.78;4.75;4.63;4.76;4.45;4.86;4.88;4.69;4.86;4.92
                     * 29;newtab-open-preload-yes.error.TART;35.90;37.24;38.57;40.60;36.04;38.12;38.78;36.73;36.91;36.69;38.12;36.69;37.79;35.80;36.11;38.01;36.59;38.85;37.14;37.30;38.02;38.95;37.64;37.86;36.43
-            tart_flex: >
-                - description:
-                      | This test was created as a part of a goal to switch away from xul flexbox to css flexbox
-                - Contact: No longer being maintained by any team/individual
             tp5n: >
                 - contact: fx-perf@mozilla.com
                 - description:
@@ -920,10 +916,6 @@ suites:
                     * (and/or maybe tpaint?) will regress if a new element is added to the
                         browser window (e.g. browser.xul) and it's frame gets created. Fix
                         this by ensuring it's display:none by default.
-            ts_paint_flex: >
-                - description:
-                      | This test was created as a part of a goal to switch away from xul flexbox to css flexbox
-                - Contact: No longer being maintained by any team/individual
             ts_paint_heavy: >
                 - `ts_paint <#ts_paint>`_ test run against a heavy user profile.
                 - contact: :mconley, Firefox Desktop Front-end team,

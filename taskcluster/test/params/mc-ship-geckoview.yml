@@ -1813,7 +1813,6 @@ existing_tasks:
     test-linux64-shippable/opt-talos-damp-e10s: JPZMIeOMSLGQpAMJFWQ_QQ
     test-linux64-shippable/opt-talos-dromaeojs-e10s: X77YW5XZTvK_OT2Uhgck6A
     test-linux64-shippable/opt-talos-dromaeojs-profiling-e10s: E0t7Tdz-QUGkaYXWq0itLg
-    test-linux64-shippable/opt-talos-flex-e10s: AZkSzYwqQ3OtDpdM8-sFfg
     test-linux64-shippable/opt-talos-g1-e10s: Z8FpaR0yR-aMKJ6C3rSA8Q
     test-linux64-shippable/opt-talos-g1-profiling-e10s: eAU0Fq_QRUWJMPQdkWZD5g
     test-linux64-shippable/opt-talos-g3-e10s: GfBf46_7TUmLzQKlb782Qw
@@ -1940,7 +1939,6 @@ existing_tasks:
     test-linux64/opt-talos-chrome-e10s: TPpI4NUZTX2KISiNTECneQ
     test-linux64/opt-talos-damp-e10s: MdorZUfxSvKm3BCIEIg4lQ
     test-linux64/opt-talos-dromaeojs-e10s: WEvrUccjRFapOxKmuJCoWw
-    test-linux64/opt-talos-flex-e10s: TsTtcXTzQC-lXo0jA_NJuQ
     test-linux64/opt-talos-g1-e10s: Wh16qsINQTSL1J3fv4Xm7g
     test-linux64/opt-talos-g3-e10s: AbJj_8xSSvibIvitur0C_A
     test-linux64/opt-talos-g4-e10s: FDD0cBQ3Q6KLwTEVgvrgHw

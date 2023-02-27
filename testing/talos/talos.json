@@ -9,9 +9,6 @@
         "dromaeojs": {
             "tests": ["dromaeo_css", "kraken"]
         },
-        "flex": {
-            "tests": ["tart_flex", "ts_paint_flex"]
-        },
         "other": {
             "tests": ["a11yr", "ts_paint", "twinopen", "sessionrestore", "sessionrestore_no_auto_restore", "tabpaint", "cpstartup", "startup_about_home_paint", "pdfpaint", "cross_origin_pageload", "startup_about_home_paint_cached"]
         },

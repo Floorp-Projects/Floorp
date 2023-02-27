@@ -60,7 +60,6 @@ figure out what suites and tests are available to run.
     #  bcv                          (basic_compositor_video)
     #  chromez                      (about_preferences_basic:tresize)
     #  dromaeojs                    (dromaeo_css:kraken)
-    #  flex                         (tart_flex:ts_paint_flex)
     # ...
 
     # Run all of the tests in the "bcv" test suite:
@@ -106,7 +105,6 @@ platform and test suites of your choosing.
     | test-windows10-64/opt-talos-webgl-gli-e10s
     | test-linux64-shippable/opt-talos-tp5o-e10s
     | test-linux64-shippable/opt-talos-svgr-e10s
-    | test-linux64-shippable/opt-talos-flex-e10s
     | test-linux64-shippable/opt-talos-damp-e10s
     > test-windows7-32/opt-talos-webgl-gli-e10s
     | test-linux64-shippable/opt-talos-bcv-e10s
@@ -6215,55 +6213,6 @@ For the sample commands found below, note that the capitalization used is import
 
 
 
-.. dropdown:: tart_flex
-   :container: + anchor-id-tart_flex
-
-   * description:
-      | This test was created as a part of a goal to switch away from xul flexbox to css flexbox
-   * Contact: No longer being maintained by any team/individual
-   * pine: False
-   * preferences: {'layout.css.moz-box-flexbox-emulation.enabled': True}
-   * Command
-
-   .. code-block::
-
-      ./mach talos-test -a tart_flex
-
-   * **Test Task**:
-
-   .. list-table:: **test-linux1804-64-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **talos-flex**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-linux1804-64-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **talos-flex**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-
-
-
 .. dropdown:: tp5
    :container: + anchor-id-tp5
 
@@ -7516,55 +7465,6 @@ For the sample commands found below, note that the capitalization used is import
         - ✅
         - ❌
         - ✅
-
-
-
-.. dropdown:: ts_paint_flex
-   :container: + anchor-id-ts_paint_flex
-
-   * description:
-      | This test was created as a part of a goal to switch away from xul flexbox to css flexbox
-   * Contact: No longer being maintained by any team/individual
-   * pine: False
-   * preferences: {'layout.css.moz-box-flexbox-emulation.enabled': True}
-   * Command
-
-   .. code-block::
-
-      ./mach talos-test -a ts_paint_flex
-
-   * **Test Task**:
-
-   .. list-table:: **test-linux1804-64-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **talos-flex**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-linux1804-64-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **talos-flex**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
 
 
 
