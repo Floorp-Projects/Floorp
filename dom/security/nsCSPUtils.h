@@ -278,15 +278,13 @@ class nsCSPHostSrc : public nsCSPBaseSrc {
   void setPort(const nsAString& aPort);
   void appendPath(const nsAString& aPath);
 
-  inline void setGeneratedFromSelfKeyword() {
+  inline void setGeneratedFromSelfKeyword() const {
     mGeneratedFromSelfKeyword = true;
   }
 
-  inline void setGeneratedScheme(bool aValue) { mGeneratedScheme = aValue; }
+  inline void setIsUniqueOrigin() const { mIsUniqueOrigin = true; }
 
-  inline void setIsUniqueOrigin() { mIsUniqueOrigin = true; }
-
-  inline void setWithinFrameAncestorsDir(bool aValue) {
+  inline void setWithinFrameAncestorsDir(bool aValue) const {
     mWithinFrameAncstorsDir = aValue;
   }
 
@@ -303,10 +301,9 @@ class nsCSPHostSrc : public nsCSPBaseSrc {
   nsString mHost;
   nsString mPort;
   nsString mPath;
-  bool mGeneratedFromSelfKeyword = false;
-  bool mGeneratedScheme = false;
-  bool mIsUniqueOrigin = false;
-  bool mWithinFrameAncstorsDir = false;
+  mutable bool mGeneratedFromSelfKeyword;
+  mutable bool mIsUniqueOrigin;
+  mutable bool mWithinFrameAncstorsDir;
 };
 
 /* =============== nsCSPKeywordSrc ============ */

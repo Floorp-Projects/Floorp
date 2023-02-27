@@ -710,13 +710,17 @@ add_task(async function responseHeaders_set_content_security_policy_header() {
       yes: { url: "http://yes/csptest", violatedCSP: [] },
       maybe: {
         url: "http://maybe/csptest",
-        violatedCSP: ["connect-src 2-of-2 http://yes"],
+        violatedCSP: [
+          // Note: "http://" is before 2-of-2 due to bug 1804145.
+          "connect-src http://2-of-2 http://yes",
+        ],
       },
       no: {
         url: "http://no/csptest",
         violatedCSP: [
-          "connect-src 1-of-2 http://yes http://maybe",
-          "connect-src 2-of-2 http://yes",
+          // Note: "http://" is before 1-of-2 and 2-of-2 due to bug 1804145.
+          "connect-src http://1-of-2 http://yes http://maybe",
+          "connect-src http://2-of-2 http://yes",
         ],
       },
     },
