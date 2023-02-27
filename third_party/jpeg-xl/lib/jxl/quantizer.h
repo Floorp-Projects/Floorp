@@ -16,7 +16,6 @@
 #include <vector>
 
 #include "lib/jxl/ac_strategy.h"
-#include "lib/jxl/aux_out_fwd.h"
 #include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/profiler.h"
@@ -24,7 +23,6 @@
 #include "lib/jxl/common.h"
 #include "lib/jxl/dct_util.h"
 #include "lib/jxl/dec_bit_reader.h"
-#include "lib/jxl/enc_bit_writer.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/quant_weights.h"
@@ -61,6 +59,8 @@ static constexpr float kDefaultQuantBias[4] = {
     1.0f - 0.049935103337343655f,
     0.145f,
 };
+
+struct QuantizerParams;
 
 class Quantizer {
  public:
@@ -117,7 +117,7 @@ class Quantizer {
   // Dequantize by multiplying with this times dequant_matrix.
   float inv_quant_ac(int32_t quant) const { return inv_global_scale_ / quant; }
 
-  Status Encode(BitWriter* writer, size_t layer, AuxOut* aux_out) const;
+  QuantizerParams GetParams() const;
 
   Status Decode(BitReader* reader);
 

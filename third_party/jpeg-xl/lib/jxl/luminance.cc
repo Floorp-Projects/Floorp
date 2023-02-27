@@ -5,11 +5,9 @@
 
 #include "lib/jxl/luminance.h"
 
-#include "lib/jxl/codec_in_out.h"
+#include "lib/jxl/image_metadata.h"
 
 namespace jxl {
-
-void SetIntensityTarget(CodecInOut* io) { SetIntensityTarget(&io->metadata.m); }
 
 void SetIntensityTarget(ImageMetadata* m) {
   if (m->color_encoding.tf.IsPQ()) {

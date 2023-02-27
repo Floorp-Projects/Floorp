@@ -9,7 +9,6 @@
 #include <cstdio>
 #include <vector>
 
-#include "gtest/gtest.h"
 #include "jxl/codestream_header.h"
 #include "jxl/decode.h"
 #include "jxl/decode_cxx.h"
@@ -19,13 +18,14 @@
 #include "lib/extras/codec.h"
 #include "lib/jxl/dec_external_image.h"
 #include "lib/jxl/enc_butteraugli_comparator.h"
+#include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_comparator.h"
 #include "lib/jxl/enc_external_image.h"
 #include "lib/jxl/encode_internal.h"
 #include "lib/jxl/icc_codec.h"
 #include "lib/jxl/image_test_utils.h"
 #include "lib/jxl/test_utils.h"
-#include "lib/jxl/testdata.h"
+#include "lib/jxl/testing.h"
 
 namespace {
 
@@ -57,8 +57,8 @@ jxl::CodecInOut ConvertTestImage(const std::vector<uint8_t>& buf,
         io.metadata.m.SetAlphaBits(16);
         break;
       default:
-        EXPECT_TRUE(false) << "Roundtrip tests for data type "
-                           << pixel_format.data_type << " not yet implemented.";
+        ADD_FAILURE() << "Roundtrip tests for data type "
+                      << pixel_format.data_type << " not yet implemented.";
     }
   }
   size_t bitdepth = 0;
@@ -80,8 +80,8 @@ jxl::CodecInOut ConvertTestImage(const std::vector<uint8_t>& buf,
       io.metadata.m.SetUintSamples(16);
       break;
     default:
-      EXPECT_TRUE(false) << "Roundtrip tests for data type "
-                         << pixel_format.data_type << " not yet implemented.";
+      ADD_FAILURE() << "Roundtrip tests for data type "
+                    << pixel_format.data_type << " not yet implemented.";
   }
   jxl::ColorEncoding color_encoding;
   if (!icc_profile.empty()) {
@@ -101,7 +101,7 @@ jxl::CodecInOut ConvertTestImage(const std::vector<uint8_t>& buf,
 }
 
 template <typename T>
-T ConvertTestPixel(const float val);
+T ConvertTestPixel(float val);
 
 template <>
 float ConvertTestPixel<float>(const float val) {
@@ -169,7 +169,7 @@ void EncodeWithEncoder(JxlEncoder* enc, std::vector<uint8_t>* compressed) {
   EXPECT_EQ(JXL_ENC_SUCCESS, process_result);
 }
 
-// Generates some pixels using using some dimensions and pixel_format,
+// Generates some pixels using some dimensions and pixel_format,
 // compresses them, and verifies that the decoded version is similar to the
 // original pixels.
 // TODO(firsching): change this to be a parameterized test, like in
@@ -416,13 +416,13 @@ void VerifyRoundtripCompression(
   }
 
   if (lossless && !already_downsampled) {
-    EXPECT_TRUE(jxl::SamePixels(*original_io.Main().color(),
-                                *decoded_io.Main().color()));
+    JXL_EXPECT_OK(jxl::SamePixels(*original_io.Main().color(),
+                                  *decoded_io.Main().color(), _));
   } else {
     jxl::ButteraugliParams ba;
-    float butteraugli_score =
-        ButteraugliDistance(original_io, decoded_io, ba, jxl::GetJxlCms(),
-                            /*distmap=*/nullptr, nullptr);
+    float butteraugli_score = ButteraugliDistance(
+        original_io.frames, decoded_io.frames, ba, jxl::GetJxlCms(),
+        /*distmap=*/nullptr, nullptr);
     EXPECT_LE(butteraugli_score, 2.0f);
   }
   JxlPixelFormat extra_channel_output_pixel_format = output_pixel_format;
@@ -653,9 +653,9 @@ TEST(RoundtripTest, ExtraBoxesTest) {
       ConvertTestImage(decoded_bytes, xsize, ysize, pixel_format, icc_profile);
 
   jxl::ButteraugliParams ba;
-  float butteraugli_score =
-      ButteraugliDistance(original_io, decoded_io, ba, jxl::GetJxlCms(),
-                          /*distmap=*/nullptr, nullptr);
+  float butteraugli_score = ButteraugliDistance(
+      original_io.frames, decoded_io.frames, ba, jxl::GetJxlCms(),
+      /*distmap=*/nullptr, nullptr);
   EXPECT_LE(butteraugli_score, 2.0f);
 }
 
@@ -791,7 +791,7 @@ TEST(RoundtripTest, TestICCProfile) {
 #if JPEGXL_ENABLE_JPEG  // Loading .jpg files requires libjpeg support.
 TEST(RoundtripTest, JXL_TRANSCODE_JPEG_TEST(TestJPEGReconstruction)) {
   const std::string jpeg_path = "jxl/flower/flower.png.im_q85_420.jpg";
-  const jxl::PaddedBytes orig = jxl::ReadTestData(jpeg_path);
+  const jxl::PaddedBytes orig = jxl::test::ReadTestData(jpeg_path);
   jxl::CodecInOut orig_io;
   ASSERT_TRUE(
       SetFromBytes(jxl::Span<const uint8_t>(orig), &orig_io, /*pool=*/nullptr));

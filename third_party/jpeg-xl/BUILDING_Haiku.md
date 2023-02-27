@@ -4,7 +4,7 @@ Haiku builds are not officially supported, i.e. the build might not work at all,
 some tests may fail and some sub-projects are excluded from build.
 
 This manual outlines Haiku-specific setup. For general building and testing
-instructions see "[README](README.md)" and
+instructions see "[BUILDING](BUILDING.md)" and
 "[Building and Testing changes](doc/building_and_testing.md)".
 
 ## Dependencies

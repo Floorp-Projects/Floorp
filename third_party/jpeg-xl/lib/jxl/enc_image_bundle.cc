@@ -5,6 +5,8 @@
 
 #include "lib/jxl/enc_image_bundle.h"
 
+#include <jxl/cms_interface.h>
+
 #include <atomic>
 #include <limits>
 #include <utility>
@@ -17,7 +19,6 @@
 #include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/image_bundle.h"
-#include "lib/jxl/luminance.h"
 
 namespace jxl {
 

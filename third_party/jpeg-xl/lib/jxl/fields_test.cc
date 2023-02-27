@@ -11,20 +11,19 @@
 #include <array>
 #include <utility>
 
-#include "gtest/gtest.h"
-#include "lib/jxl/aux_out.h"
-#include "lib/jxl/aux_out_fwd.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/common.h"
+#include "lib/jxl/enc_aux_out.h"
+#include "lib/jxl/enc_fields.h"
 #include "lib/jxl/frame_header.h"
 #include "lib/jxl/headers.h"
+#include "lib/jxl/testing.h"
 
 namespace jxl {
 namespace {
 
 // Ensures `value` round-trips and in exactly `expected_bits_written`.
 void TestU32Coder(const uint32_t value, const size_t expected_bits_written) {
-  U32Coder coder;
   const U32Enc enc(Val(0), Bits(4), Val(0x7FFFFFFF), Bits(32));
 
   BitWriter writer;
@@ -32,16 +31,16 @@ void TestU32Coder(const uint32_t value, const size_t expected_bits_written) {
       &writer, RoundUpBitsToByteMultiple(U32Coder::MaxEncodedBits(enc)));
 
   size_t precheck_pos;
-  EXPECT_TRUE(coder.CanEncode(enc, value, &precheck_pos));
+  EXPECT_TRUE(U32Coder::CanEncode(enc, value, &precheck_pos));
   EXPECT_EQ(expected_bits_written, precheck_pos);
 
-  EXPECT_TRUE(coder.Write(enc, value, &writer));
+  EXPECT_TRUE(U32Coder::Write(enc, value, &writer));
   EXPECT_EQ(expected_bits_written, writer.BitsWritten());
   writer.ZeroPadToByte();
-  ReclaimAndCharge(&writer, &allotment, 0, nullptr);
+  allotment.ReclaimAndCharge(&writer, 0, nullptr);
 
   BitReader reader(writer.GetSpan());
-  const uint32_t decoded_value = coder.Read(enc, &reader);
+  const uint32_t decoded_value = U32Coder::Read(enc, &reader);
   EXPECT_EQ(value, decoded_value);
   EXPECT_TRUE(reader.Close());
 }
@@ -58,24 +57,22 @@ TEST(FieldsTest, U32CoderTest) {
 }
 
 void TestU64Coder(const uint64_t value, const size_t expected_bits_written) {
-  U64Coder coder;
-
   BitWriter writer;
   BitWriter::Allotment allotment(
       &writer, RoundUpBitsToByteMultiple(U64Coder::MaxEncodedBits()));
 
   size_t precheck_pos;
-  EXPECT_TRUE(coder.CanEncode(value, &precheck_pos));
+  EXPECT_TRUE(U64Coder::CanEncode(value, &precheck_pos));
   EXPECT_EQ(expected_bits_written, precheck_pos);
 
-  EXPECT_TRUE(coder.Write(value, &writer));
+  EXPECT_TRUE(U64Coder::Write(value, &writer));
   EXPECT_EQ(expected_bits_written, writer.BitsWritten());
 
   writer.ZeroPadToByte();
-  ReclaimAndCharge(&writer, &allotment, 0, nullptr);
+  allotment.ReclaimAndCharge(&writer, 0, nullptr);
 
   BitReader reader(writer.GetSpan());
-  const uint64_t decoded_value = coder.Read(&reader);
+  const uint64_t decoded_value = U64Coder::Read(&reader);
   EXPECT_EQ(value, decoded_value);
   EXPECT_TRUE(reader.Close());
 }
@@ -160,25 +157,23 @@ TEST(FieldsTest, U64CoderTest) {
 }
 
 Status TestF16Coder(const float value) {
-  F16Coder coder;
-
   size_t max_encoded_bits;
   // It is not a fatal error if it can't be encoded.
-  if (!coder.CanEncode(value, &max_encoded_bits)) return false;
+  if (!F16Coder::CanEncode(value, &max_encoded_bits)) return false;
   EXPECT_EQ(F16Coder::MaxEncodedBits(), max_encoded_bits);
 
   BitWriter writer;
   BitWriter::Allotment allotment(&writer,
                                  RoundUpBitsToByteMultiple(max_encoded_bits));
 
-  EXPECT_TRUE(coder.Write(value, &writer));
+  EXPECT_TRUE(F16Coder::Write(value, &writer));
   EXPECT_EQ(F16Coder::MaxEncodedBits(), writer.BitsWritten());
   writer.ZeroPadToByte();
-  ReclaimAndCharge(&writer, &allotment, 0, nullptr);
+  allotment.ReclaimAndCharge(&writer, 0, nullptr);
 
   BitReader reader(writer.GetSpan());
   float decoded_value;
-  EXPECT_TRUE(coder.Read(&reader, &decoded_value));
+  EXPECT_TRUE(F16Coder::Read(&reader, &decoded_value));
   // All values we test can be represented exactly.
   EXPECT_EQ(value, decoded_value);
   EXPECT_TRUE(reader.Close());
@@ -365,7 +360,7 @@ TEST(FieldsTest, TestNewDecoderOldData) {
                                  kMaxOutBytes * kBitsPerByte - total_bits);
   writer.Write(20, 0xA55A);  // sentinel
   writer.ZeroPadToByte();
-  ReclaimAndCharge(&writer, &allotment, kLayerHeader, nullptr);
+  allotment.ReclaimAndCharge(&writer, kLayerHeader, nullptr);
 
   ASSERT_LE(writer.GetSpan().size(), kMaxOutBytes);
   BitReader reader(writer.GetSpan());
@@ -412,7 +407,7 @@ TEST(FieldsTest, TestOldDecoderNewData) {
   // Ensure Read skips the additional fields
   writer.Write(20, 0xA55A);  // sentinel
   writer.ZeroPadToByte();
-  ReclaimAndCharge(&writer, &allotment, kLayerHeader, nullptr);
+  allotment.ReclaimAndCharge(&writer, kLayerHeader, nullptr);
 
   BitReader reader(writer.GetSpan());
   OldBundle old_bundle;

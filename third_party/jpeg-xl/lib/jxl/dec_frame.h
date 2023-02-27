@@ -139,7 +139,7 @@ class FrameDecoder {
         // but the implementation may not yet correctly support this for Flush.
         // Therefore, can't correctly pause for a progressive step if there is
         // an extra channel (including alpha channel)
-        // TOOD(firsching): Check if this is still the case.
+        // TODO(firsching): Check if this is still the case.
         decoded_->metadata()->extra_channel_info.empty() &&
         // DC is not guaranteed to be available in modular mode and may be a
         // black image. If squeeze is used, it may be available depending on the

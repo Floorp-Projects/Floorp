@@ -7,8 +7,8 @@
 
 #include <algorithm>
 
-#include "gtest/gtest.h"
 #include "lib/jxl/enc_gamma_correct.h"
+#include "lib/jxl/testing.h"
 
 namespace jxl {
 namespace {

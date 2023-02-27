@@ -60,6 +60,8 @@ boolean jpegli_finish_decompress(j_decompress_ptr cinfo);
 JDIMENSION jpegli_read_raw_data(j_decompress_ptr cinfo, JSAMPIMAGE data,
                                 JDIMENSION max_lines);
 
+jvirt_barray_ptr *jpegli_read_coefficients(j_decompress_ptr cinfo);
+
 boolean jpegli_has_multiple_scans(j_decompress_ptr cinfo);
 
 boolean jpegli_start_output(j_decompress_ptr cinfo, int scan_number);

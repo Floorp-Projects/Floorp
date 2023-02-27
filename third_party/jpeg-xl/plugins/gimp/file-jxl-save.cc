@@ -726,6 +726,15 @@ bool SaveJpegXlImage(const gint32 image_id, const gint32 drawable_id,
     return false;
   }
 
+  // this sets some basic_info properties
+  jxl_save_opts.SetModel(jxl_save_opts.is_linear);
+
+  if (JXL_ENC_SUCCESS !=
+      JxlEncoderSetBasicInfo(enc.get(), &jxl_save_opts.basic_info)) {
+    g_printerr(SAVE_PROC " Error: JxlEncoderSetBasicInfo failed\n");
+    return false;
+  }
+
   // try to use ICC profile
   if (!icc.empty() && !jxl_save_opts.is_gray) {
     if (JXL_ENC_SUCCESS ==
@@ -784,15 +793,6 @@ bool SaveJpegXlImage(const gint32 image_id, const gint32 drawable_id,
     JxlEncoderSetFrameDistance(frame_settings, jxl_save_opts.distance);
   }
 
-  // this sets some basic_info properties
-  jxl_save_opts.SetModel(jxl_save_opts.is_linear);
-
-  if (JXL_ENC_SUCCESS !=
-      JxlEncoderSetBasicInfo(enc.get(), &jxl_save_opts.basic_info)) {
-    g_printerr(SAVE_PROC " Error: JxlEncoderSetBasicInfo failed\n");
-    return false;
-  }
-
   // convert precision and colorspace
   if (jxl_save_opts.is_linear &&
       jxl_save_opts.basic_info.bits_per_sample < 32) {
@@ -831,11 +831,7 @@ bool SaveJpegXlImage(const gint32 image_id, const gint32 drawable_id,
     g_clear_object(&buffer);
 
     // use babl to fix gamma mismatch issues
-    if (jxl_save_opts.icc_attached) {
-      jxl_save_opts.SetModel(jxl_save_opts.is_linear);
-    } else {
-      jxl_save_opts.SetModel(!jxl_save_opts.is_linear);
-    }
+    jxl_save_opts.SetModel(jxl_save_opts.is_linear);
     jxl_save_opts.pixel_format.data_type = JXL_TYPE_FLOAT;
     jxl_save_opts.SetBablType("float");
     const Babl* destination_format =

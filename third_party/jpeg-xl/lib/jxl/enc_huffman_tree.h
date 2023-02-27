@@ -34,8 +34,8 @@ void SetDepth(const HuffmanTree& p, HuffmanTree* pool, uint8_t* depth,
 // the symbol.
 //
 // See http://en.wikipedia.org/wiki/Huffman_coding
-void CreateHuffmanTree(const uint32_t* data, const size_t length,
-                       const int tree_limit, uint8_t* depth);
+void CreateHuffmanTree(const uint32_t* data, size_t length, int tree_limit,
+                       uint8_t* depth);
 
 // Write a Huffman tree from bit depths into the bitstream representation
 // of a Huffman tree. The generated Huffman tree is to be compressed once

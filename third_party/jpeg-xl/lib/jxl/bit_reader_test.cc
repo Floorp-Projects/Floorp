@@ -9,16 +9,15 @@
 #include <array>
 #include <vector>
 
-#include "gtest/gtest.h"
-#include "lib/jxl/aux_out.h"
-#include "lib/jxl/aux_out_fwd.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/random.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/thread_pool_internal.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/dec_bit_reader.h"
+#include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_bit_writer.h"
+#include "lib/jxl/testing.h"
 
 namespace jxl {
 namespace {
@@ -74,7 +73,7 @@ TEST(BitReaderTest, TestRoundTrip) {
         }
 
         writer.ZeroPadToByte();
-        ReclaimAndCharge(&writer, &allotment, 0, nullptr);
+        allotment.ReclaimAndCharge(&writer, 0, nullptr);
         BitReader reader(writer.GetSpan());
         for (const Symbol& s : symbols) {
           EXPECT_EQ(s.value, reader.ReadBits(s.num_bits));
@@ -110,7 +109,7 @@ TEST(BitReaderTest, TestSkip) {
           EXPECT_EQ(task + skip + 3, writer.BitsWritten());
           writer.ZeroPadToByte();
           AuxOut aux_out;
-          ReclaimAndCharge(&writer, &allotment, 0, &aux_out);
+          allotment.ReclaimAndCharge(&writer, 0, &aux_out);
           EXPECT_LT(aux_out.layers[0].total_bits, kSize * 8);
 
           BitReader reader1(writer.GetSpan());
@@ -159,7 +158,7 @@ TEST(BitReaderTest, TestOrder) {
     }
 
     writer.ZeroPadToByte();
-    ReclaimAndCharge(&writer, &allotment, 0, nullptr);
+    allotment.ReclaimAndCharge(&writer, 0, nullptr);
     BitReader reader(writer.GetSpan());
     EXPECT_EQ(0x1Fu, reader.ReadFixedBits<8>());
     EXPECT_EQ(0xFCu, reader.ReadFixedBits<8>());
@@ -174,7 +173,7 @@ TEST(BitReaderTest, TestOrder) {
     writer.Write(8, 0x3F);
 
     writer.ZeroPadToByte();
-    ReclaimAndCharge(&writer, &allotment, 0, nullptr);
+    allotment.ReclaimAndCharge(&writer, 0, nullptr);
     BitReader reader(writer.GetSpan());
     EXPECT_EQ(0xF8u, reader.ReadFixedBits<8>());
     EXPECT_EQ(0x3Fu, reader.ReadFixedBits<8>());
@@ -188,7 +187,7 @@ TEST(BitReaderTest, TestOrder) {
     writer.Write(16, 0xF83F);
 
     writer.ZeroPadToByte();
-    ReclaimAndCharge(&writer, &allotment, 0, nullptr);
+    allotment.ReclaimAndCharge(&writer, 0, nullptr);
     BitReader reader(writer.GetSpan());
     EXPECT_EQ(0x3Fu, reader.ReadFixedBits<8>());
     EXPECT_EQ(0xF8u, reader.ReadFixedBits<8>());
@@ -205,7 +204,7 @@ TEST(BitReaderTest, TestOrder) {
     writer.Write(4, 8);
 
     writer.ZeroPadToByte();
-    ReclaimAndCharge(&writer, &allotment, 0, nullptr);
+    allotment.ReclaimAndCharge(&writer, 0, nullptr);
     BitReader reader(writer.GetSpan());
     EXPECT_EQ(0xBDu, reader.ReadFixedBits<8>());
     EXPECT_EQ(0x8Du, reader.ReadFixedBits<8>());

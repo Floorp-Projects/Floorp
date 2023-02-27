@@ -648,26 +648,38 @@ jxl::ImageF InitialQuantField(const float butteraugli_target,
 
 void ComputeAdaptiveQuantField(j_compress_ptr cinfo) {
   jpeg_comp_master* m = cinfo->master;
-  m->quant_field.Allocate(m->ysize_blocks, m->xsize_blocks);
-  if (m->use_adaptive_quantization) {
-    int y_channel = cinfo->jpeg_color_space == JCS_RGB && m->xyb_mode ? 1 : 0;
-    jxl::ImageF input(m->xsize_blocks * DCTSIZE, m->ysize_blocks * DCTSIZE);
+  const size_t xsize_blocks = DivCeil(cinfo->image_width, DCTSIZE);
+  const size_t ysize_blocks = DivCeil(cinfo->image_height, DCTSIZE);
+  int y_channel = cinfo->jpeg_color_space == JCS_RGB ? 1 : 0;
+  jpeg_component_info* y_comp = &cinfo->comp_info[y_channel];
+  m->quant_field.Allocate(ysize_blocks, xsize_blocks);
+  if (m->use_adaptive_quantization &&
+      y_comp->h_samp_factor == cinfo->max_h_samp_factor &&
+      y_comp->v_samp_factor == cinfo->max_v_samp_factor) {
+    JXL_ASSERT(y_comp->width_in_blocks == xsize_blocks);
+    JXL_ASSERT(y_comp->height_in_blocks == ysize_blocks);
+    jxl::ImageF input(y_comp->width_in_blocks * DCTSIZE,
+                      y_comp->height_in_blocks * DCTSIZE);
     for (size_t y = 0; y < input.ysize(); ++y) {
       memcpy(input.Row(y), m->input_buffer[y_channel].Row(y),
              input.xsize() * sizeof(float));
     }
     jxl::ImageF qf =
         jpegli::InitialQuantField(m->distance, input, nullptr, m->distance);
-    float qfmin;
-    ImageMinMax(qf, &qfmin, &m->quant_field_max);
-    for (size_t y = 0; y < m->ysize_blocks; ++y) {
-      m->quant_field.CopyRow(y, qf.Row(y), m->xsize_blocks);
+    float qfmin, qfmax;
+    ImageMinMax(qf, &qfmin, &qfmax);
+    m->quant_field_max = qfmax;
+    for (size_t y = 0; y < y_comp->height_in_blocks; ++y) {
+      const float* row_in = qf.Row(y);
+      float* row_out = m->quant_field.Row(y);
+      for (size_t x = 0; x < y_comp->width_in_blocks; ++x) {
+        row_out[x] = (qfmax / row_in[x]) - 1.0f;
+      }
     }
   } else {
-    constexpr float kDefaultQuantFieldMax = 0.575f;
     m->quant_field_max = kDefaultQuantFieldMax;
-    for (size_t y = 0; y < m->ysize_blocks; ++y) {
-      m->quant_field.FillRow(y, m->quant_field_max, m->xsize_blocks);
+    for (size_t y = 0; y < ysize_blocks; ++y) {
+      m->quant_field.FillRow(y, 0.0f, xsize_blocks);
     }
   }
 }

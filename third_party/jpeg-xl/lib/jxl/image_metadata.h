@@ -24,6 +24,8 @@
 
 namespace jxl {
 
+struct AuxOut;
+
 // EXIF orientation of the image. This field overrides any field present in
 // actual EXIF metadata. The value tells which transformation the decoder must
 // apply after decoding to display the image with the correct orientation.

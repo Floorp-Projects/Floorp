@@ -20,13 +20,13 @@
 #include "lib/extras/enc/jpegli.h"
 #include "lib/extras/enc/jpg.h"
 #include "lib/extras/packed_image.h"
+#include "lib/jpegli/testing.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/size_constraints.h"
 #include "lib/jxl/test_image.h"
 #include "lib/jxl/test_utils.h"
-#include "lib/jxl/testdata.h"
 
 namespace jxl {
 namespace extras {
@@ -36,7 +36,7 @@ using test::ButteraugliDistance;
 using test::TestImage;
 
 Status ReadTestImage(const std::string& pathname, PackedPixelFile* ppf) {
-  const PaddedBytes encoded = ReadTestData(pathname);
+  const PaddedBytes encoded = jxl::test::ReadTestData(pathname);
   ColorHints color_hints;
   if (pathname.find(".ppm") != std::string::npos) {
     color_hints.Add("color_space", "RGB_D65_SRG_Rel_SRG");
@@ -45,6 +45,24 @@ Status ReadTestImage(const std::string& pathname, PackedPixelFile* ppf) {
   }
   return DecodeBytes(Span<const uint8_t>(encoded), color_hints,
                      SizeConstraints(), ppf);
+}
+
+std::vector<uint8_t> GetAppData(const std::vector<uint8_t>& compressed) {
+  std::vector<uint8_t> result;
+  size_t pos = 2;  // After SOI
+  while (pos + 4 < compressed.size()) {
+    if (compressed[pos] != 0xff || compressed[pos + 1] < 0xe0 ||
+        compressed[pos + 1] > 0xf0) {
+      break;
+    }
+    size_t len = (compressed[pos + 2] << 8) + compressed[pos + 3] + 2;
+    if (pos + len > compressed.size()) {
+      break;
+    }
+    result.insert(result.end(), &compressed[pos], &compressed[pos] + len);
+    pos += len;
+  }
+  return result;
 }
 
 Status DecodeWithLibjpeg(const std::vector<uint8_t>& compressed,
@@ -183,9 +201,9 @@ TEST(JpegliTest, JpegliYUVChromaSubsamplingEncodeTest) {
 
   std::vector<uint8_t> compressed;
   JpegSettings settings;
-  for (const std::string& sampling : {"440", "422", "420"}) {
+  for (const char* sampling : {"440", "422", "420"}) {
     settings.xyb = false;
-    settings.chroma_subsampling = sampling;
+    settings.chroma_subsampling = std::string(sampling);
     ASSERT_TRUE(EncodeJpeg(ppf_in, settings, nullptr, &compressed));
 
     PackedPixelFile ppf_out;
@@ -230,6 +248,61 @@ TEST(JpegliTest, JpegliHDRRoundtripTest) {
   ASSERT_TRUE(DecodeJpeg(compressed, JXL_TYPE_UINT16, nullptr, &ppf_out));
   EXPECT_THAT(BitsPerPixel(ppf_in, compressed), IsSlightlyBelow(2.95f));
   EXPECT_THAT(ButteraugliDistance(ppf_in, ppf_out), IsSlightlyBelow(1.05f));
+}
+
+TEST(JpegliTest, JpegliSetAppData) {
+  std::string testimage = "jxl/flower/flower_small.rgb.depth8.ppm";
+  PackedPixelFile ppf_in;
+  ASSERT_TRUE(ReadTestImage(testimage, &ppf_in));
+  EXPECT_EQ("RGB_D65_SRG_Rel_SRG", Description(ppf_in.color_encoding));
+  EXPECT_EQ(8, ppf_in.info.bits_per_sample);
+
+  std::vector<uint8_t> compressed;
+  JpegSettings settings;
+  settings.app_data = {0xff, 0xe3, 0, 4, 0, 1};
+  EXPECT_TRUE(EncodeJpeg(ppf_in, settings, nullptr, &compressed));
+  EXPECT_EQ(settings.app_data, GetAppData(compressed));
+
+  settings.app_data = {0xff, 0xe3, 0, 6, 0, 1, 2, 3, 0xff, 0xef, 0, 4, 0, 1};
+  EXPECT_TRUE(EncodeJpeg(ppf_in, settings, nullptr, &compressed));
+  EXPECT_EQ(settings.app_data, GetAppData(compressed));
+
+  settings.xyb = true;
+  EXPECT_TRUE(EncodeJpeg(ppf_in, settings, nullptr, &compressed));
+  EXPECT_EQ(0, memcmp(settings.app_data.data(), GetAppData(compressed).data(),
+                      settings.app_data.size()));
+
+  settings.xyb = false;
+  settings.app_data = {0};
+  EXPECT_FALSE(EncodeJpeg(ppf_in, settings, nullptr, &compressed));
+
+  settings.app_data = {0xff, 0xe0};
+  EXPECT_FALSE(EncodeJpeg(ppf_in, settings, nullptr, &compressed));
+
+  settings.app_data = {0xff, 0xe0, 0, 2};
+  EXPECT_FALSE(EncodeJpeg(ppf_in, settings, nullptr, &compressed));
+
+  settings.app_data = {0xff, 0xeb, 0, 4, 0};
+  EXPECT_FALSE(EncodeJpeg(ppf_in, settings, nullptr, &compressed));
+
+  settings.app_data = {0xff, 0xeb, 0, 4, 0, 1, 2, 3};
+  EXPECT_FALSE(EncodeJpeg(ppf_in, settings, nullptr, &compressed));
+
+  settings.app_data = {0xff, 0xab, 0, 4, 0, 1};
+  EXPECT_FALSE(EncodeJpeg(ppf_in, settings, nullptr, &compressed));
+
+  settings.xyb = false;
+  settings.app_data = {
+      0xff, 0xeb, 0,    4,    0,    1,                       //
+      0xff, 0xe2, 0,    20,   0x49, 0x43, 0x43, 0x5F, 0x50,  //
+      0x52, 0x4F, 0x46, 0x49, 0x4C, 0x45, 0x00, 0,    1,     //
+      0,    0,    0,    0,                                   //
+  };
+  EXPECT_TRUE(EncodeJpeg(ppf_in, settings, nullptr, &compressed));
+  EXPECT_EQ(settings.app_data, GetAppData(compressed));
+
+  settings.xyb = true;
+  EXPECT_FALSE(EncodeJpeg(ppf_in, settings, nullptr, &compressed));
 }
 
 }  // namespace

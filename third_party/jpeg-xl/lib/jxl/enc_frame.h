@@ -6,8 +6,6 @@
 #ifndef LIB_JXL_ENC_FRAME_H_
 #define LIB_JXL_ENC_FRAME_H_
 
-#include "lib/jxl/aux_out.h"
-#include "lib/jxl/aux_out_fwd.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/enc_bit_writer.h"
@@ -17,6 +15,8 @@
 #include "lib/jxl/image_bundle.h"
 
 namespace jxl {
+
+struct AuxOut;
 
 // Information needed for encoding a frame that is not contained elsewhere and
 // does not belong to `cparams`.

@@ -10,9 +10,9 @@ origin:
 
   url: https://github.com/libjxl/libjxl
 
-  release: be70f17fa7fe55b8826642d83805cf441426d5d0 (2023-02-03T21:44:42Z).
+  release: 73cb36f7129e1ce192992792778b146ed9b655a5 (2023-02-23T15:08:08Z).
 
-  revision: be70f17fa7fe55b8826642d83805cf441426d5d0
+  revision: 73cb36f7129e1ce192992792778b146ed9b655a5
 
   license: Apache-2.0
 
@@ -35,4 +35,4 @@ vendoring:
     - doc
     - third_party/testdata
     - tools
-    - lib/lib.bzl # A symlink used for Bazel. (Symlink is not permitted in mozilla-central)
+    - lib/lib.gni # Symlink is not permitted in mozilla-central

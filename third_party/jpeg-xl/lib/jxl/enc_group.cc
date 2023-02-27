@@ -14,14 +14,13 @@
 #include <hwy/highway.h>
 
 #include "lib/jxl/ac_strategy.h"
-#include "lib/jxl/aux_out.h"
-#include "lib/jxl/aux_out_fwd.h"
 #include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/profiler.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/dct_util.h"
 #include "lib/jxl/dec_transforms-inl.h"
+#include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/enc_transforms-inl.h"
 #include "lib/jxl/image.h"
@@ -102,6 +101,7 @@ void QuantizeBlockAC(const Quantizer& quantizer, const bool error_diffusion,
   }
 
 retry:
+  int sum_of_highest_freq_row_and_column = 0;
   int hfNonZeros[4] = {};
   float hfError[4] = {};
   float hfMaxError[4] = {};
@@ -128,6 +128,10 @@ retry:
       if (v != 0.0f) {
         hfNonZeros[hfix] += std::abs(v);
       }
+      if ((y == ysize * kBlockDim - 1 || x == xsize * kBlockDim - 1) &&
+          (x >= xsize * 4 && y >= ysize * 4)) {
+        sum_of_highest_freq_row_and_column += std::abs(v);
+      }
     }
   }
   if (c != 1) return;
@@ -150,12 +154,48 @@ retry:
     }
   }
   if (goretry) goto retry;
+  // Heuristic for improving accuracy of high-frequency patterns
+  // occurring in an environment with no medium-frequency masking
+  // patterns. This should be improved later to be done in X and B
+  // planes too as 32x32 and larger transforms become rather ugly
+  // when this is not compensated for.
+  if (5 * sum_of_highest_freq_row_and_column > hfNonZeros[0] + 20) {
+    *quant += 6;
+    if (3 * sum_of_highest_freq_row_and_column >= hfNonZeros[0] + 20) {
+      *quant += 5;
+    }
+    if (2 * sum_of_highest_freq_row_and_column >= hfNonZeros[0] + 20) {
+      *quant += 5;
+    }
+    if (sum_of_highest_freq_row_and_column >= (hfNonZeros[0] + 20)) {
+      *quant += 5;
+    }
+    if (*quant >= Quantizer::kQuantMax) {
+      *quant = Quantizer::kQuantMax - 1;
+    }
+    qac = quantizer.Scale() * (*quant);
+    for (size_t y = 0; y < ysize * kBlockDim; y++) {
+      for (size_t x = 0; x < xsize * kBlockDim; x++) {
+        if (x < xsize && y < ysize) {
+          continue;
+        }
+        const size_t pos = y * kBlockDim * xsize + x;
+        const size_t hfix = (static_cast<size_t>(y >= kBlockDim / 2) * 2 +
+                             static_cast<size_t>(x >= kBlockDim / 2));
+        const float val = block_in[pos] * (qm[pos] * qac * qm_multiplier);
+        const float v = (std::abs(val) < thres[hfix]) ? 0 : rintf(val);
+        block_out[pos] = static_cast<int32_t>(v);
+      }
+    }
+  }
   if (quant_kind == AcStrategy::Type::DCT) {
     // If this 8x8 block is too flat, increase the adaptive quantization level
     // a bit to reduce visible block boundaries and requantize the block.
     if (hfNonZeros[0] + hfNonZeros[1] + hfNonZeros[2] + hfNonZeros[3] < 11) {
-      *quant *= 5;
-      *quant /= 4;
+      *quant += 1;
+      if (*quant >= Quantizer::kQuantMax) {
+        *quant = Quantizer::kQuantMax - 1;
+      }
       qac = quantizer.Scale() * (*quant);
       for (size_t y = 0; y < kBlockDim; y++) {
         for (size_t x = 0; x < kBlockDim; x++) {
@@ -370,7 +410,7 @@ Status EncodeGroupTokenizedCoefficients(size_t group_idx, size_t pass_idx,
   if (histo_selector_bits != 0) {
     BitWriter::Allotment allotment(writer, histo_selector_bits);
     writer->Write(histo_selector_bits, histogram_idx);
-    ReclaimAndCharge(writer, &allotment, kLayerAC, aux_out);
+    allotment.ReclaimAndCharge(writer, kLayerAC, aux_out);
   }
   WriteTokens(enc_state.passes[pass_idx].ac_tokens[group_idx],
               enc_state.passes[pass_idx].codes,

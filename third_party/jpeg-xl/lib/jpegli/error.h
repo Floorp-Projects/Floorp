@@ -15,13 +15,7 @@
 
 namespace jpegli {
 
-static bool FormatString(char* buffer, const char* format, ...) {
-  va_list args;
-  va_start(args, format);
-  vsnprintf(buffer, JMSG_LENGTH_MAX, format, args);
-  va_end(args);
-  return false;
-}
+bool FormatString(char* buffer, const char* format, ...);
 
 }  // namespace jpegli
 

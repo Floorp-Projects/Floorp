@@ -45,11 +45,13 @@
 
 #include "jxl/codestream_header.h"
 #include "jxl/encode.h"
+#include "lib/jxl/base/byte_order.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/scope_guard.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/sanitizers.h"
+#include "lib/jxl/size_constraints.h"
 #include "png.h" /* original (unpatched) libpng is ok */
 
 namespace jxl {

@@ -74,12 +74,7 @@ struct PassesSharedState {
   Image3F dc_frames[4];
 
   struct {
-    ImageBundle storage;
-    // Can either point to `storage`, if this is a frame that is not stored in
-    // the CodecInOut, or can point to an existing ImageBundle.
-    // TODO(veluca): pointing to ImageBundles in CodecInOut is not possible for
-    // now, as they are stored in a vector and thus may be moved. Fix this.
-    ImageBundle* JXL_RESTRICT frame = &storage;
+    ImageBundle frame;
     // ImageBundle doesn't yet have a simple way to state it is in XYB.
     bool ib_is_in_xyb = false;
   } reference_frames[4] = {};

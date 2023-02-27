@@ -27,6 +27,9 @@
 #include "lib/jxl/enc_xyb.h"
 
 namespace jxl {
+
+struct AuxOut;
+
 namespace {
 void FindBestBlockEntropyModel(PassesEncoderState& enc_state) {
   if (enc_state.cparams.decoding_speed_tier >= 1) {

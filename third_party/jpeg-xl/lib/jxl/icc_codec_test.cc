@@ -7,9 +7,9 @@
 
 #include <string>
 
-#include "gtest/gtest.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/enc_icc_codec.h"
+#include "lib/jxl/testing.h"
 
 namespace jxl {
 namespace {

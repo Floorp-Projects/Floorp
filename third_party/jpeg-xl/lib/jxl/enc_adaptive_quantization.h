@@ -9,7 +9,6 @@
 #include <stddef.h>
 
 #include "lib/jxl/ac_strategy.h"
-#include "lib/jxl/aux_out.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/chroma_from_luma.h"
 #include "lib/jxl/common.h"
@@ -30,6 +29,8 @@
 // steps and try to improve the given quant field.
 
 namespace jxl {
+
+struct AuxOut;
 
 // Computes the decoded image for a given set of compression parameters. Mainly
 // used in the FindBestQuantization loops and in some tests.

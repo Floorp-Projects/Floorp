@@ -16,6 +16,7 @@
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/chroma_from_luma.h"
 #include "lib/jxl/convolve.h"
+#include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_optimize.h"
 #include "lib/jxl/image_ops.h"
 #include "lib/jxl/opsin_params.h"
@@ -367,7 +368,7 @@ void EncodeNoise(const NoiseParams& noise_params, BitWriter* writer,
   for (float i : noise_params.lut) {
     EncodeFloatParam(i, kNoisePrecision, writer);
   }
-  ReclaimAndCharge(writer, &allotment, layer, aux_out);
+  allotment.ReclaimAndCharge(writer, layer, aux_out);
 }
 
 }  // namespace jxl

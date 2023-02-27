@@ -4,7 +4,7 @@ OSX builds have "best effort" support, i.e. build might not work at all, some
 tests may fail and some sub-projects are excluded from build.
 
 This manual outlines OSX specific setup. For general building and testing
-instructions see "[README](README.md)" and
+instructions see "[BUILDING](BUILDING.md)" and
 "[Building and Testing changes](doc/building_and_testing.md)".
 
 [Homebrew](https://brew.sh/) is a popular package manager. JPEG XL library and

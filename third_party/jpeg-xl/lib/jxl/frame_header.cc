@@ -7,7 +7,6 @@
 
 #include <sstream>
 
-#include "lib/jxl/aux_out.h"
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/fields.h"
@@ -193,11 +192,6 @@ FrameHeader::FrameHeader(const CodecMetadata* metadata)
 Status ReadFrameHeader(BitReader* JXL_RESTRICT reader,
                        FrameHeader* JXL_RESTRICT frame) {
   return Bundle::Read(reader, frame);
-}
-
-Status WriteFrameHeader(const FrameHeader& frame,
-                        BitWriter* JXL_RESTRICT writer, AuxOut* aux_out) {
-  return Bundle::Write(frame, writer, kLayerHeader, aux_out);
 }
 
 Status FrameHeader::VisitFields(Visitor* JXL_RESTRICT visitor) {

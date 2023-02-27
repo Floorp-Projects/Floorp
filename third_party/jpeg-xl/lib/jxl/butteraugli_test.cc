@@ -5,9 +5,10 @@
 
 #include "jxl/butteraugli.h"
 
-#include "gtest/gtest.h"
 #include "jxl/butteraugli_cxx.h"
+#include "lib/jxl/test_image.h"
 #include "lib/jxl/test_utils.h"
+#include "lib/jxl/testing.h"
 
 TEST(ButteraugliTest, Lossless) {
   uint32_t xsize = 171;
