@@ -348,7 +348,7 @@ nsresult GMPParent::LoadProcess() {
       return NS_ERROR_FAILURE;
     }
 
-    mChildPid = base::GetProcId(mProcess->GetChildProcessHandle());
+    mChildPid = mProcess->GetChildProcessId();
     GMP_PARENT_LOG_DEBUG("%s: Launched new child process", __FUNCTION__);
 
     bool opened = mProcess->TakeInitialEndpoint().Bind(this);
