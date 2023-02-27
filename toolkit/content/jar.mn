@@ -1,6 +1,7 @@
 toolkit.jar:
 %  content global %content/global/ contentaccessible=yes
 *  content/global/license.html
+   content/global/minimal-xul.css
    content/global/xul.css
    content/global/autocomplete.css
    content/global/aboutAbout.js
