@@ -38,7 +38,7 @@ add_task(async function() {
     "The ID for 'en-US' locale code is correctly set."
   );
   ok(
-    activeLanguages[0].firstChild.value == "English [en-us]",
+    activeLanguages[0].firstChild.value == "English (United States) [en-us]",
     "The name for known 'en-US' locale code is correctly resolved."
   );
   ok(
