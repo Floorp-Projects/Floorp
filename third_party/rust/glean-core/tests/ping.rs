@@ -34,7 +34,7 @@ fn write_ping_to_disk() {
 
 #[test]
 fn disabling_upload_clears_pending_pings() {
-    let (mut glean, _) = new_glean(None);
+    let (mut glean, _t) = new_glean(None);
 
     let ping = PingType::new("metrics", true, false, vec![]);
     glean.register_ping_type(&ping);
@@ -77,7 +77,7 @@ fn disabling_upload_clears_pending_pings() {
 
 #[test]
 fn deletion_request_only_when_toggled_from_on_to_off() {
-    let (mut glean, _) = new_glean(None);
+    let (mut glean, _t) = new_glean(None);
 
     // Disabling upload generates a deletion ping
     glean.set_upload_enabled(false);
@@ -103,7 +103,7 @@ fn deletion_request_only_when_toggled_from_on_to_off() {
 
 #[test]
 fn empty_pings_with_flag_are_sent() {
-    let (mut glean, _) = new_glean(None);
+    let (mut glean, _t) = new_glean(None);
 
     let ping1 = PingType::new("custom-ping1", true, true, vec![]);
     glean.register_ping_type(&ping1);
@@ -216,7 +216,7 @@ fn test_pings_submitted_metric() {
 
 #[test]
 fn events_ping_with_metric_but_no_events_is_not_sent() {
-    let (mut glean, _) = new_glean(None);
+    let (mut glean, _t) = new_glean(None);
 
     let events_ping = PingType::new("events", true, true, vec![]);
     glean.register_ping_type(&events_ping);

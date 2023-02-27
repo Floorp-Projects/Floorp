@@ -1,6 +1,20 @@
 
 # cargo-vet imports lock
 
+[[publisher.glean]]
+version = "52.3.0"
+when = "2023-02-23"
+user-id = 48
+user-login = "badboy"
+user-name = "Jan-Erik Rediger"
+
+[[publisher.glean-core]]
+version = "52.3.0"
+when = "2023-02-23"
+user-id = 48
+user-login = "badboy"
+user-name = "Jan-Erik Rediger"
+
 [[audits.bytecodealliance.audits.arbitrary]]
 who = "Nick Fitzgerald <fitzgen@gmail.com>"
 criteria = "safe-to-deploy"
