@@ -206,6 +206,41 @@ add_task(async function testLandscapePageSizePassedToPrinter() {
   }, "page_size_a5_landscape.html");
 });
 
+add_task(async function testZeroSizePassedToPrinter() {
+  await PrintHelper.withTestPage(async helper => {
+    await helper.startPrint();
+    await helper.setupMockPrint();
+
+    let pageSize = helper.get("paper-size");
+    let orientation = helper.get("orientation");
+
+    ok(BrowserTestUtils.is_visible(pageSize), "Fallback to page size section");
+    ok(BrowserTestUtils.is_visible(orientation), "Orientation picker is shown");
+
+    await helper.closeDialog();
+  });
+}, "page_size_zero.html");
+
+add_task(async function testZeroWidthPassedToPrinter() {
+  await PrintHelper.withTestPage(async helper => {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["print.save_as_pdf.use_page_rule_size_as_paper_size.enabled", true],
+      ],
+    });
+    await helper.startPrint();
+    await helper.setupMockPrint();
+
+    let pageSize = helper.get("paper-size");
+    let orientation = helper.get("orientation");
+
+    ok(BrowserTestUtils.is_visible(pageSize), "Fallback to page size section");
+    ok(BrowserTestUtils.is_visible(orientation), "Orientation picker is shown");
+
+    await helper.closeDialog();
+  });
+}, "page_size_zero_width.html");
+
 add_task(async function testDefaultSizePassedToPrinter() {
   await PrintHelper.withTestPage(async helper => {
     await SpecialPowers.pushPrefEnv({
