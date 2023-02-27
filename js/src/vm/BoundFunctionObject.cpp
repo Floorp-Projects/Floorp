@@ -13,6 +13,7 @@
 #include "vm/Shape.h"
 #include "vm/Stack.h"
 
+#include "gc/ObjectKind-inl.h"
 #include "vm/JSFunction-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
@@ -144,7 +145,11 @@ SharedShape* BoundFunctionObject::assignInitialShape(
     return nullptr;
   }
 
-  return obj->sharedShape();
+  SharedShape* shape = obj->sharedShape();
+  if (shape->proto() == TaggedProto(&cx->global()->getFunctionPrototype())) {
+    cx->global()->setBoundFunctionShapeWithDefaultProto(shape);
+  }
+  return shape;
 }
 
 static MOZ_ALWAYS_INLINE bool ComputeLengthValue(
@@ -276,14 +281,31 @@ bool BoundFunctionObject::functionBind(JSContext* cx, unsigned argc,
     return false;
   }
 
+  // If this assertion fails, make sure we use the correct AllocKind and that we
+  // use all of its slots (consider increasing MaxInlineBoundArgs).
+  constexpr gc::AllocKind allocKind = gc::AllocKind::OBJECT8_BACKGROUND;
+  static_assert(gc::GetGCKindSlots(allocKind) == SlotCount);
+
   // Steps 2-5.
-  Rooted<BoundFunctionObject*> bound(
-      cx, NewObjectWithGivenProto<BoundFunctionObject>(cx, proto));
-  if (!bound) {
-    return false;
-  }
-  if (!SharedShape::ensureInitialCustomShape<BoundFunctionObject>(cx, bound)) {
-    return false;
+  Rooted<BoundFunctionObject*> bound(cx);
+  if (proto == &cx->global()->getFunctionPrototype() &&
+      cx->global()->maybeBoundFunctionShapeWithDefaultProto()) {
+    Rooted<SharedShape*> shape(
+        cx, cx->global()->maybeBoundFunctionShapeWithDefaultProto());
+    JSObject* obj = NativeObject::create(cx, allocKind, gc::DefaultHeap, shape);
+    if (!obj) {
+      return false;
+    }
+    bound = &obj->as<BoundFunctionObject>();
+  } else {
+    bound = NewObjectWithGivenProto<BoundFunctionObject>(cx, proto);
+    if (!bound) {
+      return false;
+    }
+    if (!SharedShape::ensureInitialCustomShape<BoundFunctionObject>(cx,
+                                                                    bound)) {
+      return false;
+    }
   }
 
   MOZ_ASSERT(bound->lookupPure(cx->names().length)->slot() == LengthSlot);
