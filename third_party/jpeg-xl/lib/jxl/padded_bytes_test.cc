@@ -8,7 +8,7 @@
 #include <numeric>  // iota
 #include <vector>
 
-#include "gtest/gtest.h"
+#include "lib/jxl/testing.h"
 
 namespace jxl {
 namespace {

@@ -16,6 +16,7 @@
 #include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/enc_ans.h"
+#include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/entropy_coder.h"
 
 namespace jxl {
@@ -119,7 +120,7 @@ void EncodeBlockCtxMap(const BlockCtxMap& block_ctx_map, BitWriter* writer,
       ctx_map.size() == 21 &&
       std::equal(ctx_map.begin(), ctx_map.end(), BlockCtxMap::kDefaultCtxMap)) {
     writer->Write(1, 1);  // default
-    ReclaimAndCharge(writer, &allotment, kLayerAC, aux_out);
+    allotment.ReclaimAndCharge(writer, kLayerAC, aux_out);
     return;
   }
   writer->Write(1, 0);
@@ -134,7 +135,7 @@ void EncodeBlockCtxMap(const BlockCtxMap& block_ctx_map, BitWriter* writer,
     JXL_CHECK(U32Coder::Write(kQFThresholdDist, i - 1, writer));
   }
   EncodeContextMap(ctx_map, block_ctx_map.num_ctxs, writer, kLayerAC, aux_out);
-  ReclaimAndCharge(writer, &allotment, kLayerAC, aux_out);
+  allotment.ReclaimAndCharge(writer, kLayerAC, aux_out);
 }
 
 }  // namespace jxl

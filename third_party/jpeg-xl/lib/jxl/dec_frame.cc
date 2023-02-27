@@ -46,7 +46,6 @@
 #include "lib/jxl/image_ops.h"
 #include "lib/jxl/jpeg/jpeg_data.h"
 #include "lib/jxl/loop_filter.h"
-#include "lib/jxl/luminance.h"
 #include "lib/jxl/passes_state.h"
 #include "lib/jxl/quant_weights.h"
 #include "lib/jxl/quantizer.h"
@@ -866,9 +865,8 @@ Status FrameDecoder::FinalizeFrame() {
   if (frame_header_.CanBeReferenced()) {
     auto& info = dec_state_->shared_storage
                      .reference_frames[frame_header_.save_as_reference];
-    info.storage = std::move(dec_state_->frame_storage_for_referencing);
+    info.frame = std::move(dec_state_->frame_storage_for_referencing);
     info.ib_is_in_xyb = frame_header_.save_before_color_transform;
-    info.frame = &info.storage;
   }
   return true;
 }

@@ -18,7 +18,6 @@
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
 
-#include "lib/jxl/aux_out.h"
 #include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/profiler.h"
@@ -26,6 +25,7 @@
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/dec_transforms-inl.h"
+#include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_transforms-inl.h"
 #include "lib/jxl/entropy_coder.h"
 #include "lib/jxl/image_ops.h"
@@ -372,7 +372,7 @@ void ColorCorrelationMapEncodeDC(ColorCorrelationMap* map, BitWriter* writer,
   if (ytox_dc == 0 && ytob_dc == 0 && color_factor == kDefaultColorFactor &&
       base_correlation_x == 0.0f && base_correlation_b == kYToBRatio) {
     writer->Write(1, 1);
-    ReclaimAndCharge(writer, &allotment, layer, aux_out);
+    allotment.ReclaimAndCharge(writer, layer, aux_out);
     return;
   }
   writer->Write(1, 0);
@@ -381,7 +381,7 @@ void ColorCorrelationMapEncodeDC(ColorCorrelationMap* map, BitWriter* writer,
   JXL_CHECK(F16Coder::Write(base_correlation_b, writer));
   writer->Write(kBitsPerByte, ytox_dc - std::numeric_limits<int8_t>::min());
   writer->Write(kBitsPerByte, ytob_dc - std::numeric_limits<int8_t>::min());
-  ReclaimAndCharge(writer, &allotment, layer, aux_out);
+  allotment.ReclaimAndCharge(writer, layer, aux_out);
 }
 
 }  // namespace jxl

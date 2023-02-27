@@ -10,7 +10,6 @@
 #include <stdint.h>
 
 #include "lib/jxl/ac_strategy.h"
-#include "lib/jxl/aux_out_fwd.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/coeff_order_fwd.h"

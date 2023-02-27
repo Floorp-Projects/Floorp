@@ -9,6 +9,7 @@
 // Macros for compiler version + nonstandard keywords, e.g. __builtin_expect.
 
 #include <stdint.h>
+#include <sys/types.h>
 
 #include "lib/jxl/base/sanitizer_definitions.h"
 

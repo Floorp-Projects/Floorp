@@ -5,12 +5,7 @@
 
 find_package(Threads REQUIRED)
 
-set(JPEGXL_THREADS_SOURCES
-  threads/resizable_parallel_runner.cc
-  threads/thread_parallel_runner.cc
-  threads/thread_parallel_runner_internal.cc
-  threads/thread_parallel_runner_internal.h
-)
+include(jxl_lists.cmake)
 
 ### Define the jxl_threads shared or static target library. The ${target}
 # parameter should already be created with add_library(), but this function
@@ -52,7 +47,7 @@ endfunction()
 
 
 ### Static library.
-add_library(jxl_threads-static STATIC ${JPEGXL_THREADS_SOURCES})
+add_library(jxl_threads-static STATIC ${JPEGXL_INTERNAL_THREADS_SOURCES})
 _set_jxl_threads(jxl_threads-static)
 
 # Make jxl_threads symbols neither imported nor exported when using the static
@@ -64,7 +59,7 @@ target_compile_definitions(jxl_threads-static
 
 ### Public shared library.
 if (BUILD_SHARED_LIBS)
-add_library(jxl_threads SHARED ${JPEGXL_THREADS_SOURCES})
+add_library(jxl_threads SHARED ${JPEGXL_INTERNAL_THREADS_SOURCES})
 _set_jxl_threads(jxl_threads)
 
 set_target_properties(jxl_threads PROPERTIES

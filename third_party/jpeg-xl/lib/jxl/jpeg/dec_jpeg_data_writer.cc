@@ -14,6 +14,7 @@
 
 #include "lib/jxl/base/bits.h"
 #include "lib/jxl/common.h"
+#include "lib/jxl/image_bundle.h"
 #include "lib/jxl/jpeg/dec_jpeg_serialization_state.h"
 #include "lib/jxl/jpeg/jpeg_data.h"
 
@@ -1043,14 +1044,6 @@ Status WriteJpeg(const JPEGData& jpg, const JPEGOutput& out) {
 Status ProcessJpeg(const JPEGData& jpg, SerializationState* ss) {
   auto nullout = [](const uint8_t* buf, size_t len) { return len; };
   return WriteJpegInternal<OutputModes::kModeHistogram>(jpg, nullout, ss);
-}
-
-Status EncodeImageJPGCoefficients(const CodecInOut* io, PaddedBytes* bytes) {
-  auto write = [&bytes](const uint8_t* buf, size_t len) {
-    bytes->append(buf, buf + len);
-    return len;
-  };
-  return WriteJpeg(*io->Main().jpeg_data, write);
 }
 
 }  // namespace jpeg

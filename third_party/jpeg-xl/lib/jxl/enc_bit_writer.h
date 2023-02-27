@@ -22,6 +22,8 @@
 
 namespace jxl {
 
+struct AuxOut;
+
 struct BitWriter {
   // Upper bound on `n_bits` in each call to Write. We shift a 64-bit word by
   // 7 bits (max already valid bits in the last byte) and at least 1 bit is
@@ -84,13 +86,14 @@ struct BitWriter {
       return histogram_bits_;
     }
 
-    // Do not call directly - use ::ReclaimAndCharge instead, which ensures
-    // the bits are charged to a layer.
+    void ReclaimAndCharge(BitWriter* JXL_RESTRICT writer, size_t layer,
+                          AuxOut* JXL_RESTRICT aux_out);
+
+   private:
     void PrivateReclaim(BitWriter* JXL_RESTRICT writer,
                         size_t* JXL_RESTRICT used_bits,
                         size_t* JXL_RESTRICT unused_bits);
 
-   private:
     size_t prev_bits_written_;
     const size_t max_bits_;
     size_t histogram_bits_ = 0;

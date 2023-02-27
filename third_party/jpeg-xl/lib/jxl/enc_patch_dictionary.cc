@@ -27,6 +27,7 @@
 #include "lib/jxl/dec_cache.h"
 #include "lib/jxl/dec_frame.h"
 #include "lib/jxl/enc_ans.h"
+#include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_cache.h"
 #include "lib/jxl/enc_dot_dictionary.h"
 #include "lib/jxl/enc_frame.h"
@@ -135,13 +136,13 @@ void PatchDictionaryEncoder::SubtractFrom(const PatchDictionary& pdic,
       size_t iy = y - by;
       size_t ref = ref_pos.ref;
       const float* JXL_RESTRICT ref_rows[3] = {
-          pdic.shared_->reference_frames[ref].frame->color()->ConstPlaneRow(
+          pdic.shared_->reference_frames[ref].frame.color().ConstPlaneRow(
               0, ref_pos.y0 + iy) +
               ref_pos.x0,
-          pdic.shared_->reference_frames[ref].frame->color()->ConstPlaneRow(
+          pdic.shared_->reference_frames[ref].frame.color().ConstPlaneRow(
               1, ref_pos.y0 + iy) +
               ref_pos.x0,
-          pdic.shared_->reference_frames[ref].frame->color()->ConstPlaneRow(
+          pdic.shared_->reference_frames[ref].frame.color().ConstPlaneRow(
               2, ref_pos.y0 + iy) +
               ref_pos.x0,
       };
@@ -524,7 +525,7 @@ std::vector<PatchInfo> FindTextLikePatches(
   }
 
   // Remove duplicates.
-  constexpr size_t kMinPatchOccurences = 2;
+  constexpr size_t kMinPatchOccurrences = 2;
   std::sort(info.begin(), info.end());
   size_t unique = 0;
   for (size_t i = 1; i < info.size(); i++) {
@@ -532,13 +533,13 @@ std::vector<PatchInfo> FindTextLikePatches(
       info[unique].second.insert(info[unique].second.end(),
                                  info[i].second.begin(), info[i].second.end());
     } else {
-      if (info[unique].second.size() >= kMinPatchOccurences) {
+      if (info[unique].second.size() >= kMinPatchOccurrences) {
         unique++;
       }
       info[unique] = info[i];
     }
   }
-  if (info[unique].second.size() >= kMinPatchOccurences) {
+  if (info[unique].second.size() >= kMinPatchOccurrences) {
     unique++;
   }
   info.resize(unique);
@@ -793,7 +794,7 @@ void RoundtripPatchFrame(Image3F* reference_frame,
     frame_start += decoded.decoded_bytes();
     encoded_size -= decoded.decoded_bytes();
     size_t ref_xsize =
-        dec_state.shared_storage.reference_frames[idx].storage.color()->xsize();
+        dec_state.shared_storage.reference_frames[idx].frame.color()->xsize();
     // if the frame itself uses patches, we need to decode another frame
     if (!ref_xsize) {
       JXL_CHECK(DecodeFrame(&dec_state, pool, frame_start, encoded_size,
@@ -803,10 +804,8 @@ void RoundtripPatchFrame(Image3F* reference_frame,
     state->shared.reference_frames[idx] =
         std::move(dec_state.shared_storage.reference_frames[idx]);
   } else {
-    state->shared.reference_frames[idx].storage = std::move(ib);
+    state->shared.reference_frames[idx].frame = std::move(ib);
   }
-  state->shared.reference_frames[idx].frame =
-      &state->shared.reference_frames[idx].storage;
 }
 
 }  // namespace jxl

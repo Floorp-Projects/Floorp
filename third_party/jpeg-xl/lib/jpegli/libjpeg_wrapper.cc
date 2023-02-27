@@ -78,6 +78,10 @@ JDIMENSION jpeg_read_raw_data(j_decompress_ptr cinfo, JSAMPIMAGE data,
   return jpegli_read_raw_data(cinfo, data, max_lines);
 }
 
+jvirt_barray_ptr *jpeg_read_coefficients(j_decompress_ptr cinfo) {
+  return jpegli_read_coefficients(cinfo);
+}
+
 boolean jpeg_has_multiple_scans(j_decompress_ptr cinfo) {
   return jpegli_has_multiple_scans(cinfo);
 }
@@ -177,6 +181,11 @@ void jpeg_suppress_tables(j_compress_ptr cinfo, boolean suppress) {
   jpegli_suppress_tables(cinfo, suppress);
 }
 
+void jpeg_copy_critical_parameters(j_decompress_ptr srcinfo,
+                                   j_compress_ptr dstinfo) {
+  jpegli_copy_critical_parameters(srcinfo, dstinfo);
+}
+
 void jpeg_write_m_header(j_compress_ptr cinfo, int marker,
                          unsigned int datalen) {
   jpegli_write_m_header(cinfo, marker, datalen);
@@ -200,9 +209,21 @@ void jpeg_start_compress(j_compress_ptr cinfo, boolean write_all_tables) {
   jpegli_start_compress(cinfo, write_all_tables);
 }
 
+void jpeg_write_tables(j_compress_ptr cinfo) { jpegli_write_tables(cinfo); }
+
 JDIMENSION jpeg_write_scanlines(j_compress_ptr cinfo, JSAMPARRAY scanlines,
                                 JDIMENSION num_lines) {
   return jpegli_write_scanlines(cinfo, scanlines, num_lines);
+}
+
+JDIMENSION jpeg_write_raw_data(j_compress_ptr cinfo, JSAMPIMAGE data,
+                               JDIMENSION num_lines) {
+  return jpegli_write_raw_data(cinfo, data, num_lines);
+}
+
+void jpeg_write_coefficients(j_compress_ptr cinfo,
+                             jvirt_barray_ptr *coef_arrays) {
+  jpegli_write_coefficients(cinfo, coef_arrays);
 }
 
 void jpeg_finish_compress(j_compress_ptr cinfo) {

@@ -16,6 +16,7 @@
 #include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_external_image.h"
 #include "lib/jxl/enc_image_bundle.h"
+#include "lib/jxl/luminance.h"
 
 namespace jxl {
 namespace extras {
@@ -184,7 +185,7 @@ Status ConvertPackedPixelFileToCodecInOut(const PackedPixelFile& ppf,
   if (ppf.info.intensity_target != 0) {
     io->metadata.m.SetIntensityTarget(ppf.info.intensity_target);
   } else {
-    SetIntensityTarget(io);
+    SetIntensityTarget(&io->metadata.m);
   }
   io->CheckMetadata();
   return true;
@@ -274,10 +275,6 @@ Status ConvertCodecInOutToPackedPixelFile(const CodecInOut& io,
     JXL_RETURN_IF_ERROR(TransformIfNeeded(*to_color_transform, c_desired,
                                           GetJxlCms(), pool, &store,
                                           &transformed));
-    size_t stride = ib.oriented_xsize() *
-                    (c_desired.Channels() * ppf->info.bits_per_sample) /
-                    kBitsPerByte;
-    PaddedBytes pixels(stride * ib.oriented_ysize());
 
     JXL_RETURN_IF_ERROR(ConvertToExternal(
         *transformed, bits_per_sample, float_out, format.num_channels,

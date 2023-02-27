@@ -15,19 +15,21 @@
 #include "base/data_parallel.h"
 #include "jxl/codestream_header.h"
 #include "jxl/types.h"
-#include "lib/jxl/aux_out.h"
 #include "lib/jxl/base/byte_order.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/codec_in_out.h"
+#include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_external_image.h"
 #include "lib/jxl/enc_fast_lossless.h"
+#include "lib/jxl/enc_fields.h"
 #include "lib/jxl/enc_file.h"
 #include "lib/jxl/enc_icc_codec.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/encode_internal.h"
 #include "lib/jxl/exif.h"
 #include "lib/jxl/jpeg/enc_jpeg_data.h"
+#include "lib/jxl/luminance.h"
 #include "lib/jxl/sanitizers.h"
 
 // Debug-printing failure macro similar to JXL_FAILURE, but for the status code
@@ -383,7 +385,7 @@ JxlEncoderStatus JxlEncoderStruct::RefillOutputByteQueue() {
     }
 
     jxl::BitWriter writer;
-    if (!WriteHeaders(&metadata, &writer, nullptr)) {
+    if (!WriteCodestreamHeaders(&metadata, &writer, nullptr)) {
       return JXL_API_ERROR(this, JXL_ENC_ERR_GENERIC,
                            "Failed to write codestream header");
     }
@@ -753,9 +755,9 @@ void JxlEncoderInitBasicInfo(JxlBasicInfo* info) {
 
 void JxlEncoderInitFrameHeader(JxlFrameHeader* frame_header) {
   // For each field, the default value of the specification is used. Depending
-  // on wheter an animation frame, or a composite still blending frame, is used,
-  // different fields have to be set up by the user after initing the frame
-  // header.
+  // on whether an animation frame, or a composite still blending frame,
+  // is used, different fields have to be set up by the user after initing
+  // the frame header.
   frame_header->duration = 0;
   frame_header->timecode = 0;
   frame_header->name_length = 0;
@@ -980,6 +982,9 @@ JxlEncoderFrameSettings* JxlEncoderFrameSettingsCreate(
     opts->values.lossless = false;
   }
   opts->values.cparams.level = enc->codestream_level;
+  opts->values.cparams.ec_distance.resize(enc->metadata.m.num_extra_channels,
+                                          -1);
+
   JxlEncoderFrameSettings* ret = opts.get();
   enc->encoder_options.emplace_back(std::move(opts));
   return ret;
@@ -1026,6 +1031,33 @@ JxlEncoderStatus JxlEncoderSetFrameDistance(
     distance = 0.01f;
   }
   frame_settings->values.cparams.butteraugli_distance = distance;
+  return JXL_ENC_SUCCESS;
+}
+
+JxlEncoderStatus JxlEncoderSetExtraChannelDistance(
+    JxlEncoderFrameSettings* frame_settings, size_t index, float distance) {
+  if (index >= frame_settings->enc->metadata.m.num_extra_channels) {
+    return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_API_USAGE,
+                         "Invalid value for the index of extra channel");
+  }
+  if (distance != -1.f && (distance < 0.f || distance > 25.f)) {
+    return JXL_API_ERROR(
+        frame_settings->enc, JXL_ENC_ERR_API_USAGE,
+        "Distance has to be -1 or in [0.0..25.0] (corresponding to "
+        "quality in [0.0..100.0])");
+  }
+  if (distance > 0.f && distance < 0.01f) {
+    distance = 0.01f;
+  }
+
+  if (index >= frame_settings->values.cparams.ec_distance.size()) {
+    // This can only happen if JxlEncoderFrameSettingsCreate() was called before
+    // JxlEncoderSetBasicInfo().
+    frame_settings->values.cparams.ec_distance.resize(
+        frame_settings->enc->metadata.m.num_extra_channels, -1);
+  }
+
+  frame_settings->values.cparams.ec_distance[index] = distance;
   return JXL_ENC_SUCCESS;
 }
 
@@ -1110,7 +1142,7 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
       frame_settings->values.cparams.resampling = value;
       return JXL_ENC_SUCCESS;
     case JXL_ENC_FRAME_SETTING_EXTRA_CHANNEL_RESAMPLING:
-      // TOOD(lode): the jxl codestream allows choosing a different resampling
+      // TODO(lode): the jxl codestream allows choosing a different resampling
       // factor for each extra channel, independently per frame. Move this
       // option to a JxlEncoderFrameSettings-option that can be set per extra
       // channel, so needs its own function rather than

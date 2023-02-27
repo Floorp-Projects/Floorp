@@ -54,6 +54,10 @@ enum class SpeedTier {
 // NOLINTNEXTLINE(clang-analyzer-optin.performance.Padding)
 struct CompressParams {
   float butteraugli_distance = 1.0f;
+
+  // explicit distances for extra channels (defaults to butteraugli_distance
+  // when not set; value of -1 can be used to represent 'default')
+  std::vector<float> ec_distance;
   size_t target_size = 0;
   float target_bitrate = 0.0f;
 
@@ -73,7 +77,6 @@ struct CompressParams {
   // 0 = default.
   // 1 = slightly worse quality.
   // 4 = fastest speed, lowest quality
-  // TODO(veluca): hook this up to the C API.
   size_t decoding_speed_tier = 0;
 
   int max_butteraugli_iters = 4;
@@ -150,17 +153,32 @@ struct CompressParams {
   bool lossy_palette = false;
 
   // Returns whether these params are lossless as defined by SetLossless();
-  bool IsLossless() const {
-    // YCbCr is also considered lossless here since it's intended for
-    // source material that is already YCbCr (we don't do the fwd transform)
-    return modular_mode && butteraugli_distance == 0.0f &&
-           color_transform != jxl::ColorTransform::kXYB;
+  bool IsLossless() const { return modular_mode && ModularPartIsLossless(); }
+
+  bool ModularPartIsLossless() const {
+    if (modular_mode) {
+      // YCbCr is also considered lossless here since it's intended for
+      // source material that is already YCbCr (we don't do the fwd transform)
+      if (butteraugli_distance != 0 ||
+          color_transform == jxl::ColorTransform::kXYB)
+        return false;
+    }
+    for (float f : ec_distance) {
+      if (f > 0) return false;
+      if (f < 0 && butteraugli_distance != 0) return false;
+    }
+    // if no explicit ec_distance given, and using vardct, then the modular part
+    // is empty or not lossless
+    if (!modular_mode && ec_distance.empty()) return false;
+    // all modular channels are encoded at distance 0
+    return true;
   }
 
   // Sets the parameters required to make the codec lossless.
   void SetLossless() {
     modular_mode = true;
     butteraugli_distance = 0.0f;
+    for (float &f : ec_distance) f = 0.0f;
     color_transform = jxl::ColorTransform::kNone;
   }
 

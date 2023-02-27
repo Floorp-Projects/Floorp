@@ -7,10 +7,10 @@
 
 #include <stdint.h>
 
-#include "gtest/gtest.h"
 #include "lib/jxl/base/random.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/dec_ans.h"
+#include "lib/jxl/testing.h"
 
 namespace jxl {
 namespace {

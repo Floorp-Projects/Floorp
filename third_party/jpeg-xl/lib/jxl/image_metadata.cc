@@ -15,6 +15,8 @@
 #include "lib/jxl/codec_in_out.h"
 #include "lib/jxl/color_management.h"
 #include "lib/jxl/fields.h"
+#include "lib/jxl/frame_header.h"
+#include "lib/jxl/quantizer.h"
 
 namespace jxl {
 BitDepth::BitDepth() { Bundle::Init(this); }
@@ -399,12 +401,6 @@ Status ToneMapping::VisitFields(Visitor* JXL_RESTRICT visitor) {
 Status ReadImageMetadata(BitReader* JXL_RESTRICT reader,
                          ImageMetadata* JXL_RESTRICT metadata) {
   return Bundle::Read(reader, metadata);
-}
-
-Status WriteImageMetadata(const ImageMetadata& metadata,
-                          BitWriter* JXL_RESTRICT writer, size_t layer,
-                          AuxOut* aux_out) {
-  return Bundle::Write(metadata, writer, layer, aux_out);
 }
 
 void ImageMetadata::SetAlphaBits(uint32_t bits, bool alpha_is_premultiplied) {

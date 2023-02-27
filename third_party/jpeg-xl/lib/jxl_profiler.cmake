@@ -3,14 +3,10 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-set(JPEGXL_PROFILER_SOURCES
-  profiler/profiler.cc
-  profiler/profiler.h
-  profiler/tsc_timer.h
-)
+include(jxl_lists.cmake)
 
 ### Static library.
-add_library(jxl_profiler STATIC ${JPEGXL_PROFILER_SOURCES})
+add_library(jxl_profiler STATIC ${JPEGXL_INTERNAL_PROFILER_SOURCES})
 target_link_libraries(jxl_profiler PUBLIC hwy)
 
 target_compile_options(jxl_profiler PRIVATE ${JPEGXL_INTERNAL_FLAGS})

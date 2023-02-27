@@ -26,6 +26,7 @@
 #include "lib/jxl/coeff_order_fwd.h"
 #include "lib/jxl/convolve.h"
 #include "lib/jxl/dct_scales.h"
+#include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_params.h"
 #include "lib/jxl/enc_transforms-inl.h"
 #include "lib/jxl/entropy_coder.h"

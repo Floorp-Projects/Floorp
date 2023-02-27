@@ -15,7 +15,6 @@
 #include <vector>
 
 #include "lib/jxl/ac_strategy.h"
-#include "lib/jxl/aux_out_fwd.h"
 #include "lib/jxl/base/cache_aligned.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/span.h"
@@ -248,8 +247,8 @@ class QuantEncoding final : public QuantEncodingInternal {
   // create a QuantEncodingInternal instance is if you need a constexpr version
   // of this class. Note that RAW() is not supported in that case since it uses
   // a std::vector.
-  static QuantEncoding Library(uint8_t predefined) {
-    return QuantEncoding(QuantEncodingInternal::Library(predefined));
+  static QuantEncoding Library(uint8_t predefined_arg) {
+    return QuantEncoding(QuantEncodingInternal::Library(predefined_arg));
   }
   static QuantEncoding Identity(const IdWeights& xybweights) {
     return QuantEncoding(QuantEncodingInternal::Identity(xybweights));
@@ -288,8 +287,8 @@ class QuantEncoding final : public QuantEncodingInternal {
   explicit QuantEncoding(const QuantEncodingInternal& other)
       : QuantEncodingInternal(other) {}
 
-  explicit QuantEncoding(QuantEncodingInternal::Mode mode)
-      : QuantEncodingInternal(mode) {}
+  explicit QuantEncoding(QuantEncodingInternal::Mode mode_arg)
+      : QuantEncodingInternal(mode_arg) {}
 };
 
 // A constexpr QuantEncodingInternal instance is often downcasted to the
@@ -372,7 +371,7 @@ class DequantMatrices {
   // Return the array of library kNumPredefinedTables QuantEncoding entries as
   // a constexpr array. Use Library() to obtain a pointer to the copy in the
   // .cc file.
-  static const DequantLibraryInternal LibraryInit();
+  static DequantLibraryInternal LibraryInit();
 
   // Returns aligned memory.
   JXL_INLINE const float* Matrix(size_t quant_kind, size_t c) const {

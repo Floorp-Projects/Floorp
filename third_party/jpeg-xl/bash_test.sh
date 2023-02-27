@@ -103,9 +103,15 @@ test_printf_size_t() {
     ret=1
   fi
 
+  if grep -n -E 'gtest\.h' \
+      $(git ls-files | grep -E '(\.c|\.cc|\.cpp|\.h)$' | grep -v -F /testing.h); then
+    echo "Don't include gtest directly, instead include 'testing.h'. " >&2
+    ret=1
+  fi
+
   if grep -n -E 'gmock\.h' \
-      $(git ls-files | grep -E '(\.c|\.cc|\.cpp|\.h)$' | grep -v -F /test_utils.h); then
-    echo "Don't include gmock directly, instead include 'test_utils.h'. " >&2
+      $(git ls-files | grep -E '(\.c|\.cc|\.cpp|\.h)$' | grep -v -F /testing.h); then
+    echo "Don't include gmock directly, instead include 'testing.h'. " >&2
     ret=1
   fi
 
@@ -122,7 +128,7 @@ test_printf_size_t() {
     fi
   done
 
-  for f in $(git ls-files | grep -E "\.h$" | grep -v -E '(printf_macros\.h|test_utils\.h)' |
+  for f in $(git ls-files | grep -E "\.h$" | grep -v -E '(printf_macros\.h|testing\.h)' |
       xargs grep -n 'PRI[udx]S'); do
     # Having PRIuS / PRIdS in a header file means that printf_macros.h may
     # be included before a system header, in particular before gtest headers.
