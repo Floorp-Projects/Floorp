@@ -1,5 +1,8 @@
 // Test that eval-in-frame throws on accessing optimized out values.
 
+// Use gczeal 0 to keep CGC from invalidating Ion code and causing test failures.
+gczeal(0);
+
 load(libdir + "jitopts.js");
 
 if (!jitTogglesMatch(Opts_IonEagerNoOffthreadCompilation))
