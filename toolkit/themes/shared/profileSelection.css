@@ -4,8 +4,6 @@
 
 @import url("chrome://global/skin/global.css");
 
-:root { -moz-box-layout: flex }
-
 #managebuttons {
   padding-top: 1em;
 }

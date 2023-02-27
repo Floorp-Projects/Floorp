@@ -9086,13 +9086,6 @@
   value: true
   mirror: always
 
-# Pref to control whether we emulate all -moz-box with modern flexbox.
-- name: layout.css.moz-box-flexbox-emulation.enabled
-  type: bool
-  value: true
-  mirror: always
-  rust: true
-
 # Pref to control whether to suspend also RefreshDriver::Tick when the page
 # itself is suspended because of some synchronous operation, like sync XHR.
 - name: layout.skip_ticks_while_page_suspended
