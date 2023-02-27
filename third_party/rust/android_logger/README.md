@@ -22,13 +22,13 @@ Example of initialization on activity creation, with log configuration:
 #[macro_use] extern crate log;
 extern crate android_logger;
 
-use log::LevelFilter;
+use log::Level;
 use android_logger::{Config,FilterBuilder};
 
 fn native_activity_create() {
     android_logger::init_once(
         Config::default()
-            .with_max_level(LevelFilter::Trace) // limit log level
+            .with_min_level(Level::Trace) // limit log level
             .with_tag("mytag") // logs will show under mytag tag
             .with_filter( // configure messages for specific crate
                 FilterBuilder::new()
@@ -47,13 +47,12 @@ To allow all logs, use the default configuration with min level Trace:
 #[macro_use] extern crate log;
 extern crate android_logger;
 
-use log::LevelFilter;
+use log::Level;
 use android_logger::Config;
 
 fn native_activity_create() {
     android_logger::init_once(
-        Config::default().with_max_level(LevelFilter::Trace),
-    );
+        Config::default().with_min_level(Level::Trace));
 }
 ```
 

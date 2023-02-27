@@ -168,7 +168,7 @@ mod test {
 
     #[test]
     fn payload_is_correct() {
-        let (glean, _t) = new_glean(None);
+        let (glean, _) = new_glean(None);
 
         let metric = UrlMetric::new(CommonMetricData {
             name: "url_metric".into(),
@@ -186,7 +186,7 @@ mod test {
 
     #[test]
     fn does_not_record_url_exceeding_maximum_length() {
-        let (glean, _t) = new_glean(None);
+        let (glean, _) = new_glean(None);
 
         let metric = UrlMetric::new(CommonMetricData {
             name: "url_metric".into(),
@@ -224,7 +224,7 @@ mod test {
 
     #[test]
     fn does_not_record_data_urls() {
-        let (glean, _t) = new_glean(None);
+        let (glean, _) = new_glean(None);
 
         let metric = UrlMetric::new(CommonMetricData {
             name: "url_metric".into(),
@@ -248,7 +248,7 @@ mod test {
 
     #[test]
     fn url_validation_works_and_records_errors() {
-        let (glean, _t) = new_glean(None);
+        let (glean, _) = new_glean(None);
 
         let metric = UrlMetric::new(CommonMetricData {
             name: "url_metric".into(),

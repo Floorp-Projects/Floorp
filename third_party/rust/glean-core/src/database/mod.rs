@@ -460,12 +460,7 @@ impl Database {
 
         for ping_name in data.storage_names() {
             if let Err(e) = self.record_per_lifetime(data.inner.lifetime, ping_name, &name, value) {
-                log::error!(
-                    "Failed to record metric '{}' into {}: {:?}",
-                    data.base_identifier(),
-                    ping_name,
-                    e
-                );
+                log::error!("Failed to record metric into {}: {:?}", ping_name, e);
             }
         }
     }
@@ -528,12 +523,7 @@ impl Database {
             if let Err(e) =
                 self.record_per_lifetime_with(data.inner.lifetime, ping_name, &name, &mut transform)
             {
-                log::error!(
-                    "Failed to record metric '{}' into {}: {:?}",
-                    data.base_identifier(),
-                    ping_name,
-                    e
-                );
+                log::error!("Failed to record metric into {}: {:?}", ping_name, e);
             }
         }
     }

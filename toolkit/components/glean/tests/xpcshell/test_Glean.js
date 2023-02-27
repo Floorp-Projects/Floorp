@@ -268,19 +268,18 @@ add_task(async function test_fog_labels_conform() {
     Glean.testOnly.mabelsLabelMaker["dot.separated"].testGetValue()
   );
   Glean.testOnly.mabelsLabelMaker.camelCase.set("wednesday");
-  Assert.equal(
-    "wednesday",
-    Glean.testOnly.mabelsLabelMaker.camelCase.testGetValue()
-  );
-  const veryLong = "1".repeat(72);
-  Glean.testOnly.mabelsLabelMaker[veryLong].set("seventy-two");
   Assert.throws(
-    () => Glean.testOnly.mabelsLabelMaker[veryLong].testGetValue(),
+    () => Glean.testOnly.mabelsLabelMaker.camelCase.testGetValue(),
     /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
     "Should throw because of an invalid label."
   );
-  // This test should _now_ throw because we are calling data after an invalid
-  // label has been set.
+  Assert.throws(
+    () => Glean.testOnly.mabelsLabelMaker.__other__.testGetValue(),
+    /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
+    "Should throw because of an invalid label."
+  );
+  // This test _should_ throw because we are calling data after an invalid label
+  // has been set.
   Assert.throws(
     () => Glean.testOnly.mabelsLabelMaker["dot.separated"].testGetValue(),
     /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
@@ -309,7 +308,7 @@ add_task(async function test_fog_labeled_boolean_works() {
     undefined,
     Glean.testOnly.mabelsLikeBalloons.__other__.testGetValue()
   );
-  Glean.testOnly.mabelsLikeBalloons["1".repeat(72)].set(true);
+  Glean.testOnly.mabelsLikeBalloons.InvalidLabel.set(true);
   Assert.throws(
     () => Glean.testOnly.mabelsLikeBalloons.__other__.testGetValue(),
     /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
@@ -338,7 +337,7 @@ add_task(async function test_fog_labeled_counter_works() {
     undefined,
     Glean.testOnly.mabelsKitchenCounters.__other__.testGetValue()
   );
-  Glean.testOnly.mabelsKitchenCounters["1".repeat(72)].add(1);
+  Glean.testOnly.mabelsKitchenCounters.InvalidLabel.add(1);
   Assert.throws(
     () => Glean.testOnly.mabelsKitchenCounters.__other__.testGetValue(),
     /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
@@ -367,7 +366,7 @@ add_task(async function test_fog_labeled_string_works() {
     undefined,
     Glean.testOnly.mabelsBalloonStrings.__other__.testGetValue()
   );
-  Glean.testOnly.mabelsBalloonStrings["1".repeat(72)].set("valid");
+  Glean.testOnly.mabelsBalloonStrings.InvalidLabel.set("valid");
   Assert.throws(
     () => Glean.testOnly.mabelsBalloonStrings.__other__.testGetValue(),
     /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/

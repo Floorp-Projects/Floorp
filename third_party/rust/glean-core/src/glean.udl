@@ -102,7 +102,7 @@ callback interface OnGleanEvents {
     // The language SDK can do additional things from within the same initializer thread,
     // e.g. starting to observe application events for foreground/background behavior.
     // The observer then needs to call the respective client activity API.
-    void initialize_finished();
+    void on_initialize_finished();
 
     // Trigger the uploader whenever a ping was submitted.
     //
@@ -123,15 +123,6 @@ callback interface OnGleanEvents {
     // Called when upload is disabled and uploads should be stopped
     [Throws=CallbackError]
     void cancel_uploads();
-
-    // Called on shutdown, before Glean is fully shutdown.
-    //
-    // * This MUST NOT put any new tasks on the dispatcher.
-    //   * New tasks will be ignored.
-    // * This SHOULD NOT block arbitrarily long.
-    //   * Shutdown waits for a maximum of 30 seconds.
-    [Throws=CallbackError]
-    void shutdown();
 };
 
 // Deserialized experiment data.
