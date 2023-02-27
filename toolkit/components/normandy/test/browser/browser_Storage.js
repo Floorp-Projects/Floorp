@@ -1,10 +1,5 @@
 "use strict";
 
-// The name of this module conflicts with the window.Storage
-// DOM global - https://developer.mozilla.org/en-US/docs/Web/API/Storage .
-// eslint-disable-next-line mozilla/no-redeclare-with-import-autofix
-const { Storage } = ChromeUtils.import("resource://normandy/lib/Storage.jsm");
-
 add_task(async function() {
   const store1 = new Storage("prefix1");
   const store2 = new Storage("prefix2");

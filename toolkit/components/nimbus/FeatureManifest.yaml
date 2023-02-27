@@ -978,3 +978,15 @@ fxaButtonVisibility:
       description: True if the Firefox Accounts toolbar button should be visible when not signed in.
       type: boolean
       setPref: identity.fxaccounts.toolbar.defaultVisible
+
+legacyHeartbeat:
+  description: Normandy Heartbeat exposed to Nimbus
+  owner: barret@mozilla.com
+  hasExposure: false
+  schema:
+    uri: "resource://normandy/schemas/LegacyHeartbeat.schema.json"
+    path: "toolkit/components/normandy/schemas/LegacyHeartbeat.schema.json"
+  variables:
+    survey:
+      type: json
+      description: The Heartbeat survey parameters.
