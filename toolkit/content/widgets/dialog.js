@@ -350,6 +350,9 @@
       if (this._translationReady) {
         await this._translationReady;
       }
+      if (document.mozSubDialogReady) {
+        await document.mozSubDialogReady;
+      }
 
       let finalStep = () => {
         this._sizeToPreferredSize();
