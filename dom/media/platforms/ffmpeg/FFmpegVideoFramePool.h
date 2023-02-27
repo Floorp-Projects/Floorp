@@ -95,7 +95,6 @@ class VideoFrameSurface<LIBAV_VER> {
   // Check if DMABufSurface is used by any gecko rendering process
   // (WebRender or GL compositor) or by DMABUFSurfaceImage/VideoData.
   bool IsUsed() const { return mSurface->IsGlobalRefSet(); }
-  void MarkAsUsed() { mSurface->GlobalRefAdd(); }
 
   // Surface points to dmabuf memmory owned by ffmpeg.
   bool IsFFMPEGSurface() const { return !!mLib; }

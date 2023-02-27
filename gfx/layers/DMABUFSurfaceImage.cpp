@@ -26,14 +26,26 @@ using namespace mozilla::layers;
 using namespace mozilla::gfx;
 using namespace mozilla::gl;
 
+#ifdef MOZ_LOGGING
+#  undef DMABUF_LOG
+extern mozilla::LazyLogModule gDmabufLog;
+#  define DMABUF_LOG(str, ...) \
+    MOZ_LOG(gDmabufLog, mozilla::LogLevel::Debug, (str, ##__VA_ARGS__))
+#else
+#  define DMABUF_LOG(args)
+#endif /* MOZ_LOGGING */
+
 DMABUFSurfaceImage::DMABUFSurfaceImage(DMABufSurface* aSurface)
     : Image(nullptr, ImageFormat::DMABUF), mSurface(aSurface) {
-  MOZ_DIAGNOSTIC_ASSERT(mSurface->IsGlobalRefSet(),
-                        "DMABufSurface must be marked as used!");
+  DMABUF_LOG("DMABUFSurfaceImage::DMABUFSurfaceImage (%p) aSurface %p UID %d\n",
+             this, aSurface, aSurface->GetUID());
+  mSurface->GlobalRefAdd();
 }
 
 DMABUFSurfaceImage::~DMABUFSurfaceImage() {
-  // Unref as we're done with this surface.
+  DMABUF_LOG(
+      "DMABUFSurfaceImage::~DMABUFSurfaceImage (%p) mSurface %p UID %d\n", this,
+      (void*)mSurface.get(), mSurface->GetUID());
   mSurface->GlobalRefRelease();
 }
 
