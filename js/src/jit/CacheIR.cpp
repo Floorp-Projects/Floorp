@@ -9360,39 +9360,6 @@ InlinableNativeIRGenerator::tryAttachGetNextMapSetEntryForIterator(bool isMap) {
   return AttachDecision::Attach;
 }
 
-AttachDecision InlinableNativeIRGenerator::tryAttachFinishBoundFunctionInit() {
-  // Self-hosted code calls this with (boundFunction, targetObj, argCount)
-  // arguments.
-  MOZ_ASSERT(argc_ == 3);
-  MOZ_ASSERT(args_[0].toObject().is<JSFunction>());
-  MOZ_ASSERT(args_[1].isObject());
-  MOZ_ASSERT(args_[2].isInt32());
-
-  // Initialize the input operand.
-  initializeInputOperand();
-
-  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
-
-  ValOperandId boundId =
-      writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
-  ObjOperandId objBoundId = writer.guardToObject(boundId);
-
-  ValOperandId targetId =
-      writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
-  ObjOperandId objTargetId = writer.guardToObject(targetId);
-
-  ValOperandId argCountId =
-      writer.loadArgumentFixedSlot(ArgumentKind::Arg2, argc_);
-  Int32OperandId int32ArgCountId = writer.guardToInt32(argCountId);
-
-  writer.finishBoundFunctionInitResult(objBoundId, objTargetId,
-                                       int32ArgCountId);
-  writer.returnFromIC();
-
-  trackAttached("FinishBoundFunctionInit");
-  return AttachDecision::Attach;
-}
-
 AttachDecision InlinableNativeIRGenerator::tryAttachNewArrayIterator() {
   // Self-hosted code calls this without any arguments
   MOZ_ASSERT(argc_ == 0);
@@ -10238,8 +10205,6 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
       return tryAttachSubstringKernel();
     case InlinableNative::IntrinsicIsConstructing:
       return tryAttachIsConstructing();
-    case InlinableNative::IntrinsicFinishBoundFunctionInit:
-      return tryAttachFinishBoundFunctionInit();
     case InlinableNative::IntrinsicNewArrayIterator:
       return tryAttachNewArrayIterator();
     case InlinableNative::IntrinsicNewStringIterator:

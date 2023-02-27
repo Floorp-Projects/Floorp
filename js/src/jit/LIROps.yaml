@@ -3179,13 +3179,6 @@
     value: BoxedValue
   call_instruction: true
 
-- name: FinishBoundFunctionInit
-  operands:
-    bound: WordSized
-    target: WordSized
-    argCount: WordSized
-  num_temps: 2
-
 - name: IsPackedArray
   result_type: WordSized
   operands:

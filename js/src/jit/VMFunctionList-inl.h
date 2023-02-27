@@ -145,7 +145,6 @@ namespace jit {
   _(EnterWith, js::jit::EnterWith)                                             \
   _(ExtractAwaitValue, js::ExtractAwaitValue)                                  \
   _(FinalSuspend, js::jit::FinalSuspend)                                       \
-  _(FinishBoundFunctionInit, JSFunction::finishBoundFunctionInit)              \
   _(FreshenLexicalEnv, js::jit::FreshenLexicalEnv)                             \
   _(FunWithProtoOperation, js::FunWithProtoOperation)                          \
   VMFUNCTION_FUZZILLI_LIST(_)                                                  \
