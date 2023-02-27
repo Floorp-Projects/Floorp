@@ -84,4 +84,8 @@
     <dimen name="radio_button_preference_start_margin">18dp</dimen>
     <dimen name="radio_button_preference_title_margins">16dp</dimen>
 
+
+    <!-- Default values for Material Bottom sheet. -->
+    <dimen name="tablet_bottom_sheet_width">@dimen/match_parent</dimen>
+    <dimen name="tablet_bottom_sheet_peekheight">64dp</dimen>
 </resources>
