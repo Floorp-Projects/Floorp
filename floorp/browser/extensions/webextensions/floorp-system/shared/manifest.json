@@ -93,6 +93,7 @@
   },
   "background": {
     "scripts": [
+      "ua_data.js",
       "gesturefy/background.js",
       "webcompat_inject.js",
       "webcompat_useragent.js",
