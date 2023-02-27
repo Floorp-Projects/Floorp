@@ -101,6 +101,7 @@ tasks:
             gradle-build-type: debug
             gradle-build-name: fenixDebug
             gradle-build: fenix
+            track-apk-size: true
         source-project-name: "fenix"
         treeherder:
             symbol: fenix-debug(Bf)
@@ -160,6 +161,7 @@ tasks:
             gradle-build-type: release
             gradle-build-name: fenixRelease
             gradle-build: fenix
+            track-apk-size: true
         shipping-phase: promote
         source-project-name: "fenix"
         treeherder:
@@ -203,6 +205,7 @@ tasks:
             gradle-build-type: nightly
             gradle-build-name: fenixNightly
             gradle-build: fenix
+            track-apk-size: true
         treeherder:
             symbol: fenix-nightly(B)
             platform: fenix-android-all/opt
@@ -240,6 +243,7 @@ tasks:
             gradle-build-type: beta
             gradle-build-name: fenixBeta
             gradle-build: fenix
+            track-apk-size: true
         shipping-phase: promote
         source-project-name: "fenix"
         treeherder:
