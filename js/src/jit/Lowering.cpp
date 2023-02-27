@@ -475,6 +475,14 @@ void LIRGenerator::visitGuardArgumentsObjectFlags(
   redefine(ins, argsObj);
 }
 
+void LIRGenerator::visitBoundFunctionNumArgs(MBoundFunctionNumArgs* ins) {
+  MDefinition* obj = ins->object();
+  MOZ_ASSERT(obj->type() == MIRType::Object);
+
+  auto* lir = new (alloc()) LBoundFunctionNumArgs(useRegisterAtStart(obj));
+  define(lir, ins);
+}
+
 void LIRGenerator::visitReturnFromCtor(MReturnFromCtor* ins) {
   LReturnFromCtor* lir = new (alloc())
       LReturnFromCtor(useBox(ins->value()), useRegister(ins->object()));

@@ -7721,6 +7721,15 @@ void CodeGenerator::visitGuardArgumentsObjectFlags(
   bailoutFrom(&bail, lir->snapshot());
 }
 
+void CodeGenerator::visitBoundFunctionNumArgs(LBoundFunctionNumArgs* lir) {
+  Register obj = ToRegister(lir->object());
+  Register output = ToRegister(lir->output());
+
+  masm.unboxInt32(Address(obj, BoundFunctionObject::offsetOfFlagsSlot()),
+                  output);
+  masm.rshift32(Imm32(BoundFunctionObject::NumBoundArgsShift), output);
+}
+
 void CodeGenerator::visitReturnFromCtor(LReturnFromCtor* lir) {
   ValueOperand value = ToValue(lir, LReturnFromCtor::ValueIndex);
   Register obj = ToRegister(lir->object());

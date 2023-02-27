@@ -466,6 +466,11 @@
   num_temps: 1
   mir_op: true
 
+- name: BoundFunctionNumArgs
+  result_type: WordSized
+  operands:
+    object: WordSized
+
 # If the Value is an Object, return unbox(Value).
 # Otherwise, return the other Object.
 - name: ReturnFromCtor

@@ -289,6 +289,16 @@
 - name: NewBoundFunction
   gen_boilerplate: false
 
+- name: BoundFunctionNumArgs
+  operands:
+    object: Object
+  result_type: Int32
+  movable: true
+  congruent_to: if_operands_equal
+  # A bound function's state is immutable, so there is no
+  # implicit dependency.
+  alias_set: none
+
 # Setting __proto__ in an object literal.
 - name: MutateProto
   operands:

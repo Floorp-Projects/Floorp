@@ -144,6 +144,7 @@ class BoundFunctionObject : public NativeObject {
     return getFixedSlotOffset(BoundArg0Slot);
   }
 
+  static constexpr size_t targetSlot() { return TargetSlot; }
   static constexpr size_t boundThisSlot() { return BoundThisSlot; }
   static constexpr size_t firstInlineBoundArgSlot() { return BoundArg0Slot; }
 };
