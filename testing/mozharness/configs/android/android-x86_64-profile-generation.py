@@ -45,6 +45,5 @@ config = {
     },
     "bogomips_minimum": 3000,
     "android_version": 24,
-    "is_fennec": False,
     "is_emulator": True,
 }

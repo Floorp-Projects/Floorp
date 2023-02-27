@@ -343,7 +343,6 @@ class SingleTestMixin(object):
             mozinfo.update(
                 {"android_version": str(self.config.get("android_version", 24))}
             )
-            mozinfo.update({"is_fennec": self.config.get("is_fennec", False)})
             mozinfo.update({"is_emulator": self.config.get("is_emulator", True)})
         mozinfo.update({"verify": True})
         self.info("Per-test run using mozinfo: %s" % str(mozinfo.info))

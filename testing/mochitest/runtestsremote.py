@@ -106,7 +106,6 @@ class MochiRemote(MochitestDesktop):
             % str(self.device.version)
         )
         mozinfo.info["android_version"] = str(self.device.version)
-        mozinfo.info["is_fennec"] = not ("geckoview" in options.app)
         mozinfo.info["is_emulator"] = self.device._device_serial.startswith("emulator-")
 
     def cleanup(self, options, final=False):
