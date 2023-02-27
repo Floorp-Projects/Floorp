@@ -43,6 +43,17 @@ jobs:
         rm -rf chrome_tmp
         rm chrome.deb
 
+        # Edge
+        aria2c -o msedge.deb "https://go.microsoft.com/fwlink?linkid=2149051&brand=M102"
+        mkdir msedge_tmp
+        cd msedge_tmp
+        ar vx ../msedge.deb
+        tar -xvf data.tar.xz
+        mv ./opt/microsoft/msedge ../msedge
+        cd ../
+        rm -rf msedge_tmp
+        rm msedge.deb
+
     - name: Scrape
       run: |
         cd User-Agent_Scraper
@@ -61,3 +72,7 @@ jobs:
         sleep 5
         export chrome_stable_ua=`npm run --silent start ~/chrome/chrome`
         echo $chrome_stable_ua
+
+        # Edge
+        export msedge_stable_ua=`npm run --silent start ~/msedge/msedge`
+        echo $msedge_stable_ua
