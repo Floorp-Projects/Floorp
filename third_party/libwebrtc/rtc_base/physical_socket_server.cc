@@ -460,7 +460,7 @@ int PhysicalSocket::DoReadFromSocket(void* buffer,
   int received = 0;
   if (read_scm_timestamp_experiment_) {
     iovec iov = {.iov_base = buffer, .iov_len = length};
-    msghdr msg = {.msg_iov = &iov, .msg_iovlen = 1};
+    msghdr msg = {.msg_name = nullptr, .msg_namelen = 0, .msg_iov = &iov, .msg_iovlen = 1};
     if (out_addr) {
       out_addr->Clear();
       msg.msg_name = addr;
