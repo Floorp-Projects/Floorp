@@ -10791,6 +10791,80 @@ AttachDecision CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
   return AttachDecision::Attach;
 }
 
+AttachDecision CallIRGenerator::tryAttachBoundFunction(
+    Handle<BoundFunctionObject*> calleeObj) {
+  // The target must be a JSFunction with a JitEntry.
+  if (!calleeObj->getTarget()->is<JSFunction>()) {
+    return AttachDecision::NoAction;
+  }
+  JSFunction* target = &calleeObj->getTarget()->as<JSFunction>();
+  if (!target->hasJitEntry()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Constructor calls and spread calls are not supported yet.
+  if (IsConstructPC(pc_) || IsSpreadPC(pc_)) {
+    return AttachDecision::NoAction;
+  }
+
+  // Limit the number of bound arguments to prevent us from compiling many
+  // different stubs (we bake in numBoundArgs and it's usually very small).
+  static constexpr size_t MaxBoundArgs = 10;
+  uint32_t numBoundArgs = calleeObj->numBoundArgs();
+  if (numBoundArgs > MaxBoundArgs) {
+    return AttachDecision::NoAction;
+  }
+
+  // Ensure we don't exceed JIT_ARGS_LENGTH_MAX.
+  if (numBoundArgs + argc_ > JIT_ARGS_LENGTH_MAX) {
+    return AttachDecision::NoAction;
+  }
+
+  CallFlags flags(CallFlags::Standard);
+  if (mode_ == ICState::Mode::Specialized) {
+    if (cx_->realm() == target->realm()) {
+      flags.setIsSameRealm();
+    }
+  }
+
+  // Load argc.
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Load the callee and ensure it's a bound function.
+  ValOperandId calleeValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_);
+  ObjOperandId calleeObjId = writer.guardToObject(calleeValId);
+  writer.guardClass(calleeObjId, GuardClassKind::BoundFunction);
+
+  // Ensure numBoundArgs matches.
+  Int32OperandId numBoundArgsId = writer.loadBoundFunctionNumArgs(calleeObjId);
+  writer.guardSpecificInt32(numBoundArgsId, numBoundArgs);
+
+  ObjOperandId targetId = writer.loadBoundFunctionTarget(calleeObjId);
+
+  if (mode_ == ICState::Mode::Specialized) {
+    // Ensure that the target is the expected target function.
+    emitCalleeGuard(targetId, target);
+    writer.callBoundScriptedFunction(calleeObjId, targetId, argcId, flags,
+                                     numBoundArgs);
+  } else {
+    // Guard that the target is a function.
+    writer.guardClass(targetId, GuardClassKind::JSFunction);
+
+    // Guard that function is not a class constructor.
+    writer.guardNotClassConstructor(targetId);
+
+    // Guard that function is scripted.
+    writer.guardFunctionHasJitEntry(targetId, /*constructing =*/false);
+    writer.callBoundScriptedFunction(calleeObjId, targetId, argcId, flags,
+                                     numBoundArgs);
+  }
+  writer.returnFromIC();
+
+  trackAttached("Call bound scripted");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachStub() {
   AutoAssertNoPendingException aanpe(cx_);
 
@@ -10820,6 +10894,9 @@ AttachDecision CallIRGenerator::tryAttachStub() {
   }
 
   RootedObject calleeObj(cx_, &callee_.toObject());
+  if (calleeObj->is<BoundFunctionObject>()) {
+    TRY_ATTACH(tryAttachBoundFunction(calleeObj.as<BoundFunctionObject>()));
+  }
   if (!calleeObj->is<JSFunction>()) {
     return tryAttachCallHook(calleeObj);
   }
