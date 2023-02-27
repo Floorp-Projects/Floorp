@@ -34,6 +34,7 @@ struct XrayJitInfo;
 
 namespace js {
 
+class BoundFunctionObject;
 class NativeObject;
 class PropertyResult;
 class ProxyObject;
@@ -509,6 +510,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachWasmCall(HandleFunction calleeFunc);
   AttachDecision tryAttachCallNative(HandleFunction calleeFunc);
   AttachDecision tryAttachCallHook(HandleObject calleeObj);
+  AttachDecision tryAttachBoundFunction(Handle<BoundFunctionObject*> calleeObj);
 
   void trackAttached(const char* name /* must be a C string literal */);
 

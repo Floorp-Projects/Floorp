@@ -3504,6 +3504,31 @@ bool CacheIRCompiler::emitLoadArrayBufferViewLengthDoubleResult(
   return true;
 }
 
+bool CacheIRCompiler::emitLoadBoundFunctionNumArgs(ObjOperandId objId,
+                                                   Int32OperandId resultId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  Register obj = allocator.useRegister(masm, objId);
+  Register output = allocator.defineRegister(masm, resultId);
+
+  masm.unboxInt32(Address(obj, BoundFunctionObject::offsetOfFlagsSlot()),
+                  output);
+  masm.rshift32(Imm32(BoundFunctionObject::NumBoundArgsShift), output);
+  return true;
+}
+
+bool CacheIRCompiler::emitLoadBoundFunctionTarget(ObjOperandId objId,
+                                                  ObjOperandId resultId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  Register obj = allocator.useRegister(masm, objId);
+  Register output = allocator.defineRegister(masm, resultId);
+
+  masm.unboxObject(Address(obj, BoundFunctionObject::offsetOfTargetSlot()),
+                   output);
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadFunctionLengthResult(ObjOperandId objId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   AutoOutputRegister output(*this);

@@ -1696,6 +1696,17 @@
     flags: CallFlagsImm
     argcFixed: UInt32Imm
 
+- name: CallBoundScriptedFunction
+  shared: false
+  transpile: false
+  cost_estimate: 3
+  args:
+    callee: ObjId
+    target: ObjId
+    argc: Int32Id
+    flags: CallFlagsImm
+    numBoundArgs: UInt32Imm
+
 - name: CallWasmFunction
   shared: false
   transpile: true
@@ -1963,6 +1974,22 @@
   cost_estimate: 2
   args:
     obj: ObjId
+
+- name: LoadBoundFunctionNumArgs
+  shared: true
+  transpile: false
+  cost_estimate: 1
+  args:
+    obj: ObjId
+    result: Int32Id
+
+- name: LoadBoundFunctionTarget
+  shared: true
+  transpile: false
+  cost_estimate: 1
+  args:
+    obj: ObjId
+    result: ObjId
 
 - name: LoadArrayBufferByteLengthInt32Result
   shared: true

@@ -131,8 +131,17 @@ class BoundFunctionObject : public NativeObject {
 
   static BoundFunctionObject* createTemplateObject(JSContext* cx);
 
+  static constexpr size_t offsetOfTargetSlot() {
+    return getFixedSlotOffset(TargetSlot);
+  }
   static constexpr size_t offsetOfFlagsSlot() {
     return getFixedSlotOffset(FlagsSlot);
+  }
+  static constexpr size_t offsetOfBoundThisSlot() {
+    return getFixedSlotOffset(BoundThisSlot);
+  }
+  static constexpr size_t offsetOfFirstInlineBoundArg() {
+    return getFixedSlotOffset(BoundArg0Slot);
   }
 
   static constexpr size_t boundThisSlot() { return BoundThisSlot; }
