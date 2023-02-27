@@ -1,0 +1,53 @@
+name: User-Agent Scrape
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 15 * * *'
+
+jobs:
+  user-agent_scrape:
+    if: (github.event_name == 'schedule' && github.repository == 'Floorp-Projects/Floorp') || (github.event_name != 'schedule')
+    
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - uses: actions/checkout@v3
+      name: Clone 🧬
+
+    - name: Setup 🪛
+      run: |
+        sudo apt update
+        sudo apt install nodejs npm
+        npm install
+
+    - name: Install browsers 🌐
+      run: |
+        cd ~
+        
+        # Firefox
+        aria2c -o firefox.tar.bz2 "https://download.mozilla.org/?product=firefox-latest-ssl&os=linux64&lang=en-US"
+        tar -xvf firefox.tar.bz2
+        rm firefox.tar.bz2
+
+        # Chrome
+        aria2c -o chrome.deb "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
+        mkdir chrome_tmp
+        cd chrome_tmp
+        ar vx ../chrome.deb
+        tar -xvf data.tar.xz
+        mv ./opt/google/chrome ../chrome
+        cd ../
+        rm -rf chrome_tmp
+        rm chrome.deb
+
+    - name: Scrape
+      run: |
+        # Firefox
+        export firefox_stable_ua=`npm run --silent start ~/firefox/firefox`
+        
+        # Chrome
+        export chrome_stable_ua=`npm run --silent start ~/chrome/chrome`
+        
+        echo $firefox_stable_ua
+        echo $chrome_stable_ua
