@@ -199,7 +199,6 @@ VideoFramePool<LIBAV_VER>::GetVideoFrameSurface(
   if (!copySurface) {
     videoSurface->LockVAAPIData(aAVCodecContext, aAVFrame, aLib);
   }
-  videoSurface->MarkAsUsed();
   return videoSurface;
 }
 
