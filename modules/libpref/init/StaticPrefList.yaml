@@ -9414,7 +9414,7 @@
 #elif defined(XP_WIN) && !defined(_ARM64_)
   value: true
 #elif defined(XP_MACOSX)
-  value: @IS_NIGHTLY_BUILD@
+  value: true
 #else
   value: false
 #endif
@@ -9424,11 +9424,11 @@
   type: bool
   mirror: always
 #if defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
-  value: @IS_NIGHTLY_BUILD@
+  value: true
 #elif defined(XP_WIN) && !defined(_ARM64_)
   value: true
 #elif defined(XP_MACOSX)
-  value: @IS_NIGHTLY_BUILD@
+  value: true
 #else
   value: false
 #endif
