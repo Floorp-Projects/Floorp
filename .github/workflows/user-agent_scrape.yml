@@ -18,6 +18,7 @@ jobs:
 
     - name: Setup 🪛
       run: |
+        cd User-Agent_Scraper
         sudo apt update
         sudo apt install nodejs npm
         npm install
@@ -44,6 +45,8 @@ jobs:
 
     - name: Scrape
       run: |
+        cd User-Agent_Scraper
+
         # Firefox
         export firefox_stable_ua=`npm run --silent start ~/firefox/firefox`
         
