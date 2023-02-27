@@ -90,11 +90,16 @@
 }
 
 ol {
+  outline-offset: calc(-1 * var(--in-content-focus-outline-offset));
   margin-block: 0;
   padding-inline-start: 0;
   overflow: hidden auto;
   flex-grow: 1;
   scroll-padding-top: 24px; /* there is the section header that is sticky to the top */
+}
+
+ol:focus-visible {
+  padding-block-start: 2px;
 }
 
 .create-login-button {
@@ -126,6 +131,8 @@ ol {
   padding: 4px 16px;
   border-bottom: 1px solid var(--in-content-border-color);
   background-color: var(--in-content-box-background);
+  margin-block-start: 2px;
+  margin-inline-start: 2px;
 }
 
 .login-list-item:not(.selected):hover {
