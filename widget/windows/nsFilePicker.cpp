@@ -265,7 +265,11 @@ bool nsFilePicker::ShowFilePicker(const nsString& aInitialDir) {
 
   // default extension to append to new files
   if (!mDefaultExtension.IsEmpty()) {
-    hr = dialog->SetDefaultExtension(mDefaultExtension.get());
+    // We don't want environment variables expanded in the extension either.
+    nsAutoString sanitizedExtension(mDefaultExtension);
+    sanitizedExtension.ReplaceChar('%', '_');
+
+    hr = dialog->SetDefaultExtension(sanitizedExtension.get());
     if (FAILED(hr)) {
       return false;
     }
