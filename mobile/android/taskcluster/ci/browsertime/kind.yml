@@ -99,7 +99,7 @@ task-defaults:
 
 tasks:
     tp6m:
-        run-with-fission: True
+        run-with-fission: False # Bug 1816421 disable fission perf tests
         page-load-tests:
             - amazon
             - instagram
@@ -123,7 +123,7 @@ tasks:
             - [google-search-restaurants, gsearch-r]
 
     tp6m-hv:
-        run-with-fission: True
+        run-with-fission: False # Bug 1816421 disable fission perf tests
         page-load-tests:
             - google
             - [amazon-search, amazon-s]
