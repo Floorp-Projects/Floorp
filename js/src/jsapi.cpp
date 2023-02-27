@@ -1097,6 +1097,14 @@ JS_PUBLIC_API bool JS_GetClassPrototype(JSContext* cx, JSProtoKey key,
                                         MutableHandleObject objp) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
+
+  // Bound functions don't have their own prototype object: they reuse the
+  // prototype of the target object. This is typically Function.prototype so we
+  // use that here.
+  if (key == JSProto_BoundFunction) {
+    key = JSProto_Function;
+  }
+
   JSObject* proto = GlobalObject::getOrCreatePrototype(cx, key);
   if (!proto) {
     return false;
