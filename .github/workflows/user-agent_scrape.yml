@@ -55,6 +55,6 @@ jobs:
         echo $firefox_stable_ua
         
         # Chrome
-        npm run --silent start ~/chrome/chrome
+        ~/chrome/chrome https://google.com
         export chrome_stable_ua=`npm run --silent start ~/chrome/chrome`
         echo $chrome_stable_ua
