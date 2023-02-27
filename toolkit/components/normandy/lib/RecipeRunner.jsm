@@ -29,6 +29,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://services-settings/RemoteSettingsClient.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
+  LegacyHeartbeat: "resource://normandy/lib/LegacyHeartbeat.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -347,19 +348,28 @@ var RecipeRunner = {
 
       const actionsManager = new lazy.ActionsManager();
 
+      const legacyHeartbeat = lazy.LegacyHeartbeat.getHeartbeatRecipe();
+      const noRecipes =
+        !recipesAndSignatures.length && legacyHeartbeat === null;
+
       // Execute recipes, if we have any.
-      if (recipesAndSignatures.length === 0) {
+      if (noRecipes) {
         log.debug("No recipes to execute");
       } else {
         for (const { recipe, signature } of recipesAndSignatures) {
           let suitability = await this.getRecipeSuitability(recipe, signature);
           await actionsManager.processRecipe(recipe, suitability);
         }
+
+        if (legacyHeartbeat !== null) {
+          await actionsManager.processRecipe(
+            legacyHeartbeat,
+            lazy.BaseAction.suitability.FILTER_MATCH
+          );
+        }
       }
 
-      await actionsManager.finalize({
-        noRecipes: !recipesAndSignatures.length,
-      });
+      await actionsManager.finalize({ noRecipes });
 
       await lazy.Uptake.reportRunner(lazy.Uptake.RUNNER_SUCCESS);
       Services.obs.notifyObservers(null, "recipe-runner:end");

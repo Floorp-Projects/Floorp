@@ -16,6 +16,15 @@ const { NormandyApi } = ChromeUtils.import(
 const { TelemetryEvents } = ChromeUtils.import(
   "resource://normandy/lib/TelemetryEvents.jsm"
 );
+const { ShowHeartbeatAction } = ChromeUtils.import(
+  "resource://normandy/actions/ShowHeartbeatAction.jsm"
+);
+
+// The name of this module conflicts with the window.Storage
+// DOM global - https://developer.mozilla.org/en-US/docs/Web/API/Storage .
+// eslint-disable-next-line mozilla/no-redeclare-with-import-autofix
+const { Storage } = ChromeUtils.import("resource://normandy/lib/Storage.jsm");
+
 ChromeUtils.defineESModuleGetters(this, {
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
 });
@@ -584,3 +593,49 @@ this.ensureAddonCleanup = function() {
     };
   };
 };
+
+class MockHeartbeat {
+  constructor() {
+    this.eventEmitter = new MockEventEmitter();
+  }
+}
+
+class MockEventEmitter {
+  constructor() {
+    this.once = sinon.stub();
+  }
+}
+
+function withStubbedHeartbeat() {
+  return function(testFunction) {
+    return async function wrappedTestFunction(args) {
+      const heartbeatInstanceStub = new MockHeartbeat();
+      const heartbeatClassStub = sinon.stub();
+      heartbeatClassStub.returns(heartbeatInstanceStub);
+      ShowHeartbeatAction.overrideHeartbeatForTests(heartbeatClassStub);
+
+      try {
+        await testFunction({
+          ...args,
+          heartbeatClassStub,
+          heartbeatInstanceStub,
+        });
+      } finally {
+        ShowHeartbeatAction.overrideHeartbeatForTests();
+      }
+    };
+  };
+}
+
+function withClearStorage() {
+  return function(testFunction) {
+    return async function wrappedTestFunction(args) {
+      Storage.clearAllStorage();
+      try {
+        await testFunction(args);
+      } finally {
+        Storage.clearAllStorage();
+      }
+    };
+  };
+}

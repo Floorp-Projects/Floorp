@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Legacy (Normandy) Heartbeat, via Nimbus",
+  "description": "The schema for the Legacy Heartbeat Nimbus feature.",
+  "type": "object",
+  "properties": {
+    "survey": {
+      "$comment": "Hearbeat arguments are nested under survey to prevent simultaneous rollouts and experiments from overriding eachothers optional variables",
+      "type": "object",
+      "properties": {
+        "repeatOption": {
+          "type": "string",
+          "enum": [
+            "once",
+            "xdays",
+            "nag"
+          ],
+          "description": "Determines how often a prompt is shown executes.",
+          "default": "once"
+        },
+        "repeatEvery": {
+          "description": "For repeatOption=xdays, how often (in days) the prompt is displayed.",
+          "default": null,
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "includeTelemetryUUID": {
+          "type": "boolean",
+          "description": "Include unique user ID in post-answer-url and Telemetry",
+          "default": false
+        },
+        "surveyId": {
+          "description": "Slug uniquely identifying this survey in telemetry",
+          "type": "string"
+        },
+        "message": {
+          "description": "Message to show to the user",
+          "type": "string"
+        },
+        "engagementButtonLabel": {
+          "description": "Text for the engagement button. If specified, this button will be shown instead of rating stars.",
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "thanksMessage": {
+          "description": "Thanks message to show to the user after they've rated Firefox",
+          "type": "string"
+        },
+        "postAnswerUrl": {
+          "description": "URL to redirect the user to after rating Firefox or clicking the engagement button",
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "learnMoreMessage": {
+          "description": "Message to show to the user to learn more",
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "learnMoreUrl": {
+          "description": "URL to show to the user when they click Learn More",
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "surveyId",
+        "message",
+        "thanksMessage",
+        "postAnswerUrl",
+        "learnMoreMessage",
+        "learnMoreUrl"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "survey"
+  ],
+  "additionalProperties": false
+}

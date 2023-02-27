@@ -11,46 +11,22 @@ const { BaseAction } = ChromeUtils.import(
   "resource://normandy/actions/BaseAction.jsm"
 );
 const lazy = {};
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ActionSchemas",
-  "resource://normandy/actions/schemas/index.js"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "BrowserWindowTracker",
-  "resource:///modules/BrowserWindowTracker.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ClientEnvironment",
-  "resource://normandy/lib/ClientEnvironment.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Heartbeat",
-  "resource://normandy/lib/Heartbeat.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ShellService",
-  "resource:///modules/ShellService.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Storage",
-  "resource://normandy/lib/Storage.jsm"
-);
+
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  ActionSchemas: "resource://normandy/actions/schemas/index.js",
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
+  ClientEnvironment: "resource://normandy/lib/ClientEnvironment.jsm",
+  Heartbeat: "resource://normandy/lib/Heartbeat.jsm",
+  ShellService: "resource:///modules/ShellService.jsm",
+  Storage: "resource://normandy/lib/Storage.jsm",
+  NormandyUtils: "resource://normandy/lib/NormandyUtils.jsm",
+});
+
 ChromeUtils.defineESModuleGetters(lazy, {
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "NormandyUtils",
-  "resource://normandy/lib/NormandyUtils.jsm"
-);
 
-var EXPORTED_SYMBOLS = ["ShowHeartbeatAction"];
+const EXPORTED_SYMBOLS = ["ShowHeartbeatAction"];
 
 XPCOMUtils.defineLazyGetter(lazy, "gAllRecipeStorage", function() {
   return new lazy.Storage("normandy-heartbeat");
@@ -107,7 +83,10 @@ class ShowHeartbeatAction extends BaseAction {
       learnMoreUrl,
       postAnswerUrl: await this.generatePostAnswerURL(recipe),
       flowId: lazy.NormandyUtils.generateUuid(),
-      surveyVersion: recipe.revision_id,
+      // Recipes coming from Nimbus won't have a revision_id.
+      ...(Object.hasOwn(recipe, "revision_id")
+        ? { surveyVersion: recipe.revision_id }
+        : {}),
     });
 
     heartbeat.eventEmitter.once(
