@@ -6528,6 +6528,10 @@
     type: bool
     value: @IS_EARLY_BETA_OR_EARLIER@
     mirror: once
+-   name: gfx.webrender.dcomp-video-check-slow-present
+    type: RelaxedAtomicBool
+    value: true
+    mirror: always
 -   name: gfx.video.convert-i420-to-nv12.force-enabled
     type: bool
     value: false
