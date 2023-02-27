@@ -14,6 +14,9 @@
 #include <winternl.h>
 #include <processthreadsapi.h>
 
+#include <bcrypt.h>
+#pragma comment(lib, "bcrypt.lib")
+
 #include "AssemblyPayloads.h"
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
 #include "mozilla/UniquePtr.h"
@@ -1380,6 +1383,8 @@ extern "C" int wmain(int argc, wchar_t* argv[]) {
       TEST_HOOK("user32.dll", InSendMessageEx, Equals, ISMEX_NOSEND) &&
       TEST_HOOK("user32.dll", SendMessageTimeoutW, Equals, 0) &&
       TEST_HOOK("user32.dll", SetCursorPos, NotEquals, FALSE) &&
+      TEST_HOOK("bcrypt.dll", BCryptGenRandom, Equals,
+                static_cast<NTSTATUS>(STATUS_INVALID_HANDLE)) &&
 #if !defined(_M_ARM64)
       TEST_HOOK("imm32.dll", ImmGetContext, Equals, nullptr) &&
 #endif  // !defined(_M_ARM64)
