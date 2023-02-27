@@ -73,6 +73,7 @@
 #include "proxy/DOMProxy.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
+#include "vm/BoundFunctionObject.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/ErrorObject.h"
 #include "vm/ErrorReporting.h"
@@ -361,12 +362,14 @@ JS_PUBLIC_API bool JS_IsBuiltinFunctionConstructor(JSFunction* fun) {
   return fun->isBuiltinFunctionConstructor();
 }
 
-JS_PUBLIC_API bool JS_IsFunctionBound(JSFunction* fun) {
-  return fun->isBoundFunction();
+JS_PUBLIC_API bool JS_ObjectIsBoundFunction(JSObject* obj) {
+  return obj->is<BoundFunctionObject>();
 }
 
-JS_PUBLIC_API JSObject* JS_GetBoundFunctionTarget(JSFunction* fun) {
-  return fun->isBoundFunction() ? fun->getBoundFunctionTarget() : nullptr;
+JS_PUBLIC_API JSObject* JS_GetBoundFunctionTarget(JSObject* obj) {
+  return obj->is<BoundFunctionObject>()
+             ? obj->as<BoundFunctionObject>().getTarget()
+             : nullptr;
 }
 
 /************************************************************************/

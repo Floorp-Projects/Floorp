@@ -272,8 +272,7 @@ static bool FormatFrame(JSContext* cx, const FrameIter& iter, Sprinter& sp,
 
   Rooted<Value> thisVal(cx);
   if (iter.hasUsableAbstractFramePtr() && iter.isFunctionFrame() && fun &&
-      !fun->isArrow() && !fun->isDerivedClassConstructor() &&
-      !(fun->isBoundFunction() && iter.isConstructing())) {
+      !fun->isArrow() && !fun->isDerivedClassConstructor()) {
     if (!GetFunctionThis(cx, iter.abstractFramePtr(), &thisVal)) {
       return false;
     }

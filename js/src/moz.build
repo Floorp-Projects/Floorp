@@ -347,6 +347,7 @@ UNIFIED_SOURCES += [
     "vm/AsyncFunction.cpp",
     "vm/AsyncIteration.cpp",
     "vm/BigIntType.cpp",
+    "vm/BoundFunctionObject.cpp",
     "vm/BuildId.cpp",
     "vm/BuiltinObjectKind.cpp",
     "vm/BytecodeLocation.cpp",

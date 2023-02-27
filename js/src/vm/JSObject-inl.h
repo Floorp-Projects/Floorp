@@ -11,6 +11,7 @@
 
 #include "js/Object.h"  // JS::GetBuiltinClass
 #include "vm/ArrayObject.h"
+#include "vm/BoundFunctionObject.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/JSFunction.h"
 #include "vm/Probes.h"
@@ -575,6 +576,10 @@ MOZ_ALWAYS_INLINE bool JSObject::isConstructor() const {
   if (is<JSFunction>()) {
     const JSFunction& fun = as<JSFunction>();
     return fun.isConstructor();
+  }
+  if (is<js::BoundFunctionObject>()) {
+    const js::BoundFunctionObject& bound = as<js::BoundFunctionObject>();
+    return bound.isConstructor();
   }
   if (is<js::ProxyObject>()) {
     const js::ProxyObject& p = as<js::ProxyObject>();
