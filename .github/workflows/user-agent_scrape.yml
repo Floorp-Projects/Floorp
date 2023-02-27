@@ -129,7 +129,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: ua_data
-        path: ua_data.js
+        path: ~/ua_data.js
 
     - uses: actions/checkout@v3
       name: Clone 🧬
