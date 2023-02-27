@@ -24,7 +24,6 @@ const CHROME_ONLY_TOGGLES = [
   "-moz-gtk-csd-maximize-button",
   "-moz-gtk-csd-close-button",
   "-moz-gtk-csd-reversed-placement",
-  "-moz-box-flexbox-emulation",
   "-moz-panel-animations",
 ];
 

@@ -48,7 +48,7 @@ ${helpers.single_keyword(
 
 ${helpers.single_keyword(
     "-moz-box-layout",
-    "legacy flex",
+    "flex legacy",
     engines="gecko",
     gecko_enum_prefix="StyleMozBoxLayout",
     animation_value_type="none",
