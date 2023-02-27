@@ -39,6 +39,7 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Components
+import org.mozilla.fenix.components.Core
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -209,64 +210,145 @@ class ToolbarViewTest {
     }
 
     @Test
-    fun `GIVEN a general search engine is default WHEN a topic specific engine is selected THEN the hint changes`() {
-        val topicSpecificEngine = buildSearchEngine(SearchEngine.Type.BUNDLED, false)
+    fun `WHEN the default general search engine is selected THEN show text for default engine`() {
         val toolbarView = buildToolbarView(false)
-        toolbarView.update(defaultState)
-        assertEquals(context.getString(R.string.search_hint), toolbarView.view.edit.hint)
+        val defaultEngine = buildSearchEngine(SearchEngine.Type.BUNDLED, true)
 
-        toolbarView.update(defaultState.copy(searchEngineSource = SearchEngineSource.Default(topicSpecificEngine)))
+        toolbarView.update(
+            defaultState.copy(
+                defaultEngine = defaultEngine,
+                searchEngineSource = SearchEngineSource.Default(defaultEngine),
+            ),
+        )
+
+        assertEquals(context.getString(R.string.search_hint), toolbarView.view.edit.hint)
+    }
+
+    @Test
+    fun `WHEN a general search engine is selected THEN show text for general engine`() {
+        val toolbarView = buildToolbarView(false)
+        val generalEngine = buildSearchEngine(SearchEngine.Type.BUNDLED, true)
+
+        toolbarView.update(
+            defaultState.copy(
+                searchEngineSource = SearchEngineSource.Shortcut(generalEngine),
+            ),
+        )
+
+        assertEquals(context.getString(R.string.search_hint_general_engine), toolbarView.view.edit.hint)
+    }
+
+    @Test
+    fun `WHEN a topic specific search engine is selected THEN show text for topic specific engine`() {
+        val toolbarView = buildToolbarView(false)
+        val topicSpecificEngine = buildSearchEngine(SearchEngine.Type.BUNDLED, false)
+
+        toolbarView.update(
+            defaultState.copy(
+                searchEngineSource = SearchEngineSource.Shortcut(topicSpecificEngine),
+            ),
+        )
 
         assertEquals(context.getString(R.string.application_search_hint), toolbarView.view.edit.hint)
     }
 
     @Test
-    fun `GIVEN a topic specific engine is default WHEN a general engine is selected THEN the hint changes`() {
-        val topicSpecificEngine = buildSearchEngine(SearchEngine.Type.BUNDLED, false)
+    fun `WHEN the default additional general search engine is selected THEN show text for default engine`() {
         val toolbarView = buildToolbarView(false)
-        toolbarView.update(defaultState.copy(searchEngineSource = SearchEngineSource.Default(topicSpecificEngine)))
-        assertEquals(context.getString(R.string.application_search_hint), toolbarView.view.edit.hint)
+        val defaultEngine = buildSearchEngine(SearchEngine.Type.BUNDLED_ADDITIONAL, true)
 
-        toolbarView.update(defaultState)
+        toolbarView.update(
+            defaultState.copy(
+                defaultEngine = defaultEngine,
+                searchEngineSource = SearchEngineSource.Default(defaultEngine),
+            ),
+        )
 
         assertEquals(context.getString(R.string.search_hint), toolbarView.view.edit.hint)
     }
 
     @Test
-    fun `GIVEN a topic specific engine is default WHEN a custom engine is selected THEN the hint changes`() {
-        val topicSpecificEngine = buildSearchEngine(SearchEngine.Type.BUNDLED, false)
-        val customEngine = buildSearchEngine(SearchEngine.Type.CUSTOM, true)
+    fun `WHEN a general additional search engine is selected THEN show text for general engine`() {
         val toolbarView = buildToolbarView(false)
-        toolbarView.update(defaultState.copy(searchEngineSource = SearchEngineSource.Default(topicSpecificEngine)))
-        assertEquals(context.getString(R.string.application_search_hint), toolbarView.view.edit.hint)
+        val generalEngine = buildSearchEngine(SearchEngine.Type.BUNDLED_ADDITIONAL, true)
 
-        toolbarView.update(defaultState.copy(searchEngineSource = SearchEngineSource.Default(customEngine)))
+        toolbarView.update(
+            defaultState.copy(
+                searchEngineSource = SearchEngineSource.Shortcut(generalEngine),
+            ),
+        )
+
+        assertEquals(context.getString(R.string.search_hint_general_engine), toolbarView.view.edit.hint)
+    }
+
+    @Test
+    fun `WHEN the default custom search engine is selected THEN show text for default engine`() {
+        val toolbarView = buildToolbarView(false)
+        val customEngine = buildSearchEngine(SearchEngine.Type.CUSTOM, true)
+
+        toolbarView.update(
+            defaultState.copy(
+                defaultEngine = customEngine,
+                searchEngineSource = SearchEngineSource.Default(customEngine),
+            ),
+        )
 
         assertEquals(context.getString(R.string.search_hint), toolbarView.view.edit.hint)
     }
 
     @Test
-    fun `GIVEN a general engine is default WHEN a custom engine is selected THEN the hint does not change`() {
-        val customEngine = buildSearchEngine(SearchEngine.Type.CUSTOM, true)
+    fun `WHEN a custom search engine is selected THEN show text for general engine`() {
         val toolbarView = buildToolbarView(false)
-        toolbarView.update(defaultState)
-        assertEquals(context.getString(R.string.search_hint), toolbarView.view.edit.hint)
+        val customEngine = buildSearchEngine(SearchEngine.Type.CUSTOM, true)
 
-        toolbarView.update(defaultState.copy(searchEngineSource = SearchEngineSource.Default(customEngine)))
+        toolbarView.update(
+            defaultState.copy(
+                searchEngineSource = SearchEngineSource.Shortcut(customEngine),
+            ),
+        )
 
-        assertEquals(context.getString(R.string.search_hint), toolbarView.view.edit.hint)
+        assertEquals(context.getString(R.string.search_hint_general_engine), toolbarView.view.edit.hint)
     }
 
     @Test
-    fun `GIVEN a custom engine is default WHEN a general engine is selected THEN the hint does not change`() {
-        val customEngine = buildSearchEngine(SearchEngine.Type.CUSTOM, true)
+    fun `WHEN history is selected as engine THEN show text specific for history`() {
         val toolbarView = buildToolbarView(false)
-        toolbarView.update(defaultState.copy(searchEngineSource = SearchEngineSource.Default(customEngine)))
-        assertEquals(context.getString(R.string.search_hint), toolbarView.view.edit.hint)
+        val historyEngine = buildSearchEngine(SearchEngine.Type.APPLICATION, false, Core.HISTORY_SEARCH_ENGINE_ID)
 
-        toolbarView.update(defaultState)
+        toolbarView.update(
+            defaultState.copy(
+                searchEngineSource = SearchEngineSource.Shortcut(historyEngine),
+            ),
+        )
 
-        assertEquals(context.getString(R.string.search_hint), toolbarView.view.edit.hint)
+        assertEquals(context.getString(R.string.history_search_hint), toolbarView.view.edit.hint)
+    }
+
+    @Test
+    fun `WHEN bookmarks is selected as engine THEN show text specific for bookmarks`() {
+        val toolbarView = buildToolbarView(false)
+        val bookmarksEngine = buildSearchEngine(SearchEngine.Type.APPLICATION, false, Core.BOOKMARKS_SEARCH_ENGINE_ID)
+
+        toolbarView.update(
+            defaultState.copy(
+                searchEngineSource = SearchEngineSource.Shortcut(bookmarksEngine),
+            ),
+        )
+
+        assertEquals(context.getString(R.string.bookmark_search_hint), toolbarView.view.edit.hint)
+    }
+
+    @Test
+    fun `WHEN tabs is selected as engine THEN show text specific for tabs`() {
+        val toolbarView = buildToolbarView(false)
+        val tabsEngine = buildSearchEngine(SearchEngine.Type.APPLICATION, false, Core.TABS_SEARCH_ENGINE_ID)
+
+        toolbarView.update(
+            defaultState.copy(
+                searchEngineSource = SearchEngineSource.Shortcut(tabsEngine),
+            ),
+        )
+        assertEquals(context.getString(R.string.tab_search_hint), toolbarView.view.edit.hint)
     }
 
     @Test
@@ -637,9 +719,13 @@ class ToolbarViewTest {
         fromHomeFragment = false,
     )
 
-    private fun buildSearchEngine(type: SearchEngine.Type, isGeneral: Boolean) = SearchEngine(
-        id = UUID.randomUUID().toString(),
-        name = "General",
+    private fun buildSearchEngine(
+        type: SearchEngine.Type,
+        isGeneral: Boolean,
+        id: String = UUID.randomUUID().toString(),
+    ) = SearchEngine(
+        id = id,
+        name = UUID.randomUUID().toString(),
         icon = testContext.getDrawable(R.drawable.ic_search)!!.toBitmap(),
         type = type,
         isGeneral = isGeneral,

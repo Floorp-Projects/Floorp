@@ -14,8 +14,10 @@
     <string name="content_description_private_browsing_button">Enable private browsing</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Disable private browsing</string>
-    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">Search or enter address</string>
+    <!-- Placeholder text shown in the search bar before a user enters text for a general engine -->
+    <string name="search_hint_general_engine">Search the web</string>
     <!-- Placeholder text shown in search bar when using history search -->
     <string name="history_search_hint">Search history</string>
     <!-- Placeholder text shown in search bar when using bookmarks search -->

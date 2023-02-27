@@ -109,12 +109,14 @@ class SearchDialogController(
         clearToolbarFocus()
 
         val searchEngine = fragmentStore.state.searchEngineSource.searchEngine
+        val isDefaultEngine = searchEngine == fragmentStore.state.defaultEngine
 
         activity.openToBrowserAndLoad(
             searchTermOrURL = url,
             newTab = fragmentStore.state.tabId == null,
             from = BrowserDirection.FromSearchDialog,
             engine = searchEngine,
+            forceSearch = !isDefaultEngine,
             requestDesktopMode = fromHomeScreen && activity.settings().openNextTabInDesktopMode,
         )
 
@@ -128,7 +130,7 @@ class SearchDialogController(
 
             MetricsUtils.recordSearchMetrics(
                 searchEngine,
-                searchEngine == store.state.search.selectedOrDefaultSearchEngine,
+                isDefaultEngine,
                 searchAccessPoint,
             )
         }

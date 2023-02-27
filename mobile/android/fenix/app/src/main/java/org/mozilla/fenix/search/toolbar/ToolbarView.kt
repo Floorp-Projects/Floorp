@@ -161,6 +161,7 @@ class ToolbarView(
         val searchEngine = searchState.searchEngineSource.searchEngine
 
         view.edit.hint = when (searchEngine?.type) {
+            null -> context.getString(R.string.search_hint)
             SearchEngine.Type.APPLICATION ->
                 when (searchEngine.id) {
                     Core.HISTORY_SEARCH_ENGINE_ID -> context.getString(R.string.history_search_hint)
@@ -168,15 +169,17 @@ class ToolbarView(
                     Core.TABS_SEARCH_ENGINE_ID -> context.getString(R.string.tab_search_hint)
                     else -> context.getString(R.string.application_search_hint)
                 }
-            SearchEngine.Type.BUNDLED -> {
+            else -> {
                 if (!searchEngine.isGeneral) {
                     context.getString(R.string.application_search_hint)
                 } else {
-                    context.getString(R.string.search_hint)
+                    if (searchEngine == searchState.defaultEngine) {
+                        context.getString(R.string.search_hint)
+                    } else {
+                        context.getString(R.string.search_hint_general_engine)
+                    }
                 }
             }
-            else ->
-                context.getString(R.string.search_hint)
         }
 
         if (!settings.showUnifiedSearchFeature && searchEngine != null) {
