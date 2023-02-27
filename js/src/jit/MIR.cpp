@@ -6963,6 +6963,17 @@ MIonToWasmCall* MIonToWasmCall::New(TempAllocator& alloc,
   return ins;
 }
 
+MNewBoundFunction* MNewBoundFunction::New(TempAllocator& alloc,
+                                          MDefinition* target, uint32_t argc,
+                                          JSObject* templateObj) {
+  auto* ins = new (alloc) MNewBoundFunction(templateObj);
+  if (!ins->init(alloc, NumNonArgumentOperands + argc)) {
+    return nullptr;
+  }
+  ins->initOperand(0, target);
+  return ins;
+}
+
 #ifdef DEBUG
 bool MIonToWasmCall::isConsistentFloat32Use(MUse* use) const {
   const wasm::FuncType& funcType =

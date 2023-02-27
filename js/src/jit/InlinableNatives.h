@@ -61,6 +61,8 @@
   _(DataViewSetBigInt64)                           \
   _(DataViewSetBigUint64)                          \
                                                    \
+  _(FunctionBind)                                  \
+                                                   \
   _(IntlGuardToCollator)                           \
   _(IntlGuardToDateTimeFormat)                     \
   _(IntlGuardToDisplayNames)                       \

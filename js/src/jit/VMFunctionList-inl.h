@@ -22,6 +22,7 @@
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 #include "vm/BigIntType.h"
+#include "vm/BoundFunctionObject.h"
 #include "vm/EqualityOperations.h"
 #include "vm/Interpreter.h"
 #include "vm/Iteration.h"
@@ -147,6 +148,7 @@ namespace jit {
   _(FinalSuspend, js::jit::FinalSuspend)                                       \
   _(FreshenLexicalEnv, js::jit::FreshenLexicalEnv)                             \
   _(FunWithProtoOperation, js::FunWithProtoOperation)                          \
+  _(FunctionBindImpl, js::BoundFunctionObject::functionBindImpl)               \
   VMFUNCTION_FUZZILLI_LIST(_)                                                  \
   _(GeneratorThrowOrReturn, js::jit::GeneratorThrowOrReturn)                   \
   _(GetAndClearException, js::GetAndClearException)                            \

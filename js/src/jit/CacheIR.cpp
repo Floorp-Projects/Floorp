@@ -36,6 +36,7 @@
 #include "util/DifferentialTesting.h"
 #include "util/Unicode.h"
 #include "vm/ArrayBufferObject.h"
+#include "vm/BoundFunctionObject.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/Compartment.h"
 #include "vm/Iteration.h"
@@ -1784,6 +1785,7 @@ void IRGenerator::emitOptimisticClassGuard(ObjOperandId objId, JSObject* obj,
     case GuardClassKind::MappedArguments:
     case GuardClassKind::UnmappedArguments:
     case GuardClassKind::JSFunction:
+    case GuardClassKind::BoundFunction:
     case GuardClassKind::WindowProxy:
       // Arguments, functions, and the global object have
       // less consistent shapes.
@@ -9708,6 +9710,59 @@ AttachDecision InlinableNativeIRGenerator::tryAttachTypedArrayConstructor() {
   return AttachDecision::Attach;
 }
 
+AttachDecision InlinableNativeIRGenerator::tryAttachFunctionBind() {
+  // Ensure |this| (the target) is a function object or a bound function object.
+  // We could support other callables too, but note that we rely on the target
+  // having a static prototype in BoundFunctionObject::functionBindImpl.
+  if (!thisval_.isObject()) {
+    return AttachDecision::NoAction;
+  }
+  Rooted<JSObject*> target(cx_, &thisval_.toObject());
+  if (!target->is<JSFunction>() && !target->is<BoundFunctionObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Only support standard, non-spread calls.
+  if (flags_.getArgFormat() != CallFlags::Standard) {
+    return AttachDecision::NoAction;
+  }
+
+  // Only optimize if the number of arguments is small. This ensures we don't
+  // compile a lot of different stubs (because we bake in argc) and that we
+  // don't get anywhere near ARGS_LENGTH_MAX.
+  static constexpr size_t MaxArguments = 6;
+  if (argc_ > MaxArguments) {
+    return AttachDecision::NoAction;
+  }
+
+  JSObject* templateObj = BoundFunctionObject::createTemplateObject(cx_);
+  if (!templateObj) {
+    cx_->recoverFromOutOfMemory();
+    return AttachDecision::NoAction;
+  }
+
+  initializeInputOperand();
+
+  emitNativeCalleeGuard();
+
+  // Guard |this| is a function object or a bound function object.
+  ValOperandId thisValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
+  ObjOperandId targetId = writer.guardToObject(thisValId);
+  if (target->is<JSFunction>()) {
+    writer.guardClass(targetId, GuardClassKind::JSFunction);
+  } else {
+    MOZ_ASSERT(target->is<BoundFunctionObject>());
+    writer.guardClass(targetId, GuardClassKind::BoundFunction);
+  }
+
+  writer.bindFunctionResult(targetId, argc_, templateObj);
+  writer.returnFromIC();
+
+  trackAttached("FunctionBind");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CallIRGenerator::tryAttachFunApply(HandleFunction calleeFunc) {
   MOZ_ASSERT(calleeFunc->isNativeWithoutJitEntry());
 
@@ -10134,6 +10189,10 @@ AttachDecision InlinableNativeIRGenerator::tryAttachStub() {
       return tryAttachDataViewSet(Scalar::BigInt64);
     case InlinableNative::DataViewSetBigUint64:
       return tryAttachDataViewSet(Scalar::BigUint64);
+
+    // Function natives.
+    case InlinableNative::FunctionBind:
+      return tryAttachFunctionBind();
 
     // Intl natives.
     case InlinableNative::IntlGuardToCollator:

@@ -7001,6 +7001,45 @@ void CodeGenerator::visitNewTypedArrayFromArrayBuffer(
   callVM<Fn, js::NewTypedArrayWithTemplateAndBuffer>(lir);
 }
 
+void CodeGenerator::visitNewBoundFunction(LNewBoundFunction* lir) {
+  Register target = ToRegister(lir->target());
+  Register temp1 = ToRegister(lir->temp0());
+  Register temp2 = ToRegister(lir->temp1());
+
+  // Try to allocate a new BoundFunctionObject we can pass to the VM function.
+  // If this fails, we set temp1 to nullptr so we do the allocation in C++.
+  TemplateObject templateObject(lir->mir()->templateObject());
+  Label allocOk, allocFailed;
+  masm.createGCObject(temp1, temp2, templateObject, gc::DefaultHeap,
+                      &allocFailed);
+  masm.jump(&allocOk);
+
+  masm.bind(&allocFailed);
+  masm.movePtr(ImmWord(0), temp1);
+
+  masm.bind(&allocOk);
+
+  // Set temp2 to the address of the first argument on the stack.
+  // Note that the Value slots used for arguments are currently aligned for a
+  // JIT call, even though that's not strictly necessary for calling into C++.
+  uint32_t argc = lir->mir()->numStackArgs();
+  if (JitStackValueAlignment > 1) {
+    argc = AlignBytes(argc, JitStackValueAlignment);
+  }
+  uint32_t unusedStack = UnusedStackBytesForCall(argc);
+  masm.computeEffectiveAddress(Address(masm.getStackPointer(), unusedStack),
+                               temp2);
+
+  pushArg(temp1);
+  pushArg(Imm32(lir->mir()->numStackArgs()));
+  pushArg(temp2);
+  pushArg(target);
+
+  using Fn = BoundFunctionObject* (*)(JSContext*, Handle<JSObject*>, Value*,
+                                      uint32_t, Handle<BoundFunctionObject*>);
+  callVM<Fn, js::BoundFunctionObject::functionBindImpl>(lir);
+}
+
 // Out-of-line object allocation for JSOp::NewObject.
 class OutOfLineNewObject : public OutOfLineCodeBase<CodeGenerator> {
   LNewObject* lir_;

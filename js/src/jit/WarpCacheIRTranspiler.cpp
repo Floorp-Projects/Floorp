@@ -397,6 +397,8 @@ const JSClass* WarpCacheIRTranspiler::classForGuardClassKind(
       return &SetObject::class_;
     case GuardClassKind::Map:
       return &MapObject::class_;
+    case GuardClassKind::BoundFunction:
+      return &BoundFunctionObject::class_;
     case GuardClassKind::JSFunction:
       break;
   }
@@ -5070,6 +5072,27 @@ bool WarpCacheIRTranspiler::emitCallClassHook(ObjOperandId calleeId,
   pushResult(call);
 
   return resumeAfter(call);
+}
+
+bool WarpCacheIRTranspiler::emitBindFunctionResult(
+    ObjOperandId targetId, uint32_t argc, uint32_t templateObjectOffset) {
+  MDefinition* target = getOperand(targetId);
+  JSObject* templateObj = tenuredObjectStubField(templateObjectOffset);
+
+  MOZ_ASSERT(callInfo_->argc() == argc);
+
+  auto* bound = MNewBoundFunction::New(alloc(), target, argc, templateObj);
+  if (!bound) {
+    return false;
+  }
+  addEffectful(bound);
+
+  for (uint32_t i = 0; i < argc; i++) {
+    bound->initArg(i, callInfo_->getArg(i));
+  }
+
+  pushResult(bound);
+  return resumeAfter(bound);
 }
 
 bool WarpCacheIRTranspiler::emitCallWasmFunction(
