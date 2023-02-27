@@ -129,6 +129,10 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetAccessHandle(
            resolver = std::move(aResolver)](
               FileSystemAccessHandle::CreatePromise::ResolveOrRejectValue&&
                   aValue) {
+            if (!self->CanSend()) {
+              return;
+            }
+
             if (aValue.IsReject()) {
               resolver(aValue.RejectValue());
               return;
