@@ -492,6 +492,9 @@ class _ConvertToCxxType(TypeVisitor):
             cxxtype = _refptr(cxxtype)
         return cxxtype
 
+    def visitBuiltinCType(self, b):
+        return Type(self.typename(b))
+
     def visitActorType(self, a):
         return Type(_actorName(self.typename(a.protocol), self.side), ptr=True)
 
@@ -1512,7 +1515,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         # classes for this protocol.
         typesToIncludes = {}
         for using in tu.using:
-            typestr = str(using.type.spec)
+            typestr = str(using.type)
             if typestr not in typesToIncludes:
                 typesToIncludes[typestr] = using.header
             else:
@@ -2502,6 +2505,7 @@ class _ComputeTypeDeps(TypeVisitor):
         self.unqualifiedTypedefs = unqualifiedTypedefs
 
     def maybeTypedef(self, fqname, name, templateargs=[]):
+        assert fqname.startswith("::")
         if fqname != name or self.unqualifiedTypedefs:
             self.usingTypedefs.append(Typedef(Type(fqname), name, templateargs))
 
@@ -2563,25 +2567,25 @@ class _ComputeTypeDeps(TypeVisitor):
         if s in self.visited:
             return
         self.visited.add(s)
-        self.maybeTypedef("mozilla::ipc::Shmem", "Shmem")
+        self.maybeTypedef("::mozilla::ipc::Shmem", "Shmem")
 
     def visitByteBufType(self, s):
         if s in self.visited:
             return
         self.visited.add(s)
-        self.maybeTypedef("mozilla::ipc::ByteBuf", "ByteBuf")
+        self.maybeTypedef("::mozilla::ipc::ByteBuf", "ByteBuf")
 
     def visitFDType(self, s):
         if s in self.visited:
             return
         self.visited.add(s)
-        self.maybeTypedef("mozilla::ipc::FileDescriptor", "FileDescriptor")
+        self.maybeTypedef("::mozilla::ipc::FileDescriptor", "FileDescriptor")
 
     def visitEndpointType(self, s):
         if s in self.visited:
             return
         self.visited.add(s)
-        self.maybeTypedef("mozilla::ipc::Endpoint", "Endpoint", ["FooSide"])
+        self.maybeTypedef("::mozilla::ipc::Endpoint", "Endpoint", ["FooSide"])
         self.visitActorType(s.actor)
 
     def visitManagedEndpointType(self, s):
@@ -2589,7 +2593,7 @@ class _ComputeTypeDeps(TypeVisitor):
             return
         self.visited.add(s)
         self.maybeTypedef(
-            "mozilla::ipc::ManagedEndpoint", "ManagedEndpoint", ["FooSide"]
+            "::mozilla::ipc::ManagedEndpoint", "ManagedEndpoint", ["FooSide"]
         )
         self.visitActorType(s.actor)
 
@@ -3584,7 +3588,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             return
 
         if using.canBeForwardDeclared():
-            spec = using.type.spec
+            spec = using.type
 
             self.usingDecls.extend(
                 [

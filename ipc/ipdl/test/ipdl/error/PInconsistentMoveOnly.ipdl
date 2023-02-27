@@ -1,5 +1,5 @@
-//error: inconsistent moveonly status of type `mozilla::ipc::SomeMoveonlyType`
-//error: inconsistent moveonly status of type `mozilla::ipc::SomeMoveonlySendType`
+//error: inconsistent moveonly status of type `::mozilla::ipc::SomeMoveonlyType`
+//error: inconsistent moveonly status of type `::mozilla::ipc::SomeMoveonlySendType`
 
 [MoveOnly] using class mozilla::ipc::SomeMoveonlyType from "SomeFile.h";
 using class mozilla::ipc::SomeMoveonlyType from "SomeFile.h";

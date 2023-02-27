@@ -7,7 +7,7 @@ import os
 import sys
 
 from ipdl.ast import CxxInclude, Decl, Loc, QualifiedId, StructDecl
-from ipdl.ast import TypeSpec, UnionDecl, UsingStmt, Visitor, StringLiteral
+from ipdl.ast import UnionDecl, UsingStmt, Visitor, StringLiteral
 from ipdl.ast import ASYNC, SYNC, INTR
 from ipdl.ast import IN, OUT, INOUT
 from ipdl.ast import NOT_NESTED, INSIDE_SYNC_NESTED, INSIDE_CPOW_NESTED
@@ -28,6 +28,9 @@ class TypeVisitor:
         )
 
     def visitVoidType(self, v, *args):
+        pass
+
+    def visitBuiltinCType(self, b, *args):
         pass
 
     def visitImportedCxxType(self, t, *args):
@@ -156,6 +159,29 @@ class VoidType(Type):
 VOID = VoidType()
 
 # --------------------
+
+
+class BuiltinCType(Type):
+    def __init__(self, name):
+        self._name = name
+
+    def isCxx(self):
+        return True
+
+    def isAtom(self):
+        return True
+
+    def isSendMoveOnly(self):
+        return False
+
+    def isDataMoveOnly(self):
+        return False
+
+    def name(self):
+        return self._name
+
+    def fullname(self):
+        return self._name
 
 
 class ImportedCxxType(Type):
@@ -703,9 +729,7 @@ def makeBuiltinUsing(tname):
     quals = tname.split("::")
     base = quals.pop()
     quals = quals[0:]
-    return UsingStmt(
-        _builtinloc, TypeSpec(_builtinloc, QualifiedId(_builtinloc, base, quals))
-    )
+    return UsingStmt(_builtinloc, QualifiedId(_builtinloc, base, quals))
 
 
 builtinUsing = [makeBuiltinUsing(t) for t in builtin.Types]
@@ -949,7 +973,7 @@ class GatherDecls(TcheckVisitor):
                     "NeedsOtherPid" in p.attributes,
                 ),
                 shortname=p.name,
-                fullname=None if 0 == len(qname.quals) else fullname,
+                fullname=fullname,
             )
 
             p.parentEndpointDecl = self.declare(
@@ -1006,7 +1030,13 @@ class GatherDecls(TcheckVisitor):
         for pinc in tu.includes:
             pinc.accept(self)
 
-        # declare imported (and builtin) C++ types
+        # declare imported (and builtin) C and C++ types
+        for ctype in builtin.CTypes:
+            self.declare(
+                loc=_builtinloc,
+                type=BuiltinCType(ctype),
+                shortname=ctype,
+            )
         for using in tu.builtinUsing:
             using.accept(self)
         for using in tu.using:
@@ -1033,10 +1063,7 @@ class GatherDecls(TcheckVisitor):
             return
 
         qname = su.qname()
-        if 0 == len(qname.quals):
-            fullname = None
-        else:
-            fullname = str(qname)
+        fullname = str(qname)
 
         if isinstance(su, StructDecl):
             sutype = StructType(qname, [])
@@ -1129,11 +1156,6 @@ class GatherDecls(TcheckVisitor):
 
     def visitUsingStmt(self, using):
         fullname = str(using.type)
-        if (using.type.basename() == fullname) or using.type.uniqueptr:
-            # Prevent generation of typedefs.  If basename == fullname then
-            # there is nothing to typedef.  With UniquePtrs, basenames
-            # are generic so typedefs would be illegal.
-            fullname = None
 
         self.checkAttributes(
             using.attributes,
@@ -1143,15 +1165,15 @@ class GatherDecls(TcheckVisitor):
             },
         )
 
-        if fullname == "mozilla::ipc::Shmem":
-            ipdltype = ShmemType(using.type.spec)
-        elif fullname == "mozilla::ipc::ByteBuf":
-            ipdltype = ByteBufType(using.type.spec)
-        elif fullname == "mozilla::ipc::FileDescriptor":
-            ipdltype = FDType(using.type.spec)
+        if fullname == "::mozilla::ipc::Shmem":
+            ipdltype = ShmemType(using.type)
+        elif fullname == "::mozilla::ipc::ByteBuf":
+            ipdltype = ByteBufType(using.type)
+        elif fullname == "::mozilla::ipc::FileDescriptor":
+            ipdltype = FDType(using.type)
         else:
             ipdltype = ImportedCxxType(
-                using.type.spec,
+                using.type,
                 using.isRefcounted(),
                 using.isSendMoveOnly(),
                 using.isDataMoveOnly(),
@@ -1178,7 +1200,7 @@ class GatherDecls(TcheckVisitor):
         using.decl = self.declare(
             loc=using.loc,
             type=ipdltype,
-            shortname=using.type.basename(),
+            shortname=using.type.baseid,
             fullname=fullname,
         )
 

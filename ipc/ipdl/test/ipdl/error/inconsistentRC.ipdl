@@ -1,4 +1,4 @@
-//error: inconsistent refcounted status of type `mozilla::ipc::SomeRefcountedType`
+//error: inconsistent refcounted status of type `::mozilla::ipc::SomeRefcountedType`
 
 [RefCounted] using class mozilla::ipc::SomeRefcountedType from "SomeFile.h";
 using class mozilla::ipc::SomeRefcountedType from "SomeFile.h";
