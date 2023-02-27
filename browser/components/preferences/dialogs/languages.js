@@ -260,17 +260,19 @@ var gLanguagesDialog = {
     if (!this._availableLanguagesList.length) {
       this._loadAvailableLanguages();
     }
+    let languageName = "";
     for (var i = 0; i < this._availableLanguagesList.length; ++i) {
       if (localeCode == this._availableLanguagesList[i].code) {
         return this._availableLanguagesList[i].name;
       }
-      // Try resolving the locale code without region code
+      // Try resolving the locale code without region code. Can't return
+      // directly because there might be a perfect match later.
       if (localeCode.split("-")[0] == this._availableLanguagesList[i].code) {
-        return this._availableLanguagesList[i].name;
+        languageName = this._availableLanguagesList[i].name;
       }
     }
 
-    return "";
+    return languageName;
   },
 
   moveUp() {
