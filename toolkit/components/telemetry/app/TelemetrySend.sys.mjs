@@ -27,6 +27,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://gre/modules/TelemetryReportingPolicy.sys.mjs",
   TelemetryStorage: "resource://gre/modules/TelemetryStorage.sys.mjs",
 });
+ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(
   lazy,
   "NimbusFeatures",
@@ -203,8 +204,13 @@ export function sendStandalonePing(endpoint, payload, extraHeaders = {}) {
     let payloadStream = Cc[
       "@mozilla.org/io/string-input-stream;1"
     ].createInstance(Ci.nsIStringInputStream);
-
-    const utf8Payload = new TextEncoder().encode(payload);
+    let converter = Cc[
+      "@mozilla.org/intl/scriptableunicodeconverter"
+      // eslint-disable-next-line mozilla/reject-scriptableunicodeconverter
+    ].createInstance(Ci.nsIScriptableUnicodeConverter);
+    converter.charset = "UTF-8";
+    let utf8Payload = converter.ConvertFromUnicode(payload);
+    utf8Payload += converter.Finish();
 
     payloadStream.data = gzipCompressString(utf8Payload);
     request.sendInputStream(payloadStream);
@@ -1012,7 +1018,7 @@ export var TelemetrySendImpl = {
       "_sendWithPingSender - sending " + pingId + " to " + submissionURL
     );
     try {
-      const pingPath = PathUtils.join(
+      const pingPath = lazy.OS.Path.join(
         lazy.TelemetryStorage.pingDirectoryPath,
         pingId
       );
@@ -1319,11 +1325,14 @@ export var TelemetrySendImpl = {
 
     // If that's a legacy ping format, just send its payload.
     let networkPayload = isV4PingFormat(ping) ? ping : ping.payload;
-
-    const utf8Payload = new TextEncoder().encode(
+    let converter = Cc[
+      "@mozilla.org/intl/scriptableunicodeconverter"
+    ].createInstance(Ci.nsIScriptableUnicodeConverter);
+    converter.charset = "UTF-8";
+    let utf8Payload = converter.ConvertFromUnicode(
       JSON.stringify(networkPayload)
     );
-
+    utf8Payload += converter.Finish();
     Services.telemetry
       .getHistogramById("TELEMETRY_STRINGIFY")
       .add(Utils.monotonicNow() - startTime);
