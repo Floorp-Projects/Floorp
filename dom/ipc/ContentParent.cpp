@@ -60,7 +60,6 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/BenchmarkStorageParent.h"
-#include "mozilla/Casting.h"
 #include "mozilla/ContentBlockingUserInteraction.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/FOGIPC.h"
@@ -3382,11 +3381,10 @@ bool ContentParent::IsInitialized() const {
 }
 
 int32_t ContentParent::Pid() const {
-  auto pid = mSubprocess->GetChildProcessId();
-  if (pid == 0) {
+  if (!mSubprocess || !mSubprocess->GetChildProcessHandle()) {
     return -1;
   }
-  return ReleaseAssertedCast<int32_t>(pid);
+  return base::GetProcId(mSubprocess->GetChildProcessHandle());
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvGetGfxVars(

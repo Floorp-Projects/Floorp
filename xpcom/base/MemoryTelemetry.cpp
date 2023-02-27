@@ -354,7 +354,7 @@ void MemoryTelemetry::GatherTotalMemory() {
           return;
         }
 #else
-        info.mHandle = aGeckoProcess->GetChildProcessId();
+        info.mHandle = base::GetProcId(aGeckoProcess->GetChildProcessHandle());
 #endif
 
         infos.AppendElement(info);
