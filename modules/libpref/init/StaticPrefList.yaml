@@ -9389,7 +9389,7 @@
 # Wether to block autoplay for webaudio
 - name: media.autoplay.block-webaudio
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # File-backed MediaCache size.
