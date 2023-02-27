@@ -3978,10 +3978,10 @@
   value: 5
   mirror: always
 
-# Enable Storage API for all platforms except Android.
+# Whether the Storage API is enabled.
 - name: dom.storageManager.enabled
   type: RelaxedAtomicBool
-  value: @IS_NOT_ANDROID@
+  value: true
   mirror: always
 
 # Whether the File System API is enabled
