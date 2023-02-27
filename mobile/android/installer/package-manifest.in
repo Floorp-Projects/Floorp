@@ -114,10 +114,8 @@
 @BINPATH@/actors/*
 
 ; [Browser Chrome Files]
-#ifdef EARLY_BETA_OR_EARLIER
 @BINPATH@/chrome/pdfjs.manifest
 @BINPATH@/chrome/pdfjs/*
-#endif
 @BINPATH@/chrome/toolkit@JAREXT@
 @BINPATH@/chrome/toolkit.manifest
 

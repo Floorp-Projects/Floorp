@@ -93,12 +93,8 @@ pref("extensions.formautofill.addresses.capture.enabled", true);
 pref("browser.formfill.debug", false);
 pref("extensions.formautofill.loglevel", "Warn");
 
-#ifdef EARLY_BETA_OR_EARLIER
 // PDF.js (enabled in StaticPrefList.yaml)
 // Try to convert PDFs sent as octet-stream
 pref("pdfjs.handleOctetStream", true);
 pref("browser.download.open_pdf_attachments_inline", true);
 pref("pdfjs.annotationEditorMode", -1);
-#else
-pref("pdfjs.disabled", true);
-#endif

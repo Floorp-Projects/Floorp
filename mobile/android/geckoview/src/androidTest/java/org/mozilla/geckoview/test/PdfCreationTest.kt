@@ -15,7 +15,6 @@ import androidx.test.filters.LargeTest
 import org.hamcrest.Matchers.equalTo
 import org.junit.After
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeThat
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -147,8 +146,6 @@ class PdfCreationTest : BaseSessionTest() {
     @NullDelegate(Autofill.Delegate::class)
     @Test
     fun saveAPdfDocument() {
-        assumeThat(sessionRule.env.isNightly, equalTo(true))
-
         activityRule.scenario.onActivity {
             mainSession.loadTestPath(HELLO_PDF_WORLD_PDF_PATH)
             mainSession.waitForPageStop()

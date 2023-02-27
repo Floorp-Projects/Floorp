@@ -7,7 +7,6 @@ package org.mozilla.geckoview.test
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
-import org.junit.Assume.assumeThat
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoSession
@@ -231,8 +230,6 @@ class FinderTest : BaseSessionTest() {
     }
 
     @Test fun find_in_pdf() {
-        assumeThat(sessionRule.env.isNightly, equalTo(true))
-
         mainSession.loadTestPath(TRACEMONKEY_PDF_PATH)
         mainSession.waitForPageStop()
 
@@ -337,8 +334,6 @@ class FinderTest : BaseSessionTest() {
     }
 
     @Test fun find_in_pdf_with_wrapped_result() {
-        assumeThat(sessionRule.env.isNightly, equalTo(true))
-
         mainSession.loadTestPath(TRACEMONKEY_PDF_PATH)
         mainSession.waitForPageStop()
 
@@ -374,8 +369,6 @@ class FinderTest : BaseSessionTest() {
     }
 
     @Test fun find_in_pdf_notFound() {
-        assumeThat(sessionRule.env.isNightly, equalTo(true))
-
         mainSession.loadTestPath(TRACEMONKEY_PDF_PATH)
         mainSession.waitForPageStop()
 
@@ -398,8 +391,6 @@ class FinderTest : BaseSessionTest() {
     }
 
     @Test fun find_in_pdf_matchCase() {
-        assumeThat(sessionRule.env.isNightly, equalTo(true))
-
         mainSession.loadTestPath(TRACEMONKEY_PDF_PATH)
         mainSession.waitForPageStop()
 
@@ -423,8 +414,6 @@ class FinderTest : BaseSessionTest() {
     }
 
     @Test fun find_in_pdf_wholeWord() {
-        assumeThat(sessionRule.env.isNightly, equalTo(true))
-
         mainSession.loadTestPath(TRACEMONKEY_PDF_PATH)
         mainSession.waitForPageStop()
 
@@ -448,8 +437,6 @@ class FinderTest : BaseSessionTest() {
     }
 
     @Test fun find_in_pdf_and_html() {
-        assumeThat(sessionRule.env.isNightly, equalTo(true))
-
         for (i in 1..2) {
             mainSession.loadTestPath(TRACEMONKEY_PDF_PATH)
             mainSession.waitForPageStop()
