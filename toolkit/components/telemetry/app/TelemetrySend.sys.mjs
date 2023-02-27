@@ -27,7 +27,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://gre/modules/TelemetryReportingPolicy.sys.mjs",
   TelemetryStorage: "resource://gre/modules/TelemetryStorage.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(lazy, "OS", "resource://gre/modules/osfile.jsm");
 ChromeUtils.defineModuleGetter(
   lazy,
   "NimbusFeatures",
@@ -136,22 +135,28 @@ function savePing(aPing) {
   return lazy.TelemetryStorage.savePendingPing(aPing);
 }
 
+function arrayToString(array) {
+  let buffer = "";
+  // String.fromCharCode can only deal with 500,000 characters at
+  // a time, so chunk the result into parts of that size.
+  const chunkSize = 500000;
+  for (let offset = 0; offset < array.length; offset += chunkSize) {
+    buffer += String.fromCharCode.apply(
+      String,
+      array.slice(offset, offset + chunkSize)
+    );
+  }
+  return buffer;
+}
+
 /**
  * @return {String} This returns a string with the gzip compressed data.
  */
 export function gzipCompressString(string) {
   let observer = {
-    buffer: "",
+    buffer: null,
     onStreamComplete(loader, context, status, length, result) {
-      // String.fromCharCode can only deal with 500,000 characters at
-      // a time, so chunk the result into parts of that size.
-      const chunkSize = 500000;
-      for (let offset = 0; offset < result.length; offset += chunkSize) {
-        this.buffer += String.fromCharCode.apply(
-          String,
-          result.slice(offset, offset + chunkSize)
-        );
-      }
+      this.buffer = arrayToString(result);
     },
   };
 
@@ -204,15 +209,10 @@ export function sendStandalonePing(endpoint, payload, extraHeaders = {}) {
     let payloadStream = Cc[
       "@mozilla.org/io/string-input-stream;1"
     ].createInstance(Ci.nsIStringInputStream);
-    let converter = Cc[
-      "@mozilla.org/intl/scriptableunicodeconverter"
-      // eslint-disable-next-line mozilla/reject-scriptableunicodeconverter
-    ].createInstance(Ci.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-8";
-    let utf8Payload = converter.ConvertFromUnicode(payload);
-    utf8Payload += converter.Finish();
 
-    payloadStream.data = gzipCompressString(utf8Payload);
+    const utf8Payload = new TextEncoder().encode(payload);
+
+    payloadStream.data = gzipCompressString(arrayToString(utf8Payload));
     request.sendInputStream(payloadStream);
   });
 }
@@ -1018,7 +1018,7 @@ export var TelemetrySendImpl = {
       "_sendWithPingSender - sending " + pingId + " to " + submissionURL
     );
     try {
-      const pingPath = lazy.OS.Path.join(
+      const pingPath = PathUtils.join(
         lazy.TelemetryStorage.pingDirectoryPath,
         pingId
       );
@@ -1325,14 +1325,11 @@ export var TelemetrySendImpl = {
 
     // If that's a legacy ping format, just send its payload.
     let networkPayload = isV4PingFormat(ping) ? ping : ping.payload;
-    let converter = Cc[
-      "@mozilla.org/intl/scriptableunicodeconverter"
-    ].createInstance(Ci.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-8";
-    let utf8Payload = converter.ConvertFromUnicode(
+
+    const utf8Payload = new TextEncoder().encode(
       JSON.stringify(networkPayload)
     );
-    utf8Payload += converter.Finish();
+
     Services.telemetry
       .getHistogramById("TELEMETRY_STRINGIFY")
       .add(Utils.monotonicNow() - startTime);
@@ -1341,7 +1338,7 @@ export var TelemetrySendImpl = {
       "@mozilla.org/io/string-input-stream;1"
     ].createInstance(Ci.nsIStringInputStream);
     startTime = Utils.monotonicNow();
-    payloadStream.data = Policy.gzipCompressString(utf8Payload);
+    payloadStream.data = Policy.gzipCompressString(arrayToString(utf8Payload));
 
     // Check the size and drop pings which are too big.
     const compressedPingSizeBytes = payloadStream.data.length;
