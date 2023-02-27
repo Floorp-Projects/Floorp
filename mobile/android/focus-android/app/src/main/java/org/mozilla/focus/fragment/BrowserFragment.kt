@@ -432,12 +432,18 @@ class BrowserFragment :
         }
     }
 
-    override fun onAccessibilityStateChanged(enabled: Boolean) = when (enabled) {
-        false -> binding.browserToolbar.enableDynamicBehavior(requireContext(), binding.engineView)
-        true -> {
-            with(binding.browserToolbar) {
-                disableDynamicBehavior(binding.engineView)
-                showAsFixed(requireContext(), binding.engineView)
+    override fun onAccessibilityStateChanged(enabled: Boolean) {
+        when (enabled) {
+            // using _binding, because this might be called before onCreateView.
+            false -> _binding?.browserToolbar?.enableDynamicBehavior(
+                requireContext(),
+                binding.engineView,
+            )
+            true -> {
+                _binding?.browserToolbar?.let {
+                    it.disableDynamicBehavior(binding.engineView)
+                    it.showAsFixed(requireContext(), binding.engineView)
+                }
             }
         }
     }
