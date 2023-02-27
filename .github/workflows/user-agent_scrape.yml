@@ -12,8 +12,9 @@ jobs:
     runs-on: ubuntu-22.04
     
     steps:
-    - uses: actions/checkout@v3
-      name: Clone 🧬
+    - name: Clone 🧬
+      run: |
+        git clone --depth 1 https://github.com/Floorp-Projects/User-Agent_Scraper
 
     - name: Setup 🪛
       run: |
