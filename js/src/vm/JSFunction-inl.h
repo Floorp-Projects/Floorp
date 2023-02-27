@@ -82,4 +82,42 @@ inline JSFunction* JSFunction::create(JSContext* cx, js::gc::AllocKind kind,
   return fun;
 }
 
+/* static */
+inline bool JSFunction::getLength(JSContext* cx, js::HandleFunction fun,
+                                  uint16_t* length) {
+  if (fun->isNativeFun()) {
+    *length = fun->nargs();
+    return true;
+  }
+
+  JSScript* script = getOrCreateScript(cx, fun);
+  if (!script) {
+    return false;
+  }
+
+  *length = script->funLength();
+  return true;
+}
+
+/* static */
+inline bool JSFunction::getUnresolvedLength(JSContext* cx,
+                                            js::HandleFunction fun,
+                                            uint16_t* length) {
+  MOZ_ASSERT(!IsInternalFunctionObject(*fun));
+  MOZ_ASSERT(!fun->hasResolvedLength());
+
+  return JSFunction::getLength(cx, fun, length);
+}
+
+inline JSAtom* JSFunction::infallibleGetUnresolvedName(JSContext* cx) {
+  MOZ_ASSERT(!IsInternalFunctionObject(*this));
+  MOZ_ASSERT(!hasResolvedName());
+
+  if (JSAtom* name = explicitOrInferredName()) {
+    return name;
+  }
+
+  return cx->names().empty;
+}
+
 #endif /* vm_JSFunction_inl_h */

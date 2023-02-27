@@ -517,9 +517,7 @@ static bool fun_resolve(JSContext* cx, HandleObject obj, HandleId id,
         return true;
       }
 
-      if (!JSFunction::getUnresolvedName(cx, fun, &v)) {
-        return false;
-      }
+      v.setString(fun->infallibleGetUnresolvedName(cx));
     }
 
     if (!NativeDefineDataProperty(cx, fun, id, v,
@@ -1061,50 +1059,6 @@ bool JSFunction::isSyntheticFunction() const {
   bool synthetic = hasBaseScript() && baseScript()->isSyntheticFunction();
   MOZ_ASSERT_IF(synthetic, isMethod());
   return synthetic;
-}
-
-/* static */
-bool JSFunction::getLength(JSContext* cx, HandleFunction fun,
-                           uint16_t* length) {
-  if (fun->isNativeFun()) {
-    *length = fun->nargs();
-    return true;
-  }
-
-  JSScript* script = getOrCreateScript(cx, fun);
-  if (!script) {
-    return false;
-  }
-
-  *length = script->funLength();
-  return true;
-}
-
-/* static */
-bool JSFunction::getUnresolvedLength(JSContext* cx, HandleFunction fun,
-                                     uint16_t* length) {
-  MOZ_ASSERT(!IsInternalFunctionObject(*fun));
-  MOZ_ASSERT(!fun->hasResolvedLength());
-
-  return JSFunction::getLength(cx, fun, length);
-}
-
-JSAtom* JSFunction::infallibleGetUnresolvedName(JSContext* cx) {
-  MOZ_ASSERT(!IsInternalFunctionObject(*this));
-  MOZ_ASSERT(!hasResolvedName());
-
-  if (JSAtom* name = explicitOrInferredName()) {
-    return name;
-  }
-
-  return cx->names().empty;
-}
-
-/* static */
-bool JSFunction::getUnresolvedName(JSContext* cx, HandleFunction fun,
-                                   MutableHandleValue v) {
-  v.setString(fun->infallibleGetUnresolvedName(cx));
-  return true;
 }
 
 /* static */
