@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="apz_test_utils.js"></script>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+    html, body { margin: 0; }
+
+    #big {
+      height: 250vh;
+      width: 100%;
+    }
+
+    #target {
+      height: 500px;
+      width: 100%;
+      background: red;
+    }
+  </style>
+</head>
+<body>
+  <div id="big">
+  </div>
+  <div id="target">
+  </div>
+</body>
+<script>
+const searchParams = new URLSearchParams(location.search);
+
+async function test() {
+  // Count the number of scroll events that occur. Instant scrolls should only
+  // trigger one scroll event, so a scroll event count of 1 indicates that a
+  // instant scroll was conducted.
+  let scrollCount = 0;
+  window.addEventListener("scroll", (e) => {
+    scrollCount += 1;
+  });
+
+  let scrollendPromise = promiseScrollend();
+
+  // Call the given programmatic scroll with behavior: smooth.
+  switch (searchParams.get("action")) {
+    case "scrollIntoView":
+      target.scrollIntoView({behavior: "smooth"});
+      break;
+    case "scrollBy":
+      document.scrollingElement.scrollBy({top: 500, behavior: "smooth"});
+      break;
+    case "scrollTo":
+      document.scrollingElement.scrollTo({top: 500, behavior: "smooth"});
+      break;
+    case "scroll":
+      document.scrollingElement.scroll({top: 500, behavior: "smooth"});
+      break;
+    default:
+      ok(false, "Unsupported action: " + searchParams.get("action"));
+      break;
+  }
+
+  await scrollendPromise;
+
+  // If general.smoothScroll is set, the behavior of the scroll should be
+  // "smooth". If general.smoothScroll is disabled, we should respect it and
+  // the scrolls should instant regardless of the specified behavior.
+  if (SpecialPowers.getBoolPref("general.smoothScroll")) {
+    info("final enabled scroll count: " + scrollCount);
+    ok(scrollCount > 1, "The programmatic scroll should create more than one scroll event");
+  } else {
+    info("final disabled scroll count: " + scrollCount);
+    ok(scrollCount == 1, "The programmatic scroll should be instant with one scroll event");
+  }
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+</script>
+</html>
