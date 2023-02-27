@@ -117,6 +117,7 @@
 #  include "detect_win32k_conflicts.h"
 #  include "mozilla/PreXULSkeletonUI.h"
 #  include "mozilla/DllPrefetchExperimentRegistryInfo.h"
+#  include "mozilla/WindowsBCryptInitialization.h"
 #  include "mozilla/WindowsDllBlocklist.h"
 #  include "mozilla/WindowsProcessMitigations.h"
 #  include "mozilla/WinHeaderOnlyUtils.h"
@@ -5790,9 +5791,16 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
     mAppData->directory = mAppData->xreDirectory;
   }
 
-#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+#if defined(XP_WIN)
+#  if defined(MOZ_SANDBOX)
   mAppData->sandboxBrokerServices = aConfig.sandboxBrokerServices;
-#endif
+#  endif  // defined(MOZ_SANDBOX)
+
+  {
+    DebugOnly<bool> result = WindowsBCryptInitialization();
+    MOZ_ASSERT(result);
+  }
+#endif  // defined(XP_WIN)
 
   // Once we unset the exception handler, we lose the ability to properly
   // detect hangs -- they show up as crashes.  We do this as late as possible.

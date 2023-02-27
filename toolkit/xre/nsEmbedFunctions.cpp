@@ -25,6 +25,7 @@
 #  endif
 #  include "mozilla/ScopeExit.h"
 #  include "mozilla/WinDllServices.h"
+#  include "mozilla/WindowsBCryptInitialization.h"
 #  include "WinUtils.h"
 #  ifdef ACCESSIBILITY
 #    include "mozilla/GeckoArgs.h"
@@ -534,24 +535,19 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
       break;
   }
 
-#if defined(MOZ_SANDBOX) && defined(XP_WIN)
+#if defined(XP_WIN)
+#  if defined(MOZ_SANDBOX)
   if (aChildData->sandboxBrokerServices) {
     SandboxBroker::Initialize(aChildData->sandboxBrokerServices);
     SandboxBroker::GeckoDependentInitialize();
   }
+#  endif  // defined(MOZ_SANDBOX)
 
-  // Call BCryptGenRandom() to pre-load bcryptPrimitives.dll while the current
-  // thread still has an unrestricted impersonation token. We need to perform
-  // that operation to warmup the BCryptGenRandom() call that is used by
-  // others, especially rust.  See bug 1746524, bug 1751094, bug 1751177
-  UCHAR buffer[32];
-  NTSTATUS status = BCryptGenRandom(NULL,            // hAlgorithm
-                                    buffer,          // pbBuffer
-                                    sizeof(buffer),  // cbBuffer
-                                    BCRYPT_USE_SYSTEM_PREFERRED_RNG  // dwFlags
-  );
-  MOZ_RELEASE_ASSERT(status == STATUS_SUCCESS);
-#endif  // defined(MOZ_SANDBOX) && defined(XP_WIN)
+  {
+    DebugOnly<bool> result = mozilla::WindowsBCryptInitialization();
+    MOZ_ASSERT(result);
+  }
+#endif  // defined(XP_WIN)
 
   {
     // This is a lexical scope for the MessageLoop below.  We want it
