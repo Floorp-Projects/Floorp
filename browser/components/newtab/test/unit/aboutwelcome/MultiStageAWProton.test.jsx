@@ -196,7 +196,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
           title: "test title",
           progress_bar: true,
         },
-        totalNumberOfScreens: 1,
+        isSingleScreen: true,
       };
       const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
       assert.ok(wrapper.exists());

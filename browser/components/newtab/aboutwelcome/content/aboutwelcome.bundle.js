@@ -1044,7 +1044,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       content: content,
       addonName: this.props.addonName,
       handleAction: this.props.handleAction
-    })), this.props.totalNumberOfScreens > 1 && !hideStepsIndicator ? this.renderStepsIndicator() : null), content.dismiss_button ? this.renderDismissButton() : null));
+    })), !hideStepsIndicator ? this.renderStepsIndicator() : null), content.dismiss_button ? this.renderDismissButton() : null));
   }
 
 }
@@ -1977,14 +1977,14 @@ class ReturnToAMO extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureComp
       content: content,
       isRtamo: true,
       isTheme: type.includes("theme"),
-      id: this.props.messageId,
-      order: this.props.order,
-      totalNumberOfScreens: this.props.totalNumberOfScreens,
+      id: this.props.message_id,
+      order: this.props.order || 0,
+      totalNumberOfScreens: 1,
+      isSingleScreen: true,
       autoAdvance: this.props.auto_advance,
       iconURL: type.includes("theme") ? (_this$props$themeScre = this.props.themeScreenshots[0]) === null || _this$props$themeScre === void 0 ? void 0 : _this$props$themeScre.url : this.props.iconURL,
       addonName: this.props.name,
-      handleAction: this.handleAction,
-      addExtension: this.onClickAddExtension
+      handleAction: this.handleAction
     }));
   }
 

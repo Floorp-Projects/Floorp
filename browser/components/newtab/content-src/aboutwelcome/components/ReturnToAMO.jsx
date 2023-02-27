@@ -84,9 +84,10 @@ export class ReturnToAMO extends React.PureComponent {
           content={content}
           isRtamo={true}
           isTheme={type.includes("theme")}
-          id={this.props.messageId}
-          order={this.props.order}
-          totalNumberOfScreens={this.props.totalNumberOfScreens}
+          id={this.props.message_id}
+          order={this.props.order || 0}
+          totalNumberOfScreens={1}
+          isSingleScreen={true}
           autoAdvance={this.props.auto_advance}
           iconURL={
             type.includes("theme")
@@ -95,7 +96,6 @@ export class ReturnToAMO extends React.PureComponent {
           }
           addonName={this.props.name}
           handleAction={this.handleAction}
-          addExtension={this.onClickAddExtension}
         />
       </div>
     );
