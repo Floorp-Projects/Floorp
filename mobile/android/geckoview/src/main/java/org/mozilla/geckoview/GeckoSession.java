@@ -2334,17 +2334,6 @@ public class GeckoSession {
   }
 
   /**
-   * Checks whether we have a rule for this session. Uses the browsing context or any of its
-   * children, calls nsICookieBannerService.hasRuleForBrowsingContextTree
-   *
-   * @return {@link GeckoResult} with boolean
-   */
-  @AnyThread
-  public @NonNull GeckoResult<Boolean> hasCookieBannerRuleForBrowsingContextTree() {
-    return mEventDispatcher.queryBoolean("GeckoView:HasCookieBannerRuleForBrowsingContextTree");
-  }
-
-  /**
    * Get the SessionPdfFileSaver instance for this session, to save a pdf document.
    *
    * @return SessionPdfFileSaver instance.
