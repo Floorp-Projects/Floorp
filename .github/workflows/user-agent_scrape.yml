@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-22.04
     
     steps:
-    - name: Clone 🧬
+    - name: Clone User-Agent_Scraper 🧬
       run: |
         git clone --depth 1 https://github.com/Floorp-Projects/User-Agent_Scraper
 
@@ -20,7 +20,7 @@ jobs:
       run: |
         cd User-Agent_Scraper
         sudo apt update
-        sudo apt install nodejs npm
+        sudo apt install nodejs npm xvfb
         npm install
 
     - name: Install browsers 🌐
@@ -47,11 +47,13 @@ jobs:
       run: |
         cd User-Agent_Scraper
 
+        Xvfb :2 -screen 0 1024x768x24 &
+        export DISPLAY=:2
+
         # Firefox
         export firefox_stable_ua=`npm run --silent start ~/firefox/firefox`
+        echo $firefox_stable_ua
         
         # Chrome
         export chrome_stable_ua=`npm run --silent start ~/chrome/chrome`
-        
-        echo $firefox_stable_ua
         echo $chrome_stable_ua
