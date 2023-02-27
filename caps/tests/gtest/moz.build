@@ -16,5 +16,3 @@ UNIFIED_SOURCES += [
 include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul-gtest"
-
-REQUIRES_UNIFIED_BUILD = True
