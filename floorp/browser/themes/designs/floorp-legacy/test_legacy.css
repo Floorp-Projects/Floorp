@@ -1736,14 +1736,14 @@ toolbarbutton[part="scrollbutton-down"] {
   margin-inline-end: -1px !important;
 }
 
-.tabbrowser-tab:not([selected="true"], :hover, [beforeselected-visible], [beforehovered]) .tab-stack::after {
+.tabbrowser-tab:not([selected="true"], :hover , [selected="true"] + .tabbrowser-tab, :hover + .tabbrowser-tab, #tabbrowser-arrowscrollbox > .tabbrowser-tab:nth-child(1)) .tab-stack::before {
   content: "";
   position: absolute;
   display: block;
   height: 20px;
-  right: 0;
+  left: 0;
   top: 6px;
-  border-right: 1px solid color-mix(in srgb, currentColor 34%, transparent);
+  border-left: 1px solid color-mix(in srgb, currentColor 34%, transparent);
 }
 
 #tabbrowser-tabs[haspinnedtabs]:not([positionpinnedtabs])>#tabbrowser-arrowscrollbox>.tabbrowser-tab[first-visible-unpinned-tab] {
@@ -1916,19 +1916,6 @@ menupopup> :is(menu:not(.menu-iconic), menuitem:not(.menuitem-iconic, [type="che
 #tabbrowser-tabs[overflow] .tabbrowser-tab[pinned] .tab-stack {
   margin-top: 8px !important;
   margin-bottom: 0 !important;
-}
-
-.tab-content::before,
-.tab-content::after {
-  content: "" !important;
-  display: block !important;
-  position: absolute !important;
-  background-color: currentColor !important;
-  width: 1px !important;
-  height: 20px !important;
-  transform: translateY(-10px) !important;
-  opacity: 0 !important;
-  transition: opacity .2s var(--ease-basic) !important;
 }
 
 .tab-content::before {
