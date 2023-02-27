@@ -371,12 +371,12 @@ Promise<void> makeDirectory(DOMString path, ...);
 
 #### Options
 
-| `OS.File` option        | `IOUtils` option         | Description                                                                                                                                                                                                     |
-| ----------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ignoreExisting: boolean | ignoreExisting: boolean  | If true, succeed even if the target directory already exists. Default is true.                                                                                                                                  |
-| from: string            | createAncestors: boolean | If true, `IOUtils` will create all missing ancestors in a path. Default is true. This option differs from `OS.File`, which requires the caller to specify a root path from which to create missing directories. |
-| unixMode                | N/A                      | `IOUtils` does not support setting a custom directory mode on unix.                                                                                                                                             |
-| winSecurity             | N/A                      | `IOUtils` does not support setting custom directory security settings on Windows.                                                                                                                               |
+| `OS.File` option        | `IOUtils` option           | Description                                                                                                                                                                                                     |
+| ----------------------- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ignoreExisting: boolean | ignoreExisting: boolean    | If true, succeed even if the target directory already exists. Default is true.                                                                                                                                  |
+| from: string            | createAncestors: boolean   | If true, `IOUtils` will create all missing ancestors in a path. Default is true. This option differs from `OS.File`, which requires the caller to specify a root path from which to create missing directories. |
+| unixMode: number        | permissions: unsigned long | The file mode to create the directory with. Ignored on Windows. Default is 0755.                                                                                                                                |
+| winSecurity             | N/A                        | `IOUtils` does not support setting custom directory security settings on Windows.                                                                                                                               |
 
 #### Example
 
