@@ -3916,7 +3916,7 @@
 
 - name: dom.workers.pFetch.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Is support for modules (new Worker(..., {type: "module">)) enabled for workers?
