@@ -387,7 +387,7 @@ add_task(async function test_remove_and_replace_csp_mv3() {
       script3_loaded: true,
       cspJSON: [
         { "img-src": ["'self'"], "report-only": false },
-        { "img-src": ["example.com"], "report-only": false },
+        { "img-src": ["http://example.com"], "report-only": false },
       ],
     },
     ext1_data: extMV3Data,
@@ -408,7 +408,7 @@ add_task(async function test_remove_and_replace_csp_mv3() {
       script3_loaded: false,
       cspJSON: [
         { "default-src": ["'none'"], "report-only": false },
-        { "img-src": ["example.com"], "report-only": false },
+        { "img-src": ["http://example.com"], "report-only": false },
       ],
     },
     ext1_data: extMV3Data,
@@ -430,7 +430,7 @@ add_task(async function test_remove_and_replace_csp_mv3() {
       script3_loaded: false,
       cspJSON: [
         { "default-src": ["'none'"], "report-only": false },
-        { "img-src": ["example.com"], "report-only": false },
+        { "img-src": ["http://example.com"], "report-only": false },
       ],
     },
     ext1_data: extMV3Data,
@@ -452,7 +452,7 @@ add_task(async function test_remove_and_replace_csp_mv3() {
       script3_loaded: false,
       cspJSON: [
         { "default-src": ["'none'"], "report-only": false },
-        { "img-src": ["example.com"], "report-only": false },
+        { "img-src": ["http://example.com"], "report-only": false },
       ],
     },
     ext1_data: extMV3Data,
