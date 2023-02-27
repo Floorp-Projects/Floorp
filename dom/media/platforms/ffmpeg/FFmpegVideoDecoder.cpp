@@ -77,6 +77,8 @@ typedef int VAStatus;
 #  define CUSTOMIZED_BUFFER_ALLOCATION 1
 #endif
 
+#define AV_LOG_DEBUG 48
+
 typedef mozilla::layers::Image Image;
 typedef mozilla::layers::PlanarYCbCrImage PlanarYCbCrImage;
 
@@ -319,6 +321,10 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::InitVAAPIDecoder() {
                  mLib->avcodec_get_name(mCodecID));
       return NS_ERROR_NOT_AVAILABLE;
     }
+  }
+
+  if (MOZ_LOG_TEST(sPDMLog, LogLevel::Debug)) {
+    mLib->av_log_set_level(AV_LOG_DEBUG);
   }
 
   FFMPEG_LOG("  VA-API FFmpeg init successful");
