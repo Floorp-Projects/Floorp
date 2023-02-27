@@ -918,7 +918,7 @@ function getDocument(src) {
   const docId = task.docId;
   const fetchDocParams = {
     docId,
-    apiVersion: '3.4.110',
+    apiVersion: '3.5.2',
     data,
     password,
     disableAutoFetch,
@@ -1209,7 +1209,6 @@ class PDFPageProxy {
     this._pdfBug = pdfBug;
     this.commonObjs = transport.commonObjs;
     this.objs = new PDFObjects();
-    this._bitmaps = new Set();
     this.cleanupAfterRender = false;
     this.pendingCleanup = false;
     this._intentStates = new Map();
@@ -1457,10 +1456,6 @@ class PDFPageProxy {
       }
     }
     this.objs.clear();
-    for (const bitmap of this._bitmaps) {
-      bitmap.close();
-    }
-    this._bitmaps.clear();
     this.pendingCleanup = false;
     return Promise.all(waitOn);
   }
@@ -1485,10 +1480,6 @@ class PDFPageProxy {
     if (resetStats && this._stats) {
       this._stats = new _display_utils.StatTimer();
     }
-    for (const bitmap of this._bitmaps) {
-      bitmap.close();
-    }
-    this._bitmaps.clear();
     this.pendingCleanup = false;
     return true;
   }
@@ -2169,12 +2160,10 @@ class WorkerTransport {
             let length;
             if (imageData.bitmap) {
               const {
-                bitmap,
                 width,
                 height
               } = imageData;
               length = width * height * 4;
-              pageProxy._bitmaps.add(bitmap);
             } else {
               length = imageData.data?.length || 0;
             }
@@ -2421,6 +2410,12 @@ class PDFObjects {
     obj.capability.resolve();
   }
   clear() {
+    for (const objId in this.#objs) {
+      const {
+        data
+      } = this.#objs[objId];
+      data?.bitmap?.close();
+    }
     this.#objs = Object.create(null);
   }
 }
@@ -2588,9 +2583,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.4.110';
+const version = '3.5.2';
 exports.version = version;
-const build = '255e98254';
+const build = '2da2ac492';
 exports.build = build;
 
 /***/ }),
@@ -8571,6 +8566,7 @@ class TextLayerRenderTask {
     this._container = this._rootContainer = container;
     this._textDivs = textDivs || [];
     this._textContentItemsStr = textContentItemsStr || [];
+    this._isOffscreenCanvasSupported = isOffscreenCanvasSupported;
     this._fontInspectorEnabled = !!globalThis.FontInspector?.enabled;
     this._reader = null;
     this._textDivProperties = textDivProperties || new WeakMap();
@@ -11806,7 +11802,7 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
           }
         });
       });
-      this._setEventListeners(selectElement, [["focus", "Focus"], ["blur", "Blur"], ["mousedown", "Mouse Down"], ["mouseenter", "Mouse Enter"], ["mouseleave", "Mouse Exit"], ["mouseup", "Mouse Up"], ["input", "Action"]], event => event.target.checked);
+      this._setEventListeners(selectElement, [["focus", "Focus"], ["blur", "Blur"], ["mousedown", "Mouse Down"], ["mouseenter", "Mouse Enter"], ["mouseleave", "Mouse Exit"], ["mouseup", "Mouse Up"], ["input", "Action"], ["input", "Validate"]], event => event.target.value);
     } else {
       selectElement.addEventListener("input", function (event) {
         storage.setValue(id, {
@@ -13008,8 +13004,8 @@ var _annotation_layer = __w_pdfjs_require__(26);
 var _worker_options = __w_pdfjs_require__(14);
 var _svg = __w_pdfjs_require__(29);
 var _xfa_layer = __w_pdfjs_require__(28);
-const pdfjsVersion = '3.4.110';
-const pdfjsBuild = '255e98254';
+const pdfjsVersion = '3.5.2';
+const pdfjsBuild = '2da2ac492';
 })();
 
 /******/ 	return __webpack_exports__;
