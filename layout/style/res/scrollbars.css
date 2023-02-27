@@ -156,8 +156,7 @@ thumb[orient="vertical"] {
   -moz-box-orient: vertical;
 }
 
-/* Don't collapse thumb when scrollbar is disabled. */
-thumb[collapsed="true"] {
+scrollbar[disabled="true"] thumb {
   visibility: hidden;
 }
 
