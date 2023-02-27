@@ -353,7 +353,6 @@ function clearContentEditableElement(el) {
   }
   el.focus();
   el.innerHTML = "";
-  lazy.event.change(el);
   el.blur();
 }
 
