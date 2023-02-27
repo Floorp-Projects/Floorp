@@ -875,6 +875,13 @@ bool GLBlitHelper::BlitSdToFramebuffer(const layers::SurfaceDescriptor& asd,
       return Blit(surfaceTexture, destSize, destOrigin);
     }
 #endif
+#ifdef MOZ_WAYLAND
+    case layers::SurfaceDescriptor::TSurfaceDescriptorDMABuf: {
+      const auto& sd = asd.get_SurfaceDescriptorDMABuf();
+      RefPtr<DMABufSurface> surface = DMABufSurface::CreateDMABufSurface(sd);
+      return Blit(surface, destSize, destOrigin);
+    }
+#endif
     default:
       return false;
   }
@@ -1417,10 +1424,14 @@ bool GLBlitHelper::BlitImage(layers::GPUVideoImage* const srcImage,
   const auto& subdescUnion =
       desc.get_SurfaceDescriptorRemoteDecoder().subdesc();
   switch (subdescUnion.type()) {
+#ifdef MOZ_WAYLAND
     case layers::RemoteDecoderVideoSubDescriptor::TSurfaceDescriptorDMABuf: {
-      // TODO.
-      return false;
+      const auto& subdesc = subdescUnion.get_SurfaceDescriptorDMABuf();
+      RefPtr<DMABufSurface> surface =
+          DMABufSurface::CreateDMABufSurface(subdesc);
+      return Blit(surface, destSize, destOrigin);
     }
+#endif
 #ifdef XP_WIN
     case layers::RemoteDecoderVideoSubDescriptor::TSurfaceDescriptorD3D10: {
       const auto& subdesc = subdescUnion.get_SurfaceDescriptorD3D10();
@@ -1471,8 +1482,42 @@ bool GLBlitHelper::Blit(DMABufSurface* surface, const gfx::IntSize& destSize,
   yuvArgs.colorSpaceForMatrix = Some(surface->GetYUVColorSpace());
 
   const DrawBlitProg::YUVArgs* pYuvArgs = nullptr;
-
   const auto planes = surface->GetTextureCount();
+
+  // -
+  // Ensure textures for all planes have been created.
+
+  const bool createTextures = [&]() {
+    for (int i = 0; i < planes; i++) {
+      if (!surface->GetTexture(i)) {
+        return true;
+      }
+    }
+    return false;
+  }();
+
+  bool didCreateTexture = false;
+  auto releaseTextures = mozilla::MakeScopeExit([&] {
+    if (didCreateTexture) {
+      surface->ReleaseTextures();
+    }
+  });
+
+  if (createTextures) {
+    for (int i = 0; i < planes; i++) {
+      if (surface->GetTexture(i)) {
+        continue;
+      }
+      if (!surface->CreateTexture(mGL, i)) {
+        LOGDMABUF(("GLBlitHelper::Blit(): Failed to create DMABuf textures."));
+        return false;
+      }
+      didCreateTexture = true;
+    }
+  }
+
+  // -
+
   const GLenum texTarget = LOCAL_GL_TEXTURE_2D;
 
   std::vector<uint8_t> texUnits;
