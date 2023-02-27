@@ -334,7 +334,8 @@ nsHtml5StreamParser::GuessEncoding(bool aInitial) {
     } else if (ifHadBeenForced == UTF_8_ENCODING) {
       MOZ_ASSERT(mCharsetSource == kCharsetFromInitialAutoDetectionASCII ||
                  mCharsetSource ==
-                     kCharsetFromInitialAutoDetectionWouldHaveBeenUTF8);
+                     kCharsetFromInitialAutoDetectionWouldHaveBeenUTF8 ||
+                 mEncoding == ISO_2022_JP_ENCODING);
       source = kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8InitialWasASCII;
     } else if (encoding != ifHadBeenForced) {
       if (mCharsetSource == kCharsetFromInitialAutoDetectionASCII) {
