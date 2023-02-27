@@ -42,8 +42,8 @@ jobs:
         cd ../
         rm -rf chrome_tmp
         rm chrome.deb
-        sudo mkdir -p /etc/chrome
-        echo '{"sync_promo": {"startup_count": 1, "user_skipped": true, "view_count": 1}}' | sudo tee /etc/chrome/initial_preferences
+        sudo mkdir -p /etc/opt/chrome
+        echo '{"sync_promo": {"startup_count": 1, "user_skipped": true, "view_count": 1}}' | sudo tee /etc/opt/chrome/initial_preferences
 
     - name: Scrape
       run: |
