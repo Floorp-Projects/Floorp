@@ -1,6 +1,33 @@
 {
   "data": [
     {
+      "name": "Safari",
+      "schema": 1676828360273,
+      "status": "beta",
+      "version": "16.4",
+      "browserid": "safari",
+      "id": "622fe41e-3628-478d-966b-8ed00e0b5b56",
+      "last_modified": 1677256449931
+    },
+    {
+      "name": "Safari on iOS",
+      "schema": 1677245063267,
+      "status": "beta",
+      "version": "16.4",
+      "browserid": "safari_ios",
+      "id": "13737476-bd8e-49a0-bde7-d01e4aac6019",
+      "last_modified": 1677256449926
+    },
+    {
+      "name": "Samsung Internet",
+      "schema": 1677245063433,
+      "status": "current",
+      "version": "20.0",
+      "browserid": "samsunginternet_android",
+      "id": "74a1c6f7-709f-410d-8540-a0a4545b042b",
+      "last_modified": 1677256449920
+    },
+    {
       "name": "Chrome Android",
       "schema": 1676640266287,
       "status": "nightly",
@@ -226,15 +253,6 @@
       "last_modified": 1670592814763
     },
     {
-      "name": "Samsung Internet",
-      "schema": 1669209850168,
-      "status": "current",
-      "version": "19.1",
-      "browserid": "samsunginternet_android",
-      "id": "0b8dd4c5-f0c2-49b0-9fa2-8bdfdd181f40",
-      "last_modified": 1669210981397
-    },
-    {
       "name": "Node.js",
       "schema": 1666790648328,
       "status": "current",
@@ -451,5 +469,5 @@
       "last_modified": 1645448267500
     }
   ],
-  "timestamp": 1676648523401
+  "timestamp": 1677256449931
 }

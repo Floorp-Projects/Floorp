@@ -2,6 +2,21 @@
   "data": [
     {
       "click": {
+        "optIn": "div[role=dialog] > div > button",
+        "optOut": "div[role=dialog] > div > button + button",
+        "presence": "#scrollview + div"
+      },
+      "schema": 1676903765660,
+      "cookies": {},
+      "domains": [
+        "instagram.com"
+      ],
+      "filter_expression": "env.appinfo.OS != 'Android'",
+      "id": "e7112653-2ab3-4ddf-b0b1-396052c2f001",
+      "last_modified": 1677164243797
+    },
+    {
+      "click": {
         "optIn": "button#onetrust-accept-btn-handler",
         "optOut": "button#onetrust-reject-all-handler",
         "presence": "div#onetrust-consent-sdk"
@@ -5613,20 +5628,6 @@
     },
     {
       "click": {
-        "optIn": "div[role=dialog] > div > button",
-        "optOut": "div[role=dialog] > div > button + button",
-        "presence": "#scrollview + div"
-      },
-      "schema": 1670460528099,
-      "cookies": {},
-      "domains": [
-        "instagram.com"
-      ],
-      "id": "e7112653-2ab3-4ddf-b0b1-396052c2f001",
-      "last_modified": 1670498157193
-    },
-    {
-      "click": {
         "optIn": ".a8c-cookie-banner-accept-all-button",
         "presence": ".a8c-cookie-banner"
       },
@@ -7504,5 +7505,5 @@
       "last_modified": 1670498155641
     }
   ],
-  "timestamp": 1676903765562
+  "timestamp": 1677164243797
 }
