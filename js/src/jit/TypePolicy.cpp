@@ -1073,6 +1073,7 @@ bool ClampPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
   _(MixPolicy<ObjectPolicy<0>, NoFloatPolicy<1>>)                             \
   _(MixPolicy<ObjectPolicy<0>, NoFloatPolicy<2>>)                             \
   _(MixPolicy<ObjectPolicy<0>, NoFloatPolicy<3>>)                             \
+  _(MixPolicy<ObjectPolicy<0>, NoFloatPolicyAfter<1>>)                        \
   _(MixPolicy<ObjectPolicy<0>, ObjectPolicy<1>>)                              \
   _(MixPolicy<ObjectPolicy<0>, StringPolicy<1>>)                              \
   _(MixPolicy<ObjectPolicy<0>, ConvertToStringPolicy<2>>)                     \

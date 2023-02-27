@@ -635,9 +635,9 @@ extern JS_PUBLIC_API bool JS_IsNativeFunction(JSObject* funobj, JSNative call);
 /** Return whether the given function is a valid constructor. */
 extern JS_PUBLIC_API bool JS_IsConstructor(JSFunction* fun);
 
-extern JS_PUBLIC_API bool JS_IsFunctionBound(JSFunction* fun);
+extern JS_PUBLIC_API bool JS_ObjectIsBoundFunction(JSObject* obj);
 
-extern JS_PUBLIC_API JSObject* JS_GetBoundFunctionTarget(JSFunction* fun);
+extern JS_PUBLIC_API JSObject* JS_GetBoundFunctionTarget(JSObject* obj);
 
 extern JS_PUBLIC_API JSObject* JS_GetGlobalFromScript(JSScript* script);
 

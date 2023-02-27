@@ -31,12 +31,6 @@ g1.evaluate(`
 g2.evaluate(`
   const capture = g1.capture;
 
-  // Use our Function.prototype.bind, not capture.bind (which is ===
-  // g1.Function.prototype.bind) so that the generated bound function is in our
-  // compartment and has our principals.
-  const boundTrue = Function.prototype.bind.call(capture, null, true);
-  const boundFalse = Function.prototype.bind.call(capture, null, false);
-
   function getOldestFrame(stack) {
     while (stack.parent) {
       stack = stack.parent;
@@ -74,18 +68,18 @@ g2.evaluate(`
   // When the youngest frame is a self hosted frame, we get two different
   // captured stacks depending on whether or not we ignore self-hosted frames.
   //
-  // Stack: iife2 (g2) <- bound function (g2) <- capture (g1)
+  // Stack: iife2 (g2) <- Array.prototype.map <- capture (g1)
 
   (function iife2() {
-    const boundTrueStack = boundTrue();
-    dumpStack("boundTrueStack", boundTrueStack);
-    assertEq(getOldestFrame(boundTrueStack).functionDisplayName, "iife2");
-    assertEq(getOldestFrame(boundTrueStack).source, "script2.js");
+    const trueStack = [true].map(capture)[0];
+    dumpStack("trueStack", trueStack);
+    assertEq(getOldestFrame(trueStack).functionDisplayName, "iife2");
+    assertEq(getOldestFrame(trueStack).source, "script2.js");
 
-    const boundFalseStack = boundFalse();
-    dumpStack("boundFalseStack", boundFalseStack);
-    assertEq(getOldestFrame(boundFalseStack).functionDisplayName !== "iife2", true);
-    assertEq(getOldestFrame(boundFalseStack).source, "self-hosted");
+    const falseStack = [false].map(capture)[0];
+    dumpStack("falseStack", falseStack);
+    assertEq(getOldestFrame(falseStack).functionDisplayName !== "iife2", true);
+    assertEq(getOldestFrame(falseStack).source, "self-hosted");
   }());
 `, {
   fileName: "script2.js"

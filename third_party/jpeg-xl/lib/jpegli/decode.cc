@@ -104,7 +104,7 @@ void jpegli_CreateDecompress(j_decompress_ptr cinfo, int version,
   if (structsize != sizeof(*cinfo)) {
     JPEGLI_ERROR("jpeg_decompress_struct has wrong size.");
   }
-  cinfo->mem = jpegli::CreateMemoryManager();
+  jpegli::InitMemoryManager(reinterpret_cast<j_common_ptr>(cinfo));
   cinfo->is_decompressor = TRUE;
   cinfo->src = nullptr;
   cinfo->marker_list = nullptr;
@@ -389,6 +389,42 @@ JDIMENSION jpegli_read_raw_data(j_decompress_ptr cinfo, JSAMPIMAGE data,
     return iMCU_height;
   }
   return 0;
+}
+
+jvirt_barray_ptr* jpegli_read_coefficients(j_decompress_ptr cinfo) {
+  if (cinfo->global_state != jpegli::kDecHeaderDone) {
+    JPEGLI_ERROR("jpegli_read_coefficients: unexpected state %d",
+                 cinfo->global_state);
+  }
+  cinfo->global_state = jpegli::kDecProcessScan;
+  jpeg_decomp_master* m = cinfo->master;
+  while (!m->found_eoi_) {
+    int retcode = jpegli::ConsumeInput(cinfo);
+    if (retcode == JPEG_SUSPENDED) {
+      return nullptr;
+    }
+  }
+  j_common_ptr comptr = reinterpret_cast<j_common_ptr>(cinfo);
+  jvirt_barray_ptr* coef_arrays = jpegli::Allocate<jvirt_barray_ptr>(
+      cinfo, cinfo->num_components, JPOOL_IMAGE);
+  for (int c = 0; c < cinfo->num_components; ++c) {
+    size_t xsize_blocks = cinfo->comp_info[c].width_in_blocks;
+    size_t ysize_blocks = cinfo->comp_info[c].height_in_blocks;
+    coef_arrays[c] = (*cinfo->mem->request_virt_barray)(
+        comptr, JPOOL_IMAGE, FALSE, xsize_blocks, ysize_blocks, 1);
+  }
+  (*cinfo->mem->realize_virt_arrays)(comptr);
+  for (int c = 0; c < cinfo->num_components; ++c) {
+    jpeg_component_info* comp = &cinfo->comp_info[c];
+    for (size_t by = 0; by < comp->height_in_blocks; ++by) {
+      JBLOCKARRAY ba = (*cinfo->mem->access_virt_barray)(comptr, coef_arrays[c],
+                                                         by, 1, true);
+      size_t stride = comp->width_in_blocks * sizeof(JBLOCK);
+      size_t offset = by * comp->width_in_blocks * DCTSIZE2;
+      memcpy(ba[0], &m->components_[c].coeffs[offset], stride);
+    }
+  }
+  return coef_arrays;
 }
 
 boolean jpegli_finish_decompress(j_decompress_ptr cinfo) {

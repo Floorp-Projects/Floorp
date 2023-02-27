@@ -64,6 +64,9 @@ void jpegli_simple_progression(j_compress_ptr cinfo);
 
 void jpegli_suppress_tables(j_compress_ptr cinfo, boolean suppress);
 
+void jpegli_copy_critical_parameters(j_decompress_ptr srcinfo,
+                                     j_compress_ptr dstinfo);
+
 void jpegli_write_m_header(j_compress_ptr cinfo, int marker,
                            unsigned int datalen);
 
@@ -77,8 +80,16 @@ void jpegli_write_icc_profile(j_compress_ptr cinfo, const JOCTET* icc_data_ptr,
 
 void jpegli_start_compress(j_compress_ptr cinfo, boolean write_all_tables);
 
+void jpegli_write_tables(j_compress_ptr cinfo);
+
 JDIMENSION jpegli_write_scanlines(j_compress_ptr cinfo, JSAMPARRAY scanlines,
                                   JDIMENSION num_lines);
+
+JDIMENSION jpegli_write_raw_data(j_compress_ptr cinfo, JSAMPIMAGE data,
+                                 JDIMENSION num_lines);
+
+void jpegli_write_coefficients(j_compress_ptr cinfo,
+                               jvirt_barray_ptr* coef_arrays);
 
 void jpegli_finish_compress(j_compress_ptr cinfo);
 

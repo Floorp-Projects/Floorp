@@ -50,6 +50,7 @@
   IMAGINARY(Null, dummy)                                                     \
   REAL(Object, OCLASP(Plain))                                                \
   REAL(Function, &FunctionClass)                                             \
+  IMAGINARY(BoundFunction, OCLASP(BoundFunction))                            \
   REAL(Array, OCLASP(Array))                                                 \
   REAL(Boolean, OCLASP(Boolean))                                             \
   REAL(JSON, CLASP(JSON))                                                    \

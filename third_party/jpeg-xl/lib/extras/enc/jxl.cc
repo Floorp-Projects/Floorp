@@ -115,6 +115,12 @@ bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
       fprintf(stderr, "JxlEncoderSetFrameBitDepth() failed.\n");
       return false;
     }
+    if (num_alpha_channels != 0 &&
+        JXL_ENC_SUCCESS != JxlEncoderSetExtraChannelDistance(
+                               settings, 0, params.alpha_distance)) {
+      fprintf(stderr, "Setting alpha distance failed.\n");
+      return false;
+    }
     if (lossless &&
         JXL_ENC_SUCCESS != JxlEncoderSetFrameLossless(settings, JXL_TRUE)) {
       fprintf(stderr, "JxlEncoderSetFrameLossless() failed.\n");

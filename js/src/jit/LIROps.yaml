@@ -213,6 +213,14 @@
   call_instruction: true
   mir_op: true
 
+- name: NewBoundFunction
+  result_type: WordSized
+  operands:
+    target: WordSized
+  call_instruction: true
+  num_temps: 2
+  mir_op: true
+
 - name: NewObject
   gen_boilerplate: false
 
@@ -457,6 +465,11 @@
     argsObject: WordSized
   num_temps: 1
   mir_op: true
+
+- name: BoundFunctionNumArgs
+  result_type: WordSized
+  operands:
+    object: WordSized
 
 # If the Value is an Object, return unbox(Value).
 # Otherwise, return the other Object.
@@ -3178,13 +3191,6 @@
   operands:
     value: BoxedValue
   call_instruction: true
-
-- name: FinishBoundFunctionInit
-  operands:
-    bound: WordSized
-    target: WordSized
-    argCount: WordSized
-  num_temps: 2
 
 - name: IsPackedArray
   result_type: WordSized

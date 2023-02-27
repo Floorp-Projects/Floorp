@@ -21,7 +21,6 @@
 
 #include "lib/jxl/ac_context.h"
 #include "lib/jxl/ac_strategy.h"
-#include "lib/jxl/aux_out.h"
 #include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/profiler.h"
@@ -43,6 +42,8 @@
 #ifndef LIB_JXL_DEC_GROUP_CC
 #define LIB_JXL_DEC_GROUP_CC
 namespace jxl {
+
+struct AuxOut;
 
 // Interface for reading groups for DecodeGroupImpl.
 class GetBlock {

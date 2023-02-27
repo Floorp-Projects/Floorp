@@ -2,7 +2,7 @@
 
 
 The plugin may already have been installed when following the instructions from the
-[Installing section of README.md](../../README.md#installing), in which case it should
+[Installing section of BUILDING.md](../../BUILDING.md#installing), in which case it should
 already be in the correct place, e.g.
 
 ```/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders/libpixbufloader-jxl.so```

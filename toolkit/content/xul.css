@@ -267,12 +267,6 @@ iframe {
   display: inline;
 }
 
-@media (-moz-box-flexbox-emulation) {
-  *|*:root {
-    -moz-box-layout: flex;
-  }
-}
-
 /* Allow the browser to shrink below its intrinsic size, to match legacy
  * behavior */
 browser {
@@ -729,13 +723,6 @@ wizard {
   contain: inline-size;
   min-width: 40em;
   min-height: 30em;
-}
-
-.wizard-window {
-  /* TODO: This can be removed once
-   * layout.css.moz-box-flexbox-emulation.enabled
-   * is true unconditionally */
-  -moz-box-layout: flex;
 }
 
 wizard > wizardpage {

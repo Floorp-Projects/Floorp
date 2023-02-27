@@ -60,8 +60,7 @@ class FunctionFlags {
     // having a [[Construct]] internal method.
     CONSTRUCTOR = 1 << 7,
 
-    // A 'Bound Function Exotic Object' created by Function.prototype.bind.
-    BOUND_FUN = 1 << 8,
+    // (1 << 8) is unused.
 
     // Function comes from a FunctionExpression, ArrowFunction, or Function()
     // call (not a FunctionDeclaration or nonstandard function-statement).
@@ -75,11 +74,8 @@ class FunctionFlags {
     // compile time or SetFunctionName at runtime.
     HAS_INFERRED_NAME = 1 << 11,
 
-    // Function had no explicit name, but a name was guessed for it anyway. For
-    // a Bound function, tracks if atom_ already contains the "bound " prefix.
-    ATOM_EXTRA_FLAG = 1 << 12,
-    HAS_GUESSED_ATOM = ATOM_EXTRA_FLAG,
-    HAS_BOUND_FUNCTION_NAME_PREFIX = ATOM_EXTRA_FLAG,
+    // Function had no explicit name, but a name was guessed for it anyway.
+    HAS_GUESSED_ATOM = 1 << 12,
 
     // The 'length' or 'name property has been resolved. See fun_resolve.
     RESOLVED_NAME = 1 << 13,
@@ -217,22 +213,8 @@ class FunctionFlags {
   }
 
   /* Possible attributes of an interpreted function: */
-  bool isBoundFunction() const { return hasFlags(BOUND_FUN); }
   bool hasInferredName() const { return hasFlags(HAS_INFERRED_NAME); }
-  bool hasGuessedAtom() const {
-    static_assert(HAS_GUESSED_ATOM == HAS_BOUND_FUNCTION_NAME_PREFIX,
-                  "HAS_GUESSED_ATOM is unused for bound functions");
-    bool hasGuessedAtom = hasFlags(HAS_GUESSED_ATOM);
-    bool boundFun = hasFlags(BOUND_FUN);
-    return hasGuessedAtom && !boundFun;
-  }
-  bool hasBoundFunctionNamePrefix() const {
-    static_assert(
-        HAS_BOUND_FUNCTION_NAME_PREFIX == HAS_GUESSED_ATOM,
-        "HAS_BOUND_FUNCTION_NAME_PREFIX is only used for bound functions");
-    MOZ_ASSERT(isBoundFunction());
-    return hasFlags(HAS_BOUND_FUNCTION_NAME_PREFIX);
-  }
+  bool hasGuessedAtom() const { return hasFlags(HAS_GUESSED_ATOM); }
   bool isLambda() const { return hasFlags(LAMBDA); }
 
   bool isNamedLambda(bool hasName) const {
@@ -285,11 +267,6 @@ class FunctionFlags {
     return setFlags(CONSTRUCTOR);
   }
 
-  FunctionFlags& setIsBoundFunction() {
-    MOZ_ASSERT(!isBoundFunction());
-    return setFlags(BOUND_FUN);
-  }
-
   FunctionFlags& setIsSelfHostedBuiltin() {
     MOZ_ASSERT(isInterpreted());
     MOZ_ASSERT(!isSelfHostedBuiltin());
@@ -309,10 +286,6 @@ class FunctionFlags {
   FunctionFlags& setInferredName() { return setFlags(HAS_INFERRED_NAME); }
 
   FunctionFlags& setGuessedAtom() { return setFlags(HAS_GUESSED_ATOM); }
-
-  FunctionFlags& setPrefixedBoundFunctionName() {
-    return setFlags(HAS_BOUND_FUNCTION_NAME_PREFIX);
-  }
 
   FunctionFlags& setSelfHostedLazy() { return setFlags(SELFHOSTLAZY); }
   FunctionFlags& clearSelfHostedLazy() { return clearFlags(SELFHOSTLAZY); }

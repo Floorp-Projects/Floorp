@@ -5,8 +5,9 @@
 
 #include "lib/extras/dec/pgx.h"
 
-#include "gtest/gtest.h"
 #include "lib/extras/packed_image_convert.h"
+#include "lib/jxl/image_bundle.h"
+#include "lib/jxl/testing.h"
 
 namespace jxl {
 namespace extras {

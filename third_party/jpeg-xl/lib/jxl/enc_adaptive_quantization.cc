@@ -20,7 +20,6 @@
 #include <hwy/highway.h>
 
 #include "lib/jxl/ac_strategy.h"
-#include "lib/jxl/aux_out.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/profiler.h"
@@ -33,6 +32,7 @@
 #include "lib/jxl/convolve.h"
 #include "lib/jxl/dec_cache.h"
 #include "lib/jxl/dec_group.h"
+#include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_butteraugli_comparator.h"
 #include "lib/jxl/enc_cache.h"
 #include "lib/jxl/enc_group.h"

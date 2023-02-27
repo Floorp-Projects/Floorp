@@ -379,7 +379,7 @@ JXL_EXPORT void JxlDecoderSkipFrames(JxlDecoder* dec, size_t amount);
 /**
  * Skips processing the current frame. Can be called after frame processing
  * already started, signaled by a @ref JXL_DEC_NEED_IMAGE_OUT_BUFFER event,
- * but before the corrsponding @ref JXL_DEC_FULL_IMAGE event. The next signaled
+ * but before the corresponding @ref JXL_DEC_FULL_IMAGE event. The next signaled
  * event will be another @ref JXL_DEC_FRAME, or @ref JXL_DEC_SUCCESS if there
  * are no more frames. If pixel data is required from the already processed part
  * of the frame, @ref JxlDecoderFlushImage must be called before this.
@@ -835,7 +835,7 @@ JXL_EXPORT JxlDecoderStatus JxlDecoderSetDesiredIntensityTarget(
  * behavior is as follows:
  *
  * If a color management system (CMS) has been set with @ref JxlDecoderSetCms,
- * and the CMS suppports output to the desired color encoding or ICC profile,
+ * and the CMS supports output to the desired color encoding or ICC profile,
  * then it will provide the output in that color encoding or ICC profile. If the
  * desired color encoding or the ICC is not supported, then an error will be
  * returned.
@@ -884,7 +884,7 @@ JXL_EXPORT JxlDecoderStatus JxlDecoderSetOutputColorProfile(
  */
 JXL_EXPORT void JxlDecoderSetCms(JxlDecoder* dec, JxlCmsInterface cms);
 // TODO(firsching): add a function JxlDecoderSetDefaultCms() for setting a
-// default in case libjxl is build with an CMS.
+// default in case libjxl is build with a CMS.
 
 /**
  * Returns the minimum size in bytes of the preview image output pixel buffer
@@ -1293,7 +1293,7 @@ JXL_EXPORT JxlDecoderStatus JxlDecoderSetDecompressBoxes(JxlDecoder* dec,
                                                          JXL_BOOL decompress);
 
 /**
- * Outputs the type of the current box, after a @ref JXL_DEC_BOX event occured,
+ * Outputs the type of the current box, after a @ref JXL_DEC_BOX event occurred,
  * as 4 characters without null termination character. In case of a compressed
  * "brob" box, this will return "brob" if the decompressed argument is
  * JXL_FALSE, or the underlying box type if the decompressed argument is

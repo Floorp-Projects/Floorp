@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :root {
-  -moz-box-layout: flex;
   --addon-icon-size: 32px;
   --card-border-zap-gradient: linear-gradient(90deg, #9059FF 0%, #FF4AA2 52.08%, #FFBD4F 100%);
   --main-margin-start: 28px;

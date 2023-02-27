@@ -29,90 +29,29 @@ and 18181-4 is the [reference software](https://github.com/libjxl/libjxl).
 
 The library API, command line options, and tools in this repository are subject
 to change, however files encoded with `cjxl` conform to the JPEG XL specification
-and can be decoded with current and future `djxl` decoders or `libjxl` decoding library.
+and can be decoded with current and future `djxl` decoders or the `libjxl` decoding library.
 
-## Compilation
+## Installation
 
-For more details and other workflows see the "Advanced guide" below.
+In most Linux distributions, installing `libjxl` is just a matter of using the package management system.
+For example in Debian-based distributions: `apt install libjxl-tools` will install `cjxl` and `djxl`
+and other tools like `benchmark_xl` are available in the package `libjxl-devtools`.
+On MacOS, you can use [Homebrew](https://brew.sh/): `brew install jpeg-xl`.
 
-### Checking out the code
+[![libjxl packaging status](https://repology.org/badge/vertical-allrepos/libjxl.svg?exclude_unsupported=1&columns=3&exclude_sources=modules,site&header=libjxl%20packaging%20status)](https://repology.org/project/libjxl/versions)
 
-```bash
-git clone https://github.com/libjxl/libjxl.git --recursive --shallow-submodules
-```
 
-This repository uses git submodules to handle some third party dependencies
-under `third_party`, that's why is important to pass `--recursive`. If you
-didn't check out with `--recursive`, or any submodule has changed, run:
+For Windows, binaries can be downloaded from the [releases page](https://github.com/libjxl/libjxl/releases/).
 
-```bash
-git submodule update --init --recursive --depth 1 --recommend-shallow
-```
+Of course you can also [build libjxl from sources](BUILDING.md).
 
-The `--shallow-submodules` and `--depth 1 --recommend-shallow` options create
-shallow clones which only downloads the commits requested, and is all that is
-needed to build `libjxl`. Should full clones be necessary, you could always run:
-
-```bash
-git submodule foreach git fetch --unshallow
-git submodule update --init --recursive
-```
-
-which pulls the rest of the commits in the submodules.
-
-Important: If you downloaded a zip file or tarball from the web interface you
-won't get the needed submodules and the code will not compile. You can download
-these external dependencies from source running `./deps.sh`. The git workflow
-described above is recommended instead.
-
-### Installing dependencies
-
-Required dependencies for compiling the code, in a Debian/Ubuntu based
-distribution run:
-
-```bash
-sudo apt install cmake pkg-config libbrotli-dev
-```
-
-Optional dependencies for supporting other formats in the `cjxl`/`djxl` tools,
-in a Debian/Ubuntu based distribution run:
-
-```bash
-sudo apt install libgif-dev libjpeg-dev libopenexr-dev libpng-dev libwebp-dev
-```
-
-We recommend using a recent Clang compiler (version 7 or newer), for that
-install clang and set `CC` and `CXX` variables.
-
-```bash
-sudo apt install clang
-export CC=clang CXX=clang++
-```
-
-### Building
-
-```bash
-cd libjxl
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF ..
-cmake --build . -- -j$(nproc)
-```
-
-The encoder/decoder tools will be available in the `build/tools` directory.
-
-### <a name="installing"></a> Installing
-
-```bash
-sudo cmake --install .
-```
 
 ## Usage
 
 To encode a source image to JPEG XL with default settings:
 
 ```bash
-build/tools/cjxl input.png output.jxl
+cjxl input.png output.jxl
 ```
 
 The desired visual fidelity can be selected using the `--distance` parameter
@@ -120,20 +59,20 @@ The desired visual fidelity can be selected using the `--distance` parameter
 or using `--quality` (on a scale from 0 to 100, roughly matching libjpeg).
 The [encode effort](doc/encode_effort.md) can be selected using the `--effort` parameter.
 
-For more settings run `build/tools/cjxl --help` or for a full list of options
-run `build/tools/cjxl -v -v --help`.
+For more settings run `cjxl --help` or for a full list of options
+run `cjxl -v -v --help`.
 
 To decode a JPEG XL file run:
 
 ```bash
-build/tools/djxl input.jxl output.png
+djxl input.jxl output.png
 ```
 
 When possible `cjxl`/`djxl` are able to read/write the following
 image formats: .exr, .gif, .jpeg/.jpg, .pfm, .pgm/.ppm, .pgx, .png.
 Specifically for JPEG files, the default `cjxl` behavior is to apply lossless
 recompression and the default `djxl` behavior is to reconstruct the original
-JPEG file.
+JPEG file (when the extension of the output file is .jpg).
 
 ### Benchmarking
 
@@ -151,26 +90,6 @@ Besides the `libjxl` library [API documentation](https://libjxl.readthedocs.io/e
 there are [example applications](examples/) and [plugins](plugins/) that can be used as a reference or
 starting point for developers who wish to integrate `libjxl` in their project.
 
-## Advanced guide
-
-### Building with Docker
-
-We build a common environment based on Debian/Ubuntu using Docker. Other
-systems may have different combinations of versions and dependencies that
-have not been tested and may not work. For those cases we recommend using the
-Docker container as explained in the
-[step by step guide](doc/developing_in_docker.md).
-
-### Building JPEG XL for developers
-
-For experienced developers, we provide build instructions for several other environments:
-
-*   [Building on Debian](doc/developing_in_debian.md)
-*   Building on Windows with [vcpkg](doc/developing_in_windows_vcpkg.md) (Visual Studio 2019)
-*   Building on Windows with [MSYS2](doc/developing_in_windows_msys.md)
-*   [Cross Compiling for Windows with Crossroad](doc/developing_with_crossroad.md)
-
-If you encounter any difficulties, please use Docker instead.
 
 ## License
 

@@ -10,13 +10,14 @@
 
 #include <stddef.h>
 
-#include "lib/jxl/aux_out_fwd.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/enc_bit_writer.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/noise.h"
 
 namespace jxl {
+
+struct AuxOut;
 
 // Get parameters of the noise for NoiseParams model
 // Returns whether a valid noise model (with HasAny()) is set.

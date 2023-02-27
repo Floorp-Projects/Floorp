@@ -3291,6 +3291,43 @@ class MInlineArgumentsSlice
   bool possiblyCalls() const override { return true; }
 };
 
+// Allocates a new BoundFunctionObject and calls
+// BoundFunctionObject::functionBindImpl. This instruction can have arbitrary
+// side-effects because the GetProperty calls for length/name can call into JS.
+class MNewBoundFunction
+    : public MVariadicInstruction,
+      public MixPolicy<ObjectPolicy<0>, NoFloatPolicyAfter<1>>::Data {
+  CompilerGCPointer<JSObject*> templateObj_;
+
+  explicit MNewBoundFunction(JSObject* templateObj)
+      : MVariadicInstruction(classOpcode), templateObj_(templateObj) {
+    setResultType(MIRType::Object);
+  }
+
+  // The target object is operand 0.
+  static const size_t NumNonArgumentOperands = 1;
+
+ public:
+  INSTRUCTION_HEADER(NewBoundFunction)
+  static MNewBoundFunction* New(TempAllocator& alloc, MDefinition* target,
+                                uint32_t argc, JSObject* templateObj);
+  NAMED_OPERANDS((0, target))
+
+  JSObject* templateObject() const { return templateObj_; }
+
+  MDefinition* getArg(uint32_t idx) const {
+    return getOperand(idx + NumNonArgumentOperands);
+  }
+  void initArg(size_t i, MDefinition* arg) {
+    initOperand(NumNonArgumentOperands + i, arg);
+  }
+  uint32_t numStackArgs() const {
+    return numOperands() - NumNonArgumentOperands;
+  }
+
+  bool possiblyCalls() const override { return true; }
+};
+
 class MToFPInstruction : public MUnaryInstruction, public ToDoublePolicy::Data {
  public:
   // Types of values which can be converted.

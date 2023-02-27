@@ -166,6 +166,7 @@ class DebuggerObject : public NativeObject {
   bool isFunction() const;
   bool isDebuggeeFunction() const;
   bool isBoundFunction() const;
+  bool isDebuggeeBoundFunction() const;
   bool isArrowFunction() const;
   bool isAsyncFunction() const;
   bool isGeneratorFunction() const;

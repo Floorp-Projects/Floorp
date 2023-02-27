@@ -1951,6 +1951,14 @@ bool IonCacheIRCompiler::emitCallScriptedFunction(ObjOperandId calleeId,
   MOZ_CRASH("Call ICs not used in ion");
 }
 
+bool IonCacheIRCompiler::emitCallBoundScriptedFunction(ObjOperandId calleeId,
+                                                       ObjOperandId targetId,
+                                                       Int32OperandId argcId,
+                                                       CallFlags flags,
+                                                       uint32_t numBoundArgs) {
+  MOZ_CRASH("Call ICs not used in ion");
+}
+
 bool IonCacheIRCompiler::emitCallWasmFunction(
     ObjOperandId calleeId, Int32OperandId argcId, CallFlags flags,
     uint32_t argcFixed, uint32_t funcExportOffset, uint32_t instanceOffset) {
@@ -2001,6 +2009,12 @@ bool IonCacheIRCompiler::emitCallInlinedFunction(ObjOperandId calleeId,
                                                  uint32_t icScriptOffset,
                                                  CallFlags flags,
                                                  uint32_t argcFixed) {
+  MOZ_CRASH("Call ICs not used in ion");
+}
+
+bool IonCacheIRCompiler::emitBindFunctionResult(ObjOperandId targetId,
+                                                uint32_t argc,
+                                                uint32_t templateObjectOffset) {
   MOZ_CRASH("Call ICs not used in ion");
 }
 

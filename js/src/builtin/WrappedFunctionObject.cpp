@@ -23,6 +23,7 @@
 #include "vm/JSFunction.h"
 #include "vm/ObjectOperations.h"
 
+#include "vm/JSFunction-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/Realm-inl.h"
 
@@ -150,16 +151,16 @@ static bool CopyNameAndLength(JSContext* cx, HandleObject fun,
   // 3. Let targetHasLength be ? HasOwnProperty(Target, "length").
   //
   // Try to avoid invoking the resolve hook.
-  // Also see JSFunction::finishBoundFunctionInit().
+  // Also see ComputeLengthValue in BoundFunctionObject.cpp.
   if (target->is<JSFunction>() &&
       !target->as<JSFunction>().hasResolvedLength()) {
-    Rooted<Value> targetLen(cx);
+    uint16_t targetLen;
     if (!JSFunction::getUnresolvedLength(cx, target.as<JSFunction>(),
                                          &targetLen)) {
       return false;
     }
 
-    length = std::max(0.0, targetLen.toNumber() - argCount);
+    length = std::max(0.0, double(targetLen) - argCount);
   } else {
     Rooted<jsid> lengthId(cx, NameToId(cx->names().length));
 
@@ -201,10 +202,8 @@ static bool CopyNameAndLength(JSContext* cx, HandleObject fun,
   // Try to avoid invoking the resolve hook.
   Rooted<Value> targetName(cx);
   if (target->is<JSFunction>() && !target->as<JSFunction>().hasResolvedName()) {
-    if (!JSFunction::getUnresolvedName(cx, target.as<JSFunction>(),
-                                       &targetName)) {
-      return false;
-    }
+    JSFunction* targetFun = &target->as<JSFunction>();
+    targetName.setString(targetFun->infallibleGetUnresolvedName(cx));
   } else {
     if (!GetProperty(cx, target, target, cx->names().name, &targetName)) {
       return false;

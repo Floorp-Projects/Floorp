@@ -10,6 +10,9 @@
 
 namespace jxl {
 
+struct AuxOut;
+struct BitWriter;
+
 Status DequantMatricesEncode(
     const DequantMatrices* matrices, BitWriter* writer, size_t layer,
     AuxOut* aux_out, ModularFrameEncoder* modular_frame_encoder = nullptr);
@@ -20,7 +23,7 @@ Status DequantMatricesEncodeDC(const DequantMatrices* matrices,
 // precision.
 void DequantMatricesSetCustomDC(DequantMatrices* matrices, const float* dc);
 
-void DequantMatricesScaleDC(DequantMatrices* matrices, const float scale);
+void DequantMatricesScaleDC(DequantMatrices* matrices, float scale);
 
 void DequantMatricesSetCustom(DequantMatrices* matrices,
                               const std::vector<QuantEncoding>& encodings,

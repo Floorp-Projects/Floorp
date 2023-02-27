@@ -5,7 +5,6 @@
 
 #include "lib/jxl/headers.h"
 
-#include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/fields.h"
 
@@ -190,11 +189,6 @@ Status AnimationHeader::VisitFields(Visitor* JXL_RESTRICT visitor) {
 Status ReadSizeHeader(BitReader* JXL_RESTRICT reader,
                       SizeHeader* JXL_RESTRICT size) {
   return Bundle::Read(reader, size);
-}
-
-Status WriteSizeHeader(const SizeHeader& size, BitWriter* JXL_RESTRICT writer,
-                       size_t layer, AuxOut* aux_out) {
-  return Bundle::Write(size, writer, layer, aux_out);
 }
 
 }  // namespace jxl

@@ -11,12 +11,14 @@
 
 #include <vector>
 
-#include "lib/jxl/aux_out.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
+#include "lib/jxl/coeff_order_fwd.h"
 #include "lib/jxl/enc_bit_writer.h"
 
 namespace jxl {
+
+struct AuxOut;
 
 // Writes the group offsets. If the permutation vector is nullptr, the identity
 // permutation will be used.

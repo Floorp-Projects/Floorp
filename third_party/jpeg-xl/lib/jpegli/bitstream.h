@@ -21,15 +21,17 @@ void EncodeAPP0(j_compress_ptr cinfo);
 void EncodeAPP14(j_compress_ptr cinfo);
 void EncodeSOF(j_compress_ptr cinfo);
 void EncodeSOS(j_compress_ptr cinfo, int scan_index);
-void EncodeDHT(j_compress_ptr cinfo,
-               const std::vector<JPEGHuffmanCode>& huffman_code,
-               size_t* next_huffman_code, size_t num_huffman_codes);
+void EncodeDHT(j_compress_ptr cinfo, const JPEGHuffmanCode* huffman_codes,
+               size_t num_huffman_codes);
 void EncodeDQT(j_compress_ptr cinfo);
 bool EncodeDRI(j_compress_ptr cinfo);
 
 bool EncodeScan(j_compress_ptr cinfo,
-                const std::vector<std::vector<jpegli::coeff_t>>& coeffs,
+                const std::vector<std::vector<coeff_t>>& coeffs,
                 int scan_index);
+
+void EncodeSingleScan(j_compress_ptr cinfo,
+                      const std::vector<std::vector<coeff_t>>& coeffs);
 
 }  // namespace jpegli
 

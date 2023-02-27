@@ -5,7 +5,7 @@
 
 #include "lib/jxl/base/bits.h"
 
-#include "gtest/gtest.h"
+#include "lib/jxl/testing.h"
 
 namespace jxl {
 namespace {

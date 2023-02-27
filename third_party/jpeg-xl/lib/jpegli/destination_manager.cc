@@ -82,9 +82,6 @@ struct MemoryDestinationManager {
 }  // namespace jpegli
 
 void jpegli_stdio_dest(j_compress_ptr cinfo, FILE* outfile) {
-  if (cinfo->dest != nullptr) {
-    JPEGLI_ERROR("jpeg_stdio_dest: destination manager is already set");
-  }
   jpegli::StdioDestinationManager* dest =
       jpegli::Allocate<jpegli::StdioDestinationManager>(cinfo, 1);
   dest->f = outfile;
@@ -101,9 +98,6 @@ void jpegli_stdio_dest(j_compress_ptr cinfo, FILE* outfile) {
 
 void jpegli_mem_dest(j_compress_ptr cinfo, unsigned char** outbuffer,
                      unsigned long* outsize) {
-  if (cinfo->dest != nullptr) {
-    JPEGLI_ERROR("jpegli_mem_dest: destination manager is already set");
-  }
   jpegli::MemoryDestinationManager* dest =
       jpegli::Allocate<jpegli::MemoryDestinationManager>(cinfo, 1);
   dest->pub.init_destination = jpegli::init_destination;

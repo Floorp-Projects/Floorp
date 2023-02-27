@@ -3,15 +3,14 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#include <setjmp.h>
 #include <stdio.h>
 
 #include <cmath>
 #include <vector>
 
-#include "gtest/gtest.h"
 #include "lib/jpegli/decode.h"
 #include "lib/jpegli/test_utils.h"
+#include "lib/jpegli/testing.h"
 #include "lib/jxl/base/byte_order.h"
 #include "lib/jxl/base/file_io.h"
 #include "lib/jxl/base/status.h"
@@ -233,7 +232,7 @@ TEST_P(DecodeAPITestParam, TestAPI) {
                                    chunk_size);
   SuspendingSourceManager src_susp(compressed.data(), compressed.size(),
                                    chunk_size);
-  std::string jpg_full_path = std::string(TEST_DATA_PATH "/") + config.fn;
+  std::string jpg_full_path = GetTestDataPath(config.fn);
   jxl::FileWrapper testfile(jpg_full_path, "rb");
   ASSERT_TRUE(testfile != nullptr);
   if (config.source_mgr == SOURCE_MGR_CHUNKED) {

@@ -3,28 +3,84 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-# Source files definitions for GN-based build systems.
+# This file is generated, do not modify by manually.
+# Run `tools/scripts/build_cleaner.py --update` to regenerate it.
 
-# Library version macros
-libjxl_version_defines = [
-    "JPEGXL_MAJOR_VERSION=0",
-    "JPEGXL_MINOR_VERSION=9",
-    "JPEGXL_PATCH_VERSION=0",
+libjxl_codec_apng_sources = [
+    "extras/dec/apng.cc",
+    "extras/dec/apng.h",
+    "extras/enc/apng.cc",
+    "extras/enc/apng.h",
 ]
 
-libjxl_public_headers = [
-    "include/jxl/butteraugli.h",
-    "include/jxl/butteraugli_cxx.h",
-    "include/jxl/cms_interface.h",
-    "include/jxl/codestream_header.h",
-    "include/jxl/color_encoding.h",
-    "include/jxl/decode.h",
-    "include/jxl/decode_cxx.h",
-    "include/jxl/encode.h",
-    "include/jxl/encode_cxx.h",
-    "include/jxl/memory_manager.h",
-    "include/jxl/parallel_runner.h",
-    "include/jxl/types.h",
+libjxl_codec_exr_sources = [
+    "extras/dec/exr.cc",
+    "extras/dec/exr.h",
+    "extras/enc/exr.cc",
+    "extras/enc/exr.h",
+]
+
+libjxl_codec_gif_sources = [
+    "extras/dec/gif.cc",
+    "extras/dec/gif.h",
+]
+
+libjxl_codec_jpegli_sources = [
+    "extras/dec/jpegli.cc",
+    "extras/dec/jpegli.h",
+    "extras/enc/jpegli.cc",
+    "extras/enc/jpegli.h",
+]
+
+libjxl_codec_jpg_sources = [
+    "extras/dec/jpg.cc",
+    "extras/dec/jpg.h",
+    "extras/enc/jpg.cc",
+    "extras/enc/jpg.h",
+]
+
+libjxl_codec_jxl_sources = [
+    "extras/dec/jxl.cc",
+    "extras/dec/jxl.h",
+    "extras/enc/jxl.cc",
+    "extras/enc/jxl.h",
+]
+
+libjxl_codec_npy_sources = [
+    "extras/enc/npy.cc",
+    "extras/enc/npy.h",
+]
+
+libjxl_codec_pgx_sources = [
+    "extras/dec/pgx.cc",
+    "extras/dec/pgx.h",
+    "extras/enc/pgx.cc",
+    "extras/enc/pgx.h",
+]
+
+libjxl_codec_pnm_sources = [
+    "extras/dec/pnm.cc",
+    "extras/dec/pnm.h",
+    "extras/enc/pnm.cc",
+    "extras/enc/pnm.h",
+]
+
+libjxl_dec_box_sources = [
+    "jxl/box_content_decoder.cc",
+    "jxl/box_content_decoder.h",
+]
+
+libjxl_dec_jpeg_sources = [
+    "jxl/decode_to_jpeg.cc",
+    "jxl/decode_to_jpeg.h",
+    "jxl/jpeg/dec_jpeg_data.cc",
+    "jxl/jpeg/dec_jpeg_data.h",
+    "jxl/jpeg/dec_jpeg_data_writer.cc",
+    "jxl/jpeg/dec_jpeg_data_writer.h",
+    "jxl/jpeg/dec_jpeg_output_chunk.h",
+    "jxl/jpeg/dec_jpeg_serialization_state.h",
+    "jxl/jpeg/jpeg_data.cc",
+    "jxl/jpeg/jpeg_data.h",
 ]
 
 libjxl_dec_sources = [
@@ -36,9 +92,6 @@ libjxl_dec_sources = [
     "jxl/ans_common.cc",
     "jxl/ans_common.h",
     "jxl/ans_params.h",
-    "jxl/aux_out.cc",
-    "jxl/aux_out.h",
-    "jxl/aux_out_fwd.h",
     "jxl/base/arch_macros.h",
     "jxl/base/bits.h",
     "jxl/base/byte_order.h",
@@ -64,8 +117,6 @@ libjxl_dec_sources = [
     "jxl/base/thread_pool_internal.h",
     "jxl/blending.cc",
     "jxl/blending.h",
-    "jxl/box_content_decoder.cc",
-    "jxl/box_content_decoder.h",
     "jxl/chroma_from_luma.cc",
     "jxl/chroma_from_luma.h",
     "jxl/codec_in_out.h",
@@ -120,10 +171,6 @@ libjxl_dec_sources = [
     "jxl/dec_xyb.cc",
     "jxl/dec_xyb.h",
     "jxl/decode.cc",
-    "jxl/decode_to_jpeg.cc",
-    "jxl/decode_to_jpeg.h",
-    "jxl/enc_bit_writer.cc",
-    "jxl/enc_bit_writer.h",
     "jxl/entropy_coder.cc",
     "jxl/entropy_coder.h",
     "jxl/epf.cc",
@@ -161,14 +208,6 @@ libjxl_dec_sources = [
     "jxl/image_metadata.cc",
     "jxl/image_metadata.h",
     "jxl/image_ops.h",
-    "jxl/jpeg/dec_jpeg_data.cc",
-    "jxl/jpeg/dec_jpeg_data.h",
-    "jxl/jpeg/dec_jpeg_data_writer.cc",
-    "jxl/jpeg/dec_jpeg_data_writer.h",
-    "jxl/jpeg/dec_jpeg_output_chunk.h",
-    "jxl/jpeg/dec_jpeg_serialization_state.h",
-    "jxl/jpeg/jpeg_data.cc",
-    "jxl/jpeg/jpeg_data.h",
     "jxl/jxl_inspection.h",
     "jxl/lehmer_code.h",
     "jxl/loop_filter.cc",
@@ -244,7 +283,6 @@ libjxl_dec_sources = [
     "jxl/render_pipeline/stage_xyb.h",
     "jxl/render_pipeline/stage_ycbcr.cc",
     "jxl/render_pipeline/stage_ycbcr.h",
-    "jxl/render_pipeline/test_render_pipeline_stages.h",
     "jxl/sanitizers.h",
     "jxl/simd_util-inl.h",
     "jxl/size_constraints.h",
@@ -270,6 +308,10 @@ libjxl_enc_sources = [
     "jxl/enc_ans_params.h",
     "jxl/enc_ar_control_field.cc",
     "jxl/enc_ar_control_field.h",
+    "jxl/enc_aux_out.cc",
+    "jxl/enc_aux_out.h",
+    "jxl/enc_bit_writer.cc",
+    "jxl/enc_bit_writer.h",
     "jxl/enc_butteraugli_comparator.cc",
     "jxl/enc_butteraugli_comparator.h",
     "jxl/enc_butteraugli_pnorm.cc",
@@ -298,6 +340,8 @@ libjxl_enc_sources = [
     "jxl/enc_external_image.h",
     "jxl/enc_fast_lossless.cc",
     "jxl/enc_fast_lossless.h",
+    "jxl/enc_fields.cc",
+    "jxl/enc_fields.h",
     "jxl/enc_file.cc",
     "jxl/enc_file.h",
     "jxl/enc_frame.cc",
@@ -368,6 +412,33 @@ libjxl_enc_sources = [
     "jxl/modular/transform/enc_transform.h",
 ]
 
+libjxl_extras_for_tools_sources = [
+    "extras/codec.cc",
+    "extras/codec.h",
+    "extras/hlg.cc",
+    "extras/hlg.h",
+    "extras/packed_image_convert.cc",
+    "extras/packed_image_convert.h",
+    "extras/tone_mapping.cc",
+    "extras/tone_mapping.h",
+]
+
+libjxl_extras_sources = [
+    "extras/dec/color_description.cc",
+    "extras/dec/color_description.h",
+    "extras/dec/color_hints.cc",
+    "extras/dec/color_hints.h",
+    "extras/dec/decode.cc",
+    "extras/dec/decode.h",
+    "extras/enc/encode.cc",
+    "extras/enc/encode.h",
+    "extras/exif.cc",
+    "extras/exif.h",
+    "extras/packed_image.h",
+    "extras/time.cc",
+    "extras/time.h",
+]
+
 libjxl_gbench_sources = [
     "extras/tone_mapping_gbench.cc",
     "jxl/dec_external_image_gbench.cc",
@@ -377,7 +448,109 @@ libjxl_gbench_sources = [
     "jxl/tf_gbench.cc",
 ]
 
-libjxl_tests_sources = [
+libjxl_jpegli_sources = [
+    "jpegli/adaptive_quantization.cc",
+    "jpegli/adaptive_quantization.h",
+    "jpegli/bitstream.cc",
+    "jpegli/bitstream.h",
+    "jpegli/color_transform.cc",
+    "jpegli/color_transform.h",
+    "jpegli/common.cc",
+    "jpegli/common.h",
+    "jpegli/common_internal.h",
+    "jpegli/dct.cc",
+    "jpegli/dct.h",
+    "jpegli/decode.cc",
+    "jpegli/decode.h",
+    "jpegli/decode_internal.h",
+    "jpegli/decode_marker.cc",
+    "jpegli/decode_marker.h",
+    "jpegli/decode_scan.cc",
+    "jpegli/decode_scan.h",
+    "jpegli/destination_manager.cc",
+    "jpegli/encode.cc",
+    "jpegli/encode.h",
+    "jpegli/encode_internal.h",
+    "jpegli/entropy_coding.cc",
+    "jpegli/entropy_coding.h",
+    "jpegli/error.cc",
+    "jpegli/error.h",
+    "jpegli/huffman.cc",
+    "jpegli/huffman.h",
+    "jpegli/idct.cc",
+    "jpegli/idct.h",
+    "jpegli/memory_manager.cc",
+    "jpegli/memory_manager.h",
+    "jpegli/quant.cc",
+    "jpegli/quant.h",
+    "jpegli/render.cc",
+    "jpegli/render.h",
+    "jpegli/source_manager.cc",
+    "jpegli/source_manager.h",
+    "jpegli/upsample.cc",
+    "jpegli/upsample.h",
+]
+
+libjxl_jpegli_testlib_files = [
+    "jpegli/test_utils.cc",
+    "jpegli/test_utils.h",
+]
+
+libjxl_jpegli_tests = [
+    "jpegli/decode_api_test.cc",
+    "jpegli/encode_api_test.cc",
+    "jpegli/transcode_api_test.cc",
+]
+
+libjxl_jpegli_wrapper_sources = [
+    "jpegli/libjpeg_wrapper.cc",
+]
+
+libjxl_major_version = 0
+
+libjxl_minor_version = 9
+
+libjxl_patch_version = 0
+
+libjxl_profiler_sources = [
+    "profiler/profiler.cc",
+    "profiler/profiler.h",
+    "profiler/tsc_timer.h",
+]
+
+libjxl_public_headers = [
+    "include/jxl/butteraugli.h",
+    "include/jxl/butteraugli_cxx.h",
+    "include/jxl/cms_interface.h",
+    "include/jxl/codestream_header.h",
+    "include/jxl/color_encoding.h",
+    "include/jxl/decode.h",
+    "include/jxl/decode_cxx.h",
+    "include/jxl/encode.h",
+    "include/jxl/encode_cxx.h",
+    "include/jxl/memory_manager.h",
+    "include/jxl/parallel_runner.h",
+    "include/jxl/types.h",
+]
+
+libjxl_testlib_files = [
+    "jxl/dct_for_test.h",
+    "jxl/dec_transforms_testonly.cc",
+    "jxl/dec_transforms_testonly.h",
+    "jxl/fake_parallel_runner_testonly.h",
+    "jxl/image_test_utils.h",
+    "jxl/render_pipeline/test_render_pipeline_stages.h",
+    "jxl/test_image.cc",
+    "jxl/test_image.h",
+    "jxl/test_utils.cc",
+    "jxl/test_utils.h",
+]
+
+libjxl_tests = [
+    "extras/codec_test.cc",
+    "extras/dec/color_description_test.cc",
+    "extras/dec/pgx_test.cc",
+    "extras/jpegli_test.cc",
     "jxl/ac_strategy_test.cc",
     "jxl/alpha_test.cc",
     "jxl/ans_common_test.cc",
@@ -430,65 +603,7 @@ libjxl_tests_sources = [
     "jxl/splines_test.cc",
     "jxl/toc_test.cc",
     "jxl/xorshift128plus_test.cc",
-]
-
-# Test-only library code.
-libjxl_testlib_sources = [
-    "jxl/dct_for_test.h",
-    "jxl/dec_transforms_testonly.cc",
-    "jxl/dec_transforms_testonly.h",
-    "jxl/fake_parallel_runner_testonly.h",
-    "jxl/image_test_utils.h",
-    "jxl/test_image.h",
-    "jxl/test_utils.h",
-    "jxl/testdata.h",
-]
-
-libjxl_extras_sources = [
-    "extras/codec.cc",
-    "extras/codec.h",
-    "extras/dec/color_description.cc",
-    "extras/dec/color_description.h",
-    "extras/dec/color_hints.cc",
-    "extras/dec/color_hints.h",
-    "extras/dec/decode.cc",
-    "extras/dec/decode.h",
-    "extras/dec/jxl.cc",
-    "extras/dec/jxl.h",
-    "extras/dec/pgx.cc",
-    "extras/dec/pgx.h",
-    "extras/dec/pnm.cc",
-    "extras/dec/pnm.h",
-    "extras/enc/encode.cc",
-    "extras/enc/encode.h",
-    "extras/enc/jxl.cc",
-    "extras/enc/jxl.h",
-    "extras/enc/npy.cc",
-    "extras/enc/npy.h",
-    "extras/enc/pgx.cc",
-    "extras/enc/pgx.h",
-    "extras/enc/pnm.cc",
-    "extras/enc/pnm.h",
-    "extras/exif.cc",
-    "extras/exif.h",
-    "extras/hlg.cc",
-    "extras/hlg.h",
-    "extras/packed_image.h",
-    "extras/packed_image_convert.cc",
-    "extras/packed_image_convert.h",
-    "extras/render_hdr.cc",
-    "extras/render_hdr.h",
-    "extras/time.cc",
-    "extras/time.h",
-    "extras/tone_mapping.cc",
-    "extras/tone_mapping.h",
-]
-
-libjxl_threads_sources = [
-    "threads/resizable_parallel_runner.cc",
-    "threads/thread_parallel_runner.cc",
-    "threads/thread_parallel_runner_internal.cc",
-    "threads/thread_parallel_runner_internal.h",
+    "threads/thread_parallel_runner_test.cc",
 ]
 
 libjxl_threads_public_headers = [
@@ -498,8 +613,9 @@ libjxl_threads_public_headers = [
     "include/jxl/thread_parallel_runner_cxx.h",
 ]
 
-libjxl_profiler_sources = [
-    "profiler/profiler.cc",
-    "profiler/profiler.h",
-    "profiler/tsc_timer.h",
+libjxl_threads_sources = [
+    "threads/resizable_parallel_runner.cc",
+    "threads/thread_parallel_runner.cc",
+    "threads/thread_parallel_runner_internal.cc",
+    "threads/thread_parallel_runner_internal.h",
 ]

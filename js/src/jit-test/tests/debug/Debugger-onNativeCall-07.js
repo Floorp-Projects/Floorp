@@ -27,7 +27,7 @@ Reflect.apply(dateNow, null, []);
 assertEqArray(rv, [
   "call", "dateNow",
   "apply", "dateNow",
-  "bind", "call", "call", "call", "dateNow",
-  "bind", "apply", "apply", "apply", "dateNow",
+  "bind", "bound call", "call", "call", "dateNow",
+  "bind", "bound apply", "apply", "apply", "dateNow",
   "apply", "dateNow",
 ]);

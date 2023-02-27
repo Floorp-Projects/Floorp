@@ -513,6 +513,7 @@ enum class GuardClassKind : uint8_t {
   UnmappedArguments,
   WindowProxy,
   JSFunction,
+  BoundFunction,
   Set,
   Map,
 };

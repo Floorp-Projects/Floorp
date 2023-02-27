@@ -5,8 +5,9 @@
 
 #include "lib/jxl/image_bundle.h"
 
-#include "gtest/gtest.h"
-#include "lib/jxl/aux_out.h"
+#include "lib/jxl/enc_aux_out.h"
+#include "lib/jxl/enc_bit_writer.h"
+#include "lib/jxl/testing.h"
 
 namespace jxl {
 namespace {
@@ -23,7 +24,7 @@ TEST(ImageBundleTest, ExtraChannelName) {
   metadata.extra_channel_info.push_back(std::move(eci));
   ASSERT_TRUE(WriteImageMetadata(metadata, &writer, /*layer=*/0, &aux_out));
   writer.ZeroPadToByte();
-  ReclaimAndCharge(&writer, &allotment, /*layer=*/0, &aux_out);
+  allotment.ReclaimAndCharge(&writer, /*layer=*/0, &aux_out);
 
   BitReader reader(writer.GetSpan());
   ImageMetadata metadata_out;

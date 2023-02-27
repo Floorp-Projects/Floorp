@@ -6,6 +6,7 @@
 #include "lib/jxl/enc_photon_noise.h"
 
 #include "lib/jxl/test_utils.h"
+#include "lib/jxl/testing.h"
 
 namespace jxl {
 namespace {

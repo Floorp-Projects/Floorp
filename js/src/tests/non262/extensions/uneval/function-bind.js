@@ -15,11 +15,11 @@ print(BUGNUMBER + ": " + summary);
  * BEGIN TEST *
  **************/
 
-assertEq((function unbound(){"body"}).bind().toSource(), `function bound unbound() {
+assertEq((function unbound(){"body"}).bind().toSource(), `function bound() {
     [native code]
 }`);
 
-assertEq(uneval((function unbound(){"body"}).bind()), `function bound unbound() {
+assertEq(uneval((function unbound(){"body"}).bind()), `function bound() {
     [native code]
 }`);
 

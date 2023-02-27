@@ -550,7 +550,7 @@ void FinalizeQuantMatrices(j_compress_ptr cinfo) {
              cinfo->quant_tbl_ptrs[1] == nullptr) {
     // No custom quantization tables were specified, so we set our default
     // YCbCr quantization tables here. We could not do this earlier in
-    // jpegli_set_defaults() becase it may depend on the ICC profile and
+    // jpegli_set_defaults() because it may depend on the ICC profile and
     // pixel values.
     cinfo->comp_info[2].quant_tbl_no = 2;
     float global_scale = kGlobalScaleYCbCr;
@@ -572,13 +572,17 @@ void FinalizeQuantMatrices(j_compress_ptr cinfo) {
   int quant_max = m->force_baseline ? 255 : 32767U;
   for (int c = 0; c < cinfo->num_components; ++c) {
     int quant_idx = cinfo->comp_info[c].quant_tbl_no;
+    if (quant_idx < 0 || quant_idx >= NUM_QUANT_TBLS) {
+      JPEGLI_ERROR("Invalid quant table index %d for component %d", quant_idx,
+                   c);
+    }
     JQUANT_TBL** qtable = &cinfo->quant_tbl_ptrs[quant_idx];
     if (*qtable != nullptr) {
       // A custom quantization table was already set for this component, nothing
       // more to do here.
       continue;
     }
-    if (quant_idx < 0 || quant_idx > 2) {
+    if (quant_idx > 2) {
       JPEGLI_ERROR("Missing quantization table %d for component %d", quant_idx,
                    c);
     }

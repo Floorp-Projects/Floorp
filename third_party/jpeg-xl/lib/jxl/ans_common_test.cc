@@ -7,8 +7,8 @@
 
 #include <vector>
 
-#include "gtest/gtest.h"
 #include "lib/jxl/ans_params.h"
+#include "lib/jxl/testing.h"
 
 namespace jxl {
 namespace {

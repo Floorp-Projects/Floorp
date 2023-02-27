@@ -14,15 +14,12 @@
 
 #include <vector>
 
-#include "lib/jxl/aux_out.h"
-#include "lib/jxl/aux_out_fwd.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/dec_ans.h"
 #include "lib/jxl/dec_bit_reader.h"
-#include "lib/jxl/enc_bit_writer.h"
 #include "lib/jxl/entropy_coder.h"
 #include "lib/jxl/field_encodings.h"
 #include "lib/jxl/fields.h"

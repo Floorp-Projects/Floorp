@@ -11,7 +11,10 @@
 
 void jpegli_abort(j_common_ptr cinfo) {
   if (cinfo->mem == nullptr) return;
-  jpegli::ReleaseMemory(cinfo->mem);
+  for (int pool_id = 0; pool_id < JPOOL_NUMPOOLS; ++pool_id) {
+    if (pool_id == JPOOL_PERMANENT) continue;
+    (*cinfo->mem->free_pool)(cinfo, pool_id);
+  }
   if (cinfo->is_decompressor) {
     cinfo->global_state = jpegli::kDecStart;
   } else {
@@ -21,8 +24,7 @@ void jpegli_abort(j_common_ptr cinfo) {
 
 void jpegli_destroy(j_common_ptr cinfo) {
   if (cinfo->mem == nullptr) return;
-  jpegli::DestroyMemoryManager(cinfo->mem);
-  cinfo->mem = nullptr;
+  (*cinfo->mem->self_destruct)(cinfo);
   if (cinfo->is_decompressor) {
     cinfo->global_state = jpegli::kDecNull;
     delete reinterpret_cast<j_decompress_ptr>(cinfo)->master;

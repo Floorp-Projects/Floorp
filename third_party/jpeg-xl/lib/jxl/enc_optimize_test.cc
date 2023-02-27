@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 
-#include "gtest/gtest.h"
+#include "lib/jxl/testing.h"
 
 namespace jxl {
 namespace optimize {

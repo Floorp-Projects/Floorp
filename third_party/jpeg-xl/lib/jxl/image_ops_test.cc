@@ -11,10 +11,10 @@
 
 #include <utility>
 
-#include "gtest/gtest.h"
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_test_utils.h"
+#include "lib/jxl/testing.h"
 
 namespace jxl {
 namespace {
@@ -25,7 +25,7 @@ void TestPacked(const size_t xsize, const size_t ysize) {
   RandomFillImage(&image1);
   const std::vector<T>& packed = PackedFromImage(image1);
   const Plane<T>& image2 = ImageFromPacked(packed, xsize, ysize);
-  EXPECT_TRUE(SamePixels(image1, image2));
+  JXL_EXPECT_OK(SamePixels(image1, image2, _));
 }
 
 TEST(ImageTest, TestPacked) {

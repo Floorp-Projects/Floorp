@@ -11,7 +11,6 @@
 #include <type_traits>
 
 #include "lib/jxl/ac_strategy.h"
-#include "lib/jxl/aux_out.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/profiler.h"
@@ -22,6 +21,7 @@
 #include "lib/jxl/dct_scales.h"
 #include "lib/jxl/dct_util.h"
 #include "lib/jxl/dec_frame.h"
+#include "lib/jxl/enc_aux_out.h"
 #include "lib/jxl/enc_frame.h"
 #include "lib/jxl/enc_group.h"
 #include "lib/jxl/enc_modular.h"
