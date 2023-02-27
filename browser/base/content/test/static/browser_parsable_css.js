@@ -35,12 +35,12 @@ let whitelist = [
     isFromDevTools: false,
   },
   {
-    sourceName: /\b(xul|minimal-xul|html|mathml|ua|forms|svg|manageDialog|autocomplete-item-shared|formautofill)\.css$/i,
+    sourceName: /\b(xul|html|mathml|ua|forms|svg|manageDialog|autocomplete-item-shared|formautofill)\.css$/i,
     errorMessage: /Unknown property.*-moz-/i,
     isFromDevTools: false,
   },
   {
-    sourceName: /(minimal-xul|xul)\.css$/i,
+    sourceName: /(scrollbars|xul)\.css$/i,
     errorMessage: /Unknown pseudo-class.*-moz-/i,
     isFromDevTools: false,
   },
@@ -91,7 +91,7 @@ if (!Services.prefs.getBoolPref("layout.css.color-mix.enabled")) {
 if (!Services.prefs.getBoolPref("layout.css.math-depth.enabled")) {
   // mathml.css UA sheet rule for math-depth.
   whitelist.push({
-    sourceName: /\b(minimal-xul|mathml)\.css$/i,
+    sourceName: /\b(scrollbars|mathml)\.css$/i,
     errorMessage: /Unknown property .*\bmath-depth\b/i,
     isFromDevTools: false,
   });
