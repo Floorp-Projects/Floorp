@@ -668,7 +668,8 @@ nsCSPBaseSrc* nsCSPParser::sourceExpression() {
     // a nsCSPSchemeSrc, but rather a nsCSPHostSrc, which
     // needs to know the scheme to enforce; remember the
     // scheme and delete cspScheme;
-    cspScheme->getScheme(parsedScheme);
+    cspScheme->toString(parsedScheme);
+    parsedScheme.Trim(":", false, true);
     delete cspScheme;
 
     // If mCurToken provides not only a scheme, but also a host, we have to
@@ -688,7 +689,6 @@ nsCSPBaseSrc* nsCSPParser::sourceExpression() {
 
   // If mCurToken does not provide a scheme (scheme-less source), we apply the
   // scheme from selfURI
-  bool generatedScheme = false;
   if (parsedScheme.IsEmpty()) {
     // Resetting internal helpers, because we might already have parsed some of
     // the host when trying to parse a scheme.
@@ -696,7 +696,6 @@ nsCSPBaseSrc* nsCSPParser::sourceExpression() {
     nsAutoCString selfScheme;
     mSelfURI->GetScheme(selfScheme);
     parsedScheme.AssignASCII(selfScheme.get());
-    generatedScheme = true;
   }
 
   // At this point we are expecting a host to be parsed.
@@ -704,7 +703,6 @@ nsCSPBaseSrc* nsCSPParser::sourceExpression() {
   if (nsCSPHostSrc* cspHost = hostSource()) {
     // Do not forget to set the parsed scheme.
     cspHost->setScheme(parsedScheme);
-    cspHost->setGeneratedScheme(generatedScheme);
     cspHost->setWithinFrameAncestorsDir(mParsingFrameAncestorsDir);
     return cspHost;
   }
