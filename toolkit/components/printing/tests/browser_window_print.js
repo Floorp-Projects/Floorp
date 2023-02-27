@@ -303,3 +303,34 @@ add_task(async function test_base_uri_srcdoc() {
     gBrowser.getTabDialogBox(browser).abortAllDialogs();
   });
 });
+
+add_task(async function test_print_reentrant() {
+  is(
+    document.querySelector(".printPreviewBrowser"),
+    null,
+    "There shouldn't be any print preview browser"
+  );
+
+  const URI = `${TEST_PATH}file_window_print_reentrant.html`;
+  await BrowserTestUtils.withNewTab(URI, async function(browser) {
+    info(
+      "Waiting for window.print() to run and ensure we're showing the preview..."
+    );
+
+    let helper = new PrintHelper(browser);
+    await helper.waitForDialog();
+
+    let previewBrowser = document.querySelector(".printPreviewBrowser");
+    isnot(previewBrowser, null, "Should open the print preview correctly");
+
+    gBrowser.getTabDialogBox(browser).abortAllDialogs();
+
+    let count = await SpecialPowers.spawn(browser, [], () => {
+      return parseInt(
+        content.document.getElementById("before-print-count").innerText
+      );
+    });
+
+    is(count, 1, "Should've fired beforeprint just once");
+  });
+});

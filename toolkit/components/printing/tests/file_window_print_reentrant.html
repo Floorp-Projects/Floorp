@@ -1,0 +1,12 @@
+<!doctype html>
+<div id="before-print-count"></div>
+<script>
+let count = 0;
+onload = function() {
+  window.addEventListener('beforeprint', (event) => {
+    document.getElementById("before-print-count").innerText = ++count;
+    print()
+  });
+  print()
+};
+</script>
