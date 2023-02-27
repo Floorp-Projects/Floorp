@@ -111,7 +111,7 @@ with Files("tests/IndexedDB/**"):
     BUG_COMPONENT = ("Core", "Storage: IndexedDB")
 
 with Files("tests/WebCryptoAPI/**"):
-    BUG_COMPONENT = ("Core", "DOM: Security")
+    BUG_COMPONENT = ("Core", "DOM: Web Crypto")
 
 with Files("tests/xhr/**"):
     BUG_COMPONENT = ("Core", "DOM: Networking")
