@@ -2307,12 +2307,6 @@
   result_type: Value
   guard: true
 
-- name: FinishBoundFunctionInit
-  operands:
-    bound: Object
-    target: Object
-    argCount: Int32
-
 - name: IsPackedArray
   operands:
     object: Object

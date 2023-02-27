@@ -195,7 +195,6 @@ bool js::jit::CanInlineNativeCrossRealm(InlinableNative native) {
     case InlinableNative::IntrinsicGuardToIteratorHelper:
     case InlinableNative::IntrinsicGuardToAsyncIteratorHelper:
     case InlinableNative::IntrinsicObjectHasPrototype:
-    case InlinableNative::IntrinsicFinishBoundFunctionInit:
     case InlinableNative::IntrinsicIsPackedArray:
     case InlinableNative::IntrinsicGuardToMapObject:
     case InlinableNative::IntrinsicGetNextMapEntryForIterator:

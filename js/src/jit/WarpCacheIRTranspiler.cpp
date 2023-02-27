@@ -3805,19 +3805,6 @@ bool WarpCacheIRTranspiler::emitFrameIsConstructingResult() {
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitFinishBoundFunctionInitResult(
-    ObjOperandId boundId, ObjOperandId targetId, Int32OperandId argCountId) {
-  MDefinition* bound = getOperand(boundId);
-  MDefinition* target = getOperand(targetId);
-  MDefinition* argCount = getOperand(argCountId);
-
-  auto* ins = MFinishBoundFunctionInit::New(alloc(), bound, target, argCount);
-  addEffectful(ins);
-
-  pushResult(constant(UndefinedValue()));
-  return resumeAfter(ins);
-}
-
 bool WarpCacheIRTranspiler::emitNewIteratorResult(
     MNewIterator::Type type, uint32_t templateObjectOffset) {
   JSObject* templateObj = tenuredObjectStubField(templateObjectOffset);
