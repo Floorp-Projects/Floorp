@@ -7760,16 +7760,6 @@ JSScript* js::TestingFunctionArgumentToScript(
     return nullptr;
   }
 
-  // Unwrap bound functions.
-  while (fun->isBoundFunction()) {
-    JSObject* target = fun->getBoundFunctionTarget();
-    if (target && target->is<JSFunction>()) {
-      fun = &target->as<JSFunction>();
-    } else {
-      break;
-    }
-  }
-
   if (!fun->isInterpreted()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TESTING_SCRIPTS_ONLY);

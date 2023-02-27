@@ -2212,23 +2212,9 @@ AttachDecision GetPropIRGenerator::tryAttachFunction(HandleObject obj,
     if (!fun->hasBytecode()) {
       return AttachDecision::NoAction;
     }
-
-    // Length can be non-int32 for bound functions.
-    if (fun->isBoundFunction()) {
-      constexpr auto lengthSlot = FunctionExtended::BOUND_FUNCTION_LENGTH_SLOT;
-      if (!fun->getExtendedSlot(lengthSlot).isInt32()) {
-        return AttachDecision::NoAction;
-      }
-    }
   } else {
     // name was probably deleted from the function.
     if (fun->hasResolvedName()) {
-      return AttachDecision::NoAction;
-    }
-
-    // Unless the bound function name prefix is present, we need to call into
-    // the VM to compute the full name.
-    if (fun->isBoundFunction() && !fun->hasBoundFunctionNamePrefix()) {
       return AttachDecision::NoAction;
     }
   }
@@ -5142,11 +5128,6 @@ AttachDecision InstanceOfIRGenerator::tryAttachStub() {
   }
 
   HandleFunction fun = rhsObj_.as<JSFunction>();
-
-  if (fun->isBoundFunction()) {
-    trackAttached(IRGenerator::NotAttached);
-    return AttachDecision::NoAction;
-  }
 
   // Look up the @@hasInstance property, and check that Function.__proto__ is
   // the property holder, and that no object further down the prototype chain
@@ -10723,6 +10704,12 @@ AttachDecision CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
 
   // We don't support spread calls in the transpiler yet.
   if (isSpread) {
+    return AttachDecision::NoAction;
+  }
+
+  // To support the BoundFunctionObject construct hook, we need to guard on the
+  // is-constructor flag.
+  if (isConstructing && calleeObj->is<BoundFunctionObject>()) {
     return AttachDecision::NoAction;
   }
 
