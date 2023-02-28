@@ -33,7 +33,7 @@ task-defaults:
         pre-gradlew:
             - ["cd", "android-components"]
         secrets:
-            - name: project/mobile/firefox-android/firebase
+            - name: project/mobile/firefox-android/android-components/firebase
               key: firebaseToken
               path: .firebase_token.json
               json: true
