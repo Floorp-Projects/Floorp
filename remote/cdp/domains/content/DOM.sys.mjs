@@ -79,7 +79,7 @@ export class DOM extends ContentProcessDomain {
 
     const node = {
       nodeId: debuggerObj.nodeId,
-      backendNodeId: debuggerObj.nodeId,
+      backendNodeId: debuggerObj.backendNodeId,
       nodeType: unsafeObj.nodeType,
       nodeName: unsafeObj.nodeName,
       localName: unsafeObj.localName,
@@ -209,9 +209,8 @@ export class DOM extends ContentProcessDomain {
     const { backendNodeId, executionContextId } = options;
 
     // Until nodeId is supported force usage of the backendNodeId
-    // Bug 1625417 - CDP expects the id as number
-    if (!["string"].includes(typeof backendNodeId)) {
-      throw new TypeError("backendNodeId: string value expected");
+    if (!["number"].includes(typeof backendNodeId)) {
+      throw new TypeError("backendNodeId: number value expected");
     }
     if (!["undefined", "number"].includes(typeof executionContextId)) {
       throw new TypeError("executionContextId: integer value expected");
