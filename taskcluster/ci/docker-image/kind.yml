@@ -42,11 +42,11 @@ jobs:
         parent: ubuntu1804-i386-raw
     ubuntu1804-base:
         symbol: I(ub18-base)
+        definition: debian-base
         parent: ubuntu1804-raw
         packages:
             - ub18-mercurial
             - ub18-python-zstandard
-            - ub18-python-psutil
     ubuntu1804-test-base:
         symbol: I(ub18-test-base)
         parent: ubuntu1804-base
