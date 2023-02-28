@@ -110,7 +110,10 @@ suites:
             urbandictionary-define: "GV, FE, RB, CH-M, FF, CH, CU"
             wikia-marvel: "GV, FE, RB, CH-M, FF, CH, CU"
     benchmarks:
-        description: "Standard benchmarks are third-party tests (i.e. Speedometer) that we have integrated into Raptor to run per-commit in our production CI."
+        description: >
+            Standard benchmarks are third-party tests (i.e. Speedometer) that we have integrated
+            into Raptor to run per-commit in our production CI. To update any of these benchmarks,
+            see `Updating Benchmark Tests <browsertime.html#updating-benchmark-tests>`_.
         tests:
             ares6: "FF, CH, CU"
             assorted-dom: "FF, CH, CU"

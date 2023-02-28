@@ -39,7 +39,8 @@ The following documents all testing we have for Raptor.
 
 Benchmarks
 ----------
-Standard benchmarks are third-party tests (i.e. Speedometer) that we have integrated into Raptor to run per-commit in our production CI.
+Standard benchmarks are third-party tests (i.e. Speedometer) that we have integrated into Raptor to run per-commit in our production CI. To update any of these benchmarks, see `Updating Benchmark Tests <browsertime.html#updating-benchmark-tests>`_.
+
 
 .. dropdown:: ares6
    :container: + anchor-id-ares6-b
