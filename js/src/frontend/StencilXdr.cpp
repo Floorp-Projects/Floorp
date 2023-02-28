@@ -1306,6 +1306,7 @@ XDRResult StencilXDR::codeSource(XDRState<mode>* xdr,
   }
 
   MOZ_TRY(xdr->codeUint32(&source->startLine_));
+  MOZ_TRY(xdr->codeUint32(&source->startColumn_));
 
   // The introduction info doesn't persist across encode/decode.
   if (mode == XDR_DECODE) {

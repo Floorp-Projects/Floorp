@@ -598,6 +598,8 @@ class ScriptSource {
 
   // Line number within the file where this source starts.
   uint32_t startLine_ = 0;
+  // Column number within the file where this source starts.
+  uint32_t startColumn_ = 0;
 
   // See: CompileOptions::mutedErrors.
   bool mutedErrors_ = false;
@@ -1029,6 +1031,7 @@ class ScriptSource {
   bool mutedErrors() const { return mutedErrors_; }
 
   uint32_t startLine() const { return startLine_; }
+  uint32_t startColumn() const { return startColumn_; }
 
   JS::DelazificationOption delazificationMode() const {
     return delazificationMode_;
