@@ -25,8 +25,7 @@ task-template:
     signing-format:
         by-build-type:
             (focus-.*|klar-.*): autograph_focus
-            beta-mozillaonline: autograph_apk_mozillaonline
-            release-mozillaonline: autograph_apk_mozillaonline
+            fenix-(beta|release)-mozillaonline: autograph_apk_mozillaonline
             default: autograph_apk
     index:
         by-tasks-for:
