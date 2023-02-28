@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["WeaveCrypto"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const CRYPT_ALGO = "AES-CBC";
 const CRYPT_ALGO_LENGTH = 256;
@@ -15,12 +11,7 @@ const AES_CBC_IV_SIZE = 16;
 const OPERATIONS = { ENCRYPT: 0, DECRYPT: 1 };
 const UTF_LABEL = "utf-8";
 
-const KEY_DERIVATION_ALGO = "PBKDF2";
-const KEY_DERIVATION_HASHING_ALGO = "SHA-1";
-const KEY_DERIVATION_ITERATIONS = 4096; // PKCS#5 recommends at least 1000.
-const DERIVED_KEY_ALGO = CRYPT_ALGO;
-
-function WeaveCrypto() {
+export function WeaveCrypto() {
   this.init();
 }
 

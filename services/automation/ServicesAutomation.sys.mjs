@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
 /*
  * This module is used in automation to connect the browser to
@@ -23,11 +22,7 @@
  *    await triggerSync(username, password, "https://accounts.stage.mozaws.net");
  *
  */
-var EXPORTED_SYMBOLS = ["Sync", "Authentication", "initConfig", "triggerSync"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -96,7 +91,7 @@ function promiseObserver(aEventName) {
  *
  *    await Authentication.signIn(username, password);
  */
-var Authentication = {
+export var Authentication = {
   async isLoggedIn() {
     return !!(await this.getSignedInUser());
   },
@@ -287,7 +282,7 @@ var Authentication = {
  *
  *   await Sync.triggerSync();
  */
-var Sync = {
+export var Sync = {
   getSyncLogsDirectory() {
     return PathUtils.join(PathUtils.profileDir, "weave", "logs");
   },
@@ -397,11 +392,11 @@ var Sync = {
   },
 };
 
-function initConfig(autoconfig) {
+export function initConfig(autoconfig) {
   Services.prefs.setCharPref(AUTOCONFIG_PREF, autoconfig);
 }
 
-async function triggerSync(username, password, autoconfig) {
+export async function triggerSync(username, password, autoconfig) {
   initConfig(autoconfig);
   await Authentication.signIn(username, password);
   var result = await Sync.triggerSync();
