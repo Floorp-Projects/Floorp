@@ -41,6 +41,8 @@ class MOZ_STACK_CLASS ParallelMarker {
 
   bool mark(SliceBudget& sliceBudget);
 
+  using AtomicCount = mozilla::Atomic<uint32_t, mozilla::Relaxed>;
+  AtomicCount& waitingTaskCountRef() { return waitingTaskCount; }
   bool hasWaitingTasks() { return waitingTaskCount != 0; }
   void donateWorkFrom(GCMarker* src);
 
@@ -69,7 +71,7 @@ class MOZ_STACK_CLASS ParallelMarker {
 
   using ParallelMarkTaskList = mozilla::DoublyLinkedList<ParallelMarkTask>;
   GCLockData<ParallelMarkTaskList> waitingTasks;
-  mozilla::Atomic<uint32_t, mozilla::Relaxed> waitingTaskCount;
+  AtomicCount waitingTaskCount;
 
   GCLockData<size_t> activeTasks;
   GCLockData<ConditionVariable> activeTasksAvailable;

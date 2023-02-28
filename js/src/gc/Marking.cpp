@@ -1334,6 +1334,9 @@ template <MarkColor color>
 bool GCMarker::markOneColorInParallel(SliceBudget& budget) {
   AutoSetMarkColor setColor(*this, color);
 
+  ParallelMarker::AtomicCount& waitingTaskCount =
+      parallelMarker_->waitingTaskCountRef();
+
   while (processMarkStackTop<MarkingOptions::ParallelMarking>(budget)) {
     if (!hasEntries(color)) {
       return true;
@@ -1342,7 +1345,7 @@ bool GCMarker::markOneColorInParallel(SliceBudget& budget) {
     // TODO: It might be better to only check this occasionally, possibly
     // combined with the slice budget check. Experiments with giving this its
     // own counter resulted in worse performance.
-    if (parallelMarker_->hasWaitingTasks() && stack.canDonateWork()) {
+    if (waitingTaskCount && stack.canDonateWork()) {
       parallelMarker_->donateWorkFrom(this);
     }
   }
