@@ -660,8 +660,7 @@ static bool BlocklistEntryToDriverInfo(const nsACString& aBlocklistEntry,
       aDriverInfo.mFeature = BlocklistFeatureToGfxFeature(dataValue);
       if (aDriverInfo.mFeature < 0) {
         // If we don't recognize the feature, we do not want to proceed.
-        gfxCriticalErrorOnce(CriticalLog::DefaultOptions(false))
-            << "Unrecognized feature " << value.get();
+        gfxWarning() << "Unrecognized feature " << value.get();
         return false;
       }
     } else if (key.EqualsLiteral("featureStatus")) {
