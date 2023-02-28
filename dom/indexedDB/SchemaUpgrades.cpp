@@ -2897,9 +2897,8 @@ UpgradeFileIdsFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
     return NS_ERROR_UNEXPECTED;
   }
 
-  QM_TRY_UNWRAP(auto cloneInfo,
-                GetStructuredCloneReadInfoFromValueArray(
-                    aArguments, 1, 0, *mFileManager, Nothing{}));
+  QM_TRY_UNWRAP(auto cloneInfo, GetStructuredCloneReadInfoFromValueArray(
+                                    aArguments, 1, 0, *mFileManager));
 
   nsAutoString fileIds;
   // XXX does this really need non-const cloneInfo?
