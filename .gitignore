@@ -200,7 +200,7 @@ config/external/icu4x
 # Ignore Storybook generated files
 browser/components/storybook/node_modules/
 browser/components/storybook/storybook-static/
-browser/components/storybook/.storybook/rewrites.js
+browser/components/storybook/.storybook/chrome-map.js
 browser/components/storybook/custom-elements.json
 
 # Ignore jscodeshift installed by mach esmify on windows

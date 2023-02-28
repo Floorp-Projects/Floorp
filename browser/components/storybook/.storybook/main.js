@@ -4,10 +4,33 @@
 /* eslint-env node */
 
 const path = require("path");
+const webpack = require("webpack");
+
+const [prefixMap, aliasMap, sourceMap] = require("./chrome-map.js");
+
 const projectRoot = path.resolve(__dirname, "../../../../");
 
-// ./mach environment --format json
-// topobjdir should be the build location
+function rewriteChromeUri(uri) {
+  if (uri in aliasMap) {
+    return rewriteChromeUri(aliasMap[uri]);
+  }
+  for (let [prefix, [bundlePath]] of Object.entries(prefixMap)) {
+    if (uri.startsWith(prefix)) {
+      if (!bundlePath.endsWith("/")) {
+        bundlePath += "/";
+      }
+      let relativePath = uri.slice(prefix.length);
+      let objdirPath = bundlePath + relativePath;
+      for (let [_objdirPath, [filePath]] of Object.entries(sourceMap)) {
+        if (_objdirPath == objdirPath) {
+          // We're just hoping this is the actual path =\
+          return filePath;
+        }
+      }
+    }
+  }
+  return "";
+}
 
 module.exports = {
   stories: [
@@ -62,14 +85,16 @@ module.exports = {
     config.resolve.alias["lit-html/directive-helpers.js"] = "lit.all.mjs";
     config.resolve.alias["lit-html"] = "lit.all.mjs";
 
+    config.plugins.push(
+      // Rewrite chrome:// URI imports to file system paths.
+      new webpack.NormalModuleReplacementPlugin(/^chrome:\/\//, resource => {
+        resource.request = rewriteChromeUri(resource.request);
+      })
+    );
+
     config.module.rules.push({
       test: /\.ftl$/,
       type: "asset/source",
-    });
-
-    config.module.rules.push({
-      test: /\.mjs/,
-      loader: path.resolve(__dirname, "./chrome-uri-loader.js"),
     });
 
     // We're adding a rule for files matching this pattern in order to support
