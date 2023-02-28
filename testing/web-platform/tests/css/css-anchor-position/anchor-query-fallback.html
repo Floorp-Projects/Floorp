@@ -6,7 +6,6 @@
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="/resources/check-layout-th.js"></script>
-<script src="support/test-common.js"></script>
 <style>
 #container {
   position: relative;
@@ -35,7 +34,7 @@
 }
 </style>
 
-<body onload="checkLayoutForAnchorPos('.target')">
+<body onload="checkLayout('.target')">
   <div id="container">
     <div class="flex-item" id="a1"></div>
     <div class="flex-item"></div>

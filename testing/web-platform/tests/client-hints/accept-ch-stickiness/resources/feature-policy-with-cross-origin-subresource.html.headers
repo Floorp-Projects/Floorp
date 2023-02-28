@@ -1,1 +1,1 @@
-Permissions-Policy: ch-device-memory=*
+Feature-Policy: ch-device-memory *;

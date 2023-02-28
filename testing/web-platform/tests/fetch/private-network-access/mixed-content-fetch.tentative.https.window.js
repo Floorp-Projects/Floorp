@@ -220,7 +220,7 @@ promise_test_parallel(t => fetchTest(t, {
   target: {
     server: Server.HTTP_LOCAL,
     behavior: {
-      preflight: PreflightBehavior.optionalSuccess(token()),
+      preflight: PreflightBehavior.success(token()),
       response: ResponseBehavior.allowCrossOrigin(),
     },
   },
@@ -236,7 +236,7 @@ promise_test_parallel(t => fetchTest(t, {
   target: {
     server: Server.HTTP_LOCAL,
     behavior: {
-      preflight: PreflightBehavior.optionalSuccess(token()),
+      preflight: PreflightBehavior.success(token()),
       response: ResponseBehavior.allowCrossOrigin(),
     },
   },

@@ -364,43 +364,31 @@ function runGenericSensorTests(sensorName,
     sensor.stop();
   }, `${sensorName}: Test that fresh reading is fetched on start().`);
 
-  sensor_test(async (t, sensorProvider) => {
-    assert_implements(sensorName in self, `${sensorName} is not supported.`);
-    const sensor = new sensorType();
-    t.add_cleanup(() => {
-      sensor.stop();
-    });
-    const sensorWatcher = new EventWatcher(t, sensor, ['reading', 'error']);
-    sensor.start();
+//  TBD file a WPT issue: visibilityChangeWatcher times out.
+//  sensor_test(async (t, sensorProvider) => {
+//    assert_implements(sensorName in self, `${sensorName} is not supported.`);
+//    const sensor = new sensorType();
+//    const sensorWatcher = new EventWatcher(t, sensor, ["reading", "error"]);
+//    const visibilityChangeWatcher = new EventWatcher(t, document,
+//                                                     "visibilitychange");
+//    sensor.start();
 
-    const mockSensor = await sensorProvider.getCreatedSensor(sensorName);
-    mockSensor.setSensorReading(readings);
+//    const mockSensor = await sensorProvider.getCreatedSensor(sensorName);
+//    mockSensor.setSensorReading(readings);
 
-    const expectedBuffer = new RingBuffer(expectedReadings);
-    await sensorWatcher.wait_for('reading');
-    const expected1 = expectedBuffer.next().value;
-    assert_true(verificationFunction(expected1, sensor));
-    assert_true(mockSensor.isReadingData());
-    const cachedTimestamp1 = sensor.timestamp;
+//    await sensorWatcher.wait_for("reading");
+//    const expected = new RingBuffer(expectedReadings).next().value;
+//    assert_true(verificationFunction(expected, sensor));
+//    const cachedTimestamp1 = sensor.timestamp;
 
-    const {minimize, restore} = window_state_context(t);
+//    const win = window.open('', '_blank');
+//    await visibilityChangeWatcher.wait_for("visibilitychange");
+//    const cachedTimestamp2 = sensor.timestamp;
 
-    await minimize();
-    assert_true(document.hidden);
-    await t.step_wait(
-        () => !mockSensor.isReadingData(), 'readings must be suspended');
-    const cachedTimestamp2 = sensor.timestamp;
-    assert_equals(cachedTimestamp1, cachedTimestamp2);
-
-    await restore();
-    assert_false(document.hidden);
-    await t.step_wait(
-        () => mockSensor.isReadingData(), 'readings must be restored');
-    await sensorWatcher.wait_for('reading');
-    const expected2 = expectedBuffer.next().value;
-    assert_true(verificationFunction(expected2, sensor));
-    assert_greater_than(sensor.timestamp, cachedTimestamp2);
-  }, `${sensorName}: Losing visibility must cause readings to be suspended.`);
+//    win.close();
+//    sensor.stop();
+//    assert_equals(cachedTimestamp1, cachedTimestamp2);
+//  }, `${sensorName}: sensor readings can not be fired on the background tab.`);
 
   sensor_test(async (t, sensorProvider) => {
     assert_implements(sensorName in self, `${sensorName} is not supported.`);
