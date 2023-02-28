@@ -230,7 +230,7 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
   mozilla::TimeDuration mRequestedCaptureInterval;
   // Used to make sure incoming timestamp is increasing for every frame.
   // mCaptureThread only.
-  int64_t mLastFrameTimeMs;
+  webrtc::Timestamp mNextFrameMinimumTime;
   // True once fully started and not fully stopped. Only accessed on
   // mControlThread.
   bool mRunning;

@@ -470,7 +470,7 @@ DesktopCaptureImpl::DesktopCaptureImpl(const int32_t aId, const char* aUniqueId,
       mDeviceUniqueId(aUniqueId),
       mDeviceType(aType),
       mControlThread(mozilla::GetCurrentSerialEventTarget()),
-      mLastFrameTimeMs(rtc::TimeMillis()),
+      mNextFrameMinimumTime(Timestamp::Zero()),
       mRunning(false),
       mCallbacks("DesktopCaptureImpl::mCallbacks") {}
 
@@ -593,7 +593,23 @@ void DesktopCaptureImpl::OnCaptureResult(DesktopCapturer::Result aResult,
     return;
   }
 
-  int64_t startProcessTimeNs = rtc::TimeNanos();
+  const auto startProcessTime = Timestamp::Micros(rtc::TimeMicros());
+  auto frameTime = startProcessTime;
+  if (auto diff = startProcessTime - mNextFrameMinimumTime;
+      diff < TimeDelta::Zero()) {
+    if (diff > TimeDelta::Millis(-1)) {
+      // Two consecutive frames within a millisecond is OK. It could happen due
+      // to timing.
+      frameTime = mNextFrameMinimumTime;
+    } else {
+      // Three consecutive frames within two milliseconds seems too much, drop
+      // one.
+      MOZ_ASSERT(diff >= TimeDelta::Millis(-2));
+      RTC_LOG(LS_WARNING) << "DesktopCapture render time is getting too far "
+                             "ahead. Framerate is unexpectedly high.";
+      return;
+    }
+  }
 
   uint8_t* videoFrame = aFrame->data();
   VideoCaptureCapability frameInfo;
@@ -643,26 +659,27 @@ void DesktopCaptureImpl::OnCaptureResult(DesktopCapturer::Result aResult,
 
   NotifyOnFrame(VideoFrame::Builder()
                     .set_video_frame_buffer(buffer)
-                    .set_timestamp_us(rtc::TimeMicros())
+                    .set_timestamp_us(frameTime.us())
                     .build());
 
-  const int64_t processTimeMs =
-      (rtc::TimeNanos() - startProcessTimeNs) / rtc::kNumNanosecsPerMillisec;
+  const TimeDelta processTime =
+      Timestamp::Micros(rtc::TimeMicros()) - startProcessTime;
 
-  if (processTimeMs > 10) {
+  if (processTime > TimeDelta::Millis(10)) {
     RTC_LOG(LS_WARNING)
         << "Too long processing time of incoming frame with dimensions "
-        << width << "x" << height << ": " << processTimeMs << " ms";
+        << width << "x" << height << ": " << processTime.ms() << " ms";
   }
 }
 
 void DesktopCaptureImpl::NotifyOnFrame(const VideoFrame& aFrame) {
   MOZ_ASSERT(mCaptureThreadChecker.IsCurrent());
-  if (aFrame.render_time_ms() == mLastFrameTimeMs) {
-    // We don't allow the same capture time for two frames, drop this one.
-    return;
-  }
-  mLastFrameTimeMs = aFrame.render_time_ms();
+  MOZ_ASSERT(Timestamp::Millis(aFrame.render_time_ms()) >
+             mNextFrameMinimumTime);
+  // Set the next frame's minimum time to ensure two consecutive frames don't
+  // have an identical render time (which is in milliseconds).
+  mNextFrameMinimumTime =
+      Timestamp::Millis(aFrame.render_time_ms()) + TimeDelta::Millis(1);
   auto callbacks = mCallbacks.Lock();
   for (auto* cb : *callbacks) {
     cb->OnFrame(aFrame);
