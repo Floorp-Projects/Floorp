@@ -293,14 +293,14 @@ windows10-64-2004-mingwclang-qr/opt:
         - mingwclang-tests-opt
 
 # win11-64 2009
-# windows11-64-2009-ccov-qr/opt:
-#    build-platform: win64-ccov/opt
-#    build-signing-label: build-signing-win64-ccov/opt
-#    test-sets:
-#        - desktop-screenshot-capture
-#        - ccov-code-coverage-tests
-#        - windows10-64-2004-ccov-tests
-#        - windows10-2004-tests
+windows11-64-2009-ccov-qr/opt:
+    build-platform: win64-ccov/opt
+    build-signing-label: build-signing-win64-ccov/opt
+    test-sets:
+        - desktop-screenshot-capture
+        - ccov-code-coverage-tests
+        # - windows10-64-2004-ccov-tests
+        - windows10-2004-tests
 
 windows11-64-2009-qr/debug:
     build-platform: win64/debug
@@ -350,15 +350,15 @@ windows11-64-2009-asan-qr/opt:
     test-sets:
         - windows11-2009-tests
 
-# windows11-64-2009-mingwclang-qr/debug:
-#    build-platform: win64-mingwclang/debug
-#    test-sets:
-#        - mingwclang-tests-debug
+windows11-64-2009-mingwclang-qr/debug:
+    build-platform: win64-mingwclang/debug
+    test-sets:
+        - mingwclang-tests-debug
 
-# windows11-64-2009-mingwclang-qr/opt:
-#    build-platform: win64-mingwclang/opt
-#    test-sets:
-#        - mingwclang-tests-opt
+windows11-64-2009-mingwclang-qr/opt:
+    build-platform: win64-mingwclang/opt
+    test-sets:
+        - mingwclang-tests-opt
 
 
 ##
