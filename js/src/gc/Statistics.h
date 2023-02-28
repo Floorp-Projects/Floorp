@@ -273,7 +273,7 @@ struct Statistics {
   struct SliceData {
     SliceData(const SliceBudget& budget, mozilla::Maybe<Trigger> trigger,
               JS::GCReason reason, TimeStamp start, size_t startFaults,
-              gc::State initialState, size_t parallelMarkInterruptions);
+              gc::State initialState);
 
     SliceBudget budget;
     JS::GCReason reason = JS::GCReason::NO_REASON;
@@ -288,7 +288,6 @@ struct Statistics {
     PhaseTimes phaseTimes;
     PhaseKindTimes totalParallelTimes;
     PhaseKindTimes maxParallelTimes;
-    size_t parallelMarkInterruptions;  // todo: bump to later patch
 
     TimeDuration duration() const { return end - start; }
     bool wasReset() const { return resetReason != GCAbortReason::None; }
