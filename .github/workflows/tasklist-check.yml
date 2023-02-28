@@ -10,4 +10,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check TaskList
-        uses sumally/github-check-tasklist-action@v1.0.1
+        uses: sumally/github-check-tasklist-action@v1.0.1
