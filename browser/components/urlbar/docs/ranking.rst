@@ -185,20 +185,20 @@ Frecency is recalculated:
   database field for the page is set to ``1``.
 
 Recalculation is done by the `PlacesFrecencyRecalculator <https://searchfox.org/mozilla-central/source/toolkit/components/places/PlacesFrecencyRecalculator.sys.mjs>`_ module.
-The Recalculator periodically polls a variable (``PlacesUtils.history.shouldStartFrecencyRecalculation``)
-that states whether there’s anything to recalculate. If a recalculation is
-necessary a DeferredTask is armed, that will look for a user idle opportunity
+The Recalculator is notified when ``PlacesUtils.history.shouldStartFrecencyRecalculation``
+value changes from false to true, that means there's values to recalculate.
+A DeferredTask is armed, that will look for a user idle opportunity
 in the next 5 minutes, otherwise it will run when that time elapses.
-To preserve energy, when the user is idle for more than 5 minutes, the polling
-is interrupted until the user is back.
-
+Once all the outdated values have been recalculated
+``PlacesUtils.history.shouldStartFrecencyRecalculation`` is set back to false
+until the next operation invalidating a frecency.
 The recalculation task is also armed on the ``idle-daily`` notification.
 
 When the task is executed, it recalculates frecency of a chunk of pages. If
 there are more pages left to recalculate, the task is re-armed. After frecency
 of a page is recalculated, its ``recalc_frecency`` field is set back to ``0``.
 
-Frecency is also decayed daily during the idle-daily global notification, by
+Frecency is also decayed daily during the ``idle-daily`` notification, by
 multiplying all the scores by a decay rate  of ``0.975`` (half-life of 28 days).
 This guarantees entries not receiving new visits or bookmarks lose relevancy.
 
