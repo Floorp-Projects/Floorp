@@ -1311,6 +1311,13 @@ export var UrlbarUtils = {
       return "unknown";
     }
 
+    if (
+      result.providerType === UrlbarUtils.PROVIDER_TYPE.EXTENSION &&
+      result.providerName != "Omnibox"
+    ) {
+      return "experimental_addon";
+    }
+
     switch (result.type) {
       case UrlbarUtils.RESULT_TYPE.DYNAMIC:
         switch (result.providerName) {
