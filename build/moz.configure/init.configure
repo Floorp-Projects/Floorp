@@ -27,6 +27,37 @@ def build_environment(_):
     )
 
 
+@depends(build_environment)
+@imports(_import="json")
+@imports(_from="pathlib", _import="Path")
+def configure_cache(build_environment):
+    """
+    This cache is used to cache the results of compiler invocations
+    between different runs of configure and save them to the disk, which
+    results in a significant speed up of subsequent configure runs (15%-50%).
+
+    It is not currently thread safe because it is just a simple dictionary
+    wrapped in a dummy class (ConfigureCache). It could be improved to be
+    thread safe in the future, if we ever make configure parallelized, but
+    for now there is no advantage to doing so.
+    """
+
+    class ConfigureCache(dict):
+        pass
+
+    cache_file = Path(build_environment.topobjdir) / "configure.cache"
+    if cache_file.exists():
+        with cache_file.open() as f:
+            cache_data = json.load(f)
+    else:
+        cache_data = {}
+
+    cache = ConfigureCache(cache_data)
+    cache.version_checked_compilers = set()
+
+    return cache
+
+
 set_config("TOPSRCDIR", build_environment.topsrcdir)
 set_config("TOPOBJDIR", build_environment.topobjdir)
 set_config("DIST", build_environment.dist)
