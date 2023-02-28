@@ -87,7 +87,6 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
   return capturer;
 }
 
-#if defined(WEBRTC_USE_PIPEWIRE)
 // static
 std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateGenericCapturer(
     const DesktopCaptureOptions& options) {
@@ -101,14 +100,15 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateGenericCapturer(
 
 std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawGenericCapturer(
     const DesktopCaptureOptions& options) {
+#if defined(WEBRTC_USE_PIPEWIRE)
   if (options.allow_pipewire() && DesktopCapturer::IsRunningUnderWayland()) {
     return std::make_unique<BaseCapturerPipeWire>(options,
                                                   CaptureType::kAnyScreenContent);
   }
+#endif  // defined(WEBRTC_USE_PIPEWIRE)
 
   return nullptr;
 }
-#endif  // defined(WEBRTC_USE_PIPEWIRE)
 
 // static
 std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
