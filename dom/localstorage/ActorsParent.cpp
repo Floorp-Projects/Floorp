@@ -271,8 +271,6 @@ static const uint32_t kUsageFileCookie = 0x420a420a;
  */
 const uint32_t kFlushTimeoutMs = 5000;
 
-const char kPrivateBrowsingObserverTopic[] = "last-pb-context-exited";
-
 const bool kDefaultShadowWrites = false;
 const uint32_t kDefaultSnapshotPrefill = 16384;
 const uint32_t kDefaultSnapshotGradualPrefill = 4096;
@@ -2604,7 +2602,6 @@ class ArchivedOriginScope {
 };
 
 class QuotaClient final : public mozilla::dom::quota::Client {
-  class Observer;
   class MatchFunction;
 
   static QuotaClient* sInstance;
@@ -2613,8 +2610,6 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
  public:
   QuotaClient();
-
-  static nsresult Initialize();
 
   static QuotaClient* GetInstance() {
     AssertIsOnBackgroundThread();
@@ -2679,23 +2674,6 @@ class QuotaClient final : public mozilla::dom::quota::Client {
   nsresult PerformDelete(mozIStorageConnection* aConnection,
                          const nsACString& aSchemaName,
                          ArchivedOriginScope* aArchivedOriginScope) const;
-};
-
-class QuotaClient::Observer final : public nsIObserver {
- public:
-  static nsresult Initialize();
-
- private:
-  Observer() { MOZ_ASSERT(NS_IsMainThread()); }
-
-  ~Observer() { MOZ_ASSERT(NS_IsMainThread()); }
-
-  nsresult Init();
-
-  nsresult Shutdown();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
 };
 
 class QuotaClient::MatchFunction final : public mozIStorageFunction {
@@ -3197,8 +3175,6 @@ void InitializeLocalStorage() {
     QM_WARNONLY_TRY(OkIf(ss));
   }
 
-  QM_WARNONLY_TRY(QM_TO_RESULT(QuotaClient::Initialize()));
-
   Preferences::RegisterCallbackAndCall(ShadowWritesPrefChangedCallback,
                                        kShadowWritesPref);
 
@@ -3514,22 +3490,6 @@ bool DeallocPBackgroundLSSimpleRequestParent(
   // Transfer ownership back from IPDL.
   RefPtr<LSSimpleRequestBase> actor =
       dont_AddRef(static_cast<LSSimpleRequestBase*>(aActor));
-
-  return true;
-}
-
-bool RecvLSClearPrivateBrowsing() {
-  AssertIsOnBackgroundThread();
-
-  gPrivateDatastores = nullptr;
-
-  if (gDatastores) {
-    for (const auto& datastore : gDatastores->Values()) {
-      if (datastore->PrivateBrowsingId()) {
-        datastore->Clear(nullptr);
-      }
-    }
-  }
 
   return true;
 }
@@ -8328,18 +8288,6 @@ QuotaClient::~QuotaClient() {
   sInstance = nullptr;
 }
 
-// static
-nsresult QuotaClient::Initialize() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsresult rv = Observer::Initialize();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
 mozilla::dom::quota::Client::Type QuotaClient::GetType() {
   return QuotaClient::LS;
 }
@@ -8939,87 +8887,6 @@ nsresult QuotaClient::PerformDelete(
 
   QM_TRY(MOZ_TO_RESULT(stmt->Execute()));
 
-  return NS_OK;
-}
-
-// static
-nsresult QuotaClient::Observer::Initialize() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  RefPtr<Observer> observer = new Observer();
-
-  QM_TRY(MOZ_TO_RESULT(observer->Init()));
-
-  return NS_OK;
-}
-
-nsresult QuotaClient::Observer::Init() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (NS_WARN_IF(!obs)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsresult rv = obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = obs->AddObserver(this, kPrivateBrowsingObserverTopic, false);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-nsresult QuotaClient::Observer::Shutdown() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (NS_WARN_IF(!obs)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  MOZ_ALWAYS_SUCCEEDS(obs->RemoveObserver(this, kPrivateBrowsingObserverTopic));
-  MOZ_ALWAYS_SUCCEEDS(obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID));
-
-  // In general, the instance will have died after the latter removal call, so
-  // it's not safe to do anything after that point.
-  // However, Shutdown is currently called from Observe which is called by the
-  // Observer Service which holds a strong reference to the observer while the
-  // Observe method is being called.
-
-  return NS_OK;
-}
-
-NS_IMPL_ISUPPORTS(QuotaClient::Observer, nsIObserver)
-
-NS_IMETHODIMP
-QuotaClient::Observer::Observe(nsISupports* aSubject, const char* aTopic,
-                               const char16_t* aData) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!strcmp(aTopic, kPrivateBrowsingObserverTopic)) {
-    PBackgroundChild* const backgroundActor =
-        BackgroundChild::GetOrCreateForCurrentThread();
-    QM_TRY(OkIf(backgroundActor), NS_ERROR_FAILURE);
-
-    QM_TRY(OkIf(backgroundActor->SendLSClearPrivateBrowsing()),
-           NS_ERROR_FAILURE);
-
-    return NS_OK;
-  }
-
-  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
-    QM_TRY(MOZ_TO_RESULT(Shutdown()));
-
-    return NS_OK;
-  }
-
-  NS_WARNING("Unknown observer topic!");
   return NS_OK;
 }
 

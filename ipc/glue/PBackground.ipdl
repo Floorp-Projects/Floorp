@@ -171,15 +171,6 @@ parent:
    */
   async PBackgroundLSSimpleRequest(LSSimpleRequestParams params);
 
-  /**
-   * Asynchronously propagates the "last-pb-context-exited" observer
-   * notification to LocalStorage NextGen implementation so it can clear
-   * retained private-browsing in-memory Datastores.  Using a (same-process)
-   * IPC message avoids the need for the main-thread nsIObserver to have a
-   * reference to the PBackground thread and directly dispatch a runnable to it.
-   */
-  async LSClearPrivateBrowsing();
-
   async PBackgroundLocalStorageCache(PrincipalInfo principalInfo,
                                      nsCString originKey,
                                      uint32_t privateBrowsingId);
