@@ -741,7 +741,6 @@ class TelemetryEvent {
     this._controller = controller;
     this._category = category;
     this._isPrivate = controller.input.isPrivate;
-    this.#beginObservingPingPrefs();
   }
 
   /**
@@ -1333,40 +1332,6 @@ class TelemetryEvent {
    */
   reset() {
     this.#previousSearchWordsSet = null;
-  }
-
-  #PING_PREFS = {
-    maxRichResults: Glean.urlbar.prefMaxResults,
-    "suggest.topsites": Glean.urlbar.prefSuggestTopsites,
-  };
-
-  #beginObservingPingPrefs() {
-    this.onPrefChanged("searchEngagementTelemetry.enabled");
-    lazy.UrlbarPrefs.addObserver(this);
-  }
-
-  onPrefChanged(pref) {
-    if (pref === "searchEngagementTelemetry.enabled") {
-      for (const p of Object.keys(this.#PING_PREFS)) {
-        this.onPrefChanged(p);
-      }
-      return;
-    }
-
-    if (!lazy.UrlbarPrefs.get("searchEngagementTelemetryEnabled")) {
-      return;
-    }
-
-    const metric = this.#PING_PREFS[pref];
-    if (metric) {
-      metric.set(lazy.UrlbarPrefs.get(pref));
-    }
-  }
-
-  onNimbusChanged(variable) {
-    if (variable === "searchEngagementTelemetryEnabled") {
-      this.onPrefChanged("searchEngagementTelemetry.enabled");
-    }
   }
 
   #previousSearchWordsSet = null;
