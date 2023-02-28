@@ -224,6 +224,9 @@ add_task(async function test_edit_login() {
   ok(!isHidden(gLoginItem._originDisplayInput), "Origin display link should be visible in edit mode");
   is(gLoginItem.shadowRoot.querySelector("a[name='origin']").getAttribute("href"), TEST_LOGIN_1.origin, "origin should be populated");
   is(usernameInput.value, TEST_LOGIN_1.username, "username should be populated");
+  is(usernameInput, document.activeElement?.shadowRoot?.activeElement, "username is focused");
+  is(usernameInput.selectionStart, 0, "username value is selected from start");
+  is(usernameInput.selectionEnd, usernameInput.value.length, "username value is selected to the end");
   is(
     document.l10n.getAttributes(usernameInput).id,
     null,
