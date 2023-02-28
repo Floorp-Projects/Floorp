@@ -35,10 +35,10 @@ def check_and_get_mach(dir_path):
 
 
 def main(args):
-    # Ensure we are running Python 3.7+. We run this check as soon as
+    # Ensure we are running Python 3.6+. We run this check as soon as
     # possible to avoid a cryptic import/usage error.
-    if sys.version_info < (3, 7):
-        print("Python 3.7+ is required to run mach.")
+    if sys.version_info < (3, 6):
+        print("Python 3.6+ is required to run mach.")
         print("You are running Python {0}".format(platform.python_version()))
         if sys.platform.startswith("linux"):
             print(dedent("""
