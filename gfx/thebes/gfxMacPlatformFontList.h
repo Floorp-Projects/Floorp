@@ -242,10 +242,23 @@ class gfxMacPlatformFontList final : public gfxPlatformFontList {
   void ActivateBundledFonts();
 #endif
 
+  static bool SkipNextChangeNotification(bool aNewValue = false) {
+    bool oldValue = sSkipNextChangeNotification;
+    sSkipNextChangeNotification = aNewValue;
+    return oldValue;
+  }
+
   enum { kATSGenerationInitial = -1 };
 
   // default font for use with system-wide font fallback
   CTFontRef mDefaultFont;
+
+  // Flag used when explicitly activating fonts during font-list initialization.
+  // We don't want to process an OS change notification in response to the
+  // activation, as that would cause a redundant re-initialization.
+  // (This is static because the RegisterFonts thread may want to set it before
+  // the platform font list has been instantiated.)
+  static bool sSkipNextChangeNotification;
 
   // font families that -apple-system maps to
   // Pre-10.11 this was always a single font family, such as Lucida Grande
