@@ -1033,8 +1033,7 @@ TestHTTPAnswerRunnable::Notify(nsITimer* aTimer) {
   nsCOMPtr<nsILoadInfo> loadInfo = testHTTPChannel->LoadInfo();
   uint32_t httpsOnlyStatus = loadInfo->GetHttpsOnlyStatus();
   httpsOnlyStatus |= nsILoadInfo::HTTPS_ONLY_EXEMPT |
-                     nsILoadInfo::HTTPS_ONLY_DO_NOT_LOG_TO_CONSOLE |
-                     nsILoadInfo::HTTPS_ONLY_BYPASS_ORB;
+                     nsILoadInfo::HTTPS_ONLY_DO_NOT_LOG_TO_CONSOLE;
   loadInfo->SetHttpsOnlyStatus(httpsOnlyStatus);
 
   testHTTPChannel->SetNotificationCallbacks(this);
