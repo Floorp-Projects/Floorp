@@ -1975,7 +1975,6 @@ size_t MarkStack::sizeOfExcludingThis(
 GCMarker::GCMarker(JSRuntime* rt)
     : tracer_(mozilla::VariantType<MarkingTracer>(), rt, this),
       runtime_(rt),
-      stack(),
       state(NotActive),
       incrementalWeakMapMarkingEnabled(
           TuningDefaults::IncrementalWeakMapMarkingEnabled)

@@ -527,16 +527,16 @@ class alignas(TypicalCacheLineSize) GCMarker {
   /* The stack of remaining marking work . */
   gc::MarkStack stack;
 
-  /* Whether we successfully added all edges to the implicit edges table. */
-  MainThreadOrGCTaskData<bool> haveAllImplicitEdges;
-
-  /* Track the state of marking. */
-  MainThreadOrGCTaskData<MarkingState> state;
-
   MainThreadOrGCTaskData<gc::ParallelMarker*> parallelMarker_;
 
   Vector<JS::GCCellPtr, 0, SystemAllocPolicy> unmarkGrayStack;
   friend class gc::UnmarkGrayTracer;
+
+  /* Track the state of marking. */
+  MainThreadOrGCTaskData<MarkingState> state;
+
+  /* Whether we successfully added all edges to the implicit edges table. */
+  MainThreadOrGCTaskData<bool> haveAllImplicitEdges;
 
  public:
   /*
