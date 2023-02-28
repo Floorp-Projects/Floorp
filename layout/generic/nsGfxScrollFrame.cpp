@@ -1721,7 +1721,7 @@ bool ScrollFrameHelper::WantAsyncScroll() const {
   ScrollStyles styles = GetScrollStylesFromFrame();
   nscoord oneDevPixel =
       GetScrolledFrame()->PresContext()->AppUnitsPerDevPixel();
-  nsRect scrollRange = GetLayoutScrollRange();
+  nsRect scrollRange = GetUnsnappedLayoutScrollRange();
 
   // If the page has a visual viewport size that's different from
   // the layout viewport size at the current zoom level, we need to be
@@ -4853,6 +4853,14 @@ ScrollStyles ScrollFrameHelper::GetScrollStylesFromFrame() const {
 
 nsRect ScrollFrameHelper::GetLayoutScrollRange() const {
   return GetScrollRange(mScrollPort.width, mScrollPort.height);
+}
+
+nsRect ScrollFrameHelper::GetUnsnappedLayoutScrollRange() const {
+  nsRect range = GetUnsnappedScrolledRectInternal(
+      mScrolledFrame->ScrollableOverflowRect(), mScrollPort.Size());
+  range.width = std::max(range.width - mScrollPort.Width(), 0);
+  range.height = std::max(range.height - mScrollPort.Height(), 0);
+  return range;
 }
 
 nsRect ScrollFrameHelper::GetScrollRange(nscoord aWidth,
