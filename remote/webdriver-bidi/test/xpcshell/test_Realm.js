@@ -7,7 +7,7 @@ const { Realm } = ChromeUtils.importESModule(
   "chrome://remote/content/webdriver-bidi/Realm.sys.mjs"
 );
 
-add_test(function test_id() {
+add_task(function test_id() {
   const realm1 = new Realm();
   const id1 = realm1.id;
   Assert.equal(typeof id1, "string");
@@ -17,11 +17,9 @@ add_test(function test_id() {
   Assert.equal(typeof id2, "string");
 
   Assert.notEqual(id1, id2, "Ids for different realms are different");
-
-  run_next_test();
 });
 
-add_test(function test_handleObjectMap() {
+add_task(function test_handleObjectMap() {
   const realm = new Realm();
 
   // Test an unknown handle.
@@ -85,6 +83,4 @@ add_test(function test_handleObjectMap() {
     undefined,
     "The first handle returns undefined as well"
   );
-
-  run_next_test();
 });

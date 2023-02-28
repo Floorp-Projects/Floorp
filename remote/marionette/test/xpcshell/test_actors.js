@@ -20,18 +20,16 @@ registerCleanupFunction(function() {
   disableEventsActor();
 });
 
-add_test(function test_commandsActor_register() {
+add_task(function test_commandsActor_register() {
   registerCommandsActor();
   unregisterCommandsActor();
 
   registerCommandsActor();
   registerCommandsActor();
   unregisterCommandsActor();
-
-  run_next_test();
 });
 
-add_test(async function test_commandsActor_getActorProxy_noBrowsingContext() {
+add_task(async function test_commandsActor_getActorProxy_noBrowsingContext() {
   registerCommandsActor();
 
   try {
@@ -45,17 +43,13 @@ add_test(async function test_commandsActor_getActorProxy_noBrowsingContext() {
   }
 
   unregisterCommandsActor();
-
-  run_next_test();
 });
 
-add_test(function test_eventsActor_enable_disable() {
+add_task(function test_eventsActor_enable_disable() {
   enableEventsActor();
   disableEventsActor();
 
   enableEventsActor();
   enableEventsActor();
   disableEventsActor();
-
-  run_next_test();
 });

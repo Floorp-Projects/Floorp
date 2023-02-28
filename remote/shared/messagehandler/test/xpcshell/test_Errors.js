@@ -10,7 +10,7 @@ const { error } = ChromeUtils.importESModule(
 // because shared/webdriver/Errors.jsm and shared/messagehandler/Errors.jsm share
 // similar helpers.
 
-add_test(function test_toJSON() {
+add_task(function test_toJSON() {
   let e0 = new error.MessageHandlerError();
   let e0s = e0.toJSON();
   equal(e0s.error, "message handler error");
@@ -24,11 +24,9 @@ add_test(function test_toJSON() {
   let e2s = e2.toJSON();
   equal(e2.status, e2s.error);
   equal(e2.message, e2s.message);
-
-  run_next_test();
 });
 
-add_test(function test_fromJSON() {
+add_task(function test_fromJSON() {
   Assert.throws(
     () => error.MessageHandlerError.fromJSON({ error: "foo" }),
     /Not of MessageHandlerError descent/
@@ -74,26 +72,20 @@ add_test(function test_fromJSON() {
   equal(e3toJSON.error, e3fromJSON.status);
   equal(e3toJSON.message, e3fromJSON.message);
   equal(e3toJSON.stacktrace, e3fromJSON.stack);
-
-  run_next_test();
 });
 
-add_test(function test_MessageHandlerError() {
+add_task(function test_MessageHandlerError() {
   let err = new error.MessageHandlerError("foo");
   equal("MessageHandlerError", err.name);
   equal("foo", err.message);
   equal("message handler error", err.status);
   ok(err instanceof error.MessageHandlerError);
-
-  run_next_test();
 });
 
-add_test(function test_UnsupportedCommandError() {
+add_task(function test_UnsupportedCommandError() {
   let e = new error.UnsupportedCommandError("foo");
   equal("UnsupportedCommandError", e.name);
   equal("foo", e.message);
   equal("unsupported message handler command", e.status);
   ok(e instanceof error.MessageHandlerError);
-
-  run_next_test();
 });

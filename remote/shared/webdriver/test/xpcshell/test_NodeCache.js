@@ -25,7 +25,7 @@ function setupTest() {
   return { browser, nodeCache, childEl, iframeEl, htmlEl, shadowRoot, svgEl };
 }
 
-add_test(function getOrCreateNodeReference_invalid() {
+add_task(function getOrCreateNodeReference_invalid() {
   const { browser, htmlEl, nodeCache } = setupTest();
 
   const invalidValues = [
@@ -44,11 +44,9 @@ add_test(function getOrCreateNodeReference_invalid() {
     info(`Testing value: ${value}`);
     Assert.throws(() => nodeCache.getOrCreateNodeReference(value), /TypeError/);
   }
-
-  run_next_test();
 });
 
-add_test(function getOrCreateNodeReference_supportedNodeTypes() {
+add_task(function getOrCreateNodeReference_supportedNodeTypes() {
   const { htmlEl, nodeCache, shadowRoot } = setupTest();
 
   const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
@@ -58,22 +56,18 @@ add_test(function getOrCreateNodeReference_supportedNodeTypes() {
   equal(nodeCache.size, 2);
 
   notEqual(htmlElRef, shadowRootRef);
-
-  run_next_test();
 });
 
-add_test(function getOrCreateNodeReference_referenceAlreadyCreated() {
+add_task(function getOrCreateNodeReference_referenceAlreadyCreated() {
   const { htmlEl, nodeCache } = setupTest();
 
   const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
   const htmlElRefOther = nodeCache.getOrCreateNodeReference(htmlEl);
   equal(nodeCache.size, 1);
   equal(htmlElRefOther, htmlElRef);
-
-  run_next_test();
 });
 
-add_test(function getOrCreateNodeReference_differentReferencePerNodeCache() {
+add_task(function getOrCreateNodeReference_differentReferencePerNodeCache() {
   const { browser, htmlEl, nodeCache } = setupTest();
   const nodeCache2 = new NodeCache();
 
@@ -87,11 +81,9 @@ add_test(function getOrCreateNodeReference_differentReferencePerNodeCache() {
   );
 
   equal(nodeCache.getNode(browser.browsingContext, htmlElRef2), null);
-
-  run_next_test();
 });
 
-add_test(function clear() {
+add_task(function clear() {
   const { browser, htmlEl, nodeCache, svgEl } = setupTest();
 
   nodeCache.getOrCreateNodeReference(htmlEl);
@@ -117,11 +109,9 @@ add_test(function clear() {
 
   nodeCache.clear({ all: true });
   equal(nodeCache.size, 0);
-
-  run_next_test();
 });
 
-add_test(function getNode_multiple_nodes() {
+add_task(function getNode_multiple_nodes() {
   const { browser, htmlEl, nodeCache, svgEl } = setupTest();
 
   const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
@@ -129,11 +119,9 @@ add_test(function getNode_multiple_nodes() {
 
   equal(nodeCache.getNode(browser.browsingContext, svgElRef), svgEl);
   equal(nodeCache.getNode(browser.browsingContext, htmlElRef), htmlEl);
-
-  run_next_test();
 });
 
-add_test(function getNode_differentBrowsingContextInSameGroup() {
+add_task(function getNode_differentBrowsingContextInSameGroup() {
   const { iframeEl, htmlEl, nodeCache } = setupTest();
 
   const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
@@ -143,11 +131,9 @@ add_test(function getNode_differentBrowsingContextInSameGroup() {
     nodeCache.getNode(iframeEl.contentWindow.browsingContext, htmlElRef),
     htmlEl
   );
-
-  run_next_test();
 });
 
-add_test(function getNode_differentBrowsingContextInOtherGroup() {
+add_task(function getNode_differentBrowsingContextInOtherGroup() {
   const { htmlEl, nodeCache } = setupTest();
 
   const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
@@ -155,11 +141,9 @@ add_test(function getNode_differentBrowsingContextInOtherGroup() {
 
   const browser2 = Services.appShell.createWindowlessBrowser(false);
   equal(nodeCache.getNode(browser2.browsingContext, htmlElRef), null);
-
-  run_next_test();
 });
 
-add_test(async function getNode_nodeDeleted() {
+add_task(async function getNode_nodeDeleted() {
   const { browser, nodeCache } = setupTest();
   let el = browser.document.createElement("div");
 
@@ -171,11 +155,9 @@ add_test(async function getNode_nodeDeleted() {
   await doGC();
 
   equal(nodeCache.getNode(browser.browsingContext, elRef), null);
-
-  run_next_test();
 });
 
-add_test(function getNodeDetails_forTopBrowsingContext() {
+add_task(function getNodeDetails_forTopBrowsingContext() {
   const { browser, htmlEl, nodeCache } = setupTest();
 
   const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
@@ -187,11 +169,9 @@ add_test(function getNodeDetails_forTopBrowsingContext() {
   ok(nodeDetails.isTopBrowsingContext);
   ok(nodeDetails.nodeWeakRef);
   equal(nodeDetails.nodeWeakRef.get(), htmlEl);
-
-  run_next_test();
 });
 
-add_test(async function getNodeDetails_forChildBrowsingContext() {
+add_task(async function getNodeDetails_forChildBrowsingContext() {
   const { browser, iframeEl, childEl, nodeCache } = setupTest();
 
   const childElRef = nodeCache.getOrCreateNodeReference(childEl);
@@ -206,6 +186,4 @@ add_test(async function getNodeDetails_forChildBrowsingContext() {
   ok(!nodeDetails.isTopBrowsingContext);
   ok(nodeDetails.nodeWeakRef);
   equal(nodeDetails.nodeWeakRef.get(), childEl);
-
-  run_next_test();
 });

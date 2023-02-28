@@ -10,7 +10,7 @@ const { truncate, pprint } = ChromeUtils.importESModule(
 const MAX_STRING_LENGTH = 250;
 const HALF = "x".repeat(MAX_STRING_LENGTH / 2);
 
-add_test(function test_pprint() {
+add_task(function test_pprint() {
   equal('[object Object] {"foo":"bar"}', pprint`${{ foo: "bar" }}`);
 
   equal("[object Number] 42", pprint`${42}`);
@@ -41,54 +41,45 @@ add_test(function test_pprint() {
     '<input id="foo" class="a b" href="#" name="bar" src="s" type="t">',
     pprint`${el}`
   );
-
-  run_next_test();
 });
 
-add_test(function test_truncate_empty() {
+add_task(function test_truncate_empty() {
   equal(truncate``, "");
-  run_next_test();
 });
 
-add_test(function test_truncate_noFields() {
+add_task(function test_truncate_noFields() {
   equal(truncate`foo bar`, "foo bar");
-  run_next_test();
 });
 
-add_test(function test_truncate_multipleFields() {
+add_task(function test_truncate_multipleFields() {
   equal(truncate`${0}`, "0");
   equal(truncate`${1}${2}${3}`, "123");
   equal(truncate`a${1}b${2}c${3}`, "a1b2c3");
-  run_next_test();
 });
 
-add_test(function test_truncate_primitiveFields() {
+add_task(function test_truncate_primitiveFields() {
   equal(truncate`${123}`, "123");
   equal(truncate`${true}`, "true");
   equal(truncate`${null}`, "");
   equal(truncate`${undefined}`, "");
-  run_next_test();
 });
 
-add_test(function test_truncate_string() {
+add_task(function test_truncate_string() {
   equal(truncate`${"foo"}`, "foo");
   equal(truncate`${"x".repeat(250)}`, "x".repeat(250));
   equal(truncate`${"x".repeat(260)}`, `${HALF} ... ${HALF}`);
-  run_next_test();
 });
 
-add_test(function test_truncate_array() {
+add_task(function test_truncate_array() {
   equal(truncate`${["foo"]}`, JSON.stringify(["foo"]));
   equal(truncate`${"foo"} ${["bar"]}`, `foo ${JSON.stringify(["bar"])}`);
   equal(
     truncate`${["x".repeat(260)]}`,
     JSON.stringify([`${HALF} ... ${HALF}`])
   );
-
-  run_next_test();
 });
 
-add_test(function test_truncate_object() {
+add_task(function test_truncate_object() {
   equal(truncate`${{}}`, JSON.stringify({}));
   equal(truncate`${{ foo: "bar" }}`, JSON.stringify({ foo: "bar" }));
   equal(
@@ -114,6 +105,4 @@ add_test(function test_truncate_object() {
     },
   };
   equal(truncate`${longComplex}`, `${HALF} ... ${HALF}`);
-
-  run_next_test();
 });

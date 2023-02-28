@@ -10,7 +10,7 @@ const {
   UnsupportedError,
 } = ChromeUtils.importESModule("chrome://remote/content/cdp/Error.sys.mjs");
 
-add_test(function test_RemoteAgentError_ctor() {
+add_task(function test_RemoteAgentError_ctor() {
   const e1 = new RemoteAgentError();
   equal(e1.name, "RemoteAgentError");
   equal(e1.message, "");
@@ -23,29 +23,23 @@ add_test(function test_RemoteAgentError_ctor() {
   const e3 = new RemoteAgentError("message", "cause");
   equal(e3.message, "message");
   equal(e3.cause, "cause");
-
-  run_next_test();
 });
 
-add_test(function test_RemoteAgentError_notify() {
+add_task(function test_RemoteAgentError_notify() {
   // nothing much we can test, except test that it doesn't throw
   new RemoteAgentError().notify();
-
-  run_next_test();
 });
 
-add_test(function test_RemoteAgentError_toString() {
+add_task(function test_RemoteAgentError_toString() {
   const e = new RemoteAgentError("message");
   equal(e.toString(), RemoteAgentError.format(e));
   equal(
     e.toString({ stack: true }),
     RemoteAgentError.format(e, { stack: true })
   );
-
-  run_next_test();
 });
 
-add_test(function test_RemoteAgentError_format() {
+add_task(function test_RemoteAgentError_format() {
   const { format } = RemoteAgentError;
 
   equal(format({ name: "HippoError" }), "HippoError");
@@ -83,11 +77,9 @@ caused by: DogError: woof:
 	two
 	three`
   );
-
-  run_next_test();
 });
 
-add_test(function test_RemoteAgentError_fromJSON() {
+add_task(function test_RemoteAgentError_fromJSON() {
   const cdpErr = {
     message: `TypeError: foo:
       bar
@@ -98,16 +90,13 @@ add_test(function test_RemoteAgentError_fromJSON() {
   equal(err.message, "TypeError: foo");
   equal(err.stack, "bar\nbaz");
   equal(err.cause, null);
-
-  run_next_test();
 });
 
-add_test(function test_UnsupportedError() {
+add_task(function test_UnsupportedError() {
   ok(new UnsupportedError() instanceof RemoteAgentError);
-  run_next_test();
 });
 
-add_test(function test_UnknownMethodError() {
+add_task(function test_UnknownMethodError() {
   ok(new UnknownMethodError() instanceof RemoteAgentError);
   ok(new UnknownMethodError("domain").message.endsWith("domain"));
   ok(
@@ -115,5 +104,4 @@ add_test(function test_UnknownMethodError() {
       "domain.command"
     )
   );
-  run_next_test();
 });

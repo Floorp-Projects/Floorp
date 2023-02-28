@@ -350,7 +350,7 @@ const { deserialize, serialize, stringify } = ChromeUtils.importESModule(
   "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs"
 );
 
-add_test(function test_deserializePrimitiveTypes() {
+add_task(function test_deserializePrimitiveTypes() {
   const realm = new Realm();
 
   for (const type of PRIMITIVE_TYPES) {
@@ -369,11 +369,9 @@ add_test(function test_deserializePrimitiveTypes() {
       );
     }
   }
-
-  run_next_test();
 });
 
-add_test(function test_deserializeDateLocalValue() {
+add_task(function test_deserializeDateLocalValue() {
   const realm = new Realm();
 
   const validaDateStrings = [
@@ -401,11 +399,9 @@ add_test(function test_deserializeDateLocalValue() {
       `Got expected value for ${dateString}`
     );
   }
-
-  run_next_test();
 });
 
-add_test(function test_deserializeLocalValues() {
+add_task(function test_deserializeLocalValues() {
   const realm = new Realm();
 
   for (const type of REMOTE_SIMPLE_VALUES.concat(REMOTE_COMPLEX_VALUES)) {
@@ -420,11 +416,9 @@ add_test(function test_deserializeLocalValues() {
     const value = deserialize(realm, serialized);
     assertLocalValue(serialized.type, value, expectedValue);
   }
-
-  run_next_test();
 });
 
-add_test(function test_deserializeLocalValuesByHandle() {
+add_task(function test_deserializeLocalValuesByHandle() {
   // Create two realms, realm1 will be used to serialize values, while realm2
   // will be used as a reference empty realm without any object reference.
   const realm1 = new Realm();
@@ -466,11 +460,9 @@ add_test(function test_deserializeLocalValuesByHandle() {
       `Got expected error when after deleting the object handle`
     );
   }
-
-  run_next_test();
 });
 
-add_test(function test_deserializePrimitiveTypesInvalidValues() {
+add_task(function test_deserializePrimitiveTypesInvalidValues() {
   const realm = new Realm();
 
   const invalidValues = [
@@ -496,11 +488,9 @@ add_test(function test_deserializePrimitiveTypesInvalidValues() {
       );
     }
   }
-
-  run_next_test();
 });
 
-add_test(function test_deserializeDateLocalValueInvalidValues() {
+add_task(function test_deserializeDateLocalValueInvalidValues() {
   const realm = new Realm();
 
   const invalidaDateStrings = [
@@ -548,11 +538,9 @@ add_test(function test_deserializeDateLocalValueInvalidValues() {
       `Got expected error for date string: ${dateString}`
     );
   }
-
-  run_next_test();
 });
 
-add_test(function test_deserializeLocalValuesInvalidType() {
+add_task(function test_deserializeLocalValuesInvalidType() {
   const realm = new Realm();
 
   const invalidTypes = [undefined, null, false, 42, {}];
@@ -576,11 +564,9 @@ add_test(function test_deserializeLocalValuesInvalidType() {
       `Got expected error for nested type ${invalidType}`
     );
   }
-
-  run_next_test();
 });
 
-add_test(function test_deserializeLocalValuesInvalidValues() {
+add_task(function test_deserializeLocalValuesInvalidValues() {
   const realm = new Realm();
 
   const invalidValues = [
@@ -690,11 +676,9 @@ add_test(function test_deserializeLocalValuesInvalidValues() {
       );
     }
   }
-
-  run_next_test();
 });
 
-add_test(function test_serializePrimitiveTypes() {
+add_task(function test_serializePrimitiveTypes() {
   const realm = new Realm();
 
   for (const type of PRIMITIVE_TYPES) {
@@ -724,11 +708,9 @@ add_test(function test_serializePrimitiveTypes() {
     assertInternalIds(serializationInternalMapWithRoot, 0);
     Assert.deepEqual(serialized, serializedWithRoot, "Got expected structure");
   }
-
-  run_next_test();
 });
 
-add_test(function test_serializeRemoteSimpleValues() {
+add_task(function test_serializeRemoteSimpleValues() {
   const realm = new Realm();
 
   for (const type of REMOTE_SIMPLE_VALUES) {
@@ -769,11 +751,9 @@ add_test(function test_serializeRemoteSimpleValues() {
       "Got expected structure, plus a generated handle id"
     );
   }
-
-  run_next_test();
 });
 
-add_test(function test_serializeRemoteComplexValues() {
+add_task(function test_serializeRemoteComplexValues() {
   const realm = new Realm();
 
   for (const type of REMOTE_COMPLEX_VALUES) {
@@ -814,11 +794,9 @@ add_test(function test_serializeRemoteComplexValues() {
       "Got expected structure, plus a generated handle id"
     );
   }
-
-  run_next_test();
 });
 
-add_test(function test_serializeWithSerializationInternalMap() {
+add_task(function test_serializeWithSerializationInternalMap() {
   const dataSet = [
     {
       data: [1],
@@ -906,11 +884,9 @@ add_test(function test_serializeWithSerializationInternalMap() {
 
     Assert.deepEqual(serialized, serializedValue, "Got expected structure");
   }
-
-  run_next_test();
 });
 
-add_test(function test_serializeMultipleValuesWithSerializationInternalMap() {
+add_task(function test_serializeMultipleValuesWithSerializationInternalMap() {
   const realm = new Realm();
   const serializationInternalMap = new Map();
   const obj1 = { foo: "bar" };
@@ -929,11 +905,9 @@ add_test(function test_serializeMultipleValuesWithSerializationInternalMap() {
     internalId2,
     "Internal ids for different object are also different"
   );
-
-  run_next_test();
 });
 
-add_test(function test_stringify() {
+add_task(function test_stringify() {
   const STRINGIFY_TEST_CASES = [
     [undefined, "undefined"],
     [null, "null"],
@@ -967,8 +941,6 @@ add_test(function test_stringify() {
 
     Assert.strictEqual(expectedString, stringifiedValue, "Got expected string");
   }
-
-  run_next_test();
 });
 
 function assertLocalValue(type, value, expectedValue) {
