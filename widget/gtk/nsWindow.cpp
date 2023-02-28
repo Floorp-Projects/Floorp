@@ -883,29 +883,33 @@ void nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints) {
   ApplySizeConstraints();
 }
 
+bool nsWindow::DrawsToCSDTitlebar() const {
+  return mSizeMode == nsSizeMode_Normal &&
+         mGtkWindowDecoration == GTK_DECORATION_CLIENT && mDrawInTitlebar;
+}
+
 void nsWindow::AddCSDDecorationSize(int* aWidth, int* aHeight) {
-  if (mSizeMode == nsSizeMode_Normal &&
-      mGtkWindowDecoration == GTK_DECORATION_CLIENT && mDrawInTitlebar) {
-    GtkBorder decorationSize = GetCSDDecorationSize(IsPopup());
-    *aWidth += decorationSize.left + decorationSize.right;
-    *aHeight += decorationSize.top + decorationSize.bottom;
+  if (!DrawsToCSDTitlebar()) {
+    return;
   }
+  GtkBorder decorationSize = GetCSDDecorationSize(IsPopup());
+  *aWidth += decorationSize.left + decorationSize.right;
+  *aHeight += decorationSize.top + decorationSize.bottom;
 }
 
 #ifdef MOZ_WAYLAND
 bool nsWindow::GetCSDDecorationOffset(int* aDx, int* aDy) {
-  if (mSizeMode == nsSizeMode_Normal &&
-      mGtkWindowDecoration == GTK_DECORATION_CLIENT && mDrawInTitlebar) {
-    GtkBorder decorationSize = GetCSDDecorationSize(IsPopup());
-    *aDx = decorationSize.left;
-    *aDy = decorationSize.top;
-    return true;
+  if (!DrawsToCSDTitlebar()) {
+    return false;
   }
-  return false;
+  GtkBorder decorationSize = GetCSDDecorationSize(IsPopup());
+  *aDx = decorationSize.left;
+  *aDy = decorationSize.top;
+  return true;
 }
 #endif
 
-void nsWindow::ApplySizeConstraints(void) {
+void nsWindow::ApplySizeConstraints() {
   if (mShell) {
     GdkGeometry geometry;
     geometry.min_width =
@@ -918,7 +922,7 @@ void nsWindow::ApplySizeConstraints(void) {
         DevicePixelsToGdkCoordRoundDown(mSizeConstraints.mMaxSize.height);
 
     uint32_t hints = 0;
-    if (mSizeConstraints.mMinSize != LayoutDeviceIntSize(0, 0)) {
+    if (mSizeConstraints.mMinSize != LayoutDeviceIntSize()) {
       if (GdkIsWaylandDisplay()) {
         gtk_widget_set_size_request(GTK_WIDGET(mContainer), geometry.min_width,
                                     geometry.min_height);
@@ -8726,8 +8730,8 @@ void nsWindow::SetDrawsInTitlebar(bool aState) {
   }
 
   if (mWindowType == WindowType::Dialog &&
-      !bool(mBorderStyle & BorderStyle::Title) &&
-      !bool(mBorderStyle & BorderStyle::ResizeH)) {
+      !(mBorderStyle & BorderStyle::Title) &&
+      !(mBorderStyle & BorderStyle::ResizeH)) {
     gtk_window_set_decorated(GTK_WINDOW(mShell), !aState);
     LOG("  set decoration for dialog with titlebar=no %d", aState);
     return;
@@ -9594,7 +9598,7 @@ void nsWindow::UpdateMozWindowActive() {
   }
 }
 
-void nsWindow::ForceTitlebarRedraw(void) {
+void nsWindow::ForceTitlebarRedraw() {
   MOZ_ASSERT(mDrawInTitlebar, "We should not redraw invisible titlebar.");
 
   if (!mWidgetListener || !mWidgetListener->GetPresShell()) {
