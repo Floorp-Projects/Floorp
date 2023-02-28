@@ -121,20 +121,21 @@ browsertime-tp6m:
                         by-subtest:
                             wikipedia:
                                 by-test-platform:
-                                    android-hw-(g5|a51).*shippable-qr.*: [trunk-only]
+                                    android-hw-(g5|a51).*shippable-qr.*: []
                                     default: []
                             google-search-restaurants:
                                 by-test-platform:
-                                    android-hw-(g5|a51).*shippable-qr.*: [trunk-only]
+                                    android-hw-(g5|a51).*shippable-qr.*: []
                                     default: []
                             default:
                                 by-test-platform:
-                                    android-hw-(g5|a51).*shippable-qr.*: [mozilla-central]
+                                    android-hw-(g5|a51).*shippable-qr.*: []
                                     default: []
             default: []
 
 browsertime-tp6m-essential:
     <<: *tp6m-defaults
+    run-without-variant: false
     raptor:
         apps: [geckoview, fenix, chrome-m, refbrow]
         run-visual-metrics: true
@@ -317,6 +318,7 @@ browsertime-speedometer-mobile:
 
 browsertime-speedometer3-mobile:
     description: Browsertime Speedometer 3 on Android
+    run-without-variant: false
     raptor:
         apps: [geckoview, fenix, chrome-m]
     tier:
