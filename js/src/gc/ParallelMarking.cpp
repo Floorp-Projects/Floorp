@@ -319,23 +319,24 @@ void ParallelMarker::decActiveTasks(ParallelMarkTask* task,
 }
 
 void ParallelMarker::donateWorkFrom(GCMarker* src) {
-  ParallelMarkTask* waitingTask;
-
-  {
-    AutoLockGC lock(gc);
-
-    // Check there are tasks waiting for work while holding the lock.
-    if (waitingTaskCount == 0) {
-      return;
-    }
-
-    // Take the first waiting task off the list.
-    waitingTask = waitingTasks.ref().popFront();
-    waitingTaskCount--;
-
-    // |task| is not running so it's safe to move work to it.
-    MOZ_ASSERT(waitingTask->isWaiting);
+  if (!gc->tryLockGC()) {
+    return;
   }
+
+  // Check there are tasks waiting for work while holding the lock.
+  if (waitingTaskCount == 0) {
+    gc->unlockGC();
+    return;
+  }
+
+  // Take the first waiting task off the list.
+  ParallelMarkTask* waitingTask = waitingTasks.ref().popFront();
+  waitingTaskCount--;
+
+  // |task| is not running so it's safe to move work to it.
+  MOZ_ASSERT(waitingTask->isWaiting);
+
+  gc->unlockGC();
 
   // Move some work from this thread's mark stack to the waiting task.
   GCMarker::moveWork(waitingTask->marker, src);
