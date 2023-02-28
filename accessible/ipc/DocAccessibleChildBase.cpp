@@ -66,14 +66,28 @@ void DocAccessibleChildBase::SerializeTree(nsTArray<LocalAccessible*>& aTree,
       genericTypes |= eActionable;
     }
 
+    RefPtr<AccAttributes> fields;
+    // Even though we send moves as a hide and a show, we don't want to
+    // push the cache again for moves.
+    if (StaticPrefs::accessibility_cache_enabled_AtStartup() &&
+        !acc->Document()->IsAccessibleBeingMoved(acc)) {
+      fields =
+          acc->BundleFieldsForCache(CacheDomain::All, CacheUpdateType::Initial);
+      if (fields->Count() == 0) {
+        fields = nullptr;
+      }
+    }
+
 #if defined(XP_WIN)
     aData.AppendElement(AccessibleData(
         id, msaaId, role, childCount, static_cast<AccType>(acc->mType),
-        static_cast<AccGenericType>(genericTypes), acc->mRoleMapEntryIndex));
+        static_cast<AccGenericType>(genericTypes), acc->mRoleMapEntryIndex,
+        fields));
 #else
-    aData.AppendElement(AccessibleData(
-        id, role, childCount, static_cast<AccType>(acc->mType),
-        static_cast<AccGenericType>(genericTypes), acc->mRoleMapEntryIndex));
+    aData.AppendElement(
+        AccessibleData(id, role, childCount, static_cast<AccType>(acc->mType),
+                       static_cast<AccGenericType>(genericTypes),
+                       acc->mRoleMapEntryIndex, fields));
 #endif
   }
 }
@@ -88,34 +102,12 @@ void DocAccessibleChildBase::InsertIntoIpcTree(LocalAccessible* aParent,
   FlattenTree(aChild, shownTree);
   ShowEventData data(parentID, aIdxInParent,
                      nsTArray<AccessibleData>(shownTree.Length()),
-                     aSuppressShowEvent ||
-                         StaticPrefs::accessibility_cache_enabled_AtStartup());
+                     aSuppressShowEvent);
   SerializeTree(shownTree, data.NewTree());
   if (ipc::ProcessChild::ExpectingShutdown()) {
     return;
   }
   MaybeSendShowEvent(data, false);
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    nsTArray<CacheData> cache(shownTree.Length());
-    for (LocalAccessible* acc : shownTree) {
-      if (mDoc->IsAccessibleBeingMoved(acc)) {
-        // Even though we send moves as a hide and a show, we don't want to
-        // push the cache again for moves.
-        continue;
-      }
-      RefPtr<AccAttributes> fields =
-          acc->BundleFieldsForCache(CacheDomain::All, CacheUpdateType::Initial);
-      if (fields->Count()) {
-        uint64_t id = reinterpret_cast<uint64_t>(acc->UniqueID());
-        cache.AppendElement(CacheData(id, fields));
-      }
-    }
-    // The cache array might be empty if there were only moved Accessibles or if
-    // no Accessibles generated any cache data.
-    if (!cache.IsEmpty()) {
-      Unused << SendCache(CacheUpdateType::Initial, cache, !aSuppressShowEvent);
-    }
-  }
 }
 
 void DocAccessibleChildBase::ShowEvent(AccShowEvent* aShowEvent) {

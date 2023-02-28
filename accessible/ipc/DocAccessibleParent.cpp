@@ -156,6 +156,13 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvShowEvent(
   RemoteAccessible* target = parent->RemoteChildAt(newChildIdx);
   ProxyShowHideEvent(target, parent, true, aFromUser);
 
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    if (nsCOMPtr<nsIObserverService> obsService =
+            services::GetObserverService()) {
+      obsService->NotifyObservers(nullptr, NS_ACCESSIBLE_CACHE_TOPIC, nullptr);
+    }
+  }
+
   if (!nsCoreUtils::AccEventObserversExist()) {
     return IPC_OK();
   }
@@ -195,6 +202,11 @@ uint32_t DocAccessibleParent::AddSubtree(
     aParent->AddChildAt(aIdxInParent, newProxy);
     mAccessibles.PutEntry(newChild.ID())->mProxy = newProxy;
     ProxyCreated(newProxy);
+
+    if (RefPtr<AccAttributes> fields = newChild.CacheFields()) {
+      MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup());
+      newProxy->ApplyCache(CacheUpdateType::Initial, fields);
+    }
 
 #if defined(XP_WIN)
     if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
