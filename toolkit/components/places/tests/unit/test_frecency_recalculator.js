@@ -83,6 +83,10 @@ add_task(async function test() {
   await resetOriginFrecency(url1.host);
   await resetOriginFrecency(url2.host);
 
+  Assert.ok(
+    PlacesUtils.history.shouldStartFrecencyRecalculation,
+    "Should have set shouldStartFrecencyRecalculation"
+  );
   await PlacesFrecencyRecalculator.recalculateSomeFrecencies({ chunkSize: 1 });
   Assert.ok(
     PlacesFrecencyRecalculator.isRecalculationPending,
@@ -93,12 +97,17 @@ add_task(async function test() {
     !PlacesFrecencyRecalculator.isRecalculationPending,
     "Recalculation should not be pending"
   );
+  Assert.ok(
+    !PlacesUtils.history.shouldStartFrecencyRecalculation,
+    "Should have unset shouldStartFrecencyRecalculation"
+  );
 
   Assert.greater(await getOriginFrecency(url1.host), 0);
   Assert.greater(await getOriginFrecency(url2.host), 0);
 
   info("Changing recalc_frecency of an entry adds a pending recalculation.");
   PlacesUtils.history.shouldStartFrecencyRecalculation = false;
+  let promiseNotify = TestUtils.topicObserved("frecency-recalculation-needed");
   await PlacesUtils.withConnectionWrapper(
     "test_frecency_recalculator",
     async db => {
@@ -112,28 +121,17 @@ add_task(async function test() {
     PlacesUtils.history.shouldStartFrecencyRecalculation,
     "Should have set shouldStartFrecencyRecalculation"
   );
-  PlacesFrecencyRecalculator.maybeStartFrecencyRecalculation();
+
+  await promiseNotify;
   Assert.ok(
     PlacesFrecencyRecalculator.isRecalculationPending,
     "Recalculation should be pending"
   );
-});
-
-add_task(async function test_idle_notifications() {
-  const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
-  let spyStart = sinon.spy(
-    PlacesFrecencyRecalculator,
-    "startRecalculationCheckInterval"
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
+  Assert.ok(
+    !PlacesUtils.history.shouldStartFrecencyRecalculation,
+    "Should have unset shouldStartFrecencyRecalculation"
   );
-  let spyStop = sinon.spy(
-    PlacesFrecencyRecalculator,
-    "stopRecalculationCheckInterval"
-  );
-  PlacesFrecencyRecalculator.observe(null, "idle", "");
-  Assert.ok(!spyStart.calledOnce, "Start callback has not been invoked");
-  Assert.ok(spyStop.calledOnce, "Stop callback has been invoked");
-  PlacesFrecencyRecalculator.observe(null, "active", "");
-  Assert.ok(spyStop.calledOnce, "Start callback has been invoked");
 });
 
 add_task(async function test_chunk_time_telemetry() {
@@ -141,6 +139,10 @@ add_task(async function test_chunk_time_telemetry() {
     url: "https://test-bookmark.com",
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
   });
+  Assert.ok(
+    PlacesUtils.history.shouldStartFrecencyRecalculation,
+    "Should have set shouldStartFrecencyRecalculation"
+  );
   let histogram = TelemetryTestUtils.getAndClearHistogram(
     "PLACES_FRECENCY_RECALC_CHUNK_TIME_MS"
   );
@@ -153,6 +155,11 @@ add_task(async function test_chunk_time_telemetry() {
     1
   );
   Assert.greater(snapshot.sum, 0);
+  Assert.ok(
+    !PlacesUtils.history.shouldStartFrecencyRecalculation,
+    "Should have unset shouldStartFrecencyRecalculation"
+  );
+
   // It should now not report any new time, since there's nothing to recalculate.
   histogram.clear();
   PlacesFrecencyRecalculator.observe(subject, "test-execute-taskFn", "");
@@ -161,5 +168,9 @@ add_task(async function test_chunk_time_telemetry() {
   Assert.equal(
     Object.values(snapshot.values).reduce((a, b) => a + b, 0),
     0
+  );
+  Assert.ok(
+    !PlacesUtils.history.shouldStartFrecencyRecalculation,
+    "Should still not have set shouldStartFrecencyRecalculation"
   );
 });
