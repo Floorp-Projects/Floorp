@@ -154,7 +154,11 @@ function getMIMEInfoForType(aMIMEType, aExtension) {
 
 // This is only used after the user has entered a filename.
 function validateFileName(aFileName) {
-  let processed = lazy.DownloadPaths.sanitize(aFileName) || "_";
+  let processed =
+    lazy.DownloadPaths.sanitize(aFileName, {
+      compressWhitespaces: false,
+      allowInvalidFilenames: true,
+    }) || "_";
   if (AppConstants.platform == "android") {
     // If a large part of the filename has been sanitized, then we
     // will use a default filename instead
