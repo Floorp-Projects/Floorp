@@ -164,3 +164,25 @@ serp:
           `tabhistory`, `unknown`.
           This will be `unknown` if we cannot determine the source.
         type: string
+
+  engagement:
+    type: event
+    description: >
+      Recorded user actions on a SERP.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1814773
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1814773
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+      - rev-data@mozilla.com
+    expires: never
+    extra_keys:
+      impression_id: *impression_id
+      action:
+        description: >
+          The action taken on the page.
+          Possible values are `clicked`.
+        type: string

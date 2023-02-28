@@ -7,7 +7,10 @@
 
 "use strict";
 
-const { SearchSERPTelemetry } = ChromeUtils.importESModule(
+const {
+  SearchSERPTelemetry,
+  SearchSERPTelemetryUtils,
+} = ChromeUtils.importESModule(
   "resource:///modules/SearchSERPTelemetry.sys.mjs"
 );
 
@@ -70,18 +73,22 @@ add_setup(async function() {
   // Enable local telemetry recording for the duration of the tests.
   let oldCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
-  Services.prefs.setBoolPref("browser.search.log", true);
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.search.log", true],
+      ["browser.search.serpEventTelemetry.enabled", true],
+    ],
+  });
 
   registerCleanupFunction(async () => {
-    Services.prefs.clearUserPref("browser.search.log");
     SearchSERPTelemetry.overrideSearchTelemetryForTests();
     Services.telemetry.canRecordExtended = oldCanRecord;
-    Services.telemetry.clearScalars();
+    resetTelemetry();
   });
 });
 
 add_task(async function test_simple_search_page_visit() {
-  searchCounts.clear();
+  resetTelemetry();
 
   await BrowserTestUtils.withNewTab(
     {
@@ -97,11 +104,21 @@ add_task(async function test_simple_search_page_visit() {
       );
     }
   );
+
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+      },
+    },
+  ]);
 });
 
 add_task(async function test_simple_search_page_visit_telemetry() {
-  searchCounts.clear();
-  Services.telemetry.clearScalars();
+  resetTelemetry();
 
   await BrowserTestUtils.withNewTab(
     {
@@ -125,6 +142,16 @@ add_task(async function test_simple_search_page_visit_telemetry() {
       Assert.notEqual(scalars[key].example, 0, "bandwidth logged");
     }
   );
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+      },
+    },
+  ]);
 });
 
 add_task(async function test_follow_on_visit() {
@@ -145,11 +172,28 @@ add_task(async function test_follow_on_visit() {
       );
     }
   );
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+      },
+    },
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+      },
+    },
+  ]);
 });
 
 add_task(async function test_track_ad() {
-  Services.telemetry.clearScalars();
-  searchCounts.clear();
+  resetTelemetry();
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -164,12 +208,22 @@ add_task(async function test_track_ad() {
     }
   );
 
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+      },
+    },
+  ]);
+
   BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_track_ad_on_data_attributes() {
-  Services.telemetry.clearScalars();
-  searchCounts.clear();
+  resetTelemetry();
 
   let url =
     getRootDirectory(gTestPath).replace(
@@ -194,12 +248,22 @@ add_task(async function test_track_ad_on_data_attributes() {
     }
   );
 
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example-data-attributes",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+      },
+    },
+  ]);
+
   BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_track_ad_on_data_attributes_and_hrefs() {
-  Services.telemetry.clearScalars();
-  searchCounts.clear();
+  resetTelemetry();
 
   let url =
     getRootDirectory(gTestPath).replace(
@@ -224,12 +288,22 @@ add_task(async function test_track_ad_on_data_attributes_and_hrefs() {
     }
   );
 
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example-data-attributes",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+      },
+    },
+  ]);
+
   BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_track_no_ad_on_data_attributes_and_hrefs() {
-  Services.telemetry.clearScalars();
-  searchCounts.clear();
+  resetTelemetry();
 
   let url =
     getRootDirectory(gTestPath).replace(
@@ -251,12 +325,22 @@ add_task(async function test_track_no_ad_on_data_attributes_and_hrefs() {
     }
   );
 
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example-data-attributes",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+      },
+    },
+  ]);
+
   BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_track_ad_on_DOMContentLoaded() {
-  Services.telemetry.clearScalars();
-  searchCounts.clear();
+  resetTelemetry();
 
   let url =
     getRootDirectory(gTestPath).replace(
@@ -287,12 +371,22 @@ add_task(async function test_track_ad_on_DOMContentLoaded() {
     }
   );
 
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "slow-page-load",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+      },
+    },
+  ]);
+
   BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_track_ad_on_load_event() {
-  Services.telemetry.clearScalars();
-  searchCounts.clear();
+  resetTelemetry();
 
   let url =
     getRootDirectory(gTestPath).replace(
@@ -313,12 +407,22 @@ add_task(async function test_track_ad_on_load_event() {
     }
   );
 
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "slow-page-load",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+      },
+    },
+  ]);
+
   BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_track_ad_organic() {
-  Services.telemetry.clearScalars();
-  searchCounts.clear();
+  resetTelemetry();
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -333,12 +437,22 @@ add_task(async function test_track_ad_organic() {
     }
   );
 
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example",
+        tagged: "false",
+        partner_code: "",
+        source: "unknown",
+      },
+    },
+  ]);
+
   BrowserTestUtils.removeTab(tab);
 });
 
 add_task(async function test_track_ad_new_window() {
-  searchCounts.clear();
-  Services.telemetry.clearScalars();
+  resetTelemetry();
 
   let win = await BrowserTestUtils.openNewBrowserWindow();
 
@@ -358,13 +472,23 @@ add_task(async function test_track_ad_new_window() {
     }
   );
 
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+      },
+    },
+  ]);
+
   await BrowserTestUtils.closeWindow(win);
 });
 
 add_task(async function test_track_ad_pages_without_ads() {
   // Note: the above tests have already checked a page with no ad-urls.
-  searchCounts.clear();
-  Services.telemetry.clearScalars();
+  resetTelemetry();
 
   let tabs = [];
 
@@ -389,6 +513,25 @@ add_task(async function test_track_ad_pages_without_ads() {
     }
   );
 
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+      },
+    },
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+      },
+    },
+  ]);
+
   for (let tab of tabs) {
     BrowserTestUtils.removeTab(tab);
   }
@@ -396,13 +539,14 @@ add_task(async function test_track_ad_pages_without_ads() {
 
 async function track_ad_click(testOrganic) {
   // Note: the above tests have already checked a page with no ad-urls.
-  searchCounts.clear();
-  Services.telemetry.clearScalars();
+  resetTelemetry();
 
   let expectedScalarKey = `example:${testOrganic ? "organic" : "tagged"}`;
   let expectedContentScalarKey = `example:${
     testOrganic ? "organic:none" : "tagged:ff"
   }`;
+  let tagged = testOrganic ? "false" : "true";
+  let partnerCode = testOrganic ? "" : "ff";
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -419,6 +563,17 @@ async function track_ad_click(testOrganic) {
     }
   );
 
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example",
+        tagged,
+        partner_code: partnerCode,
+        source: "unknown",
+      },
+    },
+  ]);
+
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
   await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
     content.document.getElementById("ad1").click();
@@ -434,6 +589,22 @@ async function track_ad_click(testOrganic) {
       "browser.search.adclicks.unknown": { [expectedScalarKey]: 1 },
     }
   );
+
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example",
+        tagged,
+        partner_code: partnerCode,
+        source: "unknown",
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+        },
+      ],
+    },
+  ]);
 
   // Now go back, and click again.
   pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
@@ -452,6 +623,30 @@ async function track_ad_click(testOrganic) {
       "browser.search.adclicks.unknown": { [expectedScalarKey]: 1 },
     }
   );
+
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example",
+        tagged,
+        partner_code: partnerCode,
+        source: "unknown",
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+        },
+      ],
+    },
+    {
+      impression: {
+        provider: "example",
+        tagged,
+        partner_code: partnerCode,
+        source: "tabhistory",
+      },
+    },
+  ]);
 
   pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
   await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
@@ -472,6 +667,35 @@ async function track_ad_click(testOrganic) {
     }
   );
 
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example",
+        tagged,
+        partner_code: partnerCode,
+        source: "unknown",
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+        },
+      ],
+    },
+    {
+      impression: {
+        provider: "example",
+        tagged,
+        partner_code: partnerCode,
+        source: "tabhistory",
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+        },
+      ],
+    },
+  ]);
+
   BrowserTestUtils.removeTab(tab);
 }
 
@@ -484,8 +708,7 @@ add_task(async function test_track_ad_click_organic() {
 });
 
 add_task(async function test_track_ad_click_with_location_change_other_tab() {
-  searchCounts.clear();
-  Services.telemetry.clearScalars();
+  resetTelemetry();
   const url = getSERPUrl(getPageUrl(false, true));
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 
@@ -496,6 +719,17 @@ add_task(async function test_track_ad_click_with_location_change_other_tab() {
       "browser.search.withads.unknown": { "example:tagged": 1 },
     }
   );
+
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+      },
+    },
+  ]);
 
   const newTab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -518,6 +752,22 @@ add_task(async function test_track_ad_click_with_location_change_other_tab() {
       "browser.search.adclicks.unknown": { "example:tagged": 1 },
     }
   );
+
+  assertImpressionEvents([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+        },
+      ],
+    },
+  ]);
 
   BrowserTestUtils.removeTab(newTab);
   BrowserTestUtils.removeTab(tab);
