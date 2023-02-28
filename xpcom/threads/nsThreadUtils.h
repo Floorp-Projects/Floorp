@@ -48,8 +48,9 @@ class nsIThread;
  *   The resulting nsIThread object.
  * @param aInitialEvent
  *   The initial event to run on this thread.  This parameter may be null.
- * @param aStackSize
- *   The size in bytes to reserve for the thread's stack.
+ * @param aOptions
+ *   Options used to configure thread creation.
+ *   Options are documented in nsIThreadManager.idl.
  *
  * @returns NS_ERROR_INVALID_ARG
  *   Indicates that the given name is not unique.

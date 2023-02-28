@@ -18,6 +18,11 @@
 #include "mozilla/SyncRunnable.h"
 #include "gtest/gtest.h"
 
+#ifdef XP_WIN
+#  include <windef.h>
+#  include <winuser.h>
+#endif
+
 using namespace mozilla;
 
 class nsRunner final : public Runnable {
@@ -377,3 +382,34 @@ TEST(Threads, UnregisteredShutdownTask)
 
   thread->Shutdown();
 }
+
+#if defined(XP_WIN) || !defined(DEBUG)
+TEST(Threads, OptionsIsUiThread)
+{
+  // On Windows, test that the isUiThread flag results in a GUI thread.
+  // In non-Windows non-debug builds, test that the isUiThread flag is ignored.
+
+  nsCOMPtr<nsIThread> thread;
+  nsIThreadManager::ThreadCreationOptions options;
+  options.isUiThread = true;
+  MOZ_ALWAYS_SUCCEEDS(NS_NewNamedThread(
+      "Testing Thread", getter_AddRefs(thread), nullptr, options));
+
+  bool isGuiThread = false;
+  auto syncRunnable =
+      MakeRefPtr<SyncRunnable>(NS_NewRunnableFunction(__func__, [&] {
+#  ifdef XP_WIN
+        isGuiThread = ::IsGUIThread(false);
+#  endif
+      }));
+  MOZ_ALWAYS_SUCCEEDS(syncRunnable->DispatchToThread(thread));
+
+  bool expectGuiThread = false;
+#  ifdef XP_WIN
+  expectGuiThread = true;
+#  endif
+  EXPECT_EQ(expectGuiThread, isGuiThread);
+
+  thread->Shutdown();
+}
+#endif

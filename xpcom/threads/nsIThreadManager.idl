@@ -68,6 +68,10 @@ interface nsIThreadManager : nsISupports
     // and perform their own event dispatching internaly, such as thread pool
     // threads or the timer thread.
     bool blockDispatch = false;
+
+    // (Windows-only) Whether the thread should have a MessageLoop capable of
+    // processing native UI events. Defaults to false.
+    bool isUiThread = false;
   };
 %}
 
