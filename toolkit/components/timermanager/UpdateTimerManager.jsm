@@ -226,7 +226,13 @@ TimerManager.prototype = {
         timerID,
         function() {
           try {
+            let startTime = Cu.now();
             Cc[cid][method](Ci.nsITimerCallback).notify(timer);
+            ChromeUtils.addProfilerMarker(
+              "UpdateTimer",
+              { category: "Timer", startTime },
+              timerID
+            );
             LOG("TimerManager:notify - notified " + cid);
           } catch (e) {
             LOG(
@@ -264,7 +270,13 @@ TimerManager.prototype = {
           if (timerData.callback && timerData.callback.notify) {
             ChromeUtils.idleDispatch(() => {
               try {
+                let startTime = Cu.now();
                 timerData.callback.notify(timer);
+                ChromeUtils.addProfilerMarker(
+                  "UpdateTimer",
+                  { category: "Timer", startTime },
+                  timerID
+                );
                 LOG(`TimerManager:notify - notified timerID: ${timerID}`);
               } catch (e) {
                 LOG(
@@ -353,6 +365,15 @@ TimerManager.prototype = {
    * See nsIUpdateTimerManager.idl
    */
   registerTimer: function TM_registerTimer(id, callback, interval, skipFirst) {
+    let markerText = `timerID: ${id} interval: ${interval}s`;
+    if (skipFirst) {
+      markerText += " skipFirst";
+    }
+    ChromeUtils.addProfilerMarker(
+      "RegisterUpdateTimer",
+      { category: "Timer" },
+      markerText
+    );
     LOG(
       `TimerManager:registerTimer - timerID: ${id} interval: ${interval} skipFirst: ${skipFirst}`
     );
@@ -393,6 +414,11 @@ TimerManager.prototype = {
   },
 
   unregisterTimer: function TM_unregisterTimer(id) {
+    ChromeUtils.addProfilerMarker(
+      "UnregisterUpdateTimer",
+      { category: "Timer" },
+      id
+    );
     LOG("TimerManager:unregisterTimer - id: " + id);
     if (id in this._timers) {
       delete this._timers[id];
