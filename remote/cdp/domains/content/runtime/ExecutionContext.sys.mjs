@@ -25,6 +25,10 @@ function uuid() {
     .slice(1, -1);
 }
 
+function randomInt() {
+  return crypto.getRandomValues(new Uint32Array(1))[0];
+}
+
 /**
  * This class represent a debuggable context onto which we can evaluate Javascript.
  * This is typically a document, but it could also be a worker, an add-on, ... or
@@ -104,7 +108,7 @@ export class ExecutionContext {
       debuggerObj instanceof Debugger.Object &&
       Node.isInstance(debuggerObj.unsafeDereference())
     ) {
-      debuggerObj.nodeId = uuid();
+      debuggerObj.nodeId = randomInt();
       // We do not differentiate between backendNodeId and nodeId (yet)
       debuggerObj.backendNodeId = debuggerObj.nodeId;
     }

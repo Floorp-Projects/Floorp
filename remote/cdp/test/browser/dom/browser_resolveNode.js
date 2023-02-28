@@ -6,8 +6,7 @@
 add_task(async function backendNodeIdInvalidTypes({ client }) {
   const { DOM } = client;
 
-  // Bug 1625417 - CDP expects the id as number
-  for (const backendNodeId of [null, true, 1, /* "foo", */ [], {}]) {
+  for (const backendNodeId of [null, true, "foo", [], {}]) {
     let errorThrown = "";
     try {
       await DOM.resolveNode({ backendNodeId });
@@ -15,7 +14,7 @@ add_task(async function backendNodeIdInvalidTypes({ client }) {
       errorThrown = e.message;
     }
     ok(
-      errorThrown.match(/backendNodeId: string value expected/),
+      errorThrown.match(/backendNodeId: number value expected/),
       `Fails for invalid type: ${backendNodeId}`
     );
   }
@@ -26,7 +25,7 @@ add_task(async function backendNodeIdInvalidValue({ client }) {
 
   let errorThrown = "";
   try {
-    await DOM.resolveNode({ backendNodeId: "-1" });
+    await DOM.resolveNode({ backendNodeId: -1 });
   } catch (e) {
     errorThrown = e.message;
   }
