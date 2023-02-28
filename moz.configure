@@ -1020,6 +1020,16 @@ include("build/moz.configure/old.configure")
 include("js/sub.configure", when=compile_environment & toolkit)
 
 
+@depends(build_environment, configure_cache)
+@imports(_import="json")
+@imports(_from="pathlib", _import="Path")
+def save_cache(build_environment, configure_cache):
+    cache_file = Path(build_environment.topobjdir) / "configure.cache"
+
+    with cache_file.open(mode="w") as fd:
+        json.dump(configure_cache, fd, indent=4)
+
+
 @depends(build_environment, build_project)
 @imports("__sandbox__")
 @imports("glob")
