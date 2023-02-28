@@ -163,6 +163,7 @@ struct MOZ_STACK_CLASS DebuggerSource::CallData {
   bool getBinary();
   bool getURL();
   bool getStartLine();
+  bool getStartColumn();
   bool getId();
   bool getDisplayURL();
   bool getElementProperty();
@@ -340,6 +341,24 @@ bool DebuggerSource::CallData::getStartLine() {
   DebuggerSourceGetStartLineMatcher matcher;
   uint32_t line = referent.match(matcher);
   args.rval().setNumber(line);
+  return true;
+}
+
+class DebuggerSourceGetStartColumnMatcher {
+ public:
+  using ReturnType = uint32_t;
+
+  ReturnType match(Handle<ScriptSourceObject*> sourceObject) {
+    ScriptSource* ss = sourceObject->source();
+    return ss->startColumn();
+  }
+  ReturnType match(Handle<WasmInstanceObject*> instanceObj) { return 0; }
+};
+
+bool DebuggerSource::CallData::getStartColumn() {
+  DebuggerSourceGetStartColumnMatcher matcher;
+  uint32_t column = referent.match(matcher);
+  args.rval().setNumber(column);
   return true;
 }
 
@@ -654,6 +673,7 @@ const JSPropertySpec DebuggerSource::properties_[] = {
     JS_DEBUG_PSG("binary", getBinary),
     JS_DEBUG_PSG("url", getURL),
     JS_DEBUG_PSG("startLine", getStartLine),
+    JS_DEBUG_PSG("startColumn", getStartColumn),
     JS_DEBUG_PSG("id", getId),
     JS_DEBUG_PSG("displayURL", getDisplayURL),
     JS_DEBUG_PSG("introductionScript", getIntroductionScript),

@@ -110,6 +110,11 @@ called `new WebAssembly.Module` with the string `"> wasm"` appended.
 source within the file or URL it was loaded from. This is normally `1`, but
 may have another value if the source is part of an HTML document.
 
+### `startColumn`
+**If the instance refers to JavaScript source**, the start column of the
+source within the file or URL it was loaded from. This is normally `1`, but
+may have another value if the source is part of an HTML document.
+
 ### `id`
 **If the instance refers to JavaScript source**, an int32 counter that identifies
 the source within the current process.  This ID is used in other places in Gecko
