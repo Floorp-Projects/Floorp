@@ -24,7 +24,7 @@ using namespace mozilla::dom;
 NS_IMETHODIMP
 ScriptElement::ScriptAvailable(nsresult aResult, nsIScriptElement* aElement,
                                bool aIsInlineClassicScript, nsIURI* aURI,
-                               int32_t aLineNo) {
+                               uint32_t aLineNo) {
   if (!aIsInlineClassicScript && NS_FAILED(aResult)) {
     nsCOMPtr<nsIParser> parser = do_QueryReferent(mCreatorParser);
     if (parser) {
