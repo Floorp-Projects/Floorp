@@ -7,7 +7,7 @@ const { splitMethod } = ChromeUtils.importESModule(
   "chrome://remote/content/cdp/CDPConnection.sys.mjs"
 );
 
-add_test(function test_Connection_splitMethod() {
+add_task(function test_Connection_splitMethod() {
   for (const t of [42, null, true, {}, [], undefined]) {
     Assert.throws(() => splitMethod(t), /TypeError/, `${typeof t} throws`);
   }
@@ -22,6 +22,4 @@ add_test(function test_Connection_splitMethod() {
     domain: "foo",
     command: "bar",
   });
-
-  run_next_test();
 });

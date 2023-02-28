@@ -113,16 +113,14 @@ function setupTest() {
   };
 }
 
-add_test(function test_findClosest() {
+add_task(function test_findClosest() {
   const { divEl, videoEl } = setupTest();
 
   equal(element.findClosest(divEl, "foo"), null);
   equal(element.findClosest(videoEl, "div"), divEl);
-
-  run_next_test();
 });
 
-add_test(function test_isSelected() {
+add_task(function test_isSelected() {
   const { browser, divEl } = setupTest();
 
   const checkbox = browser.document.createElement("input");
@@ -152,11 +150,9 @@ add_test(function test_isSelected() {
   for (const type of [undefined, null, "foo", true, [], {}, divEl]) {
     ok(!element.isSelected(type));
   }
-
-  run_next_test();
 });
 
-add_test(function test_isElement() {
+add_task(function test_isElement() {
   const { divEl, iframeEl, shadowRoot, svgEl } = setupTest();
 
   ok(element.isElement(divEl));
@@ -172,11 +168,9 @@ add_test(function test_isElement() {
   for (const type of [true, 42, {}, [], undefined, null]) {
     ok(!element.isElement(type));
   }
-
-  run_next_test();
 });
 
-add_test(function test_isDOMElement() {
+add_task(function test_isDOMElement() {
   const { divEl, iframeEl, shadowRoot, svgEl } = setupTest();
 
   ok(element.isDOMElement(divEl));
@@ -192,11 +186,9 @@ add_test(function test_isDOMElement() {
   for (const type of [true, 42, "foo", {}, [], undefined, null]) {
     ok(!element.isDOMElement(type));
   }
-
-  run_next_test();
 });
 
-add_test(function test_isXULElement() {
+add_task(function test_isXULElement() {
   const { divEl, iframeEl, shadowRoot, svgEl } = setupTest();
 
   ok(element.isXULElement(xulEl));
@@ -212,11 +204,9 @@ add_test(function test_isXULElement() {
   for (const type of [true, 42, "foo", {}, [], undefined, null]) {
     ok(!element.isXULElement(type));
   }
-
-  run_next_test();
 });
 
-add_test(function test_isDOMWindow() {
+add_task(function test_isDOMWindow() {
   const { divEl, iframeEl, shadowRoot, svgEl } = setupTest();
 
   ok(element.isDOMWindow(divEl.ownerGlobal));
@@ -232,11 +222,9 @@ add_test(function test_isDOMWindow() {
   for (const type of [true, 42, {}, [], undefined, null]) {
     ok(!element.isDOMWindow(type));
   }
-
-  run_next_test();
 });
 
-add_test(function test_isShadowRoot() {
+add_task(function test_isShadowRoot() {
   const { browser, divEl, iframeEl, shadowRoot, svgEl } = setupTest();
 
   ok(element.isShadowRoot(shadowRoot));
@@ -255,11 +243,9 @@ add_test(function test_isShadowRoot() {
 
   const documentFragment = browser.document.createDocumentFragment();
   ok(!element.isShadowRoot(documentFragment));
-
-  run_next_test();
 });
 
-add_test(function test_isReadOnly() {
+add_task(function test_isReadOnly() {
   const { browser, divEl, textareaEl } = setupTest();
 
   const input = browser.document.createElement("input");
@@ -274,11 +260,9 @@ add_test(function test_isReadOnly() {
   ok(!element.isReadOnly(divEl));
 
   ok(!element.isReadOnly(null));
-
-  run_next_test();
 });
 
-add_test(function test_isDisabled() {
+add_task(function test_isDisabled() {
   const { browser, divEl, svgEl } = setupTest();
 
   const select = browser.document.createElement("select");
@@ -310,11 +294,9 @@ add_test(function test_isDisabled() {
   ok(!element.isDisabled(svgEl));
 
   ok(!element.isDisabled(new MockXULElement("browser", { disabled: true })));
-
-  run_next_test();
 });
 
-add_test(function test_isEditingHost() {
+add_task(function test_isEditingHost() {
   const { browser, divEl, svgEl } = setupTest();
 
   ok(!element.isEditingHost(null));
@@ -326,11 +308,9 @@ add_test(function test_isEditingHost() {
   ok(!element.isEditingHost(svgEl));
   browser.document.designMode = "on";
   ok(element.isEditingHost(svgEl));
-
-  run_next_test();
 });
 
-add_test(function test_isEditable() {
+add_task(function test_isEditable() {
   const { browser, divEl, svgEl, textareaEl } = setupTest();
 
   ok(!element.isEditable(null));
@@ -371,11 +351,9 @@ add_test(function test_isEditable() {
   ok(!element.isEditable(svgEl));
   browser.document.designMode = "on";
   ok(element.isEditable(svgEl));
-
-  run_next_test();
 });
 
-add_test(function test_isMutableFormControlElement() {
+add_task(function test_isMutableFormControlElement() {
   const { browser, divEl, textareaEl } = setupTest();
 
   ok(!element.isMutableFormControl(null));
@@ -421,11 +399,9 @@ add_test(function test_isMutableFormControlElement() {
   ok(!element.isMutableFormControl(divEl));
   browser.document.designMode = "on";
   ok(!element.isMutableFormControl(divEl));
-
-  run_next_test();
 });
 
-add_test(function test_coordinates() {
+add_task(function test_coordinates() {
   const { divEl } = setupTest();
 
   let coords = element.coordinates(divEl);
@@ -476,11 +452,9 @@ add_test(function test_coordinates() {
     () => element.coordinates(divEl, [], []),
     /Offset must be a number/
   );
-
-  run_next_test();
 });
 
-add_test(function test_isNodeReferenceKnown() {
+add_task(function test_isNodeReferenceKnown() {
   const { browser, nodeCache, childEl, iframeEl, videoEl } = setupTest();
 
   // Unknown node reference
@@ -513,11 +487,9 @@ add_test(function test_isNodeReferenceKnown() {
   ok(
     !element.isNodeReferenceKnown(childBrowsingContext2, childElRef, nodeCache)
   );
-
-  run_next_test();
 });
 
-add_test(function test_getKnownElement() {
+add_task(function test_getKnownElement() {
   const { browser, nodeCache, shadowRoot, videoEl } = setupTest();
 
   // Unknown element reference
@@ -550,8 +522,6 @@ add_test(function test_getKnownElement() {
         nodeCache
       );
     }, /StaleElementReferenceError/);
-
-    run_next_test();
   });
 
   // Known element reference
@@ -562,7 +532,7 @@ add_test(function test_getKnownElement() {
   );
 });
 
-add_test(function test_getKnownShadowRoot() {
+add_task(function test_getKnownShadowRoot() {
   const { browser, nodeCache, shadowRoot, videoEl } = setupTest();
 
   const videoElRef = nodeCache.getOrCreateNodeReference(videoEl);
@@ -617,12 +587,10 @@ add_test(function test_getKnownShadowRoot() {
         nodeCache
       );
     }, /DetachedShadowRootError/);
-
-    run_next_test();
   });
 });
 
-add_test(function test_isDetached() {
+add_task(function test_isDetached() {
   const { childEl, iframeEl } = setupTest();
 
   let detachedShadowRoot = childEl.attachShadow({ mode: "open" });
@@ -639,11 +607,9 @@ add_test(function test_isDetached() {
   detachedShadowRoot.host.remove();
   equal(childEl.isConnected, false);
   ok(element.isDetached(detachedShadowRoot));
-
-  run_next_test();
 });
 
-add_test(function test_isStale() {
+add_task(function test_isStale() {
   const { childEl, iframeEl } = setupTest();
 
   // Connected to the DOM
@@ -656,22 +622,18 @@ add_test(function test_isStale() {
   // Not connected to the DOM
   childEl.remove();
   ok(element.isStale(childEl));
-
-  run_next_test();
 });
 
-add_test(function test_WebReference_ctor() {
+add_task(function test_WebReference_ctor() {
   const el = new WebReference("foo");
   equal(el.uuid, "foo");
 
   for (let t of [42, true, [], {}, null, undefined]) {
     Assert.throws(() => new WebReference(t), /to be a string/);
   }
-
-  run_next_test();
 });
 
-add_test(function test_WebElemenet_is() {
+add_task(function test_WebElemenet_is() {
   const a = new WebReference("a");
   const b = new WebReference("b");
 
@@ -681,11 +643,9 @@ add_test(function test_WebElemenet_is() {
   ok(!b.is(a));
 
   ok(!a.is({}));
-
-  run_next_test();
 });
 
-add_test(function test_WebReference_from() {
+add_task(function test_WebReference_from() {
   const { divEl, iframeEl } = setupTest();
 
   ok(WebReference.from(divEl) instanceof WebElement);
@@ -696,11 +656,9 @@ add_test(function test_WebReference_from() {
   ok(WebReference.from(xulElInPrivilegedDocument) instanceof WebElement);
 
   Assert.throws(() => WebReference.from({}), /InvalidArgumentError/);
-
-  run_next_test();
 });
 
-add_test(function test_WebReference_fromJSON_WebElement() {
+add_task(function test_WebReference_fromJSON_WebElement() {
   const { Identifier } = WebElement;
 
   const ref = { [Identifier]: "foo" };
@@ -714,46 +672,36 @@ add_test(function test_WebReference_fromJSON_WebElement() {
   const precedenceEl = WebReference.fromJSON(identifierPrecedence);
   ok(precedenceEl instanceof WebElement);
   equal(precedenceEl.uuid, "identifier-uuid");
-
-  run_next_test();
 });
 
-add_test(function test_WebReference_fromJSON_WebWindow() {
+add_task(function test_WebReference_fromJSON_WebWindow() {
   const ref = { [WebWindow.Identifier]: "foo" };
   const win = WebReference.fromJSON(ref);
 
   ok(win instanceof WebWindow);
   equal(win.uuid, "foo");
-
-  run_next_test();
 });
 
-add_test(function test_WebReference_fromJSON_WebFrame() {
+add_task(function test_WebReference_fromJSON_WebFrame() {
   const ref = { [WebFrame.Identifier]: "foo" };
   const frame = WebReference.fromJSON(ref);
   ok(frame instanceof WebFrame);
   equal(frame.uuid, "foo");
-
-  run_next_test();
 });
 
-add_test(function test_WebReference_fromJSON_malformed() {
+add_task(function test_WebReference_fromJSON_malformed() {
   Assert.throws(() => WebReference.fromJSON({}), /InvalidArgumentError/);
   Assert.throws(() => WebReference.fromJSON(null), /InvalidArgumentError/);
-
-  run_next_test();
 });
 
-add_test(function test_WebReference_fromUUID() {
+add_task(function test_WebReference_fromUUID() {
   const domWebEl = WebReference.fromUUID("bar");
 
   ok(domWebEl instanceof WebElement);
   equal(domWebEl.uuid, "bar");
-
-  run_next_test();
 });
 
-add_test(function test_WebReference_isReference() {
+add_task(function test_WebReference_isReference() {
   for (let t of [42, true, "foo", [], {}]) {
     ok(!WebReference.isReference(t));
   }
@@ -761,16 +709,13 @@ add_test(function test_WebReference_isReference() {
   ok(WebReference.isReference({ [WebElement.Identifier]: "foo" }));
   ok(WebReference.isReference({ [WebWindow.Identifier]: "foo" }));
   ok(WebReference.isReference({ [WebFrame.Identifier]: "foo" }));
-
-  run_next_test();
 });
 
-add_test(function test_generateUUID() {
+add_task(function test_generateUUID() {
   equal(typeof element.generateUUID(), "string");
-  run_next_test();
 });
 
-add_test(function test_WebElement_toJSON() {
+add_task(function test_WebElement_toJSON() {
   const { Identifier } = WebElement;
 
   const el = new WebElement("foo");
@@ -778,11 +723,9 @@ add_test(function test_WebElement_toJSON() {
 
   ok(Identifier in json);
   equal(json[Identifier], "foo");
-
-  run_next_test();
 });
 
-add_test(function test_WebElement_fromJSON() {
+add_task(function test_WebElement_fromJSON() {
   const { Identifier } = WebElement;
 
   const el = WebElement.fromJSON({ [Identifier]: "foo" });
@@ -790,46 +733,36 @@ add_test(function test_WebElement_fromJSON() {
   equal(el.uuid, "foo");
 
   Assert.throws(() => WebElement.fromJSON({}), /InvalidArgumentError/);
-
-  run_next_test();
 });
 
-add_test(function test_WebWindow_toJSON() {
+add_task(function test_WebWindow_toJSON() {
   const win = new WebWindow("foo");
   const json = win.toJSON();
 
   ok(WebWindow.Identifier in json);
   equal(json[WebWindow.Identifier], "foo");
-
-  run_next_test();
 });
 
-add_test(function test_WebWindow_fromJSON() {
+add_task(function test_WebWindow_fromJSON() {
   const ref = { [WebWindow.Identifier]: "foo" };
   const win = WebWindow.fromJSON(ref);
 
   ok(win instanceof WebWindow);
   equal(win.uuid, "foo");
-
-  run_next_test();
 });
 
-add_test(function test_WebFrame_toJSON() {
+add_task(function test_WebFrame_toJSON() {
   const frame = new WebFrame("foo");
   const json = frame.toJSON();
 
   ok(WebFrame.Identifier in json);
   equal(json[WebFrame.Identifier], "foo");
-
-  run_next_test();
 });
 
-add_test(function test_WebFrame_fromJSON() {
+add_task(function test_WebFrame_fromJSON() {
   const ref = { [WebFrame.Identifier]: "foo" };
   const win = WebFrame.fromJSON(ref);
 
   ok(win instanceof WebFrame);
   equal(win.uuid, "foo");
-
-  run_next_test();
 });

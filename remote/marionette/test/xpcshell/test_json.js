@@ -30,7 +30,7 @@ function setupTest() {
   return { browser, nodeCache, childEl, iframeEl, htmlEl, shadowRoot, svgEl };
 }
 
-add_test(function test_clone_generalTypes() {
+add_task(function test_clone_generalTypes() {
   const { nodeCache } = setupTest();
 
   // null
@@ -51,11 +51,9 @@ add_test(function test_clone_generalTypes() {
     }),
     "foo"
   );
-
-  run_next_test();
 });
 
-add_test(function test_clone_ShadowRoot() {
+add_task(function test_clone_ShadowRoot() {
   const { nodeCache, shadowRoot } = setupTest();
 
   const shadowRootRef = nodeCache.getOrCreateNodeReference(shadowRoot);
@@ -63,11 +61,9 @@ add_test(function test_clone_ShadowRoot() {
     json.clone(shadowRoot, nodeCache),
     WebReference.from(shadowRoot, shadowRootRef).toJSON()
   );
-
-  run_next_test();
 });
 
-add_test(function test_clone_WebElement() {
+add_task(function test_clone_WebElement() {
   const { htmlEl, nodeCache, svgEl } = setupTest();
 
   const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
@@ -82,11 +78,9 @@ add_test(function test_clone_WebElement() {
     json.clone(svgEl, nodeCache),
     WebReference.from(svgEl, svgElRef).toJSON()
   );
-
-  run_next_test();
 });
 
-add_test(function test_clone_Sequences() {
+add_task(function test_clone_Sequences() {
   const { htmlEl, nodeCache } = setupTest();
 
   const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
@@ -112,11 +106,9 @@ add_test(function test_clone_Sequences() {
   deepEqual(actual[3], { [WebElement.Identifier]: htmlElRef });
   equal(actual[4], "foo");
   deepEqual(actual[5], { bar: "baz" });
-
-  run_next_test();
 });
 
-add_test(function test_clone_objects() {
+add_task(function test_clone_objects() {
   const { htmlEl, nodeCache } = setupTest();
 
   const htmlElRef = nodeCache.getOrCreateNodeReference(htmlEl);
@@ -142,11 +134,9 @@ add_test(function test_clone_objects() {
   deepEqual(actual.element, { [WebElement.Identifier]: htmlElRef });
   equal(actual.toJSON, "foo");
   deepEqual(actual.object, { bar: "baz" });
-
-  run_next_test();
 });
 
-add_test(function test_clone_сyclicReference() {
+add_task(function test_clone_сyclicReference() {
   const { nodeCache } = setupTest();
 
   // object
@@ -176,11 +166,9 @@ add_test(function test_clone_сyclicReference() {
     obj.reference = obj;
     json.clone([obj], nodeCache);
   }, /JavaScriptError/);
-
-  run_next_test();
 });
 
-add_test(function test_deserialize_generalTypes() {
+add_task(function test_deserialize_generalTypes() {
   const { browser, nodeCache } = setupTest();
   const win = browser.document.ownerGlobal;
 
@@ -192,11 +180,9 @@ add_test(function test_deserialize_generalTypes() {
   equal(json.deserialize(true, nodeCache, win), true);
   equal(json.deserialize(42, nodeCache, win), 42);
   equal(json.deserialize("foo", nodeCache, win), "foo");
-
-  run_next_test();
 });
 
-add_test(function test_deserialize_ShadowRoot() {
+add_task(function test_deserialize_ShadowRoot() {
   const { browser, nodeCache, shadowRoot } = setupTest();
   const win = browser.document.ownerGlobal;
 
@@ -216,11 +202,9 @@ add_test(function test_deserialize_ShadowRoot() {
   const root = json.deserialize(shadowRootEl, nodeCache, win);
   deepEqual(root, shadowRoot);
   deepEqual(root, nodeCache.getNode(browser.browsingContext, shadowRootRef));
-
-  run_next_test();
 });
 
-add_test(function test_deserialize_WebElement() {
+add_task(function test_deserialize_WebElement() {
   const { browser, htmlEl, nodeCache } = setupTest();
   const win = browser.document.ownerGlobal;
 
@@ -240,11 +224,9 @@ add_test(function test_deserialize_WebElement() {
   const el = json.deserialize(htmlWebEl, nodeCache, win);
   deepEqual(el, htmlEl);
   deepEqual(el, nodeCache.getNode(browser.browsingContext, htmlElRef));
-
-  run_next_test();
 });
 
-add_test(function test_deserialize_Sequences() {
+add_task(function test_deserialize_Sequences() {
   const { browser, htmlEl, nodeCache } = setupTest();
   const win = browser.document.ownerGlobal;
 
@@ -265,11 +247,9 @@ add_test(function test_deserialize_Sequences() {
   deepEqual(actual[2], [42]);
   deepEqual(actual[3], htmlEl);
   deepEqual(actual[4], { bar: "baz" });
-
-  run_next_test();
 });
 
-add_test(function test_deserialize_objects() {
+add_task(function test_deserialize_objects() {
   const { browser, htmlEl, nodeCache } = setupTest();
   const win = browser.document.ownerGlobal;
 
@@ -292,5 +272,4 @@ add_test(function test_deserialize_objects() {
   deepEqual(actual.object, { bar: "baz" });
 
   nodeCache.clear({ all: true });
-  run_next_test();
 });

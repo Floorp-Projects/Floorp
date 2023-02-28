@@ -16,13 +16,11 @@ class MockSession {
 
 const noopSession = new MockSession();
 
-add_test(function test_DomainCache_constructor() {
+add_task(function test_DomainCache_constructor() {
   new DomainCache(noopSession, {});
-
-  run_next_test();
 });
 
-add_test(function test_DomainCache_domainSupportsMethod() {
+add_task(function test_DomainCache_domainSupportsMethod() {
   const modules = {
     Foo: class extends Domain {
       bar() {}
@@ -33,38 +31,30 @@ add_test(function test_DomainCache_domainSupportsMethod() {
   ok(domains.domainSupportsMethod("Foo", "bar"));
   ok(!domains.domainSupportsMethod("Foo", "baz"));
   ok(!domains.domainSupportsMethod("foo", "bar"));
-
-  run_next_test();
 });
 
-add_test(function test_DomainCache_get_invalidModule() {
+add_task(function test_DomainCache_get_invalidModule() {
   Assert.throws(() => {
     const domains = new DomainCache(noopSession, { Foo: undefined });
     domains.get("Foo");
   }, /UnknownMethodError/);
-
-  run_next_test();
 });
 
-add_test(function test_DomainCache_get_missingConstructor() {
+add_task(function test_DomainCache_get_missingConstructor() {
   Assert.throws(() => {
     const domains = new DomainCache(noopSession, { Foo: {} });
     domains.get("Foo");
   }, /TypeError/);
-
-  run_next_test();
 });
 
-add_test(function test_DomainCache_get_superClassNotDomain() {
+add_task(function test_DomainCache_get_superClassNotDomain() {
   Assert.throws(() => {
     const domains = new DomainCache(noopSession, { Foo: class {} });
     domains.get("Foo");
   }, /TypeError/);
-
-  run_next_test();
 });
 
-add_test(function test_DomainCache_get_constructs() {
+add_task(function test_DomainCache_get_constructs() {
   let eventFired;
   class Session {
     onEvent(event) {
@@ -90,22 +80,18 @@ add_test(function test_DomainCache_get_constructs() {
   const event = {};
   foo.emit(event);
   equal(event, eventFired);
-
-  run_next_test();
 });
 
-add_test(function test_DomainCache_size() {
+add_task(function test_DomainCache_size() {
   class Foo extends Domain {}
   const domains = new DomainCache(noopSession, { Foo });
 
   equal(domains.size, 0);
   domains.get("Foo");
   equal(domains.size, 1);
-
-  run_next_test();
 });
 
-add_test(function test_DomainCache_clear() {
+add_task(function test_DomainCache_clear() {
   let dtorCalled = false;
   class Foo extends Domain {
     destructor() {
@@ -122,6 +108,4 @@ add_test(function test_DomainCache_clear() {
   domains.clear();
   equal(domains.size, 0);
   ok(dtorCalled);
-
-  run_next_test();
 });

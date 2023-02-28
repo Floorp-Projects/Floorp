@@ -12,7 +12,7 @@ const { error } = ChromeUtils.importESModule(
   "chrome://remote/content/shared/webdriver/Errors.sys.mjs"
 );
 
-add_test(function test_session() {
+add_task(function test_session() {
   assert.session({ id: "foo" });
 
   const invalidTypes = [
@@ -33,11 +33,9 @@ add_test(function test_session() {
   }
 
   Assert.throws(() => assert.session({ id: null }, "custom"), /custom/);
-
-  run_next_test();
 });
 
-add_test(function test_platforms() {
+add_task(function test_platforms() {
   // at least one will fail
   let raised;
   for (let fn of [assert.desktop, assert.mobile]) {
@@ -48,28 +46,22 @@ add_test(function test_platforms() {
     }
   }
   ok(raised instanceof error.UnsupportedOperationError);
-
-  run_next_test();
 });
 
-add_test(function test_noUserPrompt() {
+add_task(function test_noUserPrompt() {
   assert.noUserPrompt(null);
   assert.noUserPrompt(undefined);
   Assert.throws(() => assert.noUserPrompt({}), /UnexpectedAlertOpenError/);
   Assert.throws(() => assert.noUserPrompt({}, "custom"), /custom/);
-
-  run_next_test();
 });
 
-add_test(function test_defined() {
+add_task(function test_defined() {
   assert.defined({});
   Assert.throws(() => assert.defined(undefined), /InvalidArgumentError/);
   Assert.throws(() => assert.noUserPrompt({}, "custom"), /custom/);
-
-  run_next_test();
 });
 
-add_test(function test_number() {
+add_task(function test_number() {
   assert.number(1);
   assert.number(0);
   assert.number(-1);
@@ -79,11 +71,9 @@ add_test(function test_number() {
   }
 
   Assert.throws(() => assert.number("foo", "custom"), /custom/);
-
-  run_next_test();
 });
 
-add_test(function test_callable() {
+add_task(function test_callable() {
   assert.callable(function() {});
   assert.callable(() => {});
 
@@ -92,11 +82,9 @@ add_test(function test_callable() {
   }
 
   Assert.throws(() => assert.callable("foo", "custom"), /custom/);
-
-  run_next_test();
 });
 
-add_test(function test_integer() {
+add_task(function test_integer() {
   assert.integer(1);
   assert.integer(0);
   assert.integer(-1);
@@ -104,21 +92,17 @@ add_test(function test_integer() {
   Assert.throws(() => assert.integer(1.2), /InvalidArgumentError/);
 
   Assert.throws(() => assert.integer("foo", "custom"), /custom/);
-
-  run_next_test();
 });
 
-add_test(function test_positiveInteger() {
+add_task(function test_positiveInteger() {
   assert.positiveInteger(1);
   assert.positiveInteger(0);
   Assert.throws(() => assert.positiveInteger(-1), /InvalidArgumentError/);
   Assert.throws(() => assert.positiveInteger("foo"), /InvalidArgumentError/);
   Assert.throws(() => assert.positiveInteger("foo", "custom"), /custom/);
-
-  run_next_test();
 });
 
-add_test(function test_positiveNumber() {
+add_task(function test_positiveNumber() {
   assert.positiveNumber(1);
   assert.positiveNumber(0);
   assert.positiveNumber(1.1);
@@ -129,30 +113,24 @@ add_test(function test_positiveNumber() {
   Assert.throws(() => assert.positiveNumber(Infinity), /InvalidArgumentError/);
   Assert.throws(() => assert.positiveNumber("foo"), /InvalidArgumentError/);
   Assert.throws(() => assert.positiveNumber("foo", "custom"), /custom/);
-
-  run_next_test();
 });
 
-add_test(function test_boolean() {
+add_task(function test_boolean() {
   assert.boolean(true);
   assert.boolean(false);
   Assert.throws(() => assert.boolean("false"), /InvalidArgumentError/);
   Assert.throws(() => assert.boolean(undefined), /InvalidArgumentError/);
   Assert.throws(() => assert.boolean(undefined, "custom"), /custom/);
-
-  run_next_test();
 });
 
-add_test(function test_string() {
+add_task(function test_string() {
   assert.string("foo");
   assert.string(`bar`);
   Assert.throws(() => assert.string(42), /InvalidArgumentError/);
   Assert.throws(() => assert.string(42, "custom"), /custom/);
-
-  run_next_test();
 });
 
-add_test(function test_open() {
+add_task(function test_open() {
   assert.open({ currentWindowGlobal: {} });
 
   for (let typ of [null, undefined, { currentWindowGlobal: null }]) {
@@ -160,11 +138,9 @@ add_test(function test_open() {
   }
 
   Assert.throws(() => assert.open(null, "custom"), /custom/);
-
-  run_next_test();
 });
 
-add_test(function test_object() {
+add_task(function test_object() {
   assert.object({});
   assert.object(new Object());
   for (let typ of [42, "foo", true, null, undefined]) {
@@ -172,33 +148,27 @@ add_test(function test_object() {
   }
 
   Assert.throws(() => assert.object(null, "custom"), /custom/);
-
-  run_next_test();
 });
 
-add_test(function test_in() {
+add_task(function test_in() {
   assert.in("foo", { foo: 42 });
   for (let typ of [{}, 42, true, null, undefined]) {
     Assert.throws(() => assert.in("foo", typ), /InvalidArgumentError/);
   }
 
   Assert.throws(() => assert.in("foo", { bar: 42 }, "custom"), /custom/);
-
-  run_next_test();
 });
 
-add_test(function test_array() {
+add_task(function test_array() {
   assert.array([]);
   assert.array(new Array());
   Assert.throws(() => assert.array(42), /InvalidArgumentError/);
   Assert.throws(() => assert.array({}), /InvalidArgumentError/);
 
   Assert.throws(() => assert.array(42, "custom"), /custom/);
-
-  run_next_test();
 });
 
-add_test(function test_that() {
+add_task(function test_that() {
   equal(1, assert.that(n => n + 1)(1));
   Assert.throws(() => assert.that(() => false)(), /InvalidArgumentError/);
   Assert.throws(() => assert.that(val => val)(false), /InvalidArgumentError/);
@@ -208,8 +178,6 @@ add_test(function test_that() {
   );
 
   Assert.throws(() => assert.that(() => false, "custom")(), /custom/);
-
-  run_next_test();
 });
 
 /* eslint-enable no-array-constructor, no-new-object */

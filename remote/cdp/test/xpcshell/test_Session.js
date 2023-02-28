@@ -31,12 +31,10 @@ class MockTarget {
   }
 }
 
-add_test(function test_Session_destructor() {
+add_task(function test_Session_destructor() {
   const session = new Session(connection, new MockTarget());
   session.domains.get("Browser");
   equal(session.domains.size, 1);
   session.destructor();
   equal(session.domains.size, 0);
-
-  run_next_test();
 });

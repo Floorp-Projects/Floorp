@@ -16,7 +16,7 @@ const domEl = {
   namespaceURI: XHTMLNS,
 };
 
-add_test(function test_createInputState() {
+add_task(function test_createInputState() {
   for (let type of ["none", "key", "pointer" /*"wheel"*/]) {
     const state = new action.State();
     const id = "device";
@@ -29,10 +29,9 @@ add_test(function test_createInputState() {
     equal(state.inputStateMap.size, 1);
     equal(state.inputStateMap.get(id).constructor.type, type);
   }
-  run_next_test();
 });
 
-add_test(function test_defaultPointerParameters() {
+add_task(function test_defaultPointerParameters() {
   let state = new action.State();
   const inputTickActions = [
     { type: "pointer", subtype: "pointerDown", button: 0 },
@@ -43,11 +42,9 @@ add_test(function test_defaultPointerParameters() {
     state.getInputSource(pointerAction.id).pointer.constructor.type,
     "mouse"
   );
-
-  run_next_test();
 });
 
-add_test(function test_processPointerParameters() {
+add_task(function test_processPointerParameters() {
   for (let subtype of ["pointerDown", "pointerUp"]) {
     for (let pointerType of ["foo", "", "get", "Get", 2, {}]) {
       const inputTickActions = [
@@ -80,11 +77,9 @@ add_test(function test_processPointerParameters() {
       pointerType
     );
   }
-
-  run_next_test();
 });
 
-add_test(function test_processPointerDownAction() {
+add_task(function test_processPointerDownAction() {
   for (let button of [-1, "a"]) {
     const inputTickActions = [
       { type: "pointer", subtype: "pointerDown", button },
@@ -101,11 +96,9 @@ add_test(function test_processPointerDownAction() {
   ];
   const chain = action.Chain.fromJSON(state, chainForTick(inputTickActions));
   equal(chain[0][0].button, 5);
-
-  run_next_test();
 });
 
-add_test(function test_validateActionDurationAndCoordinates() {
+add_task(function test_validateActionDurationAndCoordinates() {
   for (let [type, subtype] of [
     ["none", "pause"],
     ["pointer", "pointerMove"],
@@ -132,10 +125,9 @@ add_test(function test_validateActionDurationAndCoordinates() {
       `${name}: "a", subtype: pointerMove`
     );
   }
-  run_next_test();
 });
 
-add_test(function test_processPointerMoveActionOriginValidation() {
+add_task(function test_processPointerMoveActionOriginValidation() {
   for (let origin of [-1, { a: "blah" }, []]) {
     const inputTickActions = [
       { type: "pointer", duration: 5000, subtype: "pointerMove", origin },
@@ -146,11 +138,9 @@ add_test(function test_processPointerMoveActionOriginValidation() {
       `actionItem.origin: (${getTypeString(origin)})`
     );
   }
-
-  run_next_test();
 });
 
-add_test(function test_processPointerMoveActionOriginStringValidation() {
+add_task(function test_processPointerMoveActionOriginStringValidation() {
   for (let origin of ["a", "", "get", "Get"]) {
     const inputTickActions = [
       { type: "pointer", duration: 5000, subtype: "pointerMove", origin },
@@ -161,11 +151,9 @@ add_test(function test_processPointerMoveActionOriginStringValidation() {
       `actionItem.origin: ${origin}`
     );
   }
-
-  run_next_test();
 });
 
-add_test(function test_processPointerMoveActionElementOrigin() {
+add_task(function test_processPointerMoveActionElementOrigin() {
   let state = new action.State();
   const inputTickActions = [
     {
@@ -179,10 +167,9 @@ add_test(function test_processPointerMoveActionElementOrigin() {
   ];
   const chain = action.Chain.fromJSON(state, chainForTick(inputTickActions));
   deepEqual(chain[0][0].origin.element, domEl);
-  run_next_test();
 });
 
-add_test(function test_processPointerMoveActionDefaultOrigin() {
+add_task(function test_processPointerMoveActionDefaultOrigin() {
   let state = new action.State();
   const inputTickActions = [
     { type: "pointer", duration: 5000, subtype: "pointerMove", x: 0, y: 0 },
@@ -193,10 +180,9 @@ add_test(function test_processPointerMoveActionDefaultOrigin() {
     x: 0,
     y: 0,
   });
-  run_next_test();
 });
 
-add_test(function test_processPointerMoveAction() {
+add_task(function test_processPointerMoveAction() {
   let state = new action.State();
   const actionItems = [
     {
@@ -245,10 +231,9 @@ add_test(function test_processPointerMoveAction() {
     }
     deepEqual(actual.origin.constructor.name, originClass);
   }
-  run_next_test();
 });
 
-add_test(function test_computePointerDestinationViewport() {
+add_task(function test_computePointerDestinationViewport() {
   const state = new action.State();
   const inputTickActions = [
     {
@@ -273,11 +258,9 @@ add_test(function test_computePointerDestinationViewport() {
   );
   equal(actionItem.x, target[0]);
   equal(actionItem.y, target[1]);
-
-  run_next_test();
 });
 
-add_test(function test_computePointerDestinationPointer() {
+add_task(function test_computePointerDestinationPointer() {
   const state = new action.State();
   const inputTickActions = [
     {
@@ -301,11 +284,9 @@ add_test(function test_computePointerDestinationPointer() {
   );
   equal(actionItem.x + inputSource.x, target[0]);
   equal(actionItem.y + inputSource.y, target[1]);
-
-  run_next_test();
 });
 
-add_test(function test_processPointerAction() {
+add_task(function test_processPointerAction() {
   for (let pointerType of ["mouse", "touch"]) {
     const actionItems = [
       {
@@ -353,10 +334,9 @@ add_test(function test_processPointerAction() {
       }
     }
   }
-  run_next_test();
 });
 
-add_test(function test_processPauseAction() {
+add_task(function test_processPauseAction() {
   for (let type of ["none", "key", "pointer"]) {
     const state = new action.State();
     const actionSequence = {
@@ -378,11 +358,9 @@ add_test(function test_processPauseAction() {
   };
   const actionItem = action.Chain.fromJSON(state, [actionSequence])[0][0];
   equal(actionItem.duration, undefined);
-
-  run_next_test();
 });
 
-add_test(function test_processActionSubtypeValidation() {
+add_task(function test_processActionSubtypeValidation() {
   for (let type of ["none", "key", "pointer"]) {
     const message = `type: ${type}, subtype: dancing`;
     const inputTickActions = [{ type, subtype: "dancing" }];
@@ -392,10 +370,9 @@ add_test(function test_processActionSubtypeValidation() {
       message
     );
   }
-  run_next_test();
 });
 
-add_test(function test_processKeyActionDown() {
+add_task(function test_processKeyActionDown() {
   for (let value of [-1, undefined, [], ["a"], { length: 1 }, null]) {
     const inputTickActions = [{ type: "key", subtype: "keyDown", value }];
     const message = `actionItem.value: (${getTypeString(value)})`;
@@ -418,11 +395,9 @@ add_test(function test_processKeyActionDown() {
   equal(actionItem.id, "keyboard");
   equal(actionItem.subtype, "keyDown");
   equal(actionItem.value, "\ue004");
-
-  run_next_test();
 });
 
-add_test(function test_processInputSourceActionSequenceValidation() {
+add_task(function test_processInputSourceActionSequenceValidation() {
   checkFromJSONErrors(
     [{ type: "swim", subtype: "pause", id: "some id" }],
     /Unknown action type/,
@@ -458,11 +433,9 @@ add_test(function test_processInputSourceActionSequenceValidation() {
     errorRegex,
     message
   );
-
-  run_next_test();
 });
 
-add_test(function test_processInputSourceActionSequence() {
+add_task(function test_processInputSourceActionSequence() {
   const state = new action.State();
   const actionItem = { type: "pause", duration: 5 };
   const actionSequence = {
@@ -478,10 +451,9 @@ add_test(function test_processInputSourceActionSequence() {
   equal(tickActions[0].subtype, "pause");
   equal(tickActions[0].duration, 5);
   equal(tickActions[0].id, "some id");
-  run_next_test();
 });
 
-add_test(function test_processInputSourceActionSequencePointer() {
+add_task(function test_processInputSourceActionSequencePointer() {
   const state = new action.State();
   const actionItem = { type: "pointerDown", button: 1 };
   const actionSequence = {
@@ -503,10 +475,9 @@ add_test(function test_processInputSourceActionSequencePointer() {
   const inputSource = state.getInputSource(tickActions[0].id);
   equal(inputSource.constructor.type, "pointer");
   equal(inputSource.pointer.constructor.type, "mouse");
-  run_next_test();
 });
 
-add_test(function test_processInputSourceActionSequenceKey() {
+add_task(function test_processInputSourceActionSequenceKey() {
   const state = new action.State();
   const actionItem = { type: "keyUp", value: "a" };
   const actionSequence = {
@@ -522,10 +493,9 @@ add_test(function test_processInputSourceActionSequenceKey() {
   equal(tickActions[0].subtype, "keyUp");
   equal(tickActions[0].value, "a");
   equal(tickActions[0].id, "9");
-  run_next_test();
 });
 
-add_test(function test_processInputSourceActionSequenceInputStateMap() {
+add_task(function test_processInputSourceActionSequenceInputStateMap() {
   const state = new action.State();
   const id = "1";
   const actionItem = { type: "pause", duration: 5000 };
@@ -564,11 +534,9 @@ add_test(function test_processInputSourceActionSequenceInputStateMap() {
     /Expected input source 1 to be type pointer, got key/,
     message
   );
-
-  run_next_test();
 });
 
-add_test(function test_extractActionChainValidation() {
+add_task(function test_extractActionChainValidation() {
   for (let actions of [-1, "a", undefined, null]) {
     const state = new action.State();
     let message = `actions: ${getTypeString(actions)}`;
@@ -583,16 +551,14 @@ add_test(function test_extractActionChainValidation() {
       message
     );
   }
-  run_next_test();
 });
 
-add_test(function test_extractActionChainEmpty() {
+add_task(function test_extractActionChainEmpty() {
   const state = new action.State();
   deepEqual(action.Chain.fromJSON(state, []), []);
-  run_next_test();
 });
 
-add_test(function test_extractActionChain_oneTickOneInput() {
+add_task(function test_extractActionChain_oneTickOneInput() {
   const state = new action.State();
   const actionItem = { type: "pause", duration: 5000 };
   const actionSequence = {
@@ -607,11 +573,9 @@ add_test(function test_extractActionChain_oneTickOneInput() {
   equal(actionsByTick[0][0].type, "none");
   equal(actionsByTick[0][0].subtype, "pause");
   equal(actionsByTick[0][0].duration, actionItem.duration);
-
-  run_next_test();
 });
 
-add_test(function test_extractActionChain_twoAndThreeTicks() {
+add_task(function test_extractActionChain_twoAndThreeTicks() {
   const state = new action.State();
   const mouseActionItems = [
     {
@@ -663,10 +627,9 @@ add_test(function test_extractActionChain_twoAndThreeTicks() {
   equal(actionsByTick[2][0].id, keyActionSequence.id);
   equal(actionsByTick[2][0].type, "key");
   equal(actionsByTick[2][0].subtype, "keyUp");
-  run_next_test();
 });
 
-add_test(function test_computeTickDuration() {
+add_task(function test_computeTickDuration() {
   const state = new action.State();
   const expected = 8000;
   const inputTickActions = [
@@ -682,10 +645,9 @@ add_test(function test_computeTickDuration() {
   equal(1, chain.length);
   const tickActions = chain[0];
   equal(expected, tickActions.getDuration());
-  run_next_test();
 });
 
-add_test(function test_computeTickDuration_noDurations() {
+add_task(function test_computeTickDuration_noDurations() {
   const state = new action.State();
   const inputTickActions = [
     // invalid because keyDown should not have duration, so duration should be ignored.
@@ -698,7 +660,6 @@ add_test(function test_computeTickDuration_noDurations() {
   ];
   const chain = action.Chain.fromJSON(state, chainForTick(inputTickActions));
   equal(0, chain[0].getDuration());
-  run_next_test();
 });
 
 // helpers

@@ -149,7 +149,7 @@ const hasPromiseRejected = async function(promise) {
   return rejected;
 };
 
-add_test(
+add_task(
   async function test_waitForInitialNavigation_initialDocumentNoWindowGlobal() {
     const browsingContext = new MockTopContext();
     const webProgress = browsingContext.webProgress;
@@ -181,12 +181,10 @@ add_test(
       "Expected current URI has been set"
     );
     equal(targetURI.spec, INITIAL_URI.spec, "Expected target URI has been set");
-
-    run_next_test();
   }
 );
 
-add_test(
+add_task(
   async function test_waitForInitialNavigation_initialDocumentNotLoaded() {
     const browsingContext = new MockTopContext();
     const webProgress = browsingContext.webProgress;
@@ -216,12 +214,10 @@ add_test(
       "Expected current URI has been set"
     );
     equal(targetURI.spec, INITIAL_URI.spec, "Expected target URI has been set");
-
-    run_next_test();
   }
 );
 
-add_test(
+add_task(
   async function test_waitForInitialNavigation_initialDocumentLoadingAndNoAdditionalLoad() {
     const browsingContext = new MockTopContext();
     const webProgress = browsingContext.webProgress;
@@ -250,12 +246,10 @@ add_test(
       "Expected current URI has been set"
     );
     equal(targetURI.spec, INITIAL_URI.spec, "Expected target URI has been set");
-
-    run_next_test();
   }
 );
 
-add_test(
+add_task(
   async function test_waitForInitialNavigation_initialDocumentFinishedLoadingNoAdditionalLoad() {
     const browsingContext = new MockTopContext();
     const webProgress = browsingContext.webProgress;
@@ -285,12 +279,10 @@ add_test(
       "Expected current URI has been set"
     );
     equal(targetURI.spec, INITIAL_URI.spec, "Expected target URI has been set");
-
-    run_next_test();
   }
 );
 
-add_test(
+add_task(
   async function test_waitForInitialNavigation_initialDocumentLoadingAndAdditionalLoad() {
     const browsingContext = new MockTopContext();
     const webProgress = browsingContext.webProgress;
@@ -327,12 +319,10 @@ add_test(
       "Expected current URI has been set"
     );
     equal(targetURI.spec, TARGET_URI.spec, "Expected target URI has been set");
-
-    run_next_test();
   }
 );
 
-add_test(
+add_task(
   async function test_waitForInitialNavigation_initialDocumentFinishedLoadingAndAdditionalLoad() {
     const browsingContext = new MockTopContext();
     const webProgress = browsingContext.webProgress;
@@ -368,12 +358,10 @@ add_test(
       "Expected current URI has been set"
     );
     equal(targetURI.spec, TARGET_URI.spec, "Expected target URI has been set");
-
-    run_next_test();
   }
 );
 
-add_test(
+add_task(
   async function test_waitForInitialNavigation_notInitialDocumentNotLoading() {
     const browsingContext = new MockTopContext();
     const webProgress = browsingContext.webProgress;
@@ -402,12 +390,10 @@ add_test(
       "Expected current URI has been set"
     );
     equal(targetURI.spec, TARGET_URI.spec, "Expected target URI has been set");
-
-    run_next_test();
   }
 );
 
-add_test(
+add_task(
   async function test_waitForInitialNavigation_notInitialDocumentAlreadyLoading() {
     const browsingContext = new MockTopContext();
     const webProgress = browsingContext.webProgress;
@@ -436,12 +422,10 @@ add_test(
       "Expected current URI has been set"
     );
     equal(targetURI.spec, TARGET_URI.spec, "Expected target URI has been set");
-
-    run_next_test();
   }
 );
 
-add_test(
+add_task(
   async function test_waitForInitialNavigation_notInitialDocumentFinishedLoading() {
     const browsingContext = new MockTopContext();
     const webProgress = browsingContext.webProgress;
@@ -466,12 +450,10 @@ add_test(
       "Expected current URI has been set"
     );
     equal(targetURI.spec, TARGET_URI.spec, "Expected target URI has been set");
-
-    run_next_test();
   }
 );
 
-add_test(async function test_waitForInitialNavigation_resolveWhenStarted() {
+add_task(async function test_waitForInitialNavigation_resolveWhenStarted() {
   const browsingContext = new MockTopContext();
   const webProgress = browsingContext.webProgress;
 
@@ -492,11 +474,9 @@ add_test(async function test_waitForInitialNavigation_resolveWhenStarted() {
   );
   equal(currentURI.spec, CURRENT_URI.spec, "Expected current URI has been set");
   equal(targetURI.spec, INITIAL_URI.spec, "Expected target URI has been set");
-
-  run_next_test();
 });
 
-add_test(async function test_waitForInitialNavigation_crossOrigin() {
+add_task(async function test_waitForInitialNavigation_crossOrigin() {
   const browsingContext = new MockTopContext();
   const webProgress = browsingContext.webProgress;
 
@@ -525,11 +505,9 @@ add_test(async function test_waitForInitialNavigation_crossOrigin() {
   );
   equal(currentURI.spec, TARGET_URI.spec, "Expected current URI has been set");
   equal(targetURI.spec, TARGET_URI.spec, "Expected target URI has been set");
-
-  run_next_test();
 });
 
-add_test(async function test_ProgressListener_expectNavigation() {
+add_task(async function test_ProgressListener_expectNavigation() {
   const browsingContext = new MockTopContext();
   const webProgress = browsingContext.webProgress;
 
@@ -549,11 +527,9 @@ add_test(async function test_ProgressListener_expectNavigation() {
   await webProgress.sendStopState();
 
   ok(await hasPromiseResolved(navigated), "Listener has resolved");
-
-  run_next_test();
 });
 
-add_test(
+add_task(
   async function test_ProgressListener_expectNavigation_initialDocumentFinishedLoading() {
     const browsingContext = new MockTopContext();
     const webProgress = browsingContext.webProgress;
@@ -579,12 +555,10 @@ add_test(
     await webProgress.sendStopState();
 
     ok(await hasPromiseResolved(navigated), "Listener has resolved");
-
-    run_next_test();
   }
 );
 
-add_test(async function test_ProgressListener_isStarted() {
+add_task(async function test_ProgressListener_isStarted() {
   const browsingContext = new MockTopContext();
   const webProgress = browsingContext.webProgress;
 
@@ -596,11 +570,9 @@ add_test(async function test_ProgressListener_isStarted() {
 
   progressListener.stop();
   ok(!progressListener.isStarted);
-
-  run_next_test();
 });
 
-add_test(async function test_ProgressListener_notWaitForExplicitStart() {
+add_task(async function test_ProgressListener_notWaitForExplicitStart() {
   // Create a webprogress and start it before creating the progress listener.
   const browsingContext = new MockTopContext();
   const webProgress = browsingContext.webProgress;
@@ -618,11 +590,9 @@ add_test(async function test_ProgressListener_notWaitForExplicitStart() {
     await hasPromiseResolved(navigated),
     "Listener has resolved after initial navigation"
   );
-
-  run_next_test();
 });
 
-add_test(async function test_ProgressListener_waitForExplicitStart() {
+add_task(async function test_ProgressListener_waitForExplicitStart() {
   // Create a webprogress and start it before creating the progress listener.
   const browsingContext = new MockTopContext();
   const webProgress = browsingContext.webProgress;
@@ -654,11 +624,9 @@ add_test(async function test_ProgressListener_waitForExplicitStart() {
     await hasPromiseResolved(navigated),
     "Listener resolved after finishing the new navigation"
   );
-
-  run_next_test();
 });
 
-add_test(
+add_task(
   async function test_ProgressListener_waitForExplicitStartAndResolveWhenStarted() {
     // Create a webprogress and start it before creating the progress listener.
     const browsingContext = new MockTopContext();
@@ -685,12 +653,10 @@ add_test(
       await hasPromiseResolved(navigated),
       "Listener resolved after starting the new navigation"
     );
-
-    run_next_test();
   }
 );
 
-add_test(
+add_task(
   async function test_ProgressListener_resolveWhenNavigatingInsideDocument() {
     const browsingContext = new MockTopContext();
     const webProgress = browsingContext.webProgress;
@@ -718,12 +684,10 @@ add_test(
       TARGET_URI_WITH_HASH.spec,
       "Expected target URI has been set"
     );
-
-    run_next_test();
   }
 );
 
-add_test(async function test_ProgressListener_ignoreCacheError() {
+add_task(async function test_ProgressListener_ignoreCacheError() {
   const browsingContext = new MockTopContext();
   const webProgress = browsingContext.webProgress;
 
@@ -738,11 +702,9 @@ add_test(async function test_ProgressListener_ignoreCacheError() {
   });
 
   ok(await hasPromiseResolved(navigated), "Listener has resolved");
-
-  run_next_test();
 });
 
-add_test(async function test_ProgressListener_navigationRejectedOnErrorPage() {
+add_task(async function test_ProgressListener_navigationRejectedOnErrorPage() {
   const browsingContext = new MockTopContext();
   const webProgress = browsingContext.webProgress;
 
@@ -762,11 +724,9 @@ add_test(async function test_ProgressListener_navigationRejectedOnErrorPage() {
     await hasPromiseRejected(navigated),
     "Listener has rejected in location change for error page"
   );
-
-  run_next_test();
 });
 
-add_test(async function test_ProgressListener_navigationRejectedOnStopState() {
+add_task(async function test_ProgressListener_navigationRejectedOnStopState() {
   const browsingContext = new MockTopContext();
   const webProgress = browsingContext.webProgress;
 
@@ -782,11 +742,9 @@ add_test(async function test_ProgressListener_navigationRejectedOnStopState() {
     await hasPromiseRejected(navigated),
     "Listener has rejected in stop state for erroneous navigation"
   );
-
-  run_next_test();
 });
 
-add_test(async function test_ProgressListener_stopIfStarted() {
+add_task(async function test_ProgressListener_stopIfStarted() {
   const browsingContext = new MockTopContext();
   const webProgress = browsingContext.webProgress;
 
@@ -799,11 +757,9 @@ add_test(async function test_ProgressListener_stopIfStarted() {
   await webProgress.sendStartState();
   progressListener.stopIfStarted();
   ok(await hasPromiseResolved(navigated), "Listener has resolved");
-
-  run_next_test();
 });
 
-add_test(async function test_ProgressListener_stopIfStarted_alreadyStarted() {
+add_task(async function test_ProgressListener_stopIfStarted_alreadyStarted() {
   // Create an already navigating browsing context.
   const browsingContext = new MockTopContext();
   const webProgress = browsingContext.webProgress;
@@ -818,11 +774,9 @@ add_test(async function test_ProgressListener_stopIfStarted_alreadyStarted() {
   // stopIfStarted should stop the listener because of the ongoing navigation.
   progressListener.stopIfStarted();
   ok(await hasPromiseResolved(navigated), "Listener has resolved");
-
-  run_next_test();
 });
 
-add_test(
+add_task(
   async function test_ProgressListener_stopIfStarted_alreadyStarted_waitForExplicitStart() {
     // Create an already navigating browsing context.
     const browsingContext = new MockTopContext();
@@ -844,7 +798,5 @@ add_test(
     await webProgress.sendStartState();
     progressListener.stopIfStarted();
     ok(await hasPromiseResolved(navigated), "Listener has resolved");
-
-    run_next_test();
   }
 );

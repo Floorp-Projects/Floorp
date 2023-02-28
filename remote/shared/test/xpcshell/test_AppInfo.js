@@ -10,7 +10,7 @@ const { AppInfo } = ChromeUtils.importESModule(
 
 // Minimal xpcshell tests for AppInfo; Services.appinfo.* is not available
 
-add_test(function test_custom_properties() {
+add_task(function test_custom_properties() {
   const properties = [
     // platforms
     "isAndroid",
@@ -29,6 +29,4 @@ add_test(function test_custom_properties() {
       `Custom property ${prop} has expected type`
     );
   }
-
-  run_next_test();
 });

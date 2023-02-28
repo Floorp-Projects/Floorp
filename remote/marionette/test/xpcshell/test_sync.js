@@ -67,7 +67,7 @@ class MockTimer {
   }
 }
 
-add_test(function test_executeSoon_callback() {
+add_task(function test_executeSoon_callback() {
   // executeSoon() is already defined for xpcshell in head.js. As such import
   // our implementation into a custom namespace.
   let sync = ChromeUtils.importESModule(
@@ -83,21 +83,17 @@ add_test(function test_executeSoon_callback() {
     a = 1;
   });
   executeSoon(() => equal(1, a));
-
-  run_next_test();
 });
 
-add_test(function test_PollPromise_funcTypes() {
+add_task(function test_PollPromise_funcTypes() {
   for (let type of ["foo", 42, null, undefined, true, [], {}]) {
     Assert.throws(() => new PollPromise(type), /TypeError/);
   }
   new PollPromise(() => {});
   new PollPromise(function() {});
-
-  run_next_test();
 });
 
-add_test(function test_PollPromise_timeoutTypes() {
+add_task(function test_PollPromise_timeoutTypes() {
   for (let timeout of ["foo", true, [], {}]) {
     Assert.throws(() => new PollPromise(() => {}, { timeout }), /TypeError/);
   }
@@ -107,11 +103,9 @@ add_test(function test_PollPromise_timeoutTypes() {
   for (let timeout of [null, undefined, 42]) {
     new PollPromise(resolve => resolve(1), { timeout });
   }
-
-  run_next_test();
 });
 
-add_test(function test_PollPromise_intervalTypes() {
+add_task(function test_PollPromise_intervalTypes() {
   for (let interval of ["foo", null, true, [], {}]) {
     Assert.throws(() => new PollPromise(() => {}, { interval }), /TypeError/);
   }
@@ -119,8 +113,6 @@ add_test(function test_PollPromise_intervalTypes() {
     Assert.throws(() => new PollPromise(() => {}, { interval }), /RangeError/);
   }
   new PollPromise(() => {}, { interval: 42 });
-
-  run_next_test();
 });
 
 add_task(async function test_PollPromise_retvalTypes() {
@@ -196,7 +188,7 @@ add_task(async function test_PollPromise_interval() {
   equal(2, nevals);
 });
 
-add_test(function test_TimedPromise_funcTypes() {
+add_task(function test_TimedPromise_funcTypes() {
   for (let type of ["foo", 42, null, undefined, true, [], {}]) {
     Assert.throws(() => new TimedPromise(type), /TypeError/);
   }
@@ -204,11 +196,9 @@ add_test(function test_TimedPromise_funcTypes() {
   new TimedPromise(function(resolve) {
     resolve();
   });
-
-  run_next_test();
 });
 
-add_test(function test_TimedPromise_timeoutTypes() {
+add_task(function test_TimedPromise_timeoutTypes() {
   for (let timeout of ["foo", null, true, [], {}]) {
     Assert.throws(
       () => new TimedPromise(resolve => resolve(), { timeout }),
@@ -222,11 +212,9 @@ add_test(function test_TimedPromise_timeoutTypes() {
     );
   }
   new TimedPromise(resolve => resolve(), { timeout: 42 });
-
-  run_next_test();
 });
 
-add_test(async function test_TimedPromise_errorMessage() {
+add_task(async function test_TimedPromise_errorMessage() {
   try {
     await new TimedPromise(resolve => {}, { timeout: 0 });
     ok(false, "Expected Timeout error not raised");
@@ -249,8 +237,6 @@ add_test(async function test_TimedPromise_errorMessage() {
       "Expected custom error message found"
     );
   }
-
-  run_next_test();
 });
 
 add_task(async function test_Sleep() {
@@ -282,7 +268,7 @@ add_task(async function test_IdlePromiseAbortWhenWindowClosed() {
   await IdlePromise(win);
 });
 
-add_test(function test_DebounceCallback_constructor() {
+add_task(function test_DebounceCallback_constructor() {
   for (let cb of [42, "foo", true, null, undefined, [], {}]) {
     Assert.throws(() => new DebounceCallback(cb), /TypeError/);
   }
@@ -298,8 +284,6 @@ add_test(function test_DebounceCallback_constructor() {
       /RangeError/
     );
   }
-
-  run_next_test();
 });
 
 add_task(async function test_DebounceCallback_repeatedCallback() {
