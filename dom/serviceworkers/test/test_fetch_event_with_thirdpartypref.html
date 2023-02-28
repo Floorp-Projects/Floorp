@@ -59,7 +59,7 @@
       }
     });
 
-    var w = window.open("fetch/index.html?orbEnabled");
+    var w = window.open("fetch/index.html");
     return p;
   }
 
@@ -83,8 +83,6 @@
     ["dom.serviceWorkers.enabled", true],
     ["dom.serviceWorkers.testing.enabled", true],
     ["network.cookie.cookieBehavior", COOKIE_BEHAVIOR_REJECTFOREIGN],
-    ["browser.opaqueResponseBlocking", true],
-    ["browser.opaqueResponseBlocking.javascriptValidator", true]
   ]}, runTest);
 </script>
 </pre>

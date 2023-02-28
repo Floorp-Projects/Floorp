@@ -10,7 +10,7 @@ promise_test(async function () {
   // Cross-origin -> same-origin will result in setting the tainted origin flag for the second
   // request.
   let url = origins.HTTP_ORIGIN + redirectPath + "?stash=" + stash;
-  url = origins.HTTP_REMOTE_ORIGIN + redirectPath + "?stash=" + stash + "&location=" + encodeURIComponent(url) + "&dummyJS";
+  url = origins.HTTP_REMOTE_ORIGIN + redirectPath + "?stash=" + stash + "&location=" + encodeURIComponent(url);
 
   await fetch(url, { mode: "no-cors", method: "POST" });
 
@@ -123,7 +123,7 @@ function fetchReferrerPolicy(referrerPolicy, destination, fetchMode, expectedOri
     let fetchUrl =
         (destination === "same-origin" ? origins.HTTP_ORIGIN
                                        : origins.HTTP_REMOTE_ORIGIN) +
-        redirectPath + "?stash=" + stash + "&dummyJS";
+        redirectPath + "?stash=" + stash;
 
     await fetch(fetchUrl, { mode: fetchMode, method: httpMethod , "referrerPolicy": referrerPolicy});
 

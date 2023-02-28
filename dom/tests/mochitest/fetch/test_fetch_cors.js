@@ -80,7 +80,7 @@ function testNoCorsCtor() {
 
 var corsServerPath =
   "/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?";
-function testModeNoCors(withoutORB) {
+function testModeNoCors() {
   // Fetch spec, section 4, step 4, response tainting should be set opaque, so
   // that fetching leads to an opaque filtered response in step 8.
   var r = new Request("http://example.com" + corsServerPath + "status=200", {
@@ -89,19 +89,12 @@ function testModeNoCors(withoutORB) {
   return fetch(r).then(
     function(res) {
       ok(
-        withoutORB,
-        "no-cors Request fetch with invalid javascript content should be blocked when ORB is enabled"
-      );
-      ok(
         isOpaqueResponse(res),
         "no-cors Request fetch should result in opaque response"
       );
     },
     function(e) {
-      ok(
-        !withoutORB,
-        "no-cors Request fetch with invalid javascript content should not be blocked when ORB is not enabled"
-      );
+      ok(false, "no-cors Request fetch should not error");
     }
   );
 }
@@ -1209,23 +1202,22 @@ function testModeNoCorsCredentials(withoutORB) {
   var tests = [
     {
       // Initialize by setting a cookie.
-      pass: withoutORB,
+      pass: 1,
       setCookie: cookieStr,
       withCred: "include",
-      bypassORB: true,
     },
     {
-      pass: withoutORB,
+      pass: 1,
       noCookie: 1,
       withCred: "omit",
     },
     {
-      pass: withoutORB,
+      pass: 1,
       noCookie: 1,
       withCred: "same-origin",
     },
     {
-      pass: withoutORB,
+      pass: 1,
       cookie: cookieStr,
       withCred: "include",
     },
@@ -1712,29 +1704,25 @@ function testCORSRedirects() {
   return Promise.all(fetches);
 }
 
-function testNoCORSRedirects(withoutORB) {
+function testNoCORSRedirects() {
   var origin = "http://mochi.test:8888";
 
   var tests = [
+    { pass: 1, method: "GET", hops: [{ server: "http://example.com" }] },
     {
-      pass: withoutORB,
-      method: "GET",
-      hops: [{ server: "http://example.com" }],
-    },
-    {
-      pass: withoutORB,
+      pass: 1,
       method: "GET",
       hops: [{ server: origin }, { server: "http://example.com" }],
     },
     {
-      pass: withoutORB,
+      pass: 1,
       method: "GET",
       // Must use a simple header due to no-cors header restrictions.
       headers: { "accept-language": "en-us" },
       hops: [{ server: origin }, { server: "http://example.com" }],
     },
     {
-      pass: withoutORB,
+      pass: 1,
       method: "GET",
       hops: [
         { server: origin },
@@ -1743,7 +1731,7 @@ function testNoCORSRedirects(withoutORB) {
       ],
     },
     {
-      pass: withoutORB,
+      pass: 1,
       method: "POST",
       body: "upload body here",
       hops: [{ server: origin }, { server: "http://example.com" }],
@@ -1880,10 +1868,10 @@ function runTest() {
 
   return promise
     .then(testModeSameOrigin)
+    .then(testModeNoCors)
     .then(testModeCors)
     .then(testSameOriginCredentials)
     .then(testCrossOriginCredentials)
-    .then(testCORSRedirects)
     .then(function() {
       return SpecialPowers.pushPrefEnv({
         set: [["browser.opaqueResponseBlocking", false]],
@@ -1893,28 +1881,15 @@ function runTest() {
       return testModeNoCorsCredentials(1); // Without ORB
     })
     .then(function() {
-      return testModeNoCors(1); // Without ORB
-    })
-    .then(function() {
-      return testNoCORSRedirects(1); // Without ORB
-    })
-    .then(function() {
       return SpecialPowers.pushPrefEnv({
-        set: [
-          ["browser.opaqueResponseBlocking", true],
-          ["browser.opaqueResponseBlocking.javascriptValidator", true],
-        ],
+        set: [["browser.opaqueResponseBlocking", true]],
       });
     })
     .then(() => {
       return testModeNoCorsCredentials(0); // With ORB
     })
-    .then(function() {
-      return testModeNoCors(0); // With ORB
-    })
-    .then(() => {
-      return testNoCORSRedirects(0); // With ORB
-    })
+    .then(testCORSRedirects)
+    .then(testNoCORSRedirects)
     .then(testReferrer);
   // Put more promise based tests here.
 }

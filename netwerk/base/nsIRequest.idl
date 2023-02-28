@@ -335,7 +335,4 @@ interface nsIRequest : nsISupports
      * effect.
      */
     const unsigned long LOAD_FRESH_CONNECTION = 1 << 15;
-
-    // Note that all flags are taken, the rest of the flags
-    // are located in nsIChannel and nsICachingChannel
 };
