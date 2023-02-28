@@ -159,6 +159,12 @@ inline bool IsClusterExtender(uint32_t aCh) {
   return IsClusterExtender(aCh, GetGeneralCategory(aCh));
 }
 
+bool IsClusterExtenderExcludingJoiners(uint32_t aCh, uint8_t aCategory);
+
+inline bool IsClusterExtenderExcludingJoiners(uint32_t aCh) {
+  return IsClusterExtenderExcludingJoiners(aCh, GetGeneralCategory(aCh));
+}
+
 // Count the number of grapheme clusters in the given string
 uint32_t CountGraphemeClusters(Span<const char16_t> aText);
 
