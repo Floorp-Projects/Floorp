@@ -196,6 +196,11 @@ uint32_t DocAccessibleParent::AddSubtree(
     mAccessibles.PutEntry(newChild.ID())->mProxy = newProxy;
     ProxyCreated(newProxy);
 
+    if (RefPtr<AccAttributes> fields = newChild.CacheFields()) {
+      MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup());
+      newProxy->ApplyCache(CacheUpdateType::Initial, fields);
+    }
+
 #if defined(XP_WIN)
     if (!StaticPrefs::accessibility_cache_enabled_AtStartup()) {
       MsaaAccessible::GetFrom(newProxy)->SetID(newChild.MsaaID());
