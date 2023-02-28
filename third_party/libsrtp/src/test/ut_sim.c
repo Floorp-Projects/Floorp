@@ -54,6 +54,8 @@
 int ut_compar(const void *a, const void *b)
 {
     uint8_t r;
+    (void)a;
+    (void)b;
     srtp_cipher_rand_for_tests(&r, sizeof(r));
     return r > (UINT8_MAX / 2) ? -1 : 1;
 }

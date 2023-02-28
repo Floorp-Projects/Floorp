@@ -106,16 +106,18 @@ int main(int argc, char *argv[])
 
     /* read in key, checking length */
     if (strlen(argv[1]) > AES_MAX_KEY_LEN * 2) {
-        fprintf(stderr, "error: too many digits in key "
-                        "(should be at most %d hexadecimal digits, found %u)\n",
+        fprintf(stderr,
+                "error: too many digits in key "
+                "(should be at most %d hexadecimal digits, found %u)\n",
                 AES_MAX_KEY_LEN * 2, (unsigned)strlen(argv[1]));
         exit(1);
     }
     len = hex_string_to_octet_string((char *)key, argv[1], AES_MAX_KEY_LEN * 2);
     /* check that hex string is the right length */
     if (len != 32 && len != 48 && len != 64) {
-        fprintf(stderr, "error: bad number of digits in key "
-                        "(should be 32/48/64 hexadecimal digits, found %d)\n",
+        fprintf(stderr,
+                "error: bad number of digits in key "
+                "(should be 32/48/64 hexadecimal digits, found %d)\n",
                 len);
         exit(1);
     }
@@ -123,16 +125,18 @@ int main(int argc, char *argv[])
 
     /* read in plaintext, checking length */
     if (strlen(argv[2]) > 16 * 2) {
-        fprintf(stderr, "error: too many digits in plaintext "
-                        "(should be %d hexadecimal digits, found %u)\n",
+        fprintf(stderr,
+                "error: too many digits in plaintext "
+                "(should be %d hexadecimal digits, found %u)\n",
                 16 * 2, (unsigned)strlen(argv[2]));
         exit(1);
     }
     len = hex_string_to_octet_string((char *)(&data), argv[2], 16 * 2);
     /* check that hex string is the right length */
     if (len < 16 * 2) {
-        fprintf(stderr, "error: too few digits in plaintext "
-                        "(should be %d hexadecimal digits, found %d)\n",
+        fprintf(stderr,
+                "error: too few digits in plaintext "
+                "(should be %d hexadecimal digits, found %d)\n",
                 16 * 2, len);
         exit(1);
     }
@@ -162,8 +166,9 @@ int main(int argc, char *argv[])
     printf("%s\n", ciphertext);
 
     if (expected_ciphertext && strcmp(ciphertext, expected_ciphertext) != 0) {
-        fprintf(stderr, "error: calculated ciphertext %s does not match "
-                        "expected ciphertext %s\n",
+        fprintf(stderr,
+                "error: calculated ciphertext %s does not match "
+                "expected ciphertext %s\n",
                 ciphertext, expected_ciphertext);
         exit(1);
     }

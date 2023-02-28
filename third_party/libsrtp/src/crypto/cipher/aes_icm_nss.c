@@ -107,6 +107,7 @@ static srtp_err_status_t srtp_aes_icm_nss_alloc(srtp_cipher_t **c,
 {
     srtp_aes_icm_ctx_t *icm;
     NSSInitContext *nss;
+    (void)tlen;
 
     debug_print(srtp_mod_aes_icm, "allocating cipher with key length %d",
                 key_len);
@@ -275,6 +276,7 @@ static srtp_err_status_t srtp_aes_icm_nss_set_iv(void *cv,
 {
     srtp_aes_icm_ctx_t *c = (srtp_aes_icm_ctx_t *)cv;
     v128_t nonce;
+    (void)dir;
 
     /* set nonce (for alignment) */
     v128_copy_octet_string(&nonce, iv);

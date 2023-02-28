@@ -112,6 +112,7 @@ static srtp_err_status_t srtp_aes_icm_openssl_alloc(srtp_cipher_t **c,
                                                     int tlen)
 {
     srtp_aes_icm_ctx_t *icm;
+    (void)tlen;
 
     debug_print(srtp_mod_aes_icm, "allocating cipher with key length %d",
                 key_len);
@@ -168,7 +169,7 @@ static srtp_err_status_t srtp_aes_icm_openssl_alloc(srtp_cipher_t **c,
         break;
     }
 
-    /* set key size        */
+    /* set key size */
     (*c)->key_len = key_len;
 
     return srtp_err_status_ok;
@@ -249,11 +250,10 @@ static srtp_err_status_t srtp_aes_icm_openssl_context_init(void *cv,
         break;
     }
 
-    EVP_CIPHER_CTX_cleanup(c->ctx);
+    EVP_CIPHER_CTX_reset(c->ctx);
+
     if (!EVP_EncryptInit_ex(c->ctx, evp, NULL, key, NULL)) {
         return srtp_err_status_fail;
-    } else {
-        return srtp_err_status_ok;
     }
 
     return srtp_err_status_ok;
@@ -270,6 +270,7 @@ static srtp_err_status_t srtp_aes_icm_openssl_set_iv(
 {
     srtp_aes_icm_ctx_t *c = (srtp_aes_icm_ctx_t *)cv;
     v128_t nonce;
+    (void)dir;
 
     /* set nonce (for alignment) */
     v128_copy_octet_string(&nonce, iv);
@@ -283,9 +284,9 @@ static srtp_err_status_t srtp_aes_icm_openssl_set_iv(
 
     if (!EVP_EncryptInit_ex(c->ctx, NULL, NULL, NULL, c->counter.v8)) {
         return srtp_err_status_fail;
-    } else {
-        return srtp_err_status_ok;
     }
+
+    return srtp_err_status_ok;
 }
 
 /*

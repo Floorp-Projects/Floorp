@@ -5,4 +5,3 @@ foreach h : public_headers
     output: '@BASENAME@.h',
     copy: true)
 endforeach
-public_incs = include_directories('.')
