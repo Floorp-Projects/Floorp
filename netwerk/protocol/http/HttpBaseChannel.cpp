@@ -4916,11 +4916,33 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
   if (StaticPrefs::network_http_redirect_stripAuthHeader() &&
       NS_SUCCEEDED(
           httpChannel->GetRequestHeader("Authorization"_ns, authHeader))) {
-    rv = httpChannel->SetRequestHeader("Authorization"_ns, ""_ns, false);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    if (!IsNewChannelSameOrigin(httpChannel)) {
+      rv = httpChannel->SetRequestHeader("Authorization"_ns, ""_ns, false);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+    }
   }
 
   return NS_OK;
+}
+
+// check whether the new channel is of same origin as the current channel
+bool HttpBaseChannel::IsNewChannelSameOrigin(nsIChannel* aNewChannel) {
+  bool isSameOrigin = false;
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+
+  if (!ssm) {
+    return false;
+  }
+
+  nsCOMPtr<nsIURI> newURI;
+  NS_GetFinalChannelURI(aNewChannel, getter_AddRefs(newURI));
+
+  nsresult rv = ssm->CheckSameOriginURI(newURI, mURI, false, false);
+  if (NS_SUCCEEDED(rv)) {
+    isSameOrigin = true;
+  }
+
+  return isSameOrigin;
 }
 
 bool HttpBaseChannel::ShouldTaintReplacementChannelOrigin(
@@ -4934,19 +4956,13 @@ bool HttpBaseChannel::ShouldTaintReplacementChannelOrigin(
     return false;
   }
 
-  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-  if (!ssm) {
-    return true;
-  }
-
-  nsCOMPtr<nsIURI> newURI;
-  NS_GetFinalChannelURI(aNewChannel, getter_AddRefs(newURI));
-  nsresult rv = ssm->CheckSameOriginURI(newURI, mURI, false, false);
-  if (NS_SUCCEEDED(rv)) {
+  // If new channel is not of same origin we need to taint unless
+  // mURI <-> mOriginalURI/LoadingPrincipal are same origin.
+  if (IsNewChannelSameOrigin(aNewChannel)) {
     return false;
   }
-  // If newURI <-> mURI are not same-origin we need to taint unless
-  // mURI <-> mOriginalURI/LoadingPrincipal are same origin.
+
+  nsresult rv;
 
   if (mLoadInfo->GetLoadingPrincipal()) {
     bool sameOrigin = false;
@@ -4957,6 +4973,11 @@ bool HttpBaseChannel::ShouldTaintReplacementChannelOrigin(
     return !sameOrigin;
   }
   if (!mOriginalURI) {
+    return true;
+  }
+
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  if (!ssm) {
     return true;
   }
 

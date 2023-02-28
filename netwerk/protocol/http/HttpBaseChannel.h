@@ -577,6 +577,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   [[nodiscard]] virtual nsresult SetupReplacementChannel(
       nsIURI*, nsIChannel*, bool preserveMethod, uint32_t redirectFlags);
 
+  bool IsNewChannelSameOrigin(nsIChannel* aNewChannel);
+
   // WHATWG Fetch Standard 4.4. HTTP-redirect fetch, step 10
   virtual bool ShouldTaintReplacementChannelOrigin(nsIChannel* aNewChannel,
                                                    uint32_t aRedirectFlags);
