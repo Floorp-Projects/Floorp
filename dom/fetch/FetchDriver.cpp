@@ -1534,7 +1534,20 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
     // Ref: https://fetch.spec.whatwg.org/#http-redirect-fetch
     bool skipAuthHeader = false;
     if (StaticPrefs::network_fetch_redirect_stripAuthHeader()) {
-      skipAuthHeader = ReferrerInfo::IsCrossOriginRequest(oldHttpChannel);
+      nsCOMPtr<nsIURI> oldUri;
+      MOZ_ALWAYS_SUCCEEDS(
+          NS_GetFinalChannelURI(aOldChannel, getter_AddRefs(oldUri)));
+
+      nsCOMPtr<nsIURI> newUri;
+      MOZ_ALWAYS_SUCCEEDS(
+          NS_GetFinalChannelURI(aNewChannel, getter_AddRefs(newUri)));
+
+      nsresult rv = nsContentUtils::GetSecurityManager()->CheckSameOriginURI(
+          newUri, oldUri, false, false);
+
+      if (NS_FAILED(rv)) {
+        skipAuthHeader = true;
+      }
     }
 
     SetRequestHeaders(newHttpChannel, rewriteToGET, skipAuthHeader);
