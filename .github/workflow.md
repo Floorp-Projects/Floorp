@@ -27,13 +27,9 @@ https://code.visualstudio.com
 ---
 ## Setup Floorp build environment (Linux)
 
-Install Git tool
+Install tools
 ```
-sudo apt install git
-```
-Install Python tools
-```
-sudo apt-get install curl python3 python3-dev python3-pip
+sudo apt-get install git curl python3 python3-dev python3-pip
 ```
 
 ----
@@ -42,13 +38,16 @@ sudo apt-get install curl python3 python3-dev python3-pip
 Clone Floorp Browser repo
 
 ```
-git clone https://github.com/Floorp-Projects/Floorp/.git
-
-NOTICE: If you just build and aren't interested in other branches, fast cloning is possible
-
-USE: git clone --branch [BRANCH] --depth 200 https://github.com/Floorp-Projects/Floorp.git
-
+git clone https://github.com/Floorp-Projects/Floorp.git
 ```
+
+**NOTICE**: If you just build and aren't interested in other branches, fast cloning is possible
+
+**USE**: 
+```
+git clone --branch [BRANCH] --depth 1 https://github.com/Floorp-Projects/Floorp.git
+```
+
 BootStrap source code
 
 `NOTICE: Please Select 2. After that, all n is OK`
