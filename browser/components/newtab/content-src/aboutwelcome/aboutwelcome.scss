@@ -77,7 +77,6 @@ html {
   // sass-lint:disable no-color-literals
 
   --grey-subtitle-1: #696977;
-  --newtab-button-secondary-color: #0060DF;
   --mr-welcome-background-color: #F8F6F4;
   --mr-screen-heading-color: var(--in-content-text-color);
   --mr-welcome-background-gradient: linear-gradient(0deg, rgba(144, 89, 255, 0.2) 0%, rgba(2, 144, 238, 0.2) 100%);
@@ -85,16 +84,11 @@ html {
 
   @media (prefers-color-scheme: dark) {
     --grey-subtitle-1: #FFF;
-    --newtab-button-secondary-color: #FFF;
     --mr-welcome-background-color: #333336;
     --mr-welcome-background-gradient: linear-gradient(0deg, rgba(144, 89, 255, 0.3) 0%, rgba(2, 144, 238, 0.3) 100%);
     --mr-screen-background-color: #62697A;
   }
 
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Ubuntu',
-  'Helvetica Neue', sans-serif;
-  font-size: 16px;
-  position: relative;
   text-align: center;
   height: 100vh;
 
