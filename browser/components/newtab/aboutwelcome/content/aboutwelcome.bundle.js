@@ -222,7 +222,8 @@ const MultiStageAboutWelcome = props => {
 
 
     setPreviousOrder(index);
-  }, [index]);
+  }, [index]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const [flowParams, setFlowParams] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
   const {
     metricsFlowUri
@@ -297,14 +298,8 @@ const MultiStageAboutWelcome = props => {
     }
 
     return false;
-  }, []); // Update top sites with default sites by region when region is available
-
-  const [region, setRegion] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null);
-  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    (async () => {
-      setRegion(await window.AWGetRegion());
-    })();
-  }, []); // Save the active multi select state containing array of checkbox ids
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Save the active multi select state containing array of checkbox ids
   // used in handleAction to update MULTI_ACTION data
 
   const [activeMultiSelect, setActiveMultiSelect] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null); // Get the active theme so the rendering code can make it selected
@@ -319,35 +314,6 @@ const MultiStageAboutWelcome = props => {
       setActiveTheme(theme);
     })();
   }, []);
-  const useImportable = props.message_id.includes("IMPORTABLE"); // Track whether we have already sent the importable sites impression telemetry
-
-  const importTelemetrySent = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)(false);
-  const [topSites, setTopSites] = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]);
-  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
-    (async () => {
-      var _window$AWGetDefaultS, _window, _window$AWGetImportab, _window2;
-
-      let DEFAULT_SITES = await ((_window$AWGetDefaultS = (_window = window).AWGetDefaultSites) === null || _window$AWGetDefaultS === void 0 ? void 0 : _window$AWGetDefaultS.call(_window));
-      const importable = JSON.parse((await ((_window$AWGetImportab = (_window2 = window).AWGetImportableSites) === null || _window$AWGetImportab === void 0 ? void 0 : _window$AWGetImportab.call(_window2))) || "[]");
-      const showImportable = useImportable && importable.length >= 5;
-
-      if (!importTelemetrySent.current) {
-        _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_2__.AboutWelcomeUtils.sendImpressionTelemetry(`${props.message_id}_SITES`, {
-          display: showImportable ? "importable" : "static",
-          importable: importable.length
-        });
-        importTelemetrySent.current = true;
-      }
-
-      setTopSites(showImportable ? {
-        data: importable,
-        showImportable
-      } : {
-        data: DEFAULT_SITES,
-        showImportable
-      });
-    })();
-  }, [useImportable, region]);
   const {
     negotiatedLanguage,
     langPackInstallPhase,
@@ -375,7 +341,6 @@ const MultiStageAboutWelcome = props => {
       previousOrder: previousOrder,
       content: screen.content,
       navigate: handleTransition,
-      topSites: topSites,
       messageId: `${props.message_id}_${order}_${screen.id}`,
       UTMTerm: props.utm_term,
       flowParams: flowParams,

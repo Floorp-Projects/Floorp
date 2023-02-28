@@ -53,10 +53,6 @@
         "subtitle": {
           "string_id": "onboarding-multistage-import-subtitle"
         },
-        "tiles": {
-          "type": "topsites",
-          "showTitles": true
-        },
         "primary_button": {
           "label": {
             "string_id": "onboarding-multistage-import-primary-button-label"

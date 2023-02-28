@@ -42,7 +42,6 @@ describe("Multistage AboutWelcome module", () => {
           label: "test button",
         },
       },
-      topSites: [],
       messageId: "test-mr-colorway-screen",
       activeTheme: "automatic",
     };
