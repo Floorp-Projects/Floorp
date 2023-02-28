@@ -79,6 +79,8 @@ class TPSTestRunner(object):
         # hrm - not sure what the release/beta channels will do?
         "xpinstall.signatures.required": False,
         "services.sync.testing.tps": True,
+        # removed data: schema restriction for easier testing of tabs
+        "services.sync.engine.tabs.filteredSchemes": "about|resource|chrome|file|blob|moz-extension",
         "engine.bookmarks.repair.enabled": False,
         "extensions.experiments.enabled": True,
         "webextensions.storage.sync.kinto": False,
