@@ -511,7 +511,9 @@ already_AddRefed<Promise> RTCRtpSender::SetParameters(
   // TODO(bug 1803389): Remove the glean errors once they are no longer needed.
   Maybe<RTCRtpSendParameters> oldParams;
   if (mAllowOldSetParameters) {
-    if (mPendingParameters.isSome()) {
+    if (mLastReturnedParameters.isSome()) {
+      oldParams = mLastReturnedParameters;
+    } else if (mPendingParameters.isSome()) {
       oldParams = mPendingParameters;
     } else {
       oldParams = Some(mParameters);
