@@ -6281,8 +6281,7 @@ struct ValuePopulateResponseHelper {
 
     QM_TRY_UNWRAP(auto cloneInfo,
                   GetStructuredCloneReadInfoFromStatement(
-                      aStmt, 2 + offset, 1 + offset, *aCursor.mFileManager,
-                      aCursor.mDatabase->MaybeKeyRef()));
+                      aStmt, 2 + offset, 1 + offset, *aCursor.mFileManager));
 
     mCloneInfo.init(std::move(cloneInfo));
 
@@ -17699,8 +17698,7 @@ CreateIndexOp::UpdateIndexDataValuesFunction::OnFunctionCall(
   QM_TRY_UNWRAP(auto cloneInfo, GetStructuredCloneReadInfoFromValueArray(
                                     aValues,
                                     /* aDataIndex */ 3,
-                                    /* aFileIdsIndex */ 2, *mOp->mFileManager,
-                                    mDatabase->MaybeKeyRef()));
+                                    /* aFileIdsIndex */ 2, *mOp->mFileManager));
 
   const IndexMetadata& metadata = mOp->mMetadata;
   const IndexOrObjectStoreId& objectStoreId = mOp->mObjectStoreId;
@@ -18936,8 +18934,7 @@ nsresult ObjectStoreGetRequestOp::DoDatabaseWork(
       *stmt, [this](auto& stmt) mutable -> mozilla::Result<Ok, nsresult> {
         QM_TRY_UNWRAP(auto cloneInfo,
                       GetStructuredCloneReadInfoFromStatement(
-                          &stmt, 1, 0, mDatabase->GetFileManager(),
-                          mDatabase->MaybeKeyRef()));
+                          &stmt, 1, 0, mDatabase->GetFileManager()));
 
         if (cloneInfo.HasPreprocessInfo()) {
           mPreprocessInfoCount++;
@@ -19415,8 +19412,7 @@ nsresult IndexGetRequestOp::DoDatabaseWork(DatabaseConnection* aConnection) {
       *stmt, [this](auto& stmt) mutable -> mozilla::Result<Ok, nsresult> {
         QM_TRY_UNWRAP(auto cloneInfo,
                       GetStructuredCloneReadInfoFromStatement(
-                          &stmt, 1, 0, mDatabase->GetFileManager(),
-                          mDatabase->MaybeKeyRef()));
+                          &stmt, 1, 0, mDatabase->GetFileManager()));
 
         if (cloneInfo.HasPreprocessInfo()) {
           IDB_WARNING("Preprocessing for indexes not yet implemented!");
