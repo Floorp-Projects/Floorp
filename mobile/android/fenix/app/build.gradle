@@ -656,6 +656,7 @@ dependencies {
 
     androidTestImplementation FenixDependencies.androidx_junit
     androidTestImplementation FenixDependencies.androidx_test_extensions
+    androidTestImplementation FenixDependencies.androidx_tracing
     androidTestImplementation FenixDependencies.androidx_work_testing
     androidTestImplementation FenixDependencies.androidx_benchmark_junit4
     androidTestImplementation FenixDependencies.mockwebserver
