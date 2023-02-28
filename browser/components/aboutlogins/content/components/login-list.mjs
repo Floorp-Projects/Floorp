@@ -152,7 +152,10 @@ export default class LoginList extends HTMLElement {
 
   render() {
     let visibleLoginGuids = this._applyFilter();
-    this._updateVisibleLoginCount(visibleLoginGuids.size);
+    this.#updateVisibleLoginCount(
+      visibleLoginGuids.size,
+      this._loginGuidsSortedOrder.length
+    );
     this.classList.toggle("empty-search", !visibleLoginGuids.size);
     document.documentElement.classList.toggle(
       "empty-search",
@@ -692,11 +695,14 @@ export default class LoginList extends HTMLElement {
     this._list.scrollTop = 0;
   }
 
-  _updateVisibleLoginCount(count) {
-    if (count != document.l10n.getAttributes(this._count).args.count) {
-      document.l10n.setAttributes(this._count, "login-list-count", {
-        count,
-      });
+  #updateVisibleLoginCount(count, total) {
+    const args = document.l10n.getAttributes(this._count).args;
+    if (count != args.count || total != args.total) {
+      document.l10n.setAttributes(
+        this._count,
+        count == total ? "login-list-count" : "login-list-filtered-count",
+        { count, total }
+      );
     }
   }
 
