@@ -35,8 +35,6 @@ class GPUChild final : public ipc::CrashReporterHelper<GeckoProcessType_GPU>,
   bool EnsureGPUReady();
   void MarkWaitForVarUpdate() { mWaitForVarUpdate = true; }
 
-  base::ProcessHandle GetChildProcessHandle();
-
   // Notifies that an unexpected GPU process shutdown has been noticed by a
   // different IPDL actor, and the GPU process is being torn down as a result.
   // ActorDestroy may receive either NormalShutdown or AbnormalShutdown as a
