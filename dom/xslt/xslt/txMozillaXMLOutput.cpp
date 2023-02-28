@@ -853,7 +853,7 @@ NS_IMETHODIMP
 txTransformNotifier::ScriptAvailable(nsresult aResult,
                                      nsIScriptElement* aElement,
                                      bool aIsInlineClassicScript, nsIURI* aURI,
-                                     int32_t aLineNo) {
+                                     uint32_t aLineNo) {
   if (NS_FAILED(aResult) && mScriptElements.RemoveElement(aElement)) {
     SignalTransformEnd();
   }

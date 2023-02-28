@@ -177,7 +177,7 @@ class ScriptLoadContext : public JS::loader::LoadContextBase,
   // completes.
   RefPtr<Runnable> mRunnable;
 
-  int32_t mLineNo;
+  uint32_t mLineNo;
 
   // Set on scripts and top level modules.
   bool mIsPreload;

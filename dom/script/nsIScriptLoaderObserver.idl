@@ -31,7 +31,7 @@ interface nsIScriptLoaderObserver : nsISupports {
                        in nsIScriptElement aElement,
                        in boolean aIsInlineClassicScript,
                        in nsIURI aURI,
-                       in int32_t aLineNo);
+                       in uint32_t aLineNo);
 
   /**
    * The script has been evaluated.
