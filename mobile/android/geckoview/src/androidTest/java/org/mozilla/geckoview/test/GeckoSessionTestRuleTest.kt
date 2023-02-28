@@ -14,6 +14,7 @@ import org.json.JSONObject
 import org.junit.Assume.assumeThat
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.geckoview.ContentBlocking.CookieBannerMode
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.ContentDelegate
@@ -2061,5 +2062,59 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         }
 
         sessionRule.waitForResult(result)
+    }
+
+    @Test fun checkCookieBannerRuleForSession() {
+        // set preferences. We have a cookie rule for example.com
+        val testRules = "[{\"id\":\"87815b2d-a840-4155-8713-f8a26d1f483a\",\"click\":{\"optOut\":\"#optOutBtn\",\"presence\": \"#cookieBanner\"},\"cookies\":{\"optOut\":[{\"name\":\"foo\", \"value\":\"bar\"}]}, \"domains\":[\"example.org\"]}]"
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
+                "cookiebanners.service.mode" to CookieBannerMode.COOKIE_BANNER_MODE_REJECT,
+                "cookiebanners.listService.testSkipRemoteSettings" to true,
+                "cookiebanners.listService.testRules" to testRules,
+                "cookiebanners.service.detectOnly" to false
+            )
+        )
+        var prefs = sessionRule.getPrefs(
+            "cookiebanners.service.mode",
+            "cookiebanners.listService.testSkipRemoteSettings",
+            "cookiebanners.listService.testRules",
+            "cookiebanners.service.detectOnly"
+        )
+        assertThat("Cookie banner service mode should be correct", prefs[0] as Int, equalTo(1))
+        assertThat("Cookie banner remote settings should be skipped", prefs[1] as Boolean, equalTo(true))
+        assertThat("Cookie banner rule should be set", prefs[2] as String, equalTo(testRules))
+        assertThat("Cookie banner service should not be in detect only mode", prefs[3] as Boolean, equalTo(false))
+
+        // session 1 - load url for which there is no rule
+        mainSession.loadUri(HELLO_HTML_PATH)
+        sessionRule.waitForPageStop()
+        val response1 = mainSession.hasCookieBannerRuleForBrowsingContextTree()
+        sessionRule.waitForResult(response1).let {
+            assertThat("There should be no rule", it, equalTo(false))
+        }
+
+        // session 1 - load url for which there is a rule
+        mainSession.loadUri("http://example.org/")
+        sessionRule.waitForPageStop()
+        val response2 = mainSession.hasCookieBannerRuleForBrowsingContextTree()
+        sessionRule.waitForResult(response2).let {
+            assertThat("There should be a rule", it, equalTo(true))
+        }
+
+        // session 2 load url for which there is no rule
+        val session2 = sessionRule.createOpenSession()
+        session2.loadUri(HELLO_HTML_PATH)
+        sessionRule.waitForPageStop()
+        val response3 = session2.hasCookieBannerRuleForBrowsingContextTree()
+        sessionRule.waitForResult(response3).let {
+            assertThat("There should be no rule", it, equalTo(false))
+        }
+
+        // API shoul return the correct result for the page we have loaded in session 1
+        val response4 = mainSession.hasCookieBannerRuleForBrowsingContextTree()
+        sessionRule.waitForResult(response4).let {
+            assertThat("There should be a rule the second time", it, equalTo(true))
+        }
     }
 }
