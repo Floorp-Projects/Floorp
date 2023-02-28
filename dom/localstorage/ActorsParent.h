@@ -75,8 +75,6 @@ bool RecvPBackgroundLSSimpleRequestConstructor(
 bool DeallocPBackgroundLSSimpleRequestParent(
     PBackgroundLSSimpleRequestParent* aActor);
 
-bool RecvLSClearPrivateBrowsing();
-
 namespace localstorage {
 
 already_AddRefed<mozilla::dom::quota::Client> CreateQuotaClient();
