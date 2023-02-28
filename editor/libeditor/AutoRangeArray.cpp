@@ -50,6 +50,7 @@ AutoRangeArray::AutoRangeArray(const AutoRangeArray& aOther)
     RefPtr<nsRange> clonedRange = range->CloneRange();
     mRanges.AppendElement(std::move(clonedRange));
   }
+  mAnchorFocusRange = aOther.mAnchorFocusRange;
 }
 
 template <typename PointType>
@@ -59,7 +60,8 @@ AutoRangeArray::AutoRangeArray(const EditorDOMRangeBase<PointType>& aRange) {
   if (NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned())) {
     return;
   }
-  mRanges.AppendElement(std::move(range));
+  mRanges.AppendElement(*range);
+  mAnchorFocusRange = std::move(range);
 }
 
 template <typename PT, typename CT>
@@ -69,7 +71,8 @@ AutoRangeArray::AutoRangeArray(const EditorDOMPointBase<PT, CT>& aPoint) {
   if (NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned())) {
     return;
   }
-  mRanges.AppendElement(std::move(range));
+  mRanges.AppendElement(*range);
+  mAnchorFocusRange = std::move(range);
 }
 
 AutoRangeArray::~AutoRangeArray() {
@@ -843,6 +846,13 @@ void AutoRangeArray::ExtendRangesToWrapLinesToHandleBlockLevelEditAction(
         mRanges.RemoveElementAt(i);
       }
     }
+    if (!mAnchorFocusRange || !mAnchorFocusRange->IsPositioned()) {
+      if (mRanges.IsEmpty()) {
+        mAnchorFocusRange = nullptr;
+      } else {
+        mAnchorFocusRange = mRanges.LastElement();
+      }
+    }
   }
 }
 
@@ -951,17 +961,22 @@ AutoRangeArray::SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
 
   // FYI: The following code is originated in
   // https://searchfox.org/mozilla-central/rev/c8e15e17bc6fd28f558c395c948a6251b38774ff/editor/libeditor/HTMLEditSubActionHandler.cpp#7023
-  nsTArray<OwningNonNull<RangeItem>> rangeItemArray;
+  AutoTArray<OwningNonNull<RangeItem>, 8> rangeItemArray;
   rangeItemArray.AppendElements(mRanges.Length());
 
   // First register ranges for special editor gravity
-  for (OwningNonNull<RangeItem>& rangeItem : rangeItemArray) {
-    rangeItem = new RangeItem();
-    rangeItem->StoreRange(*mRanges[0]);
-    aHTMLEditor.RangeUpdaterRef().RegisterRangeItem(*rangeItem);
-    // TODO: We should keep the array, and just update the ranges.
-    mRanges.RemoveElementAt(0);
+  Maybe<size_t> anchorFocusRangeIndex;
+  for (size_t index : IntegerRange(rangeItemArray.Length())) {
+    rangeItemArray[index] = new RangeItem();
+    rangeItemArray[index]->StoreRange(*mRanges[index]);
+    aHTMLEditor.RangeUpdaterRef().RegisterRangeItem(*rangeItemArray[index]);
+    if (mRanges[index] == mAnchorFocusRange) {
+      anchorFocusRangeIndex = Some(index);
+    }
   }
+  // TODO: We should keep the array, and just update the ranges.
+  mRanges.Clear();
+  mAnchorFocusRange = nullptr;
   // Now bust up inlines.
   nsresult rv = NS_OK;
   for (OwningNonNull<RangeItem>& item : Reversed(rangeItemArray)) {
@@ -980,12 +995,18 @@ AutoRangeArray::SplitTextAtEndBoundariesAndInlineAncestorsAtBothBoundaries(
     }
   }
   // Then unregister the ranges
-  for (OwningNonNull<RangeItem>& item : rangeItemArray) {
-    aHTMLEditor.RangeUpdaterRef().DropRangeItem(item);
-    RefPtr<nsRange> range = item->GetRange();
-    if (range) {
+  for (size_t index : IntegerRange(rangeItemArray.Length())) {
+    aHTMLEditor.RangeUpdaterRef().DropRangeItem(rangeItemArray[index]);
+    RefPtr<nsRange> range = rangeItemArray[index]->GetRange();
+    if (range && range->IsPositioned()) {
+      if (anchorFocusRangeIndex.isSome() && index == *anchorFocusRangeIndex) {
+        mAnchorFocusRange = range;
+      }
       mRanges.AppendElement(std::move(range));
     }
+  }
+  if (!mAnchorFocusRange && !mRanges.IsEmpty()) {
+    mAnchorFocusRange = mRanges.LastElement();
   }
 
   // XXX Why do we ignore the other errors here??
