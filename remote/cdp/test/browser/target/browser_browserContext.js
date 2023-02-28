@@ -36,7 +36,10 @@ add_task(async function({ CDP }) {
   );
 
   const targetCreated = Target.targetCreated();
-  const { targetId } = await Target.createTarget({ browserContextId });
+  const { targetId } = await Target.createTarget({
+    url: "about:blank",
+    browserContextId,
+  });
   ok(!!targetId, "Target.createTarget returns a non-empty target id");
 
   const { targetInfo } = await targetCreated;
