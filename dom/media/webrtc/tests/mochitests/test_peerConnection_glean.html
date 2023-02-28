@@ -12,6 +12,21 @@ createHTML({
   visible: true
 });
 
+async function getAllWarningRates() {
+  return {
+    warnNoGetparameters:
+    await GleanTest.rtcrtpsenderSetparameters.warnNoGetparameters.testGetValue(),
+    warnLengthChanged:
+    await GleanTest.rtcrtpsenderSetparameters.warnLengthChanged.testGetValue(),
+    warnRidChanged:
+    await GleanTest.rtcrtpsenderSetparameters.warnRidChanged.testGetValue(),
+    warnNoTransactionid:
+    await GleanTest.rtcrtpsenderSetparameters.warnNoTransactionid.testGetValue(),
+    warnStaleTransactionid:
+    await GleanTest.rtcrtpsenderSetparameters.warnStaleTransactionid.testGetValue(),
+  };
+}
+
 const tests = [
   async function checkRTCRtpSenderCount() {
     const pc = new RTCPeerConnection();
@@ -63,6 +78,19 @@ const tests = [
     const newRate = await GleanTest.rtcrtpsender.usedSendencodings.testGetValue();
     is(newRate.denominator, oldRate.denominator + 1, "Glean should have recorded the creation of a single RTCRtpSender");
     is(newRate.numerator, oldRate.numerator, "Glean should not have recorded a use of sendEncodings");
+  },
+
+  async function checkGoodSetParametersCompatMode() {
+    await pushPrefs(
+      ["media.peerconnection.allow_old_setParameters", true]);
+    const pc = new RTCPeerConnection();
+    const {sender} = pc.addTransceiver('video', {
+      sendEncodings: [{rid: "0"},{rid: "1"},{rid: "2"}]
+    });
+    const oldWarningRates = await getAllWarningRates();
+    await sender.setParameters(sender.getParameters());
+    const newWarningRates = await getAllWarningRates();
+    isDeeply(oldWarningRates, newWarningRates);
   },
 
   async function checkBadSetParametersNoGetParametersWarning() {
