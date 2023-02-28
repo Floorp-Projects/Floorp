@@ -7,7 +7,10 @@
 
 "use strict";
 
-const { SearchSERPTelemetry } = ChromeUtils.importESModule(
+const {
+  SearchSERPTelemetry,
+  SearchSERPTelemetryUtils,
+} = ChromeUtils.importESModule(
   "resource:///modules/SearchSERPTelemetry.sys.mjs"
 );
 const { UrlbarTestUtils } = ChromeUtils.importESModule(
@@ -28,8 +31,6 @@ const TEST_PROVIDER_INFO = [
     extraAdServersRegexps: [/^https:\/\/example\.com\/ad2?/],
   },
 ];
-
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function getPageUrl(useAdPage = false) {
   let page = useAdPage ? "searchTelemetryAd.html" : "searchTelemetry.html";
@@ -149,10 +150,12 @@ add_task(async function test_search() {
 
   assertImpressionEvents([
     {
-      provider: "example",
-      tagged: "true",
-      partner_code: "ff",
-      source: "urlbar",
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "urlbar",
+      },
     },
   ]);
 });
@@ -177,16 +180,20 @@ add_task(async function test_reload() {
 
   assertImpressionEvents([
     {
-      provider: "example",
-      tagged: "true",
-      partner_code: "ff",
-      source: "urlbar",
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "urlbar",
+      },
     },
     {
-      provider: "example",
-      tagged: "true",
-      partner_code: "ff",
-      source: "reload",
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "reload",
+      },
     },
   ]);
 
@@ -211,16 +218,25 @@ add_task(async function test_reload() {
 
   assertImpressionEvents([
     {
-      provider: "example",
-      tagged: "true",
-      partner_code: "ff",
-      source: "urlbar",
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "urlbar",
+      },
     },
     {
-      provider: "example",
-      tagged: "true",
-      partner_code: "ff",
-      source: "reload",
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "reload",
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+        },
+      ],
     },
   ]);
 });
@@ -247,10 +263,12 @@ add_task(async function test_fresh_search() {
 
   assertImpressionEvents([
     {
-      provider: "example",
-      tagged: "true",
-      partner_code: "ff",
-      source: "urlbar",
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "urlbar",
+      },
     },
   ]);
 });
@@ -275,10 +293,17 @@ add_task(async function test_click_ad() {
 
   assertImpressionEvents([
     {
-      provider: "example",
-      tagged: "true",
-      partner_code: "ff",
-      source: "urlbar",
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "urlbar",
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+        },
+      ],
     },
   ]);
 });
@@ -304,16 +329,25 @@ add_task(async function test_go_back() {
 
   assertImpressionEvents([
     {
-      provider: "example",
-      tagged: "true",
-      partner_code: "ff",
-      source: "urlbar",
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "urlbar",
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+        },
+      ],
     },
     {
-      provider: "example",
-      tagged: "true",
-      partner_code: "ff",
-      source: "tabhistory",
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "tabhistory",
+      },
     },
   ]);
 
@@ -339,16 +373,30 @@ add_task(async function test_go_back() {
 
   assertImpressionEvents([
     {
-      provider: "example",
-      tagged: "true",
-      partner_code: "ff",
-      source: "urlbar",
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "urlbar",
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+        },
+      ],
     },
     {
-      provider: "example",
-      tagged: "true",
-      partner_code: "ff",
-      source: "tabhistory",
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "tabhistory",
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+        },
+      ],
     },
   ]);
 });
@@ -375,10 +423,12 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
 
   assertImpressionEvents([
     {
-      provider: "example",
-      tagged: "true",
-      partner_code: "ff",
-      source: "urlbar",
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "urlbar",
+      },
     },
   ]);
 
@@ -399,16 +449,20 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
 
   assertImpressionEvents([
     {
-      provider: "example",
-      tagged: "true",
-      partner_code: "ff",
-      source: "urlbar",
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "urlbar",
+      },
     },
     {
-      provider: "example",
-      tagged: "true",
-      partner_code: "ff",
-      source: "urlbar_persisted",
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "urlbar_persisted",
+      },
     },
   ]);
 
@@ -434,16 +488,25 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
 
   assertImpressionEvents([
     {
-      provider: "example",
-      tagged: "true",
-      partner_code: "ff",
-      source: "urlbar",
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "urlbar",
+      },
     },
     {
-      provider: "example",
-      tagged: "true",
-      partner_code: "ff",
-      source: "urlbar_persisted",
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "urlbar_persisted",
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+        },
+      ],
     },
   ]);
 

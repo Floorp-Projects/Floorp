@@ -7,7 +7,10 @@
 
 "use strict";
 
-const { SearchSERPTelemetry } = ChromeUtils.importESModule(
+const {
+  SearchSERPTelemetry,
+  SearchSERPTelemetryUtils,
+} = ChromeUtils.importESModule(
   "resource:///modules/SearchSERPTelemetry.sys.mjs"
 );
 const { UrlbarTestUtils } = ChromeUtils.importESModule(
@@ -137,10 +140,12 @@ async function track_ad_click(
 
   assertImpressionEvents([
     {
-      provider: "example",
-      tagged: "true",
-      partner_code: "ff",
-      source: expectedScalarSource,
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: expectedScalarSource,
+      },
     },
   ]);
 
@@ -164,10 +169,17 @@ async function track_ad_click(
 
   assertImpressionEvents([
     {
-      provider: "example",
-      tagged: "true",
-      partner_code: "ff",
-      source: expectedScalarSource,
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: expectedScalarSource,
+      },
+      engagements: [
+        {
+          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
+        },
+      ],
     },
   ]);
 

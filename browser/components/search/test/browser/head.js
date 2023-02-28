@@ -24,6 +24,8 @@ let gCUITestUtils = new CustomizableUITestUtils(window);
 AddonTestUtils.initMochitest(this);
 SearchTestUtils.init(this);
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * Recursively compare two objects and check that every property of expectedObj has the same value
  * on actualObj.
@@ -214,65 +216,107 @@ function clearSearchbarHistory(win = window) {
   return FormHistory.update({ op: "remove", fieldname: "searchbar-history" });
 }
 
-/**
- * Checks that the recorded Glean impression event has an impression_id property
- * pointing to a valid UUID and that the impression_id is unique.
- *
- * @param {Array} recordedEvents The recorded Glean impression events whose
- * impression_id properties we need to verify.
- */
-function assertUUIDs(recordedEvents) {
-  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  let impressionIdsSet = new Set();
-
-  for (let recordedEvent of recordedEvents) {
-    let impressionId = recordedEvent.extra.impression_id;
-
-    Assert.equal(
-      typeof impressionId,
-      "string",
-      "should be an impression_id on the event"
-    );
-    Assert.ok(
-      UUID_REGEX.test(impressionId),
-      "impression_id should be a valid UUID"
-    );
-
-    Assert.ok(
-      !impressionIdsSet.has(impressionId),
-      "Should not have found a duplicate impression_id"
-    );
-    impressionIdsSet.add(impressionId);
-  }
+function resetTelemetry() {
+  searchCounts.clear();
+  Services.telemetry.clearScalars();
+  Services.fog.testResetFOG();
 }
 
 /**
- * Checks that we get the correct number of recorded Glean impression events
- * and that the recorded Glean impression events have the correct keys and
- * values.
+ * First checks that we get the correct number of recorded Glean impression events
+ * and the recorded Glean impression events have the correct keys and values.
+ *
+ * Then it checks that there are the the correct engagement events associated with the
+ * impression events.
  *
  * @param {Array} expectedEvents The expected impression events whose keys and
  * values we use to validate the recorded Glean impression events.
  */
 function assertImpressionEvents(expectedEvents) {
-  let recordedEvents = Glean.serp.impression.testGetValue();
+  // A single test might run assertImpressionEvents more than once
+  // so the Set needs to be cleared or else the impression event
+  // check will throw.
+  const impressionIdsSet = new Set();
+
+  let recordedImpressions = Glean.serp.impression.testGetValue() ?? [];
 
   Assert.equal(
-    recordedEvents.length,
+    recordedImpressions.length,
     expectedEvents.length,
-    "should have the correct number of Glean events"
+    "Should have the correct number of impressions."
   );
 
+  // Assert the impression events.
   for (let [idx, expectedEvent] of expectedEvents.entries()) {
-    let recordedEvent = recordedEvents[idx].extra;
-    for (let key of Object.keys(expectedEvent)) {
-      Assert.equal(
-        recordedEvent[key],
-        expectedEvent[key],
-        `the value for recorded key "${key}" should match the value for expected key "${key}"`
-      );
+    let impressionId = recordedImpressions[idx].extra.impression_id;
+    Assert.ok(
+      UUID_REGEX.test(impressionId),
+      "Should have an impression_id with a valid UUID."
+    );
+
+    Assert.ok(
+      !impressionIdsSet.has(impressionId),
+      "Should have a unique impression_id."
+    );
+
+    impressionIdsSet.add(impressionId);
+
+    // If we want to use deepEqual checks, we have to add the impressionId
+    // to each impression since they are randomly generated at runtime.
+    expectedEvent.impression.impression_id = impressionId;
+
+    Assert.deepEqual(
+      recordedImpressions[idx].extra,
+      expectedEvent.impression,
+      "Should have matched impression values."
+    );
+
+    // Once the impression check is sufficient, add the impression_id to
+    // each of the expected engagements for later deep equal checks.
+    if (expectedEvent.engagements) {
+      for (let expectedEngagment of expectedEvent.engagements) {
+        expectedEngagment.impression_id = impressionId;
+      }
     }
   }
 
-  assertUUIDs(recordedEvents);
+  // Group engagement events into separate array fetchable by their
+  // impression_id.
+  let recordedEngagements = Glean.serp.engagement.testGetValue() ?? [];
+  let idToEngagements = new Map();
+  let totalExpectedEngagements = 0;
+
+  for (let recordedEngagement of recordedEngagements) {
+    let impressionId = recordedEngagement.extra.impression_id;
+    Assert.ok(
+      impressionId,
+      "Should have an engagement event with an impression_id"
+    );
+
+    let arr = idToEngagements.get(impressionId) ?? [];
+    arr.push(recordedEngagement.extra);
+
+    idToEngagements.set(impressionId, arr);
+  }
+
+  // Assert the engagement events.
+  for (let expectedEvent of expectedEvents) {
+    let impressionId = expectedEvent.impression.impression_id;
+    let expectedEngagements = expectedEvent.engagements;
+    if (expectedEngagements) {
+      let recorded = idToEngagements.get(impressionId);
+      Assert.deepEqual(
+        recorded,
+        expectedEngagements,
+        "Should have matched engagement values."
+      );
+      totalExpectedEngagements += expectedEngagements.length;
+    }
+  }
+
+  Assert.equal(
+    recordedEngagements.length,
+    totalExpectedEngagements,
+    "Should have equal number of engagements."
+  );
 }
