@@ -905,6 +905,7 @@ class MediaDecoderStateMachine::LoopingDecodingState
   }
 
   void Exit() override {
+    MOZ_DIAGNOSTIC_ASSERT(mMaster->OnTaskQueue());
     SLOG("Leaving looping state, offset [a=%" PRId64 ",v=%" PRId64
          "], endtime [a=%" PRId64 ",v=%" PRId64 "], track duration [a=%" PRId64
          ",v=%" PRId64 "], waiting=%s",
@@ -947,6 +948,13 @@ class MediaDecoderStateMachine::LoopingDecodingState
     mAudioSeekRequest.DisconnectIfExists();
     mVideoSeekRequest.DisconnectIfExists();
     DecodingState::Exit();
+  }
+
+  ~LoopingDecodingState() {
+    MOZ_DIAGNOSTIC_ASSERT(!mAudioDataRequest.Exists());
+    MOZ_DIAGNOSTIC_ASSERT(!mVideoDataRequest.Exists());
+    MOZ_DIAGNOSTIC_ASSERT(!mAudioSeekRequest.Exists());
+    MOZ_DIAGNOSTIC_ASSERT(!mVideoSeekRequest.Exists());
   }
 
   State GetState() const override { return DECODER_STATE_LOOPING_DECODING; }
