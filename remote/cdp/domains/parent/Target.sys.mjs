@@ -92,7 +92,20 @@ export class Target extends Domain {
   }
 
   async createTarget(options = {}) {
-    const { browserContextId } = options;
+    const { browserContextId, url } = options;
+
+    if (typeof url !== "string") {
+      throw new TypeError("url: string value expected");
+    }
+
+    let validURL;
+    try {
+      validURL = Services.io.newURI(url);
+    } catch (e) {
+      // If we failed to parse given URL, use about:blank instead
+      validURL = Services.io.newURI("about:blank");
+    }
+
     const { targetList, window } = this.session.target;
     const onTarget = targetList.once("target-created");
     const tab = await lazy.TabManager.addTab({
@@ -100,12 +113,18 @@ export class Target extends Domain {
       userContextId: browserContextId,
       window,
     });
+
     const target = await onTarget;
     if (tab.linkedBrowser != target.browser) {
       throw new Error(
         "Unexpected tab opened: " + tab.linkedBrowser.currentURI.spec
       );
     }
+
+    target.browsingContext.loadURI(validURL, {
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
+
     return { targetId: target.id };
   }
 
