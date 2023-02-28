@@ -15,8 +15,9 @@ import androidx.appcompat.app.AppCompatActivity
  */
 open class LocaleAwareAppCompatActivity : AppCompatActivity() {
     override fun attachBaseContext(base: Context) {
-        val context = LocaleManager.updateResources(base)
-        super.attachBaseContext(context)
+        val newContext = LocaleManager.updateResources(base)
+        val contextWrapper = ActivityContextWrapper(newContext, base)
+        super.attachBaseContext(contextWrapper)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -130,6 +130,7 @@ dependencies {
     implementation project(':service-sync-logins')
 
     implementation project(':support-base')
+    implementation project(':support-locale')
     implementation project(':support-utils')
     implementation project(':support-ktx')
     implementation project(':support-webextensions')

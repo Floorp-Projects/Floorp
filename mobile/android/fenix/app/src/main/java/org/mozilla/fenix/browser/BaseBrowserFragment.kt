@@ -99,6 +99,7 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.kotlin.getOrigin
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
+import mozilla.components.support.locale.ActivityContextWrapper
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.MediaState
@@ -250,6 +251,8 @@ abstract class BaseBrowserFragment :
 
         val activity = activity as HomeActivity
         activity.themeManager.applyStatusBarTheme(activity)
+        val originalContext = ActivityContextWrapper.getOriginalContext(activity)
+        binding.engineView.setActivityContext(originalContext)
 
         browserFragmentStore = StoreProvider.get(this) {
             BrowserFragmentStore(
@@ -1494,7 +1497,9 @@ abstract class BaseBrowserFragment :
             message = "onDestroyView()",
         )
 
+        binding.engineView.setActivityContext(null)
         requireContext().accessibilityManager.removeAccessibilityStateChangeListener(this)
+
         _browserToolbarView = null
         _browserToolbarInteractor = null
         _binding = null

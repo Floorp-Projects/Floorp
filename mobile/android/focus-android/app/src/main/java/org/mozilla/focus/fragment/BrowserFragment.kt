@@ -58,6 +58,7 @@ import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.exitImmersiveMode
+import mozilla.components.support.locale.ActivityContextWrapper
 import mozilla.components.support.utils.Browsers
 import mozilla.components.support.utils.ext.requestInPlacePermissions
 import org.mozilla.focus.GleanMetrics.Browser
@@ -200,6 +201,9 @@ class BrowserFragment :
         _binding = FragmentBrowserBinding.inflate(inflater, container, false)
 
         requireContext().accessibilityManager.addAccessibilityStateChangeListener(this)
+
+        val originalContext = ActivityContextWrapper.getOriginalContext(requireActivity())
+        binding.engineView.setActivityContext(originalContext)
 
         return binding.root
     }
@@ -529,7 +533,10 @@ class BrowserFragment :
 
     override fun onDestroyView() {
         super.onDestroyView()
+
         requireContext().accessibilityManager.removeAccessibilityStateChangeListener(this)
+        binding.engineView.setActivityContext(null)
+
         _binding = null
     }
 

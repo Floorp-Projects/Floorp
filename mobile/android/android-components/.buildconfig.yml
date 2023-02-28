@@ -1544,6 +1544,7 @@ projects:
     - support-base
     - support-images
     - support-ktx
+    - support-locale
     - support-rustlog
     - support-sync-telemetry
     - support-utils

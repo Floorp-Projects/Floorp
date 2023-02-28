@@ -34,6 +34,7 @@ import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
+import mozilla.components.support.locale.ActivityContextWrapper
 import mozilla.components.support.utils.ext.requestInPlacePermissions
 import org.mozilla.samples.browser.databinding.FragmentBrowserBinding
 import org.mozilla.samples.browser.downloads.DownloadService
@@ -74,7 +75,8 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
         _binding = FragmentBrowserBinding.inflate(inflater, container, false)
 
         binding.toolbar.display.menuBuilder = components.menuBuilder
-        binding.engineView.setActivityContext(requireActivity())
+        val originalContext = ActivityContextWrapper.getOriginalContext(requireActivity())
+        binding.engineView.setActivityContext(originalContext)
 
         sessionFeature.set(
             feature = SessionFeature(

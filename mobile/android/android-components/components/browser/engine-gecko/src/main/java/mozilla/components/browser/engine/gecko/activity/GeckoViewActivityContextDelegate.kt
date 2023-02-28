@@ -35,7 +35,7 @@ class GeckoViewActivityContextDelegate(
      */
     override fun getActivityContext(): Context? {
         val context = contextRef.get()
-        if ((context == null) || (context as Activity).isDestroyed) {
+        if ((context == null)) {
             return null
         }
         return context

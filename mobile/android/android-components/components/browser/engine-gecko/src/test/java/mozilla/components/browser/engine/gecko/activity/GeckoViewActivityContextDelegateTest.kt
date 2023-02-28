@@ -9,7 +9,6 @@ import mozilla.components.support.test.mock
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import org.mockito.Mockito.doReturn
 import java.lang.ref.WeakReference
 
 class GeckoViewActivityContextDelegateTest {
@@ -19,14 +18,6 @@ class GeckoViewActivityContextDelegateTest {
         val mockActivity = mock<Activity>()
         val activityContextDelegate = GeckoViewActivityContextDelegate(WeakReference(mockActivity))
         assertTrue(mockActivity == activityContextDelegate.activityContext)
-    }
-
-    @Test
-    fun `getActivityContext returns null when the activity is destroyed`() {
-        val mockActivity = mock<Activity>()
-        val activityContextDelegate = GeckoViewActivityContextDelegate(WeakReference(mockActivity))
-        doReturn(true).`when`(mockActivity).isDestroyed
-        assertNull(activityContextDelegate.activityContext)
     }
 
     @Test
