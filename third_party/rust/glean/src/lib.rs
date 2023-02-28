@@ -70,7 +70,7 @@ struct GleanEvents {
 }
 
 impl glean_core::OnGleanEvents for GleanEvents {
-    fn on_initialize_finished(&self) {
+    fn initialize_finished(&self) {
         // intentionally left empty
     }
 
@@ -87,6 +87,11 @@ impl glean_core::OnGleanEvents for GleanEvents {
 
     fn cancel_uploads(&self) -> Result<(), glean_core::CallbackError> {
         // intentionally left empty
+        Ok(())
+    }
+
+    fn shutdown(&self) -> Result<(), glean_core::CallbackError> {
+        self.upload_manager.shutdown();
         Ok(())
     }
 }

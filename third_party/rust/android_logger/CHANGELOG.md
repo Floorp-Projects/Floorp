@@ -6,6 +6,28 @@ All user visible changes to this project will be documented in this file. This p
 
 
 
+## [0.12.0] · 2023-01-19
+[0.12.0]: /../../tree/v0.12.0
+
+[Diff](/../../compare/v0.11.3...v0.12.0)
+
+### Added
+
+- `Config::with_max_level()` method to filters logs via `log::LevelFilter`. ([#62])
+
+### Deprecated
+
+- `Config::with_min_level()` method accepting `log::Level`. ([#62])
+
+### Fixed
+
+- Incorrect logs level filtering. ([#62])
+
+[#62]: /../../pull/62
+
+
+
+
 ## [0.11.3] · 2022-12-20
 [0.11.3]: /../../tree/v0.11.3
 

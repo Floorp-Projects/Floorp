@@ -231,7 +231,7 @@ fn dynamic_labels_too_long() {
         None,
     );
 
-    let metric = labeled.get("this_string_has_more_than_thirty_characters");
+    let metric = labeled.get("1".repeat(72));
     metric.add_sync(&glean, 1);
 
     let snapshot = StorageManager
@@ -266,15 +266,7 @@ fn dynamic_labels_regex_mismatch() {
         None,
     );
 
-    let labels_not_validating = vec![
-        "notSnakeCase",
-        "",
-        "with/slash",
-        "1.not_fine",
-        "this.$isnotfine",
-        "-.not_fine",
-        "this.is_not_fine.2",
-    ];
+    let labels_not_validating = vec!["non-ASCII�"];
     let num_non_validating = labels_not_validating.len();
 
     for label in &labels_not_validating {
@@ -394,7 +386,7 @@ fn seen_labels_get_reloaded_from_disk() {
 
     // Force a reload
     {
-        let (glean, _) = new_glean(Some(tempdir));
+        let (glean, _t) = new_glean(Some(tempdir));
 
         // Try to store another label
         labeled.get("new_label").add_sync(&glean, 40);

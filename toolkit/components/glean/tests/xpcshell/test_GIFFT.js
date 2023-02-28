@@ -275,7 +275,7 @@ add_task(function test_gifft_labeled_counter() {
     undefined,
     Glean.testOnlyIpc.aLabeledCounter.__other__.testGetValue()
   );
-  Glean.testOnlyIpc.aLabeledCounter.InvalidLabel.add(3);
+  Glean.testOnlyIpc.aLabeledCounter["1".repeat(72)].add(3);
   Assert.throws(
     () => Glean.testOnlyIpc.aLabeledCounter.__other__.testGetValue(),
     /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
@@ -289,7 +289,7 @@ add_task(function test_gifft_labeled_counter() {
     {
       a_label: 4,
       another_label: 2,
-      InvalidLabel: 3,
+      ["1".repeat(72)]: 3,
     },
     value
   );
@@ -342,7 +342,7 @@ add_task(async function test_gifft_labeled_boolean() {
     undefined,
     Glean.testOnly.mirrorsForLabeledBools.__other__.testGetValue()
   );
-  Glean.testOnly.mirrorsForLabeledBools.InvalidLabel.set(true);
+  Glean.testOnly.mirrorsForLabeledBools["1".repeat(72)].set(true);
   Assert.throws(
     () => Glean.testOnly.mirrorsForLabeledBools.__other__.testGetValue(),
     /NS_ERROR_LOSS_OF_SIGNIFICANT_DATA/,
@@ -355,7 +355,7 @@ add_task(async function test_gifft_labeled_boolean() {
     {
       a_label: true,
       another_label: false,
-      InvalidLabel: true,
+      ["1".repeat(72)]: true,
     },
     value
   );

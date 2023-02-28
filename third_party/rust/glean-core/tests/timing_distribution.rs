@@ -54,7 +54,7 @@ fn serializer_should_correctly_serialize_timing_distribution() {
     // Make a new Glean instance here, which should force reloading of the data from disk
     // so we can ensure it persisted, because it has User lifetime
     {
-        let (glean, _) = new_glean(Some(tempdir));
+        let (glean, _t) = new_glean(Some(tempdir));
         let snapshot = StorageManager
             .snapshot_as_json(glean.storage(), "store1", true)
             .unwrap();

@@ -307,9 +307,7 @@ mod test {
             None,
         );
 
-        metric
-            .get("this_string_has_more_than_thirty_characters")
-            .set(true);
+        metric.get(&"1".repeat(72)).set(true);
 
         assert_eq!(
             1,

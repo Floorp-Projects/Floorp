@@ -374,7 +374,7 @@ mod test {
 
     #[test]
     fn sequence_numbers_should_be_reset_when_toggling_uploading() {
-        let (mut glean, _) = new_glean(None);
+        let (mut glean, _t) = new_glean(None);
         let ping_maker = PingMaker::new();
 
         assert_eq!(0, ping_maker.get_ping_seq(&glean, "custom"));

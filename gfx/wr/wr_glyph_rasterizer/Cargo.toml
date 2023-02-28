@@ -30,7 +30,7 @@ firefox-on-glean = { version = "0.1.0", optional = true }
 serde = { optional = true, version = "1.0", features = ["serde_derive"] }
 
 [dev-dependencies]
-env_logger = "0.9"
+env_logger = { version = "0.10", default_features = false }
 euclid = "0.22"
 gleam = "0.13"
 glutin = "0.28"

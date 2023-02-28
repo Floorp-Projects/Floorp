@@ -123,6 +123,14 @@ impl TimingDistributionMetric {
         id
     }
 
+    pub(crate) fn start_sync(&self) -> TimerId {
+        let start_time = time::precise_time_ns();
+        let id = self.next_id.fetch_add(1, Ordering::SeqCst).into();
+        let metric = self.clone();
+        metric.set_start(id, start_time);
+        id
+    }
+
     /// **Test-only API (exported for testing purposes).**
     ///
     /// Set start time for this metric synchronously.
@@ -216,9 +224,14 @@ impl TimingDistributionMetric {
             return;
         }
 
-        glean
-            .storage()
-            .record_with(glean, &self.meta, |old_value| match old_value {
+        // Let's be defensive here:
+        // The uploader tries to store some timing distribution metrics,
+        // but in tests that storage might be gone already.
+        // Let's just ignore those.
+        // We do the same for counters.
+        // This should never happen in real app usage.
+        if let Some(storage) = glean.storage_opt() {
+            storage.record_with(glean, &self.meta, |old_value| match old_value {
                 Some(Metric::TimingDistribution(mut hist)) => {
                     hist.accumulate(duration);
                     Metric::TimingDistribution(hist)
@@ -229,6 +242,12 @@ impl TimingDistributionMetric {
                     Metric::TimingDistribution(hist)
                 }
             });
+        } else {
+            log::warn!(
+                "Couldn't get storage. Can't record timing distribution '{}'.",
+                self.meta.base_identifier()
+            );
+        }
     }
 
     /// Aborts a previous [`start`](Self::start) call.
@@ -246,7 +265,7 @@ impl TimingDistributionMetric {
     }
 
     /// Aborts a previous [`start`](Self::start) call synchronously.
-    fn cancel_sync(&self, id: TimerId) {
+    pub(crate) fn cancel_sync(&self, id: TimerId) {
         let mut map = self.start_times.lock().expect("can't lock timings map");
         map.remove(&id);
     }
