@@ -103,6 +103,7 @@ urlbar:
     notification_emails:
       - fx-search-telemetry@mozilla.com
     expires: never
+
   engagement:
     type: event
     description: Recorded when the user executes an action on a result.
@@ -238,6 +239,7 @@ urlbar:
     notification_emails:
       - fx-search-telemetry@mozilla.com
     expires: never
+
   impression:
     type: event
     description: Recorded when urlbar results are shown to the user.
@@ -333,3 +335,40 @@ urlbar:
     notification_emails:
       - fx-search-telemetry@mozilla.com
     expires: never
+
+  pref_max_results:
+    lifetime: application
+    type: quantity
+    unit: integer
+    description: >
+      Maximum results to show in the Address Bar.
+      Corresponds to the value of the `browser.urlbar.maxRichResults` pref.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1817196
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1817196
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    expires: never
+    send_in_pings:
+      - events
+
+  pref_suggest_topsites:
+    lifetime: application
+    type: boolean
+    description: >
+      Whether topsite results are enabled in the urlbar.
+      Corresponds to the value of the `browser.urlbar.suggest.topsites` pref.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1817196
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1817196
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    expires: never
+    send_in_pings:
+      - events
