@@ -103,6 +103,8 @@ var getComputedViewMatchedRules = async function(view, name) {
     const onExpand = view.inspector.once("computed-view-property-expanded");
     expander.click();
     await onExpand;
+
+    await waitFor(() => expander.hasAttribute("open"));
   }
 
   return propertyContent;
