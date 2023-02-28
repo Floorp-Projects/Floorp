@@ -13,26 +13,28 @@ For each CI config change, we need to follow:
 
 Start Date | Completed | Tracking Bug | Description
 --- | --- | --- | ---
-October 2020  | TBD | [Bug 1665012](https://bugzilla.mozilla.org/show_bug.cgi?id=1665012) | add samsung S7 phones for perf testing
-November 2020 | TBD | [Bug 1676850](https://bugzilla.mozilla.org/show_bug.cgi?id=1676850) | Windows tests migrate from AWS -> Datacenter/Azure and 1803 -> 1903
-November 2020 | TBD | TBD | upgrade datacenter linux perf machines from ubuntu 16.04 to 18.04
-TBD  | TBD | [Bug 1665012](https://bugzilla.mozilla.org/show_bug.cgi?id=1665012) | Android phones upgrade from version 7 -> 10
-October 2020  | TBD | [Bug 1673067](https://bugzilla.mozilla.org/show_bug.cgi?id=1673067) | Run tests on MacOSX BigSur (subset in parallel)
-October 2020  | TBD | [Bug 1673067](https://bugzilla.mozilla.org/show_bug.cgi?id=1673067) | Run tests on MacOSX Aarch64 (subset in parallel)
-December 2020 | TBD | TBD | Migrate OSX from Mac Mini R7, OSX 10.14 (Mojave) -> Mac Mini R8, OSX 10.15 (Catalina)
-TBD  | TBD | TBD | Migrate more coverage of OSX from 10.14 to BigSur/aarch64
-TBD  | TBD | TBD | Upgrade ubuntu from 18.04 to 20.04
+TBD  | TBD | TBD | Upgrade Ubuntu 18.04 -> Ubuntu 22.04 X11
+TBD  | TBD | TBD | Add Ubuntu 22.04 Wayland
+TBD  | TBD | TBD | Upgrade Mac M1 from 11.2.3 -> 13.2.1
+TBD  | TBD | TBD | replace 2017 acer perf laptops with lower end NUCs
+TBD  | TBD | TBD | replace windows moonshots with mid level NUCs
 TBD  | TBD | TBD | Upgrade android emulators to modern version
-September 2020 | TBD | [Bug 1548264](https://bugzilla.mozilla.org/show_bug.cgi?id=1548264) | Python 2.7 -> 3.6 migration in CI
-TBD  | TBD | [Bug 1665010](https://bugzilla.mozilla.org/show_bug.cgi?id=1665010) | Add more android phone hardware (replace moto g5 and probably pixel 2)
-TBD  | TBD | TBD | Upgrade datacenter hardware for windows/linux (primarily perf)
-TBD  | TBD | TBD | Add Linux ARM64 worker in AWS (as it is close to Apple Silicon)
 
 
 ## Completed CI config changes
 
 Start Date | Completed | Tracking Bug | Description
 --- | --- | --- | ---
+October 2022 | March 2023 | [Bug 1794900](https://bugzilla.mozilla.org/show_bug.cgi?id=1794900) | Migrate from win10 -> win11
+November 2022 | February 2023 | [Bug 1804790](https://bugzilla.mozilla.org/show_bug.cgi?id=1804790) | Migrate Win7 unittests from AWS -> Azure
+October 2022 | February 2023 | [Bug 1794895](https://bugzilla.mozilla.org/show_bug.cgi?id=1794895) | Migrate unittests from pixel2 -> pixel5
+November 2020 | August 2021 | [Bug 1676850](https://bugzilla.mozilla.org/show_bug.cgi?id=1676850) | Windows tests migrate from AWS -> Datacenter/Azure and 1803 -> 20.04
+May 2022 | July 2022 | [Bug 1767486](https://bugzilla.mozilla.org/show_bug.cgi?id=1767486) | Migrate perftests from Moto G5 phones to Samsung A51 phones
+March 2021 | October 2021 | [Bug 1699541](https://bugzilla.mozilla.org/show_bug.cgi?id=1699541) | Migrate from OSX 10.14 -> 10.15
+July 2020 | March 2021 | [Bug 1572739](https://bugzilla.mozilla.org/show_bug.cgi?id=1572739) | upgrade datacenter linux perf machines from ubuntu 16.04 to 18.04
+September 2020  | January 2021 | [Bug 1665012](https://bugzilla.mozilla.org/show_bug.cgi?id=1665012) | Android phones upgrade from version 7 -> 10
+October 2020  | February 2021 | [Bug 1673067](https://bugzilla.mozilla.org/show_bug.cgi?id=1673067) | Run tests on MacOSX Aarch64 (subset in parallel)
+September 2020 | March 2021 | [Bug 1548264](https://bugzilla.mozilla.org/show_bug.cgi?id=1548264) | Python 2.7 -> 3.6 migration in CI
 July 2020 | October 2020| [Bug 1653344](https://bugzilla.mozilla.org/show_bug.cgi?id=1653344) | Remove EDID dongles from MacOSX machines
 August 2020 | September 2020 | [Bug 1643689](https://bugzilla.mozilla.org/show_bug.cgi?id=1643689) | Schedule tests by test selection/manifest
 June 2020 | August 2020 | [Bug 1486004](https://bugzilla.mozilla.org/show_bug.cgi?id=1486004) | Android hardware tests running without rooted phones
