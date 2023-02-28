@@ -3168,6 +3168,11 @@ var SessionStoreInternal = {
       this._resetTabRestoringState(aTab);
     }
 
+    this._ensureNoNullsInTabDataList(
+      window.gBrowser.tabs,
+      this._windows[window.__SSi].tabs,
+      aTab._tPos
+    );
     this.restoreTab(aTab, tabState);
 
     // Notify of changes to closed objects.
@@ -4652,6 +4657,10 @@ var SessionStoreInternal = {
     // Let the tab data array have the right number of slots.
     tabsDataArray.length = numTabsInWindow;
 
+    // Fill out any empty items in the list:
+    let maxPos = Math.max(...aTabs.map(tab => tab._tPos));
+    this._ensureNoNullsInTabDataList(tabbrowser.tabs, tabsDataArray, maxPos);
+
     if (aSelectTab > 0 && aSelectTab <= aTabs.length) {
       // Update the window state in case we shut down without being notified.
       this._windows[aWindow.__SSi].selected = aSelectTab;
@@ -4667,6 +4676,34 @@ var SessionStoreInternal = {
     for (let t = 0; t < aTabs.length; t++) {
       if (t != selectedIndex) {
         this.restoreTab(aTabs[t], aTabData[t]);
+      }
+    }
+  },
+
+  // In case we didn't collect/receive data for any tabs yet we'll have to
+  // fill the array with at least empty tabData objects until |_tPos| or
+  // we'll end up with |null| entries.
+  _ensureNoNullsInTabDataList(tabElements, tabDataList, changedTabPos) {
+    let initialDataListLength = tabDataList.length;
+    if (changedTabPos < initialDataListLength) {
+      return;
+    }
+    // Add items to the end.
+    while (tabDataList.length < changedTabPos) {
+      let existingTabEl = tabElements[tabDataList.length];
+      tabDataList.push({
+        entries: [],
+        lastAccessed: existingTabEl.lastAccessed,
+      });
+    }
+    // Ensure the pre-existing items are non-null.
+    for (let i = 0; i < initialDataListLength; i++) {
+      if (!tabDataList[i]) {
+        let existingTabEl = tabElements[i];
+        tabDataList[i] = {
+          entries: [],
+          lastAccessed: existingTabEl.lastAccessed,
+        };
       }
     }
   },
@@ -4697,18 +4734,6 @@ var SessionStoreInternal = {
     // It's important to set the window state to dirty so that
     // we collect their data for the first time when saving state.
     DirtyWindows.add(window);
-
-    // In case we didn't collect/receive data for any tabs yet we'll have to
-    // fill the array with at least empty tabData objects until |_tPos| or
-    // we'll end up with |null| entries.
-    for (let otherTab of Array.prototype.slice.call(
-      tabbrowser.tabs,
-      0,
-      tab._tPos
-    )) {
-      let emptyState = { entries: [], lastAccessed: otherTab.lastAccessed };
-      this._windows[window.__SSi].tabs.push(emptyState);
-    }
 
     // Update the tab state in case we shut down without being notified.
     this._windows[window.__SSi].tabs[tab._tPos] = tabData;
