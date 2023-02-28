@@ -32,6 +32,7 @@ import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.history.HistoryItem
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
+import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.manifest.WebAppManifestParser
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
@@ -552,6 +553,18 @@ class GeckoEngineSession(
      */
     override fun updateSessionPriority(priority: SessionPriority) {
         geckoSession.setPriorityHint(priority.id)
+    }
+
+    /**
+     * See [EngineSession.setDisplayMode].
+     */
+    override fun setDisplayMode(displayMode: WebAppManifest.DisplayMode) {
+        geckoSession.settings.displayMode = when (displayMode) {
+            WebAppManifest.DisplayMode.MINIMAL_UI -> GeckoSessionSettings.DISPLAY_MODE_MINIMAL_UI
+            WebAppManifest.DisplayMode.FULLSCREEN -> GeckoSessionSettings.DISPLAY_MODE_FULLSCREEN
+            WebAppManifest.DisplayMode.STANDALONE -> GeckoSessionSettings.DISPLAY_MODE_STANDALONE
+            else -> GeckoSessionSettings.DISPLAY_MODE_BROWSER
+        }
     }
 
     /**

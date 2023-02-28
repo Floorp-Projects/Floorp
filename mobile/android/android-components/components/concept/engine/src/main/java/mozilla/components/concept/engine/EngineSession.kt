@@ -856,4 +856,11 @@ abstract class EngineSession(
      * Returns the list of URL schemes that are blocked from loading.
      */
     open fun getBlockedSchemes(): List<String> = emptyList()
+
+    /**
+     * Set the display member in Web App Manifest for this session.
+     *
+     * @param displayMode the display mode value for this session.
+     */
+    open fun setDisplayMode(displayMode: WebAppManifest.DisplayMode) = Unit
 }

@@ -59,6 +59,10 @@ When `"display": "fullscreen"` is set in the web app manifest, the web app will 
 
 `WebAppSiteControlsFeature` will display a silent notification whenever a web app is open. This notification contains controls to interact with the web app, such as a refresh button and a shortcut to copy the URL.
 
+### Web content variables
+
+`WebAppContentFeature` will set web content variables to the web apps. Since the `"display"` value in the web app manifest file has to be applied in the CSS media query, the feature will apply it.
+
 ## Facts
 
 This component emits the following [Facts](../../support/base/README.md#Facts):

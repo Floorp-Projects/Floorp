@@ -3858,6 +3858,33 @@ class GeckoEngineSessionTest {
         shadowOf(getMainLooper()).idle()
     }
 
+    @Test
+    fun `setDisplayMode sets same display mode value`() {
+        val geckoSetting = mock<GeckoSessionSettings>()
+        val geckoSession = mock<GeckoSession>()
+
+        val engineSession = GeckoEngineSession(
+            mock(),
+            geckoSessionProvider = geckoSessionProvider,
+        )
+
+        whenever(geckoSession.settings).thenReturn(geckoSetting)
+
+        engineSession.geckoSession = geckoSession
+
+        engineSession.setDisplayMode(WebAppManifest.DisplayMode.FULLSCREEN)
+        verify(geckoSetting, atLeastOnce()).setDisplayMode(GeckoSessionSettings.DISPLAY_MODE_FULLSCREEN)
+
+        engineSession.setDisplayMode(WebAppManifest.DisplayMode.STANDALONE)
+        verify(geckoSetting, atLeastOnce()).setDisplayMode(GeckoSessionSettings.DISPLAY_MODE_STANDALONE)
+
+        engineSession.setDisplayMode(WebAppManifest.DisplayMode.MINIMAL_UI)
+        verify(geckoSetting, atLeastOnce()).setDisplayMode(GeckoSessionSettings.DISPLAY_MODE_MINIMAL_UI)
+
+        engineSession.setDisplayMode(WebAppManifest.DisplayMode.BROWSER)
+        verify(geckoSetting, atLeastOnce()).setDisplayMode(GeckoSessionSettings.DISPLAY_MODE_BROWSER)
+    }
+
     private fun mockGeckoSession(): GeckoSession {
         val session = mock<GeckoSession>()
         whenever(session.settings).thenReturn(
