@@ -78,13 +78,13 @@ TEST_LIST = { { "srtp_calc_aead_iv_srtcp_all_zero_input_yield_zero_output()",
                 srtp_calc_aead_iv_srtcp_seq_num_over_0x7FFFFFFF_bad_param },
               { "srtp_calc_aead_iv_srtcp_distinct_iv_per_sequence_number()",
                 srtp_calc_aead_iv_srtcp_distinct_iv_per_sequence_number },
-              { 0 } /* End of tests */ };
+              { NULL } /* End of tests */ };
 
 /*
  * Implementation.
  */
 
-void srtp_calc_aead_iv_srtcp_all_zero_input_yield_zero_output(void)
+void srtp_calc_aead_iv_srtcp_all_zero_input_yield_zero_output()
 {
     // Preconditions
     srtp_session_keys_t session_keys;
@@ -94,7 +94,8 @@ void srtp_calc_aead_iv_srtcp_all_zero_input_yield_zero_output(void)
 
     // Postconditions
     srtp_err_status_t status;
-    const v128_t zero_vector = { 0 };
+    const v128_t zero_vector;
+    memset((v128_t *)&zero_vector, 0, sizeof(v128_t));
 
     // Given
     memset(&session_keys, 0, sizeof(srtp_session_keys_t));
@@ -111,7 +112,7 @@ void srtp_calc_aead_iv_srtcp_all_zero_input_yield_zero_output(void)
     TEST_CHECK(memcmp(&zero_vector, &init_vector, sizeof(v128_t)) == 0);
 }
 
-void srtp_calc_aead_iv_srtcp_seq_num_over_0x7FFFFFFF_bad_param(void)
+void srtp_calc_aead_iv_srtcp_seq_num_over_0x7FFFFFFF_bad_param()
 {
     // Preconditions
     srtp_session_keys_t session_keys;
@@ -143,7 +144,7 @@ void srtp_calc_aead_iv_srtcp_seq_num_over_0x7FFFFFFF_bad_param(void)
  * Ensure that for each valid sequence number where the most significant bit is
  * high that we get an expected and unique IV.
  */
-void srtp_calc_aead_iv_srtcp_distinct_iv_per_sequence_number(void)
+void srtp_calc_aead_iv_srtcp_distinct_iv_per_sequence_number()
 {
 #define SAMPLE_COUNT (3)
     // Preconditions

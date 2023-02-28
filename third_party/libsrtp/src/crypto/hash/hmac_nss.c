@@ -256,7 +256,7 @@ static srtp_err_status_t srtp_hmac_compute(void *statev,
         return srtp_err_status_auth_fail;
     }
 
-    if (tag_len < 0 || len < (unsigned int)tag_len)
+    if (len < tag_len)
         return srtp_err_status_auth_fail;
 
     /* copy hash_value to *result */

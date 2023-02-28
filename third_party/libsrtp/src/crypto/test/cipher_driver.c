@@ -389,7 +389,7 @@ srtp_err_status_t cipher_driver_test_buffering(srtp_cipher_t *c)
 
             /* make sure that len doesn't cause us to overreach the buffer */
             if (current + len > end)
-                len = (unsigned)(end - current);
+                len = end - current;
 
             status = srtp_cipher_encrypt(c, current, &len);
             if (status)

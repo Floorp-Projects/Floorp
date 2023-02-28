@@ -256,6 +256,7 @@ static srtp_err_status_t srtp_aes_gcm_mbedtls_set_aad(void *cv,
                                                       uint32_t aad_len)
 {
     FUNC_ENTRY();
+    int errCode = 0;
     srtp_aes_gcm_ctx_t *c = (srtp_aes_gcm_ctx_t *)cv;
 
     debug_print(srtp_mod_aes_gcm, "setting AAD: %s",
@@ -342,6 +343,7 @@ static srtp_err_status_t srtp_aes_gcm_mbedtls_decrypt(void *cv,
     FUNC_ENTRY();
     srtp_aes_gcm_ctx_t *c = (srtp_aes_gcm_ctx_t *)cv;
     int errCode = 0;
+    int len = *enc_len;
 
     if (c->dir != srtp_direction_encrypt && c->dir != srtp_direction_decrypt) {
         return (srtp_err_status_bad_param);
