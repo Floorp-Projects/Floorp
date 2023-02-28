@@ -259,15 +259,16 @@ int test_check__(int cond, const char *file, int line, const char *fmt, ...)
     }
 
     if (test_verbose_level__ >= verbose_level) {
+        size_t n = 0;
         va_list args;
 
         printf("  ");
 
         if (file != NULL)
-            printf("%s:%d: Check ", file, line);
+            n += printf("%s:%d: Check ", file, line);
 
         va_start(args, fmt);
-        vprintf(fmt, args);
+        n += vprintf(fmt, args);
         va_end(args);
 
         printf("... ");
@@ -467,8 +468,7 @@ static void test_run__(const struct test__ *test)
                     signame = "SIGTERM";
                     break;
                 default:
-                    snprintf(tmp, sizeof(tmp), "signal %d",
-                             WTERMSIG(exit_code));
+                    sprintf(tmp, "signal %d", WTERMSIG(exit_code));
                     signame = tmp;
                     break;
                 }

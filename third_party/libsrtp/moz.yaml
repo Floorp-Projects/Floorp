@@ -12,8 +12,8 @@ origin:
   license: BSD-3-Clause
   license-file: LICENSE
 
-  release: v2.5.0 (2023-02-01T08:25:02+01:00).
-  revision: v2.5.0
+  release: v2.4.2 (2021-09-20T16:10:47+02:00).
+  revision: v2.4.2
 
 
 updatebot:

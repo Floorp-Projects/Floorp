@@ -60,7 +60,7 @@ srtp_debug_module_t srtp_mod_crypto_kernel = {
 
 /* crypto_kernel is a global variable, the only one of its datatype */
 
-static srtp_crypto_kernel_t crypto_kernel = {
+srtp_crypto_kernel_t crypto_kernel = {
     srtp_crypto_kernel_state_insecure, /* start off in insecure state */
     NULL,                              /* no cipher types yet         */
     NULL,                              /* no auth types yet           */
@@ -69,7 +69,7 @@ static srtp_crypto_kernel_t crypto_kernel = {
 
 #define MAX_RNG_TRIALS 25
 
-srtp_err_status_t srtp_crypto_kernel_init(void)
+srtp_err_status_t srtp_crypto_kernel_init()
 {
     srtp_err_status_t status;
 
@@ -168,7 +168,7 @@ srtp_err_status_t srtp_crypto_kernel_init(void)
     return srtp_err_status_ok;
 }
 
-srtp_err_status_t srtp_crypto_kernel_status(void)
+srtp_err_status_t srtp_crypto_kernel_status()
 {
     srtp_err_status_t status;
     srtp_kernel_cipher_type_t *ctype = crypto_kernel.cipher_type_list;
@@ -209,7 +209,7 @@ srtp_err_status_t srtp_crypto_kernel_status(void)
     return srtp_err_status_ok;
 }
 
-srtp_err_status_t srtp_crypto_kernel_list_debug_modules(void)
+srtp_err_status_t srtp_crypto_kernel_list_debug_modules()
 {
     srtp_kernel_debug_module_t *dm = crypto_kernel.debug_module_list;
 
@@ -228,7 +228,7 @@ srtp_err_status_t srtp_crypto_kernel_list_debug_modules(void)
     return srtp_err_status_ok;
 }
 
-srtp_err_status_t srtp_crypto_kernel_shutdown(void)
+srtp_err_status_t srtp_crypto_kernel_shutdown()
 {
     /*
      * free dynamic memory used in crypto_kernel at present

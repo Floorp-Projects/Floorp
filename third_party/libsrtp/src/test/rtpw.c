@@ -285,17 +285,7 @@ int main(int argc, char *argv[])
     port = atoi(argv[optind_s++]);
 
 /* set address */
-#ifdef HAVE_INET_PTON
-    if (0 == inet_pton(AF_INET, address, &rcvr_addr)) {
-        fprintf(stderr, "%s: cannot parse IP v4 address %s\n", argv[0],
-                address);
-        exit(1);
-    }
-    if (rcvr_addr.s_addr == INADDR_NONE) {
-        fprintf(stderr, "%s: address error", argv[0]);
-        exit(1);
-    }
-#elif HAVE_INET_ATON
+#ifdef HAVE_INET_ATON
     if (0 == inet_aton(address, &rcvr_addr)) {
         fprintf(stderr, "%s: cannot parse IP v4 address %s\n", argv[0],
                 address);
@@ -483,16 +473,14 @@ int main(int argc, char *argv[])
         }
         /* check that hex string is the right length */
         if (len < expected_len) {
-            fprintf(stderr,
-                    "error: too few digits in key/salt "
-                    "(should be %d digits, found %d)\n",
+            fprintf(stderr, "error: too few digits in key/salt "
+                            "(should be %d digits, found %d)\n",
                     expected_len, len);
             exit(1);
         }
         if ((int)strlen(input_key) > policy.rtp.cipher_key_len * 2) {
-            fprintf(stderr,
-                    "error: too many digits in key/salt "
-                    "(should be %d hexadecimal digits, found %u)\n",
+            fprintf(stderr, "error: too many digits in key/salt "
+                            "(should be %d hexadecimal digits, found %u)\n",
                     policy.rtp.cipher_key_len * 2, (unsigned)strlen(input_key));
             exit(1);
         }
