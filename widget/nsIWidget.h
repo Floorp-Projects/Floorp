@@ -1974,6 +1974,11 @@ class nsIWidget : public nsISupports {
   virtual CompositorBridgeChild* GetRemoteRenderer() { return nullptr; }
 
   /**
+   * If there is a remote renderer, pause or resume it.
+   */
+  virtual void PauseOrResumeCompositor(bool aPause);
+
+  /**
    * Clear WebRender resources
    */
   virtual void ClearCachedWebrenderResources() {}
