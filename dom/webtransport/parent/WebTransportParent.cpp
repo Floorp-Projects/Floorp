@@ -7,6 +7,8 @@
 #include "WebTransportParent.h"
 #include "Http3WebTransportSession.h"
 #include "mozilla/StaticPrefs_network.h"
+#include "mozilla/TimeStamp.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/WebTransportBinding.h"
 #include "mozilla/dom/WebTransportLog.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -71,7 +73,6 @@ void WebTransportParent::Create(
   }
 
   mOwningEventTarget = GetCurrentSerialEventTarget();
-
   MOZ_ASSERT(aPrincipal);
   nsCOMPtr<nsIURI> uri;
   rv = NS_NewURI(getter_AddRefs(uri), aURL);
@@ -535,27 +536,73 @@ WebTransportParent::OnIncomingBidirectionalStreamAvailable(
   return NS_OK;
 }
 
+// The promise sent in this request will be resolved
+// in OnOutgoingDatagramOutCome which is called synchronously from
+// WebTransportSessionProxy::SendDatagram
+::mozilla::ipc::IPCResult WebTransportParent::RecvOutgoingDatagram(
+    nsTArray<uint8_t>&& aData, const TimeStamp& aExpirationTime,
+    OutgoingDatagramResolver&& aResolver) {
+  LOG(("WebTransportParent sending datagram"));
+  MOZ_ASSERT(mSocketThread->IsOnCurrentThread());
+  MOZ_ASSERT(!mOutgoingDatagramResolver);
+  MOZ_ASSERT(mWebTransport);
+
+  Unused << aExpirationTime;
+
+  mOutgoingDatagramResolver = std::move(aResolver);
+  // XXX we need to forward the timestamps to the necko stack
+  // timestamp should be checked in the necko for expiry
+  // See Bug 1818300
+  // currently this calls OnOutgoingDatagramOutCome synchronously
+  Unused << mWebTransport->SendDatagram(aData, 0);
+
+  return IPC_OK();
+}
+
 NS_IMETHODIMP WebTransportParent::OnDatagramReceived(
     const nsTArray<uint8_t>& aData) {
-  // XXX revisit this function once DOM WebAPI supports datagrams
+  // We must be on the Socket Thread
+  MOZ_ASSERT(mSocketThread->IsOnCurrentThread());
+
+  LOG(("WebTransportParent received datagram"));
+
+  TimeStamp ts = TimeStamp::Now();
+  Unused << SendIncomingDatagram(aData, ts);
+
   return NS_OK;
 }
 
 NS_IMETHODIMP WebTransportParent::OnDatagramReceivedInternal(
     nsTArray<uint8_t>&& aData) {
-  // XXX revisit this function once DOM WebAPI supports datagrams
+  // this method is used only for internal notificaiton within necko
+  // we dont expect to receive any notification with on this interface
   return NS_OK;
 }
 
 NS_IMETHODIMP
 WebTransportParent::OnOutgoingDatagramOutCome(
     uint64_t aId, WebTransportSessionEventListener::DatagramOutcome aOutCome) {
-  // XXX revisit this function once DOM WebAPI supports datagrams
+  MOZ_ASSERT(mSocketThread->IsOnCurrentThread());
+  // XXX - do we need better error mappings for failures?
+  nsresult result = NS_ERROR_FAILURE;
+  Unused << aId;
+
+  if (aOutCome == WebTransportSessionEventListener::DatagramOutcome::SENT) {
+    result = NS_OK;
+  }
+
+  MOZ_ASSERT(mOutgoingDatagramResolver);
+  mOutgoingDatagramResolver(result);
+
+  // reset the resolver to allow sending remaining datagrams
+  mOutgoingDatagramResolver = nullptr;
+
   return NS_OK;
 }
 
 NS_IMETHODIMP WebTransportParent::OnMaxDatagramSize(uint64_t aSize) {
-  // XXX revisit this function once DOM WebAPI supports datagrams
+  // XXX -  we need to pass this to  WebTransportChild via IPC
+  // See Bug 1818763
   return NS_OK;
 }
 }  // namespace mozilla::dom
