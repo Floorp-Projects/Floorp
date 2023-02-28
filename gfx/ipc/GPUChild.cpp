@@ -108,10 +108,6 @@ bool GPUChild::EnsureGPUReady() {
   return true;
 }
 
-base::ProcessHandle GPUChild::GetChildProcessHandle() {
-  return mHost->GetChildProcessHandle();
-}
-
 void GPUChild::OnUnexpectedShutdown() { mUnexpectedShutdown = true; }
 
 mozilla::ipc::IPCResult GPUChild::RecvInitComplete(const GPUDeviceData& aData) {
