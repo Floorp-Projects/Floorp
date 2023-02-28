@@ -33,7 +33,7 @@ installed for the user only:
 
 ```bash
 python -m ensurepip --user
-export PATH="$PATH:$( python3 -m site --user-base )/bin"
+export PATH="$PATH:$HOME/Library/Python/2.7/bin"
 pip install --user virtualenv
 ```
 

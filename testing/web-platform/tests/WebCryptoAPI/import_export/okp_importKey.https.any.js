@@ -1,6 +1,5 @@
 // META: title=WebCryptoAPI: importKey() for OKP keys
 // META: timeout=long
-// META: script=../util/helpers.js
 
 // Test importKey and exportKey for OKP algorithms. Only "happy paths" are
 // currently tested - those where the operation should succeed.
@@ -105,7 +104,6 @@
             return subtle.importKey(format, keyData[format], algorithm, extractable, usages).
             then(function(key) {
                 assert_equals(key.constructor, CryptoKey, "Imported a CryptoKey object");
-                assert_goodCryptoKey(key, algorithm, extractable, usages, (format === 'pkcs8' || (format === 'jwk' && keyData[format].d)) ? 'private' : 'public');
                 if (!extractable) {
                     return;
                 }

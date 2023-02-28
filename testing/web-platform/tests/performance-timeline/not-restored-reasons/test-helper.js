@@ -37,11 +37,7 @@ function assertReasonsStructEquals(
 // - /websockets/constants.sub.js in the test file and pass the domainPort
 // constant here.
 async function useWebSocket(remoteContextHelper) {
-  let return_value = await remoteContextHelper.executeScript((domain) => {
-    return new Promise((resolve) => {
-      var webSocketInNotRestoredReasonsTests = new WebSocket(domain + '/echo');
-      webSocketInNotRestoredReasonsTests.onopen = () => { resolve(42); };
-    });
+  await remoteContextHelper.executeScript((domain) => {
+    var webSocketInNotRestoredReasonsTests = new WebSocket(domain + '/echo');
   }, [SCHEME_DOMAIN_PORT]);
-  assert_equals(return_value, 42);
 }

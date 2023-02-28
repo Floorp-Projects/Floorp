@@ -6,7 +6,6 @@
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="/resources/check-layout-th.js"></script>
-<script src="support/test-common.js"></script>
 <style>
 .transform {
   transform: translate(0);
@@ -49,7 +48,7 @@
   height: anchor-size(--a1 height);
 }
 </style>
-<body onload="checkLayoutForAnchorPos('.target')">
+<body onload="checkLayout('.target')">
   <div class="transform">
     <div class="spacer" style="height: 10px"></div>
     <div class="columns">

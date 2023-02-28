@@ -5,7 +5,6 @@
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="/resources/check-layout-th.js"></script>
-<script src="support/test-common.js"></script>
 <style>
 .cb {
   width: 400px;
@@ -49,7 +48,7 @@
   }
 }
 </style>
-<body onload="checkLayoutForAnchorPos('.target')">
+<body onload="checkLayout('.target')">
   <!-- The first `@try` overflows the inset-modifed containing block -->
   <div class="cb">
     <div class="anchor1"></div>

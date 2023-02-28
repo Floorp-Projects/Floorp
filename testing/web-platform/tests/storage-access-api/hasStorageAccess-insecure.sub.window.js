@@ -13,16 +13,12 @@ promise_test(async () => {
   assert_false(hasAccess, "Access should be disallowed in insecure contexts");
 }, "[" + testPrefix + "] document.hasStorageAccess() should be disallowed in insecure contexts");
 
-promise_test(async (t) => {
-  const description = "Promise should reject when called on a generated document not part of the DOM.";
+promise_test(async () => {
   const createdDocument = document.implementation.createDocument("", null);
 
-  // Can't use `promise_rejects_dom` here, since the error comes from the wrong global.
-  await createdDocument.hasStorageAccess().then(
-    t.unreached_func("Should have rejected: " + description), (e) => {
-      assert_equals(e.name, 'InvalidStateError', description);
-    });
-}, "[" + testPrefix + "] document.hasStorageAccess() should reject in a document that isn't fully active.");
+  const hasAccess = await createdDocument.hasStorageAccess();
+  assert_false(hasAccess, "Access should be denied to a generated document not part of the DOM.");
+}, "[" + testPrefix + "] document.hasStorageAccess() should work on a document object.");
 
 // Logic to load test cases within combinations of iFrames.
 if (topLevelDocument) {

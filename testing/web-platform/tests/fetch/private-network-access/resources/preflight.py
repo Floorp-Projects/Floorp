@@ -79,9 +79,6 @@ def _get_response_headers(method, mode):
 def _get_expect_single_preflight(request):
   return request.GET.get(b"expect-single-preflight")
 
-def _is_preflight_optional(request):
-  return request.GET.get(b"is-preflight-optional")
-
 def _get_preflight_uuid(request):
   return request.GET.get(b"preflight-uuid")
 
@@ -138,8 +135,7 @@ def _handle_final_request(request, response):
   else:
     uuid = _get_preflight_uuid(request)
     if uuid is not None:
-      if (request.server.stash.take(uuid) is None and
-          not _is_preflight_optional(request)):
+      if request.server.stash.take(uuid) is None:
         return (405, [], "no preflight received for {}".format(uuid))
       request.server.stash.put(uuid, "final")
 

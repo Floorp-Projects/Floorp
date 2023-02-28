@@ -3,8 +3,8 @@
 test(() => {
   const argument = { parameters: [] };
   const tag = new WebAssembly.Tag(argument);
-  const exn = new WebAssembly.Exception(tag, []);
-  assert_class_string(exn, "WebAssembly.Exception");
+  const exception = new WebAssembly.Exception(tag, []);
+  assert_class_string(exception, "WebAssembly.Exception");
 }, "Object.prototype.toString on an Exception");
 
 test(() => {

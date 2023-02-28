@@ -14,11 +14,11 @@ promise_test(async () => {
   const kWasmAnyRef = 0x6f;
   const kSig_v_r = makeSig([kWasmAnyRef], []);
   const builder = new WasmModuleBuilder();
-  const tagIndex = builder.addTag(kSig_v_r);
+  const except = builder.addException(kSig_v_r);
   builder.addFunction("throw_param", kSig_v_r)
     .addBody([
       kExprLocalGet, 0,
-      kExprThrow, tagIndex,
+      kExprThrow, except,
     ])
     .exportFunc();
   const buffer = builder.toBuffer();
@@ -45,11 +45,11 @@ promise_test(async () => {
 
 promise_test(async () => {
   const builder = new WasmModuleBuilder();
-  const tagIndex = builder.addTag(kSig_v_a);
+  const except = builder.addException(kSig_v_a);
   builder.addFunction("throw_null", kSig_v_v)
     .addBody([
       kExprRefNull, kWasmAnyFunc,
-      kExprThrow, tagIndex,
+      kExprThrow, except,
     ])
     .exportFunc();
   const buffer = builder.toBuffer();
@@ -59,11 +59,11 @@ promise_test(async () => {
 
 promise_test(async () => {
   const builder = new WasmModuleBuilder();
-  const tagIndex = builder.addTag(kSig_v_i);
+  const except = builder.addException(kSig_v_i);
   builder.addFunction("throw_int", kSig_v_v)
     .addBody([
       ...wasmI32Const(7),
-      kExprThrow, tagIndex,
+      kExprThrow, except,
     ])
     .exportFunc();
   const buffer = builder.toBuffer();
@@ -74,12 +74,12 @@ promise_test(async () => {
 promise_test(async () => {
   const builder = new WasmModuleBuilder();
   const fnIndex = builder.addImport("module", "fn", kSig_v_v);
-  const tagIndex= builder.addTag(kSig_v_r);
+  const except = builder.addException(kSig_v_r);
   builder.addFunction("catch_exception", kSig_r_v)
     .addBody([
       kExprTry, kWasmStmt,
         kExprCallFunction, fnIndex,
-      kExprCatch, tagIndex,
+      kExprCatch, except,
         kExprReturn,
       kExprEnd,
       kExprRefNull, kWasmAnyRef,
