@@ -7,6 +7,14 @@
   min-height: 0;
 }
 
+#mediaPreviewBox,
+#imagecontainerbox,
+#thepreviewimage,
+#mainDeck > vbox {
+  min-width: 0;
+  min-height: 0;
+}
+
 #viewGroup > radio > .radio-label-box {
   -moz-box-orient: vertical;
   -moz-box-align: center;
@@ -19,8 +27,6 @@
 
 #thepreviewimage {
   display: block;
-/* This following entry can be removed when Bug 522850 is fixed. */
-  min-width: 1px;
 }
 
 table {
