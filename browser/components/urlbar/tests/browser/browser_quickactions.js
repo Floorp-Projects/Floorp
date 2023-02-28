@@ -169,42 +169,24 @@ add_task(async function enter_search_mode_key() {
 });
 
 add_task(async function test_disabled() {
-  testActionCalled = 0;
   UrlbarProviderQuickActions.addAction("disabledaction", {
     commands: ["disabledaction"],
     isActive: () => false,
     label: "quickactions-restart",
-    onPick: () => testActionCalled++,
   });
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: "disabled",
   });
-  Assert.equal(
-    UrlbarTestUtils.getResultCount(window),
-    2,
-    "The action is displayed"
-  );
 
-  EventUtils.synthesizeKey("KEY_ArrowDown");
-  Assert.ok(
-    !UrlbarTestUtils.getSelectedElement(window),
-    "There is no selected element."
-  );
-
-  let disabledButton = window.document.querySelector(
-    ".urlbarView-row[dynamicType=quickactions]"
-  );
-  EventUtils.synthesizeMouseAtCenter(disabledButton, {});
   Assert.equal(
-    testActionCalled,
-    0,
-    "onPick for disabled action was not called"
+    await hasQuickActions(window),
+    false,
+    "Result for quick actions is hidden"
   );
 
   await UrlbarTestUtils.promisePopupClose(window);
-  EventUtils.synthesizeKey("KEY_Escape");
   UrlbarProviderQuickActions.removeAction("disabledaction");
 });
 
@@ -252,21 +234,12 @@ add_task(async function test_screenshot_enabled_or_disabled() {
     value: "screenshot",
   });
   Assert.equal(
-    UrlbarTestUtils.getResultCount(window),
-    2,
-    "The action is displayed"
-  );
-  screenshotButton = window.document.querySelector(
-    ".urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row"
-  );
-  Assert.equal(
-    screenshotButton.getAttribute("disabled"),
-    "disabled",
-    "Screenshot button is disabled on about pages"
+    await hasQuickActions(window),
+    false,
+    "Result for quick actions is hidden"
   );
 
   await UrlbarTestUtils.promisePopupClose(window);
-  EventUtils.synthesizeKey("KEY_Escape");
 });
 
 add_task(async function match_in_phrase() {
@@ -421,6 +394,7 @@ add_task(async function test_quickactions_disabled() {
     window,
     value: "screenshot",
   });
+
   Assert.ok(
     !window.document.querySelector(
       ".urlbarView-row[dynamicType=quickactions] .urlbarView-quickaction-row"
@@ -637,10 +611,11 @@ add_task(async function test_viewsource() {
     window,
     value: "viewsource",
   });
-  await assertActionButtonStatus(
-    "viewsource",
+
+  Assert.equal(
+    await hasQuickActions(window),
     false,
-    "Should be disabled since the page is view-source content"
+    "Result for quick actions is hidden"
   );
 
   // Clean up.
@@ -688,7 +663,11 @@ async function doUpdateActionTest(isActiveExpected, description) {
     value: "update",
   });
 
-  await assertActionButtonStatus("update", isActiveExpected, description);
+  if (isActiveExpected) {
+    await assertActionButtonStatus("update", isActiveExpected, description);
+  } else {
+    Assert.equal(await hasQuickActions(window), false, description);
+  }
 }
 
 add_task(async function test_update() {
