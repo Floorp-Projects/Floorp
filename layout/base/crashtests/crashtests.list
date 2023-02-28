@@ -530,7 +530,7 @@ load 1539303.html
 load 1541679.html
 load 1547261.html
 load 1547391.html
-load 1548057.html
+pref(widget.windows.window_occlusion_tracking.enabled,false) load 1548057.html # Bug 1819154
 load 1549867.html
 load 1553874.html
 load 1560328.html

@@ -168,7 +168,7 @@ load 1467847-1.html
 load 1468020.html
 load 1470437.html
 load 1470440.html
-load 1478035.html
+pref(widget.windows.window_occlusion_tracking.enabled,false) load 1478035.html # Bug 1819154
 load 1490704-1.html
 load 1501518.html
 load 1503986-1.html
@@ -180,7 +180,7 @@ load 1513133.html
 load 1496194.html
 load 1505934-1.html
 load 1509123.html
-load 1494062-blob-image-wraplist-clip.html
+pref(widget.windows.window_occlusion_tracking.enabled,false) load 1494062-blob-image-wraplist-clip.html # Bug 1819154
 load texture-allocator-zero-region.html
 load 1524418.html
 pref(layout.css.individual-transform.enabled,true) load 1529149.html
