@@ -26,7 +26,7 @@
     <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
       <ul>
         <li>Buǵan nadurıs server sazlawları sebep bolıwı múmkin yamasa birew sizge kerek bolǵan serverdi basqasına almastırıwǵa háreket qılmaqta.</li>
-        <li>Eger siz aldın bul serverge sátli jalǵanǵan bolsańız, bul qáte waqtınsha bolıwı múmkin hám keyinirek qayta urınıp kóriń.</li>
+        <li>Eger siz aldın bul serverge tabıslı jalǵanǵan bolsańız, bul qáte waqtınsha bolıwı múmkin hám keyinirek qayta urınıp kóriń.</li>
       </ul>
     ]]></string>
 
@@ -75,7 +75,7 @@
 
     <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
     <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
-      <p>Brauzer sátli jalǵandı, biraq maǵlıwmatlardı jetkeriw waqtında baylanısta úzilis boldı. Ótinish, qayta urınıp kóriń.</p>
+      <p>Brauzer tabıslı jalǵandı, biraq maǵlıwmatlardı jetkeriw waqtında baylanısta úzilis boldı. Ótinish, qayta urınıp kóriń.</p>
       <ul>
         <li>Sayt waqtınsha islemey qalıwı yamasa júdá bánt bolıwı múmkin. Bir neshe minuttan soń, qayta urınıp kóriń.</li>
         <li>Eger siz birde-bir betti júkley almasańız, qurılmańız mobil internetin yamasa Wi-Fi jalǵanıwın tekseriń.</li>
@@ -213,7 +213,7 @@
     ]]></string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_no_internet_title">Internet jalǵanbaǵan</string>
+    <string name="mozac_browser_errorpages_no_internet_title">Internet penen baylanıs joq</string>
     <!-- The main body text of this error page. It will be shown beneath the title -->
     <string name="mozac_browser_errorpages_no_internet_message">Tarmaq jalǵanǵanın tekseriń yamasa bir neshe minutlardan keyin qayta júklewge urınıp kóriń.</string>
     <!-- Text that will show up on the button at the bottom of the error page -->

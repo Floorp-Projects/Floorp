@@ -41,6 +41,16 @@
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Q\'axinäq…</string>
 
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
+ <label> <b>%1$s</b>k\'o jun runa\'ojil jikomal b\'ina\'am HTTP Jikïl Ruk\'waxik Jikomal (HSTS), ri nuq\'ajuj chi ri <b>%2$s</b> xa xe nitikïr nok pa ütz jikomal. Man yatikïr ta natz\'aqatisaj jun man relik ta richin natz\'ët re ruxaq re\'.
+
+]]></string>
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+ <label> <b>%1$s</b>k\'o jun runa\'ojil jikomal b\'ina\'am HTTP Jikïl Ruk\'waxik Jikomal (HSTS), ri nuq\'ajuj chi ri <b>%2$s</b> xa xe nitikïr nok pa ütz jikomal. Man yatikïr ta natz\'aqatisaj jun man relik ta richin natz\'ët re ruxaq re\'. </label>
+
+]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Titzolin</string>
 
@@ -250,6 +260,8 @@
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
     <string name="mozac_browser_errorpages_httpsonly_title">Majun jikïl ruxaq</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Xatzïj ri HTTPS-Only Rub\'anikil richin nutziläx ri jikomal chuqa\' jun HTTPS ruwäch <em>%1$s</em> man wachel ta.]]></string>
     <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
     <string name="mozac_browser_errorpages_httpsonly_button">Tik\'oje\' na pa HTTP Ruxaq</string>
 </resources>

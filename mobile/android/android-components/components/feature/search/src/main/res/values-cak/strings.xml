@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description">Tijaq jun k\'ak\'a\' %1$s ruwi\'</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Tikanöx</string>
     <!-- Text preview for larger sized widgets -->

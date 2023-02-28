@@ -38,6 +38,10 @@
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Tik\'am tzij pa ri yakwujb\'äl</string>
     <!-- Description for clipboard_write permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Kenim taq tzij pa ri yakwujb\'äl</string>
+    <!-- Description for declarativeNetRequest permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_description">Tiq\'at rupam pa xab\'achike ruxaq</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Tasik\'ij ri runatab\'al ri okik\'amaya\'l</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Keqasäx taq yakb\'äl, tisik\'ïx chuqa\' tijalwachïx ri kik\'ulwachinel taq ruqasanik okik\'amaya\'l</string>
     <!-- Description for downloads_open permission. -->

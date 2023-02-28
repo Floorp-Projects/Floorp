@@ -167,23 +167,23 @@
     <!-- Error shown when unable to find a translation for an add-on field. %1$s is the locale of the user and %2$s is the default language of the add-on -->
     <string name="mozac_feature_addons_failed_to_translate">Awdarma tabılmadı, %1$s tili ushın da, sistemanıń tiykarǵı %2$s tili ushın da</string>
     <!-- Text shown after successfully installed an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_successfully_installed">%1$s sátli ornatıldı</string>
+    <string name="mozac_feature_addons_successfully_installed">%1$s tabıslı ornatıldı</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install">%1$s ornatıw ámelge aspadı</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_successfully_enabled">%1$s sátli qosıldı</string>
+    <string name="mozac_feature_addons_successfully_enabled">%1$s tabıslı qosıldı</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_enable">%1$s qosıw ámelge aspadı</string>
     <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_successfully_disabled">%1$s sátli óshirildi</string>
+    <string name="mozac_feature_addons_successfully_disabled">%1$s tabıslı óshirildi</string>
     <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_disable">%1$s óshiriw ámelge aspadı</string>
     <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_successfully_uninstalled">%1$s sátli óshirildi</string>
+    <string name="mozac_feature_addons_successfully_uninstalled">%1$s tabıslı óshirildi</string>
     <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_uninstall">%1$s óshiriw ámelge aspadı</string>
     <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">%1$s sátli alıp taslandı</string>
+    <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">%1$s tabıslı alıp taslandı</string>
     <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">%1$s alıp taslaw ámelge aspadı</string>
     <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be Firefox. -->

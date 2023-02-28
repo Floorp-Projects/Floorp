@@ -35,6 +35,9 @@
     <string name="mozac_feature_sitepermissions_persistent_storage_title">¿La niya\' q\'ij chi ri %1$s keruyaka\' taq tzij pa jutaqil yakoj?</string>
     <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
     <string name="mozac_feature_sitepermissions_media_key_system_access_title">¿La niya\' q\'ij chi ri %1$s nutzïj rupam samajin ruma DRM?</string>
+    <!-- Title of a dialog to use cross origin storage permission. %1$s is the name of the site URL (www.site1.example) trying to track the user's activity.
+     %2$s is the name of the site URL (www.site2.example) that the user is visiting.  This is the same domain name displayed in the address bar -->
+    <string name="mozac_feature_sitepermissions_storage_access_title">¿La niya\' q\'ij chi ri %1$s? kerokisaj taq kuki pa %2$s?</string>
     <!-- Text for a negative button in the storage access permission request dialog. This button will not give access to this permission. -->
     <string name="mozac_feature_sitepermissions_storage_access_not_allow">Tiq\'at</string>
     <!-- Clickable text that will open a new tab navigating the user to online documentation about specific features. -->

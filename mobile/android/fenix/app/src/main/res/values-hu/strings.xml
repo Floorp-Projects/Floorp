@@ -65,12 +65,10 @@
     </string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Indítóikon hozzáadása, amely privát lapokat nyit meg a Kezdőképernyőről.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message">Indítsa el a következő privát lapot egy koppintással.</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Indítóikon hozzáadása</string>
+    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">Indítsa el a következő privát lapot egy koppintással.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message_2">Indítsa el a következő privát lapot egy koppintással.</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Kezdőképernyőhöz adás</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -1362,6 +1360,8 @@
     <string name="onboarding_firefox_account_sync_is_on">A Sync be van kapcsolva</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Adatvédelem alapértelmezetten</string>
+    <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_old">A %1$s automatikusan megakadályozza, hogy a cégek titokban kövessék Önt a weben.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">Bemutatkozik a Teljes sütivédelem, amely megakadályozza, hogy a nyomkövetők arra használhassák a sütiket, hogy kövessék a webhelyek között.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -2049,4 +2049,6 @@
     <string name="a11y_action_label_wallpaper_collection_learn_more">hivatkozás megnyitása, hogy többet tudjon meg a gyűjteményről</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
     <string name="a11y_action_label_read_article">a cikk elolvasása</string>
+    <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
+    <string name="a11y_action_label_pocket_learn_more">hivatkozás megnyitása, hogy többet tudjon meg</string>
 </resources>

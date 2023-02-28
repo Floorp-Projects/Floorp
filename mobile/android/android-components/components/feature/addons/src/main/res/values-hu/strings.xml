@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Adatok vágólapra helyezése</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">Bármely oldalon lévő tartalom blokkolása</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Böngészési előzmények olvasása</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Fájlok letöltése, valamint a letöltési előzmények olvasása és módosítása</string>
     <!-- Description for downloads_open permission. -->
