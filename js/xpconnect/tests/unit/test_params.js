@@ -94,7 +94,8 @@ TestParams.prototype = {
     o.value = Cc["@mozilla.org/network/io-service;1"]
       .getService(Ci.nsIIOService)
       .newURI("http://example.com/");
-  }
+  },
+  testNaN: NaN,
 };
 
 function TestInterfaceA() {}
@@ -378,4 +379,6 @@ function test_component(obj) {
     Assert.equal(o.testOptionalSequence(uint8).toString(), "123,0,0");
     Assert.equal(o.testByteArrayOptionalLength(uint8), 3);
   }
+
+  Assert.ok(isNaN(o.testNaN), "Should handle returning NaNs");
 }
