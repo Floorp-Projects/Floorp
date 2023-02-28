@@ -19,30 +19,24 @@
 #include <set>
 #include <string>
 
+#include "api/sequence_checker.h"
 #include "api/video/video_frame.h"
-#include "common_video/libyuv/include/webrtc_libyuv.h"
+#include "api/video/video_sink_interface.h"
+#include "modules/desktop_capture/desktop_capturer.h"
 #include "modules/video_capture/video_capture.h"
-#include "modules/video_capture/video_capture_config.h"
-#include "modules/video_coding/event_wrapper.h"
-#include "modules/desktop_capture/shared_memory.h"
-#include "modules/desktop_capture/desktop_and_cursor_composer.h"
-#include "rtc_base/deprecated/recursive_critical_section.h"
 
 #include "desktop_device_info.h"
-#include "VideoEngine.h"
+#include "mozilla/DataMutex.h"
+#include "mozilla/TimeStamp.h"
+#include "nsCOMPtr.h"
+#include "PerformanceRecorder.h"
 
-#if !defined(_WIN32)
-#  include "rtc_base/platform_thread.h"
-#endif
+class nsIThread;
+class nsITimer;
 
-using namespace webrtc::videocapturemodule;
-using namespace mozilla::camera;  // for mozilla::camera::CaptureDeviceType
-
-namespace rtc {
-#if defined(_WIN32)
-class PlatformUIThread;
-#endif
-}  // namespace rtc
+namespace mozilla::camera {
+enum class CaptureDeviceType;
+}
 
 namespace webrtc {
 
@@ -172,7 +166,7 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
   CreateDeviceInfo(const int32_t aId,
                    const mozilla::camera::CaptureDeviceType aType);
 
-  // Call backs
+  // mControlThread only.
   void RegisterCaptureDataCallback(
       rtc::VideoSinkInterface<VideoFrame>* aCallback) override;
   void DeRegisterCaptureDataCallback(
@@ -185,68 +179,63 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
 
   const char* CurrentDeviceName() const override;
 
-  int32_t IncomingFrame(uint8_t* videoFrame, size_t videoFrameLength,
-                        size_t widthWithPadding,
-                        const VideoCaptureCapability& frameInfo);
-
-  // Platform dependent
   int32_t StartCapture(const VideoCaptureCapability& aCapability) override;
   virtual bool FocusOnSelectedSource() override;
   int32_t StopCapture() override;
   bool CaptureStarted() override;
   int32_t CaptureSettings(VideoCaptureCapability& aSettings) override;
 
+  void CaptureFrameOnThread();
+
+  const int32_t mModuleId;
+  const mozilla::TrackingId mTrackingId;
+  const std::string mDeviceUniqueId;
+  const mozilla::camera::CaptureDeviceType mDeviceType;
+
  protected:
   DesktopCaptureImpl(const int32_t aId, const char* aUniqueId,
                      const mozilla::camera::CaptureDeviceType aType);
   virtual ~DesktopCaptureImpl();
-  int32_t DeliverCapturedFrame(webrtc::VideoFrame& aCaptureFrame);
-
-  static const uint32_t kMaxDesktopCaptureCpuUsage =
-      50;  // maximum CPU usage in %
-
-  int32_t mModuleId;  // Module ID
-  const mozilla::TrackingId
-      mTrackingId;              // Allows tracking of this video frame source
-  std::string mDeviceUniqueId;  // current Device unique name;
-  CaptureDeviceType mDeviceType;
 
  private:
-  void LazyInitCaptureThread();
-  int32_t LazyInitDesktopCapturer();
-
+  // Maximum CPU usage in %.
+  static constexpr uint32_t kMaxDesktopCaptureCpuUsage = 50;
+  int32_t EnsureCapturer();
+  void InitOnThread(int aFramerate);
+  void ShutdownOnThread();
   // DesktopCapturer::Callback interface.
-  void OnCaptureResult(DesktopCapturer::Result result,
-                       std::unique_ptr<DesktopFrame> frame) override;
+  void OnCaptureResult(DesktopCapturer::Result aResult,
+                       std::unique_ptr<DesktopFrame> aFrame) override;
 
- public:
-  static void Run(void* aObj) {
-    static_cast<DesktopCaptureImpl*>(aObj)->process();
-  };
-  void process();
-  void ProcessIter();
+  // Notifies all mCallbacks of OnFrame(). mCaptureThread only.
+  void NotifyOnFrame(const VideoFrame& aFrame);
 
- private:
-  rtc::RecursiveCriticalSection mApiCs;
-  std::atomic<uint32_t> mMaxFPSNeeded = {0};
-  // Set in StartCapture.
+  // Control thread on which the public API is called.
+  const nsCOMPtr<nsISerialEventTarget> mControlThread;
+  // Set in StartCapture. mControlThread only.
   VideoCaptureCapability mRequestedCapability;
-  // This is created on the main thread and accessed on both the main thread
-  // and the capturer thread. It is created prior to the capturer thread
-  // starting and is destroyed after it is stopped.
+  // This is created on mControlThread and accessed on both mControlThread and
+  // mCaptureThread. It is created prior to mCaptureThread starting and is
+  // destroyed after it is stopped.
   std::unique_ptr<DesktopCapturer> mCapturer;
-  bool mCapturerStarted = false;
-  std::unique_ptr<EventWrapper> mTimeEvent;
-#if defined(_WIN32)
-  std::unique_ptr<rtc::PlatformUIThread> mCaptureThread;
-#else
-  std::unique_ptr<rtc::PlatformThread> mCaptureThread;
-#endif
+  // Dedicated thread that does the capturing. Only used on mControlThread.
+  nsCOMPtr<nsIThread> mCaptureThread;
+  // Checks that frame delivery only happens on mCaptureThread.
+  webrtc::SequenceChecker mCaptureThreadChecker;
+  // Timer that triggers frame captures. Only used on mCaptureThread.
+  // TODO(Bug 1806646): Drive capture with vsync instead.
+  nsCOMPtr<nsITimer> mCaptureTimer;
+  // Interval between captured frames, based on the framerate in
+  // mRequestedCapability.
+  mozilla::TimeDuration mRequestedCaptureInterval;
   // Used to make sure incoming timestamp is increasing for every frame.
+  // mCaptureThread only.
   int64_t mLastFrameTimeMs;
-  // True once fully started and not fully stopped.
-  std::atomic<bool> mRunning;
-  // Callbacks for captured frames.
+  // True once fully started and not fully stopped. Only accessed on
+  // mControlThread.
+  bool mRunning;
+  // Callbacks for captured frames. Mutated on mControlThread, callbacks happen
+  // on mCaptureThread.
   mozilla::DataMutex<std::set<rtc::VideoSinkInterface<VideoFrame>*>> mCallbacks;
 };
 

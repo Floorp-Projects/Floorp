@@ -58,7 +58,6 @@ class VideoEngine {
   static const int64_t kCacheExpiryPeriodMs = 2000;
 
  public:
-  VideoEngine() : mId(0){};
   NS_INLINE_DECL_REFCOUNTING(VideoEngine)
 
   static already_AddRefed<VideoEngine> Create(
@@ -67,12 +66,12 @@ class VideoEngine {
   static int SetAndroidObjects();
 #endif
   // Returns a non-negative capture identifier or -1 on failure.
-  int32_t CreateVideoCapture(const char* deviceUniqueIdUTF8);
+  int32_t CreateVideoCapture(const char* aDeviceUniqueIdUTF8);
 
-  int ReleaseVideoCapture(const int32_t id);
+  int ReleaseVideoCapture(const int32_t aId);
 
   // VideoEngine is responsible for any cleanup in its modules
-  static void Delete(VideoEngine* engine) {}
+  static void Delete(VideoEngine* aEngine) {}
 
   /** Returns an existing or creates a new new DeviceInfo.
    *   Camera info is cached to prevent repeated lengthy polling for "realness"
@@ -106,7 +105,7 @@ class VideoEngine {
  private:
   explicit VideoEngine(const CaptureDeviceType& aCaptureDeviceType);
   int32_t mId;
-  CaptureDeviceInfo mCaptureDevInfo;
+  const CaptureDeviceInfo mCaptureDevInfo;
   std::shared_ptr<webrtc::VideoCaptureModule::DeviceInfo> mDeviceInfo;
   std::map<int32_t, CaptureEntry> mCaps;
   std::map<int32_t, int32_t> mIdMap;
