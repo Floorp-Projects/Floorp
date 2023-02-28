@@ -127,6 +127,16 @@ class ProviderQuickActions extends UrlbarProvider {
       return;
     }
 
+    // If all actions are inactive, don't show anything.
+    if (
+      results.every(key => {
+        const action = this.#actions.get(key);
+        return action.isActive && !action.isActive();
+      })
+    ) {
+      return;
+    }
+
     // If we are in the Actions searchMode then we want to show all the actions
     // but not when we are in the normal url mode on first focus.
     if (

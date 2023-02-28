@@ -20,9 +20,7 @@ add_setup(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.urlbar.searchEngagementTelemetry.enabled", true],
-      ["browser.urlbar.quickactions.enabled", true],
-      ["browser.urlbar.suggest.quickactions", true],
-      ["browser.urlbar.quickactions.minimumSearchString", 0],
+      ["browser.urlbar.quickactions.enabled", false],
     ],
   });
   registerCleanupFunction(async function() {
@@ -154,7 +152,7 @@ add_task(async function selected_result_intervention_update() {
     [
       {
         selected_result: "intervention_update",
-        results: "search_engine,action,intervention_update",
+        results: "search_engine,intervention_update",
       },
     ]
   );
