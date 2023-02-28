@@ -341,26 +341,24 @@ nsIFrame* SVGUtils::GetOuterSVGFrameAndCoveredRegion(nsIFrame* aFrame,
 gfxMatrix SVGUtils::GetCanvasTM(nsIFrame* aFrame) {
   // XXX yuck, we really need a common interface for GetCanvasTM
 
-  if (!aFrame->IsFrameOfType(nsIFrame::eSVG) || aFrame->IsSVGOuterSVGFrame()) {
+  if (!aFrame->IsFrameOfType(nsIFrame::eSVG)) {
     return GetCSSPxToDevPxMatrix(aFrame);
   }
 
-  // ForeignObjectFrame caches its canvasTM
-  if (aFrame->IsSVGForeignObjectFrame()) {
+  LayoutFrameType type = aFrame->Type();
+  if (type == LayoutFrameType::SVGForeignObject) {
     return static_cast<SVGForeignObjectFrame*>(aFrame)->GetCanvasTM();
   }
+  if (type == LayoutFrameType::SVGOuterSVG) {
+    return GetCSSPxToDevPxMatrix(aFrame);
+  }
 
-  // Container frames cache their canvasTM
-  if (SVGContainerFrame* containerFrame = do_QueryFrame(aFrame)) {
+  SVGContainerFrame* containerFrame = do_QueryFrame(aFrame);
+  if (containerFrame) {
     return containerFrame->GetCanvasTM();
   }
 
-  MOZ_ASSERT(aFrame->GetParent()->IsFrameOfType(nsIFrame::eSVGContainer));
-
-  auto* parent = static_cast<SVGContainerFrame*>(aFrame->GetParent());
-  auto* content = static_cast<SVGElement*>(aFrame->GetContent());
-
-  return content->PrependLocalTransformsTo(parent->GetCanvasTM());
+  return static_cast<SVGGeometryFrame*>(aFrame)->GetCanvasTM();
 }
 
 bool SVGUtils::IsSVGTransformed(const nsIFrame* aFrame,

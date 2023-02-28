@@ -252,10 +252,13 @@ SVGImageElement::IsAttributeMapped(const nsAtom* name) const {
 }
 
 //----------------------------------------------------------------------
-// SVGImageElement methods
+// SVGGeometryElement methods
 
-void SVGImageElement::GetGeometryBounds(Rect* aBounds,
-                                        const Matrix& aToBoundsSpace) {
+/* For the purposes of the update/invalidation logic pretend to
+   be a rectangle. */
+bool SVGImageElement::GetGeometryBounds(
+    Rect* aBounds, const StrokeOptions& aStrokeOptions,
+    const Matrix& aToBoundsSpace, const Matrix* aToNonScalingStrokeSpace) {
   Rect rect;
 
   DebugOnly<bool> ok =
@@ -270,6 +273,16 @@ void SVGImageElement::GetGeometryBounds(Rect* aBounds,
   }
 
   *aBounds = aToBoundsSpace.TransformBounds(rect);
+  return true;
+}
+
+already_AddRefed<Path> SVGImageElement::BuildPath(PathBuilder* aBuilder) {
+  // To get bound, the faster method GetGeometryBounds() should already return
+  // success. For render and hittest, SVGImageFrame should have its own
+  // implementation that doesn't need to build path for an image.
+  MOZ_ASSERT_UNREACHABLE(
+      "There is no reason to call BuildPath for SVGImageElement");
+  return nullptr;
 }
 
 //----------------------------------------------------------------------
