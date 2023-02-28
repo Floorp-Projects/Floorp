@@ -9,6 +9,11 @@
 // - provider
 // - results
 
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/browser/components/urlbar/tests/ext/browser/head.js",
+  this
+);
+
 add_setup(async function() {
   await setup();
 });
@@ -490,6 +495,72 @@ add_task(async function selected_result_weather() {
       },
     ]);
   });
+});
+
+add_task(async function selected_result_experimental_addon() {
+  const extension = await loadExtension({
+    background: async () => {
+      browser.experiments.urlbar.addDynamicResultType("testDynamicType");
+      browser.experiments.urlbar.addDynamicViewTemplate("testDynamicType", {
+        children: [
+          {
+            name: "text",
+            tag: "span",
+            attributes: {
+              role: "button",
+            },
+          },
+        ],
+      });
+      browser.urlbar.onBehaviorRequested.addListener(query => {
+        return "active";
+      }, "testProvider");
+      browser.urlbar.onResultsRequested.addListener(query => {
+        return [
+          {
+            type: "dynamic",
+            source: "local",
+            payload: {
+              dynamicType: "testDynamicType",
+            },
+          },
+        ];
+      }, "testProvider");
+      browser.experiments.urlbar.onViewUpdateRequested.addListener(payload => {
+        return {
+          text: {
+            textContent: "This is a dynamic result.",
+          },
+        };
+      }, "testProvider");
+    },
+  });
+
+  await TestUtils.waitForCondition(
+    () =>
+      UrlbarProvidersManager.getProvider("testProvider") &&
+      UrlbarResult.getDynamicResultType("testDynamicType"),
+    "Waiting for provider and dynamic type to be registered"
+  );
+
+  await doTest(async browser => {
+    await openPopup("test");
+    EventUtils.synthesizeKey("KEY_ArrowDown");
+    await UrlbarTestUtils.promisePopupClose(window, () =>
+      EventUtils.synthesizeKey("KEY_Enter")
+    );
+
+    assertEngagementTelemetry([
+      {
+        selected_result: "experimental_addon",
+        selected_result_subtype: "",
+        provider: "testProvider",
+        results: "search_engine,experimental_addon",
+      },
+    ]);
+  });
+
+  await extension.unload();
 });
 
 add_task(async function selected_result_suggest_sponsor() {
