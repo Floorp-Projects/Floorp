@@ -4,11 +4,14 @@
 
 #include "xpctest_private.h"
 #include "xpctest_interfaces.h"
+#include "mozilla/Casting.h"
 #include "js/Value.h"
 
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIURI.h"
+
+using namespace mozilla;
 
 NS_IMPL_ISUPPORTS(nsXPCTestParams, nsIXPCTestParams)
 
@@ -399,5 +402,12 @@ nsXPCTestParams::TestOmittedOptionalOut(nsIXPCTestParams* aJSObj,
     return NS_ERROR_UNEXPECTED;
   }
   someURI.forget(aOut);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCTestParams::GetTestNaN(double* aResult) {
+  *aResult =
+      BitwiseCast<double>((uint64_t(JSVAL_TAG_OBJECT) << JSVAL_TAG_SHIFT) + 1);
   return NS_OK;
 }

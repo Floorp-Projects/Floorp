@@ -115,4 +115,6 @@ interface nsIXPCTestParams : nsISupports {
 
   // Test for omitted optional out parameter.
   void                 testOmittedOptionalOut(in nsIXPCTestParams aJSObj, [optional] out nsIURI aOut);
+
+  readonly attribute double testNaN;
 };
