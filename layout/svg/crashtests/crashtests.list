@@ -221,7 +221,7 @@ load 1467552-1.html
 load 1474982.html
 load conditional-outer-svg-nondirty-reflow-assert.xhtml
 load extref-test-1.xhtml
-load blob-merging-and-retained-display-list.html
+pref(widget.windows.window_occlusion_tracking.enabled,false) load blob-merging-and-retained-display-list.html # Bug 1819154
 load empty-blob-merging.html
 load grouping-empty-bounds.html
 load 1480275.html
@@ -238,7 +238,7 @@ load 1539318-1.svg
 load 1548985-1.html
 load 1548985-2.svg
 load 1555851.html
-load invalidation-of-opacity-0.html
+pref(widget.windows.window_occlusion_tracking.enabled,false) load invalidation-of-opacity-0.html # Bug 1819154
 load 1563779.html
 load 1600855.html
 load 1601824.html
