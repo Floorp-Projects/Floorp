@@ -10,9 +10,9 @@ with Files("**"):
 XPCSHELL_TESTS_MANIFESTS += ["tests/unit/xpcshell.ini"]
 
 EXTRA_JS_MODULES["services-crypto"] += [
-    "modules/jwcrypto.jsm",
-    "modules/utils.js",
-    "modules/WeaveCrypto.js",
+    "modules/jwcrypto.sys.mjs",
+    "modules/utils.sys.mjs",
+    "modules/WeaveCrypto.sys.mjs",
 ]
 
 EXTRA_COMPONENTS += [
