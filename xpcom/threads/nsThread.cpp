@@ -378,7 +378,14 @@ void nsThread::ThreadFunc(void* aArg) {
 
   {
     // Scope for MessageLoop.
-    MessageLoop loop(MessageLoop::TYPE_MOZILLA_NONMAINTHREAD, self);
+    MessageLoop loop(
+#ifdef XP_WIN
+        self->mIsUiThread ? MessageLoop::TYPE_MOZILLA_NONMAINUITHREAD
+                          : MessageLoop::TYPE_MOZILLA_NONMAINTHREAD,
+#else
+        MessageLoop::TYPE_MOZILLA_NONMAINTHREAD,
+#endif
+        self);
 
     // Now, process incoming events...
     loop.Run();
@@ -560,13 +567,19 @@ nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
       mPriority(PRIORITY_NORMAL),
       mIsMainThread(aMainThread == MAIN_THREAD),
       mUseHangMonitor(aMainThread == MAIN_THREAD),
+      mIsUiThread(aOptions.isUiThread),
       mIsAPoolThreadFree(nullptr),
       mCanInvokeJS(false),
 #ifdef EARLY_BETA_OR_EARLIER
       mLastWakeupCheckTime(TimeStamp::Now()),
 #endif
       mPerformanceCounterState(mNestedEventLoopDepth, mIsMainThread) {
+#ifndef XP_WIN
+  MOZ_ASSERT(!mIsUiThread, "Non-main UI threads are only supported on Windows");
+#endif
   if (mIsMainThread) {
+    MOZ_ASSERT(!mIsUiThread,
+               "Setting isUIThread is not supported for main threads");
     mozilla::TaskController::Get()->SetPerformanceCounterState(
         &mPerformanceCounterState);
   }
@@ -585,6 +598,7 @@ nsThread::nsThread()
       mPriority(PRIORITY_NORMAL),
       mIsMainThread(false),
       mUseHangMonitor(false),
+      mIsUiThread(false),
       mCanInvokeJS(false),
 #ifdef EARLY_BETA_OR_EARLIER
       mLastWakeupCheckTime(TimeStamp::Now()),

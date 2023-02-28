@@ -315,6 +315,7 @@ class nsThread : public nsIThreadInternal,
 
   const bool mIsMainThread;
   bool mUseHangMonitor;
+  const bool mIsUiThread;
   mozilla::Atomic<bool, mozilla::Relaxed>* mIsAPoolThreadFree;
 
   // Set to true if this thread creates a JSRuntime.
