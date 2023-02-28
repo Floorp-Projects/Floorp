@@ -28,6 +28,7 @@
 #include "mozilla/ipc/RandomAccessStreamParams.h"
 #include "mozilla/Unused.h"
 #include "mozilla/FileUtils.h"
+#include "mozilla/UniquePtr.h"
 #include "nsNetCID.h"
 #include "nsXULAppAPI.h"
 
@@ -308,7 +309,7 @@ nsresult nsFileStreamBase::DoOpen() {
     // Result doesn't need to be checked. If the file's parent path does not
     // exist, make it. If it does exist, do nothing.
     if (parent) {
-      Unused << parent->Create(nsIFile::DIRECTORY_TYPE, 0755);
+      mozilla::Unused << parent->Create(nsIFile::DIRECTORY_TYPE, 0755);
     }
   }
 
@@ -481,7 +482,7 @@ nsFileInputStream::Read(char* aBuf, uint32_t aCount, uint32_t* _retval) {
 NS_IMETHODIMP
 nsFileInputStream::ReadLine(nsACString& aLine, bool* aResult) {
   if (!mLineBuffer) {
-    mLineBuffer = MakeUnique<nsLineBuffer<char>>();
+    mLineBuffer = mozilla::MakeUnique<nsLineBuffer<char>>();
   }
   return NS_ReadLine(this, mLineBuffer.get(), aLine, aResult);
 }

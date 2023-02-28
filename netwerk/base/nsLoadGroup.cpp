@@ -25,6 +25,9 @@
 #include "RequestContextService.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/Unused.h"
+#include "mozilla/net/NeckoCommon.h"
+#include "mozilla/net/NeckoChild.h"
+#include "mozilla/StaticPrefs_network.h"
 
 namespace mozilla {
 namespace net {

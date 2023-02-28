@@ -58,8 +58,8 @@ class nsTransportStatusEvent : public Runnable {
 
   ~nsTransportStatusEvent() {
     auto ReleaseTransport = [transport(std::move(mTransport))]() mutable {};
-    if (!OnSocketThread()) {
-      gSocketTransportService->Dispatch(NS_NewRunnableFunction(
+    if (!net::OnSocketThread()) {
+      net::gSocketTransportService->Dispatch(NS_NewRunnableFunction(
           "nsHttpConnection::~nsHttpConnection", std::move(ReleaseTransport)));
     }
   }

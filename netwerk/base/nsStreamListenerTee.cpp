@@ -4,6 +4,7 @@
 
 #include "nsStreamListenerTee.h"
 #include "nsProxyRelease.h"
+#include "nsIRequest.h"
 
 namespace mozilla {
 namespace net {
