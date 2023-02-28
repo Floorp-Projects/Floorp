@@ -1324,6 +1324,8 @@ export var UrlbarUtils = {
             return "unit";
           case "UrlbarProviderContextualSearch":
             return "site_specific_contextual_search";
+          case "Weather":
+            return "weather";
         }
         break;
       case UrlbarUtils.RESULT_TYPE.KEYWORD:

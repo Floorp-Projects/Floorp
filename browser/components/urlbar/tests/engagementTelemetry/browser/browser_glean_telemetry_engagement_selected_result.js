@@ -472,6 +472,26 @@ add_task(async function selected_result_site_specific_contextual_search() {
   await SpecialPowers.popPrefEnv();
 });
 
+add_task(async function selected_result_weather() {
+  await doTest(async browser => {
+    // eslint-disable-next-line mozilla/valid-lazy
+    await lazy.MerinoTestUtils.initWeather();
+
+    await showResultByArrowDown();
+    EventUtils.synthesizeKey("KEY_ArrowDown");
+    await doEnter();
+
+    assertEngagementTelemetry([
+      {
+        selected_result: "weather",
+        selected_result_subtype: "",
+        provider: "Weather",
+        results: "weather,action",
+      },
+    ]);
+  });
+});
+
 add_task(async function selected_result_suggest_sponsor() {
   const cleanupQuickSuggest = await ensureQuickSuggestInit();
 
