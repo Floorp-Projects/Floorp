@@ -35,35 +35,6 @@ add_task(
     Assert.ok(!!source);
 
     const sourceFront = threadFront.source(source);
-    response = await sourceFront.getBreakpointPositions();
-    Assert.ok(!!response);
-    Assert.deepEqual(response, [
-      {
-        line: 2,
-        column: 2,
-      },
-      {
-        line: 3,
-        column: 14,
-      },
-      {
-        line: 3,
-        column: 17,
-      },
-      {
-        line: 3,
-        column: 24,
-      },
-      {
-        line: 4,
-        column: 4,
-      },
-      {
-        line: 6,
-        column: 0,
-      },
-    ]);
-
     response = await sourceFront.getBreakpointPositionsCompressed();
     Assert.ok(!!response);
 

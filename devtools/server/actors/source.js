@@ -296,7 +296,7 @@ class SourceActor extends Actor {
   }
 
   async getBreakableLines() {
-    const positions = await this.getBreakpointPositions();
+    const positions = await this._getBreakpointPositions();
     const lines = new Set();
     for (const position of positions) {
       if (!lines.has(position.line)) {
@@ -540,7 +540,7 @@ class SourceActor extends Actor {
     }
   }
 
-  async getBreakpointPositions(query) {
+  async _getBreakpointPositions(query) {
     const scripts = this._findDebuggeeScripts(
       query,
       /* forBreakpointPositions */ true
@@ -593,7 +593,7 @@ class SourceActor extends Actor {
   }
 
   async getBreakpointPositionsCompressed(query) {
-    const items = await this.getBreakpointPositions(query);
+    const items = await this._getBreakpointPositions(query);
     const compressed = {};
     for (const { line, column } of items) {
       if (!compressed[line]) {

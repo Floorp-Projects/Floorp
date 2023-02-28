@@ -51,14 +51,6 @@ const sourceSpec = generateActorSpec({
   typeName: "source",
 
   methods: {
-    getBreakpointPositions: {
-      request: {
-        query: Arg(0, "nullable:breakpointquery"),
-      },
-      response: {
-        positions: RetVal("array:sourceposition"),
-      },
-    },
     getBreakpointPositionsCompressed: {
       request: {
         query: Arg(0, "nullable:breakpointquery"),
