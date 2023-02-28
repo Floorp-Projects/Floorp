@@ -123,6 +123,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val COLOR_ORANGE_BACKGROUND_HTML_PATH = "/assets/www/color_orange_background.html"
         const val TRACEMONKEY_PDF_PATH = "/assets/www/tracemonkey.pdf"
         const val HELLO_PDF_WORLD_PDF_PATH = "/assets/www/helloPDFWorld.pdf"
+        const val NO_META_VIEWPORT_HTML_PATH = "/assets/www/no-meta-viewport.html"
 
         const val TEST_ENDPOINT = GeckoSessionTestRule.TEST_ENDPOINT
         const val TEST_HOST = GeckoSessionTestRule.TEST_HOST
