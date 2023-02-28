@@ -41,6 +41,7 @@ use std::marker::PhantomData;
 use std::{ops, u64};
 use crate::util::VecHelper;
 use crate::profiler::TransactionProfile;
+use peek_poke::PeekPoke;
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -96,7 +97,7 @@ impl<S> UpdateList<S> {
 /// A globally, unique identifier
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Copy, Clone, Eq, Hash, MallocSizeOf, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, Hash, MallocSizeOf, PartialEq, PeekPoke, Default)]
 pub struct ItemUid {
     uid: u64,
 }

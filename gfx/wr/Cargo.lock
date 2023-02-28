@@ -2458,6 +2458,7 @@ dependencies = [
  "malloc_size_of_derive",
  "mozangle",
  "num-traits",
+ "peek-poke",
  "plane-split",
  "png",
  "rand",

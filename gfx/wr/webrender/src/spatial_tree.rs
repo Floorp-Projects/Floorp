@@ -17,6 +17,7 @@ use crate::util::{FastTransform, LayoutToWorldFastTransform, MatrixHelpers, Scal
 use smallvec::SmallVec;
 use std::collections::hash_map::Entry;
 use crate::util::TransformedRectKind;
+use peek_poke::PeekPoke;
 
 
 /// An id that identifies coordinate systems in the SpatialTree. Each
@@ -51,7 +52,7 @@ impl CoordinateSystem {
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, Hash, MallocSizeOf, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, Hash, MallocSizeOf, PartialEq, PeekPoke, Default)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct SpatialNodeIndex(pub u32);
