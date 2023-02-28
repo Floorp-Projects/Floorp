@@ -1352,6 +1352,16 @@ Tester.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsIConsoleListener"]),
 };
 
+function isError(err) {
+  // It'd be nice if we had either `Error.isError(err)` or `Error.isInstance(err)`
+  // but we don't, so do it ourselves:
+  if (!err) {
+    return false;
+  }
+  let glob = Cu.getGlobalForObject(err);
+  return err instanceof glob.Error;
+}
+
 /**
  * Represents the result of one test assertion. This is described with a string
  * in traditional logging, and has a "status" and "expected" property used in
@@ -1405,7 +1415,7 @@ function testResult({ name, pass, todo, ex, stack, allowFailure }) {
       this.msg += "at " + ex.fileName + ":" + ex.lineNumber + " - ";
     }
 
-    if (ex instanceof Error) {
+    if (isError(ex)) {
       this.msg += String(ex);
     } else {
       try {
