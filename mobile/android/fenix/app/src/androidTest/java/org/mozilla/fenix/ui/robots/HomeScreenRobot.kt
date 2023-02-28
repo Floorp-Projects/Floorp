@@ -819,11 +819,11 @@ class HomeScreenRobot {
             return SyncSignInRobot.Transition()
         }
 
-        fun clickPrivacyNoticeButton(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+        fun clickPrivacyNoticeButton(interact: CustomTabRobot.() -> Unit): CustomTabRobot.Transition {
             privacyNoticeButton.clickAndWaitForNewWindow(waitingTimeShort)
 
-            BrowserRobot().interact()
-            return BrowserRobot.Transition()
+            CustomTabRobot().interact()
+            return CustomTabRobot.Transition()
         }
     }
 }

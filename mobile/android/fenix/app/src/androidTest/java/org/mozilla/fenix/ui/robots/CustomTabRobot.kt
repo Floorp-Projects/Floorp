@@ -143,6 +143,13 @@ class CustomTabRobot {
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
+
+        fun goBackToOnboardingScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+            mDevice.pressBack()
+
+            HomeScreenRobot().interact()
+            return HomeScreenRobot.Transition()
+        }
     }
 }
 
