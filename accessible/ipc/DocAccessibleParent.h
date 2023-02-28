@@ -151,7 +151,7 @@ class DocAccessibleParent : public RemoteAccessible,
 
   virtual mozilla::ipc::IPCResult RecvCache(
       const mozilla::a11y::CacheUpdateType& aUpdateType,
-      nsTArray<CacheData>&& aData) override;
+      nsTArray<CacheData>&& aData, const bool& aDispatchShowEvent) override;
 
   virtual mozilla::ipc::IPCResult RecvSelectedAccessiblesChanged(
       nsTArray<uint64_t>&& aSelectedIDs,

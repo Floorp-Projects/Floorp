@@ -33,7 +33,6 @@ struct AccessibleData
   AccType Type;
   AccGenericType GenericTypes;
   uint8_t RoleMapEntryIndex;
-  AccAttributes CacheFields;
 };
 
 struct ShowEventData
@@ -98,8 +97,11 @@ parent:
 
   /*
    * Cache The World
+   * aDispatchShowEvent is true when a show event with the first accessible in
+   * the cache list as the target should be dispatched after the cache is
+   * populated. The show event will have a from-user flag value of false.
    */
-  async Cache(CacheUpdateType aUpdateType, CacheData[] aData);
+  async Cache(CacheUpdateType aUpdateType, CacheData[] aData, bool aDispatchShowEvent);
 
   /*
    * Lists of accessibles that either gained or lost a selected state.
