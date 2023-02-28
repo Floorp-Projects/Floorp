@@ -944,8 +944,10 @@ class TelemetryEvent {
         startEventInfo.interactionType == "dropped" ? "drop_go" : "paste_go";
     } else if (event.type == "blur") {
       action = "blur";
+    } else if (MouseEvent.isInstance(event)) {
+      action = event.target.id == "urlbar-go-button" ? "go_button" : "click";
     } else {
-      action = MouseEvent.isInstance(event) ? "click" : "enter";
+      action = "enter";
     }
 
     let method = action == "blur" ? "abandonment" : "engagement";
@@ -980,6 +982,11 @@ class TelemetryEvent {
     if (details.selType === "dismiss") {
       // The conventional telemetry dones't support "dismiss" event.
       return;
+    }
+
+    if (action == "go_button") {
+      // Fall back since the conventional telemetry dones't support "go_button" action.
+      action = "click";
     }
 
     let endTime = (event && event.timeStamp) || Cu.now();
