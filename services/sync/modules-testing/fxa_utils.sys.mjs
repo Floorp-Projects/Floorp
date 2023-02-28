@@ -7,9 +7,7 @@ import { Log } from "resource://gre/modules/Log.sys.mjs";
 import { Weave } from "resource://services-sync/main.sys.mjs";
 import { SyncAuthManager } from "resource://services-sync/sync_auth.sys.mjs";
 
-const { TokenServerClient } = ChromeUtils.import(
-  "resource://services-common/tokenserverclient.js"
-);
+import { TokenServerClient } from "resource://services-common/tokenserverclient.sys.mjs";
 import { configureFxAccountIdentity } from "resource://testing-common/services/sync/utils.sys.mjs";
 
 // Create a new sync_auth object and initialize it with a

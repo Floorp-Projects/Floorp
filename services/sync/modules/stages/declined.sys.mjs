@@ -9,12 +9,8 @@
 
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
-);
-const { Observers } = ChromeUtils.import(
-  "resource://services-common/observers.js"
-);
+import { CommonUtils } from "resource://services-common/utils.sys.mjs";
+import { Observers } from "resource://services-common/observers.sys.mjs";
 
 export var DeclinedEngines = function(service) {
   this._log = Log.repository.getLogger("Sync.Declined");

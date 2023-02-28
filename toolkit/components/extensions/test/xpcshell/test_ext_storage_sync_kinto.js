@@ -9,8 +9,8 @@ Services.prefs.setBoolPref("webextensions.storage.sync.kinto", true);
 do_get_profile(); // so we can use FxAccounts
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
+const { CommonUtils } = ChromeUtils.importESModule(
+  "resource://services-common/utils.sys.mjs"
 );
 const {
   ExtensionStorageSyncKinto: ExtensionStorageSync,
@@ -660,8 +660,8 @@ add_task(async function test_setup() {
 
 add_task(async function test_single_initialization() {
   // Check if we're calling openConnection too often.
-  const { FirefoxAdapter } = ChromeUtils.import(
-    "resource://services-common/kinto-storage-adapter.js"
+  const { FirefoxAdapter } = ChromeUtils.importESModule(
+    "resource://services-common/kinto-storage-adapter.sys.mjs"
   );
   const origOpenConnection = FirefoxAdapter.openConnection;
   let callCount = 0;

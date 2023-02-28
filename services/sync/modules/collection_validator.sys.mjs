@@ -4,11 +4,9 @@
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Async",
-  "resource://services-common/async.js"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  Async: "resource://services-common/async.sys.mjs",
+});
 
 export class CollectionProblemData {
   constructor() {

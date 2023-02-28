@@ -55,8 +55,8 @@ add_test(function test_url_parsing() {
   run_next_test();
 });
 
-const { RESTRequest } = ChromeUtils.import(
-  "resource://services-common/rest.js"
+const { RESTRequest } = ChromeUtils.importESModule(
+  "resource://services-common/rest.sys.mjs"
 );
 function localRequest(server, path) {
   _("localRequest: " + path);

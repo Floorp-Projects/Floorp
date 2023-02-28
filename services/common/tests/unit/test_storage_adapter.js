@@ -4,8 +4,8 @@
 const { Sqlite } = ChromeUtils.importESModule(
   "resource://gre/modules/Sqlite.sys.mjs"
 );
-const { FirefoxAdapter } = ChromeUtils.import(
-  "resource://services-common/kinto-storage-adapter.js"
+const { FirefoxAdapter } = ChromeUtils.importESModule(
+  "resource://services-common/kinto-storage-adapter.sys.mjs"
 );
 
 // set up what we need to make storage adapters

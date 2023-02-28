@@ -12,10 +12,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   RemoteSettingsClient:
     "resource://services-settings/RemoteSettingsClient.sys.mjs",
   SyncHistory: "resource://services-settings/SyncHistory.sys.mjs",
+  UptakeTelemetry: "resource://services-common/uptake-telemetry.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  UptakeTelemetry: "resource://services-common/uptake-telemetry.js",
   pushBroadcastService: "resource://gre/modules/PushBroadcastService.jsm",
   Utils: "resource://services-settings/Utils.jsm",
 

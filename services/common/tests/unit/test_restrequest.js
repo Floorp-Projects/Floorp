@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { RESTRequest } = ChromeUtils.import(
-  "resource://services-common/rest.js"
+const { RESTRequest } = ChromeUtils.importESModule(
+  "resource://services-common/rest.sys.mjs"
 );
 
 function run_test() {

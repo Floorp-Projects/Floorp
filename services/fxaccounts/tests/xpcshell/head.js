@@ -42,8 +42,8 @@ const MOCK_ACCOUNT_KEYS = {
 (function initFxAccountsTestingInfrastructure() {
   do_get_profile();
 
-  let { initTestLogging } = ChromeUtils.import(
-    "resource://testing-common/services/common/logging.js"
+  let { initTestLogging } = ChromeUtils.importESModule(
+    "resource://testing-common/services/common/logging.sys.mjs"
   );
 
   initTestLogging("Trace");

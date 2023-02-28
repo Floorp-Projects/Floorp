@@ -1,15 +1,15 @@
 const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
-const { UptakeTelemetry } = ChromeUtils.import(
-  "resource://services-common/uptake-telemetry.js"
+const { UptakeTelemetry } = ChromeUtils.importESModule(
+  "resource://services-common/uptake-telemetry.sys.mjs"
 );
 
 const COMPONENT = "remotesettings";
 
 async function withFakeClientID(uuid, f) {
-  const { Policy } = ChromeUtils.import(
-    "resource://services-common/uptake-telemetry.js"
+  const { Policy } = ChromeUtils.importESModule(
+    "resource://services-common/uptake-telemetry.sys.mjs"
   );
   let oldGetClientID = Policy.getClientID;
   Policy._clientIDHash = null;

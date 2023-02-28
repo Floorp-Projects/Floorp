@@ -4,9 +4,7 @@
 
 import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
 
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
-);
+import { CommonUtils } from "resource://services-common/utils.sys.mjs";
 
 import { CryptoUtils } from "resource://services-crypto/utils.sys.mjs";
 

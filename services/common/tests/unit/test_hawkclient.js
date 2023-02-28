@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { HawkClient } = ChromeUtils.import(
-  "resource://services-common/hawkclient.js"
+const { HawkClient } = ChromeUtils.importESModule(
+  "resource://services-common/hawkclient.sys.mjs"
 );
 
 const SECOND_MS = 1000;

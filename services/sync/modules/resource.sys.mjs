@@ -6,12 +6,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
-const { Observers } = ChromeUtils.import(
-  "resource://services-common/observers.js"
-);
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
-);
+import { Observers } from "resource://services-common/observers.sys.mjs";
+import { CommonUtils } from "resource://services-common/utils.sys.mjs";
 import { Utils } from "resource://services-sync/util.sys.mjs";
 import { setTimeout, clearTimeout } from "resource://gre/modules/Timer.sys.mjs";
 

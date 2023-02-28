@@ -6,7 +6,9 @@
 
 var EXPORTED_SYMBOLS = ["TranslationDocument"];
 
-const { Async } = ChromeUtils.import("resource://services-common/async.js");
+const { Async } = ChromeUtils.importESModule(
+  "resource://services-common/async.sys.mjs"
+);
 
 /**
  * This class represents a document that is being translated,

@@ -11,8 +11,8 @@ const { Preferences } = ChromeUtils.importESModule(
 const { Log } = ChromeUtils.importESModule(
   "resource://gre/modules/Log.sys.mjs"
 );
-const { LogManager } = ChromeUtils.import(
-  "resource://services-common/logmanager.js"
+const { LogManager } = ChromeUtils.importESModule(
+  "resource://services-common/logmanager.sys.mjs"
 );
 
 // loglevel should be one of "Fatal", "Error", "Warn", "Info", "Config",

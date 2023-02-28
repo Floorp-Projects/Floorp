@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { Observers } = ChromeUtils.import(
-  "resource://services-common/observers.js"
+const { Observers } = ChromeUtils.importESModule(
+  "resource://services-common/observers.sys.mjs"
 );
 const { Resource } = ChromeUtils.importESModule(
   "resource://services-sync/resource.sys.mjs"

@@ -39,10 +39,8 @@ import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
 const { logManager } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsCommon.js"
 );
-const { Async } = ChromeUtils.import("resource://services-common/async.js");
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
-);
+import { Async } from "resource://services-common/async.sys.mjs";
+import { CommonUtils } from "resource://services-common/utils.sys.mjs";
 
 const lazy = {};
 

@@ -16,8 +16,8 @@ const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"
 );
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
+const { CommonUtils } = ChromeUtils.importESModule(
+  "resource://services-common/utils.sys.mjs"
 );
 
 const FILENAME_OUTPUT = "RootHashes.inc";

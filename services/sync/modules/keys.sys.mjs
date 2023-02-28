@@ -2,9 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
-);
+import { CommonUtils } from "resource://services-common/utils.sys.mjs";
+
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
 import { Weave } from "resource://services-sync/main.sys.mjs";

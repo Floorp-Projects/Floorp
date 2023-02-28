@@ -4,7 +4,8 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { Async } = ChromeUtils.import("resource://services-common/async.js");
+import { Async } from "resource://services-common/async.sys.mjs";
+
 const { SCORE_INCREMENT_XLARGE } = ChromeUtils.import(
   "resource://services-sync/constants.js"
 );
@@ -20,16 +21,13 @@ import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  Observers: "resource://services-common/observers.sys.mjs",
   PlacesBackups: "resource://gre/modules/PlacesBackups.sys.mjs",
   PlacesDBUtils: "resource://gre/modules/PlacesDBUtils.sys.mjs",
   PlacesSyncUtils: "resource://gre/modules/PlacesSyncUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   Resource: "resource://services-sync/resource.sys.mjs",
   SyncedBookmarksMirror: "resource://gre/modules/SyncedBookmarksMirror.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Observers: "resource://services-common/observers.js",
 });
 
 const PLACES_MAINTENANCE_INTERVAL_SECONDS = 4 * 60 * 60; // 4 hours.

@@ -13,6 +13,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Database: "resource://services-settings/Database.sys.mjs",
   RemoteSettingsWorker:
     "resource://services-settings/RemoteSettingsWorker.sys.mjs",
+  UptakeTelemetry: "resource://services-common/uptake-telemetry.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -22,7 +23,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   KintoHttpClient: "resource://services-common/kinto-http-client.js",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   SharedUtils: "resource://services-settings/SharedUtils.jsm",
-  UptakeTelemetry: "resource://services-common/uptake-telemetry.js",
   Utils: "resource://services-settings/Utils.jsm",
 });
 

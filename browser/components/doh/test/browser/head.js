@@ -21,8 +21,8 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsINativeDNSResolverOverride"
 );
 
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
+const { CommonUtils } = ChromeUtils.importESModule(
+  "resource://services-common/utils.sys.mjs"
 );
 
 const EXAMPLE_URL = "https://example.com/";

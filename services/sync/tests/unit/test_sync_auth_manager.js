@@ -12,8 +12,8 @@ const {
 } = ChromeUtils.importESModule(
   "resource://testing-common/services/sync/fxa_utils.sys.mjs"
 );
-const { HawkClient } = ChromeUtils.import(
-  "resource://services-common/hawkclient.js"
+const { HawkClient } = ChromeUtils.importESModule(
+  "resource://services-common/hawkclient.sys.mjs"
 );
 const { FxAccounts } = ChromeUtils.importESModule(
   "resource://gre/modules/FxAccounts.sys.mjs"
@@ -32,8 +32,11 @@ const { Service } = ChromeUtils.importESModule(
 const { Status } = ChromeUtils.importESModule(
   "resource://services-sync/status.sys.mjs"
 );
-const { TokenServerClient, TokenServerClientServerError } = ChromeUtils.import(
-  "resource://services-common/tokenserverclient.js"
+const {
+  TokenServerClient,
+  TokenServerClientServerError,
+} = ChromeUtils.importESModule(
+  "resource://services-common/tokenserverclient.sys.mjs"
 );
 const { AccountState } = ChromeUtils.importESModule(
   "resource://gre/modules/FxAccounts.sys.mjs"

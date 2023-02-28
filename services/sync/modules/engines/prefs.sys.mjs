@@ -39,9 +39,7 @@ import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
 const { SCORE_INCREMENT_XLARGE } = ChromeUtils.import(
   "resource://services-sync/constants.js"
 );
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
-);
+import { CommonUtils } from "resource://services-common/utils.sys.mjs";
 
 const lazy = {};
 

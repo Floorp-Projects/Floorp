@@ -13,8 +13,12 @@
 var { AddonTestUtils, MockAsyncShutdown } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
-var { Async } = ChromeUtils.import("resource://services-common/async.js");
-var { CommonUtils } = ChromeUtils.import("resource://services-common/utils.js");
+var { Async } = ChromeUtils.importESModule(
+  "resource://services-common/async.sys.mjs"
+);
+var { CommonUtils } = ChromeUtils.importESModule(
+  "resource://services-common/utils.sys.mjs"
+);
 var { PlacesTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/PlacesTestUtils.sys.mjs"
 );

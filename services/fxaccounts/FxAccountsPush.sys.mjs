@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { Async } = ChromeUtils.import("resource://services-common/async.js");
+import { Async } from "resource://services-common/async.sys.mjs";
+
 const {
   FXA_PUSH_SCOPE_ACCOUNT_UPDATE,
   ONLOGOUT_NOTIFICATION,

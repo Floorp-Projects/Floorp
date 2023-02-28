@@ -22,12 +22,9 @@
  * multiple HAWK services should instantiate one HawkClient per service.
  */
 
-const { HAWKAuthenticatedRESTRequest } = ChromeUtils.import(
-  "resource://services-common/hawkrequest.js"
-);
-const { Observers } = ChromeUtils.import(
-  "resource://services-common/observers.js"
-);
+import { HAWKAuthenticatedRESTRequest } from "resource://services-common/hawkrequest.sys.mjs";
+
+import { Observers } from "resource://services-common/observers.sys.mjs";
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 

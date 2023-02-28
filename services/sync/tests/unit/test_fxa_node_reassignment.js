@@ -7,8 +7,8 @@ _("Test that node reassignment happens correctly using the FxA identity mgr.");
 // reassignment - it comes from the token server - so we need to ensure the
 // Fxa cluster manager grabs a new token.
 
-const { RESTRequest } = ChromeUtils.import(
-  "resource://services-common/rest.js"
+const { RESTRequest } = ChromeUtils.importESModule(
+  "resource://services-common/rest.sys.mjs"
 );
 const { Service } = ChromeUtils.importESModule(
   "resource://services-sync/service.sys.mjs"

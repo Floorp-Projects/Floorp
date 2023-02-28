@@ -5,9 +5,7 @@
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
-const { Observers } = ChromeUtils.import(
-  "resource://services-common/observers.js"
-);
+import { Observers } from "resource://services-common/observers.sys.mjs";
 import { TelemetryUtils } from "resource://gre/modules/TelemetryUtils.sys.mjs";
 
 const lazy = {};

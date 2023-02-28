@@ -9,20 +9,13 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
-);
+import { CommonUtils } from "resource://services-common/utils.sys.mjs";
 import { Utils } from "resource://services-sync/util.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "Async",
-  "resource://services-common/async.js"
-);
-
 ChromeUtils.defineESModuleGetters(lazy, {
+  Async: "resource://services-common/async.sys.mjs",
   PlacesSyncUtils: "resource://gre/modules/PlacesSyncUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });

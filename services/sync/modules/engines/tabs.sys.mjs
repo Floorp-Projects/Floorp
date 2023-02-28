@@ -12,10 +12,8 @@ import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
 const { SCORE_INCREMENT_SMALL, STATUS_OK, URI_LENGTH_MAX } = ChromeUtils.import(
   "resource://services-sync/constants.js"
 );
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
-);
-const { Async } = ChromeUtils.import("resource://services-common/async.js");
+import { CommonUtils } from "resource://services-common/utils.sys.mjs";
+import { Async } from "resource://services-common/async.sys.mjs";
 
 import {
   SyncRecord,

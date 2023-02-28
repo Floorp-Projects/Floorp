@@ -4,8 +4,8 @@
 const { Kinto } = ChromeUtils.import(
   "resource://services-common/kinto-offline-client.js"
 );
-const { FirefoxAdapter } = ChromeUtils.import(
-  "resource://services-common/kinto-storage-adapter.js"
+const { FirefoxAdapter } = ChromeUtils.importESModule(
+  "resource://services-common/kinto-storage-adapter.sys.mjs"
 );
 
 var server;
