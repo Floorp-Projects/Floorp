@@ -66,6 +66,7 @@ extern "C" {
 
 typedef struct srtp_stream_ctx_t_ srtp_stream_ctx_t;
 typedef srtp_stream_ctx_t *srtp_stream_t;
+typedef struct srtp_stream_list_ctx_t_ *srtp_stream_list_t;
 
 /*
  * the following declarations are libSRTP internal functions
@@ -95,12 +96,6 @@ srtp_err_status_t srtp_steam_init_all_master_keys(
     unsigned char *key,
     srtp_master_key_t **keys,
     const unsigned int max_master_keys);
-
-/*
- * srtp_stream_init(s, p) initializes the srtp_stream_t s to
- * use the policy at the location p
- */
-srtp_err_status_t srtp_stream_init(srtp_stream_t srtp, const srtp_policy_t *p);
 
 /*
  * libsrtp internal datatypes
@@ -149,14 +144,21 @@ typedef struct srtp_stream_ctx_t_ {
     int *enc_xtn_hdr;
     int enc_xtn_hdr_count;
     uint32_t pending_roc;
-    struct srtp_stream_ctx_t_ *next; /* linked list of streams */
+    /*
+    The next and prev pointers are here to allow for a stream list to be
+    implemented as an intrusive doubly-linked list (the former being the
+    default).  Other stream list implementations can ignore these fields or use
+    them for some other purpose specific to the stream list implementation.
+    */
+    struct srtp_stream_ctx_t_ *next;
+    struct srtp_stream_ctx_t_ *prev;
 } strp_stream_ctx_t_;
 
 /*
  * an srtp_ctx_t holds a stream list and a service description
  */
 typedef struct srtp_ctx_t_ {
-    struct srtp_stream_ctx_t_ *stream_list;     /* linked list of streams     */
+    srtp_stream_list_t stream_list;             /* linked list of streams     */
     struct srtp_stream_ctx_t_ *stream_template; /* act as template for other  */
                                                 /* streams                    */
     void *user_data;                            /* user custom data           */

@@ -1818,8 +1818,8 @@ static inline void aes_inv_round(v128_t *state, const v128_t *round_key)
 {
     uint32_t column0, column1, column2, column3;
 
-/* compute the columns of the output square in terms of the octets
-   of state, using the tables U0, U1, U2, U3 */
+    /* compute the columns of the output square in terms of the octets
+       of state, using the tables U0, U1, U2, U3 */
 
 #ifdef WORDS_BIGENDIAN
     column0 = U0[state->v32[0] >> 24] ^ U1[(state->v32[3] >> 16) & 0xff] ^
