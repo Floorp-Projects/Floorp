@@ -80,8 +80,8 @@ xpcshell:
                     default: []
             msix:
                 by-test-platform:
-                    windows1.*-shippable-qr/opt: built-projects
-                    windows1.*-qr/opt: built-projects
+                    windows10-64-2004(-shippable)?-qr/opt: built-projects
+                    windows11-64-2009(-shippable)?-qr/opt: built-projects
                     default: []
             default:
                 by-test-platform:
