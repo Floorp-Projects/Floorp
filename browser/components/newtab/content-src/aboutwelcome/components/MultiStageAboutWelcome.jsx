@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Localized } from "./MSLocalized";
 import { AboutWelcomeUtils } from "../../lib/aboutwelcome-utils";
 import { MultiStageProtonScreen } from "./MultiStageProtonScreen";
@@ -40,7 +40,7 @@ export const MultiStageAboutWelcome = props => {
 
     // Remember the previous screen index so we can animate the transition
     setPreviousOrder(index);
-  }, [index]);
+  }, [index]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [flowParams, setFlowParams] = useState(null);
   const { metricsFlowUri } = props;
@@ -118,15 +118,7 @@ export const MultiStageAboutWelcome = props => {
       return () => window.removeEventListener("popstate", handler);
     }
     return false;
-  }, []);
-
-  // Update top sites with default sites by region when region is available
-  const [region, setRegion] = useState(null);
-  useEffect(() => {
-    (async () => {
-      setRegion(await window.AWGetRegion());
-    })();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Save the active multi select state containing array of checkbox ids
   // used in handleAction to update MULTI_ACTION data
@@ -143,32 +135,6 @@ export const MultiStageAboutWelcome = props => {
       setActiveTheme(theme);
     })();
   }, []);
-
-  const useImportable = props.message_id.includes("IMPORTABLE");
-  // Track whether we have already sent the importable sites impression telemetry
-  const importTelemetrySent = useRef(false);
-  const [topSites, setTopSites] = useState([]);
-  useEffect(() => {
-    (async () => {
-      let DEFAULT_SITES = await window.AWGetDefaultSites?.();
-      const importable = JSON.parse(
-        (await window.AWGetImportableSites?.()) || "[]"
-      );
-      const showImportable = useImportable && importable.length >= 5;
-      if (!importTelemetrySent.current) {
-        AboutWelcomeUtils.sendImpressionTelemetry(`${props.message_id}_SITES`, {
-          display: showImportable ? "importable" : "static",
-          importable: importable.length,
-        });
-        importTelemetrySent.current = true;
-      }
-      setTopSites(
-        showImportable
-          ? { data: importable, showImportable }
-          : { data: DEFAULT_SITES, showImportable }
-      );
-    })();
-  }, [useImportable, region]);
 
   const {
     negotiatedLanguage,
@@ -207,7 +173,6 @@ export const MultiStageAboutWelcome = props => {
               previousOrder={previousOrder}
               content={screen.content}
               navigate={handleTransition}
-              topSites={topSites}
               messageId={`${props.message_id}_${order}_${screen.id}`}
               UTMTerm={props.utm_term}
               flowParams={flowParams}

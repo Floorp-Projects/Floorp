@@ -652,7 +652,6 @@ export class FeatureCallout {
       AWParent.onContentMessage(`AWPage:${name}`, data, this.doc);
     // Expose top level functions expected by the bundle.
     this.win.AWGetFeatureConfig = () => this.config;
-    this.win.AWGetRegion = receive("GET_REGION");
     this.win.AWGetSelectedTheme = receive("GET_SELECTED_THEME");
     // Do not send telemetry if message config sets metrics as 'block'.
     if (this.config?.metrics !== "block") {
@@ -671,7 +670,6 @@ export class FeatureCallout {
   _clearWindowFunctions() {
     const windowFuncs = [
       "AWGetFeatureConfig",
-      "AWGetRegion",
       "AWGetSelectedTheme",
       "AWSendEventTelemetry",
       "AWSendToDeviceEmailsSupported",
