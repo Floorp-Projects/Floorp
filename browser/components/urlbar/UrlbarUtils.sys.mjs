@@ -1322,6 +1322,8 @@ export var UrlbarUtils = {
             return "tab_to_search";
           case "UnitConversion":
             return "unit";
+          case "UrlbarProviderContextualSearch":
+            return "site_specific_contextual_search";
         }
         break;
       case UrlbarUtils.RESULT_TYPE.KEYWORD:
