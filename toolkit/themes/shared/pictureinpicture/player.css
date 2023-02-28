@@ -571,13 +571,13 @@ input:checked + .slider::before {
 }
 
 @media (height <= 200px) {
-  #scrubber {
+  .scrubber-no-drag {
     display: none;
   }
 }
 
 @media (width <= 300px) {
-  #scrubber,
+  .scrubber-no-drag,
   #seekForward,
   #seekBackward {
     display: none;
