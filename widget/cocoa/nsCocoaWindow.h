@@ -354,8 +354,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
 
   bool InFullScreenMode() const { return mInFullScreenMode; }
 
-  void PauseCompositor();
-  void ResumeCompositor();
+  void PauseOrResumeCompositor(bool aPause) override;
 
   bool AsyncPanZoomEnabled() const override;
 
