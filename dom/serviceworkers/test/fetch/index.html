@@ -172,7 +172,13 @@
   };
 
   gExpected++;
-  var worker = new Worker('fetch_worker_script.js');
+
+  var fetch_worker_script_url = 'fetch_worker_script.js';
+  const params = new URLSearchParams(window.location.search);
+  if (params.has("orbEnabled")) {
+    fetch_worker_script_url += "?orbEnabled";
+  }
+  var worker = new Worker(fetch_worker_script_url);
   worker.onmessage = function(e) {
     if (e.data == "finish") {
       finish();
