@@ -309,28 +309,26 @@ void ParallelMarker::decActiveTasks(ParallelMarkTask* task,
 }
 
 void ParallelMarker::donateWorkFrom(GCMarker* src) {
-  AutoLockGC lock(gc);
+  ParallelMarkTask* waitingTask;
 
-  // Check there are tasks waiting for work while holding the lock.
-  if (waitingTaskCount == 0) {
-    return;
+  {
+    AutoLockGC lock(gc);
+
+    // Check there are tasks waiting for work while holding the lock.
+    if (waitingTaskCount == 0) {
+      return;
+    }
+
+    // Take the first waiting task off the list.
+    waitingTask = waitingTasks.ref().popFront();
+    waitingTaskCount--;
+
+    // |task| is not running so it's safe to move work to it.
+    MOZ_ASSERT(waitingTask->isWaiting);
   }
-
-  // Take the first waiting task off the list.
-  ParallelMarkTask* waitingTask = waitingTasks.ref().popFront();
-  waitingTaskCount--;
-
-  // |task| is not running so it's safe to move work to it.
-  MOZ_ASSERT(waitingTask->isWaiting);
-
-  // TODO: When using more than two marking threads it may be better to
-  // release the lock here.
 
   // Move some work from this thread's mark stack to the waiting task.
   GCMarker::moveWork(waitingTask->marker, src);
-
-  // Resume waiting task.
-  waitingTask->resume(lock);
 
   gc->stats().count(gcstats::COUNT_PARALLEL_MARK_INTERRUPTIONS);
 
@@ -338,4 +336,8 @@ void ParallelMarker::donateWorkFrom(GCMarker* src) {
   if (profiler.enabled()) {
     profiler.markEvent("Parallel marking donated work", "");
   }
+
+  // Resume waiting task.
+  AutoLockGC lock(gc);
+  waitingTask->resume(lock);
 }
