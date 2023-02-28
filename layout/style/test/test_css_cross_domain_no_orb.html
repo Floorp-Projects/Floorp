@@ -77,11 +77,6 @@
 
 const COLOR = {red: "rgb(255, 0, 0)", lime: "rgb(0, 255, 0)"};
 
-// Cross origin requests with text/html as the contentType.
-// These requests will be blocked by ORB (when ORB is enabled),
-// thus the color of the element is not going to be changed.
-const BLOCKED_BY_ORB = ["JD1i", "JD1l", "JD2i", "JD2l"];
-
 /** Test for Bug 524223 **/
 function check_iframe(ifr) {
   var doc = ifr.contentDocument;
@@ -92,12 +87,7 @@ function check_iframe(ifr) {
         .getPropertyValue("background-color");
 
     var id = cases[i].id;
-    // only 'quirks' can have requests that are blocked by ORB.
-    if (BLOCKED_BY_ORB.includes(id) && ifr.id === "quirks") {
-	    is(color, COLOR.red, ifr.id + " " + id);
-    } else {
-	    is(color, COLOR.lime, ifr.id + " " + id);
-    }
+	  is(color, COLOR.lime, ifr.id + " " + id);
   }
 }
 
@@ -146,8 +136,7 @@ window.onload = async function() {
   await SpecialPowers.pushPrefEnv(
     {
       set: [
-        ['browser.opaqueResponseBlocking', true],
-        ['browser.opaqueResponseBlocking.javascriptValidator', true],
+        ['browser.opaqueResponseBlocking', false],
       ],
     }
   );
