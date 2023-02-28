@@ -28,6 +28,15 @@ add_task(async function engagement_type_enter() {
   });
 });
 
+add_task(async function engagement_type_go_button() {
+  await doTest(async browser => {
+    await openPopup("x");
+    EventUtils.synthesizeMouseAtCenter(gURLBar.goButton, {});
+
+    assertEngagementTelemetry([{ engagement_type: "go_button" }]);
+  });
+});
+
 add_task(async function engagement_type_drop_go() {
   await doTest(async browser => {
     await doDropAndGo("example.com");
