@@ -354,3 +354,99 @@ add_task(function initializeShowSearchSuggestionsFirstPref() {
 
   Services.prefs.clearUserPref("browser.urlbar.matchGroups");
 });
+
+// Tests whether observer.onNimbusChanged works.
+add_task(async function onNimbusChanged() {
+  Services.prefs.setBoolPref(
+    "browser.urlbar.searchEngagementTelemetry.enabled",
+    false
+  );
+
+  // Add an observer that throws an Error and an observer that does not define
+  // anything to check whether the other observers can get notifications.
+  UrlbarPrefs.addObserver({
+    onPrefChanged(pref) {
+      throw new Error("From onPrefChanged");
+    },
+    onNimbusChanged(pref) {
+      throw new Error("From onNimbusChanged");
+    },
+  });
+  UrlbarPrefs.addObserver({});
+
+  const observer = {
+    onPrefChanged(pref) {
+      this.prefChangedList.push(pref);
+    },
+    onNimbusChanged(pref) {
+      this.nimbusChangedList.push(pref);
+    },
+  };
+  observer.prefChangedList = [];
+  observer.nimbusChangedList = [];
+  UrlbarPrefs.addObserver(observer);
+
+  const doCleanup = await UrlbarTestUtils.initNimbusFeature({
+    searchEngagementTelemetryEnabled: true,
+  });
+  Assert.equal(observer.prefChangedList.length, 0);
+  Assert.ok(
+    observer.nimbusChangedList.includes("searchEngagementTelemetryEnabled")
+  );
+  doCleanup();
+});
+
+// Tests whether observer.onPrefChanged works.
+add_task(async function onPrefChanged() {
+  const doCleanup = await UrlbarTestUtils.initNimbusFeature({
+    searchEngagementTelemetryEnabled: false,
+  });
+  Services.prefs.setBoolPref(
+    "browser.urlbar.searchEngagementTelemetry.enabled",
+    false
+  );
+
+  // Add an observer that throws an Error and an observer that does not define
+  // anything to check whether the other observers can get notifications.
+  UrlbarPrefs.addObserver({
+    onPrefChanged(pref) {
+      throw new Error("From onPrefChanged");
+    },
+    onNimbusChanged(pref) {
+      throw new Error("From onNimbusChanged");
+    },
+  });
+  UrlbarPrefs.addObserver({});
+
+  const deferred = PromiseUtils.defer();
+  const observer = {
+    onPrefChanged(pref) {
+      this.prefChangedList.push(pref);
+      deferred.resolve();
+    },
+    onNimbusChanged(pref) {
+      this.nimbusChangedList.push(pref);
+      deferred.resolve();
+    },
+  };
+  observer.prefChangedList = [];
+  observer.nimbusChangedList = [];
+  UrlbarPrefs.addObserver(observer);
+
+  Services.prefs.setBoolPref(
+    "browser.urlbar.searchEngagementTelemetry.enabled",
+    true
+  );
+  await deferred.promise;
+  Assert.equal(observer.prefChangedList.length, 1);
+  Assert.equal(
+    observer.prefChangedList[0],
+    "searchEngagementTelemetry.enabled"
+  );
+  Assert.equal(observer.nimbusChangedList.length, 0);
+
+  Services.prefs.clearUserPref(
+    "browser.urlbar.searchEngagementTelemetry.enabled"
+  );
+  doCleanup();
+});
