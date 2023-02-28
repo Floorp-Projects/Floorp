@@ -5,7 +5,9 @@
 /* import-globals-from head_global.js */
 
 var { Log } = ChromeUtils.importESModule("resource://gre/modules/Log.sys.mjs");
-var { CommonUtils } = ChromeUtils.import("resource://services-common/utils.js");
+var { CommonUtils } = ChromeUtils.importESModule(
+  "resource://services-common/utils.sys.mjs"
+);
 var {
   HTTP_400,
   HTTP_401,
@@ -33,8 +35,8 @@ var {
   HttpError,
   HttpServer,
 } = ChromeUtils.import("resource://testing-common/httpd.js");
-var { getTestLogger, initTestLogging } = ChromeUtils.import(
-  "resource://testing-common/services/common/logging.js"
+var { getTestLogger, initTestLogging } = ChromeUtils.importESModule(
+  "resource://testing-common/services/common/logging.sys.mjs"
 );
 var { MockRegistrar } = ChromeUtils.importESModule(
   "resource://testing-common/MockRegistrar.sys.mjs"
@@ -236,8 +238,8 @@ function getUptakeTelemetrySnapshot(component, source) {
 }
 
 function checkUptakeTelemetry(snapshot1, snapshot2, expectedIncrements) {
-  const { UptakeTelemetry } = ChromeUtils.import(
-    "resource://services-common/uptake-telemetry.js"
+  const { UptakeTelemetry } = ChromeUtils.importESModule(
+    "resource://services-common/uptake-telemetry.sys.mjs"
   );
   const STATUSES = Object.values(UptakeTelemetry.STATUS);
   for (const status of STATUSES) {
@@ -249,8 +251,8 @@ function checkUptakeTelemetry(snapshot1, snapshot2, expectedIncrements) {
 }
 
 async function withFakeChannel(channel, f) {
-  const { Policy } = ChromeUtils.import(
-    "resource://services-common/uptake-telemetry.js"
+  const { Policy } = ChromeUtils.importESModule(
+    "resource://services-common/uptake-telemetry.sys.mjs"
   );
   let oldGetChannel = Policy.getChannel;
   Policy.getChannel = () => channel;

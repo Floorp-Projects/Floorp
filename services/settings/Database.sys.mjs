@@ -8,12 +8,12 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
+  CommonUtils: "resource://services-common/utils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   IDBHelpers: "resource://services-settings/IDBHelpers.jsm",
   Utils: "resource://services-settings/Utils.jsm",
-  CommonUtils: "resource://services-common/utils.js",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
 });
 XPCOMUtils.defineLazyGetter(lazy, "console", () => lazy.Utils.log);

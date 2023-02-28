@@ -13,12 +13,10 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   CryptoUtils: "resource://services-crypto/utils.sys.mjs",
-});
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
   // We use this observers module because we leverage its support for richer
   // "subject" data.
-  Observers: "resource://services-common/observers.js",
+  Observers: "resource://services-common/observers.sys.mjs",
 });
 
 const { PREF_ACCOUNT_ROOT, log } = ChromeUtils.import(

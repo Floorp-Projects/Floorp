@@ -4,12 +4,8 @@
 
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
-const { RESTRequest } = ChromeUtils.import(
-  "resource://services-common/rest.js"
-);
-const { Observers } = ChromeUtils.import(
-  "resource://services-common/observers.js"
-);
+import { RESTRequest } from "resource://services-common/rest.sys.mjs";
+import { Observers } from "resource://services-common/observers.sys.mjs";
 
 const PREF_LOG_LEVEL = "services.common.log.logger.tokenserverclient";
 

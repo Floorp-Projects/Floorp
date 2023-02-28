@@ -22,11 +22,9 @@ const { DEVICE_TYPE_DESKTOP } = ChromeUtils.import(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CommonUtils",
-  "resource://services-common/utils.js"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  CommonUtils: "resource://services-common/utils.sys.mjs",
+});
 
 const PREF_LOCAL_DEVICE_NAME = PREF_ACCOUNT_ROOT + "device.name";
 XPCOMUtils.defineLazyPreferenceGetter(

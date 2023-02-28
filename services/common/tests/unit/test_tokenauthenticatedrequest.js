@@ -4,8 +4,8 @@
 const { CryptoUtils } = ChromeUtils.importESModule(
   "resource://services-crypto/utils.sys.mjs"
 );
-const { TokenAuthenticatedRESTRequest } = ChromeUtils.import(
-  "resource://services-common/rest.js"
+const { TokenAuthenticatedRESTRequest } = ChromeUtils.importESModule(
+  "resource://services-common/rest.sys.mjs"
 );
 
 function run_test() {

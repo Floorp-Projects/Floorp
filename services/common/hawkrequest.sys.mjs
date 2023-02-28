@@ -4,12 +4,8 @@
 
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
-const { RESTRequest } = ChromeUtils.import(
-  "resource://services-common/rest.js"
-);
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
-);
+import { RESTRequest } from "resource://services-common/rest.sys.mjs";
+import { CommonUtils } from "resource://services-common/utils.sys.mjs";
 import { Credentials } from "resource://gre/modules/Credentials.sys.mjs";
 
 const lazy = {};

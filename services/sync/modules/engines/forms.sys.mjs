@@ -19,7 +19,7 @@ import {
   CollectionValidator,
 } from "resource://services-sync/collection_validator.sys.mjs";
 
-const { Async } = ChromeUtils.import("resource://services-common/async.js");
+import { Async } from "resource://services-common/async.sys.mjs";
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
 const lazy = {};

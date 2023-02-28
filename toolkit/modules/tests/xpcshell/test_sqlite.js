@@ -93,8 +93,8 @@ async function getDummyTempDatabase(name, extraOptions = {}) {
 }
 
 add_task(async function test_setup() {
-  const { initTestLogging } = ChromeUtils.import(
-    "resource://testing-common/services/common/logging.js"
+  const { initTestLogging } = ChromeUtils.importESModule(
+    "resource://testing-common/services/common/logging.sys.mjs"
   );
   initTestLogging("Trace");
 });

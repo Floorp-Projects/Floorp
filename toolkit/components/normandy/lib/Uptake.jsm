@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { UptakeTelemetry } = ChromeUtils.import(
-  "resource://services-common/uptake-telemetry.js"
+const { UptakeTelemetry } = ChromeUtils.importESModule(
+  "resource://services-common/uptake-telemetry.sys.mjs"
 );
 
 var EXPORTED_SYMBOLS = ["Uptake"];

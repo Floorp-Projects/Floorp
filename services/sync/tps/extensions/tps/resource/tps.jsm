@@ -39,12 +39,14 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Addon: "resource://tps/modules/addons.sys.mjs",
   AddonValidator: "resource://services-sync/engines/addons.sys.mjs",
   Address: "resource://tps/modules/formautofill.sys.mjs",
+  Async: "resource://services-common/async.sys.mjs",
   Authentication: "resource://tps/auth/fxaccounts.sys.mjs",
   Bookmark: "resource://tps/modules/bookmarks.sys.mjs",
   BookmarkFolder: "resource://tps/modules/bookmarks.sys.mjs",
   BookmarkValidator: "resource://tps/modules/bookmarkValidator.sys.mjs",
   BrowserTabs: "resource://tps/modules/tabs.sys.mjs",
   BrowserWindows: "resource://tps/modules/windows.sys.mjs",
+  CommonUtils: "resource://services-common/utils.sys.mjs",
   CreditCard: "resource://tps/modules/formautofill.sys.mjs",
   DumpAddresses: "resource://tps/modules/formautofill.sys.mjs",
   DumpBookmarks: "resource://tps/modules/bookmarks.sys.mjs",
@@ -71,8 +73,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Async: "resource://services-common/async.js",
-  CommonUtils: "resource://services-common/utils.js",
   extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.jsm",
   WEAVE_VERSION: "resource://services-sync/constants.js",
 });

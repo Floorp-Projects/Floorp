@@ -20,7 +20,8 @@
  *   commands.json, update it, and write it back out.
  */
 
-const { Async } = ChromeUtils.import("resource://services-common/async.js");
+import { Async } from "resource://services-common/async.sys.mjs";
+
 const {
   DEVICE_TYPE_DESKTOP,
   DEVICE_TYPE_MOBILE,

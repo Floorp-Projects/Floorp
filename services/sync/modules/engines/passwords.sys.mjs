@@ -18,7 +18,7 @@ import {
 } from "resource://services-sync/engines.sys.mjs";
 import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
 
-const { Async } = ChromeUtils.import("resource://services-common/async.js");
+import { Async } from "resource://services-common/async.sys.mjs";
 
 const SYNCABLE_LOGIN_FIELDS = [
   // `nsILoginInfo` fields.

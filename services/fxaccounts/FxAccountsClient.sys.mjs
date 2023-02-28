@@ -2,15 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
-);
-const { HawkClient } = ChromeUtils.import(
-  "resource://services-common/hawkclient.js"
-);
-const { deriveHawkCredentials } = ChromeUtils.import(
-  "resource://services-common/hawkrequest.js"
-);
+import { CommonUtils } from "resource://services-common/utils.sys.mjs";
+
+import { HawkClient } from "resource://services-common/hawkclient.sys.mjs";
+import { deriveHawkCredentials } from "resource://services-common/hawkrequest.sys.mjs";
 import { CryptoUtils } from "resource://services-crypto/utils.sys.mjs";
 
 const {

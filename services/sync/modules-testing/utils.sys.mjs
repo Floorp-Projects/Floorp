@@ -2,14 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
-);
+import { CommonUtils } from "resource://services-common/utils.sys.mjs";
+
 import { Assert } from "resource://testing-common/Assert.sys.mjs";
 
-const { initTestLogging } = ChromeUtils.import(
-  "resource://testing-common/services/common/logging.js"
-);
+import { initTestLogging } from "resource://testing-common/services/common/logging.sys.mjs";
 import {
   FakeCryptoService,
   FakeFilesystemService,

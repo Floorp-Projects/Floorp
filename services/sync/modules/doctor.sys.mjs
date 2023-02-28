@@ -9,10 +9,8 @@
 
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
-const { Async } = ChromeUtils.import("resource://services-common/async.js");
-const { Observers } = ChromeUtils.import(
-  "resource://services-common/observers.js"
-);
+import { Async } from "resource://services-common/async.sys.mjs";
+import { Observers } from "resource://services-common/observers.sys.mjs";
 import { Service } from "resource://services-sync/service.sys.mjs";
 import { Resource } from "resource://services-sync/resource.sys.mjs";
 import { Svc } from "resource://services-sync/util.sys.mjs";

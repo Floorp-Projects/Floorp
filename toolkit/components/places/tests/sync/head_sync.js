@@ -24,7 +24,9 @@ var { PlacesSyncUtils } = ChromeUtils.importESModule(
 var { SyncedBookmarksMirror } = ChromeUtils.importESModule(
   "resource://gre/modules/SyncedBookmarksMirror.sys.mjs"
 );
-var { CommonUtils } = ChromeUtils.import("resource://services-common/utils.js");
+var { CommonUtils } = ChromeUtils.importESModule(
+  "resource://services-common/utils.sys.mjs"
+);
 var { FileTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/FileTestUtils.sys.mjs"
 );

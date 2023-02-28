@@ -5,10 +5,9 @@
 const HISTORY_TTL = 5184000; // 60 days in milliseconds
 const THIRTY_DAYS_IN_MS = 2592000000; // 30 days in milliseconds
 
-const { Async } = ChromeUtils.import("resource://services-common/async.js");
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
-);
+import { Async } from "resource://services-common/async.sys.mjs";
+import { CommonUtils } from "resource://services-common/utils.sys.mjs";
+
 const {
   MAX_HISTORY_DOWNLOAD,
   MAX_HISTORY_UPLOAD,

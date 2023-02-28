@@ -9,7 +9,9 @@ var EXPORTED_SYMBOLS = ["BingTranslator"];
 const { PromiseUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/PromiseUtils.sys.mjs"
 );
-const { Async } = ChromeUtils.import("resource://services-common/async.js");
+const { Async } = ChromeUtils.importESModule(
+  "resource://services-common/async.sys.mjs"
+);
 const { httpRequest } = ChromeUtils.importESModule(
   "resource://gre/modules/Http.sys.mjs"
 );

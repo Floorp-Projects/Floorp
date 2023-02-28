@@ -6,8 +6,12 @@
 const {
   HAWKAuthenticatedRESTRequest,
   deriveHawkCredentials,
-} = ChromeUtils.import("resource://services-common/hawkrequest.js");
-const { Async } = ChromeUtils.import("resource://services-common/async.js");
+} = ChromeUtils.importESModule(
+  "resource://services-common/hawkrequest.sys.mjs"
+);
+const { Async } = ChromeUtils.importESModule(
+  "resource://services-common/async.sys.mjs"
+);
 
 // https://github.com/mozilla/fxa-auth-server/wiki/onepw-protocol#wiki-use-session-certificatesign-etc
 var SESSION_KEYS = {

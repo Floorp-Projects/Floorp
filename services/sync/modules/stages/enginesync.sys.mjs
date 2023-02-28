@@ -20,7 +20,8 @@ const {
 } = ChromeUtils.import("resource://services-sync/constants.js");
 import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
 
-const { Async } = ChromeUtils.import("resource://services-common/async.js");
+import { Async } from "resource://services-common/async.sys.mjs";
+
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   Doctor: "resource://services-sync/doctor.sys.mjs",

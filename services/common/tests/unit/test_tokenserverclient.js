@@ -5,7 +5,9 @@ const {
   TokenServerClient,
   TokenServerClientError,
   TokenServerClientServerError,
-} = ChromeUtils.import("resource://services-common/tokenserverclient.js");
+} = ChromeUtils.importESModule(
+  "resource://services-common/tokenserverclient.sys.mjs"
+);
 
 initTestLogging("Trace");
 

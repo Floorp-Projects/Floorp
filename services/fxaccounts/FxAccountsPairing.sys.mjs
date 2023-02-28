@@ -19,7 +19,7 @@ import {
 const fxAccounts = getFxAccountsSingleton();
 import { setTimeout, clearTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
-ChromeUtils.import("resource://services-common/utils.js");
+ChromeUtils.importESModule("resource://services-common/utils.sys.mjs");
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   FxAccountsPairingChannel:

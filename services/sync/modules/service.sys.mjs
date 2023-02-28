@@ -9,10 +9,9 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
-const { Async } = ChromeUtils.import("resource://services-common/async.js");
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
-);
+import { Async } from "resource://services-common/async.sys.mjs";
+import { CommonUtils } from "resource://services-common/utils.sys.mjs";
+
 const {
   CLIENT_NOT_CONFIGURED,
   CREDENTIALS_CHANGED,

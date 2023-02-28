@@ -1,7 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { Async } = ChromeUtils.import("resource://services-common/async.js");
+const { Async } = ChromeUtils.importESModule(
+  "resource://services-common/async.sys.mjs"
+);
 
 function run_test() {
   _("Chain a few async methods, making sure the 'this' object is correct.");

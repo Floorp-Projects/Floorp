@@ -16,9 +16,7 @@ ChromeUtils.defineModuleGetter(
 );
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { Observers } = ChromeUtils.import(
-  "resource://services-common/observers.js"
-);
+import { Observers } from "resource://services-common/observers.sys.mjs";
 
 ChromeUtils.defineESModuleGetters(lazy, {
   BulkKeyBundle: "resource://services-sync/keys.sys.mjs",

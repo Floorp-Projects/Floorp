@@ -13,11 +13,9 @@ const CANARY_CLIENT_ID = "c0ffeec0-ffee-c0ff-eec0-ffeec0ffeec0";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CommonUtils",
-  "resource://services-common/utils.js"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  CommonUtils: "resource://services-common/utils.sys.mjs",
+});
 
 XPCOMUtils.defineLazyGetter(lazy, "CryptoHash", () => {
   return Components.Constructor(

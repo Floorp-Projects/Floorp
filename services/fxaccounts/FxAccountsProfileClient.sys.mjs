@@ -23,9 +23,7 @@ const {
 import { getFxAccountsSingleton } from "resource://gre/modules/FxAccounts.sys.mjs";
 
 const fxAccounts = getFxAccountsSingleton();
-const { RESTRequest } = ChromeUtils.import(
-  "resource://services-common/rest.js"
-);
+import { RESTRequest } from "resource://services-common/rest.sys.mjs";
 
 /**
  * Create a new FxAccountsProfileClient to be able to fetch Firefox Account profile information.

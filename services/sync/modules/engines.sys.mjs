@@ -7,10 +7,9 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { JSONFile } from "resource://gre/modules/JSONFile.sys.mjs";
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
-const { Async } = ChromeUtils.import("resource://services-common/async.js");
-const { Observers } = ChromeUtils.import(
-  "resource://services-common/observers.js"
-);
+import { Async } from "resource://services-common/async.sys.mjs";
+import { Observers } from "resource://services-common/observers.sys.mjs";
+
 const {
   DEFAULT_DOWNLOAD_BATCH_SIZE,
   DEFAULT_GUID_FETCH_BATCH_SIZE,

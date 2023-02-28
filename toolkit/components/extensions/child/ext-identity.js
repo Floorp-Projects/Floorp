@@ -8,11 +8,9 @@
 
 var { Constructor: CC } = Components;
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "CommonUtils",
-  "resource://services-common/utils.js"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  CommonUtils: "resource://services-common/utils.sys.mjs",
+});
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "redirectDomain",

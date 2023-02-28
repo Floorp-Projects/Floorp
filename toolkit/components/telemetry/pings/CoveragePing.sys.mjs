@@ -6,12 +6,8 @@ import { Log } from "resource://gre/modules/Log.sys.mjs";
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CommonUtils",
-  "resource://services-common/utils.js"
-);
 ChromeUtils.defineESModuleGetters(lazy, {
+  CommonUtils: "resource://services-common/utils.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   ServiceRequest: "resource://gre/modules/ServiceRequest.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
