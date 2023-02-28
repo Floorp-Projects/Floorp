@@ -442,7 +442,9 @@ class TestQuitRestart(MarionetteTestCase):
 
         self.marionette.start_session()
 
-    @unittest.skipIf(mozinfo.info["ccov"], "Bug 1789085 - Lost ServerSocket connection")
+    @unittest.skipIf(
+        mozinfo.info.get("ccov"), "Bug 1789085 - Lost ServerSocket connection"
+    )
     def test_in_app_quit_with_callback_that_raises_an_exception(self):
         def errorneous_callback():
             raise Exception("foo")
