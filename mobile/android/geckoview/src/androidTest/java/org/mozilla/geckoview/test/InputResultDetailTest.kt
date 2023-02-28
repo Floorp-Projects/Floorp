@@ -377,4 +377,41 @@ class InputResultDetailTest : BaseSessionTest() {
             )
         }
     }
+
+    // Tests a situation where converting a scrollport size between CSS units and app units will
+    // result different values, and the difference causes an issue that unscrollable documents
+    // behave as if it's scrollable.
+    //
+    // Note about metrics that this test uses.
+    // A basic here is that documents having no meta viewport tags are laid out on 980px width
+    // canvas, the 980px is defined as "browser.viewport.desktopWidth".
+    //
+    // So, if the device screen size is (1080px, 2160px) then the document is scaled to
+    // (1080 / 980) = 1.10204. Then if the dynamic toolbar height is 59px, the scaled document
+    // height is (2160 - 59) / 1.10204 = 1906.46 (in CSS units).  It's converted and actually rounded
+    // to 114388 (= 1906.46 * 60) in app units. And it's converted back to 1906.47 (114388 / 60) in
+    // CSS units unfortunately.
+    @WithDisplay(width = 1080, height = 2160)
+    @Test
+    fun testFractionalScrollPortSize() {
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
+                "browser.viewport.desktopWidth" to 980
+            )
+        )
+        sessionRule.display?.run { setDynamicToolbarMaxHeight(59) }
+
+        setupDocument(NO_META_VIEWPORT_HTML_PATH)
+
+        // Try to scroll down to see if the document is scrollable or not.
+        var value = sessionRule.waitForResult(sendDownEvent(50f, 50f))
+
+        assertResultDetail(
+            "The document isn't not scrollable at all",
+            value,
+            PanZoomController.INPUT_RESULT_UNHANDLED,
+            PanZoomController.SCROLLABLE_FLAG_NONE,
+            (PanZoomController.OVERSCROLL_FLAG_HORIZONTAL or PanZoomController.OVERSCROLL_FLAG_VERTICAL)
+        )
+    }
 }
