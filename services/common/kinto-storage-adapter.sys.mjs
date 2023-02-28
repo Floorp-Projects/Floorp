@@ -11,9 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const { Sqlite } = ChromeUtils.importESModule(
-  "resource://gre/modules/Sqlite.sys.mjs"
-);
+import { Sqlite } from "resource://gre/modules/Sqlite.sys.mjs";
+
 const { Kinto } = ChromeUtils.import(
   "resource://services-common/kinto-offline-client.js"
 );
@@ -214,7 +213,7 @@ const currentSchemaVersion = 2;
  *    use as its backing store. To open such a handle, use the
  *    static openConnection() method.
  */
-class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
+export class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
   constructor(collection, options = {}) {
     super();
     const { sqliteHandle = null } = options;
@@ -552,5 +551,3 @@ function transactionProxy(collection, preloaded) {
     },
   };
 }
-
-var EXPORTED_SYMBOLS = ["FirefoxAdapter"];

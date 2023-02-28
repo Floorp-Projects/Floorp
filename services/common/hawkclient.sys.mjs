@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /*
  * HAWK is an HTTP authentication scheme using a message authentication code
  * (MAC) algorithm to provide partial HTTP request cryptographic verification.
@@ -24,20 +22,14 @@
  * multiple HAWK services should instantiate one HawkClient per service.
  */
 
-var EXPORTED_SYMBOLS = ["HawkClient"];
-
 const { HAWKAuthenticatedRESTRequest } = ChromeUtils.import(
   "resource://services-common/hawkrequest.js"
 );
 const { Observers } = ChromeUtils.import(
   "resource://services-common/observers.js"
 );
-const { Log } = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { Log } from "resource://gre/modules/Log.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 // log.appender.dump should be one of "Fatal", "Error", "Warn", "Info", "Config",
 // "Debug", "Trace" or "All". If none is specified, "Error" will be used by
@@ -96,7 +88,7 @@ XPCOMUtils.defineLazyGetter(lazy, "logPII", function() {
  * @param host
  *        The url of the host
  */
-var HawkClient = function(host) {
+export var HawkClient = function(host) {
   this.host = host;
 
   // Clock offset in milliseconds between our client's clock and the date

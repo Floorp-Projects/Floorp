@@ -2,36 +2,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { Log } from "resource://gre/modules/Log.sys.mjs";
 
-var EXPORTED_SYMBOLS = [
-  "HAWKAuthenticatedRESTRequest",
-  "deriveHawkCredentials",
-];
-
-const { Preferences } = ChromeUtils.importESModule(
-  "resource://gre/modules/Preferences.sys.mjs"
-);
-const { Log } = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-);
 const { RESTRequest } = ChromeUtils.import(
   "resource://services-common/rest.js"
 );
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );
-const { Credentials } = ChromeUtils.importESModule(
-  "resource://gre/modules/Credentials.sys.mjs"
-);
+import { Credentials } from "resource://gre/modules/Credentials.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   CryptoUtils: "resource://services-crypto/utils.sys.mjs",
 });
-
-const Prefs = new Preferences("services.common.rest.");
 
 /**
  * Single-use HAWK-authenticated HTTP requests to RESTish resources.
@@ -61,7 +46,7 @@ const Prefs = new Preferences("services.common.rest.");
  * milliseconds will be -120000.
  */
 
-var HAWKAuthenticatedRESTRequest = function HawkAuthenticatedRESTRequest(
+export var HAWKAuthenticatedRESTRequest = function HawkAuthenticatedRESTRequest(
   uri,
   credentials,
   extra = {}
@@ -79,6 +64,7 @@ var HAWKAuthenticatedRESTRequest = function HawkAuthenticatedRESTRequest(
   // Expose for testing
   this._intl = getIntl();
 };
+
 HAWKAuthenticatedRESTRequest.prototype = {
   async dispatch(method, data) {
     let contentType = "text/plain";
@@ -140,7 +126,7 @@ Object.setPrototypeOf(
  *          extra: size - 64 extra bytes (if size > 64)
  *        }
  */
-async function deriveHawkCredentials(tokenHex, context, size = 96) {
+export async function deriveHawkCredentials(tokenHex, context, size = 96) {
   let token = CommonUtils.hexToBytes(tokenHex);
   let out = await lazy.CryptoUtils.hkdfLegacy(
     token,
