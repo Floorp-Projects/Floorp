@@ -16,7 +16,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   MarionettePrefs: "chrome://remote/content/marionette/prefs.sys.mjs",
   Message: "chrome://remote/content/marionette/message.sys.mjs",
   Response: "chrome://remote/content/marionette/message.sys.mjs",
-  WebReference: "chrome://remote/content/marionette/element.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
@@ -302,11 +301,37 @@ export class TCPConnection {
 
     let rv = await fn.bind(this.driver)(cmd);
 
+    // Bug 1819029: Some older commands cannot return a response wrapped within
+    // a value field because it would break compatibility with geckodriver and
+    // Marionette client. It's unlikely that we are going to fix that.
+    //
+    // Warning: No more commands should be added to this list!
+    const commandsNoValueResponse = [
+      "Marionette:Quit",
+      "WebDriver:FindElements",
+      "WebDriver:CloseChromeWindow",
+      "WebDriver:CloseWindow",
+      "WebDriver:FullscreenWindow",
+      "WebDriver:GetCookies",
+      "WebDriver:GetElementRect",
+      "WebDriver:GetTimeouts",
+      "WebDriver:GetWindowHandles",
+      "WebDriver:GetWindowRect",
+      "WebDriver:MaximizeWindow",
+      "WebDriver:MinimizeWindow",
+      "WebDriver:NewSession",
+      "WebDriver:NewWindow",
+      "WebDriver:SetWindowRect",
+    ];
+
     if (rv != null) {
-      if (lazy.WebReference.isReference(rv) || typeof rv != "object") {
-        resp.body = { value: rv };
-      } else {
+      // By default the Response' constructor sets the body to `{ value: null }`.
+      // As such we only want to override the value if it's neither `null` nor
+      // `undefined`.
+      if (commandsNoValueResponse.includes(cmd.name)) {
         resp.body = rv;
+      } else {
+        resp.body.value = rv;
       }
     }
   }

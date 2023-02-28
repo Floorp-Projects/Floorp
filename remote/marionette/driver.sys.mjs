@@ -645,7 +645,7 @@ GeckoDriver.prototype.getContext = function() {
  *     If an element that was passed as part of <var>args</var> or that is
  *     returned as result has gone stale.
  */
-GeckoDriver.prototype.executeScript = async function(cmd) {
+GeckoDriver.prototype.executeScript = function(cmd) {
   let { script, args } = cmd.parameters;
   let opts = {
     script: cmd.parameters.script,
@@ -656,7 +656,7 @@ GeckoDriver.prototype.executeScript = async function(cmd) {
     line: cmd.parameters.line,
   };
 
-  return { value: await this.execute_(script, args, opts) };
+  return this.execute_(script, args, opts);
 };
 
 /**
@@ -717,7 +717,7 @@ GeckoDriver.prototype.executeScript = async function(cmd) {
  *     If an element that was passed as part of <var>args</var> or that is
  *     returned as result has gone stale.
  */
-GeckoDriver.prototype.executeAsyncScript = async function(cmd) {
+GeckoDriver.prototype.executeAsyncScript = function(cmd) {
   let { script, args } = cmd.parameters;
   let opts = {
     script: cmd.parameters.script,
@@ -729,7 +729,7 @@ GeckoDriver.prototype.executeAsyncScript = async function(cmd) {
     async: true,
   };
 
-  return { value: await this.execute_(script, args, opts) };
+  return this.execute_(script, args, opts);
 };
 
 GeckoDriver.prototype.execute_ = async function(
@@ -2958,7 +2958,7 @@ GeckoDriver.prototype.setupReftest = async function(cmd) {
 };
 
 /** Run a reftest. */
-GeckoDriver.prototype.runReftest = async function(cmd) {
+GeckoDriver.prototype.runReftest = function(cmd) {
   let {
     test,
     references,
@@ -2979,17 +2979,15 @@ GeckoDriver.prototype.runReftest = async function(cmd) {
   lazy.assert.string(expected);
   lazy.assert.array(references);
 
-  return {
-    value: await this._reftest.run(
-      test,
-      references,
-      expected,
-      timeout,
-      pageRanges,
-      width,
-      height
-    ),
-  };
+  return this._reftest.run(
+    test,
+    references,
+    expected,
+    timeout,
+    pageRanges,
+    width,
+    height
+  );
 };
 
 /**
@@ -3088,9 +3086,7 @@ GeckoDriver.prototype.print = async function(cmd) {
     printSettings
   );
 
-  return {
-    value: btoa(binaryString),
-  };
+  return btoa(binaryString);
 };
 
 GeckoDriver.prototype.setPermission = async function(cmd) {
