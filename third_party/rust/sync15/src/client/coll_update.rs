@@ -8,9 +8,8 @@ use super::{
 };
 use crate::bso::OutgoingEncryptedBso;
 use crate::engine::{CollectionRequest, IncomingChangeset, OutgoingChangeset};
-use crate::error::{self, Error, ErrorResponse, Result};
-use crate::{KeyBundle, ServerTimestamp};
-use std::borrow::Cow;
+use crate::error::{self, Error, Result};
+use crate::{CollectionName, KeyBundle, ServerTimestamp};
 
 pub fn encrypt_outgoing(
     o: OutgoingChangeset,
@@ -24,8 +23,8 @@ pub fn encrypt_outgoing(
 
 pub fn fetch_incoming(
     client: &Sync15StorageClient,
-    state: &mut CollState,
-    collection_request: &CollectionRequest,
+    state: &CollState,
+    collection_request: CollectionRequest,
 ) -> Result<IncomingChangeset> {
     let collection = collection_request.collection.clone();
     let (records, timestamp) = match client.get_encrypted_records(collection_request)? {
@@ -36,8 +35,6 @@ pub fn fetch_incoming(
         } => (record, last_modified),
         other => return Err(other.create_storage_error()),
     };
-    // xxx - duplication below of `timestamp` smells wrong
-    state.last_modified = timestamp;
     let mut result = IncomingChangeset::new(collection, timestamp);
     result.changes.reserve(records.len());
     for record in records {
@@ -54,7 +51,7 @@ pub fn fetch_incoming(
 pub struct CollectionUpdate<'a> {
     client: &'a Sync15StorageClient,
     state: &'a CollState,
-    collection: Cow<'static, str>,
+    collection: CollectionName,
     xius: ServerTimestamp,
     to_update: Vec<OutgoingEncryptedBso>,
     fully_atomic: bool,
@@ -64,7 +61,7 @@ impl<'a> CollectionUpdate<'a> {
     pub fn new(
         client: &'a Sync15StorageClient,
         state: &'a CollState,
-        collection: Cow<'static, str>,
+        collection: CollectionName,
         xius: ServerTimestamp,
         records: Vec<OutgoingEncryptedBso>,
         fully_atomic: bool,
@@ -86,19 +83,12 @@ impl<'a> CollectionUpdate<'a> {
         fully_atomic: bool,
     ) -> Result<CollectionUpdate<'a>> {
         let collection = changeset.collection.clone();
-        let xius = changeset.timestamp;
-        if xius < state.last_modified {
-            // We know we are going to fail the XIUS check...
-            return Err(Error::StorageHttpError(ErrorResponse::PreconditionFailed {
-                route: collection.into_owned(),
-            }));
-        }
         let to_update = encrypt_outgoing(changeset, &state.key)?;
         Ok(CollectionUpdate::new(
             client,
             state,
             collection,
-            xius,
+            state.last_modified,
             to_update,
             fully_atomic,
         ))

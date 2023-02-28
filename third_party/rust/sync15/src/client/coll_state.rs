@@ -9,17 +9,18 @@ use crate::error;
 use crate::KeyBundle;
 use crate::ServerTimestamp;
 
-/// Holds state for a collection. In general, only the CollState is
-/// needed to sync a collection (but a valid GlobalState is needed to obtain
-/// a CollState)
+/// Holds state for a collection necessary to perform a sync of it. Lives for the lifetime
+/// of a single sync.
 #[derive(Debug, Clone)]
 pub struct CollState {
+    // Info about the server configuration/capabilities
     pub config: InfoConfiguration,
-    // initially from meta/global, updated after an xius POST/PUT.
+    // from meta/global, used for XIUS when we POST outgoing record based on this state.
     pub last_modified: ServerTimestamp,
     pub key: KeyBundle,
 }
 
+/// This mini state-machine helps build a CollState
 #[derive(Debug)]
 pub enum LocalCollState {
     /// The state is unknown, with the EngineSyncAssociation the collection
@@ -38,7 +39,7 @@ pub enum LocalCollState {
     SyncIdChanged { ids: CollSyncIds },
 
     /// The collection is ready to sync.
-    Ready { key: KeyBundle },
+    Ready { coll_state: CollState },
 }
 
 pub struct LocalCollStateMachine<'state> {
@@ -71,14 +72,27 @@ impl<'state> LocalCollStateMachine<'state> {
                             if ids.global == meta_global.sync_id
                                 && ids.coll == engine_meta.sync_id =>
                         {
+                            // We are done - build the CollState
                             let coll_keys = CollectionKeys::from_encrypted_payload(
                                 self.global_state.keys.clone(),
                                 self.global_state.keys_timestamp,
                                 self.root_key,
                             )?;
-                            Ok(LocalCollState::Ready {
-                                key: coll_keys.key_for_collection(name).clone(),
-                            })
+                            let key = coll_keys.key_for_collection(name).clone();
+                            let name = engine.collection_name();
+                            let config = self.global_state.config.clone();
+                            let last_modified = self
+                                .global_state
+                                .collections
+                                .get(name.as_ref())
+                                .cloned()
+                                .unwrap_or_default();
+                            let coll_state = CollState {
+                                config,
+                                last_modified,
+                                key,
+                            };
+                            Ok(LocalCollState::Ready { coll_state })
                         }
                         _ => Ok(LocalCollState::SyncIdChanged {
                             ids: CollSyncIds {
@@ -120,23 +134,8 @@ impl<'state> LocalCollStateMachine<'state> {
         loop {
             log::trace!("LocalCollState in {:?}", s);
             match s {
-                LocalCollState::Ready { key } => {
-                    let name = engine.collection_name();
-                    let config = self.global_state.config.clone();
-                    let last_modified = self
-                        .global_state
-                        .collections
-                        .get(name.as_ref())
-                        .cloned()
-                        .unwrap_or_default();
-                    return Ok(Some(CollState {
-                        config,
-                        last_modified,
-                        key,
-                    }));
-                }
+                LocalCollState::Ready { coll_state } => return Ok(Some(coll_state)),
                 LocalCollState::Declined | LocalCollState::NoSuchCollection => return Ok(None),
-
                 _ => {
                     count += 1;
                     if count > 10 {
@@ -172,7 +171,7 @@ mod tests {
     use crate::engine::CollectionRequest;
     use crate::engine::{IncomingChangeset, OutgoingChangeset};
     use crate::record_types::{MetaGlobalEngine, MetaGlobalRecord};
-    use crate::telemetry;
+    use crate::{telemetry, CollectionName};
     use anyhow::Result;
     use std::cell::{Cell, RefCell};
     use std::collections::HashMap;
@@ -227,7 +226,7 @@ mod tests {
     }
 
     impl SyncEngine for TestSyncEngine {
-        fn collection_name(&self) -> std::borrow::Cow<'static, str> {
+        fn collection_name(&self) -> CollectionName {
             self.collection_name.into()
         }
 

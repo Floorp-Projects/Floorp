@@ -7,10 +7,10 @@ use super::request::{
 };
 use super::token;
 use crate::bso::{IncomingBso, IncomingEncryptedBso, OutgoingBso, OutgoingEncryptedBso};
-use crate::engine::CollectionRequest;
+use crate::engine::{CollectionPost, CollectionRequest};
 use crate::error::{self, Error, ErrorResponse};
 use crate::record_types::MetaGlobalRecord;
-use crate::{Guid, ServerTimestamp};
+use crate::{CollectionName, Guid, ServerTimestamp};
 use serde_json::Value;
 use std::str::FromStr;
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -293,7 +293,7 @@ impl Sync15StorageClient {
 
     pub fn get_encrypted_records(
         &self,
-        collection_request: &CollectionRequest,
+        collection_request: CollectionRequest,
     ) -> error::Result<Sync15ClientResponse<Vec<IncomingEncryptedBso>>> {
         self.collection_request(Method::Get, collection_request)
     }
@@ -356,7 +356,7 @@ impl Sync15StorageClient {
     fn collection_request<T>(
         &self,
         method: Method,
-        r: &CollectionRequest,
+        r: CollectionRequest,
     ) -> error::Result<Sync15ClientResponse<T>>
     where
         for<'a> T: serde::de::Deserialize<'a>,
@@ -367,15 +367,12 @@ impl Sync15StorageClient {
 
     pub fn new_post_queue<'a, F: PostResponseHandler>(
         &'a self,
-        coll: &str,
+        coll: &'a CollectionName,
         config: &InfoConfiguration,
         ts: ServerTimestamp,
         on_response: F,
     ) -> error::Result<PostQueue<PostWrapper<'a>, F>> {
-        let pw = PostWrapper {
-            client: self,
-            coll: coll.into(),
-        };
+        let pw = PostWrapper { client: self, coll };
         Ok(PostQueue::new(config, ts, pw, on_response))
     }
 
@@ -426,7 +423,7 @@ impl Sync15StorageClient {
 
 pub struct PostWrapper<'a> {
     client: &'a Sync15StorageClient,
-    coll: String,
+    coll: &'a CollectionName,
 }
 
 impl<'a> BatchPoster for PostWrapper<'a> {
@@ -438,10 +435,10 @@ impl<'a> BatchPoster for PostWrapper<'a> {
         commit: bool,
         _: &PostQueue<T, O>,
     ) -> error::Result<PostResponse> {
-        let r = CollectionRequest::new(self.coll.clone())
+        let r = CollectionPost::new(self.coll.clone())
             .batch(batch)
             .commit(commit);
-        let url = build_collection_request_url(Url::parse(&self.client.tsc.api_endpoint()?)?, &r)?;
+        let url = build_collection_post_url(Url::parse(&self.client.tsc.api_endpoint()?)?, r)?;
 
         let req = self
             .client
@@ -453,18 +450,26 @@ impl<'a> BatchPoster for PostWrapper<'a> {
     }
 }
 
-fn build_collection_request_url(mut base_url: Url, r: &CollectionRequest) -> error::Result<Url> {
+fn build_collection_url(mut base_url: Url, collection: CollectionName) -> error::Result<Url> {
     base_url
         .path_segments_mut()
         .map_err(|_| Error::UnacceptableUrl("Storage server URL is not a base".to_string()))?
-        .extend(&["storage", &r.collection]);
+        .extend(&["storage", &collection]);
 
+    // This is strange but just accessing query_pairs_mut makes you have
+    // a trailing question mark on your url. I don't think anything bad
+    // would happen here, but I don't know, and also, it looks dumb so
+    // I'd rather not have it.
+    if base_url.query() == Some("") {
+        base_url.set_query(None);
+    }
+    Ok(base_url)
+}
+
+fn build_collection_request_url(mut base_url: Url, r: CollectionRequest) -> error::Result<Url> {
     let mut pairs = base_url.query_pairs_mut();
     if r.full {
         pairs.append_pair("full", "1");
-    }
-    if r.limit > 0 {
-        pairs.append_pair("limit", &r.limit.to_string());
     }
     if let Some(ids) = &r.ids {
         // Most ids are 12 characters, and we comma separate them, so 13.
@@ -477,32 +482,33 @@ fn build_collection_request_url(mut base_url: Url, r: &CollectionRequest) -> err
         }
         pairs.append_pair("ids", &buf);
     }
-    if let Some(batch) = &r.batch {
-        pairs.append_pair("batch", batch);
-    }
-    if r.commit {
-        pairs.append_pair("commit", "true");
-    }
     if let Some(ts) = r.older {
         pairs.append_pair("older", &ts.to_string());
     }
     if let Some(ts) = r.newer {
         pairs.append_pair("newer", &ts.to_string());
     }
-    if let Some(o) = r.order {
-        pairs.append_pair("sort", o.as_str());
+    if let Some(l) = r.limit {
+        pairs.append_pair("sort", l.order.as_str());
+        pairs.append_pair("limit", &l.num.to_string());
     }
     pairs.finish();
     drop(pairs);
+    build_collection_url(base_url, r.collection)
+}
 
-    // This is strange but just accessing query_pairs_mut makes you have
-    // a trailing question mark on your url. I don't think anything bad
-    // would happen here, but I don't know, and also, it looks dumb so
-    // I'd rather not have it.
-    if base_url.query() == Some("") {
-        base_url.set_query(None);
+#[cfg(feature = "sync-client")]
+fn build_collection_post_url(mut base_url: Url, r: CollectionPost) -> error::Result<Url> {
+    let mut pairs = base_url.query_pairs_mut();
+    if let Some(batch) = &r.batch {
+        pairs.append_pair("batch", batch);
     }
-    Ok(base_url)
+    if r.commit {
+        pairs.append_pair("commit", "true");
+    }
+    pairs.finish();
+    drop(pairs);
+    build_collection_url(base_url, r.collection)
 }
 
 #[cfg(test)]
@@ -536,34 +542,15 @@ mod test {
         let base = Url::parse("https://example.com/sync").unwrap();
 
         let empty =
-            build_collection_request_url(base.clone(), &CollectionRequest::new("foo")).unwrap();
+            build_collection_request_url(base.clone(), CollectionRequest::new("foo".into()))
+                .unwrap();
         assert_eq!(empty.as_str(), "https://example.com/sync/storage/foo");
-        let batch_start = build_collection_request_url(
-            base.clone(),
-            &CollectionRequest::new("bar")
-                .batch(Some("true".into()))
-                .commit(false),
-        )
-        .unwrap();
-        assert_eq!(
-            batch_start.as_str(),
-            "https://example.com/sync/storage/bar?batch=true"
-        );
-        let batch_commit = build_collection_request_url(
-            base.clone(),
-            &CollectionRequest::new("asdf")
-                .batch(Some("1234abc".into()))
-                .commit(true),
-        )
-        .unwrap();
-        assert_eq!(
-            batch_commit.as_str(),
-            "https://example.com/sync/storage/asdf?batch=1234abc&commit=true"
-        );
 
         let idreq = build_collection_request_url(
             base.clone(),
-            &CollectionRequest::new("wutang").full().ids(&["rza", "gza"]),
+            CollectionRequest::new("wutang".into())
+                .full()
+                .ids(&["rza", "gza"]),
         )
         .unwrap();
         assert_eq!(
@@ -573,15 +560,46 @@ mod test {
 
         let complex = build_collection_request_url(
             base,
-            &CollectionRequest::new("specific")
+            CollectionRequest::new("specific".into())
                 .full()
-                .limit(10)
-                .sort_by(RequestOrder::Oldest)
+                .limit(10, RequestOrder::Oldest)
                 .older_than(ServerTimestamp(9_876_540))
                 .newer_than(ServerTimestamp(1_234_560)),
         )
         .unwrap();
         assert_eq!(complex.as_str(),
-            "https://example.com/sync/storage/specific?full=1&limit=10&older=9876.54&newer=1234.56&sort=oldest");
+            "https://example.com/sync/storage/specific?full=1&older=9876.54&newer=1234.56&sort=oldest&limit=10");
+    }
+
+    #[cfg(feature = "sync-client")]
+    #[test]
+    fn test_post_query_building() {
+        let base = Url::parse("https://example.com/sync").unwrap();
+
+        let empty =
+            build_collection_post_url(base.clone(), CollectionPost::new("foo".into())).unwrap();
+        assert_eq!(empty.as_str(), "https://example.com/sync/storage/foo");
+        let batch_start = build_collection_post_url(
+            base.clone(),
+            CollectionPost::new("bar".into())
+                .batch(Some("true".into()))
+                .commit(false),
+        )
+        .unwrap();
+        assert_eq!(
+            batch_start.as_str(),
+            "https://example.com/sync/storage/bar?batch=true"
+        );
+        let batch_commit = build_collection_post_url(
+            base,
+            CollectionPost::new("asdf".into())
+                .batch(Some("1234abc".into()))
+                .commit(true),
+        )
+        .unwrap();
+        assert_eq!(
+            batch_commit.as_str(),
+            "https://example.com/sync/storage/asdf?batch=1234abc&commit=true"
+        );
     }
 }
