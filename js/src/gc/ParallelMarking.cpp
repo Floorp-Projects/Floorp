@@ -254,6 +254,16 @@ void ParallelMarkTask::waitUntilResumed(AutoLockGC& lock) {
   }
 }
 
+void ParallelMarkTask::resume() {
+  {
+    AutoLockGC lock(gc);
+    MOZ_ASSERT(isWaiting);
+    isWaiting = false;
+  }
+
+  resumed.notify_all();
+}
+
 void ParallelMarkTask::resume(const AutoLockGC& lock) {
   MOZ_ASSERT(isWaiting);
 
@@ -338,6 +348,5 @@ void ParallelMarker::donateWorkFrom(GCMarker* src) {
   }
 
   // Resume waiting task.
-  AutoLockGC lock(gc);
-  waitingTask->resume(lock);
+  waitingTask->resume();
 }
