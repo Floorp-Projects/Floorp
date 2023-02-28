@@ -19,6 +19,8 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/dom/indexedDB/Key.h"
+#include "mozilla/dom/quota/IPCStreamCipherStrategy.h"
+#include "IndexedDBCipherKeyManager.h"
 #include "nscore.h"
 #include "nsISupports.h"
 #include "nsStringFwd.h"
@@ -100,12 +102,14 @@ ReadCompressedNumber(Span<const uint8_t> aSpan);
 Result<StructuredCloneReadInfoParent, nsresult>
 GetStructuredCloneReadInfoFromValueArray(
     mozIStorageValueArray* aValues, uint32_t aDataIndex, uint32_t aFileIdsIndex,
-    const DatabaseFileManager& aFileManager);
+    const DatabaseFileManager& aFileManager, const Maybe<CipherKey>& aMaybeKey);
 
 Result<StructuredCloneReadInfoParent, nsresult>
-GetStructuredCloneReadInfoFromStatement(
-    mozIStorageStatement* aStatement, uint32_t aDataIndex,
-    uint32_t aFileIdsIndex, const DatabaseFileManager& aFileManager);
+GetStructuredCloneReadInfoFromStatement(mozIStorageStatement* aStatement,
+                                        uint32_t aDataIndex,
+                                        uint32_t aFileIdsIndex,
+                                        const DatabaseFileManager& aFileManager,
+                                        const Maybe<CipherKey>& aMaybeKey);
 
 Result<nsTArray<StructuredCloneFileParent>, nsresult>
 DeserializeStructuredCloneFiles(const DatabaseFileManager& aFileManager,

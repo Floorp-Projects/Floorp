@@ -9,8 +9,7 @@ with Files("**"):
 
 MOCHITEST_MANIFESTS += [
     "test/mochitest-intl-api.ini",
-    "test/mochitest-private.ini",
-    "test/mochitest-regular.ini",
+    "test/mochitest.ini",
 ]
 
 BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
@@ -69,7 +68,6 @@ UNIFIED_SOURCES += [
     "IDBTransaction.cpp",
     "IndexedDatabase.cpp",
     "IndexedDatabaseManager.cpp",
-    "IndexedDBCipherKeyManager.cpp",
     "IndexedDBCommon.cpp",
     "KeyPath.cpp",
     "ProfilerHelpers.cpp",

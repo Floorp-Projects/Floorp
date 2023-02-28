@@ -8,8 +8,6 @@
 #define DOM_INDEXEDDB_DATABASEFILEMANAGER_H_
 
 #include "FileInfoManager.h"
-#include "IndexedDBCipherKeyManager.h"
-#include "mozilla/dom/FlippedOnce.h"
 #include "mozilla/dom/quota/CommonMetadata.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/UsageInfo.h"
@@ -32,15 +30,11 @@ class DatabaseFileManager final
   const nsString mDatabaseName;
   const nsCString mDatabaseID;
 
-  mutable IndexedDBCipherKeyManager mCipherKeyManager;
-
   LazyInitializedOnce<const nsString> mDirectoryPath;
   LazyInitializedOnce<const nsString> mJournalDirectoryPath;
 
   const bool mEnforcingQuota;
   const bool mIsInPrivateBrowsingMode;
-
-  FlippedOnce<false> mInitialized;
 
   // Lock protecting DatabaseFileManager.mFileInfos.
   // It's s also used to atomically update DatabaseFileInfo.mRefCnt and
@@ -80,18 +74,9 @@ class DatabaseFileManager final
   const nsACString& Origin() const { return mOriginMetadata.mOrigin; }
 
   const nsAString& DatabaseName() const { return mDatabaseName; }
-
   const nsCString& DatabaseID() const { return mDatabaseID; }
-
-  IndexedDBCipherKeyManager& MutableCipherKeyManagerRef() const {
-    return mCipherKeyManager;
-  }
-
   auto IsInPrivateBrowsingMode() const { return mIsInPrivateBrowsingMode; }
-
   bool EnforcingQuota() const { return mEnforcingQuota; }
-
-  bool Initialized() const { return mInitialized; }
 
   nsresult Init(nsIFile* aDirectory, mozIStorageConnection& aConnection);
 
