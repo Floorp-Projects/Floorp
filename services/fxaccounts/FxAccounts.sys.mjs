@@ -4,9 +4,7 @@
 
 import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
 
-const { CryptoUtils } = ChromeUtils.import(
-  "resource://services-crypto/utils.js"
-);
+import { CryptoUtils } from "resource://services-crypto/utils.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 

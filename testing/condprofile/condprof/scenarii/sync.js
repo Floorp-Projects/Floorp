@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { triggerSync } = ChromeUtils.import(
-  "resource://gre/modules/services-automation/ServicesAutomation.jsm"
+const { triggerSync } = ChromeUtils.importESModule(
+  "resource://gre/modules/services-automation/ServicesAutomation.sys.mjs"
 );
 
 let resolve = arguments[3]; // eslint-disable-line

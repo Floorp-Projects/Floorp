@@ -11,9 +11,8 @@
 
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 
-const { CryptoUtils } = ChromeUtils.import(
-  "resource://services-crypto/utils.js"
-);
+import { CryptoUtils } from "resource://services-crypto/utils.sys.mjs";
+
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );

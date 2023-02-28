@@ -4,8 +4,8 @@
 const { Credentials } = ChromeUtils.importESModule(
   "resource://gre/modules/Credentials.sys.mjs"
 );
-const { CryptoUtils } = ChromeUtils.import(
-  "resource://services-crypto/utils.js"
+const { CryptoUtils } = ChromeUtils.importESModule(
+  "resource://services-crypto/utils.sys.mjs"
 );
 
 var { hexToBytes: h2b, hexAsString: h2s, bytesAsHex: b2h } = CommonUtils;

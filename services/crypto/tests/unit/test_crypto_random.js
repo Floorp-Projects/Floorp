@@ -1,5 +1,5 @@
-const { WeaveCrypto } = ChromeUtils.import(
-  "resource://services-crypto/WeaveCrypto.js"
+const { WeaveCrypto } = ChromeUtils.importESModule(
+  "resource://services-crypto/WeaveCrypto.sys.mjs"
 );
 
 var cryptoSvc = new WeaveCrypto();

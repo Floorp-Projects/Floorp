@@ -27,11 +27,9 @@ const { Credentials } = ChromeUtils.importESModule(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CryptoUtils",
-  "resource://services-crypto/utils.js"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  CryptoUtils: "resource://services-crypto/utils.sys.mjs",
+});
 
 const Prefs = new Preferences("services.common.rest.");
 

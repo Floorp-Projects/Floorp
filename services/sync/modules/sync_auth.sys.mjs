@@ -9,9 +9,7 @@ const { Async } = ChromeUtils.import("resource://services-common/async.js");
 const { TokenServerClient } = ChromeUtils.import(
   "resource://services-common/tokenserverclient.js"
 );
-const { CryptoUtils } = ChromeUtils.import(
-  "resource://services-crypto/utils.js"
-);
+import { CryptoUtils } from "resource://services-crypto/utils.sys.mjs";
 import { Svc, Utils } from "resource://services-sync/util.sys.mjs";
 
 const {
