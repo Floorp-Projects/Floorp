@@ -1154,8 +1154,8 @@ interface nsINavHistoryService : nsISupports
   attribute boolean isFrecencyDecaying;
 
   /**
-   * This is set to true when a frecency is invalidated and can be polled
-   * periodically to start recalculation tasks.
+   * This is set to true when a frecency is invalidated and set back to false
+   * when all the outdated values have been recalculated.
    */
   attribute boolean shouldStartFrecencyRecalculation;
 
