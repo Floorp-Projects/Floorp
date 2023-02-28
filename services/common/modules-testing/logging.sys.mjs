@@ -2,15 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { Log } from "resource://gre/modules/Log.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["getTestLogger", "initTestLogging"];
-
-const { Log } = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-);
-
-function initTestLogging(level) {
+export function initTestLogging(level) {
   function LogStats() {
     this.errorsLogged = 0;
   }
@@ -57,6 +51,6 @@ function initTestLogging(level) {
   return logStats;
 }
 
-function getTestLogger(component) {
+export function getTestLogger(component) {
   return Log.repository.getLogger("Testing");
 }

@@ -2,16 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["CommonUtils"];
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { Log } = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-);
+import { Log } from "resource://gre/modules/Log.sys.mjs";
 
-var CommonUtils = {
+export var CommonUtils = {
   /*
    * Set manipulation methods. These should be lifted into toolkit, or added to
    * `Set` itself.

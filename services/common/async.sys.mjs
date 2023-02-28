@@ -2,14 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = ["Async"];
-
 const Timer = Components.Constructor("@mozilla.org/timer;1", "nsITimer");
 
 /*
  * Helpers for various async operations.
  */
-var Async = {
+export var Async = {
   /**
    * Execute an arbitrary number of asynchronous functions one after the
    * other, passing the callback arguments on to the next one.  All functions

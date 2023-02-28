@@ -3,9 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict;";
 
-const { Log } = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-);
+import { Log } from "resource://gre/modules/Log.sys.mjs";
 
 const lazy = {};
 
@@ -18,11 +16,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/NetUtil.jsm"
 );
 
-const { Preferences } = ChromeUtils.importESModule(
-  "resource://gre/modules/Preferences.sys.mjs"
-);
-
-var EXPORTED_SYMBOLS = ["LogManager"];
+import { Preferences } from "resource://gre/modules/Preferences.sys.mjs";
 
 const DEFAULT_MAX_ERROR_AGE = 20 * 24 * 60 * 60; // 20 days
 
@@ -44,10 +38,6 @@ var consoleAppender;
 
 // A set of all preference roots used by all instances.
 var allBranches = new Set();
-
-const ONE_BYTE = 1;
-const ONE_KILOBYTE = 1024 * ONE_BYTE;
-const ONE_MEGABYTE = 1024 * ONE_KILOBYTE;
 
 const STREAM_SEGMENT_SIZE = 4096;
 const PR_UINT32_MAX = 0xffffffff;
@@ -211,7 +201,7 @@ class FlushableStorageAppender extends StorageStreamAppender {
 }
 
 // The public LogManager object.
-function LogManager(prefRoot, logNames, logFilePrefix) {
+export function LogManager(prefRoot, logNames, logFilePrefix) {
   this._prefObservers = [];
   this.init(prefRoot, logNames, logFilePrefix);
 }

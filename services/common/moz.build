@@ -18,26 +18,26 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES["services-common"] += [
-    "async.js",
+    "async.sys.mjs",
     "kinto-http-client.js",
     "kinto-offline-client.js",
-    "kinto-storage-adapter.js",
-    "logmanager.js",
-    "observers.js",
-    "rest.js",
-    "uptake-telemetry.js",
-    "utils.js",
+    "kinto-storage-adapter.sys.mjs",
+    "logmanager.sys.mjs",
+    "observers.sys.mjs",
+    "rest.sys.mjs",
+    "uptake-telemetry.sys.mjs",
+    "utils.sys.mjs",
 ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] != "android":
     EXTRA_JS_MODULES["services-common"] += [
-        "hawkclient.js",
-        "hawkrequest.js",
-        "tokenserverclient.js",
+        "hawkclient.sys.mjs",
+        "hawkrequest.sys.mjs",
+        "tokenserverclient.sys.mjs",
     ]
 
 TESTING_JS_MODULES.services.common += [
-    "modules-testing/logging.js",
+    "modules-testing/logging.sys.mjs",
 ]
 
 SPHINX_TREES["/services/common"] = "docs"

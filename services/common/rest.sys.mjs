@@ -2,19 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var EXPORTED_SYMBOLS = [
-  "RESTRequest",
-  "RESTResponse",
-  "TokenAuthenticatedRESTRequest",
-];
-
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
-const { Log } = ChromeUtils.importESModule(
-  "resource://gre/modules/Log.sys.mjs"
-);
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
+import { Log } from "resource://gre/modules/Log.sys.mjs";
+import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
+
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );
@@ -86,7 +77,7 @@ function decodeString(data, charset) {
  *
  *   let response = await new RESTRequest("http://server/rest/resource").put(data);
  */
-function RESTRequest(uri) {
+export function RESTRequest(uri) {
   this.status = this.NOT_SENT;
 
   // If we don't have an nsIURI object yet, make one. This will throw if
@@ -601,13 +592,14 @@ RESTRequest.prototype = {
  * Response object for a RESTRequest. This will be created automatically by
  * the RESTRequest.
  */
-function RESTResponse(request = null) {
+export function RESTResponse(request = null) {
   this.body = "";
   this._rawBody = "";
   this.request = request;
   this._log = Log.repository.getLogger(this._logName);
   this._log.manageLevelFromPref("services.common.log.logger.rest.response");
 }
+
 RESTResponse.prototype = {
   _logName: "Services.Common.RESTResponse",
 
@@ -702,11 +694,12 @@ RESTResponse.prototype = {
  *        nonce, and ext. See CrytoUtils.computeHTTPMACSHA1 for information on
  *        the purpose of these values.
  */
-function TokenAuthenticatedRESTRequest(uri, authToken, extra) {
+export function TokenAuthenticatedRESTRequest(uri, authToken, extra) {
   RESTRequest.call(this, uri);
   this.authToken = authToken;
   this.extra = extra || {};
 }
+
 TokenAuthenticatedRESTRequest.prototype = {
   async dispatch(method, data) {
     let sig = await lazy.CryptoUtils.computeHTTPMACSHA1(

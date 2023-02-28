@@ -2,16 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["UptakeTelemetry", "Policy"];
-
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   ClientID: "resource://gre/modules/ClientID.sys.mjs",
@@ -31,16 +24,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "services.common.uptake.sampleRate"
 );
 
-// Telemetry histogram id (see Histograms.json).
-const TELEMETRY_HISTOGRAM_ID = "UPTAKE_REMOTE_CONTENT_RESULT_1";
-
 // Telemetry events id (see Events.yaml).
 const TELEMETRY_EVENTS_ID = "uptake.remotecontent.result";
 
 /**
  * A wrapper around certain low-level operations that can be substituted for testing.
  */
-var Policy = {
+export var Policy = {
   _clientIDHash: null,
 
   getClientID() {
@@ -82,7 +72,7 @@ var Policy = {
 /**
  * A Telemetry helper to report uptake of remote content.
  */
-class UptakeTelemetry {
+export class UptakeTelemetry {
   /**
    * Supported uptake statuses:
    *
