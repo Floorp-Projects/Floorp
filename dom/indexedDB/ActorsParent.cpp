@@ -119,7 +119,6 @@
 #include "mozilla/dom/indexedDB/PBackgroundIDBVersionChangeTransactionParent.h"
 #include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsParent.h"
 #include "mozilla/dom/ipc/IdType.h"
-#include "mozilla/dom/quota/Assertions.h"
 #include "mozilla/dom/quota/CachingDatabaseConnection.h"
 #include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "mozilla/dom/quota/Client.h"
@@ -3076,7 +3075,6 @@ class FactoryOp
   const CommonFactoryRequestParams mCommonParams;
   OriginMetadata mOriginMetadata;
   nsCString mDatabaseId;
-  nsCString mStorageId;
   nsString mDatabaseFilePath;
   int64_t mDirectoryLockId;
   State mState;
@@ -3087,8 +3085,6 @@ class FactoryOp
   FlippedOnce<false> mInPrivateBrowsing;
 
  public:
-  const nsACString& StorageId() const { return mStorageId; }
-
   const nsACString& Origin() const {
     AssertIsOnOwningThread();
 
@@ -3583,115 +3579,42 @@ class NormalTransactionOp : public TransactionDatabaseOperationBase,
       const PreprocessResponse& aResponse) final;
 };
 
-Maybe<CipherKey> IndexedDBCipherKeyManager::Get(const nsACString& aStorageId,
-                                                const nsAString& aDatabaseName,
-                                                const nsACString& keyStoreId) {
-  const auto& keyId = GenerateKeyId(aStorageId, aDatabaseName);
-  {
-    MutexAutoLock l{mMutex};
+Maybe<CipherKey> IndexedDBCipherKeyManager::Get(const nsCString& aDatabaseID,
+                                                const nsCString& keyStoreID) {
+  auto lockedPrivateBrowsingInfoHashTable =
+      mPrivateBrowsingInfoHashTable.Lock();
 
-    auto dbKeyStore = mPrivateBrowsingInfoHashTable.Lookup(keyId);
-    if (!dbKeyStore) {
-      return Nothing();
-    }
-
-    return dbKeyStore->MaybeGet(keyStoreId);
-  }
-}
-
-CipherKey IndexedDBCipherKeyManager::Ensure(const nsACString& aStorageId,
-                                            const nsAString& aDatabaseName,
-                                            const nsACString& keyStoreId) {
-  const auto& keyId = GenerateKeyId(aStorageId, aDatabaseName);
-  {
-    MutexAutoLock l{mMutex};
-
-    auto& dbKeyStore = mPrivateBrowsingInfoHashTable.LookupOrInsert(keyId);
-
-    return dbKeyStore.LookupOrInsertWith(keyStoreId, [&] {
-      // Generate a new key if one corresponding to keyStoreID
-      // does not exists already.
-      auto keyOrErr = IndexedDBCipherStrategy::GenerateKey();
-
-      // Bug1800110 Propagate the error to the caller rather than asserting.
-      MOZ_RELEASE_ASSERT(keyOrErr.isOk());
-
-      // Add keyId against this aStorageId such that we could pull all the
-      // keyIds against a storageId later on.
-      auto& keyIds = mStorageIdAndKeyIdHashMap.LookupOrInsert(
-          aStorageId, nsTHashSet<nsCString>{});
-      keyIds.EnsureInserted(keyId);
-
-      return keyOrErr.unwrap();
-    });
-  }
-}
-
-bool IndexedDBCipherKeyManager::RemoveKey(const nsACString& aStorageId,
-                                          const nsAString& aDatabaseName) {
-  const auto& keyId = GenerateKeyId(aStorageId, aDatabaseName);
-  {
-    MutexAutoLock l{mMutex};
-
-    auto keyIds = mStorageIdAndKeyIdHashMap.Lookup(aStorageId);
-    if (keyIds) {
-      // In case, we are deleting a database;
-      // we need to remove it's keyId from it's storageId.
-      keyIds->Remove(keyId);
-    }
-
-    if (!mPrivateBrowsingInfoHashTable.Remove(keyId)) {
-      return false;
-    }
-
-    // we should remove this aStorageId from secondary cache if this was the
-    // only keyId in it.
-    if (keyIds->Count() == 0) {
-      mStorageIdAndKeyIdHashMap.Remove(aStorageId);
-    }
-
-    return true;
-  }
-}
-
-bool IndexedDBCipherKeyManager::RemoveAllKeysWithStorageId(
-    const nsACString& aStorageId) {
-  AssertIsOnIOThread();
-
-  {
-    MutexAutoLock l{mMutex};
-
-    const auto& keyIds = mStorageIdAndKeyIdHashMap.Lookup(aStorageId);
-    if (!keyIds) {
-      return false;
-    }
-
-    for (const auto& keyId : keyIds.Data()) {
-      mPrivateBrowsingInfoHashTable.Remove(keyId);
-    }
-
-    // origin is gone; we should remove it from secondary cache along with it's
-    // keyIds.
-    mStorageIdAndKeyIdHashMap.Remove(aStorageId);
+  auto dbKeyStore = lockedPrivateBrowsingInfoHashTable->Lookup(aDatabaseID);
+  if (!dbKeyStore) {
+    return Nothing();
   }
 
-  return true;
+  return dbKeyStore->MaybeGet(keyStoreID);
 }
 
-uint32_t IndexedDBCipherKeyManager::Count() {
-  MutexAutoLock l{mMutex};
-  return mPrivateBrowsingInfoHashTable.Count();
+CipherKey IndexedDBCipherKeyManager::Ensure(const nsCString& aDatabaseID,
+                                            const nsCString& keyStoreID) {
+  auto lockedPrivateBrowsingInfoHashTable =
+      mPrivateBrowsingInfoHashTable.Lock();
+
+  auto& dbKeyStore =
+      lockedPrivateBrowsingInfoHashTable->LookupOrInsert(aDatabaseID);
+
+  return dbKeyStore.LookupOrInsertWith(keyStoreID, [] {
+    // Generate a new key if one corresponding to keyStoreID
+    // does not exists already.
+    auto keyOrErr = IndexedDBCipherStrategy::GenerateKey();
+
+    // Bug1800110 Propagate the error to the caller rather than asserting.
+    MOZ_RELEASE_ASSERT(keyOrErr.isOk());
+    return keyOrErr.unwrap();
+  });
 }
 
-nsCString IndexedDBCipherKeyManager::GenerateKeyId(
-    const nsACString& aStorageId, const nsAString& aDatabaseName) {
-  nsCString keyId;
-
-  keyId.Append(aStorageId);
-  keyId.Append("*");
-  keyId.Append(NS_ConvertUTF16toUTF8(aDatabaseName));
-
-  return keyId;
+bool IndexedDBCipherKeyManager::Remove(const nsCString& aDatabaseID) {
+  auto lockedPrivateBrowsingInfoHashTable =
+      mPrivateBrowsingInfoHashTable.Lock();
+  return lockedPrivateBrowsingInfoHashTable->Remove(aDatabaseID);
 }
 
 // XXX Maybe we can avoid a mutex here by moving all accesses to the background
@@ -3852,11 +3775,7 @@ void ObjectStoreAddOrPutRequestOp::StoredFileInfo::EnsureCipherKey() {
 
   nsCString keyId;
   keyId.AppendInt(fileInfo.Id());
-
-  const auto& storageId = QuotaManager::StorageId::Serialize(
-      fileMgr.Origin(), fileMgr.Type(), Client::IDB);
-
-  gIndexedDBCipherKeyManager->Ensure(storageId, fileMgr.DatabaseName(), keyId);
+  gIndexedDBCipherKeyManager->Ensure(fileMgr.DatabaseID(), keyId);
 }
 
 ObjectStoreAddOrPutRequestOp::StoredFileInfo::StoredFileInfo(
@@ -5506,12 +5425,8 @@ RefPtr<BlobImpl> CreateFileBlobImpl(const Database& aDatabase,
     nsCString cipherKeyId;
     cipherKeyId.AppendInt(aId);
 
-    const auto& originMetadata = aDatabase.OriginMetadata();
-
-    const auto& storageID = QuotaManager::StorageId::Serialize(
-        originMetadata.mOrigin, originMetadata.mPersistenceType, Client::IDB);
-    const auto& key = gIndexedDBCipherKeyManager->Get(
-        storageID, aDatabase.GetFileManager().DatabaseName(), cipherKeyId);
+    const auto& key =
+        gIndexedDBCipherKeyManager->Get(aDatabase.Id(), cipherKeyId);
 
     MOZ_RELEASE_ASSERT(key.isSome());
     return MakeRefPtr<EncryptedFileBlobImpl>(aNativeFile, aId, *key);
@@ -5971,6 +5886,9 @@ void IncreaseBusyCount() {
     MOZ_ASSERT(!gLiveDatabaseHashtable);
     gLiveDatabaseHashtable = new DatabaseActorHashtable();
 
+    MOZ_ASSERT(!gIndexedDBCipherKeyManager);
+    gIndexedDBCipherKeyManager = new IndexedDBCipherKeyManager();
+
     MOZ_ASSERT(!gLoggingInfoHashtable);
     gLoggingInfoHashtable = new DatabaseLoggingInfoHashtable();
 
@@ -6016,6 +5934,11 @@ void DecreaseBusyCount() {
     MOZ_ASSERT(gLiveDatabaseHashtable);
     MOZ_ASSERT(!gLiveDatabaseHashtable->Count());
     gLiveDatabaseHashtable = nullptr;
+
+    MOZ_ASSERT(gIndexedDBCipherKeyManager);
+    // XXX After we add the private browsing session end listener, we can assert
+    // this.
+    gIndexedDBCipherKeyManager = nullptr;
 
     MOZ_ASSERT(gFactoryOps);
     MOZ_ASSERT(gFactoryOps->IsEmpty());
@@ -12504,17 +12427,6 @@ void QuotaClient::OnOriginClearCompleted(PersistenceType aPersistenceType,
   if (IndexedDatabaseManager* mgr = IndexedDatabaseManager::Get()) {
     mgr->InvalidateFileManagers(aPersistenceType, aOrigin);
   }
-
-  // Delete any cipher keys for this origin.
-  if (gIndexedDBCipherKeyManager != nullptr) {
-    const auto& storageId = QuotaManager::StorageId::Serialize(
-        aOrigin, aPersistenceType, GetType());
-
-    DebugOnly<bool> ret =
-        gIndexedDBCipherKeyManager->RemoveAllKeysWithStorageId(storageId);
-
-    MOZ_ASSERT(ret);
-  }
 }
 
 void QuotaClient::ReleaseIOThreadObjects() {
@@ -14754,17 +14666,17 @@ nsresult FactoryOp::Open() {
 
   const DatabaseMetadata& metadata = mCommonParams.metadata();
 
-  // mDatabaseId is specifically more qualified than mStorageId.
-  // mStorageId identifies origin uniquely whereas mDatabaseId
-  // uniquely identifies databases uniquely within an origin.
-  mDatabaseId =
-      (mStorageId = QuotaManager::StorageId::Serialize(
-           mOriginMetadata.mOrigin, metadata.persistenceType(), Client::IDB));
+  QuotaManager::GetStorageId(metadata.persistenceType(),
+                             mOriginMetadata.mOrigin, Client::IDB, mDatabaseId);
 
   mDatabaseId.Append('*');
   mDatabaseId.Append(NS_ConvertUTF16toUTF8(metadata.name()));
 
   MOZ_ASSERT(permission == PermissionValue::kPermissionAllowed);
+
+  if (mInPrivateBrowsing) {
+    gIndexedDBCipherKeyManager->Ensure(mDatabaseId);
+  }
 
   mState = State::FinishOpen;
   MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
@@ -15082,15 +14994,6 @@ nsresult FactoryOp::FinishOpen() {
   QuotaManager* const quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  if (mInPrivateBrowsing) {
-    if (gIndexedDBCipherKeyManager == nullptr) {
-      gIndexedDBCipherKeyManager = new IndexedDBCipherKeyManager();
-    }
-
-    gIndexedDBCipherKeyManager->Ensure(mStorageId,
-                                       mCommonParams.metadata().name());
-  }
-
   // Need to get database file path before opening the directory.
   // XXX: For what reason?
   QM_TRY_UNWRAP(mDatabaseFilePath,
@@ -15373,8 +15276,7 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
                                            kFileManagerDirectoryNameSuffix));
 
   Maybe<const CipherKey> maybeKey =
-      mInPrivateBrowsing ? gIndexedDBCipherKeyManager->Get(
-                               mStorageId, mCommonParams.metadata().name())
+      mInPrivateBrowsing ? gIndexedDBCipherKeyManager->Get(mDatabaseId)
                          : Nothing();
 
   MOZ_RELEASE_ASSERT(mInPrivateBrowsing == maybeKey.isSome());
@@ -16082,8 +15984,7 @@ void OpenDatabaseOp::EnsureDatabaseActor() {
   }
 
   Maybe<const CipherKey> maybeKey =
-      mInPrivateBrowsing ? gIndexedDBCipherKeyManager->Get(
-                               mStorageId, mCommonParams.metadata().name())
+      mInPrivateBrowsing ? gIndexedDBCipherKeyManager->Get(mDatabaseId)
                          : Nothing();
 
   MOZ_RELEASE_ASSERT(mInPrivateBrowsing == maybeKey.isSome());
@@ -16391,8 +16292,7 @@ void DeleteDatabaseOp::LoadPreviousVersion(nsIFile& aDatabaseFile) {
   }
 
   const auto maybeKey = mInPrivateBrowsing
-                            ? gIndexedDBCipherKeyManager->Get(
-                                  mStorageId, mCommonParams.metadata().name())
+                            ? gIndexedDBCipherKeyManager->Get(mDatabaseId)
                             : Nothing();
 
   MOZ_RELEASE_ASSERT(mInPrivateBrowsing == maybeKey.isSome());
@@ -16641,8 +16541,6 @@ nsresult DeleteDatabaseOp::VersionChangeOp::RunOnIOThread() {
   const PersistenceType& persistenceType =
       mDeleteDatabaseOp->mCommonParams.metadata().persistenceType();
 
-  const auto& databaseName = mDeleteDatabaseOp->mCommonParams.metadata().name();
-
   QuotaManager* quotaManager =
       mDeleteDatabaseOp->mEnforcingQuota ? QuotaManager::Get() : nullptr;
 
@@ -16664,8 +16562,8 @@ nsresult DeleteDatabaseOp::VersionChangeOp::RunOnIOThread() {
   }
 
   if (mDeleteDatabaseOp->mInPrivateBrowsing) {
-    DebugOnly<bool> ok = gIndexedDBCipherKeyManager->RemoveKey(
-        mDeleteDatabaseOp->mStorageId, databaseName);
+    DebugOnly<bool> ok =
+        gIndexedDBCipherKeyManager->Remove(mDeleteDatabaseOp->mDatabaseId);
     MOZ_ASSERT(ok);
   }
 
@@ -18817,17 +18715,13 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
           nsCString fileKeyId;
           fileKeyId.AppendInt(fileInfo.Id());
 
-          const auto& storageId = QuotaManager::StorageId::Serialize(
-              mOriginMetadata.mOrigin, mOriginMetadata.mPersistenceType,
-              Client::IDB);
-
           const auto maybeKey =
               Transaction()
                       .GetDatabase()
                       .GetFileManager()
                       .IsInPrivateBrowsingMode()
                   ? gIndexedDBCipherKeyManager->Get(
-                        storageId, fileInfo.Manager().DatabaseName(), fileKeyId)
+                        Transaction().GetDatabase().Id(), fileKeyId)
                   : Nothing();
 
           QM_TRY(
