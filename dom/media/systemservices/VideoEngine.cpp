@@ -43,9 +43,9 @@ int VideoEngine::SetAndroidObjects() {
 }
 #endif
 
-int32_t VideoEngine::CreateVideoCapture(const char* deviceUniqueIdUTF8) {
+int32_t VideoEngine::CreateVideoCapture(const char* aDeviceUniqueIdUTF8) {
   LOG(("%s", __PRETTY_FUNCTION__));
-  MOZ_ASSERT(deviceUniqueIdUTF8);
+  MOZ_ASSERT(aDeviceUniqueIdUTF8);
 
   int32_t id = GenerateId();
   LOG(("CaptureDeviceInfo.type=%s id=%d", mCaptureDevInfo.TypeName(), id));
@@ -54,7 +54,7 @@ int32_t VideoEngine::CreateVideoCapture(const char* deviceUniqueIdUTF8) {
     if (it.second.VideoCapture() &&
         it.second.VideoCapture()->CurrentDeviceName() &&
         strcmp(it.second.VideoCapture()->CurrentDeviceName(),
-               deviceUniqueIdUTF8) == 0) {
+               aDeviceUniqueIdUTF8) == 0) {
       mIdMap.emplace(id, it.first);
       return id;
     }
@@ -64,7 +64,7 @@ int32_t VideoEngine::CreateVideoCapture(const char* deviceUniqueIdUTF8) {
 
   if (mCaptureDevInfo.type == CaptureDeviceType::Camera) {
     entry = CaptureEntry(
-        id, webrtc::VideoCaptureFactory::Create(deviceUniqueIdUTF8));
+        id, webrtc::VideoCaptureFactory::Create(aDeviceUniqueIdUTF8));
     if (entry.VideoCapture()) {
       entry.VideoCapture()->SetApplyRotation(true);
     }
@@ -72,7 +72,7 @@ int32_t VideoEngine::CreateVideoCapture(const char* deviceUniqueIdUTF8) {
 #ifndef WEBRTC_ANDROID
     entry = CaptureEntry(
         id, rtc::scoped_refptr<webrtc::VideoCaptureModule>(
-                webrtc::DesktopCaptureImpl::Create(id, deviceUniqueIdUTF8,
+                webrtc::DesktopCaptureImpl::Create(id, aDeviceUniqueIdUTF8,
                                                    mCaptureDevInfo.type)));
 #else
     MOZ_ASSERT("CreateVideoCapture NO DESKTOP CAPTURE IMPL ON ANDROID" ==
@@ -84,38 +84,38 @@ int32_t VideoEngine::CreateVideoCapture(const char* deviceUniqueIdUTF8) {
   return id;
 }
 
-int VideoEngine::ReleaseVideoCapture(const int32_t id) {
+int VideoEngine::ReleaseVideoCapture(const int32_t aId) {
   bool found = false;
 
 #ifdef DEBUG
   {
-    auto it = mIdMap.find(id);
+    auto it = mIdMap.find(aId);
     MOZ_ASSERT(it != mIdMap.end());
     Unused << it;
   }
 #endif
 
   for (auto& it : mIdMap) {
-    if (it.first != id && it.second == mIdMap[id]) {
+    if (it.first != aId && it.second == mIdMap[aId]) {
       // There are other tracks still using this hardware.
       found = true;
     }
   }
 
   if (!found) {
-    WithEntry(id, [&found](CaptureEntry& cap) {
+    WithEntry(aId, [&found](CaptureEntry& cap) {
       cap.mVideoCaptureModule = nullptr;
       found = true;
     });
     MOZ_ASSERT(found);
     if (found) {
-      auto it = mCaps.find(mIdMap[id]);
+      auto it = mCaps.find(mIdMap[aId]);
       MOZ_ASSERT(it != mCaps.end());
       mCaps.erase(it);
     }
   }
 
-  mIdMap.erase(id);
+  mIdMap.erase(aId);
   return found ? 0 : (-1);
 }
 
