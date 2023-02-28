@@ -13,14 +13,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
-  clearInterval: "resource://gre/modules/Timer.sys.mjs",
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-  setInterval: "resource://gre/modules/Timer.sys.mjs",
-});
-
-XPCOMUtils.defineLazyServiceGetters(lazy, {
-  idleService: ["@mozilla.org/widget/useridleservice;1", "nsIUserIdleService"],
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "logger", function() {
@@ -62,11 +56,6 @@ const DEFERRED_TASK_INTERVAL_MS = 2 * 60000;
 const DEFERRED_TASK_MAX_IDLE_WAIT_MS = 5 * 60000;
 // Number of entries to update at once.
 const DEFAULT_CHUNK_SIZE = 50;
-// Interval to check shouldStartFrecencyRecalculation and arm the recalculation
-// task.
-const CHECK_RECALCULATION_NEEDED_INTERVAL_MS = 60000;
-// After this idle time, stop periodic checks until the user is back.
-const PAUSE_RECALCULATION_CHECK_IDLE_S = 5 * 60;
 
 export class PlacesFrecencyRecalculator {
   classID = Components.ID("1141fd31-4c1a-48eb-8f1a-2f05fad94085");
@@ -103,9 +92,6 @@ export class PlacesFrecencyRecalculator {
       () => this.#finalize()
     );
 
-    this.startRecalculationCheckInterval();
-    lazy.idleService.addIdleObserver(this, PAUSE_RECALCULATION_CHECK_IDLE_S);
-
     // The public methods and properties are intended to be used by tests, and
     // are exposed through the raw js object. Since this is expected to work
     // based on signals or notification, it should not be necessary to expose
@@ -116,6 +102,7 @@ export class PlacesFrecencyRecalculator {
     this.pendingFrecencyDecayPromise = Promise.resolve();
 
     Services.obs.addObserver(this, "idle-daily", true);
+    Services.obs.addObserver(this, "frecency-recalculation-needed", true);
 
     // Run once on startup, so we pick up any leftover work.
     this.#task.arm();
@@ -143,33 +130,10 @@ export class PlacesFrecencyRecalculator {
 
   #finalize() {
     lazy.logger.trace("Finalizing frecency recalculator");
-    lazy.idleService.removeIdleObserver(this, PAUSE_RECALCULATION_CHECK_IDLE_S);
     // We don't mind about tasks completiion, since we can execute them in the
     // next session.
     this.#task.disarm();
     this.#task.finalize().catch(console.error);
-    this.stopRecalculationCheckInterval();
-  }
-
-  /**
-   * Interval to check shouldStartFrecencyRecalculation.
-   * The following interval related methods are public for testing purposes.
-   */
-  #intervalId = 0;
-
-  startRecalculationCheckInterval() {
-    lazy.logger.trace("Start frecency recalculator interval check");
-    if (this.#task.isFinalized) {
-      return;
-    }
-    this.#intervalId = lazy.setInterval(
-      () => this.maybeStartFrecencyRecalculation(),
-      CHECK_RECALCULATION_NEEDED_INTERVAL_MS
-    );
-  }
-  stopRecalculationCheckInterval() {
-    lazy.logger.trace("Stop frecency recalculator interval check");
-    lazy.clearInterval(this.#intervalId);
   }
 
   /**
@@ -209,6 +173,8 @@ export class PlacesFrecencyRecalculator {
       // There's more entries to recalculate, rearm the task.
       this.#task.arm();
     } else {
+      // There's nothing left to recalculate, wait for the next change.
+      lazy.PlacesUtils.history.shouldStartFrecencyRecalculation = false;
       this.#task.disarm();
     }
     return affected.length;
@@ -235,9 +201,11 @@ export class PlacesFrecencyRecalculator {
    * Invoked periodically to eventually start a recalculation task.
    */
   maybeStartFrecencyRecalculation() {
-    if (lazy.PlacesUtils.history.shouldStartFrecencyRecalculation) {
+    if (
+      lazy.PlacesUtils.history.shouldStartFrecencyRecalculation &&
+      !this.#task.isFinalized
+    ) {
       lazy.logger.trace("Arm frecency recalculation");
-      lazy.PlacesUtils.history.shouldStartFrecencyRecalculation = false;
       this.#task.arm();
     }
   }
@@ -302,13 +270,11 @@ export class PlacesFrecencyRecalculator {
         this.pendingFrecencyDecayPromise = this.decay();
         // Also recalculate frecencies.
         this.#task.arm();
-        break;
-      case "idle":
-        this.stopRecalculationCheckInterval();
-        break;
-      case "active":
-        this.startRecalculationCheckInterval();
-        break;
+        return;
+      case "frecency-recalculation-needed":
+        lazy.logger.trace("Frecency recalculation requested");
+        this.maybeStartFrecencyRecalculation();
+        return;
       case "test-execute-taskFn":
         subject.promise = this.#taskFn();
     }
