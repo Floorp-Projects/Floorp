@@ -24,12 +24,16 @@ add_task(async function() {
   await pushPref("devtools.browserconsole.enableNetworkMonitoring", true);
   await pushPref("devtools.browsertoolbox.scope", "everything");
 
+  // Open a parent process tab to check it doesn't have impact
+  const aboutRobotsTab = await addTab("about:robots");
+  // And open the "actual" test tab
   const tab = await addTab(TEST_URI);
 
   await testMessages();
 
   info("Close tab");
   await removeTab(tab);
+  await removeTab(aboutRobotsTab);
 });
 
 async function testMessages() {
@@ -89,6 +93,21 @@ async function testMessages() {
   });
   const chromeSpawnedWorker = new hud.iframeWindow.Worker(
     URL.createObjectURL(blob)
+  );
+
+  // Spawn Chrome worker from a chrome window and log a message
+  // It's important to use the browser console global so the message gets assigned
+  // a non-numeric innerID in Console.cpp
+  const browserConsoleGlobal = Cu.getGlobalForObject(hud);
+  const chromeWorker = new browserConsoleGlobal.ChromeWorker(
+    URL.createObjectURL(
+      new browserConsoleGlobal.Blob(
+        [`console.log("message in chrome worker")`],
+        {
+          type: "application/javascript",
+        }
+      )
+    )
   );
 
   const sandbox = new Cu.Sandbox(null, {
@@ -237,6 +256,11 @@ async function testMessages() {
   await checkUniqueMessageExists(hud, "error in parent worker", ".error");
   await checkUniqueMessageExists(
     hud,
+    "message in chrome worker",
+    ".console-api"
+  );
+  await checkUniqueMessageExists(
+    hud,
     "Expected color but found ‘rainbow’",
     ".warn"
   );
@@ -253,6 +277,7 @@ async function testMessages() {
     delete content.testWorker;
   });
   chromeSpawnedWorker.terminate();
+  chromeWorker.terminate();
   info("Close the Browser Console");
   await safeCloseBrowserConsole();
 }
