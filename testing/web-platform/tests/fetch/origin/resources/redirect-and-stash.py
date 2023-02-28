@@ -33,6 +33,6 @@ def main(request, response):
     response.headers.set(b"Content-Type", b"text/html")
     response.headers.set(b"Access-Control-Allow-Origin", b"*")
     if b"dummyJS" in request.GET:
-        response.content = b"console.log('dummy JS')";
+        response.content = b"console.log('dummy JS')"
     else:
         response.content = b"<meta charset=utf-8>\n<body><script>parent.postMessage('loaded','*')</script></body>"
