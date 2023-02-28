@@ -6259,6 +6259,7 @@ dependencies = [
  "log",
  "malloc_size_of_derive",
  "num-traits",
+ "peek-poke",
  "plane-split",
  "rayon",
  "ron",
