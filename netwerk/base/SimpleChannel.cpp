@@ -8,6 +8,7 @@
 #include "nsBaseChannel.h"
 #include "nsIChannel.h"
 #include "nsIChildChannel.h"
+#include "nsICancelable.h"
 #include "nsIInputStream.h"
 #include "nsIRequest.h"
 #include "nsISupportsImpl.h"

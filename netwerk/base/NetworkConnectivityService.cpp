@@ -7,14 +7,16 @@
 #include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "nsCOMPtr.h"
 #include "nsIOService.h"
+#include "nsICancelable.h"
 #include "xpcpublic.h"
 #include "nsSocketTransport2.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsINetworkLinkService.h"
 #include "mozilla/StaticPrefs_network.h"
 
-static LazyLogModule gNCSLog("NetworkConnectivityService");
+static mozilla::LazyLogModule gNCSLog("NetworkConnectivityService");
 #undef LOG
 #define LOG(args) MOZ_LOG(gNCSLog, mozilla::LogLevel::Debug, args)
 

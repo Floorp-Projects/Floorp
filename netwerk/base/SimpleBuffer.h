@@ -14,7 +14,9 @@
 */
 
 #include "prtypes.h"
+#include "ErrorList.h"
 #include "mozilla/LinkedList.h"
+#include "nsISupportsImpl.h"
 
 namespace mozilla {
 namespace net {

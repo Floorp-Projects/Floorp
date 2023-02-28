@@ -17,10 +17,9 @@
 #include "nsIStreamListener.h"
 #include "nsILoadGroup.h"
 #include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "nsStreamUtils.h"
 #include <algorithm>
-
-static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 
 //
 // MOZ_LOG=nsStreamPump:5
@@ -86,7 +85,8 @@ nsresult nsInputStreamPump::PeekStream(PeekSegmentFun callback, void* closure) {
 
   PeekData data(callback, closure);
   return mAsyncStream->ReadSegments(
-      CallPeekFunc, &data, net::nsIOService::gDefaultSegmentSize, &dummy);
+      CallPeekFunc, &data, mozilla::net::nsIOService::gDefaultSegmentSize,
+      &dummy);
 }
 
 nsresult nsInputStreamPump::EnsureWaiting() {
@@ -102,7 +102,7 @@ nsresult nsInputStreamPump::EnsureWaiting() {
       nsCOMPtr<nsIEventTarget> mainThread =
           mLabeledMainThreadTarget
               ? mLabeledMainThreadTarget
-              : do_AddRef(GetMainThreadSerialEventTarget());
+              : do_AddRef(mozilla::GetMainThreadSerialEventTarget());
       if (mTargetThread != mainThread) {
         mTargetThread = mainThread;
       }
@@ -651,8 +651,8 @@ uint32_t nsInputStreamPump::OnStateStop() {
     // This method can be called on a different thread if nsInputStreamPump
     // is used off the main-thread.
     nsresult rv = mLabeledMainThreadTarget->Dispatch(
-        NewRunnableMethod("nsInputStreamPump::CallOnStateStop", this,
-                          &nsInputStreamPump::CallOnStateStop));
+        mozilla::NewRunnableMethod("nsInputStreamPump::CallOnStateStop", this,
+                                   &nsInputStreamPump::CallOnStateStop));
     NS_ENSURE_SUCCESS(rv, STATE_DEAD);
     return STATE_DEAD;
   }
