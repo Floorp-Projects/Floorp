@@ -6097,6 +6097,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   // we don't get bogus CSD margins on Wayland, see bug 1794577.
   if (IsAlwaysUndecoratedWindow()) {
     LOG("    Is undecorated Window\n");
+    gtk_window_set_titlebar(GTK_WINDOW(mShell), gtk_fixed_new());
     gtk_window_set_decorated(GTK_WINDOW(mShell), false);
   }
 
