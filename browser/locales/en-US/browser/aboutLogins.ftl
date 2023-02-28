@@ -44,6 +44,14 @@ login-list-count =
       [one] { $count } login
      *[other] { $count } logins
   }
+# Variables
+#   $count (number) - Number of filtered logins
+#   $total (number) - Total number of logins
+login-list-filtered-count =
+  { $total ->
+      [one] { $count } of { $total } login
+     *[other] { $count } of { $total } logins
+  }
 login-list-sort-label-text = Sort by:
 login-list-name-option = Name (A-Z)
 login-list-name-reverse-option = Name (Z-A)
