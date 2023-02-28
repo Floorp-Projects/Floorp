@@ -414,6 +414,7 @@ class BrowserRobot {
             mDevice.findObject(
                 UiSelector().resourceId("$packageName:id/feature_prompt_login_fragment"),
             ),
+            waitingTime,
         )
         mDevice.findObject(text(optionToSaveLogin)).click()
     }
@@ -494,7 +495,7 @@ class BrowserRobot {
         setPageObjectText(webPageItemWithResourceId("password"), password)
         clickPageObject(webPageItemWithResourceId("submit"))
 
-        mDevice.waitForObjects(mDevice.findObject(UiSelector().resourceId("$packageName:id/save_confirm")))
+        mDevice.waitForObjects(mDevice.findObject(UiSelector().resourceId("$packageName:id/save_confirm")), waitingTime)
     }
 
     fun clearUserNameLoginCredential() {
@@ -1346,7 +1347,8 @@ private fun setPageObjectText(webPageItem: UiObject, text: String) {
         try {
             webPageItem.also {
                 it.waitForExists(waitingTime)
-                it.setText(text)
+                it.clearTextField()
+                it.text = text
             }
 
             break
