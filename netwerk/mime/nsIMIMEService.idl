@@ -179,6 +179,13 @@ interface nsIMIMEService : nsISupports {
     const long VALIDATE_FORCE_APPEND_EXTENSION = 64;
 
     /**
+     * Don't modify filenames or extensions that might be invalid or dangerous
+     * on some platforms. If this flag is not used, these filenames will be
+     * modified so that the operating system does not treat them specially.
+     */
+    const long VALIDATE_ALLOW_INVALID_FILENAMES = 128;
+
+    /**
      * Generate a valid filename from the channel that can be used to save
      * the content of the channel to the local disk.
      *
@@ -197,8 +204,9 @@ interface nsIMIMEService : nsISupports {
      *    character, either ' ' or an ideographic space 0x3000 if present.
      *  - Unless VALIDATE_DONT_TRUNCATE is specified, the filename is truncated
      *    to a maximum length, preserving the extension if possible.
-     *  - Some filenames are invalid on certain platforms. These are replaced if
-     *    possible.
+     *  - Some filenames and extensions are invalid on certain platforms.
+     *    These are replaced if possible unless VALIDATE_ALLOW_INVALID_FILENAMES
+     *    is specified.
      *
      * If the VALIDATE_NO_DEFAULT_FILENAME flag is not specified, and after the
      * rules above are applied, the resulting filename is empty, a default

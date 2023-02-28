@@ -10,16 +10,29 @@ export var DownloadPaths = {
   /**
    * Sanitizes an arbitrary string via mimeSvc.validateFileNameForSaving.
    *
+   * If the filename being validated is one that was returned from a
+   * file picker, pass false for compressWhitespaces and true for
+   * allowInvalidFilenames. Otherwise, the default values of the arguments
+   * should generally be used.
+   *
    * @param {string} leafName The full leaf name to sanitize
    * @param {boolean} [compressWhitespaces] Whether consecutive whitespaces
-   *        should be compressed.
+   *        should be compressed. The default value is true.
+   * @param {boolean} [allowInvalidFilenames] Allow invalid and dangerous
+   *        filenames and extensions as is.
    */
-  sanitize(leafName, { compressWhitespaces = true } = {}) {
+  sanitize(
+    leafName,
+    { compressWhitespaces = true, allowInvalidFilenames = false } = {}
+  ) {
     const mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
 
     let flags = mimeSvc.VALIDATE_SANITIZE_ONLY | mimeSvc.VALIDATE_DONT_TRUNCATE;
     if (!compressWhitespaces) {
       flags |= mimeSvc.VALIDATE_DONT_COLLAPSE_WHITESPACE;
+    }
+    if (allowInvalidFilenames) {
+      flags |= mimeSvc.VALIDATE_ALLOW_INVALID_FILENAMES;
     }
     return mimeSvc.validateFileNameForSaving(leafName, "", flags);
   },
