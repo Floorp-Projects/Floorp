@@ -81,8 +81,12 @@ async function openAboutDevtoolsToolbox(
   shouldWaitToolboxReady = true
 ) {
   info("Open about:devtools-toolbox page");
+
+  info("Wait for the target to appear: " + targetText);
+  await waitUntil(() => findDebugTargetByText(targetText, doc));
+
   const target = findDebugTargetByText(targetText, doc);
-  ok(target, `${targetText} tab target appeared`);
+  ok(target, `${targetText} target appeared`);
 
   const {
     DEBUG_TARGETS,
