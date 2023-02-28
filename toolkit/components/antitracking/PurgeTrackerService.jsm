@@ -389,18 +389,43 @@ PurgeTrackerService.prototype = {
     cookies = cookies.slice(0, MAX_PURGE_COUNT);
 
     for (let cookie of cookies) {
-      let httpPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      let httpPrincipal;
+      let httpsPrincipal;
+
+      let origin =
         "http://" +
-          cookie.rawHost +
-          ChromeUtils.originAttributesToSuffix(cookie.originAttributes)
-      );
-      let httpsPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+        cookie.rawHost +
+        ChromeUtils.originAttributesToSuffix(cookie.originAttributes);
+      try {
+        httpPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+          origin
+        );
+      } catch (e) {
+        lazy.logger.error(
+          `Creating principal from origin ${origin} led to error ${e}.`
+        );
+      }
+      if (httpPrincipal) {
+        maybeClearPrincipals.set(httpPrincipal.origin, httpPrincipal);
+      }
+
+      origin =
         "https://" +
-          cookie.rawHost +
-          ChromeUtils.originAttributesToSuffix(cookie.originAttributes)
-      );
-      maybeClearPrincipals.set(httpPrincipal.origin, httpPrincipal);
-      maybeClearPrincipals.set(httpsPrincipal.origin, httpsPrincipal);
+        cookie.rawHost +
+        ChromeUtils.originAttributesToSuffix(cookie.originAttributes);
+      try {
+        httpsPrincipal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+          origin
+        );
+      } catch (e) {
+        lazy.logger.error(
+          `Creating principal from origin ${origin} led to error ${e}.`
+        );
+      }
+      if (httpsPrincipal) {
+        maybeClearPrincipals.set(httpsPrincipal.origin, httpsPrincipal);
+      }
+
       saved_date = cookie.creationTime;
     }
 
