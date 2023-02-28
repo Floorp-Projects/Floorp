@@ -632,7 +632,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvScrollingEvent(
 
 mozilla::ipc::IPCResult DocAccessibleParent::RecvCache(
     const mozilla::a11y::CacheUpdateType& aUpdateType,
-    nsTArray<CacheData>&& aData, const bool& aDispatchShowEvent) {
+    nsTArray<CacheData>&& aData) {
   ACQUIRE_ANDROID_LOCK
   if (mShutdown) {
     return IPC_OK();
@@ -646,35 +646,6 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvCache(
     }
 
     remote->ApplyCache(aUpdateType, entry.Fields());
-  }
-
-  if (aDispatchShowEvent && !aData.IsEmpty()) {
-    // We might need to dispatch a show event for an initial cache push. We
-    // should never dispatch a show event for a (non-initial) cache update.
-    MOZ_ASSERT(aUpdateType == CacheUpdateType::Initial);
-    RemoteAccessible* target = GetAccessible(aData.ElementAt(0).ID());
-    if (!target) {
-      MOZ_ASSERT_UNREACHABLE("No remote found for initial cache push!");
-      return IPC_OK();
-    }
-    // We never dispatch a show event for the doc itself.
-    MOZ_ASSERT(!target->IsDoc() && target->RemoteParent());
-
-    ProxyShowHideEvent(target, target->RemoteParent(), true, false);
-
-    if (nsCoreUtils::AccEventObserversExist()) {
-      xpcAccessibleGeneric* xpcAcc = GetXPCAccessible(target);
-      xpcAccessibleDocument* doc = GetAccService()->GetXPCDocument(this);
-      nsINode* node = nullptr;
-      RefPtr<xpcAccEvent> event = new xpcAccEvent(
-          nsIAccessibleEvent::EVENT_SHOW, xpcAcc, doc, node, false);
-      nsCoreUtils::DispatchAccEvent(std::move(event));
-    }
-  }
-
-  if (nsCOMPtr<nsIObserverService> obsService =
-          services::GetObserverService()) {
-    obsService->NotifyObservers(nullptr, NS_ACCESSIBLE_CACHE_TOPIC, nullptr);
   }
 
   return IPC_OK();
