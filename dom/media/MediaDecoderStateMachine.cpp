@@ -1050,7 +1050,7 @@ class MediaDecoderStateMachine::LoopingDecodingState
                                   : SeekTarget::Track::VideoOnly))
         ->Then(
             OwnerThread(), __func__,
-            [this, isAudio]() mutable -> void {
+            [this, isAudio, master = RefPtr{mMaster}]() mutable -> void {
               AUTO_PROFILER_LABEL(
                   nsPrintfCString(
                       "LoopingDecodingState::RequestDataFromStartPosition(%s)::"
@@ -1058,6 +1058,12 @@ class MediaDecoderStateMachine::LoopingDecodingState
                       isAudio ? "audio" : "video")
                       .get(),
                   MEDIA_PLAYBACK);
+              if (auto& state = master->mStateObj;
+                  state &&
+                  state->GetState() != DECODER_STATE_LOOPING_DECODING) {
+                MOZ_RELEASE_ASSERT(false, "This shouldn't happen!");
+                return;
+              }
               if (isAudio) {
                 mAudioSeekRequest.Complete();
               } else {
@@ -1082,7 +1088,8 @@ class MediaDecoderStateMachine::LoopingDecodingState
                 RequestDataFromStartPosition(seekingType);
               }
             },
-            [this, isAudio](const SeekRejectValue& aReject) mutable -> void {
+            [this, isAudio, master = RefPtr{mMaster}](
+                const SeekRejectValue& aReject) mutable -> void {
               AUTO_PROFILER_LABEL(
                   nsPrintfCString("LoopingDecodingState::"
                                   "RequestDataFromStartPosition(%s)::"
@@ -1090,6 +1097,12 @@ class MediaDecoderStateMachine::LoopingDecodingState
                                   isAudio ? "audio" : "video")
                       .get(),
                   MEDIA_PLAYBACK);
+              if (auto& state = master->mStateObj;
+                  state &&
+                  state->GetState() != DECODER_STATE_LOOPING_DECODING) {
+                MOZ_RELEASE_ASSERT(false, "This shouldn't happen!");
+                return;
+              }
               if (isAudio) {
                 mAudioSeekRequest.Complete();
               } else {
@@ -1106,12 +1119,18 @@ class MediaDecoderStateMachine::LoopingDecodingState
         ->RequestAudioData()
         ->Then(
             OwnerThread(), __func__,
-            [this](const RefPtr<AudioData>& aAudio) {
+            [this, master = RefPtr{mMaster}](const RefPtr<AudioData>& aAudio) {
               AUTO_PROFILER_LABEL(
                   "LoopingDecodingState::"
                   "RequestAudioDataFromReader::"
                   "RequestDataResolved",
                   MEDIA_PLAYBACK);
+              if (auto& state = master->mStateObj;
+                  state &&
+                  state->GetState() != DECODER_STATE_LOOPING_DECODING) {
+                MOZ_RELEASE_ASSERT(false, "This shouldn't happen!");
+                return;
+              }
               mIsReachingAudioEOS = false;
               mAudioDataRequest.Complete();
               SLOG(
@@ -1129,12 +1148,18 @@ class MediaDecoderStateMachine::LoopingDecodingState
               HandleAudioDecoded(aAudio);
               ProcessSamplesWaitingAdjustmentIfAny();
             },
-            [this](const MediaResult& aError) {
+            [this, master = RefPtr{mMaster}](const MediaResult& aError) {
               AUTO_PROFILER_LABEL(
                   "LoopingDecodingState::"
                   "RequestAudioDataFromReader::"
                   "RequestDataRejected",
                   MEDIA_PLAYBACK);
+              if (auto& state = master->mStateObj;
+                  state &&
+                  state->GetState() != DECODER_STATE_LOOPING_DECODING) {
+                MOZ_RELEASE_ASSERT(false, "This shouldn't happen!");
+                return;
+              }
               mAudioDataRequest.Complete();
               HandleError(aError, true /* isAudio */);
             })
@@ -1148,12 +1173,18 @@ class MediaDecoderStateMachine::LoopingDecodingState
                            false /* aRequestNextVideoKeyFrame */)
         ->Then(
             OwnerThread(), __func__,
-            [this](const RefPtr<VideoData>& aVideo) {
+            [this, master = RefPtr{mMaster}](const RefPtr<VideoData>& aVideo) {
               AUTO_PROFILER_LABEL(
                   "LoopingDecodingState::"
                   "RequestVideoDataFromReaderAfterEOS()::"
                   "RequestDataResolved",
                   MEDIA_PLAYBACK);
+              if (auto& state = master->mStateObj;
+                  state &&
+                  state->GetState() != DECODER_STATE_LOOPING_DECODING) {
+                MOZ_RELEASE_ASSERT(false, "This shouldn't happen!");
+                return;
+              }
               mIsReachingVideoEOS = false;
               mVideoDataRequest.Complete();
               SLOG(
@@ -1172,12 +1203,18 @@ class MediaDecoderStateMachine::LoopingDecodingState
               HandleVideoDecoded(aVideo);
               ProcessSamplesWaitingAdjustmentIfAny();
             },
-            [this](const MediaResult& aError) {
+            [this, master = RefPtr{mMaster}](const MediaResult& aError) {
               AUTO_PROFILER_LABEL(
                   "LoopingDecodingState::"
                   "RequestVideoDataFromReaderAfterEOS()::"
                   "RequestDataRejected",
                   MEDIA_PLAYBACK);
+              if (auto& state = master->mStateObj;
+                  state &&
+                  state->GetState() != DECODER_STATE_LOOPING_DECODING) {
+                MOZ_RELEASE_ASSERT(false, "This shouldn't happen!");
+                return;
+              }
               mVideoDataRequest.Complete();
               HandleError(aError, false /* isAudio */);
             })
