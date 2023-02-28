@@ -42,6 +42,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
 
   static const nscolor kBlack = NS_RGB(0, 0, 0);
   static const nscolor kWhite = NS_RGB(255, 255, 255);
+  void OnColorSchemeSettingChanged();
 
  protected:
   static bool WidgetUsesImage(WidgetNodeType aNodeType);

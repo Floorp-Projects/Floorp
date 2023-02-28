@@ -106,14 +106,6 @@ static nsDependentCString GVariantGetString(GVariant* aVariant) {
   return nsDependentCString(v, len);
 }
 
-// Observed settings for portal.
-static constexpr struct {
-  nsLiteralCString mNamespace;
-  nsLiteralCString mKey;
-} kObservedSettings[] = {
-    {"org.freedesktop.appearance"_ns, "color-scheme"_ns},
-};
-
 static void settings_changed_signal_cb(GDBusProxy* proxy, gchar* sender_name,
                                        gchar* signal_name, GVariant* parameters,
                                        gpointer user_data) {
@@ -132,13 +124,13 @@ static void settings_changed_signal_cb(GDBusProxy* proxy, gchar* sender_name,
     return;
   }
 
+  auto* lnf = static_cast<nsLookAndFeel*>(user_data);
+
   auto nsStr = GVariantGetString(ns);
   auto keyStr = GVariantGetString(key);
-  for (const auto& setting : kObservedSettings) {
-    if (setting.mNamespace.Equals(nsStr) && setting.mKey.Equals(keyStr)) {
-      OnSettingsChange();
-      return;
-    }
+  if (nsStr.Equals("org.freedesktop.appearance"_ns) &&
+      keyStr.Equals("color-scheme"_ns)) {
+    lnf->OnColorSchemeSettingChanged();
   }
 }
 
@@ -187,7 +179,7 @@ nsLookAndFeel::nsLookAndFeel() {
         "org.freedesktop.portal.Settings", nullptr, getter_Transfers(error)));
     if (mDBusSettingsProxy) {
       g_signal_connect(mDBusSettingsProxy, "g-signal",
-                       G_CALLBACK(settings_changed_signal_cb), nullptr);
+                       G_CALLBACK(settings_changed_signal_cb), this);
     } else {
       LOGLNF("Can't create DBus proxy for settings: %s\n", error->message);
     }
@@ -197,8 +189,7 @@ nsLookAndFeel::nsLookAndFeel() {
 nsLookAndFeel::~nsLookAndFeel() {
   if (mDBusSettingsProxy) {
     g_signal_handlers_disconnect_by_func(
-        mDBusSettingsProxy, FuncToGpointer(settings_changed_signal_cb),
-        nullptr);
+        mDBusSettingsProxy, FuncToGpointer(settings_changed_signal_cb), this);
     mDBusSettingsProxy = nullptr;
   }
   g_signal_handlers_disconnect_by_func(
@@ -1434,6 +1425,15 @@ void nsLookAndFeel::Initialize() {
   ConfigureFinalEffectiveTheme();
 
   RecordTelemetry();
+}
+
+void nsLookAndFeel::OnColorSchemeSettingChanged() {
+  if (NS_WARN_IF(mColorSchemePreference == ComputeColorSchemeSetting())) {
+    // We sometimes get duplicate color-scheme changes from dbus, avoid doing
+    // extra work if not needed.
+    return;
+  }
+  OnSettingsChange();
 }
 
 void nsLookAndFeel::InitializeGlobalSettings() {
