@@ -1222,13 +1222,11 @@ class Preferences {
    * Adds a preference observer.  Observers are held weakly.
    *
    * @param {object} observer
-   *        An object that may optionally implement one or both methods:
-   *         - `onPrefChanged` invoked when one of the preferences listed here
-   *           change. It will be passed the pref name.  For prefs in the
-   *           `browser.urlbar.` branch, the name will be relative to the branch.
-   *           For other prefs, the name will be the full name.
-   *         - `onNimbusChanged` invoked when a Nimbus value changes. It will be
-   *           passed the name of the changed Nimbus variable.
+   *        An object that must have a method named `onPrefChanged`, which will
+   *        be called when a urlbar preference changes.  It will be passed the
+   *        pref name.  For prefs in the `browser.urlbar.` branch, the name will
+   *        be relative to the branch.  For other prefs, the name will be the
+   *        full name.
    */
   addObserver(observer) {
     this._observerWeakRefs.push(Cu.getWeakReference(observer));
@@ -1249,7 +1247,16 @@ class Preferences {
     if (!PREF_URLBAR_DEFAULTS.has(pref) && !PREF_OTHER_DEFAULTS.has(pref)) {
       return;
     }
-    this.#notifyObservers("onPrefChanged", pref);
+    for (let i = 0; i < this._observerWeakRefs.length; ) {
+      let observer = this._observerWeakRefs[i].get();
+      if (!observer) {
+        // The observer has been GC'ed, so remove it from our list.
+        this._observerWeakRefs.splice(i, 1);
+      } else {
+        observer.onPrefChanged(pref);
+        ++i;
+      }
+    }
   }
 
   /**
@@ -1287,13 +1294,6 @@ class Preferences {
   _onNimbusUpdate() {
     let oldNimbus = this._clearNimbusCache();
     let newNimbus = this._nimbus;
-
-    // Callback to observers having onNimbusChanged.
-    for (let name in newNimbus) {
-      if (oldNimbus[name] != newNimbus[name]) {
-        this.#notifyObservers("onNimbusChanged", name);
-      }
-    }
 
     // If a change occurred to the Firefox Suggest scenario variable or any
     // variables that correspond to prefs exposed in the UI, we need to update
@@ -1524,25 +1524,6 @@ class Preferences {
       this.get("showSearchTerms.enabled") &&
       !this.get("browser.search.widget.inNavBar")
     );
-  }
-
-  #notifyObservers(method, changed) {
-    for (let i = 0; i < this._observerWeakRefs.length; ) {
-      let observer = this._observerWeakRefs[i].get();
-      if (!observer) {
-        // The observer has been GC'ed, so remove it from our list.
-        this._observerWeakRefs.splice(i, 1);
-        continue;
-      }
-      if (method in observer) {
-        try {
-          observer[method](changed);
-        } catch (ex) {
-          console.error(ex);
-        }
-      }
-      ++i;
-    }
   }
 
   #resultGroups = null;
