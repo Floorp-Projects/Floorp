@@ -54,6 +54,7 @@ DDMediaLogs
 DOMCacheThread
 DataChannel IO
 DataStorage
+DesktopCapture
 FileWatcher IO
 Font Loader
 FontEnumThread
@@ -100,6 +101,7 @@ Timer
 ToastBgThread
 TRR Background
 URL Classifier
+VideoCapture
 VRService
 VsyncIOThread
 Wifi Monitor
