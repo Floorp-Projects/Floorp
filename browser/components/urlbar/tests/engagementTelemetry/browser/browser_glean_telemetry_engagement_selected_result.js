@@ -429,6 +429,49 @@ add_task(async function selected_result_unit() {
   await SpecialPowers.popPrefEnv();
 });
 
+add_task(async function selected_result_site_specific_contextual_search() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.contextualSearch.enabled", true]],
+  });
+
+  await doTest(async browser => {
+    const extension = await SearchTestUtils.installSearchExtension(
+      {
+        name: "Contextual",
+        search_url: "https://example.com/browser",
+      },
+      { skipUnload: true }
+    );
+    const onLoaded = BrowserTestUtils.browserLoaded(
+      gBrowser.selectedBrowser,
+      false,
+      "https://example.com/"
+    );
+    BrowserTestUtils.loadURIString(
+      gBrowser.selectedBrowser,
+      "https://example.com/"
+    );
+    await onLoaded;
+
+    await openPopup("search");
+    await selectRowByProvider("UrlbarProviderContextualSearch");
+    await doEnter();
+
+    assertEngagementTelemetry([
+      {
+        selected_result: "site_specific_contextual_search",
+        selected_result_subtype: "",
+        provider: "UrlbarProviderContextualSearch",
+        results: "search_engine,site_specific_contextual_search",
+      },
+    ]);
+
+    await extension.unload();
+  });
+
+  await SpecialPowers.popPrefEnv();
+});
+
 add_task(async function selected_result_suggest_sponsor() {
   const cleanupQuickSuggest = await ensureQuickSuggestInit();
 
