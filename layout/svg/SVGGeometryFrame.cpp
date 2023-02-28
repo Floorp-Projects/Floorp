@@ -171,9 +171,9 @@ void SVGGeometryFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       return;
     }
     const auto* styleSVG = StyleSVG();
-    if (styleSVG->mFill.kind.IsNone() && styleSVG->mStroke.kind.IsNone() &&
-        styleSVG->mMarkerEnd.IsNone() && styleSVG->mMarkerMid.IsNone() &&
-        styleSVG->mMarkerStart.IsNone()) {
+    if (Type() != LayoutFrameType::SVGImage && styleSVG->mFill.kind.IsNone() &&
+        styleSVG->mStroke.kind.IsNone() && styleSVG->mMarkerEnd.IsNone() &&
+        styleSVG->mMarkerMid.IsNone() && styleSVG->mMarkerStart.IsNone()) {
       return;
     }
 
@@ -703,6 +703,10 @@ bool SVGGeometryFrame::IsInvisible() const {
 
   if (StyleEffects()->mOpacity <= opacity_threshold) {
     return true;
+  }
+
+  if (IsSVGImageFrame()) {
+    return false;
   }
 
   const nsStyleSVG* style = StyleSVG();
