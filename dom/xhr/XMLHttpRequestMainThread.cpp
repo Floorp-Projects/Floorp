@@ -3361,7 +3361,20 @@ nsresult XMLHttpRequestMainThread::OnRedirectVerifyCallback(nsresult result) {
       // Ref: https://fetch.spec.whatwg.org/#http-redirect-fetch
       bool skipAuthHeader = false;
       if (StaticPrefs::network_fetch_redirect_stripAuthHeader()) {
-        skipAuthHeader = ReferrerInfo::IsCrossOriginRequest(oldHttpChannel);
+        nsCOMPtr<nsIURI> oldUri;
+        MOZ_ALWAYS_SUCCEEDS(
+            NS_GetFinalChannelURI(oldHttpChannel, getter_AddRefs(oldUri)));
+
+        nsCOMPtr<nsIURI> newUri;
+        MOZ_ALWAYS_SUCCEEDS(
+            NS_GetFinalChannelURI(newHttpChannel, getter_AddRefs(newUri)));
+
+        nsresult rv = nsContentUtils::GetSecurityManager()->CheckSameOriginURI(
+            newUri, oldUri, false, false);
+
+        if (NS_FAILED(rv)) {
+          skipAuthHeader = true;
+        }
       }
 
       // Ensure all original headers are duplicated for the new channel (bug
