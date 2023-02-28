@@ -377,10 +377,12 @@ class alignas(TypicalCacheLineSize) GCMarker {
   bool shouldCheckCompartments() { return strictCompartmentChecking; }
 #endif
 
-  void markCurrentColorInParallel(SliceBudget& budget);
+  bool markCurrentColorInParallel(SliceBudget& budget);
 
   template <uint32_t markingOptions, gc::MarkColor>
   bool markOneColor(SliceBudget& budget);
+  template <gc::MarkColor>
+  bool markOneColorInParallel(SliceBudget& budget);
 
   static void moveWork(GCMarker* dst, GCMarker* src);
 

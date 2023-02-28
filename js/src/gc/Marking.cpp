@@ -1309,40 +1309,45 @@ bool GCMarker::doMarking(SliceBudget& budget, ShouldReportMarkTime reportTime) {
   return true;
 }
 
-void GCMarker::markCurrentColorInParallel(SliceBudget& budget) {
-  if (markColor() == MarkColor::Black) {
-    markOneColor<MarkingOptions::ParallelMarking, MarkColor::Black>(budget);
-    return;
-  }
-
-  markOneColor<MarkingOptions::ParallelMarking, MarkColor::Gray>(budget);
-}
-
 template <uint32_t opts, MarkColor color>
 bool GCMarker::markOneColor(SliceBudget& budget) {
-  MOZ_ASSERT(hasEntries(color));
-
   AutoSetMarkColor setColor(*this, color);
 
-  do {
-    if constexpr (bool(opts & MarkingOptions::ParallelMarking)) {
-      // TODO: It might be better to only check this occasionally, possibly
-      // combined with the slice budget check. Experiments with giving this its
-      // own counter resulted in worse performance.
-      if (parallelMarker_->hasWaitingTasks() && stack.canDonateWork()) {
-        parallelMarker_->donateWorkFrom(this);
-        MOZ_ASSERT(hasEntries(color));
-      }
+  while (processMarkStackTop<opts>(budget)) {
+    if (!hasEntries(color)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool GCMarker::markCurrentColorInParallel(SliceBudget& budget) {
+  if (markColor() == MarkColor::Black) {
+    return markOneColorInParallel<MarkColor::Black>(budget);
+  }
+
+  return markOneColorInParallel<MarkColor::Gray>(budget);
+}
+
+template <MarkColor color>
+bool GCMarker::markOneColorInParallel(SliceBudget& budget) {
+  AutoSetMarkColor setColor(*this, color);
+
+  while (processMarkStackTop<MarkingOptions::ParallelMarking>(budget)) {
+    if (!hasEntries(color)) {
+      return true;
     }
 
-    if (!processMarkStackTop<opts>(budget)) {
-      return false;
+    // TODO: It might be better to only check this occasionally, possibly
+    // combined with the slice budget check. Experiments with giving this its
+    // own counter resulted in worse performance.
+    if (parallelMarker_->hasWaitingTasks() && stack.canDonateWork()) {
+      parallelMarker_->donateWorkFrom(this);
     }
+  }
 
-    MOZ_ASSERT_IF(color == MarkColor::Gray, !hasBlackEntries());
-  } while (hasEntries(color));
-
-  return true;
+  return false;
 }
 
 static inline void CheckForCompartmentMismatch(JSObject* obj, JSObject* obj2) {
@@ -1382,6 +1387,9 @@ inline bool GCMarker::processMarkStackTop(SliceBudget& budget) {
    * marking slices, so we must check slots and element ranges read from the
    * stack.
    */
+
+  MOZ_ASSERT(hasEntries(markColor()));
+  MOZ_ASSERT_IF(markColor() == MarkColor::Gray, !hasBlackEntries());
 
   JSObject* obj;             // The object being scanned.
   SlotsOrElementsKind kind;  // The kind of slot range being scanned, if any.

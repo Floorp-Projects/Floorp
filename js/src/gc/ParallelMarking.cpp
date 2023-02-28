@@ -165,16 +165,11 @@ void ParallelMarkTask::recordDuration() {
 void ParallelMarkTask::run(AutoLockHelperThreadState& lock) {
   AutoUnlockHelperThreadState unlock(lock);
 
-  {
-    AutoLockGC gcLock(pm->gc);
+  AutoLockGC gcLock(pm->gc);
 
-    markOrRequestWork(gcLock);
+  markOrRequestWork(gcLock);
 
-    MOZ_ASSERT(!isWaiting);
-    if (hasWork()) {
-      pm->decActiveTasks(this, gcLock);
-    }
-  }
+  MOZ_ASSERT(!isWaiting);
 }
 
 void ParallelMarkTask::markOrRequestWork(AutoLockGC& lock) {
@@ -196,18 +191,18 @@ bool ParallelMarkTask::tryMarking(AutoLockGC& lock) {
   MOZ_ASSERT(marker->isParallelMarking());
 
   // Mark until budget exceeded or we run out of work.
+  bool finished;
   {
     AutoUnlockGC unlock(lock);
 
     AutoAddTimeDuration time(markTime.ref());
-    marker->markCurrentColorInParallel(budget);
+    finished = marker->markCurrentColorInParallel(budget);
   }
 
-  if (!hasWork()) {
-    pm->decActiveTasks(this, lock);
-  }
+  MOZ_ASSERT_IF(finished, !hasWork());
+  pm->decActiveTasks(this, lock);
 
-  return !budget.isOverBudget();
+  return finished;
 }
 
 bool ParallelMarkTask::requestWork(AutoLockGC& lock) {
