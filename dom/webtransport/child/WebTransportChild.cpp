@@ -56,4 +56,10 @@ void WebTransportChild::CloseAll() {
   return IPC_OK();
 }
 
+::mozilla::ipc::IPCResult WebTransportChild::RecvIncomingDatagram(
+    nsTArray<uint8_t>&& aData, const TimeStamp& aRecvTimeStamp) {
+  // XXX handle the received datagram
+  return IPC_OK();
+}
+
 }  // namespace mozilla::dom

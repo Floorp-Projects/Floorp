@@ -45,6 +45,10 @@ class WebTransportParent : public PWebTransportParent,
   IPCResult RecvCreateBidirectionalStream(
       Maybe<int64_t> aSendOrder, CreateBidirectionalStreamResolver&& aResolver);
 
+  ::mozilla::ipc::IPCResult RecvOutgoingDatagram(
+      nsTArray<uint8_t>&& aData, const TimeStamp& aExpirationTime,
+      OutgoingDatagramResolver&& aResolver);
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  protected:
@@ -62,6 +66,7 @@ class WebTransportParent : public PWebTransportParent,
   // This is needed because mResolver is resolved on the background thread and
   // OnSessionClosed is called on the socket thread.
   std::function<void()> mExecuteAfterResolverCallback MOZ_GUARDED_BY(mMutex);
+  OutgoingDatagramResolver mOutgoingDatagramResolver;
   FlippedOnce<false> mClosed MOZ_GUARDED_BY(mMutex);
 
   nsCOMPtr<nsIWebTransport> mWebTransport;

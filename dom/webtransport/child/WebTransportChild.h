@@ -7,6 +7,7 @@
 #ifndef DOM_WEBTRANSPORT_WEBTRANSPORTCHILD_H_
 #define DOM_WEBTRANSPORT_WEBTRANSPORTCHILD_H_
 
+#include "mozilla/TimeStamp.h"
 #include "nsISupportsImpl.h"
 #include "mozilla/dom/PWebTransportChild.h"
 #include "mozilla/ipc/DataPipe.h"
@@ -37,6 +38,9 @@ class WebTransportChild : public PWebTransportChild {
 
   ::mozilla::ipc::IPCResult RecvIncomingUnidirectionalStream(
       const RefPtr<mozilla::ipc::DataPipeReceiver>& aStream);
+
+  ::mozilla::ipc::IPCResult RecvIncomingDatagram(
+      nsTArray<uint8_t>&& aData, const TimeStamp& aRecvTimeStamp);
 
  protected:
   WebTransport* mTransport;  // WebTransport holds a strong reference to us, and
