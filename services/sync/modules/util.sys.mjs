@@ -8,9 +8,8 @@ const { Observers } = ChromeUtils.import(
 const { CommonUtils } = ChromeUtils.import(
   "resource://services-common/utils.js"
 );
-const { CryptoUtils } = ChromeUtils.import(
-  "resource://services-crypto/utils.js"
-);
+import { CryptoUtils } from "resource://services-crypto/utils.sys.mjs";
+
 const {
   DEVICE_TYPE_DESKTOP,
   MAXIMUM_BACKOFF_INTERVAL,

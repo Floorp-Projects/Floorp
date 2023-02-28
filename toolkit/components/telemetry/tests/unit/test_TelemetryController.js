@@ -39,11 +39,9 @@ const { TelemetryArchiveTesting } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryArchiveTesting.sys.mjs"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "jwcrypto",
-  "resource://services-crypto/jwcrypto.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  jwcrypto: "resource://services-crypto/jwcrypto.sys.mjs",
+});
 
 ChromeUtils.defineModuleGetter(
   this,

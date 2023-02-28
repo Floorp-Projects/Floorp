@@ -50,13 +50,13 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BulkKeyBundle: "resource://services-sync/keys.sys.mjs",
   CollectionKeyManager: "resource://services-sync/record.sys.mjs",
+  CryptoUtils: "resource://services-crypto/utils.sys.mjs",
   Utils: "resource://services-sync/util.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   CommonUtils: "resource://services-common/utils.js",
-  CryptoUtils: "resource://services-crypto/utils.js",
   ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
   KintoHttpClient: "resource://services-common/kinto-http-client.js",
   Kinto: "resource://services-common/kinto-offline-client.js",
@@ -83,8 +83,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
   KINTO_DEFAULT_SERVER_URL
 );
 XPCOMUtils.defineLazyGetter(lazy, "WeaveCrypto", function() {
-  let { WeaveCrypto } = ChromeUtils.import(
-    "resource://services-crypto/WeaveCrypto.js"
+  let { WeaveCrypto } = ChromeUtils.importESModule(
+    "resource://services-crypto/WeaveCrypto.sys.mjs"
   );
   return new WeaveCrypto();
 });

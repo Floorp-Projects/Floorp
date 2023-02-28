@@ -19,8 +19,8 @@ ChromeUtils.defineESModuleGetters(Weave, {
 });
 
 XPCOMUtils.defineLazyGetter(Weave, "Crypto", function() {
-  let { WeaveCrypto } = ChromeUtils.import(
-    "resource://services-crypto/WeaveCrypto.js"
+  let { WeaveCrypto } = ChromeUtils.importESModule(
+    "resource://services-crypto/WeaveCrypto.sys.mjs"
   );
   return new WeaveCrypto();
 });

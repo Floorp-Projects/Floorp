@@ -3,11 +3,9 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "jwcrypto",
-  "resource://services-crypto/jwcrypto.jsm"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  jwcrypto: "resource://services-crypto/jwcrypto.sys.mjs",
+});
 
 Cu.importGlobalProperties(["crypto"]);
 

@@ -11,9 +11,8 @@ const { HawkClient } = ChromeUtils.import(
 const { deriveHawkCredentials } = ChromeUtils.import(
   "resource://services-common/hawkrequest.js"
 );
-const { CryptoUtils } = ChromeUtils.import(
-  "resource://services-crypto/utils.js"
-);
+import { CryptoUtils } from "resource://services-crypto/utils.sys.mjs";
+
 const {
   ERRNO_ACCOUNT_DOES_NOT_EXIST,
   ERRNO_INCORRECT_EMAIL_CASE,

@@ -9,8 +9,8 @@ const { FxAccountsPairingFlow } = ChromeUtils.importESModule(
 const { EventEmitter } = ChromeUtils.importESModule(
   "resource://gre/modules/EventEmitter.sys.mjs"
 );
-XPCOMUtils.defineLazyModuleGetters(this, {
-  jwcrypto: "resource://services-crypto/jwcrypto.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  jwcrypto: "resource://services-crypto/jwcrypto.sys.mjs",
 });
 XPCOMUtils.defineLazyGlobalGetters(this, ["crypto"]);
 

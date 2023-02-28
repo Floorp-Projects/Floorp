@@ -38,6 +38,7 @@ const {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  CryptoUtils: "resource://services-crypto/utils.sys.mjs",
   FxAccountsPairingFlow: "resource://gre/modules/FxAccountsPairing.sys.mjs",
   FxAccountsStorageManagerCanStoreField:
     "resource://gre/modules/FxAccountsStorage.sys.mjs",
@@ -50,11 +51,6 @@ XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {
     "resource://gre/modules/FxAccounts.sys.mjs"
   ).getFxAccountsSingleton();
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CryptoUtils",
-  "resource://services-crypto/utils.js"
-);
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "pairingEnabled",

@@ -21,11 +21,9 @@ const { CommonUtils } = ChromeUtils.import(
 
 const lazy = {};
 
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "CryptoUtils",
-  "resource://services-crypto/utils.js"
-);
+ChromeUtils.defineESModuleGetters(lazy, {
+  CryptoUtils: "resource://services-crypto/utils.sys.mjs",
+});
 
 function decodeString(data, charset) {
   if (!data || !charset) {
