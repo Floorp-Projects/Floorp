@@ -15,15 +15,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5d2e7343e7fc9de883d1b0341e0b13970f764c14101234857d2ddafa1cb1cac2"
 
 [[package]]
-name = "aho-corasick"
-version = "0.7.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8716408b8bc624ed7f65d223ddb9ac2d044c0547b6fa4b0d554f3a9540496ada"
-dependencies = [
- "memchr",
-]
-
-[[package]]
 name = "android_log-sys"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -31,9 +22,9 @@ checksum = "85965b6739a430150bdd138e2374a98af0c3ee0d030b3bb7fc3bddff58d0102e"
 
 [[package]]
 name = "android_logger"
-version = "0.11.1"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5e9dd62f37dea550caf48c77591dc50bd1a378ce08855be1a0c42a97b7550fb"
+checksum = "037f3e1da32ddba7770530e69258b742c15ad67bdf90e5f6b35f4b6db9a60eb7"
 dependencies = [
  "android_log-sys",
  "env_logger",
@@ -651,15 +642,11 @@ checksum = "bb1f6b1ce1c140482ea30ddd3335fc0024ac7ee112895426e0a629a6c20adfe3"
 
 [[package]]
 name = "env_logger"
-version = "0.9.0"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b2cf0344971ee6c64c31be0d530793fba457d322dfec2810c453d0ef228f9c3"
+checksum = "85cdab6a89accf66733ad5a1693a4dcced6aeff64602b634530dd73c1f3ee9f0"
 dependencies = [
- "atty",
- "humantime",
  "log",
- "regex",
- "termcolor",
 ]
 
 [[package]]
@@ -845,9 +832,9 @@ dependencies = [
 
 [[package]]
 name = "glean"
-version = "52.2.0"
+version = "52.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3dea54c0198181ff3bd8c7d39bdc69f22a4c0504da5dd9138666edef084e26be"
+checksum = "aa4d34f9ae46bd3e68c5bb672762e7391843daedd609506a70b6b35ac6fea051"
 dependencies = [
  "chrono",
  "crossbeam-channel",
@@ -865,9 +852,9 @@ dependencies = [
 
 [[package]]
 name = "glean-core"
-version = "52.2.0"
+version = "52.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "01c3b0c688d31dbe58dd799d771d4ab60d9a20932fa0eac80dbb08f20149f36b"
+checksum = "699ab3d674e2618298111987c0053735ef7a531d09264a3aa7d496f5ac2247d6"
 dependencies = [
  "android_logger",
  "bincode",
@@ -1018,12 +1005,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "humantime"
-version = "2.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a3a5bfb195931eeb336b2a7b4d761daec841b97f947d34394601737a7bba5e4"
-
-[[package]]
 name = "id-arena"
 version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1146,9 +1127,9 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "libc"
-version = "0.2.122"
+version = "0.2.139"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec647867e2bf0772e28c8bcde4f0d19a9216916e890543b5a03ed8ef27b8f259"
+checksum = "201de327520df007757c1f0adce6e827fe8562fbc28bfd9c15571c66ca1f5f79"
 
 [[package]]
 name = "libloading"
@@ -1766,24 +1747,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "regex"
-version = "1.3.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f6946991529684867e47d86474e3a6d0c0ab9b82d5821e314b1ede31fa3a4b3"
-dependencies = [
- "aho-corasick",
- "memchr",
- "regex-syntax",
- "thread_local",
-]
-
-[[package]]
-name = "regex-syntax"
-version = "0.6.17"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7fe5bd57d1d7414c6b5ed48563a2c855d995ff777729dcd91c369ec7fea395ae"
-
-[[package]]
 name = "remove_dir_all"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2077,15 +2040,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
-]
-
-[[package]]
-name = "thread_local"
-version = "1.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d40c6d1b69745a6ec6fb1ca717914848da4b44ae29d9b3080cbee91d72a69b14"
-dependencies = [
- "lazy_static",
 ]
 
 [[package]]

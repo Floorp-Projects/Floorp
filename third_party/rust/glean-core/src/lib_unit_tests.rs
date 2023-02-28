@@ -27,7 +27,7 @@ pub fn new_glean(tempdir: Option<tempfile::TempDir>) -> (Glean, tempfile::TempDi
 
 #[test]
 fn path_is_constructed_from_data() {
-    let (glean, _) = new_glean(None);
+    let (glean, _t) = new_glean(None);
 
     assert_eq!(
         "/submit/org-mozilla-glean-test-app/baseline/1/this-is-a-docid",
@@ -241,7 +241,7 @@ fn basic_metrics_should_be_cleared_when_uploading_is_disabled() {
 
 #[test]
 fn first_run_date_is_managed_correctly_when_toggling_uploading() {
-    let (mut glean, _) = new_glean(None);
+    let (mut glean, _t) = new_glean(None);
 
     let original_first_run_date = glean
         .core_metrics
@@ -269,7 +269,7 @@ fn first_run_date_is_managed_correctly_when_toggling_uploading() {
 
 #[test]
 fn client_id_is_managed_correctly_when_toggling_uploading() {
-    let (mut glean, _) = new_glean(None);
+    let (mut glean, _t) = new_glean(None);
 
     let original_client_id = glean
         .core_metrics
@@ -611,7 +611,7 @@ fn test_dirty_bit() {
 fn test_change_metric_type_runtime() {
     let dir = tempfile::tempdir().unwrap();
 
-    let (glean, _) = new_glean(Some(dir));
+    let (glean, _t) = new_glean(Some(dir));
 
     // We attempt to create two metrics: one with a 'string' type and the other
     // with a 'timespan' type, both being sent in the same pings and having the
@@ -670,7 +670,7 @@ fn test_change_metric_type_runtime() {
 fn timing_distribution_truncation() {
     let dir = tempfile::tempdir().unwrap();
 
-    let (glean, _) = new_glean(Some(dir));
+    let (glean, _t) = new_glean(Some(dir));
     let max_sample_time = 1000 * 1000 * 1000 * 60 * 10;
 
     for (unit, expected_keys) in &[
@@ -744,7 +744,7 @@ fn timing_distribution_truncation() {
 fn timing_distribution_truncation_accumulate() {
     let dir = tempfile::tempdir().unwrap();
 
-    let (glean, _) = new_glean(Some(dir));
+    let (glean, _t) = new_glean(Some(dir));
     let max_sample_time = 1000 * 1000 * 1000 * 60 * 10;
 
     for &unit in &[
@@ -790,7 +790,7 @@ fn timing_distribution_truncation_accumulate() {
 fn test_setting_debug_view_tag() {
     let dir = tempfile::tempdir().unwrap();
 
-    let (mut glean, _) = new_glean(Some(dir));
+    let (mut glean, _t) = new_glean(Some(dir));
 
     let valid_tag = "valid-tag";
     assert!(glean.set_debug_view_tag(valid_tag));
@@ -805,7 +805,7 @@ fn test_setting_debug_view_tag() {
 fn test_setting_log_pings() {
     let dir = tempfile::tempdir().unwrap();
 
-    let (mut glean, _) = new_glean(Some(dir));
+    let (mut glean, _t) = new_glean(Some(dir));
     assert!(!glean.log_pings());
 
     glean.set_log_pings(true);
@@ -1064,7 +1064,7 @@ fn test_activity_api() {
     let _ = env_logger::builder().is_test(true).try_init();
 
     let dir = tempfile::tempdir().unwrap();
-    let (mut glean, _) = new_glean(Some(dir));
+    let (mut glean, _t) = new_glean(Some(dir));
 
     // Signal that the client was active.
     glean.handle_client_active();
