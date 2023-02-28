@@ -4,10 +4,10 @@
 // accompanying file LICENSE for details
 
 use std::io::{self, Result};
-use std::sync::{mpsc, Arc, Weak};
+use std::sync::{mpsc, Arc};
 use std::thread;
 
-use crossbeam_queue::ArrayQueue;
+use crossbeam_channel::{self, Receiver, Sender};
 use mio::{event::Event, Events, Interest, Poll, Registry, Token, Waker};
 use slab::Slab;
 
@@ -54,7 +54,7 @@ enum Request {
 #[derive(Clone, Debug)]
 pub struct EventLoopHandle {
     waker: Arc<Waker>,
-    requests: Weak<ArrayQueue<Request>>,
+    requests_tx: Sender<Request>,
 }
 
 impl EventLoopHandle {
@@ -100,23 +100,13 @@ impl EventLoopHandle {
         driver: Box<dyn Driver + Send>,
     ) -> Result<Token> {
         assert_not_in_event_loop_thread();
-        let requests = if let Some(req) = self.requests.upgrade() {
-            req
-        } else {
-            debug!(
-                "EventLoopHandle[{:p}]: add_connection failed - EventLoop dropped",
-                self
-            );
-            return Err(io::ErrorKind::ConnectionAborted.into());
-        };
         let (tx, rx) = mpsc::channel();
-        requests
-            .push(Request::AddConnection(connection, driver, tx))
+        self.requests_tx
+            .send(Request::AddConnection(connection, driver, tx))
             .map_err(|_| {
                 debug!("EventLoopHandle::add_connection send failed");
                 io::ErrorKind::ConnectionAborted
-            })
-            .expect("TODO: handle error");
+            })?;
         self.waker.wake()?;
         rx.recv().map_err(|_| {
             debug!("EventLoopHandle::add_connection recv failed");
@@ -126,44 +116,19 @@ impl EventLoopHandle {
 
     // Signal EventLoop to shutdown.  Causes EventLoop::poll to return Ok(false).
     fn shutdown(&self) -> Result<()> {
-        let requests = if let Some(req) = self.requests.upgrade() {
-            req
-        } else {
-            debug!(
-                "EventLoopHandle[{:p}]: shutdown failed - EventLoop dropped",
-                self
-            );
-            return Err(io::ErrorKind::ConnectionAborted.into());
-        };
-        requests
-            .push(Request::Shutdown)
-            .map_err(|_| {
-                debug!("EventLoopHandle::shutdown send failed");
-                io::ErrorKind::ConnectionAborted
-            })
-            .expect("TODO: handle error");
+        self.requests_tx.send(Request::Shutdown).map_err(|_| {
+            debug!("EventLoopHandle::shutdown send failed");
+            io::ErrorKind::ConnectionAborted
+        })?;
         self.waker.wake()
     }
 
     // Signal EventLoop to wake connection specified by `token` for processing.
     pub(crate) fn wake_connection(&self, token: Token) {
-        let requests = if let Some(req) = self.requests.upgrade() {
-            req
-        } else {
-            debug!(
-                "EventLoopHandle[{:p}]: wake_connection failed - EventLoop dropped",
-                self
-            );
-            return;
-        };
-        requests
-            .push(Request::WakeConnection(token))
-            .map_err(|_| {
-                debug!("EventLoopHandle::wake_connection failed");
-                io::ErrorKind::ConnectionAborted
-            })
-            .expect("TODO: handle error");
-        self.waker.wake().expect("wake failed");
+        match self.requests_tx.send(Request::WakeConnection(token)) {
+            Ok(_) => self.waker.wake().expect("wake failed"),
+            Err(e) => debug!("EventLoopHandle::wake_connection failed: {:?}", e),
+        }
     }
 }
 
@@ -176,7 +141,8 @@ struct EventLoop {
     waker: Arc<Waker>,
     name: String,
     connections: Slab<Connection>,
-    requests: Arc<ArrayQueue<Request>>,
+    requests_rx: Receiver<Request>,
+    requests_tx: Sender<Request>,
 }
 
 const EVENT_LOOP_INITIAL_CLIENTS: usize = 64; // Initial client allocation, exceeding this will cause the connection slab to grow.
@@ -186,13 +152,15 @@ impl EventLoop {
     fn new(name: String) -> Result<EventLoop> {
         let poll = Poll::new()?;
         let waker = Arc::new(Waker::new(poll.registry(), WAKE_TOKEN)?);
+        let (tx, rx) = crossbeam_channel::bounded(EVENT_LOOP_INITIAL_CLIENTS);
         let eventloop = EventLoop {
             poll,
             events: Events::with_capacity(EVENT_LOOP_EVENTS_PER_ITERATION),
             waker,
             name,
             connections: Slab::with_capacity(EVENT_LOOP_INITIAL_CLIENTS),
-            requests: Arc::new(ArrayQueue::new(EVENT_LOOP_INITIAL_CLIENTS)),
+            requests_rx: rx,
+            requests_tx: tx,
         };
 
         Ok(eventloop)
@@ -202,7 +170,7 @@ impl EventLoop {
     fn handle(&mut self) -> EventLoopHandle {
         EventLoopHandle {
             waker: self.waker.clone(),
-            requests: Arc::downgrade(&self.requests),
+            requests_tx: self.requests_tx.clone(),
         }
     }
 
@@ -279,7 +247,7 @@ impl EventLoop {
         }
 
         // If the waker was signalled there may be pending requests to process.
-        while let Some(req) = self.requests.pop() {
+        while let Ok(req) = self.requests_rx.try_recv() {
             match req {
                 Request::AddConnection(pipe, driver, tx) => {
                     debug!("{}: EventLoop: handling add_connection", self.name);
@@ -921,9 +889,9 @@ mod test {
         drop(server);
         drop(client);
 
-        let clone = client_proxy.clone();
-        let response = clone.call(TestServerMessage::TestRequest);
-        response.expect_err("sending to a dropped ClientHandler");
+        client_proxy
+            .try_clone()
+            .expect_err("cloning a closed proxy");
     }
 
     #[test]

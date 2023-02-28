@@ -105,8 +105,6 @@ TOLERATED_DUPES = {
     "bytes": 2,
     "crossbeam-deque": 2,
     "crossbeam-epoch": 2,
-    # tokio 0.1 uses an older version, allow both during transition.
-    "crossbeam-queue": 2,
     "crossbeam-utils": 3,
     "futures": 2,
     "memoffset": 2,
