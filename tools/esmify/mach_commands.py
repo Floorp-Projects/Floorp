@@ -183,6 +183,9 @@ class HgUtils(VCSUtils):
     def find_jsms(self, path):
         jsms = []
 
+        # NOTE: `set:glob:` syntax does not accept backslash on windows.
+        path = path_sep_from_native(path)
+
         cmd = ["hg", "files", f'set:glob:"{path}/**/*.jsm"']
         for line in self.run(cmd):
             jsm = pathlib.Path(line)
@@ -205,6 +208,9 @@ class HgUtils(VCSUtils):
 
     def find_all_jss(self, path):
         jss = []
+
+        # NOTE: `set:glob:` syntax does not accept backslash on windows.
+        path = path_sep_from_native(path)
 
         cmd = [
             "hg",
