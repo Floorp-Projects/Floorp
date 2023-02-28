@@ -465,7 +465,13 @@ class ProtoAndIfaceCache {
   class ArrayCache
       : public Array<JS::Heap<JSObject*>, kProtoAndIfaceCacheCount> {
    public:
-    bool HasEntryInSlot(size_t i) { return (*this)[i]; }
+    bool HasEntryInSlot(size_t i) {
+      // Do an explicit call to the Heap<…> bool conversion operator. Because
+      // that operator is marked explicit we'd otherwise end up doing an
+      // implicit cast to JSObject* first, causing an unnecessary call to
+      // exposeToActiveJS().
+      return bool((*this)[i]);
+    }
 
     JS::Heap<JSObject*>& EntrySlotOrCreate(size_t i) { return (*this)[i]; }
 
@@ -500,7 +506,11 @@ class ProtoAndIfaceCache {
       if (!p) {
         return false;
       }
-      return (*p)[leafIndex];
+      // Do an explicit call to the Heap<…> bool conversion operator. Because
+      // that operator is marked explicit we'd otherwise end up doing an
+      // implicit cast to JSObject* first, causing an unnecessary call to
+      // exposeToActiveJS().
+      return bool((*p)[leafIndex]);
     }
 
     JS::Heap<JSObject*>& EntrySlotOrCreate(size_t i) {
