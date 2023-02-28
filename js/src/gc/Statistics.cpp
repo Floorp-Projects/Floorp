@@ -1143,15 +1143,13 @@ void Statistics::endNurseryCollection(JS::GCReason reason) {
 Statistics::SliceData::SliceData(const SliceBudget& budget,
                                  Maybe<Trigger> trigger, JS::GCReason reason,
                                  TimeStamp start, size_t startFaults,
-                                 gc::State initialState,
-                                 size_t parallelMarkInterruptions)
+                                 gc::State initialState)
     : budget(budget),
       reason(reason),
       trigger(trigger),
       initialState(initialState),
       start(start),
-      startFaults(startFaults),
-      parallelMarkInterruptions(parallelMarkInterruptions) {}
+      startFaults(startFaults) {}
 
 void Statistics::beginSlice(const ZoneGCStats& zoneStats, JS::GCOptions options,
                             const SliceBudget& budget, JS::GCReason reason,
@@ -1178,8 +1176,7 @@ void Statistics::beginSlice(const ZoneGCStats& zoneStats, JS::GCOptions options,
   recordedTrigger.reset();
 
   if (!slices_.emplaceBack(budget, trigger, reason, currentTime,
-                           GetPageFaultCount(), gc->state(),
-                           getCount(COUNT_PARALLEL_MARK_INTERRUPTIONS))) {
+                           GetPageFaultCount(), gc->state())) {
     // If we are OOM, set a flag to indicate we have missing slice data.
     aborted = true;
     return;
@@ -1210,9 +1207,6 @@ void Statistics::endSlice() {
     slice.end = TimeStamp::Now();
     slice.endFaults = GetPageFaultCount();
     slice.finalState = gc->state();
-    slice.parallelMarkInterruptions =
-        getCount(COUNT_PARALLEL_MARK_INTERRUPTIONS) -
-        slice.parallelMarkInterruptions;
 
     log("end slice");
 
