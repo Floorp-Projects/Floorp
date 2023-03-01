@@ -9,6 +9,10 @@ function keyedScalarValue(aScalarName) {
 }
 
 add_task(async () => {
+  // Ensure we're starting with a clean slate. test-verify can be tricky.
+  Services.fog.testResetFOG();
+  Services.telemetry.clearScalars();
+
   Assert.equal(
     undefined,
     Glean.testOnlyIpc.aLabeledCounter.a_label.testGetValue(),
