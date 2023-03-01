@@ -4202,21 +4202,24 @@ void CodeGenerator::visitMegamorphicLoadSlot(LMegamorphicLoadSlot* lir) {
   Register temp0 = ToRegister(lir->temp0());
   Register temp1 = ToRegister(lir->temp1());
   Register temp2 = ToRegister(lir->temp2());
+  Register temp3 = ToRegister(lir->temp3());
   ValueOperand output = ToOutValue(lir);
 
   Label bail, cacheHit;
   if (JitOptions.enableWatchtowerMegamorphic) {
     masm.emitMegamorphicCacheLookup(lir->mir()->name(), obj, temp0, temp1,
                                     temp2, output, &cacheHit);
+  } else {
+    masm.xorPtr(temp2, temp2);
   }
 
   masm.branchIfNonNativeObj(obj, temp0, &bail);
 
   masm.Push(UndefinedValue());
-  masm.moveStackPtrTo(temp2);
+  masm.moveStackPtrTo(temp3);
 
-  using Fn =
-      bool (*)(JSContext * cx, JSObject * obj, PropertyKey id, Value * vp);
+  using Fn = bool (*)(JSContext * cx, JSObject * obj, PropertyKey id,
+                      MegamorphicCache::Entry * cacheEntry, Value * vp);
   masm.setupAlignedABICall();
   masm.loadJSContext(temp0);
   masm.passABIArg(temp0);
@@ -4224,8 +4227,9 @@ void CodeGenerator::visitMegamorphicLoadSlot(LMegamorphicLoadSlot* lir) {
   masm.movePropertyKey(lir->mir()->name(), temp1);
   masm.passABIArg(temp1);
   masm.passABIArg(temp2);
+  masm.passABIArg(temp3);
 
-  masm.callWithABI<Fn, GetNativeDataPropertyPureFallback>();
+  masm.callWithABI<Fn, GetNativeDataPropertyByIdPure>();
 
   MOZ_ASSERT(!output.aliases(ReturnReg));
   masm.Pop(output);
@@ -4249,6 +4253,8 @@ void CodeGenerator::visitMegamorphicLoadSlotByValue(
   if (JitOptions.enableWatchtowerMegamorphic) {
     masm.emitMegamorphicCacheLookupByValue(idVal, obj, temp0, temp1, temp2,
                                            output, &cacheHit);
+  } else {
+    masm.xorPtr(temp2, temp2);
   }
 
   masm.branchIfNonNativeObj(obj, temp0, &bail);
@@ -4258,11 +4264,13 @@ void CodeGenerator::visitMegamorphicLoadSlotByValue(
   masm.Push(idVal);
   masm.moveStackPtrTo(temp0);
 
-  using Fn = bool (*)(JSContext * cx, JSObject * obj, Value * vp);
+  using Fn = bool (*)(JSContext * cx, JSObject * obj,
+                      MegamorphicCache::Entry * cacheEntry, Value * vp);
   masm.setupAlignedABICall();
   masm.loadJSContext(temp1);
   masm.passABIArg(temp1);
   masm.passABIArg(obj);
+  masm.passABIArg(temp2);
   masm.passABIArg(temp0);
   masm.callWithABI<Fn, GetNativeDataPropertyByValuePure>();
 
@@ -4325,6 +4333,8 @@ void CodeGenerator::visitMegamorphicHasProp(LMegamorphicHasProp* lir) {
     masm.emitMegamorphicCacheLookupExists(idVal, obj, temp0, temp1, temp2,
                                           output, &cacheHit,
                                           lir->mir()->hasOwn());
+  } else {
+    masm.xorPtr(temp2, temp2);
   }
 
   masm.branchIfNonNativeObj(obj, temp0, &bail);
@@ -4334,11 +4344,13 @@ void CodeGenerator::visitMegamorphicHasProp(LMegamorphicHasProp* lir) {
   masm.Push(idVal);
   masm.moveStackPtrTo(temp0);
 
-  using Fn = bool (*)(JSContext * cx, JSObject * obj, Value * vp);
+  using Fn = bool (*)(JSContext * cx, JSObject * obj,
+                      MegamorphicCache::Entry * cacheEntry, Value * vp);
   masm.setupAlignedABICall();
   masm.loadJSContext(temp1);
   masm.passABIArg(temp1);
   masm.passABIArg(obj);
+  masm.passABIArg(temp2);
   masm.passABIArg(temp0);
   if (lir->mir()->hasOwn()) {
     masm.callWithABI<Fn, HasNativeDataPropertyPure<true>>();
