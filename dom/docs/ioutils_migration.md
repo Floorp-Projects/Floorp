@@ -217,7 +217,7 @@ Promise<unsigned long long> writeJSON(DOMString path, any value, ...);
 | -------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | backupTo: string?    | backupFile: string?           | Identifies the path to backup the target file to before performing the write operation. If unspecified, no backup will be performed. Default is null.                     |
 | tmpPath: string?     | tmpPath: string?              | Identifies a path to write to first, before performing a move to overwrite the target file. If unspecified, the target file will be written to directly. Default is null. |
-| noOverwrite: boolean | noOverwrite: boolean          | If true, fail if the destination already exists. Default is false.                                                                                                        |
+| noOverwrite: boolean | mode: 'overwrite' or 'create' | 'create' mode will refuse to overwrite an existing file. Default is 'overwrite'.                                                                                          |
 | flush: boolean       | flush: boolean                | If true, force the OS to flush its internal buffers to disk. Default is false.                                                                                            |
 | encoding: 'utf-8'    | N/A; use `writeUTF8` instead. | Allows the caller to supply a string to be encoded as utf-8 text on disk.                                                                                                 |
 
