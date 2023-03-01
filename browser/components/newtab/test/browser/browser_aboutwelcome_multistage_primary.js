@@ -132,13 +132,13 @@ add_task(async function test_AWMultistage_RemovePinScreen() {
     ["main.AW_PIN_FIREFOX_STEP1"]
   );
 
-  // Ensure step indicator does not render
-  await test_screen_content(
+  // Ensure step indicator is not displayed
+  await test_element_styles(
     browser,
-    "Step indicator doesn't render",
-    // Expected selectors:
-    [],
-    // Unexpected selectors:
-    ["div.steps"]
+    "div.steps",
+    // Expected styles:
+    {
+      display: "none",
+    }
   );
 });

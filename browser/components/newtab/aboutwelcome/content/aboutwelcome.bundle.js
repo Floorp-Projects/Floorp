@@ -1047,7 +1047,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       content: content,
       addonName: this.props.addonName,
       handleAction: this.props.handleAction
-    })), this.props.totalNumberOfScreens > 1 && !hideStepsIndicator ? this.renderStepsIndicator() : null), content.dismiss_button ? this.renderDismissButton() : null));
+    })), !hideStepsIndicator ? this.renderStepsIndicator() : null), content.dismiss_button ? this.renderDismissButton() : null));
   }
 
 }
