@@ -1820,7 +1820,8 @@ void MaybeLogBlockShutdownDiagnostics(ContentParent* aSelf, const char* aMsg,
 #if defined(MOZ_DIAGNOSTIC_ASSERT_ENABLED)
   if (aSelf->IsBlockingShutdown()) {
     MOZ_LOG(ContentParent::GetLog(), LogLevel::Info,
-            ("ContentParent: id=%p - %s at %s(%d)", aSelf, aMsg, aFile, aLine));
+            ("ContentParent: id=%p pid=%d - %s at %s(%d)", aSelf, aSelf->Pid(),
+             aMsg, aFile, aLine));
   }
 #else
   Unused << aSelf;
