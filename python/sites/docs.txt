@@ -23,7 +23,7 @@ pypi:mdit-py-plugins==0.3.0
 pypi:parsimonious==0.10.0
 pypi:pyasn1==0.4.8
 pypi:pyasn1-modules==0.2.8
-pypi:Pygments==2.7.1
+pypi:Pygments==2.14.0
 pypi:pyparsing==2.4.7
 # for autodoc
 pypi:pytest==7.2.1
