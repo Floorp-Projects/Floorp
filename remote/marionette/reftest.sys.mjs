@@ -782,12 +782,12 @@ browserRect.height: ${browserRect.height}`);
         bottom: margin,
       },
       shrinkToFit: false,
-      printBackground: true,
+      background: true,
     });
     const printSettings = lazy.print.getPrintSettings(settings);
 
     const binaryString = await lazy.print.printToBinaryString(
-      win.gBrowser,
+      win.gBrowser.browsingContext,
       printSettings
     );
 

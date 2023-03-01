@@ -19,6 +19,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
+  print: "chrome://remote/content/shared/PDF.sys.mjs",
   ProgressListener: "chrome://remote/content/shared/Navigate.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   waitForInitialNavigationCompleted:
@@ -410,6 +411,152 @@ class BrowsingContextModule extends Module {
     return this.#awaitNavigation(webProgress, targetURI, {
       wait,
     });
+  }
+
+  /**
+   * An object that holds the information about margins
+   * for Webdriver BiDi browsingContext.print command.
+   *
+   * @typedef BrowsingContextPrintMarginParameters
+   *
+   * @property {number=} bottom
+   *     Bottom margin in cm. Defaults to 1cm (~0.4 inches).
+   * @property {number=} left
+   *     Left margin in cm. Defaults to 1cm (~0.4 inches).
+   * @property {number=} right
+   *     Right margin in cm. Defaults to 1cm (~0.4 inches).
+   * @property {number=} top
+   *     Top margin in cm. Defaults to 1cm (~0.4 inches).
+   */
+
+  /**
+   * An object that holds the information about paper size
+   * for Webdriver BiDi browsingContext.print command.
+   *
+   * @typedef BrowsingContextPrintPageParameters
+   *
+   * @property {number=} height
+   *     Paper height in cm. Defaults to US letter height (27.94cm / 11 inches).
+   * @property {number=} width
+   *     Paper width in cm. Defaults to US letter width (21.59cm / 8.5 inches).
+   */
+
+  /**
+   * Used as return value for Webdriver BiDi browsingContext.print command.
+   *
+   * @typedef BrowsingContextPrintResult
+   *
+   * @property {String} data
+   *     Base64 encoded PDF representing printed document.
+   */
+
+  /**
+   * Creates a paginated PDF representation of a document
+   * of the provided browsing context, and returns it
+   * as a Base64-encoded string.
+   *
+   * @param {Object=} options
+   * @param {string} options.context
+   *     Id of the browsing context.
+   * @param {boolean=} options.background
+   *     Whether or not to print background colors and images.
+   *     Defaults to false, which prints without background graphics.
+   * @param {BrowsingContextPrintMarginParameters=} options.margin
+   *     Paper margins.
+   * @param {('landscape'|'portrait')=} options.orientation
+   *     Paper orientation. Defaults to 'portrait'.
+   * @param {BrowsingContextPrintPageParameters=} options.page
+   *     Paper size.
+   * @param {Array<number|string>=} options.pageRanges
+   *     Paper ranges to print, e.g., ['1-5', 8, '11-13'].
+   *     Defaults to the empty array, which means print all pages.
+   * @param {number=} options.scale
+   *     Scale of the webpage rendering. Defaults to 1.0.
+   * @param {boolean=} options.shrinkToFit
+   *     Whether or not to override page size as defined by CSS.
+   *     Defaults to true, in which case the content will be scaled
+   *     to fit the paper size.
+   *
+   * @returns {BrowsingContextPrintResult}
+   *
+   * @throws {InvalidArgumentError}
+   *     Raised if an argument is of an invalid type or value.
+   * @throws {NoSuchFrameError}
+   *     If the browsing context cannot be found.
+   */
+  async print(options = {}) {
+    const {
+      context: contextId,
+      background,
+      margin,
+      orientation,
+      page,
+      pageRanges,
+      scale,
+      shrinkToFit,
+    } = options;
+
+    lazy.assert.string(
+      contextId,
+      `Expected "context" to be a string, got ${contextId}`
+    );
+    const context = this.#getBrowsingContext(contextId);
+
+    const settings = lazy.print.addDefaultSettings({
+      background,
+      margin,
+      orientation,
+      page,
+      pageRanges,
+      scale,
+      shrinkToFit,
+    });
+
+    for (const prop of ["top", "bottom", "left", "right"]) {
+      lazy.assert.positiveNumber(
+        settings.margin[prop],
+        lazy.pprint`margin.${prop} is not a positive number`
+      );
+    }
+    for (const prop of ["width", "height"]) {
+      lazy.assert.positiveNumber(
+        settings.page[prop],
+        lazy.pprint`page.${prop} is not a positive number`
+      );
+    }
+    lazy.assert.positiveNumber(
+      settings.scale,
+      `scale ${settings.scale} is not a positive number`
+    );
+    lazy.assert.that(
+      scale =>
+        scale >= lazy.print.minScaleValue && scale <= lazy.print.maxScaleValue,
+      `scale ${settings.scale} is outside the range ${lazy.print.minScaleValue}-${lazy.print.maxScaleValue}`
+    )(settings.scale);
+    lazy.assert.boolean(settings.shrinkToFit);
+    lazy.assert.that(
+      orientation => lazy.print.defaults.orientationValue.includes(orientation),
+      `orientation ${
+        settings.orientation
+      } doesn't match allowed values "${lazy.print.defaults.orientationValue.join(
+        "/"
+      )}"`
+    )(settings.orientation);
+    lazy.assert.boolean(
+      settings.background,
+      `background ${settings.background} is not boolean`
+    );
+    lazy.assert.array(settings.pageRanges);
+
+    const printSettings = await lazy.print.getPrintSettings(settings);
+    const binaryString = await lazy.print.printToBinaryString(
+      context,
+      printSettings
+    );
+
+    return {
+      data: btoa(binaryString),
+    };
   }
 
   /**
