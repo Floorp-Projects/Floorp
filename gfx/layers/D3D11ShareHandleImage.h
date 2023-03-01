@@ -38,6 +38,12 @@ class D3D11RecycleAllocator final : public TextureClientRecycleAllocator {
 
   RefPtr<ID3D11Texture2D> GetStagingTextureNV12(gfx::IntSize aSize);
 
+  void SetSyncObject(RefPtr<SyncObjectClient>& aSyncObject) {
+    mSyncObject = aSyncObject;
+  }
+
+  RefPtr<SyncObjectClient> GetSyncObject() { return mSyncObject; }
+
   const RefPtr<ID3D11Device> mDevice;
   const bool mCanUseNV12;
   const bool mCanUseP010;
@@ -52,6 +58,8 @@ class D3D11RecycleAllocator final : public TextureClientRecycleAllocator {
 
   RefPtr<ID3D11Texture2D> mStagingTexture;
   gfx::IntSize mStagingTextureSize;
+
+  RefPtr<SyncObjectClient> mSyncObject;
 };
 
 // Image class that wraps a ID3D11Texture2D. This class copies the image

@@ -58,6 +58,12 @@ D3D11ShareHandleImage::MaybeCreateNV12ImageAndSetData(
     return nullptr;
   }
 
+  auto syncObject = allocator->GetSyncObject();
+  if (!syncObject) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    return nullptr;
+  }
+
   MOZ_ASSERT(allocator->GetUsableSurfaceFormat() == gfx::SurfaceFormat::NV12);
   if (allocator->GetUsableSurfaceFormat() != gfx::SurfaceFormat::NV12) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called");
@@ -80,6 +86,8 @@ D3D11ShareHandleImage::MaybeCreateNV12ImageAndSetData(
     return nullptr;
   }
 
+  // The texture does not have keyed mutex. When keyed mutex exists, the texture
+  // could not be used for video overlay. Then it needs manual synchronization
   RefPtr<ID3D11Texture2D> texture = image->GetTexture();
   if (!texture) {
     return nullptr;
@@ -91,10 +99,27 @@ D3D11ShareHandleImage::MaybeCreateNV12ImageAndSetData(
     return nullptr;
   }
 
+  RefPtr<ID3D10Multithread> mt;
+  HRESULT hr = allocator->mDevice->QueryInterface(
+      (ID3D10Multithread**)getter_AddRefs(mt));
+  if (FAILED(hr) || !mt) {
+    gfxCriticalError() << "Multithread safety interface not supported. " << hr;
+    return nullptr;
+  }
+
+  if (!mt->GetMultithreadProtected()) {
+    gfxCriticalError() << "Device used not marked as multithread-safe.";
+    return nullptr;
+  }
+
+  D3D11MTAutoEnter mtAutoEnter(mt.forget());
+
+  AutoLockD3D11Texture lockSt(stagingTexture);
+
   D3D11_MAP mapType = D3D11_MAP_WRITE;
   D3D11_MAPPED_SUBRESOURCE mappedResource;
 
-  HRESULT hr = context->Map(stagingTexture, 0, mapType, 0, &mappedResource);
+  hr = context->Map(stagingTexture, 0, mapType, 0, &mappedResource);
   if (FAILED(hr)) {
     gfxCriticalNoteOnce << "Mapping D3D11 staging texture failed: "
                         << gfx::hexa(hr);
@@ -116,6 +141,12 @@ D3D11ShareHandleImage::MaybeCreateNV12ImageAndSetData(
   context->CopyResource(texture, stagingTexture);
 
   context->Flush();
+
+  client->SyncWithObject(syncObject);
+  if (!syncObject->Synchronize(true)) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    return nullptr;
+  }
 
   return image;
 }
@@ -295,7 +326,7 @@ RefPtr<ID3D11Texture2D> D3D11RecycleAllocator::GetStagingTextureNV12(
     desc.Usage = D3D11_USAGE_STAGING;
     desc.BindFlags = 0;
     desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    desc.MiscFlags = 0;
+    desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
     desc.SampleDesc.Count = 1;
 
     HRESULT hr = mDevice->CreateTexture2D(&desc, nullptr,
