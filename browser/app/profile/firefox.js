@@ -1594,7 +1594,7 @@ pref("browser.newtabpage.activity-stream.discoverystream.hybridLayout.enabled", 
 pref("browser.newtabpage.activity-stream.discoverystream.hideCardBackground.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.fourCardLayout.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.newFooterSection.enabled", false);
-pref("browser.newtabpage.activity-stream.discoverystream.saveToPocketCard.enabled", false);
+pref("browser.newtabpage.activity-stream.discoverystream.saveToPocketCard.enabled", true);
 pref("browser.newtabpage.activity-stream.discoverystream.saveToPocketCardRegions", "");
 pref("browser.newtabpage.activity-stream.discoverystream.hideDescriptions.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.hideDescriptionsRegions", "");
