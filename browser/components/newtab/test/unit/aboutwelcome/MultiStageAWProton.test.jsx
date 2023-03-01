@@ -189,32 +189,6 @@ describe("MultiStageAboutWelcomeProton module", () => {
       assert.ok(wrapper.exists());
       assert.equal(wrapper.find(".additional-cta.cta-link").exists(), true);
     });
-
-    it("should not render a progress bar if there is 1 step", () => {
-      const SCREEN_PROPS = {
-        content: {
-          title: "test title",
-          progress_bar: true,
-        },
-        totalNumberOfScreens: 1,
-      };
-      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
-      assert.ok(wrapper.exists());
-      assert.equal(wrapper.find(".steps.progress-bar").exists(), false);
-    });
-
-    it("should render a progress bar if there are 2 steps", () => {
-      const SCREEN_PROPS = {
-        content: {
-          title: "test title",
-          progress_bar: true,
-        },
-        totalNumberOfScreens: 2,
-      };
-      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
-      assert.ok(wrapper.exists());
-      assert.equal(wrapper.find(".steps.progress-bar").exists(), true);
-    });
   });
 
   describe("AboutWelcomeDefaults for proton", () => {

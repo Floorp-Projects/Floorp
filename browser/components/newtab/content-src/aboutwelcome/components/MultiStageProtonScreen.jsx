@@ -452,9 +452,7 @@ export class ProtonScreen extends React.PureComponent {
                 handleAction={this.props.handleAction}
               />
             </div>
-            {this.props.totalNumberOfScreens > 1 && !hideStepsIndicator
-              ? this.renderStepsIndicator()
-              : null}
+            {!hideStepsIndicator ? this.renderStepsIndicator() : null}
           </div>
           {content.dismiss_button ? this.renderDismissButton() : null}
         </div>
