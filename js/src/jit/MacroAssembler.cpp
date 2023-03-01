@@ -2159,10 +2159,28 @@ void MacroAssembler::loadStringToAtomCacheLastLookups(Register dest) {
   movePtr(ImmPtr(offset), dest);
 }
 
+void MacroAssembler::loadAtomHash(Register id, Register outHash, Label* done) {
+  Label doneInner, fatInline;
+  if (!done) {
+    done = &doneInner;
+  }
+  move32(Imm32(JSString::FAT_INLINE_MASK), outHash);
+  and32(Address(id, JSString::offsetOfFlags()), outHash);
+
+  branch32(Assembler::Equal, outHash, Imm32(JSString::FAT_INLINE_MASK),
+           &fatInline);
+  load32(Address(id, NormalAtom::offsetOfHash()), outHash);
+  jump(done);
+  bind(&fatInline);
+  load32(Address(id, FatInlineAtom::offsetOfHash()), outHash);
+  jump(done);
+  bind(&doneInner);
+}
+
 void MacroAssembler::loadAtomOrSymbolAndHash(ValueOperand value, Register outId,
                                              Register outHash,
                                              Label* cacheMiss) {
-  Label isString, fatInline, done, nonAtom, atom, lastLookupAtom;
+  Label isString, done, nonAtom, atom, lastLookupAtom;
 
   {
     ScratchTagScope tag(*this, value);
@@ -2182,16 +2200,7 @@ void MacroAssembler::loadAtomOrSymbolAndHash(ValueOperand value, Register outId,
                Imm32(JSString::ATOM_BIT), &nonAtom);
 
   bind(&atom);
-  move32(Imm32(JSString::FAT_INLINE_MASK), outHash);
-  and32(Address(outId, JSString::offsetOfFlags()), outHash);
-
-  branch32(Assembler::Equal, outHash, Imm32(JSString::FAT_INLINE_MASK),
-           &fatInline);
-  load32(Address(outId, NormalAtom::offsetOfHash()), outHash);
-  jump(&done);
-  bind(&fatInline);
-  load32(Address(outId, FatInlineAtom::offsetOfHash()), outHash);
-  jump(&done);
+  loadAtomHash(outId, outHash, &done);
 
   bind(&nonAtom);
   loadStringToAtomCacheLastLookups(outHash);
@@ -2284,9 +2293,10 @@ void MacroAssembler::emitExtractValueFromMegamorphicCacheEntry(
   jump(cacheHit);
 }
 
+template <typename IdOperandType>
 void MacroAssembler::emitMegamorphicCacheLookupByValueCommon(
-    ValueOperand id, Register obj, Register scratch1, Register scratch2,
-    Register outEntryPtr, Label* cacheMiss) {
+    IdOperandType id, Register obj, Register scratch1, Register scratch2,
+    Register outEntryPtr, Label* cacheMiss, Label* cacheMissWithEntry) {
   // A lot of this code is shared with emitMegamorphicCacheLookup. It would
   // be nice to be able to avoid the duplication here, but due to a few
   // differences like taking the id in a ValueOperand instead of being able
@@ -2303,7 +2313,13 @@ void MacroAssembler::emitMegamorphicCacheLookupByValueCommon(
   rshiftPtr(Imm32(MegamorphicCache::ShapeHashShift2), scratch2);
   xorPtr(scratch2, outEntryPtr);
 
-  loadAtomOrSymbolAndHash(id, scratch1, scratch2, cacheMiss);
+  if constexpr (std::is_same<IdOperandType, ValueOperand>::value) {
+    loadAtomOrSymbolAndHash(id, scratch1, scratch2, cacheMiss);
+  } else {
+    static_assert(std::is_same<IdOperandType, Register>::value);
+    movePtr(id, scratch1);
+    loadAtomHash(scratch1, scratch2, nullptr);
+  }
   addPtr(scratch2, outEntryPtr);
 
   // outEntryPtr %= MegamorphicCache::NumEntries
@@ -2329,16 +2345,77 @@ void MacroAssembler::emitMegamorphicCacheLookupByValueCommon(
                             outEntryPtr);
   }
 
-  // if (outEntryPtr->key_ != scratch1) goto cacheMiss
+  // if (outEntryPtr->key_ != scratch1) goto cacheMissWithEntry
   branchPtr(Assembler::NotEqual,
             Address(outEntryPtr, MegamorphicCache::Entry::offsetOfKey()),
-            scratch1, cacheMiss);
+            scratch1, cacheMissWithEntry);
   loadPtr(Address(obj, JSObject::offsetOfShape()), scratch1);
+
+  // if (outEntryPtr->shape_ != scratch1) goto cacheMissWithEntry
+  branchPtr(Assembler::NotEqual,
+            Address(outEntryPtr, MegamorphicCache::Entry::offsetOfShape()),
+            scratch1, cacheMissWithEntry);
+
+  // scratch2 = scratch2->generation_
+  load16ZeroExtend(Address(scratch2, MegamorphicCache::offsetOfGeneration()),
+                   scratch2);
+  load16ZeroExtend(
+      Address(outEntryPtr, MegamorphicCache::Entry::offsetOfGeneration()),
+      scratch1);
+  // if (outEntryPtr->generation_ != scratch2) goto cacheMissWithEntry
+  branch32(Assembler::NotEqual, scratch1, scratch2, cacheMissWithEntry);
+}
+
+void MacroAssembler::emitMegamorphicCacheLookup(
+    PropertyKey id, Register obj, Register scratch1, Register scratch2,
+    Register outEntryPtr, ValueOperand output, Label* cacheHit) {
+  Label cacheMiss, isMissing, dynamicSlot, protoLoopHead, protoLoopTail;
+
+  // scratch1 = obj->shape()
+  loadPtr(Address(obj, JSObject::offsetOfShape()), scratch1);
+
+  movePtr(scratch1, outEntryPtr);
+  movePtr(scratch1, scratch2);
+
+  // outEntryPtr = (scratch1 >> 3) ^ (scratch1 >> 13) + hash(id)
+  rshiftPtr(Imm32(MegamorphicCache::ShapeHashShift1), outEntryPtr);
+  rshiftPtr(Imm32(MegamorphicCache::ShapeHashShift2), scratch2);
+  xorPtr(scratch2, outEntryPtr);
+  addPtr(Imm32(HashAtomOrSymbolPropertyKey(id)), outEntryPtr);
+
+  // outEntryPtr %= MegamorphicCache::NumEntries
+  constexpr size_t cacheSize = MegamorphicCache::NumEntries;
+  static_assert(mozilla::IsPowerOfTwo(cacheSize));
+  size_t cacheMask = cacheSize - 1;
+  and32(Imm32(cacheMask), outEntryPtr);
+
+  loadMegamorphicCache(scratch2);
+  // outEntryPtr = &scratch2->entries_[outEntryPtr]
+  constexpr size_t entrySize = sizeof(MegamorphicCache::Entry);
+  static_assert(sizeof(void*) == 4 || entrySize == 24);
+  if constexpr (sizeof(void*) == 4) {
+    mul32(Imm32(entrySize), outEntryPtr);
+    computeEffectiveAddress(BaseIndex(scratch2, outEntryPtr, TimesOne,
+                                      MegamorphicCache::offsetOfEntries()),
+                            outEntryPtr);
+  } else {
+    computeEffectiveAddress(BaseIndex(outEntryPtr, outEntryPtr, TimesTwo),
+                            outEntryPtr);
+    computeEffectiveAddress(BaseIndex(scratch2, outEntryPtr, TimesEight,
+                                      MegamorphicCache::offsetOfEntries()),
+                            outEntryPtr);
+  }
 
   // if (outEntryPtr->shape_ != scratch1) goto cacheMiss
   branchPtr(Assembler::NotEqual,
             Address(outEntryPtr, MegamorphicCache::Entry::offsetOfShape()),
-            scratch1, cacheMiss);
+            scratch1, &cacheMiss);
+
+  // if (outEntryPtr->key_ != id) goto cacheMiss
+  movePropertyKey(id, scratch1);
+  branchPtr(Assembler::NotEqual,
+            Address(outEntryPtr, MegamorphicCache::Entry::offsetOfKey()),
+            scratch1, &cacheMiss);
 
   // scratch2 = scratch2->generation_
   load16ZeroExtend(Address(scratch2, MegamorphicCache::offsetOfGeneration()),
@@ -2347,106 +2424,61 @@ void MacroAssembler::emitMegamorphicCacheLookupByValueCommon(
       Address(outEntryPtr, MegamorphicCache::Entry::offsetOfGeneration()),
       scratch1);
   // if (outEntryPtr->generation_ != scratch2) goto cacheMiss
-  branch32(Assembler::NotEqual, scratch1, scratch2, cacheMiss);
-}
+  branch32(Assembler::NotEqual, scratch1, scratch2, &cacheMiss);
 
-void MacroAssembler::emitMegamorphicCacheLookup(
-    PropertyKey id, Register obj, Register scratch1, Register scratch2,
-    Register scratch3, ValueOperand output, Label* cacheHit) {
-  Label cacheMiss, isMissing, dynamicSlot, protoLoopHead, protoLoopTail;
-
-  // scratch1 = obj->shape()
-  loadPtr(Address(obj, JSObject::offsetOfShape()), scratch1);
-
-  movePtr(scratch1, scratch2);
-  movePtr(scratch1, scratch3);
-
-  // scratch2 = (scratch1 >> 3) ^ (scratch1 >> 13) + hash(id)
-  rshiftPtr(Imm32(MegamorphicCache::ShapeHashShift1), scratch2);
-  rshiftPtr(Imm32(MegamorphicCache::ShapeHashShift2), scratch3);
-  xorPtr(scratch3, scratch2);
-  addPtr(Imm32(HashAtomOrSymbolPropertyKey(id)), scratch2);
-
-  // scratch2 %= MegamorphicCache::NumEntries
-  constexpr size_t cacheSize = MegamorphicCache::NumEntries;
-  static_assert(mozilla::IsPowerOfTwo(cacheSize));
-  size_t cacheMask = cacheSize - 1;
-  and32(Imm32(cacheMask), scratch2);
-
-  loadMegamorphicCache(scratch3);
-  // scratch2 = &scratch3->entries_[scratch2]
-  constexpr size_t entrySize = sizeof(MegamorphicCache::Entry);
-  static_assert(sizeof(void*) == 4 || entrySize == 24);
-  if constexpr (sizeof(void*) == 4) {
-    mul32(Imm32(entrySize), scratch2);
-    computeEffectiveAddress(BaseIndex(scratch3, scratch2, TimesOne,
-                                      MegamorphicCache::offsetOfEntries()),
-                            scratch2);
-  } else {
-    computeEffectiveAddress(BaseIndex(scratch2, scratch2, TimesTwo), scratch2);
-    computeEffectiveAddress(BaseIndex(scratch3, scratch2, TimesEight,
-                                      MegamorphicCache::offsetOfEntries()),
-                            scratch2);
-  }
-
-  // if (scratch2->shape_ != scratch1) goto cacheMiss
-  branchPtr(Assembler::NotEqual,
-            Address(scratch2, MegamorphicCache::Entry::offsetOfShape()),
-            scratch1, &cacheMiss);
-
-  // if (scratch2->key_ != id) goto cacheMiss
-  movePropertyKey(id, scratch1);
-  branchPtr(Assembler::NotEqual,
-            Address(scratch2, MegamorphicCache::Entry::offsetOfKey()), scratch1,
-            &cacheMiss);
-
-  // scratch3 = scratch3->generation_
-  load16ZeroExtend(Address(scratch3, MegamorphicCache::offsetOfGeneration()),
-                   scratch3);
-  load16ZeroExtend(
-      Address(scratch2, MegamorphicCache::Entry::offsetOfGeneration()),
-      scratch1);
-  // if (scratch2->generation_ != scratch3) goto cacheMiss
-  branch32(Assembler::NotEqual, scratch1, scratch3, &cacheMiss);
-
-  emitExtractValueFromMegamorphicCacheEntry(obj, scratch2, scratch1, scratch3,
-                                            output, cacheHit, &cacheMiss);
+  emitExtractValueFromMegamorphicCacheEntry(
+      obj, outEntryPtr, scratch1, scratch2, output, cacheHit, &cacheMiss);
 
   bind(&cacheMiss);
 }
 
+template <typename IdOperandType>
 void MacroAssembler::emitMegamorphicCacheLookupByValue(
-    ValueOperand id, Register obj, Register scratch1, Register scratch2,
-    Register scratch3, ValueOperand output, Label* cacheHit) {
-  Label cacheMiss;
-  emitMegamorphicCacheLookupByValueCommon(id, obj, scratch1, scratch2, scratch3,
-                                          &cacheMiss);
-  emitExtractValueFromMegamorphicCacheEntry(obj, scratch3, scratch1, scratch2,
-                                            output, cacheHit, &cacheMiss);
+    IdOperandType id, Register obj, Register scratch1, Register scratch2,
+    Register outEntryPtr, ValueOperand output, Label* cacheHit) {
+  Label cacheMiss, cacheMissWithEntry;
+  emitMegamorphicCacheLookupByValueCommon(id, obj, scratch1, scratch2,
+                                          outEntryPtr, &cacheMiss,
+                                          &cacheMissWithEntry);
+  emitExtractValueFromMegamorphicCacheEntry(obj, outEntryPtr, scratch1,
+                                            scratch2, output, cacheHit,
+                                            &cacheMissWithEntry);
   bind(&cacheMiss);
+  xorPtr(outEntryPtr, outEntryPtr);
+  bind(&cacheMissWithEntry);
 }
+
+template void MacroAssembler::emitMegamorphicCacheLookupByValue<ValueOperand>(
+    ValueOperand id, Register obj, Register scratch1, Register scratch2,
+    Register outEntryPtr, ValueOperand output, Label* cacheHit);
+
+template void MacroAssembler::emitMegamorphicCacheLookupByValue<Register>(
+    Register id, Register obj, Register scratch1, Register scratch2,
+    Register outEntryPtr, ValueOperand output, Label* cacheHit);
 
 void MacroAssembler::emitMegamorphicCacheLookupExists(
     ValueOperand id, Register obj, Register scratch1, Register scratch2,
-    Register scratch3, Register output, Label* cacheHit, bool hasOwn) {
-  Label cacheMiss, cacheHitFalse;
-  emitMegamorphicCacheLookupByValueCommon(id, obj, scratch1, scratch2, scratch3,
-                                          &cacheMiss);
+    Register outEntryPtr, Register output, Label* cacheHit, bool hasOwn) {
+  Label cacheMiss, cacheMissWithEntry, cacheHitFalse;
+  emitMegamorphicCacheLookupByValueCommon(id, obj, scratch1, scratch2,
+                                          outEntryPtr, &cacheMiss,
+                                          &cacheMissWithEntry);
 
-  // scratch3 = scratch3->numHops_
-  load8ZeroExtend(Address(scratch3, MegamorphicCache::Entry::offsetOfNumHops()),
-                  scratch3);
+  // scratch1 = outEntryPtr->numHops_
+  load8ZeroExtend(
+      Address(outEntryPtr, MegamorphicCache::Entry::offsetOfNumHops()),
+      scratch1);
 
-  branch32(Assembler::Equal, scratch3,
+  branch32(Assembler::Equal, scratch1,
            Imm32(MegamorphicCache::Entry::NumHopsForMissingProperty),
            &cacheHitFalse);
 
   if (hasOwn) {
-    branch32(Assembler::NotEqual, scratch3, Imm32(0), &cacheHitFalse);
+    branch32(Assembler::NotEqual, scratch1, Imm32(0), &cacheHitFalse);
   } else {
-    branch32(Assembler::Equal, scratch3,
+    branch32(Assembler::Equal, scratch1,
              Imm32(MegamorphicCache::Entry::NumHopsForMissingOwnProperty),
-             &cacheMiss);
+             &cacheMissWithEntry);
   }
 
   move32(Imm32(1), output);
@@ -2457,6 +2489,8 @@ void MacroAssembler::emitMegamorphicCacheLookupExists(
   jump(cacheHit);
 
   bind(&cacheMiss);
+  xorPtr(outEntryPtr, outEntryPtr);
+  bind(&cacheMissWithEntry);
 }
 
 void MacroAssembler::extractCurrentIndexAndKindFromIterator(Register iterator,

@@ -39,6 +39,7 @@ class SetObject;
 class Shape;
 class TypedArrayObject;
 class WithScope;
+class MegamorphicCacheEntry;
 
 namespace gc {
 
@@ -544,16 +545,21 @@ bool CallDOMSetter(JSContext* cx, const JSJitInfo* jitInfo, HandleObject obj,
 void HandleCodeCoverageAtPC(BaselineFrame* frame, jsbytecode* pc);
 void HandleCodeCoverageAtPrologue(BaselineFrame* frame);
 
-bool GetNativeDataPropertyPure(JSContext* cx, JSObject* obj, PropertyName* name,
-                               Value* vp);
+bool GetNativeDataPropertyByNamePure(JSContext* cx, JSObject* obj,
+                                     PropertyName* name,
+                                     MegamorphicCacheEntry* entry, Value* vp);
 
-bool GetNativeDataPropertyPureFallback(JSContext* cx, JSObject* obj,
-                                       PropertyKey id, Value* vp);
+bool GetNativeDataPropertyByIdPure(JSContext* cx, JSObject* obj, PropertyKey id,
+                                   MegamorphicCacheEntry* cacheEntry,
+                                   Value* vp);
 
-bool GetNativeDataPropertyByValuePure(JSContext* cx, JSObject* obj, Value* vp);
+bool GetNativeDataPropertyByValuePure(JSContext* cx, JSObject* obj,
+                                      MegamorphicCacheEntry* cacheEntry,
+                                      Value* vp);
 
 template <bool HasOwn>
-bool HasNativeDataPropertyPure(JSContext* cx, JSObject* obj, Value* vp);
+bool HasNativeDataPropertyPure(JSContext* cx, JSObject* obj,
+                               MegamorphicCacheEntry* cacheEntry, Value* vp);
 
 bool HasNativeElementPure(JSContext* cx, NativeObject* obj, int32_t index,
                           Value* vp);

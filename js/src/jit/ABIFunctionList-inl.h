@@ -136,9 +136,9 @@ namespace jit {
   _(js::jit::GetContextSensitiveInterpreterStub)                      \
   _(js::jit::GetIndexFromString)                                      \
   _(js::jit::GetInt32FromStringPure)                                  \
+  _(js::jit::GetNativeDataPropertyByIdPure)                           \
+  _(js::jit::GetNativeDataPropertyByNamePure)                         \
   _(js::jit::GetNativeDataPropertyByValuePure)                        \
-  _(js::jit::GetNativeDataPropertyPure)                               \
-  _(js::jit::GetNativeDataPropertyPureFallback)                       \
   _(js::jit::GlobalHasLiveOnDebuggerStatement)                        \
   _(js::jit::HandleCodeCoverageAtPC)                                  \
   _(js::jit::HandleCodeCoverageAtPrologue)                            \

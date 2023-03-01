@@ -2603,7 +2603,7 @@
   result_type: BoxedValue
   operands:
     object: WordSized
-  num_temps: 3
+  num_temps: 4
   call_instruction: true
   mir_op: true
 
