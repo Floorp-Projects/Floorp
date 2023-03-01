@@ -883,7 +883,9 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvUpdateResources(
     nsTArray<OpUpdateResource>&& aResourceUpdates,
     nsTArray<RefCountedShmem>&& aSmallShmems,
     nsTArray<ipc::Shmem>&& aLargeShmems) {
-  if (mDestroyed || aIdNamespace != mIdNamespace) {
+  const bool isValidMessage = aIdNamespace == mIdNamespace;
+
+  if (mDestroyed || !isValidMessage) {
     wr::IpcResourceUpdateQueue::ReleaseShmems(this, aSmallShmems);
     wr::IpcResourceUpdateQueue::ReleaseShmems(this, aLargeShmems);
     return IPC_OK();
@@ -1143,6 +1145,12 @@ bool WebRenderBridgeParent::ProcessDisplayListData(
   wr::TransactionBuilder txn(mApi);
   Maybe<wr::AutoTransactionSender> sender;
 
+  if (!aValidTransaction) {
+    return true;
+  }
+
+  MOZ_ASSERT(aDisplayList.mIdNamespace == mIdNamespace);
+
   // Note that this needs to happen before the display list transaction is
   // sent to WebRender, so that the UpdateHitTestingTree call is guaranteed to
   // be in the updater queue at the time that the scene swap completes.
@@ -1151,15 +1159,14 @@ bool WebRenderBridgeParent::ProcessDisplayListData(
   }
 
   txn.SetLowPriority(!IsRootWebRenderBridgeParent());
-  if (aValidTransaction) {
-    MOZ_ASSERT(aDisplayList.mIdNamespace == mIdNamespace);
-    sender.emplace(mApi, &txn);
-  }
+  sender.emplace(mApi, &txn);
+  bool success = true;
 
-  bool success = ProcessWebRenderParentCommands(aDisplayList.mCommands, txn);
+  success =
+      ProcessWebRenderParentCommands(aDisplayList.mCommands, txn) && success;
 
   if (aDisplayList.mDLItems && aDisplayList.mDLCache &&
-      aDisplayList.mDLSpatialTree && aValidTransaction) {
+      aDisplayList.mDLSpatialTree) {
     success = SetDisplayList(
                   aDisplayList.mRect, std::move(aDisplayList.mDLItems.ref()),
                   std::move(aDisplayList.mDLCache.ref()),
@@ -1274,14 +1281,15 @@ bool WebRenderBridgeParent::ProcessEmptyTransactionUpdates(
   // AsyncImagePipelineManager.
   Unused << GetNextWrEpoch();
 
+  const bool validTransaction = aData.mIdNamespace == mIdNamespace;
   bool success = true;
-  if (aData.mIdNamespace == mIdNamespace) {
+
+  if (validTransaction) {
     success = UpdateResources(aData.mResourceUpdates, aData.mSmallShmems,
                               aData.mLargeShmems, txn);
-  }
-
-  if (!aData.mCommands.IsEmpty()) {
-    success = ProcessWebRenderParentCommands(aData.mCommands, txn) && success;
+    if (!aData.mCommands.IsEmpty()) {
+      success = ProcessWebRenderParentCommands(aData.mCommands, txn) && success;
+    }
   }
 
   if (ShouldParentObserveEpoch()) {
@@ -1420,8 +1428,14 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetFocusTarget(
 }
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvParentCommands(
+    const wr::IdNamespace& aIdNamespace,
     nsTArray<WebRenderParentCommand>&& aCommands) {
   if (mDestroyed) {
+    return IPC_OK();
+  }
+
+  const bool isValidMessage = aIdNamespace == mIdNamespace;
+  if (!isValidMessage) {
     return IPC_OK();
   }
 

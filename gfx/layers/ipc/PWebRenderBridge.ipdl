@@ -65,7 +65,7 @@ parent:
   async SetFocusTarget(FocusTarget focusTarget);
   async UpdateResources(IdNamespace aIdNamespace, OpUpdateResource[] aResourceUpdates,
                         RefCountedShmem[] aSmallShmems, Shmem[] aLargeShmems);
-  async ParentCommands(WebRenderParentCommand[] commands);
+  async ParentCommands(IdNamespace aIdNamespace, WebRenderParentCommand[] commands);
   sync GetSnapshot(PTexture texture) returns (bool aNeedsYFlip);
   async SetLayersObserverEpoch(LayersObserverEpoch childEpoch);
   async ClearCachedResources();
