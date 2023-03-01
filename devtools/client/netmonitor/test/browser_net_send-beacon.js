@@ -33,10 +33,12 @@ add_task(async function() {
     1,
     "The beacon should be recorded."
   );
+
   const request = getSortedRequests(store.getState())[0];
   is(request.method, "POST", "The method is correct.");
   ok(request.url.endsWith("beacon_request"), "The URL is correct.");
   is(request.status, "404", "The status is correct.");
+  is(request.blockedReason, 0, "The request is not blocked");
 
   return teardown(monitor);
 });
