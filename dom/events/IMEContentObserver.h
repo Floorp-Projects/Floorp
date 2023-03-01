@@ -75,6 +75,20 @@ class IMEContentObserver final : public nsStubMutationObserver,
   HandleQueryContentEvent(WidgetQueryContentEvent* aEvent);
 
   /**
+   * Handle eSetSelection event if and only if aEvent changes selection offset
+   * or length.  Doing nothing when selection range is same is important to
+   * honer users' intention or web app's intention because ContentEventHandler
+   * does not support to put range boundaries to arbitrary side of element
+   * boundaries.  E.g., `<b>bold[]</b> normal` vs. `<b>bold</b>[] normal`.
+   * Note that this compares given range with selection cache which has been
+   * notified IME via widget.  Therefore, the caller needs to guarantee that
+   * pending notifications should've been flushed.  If you test this, you need
+   * to wait 2 animation frames before sending eSetSelection event.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult MaybeHandleSelectionEvent(
+      nsPresContext* aPresContext, WidgetSelectionEvent* aEvent);
+
+  /**
    * Init() initializes the instance, i.e., retrieving necessary objects and
    * starts to observe something.
    * Be aware, callers of this method need to guarantee that the instance

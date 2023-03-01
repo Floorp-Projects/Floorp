@@ -47,7 +47,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=864040
       ok(referenceSnapshot, tn + ': failed to take snapshot (1)');
 
       // Set selection to the same spot through a selection event
-      ok(synthesizeSelectionSet(refoffset, 0, false), tn + ': failed to set selection');
+      ok(await synthesizeSelectionSet(refoffset, 0, false), tn + ': failed to set selection');
 
       // Make sure new selection is the same
       result = synthesizeQuerySelectedText();

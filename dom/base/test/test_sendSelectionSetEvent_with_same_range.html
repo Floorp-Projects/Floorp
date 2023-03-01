@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Testing nsIDOMWindowUtils.sendSelectionSetEvent not update selection if result range is same in serialized text within the ContentEventHandler rules</title>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+<script>
+"use strict";
+
+const kLineBreak = navigator.platform.indexOf("Win") == 0 ? "\r\n" : "\n";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async () => {
+  const editingHost = document.querySelector("div[contenteditable]");
+
+  function waitForFlushingIMEContentObserver() {
+    return new Promise(resolve => requestAnimationFrame(
+      () => requestAnimationFrame(resolve)
+    ));
+  }
+
+  await (async function test_setSelection_when_selection_collapsed_at_end_of_inline_element() {
+    editingHost.innerHTML = "<b>abc</b>def";
+    getSelection().collapse(editingHost.querySelector("b").firstChild, "abc".length);
+    await waitForFlushingIMEContentObserver();
+    const ret = windowUtils.sendSelectionSetEvent(
+      3,
+      0,
+      SpecialPowers.Ci.nsIDOMWindowUtils.SELECTION_SET_FLAG_USE_NATIVE_LINE_BREAK
+    );
+    ok(
+      ret,
+      "test_setSelection_when_selection_collapsed_at_end_of_inline_element: eSetSelection event should be succeeded"
+    );
+    is(
+      getSelection().focusNode,
+      editingHost.querySelector("b").firstChild,
+      "test_setSelection_when_selection_collapsed_at_end_of_inline_element: focus node should not be changed from the text node in the <b>"
+    );
+    is(
+      getSelection().focusOffset,
+      "abc".length,
+      "test_setSelection_when_selection_collapsed_at_end_of_inline_element: focus offset should not be changed from end of the text node"
+    );
+  })();
+
+  await (async function test_setSelection_when_selection_collapsed_after_inline_element() {
+    editingHost.innerHTML = "<b>abc</b>def";
+    getSelection().collapse(editingHost.querySelector("b").nextSibling, 0);
+    await waitForFlushingIMEContentObserver();
+    const ret = windowUtils.sendSelectionSetEvent(
+      3,
+      0,
+      SpecialPowers.Ci.nsIDOMWindowUtils.SELECTION_SET_FLAG_USE_NATIVE_LINE_BREAK
+    );
+    ok(
+      ret,
+      "test_setSelection_when_selection_collapsed_after_inline_element: eSetSelection event should be succeeded"
+    );
+    is(
+      getSelection().focusNode,
+      editingHost.querySelector("b").nextSibling,
+      "test_setSelection_when_selection_collapsed_after_inline_element: focus node should not be changed from the text node after the <b>"
+    );
+    is(
+      getSelection().focusOffset,
+      0,
+      "test_setSelection_when_selection_collapsed_after_inline_element: focus offset should not be changed from start of the text node"
+    );
+  })();
+
+  await (async function test_setSelection_when_selection_collapsed_in_empty_block_element() {
+    editingHost.innerHTML = "<p style=\"width:1em;height:1em;\"></p>\n";
+    getSelection().collapse(editingHost.querySelector("p"), 0);
+    await waitForFlushingIMEContentObserver();
+    const ret = windowUtils.sendSelectionSetEvent(
+      kLineBreak.length,
+      0,
+      SpecialPowers.Ci.nsIDOMWindowUtils.SELECTION_SET_FLAG_USE_NATIVE_LINE_BREAK
+    );
+    ok(
+      ret,
+      "test_setSelection_when_selection_collapsed_in_empty_block_element: eSetSelection event should be succeeded"
+    );
+    is(
+      getSelection().focusNode,
+      editingHost.querySelector("p"),
+      "test_setSelection_when_selection_collapsed_in_empty_block_element: focus node should not be changed from the empty <div>"
+    );
+  })();
+
+  SimpleTest.finish();
+});
+</script>
+</head>
+<body>
+<div contenteditable></div>
+</body>
+</html>

@@ -2601,12 +2601,23 @@ function synthesizeQueryCaretRect(aOffset, aWindow) {
  * @param aWindow  Optional (If null, current |window| will be used)
  * @return         True, if succeeded.  Otherwise false.
  */
-function synthesizeSelectionSet(aOffset, aLength, aReverse, aWindow) {
-  var utils = _getDOMWindowUtils(aWindow);
+async function synthesizeSelectionSet(
+  aOffset,
+  aLength,
+  aReverse,
+  aWindow = window
+) {
+  const utils = _getDOMWindowUtils(aWindow);
   if (!utils) {
     return false;
   }
-  var flags = aReverse ? SELECTION_SET_FLAG_REVERSE : 0;
+  // eSetSelection event will be compared with selection cache in
+  // IMEContentObserver, but it may have not been updated yet.  Therefore, we
+  // need to flush pending things of IMEContentObserver.
+  await new Promise(resolve =>
+    aWindow.requestAnimationFrame(() => aWindow.requestAnimationFrame(resolve))
+  );
+  const flags = aReverse ? SELECTION_SET_FLAG_REVERSE : 0;
   return utils.sendSelectionSetEvent(aOffset, aLength, flags);
 }
 

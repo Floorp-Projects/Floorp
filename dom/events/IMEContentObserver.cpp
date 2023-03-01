@@ -678,6 +678,49 @@ nsresult IMEContentObserver::HandleQueryContentEvent(
   return rv;
 }
 
+nsresult IMEContentObserver::MaybeHandleSelectionEvent(
+    nsPresContext* aPresContext, WidgetSelectionEvent* aEvent) {
+  MOZ_ASSERT(aEvent);
+  MOZ_ASSERT(aEvent->mMessage == eSetSelection);
+  NS_ASSERTION(!mNeedsToNotifyIMEOfSelectionChange,
+               "Selection cache has not been updated yet");
+
+  MOZ_LOG(
+      sIMECOLog, LogLevel::Debug,
+      ("0x%p MaybeHandleSelectionEvent(aEvent={ "
+       "mMessage=%s, mOffset=%u, mLength=%u, mReversed=%s, "
+       "mExpandToClusterBoundary=%s, mUseNativeLineBreak=%s }), "
+       "mSelectionData=%s",
+       this, ToChar(aEvent->mMessage), aEvent->mOffset, aEvent->mLength,
+       ToChar(aEvent->mReversed), ToChar(aEvent->mExpandToClusterBoundary),
+       ToChar(aEvent->mUseNativeLineBreak), ToString(mSelectionData).c_str()));
+
+  // When we have Selection cache, and the caller wants to set same selection
+  // range, we shouldn't try to compute same range because it may be impossible
+  // if the range boundary is around element boundaries which won't be
+  // serialized with line breaks like close tags of inline elements.  In that
+  // case, inserting new text at different point may be different from intention
+  // of users or web apps which set current selection.
+  // FIXME: We cache only selection data computed with native line breaker
+  // lengths.  Perhaps, we should improve the struct to have both data of
+  // offset and length.  E.g., adding line break counts for both offset and
+  // length.
+  if (!mNeedsToNotifyIMEOfSelectionChange && aEvent->mUseNativeLineBreak &&
+      mSelectionData.IsInitialized() && mSelectionData.HasRange() &&
+      mSelectionData.StartOffset() == aEvent->mOffset &&
+      mSelectionData.Length() == aEvent->mLength) {
+    if (RefPtr<Selection> selection = mSelection) {
+      selection->ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION,
+                                ScrollAxis(), ScrollAxis(), 0);
+    }
+    aEvent->mSucceeded = true;
+    return NS_OK;
+  }
+
+  ContentEventHandler handler(aPresContext);
+  return handler.OnSelectionEvent(aEvent);
+}
+
 bool IMEContentObserver::OnMouseButtonEvent(nsPresContext& aPresContext,
                                             WidgetMouseEvent& aMouseEvent) {
   if (!mIMENotificationRequests ||

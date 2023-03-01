@@ -511,9 +511,16 @@ void TextComposition::HandleSelectionEvent(
     return;
   }
 
-  ContentEventHandler handler(aPresContext);
   AutoRestore<bool> saveHandlingSelectionEvent(sHandlingSelectionEvent);
   sHandlingSelectionEvent = true;
+
+  if (RefPtr<IMEContentObserver> contentObserver =
+          IMEStateManager::GetActiveContentObserver()) {
+    contentObserver->MaybeHandleSelectionEvent(aPresContext, aSelectionEvent);
+    return;
+  }
+
+  ContentEventHandler handler(aPresContext);
   // XXX During setting selection, a selection listener may change selection
   //     again.  In such case, sHandlingSelectionEvent doesn't indicate if
   //     the selection change is caused by a selection event.  However, it
