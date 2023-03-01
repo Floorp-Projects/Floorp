@@ -27,7 +27,7 @@ import mozilla.components.support.ktx.android.util.dpToPx
  * @param displayMetrics [DisplayMetrics] used for adapting resources to the current display.
  */
 internal class TabSheetBehaviorManager(
-    private val behavior: BottomSheetBehavior<View>,
+    private val behavior: BottomSheetBehavior<out View>,
     orientation: Int,
     private val maxNumberOfTabs: Int,
     private val numberForExpandingTray: Int,
@@ -85,7 +85,7 @@ internal class TabSheetBehaviorManager(
 
 @VisibleForTesting
 internal class TraySheetBehaviorCallback(
-    @get:VisibleForTesting internal val behavior: BottomSheetBehavior<View>,
+    @get:VisibleForTesting internal val behavior: BottomSheetBehavior<out View>,
     @get:VisibleForTesting internal val trayInteractor: NavigationInteractor,
 ) : BottomSheetBehavior.BottomSheetCallback() {
 
