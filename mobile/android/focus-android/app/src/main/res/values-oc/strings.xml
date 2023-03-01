@@ -1011,6 +1011,12 @@
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
     <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Per defaut %1$s tempta de se connectar en utilizant lo protocòl HTTPS per una melhora seguretat. Per modificar aqueste reglatge o per ne saber mai, anatz als Paramètres &gt; Vida privada e seguretat &gt; Seguretat.</string>
 
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s ensaja d’utilizar una connexion HTTPS quand es possible per mai de seguretat.
+     <a href="%2$s">Ne saber mai</a> <br/><br/>
+     Cambiatz aqueste paramètre dins Paramètres > Vida privada e seguretat > Seguretat.]]></string>
+
     <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Connexion pas segura</string>
 
@@ -1019,6 +1025,11 @@
  Aquò pòt èsser degut a un problèma de configuracion del servidor o a una persona qu’ensaja d’usurpar l’identitat del servidor. <br/><br/>
  Se ja sètz connectat(ada) amb succès a aqueste servidor, benlèu l’error es temporària e podètz ensajar tornamai pus tard.
  ]]></string>
+
+     <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Qualqu’un poiriá usurpar l’identitat del site, contunhar la navegacion poiriá èsser perilhós.</label>
+        <br><br>
+        <label>Los sites web pròvan lor identitat via de certificats. %1$s se fisa pas de <b>%2$s</b> perque lo seu emissor de certificats es desconegut, lo certificat es auto-signat, o lo servidor envia pas los certificats intermediari corrèctes.</label>]]></string>
 
      <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->

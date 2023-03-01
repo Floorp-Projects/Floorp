@@ -20,6 +20,8 @@
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
     <string name="feedback_erase">Ri runatab\'al okem pa k\'amaya\'l xyuj el.</string>
 
+    <string name="feedback_erase2">Josq\'in kinatab\'al okem pa k\'amaya\'l</string>
+
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
     <string name="feedback_erase_custom_tab">Xyuj ri ruwi\' runatab\'al okem pa k\'amaya\'l.</string>
 
@@ -45,6 +47,11 @@
 
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">Titz\'aqatisäx pa ri Nïm tzuwäch</string>
+
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">Titz\'aqatisäx choj okem</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Tiyuj pa taq choj okem</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">Achike Natzijoj</string>
@@ -129,6 +136,19 @@
           Do not translate or transliterate Focus Nightly.-->
     <string name="text_selection_search_action_focus_nightly">Tikanöx pa Focus Nightly</string>
 
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s nuya\' ronojel pan aq\'a\'.</p>
+<p>Tawokisaj achi\'el jun ichinan okik\'amaya\'l:
+ <ul>
+ <li>Tikanöx chuqa\' tokisäx ri chokoy</li>
+    <li>Keq\'at ojqanela\' (o kek\'ex taq cha\'oj richin niya\' q\'ij chi ke ri ojqanela\')</li>
+    <li>Tiyuj richin yeyuj el taq kaxlawey chuqa\' runatab\'al kanoxïk chuqa\' okem pa k\'amaya\'l</li>
+  </ul>
+</p>
+<p>%1$s Xsamajin ruma ri Mozilla. Ri taqel qataqanem ja ri niqayäk qak\'u\'x richin jun jaqäl chuqa\' raxinäq k\'amaya\'l.<br/>
+<a href="%2$s">Tetamäx ch\'aqa\' chik</a></p>]]></string>
+
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Ichinanem &amp; Jikomal</string>
 
@@ -204,6 +224,9 @@
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Titz\'aqatisäx ichinan URL</string>
 
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">Titz\'aqatisäx URL</string>
+
     <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">Titz\'aqatisäx ichinan URL</string>
 
@@ -273,6 +296,7 @@
     <string name="preference_privacy_should_block_cookies_no_option2">Mani matyox</string>
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Keq\'at xa xe 3rx kiwinaqil kikaxlanwäy ojqanela\'</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Keq\'at xa xe 3rx kiwinaqil kaxlanwäy</string>
+    <string name="preference_privacy_should_block_cookies_cross_site_option">Keq\'at ronojel Kikuki xoch\'in taq ruxaq</string>
     <string name="preference_privacy_should_block_cookies_yes_option2">Ja\', tab\'ana\' utzil</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
@@ -335,6 +359,9 @@
     <string name="preference_search_remove">Tiyuj</string>
     <!-- Action for dding an additional search engine to the list -->
     <string name="preference_search_add3">Titz\'aqatisäx jun chik kanob\'äl</string>
+
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">Tacha\' ri jeb\'ël awokik\'amaya\'l</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">Titz\'aqatisäx kanob\'äl</string>
@@ -469,8 +496,15 @@
     <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
     <string name="onboarding_first_screen_title">Ütz apetik pa %1$s</string>
 
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">Anin. Ichinan. Majun nrewaj.</string>
+
     <!-- New Onboarding flow first screen button label-->
     <string name="onboarding_first_screen_button_text">Titikirisäx</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s man junam ta achi\'el kik\'in ch\'aqa\' chik okik\'amaya\'l</string>
 
     <!-- New Onboarding flow second screen make Focus default browser button label-->
     <string name="onboarding_second_screen_default_browser_button_text">Tiya\' kan achi\'el kanob\'äl k\'o wi</string>
@@ -515,6 +549,10 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">MANI</string>
 
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">Nijaq ri chojokem akuchi\' chupun ri Nimirisan Ojqanem chuwäch Chajinïk</string>
+
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
 
@@ -545,7 +583,28 @@
 
 
 
-  <!-- Text shown in prompts for GeckoView -->
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s niya\' pan aq\'a\' rik\'in rojqanem ri <a href="%2$s">Aj winäq Ya\'oj Ruq\'ij Mozilla</a> chuqa\' ch\'aqa\' chik taq ya\'oj q\'ij kichin ch\'aqa\' chik taq jaqäl b\'itz\'ib\'.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Man nisuj taq kich\'ojib\'al chuqa\' ya\'oj q\'ij chi ke ri etz\'ib\'an taq b\'i\'aj richin Mozilla Moloj ni xa ta chi ke ri taq ruch\'akulal achi\'el Mozilla, Firefox o %1$s taq b\'i\'aj o taq wachaj. Nawïl rutz\'aqat na\'oj <a href="%2$s">wawe\'</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[Rutz\'aqat ruxe\'el b\'itz\'ib\' richin %1$s wachel kik\'in ch\'aqa\' chik jalajöj sipan taq kema\' chuqa\' jaqäl b\'itz\'ib\' <a href="%2$s">taq ya\'oj q\'ij</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s chuqa\' nrokisaj kicholonem tanaj ya\'on ruma Disconnect, Inc. achi\'el jachon chuqa\' alaj ruk\'aslem nimawuj ruma <a href="%2$s">GNU General Public License v3</a>, chuqa\' wachel <a href="%3$s">wawe\'</a>.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Rub\'i\' okisanel</string>
     <string name="gv_prompt_password_hint">Ewan tzij</string>
     <string name="gv_prompt_clear">Tijosq\'ïx</string>
@@ -619,8 +678,26 @@
     <!-- Preference for removing cookie/consent banners from sites automatically, this is shown as part of the protections panel with the tracking protection toggle. -->--&gt;
     <string name="cookie_banner_exception_item_title">Kech\'utinirisäx kitzijol kuki</string>
 
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle. -->
+    <string name="cookie_banner_exception_item_description_state_on">TZIJÏL pa re ruxaq re\'</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle. -->
+    <string name="cookie_banner_exception_item_description_state_off">CHUPÜL pa re ruxaq re\'</string>
+
     <!-- Preference for removing cookie/consent banners from sites automatically, this is shown when the user enters in details after he clicks on the item from protection panel. -->
     <string name="cookie_banner_exception_panel_switch_title">Kech\'utinirisäx kitzijol kuki</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown when the user enters in details after he clicks on the item from protection panel. -->
+    <string name="cookie_banner_exception_panel_switch_state_off">CHUPÜL pa re ruxaq re\'</string>
+
+    <!-- Text for indicating cookie banner handling is on this site, this is shown when the user enters in details after he clicks on the item from protection panel. -->
+    <string name="cookie_banner_exception_panel_switch_state_on">TZIJÏL pa re ruxaq re\'</string>
+
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site. -->
+    <string name="cookie_banner_exception_panel_title_state_on_for_site">¿La nitzij ri kich\'utinisaxik rutzijol kuki richin %1$s?</string>
+
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site. -->
+    <string name="cookie_banner_exception_panel_title_state_off_for_site">¿La nichup ri kich\'utinisaxik rutzijol kuki richin %1$s?</string>
 
     <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
     <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">taq nuk\'ulem</string>
@@ -823,6 +900,8 @@
     <string name="enhanced_tracking_protection_state_off">CHUPÜL ri chajinïk pa re ruxaq re\'</string>
     <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
     <string name="enhanced_tracking_protection_state_on">TZIJÏL ri chajinïk pa re ruxaq re\'</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">Rujikomal okem</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="insecure_connection">Man ütz ta chi okem</string>
 
@@ -858,6 +937,9 @@
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Titz\'apïx ruwi\'</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">Titz\'apïx elenel tzuwäch</string>
+
     <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
     <string name="tool_tip_dismiss_button_content_description">Tewäx</string>
 
@@ -868,5 +950,8 @@
     <!-- Content description (not visible, for screen readers etc.): This is the description for the
     close button from promote search widget dialog. -->
     <string name="promote_search_widget_dialog_content_description">Titz\'apïx</string>
+
+    <!-- This is the title of promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_title">Josq\'in kinatab\'al okem pa k\'amaya\'l 🎉</string>
 
     </resources>
