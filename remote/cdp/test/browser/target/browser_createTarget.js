@@ -52,12 +52,19 @@ add_task(
     const expectedUrl = "about:blank";
 
     for (const url of ["", "example.com", "https://example[.com", "https:"]) {
+      // Here we cannot wait for browserLoaded, because the tab might already
+      // be on about:blank when `createTarget` resolves.
+      const onNewTabLoaded = BrowserTestUtils.waitForNewTab(
+        gBrowser,
+        "about:blank",
+        true
+      );
       const { targetId } = await Target.createTarget({ url });
       is(typeof targetId, "string", "Got expected type for target id");
 
-      const browser = gBrowser.selectedTab.linkedBrowser;
-      await BrowserTestUtils.browserLoaded(browser, false, expectedUrl);
-
+      // Wait for the load to be done before checking the URL.
+      const tab = await onNewTabLoaded;
+      const browser = tab.linkedBrowser;
       is(browser.currentURI.spec, expectedUrl, "Expected URL loaded");
     }
   },
@@ -69,13 +76,13 @@ add_task(
     const { Target } = client;
 
     const url = PAGE_TEST;
+    const onNewTabLoaded = BrowserTestUtils.waitForNewTab(gBrowser, url, true);
     const { targetId } = await Target.createTarget({ url });
 
     is(typeof targetId, "string", "Got expected type for target id");
 
-    const browser = gBrowser.selectedTab.linkedBrowser;
-    await BrowserTestUtils.browserLoaded(browser, false, url);
-
+    const tab = await onNewTabLoaded;
+    const browser = tab.linkedBrowser;
     is(browser.currentURI.spec, url, "Expected URL loaded");
 
     const { targetInfos } = await Target.getTargets();
