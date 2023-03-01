@@ -395,7 +395,9 @@ int32_t DesktopCaptureImpl::EnsureCapturer() {
   DesktopCaptureOptions options = CreateDesktopCaptureOptions();
 
 #if defined(WEBRTC_USE_PIPEWIRE)
-  if (mozilla::StaticPrefs::media_webrtc_capture_allow_pipewire() &&
+  if ((mDeviceType == CaptureDeviceType::Screen ||
+       mDeviceType == CaptureDeviceType::Window) &&
+      mozilla::StaticPrefs::media_webrtc_capture_allow_pipewire() &&
       webrtc::DesktopCapturer::IsRunningUnderWayland()) {
     std::unique_ptr<DesktopCapturer> capturer =
         DesktopCapturer::CreateGenericCapturer(options);
