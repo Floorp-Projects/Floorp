@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ARIA and style="display: contents;"</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      // Test ARIA grids that have display: contents; on different elements.
+      // They should all have equivalent trees.
+      var accTree =
+        { TABLE: [
+          { ROW: [
+            { role: ROLE_COLUMNHEADER,
+              children: [ { TEXT_LEAF: [ ] }, ]
+            },
+            { role: ROLE_COLUMNHEADER,
+              children: [ { TEXT_LEAF: [ ] }, ]
+            },
+          ] },
+          { ROW: [
+            { ROWHEADER: [
+              { TEXT_LEAF: [ ] },
+            ] },
+            { GRID_CELL: [
+              { TEXT_LEAF: [ ] },
+            ] },
+          ] },
+        ] };
+
+      testAccessibleTree("gridWithoutDisplayContents", accTree);
+      testAccessibleTree("gridWithDisplayContents", accTree);
+      testAccessibleTree("gridWithDisplayContentsRow", accTree);
+      testAccessibleTree("gridWithDisplayContentsColHeader", accTree);
+      testAccessibleTree("gridWithDisplayContentsRowHeader", accTree);
+      testAccessibleTree("gridWithDisplayContentsGridCell", accTree);
+
+      // Test divs with ARIA roles and attributes and display: contents to
+      // verify that Accessibles are created appropriately.
+      accTree =
+        { SECTION: [
+          { LIST: [
+            { LISTITEM: [
+              { TEXT_LEAF: [ ] }
+            ] },
+          ] },
+          { SECTION: [
+            { LISTITEM: [
+              { TEXT_LEAF: [ ] }
+            ] },
+          ] },
+          { LISTITEM: [
+            { TEXT_LEAF: [ ] }
+          ] },
+        ] };
+      testAccessibleTree("container", accTree);
+
+      // Test paragraph with display: contents. It should create a generic
+      // Accessible that reports the role correctly.
+      accTree =
+        { SECTION: [
+          { PARAGRAPH: [ { TEXT_LEAF: [ ] } ] },
+          { TEXT_LEAF: [ ] }, // space between paragraphs
+          { TEXT_LEAF: [ ] },
+        ] };
+      testAccessibleTree("paragraphContainer", accTree);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Element with ARIA role and display: contents doesn't get an accessible"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1494196">
+    Mozilla Bug 1494196
+  </a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="gridWithoutDisplayContents" role="grid">
+    <div role="row">
+      <div role="columnheader">col1</div>
+      <div role="columnheader">col2</div>
+    </div>
+    <div role="row">
+      <div role="rowheader">row1</div>
+      <div role="gridcell">cell1</div>
+    </div>
+  </div>
+  <div id="gridWithDisplayContents" role="grid" style="display:contents;">
+    <div role="row">
+      <div role="columnheader">col1</div>
+      <div role="columnheader">col2</div>
+    </div>
+    <div role="row">
+      <div role="rowheader">row1</div>
+      <div role="gridcell">cell1</div>
+    </div>
+  </div>
+  <div id="gridWithDisplayContentsRow" role="grid">
+    <div role="row" style="display:contents;">
+      <div role="columnheader">col1</div>
+      <div role="columnheader">col2</div>
+    </div>
+    <div role="row">
+      <div role="rowheader">row1</div>
+      <div role="gridcell">cell1</div>
+    </div>
+  </div>
+  <div id="gridWithDisplayContentsColHeader" role="grid">
+    <div role="row">
+      <div role="columnheader" style="display:contents;">col1</div>
+      <div role="columnheader">col2</div>
+    </div>
+    <div role="row">
+      <div role="rowheader">row1</div>
+      <div role="gridcell">cell1</div>
+    </div>
+  </div>
+  <div id="gridWithDisplayContentsRowHeader" role="grid">
+    <div role="row">
+      <div role="columnheader">col1</div>
+      <div role="columnheader">col2</div>
+    </div>
+    <div role="row">
+      <div role="rowheader" style="display:contents;">row1</div>
+      <div role="gridcell">cell1</div>
+    </div>
+  </div>
+  <div id="gridWithDisplayContentsGridCell" role="grid">
+    <div role="row">
+      <div role="columnheader">col1</div>
+      <div role="columnheader">col2</div>
+    </div>
+    <div role="row">
+      <div role="rowheader">row1</div>
+      <div role="gridcell" style="display:contents;">cell1</div>
+    </div>
+  </div>
+
+  <div id="container">
+    <div role="list" style="display: contents;">
+      <div role="listitem">test</div>
+    </div>
+    <div aria-label="test" style="display: contents;">
+      <div role="listitem">test</div>
+    </div>
+    <div role="none" style="display: contents;">
+      <div role="listitem">test</div>
+    </div>
+  </div>
+
+  <div id="paragraphContainer">
+    <p style="display: contents;">test</p>
+    <p style="display: contents;" role="none">test</p>
+  </div>
+</body>
+</html>
