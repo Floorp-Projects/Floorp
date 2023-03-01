@@ -351,7 +351,7 @@ tasks:
 
     fenix-android-test-debug:
         attributes:
-            shipping-product: focus
+            shipping-product: fenix
         description: 'Fenix Debug Android Test for debugging'
         dependencies:
             external-gradle-dependencies: external-gradle-dependencies-fenix
