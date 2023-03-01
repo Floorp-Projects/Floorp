@@ -7,6 +7,7 @@ import { Component } from "react";
 import PropTypes from "prop-types";
 import { getSelectedSource, getSelectedBreakableLines } from "../../selectors";
 import { fromEditorLine } from "../../utils/editor";
+import { isWasm } from "../../utils/wasm";
 
 class EmptyLines extends Component {
   static get propTypes() {
@@ -53,23 +54,20 @@ class EmptyLines extends Component {
   disableEmptyLines() {
     const { breakableLines, selectedSource, editor } = this.props;
 
-    editor.codeMirror.operation(() => {
-      editor.codeMirror.eachLine(lineHandle => {
-        const line = fromEditorLine(
-          selectedSource.id,
-          editor.codeMirror.getLineNumber(lineHandle)
-        );
+    const { codeMirror } = editor;
+    const isSourceWasm = isWasm(selectedSource.id);
+
+    codeMirror.operation(() => {
+      const lineCount = codeMirror.lineCount();
+      for (let i = 0; i < lineCount; i++) {
+        const line = fromEditorLine(selectedSource.id, i, isSourceWasm);
 
         if (breakableLines.has(line)) {
-          editor.codeMirror.removeLineClass(
-            lineHandle,
-            "wrapClass",
-            "empty-line"
-          );
+          codeMirror.removeLineClass(i, "wrapClass", "empty-line");
         } else {
-          editor.codeMirror.addLineClass(lineHandle, "wrapClass", "empty-line");
+          codeMirror.addLineClass(i, "wrapClass", "empty-line");
         }
-      });
+      }
     });
   }
 
