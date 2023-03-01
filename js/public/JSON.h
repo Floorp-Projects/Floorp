@@ -21,8 +21,11 @@ using JSONWriteCallback = bool (*)(const char16_t* buf, uint32_t len,
 
 /**
  * Performs the JSON.stringify operation, as specified by ECMAScript, except
- * writing stringified data by repeated calls of |callback|, with each such
- * call passed |data| as argument.
+ * writing stringified data by exactly one call of |callback|, passing |data| as
+ * argument.
+ *
+ * In cases where JSON.stringify would return undefined, this function calls
+ * |callback| with the string "null".
  */
 extern JS_PUBLIC_API bool JS_Stringify(JSContext* cx,
                                        JS::MutableHandle<JS::Value> value,
@@ -53,6 +56,19 @@ extern JS_PUBLIC_API bool ToJSONMaybeSafely(JSContext* cx,
                                             JS::Handle<JSObject*> input,
                                             JSONWriteCallback callback,
                                             void* data);
+
+/**
+ * Performs the JSON.stringify operation, as specified by ECMAScript, except
+ * writing stringified data by one call of |callback|, passing |data| as
+ * argument.
+ *
+ * In cases where JSON.stringify would return undefined, this function does not
+ * call |callback| at all.
+ */
+extern JS_PUBLIC_API bool ToJSON(JSContext* cx, Handle<Value> value,
+                                 Handle<JSObject*> replacer,
+                                 Handle<Value> space,
+                                 JSONWriteCallback callback, void* data);
 
 } /* namespace JS */
 
