@@ -32,6 +32,14 @@ Then, make sure the files:
 include conditional compilation directives, by probably reverting them (or
 reverting and adjusting them if new codecs are added).
 
+## Add headers for a new major ffmpeg version
+
+If a new major version of ffmpeg is being imported in the tree, it's necessary
+to vendor the new ffmpeg headers in `dom/media/platforms/ffmpeg/ffmpegxx` where
+xx is the new ffmpeg major version number, and to modify the dynamic linker
+wrapper in
+`dom/media/platforms/dom/media/platforms/ffmpeg/{FFmpegLibWrapper.cpp,FFmpegRungtimeLinker.cpp}` with the new version and the new API in this new version.
+
 ## `config.h` generation
 
 Configuration files are generated as follow using the configure script (here
