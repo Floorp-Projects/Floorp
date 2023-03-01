@@ -320,10 +320,8 @@ class Axis {
       const ParentLayerPoint& aPoint) const = 0;
   virtual ParentLayerCoord GetRectLength(
       const ParentLayerRect& aRect) const = 0;
-  virtual CSSCoord GetRectLength(const CSSRect& aRect) const = 0;
   virtual ParentLayerCoord GetRectOffset(
       const ParentLayerRect& aRect) const = 0;
-  virtual CSSCoord GetRectOffset(const CSSRect& aRect) const = 0;
   virtual float GetTransformScale(
       const AsyncTransformComponentMatrix& aMatrix) const = 0;
   virtual ParentLayerCoord GetTransformTranslation(
@@ -399,9 +397,7 @@ class AxisX : public Axis {
   ParentLayerCoord GetPointOffset(
       const ParentLayerPoint& aPoint) const override;
   ParentLayerCoord GetRectLength(const ParentLayerRect& aRect) const override;
-  CSSCoord GetRectLength(const CSSRect& aRect) const override;
   ParentLayerCoord GetRectOffset(const ParentLayerRect& aRect) const override;
-  CSSCoord GetRectOffset(const CSSRect& aRect) const override;
   float GetTransformScale(
       const AsyncTransformComponentMatrix& aMatrix) const override;
   ParentLayerCoord GetTransformTranslation(
@@ -428,9 +424,7 @@ class AxisY : public Axis {
   CSSToParentLayerScale GetAxisScale(
       const CSSToParentLayerScale2D& aScale) const override;
   ParentLayerCoord GetRectLength(const ParentLayerRect& aRect) const override;
-  CSSCoord GetRectLength(const CSSRect& aRect) const override;
   ParentLayerCoord GetRectOffset(const ParentLayerRect& aRect) const override;
-  CSSCoord GetRectOffset(const CSSRect& aRect) const override;
   float GetTransformScale(
       const AsyncTransformComponentMatrix& aMatrix) const override;
   ParentLayerCoord GetTransformTranslation(
