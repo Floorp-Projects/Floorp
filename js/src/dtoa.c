@@ -244,14 +244,6 @@ extern void *MALLOC(size_t);
 #include <math.h>
 #endif
 
-#ifndef CONST
-#ifdef KR_headers
-#define CONST /* blank */
-#else
-#define CONST const
-#endif
-#endif
-
 #if defined(IEEE_8087) + defined(IEEE_MC68k) + defined(VAX) + defined(IBM) != 1
 #error "Exactly one of IEEE_8087, IEEE_MC68k, VAX, or IBM should be defined."
 #endif
@@ -1084,5 +1076,3 @@ d2b
 	}
 #undef d0
 #undef d1
-
-#undef CONST
