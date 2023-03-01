@@ -70,8 +70,8 @@ export function toEditorLine(sourceId, lineOrOffset) {
   return lineOrOffset ? lineOrOffset - 1 : 1;
 }
 
-export function fromEditorLine(sourceId, line, sourceIsWasm) {
-  if (sourceIsWasm) {
+export function fromEditorLine(sourceId, line) {
+  if (isWasm(sourceId)) {
     return lineToWasmOffset(sourceId, line) || 0;
   }
 
@@ -198,7 +198,7 @@ export function getSourceLocationFromMouseEvent({ codeMirror }, source, e) {
 
   return {
     sourceId,
-    line: fromEditorLine(sourceId, line, isWasm(sourceId)),
+    line: fromEditorLine(sourceId, line),
     column: isWasm(sourceId) ? 0 : ch + 1,
   };
 }

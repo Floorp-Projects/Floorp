@@ -537,45 +537,44 @@ function prependWhiteSpace(
   }
 }
 
-const escapeCharacters = {
-  // Backslash
-  "\\": "\\\\",
-  // Newlines
-  "\n": "\\n",
-  // Carriage return
-  "\r": "\\r",
-  // Tab
-  "\t": "\\t",
-  // Vertical tab
-  "\v": "\\v",
-  // Form feed
-  "\f": "\\f",
-  // Null character
-  "\0": "\\x00",
-  // Line separator
-  "\u2028": "\\u2028",
-  // Paragraph separator
-  "\u2029": "\\u2029",
-  // Single quotes
-  "'": "\\'",
-};
-
-// eslint-disable-next-line prefer-template
-const regExpString = "(" + Object.values(escapeCharacters).join("|") + ")";
-const escapeCharactersRegExp = new RegExp(regExpString, "g");
-
-function sanitizerReplaceFunc(_, c) {
-  return escapeCharacters[c];
-}
-
 /**
  * Make sure that we output the escaped character combination inside string
  * literals instead of various problematic characters.
  */
-function sanitize(str) {
-  return str.replace(escapeCharactersRegExp, sanitizerReplaceFunc);
-}
+const sanitize = (function() {
+  const escapeCharacters = {
+    // Backslash
+    "\\": "\\\\",
+    // Newlines
+    "\n": "\\n",
+    // Carriage return
+    "\r": "\\r",
+    // Tab
+    "\t": "\\t",
+    // Vertical tab
+    "\v": "\\v",
+    // Form feed
+    "\f": "\\f",
+    // Null character
+    "\0": "\\x00",
+    // Line separator
+    "\u2028": "\\u2028",
+    // Paragraph separator
+    "\u2029": "\\u2029",
+    // Single quotes
+    "'": "\\'",
+  };
 
+  // eslint-disable-next-line prefer-template
+  const regExpString = "(" + Object.values(escapeCharacters).join("|") + ")";
+  const escapeCharactersRegExp = new RegExp(regExpString, "g");
+
+  return function(str) {
+    return str.replace(escapeCharactersRegExp, function(_, c) {
+      return escapeCharacters[c];
+    });
+  };
+})();
 /**
  * Add the given token to the pretty printed results.
  *
@@ -981,6 +980,7 @@ function getTokens(input, options) {
 
   const res = acorn.tokenizer(input, {
     locations: true,
+    sourceFile: options.url,
     ecmaVersion: options.ecmaVersion || "latest",
     onComment(block, text, start, end, startLoc, endLoc) {
       tokens.push({
