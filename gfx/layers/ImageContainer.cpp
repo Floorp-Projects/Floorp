@@ -474,6 +474,15 @@ RefPtr<D3D11RecycleAllocator> ImageContainer::GetD3D11RecycleAllocator(
 
   mD3D11RecycleAllocator =
       new D3D11RecycleAllocator(aKnowsCompositor, device, aPreferredFormat);
+
+  if (device != DeviceManagerDx::Get()->GetCompositorDevice()) {
+    RefPtr<SyncObjectClient> syncObject =
+        SyncObjectClient::CreateSyncObjectClient(
+            aKnowsCompositor->GetTextureFactoryIdentifier().mSyncHandle,
+            device);
+    mD3D11RecycleAllocator->SetSyncObject(syncObject);
+  }
+
   return mD3D11RecycleAllocator;
 }
 
