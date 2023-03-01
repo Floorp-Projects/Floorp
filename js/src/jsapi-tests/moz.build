@@ -74,6 +74,7 @@ UNIFIED_SOURCES += [
     "testIsInsideNursery.cpp",
     "testIteratorObject.cpp",
     "testJSEvaluateScript.cpp",
+    "testJSON.cpp",
     "testLargeArrayBuffers.cpp",
     "testLookup.cpp",
     "testLooselyEqual.cpp",
