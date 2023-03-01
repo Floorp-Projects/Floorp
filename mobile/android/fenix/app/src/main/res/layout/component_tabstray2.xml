@@ -19,6 +19,7 @@
         android:layout_height="@dimen/bottom_sheet_handle_height"
         android:layout_marginTop="@dimen/bottom_sheet_handle_top_margin"
         android:background="@color/fx_mobile_text_color_secondary"
+        android:contentDescription="@string/a11y_action_label_collapse"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
