@@ -337,6 +337,8 @@ urlbar.picked.*
     An unknown result type, a bug should be filed to figure out what it is.
   - ``visiturl``
     The user typed string can be directly visited.
+  - ``weather``
+    A Firefox Suggest weather suggestion.
 
   .. _adaptive history autofill document: https://docs.google.com/document/d/e/2PACX-1vRBLr_2dxus-aYhZRUkW9Q3B1K0uC-a0qQyE3kQDTU3pcNpDHb36-Pfo9fbETk89e7Jz4nkrqwRhi4j/pub
   .. _origin: https://html.spec.whatwg.org/multipage/origin.html#origin

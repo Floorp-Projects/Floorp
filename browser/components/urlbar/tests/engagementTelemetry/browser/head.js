@@ -22,8 +22,7 @@ XPCOMUtils.defineLazyGetter(lazy, "QuickSuggestTestUtils", () => {
   return module;
 });
 
-// eslint-disable-next-line mozilla/valid-lazy
-XPCOMUtils.defineLazyGetter(lazy, "MerinoTestUtils", () => {
+XPCOMUtils.defineLazyGetter(this, "MerinoTestUtils", () => {
   const { MerinoTestUtils: module } = ChromeUtils.importESModule(
     "resource://testing-common/MerinoTestUtils.sys.mjs"
   );

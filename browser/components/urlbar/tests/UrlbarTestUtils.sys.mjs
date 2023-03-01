@@ -360,7 +360,9 @@ export var UrlbarTestUtils = {
     details.source = result.source;
     details.heuristic = result.heuristic;
     details.autofill = !!result.autofill;
-    details.image = element.getElementsByClassName("urlbarView-favicon")[0].src;
+    details.image = element.getElementsByClassName(
+      "urlbarView-favicon"
+    )[0]?.src;
     details.title = result.title;
     details.tags = "tags" in result.payload ? result.payload.tags : [];
     details.isSponsored = result.payload.isSponsored;

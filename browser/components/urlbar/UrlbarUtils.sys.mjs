@@ -1224,8 +1224,7 @@ export var UrlbarUtils = {
         } else if (result.providerName == "quickactions") {
           return "quickaction";
         } else if (result.providerName == "Weather") {
-          // TODO (SNT-441): Return "weather". This value is used in telemetry.
-          return "quicksuggest";
+          return "weather";
         }
         return "dynamic";
     }
@@ -1398,8 +1397,7 @@ export var UrlbarUtils = {
             : "suggest_non_sponsor";
         }
         if (result.providerName === "Weather") {
-          // TODO (SNT-441): Return "weather". This value is used in telemetry.
-          return "suggest_non_sponsor";
+          return "weather";
         }
         if (result.providerName === "UrlbarProviderTopSites") {
           return "top_site";
