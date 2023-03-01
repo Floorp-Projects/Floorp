@@ -8536,10 +8536,11 @@
   mirror: always
   rust: true
 
-  # Is support for :nth-child(An+B of S) and :nth-last-child(An+B of S) enabled?
+# Is support for :nth-child(An+B of S) and :nth-last-child(An+B of S) enabled?
+# Before enabling everywhere, make sure blockers of bug 1808229 are fixed.
 - name: layout.css.nth-child-of.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
   rust: true
 
