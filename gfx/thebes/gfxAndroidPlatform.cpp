@@ -12,6 +12,7 @@
 #include "mozilla/CountingAllocatorBase.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/intl/OSPreferences.h"
+#include "mozilla/java/GeckoAppShellWrappers.h"
 #include "mozilla/jni/Utils.h"
 #include "mozilla/layers/AndroidHardwareBuffer.h"
 #include "mozilla/Preferences.h"
@@ -302,6 +303,10 @@ class AndroidVsyncSource final : public VsyncSource,
     if (mObservingVsync) {
       return;
     }
+
+    float fps = java::GeckoAppShell::GetScreenRefreshRate();
+    MOZ_ASSERT(fps > 0.0f);
+    mVsyncRate = TimeDuration::FromMilliseconds(1000.0 / fps);
     mAndroidVsync->RegisterObserver(this, widget::AndroidVsync::RENDER);
     mObservingVsync = true;
   }
@@ -316,7 +321,7 @@ class AndroidVsyncSource final : public VsyncSource,
     mObservingVsync = false;
   }
 
-  TimeDuration GetVsyncRate() override { return mAndroidVsync->GetVsyncRate(); }
+  TimeDuration GetVsyncRate() override { return mVsyncRate; }
 
   void Shutdown() override { DisableVsync(); }
 
@@ -335,8 +340,8 @@ class AndroidVsyncSource final : public VsyncSource,
   virtual ~AndroidVsyncSource() { DisableVsync(); }
 
   RefPtr<widget::AndroidVsync> mAndroidVsync;
+  TimeDuration mVsyncRate;
   bool mObservingVsync = false;
-  TimeDuration mVsyncDuration;
 };
 
 already_AddRefed<mozilla::gfx::VsyncSource>

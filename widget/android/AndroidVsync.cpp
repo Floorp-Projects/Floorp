@@ -6,7 +6,6 @@
 
 #include "AndroidVsync.h"
 
-#include "mozilla/java/GeckoAppShellWrappers.h"
 #include "nsTArray.h"
 
 /**
@@ -73,8 +72,6 @@ AndroidVsync::AndroidVsync() : mImpl("AndroidVsync.mImpl") {
   impl->mSupport = new AndroidVsyncSupport(this);
   impl->mSupportJava = java::AndroidVsync::New();
   AndroidVsyncSupport::AttachNative(impl->mSupportJava, impl->mSupport);
-  float fps = java::GeckoAppShell::GetScreenRefreshRate();
-  impl->mVsyncDuration = TimeDuration::FromMilliseconds(1000.0 / fps);
 }
 
 AndroidVsync::~AndroidVsync() {
@@ -83,11 +80,6 @@ AndroidVsync::~AndroidVsync() {
   impl->mRenderObservers.Clear();
   impl->UpdateObservingVsync();
   impl->mSupport->Unlink();
-}
-
-TimeDuration AndroidVsync::GetVsyncRate() {
-  auto impl = mImpl.Lock();
-  return impl->mVsyncDuration;
 }
 
 void AndroidVsync::RegisterObserver(Observer* aObserver, ObserverType aType) {
