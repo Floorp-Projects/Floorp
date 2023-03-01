@@ -189,9 +189,9 @@ impl GpuBufferBuilder {
         &mut self,
         blocks: &[GpuBufferBlock],
     ) -> GpuBufferAddress {
-        assert!(blocks.len() < MAX_VERTEX_TEXTURE_WIDTH);
+        assert!(blocks.len() <= MAX_VERTEX_TEXTURE_WIDTH);
 
-        if self.data.len() + blocks.len() >= MAX_VERTEX_TEXTURE_WIDTH {
+        if (self.data.len() % MAX_VERTEX_TEXTURE_WIDTH) + blocks.len() > MAX_VERTEX_TEXTURE_WIDTH {
             while self.data.len() % MAX_VERTEX_TEXTURE_WIDTH != 0 {
                 self.data.push(GpuBufferBlock::EMPTY);
             }
@@ -212,9 +212,9 @@ impl GpuBufferBuilder {
         &mut self,
         block_count: usize,
     ) -> GpuBufferWriter {
-        assert!(block_count < MAX_VERTEX_TEXTURE_WIDTH);
+        assert!(block_count <= MAX_VERTEX_TEXTURE_WIDTH);
 
-        if self.data.len() + block_count >= MAX_VERTEX_TEXTURE_WIDTH {
+        if (self.data.len() % MAX_VERTEX_TEXTURE_WIDTH) + block_count > MAX_VERTEX_TEXTURE_WIDTH {
             while self.data.len() % MAX_VERTEX_TEXTURE_WIDTH != 0 {
                 self.data.push(GpuBufferBlock::EMPTY);
             }
@@ -271,4 +271,43 @@ impl GpuBuffer {
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
+}
+
+
+#[test]
+fn test_gpu_buffer_sizing_push() {
+    let render_task_graph = RenderTaskGraph::new_for_testing();
+    let mut builder = GpuBufferBuilder::new();
+
+    let row = vec![GpuBufferBlock::EMPTY; MAX_VERTEX_TEXTURE_WIDTH];
+    builder.push(&row);
+
+    builder.push(&[GpuBufferBlock::EMPTY]);
+    builder.push(&[GpuBufferBlock::EMPTY]);
+
+    let buffer = builder.finalize(&render_task_graph);
+    assert_eq!(buffer.data.len(), MAX_VERTEX_TEXTURE_WIDTH * 2);
+}
+
+#[test]
+fn test_gpu_buffer_sizing_writer() {
+    let render_task_graph = RenderTaskGraph::new_for_testing();
+    let mut builder = GpuBufferBuilder::new();
+
+    let mut writer = builder.write_blocks(MAX_VERTEX_TEXTURE_WIDTH);
+    for _ in 0 .. MAX_VERTEX_TEXTURE_WIDTH {
+        writer.push_one(GpuBufferBlock::EMPTY);
+    }
+    writer.finish();
+
+    let mut writer = builder.write_blocks(1);
+    writer.push_one(GpuBufferBlock::EMPTY);
+    writer.finish();
+
+    let mut writer = builder.write_blocks(1);
+    writer.push_one(GpuBufferBlock::EMPTY);
+    writer.finish();
+
+    let buffer = builder.finalize(&render_task_graph);
+    assert_eq!(buffer.data.len(), MAX_VERTEX_TEXTURE_WIDTH * 2);
 }

@@ -703,6 +703,18 @@ impl RenderTaskGraph {
     }
 
 
+    #[cfg(test)]
+    pub fn new_for_testing() -> Self {
+        RenderTaskGraph {
+            tasks: Vec::new(),
+            passes: Vec::new(),
+            frame_id: FrameId::INVALID,
+            task_data: Vec::new(),
+            surface_count: 0,
+            unique_surfaces: FastHashSet::default(),
+        }
+    }
+
     /// Return the surface and texture counts, used for testing
     #[cfg(test)]
     pub fn surface_counts(&self) -> (usize, usize) {
