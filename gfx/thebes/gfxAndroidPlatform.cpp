@@ -336,6 +336,17 @@ class AndroidVsyncSource final : public VsyncSource,
     NotifyVsync(vsyncTime, outputTime);
   }
 
+  void OnMaybeUpdateRefreshRate() override {
+    NS_DispatchToMainThread(
+        NS_NewRunnableFunction(__func__, [self = RefPtr{this}]() {
+          if (!self->mObservingVsync) {
+            return;
+          }
+          self->DisableVsync();
+          self->EnableVsync();
+        }));
+  }
+
  private:
   virtual ~AndroidVsyncSource() { DisableVsync(); }
 

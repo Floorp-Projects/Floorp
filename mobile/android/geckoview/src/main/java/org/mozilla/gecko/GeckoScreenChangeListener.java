@@ -45,7 +45,12 @@ public class GeckoScreenChangeListener implements DisplayManager.DisplayListener
       return;
     }
 
-    GeckoScreenOrientation.getInstance().update(displayManager.getDisplay(displayId));
+    if (GeckoScreenOrientation.getInstance().update(displayManager.getDisplay(displayId))) {
+      // refreshScreenInfo is already called.
+      return;
+    }
+
+    ScreenManagerHelper.refreshScreenInfo();
   }
 
   private static DisplayManager getDisplayManager() {
