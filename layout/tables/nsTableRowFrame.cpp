@@ -5,6 +5,7 @@
 
 #include "nsTableRowFrame.h"
 
+#include "mozilla/Baseline.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PresShell.h"
 #include "nsTableRowGroupFrame.h"
@@ -25,7 +26,6 @@
 #include "nsCOMPtr.h"
 #include "nsDisplayList.h"
 #include "nsIFrameInlines.h"
-#include "Baseline.h"
 #include <algorithm>
 
 #ifdef ACCESSIBILITY

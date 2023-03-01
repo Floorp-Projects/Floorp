@@ -6,6 +6,7 @@
 
 #include "nsHTMLButtonControlFrame.h"
 
+#include "mozilla/Baseline.h"
 #include "mozilla/PresShell.h"
 #include "nsContainerFrame.h"
 #include "nsIFormControlFrame.h"
@@ -16,7 +17,6 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsNameSpaceManager.h"
 #include "nsDisplayList.h"
-#include "Baseline.h"
 #include <algorithm>
 
 using namespace mozilla;

@@ -33,7 +33,6 @@ if CONFIG["MOZ_DEBUG"]:
 XPIDL_MODULE = "layout_base"
 
 EXPORTS += [
-    "Baseline.h",
     "CaretAssociationHint.h",
     "FrameProperties.h",
     "LayoutConstants.h",
@@ -73,6 +72,7 @@ EXPORTS += [
 EXPORTS.mozilla += [
     "AccessibleCaretEventHub.h",
     "ArenaObjectID.h",
+    "Baseline.h",
     "ContainStyleScopeManager.h",
     "DepthOrderedFrameList.h",
     "DisplayPortUtils.h",

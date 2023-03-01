@@ -14,6 +14,7 @@
 #include <type_traits>
 #include "gfxContext.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/Baseline.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/CSSAlignUtils.h"
 #include "mozilla/StaticPrefs_layout.h"
@@ -38,7 +39,6 @@
 #include "nsPresContext.h"
 #include "nsReadableUtils.h"
 #include "nsTableWrapperFrame.h"
-#include "Baseline.h"
 
 using namespace mozilla;
 
