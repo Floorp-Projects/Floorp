@@ -858,7 +858,6 @@
     <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun setDeleteDataOnQuit(type: DeleteBrowsingDataOnQuitType, value: Boolean)</ID>
     <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun setSitePermissionSettingListener(lifecycleOwner: LifecycleOwner, listener: () -&gt; Unit)</ID>
     <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun shouldDeleteAnyDataOnQuit()</ID>
-    <ID>UndocumentedPublicFunction:Settings.kt$Settings$fun shouldShowDefaultBrowserNotification(): Boolean</ID>
     <ID>UndocumentedPublicFunction:ShareCloseView.kt$ShareCloseInteractor$fun onShareClosed()</ID>
     <ID>UndocumentedPublicFunction:ShareCloseView.kt$ShareCloseView$fun setTabs(tabs: List&lt;ShareData&gt;)</ID>
     <ID>UndocumentedPublicFunction:ShareController.kt$DefaultShareController$@VisibleForTesting fun getShareText()</ID>

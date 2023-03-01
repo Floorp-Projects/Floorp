@@ -621,15 +621,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         return browsers.isDefaultBrowser
     }
 
-    var defaultBrowserNotificationDisplayed by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_should_show_default_browser_notification),
-        default = false,
-    )
-
-    fun shouldShowDefaultBrowserNotification(): Boolean {
-        return !defaultBrowserNotificationDisplayed && !isDefaultBrowserBlocking()
-    }
-
     var reEngagementNotificationShown by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_re_engagement_notification_shown),
         default = false,

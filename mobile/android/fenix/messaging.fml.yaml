@@ -70,6 +70,11 @@ features:
             DEVICE_IOS: os == 'iOS'
             ALWAYS: "true"
             NEVER: "false"
+            DAY_1_AFTER_INSTALL: days_since_install == 1
+            DAY_2_AFTER_INSTALL: days_since_install == 2
+            DAY_3_AFTER_INSTALL: days_since_install == 3
+            DAY_4_AFTER_INSTALL: days_since_install == 4
+            DAY_5_AFTER_INSTALL: days_since_install == 5
 
             # Using custom attributes for the browser
             I_AM_DEFAULT_BROWSER: "is_default_browser"
@@ -144,6 +149,15 @@ features:
               trigger: [ "I_AM_NOT_DEFAULT_BROWSER","USER_ESTABLISHED_INSTALL" ]
               style: "PERSISTENT"
               button-label: preferences_set_as_default_browser
+            default-browser-notification:
+              title: nimbus_notification_default_browser_title
+              text: nimbus_notification_default_browser_text
+              surface: notification
+              style: NOTIFICATION
+              trigger:
+                - I_AM_NOT_DEFAULT_BROWSER
+                - DAY_3_AFTER_INSTALL
+              action: MAKE_DEFAULT_BROWSER
 
       - channel: developer
         value:
@@ -156,16 +170,6 @@ features:
               max-display-count: 1
           notification-config:
             refresh-interval: 120 # minutes (2 hours)
-          messages:
-            default-browser-notification:
-              title: preferences_set_as_default_browser
-              text: default_browser_experiment_card_text
-              surface: notification
-              style: NOTIFICATION
-              action: MAKE_DEFAULT_BROWSER
-              trigger:
-                - I_AM_NOT_DEFAULT_BROWSER
-                - INACTIVE_2_DAYS
 
 objects:
   MessageData:

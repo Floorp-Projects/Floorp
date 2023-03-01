@@ -14,7 +14,6 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.openSetDefaultBrowserOption
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.onboarding.DefaultBrowserNotificationWorker.Companion.isDefaultBrowserNotificationIntent
 import org.mozilla.fenix.onboarding.ReEngagementNotificationWorker
 import org.mozilla.fenix.onboarding.ReEngagementNotificationWorker.Companion.isReEngagementNotificationIntent
 
@@ -30,12 +29,6 @@ class DefaultBrowserIntentProcessor(
 
     override fun process(intent: Intent, navController: NavController, out: Intent): Boolean {
         return when {
-            isDefaultBrowserNotificationIntent(intent) -> {
-                Events.defaultBrowserNotifTapped.record(NoExtras())
-
-                activity.openSetDefaultBrowserOption()
-                true
-            }
             isReEngagementNotificationIntent(intent) -> {
                 Events.reEngagementNotifTapped.record(NoExtras())
 

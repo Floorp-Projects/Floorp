@@ -45,30 +45,6 @@ class DefaultBrowserIntentProcessorTest {
     }
 
     @Test
-    fun `process default browser notification intents`() {
-        val navController: NavController = mockk(relaxed = true)
-        val out: Intent = mockk()
-        val activity: HomeActivity = mockk()
-
-        val intent = Intent().apply {
-            putExtra("org.mozilla.fenix.default.browser.intent", true)
-        }
-        every { activity.startActivity(any()) } returns Unit
-        every { activity.applicationContext } returns testContext
-
-        assertNull(Events.defaultBrowserNotifTapped.testGetValue())
-
-        val result = DefaultBrowserIntentProcessor(activity)
-            .process(intent, navController, out)
-
-        assert(result)
-
-        assertNotNull(Events.defaultBrowserNotifTapped.testGetValue())
-        verify { navController wasNot Called }
-        verify { out wasNot Called }
-    }
-
-    @Test
     fun `process re-engagement notification intents`() {
         val navController: NavController = mockk(relaxed = true)
         val out: Intent = mockk()

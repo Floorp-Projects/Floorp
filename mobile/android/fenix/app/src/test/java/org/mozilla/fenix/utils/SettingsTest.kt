@@ -749,26 +749,6 @@ class SettingsTest {
     }
 
     @Test
-    fun `GIVEN shownDefaultBrowserNotification and isDefaultBrowser WHEN calling shouldShowDefaultBrowserNotification THEN return correct value`() {
-        val localSetting = spyk(settings)
-        every { localSetting.isDefaultBrowserBlocking() } returns false
-
-        localSetting.defaultBrowserNotificationDisplayed = false
-        assert(localSetting.shouldShowDefaultBrowserNotification())
-
-        localSetting.defaultBrowserNotificationDisplayed = true
-        assertFalse(localSetting.shouldShowDefaultBrowserNotification())
-
-        every { localSetting.isDefaultBrowserBlocking() } returns true
-
-        localSetting.defaultBrowserNotificationDisplayed = false
-        assertFalse(localSetting.shouldShowDefaultBrowserNotification())
-
-        localSetting.defaultBrowserNotificationDisplayed = true
-        assertFalse(localSetting.shouldShowDefaultBrowserNotification())
-    }
-
-    @Test
     fun `GIVEN re-engagement notification shown and number of app launch THEN should set re-engagement notification returns correct value`() {
         val localSetting = spyk(settings)
 
