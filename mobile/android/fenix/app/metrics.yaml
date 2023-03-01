@@ -2475,20 +2475,17 @@ preferences:
       tags:
         - Settings
   open_links_in_app_enabled:
-    type: boolean
+    type: string
     description: |
-      Whether or not the user has the open links in apps feature enabled.
-      default: false
+      The user has the open links in apps feature enabled.
+      "ask_before_opening", "always" or "never".
+      default: "never"
     send_in_pings:
       - metrics
     bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/11118
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1818085
     data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/11446
-      - https://github.com/mozilla-mobile/fenix/pull/15713#issuecomment-703972068
-      - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
-      - https://github.com/mozilla-mobile/fenix/pull/20517#pullrequestreview-718069041
-      - https://github.com/mozilla-mobile/fenix/pull/23453#issuecomment-1024694220
+      - https://github.com/mozilla-mobile/firefox-android/pull/1054
     data_sensitivity:
       - interaction
     notification_emails:

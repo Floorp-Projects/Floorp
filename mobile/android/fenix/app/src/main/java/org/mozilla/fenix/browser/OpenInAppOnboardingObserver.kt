@@ -77,7 +77,7 @@ class OpenInAppOnboardingObserver(
     }
 
     private fun maybeShowOpenInAppBanner(url: String, loading: Boolean) {
-        if (loading || settings.openLinksInExternalApp || !settings.shouldShowOpenInAppCfr) {
+        if (loading || settings.shouldOpenLinksInApp() || !settings.shouldShowOpenInAppCfr) {
             return
         }
 
@@ -102,7 +102,7 @@ class OpenInAppOnboardingObserver(
             shouldScrollWithTopToolbar = shouldScrollWithTopToolbar,
         ) {
             val directions = BrowserFragmentDirections.actionBrowserFragmentToSettingsFragment(
-                preferenceToScrollTo = context.getString(R.string.pref_key_open_links_in_external_app),
+                preferenceToScrollTo = context.getString(R.string.pref_key_open_links_in_apps),
             )
             navController.nav(R.id.browserFragment, directions)
         }

@@ -89,7 +89,7 @@ class OpenInAppOnboardingObserverTest {
 
     @Test
     fun `GIVEN user configured to open links in external app WHEN page finishes loading THEN do not show banner`() {
-        every { settings.openLinksInExternalApp } returns true
+        every { settings.shouldOpenLinksInApp() } returns true
         every { settings.shouldShowOpenInAppCfr } returns true
         every { appLinksUseCases.appLinkRedirect.invoke(any()).hasExternalApp() } returns true
         store.dispatch(ContentAction.UpdateLoadingStateAction("1", true)).joinBlocking()
@@ -101,7 +101,7 @@ class OpenInAppOnboardingObserverTest {
 
     @Test
     fun `GIVEN user has not configured to open links in external app WHEN page finishes loading THEN show banner`() {
-        every { settings.openLinksInExternalApp } returns false
+        every { settings.shouldOpenLinksInApp() } returns false
         every { settings.shouldShowOpenInAppCfr } returns true
         every { appLinksUseCases.appLinkRedirect.invoke(any()).hasExternalApp() } returns true
         store.dispatch(ContentAction.UpdateLoadingStateAction("1", true)).joinBlocking()
@@ -114,7 +114,7 @@ class OpenInAppOnboardingObserverTest {
 
     @Test
     fun `GIVEN banner was already displayed WHEN page finishes loading THEN do not show banner`() {
-        every { settings.openLinksInExternalApp } returns false
+        every { settings.openLinksInExternalApp } returns "never"
         every { settings.shouldShowOpenInAppCfr } returns false
         every { appLinksUseCases.appLinkRedirect.invoke(any()).hasExternalApp() } returns true
         store.dispatch(ContentAction.UpdateLoadingStateAction("1", true)).joinBlocking()
@@ -126,7 +126,7 @@ class OpenInAppOnboardingObserverTest {
 
     @Test
     fun `GIVEN banner should be displayed WHEN no application found THEN do not show banner`() {
-        every { settings.openLinksInExternalApp } returns false
+        every { settings.openLinksInExternalApp } returns "never"
         every { settings.shouldShowOpenInAppCfr } returns true
         every { appLinksUseCases.appLinkRedirect.invoke(any()).hasExternalApp() } returns false
         store.dispatch(ContentAction.UpdateLoadingStateAction("1", true)).joinBlocking()
@@ -139,7 +139,7 @@ class OpenInAppOnboardingObserverTest {
 
     @Test
     fun `GIVEN banner is displayed WHEN user navigates to different domain THEN banner is dismissed`() {
-        every { settings.openLinksInExternalApp } returns false
+        every { settings.openLinksInExternalApp } returns "never"
         every { settings.shouldShowOpenInAppCfr } returns true
         every { appLinksUseCases.appLinkRedirect.invoke(any()).hasExternalApp() } returns true
 

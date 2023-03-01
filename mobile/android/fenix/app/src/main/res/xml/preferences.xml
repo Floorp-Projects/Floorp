@@ -154,11 +154,10 @@
             app:iconSpaceReserved="false"
             android:title="@string/preferences_customize_amo_collection" />
 
-        <androidx.preference.SwitchPreference
-            android:defaultValue="false"
-            android:key="@string/pref_key_open_links_in_external_app"
-            app:iconSpaceReserved="false"
-            android:title="@string/preferences_open_links_in_apps" />
+        <androidx.preference.Preference
+            android:key="@string/pref_key_open_links_in_apps"
+            android:title="@string/preferences_open_links_in_apps"
+            app:iconSpaceReserved="false" />
 
         <androidx.preference.SwitchPreference
             android:defaultValue="false"

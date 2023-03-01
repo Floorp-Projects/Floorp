@@ -59,6 +59,7 @@ class AppLinksFeature(
     private val failedToLaunchAction: () -> Unit = {},
     private val loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase? = null,
     private val engineSupportedSchemes: Set<String> = ENGINE_SUPPORTED_SCHEMES,
+    private val shouldPrompt: () -> Boolean = { true },
 ) : LifecycleAwareFeature {
 
     private var scope: CoroutineScope? = null
@@ -106,7 +107,7 @@ class AppLinksFeature(
             )
         }
 
-        if (fragmentManager == null) {
+        if ((!tab.content.private && !shouldPrompt()) || fragmentManager == null) {
             doOpenApp()
             return
         }

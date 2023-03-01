@@ -198,7 +198,11 @@
 
     <!-- Privacy Settings -->
     <string name="pref_key_open_links_in_a_private_tab" translatable="false">pref_key_open_links_in_a_private_tab</string>
-    <string name="pref_key_open_links_in_external_app" translatable="false">pref_key_open_links_in_external_app</string>
+    <string name="pref_key_open_links_in_external_app_old" translatable="false">pref_key_open_links_in_external_app</string>
+    <string name="pref_key_open_links_in_apps" translatable="false">pref_key_open_links_in_apps</string>
+    <string name="pref_key_open_links_in_apps_always" translatable="false">pref_key_open_links_in_apps_always</string>
+    <string name="pref_key_open_links_in_apps_ask" translatable="false">pref_key_open_links_in_apps_ask</string>
+    <string name="pref_key_open_links_in_apps_never" translatable="false">pref_key_open_links_in_apps_never</string>
     <string name="pref_key_external_download_manager" translatable="false">pref_key_external_download_manager</string>
     <string name="pref_key_allow_screenshots_in_private_mode" translatable="false">pref_key_allow_screenshots_in_private_mode</string>
 

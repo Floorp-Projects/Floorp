@@ -230,6 +230,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
             getString(R.string.preferences_credit_cards)
         }
 
+        val openLinksInAppsSettingsPreference =
+            requirePreference<Preference>(R.string.pref_key_open_links_in_apps)
+        openLinksInAppsSettingsPreference.summary = context?.settings()?.getOpenLinksInAppsString()
+
         setupPreferences()
 
         if (shouldUpdateAccountUIState) {
@@ -287,6 +291,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
             resources.getString(R.string.pref_key_addons) -> {
                 Addons.openAddonsInSettings.record(mozilla.components.service.glean.private.NoExtras())
                 SettingsFragmentDirections.actionSettingsFragmentToAddonsFragment()
+            }
+            resources.getString(R.string.pref_key_open_links_in_apps) -> {
+                SettingsFragmentDirections.actionSettingsFragmentToOpenLinksInAppsFragment()
             }
             resources.getString(R.string.pref_key_data_choices) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToDataChoicesFragment()
@@ -433,9 +440,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val preferenceMakeDefaultBrowser =
             requirePreference<DefaultBrowserPreference>(R.string.pref_key_make_default_browser)
 
-        val preferenceOpenLinksInExternalApp =
-            findPreference<Preference>(getPreferenceKey(R.string.pref_key_open_links_in_external_app))
-
         if (!Config.channel.isReleased) {
             preferenceLeakCanary?.setOnPreferenceChangeListener { _, newValue ->
                 val isEnabled = newValue == true
@@ -457,8 +461,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
             onPreferenceClickListener =
                 getClickListenerForMakeDefaultBrowser()
         }
-
-        preferenceOpenLinksInExternalApp?.onPreferenceChangeListener = SharedPreferenceUpdater()
 
         val preferenceStartProfiler =
             findPreference<Preference>(getPreferenceKey(R.string.pref_key_start_profiler))

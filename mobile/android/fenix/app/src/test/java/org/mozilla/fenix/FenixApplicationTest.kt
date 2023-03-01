@@ -129,7 +129,7 @@ class FenixApplicationTest {
         every { settings.openLinksInAPrivateTab } returns true
         every { settings.shouldShowSearchSuggestionsInPrivate } returns true
         every { settings.shouldShowVoiceSearch } returns true
-        every { settings.openLinksInExternalApp } returns true
+        every { settings.openLinksInExternalApp } returns "never"
         every { settings.shouldUseFixedTopToolbar } returns true
         every { settings.useStandardTrackingProtection } returns true
         every { settings.switchServiceIsEnabled } returns true
@@ -177,7 +177,7 @@ class FenixApplicationTest {
         assertEquals(true, Preferences.clipboardSuggestionsEnabled.testGetValue())
         assertEquals(true, Preferences.searchShortcutsEnabled.testGetValue())
         assertEquals(true, Preferences.voiceSearchEnabled.testGetValue())
-        assertEquals(true, Preferences.openLinksInAppEnabled.testGetValue())
+        assertEquals("never", Preferences.openLinksInAppEnabled.testGetValue())
         assertEquals(true, Preferences.signedInSync.testGetValue())
         assertEquals(emptyList<String>(), Preferences.syncItems.testGetValue())
         assertEquals("fixed_top", Preferences.toolbarPositionSetting.testGetValue())

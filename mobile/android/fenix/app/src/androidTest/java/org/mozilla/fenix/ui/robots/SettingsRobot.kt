@@ -22,11 +22,8 @@ import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.hasSibling
-import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
-import androidx.test.espresso.matcher.ViewMatchers.isNotChecked
-import androidx.test.espresso.matcher.ViewMatchers.withClassName
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -39,7 +36,6 @@ import androidx.test.uiautomator.Until
 import junit.framework.AssertionFailedError
 import org.hamcrest.CoreMatchers
 import org.hamcrest.Matchers.allOf
-import org.hamcrest.Matchers.endsWith
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.LISTS_MAXSWIPES
@@ -49,7 +45,6 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
-import org.mozilla.fenix.helpers.TestHelper.hasCousin
 import org.mozilla.fenix.helpers.TestHelper.isPackageInstalled
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
@@ -97,8 +92,7 @@ class SettingsRobot {
     fun verifyNotificationsButton() = assertNotificationsButton()
     fun verifyDataCollectionButton() = assertDataCollectionButton()
     fun verifyOpenLinksInAppsButton() = assertOpenLinksInAppsButton()
-    fun verifyOpenLinksInAppsSwitchState(enabled: Boolean) = assertOpenLinksInAppsSwitchState(enabled)
-    fun clickOpenLinksInAppsSwitch() = openLinksInAppsButton().click()
+    fun verifyOpenLinksInAppsState(state: String) = assertOpenLinksInAppsSwitchState(state)
     fun verifySettingsView() = assertSettingsView()
     fun verifySettingsToolbar() = assertSettingsToolbar()
 
@@ -317,6 +311,13 @@ class SettingsRobot {
             SettingsSubMenuAddonsManagerRobot().interact()
             return SettingsSubMenuAddonsManagerRobot.Transition()
         }
+
+        fun openOpenLinksInAppsMenu(interact: SettingsSubMenuOpenLinksInAppsRobot.() -> Unit): SettingsSubMenuOpenLinksInAppsRobot.Transition {
+            openLinksInAppsButton().click()
+
+            SettingsSubMenuOpenLinksInAppsRobot().interact()
+            return SettingsSubMenuOpenLinksInAppsRobot.Transition()
+        }
     }
 
     companion object {
@@ -504,33 +505,13 @@ private fun assertOpenLinksInAppsButton() {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-fun assertOpenLinksInAppsSwitchState(enabled: Boolean) {
-    scrollToElementByText("Open links in apps")
-    if (enabled) {
-        openLinksInAppsButton()
-            .check(
-                matches(
-                    hasCousin(
-                        allOf(
-                            withClassName(endsWith("Switch")),
-                            isChecked(),
-                        ),
-                    ),
-                ),
-            )
-    } else {
-        openLinksInAppsButton()
-            .check(
-                matches(
-                    hasCousin(
-                        allOf(
-                            withClassName(endsWith("Switch")),
-                            isNotChecked(),
-                        ),
-                    ),
-                ),
-            )
-    }
+fun assertOpenLinksInAppsSwitchState(state: String) {
+    onView(
+        allOf(
+            withText(R.string.preferences_open_links_in_apps),
+            hasSibling(withText(state)),
+        ),
+    ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 // DEVELOPER TOOLS SECTION

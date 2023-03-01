@@ -5,15 +5,13 @@
 package org.mozilla.fenix.components
 
 import android.content.Context
-import androidx.preference.PreferenceManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.feature.accounts.FirefoxAccountsAuthFeature
 import mozilla.components.feature.app.links.AppLinksInterceptor
 import mozilla.components.service.fxa.manager.FxaAccountManager
-import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.getPreferenceKey
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.perf.lazyMonitored
 import org.mozilla.fenix.settings.SupportUtils
 
@@ -37,12 +35,7 @@ class Services(
         AppLinksInterceptor(
             context,
             interceptLinkClicks = true,
-            launchInApp = {
-                PreferenceManager.getDefaultSharedPreferences(context).getBoolean(
-                    context.getPreferenceKey(R.string.pref_key_open_links_in_external_app),
-                    false,
-                )
-            },
+            launchInApp = { context.settings().shouldOpenLinksInApp() },
         )
     }
 }

@@ -16,6 +16,7 @@ import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
+import org.mozilla.fenix.ui.robots.clickAlwaysButton
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
@@ -61,7 +62,7 @@ class SettingsAdvancedTest {
             verifyAdvancedHeading()
             verifyAddons()
             verifyOpenLinksInAppsButton()
-            verifyOpenLinksInAppsSwitchState(false)
+            verifyOpenLinksInAppsState("Never")
             verifyRemoteDebug()
             verifyLeakCanaryButton()
         }
@@ -76,9 +77,11 @@ class SettingsAdvancedTest {
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
-            verifyOpenLinksInAppsSwitchState(false)
-            clickOpenLinksInAppsSwitch()
-            verifyOpenLinksInAppsSwitchState(true)
+            verifyOpenLinksInAppsButton()
+            verifyOpenLinksInAppsState("Never")
+        }.openOpenLinksInAppsMenu {
+            clickAlwaysButton()
+        }.goBack {
         }.goBack {}
 
         navigationToolbar {

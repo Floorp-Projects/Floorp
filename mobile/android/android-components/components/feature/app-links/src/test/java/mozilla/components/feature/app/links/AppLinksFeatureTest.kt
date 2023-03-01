@@ -140,7 +140,21 @@ class AppLinksFeatureTest {
     }
 
     @Test
-    fun `in non-private mode an external app dialog is shown`() {
+    fun `WHEN should prompt AND in non-private mode THEN an external app dialog is shown`() {
+        feature = spy(
+            AppLinksFeature(
+                context = mockContext,
+                store = store,
+                fragmentManager = mockFragmentManager,
+                useCases = mockUseCases,
+                dialog = mockDialog,
+                loadUrlUseCase = mockLoadUrlUseCase,
+                shouldPrompt = { true },
+            ),
+        ).also {
+            it.start()
+        }
+
         val tab = createTab(webUrl)
         feature.handleAppIntent(tab, intentUrl, mock())
 
@@ -149,7 +163,66 @@ class AppLinksFeatureTest {
     }
 
     @Test
-    fun `in private mode an external app dialog is shown`() {
+    fun `WHEN should not prompt AND in non-private mode THEN an external app dialog is not shown`() {
+        feature = spy(
+            AppLinksFeature(
+                context = mockContext,
+                store = store,
+                fragmentManager = mockFragmentManager,
+                useCases = mockUseCases,
+                dialog = mockDialog,
+                loadUrlUseCase = mockLoadUrlUseCase,
+                shouldPrompt = { false },
+            ),
+        ).also {
+            it.start()
+        }
+
+        val tab = createTab(webUrl)
+        feature.handleAppIntent(tab, intentUrl, mock())
+
+        verify(mockDialog, never()).showNow(eq(mockFragmentManager), anyString())
+    }
+
+    @Test
+    fun `WHEN should prompt and in private mode THEN an external app dialog is shown`() {
+        feature = spy(
+            AppLinksFeature(
+                context = mockContext,
+                store = store,
+                fragmentManager = mockFragmentManager,
+                useCases = mockUseCases,
+                dialog = mockDialog,
+                loadUrlUseCase = mockLoadUrlUseCase,
+                shouldPrompt = { true },
+            ),
+        ).also {
+            it.start()
+        }
+
+        val tab = createTab(webUrl, private = true)
+        feature.handleAppIntent(tab, intentUrl, mock())
+
+        verify(mockDialog).showNow(eq(mockFragmentManager), anyString())
+        verify(mockOpenRedirect, never()).invoke(any(), anyBoolean(), any())
+    }
+
+    @Test
+    fun `WHEN should not prompt and in private mode THEN an external app dialog is shown`() {
+        feature = spy(
+            AppLinksFeature(
+                context = mockContext,
+                store = store,
+                fragmentManager = mockFragmentManager,
+                useCases = mockUseCases,
+                dialog = mockDialog,
+                loadUrlUseCase = mockLoadUrlUseCase,
+                shouldPrompt = { false },
+            ),
+        ).also {
+            it.start()
+        }
+
         val tab = createTab(webUrl, private = true)
         feature.handleAppIntent(tab, intentUrl, mock())
 
