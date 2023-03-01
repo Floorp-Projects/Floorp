@@ -160,7 +160,8 @@ EVENT(RadioStateChange, eFormRadioStateChange, EventNameType_None,
 EVENT(auxclick, eMouseAuxClick, EventNameType_All, eMouseEventClass)
 EVENT(click, eMouseClick, EventNameType_All, eMouseEventClass)
 EVENT(close, eClose, EventNameType_HTMLXUL, eBasicEventClass)
-EVENT(contextmenu, eContextMenu, EventNameType_HTMLXUL, eMouseEventClass)
+EVENT(contextmenu, eContextMenu,
+      EventNameType_HTMLXUL | EventNameType_SVGGraphic, eMouseEventClass)
 NON_IDL_EVENT(mouselongtap, eMouseLongTap, EventNameType_HTMLXUL,
               eMouseEventClass)
 EVENT(cuechange, eCueChange, EventNameType_All, eBasicEventClass)
