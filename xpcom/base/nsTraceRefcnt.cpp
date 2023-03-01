@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsTraceRefcnt.h"
+
+#include "base/process_util.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/CycleCollectedJSContext.h"
@@ -53,7 +55,6 @@
 #endif
 
 #ifdef MOZ_DMD
-#  include "base/process_util.h"
 #  include "nsMemoryInfoDumper.h"
 #endif
 
