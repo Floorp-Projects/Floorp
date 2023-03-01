@@ -317,7 +317,9 @@ bool DocAccessibleChild::SendBindChildDoc(DocAccessibleChild* aChildDoc,
 }
 
 ipc::IPCResult DocAccessibleChild::RecvRestoreFocus() {
-  FocusMgr()->ForceFocusEvent();
+  if (FocusManager* focusMgr = FocusMgr()) {
+    focusMgr->ForceFocusEvent();
+  }
   return IPC_OK();
 }
 

@@ -1566,7 +1566,9 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvConstructedInParentProcess() {
 }
 
 mozilla::ipc::IPCResult DocAccessibleChild::RecvRestoreFocus() {
-  FocusMgr()->ForceFocusEvent();
+  if (FocusManager* focusMgr = FocusMgr()) {
+    focusMgr->ForceFocusEvent();
+  }
   return IPC_OK();
 }
 
