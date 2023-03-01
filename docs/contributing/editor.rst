@@ -123,6 +123,7 @@ tree, or if you only want indexes to be generated for the moment, run the
 following commands (assuming you're in the gecko repo root):
 
 .. code::
+
     cd gecko_build_directory
     make export
     ./config.status

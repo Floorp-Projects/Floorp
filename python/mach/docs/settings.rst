@@ -71,6 +71,7 @@ specified by any of the configuration files.
 ``extra`` is also optional and is a dict containing additional key/value
 pairs to add to the setting's metadata. The following keys may be specified
 in the ``extra`` dict:
+
     * ``choices`` - A set of allowed values for the setting.
 
 Wildcards
