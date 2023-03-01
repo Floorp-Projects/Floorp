@@ -63,7 +63,6 @@ avcodec_find_encoder_by_name
 avcodec_flush_buffers
 avcodec_free_context
 avcodec_get_class
-avcodec_get_frame_class
 avcodec_get_hw_config
 avcodec_get_name
 avcodec_get_subtitle_rect_class
