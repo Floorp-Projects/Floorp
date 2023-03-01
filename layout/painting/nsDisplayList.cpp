@@ -7529,16 +7529,43 @@ bool nsDisplayText::CreateWebRenderCommands(
           .ToUnknownPoint();
 
   // Clipping the bounds to the PaintRect (factoring in what's covered by parent
-  // frames) let's us early reject a bunch of things, but it can produce
-  // incorrect results for shadows, because they can translate things back into
-  // view. Also if we're selected we might have some shadows from the
-  // ::selected and ::inctive-selected pseudo-selectors. So don't do this
-  // optimization if we have shadows or a selection.
-  if (!(f->IsSelected() || f->StyleText()->HasTextShadow())) {
-    nsRect visible = mVisibleRect;
-    visible.Inflate(3 * appUnitsPerDevPixel);
-    bounds = bounds.Intersect(visible);
+  // frames) lets us early reject a bunch of things.
+  nsRect visible = mVisibleRect;
+
+  // Add the "source rect" area from which the given shadows could intersect
+  // with mVisibleRect, and which therefore needs to included in the paint
+  // operation, to the `visible` rect that we will use to limit the bounds of
+  // what we send to the renderer.
+  auto addShadowSourceToVisible = [&](Span<const StyleSimpleShadow> aShadows) {
+    for (const auto& shadow : aShadows) {
+      nsRect sourceRect = mVisibleRect;
+      // Negate the offsets, because we're looking for the "source" rect that
+      // could cast a shadow into the visible rect, rather than a "target" area
+      // onto which the visible rect would cast a shadow.
+      sourceRect.MoveBy(-shadow.horizontal.ToAppUnits(),
+                        -shadow.vertical.ToAppUnits());
+      // Inflate to account for the shadow blur.
+      sourceRect.Inflate(nsContextBoxBlur::GetBlurRadiusMargin(
+          shadow.blur.ToAppUnits(), appUnitsPerDevPixel));
+      visible.OrWith(sourceRect);
+    }
+  };
+
+  // Shadows can translate things back into view, so we enlarge the notional
+  // "visible" rect to ensure we don't skip painting relevant parts that might
+  // cast a shadow within the visible area.
+  addShadowSourceToVisible(f->StyleText()->mTextShadow.AsSpan());
+
+  // Similarly for shadows that may be cast by ::selection.
+  if (f->IsSelected()) {
+    Span<const StyleSimpleShadow> shadows;
+    f->GetSelectionTextShadow(SelectionType::eNormal, &shadows);
+    addShadowSourceToVisible(shadows);
   }
+
+  // Inflate a little extra to allow for potential antialiasing "blur".
+  visible.Inflate(3 * appUnitsPerDevPixel);
+  bounds = bounds.Intersect(visible);
 
   gfxContext* textDrawer = aBuilder.GetTextContext(aResources, aSc, aManager,
                                                    this, bounds, deviceOffset);

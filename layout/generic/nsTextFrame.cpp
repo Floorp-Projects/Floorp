@@ -6227,14 +6227,17 @@ bool nsTextFrame::GetSelectionTextColors(SelectionType aSelectionType,
  * type of selection.
  * If text-shadow was not specified, *aShadows is left untouched.
  */
-static void GetSelectionTextShadow(nsIFrame* aFrame,
-                                   SelectionType aSelectionType,
-                                   nsTextPaintStyle& aTextPaintStyle,
-                                   Span<const StyleSimpleShadow>* aShadows) {
+void nsTextFrame::GetSelectionTextShadow(
+    SelectionType aSelectionType, Span<const StyleSimpleShadow>* aShadows,
+    nsTextPaintStyle* aTextPaintStyle) {
   if (aSelectionType != SelectionType::eNormal) {
     return;
   }
-  aTextPaintStyle.GetSelectionShadow(aShadows);
+  if (aTextPaintStyle) {
+    aTextPaintStyle->GetSelectionShadow(aShadows);
+  } else {
+    nsTextPaintStyle(this).GetSelectionShadow(aShadows);
+  }
 }
 
 /**
@@ -6673,8 +6676,7 @@ bool nsTextFrame::PaintTextWithSelectionColors(
     // Determine what shadow, if any, to draw - either from textStyle
     // or from the ::-moz-selection pseudo-class if specified there
     Span<const StyleSimpleShadow> shadows = textStyle->mTextShadow.AsSpan();
-    GetSelectionTextShadow(this, selectionType, *aParams.textPaintStyle,
-                           &shadows);
+    GetSelectionTextShadow(selectionType, &shadows, aParams.textPaintStyle);
     if (!shadows.IsEmpty()) {
       nscoord startEdge = iOffset;
       if (mTextRun->IsInlineReversed()) {
