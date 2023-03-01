@@ -591,6 +591,13 @@
         <item name="android:fontWeight" tools:ignore="NewApi">@integer/font_weight_medium</item>
     </style>
 
+    <style name="StudiesItemTitleTextStyle">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textFontWeight" tools:ignore="NewApi">@integer/font_weight_semi_bold</item>
+        <item name="android:fontWeight" tools:ignore="NewApi">@integer/font_weight_semi_bold</item>
+        <item name="fontFamily">sans-serif-medium</item>
+    </style>
+
     <style name="ShareDialogStyle" parent="DialogStyleBase"/>
 
     <style name="AboutItemText" parent="TextAppearance.MaterialComponents.Body2">

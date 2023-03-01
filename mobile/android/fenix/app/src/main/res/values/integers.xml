@@ -5,4 +5,5 @@
 <resources>
     <!-- Font weights -->
     <integer name="font_weight_medium">500</integer>
+    <integer name="font_weight_semi_bold">600</integer>
 </resources>

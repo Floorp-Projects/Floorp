@@ -22,12 +22,13 @@
         android:layout_marginStart="@dimen/top_bar_alignment_margin_start"
         android:id="@+id/title"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/section_header_height"
+        android:layout_height="wrap_content"
         android:gravity="start|center_vertical"
         android:textColor="?preferenceSectionHeader"
         android:background="?android:attr/selectableItemBackground"
         android:orientation="horizontal"
-        android:paddingVertical="16dp"
-        android:textStyle="bold"
-        tools:text="Active" />
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="14dp"
+        style="@style/StudiesItemTitleTextStyle"
+        tools:text="Active"/>
 </LinearLayout>
