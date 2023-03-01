@@ -10,6 +10,7 @@
 
 #include <mozilla/jni/Refs.h>
 
+#include "AndroidVsync.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/java/GeckoAppShellWrappers.h"
 #include "mozilla/java/ScreenManagerHelperNatives.h"
@@ -62,4 +63,8 @@ void ScreenHelperAndroid::Refresh() {
   AutoTArray<RefPtr<Screen>, 1> screens;
   screens.AppendElement(MakePrimaryScreen());
   ScreenManager::Refresh(std::move(screens));
+
+  if (RefPtr<AndroidVsync> vsync = AndroidVsync::GetInstance()) {
+    vsync->OnMaybeUpdateRefreshRate();
+  }
 }
