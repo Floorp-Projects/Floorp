@@ -6611,7 +6611,6 @@ function getTokens(input, options) {
   const tokens = [];
   const res = acorn.tokenizer(input, {
     locations: true,
-    sourceFile: options.url,
     ecmaVersion: options.ecmaVersion || "latest",
 
     onComment(block, text, start, end, startLoc, endLoc) {
