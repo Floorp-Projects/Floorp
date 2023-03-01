@@ -89,6 +89,9 @@ class TabsListBase {
       case "drop":
         this._onDrop(event);
         break;
+      case "click":
+        this._onClick(event);
+        break;
     }
   }
 
@@ -140,6 +143,8 @@ class TabsListBase {
     this.gBrowser.tabContainer.addEventListener("TabMove", this);
     this.gBrowser.tabContainer.addEventListener("TabPinned", this);
 
+    this.containerNode.addEventListener("click", this);
+
     if (this.dropIndicator) {
       this.containerNode.addEventListener("dragstart", this);
       this.containerNode.addEventListener("dragover", this);
@@ -154,6 +159,8 @@ class TabsListBase {
     this.gBrowser.tabContainer.removeEventListener("TabClose", this);
     this.gBrowser.tabContainer.removeEventListener("TabMove", this);
     this.gBrowser.tabContainer.removeEventListener("TabPinned", this);
+
+    this.containerNode.removeEventListener("click", this);
 
     if (this.dropIndicator) {
       this.containerNode.removeEventListener("dragstart", this);
@@ -367,7 +374,7 @@ class TabsPanel extends TabsListBase {
   }
 
   _onDragStart(event) {
-    const row = this._getDragTargetRow(event);
+    const row = this._getTargetRowFromEvent(event);
     if (!row) {
       return;
     }
@@ -377,12 +384,8 @@ class TabsPanel extends TabsListBase {
     });
   }
 
-  _getDragTargetRow(event) {
-    let row = event.target;
-    while (row && row.localName !== "toolbaritem") {
-      row = row.parentNode;
-    }
-    return row;
+  _getTargetRowFromEvent(event) {
+    return event.target.closest("toolbaritem");
   }
 
   _isMovingTabs(event) {
@@ -467,7 +470,7 @@ class TabsPanel extends TabsListBase {
   }
 
   _updateDropTarget(event) {
-    const row = this._getDragTargetRow(event);
+    const row = this._getTargetRowFromEvent(event);
     if (!row) {
       return false;
     }
@@ -528,6 +531,19 @@ class TabsPanel extends TabsListBase {
     if (this.dropIndicator) {
       this.dropIndicator.style.top = `0px`;
       this.dropIndicator.collapsed = true;
+    }
+  }
+
+  _onClick(event) {
+    if (event.button == 1) {
+      const row = this._getTargetRowFromEvent(event);
+      if (!row) {
+        return;
+      }
+
+      this.gBrowser.removeTab(row.tab, {
+        animate: true,
+      });
     }
   }
 }
