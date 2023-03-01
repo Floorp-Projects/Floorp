@@ -42,6 +42,7 @@ firefox_desktop_metrics = [
     "toolkit/components/search/metrics.yaml",
     "toolkit/components/telemetry/dap/metrics.yaml",
     "toolkit/components/telemetry/metrics.yaml",
+    "toolkit/modules/metrics.yaml",
     "toolkit/xre/metrics.yaml",
 ]
 
@@ -87,6 +88,7 @@ firefox_desktop_pings = [
     "browser/components/newtab/pings.yaml",
     "toolkit/components/crashes/pings.yaml",
     "toolkit/components/telemetry/pings.yaml",
+    "toolkit/modules/pings.yaml",
 ]
 
 # Pings that are sent by the Firefox Desktop Background Update Task

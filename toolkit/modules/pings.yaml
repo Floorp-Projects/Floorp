@@ -1,0 +1,19 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+---
+$schema: moz://mozilla.org/schemas/glean/pings/2-0-0
+
+first-startup:
+  description: |
+    Sent during startup if Firefox was launched by the installer.
+  include_client_id: true
+  send_if_empty: false
+  bugs:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1749345
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1749345
+  notification_emails:
+    - rhelmer@mozilla.com
+    - mconley@mozilla.com
