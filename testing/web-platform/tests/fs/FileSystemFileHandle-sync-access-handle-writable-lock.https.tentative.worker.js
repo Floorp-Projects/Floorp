@@ -65,7 +65,7 @@ directory_test(async (t, root_dir) =>  {
   const syncHandle = await fileHandle.createSyncAccessHandle();
   t.add_cleanup(() => { syncHandle.close(); });
   await promise_rejects_dom(
-    t, 'NoModificationAllowedError', cleanup_writable(t, await fileHandle.createWritable()));
+    t, 'NoModificationAllowedError', cleanup_writable(t, fileHandle.createWritable()));
 
   syncHandle.close();
   const writable = await cleanup_writable(t, await fileHandle.createWritable());
