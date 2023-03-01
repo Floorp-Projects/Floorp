@@ -83,6 +83,13 @@ export async function insertFTLIfNeeded(name) {
       `browser/locales-preview/${rest}`
     );
     ftlContents = imported.default;
+  } else if (root == "branding") {
+    // eslint-disable-next-line no-unsanitized/method
+    let imported = await import(
+      /* webpackInclude: /\.ftl$/ */
+      `browser/branding/nightly/locales/en-US/${rest}`
+    );
+    ftlContents = imported.default;
   }
 
   if (loadedResources.has(name)) {
