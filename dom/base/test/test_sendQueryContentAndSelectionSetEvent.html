@@ -10,29 +10,30 @@
 <div id="content" style="display: none">
 
 </div>
-<div id="editor" contenteditable>abc<br>def</div>
+<div contenteditable>abc<br>def</div>
 <pre id="test">
 <script type="application/javascript">
 
-var editor = document.getElementById("editor");
-
 SimpleTest.waitForExplicitFinish();
 
-const kIsWin = navigator.platform.indexOf("Win") == 0;
-const kIsMac = navigator.platform.indexOf("Mac") == 0;
+const kLineBreak = navigator.platform.indexOf("Win") == 0 ? "\r\n" : "\n";
 
-const kLineBreak = kIsWin ? "\r\n" : "\n";
+SimpleTest.waitForFocus(async () => {
+  const gUtils = window.windowUtils;
 
-var gUtils = window.windowUtils;
+  function escape(aStr)
+  {
+    var result = aStr.replace("\n", "\\n");
+    return result.replace("\r", "\\r");
+  }
 
-function escape(aStr)
-{
-  var result = aStr.replace("\n", "\\n");
-  return result.replace("\r", "\\r");
-}
+  function waitForFlushingIMEContentObserver() {
+    return new Promise(resolve => requestAnimationFrame(
+      () => requestAnimationFrame(resolve)
+    ));
+  }
 
-function runTests()
-{
+  const editor = document.querySelector("div[contenteditable]");
   editor.focus();
 
   // NOTE: For compatibility, calling without flags should work as with QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK.
@@ -61,7 +62,7 @@ function runTests()
      "sendQueryContentEvent(QUERY_TEXT_CONTENT, QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK) got unexpected string");
 
   // QueryCaretRect
-  window.getSelection().collapse(editor.firstChild, 0);
+  getSelection().collapse(editor.firstChild, 0);
 
   var caretNative = gUtils.sendQueryContentEvent(gUtils.QUERY_CARET_RECT, 6, 0, 0, 0,
                                                  gUtils.QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK);
@@ -190,6 +191,7 @@ function runTests()
      "The character offset is wrong");
 
   // SelectionSet and QuerySelectedText
+  await waitForFlushingIMEContentObserver();
   var selectionSet = gUtils.sendSelectionSetEvent(0, 6, gUtils.SELECTION_SET_FLAG_USE_NATIVE_LINE_BREAK);
   ok(selectionSet,
      "sendSelectionSetEvent(0, 6, SELECTION_SET_FLAG_USE_NATIVE_LINE_BREAK) should succeed");
@@ -204,6 +206,7 @@ function runTests()
   is(escape(result.text), expectedStr,
      "sendQueryContentEvent(QUERY_SELECTED_TEXT, QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK) got unexpected string");
 
+  await waitForFlushingIMEContentObserver();
   selectionSet = gUtils.sendSelectionSetEvent(0, 6, gUtils.SELECTION_SET_FLAG_USE_XP_LINE_BREAK);
   ok(selectionSet,
      "sendSelectionSetEvent(0, 6, SELECTION_SET_FLAG_USE_XP_LINE_BREAK) should succeed");
@@ -218,6 +221,8 @@ function runTests()
   is(escape(result.text), expectedStr,
      "sendQueryContentEvent(QUERY_SELECTED_TEXT, QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK) got unexpected string");
 
+  getSelection().collapse(editor, 0);
+  await waitForFlushingIMEContentObserver();
   var selectionSet = gUtils.sendSelectionSetEvent(0, 6, gUtils.SELECTION_SET_FLAG_USE_NATIVE_LINE_BREAK | gUtils.SELECTION_SET_FLAG_REVERSE);
   ok(selectionSet,
      "sendSelectionSetEvent(0, 6, SELECTION_SET_FLAG_USE_NATIVE_LINE_BREAK) should succeed");
@@ -241,10 +246,7 @@ function runTests()
      "sendSelectionSetEvent(0, 6, SELECTION_SET_FLAG_USE_XP_LINE_BREAK | SELECTION_SET_FLAG_REVERSE) should set reversed selection");
 
   SimpleTest.finish();
-}
-
-SimpleTest.waitForFocus(runTests);
-
+});
 </script>
 </pre>
 </body>

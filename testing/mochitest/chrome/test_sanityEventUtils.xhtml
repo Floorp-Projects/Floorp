@@ -101,7 +101,7 @@
     }
 
     SimpleTest.waitForExplicitFinish();
-    function test() {
+    async function test() {
       var startTime = new Date();
       var result;
 
@@ -139,7 +139,7 @@
       ok(content, "synthesizeCharAtPoint should not be null");
       ok(content.succeeded, "synthesizeCharAtPoint should succeed");
 
-      content = synthesizeSelectionSet(0, 100);
+      content = await synthesizeSelectionSet(0, 100);
       ok(content, "synthesizeSelectionSet should not be null");
       is(content, true, "synthesizeSelectionSet should succeed");
 

@@ -1434,6 +1434,12 @@ interface nsIDOMWindowUtils : nsISupports {
    * Synthesize a selection set event to the window.
    *
    * This sets the selection as the specified information.
+   * Note that for avoiding unnecessary update from user and web app point of
+   * view, it compares aOffset and aLength with selection cache which is same
+   * as what is notified with NOTIFY_IME_OF_SELECTION_CHANGE.  Therefore, if
+   * the notification is still queued, this works different from user's
+   * scenario.  Therefore, before calling this, the caller should wait at least
+   * 2 animation frames if `Selection` was changed before.
    *
    * @param aOffset  The caret offset of the selection start.
    * @param aLength  The length of the selection.  If this is too long, the
