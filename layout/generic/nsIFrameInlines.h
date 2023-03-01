@@ -8,10 +8,10 @@
 #define nsIFrameInlines_h___
 
 #include "mozilla/dom/ElementInlines.h"
-#include "mozilla/ComputedStyleInlines.h"
 #include "nsContainerFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsPlaceholderFrame.h"
+#include "nsStyleStructInlines.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsFrameManager.h"
 
@@ -53,11 +53,11 @@ bool nsIFrame::IsFloating() const {
 }
 
 bool nsIFrame::IsAbsPosContainingBlock() const {
-  return Style()->IsAbsPosContainingBlock(this);
+  return StyleDisplay()->IsAbsPosContainingBlock(this);
 }
 
 bool nsIFrame::IsFixedPosContainingBlock() const {
-  return Style()->IsFixedPosContainingBlock(this);
+  return StyleDisplay()->IsFixedPosContainingBlock(this);
 }
 
 bool nsIFrame::IsRelativelyOrStickyPositioned() const {

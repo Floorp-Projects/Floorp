@@ -177,18 +177,14 @@ class nsTableFrame : public nsContainerFrame {
 
   static bool PageBreakAfter(nsIFrame* aSourceFrame, nsIFrame* aNextFrame);
 
-  // Register or deregister a positioned table part with its nsTableFrame.
-  // These objects will be visited by FixupPositionedTableParts after reflow is
-  // complete. (See that function for more explanation.) Should be called
-  // during frame construction or style recalculation.
-  //
-  // @return true if the frame is a registered positioned table part.
-  static void PositionedTablePartMaybeChanged(
-      nsIFrame*, mozilla::ComputedStyle* aOldStyle);
+  // Register a positioned table part with its nsTableFrame. These objects will
+  // be visited by FixupPositionedTableParts after reflow is complete. (See that
+  // function for more explanation.) Should be called during frame construction.
+  static void RegisterPositionedTablePart(nsIFrame* aFrame);
 
-  // Unregister a positioned table part with its nsTableFrame, if needed.
-  static void MaybeUnregisterPositionedTablePart(nsIFrame* aFrame,
-                                                 nsIFrame* aDestructRoot);
+  // Unregister a positioned table part with its nsTableFrame.
+  static void UnregisterPositionedTablePart(nsIFrame* aFrame,
+                                            nsIFrame* aDestructRoot);
 
   /*
    * Notification that rowspan or colspan has changed for content inside a

@@ -11,7 +11,6 @@
 
 #include "nsSubDocumentFrame.h"
 
-#include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_layout.h"
