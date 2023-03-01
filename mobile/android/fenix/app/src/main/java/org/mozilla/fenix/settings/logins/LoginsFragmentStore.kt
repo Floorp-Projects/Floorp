@@ -171,8 +171,10 @@ private fun filterItems(
             filteredItems = sortingStrategy(state.loginList).filter {
                 it.origin.contains(
                     searchedForText,
+                    true,
                 ) || it.username.contains(
                     searchedForText,
+                    true,
                 )
             },
         )
