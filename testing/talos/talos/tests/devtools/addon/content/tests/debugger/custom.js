@@ -16,6 +16,7 @@ const {
 const {
   createContext,
   findSource,
+  getCM,
   hoverOnToken,
   openDebuggerAndLog,
   pauseDebugger,
@@ -212,6 +213,11 @@ async function testPrettyPrint(toolbox) {
   dump("Creating context\n");
   const dbg = await createContext(panel);
 
+  // Close all existing tabs to have a clean state
+  const state = dbg.getState();
+  const tabURLs = dbg.selectors.getSourcesForTabs(state).map(t => t.url);
+  await dbg.actions.closeTabs(dbg.selectors.getContext(state), tabURLs);
+
   // Disable source map so we can prettyprint main.js
   await dbg.actions.toggleSourceMapsEnabled(false);
 
@@ -220,13 +226,21 @@ async function testPrettyPrint(toolbox) {
 
   dump("Select minified file\n");
   await selectSource(dbg, fileUrl);
+
+  dump("Wait until CodeMirror highlighting is done\n");
+  const cm = getCM(dbg);
+  // highlightFrontier is not documented but is an internal variable indicating the current
+  // line that was just highlighted. This document has only 2 lines, so wait until both
+  // are highlighted. Since there was an other document opened before, we need to do an
+  // exact check to properly wait.
+  await waitUntil(() => cm.doc.highlightFrontier === 2);
+
   const prettyPrintButton = await waitUntil(() => {
     return dbg.win.document.querySelector(".source-footer .prettyPrint.active");
   });
 
-  const test = runTest("custom.jsdebugger.pretty-print.DAMP");
-
   dump("Click pretty-print button\n");
+  const test = runTest("custom.jsdebugger.pretty-print.DAMP");
   prettyPrintButton.click();
   await waitForSource(dbg, formattedFileUrl);
   await waitForText(dbg, "!function (n) {\n");
