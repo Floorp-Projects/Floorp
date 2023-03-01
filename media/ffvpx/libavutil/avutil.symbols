@@ -54,7 +54,6 @@ av_crc
 av_crc_get_table
 av_crc_init
 av_d2q
-av_d2str
 av_default_get_category
 av_default_item_name
 av_dict_copy
@@ -62,6 +61,7 @@ av_dict_count
 av_dict_free
 av_dict_get
 av_dict_get_string
+av_dict_iterate
 av_dict_parse_string
 av_dict_set
 av_dict_set_int
@@ -134,7 +134,6 @@ av_get_channel_layout_channel_index
 av_get_channel_layout_nb_channels
 av_get_channel_layout_string
 av_get_channel_name
-av_get_colorspace_name
 av_get_cpu_flags
 av_get_default_channel_layout
 av_get_known_color_name
@@ -325,4 +324,3 @@ av_hwdevice_ctx_init
 av_hwframe_transfer_get_formats
 av_hwdevice_ctx_create_derived
 av_malloc_array
-av_mallocz_array
