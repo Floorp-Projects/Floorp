@@ -30,8 +30,8 @@ namespace apz {
  * @param aApzc The APZC that scrolls the scroll frame.
  * @param aMetrics The metrics associated with the scroll frame, reflecting
  *    the last paint of the associated content. Note: this metrics should
- *    NOT reflect async scrolling or zooming, i.e. they should be the layer
- *    tree's copy of the metrics, or APZC's last-content-paint metrics.
+ *    NOT reflect async scrolling, i.e. they should be the layer tree's
+ *    copy of the metrics, or APZC's last-content-paint metrics.
  * @param aScrollbarData The scrollbar data for the the scroll thumb layer.
  * @param aScrollbarIsDescendant True iff. the scroll thumb layer is a
  *    descendant of the layer bearing the scroll frame's metrics.
