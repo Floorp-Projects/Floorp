@@ -26,15 +26,14 @@ class LoadURIDelegateChild extends GeckoViewActorChild {
                     tp=${aTriggeringPrincipal && aTriggeringPrincipal.spec}`;
 
     // Ignore any load going to the extension process
-    // TODO: Remove workaround after Bug 1619798
+    // TODO: Remove workaround after Bug 1619798 and Bug 1535365.
     if (
       WebExtensionPolicy.useRemoteWebExtensions &&
-      lazy.E10SUtils.getRemoteTypeForURIObject(
-        aUri,
-        /* aMultiProcess */ true,
-        /* aRemoteSubframes */ false,
-        Services.appinfo.remoteType
-      ) == lazy.E10SUtils.EXTENSION_REMOTE_TYPE
+      lazy.E10SUtils.getRemoteTypeForURIObject(aUri, {
+        multiProcess: true,
+        remoteSubFrames: false,
+        preferredRemoteType: Services.appinfo.remoteType,
+      }) == lazy.E10SUtils.EXTENSION_REMOTE_TYPE
     ) {
       debug`Bypassing load delegate in the Extension process.`;
       return false;
