@@ -26,6 +26,10 @@ const INFO_TEXT_ID = "firefoxSuggestInfoText";
 const LEARN_MORE_CLASS = "firefoxSuggestLearnMore";
 const BEST_MATCH_CONTAINER_ID = "firefoxSuggestBestMatchContainer";
 const BEST_MATCH_CHECKBOX_ID = "firefoxSuggestBestMatch";
+const BUTTON_RESTORE_DISMISSED_ID = "restoreDismissedSuggestions";
+const PREF_URLBAR_QUICKSUGGEST_BLOCKLIST =
+  "browser.urlbar.quicksuggest.blockedDigests";
+const PREF_URLBAR_WEATHER_USER_ENABLED = "browser.urlbar.suggest.weather";
 
 // Maps text element IDs to `{ enabled, disabled }`, where `enabled` is the
 // expected l10n ID when the Firefox Suggest feature is enabled, and `disabled`
@@ -468,7 +472,7 @@ add_task(async function clickLearnMore() {
   let learnMoreLinks = doc.querySelectorAll("." + LEARN_MORE_CLASS);
   Assert.equal(
     learnMoreLinks.length,
-    2,
+    3,
     "Expected number of learn-more links are present"
   );
   for (let link of learnMoreLinks) {
@@ -518,6 +522,60 @@ add_task(async function bestMatchVisibility() {
       }
     }
   }
+});
+
+// Tests the "Restore" button for dismissed suggestions.
+add_task(async function restoreDismissedSuggestions() {
+  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+
+  let doc = gBrowser.selectedBrowser.contentDocument;
+  let addressBarSection = doc.getElementById("locationBarGroup");
+  addressBarSection.scrollIntoView();
+
+  let button = doc.getElementById(BUTTON_RESTORE_DISMISSED_ID);
+  Assert.equal(
+    Services.prefs.getStringPref(PREF_URLBAR_QUICKSUGGEST_BLOCKLIST, ""),
+    "",
+    "Block list is empty initially"
+  );
+  Assert.ok(
+    Services.prefs.getBoolPref(PREF_URLBAR_WEATHER_USER_ENABLED),
+    "Weather suggestions are enabled initially"
+  );
+  Assert.ok(button.disabled, "Restore button is disabled initially.");
+
+  await QuickSuggest.blockedSuggestions.add("https://example.com/");
+  Assert.notEqual(
+    Services.prefs.getStringPref(PREF_URLBAR_QUICKSUGGEST_BLOCKLIST, ""),
+    "",
+    "Block list is non-empty after adding URL"
+  );
+  Assert.ok(!button.disabled, "Restore button is enabled after blocking URL.");
+  button.click();
+  Assert.equal(
+    Services.prefs.getStringPref(PREF_URLBAR_QUICKSUGGEST_BLOCKLIST, ""),
+    "",
+    "Block list is empty clicking Restore button"
+  );
+  Assert.ok(button.disabled, "Restore button is disabled after clicking it.");
+
+  Services.prefs.setBoolPref(PREF_URLBAR_WEATHER_USER_ENABLED, false);
+  Assert.ok(
+    !button.disabled,
+    "Restore button is enabled after disabling weather suggestions."
+  );
+  button.click();
+  Assert.ok(
+    Services.prefs.getBoolPref(PREF_URLBAR_WEATHER_USER_ENABLED),
+    "Weather suggestions are enabled after clicking Restore button"
+  );
+  Assert.ok(
+    button.disabled,
+    "Restore button is disabled after clicking it again."
+  );
+
+  gBrowser.removeCurrentTab();
+  await SpecialPowers.popPrefEnv();
 });
 
 /**

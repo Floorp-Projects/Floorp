@@ -322,19 +322,13 @@
 
 #firefoxSuggestInfoBox {
   margin-block-start: 16px;
-  padding: 12px;
-}
-
-#firefoxSuggestInfoBox > description {
-  margin-inline-start: 2px;
-  margin-block: 2px;
 }
 
 #openSearchEnginePreferences {
-  margin-block-start: 6px;
-  line-height: 30px;
+  margin-block-start: .5em;
 }
 
+#dismissedSuggestions,
 #openSearchEnginePreferences.extraMargin {
-  margin-block-start: 24px;
+  margin-block-start: 2em;
 }

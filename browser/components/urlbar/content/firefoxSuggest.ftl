@@ -147,6 +147,12 @@ addressbar-firefox-suggest-info-sponsored = Based on your selection, you’ll re
 # Data collection: on
 addressbar-firefox-suggest-info-data = Based on your selection, you won’t receive suggestions from the web or sponsored sites. We will process your search query data to develop the { -firefox-suggest-brand-name } feature.
 
+addressbar-dismissed-suggestions-label = Dismissed suggestions
+addressbar-restore-dismissed-suggestions-description = Restore dismissed suggestions from sponsors and the web.
+addressbar-restore-dismissed-suggestions-button =
+  .label = Restore
+addressbar-restore-dismissed-suggestions-learn-more = Learn more
+
 ## Used as title on the introduction pane. The text can be formatted to span
 ## multiple lines as needed (line breaks are significant).
 
