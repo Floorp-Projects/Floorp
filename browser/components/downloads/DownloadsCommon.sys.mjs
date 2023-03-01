@@ -754,17 +754,6 @@ XPCOMUtils.defineLazyGetter(DownloadsCommon, "error", () => {
   return lazy.DownloadsLogger.error.bind(lazy.DownloadsLogger);
 });
 
-/**
- * Returns true if we are executing on Windows Vista or a later version.
- */
-XPCOMUtils.defineLazyGetter(DownloadsCommon, "isWinVistaOrHigher", function() {
-  let os = Services.appinfo.OS;
-  if (os != "WINNT") {
-    return false;
-  }
-  return parseFloat(Services.sysinfo.getProperty("version")) >= 6;
-});
-
 // DownloadsData
 
 /**
