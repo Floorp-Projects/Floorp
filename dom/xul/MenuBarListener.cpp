@@ -247,7 +247,7 @@ nsresult MenuBarListener::KeyPress(Event* aKeyEvent) {
     // the menu bar.
     // TODO(emilio): This is rather odd, and I cannot get the beep to work,
     // but this matches what old code was doing...
-    if (mMenuBar && mMenuBar->IsActive()) {
+    if (mMenuBar && mMenuBar->IsActiveByKeyboard()) {
       if (nsCOMPtr<nsISound> sound = do_GetService("@mozilla.org/sound;1")) {
         sound->Beep();
       }
