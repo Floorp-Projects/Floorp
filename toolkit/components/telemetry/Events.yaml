@@ -877,7 +877,7 @@ urlbar:
           "autofill", "visit", "bookmark", "history", "keyword", "search",
           "searchsuggestion", "switchtab", "remotetab", "extension", "oneoff",
           "keywordoffer", "canonized", "tip", "tiphelp", "formhistory",
-          "tabtosearch", "quicksuggest", "none"
+          "tabtosearch", "quicksuggest", "weather", "none"
       provider: The name of the provider that presented the result.
   abandonment:
     objects: ["blur"]

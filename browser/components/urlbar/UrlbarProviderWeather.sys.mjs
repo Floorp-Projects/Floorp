@@ -461,7 +461,7 @@ class ProviderWeather extends UrlbarProvider {
    *   should be one of the following values:
    *
    *   - "": The user didn't pick the row or any part of it
-   *   - "quicksuggest": The user picked the main part of the row
+   *   - "weather": The user picked the main part of the row
    *   - "help": The user picked the help button
    *   - "block": The user picked the block button or used the key shortcut
    *
@@ -496,7 +496,7 @@ class ProviderWeather extends UrlbarProvider {
     // scalars related to clicking the result and other elements in its row
     let clickScalars = [];
     switch (selType) {
-      case "quicksuggest":
+      case "weather":
         clickScalars.push(TELEMETRY_SCALARS.CLICK);
         clickScalars.push(QS_SCALARS.CLICK_NONSPONSORED);
         break;
@@ -524,7 +524,7 @@ class ProviderWeather extends UrlbarProvider {
     Services.telemetry.recordEvent(
       lazy.QuickSuggest.TELEMETRY_EVENT_CATEGORY,
       "engagement",
-      selType == "quicksuggest" ? "click" : selType || "impression_only",
+      selType == "weather" ? "click" : selType || "impression_only",
       "",
       {
         match_type: "firefox-suggest",
