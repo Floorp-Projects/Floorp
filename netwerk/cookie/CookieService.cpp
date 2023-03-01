@@ -808,7 +808,26 @@ CookieService::Add(const nsACString& aHost, const nsACString& aPath,
   }
 
   return AddNative(aHost, aPath, aName, aValue, aIsSecure, aIsHttpOnly,
-                   aIsSession, aExpiry, &attrs, aSameSite, aSchemeMap);
+                   aIsSession, aExpiry, &attrs, aSameSite, aSchemeMap, -1);
+}
+
+NS_IMETHODIMP
+CookieService::AddForTest(const nsACString& aHost, const nsACString& aPath,
+                          const nsACString& aName, const nsACString& aValue,
+                          bool aIsSecure, bool aIsHttpOnly, bool aIsSession,
+                          int64_t aExpiry,
+                          JS::Handle<JS::Value> aOriginAttributes,
+                          int32_t aSameSite, nsICookie::schemeType aSchemeMap,
+                          int64_t aCreationTimeOverrideUsec, JSContext* aCx) {
+  OriginAttributes attrs;
+
+  if (!aOriginAttributes.isObject() || !attrs.Init(aCx, aOriginAttributes)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  return AddNative(aHost, aPath, aName, aValue, aIsSecure, aIsHttpOnly,
+                   aIsSession, aExpiry, &attrs, aSameSite, aSchemeMap,
+                   aCreationTimeOverrideUsec);
 }
 
 NS_IMETHODIMP_(nsresult)
@@ -816,7 +835,8 @@ CookieService::AddNative(const nsACString& aHost, const nsACString& aPath,
                          const nsACString& aName, const nsACString& aValue,
                          bool aIsSecure, bool aIsHttpOnly, bool aIsSession,
                          int64_t aExpiry, OriginAttributes* aOriginAttributes,
-                         int32_t aSameSite, nsICookie::schemeType aSchemeMap) {
+                         int32_t aSameSite, nsICookie::schemeType aSchemeMap,
+                         int64_t aCreationTimeOverrideUsec) {
   if (NS_WARN_IF(!aOriginAttributes)) {
     return NS_ERROR_FAILURE;
   }
@@ -836,14 +856,18 @@ CookieService::AddNative(const nsACString& aHost, const nsACString& aPath,
   rv = CookieCommons::GetBaseDomainFromHost(mTLDService, host, baseDomain);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  int64_t currentTimeInUsec = PR_Now();
+  int64_t currentTimeInUsec;
+  currentTimeInUsec = Cookie::GenerateUniqueCreationTime(PR_Now());
+  // Test callers may override creation time.
+  if (aCreationTimeOverrideUsec > 0) {
+    currentTimeInUsec = aCreationTimeOverrideUsec;
+  }
   CookieKey key = CookieKey(baseDomain, *aOriginAttributes);
 
   CookieStruct cookieData(nsCString(aName), nsCString(aValue), nsCString(aHost),
                           nsCString(aPath), aExpiry, currentTimeInUsec,
-                          Cookie::GenerateUniqueCreationTime(currentTimeInUsec),
-                          aIsHttpOnly, aIsSession, aIsSecure, aSameSite,
-                          aSameSite, aSchemeMap);
+                          currentTimeInUsec, aIsHttpOnly, aIsSession, aIsSecure,
+                          aSameSite, aSameSite, aSchemeMap);
 
   RefPtr<Cookie> cookie = Cookie::Create(cookieData, key.mOriginAttributes);
   MOZ_ASSERT(cookie);
