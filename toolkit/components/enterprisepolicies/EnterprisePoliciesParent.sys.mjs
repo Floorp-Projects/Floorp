@@ -529,8 +529,12 @@ class JSONPoliciesProvider {
     let configFile = null;
 
     if (AppConstants.platform == "linux" && AppConstants.MOZ_SYSTEM_POLICIES) {
-      let systemConfigFile = Services.dirsvc.get("SysConfD", Ci.nsIFile);
-      systemConfigFile.append("policies");
+      let systemConfigFile = Cc["@mozilla.org/file/local;1"].createInstance(
+        Ci.nsIFile
+      );
+      systemConfigFile.initWithPath(
+        "/etc/" + Services.appinfo.name.toLowerCase() + "/policies"
+      );
       systemConfigFile.append(POLICIES_FILENAME);
       if (systemConfigFile.exists()) {
         return systemConfigFile;
