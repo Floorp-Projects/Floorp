@@ -25,7 +25,7 @@ mod sync_multiple;
 mod token;
 mod util;
 
-pub(crate) use coll_state::{CollState, LocalCollStateMachine};
+pub(crate) use coll_state::CollState;
 pub(crate) use coll_update::{fetch_incoming, CollectionUpdate};
 pub(crate) use collection_keys::CollectionKeys;
 pub(crate) use request::InfoConfiguration;

@@ -170,12 +170,12 @@ warp = { git = "https://github.com/glandium/warp", rev = "4af45fae95bc98b0eba1ef
 cssparser = { git = "https://github.com/servo/rust-cssparser", rev = "b196a164dcbb317016d4aa6c58c13147e6045ebb" }
 
 # application-services overrides to make updating them all simpler.
-interrupt-support = { git = "https://github.com/mozilla/application-services", rev = "5433b3dc9ac152a0da29ed6642df839d79515a59" }
-sql-support = { git = "https://github.com/mozilla/application-services", rev = "5433b3dc9ac152a0da29ed6642df839d79515a59" }
-sync15 = { git = "https://github.com/mozilla/application-services", rev = "5433b3dc9ac152a0da29ed6642df839d79515a59" }
-tabs = { git = "https://github.com/mozilla/application-services", rev = "5433b3dc9ac152a0da29ed6642df839d79515a59" }
-viaduct = { git = "https://github.com/mozilla/application-services", rev = "5433b3dc9ac152a0da29ed6642df839d79515a59" }
-webext-storage = { git = "https://github.com/mozilla/application-services", rev = "5433b3dc9ac152a0da29ed6642df839d79515a59" }
+interrupt-support = { git = "https://github.com/bendk/application-services", rev = "ecb35df5fc40357c49922f90e86bf4147fa52953" }
+sql-support = { git = "https://github.com/bendk/application-services", rev = "ecb35df5fc40357c49922f90e86bf4147fa52953" }
+sync15 = { git = "https://github.com/bendk/application-services", rev = "ecb35df5fc40357c49922f90e86bf4147fa52953" }
+tabs = { git = "https://github.com/bendk/application-services", rev = "ecb35df5fc40357c49922f90e86bf4147fa52953" }
+viaduct = { git = "https://github.com/bendk/application-services", rev = "ecb35df5fc40357c49922f90e86bf4147fa52953" }
+webext-storage = { git = "https://github.com/bendk/application-services", rev = "ecb35df5fc40357c49922f90e86bf4147fa52953" }
 
 # Patch mio 0.6 to use winapi 0.3 and miow 0.3, getting rid of winapi 0.2.
 # There is not going to be new version of mio 0.6, mio now being >= 0.7.11.

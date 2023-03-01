@@ -32,7 +32,5 @@ mod sync_engine;
 
 pub use bridged_engine::{ApplyResults, BridgedEngine};
 pub use changeset::{IncomingChangeset, OutgoingChangeset};
-#[cfg(feature = "sync-client")]
-pub(crate) use request::CollectionPost;
 pub use request::{CollectionRequest, RequestOrder};
 pub use sync_engine::{CollSyncIds, EngineSyncAssociation, SyncEngine, SyncEngineId};
