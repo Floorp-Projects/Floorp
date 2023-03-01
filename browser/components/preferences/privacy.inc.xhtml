@@ -720,10 +720,10 @@
         />
       </html:moz-toggle>
     </vbox>
-    <hbox id="firefoxSuggestInfoBox" class="info-box-container" align="start"
+    <hbox id="firefoxSuggestInfoBox" class="info-box-container smaller-font-size" align="start"
           hidden="true">
       <html:img class="info-icon"/>
-      <description class="tip-caption" flex="1">
+      <description flex="1">
         <html:span id="firefoxSuggestInfoText" class="tail-with-learn-more"/>
         <html:a is="moz-support-link"
                 id="firefoxSuggestInfoBoxLearnMore"
@@ -732,6 +732,27 @@
                 support-page="firefox-suggest"
         />
       </description>
+    </hbox>
+    <hbox id="dismissedSuggestions" align="center">
+      <vbox flex="1">
+        <label data-l10n-id="addressbar-dismissed-suggestions-label"/>
+        <description class="tip-caption">
+          <html:span id="dismissedSuggestionsDescription"
+                     class="tail-with-learn-more"
+                     data-l10n-id="addressbar-restore-dismissed-suggestions-description"/>
+          <html:a is="moz-support-link"
+                  id="dismissedSuggestionsLearnMore"
+                  class="learnMore firefoxSuggestLearnMore"
+                  data-l10n-id="addressbar-restore-dismissed-suggestions-learn-more"
+                  support-page="firefox-suggest"
+          />
+        </description>
+      </vbox>
+      <button id="restoreDismissedSuggestions"
+              is="highlightable-button"
+              class="accessory-button"
+              data-l10n-id="addressbar-restore-dismissed-suggestions-button"
+              aria-describedby="dismissedSuggestionsDescription"/>
     </hbox>
   </vbox>
   <label id="openSearchEnginePreferences" is="text-link"

@@ -21,6 +21,10 @@ const CONTENT_BLOCKING_PREFS = [
   "privacy.firstparty.isolate",
 ];
 
+const PREF_URLBAR_QUICKSUGGEST_BLOCKLIST =
+  "browser.urlbar.quicksuggest.blockedDigests";
+const PREF_URLBAR_WEATHER_USER_ENABLED = "browser.urlbar.suggest.weather";
+
 /*
  * Prefs that are unique to sanitizeOnShutdown and are not shared
  * with the deleteOnClose mechanism like privacy.clearOnShutdown.cookies, -cache and -offlineApps
@@ -103,6 +107,8 @@ Preferences.addAll([
   { id: "browser.urlbar.suggest.quicksuggest.nonsponsored", type: "bool" },
   { id: "browser.urlbar.suggest.quicksuggest.sponsored", type: "bool" },
   { id: "browser.urlbar.quicksuggest.dataCollection.enabled", type: "bool" },
+  { id: PREF_URLBAR_QUICKSUGGEST_BLOCKLIST, type: "string" },
+  { id: PREF_URLBAR_WEATHER_USER_ENABLED, type: "bool" },
 
   // History
   { id: "places.history.enabled", type: "bool" },
@@ -2096,6 +2102,18 @@ var gPrivacyPane = {
 
       // Show the container.
       this._updateFirefoxSuggestInfoBox();
+
+      this._updateDismissedSuggestionsStatus();
+      Preferences.get(PREF_URLBAR_QUICKSUGGEST_BLOCKLIST).on("change", () =>
+        this._updateDismissedSuggestionsStatus()
+      );
+      Preferences.get(PREF_URLBAR_WEATHER_USER_ENABLED).on("change", () =>
+        this._updateDismissedSuggestionsStatus()
+      );
+      setEventListener("restoreDismissedSuggestions", "command", () =>
+        this.restoreDismissedSuggestions()
+      );
+
       container.removeAttribute("hidden");
     } else if (!onInit) {
       // Firefox Suggest is not enabled. This is the default, so to avoid
@@ -2166,6 +2184,27 @@ var gPrivacyPane = {
         }
       });
     }
+  },
+
+  /**
+   * Enables/disables the "Restore" button for dismissed Firefox Suggest
+   * suggestions.
+   */
+  _updateDismissedSuggestionsStatus() {
+    document.getElementById("restoreDismissedSuggestions").disabled =
+      !Services.prefs.prefHasUserValue(PREF_URLBAR_QUICKSUGGEST_BLOCKLIST) &&
+      !(
+        Services.prefs.prefHasUserValue(PREF_URLBAR_WEATHER_USER_ENABLED) &&
+        !Services.prefs.getBoolPref(PREF_URLBAR_WEATHER_USER_ENABLED)
+      );
+  },
+
+  /**
+   * Restores Firefox Suggest suggestions dismissed by the user.
+   */
+  restoreDismissedSuggestions() {
+    Services.prefs.clearUserPref(PREF_URLBAR_QUICKSUGGEST_BLOCKLIST);
+    Services.prefs.clearUserPref(PREF_URLBAR_WEATHER_USER_ENABLED);
   },
 
   // GEOLOCATION

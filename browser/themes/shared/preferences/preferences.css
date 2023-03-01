@@ -111,6 +111,7 @@ label {
 
 .tip-caption {
   font-size: .9em;
+  color: var(--in-content-deemphasized-text);
 }
 
 menulist::part(label),
