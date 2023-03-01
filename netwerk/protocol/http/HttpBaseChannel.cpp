@@ -3026,9 +3026,7 @@ bool HttpBaseChannel::ShouldBlockOpaqueResponse() const {
   }
 
   nsCOMPtr<nsIPrincipal> principal = mLoadInfo->GetLoadingPrincipal();
-  bool isTopLevel = false;
-  if (!principal || principal->IsSystemPrincipal() ||
-      (NS_SUCCEEDED(mLoadInfo->GetIsTopLevelLoad(&isTopLevel)) && isTopLevel)) {
+  if (!principal || principal->IsSystemPrincipal()) {
     // If it's a top-level load or a system principal, then there is nothing to
     // do.
     LOGORB("No block: top-level load or system principal");
