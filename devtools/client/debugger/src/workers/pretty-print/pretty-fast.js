@@ -980,7 +980,6 @@ function getTokens(input, options) {
 
   const res = acorn.tokenizer(input, {
     locations: true,
-    sourceFile: options.url,
     ecmaVersion: options.ecmaVersion || "latest",
     onComment(block, text, start, end, startLoc, endLoc) {
       tokens.push({
