@@ -83,10 +83,7 @@ void nsTableCellFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
 void nsTableCellFrame::DestroyFrom(nsIFrame* aDestructRoot,
                                    PostDestroyData& aPostDestroyData) {
-  if (HasAnyStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN)) {
-    nsTableFrame::UnregisterPositionedTablePart(this, aDestructRoot);
-  }
-
+  nsTableFrame::MaybeUnregisterPositionedTablePart(this, aDestructRoot);
   nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
@@ -183,6 +180,7 @@ nsresult nsTableCellFrame::AttributeChanged(int32_t aNameSpaceID,
 /* virtual */
 void nsTableCellFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   nsContainerFrame::DidSetComputedStyle(aOldComputedStyle);
+  nsTableFrame::PositionedTablePartMaybeChanged(this, aOldComputedStyle);
 
   if (!aOldComputedStyle) {
     return;  // avoid the following on init
