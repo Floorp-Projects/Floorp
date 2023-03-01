@@ -774,13 +774,6 @@ void nsTableRowFrame::ReflowChildren(nsPresContext* aPresContext,
     nsRect kidRect = kidFrame->GetRect();
     LogicalPoint origKidNormalPosition =
         kidFrame->GetLogicalNormalPosition(wm, containerSize);
-    // All cells' no-relative-positioning position should be snapped to the
-    // row's bstart edge.
-    // This doesn't hold in vertical-rl mode, where we don't yet know the
-    // correct containerSize for the row frame. In that case, we'll have to
-    // fix up child positions later, after determining our desiredSize.
-    NS_ASSERTION(origKidNormalPosition.B(wm) == 0 || wm.IsVerticalRL(),
-                 "unexpected kid position");
 
     nsRect kidInkOverflow = kidFrame->InkOverflowRect();
     LogicalPoint kidPosition(wm, iCoord, 0);
