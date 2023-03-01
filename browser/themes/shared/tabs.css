@@ -648,6 +648,7 @@ toolbar[brighttext] {
   background: url(chrome://browser/skin/tabbrowser/tab-drag-indicator.svg) no-repeat center;
   position: relative;
   z-index: 2;
+  pointer-events: none;
 }
 
 /* Drag space */

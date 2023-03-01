@@ -74,7 +74,7 @@ add_task(async function() {
   info("Dragging link between test tab and new tab");
   EventUtils.synthesizeDrop(
     linkSrcEl,
-    win.gBrowser.tabContainer,
+    testTab,
     [[{ type: "text/plain", data: "https://example.com/#test" }]],
     "link",
     win,
