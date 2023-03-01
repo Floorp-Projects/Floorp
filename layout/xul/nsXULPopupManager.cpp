@@ -2012,13 +2012,14 @@ void nsXULPopupManager::SetCaptureState(nsIContent* aOldPopup) {
 void nsXULPopupManager::UpdateKeyboardListeners() {
   nsCOMPtr<EventTarget> newTarget;
   bool isForMenu = false;
-  nsMenuChainItem* item = GetTopVisibleMenu();
-  if (item) {
+  if (nsMenuChainItem* item = GetTopVisibleMenu()) {
     if (item->IgnoreKeys() != eIgnoreKeys_True) {
       newTarget = item->Content()->GetComposedDoc();
     }
     isForMenu = item->GetPopupType() == PopupType::Menu;
-  } else if (mActiveMenuBar) {
+  } else if (mActiveMenuBar && mActiveMenuBar->IsActiveByKeyboard()) {
+    // Only listen for key events iff menubar is activated via key, see
+    // bug 1818241.
     newTarget = mActiveMenuBar->GetComposedDoc();
     isForMenu = true;
   }
@@ -2218,7 +2219,7 @@ bool nsXULPopupManager::HandleShortcutNavigation(KeyboardEvent& aKeyEvent,
   }
 
   // Only do shortcut navigation when the menubar is activated via keyboard.
-  if (mActiveMenuBar && mActiveMenuBar->IsActiveByKeyboard()) {
+  if (mActiveMenuBar) {
     RefPtr menubar = mActiveMenuBar;
     if (RefPtr result = menubar->FindMenuWithShortcut(aKeyEvent)) {
       result->OpenMenuPopup(true);
@@ -2474,7 +2475,7 @@ bool nsXULPopupManager::HandleKeyboardEventWithKeyCode(
         HidePopup(aTopVisibleMenuItem->Content(), {HidePopupOption::IsRollup});
       } else if (mActiveMenuBar) {
         RefPtr menubar = mActiveMenuBar;
-        menubar->MenuClosed();
+        menubar->SetActive(false);
       }
       break;
 
@@ -2491,7 +2492,7 @@ bool nsXULPopupManager::HandleKeyboardEventWithKeyCode(
         break;
       } else if (mActiveMenuBar) {
         RefPtr menubar = mActiveMenuBar;
-        menubar->MenuClosed();
+        menubar->SetActive(false);
         break;
       }
       // Intentional fall-through to RETURN case
@@ -2637,7 +2638,7 @@ nsresult nsXULPopupManager::KeyDown(KeyboardEvent* aKeyEvent) {
           Rollup({});
         } else if (mActiveMenuBar) {
           RefPtr menubar = mActiveMenuBar;
-          menubar->MenuClosed();
+          menubar->SetActive(false);
         }
 
         // Clear the item to avoid bugs as it may have been deleted during
