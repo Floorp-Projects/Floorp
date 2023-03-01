@@ -1478,18 +1478,18 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
     orientation = Orientation{};
   }
 
-  MaybeIntSize parsedImageSize = GetImageSize(parsedInfo);
+  MaybeIntSize ispeImageSize = GetImageSize(parsedInfo);
 
   bool sendDecodeTelemetry = IsMetadataDecode();
-  if (parsedImageSize.isSome()) {
+  if (ispeImageSize.isSome()) {
     MOZ_LOG(sAVIFLog, LogLevel::Debug,
             ("[this=%p] Parser returned image size %d x %d (%d/%d bit)", this,
-             parsedImageSize->width, parsedImageSize->height,
+             ispeImageSize->width, ispeImageSize->height,
              mIsAnimated ? parsedInfo.color_track_bit_depth
                          : parsedInfo.primary_item_bit_depth,
              mIsAnimated ? parsedInfo.alpha_track_bit_depth
                          : parsedInfo.alpha_item_bit_depth));
-    PostSize(parsedImageSize->width, parsedImageSize->height, orientation);
+    PostSize(ispeImageSize->width, ispeImageSize->height, orientation);
     if (IsMetadataDecode()) {
       MOZ_LOG(
           sAVIFLog, LogLevel::Debug,
@@ -1537,7 +1537,10 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
     return AsVariant(NonDecoderResult::AlphaYSizeMismatch);
   }
 
-  if (parsedImageSize.isNothing()) {
+  bool isFirstFrame = GetFrameCount() == 0;
+
+  if (!HasSize()) {
+    MOZ_ASSERT(isFirstFrame);
     MOZ_LOG(
         sAVIFLog, LogLevel::Error,
         ("[this=%p] Using decoded image size: %d x %d", this,
@@ -1545,18 +1548,39 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
     PostSize(decodedData->mPictureRect.width, decodedData->mPictureRect.height,
              orientation);
     AccumulateCategorical(LABELS_AVIF_ISPE::absent);
-  } else if (decodedData->mPictureRect.width != parsedImageSize->width ||
-             decodedData->mPictureRect.height != parsedImageSize->height) {
-    MOZ_LOG(
-        sAVIFLog, LogLevel::Error,
-        ("[this=%p] Metadata image size doesn't match decoded image size: "
-         "(%d x %d) != (%d x %d)",
-         this, parsedImageSize->width, parsedImageSize->height,
-         decodedData->mPictureRect.width, decodedData->mPictureRect.height));
-    AccumulateCategorical(LABELS_AVIF_ISPE::bitstream_mismatch);
-    return AsVariant(NonDecoderResult::MetadataImageSizeMismatch);
   } else {
-    AccumulateCategorical(LABELS_AVIF_ISPE::valid);
+    // Verify that the bitstream hasn't changed the image size compared to
+    // either the ispe box or the previous frames.
+    IntSize expectedSize = GetImageMetadata()
+                               .GetOrientation()
+                               .ToUnoriented(Size())
+                               .ToUnknownSize();
+    if (decodedData->mPictureRect.width != expectedSize.width ||
+        decodedData->mPictureRect.height != expectedSize.height) {
+      if (isFirstFrame) {
+        MOZ_LOG(
+            sAVIFLog, LogLevel::Error,
+            ("[this=%p] Metadata image size doesn't match decoded image size: "
+             "(%d x %d) != (%d x %d)",
+             this, ispeImageSize->width, ispeImageSize->height,
+             decodedData->mPictureRect.width,
+             decodedData->mPictureRect.height));
+        AccumulateCategorical(LABELS_AVIF_ISPE::bitstream_mismatch);
+        return AsVariant(NonDecoderResult::MetadataImageSizeMismatch);
+      }
+
+      MOZ_LOG(
+          sAVIFLog, LogLevel::Error,
+          ("[this=%p] Frame size has changed in the bitstream: "
+           "(%d x %d) != (%d x %d)",
+           this, expectedSize.width, expectedSize.height,
+           decodedData->mPictureRect.width, decodedData->mPictureRect.height));
+      return AsVariant(NonDecoderResult::FrameSizeChanged);
+    }
+
+    if (isFirstFrame) {
+      AccumulateCategorical(LABELS_AVIF_ISPE::valid);
+    }
   }
 
   if (IsMetadataDecode()) {
@@ -1564,9 +1588,6 @@ nsAVIFDecoder::DecodeResult nsAVIFDecoder::Decode(
   }
 
   IntSize rgbSize = decodedData->mPictureRect.Size();
-  MOZ_ASSERT(
-      rgbSize ==
-      GetImageMetadata().GetOrientation().ToUnoriented(Size()).ToUnknownSize());
 
   if (parsedImage.mFrameNum == 0) {
     RecordFrameTelem(mIsAnimated, parsedInfo, *decodedData);
@@ -1917,6 +1938,9 @@ void nsAVIFDecoder::RecordDecodeResultTelemetry(
         return;
       case NonDecoderResult::RenderSizeMismatch:
         AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::render_size_mismatch);
+        return;
+      case NonDecoderResult::FrameSizeChanged:
+        AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::frame_size_changed);
         return;
       case NonDecoderResult::InvalidCICP:
         AccumulateCategorical(LABELS_AVIF_DECODE_RESULT::invalid_cicp);

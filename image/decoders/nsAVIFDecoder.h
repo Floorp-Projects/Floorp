@@ -63,6 +63,7 @@ class nsAVIFDecoder final : public Decoder {
     AlphaYColorDepthMismatch,
     MetadataImageSizeMismatch,
     RenderSizeMismatch,
+    FrameSizeChanged,
     InvalidCICP,
     NoSamples,
   };
