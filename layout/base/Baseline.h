@@ -22,21 +22,56 @@ enum class BaselineSharingGroup : uint8_t {
 class Baseline {
  public:
   /**
-   * Synthesize a first(last) inline-axis baseline based on our margin-box.
+   * Synthesize a first(last) inline-axis baseline in aWM based on aFrame's
+   * margin-box.
+   *
+   * An alphabetical baseline is at the end edge of aFrame's margin-box with
+   * respect to aWM's block-axis, and a central baseline is halfway between the
+   * start and end edges. (aWM tells which baseline to use.)
+   * https://drafts.csswg.org/css-align-3/#synthesize-baseline
+   *
+   * @note This works only when aFrame's writing-mode is parallel to aWM.
+   * @param aWM the writing-mode of the alignment context.
+   * @return an offset from aFrame's border-box start(end) edge in aWM's
+   *         block-axis for a first(last) baseline, respectively.
    */
-  static nscoord SynthesizeBOffsetFromMarginBox(const nsIFrame*, WritingMode,
+  static nscoord SynthesizeBOffsetFromMarginBox(const nsIFrame* aFrame,
+                                                WritingMode aWM,
                                                 BaselineSharingGroup);
 
   /**
-   * Synthesize a first(last) inline-axis baseline based on our border-box.
+   * Synthesize a first(last) inline-axis baseline in aWM based on aFrame's
+   * border-box.
+   *
+   * An alphabetical baseline is at the end edge of aFrame's border-box with
+   * respect to aWM's block-axis, and a central baseline is halfway between the
+   * start and end edges. (aWM tells which baseline to use.)
+   * https://drafts.csswg.org/css-align-3/#synthesize-baseline
+   *
+   * @param aWM the writing-mode of the alignment context.
+   * @return an offset from aFrame's border-box start(end) edge in aWM's
+   *         block-axis for a first(last) baseline, respectively.
    */
-  static nscoord SynthesizeBOffsetFromBorderBox(const nsIFrame*, WritingMode,
+  static nscoord SynthesizeBOffsetFromBorderBox(const nsIFrame* aFrame,
+                                                WritingMode aWM,
                                                 BaselineSharingGroup);
 
   /**
-   * Synthesize a first(last) inline-axis baseline based on our content-box.
+   * Synthesize a first(last) inline-axis baseline in aWM based on aFrame's
+   * content-box.
+   *
+   * An alphabetical baseline is at the end edge of aFrame's content-box with
+   * respect to aWM's block-axis, and a central baseline is halfway between the
+   * start and end edges. (aWM tells which baseline to use.)
+   * https://drafts.csswg.org/css-align-3/#synthesize-baseline
+   *
+   * @note This works only when aFrame's writing-mode is parallel to aWM.
+   * @param aWM the writing-mode of the alignment context.
+   * @return an offset from aFrame's border-box start(end) edge in aWM's
+   *         block-axis for a first(last) baseline, respectively.
    */
-  static nscoord SynthesizeBOffsetFromContentBox(const nsIFrame*, WritingMode,
+  static nscoord SynthesizeBOffsetFromContentBox(const nsIFrame* aFrame,
+                                                 WritingMode aWM,
                                                  BaselineSharingGroup);
 };
 
