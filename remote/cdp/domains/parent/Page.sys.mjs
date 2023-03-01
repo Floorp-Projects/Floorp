@@ -651,7 +651,7 @@ export class Page extends Domain {
       retval.stream = lazy.streamRegistry.add(new lazy.Stream(path));
     } else {
       const binaryString = await lazy.print.printToBinaryString(
-        linkedBrowser,
+        linkedBrowser.browsingContext,
         printSettings
       );
 
