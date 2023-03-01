@@ -73,7 +73,6 @@
 #include "nsStyleStruct.h"
 #include "Visibility.h"
 #include "nsChangeHint.h"
-#include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/CompositorHitTestInfo.h"

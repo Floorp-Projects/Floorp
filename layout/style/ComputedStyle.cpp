@@ -52,17 +52,18 @@ ComputedStyle::ComputedStyle(PseudoStyleType aPseudoType,
 // whether we establish a containing block has really changed.
 static bool ContainingBlockMayHaveChanged(const ComputedStyle& aOldStyle,
                                           const ComputedStyle& aNewStyle) {
-  auto* oldDisp = aOldStyle.StyleDisplay();
-  auto* newDisp = aNewStyle.StyleDisplay();
+  const auto& oldDisp = *aOldStyle.StyleDisplay();
+  const auto& newDisp = *aNewStyle.StyleDisplay();
 
-  if (oldDisp->IsPositionedStyle() != newDisp->IsPositionedStyle()) {
+  if (oldDisp.IsPositionedStyle() != newDisp.IsPositionedStyle()) {
+    // XXX This check can probably be moved to after the fixedCB check, since
+    // IsPositionedStyle() is also only relevant for non-svg text frame
+    // subtrees.
     return true;
   }
 
-  bool fixedCB =
-      oldDisp->IsFixedPosContainingBlockForNonSVGTextFrames(aOldStyle);
-  if (fixedCB !=
-      newDisp->IsFixedPosContainingBlockForNonSVGTextFrames(aNewStyle)) {
+  const bool fixedCB = aOldStyle.IsFixedPosContainingBlockForNonSVGTextFrames();
+  if (fixedCB != aNewStyle.IsFixedPosContainingBlockForNonSVGTextFrames()) {
     return true;
   }
   // If we were both before and after a fixed-pos containing-block that means
@@ -71,20 +72,21 @@ static bool ContainingBlockMayHaveChanged(const ComputedStyle& aOldStyle,
   if (fixedCB) {
     return false;
   }
+
   // Note that neither of these two following sets of frames
   // (transform-supporting and layout-and-paint-supporting frames) is a subset
   // of the other, because table frames support contain: layout/paint but not
   // transforms (which are instead inherited to the table wrapper), and quite a
   // few frame types support transforms but not contain: layout/paint (e.g.,
   // table rows and row groups, many SVG frames).
-  if (oldDisp->IsFixedPosContainingBlockForTransformSupportingFrames() !=
-      newDisp->IsFixedPosContainingBlockForTransformSupportingFrames()) {
+  if (oldDisp.IsFixedPosContainingBlockForTransformSupportingFrames() !=
+      newDisp.IsFixedPosContainingBlockForTransformSupportingFrames()) {
     return true;
   }
   if (oldDisp
-          ->IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames() !=
+          .IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames() !=
       newDisp
-          ->IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames()) {
+          .IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames()) {
     return true;
   }
   return false;
