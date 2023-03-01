@@ -46,8 +46,6 @@ class AndroidVsync final : public SupportsThreadSafeWeakPtr<AndroidVsync> {
   void RegisterObserver(Observer* aObserver, ObserverType aType);
   void UnregisterObserver(Observer* aObserver, ObserverType aType);
 
-  TimeDuration GetVsyncRate();
-
  private:
   friend class AndroidVsyncSupport;
 
@@ -59,7 +57,6 @@ class AndroidVsync final : public SupportsThreadSafeWeakPtr<AndroidVsync> {
   struct Impl {
     void UpdateObservingVsync();
 
-    TimeDuration mVsyncDuration;
     nsTArray<Observer*> mInputObservers;
     nsTArray<Observer*> mRenderObservers;
     RefPtr<AndroidVsyncSupport> mSupport;
