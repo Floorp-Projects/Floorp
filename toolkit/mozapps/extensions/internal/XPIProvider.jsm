@@ -2175,7 +2175,18 @@ var XPIProvider = {
   // Have we started shutting down bootstrap add-ons?
   _closing: false,
 
+  // Promises awaited by the XPIProvider before resolving providerReadyPromise,
+  // (pushed into the array by XPIProvider maybeInstallBuiltinAddon and startup
+  // methods).
   startupPromises: [],
+
+  // Array of the bootstrap startup promises for the enabled addons being
+  // initiated during the XPIProvider startup.
+  //
+  // NOTE: XPIProvider will wait for these promises (and the startupPromises one)
+  // to have settled before allowing the application to proceed with shutting down
+  // (see quitApplicationGranted blocker at the end of the XPIProvider.startup).
+  enabledAddonsStartupPromises: [],
 
   databaseReady: Promise.all([dbReadyPromise, providerReadyPromise]),
 
@@ -2568,7 +2579,9 @@ var XPIProvider = {
             ) {
               reason = BOOTSTRAP_REASONS.ADDON_ENABLE;
             }
-            BootstrapScope.get(addon).startup(reason);
+            this.enabledAddonsStartupPromises.push(
+              BootstrapScope.get(addon).startup(reason)
+            );
           } catch (e) {
             logger.error(
               "Failed to load bootstrap addon " +
@@ -2594,6 +2607,13 @@ var XPIProvider = {
       lazy.AsyncShutdown.quitApplicationGranted.addBlocker(
         "XPIProvider shutdown",
         async () => {
+          // Do not enter shutdown before we actually finished starting as this
+          // can lead to hangs as seen in bug 1814104.
+          await Promise.allSettled([
+            ...this.startupPromises,
+            ...this.enabledAddonsStartupPromises,
+          ]);
+
           XPIProvider._closing = true;
 
           await XPIProvider.cleanupTemporaryAddons();
