@@ -5,7 +5,8 @@
      unfocuses and refocuses the window on Windows -->
 
 <window title="Popup Tests"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
   <script type="application/javascript" src="popup_shared.js"></script>
@@ -72,6 +73,7 @@
 </menubar>
 <hbox>
   <description id="outside">Outside menubar</description>
+  <html:input id="input"/>
 </hbox>
 </hbox>
 
@@ -945,9 +947,13 @@ var popupTests = [
   testname: "Shortcut navigation on mouse-activated menubar",
   events: [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu", "DOMMenuItemInactive filemenu", "DOMMenuBarInactive menubar" ],
   async test() {
+    let input = document.getElementById("input");
+    input.value = "";
+    input.focus();
     await moveMouseOver("filemenu");
     synthesizeKey("F");
     await moveMouseOver("outside");
+    is(input.value, "F", "Key shouldn't be consumed by menubar");
   },
 },
 
