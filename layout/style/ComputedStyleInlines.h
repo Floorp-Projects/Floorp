@@ -19,7 +19,7 @@
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Unused.h"
-#include "nsStyleStruct.h"
+#include "nsStyleStructInlines.h"
 
 namespace mozilla {
 
@@ -66,6 +66,55 @@ StylePointerEvents ComputedStyle::PointerEvents() const {
 StyleUserSelect ComputedStyle::UserSelect() const {
   return StyleUI()->IsInert() ? StyleUserSelect::None
                               : StyleUIReset()->ComputedUserSelect();
+}
+
+bool ComputedStyle::IsFixedPosContainingBlockForNonSVGTextFrames() const {
+  // NOTE: Any CSS properties that influence the output of this function
+  // should return FIXPOS_CB_NON_SVG for will-change.
+  if (IsRootElementStyle()) {
+    return false;
+  }
+
+  const auto& disp = *StyleDisplay();
+  if (disp.mWillChange.bits & mozilla::StyleWillChangeBits::FIXPOS_CB_NON_SVG) {
+    return true;
+  }
+
+  const auto& effects = *StyleEffects();
+  return effects.HasFilters() || effects.HasBackdropFilters();
+}
+
+bool ComputedStyle::IsFixedPosContainingBlock(
+    const nsIFrame* aContextFrame) const {
+  // NOTE: Any CSS properties that influence the output of this function
+  // should also handle will-change appropriately.
+  if (mozilla::SVGUtils::IsInSVGTextSubtree(aContextFrame)) {
+    return false;
+  }
+  if (IsFixedPosContainingBlockForNonSVGTextFrames()) {
+    return true;
+  }
+  const auto& disp = *StyleDisplay();
+  if (disp.IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames() &&
+      aContextFrame->IsFrameOfType(nsIFrame::eSupportsContainLayoutAndPaint)) {
+    return true;
+  }
+  if (disp.IsFixedPosContainingBlockForTransformSupportingFrames() &&
+      aContextFrame->IsFrameOfType(nsIFrame::eSupportsCSSTransforms)) {
+    return true;
+  }
+  return false;
+}
+
+bool ComputedStyle::IsAbsPosContainingBlock(
+    const nsIFrame* aContextFrame) const {
+  if (IsFixedPosContainingBlock(aContextFrame)) {
+    return true;
+  }
+  // NOTE: Any CSS properties that influence the output of this function
+  // should also handle will-change appropriately.
+  return StyleDisplay()->IsPositionedStyle() &&
+         !mozilla::SVGUtils::IsInSVGTextSubtree(aContextFrame);
 }
 
 }  // namespace mozilla

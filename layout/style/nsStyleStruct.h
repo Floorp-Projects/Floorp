@@ -1730,33 +1730,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
    */
   inline bool HasPerspective(const nsIFrame* aContextFrame) const;
 
-  /**
-   * Returns whether the element is a containing block for its
-   * absolutely positioned descendants.
-   * aContextFrame is the frame for which this is the nsStyleDisplay.
-   */
-  inline bool IsAbsPosContainingBlock(const nsIFrame* aContextFrame) const;
-
-  /**
-   * Returns true when the element is a containing block for its fixed-pos
-   * descendants.
-   * aContextFrame is the frame for which this is the nsStyleDisplay.
-   */
-  inline bool IsFixedPosContainingBlock(const nsIFrame* aContextFrame) const;
-
-  /**
-   * Tests for only the sub-parts of IsFixedPosContainingBlock that apply
-   * to:
-   *  - nearly all frames, except those that are SVG text frames.
-   *  - frames that support CSS contain:layout and contain:paint and are not
-   *    SVG text frames.
-   *  - frames that support CSS transforms and are not SVG text frames.
-   *
-   * This should be used only when the caller has the style but not the
-   * frame (i.e., when calculating style changes).
-   */
-  inline bool IsFixedPosContainingBlockForNonSVGTextFrames(
-      const mozilla::ComputedStyle&) const;
   inline bool
   IsFixedPosContainingBlockForContainLayoutAndPaintSupportingFrames() const;
   inline bool IsFixedPosContainingBlockForTransformSupportingFrames() const;
