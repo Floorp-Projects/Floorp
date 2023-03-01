@@ -95,3 +95,32 @@ addAccessibleTask(
     ok(attributedText[1].AXMarkedMisspelled);
   }
 );
+
+// Test getting a span of attributed text that includes an empty input element.
+addAccessibleTask(`hello <input id="input"> world`, async (browser, accDoc) => {
+  let macDoc = accDoc.nativeInterface.QueryInterface(
+    Ci.nsIAccessibleMacInterface
+  );
+
+  let range = macDoc.getParameterizedAttributeValue(
+    "AXTextMarkerRangeForUnorderedTextMarkers",
+    [
+      macDoc.getAttributeValue("AXStartTextMarker"),
+      macDoc.getAttributeValue("AXEndTextMarker"),
+    ]
+  );
+
+  let attributedText = macDoc.getParameterizedAttributeValue(
+    "AXAttributedStringForTextMarkerRange",
+    range
+  );
+
+  let text = macDoc.getParameterizedAttributeValue(
+    "AXStringForTextMarkerRange",
+    range
+  );
+
+  is(attributedText.length, 1, "Empty input does not break up attribute run.");
+  is(attributedText[0].string, `hello  world `, "Attributed string is correct");
+  is(text, `hello  world `, "Unattributed string is correct");
+});

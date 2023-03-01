@@ -268,9 +268,13 @@ NSString* CachedTextMarkerRange::Text() const {
           : mRange;
 
   for (TextLeafRange segment : range) {
-    segment.Start().mAcc->AppendTextTo(
-        text, segment.Start().mOffset,
-        segment.End().mOffset - segment.Start().mOffset);
+    TextLeafPoint start = segment.Start();
+    if (start.mAcc->IsTextField() && start.mAcc->ChildCount() == 0) {
+      continue;
+    }
+
+    start.mAcc->AppendTextTo(text, start.mOffset,
+                             segment.End().mOffset - start.mOffset);
   }
 
   return nsCocoaUtils::ToNSString(text);
@@ -297,7 +301,7 @@ NSAttributedString* CachedTextMarkerRange::AttributedText() const {
 
   if ((mRange.Start().mAcc == mRange.End().mAcc) &&
       (mRange.Start().mAcc->ChildCount() == 0) &&
-      (mRange.Start().mAcc->State() & states::EDITABLE)) {
+      (mRange.Start().mAcc->IsTextField())) {
     return str;
   }
 
@@ -313,11 +317,15 @@ NSAttributedString* CachedTextMarkerRange::AttributedText() const {
   Accessible* runAcc = range.Start().mAcc;
   for (TextLeafRange segment : range) {
     TextLeafPoint start = segment.Start();
+    if (start.mAcc->IsTextField() && start.mAcc->ChildCount() == 0) {
+      continue;
+    }
     TextLeafPoint attributesNext;
     do {
       attributesNext = start.FindTextAttrsStart(eDirNext, false);
       RefPtr<AccAttributes> attributes = start.GetTextAttributes();
-      if (!attributes->Equal(currentRun)) {
+      MOZ_ASSERT(attributes);
+      if (attributes && !attributes->Equal(currentRun)) {
         AppendTextToAttributedString(str, runAcc, text, currentRun);
         text.Truncate();
         currentRun = attributes;
