@@ -9288,6 +9288,39 @@ places:
     record_in_processes:
       - main
 
+firstStartup:
+  statusCode:
+    bug_numbers:
+      - 1749345
+    description: >
+      Status of the FirstRun service, which runs post-install/early-startup in Firefox.
+    expires: never
+    kind: uint
+    notification_emails:
+      - rhelmer@mozilla.com
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
+  elapsed:
+    bug_numbers:
+      - 1749345
+    description: >
+      Number of milliseconds the FirstRun service took to run.
+    expires: never
+    kind: uint
+    notification_emails:
+      - rhelmer@mozilla.com
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
 # NOTE: Please don't add new definitions below this point. Consider adding
 # them earlier in the file and leave the telemetry.test category as the last
 # one for readability.

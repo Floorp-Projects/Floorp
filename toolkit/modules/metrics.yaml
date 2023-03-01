@@ -1,0 +1,49 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Toolkit :: General'
+
+first_startup:
+  status_code:
+    type: quantity
+    unit: status code
+    description: |
+      Status of the FirstStartup service, which runs
+      post-install/early-startup in Firefox.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1749345
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1749345
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - rhelmer@mozilla.com
+      - mconley@mozilla.com
+    expires: never
+    send_in_pings:
+      - first-startup
+
+  elapsed:
+    type: quantity
+    unit: milliseconds
+    description: |
+      Number of milliseconds the FirstStartup service took to run.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1749345
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1749345
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - rhelmer@mozilla.com
+      - mconley@mozilla.com
+    expires: never
+    send_in_pings:
+      - first-startup
