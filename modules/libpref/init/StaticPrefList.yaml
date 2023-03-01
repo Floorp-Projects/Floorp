@@ -3453,6 +3453,12 @@
   mirror: never
 #endif
 
+# Use to control to dump CheckedUnsafePtr creation stack and assignment stacks. 
+- name: dom.checkedUnsafePtr.dumpStacks.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Determines within what distance of a tick mark, in pixels, dragging an input
 # range range will snap the range's value to that tick mark. By default, this is
 # half the default width of the range thumb.
