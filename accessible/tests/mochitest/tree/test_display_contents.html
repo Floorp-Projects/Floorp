@@ -36,9 +36,20 @@ function doTest() {
       ]},
     ] };
   testAccessibleTree("tableTableContents", tree);
-  testAccessibleTree("tableTbodyContents", tree);
   testAccessibleTree("tableTrContents", tree);
   testAccessibleTree("tableTdContents", tree);
+
+  tree =
+  { TABLE: [
+    { GROUPING : [
+      { ROW: [
+        { CELL: [{ TEXT_LEAF: [] } ] },
+        { CELL: [{ TEXT_LEAF: [] } ] },
+      ]},
+    ]},
+  ] };
+  testAccessibleTree("tableTbodyContents", tree);
+
 
   SimpleTest.finish();
 }
@@ -63,11 +74,6 @@ addA11yLoadEvent(doTest);
   <table id="tableTableContents" summary="summary" style="display: contents;">
     <tr><td>a</td><td>b</td></tr>
   </table>
-  <table id="tableTbodyContents" summary="summary" style="display: block;">
-    <tbody style="display: contents;">
-      <tr><td>a</td><td>b</td></tr>
-    </tbody>
-  </table>
   <table id="tableTrContents" summary="table" style="display: block;">
     <tr style="display: contents;"><td>a</td><td>b</td></tr>
   </table>
@@ -76,6 +82,11 @@ addA11yLoadEvent(doTest);
       <td style="display: contents;">a</td>
       <td style="display: contents;">b</td>
     </tr>
+  </table>
+  <table id="tableTbodyContents" summary="summary" style="display: block;">
+    <tbody style="display: contents;">
+      <tr><td>a</td><td>b</td></tr>
+    </tbody>
   </table>
 </body>
 </html>
