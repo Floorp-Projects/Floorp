@@ -854,7 +854,7 @@ function prompt(aActor, aBrowser, aRequest) {
         );
         menupopup.appendChild(doc.createXULElement("menuseparator"));
 
-        let isPipeWire = false;
+        let isPipeWireDetected = false;
 
         // Build the list of 'devices'.
         let monitorIndex = 1;
@@ -869,7 +869,7 @@ function prompt(aActor, aBrowser, aRequest) {
             // Don't mark it as scary as there's an extra confirmation step by
             // PipeWire portal dialog.
 
-            isPipeWire = true;
+            isPipeWireDetected = true;
             let item = addDeviceToList(
               menupopup,
               localization.formatValueSync("webrtc-share-pipe-wire-portal"),
@@ -882,8 +882,7 @@ function prompt(aActor, aBrowser, aRequest) {
             // In this case the OS sharing dialog will be the only option and
             // can be safely pre-selected.
             menupopup.parentNode.selectedItem = item;
-            menupopup.parentNode.disabled = true;
-            break;
+            continue;
           } else if (type == "screen") {
             // Building screen list from available screens.
             if (device.name == "Primary Monitor") {
@@ -983,7 +982,9 @@ function prompt(aActor, aBrowser, aRequest) {
             perms.EXPIRE_SESSION
           );
 
-          if (!isPipeWire) {
+          // We don't have access to any screen content besides our browser tabs
+          // on Wayland, therefore there are no previews we can show.
+          if (!isPipeWireDetected || mediaSource == "browser") {
             video.deviceId = deviceId;
             let constraints = {
               video: { mediaSource, deviceId: { exact: deviceId } },
