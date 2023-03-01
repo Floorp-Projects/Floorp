@@ -2536,6 +2536,13 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .long_name = NULL_IF_CONFIG_SMALL("ADPCM IMA Acorn Replay"),
         .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSY,
     },
+    {
+        .id        = AV_CODEC_ID_ADPCM_XMD,
+        .type      = AVMEDIA_TYPE_AUDIO,
+        .name      = "adpcm_xmd",
+        .long_name = NULL_IF_CONFIG_SMALL("ADPCM Konami XMD"),
+        .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSY,
+    },
 
     /* AMR */
     {
@@ -2617,6 +2624,20 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .type      = AVMEDIA_TYPE_AUDIO,
         .name      = "derf_dpcm",
         .long_name = NULL_IF_CONFIG_SMALL("DPCM Xilam DERF"),
+        .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSY,
+    },
+    {
+        .id        = AV_CODEC_ID_WADY_DPCM,
+        .type      = AVMEDIA_TYPE_AUDIO,
+        .name      = "wady_dpcm",
+        .long_name = NULL_IF_CONFIG_SMALL("DPCM Marble WADY"),
+        .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSY,
+    },
+    {
+        .id        = AV_CODEC_ID_CBD2_DPCM,
+        .type      = AVMEDIA_TYPE_AUDIO,
+        .name      = "cbd2_dpcm",
+        .long_name = NULL_IF_CONFIG_SMALL("DPCM Cuberoot-Delta-Exact"),
         .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSY,
     },
 
@@ -3332,6 +3353,20 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .long_name = NULL_IF_CONFIG_SMALL("FTR Voice"),
         .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSY,
     },
+    {
+        .id        = AV_CODEC_ID_WAVARC,
+        .type      = AVMEDIA_TYPE_AUDIO,
+        .name      = "wavarc",
+        .long_name = NULL_IF_CONFIG_SMALL("Waveform Archiver"),
+        .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSLESS,
+    },
+    {
+        .id        = AV_CODEC_ID_RKA,
+        .type      = AVMEDIA_TYPE_AUDIO,
+        .name      = "rka",
+        .long_name = NULL_IF_CONFIG_SMALL("RKA (RK Audio)"),
+        .props     = AV_CODEC_PROP_INTRA_ONLY | AV_CODEC_PROP_LOSSY | AV_CODEC_PROP_LOSSLESS,
+    },
 
     /* subtitle codecs */
     {
@@ -3603,6 +3638,18 @@ static const AVCodecDescriptor codec_descriptors[] = {
         .name      = "wrapped_avframe",
         .long_name = NULL_IF_CONFIG_SMALL("AVFrame to AVPacket passthrough"),
         .props     = AV_CODEC_PROP_LOSSLESS,
+    },
+    {
+        .id        = AV_CODEC_ID_VNULL,
+        .type      = AVMEDIA_TYPE_VIDEO,
+        .name      = "vnull",
+        .long_name = NULL_IF_CONFIG_SMALL("Null video codec"),
+    },
+    {
+        .id        = AV_CODEC_ID_ANULL,
+        .type      = AVMEDIA_TYPE_AUDIO,
+        .name      = "anull",
+        .long_name = NULL_IF_CONFIG_SMALL("Null audio codec"),
     },
 };
 

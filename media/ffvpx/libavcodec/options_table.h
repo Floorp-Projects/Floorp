@@ -58,13 +58,12 @@ static const AVOption avcodec_options[] = {
 {"loop", "use loop filter", 0, AV_OPT_TYPE_CONST, {.i64 = AV_CODEC_FLAG_LOOP_FILTER }, INT_MIN, INT_MAX, V|E, "flags"},
 {"qscale", "use fixed qscale", 0, AV_OPT_TYPE_CONST, {.i64 = AV_CODEC_FLAG_QSCALE }, INT_MIN, INT_MAX, 0, "flags"},
 {"recon_frame", "export reconstructed frames", 0, AV_OPT_TYPE_CONST, {.i64 = AV_CODEC_FLAG_RECON_FRAME}, .unit = "flags"},
+{"copy_opaque", "propagate opaque values", 0, AV_OPT_TYPE_CONST, {.i64 = AV_CODEC_FLAG_COPY_OPAQUE}, .unit = "flags"},
+{"frame_duration", "use frame durations", 0, AV_OPT_TYPE_CONST, {.i64 = AV_CODEC_FLAG_FRAME_DURATION}, .unit = "flags"},
 {"pass1", "use internal 2-pass ratecontrol in first  pass mode", 0, AV_OPT_TYPE_CONST, {.i64 = AV_CODEC_FLAG_PASS1 }, INT_MIN, INT_MAX, 0, "flags"},
 {"pass2", "use internal 2-pass ratecontrol in second pass mode", 0, AV_OPT_TYPE_CONST, {.i64 = AV_CODEC_FLAG_PASS2 }, INT_MIN, INT_MAX, 0, "flags"},
 {"gray", "only decode/encode grayscale", 0, AV_OPT_TYPE_CONST, {.i64 = AV_CODEC_FLAG_GRAY }, INT_MIN, INT_MAX, V|E|D, "flags"},
 {"psnr", "error[?] variables will be set during encoding", 0, AV_OPT_TYPE_CONST, {.i64 = AV_CODEC_FLAG_PSNR }, INT_MIN, INT_MAX, V|E, "flags"},
-#if FF_API_FLAG_TRUNCATED
-{"truncated", "(Deprecated, use parsers instead.) Input bitstream might be randomly truncated", 0, AV_OPT_TYPE_CONST, {.i64 = AV_CODEC_FLAG_TRUNCATED }, INT_MIN, INT_MAX, V|D | AV_OPT_FLAG_DEPRECATED, "flags"},
-#endif
 {"ildct", "use interlaced DCT", 0, AV_OPT_TYPE_CONST, {.i64 = AV_CODEC_FLAG_INTERLACED_DCT }, INT_MIN, INT_MAX, V|E, "flags"},
 {"low_delay", "force low delay", 0, AV_OPT_TYPE_CONST, {.i64 = AV_CODEC_FLAG_LOW_DELAY }, INT_MIN, INT_MAX, V|D|E, "flags"},
 {"global_header", "place global headers in extradata instead of every keyframe", 0, AV_OPT_TYPE_CONST, {.i64 = AV_CODEC_FLAG_GLOBAL_HEADER }, INT_MIN, INT_MAX, V|A|E, "flags"},
@@ -98,7 +97,7 @@ static const AVOption avcodec_options[] = {
 #endif
 {"cutoff", "set cutoff bandwidth", OFFSET(cutoff), AV_OPT_TYPE_INT, {.i64 = DEFAULT }, INT_MIN, INT_MAX, A|E},
 {"frame_size", NULL, OFFSET(frame_size), AV_OPT_TYPE_INT, {.i64 = DEFAULT }, 0, INT_MAX, A|E},
-{"frame_number", NULL, OFFSET(frame_number), AV_OPT_TYPE_INT, {.i64 = DEFAULT }, INT_MIN, INT_MAX},
+{"frame_number", NULL, OFFSET(frame_num), AV_OPT_TYPE_INT64, {.i64 = DEFAULT }, INT_MIN, INT_MAX},
 {"delay", NULL, OFFSET(delay), AV_OPT_TYPE_INT, {.i64 = DEFAULT }, INT_MIN, INT_MAX},
 {"qcomp", "video quantizer scale compression (VBR). Constant of ratecontrol equation. "
           "Recommended range for default rc_eq: 0.0-1.0",
@@ -377,10 +376,6 @@ static const AVOption avcodec_options[] = {
 {"auto",        NULL, 0, AV_OPT_TYPE_CONST, {.i64 = FF_SUB_CHARENC_MODE_AUTOMATIC},   INT_MIN, INT_MAX, S|D, "sub_charenc_mode"},
 {"pre_decoder", NULL, 0, AV_OPT_TYPE_CONST, {.i64 = FF_SUB_CHARENC_MODE_PRE_DECODER}, INT_MIN, INT_MAX, S|D, "sub_charenc_mode"},
 {"ignore",      NULL, 0, AV_OPT_TYPE_CONST, {.i64 = FF_SUB_CHARENC_MODE_IGNORE},      INT_MIN, INT_MAX, S|D, "sub_charenc_mode"},
-#if FF_API_SUB_TEXT_FORMAT
-{"sub_text_format", "Deprecated, does nothing", OFFSET(sub_text_format), AV_OPT_TYPE_INT, {.i64 = FF_SUB_TEXT_FMT_ASS}, 0, 1, S|D | AV_OPT_FLAG_DEPRECATED, "sub_text_format"},
-{"ass",              NULL, 0, AV_OPT_TYPE_CONST, {.i64 = FF_SUB_TEXT_FMT_ASS},              INT_MIN, INT_MAX, S|D, "sub_text_format"},
-#endif
 {"apply_cropping", NULL, OFFSET(apply_cropping), AV_OPT_TYPE_BOOL, { .i64 = 1 }, 0, 1, V | D },
 {"skip_alpha", "Skip processing alpha", OFFSET(skip_alpha), AV_OPT_TYPE_BOOL, {.i64 = 0 }, 0, 1, V|D },
 {"field_order", "Field order", OFFSET(field_order), AV_OPT_TYPE_INT, {.i64 = AV_FIELD_UNKNOWN }, 0, 5, V|D|E, "field_order" },
@@ -399,6 +394,7 @@ static const AVOption avcodec_options[] = {
 {"ignore_level", "ignore level even if the codec level used is unknown or higher than the maximum supported level reported by the hardware driver", 0, AV_OPT_TYPE_CONST, { .i64 = AV_HWACCEL_FLAG_IGNORE_LEVEL }, INT_MIN, INT_MAX, V | D, "hwaccel_flags" },
 {"allow_high_depth", "allow to output YUV pixel formats with a different chroma sampling than 4:2:0 and/or other than 8 bits per component", 0, AV_OPT_TYPE_CONST, {.i64 = AV_HWACCEL_FLAG_ALLOW_HIGH_DEPTH }, INT_MIN, INT_MAX, V | D, "hwaccel_flags"},
 {"allow_profile_mismatch", "attempt to decode anyway if HW accelerated decoder's supported profiles do not exactly match the stream", 0, AV_OPT_TYPE_CONST, {.i64 = AV_HWACCEL_FLAG_ALLOW_PROFILE_MISMATCH }, INT_MIN, INT_MAX, V | D, "hwaccel_flags"},
+{"unsafe_output", "allow potentially unsafe hwaccel frame output that might require special care to process successfully", 0, AV_OPT_TYPE_CONST, {.i64 = AV_HWACCEL_FLAG_UNSAFE_OUTPUT }, INT_MIN, INT_MAX, V | D, "hwaccel_flags"},
 {"extra_hw_frames", "Number of extra hardware frames to allocate for the user", OFFSET(extra_hw_frames), AV_OPT_TYPE_INT, { .i64 = -1 }, -1, INT_MAX, V|D },
 {"discard_damaged_percentage", "Percentage of damaged samples to discard a frame", OFFSET(discard_damaged_percentage), AV_OPT_TYPE_INT, {.i64 = 95 }, 0, 100, V|D },
 {NULL},

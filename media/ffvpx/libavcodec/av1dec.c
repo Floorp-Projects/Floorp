@@ -194,7 +194,7 @@ static uint8_t get_shear_params_valid(AV1DecContext *s, int idx)
 }
 
 /**
-* update gm type/params, since cbs already implemented part of this funcation,
+* update gm type/params, since cbs already implemented part of this function,
 * so we don't need to full implement spec.
 */
 static void global_motion_params(AV1DecContext *s)
@@ -567,7 +567,7 @@ static int get_pixel_format(AVCodecContext *avctx)
      * implemented in the future, need remove this check.
      */
     if (!avctx->hwaccel) {
-        av_log(avctx, AV_LOG_ERROR, "Your platform doesn't suppport"
+        av_log(avctx, AV_LOG_ERROR, "Your platform doesn't support"
                " hardware accelerated AV1 decoding.\n");
         return AVERROR(ENOSYS);
     }
