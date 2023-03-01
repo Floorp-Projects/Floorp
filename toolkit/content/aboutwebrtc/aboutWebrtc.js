@@ -22,6 +22,52 @@ const WGI = WebrtcGlobalInformation;
 const LOGFILE_NAME_DEFAULT = "aboutWebrtc.html";
 const WEBRTC_TRACE_ALL = 65535;
 
+class Renderer {
+  // Long function names preserved until code can be uniformly moved to new names
+  renderElement(name, options, l10n_id, l10n_args) {
+    let elem = Object.assign(document.createElement(name), options);
+    if (l10n_id) {
+      document.l10n.setAttributes(elem, l10n_id, l10n_args);
+    }
+    return elem;
+  }
+  elem() {
+    return this.renderElement(...arguments);
+  }
+  text(name, textContent, options) {
+    return this.renderElement(name, Object.assign({ textContent }, options));
+  }
+  renderElements(name, options, list) {
+    const element = renderElement(name, options);
+    element.append(...list);
+    return element;
+  }
+  elems() {
+    return this.renderElements(...arguments);
+  }
+}
+
+// Proxies a Renderer instance to provide some meta programming methods to make
+// adding elements more readable, e.g. elemRenderer.elem_h4(...) instead of
+// elemRenderer.elem("h4", ...).
+const elemRenderer = new Proxy(new Renderer(), {
+  get(target, prop, receiver) {
+    // Function prefixes to proxy.
+    const proxied = {
+      elem_: (...args) => target.elem(...args),
+      elems_: (...args) => target.elems(...args),
+      text_: (...args) => target.text(...args),
+    };
+    for (let [prefix, func] of Object.entries(proxied)) {
+      if (prop.startsWith(prefix) && prop.length > prefix.length) {
+        return (...args) => func(prop.substring(prefix.length), ...args);
+      }
+    }
+    // Pass non-matches to the base object
+    return Reflect.get(...arguments);
+  },
+});
+
 async function getStats() {
   const { reports } = await new Promise(r => WGI.getAllStats(r));
   return [...reports].sort((a, b) => b.timestamp - a.timestamp);
@@ -29,22 +75,14 @@ async function getStats() {
 
 const getLog = () => new Promise(r => WGI.getLogging("", r));
 
-const renderElement = (name, options, l10n_id, l10n_args) => {
-  let elem = Object.assign(document.createElement(name), options);
-  if (l10n_id) {
-    document.l10n.setAttributes(elem, l10n_id, l10n_args);
-  }
-  return elem;
-};
+const renderElement = (name, options, l10n_id, l10n_args) =>
+  elemRenderer.elem(name, options, l10n_id, l10n_args);
 
 const renderText = (name, textContent, options) =>
-  renderElement(name, Object.assign({ textContent }, options));
+  elemRenderer.text(name, textContent, options);
 
-const renderElements = (name, options, list) => {
-  const element = renderElement(name, options);
-  element.append(...list);
-  return element;
-};
+const renderElements = (name, options, list) =>
+  elemRenderer.elems(name, options, list);
 
 // Button control classes
 
@@ -370,6 +408,7 @@ class ShowTab extends Control {
 })();
 
 function renderPeerConnection(report) {
+  const rndr = elemRenderer;
   const { pcid, browserId, closed, timestamp, configuration } = report;
 
   const pcDiv = renderElement("div", { className: "peer-connection" });
@@ -411,7 +450,7 @@ function renderPeerConnection(report) {
       renderConfiguration(configuration),
       renderRTPStats(report),
       renderICEStats(report),
-      renderSDPStats(report),
+      renderSDPStats(rndr, report),
       renderBandwidthStats(report),
       renderFrameRateStats(report)
     );
@@ -420,88 +459,137 @@ function renderPeerConnection(report) {
   return pcDiv;
 }
 
-function renderSDPStats({ offerer, localSdp, remoteSdp, sdpHistory }) {
-  const trimNewlines = sdp => sdp.replaceAll("\r\n", "\n");
+const trimNewlines = sdp => sdp.replaceAll("\r\n", "\n");
 
-  const statsDiv = renderElements("div", {}, [
-    renderElement("h4", {}, "about-webrtc-sdp-heading"),
-    renderElement(
-      "h5",
-      {},
-      offerer
-        ? "about-webrtc-local-sdp-heading-offer"
-        : "about-webrtc-local-sdp-heading-answer"
-    ),
-    renderText("pre", trimNewlines(localSdp)),
-    renderElement(
-      "h5",
-      {},
-      offerer
-        ? "about-webrtc-remote-sdp-heading-answer"
-        : "about-webrtc-remote-sdp-heading-offer"
-    ),
-    renderText("pre", trimNewlines(remoteSdp)),
-    renderElement("h4", {}, "about-webrtc-sdp-history-heading"),
-  ]);
+const tabElementProps = (element, elemSubId, pcid) => ({
+  className:
+    elemSubId != "answer"
+      ? `tab-${element}`
+      : `tab-${element} active-tab-${element}`,
+  id: `tab_${element}_${elemSubId}_${pcid}`,
+});
 
+const renderSDPTab = (rndr, sdp, props) =>
+  rndr.elems("div", props, [rndr.text("pre", trimNewlines(sdp))]);
+
+const renderSDPHistoryTab = (rndr, hist, props) => {
   // All SDP in sequential order. Add onclick handler to scroll the associated
   // SDP into view below.
-  for (const { isLocal, timestamp } of sdpHistory) {
-    const histDiv = renderElement("div", {});
-    const text = renderElement(
-      "h5",
-      { className: "sdp-history-link" },
-      isLocal
-        ? "about-webrtc-sdp-set-at-timestamp-local"
-        : "about-webrtc-sdp-set-at-timestamp-remote",
-      { timestamp }
-    );
-    text.onclick = () => {
-      const elem = document.getElementById("sdp-history: " + timestamp);
-      if (elem) {
-        elem.scrollIntoView();
-      }
+  let first = Math.min(...hist.map(({ timestamp }) => timestamp));
+  const parts = hist.map(({ isLocal, timestamp, sdp, errors: errs }) => {
+    let errorsSubSect = () => [
+      rndr.elem_h5({}, "about-webrtc-sdp-parsing-errors-heading"),
+      ...errs.map(({ lineNumber: n, error: e }) => rndr.text_br(`${n}: ${e}`)),
+    ];
+
+    let sdpSection = [
+      rndr.elem_h5({}, "about-webrtc-sdp-set-timestamp", {
+        timestamp,
+        "relative-timestamp": timestamp - first,
+      }),
+      ...(errs.length ? errorsSubSect() : []),
+      rndr.text_pre(trimNewlines(sdp)),
+    ];
+
+    return {
+      link: rndr.elems_div({}, [
+        rndr.elem_h5(
+          {
+            className: "sdp-history-link",
+            onclick: () => sdpSection[0].scrollIntoView(),
+          },
+          isLocal
+            ? "about-webrtc-sdp-set-at-timestamp-local"
+            : "about-webrtc-sdp-set-at-timestamp-remote",
+          { timestamp }
+        ),
+      ]),
+      ...(isLocal ? { local: sdpSection } : { remote: sdpSection }),
     };
-    histDiv.append(text);
-    statsDiv.append(histDiv);
-  }
+  });
 
-  // Render the SDP into separate columns for local and remote.
-  const section = renderElement("div", { className: "sdp-history" });
-  const localDiv = renderElements("div", {}, [
-    renderElement("h4", {}, "about-webrtc-local-sdp-heading"),
+  return rndr.elems_div(props, [
+    // Render the links
+    rndr.elems_div(
+      {},
+      parts.map(({ link }) => link)
+    ),
+    rndr.elems_div({ className: "sdp-history" }, [
+      // Render the SDP into separate columns for local and remote.
+      rndr.elems_div({}, [
+        rndr.elem_h4({}, "about-webrtc-local-sdp-heading"),
+        ...parts.filter(({ local }) => local).flatMap(({ local }) => local),
+      ]),
+      rndr.elems_div({}, [
+        rndr.elem_h4({}, "about-webrtc-remote-sdp-heading"),
+        ...parts.filter(({ remote }) => remote).flatMap(({ remote }) => remote),
+      ]),
+    ]),
   ]);
-  const remoteDiv = renderElements("div", {}, [
-    renderElement("h4", {}, "about-webrtc-remote-sdp-heading"),
-  ]);
+};
 
-  let first = NaN;
-  for (const { isLocal, timestamp, sdp, errors } of sdpHistory) {
-    if (isNaN(first)) {
-      first = timestamp;
-    }
-    const histDiv = isLocal ? localDiv : remoteDiv;
-    histDiv.append(
-      renderElement(
-        "h5",
-        { id: "sdp-history: " + timestamp },
-        "about-webrtc-sdp-set-timestamp",
-        { timestamp, "relative-timestamp": timestamp - first }
-      )
-    );
-    if (errors.length) {
-      histDiv.append(
-        renderElement("h5", {}, "about-webrtc-sdp-parsing-errors-heading")
-      );
-    }
-    for (const { lineNumber, error } of errors) {
-      histDiv.append(renderElement("br"), `${lineNumber}: ${error}`);
-    }
-    histDiv.append(renderText("pre", trimNewlines(sdp)));
-  }
-  section.append(localDiv, remoteDiv);
-  statsDiv.append(section);
-  return statsDiv;
+function renderSDPStats(
+  rndr,
+  { offerer, localSdp, remoteSdp, sdpHistory, pcid }
+) {
+  const sdps = offerer
+    ? { offer: localSdp, answer: remoteSdp }
+    : { offer: remoteSdp, answer: localSdp };
+
+  const sdpLabels = offerer
+    ? { offer: "local", answer: "remote" }
+    : { offer: "remote", answer: "local" };
+
+  sdpLabels.l10n = {
+    offer: offerer
+      ? "about-webrtc-local-sdp-heading-offer"
+      : "about-webrtc-remote-sdp-heading-offer",
+    answer: offerer
+      ? "about-webrtc-remote-sdp-heading-answer"
+      : "about-webrtc-local-sdp-heading-answer",
+    history: "about-webrtc-sdp-history-heading",
+  };
+
+  const tabPaneProps = elemSubId => tabElementProps("pane", elemSubId, pcid);
+
+  const panes = {
+    answer: renderSDPTab(rndr, sdps.answer, tabPaneProps("answer")),
+    offer: renderSDPTab(rndr, sdps.offer, tabPaneProps("offer")),
+    history: renderSDPHistoryTab(rndr, sdpHistory, tabPaneProps("history")),
+  };
+
+  // Creates the properties and l10n label for tab buttons
+  const tabButtonProps = (elemSubId, pane) => [
+    {
+      ...tabElementProps("button", elemSubId, pcid),
+      onclick({ currentTarget: t }) {
+        const flipPane = c => c.classList.toggle("active-tab-pane", c == pane);
+        Object.values(panes).forEach(flipPane);
+        const selButton = c => c.classList.toggle("active-tab-button", c == t);
+        [...t.parentElement.children].forEach(selButton);
+      },
+    },
+    sdpLabels.l10n[elemSubId],
+  ];
+
+  const sdpDiv = rndr.elems_div({}, [
+    rndr.elem_h4({}, "about-webrtc-sdp-heading"),
+  ]);
+  let foldSection = renderFoldableSection(sdpDiv, {
+    showMsg: "about-webrtc-show-msg-sdp",
+    hideMsg: "about-webrtc-hide-msg-sdp",
+  });
+  foldSection.append(
+    rndr.elems_div({ className: "tab-buttons" }, [
+      ...Object.entries(panes).map(([elemSubId, pane]) =>
+        rndr.elem_button(...tabButtonProps(elemSubId, pane))
+      ),
+      ...Object.values(panes),
+    ])
+  );
+  sdpDiv.append(foldSection);
+
+  return sdpDiv;
 }
 
 function renderBandwidthStats(report) {
