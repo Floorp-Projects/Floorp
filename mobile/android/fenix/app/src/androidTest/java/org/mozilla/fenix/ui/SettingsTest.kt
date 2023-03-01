@@ -14,6 +14,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.ui.robots.homeScreen
 
 /**
  *  Tests for verifying the main three dot menu options
@@ -27,7 +28,7 @@ class SettingsTest {
     private lateinit var mockWebServer: MockWebServer
 
     @get:Rule
-    val activityTestRule = HomeActivityTestRule()
+    val activityTestRule = HomeActivityTestRule.withDefaultSettingsOverrides(skipOnboarding = true)
 
     @Before
     fun setUp() {
@@ -41,6 +42,111 @@ class SettingsTest {
     @After
     fun tearDown() {
         mockWebServer.shutdown()
+    }
+
+    // Walks through settings privacy menu and sub-menus to ensure all items are present
+    @Test
+    fun settingsPrivacyItemsTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+            // PRIVACY
+            verifyPrivacyHeading()
+
+            // PRIVATE BROWSING
+            verifyPrivateBrowsingButton()
+        }.openPrivateBrowsingSubMenu {
+            verifyNavigationToolBarHeader()
+        }.goBack {
+            // HTTPS-Only Mode
+            verifyHTTPSOnlyModeButton()
+            verifyHTTPSOnlyModeState("Off")
+
+            // ENHANCED TRACKING PROTECTION
+            verifyEnhancedTrackingProtectionButton()
+            verifyEnhancedTrackingProtectionState("Standard")
+        }.openEnhancedTrackingProtectionSubMenu {
+            verifyNavigationToolBarHeader()
+            verifyEnhancedTrackingProtectionProtectionSubMenuItems()
+
+            // ENHANCED TRACKING PROTECTION EXCEPTION
+        }.openExceptions {
+            verifyNavigationToolBarHeader()
+            verifyEnhancedTrackingProtectionProtectionExceptionsSubMenuItems()
+        }.goBack {
+        }.goBack {
+            // SITE PERMISSIONS
+            verifySitePermissionsButton()
+        }.openSettingsSubMenuSitePermissions {
+            verifyNavigationToolBarHeader()
+            verifySitePermissionsSubMenuItems()
+
+            // SITE PERMISSIONS AUTOPLAY
+        }.openAutoPlay {
+            verifyNavigationToolBarHeader("Autoplay")
+            verifySitePermissionsAutoPlaySubMenuItems()
+        }.goBack {
+            // SITE PERMISSIONS CAMERA
+        }.openCamera {
+            verifyNavigationToolBarHeader("Camera")
+            verifySitePermissionsCommonSubMenuItems()
+            verifyToggleNameToON("3. Toggle Camera to ON")
+        }.goBack {
+            // SITE PERMISSIONS LOCATION
+        }.openLocation {
+            verifyNavigationToolBarHeader("Location")
+            verifySitePermissionsCommonSubMenuItems()
+            verifyToggleNameToON("3. Toggle Location to ON")
+        }.goBack {
+            // SITE PERMISSIONS MICROPHONE
+        }.openMicrophone {
+            verifyNavigationToolBarHeader("Microphone")
+            verifySitePermissionsCommonSubMenuItems()
+            verifyToggleNameToON("3. Toggle Microphone to ON")
+        }.goBack {
+            // SITE PERMISSIONS NOTIFICATION
+        }.openNotification {
+            verifyNavigationToolBarHeader("Notification")
+            verifySitePermissionsNotificationSubMenuItems()
+        }.goBack {
+            // SITE PERMISSIONS PERSISTENT STORAGE
+        }.openPersistentStorage {
+            verifyNavigationToolBarHeader("Persistent Storage")
+            verifySitePermissionsPersistentStorageSubMenuItems()
+        }.goBack {
+            // SITE PERMISSIONS EXCEPTIONS
+        }.openExceptions {
+            verifyNavigationToolBarHeader()
+            verifySitePermissionsExceptionSubMenuItems()
+        }.goBack {
+        }.goBack {
+            // DELETE BROWSING DATA
+            verifyDeleteBrowsingDataButton()
+        }.openSettingsSubMenuDeleteBrowsingData {
+            verifyNavigationToolBarHeader()
+            verifyDeleteBrowsingDataSubMenuItems()
+        }.goBack {
+            // DELETE BROWSING DATA ON QUIT
+            verifyDeleteBrowsingDataOnQuitButton()
+            verifyDeleteBrowsingDataOnQuitState("Off")
+        }.openSettingsSubMenuDeleteBrowsingDataOnQuit {
+            verifyNavigationToolBarHeader()
+            verifyDeleteBrowsingDataOnQuitSubMenuItems()
+        }.goBack {
+            // NOTIFICATIONS
+            verifyNotificationsButton()
+        }.openSettingsSubMenuNotifications {
+            verifySystemNotificationsView()
+        }.goBack {
+            // DATA COLLECTION
+            verifyDataCollectionButton()
+        }.openSettingsSubMenuDataCollection {
+            verifyNavigationToolBarHeader()
+            verifyDataCollectionSubMenuItems()
+        }.goBack {
+        }.goBack {
+            verifyHomeComponent()
+        }
     }
 
     // Walks through settings menu and sub-menus to ensure all items are present

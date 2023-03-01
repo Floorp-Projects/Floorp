@@ -8,7 +8,11 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.Constants.PackageName.GMAIL_APP
 import org.mozilla.fenix.helpers.Constants.PackageName.PHONE_APP
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.assertNativeAppOpens
+import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.ui.robots.addToHomeScreen
+import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.customTabScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.pwaScreen
@@ -96,6 +100,42 @@ class PwaTest {
         pwaScreen {
             verifyCustomTabToolbarIsNotDisplayed()
             verifyPwaActivityInCurrentTask()
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun saveLoginsInPWATest() {
+        val pwaPage = "https://mozilla-mobile.github.io/testapp/loginForm"
+        val shortcutTitle = "TEST_APP"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(pwaPage.toUri()) {
+            verifyNotificationDotOnMainMenu()
+        }.openThreeDotMenu {
+        }.clickInstall {
+            clickAddAutomaticallyButton()
+        }.openHomeScreenShortcut(shortcutTitle) {
+            mDevice.waitForIdle()
+            fillAndSubmitLoginCredentials("mozilla", "firefox")
+            verifySaveLoginPromptIsDisplayed()
+            saveLoginFromPrompt("Save")
+            TestHelper.openAppFromExternalLink(pwaPage)
+
+            browserScreen {
+            }.openThreeDotMenu {
+            }.openSettings {
+            }.openLoginsAndPasswordSubMenu {
+            }.openSavedLogins {
+                verifySecurityPromptForLogins()
+                tapSetupLater()
+                verifySavedLoginsSectionUsername("mozilla")
+            }
+
+            addToHomeScreen {
+            }.searchAndOpenHomeScreenShortcut(shortcutTitle) {
+                verifyPrefilledPWALoginCredentials("mozilla", shortcutTitle)
+            }
         }
     }
 }
