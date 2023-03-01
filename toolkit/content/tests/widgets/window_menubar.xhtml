@@ -957,6 +957,8 @@ var popupTests = [
   },
 },
 
+// FIXME: This leaves the menubar in a state where IsActive() is false but
+// IsActiveByKeyboard() is true!
 {
   testname: "Trying to activate menubar without activatable items shouldn't crash",
   events: [ "TestDone menubar" ],
