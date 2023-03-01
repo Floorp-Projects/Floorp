@@ -48,11 +48,9 @@ mod argument;
 ///    }
 /// }
 ///
-/// // The `handle_error` macro maps from the error supplied in the mandatory argument
-/// // (ie, `Error` in this example) to the error returned by the function (`ExternalError`
-/// // in this example)
-/// #[handle_error(Error)]
+/// #[handle_error]
 /// fn do_something() -> std::result::Result<String, ExternalError> {
+///    // The `handle_error` macro maps from `Error` to `ExternalError`
 ///    Err(Error{})
 /// }
 ///
@@ -74,13 +72,18 @@ fn impl_handle_error(
     arguments: &syn::AttributeArgs,
 ) -> syn::Result<proc_macro2::TokenStream> {
     if let syn::Item::Fn(item_fn) = input {
-        let err_path = argument::validate(arguments)?;
+        argument::validate(arguments)?;
         let original_body = &item_fn.block;
 
         let mut new_fn = item_fn.clone();
         new_fn.block = parse_quote! {
             {
-                (|| -> ::std::result::Result<_, #err_path> {
+                // Note: the `Result` here is a smell
+                // because the macro is **assuming** a `Result` exists
+                // that reflects the return value of the block
+                // An improvement would include the error of the `original_block`
+                // as an attribute to the macro itself.
+                (|| -> Result<_> {
                     #original_body
                 })().map_err(::error_support::convert_log_report_error)
             }
@@ -92,7 +95,7 @@ fn impl_handle_error(
     } else {
         Err(syn::Error::new(
             input.span(),
-            "#[handle_error(..)] can only be used on functions",
+            "#[handle_error] can only be used on functions",
         ))
     }
 }

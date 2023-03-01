@@ -4,7 +4,7 @@
 
 use std::sync::{Arc, Mutex};
 
-use crate::error::{ApiResult, TabsApiError};
+use crate::error::{ApiResult, Result, TabsApiError};
 use crate::sync::engine::TabsSyncImpl;
 use crate::TabsStore;
 use error_support::handle_error;
@@ -47,7 +47,7 @@ impl BridgedEngineImpl {
 impl BridgedEngine for BridgedEngineImpl {
     type Error = TabsApiError;
 
-    #[handle_error(crate::Error)]
+    #[handle_error]
     fn last_sync(&self) -> ApiResult<i64> {
         Ok(self
             .sync_impl
@@ -58,7 +58,7 @@ impl BridgedEngine for BridgedEngineImpl {
             .as_millis())
     }
 
-    #[handle_error(crate::Error)]
+    #[handle_error]
     fn set_last_sync(&self, last_sync_millis: i64) -> ApiResult<()> {
         self.sync_impl
             .lock()
@@ -67,7 +67,7 @@ impl BridgedEngine for BridgedEngineImpl {
         Ok(())
     }
 
-    #[handle_error(crate::Error)]
+    #[handle_error]
     fn sync_id(&self) -> ApiResult<Option<String>> {
         Ok(match self.sync_impl.lock().unwrap().get_sync_assoc()? {
             EngineSyncAssociation::Connected(id) => Some(id.coll.to_string()),
@@ -75,7 +75,7 @@ impl BridgedEngine for BridgedEngineImpl {
         })
     }
 
-    #[handle_error(crate::Error)]
+    #[handle_error]
     fn reset_sync_id(&self) -> ApiResult<String> {
         let new_id = SyncGuid::random().to_string();
         let new_coll_ids = CollSyncIds {
@@ -89,7 +89,7 @@ impl BridgedEngine for BridgedEngineImpl {
         Ok(new_id)
     }
 
-    #[handle_error(crate::Error)]
+    #[handle_error]
     fn ensure_current_sync_id(&self, sync_id: &str) -> ApiResult<String> {
         let mut sync_impl = self.sync_impl.lock().unwrap();
         let assoc = sync_impl.get_sync_assoc()?;
@@ -105,7 +105,7 @@ impl BridgedEngine for BridgedEngineImpl {
         Ok(sync_id.to_string()) // this is a bit odd, why the result?
     }
 
-    #[handle_error(crate::Error)]
+    #[handle_error]
     fn prepare_for_sync(&self, client_data: &str) -> ApiResult<()> {
         let data: ClientData = serde_json::from_str(client_data)?;
         self.sync_impl.lock().unwrap().prepare_for_sync(data)
@@ -116,14 +116,14 @@ impl BridgedEngine for BridgedEngineImpl {
         Ok(())
     }
 
-    #[handle_error(crate::Error)]
+    #[handle_error]
     fn store_incoming(&self, incoming: Vec<IncomingBso>) -> ApiResult<()> {
         // Store the incoming payload in memory so we can use it in apply
         *(self.incoming.lock().unwrap()) = incoming;
         Ok(())
     }
 
-    #[handle_error(crate::Error)]
+    #[handle_error]
     fn apply(&self) -> ApiResult<ApplyResults> {
         let mut incoming = self.incoming.lock().unwrap();
         // We've a reference to a Vec<> but it's owned by the mutex - swap the mutex owned
@@ -141,7 +141,7 @@ impl BridgedEngine for BridgedEngineImpl {
         })
     }
 
-    #[handle_error(crate::Error)]
+    #[handle_error]
     fn set_uploaded(&self, server_modified_millis: i64, ids: &[SyncGuid]) -> ApiResult<()> {
         self.sync_impl
             .lock()
@@ -149,13 +149,13 @@ impl BridgedEngine for BridgedEngineImpl {
             .sync_finished(ServerTimestamp::from_millis(server_modified_millis), ids)
     }
 
-    #[handle_error(crate::Error)]
+    #[handle_error]
     fn sync_finished(&self) -> ApiResult<()> {
         *(self.incoming.lock().unwrap()) = Vec::default();
         Ok(())
     }
 
-    #[handle_error(crate::Error)]
+    #[handle_error]
     fn reset(&self) -> ApiResult<()> {
         self.sync_impl
             .lock()
@@ -164,7 +164,7 @@ impl BridgedEngine for BridgedEngineImpl {
         Ok(())
     }
 
-    #[handle_error(crate::Error)]
+    #[handle_error]
     fn wipe(&self) -> ApiResult<()> {
         self.sync_impl.lock().unwrap().wipe()?;
         Ok(())
@@ -210,7 +210,7 @@ impl TabsBridgedEngine {
     }
 
     // Decode the JSON-encoded IncomingBso's that UniFFI passes to us
-    #[handle_error(crate::Error)]
+    #[handle_error]
     fn convert_incoming_bsos(&self, incoming: Vec<String>) -> ApiResult<Vec<IncomingBso>> {
         let mut bsos = Vec::with_capacity(incoming.len());
         for inc in incoming {
@@ -220,7 +220,7 @@ impl TabsBridgedEngine {
     }
 
     // Encode OutgoingBso's into JSON for UniFFI
-    #[handle_error(crate::Error)]
+    #[handle_error]
     fn convert_outgoing_bsos(&self, outgoing: Vec<OutgoingBso>) -> ApiResult<Vec<String>> {
         let mut bsos = Vec::with_capacity(outgoing.len());
         for e in outgoing {
@@ -279,7 +279,7 @@ mod tests {
                 title: "my first tab".to_string(),
                 url_history: vec!["http://1.com".to_string()],
                 icon: None,
-                last_used: 2,
+                last_used: 0,
             },
             RemoteTab {
                 title: "my second tab".to_string(),
