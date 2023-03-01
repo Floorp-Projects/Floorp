@@ -788,6 +788,11 @@ NativeLayerCA::NativeLayerCA(gfx::DeviceColor aColor)
 }
 
 NativeLayerCA::~NativeLayerCA() {
+#ifdef NIGHTLY_BUILD
+  if (mHasEverAttachExternalImage && StaticPrefs::gfx_core_animation_specialize_video_log()) {
+    NSLog(@"VIDEO_LOG: ~NativeLayerCA: %p is being destroyed after hosting video.", this);
+  }
+#endif
   if (mInProgressLockedIOSurface) {
     mInProgressLockedIOSurface->Unlock(false);
     mInProgressLockedIOSurface = nullptr;
@@ -829,6 +834,11 @@ void NativeLayerCA::AttachExternalImage(wr::RenderTextureHost* aExternalImage) {
   bool oldSpecializeVideo = mSpecializeVideo;
   mSpecializeVideo = ShouldSpecializeVideo(lock);
   bool changedSpecializeVideo = (mSpecializeVideo != oldSpecializeVideo);
+#ifdef NIGHTLY_BUILD
+  if (changedSpecializeVideo && StaticPrefs::gfx_core_animation_specialize_video_log()) {
+    NSLog(@"VIDEO_LOG: AttachExternalImage: %p is forcing a video layer rebuild.", this);
+  }
+#endif
 
   bool oldIsDRM = mIsDRM;
   mIsDRM = aExternalImage->IsFromDRMSource();
@@ -910,14 +920,25 @@ bool NativeLayerCA::ShouldSpecializeVideo(const MutexAutoLock& aProofOfLock) {
 }
 
 void NativeLayerCA::SetRootWindowIsFullscreen(bool aFullscreen) {
+  if (mRootWindowIsFullscreen == aFullscreen) {
+    return;
+  }
+
   MutexAutoLock lock(mMutex);
 
   mRootWindowIsFullscreen = aFullscreen;
 
   bool oldSpecializeVideo = mSpecializeVideo;
   mSpecializeVideo = ShouldSpecializeVideo(lock);
+  bool changedSpecializeVideo = (mSpecializeVideo != oldSpecializeVideo);
 
-  if (mSpecializeVideo != oldSpecializeVideo) {
+  if (changedSpecializeVideo) {
+#ifdef NIGHTLY_BUILD
+    if (StaticPrefs::gfx_core_animation_specialize_video_log()) {
+      NSLog(@"VIDEO_LOG: SetRootWindowIsFullscreen: %p is forcing a video layer rebuild.", this);
+    }
+#endif
+
     ForAllRepresentations([&](Representation& r) { r.mMutatedSpecializeVideo = true; });
   }
 }
@@ -1648,6 +1669,11 @@ bool NativeLayerCA::Representation::ApplyChanges(
   if (mWrappingCALayer && mMutatedSpecializeVideo) {
     // Since specialize video changes the way we construct our wrapping and content layers,
     // we have to scrap them if this value has changed.
+#ifdef NIGHTLY_BUILD
+    if (aIsVideo && StaticPrefs::gfx_core_animation_specialize_video_log()) {
+      NSLog(@"VIDEO_LOG: Scrapping existing video layer.");
+    }
+#endif
     [mContentCALayer release];
     mContentCALayer = nil;
     [mOpaquenessTintLayer release];
