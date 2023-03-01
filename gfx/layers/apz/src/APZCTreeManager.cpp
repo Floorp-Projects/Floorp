@@ -760,9 +760,8 @@ void APZCTreeManager::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
       auto it = mTestData.find(guid.mLayersId);
       if (it != mTestData.end()) {
         it->second->RecordSampledResult(
-            apzc->GetCurrentAsyncVisualViewport(
-                    AsyncPanZoomController::eForCompositing)
-                .TopLeft(),
+            apzc->GetCurrentAsyncScrollOffsetInCssPixels(
+                AsyncPanZoomController::eForCompositing),
             (aSampleTime.Time() - TimeStamp::ProcessCreation())
                 .ToMicroseconds(),
             guid.mLayersId, guid.mScrollId);

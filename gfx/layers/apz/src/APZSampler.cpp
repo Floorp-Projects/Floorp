@@ -161,9 +161,8 @@ APZSampler::GetCurrentScrollOffsetAndRange(
       // FIXME: Use the one-frame delayed offset now. This doesn't take
       // scroll-linked effets into accounts, so we have to fix this in the
       // future.
-      apzc->GetCurrentAsyncVisualViewport(
-              AsyncPanZoomController::AsyncTransformConsumer::eForCompositing)
-          .TopLeft(),
+      apzc->GetCurrentAsyncScrollOffsetInCssPixels(
+          AsyncPanZoomController::AsyncTransformConsumer::eForCompositing),
       apzc->GetCurrentScrollRangeInCssPixels()});
 }
 
