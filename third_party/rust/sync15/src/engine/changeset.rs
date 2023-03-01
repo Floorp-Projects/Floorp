@@ -3,50 +3,40 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::bso::{IncomingBso, OutgoingBso};
-use crate::{CollectionName, ServerTimestamp};
+use crate::ServerTimestamp;
 
-// Incoming and Outgoing changesets are almost identical except for the timestamp.
-// Separate types still helps avoid confusion with that timestamp, so they're split.
-#[derive(Debug)]
-pub struct IncomingChangeset {
-    pub changes: Vec<IncomingBso>,
-    /// The server timestamp of the collection.
+#[derive(Debug, Clone)]
+pub struct RecordChangeset<T> {
+    pub changes: Vec<T>,
+    /// For GETs, the last sync timestamp that should be persisted after
+    /// applying the records.
+    /// For POSTs, this is the XIUS timestamp.
     pub timestamp: ServerTimestamp,
-    pub collection: CollectionName,
+    pub collection: std::borrow::Cow<'static, str>,
 }
 
-impl IncomingChangeset {
+pub type IncomingChangeset = RecordChangeset<IncomingBso>;
+pub type OutgoingChangeset = RecordChangeset<OutgoingBso>;
+
+impl<T> RecordChangeset<T> {
     #[inline]
-    pub fn new(collection: CollectionName, timestamp: ServerTimestamp) -> Self {
+    pub fn new(
+        collection: impl Into<std::borrow::Cow<'static, str>>,
+        timestamp: ServerTimestamp,
+    ) -> RecordChangeset<T> {
         Self::new_with_changes(collection, timestamp, Vec::new())
     }
 
     #[inline]
     pub fn new_with_changes(
-        collection: CollectionName,
+        collection: impl Into<std::borrow::Cow<'static, str>>,
         timestamp: ServerTimestamp,
-        changes: Vec<IncomingBso>,
-    ) -> Self {
-        Self {
+        changes: Vec<T>,
+    ) -> RecordChangeset<T> {
+        RecordChangeset {
             changes,
             timestamp,
-            collection,
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct OutgoingChangeset {
-    pub changes: Vec<OutgoingBso>,
-    pub collection: CollectionName,
-}
-
-impl OutgoingChangeset {
-    #[inline]
-    pub fn new(collection: CollectionName, changes: Vec<OutgoingBso>) -> Self {
-        Self {
-            collection,
-            changes,
+            collection: collection.into(),
         }
     }
 }

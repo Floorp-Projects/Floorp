@@ -311,7 +311,11 @@ impl SyncEngine for TabsEngine {
             .unwrap()
             .apply_incoming(inbound.changes, telem)?;
 
-        Ok(OutgoingChangeset::new("tabs".into(), outgoing_records))
+        Ok(OutgoingChangeset::new_with_changes(
+            "tabs",
+            inbound.timestamp,
+            outgoing_records,
+        ))
     }
 
     fn sync_finished(
@@ -339,9 +343,7 @@ impl SyncEngine for TabsEngine {
         Ok(if since == server_timestamp {
             vec![]
         } else {
-            vec![CollectionRequest::new("tabs".into())
-                .full()
-                .newer_than(since)]
+            vec![CollectionRequest::new("tabs").full().newer_than(since)]
         })
     }
 
