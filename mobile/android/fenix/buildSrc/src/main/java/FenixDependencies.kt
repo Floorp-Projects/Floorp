@@ -51,7 +51,7 @@ object FenixVersions {
 
     const val mockwebserver = "4.10.0"
     const val uiautomator = "2.2.0"
-    const val robolectric = "4.9"
+    const val robolectric = "4.9.2"
 
     const val google_ads_id_version = "16.0.0"
 
