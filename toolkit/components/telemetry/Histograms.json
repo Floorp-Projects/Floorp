@@ -1827,6 +1827,7 @@
       "alpha_y_bpc_mismatch",
       "ispe_mismatch",
       "render_size_mismatch",
+      "frame_size_changed",
       "invalid_cicp",
       "no_samples",
       "invalid_parse_status",
