@@ -1291,7 +1291,6 @@ class MediaPipelineReceiveAudio::PipelineListener
 
   void SetPrivatePrincipal(PrincipalHandle aHandle) {
     MOZ_ASSERT(NS_IsMainThread());
-    MOZ_DIAGNOSTIC_ASSERT(mForceSilence);
 
     class Message : public ControlMessage {
      public:
