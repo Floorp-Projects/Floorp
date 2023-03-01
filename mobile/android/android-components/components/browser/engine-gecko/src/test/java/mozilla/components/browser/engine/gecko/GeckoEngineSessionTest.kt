@@ -97,6 +97,7 @@ import org.mozilla.geckoview.WebRequestError.ERROR_MALFORMED_URI
 import org.mozilla.geckoview.WebRequestError.ERROR_UNKNOWN
 import org.mozilla.geckoview.WebResponse
 import org.robolectric.Shadows.shadowOf
+import java.io.IOException
 import java.security.Principal
 import java.security.cert.X509Certificate
 
@@ -2291,6 +2292,80 @@ class GeckoEngineSessionTest {
 
         engineSession.toggleDesktopMode(false, reload = true)
         verify(engineSession, atLeastOnce()).reload()
+    }
+
+    @Test
+    fun `hasCookieBannerRuleForSession should call onSuccess callback for a valid GV response`() {
+        val engineSession = GeckoEngineSession(
+            mock(),
+            geckoSessionProvider = geckoSessionProvider,
+        )
+        var onResultCalled = false
+        var onExceptionCalled = false
+
+        val ruleResult = GeckoResult<Boolean>()
+        whenever(geckoSession.hasCookieBannerRuleForBrowsingContextTree()).thenReturn(ruleResult)
+
+        engineSession.hasCookieBannerRuleForSession(
+            onResult = { onResultCalled = true },
+            onException = { onExceptionCalled = true },
+        )
+
+        ruleResult.complete(true)
+        shadowOf(getMainLooper()).idle()
+
+        assertTrue(onResultCalled)
+        assertFalse(onExceptionCalled)
+    }
+
+    @Test
+    fun `hasCookieBannerRuleForSession should call onError callback in case GV returns an exception`() {
+        val engineSession = GeckoEngineSession(
+            mock(),
+            geckoSessionProvider = geckoSessionProvider,
+        )
+
+        var onResultCalled = false
+        var onExceptionCalled = false
+
+        val ruleResult = GeckoResult<Boolean>()
+        whenever(geckoSession.hasCookieBannerRuleForBrowsingContextTree()).thenReturn(ruleResult)
+
+        engineSession.hasCookieBannerRuleForSession(
+            onResult = { onResultCalled = true },
+            onException = { onExceptionCalled = true },
+        )
+
+        ruleResult.completeExceptionally(IOException())
+        shadowOf(getMainLooper()).idle()
+
+        assertTrue(onExceptionCalled)
+        assertFalse(onResultCalled)
+    }
+
+    @Test
+    fun `hasCookieBannerRuleForSession should call onError callback in case GV returns a null`() {
+        val engineSession = GeckoEngineSession(
+            mock(),
+            geckoSessionProvider = geckoSessionProvider,
+        )
+
+        var onResultCalled = false
+        var onExceptionCalled = false
+
+        val ruleResult = GeckoResult<Boolean>()
+        whenever(geckoSession.hasCookieBannerRuleForBrowsingContextTree()).thenReturn(ruleResult)
+
+        engineSession.hasCookieBannerRuleForSession(
+            onResult = { onResultCalled = true },
+            onException = { onExceptionCalled = true },
+        )
+
+        ruleResult.complete(null)
+        shadowOf(getMainLooper()).idle()
+
+        assertTrue(onExceptionCalled)
+        assertFalse(onResultCalled)
     }
 
     @Test

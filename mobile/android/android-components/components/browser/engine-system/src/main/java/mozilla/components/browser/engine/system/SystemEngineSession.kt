@@ -405,6 +405,13 @@ class SystemEngineSession(
         }
     }
 
+    override fun hasCookieBannerRuleForSession(
+        onResult: (Boolean) -> Unit,
+        onException: (Throwable) -> Unit,
+    ) {
+        throw UnsupportedOperationException("Cookie Banner handling is not available in this engine")
+    }
+
     /**
      * See [EngineSession.exitFullScreenMode]
      */

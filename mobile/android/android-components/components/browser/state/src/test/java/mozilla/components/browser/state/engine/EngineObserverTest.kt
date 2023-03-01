@@ -68,6 +68,10 @@ class EngineObserverTest {
             override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {
                 notifyObservers { onDesktopModeChange(enable) }
             }
+            override fun hasCookieBannerRuleForSession(
+                onResult: (Boolean) -> Unit,
+                onException: (Throwable) -> Unit,
+            ) {}
             override fun findAll(text: String) {}
             override fun findNext(forward: Boolean) {}
             override fun clearFindMatches() {}
@@ -124,6 +128,10 @@ class EngineObserverTest {
             override fun restoreState(state: EngineSessionState): Boolean { return false }
             override fun updateTrackingProtection(policy: TrackingProtectionPolicy) {}
             override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {}
+            override fun hasCookieBannerRuleForSession(
+                onResult: (Boolean) -> Unit,
+                onException: (Throwable) -> Unit,
+            ) {}
             override fun findAll(text: String) {}
             override fun findNext(forward: Boolean) {}
             override fun clearFindMatches() {}
@@ -176,6 +184,10 @@ class EngineObserverTest {
             override fun restoreState(state: EngineSessionState): Boolean { return false }
             override fun updateTrackingProtection(policy: TrackingProtectionPolicy) {}
             override fun toggleDesktopMode(enable: Boolean, reload: Boolean) {}
+            override fun hasCookieBannerRuleForSession(
+                onResult: (Boolean) -> Unit,
+                onException: (Throwable) -> Unit,
+            ) {}
             override fun loadUrl(
                 url: String,
                 parent: EngineSession?,

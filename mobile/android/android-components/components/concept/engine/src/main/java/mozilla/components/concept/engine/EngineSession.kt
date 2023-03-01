@@ -781,6 +781,16 @@ abstract class EngineSession(
     abstract fun toggleDesktopMode(enable: Boolean, reload: Boolean = false)
 
     /**
+     * Checks if there is a rule for handling a cookie banner for the current website in the session.
+     *
+     * @param onSuccess callback invoked if the engine API returned a valid response. Please note
+     * that the response can be null - which can indicate a bug, a miscommunication
+     * or other unexpected failure.
+     * @param onError callback invoked if there was an error getting the response.
+     */
+    abstract fun hasCookieBannerRuleForSession(onResult: (Boolean) -> Unit, onException: (Throwable) -> Unit)
+
+    /**
      * Finds and highlights all occurrences of the provided String and highlights them asynchronously.
      *
      * @param text the String to search for

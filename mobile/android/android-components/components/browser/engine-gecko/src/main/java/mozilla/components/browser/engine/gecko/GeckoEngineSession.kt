@@ -441,6 +441,37 @@ class GeckoEngineSession(
     }
 
     /**
+     * See [EngineSession.hasCookieBannerRuleForSession]
+     */
+    override fun hasCookieBannerRuleForSession(
+        onResult: (Boolean) -> Unit,
+        onException: (Throwable) -> Unit,
+    ) {
+        geckoSession.hasCookieBannerRuleForBrowsingContextTree().then(
+            { response ->
+                if (response == null) {
+                    logger.error(
+                        "Invalid value: unable to get response from hasCookieBannerRuleForBrowsingContextTree.",
+                    )
+                    onException(
+                        java.lang.IllegalStateException(
+                            "Invalid value: unable to get response from hasCookieBannerRuleForBrowsingContextTree.",
+                        ),
+                    )
+                    return@then GeckoResult()
+                }
+                onResult(response)
+                GeckoResult<Boolean>()
+            },
+            { throwable ->
+                logger.error("Checking for cookie banner rule failed.", throwable)
+                onException(throwable)
+                GeckoResult()
+            },
+        )
+    }
+
+    /**
      * Checks and returns a non-mobile version of the url.
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)

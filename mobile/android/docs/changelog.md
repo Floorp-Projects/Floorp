@@ -21,6 +21,12 @@ permalink: /changelog/
 * **lib-crash-sentry-legacy**
   * ⚠️ **This is a breaking change**: This component has been removed. Consumers should use the newer `lib-crash-sentry` component instead.
 
+* **browser-engine-gecko**:
+  * Add support for `hasCookieBannerRuleForSession` API for checking whether a cookie banner from the current website in the session can be handled.
+
+* **concept-engine**:
+  * Add new `hasCookieBannerRuleForSession` API in `Engine`. This is currently only supported in the Gecko Engine.
+
 
 # 111.0.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/v110.0.0...v111.0.0)
