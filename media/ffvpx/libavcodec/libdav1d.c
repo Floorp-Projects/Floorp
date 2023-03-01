@@ -41,9 +41,6 @@
 typedef struct Libdav1dContext {
     AVClass *class;
     Dav1dContext *c;
-    /* This packet coincides with AVCodecInternal.in_pkt
-     * and is not owned by us. */
-    AVPacket *pkt;
     AVBufferPool *pool;
     int pool_size;
 
@@ -219,8 +216,6 @@ static av_cold int libdav1d_init(AVCodecContext *c)
 #endif
     int res;
 
-    dav1d->pkt = c->internal->in_pkt;
-
     av_log(c, AV_LOG_INFO, "libdav1d %s\n", dav1d_version());
 
     dav1d_default_settings(&s);
@@ -265,6 +260,15 @@ static av_cold int libdav1d_init(AVCodecContext *c)
            s.n_frame_threads, s.n_tile_threads);
 #endif
 
+#if FF_DAV1D_VERSION_AT_LEAST(6,8)
+    if (c->skip_frame >= AVDISCARD_NONKEY)
+        s.decode_frame_type = DAV1D_DECODEFRAMETYPE_KEY;
+    else if (c->skip_frame >= AVDISCARD_NONINTRA)
+        s.decode_frame_type = DAV1D_DECODEFRAMETYPE_INTRA;
+    else if (c->skip_frame >= AVDISCARD_NONREF)
+        s.decode_frame_type = DAV1D_DECODEFRAMETYPE_REFERENCE;
+#endif
+
     res = libdav1d_parse_extradata(c);
     if (res < 0)
         return res;
@@ -284,6 +288,13 @@ static void libdav1d_flush(AVCodecContext *c)
     dav1d_flush(dav1d->c);
 }
 
+typedef struct OpaqueData {
+    void    *pkt_orig_opaque;
+#if FF_API_REORDERED_OPAQUE
+    int64_t  reordered_opaque;
+#endif
+} OpaqueData;
+
 static void libdav1d_data_free(const uint8_t *data, void *opaque) {
     AVBufferRef *buf = opaque;
 
@@ -291,8 +302,10 @@ static void libdav1d_data_free(const uint8_t *data, void *opaque) {
 }
 
 static void libdav1d_user_data_free(const uint8_t *data, void *opaque) {
+    AVPacket *pkt = opaque;
     av_assert0(data == opaque);
-    av_free(opaque);
+    av_free(pkt->opaque);
+    av_packet_free(&pkt);
 }
 
 static int libdav1d_receive_frame(AVCodecContext *c, AVFrame *frame)
@@ -300,52 +313,68 @@ static int libdav1d_receive_frame(AVCodecContext *c, AVFrame *frame)
     Libdav1dContext *dav1d = c->priv_data;
     Dav1dData *data = &dav1d->data;
     Dav1dPicture pic = { 0 }, *p = &pic;
+    AVPacket *pkt;
+    OpaqueData *od = NULL;
 #if FF_DAV1D_VERSION_AT_LEAST(5,1)
     enum Dav1dEventFlags event_flags = 0;
 #endif
     int res;
 
     if (!data->sz) {
-        AVPacket *const pkt = dav1d->pkt;
+        pkt = av_packet_alloc();
+
+        if (!pkt)
+            return AVERROR(ENOMEM);
 
         res = ff_decode_get_packet(c, pkt);
-        if (res < 0 && res != AVERROR_EOF)
+        if (res < 0 && res != AVERROR_EOF) {
+            av_packet_free(&pkt);
             return res;
+        }
 
         if (pkt->size) {
             res = dav1d_data_wrap(data, pkt->data, pkt->size,
                                   libdav1d_data_free, pkt->buf);
             if (res < 0) {
-                av_packet_unref(pkt);
+                av_packet_free(&pkt);
                 return res;
             }
 
-            data->m.timestamp = pkt->pts;
-            data->m.offset    = pkt->pos;
-            data->m.duration  = pkt->duration;
-
             pkt->buf = NULL;
-            av_packet_unref(pkt);
 
-            if (c->reordered_opaque != AV_NOPTS_VALUE) {
-                uint8_t *reordered_opaque = av_memdup(&c->reordered_opaque,
-                                                      sizeof(c->reordered_opaque));
-                if (!reordered_opaque) {
+FF_DISABLE_DEPRECATION_WARNINGS
+            if (
+#if FF_API_REORDERED_OPAQUE
+                c->reordered_opaque != AV_NOPTS_VALUE ||
+#endif
+                (pkt->opaque && (c->flags & AV_CODEC_FLAG_COPY_OPAQUE))) {
+                od = av_mallocz(sizeof(*od));
+                if (!od) {
+                    av_packet_free(&pkt);
                     dav1d_data_unref(data);
                     return AVERROR(ENOMEM);
                 }
-
-                res = dav1d_data_wrap_user_data(data, reordered_opaque,
-                                                libdav1d_user_data_free, reordered_opaque);
-                if (res < 0) {
-                    av_free(reordered_opaque);
-                    dav1d_data_unref(data);
-                    return res;
-                }
+                od->pkt_orig_opaque  = pkt->opaque;
+#if FF_API_REORDERED_OPAQUE
+                od->reordered_opaque = c->reordered_opaque;
+#endif
+FF_ENABLE_DEPRECATION_WARNINGS
             }
-        } else if (res >= 0) {
-            av_packet_unref(pkt);
-            return AVERROR(EAGAIN);
+            pkt->opaque = od;
+
+            res = dav1d_data_wrap_user_data(data, (const uint8_t *)pkt,
+                                            libdav1d_user_data_free, pkt);
+            if (res < 0) {
+                av_free(pkt->opaque);
+                av_packet_free(&pkt);
+                dav1d_data_unref(data);
+                return res;
+            }
+            pkt = NULL;
+        } else {
+            av_packet_free(&pkt);
+            if (res >= 0)
+                return AVERROR(EAGAIN);
         }
     }
 
@@ -410,17 +439,29 @@ static int libdav1d_receive_frame(AVCodecContext *c, AVFrame *frame)
               INT_MAX);
     ff_set_sar(c, frame->sample_aspect_ratio);
 
-    if (p->m.user_data.data)
-        memcpy(&frame->reordered_opaque, p->m.user_data.data, sizeof(frame->reordered_opaque));
+    pkt = (AVPacket *)p->m.user_data.data;
+    od  = pkt->opaque;
+#if FF_API_REORDERED_OPAQUE
+FF_DISABLE_DEPRECATION_WARNINGS
+    if (od && od->reordered_opaque != AV_NOPTS_VALUE)
+        frame->reordered_opaque = od->reordered_opaque;
     else
         frame->reordered_opaque = AV_NOPTS_VALUE;
+FF_ENABLE_DEPRECATION_WARNINGS
+#endif
+
+    // restore the original user opaque value for
+    // ff_decode_frame_props_from_pkt()
+    pkt->opaque = od ? od->pkt_orig_opaque : NULL;
+    av_freep(&od);
 
     // match timestamps and packet size
-    frame->pts = p->m.timestamp;
-    frame->pkt_dts = p->m.timestamp;
-    frame->pkt_pos = p->m.offset;
-    frame->pkt_size = p->m.size;
-    frame->duration = p->m.duration;
+    res = ff_decode_frame_props_from_pkt(c, frame, pkt);
+    pkt->opaque = NULL;
+    if (res < 0)
+        goto fail;
+
+    frame->pkt_dts = pkt->pts;
     frame->key_frame = p->frame_hdr->frame_type == DAV1D_FRAME_TYPE_KEY;
 
     switch (p->frame_hdr->frame_type) {
@@ -594,7 +635,7 @@ const FFCodec ff_libdav1d_decoder = {
     .flush          = libdav1d_flush,
     FF_CODEC_RECEIVE_FRAME_CB(libdav1d_receive_frame),
     .p.capabilities = AV_CODEC_CAP_DELAY | AV_CODEC_CAP_OTHER_THREADS,
-    .caps_internal  = FF_CODEC_CAP_SETS_PKT_DTS |
+    .caps_internal  = FF_CODEC_CAP_SETS_PKT_DTS | FF_CODEC_CAP_SETS_FRAME_PROPS |
                       FF_CODEC_CAP_AUTO_THREADS,
     .p.priv_class   = &libdav1d_class,
     .p.wrapper_name = "libdav1d",

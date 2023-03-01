@@ -413,6 +413,7 @@ enum AVCodecID {
     AV_CODEC_ID_ADPCM_IMA_CUNNING,
     AV_CODEC_ID_ADPCM_IMA_MOFLEX,
     AV_CODEC_ID_ADPCM_IMA_ACORN,
+    AV_CODEC_ID_ADPCM_XMD,
 
     /* AMR */
     AV_CODEC_ID_AMR_NB = 0x12000,
@@ -430,6 +431,8 @@ enum AVCodecID {
     AV_CODEC_ID_SDX2_DPCM,
     AV_CODEC_ID_GREMLIN_DPCM,
     AV_CODEC_ID_DERF_DPCM,
+    AV_CODEC_ID_WADY_DPCM,
+    AV_CODEC_ID_CBD2_DPCM,
 
     /* audio codecs */
     AV_CODEC_ID_MP2 = 0x15000,
@@ -533,6 +536,8 @@ enum AVCodecID {
     AV_CODEC_ID_MISC4,
     AV_CODEC_ID_APAC,
     AV_CODEC_ID_FTR,
+    AV_CODEC_ID_WAVARC,
+    AV_CODEC_ID_RKA,
 
     /* subtitle codecs */
     AV_CODEC_ID_FIRST_SUBTITLE = 0x17000,          ///< A dummy ID pointing at the start of subtitle codecs.
@@ -587,6 +592,16 @@ enum AVCodecID {
                                 * stream (only used by libavformat) */
     AV_CODEC_ID_FFMETADATA = 0x21000,   ///< Dummy codec for streams containing only metadata information.
     AV_CODEC_ID_WRAPPED_AVFRAME = 0x21001, ///< Passthrough codec, AVFrames wrapped in AVPacket
+    /**
+     * Dummy null video codec, useful mainly for development and debugging.
+     * Null encoder/decoder discard all input and never return any output.
+     */
+    AV_CODEC_ID_VNULL,
+    /**
+     * Dummy null audio codec, useful mainly for development and debugging.
+     * Null encoder/decoder discard all input and never return any output.
+     */
+    AV_CODEC_ID_ANULL,
 };
 
 /**

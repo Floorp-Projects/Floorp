@@ -162,8 +162,11 @@ static int av1_parser_parse(AVCodecParserContext *ctx,
     avctx->color_trc = (enum AVColorTransferCharacteristic) color->transfer_characteristics;
     avctx->color_range = color->color_range ? AVCOL_RANGE_JPEG : AVCOL_RANGE_MPEG;
 
-    if (avctx->framerate.num)
-        avctx->time_base = av_inv_q(av_mul_q(avctx->framerate, (AVRational){avctx->ticks_per_frame, 1}));
+    if (seq->timing_info_present_flag) {
+        const AV1RawTimingInfo *timing = &seq->timing_info;
+        av_reduce(&avctx->framerate.den, &avctx->framerate.num,
+                  timing->num_units_in_display_tick, timing->time_scale, INT_MAX);
+    }
 
 end:
     ff_cbs_fragment_reset(td);
