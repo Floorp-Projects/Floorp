@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include "gfxContext.h"
+#include "mozilla/Baseline.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Likely.h"
 #include "mozilla/PresShell.h"
@@ -24,7 +25,6 @@
 #include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleConsts.h"
-#include "Baseline.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;

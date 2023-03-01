@@ -11,6 +11,7 @@
 #include <algorithm>
 
 #include "gfxContext.h"
+#include "mozilla/Baseline.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/CSSOrderAwareFrameIterator.h"
 #include "mozilla/FloatingPoint.h"
@@ -27,7 +28,6 @@
 #include "nsLayoutUtils.h"
 #include "nsPlaceholderFrame.h"
 #include "nsPresContext.h"
-#include "Baseline.h"
 
 using namespace mozilla;
 using namespace mozilla::layout;

@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BaselineUtils_h___
-#define BaselineUtils_h___
+#ifndef LAYOUT_BASE_BASELINE_H_
+#define LAYOUT_BASE_BASELINE_H_
 
 #include "nsCoord.h"
 #include "mozilla/WritingModes.h"
@@ -41,4 +41,5 @@ class Baseline {
 };
 
 }  // namespace mozilla
-#endif  // BaselineUtils_h___
+
+#endif  // LAYOUT_BASE_BASELINE_H_

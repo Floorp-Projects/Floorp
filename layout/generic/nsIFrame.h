@@ -54,6 +54,7 @@
 #include "LayoutConstants.h"
 #include "mozilla/AspectRatio.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Baseline.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RelativeTo.h"
@@ -81,7 +82,6 @@
 #include "nsDisplayItemTypes.h"
 #include "nsPresContext.h"
 #include "nsTHashSet.h"
-#include "Baseline.h"
 
 #ifdef ACCESSIBILITY
 #  include "mozilla/a11y/AccTypes.h"

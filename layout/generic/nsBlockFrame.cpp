@@ -14,6 +14,7 @@
 #include "gfxContext.h"
 
 #include "mozilla/AppUnits.h"
+#include "mozilla/Baseline.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
@@ -63,7 +64,6 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/Telemetry.h"
 #include "nsFlexContainerFrame.h"
-#include "Baseline.h"
 
 #include "nsBidiPresUtils.h"
 
