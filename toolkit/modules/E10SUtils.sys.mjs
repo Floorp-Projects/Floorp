@@ -407,39 +407,34 @@ export var E10SUtils = {
       return DEFAULT_REMOTE_TYPE;
     }
 
-    return this.getRemoteTypeForURIObject(
-      uri,
-      aMultiProcess,
-      aRemoteSubframes,
-      aPreferredRemoteType,
-      aCurrentUri,
-      null, //aResultPrincipal
-      false, //aIsSubframe
-      false, // aIsWorker
-      aOriginAttributes
-    );
+    return this.getRemoteTypeForURIObject(uri, {
+      multiProcess: aMultiProcess,
+      remoteSubFrames: aRemoteSubframes,
+      preferredRemoteType: aPreferredRemoteType,
+      currentURI: aCurrentUri,
+      originAttributes: aOriginAttributes,
+    });
   },
 
-  getRemoteTypeForURIObject(
-    aURI,
-    aMultiProcess,
-    aRemoteSubframes,
-    aPreferredRemoteType = DEFAULT_REMOTE_TYPE,
-    aCurrentUri = null,
-    aResultPrincipal = null,
-    aIsSubframe = false,
-    aIsWorker = false,
-    aOriginAttributes = {},
-    aWorkerType = Ci.nsIE10SUtils.REMOTE_WORKER_TYPE_SHARED
-  ) {
-    if (!aMultiProcess) {
+  getRemoteTypeForURIObject(aURI, options) {
+    let {
+      multiProcess = Services.appinfo.browserTabsRemoteAutostart,
+      remoteSubFrames = Services.appinfo.fissionAutostart,
+      preferredRemoteType = DEFAULT_REMOTE_TYPE,
+      currentURI = null,
+      resultPrincipal = null,
+      isWorker = false,
+      originAttributes = {},
+      workerType = Ci.nsIE10SUtils.REMOTE_WORKER_TYPE_SHARED,
+    } = options;
+    if (!multiProcess) {
       return NOT_REMOTE;
     }
 
     switch (aURI.scheme) {
       case "javascript":
         // javascript URIs can load in any, they apply to the current document.
-        return aPreferredRemoteType;
+        return preferredRemoteType;
 
       case "data":
       case "blob":
@@ -448,9 +443,9 @@ export var E10SUtils = {
         // unless it is non-remote. In that case we don't want to load them in
         // the parent process, so we load them in the default remote process,
         // which is sandboxed and limits any risk.
-        return aPreferredRemoteType == NOT_REMOTE
+        return preferredRemoteType == NOT_REMOTE
           ? DEFAULT_REMOTE_TYPE
-          : aPreferredRemoteType;
+          : preferredRemoteType;
 
       case "file":
         return lazy.useSeparateFileUriProcess
@@ -462,7 +457,7 @@ export var E10SUtils = {
         // If the module doesn't exist then an error page will be loading, that
         // should be ok to load in any process
         if (!module) {
-          return aPreferredRemoteType;
+          return preferredRemoteType;
         }
 
         let flags = module.getURIFlags(aURI);
@@ -494,14 +489,7 @@ export var E10SUtils = {
             if (readerModeURI) {
               let innerRemoteType = this.getRemoteTypeForURIObject(
                 readerModeURI,
-                aMultiProcess,
-                aRemoteSubframes,
-                aPreferredRemoteType,
-                aCurrentUri,
-                null, // aResultPrincipal
-                aIsSubframe,
-                aIsWorker,
-                aOriginAttributes
+                options
               );
               if (
                 innerRemoteType &&
@@ -518,7 +506,7 @@ export var E10SUtils = {
         // If the about page can load in parent or child, it should be safe to
         // load in any remote type.
         if (flags & Ci.nsIAboutModule.URI_CAN_LOAD_IN_CHILD) {
-          return aPreferredRemoteType;
+          return preferredRemoteType;
         }
 
         return NOT_REMOTE;
@@ -533,7 +521,7 @@ export var E10SUtils = {
 
         if (
           chromeReg.canLoadURLRemotely(aURI) &&
-          aPreferredRemoteType != NOT_REMOTE
+          preferredRemoteType != NOT_REMOTE
         ) {
           return DEFAULT_REMOTE_TYPE;
         }
@@ -541,14 +529,11 @@ export var E10SUtils = {
         return NOT_REMOTE;
 
       case "moz-extension":
-        if (WebExtensionPolicy.useRemoteWebExtensions) {
-          // Extension iframes should load in the same process
-          // as their outer frame, top-level ones should load
-          // in the extension process.
-          return aIsSubframe ? aPreferredRemoteType : EXTENSION_REMOTE_TYPE;
-        }
-
-        return NOT_REMOTE;
+        // Extension iframes should load in the same process
+        // as their outer frame, but that's handled elsewhere.
+        return WebExtensionPolicy.useRemoteWebExtensions
+          ? EXTENSION_REMOTE_TYPE
+          : NOT_REMOTE;
 
       case "imap":
       case "mailbox":
@@ -570,7 +555,7 @@ export var E10SUtils = {
         if (aURI.scheme.startsWith("ext+")) {
           // We shouldn't even get to this for a worker, throw an unexpected error
           // if we do.
-          if (aIsWorker) {
+          if (isWorker) {
             throw Components.Exception(
               "Unexpected remote worker with extension handled scheme",
               Cr.NS_ERROR_UNEXPECTED
@@ -592,7 +577,7 @@ export var E10SUtils = {
         if (aURI instanceof Ci.nsINestedURI) {
           // We shouldn't even get to this for a worker, throw an unexpected error
           // if we do.
-          if (aIsWorker) {
+          if (isWorker) {
             throw Components.Exception(
               "Unexpected worker with a NestedURI",
               Cr.NS_ERROR_UNEXPECTED
@@ -600,33 +585,23 @@ export var E10SUtils = {
           }
 
           let innerURI = aURI.QueryInterface(Ci.nsINestedURI).innerURI;
-          return this.getRemoteTypeForURIObject(
-            innerURI,
-            aMultiProcess,
-            aRemoteSubframes,
-            aPreferredRemoteType,
-            aCurrentUri,
-            aResultPrincipal,
-            false, // aIsSubframe
-            false, // aIsWorker
-            aOriginAttributes
-          );
+          return this.getRemoteTypeForURIObject(innerURI, options);
         }
 
         var log = this.log();
         log.debug("validatedWebRemoteType()");
-        log.debug(`  aPreferredRemoteType: ${aPreferredRemoteType}`);
+        log.debug(`  aPreferredRemoteType: ${preferredRemoteType}`);
         log.debug(`  aTargetUri: ${this._uriStr(aURI)}`);
-        log.debug(`  aCurrentUri: ${this._uriStr(aCurrentUri)}`);
+        log.debug(`  aCurrentUri: ${this._uriStr(currentURI)}`);
         var remoteType = validatedWebRemoteType(
-          aPreferredRemoteType,
+          preferredRemoteType,
           aURI,
-          aCurrentUri,
-          aResultPrincipal,
-          aRemoteSubframes,
-          aIsWorker,
-          aOriginAttributes,
-          aWorkerType
+          currentURI,
+          resultPrincipal,
+          remoteSubFrames,
+          isWorker,
+          originAttributes,
+          workerType
         );
         log.debug(`  validatedWebRemoteType() returning: ${remoteType}`);
         return remoteType;
@@ -692,18 +667,15 @@ export var E10SUtils = {
       // (which is based on the worker script url) and an initial preferredRemoteType
       // (only set for shared worker, based on the remote type where the shared worker
       // was registered from).
-      return E10SUtils.getRemoteTypeForURIObject(
-        aPrincipal.URI,
-        aIsMultiProcess,
-        aIsFission,
-        aPreferredRemoteType,
-        null,
-        aPrincipal,
-        false, // aIsSubFrame
-        true, // aIsWorker
-        aPrincipal.originAttributes,
-        aWorkerType
-      );
+      return E10SUtils.getRemoteTypeForURIObject(aPrincipal.URI, {
+        multiProcess: aIsMultiProcess,
+        remoteSubFrames: aIsFission,
+        preferredRemoteType: aPreferredRemoteType,
+        resultPrincipal: aPrincipal,
+        originAttributes: aPrincipal.originAttributes,
+        isWorker: true,
+        workerType: aWorkerType,
+      });
     }
 
     // Throw explicitly if we were unable to get a remoteType for the worker.
