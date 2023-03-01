@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const peer = new RTCPeerConnection()
   const stream = await navigator.mediaDevices.getUserMedia({
     video: true,
+    audio: true,
     fake: true,
     peerIdentity: 'name',
   })
