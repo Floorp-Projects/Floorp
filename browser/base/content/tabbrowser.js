@@ -5594,15 +5594,20 @@
         return;
       }
 
-      let l10nId, l10nArgs;
+      const tooltip = event.target;
+      tooltip.removeAttribute("data-l10n-id");
+
       const tabCount = this.selectedTabs.includes(tab)
         ? this.selectedTabs.length
         : 1;
       if (tab.mOverCloseButton) {
-        l10nId = "tabbrowser-close-tabs-tooltip";
-        l10nArgs = { tabCount };
+        tooltip.label = "";
+        document.l10n.setAttributes(tooltip, "tabbrowser-close-tabs-tooltip", {
+          tabCount,
+        });
       } else if (tab._overPlayingIcon) {
-        l10nArgs = { tabCount };
+        let l10nId;
+        const l10nArgs = { tabCount };
         if (tab.selected) {
           l10nId = tab.linkedBrowser.audioMuted
             ? "tabbrowser-unmute-tab-audio-tooltip"
@@ -5616,12 +5621,11 @@
             ? "tabbrowser-unmute-tab-audio-background-tooltip"
             : "tabbrowser-mute-tab-audio-background-tooltip";
         }
+        tooltip.label = "";
+        document.l10n.setAttributes(tooltip, l10nId, l10nArgs);
       } else {
-        l10nId = "tabbrowser-tab-tooltip";
-        l10nArgs = { title: this.getTabTooltip(tab, true) };
+        tooltip.label = this.getTabTooltip(tab, true);
       }
-
-      document.l10n.setAttributes(event.target, l10nId, l10nArgs);
     },
 
     handleEvent(aEvent) {
