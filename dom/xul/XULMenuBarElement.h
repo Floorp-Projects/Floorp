@@ -37,8 +37,6 @@ class XULMenuBarElement final : public XULMenuParentElement {
   void SetActiveByKeyboard() { mActiveByKeyboard = true; }
   bool IsActiveByKeyboard() const { return mActiveByKeyboard; }
 
-  MOZ_CAN_RUN_SCRIPT void MenuClosed() { SetActive(false); }
-
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
   void UnbindFromTree(bool aNullParent) override;
 
