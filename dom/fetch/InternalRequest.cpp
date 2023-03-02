@@ -190,14 +190,11 @@ InternalRequest::InternalRequest(const IPCInternalRequest& aIPCRequest)
 
   const Maybe<BodyStreamVariant>& body = aIPCRequest.body();
 
-  if (!XRE_IsParentProcess()) {
-    if (body) {
-      MOZ_ASSERT(body->type() == BodyStreamVariant::TParentToChildStream);
+  if (body) {
+    if (body->type() == BodyStreamVariant::TParentToChildStream) {
       mBodyStream = body->get_ParentToChildStream().get_RemoteLazyInputStream();
     }
-  } else {
-    if (body) {
-      MOZ_ASSERT(body->type() == BodyStreamVariant::TChildToParentStream);
+    if (body->type() == BodyStreamVariant::TChildToParentStream) {
       mBodyStream =
           DeserializeIPCStream(body->get_ChildToParentStream().stream());
     }
