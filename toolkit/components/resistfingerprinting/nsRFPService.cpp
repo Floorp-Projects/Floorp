@@ -1184,6 +1184,17 @@ Maybe<nsTArray<uint8_t>> nsRFPService::GenerateKey(nsIURI* aTopLevelURI,
     return Nothing();
   }
 
+  // Return nothing if fingerprinting resistance is disabled or fingerprinting
+  // resistance is exempted from the normal windows. Note that we still need to
+  // generate the key for exempted domains because there could be unexempted
+  // sub-documents that need the key.
+  if (!nsContentUtils::ShouldResistFingerprinting("Coarse Efficiency Check") ||
+      (!aIsPrivate &&
+       StaticPrefs::privacy_resistFingerprinting_testGranularityMask() &
+           0x02 /* NonPBMExemptMask */)) {
+    return Nothing();
+  }
+
   const nsID& sessionKey = aIsPrivate
                                ? service->mPrivateBrowsingSessionKey.ref()
                                : service->mBrowsingSessionKey.ref();

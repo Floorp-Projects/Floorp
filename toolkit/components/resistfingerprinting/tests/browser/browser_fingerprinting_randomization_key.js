@@ -166,10 +166,57 @@ add_task(async function test_randomization_disabled() {
   BrowserTestUtils.removeTab(tab);
 });
 
+// Test accessing the fingerprinting randomization key will throw if
+// fingerprinting resistance is disabled.
+add_task(async function test_randomization_disabled_with_rfp_disabled() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting.randomization.enabled", true],
+      ["privacy.resistFingerprinting", false],
+    ],
+  });
+
+  // Ensure accessing the fingerprinting randomization key of the browser
+  // element will throw if fingerprinting randomization is disabled.
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_DOMAIN);
+
+  try {
+    let key =
+      tab.linkedBrowser.cookieJarSettings.fingerprintingRandomizationKey;
+    ok(
+      false,
+      `Accessing the fingerprinting randomization key should throw when fingerprinting resistance is disabled. ${key}`
+    );
+  } catch (e) {
+    ok(
+      true,
+      "It should throw when getting the key when fingerprinting resistance is disabled."
+    );
+  }
+
+  // Ensure accessing the fingerprinting randomization key of the top-level
+  // document will throw if fingerprinting randomization is disabled.
+  try {
+    await SpecialPowers.spawn(tab.linkedBrowser, [], _ => {
+      return content.document.cookieJarSettings.fingerprintingRandomizationKey;
+    });
+  } catch (e) {
+    ok(
+      true,
+      "It should throw when getting the key when fingerprinting resistance is disabled."
+    );
+  }
+
+  BrowserTestUtils.removeTab(tab);
+});
+
 // Test the fingerprinting randomization key generation.
 add_task(async function test_generate_randomization_key() {
   await SpecialPowers.pushPrefEnv({
-    set: [["privacy.resistFingerprinting.randomization.enabled", true]],
+    set: [
+      ["privacy.resistFingerprinting.randomization.enabled", true],
+      ["privacy.resistFingerprinting", true],
+    ],
   });
 
   for (let private of [true, false]) {
@@ -260,7 +307,10 @@ add_task(async function test_generate_randomization_key() {
 // ends.
 add_task(async function test_reset_key_after_pbm_session_ends() {
   await SpecialPowers.pushPrefEnv({
-    set: [["privacy.resistFingerprinting.randomization.enabled", true]],
+    set: [
+      ["privacy.resistFingerprinting.randomization.enabled", true],
+      ["privacy.resistFingerprinting", true],
+    ],
   });
 
   let privateWin = await BrowserTestUtils.openNewBrowserWindow({
@@ -301,6 +351,74 @@ add_task(async function test_reset_key_after_pbm_session_ends() {
 
   // Ensure the keys are different.
   isnot(keyHexNew, keyHex, "Ensure the new key is different from the old one.");
+
+  BrowserTestUtils.removeTab(tab);
+  await BrowserTestUtils.closeWindow(privateWin);
+});
+
+// Test accessing the fingerprinting randomization key will throw in normal
+// windows if we exempt fingerprinting protection in normal windows.
+add_task(async function test_randomization_with_exempted_normal_window() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.resistFingerprinting.randomization.enabled", true],
+      ["privacy.resistFingerprinting", true],
+      ["privacy.resistFingerprinting.testGranularityMask", 2],
+    ],
+  });
+
+  // Ensure accessing the fingerprinting randomization key of the browser
+  // element will throw if fingerprinting randomization is exempted from normal
+  // windows.
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_DOMAIN);
+
+  try {
+    let key =
+      tab.linkedBrowser.cookieJarSettings.fingerprintingRandomizationKey;
+    ok(
+      false,
+      `Accessing the fingerprinting randomization key should throw when fingerprinting resistance is exempted in normal windows. ${key}`
+    );
+  } catch (e) {
+    ok(
+      true,
+      "It should throw when getting the key when fingerprinting resistance is exempted in normal windows."
+    );
+  }
+
+  // Ensure accessing the fingerprinting randomization key of the top-level
+  // document will throw if fingerprinting randomization is exempted from normal
+  // windows.
+  try {
+    await SpecialPowers.spawn(tab.linkedBrowser, [], _ => {
+      return content.document.cookieJarSettings.fingerprintingRandomizationKey;
+    });
+  } catch (e) {
+    ok(
+      true,
+      "It should throw when getting the key when fingerprinting resistance is exempted in normal windows."
+    );
+  }
+
+  BrowserTestUtils.removeTab(tab);
+
+  // Open a private window and check the key can be accessed there.
+  let privateWin = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+
+  // Open a tab in the private window.
+  tab = await BrowserTestUtils.openNewForegroundTab(
+    privateWin.gBrowser,
+    TEST_DOMAIN
+  );
+
+  // Access the key, this shouldn't throw an error.
+  await getRandomKeyHexFromBrowser(
+    tab.linkedBrowser,
+    TEST_DOMAIN,
+    TEST_DOMAIN_THIRD
+  );
 
   BrowserTestUtils.removeTab(tab);
   await BrowserTestUtils.closeWindow(privateWin);
