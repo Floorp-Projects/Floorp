@@ -285,12 +285,8 @@ nsRect nsCaret::GetGeometryForFrame(nsIFrame* aFrame, int32_t aFrameOffset,
       //   if ( (!textRun->IsSidewaysLeft() && textRunDirIsReverseOfFrame) ||
       //        (textRun->IsSidewaysLeft()  && !textRunDirIsReverseOfFrame) )
       if (textRunDirIsReverseOfFrame != textRun->IsSidewaysLeft()) {
-        int dir = wm.IsBidiLTR() ? -1 : 1;
-        if (vertical) {
-          inlineOffset = dir * caretMetrics.mCaretWidth;
-        } else {
-          inlineOffset = dir * caretMetrics.mCaretWidth;
-        }
+        inlineOffset = wm.IsBidiLTR() ? -caretMetrics.mCaretWidth
+                                      : caretMetrics.mCaretWidth;
       }
     }
   }
