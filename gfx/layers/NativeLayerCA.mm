@@ -1230,9 +1230,6 @@ void NativeLayerCA::HandlePartialUpdate(const MutexAutoLock& aProofOfLock,
   // some combination of the update region and the front surface's valid region. Because
   // this check is complex, we only do it in Nightly.
   //
-  // As a special case, we'll tolerate a remaining area that is only one pixel tall or wide,
-  // which is also tolerated in NotifySurfaceReady (until Bug 1818540 is fixed).
-  //
   // Also, since this condition will hit a later release assert in NotifySurfaceReady, we
   // choose to crash now.
 
@@ -1246,10 +1243,7 @@ void NativeLayerCA::HandlePartialUpdate(const MutexAutoLock& aProofOfLock,
       exposedRegion.AndWith(mFrontSurface->mInvalidRegion);
     }
 
-    gfx::IntRegion invalidRegion(exposedRegion);
-    invalidRegion.SubOut(aUpdateRegion);
-    IntRect invalidBounds = invalidRegion.GetBounds();
-    if (invalidBounds.width > 1 || invalidBounds.height > 1) {
+    if (!aUpdateRegion.Contains(exposedRegion)) {
       // Let's crash now instead of later.
       std::ostringstream reason;
       reason << "The update region " << aUpdateRegion << " must cover the invalid region "
