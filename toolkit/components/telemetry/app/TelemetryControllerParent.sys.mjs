@@ -886,7 +886,7 @@ var Impl = {
       this._testMode ? 0 : undefined
     );
 
-    IOUtils.sendTelemetry.addBlocker(
+    AsyncShutdown.sendTelemetry.addBlocker(
       "TelemetryController: shutting down",
       () => this.shutdown(),
       () => this._getState()
