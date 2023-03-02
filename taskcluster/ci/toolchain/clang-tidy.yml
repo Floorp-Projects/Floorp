@@ -61,7 +61,7 @@ macosx64-clang-tidy:
             - linux64-clang-15
             - macosx64-sdk-toolchain
 
-macosx64-arch64-clang-tidy:
+macosx64-aarch64-clang-tidy:
     index:
         job-name: macosx64-aarch64-clang-tidy
     treeherder:
