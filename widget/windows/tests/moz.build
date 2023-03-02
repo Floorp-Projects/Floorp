@@ -11,8 +11,6 @@ GeckoCppUnitTests(
     linkage=None,
 )
 
-DIRS = ["gtest"]
-
 LOCAL_INCLUDES += []
 
 OS_LIBS += [
