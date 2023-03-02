@@ -71,7 +71,6 @@ struct Http3TestServer {
     sessions_to_close: HashMap<Instant, Vec<WebTransportRequest>>,
     sessions_to_create_stream: Vec<(WebTransportRequest, StreamType)>,
     webtransport_bidi_stream: HashSet<Http3OrWebTransportStream>,
-    echo_temp: Vec<u8>,
 }
 
 impl ::std::fmt::Display for Http3TestServer {
@@ -90,7 +89,6 @@ impl Http3TestServer {
             sessions_to_close: HashMap::new(),
             sessions_to_create_stream: Vec::new(),
             webtransport_bidi_stream: HashSet::new(),
-            echo_temp: b"".to_vec(),
         }
     }
 
@@ -152,11 +150,9 @@ impl Http3TestServer {
         let mut session = tuple.0;
         let mut wt_server_stream = session.create_stream(tuple.1).unwrap();
         if tuple.1 == StreamType::UniDi {
-            wt_server_stream.send_data(&self.echo_temp).unwrap();
+            let content = b"0123456789".to_vec();
+            wt_server_stream.send_data(&content).unwrap();
         } else {
-            if self.echo_temp.len() > 0 {
-                wt_server_stream.send_data(&self.echo_temp).unwrap();
-            }
             self.webtransport_bidi_stream.insert(wt_server_stream);
         }
     }
@@ -370,7 +366,6 @@ impl HttpServer for Http3TestServer {
                     data,
                     fin,
                 } => {
-                    self.echo_temp = data.clone();
                     if self.webtransport_bidi_stream.contains(&stream) {
                         self.new_response(stream, data);
                         break;
@@ -450,11 +445,6 @@ impl HttpServer for Http3TestServer {
                                 session
                                     .response(&WebTransportSessionAcceptAction::Accept)
                                     .unwrap();
-                                let now = Instant::now();
-                                if !self.sessions_to_close.contains_key(&now) {
-                                    self.sessions_to_close.insert(now, Vec::new());
-                                }
-                                self.sessions_to_close.get_mut(&now).unwrap().push(session);
                             } else if path == "/closeafter100ms" {
                                 session
                                     .response(&WebTransportSessionAcceptAction::Accept)
@@ -473,28 +463,7 @@ impl HttpServer for Http3TestServer {
                                     .unwrap();
                                 self.sessions_to_create_stream
                                     .push((session, StreamType::UniDi));
-                            } else if path == "/create_unidi_stream_and_hello" {
-                                self.echo_temp = b"qwerty".to_vec();
-                                session
-                                    .response(&WebTransportSessionAcceptAction::Accept)
-                                    .unwrap();
-                                self.sessions_to_create_stream
-                                    .push((session, StreamType::UniDi));
                             } else if path == "/create_bidi_stream" {
-                                session
-                                    .response(&WebTransportSessionAcceptAction::Accept)
-                                    .unwrap();
-                                self.sessions_to_create_stream
-                                    .push((session, StreamType::BiDi));
-                            } else if path == "/create_bidi_stream_and_hello" {
-                                self.echo_temp = b"abcdefghij".to_vec();
-                                session
-                                    .response(&WebTransportSessionAcceptAction::Accept)
-                                    .unwrap();
-                                self.sessions_to_create_stream
-                                    .push((session, StreamType::BiDi));
-                            } else if path == "/create_bidi_stream_no_write" {
-                                self.echo_temp = b"".to_vec();
                                 session
                                     .response(&WebTransportSessionAcceptAction::Accept)
                                     .unwrap();
@@ -518,7 +487,7 @@ impl HttpServer for Http3TestServer {
                 Http3ServerEvent::WebTransport(WebTransportServerEvent::SessionClosed {
                     session,
                     reason,
-                    headers: _,
+                    headers: _
                 }) => {
                     qdebug!(
                         "WebTransportServerEvent::SessionClosed {:?} {:?}",
