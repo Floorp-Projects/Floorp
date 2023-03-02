@@ -1820,7 +1820,7 @@ ssl_GetSelfEncryptKeyPair(SECKEYPublicKey **pubKey,
     return SECSuccess;
 }
 
-static SECStatus
+static PRBool
 ssl_GenerateSelfEncryptKeys(void *pwArg, PRUint8 *keyName,
                             PK11SymKey **aesKey, PK11SymKey **macKey);
 
