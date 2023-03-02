@@ -555,4 +555,24 @@ class ContentDelegateTest : BaseSessionTest() {
         mainSession.loadTestPath(HUNG_SCRIPT)
         sessionRule.waitForPageStop(mainSession)
     }
+
+    /**
+     * Test that the display mode is applied to CSS media query
+     */
+    @Test fun displayMode() {
+        val pwaSession = sessionRule.createOpenSession(
+            GeckoSessionSettings.Builder(mainSession.settings)
+                .displayMode(GeckoSessionSettings.DISPLAY_MODE_FULLSCREEN)
+                .build()
+        )
+        pwaSession.loadTestPath(HELLO_HTML_PATH)
+        pwaSession.waitForPageStop()
+
+        val matches = pwaSession.evaluateJS("window.matchMedia('(display-mode: fullscreen)').matches") as Boolean
+        assertThat(
+            "display-mode should be fullscreen",
+            matches,
+            equalTo(true)
+        )
+    }
 }
