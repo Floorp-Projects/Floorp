@@ -22,7 +22,8 @@ nsresult SerializeFromJSObject(JSContext* aCx, JS::Handle<JSObject*> aObject,
 nsresult SerializeFromJSVal(JSContext* aCx, JS::Handle<JS::Value> aValue,
                             nsAString& aSerializedValue) {
   aSerializedValue.Truncate();
-  NS_ENSURE_TRUE(nsContentUtils::StringifyJSON(aCx, aValue, aSerializedValue),
+  NS_ENSURE_TRUE(nsContentUtils::StringifyJSON(aCx, aValue, aSerializedValue,
+                                               UndefinedIsNullStringLiteral),
                  NS_ERROR_XPC_BAD_CONVERT_JS);
   NS_ENSURE_TRUE(!aSerializedValue.IsEmpty(), NS_ERROR_FAILURE);
   return NS_OK;

@@ -243,7 +243,11 @@ struct EventNameMapping {
 
 namespace mozilla {
 enum class PreventDefaultResult : uint8_t { No, ByContent, ByChrome };
+
+namespace dom {
+enum JSONBehavior { UndefinedIsNullStringLiteral, UndefinedIsVoidString };
 }
+}  // namespace mozilla
 
 class nsContentUtils {
   friend class nsAutoScriptBlockerSuppressNodeRemoved;
@@ -256,6 +260,7 @@ class nsContentUtils {
   using EventMessage = mozilla::EventMessage;
   using TimeDuration = mozilla::TimeDuration;
   using Trusted = mozilla::Trusted;
+  using JSONBehavior = mozilla::dom::JSONBehavior;
 
  public:
   static nsresult Init();
@@ -3256,15 +3261,21 @@ class nsContentUtils {
   static nsresult AnonymizeURI(nsIURI* aURI, nsCString& aAnonymizedURI);
 
   /**
-   * Serializes a JSON-like JS::Value into a string, returning the string "null"
-   * where JSON.stringify would return undefined.
+   * Serializes a JSON-like JS::Value into a string.
+   * Cases where JSON.stringify would return undefined are handled according to
+   * the |aBehavior| argument:
    *
+   * - If it is |UndefinedIsNullStringLiteral|, the string "null" is returned.
+   * - If it is |UndefinedIsVoidString|, the void string is returned.
+   *
+   * The |UndefinedIsNullStringLiteral| case is likely not desirable, but is
+   * retained for now for historical reasons.
    * Usage:
    *   nsAutoString serializedValue;
-   *   nsContentUtils::StringifyJSON(cx, value, serializedValue);
+   *   nsContentUtils::StringifyJSON(cx, value, serializedValue, behavior);
    */
   static bool StringifyJSON(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                            nsAString& aOutStr);
+                            nsAString& aOutStr, JSONBehavior aBehavior);
 
   /**
    * Returns true if the top level ancestor content document of aDocument hasn't

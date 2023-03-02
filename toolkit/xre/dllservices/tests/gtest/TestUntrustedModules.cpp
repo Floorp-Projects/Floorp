@@ -230,7 +230,8 @@ class UntrustedModulesFixture : public TelemetryTestFixture {
     serializer.GetObject(&jsval);
 
     nsAutoString json;
-    EXPECT_TRUE(nsContentUtils::StringifyJSON(cx.GetJSContext(), jsval, json));
+    EXPECT_TRUE(nsContentUtils::StringifyJSON(
+        cx.GetJSContext(), jsval, json, dom::UndefinedIsNullStringLiteral));
 
     JS::Rooted<JSObject*> re(
         cx.GetJSContext(),

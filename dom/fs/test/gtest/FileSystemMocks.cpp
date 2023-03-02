@@ -48,7 +48,8 @@ nsresult GetAsString(const RefPtr<Promise>& aPromise, nsAString& aString) {
     }
 
     case Promise::PromiseState::Resolved: {
-      if (nsContentUtils::StringifyJSON(cx, vp, aString)) {
+      if (nsContentUtils::StringifyJSON(cx, vp, aString,
+                                        UndefinedIsNullStringLiteral)) {
         return NS_OK;
       }
 
