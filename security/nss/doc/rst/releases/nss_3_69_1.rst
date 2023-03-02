@@ -1,7 +1,7 @@
 .. _mozilla_projects_nss_nss_3_69_1_release_notes:
 
 NSS 3.69.1 release notes
-======================
+========================
 
 `Introduction <#introduction>`__
 --------------------------------
@@ -29,7 +29,7 @@ NSS 3.69.1 release notes
 .. _changes_3.69.1:
 
 `Changes in NSS 3.69.1 <#changes_3.69.1>`__
-----------------------------------------------------
+-------------------------------------------
 
 .. container::
 

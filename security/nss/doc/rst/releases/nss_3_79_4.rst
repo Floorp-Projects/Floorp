@@ -1,14 +1,14 @@
-.. _mozilla_projects_nss_nss_3_79_2_release_notes:
+.. _mozilla_projects_nss_nss_3_79_4_release_notes:
 
-NSS 3.79.2 release notes
-========================
+NSS 3.79.4 release notes
+======================
 
 `Introduction <#introduction>`__
 --------------------------------
 
 .. container::
 
-   Network Security Services (NSS) 3.79.2 was released on **25 October 2022**.
+   Network Security Services (NSS) 3.79.4 was released on **9 February 2023**.
 
 
 .. _distribution_information:
@@ -18,24 +18,23 @@ NSS 3.79.2 release notes
 
 .. container::
 
-   The HG tag is NSS_3_79_2_RTM. NSS 3.79.2 requires NSPR 4.34.1 or newer.
+   The HG tag is NSS_3_79_4_RTM. NSS 3.79.4 requires NSPR 4.34.1 or newer.
 
-   NSS 3.79.2 source distributions are available on ftp.mozilla.org for secure HTTPS download:
+   NSS 3.79.4 source distributions are available on ftp.mozilla.org for secure HTTPS download:
 
    -  Source tarballs:
-      https://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_79_2_RTM/src/
+      https://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_79_4_RTM/src/
 
    Other releases are available :ref:`mozilla_projects_nss_releases`.
 
-.. _changes_in_nss_3.79.2:
+.. _changes_in_nss_3.79.4:
 
-`Changes in NSS 3.79.2 <#changes_in_nss_3.79.2>`__
---------------------------------------------------
+`Changes in NSS 3.79.4 <#changes_in_nss_3.79.4>`__
+----------------------------------------------------
 
 .. container::
 
-   - Bug 1785846 - Bump minimum NSPR version to 4.34.1.
-   - Bug 1777672 - Gracefully handle null nickname in CERT_GetCertNicknameWithValidity.
+   - Bug 1804640 - improve handling of unknown PKCS#12 safe bag types.
 
 
 `Compatibility <#compatibility>`__
@@ -43,7 +42,7 @@ NSS 3.79.2 release notes
 
 .. container::
 
-   NSS 3.79.2 shared libraries are backwards-compatible with all older NSS 3.x shared
+   NSS 3.79.4 shared libraries are backwards-compatible with all older NSS 3.x shared
    libraries. A program linked with older NSS 3.x shared libraries will work with
    this new version of the shared libraries without recompiling or
    relinking. Furthermore, applications that restrict their use of NSS APIs to the

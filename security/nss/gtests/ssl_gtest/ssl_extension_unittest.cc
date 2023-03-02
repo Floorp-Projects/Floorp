@@ -1357,6 +1357,107 @@ TEST_F(TlsConnectDatagram13, Dtls13RejectLegacyCookie) {
   client_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
 }
 
+TEST_P(TlsConnectGeneric, ClientHelloExtensionPermutation) {
+  EnsureTlsSetup();
+  PR_ASSERT(SSL_OptionSet(client_->ssl_fd(),
+                          SSL_ENABLE_CH_EXTENSION_PERMUTATION,
+                          PR_TRUE) == SECSuccess);
+  Connect();
+}
+
+TEST_F(TlsConnectStreamTls13, ClientHelloExtensionPermutationWithPSK) {
+  EnsureTlsSetup();
+
+  ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
+  const uint8_t kPskDummyVal_[16] = {0x01, 0x02, 0x03, 0x04, 0x05,
+                                     0x06, 0x07, 0x08, 0x09, 0x0a,
+                                     0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
+  SECItem psk_item;
+  psk_item.type = siBuffer;
+  psk_item.len = sizeof(kPskDummyVal_);
+  psk_item.data = const_cast<uint8_t*>(kPskDummyVal_);
+  PK11SymKey* key =
+      PK11_ImportSymKey(slot.get(), CKM_HKDF_KEY_GEN, PK11_OriginUnwrap,
+                        CKA_DERIVE, &psk_item, NULL);
+
+  ScopedPK11SymKey scoped_psk_(key);
+  const std::string kPskDummyLabel_ = "NSS PSK GTEST label";
+  const SSLHashType kPskHash_ = ssl_hash_sha384;
+  AddPsk(scoped_psk_, kPskDummyLabel_, kPskHash_);
+
+  PR_ASSERT(SSL_OptionSet(client_->ssl_fd(),
+                          SSL_ENABLE_CH_EXTENSION_PERMUTATION,
+                          PR_TRUE) == SECSuccess);
+  Connect();
+  SendReceive();
+  CheckKeys(ssl_kea_ecdh, ssl_grp_ec_curve25519, ssl_auth_psk, ssl_sig_none);
+}
+
+/* This test checks that the ClientHello extension order is actually permuted
+ * if ss->opt.chXtnPermutation is set. It is asserted that at least one out of
+ * 10 extension orders differs from the others.
+ *
+ * This is a probabilistic test: The default TLS 1.3 ClientHello contains 8
+ * extensions, leading to a 1/8! probability for any extension order and the
+ * same probability for two drawn extension orders to coincide.
+ * Since all sequences are compared against each other this leads to a false
+ * positive rate of (1/8!)^(n^2-n).
+ * To achieve a spurious failure rate << 1/2^64, we compare n=10 drawn orders.
+ *
+ * This test assures that randomisation is happening but does not check quality
+ * of the used Fisher-Yates shuffle. */
+TEST_F(TlsConnectStreamTls13,
+       ClientHelloExtensionPermutationProbabilisticTest) {
+  std::vector<std::vector<uint16_t>> orders;
+
+  /* Capture the extension order of 10 ClientHello messages. */
+  for (size_t i = 0; i < 10; i++) {
+    client_->StartConnect();
+    /* Enable ClientHello extension permutation. */
+    PR_ASSERT(SSL_OptionSet(client_->ssl_fd(),
+                            SSL_ENABLE_CH_EXTENSION_PERMUTATION,
+                            PR_TRUE) == SECSuccess);
+    /* Capture extension order filter. */
+    auto filter = MakeTlsFilter<TlsExtensionOrderCapture>(
+        client_, kTlsHandshakeClientHello);
+    /* Send ClientHello. */
+    client_->Handshake();
+    /* Remember extension order. */
+    orders.push_back(filter->order);
+    /* Reset client / server state. */
+    Reset();
+  }
+
+  /* Check for extension order inequality. */
+  size_t inequal = 0;
+  for (auto& outerOrders : orders) {
+    for (auto& innerOrders : orders) {
+      if (outerOrders != innerOrders) {
+        inequal++;
+      }
+    }
+  }
+  PR_ASSERT(inequal >= 1);
+}
+
+// The certificate_authorities xtn can be included in a ClientHello [RFC 8446,
+// Section 4.2]
+TEST_F(TlsConnectStreamTls13, ClientHelloCertAuthXtnToleration) {
+  EnsureTlsSetup();
+  uint8_t bodyBuf[3] = {0x00, 0x01, 0xff};
+  DataBuffer body(bodyBuf, sizeof(bodyBuf));
+  auto ch = MakeTlsFilter<TlsExtensionAppender>(
+      client_, kTlsHandshakeClientHello, ssl_tls13_certificate_authorities_xtn,
+      body);
+  // The Connection will fail because the added extension isn't in the client's
+  // transcript  not because the extension is unsupported (Bug 1815167).
+  server_->ExpectSendAlert(bad_record_mac);
+  client_->ExpectSendAlert(bad_record_mac);
+  ConnectExpectFail();
+  server_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);
+  client_->CheckErrorCode(SSL_ERROR_BAD_MAC_READ);
+}
+
 INSTANTIATE_TEST_SUITE_P(
     ExtensionStream, TlsExtensionTestGeneric,
     ::testing::Combine(TlsConnectTestBase::kTlsVariantsStream,
