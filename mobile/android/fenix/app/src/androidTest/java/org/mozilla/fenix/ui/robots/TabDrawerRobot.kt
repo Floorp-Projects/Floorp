@@ -37,6 +37,7 @@ import org.hamcrest.CoreMatchers.anyOf
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.Matcher
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndDescription
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
@@ -107,6 +108,15 @@ class TabDrawerRobot {
             retries++
         } while (closeTabButton().exists() && retries < 3)
     }
+
+    fun closeTabWithTitle(title: String) =
+        itemWithResIdAndDescription(
+            "$packageName:id/mozac_browser_tabstray_close",
+            "Close tab $title",
+        ).also {
+            it.waitForExists(waitingTime)
+            it.click()
+        }
 
     fun swipeTabRight(title: String) {
         var retries = 0 // number of retries before failing, will stop at 2

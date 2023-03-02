@@ -127,7 +127,6 @@ class HomeScreenTest {
         }
     }
 
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1807283")
     @Test
     fun verifyJumpBackInSectionTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 4)
@@ -135,27 +134,39 @@ class HomeScreenTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
+            verifyPageContent(firstWebPage.content)
+            verifyUrl(firstWebPage.url.toString())
         }.goToHomescreen {
             verifyJumpBackInSectionIsDisplayed()
-            verifyJumpBackInItemTitle(firstWebPage.title)
-            verifyJumpBackInItemWithUrl(firstWebPage.url.toString())
+            verifyJumpBackInItemTitle(activityTestRule, firstWebPage.title)
+            verifyJumpBackInItemWithUrl(activityTestRule, firstWebPage.url.toString())
             verifyJumpBackInShowAllButton()
         }.clickJumpBackInShowAllButton {
             verifyExistingOpenTabs(firstWebPage.title)
         }.closeTabDrawer {
         }
-        homeScreen {
-        }.clickJumpBackInItemWithTitle(firstWebPage.title) {
-            verifyUrl(firstWebPage.url.toString())
-            clickLinkMatchingText("Link 1")
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(secondWebPage.url) {
             verifyPageContent(secondWebPage.content)
+            verifyUrl(secondWebPage.url.toString())
         }.goToHomescreen {
             verifyJumpBackInSectionIsDisplayed()
-            verifyJumpBackInItemTitle(secondWebPage.title)
-            verifyJumpBackInItemWithUrl(secondWebPage.url.toString())
+            verifyJumpBackInItemTitle(activityTestRule, secondWebPage.title)
+            verifyJumpBackInItemWithUrl(activityTestRule, secondWebPage.url.toString())
+        }.openTabDrawer {
+            closeTabWithTitle(secondWebPage.title)
+        }.closeTabDrawer {
+        }
+
+        homeScreen {
+            verifyJumpBackInSectionIsDisplayed()
+            verifyJumpBackInItemTitle(activityTestRule, firstWebPage.title)
+            verifyJumpBackInItemWithUrl(activityTestRule, firstWebPage.url.toString())
         }.openTabDrawer {
             closeTab()
         }
+
         homeScreen {
             verifyJumpBackInSectionIsNotDisplayed()
         }
