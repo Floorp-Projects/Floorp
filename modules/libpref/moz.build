@@ -173,5 +173,3 @@ else:
     FINAL_TARGET_PP_FILES += [
         "greprefs.js",
     ]
-
-REQUIRES_UNIFIED_BUILD = True
