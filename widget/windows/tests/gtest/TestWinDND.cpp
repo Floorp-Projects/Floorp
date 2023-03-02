@@ -2,19 +2,35 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#define MOZILLA_INTERNAL_API
 
+// #include <windows.h>
 #include <ole2.h>
 #include <shlobj.h>
 
-#include "TestHarness.h"
 #include "nsArray.h"
+#include "nsArrayUtils.h"
+#include "nsComponentManagerUtils.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
 #include "nsIFile.h"
 #include "nsNetUtil.h"
 #include "nsISupportsPrimitives.h"
 #include "nsITransferable.h"
+
 #include "nsClipboard.h"
 #include "nsDataObjCollection.h"
+
+#include "gtest/gtest.h"
+
+// shims for conversion from cppunittest to gtest
+template <size_t N>
+void fail(const char (&msg)[N]) {
+  ADD_FAILURE() << "TEST-UNEXPECTED-FAIL | " << msg;
+}
+template <size_t N>
+void passed(const char (&msg)[N]) {
+  GTEST_SUCCEED() << "TEST-PASS | " << msg;
+}
 
 nsIFile* xferFile;
 
@@ -32,16 +48,17 @@ nsresult CheckValidHDROP(STGMEDIUM* pSTG) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (pDropFiles->pFiles != sizeof(DROPFILES))
+  if (pDropFiles->pFiles != sizeof(DROPFILES)) {
     fail("DROPFILES struct has wrong size");
+  }
 
-  if (pDropFiles->fWide != true) {
+  if (!pDropFiles->fWide) {
     fail("Received data is not Unicode");
     return NS_ERROR_UNEXPECTED;
   }
   nsString s;
   unsigned long offset = 0;
-  while (1) {
+  while (true) {
     s = (char16_t*)((char*)pDropFiles + pDropFiles->pFiles + offset);
     if (s.IsEmpty()) break;
     nsresult rv;
@@ -160,8 +177,7 @@ nsresult GetTransferableFile(nsCOMPtr<nsITransferable>& pTransferable) {
 
   pTransferable = do_CreateInstance("@mozilla.org/widget/transferable;1");
   pTransferable->Init(nullptr);
-  rv = pTransferable->SetTransferData("application/x-moz-file", genericWrapper,
-                                      0);
+  rv = pTransferable->SetTransferData("application/x-moz-file", genericWrapper);
   return rv;
 }
 
@@ -177,8 +193,7 @@ nsresult GetTransferableText(nsCOMPtr<nsITransferable>& pTransferable) {
 
   pTransferable = do_CreateInstance("@mozilla.org/widget/transferable;1");
   pTransferable->Init(nullptr);
-  rv = pTransferable->SetTransferData("text/plain", genericWrapper,
-                                      mozString.Length() * sizeof(char16_t));
+  rv = pTransferable->SetTransferData("text/plain", genericWrapper);
   return rv;
 }
 
@@ -194,8 +209,7 @@ nsresult GetTransferableTextTwo(nsCOMPtr<nsITransferable>& pTransferable) {
 
   pTransferable = do_CreateInstance("@mozilla.org/widget/transferable;1");
   pTransferable->Init(nullptr);
-  rv = pTransferable->SetTransferData("text/plain", genericWrapper,
-                                      mozString.Length() * sizeof(char16_t));
+  rv = pTransferable->SetTransferData("text/plain", genericWrapper);
   return rv;
 }
 
@@ -211,7 +225,7 @@ nsresult GetTransferableURI(nsCOMPtr<nsITransferable>& pTransferable) {
 
   pTransferable = do_CreateInstance("@mozilla.org/widget/transferable;1");
   pTransferable->Init(nullptr);
-  rv = pTransferable->SetTransferData("text/x-moz-url", genericWrapper, 0);
+  rv = pTransferable->SetTransferData("text/x-moz-url", genericWrapper);
   return rv;
 }
 
@@ -667,30 +681,48 @@ nsresult Do_Test2() {
 // consisting of multiple transferables that have different data types
 nsresult Do_Test3() {
   nsresult rv = NS_OK;
-  nsresult workingrv;
+  // nsresult workingrv;
 
   // XXX TODO Write more advanced tests in Bug 535860
   return rv;
 }
 
-int main(int argc, char** argv) {
-  ScopedXPCOM xpcom("Test Windows Drag and Drop");
+nsCOMPtr<nsIFile> GetTemporaryDirectory() {
+  nsCOMPtr<nsIFile> tmpdir;
 
-  nsCOMPtr<nsIFile> file;
-  file = xpcom.GetProfileDirectory();
+#define ENSURE(expr) NS_ENSURE_SUCCESS(expr, nullptr);
+
+  ENSURE(NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpdir)));
+  MOZ_ASSERT(tmpdir);
+
+  ENSURE(tmpdir->AppendNative("TestWinDND"_ns));
+  ENSURE(tmpdir->CreateUnique(nsIFile::DIRECTORY_TYPE, 0777));
+
+#undef ENSURE
+
+  return tmpdir;
+}
+
+TEST(TestWinDND, All)
+{
+  nsCOMPtr<nsIFile> file = GetTemporaryDirectory();
+  if (!file) {
+    fail("could not create temporary directory!");
+    return;
+  }
   xferFile = file;
 
-  if (NS_SUCCEEDED(Do_Test1()))
+  if (NS_SUCCEEDED(Do_Test1())) {
     passed(
         "Basic Drag and Drop data type tests (single transferable) succeeded!");
+  }
 
-  if (NS_SUCCEEDED(Do_Test2()))
+  if (NS_SUCCEEDED(Do_Test2())) {
     passed(
         "Basic Drag and Drop data type tests (multiple transferables) "
         "succeeded!");
+  }
 
   // if (NS_SUCCEEDED(Do_Test3()))
   //  passed("Advanced Drag and Drop data type tests succeeded!");
-
-  return gFailCount;
 }
