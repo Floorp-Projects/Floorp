@@ -240,6 +240,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             fromHomeFragment,
         ).also {
             inlineAutocompleteEditText = it.view.findViewById(R.id.mozac_browser_toolbar_edit_url_view)
+            inlineAutocompleteEditText.increaseTapArea(TAP_INCREASE_DPS_4)
         }
 
         val awesomeBar = binding.awesomeBar
@@ -994,6 +995,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
     companion object {
         private const val TAP_INCREASE_DPS = 8
+        private const val TAP_INCREASE_DPS_4 = 4
         private const val QR_FRAGMENT_TAG = "MOZAC_QR_FRAGMENT"
         private const val REQUEST_CODE_CAMERA_PERMISSIONS = 1
     }
