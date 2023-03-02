@@ -286,7 +286,8 @@ class nsWindow final : public nsBaseWidget {
   void UpdateThemeGeometries(
       const nsTArray<ThemeGeometry>& aThemeGeometries) override;
   uint32_t GetMaxTouchPoints() const override;
-  void SetWindowClass(const nsAString& xulWinType) override;
+  void SetWindowClass(const nsAString& xulWinType, const nsAString& xulWinClass,
+                      const nsAString& xulWinName) override;
 
   /**
    * Event helpers

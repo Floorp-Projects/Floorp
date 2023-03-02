@@ -1389,8 +1389,22 @@ class nsIWidget : public nsISupports {
 
   /**
    * Classify the window for the window manager. Mostly for X11.
+   *
+   *  @param xulWinType The window type. Characters other than [A-Za-z0-9_-] are
+   *                    converted to '_'. Anything before the first colon is
+   *                    assigned to name, anything after it to role. If there's
+   *                    no colon, assign the whole thing to both role and name.
+   *
+   * @param xulWinClass The window class. If set, overrides the normal value.
+   *                    Otherwise, the program class it used.
+   *
+   * @param xulWinName The window name. If set, overrides the value specified in
+   *                   window type. Otherwise, name from window type is used.
+   *
    */
-  virtual void SetWindowClass(const nsAString& xulWinType) = 0;
+  virtual void SetWindowClass(const nsAString& xulWinType,
+                              const nsAString& xulWinClass,
+                              const nsAString& xulWinName) = 0;
 
   /**
    * Enables/Disables system capture of any and all events that would cause a
