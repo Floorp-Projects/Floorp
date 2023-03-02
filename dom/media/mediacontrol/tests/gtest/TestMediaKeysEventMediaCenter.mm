@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #import <MediaPlayer/MediaPlayer.h>
 
+#include "gtest/gtest.h"
 #include "MediaHardwareKeysEventSourceMacMediaCenter.h"
 #include "MediaKeyListenerTest.h"
 #include "nsCocoaFeatures.h"
@@ -11,6 +12,7 @@
 #include "prthread.h"
 
 using namespace mozilla::dom;
+using namespace mozilla::widget;
 
 NS_ASSUME_NONNULL_BEGIN
 
