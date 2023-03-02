@@ -80,13 +80,17 @@ function run_test() {
 
   httpProtocolHandler.EnsureHSTSDataReady().then(function() {
     var chan1 = make_channel(URL + "/content");
-    chan1.asyncOpen(new ChannelListener(firstTimeThrough, null));
+    chan1.asyncOpen(
+      new ChannelListener(firstTimeThrough, null, CL_IGNORE_DELAYS)
+    );
     var chan2 = make_channel(URL + "/content");
     chan2
       .QueryInterface(Ci.nsIRaceCacheWithNetwork)
       .test_delayCacheEntryOpeningBy(200);
     chan2.QueryInterface(Ci.nsIRaceCacheWithNetwork).test_triggerNetwork(50);
-    chan2.asyncOpen(new ChannelListener(secondTimeThrough, null));
+    chan2.asyncOpen(
+      new ChannelListener(secondTimeThrough, null, CL_IGNORE_DELAYS)
+    );
   });
 
   do_test_pending();
