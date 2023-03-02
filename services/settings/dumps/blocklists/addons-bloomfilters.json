@@ -3,6 +3,127 @@
     {
       "stash": {
         "blocked": [
+          "{a15800a5-f2a2-41e7-b930-b1da456b6b8b}:0.5",
+          "{27937be8-9da4-4897-8008-728fae96e6fc}:2.45",
+          "{10800464-82af-434d-a1bd-738d77a11e55}:1.0.1",
+          "{2bfc8e07-8df2-4600-a937-6bab8f954152}:2.75",
+          "{48692932-3068-44f9-b2bd-01a69b11cf69}:1.75",
+          "{27937be8-9da4-4897-8008-728fae96e6fc}:2.10",
+          "{03368d49-df3b-4eb8-9a20-69359371bb83}:13.25",
+          "{27937be8-9da4-4897-8008-728fae96e6fc}:2.47",
+          "{48692932-3068-44f9-b2bd-01a69b11cf69}:1.95",
+          "{77486670-e5ad-449d-b6ec-c364c54ff901}:1.0.0",
+          "{59692932-3068-44f9-b2bd-01a69b11cf69}:2.15",
+          "{48692932-3068-44f9-b2bd-01a69b11cf69}:3.75",
+          "{2bfc8e07-8df2-4600-a937-6bab8f954152}:2.15",
+          "jnppcciiidnkneblifablmdcmiiocppb@chrome-store-foxified-3523362862:2.75",
+          "{018c60bd-db76-4382-8b53-9b1e948aab03}:1.85",
+          "{48692932-3068-44f9-b2bd-01a69b11cf69}:3.55",
+          "{27937be8-9da4-4897-8008-728fae96e6fc}:2.20",
+          "{27937be8-9da4-4897-8008-728fae96e6fc}:2.25",
+          "{018c60bd-db76-4382-8b53-9b1e948aab03}:2.10",
+          "{77486670-e5ad-449d-b6ec-c364c54ff901}:1.0.1",
+          "bhhelmhcogammbbifmgccfmcphkgleke@chrome-store-foxified-3990041007:2.35",
+          "{27937be8-9da4-4897-8008-728fae96e6fc}:2.30",
+          "bhhelmhcogammbbifmgccfmcphkgleke@chrome-store-foxified-1879272856:2.35",
+          "{48692932-3068-44f9-b2bd-01a69b11cf69}:3.79",
+          "{2bfc8e07-8df2-4600-a937-6bab8f954152}:2.35",
+          "{77486670-e5ad-449d-b6ec-c364c54ff901}:1.0.2",
+          "{a15800a5-f2a2-41e7-b930-b1da456b6b8b}:0.2",
+          "bhhelmhcogammbbifmgccfmcphkgleke@chrome-store-foxified-1005108540:2.35",
+          "{59692932-3068-44f9-b2bd-01a69b11cf69}:2.55",
+          "bhhelmhcogammbbifmgccfmcphkgleke@chrome-store-foxified-2229799922:2.35",
+          "{a15800a5-f2a2-41e7-b930-b1da456b6b8b}:0.3",
+          "{1a6e8d1d-d550-4ff6-806b-70f895e9aac4}:1.80",
+          "{03368d49-df3b-4eb8-9a20-69359371bb83}:13",
+          "bhhelmhcogammbbifmgccfmcphkgleke@chrome-store-foxified-16409511:2.35",
+          "{a15800a5-f2a2-41e7-b930-b1da456b6b8b}:0.4",
+          "{018c60bd-db76-4382-8b53-9b1e948aab03}:1.80",
+          "bhhelmhcogammbbifmgccfmcphkgleke@chrome-store-foxified-2359153945:2.35",
+          "{2bfc8e07-8df2-4600-a937-6bab8f954152}:2.45",
+          "{10800464-82af-434d-a1bd-738d77a11e55}:1.2",
+          "aoiobldpmgochmjnjopjgklejhljjbgd@chrome-store-foxified--2143412587:2.35",
+          "{a15800a5-f2a2-41e7-b930-b1da456b6b8b}:0.6",
+          "{03368d49-df3b-4eb8-9a20-69359371bb83}:13.45",
+          "{d213eb87-e1a7-4c35-85e6-6e043a118d62}:1.75",
+          "{03368d49-df3b-4eb8-9a20-69359371bb83}:13.10",
+          "bhhelmhcogammbbifmgccfmcphkgleke@chrome-store-foxified--889141007:2.35",
+          "{2bfc8e07-8df2-4600-a937-6bab8f954152}:2.11",
+          "{a15800a5-f2a2-41e7-b930-b1da456b6b8b}:0.7",
+          "{10800464-82af-434d-a1bd-738d77a11e55}:1.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1677631040921,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1677674107440,
+      "id": "6feba0e2-49c7-44ba-a2f5-bb92d3acf1be",
+      "last_modified": 1677674240513
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{d9cf5465-81f4-4dae-985d-c8ab60ce39fa}:4.1.18",
+          "{83895472-16d8-4e06-933f-c5bce4ae91be}:4.1.46",
+          "{58d8b938-074e-4b80-afdb-d1199a411e2c}:4.1.46",
+          "{30e2541e-088e-4604-a614-6f2567ea88a3}:4.0.181",
+          "{6a14d3dc-f41e-49db-9743-16ce1152f4d5}:4.1.18",
+          "{b1781d5a-d24f-4e26-95e1-df8783af8d95}:3.14.1",
+          "{9ff09d4e-4be8-4698-b9cb-2e5ff7a86452}:4.1.46",
+          "{1f911d39-c2bb-4897-ab1c-ab80506823fc}:3.4.19",
+          "{92a4eccb-07f2-45ca-a372-848632ca0c2c}:4.1.18",
+          "{b292d842-bbca-41d5-a97a-5448f551a83b}:4.1.53",
+          "{c2c44797-3ddf-4e12-a31c-f8ac2b8e8962}:3.14.2",
+          "{286acf96-df20-422f-af80-7a0ad9049fb5}:4.1.46",
+          "{7df1b062-153e-43e4-99a4-4338ad8b61e7}:3.5.31",
+          "{d6c94902-c168-48a3-867d-bd3028de61e2}:3.14.1",
+          "{1f911d39-c2bb-4897-ab1c-ab80506823fc}:4.1.53",
+          "{68cc5df2-ea82-4e7f-bf1f-504ff5cb78fa}:3.8.4",
+          "{f97bd065-abef-4d9e-ad4e-5bf6e2b2c282}:4.1.53",
+          "{d602a657-1b0e-4491-ba42-daa2aeae5380}:3.12",
+          "{152d6906-9a2c-4d9b-ada3-94011b965519}:4.1.53",
+          "{6f0a388d-ea98-4830-afb1-c0318a976d80}:3.5.31",
+          "{d10fe99f-6d8a-43d1-9bf1-d7e555e5080e}:3.15.2"
+        ],
+        "unblocked": []
+      },
+      "schema": 1677601138919,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1677630907318,
+      "id": "2992686f-5cd5-4821-a779-ae5d2b038123",
+      "last_modified": 1677631040860
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{f171ff98-4433-4de4-9976-d87525a80c45}:1.32",
+          "{f171ff98-4433-4de4-9976-d87525a80c45}:1.30",
+          "{b5109596-f4e6-496a-ad57-3921879b6921}:1.32"
+        ],
+        "unblocked": []
+      },
+      "schema": 1677523038010,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1677544507213,
+      "id": "b7e1f256-33ce-4041-baf0-418b91eab368",
+      "last_modified": 1677544639579
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{6c9d3a6b-aa01-4c61-8984-a42a29b33e15}:1.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1677177441016,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1677522907650,
+      "id": "73afcd24-16f8-496e-a5e2-eaebd04bca74",
+      "last_modified": 1677523037938
+    },
+    {
+      "stash": {
+        "blocked": [
           "tijmenspeekenbrink@gmail.com:1.1",
           "tijmenspeekenbrink@gmail.com:1.0",
           "tijmenspeekenbrink@gmail.com:1.3"
@@ -872,5 +993,5 @@
       "last_modified": 1673354326131
     }
   ],
-  "timestamp": 1677177440957
+  "timestamp": 1677674240513
 }
