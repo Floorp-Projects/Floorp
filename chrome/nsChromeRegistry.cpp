@@ -15,6 +15,8 @@
 #include "nsNetUtil.h"
 #include "nsString.h"
 #include "nsQueryObject.h"
+#include "nsIURIMutator.h"
+#include "nsIURL.h"
 
 #include "mozilla/dom/URL.h"
 #include "nsIConsoleService.h"
