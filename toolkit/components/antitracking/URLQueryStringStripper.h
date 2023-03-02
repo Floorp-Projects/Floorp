@@ -7,6 +7,7 @@
 #ifndef mozilla_URLQueryStringStripper_h
 #define mozilla_URLQueryStringStripper_h
 
+#include "nsIURLQueryStringStripper.h"
 #include "nsIURLQueryStrippingListService.h"
 
 #include "nsStringFwd.h"
@@ -16,42 +17,27 @@ class nsIURI;
 
 namespace mozilla {
 
-// URLQueryStringStripper is responsible for stripping certain part of the query
-// string of the given URI to address the bounce(redirect) tracking issues. It
-// will strip every query parameter which matches the strip list defined in
-// the pref 'privacy.query_stripping.strip_list'. Note that It's different from
-// URLDecorationStripper which strips the entire query string from the referrer
-// if there is a tracking query parameter present in the URI.
-//
-// TODO: Given that URLQueryStringStripper and URLDecorationStripper are doing
-//       similar things. We could somehow combine these two modules into one.
-//       We will improve this in the future.
-
-class URLQueryStringStripper final : public nsIURLQueryStrippingListObserver {
- public:
+class URLQueryStringStripper final : public nsIURLQueryStringStripper,
+                                     public nsIURLQueryStrippingListObserver {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIURLQUERYSTRIPPINGLISTOBSERVER
 
-  // Strip the query parameters that are in the strip list. Return the amount of
-  // query parameters that have been stripped. Returns 0 if no query parameters
-  // have been stripped or the feature is disabled.
-  static uint32_t Strip(nsIURI* aURI, bool aIsPBM, nsCOMPtr<nsIURI>& aOutput);
+  NS_DECL_NSIURLQUERYSTRINGSTRIPPER
 
-  // Test-only method to get the current strip list.
-  static void TestGetStripList(nsACString& aStripList);
+ public:
+  static already_AddRefed<URLQueryStringStripper> GetSingleton();
 
  private:
   URLQueryStringStripper();
   ~URLQueryStringStripper() = default;
 
-  static URLQueryStringStripper* GetOrCreate();
-
   static void OnPrefChange(const char* aPref, void* aData);
 
-  nsresult Init();
-  nsresult Shutdown();
+  [[nodiscard]] nsresult Init();
+  [[nodiscard]] nsresult Shutdown();
 
-  uint32_t StripQueryString(nsIURI* aURI, nsCOMPtr<nsIURI>& aOutput);
+  nsresult StripQueryString(nsIURI* aURI, nsIURI** aOutput,
+                            uint32_t* aStripCount);
 
   bool CheckAllowList(nsIURI* aURI);
 

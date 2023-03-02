@@ -1,0 +1,30 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIURI.idl"
+
+/**
+ * nsIURLQueryStringStripper is responsible for stripping certain part of the
+ * query string of the given URI to address the bounce(redirect) tracking
+ * issues. It will strip every query parameter which matches the strip list
+ * defined in the pref 'privacy.query_stripping.strip_list'. Note that It's
+ * different from URLDecorationStripper which strips the entire query string
+ * from the referrer if there is a tracking query parameter present in the URI.
+ *
+ * TODO: Given that nsIURLQueryStringStripper and URLDecorationStripper are
+ *       doing similar things. We could somehow combine these two modules into
+ *       one. We will improve this in the future.
+ */
+[scriptable, uuid(6b42a890-2624-4560-99c4-b25380e8cd77)]
+interface nsIURLQueryStringStripper : nsISupports {
+
+  // Strip the query parameters that are in the strip list. Return the amount of
+  // query parameters that have been stripped. Returns 0 if no query parameters
+  // have been stripped or the feature is disabled.
+  uint32_t strip(in nsIURI aURI, in bool aIsPBM, out nsIURI aOutput);
+
+  // Test-only method to get the current strip list.
+  ACString testGetStripList();
+};

@@ -5,6 +5,8 @@
 
 #include "gtest/gtest.h"
 
+#include "mozilla/Components.h"
+#include "nsIURLQueryStringStripper.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsStringFwd.h"
@@ -26,11 +28,16 @@ static const char kPrefQueryStrippingList[] =
  * Waits for the strip list in the URLQueryStringStripper to match aExpected.
  */
 void waitForStripListChange(const nsACString& aExpected) {
+  nsresult rv;
+  nsCOMPtr<nsIURLQueryStringStripper> queryStripper =
+      components::URLQueryStringStripper::Service(&rv);
+  EXPECT_TRUE(NS_SUCCEEDED(rv));
+
   MOZ_ALWAYS_TRUE(mozilla::SpinEventLoopUntil(
       "TestURLQueryStringStripper waitForStripListChange"_ns, [&]() -> bool {
         nsAutoCString stripList;
-        URLQueryStringStripper::TestGetStripList(stripList);
-        return stripList.Equals(aExpected);
+        rv = queryStripper->TestGetStripList(stripList);
+        return NS_SUCCEEDED(rv) && stripList.Equals(aExpected);
       }));
 }
 
@@ -40,9 +47,16 @@ void DoTest(const nsACString& aTestURL, const bool aIsPBM,
 
   NS_NewURI(getter_AddRefs(testURI), aTestURL);
 
+  nsresult rv;
+  nsCOMPtr<nsIURLQueryStringStripper> queryStripper =
+      components::URLQueryStringStripper::Service(&rv);
+  EXPECT_TRUE(NS_SUCCEEDED(rv));
+
   nsCOMPtr<nsIURI> strippedURI;
-  uint32_t numStripped =
-      URLQueryStringStripper::Strip(testURI, aIsPBM, strippedURI);
+  uint32_t numStripped;
+  rv = queryStripper->Strip(testURI, aIsPBM, getter_AddRefs(strippedURI),
+                            &numStripped);
+  EXPECT_TRUE(NS_SUCCEEDED(rv));
 
   EXPECT_TRUE(numStripped == aExpectedResult);
 

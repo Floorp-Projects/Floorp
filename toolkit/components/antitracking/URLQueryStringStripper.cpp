@@ -21,6 +21,7 @@
 namespace {
 
 mozilla::StaticRefPtr<mozilla::URLQueryStringStripper> gQueryStringStripper;
+
 static const char kQueryStrippingEnabledPref[] =
     "privacy.query_stripping.enabled";
 static const char kQueryStrippingEnabledPBMPref[] =
@@ -30,9 +31,12 @@ static const char kQueryStrippingEnabledPBMPref[] =
 
 namespace mozilla {
 
-NS_IMPL_ISUPPORTS(URLQueryStringStripper, nsIURLQueryStrippingListObserver)
+NS_IMPL_ISUPPORTS(URLQueryStringStripper, nsIURLQueryStringStripper,
+                  nsIURLQueryStrippingListObserver)
 
-URLQueryStringStripper* URLQueryStringStripper::GetOrCreate() {
+// static
+already_AddRefed<URLQueryStringStripper>
+URLQueryStringStripper::GetSingleton() {
   if (!gQueryStringStripper) {
     gQueryStringStripper = new URLQueryStringStripper();
     // Check initial pref state and enable service. We can pass nullptr, because
@@ -49,7 +53,7 @@ URLQueryStringStripper* URLQueryStringStripper::GetOrCreate() {
         ShutdownPhase::XPCOMShutdown);
   }
 
-  return gQueryStringStripper;
+  return do_AddRef(gQueryStringStripper);
 }
 
 URLQueryStringStripper::URLQueryStringStripper() {
@@ -64,26 +68,30 @@ URLQueryStringStripper::URLQueryStringStripper() {
   NS_ENSURE_SUCCESS_VOID(rv);
 }
 
-/* static */
-uint32_t URLQueryStringStripper::Strip(nsIURI* aURI, bool aIsPBM,
-                                       nsCOMPtr<nsIURI>& aOutput) {
+NS_IMETHODIMP
+URLQueryStringStripper::Strip(nsIURI* aURI, bool aIsPBM, nsIURI** aOutput,
+                              uint32_t* aStripCount) {
+  NS_ENSURE_ARG_POINTER(aURI);
+  NS_ENSURE_ARG_POINTER(aOutput);
+  NS_ENSURE_ARG_POINTER(aStripCount);
+
+  *aStripCount = 0;
+
   if (aIsPBM) {
     if (!StaticPrefs::privacy_query_stripping_enabled_pbmode()) {
-      return 0;
+      return NS_OK;
     }
   } else {
     if (!StaticPrefs::privacy_query_stripping_enabled()) {
-      return 0;
+      return NS_OK;
     }
   }
 
-  RefPtr<URLQueryStringStripper> stripper = GetOrCreate();
-
-  if (stripper->CheckAllowList(aURI)) {
-    return 0;
+  if (CheckAllowList(aURI)) {
+    return NS_OK;
   }
 
-  return stripper->StripQueryString(aURI, aOutput);
+  return StripQueryString(aURI, aOutput, aStripCount);
 }
 
 // static
@@ -93,11 +101,14 @@ void URLQueryStringStripper::OnPrefChange(const char* aPref, void* aData) {
   bool prefEnablesComponent =
       StaticPrefs::privacy_query_stripping_enabled() ||
       StaticPrefs::privacy_query_stripping_enabled_pbmode();
+
+  nsresult rv;
   if (prefEnablesComponent) {
-    gQueryStringStripper->Init();
+    rv = gQueryStringStripper->Init();
   } else {
-    gQueryStringStripper->Shutdown();
+    rv = gQueryStringStripper->Shutdown();
   }
+  NS_ENSURE_SUCCESS_VOID(rv);
 }
 
 nsresult URLQueryStringStripper::Init() {
@@ -130,21 +141,24 @@ nsresult URLQueryStringStripper::Shutdown() {
   return NS_OK;
 }
 
-uint32_t URLQueryStringStripper::StripQueryString(nsIURI* aURI,
-                                                  nsCOMPtr<nsIURI>& aOutput) {
-  MOZ_ASSERT(aURI);
+nsresult URLQueryStringStripper::StripQueryString(nsIURI* aURI,
+                                                  nsIURI** aOutput,
+                                                  uint32_t* aStripCount) {
+  NS_ENSURE_ARG_POINTER(aURI);
+  NS_ENSURE_ARG_POINTER(aOutput);
+  NS_ENSURE_ARG_POINTER(aStripCount);
+
+  *aStripCount = 0;
 
   nsCOMPtr<nsIURI> uri(aURI);
 
   nsAutoCString query;
   nsresult rv = aURI->GetQuery(query);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  uint32_t numStripped = 0;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // We don't need to do anything if there is no query string.
   if (query.IsEmpty()) {
-    return numStripped;
+    return NS_OK;
   }
 
   URLParams params;
@@ -155,7 +169,7 @@ uint32_t URLQueryStringStripper::StripQueryString(nsIURI* aURI,
     ToLowerCase(name, lowerCaseName);
 
     if (mList.Contains(lowerCaseName)) {
-      numStripped += 1;
+      *aStripCount += 1;
 
       // Count how often a specific query param is stripped. For privacy reasons
       // this will only count query params listed in the Histogram definition.
@@ -173,8 +187,8 @@ uint32_t URLQueryStringStripper::StripQueryString(nsIURI* aURI,
   });
 
   // Return if there is no parameter has been stripped.
-  if (!numStripped) {
-    return numStripped;
+  if (!*aStripCount) {
+    return NS_OK;
   }
 
   nsAutoString newQuery;
@@ -184,7 +198,7 @@ uint32_t URLQueryStringStripper::StripQueryString(nsIURI* aURI,
                 .SetQuery(NS_ConvertUTF16toUTF8(newQuery))
                 .Finalize(aOutput);
 
-  return numStripped;
+  return NS_OK;
 }
 
 bool URLQueryStringStripper::CheckAllowList(nsIURI* aURI) {
@@ -227,13 +241,15 @@ URLQueryStringStripper::OnQueryStrippingListUpdate(
 }
 
 // static
-void URLQueryStringStripper::TestGetStripList(nsACString& aStripList) {
+NS_IMETHODIMP
+URLQueryStringStripper::TestGetStripList(nsACString& aStripList) {
   aStripList.Truncate();
 
-  StringJoinAppend(aStripList, " "_ns, GetOrCreate()->mList,
+  StringJoinAppend(aStripList, " "_ns, mList,
                    [](auto& aResult, const auto& aValue) {
                      aResult.Append(NS_ConvertUTF16toUTF8(aValue));
                    });
+  return NS_OK;
 }
 
 }  // namespace mozilla

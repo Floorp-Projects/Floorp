@@ -35,6 +35,7 @@
 #include "nsIStreamListenerTee.h"
 #include "nsISeekableStream.h"
 #include "nsIProtocolProxyService2.h"
+#include "nsIURLQueryStringStripper.h"
 #include "nsIWebTransport.h"
 #include "nsCRT.h"
 #include "nsMimeTypes.h"
@@ -135,7 +136,6 @@
 #include "js/Conversions.h"
 #include "mozilla/dom/SecFetch.h"
 #include "mozilla/net/TRRService.h"
-#include "mozilla/URLQueryStringStripper.h"
 #include "nsUnknownDecoder.h"
 #ifdef XP_WIN
 #  include "HttpWinUtils.h"
@@ -5235,8 +5235,16 @@ nsresult nsHttpChannel::AsyncProcessRedirection(uint32_t redirectType) {
 
       if (!isRedirectURIInAllowList) {
         nsCOMPtr<nsIURI> strippedURI;
-        uint32_t numStripped = URLQueryStringStripper::Strip(
-            mRedirectURI, mPrivateBrowsing, strippedURI);
+
+        nsCOMPtr<nsIURLQueryStringStripper> queryStripper =
+            components::URLQueryStringStripper::Service(&rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        uint32_t numStripped;
+
+        rv = queryStripper->Strip(mRedirectURI, mPrivateBrowsing,
+                                  getter_AddRefs(strippedURI), &numStripped);
+        NS_ENSURE_SUCCESS(rv, rv);
 
         if (numStripped) {
           mUnstrippedRedirectURI = mRedirectURI;
