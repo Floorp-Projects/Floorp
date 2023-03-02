@@ -23,10 +23,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import mozilla.components.support.base.ids.SharedIdsHelper
+import org.mozilla.fenix.ext.areNotificationsEnabledSafe
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.nimbus.MessageSurfaceId
-import org.mozilla.fenix.onboarding.MARKETING_CHANNEL_ID
+import org.mozilla.fenix.onboarding.ensureMarketingChannelExists
 import org.mozilla.fenix.utils.BootUtils
 import org.mozilla.fenix.utils.IntentUtils
 import org.mozilla.fenix.utils.createBaseNotification
@@ -49,6 +50,11 @@ class MessageNotificationWorker(
     override fun doWork(): Result {
         GlobalScope.launch(Dispatchers.IO) {
             val context = applicationContext
+            val nm = NotificationManagerCompat.from(context)
+            if (!nm.areNotificationsEnabledSafe()) {
+                return@launch
+            }
+
             val messagingStorage = context.components.analytics.messagingStorage
             val messages = messagingStorage.getMessages()
             val nextMessage =
@@ -72,7 +78,7 @@ class MessageNotificationWorker(
                 )
             nimbusMessagingController.onMessageDisplayed(updatedMessage)
 
-            NotificationManagerCompat.from(context).notify(
+            nm.notify(
                 MESSAGE_TAG,
                 SharedIdsHelper.getIdForTag(context, updatedMessage.id),
                 buildNotification(
@@ -94,7 +100,7 @@ class MessageNotificationWorker(
 
         return createBaseNotification(
             context,
-            MARKETING_CHANNEL_ID,
+            ensureMarketingChannelExists(context),
             message.data.title,
             message.data.text,
             onClickPendingIntent,
