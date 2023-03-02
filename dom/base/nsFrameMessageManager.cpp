@@ -472,7 +472,7 @@ bool nsFrameMessageManager::GetParamsForMessage(JSContext* aCx,
   //    properly cases when interface is implemented in JS and used
   //    as a dictionary.
   nsAutoString json;
-  NS_ENSURE_TRUE(nsContentUtils::StringifyJSON(aCx, &v, json), false);
+  NS_ENSURE_TRUE(nsContentUtils::StringifyJSON(aCx, v, json), false);
   NS_ENSURE_TRUE(!json.IsEmpty(), false);
 
   JS::Rooted<JS::Value> val(aCx, JS::NullValue());

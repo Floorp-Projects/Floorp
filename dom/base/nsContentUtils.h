@@ -3260,9 +3260,9 @@ class nsContentUtils {
    *
    * Usage:
    *   nsAutoString serializedValue;
-   *   nsContentUtils::StringifyJSON(cx, &value, serializedValue);
+   *   nsContentUtils::StringifyJSON(cx, value, serializedValue);
    */
-  static bool StringifyJSON(JSContext* aCx, JS::MutableHandle<JS::Value> vp,
+  static bool StringifyJSON(JSContext* aCx, JS::Handle<JS::Value> aValue,
                             nsAString& aOutStr);
 
   /**
