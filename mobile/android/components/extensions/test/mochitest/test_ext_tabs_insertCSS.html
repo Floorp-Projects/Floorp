@@ -19,6 +19,7 @@ add_task(async function testExecuteScript() {
   async function background() {
     const tasks = [
       {
+        description: "CSS as moz-extension:// url",
         background: "rgba(0, 0, 0, 0)",
         foreground: "rgb(0, 113, 4)",
         promise: () => {
@@ -28,6 +29,7 @@ add_task(async function testExecuteScript() {
         },
       },
       {
+        description: "CSS as code snippet string",
         background: "rgb(42, 42, 42)",
         foreground: "rgb(0, 113, 4)",
         promise: () => {
@@ -37,30 +39,34 @@ add_task(async function testExecuteScript() {
         },
       },
       {
+        description: "last of two author CSS wins",
         background: "rgb(42, 42, 42)",
         foreground: "rgb(0, 113, 4)",
-        promise: () => {
-          return browser.tabs.insertCSS({
+        promise: async () => {
+          await browser.tabs.insertCSS({
             code: "* { background: rgb(100, 100, 100) !important }",
             cssOrigin: "author",
-          }).then(r => browser.tabs.insertCSS({
+          });
+          await browser.tabs.insertCSS({
             code: "* { background: rgb(42, 42, 42) !important }",
             cssOrigin: "author",
-          }));
+          });
         },
       },
       {
+        description: "user CSS has higher priority",
         background: "rgb(100, 100, 100)",
         foreground: "rgb(0, 113, 4)",
-        promise: () => {
+        promise: async () => {
           // User has higher importance
-          return browser.tabs.insertCSS({
+          await browser.tabs.insertCSS({
             code: "* { background: rgb(100, 100, 100) !important }",
             cssOrigin: "user",
-          }).then(r => browser.tabs.insertCSS({
+          });
+          await browser.tabs.insertCSS({
             code: "* { background: rgb(42, 42, 42) !important }",
             cssOrigin: "author",
-          }));
+          });
         },
       },
     ];
@@ -71,7 +77,8 @@ add_task(async function testExecuteScript() {
     }
 
     try {
-      for (const {promise, background, foreground} of tasks) {
+      for (const {background, description, foreground, promise} of tasks) {
+        browser.test.log(`Run test case: ${description}`);
         let result = await promise();
 
         browser.test.assertEq(undefined, result, "Expected callback result");
@@ -87,7 +94,7 @@ add_task(async function testExecuteScript() {
       browser.test.notifyPass("insertCSS");
     } catch (e) {
       browser.test.fail(`Error: ${e} :: ${e.stack}`);
-      browser.test.notifyFailure("insertCSS");
+      browser.test.notifyFail("insertCSS");
     }
   }
 
