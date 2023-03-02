@@ -406,7 +406,10 @@ add_task(async function test_fresh_search_with_urlbar_persisted() {
   resetTelemetry();
 
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.showSearchTerms.featureGate", true]],
+    set: [
+      ["browser.urlbar.showSearchTerms.featureGate", true],
+      ["browser.urlbar.tipShownCount.searchTip_persist", 999],
+    ],
   });
 
   // Load a SERP once in order to show the search term in the Urlbar.
