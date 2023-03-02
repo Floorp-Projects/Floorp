@@ -10,41 +10,48 @@ loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 /**
  * Test accessibles aren't created for linebreaks.
  */
-addAccessibleTask(`hello<br>world`, async (browser, accDoc) => {
-  let doc = accDoc.nativeInterface.QueryInterface(Ci.nsIAccessibleMacInterface);
-  let docChildren = doc.getAttributeValue("AXChildren");
-  is(docChildren.length, 1, "The document contains a root group");
+addAccessibleTask(
+  `hello<br>world`,
+  async (browser, accDoc) => {
+    let doc = accDoc.nativeInterface.QueryInterface(
+      Ci.nsIAccessibleMacInterface
+    );
+    let docChildren = doc.getAttributeValue("AXChildren");
+    is(docChildren.length, 1, "The document contains a root group");
 
-  let rootGroup = docChildren[0];
-  let children = rootGroup.getAttributeValue("AXChildren");
-  is(docChildren.length, 1, "The root group contains 2 children");
+    let rootGroup = docChildren[0];
+    let children = rootGroup.getAttributeValue("AXChildren");
+    is(docChildren.length, 1, "The root group contains 2 children");
 
-  // verify first child is correct
-  is(
-    children[0].getAttributeValue("AXRole"),
-    "AXStaticText",
-    "First child is a text node"
-  );
-  is(
-    children[0].getAttributeValue("AXValue"),
-    "hello",
-    "First child is hello text"
-  );
+    // verify first child is correct
+    is(
+      children[0].getAttributeValue("AXRole"),
+      "AXStaticText",
+      "First child is a text node"
+    );
+    is(
+      children[0].getAttributeValue("AXValue"),
+      "hello",
+      "First child is hello text"
+    );
 
-  // verify second child is correct
-  is(
-    children[1].getAttributeValue("AXRole"),
-    "AXStaticText",
-    "Second child is a text node"
-  );
+    // verify second child is correct
+    is(
+      children[1].getAttributeValue("AXRole"),
+      "AXStaticText",
+      "Second child is a text node"
+    );
 
-  is(
-    children[1].getAttributeValue("AXValue"),
-    "world ",
-    "Second child is world text"
-  );
-  // we have a trailing space here due to bug 1577028
-});
+    is(
+      children[1].getAttributeValue("AXValue"),
+      gIsIframe && !gIsRemoteIframe ? "world" : "world ",
+      "Second child is world text"
+    );
+    // we have a trailing space in here due to bug 1577028
+    // but this appears fixed in non-remote iframes
+  },
+  { chrome: true, iframe: true, remoteIframe: true }
+);
 
 addAccessibleTask(
   `<p id="p">hello, this is a test</p>`,
@@ -71,5 +78,6 @@ addAccessibleTask(
     );
 
     ok(smallBounds.size[0] < largeBounds.size[0], "longer range is wider");
-  }
+  },
+  { chrome: true, iframe: true, remoteIframe: true }
 );
