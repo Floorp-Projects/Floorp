@@ -134,6 +134,7 @@
 #include "nsIURIMutator.h"
 #include "nsQueryObject.h"
 #include "nsSandboxFlags.h"
+#include "mozmemory.h"
 
 #include "ChildProfilerController.h"
 
@@ -2816,6 +2817,15 @@ mozilla::ipc::IPCResult ContentChild::RecvNotifyProcessPriorityChanged(
 
   os->NotifyObservers(static_cast<nsIPropertyBag2*>(props),
                       "ipc:process-priority-changed", nullptr);
+
+  if (mProcessPriority >= hal::PROCESS_PRIORITY_FOREGROUND) {
+    moz_set_max_dirty_page_modifier(3);
+  } else if (mProcessPriority == hal::PROCESS_PRIORITY_BACKGROUND) {
+    moz_set_max_dirty_page_modifier(-1);
+  } else {
+    moz_set_max_dirty_page_modifier(0);
+  }
+
   return IPC_OK();
 }
 
