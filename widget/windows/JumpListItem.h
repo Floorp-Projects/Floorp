@@ -11,6 +11,7 @@
 #undef LogSeverity  // SetupAPI.h #defines this as DWORD
 
 #include "mozilla/RefPtr.h"
+#include "mozilla/LazyIdleThread.h"
 #include "nsIJumpListItem.h"  // defines nsIJumpListItem
 #include "nsIMIMEInfo.h"      // defines nsILocalHandlerApp
 #include "nsTArray.h"
@@ -105,7 +106,7 @@ class JumpListShortcut : public JumpListItemBase, public nsIJumpListShortcut {
 
   static nsresult GetShellLink(nsCOMPtr<nsIJumpListItem>& item,
                                RefPtr<IShellLinkW>& aShellLink,
-                               nsCOMPtr<nsIThread>& aIOThread);
+                               RefPtr<LazyIdleThread>& aIOThread);
   static nsresult GetJumpListShortcut(IShellLinkW* pLink,
                                       nsCOMPtr<nsIJumpListShortcut>& aShortcut);
   static nsresult GetOutputIconPath(nsCOMPtr<nsIURI> aFaviconPageURI,
@@ -117,12 +118,6 @@ class JumpListShortcut : public JumpListItemBase, public nsIJumpListShortcut {
   nsCOMPtr<nsILocalHandlerApp> mHandlerApp;
 
   bool ExecutableExists(nsCOMPtr<nsILocalHandlerApp>& handlerApp);
-  static nsresult ObtainCachedIconFile(nsCOMPtr<nsIURI> aFaviconPageURI,
-                                       nsString& aICOFilePath,
-                                       nsCOMPtr<nsIThread>& aIOThread);
-  static nsresult CacheIconFileFromFaviconURIAsync(
-      nsCOMPtr<nsIURI> aFaviconPageURI, nsCOMPtr<nsIFile> aICOFile,
-      nsCOMPtr<nsIThread>& aIOThread);
 };
 
 }  // namespace widget

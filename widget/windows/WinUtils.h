@@ -39,6 +39,7 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/HalScreenConfiguration.h"
 #include "mozilla/HashTable.h"
+#include "mozilla/LazyIdleThread.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "mozilla/WindowsDpiAwareness.h"
@@ -649,7 +650,7 @@ class AsyncFaviconDataReady final : public nsIFaviconDataCallback {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFAVICONDATACALLBACK
 
-  AsyncFaviconDataReady(nsIURI* aNewURI, nsCOMPtr<nsIThread>& aIOThread,
+  AsyncFaviconDataReady(nsIURI* aNewURI, RefPtr<LazyIdleThread>& aIOThread,
                         const bool aURLShortcut,
                         already_AddRefed<nsIRunnable> aRunnable);
   nsresult OnFaviconDataNotAvailable(void);
@@ -658,7 +659,7 @@ class AsyncFaviconDataReady final : public nsIFaviconDataCallback {
   ~AsyncFaviconDataReady() {}
 
   nsCOMPtr<nsIURI> mNewURI;
-  nsCOMPtr<nsIThread> mIOThread;
+  RefPtr<LazyIdleThread> mIOThread;
   nsCOMPtr<nsIRunnable> mRunnable;
   const bool mURLShortcut;
 };
@@ -711,7 +712,7 @@ class FaviconHelper {
   static const char kShortcutCacheDir[];
   static nsresult ObtainCachedIconFile(
       nsCOMPtr<nsIURI> aFaviconPageURI, nsString& aICOFilePath,
-      nsCOMPtr<nsIThread>& aIOThread, bool aURLShortcut,
+      RefPtr<LazyIdleThread>& aIOThread, bool aURLShortcut,
       already_AddRefed<nsIRunnable> aRunnable = nullptr);
 
   static nsresult HashURI(nsCOMPtr<nsICryptoHash>& aCryptoHash, nsIURI* aUri,
@@ -723,7 +724,7 @@ class FaviconHelper {
 
   static nsresult CacheIconFileFromFaviconURIAsync(
       nsCOMPtr<nsIURI> aFaviconPageURI, nsCOMPtr<nsIFile> aICOFile,
-      nsCOMPtr<nsIThread>& aIOThread, bool aURLShortcut,
+      RefPtr<LazyIdleThread>& aIOThread, bool aURLShortcut,
       already_AddRefed<nsIRunnable> aRunnable);
 
   static int32_t GetICOCacheSecondsTimeout();

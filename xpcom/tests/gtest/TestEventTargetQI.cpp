@@ -17,12 +17,13 @@
 
 using namespace mozilla;
 
-// Cast the pointer to nsISupports* before doing the QI in order to avoid
-// a static assert intended to prevent trivial QIs.
+// Cast the pointer to nsISupports* through nsIEventTarget* before doing the QI
+// in order to avoid a static assert intended to prevent trivial QIs, while also
+// avoiding ambiguous base errors.
 template <typename TargetInterface, typename SourcePtr>
 bool TestQITo(SourcePtr& aPtr1) {
-  nsCOMPtr<TargetInterface> aPtr2 =
-      do_QueryInterface(static_cast<nsISupports*>(aPtr1.get()));
+  nsCOMPtr<TargetInterface> aPtr2 = do_QueryInterface(
+      static_cast<nsISupports*>(static_cast<nsIEventTarget*>(aPtr1.get())));
   return (bool)aPtr2;
 }
 
@@ -71,7 +72,7 @@ TEST(TestEventTargetQI, ThrottledEventQueue)
 
 TEST(TestEventTargetQI, LazyIdleThread)
 {
-  nsCOMPtr<nsIThread> thing = new LazyIdleThread(0, "TestThread"_ns);
+  RefPtr<LazyIdleThread> thing = new LazyIdleThread(0, "TestThread");
   EXPECT_TRUE(thing);
 
   EXPECT_TRUE(TestQITo<nsISerialEventTarget>(thing));

@@ -883,7 +883,7 @@ Result<Ok, nsresult> ExtensionProtocolHandler::NewFD(
 
   if (!mFileOpenerThread) {
     mFileOpenerThread = new LazyIdleThread(DEFAULT_THREAD_TIMEOUT_MS,
-                                           "ExtensionProtocolHandler"_ns);
+                                           "ExtensionProtocolHandler");
   }
 
   RefPtr<ExtensionJARFileOpener> fileOpener =
