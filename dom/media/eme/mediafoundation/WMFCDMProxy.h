@@ -68,10 +68,10 @@ class WMFCDMProxy : public CDMProxy {
 
   void OnSessionMessage(const nsAString& aSessionId,
                         dom::MediaKeyMessageType aMessageType,
-                        const nsTArray<uint8_t>& aMessage) override {}
+                        const nsTArray<uint8_t>& aMessage) override;
 
   void OnExpirationChange(const nsAString& aSessionId,
-                          UnixTime aExpiryTime) override {}
+                          UnixTime aExpiryTime) override;
 
   void OnSessionClosed(const nsAString& aSessionId) override {}
 
@@ -91,7 +91,7 @@ class WMFCDMProxy : public CDMProxy {
   void RejectPromise(PromiseId aId, ErrorResult&& aException,
                      const nsCString& aReason) override;
 
-  void OnKeyStatusesChange(const nsAString& aSessionId) override {}
+  void OnKeyStatusesChange(const nsAString& aSessionId) override;
 
   void GetStatusForPolicy(PromiseId aPromiseId,
                           const nsAString& aMinHdcpVersion) override {}

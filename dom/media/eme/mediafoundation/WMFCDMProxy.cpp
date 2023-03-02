@@ -11,6 +11,9 @@
 
 namespace mozilla {
 
+#define LOG(msg, ...) \
+  EME_LOG("WMFCDMProxy[%p]@%s: " msg, this, __func__, ##__VA_ARGS__)
+
 WMFCDMProxy::WMFCDMProxy(dom::MediaKeys* aKeys, const nsAString& aKeySystem,
                          const dom::MediaKeySystemConfiguration& aConfig)
     : CDMProxy(
@@ -182,5 +185,46 @@ void WMFCDMProxy::Shutdown() {
   // TODO: reject pending promise.
   mCreateSessionRequest.DisconnectIfExists();
 }
+
+void WMFCDMProxy::OnSessionMessage(const nsAString& aSessionId,
+                                   dom::MediaKeyMessageType aMessageType,
+                                   const nsTArray<uint8_t>& aMessage) {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mKeys.IsNull()) {
+    return;
+  }
+  if (RefPtr<dom::MediaKeySession> session = mKeys->GetSession(aSessionId)) {
+    LOG("Notify key message for session Id=%s",
+        NS_ConvertUTF16toUTF8(aSessionId).get());
+    session->DispatchKeyMessage(aMessageType, aMessage);
+  }
+}
+
+void WMFCDMProxy::OnKeyStatusesChange(const nsAString& aSessionId) {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mKeys.IsNull()) {
+    return;
+  }
+  if (RefPtr<dom::MediaKeySession> session = mKeys->GetSession(aSessionId)) {
+    LOG("Notify key statuses for session Id=%s",
+        NS_ConvertUTF16toUTF8(aSessionId).get());
+    session->DispatchKeyStatusesChange();
+  }
+}
+
+void WMFCDMProxy::OnExpirationChange(const nsAString& aSessionId,
+                                     UnixTime aExpiryTime) {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mKeys.IsNull()) {
+    return;
+  }
+  if (RefPtr<dom::MediaKeySession> session = mKeys->GetSession(aSessionId)) {
+    LOG("Notify expiration for session Id=%s",
+        NS_ConvertUTF16toUTF8(aSessionId).get());
+    session->SetExpiration(static_cast<double>(aExpiryTime));
+  }
+}
+
+#undef LOG
 
 }  // namespace mozilla
