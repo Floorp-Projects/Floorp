@@ -86,6 +86,14 @@ extern JS_PUBLIC_API bool JS_ParseJSON(JSContext* cx, JS::Handle<JSString*> str,
                                        JS::MutableHandle<JS::Value> vp);
 
 /**
+ * Performs the JSON.parse operation as specified by ECMAScript.
+ */
+extern JS_PUBLIC_API bool JS_ParseJSON(JSContext* cx,
+                                       const JS::Latin1Char* chars,
+                                       uint32_t len,
+                                       JS::MutableHandle<JS::Value> vp);
+
+/**
  * Performs the JSON.parse operation as specified by ECMAScript, using the
  * given |reviver| argument as the corresponding optional argument to that
  * function.

@@ -8,6 +8,7 @@
 #include "js/JSON.h"
 #include "mozilla/dom/JSOracleChild.h"
 
+#include "mozilla/Encoding.h"
 #include "mozilla/ipc/Endpoint.h"
 
 #include "js/experimental/JSStencil.h"
@@ -18,6 +19,7 @@
 #include "js/RealmOptions.h"
 
 using namespace mozilla::dom;
+using Encoding = mozilla::Encoding;
 
 mozilla::ipc::IPCResult JSValidatorChild::RecvIsOpaqueResponseAllowed(
     IsOpaqueResponseAllowedResolver&& aResolver) {
@@ -116,11 +118,38 @@ JSValidatorChild::ValidatorResult JSValidatorChild::ShouldAllowJS() const {
     return ValidatorResult::Other;
   }
 
-  // The stencil parsing lacks the JSON support, so we have to do the
-  // JSON parsing separately.
-  if (StringBeginsWith(NS_ConvertUTF8toUTF16(mSourceBytes), u"{"_ns)) {
-    return ValidatorResult::JSON;
+  MOZ_ASSERT(!mSourceBytes.IsEmpty());
+
+  // Parse to JSON
+  JS::Rooted<JS::Value> json(cx);
+  if (IsAscii(mSourceBytes)) {
+    // Ascii is a subset of Latin1, and JS_ParseJSON can take Latin1 directly
+    if (JS_ParseJSON(cx,
+                     reinterpret_cast<const JS::Latin1Char*>(
+                         mSourceBytes.BeginReading()),
+                     mSourceBytes.Length(), &json)) {
+      return ValidatorResult::JSON;
+    }
+  } else {
+    // The data that the Utility Process receives are utf8 encoded.
+    nsString decoded;
+    nsresult rv = UTF_8_ENCODING->DecodeWithBOMRemoval(
+        Span(reinterpret_cast<const uint8_t*>(mSourceBytes.BeginReading()),
+             mSourceBytes.Length()),
+        decoded);
+    if (NS_FAILED(rv)) {
+      return ValidatorResult::Failure;
+    }
+
+    if (JS_ParseJSON(cx, decoded.BeginReading(), decoded.Length(), &json)) {
+      return ValidatorResult::JSON;
+    }
   }
 
+  // Since the JSON parsing failed, we confirmed the file is Javascript and not
+  // JSON.
+  if (JS_IsExceptionPending(cx)) {
+    JS_ClearPendingException(cx);
+  }
   return ValidatorResult::JavaScript;
 }
