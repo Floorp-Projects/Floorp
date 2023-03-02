@@ -7,6 +7,7 @@
 #ifndef WMFMediaDataEncoder_h_
 #define WMFMediaDataEncoder_h_
 
+#include "ImageContainer.h"
 #include "MFTEncoder.h"
 #include "PlatformEncoderModule.h"
 #include "TimeUnits.h"
@@ -188,9 +189,9 @@ class WMFMediaDataEncoder final : public MediaDataEncoder {
     AssertOnTaskQueue();
     MOZ_ASSERT(mEncoder);
 
-    const PlanarYCbCrImage* image = aData->mImage->AsPlanarYCbCrImage();
+    const layers::PlanarYCbCrImage* image = aData->mImage->AsPlanarYCbCrImage();
     MOZ_ASSERT(image);
-    const PlanarYCbCrData* yuv = image->GetData();
+    const layers::PlanarYCbCrData* yuv = image->GetData();
     auto ySize = yuv->YDataSize();
     auto cbcrSize = yuv->CbCrDataSize();
     size_t yLength = yuv->mYStride * ySize.height;
