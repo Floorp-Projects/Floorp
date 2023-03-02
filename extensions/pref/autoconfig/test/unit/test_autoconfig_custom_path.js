@@ -11,6 +11,9 @@ function run_test() {
 
   updateAppInfo();
 
+  try {
+    Services.dirsvc.undefine("SysConfD");
+  } catch (e) {}
   let customSysConfD = Services.dirsvc.get("SysConfD", Ci.nsIFile);
   let parent = customSysConfD.parent;
   let child = customSysConfD.leafName;
