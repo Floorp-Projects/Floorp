@@ -45,7 +45,6 @@ static const ssl3ExtensionHandler clientHelloHandlers[] = {
     { ssl_app_layer_protocol_xtn, &ssl3_ServerHandleAppProtoXtn },
     { ssl_use_srtp_xtn, &ssl3_ServerHandleUseSRTPXtn },
     { ssl_cert_status_xtn, &ssl3_ServerHandleStatusRequestXtn },
-    { ssl_tls13_certificate_authorities_xtn, &tls13_ServerHandleCertAuthoritiesXtn },
     { ssl_signature_algorithms_xtn, &ssl3_HandleSigAlgsXtn },
     { ssl_extended_master_secret_xtn, &ssl3_HandleExtendedMasterSecretXtn },
     { ssl_signed_cert_timestamp_xtn, &ssl3_ServerHandleSignedCertTimestampXtn },
@@ -124,8 +123,6 @@ static const ssl3ExtensionHandler certificateRequestHandlers[] = {
  * extension, if it were listed last). See bug 1243641.
  */
 static const sslExtensionBuilder clientHelloSendersTLS[] = {
-    /* TLS 1.3 GREASE extensions - empty. */
-    { ssl_tls13_grease_xtn, &tls13_SendEmptyGreaseXtn },
     { ssl_server_name_xtn, &ssl3_ClientSendServerNameXtn },
     { ssl_extended_master_secret_xtn, &ssl3_SendExtendedMasterSecretXtn },
     { ssl_renegotiation_info_xtn, &ssl3_SendRenegotiationInfoXtn },
@@ -149,8 +146,6 @@ static const sslExtensionBuilder clientHelloSendersTLS[] = {
     { ssl_tls13_psk_key_exchange_modes_xtn, &tls13_ClientSendPskModesXtn },
     { ssl_tls13_post_handshake_auth_xtn, &tls13_ClientSendPostHandshakeAuthXtn },
     { ssl_record_size_limit_xtn, &ssl_SendRecordSizeLimitXtn },
-    /* TLS 1.3 GREASE extensions - 1 zero byte. */
-    { ssl_tls13_grease_xtn, &tls13_SendGreaseXtn },
     /* The pre_shared_key extension MUST be last. */
     { ssl_tls13_pre_shared_key_xtn, &tls13_ClientSendPreSharedKeyXtn },
     { 0, NULL }
@@ -164,8 +159,6 @@ static const sslExtensionBuilder clientHelloSendersSSL3[] = {
 static const sslExtensionBuilder tls13_cert_req_senders[] = {
     { ssl_signature_algorithms_xtn, &ssl3_SendSigAlgsXtn },
     { ssl_tls13_certificate_authorities_xtn, &tls13_SendCertAuthoritiesXtn },
-    /* TLS 1.3 GREASE extension. */
-    { ssl_tls13_grease_xtn, &tls13_SendEmptyGreaseXtn },
     { 0, NULL }
 };
 
@@ -761,12 +754,7 @@ ssl_ConstructExtensions(sslSocket *ss, sslBuffer *buf, SSLHandshakeType message)
     switch (message) {
         case ssl_hs_client_hello:
             if (ss->vrange.max > SSL_LIBRARY_VERSION_3_0) {
-                /* Use TLS ClientHello Extension Permutation? */
-                if (ss->opt.enableChXtnPermutation) {
-                    sender = ss->ssl3.hs.chExtensionPermutation;
-                } else {
-                    sender = clientHelloSendersTLS;
-                }
+                sender = clientHelloSendersTLS;
             } else {
                 sender = clientHelloSendersSSL3;
             }
@@ -803,7 +791,6 @@ ssl_ConstructExtensions(sslSocket *ss, sslBuffer *buf, SSLHandshakeType message)
     }
 
     for (; sender->ex_sender != NULL; ++sender) {
-        PRUint16 ex_type = sender->ex_type;
         PRBool append = PR_FALSE;
         unsigned int start = buf->len;
         unsigned int length;
@@ -827,14 +814,8 @@ ssl_ConstructExtensions(sslSocket *ss, sslBuffer *buf, SSLHandshakeType message)
             continue;
         }
 
-        /* If TLS 1.3 GREASE is enabled, replace ssl_tls13_grease_xtn dummy
-         * GREASE extension types with randomly generated GREASE value. */
-        rv = tls13_MaybeGreaseExtensionType(ss, message, &ex_type);
-        if (rv != SECSuccess) {
-            goto loser; /* Code already set. */
-        }
-
-        rv = sslBuffer_AppendNumber(buf, ex_type, 2);
+        buf->len = start;
+        rv = sslBuffer_AppendNumber(buf, sender->ex_type, 2);
         if (rv != SECSuccess) {
             goto loser; /* Code already set. */
         }
@@ -848,7 +829,7 @@ ssl_ConstructExtensions(sslSocket *ss, sslBuffer *buf, SSLHandshakeType message)
         if (message == ssl_hs_client_hello ||
             message == ssl_hs_certificate_request) {
             ss->xtnData.advertised[ss->xtnData.numAdvertised++] =
-                ex_type;
+                sender->ex_type;
         }
     }
 
@@ -1124,58 +1105,4 @@ ssl3_ExtConsumeHandshakeVariable(const sslSocket *ss, SECItem *i,
                                  PRUint32 *length)
 {
     return ssl3_ConsumeHandshakeVariable((sslSocket *)ss, i, bytes, b, length);
-}
-
-SECStatus
-tls_ClientHelloExtensionPermutationSetup(sslSocket *ss)
-{
-    const size_t buildersLen = PR_ARRAY_SIZE(clientHelloSendersTLS);
-    const size_t buildersSize = (sizeof(sslExtensionBuilder) * buildersLen);
-    /* Psk Extension and then NULL entry MUST be last. */
-    const size_t permutationLen = buildersLen - 2;
-
-    /* There shouldn't already be a stored permutation. */
-    PR_ASSERT(!ss->ssl3.hs.chExtensionPermutation);
-
-    /* This shuffle handles up to 256 extensions. */
-    PR_ASSERT(buildersLen < 256);
-    uint8_t permutation[256] = { 0 };
-
-    sslExtensionBuilder *builders = PORT_ZAlloc(buildersSize);
-    if (!builders) {
-        return SECFailure;
-    }
-
-    /* Get a working copy of default builders. */
-    PORT_Memcpy(builders, clientHelloSendersTLS, buildersSize);
-
-    /* Get permutation randoms. */
-    if (PK11_GenerateRandom(permutation, permutationLen) != SECSuccess) {
-        PORT_Free(builders);
-        return SECFailure;
-    }
-
-    /* Fisher-Yates Shuffle */
-    for (size_t i = permutationLen - 1; i > 0; i--) {
-        size_t idx = permutation[i - 1] % (i + 1);
-        sslExtensionBuilder tmp = builders[i];
-        builders[i] = builders[idx];
-        builders[idx] = tmp;
-    }
-
-    /* Make sure that Psk extension is penultimate (before NULL entry). */
-    PR_ASSERT(builders[buildersLen - 2].ex_type == ssl_tls13_pre_shared_key_xtn);
-    PR_ASSERT(builders[buildersLen - 2].ex_sender == clientHelloSendersTLS[buildersLen - 2].ex_sender);
-
-    ss->ssl3.hs.chExtensionPermutation = builders;
-    return SECSuccess;
-}
-
-void
-tls_ClientHelloExtensionPermutationDestroy(sslSocket *ss)
-{
-    if (ss->ssl3.hs.chExtensionPermutation) {
-        PORT_Free(ss->ssl3.hs.chExtensionPermutation);
-        ss->ssl3.hs.chExtensionPermutation = NULL;
-    }
 }
