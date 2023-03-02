@@ -41,6 +41,7 @@
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_prompts.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/dom/WindowGlobalParent.h"
 #include "nsIProxiedChannel.h"
 #include "nsIProxyInfo.h"
 
@@ -1059,16 +1060,34 @@ bool nsHttpChannelAuthProvider::BlockPrompt(bool proxyAuth) {
   bool topDoc = true;
   bool xhr = false;
   bool nonWebContent = false;
+  bool isCrossDomain = false;
 
   if (loadInfo->GetExternalContentPolicyType() !=
       ExtContentPolicy::TYPE_DOCUMENT) {
     topDoc = false;
   }
 
-  if (!topDoc) {
+  if (topDoc) {
+    // To check if the navigation is cross domain, we need to find out where
+    // we're navigating away from
+    RefPtr<dom::BrowsingContext> browsingContext;
+    nsresult rv =
+        loadInfo->GetTargetBrowsingContext(getter_AddRefs(browsingContext));
+    if (browsingContext && NS_SUCCEEDED(rv)) {
+      if (RefPtr<dom::WindowGlobalParent> windowGlobalParent =
+              browsingContext->Canonical()->GetCurrentWindowGlobal()) {
+        if (nsCOMPtr<nsIPrincipal> documentPrincipal =
+                windowGlobalParent->DocumentPrincipal()) {
+          documentPrincipal->IsThirdPartyURI(mURI, &isCrossDomain);
+        }
+      }
+    }
+  } else {
     nsCOMPtr<nsIPrincipal> triggeringPrinc = loadInfo->TriggeringPrincipal();
     if (triggeringPrinc->IsSystemPrincipal()) {
       nonWebContent = true;
+    } else {
+      triggeringPrinc->IsThirdPartyURI(mURI, &isCrossDomain);
     }
   }
 
@@ -1086,6 +1105,24 @@ bool nsHttpChannelAuthProvider::BlockPrompt(bool proxyAuth) {
       nsIPrincipal* loadingPrinc = loadInfo->GetLoadingPrincipal();
       MOZ_ASSERT(loadingPrinc);
       mCrossOrigin = !loadingPrinc->IsSameOrigin(mURI);
+    }
+  }
+
+  if (topDoc) {
+    if (isCrossDomain) {
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_HTTP_AUTH_RESOURCE_TYPE::topLevelCrossDomain);
+    } else {
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_HTTP_AUTH_RESOURCE_TYPE::topLevelSameDomain);
+    }
+  } else {
+    if (isCrossDomain) {
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_HTTP_AUTH_RESOURCE_TYPE::subCrossDomain);
+    } else {
+      Telemetry::AccumulateCategorical(
+          Telemetry::LABELS_HTTP_AUTH_RESOURCE_TYPE::subSameDomain);
     }
   }
 

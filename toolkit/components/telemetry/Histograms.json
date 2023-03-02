@@ -3191,6 +3191,17 @@
     "n_values": 64,
     "description": "Stats about what kind of resource requested http authentication. (29=top-level doc, 30=same origin subresources, 31=same origin xhr, 32=non-web-content, (nsIContentPolicy type)=cross-origin subresources per nsIContentPolicy type)"
   },
+  "HTTP_AUTH_RESOURCE_TYPE": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "expires_in_version": "116",
+    "alert_emails": ["pbz@mozilla.com", "hpeuckmann@mozilla.com"],
+    "bug_numbers": [1815738],
+    "kind": "categorical",
+    "releaseChannelCollection": "opt-out",
+    "description": "Records same/cross domain http authentication requests from top level navigations and subresource requests.",
+    "labels": ["topLevelSameDomain", "topLevelCrossDomain", "subSameDomain", "subCrossDomain"]
+  },
   "HTTP_AUTH_TYPE_STATS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
