@@ -1209,7 +1209,7 @@ void nsBidiPresUtils::TraverseFrames(nsIFrame* aCurrentFrame,
     char16_t overrideChar = 0;
     LayoutFrameType frameType = frame->Type();
     if (frame->IsFrameOfType(nsIFrame::eBidiInlineContainer) ||
-        frameType == LayoutFrameType::Ruby) {
+        RubyUtils::IsRubyBox(frameType)) {
       if (!frame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
         nsContainerFrame* c = static_cast<nsContainerFrame*>(frame);
         MOZ_ASSERT(c == do_QueryFrame(frame),
