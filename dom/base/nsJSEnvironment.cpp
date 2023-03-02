@@ -55,6 +55,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/SchedulerGroup.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/BrowsingContext.h"
@@ -1565,7 +1566,9 @@ void nsJSContext::EndCycleCollectionCallback(
                           std::min(ccNowDuration, kMaxICCDuration));
   }
 #if defined(MOZ_MEMORY)
-  else {
+  else if (
+      StaticPrefs::
+          dom_memory_foreground_content_processes_have_larger_page_cache()) {
     jemalloc_free_dirty_pages();
   }
 #endif
@@ -1817,7 +1820,9 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
                             TimeUntilNow(sCurrentGCStartTime).ToMilliseconds());
 
 #if defined(MOZ_MEMORY)
-      if (freeDirty) {
+      if (freeDirty &&
+          StaticPrefs::
+              dom_memory_foreground_content_processes_have_larger_page_cache()) {
         jemalloc_free_dirty_pages();
       }
 #endif

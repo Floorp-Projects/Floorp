@@ -3109,6 +3109,13 @@
   value: 2.0f
   mirror: always
 
+# Inform mozjemalloc that the foreground content processes can keep more dirty
+# pages in memory.
+- name: dom.memory.foreground_content_processes_have_larger_page_cache
+  type: bool
+  value: true
+  mirror: always
+
 # Enable meta-viewport support in remote APZ-enabled frames.
 - name: dom.meta-viewport.enabled
   type: RelaxedAtomicBool
