@@ -6,6 +6,7 @@ loader: taskgraph.loader.transform:loader
 
 transforms:
     - android_taskgraph.transforms.gradle_optimization:transforms
+    - android_taskgraph.transforms.test:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
@@ -18,6 +19,7 @@ task-defaults:
         build-type: debug
         code-review: true
         retrigger: true
+    include-pull-request-number: true
     optimization:
         skip-unless-changed: [] # Paths are dynamically added by transforms
     worker-type: b-android
