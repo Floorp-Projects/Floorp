@@ -433,7 +433,7 @@ class WasmMemoryObject : public NativeObject {
   bool addMovingGrowObserver(JSContext* cx, WasmInstanceObject* instance);
   static uint64_t grow(Handle<WasmMemoryObject*> memory, uint64_t delta,
                        JSContext* cx);
-  static void discard(Handle<WasmMemoryObject*> memory, uint64_t byteOffset,
+  static bool discard(Handle<WasmMemoryObject*> memory, uint64_t byteOffset,
                       uint64_t len, JSContext* cx);
 };
 
