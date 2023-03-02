@@ -7,6 +7,7 @@
 #include <winerror.h>
 
 #include "MFMediaEngineUtils.h"
+#include "mozilla/EMEUtils.h"
 #include "mozilla/dom/MediaKeyMessageEventBinding.h"
 #include "mozilla/dom/MediaKeyStatusMapBinding.h"
 #include "nsThreadUtils.h"
@@ -16,9 +17,7 @@ namespace mozilla {
 using Microsoft::WRL::ComPtr;
 using Microsoft::WRL::MakeAndInitialize;
 
-#define LOG(msg, ...)                         \
-  MOZ_LOG(gMFMediaEngineLog, LogLevel::Debug, \
-          ("MFCDMSession=%p, " msg, this, ##__VA_ARGS__))
+#define LOG(msg, ...) EME_LOG("MFCDMSession=%p, " msg, this, ##__VA_ARGS__)
 
 static inline MF_MEDIAKEYSESSION_TYPE ConvertSessionType(
     KeySystemConfig::SessionType aType) {

@@ -6,14 +6,13 @@
 
 #include "MFMediaEngineUtils.h"
 #include "WMF.h"
+#include "mozilla/EMEUtils.h"
 
 namespace mozilla {
 
 using Microsoft::WRL::ComPtr;
 
-#define LOG(msg, ...)                         \
-  MOZ_LOG(gMFMediaEngineLog, LogLevel::Debug, \
-          ("MFPMPHostWrapper=%p, " msg, this, ##__VA_ARGS__))
+#define LOG(msg, ...) EME_LOG("MFPMPHostWrapper=%p, " msg, this, ##__VA_ARGS__)
 
 HRESULT MFPMPHostWrapper::RuntimeClassInitialize(
     Microsoft::WRL::ComPtr<IMFPMPHost>& aHost) {
