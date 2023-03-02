@@ -10628,12 +10628,11 @@ nsresult nsContentUtils::AnonymizeURI(nsIURI* aURI, nsCString& aAnonymizedURI) {
 }
 
 /* static */
-bool nsContentUtils::StringifyJSON(JSContext* aCx,
-                                   JS::MutableHandle<JS::Value> aValue,
+bool nsContentUtils::StringifyJSON(JSContext* aCx, JS::Handle<JS::Value> aValue,
                                    nsAString& aOutStr) {
   MOZ_ASSERT(aCx);
   aOutStr.Truncate();
-  JS::Rooted<JS::Value> value(aCx, aValue.get());
+  JS::Rooted<JS::Value> value(aCx, aValue);
   nsAutoString serializedValue;
   NS_ENSURE_TRUE(JS_Stringify(aCx, &value, nullptr, JS::NullHandleValue,
                               JSONCreator, &serializedValue),

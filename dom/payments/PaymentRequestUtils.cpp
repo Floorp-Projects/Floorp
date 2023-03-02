@@ -22,12 +22,9 @@ nsresult SerializeFromJSObject(JSContext* aCx, JS::Handle<JSObject*> aObject,
 nsresult SerializeFromJSVal(JSContext* aCx, JS::Handle<JS::Value> aValue,
                             nsAString& aSerializedValue) {
   aSerializedValue.Truncate();
-  nsAutoString serializedValue;
-  JS::Rooted<JS::Value> value(aCx, aValue.get());
-  NS_ENSURE_TRUE(nsContentUtils::StringifyJSON(aCx, &value, serializedValue),
+  NS_ENSURE_TRUE(nsContentUtils::StringifyJSON(aCx, aValue, aSerializedValue),
                  NS_ERROR_XPC_BAD_CONVERT_JS);
-  NS_ENSURE_TRUE(!serializedValue.IsEmpty(), NS_ERROR_FAILURE);
-  aSerializedValue = serializedValue;
+  NS_ENSURE_TRUE(!aSerializedValue.IsEmpty(), NS_ERROR_FAILURE);
   return NS_OK;
 }
 

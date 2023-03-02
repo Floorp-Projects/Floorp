@@ -75,9 +75,8 @@ TEST(DOM_Base_ContentUtils, StringifyJSON_EmptyValue)
   JSContext* cx = jsAPI.cx();
   nsAutoString serializedValue;
 
-  JS::Rooted<JS::Value> jsValue(cx);
-  ASSERT_TRUE(nsContentUtils::StringifyJSON(cx, &jsValue, serializedValue));
-
+  ASSERT_TRUE(nsContentUtils::StringifyJSON(cx, JS::UndefinedHandleValue,
+                                            serializedValue));
   ASSERT_TRUE(serializedValue.EqualsLiteral("null"));
 }
 
@@ -97,7 +96,7 @@ TEST(DOM_Base_ContentUtils, StringifyJSON_Object)
   ASSERT_TRUE(JS_DefineProperty(cx, jsObj, "key1", valueStr, JSPROP_ENUMERATE));
   JS::Rooted<JS::Value> jsValue(cx, JS::ObjectValue(*jsObj));
 
-  ASSERT_TRUE(nsContentUtils::StringifyJSON(cx, &jsValue, serializedValue));
+  ASSERT_TRUE(nsContentUtils::StringifyJSON(cx, jsValue, serializedValue));
 
   ASSERT_TRUE(serializedValue.EqualsLiteral("{\"key1\":\"Hello World!\"}"));
 }
