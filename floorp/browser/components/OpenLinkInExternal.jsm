@@ -43,11 +43,16 @@ function getBrowsersOnWindows() {
         let key = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
             Ci.nsIWindowsRegKey
         );
-        key.open(
-            ROOT_KEY,
-            "Software\\Clients\\StartMenuInternet",
-            Ci.nsIWindowsRegKey.ACCESS_READ
-        );
+        try {
+            key.open(
+                ROOT_KEY,
+                "Software\\Clients\\StartMenuInternet",
+                Ci.nsIWindowsRegKey.ACCESS_READ
+            );
+        } catch (e) {
+            console.error(e);
+            continue;
+        }
         for (let i = 0; i < key.childCount; i++) {
             let keyname = key.getChildName(i);
             if (browsers.filter(browser => browser.keyName === keyname).length >= 1) continue;
