@@ -10605,13 +10605,6 @@ void nsContentUtils::InnerOrOuterWindowDestroyed() {
   --sInnerOrOuterWindowCount;
 }
 
-static bool JSONCreator(const char16_t* aBuf, uint32_t aLen, void* aData) {
-  nsAString* result = static_cast<nsAString*>(aData);
-  result->Append(static_cast<const char16_t*>(aBuf),
-                 static_cast<uint32_t>(aLen));
-  return true;
-}
-
 /* static */
 nsresult nsContentUtils::AnonymizeURI(nsIURI* aURI, nsCString& aAnonymizedURI) {
   MOZ_ASSERT(aURI);
@@ -10625,6 +10618,12 @@ nsresult nsContentUtils::AnonymizeURI(nsIURI* aURI, nsCString& aAnonymizedURI) {
   // presented in the UI.
   nsCOMPtr<nsIURI> exposableURI = net::nsIOService::CreateExposableURI(aURI);
   return exposableURI->GetSpec(aAnonymizedURI);
+}
+
+static bool JSONCreator(const char16_t* aBuf, uint32_t aLen, void* aData) {
+  nsAString* result = static_cast<nsAString*>(aData);
+  result->Append(aBuf, aLen);
+  return true;
 }
 
 /* static */
