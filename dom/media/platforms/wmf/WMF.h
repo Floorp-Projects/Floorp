@@ -187,6 +187,9 @@ HRESULT MFUnlockDXGIDeviceManager();
 HRESULT MFPutWorkItem(DWORD dwQueue, IMFAsyncCallback* pCallback,
                       IUnknown* pState);
 
+HRESULT MFSerializeAttributesToStream(IMFAttributes* pAttr, DWORD dwOptions,
+                                      IStream* pStm);
+
 }  // namespace mozilla::wmf
 
 #endif

@@ -616,5 +616,11 @@ HRESULT MFPutWorkItem(DWORD dwQueue, IMFAsyncCallback* pCallback,
   return (MFPutWorkItemPtr)(dwQueue, pCallback, pState);
 }
 
+HRESULT MFSerializeAttributesToStream(IMFAttributes* pAttr, DWORD dwOptions,
+                                      IStream* pStm) {
+  ENSURE_FUNCTION_PTR(MFSerializeAttributesToStream, mfplat.dll);
+  return (MFSerializeAttributesToStreamPtr)(pAttr, dwOptions, pStm);
+}
+
 }  // end namespace wmf
 }  // end namespace mozilla

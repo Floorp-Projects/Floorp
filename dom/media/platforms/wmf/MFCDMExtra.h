@@ -106,6 +106,12 @@ typedef struct MFMediaKeyStatus {
 
 EXTERN_GUID(MF_CONTENTDECRYPTIONMODULE_SERVICE, 0x15320c45, 0xff80, 0x484a,
             0x9d, 0xcb, 0xd, 0xf8, 0x94, 0xe6, 0x9a, 0x1);
+EXTERN_GUID(GUID_ObjectStream, 0x3e73735c, 0xe6c0, 0x481d, 0x82, 0x60, 0xee,
+            0x5d, 0xb1, 0x34, 0x3b, 0x5f);
+EXTERN_GUID(GUID_ClassName, 0x77631a31, 0xe5e7, 0x4785, 0xbf, 0x17, 0x20, 0xf5,
+            0x7b, 0x22, 0x48, 0x02);
+EXTERN_GUID(CLSID_EMEStoreActivate, 0x2df7b51e, 0x797b, 0x4d06, 0xbe, 0x71,
+            0xd1, 0x4a, 0x52, 0xcf, 0x84, 0x21);
 
 #  ifndef __IMFContentDecryptionModuleSessionCallbacks_INTERFACE_DEFINED__
 #    define __IMFContentDecryptionModuleSessionCallbacks_INTERFACE_DEFINED__
@@ -175,6 +181,30 @@ IMFContentDecryptionModuleSession : public IUnknown {
 };
 
 #  endif /* __IMFContentDecryptionModuleSession_INTERFACE_DEFINED__ */
+
+#  ifndef __IMFPMPHostApp_INTERFACE_DEFINED__
+#    define __IMFPMPHostApp_INTERFACE_DEFINED__
+
+/* interface IMFPMPHostApp */
+/* [uuid][object] */
+
+EXTERN_C const IID IID_IMFPMPHostApp;
+
+MIDL_INTERFACE("84d2054a-3aa1-4728-a3b0-440a418cf49c")
+IMFPMPHostApp : public IUnknown {
+ public:
+  virtual HRESULT STDMETHODCALLTYPE LockProcess(void) = 0;
+
+  virtual HRESULT STDMETHODCALLTYPE UnlockProcess(void) = 0;
+
+  virtual HRESULT STDMETHODCALLTYPE ActivateClassById(
+      /* [in] */ __RPC__in LPCWSTR id,
+      /* [unique][in] */ __RPC__in_opt IStream * pStream,
+      /* [in] */ __RPC__in REFIID riid,
+      /* [iid_is][out] */ __RPC__deref_out_opt void** ppv) = 0;
+};
+
+#  endif /* __IMFPMPHostApp_INTERFACE_DEFINED__ */
 
 #  ifndef __IMFContentDecryptionModule_INTERFACE_DEFINED__
 #    define __IMFContentDecryptionModule_INTERFACE_DEFINED__
