@@ -8,6 +8,7 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "nsComplexBreaker.h"
 #include "nsTArray.h"
+#include "nsUnicodeProperties.h"
 
 using mozilla::intl::Script;
 using mozilla::intl::UnicodeProperties;
