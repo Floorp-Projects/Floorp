@@ -67,14 +67,10 @@
     <string name="private_browsing_common_myths">Vanlege mytar om privat nettlesing</string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Legg til ein snarveg for å opne private faner frå startskjermen.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">Opne neste private fane med eitt trykk.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">Opne neste private fane med eitt trykk.</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Legg til snarveg</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Legg til på startskjermen</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -1368,6 +1364,8 @@
 
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Personvernsikring som standard</string>
+    <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_old">%1$s stoppar selskap automatisk frå å spore aktivitetane dine på nettet i det skjulte.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">Totalt vern mot infokapslar stoppar sporarar frå å bruke infokapslar til å forfølgje deg på tvers av nettstadar.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -2062,4 +2060,6 @@
     <string name="a11y_action_label_wallpaper_collection_learn_more">opne lenka for å lære meir om denne samlinga</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
     <string name="a11y_action_label_read_article">les artikkelen</string>
+    <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
+    <string name="a11y_action_label_pocket_learn_more">opne lenke for å lese meir</string>
 </resources>

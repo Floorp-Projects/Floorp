@@ -75,6 +75,12 @@
          sharing an URL. -->
     <string name="share_dialog_title">Падзяліцца праз</string>
 
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">Сцерці гісторыю аглядання</string>
+
     <!-- Notification action to open Focus and resume the current browsing session. -->
     <string name="notification_action_open">Адкрыць</string>
 
@@ -85,6 +91,12 @@
     <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
          This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
     <string name="shortcut_erase_short_label">Сцерці</string>
+
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">Сцерці гісторыю аглядання</string>
 
 
     <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
@@ -202,6 +214,49 @@
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Выкарыстоўвайце адбіткі пальцаў для разблакіравання праграмы</string>
+
+    <string name="preference_performance_block_webfonts">Блакіраваць вэб-шрыфты</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">Можа прывесці да адсутнасці значкоў або відарысаў</string>
+
+    <string name="preference_performance_block_javascript">Блакіраваць JavaScript</string>
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">Старонкі могуць загружацца хутчэй, але пры гэтым могуць няправільна працаваць</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">Зрабіць %1$s прадвызначаным браўзерам</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">Адпраўляць даныя аб выкарыстанні</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">Падрабязней</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">Паведамленне аб прыватнасці</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">Пра %1$s</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">Усталяваныя пошукавыя сістэмы</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">Выберыце пошукавую сістэму</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">Аднавіць прадвызначаныя пошукавыя сістэмы</string>
+
+    <string name="preference_search_remove">Выдаліць</string>
+
+    <string name="search_add_manually_save">Захаваць</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">Загрузка</string>
 
     <!-- Tips displayed on the home view -->
 

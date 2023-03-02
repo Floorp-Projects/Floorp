@@ -1639,7 +1639,7 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarnamalardı jasırıw ushı
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Paroldi kóshirip alıw</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
-    <string name="saved_logins_clear_password">Paroldı tazalaw</string>
+    <string name="saved_logins_clear_password">Paroldi tazalaw</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Paydalanıwshı atın kóshirip alıw</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->

@@ -672,7 +672,7 @@
     <string name="preference_performance_request_desktop_site2">სრული საიტი</string>
 
     <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
-    <string name="custom_tab_copy_url_action">URL-ს ასლი მზადაა</string>
+    <string name="custom_tab_copy_url_action">ბმული აღებულია</string>
 
     <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
     <string name="preference_advanced_summary">შემმუშავებლის ხელსაწყოები</string>
@@ -904,7 +904,7 @@
     <string name="full_screen_notification">სრულ ეკრანზე გაშლა</string>
 
     <!-- Preference for switching to a new tab immediately after opening -->
-    <string name="preference_open_new_tab">ბმულის ახალ ჩანართში გახსნისას მაშინვე მასზე გადასვლა</string>
+    <string name="preference_open_new_tab">ბმულის გახსნისას ახალ ჩანართში მაშინვე მასზე გადასვლა</string>
 
     <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
     <string name="preference_safe_browsing_title">შესაძლო საფრთხის მქონე და თაღლითური საიტების შეზღუდვა</string>

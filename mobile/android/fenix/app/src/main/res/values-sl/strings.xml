@@ -2059,4 +2059,6 @@
     <string name="a11y_action_label_wallpaper_collection_learn_more">odprete povezavo z več informacijami o tej zbirki</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
     <string name="a11y_action_label_read_article">preberete članek</string>
-    </resources>
+    <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
+    <string name="a11y_action_label_pocket_learn_more">odprete povezavo s podrobnostmi</string>
+</resources>
