@@ -36,8 +36,8 @@
 "use strict";
 do_get_profile(); // must be called before getting nsIX509CertDB
 
-const { RemoteSecuritySettings } = ChromeUtils.import(
-  "resource://gre/modules/psm/RemoteSecuritySettings.jsm"
+const { RemoteSecuritySettings } = ChromeUtils.importESModule(
+  "resource://gre/modules/psm/RemoteSecuritySettings.sys.mjs"
 );
 const { TestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TestUtils.sys.mjs"

@@ -12,8 +12,8 @@
 // * it does a sanity check to ensure other cert verifier behavior is
 //   unmodified
 
-const { RemoteSecuritySettings } = ChromeUtils.import(
-  "resource://gre/modules/psm/RemoteSecuritySettings.jsm"
+const { RemoteSecuritySettings } = ChromeUtils.importESModule(
+  "resource://gre/modules/psm/RemoteSecuritySettings.sys.mjs"
 );
 
 // First, we need to setup appInfo for the blocklist service to work

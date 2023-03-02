@@ -42,6 +42,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
+
+  RemoteSecuritySettings:
+    "resource://gre/modules/psm/RemoteSecuritySettings.sys.mjs",
+
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
   SearchSERPTelemetry: "resource:///modules/SearchSERPTelemetry.sys.mjs",
@@ -90,10 +94,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   PluralForm: "resource://gre/modules/PluralForm.jsm",
   ProcessHangMonitor: "resource:///modules/ProcessHangMonitor.jsm",
   PublicSuffixList: "resource://gre/modules/netwerk-dns/PublicSuffixList.jsm",
-
-  RemoteSecuritySettings:
-    "resource://gre/modules/psm/RemoteSecuritySettings.jsm",
-
   RFPHelper: "resource://gre/modules/RFPHelper.jsm",
   SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Sanitizer: "resource:///modules/Sanitizer.jsm",

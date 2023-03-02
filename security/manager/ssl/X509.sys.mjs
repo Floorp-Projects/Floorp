@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var { DER } = ChromeUtils.import("resource://gre/modules/psm/DER.jsm");
+import { DER } from "resource://gre/modules/psm/DER.sys.mjs";
 
 const ERROR_UNSUPPORTED_ASN1 = "unsupported asn.1";
 const ERROR_TIME_NOT_VALID = "Time not valid";
@@ -640,5 +638,4 @@ class SubjectPublicKeyInfo extends DecodedDER {
   }
 }
 
-var X509 = { Certificate };
-var EXPORTED_SYMBOLS = ["X509"];
+export var X509 = { Certificate };

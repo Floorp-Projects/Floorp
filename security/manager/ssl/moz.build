@@ -55,9 +55,9 @@ XPCOM_MANIFESTS += [
 ]
 
 EXTRA_JS_MODULES.psm += [
-    "DER.jsm",
-    "RemoteSecuritySettings.jsm",
-    "X509.jsm",
+    "DER.sys.mjs",
+    "RemoteSecuritySettings.sys.mjs",
+    "X509.sys.mjs",
 ]
 
 EXPORTS += [
