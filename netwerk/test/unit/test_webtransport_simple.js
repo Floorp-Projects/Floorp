@@ -180,11 +180,11 @@ async function test_closed(path) {
 }
 
 add_task(async function test_closed_0ms() {
-  await test_closed("/closeafter0ms");
+  test_closed("/closeafter0ms");
 });
 
 add_task(async function test_closed_100ms() {
-  await test_closed("/closeafter100ms");
+  test_closed("/closeafter100ms");
 });
 
 add_task(async function test_wt_stream_create() {
