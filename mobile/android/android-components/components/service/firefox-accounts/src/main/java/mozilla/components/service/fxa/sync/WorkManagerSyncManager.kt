@@ -61,6 +61,12 @@ private const val KEY_REASON = "reason"
 private const val SYNC_WORKER_BACKOFF_DELAY_MINUTES = 3L
 
 /**
+ * The Rust implemented SyncManager. Must be a singleton as it carries some state between
+ * syncs. Does no IO at creation time so is safe to call on any thread.
+ */
+val syncManager: RustSyncManager by lazy { RustSyncManager() }
+
+/**
  * A [SyncManager] implementation which uses WorkManager APIs to schedule sync tasks.
  *
  * Must be initialized on the main thread.
@@ -337,13 +343,14 @@ internal class WorkManagerSyncWorker(
 
     @Suppress("LongMethod", "ComplexMethod")
     private suspend fun doSync(syncableStores: Map<SyncEngine, LazyStoreWithKey>): Result {
-        val syncManager = RustSyncManager()
         val engineKeyProviders = mutableMapOf<SyncEngine, KeyProvider>()
 
         // We need to tell RustSyncManager which engines to sync.
         val enginesToSync = SyncEngineSelection.Some(syncableStores.map { it.key.nativeName })
 
         // We need to tell RustSyncManager about instances of supported stores ('places' and 'logins').
+        // NOTE: This need only be done once, not each sync - but the only impact is that
+        // it's slightly less efficient so refactoring might not be worthwhile.
         syncableStores.entries.forEach {
             // We're assuming all syncable stores live in Rust.
             // Currently `RustSyncManager` doesn't support non-Rust sync engines.
