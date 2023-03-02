@@ -130,13 +130,11 @@ class Concrete<FakeNode> : public Base {
   }
 };
 
-const char16_t Concrete<FakeNode>::concreteTypeName[] = u"FakeNode";
-
 }  // namespace ubi
 }  // namespace JS
 
-void AddEdge(FakeNode& node, FakeNode& referent,
-             const char16_t* edgeName = nullptr) {
+inline void AddEdge(FakeNode& node, FakeNode& referent,
+                    const char16_t* edgeName = nullptr) {
   char16_t* ownedEdgeName = nullptr;
   if (edgeName) {
     ownedEdgeName = NS_xstrdup(edgeName);
@@ -207,7 +205,7 @@ class MockWriter : public CoreDumpWriter {
   MOCK_METHOD1(writeMetadata, bool(uint64_t));
 };
 
-void ExpectWriteNode(MockWriter& writer, FakeNode& node) {
+inline void ExpectWriteNode(MockWriter& writer, FakeNode& node) {
   EXPECT_CALL(writer, writeNode(Eq(JS::ubi::Node(&node)), _))
       .Times(1)
       .WillOnce(Return(true));
