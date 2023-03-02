@@ -56,7 +56,6 @@ UNIFIED_SOURCES = [
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     UNIFIED_SOURCES += ["cocoa/CocoaGamepad.cpp"]
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
-    REQUIRES_UNIFIED_BUILD = True
     UNIFIED_SOURCES += ["windows/WindowsGamepad.cpp"]
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
     UNIFIED_SOURCES += ["android/AndroidGamepad.cpp"]
