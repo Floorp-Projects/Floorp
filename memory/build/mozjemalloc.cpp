@@ -1240,7 +1240,10 @@ struct arena_t {
 
   void* Ralloc(void* aPtr, size_t aSize, size_t aOldSize);
 
-  void Purge(bool aAll);
+  size_t EffectiveMaxDirty();
+
+  // Passing one means purging all.
+  void Purge(size_t aMaxDirty);
 
   void HardPurge();
 
@@ -2766,10 +2769,7 @@ arena_run_t* arena_t::AllocRun(size_t aSize, bool aLarge, bool aZero) {
   return SplitRun(run, aSize, aLarge, aZero) ? run : nullptr;
 }
 
-void arena_t::Purge(bool aAll) {
-  arena_chunk_t* chunk;
-  size_t i, npages;
-
+size_t arena_t::EffectiveMaxDirty() {
   int32_t modifier = gArenas.DefaultMaxDirtyPageModifier();
   if (modifier) {
     int32_t arenaOverride =
@@ -2779,10 +2779,13 @@ void arena_t::Purge(bool aAll) {
     }
   }
 
-  // If all is set purge all dirty pages.
-  size_t dirty_max = aAll            ? 1
-                     : modifier >= 0 ? mMaxDirty << modifier
-                                     : mMaxDirty >> -modifier;
+  return modifier >= 0 ? mMaxDirty << modifier : mMaxDirty >> -modifier;
+}
+
+void arena_t::Purge(size_t aMaxDirty) {
+  arena_chunk_t* chunk;
+  size_t i, npages;
+
 #ifdef MOZ_DEBUG
   size_t ndirty = 0;
   for (auto chunk : mChunksDirty.iter()) {
@@ -2790,13 +2793,13 @@ void arena_t::Purge(bool aAll) {
   }
   MOZ_ASSERT(ndirty == mNumDirty);
 #endif
-  MOZ_DIAGNOSTIC_ASSERT(aAll || (mNumDirty > mMaxDirty));
+  MOZ_DIAGNOSTIC_ASSERT(aMaxDirty == 1 || (mNumDirty > aMaxDirty));
 
   // Iterate downward through chunks until enough dirty memory has been
   // purged.  Terminate as soon as possible in order to minimize the
   // number of system calls, even if a chunk has only been partially
   // purged.
-  while (mNumDirty > (dirty_max >> 1)) {
+  while (mNumDirty > (aMaxDirty >> 1)) {
 #ifdef MALLOC_DOUBLE_PURGE
     bool madvised = false;
 #endif
@@ -2847,7 +2850,7 @@ void arena_t::Purge(bool aAll) {
         madvised = true;
 #  endif
 #endif
-        if (mNumDirty <= (dirty_max >> 1)) {
+        if (mNumDirty <= (aMaxDirty >> 1)) {
           break;
         }
       }
@@ -2963,9 +2966,9 @@ arena_chunk_t* arena_t::DallocRun(arena_run_t* aRun, bool aDirty) {
     chunk_dealloc = DeallocChunk(chunk);
   }
 
-  // Enforce mMaxDirty.
-  if (mNumDirty > mMaxDirty) {
-    Purge(false);
+  size_t maxDirty = EffectiveMaxDirty();
+  if (mNumDirty > maxDirty) {
+    Purge(maxDirty);
   }
 
   return chunk_dealloc;
@@ -4823,7 +4826,7 @@ inline void MozJemalloc::jemalloc_free_dirty_pages(void) {
     MutexAutoLock lock(gArenas.mLock);
     for (auto arena : gArenas.iter()) {
       MutexAutoLock arena_lock(arena->mLock);
-      arena->Purge(true);
+      arena->Purge(1);
     }
   }
 }
