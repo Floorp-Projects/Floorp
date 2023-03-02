@@ -184,6 +184,41 @@ let ShellServiceInternal = {
       return true;
     }
 
+    const handler = this.getDefaultPDFHandler();
+    if (handler === null) {
+      // We only get an exception when something went really wrong.  Fail
+      // safely: don't set Firefox as default PDF handler.
+      lazy.log.warn(
+        "Could not determine default PDF handler: not setting Firefox as " +
+          "default PDF handler!"
+      );
+      return false;
+    }
+
+    if (!handler.registered) {
+      lazy.log.debug(
+        "Current default PDF handler has no registered association; " +
+          "should set as default PDF handler."
+      );
+      return true;
+    }
+
+    if (handler.knownBrowser) {
+      lazy.log.debug(
+        "Current default PDF handler progID matches known browser; should " +
+          "set as default PDF handler."
+      );
+      return true;
+    }
+
+    lazy.log.debug(
+      "Current default PDF handler progID does not match known browser " +
+        "prefix; should not set as default PDF handler."
+    );
+    return false;
+  },
+
+  getDefaultPDFHandler() {
     const knownBrowserPrefixes = [
       "AppXq0fevzme2pys62n3e0fbqa7peapykr8v", // Edge before Blink, per https://stackoverflow.com/a/32724723.
       "Brave", // For "BraveFile".
@@ -194,6 +229,7 @@ let ShellServiceInternal = {
       "Opera", // For "OperaStable", presumably varying with channel.
       "Yandex", // For "YandexPDF.IHKFKZEIOKEMR6BGF62QXCRIKM", presumably varying with installation.
     ];
+
     let currentProgID = "";
     try {
       // Returns the empty string when no association is registered, in
@@ -203,37 +239,26 @@ let ShellServiceInternal = {
     } catch (e) {
       // We only get an exception when something went really wrong.  Fail
       // safely: don't set Firefox as default PDF handler.
-      lazy.log.warn(
-        "Failed to queryCurrentDefaultHandlerFor: " +
-          "not setting Firefox as default PDF handler!"
-      );
-      return false;
+      lazy.log.warn("Failed to queryCurrentDefaultHandlerFor:");
+      return null;
     }
 
     if (currentProgID == "") {
-      lazy.log.debug(
-        `Current default PDF handler has no registered association; ` +
-          `should set as default PDF handler.`
-      );
-      return true;
+      return { registered: false, knownBrowser: false };
     }
 
-    let knownBrowserPrefix = knownBrowserPrefixes.find(it =>
+    const knownBrowserPrefix = knownBrowserPrefixes.find(it =>
       currentProgID.startsWith(it)
     );
+
     if (knownBrowserPrefix) {
-      lazy.log.debug(
-        `Current default PDF handler progID matches known browser prefix: ` +
-          `'${knownBrowserPrefix}'; should set as default PDF handler.`
-      );
-      return true;
+      lazy.log.debug(`Found known browser prefix: ${knownBrowserPrefix}`);
     }
 
-    lazy.log.debug(
-      `Current default PDF handler progID does not match known browser prefix; ` +
-        `should not set as default PDF handler.`
-    );
-    return false;
+    return {
+      registered: true,
+      knownBrowser: !!knownBrowserPrefix,
+    };
   },
 
   /*
