@@ -128,6 +128,7 @@ MOCHITEST_SERVER_LOGGING = False
 #####################
 
 # output processing
+TBPL_RETRY = 4  # Defined in mozharness
 
 
 class MessageLogger(object):
@@ -2734,15 +2735,23 @@ toolbar#nav-bar {
             )
 
             # start the runner
-            runner.start(
-                debug_args=debug_args, interactive=interactive, outputTimeout=timeout
-            )
-            proc = runner.process_handler
-            self.log.info("runtests.py | Application pid: %d" % proc.pid)
+            try:
+                runner.start(
+                    debug_args=debug_args,
+                    interactive=interactive,
+                    outputTimeout=timeout,
+                )
+                proc = runner.process_handler
+                self.log.info("runtests.py | Application pid: %d" % proc.pid)
 
-            gecko_id = "GECKO(%d)" % proc.pid
-            self.log.process_start(gecko_id)
-            self.message_logger.gecko_id = gecko_id
+                gecko_id = "GECKO(%d)" % proc.pid
+                self.log.process_start(gecko_id)
+                self.message_logger.gecko_id = gecko_id
+            except PermissionError:
+                # treat machine as bad, return
+                return TBPL_RETRY, "Failure to launch browser"
+            except Exception as e:
+                raise e  # unknown error
 
             try:
                 # start marionette and kick off the tests
@@ -2999,6 +3008,9 @@ toolbar#nav-bar {
                     bisection_log = 1
 
             result = self.doTests(options, testsToRun, manifestToFilter)
+            if result == TBPL_RETRY:  # terminate task
+                return result
+
             if options.bisectChunk:
                 status = bisect.post_test(options, self.expectedError, self.result)
             else:
@@ -3306,6 +3318,8 @@ toolbar#nav-bar {
             # problems if we use the directory provided by the user.
             tests_in_manifest = [t["path"] for t in tests if t["manifest"] == m]
             res = self.runMochitests(options, tests_in_manifest, manifestToFilter=m)
+            if res == TBPL_RETRY:  # terminate task
+                return res
             result = result or res
 
             # Dump the logging buffer
