@@ -12,6 +12,7 @@
 #include "mozilla/BasicEvents.h"
 #include "nsContentUtils.h"
 #include "nsHashtablesFwd.h"
+#include "nsID.h"
 #include "nsIGlobalObject.h"
 #include "nsIObserver.h"
 #include "nsISupports.h"
@@ -227,6 +228,11 @@ class nsRFPService final : public nsIObserver {
                                 const WidgetKeyboardEvent* aKeyboardEvent,
                                 uint32_t& aOut);
 
+  // The method to generate the key for randomization. It can return nothing if
+  // the session key is not available due to the randomization is disabled.
+  static Maybe<nsTArray<uint8_t>> GenerateKey(nsIURI* aTopLevelURI,
+                                              bool aIsPrivate);
+
  private:
   nsresult Init();
 
@@ -261,7 +267,24 @@ class nsRFPService final : public nsIObserver {
 
   static void TypeToText(TimerPrecisionType aType, nsACString& aText);
 
+  // Generate the session key if it hasn't been generated.
+  nsresult EnsureSessionKey(bool aIsPrivate);
+  void ClearSessionKey(bool aIsPrivate);
+
   nsCString mInitialTZValue;
+
+  // The keys that represent the browsing session. The lifetime of the key ties
+  // to the browsing session. For normal windows, the key is generated when
+  // loading the first http channel after the browser startup and persists until
+  // the browser shuts down. For private windows, the key is generated when
+  // opening a http channel on a private window and reset after all private
+  // windows close, i.e. private browsing session ends.
+  //
+  // The key will be used to generate the randomization noise used to fiddle the
+  // browser fingerprints. Note that this key lives and can only be accessed in
+  // the parent process.
+  Maybe<nsID> mBrowsingSessionKey;
+  Maybe<nsID> mPrivateBrowsingSessionKey;
 };
 
 }  // namespace mozilla

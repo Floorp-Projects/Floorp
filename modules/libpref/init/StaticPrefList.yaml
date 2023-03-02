@@ -12921,6 +12921,25 @@
   value: 0
   mirror: always
 
+# Enable the fingerprinting randomization.
+- name: privacy.resistFingerprinting.randomization.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Enable resetting the fingerprinting randomization key daily for normal windwos.
+- name: privacy.resistFingerprinting.randomization.daily_reset.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Enable resetting the fingerprinting randomization key daily for private windwos.
+- name: privacy.resistFingerprinting.randomization.daily_reset.private.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+
 # Anti-tracking permission expiration.
 - name: privacy.restrict3rdpartystorage.expiration
   type: uint32_t

@@ -17,6 +17,7 @@
 #include <utility>
 
 #include "MainThreadUtils.h"
+#include "ScopedNSSTypes.h"
 
 #include "mozilla/ArrayIterator.h"
 #include "mozilla/Assertions.h"
@@ -28,6 +29,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MacroForEach.h"
+#include "mozilla/OriginAttributes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Services.h"
@@ -66,6 +68,7 @@
 #include "nsIGlobalObject.h"
 #include "nsIObserverService.h"
 #include "nsIRandomGenerator.h"
+#include "nsIUserIdleService.h"
 #include "nsIXULAppInfo.h"
 
 #include "nscore.h"
@@ -90,12 +93,18 @@ static mozilla::LazyLogModule gResistFingerprintingLog(
 #define RFP_JITTER_VALUE_PREF \
   "privacy.resistFingerprinting.reduceTimerPrecision.jitter"
 #define PROFILE_INITIALIZED_TOPIC "profile-initial-state"
+#define LAST_PB_SESSION_EXITED_TOPIC "last-pb-context-exited"
+#define STARTUP_COMPLETE_TOPIC "browser-delayed-startup-finished"
 
 static constexpr uint32_t kVideoFramesPerSec = 30;
 static constexpr uint32_t kVideoDroppedRatio = 5;
 
 #define RFP_DEFAULT_SPOOFING_KEYBOARD_LANG KeyboardLang::EN
 #define RFP_DEFAULT_SPOOFING_KEYBOARD_REGION KeyboardRegion::US
+
+// The number of seconds we will wait after receiving the idle-daily
+// notification before clearing the session keys.
+const uint32_t kIdleObserverTimeSec = 1;
 
 NS_IMPL_ISUPPORTS(nsRFPService, nsIObserver)
 
@@ -644,6 +653,14 @@ nsresult nsRFPService::Init() {
   rv = obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (XRE_IsParentProcess()) {
+    rv = obs->AddObserver(this, LAST_PB_SESSION_EXITED_TOPIC, false);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = obs->AddObserver(this, STARTUP_COMPLETE_TOPIC, false);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
 #if defined(XP_WIN)
   rv = obs->AddObserver(this, PROFILE_INITIALIZED_TOPIC, false);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -734,7 +751,18 @@ void nsRFPService::StartShutdown() {
 
   if (obs) {
     obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    if (XRE_IsParentProcess()) {
+      obs->RemoveObserver(this, LAST_PB_SESSION_EXITED_TOPIC);
+    }
   }
+
+  nsCOMPtr<nsIUserIdleService> idleService =
+      do_GetService("@mozilla.org/widget/useridleservice;1");
+
+  if (idleService && XRE_IsParentProcess()) {
+    idleService->RemoveIdleObserver(this, kIdleObserverTimeSec);
+  }
+
   Preferences::UnregisterCallbacks(nsRFPService::PrefChanged, gCallbackPrefs,
                                    this);
 }
@@ -1061,5 +1089,137 @@ nsRFPService::Observe(nsISupports* aObject, const char* aTopic,
   }
 #endif
 
+  if (strcmp(LAST_PB_SESSION_EXITED_TOPIC, aTopic) == 0) {
+    // Clear the private session key when the private session ends so that we
+    // can generate a new key for the new private session.
+    ClearSessionKey(true);
+  }
+
+  if (strcmp(STARTUP_COMPLETE_TOPIC, aTopic) == 0) {
+    // Register the idle observer after the startup is finished.
+    nsCOMPtr<nsIUserIdleService> idleService =
+        do_GetService("@mozilla.org/widget/useridleservice;1");
+    NS_ENSURE_TRUE(idleService, NS_ERROR_NOT_AVAILABLE);
+
+    nsresult rv = idleService->AddIdleObserver(this, kIdleObserverTimeSec);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    NS_ENSURE_TRUE(obs, NS_ERROR_NOT_AVAILABLE);
+
+    rv = obs->RemoveObserver(this, STARTUP_COMPLETE_TOPIC);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (!strcmp(OBSERVER_TOPIC_IDLE_DAILY, aTopic)) {
+    if (StaticPrefs::
+            privacy_resistFingerprinting_randomization_daily_reset_enabled()) {
+      ClearSessionKey(false);
+    }
+
+    if (StaticPrefs::
+            privacy_resistFingerprinting_randomization_daily_reset_private_enabled()) {
+      ClearSessionKey(true);
+    }
+  }
+
   return NS_OK;
+}
+
+nsresult nsRFPService::EnsureSessionKey(bool aIsPrivate) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  MOZ_LOG(gResistFingerprintingLog, LogLevel::Info,
+          ("Ensure the session key for %s browsing session\n",
+           aIsPrivate ? "private" : "normal"));
+
+  if (!StaticPrefs::privacy_resistFingerprinting_randomization_enabled()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  Maybe<nsID>& sessionKey =
+      aIsPrivate ? mPrivateBrowsingSessionKey : mBrowsingSessionKey;
+
+  // The key has been generated, bail out earlier.
+  if (sessionKey) {
+    MOZ_LOG(
+        gResistFingerprintingLog, LogLevel::Info,
+        ("The %s session key exists: %s\n", aIsPrivate ? "private" : "normal",
+         sessionKey.ref().ToString().get()));
+    return NS_OK;
+  }
+
+  sessionKey.emplace(nsID::GenerateUUID());
+
+  MOZ_LOG(gResistFingerprintingLog, LogLevel::Debug,
+          ("Generated %s session key: %s\n", aIsPrivate ? "private" : "normal",
+           sessionKey.ref().ToString().get()));
+
+  return NS_OK;
+}
+
+void nsRFPService::ClearSessionKey(bool aIsPrivate) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  Maybe<nsID>& sessionKey =
+      aIsPrivate ? mPrivateBrowsingSessionKey : mBrowsingSessionKey;
+
+  sessionKey.reset();
+}
+
+// static
+Maybe<nsTArray<uint8_t>> nsRFPService::GenerateKey(nsIURI* aTopLevelURI,
+                                                   bool aIsPrivate) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(aTopLevelURI);
+
+  MOZ_LOG(gResistFingerprintingLog, LogLevel::Debug,
+          ("Generating %s randomization key for top-level URI: %s\n",
+           aIsPrivate ? "private" : "normal",
+           aTopLevelURI->GetSpecOrDefault().get()));
+
+  RefPtr<nsRFPService> service = GetOrCreate();
+
+  if (NS_FAILED(service->EnsureSessionKey(aIsPrivate))) {
+    return Nothing();
+  }
+
+  const nsID& sessionKey = aIsPrivate
+                               ? service->mPrivateBrowsingSessionKey.ref()
+                               : service->mBrowsingSessionKey.ref();
+
+  auto sessionKeyStr = sessionKey.ToString();
+
+  // Using the OriginAttributes to get the site from the top-level URI. The site
+  // is composed of scheme, host, and port.
+  OriginAttributes attrs;
+  attrs.SetPartitionKey(aTopLevelURI);
+
+  // Generate the key by using the hMAC. The key is based on the session key and
+  // the partitionKey, i.e. top-level site.
+  HMAC hmac;
+
+  nsresult rv = hmac.Begin(
+      SEC_OID_SHA256,
+      Span(reinterpret_cast<const uint8_t*>(sessionKeyStr.get()), NSID_LENGTH));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return Nothing();
+  }
+
+  NS_ConvertUTF16toUTF8 topLevelSite(attrs.mPartitionKey);
+  rv = hmac.Update(reinterpret_cast<const uint8_t*>(topLevelSite.get()),
+                   topLevelSite.Length());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return Nothing();
+  }
+
+  Maybe<nsTArray<uint8_t>> key;
+  key.emplace();
+
+  rv = hmac.End(key.ref());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return Nothing();
+  }
+
+  return key;
 }
