@@ -3256,7 +3256,8 @@ class nsContentUtils {
   static nsresult AnonymizeURI(nsIURI* aURI, nsCString& aAnonymizedURI);
 
   /**
-   * Serializes a JSON-like JS::Value into a string.
+   * Serializes a JSON-like JS::Value into a string, returning the string "null"
+   * where JSON.stringify would return undefined.
    *
    * Usage:
    *   nsAutoString serializedValue;
