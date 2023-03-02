@@ -109,6 +109,7 @@ VIAddVersionKey "OriginalFilename" "setup.exe"
 !insertmacro CleanUpdateDirectories
 !insertmacro CopyFilesFromDir
 !insertmacro CopyPostSigningData
+!insertmacro CopyProvenanceData
 !insertmacro CreateRegKey
 !insertmacro GetFirstInstallPath
 !insertmacro GetLongPath
@@ -774,7 +775,7 @@ Section "-InstallEndCleanup"
   DetailPrint "$(STATUS_CLEANUP)"
   SetDetailsPrint none
 
-  ; Maybe copy the post-signing data?
+  ; Maybe copy the post-signing data and provenance data
   StrCpy $PostSigningData ""
   ${GetParameters} $0
   ClearErrors
@@ -788,6 +789,7 @@ Section "-InstallEndCleanup"
       ; We're being run standalone, copy the data.
       ${CopyPostSigningData}
       Pop $PostSigningData
+      ${CopyProvenanceData}
     ${EndIf}
   ${EndIf}
 
