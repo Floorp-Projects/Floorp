@@ -290,6 +290,26 @@ const QueryCache = {
       FRECENT_SITES_UPDATE_INTERVAL,
       lazy.AddonManager // eslint-disable-line mozilla/valid-lazy
     ),
+    isDefaultHandler: {
+      pdf: new CachedTargetingGetter(
+        "isDefaultHandlerFor",
+        [".pdf"],
+        FRECENT_SITES_UPDATE_INTERVAL,
+        ShellService
+      ),
+      html: new CachedTargetingGetter(
+        "isDefaultHandlerFor",
+        [".html"],
+        FRECENT_SITES_UPDATE_INTERVAL,
+        ShellService
+      ),
+    },
+    defaultPDFHandler: new CachedTargetingGetter(
+      "getDefaultPDFHandler",
+      null,
+      FRECENT_SITES_UPDATE_INTERVAL,
+      ShellService
+    ),
   },
 };
 
@@ -817,6 +837,19 @@ const TargetingGetters = {
     let button = lazy.CustomizableUI.getWidget("firefox-view-button");
     return button.areaType;
   },
+
+  isDefaultHandler: {
+    get html() {
+      return QueryCache.getters.isDefaultHandler.html.get();
+    },
+    get pdf() {
+      return QueryCache.getters.isDefaultHandler.pdf.get();
+    },
+  },
+
+  get defaultPDFHandler() {
+    return QueryCache.getters.defaultPDFHandler.get();
+  },
 };
 
 const ASRouterTargeting = {
@@ -833,25 +866,38 @@ const ASRouterTargeting = {
    * integer.
    */
   async getEnvironmentSnapshot(target = ASRouterTargeting.Environment) {
-    // One promise for each named property.  Label promises with property name.
-    let promises = Object.keys(target).map(async name => {
-      // Each promise needs to check if we're shutting down when it is evaluated.
-      if (Services.startup.shuttingDown) {
-        throw new Error("shutting down, so not querying targeting environment");
-      }
-      return [name, await target[name]];
-    });
+    async function resolveRecursive(object) {
+      // One promise for each named property. Label promises with property name.
+      const promises = Object.keys(object).map(async key => {
+        // Each promise needs to check if we're shutting down when it is evaluated.
+        if (Services.startup.shuttingDown) {
+          throw new Error(
+            "shutting down, so not querying targeting environment"
+          );
+        }
 
-    // Ignore properties that are rejected.
-    let results = await Promise.allSettled(promises);
+        let value = await object[key];
 
-    let environment = {};
-    for (let result of results) {
-      if (result.status === "fulfilled") {
-        let [name, value] = result.value;
-        environment[name] = value;
+        if (typeof value === "object" && object !== null) {
+          value = await resolveRecursive(value);
+        }
+
+        return [key, value];
+      });
+
+      const resolved = {};
+      for (const result of await Promise.allSettled(promises)) {
+        // Ignore properties that are rejected.
+        if (result.status === "fulfilled") {
+          const [key, value] = result.value;
+          resolved[key] = value;
+        }
       }
+
+      return resolved;
     }
+
+    const environment = await resolveRecursive(target);
 
     // Should we need to migrate in the future.
     const snapshot = { environment, version: 1 };
