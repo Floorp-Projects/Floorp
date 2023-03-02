@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 
+#include "ErrorList.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/EventForwards.h"
@@ -1977,7 +1978,7 @@ CanonicalBrowsingContext::ChangeRemoteness(
     return RemotenessPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
-  // Ensure our embedder hasn't been destroyed already.
+  // Ensure our embedder hasn't been destroyed or asked to shutdown already.
   RefPtr<WindowGlobalParent> embedderWindowGlobal = GetEmbedderWindowGlobal();
   if (!embedderWindowGlobal) {
     NS_WARNING("Non-embedded BrowsingContext");
@@ -1986,6 +1987,13 @@ CanonicalBrowsingContext::ChangeRemoteness(
 
   if (!embedderWindowGlobal->CanSend()) {
     NS_WARNING("Embedder already been destroyed.");
+    return RemotenessPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
+  }
+
+  RefPtr<BrowserParent> embedderBrowser =
+      embedderWindowGlobal->GetBrowserParent();
+  if (embedderBrowser && embedderBrowser->Manager()->IsShuttingDown()) {
+    NS_WARNING("Embedder already asked to shutdown.");
     return RemotenessPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
   }
 
@@ -2045,8 +2053,6 @@ CanonicalBrowsingContext::ChangeRemoteness(
   }
 
   // Switching a subframe to be local within it's embedding process.
-  RefPtr<BrowserParent> embedderBrowser =
-      embedderWindowGlobal->GetBrowserParent();
   if (embedderBrowser &&
       aOptions.mRemoteType == embedderBrowser->Manager()->GetRemoteType()) {
     MOZ_DIAGNOSTIC_ASSERT(
