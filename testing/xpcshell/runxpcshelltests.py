@@ -49,6 +49,7 @@ except ImportError:
     build = None
 
 HARNESS_TIMEOUT = 5 * 60
+TBPL_RETRY = 4  # defined in mozharness
 
 # benchmarking on tbpl revealed that this works best for now
 # TODO: This has been evaluated/set many years ago and we might want to
@@ -220,6 +221,7 @@ class XPCShellTestThread(Thread):
         self.command = None
         self.harness_timeout = kwargs.get("harness_timeout")
         self.timedout = False
+        self.infra = False
 
         # event from main thread to signal work done
         self.event = kwargs.get("event")
@@ -228,6 +230,10 @@ class XPCShellTestThread(Thread):
     def run(self):
         try:
             self.run_test()
+        except PermissionError as e:
+            self.infra = True
+            self.exception = e
+            self.traceback = traceback.format_exc()
         except Exception as e:
             self.exception = e
             self.traceback = traceback.format_exc()
@@ -2073,6 +2079,7 @@ class XPCShellTests(object):
         # tests in the queue at most threadCount at a time
         running_tests = set()
         keep_going = True
+        infra_abort = False
         exceptions = []
         tracebacks = []
         self.try_again_list = []
@@ -2132,11 +2139,15 @@ class XPCShellTests(object):
                         # we won't add any more tests, will just wait for
                         # the currently running ones to finish
                         keep_going = False
+                    infra_abort = infra_abort and test.infra
                     keep_going = keep_going and test.keep_going
                     self.addTestResults(test)
 
             # make room for new tests to run
             running_tests.difference_update(done_tests)
+
+        if infra_abort:
+            return TBPL_RETRY  # terminate early
 
         if keep_going:
             # run the other tests sequentially
@@ -2258,7 +2269,11 @@ def main():
         log.error("Error: You must specify a test filename in interactive mode!")
         sys.exit(1)
 
-    if not xpcsh.runTests(options):
+    result = xpcsh.runTests(options)
+    if result == TBPL_RETRY:
+        sys.exit(4)
+
+    if not result:
         sys.exit(1)
 
 
