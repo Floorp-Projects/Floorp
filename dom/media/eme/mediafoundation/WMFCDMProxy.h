@@ -19,6 +19,8 @@
 
 namespace mozilla {
 
+class WMFCDMProxyCallback;
+
 class WMFCDMProxy : public CDMProxy {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WMFCDMProxy, override)
@@ -103,7 +105,7 @@ class WMFCDMProxy : public CDMProxy {
 #endif
 
  private:
-  virtual ~WMFCDMProxy() = default;
+  virtual ~WMFCDMProxy();
 
   template <typename T>
   void ResolvePromiseWithResult(PromiseId aId, const T& aResult) {}
@@ -118,6 +120,8 @@ class WMFCDMProxy : public CDMProxy {
   MozPromiseRequestHolder<MFCDMChild::SessionPromise> mCreateSessionRequest;
 
   const dom::MediaKeySystemConfiguration mConfig;
+
+  RefPtr<WMFCDMProxyCallback> mProxyCallback;
 };
 
 }  // namespace mozilla

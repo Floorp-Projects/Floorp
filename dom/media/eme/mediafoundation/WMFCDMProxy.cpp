@@ -7,7 +7,9 @@
 #include "WMFCDMProxy.h"
 
 #include "mozilla/dom/MediaKeySession.h"
+#include "mozilla/WMFCDMProxyCallback.h"
 #include "WMFCDMImpl.h"
+#include "WMFCDMProxyCallback.h"
 
 namespace mozilla {
 
@@ -23,6 +25,8 @@ WMFCDMProxy::WMFCDMProxy(dom::MediaKeys* aKeys, const nsAString& aKeySystem,
       mConfig(aConfig) {
   MOZ_ASSERT(NS_IsMainThread());
 }
+
+WMFCDMProxy::~WMFCDMProxy() {}
 
 void WMFCDMProxy::Init(PromiseId aPromiseId, const nsAString& aOrigin,
                        const nsAString& aTopLevelOrigin,
@@ -40,6 +44,7 @@ void WMFCDMProxy::Init(PromiseId aPromiseId, const nsAString& aOrigin,
   }
 
   mCDM = MakeRefPtr<WMFCDMImpl>(mKeySystem);
+  mProxyCallback = new WMFCDMProxyCallback(this);
   WMFCDMImpl::InitParams params{
       nsString(aOrigin), mConfig.mInitDataTypes, mPersistentStateRequired,
       mDistinctiveIdentifierRequired, false /* HW secure? */};
@@ -182,8 +187,13 @@ void WMFCDMProxy::CreateSession(uint32_t aCreateSessionToken,
 }
 
 void WMFCDMProxy::Shutdown() {
+  MOZ_ASSERT(NS_IsMainThread());
   // TODO: reject pending promise.
   mCreateSessionRequest.DisconnectIfExists();
+  if (mProxyCallback) {
+    mProxyCallback->Shutdown();
+    mProxyCallback = nullptr;
+  }
 }
 
 void WMFCDMProxy::OnSessionMessage(const nsAString& aSessionId,

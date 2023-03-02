@@ -7,11 +7,13 @@
 EXPORTS.mozilla += [
     "WMFCDMImpl.h",
     "WMFCDMProxy.h",
+    "WMFCDMProxyCallback.h",
 ]
 
 UNIFIED_SOURCES += [
     "WMFCDMImpl.cpp",
     "WMFCDMProxy.cpp",
+    "WMFCDMProxyCallback.cpp",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
