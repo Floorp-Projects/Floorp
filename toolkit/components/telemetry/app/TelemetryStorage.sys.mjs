@@ -6,8 +6,6 @@
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { Log } from "resource://gre/modules/Log.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 import { TelemetryUtils } from "resource://gre/modules/TelemetryUtils.sys.mjs";
 import { Preferences } from "resource://gre/modules/Preferences.sys.mjs";
 
@@ -26,13 +24,13 @@ const SESSION_STATE_FILE_NAME = "session-state.json";
 const lazy = {};
 
 XPCOMUtils.defineLazyGetter(lazy, "gDataReportingDir", function() {
-  return OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIR);
+  return PathUtils.join(PathUtils.profileDir, DATAREPORTING_DIR);
 });
 XPCOMUtils.defineLazyGetter(lazy, "gPingsArchivePath", function() {
-  return OS.Path.join(lazy.gDataReportingDir, PINGS_ARCHIVE_DIR);
+  return PathUtils.join(lazy.gDataReportingDir, PINGS_ARCHIVE_DIR);
 });
 XPCOMUtils.defineLazyGetter(lazy, "gAbortedSessionFilePath", function() {
-  return OS.Path.join(lazy.gDataReportingDir, ABORTED_SESSION_FILE_NAME);
+  return PathUtils.join(lazy.gDataReportingDir, ABORTED_SESSION_FILE_NAME);
 });
 ChromeUtils.defineESModuleGetters(lazy, {
   TelemetryHealthPing: "resource://gre/modules/HealthPing.sys.mjs",
@@ -144,7 +142,7 @@ function internString(str) {
 
 export var TelemetryStorage = {
   get pingDirectoryPath() {
-    return OS.Path.join(OS.Constants.Path.profileDir, "saved-telemetry-pings");
+    return PathUtils.join(PathUtils.profileDir, "saved-telemetry-pings");
   },
 
   /**
@@ -303,7 +301,7 @@ export var TelemetryStorage = {
    * Returns a list of the currently pending pings in the format:
    * {
    *   id: <string>, // The pings UUID.
-   *   lastModificationDate: <number>, // Timestamp of the pings last modification.
+   *   lastModified: <number>, // Timestamp of the pings last modification.
    * }
    * This populates the list by scanning the disk.
    *
@@ -317,7 +315,7 @@ export var TelemetryStorage = {
    * Returns a list of the currently pending pings in the format:
    * {
    *   id: <string>, // The pings UUID.
-   *   lastModificationDate: <number>, // Timestamp of the pings last modification.
+   *   lastModified: <number>, // Timestamp of the pings last modification.
    * }
    * This does not scan pending pings on disk.
    *
@@ -661,7 +659,7 @@ var TelemetryStorageImpl = {
       });
     }
 
-    // Wait on pending pings still being saved. While OS.File should have shutdown
+    // Wait on pending pings still being saved. While IOUtils should have shutdown
     // blockers in place, we a) have seen weird errors being reported that might
     // indicate a bad shutdown path and b) might have completion handlers hanging
     // off the save operations that don't expect to be late in shutdown.
@@ -708,10 +706,7 @@ var TelemetryStorageImpl = {
     // Get the archived ping path and append the lz4 suffix to it (so we have 'jsonlz4').
     const filePath =
       getArchivedPingPath(ping.id, creationDate, ping.type) + "lz4";
-    await OS.File.makeDir(OS.Path.dirname(filePath), {
-      ignoreExisting: true,
-      from: OS.Constants.Path.profileDir,
-    });
+    await IOUtils.makeDirectory(PathUtils.parent(filePath));
     await this.savePingToFile(
       ping,
       filePath,
@@ -752,7 +747,7 @@ var TelemetryStorageImpl = {
 
     // Purge pings which are too big.
     let checkSize = async function(path) {
-      const fileSize = (await OS.File.stat(path)).size;
+      const fileSize = await IOUtils.stat(path).then(info => info.size);
       if (fileSize > PING_FILE_MAXIMUM_SIZE_BYTES) {
         Telemetry.getHistogramById(
           "TELEMETRY_DISCARDED_ARCHIVED_PINGS_SIZE_MB"
@@ -760,9 +755,9 @@ var TelemetryStorageImpl = {
         Telemetry.getHistogramById(
           "TELEMETRY_PING_SIZE_EXCEEDED_ARCHIVED"
         ).add();
-        await OS.File.remove(path, { ignoreAbsent: true });
+        await IOUtils.remove(path, { ignoreAbsent: true });
         throw new Error(
-          "loadArchivedPing - exceeded the maximum ping size: " + fileSize
+          `loadArchivedPing - exceeded the maximum ping size: ${fileSize}`
         );
       }
     };
@@ -800,10 +795,11 @@ var TelemetryStorageImpl = {
   },
 
   async _saveSessionData(sessionData) {
-    let dataDir = OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIR);
-    await OS.File.makeDir(dataDir);
+    await IOUtils.makeDirectory(lazy.gDataReportingDir, {
+      createAncestors: false,
+    });
 
-    let filePath = OS.Path.join(
+    let filePath = PathUtils.join(
       lazy.gDataReportingDir,
       SESSION_STATE_FILE_NAME
     );
@@ -811,7 +807,7 @@ var TelemetryStorageImpl = {
       await IOUtils.writeJSON(filePath, sessionData);
     } catch (e) {
       this._log.error(
-        "_saveSessionData - Failed to write session data to " + filePath,
+        `_saveSessionData - Failed to write session data to ${filePath}`,
         e
       );
       Telemetry.getHistogramById("TELEMETRY_SESSIONDATA_FAILED_SAVE").add(1);
@@ -828,14 +824,14 @@ var TelemetryStorageImpl = {
   },
 
   async _loadSessionData() {
-    const dataFile = OS.Path.join(
-      OS.Constants.Path.profileDir,
+    const dataFile = PathUtils.join(
+      PathUtils.profileDir,
       DATAREPORTING_DIR,
       SESSION_STATE_FILE_NAME
     );
     let content;
     try {
-      content = await OS.File.read(dataFile, { encoding: "utf-8" });
+      content = await IOUtils.readUTF8(dataFile);
     } catch (ex) {
       this._log.info("_loadSessionData - can not load session data file", ex);
       Telemetry.getHistogramById("TELEMETRY_SESSIONDATA_FAILED_LOAD").add(1);
@@ -875,8 +871,8 @@ var TelemetryStorageImpl = {
     const pathCompressed = path + "lz4";
 
     this._log.trace("_removeArchivedPing - removing ping from: " + path);
-    await OS.File.remove(path, { ignoreAbsent: true });
-    await OS.File.remove(pathCompressed, { ignoreAbsent: true });
+    await IOUtils.remove(path);
+    await IOUtils.remove(pathCompressed);
     // Remove the ping from the cache.
     this._archivedPings.delete(id);
   },
@@ -908,9 +904,6 @@ var TelemetryStorageImpl = {
 
     const nowDate = Policy.now();
     const startTimeStamp = nowDate.getTime();
-    let dirIterator = new OS.File.DirectoryIterator(lazy.gPingsArchivePath);
-    let subdirs = (await dirIterator.nextBatch()).filter(e => e.isDir);
-    dirIterator.close();
 
     // Keep track of the newest removed month to update the cache, if needed.
     let newestRemovedMonthTimestamp = null;
@@ -918,7 +911,14 @@ var TelemetryStorageImpl = {
     let maxDirAgeInMonths = 0;
 
     // Walk through the monthly subdirs of the form <YYYY-MM>/
-    for (let dir of subdirs) {
+    for (const path of await IOUtils.getChildren(lazy.gPingsArchivePath)) {
+      const info = await IOUtils.stat(path);
+      if (info.type !== "directory") {
+        continue;
+      }
+
+      const name = PathUtils.filename(path);
+
       if (this._shutdown) {
         this._log.trace(
           "_purgeOldPings - Terminating the clean up task due to shutdown"
@@ -926,17 +926,17 @@ var TelemetryStorageImpl = {
         return;
       }
 
-      if (!isValidArchiveDir(dir.name)) {
+      if (!isValidArchiveDir(name)) {
         this._log.warn(
-          "_purgeOldPings - skipping invalidly named subdirectory " + dir.path
+          `_purgeOldPings - skipping invalidly named subdirectory ${path}`
         );
         continue;
       }
 
-      const archiveDate = getDateFromArchiveDir(dir.name);
+      const archiveDate = getDateFromArchiveDir(name);
       if (!archiveDate) {
         this._log.warn(
-          "_purgeOldPings - skipping invalid subdirectory date " + dir.path
+          `_purgeOldPings - skipping invalid subdirectory date ${path}`
         );
         continue;
       }
@@ -947,7 +947,7 @@ var TelemetryStorageImpl = {
         MAX_ARCHIVED_PINGS_RETENTION_MS
       ) {
         try {
-          await OS.File.removeDir(dir.path);
+          await IOUtils.remove(path, { recursive: true });
           evictedDirsCount++;
 
           // Update the newest removed month.
@@ -956,7 +956,7 @@ var TelemetryStorageImpl = {
             newestRemovedMonthTimestamp
           );
         } catch (ex) {
-          this._log.error("_purgeOldPings - Unable to remove " + dir.path, ex);
+          this._log.error(`_purgeOldPings - Unable to remove ${path}`, ex);
         }
       } else {
         // We're not removing this directory, so record the age for the oldest directory.
@@ -1143,7 +1143,7 @@ var TelemetryStorageImpl = {
   async _cleanArchive() {
     this._log.trace("cleanArchiveTask");
 
-    if (!(await OS.File.exists(lazy.gPingsArchivePath))) {
+    if (!(await IOUtils.exists(lazy.gPingsArchivePath))) {
       return;
     }
 
@@ -1193,10 +1193,10 @@ var TelemetryStorageImpl = {
     // Build an ordered list, from newer to older, of pending pings.
     let pingList = Array.from(this._pendingPings, p => ({
       id: p[0],
-      lastModificationDate: p[1].lastModificationDate,
+      lastModified: p[1].lastModified,
     }));
 
-    pingList.sort((a, b) => b.lastModificationDate - a.lastModificationDate);
+    pingList.sort((a, b) => b.lastModified - a.lastModified);
 
     // If our pending pings directory is too big, we should reduce it to reach 90% of the quota.
     const SAFE_QUOTA = Policy.getPendingPingsQuota() * 0.9;
@@ -1353,28 +1353,41 @@ var TelemetryStorageImpl = {
       );
     };
 
-    if (!(await OS.File.exists(lazy.gPingsArchivePath))) {
+    if (!(await IOUtils.exists(lazy.gPingsArchivePath))) {
       submitProbes(0, 0);
       return new Map();
     }
 
-    let dirIterator = new OS.File.DirectoryIterator(lazy.gPingsArchivePath);
-    let subdirs = (await dirIterator.nextBatch())
-      .filter(e => e.isDir)
-      .filter(e => isValidArchiveDir(e.name));
-    dirIterator.close();
-
+    let subDirCount = 0;
     // Walk through the monthly subdirs of the form <YYYY-MM>/
-    for (let dir of subdirs) {
-      this._log.trace("_scanArchive - checking in subdir: " + dir.path);
-      let pingIterator = new OS.File.DirectoryIterator(dir.path);
-      let pings = (await pingIterator.nextBatch()).filter(e => !e.isDir);
-      pingIterator.close();
+    for (const path of await IOUtils.getChildren(lazy.gPingsArchivePath)) {
+      const info = await IOUtils.stat(path);
+
+      if (info.type !== "directory") {
+        continue;
+      }
+
+      const name = PathUtils.filename(path);
+      if (!isValidArchiveDir(name)) {
+        continue;
+      }
+
+      subDirCount++;
+
+      this._log.trace(`_scanArchive - checking in subdir: ${path}`);
+      const pingPaths = [];
+      for (const ping of await IOUtils.getChildren(path)) {
+        const info = await IOUtils.stat(ping);
+        if (info.type !== "directory") {
+          pingPaths.push(ping);
+        }
+      }
 
       // Now process any ping files of the form "<timestamp>.<uuid>.<type>.[json|jsonlz4]".
-      for (let p of pings) {
+      for (const path of pingPaths) {
+        const filename = PathUtils.filename(path);
         // data may be null if the filename doesn't match the above format.
-        let data = this._getArchivedPingDataFromFileName(p.name);
+        let data = this._getArchivedPingDataFromFileName(filename);
         if (!data) {
           continue;
         }
@@ -1384,10 +1397,7 @@ var TelemetryStorageImpl = {
           const overwrite =
             data.timestamp > this._archivedPings.get(data.id).timestampCreated;
           this._log.warn(
-            "_scanArchive - have seen this id before: " +
-              data.id +
-              ", overwrite: " +
-              overwrite
+            `_scanArchive - have seen this id before: ${data.id}, overwrite: ${overwrite}`
           );
           if (!overwrite) {
             continue;
@@ -1412,7 +1422,7 @@ var TelemetryStorageImpl = {
     // Mark the archive as scanned, so we no longer hit the disk.
     this._scannedArchiveDirectory = true;
     // Update the ping and directories count histograms.
-    submitProbes(this._archivedPings.size, subdirs.length);
+    submitProbes(this._archivedPings.size, subDirCount);
     return this._archivedPings;
   },
 
@@ -1431,14 +1441,16 @@ var TelemetryStorageImpl = {
   async savePingToFile(ping, filePath, overwrite, compress = false) {
     try {
       this._log.trace("savePingToFile - path: " + filePath);
-      let pingString = JSON.stringify(ping);
-      let options = { tmpPath: filePath + ".tmp", noOverwrite: !overwrite };
-      if (compress) {
-        options.compression = "lz4";
-      }
-      await OS.File.writeAtomic(filePath, pingString, options);
+      await IOUtils.writeJSON(filePath, ping, {
+        compress,
+        mode: overwrite ? "overwrite" : "create",
+        tmpPath: `${filePath}.tmp`,
+      });
     } catch (e) {
-      if (!e.becauseExists) {
+      if (
+        !DOMException.isInstance(e) ||
+        e.name !== "NoModificationAllowedError"
+      ) {
         throw e;
       }
     }
@@ -1478,14 +1490,14 @@ var TelemetryStorageImpl = {
    * @returns {promise}
    */
   cleanupPingFile(ping) {
-    return OS.File.remove(pingFilePath(ping));
+    return IOUtils.remove(pingFilePath(ping));
   },
 
   savePendingPing(ping) {
     let p = this.savePing(ping, true).then(path => {
       this._pendingPings.set(ping.id, {
         path,
-        lastModificationDate: Policy.now().getTime(),
+        lastModified: Policy.now().getTime(),
       });
       this._log.trace("savePendingPing - saved ping with id " + ping.id);
     });
@@ -1506,9 +1518,9 @@ var TelemetryStorageImpl = {
     // Try to get the dimension of the ping. If that fails, update the histograms.
     let fileSize = 0;
     try {
-      fileSize = (await OS.File.stat(info.path)).size;
+      fileSize = await IOUtils.stat(info.path).then(stat => stat.size);
     } catch (e) {
-      if (!(e instanceof OS.File.Error) || !e.becauseNoSuchFile) {
+      if (!DOMException.isInstance(e) || e.name !== "NotFoundError") {
         throw e;
       }
       // Fall through and let |loadPingFile| report the error.
@@ -1567,7 +1579,7 @@ var TelemetryStorageImpl = {
         info.path
     );
     this._pendingPings.delete(id);
-    return OS.File.remove(info.path).catch(ex =>
+    return IOUtils.remove(info.path).catch(ex =>
       this._log.error("removePendingPing - failed to remove ping", ex)
     );
   },
@@ -1625,30 +1637,41 @@ var TelemetryStorageImpl = {
     // Individually remove existing pings, so we don't interfere with operations expecting
     // the pending pings directory to exist.
     const directory = TelemetryStorage.pingDirectoryPath;
-    let iter = new OS.File.DirectoryIterator(directory);
 
-    try {
-      if (!(await iter.exists())) {
-        this._log.trace(
-          "removePendingPings - the pending pings directory doesn't exist"
-        );
-        return;
-      }
+    if (!(await IOUtils.exists(directory))) {
+      this._log.trace(
+        "removePendingPings - the pending pings directory doesn't exist"
+      );
+      return;
+    }
 
-      let files = (await iter.nextBatch()).filter(e => !e.isDir);
-      for (let file of files) {
-        try {
-          await OS.File.remove(file.path);
-        } catch (ex) {
-          this._log.error(
-            "removePendingPings - failed to remove file " + file.path,
-            ex
-          );
+    for (const path of await IOUtils.getChildren(directory)) {
+      let info;
+      try {
+        info = await IOUtils.stat(path);
+      } catch (ex) {
+        // It is possible there is another task removing a ping in between
+        // reading the directory and calling stat.
+        if (DOMException.isInstance(ex) && ex.name === "NotFoundError") {
           continue;
         }
+
+        throw ex;
       }
-    } finally {
-      await iter.close();
+
+      if (info.type === "directory") {
+        continue;
+      }
+
+      try {
+        await IOUtils.remove(path);
+      } catch (ex) {
+        this._log.error(
+          `removePendingPings - failed to remove file ${path}`,
+          ex
+        );
+        continue;
+      }
     }
   },
 
@@ -1659,38 +1682,38 @@ var TelemetryStorageImpl = {
   async *_iterateAppDataPings() {
     this._log.trace("_iterateAppDataPings");
 
-    // The test suites might not create and define the "UAppData" directory.
-    // We account for that here instead of manually going through each test using
-    // telemetry to manually create the directory and define the constant.
-    if (!OS.Constants.Path.userApplicationDataDir) {
+    let uAppDataDir;
+    try {
+      uAppDataDir = Services.dirsvc.get("UAppData", Ci.nsIFile);
+    } catch (ex) {
+      // The test suites might not create and define the "UAppData" directory.
+      // We account for that here instead of manually going through each test using
+      // telemetry to manually create the directory and define the constant.
       this._log.trace(
         "_iterateAppDataPings - userApplicationDataDir is not defined. Is this a test?"
       );
       return;
     }
 
-    const appDataPendingPings = OS.Path.join(
-      OS.Constants.Path.userApplicationDataDir,
+    const appDataPendingPings = PathUtils.join(
+      uAppDataDir.path,
       "Pending Pings"
     );
 
-    // Iterate through the pending ping files.
-    let iter = new OS.File.DirectoryIterator(appDataPendingPings);
-    try {
-      // Check if appDataPendingPings exists and bail out if it doesn't.
-      if (!(await iter.exists())) {
-        this._log.trace(
-          "_iterateAppDataPings - the AppData pending pings directory doesn't exist."
-        );
-        return;
-      }
+    // Check if appDataPendingPings exists and bail out if it doesn't.
+    if (!(await IOUtils.exists(appDataPendingPings))) {
+      this._log.trace(
+        "_iterateAppDataPings - the AppData pending pings directory doesn't exist."
+      );
+      return;
+    }
 
-      let files = (await iter.nextBatch()).filter(e => !e.isDir);
-      for (let file of files) {
-        yield file;
+    // Iterate through the pending ping files.
+    for (const path of await IOUtils.getChildren(appDataPendingPings)) {
+      const info = await IOUtils.stat(path);
+      if (info.type !== "directory") {
+        yield path;
       }
-    } finally {
-      await iter.close();
     }
   },
 
@@ -1701,12 +1724,12 @@ var TelemetryStorageImpl = {
   async removeAppDataPings() {
     this._log.trace("removeAppDataPings");
 
-    for await (const file of this._iterateAppDataPings()) {
+    for await (const path of this._iterateAppDataPings()) {
       try {
-        await OS.File.remove(file.path);
+        await IOUtils.remove(path);
       } catch (ex) {
         this._log.error(
-          "removeAppDataPings - failed to remove file " + file.path,
+          `removeAppDataPings - failed to remove file ${path}`,
           ex
         );
       }
@@ -1720,28 +1743,27 @@ var TelemetryStorageImpl = {
   async _migrateAppDataPings() {
     this._log.trace("_migrateAppDataPings");
 
-    for await (const file of this._iterateAppDataPings()) {
+    for await (const path of this._iterateAppDataPings()) {
       try {
         // Load the ping data from the original file.
-        const pingData = await this.loadPingFile(file.path);
+        const pingData = await this.loadPingFile(path);
 
         // Save it among the pending pings in the user profile, overwrite on
         // ping id collision.
         await TelemetryStorage.savePing(pingData, true);
       } catch (ex) {
         this._log.error(
-          "_migrateAppDataPings - failed to load or migrate file. Removing. " +
-            file.path,
+          `_migrateAppDataPings - failed to load or migrate file. Removing ${path}`,
           ex
         );
       }
 
       try {
         // Finally remove the file.
-        await OS.File.remove(file.path);
+        await IOUtils.remove(path);
       } catch (ex) {
         this._log.error(
-          "_migrateAppDataPings - failed to remove file " + file.path,
+          `_migrateAppDataPings - failed to remove file ${path}`,
           ex
         );
       }
@@ -1787,74 +1809,70 @@ var TelemetryStorageImpl = {
     // application data directory (mainly crash pings that failed to be sent).
     await this._migrateAppDataPings();
 
-    let directory = TelemetryStorage.pingDirectoryPath;
-    let iter = new OS.File.DirectoryIterator(directory);
-    let exists = await iter.exists();
+    const directory = TelemetryStorage.pingDirectoryPath;
+    if (!(await IOUtils.exists(directory))) {
+      return [];
+    }
 
-    try {
-      if (!exists) {
+    const files = [];
+    for (const path of await IOUtils.getChildren(directory)) {
+      if (this._shutdown) {
         return [];
       }
 
-      let files = (await iter.nextBatch()).filter(e => !e.isDir);
-
-      for (let file of files) {
-        if (this._shutdown) {
-          return [];
+      try {
+        const info = await IOUtils.stat(path);
+        if (info.type !== "directory") {
+          files.push({ path, info });
         }
+      } catch (ex) {
+        this._log.error(`_scanPendingPings - failed to stat file ${path}`, ex);
+        continue;
+      }
+    }
 
-        let info;
+    for (const { path, info } of files) {
+      if (this._shutdown) {
+        return [];
+      }
+
+      // Enforce a maximum file size limit on pending pings.
+      if (info.size > PING_FILE_MAXIMUM_SIZE_BYTES) {
+        this._log.error(
+          `_scanPendingPings - removing file exceeding size limit ${path}`
+        );
         try {
-          info = await OS.File.stat(file.path);
+          await IOUtils.remove(path);
         } catch (ex) {
           this._log.error(
-            "_scanPendingPings - failed to stat file " + file.path,
+            `_scanPendingPings - failed to remove file ${path}`,
             ex
           );
-          continue;
+        } finally {
+          Telemetry.getHistogramById(
+            "TELEMETRY_DISCARDED_PENDING_PINGS_SIZE_MB"
+          ).add(Math.floor(info.size / 1024 / 1024));
+          Telemetry.getHistogramById(
+            "TELEMETRY_PING_SIZE_EXCEEDED_PENDING"
+          ).add();
+
+          // Currently we don't have the ping type available without loading the ping from disk.
+          // Bug 1384903 will fix that.
+          lazy.TelemetryHealthPing.recordDiscardedPing("<unknown>");
         }
-
-        // Enforce a maximum file size limit on pending pings.
-        if (info.size > PING_FILE_MAXIMUM_SIZE_BYTES) {
-          this._log.error(
-            "_scanPendingPings - removing file exceeding size limit " +
-              file.path
-          );
-          try {
-            await OS.File.remove(file.path);
-          } catch (ex) {
-            this._log.error(
-              "_scanPendingPings - failed to remove file " + file.path,
-              ex
-            );
-          } finally {
-            Telemetry.getHistogramById(
-              "TELEMETRY_DISCARDED_PENDING_PINGS_SIZE_MB"
-            ).add(Math.floor(info.size / 1024 / 1024));
-            Telemetry.getHistogramById(
-              "TELEMETRY_PING_SIZE_EXCEEDED_PENDING"
-            ).add();
-
-            // Currently we don't have the ping type available without loading the ping from disk.
-            // Bug 1384903 will fix that.
-            lazy.TelemetryHealthPing.recordDiscardedPing("<unknown>");
-          }
-          continue;
-        }
-
-        let id = OS.Path.basename(file.path);
-        if (!UUID_REGEX.test(id)) {
-          this._log.trace("_scanPendingPings - filename is not a UUID: " + id);
-          id = Utils.generateUUID();
-        }
-
-        this._pendingPings.set(id, {
-          path: file.path,
-          lastModificationDate: info.lastModificationDate.getTime(),
-        });
+        continue;
       }
-    } finally {
-      await iter.close();
+
+      let id = PathUtils.filename(path);
+      if (!UUID_REGEX.test(id)) {
+        this._log.trace(`_scanPendingPings - filename is not a UUID: ${id}`);
+        id = Utils.generateUUID();
+      }
+
+      this._pendingPings.set(id, {
+        path,
+        lastModified: info.lastModified,
+      });
     }
 
     this._scannedPendingDirectory = true;
@@ -1864,10 +1882,10 @@ var TelemetryStorageImpl = {
   _buildPingList() {
     const list = Array.from(this._pendingPings, p => ({
       id: p[0],
-      lastModificationDate: p[1].lastModificationDate,
+      lastModified: p[1].lastModified,
     }));
 
-    list.sort((a, b) => b.lastModificationDate - a.lastModificationDate);
+    list.sort((a, b) => b.lastModified - a.lastModified);
     return list;
   },
 
@@ -1881,29 +1899,25 @@ var TelemetryStorageImpl = {
    * @throws {PingParseError} There was an error while parsing the JSON content of the ping file.
    */
   async loadPingFile(aFilePath, aCompressed = false) {
-    let options = {};
-    if (aCompressed) {
-      options.compression = "lz4";
-    }
-
-    let array;
+    let rawPing;
     try {
-      array = await OS.File.read(aFilePath, options);
+      rawPing = await IOUtils.readUTF8(aFilePath, { decompress: aCompressed });
     } catch (e) {
-      this._log.trace("loadPingfile - unreadable ping " + aFilePath, e);
-      throw new PingReadError(e.message, e.becauseNoSuchFile);
+      this._log.trace(`loadPingfile - unreadable ping ${aFilePath}`, e);
+      throw new PingReadError(
+        e.message,
+        DOMException.isInstance(e) && e.name === "NotFoundError"
+      );
     }
 
-    let decoder = new TextDecoder();
-    let string = decoder.decode(array);
     let ping;
     try {
-      ping = JSON.parse(string);
+      ping = JSON.parse(rawPing);
     } catch (e) {
-      this._log.trace("loadPingfile - unparseable ping " + aFilePath, e);
-      await OS.File.remove(aFilePath).catch(ex => {
+      this._log.trace(`loadPingfile - unparseable ping ${aFilePath}`, e);
+      await IOUtils.remove(aFilePath).catch(ex => {
         this._log.error(
-          "loadPingFile - failed removing unparseable ping file",
+          `loadPingFile - failed removing unparseable ping file ${aFilePath}`,
           ex
         );
       });
@@ -1978,7 +1992,7 @@ var TelemetryStorageImpl = {
     this._log.trace(
       "saveAbortedSessionPing - ping path: " + lazy.gAbortedSessionFilePath
     );
-    await OS.File.makeDir(lazy.gDataReportingDir, { ignoreExisting: true });
+    await IOUtils.makeDirectory(lazy.gDataReportingDir);
 
     return this._abortedSessionSerializer.enqueueTask(() =>
       this.savePingToFile(ping, lazy.gAbortedSessionFilePath, true)
@@ -2002,12 +2016,12 @@ var TelemetryStorageImpl = {
   removeAbortedSessionPing() {
     return this._abortedSessionSerializer.enqueueTask(async () => {
       try {
-        await OS.File.remove(lazy.gAbortedSessionFilePath, {
+        await IOUtils.remove(lazy.gAbortedSessionFilePath, {
           ignoreAbsent: false,
         });
         this._log.trace("removeAbortedSessionPing - success");
       } catch (ex) {
-        if (ex.becauseNoSuchFile) {
+        if (DOMException.isInstance(ex) && ex.name === "NotFoundError") {
           this._log.trace("removeAbortedSessionPing - no such file");
         } else {
           this._log.error("removeAbortedSessionPing - error removing ping", ex);
@@ -2036,27 +2050,26 @@ var TelemetryStorageImpl = {
     }
 
     const { directory, file } = Policy.getUninstallPingPath("*");
+    const [prefix, suffix] = file.split("*");
 
-    const iteratorOptions = { winPattern: file };
-    const iterator = new OS.File.DirectoryIterator(
-      directory.path,
-      iteratorOptions
-    );
+    for (const path of await IOUtils.getChildren(directory.path)) {
+      const filename = PathUtils.filename(path);
+      if (!filename.startsWith(prefix) || !filename.endsWith(suffix)) {
+        continue;
+      }
 
-    await iterator.forEach(async entry => {
-      this._log.trace("removeUninstallPings - removing", entry.path);
+      this._log.trace("removeUninstallPings - removing", path);
       try {
-        await OS.File.remove(entry.path);
+        await IOUtils.remove(path);
         this._log.trace("removeUninstallPings - success");
       } catch (ex) {
-        if (ex.becauseNoSuchFile) {
+        if (DOMException.isInstance(ex) && ex.name === "NotFoundError") {
           this._log.trace("removeUninstallPings - no such file");
         } else {
           this._log.error("removeUninstallPings - error removing ping", ex);
         }
       }
-    });
-    iterator.close();
+    }
   },
 
   /**
@@ -2073,15 +2086,9 @@ var TelemetryStorageImpl = {
     // Even if it's uncommon, there may be 2 additional files: - a "write ahead log"
     // (-wal) file and a "shared memory file" (-shm). We need to remove them as well.
     let FILES_TO_REMOVE = [
-      OS.Path.join(OS.Constants.Path.profileDir, FHR_DB_DEFAULT_FILENAME),
-      OS.Path.join(
-        OS.Constants.Path.profileDir,
-        FHR_DB_DEFAULT_FILENAME + "-wal"
-      ),
-      OS.Path.join(
-        OS.Constants.Path.profileDir,
-        FHR_DB_DEFAULT_FILENAME + "-shm"
-      ),
+      PathUtils.join(PathUtils.profileDir, FHR_DB_DEFAULT_FILENAME),
+      PathUtils.join(PathUtils.profileDir, FHR_DB_DEFAULT_FILENAME + "-wal"),
+      PathUtils.join(PathUtils.profileDir, FHR_DB_DEFAULT_FILENAME + "-shm"),
     ];
 
     // FHR could have used either the default DB file name or a custom one
@@ -2092,21 +2099,15 @@ var TelemetryStorageImpl = {
     );
     if (FHR_DB_CUSTOM_FILENAME) {
       FILES_TO_REMOVE.push(
-        OS.Path.join(OS.Constants.Path.profileDir, FHR_DB_CUSTOM_FILENAME),
-        OS.Path.join(
-          OS.Constants.Path.profileDir,
-          FHR_DB_CUSTOM_FILENAME + "-wal"
-        ),
-        OS.Path.join(
-          OS.Constants.Path.profileDir,
-          FHR_DB_CUSTOM_FILENAME + "-shm"
-        )
+        PathUtils.join(PathUtils.profileDir, FHR_DB_CUSTOM_FILENAME),
+        PathUtils.join(PathUtils.profileDir, FHR_DB_CUSTOM_FILENAME + "-wal"),
+        PathUtils.join(PathUtils.profileDir, FHR_DB_CUSTOM_FILENAME + "-shm")
       );
     }
 
     for (let f of FILES_TO_REMOVE) {
-      await OS.File.remove(f, { ignoreAbsent: true }).catch(e =>
-        this._log.error("removeFHRDatabase - failed to remove " + f, e)
+      await IOUtils.remove(f).catch(e =>
+        this._log.error(`removeFHRDatabase - failed to remove ${f}`, e)
       );
     }
   },
@@ -2117,15 +2118,22 @@ var TelemetryStorageImpl = {
 function pingFilePath(ping) {
   // Support legacy ping formats, who don't have an "id" field, but a "slug" field.
   let pingIdentifier = ping.slug ? ping.slug : ping.id;
-  return OS.Path.join(TelemetryStorage.pingDirectoryPath, pingIdentifier);
+
+  if (typeof pingIdentifier === "undefined" || pingIdentifier === null) {
+    throw new Error(
+      "Incompatible ping format -- ping has no slug or id attribute"
+    );
+  }
+
+  return PathUtils.join(TelemetryStorage.pingDirectoryPath, pingIdentifier);
 }
 
 function getPingDirectory() {
   return (async function() {
     let directory = TelemetryStorage.pingDirectoryPath;
 
-    if (!(await OS.File.exists(directory))) {
-      await OS.File.makeDir(directory, { unixMode: OS.Constants.S_IRWXU });
+    if (!(await IOUtils.exists(directory))) {
+      await IOUtils.makeDirectory(directory, { permissions: 0o700 });
     }
 
     return directory;
@@ -2143,13 +2151,13 @@ function getArchivedPingPath(aPingId, aDate, aType) {
   // Get the ping creation date and generate the archive directory to hold it. Note
   // that getMonth returns a 0-based month, so we need to add an offset.
   let month = String(aDate.getMonth() + 1);
-  let archivedPingDir = OS.Path.join(
+  let archivedPingDir = PathUtils.join(
     lazy.gPingsArchivePath,
     aDate.getFullYear() + "-" + month.padStart(2, "0")
   );
   // Generate the archived ping file path as YYYY-MM/<TIMESTAMP>.UUID.type.json
   let fileName = [aDate.getTime(), aPingId, aType, "json"].join(".");
-  return OS.Path.join(archivedPingDir, fileName);
+  return PathUtils.join(archivedPingDir, fileName);
 }
 
 /**
@@ -2162,7 +2170,7 @@ var getArchivedPingSize = async function(aPingId, aDate, aType) {
 
   for (let path of filePaths) {
     try {
-      return (await OS.File.stat(path)).size;
+      return (await IOUtils.stat(path)).size;
     } catch (e) {}
   }
 
@@ -2175,9 +2183,9 @@ var getArchivedPingSize = async function(aPingId, aDate, aType) {
  * @return {Integer} The file size, in bytes, of the ping file or 0 on errors.
  */
 var getPendingPingSize = async function(aPingId) {
-  const path = OS.Path.join(TelemetryStorage.pingDirectoryPath, aPingId);
+  const path = PathUtils.join(TelemetryStorage.pingDirectoryPath, aPingId);
   try {
-    return (await OS.File.stat(path)).size;
+    return (await IOUtils.stat(path)).size;
   } catch (e) {}
 
   // That's odd, this ping doesn't seem to exist.
