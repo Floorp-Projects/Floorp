@@ -1128,7 +1128,8 @@ MOZ_CAN_RUN_SCRIPT
 static void SetSessionData(JSContext* aCx, Element* aElement,
                            JS::MutableHandle<JS::Value> aObject) {
   nsAutoString data;
-  if (nsContentUtils::StringifyJSON(aCx, aObject, data)) {
+  if (nsContentUtils::StringifyJSON(aCx, aObject, data,
+                                    UndefinedIsNullStringLiteral)) {
     SetElementAsString(aElement, data);
   } else {
     JS_ClearPendingException(aCx);

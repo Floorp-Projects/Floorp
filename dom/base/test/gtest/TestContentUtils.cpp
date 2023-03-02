@@ -14,6 +14,8 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/SimpleGlobalObject.h"
 
+using namespace mozilla::dom;
+
 struct IsURIInListMatch {
   nsLiteralCString pattern;
   bool firstMatch, secondMatch;
@@ -64,7 +66,8 @@ TEST(DOM_Base_ContentUtils, IsURIInList)
   }
 }
 
-TEST(DOM_Base_ContentUtils, StringifyJSON_EmptyValue)
+TEST(DOM_Base_ContentUtils,
+     StringifyJSON_EmptyValue_UndefinedIsNullStringLiteral)
 {
   JS::Rooted<JSObject*> globalObject(
       mozilla::dom::RootingCx(),
@@ -76,11 +79,12 @@ TEST(DOM_Base_ContentUtils, StringifyJSON_EmptyValue)
   nsAutoString serializedValue;
 
   ASSERT_TRUE(nsContentUtils::StringifyJSON(cx, JS::UndefinedHandleValue,
-                                            serializedValue));
+                                            serializedValue,
+                                            UndefinedIsNullStringLiteral));
   ASSERT_TRUE(serializedValue.EqualsLiteral("null"));
 }
 
-TEST(DOM_Base_ContentUtils, StringifyJSON_Object)
+TEST(DOM_Base_ContentUtils, StringifyJSON_Object_UndefinedIsNullStringLiteral)
 {
   JS::Rooted<JSObject*> globalObject(
       mozilla::dom::RootingCx(),
@@ -96,7 +100,47 @@ TEST(DOM_Base_ContentUtils, StringifyJSON_Object)
   ASSERT_TRUE(JS_DefineProperty(cx, jsObj, "key1", valueStr, JSPROP_ENUMERATE));
   JS::Rooted<JS::Value> jsValue(cx, JS::ObjectValue(*jsObj));
 
-  ASSERT_TRUE(nsContentUtils::StringifyJSON(cx, jsValue, serializedValue));
+  ASSERT_TRUE(nsContentUtils::StringifyJSON(cx, jsValue, serializedValue,
+                                            UndefinedIsNullStringLiteral));
+
+  ASSERT_TRUE(serializedValue.EqualsLiteral("{\"key1\":\"Hello World!\"}"));
+}
+
+TEST(DOM_Base_ContentUtils, StringifyJSON_EmptyValue_UndefinedIsVoidString)
+{
+  JS::Rooted<JSObject*> globalObject(
+      mozilla::dom::RootingCx(),
+      mozilla::dom::SimpleGlobalObject::Create(
+          mozilla::dom::SimpleGlobalObject::GlobalType::BindingDetail));
+  mozilla::dom::AutoJSAPI jsAPI;
+  ASSERT_TRUE(jsAPI.Init(globalObject));
+  JSContext* cx = jsAPI.cx();
+  nsAutoString serializedValue;
+
+  ASSERT_TRUE(nsContentUtils::StringifyJSON(
+      cx, JS::UndefinedHandleValue, serializedValue, UndefinedIsVoidString));
+
+  ASSERT_TRUE(serializedValue.IsVoid());
+}
+
+TEST(DOM_Base_ContentUtils, StringifyJSON_Object_UndefinedIsVoidString)
+{
+  JS::Rooted<JSObject*> globalObject(
+      mozilla::dom::RootingCx(),
+      mozilla::dom::SimpleGlobalObject::Create(
+          mozilla::dom::SimpleGlobalObject::GlobalType::BindingDetail));
+  mozilla::dom::AutoJSAPI jsAPI;
+  ASSERT_TRUE(jsAPI.Init(globalObject));
+  JSContext* cx = jsAPI.cx();
+  nsAutoString serializedValue;
+
+  JS::Rooted<JSObject*> jsObj(cx, JS_NewPlainObject(cx));
+  JS::Rooted<JSString*> valueStr(cx, JS_NewStringCopyZ(cx, "Hello World!"));
+  ASSERT_TRUE(JS_DefineProperty(cx, jsObj, "key1", valueStr, JSPROP_ENUMERATE));
+  JS::Rooted<JS::Value> jsValue(cx, JS::ObjectValue(*jsObj));
+
+  ASSERT_TRUE(nsContentUtils::StringifyJSON(cx, jsValue, serializedValue,
+                                            UndefinedIsVoidString));
 
   ASSERT_TRUE(serializedValue.EqualsLiteral("{\"key1\":\"Hello World!\"}"));
 }

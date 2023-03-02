@@ -10628,16 +10628,28 @@ static bool JSONCreator(const char16_t* aBuf, uint32_t aLen, void* aData) {
 
 /* static */
 bool nsContentUtils::StringifyJSON(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                                   nsAString& aOutStr) {
+                                   nsAString& aOutStr, JSONBehavior aBehavior) {
   MOZ_ASSERT(aCx);
-  aOutStr.Truncate();
-  JS::Rooted<JS::Value> value(aCx, aValue);
-  nsAutoString serializedValue;
-  NS_ENSURE_TRUE(JS_Stringify(aCx, &value, nullptr, JS::NullHandleValue,
-                              JSONCreator, &serializedValue),
-                 false);
-  aOutStr = serializedValue;
-  return true;
+  switch (aBehavior) {
+    case UndefinedIsNullStringLiteral: {
+      aOutStr.Truncate();
+      JS::Rooted<JS::Value> value(aCx, aValue);
+      nsAutoString serializedValue;
+      NS_ENSURE_TRUE(JS_Stringify(aCx, &value, nullptr, JS::NullHandleValue,
+                                  JSONCreator, &serializedValue),
+                     false);
+      aOutStr = serializedValue;
+      return true;
+    }
+    case UndefinedIsVoidString: {
+      aOutStr.SetIsVoid(true);
+      return JS::ToJSON(aCx, aValue, nullptr, JS::NullHandleValue, JSONCreator,
+                        &aOutStr);
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid value for aBehavior");
+      return false;
+  }
 }
 
 /* static */

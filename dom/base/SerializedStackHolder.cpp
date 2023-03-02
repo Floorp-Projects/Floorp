@@ -133,7 +133,8 @@ void ConvertSerializedStackToJSON(UniquePtr<SerializedStackHolder> aStackHolder,
   }
 
   JS::Rooted<JS::Value> convertedValue(cx, JS::ObjectValue(*converted));
-  if (!nsContentUtils::StringifyJSON(cx, convertedValue, aStackString)) {
+  if (!nsContentUtils::StringifyJSON(cx, convertedValue, aStackString,
+                                     UndefinedIsNullStringLiteral)) {
     JS_ClearPendingException(cx);
     return;
   }
