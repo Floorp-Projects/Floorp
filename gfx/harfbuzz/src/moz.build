@@ -45,6 +45,7 @@ UNIFIED_SOURCES += [
     'hb-buffer.cc',
     'hb-common.cc',
     'hb-draw.cc',
+    'hb-face-builder.cc',
     'hb-face.cc',
     'hb-font.cc',
     'hb-map.cc',
