@@ -231,7 +231,7 @@ void WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
     return;
   }
 
-  nsCOMPtr<nsIPrincipal> principal = nsContentUtils::GetSystemPrincipal();
+  nsCOMPtr<nsIPrincipal> principal = mGlobal->PrincipalOrNull();
   // Create a new IPC connection
   Endpoint<PWebTransportParent> parentEndpoint;
   Endpoint<PWebTransportChild> childEndpoint;
