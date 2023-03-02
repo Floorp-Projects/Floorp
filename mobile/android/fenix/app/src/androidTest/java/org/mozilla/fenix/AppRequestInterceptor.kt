@@ -23,7 +23,9 @@ import java.lang.ref.WeakReference
  * deactivate the FxA web channel
  * which is not supported on the staging servers.
  */
-class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
+class AppRequestInterceptor(
+    private val context: Context,
+) : RequestInterceptor {
 
     private var navController: WeakReference<NavController>? = null
 
@@ -86,6 +88,8 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
             errorType = improvedErrorType,
             uri = uri,
             htmlResource = riskLevel.htmlRes,
+            titleOverride = { type -> getErrorPageTitle(context, type) },
+            descriptionOverride = { type -> getErrorPageDescription(context, type) },
         )
 
         return RequestInterceptor.ErrorResponse(errorPageUri)
@@ -125,6 +129,8 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
         return null
     }
 
+    // This method is the only difference from the production code.
+    // Otherwise the code should be kept identical
     @Suppress("LongParameterList")
     private fun interceptFxaRequest(
         engineSession: EngineSession,
@@ -160,6 +166,7 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
 
         return when {
             errorType == ErrorType.ERROR_UNKNOWN_HOST && !isConnected -> ErrorType.ERROR_NO_INTERNET
+            errorType == ErrorType.ERROR_HTTPS_ONLY -> ErrorType.ERROR_HTTPS_ONLY
             else -> errorType
         }
     }
@@ -199,6 +206,25 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
         ErrorType.ERROR_SAFEBROWSING_PHISHING_URI,
         ErrorType.ERROR_SAFEBROWSING_UNWANTED_URI,
         -> RiskLevel.High
+    }
+
+    private fun getErrorPageTitle(context: Context, type: ErrorType): String? {
+        return when (type) {
+            ErrorType.ERROR_HTTPS_ONLY -> context.getString(R.string.errorpage_httpsonly_title)
+            // Returning `null` will let the component use its default title for this error type
+            else -> null
+        }
+    }
+
+    private fun getErrorPageDescription(context: Context, type: ErrorType): String? {
+        return when (type) {
+            ErrorType.ERROR_HTTPS_ONLY ->
+                context.getString(R.string.errorpage_httpsonly_message_title) +
+                    "<br><br>" +
+                    context.getString(R.string.errorpage_httpsonly_message_summary)
+            // Returning `null` will let the component use its default description for this error type
+            else -> null
+        }
     }
 
     internal enum class RiskLevel(val htmlRes: String) {
