@@ -244,6 +244,7 @@ Var ArchToInstall
 !include "common.nsh"
 
 !insertmacro CopyPostSigningData
+!insertmacro CopyProvenanceData
 !insertmacro ElevateUAC
 !insertmacro GetLongPath
 !insertmacro GetPathFromString
@@ -1283,6 +1284,8 @@ Function FinishInstall
 
   ${CopyPostSigningData}
   Pop $PostSigningData
+
+  ${CopyProvenanceData}
 
   Call LaunchApp
 FunctionEnd
