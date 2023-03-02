@@ -27,9 +27,8 @@ const config = (function() {
     scope: ["https://identity.mozilla.com/apps/relay"],
     addressesUrl: baseUrl + `relayaddresses/`,
     profilesUrl: baseUrl + `profiles/`,
-    learnMoreURL: Services.prefs.getStringPref(
-      "signon.firefoxRelay.learn_more_url",
-      undefined
+    learnMoreURL: Services.urlFormatter.formatURLPref(
+      "signon.firefoxRelay.learn_more_url"
     ),
     relayFeaturePref: "signon.firefoxRelay.feature",
   };
