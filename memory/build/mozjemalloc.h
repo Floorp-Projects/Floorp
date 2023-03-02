@@ -65,6 +65,8 @@ struct DummyArenaAllocator {
 
   static void moz_dispose_arena(arena_id_t) {}
 
+  static void moz_set_max_dirty_page_modifier(int32_t) {}
+
 #define MALLOC_DECL(name, return_type, ...)                 \
   static return_type moz_arena_##name(                      \
       arena_id_t, ARGS_HELPER(TYPED_ARGS, ##__VA_ARGS__)) { \
