@@ -8,6 +8,9 @@ const { updateAppInfo } = ChromeUtils.importESModule(
 function run_test() {
   updateAppInfo();
 
+  try {
+    Services.dirsvc.undefine("SysConfD");
+  } catch (e) {}
   let defaultSysConfD = Services.dirsvc.get("SysConfD", Ci.nsIFile);
   equal("/etc/xpcshell", defaultSysConfD.path, "SysConfD is in /etc");
 }
