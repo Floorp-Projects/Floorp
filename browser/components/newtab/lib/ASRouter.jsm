@@ -1140,25 +1140,13 @@ class _ASRouter {
    * and ASRouter._getMessagesContext parameters and values
    */
   async getTargetingParameters(environment, localContext) {
-    // Resolve objects that may contain promises.
-    async function resolve(object) {
-      const target = {};
-
-      for (const param of Object.keys(object)) {
-        target[param] = await object[param];
-
-        if (typeof target[param] === "object" && target[param] !== null) {
-          target[param] = await resolve(target[param]);
-        }
-      }
-
-      return target;
+    const targetingParameters = {};
+    for (const param of Object.keys(environment)) {
+      targetingParameters[param] = await environment[param];
     }
-
-    const targetingParameters = {
-      ...(await resolve(environment)),
-      ...(await resolve(localContext)),
-    };
+    for (const param of Object.keys(localContext)) {
+      targetingParameters[param] = await localContext[param];
+    }
 
     return targetingParameters;
   }
