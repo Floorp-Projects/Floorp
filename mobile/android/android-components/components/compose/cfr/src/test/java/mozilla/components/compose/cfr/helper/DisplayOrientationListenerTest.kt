@@ -16,6 +16,7 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoInteractions
 
 class DisplayOrientationListenerTest {
     private val context: Context = mock()
@@ -66,6 +67,17 @@ class DisplayOrientationListenerTest {
         listener.onDisplayRemoved(1)
 
         assertFalse(hasRotationChanged)
+    }
+
+    @Test
+    fun `GIVEN display is null WHEN a display is changed THEN don't inform the client`() {
+        val onDisplayRotationChanged = mock<() -> Unit>()
+        val listener = DisplayOrientationListener(context, onDisplayRotationChanged)
+        doReturn(null).`when`(displayManager).getDisplay(1)
+
+        listener.onDisplayChanged(1)
+
+        verifyNoInteractions(onDisplayRotationChanged)
     }
 
     @Test

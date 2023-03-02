@@ -49,7 +49,7 @@ internal class DisplayOrientationListener(
     override fun onDisplayRemoved(displayId: Int) = Unit
 
     override fun onDisplayChanged(displayId: Int) {
-        val display = displayManager.getDisplay(displayId)
+        val display = displayManager.getDisplay(displayId) ?: return // getDisplay may return null
 
         if (display.rotation != currentOrientation) {
             currentOrientation = display.rotation
