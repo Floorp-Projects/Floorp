@@ -15,6 +15,7 @@
 #include "RemoteDecodeUtils.h"       // For GetCurrentSandboxingKind()
 #include "SpecialSystemDirectory.h"  // For temp dir
 
+using Microsoft::WRL::ComPtr;
 using Microsoft::WRL::MakeAndInitialize;
 
 namespace mozilla {
@@ -102,12 +103,12 @@ void MFCDMParent::Destroy() {
 }
 
 HRESULT MFCDMParent::LoadFactory() {
-  Microsoft::WRL::ComPtr<IMFMediaEngineClassFactory4> clsFactory;
+  ComPtr<IMFMediaEngineClassFactory4> clsFactory;
   MFCDM_RETURN_IF_FAILED(CoCreateInstance(CLSID_MFMediaEngineClassFactory,
                                           nullptr, CLSCTX_INPROC_SERVER,
                                           IID_PPV_ARGS(&clsFactory)));
 
-  Microsoft::WRL::ComPtr<IMFContentDecryptionModuleFactory> cdmFactory;
+  ComPtr<IMFContentDecryptionModuleFactory> cdmFactory;
   MFCDM_RETURN_IF_FAILED(clsFactory->CreateContentDecryptionModuleFactory(
       mKeySystem.get(), IID_PPV_ARGS(&cdmFactory)));
 
@@ -120,7 +121,7 @@ HRESULT MFCDMParent::LoadFactory() {
 // Windows.Media.Protection.ProtectionCapabilities.IsTypeSupported(). See
 // https://learn.microsoft.com/en-us/uwp/api/windows.media.protection.protectioncapabilities.istypesupported?view=winrt-19041
 static bool FactorySupports(
-    Microsoft::WRL::ComPtr<IMFContentDecryptionModuleFactory>& aFactory,
+    ComPtr<IMFContentDecryptionModuleFactory>& aFactory,
     const nsString& aKeySystem,
     const KeySystemConfig::EMECodecString& aVideoCodec,
     const KeySystemConfig::EMECodecString& aAudioCodec =
@@ -297,11 +298,9 @@ static inline LPCWSTR InitDataTypeToString(const nsAString& aInitDataType) {
   }
 }
 
-static HRESULT BuildCDMAccessConfig(
-    const MFCDMInitParamsIPDL& aParams,
-    Microsoft::WRL::ComPtr<IPropertyStore>& aConfig) {
-  Microsoft::WRL::ComPtr<IPropertyStore>
-      mksc;  // EME MediaKeySystemConfiguration
+static HRESULT BuildCDMAccessConfig(const MFCDMInitParamsIPDL& aParams,
+                                    ComPtr<IPropertyStore>& aConfig) {
+  ComPtr<IPropertyStore> mksc;  // EME MediaKeySystemConfiguration
   MFCDM_RETURN_IF_FAILED(PSCreateMemoryPropertyStore(IID_PPV_ARGS(&mksc)));
 
   // If we don't set `MF_EME_INITDATATYPES` then we won't be able to create
@@ -329,8 +328,7 @@ static HRESULT BuildCDMAccessConfig(
       mksc->SetValue(MF_EME_AUDIOCAPABILITIES, audioCapabilities.get()));
 
   // 'videoCapabilites'.
-  Microsoft::WRL::ComPtr<IPropertyStore>
-      mksmc;  // EME MediaKeySystemMediaCapability
+  ComPtr<IPropertyStore> mksmc;  // EME MediaKeySystemMediaCapability
   MFCDM_RETURN_IF_FAILED(PSCreateMemoryPropertyStore(IID_PPV_ARGS(&mksmc)));
   if (aParams.hwSecure()) {
     AutoPropVar robustness;
@@ -372,11 +370,11 @@ static HRESULT BuildCDMAccessConfig(
   return S_OK;
 }
 
-static HRESULT BuildCDMProperties(
-    const nsString& aOrigin, Microsoft::WRL::ComPtr<IPropertyStore>& aProps) {
+static HRESULT BuildCDMProperties(const nsString& aOrigin,
+                                  ComPtr<IPropertyStore>& aProps) {
   MOZ_ASSERT(!aOrigin.IsEmpty());
 
-  Microsoft::WRL::ComPtr<IPropertyStore> props;
+  ComPtr<IPropertyStore> props;
   MFCDM_RETURN_IF_FAILED(PSCreateMemoryPropertyStore(IID_PPV_ARGS(&props)));
 
   AutoPropVar origin;
@@ -439,21 +437,21 @@ mozilla::ipc::IPCResult MFCDMParent::RecvInit(
   MOZ_ASSERT(mFactory->IsTypeSupported(mKeySystem.get(), nullptr));
 
   // Get access object to CDM.
-  Microsoft::WRL::ComPtr<IPropertyStore> accessConfig;
+  ComPtr<IPropertyStore> accessConfig;
   MFCDM_REJECT_IF_FAILED(BuildCDMAccessConfig(aParams, accessConfig),
                          NS_ERROR_FAILURE);
 
   AutoTArray<IPropertyStore*, 1> configs = {accessConfig.Get()};
-  Microsoft::WRL::ComPtr<IMFContentDecryptionModuleAccess> cdmAccess;
+  ComPtr<IMFContentDecryptionModuleAccess> cdmAccess;
   MFCDM_REJECT_IF_FAILED(
       mFactory->CreateContentDecryptionModuleAccess(
           mKeySystem.get(), configs.Elements(), configs.Length(), &cdmAccess),
       NS_ERROR_FAILURE);
   // Get CDM.
-  Microsoft::WRL::ComPtr<IPropertyStore> cdmProps;
+  ComPtr<IPropertyStore> cdmProps;
   MFCDM_REJECT_IF_FAILED(BuildCDMProperties(aParams.origin(), cdmProps),
                          NS_ERROR_FAILURE);
-  Microsoft::WRL::ComPtr<IMFContentDecryptionModule> cdm;
+  ComPtr<IMFContentDecryptionModule> cdm;
   MFCDM_REJECT_IF_FAILED(
       cdmAccess->CreateContentDecryptionModule(cdmProps.Get(), &cdm),
       NS_ERROR_FAILURE);
@@ -462,8 +460,8 @@ mozilla::ipc::IPCResult MFCDMParent::RecvInit(
   MFCDM_PARENT_LOG("Created a CDM!");
 
   // TODO : for Widevine CDM, would we still need to do following steps?
-  Microsoft::WRL::ComPtr<IMFPMPHost> pmpHost;
-  Microsoft::WRL::ComPtr<IMFGetService> cdmService;
+  ComPtr<IMFPMPHost> pmpHost;
+  ComPtr<IMFGetService> cdmService;
   MFCDM_REJECT_IF_FAILED(mCDM.As(&cdmService), NS_ERROR_FAILURE);
   MFCDM_REJECT_IF_FAILED(
       cdmService->GetService(MF_CONTENTDECRYPTIONMODULE_SERVICE,
