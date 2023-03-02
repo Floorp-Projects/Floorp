@@ -6,8 +6,10 @@
 
 #include "RegistryMessageUtils.h"
 #include "nsChromeRegistryContent.h"
+#include "nsISubstitutingProtocolHandler.h"
 #include "nsString.h"
 #include "nsNetUtil.h"
+#include "mozilla/UniquePtr.h"
 
 nsChromeRegistryContent::nsChromeRegistryContent() {}
 
@@ -60,7 +62,7 @@ void nsChromeRegistryContent::RegisterPackage(const ChromePackage& aPackage) {
     if (NS_FAILED(rv)) return;
   }
 
-  UniquePtr<PackageEntry> entry = MakeUnique<PackageEntry>();
+  mozilla::UniquePtr<PackageEntry> entry = mozilla::MakeUnique<PackageEntry>();
   entry->flags = aPackage.flags;
   entry->contentBaseURI = content;
   entry->localeBaseURI = locale;
