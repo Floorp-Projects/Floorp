@@ -149,12 +149,7 @@ void DocumentL10n::TriggerInitialTranslation() {
     return;
   }
 
-  DOMLocalization::ConnectRoot(*documentElement, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    InitialTranslationCompleted(false);
-    mReady->MaybeRejectWithUndefined();
-    return;
-  }
+  DOMLocalization::ConnectRoot(*documentElement);
 
   AutoEntryScript aes(mGlobal, "DocumentL10n InitialTranslation");
   RefPtr<Promise> promise = Promise::All(aes.cx(), promises, rv);
@@ -342,7 +337,7 @@ void DocumentL10n::ConnectRoot(nsINode& aNode, bool aTranslate,
       RefPtr<Promise> promise = TranslateFragment(aNode, aRv);
     }
   }
-  DOMLocalization::ConnectRoot(aNode, aRv);
+  DOMLocalization::ConnectRoot(aNode);
 }
 
 Promise* DocumentL10n::Ready() { return mReady; }

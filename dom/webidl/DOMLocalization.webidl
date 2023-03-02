@@ -49,25 +49,25 @@ interface DOMLocalization : Localization {
    * Adds a node to nodes observed for localization
    * related changes.
    */
-  [Throws] undefined connectRoot(Node aElement);
+  undefined connectRoot(Node aElement);
 
   /**
    * Removes a node from nodes observed for localization
    * related changes.
    */
-  [Throws] undefined disconnectRoot(Node aElement);
+  undefined disconnectRoot(Node aElement);
 
   /**
    * Pauses the MutationObserver set to observe
    * localization related DOM mutations.
    */
-  [Throws] undefined pauseObserving();
+  undefined pauseObserving();
 
   /**
    * Resumes the MutationObserver set to observe
    * localization related DOM mutations.
    */
-  [Throws] undefined resumeObserving();
+  undefined resumeObserving();
 
   /**
    * A helper function which allows the user to set localization-specific attributes

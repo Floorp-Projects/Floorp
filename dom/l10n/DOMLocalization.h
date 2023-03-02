@@ -49,11 +49,11 @@ class DOMLocalization : public intl::Localization {
    * Methods documentation in DOMLocalization.webidl
    */
 
-  void ConnectRoot(nsINode& aNode, ErrorResult& aRv);
-  void DisconnectRoot(nsINode& aNode, ErrorResult& aRv);
+  void ConnectRoot(nsINode& aNode);
+  void DisconnectRoot(nsINode& aNode);
 
-  void PauseObserving(ErrorResult& aRv);
-  void ResumeObserving(ErrorResult& aRv);
+  void PauseObserving();
+  void ResumeObserving();
 
   void SetAttributes(JSContext* aCx, Element& aElement, const nsAString& aId,
                      const Optional<JS::Handle<JSObject*>>& aArgs,

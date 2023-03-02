@@ -100,9 +100,8 @@ void L10nMutations::ContentInserted(nsIContent* aChild) {
     return;
   }
 
-  ErrorResult rv;
   Sequence<OwningNonNull<Element>> elements;
-  DOMLocalization::GetTranslatables(*aChild, elements, rv);
+  DOMLocalization::GetTranslatables(*aChild, elements, IgnoreErrors());
 
   for (auto& elem : elements) {
     L10nElementChanged(elem);
