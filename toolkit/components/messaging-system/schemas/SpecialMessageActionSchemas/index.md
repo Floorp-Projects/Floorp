@@ -245,22 +245,9 @@ Action for pinning Firefox to the user's taskbar.
 
 ### `SET_DEFAULT_BROWSER`
 
-Action for setting the default browser to Firefox on the user's system.
+Action for configuring the default browser to Firefox on the user's system.
 
 - args: (none)
-
-### `SET_DEFAULT_PDF_HANDLER`
-
-Action for setting the default PDF handler to Firefox on the user's system.
-
-- args:
-```ts
-{
-  // Only set Firefox as the default PDF handler if the current PDF handler is a
-  // known browser.
-  onlyIfKnownBrowser?: boolean;
-}
-```
 
 ### `SHOW_SPOTLIGHT`
 
