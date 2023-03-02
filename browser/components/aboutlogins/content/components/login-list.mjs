@@ -842,6 +842,7 @@ export default class LoginList extends HTMLElement {
       from?.classList.remove("keyboard-selected");
       to.classList.add("keyboard-selected");
       to.scrollIntoView({ block: "nearest" });
+      this.clickSelected();
     }
   }
 
