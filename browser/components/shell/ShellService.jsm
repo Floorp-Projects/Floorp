@@ -184,41 +184,6 @@ let ShellServiceInternal = {
       return true;
     }
 
-    const handler = this.getDefaultPDFHandler();
-    if (handler === null) {
-      // We only get an exception when something went really wrong.  Fail
-      // safely: don't set Firefox as default PDF handler.
-      lazy.log.warn(
-        "Could not determine default PDF handler: not setting Firefox as " +
-          "default PDF handler!"
-      );
-      return false;
-    }
-
-    if (!handler.registered) {
-      lazy.log.debug(
-        "Current default PDF handler has no registered association; " +
-          "should set as default PDF handler."
-      );
-      return true;
-    }
-
-    if (handler.knownBrowser) {
-      lazy.log.debug(
-        "Current default PDF handler progID matches known browser; should " +
-          "set as default PDF handler."
-      );
-      return true;
-    }
-
-    lazy.log.debug(
-      "Current default PDF handler progID does not match known browser " +
-        "prefix; should not set as default PDF handler."
-    );
-    return false;
-  },
-
-  getDefaultPDFHandler() {
     const knownBrowserPrefixes = [
       "AppXq0fevzme2pys62n3e0fbqa7peapykr8v", // Edge before Blink, per https://stackoverflow.com/a/32724723.
       "Brave", // For "BraveFile".
@@ -229,7 +194,6 @@ let ShellServiceInternal = {
       "Opera", // For "OperaStable", presumably varying with channel.
       "Yandex", // For "YandexPDF.IHKFKZEIOKEMR6BGF62QXCRIKM", presumably varying with installation.
     ];
-
     let currentProgID = "";
     try {
       // Returns the empty string when no association is registered, in
@@ -239,26 +203,37 @@ let ShellServiceInternal = {
     } catch (e) {
       // We only get an exception when something went really wrong.  Fail
       // safely: don't set Firefox as default PDF handler.
-      lazy.log.warn("Failed to queryCurrentDefaultHandlerFor:");
-      return null;
+      lazy.log.warn(
+        "Failed to queryCurrentDefaultHandlerFor: " +
+          "not setting Firefox as default PDF handler!"
+      );
+      return false;
     }
 
     if (currentProgID == "") {
-      return { registered: false, knownBrowser: false };
+      lazy.log.debug(
+        `Current default PDF handler has no registered association; ` +
+          `should set as default PDF handler.`
+      );
+      return true;
     }
 
-    const knownBrowserPrefix = knownBrowserPrefixes.find(it =>
+    let knownBrowserPrefix = knownBrowserPrefixes.find(it =>
       currentProgID.startsWith(it)
     );
-
     if (knownBrowserPrefix) {
-      lazy.log.debug(`Found known browser prefix: ${knownBrowserPrefix}`);
+      lazy.log.debug(
+        `Current default PDF handler progID matches known browser prefix: ` +
+          `'${knownBrowserPrefix}'; should set as default PDF handler.`
+      );
+      return true;
     }
 
-    return {
-      registered: true,
-      knownBrowser: !!knownBrowserPrefix,
-    };
+    lazy.log.debug(
+      `Current default PDF handler progID does not match known browser prefix; ` +
+        `should not set as default PDF handler.`
+    );
+    return false;
   },
 
   /*
@@ -314,54 +289,44 @@ let ShellServiceInternal = {
         arguments: exeArgs,
       });
       telemetryResult = "ErrOther";
-      this._handleWDBAResult(exeProcess);
-    } catch (ex) {
-      if (ex instanceof WDBAError) {
-        telemetryResult = ex.telemetryResult;
+
+      // Exit codes, see toolkit/mozapps/defaultagent/SetDefaultBrowser.h
+      const S_OK = 0;
+      const STILL_ACTIVE = 0x103;
+      const MOZ_E_NO_PROGID = 0xa0000001;
+      const MOZ_E_HASH_CHECK = 0xa0000002;
+      const MOZ_E_REJECTED = 0xa0000003;
+      const MOZ_E_BUILD = 0xa0000004;
+
+      const exeWaitTimeoutMs = 2000; // 2 seconds
+      const exeWaitPromise = exeProcess.wait();
+      const timeoutPromise = new Promise(function(resolve, reject) {
+        lazy.setTimeout(
+          () => resolve({ exitCode: STILL_ACTIVE }),
+          exeWaitTimeoutMs
+        );
+      });
+      const { exitCode } = await Promise.race([exeWaitPromise, timeoutPromise]);
+
+      if (exitCode != S_OK) {
+        telemetryResult =
+          new Map([
+            [STILL_ACTIVE, "ErrExeTimeout"],
+            [MOZ_E_NO_PROGID, "ErrExeProgID"],
+            [MOZ_E_HASH_CHECK, "ErrExeHash"],
+            [MOZ_E_REJECTED, "ErrExeRejected"],
+            [MOZ_E_BUILD, "ErrBuild"],
+          ]).get(exitCode) ?? "ErrExeOther";
+        throw new Error(
+          `WDBA nonzero exit code ${exitCode}: ${telemetryResult}`
+        );
       }
 
-      throw ex;
+      telemetryResult = "Success";
     } finally {
       try {
         const histogram = Services.telemetry.getHistogramById(
           "BROWSER_SET_DEFAULT_USER_CHOICE_RESULT"
-        );
-        histogram.add(telemetryResult);
-      } catch (ex) {}
-    }
-  },
-
-  async setAsDefaultPDFHandlerUserChoice() {
-    if (AppConstants.platform != "win") {
-      throw new Error("Windows-only");
-    }
-
-    // See comment in setAsDefaultUserChoice for an explanation of why we shell
-    // out to WDBA.
-    let telemetryResult = "ErrOther";
-
-    try {
-      const aumi = lazy.XreDirProvider.getInstallHash();
-      const exeProcess = await this._callExternalDefaultBrowserAgent({
-        arguments: [
-          "set-default-extension-handlers-user-choice",
-          aumi,
-          ".pdf",
-          "FirefoxPDF",
-        ],
-      });
-      telemetryResult = "ErrOther";
-      this._handleWDBAResult(exeProcess);
-    } catch (ex) {
-      if (ex instanceof WDBAError) {
-        telemetryResult = ex.telemetryResult;
-      }
-
-      throw ex;
-    } finally {
-      try {
-        const histogram = Services.telemetry.getHistogramById(
-          "BROWSER_SET_DEFAULT_PDF_HANDLER_USER_CHOICE_RESULT"
         );
         histogram.add(telemetryResult);
       } catch (ex) {}
@@ -420,16 +385,6 @@ let ShellServiceInternal = {
     Services.telemetry
       .getHistogramById("BROWSER_SET_DEFAULT_ERROR")
       .add(setAsDefaultError);
-  },
-
-  setAsDefaultPDFHandler(onlyIfKnownBrowser = false) {
-    if (onlyIfKnownBrowser && !this.getDefaultPDFHandler().knownBrowser) {
-      return;
-    }
-
-    if (AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
-      this.setAsDefaultPDFHandlerUserChoice();
-    }
   },
 
   /**
@@ -512,39 +467,6 @@ let ShellServiceInternal = {
       }
     }
   },
-
-  async _handleWDBAResult(exeProcess, exeWaitTimeoutMs = 2000) {
-    // Exit codes, see toolkit/mozapps/defaultagent/SetDefaultBrowser.h
-    const S_OK = 0;
-    const STILL_ACTIVE = 0x103;
-    const MOZ_E_NO_PROGID = 0xa0000001;
-    const MOZ_E_HASH_CHECK = 0xa0000002;
-    const MOZ_E_REJECTED = 0xa0000003;
-    const MOZ_E_BUILD = 0xa0000004;
-
-    const exeWaitPromise = exeProcess.wait();
-    const timeoutPromise = new Promise(function(resolve) {
-      lazy.setTimeout(
-        () => resolve({ exitCode: STILL_ACTIVE }),
-        exeWaitTimeoutMs
-      );
-    });
-
-    const { exitCode } = await Promise.race([exeWaitPromise, timeoutPromise]);
-
-    if (exitCode != S_OK) {
-      const telemetryResult =
-        new Map([
-          [STILL_ACTIVE, "ErrExeTimeout"],
-          [MOZ_E_NO_PROGID, "ErrExeProgID"],
-          [MOZ_E_HASH_CHECK, "ErrExeHash"],
-          [MOZ_E_REJECTED, "ErrExeRejected"],
-          [MOZ_E_BUILD, "ErrBuild"],
-        ]).get(exitCode) ?? "ErrExeOther";
-
-      throw new WDBAError(exitCode, telemetryResult);
-    }
-  },
 };
 
 XPCOMUtils.defineLazyServiceGetters(ShellServiceInternal, {
@@ -569,12 +491,3 @@ var ShellService = new Proxy(ShellServiceInternal, {
     return undefined;
   },
 });
-
-class WDBAError extends Error {
-  constructor(exitCode, telemetryResult) {
-    super(`WDBA nonzero exit code ${exitCode}: ${telemetryResult}`);
-
-    this.exitCode = exitCode;
-    this.telemetryResult = telemetryResult;
-  }
-}
