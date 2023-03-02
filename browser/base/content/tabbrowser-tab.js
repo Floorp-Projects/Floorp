@@ -451,7 +451,7 @@
         } else {
           gBrowser.removeTab(this, {
             animate: true,
-            byMouse: event.mozInputSource == MouseEvent.MOZ_SOURCE_MOUSE,
+            triggeringEvent: event,
           });
         }
         // This enables double-click protection for the tab container
@@ -479,7 +479,7 @@
       ) {
         gBrowser.removeTab(this, {
           animate: true,
-          byMouse: event.mozInputSource == MouseEvent.MOZ_SOURCE_MOUSE,
+          triggeringEvent: event,
         });
       }
     }

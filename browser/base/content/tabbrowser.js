@@ -3757,7 +3757,7 @@
       aTab,
       {
         animate,
-        byMouse,
+        triggeringEvent,
         skipPermitUnload,
         closeWindowWithLastTab,
         prewarmed,
@@ -3807,7 +3807,13 @@
         return;
       }
 
-      if (!aTab.pinned && !aTab.hidden && aTab._fullyOpen && byMouse) {
+      let lockTabSizing =
+        !aTab.pinned &&
+        !aTab.hidden &&
+        aTab._fullyOpen &&
+        triggeringEvent?.mozInputSource == MouseEvent.MOZ_SOURCE_MOUSE &&
+        triggeringEvent?.target.closest(".tabbrowser-tab");
+      if (lockTabSizing) {
         this.tabContainer._lockTabSizing(aTab, tabWidth);
       } else {
         this.tabContainer._unlockTabSizing();
