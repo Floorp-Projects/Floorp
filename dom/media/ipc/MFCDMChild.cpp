@@ -8,6 +8,7 @@
 #include "mozilla/KeySystemConfig.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/WMFCDMProxyCallback.h"
 #include "nsString.h"
 #include "RemoteDecoderManagerChild.h"
 
@@ -24,6 +25,8 @@ MFCDMChild::MFCDMChild(const nsAString& aKeySystem)
       mShutdown(false) {
   mRemotePromise = EnsureRemote();
 }
+
+MFCDMChild::~MFCDMChild() {}
 
 RefPtr<MFCDMChild::RemotePromise> MFCDMChild::EnsureRemote() {
   if (!mManagerThread) {
@@ -74,6 +77,7 @@ void MFCDMChild::Shutdown() {
   MOZ_ASSERT(!mShutdown);
 
   mShutdown = true;
+  mProxyCallback = nullptr;
 
   mRemoteRequest.DisconnectIfExists();
   mInitRequest.DisconnectIfExists();
@@ -154,7 +158,8 @@ already_AddRefed<PromiseType> MFCDMChild::InvokeAsync(
 RefPtr<MFCDMChild::InitPromise> MFCDMChild::Init(
     const nsAString& aOrigin, const CopyableTArray<nsString>& aInitDataTypes,
     const KeySystemConfig::Requirement aPersistentState,
-    const KeySystemConfig::Requirement aDistinctiveID, const bool aHWSecure) {
+    const KeySystemConfig::Requirement aDistinctiveID, const bool aHWSecure,
+    WMFCDMProxyCallback* aProxyCallback) {
   MOZ_ASSERT(mManagerThread);
 
   if (mShutdown) {
@@ -166,6 +171,7 @@ RefPtr<MFCDMChild::InitPromise> MFCDMChild::Init(
     return InitPromise::CreateAndReject(mState, __func__);
   }
 
+  mProxyCallback = aProxyCallback;
   MFCDMInitParamsIPDL params{nsString(aOrigin), aInitDataTypes, aDistinctiveID,
                              aPersistentState, aHWSecure};
   auto doSend = [self = RefPtr{this}, this, params]() {
@@ -231,19 +237,28 @@ RefPtr<MFCDMChild::SessionPromise> MFCDMChild::CreateSessionAndGenerateRequest(
 
 mozilla::ipc::IPCResult MFCDMChild::RecvOnSessionKeyMessage(
     const MFCDMKeyMessage& aMessage) {
-  // TODO : implement this.
+  LOG("RecvOnSessionKeyMessage, sessionId=%s",
+      NS_ConvertUTF16toUTF8(aMessage.sessionId()).get());
+  MOZ_ASSERT(mProxyCallback);
+  mProxyCallback->OnSessionMessage(aMessage);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult MFCDMChild::RecvOnSessionKeyStatusesChanged(
     const MFCDMKeyStatusChange& aKeyStatuses) {
-  // TODO : implement this.
+  LOG("RecvOnSessionKeyStatusesChanged, sessionId=%s",
+      NS_ConvertUTF16toUTF8(aKeyStatuses.sessionId()).get());
+  MOZ_ASSERT(mProxyCallback);
+  mProxyCallback->OnSessionKeyStatusesChange(aKeyStatuses);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult MFCDMChild::RecvOnSessionKeyExpiration(
     const MFCDMKeyExpiration& aExpiration) {
-  // TODO : implement this.
+  LOG("RecvOnSessionKeyExpiration, sessionId=%s",
+      NS_ConvertUTF16toUTF8(aExpiration.sessionId()).get());
+  MOZ_ASSERT(mProxyCallback);
+  mProxyCallback->OnSessionKeyExpiration(aExpiration);
   return IPC_OK();
 }
 

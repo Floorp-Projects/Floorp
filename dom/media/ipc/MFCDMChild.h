@@ -11,6 +11,8 @@
 
 namespace mozilla {
 
+class WMFCDMProxyCallback;
+
 /**
  * MFCDMChild is a content process proxy to MFCDMParent and the actual CDM
  * running in utility process.
@@ -34,7 +36,8 @@ class MFCDMChild final : public PMFCDMChild {
                            const CopyableTArray<nsString>& aInitDataTypes,
                            const KeySystemConfig::Requirement aPersistentState,
                            const KeySystemConfig::Requirement aDistinctiveID,
-                           const bool aHWSecure);
+                           const bool aHWSecure,
+                           WMFCDMProxyCallback* aProxyCallback);
 
   using SessionPromise = MozPromise<nsString, nsresult, true>;
   RefPtr<SessionPromise> CreateSessionAndGenerateRequest(
@@ -66,7 +69,7 @@ class MFCDMChild final : public PMFCDMChild {
   }
 
  private:
-  ~MFCDMChild() = default;
+  ~MFCDMChild();
 
   using RemotePromise = GenericNonExclusivePromise;
   RefPtr<RemotePromise> EnsureRemote();
@@ -101,6 +104,8 @@ class MFCDMChild final : public PMFCDMChild {
   MozPromiseHolder<SessionPromise> mCreateSessionPromiseHolder;
   MozPromiseRequestHolder<CreateSessionAndGenerateRequestPromise>
       mCreateSessionRequest;
+
+  RefPtr<WMFCDMProxyCallback> mProxyCallback;
 };
 
 }  // namespace mozilla

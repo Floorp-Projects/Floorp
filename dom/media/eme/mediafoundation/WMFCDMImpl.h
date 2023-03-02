@@ -18,6 +18,8 @@
 
 namespace mozilla {
 
+class WMFCDMProxyCallback;
+
 /**
  * WMFCDMImpl is a helper class for MFCDM protocol clients. It creates, manages,
  * and calls MFCDMChild object in the content process on behalf of the client,
@@ -41,6 +43,7 @@ class WMFCDMImpl final {
     bool mPersistentStateRequired;
     bool mDistinctiveIdentifierRequired;
     bool mHWSecure;
+    WMFCDMProxyCallback* mProxyCallback;
   };
 
   RefPtr<InitPromise> Init(const InitParams& aParams);
