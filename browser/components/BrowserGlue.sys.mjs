@@ -4914,6 +4914,8 @@ var ContentBlockingCategoriesPrefs = {
         "privacy.trackingprotection.socialtracking.enabled": null,
         "privacy.trackingprotection.fingerprinting.enabled": null,
         "privacy.trackingprotection.cryptomining.enabled": null,
+        "privacy.trackingprotection.emailtracking.enabled": null,
+        "privacy.trackingprotection.emailtracking.pbmode.enabled": null,
         "privacy.annotate_channels.strict_list.enabled": null,
         "privacy.annotate_channels.strict_list.pbmode.enabled": null,
         "network.http.referer.disallowCrossSiteRelaxingDefault": null,
@@ -4930,6 +4932,8 @@ var ContentBlockingCategoriesPrefs = {
         "privacy.trackingprotection.socialtracking.enabled": null,
         "privacy.trackingprotection.fingerprinting.enabled": null,
         "privacy.trackingprotection.cryptomining.enabled": null,
+        "privacy.trackingprotection.emailtracking.enabled": null,
+        "privacy.trackingprotection.emailtracking.pbmode.enabled": null,
         "privacy.annotate_channels.strict_list.enabled": null,
         "privacy.annotate_channels.strict_list.pbmode.enabled": null,
         "network.http.referer.disallowCrossSiteRelaxingDefault": null,
@@ -4993,6 +4997,26 @@ var ContentBlockingCategoriesPrefs = {
         case "-stp":
           this.CATEGORY_PREFS[type][
             "privacy.trackingprotection.socialtracking.enabled"
+          ] = false;
+          break;
+        case "emailTP":
+          this.CATEGORY_PREFS[type][
+            "privacy.trackingprotection.emailtracking.enabled"
+          ] = true;
+          break;
+        case "-emailTP":
+          this.CATEGORY_PREFS[type][
+            "privacy.trackingprotection.emailtracking.enabled"
+          ] = false;
+          break;
+        case "emailTPPrivate":
+          this.CATEGORY_PREFS[type][
+            "privacy.trackingprotection.emailtracking.pbmode.enabled"
+          ] = true;
+          break;
+        case "-emailTPPrivate":
+          this.CATEGORY_PREFS[type][
+            "privacy.trackingprotection.emailtracking.pbmode.enabled"
           ] = false;
           break;
         case "lvl2":
