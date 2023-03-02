@@ -13,6 +13,7 @@ XPIDL_SOURCES += [
     "nsIPurgeTrackerService.idl",
     "nsITrackingDBService.idl",
     "nsIURLDecorationAnnotationsService.idl",
+    "nsIURLQueryStringStripper.idl",
     "nsIURLQueryStrippingListService.idl",
 ]
 

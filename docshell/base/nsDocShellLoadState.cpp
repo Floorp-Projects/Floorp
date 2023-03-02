@@ -11,6 +11,7 @@
 #include "nsIURIFixup.h"
 #include "nsIWebNavigation.h"
 #include "nsIChannel.h"
+#include "nsIURLQueryStringStripper.h"
 #include "nsNetUtil.h"
 #include "nsQueryObject.h"
 #include "ReferrerInfo.h"
@@ -24,7 +25,6 @@
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/URLQueryStringStripper.h"
 
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/NullPrincipal.h"
@@ -707,8 +707,16 @@ void nsDocShellLoadState::MaybeStripTrackerQueryStrings(
       Telemetry::LABELS_QUERY_STRIPPING_COUNT::Navigation);
 
   nsCOMPtr<nsIURI> strippedURI;
-  uint32_t numStripped = URLQueryStringStripper::Strip(
-      URI(), aContext->UsePrivateBrowsing(), strippedURI);
+
+  nsresult rv;
+  nsCOMPtr<nsIURLQueryStringStripper> queryStripper =
+      components::URLQueryStringStripper::Service(&rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  uint32_t numStripped;
+
+  queryStripper->Strip(URI(), aContext->UsePrivateBrowsing(),
+                       getter_AddRefs(strippedURI), &numStripped);
   if (numStripped) {
     if (!mUnstrippedURI) {
       mUnstrippedURI = URI();
@@ -725,8 +733,9 @@ void nsDocShellLoadState::MaybeStripTrackerQueryStrings(
   // string could be different.
   if (mUnstrippedURI) {
     nsCOMPtr<nsIURI> uri;
-    Unused << URLQueryStringStripper::Strip(
-        mUnstrippedURI, aContext->UsePrivateBrowsing(), uri);
+    Unused << queryStripper->Strip(mUnstrippedURI,
+                                   aContext->UsePrivateBrowsing(),
+                                   getter_AddRefs(uri), &numStripped);
     bool equals = false;
     Unused << URI()->Equals(uri, &equals);
     MOZ_ASSERT(equals);
