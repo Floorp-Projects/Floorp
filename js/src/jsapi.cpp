@@ -3528,6 +3528,14 @@ JS_PUBLIC_API bool JS_ParseJSON(JSContext* cx, HandleString str,
   return JS_ParseJSONWithReviver(cx, str, NullHandleValue, vp);
 }
 
+JS_PUBLIC_API bool JS_ParseJSON(JSContext* cx, const Latin1Char* chars,
+                                uint32_t len, MutableHandleValue vp) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  return ParseJSONWithReviver(cx, mozilla::Range<const Latin1Char>(chars, len),
+                              NullHandleValue, vp);
+}
+
 JS_PUBLIC_API bool JS_ParseJSONWithReviver(JSContext* cx, const char16_t* chars,
                                            uint32_t len, HandleValue reviver,
                                            MutableHandleValue vp) {
