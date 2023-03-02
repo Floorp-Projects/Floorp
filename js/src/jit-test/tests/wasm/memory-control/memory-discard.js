@@ -8,10 +8,9 @@
 // The ultimate goal is to release physical pages of memory back to the
 // operating system, but we can't really observe memory metrics here. Oh well.
 
-function initModule(discardOffset, discardLen, discardViaJS, shared, memType = 'i32') {
-    const memProps = shared ? '4 4 shared' : '4'; // 4 pages
+function initModule(discardOffset, discardLen, discardViaJS, memType = 'i32') {
     const text = `(module
-        (memory (export "memory") ${memType} ${memProps})
+        (memory (export "memory") ${memType} 4) ;; 4 pages
         (data "abcdefghijklmnopqrstuvwxyz")
         (func (export "init")
             ;; splat alphabet halfway across the 3/4 page boundary.
@@ -42,21 +41,17 @@ function checkSecondHalf(exp, expectLetters) { return checkRegion(exp, 13, 26, e
 function checkWholeAlphabet(exp, expectLetters) { return checkRegion(exp, 0, 26, expectLetters) }
 
 function testAll(func) {
-    func(false, false, 'i32');
-    func(false, true, 'i32');
-    func(true, false, 'i32');
-    func(true, true, 'i32');
+    func(false, 'i32');
+    func(true, 'i32');
     if (wasmMemory64Enabled()) {
-        func(false, false, 'i64');
-        func(false, true, 'i64');
-        func(true, false, 'i64');
-        func(true, true, 'i64');
+        func(false, 'i64');
+        func(true, 'i64');
     }
 }
 
-testAll(function testHappyPath(discardViaJS, shared, memType) {
+testAll(function testHappyPath(discardViaJS, memType) {
     // Only page 3 of memory, half the alphabet
-    const [exp, discard] = initModule(65536 * 2, 65536, discardViaJS, shared, memType);
+    const [exp, discard] = initModule(65536 * 2, 65536, discardViaJS, memType);
 
     // All zero to start
     checkWholeAlphabet(exp, false);
@@ -80,9 +75,9 @@ testAll(function testHappyPath(discardViaJS, shared, memType) {
     checkSecondHalf(exp, true);
 });
 
-testAll(function testZeroLen(discardViaJS, shared) {
+testAll(function testZeroLen(discardViaJS) {
     // Discard zero bytes
-    const [exp, discard] = initModule(PageSizeInBytes * 2, 0, discardViaJS, shared);
+    const [exp, discard] = initModule(PageSizeInBytes * 2, 0, discardViaJS);
 
     // Init the stuff
     exp.init();
@@ -95,14 +90,10 @@ testAll(function testZeroLen(discardViaJS, shared) {
     checkWholeAlphabet(exp, true);
 });
 
-testAll(function testWithGrow(discardViaJS, shared, memType) {
-    if (shared) {
-        return; // shared memories cannot grow
-    }
-
+testAll(function testWithGrow(discardViaJS, memType) {
     // Only page 3 of memory, half the alphabet. There is no max size on the
     // memory, so it will be subject to moving grows in 32-bit mode.
-    const [exp, discard] = initModule(65536 * 2, 65536, discardViaJS, false, memType);
+    const [exp, discard] = initModule(65536 * 2, 65536, discardViaJS, memType);
 
     // Start with the whole alphabet
     exp.init();
@@ -128,11 +119,11 @@ testAll(function testWithGrow(discardViaJS, shared, memType) {
     discard();
     checkFirstHalf(exp, false);
     checkSecondHalf(exp, true);
-});
+})
 
-testAll(function testOOB(discardViaJS, shared) {
+testAll(function testOOB(discardViaJS) {
     // Discard two pages where there is only one
-    const [exp, discard] = initModule(PageSizeInBytes * 3, PageSizeInBytes * 2, discardViaJS, shared);
+    const [exp, discard] = initModule(PageSizeInBytes * 3, PageSizeInBytes * 2, discardViaJS);
 
     exp.init();
     checkWholeAlphabet(exp, true);
@@ -142,10 +133,10 @@ testAll(function testOOB(discardViaJS, shared) {
     checkWholeAlphabet(exp, true);
 });
 
-testAll(function testOOB2(discardViaJS, shared) {
+testAll(function testOOB2(discardViaJS) {
     // Discard two pages starting near the end of 32-bit address space
     // (would trigger an overflow in 32-bit world)
-    const [exp, discard] = initModule(2 ** 32 - PageSizeInBytes, PageSizeInBytes * 2, discardViaJS, shared);
+    const [exp, discard] = initModule(2 ** 32 - PageSizeInBytes, PageSizeInBytes * 2, discardViaJS);
 
     exp.init();
     checkWholeAlphabet(exp, true);
@@ -155,9 +146,9 @@ testAll(function testOOB2(discardViaJS, shared) {
     checkWholeAlphabet(exp, true);
 });
 
-testAll(function testOOB3(discardViaJS, shared) {
+testAll(function testOOB3(discardViaJS) {
     // Discard nearly an entire 32-bit address space's worth of pages. Very exciting!
-    const [exp, discard] = initModule(0, 2 ** 32 - PageSizeInBytes, discardViaJS, shared);
+    const [exp, discard] = initModule(0, 2 ** 32 - PageSizeInBytes, discardViaJS);
 
     exp.init();
     checkWholeAlphabet(exp, true);
@@ -188,7 +179,7 @@ if (wasmMemory64Enabled()) {
         // This cannot be done with a JS discard because JS can't actually represent big enough integers.
 
         // The big ol' number here is 2^64 - (65536 * 2)
-        const [exp, discard] = initModule(65536 * 3, `18_446_744_073_709_420_544`, false, false, 'i64');
+        const [exp, discard] = initModule(65536 * 3, `18_446_744_073_709_420_544`, false, 'i64');
 
         // Init the stuff
         exp.init();
@@ -202,9 +193,9 @@ if (wasmMemory64Enabled()) {
     })();
 }
 
-testAll(function testMisalignedStart(discardViaJS, shared) {
+testAll(function testMisalignedStart(discardViaJS) {
     // Discard only the first half of the alphabet (this misaligns the start)
-    const [exp, discard] = initModule(PageSizeInBytes * 3 - 13, 13, discardViaJS, shared);
+    const [exp, discard] = initModule(PageSizeInBytes * 3 - 13, 13, discardViaJS);
 
     exp.init();
     checkWholeAlphabet(exp, true);
@@ -214,9 +205,9 @@ testAll(function testMisalignedStart(discardViaJS, shared) {
     checkWholeAlphabet(exp, true);
 });
 
-testAll(function testMisalignedEnd(discardViaJS, shared) {
+testAll(function testMisalignedEnd(discardViaJS) {
     // Discard only the second half of the alphabet (this misaligns the end)
-    const [exp, discard] = initModule(PageSizeInBytes * 3, 13, discardViaJS, shared);
+    const [exp, discard] = initModule(PageSizeInBytes * 3, 13, discardViaJS);
 
     exp.init();
     checkWholeAlphabet(exp, true);

@@ -919,47 +919,23 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 }
 
 template <typename I>
-static bool WasmDiscardCheck(Instance* instance, I byteOffset, I byteLen,
-                             size_t memLen, bool shared) {
+static int32_t MemDiscardNotShared(Instance* instance, I byteOffset, I byteLen,
+                                   uint8_t* memBase) {
   JSContext* cx = instance->cx();
 
   if (byteOffset % wasm::PageSize != 0 || byteLen % wasm::PageSize != 0) {
     ReportTrapError(cx, JSMSG_WASM_UNALIGNED_ACCESS);
-    return false;
+    return -1;
   }
 
-  if (!MemoryBoundsCheck(byteOffset, byteLen, memLen)) {
-    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
-    return false;
-  }
-
-  return true;
-}
-
-template <typename I>
-static int32_t MemDiscardNotShared(Instance* instance, I byteOffset, I byteLen,
-                                   uint8_t* memBase) {
   WasmArrayRawBuffer* rawBuf = WasmArrayRawBuffer::fromDataPtr(memBase);
   size_t memLen = rawBuf->byteLength();
 
-  if (!WasmDiscardCheck(instance, byteOffset, byteLen, memLen, false)) {
+  if (!MemoryBoundsCheck(byteOffset, byteLen, memLen)) {
+    ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
     return -1;
   }
-  rawBuf->discard(byteOffset, byteLen);
 
-  return 0;
-}
-
-template <typename I>
-static int32_t MemDiscardShared(Instance* instance, I byteOffset, I byteLen,
-                                uint8_t* memBase) {
-  WasmSharedArrayRawBuffer* rawBuf =
-      WasmSharedArrayRawBuffer::fromDataPtr(memBase);
-  size_t memLen = rawBuf->volatileByteLength();
-
-  if (!WasmDiscardCheck(instance, byteOffset, byteLen, memLen, true)) {
-    return -1;
-  }
   rawBuf->discard(byteOffset, byteLen);
 
   return 0;
@@ -981,16 +957,18 @@ static int32_t MemDiscardShared(Instance* instance, I byteOffset, I byteLen,
 
 /* static */ int32_t Instance::memDiscardShared_m32(Instance* instance,
                                                     uint32_t byteOffset,
-                                                    uint32_t byteLen,
+                                                    uint32_t len,
                                                     uint8_t* memBase) {
-  return MemDiscardShared(instance, byteOffset, byteLen, memBase);
+  ReportTrapError(instance->cx(), JSMSG_WASM_NOT_IMPLEMENTED);
+  return -1;
 }
 
 /* static */ int32_t Instance::memDiscardShared_m64(Instance* instance,
                                                     uint64_t byteOffset,
-                                                    uint64_t byteLen,
+                                                    uint64_t len,
                                                     uint8_t* memBase) {
-  return MemDiscardShared(instance, byteOffset, byteLen, memBase);
+  ReportTrapError(instance->cx(), JSMSG_WASM_NOT_IMPLEMENTED);
+  return -1;
 }
 
 /* static */ void* Instance::tableGet(Instance* instance, uint32_t index,
