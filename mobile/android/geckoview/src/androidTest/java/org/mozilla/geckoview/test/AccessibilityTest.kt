@@ -18,6 +18,7 @@ import android.view.accessibility.AccessibilityNodeProvider
 import android.view.accessibility.AccessibilityRecord
 import android.widget.EditText
 import android.widget.FrameLayout
+import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
@@ -26,7 +27,9 @@ import org.junit.After
 import org.junit.Assume.assumeThat
 import org.junit.Before
 import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
@@ -47,6 +50,10 @@ class AccessibilityTest : BaseSessionTest() {
     val screenRect = Rect(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT)
     val provider: AccessibilityNodeProvider get() = view.accessibilityNodeProvider
     private val nodeInfos = mutableListOf<AccessibilityNodeInfo>()
+    private val activityRule = ActivityScenarioRule(GeckoViewTestActivity::class.java)
+
+    @get:Rule
+    override val rules: RuleChain = RuleChain.outerRule(activityRule).around(sessionRule)
 
     // Given a child ID, return the virtual descendent ID.
     private fun getVirtualDescendantId(childId: Long): Int {
@@ -78,20 +85,28 @@ class AccessibilityTest : BaseSessionTest() {
     }
 
     // Get a child ID by index.
-    private fun AccessibilityNodeInfo.getChildId(index: Int): Int =
-        getVirtualDescendantId(
-            if (Build.VERSION.SDK_INT >= 21) {
-                AccessibilityNodeInfo::class.java.getMethod(
-                    "getChildId",
-                    Int::class.java
-                ).invoke(this, index) as Long
-            } else {
-                (
-                    AccessibilityNodeInfo::class.java.getMethod("getChildNodeIds")
-                        .invoke(this) as SparseLongArray
-                    ).get(index)
-            }
-        )
+    private fun AccessibilityNodeInfo.getChildId(index: Int): Int {
+        try {
+            val field = AccessibilityNodeInfo::class.java.getDeclaredField("mChildNodeIds")
+            field.setAccessible(true)
+            val id = Class.forName("android.util.LongArray").getMethod("get", Int::class.java).invoke(field.get(this), index) as Long
+            return getVirtualDescendantId(id)
+        } catch (ex: Exception) {
+            return getVirtualDescendantId(
+                if (Build.VERSION.SDK_INT >= 21) {
+                    AccessibilityNodeInfo::class.java.getMethod(
+                        "getChildId",
+                        Int::class.java
+                    ).invoke(this, index) as Long
+                } else {
+                    (
+                        AccessibilityNodeInfo::class.java.getMethod("getChildNodeIds")
+                            .invoke(this) as SparseLongArray
+                        ).get(index)
+                }
+            )
+        }
+    }
 
     private interface EventDelegate {
         fun onAccessibilityFocused(event: AccessibilityEvent) { }
@@ -547,6 +562,13 @@ class AccessibilityTest : BaseSessionTest() {
     }
 
     @Test fun testClipboard() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // Writing clipboard requires foreground on Android 10.
+            activityRule.scenario?.onActivity { activity ->
+                activity.onWindowFocusChanged(true)
+            }
+        }
+
         var nodeId = AccessibilityNodeProvider.HOST_VIEW_ID
         loadTestPage("test-clipboard")
         waitForInitialFocus()
