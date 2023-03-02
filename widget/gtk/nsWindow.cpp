@@ -6347,15 +6347,23 @@ void nsWindow::RefreshWindowClass(void) {
   }
 
 #ifdef MOZ_X11
-  if (!mGtkWindowAppName.IsEmpty() && GdkIsX11Display()) {
+  if (GdkIsX11Display()) {
     XClassHint* class_hint = XAllocClassHint();
-    if (!class_hint) {
+    if (!class_hint) return;
+
+    const char* res_name =
+        !mGtkWindowAppName.IsEmpty() ? mGtkWindowAppName.get() : gAppData->name;
+
+    const char* res_class = !mGtkWindowAppClass.IsEmpty()
+                                ? mGtkWindowAppClass.get()
+                                : gdk_get_program_class();
+
+    if (!res_name || !res_class) {
+      XFree(class_hint);
       return;
     }
-    const char* res_class = gdk_get_program_class();
-    if (!res_class) return;
 
-    class_hint->res_name = const_cast<char*>(mGtkWindowAppName.get());
+    class_hint->res_name = const_cast<char*>(res_name);
     class_hint->res_class = const_cast<char*>(res_class);
 
     // Can't use gtk_window_set_wmclass() for this; it prints
@@ -6368,32 +6376,54 @@ void nsWindow::RefreshWindowClass(void) {
 #endif /* MOZ_X11 */
 }
 
-void nsWindow::SetWindowClass(const nsAString& xulWinType) {
+void nsWindow::SetWindowClass(const nsAString& xulWinType,
+                              const nsAString& xulWinClass,
+                              const nsAString& xulWinName) {
   if (!mShell) return;
 
-  char* res_name = ToNewCString(xulWinType, mozilla::fallible);
-  if (!res_name) return;
+  // If window type attribute is set, parse it into name and role
+  if (!xulWinType.IsEmpty()) {
+    char* res_name = ToNewCString(xulWinType, mozilla::fallible);
+    const char* role = nullptr;
 
-  const char* role = nullptr;
+    if (res_name) {
+      // Parse res_name into a name and role. Characters other than
+      // [A-Za-z0-9_-] are converted to '_'. Anything after the first
+      // colon is assigned to role; if there's no colon, assign the
+      // whole thing to both role and res_name.
+      for (char* c = res_name; *c; c++) {
+        if (':' == *c) {
+          *c = 0;
+          role = c + 1;
+        } else if (!isascii(*c) ||
+                   (!isalnum(*c) && ('_' != *c) && ('-' != *c))) {
+          *c = '_';
+        }
+      }
+      res_name[0] = (char)toupper(res_name[0]);
+      if (!role) role = res_name;
 
-  // Parse res_name into a name and role. Characters other than
-  // [A-Za-z0-9_-] are converted to '_'. Anything after the first
-  // colon is assigned to role; if there's no colon, assign the
-  // whole thing to both role and res_name.
-  for (char* c = res_name; *c; c++) {
-    if (':' == *c) {
-      *c = 0;
-      role = c + 1;
-    } else if (!isascii(*c) || (!isalnum(*c) && ('_' != *c) && ('-' != *c))) {
-      *c = '_';
+      mGtkWindowAppName = res_name;
+      mGtkWindowRoleName = role;
+      free(res_name);
     }
   }
-  res_name[0] = (char)toupper(res_name[0]);
-  if (!role) role = res_name;
 
-  mGtkWindowAppName = res_name;
-  mGtkWindowRoleName = role;
-  free(res_name);
+  // If window class attribute is set, store it as app class
+  // If this attribute is not set, reset app class to default
+  if (!xulWinClass.IsEmpty()) {
+    CopyUTF16toUTF8(xulWinClass, mGtkWindowAppClass);
+  } else {
+    mGtkWindowAppClass = nullptr;
+  }
+
+  // If window class attribute is set, store it as app name
+  // If both name and type are not set, reset app name to default
+  if (!xulWinName.IsEmpty()) {
+    CopyUTF16toUTF8(xulWinName, mGtkWindowAppName);
+  } else if (xulWinType.IsEmpty()) {
+    mGtkWindowAppClass = nullptr;
+  }
 
   RefreshWindowClass();
 }
