@@ -100,6 +100,8 @@ TEST(GfxWidgets, Versioning)
   ASSERT_TRUE(mozilla::Version("1b1b") < mozilla::Version("1b1d"));
   ASSERT_TRUE(mozilla::Version("1b1c") > mozilla::Version("1b1b"));
   ASSERT_TRUE(mozilla::Version("1b1d") > mozilla::Version("1b1b"));
+  ASSERT_TRUE(mozilla::Version("110") < mozilla::Version("110.0.1"));
+  ASSERT_TRUE(mozilla::Version("110.*") >= mozilla::Version("110.0.1"));
 
   // Note these two; one would expect for 42.0b1 and 42b1 to compare the
   // same, but they do not.  If this ever changes, we want to know, so
