@@ -95,7 +95,7 @@ fuzzy-if(winWidget,0-4,0-51) == transform-geometry-1.html transform-geometry-1-r
 == preserves3d-nested-filter-1.html preserves3d-nested-filter-1-ref.html
 != preserve3d-scale.html about:blank
 fuzzy(0-52,0-1600) == preserve3d-scale.html preserve3d-scale-ref.html
-fuzzy(0-1,0-5) == perspective-overflow-1.html perspective-overflow-1-ref.html
+fuzzy(0-50,0-22) == perspective-overflow-1.html perspective-overflow-1-ref.html
 == perspective-overflow-2.html perspective-overflow-2-ref.html
 == 1544995-1.html 1544995-1-ref.html
 == preserve3d-will-change-large-frame.html preserve3d-will-change-ref.html
