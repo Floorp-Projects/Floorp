@@ -25,6 +25,7 @@ class RDDProcessManager final : public RDDProcessHost::Listener {
 
  public:
   static void Initialize();
+  static void RDDProcessShutdown();
   static void Shutdown();
   static RDDProcessManager* Get();
 
@@ -80,7 +81,6 @@ class RDDProcessManager final : public RDDProcessHost::Listener {
   RDDProcessManager();
 
   // Shutdown the RDD process.
-  void CleanShutdown();
   void DestroyProcess();
 
   bool IsShutdown() const;
