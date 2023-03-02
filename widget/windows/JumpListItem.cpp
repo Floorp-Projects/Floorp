@@ -273,7 +273,7 @@ nsresult JumpListSeparator::GetSeparator(RefPtr<IShellLinkW>& aShellLink) {
 // (static) Creates a ShellLink that encapsulate a shortcut to local apps.
 nsresult JumpListShortcut::GetShellLink(nsCOMPtr<nsIJumpListItem>& item,
                                         RefPtr<IShellLinkW>& aShellLink,
-                                        nsCOMPtr<nsIThread>& aIOThread) {
+                                        RefPtr<LazyIdleThread>& aIOThread) {
   HRESULT hr;
   IShellLinkW* psl;
   nsresult rv;

@@ -31,21 +31,6 @@
 #include "nsXULAppAPI.h"
 #include "private/prpriv.h"  // For PR_GetThreadID
 
-static DWORD ToWin32ThreadId(nsIThread* aThread) {
-  if (!aThread) {
-    return 0UL;
-  }
-
-  PRThread* prThread;
-  nsresult rv = aThread->GetPRThread(&prThread);
-  if (NS_FAILED(rv)) {
-    // Possible when a LazyInitThread's underlying nsThread is not present
-    return 0UL;
-  }
-
-  return DWORD(::PR_GetThreadID(prThread));
-}
-
 namespace mozilla {
 
 class MOZ_RAII BackgroundPriorityRegion final {
@@ -62,19 +47,12 @@ class MOZ_RAII BackgroundPriorityRegion final {
     Clear(::GetCurrentThread());
   }
 
-  static void Clear(nsIThread* aThread) {
-    DWORD tid = ToWin32ThreadId(aThread);
-    if (!tid) {
+  static void Clear(const nsAutoHandle& aThread) {
+    if (!aThread) {
       return;
     }
 
-    nsAutoHandle thread(
-        ::OpenThread(THREAD_SET_LIMITED_INFORMATION, FALSE, tid));
-    if (!thread) {
-      return;
-    }
-
-    Clear(thread);
+    Clear(aThread.get());
   }
 
   BackgroundPriorityRegion(const BackgroundPriorityRegion&) = delete;
@@ -121,14 +99,16 @@ RefPtr<UntrustedModulesProcessor> UntrustedModulesProcessor::Create(
   return result.forget();
 }
 
-NS_IMPL_ISUPPORTS(UntrustedModulesProcessor, nsIObserver)
+NS_IMPL_ISUPPORTS(UntrustedModulesProcessor, nsIObserver, nsIThreadPoolListener)
 
 static const uint32_t kThreadTimeoutMS = 120000;  // 2 minutes
 
 UntrustedModulesProcessor::UntrustedModulesProcessor(
     bool aIsReadyForBackgroundProcessing)
-    : mThread(new LazyIdleThread(kThreadTimeoutMS, "Untrusted Modules"_ns,
+    : mThread(new LazyIdleThread(kThreadTimeoutMS, "Untrusted Modules",
                                  LazyIdleThread::ManualShutdown)),
+      mThreadHandleMutex(
+          "mozilla::UntrustedModulesProcessor::mThreadHandleMutex"),
       mUnprocessedMutex(
           "mozilla::UntrustedModulesProcessor::mUnprocessedMutex"),
       mModuleCacheMutex(
@@ -146,6 +126,7 @@ void UntrustedModulesProcessor::AddObservers() {
   if (XRE_IsContentProcess()) {
     obsServ->AddObserver(this, "content-child-will-shutdown", false);
   }
+  mThread->SetListener(this);
 }
 
 bool UntrustedModulesProcessor::IsReadyForBackgroundProcessing() const {
@@ -154,7 +135,10 @@ bool UntrustedModulesProcessor::IsReadyForBackgroundProcessing() const {
 
 void UntrustedModulesProcessor::Disable() {
   // Ensure that mThread cannot run at low priority anymore
-  BackgroundPriorityRegion::Clear(mThread);
+  {
+    MutexAutoLock lock(mThreadHandleMutex);
+    BackgroundPriorityRegion::Clear(mThreadHandle);
+  }
 
   // No more background processing allowed beyond this point
   if (mStatus.exchange(Status::ShuttingDown) != Status::Allowed) {
@@ -220,6 +204,32 @@ NS_IMETHODIMP UntrustedModulesProcessor::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
+NS_IMETHODIMP UntrustedModulesProcessor::OnThreadCreated() {
+  // Whenever a backing lazy thread is created, record a thread handle to it.
+  HANDLE threadHandle;
+  if (!::DuplicateHandle(
+          ::GetCurrentProcess(), ::GetCurrentThread(), ::GetCurrentProcess(),
+          &threadHandle,
+          THREAD_QUERY_LIMITED_INFORMATION | THREAD_SET_LIMITED_INFORMATION,
+          FALSE, 0)) {
+    MOZ_ASSERT_UNREACHABLE("DuplicateHandle failed on GetCurrentThread()?");
+    threadHandle = nullptr;
+  }
+  MutexAutoLock lock(mThreadHandleMutex);
+  mThreadHandle.own(threadHandle);
+  return NS_OK;
+}
+
+NS_IMETHODIMP UntrustedModulesProcessor::OnThreadShuttingDown() {
+  // When a lazy thread shuts down, clean up the thread handle reference unless
+  // it's already been replaced.
+  MutexAutoLock lock(mThreadHandleMutex);
+  if (mThreadHandle && ::GetCurrentThreadId() == ::GetThreadId(mThreadHandle)) {
+    mThreadHandle.reset();
+  }
+  return NS_OK;
+}
+
 void UntrustedModulesProcessor::RemoveObservers() {
   nsCOMPtr<nsIObserverService> obsServ(services::GetObserverService());
   obsServ->RemoveObserver(this, NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID);
@@ -228,6 +238,7 @@ void UntrustedModulesProcessor::RemoveObservers() {
   if (XRE_IsContentProcess()) {
     obsServ->RemoveObserver(this, "content-child-will-shutdown");
   }
+  mThread->SetListener(nullptr);
 }
 
 void UntrustedModulesProcessor::ScheduleNonEmptyQueueProcessing(
@@ -303,10 +314,13 @@ void UntrustedModulesProcessor::Enqueue(
     return;
   }
 
-  DWORD bgThreadId = ToWin32ThreadId(mThread);
-  if (aModLoadInfo.mNtLoadInfo.mThreadId == bgThreadId) {
-    // Exclude loads that were caused by our own background thread
-    return;
+  {
+    MutexAutoLock lock(mThreadHandleMutex);
+    DWORD bgThreadId = ::GetThreadId(mThreadHandle);
+    if (aModLoadInfo.mNtLoadInfo.mThreadId == bgThreadId) {
+      // Exclude loads that were caused by our own background thread
+      return;
+    }
   }
 
   MutexAutoLock lock(mUnprocessedMutex);
@@ -337,12 +351,7 @@ void UntrustedModulesProcessor::Enqueue(ModuleLoadInfoVec&& aEvents) {
 
 void UntrustedModulesProcessor::AssertRunningOnLazyIdleThread() {
 #if defined(DEBUG)
-  PRThread* curThread;
-  PRThread* lazyIdleThread;
-
-  MOZ_ASSERT(NS_SUCCEEDED(NS_GetCurrentThread()->GetPRThread(&curThread)) &&
-             NS_SUCCEEDED(mThread->GetPRThread(&lazyIdleThread)) &&
-             curThread == lazyIdleThread);
+  MOZ_ASSERT(mThread->IsOnCurrentThread());
 #endif  // defined(DEBUG)
 }
 
@@ -350,7 +359,10 @@ RefPtr<UntrustedModulesPromise> UntrustedModulesProcessor::GetProcessedData() {
   MOZ_ASSERT(NS_IsMainThread());
 
   // Clear any background priority in case background processing is running.
-  BackgroundPriorityRegion::Clear(mThread);
+  {
+    MutexAutoLock lock(mThreadHandleMutex);
+    BackgroundPriorityRegion::Clear(mThreadHandle);
+  }
 
   RefPtr<UntrustedModulesProcessor> self(this);
   return InvokeAsync(mThread, __func__, [self = std::move(self)]() {
@@ -375,7 +387,10 @@ RefPtr<ModulesTrustPromise> UntrustedModulesProcessor::GetModulesTrust(
 
   if (aRunAtNormalPriority) {
     // Clear any background priority in case background processing is running.
-    BackgroundPriorityRegion::Clear(mThread);
+    {
+      MutexAutoLock lock(mThreadHandleMutex);
+      BackgroundPriorityRegion::Clear(mThreadHandle);
+    }
 
     return InvokeAsync(mThread, __func__, std::move(run));
   }
