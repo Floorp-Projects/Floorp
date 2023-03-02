@@ -7,13 +7,18 @@ FROM $DOCKER_IMAGE_PARENT
 
 VOLUME /builds/worker/checkouts
 
+# Install Java 8 needed for Nexus
+RUN apt-get update -qq \
+    && apt-get install -y openjdk-8-jdk \
+    && apt-get clean
+
 # Install Sonatype Nexus.  Cribbed directly from
-# https://github.com/sonatype/docker-nexus/blob/fffd2c61b2368292040910c055cf690c8e76a272/oss/Dockerfile.
+# https://github.com/sonatype/docker-nexus/blob/0415e54b6c824d510f883e5a75c4008b936eca62/oss/Dockerfile.
 
 ENV NEXUS_ARCHIVE='nexus-bundle.tar.gz' \
     NEXUS_ROOT='/opt/sonatype/nexus' \
-    NEXUS_SHA1SUM=1a9aaad8414baffe0a2fd46eed1f41b85f4049e6 \
-    NEXUS_VERSION=2.12.0-01 \
+    NEXUS_SHA1SUM=0fcb4f002eec0cbad6b421b90a8fe99959d78e93 \
+    NEXUS_VERSION=2.15.1-02 \
     NEXUS_WORK=/builds/worker/workspace/nexus
 
 RUN mkdir -p "$NEXUS_ROOT" \

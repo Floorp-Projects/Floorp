@@ -14,14 +14,13 @@ MAINTAINER Sebastian Kaspari "skaspari@mozilla.com"
 ENV GRADLE_OPTS='-Xmx4096m -Dorg.gradle.daemon=false' \
     LANG='en_US.UTF-8' \
     TERM='dumb' \
-    JAVA8PATH="/usr/lib/jvm/java-8-openjdk-amd64/jre/bin/:$PATH"
+    JAVA11PATH="/usr/lib/jvm/java-11-openjdk-amd64/bin/:$PATH"
 
 RUN apt-get update -qq \
     # We need to install tzdata before all of the other packages. Otherwise it will show an interactive dialog
     # which we cannot navigate while building the Docker image.
     && apt-get install -y tzdata \
-    && apt-get install -y openjdk-8-jdk \
-                          openjdk-11-jdk \
+    && apt-get install -y openjdk-11-jdk \
                           git \
                           curl \
                           python \
@@ -47,7 +46,7 @@ RUN cd /opt && curl --location --retry 5 --output android-sdk.zip https://dl.goo
 ENV ANDROID_SDK_HOME /opt/android-sdk-linux
 ENV ANDROID_HOME /opt/android-sdk-linux
 
-RUN yes | PATH=$JAVA8PATH "${ANDROID_SDK_HOME}/tools/bin/sdkmanager" --licenses
+RUN yes | PATH=$JAVA11PATH "${ANDROID_SDK_HOME}/cmdline-tools/bin/sdkmanager" --licenses
 
 # -- Project setup ----------------------------------------------------------------------
 
