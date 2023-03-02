@@ -27,6 +27,7 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
+#include "nsRFPService.h"
 #include "nsSandboxFlags.h"
 #include "nsScriptSecurityManager.h"
 #include "PartitioningExceptionList.h"
@@ -885,4 +886,13 @@ void AntiTrackingUtils::UpdateAntiTrackingInfoForChannel(nsIChannel* aChannel) {
   nsCOMPtr<nsIURI> uri;
   Unused << aChannel->GetURI(getter_AddRefs(uri));
   net::CookieJarSettings::Cast(cookieJarSettings)->SetPartitionKey(uri);
+
+  // Generate the fingerprinting randomization key for top-level loads. The key
+  // will automatically be propagated to sub loads.
+  auto RFPRandomKey =
+      nsRFPService::GenerateKey(uri, NS_UsePrivateBrowsing(aChannel));
+  if (RFPRandomKey) {
+    net::CookieJarSettings::Cast(cookieJarSettings)
+        ->SetFingerprintingRandomizationKey(RFPRandomKey.ref());
+  }
 }

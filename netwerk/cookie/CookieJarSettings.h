@@ -7,6 +7,8 @@
 #ifndef mozilla_net_CookieJarSettings_h
 #define mozilla_net_CookieJarSettings_h
 
+#include "mozilla/Maybe.h"
+
 #include "nsICookieJarSettings.h"
 #include "nsTArray.h"
 
@@ -165,6 +167,10 @@ class CookieJarSettings final : public nsICookieJarSettings {
   }
   const nsAString& GetPartitionKey() { return mPartitionKey; };
 
+  void SetFingerprintingRandomizationKey(const nsTArray<uint8_t>& aKey) {
+    mFingerprintingRandomKey.emplace(aKey.Clone());
+  }
+
   // Utility function to test if the passed cookiebahvior is
   // BEHAVIOR_REJECT_TRACKER, BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN or
   // BEHAVIOR_REJECT_FOREIGN when
@@ -248,6 +254,14 @@ class CookieJarSettings final : public nsICookieJarSettings {
   //   This all occurrs in the nscontentUtils::ShouldResistFingerprinting
   //   functions which you should be using.
   bool mShouldResistFingerprinting;
+
+  // The key used to generate the random noise for randomizing the browser
+  // fingerprint. The key is decided by the session key and the top-level site.
+  // So, the browse fingerprint will look different to the same tracker
+  // under different top-level sites. Also, the fingerprint will change as
+  // browsing session changes. This can prevent trackers to identify individuals
+  // by using browser fingerprints.
+  Maybe<nsTArray<uint8_t>> mFingerprintingRandomKey;
 };
 
 }  // namespace net
