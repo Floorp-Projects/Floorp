@@ -828,8 +828,6 @@ class BufferTextureHost : public TextureHost {
                         const Range<wr::ImageKey>& aImageKeys,
                         PushDisplayItemFlagSet aFlags) override;
 
-  void DisableExternalTextures() { mUseExternalTextures = false; }
-
  protected:
   bool UseExternalTextures() const { return mUseExternalTextures; }
 
