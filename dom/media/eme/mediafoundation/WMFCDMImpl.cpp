@@ -113,7 +113,7 @@ RefPtr<WMFCDMImpl::InitPromise> WMFCDMImpl::Init(
              aParams.mDistinctiveIdentifierRequired
                  ? KeySystemConfig::Requirement::Required
                  : KeySystemConfig::Requirement::Optional,
-             aParams.mHWSecure)
+             aParams.mHWSecure, aParams.mProxyCallback)
       ->Then(
           mCDM->ManagerThread(), __func__,
           [self, this](const MFCDMInitIPDL& init) {
