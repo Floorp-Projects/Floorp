@@ -747,6 +747,7 @@ const nativeLocaleNames = new Map(
     szl: "Ślōnsko",
     ta: "தமிழ்",
     te: "తెలుగు",
+    tg: "Тоҷикӣ",
     th: "ไทย",
     tl: "Tagalog",
     tr: "Türkçe",
