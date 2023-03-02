@@ -1622,7 +1622,7 @@ pref("browser.newtabpage.activity-stream.discoverystream.spocTopsitesAdTypes", "
 pref("browser.newtabpage.activity-stream.discoverystream.spocTopsitesZoneIds", "");
 pref("browser.newtabpage.activity-stream.discoverystream.spocSiteId", "");
 
-pref("browser.newtabpage.activity-stream.discoverystream.sendToPocket.enabled", false);
+pref("browser.newtabpage.activity-stream.discoverystream.sendToPocket.enabled", true);
 
 // List of regions that do not get stories, regardless of locale-list-config.
 pref("browser.newtabpage.activity-stream.discoverystream.region-stories-block", "FR");
