@@ -131,7 +131,7 @@ SFTKFIPSAlgorithmList sftk_fips_mechs[] = {
     /* ---------------------- SSL/TLS operations ------------------------- */
     { CKM_SHA224_KEY_DERIVATION, { 112, 224, CKF_KDF }, 1, SFTKFIPSNone },
     { CKM_SHA256_KEY_DERIVATION, { 128, 256, CKF_KDF }, 1, SFTKFIPSNone },
-    { CKM_SHA384_KEY_DERIVATION, { 192, 284, CKF_KDF }, 1, SFTKFIPSNone },
+    { CKM_SHA384_KEY_DERIVATION, { 192, 384, CKF_KDF }, 1, SFTKFIPSNone },
     { CKM_SHA512_KEY_DERIVATION, { 256, 512, CKF_KDF }, 1, SFTKFIPSNone },
     { CKM_TLS12_MASTER_KEY_DERIVE, { 384, 384, CKF_KDF }, 1, SFTKFIPSNone },
     { CKM_TLS12_MASTER_KEY_DERIVE_DH, { DH_FB_KEY, CKF_KDF }, 1, SFTKFIPSNone },

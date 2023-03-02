@@ -152,6 +152,12 @@ SECStatus tls13_AEAD(PK11Context *context, PRBool decrypt,
                      const unsigned char *in, unsigned int inLen);
 void tls13_SetSpecRecordVersion(sslSocket *ss, ssl3CipherSpec *spec);
 SECStatus SSLExp_SendCertificateRequest(PRFileDesc *fd);
+SECStatus tls13_ClientGreaseSetup(sslSocket *ss);
+void tls13_ClientGreaseDestroy(sslSocket *ss);
+SECStatus tls13_RandomGreaseValue(PRUint16 *out);
+SECStatus tls13_MaybeGreaseExtensionType(const sslSocket *ss,
+                                         const SSLHandshakeType message,
+                                         PRUint16 *exType);
 
 /* Use this instead of FATAL_ERROR when no alert shall be sent. */
 #define LOG_ERROR(ss, prError)                                                     \

@@ -290,6 +290,8 @@ typedef struct sslOptionsStr {
     unsigned int enableTls13GreaseEch : 1;
     unsigned int enableTls13BackendEch : 1;
     unsigned int callExtensionWriterOnEchInner : 1;
+    unsigned int enableGrease : 1;
+    unsigned int enableChXtnPermutation : 1;
 } sslOptions;
 
 typedef enum { sslHandshakingUndetermined = 0,
@@ -610,6 +612,24 @@ typedef struct {
     PRUint32 timeout;
 } dtlsTimer;
 
+/* TLS 1.3 client GREASE entry indices. */
+typedef enum {
+    grease_cipher,
+    grease_extension1,
+    grease_extension2,
+    grease_group,
+    grease_sigalg,
+    grease_version,
+    grease_alpn,
+    grease_entries
+} tls13ClientGreaseEntry;
+
+/* TLS 1.3 client GREASE values struct. */
+typedef struct tls13ClientGreaseStr {
+    PRUint16 idx[grease_entries];
+    PRUint8 pskKem;
+} tls13ClientGrease;
+
 /*
 ** This is the "hs" member of the "ssl3" struct.
 ** This entire struct is protected by ssl3HandshakeLock
@@ -762,6 +782,12 @@ typedef struct SSL3HandshakeStateStr {
     sslBuffer greaseEchBuf;     /* Client: Remember GREASE ECH, as advertised, for CH2 (HRR case).
                                   Server: Remember HRR Grease Value, for transcript calculations */
     PRBool echInvalidExtension; /* Client: True if the server offered an invalid extension for the ClientHelloInner */
+
+    /* TLS 1.3 GREASE state. */
+    tls13ClientGrease *grease;
+
+    /* ClientHello Extension Permutation state. */
+    sslExtensionBuilder *chExtensionPermutation;
 } SSL3HandshakeState;
 
 #define SSL_ASSERT_HASHES_EMPTY(ss)                                  \
@@ -1740,10 +1766,10 @@ SECStatus ssl3_AuthCertificate(sslSocket *ss);
 SECStatus ssl_ReadCertificateStatus(sslSocket *ss, PRUint8 *b,
                                     PRUint32 length);
 SECStatus ssl3_EncodeSigAlgs(const sslSocket *ss, PRUint16 minVersion, PRBool forCert,
-                             sslBuffer *buf);
+                             PRBool grease, sslBuffer *buf);
 SECStatus ssl3_EncodeFilteredSigAlgs(const sslSocket *ss,
                                      const SSLSignatureScheme *schemes,
-                                     PRUint32 numSchemes, sslBuffer *buf);
+                                     PRUint32 numSchemes, PRBool grease, sslBuffer *buf);
 SECStatus ssl3_FilterSigAlgs(const sslSocket *ss, PRUint16 minVersion, PRBool disableRsae, PRBool forCert,
                              unsigned int maxSchemes, SSLSignatureScheme *filteredSchemes,
                              unsigned int *numFilteredSchemes);
