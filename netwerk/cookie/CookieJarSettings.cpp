@@ -292,6 +292,17 @@ CookieJarSettings::GetPartitionKey(nsAString& aPartitionKey) {
 }
 
 NS_IMETHODIMP
+CookieJarSettings::GetFingerprintingRandomizationKey(
+    nsTArray<uint8_t>& aFingerprintingRandomizationKey) {
+  if (!mFingerprintingRandomKey) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  aFingerprintingRandomizationKey = mFingerprintingRandomKey->Clone();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 CookieJarSettings::CookiePermission(nsIPrincipal* aPrincipal,
                                     uint32_t* aCookiePermission) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -368,6 +379,12 @@ void CookieJarSettings::Serialize(CookieJarSettingsArgs& aData) {
   aData.shouldResistFingerprinting() = mShouldResistFingerprinting;
   aData.isOnContentBlockingAllowList() = mIsOnContentBlockingAllowList;
   aData.partitionKey() = mPartitionKey;
+  if (mFingerprintingRandomKey) {
+    aData.hasFingerprintingRandomizationKey() = true;
+    aData.fingerprintingRandomizationKey() = mFingerprintingRandomKey->Clone();
+  } else {
+    aData.hasFingerprintingRandomizationKey() = false;
+  }
 
   for (const RefPtr<nsIPermission>& permission : mCookiePermissions) {
     nsCOMPtr<nsIPrincipal> principal;
@@ -430,6 +447,11 @@ void CookieJarSettings::Serialize(CookieJarSettingsArgs& aData) {
   cookieJarSettings->mPartitionKey = aData.partitionKey();
   cookieJarSettings->mShouldResistFingerprinting =
       aData.shouldResistFingerprinting();
+
+  if (aData.hasFingerprintingRandomizationKey()) {
+    cookieJarSettings->mFingerprintingRandomKey.emplace(
+        aData.fingerprintingRandomizationKey().Clone());
+  }
 
   cookieJarSettings.forget(aCookieJarSettings);
 }

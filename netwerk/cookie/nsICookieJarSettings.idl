@@ -60,6 +60,11 @@ interface nsICookieJarSettings : nsISerializable
   readonly attribute AString partitionKey;
 
   /**
+   * The key used for fingerprinting randomization.
+   */
+  readonly attribute Array<uint8_t> fingerprintingRandomizationKey;
+
+  /**
    * CookiePermission at the loading of the document for a particular
    * principal. It returns the same cookiePermission also in case it changes
    * during the life-time of the top document.

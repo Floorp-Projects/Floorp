@@ -61,6 +61,8 @@ struct CookieJarSettingsArgs
   CookiePermissionData[] cookiePermissions;
   bool isFixed;
   nsString partitionKey;
+  bool hasFingerprintingRandomizationKey;
+  uint8_t[] fingerprintingRandomizationKey;
 };
 
 //-----------------------------------------------------------------------------
