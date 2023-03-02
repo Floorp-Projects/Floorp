@@ -8798,7 +8798,11 @@
   # May a Clearkey GMP x64 process be executed on ARM builds.
 - name: media.gmp-gmpclearkey.allow-x64-plugin-on-arm64
   type: RelaxedAtomicBool
-  value: @IS_XP_WIN@
+#if defined(NIGHTLY_BUILD) || !defined(XP_WIN)
+  value: false
+#else
+  value: true
+#endif
   mirror: always
 #endif
 
