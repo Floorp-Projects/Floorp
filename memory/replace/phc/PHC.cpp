@@ -1454,6 +1454,11 @@ void replace_moz_dispose_arena(arena_id_t aArenaId) {
   return sMallocTable.moz_dispose_arena(aArenaId);
 }
 
+void replace_moz_set_max_dirty_page_modifier(int32_t aModifier) {
+  // No need to do anything special here.
+  return sMallocTable.moz_set_max_dirty_page_modifier(aModifier);
+}
+
 void* replace_moz_arena_malloc(arena_id_t aArenaId, size_t aReqSize) {
   return PageMalloc(Some(aArenaId), aReqSize);
 }

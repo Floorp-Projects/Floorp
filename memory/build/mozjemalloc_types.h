@@ -65,10 +65,22 @@ typedef size_t arena_id_t;
 
 typedef struct arena_params_s {
   size_t mMaxDirty;
+  // Arena specific modifiers which override the value passed to
+  // moz_set_max_dirty_page_modifier. If value > 0 is passed to that function,
+  // and mMaxDirtyIncreaseOverride != 0, mMaxDirtyIncreaseOverride will be used
+  // instead, and similarly if value < 0 is passed and mMaxDirtyDecreaseOverride
+  // != 0, mMaxDirtyDecreaseOverride will be used as the modifier.
+  int32_t mMaxDirtyIncreaseOverride;
+  int32_t mMaxDirtyDecreaseOverride;
+
   uint32_t mFlags;
 
 #ifdef __cplusplus
-  arena_params_s() : mMaxDirty(0), mFlags(0) {}
+  arena_params_s()
+      : mMaxDirty(0),
+        mMaxDirtyIncreaseOverride(0),
+        mMaxDirtyDecreaseOverride(0),
+        mFlags(0) {}
 #endif
 } arena_params_t;
 
