@@ -6,4 +6,8 @@ MOCHITEST_CHROME_MANIFESTS += [
     "chrome.ini",
 ]
 
+BROWSER_CHROME_MANIFESTS += [
+    "browser/browser.ini",
+]
+
 FINAL_LIBRARY = "xul-gtest"
