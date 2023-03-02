@@ -7,7 +7,9 @@
 
 // Until DER.jsm is actually used in production code, this is where we have to
 // import it from.
-var { DER } = ChromeUtils.import("resource://gre/modules/psm/DER.jsm");
+var { DER } = ChromeUtils.importESModule(
+  "resource://gre/modules/psm/DER.sys.mjs"
+);
 
 function run_simple_tests() {
   throws(
