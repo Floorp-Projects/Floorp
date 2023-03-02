@@ -140,6 +140,12 @@ about-webrtc-local-receive-ssrc = Local Receiving SSRC
 # This is an SSRC on the remote side of the connection that is sending RTP
 about-webrtc-remote-send-ssrc = Remote Sending SSRC
 
+## These are displayed on the button that shows or hides the
+## PeerConnection configuration disclosure
+
+about-webrtc-pc-configuration-show-msg = Show Configuration
+about-webrtc-pc-configuration-hide-msg = Hide Configuration
+
 ##
 
 # An option whose value will not be displayed but instead noted as having been

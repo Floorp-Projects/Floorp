@@ -446,8 +446,8 @@ function renderPeerConnection(report) {
           "about-webrtc-peerconnection-id-label"
         ),
         renderText("span", pcid, { className: "info-body" }),
+        renderConfiguration(rndr, configuration),
       ]),
-      renderConfiguration(configuration),
       renderRTPStats(report),
       renderICEStats(report),
       renderSDPStats(rndr, report),
@@ -953,7 +953,7 @@ function renderRawIceTable(caption, candidates) {
   return table;
 }
 
-function renderConfiguration(c) {
+function renderConfiguration(rndr, c) {
   const provided = "about-webrtc-configuration-element-provided";
   const notProvided = "about-webrtc-configuration-element-not-provided";
 
@@ -975,24 +975,33 @@ function renderConfiguration(c) {
     renderElement("i", {}, obj[`${key}Provided`] ? provided : notProvided),
   ];
 
-  return renderElements("div", { classList: "peer-connection-config" }, [
-    "RTCConfiguration",
-    ...cfg(c, "bundlePolicy"),
-    ...cfg(c, "iceTransportPolicy"),
-    ...pro(c, "peerIdentity"),
-    ...cfg(c, "sdpSemantics"),
-    renderElement("br"),
-    "iceServers: ",
-    ...(!c.iceServers
-      ? [renderElement("i", {}, notProvided)]
-      : c.iceServers.map(i =>
-          renderElements("div", {}, [
-            `urls: ${JSON.stringify(i.urls)}`,
-            ...pro(i, "credential"),
-            ...pro(i, "userName"),
-          ])
-        )),
-  ]);
+  const confDiv = rndr.elem_div({ display: "contents" });
+  let disclosure = renderFoldableSection(confDiv, {
+    showMsg: "about-webrtc-pc-configuration-show-msg",
+    hideMsg: "about-webrtc-pc-configuration-hide-msg",
+  });
+  disclosure.append(
+    rndr.elems_div({ classList: "peer-connection-config" }, [
+      "RTCConfiguration",
+      ...cfg(c, "bundlePolicy"),
+      ...cfg(c, "iceTransportPolicy"),
+      ...pro(c, "peerIdentity"),
+      ...cfg(c, "sdpSemantics"),
+      renderElement("br"),
+      "iceServers: ",
+      ...(!c.iceServers
+        ? [renderElement("i", {}, notProvided)]
+        : c.iceServers.map(i =>
+            renderElements("div", {}, [
+              `urls: ${JSON.stringify(i.urls)}`,
+              ...pro(i, "credential"),
+              ...pro(i, "userName"),
+            ])
+          )),
+    ])
+  );
+  confDiv.append(disclosure);
+  return confDiv;
 }
 
 function renderICEStats(report) {
