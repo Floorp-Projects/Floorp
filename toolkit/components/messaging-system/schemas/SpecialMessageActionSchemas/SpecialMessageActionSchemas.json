@@ -370,6 +370,28 @@
         {
           "type": "object",
           "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["SET_DEFAULT_PDF_HANDLER"]
+            },
+            "data": {
+              "type": "object",
+              "properties": {
+                "onlyIfKnownBrowser": {
+                  "type": "boolean",
+                  "description": "Only set Firefox as the default PDF handler if the current PDF handler is a known browser."
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["type"],
+          "additionalProperties": false,
+          "description": "Message action to set Firefox as the default PDF handler"
+        },
+        {
+          "type": "object",
+          "properties": {
             "data": {
               "type": "object",
               "properties": {

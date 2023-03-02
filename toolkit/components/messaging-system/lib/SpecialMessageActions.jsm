@@ -105,6 +105,15 @@ const SpecialMessageActions = {
   },
 
   /**
+   * Set browser as the default PDF handler.
+   *
+   * @param {Window} window Reference to a window object
+   */
+  setDefaultPDFHandler(window, onlyIfKnownBrowser = false) {
+    window.getShellService().setAsDefaultPDFHandler(onlyIfKnownBrowser);
+  },
+
+  /**
    * Reset browser homepage and newtab to default with a certain section configuration
    *
    * @param {"default"|null} home Value to set for browser homepage
@@ -304,6 +313,12 @@ const SpecialMessageActions = {
         break;
       case "SET_DEFAULT_BROWSER":
         this.setDefaultBrowser(window);
+        break;
+      case "SET_DEFAULT_PDF_HANDLER":
+        this.setDefaultPDFHandler(
+          window,
+          action.data?.onlyIfKnownBrowser ?? false
+        );
         break;
       case "PIN_CURRENT_TAB":
         let tab = window.gBrowser.selectedTab;
