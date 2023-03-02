@@ -144,16 +144,15 @@ add_task(async function test_list_filtered() {
       sendKey(key);
       ok(ol.querySelectorAll(".login-list-item[data-guid]:not([hidden])")[selectedIndex]?.classList?.contains("keyboard-selected"),
         `item ${selectedIndex} should be marked as keyboard-selected`);
+      is(ol.querySelector(".selected").dataset.guid, LOGINS[selectedIndex].guid, `item ${selectedIndex} must be selected`);
     }
 
     pressKeyAndExpectSelection("DOWN", 1);
     pressKeyAndExpectSelection("DOWN", 2);
 
     // ENTER key in search box must click on selected item in the list
-    const selectedGuid = LOGINS[2].guid;
-    isnot(ol.querySelector(".selected").dataset.guid, selectedGuid, "item must not be selected");
     sendKey("RETURN");
-    is(ol.querySelector(".selected").dataset.guid, selectedGuid, "item must be selected");
+    is(ol.querySelector(".selected").dataset.guid, LOGINS[2].guid, "item 2 must still be selected");
 
     pressKeyAndExpectSelection("DOWN", 2);
     pressKeyAndExpectSelection("UP", 1);
