@@ -168,11 +168,11 @@ window.addEventListener("pageshow", async function() {
     const prefNameNightly = `${basePrefName}.nightly`;
     const prefNameVersion = `${basePrefName}.${appVersion}`;
     const prefName = isNightlyPref
-      ? `${basePrefName}.nightly`
-      : `${basePrefName}.${appVersion}`;
+      ? prefNameNightly
+      : prefNameVersion;
     let elem = document.getElementById("disableExtensionCheckCompatibility");
-    elem.value = !Services.prefs.getIntPref(prefName, true);
-    elem.addEventListener('change', function () {
+    elem.checked = !Services.prefs.getBoolPref(prefName, true);
+    elem.addEventListener("command", function () {
       Services.prefs.setBoolPref(prefNameNightly, !elem.checked);
       for (let minor = 0; minor <= 15; minor++) {
         Services.prefs.setBoolPref(`${basePrefName}.${appVersionMajor}.${minor}`, !elem.checked);
