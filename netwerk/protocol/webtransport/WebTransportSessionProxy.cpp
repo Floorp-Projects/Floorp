@@ -108,6 +108,20 @@ nsresult WebTransportSessionProxy::AsyncConnect(
     return rv;
   }
 
+  // To establish a WebTransport session with an origin origin, follow
+  // [WEB-TRANSPORT-HTTP3] section 3.3, with using origin, serialized and
+  // isomorphic encoded, as the `Origin` header of the request.
+  // https://www.w3.org/TR/webtransport/#protocol-concepts
+  nsAutoCString serializedOrigin;
+  if (NS_FAILED(aPrincipal->GetAsciiOrigin(serializedOrigin))) {
+    return NS_ERROR_ABORT;
+  }
+
+  rv = httpChannel->SetRequestHeader("Origin"_ns, serializedOrigin, false);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   rv = mChannel->AsyncOpen(this);
   if (NS_SUCCEEDED(rv)) {
     cleanup.release();
