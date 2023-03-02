@@ -137,18 +137,29 @@ void BrowsingContextGroup::EnsureHostProcess(ContentParent* aProcess) {
   MOZ_DIAGNOSTIC_ASSERT(!aProcess->GetRemoteType().IsEmpty(),
                         "host process must have remote type");
 
+  // XXX: The diagnostic crashes in bug 1816025 seemed to come through caller
+  // ContentParent::GetNewOrUsedLaunchingBrowserProcess where we already
+  // did AssertAlive, so IsDead should be irrelevant here. Still it reads
+  // wrong that we ever might do AddBrowsingContextGroup if aProcess->IsDead().
   if (aProcess->IsDead() ||
       mHosts.WithEntryHandle(aProcess->GetRemoteType(), [&](auto&& entry) {
         if (entry) {
-          MOZ_DIAGNOSTIC_ASSERT(
+          // We know from bug 1816025 that this happens quite often and we have
+          // bug 1815480 on file that should harden the entire flow. But in the
+          // meantime we can just live with NOT replacing the found host
+          // process with a new one here if it is still alive.
+          MOZ_ASSERT(
               entry.Data() == aProcess,
               "There's already another host process for this remote type");
-          return false;
+          if (!entry.Data()->IsShuttingDown()) {
+            return false;
+          }
         }
 
-        // This process wasn't already marked as our host, so insert it, and
-        // begin subscribing, unless the process is still launching.
-        entry.Insert(do_AddRef(aProcess));
+        // This process wasn't already marked as our host, so insert it (or
+        // update if the old process is shutting down), and begin subscribing,
+        // unless the process is still launching.
+        entry.InsertOrUpdate(do_AddRef(aProcess));
 
         return true;
       })) {
