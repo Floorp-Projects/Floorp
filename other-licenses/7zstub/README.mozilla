@@ -31,33 +31,53 @@ The firefox/ directory contains several things:
   builds). To compile your own version of this file, open SFXSetup.sln and build
   the ReleaseD configuration.
 * 7zSD.Win32.sfx
-  32-bit x86 binary built using some of the above files, but through a different
-  build procedure that uses Visual C++ 6 in order to maintain compatibility with
-  legacy Windows platforms (Firefox doesn't run on these platforms, but at least
-  we can display a helpful error message). The exact procedure that generated
-  this file was:
-  1) Install Microsoft Visual C++ 6 Professional or Enterprise edition (the
-     Standard edition does not include the optimizing compiler, so it should
-     not be used). You'll likely want a virtual machine running Windows XP,
-     because running VC6 under more modern Windows versions is tricky.
-  2) Install an appropriate Windows SDK version. The Windows XP Service Pack 2
-     SDK is known to work well, but that particular version appears to only be
-     available from archive.org:
-     https://web.archive.org/web/20080209175723/http://www.microsoft.com:80/msdownload/platformsdk/sdkupdate/XPSP2FULLInstall.htm
-  3) Run the tool included with the SDK that configures Visual C++ to use it.
-  4) If using a fresh copy of the LZMA SDK sources, apply the patch in
-     mozilla_customizations.diff. The copy in the Firefox source tree already
-     has these changes applied.
-  5) Open the workspace file at src\CPP\7zip\Bundles\SFXSetup\SFXSetup.dsw and
-     build it using the "SFXSetup - Win32 ReleaseD" configuration. The output
-     executable should be at the path ReleaseD\7zSD.sfx relative to SFXSetup.dsw.
-  6) Use Resource Hacker (available from http://angusj.com/resourcehacker/) to
-     replace the existing icon on 7zSD.sfx and to add the manifest as a new
-     resource. Also edit the version info resource to replace CompanyName and
-     LegalCopyright with "Mozilla" (or appropriate vendor name) and
-     FileDescription and ProductName with "Firefox" (or appropriate product name).
-     Be sure to recompile the resources using the green "play" button in the
-     toolbar (or by pressing F5) before saving the file.
-  In the future this file may be replaced with one built in the same manner as
-  the AArch64 version using a modern toolchain, if the loss of platform support
-  is deemed acceptable.
+  32-bit x86 binary built using some of the above files. Checking this into the
+  tree in compiled binary form means that packaging the installer does not
+  require having a compiler toolchain configured (which is the case for artifact
+  builds). To compile your own version of this file, open SFXSetup.sln and build
+  the ReleaseD configuration.
+
+Making Future src Customizations
+--------------------------------
+
+When we make future customizations, they should be made both to the source
+files, and to `mozilla_customizations.diff`. Ideally, this should be done in a
+consistent way so that the changes to `mozilla_customizations.diff` are at
+least somewhat readable in code review rather than just being a complete
+rewrite of the file every time. Following these steps should accomplish this.
+
+  1) Start with a clean copy of mozilla-central.
+  2) Download a copy of the LZMA SDK. This is no longer available from the
+     original 7-zip.org download URL given above, but it is available on
+     [SourceForge](https://sourceforge.net/projects/sevenzip/files/LZMA%20SDK/lzma1805.7z/download).
+  3) The downloaded archive will contain 7 directories. 7 directories with
+     matching names are located in `other-licenses\7zstub\src`. Recursively copy
+     the extracted directories, overwriting all files.
+  4) Make a Mercurial commit: `hg commit`. For convenience referring to this
+     commit later, you can bookmark it: `hg bookmark -if orig7z`.
+  5) Update back to central: `hg up central`.
+  6) Generate a diff and check that it matches `mozilla_customizations.diff`:
+     `hg diff --from=orig7z --to=central --unified=3 | diff - other-licenses/7zstub/mozilla_customizations.diff`
+     If there are any changes (say `hg diff`'s output format changed), it may be
+     good to re-generate `mozilla_customizations.diff` and commit it separately.
+  7) Make the new customizations.
+  8) Build the new `7zSD.ARM64.sfx` and `7zSD.Win32.sfx`.
+     This may require that the Visual Studio Installer be re-run to add the
+     ARM64 toolchain, if you don't already have it. The current latest is called
+     "MSVC v143 - VS 2022 C++ ARM64/ARM64EC build tools (latest)".
+     Once the necessary tools are available, open SFXSetup.sln.
+     It may ask if you want to use the latest toolset versions rather than the
+     ones specified by the project, which should be fine.
+     Select the "ReleaseD" solution configuration and the "ARM64" platform and
+     build in order to build `7zSD.ARM64.sfx`. Then select the "x86" platform
+     and build again to get `7zSD.Win32.sfx`.
+  9) Move the new binaries into place and delete the other build files that we
+     do not need.
+     ```
+     mv other-licenses/7zstub/firefox/Win32/ReleaseD/7zSD.Win32.sfx other-licenses/7zstub/firefox/
+     mv other-licenses/7zstub/firefox/ARM64/ReleaseD/7zSD.ARM64.sfx other-licenses/7zstub/firefox/
+     rm -rf other-licenses/7zstub/firefox/ARM64/
+     rm -rf other-licenses/7zstub/firefox/Win32/
+     ```
+  8) Regenerate `mozilla_customizations.diff`:
+     `hg diff --from=orig7z --unified=3 -I other-licenses/7zstub/src/ > other-licenses/7zstub/mozilla_customizations.diff`

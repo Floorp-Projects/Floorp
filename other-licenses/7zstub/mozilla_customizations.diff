@@ -1,6 +1,5 @@
-diff --git a/c:/Users/mhowell/Downloads/lzma1805/CPP/7zip/Bundles/SFXSetup/SFXSetup.dsp b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SFXSetup.dsp
-index b1d740e..61cb260 100644
---- a/c:/Users/mhowell/Downloads/lzma1805/CPP/7zip/Bundles/SFXSetup/SFXSetup.dsp
+diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SFXSetup.dsp b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SFXSetup.dsp
+--- a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SFXSetup.dsp
 +++ b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SFXSetup.dsp
 @@ -54,7 +54,7 @@ BSC32=bscmake.exe
  # ADD BSC32 /nologo
@@ -32,11 +31,10 @@ index b1d740e..61cb260 100644
  # SUBTRACT LINK32 /pdb:none
  
  !ENDIF 
-diff --git a/c:/Users/mhowell/Downloads/lzma1805/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp
-index 1705a8d..e3a3bb2 100644
---- a/c:/Users/mhowell/Downloads/lzma1805/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp
+diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp
+--- a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp
 +++ b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/SfxSetup.cpp
-@@ -125,6 +125,179 @@ static void ShowErrorMessageSpec(const UString &name)
+@@ -125,6 +125,179 @@ static void ShowErrorMessageSpec(const U
    ShowErrorMessage(NULL, message);
  }
  
@@ -216,7 +214,7 @@ index 1705a8d..e3a3bb2 100644
  int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
      #ifdef UNDER_CE
      LPWSTR
-@@ -133,13 +306,35 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
+@@ -133,13 +306,35 @@ int APIENTRY WinMain(HINSTANCE hInstance
      #endif
      /* lpCmdLine */,int /* nCmdShow */)
  {
@@ -255,7 +253,7 @@ index 1705a8d..e3a3bb2 100644
  
    // InitCommonControls();
  
-@@ -172,6 +367,18 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
+@@ -172,6 +367,18 @@ int APIENTRY WinMain(HINSTANCE hInstance
    UString dirPrefix ("." STRING_PATH_SEPARATOR);
    UString appLaunched;
    bool showProgress = true;
@@ -274,7 +272,7 @@ index 1705a8d..e3a3bb2 100644
    if (!config.IsEmpty())
    {
      CObjectVector<CTextConfigPair> pairs;
-@@ -204,7 +411,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
+@@ -204,7 +411,8 @@ int APIENTRY WinMain(HINSTANCE hInstance
    }
  
    CTempDir tempDir;
@@ -284,7 +282,7 @@ index 1705a8d..e3a3bb2 100644
    {
      if (!assumeYes)
        ShowErrorMessage(L"Can not create temp folder archive");
-@@ -222,7 +430,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
+@@ -222,7 +430,9 @@ int APIENTRY WinMain(HINSTANCE hInstance
      }
    }
  
@@ -295,7 +293,7 @@ index 1705a8d..e3a3bb2 100644
    // tempDirPath = L"M:\\1\\"; // to test low disk space
    {
      bool isCorrupt = false;
-@@ -250,6 +460,28 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */,
+@@ -250,6 +460,28 @@ int APIENTRY WinMain(HINSTANCE hInstance
      }
    }
  
@@ -324,9 +322,8 @@ index 1705a8d..e3a3bb2 100644
    #ifndef UNDER_CE
    CCurrentDirRestorer currentDirRestorer;
    if (!SetCurrentDir(tempDirPath))
-diff --git a/c:/Users/mhowell/Downloads/lzma1805/CPP/7zip/Bundles/SFXSetup/resource.h b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/resource.h
-index 533197e..975d779 100644
---- a/c:/Users/mhowell/Downloads/lzma1805/CPP/7zip/Bundles/SFXSetup/resource.h
+diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/resource.h b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/resource.h
+--- a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/resource.h
 +++ b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/resource.h
 @@ -4,3 +4,5 @@
  #define IDS_EXTRACTION_ERROR_MESSAGE     8
@@ -334,9 +331,8 @@ index 533197e..975d779 100644
  #define IDS_PROGRESS_EXTRACTING       3300
 +#define IDS_MIN_OS_TITLE                70
 +#define IDS_MIN_OS_TEXT                 71
-diff --git a/c:/Users/mhowell/Downloads/lzma1805/CPP/7zip/Bundles/SFXSetup/resource.rc b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/resource.rc
-index 9e88fd4..9fda0d0 100644
---- a/c:/Users/mhowell/Downloads/lzma1805/CPP/7zip/Bundles/SFXSetup/resource.rc
+diff --git a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/resource.rc b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/resource.rc
+--- a/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/resource.rc
 +++ b/other-licenses/7zstub/src/CPP/7zip/Bundles/SFXSetup/resource.rc
 @@ -11,6 +11,8 @@ BEGIN
    IDS_EXTRACTION_ERROR_MESSAGE  "File is corrupt"
@@ -347,11 +343,10 @@ index 9e88fd4..9fda0d0 100644
  END
  
  #include "../../UI/FileManager/ProgressDialog.rc"
-diff --git a/c:/Users/mhowell/Downloads/lzma1805/CPP/7zip/UI/FileManager/ProgressDialog.cpp b/other-licenses/7zstub/src/CPP/7zip/UI/FileManager/ProgressDialog.cpp
-index 27d42b2..9b61369 100644
---- a/c:/Users/mhowell/Downloads/lzma1805/CPP/7zip/UI/FileManager/ProgressDialog.cpp
+diff --git a/other-licenses/7zstub/src/CPP/7zip/UI/FileManager/ProgressDialog.cpp b/other-licenses/7zstub/src/CPP/7zip/UI/FileManager/ProgressDialog.cpp
+--- a/other-licenses/7zstub/src/CPP/7zip/UI/FileManager/ProgressDialog.cpp
 +++ b/other-licenses/7zstub/src/CPP/7zip/UI/FileManager/ProgressDialog.cpp
-@@ -165,7 +165,8 @@ bool CProgressDialog::OnButtonClicked(int buttonID, HWND buttonHWND)
+@@ -165,7 +165,8 @@ bool CProgressDialog::OnButtonClicked(in
        bool paused = Sync.GetPaused();
        Sync.SetPaused(true);
        _inCancelMessageBox = true;
