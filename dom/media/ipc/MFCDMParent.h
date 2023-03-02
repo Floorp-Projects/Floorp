@@ -11,6 +11,7 @@
 #include "mozilla/PMFCDMParent.h"
 #include "MFCDMExtra.h"
 #include "MFCDMSession.h"
+#include "MFPMPHostWrapper.h"
 #include "RemoteDecoderManagerParent.h"
 
 namespace mozilla {
@@ -83,6 +84,7 @@ class MFCDMParent final : public PMFCDMParent {
   RefPtr<MFCDMParent> mIPDLSelfRef;
   Microsoft::WRL::ComPtr<IMFContentDecryptionModuleFactory> mFactory;
   Microsoft::WRL::ComPtr<IMFContentDecryptionModule> mCDM;
+  Microsoft::WRL::ComPtr<MFPMPHostWrapper> mPMPHostWrapper;
 
   std::map<nsString, UniquePtr<MFCDMSession>> mSessions;
 
