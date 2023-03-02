@@ -23,6 +23,7 @@ using VideoBridgeTable =
 
 static StaticDataMutex<VideoBridgeTable> sVideoBridgeFromProcess(
     "VideoBridges");
+static Atomic<bool> sVideoBridgeParentShutDown(false);
 
 VideoBridgeParent::VideoBridgeParent(VideoBridgeSource aSource)
     : mCompositorThreadHolder(CompositorThreadHolder::GetSingleton()),
@@ -90,7 +91,9 @@ TextureHost* VideoBridgeParent::LookupTexture(uint64_t aSerial) {
 }
 
 void VideoBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
-  if (aWhy == AbnormalShutdown) {
+  bool shutdown = sVideoBridgeParentShutDown;
+
+  if (!shutdown && aWhy == AbnormalShutdown) {
     gfxCriticalNote
         << "VideoBridgeParent receives IPC close with reason=AbnormalShutdown";
   }
@@ -100,6 +103,8 @@ void VideoBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
 
 /* static */
 void VideoBridgeParent::Shutdown() {
+  sVideoBridgeParentShutDown = true;
+
   auto videoBridgeFromProcess = sVideoBridgeFromProcess.Lock();
   for (auto& bridgeParent : *videoBridgeFromProcess) {
     if (bridgeParent) {

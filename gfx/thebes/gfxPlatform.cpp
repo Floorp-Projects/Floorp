@@ -12,6 +12,7 @@
 #include "mozilla/layers/ISurfaceAllocator.h"  // for GfxMemoryImageReporter
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/RemoteTextureMap.h"
+#include "mozilla/layers/VideoBridgeParent.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "mozilla/webrender/webrender_ffi.h"
@@ -1338,6 +1339,8 @@ void gfxPlatform::ShutdownLayersIPC() {
     }
 
   } else if (XRE_IsParentProcess()) {
+    VideoBridgeParent::Shutdown();
+    RDDProcessManager::RDDProcessShutdown();
     gfx::VRManagerChild::ShutDown();
     gfx::CanvasManagerChild::Shutdown();
     layers::CompositorManagerChild::Shutdown();
