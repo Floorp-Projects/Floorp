@@ -3137,7 +3137,7 @@ bool nsRefreshDriver::IsRefreshObserver(nsARefreshObserver* aObserver,
 #endif
 
 void nsRefreshDriver::ScheduleViewManagerFlush() {
-  NS_ASSERTION(mPresContext->IsRoot(),
+  NS_ASSERTION(mPresContext && mPresContext->IsRoot(),
                "Should only schedule view manager flush on root prescontexts");
   mViewManagerFlushIsPending = true;
   if (!mViewManagerFlushCause) {
