@@ -14,6 +14,8 @@ Please note that some targeting attributes require stricter controls on the tele
 * [currentDate](#currentdate)
 * [devToolsOpenedCount](#devtoolsopenedcount)
 * [isDefaultBrowser](#isdefaultbrowser)
+* [isDefaultHandler](#isdefaulthandler)
+* [defaultPDFHandler](#defaultpdfhandler)
 * [firefoxVersion](#firefoxversion)
 * [locale](#locale)
 * [localeLanguageCode](#localelanguagecode)
@@ -218,6 +220,45 @@ Is Firefox the user's default browser?
 
 ```ts
 declare const isDefaultBrowser: boolean;
+```
+
+### `isDefaultHandler`
+
+Is Firefox the user's default handler for various file extensions?
+
+Windows-only.
+
+#### Definition
+
+```ts
+declare const isDefaultHandler: {
+  pdf: boolean;
+  html: boolean;
+};
+```
+
+#### Examples
+* Is Firefox the default PDF handler?
+```ts
+isDefaultHandler.pdf
+```
+
+### `defaultPDFHandler`
+
+Information about the user's default PDF handler
+
+Windows-only.
+
+#### Definition
+
+```ts
+declare const defaultPDFHandler: {
+  // Does the user have a default PDF handler registered?
+  registered: boolean;
+
+  // Is the default PDF handler a known browser?
+  knownBrowser: boolean;
+};
 ```
 
 ### `firefoxVersion`
