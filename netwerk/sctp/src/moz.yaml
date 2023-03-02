@@ -1,0 +1,51 @@
+schema: 1
+
+bugzilla:
+  product: Core
+  component: Networking
+
+origin:
+  name: sctp
+  description: userland SCTP stack
+
+  url: https://github.com/sctplab/usrsctp/blob/master/Manual.md
+
+  release: 8e12cd9e01fc94d2e84ea1afa351c845966e116e (2022-10-12T23:26:25Z).
+  revision: 8e12cd9e01fc94d2e84ea1afa351c845966e116e
+
+  license: BSD-3-Clause
+
+vendoring:
+  url: https://github.com/sctplab/usrsctp
+  source-hosting: github
+  tracking: commit
+
+  exclude:
+    - "meson*"
+    - "Makefile.*"
+    - "Manual.*"
+    - "CMake*"
+    - ".*"
+    - "*.py"
+    - "*.in"
+    - "*.ac"
+    - bootstrap
+    - cmake/
+    - fuzzer/
+    - programs/
+    - 'usrsctplib/Makefile.*'
+    - 'usrsctplib/meson.*'
+    - 'usrsctplib/CMake*'
+    - 'usrsctplib/netinet*/meson.*'
+
+  keep:
+    - moz.build
+    - restore_mod.sh
+
+  update-actions:
+    - action: move-dir
+      from: '{vendor_dir}/usrsctplib'
+      to: '{vendor_dir}'
+    - action: run-script
+      script: '{yaml_dir}/restore_mod.sh'
+      cwd: '{yaml_dir}'
