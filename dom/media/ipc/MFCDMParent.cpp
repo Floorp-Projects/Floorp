@@ -15,6 +15,8 @@
 #include "RemoteDecodeUtils.h"       // For GetCurrentSandboxingKind()
 #include "SpecialSystemDirectory.h"  // For temp dir
 
+using Microsoft::WRL::MakeAndInitialize;
+
 namespace mozilla {
 
 // See
@@ -457,8 +459,23 @@ mozilla::ipc::IPCResult MFCDMParent::RecvInit(
       NS_ERROR_FAILURE);
 
   mCDM.Swap(cdm);
-  aResolver(MFCDMInitIPDL{mId});
   MFCDM_PARENT_LOG("Created a CDM!");
+
+  // TODO : for Widevine CDM, would we still need to do following steps?
+  Microsoft::WRL::ComPtr<IMFPMPHost> pmpHost;
+  Microsoft::WRL::ComPtr<IMFGetService> cdmService;
+  MFCDM_REJECT_IF_FAILED(mCDM.As(&cdmService), NS_ERROR_FAILURE);
+  MFCDM_REJECT_IF_FAILED(
+      cdmService->GetService(MF_CONTENTDECRYPTIONMODULE_SERVICE,
+                             IID_PPV_ARGS(&pmpHost)),
+      NS_ERROR_FAILURE);
+  MFCDM_REJECT_IF_FAILED(
+      SUCCEEDED(MakeAndInitialize<MFPMPHostWrapper>(&mPMPHostWrapper, pmpHost)),
+      NS_ERROR_FAILURE);
+  MFCDM_REJECT_IF_FAILED(mCDM->SetPMPHostApp(mPMPHostWrapper.Get()),
+                         NS_ERROR_FAILURE);
+  MFCDM_PARENT_LOG("Set PMPHostWrapper on CDM!");
+  aResolver(MFCDMInitIPDL{mId});
   return IPC_OK();
 }
 
