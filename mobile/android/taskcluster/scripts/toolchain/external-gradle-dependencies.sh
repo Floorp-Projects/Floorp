@@ -16,17 +16,7 @@ REPO_ROOT_DIR="$(get_abs_path $CURRENT_DIR/../../../..)"
 ANDROID_COMPONENTS_DIR="$REPO_ROOT_DIR/android-components"
 WORKING_DIR="$REPO_ROOT_DIR/$1"
 shift
-GRADLE_REGULAR_COMMANDS=""
-GRADLE_TEST_COMMANDS=""
-
-for argv in "$@"; do
-    if [[ $argv = *test* ]]; then
-      GRADLE_TEST_COMMANDS="$GRADLE_TEST_COMMANDS $argv"
-    else
-      GRADLE_REGULAR_COMMANDS="$GRADLE_REGULAR_COMMANDS $argv"
-    fi
-done
-
+GRADLE_COMMANDS="$@"
 
 NEXUS_PREFIX='http://localhost:8081/nexus/content/repositories'
 REPOS="-PgoogleRepo=$NEXUS_PREFIX/google/ -PcentralRepo=$NEXUS_PREFIX/central/"
@@ -51,8 +41,7 @@ if [[ $WORKING_DIR == ${ANDROID_COMPONENTS_DIR}* ]]; then
   done
 fi
 
-./gradlew $GRADLE_ARGS $GRADLE_REGULAR_COMMANDS
-set +e; ./gradlew $GRADLE_ARGS $GRADLE_TEST_COMMANDS; set -e
+./gradlew $GRADLE_ARGS $GRADLE_COMMANDS
 
 . "$REPO_ROOT_DIR/taskcluster/scripts/toolchain/external-gradle-dependencies/after.sh"
 
