@@ -9,6 +9,7 @@
 
 #include "nsString.h"
 #include "nsTArray.h"
+#include "mozilla/dom/MediaKeysBinding.h"
 
 namespace mozilla {
 
@@ -146,6 +147,10 @@ struct KeySystemConfig {
   ContainerSupport mWebM;
   bool mIsHW = false;
 };
+
+KeySystemConfig::SessionType ConvertToKeySystemConfigSessionType(
+    dom::MediaKeySessionType aType);
+const char* SessionTypeToStr(KeySystemConfig::SessionType aType);
 
 }  // namespace mozilla
 

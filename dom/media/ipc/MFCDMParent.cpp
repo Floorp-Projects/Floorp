@@ -521,11 +521,38 @@ mozilla::ipc::IPCResult MFCDMParent::RecvCreateSessionAndGenerateRequest(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult MFCDMParent::RecvLoadSession(
+    const KeySystemConfig::SessionType& aSessionType,
+    const nsString& aSessionId, LoadSessionResolver&& aResolver) {
+  MOZ_ASSERT(mCDM, "RecvInit() must be called and waited on before this call");
+
+  nsresult rv = NS_OK;
+  auto* session = GetSession(aSessionId);
+  if (!session) {
+    // TODO : create a dedicated error to indicate the error reason. Same for
+    // below.
+    aResolver(NS_ERROR_FAILURE);
+    return IPC_OK();
+  }
+  MFCDM_REJECT_IF_FAILED(session->Load(aSessionId), NS_ERROR_FAILURE);
+  aResolver(rv);
+  return IPC_OK();
+}
+
 void MFCDMParent::ConnectSessionEvents(MFCDMSession* aSession) {
   // TODO : clear session's event source when the session gets removed.
   mKeyMessageEvents.Forward(aSession->KeyMessageEvent());
   mKeyChangeEvents.Forward(aSession->KeyChangeEvent());
   mExpirationEvents.Forward(aSession->ExpirationEvent());
+}
+
+MFCDMSession* MFCDMParent::GetSession(const nsString& aSessionId) {
+  AssertOnManagerThread();
+  auto iter = mSessions.find(aSessionId);
+  if (iter == mSessions.end()) {
+    return nullptr;
+  }
+  return iter->second.get();
 }
 
 #undef MFCDM_REJECT_IF_FAILED

@@ -82,10 +82,12 @@ void MFCDMChild::Shutdown() {
   mRemoteRequest.DisconnectIfExists();
   mInitRequest.DisconnectIfExists();
   mCreateSessionRequest.DisconnectIfExists();
+  mLoadSessionRequest.DisconnectIfExists();
   mRemotePromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
   mCapabilitiesPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
   mInitPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
   mCreateSessionPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
+  mLoadSessionPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
 
   if (mState == NS_OK) {
     mManagerThread->Dispatch(NS_NewRunnableFunction(
@@ -233,6 +235,40 @@ RefPtr<MFCDMChild::SessionPromise> MFCDMChild::CreateSessionAndGenerateRequest(
             ->Track(mCreateSessionRequest);
       }));
   return mCreateSessionPromiseHolder.Ensure(__func__);
+}
+
+RefPtr<GenericPromise> MFCDMChild::LoadSession(
+    const KeySystemConfig::SessionType aSessionType,
+    const nsAString& aSessionId) {
+  MOZ_ASSERT(mManagerThread);
+  MOZ_ASSERT(mId > 0, "Should call Init() first and wait for it");
+
+  mManagerThread->Dispatch(
+      NS_NewRunnableFunction(__func__, [self = RefPtr{this}, this, aSessionType,
+                                        sessionId = nsString{aSessionId}] {
+        SendLoadSession(aSessionType, sessionId)
+            ->Then(
+                mManagerThread, __func__,
+                [self,
+                 this](PMFCDMChild::LoadSessionPromise::ResolveOrRejectValue&&
+                           aResult) {
+                  mLoadSessionRequest.Complete();
+                  if (aResult.IsResolve()) {
+                    if (NS_SUCCEEDED(aResult.ResolveValue())) {
+                      mLoadSessionPromiseHolder.ResolveIfExists(true, __func__);
+                    } else {
+                      mLoadSessionPromiseHolder.RejectIfExists(
+                          aResult.ResolveValue(), __func__);
+                    }
+                  } else {
+                    // IPC died
+                    mLoadSessionPromiseHolder.RejectIfExists(NS_ERROR_FAILURE,
+                                                             __func__);
+                  }
+                })
+            ->Track(mLoadSessionRequest);
+      }));
+  return mLoadSessionPromiseHolder.Ensure(__func__);
 }
 
 mozilla::ipc::IPCResult MFCDMChild::RecvOnSessionKeyMessage(

@@ -132,33 +132,11 @@ void WMFCDMProxy::CreateSession(uint32_t aCreateSessionToken,
                                 nsTArray<uint8_t>& aInitData) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  static auto ConvertSessionType = [](dom::MediaKeySessionType aType) {
-    switch (aType) {
-      case dom::MediaKeySessionType::Temporary:
-        return KeySystemConfig::SessionType::Temporary;
-      case dom::MediaKeySessionType::Persistent_license:
-        return KeySystemConfig::SessionType::PersistentLicense;
-      default:
-        MOZ_ASSERT_UNREACHABLE("Invalid session type");
-        return KeySystemConfig::SessionType::Temporary;
-    }
-  };
-  static auto SessionTypeToStr = [](dom::MediaKeySessionType aType) {
-    switch (aType) {
-      case dom::MediaKeySessionType::Temporary:
-        return "Temporary";
-      case dom::MediaKeySessionType::Persistent_license:
-        return "PersistentLicense";
-      default:
-        MOZ_ASSERT_UNREACHABLE("Invalid session type");
-        return "Invalid";
-    }
-  };
+  const auto sessionType = ConvertToKeySystemConfigSessionType(aSessionType);
   EME_LOG("WMFCDMProxy::CreateSession(this=%p, pid=%" PRIu32
           "), sessionType=%s",
-          this, aPromiseId, SessionTypeToStr(aSessionType));
-  mCDM->CreateSession(ConvertSessionType(aSessionType), aInitDataType,
-                      aInitData)
+          this, aPromiseId, SessionTypeToStr(sessionType));
+  mCDM->CreateSession(sessionType, aInitDataType, aInitData)
       ->Then(
           mMainThread, __func__,
           [self = RefPtr{this}, this, aCreateSessionToken,
@@ -187,10 +165,45 @@ void WMFCDMProxy::CreateSession(uint32_t aCreateSessionToken,
       ->Track(mCreateSessionRequest);
 }
 
+void WMFCDMProxy::LoadSession(PromiseId aPromiseId,
+                              dom::MediaKeySessionType aSessionType,
+                              const nsAString& aSessionId) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  const auto sessionType = ConvertToKeySystemConfigSessionType(aSessionType);
+  EME_LOG("WMFCDMProxy::LoadSession(this=%p, pid=%" PRIu32
+          "), sessionType=%s, sessionId=%s",
+          this, aPromiseId, SessionTypeToStr(sessionType),
+          NS_ConvertUTF16toUTF8(aSessionId).get());
+  mCDM->LoadSession(sessionType, aSessionId)
+      ->Then(
+          mMainThread, __func__,
+          [self = RefPtr{this}, this, aPromiseId]() {
+            mLoadSessionRequest.Complete();
+            if (mKeys.IsNull()) {
+              EME_LOG("WMFCDMProxy(this=%p, pid=%" PRIu32
+                      ") : abort the load session due to "
+                      "empty key",
+                      this, aPromiseId);
+              return;
+            }
+            ResolvePromise(aPromiseId);
+          },
+          [self = RefPtr{this}, this, aPromiseId]() {
+            mLoadSessionRequest.Complete();
+            RejectPromiseWithStateError(
+                aPromiseId,
+                nsLiteralCString(
+                    "WMFCDMProxy::LoadSession: failed to load session"));
+          })
+      ->Track(mLoadSessionRequest);
+}
+
 void WMFCDMProxy::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   // TODO: reject pending promise.
   mCreateSessionRequest.DisconnectIfExists();
+  mLoadSessionRequest.DisconnectIfExists();
   if (mProxyCallback) {
     mProxyCallback->Shutdown();
     mProxyCallback = nullptr;

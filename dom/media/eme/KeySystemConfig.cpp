@@ -184,4 +184,29 @@ bool KeySystemConfig::GetConfig(const nsAString& aKeySystem,
   return false;
 }
 
+KeySystemConfig::SessionType ConvertToKeySystemConfigSessionType(
+    dom::MediaKeySessionType aType) {
+  switch (aType) {
+    case dom::MediaKeySessionType::Temporary:
+      return KeySystemConfig::SessionType::Temporary;
+    case dom::MediaKeySessionType::Persistent_license:
+      return KeySystemConfig::SessionType::PersistentLicense;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid session type");
+      return KeySystemConfig::SessionType::Temporary;
+  }
+}
+
+const char* SessionTypeToStr(KeySystemConfig::SessionType aType) {
+  switch (aType) {
+    case KeySystemConfig::SessionType::Temporary:
+      return "Temporary";
+    case KeySystemConfig::SessionType::PersistentLicense:
+      return "PersistentLicense";
+    default:
+      MOZ_ASSERT_UNREACHABLE("Invalid session type");
+      return "Invalid";
+  }
+}
+
 }  // namespace mozilla
