@@ -17,7 +17,7 @@ MozXULElement.insertFTLIfNeeded("browser/components/mozSupportLink.ftl");
 export default class MozSupportLink extends HTMLAnchorElement {
   static SUPPORT_URL = "https://www.mozilla.org/";
   static get observedAttributes() {
-    return ["support-page", "utm-content", "data-l10n-id"];
+    return ["support-page", "utm-content"];
   }
 
   /**
