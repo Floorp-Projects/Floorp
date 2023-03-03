@@ -66,6 +66,10 @@ class WMFCDMImpl final {
     return mCDM->UpdateSession(aSessionId, aResponse);
   }
 
+  RefPtr<GenericPromise> CloseSession(const nsAString& aSessionId) {
+    return mCDM->CloseSession(aSessionId);
+  }
+
   uint64_t Id() {
     MOZ_ASSERT(mCDM->Id() != 0,
                "Should be called only after Init() is resolved");

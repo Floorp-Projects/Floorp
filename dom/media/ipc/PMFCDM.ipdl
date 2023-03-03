@@ -103,6 +103,7 @@ parent:
       returns (MFCDMSessionResult result);
   async LoadSession(SessionType sessionType, nsString sessionId) returns (nsresult result);
   async UpdateSession(nsString sessionId, uint8_t[] response) returns (nsresult result);
+  async CloseSession(nsString sessionId) returns (nsresult result);
   async __delete__();
 
 child:
