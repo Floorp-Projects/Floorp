@@ -7,6 +7,7 @@
 #ifndef mozilla_freestanding_DllBlocklist_h
 #define mozilla_freestanding_DllBlocklist_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/NativeNt.h"
 #include "nsWindowsDllInterceptor.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
@@ -17,7 +18,7 @@ namespace freestanding {
 NTSTATUS NTAPI patched_LdrLoadDll(PWCHAR aDllPath, PULONG aFlags,
                                   PUNICODE_STRING aDllName, PHANDLE aOutHandle);
 
-NTSTATUS NTAPI patched_NtMapViewOfSection(
+MOZ_NO_STACK_PROTECTOR NTSTATUS NTAPI patched_NtMapViewOfSection(
     HANDLE aSection, HANDLE aProcess, PVOID* aBaseAddress, ULONG_PTR aZeroBits,
     SIZE_T aCommitSize, PLARGE_INTEGER aSectionOffset, PSIZE_T aViewSize,
     SECTION_INHERIT aInheritDisposition, ULONG aAllocationType,
