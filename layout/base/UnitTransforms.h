@@ -157,7 +157,7 @@ Maybe<gfx::IntRectTyped<TargetUnits>> ViewAs(
   return Nothing();
 }
 // Unlike the other functions in this category, these functions take the
-// target matrix type, rather than its source and target unit types, as
+// target matrix or scale type, rather than its source and target unit types, as
 // the explicit template argument, so an example invocation is:
 //    ViewAs<ScreenToLayerMatrix4x4>(otherTypedMatrix, justification)
 // The reason is that if it took the source and target unit types as two
@@ -180,6 +180,13 @@ Maybe<TargetMatrix> ViewAs(
     return Some(TargetMatrix::FromUnknownMatrix(aMatrix->ToUnknownMatrix()));
   }
   return Nothing();
+}
+template <class TargetScale, class SourceScaleSourceUnits,
+          class SourceScaleTargetUnits>
+TargetScale ViewAs(const gfx::ScaleFactor<SourceScaleSourceUnits,
+                                          SourceScaleTargetUnits>& aScale,
+                   PixelCastJustification) {
+  return TargetScale{aScale.scale};
 }
 
 // A non-member overload of ToUnknownMatrix() for use on a Maybe<Matrix>.
