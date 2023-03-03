@@ -205,22 +205,21 @@ struct FrameMetrics {
 
   /*
    * Calculate the composition bounds of this frame in the CSS pixels of
-   * the content surrounding the scroll frame. (This can be thought of as
-   * "parent CSS" pixels).
+   * the content surrounding the scroll frame (OuterCSS pixels).
    * Note that it does not make sense to ask for the composition bounds in the
    * CSS pixels of the scrolled content (that is, regular CSS pixels),
    * because the origin of the composition bounds is not meaningful in that
    * coordinate space. (The size is, use CalculateCompositedSizeInCssPixels()
    * for that.)
    */
-  CSSRect CalculateCompositionBoundsInCssPixelsOfSurroundingContent() const {
+  OuterCSSRect CalculateCompositionBoundsInOuterCssPixels() const {
     if (GetZoom() == CSSToParentLayerScale(0)) {
-      return CSSRect();  // avoid division by zero
+      return OuterCSSRect();  // avoid division by zero
     }
     // The CSS pixels of the scrolled content and the CSS pixels of the
     // surrounding content only differ if the scrolled content is rendered
     // at a higher resolution, and the difference is the resolution.
-    return mCompositionBounds / GetZoom() * CSSToCSSScale{mPresShellResolution};
+    return mCompositionBounds / GetZoom() * GetCSSToOuterCSSScale();
   }
 
   CSSSize CalculateBoundedCompositedSizeInCssPixels() const {
@@ -316,6 +315,13 @@ struct FrameMetrics {
 
   const CSSToLayoutDeviceScale& GetDevPixelsPerCSSPixel() const {
     return mDevPixelsPerCSSPixel;
+  }
+
+  CSSToOuterCSSScale GetCSSToOuterCSSScale() const {
+    // The scale difference between CSS and OuterCSS pixels is the
+    // part of the zoom that's not subject to all enclosing content,
+    // i.e. the pres shell resolution.
+    return CSSToOuterCSSScale(mPresShellResolution);
   }
 
   void SetIsRootContent(bool aIsRootContent) {

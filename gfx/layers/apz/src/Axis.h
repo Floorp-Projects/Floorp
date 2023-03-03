@@ -316,6 +316,7 @@ class Axis {
   virtual CSSToParentLayerScale GetAxisScale(
       const CSSToParentLayerScale2D& aScale) const = 0;
   virtual CSSCoord GetPointOffset(const CSSPoint& aPoint) const = 0;
+  virtual OuterCSSCoord GetPointOffset(const OuterCSSPoint& aPoint) const = 0;
   virtual ParentLayerCoord GetPointOffset(
       const ParentLayerPoint& aPoint) const = 0;
   virtual ParentLayerCoord GetRectLength(
@@ -396,6 +397,7 @@ class AxisX : public Axis {
   CSSToParentLayerScale GetAxisScale(
       const CSSToParentLayerScale2D& aScale) const override;
   CSSCoord GetPointOffset(const CSSPoint& aPoint) const override;
+  OuterCSSCoord GetPointOffset(const OuterCSSPoint& aPoint) const override;
   ParentLayerCoord GetPointOffset(
       const ParentLayerPoint& aPoint) const override;
   ParentLayerCoord GetRectLength(const ParentLayerRect& aRect) const override;
@@ -423,6 +425,7 @@ class AxisY : public Axis {
  public:
   explicit AxisY(AsyncPanZoomController* mAsyncPanZoomController);
   CSSCoord GetPointOffset(const CSSPoint& aPoint) const override;
+  OuterCSSCoord GetPointOffset(const OuterCSSPoint& aPoint) const override;
   ParentLayerCoord GetPointOffset(
       const ParentLayerPoint& aPoint) const override;
   CSSToParentLayerScale GetAxisScale(

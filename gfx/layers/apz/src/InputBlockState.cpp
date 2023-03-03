@@ -263,7 +263,7 @@ bool DragBlockState::HasReceivedMouseUp() { return mReceivedMouseUp; }
 
 void DragBlockState::MarkMouseUpReceived() { mReceivedMouseUp = true; }
 
-void DragBlockState::SetInitialThumbPos(CSSCoord aThumbPos) {
+void DragBlockState::SetInitialThumbPos(OuterCSSCoord aThumbPos) {
   mInitialThumbPos = aThumbPos;
 }
 

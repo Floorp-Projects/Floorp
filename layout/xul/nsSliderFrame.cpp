@@ -459,11 +459,10 @@ void nsSliderFrame::BuildDisplayListForChildren(
       MOZ_ASSERT(scrollDirection.isSome());
       const bool isHorizontal =
           *scrollDirection == ScrollDirection::eHorizontal;
-      const float appUnitsPerCss = float(AppUnitsPerCSSPixel());
-      const CSSCoord thumbLength = NSAppUnitsToFloatPixels(
-          isHorizontal ? thumbRect.width : thumbRect.height, appUnitsPerCss);
-      const CSSCoord minThumbLength =
-          NSAppUnitsToFloatPixels(mThumbMinLength, appUnitsPerCss);
+      const OuterCSSCoord thumbLength = OuterCSSPixel::FromAppUnits(
+          isHorizontal ? thumbRect.width : thumbRect.height);
+      const OuterCSSCoord minThumbLength =
+          OuterCSSPixel::FromAppUnits(mThumbMinLength);
 
       nsIFrame* scrollbarBox = GetScrollbar();
       bool isAsyncDraggable = !UsesCustomScrollbarMediator(scrollbarBox);
@@ -479,13 +478,12 @@ void nsSliderFrame::BuildDisplayListForChildren(
       // This rect is the range in which the scroll thumb can slide in.
       sliderTrack = sliderTrack + GetRect().TopLeft() +
                     scrollbarBox->GetPosition() - scrollPortOrigin;
-      const CSSCoord sliderTrackStart = NSAppUnitsToFloatPixels(
-          isHorizontal ? sliderTrack.x : sliderTrack.y, appUnitsPerCss);
-      const CSSCoord sliderTrackLength = NSAppUnitsToFloatPixels(
-          isHorizontal ? sliderTrack.width : sliderTrack.height,
-          appUnitsPerCss);
-      const CSSCoord thumbStart = NSAppUnitsToFloatPixels(
-          isHorizontal ? thumbRect.x : thumbRect.y, appUnitsPerCss);
+      const OuterCSSCoord sliderTrackStart = OuterCSSPixel::FromAppUnits(
+          isHorizontal ? sliderTrack.x : sliderTrack.y);
+      const OuterCSSCoord sliderTrackLength = OuterCSSPixel::FromAppUnits(
+          isHorizontal ? sliderTrack.width : sliderTrack.height);
+      const OuterCSSCoord thumbStart =
+          OuterCSSPixel::FromAppUnits(isHorizontal ? thumbRect.x : thumbRect.y);
 
       const nsRect overflow = thumb->InkOverflowRectRelativeToParent();
       nsSize refSize = aBuilder->RootReferenceFrame()->GetSize();
@@ -1148,7 +1146,7 @@ void nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent) {
   uint32_t presShellId = presShell->GetPresShellId();
   AsyncDragMetrics dragMetrics(
       scrollTargetId, presShellId, inputblockId,
-      NSAppUnitsToFloatPixels(mDragStart, float(AppUnitsPerCSSPixel())),
+      OuterCSSPixel::FromAppUnits(mDragStart),
       isHorizontal ? ScrollDirection::eHorizontal : ScrollDirection::eVertical);
 
   // It's important to set this before calling
