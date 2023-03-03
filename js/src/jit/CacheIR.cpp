@@ -3044,17 +3044,6 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId,
     size_t dynamicSlotOffset =
         holder->dynamicSlotIndex(prop->slot()) * sizeof(Value);
     writer.loadDynamicSlotResult(objId, dynamicSlotOffset);
-  } else if (holder == &globalLexical->global()) {
-    MOZ_ASSERT(globalLexical->global().isGenerationCountedGlobal());
-    writer.guardGlobalGeneration(
-        globalLexical->global().generationCount(),
-        globalLexical->global().addressOfGenerationCount());
-    ObjOperandId holderId = writer.loadObject(holder);
-#ifdef DEBUG
-    writer.assertPropertyLookup(holderId, id.toAtom()->asPropertyName(),
-                                prop->slot());
-#endif
-    EmitLoadSlotResult(writer, holderId, holder, *prop);
   } else {
     // Check the prototype chain from the global to the holder
     // prototype. Ignore the global lexical scope as it doesn't figure
@@ -3068,12 +3057,15 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId,
     writer.guardShape(objId, globalLexical->shape());
 
     // Guard on the shape of the GlobalObject.
-    ObjOperandId globalId = writer.loadObject(&globalLexical->global());
+    ObjOperandId globalId = writer.loadEnclosingEnvironment(objId);
     writer.guardShape(globalId, globalLexical->global().shape());
 
-    // Shape guard holder.
-    ObjOperandId holderId = writer.loadObject(holder);
-    writer.guardShape(holderId, holder->shape());
+    ObjOperandId holderId = globalId;
+    if (holder != &globalLexical->global()) {
+      // Shape guard holder.
+      holderId = writer.loadObject(holder);
+      writer.guardShape(holderId, holder->shape());
+    }
 
     EmitLoadSlotResult(writer, holderId, holder, *prop);
   }

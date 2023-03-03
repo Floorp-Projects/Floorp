@@ -514,7 +514,7 @@ bool NativeObject::changeProperty(JSContext* cx, Handle<NativeObject*> obj,
   MOZ_ASSERT(!flags.isCustomDataProperty(),
              "Use changeCustomDataPropAttributes for custom data properties");
 
-  if (!Watchtower::watchPropertyChange(cx, obj, id, flags)) {
+  if (!Watchtower::watchPropertyChange(cx, obj, id)) {
     return false;
   }
 
@@ -633,7 +633,7 @@ bool NativeObject::changeCustomDataPropAttributes(JSContext* cx,
   AssertValidArrayIndex(obj, id);
   AssertValidCustomDataProp(obj, flags);
 
-  if (!Watchtower::watchPropertyChange(cx, obj, id, flags)) {
+  if (!Watchtower::watchPropertyChange(cx, obj, id)) {
     return false;
   }
 

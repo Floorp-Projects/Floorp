@@ -415,13 +415,10 @@ class AliasSet {
     // The malloc'd block that WasmArrayObject::data_ points at
     WasmArrayDataArea = 1 << 25,
 
-    // The generation counter associated with the global object
-    GlobalGenerationCounter = 1 << 26,
-
-    Last = GlobalGenerationCounter,
+    Last = WasmArrayDataArea,
 
     Any = Last | (Last - 1),
-    NumCategories = 27,
+    NumCategories = 26,
 
     // Indicates load or store.
     Store_ = 1 << 31

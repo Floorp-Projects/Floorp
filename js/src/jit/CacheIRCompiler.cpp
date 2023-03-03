@@ -9234,31 +9234,6 @@ bool CacheIRCompiler::emitArrayFromArgumentsObjectResult(ObjOperandId objId,
   return true;
 }
 
-bool CacheIRCompiler::emitGuardGlobalGeneration(uint32_t expectedOffset,
-                                                uint32_t generationAddrOffset) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-
-  AutoScratchRegister scratch(allocator, masm);
-  AutoScratchRegister scratch2(allocator, masm);
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  StubFieldOffset expected(expectedOffset, StubField::Type::RawInt32);
-  emitLoadStubField(expected, scratch);
-
-  StubFieldOffset generationAddr(generationAddrOffset,
-                                 StubField::Type::RawPointer);
-  emitLoadStubField(generationAddr, scratch2);
-
-  masm.branch32(Assembler::NotEqual, Address(scratch2, 0), scratch,
-                failure->label());
-
-  return true;
-}
-
 bool CacheIRCompiler::emitBailout() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
@@ -9275,37 +9250,6 @@ bool CacheIRCompiler::emitAssertRecoveredOnBailoutResult(ValOperandId valId,
 
   // NOP when not in IonMonkey
   masm.moveValue(UndefinedValue(), output.valueReg());
-
-  return true;
-}
-
-bool CacheIRCompiler::emitAssertPropertyLookup(ObjOperandId objId,
-                                               uint32_t idOffset,
-                                               uint32_t slotOffset) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-
-  Register obj = allocator.useRegister(masm, objId);
-
-  AutoScratchRegister id(allocator, masm);
-  AutoScratchRegister slot(allocator, masm);
-
-  LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
-  masm.PushRegsInMask(save);
-
-  masm.setupUnalignedABICall(id);
-
-  StubFieldOffset idField(idOffset, StubField::Type::String);
-  emitLoadStubField(idField, id);
-
-  StubFieldOffset slotField(slotOffset, StubField::Type::RawInt32);
-  emitLoadStubField(slotField, slot);
-
-  masm.passABIArg(obj);
-  masm.passABIArg(id);
-  masm.passABIArg(slot);
-  using Fn = void (*)(NativeObject*, PropertyName*, uint32_t);
-  masm.callWithABI<Fn, js::jit::AssertPropertyLookup>();
-  masm.PopRegsInMask(save);
 
   return true;
 }

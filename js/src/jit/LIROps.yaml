@@ -2542,10 +2542,6 @@
     object: WordSized
   num_temps: 1
 
-- name: GuardGlobalGeneration
-  mir_op: true
-  num_temps: 1
-
 - name: GuardIsProxy
   operands:
     object: WordSized
