@@ -782,6 +782,9 @@ glean:
   owner: glean-team@mozilla.com
   hasExposure: false
   variables:
+    finalInactive:
+      type: "boolean"
+      description: "Enables FOG early shutdown pings when true"
     newtabPingEnabled:
       type: "boolean"
       fallbackPref: "browser.newtabpage.ping.enabled"
