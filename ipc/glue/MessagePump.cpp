@@ -337,6 +337,8 @@ void MessagePumpForNonMainThreads::Run(base::MessagePump::Delegate* aDelegate) {
 
 #if defined(XP_WIN)
 
+NS_IMPL_ADDREF_INHERITED(MessagePumpForNonMainUIThreads, MessagePump)
+NS_IMPL_RELEASE_INHERITED(MessagePumpForNonMainUIThreads, MessagePump)
 NS_IMPL_QUERY_INTERFACE(MessagePumpForNonMainUIThreads, nsIThreadObserver)
 
 #  define CHECK_QUIT_STATE       \

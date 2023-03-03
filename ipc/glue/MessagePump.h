@@ -95,12 +95,7 @@ class MessagePumpForNonMainThreads final : public MessagePump {
 class MessagePumpForNonMainUIThreads final : public base::MessagePumpForUI,
                                              public nsIThreadObserver {
  public:
-  // We don't want xpcom refing, chromium controls our lifetime via
-  // RefCountedThreadSafe.
-  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) override { return 2; }
-  NS_IMETHOD_(MozExternalRefCountType) Release(void) override { return 1; }
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
-
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSITHREADOBSERVER
 
  public:
