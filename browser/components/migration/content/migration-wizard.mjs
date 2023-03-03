@@ -94,10 +94,21 @@ export class MigrationWizard extends HTMLElement {
               <button class="primary" id="done-button" data-l10n-id="migration-done-button-label"></button>
             </moz-button-group>
           </div>
-
           <div name="page-safari-permission">
             <h3>TODO: Safari permission page</h3>
           </div>
+
+          <div name="page-no-browsers-found">
+            <h3 data-l10n-id="migration-wizard-selection-header"></h3>
+            <div class="no-browsers-found">
+              <span class="error-icon" role="img"></span>
+              <div class="no-browsers-found-message" data-l10n-id="migration-wizard-import-browser-no-browsers"></div>
+            </div>
+            <moz-button-group class="buttons">
+              <button class="cancel-close" data-l10n-id="migration-cancel-button-label"></button>
+            </moz-button-group>
+          </div>
+          
         </named-deck>
       </template>
     `;
@@ -127,6 +138,7 @@ export class MigrationWizard extends HTMLElement {
     const shadow = this.attachShadow({ mode: "closed" });
 
     if (window.MozXULElement) {
+      window.MozXULElement.insertFTLIfNeeded("branding/brand.ftl");
       window.MozXULElement.insertFTLIfNeeded(
         "locales-preview/migrationWizard.ftl"
       );
