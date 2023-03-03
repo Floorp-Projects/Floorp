@@ -68,9 +68,9 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
 
   // These internal helper methods must be called while mMonitor is held.
   // AddTimerInternal returns false if the insertion failed.
-  bool AddTimerInternal(nsTimerImpl* aTimer) MOZ_REQUIRES(mMonitor);
-  bool RemoveTimerInternal(nsTimerImpl* aTimer)
-      MOZ_REQUIRES(mMonitor, aTimer->mMutex);
+  bool AddTimerInternal(nsTimerImpl& aTimer) MOZ_REQUIRES(mMonitor);
+  bool RemoveTimerInternal(nsTimerImpl& aTimer)
+      MOZ_REQUIRES(mMonitor, aTimer.mMutex);
   void RemoveLeadingCanceledTimersInternal() MOZ_REQUIRES(mMonitor);
   void RemoveFirstTimerInternal() MOZ_REQUIRES(mMonitor);
   nsresult Init() MOZ_REQUIRES(mMonitor);
@@ -92,9 +92,9 @@ class TimerThread final : public mozilla::Runnable, public nsIObserver {
 
   class Entry final {
    public:
-    explicit Entry(nsTimerImpl* aTimerImpl)
-        : mTimeout(aTimerImpl->mTimeout), mTimerImpl(aTimerImpl) {
-      aTimerImpl->SetIsInTimerThread(true);
+    explicit Entry(nsTimerImpl& aTimerImpl)
+        : mTimeout(aTimerImpl.mTimeout), mTimerImpl(&aTimerImpl) {
+      aTimerImpl.SetIsInTimerThread(true);
     }
 
     // Create an already-canceled entry with the given timeout.
