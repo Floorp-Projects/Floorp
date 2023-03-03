@@ -180,7 +180,7 @@ class SitePermissionsFeatureTest {
         // then
         verify(mockStore).dispatch(
             ContentAction.ConsumePermissionsRequest
-            ("sessionIdTest", mockPermissionRequest),
+                ("sessionIdTest", mockPermissionRequest),
         )
     }
 
@@ -192,7 +192,7 @@ class SitePermissionsFeatureTest {
         // then
         verify(mockStore).dispatch(
             ContentAction.ConsumePermissionsRequest
-            (selectedTab.id, mockPermissionRequest),
+                (selectedTab.id, mockPermissionRequest),
         )
     }
 
@@ -204,7 +204,7 @@ class SitePermissionsFeatureTest {
         // then
         verify(mockStore).dispatch(
             ContentAction.ConsumeAppPermissionsRequest
-            ("sessionIdTest", mockAppPermissionRequest),
+                ("sessionIdTest", mockAppPermissionRequest),
         )
     }
 
@@ -216,7 +216,7 @@ class SitePermissionsFeatureTest {
         // then
         verify(mockStore).dispatch(
             ContentAction.ConsumeAppPermissionsRequest
-            (selectedTab.id, mockAppPermissionRequest),
+                (selectedTab.id, mockAppPermissionRequest),
         )
     }
 

@@ -23,7 +23,7 @@ data class Choice(
     var label: String,
     var selected: Boolean = false,
     val isASeparator:
-        Boolean = false,
+    Boolean = false,
     val children: Array<Choice>? = null,
 ) : Parcelable {
 

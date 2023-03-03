@@ -23,13 +23,13 @@ object SafeUrl {
 
         @Suppress("ControlFlowWithEmptyBody", "EmptyWhileBlock")
         while (urlSchemesBlocklist.find {
-            if (safeUrl.startsWith(it, true)) {
-                safeUrl = safeUrl.replaceFirst(Regex(it, RegexOption.IGNORE_CASE), "")
-                true
-            } else {
-                false
-            }
-        } != null
+                if (safeUrl.startsWith(it, true)) {
+                    safeUrl = safeUrl.replaceFirst(Regex(it, RegexOption.IGNORE_CASE), "")
+                    true
+                } else {
+                    false
+                }
+            } != null
         ) {
         }
 

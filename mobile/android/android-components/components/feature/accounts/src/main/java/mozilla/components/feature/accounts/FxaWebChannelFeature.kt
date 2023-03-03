@@ -140,7 +140,7 @@ class FxaWebChannelFeature(
             try {
                 payload = json.getJSONObject("message")
                 command = payload.getString("command").toWebChannelCommand() ?: throw
-                JSONException("Couldn't get WebChannel command")
+                    JSONException("Couldn't get WebChannel command")
                 messageId = payload.optString("messageId", "")
             } catch (e: JSONException) {
                 // We don't have control over what messages we will get from the webchannel.

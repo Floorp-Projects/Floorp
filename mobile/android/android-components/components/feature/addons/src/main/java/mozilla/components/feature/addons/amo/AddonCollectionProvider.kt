@@ -121,7 +121,7 @@ class AddonCollectionProvider(
                     cache?.let {
                         logger.info(
                             "Falling back to available add-ons cache from ${
-                            SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'", Locale.US).format(cacheLastUpdated)
+                                SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'", Locale.US).format(cacheLastUpdated)
                             }",
                         )
                         return it

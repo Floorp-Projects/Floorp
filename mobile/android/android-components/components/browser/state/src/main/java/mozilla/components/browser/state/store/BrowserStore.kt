@@ -36,10 +36,10 @@ class BrowserStore(
         }
 
         if (initialState.tabs
-            .groupingBy { it.id }
-            .eachCount()
-            .filter { it.value > 1 }
-            .isNotEmpty()
+                .groupingBy { it.id }
+                .eachCount()
+                .filter { it.value > 1 }
+                .isNotEmpty()
         ) {
             throw IllegalArgumentException("Duplicate tabs found")
         }

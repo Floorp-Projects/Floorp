@@ -116,9 +116,9 @@ class DownloadsFeature(
     private val promptsStyling: PromptsStyling? = null,
     private val shouldForwardToThirdParties: () -> Boolean = { false },
     private val customFirstPartyDownloadDialog:
-        ((Filename, ContentSize, PositiveActionCallback, NegativeActionCallback) -> Unit)? = null,
+    ((Filename, ContentSize, PositiveActionCallback, NegativeActionCallback) -> Unit)? = null,
     private val customThirdPartyDownloadDialog:
-        ((ThirdPartyDownloaderApps, ThirdPartyDownloaderAppChosenCallback, NegativeActionCallback) -> Unit)? = null,
+    ((ThirdPartyDownloaderApps, ThirdPartyDownloaderAppChosenCallback, NegativeActionCallback) -> Unit)? = null,
 ) : LifecycleAwareFeature, PermissionsFeature {
 
     var onDownloadStopped: onDownloadStopped
