@@ -69,7 +69,7 @@ test_metrics = [
 
 # The list of all Glean metrics.yaml files, relative to the top src dir.
 # ONLY TO BE MODIFIED BY FOG PEERS!
-metrics_yamls = (
+metrics_yamls = set(
     gecko_metrics
     + firefox_desktop_metrics
     + background_update_metrics
@@ -126,7 +126,7 @@ pings_by_app_id = {
 
 # The list of all Glean pings.yaml files, relative to the top src dir.
 # ONLY TO BE MODIFIED BY FOG PEERS!
-pings_yamls = (
+pings_yamls = set(
     gecko_pings
     + firefox_desktop_pings
     + background_update_pings
