@@ -751,8 +751,8 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
         WindowProtocol::All, DriverVendor::NonMesaAll, DeviceFamily::NvidiaAll,
         nsIGfxInfo::FEATURE_DMABUF, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
-        DRIVER_BETWEEN_INCLUSIVE_START, V(495, 44, 0, 0), V(530, 0, 0, 0),
-        "FEATURE_FAILURE_BUG_1788573", ">= 530.0.0");
+        DRIVER_BETWEEN_INCLUSIVE, V(495, 44, 0, 0), V(530, 30, 2, 0),
+        "FEATURE_FAILURE_BUG_1788573", "> 530.30.2");
 
     ////////////////////////////////////
     // FEATURE_DMABUF_SURFACE_EXPORT
@@ -842,8 +842,8 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
         WindowProtocol::All, DriverVendor::NonMesaAll, DeviceFamily::NvidiaAll,
         nsIGfxInfo::FEATURE_THREADSAFE_GL,
-        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN,
-        V(530, 0, 0, 0), "FEATURE_FAILURE_BUG_1788573", ">= 530.0.0");
+        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN_OR_EQUAL,
+        V(530, 30, 2, 0), "FEATURE_FAILURE_BUG_1788573", "> 530.30.2");
   }
   return *sDriverInfo;
 }
