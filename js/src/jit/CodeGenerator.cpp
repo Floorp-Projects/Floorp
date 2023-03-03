@@ -16580,8 +16580,8 @@ void CodeGenerator::visitWasmGcObjectIsSubtypeOf(
   const MWasmGcObjectIsSubtypeOf* mir = ins->mir();
   Register object = ToRegister(ins->object());
   Register superTypeDef = ToRegister(ins->superTypeDef());
-  Register subTypeDef = ToRegister(ins->temp0());
-  Register scratch = ins->temp1()->isBogusTemp() ? Register::Invalid()
+  Register scratch1 = ToRegister(ins->temp0());
+  Register scratch2 = ins->temp1()->isBogusTemp() ? Register::Invalid()
                                                  : ToRegister(ins->temp1());
   Register result = ToRegister(ins->output());
   Label failed;
@@ -16589,8 +16589,9 @@ void CodeGenerator::visitWasmGcObjectIsSubtypeOf(
   Label join;
   masm.branchTestPtr(Assembler::Zero, object, object,
                      mir->succeedOnNull() ? &success : &failed);
-  masm.loadPtr(Address(object, WasmGcObject::offsetOfTypeDef()), subTypeDef);
-  masm.branchWasmTypeDefIsSubtype(subTypeDef, superTypeDef, scratch,
+  masm.branchTestObjectIsWasmGcObject(false, object, scratch1, &failed);
+  masm.loadPtr(Address(object, WasmGcObject::offsetOfTypeDef()), scratch1);
+  masm.branchWasmTypeDefIsSubtype(scratch1, superTypeDef, scratch2,
                                   mir->subTypingDepth(), &success, true);
   masm.bind(&failed);
   masm.xor32(result, result);
@@ -16605,15 +16606,16 @@ void CodeGenerator::visitWasmGcObjectIsSubtypeOfAndBranch(
   MOZ_ASSERT(gen->compilingWasm());
   Register object = ToRegister(ins->object());
   Register superTypeDef = ToRegister(ins->superTypeDef());
-  Register subTypeDef = ToRegister(ins->temp0());
-  Register scratch = ins->temp1()->isBogusTemp() ? Register::Invalid()
+  Register scratch1 = ToRegister(ins->temp0());
+  Register scratch2 = ins->temp1()->isBogusTemp() ? Register::Invalid()
                                                  : ToRegister(ins->temp1());
   Label* onSuccess = getJumpLabelForBranch(ins->ifTrue());
   Label* onFail = getJumpLabelForBranch(ins->ifFalse());
   Label* onNull = ins->succeedOnNull() ? onSuccess : onFail;
   masm.branchTestPtr(Assembler::Zero, object, object, onNull);
-  masm.loadPtr(Address(object, WasmGcObject::offsetOfTypeDef()), subTypeDef);
-  masm.branchWasmTypeDefIsSubtype(subTypeDef, superTypeDef, scratch,
+  masm.branchTestObjectIsWasmGcObject(false, object, scratch1, onFail);
+  masm.loadPtr(Address(object, WasmGcObject::offsetOfTypeDef()), scratch1);
+  masm.branchWasmTypeDefIsSubtype(scratch1, superTypeDef, scratch2,
                                   ins->subTypingDepth(), onSuccess, true);
   masm.jump(onFail);
 }
