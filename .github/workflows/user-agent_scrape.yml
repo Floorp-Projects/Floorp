@@ -64,7 +64,8 @@ jobs:
         export DISPLAY=:2
 
         # Firefox
-        export firefox_stable_ua=`npm run --silent start ~/firefox/firefox`
+        npm run --silent start ~/firefox/firefox > user_agent.txt
+        export firefox_stable_ua=`cat user_agent.txt`
         echo $firefox_stable_ua
         
         # Chrome
@@ -72,11 +73,13 @@ jobs:
         sleep 5
         pkill -KILL -f chrome
         sleep 5
-        export chrome_stable_ua=`npm run --silent start ~/chrome/chrome`
+        npm run --silent start ~/chrome/chrome > user_agent.txt
+        export chrome_stable_ua=`cat user_agent.txt`
         echo $chrome_stable_ua
 
         # Edge
-        export msedge_stable_ua=`npm run --silent start ~/msedge/msedge`
+        npm run --silent start ~/msedge/msedge > user_agent.txt
+        export msedge_stable_ua=`cat user_agent.txt`
         echo $msedge_stable_ua
 
         echo "firefox_stable_ua=${firefox_stable_ua}" >> $GITHUB_OUTPUT
