@@ -346,26 +346,25 @@ already_AddRefed<Promise> DOMLocalization::TranslateElements(
 
     if (NS_WARN_IF(aRv.Failed())) {
       promise->MaybeRejectWithUndefined();
-      return MaybeWrapPromise(promise);
+      return promise.forget();
     }
 
     bool allTranslated =
         ApplyTranslations(domElements, l10nMessages, aProto, aRv);
     if (NS_WARN_IF(aRv.Failed()) || !allTranslated) {
       promise->MaybeRejectWithUndefined();
-      return MaybeWrapPromise(promise);
+      return promise.forget();
     }
 
     promise->MaybeResolveWithUndefined();
-  } else {
-    RefPtr<Promise> callbackResult = FormatMessages(l10nKeys, aRv);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return nullptr;
-    }
-    nativeHandler->SetReturnValuePromise(promise);
-    callbackResult->AppendNativeHandler(nativeHandler);
+    return promise.forget();
   }
-
+  RefPtr<Promise> callbackResult = FormatMessages(l10nKeys, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+  nativeHandler->SetReturnValuePromise(promise);
+  callbackResult->AppendNativeHandler(nativeHandler);
   return MaybeWrapPromise(promise);
 }
 

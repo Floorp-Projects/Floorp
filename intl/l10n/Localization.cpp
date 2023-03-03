@@ -457,7 +457,7 @@ class PromiseResolver final : public PromiseNativeHandler {
  public:
   NS_DECL_ISUPPORTS
 
-  explicit PromiseResolver(Promise* aPromise);
+  explicit PromiseResolver(Promise* aPromise) : mPromise(aPromise) {}
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
                         ErrorResult& aRv) override;
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
@@ -475,8 +475,6 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(PromiseResolver)
 NS_IMPL_RELEASE(PromiseResolver)
-
-PromiseResolver::PromiseResolver(Promise* aPromise) { mPromise = aPromise; }
 
 void PromiseResolver::ResolvedCallback(JSContext* aCx,
                                        JS::Handle<JS::Value> aValue,
@@ -504,20 +502,21 @@ PromiseResolver::~PromiseResolver() { mPromise = nullptr; }
  */
 already_AddRefed<Promise> Localization::MaybeWrapPromise(
     Promise* aInnerPromise) {
+  MOZ_ASSERT(aInnerPromise->State() == Promise::PromiseState::Pending);
   // For system principal we don't need to wrap the
   // result promise at all.
   nsIPrincipal* principal = mGlobal->PrincipalOrNull();
   if (principal && principal->IsSystemPrincipal()) {
-    return RefPtr<Promise>(aInnerPromise).forget();
+    return do_AddRef(aInnerPromise);
   }
 
-  ErrorResult result;
+  IgnoredErrorResult result;
   RefPtr<Promise> docPromise = Promise::Create(mGlobal, result);
   if (NS_WARN_IF(result.Failed())) {
     return nullptr;
   }
 
-  RefPtr<PromiseResolver> resolver = new PromiseResolver(docPromise);
+  auto resolver = MakeRefPtr<PromiseResolver>(docPromise);
   aInnerPromise->AppendNativeHandler(resolver);
   return docPromise.forget();
 }
