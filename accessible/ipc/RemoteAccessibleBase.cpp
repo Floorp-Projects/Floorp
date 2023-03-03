@@ -1064,25 +1064,27 @@ RemoteAccessibleBase<Derived>::GetCachedTextLines() {
 }
 
 template <class Derived>
-Maybe<nsTArray<nsRect>> RemoteAccessibleBase<Derived>::GetCachedCharData() {
+nsRect RemoteAccessibleBase<Derived>::GetCachedCharRect(int32_t aOffset) {
   MOZ_ASSERT(IsText());
   if (!mCachedFields) {
-    return Nothing();
+    return nsRect();
   }
 
   if (Maybe<const nsTArray<int32_t>&> maybeCharData =
           mCachedFields->GetAttribute<nsTArray<int32_t>>(
               nsGkAtoms::characterData)) {
     const nsTArray<int32_t>& charData = *maybeCharData;
-    nsTArray<nsRect> rects;
-    for (int i = 0; i < static_cast<int32_t>(charData.Length()); i += 4) {
-      nsRect r(charData[i], charData[i + 1], charData[i + 2], charData[i + 3]);
-      rects.AppendElement(r);
+    const int32_t index = aOffset * kNumbersInRect;
+    if (index < static_cast<int32_t>(charData.Length())) {
+      return nsRect(charData[index], charData[index + 1], charData[index + 2],
+                    charData[index + 3]);
     }
-    return Some(std::move(rects));
+    // It is valid for a client to call this with an offset 1 after the last
+    // character because of the insertion point at the end of text boxes.
+    MOZ_ASSERT(index == static_cast<int32_t>(charData.Length()));
   }
 
-  return Nothing();
+  return nsRect();
 }
 
 template <class Derived>
