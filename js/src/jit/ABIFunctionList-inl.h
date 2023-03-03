@@ -113,7 +113,6 @@ namespace jit {
   _(js::jit::AllocateDependentString)                                 \
   _(js::jit::ArrayPushDensePure)                                      \
   _(js::jit::AssertMapObjectHash)                                     \
-  _(js::jit::AssertPropertyLookup)                                    \
   _(js::jit::AssertSetObjectHash)                                     \
   _(js::jit::AssertValidBigIntPtr)                                    \
   _(js::jit::AssertValidObjectPtr)                                    \

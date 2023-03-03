@@ -5528,13 +5528,6 @@ bool WarpCacheIRTranspiler::emitBailout() {
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitAssertPropertyLookup(ObjOperandId objId,
-                                                     uint32_t idOffset,
-                                                     uint32_t slotOffset) {
-  // We currently only emit checks in baseline.
-  return true;
-}
-
 bool WarpCacheIRTranspiler::emitAssertRecoveredOnBailoutResult(
     ValOperandId valId, bool mustBeRecovered) {
   MDefinition* val = getOperand(valId);
@@ -5668,17 +5661,6 @@ bool WarpCacheIRTranspiler::emitCloseIterScriptedResult(ObjOperandId iterId,
   MCheckIsObj* check = MCheckIsObj::New(
       alloc(), call, uint8_t(CheckIsObjectKind::IteratorReturn));
   add(check);
-
-  return true;
-}
-
-bool WarpCacheIRTranspiler::emitGuardGlobalGeneration(
-    uint32_t expectedOffset, uint32_t generationAddrOffset) {
-  uint32_t expected = uint32StubField(expectedOffset);
-  const void* generationAddr = rawPointerField(generationAddrOffset);
-
-  auto guard = MGuardGlobalGeneration::New(alloc(), expected, generationAddr);
-  add(guard);
 
   return true;
 }
