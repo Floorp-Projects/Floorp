@@ -46,9 +46,7 @@ function promiseTestOnWindow(aIsPrivate, aValue) {
 
 add_setup(async function() {
   forgetClosedWindows();
-  while (ss.getClosedTabCount(window) > 0) {
-    ss.forgetClosedTab(window, 0);
-  }
+  forgetClosedTabs(window);
 });
 
 add_task(async function main() {

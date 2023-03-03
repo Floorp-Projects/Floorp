@@ -8127,12 +8127,24 @@ function undoCloseTab(aIndex) {
     blankTabToRemove = gBrowser.selectedTab;
   }
 
+  let closedTabCount = SessionStore.getLastClosedTabCount(window);
+
+  // There's nothing to do here if there are no tabs to re-open for this
+  // window...
+  if (!closedTabCount) {
+    // ... unless there's a previous session that we can restore, in which
+    // case, we use this as a signal to restore that session and merge it into
+    // the current session.
+    if (SessionStore.canRestoreLastSession) {
+      SessionStore.restoreLastSession();
+    }
+    return null;
+  }
+
   let tab = null;
   // aIndex is undefined if the function is called without a specific tab to restore.
   let tabsToRemove =
-    aIndex !== undefined
-      ? [aIndex]
-      : new Array(SessionStore.getLastClosedTabCount(window)).fill(0);
+    aIndex !== undefined ? [aIndex] : new Array(closedTabCount).fill(0);
   let tabsRemoved = false;
   for (let index of tabsToRemove) {
     if (SessionStore.getClosedTabCount(window) > index) {

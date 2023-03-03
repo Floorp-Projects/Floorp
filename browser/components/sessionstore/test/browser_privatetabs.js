@@ -3,9 +3,7 @@
 
 add_task(function cleanup() {
   info("Forgetting closed tabs");
-  while (ss.getClosedTabCount(window)) {
-    ss.forgetClosedTab(window, 0);
-  }
+  forgetClosedTabs(window);
 });
 
 add_task(async function() {
