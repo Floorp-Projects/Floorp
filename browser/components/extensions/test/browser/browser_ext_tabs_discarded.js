@@ -184,12 +184,18 @@ add_task(async function test_discarded_private_tab_restored() {
 
     background() {
       browser.tabs.onUpdated.addListener(
-        async (tabId, changeInfo, tab) => {
+        async function listener(tabId, changeInfo, tab) {
           const { active, discarded, incognito } = tab;
           if (!incognito || active || discarded) {
             return;
           }
+          browser.test.log(`Test extension discarding ${tabId}`);
           await browser.tabs.discard(tabId);
+          // Remove the onUpdated listener to prevent intermittent failure
+          // to be hit if the listener gets called again for unrelated
+          // tabs.onUpdated events that may get fired after the test case got
+          // the tab-discarded test message that was expecting.
+          browser.tabs.onUpdated.removeListener(listener);
           browser.test.sendMessage("tab-discarded");
         },
         { properties: ["status"] }
