@@ -100,7 +100,7 @@ class BrowserRobot {
                 false -> {
                     ThreeDotMainMenuRobot.Transition().clickStopLoadingButton {
                         if (!mDevice.findObject(UiSelector().textContains(pageContent))
-                            .waitForExists(waitingTime)
+                                .waitForExists(waitingTime)
                         ) {
                             browserScreen {
                             }.openMainMenu {

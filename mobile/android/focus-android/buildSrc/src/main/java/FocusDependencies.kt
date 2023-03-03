@@ -57,7 +57,7 @@ object FocusVersions {
         const val falcon = "2.2.0"
         const val fastlane = "2.1.1"
         const val junit = "5.9.1"
-        const val ktlint = "0.47.1"
+        const val ktlint = "0.48.2"
         const val mockito = "4.8.1"
         const val mockwebserver = "4.10.0"
         const val robolectric = "4.9.2"
