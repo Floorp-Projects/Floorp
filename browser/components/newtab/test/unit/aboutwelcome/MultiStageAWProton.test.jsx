@@ -1,5 +1,6 @@
 import { AboutWelcomeDefaults } from "aboutwelcome/lib/AboutWelcomeDefaults.jsm";
 import { MultiStageProtonScreen } from "content-src/aboutwelcome/components/MultiStageProtonScreen";
+import { AWScreenUtils } from "lib/AWScreenUtils.jsm";
 import React from "react";
 import { mount } from "enzyme";
 
@@ -227,6 +228,18 @@ describe("MultiStageAboutWelcomeProton module", () => {
     }
     beforeEach(() => {
       sandbox.stub(global.Services.prefs, "getBoolPref").returns(true);
+      sandbox
+        .stub(global.AWScreenUtils, "evaluateTargetingAndRemoveScreens")
+        .callsFake(() => AWScreenUtils.evaluateTargetingAndRemoveScreens());
+      // This is necessary because there are still screens being removed with
+      // `removeScreens` in `prepareContentForReact()`. Once we've migrated
+      // to using screen targeting instead of manually removing screens,
+      // we can remove this stub.
+      sandbox
+        .stub(global.AWScreenUtils, "removeScreens")
+        .callsFake((screens, callback) =>
+          AWScreenUtils.removeScreens(screens, callback)
+        );
     });
     it("should have 'pin' button by default", async () => {
       const data = await getData();
@@ -436,6 +449,11 @@ describe("MultiStageAboutWelcomeProton module", () => {
       sandbox
         .stub(global.AppConstants, "isPlatformAndVersionAtMost")
         .returns(true);
+      sandbox
+        .stub(global.AWScreenUtils, "removeScreens")
+        .callsFake((screens, screen) =>
+          AWScreenUtils.removeScreens(screens, screen)
+        );
 
       const { screens } = await AboutWelcomeDefaults.prepareContentForReact({
         screens: [
@@ -460,6 +478,11 @@ describe("MultiStageAboutWelcomeProton module", () => {
       sandbox
         .stub(global.AppConstants, "isPlatformAndVersionAtMost")
         .returns(true);
+      sandbox
+        .stub(global.AWScreenUtils, "removeScreens")
+        .callsFake((screens, screen) =>
+          AWScreenUtils.removeScreens(screens, screen)
+        );
 
       const { screens } = await AboutWelcomeDefaults.prepareContentForReact({
         screens: [
