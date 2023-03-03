@@ -207,7 +207,8 @@ export class _TopSites extends React.PureComponent {
 }
 
 export const TopSites = connect((state, props) => ({
-  TopSites: state.TopSites,
+  // For SPOC Experiment only, take TopSites from DiscoveryStream TopSites that takes in SPOC Data
+  TopSites: props.TopSitesWithSpoc || state.TopSites,
   Prefs: state.Prefs,
   TopSitesRows: state.Prefs.values.topSitesRows,
 }))(_TopSites);

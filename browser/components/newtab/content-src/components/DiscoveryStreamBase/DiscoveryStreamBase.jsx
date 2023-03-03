@@ -17,7 +17,7 @@ import { PrivacyLink } from "content-src/components/DiscoveryStreamComponents/Pr
 import React from "react";
 import { SectionTitle } from "content-src/components/DiscoveryStreamComponents/SectionTitle/SectionTitle";
 import { selectLayoutRender } from "content-src/lib/selectLayoutRender";
-import { TopSites } from "content-src/components/TopSites/TopSites";
+import { TopSites } from "content-src/components/DiscoveryStreamComponents/TopSites/TopSites";
 
 const ALLOWED_CSS_URL_PREFIXES = [
   "chrome://",
@@ -114,10 +114,16 @@ export class _DiscoveryStreamBase extends React.PureComponent {
       case "Highlights":
         return <Highlights />;
       case "TopSites":
+        let positions = [];
+        if (component?.spocs?.positions?.length) {
+          positions = component.spocs.positions;
+        }
         return (
-          <div className="ds-top-sites">
-            <TopSites isFixed={true} title={component.header?.title} />
-          </div>
+          <TopSites
+            header={component.header}
+            data={component.data}
+            promoPositions={positions}
+          />
         );
       case "TextPromo":
         return (

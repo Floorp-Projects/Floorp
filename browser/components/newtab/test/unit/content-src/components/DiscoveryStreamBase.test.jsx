@@ -11,7 +11,7 @@ import { Navigation } from "content-src/components/DiscoveryStreamComponents/Nav
 import React from "react";
 import { shallow } from "enzyme";
 import { SectionTitle } from "content-src/components/DiscoveryStreamComponents/SectionTitle/SectionTitle";
-import { TopSites } from "content-src/components/TopSites/TopSites";
+import { TopSites } from "content-src/components/DiscoveryStreamComponents/TopSites/TopSites";
 
 describe("<isAllowedCSS>", () => {
   it("should allow colors", () => {
@@ -302,7 +302,6 @@ describe("<DiscoveryStreamBase>", () => {
     assert.equal(
       wrapper
         .find(".ds-column-grid div")
-        .find(".ds-top-sites")
         .children()
         .at(0)
         .type(),
