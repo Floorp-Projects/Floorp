@@ -243,7 +243,6 @@ void WMFCDMProxy::RemoveSession(const nsAString& aSessionId,
 void WMFCDMProxy::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mIsShutdown);
-  // TODO: reject pending promise.
   if (mProxyCallback) {
     mProxyCallback->Shutdown();
     mProxyCallback = nullptr;
