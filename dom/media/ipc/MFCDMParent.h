@@ -48,6 +48,10 @@ class MFCDMParent final : public PMFCDMParent {
       const MFCDMCreateSessionParamsIPDL& aParams,
       CreateSessionAndGenerateRequestResolver&& aResolver);
 
+  mozilla::ipc::IPCResult RecvLoadSession(
+      const KeySystemConfig::SessionType& aSessionType,
+      const nsString& aSessionId, LoadSessionResolver&& aResolver);
+
   nsISerialEventTarget* ManagerThread() { return mManagerThread; }
   void AssertOnManagerThread() const {
     MOZ_ASSERT(mManagerThread->IsOnCurrentThread());
@@ -70,6 +74,8 @@ class MFCDMParent final : public PMFCDMParent {
   }
 
   void ConnectSessionEvents(MFCDMSession* aSession);
+
+  MFCDMSession* GetSession(const nsString& aSessionId);
 
   nsString mKeySystem;
 

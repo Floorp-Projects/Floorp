@@ -55,6 +55,12 @@ class WMFCDMImpl final {
                                                  aInitData);
   }
 
+  RefPtr<GenericPromise> LoadSession(
+      const KeySystemConfig::SessionType aSessionType,
+      const nsAString& aSessionId) {
+    return mCDM->LoadSession(aSessionType, aSessionId);
+  }
+
   uint64_t Id() {
     MOZ_ASSERT(mCDM->Id() != 0,
                "Should be called only after Init() is resolved");
