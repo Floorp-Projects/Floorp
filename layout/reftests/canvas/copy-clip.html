@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+function test() {
+	let canvas = document.createElement('canvas');
+	canvas.width = canvas.height = 200;
+	let ctx = canvas.getContext('2d');
+	ctx.globalCompositeOperation = 'copy';
+	ctx.translate(0, 0);
+	ctx.rect(0, 0, 100, 100);
+	ctx.clip();
+	ctx.fillStyle = '#f00';
+	ctx.resetTransform();
+	ctx.fillRect(0, 0, canvas.width, canvas.height);
+	return canvas;
+}
+
+document.body.appendChild(test(0));
+</script>
+</body>
+</html>

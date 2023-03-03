@@ -1542,12 +1542,12 @@ bool DrawTargetD2D1::PrepareForDrawing(CompositionOp aOp,
 
   MarkChanged();
 
-  bool patternSupported = IsPatternSupportedByD2D(aPattern);
+  PushAllClips();
 
+  bool patternSupported = IsPatternSupportedByD2D(aPattern);
   if (D2DSupportsPrimitiveBlendMode(aOp) && patternSupported) {
     // It's important to do this before FlushTransformToDC! As this will cause
     // the transform to become dirty.
-    PushAllClips();
 
     FlushTransformToDC();
 
