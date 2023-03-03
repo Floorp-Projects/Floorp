@@ -1352,14 +1352,21 @@ Tester.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsIConsoleListener"]),
 };
 
+// Note: duplicated in SimpleTest.js . See also bug 1820150.
 function isError(err) {
   // It'd be nice if we had either `Error.isError(err)` or `Error.isInstance(err)`
   // but we don't, so do it ourselves:
   if (!err) {
     return false;
   }
-  let glob = Cu.getGlobalForObject(err);
-  return err instanceof glob.Error;
+  try {
+    let glob = Cu.getGlobalForObject(err);
+    return err instanceof glob.Error;
+  } catch {
+    // getGlobalForObject can be upset if it doesn't get passed an object.
+    // Just do a standard instanceof check using this global and cross fingers:
+  }
+  return err instanceof Error;
 }
 
 /**
@@ -1415,7 +1422,7 @@ function testResult({ name, pass, todo, ex, stack, allowFailure }) {
       this.msg += "at " + ex.fileName + ":" + ex.lineNumber + " - ";
     }
 
-    if (isError(ex)) {
+    if (typeof ex == "string" || (typeof ex == "object" && isError(ex))) {
       this.msg += String(ex);
     } else {
       try {
