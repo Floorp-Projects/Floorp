@@ -188,11 +188,3 @@ SafariPermissions.args = {
     page: MigrationWizardConstants.PAGES.SAFARI_PERMISSION,
   },
 };
-
-export const NoBrowsersFound = Template.bind({});
-NoBrowsersFound.args = {
-  dialogMode: true,
-  state: {
-    page: MigrationWizardConstants.PAGES.NO_BROWSERS_FOUND,
-  },
-};

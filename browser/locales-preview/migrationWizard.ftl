@@ -53,7 +53,6 @@ migration-import-button-label = Import
 migration-cancel-button-label = Cancel
 migration-done-button-label = Done
 
-migration-wizard-import-browser-no-browsers = { -brand-short-name } couldn’t find any programs that contain bookmark, history or password data.
 migration-wizard-progress-header = Importing Data
 migration-wizard-progress-done-header = Data Imported Successfully
 migration-wizard-progress-icon-in-progress =
