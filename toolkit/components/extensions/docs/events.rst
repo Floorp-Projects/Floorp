@@ -537,16 +537,31 @@ listener persistency to a new WebExtensions API, and reduce the number of code
 duplication, the following section provide some more details about what the
 abstractions are doing internally in practice.
 
-To make a persistent listener, the ``ExtensionAPI`` class in the module must also
-provide a ``primeListeners`` method.  The ``module`` and ``event`` params are
-required for the ``EventManager`` constructor.
+WebExtensions APIs classes that extend the ``ExtensionAPIPersistent`` base class
+are still able to support non persisted listeners along with persisted ones
+(e.g. events that are persisting the listeners registered from an event page are
+already not persisting listeners registered from other extension contexts)
+and can mix persisted and non-persisted events.
 
-This requires structuring the listener registration code in a way that it can
-be used by both the ``primeListener`` call and in the constructor for ``EventManager``.
+As an example in ``toolkit/components/extensions/parent/ext-runtime.js``` the two
+events ``onSuspend`` and ``onSuspendCanceled`` are expected to be never persisted
+nor primed (even for an event page) and so their ``EventManager`` instances
+receive the following options:
 
-``primeListener`` must return an object with an ``unregister`` and ``convert`` method, while
-the ``register`` callback passed to  the ``EventManager`` constructor is expected to return
-the ``unregister`` method.
+- a ``register`` callback (instead of the one part of ``PERSISTED_EVENTS``)
+- a ``name`` string property (instead of the two separate ``module`` and ``event``
+  string properties that are used for ``EventManager`` instances from persisted
+  ones
+- no ``extensionApi`` property (because that is only needed for events that are
+  expected to persist event page listeners)
+
+In practice ``ExtensionAPIPersistent`` extends the ``ExtensionAPI`` class to provide
+a generic ``primeListeners`` method, which is the method responsible for priming
+a persisted listener when the event page has been suspended or not started yet.
+
+The ``primeListener`` method is expected to return an object with an ``unregister``
+and ``convert`` method, while the ``register`` callback passed to  the ``EventManager``
+constructor is expected to return the ``unregister`` method.
 
 .. code-block:: js
 
