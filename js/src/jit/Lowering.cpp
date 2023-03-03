@@ -483,6 +483,17 @@ void LIRGenerator::visitBoundFunctionNumArgs(MBoundFunctionNumArgs* ins) {
   define(lir, ins);
 }
 
+void LIRGenerator::visitGuardBoundFunctionIsConstructor(
+    MGuardBoundFunctionIsConstructor* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+
+  auto* lir = new (alloc())
+      LGuardBoundFunctionIsConstructor(useRegister(ins->object()));
+  assignSnapshot(lir, ins->bailoutKind());
+  add(lir, ins);
+  redefine(ins, ins->object());
+}
+
 void LIRGenerator::visitReturnFromCtor(MReturnFromCtor* ins) {
   LReturnFromCtor* lir = new (alloc())
       LReturnFromCtor(useBox(ins->value()), useRegister(ins->object()));

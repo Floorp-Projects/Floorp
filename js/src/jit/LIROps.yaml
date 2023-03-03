@@ -471,6 +471,10 @@
   operands:
     object: WordSized
 
+- name: GuardBoundFunctionIsConstructor
+  operands:
+    object: WordSized
+
 # If the Value is an Object, return unbox(Value).
 # Otherwise, return the other Object.
 - name: ReturnFromCtor

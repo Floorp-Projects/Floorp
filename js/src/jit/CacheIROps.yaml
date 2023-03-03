@@ -1991,6 +1991,13 @@
     obj: ObjId
     result: ObjId
 
+- name: GuardBoundFunctionIsConstructor
+  shared: true
+  transpile: true
+  cost_estimate: 1
+  args:
+    obj: ObjId
+
 - name: LoadArrayBufferByteLengthInt32Result
   shared: true
   transpile: true
