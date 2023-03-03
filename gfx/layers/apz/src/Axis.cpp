@@ -517,6 +517,10 @@ CSSCoord AxisX::GetPointOffset(const CSSPoint& aPoint) const {
   return aPoint.x;
 }
 
+OuterCSSCoord AxisX::GetPointOffset(const OuterCSSPoint& aPoint) const {
+  return aPoint.x;
+}
+
 ParentLayerCoord AxisX::GetPointOffset(const ParentLayerPoint& aPoint) const {
   return aPoint.x;
 }
@@ -599,6 +603,10 @@ AxisY::AxisY(AsyncPanZoomController* aAsyncPanZoomController)
     : Axis(aAsyncPanZoomController) {}
 
 CSSCoord AxisY::GetPointOffset(const CSSPoint& aPoint) const {
+  return aPoint.y;
+}
+
+OuterCSSCoord AxisY::GetPointOffset(const OuterCSSPoint& aPoint) const {
   return aPoint.y;
 }
 

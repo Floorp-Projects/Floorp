@@ -370,7 +370,7 @@ class AsyncPanZoomController {
 
   nsEventStatus HandleDragEvent(const MouseInput& aEvent,
                                 const AsyncDragMetrics& aDragMetrics,
-                                CSSCoord aInitialThumbPos);
+                                OuterCSSCoord aInitialThumbPos);
 
   /**
    * Handler for events which should not be intercepted by the touch listener.
@@ -565,11 +565,11 @@ class AsyncPanZoomController {
 
   /**
    * Convert a point on the scrollbar from this APZC's ParentLayer coordinates
-   * to CSS coordinates relative to the beginning of the scroll track.
+   * to OuterCSS coordinates relative to the beginning of the scroll track.
    * Only the component in the direction of scrolling is returned.
    */
-  CSSCoord ConvertScrollbarPoint(const ParentLayerPoint& aScrollbarPoint,
-                                 const ScrollbarData& aThumbData) const;
+  OuterCSSCoord ConvertScrollbarPoint(const ParentLayerPoint& aScrollbarPoint,
+                                      const ScrollbarData& aThumbData) const;
 
   void NotifyMozMouseScrollEvent(const nsString& aString) const;
 

@@ -38,10 +38,10 @@ struct ScrollbarData {
    * This constructor is for Thumb layer type.
    */
   ScrollbarData(ScrollDirection aDirection, float aThumbRatio,
-                CSSCoord aThumbStart, CSSCoord aThumbLength,
-                CSSCoord aThumbMinLength, bool aThumbIsAsyncDraggable,
-                CSSCoord aScrollTrackStart, CSSCoord aScrollTrackLength,
-                uint64_t aTargetViewId)
+                OuterCSSCoord aThumbStart, OuterCSSCoord aThumbLength,
+                OuterCSSCoord aThumbMinLength, bool aThumbIsAsyncDraggable,
+                OuterCSSCoord aScrollTrackStart,
+                OuterCSSCoord aScrollTrackLength, uint64_t aTargetViewId)
       : mDirection(Some(aDirection)),
         mScrollbarLayerType(ScrollbarLayerType::Thumb),
         mThumbRatio(aThumbRatio),
@@ -66,10 +66,10 @@ struct ScrollbarData {
   ScrollbarData() = default;
 
   static ScrollbarData CreateForThumb(
-      ScrollDirection aDirection, float aThumbRatio, CSSCoord aThumbStart,
-      CSSCoord aThumbLength, CSSCoord aThumbMinLength,
-      bool aThumbIsAsyncDraggable, CSSCoord aScrollTrackStart,
-      CSSCoord aScrollTrackLength, uint64_t aTargetViewId) {
+      ScrollDirection aDirection, float aThumbRatio, OuterCSSCoord aThumbStart,
+      OuterCSSCoord aThumbLength, OuterCSSCoord aThumbMinLength,
+      bool aThumbIsAsyncDraggable, OuterCSSCoord aScrollTrackStart,
+      OuterCSSCoord aScrollTrackLength, uint64_t aTargetViewId) {
     return ScrollbarData(aDirection, aThumbRatio, aThumbStart, aThumbLength,
                          aThumbMinLength, aThumbIsAsyncDraggable,
                          aScrollTrackStart, aScrollTrackLength, aTargetViewId);
@@ -99,17 +99,17 @@ struct ScrollbarData {
    */
   float mThumbRatio = 0.0f;
 
-  CSSCoord mThumbStart;
-  CSSCoord mThumbLength;
-  CSSCoord mThumbMinLength;
+  OuterCSSCoord mThumbStart;
+  OuterCSSCoord mThumbLength;
+  OuterCSSCoord mThumbMinLength;
 
   /**
    * Whether the scrollbar thumb can be dragged asynchronously.
    */
   bool mThumbIsAsyncDraggable = false;
 
-  CSSCoord mScrollTrackStart;
-  CSSCoord mScrollTrackLength;
+  OuterCSSCoord mScrollTrackStart;
+  OuterCSSCoord mScrollTrackLength;
   uint64_t mTargetViewId = ScrollableLayerGuid::NULL_SCROLL_ID;
 
   bool operator==(const ScrollbarData& aOther) const {
