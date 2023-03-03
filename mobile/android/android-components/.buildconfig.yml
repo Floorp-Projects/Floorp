@@ -4,62 +4,104 @@ projects:
     path: components/browser/domains
     publish: true
     upstream_dependencies:
+    - concept-base
     - concept-toolbar
+    - lib-publicsuffixlist
+    - support-base
+    - support-ktx
     - support-test
+    - support-utils
+    - tooling-lint
   browser-engine-gecko:
     description: Engine implementation based on GeckoView.
     path: components/browser/engine-gecko
     publish: true
     upstream_dependencies:
+    - browser-errorpages
+    - concept-base
     - concept-engine
     - concept-fetch
+    - concept-storage
+    - lib-publicsuffixlist
     - service-glean
+    - support-base
     - support-ktx
     - support-test
     - support-utils
     - tooling-fetch-tests
+    - tooling-lint
+    - ui-icons
   browser-engine-system:
     description: Engine implementation based on the system WebView.
     path: components/browser/engine-system
     publish: true
     upstream_dependencies:
+    - browser-errorpages
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-storage
+    - lib-publicsuffixlist
+    - support-base
     - support-ktx
     - support-test
     - support-utils
+    - tooling-lint
+    - ui-icons
   browser-errorpages:
     description: Responsive browser error pages for Android apps.
     path: components/browser/errorpages
     publish: true
     upstream_dependencies:
+    - concept-base
+    - lib-publicsuffixlist
+    - support-base
     - support-ktx
     - support-test
+    - support-utils
+    - tooling-lint
     - ui-icons
   browser-icons:
     description: A component for loading and storing website icons.
     path: components/browser/icons
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-state
     - concept-base
     - concept-engine
     - concept-fetch
+    - concept-storage
     - lib-fetch-httpurlconnection
     - lib-fetch-okhttp
+    - lib-publicsuffixlist
+    - lib-state
+    - support-base
     - support-images
     - support-ktx
     - support-test
+    - support-utils
+    - tooling-lint
+    - ui-icons
   browser-menu:
     description: A customizable menu for browsers.
     path: components/browser/menu
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-state
+    - concept-base
     - concept-engine
+    - concept-fetch
     - concept-menu
+    - concept-storage
+    - lib-publicsuffixlist
+    - lib-state
     - support-base
     - support-ktx
     - support-test
+    - support-utils
+    - tooling-lint
     - ui-colors
     - ui-icons
   browser-menu2:
@@ -67,60 +109,107 @@ projects:
     path: components/browser/menu2
     publish: true
     upstream_dependencies:
+    - concept-base
     - concept-menu
+    - lib-publicsuffixlist
     - support-base
     - support-ktx
     - support-test
+    - support-utils
+    - tooling-lint
     - ui-icons
   browser-session-storage:
     description: Component for saving and restoring the browser state.
     path: components/browser/session-storage
     publish: true
     upstream_dependencies:
+    - browser-engine-gecko
+    - browser-errorpages
+    - browser-menu2
     - browser-state
+    - browser-tabstray
+    - browser-thumbnails
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-menu
+    - concept-storage
+    - concept-tabstray
+    - concept-toolbar
+    - feature-session
     - feature-tabs
+    - lib-publicsuffixlist
+    - lib-state
+    - support-android-test
+    - support-base
+    - support-images
     - support-ktx
     - support-test
     - support-test-fakes
     - support-test-libstate
     - support-utils
+    - tooling-lint
+    - ui-colors
+    - ui-icons
+    - ui-tabcounter
   browser-state:
     description: Component responsible for maintaining the centralized state of a
       browser engine.
     path: components/browser/state
     publish: true
     upstream_dependencies:
+    - browser-errorpages
+    - concept-base
     - concept-engine
     - concept-fetch
     - concept-storage
+    - lib-publicsuffixlist
     - lib-state
+    - support-base
     - support-ktx
     - support-test
     - support-test-libstate
     - support-utils
+    - tooling-lint
+    - ui-icons
   browser-storage-sync:
     description: A syncable, Rust Places-backed implementation of core data storage.
     path: components/browser/storage-sync
     publish: true
     upstream_dependencies:
+    - concept-base
+    - concept-fetch
     - concept-storage
     - concept-sync
     - concept-toolbar
+    - lib-publicsuffixlist
+    - service-glean
+    - support-base
+    - support-ktx
     - support-sync-telemetry
     - support-test
     - support-utils
+    - tooling-lint
   browser-tabstray:
     description: A tabs tray component for browsers.
     path: components/browser/tabstray
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-state
     - concept-base
+    - concept-engine
+    - concept-fetch
+    - concept-storage
     - concept-tabstray
+    - lib-publicsuffixlist
+    - lib-state
+    - support-base
     - support-images
     - support-ktx
     - support-test
+    - support-utils
+    - tooling-lint
     - ui-colors
     - ui-icons
   browser-thumbnails:
@@ -128,26 +217,44 @@ projects:
     path: components/browser/thumbnails
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-state
     - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-storage
+    - lib-publicsuffixlist
+    - lib-state
+    - support-base
     - support-images
     - support-ktx
     - support-test
     - support-test-libstate
+    - support-utils
+    - tooling-lint
+    - ui-icons
   browser-toolbar:
     description: A customizable toolbar for browsers.
     path: components/browser/toolbar
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-menu
     - browser-menu2
+    - browser-state
+    - concept-base
     - concept-engine
+    - concept-fetch
     - concept-menu
+    - concept-storage
     - concept-toolbar
+    - lib-publicsuffixlist
+    - lib-state
     - support-base
     - support-ktx
     - support-test
+    - support-utils
+    - tooling-lint
     - ui-autocomplete
     - ui-colors
     - ui-icons
@@ -157,21 +264,41 @@ projects:
     path: components/compose/awesomebar
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-state
     - concept-awesomebar
+    - concept-base
+    - concept-engine
+    - concept-fetch
+    - concept-storage
+    - lib-publicsuffixlist
+    - lib-state
     - support-base
+    - support-ktx
     - support-test
     - support-utils
+    - tooling-lint
     - ui-icons
   compose-browser-toolbar:
     description: A customizable toolbar for browsers using Jetpack Compose.
     path: components/compose/browser-toolbar
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-state
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-storage
+    - concept-toolbar
     - feature-session
+    - lib-publicsuffixlist
+    - lib-state
+    - support-base
+    - support-ktx
     - support-test
+    - support-utils
+    - tooling-lint
     - ui-icons
   compose-cfr:
     description: A standard Contextual Feature Recommendation popup using Jetpack
@@ -179,8 +306,13 @@ projects:
     path: components/compose/cfr
     publish: true
     upstream_dependencies:
+    - concept-base
+    - lib-publicsuffixlist
+    - support-base
     - support-ktx
     - support-test
+    - support-utils
+    - tooling-lint
     - ui-icons
   compose-engine:
     description: A component for integrating a concept-engine implementation into
@@ -188,132 +320,242 @@ projects:
     path: components/compose/engine
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-state
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-storage
+    - lib-publicsuffixlist
+    - lib-state
+    - support-base
     - support-ktx
     - support-test
+    - support-utils
+    - tooling-lint
+    - ui-icons
   compose-tabstray:
     description: A customizable tabs tray using Jetpack Compose.
     path: components/compose/tabstray
     publish: true
     upstream_dependencies:
+    - browser-errorpages
+    - browser-menu2
+    - browser-session-storage
     - browser-state
+    - browser-tabstray
+    - browser-thumbnails
+    - concept-base
+    - concept-engine
+    - concept-fetch
+    - concept-menu
+    - concept-storage
     - concept-tabstray
+    - concept-toolbar
+    - feature-session
     - feature-tabs
+    - lib-publicsuffixlist
+    - lib-state
+    - support-base
+    - support-images
+    - support-ktx
     - support-test
+    - support-utils
+    - tooling-lint
+    - ui-colors
     - ui-icons
+    - ui-tabcounter
   concept-awesomebar:
     description: An abstract definition of an awesomebar component.
     path: components/concept/awesomebar
     publish: true
     upstream_dependencies:
+    - concept-base
     - support-base
+    - tooling-lint
   concept-base:
     description: A component for basic interfaces needed by multiple components and
       that do not warrant a standalone component.
     path: components/concept/base
     publish: true
     upstream_dependencies:
+    - support-base
     - support-test
+    - tooling-lint
   concept-engine:
     description: An abstract layer hiding the actual browser engine implementation.
     path: components/concept/engine
     publish: true
     upstream_dependencies:
     - browser-errorpages
+    - concept-base
     - concept-fetch
     - concept-storage
+    - lib-publicsuffixlist
     - support-base
     - support-ktx
     - support-test
     - support-utils
+    - tooling-lint
+    - ui-icons
   concept-fetch:
     description: An abstract definition of an HTTP client for fetching resources.
     path: components/concept/fetch
     publish: true
     upstream_dependencies:
+    - concept-base
+    - support-base
     - support-test
+    - tooling-lint
   concept-menu:
     description: An abstract definition of a browser menu component.
     path: components/concept/menu
     publish: true
     upstream_dependencies:
+    - concept-base
+    - lib-publicsuffixlist
     - support-base
     - support-ktx
     - support-test
+    - support-utils
+    - tooling-lint
   concept-push:
     description: An abstract definition of a push service component.
     path: components/concept/push
     publish: true
     upstream_dependencies:
+    - concept-base
     - support-base
     - support-test
+    - tooling-lint
   concept-storage:
     description: An abstract definition of a browser storage layer.
     path: components/concept/storage
     publish: true
     upstream_dependencies:
+    - concept-base
+    - lib-publicsuffixlist
+    - support-base
     - support-ktx
     - support-test
+    - support-utils
+    - tooling-lint
   concept-sync:
     description: An abstract definition of a browser data synchronization layer.
     path: components/concept/sync
     publish: true
     upstream_dependencies:
+    - concept-base
     - support-base
+    - tooling-lint
   concept-tabstray:
     description: An abstract definition of a tabs tray component.
     path: components/concept/tabstray
     publish: true
     upstream_dependencies:
+    - browser-errorpages
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-storage
+    - lib-publicsuffixlist
     - support-base
+    - support-ktx
+    - support-utils
+    - tooling-lint
+    - ui-icons
   concept-toolbar:
     description: An abstract definition of a toolbar component.
     path: components/concept/toolbar
     publish: true
     upstream_dependencies:
+    - concept-base
+    - lib-publicsuffixlist
     - support-base
     - support-ktx
     - support-test
+    - support-utils
+    - tooling-lint
   feature-accounts:
     description: Component for tying an account manager with the tabs feature to facilitate
       auth flows.
     path: components/feature/accounts
     publish: true
     upstream_dependencies:
+    - browser-errorpages
+    - browser-menu2
+    - browser-session-storage
     - browser-state
+    - browser-tabstray
+    - browser-thumbnails
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-menu
+    - concept-storage
+    - concept-sync
+    - concept-tabstray
+    - concept-toolbar
+    - feature-session
     - feature-tabs
+    - lib-dataprotect
+    - lib-publicsuffixlist
+    - lib-state
     - service-firefox-accounts
+    - service-glean
+    - support-base
+    - support-images
     - support-ktx
+    - support-sync-telemetry
     - support-test
+    - support-utils
     - support-webextensions
+    - tooling-lint
+    - ui-colors
+    - ui-icons
+    - ui-tabcounter
   feature-accounts-push:
     description: Feature of use cases for FxA Account that work with push support.
     path: components/feature/accounts-push
     publish: true
     upstream_dependencies:
+    - concept-base
+    - concept-fetch
     - concept-push
+    - concept-storage
+    - concept-sync
     - feature-push
+    - lib-dataprotect
+    - lib-publicsuffixlist
+    - lib-state
     - service-firefox-accounts
+    - service-glean
     - support-base
     - support-ktx
+    - support-sync-telemetry
     - support-test
+    - support-utils
+    - tooling-lint
   feature-addons:
     description: A feature that provides for managing add-ons.
     path: components/feature/addons
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-state
+    - concept-base
     - concept-engine
     - concept-fetch
     - concept-menu
+    - concept-storage
+    - lib-publicsuffixlist
+    - lib-state
     - support-base
     - support-ktx
     - support-test
     - support-utils
     - support-webextensions
+    - tooling-lint
     - ui-colors
     - ui-icons
     - ui-widgets
@@ -322,19 +564,29 @@ projects:
     path: components/feature/app-links
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-state
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-storage
+    - concept-toolbar
     - feature-session
+    - lib-publicsuffixlist
+    - lib-state
     - support-base
     - support-ktx
     - support-test
     - support-test-libstate
     - support-utils
+    - tooling-lint
+    - ui-icons
   feature-autofill:
     description: Component adding support for Android`s Autofill framework.
     path: components/feature/autofill
     publish: true
     upstream_dependencies:
+    - concept-base
     - concept-fetch
     - concept-storage
     - lib-fetch-okhttp
@@ -344,87 +596,164 @@ projects:
     - support-ktx
     - support-test
     - support-utils
+    - tooling-lint
   feature-awesomebar:
     description: Component connecting a concept-toolbar with a concept-awesomebar.
     path: components/feature/awesomebar
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-icons
+    - browser-menu2
+    - browser-session-storage
     - browser-state
     - browser-storage-sync
+    - browser-tabstray
+    - browser-thumbnails
     - concept-awesomebar
+    - concept-base
     - concept-engine
     - concept-fetch
+    - concept-menu
     - concept-storage
+    - concept-sync
+    - concept-tabstray
     - concept-toolbar
     - feature-search
     - feature-session
     - feature-tabs
     - lib-fetch-httpurlconnection
+    - lib-publicsuffixlist
+    - lib-state
+    - service-glean
+    - service-location
+    - support-base
+    - support-images
     - support-ktx
+    - support-sync-telemetry
     - support-test
     - support-utils
+    - tooling-lint
+    - ui-colors
     - ui-icons
+    - ui-tabcounter
   feature-containers:
     description: Feature component for working with contextual identities also known
       as containers.
     path: components/feature/containers
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-state
+    - concept-base
+    - concept-engine
+    - concept-fetch
+    - concept-storage
+    - lib-publicsuffixlist
+    - lib-state
+    - support-android-test
     - support-base
     - support-ktx
     - support-test
     - support-test-libstate
+    - support-utils
+    - tooling-lint
+    - ui-icons
   feature-contextmenu:
     description: Component for displaying context menus for web content.
     path: components/feature/contextmenu
     publish: true
     upstream_dependencies:
+    - browser-errorpages
+    - browser-menu2
+    - browser-session-storage
     - browser-state
+    - browser-tabstray
+    - browser-thumbnails
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-menu
+    - concept-storage
+    - concept-tabstray
+    - concept-toolbar
     - feature-app-links
     - feature-search
+    - feature-session
     - feature-tabs
+    - lib-publicsuffixlist
+    - lib-state
+    - service-location
+    - support-base
+    - support-images
     - support-ktx
     - support-test
     - support-test-libstate
     - support-utils
+    - tooling-lint
+    - ui-colors
+    - ui-icons
+    - ui-tabcounter
   feature-customtabs:
     description: Component for providing custom tabs functionality.
     path: components/feature/customtabs
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-menu
+    - browser-menu2
+    - browser-session-storage
     - browser-state
+    - browser-tabstray
+    - browser-thumbnails
     - browser-toolbar
+    - concept-base
     - concept-engine
     - concept-fetch
     - concept-menu
+    - concept-storage
+    - concept-tabstray
+    - concept-toolbar
     - feature-intent
+    - feature-search
     - feature-session
     - feature-tabs
+    - lib-publicsuffixlist
+    - lib-state
     - service-digitalassetlinks
+    - service-location
     - support-base
+    - support-images
     - support-ktx
     - support-test
     - support-test-libstate
     - support-utils
+    - tooling-lint
+    - ui-autocomplete
+    - ui-colors
     - ui-icons
+    - ui-tabcounter
   feature-downloads:
     description: Feature implementation for apps that want to use Android downloads
       manager.
     path: components/feature/downloads
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-state
+    - concept-base
     - concept-engine
     - concept-fetch
+    - concept-storage
+    - lib-publicsuffixlist
+    - lib-state
+    - support-android-test
     - support-base
     - support-ktx
     - support-test
     - support-test-libstate
     - support-utils
+    - tooling-lint
     - ui-icons
   feature-findinpage:
     description: Feature that will subscribe to the selected session and show an UI
@@ -432,73 +761,140 @@ projects:
     path: components/feature/findinpage
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-state
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-storage
+    - lib-publicsuffixlist
+    - lib-state
+    - support-base
     - support-ktx
     - support-test
+    - support-utils
+    - tooling-lint
     - ui-icons
   feature-intent:
     description: Combining various feature components for intent processing.
     path: components/feature/intent
     publish: true
     upstream_dependencies:
+    - browser-errorpages
+    - browser-menu2
+    - browser-session-storage
     - browser-state
+    - browser-tabstray
+    - browser-thumbnails
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-menu
+    - concept-storage
+    - concept-tabstray
+    - concept-toolbar
     - feature-search
     - feature-session
     - feature-tabs
+    - lib-publicsuffixlist
+    - lib-state
+    - service-location
+    - support-base
+    - support-images
     - support-ktx
     - support-test
     - support-test-libstate
     - support-utils
+    - tooling-lint
+    - ui-colors
+    - ui-icons
+    - ui-tabcounter
   feature-logins:
     description: Feature component for logins related features.
     path: components/feature/logins
     publish: true
     upstream_dependencies:
+    - browser-errorpages
+    - browser-state
+    - concept-base
+    - concept-engine
+    - concept-fetch
+    - concept-storage
+    - concept-toolbar
     - feature-prompts
+    - feature-session
+    - lib-publicsuffixlist
+    - lib-state
+    - support-android-test
     - support-base
     - support-ktx
     - support-test
+    - support-utils
+    - tooling-lint
+    - ui-icons
   feature-media:
     description: Feature component for website media related features.
     path: components/feature/media
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-state
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-storage
+    - lib-publicsuffixlist
+    - lib-state
     - support-base
     - support-ktx
     - support-test
     - support-test-libstate
     - support-utils
+    - tooling-lint
     - ui-icons
   feature-privatemode:
     description: Features used to enhance private browsing mode.
     path: components/feature/privatemode
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-state
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-storage
+    - lib-publicsuffixlist
+    - lib-state
     - support-base
     - support-ktx
     - support-test
     - support-test-libstate
     - support-utils
+    - tooling-lint
+    - ui-icons
   feature-prompts:
     description: Feature that will subscribe to the selected session and will handle
       all the common prompt dialogs from web content.
     path: components/feature/prompts
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-state
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-storage
+    - concept-toolbar
     - feature-session
+    - lib-publicsuffixlist
     - lib-state
+    - support-android-test
+    - support-base
     - support-ktx
     - support-test
     - support-test-libstate
     - support-utils
+    - tooling-lint
     - ui-icons
   feature-push:
     description: Feature that implements push notifications with a supported push
@@ -506,175 +902,342 @@ projects:
     path: components/feature/push
     publish: true
     upstream_dependencies:
+    - concept-base
     - concept-push
     - support-base
     - support-test
+    - tooling-lint
   feature-pwa:
     description: Feature implementation for Progressive Web Apps (PWA).
     path: components/feature/pwa
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-icons
+    - browser-menu
+    - browser-menu2
+    - browser-session-storage
     - browser-state
+    - browser-tabstray
+    - browser-thumbnails
+    - browser-toolbar
+    - concept-base
     - concept-engine
     - concept-fetch
+    - concept-menu
+    - concept-storage
+    - concept-tabstray
+    - concept-toolbar
     - feature-customtabs
     - feature-intent
+    - feature-search
     - feature-session
     - feature-tabs
+    - lib-publicsuffixlist
+    - lib-state
     - service-digitalassetlinks
+    - service-location
     - support-base
     - support-images
     - support-ktx
     - support-test
     - support-test-libstate
     - support-utils
+    - tooling-lint
+    - ui-autocomplete
+    - ui-colors
+    - ui-icons
+    - ui-tabcounter
   feature-qr:
     description: A feature that provides functionality for scanning QR codes.
     path: components/feature/qr
     publish: true
     upstream_dependencies:
+    - concept-base
+    - lib-publicsuffixlist
     - support-base
     - support-ktx
     - support-test
+    - support-utils
+    - tooling-lint
   feature-readerview:
     description: Feature implementation providing a Reader View WebExtension.
     path: components/feature/readerview
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-menu
     - browser-state
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-menu
+    - concept-storage
+    - lib-publicsuffixlist
+    - lib-state
     - support-base
     - support-ktx
     - support-test
     - support-utils
     - support-webextensions
+    - tooling-lint
+    - ui-colors
     - ui-icons
   feature-recentlyclosed:
     description: Feature implementation for saving and restoring recently closed tabs
     path: components/feature/recentlyclosed
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-session-storage
     - browser-state
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-storage
+    - concept-toolbar
     - feature-session
+    - lib-publicsuffixlist
+    - lib-state
     - support-base
     - support-ktx
     - support-test
+    - support-test-fakes
     - support-test-libstate
+    - support-utils
+    - tooling-lint
+    - ui-icons
   feature-search:
     description: Feature implementation connecting an engine implementation with the
       search module.
     path: components/feature/search
     publish: true
     upstream_dependencies:
+    - browser-errorpages
+    - browser-menu2
+    - browser-session-storage
     - browser-state
+    - browser-tabstray
+    - browser-thumbnails
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-menu
+    - concept-storage
+    - concept-tabstray
+    - concept-toolbar
+    - feature-session
     - feature-tabs
+    - lib-publicsuffixlist
+    - lib-state
     - service-location
     - support-base
+    - support-images
     - support-ktx
     - support-test
     - support-test-fakes
     - support-test-libstate
     - support-utils
+    - tooling-lint
     - ui-colors
+    - ui-icons
+    - ui-tabcounter
   feature-serviceworker:
     description: Feature that adds support for service workers when using GeckoEngine.
     path: components/feature/serviceworker
     publish: true
     upstream_dependencies:
     - browser-engine-gecko
+    - browser-errorpages
+    - browser-menu2
+    - browser-session-storage
     - browser-state
+    - browser-tabstray
+    - browser-thumbnails
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-menu
+    - concept-storage
+    - concept-tabstray
+    - concept-toolbar
+    - feature-session
     - feature-tabs
+    - lib-publicsuffixlist
+    - lib-state
+    - support-base
+    - support-images
+    - support-ktx
     - support-test
+    - support-utils
+    - tooling-lint
+    - ui-colors
+    - ui-icons
+    - ui-tabcounter
   feature-session:
     description: Feature implementation connecting an engine implementation with the
       session module.
     path: components/feature/session
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-state
+    - concept-base
     - concept-engine
+    - concept-fetch
     - concept-storage
     - concept-toolbar
+    - lib-publicsuffixlist
+    - lib-state
+    - support-base
     - support-ktx
     - support-test
     - support-test-fakes
     - support-test-libstate
     - support-utils
+    - tooling-lint
+    - ui-icons
   feature-share:
     description: Feature implementation for saving and sorting recent apps used for
       sharing.
     path: components/feature/share
     publish: true
     upstream_dependencies:
+    - concept-base
+    - lib-publicsuffixlist
+    - support-android-test
     - support-base
     - support-ktx
     - support-test
+    - support-utils
+    - tooling-lint
   feature-sitepermissions:
     description: A feature for showing site permission request prompts.
     path: components/feature/sitepermissions
     publish: true
     upstream_dependencies:
+    - browser-errorpages
+    - browser-menu2
+    - browser-session-storage
     - browser-state
+    - browser-tabstray
+    - browser-thumbnails
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-menu
+    - concept-storage
+    - concept-tabstray
+    - concept-toolbar
+    - feature-session
     - feature-tabs
+    - lib-publicsuffixlist
+    - lib-state
+    - support-android-test
+    - support-base
+    - support-images
     - support-ktx
     - support-test
+    - support-utils
+    - tooling-lint
+    - ui-colors
     - ui-icons
+    - ui-tabcounter
   feature-syncedtabs:
     description: Feature that provides access to other devices' tabs in the same account.
     path: components/feature/syncedtabs
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-icons
     - browser-state
     - browser-storage-sync
     - concept-awesomebar
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-storage
+    - concept-sync
     - concept-toolbar
     - feature-session
+    - lib-dataprotect
+    - lib-publicsuffixlist
+    - lib-state
     - service-firefox-accounts
+    - service-glean
     - support-base
+    - support-images
     - support-ktx
+    - support-sync-telemetry
     - support-test
     - support-utils
+    - tooling-lint
+    - ui-icons
   feature-tab-collections:
     description: Feature implementation for saving, restoring and organizing collections
       of tabs.
     path: components/feature/tab-collections
     publish: true
     upstream_dependencies:
+    - browser-errorpages
+    - browser-menu2
     - browser-session-storage
     - browser-state
+    - browser-tabstray
+    - browser-thumbnails
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-menu
+    - concept-storage
+    - concept-tabstray
+    - concept-toolbar
+    - feature-session
     - feature-tabs
+    - lib-publicsuffixlist
+    - lib-state
+    - support-android-test
     - support-base
+    - support-images
     - support-ktx
     - support-test
+    - support-test-fakes
     - support-test-libstate
+    - support-utils
+    - tooling-lint
+    - ui-colors
+    - ui-icons
+    - ui-tabcounter
   feature-tabs:
     description: Feature implementation connecting a tabs tray implementation with
       the session and toolbar modules.
     path: components/feature/tabs
     publish: true
     upstream_dependencies:
+    - browser-errorpages
+    - browser-menu2
     - browser-session-storage
     - browser-state
     - browser-tabstray
     - browser-thumbnails
+    - concept-base
     - concept-engine
+    - concept-fetch
     - concept-menu
+    - concept-storage
     - concept-tabstray
     - concept-toolbar
     - feature-session
+    - lib-publicsuffixlist
+    - lib-state
+    - support-base
+    - support-images
     - support-ktx
     - support-test
     - support-test-libstate
+    - support-utils
+    - tooling-lint
+    - ui-colors
     - ui-icons
     - ui-tabcounter
   feature-toolbar:
@@ -684,15 +1247,21 @@ projects:
     publish: true
     upstream_dependencies:
     - browser-domains
+    - browser-errorpages
     - browser-state
+    - concept-base
     - concept-engine
+    - concept-fetch
     - concept-storage
     - concept-toolbar
     - feature-session
     - lib-publicsuffixlist
+    - lib-state
+    - support-base
     - support-ktx
     - support-test
     - support-utils
+    - tooling-lint
     - ui-icons
   feature-top-sites:
     description: Feature implementation for saving and removing top sites.
@@ -700,83 +1269,161 @@ projects:
     publish: true
     upstream_dependencies:
     - browser-storage-sync
+    - concept-base
+    - concept-fetch
+    - concept-storage
+    - concept-sync
     - concept-toolbar
+    - lib-publicsuffixlist
+    - service-glean
+    - support-android-test
     - support-base
     - support-ktx
+    - support-sync-telemetry
     - support-test
     - support-utils
+    - tooling-lint
   feature-webauthn:
     description: A feature that provides WebAuthn functionality for supported engines.
     path: components/feature/webauthn
     publish: true
     upstream_dependencies:
+    - browser-errorpages
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-storage
+    - lib-publicsuffixlist
+    - support-base
+    - support-ktx
     - support-test
+    - support-utils
+    - tooling-lint
+    - ui-icons
   feature-webcompat:
     description: Feature that provides hotfixes for websites from Mozilla's Web Compatibility
       team
     path: components/feature/webcompat
     publish: true
     upstream_dependencies:
+    - browser-errorpages
+    - browser-state
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-storage
+    - lib-publicsuffixlist
+    - lib-state
+    - support-base
+    - support-ktx
     - support-test
+    - support-utils
     - support-webextensions
+    - tooling-lint
+    - ui-icons
   feature-webcompat-reporter:
     description: Feature that enables users to report site issues to Mozilla's Web
       Compatibility team.
     path: components/feature/webcompat-reporter
     publish: true
     upstream_dependencies:
+    - browser-errorpages
+    - browser-state
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-storage
+    - lib-publicsuffixlist
+    - lib-state
+    - support-base
+    - support-ktx
     - support-test
+    - support-utils
     - support-webextensions
+    - tooling-lint
+    - ui-icons
   feature-webnotifications:
     description: Feature component for Web Notifications.
     path: components/feature/webnotifications
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-icons
+    - browser-menu2
+    - browser-session-storage
+    - browser-state
+    - browser-tabstray
+    - browser-thumbnails
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-menu
+    - concept-storage
+    - concept-tabstray
+    - concept-toolbar
     - feature-intent
+    - feature-search
+    - feature-session
     - feature-sitepermissions
+    - feature-tabs
+    - lib-publicsuffixlist
+    - lib-state
+    - service-location
+    - support-base
+    - support-images
     - support-ktx
     - support-test
     - support-utils
+    - tooling-lint
+    - ui-colors
+    - ui-icons
+    - ui-tabcounter
   lib-auth:
     description: A component for various kinds of authentication mechanisms.
     path: components/lib/auth
     publish: true
     upstream_dependencies:
+    - concept-base
     - support-base
     - support-test
+    - tooling-lint
   lib-crash:
     description: A generic crash reporter library that can report crashes to multiple
       services.
     path: components/lib/crash
     publish: true
     upstream_dependencies:
+    - concept-base
+    - concept-fetch
+    - lib-publicsuffixlist
     - service-glean
     - support-base
     - support-ktx
     - support-test
     - support-utils
+    - tooling-lint
   lib-crash-sentry:
     description: A crash reporter for Sentry.io that that uses lib-crash.
     path: components/lib/crash-sentry
     publish: true
     upstream_dependencies:
+    - concept-base
     - lib-crash
+    - lib-publicsuffixlist
     - support-base
     - support-ktx
     - support-test
     - support-utils
+    - tooling-lint
   lib-dataprotect:
     description: A component using AndroidKeyStore to protect user data.
     path: components/lib/dataprotect
     publish: true
     upstream_dependencies:
+    - concept-base
     - support-base
     - support-test
+    - tooling-lint
   lib-fetch-httpurlconnection:
     description: An implementation of lib-fetch based on HttpUrlConnection.
     path: components/lib/fetch-httpurlconnection
@@ -784,51 +1431,68 @@ projects:
     upstream_dependencies:
     - concept-fetch
     - tooling-fetch-tests
+    - tooling-lint
   lib-fetch-okhttp:
     description: An implementation of lib-fetch based on OkHttp.
     path: components/lib/fetch-okhttp
     publish: true
     upstream_dependencies:
+    - concept-base
     - concept-fetch
+    - support-base
     - support-test
     - tooling-fetch-tests
+    - tooling-lint
   lib-jexl:
     description: 'Javascript Expression Language: Powerful context-based expression
       parser and evaluator.'
     path: components/lib/jexl
     publish: true
-    upstream_dependencies: []
+    upstream_dependencies:
+    - tooling-lint
   lib-publicsuffixlist:
     description: A library for reading and using the public suffix list.
     path: components/lib/publicsuffixlist
     publish: true
     upstream_dependencies:
+    - concept-base
+    - support-base
     - support-test
+    - tooling-lint
   lib-push-firebase:
     description: An implementation of concept-push for the Firebase Message Service.
     path: components/lib/push-firebase
     publish: true
     upstream_dependencies:
+    - concept-base
     - concept-push
     - support-base
     - support-test
+    - tooling-lint
   lib-state:
     description: A library for maintaining application state.
     path: components/lib/state
     publish: true
     upstream_dependencies:
+    - concept-base
+    - lib-publicsuffixlist
     - support-base
     - support-ktx
     - support-test
+    - support-utils
+    - tooling-lint
   samples-browser:
     description: A simple browser composed from browser components.
     path: samples/browser
     publish: false
     upstream_dependencies:
     - browser-domains
+    - browser-engine-gecko
     - browser-engine-system
+    - browser-errorpages
     - browser-icons
     - browser-menu
+    - browser-menu2
     - browser-session-storage
     - browser-state
     - browser-storage-sync
@@ -840,7 +1504,9 @@ projects:
     - concept-base
     - concept-engine
     - concept-fetch
+    - concept-menu
     - concept-storage
+    - concept-sync
     - concept-tabstray
     - concept-toolbar
     - feature-addons
@@ -869,114 +1535,209 @@ projects:
     - lib-dataprotect
     - lib-fetch-httpurlconnection
     - lib-publicsuffixlist
+    - lib-state
     - service-digitalassetlinks
     - service-glean
     - service-location
     - service-sync-logins
+    - support-android-test
     - support-base
+    - support-images
     - support-ktx
     - support-rustlog
+    - support-sync-telemetry
     - support-utils
     - support-webextensions
+    - tooling-lint
     - ui-autocomplete
+    - ui-colors
+    - ui-icons
     - ui-tabcounter
+    - ui-widgets
   samples-compose-browser:
     description: A simple browser composed from browser components using Jetpack Compose.
     path: samples/compose-browser
     publish: false
     upstream_dependencies:
     - browser-engine-gecko
+    - browser-errorpages
     - browser-icons
+    - browser-menu2
+    - browser-session-storage
     - browser-state
+    - browser-storage-sync
+    - browser-tabstray
+    - browser-thumbnails
     - compose-awesomebar
     - compose-browser-toolbar
     - compose-engine
     - compose-tabstray
     - concept-awesomebar
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-menu
+    - concept-storage
+    - concept-sync
     - concept-tabstray
+    - concept-toolbar
     - feature-awesomebar
     - feature-search
     - feature-session
     - feature-tabs
+    - lib-publicsuffixlist
+    - lib-state
+    - service-glean
     - service-location
+    - support-base
+    - support-images
+    - support-ktx
+    - support-sync-telemetry
+    - support-utils
+    - tooling-lint
+    - ui-colors
     - ui-icons
+    - ui-tabcounter
   samples-crash:
     description: An app showing the integration of the lib-crash component.
     path: samples/crash
     publish: false
     upstream_dependencies:
+    - concept-base
+    - concept-fetch
     - lib-crash
     - lib-fetch-httpurlconnection
+    - lib-publicsuffixlist
     - service-glean
     - support-base
+    - support-ktx
     - support-utils
+    - tooling-lint
   samples-dataprotect:
     description: An app demoing how to use the Dataprotect component to load and store
       encrypted data in SharedPreferences.
     path: samples/dataprotect
     publish: false
     upstream_dependencies:
+    - concept-base
     - lib-dataprotect
+    - lib-publicsuffixlist
+    - support-base
     - support-ktx
+    - support-utils
+    - tooling-lint
   samples-firefox-accounts:
     description: A simple app demoing Firefox Accounts integration.
     path: samples/firefox-accounts
     publish: false
     upstream_dependencies:
+    - concept-base
+    - concept-fetch
+    - concept-storage
+    - concept-sync
     - feature-qr
+    - lib-dataprotect
     - lib-fetch-httpurlconnection
+    - lib-publicsuffixlist
+    - lib-state
     - service-firefox-accounts
+    - service-glean
     - support-base
+    - support-ktx
     - support-rusthttp
     - support-rustlog
+    - support-sync-telemetry
+    - support-utils
+    - tooling-lint
   samples-glean:
     description: An app demoing how to use the Glean library to collect and send telemetry
       data.
     path: samples/glean
     publish: false
     upstream_dependencies:
+    - browser-errorpages
+    - browser-state
+    - concept-base
+    - concept-engine
+    - concept-fetch
+    - concept-storage
     - lib-fetch-httpurlconnection
+    - lib-publicsuffixlist
+    - lib-state
     - samples-glean-library
     - service-glean
     - service-nimbus
     - support-base
+    - support-ktx
+    - support-locale
     - support-rusthttp
     - support-rustlog
+    - support-utils
+    - tooling-lint
+    - ui-icons
   samples-glean-library:
     description: A third-party library used by samples-glean to demonstrate multi-library
       support for Glean.
     path: samples/glean/samples-glean-library
     publish: false
     upstream_dependencies:
+    - concept-base
+    - concept-fetch
+    - lib-publicsuffixlist
     - service-glean
+    - support-base
+    - support-ktx
+    - support-utils
+    - tooling-lint
   samples-sync:
     description: A simple app demoing Firefox Sync (History, Bookmarks, etc) integration.
     path: samples/sync
     publish: false
     upstream_dependencies:
     - browser-storage-sync
+    - concept-base
+    - concept-fetch
     - concept-storage
+    - concept-sync
     - concept-toolbar
     - lib-dataprotect
     - lib-fetch-httpurlconnection
+    - lib-publicsuffixlist
+    - lib-state
     - service-firefox-accounts
+    - service-glean
     - service-sync-autofill
     - service-sync-logins
+    - support-base
+    - support-ktx
     - support-rusthttp
     - support-rustlog
+    - support-sync-telemetry
+    - support-utils
+    - tooling-lint
   samples-sync-logins:
     description: A simple app demoing Firefox Sync (Logins) integration.
     path: samples/sync-logins
     publish: false
     upstream_dependencies:
+    - concept-base
+    - concept-fetch
     - concept-storage
+    - concept-sync
     - lib-dataprotect
     - lib-fetch-httpurlconnection
+    - lib-publicsuffixlist
+    - lib-state
     - service-firefox-accounts
+    - service-glean
     - service-sync-logins
+    - support-base
+    - support-ktx
     - support-rusthttp
     - support-rustlog
+    - support-sync-telemetry
+    - support-utils
+    - tooling-lint
   samples-toolbar:
     description: An app demoing multiple customized toolbars using the browser-toolbar
       component.
@@ -984,14 +1745,26 @@ projects:
     publish: false
     upstream_dependencies:
     - browser-domains
+    - browser-errorpages
     - browser-menu
     - browser-menu2
+    - browser-state
     - browser-toolbar
+    - concept-base
     - concept-engine
+    - concept-fetch
     - concept-menu
+    - concept-storage
+    - concept-toolbar
+    - feature-session
     - feature-toolbar
+    - lib-publicsuffixlist
+    - lib-state
+    - support-base
     - support-ktx
     - support-utils
+    - tooling-lint
+    - ui-autocomplete
     - ui-colors
     - ui-icons
     - ui-tabcounter
@@ -1000,77 +1773,119 @@ projects:
     path: components/service/contile
     publish: true
     upstream_dependencies:
+    - browser-storage-sync
+    - concept-base
     - concept-fetch
+    - concept-storage
+    - concept-sync
+    - concept-toolbar
     - feature-top-sites
+    - lib-publicsuffixlist
+    - service-glean
     - support-base
     - support-ktx
+    - support-sync-telemetry
     - support-test
+    - support-utils
+    - tooling-lint
   service-digitalassetlinks:
     description: A library for communicating with the Digital Asset Links API.
     path: components/service/digitalassetlinks
     publish: true
     upstream_dependencies:
+    - concept-base
     - concept-fetch
+    - lib-publicsuffixlist
     - support-base
     - support-ktx
     - support-test
     - support-utils
+    - tooling-lint
   service-firefox-accounts:
     description: A library for integrating with Firefox Accounts.
     path: components/service/firefox-accounts
     publish: true
     upstream_dependencies:
+    - concept-base
+    - concept-fetch
     - concept-storage
     - concept-sync
     - lib-dataprotect
+    - lib-publicsuffixlist
     - lib-state
+    - service-glean
     - support-base
     - support-ktx
     - support-sync-telemetry
     - support-test
     - support-test-libstate
     - support-utils
+    - tooling-lint
   service-glean:
     description: A client-side telemetry SDK for collecting metrics and sending them
       to the Mozilla telemetry service
     path: components/service/glean
     publish: true
     upstream_dependencies:
+    - concept-base
     - concept-fetch
     - lib-fetch-httpurlconnection
     - lib-fetch-okhttp
+    - lib-publicsuffixlist
     - support-base
     - support-ktx
     - support-test
     - support-utils
+    - tooling-lint
   service-location:
     description: A library for providing location-based services.
     path: components/service/location
     publish: true
     upstream_dependencies:
+    - concept-base
     - concept-fetch
     - lib-fetch-httpurlconnection
+    - lib-publicsuffixlist
     - support-base
     - support-ktx
     - support-test
+    - support-utils
+    - tooling-lint
   service-nimbus:
     description: A client-side experiment SDK
     path: components/service/nimbus
     publish: true
     upstream_dependencies:
+    - browser-errorpages
+    - browser-state
+    - concept-base
+    - concept-engine
+    - concept-fetch
+    - concept-storage
+    - lib-publicsuffixlist
+    - lib-state
     - support-base
+    - support-ktx
     - support-locale
     - support-test
+    - support-utils
+    - tooling-lint
+    - ui-icons
   service-pocket:
     description: A library to communicate with the Pocket API
     path: components/service/pocket
     publish: true
     upstream_dependencies:
+    - concept-base
     - concept-fetch
     - lib-fetch-httpurlconnection
+    - lib-publicsuffixlist
+    - support-android-test
     - support-base
     - support-ktx
     - support-test
+    - support-utils
+    - tooling-lint
   service-sync-autofill:
     description: A library for autofilling addresses and credit cards.
     path: components/service/sync-autofill
@@ -1080,26 +1895,36 @@ projects:
     - concept-storage
     - concept-sync
     - lib-dataprotect
+    - lib-publicsuffixlist
+    - support-base
     - support-ktx
     - support-test
     - support-utils
+    - tooling-lint
   service-sync-logins:
     description: A library for integrating with Firefox Sync - Logins.
     path: components/service/sync-logins
     publish: true
     upstream_dependencies:
+    - concept-base
+    - concept-fetch
     - concept-storage
     - concept-sync
     - lib-dataprotect
+    - lib-publicsuffixlist
     - service-glean
+    - support-base
+    - support-ktx
     - support-sync-telemetry
     - support-utils
+    - tooling-lint
   support-android-test:
     description: A collection of helpers for testing components from instrumented
       (on device) tests.
     path: components/support/android-test
     publish: true
-    upstream_dependencies: []
+    upstream_dependencies:
+    - tooling-lint
   support-base:
     description: Base component containing building blocks for components.
     path: components/support/base
@@ -1107,41 +1932,64 @@ projects:
     upstream_dependencies:
     - concept-base
     - support-test
+    - tooling-lint
   support-images:
     description: A collection of helpers for handling images such as icons and thumbnails.
     path: components/support/images
     publish: true
     upstream_dependencies:
+    - concept-base
     - concept-fetch
     - support-base
     - support-test
+    - tooling-lint
   support-ktx:
     description: A set of Kotlin extensions.
     path: components/support/ktx
     publish: true
     upstream_dependencies:
+    - browser-errorpages
+    - concept-base
+    - concept-engine
+    - concept-fetch
+    - concept-storage
     - lib-publicsuffixlist
+    - support-android-test
     - support-base
     - support-test
     - support-test-fakes
     - support-utils
+    - tooling-lint
+    - ui-icons
   support-locale:
     description: A component to allow apps to change the system defined language by
       their custom one
     path: components/support/locale
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-state
+    - concept-base
+    - concept-engine
+    - concept-fetch
+    - concept-storage
+    - lib-publicsuffixlist
+    - lib-state
     - support-base
+    - support-ktx
     - support-test
     - support-test-libstate
     - support-utils
+    - tooling-lint
+    - ui-icons
   support-rusterrors:
     description: A bridge for reporting Rust errors to Sentry/Glean
     path: components/support/rusterrors
     publish: true
     upstream_dependencies:
+    - concept-base
     - support-base
+    - tooling-lint
   support-rusthttp:
     description: A bridge allowing configuration of Rust HTTP requests without directly
       depending on the application services library
@@ -1149,67 +1997,108 @@ projects:
     publish: true
     upstream_dependencies:
     - concept-fetch
+    - tooling-lint
   support-rustlog:
     description: A bridge allowing log messages from Rust code to be sent to the log
       system in support-base
     path: components/support/rustlog
     publish: true
     upstream_dependencies:
+    - concept-base
     - support-base
     - support-test
+    - tooling-lint
   support-sync-telemetry:
     description: A collection of sync-related telemetry helper classes and ping descriptions.
     path: components/support/sync-telemetry
     publish: true
     upstream_dependencies:
+    - concept-base
+    - concept-fetch
+    - lib-publicsuffixlist
     - service-glean
     - support-base
+    - support-ktx
     - support-test
+    - support-utils
+    - tooling-lint
   support-test:
     description: A collection of helpers for testing components (local unit tests).
     path: components/support/test
     publish: true
     upstream_dependencies:
+    - concept-base
+    - lib-publicsuffixlist
     - support-base
     - support-ktx
+    - support-utils
+    - tooling-lint
   support-test-appservices:
     description: A component for synchronizing Application Services' unit testing
       dependencies used in Android Components.
     path: components/support/test-appservices
     publish: true
-    upstream_dependencies: []
+    upstream_dependencies:
+    - tooling-lint
   support-test-fakes:
     description: A collection of fake implementations for testing purposes.
     path: components/support/test-fakes
     publish: true
     upstream_dependencies:
+    - browser-errorpages
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-storage
+    - lib-publicsuffixlist
+    - support-base
+    - support-ktx
+    - support-utils
+    - tooling-lint
+    - ui-icons
   support-test-libstate:
     description: A collection of helpers for testing functionality that relies on
       the lib-state component (local unit tests).
     path: components/support/test-libstate
     publish: true
     upstream_dependencies:
+    - concept-base
+    - lib-publicsuffixlist
     - lib-state
+    - support-base
+    - support-ktx
+    - support-utils
+    - tooling-lint
   support-utils:
     description: A collection of generic helper classes.
     path: components/support/utils
     publish: true
     upstream_dependencies:
+    - concept-base
     - support-base
     - support-test
+    - tooling-lint
   support-webextensions:
     description: A component containing building blocks for features implemented as
       web extensions.
     path: components/support/webextensions
     publish: true
     upstream_dependencies:
+    - browser-errorpages
     - browser-state
+    - concept-base
     - concept-engine
+    - concept-fetch
+    - concept-storage
+    - lib-publicsuffixlist
+    - lib-state
     - support-base
     - support-ktx
     - support-test
     - support-test-libstate
+    - support-utils
+    - tooling-lint
+    - ui-icons
   tooling-detekt:
     description: Custom Detekt rules for internal use.
     path: components/tooling/detekt
@@ -1221,6 +2110,7 @@ projects:
     publish: false
     upstream_dependencies:
     - concept-fetch
+    - tooling-lint
   tooling-lint:
     description: Custom Lint checks for using and writing components.
     path: components/tooling/lint
@@ -1231,41 +2121,52 @@ projects:
     path: components/ui/autocomplete
     publish: true
     upstream_dependencies:
+    - concept-base
     - support-base
     - support-test
     - support-utils
+    - tooling-lint
   ui-colors:
     description: The standard set of Photon colors.
     path: components/ui/colors
     publish: true
-    upstream_dependencies: []
+    upstream_dependencies:
+    - tooling-lint
   ui-fonts:
     description: Convenience accessor for fonts used by Mozilla.
     path: components/ui/fonts
     publish: true
-    upstream_dependencies: []
+    upstream_dependencies:
+    - tooling-lint
   ui-icons:
     description: A collection of often used browser icons.
     path: components/ui/icons
     publish: true
-    upstream_dependencies: []
+    upstream_dependencies:
+    - tooling-lint
   ui-tabcounter:
     description: A tab counter for browsers.
     path: components/ui/tabcounter
     publish: true
     upstream_dependencies:
     - browser-menu2
+    - concept-base
     - concept-menu
+    - lib-publicsuffixlist
     - support-base
     - support-ktx
     - support-test
     - support-utils
+    - tooling-lint
     - ui-icons
   ui-widgets:
     description: The standard set of Mozilla widgets.
     path: components/ui/widgets
     publish: true
     upstream_dependencies:
+    - concept-base
+    - support-base
     - support-test
+    - tooling-lint
     - ui-colors
     - ui-icons

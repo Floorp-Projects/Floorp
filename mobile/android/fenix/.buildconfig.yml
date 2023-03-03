@@ -3,6 +3,7 @@ projects:
     upstream_dependencies:
     - browser-domains
     - browser-engine-gecko
+    - browser-errorpages
     - browser-icons
     - browser-menu
     - browser-menu2
@@ -17,6 +18,7 @@ projects:
     - concept-awesomebar
     - concept-base
     - concept-engine
+    - concept-fetch
     - concept-menu
     - concept-push
     - concept-storage
@@ -78,10 +80,12 @@ projects:
     - support-rusterrors
     - support-rusthttp
     - support-rustlog
+    - support-sync-telemetry
     - support-test
     - support-test-libstate
     - support-utils
     - support-webextensions
+    - ui-autocomplete
     - ui-colors
     - ui-icons
     - ui-tabcounter
