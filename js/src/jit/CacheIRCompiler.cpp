@@ -9279,6 +9279,37 @@ bool CacheIRCompiler::emitAssertRecoveredOnBailoutResult(ValOperandId valId,
   return true;
 }
 
+bool CacheIRCompiler::emitAssertPropertyLookup(ObjOperandId objId,
+                                               uint32_t idOffset,
+                                               uint32_t slotOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  Register obj = allocator.useRegister(masm, objId);
+
+  AutoScratchRegister id(allocator, masm);
+  AutoScratchRegister slot(allocator, masm);
+
+  LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+  masm.PushRegsInMask(save);
+
+  masm.setupUnalignedABICall(id);
+
+  StubFieldOffset idField(idOffset, StubField::Type::String);
+  emitLoadStubField(idField, id);
+
+  StubFieldOffset slotField(slotOffset, StubField::Type::RawInt32);
+  emitLoadStubField(slotField, slot);
+
+  masm.passABIArg(obj);
+  masm.passABIArg(id);
+  masm.passABIArg(slot);
+  using Fn = void (*)(NativeObject*, PropertyName*, uint32_t);
+  masm.callWithABI<Fn, js::jit::AssertPropertyLookup>();
+  masm.PopRegsInMask(save);
+
+  return true;
+}
+
 #ifdef FUZZING_JS_FUZZILLI
 bool CacheIRCompiler::emitFuzzilliHashResult(ValOperandId valId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);

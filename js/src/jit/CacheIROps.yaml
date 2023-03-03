@@ -3046,6 +3046,15 @@
     val: ValId
     mustBeRecovered: BoolImm
 
+- name: AssertPropertyLookup
+  shared: true
+  transpile: true
+  cost_estimate: 4
+  args:
+    obj: ObjId
+    id: PropertyNameField
+    slot: RawInt32Field
+
 #ifdef FUZZING_JS_FUZZILLI
 - name: FuzzilliHashResult
   shared: true
