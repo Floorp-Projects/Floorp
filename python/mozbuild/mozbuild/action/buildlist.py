@@ -16,8 +16,8 @@ from mozbuild.util import ensureParentDir, lock_file
 
 
 def addEntriesToListFile(listFile, entries):
-    """Given a file |listFile| containing one entry per line,
-    add each entry in |entries| to the file, unless it is already
+    """Given a file ``listFile`` containing one entry per line,
+    add each entry in ``entries`` to the file, unless it is already
     present."""
     ensureParentDir(listFile)
     lock = lock_file(listFile + ".lck")

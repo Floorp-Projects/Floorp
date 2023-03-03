@@ -439,9 +439,11 @@ class tags(InstanceFilter):
 
 class failures(InstanceFilter):
     """
-    [test_foobar.html]
-    fail-if =
-      keyword # <comment>
+    .. code-block:: ini
+
+        [test_foobar.html]
+        fail-if =
+          keyword # <comment>
 
     :param keywords: A keyword to filter tests on
     """

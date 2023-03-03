@@ -116,7 +116,7 @@ def register_callback_action(
         JSON schema specifying input accepted by the action.
         This is optional and can be left ``null`` if no input is taken.
     permission : string
-        This defaults to ``generic` and needs to be set for actions that need
+        This defaults to ``generic`` and needs to be set for actions that need
         additional permissions. It appears appears in ci-configuration and
         various role and hook
         names.

@@ -21,41 +21,54 @@ class ErrorCollector(object):
 
     Warnings, errors and fatal errors may be logged by calls to the following
     functions:
-        errors.warn(message)
-        errors.error(message)
-        errors.fatal(message)
+      - errors.warn(message)
+      - errors.error(message)
+      - errors.fatal(message)
 
     Warnings only send the message on the logging output, while errors and
     fatal errors send the message and throw an ErrorMessage exception. The
     exception, however, may be deferred. See further below.
 
     Errors may be ignored by calling:
-        errors.ignore_errors()
+      - errors.ignore_errors()
 
     After calling that function, only fatal errors throw an exception.
 
     The warnings, errors or fatal errors messages may be augmented with context
     information when a context is provided. Context is defined by a pair
     (filename, linenumber), and may be set with errors.context() used as a
+
     context manager:
+
+    .. code-block:: python
+
         with errors.context(filename, linenumber):
             errors.warn(message)
 
     Arbitrary nesting is supported, both for errors.context calls:
+
+    .. code-block:: python
+
         with errors.context(filename1, linenumber1):
             errors.warn(message)
             with errors.context(filename2, linenumber2):
                 errors.warn(message)
 
     as well as for function calls:
+
+    .. code-block:: python
+
         def func():
             errors.warn(message)
-        with errors.context(filename, linenumber):
-            func()
+            with errors.context(filename, linenumber):
+                func()
 
     Errors and fatal errors can have their exception thrown at a later time,
     allowing for several different errors to be reported at once before
     throwing. This is achieved with errors.accumulate() as a context manager:
+
+    .. code-block:: python
+
         with errors.accumulate():
             if test1:
                 errors.error(message1)

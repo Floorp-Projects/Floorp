@@ -66,9 +66,8 @@ def is_executable(path):
     """
     Return whether a given file path points to an executable or a library,
     where an executable or library is identified by:
-        - the file extension on OS/2 and WINNT
-        - the file signature on OS/X and ELF systems (GNU/Linux, Android, BSD,
-          Solaris)
+    - the file extension on OS/2 and WINNT
+    - the file signature on OS/X and ELF systems (GNU/Linux, Android, BSD, Solaris)
 
     As this function is intended for use to choose between the ExecutableFile
     and File classes in FileFinder, and choosing ExecutableFile only matters

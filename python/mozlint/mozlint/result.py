@@ -123,11 +123,14 @@ class Issue(object):
 
 
 class IssueEncoder(JSONEncoder):
-    """Class for encoding :class:`~result.Issue`s to json.
+    """Class for encoding :class:`~result.Issue` to json.
 
     Usage:
 
+    .. code-block:: python
+
         json.dumps(results, cls=IssueEncoder)
+
     """
 
     def default(self, o):

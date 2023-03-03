@@ -775,7 +775,7 @@ def set_test_setting(config, tasks):
     This transform adds a ``test-setting`` object to the ``extra`` portion of
     all test tasks, of the form:
 
-    .. code-block:: json
+    .. code-block::
 
         {
             "platform": { ... },

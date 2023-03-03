@@ -280,7 +280,7 @@ def find_and_update_from_json(*dirs, **kwargs):
     :param tuple dirs: Directories in which to look for the file.
     :param dict kwargs: optional values:
                         raise_exception: if True, exceptions are raised.
-                                         False by default.
+                        False by default.
     :returns: None: default behavior if mozinfo.json cannot be found.
               json_path: string representation of mozinfo.json path.
     :raises: IOError: if raise_exception is True and file is not found.

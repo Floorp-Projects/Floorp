@@ -21,7 +21,7 @@ class LintProcess(ProcessHandlerMixin, ABC):
     def process_line(self, line):
         """Process a single line of output.
 
-        The implementation is responsible for creating one or more :class:`~mozlint.result.Issue`s
+        The implementation is responsible for creating one or more :class:`~mozlint.result.Issue`
         and storing them somewhere accessible.
 
         Args:

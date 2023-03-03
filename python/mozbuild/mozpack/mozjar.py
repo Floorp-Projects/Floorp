@@ -39,19 +39,24 @@ class JarStruct(object):
     field names. In the latter case, the field is considered to be a string
     buffer with a length given in that field.
     For example,
+
+    .. code-block:: python
+
         STRUCT = [
             ('version', 'uint32'),
             ('filename_size', 'uint16'),
             ('filename', 'filename_size')
         ]
+
     describes a structure with a 'version' 32-bits unsigned integer field,
     followed by a 'filename_size' 16-bits unsigned integer field, followed by a
     filename_size-long string buffer 'filename'.
 
     Fields that are used as other fields size are not stored in objects. In the
     above example, an instance of such subclass would only have two attributes:
-        obj['version']
-        obj['filename']
+      - obj['version']
+      - obj['filename']
+
     filename_size would be obtained with len(obj['filename']).
 
     JarStruct subclasses instances can be either initialized from existing data
@@ -561,6 +566,7 @@ class JarWriter(object):
             - (...)
             - End of central directory, pointing at first central directory
               entry.
+
         The duplication of the End of central directory is to accomodate some
         Zip reading tools that want an end of central directory structure to
         follow the central directory entries.

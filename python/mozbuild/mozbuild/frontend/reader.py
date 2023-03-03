@@ -1066,7 +1066,7 @@ class BuildReader(object):
         This starts with a single mozbuild file, executes it, and descends into
         other referenced files per our traversal logic.
 
-        The traversal logic is to iterate over the *DIRS variables, treating
+        The traversal logic is to iterate over the ``*DIRS`` variables, treating
         each element as a relative directory path. For each encountered
         directory, we will open the moz.build file located in that
         directory in a new Sandbox and process it.

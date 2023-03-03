@@ -61,11 +61,14 @@ class ArtifactPersistLimit(dlmanager.PersistLimit):
     After a download finishes, the newly downloaded file is registered, and the
     oldest files registered to the PersistLimit instance are removed depending
     on the size and file limits it's configured for.
+
     This is all good, but there are a few tweaks we want here:
-    - We have pickle files in the cache directory that we don't want purged.
-    - Files that were just downloaded in the same session shouldn't be purged.
-      (if for some reason we end up downloading more than the default max size,
-       we don't want the files to be purged)
+
+      - We have pickle files in the cache directory that we don't want purged.
+      - Files that were just downloaded in the same session shouldn't be
+        purged. (if for some reason we end up downloading more than the default
+        max size, we don't want the files to be purged)
+
     To achieve this, this subclass of PersistLimit inhibits the register_file
     method for pickle files and tracks what files were downloaded in the same
     session to avoid removing them.

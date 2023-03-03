@@ -64,10 +64,10 @@ class ArtifactSubCommand(SubCommand):
 def artifact(command_context):
     """Download, cache, and install pre-built binary artifacts to build Firefox.
 
-    Use |mach build| as normal to freshen your installed binary libraries:
+    Use ``mach build`` as normal to freshen your installed binary libraries:
     artifact builds automatically download, cache, and install binary
     artifacts from Mozilla automation, replacing whatever may be in your
-    object directory.  Use |mach artifact last| to see what binary artifacts
+    object directory.  Use ``mach artifact last`` to see what binary artifacts
     were last used.
 
     Never build libxul again!

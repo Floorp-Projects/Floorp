@@ -13,10 +13,11 @@ Problem:
     be able to effectively update a library automatically and send useful try runs in.
 
     So far, it has been difficult to do that.
+
     Why:
-        Some files need to go into UNIFIED_SOURCES vs SOURCES
-        Some files are os-specific, and need to go into per-OS conditionals
-        Some files are both UNIFIED_SOURCES/SOURCES sensitive and OS-specific.
+        - Some files need to go into UNIFIED_SOURCES vs SOURCES
+        - Some files are os-specific, and need to go into per-OS conditionals
+        - Some files are both UNIFIED_SOURCES/SOURCES sensitive and OS-specific.
 
 Proposal:
     Design an algorithm that maps a third party library file to a suspected moz.build location.
@@ -25,17 +26,17 @@ Proposal:
 
 Initial Algorithm
     Given a file, which includes the filename and the path from gecko root, we want to find the
-        correct moz.build file and location within that file.
+    correct moz.build file and location within that file.
     Take the path of the file, and iterate up the directory tree, looking for moz.build files as
     we go.
     Consider each of these moz.build files, starting with the one closest to the file.
     Within a moz.build file, identify the SOURCES or UNIFIED_SOURCES block(s) that contains a file
-        in the same directory path as the file to be added.
+    in the same directory path as the file to be added.
     If there is only one such block, use that one.
     If there are multiple blocks, look at the files within each block and note the longest length
-        of a common prefix (including partial filenames - if we just did full directories the
-        result would be the same as the prior step and we would not narrow the results down). Use
-        the block containing the longest prefix. (We call this 'guessing'.)
+    of a common prefix (including partial filenames - if we just did full directories the
+    result would be the same as the prior step and we would not narrow the results down). Use
+    the block containing the longest prefix. (We call this 'guessing'.)
 
 Result of the proposal:
     The initial implementation works on 1675 of 1977 elligible files.
@@ -46,8 +47,8 @@ Result of the proposal:
         - per-cpu-feature files, where only a single file is added under a conditional
         - When guessing, because of a len(...) > longest_so_far comparison, we would prefer the
           first block we found.
-          -  Changing this to prefer UNIFIED_SOURCES in the event of a tie
-             yielded 17 additional correct assignments (about a 1% improvement)
+          - Changing this to prefer UNIFIED_SOURCES in the event of a tie
+            yielded 17 additional correct assignments (about a 1% improvement)
         - As a result of the change immediately above, when guessing, because given equal
           prefixes, we would prefer a UNIFIED_SOURCES block over other blocks, even if the other
           blocks are longer
@@ -59,6 +60,7 @@ Result of the proposal:
         - Those specified in source assignments composed of generators (e.g. [f for f in '%.c'])
         - Those specified in source assignments to subscripted variables
           (e.g. SOURCES += foo['x86_files'])
+
     We needed to iterate up the directory and look at a different moz.build file _zero_ times.
         This indicates this code is probably not needed, and therefore we will remove it from the
         algorithm.
@@ -87,7 +89,7 @@ source-assignment
     We specifically look only for these two variable names to avoid identifying things
     such as CXX_FLAGS.
 
-    Sometimes; however, there is an intermediary variable, such as SOURCES += celt_filenames
+    Sometimes; however, there is an intermediary variable, such as `SOURCES += celt_filenames`
     In this situation we find the celt_filenames assignment, and treat it as a 'source-assignment'
 
 source-assignment-location
@@ -106,12 +108,12 @@ source-assignment-location
 
     For example:
 
-    When SOURCES += ['ffpvx.xpp'] appears as the first line of the file (or any other
-    unindented-location) its source-assignment-location will be "> SOURCES 1".
+    When `SOURCES += ['ffpvx.xpp']` appears as the first line of the file (or any other
+    unindented-location) its source-assignment-location will be `> SOURCES 1`.
 
-    When SOURCES += ['ffpvx.xpp'] appears inside a conditional such as
+    When `SOURCES += ['ffpvx.xpp']` appears inside a conditional such as
     `CONFIG['OS_TARGET'] == 'WINNT'` then its source-assignment-location will be
-    "> if CONFIG['OS_TARGET'] == 'WINNT' > SOURCES 1"
+    `> if CONFIG['OS_TARGET'] == 'WINNT' > SOURCES 1`
 
     When SOURCES += ['ffpvx.xpp'] appears as the second line of the file, and a different
     SOURCES += [] was the first line, then its source-assignment-location will be "> SOURCES 2".
@@ -146,9 +148,9 @@ normalized-filename
 
     Normalization gets more complicated when dealing with separate vendoring and moz.yaml
     directories. This is because a file can be considered normalized when it looks like
-       third_party/libdav1d/src/a.cpp
+    third_party/libdav1d/src/a.cpp
     _or_ when it looks like
-       media/libdav1d/../../third_party/libdav1d/src/a.cpp
+    media/libdav1d/../../third_party/libdav1d/src/a.cpp
     This is because in the moz.build file, it will be specified as
     `../../third_party/libdav1d/src/a.cpp` and we 'normalize' it by prepending the path to the
     moz.build file.
@@ -162,13 +164,13 @@ normalized-filename
     Whenever a filename is normalized, it should be specified as such in the variable name,
     either as a prefix (normalized_filename) or a suffix (target_filename_normalized)
 
-statistic_
+statistic
     Using some hacky stuff, we report statistics about how many times we hit certain branches of
     the code.
     e.g.
-        "How many times did we refine a guess based on prefix length"
-        "How many times did we refine a guess based on the number of files in the block"
-        "What is the histogram of guess candidates"
+      - "How many times did we refine a guess based on prefix length"
+      - "How many times did we refine a guess based on the number of files in the block"
+      - "What is the histogram of guess candidates"
 
     We do this to identify how frequently certain code paths were taken, allowing us to identify
     strange behavior and investigate outliers. This process lead to identifying bugs and small
@@ -524,11 +526,13 @@ def get_mozbuild_file_search_order(
     Returns an ordered list of normalized moz.build filenames to consider for a given filename
 
     normalized_filename: a source filename normalized to the gecko root
-    moz_yaml_dir: the path from gecko_root to the moz.yaml file (which is the root of the
-                  moz.build files)
-    moz_yaml_dir: the path to where the library's source files are
-    all_mozbuild_filenames_normalized: (optional) the list of all third-party moz.build files
 
+    moz_yaml_dir: the path from gecko_root to the moz.yaml file (which is the root of the
+    moz.build files)
+
+    moz_yaml_dir: the path to where the library's source files are
+
+    all_mozbuild_filenames_normalized: (optional) the list of all third-party moz.build files
     If all_mozbuild_filenames_normalized is not specified, we look in the filesystem.
 
     The list is built out of two distinct steps.
@@ -541,6 +545,9 @@ def get_mozbuild_file_search_order(
     directory.
 
     Example:
+
+    .. code-block:: python
+
         When moz_yaml directory != vendoring_directory:
             moz_yaml_dir = foo/bar/
             vendoring_dir = third_party/baz/
@@ -680,7 +687,7 @@ def guess_best_assignment(source_assignments, filename_normalized):
     assignment which contains a filename with the longest matching prefix.
 
     e.g: "foo/asm_neon.c" compared to ["foo/main.c", "foo/all_utility.c"], ["foo/asm_arm.c"]
-            -> ["foo/asm_arm.c"] (match of foo/asm_)
+            -> ["foo/asm_arm.c"] (match of `foo/asm_`)
     """
     length_of_longest_match = 0
     source_assignment_location_of_longest_match = None
@@ -722,9 +729,9 @@ def edit_moz_build_file_to_add_file(
     I had _really_ hoped to replace this whole damn thing with something that adds a
     node to the AST, dumps the AST out, and then runs black on the file but there are
     some issues:
-      - third party moz.build files (or maybe all moz.build files) aren't always run
-        through black
-      - dumping the ast out losing comments
+    - third party moz.build files (or maybe all moz.build files) aren't always run through black
+    - dumping the ast out losing comments
+
     """
 
     # Make sure that we only write in forward slashes

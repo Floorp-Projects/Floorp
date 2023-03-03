@@ -994,7 +994,7 @@ class TestRecursiveMakeBackend(BackendTester):
         self.assertEqual(lines, expected)
 
     def test_rust_programs(self):
-        """Test that {HOST_,}RUST_PROGRAMS are written to backend.mk correctly."""
+        """Test that `{HOST_,}RUST_PROGRAMS` are written to backend.mk correctly."""
         env = self._consume("rust-programs", RecursiveMakeBackend)
 
         backend_path = mozpath.join(env.topobjdir, "code/backend.mk")

@@ -251,6 +251,7 @@ class RecursiveMakeTraversal(object):
 
         filter is a function with the following signature:
             def filter(current, subdirs)
+
         where current is the directory being traversed, and subdirs the
         SubDirectories instance corresponding to it.
         The filter function returns a tuple (filtered_current, filtered_parallel,
