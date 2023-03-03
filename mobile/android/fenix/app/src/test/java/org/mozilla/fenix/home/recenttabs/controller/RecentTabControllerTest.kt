@@ -59,7 +59,6 @@ class RecentTabControllerTest {
             DefaultRecentTabsController(
                 selectTabUseCase = selectTabUseCase.selectTab,
                 navController = navController,
-                store = store,
                 appStore = appStore,
             ),
         )
@@ -68,7 +67,6 @@ class RecentTabControllerTest {
     @Test
     fun handleRecentTabClicked() {
         assertNull(RecentTabs.recentTabOpened.testGetValue())
-        assertNull(RecentTabs.inProgressMediaTabOpened.testGetValue())
 
         every { navController.currentDestination } returns mockk {
             every { id } returns R.id.homeFragment
@@ -88,13 +86,11 @@ class RecentTabControllerTest {
             navController.navigate(R.id.browserFragment)
         }
         assertNotNull(RecentTabs.recentTabOpened.testGetValue())
-        assertNull(RecentTabs.inProgressMediaTabOpened.testGetValue())
     }
 
     @Test
     fun handleRecentTabClickedForMediaTab() {
         assertNull(RecentTabs.recentTabOpened.testGetValue())
-        assertNull(RecentTabs.inProgressMediaTabOpened.testGetValue())
 
         every { navController.currentDestination } returns mockk {
             every { id } returns R.id.homeFragment
@@ -115,8 +111,7 @@ class RecentTabControllerTest {
             selectTabUseCase.selectTab.invoke(inProgressMediaTab.id)
             navController.navigate(R.id.browserFragment)
         }
-        assertNull(RecentTabs.recentTabOpened.testGetValue())
-        assertNotNull(RecentTabs.inProgressMediaTabOpened.testGetValue())
+        assertNotNull(RecentTabs.recentTabOpened.testGetValue())
     }
 
     @Test

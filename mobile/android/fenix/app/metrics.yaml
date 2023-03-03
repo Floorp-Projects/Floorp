@@ -8084,23 +8084,6 @@ recent_tabs:
     metadata:
       tags:
         - RecentTabs
-  in_progress_media_tab_opened:
-    type: event
-    description: |
-      User has opened a recent media tab from homescreen.
-    bugs:
-      - https://github.com/mozilla-mobile/fenix/issues/20393
-    data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/20138
-      - https://github.com/mozilla-mobile/fenix/pull/24982
-    data_sensitivity:
-      - interaction
-    notification_emails:
-      - android-probes@mozilla.com
-    expires: 114
-    metadata:
-      tags:
-        - RecentTabs
   section_visible:
     type: boolean
     description: |
