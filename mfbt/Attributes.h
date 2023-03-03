@@ -70,6 +70,14 @@
 #  define MOZ_HAVE_NORETURN_PTR __attribute__((noreturn))
 #endif
 
+#if defined(__clang__)
+#  if __has_attribute(no_stack_protector)
+#    define MOZ_HAVE_NO_STACK_PROTECTOR __attribute__((no_stack_protector))
+#  endif
+#elif defined(__GNUC__)
+#  define MOZ_HAVE_NO_STACK_PROTECTOR __attribute__((no_stack_protector))
+#endif
+
 /*
  * When built with clang analyzer (a.k.a scan-build), define MOZ_HAVE_NORETURN
  * to mark some false positives
@@ -379,6 +387,26 @@
 #  define MOZ_MAYBE_UNUSED __pragma(warning(suppress : 4505))
 #else
 #  define MOZ_MAYBE_UNUSED
+#endif
+
+/*
+ * MOZ_NO_STACK_PROTECTOR, specified at the start of a function declaration,
+ * indicates that the given function should *NOT* be instrumented to detect
+ * stack buffer overflows at runtime. (The function definition does not need to
+ * be annotated.)
+ *
+ *   MOZ_NO_STACK_PROTECTOR int foo();
+ *
+ * Detecting stack buffer overflows at runtime is a security feature. This
+ * modifier should thus only be used on functions which are provably exempt of
+ * stack buffer overflows, for example because they do not use stack buffers.
+ *
+ * This modifier does not affect the corresponding function's linking behavior.
+ */
+#if defined(MOZ_HAVE_NO_STACK_PROTECTOR)
+#  define MOZ_NO_STACK_PROTECTOR MOZ_HAVE_NO_STACK_PROTECTOR
+#else
+#  define MOZ_NO_STACK_PROTECTOR /* no support */
 #endif
 
 #ifdef __cplusplus
