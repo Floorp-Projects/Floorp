@@ -1798,6 +1798,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                            Register scratch,
                                            const void* handlerp, Label* label);
 
+  inline void branchTestObjectIsWasmGcObject(bool isGcObject, Register obj,
+                                             Register scratch, Label* label);
+
   inline void branchTestNeedsIncrementalBarrier(Condition cond, Label* label);
   inline void branchTestNeedsIncrementalBarrierAnyZone(Condition cond,
                                                        Label* label,

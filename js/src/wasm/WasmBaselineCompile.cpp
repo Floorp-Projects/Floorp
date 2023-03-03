@@ -6404,30 +6404,28 @@ void BaseCompiler::branchGcObjectType(RegRef object, uint32_t typeIndex,
                                       bool onSuccess) {
   const TypeDef& castTypeDef = (*moduleEnv_.types)[typeIndex];
   RegPtr superTypeDef = loadTypeDef(typeIndex);
-  RegPtr subTypeDef = needPtr();
-  RegI32 length;
+  RegPtr scratch1 = needPtr();
+  RegI32 scratch2;
   if (castTypeDef.subTypingDepth() >= MinSuperTypeVectorLength) {
-    length = needI32();
+    scratch2 = needI32();
   }
 
   Label fallthrough;
   Label* successLabel = onSuccess ? label : &fallthrough;
   Label* failLabel = onSuccess ? &fallthrough : label;
-  if (succeedOnNull) {
-    masm.branchTestPtr(Assembler::Zero, object, object, successLabel);
-  } else {
-    masm.branchTestPtr(Assembler::Zero, object, object, failLabel);
-  }
-  masm.loadPtr(Address(object, WasmGcObject::offsetOfTypeDef()), subTypeDef);
-  masm.branchWasmTypeDefIsSubtype(subTypeDef, superTypeDef, length,
+  Label* nullLabel = succeedOnNull ? successLabel : failLabel;
+  masm.branchTestPtr(Assembler::Zero, object, object, nullLabel);
+  masm.branchTestObjectIsWasmGcObject(false, object, scratch1, failLabel);
+  masm.loadPtr(Address(object, WasmGcObject::offsetOfTypeDef()), scratch1);
+  masm.branchWasmTypeDefIsSubtype(scratch1, superTypeDef, scratch2,
                                   castTypeDef.subTypingDepth(), label,
                                   onSuccess);
   masm.bind(&fallthrough);
 
   if (castTypeDef.subTypingDepth() >= MinSuperTypeVectorLength) {
-    freeI32(length);
+    freeI32(scratch2);
   }
-  freePtr(subTypeDef);
+  freePtr(scratch1);
   freePtr(superTypeDef);
 }
 
