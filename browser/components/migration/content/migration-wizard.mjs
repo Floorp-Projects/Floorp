@@ -216,6 +216,7 @@ export class MigrationWizard extends HTMLElement {
       .resourceTypes;
     for (let child of this.#resourceTypeList.children) {
       child.hidden = true;
+      child.control.checked = false;
     }
 
     for (let resourceType of resourceTypes) {
@@ -224,8 +225,11 @@ export class MigrationWizard extends HTMLElement {
       );
       if (resourceLabel) {
         resourceLabel.hidden = false;
+        resourceLabel.control.checked = true;
       }
     }
+    let selectAll = this.#shadowRoot.querySelector("#select-all").control;
+    selectAll.checked = true;
   }
 
   /**
