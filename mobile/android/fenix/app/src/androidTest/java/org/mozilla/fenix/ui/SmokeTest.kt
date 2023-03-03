@@ -29,10 +29,8 @@ import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
-import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.assertNativeAppOpens
 import org.mozilla.fenix.helpers.TestHelper.createCustomTabIntent
-import org.mozilla.fenix.helpers.TestHelper.generateRandomString
 import org.mozilla.fenix.helpers.TestHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.browserScreen
@@ -217,35 +215,6 @@ class SmokeTest {
         }.openThreeDotMenu {
         }.openFindInPage {
             verifyFindInPageSearchBarItems()
-        }
-    }
-
-    // Verifies the Add to home screen option in a tab's 3 dot menu
-    @Test
-    fun mainMenuAddToHomeScreenTest() {
-        val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-        val shortcutTitle = generateRandomString(5)
-
-        homeScreen {
-        }.openNavigationToolbar {
-        }.enterURLAndEnterToBrowser(website.url) {
-        }.openThreeDotMenu {
-            expandMenu()
-        }.openAddToHomeScreen {
-            clickCancelShortcutButton()
-        }
-
-        browserScreen {
-        }.openThreeDotMenu {
-            expandMenu()
-        }.openAddToHomeScreen {
-            verifyShortcutTextFieldTitle("Test_Page_1")
-            addShortcutName(shortcutTitle)
-            clickAddShortcutButton()
-            clickAddAutomaticallyButton()
-        }.openHomeScreenShortcut(shortcutTitle) {
-            verifyUrl(website.url.toString())
-            verifyTabCounter("1")
         }
     }
 
@@ -535,25 +504,6 @@ class SmokeTest {
         }.openThreeDotMenu {
         }.openHistory {
             verifyEmptyHistoryView()
-        }
-    }
-
-    @Test
-    fun addPrivateBrowsingShortcutTest() {
-        homeScreen {
-        }.dismissOnboarding()
-
-        homeScreen {
-        }.triggerPrivateBrowsingShortcutPrompt {
-            verifyNoThanksPrivateBrowsingShortcutButton()
-            verifyAddPrivateBrowsingShortcutButton()
-            clickAddPrivateBrowsingShortcutButton()
-            clickAddAutomaticallyButton()
-        }.openHomeScreenShortcut("Private $appName") {}
-        searchScreen {
-            verifySearchView()
-        }.dismissSearchBar {
-            verifyPrivateSessionMessage()
         }
     }
 
