@@ -42,7 +42,19 @@ struct AsyncScrollThumbTransformer {
   // Scale the thumb by |aScale| along |aAxis|, while keeping constant the
   // position of the top denoted by |aExtent|.
   void ScaleThumbBy(const Axis& aAxis, float aScale, ScrollThumbExtent aExtent);
+
+  // Translate the thumb along |aAxis| by |aTranslation| in "scrollbar space"
+  // (CSS pixels along the scrollbar track, similar to e.g.
+  // |mScrollbarData.mThumbStart|).
+  void TranslateThumb(const Axis& aAxis, CSSCoord aTranslation);
 };
+
+void AsyncScrollThumbTransformer::TranslateThumb(const Axis& aAxis,
+                                                 CSSCoord aTranslation) {
+  aAxis.PostTranslate(mScrollbarTransform,
+                      aTranslation * mMetrics.GetDevPixelsPerCSSPixel() *
+                          LayoutDeviceToParentLayerScale(1.0));
+}
 
 void AsyncScrollThumbTransformer::ScaleThumbBy(const Axis& aAxis, float aScale,
                                                ScrollThumbExtent aExtent) {
@@ -69,12 +81,9 @@ void AsyncScrollThumbTransformer::ScaleThumbBy(const Axis& aAxis, float aScale,
   }
   const CSSCoord thumbExtentScaled = thumbExtent * aScale;
   const CSSCoord thumbExtentDelta = thumbExtentScaled - thumbExtent;
-  const ParentLayerCoord thumbExtentDeltaPL =
-      thumbExtentDelta * mMetrics.GetDevPixelsPerCSSPixel() *
-      LayoutDeviceToParentLayerScale(1.0);
 
   aAxis.PostScale(mScrollbarTransform, aScale);
-  aAxis.PostTranslate(mScrollbarTransform, -thumbExtentDeltaPL);
+  TranslateThumb(aAxis, -thumbExtentDelta);
 }
 
 void AsyncScrollThumbTransformer::ApplyTransformForAxis(const Axis& aAxis) {
@@ -175,10 +184,7 @@ void AsyncScrollThumbTransformer::ApplyTransformForAxis(const Axis& aAxis) {
         overscroll < 0 ? ScrollThumbExtent::Start : ScrollThumbExtent::End);
   }
 
-  aAxis.PostTranslate(mScrollbarTransform,
-                      (desiredThumbPos - mScrollbarData.mThumbStart) *
-                          mMetrics.GetDevPixelsPerCSSPixel() *
-                          LayoutDeviceToParentLayerScale(1.0));
+  TranslateThumb(aAxis, desiredThumbPos - mScrollbarData.mThumbStart);
 }
 
 LayerToParentLayerMatrix4x4 AsyncScrollThumbTransformer::ComputeTransform() {
