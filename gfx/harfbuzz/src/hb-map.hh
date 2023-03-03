@@ -317,16 +317,6 @@ struct hb_hashmap_t
     hb_copy (other, *this);
   }
 
-  void keys (hb_set_t &keys_) const
-  {
-    hb_copy (keys() , keys_);
-  }
-
-  void values (hb_set_t &values_) const
-  {
-    hb_copy (values() , values_);
-  }
-
   /*
    * Iterator
    */
