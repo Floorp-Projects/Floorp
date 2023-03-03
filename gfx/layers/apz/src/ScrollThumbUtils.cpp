@@ -84,7 +84,8 @@ void AsyncScrollThumbTransformer::ApplyTransformForAxis(const Axis& aAxis) {
   const ParentLayerCoord overscroll =
       aAxis.GetPointOffset(mApzc->GetOverscrollAmount());
 
-  if (FuzzyEqualsAdditive(asyncZoom, 1.f) && mApzc->IsZero(asyncScroll) &&
+  bool haveAsyncZoom = !FuzzyEqualsAdditive(asyncZoom, 1.f);
+  if (!haveAsyncZoom && mApzc->IsZero(asyncScroll) &&
       mApzc->IsZero(overscroll)) {
     return;
   }
@@ -146,10 +147,12 @@ void AsyncScrollThumbTransformer::ApplyTransformForAxis(const Axis& aAxis) {
 
   const CSSCoord desiredThumbPos = curPos * thumbPosRatio;
 
-  // When scaling the thumb to account for the async zoom, keep the position
-  // of the start of the thumb (which corresponds to the scroll offset)
-  // constant.
-  ScaleThumbBy(aAxis, scale, ScrollThumbExtent::Start);
+  if (haveAsyncZoom) {
+    // When scaling the thumb to account for the async zoom, keep the position
+    // of the start of the thumb (which corresponds to the scroll offset)
+    // constant.
+    ScaleThumbBy(aAxis, scale, ScrollThumbExtent::Start);
+  }
 
   // If the page is overscrolled, additionally squish the thumb in accordance
   // with the overscroll amount.
