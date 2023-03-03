@@ -383,6 +383,46 @@ ScaledFontDWrite::InstanceData::InstanceData(
   }
 }
 
+bool ScaledFontDWrite::HasVariationSettings() {
+  RefPtr<IDWriteFontFace5> ff5;
+  mFontFace->QueryInterface(__uuidof(IDWriteFontFace5),
+                            (void**)getter_AddRefs(ff5));
+  if (!ff5 || !ff5->HasVariations()) {
+    return false;
+  }
+
+  uint32_t count = ff5->GetFontAxisValueCount();
+  if (!count) {
+    return false;
+  }
+
+  RefPtr<IDWriteFontResource> res;
+  if (FAILED(ff5->GetFontResource(getter_AddRefs(res)))) {
+    return false;
+  }
+
+  std::vector<DWRITE_FONT_AXIS_VALUE> defaults(count);
+  if (FAILED(res->GetDefaultFontAxisValues(defaults.data(), count))) {
+    return false;
+  }
+
+  std::vector<DWRITE_FONT_AXIS_VALUE> values(count);
+  if (FAILED(ff5->GetFontAxisValues(values.data(), count))) {
+    return false;
+  }
+
+  for (uint32_t i = 0; i < count; i++) {
+    DWRITE_FONT_AXIS_ATTRIBUTES attr = res->GetFontAxisAttributes(i);
+    if (attr & DWRITE_FONT_AXIS_ATTRIBUTES_VARIABLE) {
+      if (values[i].value != defaults[i].value) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 // Helper for ScaledFontDWrite::GetFontInstanceData: if the font has variation
 // axes, get their current values into the aOutput vector.
 static void GetVariationsFromFontFace(IDWriteFontFace* aFace,

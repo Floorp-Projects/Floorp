@@ -63,6 +63,8 @@ class ScaledFontDWrite final : public ScaledFontBase {
     return (mFontFace->GetSimulations() & DWRITE_FONT_SIMULATIONS_BOLD) != 0;
   }
 
+  bool HasVariationSettings() override;
+
   SkTypeface* CreateSkTypeface() override;
   void SetupSkFontDrawOptions(SkFont& aFont) override;
   SkFontStyle mStyle;
