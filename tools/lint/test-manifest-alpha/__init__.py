@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import difflib
 import os
 import sys
 
@@ -56,6 +57,10 @@ def lint(paths, config, fix=None, **lintargs):
             ):
                 level = "error"
 
+            diff_instance = difflib.Differ()
+            diff_result = diff_instance.compare(test_names, sorted_test_names)
+            diff_list = list(diff_result)
+
             res = {
                 "path": rel_file_path,
                 "lineno": 0,
@@ -65,6 +70,7 @@ def lint(paths, config, fix=None, **lintargs):
                     "Expected ordering: \n\n%s\n\n" % "\n".join(sorted_test_names)
                 ),
                 "level": level,
+                "diff": "\n".join(diff_list),
             }
             results.append(result.from_config(config, **res))
 
