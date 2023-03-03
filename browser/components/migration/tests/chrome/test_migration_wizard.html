@@ -107,8 +107,10 @@
           let node = resourceTypeList.querySelector(`label[data-resource-type="${resourceType}"]`);
           if (migratorInstance.resourceTypes.includes(resourceType)) {
             ok(!isHidden(node), `Selection for ${resourceType} should be shown.`);
+            ok(node.control.checked, `Checkbox for ${resourceType} should be checked.`);
           } else {
             ok(isHidden(node), `Selection for ${resourceType} should be hidden.`);
+            ok(!node.control.checked, `Checkbox for ${resourceType} should be unchecked.`);
           }
         }
       }
@@ -150,8 +152,10 @@
           let node = resourceTypeList.querySelector(`label[data-resource-type="${resourceType}"]`);
           if (migratorInstance.resourceTypes.includes(resourceType)) {
             ok(!isHidden(node), `Selection for ${resourceType} should be shown.`);
+            ok(node.control.checked, `Checkbox for ${resourceType} should be checked.`);
           } else {
             ok(isHidden(node), `Selection for ${resourceType} should be hidden.`);
+            ok(!node.control.checked, `Checkbox for ${resourceType} should be unchecked.`);
           }
         }
       }
@@ -160,6 +164,7 @@
       let summary = gShadowRoot.querySelector("summary");
       let details = gShadowRoot.querySelector("details");
       ok(!isHidden(selectAll), "Selection for select-all should be shown.");
+      ok(selectAll.control.checked, "Checkbox for select-all should be checked.");
       ok(!isHidden(summary), "Summary should be shown.");
       ok(!isHidden(details), "Details should be shown.");
 
