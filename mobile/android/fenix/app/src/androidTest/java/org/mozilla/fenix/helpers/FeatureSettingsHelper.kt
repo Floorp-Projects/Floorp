@@ -88,5 +88,4 @@ enum class ETPPolicy {
     STANDARD,
     STRICT,
     CUSTOM,
-    ;
 }

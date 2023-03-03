@@ -221,7 +221,7 @@ class HistoryMetadataGroupFragment :
 
     private fun promptDeleteAll() {
         if (childFragmentManager.findFragmentByTag(DeleteAllConfirmationDialogFragment.TAG)
-            as? DeleteAllConfirmationDialogFragment != null
+                as? DeleteAllConfirmationDialogFragment != null
         ) {
             return
         }

@@ -171,6 +171,5 @@ class ProfilerStopDialogFragment : DialogFragment() {
     enum class CardState {
         UrlWarningState,
         WaitForProfilerState,
-        ;
     }
 }

@@ -88,7 +88,6 @@ enum class ProfilerSettings(val threads: Array<String>, val features: Array<Stri
     Graphics(graphics_threads, graphics_features),
     Media(media_threads, media_features),
     Networking(networking_threads, networking_features),
-    ;
 }
 
 /**

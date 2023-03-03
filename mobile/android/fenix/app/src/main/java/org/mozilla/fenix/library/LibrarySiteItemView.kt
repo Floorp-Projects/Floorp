@@ -103,7 +103,7 @@ class LibrarySiteItemView @JvmOverloads constructor(
     }
 
     enum class ItemType {
-        SITE, FOLDER;
+        SITE, FOLDER
     }
 
     companion object {

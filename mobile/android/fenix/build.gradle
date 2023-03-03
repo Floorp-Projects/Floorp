@@ -219,7 +219,7 @@ configurations {
 }
 
 dependencies {
-    ktlint("com.pinterest:ktlint:0.47.0") {
+    ktlint("com.pinterest:ktlint:0.48.2") {
         attributes {
             attribute(Bundling.BUNDLING_ATTRIBUTE, getObjects().named(Bundling, Bundling.EXTERNAL))
         }

@@ -40,8 +40,6 @@ class StartupStateProvider(
          * - if the currently started activity is not the first started activity
          */
         UNKNOWN,
-
-        ;
     }
 
     /**

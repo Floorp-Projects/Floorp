@@ -29,7 +29,6 @@ class BookmarkItemMenu(
         OpenAllInNewTabs,
         OpenAllInPrivateTabs,
         Delete,
-        ;
     }
 
     val menuController: MenuController by lazy { BrowserMenuController() }

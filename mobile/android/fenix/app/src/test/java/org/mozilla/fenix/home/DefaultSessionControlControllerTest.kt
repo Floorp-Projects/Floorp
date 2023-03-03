@@ -404,7 +404,7 @@ class DefaultSessionControlControllerTest {
         verify {
             activity.openToBrowserAndLoad(
                 searchTermOrURL = SupportUtils.getGenericSumoURLForTopic
-                (SupportUtils.SumoTopic.PRIVATE_BROWSING_MYTHS),
+                    (SupportUtils.SumoTopic.PRIVATE_BROWSING_MYTHS),
                 newTab = true,
                 from = BrowserDirection.FromHome,
             )

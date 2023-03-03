@@ -113,7 +113,7 @@ object TestHelper {
 
     fun getPermissionAllowID(): String {
         return when
-        (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+            (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
             true -> "com.android.permissioncontroller"
             false -> "com.android.packageinstaller"
         }

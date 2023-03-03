@@ -87,6 +87,6 @@ class LocaleAdapter(private val interactor: LocaleSettingsViewInteractor) :
     }
 
     enum class ItemType {
-        DEFAULT, LOCALE;
+        DEFAULT, LOCALE
     }
 }
