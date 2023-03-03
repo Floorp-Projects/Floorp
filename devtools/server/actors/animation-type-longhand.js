@@ -316,6 +316,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "object-position",
       "offset-anchor",
       "offset-path",
+      "offset-position",
       "offset-rotate",
       "order",
       "perspective-origin",

@@ -8596,6 +8596,13 @@
   mirror: always
   rust: true
 
+# Is support for motion-path offset-position enabled?
+- name: layout.css.motion-path-offset-position.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
 # Pref to control whether the ::marker property restrictions defined in [1]
 # apply.
 #

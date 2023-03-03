@@ -410,6 +410,11 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
     [ test_background_position_transition ];
 }
 
+if (IsCSSPropertyPrefEnabled("layout.css.motion-path-offset-position.enabled")) {
+  supported_properties["offset-position"] =
+    [ test_background_position_transition ];
+}
+
 if (IsCSSPropertyPrefEnabled("layout.css.d-property.enabled")) {
   supported_properties["d"] = [ test_path_function ];
 }
