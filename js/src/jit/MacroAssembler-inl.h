@@ -735,22 +735,6 @@ void MacroAssembler::branchTestObjectIsProxy(bool proxy, Register object,
                Imm32(ShiftedMask), label);
 }
 
-void MacroAssembler::branchTestObjectIsWasmGcObject(bool isGcObject,
-                                                    Register object,
-                                                    Register scratch,
-                                                    Label* label) {
-  constexpr uint32_t ShiftedMask = (Shape::kindMask() << Shape::kindShift());
-  constexpr uint32_t ShiftedKind =
-      (uint32_t(Shape::Kind::WasmGC) << Shape::kindShift());
-  MOZ_ASSERT(object != scratch);
-
-  loadPtr(Address(object, JSObject::offsetOfShape()), scratch);
-  load32(Address(scratch, Shape::offsetOfImmutableFlags()), scratch);
-  and32(Imm32(ShiftedMask), scratch);
-  branch32(isGcObject ? Assembler::Equal : Assembler::NotEqual, scratch,
-           Imm32(ShiftedKind), label);
-}
-
 void MacroAssembler::branchTestProxyHandlerFamily(Condition cond,
                                                   Register proxy,
                                                   Register scratch,
