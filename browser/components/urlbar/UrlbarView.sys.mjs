@@ -450,6 +450,7 @@ export class UrlbarView {
       this.input.searchMode = null;
     }
 
+    this.resultMenu.hidePopup();
     this.removeAccessibleFocus();
     this.input.inputField.setAttribute("aria-expanded", "false");
     this.#openPanelInstance = null;
@@ -783,9 +784,9 @@ export class UrlbarView {
     this.resultMenu.openPopup(anchor, "bottomright topright");
     anchor.toggleAttribute("open", true);
     this.resultMenu.addEventListener(
-      "popuphiding",
+      "popuphidden",
       () => {
-        anchor.toggleAttribute("open", false);
+        anchor.removeAttribute("open");
       },
       { once: true }
     );
@@ -937,7 +938,7 @@ export class UrlbarView {
     this.input.inputField.setAttribute("aria-expanded", "true");
 
     this.input.toggleAttribute("suppress-focus-border", true);
-    this.input.setAttribute("open", "true");
+    this.input.toggleAttribute("open", true);
     this.input.startLayoutExtend();
 
     this.window.addEventListener("resize", this);
