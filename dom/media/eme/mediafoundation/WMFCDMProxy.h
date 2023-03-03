@@ -120,6 +120,7 @@ class WMFCDMProxy : public CDMProxy {
   MozPromiseRequestHolder<GenericPromise> mLoadSessionRequest;
   MozPromiseRequestHolder<GenericPromise> mUpdateSessionRequest;
   MozPromiseRequestHolder<GenericPromise> mCloseSessionRequest;
+  MozPromiseRequestHolder<GenericPromise> mRemoveSessionRequest;
 
   const dom::MediaKeySystemConfiguration mConfig;
 
