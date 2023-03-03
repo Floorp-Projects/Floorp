@@ -2830,8 +2830,9 @@ void BaselineCacheIRCompiler::pushFunApplyArgsObj(Register argcReg,
 
 void BaselineCacheIRCompiler::pushBoundFunctionArguments(
     Register argcReg, Register calleeReg, Register scratch, Register scratch2,
-    uint32_t numBoundArgs, bool isJitCall) {
-  constexpr uint32_t additionalArgc = 1;  // |this|
+    CallFlags flags, uint32_t numBoundArgs, bool isJitCall) {
+  bool isConstructing = flags.isConstructing();
+  uint32_t additionalArgc = 1 + isConstructing;  // |this| and newTarget
 
   // Calculate total number of Values to push.
   Register countReg = scratch;
@@ -2844,9 +2845,19 @@ void BaselineCacheIRCompiler::pushBoundFunctionArguments(
     masm.alignJitStackBasedOnNArgs(countReg, /*countIncludesThis = */ true);
   }
 
+  if (isConstructing) {
+    // Push the bound function's target as newTarget.
+    Address boundTarget(calleeReg, BoundFunctionObject::offsetOfTargetSlot());
+    masm.pushValue(boundTarget);
+  }
+
   // Ensure argPtr initially points to the last argument. Skip the stub frame.
   Register argPtr = scratch2;
   Address argAddress(FramePointer, BaselineStubFrameLayout::Size());
+  if (isConstructing) {
+    // Skip newTarget.
+    argAddress.offset += sizeof(Value);
+  }
   masm.computeEffectiveAddress(argAddress, argPtr);
 
   // Push all supplied arguments, starting at the last one.
@@ -2881,9 +2892,18 @@ void BaselineCacheIRCompiler::pushBoundFunctionArguments(
     }
   }
 
-  // Push the bound |this|.
-  Address boundThis(calleeReg, BoundFunctionObject::offsetOfBoundThisSlot());
-  masm.pushValue(boundThis);
+  if (isConstructing) {
+    // Push the |this| Value. This is either the object we allocated or the
+    // JS_UNINITIALIZED_LEXICAL magic value. It's stored in the BaselineFrame,
+    // so skip past the stub frame, (unbound) arguments and newTarget.
+    BaseValueIndex thisAddress(FramePointer, argcReg,
+                               BaselineStubFrameLayout::Size() + sizeof(Value));
+    masm.pushValue(thisAddress, scratch);
+  } else {
+    // Push the bound |this|.
+    Address boundThis(calleeReg, BoundFunctionObject::offsetOfBoundThisSlot());
+    masm.pushValue(boundThis);
+  }
 }
 
 bool BaselineCacheIRCompiler::emitCallNativeShared(
@@ -3109,7 +3129,8 @@ void BaselineCacheIRCompiler::storeThis(const T& newThis, Register argcReg,
  * overwrites the magic ThisV on the stack.
  */
 void BaselineCacheIRCompiler::createThis(Register argcReg, Register calleeReg,
-                                         Register scratch, CallFlags flags) {
+                                         Register scratch, CallFlags flags,
+                                         bool isBoundFunction) {
   MOZ_ASSERT(flags.isConstructing());
 
   if (flags.needsUninitializedThis()) {
@@ -3125,13 +3146,21 @@ void BaselineCacheIRCompiler::createThis(Register argcReg, Register calleeReg,
 
   // CreateThis takes two arguments: callee, and newTarget.
 
-  // Push newTarget:
-  loadStackObject(ArgumentKind::NewTarget, flags, argcReg, scratch);
-  masm.push(scratch);
+  if (isBoundFunction) {
+    // Push the bound function's target as callee and newTarget.
+    Address boundTarget(calleeReg, BoundFunctionObject::offsetOfTargetSlot());
+    masm.unboxObject(boundTarget, scratch);
+    masm.push(scratch);
+    masm.push(scratch);
+  } else {
+    // Push newTarget:
+    loadStackObject(ArgumentKind::NewTarget, flags, argcReg, scratch);
+    masm.push(scratch);
 
-  // Push callee:
-  loadStackObject(ArgumentKind::Callee, flags, argcReg, scratch);
-  masm.push(scratch);
+    // Push callee:
+    loadStackObject(ArgumentKind::Callee, flags, argcReg, scratch);
+    masm.push(scratch);
+  }
 
   // Call CreateThisFromIC.
   using Fn =
@@ -3219,7 +3248,8 @@ bool BaselineCacheIRCompiler::emitCallScriptedFunction(ObjOperandId calleeId,
   }
 
   if (isConstructing) {
-    createThis(argcReg, calleeReg, scratch, flags);
+    createThis(argcReg, calleeReg, scratch, flags,
+               /* isBoundFunction = */ false);
   }
 
   pushArguments(argcReg, calleeReg, scratch, scratch2, flags, argcFixed,
@@ -3310,7 +3340,8 @@ bool BaselineCacheIRCompiler::emitCallInlinedFunction(ObjOperandId calleeId,
 
   Label baselineScriptDiscarded;
   if (isConstructing) {
-    createThis(argcReg, calleeReg, scratch, flags);
+    createThis(argcReg, calleeReg, scratch, flags,
+               /* isBoundFunction = */ false);
 
     // CreateThisFromIC may trigger a GC and discard the BaselineScript.
     // We have already called discardStack, so we can't use a FailurePath.
@@ -3381,7 +3412,7 @@ bool BaselineCacheIRCompiler::emitCallBoundScriptedFunction(
   Register calleeReg = allocator.useRegister(masm, calleeId);
   Register argcReg = allocator.useRegister(masm, argcId);
 
-  MOZ_ASSERT(!flags.isConstructing(), "constructor calls not supported yet");
+  bool isConstructing = flags.isConstructing();
   bool isSameRealm = flags.isSameRealm();
 
   allocator.discardStack(masm);
@@ -3391,8 +3422,13 @@ bool BaselineCacheIRCompiler::emitCallBoundScriptedFunction(
   AutoStubFrame stubFrame(*this);
   stubFrame.enter(masm, scratch);
 
+  if (isConstructing) {
+    createThis(argcReg, calleeReg, scratch, flags,
+               /* isBoundFunction = */ true);
+  }
+
   // Push all arguments, including |this|.
-  pushBoundFunctionArguments(argcReg, calleeReg, scratch, scratch2,
+  pushBoundFunctionArguments(argcReg, calleeReg, scratch, scratch2, flags,
                              numBoundArgs, /* isJitCall = */ true);
 
   // Load the target JSFunction.
@@ -3412,7 +3448,7 @@ bool BaselineCacheIRCompiler::emitCallBoundScriptedFunction(
 
   // Note that we use Push, not push, so that callJit will align the stack
   // properly on ARM.
-  masm.PushCalleeToken(calleeReg, /* constructing = */ false);
+  masm.PushCalleeToken(calleeReg, isConstructing);
   masm.PushFrameDescriptorForJitCall(FrameType::BaselineStub, argcReg, scratch);
 
   // Handle arguments underflow.
@@ -3429,7 +3465,9 @@ bool BaselineCacheIRCompiler::emitCallBoundScriptedFunction(
   masm.bind(&noUnderflow);
   masm.callJit(code);
 
-  MOZ_ASSERT(!flags.isConstructing(), "don't have to check return value");
+  if (isConstructing) {
+    updateReturnValue();
+  }
 
   stubFrame.leave(masm);
 

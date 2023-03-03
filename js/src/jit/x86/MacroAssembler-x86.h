@@ -52,6 +52,15 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
     }
     return payloadOf(address);
   }
+  Operand payloadOfAfterStackPush(const BaseIndex& address) {
+    // If we are basing off %esp, the address will be invalid after the
+    // first push.
+    if (address.base == StackPointer) {
+      return Operand(address.base, address.index, address.scale,
+                     address.offset + 4);
+    }
+    return payloadOf(address);
+  }
   Operand payloadOf(const Address& address) {
     return Operand(address.base, address.offset);
   }
@@ -275,6 +284,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
     push(reg);
   }
   void pushValue(const Address& addr) {
+    push(tagOf(addr));
+    push(payloadOfAfterStackPush(addr));
+  }
+  void pushValue(const BaseIndex& addr, Register scratch) {
     push(tagOf(addr));
     push(payloadOfAfterStackPush(addr));
   }

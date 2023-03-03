@@ -85,9 +85,10 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
                            Register scratch, Register scratch2, bool isJitCall);
   void pushBoundFunctionArguments(Register argcReg, Register calleeReg,
                                   Register scratch, Register scratch2,
-                                  uint32_t numBoundArgs, bool isJitCall);
+                                  CallFlags flags, uint32_t numBoundArgs,
+                                  bool isJitCall);
   void createThis(Register argcReg, Register calleeReg, Register scratch,
-                  CallFlags flags);
+                  CallFlags flags, bool isBoundFunction);
   template <typename T>
   void storeThis(const T& newThis, Register argcReg, CallFlags flags);
   void updateReturnValue();
