@@ -5665,6 +5665,17 @@ bool WarpCacheIRTranspiler::emitCloseIterScriptedResult(ObjOperandId iterId,
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardGlobalGeneration(
+    uint32_t expectedOffset, uint32_t generationAddrOffset) {
+  uint32_t expected = uint32StubField(expectedOffset);
+  const void* generationAddr = rawPointerField(generationAddrOffset);
+
+  auto guard = MGuardGlobalGeneration::New(alloc(), expected, generationAddr);
+  add(guard);
+
+  return true;
+}
+
 #ifdef FUZZING_JS_FUZZILLI
 bool WarpCacheIRTranspiler::emitFuzzilliHashResult(ValOperandId valId) {
   MDefinition* input = getOperand(valId);
