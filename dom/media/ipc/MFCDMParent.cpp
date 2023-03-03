@@ -500,14 +500,14 @@ mozilla::ipc::IPCResult MFCDMParent::RecvCreateSessionAndGenerateRequest(
       MFCDMSession::Create(aParams.sessionType(), mCDM.Get(), mManagerThread)};
   if (!session) {
     MFCDM_PARENT_LOG("Failed to create CDM session");
-    aResolver(NS_ERROR_FAILURE);
+    aResolver(NS_ERROR_DOM_MEDIA_CDM_NO_SESSION_ERR);
     return IPC_OK();
   }
 
   MFCDM_REJECT_IF_FAILED(session->GenerateRequest(aParams.initDataType(),
                                                   aParams.initData().Elements(),
                                                   aParams.initData().Length()),
-                         NS_ERROR_FAILURE);
+                         NS_ERROR_DOM_MEDIA_CDM_SESSION_OPERATION_ERR);
   ConnectSessionEvents(session.get());
 
   // TODO : now we assume all session ID is available after session is created,
@@ -529,12 +529,11 @@ mozilla::ipc::IPCResult MFCDMParent::RecvLoadSession(
   nsresult rv = NS_OK;
   auto* session = GetSession(aSessionId);
   if (!session) {
-    // TODO : create a dedicated error to indicate the error reason. Same for
-    // below.
-    aResolver(NS_ERROR_FAILURE);
+    aResolver(NS_ERROR_DOM_MEDIA_CDM_NO_SESSION_ERR);
     return IPC_OK();
   }
-  MFCDM_REJECT_IF_FAILED(session->Load(aSessionId), NS_ERROR_FAILURE);
+  MFCDM_REJECT_IF_FAILED(session->Load(aSessionId),
+                         NS_ERROR_DOM_MEDIA_CDM_SESSION_OPERATION_ERR);
   aResolver(rv);
   return IPC_OK();
 }
@@ -546,10 +545,11 @@ mozilla::ipc::IPCResult MFCDMParent::RecvUpdateSession(
   nsresult rv = NS_OK;
   auto* session = GetSession(aSessionId);
   if (!session) {
-    aResolver(NS_ERROR_FAILURE);
+    aResolver(NS_ERROR_DOM_MEDIA_CDM_NO_SESSION_ERR);
     return IPC_OK();
   }
-  MFCDM_REJECT_IF_FAILED(session->Update(aResponse), NS_ERROR_FAILURE);
+  MFCDM_REJECT_IF_FAILED(session->Update(aResponse),
+                         NS_ERROR_DOM_MEDIA_CDM_SESSION_OPERATION_ERR);
   aResolver(rv);
   return IPC_OK();
 }
@@ -560,10 +560,11 @@ mozilla::ipc::IPCResult MFCDMParent::RecvCloseSession(
   nsresult rv = NS_OK;
   auto* session = GetSession(aSessionId);
   if (!session) {
-    aResolver(NS_ERROR_FAILURE);
+    aResolver(NS_ERROR_DOM_MEDIA_CDM_NO_SESSION_ERR);
     return IPC_OK();
   }
-  MFCDM_REJECT_IF_FAILED(session->Close(), NS_ERROR_FAILURE);
+  MFCDM_REJECT_IF_FAILED(session->Close(),
+                         NS_ERROR_DOM_MEDIA_CDM_SESSION_OPERATION_ERR);
   aResolver(rv);
   return IPC_OK();
 }
@@ -574,10 +575,11 @@ mozilla::ipc::IPCResult MFCDMParent::RecvRemoveSession(
   nsresult rv = NS_OK;
   auto* session = GetSession(aSessionId);
   if (!session) {
-    aResolver(NS_ERROR_FAILURE);
+    aResolver(NS_ERROR_DOM_MEDIA_CDM_NO_SESSION_ERR);
     return IPC_OK();
   }
-  MFCDM_REJECT_IF_FAILED(session->Remove(), NS_ERROR_FAILURE);
+  MFCDM_REJECT_IF_FAILED(session->Remove(),
+                         NS_ERROR_DOM_MEDIA_CDM_SESSION_OPERATION_ERR);
   aResolver(rv);
   return IPC_OK();
 }
