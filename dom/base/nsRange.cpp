@@ -893,15 +893,15 @@ void nsRange::NotifySelectionListenersAfterRangeSet() {
     // way selections can be added or removed safely during iteration.
     // To save allocation cost, the copy is only created if there is more than
     // one Selection present  (which will barely ever be the case).
-    if (mSelections.getFirst() != mSelections.getLast()) {
+    if (IsPartOfOneSelectionOnly()) {
+      RefPtr<Selection> selection = mSelections.getFirst()->Get();
+      selection->NotifySelectionListeners(calledByJSRestorer.SavedValue());
+    } else {
       SelectionListLocalCopy copiedSelections{mSelections};
       for (const auto* selectionWrapper : copiedSelections.Get()) {
         RefPtr<Selection> selection = selectionWrapper->Get();
         selection->NotifySelectionListeners(calledByJSRestorer.SavedValue());
       }
-    } else {
-      RefPtr<Selection> selection = mSelections.getFirst()->Get();
-      selection->NotifySelectionListeners(calledByJSRestorer.SavedValue());
     }
   }
 }

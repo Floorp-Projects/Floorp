@@ -18,6 +18,8 @@
 
 namespace mozilla {
 
+using namespace dom;
+
 static bool ComparePostMode(const RawRangeBoundary& aStart,
                             const RawRangeBoundary& aEnd, nsINode& aNode) {
   nsINode* parent = aNode.GetParentNode();
@@ -162,7 +164,7 @@ nsresult ContentIteratorBase::Init(nsINode* aRoot) {
   return NS_OK;
 }
 
-nsresult ContentIteratorBase::Init(nsRange* aRange) {
+nsresult ContentIteratorBase::Init(AbstractRange* aRange) {
   if (NS_WARN_IF(!aRange)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -735,7 +737,7 @@ nsresult ContentSubtreeIterator::Init(nsINode* aRoot) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult ContentSubtreeIterator::Init(nsRange* aRange) {
+nsresult ContentSubtreeIterator::Init(AbstractRange* aRange) {
   MOZ_ASSERT(aRange);
 
   if (NS_WARN_IF(!aRange->IsPositioned())) {

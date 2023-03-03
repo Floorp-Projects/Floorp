@@ -235,7 +235,8 @@ struct MOZ_RAII AutoPrepareFocusRange {
       // Scripted command or the user is starting a new explicit multi-range
       // selection.
       for (StyledRange& entry : ranges) {
-        entry.mRange->SetIsGenerated(false);
+        MOZ_ASSERT(entry.mRange->IsDynamicRange());
+        entry.mRange->AsDynamicRange()->SetIsGenerated(false);
       }
       return;
     }
@@ -280,16 +281,19 @@ struct MOZ_RAII AutoPrepareFocusRange {
     nsRange* result{nullptr};
     if (aSelection.GetDirection() == eDirNext) {
       for (size_t i = 0; i < len; ++i) {
-        if (ranges[i].mRange->IsGenerated()) {
-          result = ranges[i].mRange;
+        // This function is only called for selections with type == eNormal.
+        // (see MOZ_ASSERT in constructor).
+        // Therefore, all ranges must be dynamic.
+        if (ranges[i].mRange->AsDynamicRange()->IsGenerated()) {
+          result = ranges[i].mRange->AsDynamicRange();
           break;
         }
       }
     } else {
       size_t i = len;
       while (i--) {
-        if (ranges[i].mRange->IsGenerated()) {
-          result = ranges[i].mRange;
+        if (ranges[i].mRange->AsDynamicRange()->IsGenerated()) {
+          result = ranges[i].mRange->AsDynamicRange();
           break;
         }
       }
@@ -303,7 +307,13 @@ struct MOZ_RAII AutoPrepareFocusRange {
     nsTArray<StyledRange>& ranges = aSelection.mStyledRanges.mRanges;
     size_t i = ranges.Length();
     while (i--) {
-      nsRange* range = ranges[i].mRange;
+      // This function is only called for selections with type == eNormal.
+      // (see MOZ_ASSERT in constructor).
+      // Therefore, all ranges must be dynamic.
+      if (!ranges[i].mRange->IsDynamicRange()) {
+        continue;
+      }
+      nsRange* range = ranges[i].mRange->AsDynamicRange();
       if (range->IsGenerated()) {
         range->UnregisterSelection(aSelection);
         aSelection.SelectFrames(presContext, range, false);
@@ -1589,7 +1599,38 @@ void nsFrameSelection::AddHighlightSelection(
 }
 
 void nsFrameSelection::RemoveHighlightSelection(const nsAtom* aHighlightName) {
-  mHighlightSelections.Remove(aHighlightName);
+  if (auto maybeSelection = mHighlightSelections.MaybeGet(aHighlightName)) {
+    RefPtr<Selection> selection = *maybeSelection;
+    selection->RemoveAllRanges(IgnoreErrors());
+    mHighlightSelections.Remove(aHighlightName);
+  }
+}
+
+void nsFrameSelection::AddHighlightSelectionRange(
+    const nsAtom* aHighlightName, const mozilla::dom::Highlight& aHighlight,
+    mozilla::dom::AbstractRange& aRange, ErrorResult& aRv) {
+  if (auto lookupResult = mHighlightSelections.Lookup(aHighlightName)) {
+    RefPtr<Selection> selection = lookupResult.Data();
+    selection->AddHighlightRangeAndSelectFramesAndNotifyListeners(aRange, aRv);
+  } else {
+    // if the selection does not exist yet, add all of its ranges and exit.
+    RefPtr<Selection> selection =
+        aHighlight.CreateHighlightSelection(aHighlightName, this, aRv);
+    if (aRv.Failed()) {
+      return;
+    }
+    lookupResult.Data() = selection;
+  }
+}
+
+void nsFrameSelection::RemoveHighlightSelectionRange(
+    const nsAtom* aHighlightName, mozilla::dom::AbstractRange& aRange) {
+  if (const auto lookupResult = mHighlightSelections.Lookup(aHighlightName)) {
+    // NOLINTNEXTLINE(performance-unnecessary-copy-initialization)
+    RefPtr<Selection> selection = lookupResult.Data();
+    selection->RemoveRangeAndUnselectFramesAndNotifyListeners(aRange,
+                                                              IgnoreErrors());
+  }
 }
 
 nsresult nsFrameSelection::ScrollSelectionIntoView(SelectionType aSelectionType,

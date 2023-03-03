@@ -59,8 +59,50 @@ JSObject* HighlightRegistry::WrapObject(JSContext* aCx,
   return HighlightRegistry_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void HighlightRegistry::HighlightPropertiesChanged(Highlight& aHighlight,
-                                                   ErrorResult& aRv) {
+void HighlightRegistry::MaybeAddRangeToHighlightSelection(AbstractRange& aRange,
+                                                          Highlight& aHighlight,
+                                                          ErrorResult& aRv) {
+  RefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
+  if (!frameSelection) {
+    return;
+  }
+  MOZ_ASSERT(frameSelection->GetPresShell());
+  if (!frameSelection->GetPresShell()->GetDocument() ||
+      frameSelection->GetPresShell()->GetDocument() !=
+          aRange.GetComposedDocOfContainers()) {
+    // ranges that belong to a different document must not be added.
+    return;
+  }
+  for (auto const& iter : mHighlightsOrdered) {
+    if (iter.second() != &aHighlight) {
+      continue;
+    }
+
+    const RefPtr<const nsAtom> highlightName = iter.first();
+    frameSelection->AddHighlightSelectionRange(highlightName, aHighlight,
+                                               aRange, aRv);
+  }
+}
+
+void HighlightRegistry::MaybeRemoveRangeFromHighlightSelection(
+    AbstractRange& aRange, Highlight& aHighlight) {
+  RefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
+  if (!frameSelection) {
+    return;
+  }
+  MOZ_ASSERT(frameSelection->GetPresShell());
+
+  for (auto const& iter : mHighlightsOrdered) {
+    if (iter.second() != &aHighlight) {
+      continue;
+    }
+
+    const RefPtr<const nsAtom> highlightName = iter.first();
+    frameSelection->RemoveHighlightSelectionRange(highlightName, aRange);
+  }
+}
+
+void HighlightRegistry::RemoveHighlightSelection(Highlight& aHighlight) {
   RefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
   if (!frameSelection) {
     return;
@@ -70,12 +112,8 @@ void HighlightRegistry::HighlightPropertiesChanged(Highlight& aHighlight,
       continue;
     }
 
-    RefPtr<const nsAtom> highlightName = iter.first();
+    const RefPtr<const nsAtom> highlightName = iter.first();
     frameSelection->RemoveHighlightSelection(highlightName);
-    frameSelection->AddHighlightSelection(highlightName, aHighlight, aRv);
-    if (aRv.Failed()) {
-      return;
-    }
   }
 }
 
@@ -135,8 +173,8 @@ void HighlightRegistry::Clear(ErrorResult& aRv) {
   }
   auto frameSelection = GetFrameSelection();
   for (auto const& iter : mHighlightsOrdered) {
-    const auto& highlightName = iter.first();
-    const auto& highlight = iter.second();
+    const RefPtr<const nsAtom> highlightName = iter.first();
+    const RefPtr<Highlight>& highlight = iter.second();
     highlight->RemoveFromHighlightRegistry(*this, *highlightName);
     if (frameSelection) {
       frameSelection->RemoveHighlightSelection(highlightName);
@@ -145,9 +183,9 @@ void HighlightRegistry::Clear(ErrorResult& aRv) {
   mHighlightsOrdered.Clear();
 }
 
-void HighlightRegistry::Delete(const nsAString& aKey, ErrorResult& aRv) {
+bool HighlightRegistry::Delete(const nsAString& aKey, ErrorResult& aRv) {
   if (!HighlightRegistry_Binding::MaplikeHelpers::Delete(this, aKey, aRv)) {
-    return;
+    return false;
   }
   RefPtr<nsAtom> highlightNameAtom = NS_AtomizeMainThread(aKey);
   auto foundIter =
@@ -155,9 +193,9 @@ void HighlightRegistry::Delete(const nsAString& aKey, ErrorResult& aRv) {
                    [&highlightNameAtom](auto const& aElm) {
                      return aElm.first() == highlightNameAtom;
                    });
-  if (foundIter == mHighlightsOrdered.cend()) {
-    return;
-  }
+  MOZ_ASSERT(foundIter != mHighlightsOrdered.cend(),
+             "HighlightRegistry: maplike and internal data are out of sync!");
+
   RefPtr<Highlight> highlight = foundIter->second();
   mHighlightsOrdered.RemoveElementAt(foundIter);
 
@@ -165,6 +203,7 @@ void HighlightRegistry::Delete(const nsAString& aKey, ErrorResult& aRv) {
     frameSelection->RemoveHighlightSelection(highlightNameAtom);
   }
   highlight->RemoveFromHighlightRegistry(*this, *highlightNameAtom);
+  return true;
 }
 
 RefPtr<nsFrameSelection> HighlightRegistry::GetFrameSelection() {

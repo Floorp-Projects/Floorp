@@ -479,8 +479,8 @@ static nsTArray<nsRange*> FindDOMSpellingErrors(LocalAccessible* aAcc,
           ? dom::CharacterData::FromNode(node)->TextLength()
           : RenderedToContentOffset(aAcc, aRenderedEnd);
   nsTArray<nsRange*> domRanges;
-  domSel->GetRangesForIntervalArray(node, contentStart, node, contentEnd,
-                                    aAllowAdjacent, &domRanges);
+  domSel->GetDynamicRangesForIntervalArray(node, contentStart, node, contentEnd,
+                                           aAllowAdjacent, &domRanges);
   return domRanges;
 }
 

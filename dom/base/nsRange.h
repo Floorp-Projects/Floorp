@@ -351,6 +351,14 @@ class nsRange final : public mozilla::dom::AbstractRange,
   bool IsPointComparableToRange(const nsINode& aContainer, uint32_t aOffset,
                                 ErrorResult& aErrorResult) const;
 
+  /**
+   * @brief Returns true if the range is part of exactly one |Selection|.
+   */
+  bool IsPartOfOneSelectionOnly() const {
+    return !mSelections.isEmpty() &&
+           mSelections.getFirst() == mSelections.getLast();
+  };
+
  public:
   /**
    * This helper function gets rects and correlated text for the given range.

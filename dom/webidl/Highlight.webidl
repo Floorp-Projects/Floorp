@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://www.w3.org/TR/css-highlight-api-1/
+ * https://drafts.csswg.org/css-highlight-api-1/
  *
  * Copyright © 2021 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
@@ -12,7 +12,7 @@
 
 /**
  * Enum defining the available highlight types.
- * See https://www.w3.org/TR/css-highlight-api-1/#enumdef-highlighttype
+ * See https://drafts.csswg.org/css-highlight-api-1/#enumdef-highlighttype
  */
 enum HighlightType {
   "highlight",
@@ -24,7 +24,7 @@ enum HighlightType {
  * Definition of a highlight object, consisting of a set of ranges,
  * a priority and a highlight type.
  *
- * See https://www.w3.org/TR/css-highlight-api-1/#highlight
+ * See https://drafts.csswg.org/css-highlight-api-1/#highlight
  */
 [Pref="dom.customHighlightAPI.enabled", Exposed=Window]
 interface Highlight {
@@ -45,13 +45,13 @@ partial interface Highlight {
   [Throws]
   undefined clear();
   [Throws]
-  undefined delete(AbstractRange range);
+  boolean delete(AbstractRange range);
 };
 
 /**
  * Registry object that contains all Highlights associated with a Document.
  *
- * See https://www.w3.org/TR/css-highlight-api-1/#highlightregistry
+ * See https://drafts.csswg.org/css-highlight-api-1/#highlightregistry
  */
 [Pref="dom.customHighlightAPI.enabled", Exposed=Window]
 interface HighlightRegistry {
@@ -67,5 +67,5 @@ partial interface HighlightRegistry {
   [Throws]
   undefined clear();
   [Throws]
-  undefined delete(DOMString key);
+  boolean delete(DOMString key);
 };
