@@ -14,7 +14,6 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.DialogFragment
 import androidx.navigation.fragment.findNavController
-import com.google.accompanist.insets.ProvideWindowInsets
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.components
@@ -47,23 +46,21 @@ class HomeOnboardingDialogFragment : DialogFragment() {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
 
         setContent {
-            ProvideWindowInsets {
-                FirefoxTheme {
-                    val account =
-                        components.backgroundServices.syncStore.observeAsComposableState { state -> state.account }
+            FirefoxTheme {
+                val account =
+                    components.backgroundServices.syncStore.observeAsComposableState { state -> state.account }
 
-                    UpgradeOnboarding(
-                        isSyncSignIn = account.value != null,
-                        onDismiss = ::onDismiss,
-                        onSignInButtonClick = {
-                            findNavController().nav(
-                                R.id.homeOnboardingDialogFragment,
-                                HomeOnboardingDialogFragmentDirections.actionGlobalTurnOnSync(),
-                            )
-                            onDismiss()
-                        },
-                    )
-                }
+                UpgradeOnboarding(
+                    isSyncSignIn = account.value != null,
+                    onDismiss = ::onDismiss,
+                    onSignInButtonClick = {
+                        findNavController().nav(
+                            R.id.homeOnboardingDialogFragment,
+                            HomeOnboardingDialogFragmentDirections.actionGlobalTurnOnSync(),
+                        )
+                        onDismiss()
+                    },
+                )
             }
         }
     }

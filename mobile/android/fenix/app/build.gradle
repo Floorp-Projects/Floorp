@@ -492,7 +492,6 @@ dependencies {
     implementation FenixDependencies.androidx_constraintlayout
     implementation FenixDependencies.androidx_coordinatorlayout
     implementation FenixDependencies.google_accompanist_drawablepainter
-    implementation FenixDependencies.google_accompanist_insets
 
     implementation FenixDependencies.sentry
 

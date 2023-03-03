@@ -13,7 +13,6 @@ import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.DialogFragment
-import com.google.accompanist.insets.ProvideWindowInsets
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.onboarding.view.NotificationPermissionDialogScreen
@@ -43,16 +42,14 @@ class HomeNotificationPermissionDialogFragment : DialogFragment() {
     ): View = ComposeView(requireContext()).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
         setContent {
-            ProvideWindowInsets {
-                FirefoxTheme {
-                    NotificationPermissionDialogScreen(
-                        onDismiss = ::onDismiss,
-                        grantNotificationPermission = {
-                            ensureMarketingChannelExists(context.applicationContext)
-                            onDismiss()
-                        },
-                    )
-                }
+            FirefoxTheme {
+                NotificationPermissionDialogScreen(
+                    onDismiss = ::onDismiss,
+                    grantNotificationPermission = {
+                        ensureMarketingChannelExists(context.applicationContext)
+                        onDismiss()
+                    },
+                )
             }
         }
     }

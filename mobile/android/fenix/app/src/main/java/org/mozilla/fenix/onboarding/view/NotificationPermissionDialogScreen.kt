@@ -4,11 +4,11 @@
 
 package org.mozilla.fenix.onboarding.view
 
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import com.google.accompanist.insets.navigationBarsPadding
-import com.google.accompanist.insets.statusBarsPadding
 import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.Onboarding
 import org.mozilla.fenix.R
