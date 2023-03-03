@@ -22,7 +22,8 @@ async function UCTFirst(){
         if (a != null) a.remove()
     },
     onCommand() {
-        if (SessionStore.getClosedTabCount(window)) SessionStore.undoCloseTab(window)
+        let workingWindow = Services.wm.getMostRecentWindow("navigator:browser")
+        if (SessionStore.getClosedTabCount(workingWindow)) SessionStore.undoCloseTab(workingWindow)
     }
   });
 }
