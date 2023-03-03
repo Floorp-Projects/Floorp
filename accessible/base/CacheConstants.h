@@ -83,6 +83,10 @@ static constexpr RelationData kRelationTypeAtoms[] = {
      RelationType::FLOWS_FROM},
 };
 
+// The count of numbers needed to serialize an nsRect. This is used when
+// flattening character rects into an array of ints.
+constexpr int32_t kNumbersInRect = 4;
+
 }  // namespace a11y
 }  // namespace mozilla
 
