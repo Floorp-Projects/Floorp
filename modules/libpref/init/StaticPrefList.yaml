@@ -6179,7 +6179,7 @@
 # Use gfxPlatform::MaxAllocSize instead of the pref directly.
 - name: gfx.max-alloc-size
   type: int32_t
-  value: (int32_t)500000000
+  value: (int32_t)0x7FFFFFFF
   mirror: once
   do_not_use_directly: true
 
