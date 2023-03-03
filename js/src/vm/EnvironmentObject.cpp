@@ -3516,6 +3516,7 @@ bool js::CheckLexicalNameConflict(
   const char* redeclKind = nullptr;
   RootedId id(cx, NameToId(name));
   mozilla::Maybe<PropertyInfo> prop;
+  bool shadowsExistingProperty = false;
   if (varObj->is<GlobalObject>() &&
       varObj->as<GlobalObject>().isInVarNames(name)) {
     // ES 15.1.11 step 5.a
@@ -3529,6 +3530,8 @@ bool js::CheckLexicalNameConflict(
     // without going through a resolve hook.
     if (!prop->configurable()) {
       redeclKind = "non-configurable global property";
+    } else {
+      shadowsExistingProperty = true;
     }
   } else {
     // ES 15.1.11 step 5.c-d
@@ -3536,14 +3539,23 @@ bool js::CheckLexicalNameConflict(
     if (!GetOwnPropertyDescriptor(cx, varObj, id, &desc)) {
       return false;
     }
-    if (desc.isSome() && !desc->configurable()) {
-      redeclKind = "non-configurable global property";
+    if (desc.isSome()) {
+      if (!desc->configurable()) {
+        redeclKind = "non-configurable global property";
+      } else {
+        shadowsExistingProperty = true;
+      }
     }
   }
 
   if (redeclKind) {
     ReportRuntimeRedeclaration(cx, name, redeclKind);
     return false;
+  }
+  if (shadowsExistingProperty && varObj->is<GlobalObject>()) {
+    // Shadowing a configurable global property with a new lexical is one
+    // of the rare ways to invalidate a GetGName stub.
+    varObj->as<GlobalObject>().bumpGenerationCount();
   }
 
   return true;

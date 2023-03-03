@@ -196,6 +196,13 @@ class JSObject
     return setFlag(cx, obj, js::ObjectFlag::UseWatchtowerTestingLog);
   }
 
+  bool isGenerationCountedGlobal() const {
+    return hasFlag(js::ObjectFlag::GenerationCountedGlobal);
+  }
+  static bool setGenerationCountedGlobal(JSContext* cx, JS::HandleObject obj) {
+    return setFlag(cx, obj, js::ObjectFlag::GenerationCountedGlobal);
+  }
+
   // A "qualified" varobj is the object on which "qualified" variable
   // declarations (i.e., those defined with "var") are kept.
   //
