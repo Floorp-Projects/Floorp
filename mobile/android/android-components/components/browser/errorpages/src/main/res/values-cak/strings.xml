@@ -41,6 +41,15 @@
     <!-- The document title and heading of the error page shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Re ruxaq k\'amaya\'l nrajo\' jun jikïl okem.</string>
 
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>Ri ruxaq natojtob\'ej natz\'ët man tz\'etel ta ruma chi ri ruxaq k\'amaya\'l nrajo\' jun jikïl okem.</li>
+         <li>Rik\'in jub\'a\' ri k\'ayewal xa ruma ri ruxaq ajk\'amaya\'l, majun yatikïr nab\'än chuwäch richin nasöl.</li>
+         <li>Yatikïr naya\' rutzijol chi re ri runuk\'samajel ruxaq k\'amaya\'l chi rij ri k\'ayewal.</li>
+      </ul>
+    ]]></string>
+
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Q\'axinäq…</string>
 

@@ -61,10 +61,13 @@
          Next to this label is a switch that allows the user to temporarily enable / disable the
          blocking of trackers for the current browsing session - for example if the current website
          doesn't work correctly with blocked content. -->
-    <string name="menu_trackers_blocked_title">Трэкераў заблакавана</string>
+    <string name="menu_trackers_blocked_title">Трэкераў заблакіравана</string>
 
     <!-- Menu item: This is the label for turning off content blocking for the current website. -->
-    <string name="menu_content_blocking">Блакаванне змесціва</string>
+    <string name="menu_content_blocking">Блакіроўка змесціва</string>
+
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">Адключыць для вырашэння праблем з некаторымі сайтамі</string>
 
     <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
      See https://github.com/mozilla-mobile/focus-android/issues/2106
@@ -191,6 +194,21 @@
     <!-- A link to SUMO at autocomplete settings. -->
     <string name="preference_autocomplete_learn_more">Падрабязней</string>
 
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">URL для дадавання</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">Устаўце або ўвядзіце URL</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">Прыклад: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">Прыклад: example.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">Новы ўласны URL-адрас дададзены.</string>
+
     <!-- Menu item to remove existing autocomplete URLs. -->
     <string name="preference_autocomplete_menu_remove">Выдаліць</string>
 
@@ -206,7 +224,7 @@
     <string name="preference_language_systemdefault">Прадвызначаная сістэмы</string>
 
     <string name="preference_category_privacy">Прыватнасць</string>
-    <string name="preference_privacy_block_ads">Блакаванне рэкламнага сачэння</string>
+    <string name="preference_privacy_block_ads">Блакіраваць рэкламнае сачэнне</string>
 
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
     only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
@@ -250,13 +268,97 @@
     <!-- Action for restoring the default list of search engines -->
     <string name="preference_search_restore">Аднавіць прадвызначаныя пошукавыя сістэмы</string>
 
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ Дадаць іншую пошукавую сістэму</string>
+    <string name="preference_search_remove_title">Выдаліць пошукавыя сістэмы</string>
     <string name="preference_search_remove">Выдаліць</string>
 
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Дадаць іншую пошукавую сістэму</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">Выберыце сваю пошукавую сістэму:</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">Дадаць пошукавую сістэму</string>
+
+    <string name="search_add_manually_name_hint">Назва пошукавай сістэмы</string>
+    <string name="search_add_manually_string">Пошукавы радок</string>
     <string name="search_add_manually_save">Захаваць</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">Прыклад: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">Дададзена новая пошукавая сістэма.</string>
+
+    <string name="search_add_error_empty_name">Увядзіце назву пошукавай сістэмы</string>
+
+    <string name="search_add_error_duplicate_name">Гэта назва ўжо выкарыстоўваецца ва ўсталяванай пошукавай сістэме.</string>
+
+    <string name="search_add_error_empty_search">Увядзіце радок пошуку</string>
+
+    <string name="search_add_error_format">Пераканайцеся, што пошукавы запыт адпавядае Ўзорнаму фармату</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">Ачысціць увод</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">Адхіліць</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">Сцерці гісторыю аглядання</string>
 
     <!-- This text is not visible. Instead it will be read by the accessibility service once we start
      loading a website -->
     <string name="accessibility_announcement_loading">Загрузка</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">Перазагрузіць сайт</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">Перайсці назад</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">Адкрыць</string>
+
+    <string name="error_hostLookup_title">Сервер не знойдзены</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Закрыць</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Пачаць</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Прапусціць</string>
+
+    <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">Узмацніце сваю прыватнасць</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">Перайдзіце на новы ўзровень прыватнага аглядання. Блакіруйце рэкламу і іншы змест, які можа сачыць за вамі на сайтах і запавольваць загрузку старонак.</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">Шукайце па-свойму</string>
+
+    <string name="firstrun_close_button">OK, зразумела!</string>
+    <string name="firstrun_skip_button">Прапусціць</string>
+    <string name="firstrun_next_button">Далей</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">Дадаць</string>
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">ТАК</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">Скасаваць</string>
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">НЕ</string>
 
     <!-- Tips displayed on the home view -->
 

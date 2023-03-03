@@ -129,22 +129,53 @@
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
     <string name="content_description_forward">Aldıǵa</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">Sayttı qayta júklew</string>
+
     <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
     <string name="content_description_back">Artqa qaytıw</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">Sayttı júklewdi toqtatıw</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">Aldınǵı baǵdarlamaǵa qaytıw</string>
+
+    <string name="your_rights">Siziń huqıqlarıńız</string>
+
+    <string name="external_app_prompt_title">Siltemeni basqa baǵdarlamada ashıw</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">Jeke kóriwden shıǵıwdı qáleysiz be?</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">%1$s júklendi</string>
 
     <!-- Snackbar action to immediately open the successfully downloaded file. -->
     <string name="download_snackbar_open">Ashıw</string>
 
+    <string name="error_hostLookup_title">Server tabılmadı</string>
+
     <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
     <string name="onboarding_close_button_content_description">Jabıw</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">%1$sǵa xosh kelibsiz</string>
 
     <!-- New Onboarding flow first screen button label-->
     <string name="onboarding_first_screen_button_text">Baslaw</string>
 
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s basqa brauzerlarǵa uqsamaydı</string>
+
     <!-- New Onboarding flow second screen skip onboarding button label-->
     <string name="onboarding_second_screen_skip_button_text">Ótkizip jiberiw</string>
 
+    <string name="firstrun_close_button">MAQUL, túsinikli!</string>
     <string name="firstrun_skip_button">Ótkizip jiberiw</string>
+
+    <string name="firstrun_next_button">Keyingi</string>
 
     <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
     <string name="content_blocking_disabled">-</string>
@@ -159,10 +190,25 @@
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">YAQ</string>
 
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">Jeke kóriw seansı</string>
+
     <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Paydalanıwshı atı</string>
     <string name="gv_prompt_password_hint">Parol</string>
     <string name="gv_prompt_clear">Tazalaw</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">Qáwipsiz jalǵanıw</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">Betten tabıw</string>
 
     <!-- Watermark/Hint for the find in page input field -->
     <string name="find_in_page_input">Betten tabıw</string>
@@ -183,6 +229,12 @@
 
     <!-- Checkbox menu item text to request desktop site -->
     <string name="preference_performance_request_desktop_site2">Sayttıń kompyuter versiyası</string>
+
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">Silteme nusqalandı</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">Baǵdarlamashı ásbapları</string>
 
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Siltemelerdi baǵdarlamalarda ashıw</string>
@@ -285,11 +337,17 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Aktiv</string>
 
+    <!-- Text Button for show biometric prompt -->
+    <string name="show_biometric_button_text">Bloktan shıǵarıw</string>
+
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Yaq</string>
 
     <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_yes">Awa</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">Jabıw</string>
 
     <!-- Tips displayed on the home view -->
 
@@ -315,7 +373,10 @@
 
     <!-- Tracking protection bottom sheet -->
 
-     <!-- Top Sites -->
+     <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">Artqa qaytıw</string>
+
+    <!-- Top Sites -->
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Alıp taslaw</string>
     <!-- Text for the menu item to remove a top site -->

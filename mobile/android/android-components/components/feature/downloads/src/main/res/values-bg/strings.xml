@@ -45,6 +45,8 @@
     <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
     <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">За сваляне на файлове е необходимо за достъп до медия и файлове. За да разрешите, влезте в настройки на Android, след което докоснете разрешения и позволяване.</string>
 
+    <!-- Alert dialog confirmation before cancelling downloads, this is the title   -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">Отмяна на поверителните изтегляния?</string>
     <!-- Alert dialog confirmation before cancelling private downloads, this is the body. %1$s will be replaced with the name of the file. -->
     <string name="mozac_feature_downloads_cancel_active_private_downloads_warning_content_body">Ако затворите всички поверителни раздели, %1$s изтегляния ще бъдат прекъснати. Сигурни ли сте, че искате да напуснете поверителното разглеждане?</string>
     <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->

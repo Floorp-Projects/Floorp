@@ -7,7 +7,7 @@
 
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
-    <string name="content_description_menu">Rhagor o opsiynau</string>
+    <string name="content_description_menu">Rhagor o ddewisiadau</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_private_browsing_button">Galluogi pori preifat</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
@@ -21,7 +21,7 @@
     <!-- Placeholder text shown in search bar when using tabs search -->
     <string name="tab_search_hint">Chwilio’r tabiau</string>
     <!-- Placeholder text shown in the search bar when using application search engines -->
-    <string name="application_search_hint">Rhowch dermau chwilio</string>
+    <string name="application_search_hint">Rhowch air chwilio</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Bydd eich tabiau agored i’w gweld yma.</string>
 
@@ -78,7 +78,7 @@
     <!-- Text for the info message. The first parameter is the name of the application.-->
     <string name="open_in_app_cfr_info_message_2">Gallwch osod %1$s i agor dolenni mewn apiau’n awtomatig.</string>
     <!-- Text for the positive action button -->
-    <string name="open_in_app_cfr_positive_button_text">Mynd i gosodiadau</string>
+    <string name="open_in_app_cfr_positive_button_text">Mynd i’r gosodiadau</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Cau</string>
 
@@ -214,7 +214,7 @@
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Cyfaddasu’r golwg defnyddiwr</string>
     <!-- Browser menu label for adding a bookmark -->
-    <string name="browser_menu_add">Newydd</string>
+    <string name="browser_menu_add">Ychwanegu</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Golygu</string>
 
@@ -351,7 +351,7 @@
     <string name="preferences_https_only_title">Modd HTTPS-yn-Unig</string>
 
     <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
-    <string name="preferences_cookie_banner_reduction">Gostyngiad Baner Cwcis</string>
+    <string name="preferences_cookie_banner_reduction">Cyfyngu Baneri Cwcis</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
     <string name="reduce_cookie_banner_option">Lleihau baneri cwcis</string>
     <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
@@ -407,7 +407,7 @@
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Cau Llamlenni</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Llai o Faneri Cwcis</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Cyfyngu Baneri Cwcis</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Caniatáu i %1$s wrthod cais caniatâd cwci gwefan os yn bosibl neu dderbyn mynediad cwci pan nad yw’n bosibl?</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
@@ -484,7 +484,7 @@
     <!-- Preference title for switch preference to suggest browsing history when searching -->
     <string name="preferences_search_browsing_history">Chwilio hanes pori</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
-    <string name="preferences_search_bookmarks">Chwilio nodau tudalen</string>
+    <string name="preferences_search_bookmarks">Chwilio’r nodau tudalen</string>
     <!-- Preference title for switch preference to suggest synced tabs when searching -->
     <string name="preferences_search_synced_tabs">Chwilio tabiau wedi’u cydweddu</string>
     <!-- Preference for account settings -->
@@ -504,7 +504,7 @@
     <string name="preferences_notifications">Hysbysiadau</string>
 
     <!-- Summary for notification preference indicating notifications are allowed -->
-    <string name="notifications_allowed_summary">Caniatáu</string>
+    <string name="notifications_allowed_summary">Caniatawyd</string>
     <!-- Summary for notification preference indicating notifications are not allowed -->
     <string name="notifications_not_allowed_summary">Dim caniatáu</string>
 
@@ -762,7 +762,7 @@
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Cau tabiau</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
-    <string name="close_tabs_manually">Â llaw</string>
+    <string name="close_tabs_manually">Byth</string>
     <!-- Option for auto closing tabs that will auto close tabs after one day -->
     <string name="close_tabs_after_one_day">Ar ôl diwrnod</string>
     <!-- Option for auto closing tabs that will auto close tabs after one week -->
@@ -893,7 +893,7 @@
 
     <!-- History -->
     <!-- Text for the button to search all history -->
-    <string name="history_search_1">Rhowch gair chwilio</string>
+    <string name="history_search_1">Rhowch air chwilio</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Dileu hanes</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
@@ -904,7 +904,7 @@
     <string name="history_delete_item">Dileu</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
-    <string name="history_multi_select_title">%1$d wedi’i ddewis</string>
+    <string name="history_multi_select_title">%1$d wedi’u dewis</string>
     <!-- Text for the header that groups the history for today -->
     <string name="history_today">Heddiw</string>
     <!-- Text for the header that groups the history for yesterday -->
@@ -978,7 +978,7 @@
     <string name="bookmark_menu_save_button">Cadw</string>
     <!-- Bookmark multi select title in app bar
      The first parameter is the number of bookmarks selected -->
-    <string name="bookmarks_multi_select_title">%1$d wedi’i ddewis</string>
+    <string name="bookmarks_multi_select_title">%1$d wedi’u dewis</string>
     <!-- Bookmark editing screen title -->
     <string name="edit_bookmark_fragment_title">Golygu nod tudalen</string>
     <!-- Bookmark folder editing screen title -->
@@ -1013,11 +1013,11 @@
     <string name="bookmark_undo_deletion">DADWNEUD</string>
 
     <!-- Text for the button to search all bookmarks -->
-    <string name="bookmark_search">Rhowch dermau chwilio</string>
+    <string name="bookmark_search">Rhowch air chwilio</string>
 
     <!-- Site Permissions -->
     <!-- Button label that take the user to the Android App setting -->
-    <string name="phone_feature_go_to_settings">Ewch i Gosodiadau</string>
+    <string name="phone_feature_go_to_settings">Mynd i’r gosodiadau</string>
     <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
         to give users access to site specific information / settings. For example:
         Secure settings status and a button to modify site permissions -->
@@ -1057,9 +1057,9 @@
     <!-- Label that indicates that a permission must be asked always -->
     <string name="preference_option_phone_feature_ask_to_allow">Gofyn i ganiatáu</string>
     <!-- Label that indicates that a permission must be blocked -->
-    <string name="preference_option_phone_feature_blocked">Rhwystro</string>
+    <string name="preference_option_phone_feature_blocked">Rhwystrwyd</string>
     <!-- Label that indicates that a permission must be allowed -->
-    <string name="preference_option_phone_feature_allowed">Caniatáu</string>
+    <string name="preference_option_phone_feature_allowed">Caniatawyd</string>
     <!--Label that indicates a permission is by the Android OS-->
     <string name="phone_feature_blocked_by_android">Rhwystrwyd gan Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
@@ -1476,7 +1476,7 @@
     <!-- Button label for navigating to the Enhanced Tracking Protection details -->
     <string name="enhanced_tracking_protection_details">Manylion</string>
     <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
-    <string name="enhanced_tracking_protection_blocked">Rhwystro</string>
+    <string name="enhanced_tracking_protection_blocked">Rhwystrwyd</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Caniatawyd</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
@@ -1669,7 +1669,7 @@
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Cyfeiriadau</string>
     <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards">Cardiau Credyd</string>
+    <string name="preferences_credit_cards">Cardiau credyd</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards">Cadw ac awtolanw cardiau</string>
     <!-- Preference summary for saving and autofilling credit card data -->
@@ -1836,7 +1836,7 @@
     <!-- First step for the allowing a permission -->
     <string name="phone_feature_blocked_step_settings">1. Ewch i Gosodiadau Android</string>
     <!-- Second step for the allowing a permission -->
-    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Tapio <b>Caniatâd</b>]]></string>
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Tapiwch <b>Caniatâd</b>]]></string>
     <!-- Third step for the allowing a permission (Fore example: Camera) -->
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. Toglo <b>%1$s</b> i YMLAEN]]></string>
 
@@ -2025,7 +2025,7 @@
     <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
     <string name="experiments_snackbar">Galluogi telemetreg i anfon data.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
-    <string name="experiments_snackbar_button">Mynd i gosodiadau</string>
+    <string name="experiments_snackbar_button">Mynd i’r gosodiadau</string>
 
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->

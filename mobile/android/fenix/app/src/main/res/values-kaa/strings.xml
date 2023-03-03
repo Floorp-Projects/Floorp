@@ -28,7 +28,7 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Jeke betlerińiz usı jerde kórsetiledi.</string>
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
-    <string name="tab_tray_multi_select_title">%1$d  saylandı</string>
+    <string name="tab_tray_multi_select_title">%1$d  tańlandı</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
     <string name="tab_tray_add_new_collection">Jańa toplam qosıw</string>
     <!-- Label of editable text in create collection dialog for naming a new collection  -->
@@ -43,7 +43,7 @@
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
     <string name="tab_tray_collection_button_multiselect_content_description">Saylanǵan betlerdi toplamda saqlaw</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
-    <string name="tab_tray_multiselect_selected_content_description">Saylandı</string>
+    <string name="tab_tray_multiselect_selected_content_description">Tańlandı</string>
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
@@ -578,7 +578,7 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarnamalardı jasırıw ushı
     <string name="addon_not_supported_error">Qosımshanı qollap-quwatlamaydı</string>
 
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
-    <string name="addon_already_installed">Qosımsha álle qashan ornatılǵan</string>
+    <string name="addon_already_installed">Qosımsha álleqashan ornatılǵan</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -985,7 +985,7 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarnamalardı jasırıw ushı
     <string name="bookmark_menu_save_button">Saqlaw</string>
     <!-- Bookmark multi select title in app bar
      The first parameter is the number of bookmarks selected -->
-    <string name="bookmarks_multi_select_title">%1$d  saylandı</string>
+    <string name="bookmarks_multi_select_title">%1$d tańlandı</string>
     <!-- Bookmark editing screen title -->
     <string name="edit_bookmark_fragment_title">Saylandıǵa ózgeris kirgiziw</string>
     <!-- Bookmark folder editing screen title -->
@@ -1129,10 +1129,10 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarnamalardı jasırıw ushı
     <string name="create_collection_save_to_collection_empty">Saqlaw ushın betlerdı tańlań</string>
     <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
      %d is a placeholder for the number of tabs selected. -->
-    <string name="create_collection_save_to_collection_tabs_selected">%d bet saylandı</string>
+    <string name="create_collection_save_to_collection_tabs_selected">%d bet tańlandı</string>
     <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
     %d is a placeholder for the number of tabs selected. -->
-    <string name="create_collection_save_to_collection_tab_selected">%d bet saylandı</string>
+    <string name="create_collection_save_to_collection_tab_selected">%d bet tańlandı</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">Betler saqlandı!</string>
     <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
@@ -1278,7 +1278,7 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarnamalardı jasırıw ushı
     <string name="preference_accessibility_auto_size_2">Avtomatikalıq shrift ólshemi</string>
 
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size_summary">Shrift ólshemi Android sazlawlarına maslasadı. Bul jerde shrift ólshemin basqarıw ushın bul sazlawdı óshiriń.</string>
+    <string name="preference_accessibility_auto_size_summary">Shrift ólshemi Android sazlawlarına sáykeslestiriledi. Bul jerde shrift ólshemin basqarıw ushın bul sazlawdı óshiriń.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Brauzer maǵlıwmatların óshiriw</string>
@@ -1833,7 +1833,7 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarnamalardı jasırıw ushı
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">Izlew qatarın kirgiziń</string>
     <!-- Text shown when a user leaves out the required template string -->
-    <string name="search_add_custom_engine_error_missing_template">Izlew qatarınıń úlgi formatına mas keliwin tekseriń</string>
+    <string name="search_add_custom_engine_error_missing_template">Izlew qatarınıń úlgi formatına sáykes keliwin tekseriń</string>
     <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
     <string name="search_add_custom_engine_error_cannot_reach">“%s” ǵa jalǵanıwdaǵı qátelik</string>
     <!-- Text shown when a user creates a new search engine -->
@@ -1916,7 +1916,7 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarnamalardı jasırıw ushı
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
     <string name="voice_search_explainer">Házir sóyleń</string>
     <!--  The error message in edit login view when a duplicate username exists. -->
-    <string name="saved_login_duplicate">Bul paydalanıwshı atındaǵı login álle qashan bar</string>
+    <string name="saved_login_duplicate">Bul paydalanıwshı atındaǵı login álleqashan bar</string>
     <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
     <string name="add_login_hostname_hint_text">https://www.example.com</string>
 

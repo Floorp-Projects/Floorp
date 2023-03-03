@@ -51,7 +51,7 @@
     <!-- Description for geolocation permission. -->
     <string name="mozac_feature_addons_permissions_geolocation_description">Mynediad i’ch lleoliad</string>
     <!-- Description for history permission. -->
-    <string name="mozac_feature_addons_permissions_history_description">Mynediad at eich hanes pori</string>
+    <string name="mozac_feature_addons_permissions_history_description">Mynd i’ch hanes pori</string>
     <!-- Description for management permission. -->
     <string name="mozac_feature_addons_permissions_management_description">Monitro’r defnydd o estyniadau a rheoli themâu</string>
     <!-- Description for native_messaging permission. -->
@@ -67,7 +67,7 @@
     <!-- Description for tab_hide permission. -->
     <string name="mozac_feature_addons_permissions_tab_hide_description">Cuddio a dangos tabiau’r porwr</string>
     <!-- Description for top_sites permission. -->
-    <string name="mozac_feature_addons_permissions_top_sites_description">Mynediad i’ch hanes pori</string>
+    <string name="mozac_feature_addons_permissions_top_sites_description">Mynd i’ch hanes pori</string>
     <!-- Description for devtools permission. -->
     <string name="mozac_feature_addons_permissions_devtools_description">Estyn offer datblygwyr i gael mynediad i’ch data mewn tabiau agored</string>
     <!-- The version on of add-on. -->
