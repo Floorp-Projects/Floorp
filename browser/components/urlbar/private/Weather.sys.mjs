@@ -10,7 +10,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   clearInterval: "resource://gre/modules/Timer.sys.mjs",
   MerinoClient: "resource:///modules/MerinoClient.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
-  QuickSuggest: "resource:///modules/QuickSuggest.sys.mjs",
   setInterval: "resource://gre/modules/Timer.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
 });
@@ -48,13 +47,18 @@ export class Weather extends BaseFeature {
 
   /**
    * @returns {Set}
-   *   The set of keywords that should trigger weather suggestions. This just
-   *   reflects the keywords array stored in the remote settings config, so it
-   *   may be non-empty even if `browser.urlbar.weather.zeroPrefix` is true.
-   *   Check the pref before allowing keyword-based suggestions.
+   *   The set of keywords that should trigger the weather suggestion. Null if
+   *   the suggestion should be shown on zero prefix (empty search string).
    */
   get keywords() {
     return this.#keywords;
+  }
+
+  update() {
+    super.update();
+    if (this.isEnabled) {
+      this.#updateKeywords();
+    }
   }
 
   enable(enabled) {
@@ -80,12 +84,6 @@ export class Weather extends BaseFeature {
   }
 
   #init() {
-    this.#onConfigSet = () => this.#updateKeywords();
-    lazy.QuickSuggest.remoteSettings.emitter.on(
-      "config-set",
-      this.#onConfigSet
-    );
-
     this.#merino = new lazy.MerinoClient(this.constructor.name);
 
     this.#fetchInterval = lazy.setInterval(
@@ -95,20 +93,16 @@ export class Weather extends BaseFeature {
 
     // `#fetch()` is async but there's no need to await it here.
     this.#fetch();
+
+    this.#updateKeywords();
   }
 
   #uninit() {
-    lazy.QuickSuggest.remoteSettings.emitter.off(
-      "config-set",
-      this.#onConfigSet
-    );
-    this.#onConfigSet = null;
-
     this.#merino = null;
     this.#suggestion = null;
     lazy.clearInterval(this.#fetchInterval);
     this.#fetchInterval = 0;
-    this.#keywords.clear();
+    this.#keywords = null;
   }
 
   async #fetch() {
@@ -163,8 +157,23 @@ export class Weather extends BaseFeature {
   }
 
   #updateKeywords() {
-    let { weather_keywords } = lazy.QuickSuggest.remoteSettings.config;
-    this.#keywords = new Set(weather_keywords || []);
+    let fullKeywords = lazy.UrlbarPrefs.get("weatherKeywords");
+    let minLength = lazy.UrlbarPrefs.get("weatherKeywordsMinimumLength");
+    if (!fullKeywords || !minLength) {
+      this.#keywords = null;
+      return;
+    }
+
+    this.#keywords = new Set();
+
+    // Create keywords that are prefixes of the full keywords starting at the
+    // specified minimum length.
+    for (let full of fullKeywords) {
+      this.#keywords.add(full);
+      for (let i = minLength; i < full.length; i++) {
+        this.#keywords.add(full.substring(0, i));
+      }
+    }
   }
 
   get _test_merino() {
@@ -198,6 +207,5 @@ export class Weather extends BaseFeature {
   #timeoutMs = MERINO_TIMEOUT_MS;
   #waitForFetchesDeferred = null;
   #pendingFetchCount = 0;
-  #onConfigSet = null;
-  #keywords = new Set();
+  #keywords = null;
 }

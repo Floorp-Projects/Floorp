@@ -205,14 +205,13 @@ class ProviderWeather extends UrlbarProvider {
       return false;
     }
 
-    if (lazy.UrlbarPrefs.get("weather.zeroPrefix")) {
+    let { keywords } = lazy.QuickSuggest.weather;
+    if (!keywords) {
+      // Show the suggestion only on zero prefix (empty search string).
       return !queryContext.searchString;
     }
 
-    // Trim only the start of the search string because a trailing space can
-    // affect the suggestions.
-    let trimmedSearchString = queryContext.searchString.trimStart();
-    return lazy.QuickSuggest.weather.keywords.has(trimmedSearchString);
+    return keywords.has(queryContext.searchString.trim());
   }
 
   /**

@@ -526,27 +526,6 @@ add_task(async function locale_nonEnglish() {
   });
 });
 
-// Search strings with only spaces or that start with spaces should not trigger
-// a weather suggestion.
-add_task(async function spacesInSearchString() {
-  // Sanity check initial state.
-  assertEnabled({
-    message: "Sanity check initial state",
-    hasSuggestion: true,
-    pendingFetchCount: 0,
-  });
-
-  for (let searchString of [" ", "  ", "   ", " doesn't match anything"]) {
-    await check_results({
-      context: createContext(searchString, {
-        providers: [UrlbarProviderWeather.name],
-        isPrivate: false,
-      }),
-      matches: [],
-    });
-  }
-});
-
 /**
  * Testing locales is tricky due to the weather feature's use of
  * `Services.locale.regionalPrefsLocales`. By default `regionalPrefsLocales`
@@ -628,8 +607,265 @@ async function doLocaleTest({ shouldRunTask, osUnit, unitsByLocale }) {
   }
 }
 
-// A weather suggestion should not be returned for a non-empty search string.
-add_task(async function nonEmptySearchString() {
+// When no keyword-related Nimbus variables are defined, the suggestion should
+// be triggered on zero prefix.
+add_task(async function noKeywordVariables() {
+  await doKeywordsTest({
+    nimbusValues: {},
+    tests: {
+      "": true,
+      w: false,
+      we: false,
+      wea: false,
+      weat: false,
+      weath: false,
+      weathe: false,
+      weather: false,
+      f: false,
+      fo: false,
+      for: false,
+      fore: false,
+      forec: false,
+      foreca: false,
+      forecas: false,
+      forecast: false,
+    },
+  });
+});
+
+// When `weatherKeywords` is non-null and `weatherKeywordsMinimumLength` is
+// absent from the Nimbus recipe, the suggestion should be triggered on zero
+// prefix.
+add_task(async function minLength_absent() {
+  await doKeywordsTest({
+    nimbusValues: {
+      weatherKeywords: ["weather"],
+    },
+    tests: {
+      "": true,
+      w: false,
+      we: false,
+      wea: false,
+      weat: false,
+      weath: false,
+      weathe: false,
+      weather: false,
+      " weather": false,
+      "weather ": false,
+      " weather ": false,
+    },
+  });
+});
+
+// When `weatherKeywords` is non-null and `weatherKeywordsMinimumLength` is
+// zero, the suggestion should be triggered on zero prefix.
+add_task(async function minLength_zero() {
+  await doKeywordsTest({
+    nimbusValues: {
+      weatherKeywords: ["weather"],
+      weatherKeywordsMinimumLength: 0,
+    },
+    tests: {
+      "": true,
+      w: false,
+      we: false,
+      wea: false,
+      weat: false,
+      weath: false,
+      weathe: false,
+      weather: false,
+      " weather": false,
+      "weather ": false,
+      " weather ": false,
+    },
+  });
+});
+
+// When `weatherKeywords` is non-null and `weatherKeywordsMinimumLength` is
+// larger than the length of all keywords, the suggestion should be triggered by
+// typing a full keyword.
+add_task(async function minLength_large() {
+  await doKeywordsTest({
+    nimbusValues: {
+      weatherKeywords: ["weather", "forecast"],
+      weatherKeywordsMinimumLength: 999,
+    },
+    tests: {
+      "": false,
+      w: false,
+      we: false,
+      wea: false,
+      weat: false,
+      weath: false,
+      weathe: false,
+      weather: true,
+      f: false,
+      fo: false,
+      for: false,
+      fore: false,
+      forec: false,
+      foreca: false,
+      forecas: false,
+      forecast: true,
+    },
+  });
+});
+
+// When `weatherKeywords` is non-null and `weatherKeywordsMinimumLength` is a
+// typical value like 4, the suggestion should be triggered by typing the first
+// 4 or more characters of a keyword.
+add_task(async function minLength_typical() {
+  await doKeywordsTest({
+    nimbusValues: {
+      weatherKeywords: ["weather", "forecast"],
+      weatherKeywordsMinimumLength: 4,
+    },
+    tests: {
+      "": false,
+      w: false,
+      we: false,
+      wea: false,
+      weat: true,
+      weath: true,
+      weathe: true,
+      weather: true,
+      f: false,
+      fo: false,
+      for: false,
+      fore: true,
+      forec: true,
+      foreca: true,
+      forecas: true,
+      forecast: true,
+      " wea": false,
+      "  wea": false,
+      "wea ": false,
+      "wea  ": false,
+      " weat": true,
+      "  weat": true,
+      "weat ": true,
+      "weat  ": true,
+    },
+  });
+});
+
+async function doKeywordsTest({ nimbusValues, tests }) {
+  // Sanity check initial state.
+  assertEnabled({
+    message: "Sanity check initial state",
+    hasSuggestion: true,
+    pendingFetchCount: 0,
+  });
+
+  let cleanup = await UrlbarTestUtils.initNimbusFeature(nimbusValues);
+
+  for (let [searchString, expected] of Object.entries(tests)) {
+    info("Doing search: " + JSON.stringify({ nimbusValues, searchString }));
+
+    let suggestedIndex = searchString ? 1 : 0;
+    await check_results({
+      context: createContext(searchString, {
+        providers: [UrlbarProviderWeather.name],
+        isPrivate: false,
+      }),
+      matches: expected ? [makeExpectedResult({ suggestedIndex })] : [],
+    });
+  }
+
+  await cleanup();
+}
+
+// When a Nimbus experiment isn't active, the suggestion should be triggered on
+// zero prefix. Installing and uninstalling an experiment should update the
+// keywords.
+add_task(async function zeroPrefix_withoutNimbus() {
+  // Sanity check initial state.
+  assertEnabled({
+    message: "Sanity check initial state",
+    hasSuggestion: true,
+    pendingFetchCount: 0,
+  });
+
+  info("1. Doing searches before installing experiment and setting keyword");
+  await check_results({
+    context: createContext("", {
+      providers: [UrlbarProviderWeather.name],
+      isPrivate: false,
+    }),
+    matches: [makeExpectedResult()],
+  });
+  await check_results({
+    context: createContext("weather", {
+      providers: [UrlbarProviderWeather.name],
+      isPrivate: false,
+    }),
+    matches: [],
+  });
+
+  let cleanup = await UrlbarTestUtils.initNimbusFeature({
+    weatherKeywords: ["weather"],
+    weatherKeywordsMinimumLength: 1,
+  });
+
+  info("2. Doing searches after installing experiment and setting keyword");
+  await check_results({
+    context: createContext("", {
+      providers: [UrlbarProviderWeather.name],
+      isPrivate: false,
+    }),
+    matches: [],
+  });
+  await check_results({
+    context: createContext("weather", {
+      providers: [UrlbarProviderWeather.name],
+      isPrivate: false,
+    }),
+    matches: [makeExpectedResult({ suggestedIndex: 1 })],
+  });
+
+  await cleanup();
+
+  info("3. Doing searches after uninstalling experiment");
+  await check_results({
+    context: createContext("", {
+      providers: [UrlbarProviderWeather.name],
+      isPrivate: false,
+    }),
+    matches: [makeExpectedResult()],
+  });
+  await check_results({
+    context: createContext("weather", {
+      providers: [UrlbarProviderWeather.name],
+      isPrivate: false,
+    }),
+    matches: [],
+  });
+});
+
+// When the zero-prefix suggestion is enabled, search strings with only spaces
+// or that start with spaces should not trigger a weather suggestion.
+add_task(async function zeroPrefix_spacesInSearchString() {
+  // Sanity check initial state.
+  assertEnabled({
+    message: "Sanity check initial state",
+    hasSuggestion: true,
+    pendingFetchCount: 0,
+  });
+
+  for (let searchString of [" ", "  ", "   ", " doesn't match anything"]) {
+    await check_results({
+      context: createContext(searchString, {
+        providers: [UrlbarProviderWeather.name],
+        isPrivate: false,
+      }),
+      matches: [],
+    });
+  }
+});
+
+// When the zero-prefix suggestion is enabled, a weather suggestion should not
+// be returned for a non-empty search string.
+add_task(async function zeroPrefix_nonEmptySearchString() {
   assertEnabled({
     message: "Sanity check initial state",
     hasSuggestion: true,
@@ -698,81 +934,6 @@ add_task(async function block() {
   });
 });
 
-// When `weather.zeroPrefix` is false, weather suggestions should be triggered
-// by keywords.
-add_task(async function keywords() {
-  // Sanity check initial state.
-  assertEnabled({
-    message: "Sanity check initial state",
-    hasSuggestion: true,
-    pendingFetchCount: 0,
-  });
-
-  await QuickSuggestTestUtils.withConfig({
-    config: {
-      weather_keywords: ["wea", "weather"],
-    },
-    callback: async () => {
-      // Map from search string -> whether the result should be triggered when
-      // `weather.zeroPrefix` is false
-      let tests = {
-        wea: true,
-        " wea": true,
-        "     wea": true,
-        weather: true,
-        " weather": true,
-        "     weather": true,
-
-        "": false,
-        " ": false,
-        "     ": false,
-        w: false,
-        we: false,
-        weat: false,
-        weath: false,
-        weathe: false,
-        "weather ": false,
-        " weather ": false,
-      };
-
-      for (let [searchString, expected] of Object.entries(tests)) {
-        // First do a search with `weather.zeroPrefix` set to true. Only the
-        // empty string should trigger the result even if the search string
-        // matches a keyword in the config.
-        info(
-          "Doing first search with weather.zeroPrefix = true: " +
-            JSON.stringify(searchString)
-        );
-        UrlbarPrefs.set("weather.zeroPrefix", true);
-        await check_results({
-          context: createContext(searchString, {
-            providers: [UrlbarProviderWeather.name],
-            isPrivate: false,
-          }),
-          matches: !searchString ? [makeExpectedResult()] : [],
-        });
-
-        // Do a second search with `weather.zeroPrefix` set to false and check
-        // the test case.
-        info(
-          "Doing second search with weather.zeroPrefix = false: " +
-            JSON.stringify(searchString)
-        );
-        UrlbarPrefs.set("weather.zeroPrefix", false);
-        await check_results({
-          context: createContext(searchString, {
-            providers: [UrlbarProviderWeather.name],
-            isPrivate: false,
-          }),
-          matches: expected ? [makeExpectedResult({ suggestedIndex: 1 })] : [],
-        });
-      }
-    },
-  });
-
-  UrlbarPrefs.clear("weather.zeroPrefix");
-});
-
 // When a sponsored quick suggest result matches the same keyword as the weather
 // result, the weather result should be shown and the quick suggest result
 // should not be shown.
@@ -813,77 +974,65 @@ async function doMatchingQuickSuggestTest(pref, isSponsored) {
     },
   ]);
 
-  await QuickSuggestTestUtils.withConfig({
-    config: {
-      weather_keywords: [keyword],
-    },
-    callback: async () => {
-      // First do a search with `weather.zeroPrefix` set to true to verify the
-      // quick suggest result matches the keyword.
-      info("Doing first search with weather.zeroPrefix = true");
-      UrlbarPrefs.set("weather.zeroPrefix", true);
-      await check_results({
-        context: createContext(keyword, {
-          providers: [
-            UrlbarProviderQuickSuggest.name,
-            UrlbarProviderWeather.name,
-          ],
-          isPrivate: false,
-        }),
-        matches: [
-          {
-            type: UrlbarUtils.RESULT_TYPE.URL,
-            source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-            heuristic: false,
-            payload: {
-              qsSuggestion: keyword,
-              title: "Suggestion",
-              url: "http://example.com/",
-              displayUrl: "http://example.com",
-              originalUrl: "http://example.com/",
-              icon: null,
-              sponsoredImpressionUrl: "http://example.com/impression",
-              sponsoredClickUrl: "http://example.com/click",
-              sponsoredBlockId: 1,
-              sponsoredAdvertiser: "TestAdvertiser",
-              sponsoredIabCategory: iab_category,
-              isSponsored,
-              helpUrl: QuickSuggest.HELP_URL,
-              helpL10n: {
-                id: UrlbarPrefs.get("resultMenu")
-                  ? "urlbar-result-menu-learn-more-about-firefox-suggest"
-                  : "firefox-suggest-urlbar-learn-more",
-              },
-              isBlockable: false,
-              blockL10n: {
-                id: UrlbarPrefs.get("resultMenu")
-                  ? "urlbar-result-menu-dismiss-firefox-suggest"
-                  : "firefox-suggest-urlbar-block",
-              },
-              source: "remote-settings",
-            },
+  // First do a search to verify the quick suggest result matches the keyword.
+  info("Doing first search for quick suggest result");
+  await check_results({
+    context: createContext(keyword, {
+      providers: [UrlbarProviderQuickSuggest.name, UrlbarProviderWeather.name],
+      isPrivate: false,
+    }),
+    matches: [
+      {
+        type: UrlbarUtils.RESULT_TYPE.URL,
+        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+        heuristic: false,
+        payload: {
+          qsSuggestion: keyword,
+          title: "Suggestion",
+          url: "http://example.com/",
+          displayUrl: "http://example.com",
+          originalUrl: "http://example.com/",
+          icon: null,
+          sponsoredImpressionUrl: "http://example.com/impression",
+          sponsoredClickUrl: "http://example.com/click",
+          sponsoredBlockId: 1,
+          sponsoredAdvertiser: "TestAdvertiser",
+          sponsoredIabCategory: iab_category,
+          isSponsored,
+          helpUrl: QuickSuggest.HELP_URL,
+          helpL10n: {
+            id: UrlbarPrefs.get("resultMenu")
+              ? "urlbar-result-menu-learn-more-about-firefox-suggest"
+              : "firefox-suggest-urlbar-learn-more",
           },
-        ],
-      });
-
-      // Do a second search with `weather.zeroPrefix` set to false to verify
-      // only the weather result is shown.
-      info("Doing second search with weather.zeroPrefix = false");
-      UrlbarPrefs.set("weather.zeroPrefix", false);
-      await check_results({
-        context: createContext(keyword, {
-          providers: [
-            UrlbarProviderQuickSuggest.name,
-            UrlbarProviderWeather.name,
-          ],
-          isPrivate: false,
-        }),
-        matches: [makeExpectedResult({ suggestedIndex: 1 })],
-      });
-    },
+          isBlockable: false,
+          blockL10n: {
+            id: UrlbarPrefs.get("resultMenu")
+              ? "urlbar-result-menu-dismiss-firefox-suggest"
+              : "firefox-suggest-urlbar-block",
+          },
+          source: "remote-settings",
+        },
+      },
+    ],
   });
 
-  UrlbarPrefs.clear("weather.zeroPrefix");
+  // Set up the keyword for the weather suggestion and do a second search to
+  // verify only the weather result matches.
+  info("Doing second search for weather suggestion");
+  let cleanup = await UrlbarTestUtils.initNimbusFeature({
+    weatherKeywords: [keyword],
+    weatherKeywordsMinimumLength: 1,
+  });
+  await check_results({
+    context: createContext(keyword, {
+      providers: [UrlbarProviderQuickSuggest.name, UrlbarProviderWeather.name],
+      isPrivate: false,
+    }),
+    matches: [makeExpectedResult({ suggestedIndex: 1 })],
+  });
+  await cleanup();
+
   UrlbarPrefs.clear(pref);
 }
 
