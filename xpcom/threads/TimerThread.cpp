@@ -818,7 +818,7 @@ nsresult TimerThread::AddTimer(nsTimerImpl* aTimer,
        aTimer->mDelay.IsZero());
 
   // Add the timer to our list.
-  if (!AddTimerInternal(aTimer)) {
+  if (!AddTimerInternal(*aTimer)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -853,7 +853,7 @@ nsresult TimerThread::RemoveTimer(nsTimerImpl* aTimer,
   // Remove the timer from our array.  Tell callers that aTimer was not found
   // by returning NS_ERROR_NOT_AVAILABLE.
 
-  if (!RemoveTimerInternal(aTimer)) {
+  if (!RemoveTimerInternal(*aTimer)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -934,17 +934,17 @@ TimeStamp TimerThread::FindNextFireTimeForCurrentThread(TimeStamp aDefault,
 
 // This function must be called from within a lock
 // Also: we hold the mutex for the nsTimerImpl.
-bool TimerThread::AddTimerInternal(nsTimerImpl* aTimer) {
+bool TimerThread::AddTimerInternal(nsTimerImpl& aTimer) {
   mMonitor.AssertCurrentThreadOwns();
-  aTimer->mMutex.AssertCurrentThreadOwns();
+  aTimer.mMutex.AssertCurrentThreadOwns();
   AUTO_TIMERS_STATS(TimerThread_AddTimerInternal);
   if (mShutdown) {
     return false;
   }
 
-  LogTimerEvent::LogDispatch(aTimer);
+  LogTimerEvent::LogDispatch(&aTimer);
 
-  const TimeStamp& timeout = aTimer->mTimeout;
+  const TimeStamp& timeout = aTimer.mTimeout;
   const size_t insertionIndex = ComputeTimerInsertionIndex(timeout);
 
   if (insertionIndex != 0 && !mTimers[insertionIndex - 1].Value()) {
@@ -1016,26 +1016,22 @@ bool TimerThread::AddTimerInternal(nsTimerImpl* aTimer) {
 
 // This function must be called from within a lock
 // Also: we hold the mutex for the nsTimerImpl.
-bool TimerThread::RemoveTimerInternal(nsTimerImpl* aTimer) {
+bool TimerThread::RemoveTimerInternal(nsTimerImpl& aTimer) {
   mMonitor.AssertCurrentThreadOwns();
-  aTimer->mMutex.AssertCurrentThreadOwns();
+  aTimer.mMutex.AssertCurrentThreadOwns();
   AUTO_TIMERS_STATS(TimerThread_RemoveTimerInternal);
-  if (!aTimer) {
-    COUNT_TIMERS_STATS(TimerThread_RemoveTimerInternal_nullptr);
-    return false;
-  }
-  if (!aTimer->IsInTimerThread()) {
+  if (!aTimer.IsInTimerThread()) {
     COUNT_TIMERS_STATS(TimerThread_RemoveTimerInternal_not_in_list);
     return false;
   }
   AUTO_TIMERS_STATS(TimerThread_RemoveTimerInternal_in_list);
   for (auto& entry : mTimers) {
-    if (entry.Value() == aTimer) {
+    if (entry.Value() == &aTimer) {
       entry.Forget();
       return true;
     }
   }
-  MOZ_ASSERT(!aTimer->IsInTimerThread(),
+  MOZ_ASSERT(!aTimer.IsInTimerThread(),
              "Not found in the list but it should be!?");
   return false;
 }
@@ -1099,7 +1095,7 @@ void TimerThread::PostTimerEvent(already_AddRefed<nsTimerImpl> aTimerRef) {
       // happy
       MutexAutoLock lock1(timer.get()->mMutex);
       MonitorAutoLock lock2(mMonitor);
-      RemoveTimerInternal(timer.get());
+      RemoveTimerInternal(*timer);
     }
   }
 }
