@@ -3718,18 +3718,15 @@ void nsWindow::CreateCompositorVsyncDispatcher() {
     nsBaseWidget::CreateCompositorVsyncDispatcher();
     return;
   }
-
-  if (XRE_IsParentProcess()) {
-    if (!mCompositorVsyncDispatcherLock) {
-      mCompositorVsyncDispatcherLock =
-          MakeUnique<Mutex>("mCompositorVsyncDispatcherLock");
-    }
-    MutexAutoLock lock(*mCompositorVsyncDispatcherLock);
-    if (!mCompositorVsyncDispatcher) {
-      LOG_VSYNC("  create CompositorVsyncDispatcher()");
-      mCompositorVsyncDispatcher =
-          new CompositorVsyncDispatcher(mWaylandVsyncDispatcher);
-    }
+  if (!mCompositorVsyncDispatcherLock) {
+    mCompositorVsyncDispatcherLock =
+        MakeUnique<Mutex>("mCompositorVsyncDispatcherLock");
+  }
+  MutexAutoLock lock(*mCompositorVsyncDispatcherLock);
+  if (!mCompositorVsyncDispatcher) {
+    LOG_VSYNC("  create CompositorVsyncDispatcher()");
+    mCompositorVsyncDispatcher =
+        new CompositorVsyncDispatcher(mWaylandVsyncDispatcher);
   }
 }
 #endif
@@ -6289,8 +6286,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
       mWindowType == WindowType::TopLevel) {
     mWaylandVsyncSource = new WaylandVsyncSource(this);
     mWaylandVsyncDispatcher = new VsyncDispatcher(mWaylandVsyncSource);
-    LOG_VSYNC("  created WaylandVsyncSource)");
-    MOZ_RELEASE_ASSERT(mWaylandVsyncSource);
+    LOG_VSYNC("  created WaylandVsyncSource");
   }
 #endif
 
