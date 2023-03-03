@@ -39,7 +39,7 @@ dependencies {
     implementation project(':browser-state')
     implementation project(':support-base')
     implementation project(':support-ktx')
-    implementation ComponentsDependencies.kotlin_stdlib
+
     implementation ComponentsDependencies.kotlin_coroutines
 
     testImplementation project(':support-test')

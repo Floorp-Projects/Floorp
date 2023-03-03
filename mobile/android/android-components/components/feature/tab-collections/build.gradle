@@ -56,7 +56,6 @@ dependencies {
     implementation project(':support-ktx')
     implementation project(':support-base')
 
-    implementation ComponentsDependencies.kotlin_stdlib
     implementation ComponentsDependencies.kotlin_coroutines
 
     implementation ComponentsDependencies.androidx_paging

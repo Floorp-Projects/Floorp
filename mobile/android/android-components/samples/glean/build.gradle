@@ -59,7 +59,6 @@ dependencies {
     implementation project(':support-rustlog')
     implementation project(':lib-fetch-httpurlconnection')
 
-    implementation ComponentsDependencies.kotlin_stdlib
     implementation ComponentsDependencies.kotlin_coroutines
 
     implementation ComponentsDependencies.androidx_appcompat

@@ -37,8 +37,6 @@ dependencies {
 
     implementation project(':support-ktx')
 
-    implementation ComponentsDependencies.kotlin_stdlib
-
     implementation project(':ui-icons')
 
     testImplementation project(':support-test')

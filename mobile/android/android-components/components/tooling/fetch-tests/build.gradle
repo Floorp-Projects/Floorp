@@ -33,8 +33,6 @@ android {
 dependencies {
     implementation project(':concept-fetch')
 
-    implementation ComponentsDependencies.kotlin_stdlib
-
     implementation ComponentsDependencies.testing_mockwebserver
     implementation ComponentsDependencies.testing_junit
     implementation ComponentsDependencies.kotlin_coroutines

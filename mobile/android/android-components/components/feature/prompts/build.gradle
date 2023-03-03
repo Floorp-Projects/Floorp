@@ -39,10 +39,9 @@ dependencies {
     implementation project(':support-utils')
     implementation project(':ui-icons')
 
-    implementation ComponentsDependencies.androidx_core_ktx
-    implementation ComponentsDependencies.kotlin_stdlib
-    implementation ComponentsDependencies.google_material
     implementation ComponentsDependencies.androidx_constraintlayout
+    implementation ComponentsDependencies.androidx_core_ktx
+    implementation ComponentsDependencies.google_material
 
     testImplementation ComponentsDependencies.androidx_test_core
     testImplementation ComponentsDependencies.androidx_test_junit

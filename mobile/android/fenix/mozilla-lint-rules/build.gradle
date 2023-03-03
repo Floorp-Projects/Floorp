@@ -21,17 +21,6 @@ repositories {
 }
 
 dependencies {
-    // I didn't look thoroughly enough to really know what's going on here but I think
-    // the lint API uses jdk8 so if we provide jdk7, the dependency collision system
-    // doesn't work and there are duplicate APIs with different versions in the output.
-    //
-    // The prepareLintJar task fails with "Found more than one jar in the 'lintChecks' configuration"
-    // if we include the stdlib (with implementation) so we have to do compileOnly + testImplementation.
-    compileOnly FenixDependencies.kotlin_stdlib_jdk8
-    compileOnly FenixDependencies.kotlin_reflect
-    testImplementation FenixDependencies.kotlin_stdlib_jdk8
-    testImplementation FenixDependencies.kotlin_reflect
-
     compileOnly "com.android.tools.lint:lint-api:${FenixVersions.android_lint_api}"
     compileOnly "com.android.tools.lint:lint-checks:${FenixVersions.android_lint_api}"
 

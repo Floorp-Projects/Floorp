@@ -40,7 +40,6 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 }
 
 dependencies {
-    implementation ComponentsDependencies.kotlin_stdlib
     implementation ComponentsDependencies.kotlin_coroutines
     implementation ComponentsDependencies.androidx_fragment
     implementation ComponentsDependencies.androidx_compose_ui

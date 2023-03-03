@@ -57,13 +57,14 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
 }
 
 dependencies {
-    implementation ComponentsDependencies.androidx_appcompat
-    implementation ComponentsDependencies.kotlin_stdlib
     implementation ComponentsDependencies.kotlin_coroutines
-    implementation ComponentsDependencies.androidx_work_runtime
+
+    implementation ComponentsDependencies.androidx_appcompat
+    implementation ComponentsDependencies.androidx_cardview
     implementation ComponentsDependencies.androidx_core_ktx
     implementation ComponentsDependencies.androidx_recyclerview
-    implementation ComponentsDependencies.androidx_cardview
+    implementation ComponentsDependencies.androidx_work_runtime
+
     implementation ComponentsDependencies.androidx_room_runtime
     kapt ComponentsDependencies.androidx_room_compiler
 

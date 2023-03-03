@@ -41,7 +41,6 @@ dependencies {
     implementation project(':support-utils')
     implementation project(':support-sync-telemetry')
 
-    implementation ComponentsDependencies.kotlin_stdlib
     implementation ComponentsDependencies.androidx_work_runtime
 
     testImplementation project(':support-test')

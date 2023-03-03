@@ -26,8 +26,6 @@ android {
 }
 
 dependencies {
-    implementation ComponentsDependencies.kotlin_stdlib
-
     testImplementation ComponentsDependencies.testing_junit
     testImplementation ComponentsDependencies.testing_mockito
 }

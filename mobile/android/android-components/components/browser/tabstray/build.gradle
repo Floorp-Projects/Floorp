@@ -42,7 +42,6 @@ dependencies {
     implementation ComponentsDependencies.androidx_cardview
     api ComponentsDependencies.androidx_recyclerview
 
-    implementation ComponentsDependencies.kotlin_stdlib
     implementation ComponentsDependencies.kotlin_coroutines
 
     testImplementation project(':support-test')

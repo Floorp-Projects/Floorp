@@ -58,12 +58,13 @@ dependencies {
     implementation project(':support-ktx')
 
     implementation ComponentsDependencies.androidx_annotation
+    implementation ComponentsDependencies.androidx_compose_material
+    implementation ComponentsDependencies.androidx_compose_ui
     implementation ComponentsDependencies.androidx_core_ktx
     implementation ComponentsDependencies.androidx_palette
-    implementation ComponentsDependencies.androidx_compose_ui
-    implementation ComponentsDependencies.androidx_compose_material
-    implementation ComponentsDependencies.kotlin_stdlib
+
     implementation ComponentsDependencies.kotlin_coroutines
+
     implementation ComponentsDependencies.thirdparty_disklrucache
 
     testImplementation project(':support-test')

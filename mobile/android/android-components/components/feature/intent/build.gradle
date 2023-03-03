@@ -32,7 +32,6 @@ dependencies {
     implementation project(':feature-tabs')
     implementation project(':support-utils')
     implementation project(':support-ktx')
-    implementation ComponentsDependencies.kotlin_stdlib
 
     testImplementation project(':support-test')
     testImplementation project(':support-test-libstate')

@@ -35,7 +35,6 @@ dependencies {
     implementation project(':support-ktx')
     implementation project(':ui-icons')
 
-    implementation ComponentsDependencies.kotlin_stdlib
     implementation ComponentsDependencies.androidx_constraintlayout
 
     testImplementation ComponentsDependencies.androidx_test_core

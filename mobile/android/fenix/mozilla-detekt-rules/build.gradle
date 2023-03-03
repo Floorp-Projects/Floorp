@@ -4,11 +4,6 @@ dependencies {
   compileOnly FenixDependencies.detektApi
   implementation FenixDependencies.androidx_annotation
 
-  // I didn't look thoroughly enough to really know what's going on here but I think
-  // the detekt API uses jdk8 so if we provide jdk7, the dependency collision system
-  // doesn't work and there are duplicate APIs with different versions in the output.
-  implementation FenixDependencies.kotlin_stdlib_jdk8
-
   testImplementation FenixDependencies.detektApi
   testImplementation FenixDependencies.detektTest
   testImplementation FenixDependencies.junitApi

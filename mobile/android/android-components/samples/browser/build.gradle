@@ -139,8 +139,6 @@ dependencies {
 
     implementation ComponentsDependencies.google_material
 
-    implementation ComponentsDependencies.kotlin_stdlib
-
     implementation ComponentsDependencies.androidx_appcompat
     implementation ComponentsDependencies.androidx_compose_ui_tooling
     implementation ComponentsDependencies.androidx_compose_foundation

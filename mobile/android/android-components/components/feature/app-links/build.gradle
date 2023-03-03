@@ -45,7 +45,6 @@ dependencies {
     implementation project(':support-utils')
     implementation project(':feature-session')
 
-    implementation ComponentsDependencies.kotlin_stdlib
     implementation ComponentsDependencies.kotlin_coroutines
 
     testImplementation project(':support-test')

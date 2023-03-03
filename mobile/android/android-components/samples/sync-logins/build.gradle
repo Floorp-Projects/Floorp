@@ -45,8 +45,6 @@ dependencies {
     implementation project(':lib-dataprotect')
     implementation project(':lib-fetch-httpurlconnection')
 
-    implementation ComponentsDependencies.kotlin_stdlib
-
     implementation ComponentsDependencies.androidx_appcompat
     implementation ComponentsDependencies.androidx_browser
     implementation ComponentsDependencies.androidx_recyclerview

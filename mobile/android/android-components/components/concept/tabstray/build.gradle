@@ -27,7 +27,6 @@ dependencies {
     api project(':concept-engine')
 
     implementation project(':support-base')
-    implementation ComponentsDependencies.kotlin_stdlib
 }
 
 apply from: '../../../android-lint.gradle'

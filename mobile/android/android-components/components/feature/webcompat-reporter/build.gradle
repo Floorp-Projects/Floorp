@@ -28,7 +28,7 @@ dependencies {
     implementation project(':support-webextensions')
 
     implementation ComponentsDependencies.androidx_core_ktx
-    implementation ComponentsDependencies.kotlin_stdlib
+
     implementation ComponentsDependencies.kotlin_coroutines
 
     testImplementation project(':support-test')

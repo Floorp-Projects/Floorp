@@ -36,7 +36,6 @@ dependencies {
     implementation ComponentsDependencies.androidx_constraintlayout
     implementation ComponentsDependencies.androidx_coordinatorlayout
 
-    implementation ComponentsDependencies.kotlin_stdlib
     implementation ComponentsDependencies.kotlin_coroutines
 
     testImplementation project(':support-test')

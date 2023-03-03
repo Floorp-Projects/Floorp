@@ -32,7 +32,6 @@ dependencies {
     // Remove when the MessageBus is implemented somewhere else.
     implementation project(':support-base')
 
-    implementation ComponentsDependencies.kotlin_stdlib
     implementation ComponentsDependencies.kotlin_coroutines
     implementation ComponentsDependencies.androidx_work_runtime
     implementation ComponentsDependencies.androidx_lifecycle_runtime

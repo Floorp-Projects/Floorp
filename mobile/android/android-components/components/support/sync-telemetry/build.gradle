@@ -45,7 +45,7 @@ dependencies {
     implementation project(':support-base')
 
     implementation project(':service-glean')
-    implementation ComponentsDependencies.kotlin_stdlib
+
     implementation ComponentsDependencies.kotlin_coroutines
     implementation ComponentsDependencies.mozilla_sync15
 

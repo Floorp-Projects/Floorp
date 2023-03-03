@@ -48,7 +48,6 @@ dependencies {
     implementation project(':concept-fetch')
     implementation project(':support-base')
 
-    implementation ComponentsDependencies.kotlin_stdlib
     implementation ComponentsDependencies.kotlin_coroutines
 
     implementation ComponentsDependencies.androidx_compose_ui

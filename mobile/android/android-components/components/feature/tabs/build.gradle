@@ -48,7 +48,6 @@ dependencies {
     implementation ComponentsDependencies.androidx_fragment
     implementation ComponentsDependencies.androidx_recyclerview
 
-    implementation ComponentsDependencies.kotlin_stdlib
     implementation ComponentsDependencies.kotlin_coroutines
 
     // In tests we are constructing our own SessionManager instance which needs to know about an "engine".

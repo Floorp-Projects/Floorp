@@ -24,8 +24,6 @@ android {
 }
 
 dependencies {
-    implementation ComponentsDependencies.kotlin_stdlib
-
     implementation ComponentsDependencies.androidx_annotation
     implementation ComponentsDependencies.androidx_appcompat
     implementation project(':support-base')

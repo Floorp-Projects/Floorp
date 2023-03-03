@@ -47,7 +47,6 @@ dependencies {
     implementation project(':support-utils')
     implementation project(':service-glean')
 
-    implementation ComponentsDependencies.kotlin_stdlib
     implementation ComponentsDependencies.kotlin_coroutines
 }
 

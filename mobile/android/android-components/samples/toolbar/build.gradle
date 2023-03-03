@@ -51,7 +51,6 @@ dependencies {
 
     implementation project(':support-utils')
 
-    implementation ComponentsDependencies.kotlin_stdlib
     implementation ComponentsDependencies.kotlin_coroutines
 
     implementation ComponentsDependencies.androidx_appcompat

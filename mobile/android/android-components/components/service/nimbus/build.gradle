@@ -49,8 +49,9 @@ dependencies {
     implementation ComponentsDependencies.androidx_constraintlayout
     implementation ComponentsDependencies.androidx_coordinatorlayout
     implementation ComponentsDependencies.androidx_recyclerview
-    implementation ComponentsDependencies.kotlin_stdlib
+
     implementation ComponentsDependencies.kotlin_coroutines
+
     implementation project(':support-base')
     implementation project(':support-locale')
 

@@ -55,16 +55,16 @@ dependencies {
     implementation project(':support-utils')
     implementation project(':ui-icons')
 
-    implementation ComponentsDependencies.androidx_core_ktx
-    implementation ComponentsDependencies.androidx_localbroadcastmanager
-    implementation ComponentsDependencies.kotlin_coroutines
-    implementation ComponentsDependencies.kotlin_stdlib
-    implementation ComponentsDependencies.androidx_recyclerview
     implementation ComponentsDependencies.androidx_constraintlayout
-    implementation ComponentsDependencies.androidx_room_runtime
-    implementation ComponentsDependencies.androidx_paging
+    implementation ComponentsDependencies.androidx_core_ktx
     implementation ComponentsDependencies.androidx_lifecycle_livedata
+    implementation ComponentsDependencies.androidx_localbroadcastmanager
+    implementation ComponentsDependencies.androidx_paging
+    implementation ComponentsDependencies.androidx_recyclerview
 
+    implementation ComponentsDependencies.kotlin_coroutines
+
+    implementation ComponentsDependencies.androidx_room_runtime
     kapt ComponentsDependencies.androidx_room_compiler
 
     testImplementation ComponentsDependencies.androidx_test_core

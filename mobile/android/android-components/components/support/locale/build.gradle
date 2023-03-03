@@ -26,7 +26,6 @@ android {
 }
 
 dependencies {
-    implementation ComponentsDependencies.kotlin_stdlib
     implementation ComponentsDependencies.androidx_core
     implementation ComponentsDependencies.androidx_core_ktx
     implementation ComponentsDependencies.kotlin_coroutines

@@ -46,7 +46,6 @@ dependencies {
     implementation project(':support-base')
     implementation project(':feature-prompts')
 
-    implementation ComponentsDependencies.kotlin_stdlib
     implementation ComponentsDependencies.kotlin_coroutines
 
     implementation ComponentsDependencies.androidx_paging

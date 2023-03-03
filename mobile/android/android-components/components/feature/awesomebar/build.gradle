@@ -44,7 +44,6 @@ dependencies {
     implementation project(':ui-icons')
 
     implementation ComponentsDependencies.androidx_core_ktx
-    implementation ComponentsDependencies.kotlin_stdlib
 
     testImplementation project(':support-test')
     testImplementation project(':lib-fetch-httpurlconnection')

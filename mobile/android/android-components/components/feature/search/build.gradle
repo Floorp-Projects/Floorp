@@ -51,7 +51,6 @@ dependencies {
     implementation project(':support-base')
 
     implementation ComponentsDependencies.androidx_core_ktx
-    implementation ComponentsDependencies.kotlin_stdlib
 
     testImplementation project(':support-test')
     testImplementation project(':support-test-fakes')

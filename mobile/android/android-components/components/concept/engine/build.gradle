@@ -26,9 +26,10 @@ android {
 
 dependencies {
     implementation project(':support-ktx')
-    implementation ComponentsDependencies.kotlin_stdlib
-    implementation ComponentsDependencies.androidx_annotation
+
     implementation ComponentsDependencies.kotlin_coroutines
+
+    implementation ComponentsDependencies.androidx_annotation
     implementation ComponentsDependencies.androidx_paging
 
     // We expose this as API because we are using Observable in our public API and do not want every

@@ -37,10 +37,10 @@ dependencies {
     implementation project(':support-utils')
     implementation project(':support-ktx')
 
-    implementation ComponentsDependencies.kotlin_stdlib
+
     implementation ComponentsDependencies.androidx_core_ktx
-    implementation ComponentsDependencies.google_material
     implementation ComponentsDependencies.androidx_swiperefreshlayout
+    implementation ComponentsDependencies.google_material
 
     testImplementation project(':support-test')
     testImplementation project(':support-test-fakes')

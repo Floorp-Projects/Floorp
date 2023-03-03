@@ -46,7 +46,6 @@ dependencies {
     implementation project(':lib-dataprotect')
     implementation project(':lib-state')
 
-    implementation ComponentsDependencies.kotlin_stdlib
     implementation ComponentsDependencies.kotlin_coroutines
 
     implementation ComponentsDependencies.androidx_work_runtime

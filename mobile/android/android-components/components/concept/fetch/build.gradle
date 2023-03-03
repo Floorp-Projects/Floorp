@@ -26,7 +26,6 @@ android {
 }
 
 dependencies {
-    implementation ComponentsDependencies.kotlin_stdlib
     testImplementation ComponentsDependencies.kotlin_coroutines
 
     testImplementation ComponentsDependencies.androidx_test_junit

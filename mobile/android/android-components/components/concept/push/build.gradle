@@ -28,8 +28,6 @@ android {
 }
 
 dependencies {
-    implementation ComponentsDependencies.kotlin_stdlib
-
     implementation project(':support-base')
 
     testImplementation project(':support-test')

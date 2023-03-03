@@ -26,8 +26,6 @@ android {
 }
 
 dependencies {
-    implementation ComponentsDependencies.kotlin_stdlib
-
     implementation project(':ui-colors')
     implementation project(':ui-icons')
 

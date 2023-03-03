@@ -95,7 +95,6 @@ object Versions {
 // Synchronized dependencies used by (some) modules
 @Suppress("Unused", "MaxLineLength")
 object ComponentsDependencies {
-    const val kotlin_stdlib = "org.jetbrains.kotlin:kotlin-stdlib:${Versions.kotlin}"
     const val kotlin_coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.coroutines}"
     const val kotlin_reflect = "org.jetbrains.kotlin:kotlin-reflect:${Versions.kotlin}"
 

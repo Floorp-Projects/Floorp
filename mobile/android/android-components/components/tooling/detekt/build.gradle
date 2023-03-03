@@ -9,19 +9,11 @@ targetCompatibility = JavaVersion.VERSION_11
 sourceCompatibility = JavaVersion.VERSION_11
 
 dependencies {
-    implementation ComponentsDependencies.kotlin_stdlib
     implementation ComponentsDependencies.tools_detekt_api
 
     testImplementation ComponentsDependencies.testing_junit
     testImplementation ComponentsDependencies.tools_detekt_api
     testImplementation ComponentsDependencies.tools_detekt_test
-}
-
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
-    // Gradle keeps warning about different Kotlin versions being on the classpath. I am unsure
-    // how to resolve that and if it is even resolvable in this cross-library setup. Anyhow,
-    // since it is only a warning I am going to suppress them for this project specifically.
-    kotlinOptions.allWarningsAsErrors = false
 }
 
 tasks.register("lintRelease") {

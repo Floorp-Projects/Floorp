@@ -484,7 +484,6 @@ dependencies {
 
     implementation project(':browser-engine-gecko')
 
-    implementation FenixDependencies.kotlin_stdlib
     implementation FenixDependencies.kotlin_coroutines
     implementation FenixDependencies.kotlin_coroutines_android
     testImplementation FenixDependencies.kotlin_coroutines_test

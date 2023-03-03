@@ -32,7 +32,6 @@ android {
 dependencies {
     implementation ComponentsDependencies.mozilla_rustlog
 
-    implementation ComponentsDependencies.kotlin_stdlib
     implementation ComponentsDependencies.kotlin_coroutines
     // Log.Priority is in the public api.
     api project(':support-base')
