@@ -88,9 +88,6 @@ class AddonInstallationDialogFragmentTest {
 
         doReturn(testContext).`when`(fragment).requireContext()
 
-        @Suppress("DEPRECATION")
-        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
-
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
         val confirmButton = dialog.findViewById<Button>(R.id.confirm_button)
@@ -118,9 +115,7 @@ class AddonInstallationDialogFragmentTest {
 
         doReturn(testContext).`when`(fragment).requireContext()
 
-        @Suppress("DEPRECATION")
-        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
-        doReturn(mockFragmentManager()).`when`(fragment).getParentFragmentManager()
+        doReturn(mockFragmentManager()).`when`(fragment).parentFragmentManager
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()

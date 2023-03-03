@@ -65,8 +65,6 @@ class DownloadAppChooserDialogTest {
         fragment.onAppSelected = onAppSelected
 
         doReturn(testContext).`when`(fragment).requireContext()
-        @Suppress("DEPRECATION")
-        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
 
         val downloadDialog = fragment.onCreateDialog(null)
         downloadDialog.show()
@@ -94,8 +92,6 @@ class DownloadAppChooserDialogTest {
         fragment.onDismiss = onDismiss
 
         doReturn(testContext).`when`(fragment).requireContext()
-        @Suppress("DEPRECATION")
-        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
 
         val downloadDialog = fragment.onCreateDialog(null)
         downloadDialog.show()

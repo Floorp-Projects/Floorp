@@ -252,10 +252,6 @@ class SitePermissionsDialogFragmentTest {
 
         doReturn(testContext).`when`(fragment).requireContext()
 
-        @Suppress("DEPRECATION")
-        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
-        doReturn(mockFragmentManager()).`when`(fragment).getParentFragmentManager()
-
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
 
@@ -284,9 +280,7 @@ class SitePermissionsDialogFragmentTest {
 
         doReturn(testContext).`when`(fragment).requireContext()
 
-        @Suppress("DEPRECATION")
-        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
-        doReturn(mockFragmentManager()).`when`(fragment).getParentFragmentManager()
+        doReturn(mockFragmentManager()).`when`(fragment).parentFragmentManager
 
         fragment.onDismiss(mock())
 
@@ -356,10 +350,6 @@ class SitePermissionsDialogFragmentTest {
 
         doReturn(testContext).`when`(fragment).requireContext()
 
-        @Suppress("DEPRECATION")
-        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
-        doReturn(mockFragmentManager()).`when`(fragment).getParentFragmentManager()
-
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
 
@@ -389,10 +379,6 @@ class SitePermissionsDialogFragmentTest {
 
         doReturn(testContext).`when`(fragment).requireContext()
 
-        @Suppress("DEPRECATION")
-        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
-        doReturn(mockFragmentManager()).`when`(fragment).getParentFragmentManager()
-
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
 
@@ -421,10 +407,6 @@ class SitePermissionsDialogFragmentTest {
         fragment.feature = mockFeature
 
         doReturn(testContext).`when`(fragment).requireContext()
-
-        @Suppress("DEPRECATION")
-        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
-        doReturn(mockFragmentManager()).`when`(fragment).getParentFragmentManager()
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()

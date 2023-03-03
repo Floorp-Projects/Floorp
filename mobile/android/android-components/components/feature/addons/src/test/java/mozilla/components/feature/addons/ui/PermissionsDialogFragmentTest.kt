@@ -72,9 +72,6 @@ class PermissionsDialogFragmentTest {
 
         doReturn(testContext).`when`(fragment).requireContext()
 
-        @Suppress("DEPRECATION")
-        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
-
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
 
@@ -101,9 +98,7 @@ class PermissionsDialogFragmentTest {
 
         doReturn(testContext).`when`(fragment).requireContext()
 
-        @Suppress("DEPRECATION")
-        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
-        doReturn(mockFragmentManager()).`when`(fragment).getParentFragmentManager()
+        doReturn(mockFragmentManager()).`when`(fragment).parentFragmentManager
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()

@@ -38,8 +38,6 @@ class SimpleRedirectDialogFragmentTest {
         doNothing().`when`(fragment).dismiss()
 
         doReturn(testContext).`when`(fragment).requireContext()
-        @Suppress("DEPRECATION")
-        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
 
         fragment.onConfirmRedirect = onConfirm
         fragment.onCancelRedirect = onCancel
@@ -67,8 +65,6 @@ class SimpleRedirectDialogFragmentTest {
         doNothing().`when`(fragment).dismiss()
 
         doReturn(testContext).`when`(fragment).requireContext()
-        @Suppress("DEPRECATION")
-        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
 
         fragment.onConfirmRedirect = onConfirm
         fragment.onCancelRedirect = onCancel
@@ -96,8 +92,6 @@ class SimpleRedirectDialogFragmentTest {
         doNothing().`when`(fragment).dismiss()
 
         doReturn(testContext).`when`(fragment).requireContext()
-        @Suppress("DEPRECATION")
-        doReturn(mockFragmentManager()).`when`(fragment).requireFragmentManager()
 
         fragment.onConfirmRedirect = onConfirm
         fragment.onCancelRedirect = onCancel
