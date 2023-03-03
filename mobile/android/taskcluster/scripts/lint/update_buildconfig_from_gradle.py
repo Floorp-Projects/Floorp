@@ -9,6 +9,7 @@ import argparse
 import json
 import logging
 import os
+import re
 import subprocess
 import sys
 from collections import defaultdict
@@ -18,51 +19,46 @@ from mergedeep import merge
 
 logger = logging.getLogger(__name__)
 
-CONFIGURATIONS_WITH_DEPENDENCIES = (
-    "api",
-    "compileOnly",
-    "implementation",
-    "testImplementation",
-)
-
 _DEFAULT_GRADLE_COMMAND = ("./gradlew", "--console=plain", "--parallel")
+_LOCAL_DEPENDENCY_PATTERN = re.compile(
+    r"(\+|\\)--- project :(?P<local_dependency_name>\S+)\s?.*"
+)
 
 
 def _get_upstream_deps_per_gradle_project(gradle_root, existing_build_config):
     project_dependencies = defaultdict(set)
     gradle_projects = _get_gradle_projects(gradle_root, existing_build_config)
 
-    for configuration in CONFIGURATIONS_WITH_DEPENDENCIES:
-        logger.info(
-            f"Looking for dependencies in {configuration} configuration "
-            f"in {gradle_root}"
-        )
+    logger.info(f"Looking for dependencies in {gradle_root}")
 
-        # This is eventually going to fail if there's ever enough projects to make the
-        # command line too long. If that happens, we'll need to split this list up and
-        # run gradle more than once.
-        cmd = list(_DEFAULT_GRADLE_COMMAND)
-        for gradle_project in sorted(gradle_projects):
-            cmd.extend(
-                [f"{gradle_project}:dependencies", "--configuration", configuration]
-            )
+    # This is eventually going to fail if there's ever enough projects to make the
+    # command line too long. If that happens, we'll need to split this list up and
+    # run gradle more than once.
+    cmd = list(_DEFAULT_GRADLE_COMMAND)
+    cmd.extend(
+        [f"{gradle_project}:dependencies" for gradle_project in sorted(gradle_projects)]
+    )
 
-        # Parsing output like this is not ideal but bhearsum couldn't find a way
-        # to get the dependencies printed in a better format. If we could convince
-        # gradle to spit out JSON that would be much better.
-        # This is filed as https://bugzilla.mozilla.org/show_bug.cgi?id=1795152
-        current_project_name = None
-        for line in subprocess.check_output(
-            cmd, universal_newlines=True, cwd=gradle_root
-        ).splitlines():
-            # If we find the start of a new component section, update our tracking
-            # variable
-            if line.startswith("Project"):
-                current_project_name = line.split(":")[1].strip("'")
+    # Parsing output like this is not ideal but bhearsum couldn't find a way
+    # to get the dependencies printed in a better format. If we could convince
+    # gradle to spit out JSON that would be much better.
+    # This is filed as https://bugzilla.mozilla.org/show_bug.cgi?id=1795152
+    current_project_name = None
+    print(f"Running command: {' '.join(cmd)}")
+    for line in subprocess.check_output(
+        cmd, universal_newlines=True, cwd=gradle_root
+    ).splitlines():
+        # If we find the start of a new component section, update our tracking
+        # variable
+        if line.startswith("Project"):
+            current_project_name = line.split(":")[1].strip("'")
 
-            # If we find a new local dependency, add it.
-            if line.startswith("+--- project") or line.startswith(r"\--- project"):
-                project_dependencies[current_project_name].add(line.split(" ")[2])
+        # If we find a new local dependency, add it.
+        local_dep_match = _LOCAL_DEPENDENCY_PATTERN.search(line)
+        if local_dep_match:
+            local_dependency_name = local_dep_match.group("local_dependency_name")
+            if local_dependency_name != current_project_name:
+                project_dependencies[current_project_name].add(local_dependency_name)
 
     return {
         project_name: sorted(project_dependencies[project_name])
