@@ -232,12 +232,43 @@ void WMFCDMProxy::UpdateSession(const nsAString& aSessionId,
       ->Track(mUpdateSessionRequest);
 }
 
+void WMFCDMProxy::CloseSession(const nsAString& aSessionId,
+                               PromiseId aPromiseId) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  EME_LOG("WMFCDMProxy::CloseSession(this=%p, pid=%" PRIu32 "), sessionId=%s",
+          this, aPromiseId, NS_ConvertUTF16toUTF8(aSessionId).get());
+  mCDM->CloseSession(aSessionId)
+      ->Then(
+          mMainThread, __func__,
+          [self = RefPtr{this}, this, aPromiseId]() {
+            mCloseSessionRequest.Complete();
+            if (mKeys.IsNull()) {
+              EME_LOG("WMFCDMProxy(this=%p, pid=%" PRIu32
+                      ") : abort the close session due to "
+                      "empty key",
+                      this, aPromiseId);
+              return;
+            }
+            ResolvePromise(aPromiseId);
+          },
+          [self = RefPtr{this}, this, aPromiseId]() {
+            mCloseSessionRequest.Complete();
+            RejectPromiseWithStateError(
+                aPromiseId,
+                nsLiteralCString(
+                    "WMFCDMProxy::CloseSession: failed to close session"));
+          })
+      ->Track(mCloseSessionRequest);
+}
+
 void WMFCDMProxy::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   // TODO: reject pending promise.
   mCreateSessionRequest.DisconnectIfExists();
   mLoadSessionRequest.DisconnectIfExists();
   mUpdateSessionRequest.DisconnectIfExists();
+  mCloseSessionRequest.DisconnectIfExists();
   if (mProxyCallback) {
     mProxyCallback->Shutdown();
     mProxyCallback = nullptr;
