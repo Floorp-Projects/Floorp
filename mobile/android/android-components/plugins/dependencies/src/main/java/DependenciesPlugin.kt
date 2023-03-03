@@ -14,7 +14,7 @@ class DependenciesPlugin : Plugin<Settings> {
 
 // Synchronized version numbers for dependencies used by (some) modules
 object Versions {
-    const val kotlin = "1.7.20"
+    const val kotlin = "1.8.10"
     const val coroutines = "1.6.4"
 
     const val junit = "4.13.2"
@@ -52,7 +52,7 @@ object Versions {
     // see https://android-developers.googleblog.com/2022/06/independent-versioning-of-Jetpack-Compose-libraries.html
     // for Jetpack Compose libraries versioning
     const val compose_version = "1.3.1"
-    const val compose_compiler = "1.3.2"
+    const val compose_compiler = "1.4.3"
 
     object AndroidX {
         const val activityCompose = "1.4.0"
