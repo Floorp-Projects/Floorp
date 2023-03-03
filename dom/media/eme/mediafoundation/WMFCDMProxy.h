@@ -116,15 +116,12 @@ class WMFCDMProxy : public CDMProxy {
 
   RefPtr<WMFCDMImpl> mCDM;
 
-  MozPromiseRequestHolder<MFCDMChild::SessionPromise> mCreateSessionRequest;
-  MozPromiseRequestHolder<GenericPromise> mLoadSessionRequest;
-  MozPromiseRequestHolder<GenericPromise> mUpdateSessionRequest;
-  MozPromiseRequestHolder<GenericPromise> mCloseSessionRequest;
-  MozPromiseRequestHolder<GenericPromise> mRemoveSessionRequest;
-
   const dom::MediaKeySystemConfiguration mConfig;
 
   RefPtr<WMFCDMProxyCallback> mProxyCallback;
+
+  // It can only be used on the main thread.
+  bool mIsShutdown = false;
 };
 
 }  // namespace mozilla
