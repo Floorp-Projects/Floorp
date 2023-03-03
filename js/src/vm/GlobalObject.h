@@ -219,6 +219,14 @@ class GlobalObjectData {
 
   UniquePtr<gc::FinalizationRegistryGlobalData> finalizationRegistryData;
 
+  // The number of times that one of the following has occurred:
+  // 1. A property of this GlobalObject is deleted.
+  // 2. A data property of this GlobalObject is converted to an accessor,
+  //    or vice versa.
+  // 3. A property is defined on the global lexical that shadows a property on
+  //    this GlobalObject.
+  uint32_t generationCount = 0;
+
   // Whether the |globalThis| property has been resolved on the global object.
   bool globalThisResolved = false;
 
@@ -1082,6 +1090,15 @@ class GlobalObject : public NativeObject {
 
   static size_t offsetOfGlobalDataSlot() {
     return getFixedSlotOffset(GLOBAL_DATA_SLOT);
+  }
+
+  uint32_t generationCount() const { return data().generationCount; }
+  const void* addressOfGenerationCount() const {
+    return &data().generationCount;
+  }
+  void bumpGenerationCount() {
+    MOZ_RELEASE_ASSERT(data().generationCount < UINT32_MAX);
+    data().generationCount++;
   }
 };
 

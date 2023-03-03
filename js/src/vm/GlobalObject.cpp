@@ -574,6 +574,9 @@ GlobalObject* GlobalObject::createInternal(JSContext* cx,
   if (!JSObject::setQualifiedVarObj(cx, global)) {
     return nullptr;
   }
+  if (!JSObject::setGenerationCountedGlobal(cx, global)) {
+    return nullptr;
+  }
 
   return global;
 }
