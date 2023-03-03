@@ -16,13 +16,21 @@ namespace mozilla {
 #define LOG(msg, ...) \
   EME_LOG("WMFCDMProxy[%p]@%s: " msg, this, __func__, ##__VA_ARGS__)
 
+#define RETURN_IF_SHUTDOWN()       \
+  do {                             \
+    MOZ_ASSERT(NS_IsMainThread()); \
+    if (mIsShutdown) {             \
+      return;                      \
+    }                              \
+  } while (false)
+
 #define PERFORM_ON_CDM(operation, promiseId, ...)                             \
   do {                                                                        \
     mCDM->operation(__VA_ARGS__)                                              \
         ->Then(                                                               \
             mMainThread, __func__,                                            \
             [self = RefPtr{this}, this, promiseId]() {                        \
-              m##operation##Request.Complete();                               \
+              RETURN_IF_SHUTDOWN();                                           \
               if (mKeys.IsNull()) {                                           \
                 EME_LOG("WMFCDMProxy(this=%p, pid=%" PRIu32                   \
                         ") : abort the " #operation " due to empty key",      \
@@ -32,12 +40,11 @@ namespace mozilla {
               ResolvePromise(promiseId);                                      \
             },                                                                \
             [self = RefPtr{this}, this, promiseId]() {                        \
-              m##operation##Request.Complete();                               \
+              RETURN_IF_SHUTDOWN();                                           \
               RejectPromiseWithStateError(                                    \
                   promiseId, nsLiteralCString("WMFCDMProxy::" #operation ": " \
                                               "failed to " #operation));      \
-            })                                                                \
-        ->Track(m##operation##Request);                                       \
+            });                                                               \
   } while (false)
 
 WMFCDMProxy::WMFCDMProxy(dom::MediaKeys* aKeys, const nsAString& aKeySystem,
@@ -88,6 +95,7 @@ void WMFCDMProxy::Init(PromiseId aPromiseId, const nsAString& aOrigin,
 
 void WMFCDMProxy::ResolvePromise(PromiseId aId) {
   auto resolve = [self = RefPtr{this}, this, aId]() {
+    RETURN_IF_SHUTDOWN();
     EME_LOG("WMFCDMProxy::ResolvePromise(this=%p, pid=%" PRIu32 ")", this, aId);
     if (!mKeys.IsNull()) {
       mKeys->ResolvePromise(aId);
@@ -133,6 +141,7 @@ void WMFCDMProxy::RejectPromise(PromiseId aId, ErrorResult&& aException,
 void WMFCDMProxy::RejectPromiseOnMainThread(PromiseId aId,
                                             CopyableErrorResult&& aException,
                                             const nsCString& aReason) {
+  RETURN_IF_SHUTDOWN();
   // Moving into or out of a non-copyable ErrorResult will assert that both
   // ErorResults are from our current thread.  Avoid the assertion by moving
   // into a current-thread CopyableErrorResult first.  Note that this is safe,
@@ -155,7 +164,7 @@ void WMFCDMProxy::CreateSession(uint32_t aCreateSessionToken,
                                 const nsAString& aInitDataType,
                                 nsTArray<uint8_t>& aInitData) {
   MOZ_ASSERT(NS_IsMainThread());
-
+  RETURN_IF_SHUTDOWN();
   const auto sessionType = ConvertToKeySystemConfigSessionType(aSessionType);
   EME_LOG("WMFCDMProxy::CreateSession(this=%p, pid=%" PRIu32
           "), sessionType=%s",
@@ -165,7 +174,7 @@ void WMFCDMProxy::CreateSession(uint32_t aCreateSessionToken,
           mMainThread, __func__,
           [self = RefPtr{this}, this, aCreateSessionToken,
            aPromiseId](nsString sessionID) {
-            mCreateSessionRequest.Complete();
+            RETURN_IF_SHUTDOWN();
             if (mKeys.IsNull()) {
               EME_LOG("WMFCDMProxy(this=%p, pid=%" PRIu32
                       ") : abort the create session due to "
@@ -180,20 +189,19 @@ void WMFCDMProxy::CreateSession(uint32_t aCreateSessionToken,
             ResolvePromise(aPromiseId);
           },
           [self = RefPtr{this}, this, aPromiseId]() {
-            mCreateSessionRequest.Complete();
+            RETURN_IF_SHUTDOWN();
             RejectPromiseWithStateError(
                 aPromiseId,
                 nsLiteralCString(
                     "WMFCDMProxy::CreateSession: cannot create session"));
-          })
-      ->Track(mCreateSessionRequest);
+          });
 }
 
 void WMFCDMProxy::LoadSession(PromiseId aPromiseId,
                               dom::MediaKeySessionType aSessionType,
                               const nsAString& aSessionId) {
   MOZ_ASSERT(NS_IsMainThread());
-
+  RETURN_IF_SHUTDOWN();
   const auto sessionType = ConvertToKeySystemConfigSessionType(aSessionType);
   EME_LOG("WMFCDMProxy::LoadSession(this=%p, pid=%" PRIu32
           "), sessionType=%s, sessionId=%s",
@@ -206,7 +214,7 @@ void WMFCDMProxy::UpdateSession(const nsAString& aSessionId,
                                 PromiseId aPromiseId,
                                 nsTArray<uint8_t>& aResponse) {
   MOZ_ASSERT(NS_IsMainThread());
-
+  RETURN_IF_SHUTDOWN();
   EME_LOG("WMFCDMProxy::UpdateSession(this=%p, pid=%" PRIu32
           "), sessionId=%s, responseLen=%zu",
           this, aPromiseId, NS_ConvertUTF16toUTF8(aSessionId).get(),
@@ -217,7 +225,7 @@ void WMFCDMProxy::UpdateSession(const nsAString& aSessionId,
 void WMFCDMProxy::CloseSession(const nsAString& aSessionId,
                                PromiseId aPromiseId) {
   MOZ_ASSERT(NS_IsMainThread());
-
+  RETURN_IF_SHUTDOWN();
   EME_LOG("WMFCDMProxy::CloseSession(this=%p, pid=%" PRIu32 "), sessionId=%s",
           this, aPromiseId, NS_ConvertUTF16toUTF8(aSessionId).get());
   PERFORM_ON_CDM(CloseSession, aPromiseId, aSessionId);
@@ -226,7 +234,7 @@ void WMFCDMProxy::CloseSession(const nsAString& aSessionId,
 void WMFCDMProxy::RemoveSession(const nsAString& aSessionId,
                                 PromiseId aPromiseId) {
   MOZ_ASSERT(NS_IsMainThread());
-
+  RETURN_IF_SHUTDOWN();
   EME_LOG("WMFCDMProxy::RemoveSession(this=%p, pid=%" PRIu32 "), sessionId=%s",
           this, aPromiseId, NS_ConvertUTF16toUTF8(aSessionId).get());
   PERFORM_ON_CDM(RemoveSession, aPromiseId, aSessionId);
@@ -234,21 +242,20 @@ void WMFCDMProxy::RemoveSession(const nsAString& aSessionId,
 
 void WMFCDMProxy::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mIsShutdown);
   // TODO: reject pending promise.
-  mCreateSessionRequest.DisconnectIfExists();
-  mLoadSessionRequest.DisconnectIfExists();
-  mUpdateSessionRequest.DisconnectIfExists();
-  mCloseSessionRequest.DisconnectIfExists();
   if (mProxyCallback) {
     mProxyCallback->Shutdown();
     mProxyCallback = nullptr;
   }
+  mIsShutdown = true;
 }
 
 void WMFCDMProxy::OnSessionMessage(const nsAString& aSessionId,
                                    dom::MediaKeyMessageType aMessageType,
                                    const nsTArray<uint8_t>& aMessage) {
   MOZ_ASSERT(NS_IsMainThread());
+  RETURN_IF_SHUTDOWN();
   if (mKeys.IsNull()) {
     return;
   }
@@ -261,6 +268,7 @@ void WMFCDMProxy::OnSessionMessage(const nsAString& aSessionId,
 
 void WMFCDMProxy::OnKeyStatusesChange(const nsAString& aSessionId) {
   MOZ_ASSERT(NS_IsMainThread());
+  RETURN_IF_SHUTDOWN();
   if (mKeys.IsNull()) {
     return;
   }
@@ -274,6 +282,7 @@ void WMFCDMProxy::OnKeyStatusesChange(const nsAString& aSessionId) {
 void WMFCDMProxy::OnExpirationChange(const nsAString& aSessionId,
                                      UnixTime aExpiryTime) {
   MOZ_ASSERT(NS_IsMainThread());
+  RETURN_IF_SHUTDOWN();
   if (mKeys.IsNull()) {
     return;
   }
@@ -285,6 +294,7 @@ void WMFCDMProxy::OnExpirationChange(const nsAString& aSessionId,
 }
 
 #undef LOG
+#undef RETURN_IF_SHUTDOWN
 #undef PERFORM_ON_CDM
 
 }  // namespace mozilla
