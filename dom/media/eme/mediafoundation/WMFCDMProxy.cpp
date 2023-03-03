@@ -16,6 +16,30 @@ namespace mozilla {
 #define LOG(msg, ...) \
   EME_LOG("WMFCDMProxy[%p]@%s: " msg, this, __func__, ##__VA_ARGS__)
 
+#define PERFORM_ON_CDM(operation, promiseId, ...)                             \
+  do {                                                                        \
+    mCDM->operation(__VA_ARGS__)                                              \
+        ->Then(                                                               \
+            mMainThread, __func__,                                            \
+            [self = RefPtr{this}, this, promiseId]() {                        \
+              m##operation##Request.Complete();                               \
+              if (mKeys.IsNull()) {                                           \
+                EME_LOG("WMFCDMProxy(this=%p, pid=%" PRIu32                   \
+                        ") : abort the " #operation " due to empty key",      \
+                        this, promiseId);                                     \
+                return;                                                       \
+              }                                                               \
+              ResolvePromise(promiseId);                                      \
+            },                                                                \
+            [self = RefPtr{this}, this, promiseId]() {                        \
+              m##operation##Request.Complete();                               \
+              RejectPromiseWithStateError(                                    \
+                  promiseId, nsLiteralCString("WMFCDMProxy::" #operation ": " \
+                                              "failed to " #operation));      \
+            })                                                                \
+        ->Track(m##operation##Request);                                       \
+  } while (false)
+
 WMFCDMProxy::WMFCDMProxy(dom::MediaKeys* aKeys, const nsAString& aKeySystem,
                          const dom::MediaKeySystemConfiguration& aConfig)
     : CDMProxy(
@@ -175,28 +199,7 @@ void WMFCDMProxy::LoadSession(PromiseId aPromiseId,
           "), sessionType=%s, sessionId=%s",
           this, aPromiseId, SessionTypeToStr(sessionType),
           NS_ConvertUTF16toUTF8(aSessionId).get());
-  mCDM->LoadSession(sessionType, aSessionId)
-      ->Then(
-          mMainThread, __func__,
-          [self = RefPtr{this}, this, aPromiseId]() {
-            mLoadSessionRequest.Complete();
-            if (mKeys.IsNull()) {
-              EME_LOG("WMFCDMProxy(this=%p, pid=%" PRIu32
-                      ") : abort the load session due to "
-                      "empty key",
-                      this, aPromiseId);
-              return;
-            }
-            ResolvePromise(aPromiseId);
-          },
-          [self = RefPtr{this}, this, aPromiseId]() {
-            mLoadSessionRequest.Complete();
-            RejectPromiseWithStateError(
-                aPromiseId,
-                nsLiteralCString(
-                    "WMFCDMProxy::LoadSession: failed to load session"));
-          })
-      ->Track(mLoadSessionRequest);
+  PERFORM_ON_CDM(LoadSession, aPromiseId, sessionType, aSessionId);
 }
 
 void WMFCDMProxy::UpdateSession(const nsAString& aSessionId,
@@ -208,28 +211,7 @@ void WMFCDMProxy::UpdateSession(const nsAString& aSessionId,
           "), sessionId=%s, responseLen=%zu",
           this, aPromiseId, NS_ConvertUTF16toUTF8(aSessionId).get(),
           aResponse.Length());
-  mCDM->UpdateSession(aSessionId, aResponse)
-      ->Then(
-          mMainThread, __func__,
-          [self = RefPtr{this}, this, aPromiseId]() {
-            mUpdateSessionRequest.Complete();
-            if (mKeys.IsNull()) {
-              EME_LOG("WMFCDMProxy(this=%p, pid=%" PRIu32
-                      ") : abort the update session due to "
-                      "empty key",
-                      this, aPromiseId);
-              return;
-            }
-            ResolvePromise(aPromiseId);
-          },
-          [self = RefPtr{this}, this, aPromiseId]() {
-            mUpdateSessionRequest.Complete();
-            RejectPromiseWithStateError(
-                aPromiseId,
-                nsLiteralCString(
-                    "WMFCDMProxy::UpdateSession: failed to update session"));
-          })
-      ->Track(mUpdateSessionRequest);
+  PERFORM_ON_CDM(UpdateSession, aPromiseId, aSessionId, aResponse);
 }
 
 void WMFCDMProxy::CloseSession(const nsAString& aSessionId,
@@ -238,28 +220,7 @@ void WMFCDMProxy::CloseSession(const nsAString& aSessionId,
 
   EME_LOG("WMFCDMProxy::CloseSession(this=%p, pid=%" PRIu32 "), sessionId=%s",
           this, aPromiseId, NS_ConvertUTF16toUTF8(aSessionId).get());
-  mCDM->CloseSession(aSessionId)
-      ->Then(
-          mMainThread, __func__,
-          [self = RefPtr{this}, this, aPromiseId]() {
-            mCloseSessionRequest.Complete();
-            if (mKeys.IsNull()) {
-              EME_LOG("WMFCDMProxy(this=%p, pid=%" PRIu32
-                      ") : abort the close session due to "
-                      "empty key",
-                      this, aPromiseId);
-              return;
-            }
-            ResolvePromise(aPromiseId);
-          },
-          [self = RefPtr{this}, this, aPromiseId]() {
-            mCloseSessionRequest.Complete();
-            RejectPromiseWithStateError(
-                aPromiseId,
-                nsLiteralCString(
-                    "WMFCDMProxy::CloseSession: failed to close session"));
-          })
-      ->Track(mCloseSessionRequest);
+  PERFORM_ON_CDM(CloseSession, aPromiseId, aSessionId);
 }
 
 void WMFCDMProxy::RemoveSession(const nsAString& aSessionId,
@@ -268,28 +229,7 @@ void WMFCDMProxy::RemoveSession(const nsAString& aSessionId,
 
   EME_LOG("WMFCDMProxy::RemoveSession(this=%p, pid=%" PRIu32 "), sessionId=%s",
           this, aPromiseId, NS_ConvertUTF16toUTF8(aSessionId).get());
-  mCDM->RemoveSession(aSessionId)
-      ->Then(
-          mMainThread, __func__,
-          [self = RefPtr{this}, this, aPromiseId]() {
-            mRemoveSessionRequest.Complete();
-            if (mKeys.IsNull()) {
-              EME_LOG("WMFCDMProxy(this=%p, pid=%" PRIu32
-                      ") : abort the remove session due to "
-                      "empty key",
-                      this, aPromiseId);
-              return;
-            }
-            ResolvePromise(aPromiseId);
-          },
-          [self = RefPtr{this}, this, aPromiseId]() {
-            mRemoveSessionRequest.Complete();
-            RejectPromiseWithStateError(
-                aPromiseId,
-                nsLiteralCString(
-                    "WMFCDMProxy::CloseSession: failed to remove session"));
-          })
-      ->Track(mRemoveSessionRequest);
+  PERFORM_ON_CDM(RemoveSession, aPromiseId, aSessionId);
 }
 
 void WMFCDMProxy::Shutdown() {
@@ -345,5 +285,6 @@ void WMFCDMProxy::OnExpirationChange(const nsAString& aSessionId,
 }
 
 #undef LOG
+#undef PERFORM_ON_CDM
 
 }  // namespace mozilla
