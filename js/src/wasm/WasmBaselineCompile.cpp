@@ -3153,10 +3153,14 @@ bool BaseCompiler::jumpConditionalWithResults(BranchState* b, RegRef object,
     }
     if (b->stackHeight != resultsBase) {
       Label notTaken;
+      // Temporarily take the result registers so that branchGcObjectType
+      // doesn't use them.
+      needIntegerResultRegisters(b->resultType);
       branchGcObjectType(
           object, typeIndex, &notTaken,
           /*succeedOnNull=*/false,
           /*onSuccess=*/b->invertBranch ? onSuccess : !onSuccess);
+      freeIntegerResultRegisters(b->resultType);
 
       // Shuffle stack args.
       shuffleStackResultsBeforeBranch(resultsBase, b->stackHeight,
@@ -7335,15 +7339,31 @@ bool BaseCompiler::emitBrOnCastCommon(bool onSuccess) {
   Control& target = controlItem(labelRelativeDepth);
   target.bceSafeOnExit &= bceSafe_;
 
-  RegRef object = popRef();
-  pushRef(object);
-
   // 3. br_if $l : [T*, ref] -> [T*, ref]
   BranchState b(&target.label, target.stackHeight, InvertBranch(false),
                 labelType);
-  if (!jumpConditionalWithResults(&b, object, castTypeIndex, onSuccess)) {
+
+  // Don't allocate the result register used in the branch
+  if (b.hasBlockResults()) {
+    needIntegerResultRegisters(b.resultType);
+  }
+
+  // Create a copy of the ref for passing to the br_on_cast label,
+  // the original ref is used for casting in the condition.
+  RegRef object = popRef();
+  RegRef objectCondition = needRef();
+  moveRef(object, objectCondition);
+  pushRef(object);
+
+  if (b.hasBlockResults()) {
+    freeIntegerResultRegisters(b.resultType);
+  }
+
+  if (!jumpConditionalWithResults(&b, objectCondition, castTypeIndex,
+                                  onSuccess)) {
     return false;
   }
+  freeRef(objectCondition);
 
   return true;
 }
