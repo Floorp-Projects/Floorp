@@ -199,11 +199,45 @@ void WMFCDMProxy::LoadSession(PromiseId aPromiseId,
       ->Track(mLoadSessionRequest);
 }
 
+void WMFCDMProxy::UpdateSession(const nsAString& aSessionId,
+                                PromiseId aPromiseId,
+                                nsTArray<uint8_t>& aResponse) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  EME_LOG("WMFCDMProxy::UpdateSession(this=%p, pid=%" PRIu32
+          "), sessionId=%s, responseLen=%zu",
+          this, aPromiseId, NS_ConvertUTF16toUTF8(aSessionId).get(),
+          aResponse.Length());
+  mCDM->UpdateSession(aSessionId, aResponse)
+      ->Then(
+          mMainThread, __func__,
+          [self = RefPtr{this}, this, aPromiseId]() {
+            mUpdateSessionRequest.Complete();
+            if (mKeys.IsNull()) {
+              EME_LOG("WMFCDMProxy(this=%p, pid=%" PRIu32
+                      ") : abort the update session due to "
+                      "empty key",
+                      this, aPromiseId);
+              return;
+            }
+            ResolvePromise(aPromiseId);
+          },
+          [self = RefPtr{this}, this, aPromiseId]() {
+            mUpdateSessionRequest.Complete();
+            RejectPromiseWithStateError(
+                aPromiseId,
+                nsLiteralCString(
+                    "WMFCDMProxy::UpdateSession: failed to update session"));
+          })
+      ->Track(mUpdateSessionRequest);
+}
+
 void WMFCDMProxy::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   // TODO: reject pending promise.
   mCreateSessionRequest.DisconnectIfExists();
   mLoadSessionRequest.DisconnectIfExists();
+  mUpdateSessionRequest.DisconnectIfExists();
   if (mProxyCallback) {
     mProxyCallback->Shutdown();
     mProxyCallback = nullptr;

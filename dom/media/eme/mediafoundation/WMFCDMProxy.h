@@ -44,7 +44,7 @@ class WMFCDMProxy : public CDMProxy {
                             nsTArray<uint8_t>& aCert) override {}
 
   void UpdateSession(const nsAString& aSessionId, PromiseId aPromiseId,
-                     nsTArray<uint8_t>& aResponse) override {}
+                     nsTArray<uint8_t>& aResponse) override;
 
   void CloseSession(const nsAString& aSessionId,
                     PromiseId aPromiseId) override {}
@@ -119,6 +119,7 @@ class WMFCDMProxy : public CDMProxy {
 
   MozPromiseRequestHolder<MFCDMChild::SessionPromise> mCreateSessionRequest;
   MozPromiseRequestHolder<GenericPromise> mLoadSessionRequest;
+  MozPromiseRequestHolder<GenericPromise> mUpdateSessionRequest;
 
   const dom::MediaKeySystemConfiguration mConfig;
 

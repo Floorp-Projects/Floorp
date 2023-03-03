@@ -83,11 +83,14 @@ void MFCDMChild::Shutdown() {
   mInitRequest.DisconnectIfExists();
   mCreateSessionRequest.DisconnectIfExists();
   mLoadSessionRequest.DisconnectIfExists();
+  mUpdateSessionRequest.DisconnectIfExists();
+
   mRemotePromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
   mCapabilitiesPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
   mInitPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
   mCreateSessionPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
   mLoadSessionPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
+  mUpdateSessionPromiseHolder.RejectIfExists(NS_ERROR_ABORT, __func__);
 
   if (mState == NS_OK) {
     mManagerThread->Dispatch(NS_NewRunnableFunction(
@@ -269,6 +272,39 @@ RefPtr<GenericPromise> MFCDMChild::LoadSession(
             ->Track(mLoadSessionRequest);
       }));
   return mLoadSessionPromiseHolder.Ensure(__func__);
+}
+
+RefPtr<GenericPromise> MFCDMChild::UpdateSession(const nsAString& aSessionId,
+                                                 nsTArray<uint8_t>& aResponse) {
+  MOZ_ASSERT(mManagerThread);
+  MOZ_ASSERT(mId > 0, "Should call Init() first and wait for it");
+
+  mManagerThread->Dispatch(NS_NewRunnableFunction(
+      __func__, [self = RefPtr{this}, this, sessionId = nsString{aSessionId},
+                 response = std::move(aResponse)] {
+        SendUpdateSession(sessionId, response)
+            ->Then(mManagerThread, __func__,
+                   [self, this](
+                       PMFCDMChild::UpdateSessionPromise::ResolveOrRejectValue&&
+                           aResult) {
+                     mUpdateSessionRequest.Complete();
+                     if (aResult.IsResolve()) {
+                       if (NS_SUCCEEDED(aResult.ResolveValue())) {
+                         mUpdateSessionPromiseHolder.ResolveIfExists(true,
+                                                                     __func__);
+                       } else {
+                         mUpdateSessionPromiseHolder.RejectIfExists(
+                             aResult.ResolveValue(), __func__);
+                       }
+                     } else {
+                       // IPC died
+                       mUpdateSessionPromiseHolder.RejectIfExists(
+                           NS_ERROR_FAILURE, __func__);
+                     }
+                   })
+            ->Track(mUpdateSessionRequest);
+      }));
+  return mUpdateSessionPromiseHolder.Ensure(__func__);
 }
 
 mozilla::ipc::IPCResult MFCDMChild::RecvOnSessionKeyMessage(

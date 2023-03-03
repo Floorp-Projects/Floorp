@@ -48,6 +48,9 @@ class MFCDMChild final : public PMFCDMChild {
       const KeySystemConfig::SessionType aSessionType,
       const nsAString& aSessionId);
 
+  RefPtr<GenericPromise> UpdateSession(const nsAString& aSessionId,
+                                       nsTArray<uint8_t>& aResponse);
+
   mozilla::ipc::IPCResult RecvOnSessionKeyMessage(
       const MFCDMKeyMessage& aMessage);
   mozilla::ipc::IPCResult RecvOnSessionKeyStatusesChanged(
@@ -111,6 +114,9 @@ class MFCDMChild final : public PMFCDMChild {
 
   MozPromiseHolder<GenericPromise> mLoadSessionPromiseHolder;
   MozPromiseRequestHolder<LoadSessionPromise> mLoadSessionRequest;
+
+  MozPromiseHolder<GenericPromise> mUpdateSessionPromiseHolder;
+  MozPromiseRequestHolder<UpdateSessionPromise> mUpdateSessionRequest;
 
   RefPtr<WMFCDMProxyCallback> mProxyCallback;
 };
