@@ -27,7 +27,8 @@ function run_test() {
     );
 
     // This is a CCW.
-    XPCOMUtils.defineLazyGetter(this, "foo", function() { return "foo"; });
+    XPCOMUtils.defineLazyScriptGetter(
+      this, "foo", "chrome://global/content/viewZoomOverlay.js");
   `);
 
   // Neither scripted getter should be considered safe.
