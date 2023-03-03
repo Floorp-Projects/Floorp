@@ -24,9 +24,8 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 let gWindow = null;
 
 const kIsLinux = navigator.platform.includes("Lin");
-const kIsMacOS = navigator.platform.includes("Mac");
-// On Linux and macOS sizemode changes might be async.
-const kAsyncChanges = kIsLinux || kIsMacOS;
+// On Linux sizemode changes might be async.
+const kAsyncChanges = kIsLinux;
 
 let gSizeModeDidChange = false;
 let gSizeModeDidChangeTo = 0;

@@ -28,7 +28,6 @@ SimpleTest.requestFlakyTimeout("untriaged");
 // run in an iframe, which by default will not have the allowfullscreen
 // attribute set, so full-screen won't work.
 var gTestWindows = [
-  { test: "file_fullscreen-single.html" },
   { test: "file_fullscreen-multiple.html",
     prefs: [["full-screen-api.exit-on.windowRaise", false],
             ["full-screen-api.exit-on.windowOpen", false]] },
@@ -73,7 +72,6 @@ function nextTest() {
       info("main window focused, starting next test");
       SimpleTest.executeSoon(runNextTest);
     }, {once: true});
-    info("testWindow.close()");
     testWindow.close();
   } else {
     SimpleTest.executeSoon(runNextTest);
