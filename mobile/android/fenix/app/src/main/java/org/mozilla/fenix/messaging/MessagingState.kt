@@ -2,9 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.gleanplumb
+package org.mozilla.fenix.messaging
 
-import org.mozilla.fenix.nimbus.MessageSurfaceId
+import mozilla.components.service.nimbus.messaging.Message
+import mozilla.components.service.nimbus.messaging.MessageSurfaceId
 
 /**
  * Represent all the state related to the Messaging framework.

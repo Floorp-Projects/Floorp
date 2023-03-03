@@ -9,8 +9,133 @@ channels:
   - beta
   - nightly
   - developer
-includes:
-  - messaging.fml.yaml
+import:
+  - path: ../../android-components/components/service/nimbus/messaging.fml.yaml
+    channel: release
+    features:
+      messaging:
+        - value:
+            triggers:
+              # Using attributes built into the Nimbus SDK
+              USER_RECENTLY_INSTALLED: days_since_install < 7
+              USER_RECENTLY_UPDATED: days_since_update < 7 && days_since_install != days_since_update
+              USER_TIER_ONE_COUNTRY: ('US' in locale || 'GB' in locale || 'CA' in locale || 'DE' in locale || 'FR' in locale)
+              USER_EN_SPEAKER: "'en' in locale"
+              USER_ES_SPEAKER: "'es' in locale"
+              USER_DE_SPEAKER: "'de' in locale"
+              USER_FR_SPEAKER: "'fr' in locale"
+              DEVICE_ANDROID: os == 'Android'
+              DEVICE_IOS: os == 'iOS'
+              ALWAYS: "true"
+              NEVER: "false"
+              DAY_1_AFTER_INSTALL: days_since_install == 1
+              DAY_2_AFTER_INSTALL: days_since_install == 2
+              DAY_3_AFTER_INSTALL: days_since_install == 3
+              DAY_4_AFTER_INSTALL: days_since_install == 4
+              DAY_5_AFTER_INSTALL: days_since_install == 5
+
+              # Using custom attributes for the browser
+              I_AM_DEFAULT_BROWSER: "is_default_browser"
+              I_AM_NOT_DEFAULT_BROWSER: "is_default_browser == false"
+              USER_ESTABLISHED_INSTALL: "number_of_app_launches >=4"
+
+              FUNNEL_PAID: "adjust_campaign != ''"
+              FUNNEL_ORGANIC: "adjust_campaign == ''"
+
+              # Using Glean events, specific to the browser
+              INACTIVE_1_DAY: "'app_launched'|eventLastSeen('Hours') >= 24"
+              INACTIVE_2_DAYS: "'app_launched'|eventLastSeen('Days', 0) >= 2"
+              INACTIVE_3_DAYS: "'app_launched'|eventLastSeen('Days', 0) >= 3"
+              INACTIVE_4_DAYS: "'app_launched'|eventLastSeen('Days', 0) >= 4"
+              INACTIVE_5_DAYS: "'app_launched'|eventLastSeen('Days', 0) >= 5"
+
+              # Has the user signed in the last 4 years
+              FXA_SIGNED_IN: "'sync_auth.sign_in'|eventLastSeen('Years', 0) <= 4"
+              FXA_NOT_SIGNED_IN: "'sync_auth.sign_in'|eventLastSeen('Years', 0) > 4"
+
+              # https://mozilla-hub.atlassian.net/wiki/spaces/FJT/pages/11469471/Core+Active
+              USER_INFREQUENT: "'app_launched'|eventCountNonZero('Days', 28) >= 1 && 'app_launched'|eventCountNonZero('Days', 28) < 7"
+              USER_CASUAL: "'app_launched'|eventCountNonZero('Days', 28) >= 7 && 'app_launched'|eventCountNonZero('Days', 28) < 14"
+              USER_REGULAR: "'app_launched'|eventCountNonZero('Days', 28) >= 14 && 'app_launched'|eventCountNonZero('Days', 28) < 21"
+              USER_CORE_ACTIVE: "'app_launched'|eventCountNonZero('Days', 28) >= 21"
+
+              LAUNCHED_ONCE_THIS_WEEK: "'app_launched'|eventSum('Days', 7) == 1"
+
+            actions:
+              ENABLE_PRIVATE_BROWSING: ://enable_private_browsing
+              INSTALL_SEARCH_WIDGET: ://install_search_widget
+              MAKE_DEFAULT_BROWSER: ://make_default_browser
+              VIEW_BOOKMARKS: ://urls_bookmarks
+              VIEW_COLLECTIONS: ://home_collections
+              VIEW_HISTORY: ://urls_history
+              VIEW_HOMESCREEN: ://home
+              OPEN_SETTINGS_ACCESSIBILITY: ://settings_accessibility
+              OPEN_SETTINGS_ADDON_MANAGER: ://settings_addon_manager
+              OPEN_SETTINGS_DELETE_BROWSING_DATA: ://settings_delete_browsing_data
+              OPEN_SETTINGS_LOGINS: ://settings_logins
+              OPEN_SETTINGS_NOTIFICATIONS: ://settings_notifications
+              OPEN_SETTINGS_PRIVACY: ://settings_privacy
+              OPEN_SETTINGS_SEARCH_ENGINE: ://settings_search_engine
+              OPEN_SETTINGS_TRACKING_PROTECTION: ://settings_tracking_protection
+              OPEN_SETTINGS_WALLPAPERS: ://settings_wallpapers
+              OPEN_SETTINGS: ://settings
+              TURN_ON_SYNC: ://turn_on_sync
+            styles:
+              DEFAULT:
+                priority: 50
+                max-display-count: 5
+              SURVEY:
+                priority: 55
+                max-display-count: 10
+              PERSISTENT:
+                priority: 50
+                max-display-count: 20
+              WARNING:
+                priority: 60
+                max-display-count: 10
+              URGENT:
+                priority: 100
+                max-display-count: 10
+              NOTIFICATION:
+                priority: 50
+                max-display-count: 1
+            messages:
+              arturo-notification:
+                text: "This is our notification test"
+                surface: notification
+                action: "https://developer.android.com/guide/background/persistent/getting-started/define-work"
+                trigger: [ "USER_FR_SPEAKER" ]
+                style: "PERSISTENT"
+                button-label: "My new button"
+              default-browser:
+                text: default_browser_experiment_card_text
+                surface: homescreen
+                action: "MAKE_DEFAULT_BROWSER"
+                trigger: [ "I_AM_NOT_DEFAULT_BROWSER","USER_ESTABLISHED_INSTALL" ]
+                style: "PERSISTENT"
+                button-label: preferences_set_as_default_browser
+              default-browser-notification:
+                title: "nimbus_notification_default_browser_title"
+                text: nimbus_notification_default_browser_text
+                surface: notification
+                style: NOTIFICATION
+                trigger:
+                  - I_AM_NOT_DEFAULT_BROWSER
+                  - DAY_3_AFTER_INSTALL
+                action: MAKE_DEFAULT_BROWSER
+
+        - channel: developer
+          value:
+            styles:
+              DEFAULT:
+                priority: 50
+                max-display-count: 100
+              EXPIRES_QUICKLY:
+                priority: 100
+                max-display-count: 1
+            notification-config:
+              refresh-interval: 120 # minutes (2 hours)
+
 features:
   homescreen:
     description: The homescreen that the user goes to when they press home or new tab.

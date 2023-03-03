@@ -7,7 +7,15 @@ buildscript {
         maven {
             url "https://maven.mozilla.org/maven2"
         }
+        dependencies {
+            classpath "org.mozilla.appservices:tooling-nimbus-gradle:${Versions.mozilla_appservices}"
+            classpath "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean}"
+        }
     }
+}
+
+plugins {
+    id "com.jetbrains.python.envs" version "0.0.26"
 }
 
 apply plugin: 'com.android.library'
@@ -49,13 +57,20 @@ dependencies {
     implementation ComponentsDependencies.androidx_constraintlayout
     implementation ComponentsDependencies.androidx_coordinatorlayout
     implementation ComponentsDependencies.androidx_recyclerview
+    implementation ComponentsDependencies.androidx_work_runtime
 
     implementation ComponentsDependencies.kotlin_coroutines
 
+    implementation ComponentsDependencies.mozilla_nimbus
+
     implementation project(':support-base')
     implementation project(':support-locale')
+    implementation project(':support-ktx')
+    implementation project(':support-utils')
 
-    testImplementation ComponentsDependencies.androidx_work_testing
+    // We only compile against GeckoView and Glean. It's up to the app to add those dependencies if it wants to
+    // send crash reports to Socorro (GV).
+    compileOnly project(":service-glean")
 
     testImplementation ComponentsDependencies.mozilla_full_megazord_forUnitTests
     testImplementation ComponentsDependencies.androidx_test_core
@@ -63,9 +78,38 @@ dependencies {
     testImplementation ComponentsDependencies.testing_mockito
     testImplementation ComponentsDependencies.testing_mockwebserver
     testImplementation ComponentsDependencies.testing_robolectric
+    testImplementation ComponentsDependencies.testing_coroutines
+    testImplementation ComponentsDependencies.mozilla_glean_forUnitTests
+    testImplementation ComponentsDependencies.androidx_work_testing
     testImplementation project(':support-test')
+    testImplementation project(":service-glean")
 }
 
 apply from: '../../../android-lint.gradle'
 apply from: '../../../publish.gradle'
 ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)
+
+
+apply plugin: "org.mozilla.appservices.nimbus-gradle-plugin"
+
+nimbus {
+    // The path to the Nimbus feature manifest file
+    manifestFile = "messaging.fml.yaml"
+
+    // Map from the variant name to the channel as experimenter and nimbus understand it.
+    // If nimbus's channels were accurately set up well for this project, then this
+    // shouldn't be needed.
+    channels = [
+            debug: "debug",
+            release: "release",
+    ]
+
+    // This is an optional value, and updates the plugin to use a copy of application
+    // services. The path should be relative to the root project directory.
+    // *NOTE*: This example will not work for all projects, but should work for Fenix, Focus, and Android Components
+    applicationServicesDir = gradle.hasProperty('localProperties.autoPublish.application-services.dir')
+            ? gradle.getProperty('localProperties.autoPublish.application-services.dir') : null
+}
+
+ext.gleanGenerateMarkdownDocs = true
+apply plugin: "org.mozilla.telemetry.glean-gradle-plugin"

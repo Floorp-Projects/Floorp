@@ -2,9 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.gleanplumb.state
+package org.mozilla.fenix.messaging.state
 
 import io.mockk.mockk
+import mozilla.components.service.nimbus.messaging.Message
+import mozilla.components.service.nimbus.messaging.MessageData
+import mozilla.components.service.nimbus.messaging.MessageSurfaceId
+import mozilla.components.service.nimbus.messaging.StyleData
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -15,11 +19,8 @@ import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.UpdateMes
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.UpdateMessages
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.appstate.AppStoreReducer
-import org.mozilla.fenix.gleanplumb.Message
-import org.mozilla.fenix.gleanplumb.MessagingState
-import org.mozilla.fenix.nimbus.MessageData
-import org.mozilla.fenix.nimbus.MessageSurfaceId
-import org.mozilla.fenix.nimbus.StyleData
+import org.mozilla.fenix.messaging.FenixMessageSurfaceId
+import org.mozilla.fenix.messaging.MessagingState
 
 class MessagingReducerTest {
 
@@ -45,7 +46,7 @@ class MessagingReducerTest {
         assertNull(updatedState.messaging.messageToShow[m.surface])
     }
 
-    private fun createMessage(id: String, action: String = "action-1", surface: MessageSurfaceId = MessageSurfaceId.HOMESCREEN): Message =
+    private fun createMessage(id: String, action: String = "action-1", surface: MessageSurfaceId = FenixMessageSurfaceId.HOMESCREEN): Message =
         Message(
             id = id,
             data = MessageData(surface = surface),

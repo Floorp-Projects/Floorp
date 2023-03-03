@@ -18,9 +18,9 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import com.google.android.material.button.MaterialButton
+import mozilla.components.service.nimbus.messaging.MESSAGING_FEATURE_ID
 import org.mozilla.experiments.nimbus.internal.EnrolledExperiment
 import org.mozilla.fenix.R
-import org.mozilla.fenix.gleanplumb.MESSAGING_FEATURE_ID
 import org.mozilla.fenix.settings.studies.CustomViewHolder.SectionViewHolder
 import org.mozilla.fenix.settings.studies.CustomViewHolder.StudyViewHolder
 

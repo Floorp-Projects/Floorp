@@ -1866,6 +1866,7 @@ projects:
     - concept-storage
     - lib-publicsuffixlist
     - lib-state
+    - service-glean
     - support-base
     - support-ktx
     - support-locale

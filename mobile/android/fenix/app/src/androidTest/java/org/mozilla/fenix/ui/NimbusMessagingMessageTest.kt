@@ -8,6 +8,8 @@ import android.content.Context
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import kotlinx.coroutines.test.runTest
+import mozilla.components.service.nimbus.messaging.FxNimbusMessaging
+import mozilla.components.service.nimbus.messaging.Messaging
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -16,11 +18,9 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.gleanplumb.CustomAttributeProvider
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestHelper
-import org.mozilla.fenix.nimbus.FxNimbus
-import org.mozilla.fenix.nimbus.Messaging
+import org.mozilla.fenix.messaging.CustomAttributeProvider
 
 /**
  * This test is to test the integrity of messages hardcoded in the FML.
@@ -45,7 +45,7 @@ class NimbusMessagingMessageTest {
     fun setUp() {
         context = TestHelper.appContext
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        feature = FxNimbus.features.messaging.value()
+        feature = FxNimbusMessaging.features.messaging.value()
     }
 
     /**

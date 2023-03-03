@@ -2,13 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.gleanplumb.state
+package org.mozilla.fenix.messaging.state
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
+import mozilla.components.service.nimbus.messaging.Message
+import mozilla.components.service.nimbus.messaging.NimbusMessagingController
+import mozilla.components.service.nimbus.messaging.NimbusMessagingStorage
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.ConsumeMessageToShow
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.Evaluate
@@ -18,15 +21,13 @@ import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.Restore
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.UpdateMessageToShow
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.UpdateMessages
 import org.mozilla.fenix.components.appstate.AppState
-import org.mozilla.fenix.gleanplumb.Message
-import org.mozilla.fenix.gleanplumb.NimbusMessagingController
-import org.mozilla.fenix.gleanplumb.NimbusMessagingStorage
+import org.mozilla.fenix.messaging.FenixNimbusMessagingController
 
 typealias AppStoreMiddlewareContext = MiddlewareContext<AppState, AppAction>
 
 class MessagingMiddleware(
     private val messagingStorage: NimbusMessagingStorage,
-    private val controller: NimbusMessagingController = NimbusMessagingController(messagingStorage),
+    private val controller: NimbusMessagingController = FenixNimbusMessagingController(messagingStorage),
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO),
 ) : Middleware<AppState, AppAction> {
 

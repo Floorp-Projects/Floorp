@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.gleanplumb
+package mozilla.components.service.nimbus.messaging
 
 import android.content.Context
 import androidx.annotation.VisibleForTesting
@@ -12,10 +12,7 @@ import org.mozilla.experiments.nimbus.GleanPlumbInterface
 import org.mozilla.experiments.nimbus.GleanPlumbMessageHelper
 import org.mozilla.experiments.nimbus.internal.FeatureHolder
 import org.mozilla.experiments.nimbus.internal.NimbusException
-import org.mozilla.fenix.nimbus.ControlMessageBehavior
-import org.mozilla.fenix.nimbus.MessageSurfaceId
-import org.mozilla.fenix.nimbus.Messaging
-import org.mozilla.fenix.nimbus.StyleData
+import mozilla.components.service.nimbus.GleanMetrics.Messaging as GleanMessaging
 
 /**
  * This ID must match the name given in the `nimbus.fml.yaml` file, which
@@ -36,17 +33,19 @@ const val MESSAGING_FEATURE_ID = "messaging"
 class NimbusMessagingStorage(
     private val context: Context,
     private val metadataStorage: MessageMetadataStorage,
-    private val reportMalformedMessage: (String) -> Unit,
+    private val reportMalformedMessage: (String) -> Unit = {
+        GleanMessaging.malformed.record(GleanMessaging.MalformedExtra(it))
+    },
     private val gleanPlumb: GleanPlumbInterface,
     private val messagingFeature: FeatureHolder<Messaging>,
-    private val attributeProvider: CustomAttributeProvider? = null,
+    private val attributeProvider: JexlAttributeProvider? = null,
 ) {
     /**
      * Contains all malformed messages where they key can be the value or a trigger of the message
      * and the value is the message id.
      */
     @VisibleForTesting
-    internal val malFormedMap = mutableMapOf<String, String>()
+    val malFormedMap = mutableMapOf<String, String>()
     private val logger = Logger("MessagingStorage")
     private val nimbusFeature = messagingFeature
     private val customAttributes: JSONObject
@@ -90,7 +89,8 @@ class NimbusMessagingStorage(
 
         return nimbusMessages
             .mapNotNull { (key, value) ->
-                val action = sanitizeAction(key, value.action, nimbusActions, value.isControl) ?: return@mapNotNull null
+                val action = sanitizeAction(key, value.action, nimbusActions, value.isControl)
+                    ?: return@mapNotNull null
                 Message(
                     id = key,
                     data = value,
@@ -216,23 +216,31 @@ class NimbusMessagingStorage(
         }
     }
 
+    /**
+     * Return true if the message passed as a parameter is under experiment
+     *
+     * Aimed to be used from tests only, but currently public because some tests inside Fenix need
+     * it. This should be set as internal when this bug is fixed:
+     * https://bugzilla.mozilla.org/show_bug.cgi?id=1823472
+     */
     @VisibleForTesting
-    internal fun isMessageUnderExperiment(message: Message, expression: String?): Boolean {
+    fun isMessageUnderExperiment(message: Message, expression: String?): Boolean {
         return message.data.isControl || when {
-            expression.isNullOrBlank() -> {
-                false
-            }
-            expression.endsWith("-") -> {
-                message.id.startsWith(expression)
-            }
-            else -> {
-                message.id == expression
-            }
+            expression.isNullOrBlank() -> false
+            expression.endsWith("-") -> message.id.startsWith(expression)
+            else -> message.id == expression
         }
     }
 
+    /**
+     * Return true if the message passed as a parameter is eligible
+     *
+     * Aimed to be used from tests only, but currently public because some tests inside Fenix need
+     * it. This should be set as internal when this bug is fixed:
+     * https://bugzilla.mozilla.org/show_bug.cgi?id=1823472
+     */
     @VisibleForTesting
-    internal fun isMessageEligible(
+    fun isMessageEligible(
         message: Message,
         helper: GleanPlumbMessageHelper,
         jexlCache: MutableMap<String, Boolean> = mutableMapOf(),

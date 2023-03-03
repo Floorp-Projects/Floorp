@@ -2,14 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.gleanplumb
+package mozilla.components.service.nimbus.messaging
 
-import io.mockk.Runs
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.just
-import io.mockk.spyk
-import io.mockk.verify
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.test.runTest
 import mozilla.components.support.test.robolectric.testContext
 import org.json.JSONArray
@@ -20,9 +15,13 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 
-@RunWith(FenixRobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
+@kotlinx.coroutines.ExperimentalCoroutinesApi
 class OnDiskMessageMetadataStorageTest {
 
     private lateinit var storage: OnDiskMessageMetadataStorage
@@ -37,50 +36,50 @@ class OnDiskMessageMetadataStorageTest {
     @Test
     fun `GIVEN metadata is not loaded from disk WHEN calling getMetadata THEN load it`() =
         runTest {
-            val spiedStorage = spyk(storage)
+            val spiedStorage = spy(storage)
 
-            coEvery { spiedStorage.readFromDisk() } returns emptyMap()
+            `when`(spiedStorage.readFromDisk()).thenReturn(emptyMap())
 
             spiedStorage.getMetadata()
 
-            verify { spiedStorage.readFromDisk() }
+            verify(spiedStorage).readFromDisk()
         }
 
     @Test
     fun `GIVEN metadata is loaded from disk WHEN calling getMetadata THEN do not load it from disk`() =
         runTest {
-            val spiedStorage = spyk(storage)
+            val spiedStorage = spy(storage)
 
             spiedStorage.metadataMap = hashMapOf("" to Message.Metadata("id"))
 
             spiedStorage.getMetadata()
 
-            verify(exactly = 0) { spiedStorage.readFromDisk() }
+            verify(spiedStorage, never()).readFromDisk()
         }
 
     @Test
     fun `WHEN calling addMetadata THEN add in memory and disk`() = runTest {
-        val spiedStorage = spyk(storage)
+        val spiedStorage = spy(storage)
 
         assertTrue(spiedStorage.metadataMap.isEmpty())
 
-        coEvery { spiedStorage.writeToDisk() } just Runs
+        `when`(spiedStorage.writeToDisk()).then { }
 
         spiedStorage.addMetadata(Message.Metadata("id"))
 
         assertFalse(spiedStorage.metadataMap.isEmpty())
-        coVerify { spiedStorage.writeToDisk() }
+        verify(spiedStorage).writeToDisk()
     }
 
     @Test
     fun `WHEN calling updateMetadata THEN delegate to addMetadata`() = runTest {
-        val spiedStorage = spyk(storage)
+        val spiedStorage = spy(storage)
         val metadata = Message.Metadata("id")
-        coEvery { spiedStorage.writeToDisk() } just Runs
+        `when`(spiedStorage.writeToDisk()).then { }
 
         spiedStorage.updateMetadata(metadata)
 
-        coVerify { spiedStorage.addMetadata(metadata) }
+        verify(spiedStorage).addMetadata(metadata)
     }
 
     @Test

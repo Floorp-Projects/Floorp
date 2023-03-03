@@ -59,6 +59,8 @@ buildscript {
     }
 
     dependencies {
+        classpath "org.mozilla.appservices:tooling-nimbus-gradle:${Versions.mozilla_appservices}"
+
         classpath FenixDependencies.tools_androidgradle
         classpath FenixDependencies.tools_kotlingradle
         classpath FenixDependencies.tools_benchmarkgradle

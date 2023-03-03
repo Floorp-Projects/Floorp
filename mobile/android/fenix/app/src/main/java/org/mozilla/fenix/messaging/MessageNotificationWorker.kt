@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.gleanplumb
+package org.mozilla.fenix.messaging
 
 import android.app.Activity
 import android.app.Notification
@@ -18,14 +18,14 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
+import mozilla.components.service.nimbus.messaging.FxNimbusMessaging
+import mozilla.components.service.nimbus.messaging.Message
 import mozilla.components.support.base.ids.SharedIdsHelper
+import mozilla.components.support.utils.BootUtils
 import org.mozilla.fenix.ext.areNotificationsEnabledSafe
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.nimbus.FxNimbus
-import org.mozilla.fenix.nimbus.MessageSurfaceId
 import org.mozilla.fenix.onboarding.ensureMarketingChannelExists
 import org.mozilla.fenix.perf.runBlockingIncrement
-import org.mozilla.fenix.utils.BootUtils
 import org.mozilla.fenix.utils.IntentUtils
 import org.mozilla.fenix.utils.createBaseNotification
 import java.util.concurrent.TimeUnit
@@ -55,7 +55,7 @@ class MessageNotificationWorker(
         val messagingStorage = context.components.analytics.messagingStorage
         val messages = runBlockingIncrement { messagingStorage.getMessages() }
         val nextMessage =
-            messagingStorage.getNextMessage(MessageSurfaceId.NOTIFICATION, messages)
+            messagingStorage.getNextMessage(FenixMessageSurfaceId.NOTIFICATION, messages)
                 ?: return Result.success()
 
         val currentBootUniqueIdentifier = BootUtils.getBootIdentifier(context)
@@ -65,7 +65,7 @@ class MessageNotificationWorker(
             return Result.success()
         }
 
-        val nimbusMessagingController = NimbusMessagingController(messagingStorage)
+        val nimbusMessagingController = FenixNimbusMessagingController(messagingStorage)
 
         // Update message as displayed.
         val updatedMessage =
@@ -147,7 +147,7 @@ class MessageNotificationWorker(
          * Initialize the [Worker] to begin polling Nimbus.
          */
         fun setMessageNotificationWorker(context: Context) {
-            val messaging = FxNimbus.features.messaging
+            val messaging = FxNimbusMessaging.features.messaging
             val featureConfig = messaging.value()
             val notificationConfig = featureConfig.notificationConfig
             val pollingInterval = notificationConfig.refreshInterval.toLong()
@@ -189,10 +189,10 @@ class NotificationDismissedService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent != null) {
             val nimbusMessagingController =
-                NimbusMessagingController(applicationContext.components.analytics.messagingStorage)
+                FenixNimbusMessagingController(applicationContext.components.analytics.messagingStorage)
 
             // Get the relevant message.
-            val message = intent.getStringExtra(DISMISSED_MESSAGE_ID) ?.let { messageId ->
+            val message = intent.getStringExtra(DISMISSED_MESSAGE_ID)?.let { messageId ->
                 runBlockingIncrement { nimbusMessagingController.getMessage(messageId) }
             }
 
@@ -218,10 +218,10 @@ class NotificationClickedReceiverActivity : Activity() {
         super.onCreate(savedInstanceState)
 
         val nimbusMessagingController =
-            NimbusMessagingController(components.analytics.messagingStorage)
+            FenixNimbusMessagingController(components.analytics.messagingStorage)
 
         // Get the relevant message.
-        val message = intent.getStringExtra(CLICKED_MESSAGE_ID) ?.let { messageId ->
+        val message = intent.getStringExtra(CLICKED_MESSAGE_ID)?.let { messageId ->
             runBlockingIncrement { nimbusMessagingController.getMessage(messageId) }
         }
 

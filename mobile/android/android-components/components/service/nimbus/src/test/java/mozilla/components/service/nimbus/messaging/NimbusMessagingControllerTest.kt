@@ -2,19 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.gleanplumb
+package mozilla.components.service.nimbus.messaging
 
 import android.content.Intent
 import android.net.Uri
 import androidx.core.net.toUri
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
+import mozilla.components.service.glean.testing.GleanTestRule
+import mozilla.components.support.test.any
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
-import mozilla.telemetry.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -23,19 +21,21 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
 import org.mozilla.experiments.nimbus.NullVariables
-import org.mozilla.fenix.BuildConfig
-import org.mozilla.fenix.GleanMetrics.Messaging
-import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import org.mozilla.fenix.nimbus.MessageData
-import org.mozilla.fenix.nimbus.StyleData
+import org.robolectric.RobolectricTestRunner
 import java.util.UUID
+import mozilla.components.service.nimbus.GleanMetrics.Messaging as GleanMessaging
 
 private const val MOCK_TIME_MILLIS = 1000L
 
-@RunWith(FenixRobolectricTestRunner::class)
+@OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(RobolectricTestRunner::class)
 class NimbusMessagingControllerTest {
-    private val storage: NimbusMessagingStorage = mockk(relaxed = true)
+
+    private val storage: NimbusMessagingStorage = mock(NimbusMessagingStorage::class.java)
 
     @get:Rule
     val gleanTestRule = GleanTestRule(testContext)
@@ -43,7 +43,8 @@ class NimbusMessagingControllerTest {
     private val coroutinesTestRule = MainCoroutineRule()
     private val coroutineScope = coroutinesTestRule.scope
 
-    private val controller = NimbusMessagingController(storage) { MOCK_TIME_MILLIS }
+    private val deepLinkScheme = "deepLinkScheme"
+    private val controller = NimbusMessagingController(storage, deepLinkScheme) { MOCK_TIME_MILLIS }
 
     @Before
     fun setup() {
@@ -98,21 +99,21 @@ class NimbusMessagingControllerTest {
         coroutineScope.runTest {
             val message = createMessage("id-1", style = StyleData(maxDisplayCount = 1))
             // Assert telemetry is initially null
-            assertNull(Messaging.messageShown.testGetValue())
-            assertNull(Messaging.messageExpired.testGetValue())
+            assertNull(GleanMessaging.messageShown.testGetValue())
+            assertNull(GleanMessaging.messageExpired.testGetValue())
 
             controller.onMessageDisplayed(message)
 
             // Shown telemetry
-            assertNotNull(Messaging.messageShown.testGetValue())
-            val shownEvent = Messaging.messageShown.testGetValue()!!
+            assertNotNull(GleanMessaging.messageShown.testGetValue())
+            val shownEvent = GleanMessaging.messageShown.testGetValue()!!
             assertEquals(1, shownEvent.size)
             assertEquals(message.id, shownEvent.single().extra!!["message_key"])
 
             // Expired telemetry
-            assertNull(Messaging.messageExpired.testGetValue())
+            assertNull(GleanMessaging.messageExpired.testGetValue())
 
-            coVerify { storage.updateMetadata(message.metadata) }
+            verify(storage).updateMetadata(message.metadata)
         }
 
     @Test
@@ -121,61 +122,61 @@ class NimbusMessagingControllerTest {
             val message =
                 createMessage("id-1", style = StyleData(maxDisplayCount = 1), displayCount = 1)
             // Assert telemetry is initially null
-            assertNull(Messaging.messageShown.testGetValue())
-            assertNull(Messaging.messageExpired.testGetValue())
+            assertNull(GleanMessaging.messageShown.testGetValue())
+            assertNull(GleanMessaging.messageExpired.testGetValue())
 
             controller.onMessageDisplayed(message)
 
             // Shown telemetry
-            assertNotNull(Messaging.messageShown.testGetValue())
-            val shownEvent = Messaging.messageShown.testGetValue()!!
+            assertNotNull(GleanMessaging.messageShown.testGetValue())
+            val shownEvent = GleanMessaging.messageShown.testGetValue()!!
             assertEquals(1, shownEvent.size)
             assertEquals(message.id, shownEvent.single().extra!!["message_key"])
 
             // Expired telemetry
-            assertNotNull(Messaging.messageExpired.testGetValue())
-            val expiredEvent = Messaging.messageExpired.testGetValue()!!
+            assertNotNull(GleanMessaging.messageExpired.testGetValue())
+            val expiredEvent = GleanMessaging.messageExpired.testGetValue()!!
             assertEquals(1, expiredEvent.size)
             assertEquals(message.id, expiredEvent.single().extra!!["message_key"])
 
-            coVerify { storage.updateMetadata(message.metadata) }
+            verify(storage).updateMetadata(message.metadata)
         }
 
     @Test
     fun `WHEN calling onMessageDismissed THEN record a messageDismissed event and update metadata`() =
         coroutineScope.runTest {
             val message = createMessage("id-1")
-            assertNull(Messaging.messageDismissed.testGetValue())
+            assertNull(GleanMessaging.messageDismissed.testGetValue())
 
             controller.onMessageDismissed(message.metadata)
 
-            assertNotNull(Messaging.messageDismissed.testGetValue())
-            val event = Messaging.messageDismissed.testGetValue()!!
+            assertNotNull(GleanMessaging.messageDismissed.testGetValue())
+            val event = GleanMessaging.messageDismissed.testGetValue()!!
             assertEquals(1, event.size)
             assertEquals(message.id, event.single().extra!!["message_key"])
 
-            coVerify { storage.updateMetadata(message.metadata.copy(dismissed = true)) }
+            verify(storage).updateMetadata(message.metadata.copy(dismissed = true))
         }
 
     @Test
     fun `GIVEN action is URL WHEN calling processMessageActionToUri THEN record a clicked telemetry event and return an open URI`() {
         val url = "http://mozilla.org"
         val message = createMessage("id-1", action = url)
-        every { storage.generateUuidAndFormatAction(message.action) } returns Pair(
-            null,
-            message.action,
-        )
+
+        `when`(storage.generateUuidAndFormatAction(message.action))
+            .thenReturn(Pair(null, message.action))
+
         // Assert telemetry is initially null
-        assertNull(Messaging.messageClicked.testGetValue())
+        assertNull(GleanMessaging.messageClicked.testGetValue())
 
         val encodedUrl = Uri.encode(url)
-        val expectedUri = "${BuildConfig.DEEP_LINK_SCHEME}://open?url=$encodedUrl".toUri()
+        val expectedUri = "$deepLinkScheme://open?url=$encodedUrl".toUri()
 
         val actualUri = controller.processMessageActionToUri(message)
 
         // Updated telemetry
-        assertNotNull(Messaging.messageClicked.testGetValue())
-        val clickedEvent = Messaging.messageClicked.testGetValue()!!
+        assertNotNull(GleanMessaging.messageClicked.testGetValue())
+        val clickedEvent = GleanMessaging.messageClicked.testGetValue()!!
         assertEquals(1, clickedEvent.size)
         assertEquals(message.id, clickedEvent.single().extra!!["message_key"])
 
@@ -187,18 +188,18 @@ class NimbusMessagingControllerTest {
         val url = "http://mozilla.org?uuid={uuid}"
         val message = createMessage("id-1", action = url)
         val uuid = UUID.randomUUID().toString()
-        every { storage.generateUuidAndFormatAction(any()) } returns Pair(uuid, message.action)
+        `when`(storage.generateUuidAndFormatAction(any())).thenReturn(Pair(uuid, message.action))
 
         // Assert telemetry is initially null
-        assertNull(Messaging.messageClicked.testGetValue())
+        assertNull(GleanMessaging.messageClicked.testGetValue())
 
         val encodedUrl = Uri.encode(url)
-        val expectedUri = "${BuildConfig.DEEP_LINK_SCHEME}://open?url=$encodedUrl".toUri()
+        val expectedUri = "$deepLinkScheme://open?url=$encodedUrl".toUri()
 
         val actualUri = controller.processMessageActionToUri(message)
 
         // Updated telemetry
-        val clickedEvents = Messaging.messageClicked.testGetValue()
+        val clickedEvents = GleanMessaging.messageClicked.testGetValue()
         assertNotNull(clickedEvents)
         val clickedEvent = clickedEvents!!.single()
         assertEquals(message.id, clickedEvent.extra!!["message_key"])
@@ -210,19 +211,18 @@ class NimbusMessagingControllerTest {
     @Test
     fun `GIVEN action is deeplink WHEN calling processMessageActionToUri THEN return a deeplink URI`() {
         val message = createMessage("id-1", action = "://a-deep-link")
-        every { storage.generateUuidAndFormatAction(message.action) } returns Pair(
-            null,
-            message.action,
-        )
-        // Assert telemetry is initially null
-        assertNull(Messaging.messageClicked.testGetValue())
+        `when`(storage.generateUuidAndFormatAction(message.action))
+            .thenReturn(Pair(null, message.action))
 
-        val expectedUri = "${BuildConfig.DEEP_LINK_SCHEME}${message.action}".toUri()
+        // Assert telemetry is initially null
+        assertNull(GleanMessaging.messageClicked.testGetValue())
+
+        val expectedUri = "$deepLinkScheme${message.action}".toUri()
         val actualUri = controller.processMessageActionToUri(message)
 
         // Updated telemetry
-        assertNotNull(Messaging.messageClicked.testGetValue())
-        val clickedEvent = Messaging.messageClicked.testGetValue()!!
+        assertNotNull(GleanMessaging.messageClicked.testGetValue())
+        val clickedEvent = GleanMessaging.messageClicked.testGetValue()!!
         assertEquals(1, clickedEvent.size)
         assertEquals(message.id, clickedEvent.single().extra!!["message_key"])
 
@@ -232,19 +232,18 @@ class NimbusMessagingControllerTest {
     @Test
     fun `GIVEN action unknown format WHEN calling processMessageActionToUri THEN return the action URI`() {
         val message = createMessage("id-1", action = "unknown")
-        every { storage.generateUuidAndFormatAction(message.action) } returns Pair(
-            null,
-            message.action,
-        )
+        `when`(storage.generateUuidAndFormatAction(message.action))
+            .thenReturn(Pair(null, message.action))
+
         // Assert telemetry is initially null
-        assertNull(Messaging.messageClicked.testGetValue())
+        assertNull(GleanMessaging.messageClicked.testGetValue())
 
         val expectedUri = message.action.toUri()
         val actualUri = controller.processMessageActionToUri(message)
 
         // Updated telemetry
-        assertNotNull(Messaging.messageClicked.testGetValue())
-        val clickedEvent = Messaging.messageClicked.testGetValue()!!
+        assertNotNull(GleanMessaging.messageClicked.testGetValue())
+        val clickedEvent = GleanMessaging.messageClicked.testGetValue()!!
         assertEquals(1, clickedEvent.size)
         assertEquals(message.id, clickedEvent.single().extra!!["message_key"])
 
@@ -260,16 +259,14 @@ class NimbusMessagingControllerTest {
             controller.onMessageClicked(message.metadata)
 
             val updatedMetadata = message.metadata.copy(pressed = true)
-            coVerify { storage.updateMetadata(updatedMetadata) }
+            verify(storage).updateMetadata(updatedMetadata)
         }
 
     @Test
     fun `WHEN getIntentForMessageAction is called THEN return a generated Intent with the processed Message action`() {
         val message = createMessage("id-1", action = "unknown")
-        every { storage.generateUuidAndFormatAction(message.action) } returns Pair(
-            null,
-            message.action,
-        )
+        `when`(storage.generateUuidAndFormatAction(message.action))
+            .thenReturn(Pair(null, message.action))
 
         val actualIntent = controller.getIntentForMessageAction(message.action)
 
@@ -283,7 +280,7 @@ class NimbusMessagingControllerTest {
     fun `GIVEN stored messages contains a matching message WHEN calling getMessage THEN return the matching message`() =
         coroutineScope.runTest {
             val message1 = createMessage("1")
-            coEvery { storage.getMessage(message1.id) }.returns(message1)
+            `when`(storage.getMessage(message1.id)).thenReturn(message1)
             val actualMessage = controller.getMessage(message1.id)
 
             assertEquals(message1, actualMessage)
@@ -292,7 +289,7 @@ class NimbusMessagingControllerTest {
     @Test
     fun `GIVEN stored messages doesn't contain a matching message WHEN calling getMessage THEN return null`() =
         coroutineScope.runTest {
-            coEvery { storage.getMessage("unknown id") }.returns(null)
+            `when`(storage.getMessage("unknown id")).thenReturn(null)
             val actualMessage = controller.getMessage("unknown id")
 
             assertNull(actualMessage)

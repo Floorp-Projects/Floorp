@@ -10,6 +10,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
 import androidx.test.rule.GrantPermissionRule.grant
 import androidx.test.uiautomator.UiDevice
+import mozilla.components.service.nimbus.messaging.FxNimbusMessaging
 import org.json.JSONObject
 import org.junit.Before
 import org.junit.Rule
@@ -85,7 +86,7 @@ class NimbusMessagingNotificationTest {
         mDevice.openNotification()
         notificationShade {
             val data =
-                FxNimbus.features.messaging.value().messages["test-default-browser-notification"]
+                FxNimbusMessaging.features.messaging.value().messages["test-default-browser-notification"]
             verifySystemNotificationExists(data!!.title!!)
             verifySystemNotificationExists(data.text)
         }

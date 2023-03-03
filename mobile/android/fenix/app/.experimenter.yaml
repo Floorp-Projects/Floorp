@@ -77,7 +77,7 @@ mr2022:
       type: json
       description: This property provides a lookup table of whether or not the given section should be enabled.
 nimbus-system:
-  description: "Configuration of the Nimbus System in Fenix.\n"
+  description: "Configuration of the Nimbus System in Android.\n"
   hasExposure: true
   exposureDescription: ""
   variables:

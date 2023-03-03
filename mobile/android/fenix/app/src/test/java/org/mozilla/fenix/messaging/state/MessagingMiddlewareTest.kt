@@ -2,13 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.gleanplumb.state
+package org.mozilla.fenix.messaging.state
 
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.advanceUntilIdle
+import mozilla.components.service.nimbus.messaging.Message
+import mozilla.components.service.nimbus.messaging.MessageData
+import mozilla.components.service.nimbus.messaging.NimbusMessagingController
+import mozilla.components.service.nimbus.messaging.NimbusMessagingStorage
+import mozilla.components.service.nimbus.messaging.StyleData
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.rule.MainCoroutineRule
@@ -24,13 +29,9 @@ import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.MessageCl
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.MessageDismissed
 import org.mozilla.fenix.components.appstate.AppAction.MessagingAction.Restore
 import org.mozilla.fenix.components.appstate.AppState
-import org.mozilla.fenix.gleanplumb.Message
-import org.mozilla.fenix.gleanplumb.MessagingState
-import org.mozilla.fenix.gleanplumb.NimbusMessagingController
-import org.mozilla.fenix.gleanplumb.NimbusMessagingStorage
-import org.mozilla.fenix.nimbus.MessageData
-import org.mozilla.fenix.nimbus.MessageSurfaceId
-import org.mozilla.fenix.nimbus.StyleData
+import org.mozilla.fenix.messaging.FenixMessageSurfaceId
+import org.mozilla.fenix.messaging.FenixNimbusMessagingController
+import org.mozilla.fenix.messaging.MessagingState
 
 class MessagingMiddlewareTest {
     @get:Rule
@@ -42,7 +43,7 @@ class MessagingMiddlewareTest {
     @Before
     fun setUp() {
         messagingStorage = mockk(relaxed = true)
-        controller = NimbusMessagingController(messagingStorage) { 0 }
+        controller = FenixNimbusMessagingController(messagingStorage) { 0 }
     }
 
     @Test
@@ -86,14 +87,14 @@ class MessagingMiddlewareTest {
 
         every {
             messagingStorage.getNextMessage(
-                MessageSurfaceId.HOMESCREEN,
+                FenixMessageSurfaceId.HOMESCREEN,
                 any(),
             )
         } returns message
 
         assertEquals(0, store.state.messaging.messageToShow.size)
 
-        store.dispatch(Evaluate(MessageSurfaceId.HOMESCREEN)).joinBlocking()
+        store.dispatch(Evaluate(FenixMessageSurfaceId.HOMESCREEN)).joinBlocking()
         store.waitUntilIdle()
 
         // UpdateMessageToShow to causes messageToShow to append
@@ -212,12 +213,12 @@ class MessagingMiddlewareTest {
 
         every {
             messagingStorage.getNextMessage(
-                MessageSurfaceId.HOMESCREEN,
+                FenixMessageSurfaceId.HOMESCREEN,
                 any(),
             )
         } returns message
 
-        store.dispatch(Evaluate(MessageSurfaceId.HOMESCREEN))
+        store.dispatch(Evaluate(FenixMessageSurfaceId.HOMESCREEN))
         store.waitUntilIdle()
 
         assertEquals(1, store.state.messaging.messages.first().metadata.displayCount)
@@ -245,12 +246,12 @@ class MessagingMiddlewareTest {
 
         every {
             messagingStorage.getNextMessage(
-                MessageSurfaceId.HOMESCREEN,
+                FenixMessageSurfaceId.HOMESCREEN,
                 any(),
             )
         } returns message1
 
-        store.dispatch(Evaluate(MessageSurfaceId.HOMESCREEN)).joinBlocking()
+        store.dispatch(Evaluate(FenixMessageSurfaceId.HOMESCREEN)).joinBlocking()
         store.waitUntilIdle()
 
         assertEquals(messageDisplayed1, store.state.messaging.messages[0])
@@ -277,12 +278,12 @@ class MessagingMiddlewareTest {
 
         every {
             messagingStorage.getNextMessage(
-                MessageSurfaceId.HOMESCREEN,
+                FenixMessageSurfaceId.HOMESCREEN,
                 any(),
             )
         } returns message
 
-        store.dispatch(Evaluate(MessageSurfaceId.HOMESCREEN)).joinBlocking()
+        store.dispatch(Evaluate(FenixMessageSurfaceId.HOMESCREEN)).joinBlocking()
         store.waitUntilIdle()
 
         assertEquals(messageDisplayed.metadata.displayCount, store.state.messaging.messages[0].metadata.displayCount)
@@ -307,12 +308,12 @@ class MessagingMiddlewareTest {
 
         every {
             messagingStorage.getNextMessage(
-                MessageSurfaceId.HOMESCREEN,
+                FenixMessageSurfaceId.HOMESCREEN,
                 any(),
             )
         } returns message
 
-        store.dispatch(Evaluate(MessageSurfaceId.HOMESCREEN)).joinBlocking()
+        store.dispatch(Evaluate(FenixMessageSurfaceId.HOMESCREEN)).joinBlocking()
         store.waitUntilIdle()
 
         assertEquals(0, store.state.messaging.messages.size)

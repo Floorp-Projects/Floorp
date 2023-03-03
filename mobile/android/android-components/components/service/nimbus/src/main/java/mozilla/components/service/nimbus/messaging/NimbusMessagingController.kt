@@ -2,19 +2,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.gleanplumb
+package mozilla.components.service.nimbus.messaging
 
 import android.content.Intent
 import android.net.Uri
 import androidx.core.net.toUri
-import org.mozilla.fenix.BuildConfig
-import org.mozilla.fenix.GleanMetrics.Messaging
+import mozilla.components.service.nimbus.GleanMetrics.Messaging as GleanMessaging
 
 /**
  * Bookkeeping for message actions in terms of Glean messages and the messaging store.
+ *
+ * @param messagingStorage a NimbusMessagingStorage instance
+ * @param deepLinkScheme the deepLinkScheme for the app
+ * @param httpActionToDeepLinkUriConverter will be used to create a deepLinkUri from the action associated to a message.
+ * It can be customized to fit the needs of any app. A default implementation is provided.
+ * @param now will be used to get the current time
  */
-class NimbusMessagingController(
+open class NimbusMessagingController(
     private val messagingStorage: NimbusMessagingStorage,
+    private val deepLinkScheme: String,
+    private val httpActionToDeepLinkUriConverter: (String) -> Uri = { action ->
+        "$deepLinkScheme://open?url=${Uri.encode(action)}".toUri()
+    },
     private val now: () -> Long = { System.currentTimeMillis() },
 ) {
     /**
@@ -74,7 +83,7 @@ class NimbusMessagingController(
      * @return an [Intent] using the processed [Message.action].
      */
     fun getIntentForMessageAction(action: String): Intent {
-        return Intent(Intent.ACTION_VIEW, action.toDeepLinkSchemeUri())
+        return Intent(Intent.ACTION_VIEW, convertActionIntoDeepLinkSchemeUri(action))
     }
 
     /**
@@ -98,36 +107,33 @@ class NimbusMessagingController(
         val (uuid, action) = messagingStorage.generateUuidAndFormatAction(message.action)
         sendClickedMessageTelemetry(message.id, uuid)
 
-        return action.toDeepLinkSchemeUri()
+        return convertActionIntoDeepLinkSchemeUri(action)
     }
 
     private fun sendDismissedMessageTelemetry(messageId: String) {
-        Messaging.messageDismissed.record(Messaging.MessageDismissedExtra(messageId))
+        GleanMessaging.messageDismissed.record(GleanMessaging.MessageDismissedExtra(messageId))
     }
 
     private fun sendShownMessageTelemetry(messageId: String) {
-        Messaging.messageShown.record(Messaging.MessageShownExtra(messageId))
+        GleanMessaging.messageShown.record(GleanMessaging.MessageShownExtra(messageId))
     }
 
     private fun sendExpiredMessageTelemetry(messageId: String) {
-        Messaging.messageExpired.record(Messaging.MessageExpiredExtra(messageId))
+        GleanMessaging.messageExpired.record(GleanMessaging.MessageExpiredExtra(messageId))
     }
 
     private fun sendClickedMessageTelemetry(messageId: String, uuid: String?) {
-        Messaging.messageClicked.record(
-            Messaging.MessageClickedExtra(messageKey = messageId, actionUuid = uuid),
+        GleanMessaging.messageClicked.record(
+            GleanMessaging.MessageClickedExtra(messageKey = messageId, actionUuid = uuid),
         )
     }
-}
 
-private fun String.toDeepLinkSchemeUri(): Uri {
-    val actionWithDeepLinkScheme = if (startsWith("http", ignoreCase = true)) {
-        "${BuildConfig.DEEP_LINK_SCHEME}://open?url=${Uri.encode(this)}"
-    } else if (startsWith("://")) {
-        "${BuildConfig.DEEP_LINK_SCHEME}$this"
-    } else {
-        this
-    }
-
-    return actionWithDeepLinkScheme.toUri()
+    private fun convertActionIntoDeepLinkSchemeUri(action: String): Uri =
+        if (action.startsWith("http", ignoreCase = true)) {
+            httpActionToDeepLinkUriConverter(action)
+        } else if (action.startsWith("://")) {
+            "$deepLinkScheme$action".toUri()
+        } else {
+            action.toUri()
+        }
 }

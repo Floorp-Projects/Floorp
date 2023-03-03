@@ -6,6 +6,8 @@ package org.mozilla.fenix.ui
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
+import mozilla.components.service.nimbus.messaging.FxNimbusMessaging
+import mozilla.components.service.nimbus.messaging.Messaging
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
@@ -13,11 +15,9 @@ import org.junit.Test
 import org.mozilla.experiments.nimbus.NimbusInterface
 import org.mozilla.experiments.nimbus.internal.NimbusException
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.gleanplumb.CustomAttributeProvider
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestHelper
-import org.mozilla.fenix.nimbus.FxNimbus
-import org.mozilla.fenix.nimbus.Messaging
+import org.mozilla.fenix.messaging.CustomAttributeProvider
 
 /**
  * Test to instantiate Nimbus and automatically test all trigger expressions shipping with the app.
@@ -39,7 +39,7 @@ class NimbusMessagingTriggerTest {
     fun setUp() {
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         nimbus = TestHelper.appContext.components.analytics.experiments
-        feature = FxNimbus.features.messaging.value()
+        feature = FxNimbusMessaging.features.messaging.value()
     }
 
     @Test

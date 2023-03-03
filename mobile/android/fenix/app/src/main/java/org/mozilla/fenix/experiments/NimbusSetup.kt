@@ -8,6 +8,8 @@ import android.content.Context
 import mozilla.components.service.nimbus.NimbusApi
 import mozilla.components.service.nimbus.NimbusAppInfo
 import mozilla.components.service.nimbus.NimbusBuilder
+import mozilla.components.service.nimbus.messaging.FxNimbusMessaging
+import mozilla.components.service.nimbus.messaging.NimbusSystem
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.experiments.nimbus.NimbusInterface
 import org.mozilla.experiments.nimbus.internal.NimbusException
@@ -15,9 +17,8 @@ import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.gleanplumb.CustomAttributeProvider
+import org.mozilla.fenix.messaging.CustomAttributeProvider
 import org.mozilla.fenix.nimbus.FxNimbus
-import org.mozilla.fenix.nimbus.NimbusSystem
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -97,7 +98,7 @@ fun NimbusException.isReportableError(): Boolean {
  */
 fun NimbusInterface.maybeFetchExperiments(
     context: Context,
-    feature: NimbusSystem = FxNimbus.features.nimbusSystem.value(),
+    feature: NimbusSystem = FxNimbusMessaging.features.nimbusSystem.value(),
     currentTimeMillis: Long = System.currentTimeMillis(),
 ) {
     val minimumPeriodMinutes = if (!context.settings().nimbusUsePreview) {

@@ -2,10 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.gleanplumb
+package org.mozilla.fenix.messaging
 
 import android.content.Context
 import androidx.core.app.NotificationManagerCompat
+import mozilla.components.service.nimbus.messaging.JexlAttributeProvider
 import org.json.JSONObject
 import org.mozilla.fenix.ext.areNotificationsEnabledSafe
 import org.mozilla.fenix.ext.settings
@@ -18,7 +19,7 @@ import java.util.Locale
  * Custom attributes that the messaging framework will use to evaluate if message is eligible
  * to be shown.
  */
-object CustomAttributeProvider {
+object CustomAttributeProvider : JexlAttributeProvider {
     private val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.US)
 
     /**
@@ -48,7 +49,7 @@ object CustomAttributeProvider {
      *
      * This is used to drive display triggers of messages.
      */
-    fun getCustomAttributes(context: Context): JSONObject {
+    override fun getCustomAttributes(context: Context): JSONObject {
         val now = Calendar.getInstance()
         val settings = context.settings()
         return JSONObject(
