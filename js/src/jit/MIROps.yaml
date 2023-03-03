@@ -299,6 +299,16 @@
   # implicit dependency.
   alias_set: none
 
+- name: GuardBoundFunctionIsConstructor
+  operands:
+    object: Object
+  result_type: Object
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  # The is-constructor flag is immutable for a bound function.
+  alias_set: none
+
 # Setting __proto__ in an object literal.
 - name: MutateProto
   operands:

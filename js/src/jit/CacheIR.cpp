@@ -10765,14 +10765,14 @@ AttachDecision CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
     return AttachDecision::NoAction;
   }
 
-  // We don't support spread calls in the transpiler yet.
-  if (isSpread) {
+  // Bound functions have a JSClass construct hook but are not always
+  // constructors.
+  if (isConstructing && !calleeObj->isConstructor()) {
     return AttachDecision::NoAction;
   }
 
-  // To support the BoundFunctionObject construct hook, we need to guard on the
-  // is-constructor flag.
-  if (isConstructing && calleeObj->is<BoundFunctionObject>()) {
+  // We don't support spread calls in the transpiler yet.
+  if (isSpread) {
     return AttachDecision::NoAction;
   }
 
@@ -10786,6 +10786,10 @@ AttachDecision CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
 
   // Ensure the callee's class matches the one in this stub.
   writer.guardAnyClass(calleeObjId, calleeObj->getClass());
+
+  if (isConstructing && calleeObj->is<BoundFunctionObject>()) {
+    writer.guardBoundFunctionIsConstructor(calleeObjId);
+  }
 
   writer.callClassHook(calleeObjId, argcId, hook, flags, ClampFixedArgc(argc_));
   writer.returnFromIC();

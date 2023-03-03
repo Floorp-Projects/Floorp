@@ -7742,6 +7742,17 @@ void CodeGenerator::visitBoundFunctionNumArgs(LBoundFunctionNumArgs* lir) {
   masm.rshift32(Imm32(BoundFunctionObject::NumBoundArgsShift), output);
 }
 
+void CodeGenerator::visitGuardBoundFunctionIsConstructor(
+    LGuardBoundFunctionIsConstructor* lir) {
+  Register obj = ToRegister(lir->object());
+
+  Label bail;
+  Address flagsSlot(obj, BoundFunctionObject::offsetOfFlagsSlot());
+  masm.branchTest32(Assembler::Zero, flagsSlot,
+                    Imm32(BoundFunctionObject::IsConstructorFlag), &bail);
+  bailoutFrom(&bail, lir->snapshot());
+}
+
 void CodeGenerator::visitReturnFromCtor(LReturnFromCtor* lir) {
   ValueOperand value = ToValue(lir, LReturnFromCtor::ValueIndex);
   Register obj = ToRegister(lir->object());

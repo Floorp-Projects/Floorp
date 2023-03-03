@@ -1731,6 +1731,17 @@ bool WarpCacheIRTranspiler::emitLoadBoundFunctionTarget(ObjOperandId objId,
   return defineOperand(resultId, target);
 }
 
+bool WarpCacheIRTranspiler::emitGuardBoundFunctionIsConstructor(
+    ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* guard = MGuardBoundFunctionIsConstructor::New(alloc(), obj);
+  add(guard);
+
+  setOperand(objId, guard);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitArrayFromArgumentsObjectResult(
     ObjOperandId objId, uint32_t shapeOffset) {
   MDefinition* obj = getOperand(objId);
