@@ -101,9 +101,10 @@ void AsyncScrollThumbTransformer::ApplyTransformForAxis(const Axis& aAxis) {
       static_cast<int>(visualViewportLength * 0.8);
   CSSCoord pageIncrement;
 
+  CSSToLayoutDeviceScale deviceScale = mMetrics.GetDevPixelsPerCSSPixel();
   if (*mScrollbarData.mDirection == ScrollDirection::eVertical) {
     const CSSCoord lineScrollAmount =
-        mApzc->GetScrollMetadata().GetLineScrollAmount().height;
+        (mApzc->GetScrollMetadata().GetLineScrollAmount() / deviceScale).height;
     const double kScrollMultiplier =
         StaticPrefs::toolkit_scrollbox_verticalScrollDistance();
     CSSCoord increment = lineScrollAmount * kScrollMultiplier;
@@ -121,8 +122,14 @@ void AsyncScrollThumbTransformer::ApplyTransformForAxis(const Axis& aAxis) {
   float ratio = pageIncrement / (maxMinPosDifference + pageIncrement);
 
   CSSCoord desiredThumbLength{
-      std::max(mScrollbarData.mThumbMinLength.Rounded(),
-               (mScrollbarData.mScrollTrackLength * ratio).Rounded())};
+      std::max(mScrollbarData.mThumbMinLength,
+               mScrollbarData.mScrollTrackLength * ratio)};
+
+  // Round the thumb length to an integer number of LayoutDevice pixels, to
+  // match the main-thread behaviour.
+  desiredThumbLength =
+      LayoutDeviceCoord((desiredThumbLength * deviceScale).Rounded()) /
+      deviceScale;
 
   const float scale = desiredThumbLength / mScrollbarData.mThumbLength;
 
