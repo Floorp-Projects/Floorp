@@ -431,8 +431,24 @@ class nsFrameSelection final {
   /**
    * @brief Removes the Highlight selection identified by `aHighlightName`.
    */
-  void RemoveHighlightSelection(const nsAtom* aHighlightName);
+  MOZ_CAN_RUN_SCRIPT void RemoveHighlightSelection(
+      const nsAtom* aHighlightName);
 
+  /**
+   * @brief Adds a new range to the highlight selection.
+   *
+   * If there is no highlight selection for the given highlight yet, it is
+   * created using |AddHighlightSelection|.
+   */
+  MOZ_CAN_RUN_SCRIPT void AddHighlightSelectionRange(
+      const nsAtom* aHighlightName, const mozilla::dom::Highlight& aHighlight,
+      mozilla::dom::AbstractRange& aRange, mozilla::ErrorResult& aRv);
+
+  /**
+   * @brief Removes a range from a highlight selection.
+   */
+  MOZ_CAN_RUN_SCRIPT void RemoveHighlightSelectionRange(
+      const nsAtom* aHighlightName, mozilla::dom::AbstractRange& aRange);
   /**
    * ScrollSelectionIntoView scrolls a region of the selection,
    * so that it is visible in the scrolled view.

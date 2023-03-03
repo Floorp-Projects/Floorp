@@ -149,12 +149,12 @@ class Highlight final : public nsISupports, public nsWrapperCache {
    * internal one.
    *
    * Also notifies all `HighlightRegistry` instances.
+   *
+   * @return As per spec, returns true if the range was deleted.
    */
-  MOZ_CAN_RUN_SCRIPT void Delete(AbstractRange& aRange, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT bool Delete(AbstractRange& aRange, ErrorResult& aRv);
 
  private:
-  MOZ_CAN_RUN_SCRIPT void NotifyChangesToRegistries(ErrorResult& aRv);
-
   RefPtr<nsPIDOMWindowInner> mWindow;
 
   /**

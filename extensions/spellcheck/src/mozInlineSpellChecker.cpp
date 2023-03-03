@@ -1722,8 +1722,8 @@ nsresult mozInlineSpellChecker::IsPointInSelection(Selection& aSelection,
   *aRange = nullptr;
 
   nsTArray<nsRange*> ranges;
-  nsresult rv = aSelection.GetRangesForIntervalArray(aNode, aOffset, aNode,
-                                                     aOffset, true, &ranges);
+  nsresult rv = aSelection.GetDynamicRangesForIntervalArray(
+      aNode, aOffset, aNode, aOffset, true, &ranges);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (ranges.Length() == 0) return NS_OK;  // no matches

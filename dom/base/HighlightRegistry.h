@@ -23,6 +23,7 @@ class ErrorResult;
 }
 namespace mozilla::dom {
 
+class AbstractRange;
 class Document;
 class Highlight;
 
@@ -62,10 +63,33 @@ class HighlightRegistry final : public nsISupports, public nsWrapperCache {
       ErrorResult& aRv);
 
   /**
-   * @brief Propagates changes to a highlight to the `FrameSelection`.
+   * @brief Adds the Range to the Highlight Selection if it belongs to the same
+   * Document.
+   *
+   * If no Highlight Selection for this highlight exists, it will be created.
+   * This may occur when a Highlight is added to the Registry after the
+   * nsFrameSelection is created.
    */
-  MOZ_CAN_RUN_SCRIPT void HighlightPropertiesChanged(Highlight& aHighlight,
-                                                     ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void MaybeAddRangeToHighlightSelection(
+      AbstractRange& aRange, Highlight& aHighlight, ErrorResult& aRv);
+
+  /**
+   * @brief Removes the Range from the Highlight Selection if it belongs to the
+   * same Document.
+   *
+   * @note If the last range of a highlight selection is removed, the selection
+   * itself is *not* removed.
+   */
+  MOZ_CAN_RUN_SCRIPT void MaybeRemoveRangeFromHighlightSelection(
+      AbstractRange& aRange, Highlight& aHighlight);
+
+  /**
+   * @brief Removes the highlight selections associated with the highlight.
+   *
+   * This method is called when the Highlight is cleared
+   * (i.e., all Ranges are removed).
+   */
+  MOZ_CAN_RUN_SCRIPT void RemoveHighlightSelection(Highlight& aHighlight);
 
   // WebIDL interface
 
@@ -92,15 +116,17 @@ class HighlightRegistry final : public nsISupports, public nsWrapperCache {
    *
    * If a `FrameSelection` is present, all highlight selections are removed.
    */
-  void Clear(ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void Clear(ErrorResult& aRv);
 
   /**
    * @brief Removes the highlight named `aKey` from the registry.
    *
    * This call removes the combination of `this` and `aKey` from the highlight.
    * If a `FrameSelection` is present, the highlight selection is removed.
+   *
+   * @return true if `aKey` existed and was deleted.
    */
-  void Delete(const nsAString& aKey, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT bool Delete(const nsAString& aKey, ErrorResult& aRv);
 
  private:
   /**

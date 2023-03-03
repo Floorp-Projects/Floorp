@@ -23,6 +23,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/SelectionBinding.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/dom/StaticRange.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/IntegerRange.h"
@@ -685,12 +686,15 @@ void Selection::SetAnchorFocusRange(size_t aIndex) {
   if (aIndex >= mStyledRanges.Length()) {
     return;
   }
-  mAnchorFocusRange = mStyledRanges.mRanges[aIndex].mRange;
+  // Highlight selections may contain static ranges.
+  MOZ_ASSERT(mSelectionType != SelectionType::eHighlight);
+  AbstractRange* anchorFocusRange = mStyledRanges.mRanges[aIndex].mRange;
+  mAnchorFocusRange = anchorFocusRange->AsDynamicRange();
 }
 
 static int32_t CompareToRangeStart(const nsINode& aCompareNode,
                                    uint32_t aCompareOffset,
-                                   const nsRange& aRange) {
+                                   const AbstractRange& aRange) {
   MOZ_ASSERT(aRange.GetStartContainer());
   nsINode* start = aRange.GetStartContainer();
   // If the nodes that we're comparing are not in the same document, assume that
@@ -709,7 +713,7 @@ static int32_t CompareToRangeStart(const nsINode& aCompareNode,
 
 static int32_t CompareToRangeEnd(const nsINode& aCompareNode,
                                  uint32_t aCompareOffset,
-                                 const nsRange& aRange) {
+                                 const AbstractRange& aRange) {
   MOZ_ASSERT(aRange.IsPositioned());
   nsINode* end = aRange.GetEndContainer();
   // If the nodes that we're comparing are not in the same document or in the
@@ -730,14 +734,14 @@ static int32_t CompareToRangeEnd(const nsINode& aCompareNode,
 size_t Selection::StyledRanges::FindInsertionPoint(
     const nsTArray<StyledRange>* aElementArray, const nsINode& aPointNode,
     uint32_t aPointOffset,
-    int32_t (*aComparator)(const nsINode&, uint32_t, const nsRange&)) {
+    int32_t (*aComparator)(const nsINode&, uint32_t, const AbstractRange&)) {
   int32_t beginSearch = 0;
   int32_t endSearch = aElementArray->Length();  // one beyond what to check
 
   if (endSearch) {
     int32_t center = endSearch - 1;  // Check last index, then binary search
     do {
-      const nsRange* range = (*aElementArray)[center].mRange;
+      const AbstractRange* range = (*aElementArray)[center].mRange;
 
       int32_t cmp{aComparator(aPointNode, aPointOffset, *range)};
 
@@ -766,7 +770,7 @@ size_t Selection::StyledRanges::FindInsertionPoint(
 // static
 nsresult Selection::StyledRanges::SubtractRange(
     StyledRange& aRange, nsRange& aSubtract, nsTArray<StyledRange>* aOutput) {
-  nsRange* range = aRange.mRange;
+  AbstractRange* range = aRange.mRange;
   if (NS_WARN_IF(!range->IsPositioned())) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -1080,7 +1084,9 @@ nsresult Selection::StyledRanges::MaybeAddRangeAndTruncateOverlaps(
 
   // Remove all the overlapping ranges
   for (size_t i = startIndex; i < endIndex; ++i) {
-    mRanges[i].mRange->UnregisterSelection(mSelection);
+    if (mRanges[i].mRange->IsDynamicRange()) {
+      mRanges[i].mRange->AsDynamicRange()->UnregisterSelection(mSelection);
+    }
   }
   mRanges.RemoveElementsAt(startIndex, endIndex - startIndex);
 
@@ -1102,9 +1108,12 @@ nsresult Selection::StyledRanges::MaybeAddRangeAndTruncateOverlaps(
   mRanges.InsertElementsAt(startIndex, temp);
 
   for (uint32_t i = 0; i < temp.Length(); ++i) {
-    MOZ_KnownLive(temp[i].mRange)->RegisterSelection(MOZ_KnownLive(mSelection));
-    // `MOZ_KnownLive` is required because of
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1622253.
+    if (temp[i].mRange->IsDynamicRange()) {
+      MOZ_KnownLive(temp[i].mRange->AsDynamicRange())
+          ->RegisterSelection(MOZ_KnownLive(mSelection));
+      // `MOZ_KnownLive` is required because of
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=1622253.
+    }
   }
 
   aOutIndex->emplace(startIndex + insertionPoint);
@@ -1112,7 +1121,7 @@ nsresult Selection::StyledRanges::MaybeAddRangeAndTruncateOverlaps(
 }
 
 nsresult Selection::StyledRanges::RemoveRangeAndUnregisterSelection(
-    nsRange& aRange) {
+    AbstractRange& aRange) {
   // Find the range's index & remove it. We could use FindInsertionPoint to
   // get O(log n) time, but that requires many expensive DOM comparisons.
   // For even several thousand items, this is probably faster because the
@@ -1128,7 +1137,9 @@ nsresult Selection::StyledRanges::RemoveRangeAndUnregisterSelection(
   if (idx < 0) return NS_ERROR_DOM_NOT_FOUND_ERR;
 
   mRanges.RemoveElementAt(idx);
-  aRange.UnregisterSelection(mSelection);
+  if (aRange.IsDynamicRange()) {
+    aRange.AsDynamicRange()->UnregisterSelection(mSelection);
+  }
   return NS_OK;
 }
 nsresult Selection::RemoveCollapsedRanges() {
@@ -1170,7 +1181,7 @@ void Selection::Clear(nsPresContext* aPresContext) {
 bool Selection::StyledRanges::HasEqualRangeBoundariesAt(
     const nsRange& aRange, size_t aRangeIndex) const {
   if (aRangeIndex < mRanges.Length()) {
-    const nsRange* range = mRanges[aRangeIndex].mRange;
+    const AbstractRange* range = mRanges[aRangeIndex].mRange;
     return range->HasEqualBoundaries(aRange);
   }
   return false;
@@ -1181,9 +1192,10 @@ void Selection::GetRangesForInterval(nsINode& aBeginNode, uint32_t aBeginOffset,
                                      bool aAllowAdjacent,
                                      nsTArray<RefPtr<nsRange>>& aReturn,
                                      mozilla::ErrorResult& aRv) {
-  nsTArray<nsRange*> results;
-  nsresult rv = GetRangesForIntervalArray(&aBeginNode, aBeginOffset, &aEndNode,
-                                          aEndOffset, aAllowAdjacent, &results);
+  AutoTArray<nsRange*, 2> results;
+  nsresult rv =
+      GetDynamicRangesForIntervalArray(&aBeginNode, aBeginOffset, &aEndNode,
+                                       aEndOffset, aAllowAdjacent, &results);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
@@ -1195,9 +1207,10 @@ void Selection::GetRangesForInterval(nsINode& aBeginNode, uint32_t aBeginOffset,
   }
 }
 
-nsresult Selection::GetRangesForIntervalArray(
+nsresult Selection::GetAbstractRangesForIntervalArray(
     nsINode* aBeginNode, uint32_t aBeginOffset, nsINode* aEndNode,
-    uint32_t aEndOffset, bool aAllowAdjacent, nsTArray<nsRange*>* aRanges) {
+    uint32_t aEndOffset, bool aAllowAdjacent,
+    nsTArray<AbstractRange*>* aRanges) {
   if (NS_WARN_IF(!aBeginNode)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -1223,6 +1236,23 @@ nsresult Selection::GetRangesForIntervalArray(
     aRanges->AppendElement(mStyledRanges.mRanges[i].mRange);
   }
 
+  return NS_OK;
+}
+
+nsresult Selection::GetDynamicRangesForIntervalArray(
+    nsINode* aBeginNode, uint32_t aBeginOffset, nsINode* aEndNode,
+    uint32_t aEndOffset, bool aAllowAdjacent, nsTArray<nsRange*>* aRanges) {
+  MOZ_ASSERT(mSelectionType != SelectionType::eHighlight);
+  AutoTArray<AbstractRange*, 2> abstractRanges;
+  nsresult rv = GetAbstractRangesForIntervalArray(
+      aBeginNode, aBeginOffset, aEndNode, aEndOffset, aAllowAdjacent,
+      &abstractRanges);
+  NS_ENSURE_SUCCESS(rv, rv);
+  aRanges->Clear();
+  aRanges->SetCapacity(abstractRanges.Length());
+  for (auto* abstractRange : abstractRanges) {
+    aRanges->AppendElement(abstractRange->AsDynamicRange());
+  }
   return NS_OK;
 }
 
@@ -1254,7 +1284,7 @@ nsresult Selection::StyledRanges::GetIndicesForInterval(
                                             &CompareToRangeStart)};
 
   if (endsBeforeIndex == 0) {
-    const nsRange* endRange = mRanges[endsBeforeIndex].mRange;
+    const AbstractRange* endRange = mRanges[endsBeforeIndex].mRange;
 
     // If the interval is strictly before the range at index 0, we can optimize
     // by returning now - all ranges start after the given interval
@@ -1289,9 +1319,9 @@ nsresult Selection::StyledRanges::GetIndicesForInterval(
     // In the final case, there can be two such ranges, a collapsed range, and
     // an adjacent range (they will appear in mRanges in that
     // order). For this final case, we need to increment endsBeforeIndex, until
-    // one of the first two possibilites hold
+    // one of the first two possibilities hold
     while (endsBeforeIndex < mRanges.Length()) {
-      const nsRange* endRange = mRanges[endsBeforeIndex].mRange;
+      const AbstractRange* endRange = mRanges[endsBeforeIndex].mRange;
       if (!endRange->StartRef().Equals(aEndNode, aEndOffset)) {
         break;
       }
@@ -1309,7 +1339,7 @@ nsresult Selection::StyledRanges::GetIndicesForInterval(
     // order). For this final case, we only need to take action if both those
     // ranges exist, and we are pointing to the collapsed range - we need to
     // point to the adjacent range
-    const nsRange* beginRange = mRanges[beginsAfterIndex].mRange;
+    const AbstractRange* beginRange = mRanges[beginsAfterIndex].mRange;
     if (beginsAfterIndex > 0 && beginRange->Collapsed() &&
         beginRange->EndRef().Equals(aBeginNode, aBeginOffset)) {
       beginRange = mRanges[beginsAfterIndex - 1].mRange;
@@ -1322,7 +1352,7 @@ nsresult Selection::StyledRanges::GetIndicesForInterval(
     // need to take action is when the range at beginsAfterIndex ends on
     // the given interval's start point, but that range isn't collapsed (a
     // collapsed range should be included in the returned results).
-    const nsRange* beginRange = mRanges[beginsAfterIndex].mRange;
+    const AbstractRange* beginRange = mRanges[beginsAfterIndex].mRange;
     if (beginRange->EndRef().Equals(aBeginNode, aBeginOffset) &&
         !beginRange->Collapsed()) {
       beginsAfterIndex++;
@@ -1333,7 +1363,7 @@ nsresult Selection::StyledRanges::GetIndicesForInterval(
     // represents the point at the end of the interval - this range should be
     // included
     if (endsBeforeIndex < mRanges.Length()) {
-      const nsRange* endRange = mRanges[endsBeforeIndex].mRange;
+      const AbstractRange* endRange = mRanges[endsBeforeIndex].mRange;
       if (endRange->StartRef().Equals(aEndNode, aEndOffset) &&
           endRange->Collapsed()) {
         endsBeforeIndex++;
@@ -1465,8 +1495,12 @@ nsresult Selection::SelectFramesOfInclusiveDescendantsOfContent(
 }
 
 void Selection::SelectFramesInAllRanges(nsPresContext* aPresContext) {
+  // this method is currently only called in a user-initiated context.
+  // therefore it is safe to assume that we are not in a Highlight selection
+  // and we only have to deal with nsRanges (no StaticRanges).
+  MOZ_ASSERT(mSelectionType != SelectionType::eHighlight);
   for (size_t i = 0; i < mStyledRanges.Length(); ++i) {
-    nsRange* range = mStyledRanges.mRanges[i].mRange;
+    nsRange* range = mStyledRanges.mRanges[i].mRange->AsDynamicRange();
     MOZ_ASSERT(range->IsInAnySelection());
     SelectFrames(aPresContext, range, range->IsInAnySelection());
   }
@@ -1476,13 +1510,18 @@ void Selection::SelectFramesInAllRanges(nsPresContext* aPresContext) {
  * The idea of this helper method is to select or deselect "top to bottom",
  * traversing through the frames
  */
-nsresult Selection::SelectFrames(nsPresContext* aPresContext, nsRange* aRange,
-                                 bool aSelect) const {
+nsresult Selection::SelectFrames(nsPresContext* aPresContext,
+                                 AbstractRange* aRange, bool aSelect) const {
   if (!mFrameSelection || !aPresContext || !aPresContext->GetPresShell()) {
     // nothing to do
     return NS_OK;
   }
   MOZ_ASSERT(aRange && aRange->IsPositioned());
+
+  if (aRange->IsStaticRange() && !aRange->AsStaticRange()->IsValid()) {
+    // TODO jjaschke: Actions necessary to unselect invalid static ranges?
+    return NS_OK;
+  }
 
   if (mFrameSelection->IsInTableSelectionMode()) {
     nsINode* node = aRange->GetClosestCommonInclusiveAncestor();
@@ -1629,10 +1668,10 @@ UniquePtr<SelectionDetails> Selection::LookUpSelection(
     return aDetailsHead;
   }
 
-  nsTArray<nsRange*> overlappingRanges;
-  nsresult rv = GetRangesForIntervalArray(aContent, aContentOffset, aContent,
-                                          aContentOffset + aContentLength,
-                                          false, &overlappingRanges);
+  nsTArray<AbstractRange*> overlappingRanges;
+  nsresult rv = GetAbstractRangesForIntervalArray(
+      aContent, aContentOffset, aContent, aContentOffset + aContentLength,
+      false, &overlappingRanges);
   if (NS_FAILED(rv)) {
     return aDetailsHead;
   }
@@ -1644,7 +1683,10 @@ UniquePtr<SelectionDetails> Selection::LookUpSelection(
   UniquePtr<SelectionDetails> detailsHead = std::move(aDetailsHead);
 
   for (size_t i = 0; i < overlappingRanges.Length(); i++) {
-    nsRange* range = overlappingRanges[i];
+    AbstractRange* range = overlappingRanges[i];
+    if (range->IsStaticRange() && !range->AsStaticRange()->IsValid()) {
+      continue;
+    }
     nsINode* startNode = range->GetStartContainer();
     nsINode* endNode = range->GetEndContainer();
     uint32_t startOffset = range->StartOffset();
@@ -1786,13 +1828,15 @@ void Selection::SetAncestorLimiter(nsIContent* aLimiter) {
 void Selection::StyledRanges::UnregisterSelection() {
   uint32_t count = mRanges.Length();
   for (uint32_t i = 0; i < count; ++i) {
-    mRanges[i].mRange->UnregisterSelection(mSelection);
+    if (mRanges[i].mRange->IsDynamicRange()) {
+      mRanges[i].mRange->AsDynamicRange()->UnregisterSelection(mSelection);
+    }
   }
 }
 
 void Selection::StyledRanges::Clear() { mRanges.Clear(); }
 
-StyledRange* Selection::StyledRanges::FindRangeData(nsRange* aRange) {
+StyledRange* Selection::StyledRanges::FindRangeData(AbstractRange* aRange) {
   NS_ENSURE_TRUE(aRange, nullptr);
   for (uint32_t i = 0; i < mRanges.Length(); i++) {
     if (mRanges[i].mRange == aRange) {
@@ -2009,6 +2053,26 @@ void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
   NotifySelectionListeners();
 }
 
+void Selection::AddHighlightRangeAndSelectFramesAndNotifyListeners(
+    AbstractRange& aRange, mozilla::ErrorResult& aRv) {
+  MOZ_ASSERT(mSelectionType == SelectionType::eHighlight);
+
+  mStyledRanges.mRanges.AppendElement(StyledRange{&aRange});
+  if (aRange.IsDynamicRange()) {
+    RefPtr<nsRange> range = aRange.AsDynamicRange();
+    range->RegisterSelection(*this);
+  }
+  if (!mFrameSelection) {
+    return;  // nothing to do
+  }
+
+  RefPtr<nsPresContext> presContext = GetPresContext();
+  SelectFrames(presContext, &aRange, true);
+
+  // Be aware, this instance may be destroyed after this call.
+  NotifySelectionListeners();
+}
+
 // Selection::RemoveRangeAndUnselectFramesAndNotifyListeners
 //
 //    Removes the given range from the selection. The tricky part is updating
@@ -2022,7 +2086,7 @@ void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
 //    selected frames after we've cleared the bit from ours.
 
 void Selection::RemoveRangeAndUnselectFramesAndNotifyListeners(
-    nsRange& aRange, ErrorResult& aRv) {
+    AbstractRange& aRange, ErrorResult& aRv) {
   nsresult rv = mStyledRanges.RemoveRangeAndUnregisterSelection(aRange);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
@@ -2056,9 +2120,9 @@ void Selection::RemoveRangeAndUnselectFramesAndNotifyListeners(
   SelectFrames(presContext, &aRange, false);
 
   // add back the selected bit for each range touching our nodes
-  nsTArray<nsRange*> affectedRanges;
-  rv = GetRangesForIntervalArray(beginNode, beginOffset, endNode, endOffset,
-                                 true, &affectedRanges);
+  nsTArray<AbstractRange*> affectedRanges;
+  rv = GetAbstractRangesForIntervalArray(beginNode, beginOffset, endNode,
+                                         endOffset, true, &affectedRanges);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
@@ -2232,7 +2296,7 @@ void Selection::CollapseToStart(ErrorResult& aRv) {
   }
 
   // Get the first range
-  const nsRange* firstRange = mStyledRanges.mRanges[0].mRange;
+  const AbstractRange* firstRange = mStyledRanges.mRanges[0].mRange;
   if (!firstRange) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
@@ -2269,7 +2333,7 @@ void Selection::CollapseToEnd(ErrorResult& aRv) {
   }
 
   // Get the last range
-  const nsRange* lastRange = mStyledRanges.mRanges[cnt - 1].mRange;
+  const AbstractRange* lastRange = mStyledRanges.mRanges[cnt - 1].mRange;
   if (!lastRange) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
@@ -2308,9 +2372,23 @@ nsRange* Selection::GetRangeAt(uint32_t aIndex, ErrorResult& aRv) {
   return range;
 }
 
-nsRange* Selection::GetRangeAt(uint32_t aIndex) const {
+AbstractRange* Selection::GetAbstractRangeAt(uint32_t aIndex) const {
   StyledRange empty(nullptr);
   return mStyledRanges.mRanges.SafeElementAt(aIndex, empty).mRange;
+}
+
+nsRange* Selection::GetRangeAt(uint32_t aIndex) const {
+  // This method per IDL spec returns a dynamic range.
+  // Therefore, it must be ensured that it is only called
+  // for a selection which contains dynamic ranges exclusively.
+  // Highlight Selections are allowed to contain StaticRanges,
+  // therefore this method must not be called.
+  MOZ_ASSERT(mSelectionType != SelectionType::eHighlight);
+  AbstractRange* abstractRange = GetAbstractRangeAt(aIndex);
+  if (!abstractRange) {
+    return nullptr;
+  }
+  return abstractRange->AsDynamicRange();
 }
 
 nsresult Selection::SetAnchorFocusToRange(nsRange* aRange) {
@@ -2737,9 +2815,9 @@ bool Selection::ContainsNode(nsINode& aNode, bool aAllowPartial,
     nodeLength = aNode.GetChildCount();
   }
 
-  nsTArray<nsRange*> overlappingRanges;
-  rv = GetRangesForIntervalArray(&aNode, 0, &aNode, nodeLength, false,
-                                 &overlappingRanges);
+  nsTArray<AbstractRange*> overlappingRanges;
+  rv = GetAbstractRangesForIntervalArray(&aNode, 0, &aNode, nodeLength, false,
+                                         &overlappingRanges);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return false;
@@ -3074,7 +3152,7 @@ void Selection::RemoveSelectionListener(
 Element* Selection::StyledRanges::GetCommonEditingHost() const {
   Element* editingHost = nullptr;
   for (const StyledRange& rangeData : mRanges) {
-    const nsRange* range = rangeData.mRange;
+    const AbstractRange* range = rangeData.mRange;
     MOZ_ASSERT(range);
     nsINode* commonAncestorNode = range->GetClosestCommonInclusiveAncestor();
     if (!commonAncestorNode || !commonAncestorNode->IsContent()) {

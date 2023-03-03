@@ -230,6 +230,17 @@ class Selection final : public nsSupportsWeakReference,
    */
   nsRange* GetRangeAt(uint32_t aIndex) const;
 
+  /**
+   * @brief Get the |AbstractRange| at |aIndex|.
+   *
+   * This method is safe to be called for every selection type.
+   * However, |StaticRange|s only occur for |SelectionType::eHighlight|.
+   * If the SelectionType may be eHighlight, this method must be called instead
+   * of |GetRangeAt()|.
+   *
+   * Returns null if |aIndex| is out of bounds.
+   */
+  AbstractRange* GetAbstractRangeAt(uint32_t aIndex) const;
   // Get the anchor-to-focus range if we don't care which end is
   // anchor and which end is focus.
   const nsRange* GetAnchorFocusRange() const { return mAnchorFocusRange; }
@@ -365,7 +376,7 @@ class Selection final : public nsSupportsWeakReference,
    * Callers need to keep `aRange` alive.
    */
   MOZ_CAN_RUN_SCRIPT void RemoveRangeAndUnselectFramesAndNotifyListeners(
-      nsRange& aRange, mozilla::ErrorResult& aRv);
+      AbstractRange& aRange, mozilla::ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT void RemoveAllRanges(mozilla::ErrorResult& aRv);
 
@@ -547,6 +558,9 @@ class Selection final : public nsSupportsWeakReference,
   MOZ_CAN_RUN_SCRIPT void AddRangeAndSelectFramesAndNotifyListeners(
       nsRange& aRange, mozilla::ErrorResult& aRv);
 
+  MOZ_CAN_RUN_SCRIPT void AddHighlightRangeAndSelectFramesAndNotifyListeners(
+      AbstractRange& aRange, mozilla::ErrorResult& aRv);
+
   /**
    * Adds all children of the specified node to the selection.
    * @param aNode the parent of the children to be added to the selection.
@@ -662,7 +676,7 @@ class Selection final : public nsSupportsWeakReference,
    */
   void SetCanCacheFrameOffset(bool aCanCacheFrameOffset);
 
-  // Selection::GetRangesForIntervalArray
+  // Selection::GetAbstractRangesForIntervalArray
   //
   //    Fills a nsTArray with the ranges overlapping the range specified by
   //    the given endpoints. Ranges in the selection exactly adjacent to the
@@ -681,10 +695,23 @@ class Selection final : public nsSupportsWeakReference,
   //
   //    Now that overlapping ranges are disallowed, there can be a maximum of
   //    2 adjacent ranges
-  nsresult GetRangesForIntervalArray(nsINode* aBeginNode, uint32_t aBeginOffset,
-                                     nsINode* aEndNode, uint32_t aEndOffset,
-                                     bool aAllowAdjacent,
-                                     nsTArray<nsRange*>* aRanges);
+  nsresult GetAbstractRangesForIntervalArray(nsINode* aBeginNode,
+                                             uint32_t aBeginOffset,
+                                             nsINode* aEndNode,
+                                             uint32_t aEndOffset,
+                                             bool aAllowAdjacent,
+                                             nsTArray<AbstractRange*>* aRanges);
+
+  /**
+   * Converts the results of |GetAbstractRangesForIntervalArray()| to |nsRange|.
+   *
+   * |StaticRange|s can only occur in Selections of type |eHighlight|.
+   * Therefore, this method must not be called for this selection type
+   * as not every |AbstractRange| can be cast to |nsRange|.
+   */
+  nsresult GetDynamicRangesForIntervalArray(
+      nsINode* aBeginNode, uint32_t aBeginOffset, nsINode* aEndNode,
+      uint32_t aEndOffset, bool aAllowAdjacent, nsTArray<nsRange*>* aRanges);
 
   /**
    * Modifies the cursor Bidi level after a change in keyboard direction
@@ -792,7 +819,7 @@ class Selection final : public nsSupportsWeakReference,
       PostContentIterator& aPostOrderIter, nsIContent* aContent,
       bool aSelected) const;
 
-  nsresult SelectFrames(nsPresContext* aPresContext, nsRange* aRange,
+  nsresult SelectFrames(nsPresContext* aPresContext, AbstractRange* aRange,
                         bool aSelect) const;
 
   /**
@@ -817,7 +844,7 @@ class Selection final : public nsSupportsWeakReference,
     explicit StyledRanges(Selection& aSelection) : mSelection(aSelection) {}
     void Clear();
 
-    StyledRange* FindRangeData(nsRange* aRange);
+    StyledRange* FindRangeData(AbstractRange* aRange);
 
     using Elements = AutoTArray<StyledRange, 1>;
 
@@ -825,7 +852,7 @@ class Selection final : public nsSupportsWeakReference,
 
     nsresult RemoveCollapsedRanges();
 
-    nsresult RemoveRangeAndUnregisterSelection(nsRange& aRange);
+    nsresult RemoveRangeAndUnregisterSelection(AbstractRange& aRange);
 
     /**
      * Binary searches the given sorted array of ranges for the insertion point
@@ -841,7 +868,7 @@ class Selection final : public nsSupportsWeakReference,
     static size_t FindInsertionPoint(
         const nsTArray<StyledRange>* aElementArray, const nsINode& aPointNode,
         uint32_t aPointOffset,
-        int32_t (*aComparator)(const nsINode&, uint32_t, const nsRange&));
+        int32_t (*aComparator)(const nsINode&, uint32_t, const AbstractRange&));
 
     /**
      * Works on the same principle as GetRangesForIntervalArray, however

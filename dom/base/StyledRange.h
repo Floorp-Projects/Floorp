@@ -10,12 +10,14 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/TextRange.h"
 
-class nsRange;
+namespace mozilla::dom {
+class AbstractRange;
+}
 
 struct StyledRange {
-  explicit StyledRange(nsRange* aRange);
+  explicit StyledRange(mozilla::dom::AbstractRange* aRange);
 
-  RefPtr<nsRange> mRange;
+  RefPtr<mozilla::dom::AbstractRange> mRange;
   mozilla::TextRangeStyle mTextRangeStyle;
 };
 
