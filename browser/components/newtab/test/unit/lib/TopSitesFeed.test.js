@@ -612,6 +612,39 @@ describe("Top Sites Feed", () => {
 
       assert.calledWith(feed._fetchScreenshot, sinon.match.object, "custom");
     });
+    describe("discoverystream", () => {
+      beforeEach(() => {
+        feed.store.state.DiscoveryStream = {
+          layout: [
+            {
+              components: [
+                {
+                  placement: {
+                    name: "sponsored-topsites",
+                  },
+                  spocs: {
+                    positions: [{ index: 1 }],
+                  },
+                },
+              ],
+            },
+          ],
+          spocs: {
+            data: {
+              "sponsored-topsites": {
+                items: [{ title: "test spoc", url: "https://test-spoc.com" }],
+              },
+            },
+          },
+        };
+      });
+      it("should add a sponsored topsite from discoverystream", async () => {
+        const result = await feed.getLinksWithDefaults();
+        assert.equal(result[1].type, "SPOC");
+        assert.equal(result[1].title, "test spoc");
+        assert.equal(result[1].url, "https://test-spoc.com");
+      });
+    });
   });
   describe("#init", () => {
     it("should call refresh (broadcast:true)", async () => {

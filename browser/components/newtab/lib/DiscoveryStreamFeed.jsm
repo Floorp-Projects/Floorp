@@ -703,6 +703,9 @@ class DiscoveryStreamFeed {
         spocPositions: this.parseGridPositions(
           pocketConfig.spocPositions?.split(`,`)
         ),
+        spocTopsitesPositions: this.parseGridPositions(
+          pocketConfig.spocTopsitesPositions?.split(`,`)
+        ),
         widgetPositions: this.parseGridPositions(
           pocketConfig.widgetPositions?.split(`,`)
         ),
@@ -2145,6 +2148,7 @@ class DiscoveryStreamFeed {
      `spocsUrl` Changing the url for spocs is used for adding a siteId query param.
      `items` How many items to include in the primary card grid.
      `spocPositions` Changes the position of spoc cards.
+     `spocTopsitesPositions` Changes the position of spoc topsites.
      `spocPlacementData` Used to set the spoc content.
      `spocTopsitesPlacementData` Used to set spoc content for topsites.
      `sponsoredCollectionsEnabled` Tuns on and off the sponsored collection section.
@@ -2160,6 +2164,7 @@ getHardcodedLayout = ({
   spocsUrl = SPOCS_URL,
   items = 21,
   spocPositions = [1, 5, 7, 11, 18, 20],
+  spocTopsitesPositions = [1],
   spocPlacementData = { ad_types: [3617], zone_ids: [217758, 217995] },
   spocTopsitesPlacementData,
   widgetPositions = [],
@@ -2198,11 +2203,9 @@ getHardcodedLayout = ({
                 spocs: {
                   probability: 1,
                   prefs: [PREF_SHOW_SPONSORED_TOPSITES],
-                  positions: [
-                    {
-                      index: 1,
-                    },
-                  ],
+                  positions: spocTopsitesPositions.map(position => {
+                    return { index: position };
+                  }),
                 },
               }
             : {}),
