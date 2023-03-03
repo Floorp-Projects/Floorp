@@ -388,6 +388,10 @@ class ChromeActions {
     };
   }
 
+  getCanvasMaxArea() {
+    return getIntPref("gfx.max-alloc-size", 500000000);
+  }
+
   isInAutomation() {
     return Cu.isInAutomation;
   }
