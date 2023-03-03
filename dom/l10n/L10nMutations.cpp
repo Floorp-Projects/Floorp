@@ -200,7 +200,7 @@ void L10nMutations::FlushPendingTranslations() {
 
   RefPtr<Promise> promise =
       mDOMLocalization->TranslateElements(elements, IgnoreErrors());
-  if (promise) {
+  if (promise && promise->State() == Promise::PromiseState::Pending) {
     auto l10nMutationFinalizationHandler =
         MakeRefPtr<L10nMutationFinalizationHandler>(
             mDOMLocalization->GetParentObject());
