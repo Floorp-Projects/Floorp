@@ -6,6 +6,7 @@
 
 #include "Highlight.h"
 #include "HighlightRegistry.h"
+#include "mozilla/StaticAnalysisFunctions.h"
 #include "mozilla/dom/HighlightBinding.h"
 
 #include "mozilla/AlreadyAddRefed.h"
@@ -87,7 +88,8 @@ already_AddRefed<Selection> Highlight::CreateHighlightSelection(
   RefPtr<Selection> selection =
       MakeRefPtr<Selection>(SelectionType::eHighlight, aFrameSelection);
   selection->SetHighlightName(aHighlightName);
-  SelectionBatcher selectionBatcher(selection, __FUNCTION__);
+  AutoFrameSelectionBatcher selectionBatcher(__FUNCTION__);
+  selectionBatcher.AddFrameSelection(aFrameSelection);
   // NOLINTNEXTLINE(performance-for-range-copy)
   for (const RefPtr<AbstractRange> range : mRanges) {
     if (range->GetComposedDocOfContainers() ==
@@ -106,8 +108,13 @@ void Highlight::Add(AbstractRange& aRange, ErrorResult& aRv) {
   }
   if (!mRanges.Contains(&aRange)) {
     mRanges.AppendElement(&aRange);
+    AutoFrameSelectionBatcher selectionBatcher(__FUNCTION__,
+                                               mHighlightRegistries.Count());
     for (const RefPtr<HighlightRegistry> registry :
          mHighlightRegistries.Keys()) {
+      auto frameSelection = registry->GetFrameSelection();
+      selectionBatcher.AddFrameSelection(frameSelection);
+
       registry->MaybeAddRangeToHighlightSelection(aRange, *this, aRv);
       if (aRv.Failed()) {
         return;
@@ -120,9 +127,16 @@ void Highlight::Clear(ErrorResult& aRv) {
   Highlight_Binding::SetlikeHelpers::Clear(this, aRv);
   if (!aRv.Failed()) {
     mRanges.Clear();
-    for (const RefPtr<HighlightRegistry> registry :
+    AutoFrameSelectionBatcher selectionBatcher(__FUNCTION__,
+                                               mHighlightRegistries.Count());
+
+    for (const RefPtr<HighlightRegistry>& registry :
          mHighlightRegistries.Keys()) {
-      registry->RemoveHighlightSelection(*this);
+      auto frameSelection = registry->GetFrameSelection();
+      selectionBatcher.AddFrameSelection(frameSelection);
+      // Because of the selection batcher, this call does *not* run script.
+      // MOZ_KnownLive() is needed regardless.
+      MOZ_KnownLive(registry)->RemoveHighlightSelection(*this);
     }
   }
 }
@@ -130,9 +144,17 @@ void Highlight::Clear(ErrorResult& aRv) {
 bool Highlight::Delete(AbstractRange& aRange, ErrorResult& aRv) {
   if (Highlight_Binding::SetlikeHelpers::Delete(this, aRange, aRv)) {
     mRanges.RemoveElement(&aRange);
-    for (const RefPtr<HighlightRegistry> registry :
+    AutoFrameSelectionBatcher selectionBatcher(__FUNCTION__,
+                                               mHighlightRegistries.Count());
+
+    for (const RefPtr<HighlightRegistry>& registry :
          mHighlightRegistries.Keys()) {
-      registry->MaybeRemoveRangeFromHighlightSelection(aRange, *this);
+      auto frameSelection = registry->GetFrameSelection();
+      selectionBatcher.AddFrameSelection(frameSelection);
+      // Because of the selection batcher, this call does *not* run script.
+      // MOZ_KnownLive() is needed regardless.
+      MOZ_KnownLive(registry)->MaybeRemoveRangeFromHighlightSelection(aRange,
+                                                                      *this);
     }
     return true;
   }

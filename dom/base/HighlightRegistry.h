@@ -128,12 +128,12 @@ class HighlightRegistry final : public nsISupports, public nsWrapperCache {
    */
   MOZ_CAN_RUN_SCRIPT bool Delete(const nsAString& aKey, ErrorResult& aRv);
 
- private:
   /**
    * @brief Get the `FrameSelection` object if available. Can return nullptr.
    */
   RefPtr<nsFrameSelection> GetFrameSelection();
 
+ private:
   /**
    * Parent document.
    */

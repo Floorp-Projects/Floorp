@@ -1157,4 +1157,32 @@ class nsFrameSelection final {
   bool mIsDoubleClickSelection{false};
 };
 
+/**
+ * Selection Batcher class that supports multiple FrameSelections.
+ */
+class MOZ_STACK_CLASS AutoFrameSelectionBatcher {
+ public:
+  explicit AutoFrameSelectionBatcher(const char* aFunctionName,
+                                     size_t aEstimatedSize = 1)
+      : mFunctionName(aFunctionName) {
+    mFrameSelections.SetCapacity(aEstimatedSize);
+  }
+  ~AutoFrameSelectionBatcher() {
+    for (const auto& frameSelection : mFrameSelections) {
+      frameSelection->EndBatchChanges(mFunctionName);
+    }
+  }
+  void AddFrameSelection(nsFrameSelection* aFrameSelection) {
+    if (!aFrameSelection) {
+      return;
+    }
+    aFrameSelection->StartBatchChanges(mFunctionName);
+    mFrameSelections.AppendElement(aFrameSelection);
+  }
+
+ private:
+  const char* mFunctionName;
+  AutoTArray<RefPtr<nsFrameSelection>, 1> mFrameSelections;
+};
+
 #endif /* nsFrameSelection_h___ */
