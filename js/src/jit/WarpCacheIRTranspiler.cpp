@@ -1742,6 +1742,17 @@ bool WarpCacheIRTranspiler::emitGuardBoundFunctionIsConstructor(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardObjectIdentity(ObjOperandId obj1Id,
+                                                    ObjOperandId obj2Id) {
+  MDefinition* obj1 = getOperand(obj1Id);
+  MDefinition* obj2 = getOperand(obj2Id);
+
+  auto* guard = MGuardObjectIdentity::New(alloc(), obj1, obj2,
+                                          /* bailOnEquality = */ false);
+  add(guard);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitArrayFromArgumentsObjectResult(
     ObjOperandId objId, uint32_t shapeOffset) {
   MDefinition* obj = getOperand(objId);
@@ -5114,16 +5125,27 @@ bool WarpCacheIRTranspiler::emitCallBoundScriptedFunction(
   MDefinition* target = getOperand(targetId);
 
   MOZ_ASSERT(callInfo_->argFormat() == CallInfo::ArgFormat::Standard);
-  MOZ_ASSERT(!callInfo_->constructing());
+  MOZ_ASSERT(callInfo_->constructing() == flags.isConstructing());
 
   callInfo_->setCallee(target);
   updateArgumentsFromOperands();
 
-  auto* thisv = MLoadFixedSlot::New(alloc(), callee,
-                                    BoundFunctionObject::boundThisSlot());
-  add(thisv);
-  callInfo_->thisArg()->setImplicitlyUsedUnchecked();
-  callInfo_->setThis(thisv);
+  WrappedFunction* wrappedTarget = maybeCallTarget(target, CallKind::Scripted);
+
+  bool needsThisCheck = false;
+  if (callInfo_->constructing()) {
+    callInfo_->setNewTarget(target);
+    needsThisCheck = maybeCreateThis(target, flags, CallKind::Scripted);
+    if (needsThisCheck) {
+      wrappedTarget = nullptr;
+    }
+  } else {
+    auto* thisv = MLoadFixedSlot::New(alloc(), callee,
+                                      BoundFunctionObject::boundThisSlot());
+    add(thisv);
+    callInfo_->thisArg()->setImplicitlyUsedUnchecked();
+    callInfo_->setThis(thisv);
+  }
 
   bool usingInlineBoundArgs =
       numBoundArgs <= BoundFunctionObject::MaxInlineBoundArgs;
@@ -5152,10 +5174,7 @@ bool WarpCacheIRTranspiler::emitCallBoundScriptedFunction(
     return false;
   }
 
-  WrappedFunction* wrappedTarget = maybeCallTarget(target, CallKind::Scripted);
-
-  MCall* call =
-      makeCall(*callInfo_, /* needsThisCheck = */ false, wrappedTarget);
+  MCall* call = makeCall(*callInfo_, needsThisCheck, wrappedTarget);
   if (!call) {
     return false;
   }

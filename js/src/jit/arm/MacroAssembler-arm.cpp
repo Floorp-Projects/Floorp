@@ -3167,6 +3167,12 @@ void MacroAssemblerARMCompat::pushValue(const Address& addr) {
   ma_push(scratch);
 }
 
+void MacroAssemblerARMCompat::pushValue(const BaseIndex& addr,
+                                        Register scratch) {
+  computeEffectiveAddress(addr, scratch);
+  pushValue(Address(scratch, 0));
+}
+
 void MacroAssemblerARMCompat::popValue(ValueOperand val) {
   ma_pop(val.payloadReg());
   ma_pop(val.typeReg());

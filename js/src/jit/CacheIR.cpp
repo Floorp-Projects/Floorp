@@ -10564,8 +10564,8 @@ static bool CanOptimizeScriptedCall(JSFunction* callee, bool isConstructing) {
 void CallIRGenerator::emitCallScriptedGuards(ObjOperandId calleeObjId,
                                              JSFunction* calleeFunc,
                                              Int32OperandId argcId,
-                                             CallFlags flags,
-                                             Shape* thisShape) {
+                                             CallFlags flags, Shape* thisShape,
+                                             bool isBoundFunction) {
   bool isConstructing = flags.isConstructing();
 
   if (mode_ == ICState::Mode::Specialized) {
@@ -10578,10 +10578,17 @@ void CallIRGenerator::emitCallScriptedGuards(ObjOperandId calleeObjId,
       // expect. Note that getThisForScripted checked newTarget is a function
       // with a non-configurable .prototype data property.
 
-      JSFunction* newTarget = &newTarget_.toObject().as<JSFunction>();
-      ValOperandId newTargetValId = writer.loadArgumentDynamicSlot(
-          ArgumentKind::NewTarget, argcId, flags);
-      ObjOperandId newTargetObjId = writer.guardToObject(newTargetValId);
+      JSFunction* newTarget;
+      ObjOperandId newTargetObjId;
+      if (isBoundFunction) {
+        newTarget = calleeFunc;
+        newTargetObjId = calleeObjId;
+      } else {
+        newTarget = &newTarget_.toObject().as<JSFunction>();
+        ValOperandId newTargetValId = writer.loadArgumentDynamicSlot(
+            ArgumentKind::NewTarget, argcId, flags);
+        newTargetObjId = writer.guardToObject(newTargetValId);
+      }
 
       Maybe<PropertyInfo> prop = newTarget->lookupPure(cx_->names().prototype);
       MOZ_ASSERT(prop.isSome());
@@ -10675,7 +10682,8 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
       writer.loadArgumentDynamicSlot(ArgumentKind::Callee, argcId, flags);
   ObjOperandId calleeObjId = writer.guardToObject(calleeValId);
 
-  emitCallScriptedGuards(calleeObjId, calleeFunc, argcId, flags, thisShape);
+  emitCallScriptedGuards(calleeObjId, calleeFunc, argcId, flags, thisShape,
+                         /* isBoundFunction = */ false);
 
   writer.callScriptedFunction(calleeObjId, argcId, flags,
                               ClampFixedArgc(argc_));
@@ -10834,12 +10842,12 @@ AttachDecision CallIRGenerator::tryAttachBoundFunction(
   bool isSpread = IsSpreadPC(pc_);
   bool isConstructing = IsConstructPC(pc_);
 
-  // Constructor calls and spread calls are not supported yet.
-  if (isConstructing || isSpread) {
+  // Spread calls are not supported yet.
+  if (isSpread) {
     return AttachDecision::NoAction;
   }
 
-  JSFunction* target = &calleeObj->getTarget()->as<JSFunction>();
+  Rooted<JSFunction*> target(cx_, &calleeObj->getTarget()->as<JSFunction>());
   if (!CanOptimizeScriptedCall(target, isConstructing)) {
     return AttachDecision::NoAction;
   }
@@ -10865,6 +10873,28 @@ AttachDecision CallIRGenerator::tryAttachBoundFunction(
     }
   }
 
+  Rooted<Shape*> thisShape(cx_);
+  if (isConstructing) {
+    // Only optimize if newTarget == callee. This is the common case and ensures
+    // we can always pass the bound function's target as newTarget.
+    if (newTarget_ != ObjectValue(*calleeObj)) {
+      return AttachDecision::NoAction;
+    }
+
+    if (mode_ == ICState::Mode::Specialized) {
+      Handle<JSFunction*> newTarget = target;
+      switch (getThisShapeForScripted(target, newTarget, &thisShape)) {
+        case ScriptedThisResult::PlainObjectShape:
+          break;
+        case ScriptedThisResult::UninitializedThis:
+          flags.setNeedsUninitializedThis();
+          break;
+        case ScriptedThisResult::NoAction:
+          return AttachDecision::NoAction;
+      }
+    }
+  }
+
   // Load argc.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
@@ -10878,10 +10908,19 @@ AttachDecision CallIRGenerator::tryAttachBoundFunction(
   Int32OperandId numBoundArgsId = writer.loadBoundFunctionNumArgs(calleeObjId);
   writer.guardSpecificInt32(numBoundArgsId, numBoundArgs);
 
+  if (isConstructing) {
+    // Guard newTarget == callee. We depend on this in CallBoundScriptedFunction
+    // and in emitCallScriptedGuards by using boundTarget as newTarget.
+    ValOperandId newTargetValId =
+        writer.loadArgumentFixedSlot(ArgumentKind::NewTarget, argc_, flags);
+    ObjOperandId newTargetObjId = writer.guardToObject(newTargetValId);
+    writer.guardObjectIdentity(newTargetObjId, calleeObjId);
+  }
+
   ObjOperandId targetId = writer.loadBoundFunctionTarget(calleeObjId);
 
-  emitCallScriptedGuards(targetId, target, argcId, flags,
-                         /* thisShape = */ nullptr);
+  emitCallScriptedGuards(targetId, target, argcId, flags, thisShape,
+                         /* isBoundFunction = */ true);
 
   writer.callBoundScriptedFunction(calleeObjId, targetId, argcId, flags,
                                    numBoundArgs);

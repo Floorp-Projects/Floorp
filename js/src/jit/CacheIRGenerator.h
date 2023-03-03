@@ -505,7 +505,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
 
   void emitCallScriptedGuards(ObjOperandId calleeObjId, JSFunction* calleeFunc,
                               Int32OperandId argcId, CallFlags flags,
-                              Shape* thisShape);
+                              Shape* thisShape, bool isBoundFunction);
 
   AttachDecision tryAttachFunCall(HandleFunction calleeFunc);
   AttachDecision tryAttachFunApply(HandleFunction calleeFunc);

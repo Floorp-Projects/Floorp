@@ -1093,6 +1093,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM {
     ma_push(reg);
   }
   void pushValue(const Address& addr);
+  void pushValue(const BaseIndex& addr, Register scratch);
 
   void storePayload(const Value& val, const Address& dest);
   void storePayload(Register src, const Address& dest);

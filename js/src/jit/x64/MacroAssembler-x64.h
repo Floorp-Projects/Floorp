@@ -217,6 +217,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   }
   void pushValue(const Address& addr) { push(Operand(addr)); }
 
+  void pushValue(const BaseIndex& addr, Register scratch) {
+    push(Operand(addr));
+  }
+
   void boxValue(JSValueType type, Register src, Register dest);
 
   Condition testUndefined(Condition cond, Register tag) {

@@ -380,6 +380,10 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     loadValue(addr, scratch);
     push(scratch);
   }
+  void pushValue(const BaseIndex& addr, Register scratch) {
+    loadValue(addr, ValueOperand(scratch));
+    pushValue(ValueOperand(scratch));
+  }
   template <typename T>
   void storeUnboxedPayload(ValueOperand value, T address, size_t nbytes,
                            JSValueType type) {
