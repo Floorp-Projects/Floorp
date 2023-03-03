@@ -98,6 +98,22 @@ details:not([open]) summary {
   fill: var(--in-content-success-icon-color);
 }
 
+.error-icon {
+  content: url("chrome://global/skin/icons/error.svg");
+  -moz-context-properties: fill;
+  fill: var(--in-content-danger-button-background);
+  margin-inline-end: 8px;
+}
+
+.no-browsers-found-message {
+  display: flex;
+}
+
+.no-browsers-found {
+  display: flex;
+  align-items: start;
+}
+
 /**
  * Workaround for bug 1671784, which shows a slight outline around the
  * rotating masked element.
