@@ -15324,17 +15324,6 @@
     "description": "The total usage amount of the operations of tab audio indicator, mute=0 , unmuted=1, unblockByVisitingTab=2, unblockingByClickingIcon=3",
     "releaseChannelCollection": "opt-out"
   },
-  "EXTENSION_INSTALL_PROMPT_RESULT": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["aswan@mozilla.com", "andym@mozilla.com"],
-    "bug_numbers": [1338713],
-    "expires_in_version": "60",
-    "kind": "categorical",
-    "labels": ["installAmoAccepted", "installAmoRejected", "installLocalAccepted", "installLocalRejected", "installWebAccepted", "installWebRejected", "sideloadAccepted", "sideloadRejected", "updateAccepted", "updateRejected"],
-    "description": "Results of displaying add-on installation notifications.",
-    "releaseChannelCollection": "opt-out"
-  },
   "INPUT_EVENT_QUEUED_CLICK_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
