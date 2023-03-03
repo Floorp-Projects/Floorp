@@ -66,19 +66,15 @@ void L10nMutations::ContentAppended(nsIContent* aChild) {
     return;
   }
 
-  nsINode* node = aChild;
-  if (!IsInRoots(node)) {
+  if (!IsInRoots(aChild)) {
     return;
   }
 
-  ErrorResult rv;
   Sequence<OwningNonNull<Element>> elements;
-  while (node) {
+  for (nsIContent* node = aChild; node; node = node->GetNextSibling()) {
     if (node->IsElement()) {
-      DOMLocalization::GetTranslatables(*node, elements, rv);
+      DOMLocalization::GetTranslatables(*node, elements, IgnoreErrors());
     }
-
-    node = node->GetNextSibling();
   }
 
   for (auto& elem : elements) {
