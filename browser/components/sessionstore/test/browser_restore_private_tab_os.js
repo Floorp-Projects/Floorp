@@ -55,7 +55,5 @@ add_task(async function testRestore() {
 
   // Cleanup
   info("Forgetting closed tabs");
-  while (ss.getClosedTabCount(window)) {
-    ss.forgetClosedTab(window, 0);
-  }
+  forgetClosedTabs(window);
 });
