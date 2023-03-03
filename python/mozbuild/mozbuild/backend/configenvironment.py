@@ -88,8 +88,7 @@ class ConfigEnvironment(object):
     Creating a ConfigEnvironment requires a few arguments:
       - topsrcdir and topobjdir are, respectively, the top source and
         the top object directory.
-      - defines is a dict filled from AC_DEFINE and AC_DEFINE_UNQUOTED in
-        autoconf.
+      - defines is a dict filled from AC_DEFINE and AC_DEFINE_UNQUOTED in autoconf.
       - substs is a dict filled from AC_SUBST in autoconf.
 
     ConfigEnvironment automatically defines one additional substs variable
@@ -97,15 +96,15 @@ class ConfigEnvironment(object):
       - ACDEFINES contains the defines in the form -DNAME=VALUE, for use on
         preprocessor command lines. The order in which defines were given
         when creating the ConfigEnvironment is preserved.
+
     and two other additional subst variables from all the other substs:
       - ALLSUBSTS contains the substs in the form NAME = VALUE, in sorted
-        order, for use in autoconf.mk. It includes ACDEFINES
+        order, for use in autoconf.mk. It includes ACDEFINES.
         Only substs with a VALUE are included, such that the resulting file
         doesn't change when new empty substs are added.
         This results in less invalidation of build dependencies in the case
         of autoconf.mk..
-      - ALLEMPTYSUBSTS contains the substs with an empty value, in the form
-        NAME =.
+      - ALLEMPTYSUBSTS contains the substs with an empty value, in the form NAME =.
 
     ConfigEnvironment expects a "top_srcdir" subst to be set with the top
     source directory, in msys format on windows. It is used to derive a
@@ -314,14 +313,16 @@ class PartialConfigEnvironment(object):
 
     The PartialConfigEnvironment automatically defines one additional subst variable
     from all the defines:
+
       - ACDEFINES contains the defines in the form -DNAME=VALUE, for use on
         preprocessor command lines. The order in which defines were given
         when creating the ConfigEnvironment is preserved.
 
     and one additional define from all the defines as a dictionary:
+
       - ALLDEFINES contains all of the global defines as a dictionary. This is
-      intended to be used instead of the defines structure from config.status so
-      that scripts can depend directly on its value.
+        intended to be used instead of the defines structure from config.status so
+        that scripts can depend directly on its value.
     """
 
     def __init__(self, topobjdir):

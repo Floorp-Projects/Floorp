@@ -99,9 +99,7 @@ class _SimpleOrderedSet(object):
 class Rule(object):
     """Class handling simple rules in the form:
     target1 target2 ... : dep1 dep2 ...
-            command1
-            command2
-            ...
+    command1 command2 ...
     """
 
     def __init__(self, targets=()):

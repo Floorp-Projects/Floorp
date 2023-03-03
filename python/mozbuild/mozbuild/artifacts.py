@@ -27,7 +27,7 @@ This module performs the following steps:
   so we don't have to mount DMG files frequently.
 
 This module requires certain modules be importable from the ambient Python
-environment.  |mach artifact| ensures these modules are available, but other
+environment.  ``mach artifact`` ensures these modules are available, but other
 consumers will need to arrange this themselves.
 """
 

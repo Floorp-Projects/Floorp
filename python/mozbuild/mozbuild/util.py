@@ -707,6 +707,9 @@ def StrictOrderingOnAppendListWithFlagsFactory(flags):
     the flag names, and values the type used for the value of that flag.
 
     Example:
+
+    .. code-block:: python
+
         FooList = StrictOrderingOnAppendListWithFlagsFactory({
             'foo': bool, 'bar': unicode
         })

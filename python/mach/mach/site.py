@@ -444,13 +444,16 @@ class CommandSiteManager:
     used standalone to invoke a script).
 
     A few notes:
-    * The command environment always inherits Mach's import scope. This is because
-      "unloading" packages in Python is error-prone, so in-process activations will always
-      carry Mach's dependencies along with it. Accordingly, compatibility between each
-      command environment and the Mach environment must be maintained
+
+    * The command environment always inherits Mach's import scope. This is
+      because "unloading" packages in Python is error-prone, so in-process activations
+      will always carry Mach's dependencies along with it. Accordingly, compatibility
+      between each command environment and the Mach environment must be maintained
+
     * Unlike the Mach environment, command environments *always* have an associated
       physical virtualenv on-disk. This is because some commands invoke child Python
       processes, and that child process should have the same import scope.
+
     """
 
     def __init__(

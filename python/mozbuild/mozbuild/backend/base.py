@@ -255,7 +255,7 @@ class BuildBackend(LoggingMixin):
         status value of a subprocess, where 0 denotes success and any
         other value is an error code.
 
-        If an exception is raised, |mach build| will fail with a
+        If an exception is raised, ``mach build`` will fail with a
         non-zero exit code.
         """
         self._write_purgecaches(config)

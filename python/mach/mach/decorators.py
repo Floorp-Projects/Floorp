@@ -177,6 +177,8 @@ class Command(object):
 
     For example:
 
+    .. code-block:: python
+
         @Command('foo', category='misc', description='Run the foo action')
         def foo(self, command_context):
             pass
@@ -255,6 +257,8 @@ class CommandArgument(object):
 
     For example:
 
+    .. code-block:: python
+
         @Command('foo', help='Run the foo action')
         @CommandArgument('-b', '--bar', action='store_true', default=False,
             help='Enable bar mode.')
@@ -289,6 +293,8 @@ class CommandArgumentGroup(object):
     ArgumentParser.add_argument_group().
 
     For example:
+
+    .. code-block: python
 
         @Command('foo', helps='Run the foo action')
         @CommandArgumentGroup('group1')

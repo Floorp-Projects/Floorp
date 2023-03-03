@@ -208,7 +208,7 @@ class UnifiedFinder(BaseFinder):
 class UnifiedBuildFinder(UnifiedFinder):
     """
     Specialized UnifiedFinder for Mozilla applications packaging. It allows
-    "*.manifest" files to differ in their order, and unifies "buildconfig.html"
+    ``*.manifest`` files to differ in their order, and unifies ``buildconfig.html``
     files by merging their content.
     """
 

@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 """
-Use pywatchman to watch source directories and perform partial |mach
-build faster| builds.
+Use pywatchman to watch source directories and perform partial
+``mach build faster`` builds.
 """
 
 import datetime

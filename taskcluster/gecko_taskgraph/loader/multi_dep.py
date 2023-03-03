@@ -79,7 +79,7 @@ def loader(kind, path, config, params, loaded_tasks):
 
 
 def skip_only_or_not(config, task):
-    """Return True if we should skip this task based on only_ or not_ config."""
+    """Return True if we should skip this task based on `only_` or `not_` config."""
     only_platforms = config.get("only-for-build-platforms")
     not_platforms = config.get("not-for-build-platforms")
     only_attributes = config.get("only-for-attributes")

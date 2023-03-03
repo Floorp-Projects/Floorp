@@ -42,10 +42,11 @@ class LoggingMixin(object):
         performed by calling format() on this string, feeding into it the dict
         of attributes constituting the event.
 
-        Example Usage
-        -------------
+        Example Usage:
 
-        self.log(logging.DEBUG, 'login', {'username': 'johndoe'},
-            'User login: {username}')
+        .. code-block:: python
+
+            self.log(logging.DEBUG, 'login', {'username': 'johndoe'},
+                'User login: {username}')
         """
         self._logger.log(level, format_str, extra={"action": action, "params": params})

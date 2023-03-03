@@ -36,8 +36,8 @@ from .telemetry import create_telemetry_from_environment, report_invocation_metr
 from .util import UserError, setenv
 
 SUGGEST_MACH_BUSTED_TEMPLATE = r"""
-You can invoke |./mach busted| to check if this issue is already on file. If it
-isn't, please use |./mach busted file %s| to report it. If |./mach busted| is
+You can invoke ``./mach busted`` to check if this issue is already on file. If it
+isn't, please use ``./mach busted file %s`` to report it. If ``./mach busted`` is
 misbehaving, you can also inspect the dependencies of bug 1543241.
 """.lstrip()
 
@@ -82,13 +82,13 @@ a bug in the called code itself or in the way that mach is calling it.
 NO_COMMAND_ERROR = r"""
 It looks like you tried to run mach without a command.
 
-Run |mach help| to show a list of commands.
+Run ``mach help`` to show a list of commands.
 """.lstrip()
 
 UNKNOWN_COMMAND_ERROR = r"""
 It looks like you are trying to %s an unknown mach command: %s
 %s
-Run |mach help| to show a list of commands.
+Run ``mach help`` to show a list of commands.
 """.lstrip()
 
 SUGGESTED_COMMANDS_MESSAGE = r"""
@@ -195,7 +195,7 @@ class Mach(object):
 
         populate_context_handler -- If defined, it must be a callable. The
             callable signature is the following:
-                populate_context_handler(key=None)
+            populate_context_handler(key=None)
             It acts as a fallback getter for the mach.base.CommandContext
             instance.
             This allows to augment the context instance with arbitrary data

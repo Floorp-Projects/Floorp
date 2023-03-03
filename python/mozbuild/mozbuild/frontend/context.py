@@ -870,7 +870,7 @@ class Path(six.with_metaclass(PathMeta, ContextDerivedValue, six.text_type)):
         return self
 
     def join(self, *p):
-        """ContextDerived equivalent of mozpath.join(self, *p), returning a
+        """ContextDerived equivalent of `mozpath.join(self, *p)`, returning a
         new Path instance.
         """
         return Path(self.context, mozpath.join(self, *p))
@@ -1034,10 +1034,12 @@ def ContextDerivedTypedRecord(*fields):
     This API is extremely similar to the TypedNamedTuple API,
     except that properties may be mutated. This supports syntax like:
 
-    VARIABLE_NAME.property += [
-      'item1',
-      'item2',
-    ]
+    .. code-block:: python
+
+        VARIABLE_NAME.property += [
+          'item1',
+          'item2',
+        ]
     """
 
     class _TypedRecord(ContextDerivedValue):
