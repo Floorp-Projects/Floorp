@@ -139,10 +139,11 @@ nsCocoaWindow::nsCocoaWindow()
       mSheetNeedsShow(false),
       mSizeMode(nsSizeMode_Normal),
       mInFullScreenMode(false),
-      mInNativeFullScreenMode(false),
+      mInFullScreenTransition(false),
       mIgnoreOcclusionCount(0),
       mModal(false),
       mFakeModal(false),
+      mInNativeFullScreenMode(false),
       mIsAnimationSuppressed(false),
       mInReportMoveEvent(false),
       mInResize(false),
@@ -1255,15 +1256,32 @@ void nsCocoaWindow::Move(double aX, double aY) {
 }
 
 void nsCocoaWindow::SetSizeMode(nsSizeMode aMode) {
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
+
+  if (!mWindow) return;
+
+  // mSizeMode will be updated in DispatchSizeModeEvent, which will be called
+  // from a delegate method that handles the state change during one of the
+  // calls below.
+  nsSizeMode previousMode = mSizeMode;
+
   if (aMode == nsSizeMode_Normal) {
-    QueueTransition(TransitionType::Windowed);
+    if ([mWindow isMiniaturized])
+      [mWindow deminiaturize:nil];
+    else if (previousMode == nsSizeMode_Maximized && [mWindow isZoomed])
+      [mWindow zoom:nil];
+    else if (previousMode == nsSizeMode_Fullscreen)
+      MakeFullScreen(false);
   } else if (aMode == nsSizeMode_Minimized) {
-    QueueTransition(TransitionType::Miniaturize);
+    if (![mWindow isMiniaturized]) [mWindow miniaturize:nil];
   } else if (aMode == nsSizeMode_Maximized) {
-    QueueTransition(TransitionType::Zoom);
+    if ([mWindow isMiniaturized]) [mWindow deminiaturize:nil];
+    if (![mWindow isZoomed]) [mWindow zoom:nil];
   } else if (aMode == nsSizeMode_Fullscreen) {
-    MakeFullScreen(true);
+    if (!mInFullScreenMode) MakeFullScreen(true);
   }
+
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
 // The (work)space switching implementation below was inspired by Phoenix:
@@ -1621,33 +1639,18 @@ static bool AlwaysUsesNativeFullScreen() {
   [mFullscreenTransitionAnimation startAnimation];
 }
 
-void nsCocoaWindow::CocoaWindowWillEnterFullscreen(bool aFullscreen) {
-  MOZ_ASSERT(mUpdateFullscreenOnResize.isNothing());
-
-  // Ensure that we update our fullscreen state as early as possible, when the resize
-  // happens.
-  mUpdateFullscreenOnResize =
-      Some(aFullscreen ? TransitionType::Fullscreen : TransitionType::Windowed);
-
+void nsCocoaWindow::WillEnterFullScreen(bool aFullScreen) {
   if (mWidgetListener) {
-    mWidgetListener->FullscreenWillChange(aFullscreen);
+    mWidgetListener->FullscreenWillChange(aFullScreen);
   }
+  // Update the state to full screen when we are entering, so that we switch to
+  // full screen view as soon as possible.
+  UpdateFullscreenState(aFullScreen, true);
 }
 
-void nsCocoaWindow::CocoaWindowDidFailFullscreen(bool aAttemptedFullscreen) {
-  if (mWidgetListener) {
-    mWidgetListener->FullscreenWillChange(!aAttemptedFullscreen);
-  }
-
-  // If we already updated our fullscreen state due to a resize, we need to update it again.
-  if (mUpdateFullscreenOnResize.isNothing()) {
-    UpdateFullscreenState(!aAttemptedFullscreen, true);
-    ReportSizeEvent();
-  }
-
-  TransitionType transition =
-      aAttemptedFullscreen ? TransitionType::Fullscreen : TransitionType::Windowed;
-  FinishCurrentTransitionIfMatching(transition);
+void nsCocoaWindow::EnteredFullScreen(bool aFullScreen, bool aNativeMode) {
+  mInFullScreenTransition = false;
+  UpdateFullscreenState(aFullScreen, aNativeMode);
 }
 
 void nsCocoaWindow::UpdateFullscreenState(bool aFullScreen, bool aNativeMode) {
@@ -1668,6 +1671,29 @@ void nsCocoaWindow::UpdateFullscreenState(bool aFullScreen, bool aNativeMode) {
   }
 }
 
+inline bool nsCocoaWindow::ShouldToggleNativeFullscreen(bool aFullScreen,
+                                                        bool aUseSystemTransition) {
+  // First check if this window supports entering native fullscreen.
+  // This is set based on the macnativefullscreen attribute on the window's
+  // document element.
+  NSWindowCollectionBehavior colBehavior = [mWindow collectionBehavior];
+  if (!(colBehavior & NSWindowCollectionBehaviorFullScreenPrimary)) {
+    return false;
+  }
+
+  if (mInNativeFullScreenMode) {
+    // If we are using native fullscreen, go ahead to exit it.
+    return true;
+  }
+  if (!aUseSystemTransition) {
+    // If we do not want the system fullscreen transition,
+    // don't use the native fullscreen.
+    return false;
+  }
+  // If we are using native fullscreen, we should have returned earlier.
+  return aFullScreen;
+}
+
 nsresult nsCocoaWindow::MakeFullScreen(bool aFullScreen) {
   return DoMakeFullScreen(aFullScreen, AlwaysUsesNativeFullScreen());
 }
@@ -1677,196 +1703,45 @@ nsresult nsCocoaWindow::MakeFullScreenWithNativeTransition(bool aFullScreen) {
 }
 
 nsresult nsCocoaWindow::DoMakeFullScreen(bool aFullScreen, bool aUseSystemTransition) {
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+
   if (!mWindow) {
     return NS_OK;
   }
 
-  // Figure out what type of transition is being requested.
-  TransitionType transition = TransitionType::Windowed;
-  if (aFullScreen) {
-    // Decide whether to use fullscreen or emulated fullscreen.
-    transition = (aUseSystemTransition &&
-                  (mWindow.collectionBehavior & NSWindowCollectionBehaviorFullScreenPrimary))
-                     ? TransitionType::Fullscreen
-                     : TransitionType::EmulatedFullscreen;
+  // We will call into MakeFullScreen redundantly when entering/exiting
+  // fullscreen mode via OS X controls. When that happens we should just handle
+  // it gracefully - no need to ASSERT.
+  if (mInFullScreenMode == aFullScreen) {
+    return NS_OK;
   }
 
-  QueueTransition(transition);
+  mInFullScreenTransition = true;
+
+  if (ShouldToggleNativeFullscreen(aFullScreen, aUseSystemTransition)) {
+    MOZ_ASSERT(mInNativeFullScreenMode != aFullScreen,
+               "We shouldn't have been in native fullscreen.");
+    // Calling toggleFullScreen will result in windowDid(FailTo)?(Enter|Exit)FullScreen
+    // to be called from the OS. We will call EnteredFullScreen from those methods,
+    // where mInFullScreenMode will be set and a sizemode event will be dispatched.
+    [mWindow toggleFullScreen:nil];
+  } else {
+    if (mWidgetListener) {
+      mWidgetListener->FullscreenWillChange(aFullScreen);
+    }
+    NSDisableScreenUpdates();
+    // The order here matters. When we exit full screen mode, we need to show the
+    // Dock first, otherwise the newly-created window won't have its minimize
+    // button enabled. See bug 526282.
+    nsCocoaUtils::HideOSChromeOnScreen(aFullScreen);
+    nsBaseWidget::InfallibleMakeFullScreen(aFullScreen);
+    NSEnableScreenUpdates();
+    EnteredFullScreen(aFullScreen, /* aNativeMode */ false);
+  }
+
   return NS_OK;
-}
 
-void nsCocoaWindow::QueueTransition(const TransitionType& aTransition) {
-  mTransitionsPending.push(aTransition);
-  ProcessTransitions();
-}
-
-void nsCocoaWindow::ProcessTransitions() {
-  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK
-
-  if (mInProcessTransitions) {
-    return;
-  }
-
-  mInProcessTransitions = true;
-
-  // Start a loop that will continue as long as we have transitions to process
-  // and we aren't waiting on an asynchronous transition to complete. Any
-  // transition that starts something async will `continue` this loop to exit.
-  while (!mTransitionsPending.empty() && !IsInTransition()) {
-    TransitionType nextTransition = mTransitionsPending.front();
-
-    // We have to check for some incompatible transition states, and if we find one,
-    // instead perform an alternative transition and leave the queue untouched. If
-    // we add one of these transitions, we suppress size mode events because we don't
-    // want to confuse listeners who are expecting to receive exactly one event when
-    // the requested transition has completed. The mSuppressSizeModeEvents flag is
-    // cleared in FinishCurrentTransitionIfMatching.
-    switch (nextTransition) {
-      case TransitionType::Fullscreen:
-      case TransitionType::EmulatedFullscreen:
-      case TransitionType::Windowed:
-      case TransitionType::Zoom:
-        // These can't handle miniaturized windows, so deminiaturize first.
-        if (mWindow.miniaturized) {
-          // Anything other than Windowed will be confused by the size mode event
-          // posted by deminiaturization.
-          if (nextTransition != TransitionType::Windowed) {
-            mSuppressSizeModeEvents = true;
-          }
-          mTransitionCurrent = Some(TransitionType::Deminiaturize);
-        }
-        break;
-      case TransitionType::Miniaturize:
-        // This can't handle fullscreen, so go to windowed first.
-        if (mInFullScreenMode) {
-          mSuppressSizeModeEvents = true;
-          mTransitionCurrent = Some(TransitionType::Windowed);
-        }
-        break;
-      default:
-        break;
-    }
-
-    // If mTransitionCurrent is still empty, then we use the nextTransition and pop
-    // the queue.
-    if (mTransitionCurrent.isNothing()) {
-      mTransitionCurrent = Some(nextTransition);
-      mTransitionsPending.pop();
-    }
-
-    switch (*mTransitionCurrent) {
-      case TransitionType::Fullscreen: {
-        if (!mInFullScreenMode) {
-          // This triggers an async animation, so continue.
-          [mWindow toggleFullScreen:nil];
-          continue;
-        }
-        break;
-      }
-
-      case TransitionType::EmulatedFullscreen: {
-        if (!mInFullScreenMode) {
-          // This can be done synchronously.
-          if (mWidgetListener) {
-            mWidgetListener->FullscreenWillChange(true);
-          }
-          NSDisableScreenUpdates();
-          mSuppressSizeModeEvents = true;
-          // The order here matters. When we exit full screen mode, we need to show the
-          // Dock first, otherwise the newly-created window won't have its minimize
-          // button enabled. See bug 526282.
-          nsCocoaUtils::HideOSChromeOnScreen(true);
-          nsBaseWidget::InfallibleMakeFullScreen(true);
-          mSuppressSizeModeEvents = false;
-          NSEnableScreenUpdates();
-          UpdateFullscreenState(true, false);
-        }
-        break;
-      }
-
-      case TransitionType::Windowed: {
-        if (mInFullScreenMode) {
-          if (mInNativeFullScreenMode) {
-            // This triggers an async animation, so continue.
-            [mWindow toggleFullScreen:nil];
-            continue;
-          } else {
-            // This can be done synchronously.
-            if (mWidgetListener) {
-              mWidgetListener->FullscreenWillChange(false);
-            }
-            NSDisableScreenUpdates();
-            mSuppressSizeModeEvents = true;
-            // The order here matters. When we exit full screen mode, we need to show the
-            // Dock first, otherwise the newly-created window won't have its minimize
-            // button enabled. See bug 526282.
-            nsCocoaUtils::HideOSChromeOnScreen(false);
-            nsBaseWidget::InfallibleMakeFullScreen(false);
-            mSuppressSizeModeEvents = false;
-            NSEnableScreenUpdates();
-            UpdateFullscreenState(false, false);
-          }
-        } else if (mWindow.zoomed) {
-          [mWindow zoom:nil];
-        }
-        break;
-      }
-
-      case TransitionType::Miniaturize:
-        if (!mWindow.miniaturized) {
-          // This triggers an async animation, so continue.
-          [mWindow miniaturize:nil];
-          continue;
-        }
-        break;
-
-      case TransitionType::Deminiaturize:
-        if (mWindow.miniaturized) {
-          // This triggers an async animation, so continue.
-          [mWindow deminiaturize:nil];
-          continue;
-        }
-        break;
-
-      case TransitionType::Zoom:
-        if (!mWindow.zoomed) {
-          [mWindow zoom:nil];
-        }
-        break;
-
-      default:
-        break;
-    }
-
-    mTransitionCurrent.reset();
-  }
-
-  mInProcessTransitions = false;
-
-  NS_OBJC_END_TRY_IGNORE_BLOCK;
-}
-
-void nsCocoaWindow::FinishCurrentTransition() {
-  mTransitionCurrent.reset();
-  mSuppressSizeModeEvents = false;
-  ProcessTransitions();
-}
-
-void nsCocoaWindow::FinishCurrentTransitionIfMatching(const TransitionType& aTransition) {
-  // We've just finished some transition activity, and we're not sure whether it was
-  // triggered programmatically, or by the user. If it matches our current transition,
-  // then assume it was triggered programmatically and we can clean up that transition
-  // and start processing transitions again.
-  if (mTransitionCurrent.isSome() && (*mTransitionCurrent == aTransition)) {
-    // This matches our current transition. Since this function is called from
-    // nsWindowDelegate transition callbacks, we want to make sure those callbacks are
-    // all the way done before we start processing more transitions. To accomplish
-    // this, we dispatch our cleanup to happen on the next event loop. Doing this will
-    // ensure that any async native transition methods we call (like toggleFullscreen)
-    // will succeed.
-    NS_DispatchToCurrentThread(NewRunnableMethod("FinishCurrentTransition", this,
-                                                 &nsCocoaWindow::FinishCurrentTransition));
-  }
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
 // Coordinates are desktop pixels
@@ -2221,12 +2096,12 @@ void nsCocoaWindow::DispatchSizeModeEvent() {
     return;
   }
 
-  if (mSuppressSizeModeEvents) {
-    return;
-  }
-
   nsSizeMode newMode = GetWindowSizeMode(mWindow, mInFullScreenMode);
-  if (mSizeMode == newMode) {
+
+  // Don't dispatch a sizemode event if:
+  // 1. the window is transitioning to fullscreen
+  // 2. the new sizemode is the same as the current sizemode
+  if (mInFullScreenTransition || mSizeMode == newMode) {
     return;
   }
 
@@ -2263,6 +2138,7 @@ void nsCocoaWindow::ReportSizeEvent() {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   UpdateBounds();
+
   if (mWidgetListener) {
     LayoutDeviceIntRect innerBounds = GetClientBounds();
     mWidgetListener->WindowResized(this, innerBounds.width, innerBounds.height);
@@ -2789,41 +2665,8 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChildWindow() {
 
 - (NSSize)windowWillResize:(NSWindow*)sender toSize:(NSSize)proposedFrameSize {
   RollUpPopups();
+
   return proposedFrameSize;
-}
-
-void nsCocoaWindow::CocoaSendToplevelActivateEvents() {
-  if (mWidgetListener) {
-    mWidgetListener->WindowActivated();
-  }
-}
-
-void nsCocoaWindow::CocoaSendToplevelDeactivateEvents() {
-  if (mWidgetListener) {
-    mWidgetListener->WindowDeactivated();
-  }
-}
-
-void nsCocoaWindow::CocoaWindowDidResize() {
-  // It's important to update our bounds before we trigger any listeners. This
-  // ensures that our bounds are correct when GetScreenBounds is called.
-  UpdateBounds();
-
-  if (mUpdateFullscreenOnResize.isSome()) {
-    // Act as if the native fullscreen transition is complete, doing everything other
-    // than actually clearing the transition state, which will happen when one of the
-    // appropriate windowDid delegate methods is called.
-    bool toFullscreen = (*mUpdateFullscreenOnResize == TransitionType::Fullscreen);
-    mUpdateFullscreenOnResize.reset();
-
-    UpdateFullscreenState(toFullscreen, true);
-    ReportSizeEvent();
-    return;
-  }
-
-  // Resizing might have changed our zoom state.
-  DispatchSizeModeEvent();
-  ReportSizeEvent();
 }
 
 - (void)windowDidResize:(NSNotification*)aNotification {
@@ -2832,7 +2675,9 @@ void nsCocoaWindow::CocoaWindowDidResize() {
 
   if (!mGeckoWindow) return;
 
-  mGeckoWindow->CocoaWindowDidResize();
+  // Resizing might have changed our zoom state.
+  mGeckoWindow->DispatchSizeModeEvent();
+  mGeckoWindow->ReportSizeEvent();
 }
 
 - (void)windowDidChangeScreen:(NSNotification*)aNotification {
@@ -2869,13 +2714,20 @@ void nsCocoaWindow::CocoaWindowDidResize() {
   if (!mGeckoWindow) {
     return;
   }
-  mGeckoWindow->CocoaWindowWillEnterFullscreen(true);
+
+  mGeckoWindow->WillEnterFullScreen(true);
 }
 
 // Lion's full screen mode will bypass our internal fullscreen tracking, so
 // we need to catch it when we transition and call our own methods, which in
 // turn will fire "fullscreen" events.
 - (void)windowDidEnterFullScreen:(NSNotification*)notification {
+  if (!mGeckoWindow) {
+    return;
+  }
+
+  mGeckoWindow->EnteredFullScreen(true);
+
   // On Yosemite, the NSThemeFrame class has two new properties --
   // titlebarView (an NSTitlebarView object) and titlebarContainerView (an
   // NSTitlebarContainerView object).  These are used to display the titlebar
@@ -2898,40 +2750,38 @@ void nsCocoaWindow::CocoaWindowDidResize() {
   if ([titlebarContainerView respondsToSelector:@selector(setTransparent:)]) {
     [titlebarContainerView setTransparent:NO];
   }
-
-  if (!mGeckoWindow) {
-    return;
-  }
-
-  mGeckoWindow->FinishCurrentTransitionIfMatching(nsCocoaWindow::TransitionType::Fullscreen);
 }
 
 - (void)windowWillExitFullScreen:(NSNotification*)notification {
   if (!mGeckoWindow) {
     return;
   }
-  mGeckoWindow->CocoaWindowWillEnterFullscreen(false);
+
+  mGeckoWindow->WillEnterFullScreen(false);
 }
 
 - (void)windowDidExitFullScreen:(NSNotification*)notification {
   if (!mGeckoWindow) {
     return;
   }
-  mGeckoWindow->FinishCurrentTransitionIfMatching(nsCocoaWindow::TransitionType::Windowed);
+
+  mGeckoWindow->EnteredFullScreen(false);
 }
 
 - (void)windowDidFailToEnterFullScreen:(NSWindow*)window {
   if (!mGeckoWindow) {
     return;
   }
-  mGeckoWindow->CocoaWindowDidFailFullscreen(true);
+
+  mGeckoWindow->EnteredFullScreen(false);
 }
 
 - (void)windowDidFailToExitFullScreen:(NSWindow*)window {
   if (!mGeckoWindow) {
     return;
   }
-  mGeckoWindow->CocoaWindowDidFailFullscreen(false);
+
+  mGeckoWindow->EnteredFullScreen(true);
 }
 
 - (void)windowDidBecomeMain:(NSNotification*)aNotification {
@@ -3033,19 +2883,11 @@ void nsCocoaWindow::CocoaWindowDidResize() {
 }
 
 - (void)windowDidMiniaturize:(NSNotification*)aNotification {
-  if (!mGeckoWindow) {
-    return;
-  }
-  mGeckoWindow->DispatchSizeModeEvent();
-  mGeckoWindow->FinishCurrentTransitionIfMatching(nsCocoaWindow::TransitionType::Miniaturize);
+  if (mGeckoWindow) mGeckoWindow->DispatchSizeModeEvent();
 }
 
 - (void)windowDidDeminiaturize:(NSNotification*)aNotification {
-  if (!mGeckoWindow) {
-    return;
-  }
-  mGeckoWindow->DispatchSizeModeEvent();
-  mGeckoWindow->FinishCurrentTransitionIfMatching(nsCocoaWindow::TransitionType::Deminiaturize);
+  if (mGeckoWindow) mGeckoWindow->DispatchSizeModeEvent();
 }
 
 - (BOOL)windowShouldZoom:(NSWindow*)window toFrame:(NSRect)proposedFrame {
@@ -3114,15 +2956,20 @@ void nsCocoaWindow::CocoaWindowDidResize() {
 
 - (void)sendToplevelActivateEvents {
   if (!mToplevelActiveState && mGeckoWindow) {
-    mGeckoWindow->CocoaSendToplevelActivateEvents();
-
+    nsIWidgetListener* listener = mGeckoWindow->GetWidgetListener();
+    if (listener) {
+      listener->WindowActivated();
+    }
     mToplevelActiveState = true;
   }
 }
 
 - (void)sendToplevelDeactivateEvents {
   if (mToplevelActiveState && mGeckoWindow) {
-    mGeckoWindow->CocoaSendToplevelDeactivateEvents();
+    nsIWidgetListener* listener = mGeckoWindow->GetWidgetListener();
+    if (listener) {
+      listener->WindowDeactivated();
+    }
     mToplevelActiveState = false;
   }
 }
