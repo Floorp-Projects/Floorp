@@ -3243,7 +3243,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
             nsLayoutUtils::FrameForPointOption::IgnoreCrossDoc}});
 
       nsTHashSet<LocalAccessible*> inViewAccs;
-      nsTArray<uint64_t> viewportCache;
+      nsTArray<uint64_t> viewportCache(frames.Length());
       // Layout considers table rows fully occluded by their containing cells.
       // This means they don't have their own display list items, and they won't
       // show up in the list returned from GetFramesForArea. To prevent table
@@ -3451,15 +3451,15 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       }
 
       if (frame && frame->IsTextFrame()) {
-        nsTArray<int32_t> charData;
-
         if (nsTextFrame* currTextFrame = do_QueryFrame(frame)) {
+          nsTArray<int32_t> charData(nsAccUtils::TextLength(this) *
+                                     kNumbersInRect);
           while (currTextFrame) {
             nsPoint contOffset = currTextFrame->GetOffsetTo(frame);
-            nsTArray<nsRect> charBounds;
+            int32_t length = currTextFrame->GetContentLength();
+            nsTArray<nsRect> charBounds(length);
             currTextFrame->GetCharacterRectsInRange(
-                currTextFrame->GetContentOffset(),
-                currTextFrame->GetContentEnd(), charBounds);
+                currTextFrame->GetContentOffset(), length, charBounds);
             for (nsRect& charRect : charBounds) {
               // We expect each char rect to be relative to the text leaf
               // acc this text lives in. Unfortunately, GetCharacterRectsInRange
@@ -3474,9 +3474,9 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
             }
             currTextFrame = currTextFrame->GetNextContinuation();
           }
-        }
-        if (charData.Length()) {
-          fields->SetAttribute(nsGkAtoms::characterData, std::move(charData));
+          if (charData.Length()) {
+            fields->SetAttribute(nsGkAtoms::characterData, std::move(charData));
+          }
         }
       }
     }
