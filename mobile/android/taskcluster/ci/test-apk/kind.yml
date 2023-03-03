@@ -32,7 +32,7 @@ task-defaults:
         use-caches: false
     treeherder:
         kind: test
-    worker-type: b-android
+    worker-type: b-android-large
     worker:
         docker-image: {in-tree: base}
         max-run-time: 7200
@@ -59,10 +59,10 @@ tasks:
         worker:
             artifacts:
                 - name: public/reports/index.html
-                  path: /builds/worker/checkouts/vcs/app/build/reports/tests/testDebugUnitTest/index.html
+                  path: /builds/worker/checkouts/vcs/focus-android/app/build/reports/tests/testFocusDebugUnitTest/index.html
                   type: file
                 - name: public/reports/test
-                  path: /builds/worker/checkouts/vcs/app/build/reports/tests
+                  path: /builds/worker/checkouts/vcs/focus-android/app/build/reports/tests
                   type: directory
                 - name: public/github
                   path: /builds/worker/github
@@ -80,7 +80,7 @@ tasks:
             pre-gradlew:
                 - ["cd", "fenix"]
                 - ['java', '-version']
-            gradlew: ['clean', 'testDebugUnitTest', 'githubTestDetails']
+            gradlew: ['clean', 'testFenixDebugUnitTest', 'githubTestDetails']
         treeherder:
             platform: 'fenix-android-all/opt'
             symbol: fenix-debug(T)
@@ -88,10 +88,10 @@ tasks:
         worker:
             artifacts:
                 - name: public/reports/index.html
-                  path: /builds/worker/checkouts/vcs/app/build/reports/tests/testDebugUnitTest/index.html
+                  path: /builds/worker/checkouts/vcs/fenix/app/build/reports/tests/testFenixDebugUnitTest/index.html
                   type: file
                 - name: public/reports/test
-                  path: /builds/worker/checkouts/vcs/app/build/reports/tests
+                  path: /builds/worker/checkouts/vcs/fenix/app/build/reports/tests
                   type: directory
                 - name: public/github
                   path: /builds/worker/github
@@ -140,7 +140,7 @@ tasks:
                         "type": "section",
                         "text": {
                           "type": "mrkdwn",
-                          "text": "*Test Summary*: <https://firefoxci.taskcluster-artifacts.net/${status.taskId}/0/public/reports/test/testDebugUnitTest/index.html|Results> :debug:"
+                          "text": "*Test Summary*: <https://firefoxci.taskcluster-artifacts.net/${status.taskId}/0/public/reports/test/testFenixDebugUnitTest/index.html|Results> :debug:"
                         }
                       },
                       {

@@ -29,11 +29,14 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.rule.MainCoroutineRule
+import org.junit.After
+import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -92,6 +95,13 @@ class BrowserFragmentTest {
         testTab = createTab(url = "https://mozilla.org")
         store = BrowserStore()
         every { context.components.core.store } returns store
+
+        mockkObject(FeatureFlags)
+    }
+
+    @After
+    fun tearDown() {
+        unmockkObject(FeatureFlags)
     }
 
     @Test
@@ -257,18 +267,21 @@ class BrowserFragmentTest {
 
     @Test
     fun `WHEN isPullToRefreshEnabledInBrowser is disabled THEN pull down refresh is disabled`() {
+        every { FeatureFlags.pullToRefreshEnabled } returns true
         every { context.settings().isPullToRefreshEnabledInBrowser } returns true
-        assert(browserFragment.shouldPullToRefreshBeEnabled(false))
+        assertTrue(browserFragment.shouldPullToRefreshBeEnabled(false))
 
+        every { FeatureFlags.pullToRefreshEnabled } returns true
         every { context.settings().isPullToRefreshEnabledInBrowser } returns false
-        assert(!browserFragment.shouldPullToRefreshBeEnabled(false))
+        assertTrue(!browserFragment.shouldPullToRefreshBeEnabled(false))
     }
 
     @Test
     fun `WHEN in fullscreen THEN pull down refresh is disabled`() {
+        every { FeatureFlags.pullToRefreshEnabled } returns true
         every { context.settings().isPullToRefreshEnabledInBrowser } returns true
-        assert(browserFragment.shouldPullToRefreshBeEnabled(false))
-        assert(!browserFragment.shouldPullToRefreshBeEnabled(true))
+        assertTrue(browserFragment.shouldPullToRefreshBeEnabled(false))
+        assertTrue(!browserFragment.shouldPullToRefreshBeEnabled(true))
     }
 
     @Test

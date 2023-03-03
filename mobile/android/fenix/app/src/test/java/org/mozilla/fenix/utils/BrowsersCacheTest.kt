@@ -15,12 +15,14 @@ import mozilla.components.support.utils.Browsers
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 
 @RunWith(FenixRobolectricTestRunner::class)
+@Ignore("https://bugzilla.mozilla.org/show_bug.cgi?id=1794926")
 class BrowsersCacheTest {
 
     // NB: There is always one more browser than pretendBrowsersAreInstalled installs because

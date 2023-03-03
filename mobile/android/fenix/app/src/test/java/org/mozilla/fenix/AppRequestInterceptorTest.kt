@@ -28,6 +28,7 @@ import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.components.Services
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.isOnline
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -44,6 +45,7 @@ class AppRequestInterceptorTest {
         mockkStatic("org.mozilla.fenix.ext.ConnectivityManagerKt")
 
         every { testContext.getSystemService<ConnectivityManager>()!!.isOnline() } returns true
+        every { testContext.settings() } returns mockk(relaxed = true)
 
         navigationController = mockk(relaxed = true)
         interceptor = AppRequestInterceptor(testContext).also {
