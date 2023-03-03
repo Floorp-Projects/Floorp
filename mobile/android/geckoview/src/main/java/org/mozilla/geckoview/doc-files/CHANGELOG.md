@@ -16,6 +16,8 @@ exclude: true
 ## v112
 - Added `GeckoSession.LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE`, see ([bug 1809269]({{bugzilla}}1809269)).
 - Added [`GeckoSession.hasCookieBannerRuleForBrowsingContextTree`][112.1] to expose Gecko API nsICookieBannerService::hasRuleForBrowsingContextTree see ([bug 1806740]({{bugzilla}}1806740))
+- Removed deprecated [`Autofill.Node.getDimensions`][110.6]
+  ([bug 1815830]({{bugzilla}}1815830))
 
 [112.1]: {{javadoc_uri}}/GeckoSession.html#hasCookieBannerRuleForBrowsingContextTree()
 
@@ -1324,4 +1326,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 2eda8f8745bff92ab7b9462d550c91ca5f1dfa85
+[api-version]: 689b18906b126893e80298e5fa4281563f251bae

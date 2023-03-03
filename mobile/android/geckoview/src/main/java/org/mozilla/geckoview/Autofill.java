@@ -569,12 +569,10 @@ public class Autofill {
      * proper dimensions.
      *
      * @return The dimensions of this node.
-     * @deprecated Use {@link #getScreenRect}.
      */
-    @Deprecated
-    @DeprecationSchedule(id = "autofill-fission", version = 112) // should be package private
     @AnyThread
-    public @NonNull Rect getDimensions() {
+    /* package */ @NonNull
+    Rect getDimensions() {
       return mDimens;
     }
 
