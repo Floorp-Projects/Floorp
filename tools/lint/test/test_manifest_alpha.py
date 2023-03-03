@@ -9,6 +9,7 @@ LINTER = "test-manifest-alpha"
 def test_very_out_of_order(lint, paths):
     results = lint(paths("mochitest-very-out-of-order.ini"))
     assert len(results) == 1
+    assert results[0].diff
 
 
 def test_in_order(lint, paths):
@@ -19,6 +20,7 @@ def test_in_order(lint, paths):
 def test_mostly_in_order(lint, paths):
     results = lint(paths("mochitest-mostly-in-order.ini"))
     assert len(results) == 1
+    assert results[0].diff
 
 
 def test_other_ini_very_out_of_order(lint, paths):
