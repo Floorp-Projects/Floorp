@@ -1,3 +1,13 @@
+Overview of changes leading to 7.1.0
+Friday, March 3, 2023
+====================================
+- New experimental hb_shape_justify() API that uses font variations to expand
+  or shrink the text to a given advance. (Behdad Esfahbod)
+- Various build and bug fixes. (Behdad Esfahbod, Garret Rieger, Qunxin Liu)
+
+- New API:
++hb_font_set_variation()
+
 Overview of changes leading to 7.0.1
 Monday, February 20, 2023
 ====================================

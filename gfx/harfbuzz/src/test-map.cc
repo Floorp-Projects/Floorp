@@ -344,8 +344,8 @@ main (int argc, char **argv)
     hb_set_t keys;
     hb_set_t values;
 
-    m.keys (keys);
-    m.values (values);
+    hb_copy (m.keys (), keys);
+    hb_copy (m.values (), values);
 
     assert (keys.is_equal (hb_set_t ({1, 2, 3, 4, 5, 6})));
     assert (values.is_equal (hb_set_t ({1, 1, 2, 3, 5, 8})));
