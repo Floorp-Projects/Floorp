@@ -4648,6 +4648,12 @@ void LIRGenerator::visitGuardIsNativeObject(MGuardIsNativeObject* ins) {
   redefine(ins, ins->object());
 }
 
+void LIRGenerator::visitGuardGlobalGeneration(MGuardGlobalGeneration* ins) {
+  auto* lir = new (alloc()) LGuardGlobalGeneration(temp());
+  assignSnapshot(lir, ins->bailoutKind());
+  add(lir, ins);
+}
+
 void LIRGenerator::visitGuardIsProxy(MGuardIsProxy* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
 
