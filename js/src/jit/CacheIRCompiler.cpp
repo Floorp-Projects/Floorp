@@ -9234,6 +9234,31 @@ bool CacheIRCompiler::emitArrayFromArgumentsObjectResult(ObjOperandId objId,
   return true;
 }
 
+bool CacheIRCompiler::emitGuardGlobalGeneration(uint32_t expectedOffset,
+                                                uint32_t generationAddrOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoScratchRegister scratch(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  StubFieldOffset expected(expectedOffset, StubField::Type::RawInt32);
+  emitLoadStubField(expected, scratch);
+
+  StubFieldOffset generationAddr(generationAddrOffset,
+                                 StubField::Type::RawPointer);
+  emitLoadStubField(generationAddr, scratch2);
+
+  masm.branch32(Assembler::NotEqual, Address(scratch2, 0), scratch,
+                failure->label());
+
+  return true;
+}
+
 bool CacheIRCompiler::emitBailout() {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
