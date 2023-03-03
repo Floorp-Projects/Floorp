@@ -164,7 +164,7 @@ export class ExecutionContext {
           result = this._debuggee.makeDebuggeeValue(promiseResult);
         } catch (e) {
           // The promise has been rejected
-          return this._returnError(e);
+          return this._returnError(this._debuggee.makeDebuggeeValue(e));
         }
       }
     }
@@ -259,7 +259,7 @@ export class ExecutionContext {
           result = this._debuggee.makeDebuggeeValue(promiseResult);
         } catch (e) {
           // The promise has been rejected
-          return this._returnError(e);
+          return this._returnError(this._debuggee.makeDebuggeeValue(e));
         }
       }
     }

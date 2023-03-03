@@ -173,6 +173,27 @@ add_task(async function awaitPromiseDelayedReject({ client }) {
   );
 });
 
+add_task(async function awaitPromiseDelayedRejectError({ client }) {
+  const { Runtime } = client;
+
+  const { id: executionContextId } = await enableRuntime(client);
+
+  const { exceptionDetails } = await Runtime.callFunctionOn({
+    functionDeclaration:
+      "() => new Promise((_,r) => setTimeout(() => r(new Error('foo')), 0))",
+    awaitPromise: true,
+    executionContextId,
+  });
+
+  Assert.deepEqual(
+    exceptionDetails,
+    {
+      text: "foo",
+    },
+    "Exception details are passed to the client"
+  );
+});
+
 add_task(async function awaitPromiseResolveWithoutWait({ client }) {
   const { Runtime } = client;
 
