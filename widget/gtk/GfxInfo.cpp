@@ -746,6 +746,14 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         DRIVER_LESS_THAN, V(495, 44, 0, 0), "FEATURE_FAILURE_NO_GBM",
         "495.44.0");
 
+    // Disabled due to high volume crash tracked in bug 1788573.
+    APPEND_TO_DRIVER_BLOCKLIST_RANGE_EXT(
+        OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
+        WindowProtocol::All, DriverVendor::NonMesaAll, DeviceFamily::NvidiaAll,
+        nsIGfxInfo::FEATURE_DMABUF, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
+        DRIVER_BETWEEN_INCLUSIVE_START, V(495, 44, 0, 0), V(530, 0, 0, 0),
+        "FEATURE_FAILURE_BUG_1788573", ">= 530.0.0");
+
     ////////////////////////////////////
     // FEATURE_DMABUF_SURFACE_EXPORT
     // Disabled due to:
@@ -828,6 +836,14 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         nsIGfxInfo::FEATURE_THREADSAFE_GL, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
         DRIVER_COMPARISON_IGNORED, V(0, 0, 0, 0),
         "FEATURE_FAILURE_THREADSAFE_GL", "");
+
+    // Disabled due to high volume crash tracked in bug 1788573.
+    APPEND_TO_DRIVER_BLOCKLIST_EXT(
+        OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
+        WindowProtocol::All, DriverVendor::NonMesaAll, DeviceFamily::NvidiaAll,
+        nsIGfxInfo::FEATURE_THREADSAFE_GL,
+        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN,
+        V(530, 0, 0, 0), "FEATURE_FAILURE_BUG_1788573", ">= 530.0.0");
   }
   return *sDriverInfo;
 }
