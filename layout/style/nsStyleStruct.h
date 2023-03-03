@@ -1390,6 +1390,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   mozilla::LengthPercentage mOffsetDistance;
   mozilla::StyleOffsetRotate mOffsetRotate;
   mozilla::StylePositionOrAuto mOffsetAnchor;
+  mozilla::StylePositionOrAuto mOffsetPosition;
 
   mozilla::StyleTransformOrigin mTransformOrigin;
   mozilla::StylePerspective mChildPerspective;
@@ -1656,7 +1657,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
     return HasTransformProperty() || HasIndividualTransform() ||
            mTransformStyle == mozilla::StyleTransformStyle::Preserve3d ||
            (mWillChange.bits & mozilla::StyleWillChangeBits::TRANSFORM) ||
-           !mOffsetPath.IsNone();
+           !mOffsetPath.IsNone() || !mOffsetPosition.IsAuto();
   }
 
   bool HasTransformProperty() const { return !mTransform._0.IsEmpty(); }
@@ -1666,6 +1667,12 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   }
 
   bool HasPerspectiveStyle() const { return !mChildPerspective.IsNone(); }
+
+  bool IsStackingContext() const {
+    // offset-path and/or offset-position creates a stacking context and a
+    // motion transform.
+    return !mOffsetPath.IsNone() || !mOffsetPosition.IsAuto();
+  }
 
   bool BackfaceIsHidden() const {
     return mBackfaceVisibility == mozilla::StyleBackfaceVisibility::Hidden;

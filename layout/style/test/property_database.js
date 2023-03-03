@@ -13408,22 +13408,28 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: ["none"],
-    other_values: pathValues.other_values.concat([
+    other_values: [...pathValues.other_values],
+    invalid_values: [...pathValues.invalid_values],
+  };
+
+  if (IsCSSPropertyPrefEnabled("layout.css.motion-path-ray.enabled")) {
+    gCSSProperties["offset-path"]["other_values"].push(
       "ray(45deg closest-side)",
       "ray(0rad farthest-side)",
       "ray(0.5turn closest-corner contain)",
       "ray(200grad farthest-corner)",
       "ray(sides 180deg)",
       "ray(contain farthest-side 180deg)",
-      "ray(calc(180deg - 45deg) farthest-side)",
-    ]),
-    invalid_values: pathValues.invalid_values.concat([
+      "ray(calc(180deg - 45deg) farthest-side)"
+    );
+
+    gCSSProperties["offset-path"]["invalid_values"].push(
       "ray(0deg)",
       "ray(closest-side)",
       "ray(0deg, closest-side)",
-      "ray(contain 0deg closest-side contain)",
-    ]),
-  };
+      "ray(contain 0deg closest-side contain)"
+    );
+  }
 
   gCSSProperties["offset-distance"] = {
     domProp: "offsetDistance",
@@ -13445,6 +13451,39 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
 
   gCSSProperties["offset-anchor"] = {
     domProp: "offsetAnchor",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["auto"],
+    other_values: [
+      "left bottom",
+      "center center",
+      "calc(20% + 10px) center",
+      "right 30em",
+      "10px 20%",
+      "left -10px top -20%",
+      "right 10% bottom 20em",
+    ],
+    invalid_values: ["none", "10deg", "left 10% top"],
+  };
+}
+
+if (
+  IsCSSPropertyPrefEnabled("layout.css.motion-path-offset-position.enabled")
+) {
+  if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
+    gCSSProperties["offset"]["subproperties"].push("offset-position");
+    gCSSProperties["offset"]["other_values"].push("top right / top left");
+
+    if (IsCSSPropertyPrefEnabled("layout.css.motion-path-ray.enabled")) {
+      gCSSProperties["offset"]["other_values"].push(
+        "top right ray(45deg closest-side)",
+        "50% 50% ray(0rad farthest-side)"
+      );
+    }
+  }
+
+  gCSSProperties["offset-position"] = {
+    domProp: "offsetPosition",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: ["auto"],

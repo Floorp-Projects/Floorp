@@ -2970,6 +2970,7 @@ exports.CSS_PROPERTIES = {
       "offset-distance",
       "offset-rotate",
       "offset-anchor",
+      "offset-position",
       "scroll-behavior",
       "scroll-snap-align",
       "scroll-snap-type",
@@ -9070,7 +9071,8 @@ exports.CSS_PROPERTIES = {
       "offset-path",
       "offset-distance",
       "offset-rotate",
-      "offset-anchor"
+      "offset-anchor",
+      "offset-position"
     ],
     "supports": [],
     "values": [
@@ -9139,6 +9141,26 @@ exports.CSS_PROPERTIES = {
       "ray",
       "revert",
       "revert-layer",
+      "unset"
+    ]
+  },
+  "offset-position": {
+    "isInherited": false,
+    "subproperties": [
+      "offset-position"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "bottom",
+      "center",
+      "inherit",
+      "initial",
+      "left",
+      "revert",
+      "revert-layer",
+      "right",
+      "top",
       "unset"
     ]
   },
