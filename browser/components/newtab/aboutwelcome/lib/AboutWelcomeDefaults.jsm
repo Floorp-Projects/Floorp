@@ -21,20 +21,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
+  AWScreenUtils: "resource://activity-stream/lib/AWScreenUtils.jsm",
 });
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "usesFirefoxSync",
-  "services.sync.username"
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "mobileDevices",
-  "services.sync.clients.devices.mobile",
-  0
-);
 
 // Message to be updated based on finalized MR designs
 const MR_ABOUT_WELCOME_DEFAULT = {
@@ -218,6 +206,7 @@ const MR_ABOUT_WELCOME_DEFAULT = {
     },
     {
       id: "AW_MOBILE_DOWNLOAD",
+      targeting: "isFxASignedIn && sync.mobileDevices > 0",
       content: {
         position: "split",
         split_narrow_bkg_position: "-160px",
@@ -389,15 +378,6 @@ function getLocalizedUA(ua) {
   return null;
 }
 
-// Helper to find screens and remove them where applicable.
-function removeScreens(check, screens) {
-  for (let i = 0; i < screens?.length; i++) {
-    if (check(screens[i])) {
-      screens.splice(i--, 1);
-    }
-  }
-}
-
 // Function to evalute the appropriate string for the welcome screen button label
 function evaluateWelcomeScreenButtonLabel(removeDefault) {
   return removeDefault
@@ -430,23 +410,12 @@ function prepareMobileDownload(screens) {
   }
 }
 
-function prepareMRContent(content) {
-  // Expand with logic for finalized MR designs
-  const { screens } = content;
-
-  // Do not show the screen to users who are already using firefox sync
-  // and syncing to a mobile device
-  if (lazy.usesFirefoxSync && lazy.mobileDevices > 0) {
-    removeScreens(screen => screen.id === "AW_MOBILE_DOWNLOAD", screens);
-  } else {
-    prepareMobileDownload(screens);
-  }
-
-  return content;
-}
-
 async function prepareContentForReact(content) {
   const { screens } = content;
+
+  // Remove screens based on screen targeting
+  // by running filter through ASRouter targeting checks
+  await lazy.AWScreenUtils.evaluateTargetingAndRemoveScreens(screens);
 
   if (content?.template === "return_to_amo") {
     return content;
@@ -454,9 +423,8 @@ async function prepareContentForReact(content) {
 
   // Change content for Windows 7 because non-light themes aren't quite right.
   if (AppConstants.isPlatformAndVersionAtMost("win", "6.1")) {
-    removeScreens(
-      screen => ["theme"].includes(screen.content?.tiles?.type),
-      screens
+    await lazy.AWScreenUtils.removeScreens(screens, screen =>
+      ["theme"].includes(screen.content?.tiles?.type)
     );
   }
 
@@ -521,7 +489,9 @@ async function prepareContentForReact(content) {
     }
   }
   if (removeDefault) {
-    removeScreens(screen => screen.id?.startsWith("AW_SET_DEFAULT"), screens);
+    await lazy.AWScreenUtils.removeScreens(screens, screen =>
+      screen.id?.startsWith("AW_SET_DEFAULT")
+    );
   }
 
   // Remove Firefox Accounts related UI and prevent related metrics.
@@ -561,10 +531,14 @@ async function prepareContentForReact(content) {
   }
 
   if (shouldRemoveLanguageMismatchScreen) {
-    removeScreens(screen => screen.id === "AW_LANGUAGE_MISMATCH", screens);
+    await lazy.AWScreenUtils.removeScreens(
+      screens,
+      screen => screen.id === "AW_LANGUAGE_MISMATCH"
+    );
   }
 
-  return prepareMRContent(content);
+  prepareMobileDownload(content.screens);
+  return content;
 }
 
 const AboutWelcomeDefaults = {
