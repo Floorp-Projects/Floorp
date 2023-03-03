@@ -340,6 +340,37 @@ RefPtr<GenericPromise> MFCDMChild::CloseSession(const nsAString& aSessionId) {
   return mCloseSessionPromiseHolder.Ensure(__func__);
 }
 
+RefPtr<GenericPromise> MFCDMChild::RemoveSession(const nsAString& aSessionId) {
+  MOZ_ASSERT(mManagerThread);
+  MOZ_ASSERT(mId > 0, "Should call Init() first and wait for it");
+
+  mManagerThread->Dispatch(NS_NewRunnableFunction(
+      __func__, [self = RefPtr{this}, this, sessionId = nsString{aSessionId}] {
+        SendRemoveSession(sessionId)
+            ->Then(mManagerThread, __func__,
+                   [self, this](
+                       PMFCDMChild::RemoveSessionPromise::ResolveOrRejectValue&&
+                           aResult) {
+                     mRemoveSessionRequest.Complete();
+                     if (aResult.IsResolve()) {
+                       if (NS_SUCCEEDED(aResult.ResolveValue())) {
+                         mRemoveSessionPromiseHolder.ResolveIfExists(true,
+                                                                     __func__);
+                       } else {
+                         mRemoveSessionPromiseHolder.RejectIfExists(
+                             aResult.ResolveValue(), __func__);
+                       }
+                     } else {
+                       // IPC died
+                       mRemoveSessionPromiseHolder.RejectIfExists(
+                           NS_ERROR_FAILURE, __func__);
+                     }
+                   })
+            ->Track(mRemoveSessionRequest);
+      }));
+  return mRemoveSessionPromiseHolder.Ensure(__func__);
+}
+
 mozilla::ipc::IPCResult MFCDMChild::RecvOnSessionKeyMessage(
     const MFCDMKeyMessage& aMessage) {
   LOG("RecvOnSessionKeyMessage, sessionId=%s",

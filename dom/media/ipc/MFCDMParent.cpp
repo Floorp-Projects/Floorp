@@ -568,6 +568,20 @@ mozilla::ipc::IPCResult MFCDMParent::RecvCloseSession(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult MFCDMParent::RecvRemoveSession(
+    const nsString& aSessionId, UpdateSessionResolver&& aResolver) {
+  MOZ_ASSERT(mCDM, "RecvInit() must be called and waited on before this call");
+  nsresult rv = NS_OK;
+  auto* session = GetSession(aSessionId);
+  if (!session) {
+    aResolver(NS_ERROR_FAILURE);
+    return IPC_OK();
+  }
+  MFCDM_REJECT_IF_FAILED(session->Remove(), NS_ERROR_FAILURE);
+  aResolver(rv);
+  return IPC_OK();
+}
+
 void MFCDMParent::ConnectSessionEvents(MFCDMSession* aSession) {
   // TODO : clear session's event source when the session gets removed.
   mKeyMessageEvents.Forward(aSession->KeyMessageEvent());

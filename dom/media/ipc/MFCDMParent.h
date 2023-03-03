@@ -59,6 +59,9 @@ class MFCDMParent final : public PMFCDMParent {
   mozilla::ipc::IPCResult RecvCloseSession(const nsString& aSessionId,
                                            UpdateSessionResolver&& aResolver);
 
+  mozilla::ipc::IPCResult RecvRemoveSession(const nsString& aSessionId,
+                                            UpdateSessionResolver&& aResolver);
+
   nsISerialEventTarget* ManagerThread() { return mManagerThread; }
   void AssertOnManagerThread() const {
     MOZ_ASSERT(mManagerThread->IsOnCurrentThread());

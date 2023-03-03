@@ -70,6 +70,10 @@ class WMFCDMImpl final {
     return mCDM->CloseSession(aSessionId);
   }
 
+  RefPtr<GenericPromise> RemoveSession(const nsAString& aSessionId) {
+    return mCDM->RemoveSession(aSessionId);
+  }
+
   uint64_t Id() {
     MOZ_ASSERT(mCDM->Id() != 0,
                "Should be called only after Init() is resolved");

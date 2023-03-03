@@ -262,6 +262,36 @@ void WMFCDMProxy::CloseSession(const nsAString& aSessionId,
       ->Track(mCloseSessionRequest);
 }
 
+void WMFCDMProxy::RemoveSession(const nsAString& aSessionId,
+                                PromiseId aPromiseId) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  EME_LOG("WMFCDMProxy::RemoveSession(this=%p, pid=%" PRIu32 "), sessionId=%s",
+          this, aPromiseId, NS_ConvertUTF16toUTF8(aSessionId).get());
+  mCDM->RemoveSession(aSessionId)
+      ->Then(
+          mMainThread, __func__,
+          [self = RefPtr{this}, this, aPromiseId]() {
+            mRemoveSessionRequest.Complete();
+            if (mKeys.IsNull()) {
+              EME_LOG("WMFCDMProxy(this=%p, pid=%" PRIu32
+                      ") : abort the remove session due to "
+                      "empty key",
+                      this, aPromiseId);
+              return;
+            }
+            ResolvePromise(aPromiseId);
+          },
+          [self = RefPtr{this}, this, aPromiseId]() {
+            mRemoveSessionRequest.Complete();
+            RejectPromiseWithStateError(
+                aPromiseId,
+                nsLiteralCString(
+                    "WMFCDMProxy::CloseSession: failed to remove session"));
+          })
+      ->Track(mRemoveSessionRequest);
+}
+
 void WMFCDMProxy::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   // TODO: reject pending promise.
