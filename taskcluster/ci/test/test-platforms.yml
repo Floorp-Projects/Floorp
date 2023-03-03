@@ -176,7 +176,7 @@ windows11-32-2009-shippable-qr/opt:
     test-sets:
         - awsy
         - desktop-screenshot-capture
-        # - web-platform-tests
+        - web-platform-tests
         - windows32-2004-tests
 
 
@@ -185,14 +185,14 @@ windows11-32-2009-qr/opt:
     test-sets:
         - awsy
         - desktop-screenshot-capture
-        # - web-platform-tests
+        - web-platform-tests
         - windows32-2004-tests
 
 windows11-32-2009-qr/debug:
     build-platform: win32/debug
     build-signing-label: build-signing-win32/debug
     test-sets:
-        # - web-platform-tests
+        - web-platform-tests
         - windows-7-tests
         - windows32-2004-tests
 
@@ -299,14 +299,14 @@ windows11-64-2009-ccov-qr/opt:
     test-sets:
         - desktop-screenshot-capture
         - ccov-code-coverage-tests
-        # - windows10-64-2004-ccov-tests
+        - windows10-64-2004-ccov-tests
         - windows10-2004-tests
 
 windows11-64-2009-qr/debug:
     build-platform: win64/debug
     build-signing-label: build-signing-win64/debug
     test-sets:
-        # - web-platform-tests
+        - web-platform-tests
         - windows11-2009-tests
 
 windows11-64-2009-qr/opt:
@@ -318,8 +318,8 @@ windows11-64-2009-qr/opt:
     test-sets:
         - awsy
         - desktop-screenshot-capture
-        # - web-platform-tests
-        # - web-platform-tests-backlog
+        - web-platform-tests
+        - web-platform-tests-backlog
         - windows11-2009-tests
         - talos-xperf
 
@@ -332,8 +332,8 @@ windows11-64-2009-shippable-qr/opt:
     test-sets:
         - awsy
         - desktop-screenshot-capture
-        # - web-platform-tests
-        # - web-platform-tests-backlog
+        - web-platform-tests
+        - web-platform-tests-backlog
         - windows11-2009-tests
         - talos-xperf
 
@@ -342,7 +342,7 @@ windows11-64-2009-devedition-qr/opt:
     build-signing-label: build-signing-win64-devedition/opt
     test-sets:
         - desktop-screenshot-capture
-        # - web-platform-tests
+        - web-platform-tests
         - windows11-2009-tests
 
 windows11-64-2009-asan-qr/opt:
