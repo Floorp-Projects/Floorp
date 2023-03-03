@@ -109,22 +109,29 @@ bool SurfaceContainsPoint(SourceSurface* aSurface, const IntPoint& aPoint) {
 void CopySurfaceDataToPackedArray(uint8_t* aSrc, uint8_t* aDst,
                                   IntSize aSrcSize, int32_t aSrcStride,
                                   int32_t aBytesPerPixel) {
-  MOZ_ASSERT(aBytesPerPixel > 0,
-             "Negative stride for aDst not currently supported");
-  MOZ_ASSERT(BufferSizeFromStrideAndHeight(aSrcStride, aSrcSize.height) > 0,
-             "How did we end up with a surface with such a big buffer?");
+  CheckedInt<size_t> packedStride(aBytesPerPixel);
+  packedStride *= aSrcSize.width;
+  if (!packedStride.isValid()) {
+    MOZ_ASSERT(false, "Invalid stride");
+    return;
+  }
 
-  int packedStride = aSrcSize.width * aBytesPerPixel;
+  CheckedInt<size_t> totalSize(aSrcStride);
+  totalSize *= aSrcSize.height;
+  if (!totalSize.isValid()) {
+    MOZ_ASSERT(false, "Invalid surface size");
+    return;
+  }
 
-  if (aSrcStride == packedStride) {
+  if (size_t(aSrcStride) == packedStride.value()) {
     // aSrc is already packed, so we can copy with a single memcpy.
-    memcpy(aDst, aSrc, packedStride * aSrcSize.height);
+    memcpy(aDst, aSrc, totalSize.value());
   } else {
     // memcpy one row at a time.
     for (int row = 0; row < aSrcSize.height; ++row) {
-      memcpy(aDst, aSrc, packedStride);
+      memcpy(aDst, aSrc, packedStride.value());
       aSrc += aSrcStride;
-      aDst += packedStride;
+      aDst += packedStride.value();
     }
   }
 }
