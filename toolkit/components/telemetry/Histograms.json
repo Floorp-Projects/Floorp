@@ -15324,6 +15324,17 @@
     "description": "The total usage amount of the operations of tab audio indicator, mute=0 , unmuted=1, unblockByVisitingTab=2, unblockingByClickingIcon=3",
     "releaseChannelCollection": "opt-out"
   },
+  "EXTENSION_INSTALL_PROMPT_RESULT": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["aswan@mozilla.com", "andym@mozilla.com"],
+    "bug_numbers": [1338713],
+    "expires_in_version": "60",
+    "kind": "categorical",
+    "labels": ["installAmoAccepted", "installAmoRejected", "installLocalAccepted", "installLocalRejected", "installWebAccepted", "installWebRejected", "sideloadAccepted", "sideloadRejected", "updateAccepted", "updateRejected"],
+    "description": "Results of displaying add-on installation notifications.",
+    "releaseChannelCollection": "opt-out"
+  },
   "INPUT_EVENT_QUEUED_CLICK_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
@@ -16029,6 +16040,17 @@
     "labels": ["success", "failure"],
     "releaseChannelCollection": "opt-out",
     "description": "The number of times a storage.local backend data migration has been completed and results in one of the categories."
+  },
+  "EXTENSION_UPDATE_TYPE": {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["addons-dev-internal@mozilla.com"],
+    "bug_numbers": [1460336],
+    "expires_in_version": "66",
+    "kind": "categorical",
+    "labels": ["JSON", "RDF"],
+    "releaseChannelCollection": "opt-out",
+    "description": "The type of update manifest served for a given update request."
   },
   "PLACES_SEARCHBAR_FILTER_TYPE": {
     "record_in_processes": ["main"],
