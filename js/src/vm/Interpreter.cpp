@@ -483,11 +483,17 @@ MOZ_ALWAYS_INLINE bool CallJSNativeConstructor(JSContext* cx, Native native,
    * constructor to return the callee, the assertion can be removed or
    * (another) conjunct can be added to the antecedent.
    *
-   * Exception: (new Object(Object)) returns the callee. Also allow if this may
-   *            be due to a debugger hook since fuzzing may let this happen.
+   * Exceptions:
+   * - (new Object(Object)) returns the callee.
+   * - The bound function construct hook can return an arbitrary object,
+   *   including the callee.
+   *
+   * Also allow if this may be due to a debugger hook since fuzzing may let this
+   * happen.
    */
   MOZ_ASSERT(args.rval().isObject());
   MOZ_ASSERT_IF(!JS_IsNativeFunction(callee, obj_construct) &&
+                    !callee->is<BoundFunctionObject>() &&
                     !cx->insideDebuggerEvaluationWithOnNativeCallHook,
                 args.rval() != ObjectValue(*callee));
 
