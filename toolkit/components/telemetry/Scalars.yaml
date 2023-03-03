@@ -1430,23 +1430,6 @@ gecko:
       - 'main'
     release_channel_collection: opt-out
 
-extensions.updates:
-  rdf:
-    bug_numbers:
-      - 1460336
-    description: >
-      The number of RDF update requsts for a given extension ID.
-    expires: "66"
-    kind: uint
-    keyed: true
-    notification_emails:
-      - addons-dev-internal@mozilla.com
-    products:
-      - 'firefox'
-      - 'fennec'
-    record_in_processes:
-      - main
-
 extensions.startupCache:
   write_byteLength:
     bug_numbers:
