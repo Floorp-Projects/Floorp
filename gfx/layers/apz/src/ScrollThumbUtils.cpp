@@ -134,6 +134,17 @@ void AsyncScrollThumbTransformer::ApplyTransformForAxis(const Axis& aAxis) {
 
   const float scale = desiredThumbLength / mScrollbarData.mThumbLength;
 
+  CSSCoord effectiveThumbLength = mScrollbarData.mThumbLength;
+
+  if (haveAsyncZoom) {
+    effectiveThumbLength = desiredThumbLength;
+
+    // When scaling the thumb to account for the async zoom, keep the position
+    // of the start of the thumb (which corresponds to the scroll offset)
+    // constant.
+    ScaleThumbBy(aAxis, scale, ScrollThumbExtent::Start);
+  }
+
   // Subtracting the offset of the scrollable rect is needed for right-to-left
   // pages.
   const CSSCoord curPos = aAxis.GetRectOffset(visualViewportRect) -
@@ -141,18 +152,11 @@ void AsyncScrollThumbTransformer::ApplyTransformForAxis(const Axis& aAxis) {
 
   const float thumbPosRatio =
       (maxMinPosDifference != 0)
-          ? float((mScrollbarData.mScrollTrackLength - desiredThumbLength) /
+          ? float((mScrollbarData.mScrollTrackLength - effectiveThumbLength) /
                   maxMinPosDifference)
           : 1.f;
 
   const CSSCoord desiredThumbPos = curPos * thumbPosRatio;
-
-  if (haveAsyncZoom) {
-    // When scaling the thumb to account for the async zoom, keep the position
-    // of the start of the thumb (which corresponds to the scroll offset)
-    // constant.
-    ScaleThumbBy(aAxis, scale, ScrollThumbExtent::Start);
-  }
 
   // If the page is overscrolled, additionally squish the thumb in accordance
   // with the overscroll amount.
