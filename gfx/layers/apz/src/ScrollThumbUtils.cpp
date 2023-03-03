@@ -93,51 +93,53 @@ void AsyncScrollThumbTransformer::ApplyTransformForAxis(const Axis& aAxis) {
   const CSSRect visualViewportRect = mApzc->GetCurrentAsyncVisualViewport(
       AsyncPanZoomController::eForCompositing);
   const CSSCoord visualViewportLength = aAxis.GetRectLength(visualViewportRect);
-  // The calculations here closely follow the main thread calculations at
-  // https://searchfox.org/mozilla-central/rev/0bf957f909ae1f3d19b43fd4edfc277342554836/layout/generic/nsGfxScrollFrame.cpp#6902-6927
-  // and
-  // https://searchfox.org/mozilla-central/rev/0bf957f909ae1f3d19b43fd4edfc277342554836/layout/xul/nsSliderFrame.cpp#587-614
-  // Any modifications there should be reflected here as well.
-  const CSSCoord pageIncrementMin =
-      static_cast<int>(visualViewportLength * 0.8);
-  CSSCoord pageIncrement;
-
-  CSSToLayoutDeviceScale deviceScale = mMetrics.GetDevPixelsPerCSSPixel();
-  if (*mScrollbarData.mDirection == ScrollDirection::eVertical) {
-    const CSSCoord lineScrollAmount =
-        (mApzc->GetScrollMetadata().GetLineScrollAmount() / deviceScale).height;
-    const double kScrollMultiplier =
-        StaticPrefs::toolkit_scrollbox_verticalScrollDistance();
-    CSSCoord increment = lineScrollAmount * kScrollMultiplier;
-
-    pageIncrement =
-        std::max(visualViewportLength - increment, pageIncrementMin);
-  } else {
-    pageIncrement = pageIncrementMin;
-  }
 
   const CSSCoord maxMinPosDifference =
       CSSCoord(aAxis.GetRectLength(mMetrics.GetScrollableRect()).Truncated()) -
       visualViewportLength;
 
-  float ratio = pageIncrement / (maxMinPosDifference + pageIncrement);
-
-  CSSCoord desiredThumbLength{
-      std::max(mScrollbarData.mThumbMinLength,
-               mScrollbarData.mScrollTrackLength * ratio)};
-
-  // Round the thumb length to an integer number of LayoutDevice pixels, to
-  // match the main-thread behaviour.
-  desiredThumbLength =
-      LayoutDeviceCoord((desiredThumbLength * deviceScale).Rounded()) /
-      deviceScale;
-
-  const float scale = desiredThumbLength / mScrollbarData.mThumbLength;
-
   CSSCoord effectiveThumbLength = mScrollbarData.mThumbLength;
 
   if (haveAsyncZoom) {
+    // The calculations here closely follow the main thread calculations at
+    // https://searchfox.org/mozilla-central/rev/0bf957f909ae1f3d19b43fd4edfc277342554836/layout/generic/nsGfxScrollFrame.cpp#6902-6927
+    // and
+    // https://searchfox.org/mozilla-central/rev/0bf957f909ae1f3d19b43fd4edfc277342554836/layout/xul/nsSliderFrame.cpp#587-614
+    // Any modifications there should be reflected here as well.
+    const CSSCoord pageIncrementMin =
+        static_cast<int>(visualViewportLength * 0.8);
+    CSSCoord pageIncrement;
+
+    CSSToLayoutDeviceScale deviceScale = mMetrics.GetDevPixelsPerCSSPixel();
+    if (*mScrollbarData.mDirection == ScrollDirection::eVertical) {
+      const CSSCoord lineScrollAmount =
+          (mApzc->GetScrollMetadata().GetLineScrollAmount() / deviceScale)
+              .height;
+      const double kScrollMultiplier =
+          StaticPrefs::toolkit_scrollbox_verticalScrollDistance();
+      CSSCoord increment = lineScrollAmount * kScrollMultiplier;
+
+      pageIncrement =
+          std::max(visualViewportLength - increment, pageIncrementMin);
+    } else {
+      pageIncrement = pageIncrementMin;
+    }
+
+    float ratio = pageIncrement / (maxMinPosDifference + pageIncrement);
+
+    CSSCoord desiredThumbLength{
+        std::max(mScrollbarData.mThumbMinLength,
+                 mScrollbarData.mScrollTrackLength * ratio)};
+
+    // Round the thumb length to an integer number of LayoutDevice pixels, to
+    // match the main-thread behaviour.
+    desiredThumbLength =
+        LayoutDeviceCoord((desiredThumbLength * deviceScale).Rounded()) /
+        deviceScale;
+
     effectiveThumbLength = desiredThumbLength;
+
+    const float scale = desiredThumbLength / mScrollbarData.mThumbLength;
 
     // When scaling the thumb to account for the async zoom, keep the position
     // of the start of the thumb (which corresponds to the scroll offset)
