@@ -16582,7 +16582,7 @@ void CodeGenerator::visitWasmGcObjectIsSubtypeOf(
   Register superTypeDef = ToRegister(ins->superTypeDef());
   Register scratch1 = ToRegister(ins->temp0());
   Register scratch2 = ins->temp1()->isBogusTemp() ? Register::Invalid()
-                                                 : ToRegister(ins->temp1());
+                                                  : ToRegister(ins->temp1());
   Register result = ToRegister(ins->output());
   Label failed;
   Label success;
@@ -16608,7 +16608,7 @@ void CodeGenerator::visitWasmGcObjectIsSubtypeOfAndBranch(
   Register superTypeDef = ToRegister(ins->superTypeDef());
   Register scratch1 = ToRegister(ins->temp0());
   Register scratch2 = ins->temp1()->isBogusTemp() ? Register::Invalid()
-                                                 : ToRegister(ins->temp1());
+                                                  : ToRegister(ins->temp1());
   Label* onSuccess = getJumpLabelForBranch(ins->ifTrue());
   Label* onFail = getJumpLabelForBranch(ins->ifFalse());
   Label* onNull = ins->succeedOnNull() ? onSuccess : onFail;
