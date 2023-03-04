@@ -14,7 +14,9 @@ const {
   checkExpectedCookies,
   preclean_test,
   cleanup_test,
-} = ChromeUtils.import("resource://testing-common/cookie_filtering_helper.jsm");
+} = ChromeUtils.importESModule(
+  "resource://testing-common/cookie_filtering_helper.sys.mjs"
+);
 
 async function runSuiteWithContentListener(name, trigger_suite_func, expected) {
   return async function(browser) {

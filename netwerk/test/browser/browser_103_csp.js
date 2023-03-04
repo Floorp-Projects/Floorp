@@ -6,8 +6,8 @@
 
 Services.prefs.setBoolPref("network.early-hints.enabled", true);
 
-const { test_preload_hint_and_request } = ChromeUtils.import(
-  "resource://testing-common/early_hint_preload_test_helper.jsm"
+const { test_preload_hint_and_request } = ChromeUtils.importESModule(
+  "resource://testing-common/early_hint_preload_test_helper.sys.mjs"
 );
 
 add_task(async function test_preload_images_csp_in_early_hints_response() {

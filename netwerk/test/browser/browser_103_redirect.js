@@ -6,8 +6,11 @@
 
 Services.prefs.setBoolPref("network.early-hints.enabled", true);
 
-const { test_hint_preload, request_count_checking } = ChromeUtils.import(
-  "resource://testing-common/early_hint_preload_test_helper.jsm"
+const {
+  test_hint_preload,
+  request_count_checking,
+} = ChromeUtils.importESModule(
+  "resource://testing-common/early_hint_preload_test_helper.sys.mjs"
 );
 
 // Early hint to redirect to same origin in secure context

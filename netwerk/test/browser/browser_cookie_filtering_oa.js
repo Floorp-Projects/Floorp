@@ -17,7 +17,9 @@ const {
   triggerSetCookieFromHttpPrivate,
   preclean_test,
   cleanup_test,
-} = ChromeUtils.import("resource://testing-common/cookie_filtering_helper.jsm");
+} = ChromeUtils.importESModule(
+  "resource://testing-common/cookie_filtering_helper.sys.mjs"
+);
 
 // TEST: OriginAttributes
 // * example.com OA-changed cookies don't go to example.com & vice-versa

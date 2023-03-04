@@ -3,8 +3,8 @@
 
 "use strict";
 
-const { PublicSuffixList } = ChromeUtils.import(
-  "resource://gre/modules/netwerk-dns/PublicSuffixList.jsm"
+const { PublicSuffixList } = ChromeUtils.importESModule(
+  "resource://gre/modules/netwerk-dns/PublicSuffixList.sys.mjs"
 );
 const { TestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TestUtils.sys.mjs"

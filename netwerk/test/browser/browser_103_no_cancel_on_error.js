@@ -8,8 +8,8 @@
 
 Services.prefs.setBoolPref("network.early-hints.enabled", true);
 
-const { request_count_checking } = ChromeUtils.import(
-  "resource://testing-common/early_hint_preload_test_helper.jsm"
+const { request_count_checking } = ChromeUtils.importESModule(
+  "resource://testing-common/early_hint_preload_test_helper.sys.mjs"
 );
 
 // - httpCode is the response code we're testing for. This file mostly covers 400 and 500 responses
