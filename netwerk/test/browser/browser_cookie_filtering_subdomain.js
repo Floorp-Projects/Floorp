@@ -16,7 +16,9 @@ const {
   fetchHelper,
   preclean_test,
   cleanup_test,
-} = ChromeUtils.import("resource://testing-common/cookie_filtering_helper.jsm");
+} = ChromeUtils.importESModule(
+  "resource://testing-common/cookie_filtering_helper.sys.mjs"
+);
 
 const HTTPS_SUBDOMAIN_1_EXAMPLE_COM = "https://test1.example.com";
 const HTTP_SUBDOMAIN_1_EXAMPLE_COM = "http://test1.example.com";

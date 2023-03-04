@@ -16,7 +16,9 @@ const {
   fetchHelper,
   preclean_test,
   cleanup_test,
-} = ChromeUtils.import("resource://testing-common/cookie_filtering_helper.jsm");
+} = ChromeUtils.importESModule(
+  "resource://testing-common/cookie_filtering_helper.sys.mjs"
+);
 
 // run suite with content listener
 // 1. initializes the content process and observer

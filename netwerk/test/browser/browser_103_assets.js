@@ -4,8 +4,8 @@
 
 Services.prefs.setBoolPref("network.early-hints.enabled", true);
 
-const { request_count_checking } = ChromeUtils.import(
-  "resource://testing-common/early_hint_preload_test_helper.jsm"
+const { request_count_checking } = ChromeUtils.importESModule(
+  "resource://testing-common/early_hint_preload_test_helper.sys.mjs"
 );
 
 // - testName is just there to be printed during Asserts when failing

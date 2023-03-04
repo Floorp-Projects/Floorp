@@ -6,8 +6,8 @@
 
 Services.prefs.setBoolPref("network.early-hints.enabled", true);
 
-const { test_hint_preload } = ChromeUtils.import(
-  "resource://testing-common/early_hint_preload_test_helper.jsm"
+const { test_hint_preload } = ChromeUtils.importESModule(
+  "resource://testing-common/early_hint_preload_test_helper.sys.mjs"
 );
 
 // 400 Bad Request

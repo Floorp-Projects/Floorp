@@ -10,8 +10,8 @@ const {
   test_hint_preload,
   test_hint_preload_internal,
   request_count_checking,
-} = ChromeUtils.import(
-  "resource://testing-common/early_hint_preload_test_helper.jsm"
+} = ChromeUtils.importESModule(
+  "resource://testing-common/early_hint_preload_test_helper.sys.mjs"
 );
 
 // two early hint responses

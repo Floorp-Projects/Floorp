@@ -11,8 +11,8 @@ const {
   request_count_checking,
   test_hint_preload_internal,
   test_hint_preload,
-} = ChromeUtils.import(
-  "resource://testing-common/early_hint_preload_test_helper.jsm"
+} = ChromeUtils.importESModule(
+  "resource://testing-common/early_hint_preload_test_helper.sys.mjs"
 );
 
 const START_VALUE =
