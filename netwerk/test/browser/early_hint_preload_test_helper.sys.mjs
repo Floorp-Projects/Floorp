@@ -2,24 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { Assert } from "resource://testing-common/Assert.sys.mjs";
+import { BrowserTestUtils } from "resource://testing-common/BrowserTestUtils.sys.mjs";
 
-const EXPORTED_SYMBOLS = [
-  "request_count_checking",
-  "test_hint_preload",
-  "test_hint_preload_internal",
-  "test_preload_hint_and_request",
-];
-
-const { Assert } = ChromeUtils.importESModule(
-  "resource://testing-common/Assert.sys.mjs"
-);
-const { BrowserTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/BrowserTestUtils.sys.mjs"
-);
 const { gBrowser } = Services.wm.getMostRecentWindow("navigator:browser");
 
-async function request_count_checking(testName, got, expected) {
+export async function request_count_checking(testName, got, expected) {
   // stringify to pretty print assert output
   let g = JSON.stringify(got);
   let e = JSON.stringify(expected);
@@ -38,7 +26,7 @@ async function request_count_checking(testName, got, expected) {
   );
 }
 
-async function test_hint_preload(
+export async function test_hint_preload(
   testName,
   requestFrom,
   imgUrl,
@@ -63,7 +51,7 @@ async function test_hint_preload(
 // - urls are in the form [[url1, uuid1], ...]. The uuids are there to make each preload
 //   unique and not available in the cache from other test cases
 // - expectedRequestCount is the sum of all requested objects { normal: count, hinted: count }
-async function test_hint_preload_internal(
+export async function test_hint_preload_internal(
   testName,
   requestFrom,
   imgUrls,
@@ -113,7 +101,7 @@ async function test_hint_preload_internal(
 // Client-side, we verify that the image was loaded or not loaded, depending on the scenario
 
 // This verifies preload hints and requests
-async function test_preload_hint_and_request(input, expected_results) {
+export async function test_preload_hint_and_request(input, expected_results) {
   // reset the count
   let headers = new Headers();
   headers.append("X-Early-Hint-Count-Start", "");

@@ -17,7 +17,7 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = "url-classifier"
 
 EXTRA_JS_MODULES += [
-    "UrlClassifierExceptionListService.jsm",
+    "UrlClassifierExceptionListService.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [

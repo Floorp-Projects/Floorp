@@ -207,7 +207,7 @@ if CONFIG["MOZ_AUTH_EXTENSION"]:
     ]
 
 EXTRA_JS_MODULES += [
-    "WellKnownOpportunisticUtils.jsm",
+    "WellKnownOpportunisticUtils.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [
