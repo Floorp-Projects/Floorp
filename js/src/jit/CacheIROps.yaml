@@ -281,6 +281,14 @@
     obj: ObjId
     clasp: RawPointerField
 
+- name: GuardGlobalGeneration
+  shared: true
+  transpile: false
+  cost_estimate: 1
+  args:
+    expected: RawInt32Field
+    generationAddr: RawPointerField
+
 - name: HasClassResult
   shared: false
   transpile: true
