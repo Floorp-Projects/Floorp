@@ -257,7 +257,7 @@ tasks.register("listRepositories") {
 }
 
 tasks.register("githubTestDetails", GithubDetailsTask) {
-    text = "### [Unit Test Results Fenix]({reportsUrl}/test/testDebugUnitTest/index.html)"
+    text = "### [Unit Test Results Fenix]({reportsUrl}/test/testFenixDebugUnitTest/index.html)"
 }
 
 tasks.register("githubLintDetektDetails", GithubDetailsTask) {
