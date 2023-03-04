@@ -1510,6 +1510,16 @@
   congruent_to: if_operands_equal
   alias_set: none
 
+- name: GuardGlobalGeneration
+  arguments:
+   expected: uint32_t
+   generationAddr: const void*
+  result_type: None
+  guard: true
+  movable: true
+  alias_set: custom
+  congruent_to: custom
+
 - name: GuardIsProxy
   operands:
     object: Object

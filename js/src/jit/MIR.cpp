@@ -6360,6 +6360,16 @@ AliasSet MGuardMultipleShapes::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
 }
 
+AliasSet MGuardGlobalGeneration::getAliasSet() const {
+  return AliasSet::Load(AliasSet::GlobalGenerationCounter);
+}
+
+bool MGuardGlobalGeneration::congruentTo(const MDefinition* ins) const {
+  return ins->isGuardGlobalGeneration() &&
+         ins->toGuardGlobalGeneration()->expected() == expected() &&
+         ins->toGuardGlobalGeneration()->generationAddr() == generationAddr();
+}
+
 MDefinition* MGuardIsNotProxy::foldsTo(TempAllocator& alloc) {
   KnownClass known = GetObjectKnownClass(object());
   if (known == KnownClass::None) {
