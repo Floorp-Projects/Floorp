@@ -1594,43 +1594,40 @@ var BookmarkingUI = {
    * We hide it in customize mode, unless there's nothing on the toolbar.
    */
   updateEmptyToolbarMessage() {
-    let emptyMsg = document.getElementById("personal-toolbar-empty");
-
-    // If the bookmarks are here but it's early in startup, show the message.
-    // It'll get made visibility: hidden early in startup anyway - it's just
-    // to ensure the toolbar has height.
-    //
-    // If we're customizing, we might have visible children anyways, even if we
-    // haven't really initialized the toolbar, so go through the usual path.
-    if (!this._isCustomizing && !this.toolbar.hasAttribute("initialized")) {
-      emptyMsg.hidden = false;
-      emptyMsg.setAttribute("nowidth", "");
-      return;
-    }
-
-    // Do we have visible kids?
-    let hasVisibleChildren = !!this.toolbar.querySelector(
-      `:scope > toolbarpaletteitem > toolbarbutton:not([hidden]),
-       :scope > toolbarpaletteitem > toolbaritem:not([hidden], #personal-bookmarks),
-       :scope > toolbarbutton:not([hidden]),
-       :scope > toolbaritem:not([hidden], #personal-bookmarks)`
-    );
-
-    if (!hasVisibleChildren) {
+    let hasVisibleChildren = (() => {
+      // Do we have visible kids?
+      if (
+        this.toolbar.querySelector(
+          `:scope > toolbarpaletteitem > toolbarbutton:not([hidden]),
+           :scope > toolbarpaletteitem > toolbaritem:not([hidden], #personal-bookmarks),
+           :scope > toolbarbutton:not([hidden]),
+           :scope > toolbaritem:not([hidden], #personal-bookmarks)`
+        )
+      ) {
+        return true;
+      }
+      if (!this.toolbar.hasAttribute("initialized")) {
+        // If the bookmarks are here but it's early in startup, show the
+        // message. It'll get made visibility: hidden early in startup anyway -
+        // it's just to ensure the toolbar has height.
+        return false;
+      }
       // Hmm, apparently not. Check for bookmarks or customize mode:
       let bookmarksToolbarItemsPlacement = CustomizableUI.getPlacementOfWidget(
         "personal-bookmarks"
       );
       let bookmarksItemInToolbar =
         bookmarksToolbarItemsPlacement?.area == CustomizableUI.AREA_BOOKMARKS;
+      if (!bookmarksItemInToolbar) {
+        return false;
+      }
+      return (
+        this._isCustomizing ||
+        !!PlacesUtils.getChildCountForFolder(PlacesUtils.bookmarks.toolbarGuid)
+      );
+    })();
 
-      hasVisibleChildren =
-        bookmarksItemInToolbar &&
-        (this._isCustomizing ||
-          !!PlacesUtils.getChildCountForFolder(
-            PlacesUtils.bookmarks.toolbarGuid
-          ));
-    }
+    let emptyMsg = document.getElementById("personal-toolbar-empty");
     emptyMsg.hidden = hasVisibleChildren;
     emptyMsg.toggleAttribute("nowidth", !hasVisibleChildren);
   },
