@@ -3050,6 +3050,10 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId,
         globalLexical->global().generationCount(),
         globalLexical->global().addressOfGenerationCount());
     ObjOperandId holderId = writer.loadObject(holder);
+#ifdef DEBUG
+    writer.assertPropertyLookup(holderId, id.toAtom()->asPropertyName(),
+                                prop->slot());
+#endif
     EmitLoadSlotResult(writer, holderId, holder, *prop);
   } else {
     // Check the prototype chain from the global to the holder

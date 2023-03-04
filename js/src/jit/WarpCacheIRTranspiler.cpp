@@ -5528,6 +5528,13 @@ bool WarpCacheIRTranspiler::emitBailout() {
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitAssertPropertyLookup(ObjOperandId objId,
+                                                     uint32_t idOffset,
+                                                     uint32_t slotOffset) {
+  // We currently only emit checks in baseline.
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitAssertRecoveredOnBailoutResult(
     ValOperandId valId, bool mustBeRecovered) {
   MDefinition* val = getOperand(valId);
