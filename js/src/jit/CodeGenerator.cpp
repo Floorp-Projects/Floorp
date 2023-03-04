@@ -4091,6 +4091,16 @@ void CodeGenerator::visitGuardIsNativeObject(LGuardIsNativeObject* guard) {
   bailoutFrom(&bail, guard->snapshot());
 }
 
+void CodeGenerator::visitGuardGlobalGeneration(LGuardGlobalGeneration* guard) {
+  Register temp = ToRegister(guard->temp0());
+  Label bail;
+
+  masm.load32(AbsoluteAddress(guard->mir()->generationAddr()), temp);
+  masm.branch32(Assembler::NotEqual, temp, Imm32(guard->mir()->expected()),
+                &bail);
+  bailoutFrom(&bail, guard->snapshot());
+}
+
 void CodeGenerator::visitGuardIsProxy(LGuardIsProxy* guard) {
   Register obj = ToRegister(guard->input());
   Register temp = ToRegister(guard->temp0());
