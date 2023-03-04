@@ -35,7 +35,7 @@ export default class Exception extends PureComponent {
   }
 
   setEditorExceptionLine(doc, line, column, lineText) {
-    doc.addLineClass(line, "wrapClass", "line-exception");
+    doc.addLineClass(line, "wrap", "line-exception");
 
     column = Math.max(column, getIndentation(lineText));
     const columnEnd = doc.cm ? getTokenEnd(doc.cm, line, column) : null;
@@ -79,7 +79,7 @@ export default class Exception extends PureComponent {
       if (hasDocument(selectedSourceId)) {
         this.props.doc.removeLineClass(
           this.exceptionLine,
-          "wrapClass",
+          "wrap",
           "line-exception"
         );
       }

@@ -210,7 +210,7 @@ export function forEachLine(codeMirror, iter) {
 }
 
 export function removeLineClass(codeMirror, line, className) {
-  codeMirror.removeLineClass(line, "wrapClass", className);
+  codeMirror.removeLineClass(line, "wrap", className);
 }
 
 export function clearLineClass(codeMirror, className) {

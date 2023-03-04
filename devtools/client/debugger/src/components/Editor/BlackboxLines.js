@@ -120,15 +120,11 @@ class BlackboxLines extends Component {
   }
 
   clearBlackboxLine(editor, lineHandle) {
-    editor.codeMirror.removeLineClass(
-      lineHandle,
-      "wrapClass",
-      "blackboxed-line"
-    );
+    editor.codeMirror.removeLineClass(lineHandle, "wrap", "blackboxed-line");
   }
 
   setBlackboxLine(editor, lineHandle) {
-    editor.codeMirror.addLineClass(lineHandle, "wrapClass", "blackboxed-line");
+    editor.codeMirror.addLineClass(lineHandle, "wrap", "blackboxed-line");
   }
 
   render() {
