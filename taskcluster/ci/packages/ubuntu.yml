@@ -28,6 +28,19 @@ ub18-32-libc6:
         arch: i386
         patch: ubuntu-glibc.diff
 
+ub18-python-psutil:
+    description: "python-psutil for Ubuntu bionic"
+    treeherder:
+        symbol: Ub18(python-psutil)
+    run:
+        dsc:
+            url: https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/python-psutil/5.4.2-1ubuntu0.1/python-psutil_5.4.2-1ubuntu0.1.dsc
+            sha256: a0ca4560d25fcfe5b7407d2cb21318f0635f2c3559898efce1679eef35b61f05
+        name: python-psutil
+        pre-build-command: >-
+            apt-get install python3.7-dev python3.7-dbg &&
+            export DEBPYTHON3_SUPPORTED="3.7"
+
 ub18-python-zstandard:
     description: "python-zstandard for Ubuntu bionic"
     treeherder:
@@ -37,7 +50,10 @@ ub18-python-zstandard:
             url: https://github.com/indygreg/python-zstandard/releases/download/0.19.0/zstandard-0.19.0.tar.gz
             sha256: 31d12fcd942dd8dbf52ca5f6b1bbe287f44e5d551a081a983ff3ea2082867863
         name: python-zstandard
-        pre-build-command: debchange -v 0.19.0-1.ub18moz --distribution bionic "Mozilla backport for bionic"
+        pre-build-command: >-
+            apt-get install python3.7-dev &&
+            export DEBPYTHON3_SUPPORTED="3.7" &&
+            debchange -v 0.19.0-1.ub18moz --distribution bionic "Mozilla backport for bionic"
 
 ub18-mercurial:
     description: "Modern Mercurial for Ubuntu bionic"
@@ -48,6 +64,9 @@ ub18-mercurial:
             url: https://www.mercurial-scm.org/release/mercurial-5.8.1.tar.gz
             sha256: 81baa3fe2087bdda2dd119d7ea948f6badebaeb7b528a7d18b277e2ceb22b19b
         pre-build-command: >-
+            apt-get install python3.7-dev &&
+            export DEB_HG_PYTHON_VERSIONS="3.7" &&
+            export DEBPYTHON3_SUPPORTED="3.7" &&
             cp -r contrib/packaging/debian debian &&
             sed -i -e "s/__VERSION__/$(awk -F\" '$2 {print $2}' mercurial/__version__.py)-1.ub18moz1/" \
                          -e "s/__DATE__/$(date --rfc-2822)/" \
