@@ -123,6 +123,12 @@ void L10nMutations::ContentRemoved(nsIContent* aChild,
       mPendingElements.RemoveElement(elem);
     }
   }
+
+  if (!HasPendingMutations()) {
+    nsContentUtils::AddScriptRunner(NewRunnableMethod(
+        "MaybeFirePendingTranslationsFinished", this,
+        &L10nMutations::MaybeFirePendingTranslationsFinished));
+  }
 }
 
 void L10nMutations::L10nElementChanged(Element* aElement) {
@@ -153,28 +159,40 @@ class L10nMutationFinalizationHandler final : public PromiseNativeHandler {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(L10nMutationFinalizationHandler)
 
-  explicit L10nMutationFinalizationHandler(nsIGlobalObject* aGlobal)
-      : mGlobal(aGlobal) {}
+  explicit L10nMutationFinalizationHandler(L10nMutations* aMutations,
+                                           nsIGlobalObject* aGlobal)
+      : mMutations(aMutations), mGlobal(aGlobal) {}
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {}
+  MOZ_CAN_RUN_SCRIPT void Settled() {
+    if (RefPtr mutations = mMutations) {
+      mutations->PendingPromiseSettled();
+    }
+  }
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue,
-                        ErrorResult& aRv) override {
+  MOZ_CAN_RUN_SCRIPT void ResolvedCallback(JSContext* aCx,
+                                           JS::Handle<JS::Value> aValue,
+                                           ErrorResult& aRv) override {
+    Settled();
+  }
+
+  MOZ_CAN_RUN_SCRIPT void RejectedCallback(JSContext* aCx,
+                                           JS::Handle<JS::Value> aValue,
+                                           ErrorResult& aRv) override {
     nsTArray<nsCString> errors{
         "[dom/l10n] Errors during l10n mutation frame."_ns,
     };
-    IgnoredErrorResult rv;
-    MaybeReportErrorsToGecko(errors, rv, mGlobal);
+    MaybeReportErrorsToGecko(errors, IgnoreErrors(), mGlobal);
+    Settled();
   }
 
  private:
   ~L10nMutationFinalizationHandler() = default;
 
+  RefPtr<L10nMutations> mMutations;
   nsCOMPtr<nsIGlobalObject> mGlobal;
 };
 
-NS_IMPL_CYCLE_COLLECTION(L10nMutationFinalizationHandler, mGlobal)
+NS_IMPL_CYCLE_COLLECTION(L10nMutationFinalizationHandler, mGlobal, mMutations)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(L10nMutationFinalizationHandler)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -201,11 +219,34 @@ void L10nMutations::FlushPendingTranslations() {
   RefPtr<Promise> promise =
       mDOMLocalization->TranslateElements(elements, IgnoreErrors());
   if (promise && promise->State() == Promise::PromiseState::Pending) {
+    mPendingPromises++;
     auto l10nMutationFinalizationHandler =
         MakeRefPtr<L10nMutationFinalizationHandler>(
-            mDOMLocalization->GetParentObject());
+            this, mDOMLocalization->GetParentObject());
     promise->AppendNativeHandler(l10nMutationFinalizationHandler);
   }
+
+  MaybeFirePendingTranslationsFinished();
+}
+
+void L10nMutations::PendingPromiseSettled() {
+  MOZ_DIAGNOSTIC_ASSERT(mPendingPromises);
+  mPendingPromises--;
+  MaybeFirePendingTranslationsFinished();
+}
+
+void L10nMutations::MaybeFirePendingTranslationsFinished() {
+  if (HasPendingMutations()) {
+    return;
+  }
+
+  RefPtr doc = GetDocument();
+  if (!doc) {
+    return;
+  }
+  nsContentUtils::DispatchEventOnlyToChrome(
+      doc, ToSupports(doc), u"L10nMutationsFinished"_ns, CanBubble::eNo,
+      Cancelable::eNo, Composed::eNo, nullptr);
 }
 
 void L10nMutations::Disconnect() {
@@ -213,17 +254,23 @@ void L10nMutations::Disconnect() {
   mDOMLocalization = nullptr;
 }
 
+Document* L10nMutations::GetDocument() const {
+  if (!mDOMLocalization) {
+    return nullptr;
+  }
+  auto* innerWindow = mDOMLocalization->GetParentObject()->AsInnerWindow();
+  if (!innerWindow) {
+    return nullptr;
+  }
+  return innerWindow->GetExtantDoc();
+}
+
 void L10nMutations::StartRefreshObserver() {
   if (!mDOMLocalization || mRefreshDriver) {
     return;
   }
-
-  nsPIDOMWindowInner* innerWindow =
-      mDOMLocalization->GetParentObject()->AsInnerWindow();
-  Document* doc = innerWindow ? innerWindow->GetExtantDoc() : nullptr;
-  if (doc) {
-    nsPresContext* ctx = doc->GetPresContext();
-    if (ctx) {
+  if (Document* doc = GetDocument()) {
+    if (nsPresContext* ctx = doc->GetPresContext()) {
       mRefreshDriver = ctx->RefreshDriver();
     }
   }

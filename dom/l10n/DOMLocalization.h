@@ -40,8 +40,9 @@ class DOMLocalization : public intl::Localization {
       const dom::Optional<dom::Sequence<nsCString>>& aLocales,
       ErrorResult& aRv);
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
+
+  bool HasPendingMutations() const;
 
   /**
    * DOMLocalization API

@@ -96,6 +96,10 @@ void DOMLocalization::Destroy() { DisconnectMutations(); }
 
 DOMLocalization::~DOMLocalization() { Destroy(); }
 
+bool DOMLocalization::HasPendingMutations() const {
+  return mMutations && mMutations->HasPendingMutations();
+}
+
 /**
  * DOMLocalization API
  */

@@ -4319,7 +4319,9 @@ bool Document::HasPendingInitialTranslation() {
   return mDocumentL10n && mDocumentL10n->GetState() != DocumentL10nState::Ready;
 }
 
-DocumentL10n* Document::GetL10n() { return mDocumentL10n; }
+bool Document::HasPendingL10nMutations() const {
+  return mDocumentL10n && mDocumentL10n->HasPendingMutations();
+}
 
 bool Document::DocumentSupportsL10n(JSContext* aCx, JSObject* aObject) {
   JS::Rooted<JSObject*> object(aCx, aObject);

@@ -601,6 +601,7 @@ partial interface Document {
 
 partial interface Document {
   [Func="Document::DocumentSupportsL10n"] readonly attribute DocumentL10n? l10n;
+  [Func="Document::DocumentSupportsL10n"] readonly attribute boolean hasPendingL10nMutations;
 };
 
 Document includes XPathEvaluatorMixin;
