@@ -704,6 +704,17 @@ DocumentL10n
 DocumentL10n implements the DocumentL10n WebIDL API and allows Document to
 communicate with DOMLocalization.
 
+Events
+^^^^^^
+
+DOM translation is asynchronous (e.g., setting a `data-l10n-id` attribute won't
+immediately reflect the localized content in the DOM).
+
+We expose a :js:`Document.hasPendingL10nMutations` member that reflects whether
+there are any async operations pending. When they are finished, the
+`L10nMutationsFinished` event is fired on the document, so that chrome code can
+be certain all the async operations are done.
+
 L10nRegistry
 ------------
 

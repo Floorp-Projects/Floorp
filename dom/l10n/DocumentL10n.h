@@ -68,7 +68,7 @@ class DocumentL10n final : public DOMLocalization {
 
   void InitialTranslationCompleted(bool aL10nCached);
 
-  Document* GetDocument() { return mDocument; };
+  Document* GetDocument() const { return mDocument; };
   void OnCreatePresShell();
 
   void ConnectRoot(nsINode& aNode, bool aTranslate, ErrorResult& aRv);

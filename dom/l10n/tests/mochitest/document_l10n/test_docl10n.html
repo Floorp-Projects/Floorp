@@ -6,7 +6,7 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <link rel="localization" href="crashreporter/aboutcrashes.ftl"/>
-  <script type="application/javascript">
+  <script>
   "use strict";
   SimpleTest.waitForExplicitFinish();
 
@@ -38,15 +38,6 @@
     l10nArgs = document.l10n.getAttributes(label);
     is(l10nArgs.id, null, "id is not set if args are invalid");
 
-    // Test for mutations applied.
-    let verifyL10n = () => {
-      if (label.textContent.length) {
-        window.removeEventListener("MozAfterPaint", verifyL10n);
-        SimpleTest.finish();
-      }
-    };
-    window.addEventListener("MozAfterPaint", verifyL10n);
-
     document.l10n.setAttributes(
       label,
       "date-crashed-heading",
@@ -54,9 +45,16 @@
         name: "John",
       }
     );
+    ok(document.hasPendingL10nMutations, "Should have pending mutations");
     l10nArgs = document.l10n.getAttributes(label);
     is(l10nArgs.id, "date-crashed-heading", "id is set by setAttributes");
     is(l10nArgs.args.name, "John", "args are set by setAttributes");
+    // Test for mutations applied.
+    document.addEventListener("L10nMutationsFinished", function() {
+      ok(!!label.textContent.length, "Should've applied translation");
+      ok(!document.hasPendingL10nMutations, "Should have no more pending mutations");
+      SimpleTest.finish();
+    }, { once: true });
   })();
   </script>
 </head>

@@ -3861,7 +3861,14 @@ class Document : public nsINode,
    * This is a public method exposed on Document WebIDL
    * to chrome only documents.
    */
-  DocumentL10n* GetL10n();
+  DocumentL10n* GetL10n() const { return mDocumentL10n.get(); }
+
+  /**
+   * Whether there's any async l10n mutation work pending.
+   *
+   * When this turns false, we fire the L10nMutationsFinished event.
+   */
+  bool HasPendingL10nMutations() const;
 
   /**
    * This method should be called when the container
