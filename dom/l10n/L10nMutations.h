@@ -70,6 +70,7 @@ class L10nMutations final : public nsStubMultiMutationObserver,
 
  private:
   bool mObserving = false;
+  bool mBlockingLoad = false;
   uint32_t mPendingPromises = 0;
   RefPtr<nsRefreshDriver> mRefreshDriver;
   DOMLocalization* mDOMLocalization;

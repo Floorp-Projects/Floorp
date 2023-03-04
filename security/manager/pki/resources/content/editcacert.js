@@ -14,12 +14,9 @@ var gCertDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
  */
 var gCert = window.arguments[0];
 
-document.mozSubdialogReady = init();
+document.addEventListener("DOMContentLoaded", init);
 
-async function init() {
-  await new Promise(r => {
-    document.addEventListener("DOMContentLoaded", r, { once: true });
-  });
+function init() {
   document.addEventListener("dialogaccept", onDialogAccept);
 
   let sslCheckbox = document.getElementById("trustSSL");
@@ -37,12 +34,9 @@ async function init() {
   );
 
   let certMsg = document.getElementById("certmsg");
-  document.l10n.pauseObserving();
   document.l10n.setAttributes(certMsg, "edit-trust-ca", {
     certName: gCert.commonName,
   });
-  document.l10n.resumeObserving();
-  await document.l10n.translateElements([certMsg]);
 }
 
 /**

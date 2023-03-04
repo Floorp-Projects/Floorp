@@ -9,6 +9,7 @@
 #include "nsRefreshDriver.h"
 #include "DOMLocalization.h"
 #include "mozilla/intl/Localization.h"
+#include "nsThreadManager.h"
 
 using namespace mozilla;
 using namespace mozilla::intl;
@@ -132,12 +133,37 @@ void L10nMutations::ContentRemoved(nsIContent* aChild,
 }
 
 void L10nMutations::L10nElementChanged(Element* aElement) {
+  const bool wasEmpty = mPendingElements.IsEmpty();
+
   if (mPendingElementsHash.EnsureInserted(aElement)) {
     mPendingElements.AppendElement(aElement);
   }
 
+  if (!wasEmpty) {
+    return;
+  }
+
   if (!mRefreshDriver) {
     StartRefreshObserver();
+  }
+
+  if (!mBlockingLoad) {
+    Document* doc = GetDocument();
+    if (doc && doc->GetReadyStateEnum() != Document::READYSTATE_COMPLETE) {
+      doc->BlockOnload();
+      mBlockingLoad = true;
+      // We want to make sure we flush translations and don't block the load
+      // indefinitely (and, in fact, that we do it rather soon, even if the
+      // refresh driver is not ticking yet).
+      //
+      // In some platforms (mainly Wayland) the load of the main document
+      // causes vsync to start running and start ticking the refresh driver,
+      // so we can't rely on the refresh driver ticking yet.
+      RefPtr<nsIRunnable> task =
+          NewRunnableMethod("FlushPendingTranslationsBeforeLoad", this,
+                            &L10nMutations::FlushPendingTranslations);
+      nsThreadManager::get().DispatchDirectTaskToCurrentThread(task);
+    }
   }
 }
 
@@ -241,8 +267,13 @@ void L10nMutations::MaybeFirePendingTranslationsFinished() {
   }
 
   RefPtr doc = GetDocument();
-  if (!doc) {
+  if (NS_WARN_IF(!doc)) {
     return;
+  }
+
+  if (mBlockingLoad) {
+    mBlockingLoad = false;
+    doc->UnblockOnload(false);
   }
   nsContentUtils::DispatchEventOnlyToChrome(
       doc, ToSupports(doc), u"L10nMutationsFinished"_ns, CanBubble::eNo,
