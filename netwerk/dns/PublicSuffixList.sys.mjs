@@ -1,21 +1,17 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-const { RemoteSettings } = ChromeUtils.importESModule(
-  "resource://services-settings/remote-settings.sys.mjs"
-);
+import { RemoteSettings } from "resource://services-settings/remote-settings.sys.mjs";
+
 const FileUtils = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"
 ).FileUtils;
 
-const EXPORTED_SYMBOLS = ["PublicSuffixList"];
-
 const RECORD_ID = "tld-dafsa";
 const SIGNAL = "public-suffix-list-updated";
 
-const PublicSuffixList = {
+export const PublicSuffixList = {
   CLIENT: RemoteSettings("public-suffix-list"),
 
   init() {

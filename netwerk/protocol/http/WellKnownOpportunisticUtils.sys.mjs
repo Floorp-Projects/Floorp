@@ -3,9 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-function WellKnownOpportunisticUtils() {
+export function WellKnownOpportunisticUtils() {
   this.valid = false;
   this.mixed = false;
   this.lifetime = 0;
@@ -26,5 +24,3 @@ WellKnownOpportunisticUtils.prototype = {
     this.valid = true;
   },
 };
-
-var EXPORTED_SYMBOLS = ["WellKnownOpportunisticUtils"];
