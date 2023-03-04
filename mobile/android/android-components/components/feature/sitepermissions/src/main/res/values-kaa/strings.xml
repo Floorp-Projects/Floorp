@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Title of a dialog for a notification permission request. -->
-    <string name="mozac_feature_sitepermissions_notification_title">%1$s ushın xabarnamalardı jiberiwdi ruqsat etiw kerek pe?</string>
+    <string name="mozac_feature_sitepermissions_notification_title">%1$s ushın xabarlamalardı jiberiwdi ruqsat etiw kerek pe?</string>
     <!-- Title of a dialog for a camera permission request. -->
     <string name="mozac_feature_sitepermissions_camera_title">%1$s ushın kamerańızdan qollanıwdı ruqsat etiw kerek pe?</string>
     <!-- Title of a dialog for a microphone permission request. -->

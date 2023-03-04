@@ -15,8 +15,13 @@
     <!-- This text is shown in the URL bar when it's empty -->
     <string name="urlbar_hint">Mánzildi izleń yamasa kirgiziń</string>
 
+    <string name="feedback_erase2">Kóriw tariyxi tazalandı</string>
+
     <!-- Menu item: Share the currently visible page -->
     <string name="menu_share">Bólisiw…</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">Sayt nasazlıǵı haqqında xabar beriw</string>
 
     <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
       replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
@@ -35,13 +40,30 @@
     <!-- Menu item: Add the current site as a shortcut on the Home screen -->
     <string name="menu_add_to_shortcuts">Operativ buyrıqlarǵa qosıw</string>
 
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">Ne jańalıq</string>
     <string name="menu_settings">Sazlawlar</string>
     <string name="menu_about">Baǵdarlama haqqında</string>
     <string name="menu_help">Járdem</string>
 
+    <string name="menu_rights">Siziń huqıqlarıńız</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">Baqlawshılar bloklandı</string>
+
     <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
          sharing an URL. -->
     <string name="share_dialog_title">Arqalı bólisiw</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">Kóriw tariyxin óshiriw</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->
     <string name="notification_action_open">Ashıw</string>
@@ -53,6 +75,12 @@
     <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
          This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
     <string name="shortcut_erase_short_label">Óshiriw</string>
+
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">Kóriw tariyxin óshiriw</string>
 
 
     <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
@@ -76,6 +104,9 @@
           Do not translate or transliterate Focus Nightly.-->
     <string name="text_selection_search_action_focus_nightly">Focus Nightlyda izlew</string>
 
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">Qupıyalıq hám Qorǵanıw</string>
+
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">Ulıwmalıq</string>
 
@@ -90,6 +121,27 @@
     <!-- Text that is shown below a "switch" preference that is disabled. -->
     <string name="preference_state_off">Óshirilgen</string>
 
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">Saytlardı basqarıw</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">Saytlardı basqarıw</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">URL qosıw</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">Tolıǵıraq úyreniw</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">Qosıw ushın URL</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">Mısal: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">Mısal: example.com</string>
+
     <!-- Menu item to remove existing autocomplete URLs. -->
     <string name="preference_autocomplete_menu_remove">Alıp taslaw</string>
 
@@ -98,6 +150,8 @@
 
     <string name="preference_language">Til</string>
 
+    <string name="preference_category_privacy">Qupıyalıq</string>
+
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
     only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
     <string name="preference_privacy_should_block_cookies_no_option2">Yaq, raxmet</string>
@@ -105,6 +159,8 @@
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Baǵdarlamanı bloktan shıǵarıw ushın barmaq izin qollanıń</string>
+
+    <string name="preference_category_security">Qorǵanıw</string>
 
     <string name="preference_category_mozilla">Mozilla</string>
 
@@ -116,7 +172,41 @@
 
     <string name="preference_search_remove">Alıp taslaw</string>
 
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">Izlew sistemasın qosıw</string>
+
+    <string name="search_add_manually_name_hint">Izlew sistemasınıń ataması</string>
+    <string name="search_add_manually_string">Paydalanıw ushın izlew qatarı</string>
     <string name="search_add_manually_save">Saqlaw</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">Mısal: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">Jańa izlew sisteması qosıldı.</string>
+
+    <string name="search_add_error_empty_name">Izlew sistemasınıń atamasın kirgiziń</string>
+
+    <string name="search_add_error_empty_search">Izlew qatarın kirgiziń</string>
+
+    <string name="search_add_error_format">Izlew qatarınıń úlgi formatına sáykes keliwin tekseriń</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">Ótkizip jiberiw</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">Kóriw tariyxin óshiriw</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">Ashılǵan betler: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">Qáwipsiz jalǵanıw</string>
 
     <!-- This text is not visible. Instead it will be read by the accessibility service once we start
      loading a website -->
@@ -125,6 +215,9 @@
     <!-- This text is not visible. Instead it will be read by the accessibility service once we
      finished loading a website -->
     <string name="accessibility_announcement_loading_finished">Sayt júklendi</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Basqa variantlar</string>
 
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
     <string name="content_description_forward">Aldıǵa</string>
@@ -144,6 +237,9 @@
     <string name="your_rights">Siziń huqıqlarıńız</string>
 
     <string name="external_app_prompt_title">Siltemeni basqa baǵdarlamada ashıw</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">Bul siltemeni %2$sda ashıw ushın, siz %1$s baǵdarlamasınan shıǵıwıńız múmkin.</string>
     <!-- This label is shown above a list of apps that can be used to open a given link -->
     <string name="external_multiple_apps_matched_exit">Jeke kóriwden shıǵıwdı qáleysiz be?</string>
 
@@ -168,6 +264,9 @@
     <!-- Onboarding second screen: Title -->
     <!-- %1$s will be replaced by the app short name(Focus) -->
     <string name="onboarding_second_screen_title">%1$s basqa brauzerlarǵa uqsamaydı</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">Tiykarǵi brauzer retinde ornatıw</string>
 
     <!-- New Onboarding flow second screen skip onboarding button label-->
     <string name="onboarding_second_screen_skip_button_text">Ótkizip jiberiw</string>
@@ -198,6 +297,13 @@
     -->
     <string name="notification_browsing_session_channel_name">Jeke kóriw seansı</string>
 
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">Kóriw tariyxin óshiriw</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">Firefoxtı júklep alıw</string>
+
     <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Paydalanıwshı atı</string>
     <string name="gv_prompt_password_hint">Parol</string>
@@ -206,6 +312,8 @@
     <!-- Text shown in Security Information Popup -->
     <!-- Text to denote secure or insecure connection -->
     <string name="security_popup_secure_connection">Qáwipsiz jalǵanıw</string>
+
+    <string name="preference_autocomplete_duplicate_url_error">URL álleqashan bar</string>
 
     <!-- Label for the Find in page button -->
     <string name="find_in_page">Betten tabıw</string>
@@ -373,7 +481,10 @@
 
     <!-- Tracking protection bottom sheet -->
 
-     <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+     <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">Social tarmaqlar</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
     <string name="go_back">Artqa qaytıw</string>
 
     <!-- Top Sites -->
@@ -411,4 +522,18 @@
     close button from promote search widget dialog. -->
     <string name="promote_search_widget_dialog_content_description">Jabıw</string>
 
-    </resources>
+    <!-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_picture_content_description">Izlew vidjeti</string>
+
+    <!-- This is the title of promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_title">Kóriw tariyxi óshirildi 🎉</string>
+
+    <!-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. -->
+    <string name="promote_search_widget_button_text">Vidjetti bas ekranǵa qosıw</string>
+
+    <!-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. -->
+    <string name="promote_search_widget_snackbar_message">Vidjet bas ekranǵa qosıldı</string>
+</resources>

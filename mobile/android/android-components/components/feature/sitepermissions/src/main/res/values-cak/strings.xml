@@ -38,6 +38,9 @@
     <!-- Title of a dialog to use cross origin storage permission. %1$s is the name of the site URL (www.site1.example) trying to track the user's activity.
      %2$s is the name of the site URL (www.site2.example) that the user is visiting.  This is the same domain name displayed in the address bar -->
     <string name="mozac_feature_sitepermissions_storage_access_title">¿La niya\' q\'ij chi ri %1$s? kerokisaj taq kuki pa %2$s?</string>
+    <!-- Message of a dialog offering more context about the cross origin storage permission.
+    %s is the name of the site URL (www.site1.example) trying to track the user's activity. -->
+    <string name="mozac_feature_sitepermissions_storage_access_message">Rik\'in jub\'a\' nawajo\' naq\'ät ri okem we man q\'aläj ta ruma chi ri %s nik\'atzin chi re re taq tzij re\'.</string>
     <!-- Text for a negative button in the storage access permission request dialog. This button will not give access to this permission. -->
     <string name="mozac_feature_sitepermissions_storage_access_not_allow">Tiq\'at</string>
     <!-- Clickable text that will open a new tab navigating the user to online documentation about specific features. -->

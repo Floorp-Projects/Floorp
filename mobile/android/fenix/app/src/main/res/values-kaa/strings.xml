@@ -277,7 +277,7 @@
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
     <string name="onboarding_home_sign_in_button">Kiriw</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
-    <string name="onboarding_home_skip_button">Ótkizip jiberiw</string>
+    <string name="onboarding_home_skip_button">Ótkerip jiberiw</string>
     <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
     <string name="sync_cfr_message">Betler sáykeslestirilmekte! Jumıstı qalǵan jerinen basqa qurılmada dawam etiń.</string>
     <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
@@ -286,7 +286,7 @@
     <!-- Notification pre-permission dialog -->
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_title">Xabarnamalar sizge %s penen kóbirek nárseler islewge járdem beredi</string>
+    <string name="onboarding_home_enable_notifications_title">Xabarlamalar sizge %s penen kóbirek nárseler islewge járdem beredi</string>
     <!-- Enable notification pre permission dialog description with rationale
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="onboarding_home_enable_notifications_description">Qurılmalar arasında betlerdi sáykesleń, júklemelerdi basqarıń, %stıń qupıyalıq qorǵanıwınan joqarı dárejede paydalanıw haqqında másláhátlerdi alıń hám basqalar.</string>
@@ -348,17 +348,17 @@
     <string name="preferences_https_only_title">Tek HTTPS rejimi</string>
 
     <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
-    <string name="preferences_cookie_banner_reduction">Cookie haqqındaǵı xabarnamalardı qısqartıw</string>
+    <string name="preferences_cookie_banner_reduction">Cookie haqqındaǵı xabarlamalardı qısqartıw</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
-    <string name="reduce_cookie_banner_option">Cookie haqqındaǵı xabarnamalardı qısqartıw</string>
+    <string name="reduce_cookie_banner_option">Cookie haqqındaǵı xabarlamalardı qısqartıw</string>
     <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
     <string name="reduce_cookie_banner_option_off">Óshirilgen</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
     <string name="reduce_cookie_banner_option_on">Qosıwlı</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Cookiedı ornatıw haqqındaǵı xabarnamalar kórsetilgende, Firefox olardı avtomatikalıq biykar etiwge háreket etedi. Eger de biykar etiw múmkinshiligi bolmasa, Firefox xabarnamalardı jasırıw ushın hámme cookielardı qabıllawı múmkin.</string>
+    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Cookiedı ornatıw haqqındaǵı xabarlamalar kórsetilgende, Firefox olardı avtomatikalıq biykar etiwge háreket etedi. Eger de biykar etiw múmkinshiligi bolmasa, Firefox xabarlamalardı jasırıw ushın hámme cookielardı qabıllawı múmkin.</string>
     <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_summary_1">%1$s cookie haqqındaǵı xabarnamalardaǵı cookie sorawlardı avtomatikalıq biykarlawǵa háreket etedi.</string>
+    <string name="reduce_cookie_banner_summary_1">%1$s cookie haqqındaǵı xabarlamalardaǵı cookie sorawlardı avtomatikalıq biykarlawǵa háreket etedi.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Bul sayt ushın óshirilgen</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -366,22 +366,22 @@
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">Sayt házirshe qollap-quwatlanbaydı</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_on_for_site">%1$s ushın cookie haqqındaǵı xabarnamalardı qısqartıwdı qosayıq pa?</string>
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">%1$s ushın cookie haqqındaǵı xabarlamalardı qısqartıwdı qosayıq pa?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_off_for_site">%1$s ushın cookie haqqındaǵı xabarnamalardı qısqartıwdı óshireyik pe?</string>
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">%1$s ushın cookie haqqındaǵı xabarlamalardı qısqartıwdı óshireyik pe?</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s bul sayttıń cookieların óshiredi hám betti jańalaydı. Barlıq cookielardı óshiriw sizdi sistemadan shıǵarıwı yamasa sawda islew sebetińizdi bosatıwı múmkin.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first and second parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$s cookiedı qollanıw haqqındaǵı sorawlardı avtomatikalıq biykar etiwi múmkin.
-Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarnamalardı jasırıw ushın hámme cookielardı qabıllawı múmkin.</string>
+Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarlamalardı jasırıw ushın hámme cookielardı qabıllawı múmkin.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s kuki sorawların avtomatikalıq biykarlawǵa háreket qılıwı múmkin.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s qollap-quwatlanǵan saytlardaǵı barlıq cookie sorawların avtomatikalıq biykarlawǵa háreket etedi.</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title">Cookie haqqındaǵı xabarnamalar joq bolıp ketti!</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_title">Cookie haqqındaǵı xabarlamalar joq bolıp ketti!</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Múmkinshilik bolsa cookie haqqındaǵı hámme sorawlardı avtomatikalıq biykar etiw. Bolmasa xabarnamalardı jasırıw ushın hámme cookielardı qabıllaw.</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Múmkinshilik bolsa cookie haqqındaǵı hámme sorawlardı avtomatikalıq biykar etiw. Bolmasa xabarlamalardı jasırıw ushın hámme cookielardı qabıllaw.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Imkanı bolǵanda, cookie sorawların avtomatikalıq biykarlaw.</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
@@ -390,7 +390,7 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarnamalardı jasırıw ushı
     <string name="reduce_cookie_banner_dialog_not_now_button">Házir emes</string>
 
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button">Xabarnamalardı jasırıw</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button">Xabarlamalardı jasırıw</string>
     <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
     <string name="reduce_cookie_banner_dialog_snackbar_text">Siz cookiedı qabıllaw haqqındaǵı sorawlardı azıraq kóresiz</string>
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
@@ -402,7 +402,7 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarnamalardı jasırıw ushı
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Qalqıp turıwshı aynalardı ótkizip jiberiw</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Cookie haqqındaǵı xabarnamalardı qısqartıw</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Cookie haqqındaǵı xabarlamalardı qısqartıw</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">%1$sqa sayttıń cookie haqqındaǵı sorawların biykar etiwge ruqsat beriw, múmkinshilik bolmasa cookielerge ruqsat beriw kerek pe?</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
@@ -497,7 +497,7 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarnamalardı jasırıw ushı
     <string name="preferences_addons">Qosımshalar</string>
 
     <!-- Preference for notifications -->
-    <string name="preferences_notifications">Xabarnamalar</string>
+    <string name="preferences_notifications">Xabarlamalar</string>
     <!-- Summary for notification preference indicating notifications are allowed -->
     <string name="notifications_allowed_summary">Ruqsat etildi</string>
     <!-- Summary for notification preference indicating notifications are not allowed -->
@@ -625,7 +625,7 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarnamalardı jasırıw ushı
     <string name="fxa_received_tab_channel_name">Qabıllanǵan betler</string>
 
     <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string name="fxa_received_tab_channel_description">Firefoxtıń basqa qurılmalarınan alınǵan betler haqqındaǵı xabarnamaları.</string>
+    <string name="fxa_received_tab_channel_description">Firefoxtıń basqa qurılmalarınan alınǵan betler haqqındaǵı xabarlamaları.</string>
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">Bet qabıllandı</string>
     <!-- %s is the device name -->
@@ -1208,13 +1208,7 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarnamalardı jasırıw ushı
     <string name="notification_pbm_delete_text_2">Jeke betlerdı jabıw</string>
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Marketing</string>
-    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_title">%1$s tez hám qupıya</string>
 
-    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_text">%1$sti tiykarǵi brauzer retinde ornatıń</string>
     <!-- Title shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_title">Jeke kóriwdi sınap kóriń</string>
     <!-- Text shown in the notification that pops up to re-engage the user.

@@ -57,7 +57,7 @@
     <!-- Description for native_messaging permission. -->
     <string name="mozac_feature_addons_permissions_native_messaging_description">Bunnan basqa baǵdarlamalar menen xabar almasıw</string>
     <!-- Description for notifications permission. -->
-    <string name="mozac_feature_addons_permissions_notifications_description">Sizge xabarnamalardı kórsetiw</string>
+    <string name="mozac_feature_addons_permissions_notifications_description">Sizge xabarlamalardı kórsetiw</string>
     <!-- Description for pkcs11 permission. -->
     <string name="mozac_feature_addons_permissions_pkcs11_description">Kriptografiyalıq audentifikaciya xızmetleri menen támiyinlew</string>
     <!-- Description for proxy permission. -->

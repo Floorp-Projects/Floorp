@@ -23,7 +23,7 @@
     <string name="mozac_lib_crash_notification_action_report">Xabar berıw</string>
 
     <!-- Label of notification showing that the crash report service is running. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
-    <string name="mozac_lib_send_crash_report_in_progress">Nasazlıq esabatı %1$s ǵa jiberilip atır</string>
+    <string name="mozac_lib_send_crash_report_in_progress">Nasazlıq esabattı %1$s ǵa jiberilip atır</string>
 
     <!-- Label of notification showing that the crash handling service is gathering the crash data. -->
     <string name="mozac_lib_gathering_crash_data_in_progress">Nasazlıq haqqındaǵı maģlıwmatlardı toplaw</string>
