@@ -14,13 +14,6 @@
   class MozDialog extends MozXULElement {
     constructor() {
       super();
-
-      /**
-       * Gets populated by elements that are passed to document.l10n.setAttributes
-       * to localize the dialog buttons. Needed to properly size the dialog after
-       * the asynchronous translation.
-       */
-      this._l10nButtons = [];
     }
 
     static get observedAttributes() {
@@ -99,6 +92,7 @@
       this.attachShadow({ mode: "open" });
 
       document.documentElement.setAttribute("role", "dialog");
+      document.l10n?.connectRoot(this.shadowRoot);
 
       this.shadowRoot.textContent = "";
       this.shadowRoot.appendChild(
@@ -147,17 +141,6 @@
           event.preventDefault();
         }
       });
-
-      if (this._l10nButtons.length) {
-        document.blockUnblockOnload(true);
-        this._translationReady = document.l10n.ready.then(async () => {
-          try {
-            await document.l10n.translateElements(this._l10nButtons);
-          } finally {
-            document.blockUnblockOnload(false);
-          }
-        });
-      }
 
       // Call postLoadInit for things that we need to initialize after onload.
       if (document.readyState == "complete") {
@@ -347,13 +330,6 @@
 
     async _postLoadInit() {
       this._setInitialFocusIfNeeded();
-      if (this._translationReady) {
-        await this._translationReady;
-      }
-      if (document.mozSubDialogReady) {
-        await document.mozSubDialogReady;
-      }
-
       let finalStep = () => {
         this._sizeToPreferredSize();
         this._snapCursorToDefaultButtonIfNeeded();
@@ -437,7 +413,6 @@
               button,
               this.getAttribute("buttonid" + dlgtype)
             );
-            this._l10nButtons.push(button);
           } else if (dlgtype != "extra1" && dlgtype != "extra2") {
             button.setAttribute(
               "label",

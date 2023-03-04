@@ -3809,11 +3809,9 @@ class Document : public nsINode,
   nsresult Dispatch(TaskCategory aCategory,
                     already_AddRefed<nsIRunnable>&& aRunnable) final;
 
-  virtual nsISerialEventTarget* EventTargetFor(
-      TaskCategory aCategory) const override;
+  nsISerialEventTarget* EventTargetFor(TaskCategory) const override;
 
-  virtual AbstractThread* AbstractMainThreadFor(
-      TaskCategory aCategory) override;
+  AbstractThread* AbstractMainThreadFor(TaskCategory) override;
 
   // The URLs passed to this function should match what
   // JS::DescribeScriptedCaller() returns, since this API is used to
