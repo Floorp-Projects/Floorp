@@ -17,7 +17,7 @@ fuzzy-if(Android,0-54,0-33) fuzzy-if(!Android,0-107,0-72) pref(apz.allow_zooming
 fuzzy-if(Android,0-53,0-30) fuzzy-if(!Android,0-107,0-167) pref(apz.allow_zooming,true) == root-scrollbar-async-zoomed-out.html root-scrollbar-async-zoomed-out-ref.html
 
 # Test that the compositor thumb sizing calculations handle a non-default device scale correctly
-fuzzy-if(Android,0-31,0-29) fuzzy-if(gtkWidget,0-18,0-49) fuzzy-if(cocoaWidget,0-3,0-53) pref(layout.css.devPixelsPerPx,"0.67") == async-scrollbar-1-v.html async-scrollbar-1-v-ref.html
+fuzzy-if(Android,0-31,0-29) fuzzy-if(gtkWidget,0-18,0-49) fuzzy-if(cocoaWidget,0-18,0-53) == async-scrollbar-1-v-fullzoom.html async-scrollbar-1-v-fullzoom-ref.html
 
 # Test scrollbars working properly with pinch-zooming, i.e. different document resolutions.
 # As above, the end of the scrollthumb won't match perfectly, but the bulk of the scrollbar should be present and identical.
