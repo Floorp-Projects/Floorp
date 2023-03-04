@@ -686,6 +686,8 @@ void AssertSetObjectHash(JSContext* cx, SetObject* obj, const Value* value,
 void AssertMapObjectHash(JSContext* cx, MapObject* obj, const Value* value,
                          mozilla::HashNumber actualHash);
 
+void AssertPropertyLookup(NativeObject* obj, PropertyName* id, uint32_t slot);
+
 // Functions used when JS_MASM_VERBOSE is enabled.
 void AssumeUnreachable(const char* output);
 void Printf0(const char* output);

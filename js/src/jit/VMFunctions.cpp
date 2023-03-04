@@ -2833,6 +2833,17 @@ void AssertMapObjectHash(JSContext* cx, MapObject* obj, const Value* value,
   MOZ_ASSERT(actualHash == HashValue(cx, obj->getData(), value));
 }
 
+void AssertPropertyLookup(NativeObject* obj, PropertyName* id, uint32_t slot) {
+  AutoUnsafeCallWithABI unsafe;
+#ifdef DEBUG
+  mozilla::Maybe<PropertyInfo> prop = obj->lookupPure(id);
+  MOZ_ASSERT(prop.isSome());
+  MOZ_ASSERT(prop->slot() == slot);
+#else
+  MOZ_CRASH("This should only be called in debug builds.");
+#endif
+}
+
 void AssumeUnreachable(const char* output) {
   MOZ_ReportAssertionFailure(output, __FILE__, __LINE__);
 }
