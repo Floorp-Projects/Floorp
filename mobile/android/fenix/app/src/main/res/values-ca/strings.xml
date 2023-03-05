@@ -730,9 +730,16 @@
     <!-- Text to show users they have one site in the history group section of the History fragment.
     %d is a placeholder for the number of sites in the group. -->
     <string name="history_search_group_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%d lloc</string>
+    <!-- Text to show users they have one page in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_site_1">%d pàgina</string>
     <!-- Text to show users they have multiple sites in the history group section of the History fragment.
     %d is a placeholder for the number of sites in the group. -->
     <string name="history_search_group_sites" moz:RemovedIn="111" tools:ignore="UnusedResources">%d llocs</string>
+
+    <!-- Text to show users they have multiple pages in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_sites_1">%d pàgines</string>
 
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Pestanyes tancades recentment</string>
@@ -1196,13 +1203,13 @@
     <string name="notification_pbm_delete_text_2">Tanca les pestanyes privades</string>
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Màrqueting</string>
-    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_title">El %1$s és ràpid i privat</string>
-    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_text">Fes que el %1$s sigui el navegador per defecte</string>
 
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_title" tools:ignore="UnusedResources">El Firefox és ràpid i privat</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_text" tools:ignore="UnusedResources">Fes que el Firefox sigui el navegador per defecte</string>
     <!-- Title shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_title">Proveu la navegació privada</string>
     <!-- Text shown in the notification that pops up to re-engage the user.
@@ -1347,6 +1354,8 @@
     <string name="onboarding_firefox_account_sync_is_on">La sincronització està activada</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Protecció de la privadesa per defecte</string>
+    <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_old">El %1$s bloca automàticament les empreses que, en secret, us fan el seguiment mentre navegueu.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">La protecció total de galetes impedeix que els seguidors utilitzin les galetes per a perseguir-vos d’un lloc web a l’altre.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1369,7 +1378,7 @@
     <string name="onboarding_privacy_notice_read_button">Mostra l’avís de privadesa</string>
 
     <!-- Text for the conclusion onboarding message -->
-    <string name="onboarding_conclusion_header">Esteu a punt per obrir una Internet espectacular?</string>
+    <string name="onboarding_conclusion_header">A punt per obrir una Internet fascinant?</string>
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Comença a navegar</string>
 
@@ -2031,4 +2040,6 @@
     <string name="a11y_action_label_wallpaper_collection_learn_more">obrir l’enllaç per obtenir més informació sobre aquesta col·lecció</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
     <string name="a11y_action_label_read_article">llegir l’article</string>
-    </resources>
+    <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
+    <string name="a11y_action_label_pocket_learn_more">obrir l’enllaç i veure més informació</string>
+</resources>

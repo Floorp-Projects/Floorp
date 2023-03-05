@@ -118,6 +118,23 @@
     <string name="shortcut_erase_and_open_long_label">Vymazat a otevřít %1$s</string>
 
 
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Focus is hard coded since we can't use variables in this context.
+         Do not translate or transliterate Focus.-->
+    <string name="text_selection_search_action_focus">Vyhledat ve Focusu</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+             Klar is hard coded since we can't use variables in this context.
+             Do not translate or transliterate Klar.-->
+    <string name="text_selection_search_action_klar">Vyhledat v Klaru</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+            Focus Beta is hard coded since we can't use variables in this context.
+            Do not translate or transliterate Focus Beta.-->
+    <string name="text_selection_search_action_focus_beta">Vyhledat v betaverzi Focusu</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+          Focus Nightly is hard coded since we can't use variables in this context.
+          Do not translate or transliterate Focus Nightly.-->
+    <string name="text_selection_search_action_focus_nightly">Vyhledat ve Focusu Nightly</string>
+
     <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
          Argument 2 is the url for the learn-more link. -->
     <string name="about_content"><![CDATA[<p>%1$s vám dává kontrolu.</p>
@@ -495,6 +512,13 @@
     <!-- %1$s will be replaced by the app short name(Focus) -->
     <string name="onboarding_second_screen_title">%1$s není jako ostatní prohlížeče</string>
 
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">Pro zvýšení vašeho soukromí vymažeme při zavření aplikace vaši historii.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Nastavte si aplikaci %1$s jako výchozí a chraňte tak svá data při každém otevření odkazu.</string>
+
     <!-- New Onboarding flow second screen make Focus default browser button label-->
     <string name="onboarding_second_screen_default_browser_button_text">Nastavit jako výchozí prohlížeč</string>
 
@@ -691,6 +715,9 @@
 
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site. -->
     <string name="cookie_banner_exception_panel_title_state_off_for_site">Chcete vypnout omezení cookie lišt pro %1$s?</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
+    <string name="cookie_banner_exception_panel_description_state_off_for_site2">%1$s se může pokusit automaticky odmítnout žádosti o povolení cookies.</string>
 
     <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
     <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">nastavení</string>
@@ -956,11 +983,18 @@
 
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">Požadovaný web nepodporuje HTTPS</string>
-    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">Ve výchozím nastavení navazuje %1$s bezpečné spojení pomocí protokolu HTTPS. Pro více informací nebo změnu tohoto nastavení přejděte do Nastavení &gt; Soukromí a zabezpečení &gt; Zabezpečení.</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">Požadovaný web nepodporuje HTTPS</string>
 
-    <!-- Sessions List -->
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Tento server nepodporuje HTTPS</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Ve výchozím nastavení navazuje %1$s bezpečné spojení pomocí protokolu HTTPS. Pro více informací nebo změnu tohoto nastavení přejděte do Nastavení &gt; Soukromí a zabezpečení &gt; Zabezpečení.</string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Spojení není zabezpečené</string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Zavřít panel</string>
 
@@ -978,6 +1012,9 @@
     <string name="tool_tip_message">Tato výchozí nastavení poskytují silnou ochranu. Můžete je ale jednoduše nastavit podle vlastních potřeb.</string>
     <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
     <string name="tool_tip_dismiss_button_content_description">Zavřít</string>
+
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon2">Klepnutím sem vše vyhodíte do koše – historii, cookies, prostě vše – a začnete znovu v novém panelu.</string>
 
     <!-- Promote SearchWidget Dialog -->
 
@@ -999,6 +1036,9 @@
 
     !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
     of the app (e.g. &quot;Focus&quot;) --&gt;
+    <!-- Banner Info Message than will appear when user first enters in the app. The location is at the toolbar. -->
+    <string name="cfr_for_start_browsing">Začněte svou relaci anonymního prohlížení a my budeme průběžně blokovat sledovací prvky a jiné zlé věci.</string>
+
     <!-- This is te text from add search widget to home screen button .The button is located on
     promote search widget dialog. -->
     <string name="promote_search_widget_button_text">Přidat widget na domovskou obrazovku</string>

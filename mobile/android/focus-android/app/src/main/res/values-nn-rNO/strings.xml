@@ -1020,8 +1020,27 @@
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
     <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Som standard vil %1$s forsøke å kople til med HTTPS for auka sikkerheit. For å endre innstillingane eller å lese meir, gå til Innstillingar &gt; Personvern og sikkerheit &gt; Sikkerheit.</string>
 
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s prøver å bruke ei HTTPS-tilkopling når det er muleg, for auka sikkerheit.
+     <a href="%2$s">Les meir</a> <br/><br/>
+    Endre denne innstillinga i Instillingar > Personvern og sikkerheit > Sikkerheit.]]></string>
+
     <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Tilkoplinga er ikkje trygg</string>
+
+     <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    Dette kan vere eit problem med konfigurasjonen til serveren, eller så kan det vere nokon som prøver å gje seg ut for å vere serveren. <br/><br/>
+    Om du har kopla til denne serveren tidlegare kan feilen vere tilfeldig.
+    ]]></string>
+
+     <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Nokon kan prøve å gje seg ut for å vere nettstaden, og å halde fram kan vere riskabelt.</label>
+        <br><br>
+        <label>%1$s stolar ikkje på <b>%2$s</b> fordi sertifikatutskrivaren er ukjend, sertifikatet er sjølvsignert eller at serveren ikkje sender rett mellomliggjande sertifikat.</label>
+    ]]></string>
 
      <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->

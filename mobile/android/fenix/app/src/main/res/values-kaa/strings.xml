@@ -32,7 +32,7 @@
     <!-- Label of button in create collection dialog for creating a new collection  -->
     <string name="tab_tray_add_new_collection">Jańa toplam qosıw</string>
     <!-- Label of editable text in create collection dialog for naming a new collection  -->
-    <string name="tab_tray_add_new_collection_name">Atı</string>
+    <string name="tab_tray_add_new_collection_name">Ataması</string>
 
 
     <!-- Label of button in save to collection dialog for selecting a current collection  -->
@@ -400,7 +400,7 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarlamalardı jasırıw ushı
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">Kóriwden alań bolmaw ushın, cookie haqqındaǵı qalqıp shıǵıwshı aynalarǵa avtomatikalıq juwap beriw. %1$s múmkinshiligi bolsa hámme sorawlardı bırkarlaydı.</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Qalqıp turıwshı aynalardı ótkizip jiberiw</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Qalqıp turıwshı aynalardı ótkerip jiberiw</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Cookie haqqındaǵı xabarlamalardı qısqartıw</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
@@ -512,7 +512,7 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarlamalardı jasırıw ushı
     <string name="customize_addon_collection_cancel">Biykarlaw</string>
 
     <!-- Hint displayed on input field for custom collection name -->
-    <string name="customize_addon_collection_hint">Toplam atı</string>
+    <string name="customize_addon_collection_hint">Toplam ataması</string>
 
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Toplam iyesi (Paydalanıwshı ID)</string>
@@ -598,9 +598,9 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarlamalardı jasırıw ushı
 
 
     <!-- Preference displays and allows changing current FxA device name -->
-    <string name="preferences_sync_device_name">Qurılma atı</string>
+    <string name="preferences_sync_device_name">Qurılma ataması</string>
     <!-- Text shown when user enters empty device name -->
-    <string name="empty_device_name_error">Qurılma atı bos bolıwı múmkin emes.</string>
+    <string name="empty_device_name_error">Qurılma ataması bos bolıwı múmkin emes.</string>
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing_in_progress">Sáykeslestiriw…</string>
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
@@ -887,7 +887,7 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarlamalardı jasırıw ushı
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Betlerdi ashıw</string>
     <!-- Hint for adding name of a collection -->
-    <string name="collection_name_hint">Toplam atı</string>
+    <string name="collection_name_hint">Toplam ataması</string>
 	<!-- Text for the menu button to rename a top site -->
 	<string name="rename_top_site">Qayta ataw</string>
 	<!-- Text for the menu button to remove a top site -->
@@ -997,7 +997,7 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarlamalardı jasırıw ushı
     <!-- Bookmark FOLDER editing field label -->
     <string name="bookmark_folder_label">PAPKA</string>
     <!-- Bookmark NAME editing field label -->
-    <string name="bookmark_name_label">ATI</string>
+    <string name="bookmark_name_label">ATAMASI</string>
 
     <!-- Bookmark add folder screen title -->
     <string name="bookmark_add_folder_fragment_label">Papka qosıw</string>
@@ -1054,7 +1054,7 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarlamalardı jasırıw ushı
     <!-- Preference for altering the location access for all websites -->
     <string name="preference_phone_feature_location">Jaylasıw ornı</string>
     <!-- Preference for altering the notification access for all websites -->
-    <string name="preference_phone_feature_notification">Xabarnama</string>
+    <string name="preference_phone_feature_notification">Xabarlama</string>
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Turaqlı saqlaw ornı</string>
     <!-- Preference for altering the storage access setting for all websites -->
@@ -1118,7 +1118,7 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarlamalardı jasırıw ushı
     <!-- Title for the "select collection" step of the collection creator -->
     <string name="create_collection_select_collection">Toplamdı tańlań</string>
     <!-- Title for the "name collection" step of the collection creator -->
-    <string name="create_collection_name_collection">Toplam atı</string>
+    <string name="create_collection_name_collection">Toplam ataması</string>
     <!-- Button to add new collection for the "select collection" step of the collection creator -->
     <string name="create_collection_add_new_collection">Jańa toplam qosıw</string>
     <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
@@ -1219,7 +1219,7 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarlamalardı jasırıw ushı
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Toplam óshirildi</string>
     <!-- Text shown in snackbar when user renames a collection -->
-    <string name="snackbar_collection_renamed">Toplam atı ózgertildi</string>
+    <string name="snackbar_collection_renamed">Toplam ataması ózgertildi</string>
     <!-- Text shown in snackbar when user closes a tab -->
     <string name="snackbar_tab_closed">Bet jabıldı</string>
     <!-- Text shown in snackbar when user closes all tabs -->
@@ -1259,7 +1259,7 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarlamalardı jasırıw ushı
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Tolıq ekran rejimi</string>
     <!-- Message for copying the URL via long press on the toolbar -->
-    <string name="url_copied">Silteme nusqalandı</string>
+    <string name="url_copied">Silteme kóshirip alındı</string>
 
     <!-- Sample text for accessibility font size -->
     <string name="accessibility_text_size_sample_text_1">Bul úlgi tekst. Siz bul sazlaw járdeminde ólshemdi úlkeytkende yamasa kishireytkende, tekst qanday kórinetuǵının kóriwge boladı.</string>
@@ -1576,7 +1576,7 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarlamalardı jasırıw ushı
     <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
     <string name="add_to_homescreen_continue">Saytqa qaytıw</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
-    <string name="add_to_homescreen_text_placeholder">Operativ buyrıq atı</string>
+    <string name="add_to_homescreen_text_placeholder">Operativ buyrıq ataması</string>
 
     <!-- Describes the add to homescreen functionality -->
     <string name="add_to_homescreen_description_2">Tez kiriw ushın bul sayttı qurılmańız tiykarǵı ekranına qoyıwıńız múmkin.</string>
@@ -1664,7 +1664,7 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarlamalardı jasırıw ushı
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom_summary">Bul háreket tıyım salınǵan veb-saytlarda da kólemin ózgertiwge ruqsat etiw ushın qosıń.</string>
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
-    <string name="saved_logins_sort_strategy_alphabetically">Atı boyınsha (A-Z)</string>
+    <string name="saved_logins_sort_strategy_alphabetically">Ataması boyınsha (A-Z)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Sońǵı qollanılǵan</string>
 
@@ -1950,9 +1950,9 @@ Eger de biykar etiw múmkinshiligi bolmasa, %2$s xabarlamalardı jasırıw ushı
     <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_4">Operativ buyrıqlar</string>
 	<!-- Title text displayed in the rename top site dialog. -->
-	<string name="top_sites_rename_dialog_title">Atı</string>
+	<string name="top_sites_rename_dialog_title">Ataması</string>
     <!-- Hint for renaming title of a shortcut -->
-    <string name="shortcut_name_hint">Operativ buyrıq atı</string>
+    <string name="shortcut_name_hint">Operativ buyrıq ataması</string>
 	<!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">MAQUL</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->

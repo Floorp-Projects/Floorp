@@ -998,12 +998,36 @@
     <string name="preference_follow_device_theme">Segons el tema del dispositiu</string>
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">El lloc que heu sol·licitat no admet HTTPS</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">El lloc que heu sol·licitat no admet HTTPS</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Aquest lloc no admet HTTPS</string>
 
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">Per defecte, el %1$s intenta connectar-se mitjançant HTTPS per millorar la seguretat. Per a canviar aquest paràmetre o per a obtenir-ne més informació, aneu a Paràmetres &gt; Privadesa i seguretat &gt; Seguretat.</string>
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Per defecte, el %1$s intenta connectar-se mitjançant HTTPS per millorar la seguretat. Per a canviar aquest paràmetre o per a obtenir-ne més informació, aneu a Paràmetres &gt; Privadesa i seguretat &gt; Seguretat.</string>
 
-    <!-- Sessions List -->
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[El %1$s intenta utilitzar una connexió HTTPS sempre que sigui possible per a més seguretat.
+ <a href="%2$s">Més informació</a> <br/><br/>
+ Podeu canviar aquest paràmetre a Paràmetres > Privadesa i seguretat > Seguretat.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">La connexió no és segura</string>
+
+     <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+ Això podria ser un problema amb la configuració del servidor, o bé podria ser que algú estigués intentant fer-se passar pel servidor.<br/><br/>
+ Si us hi heu connectat sense cap problema alguna altra vegada, l’error podria ser temporal.
+ ]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+ <label>És possible que algú estigui intentant suplantar el lloc i podria ser arriscat continuar.</label>
+ <br><br>
+ <label>El %1$s no confia en <b>%2$s</b> perquè l’emissor del seu certificat és desconegut, el certificat està signat per ell mateix o el servidor no envia els certificats intermedis correctes.</label>]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Tanca la pestanya</string>
 

@@ -57,6 +57,8 @@
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">Aberi in s’ischeda privada imbeniente cun unu tocu ebbia.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message_2">Aberi s’ischeda privada imbeniente cun unu tocu ebbia.</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Agiunghe a s’ischermu printzipale</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -148,6 +150,8 @@
     <string name="browser_menu_stop">Firma</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Cumplementos</string>
+    <!-- Browser menu button that opens account settings -->
+    <string name="browser_menu_account_settings">Informatziones de su contu</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Nissunu cumplementu inoghe</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -303,6 +307,8 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Modalidade «isceti HTTPS»</string>
 
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Ismenguada de is avisos de testimòngios</string>
     <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
     <string name="reduce_cookie_banner_option_off">Disativadu</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
@@ -312,6 +318,14 @@
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Ativu pro custu situ</string>
 
+    <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">Situ non cumpatìbile</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">Boles ativare s’ismèngua de is avisos de testimòngios pro %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">Boles disativare s’ismèngua de is avisos de testimòngios pro %1$s?</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s at a limpiare is testimòngios de custu situ e at a atualizare sa pàgina. Sa limpiesa de totu is testimòngios ti diat pòdere serrare sa sessione o isboidare is carrellos de s’ispesa.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Immoe nono</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
@@ -661,6 +675,9 @@
     <string name="opening_screen_homepage_summary">Aberi in sa pàgina printzipale</string>
     <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
     <string name="opening_screen_last_tab_summary">Aberi in s’ùrtima ischeda</string>
+
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">Aberi sa pàgina printzipale a pustis de 4 oras</string>
 
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
@@ -1022,12 +1039,6 @@
     <!-- Notifications -->
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Serra is ischedas privadas</string>
-    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_title">%1$s est lestru e privadu</string>
-    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_text">Imprea %1$s comente navigadore predefinidu</string>
     <!-- Title shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_title">Prova sa navigatzione privada</string>
 
@@ -1140,6 +1151,8 @@
     <string name="onboarding_tracking_protection_header">Amparu de riservadesa predefinidu</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Istàndard (predefinidu)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_3">Echilìbriu intre amparu e rendimentu. Is pàginas s’ant a carrigare cun normalidade.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Restrinta</string>
     <!-- Text for the privacy notice onboarding card header -->

@@ -273,15 +273,23 @@
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Tawetamaj ruwäch ri ichinan ruxaq tikirib\'äl. Ri k\'ak\'a\' taq ruwi\', taq yaketal chuqa\' retal taq kanoxïk wawe\' xkeq\'alajin.</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title_2">Ütz apetik pa jun k\'amaya\'l awichin</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">K\'ïy b\'onil. Ütz ichinanem. Nuya\' rutzij chi kiwäch ri winäq stape\' janipe\' na ri ch\'akoj.</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">Najäl ruwäch wakami man k\'ayew ta</string>
 
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Tasamajij chik el akuchi\' xya\' wi kan pa jun chik ruwi\' jun okisaxel, wakami ruxaq atikirib\'al.</string>
     <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_get_started_button">Titikirisäx</string>
     <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
     <string name="onboarding_home_sign_in_button">Titikirisäx molojri\'ïl</string>
     <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
     <string name="onboarding_home_skip_button">Tik\'o</string>
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">¡Najin yexim ri taq ruwi\'! Kasamäj chik el akuchi\' xaya\' wi kan pa jun chik okisaxel.</string>
     <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
     <string name="onboarding_home_content_description_close_button">Titz\'apïx</string>
 
@@ -289,6 +297,9 @@
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="onboarding_home_enable_notifications_title">Ri taq rutzijol yatkito\' richin nasamajij  ch\'aqa\' chik pa %s</string>
+    <!-- Enable notification pre permission dialog description with rationale
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_description">Ke\'axima\' ri taq ruwi\' chi kikojol ri taq okisaxel, ke\'anuk\'samajij taq qasanïk, ke\'ak\'ulu\' taq na\'oj chi rij rub\'eyal nawïl ri rutzil ruchajixik richinanem %s chuqa\' ch\'aqa\' chik.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="onboarding_home_enable_notifications_positive_button">Titikïr chik el</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
