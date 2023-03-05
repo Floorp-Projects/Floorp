@@ -14,13 +14,18 @@ echo "running as $(id)"
 
 : WORKSPACE "${WORKSPACE:=/builds/worker/workspace}"
 
-# Package everything up.
-pushd "$WORKSPACE"
-mkdir -p external-gradle-dependencies /builds/worker/artifacts
 
-cp -R "${NEXUS_WORK}/storage/google" external-gradle-dependencies
-cp -R "${NEXUS_WORK}/storage/central" external-gradle-dependencies
+function _package_artifacts_downloaded_by_nexus() {
+    pushd "$WORKSPACE"
+    mkdir -p external-gradle-dependencies /builds/worker/artifacts
 
-tar cf - external-gradle-dependencies | xz > /builds/worker/artifacts/external-gradle-dependencies.tar.xz
+    cp -R "${NEXUS_WORK}/storage/google" external-gradle-dependencies
+    cp -R "${NEXUS_WORK}/storage/central" external-gradle-dependencies
 
-popd
+    tar cf - external-gradle-dependencies | xz > /builds/worker/artifacts/external-gradle-dependencies.tar.xz
+
+    popd
+}
+
+
+_package_artifacts_downloaded_by_nexus
