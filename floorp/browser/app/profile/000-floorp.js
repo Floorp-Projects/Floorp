@@ -85,7 +85,7 @@ pref("floorp.browser.sidebar.enable", true);// サイドバーを表示
 pref("floorp.browser.sidebar2.page", "");//サイドバーで開いているページ
 
 // url:URL width:幅 userAgent:userAgent usercontext:コンテナタブ
-pref("floorp.browser.sidebar2.data", '{"data":{},"index":[}');
+pref("floorp.browser.sidebar2.data", '{"data":{},"index":[]}');
 
 pref("floorp.browser.sidebar2.global.webpanel.width", 400);
 
