@@ -10,18 +10,18 @@
 
 set -x -e
 
-echo "running as" $(id)
+echo "running as $(id)"
 
-: WORKSPACE ${WORKSPACE:=/builds/worker/workspace}
+: WORKSPACE "${WORKSPACE:=/builds/worker/workspace}"
 
 set -v
 
 # Package everything up.
-pushd $WORKSPACE
+pushd "$WORKSPACE"
 mkdir -p external-gradle-dependencies /builds/worker/artifacts
 
-cp -R ${NEXUS_WORK}/storage/google external-gradle-dependencies
-cp -R ${NEXUS_WORK}/storage/central external-gradle-dependencies
+cp -R "${NEXUS_WORK}/storage/google" external-gradle-dependencies
+cp -R "${NEXUS_WORK}/storage/central" external-gradle-dependencies
 
 tar cf - external-gradle-dependencies | xz > /builds/worker/artifacts/external-gradle-dependencies.tar.xz
 
