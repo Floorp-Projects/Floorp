@@ -199,6 +199,22 @@ class RangeBoundaryBase {
     return Some(kFallbackOffset);
   }
 
+  friend std::ostream& operator<<(
+      std::ostream& aStream,
+      const RangeBoundaryBase<ParentType, RefType>& aRangeBoundary) {
+    aStream << "{ mParent=" << aRangeBoundary.Container();
+    if (aRangeBoundary.Container()) {
+      aStream << " (" << *aRangeBoundary.Container()
+              << ", Length()=" << aRangeBoundary.Container()->Length() << ")";
+    }
+    aStream << ", mRef=" << aRangeBoundary.Ref();
+    if (aRangeBoundary.Ref()) {
+      aStream << " (" << *aRangeBoundary.Ref() << ")";
+    }
+    aStream << ", mOffset=" << aRangeBoundary.mOffset << " }";
+    return aStream;
+  }
+
  private:
   void DetermineOffsetFromReference() const {
     MOZ_ASSERT(mParent);

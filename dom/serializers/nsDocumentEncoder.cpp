@@ -1650,8 +1650,8 @@ nsHTMLCopyEncoder::SetSelection(Selection* aSelection) {
     ErrorResult result;
     RefPtr<Selection> selection(mEncodingScope.mSelection);
     RefPtr<Document> document(mDocument);
-    selection->AddRangeAndSelectFramesAndNotifyListeners(*myRange, document,
-                                                         result);
+    selection->AddRangeAndSelectFramesAndNotifyListenersInternal(
+        *myRange, document, result);
     rv = result.StealNSResult();
     NS_ENSURE_SUCCESS(rv, rv);
   }

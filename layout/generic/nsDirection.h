@@ -7,9 +7,13 @@
 #ifndef nsDirection_h___
 #define nsDirection_h___
 
+#include <ostream>
+
 // This file makes the nsDirection enum present both in nsIFrame.h and
 // Selection.h.
 
 enum nsDirection { eDirNext = 0, eDirPrevious = 1 };
+
+std::ostream& operator<<(std::ostream& aStream, const nsDirection& aDirection);
 
 #endif

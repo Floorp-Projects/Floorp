@@ -7,7 +7,6 @@
 #ifndef mozilla_Selection_h__
 #define mozilla_Selection_h__
 
-#include "mozilla/dom/StyledRange.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/PresShellForwards.h"
@@ -15,6 +14,7 @@
 #include "mozilla/SelectionChangeEventDispatcher.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/dom/StyledRange.h"
 #include "nsDirection.h"
 #include "nsISelectionController.h"
 #include "nsISelectionListener.h"
@@ -219,9 +219,7 @@ class Selection final : public nsSupportsWeakReference,
     return result.StealNSResult();
   }
   MOZ_CAN_RUN_SCRIPT void CollapseInLimiter(const RawRangeBoundary& aPoint,
-                                            ErrorResult& aRv) {
-    CollapseInternal(InLimiter::eYes, aPoint, aRv);
-  }
+                                            ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT nsresult Extend(nsINode* aContainer, uint32_t aOffset);
 
@@ -510,8 +508,7 @@ class Selection final : public nsSupportsWeakReference,
   MOZ_CAN_RUN_SCRIPT void CollapseInLimiter(nsINode& aContainer,
                                             uint32_t aOffset,
                                             ErrorResult& aRv) {
-    CollapseInternal(InLimiter::eYes, RawRangeBoundary(&aContainer, aOffset),
-                     aRv);
+    CollapseInLimiter(RawRangeBoundary(&aContainer, aOffset), aRv);
   }
 
  private:
@@ -577,9 +574,7 @@ class Selection final : public nsSupportsWeakReference,
    */
   MOZ_CAN_RUN_SCRIPT
   void SetStartAndEnd(const RawRangeBoundary& aStartRef,
-                      const RawRangeBoundary& aEndRef, ErrorResult& aRv) {
-    SetStartAndEndInternal(InLimiter::eNo, aStartRef, aEndRef, eDirNext, aRv);
-  }
+                      const RawRangeBoundary& aEndRef, ErrorResult& aRv);
   MOZ_CAN_RUN_SCRIPT
   void SetStartAndEnd(nsINode& aStartContainer, uint32_t aStartOffset,
                       nsINode& aEndContainer, uint32_t aEndOffset,
@@ -596,9 +591,7 @@ class Selection final : public nsSupportsWeakReference,
   MOZ_CAN_RUN_SCRIPT
   void SetStartAndEndInLimiter(const RawRangeBoundary& aStartRef,
                                const RawRangeBoundary& aEndRef,
-                               ErrorResult& aRv) {
-    SetStartAndEndInternal(InLimiter::eYes, aStartRef, aEndRef, eDirNext, aRv);
-  }
+                               ErrorResult& aRv);
   MOZ_CAN_RUN_SCRIPT
   void SetStartAndEndInLimiter(nsINode& aStartContainer, uint32_t aStartOffset,
                                nsINode& aEndContainer, uint32_t aEndOffset,
@@ -625,9 +618,7 @@ class Selection final : public nsSupportsWeakReference,
                         ErrorResult& aRv);
   MOZ_CAN_RUN_SCRIPT
   void SetBaseAndExtent(const RawRangeBoundary& aAnchorRef,
-                        const RawRangeBoundary& aFocusRef, ErrorResult& aRv) {
-    SetBaseAndExtentInternal(InLimiter::eNo, aAnchorRef, aFocusRef, aRv);
-  }
+                        const RawRangeBoundary& aFocusRef, ErrorResult& aRv);
 
   /**
    * SetBaseAndExtentInLimiter() is similar to SetBaseAndExtent(), but this
@@ -644,9 +635,7 @@ class Selection final : public nsSupportsWeakReference,
   MOZ_CAN_RUN_SCRIPT
   void SetBaseAndExtentInLimiter(const RawRangeBoundary& aAnchorRef,
                                  const RawRangeBoundary& aFocusRef,
-                                 ErrorResult& aRv) {
-    SetBaseAndExtentInternal(InLimiter::eYes, aAnchorRef, aFocusRef, aRv);
-  }
+                                 ErrorResult& aRv);
 
   void AddSelectionChangeBlocker();
   void RemoveSelectionChangeBlocker();
@@ -728,9 +717,9 @@ class Selection final : public nsSupportsWeakReference,
   friend class ::nsCopySupport;
   friend class ::nsHTMLCopyEncoder;
   MOZ_CAN_RUN_SCRIPT
-  void AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
-                                                 Document* aDocument,
-                                                 ErrorResult&);
+  void AddRangeAndSelectFramesAndNotifyListenersInternal(nsRange& aRange,
+                                                         Document* aDocument,
+                                                         ErrorResult&);
 
   // This is helper method for GetPrimaryFrameForFocusNode.
   // If aVisual is true, this returns caret frame.
@@ -837,6 +826,8 @@ class Selection final : public nsSupportsWeakReference,
                                                      Maybe<size_t>* aOutIndex);
 
   Document* GetDocument() const;
+
+  MOZ_CAN_RUN_SCRIPT void RemoveAllRangesInternal(mozilla::ErrorResult& aRv);
 
   void Disconnect();
 
