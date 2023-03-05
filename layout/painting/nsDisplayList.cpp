@@ -97,6 +97,7 @@
 #include "nsTableCellFrame.h"
 #include "nsTableColFrame.h"
 #include "nsTextFrame.h"
+#include "nsTextPaintStyle.h"
 #include "nsSliderFrame.h"
 #include "nsFocusManager.h"
 #include "TextDrawTarget.h"
@@ -7558,8 +7559,9 @@ bool nsDisplayText::CreateWebRenderCommands(
 
   // Similarly for shadows that may be cast by ::selection.
   if (f->IsSelected()) {
+    nsTextPaintStyle textPaint(f);
     Span<const StyleSimpleShadow> shadows;
-    f->GetSelectionTextShadow(SelectionType::eNormal, &shadows);
+    f->GetSelectionTextShadow(SelectionType::eNormal, textPaint, &shadows);
     addShadowSourceToVisible(shadows);
   }
 

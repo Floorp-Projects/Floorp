@@ -206,6 +206,7 @@ UNIFIED_SOURCES += [
     "nsSubDocumentFrame.cpp",
     "nsTextFrame.cpp",
     "nsTextFrameUtils.cpp",
+    "nsTextPaintStyle.cpp",
     "nsTextRunTransformations.cpp",
     "nsVideoFrame.cpp",
     "PrintedSheetFrame.cpp",
