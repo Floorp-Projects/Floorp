@@ -8,13 +8,11 @@
 # https://searchfox.org/mozilla-central/rev/2cd2d511c0d94a34fb7fa3b746f54170ee759e35/taskcluster/scripts/misc/android-gradle-dependencies/after.sh.
 # gradle-plugins was removed because it's not used in this project.
 
-set -x -e
+set -x -e -v
 
 echo "running as $(id)"
 
 : WORKSPACE "${WORKSPACE:=/builds/worker/workspace}"
-
-set -v
 
 # Package everything up.
 pushd "$WORKSPACE"
