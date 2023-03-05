@@ -14,16 +14,17 @@ echo "running as $(id)"
 
 : WORKSPACE "${WORKSPACE:=/builds/worker/workspace}"
 ARTIFACTS_TARGET_DIR='/builds/worker/artifacts'
+EXTERNAL_DEPS='external-gradle-dependencies'
 
 
 function _package_artifacts_downloaded_by_nexus() {
     pushd "$WORKSPACE"
-    mkdir -p external-gradle-dependencies "$ARTIFACTS_TARGET_DIR"
+    mkdir -p "$WORKSPACE/$EXTERNAL_DEPS" "$ARTIFACTS_TARGET_DIR"
 
-    cp -R "${NEXUS_WORK}/storage/google" external-gradle-dependencies
-    cp -R "${NEXUS_WORK}/storage/central" external-gradle-dependencies
+    cp -R "${NEXUS_WORK}/storage/google" "$EXTERNAL_DEPS"
+    cp -R "${NEXUS_WORK}/storage/central" "$EXTERNAL_DEPS"
 
-    tar cf - external-gradle-dependencies | xz > "$ARTIFACTS_TARGET_DIR/external-gradle-dependencies.tar.xz"
+    tar cf - "$EXTERNAL_DEPS" | xz > "$ARTIFACTS_TARGET_DIR/$EXTERNAL_DEPS.tar.xz"
 
     popd
 }
