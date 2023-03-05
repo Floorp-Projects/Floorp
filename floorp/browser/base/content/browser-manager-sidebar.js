@@ -125,9 +125,9 @@ const bmsController = {
                 BROWSER_SIDEBAR_DATA.index.splice(index, 1);
                 delete BROWSER_SIDEBAR_DATA.data[clickedWebpanel.replace("select-", "")];
                 Services.prefs.setStringPref(`floorp.browser.sidebar2.data`, JSON.stringify(BROWSER_SIDEBAR_DATA));
-                contextWebpanel.remove();
+                contextWebpanel?.remove();
 
-                if(document.getElementById(clickedWebpanel) != null) document.getElementById(clickedWebpanel).remove();
+                document.getElementById(clickedWebpanel)?.remove();
             },
             muteWebpanel:()=>{
                 if (contextWebpanel.audioMuted == false) {
