@@ -8,6 +8,10 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
+const { FirefoxRelayTelemetry } = ChromeUtils.importESModule(
+  "resource://gre/modules/FirefoxRelayTelemetry.mjs"
+);
+
 const LoginInfo = new Components.Constructor(
   "@mozilla.org/login-manager/loginInfo;1",
   Ci.nsILoginInfo,
@@ -351,10 +355,20 @@ class LoginManagerParent extends JSWindowActorParent {
       }
 
       case "PasswordManager:offerRelayIntegration": {
+        FirefoxRelayTelemetry.recordRelayOfferedEvent(
+          "clicked",
+          data.telemetry.flowId,
+          data.telemetry.scenarioName,
+          data.telemetry.isRelayUser
+        );
         return this.#offerRelayIntegration(context.origin);
       }
 
       case "PasswordManager:generateRelayUsername": {
+        FirefoxRelayTelemetry.recordRelayUsernameFilledEvent(
+          "clicked",
+          data.telemetry.flowId
+        );
         return this.#generateRelayUsername(context.origin);
       }
     }
@@ -778,6 +792,7 @@ class LoginManagerParent extends JSWindowActorParent {
     // Convert the array of nsILoginInfo to vanilla JS objects since nsILoginInfo
     // doesn't support structured cloning.
     let jsLogins = lazy.LoginHelper.loginsToVanillaObjects(matchingLogins);
+
     return {
       generatedPassword,
       importable: await getImportableLogins(formOrigin),
