@@ -35,10 +35,12 @@
 #include "mozilla/dom/RangeBinding.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Text.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/RangeUtils.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/ToString.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Likely.h"
 #include "nsCSSFrameConstructor.h"
@@ -46,6 +48,32 @@
 #include "nsStyleStructInlines.h"
 #include "nsComputedDOMStyle.h"
 #include "mozilla/dom/InspectorFontFace.h"
+
+namespace mozilla {
+extern LazyLogModule sSelectionAPILog;
+extern void LogStackForSelectionAPI();
+
+template <typename SPT, typename SRT, typename EPT, typename ERT>
+static void LogSelectionAPI(const dom::Selection* aSelection,
+                            const char* aFuncName, const char* aArgName1,
+                            const RangeBoundaryBase<SPT, SRT>& aBoundary1,
+                            const char* aArgName2,
+                            const RangeBoundaryBase<EPT, ERT>& aBoundary2,
+                            const char* aArgName3, bool aBoolArg) {
+  if (aBoundary1 == aBoundary2) {
+    MOZ_LOG(sSelectionAPILog, LogLevel::Info,
+            ("%p nsRange::%s(%s=%s=%s, %s=%s)", aSelection, aFuncName,
+             aArgName1, aArgName2, ToString(aBoundary1).c_str(), aArgName3,
+             aBoolArg ? "true" : "false"));
+  } else {
+    MOZ_LOG(
+        sSelectionAPILog, LogLevel::Info,
+        ("%p nsRange::%s(%s=%s, %s=%s, %s=%s)", aSelection, aFuncName,
+         aArgName1, ToString(aBoundary1).c_str(), aArgName2,
+         ToString(aBoundary2).c_str(), aArgName3, aBoolArg ? "true" : "false"));
+  }
+}
+}  // namespace mozilla
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1022,6 +1050,17 @@ void nsRange::DoSetRange(const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
   // an invalid state. So we run it off of a script runner to ensure it runs
   // after the mutation observers have finished running.
   if (!mSelections.isEmpty()) {
+    if (MOZ_LOG_TEST(sSelectionAPILog, LogLevel::Info)) {
+      for (const RefPtr<SelectionListWrapper>& wrapper : mSelections) {
+        if (wrapper && wrapper->Get() &&
+            wrapper->Get()->Type() == SelectionType::eNormal) {
+          LogSelectionAPI(wrapper->Get(), __FUNCTION__, "aStartBoundary",
+                          aStartBoundary, "aEndBoundary", aEndBoundary,
+                          "aNotInsertedYet", aNotInsertedYet);
+          LogStackForSelectionAPI();
+        }
+      }
+    }
     nsContentUtils::AddScriptRunner(
         NewRunnableMethod("NotifySelectionListenersAfterRangeSet", this,
                           &nsRange::NotifySelectionListenersAfterRangeSet));

@@ -31,11 +31,13 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/RangeUtils.h"
+#include "mozilla/StackWalk.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Telemetry.h"
 
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
+#include "nsDirection.h"
 #include "nsString.h"
 #include "nsFrameSelection.h"
 #include "nsISelectionListener.h"
@@ -80,10 +82,157 @@
 #include "nsFocusManager.h"
 #include "nsPIDOMWindow.h"
 
+namespace mozilla {
+// "Selection" logs only the calls of AddRangesForSelectableNodes and
+// NotifySelectionListeners in debug level.
+static LazyLogModule sSelectionLog("Selection");
+// "SelectionAPI" logs all API calls (both internal ones and exposed to script
+// ones) of normal selection which may change selection ranges.
+// 3. Info: Calls of APIs
+// 4. Debug: Call stacks with 7 ancestor callers of APIs
+// 5. Verbose: Complete call stacks of APIs.
+LazyLogModule sSelectionAPILog("SelectionAPI");
+
+MOZ_ALWAYS_INLINE bool NeedsToLogSelectionAPI(dom::Selection& aSelection) {
+  return aSelection.Type() == SelectionType::eNormal &&
+         MOZ_LOG_TEST(sSelectionAPILog, LogLevel::Info);
+}
+
+void LogStackForSelectionAPI() {
+  if (!MOZ_LOG_TEST(sSelectionAPILog, LogLevel::Debug)) {
+    return;
+  }
+  static nsAutoCString* sBufPtr = nullptr;
+  MOZ_ASSERT(!sBufPtr);
+  nsAutoCString buf;
+  sBufPtr = &buf;
+  auto writer = [](const char* aBuf) { sBufPtr->Append(aBuf); };
+  const LogLevel logLevel = MOZ_LOG_TEST(sSelectionAPILog, LogLevel::Verbose)
+                                ? LogLevel::Verbose
+                                : LogLevel::Debug;
+  MozWalkTheStackWithWriter(writer, CallerPC(),
+                            logLevel == LogLevel::Verbose
+                                ? 0u /* all */
+                                : 8u /* 8 inclusive ancestors */);
+  MOZ_LOG(sSelectionAPILog, logLevel, ("\n%s", buf.get()));
+  sBufPtr = nullptr;
+}
+
+static void LogSelectionAPI(const dom::Selection* aSelection,
+                            const char* aFuncName) {
+  MOZ_LOG(sSelectionAPILog, LogLevel::Info,
+          ("%p Selection::%s()", aSelection, aFuncName));
+}
+
+static void LogSelectionAPI(const dom::Selection* aSelection,
+                            const char* aFuncName, const char* aArgName,
+                            const nsINode* aNode) {
+  MOZ_LOG(sSelectionAPILog, LogLevel::Info,
+          ("%p Selection::%s(%s=%s)", aSelection, aFuncName, aArgName,
+           aNode ? ToString(*aNode).c_str() : "nullptr"));
+}
+
+static void LogSelectionAPI(const dom::Selection* aSelection,
+                            const char* aFuncName, const char* aArgName,
+                            const dom::AbstractRange& aRange) {
+  MOZ_LOG(sSelectionAPILog, LogLevel::Info,
+          ("%p Selection::%s(%s=%s)", aSelection, aFuncName, aArgName,
+           ToString(aRange).c_str()));
+}
+
+static void LogSelectionAPI(const dom::Selection* aSelection,
+                            const char* aFuncName, const char* aArgName1,
+                            const nsINode* aNode, const char* aArgName2,
+                            uint32_t aOffset) {
+  MOZ_LOG(sSelectionAPILog, LogLevel::Info,
+          ("%p Selection::%s(%s=%s, %s=%u)", aSelection, aFuncName, aArgName1,
+           aNode ? ToString(*aNode).c_str() : "nullptr", aArgName2, aOffset));
+}
+
+static void LogSelectionAPI(const dom::Selection* aSelection,
+                            const char* aFuncName, const char* aArgName,
+                            const RawRangeBoundary& aBoundary) {
+  MOZ_LOG(sSelectionAPILog, LogLevel::Info,
+          ("%p Selection::%s(%s=%s)", aSelection, aFuncName, aArgName,
+           ToString(aBoundary).c_str()));
+}
+
+static void LogSelectionAPI(const dom::Selection* aSelection,
+                            const char* aFuncName, const char* aArgName1,
+                            const nsAString& aStr1, const char* aArgName2,
+                            const nsAString& aStr2, const char* aArgName3,
+                            const nsAString& aStr3) {
+  MOZ_LOG(sSelectionAPILog, LogLevel::Info,
+          ("%p Selection::%s(%s=%s, %s=%s, %s=%s)", aSelection, aFuncName,
+           aArgName1, NS_ConvertUTF16toUTF8(aStr1).get(), aArgName2,
+           NS_ConvertUTF16toUTF8(aStr2).get(), aArgName3,
+           NS_ConvertUTF16toUTF8(aStr3).get()));
+}
+
+static void LogSelectionAPI(const dom::Selection* aSelection,
+                            const char* aFuncName, const char* aNodeArgName1,
+                            const nsINode& aNode1, const char* aOffsetArgName1,
+                            uint32_t aOffset1, const char* aNodeArgName2,
+                            const nsINode& aNode2, const char* aOffsetArgName2,
+                            uint32_t aOffset2) {
+  if (&aNode1 == &aNode2 && aOffset1 == aOffset2) {
+    MOZ_LOG(sSelectionAPILog, LogLevel::Info,
+            ("%p Selection::%s(%s=%s=%s, %s=%s=%u)", aSelection, aFuncName,
+             aNodeArgName1, aNodeArgName2, ToString(aNode1).c_str(),
+             aOffsetArgName1, aOffsetArgName2, aOffset1));
+  } else {
+    MOZ_LOG(
+        sSelectionAPILog, LogLevel::Info,
+        ("%p Selection::%s(%s=%s, %s=%u, %s=%s, %s=%u)", aSelection, aFuncName,
+         aNodeArgName1, ToString(aNode1).c_str(), aOffsetArgName1, aOffset1,
+         aNodeArgName2, ToString(aNode2).c_str(), aOffsetArgName2, aOffset2));
+  }
+}
+
+static void LogSelectionAPI(const dom::Selection* aSelection,
+                            const char* aFuncName, const char* aNodeArgName1,
+                            const nsINode& aNode1, const char* aOffsetArgName1,
+                            uint32_t aOffset1, const char* aNodeArgName2,
+                            const nsINode& aNode2, const char* aOffsetArgName2,
+                            uint32_t aOffset2, const char* aDirArgName,
+                            nsDirection aDirection, const char* aReasonArgName,
+                            int16_t aReason) {
+  if (&aNode1 == &aNode2 && aOffset1 == aOffset2) {
+    MOZ_LOG(sSelectionAPILog, LogLevel::Info,
+            ("%p Selection::%s(%s=%s=%s, %s=%s=%u, %s=%s, %s=%d)", aSelection,
+             aFuncName, aNodeArgName1, aNodeArgName2, ToString(aNode1).c_str(),
+             aOffsetArgName1, aOffsetArgName2, aOffset1, aDirArgName,
+             ToString(aDirection).c_str(), aReasonArgName, aReason));
+  } else {
+    MOZ_LOG(sSelectionAPILog, LogLevel::Info,
+            ("%p Selection::%s(%s=%s, %s=%u, %s=%s, %s=%u, %s=%s, %s=%d)",
+             aSelection, aFuncName, aNodeArgName1, ToString(aNode1).c_str(),
+             aOffsetArgName1, aOffset1, aNodeArgName2, ToString(aNode2).c_str(),
+             aOffsetArgName2, aOffset2, aDirArgName,
+             ToString(aDirection).c_str(), aReasonArgName, aReason));
+  }
+}
+
+static void LogSelectionAPI(const dom::Selection* aSelection,
+                            const char* aFuncName, const char* aArgName1,
+                            const RawRangeBoundary& aBoundary1,
+                            const char* aArgName2,
+                            const RawRangeBoundary& aBoundary2) {
+  if (aBoundary1 == aBoundary2) {
+    MOZ_LOG(sSelectionAPILog, LogLevel::Info,
+            ("%p Selection::%s(%s=%s=%s)", aSelection, aFuncName, aArgName1,
+             aArgName2, ToString(aBoundary1).c_str()));
+  } else {
+    MOZ_LOG(sSelectionAPILog, LogLevel::Info,
+            ("%p Selection::%s(%s=%s, %s=%s)", aSelection, aFuncName, aArgName1,
+             ToString(aBoundary1).c_str(), aArgName2,
+             ToString(aBoundary2).c_str()));
+  }
+}
+}  // namespace mozilla
+
 using namespace mozilla;
 using namespace mozilla::dom;
-
-static LazyLogModule sSelectionLog("Selection");
 
 // #define DEBUG_TABLE 1
 
@@ -617,7 +766,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(Selection)
 
 MOZ_CAN_RUN_SCRIPT_BOUNDARY
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Selection)
-  // Unlink the selection listeners *before* we do RemoveAllRanges since
+  // Unlink the selection listeners *before* we do RemoveAllRangesInternal since
   // we don't want to notify the listeners during JS GC (they could be
   // in JS!).
   tmp->mNotifyAutoCopy = false;
@@ -626,7 +775,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Selection)
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelectionChangeEventDispatcher)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelectionListeners)
-  MOZ_KnownLive(tmp)->RemoveAllRanges(IgnoreErrors());
+  MOZ_KnownLive(tmp)->RemoveAllRangesInternal(IgnoreErrors());
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrameSelection)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_PTR
@@ -1143,6 +1292,11 @@ nsresult Selection::StyledRanges::RemoveRangeAndUnregisterSelection(
   return NS_OK;
 }
 nsresult Selection::RemoveCollapsedRanges() {
+  if (NeedsToLogSelectionAPI(*this)) {
+    LogSelectionAPI(this, __FUNCTION__);
+    LogStackForSelectionAPI();
+  }
+
   return mStyledRanges.RemoveCollapsedRanges();
 }
 
@@ -1817,6 +1971,11 @@ nsIContent* Selection::GetAncestorLimiter() const {
 }
 
 void Selection::SetAncestorLimiter(nsIContent* aLimiter) {
+  if (NeedsToLogSelectionAPI(*this)) {
+    LogSelectionAPI(this, __FUNCTION__, "aLimiter", aLimiter);
+    LogStackForSelectionAPI();
+  }
+
   MOZ_ASSERT(mSelectionType == SelectionType::eNormal);
 
   if (mFrameSelection) {
@@ -1955,6 +2114,15 @@ nsresult AutoScroller::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint) {
 }
 
 void Selection::RemoveAllRanges(ErrorResult& aRv) {
+  if (NeedsToLogSelectionAPI(*this)) {
+    LogSelectionAPI(this, __FUNCTION__);
+    LogStackForSelectionAPI();
+  }
+
+  RemoveAllRangesInternal(aRv);
+}
+
+void Selection::RemoveAllRangesInternal(ErrorResult& aRv) {
   if (!mFrameSelection) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return;
@@ -1973,20 +2141,31 @@ void Selection::RemoveAllRanges(ErrorResult& aRv) {
 }
 
 void Selection::AddRangeJS(nsRange& aRange, ErrorResult& aRv) {
+  if (NeedsToLogSelectionAPI(*this)) {
+    LogSelectionAPI(this, __FUNCTION__, "aRange", aRange);
+    LogStackForSelectionAPI();
+  }
+
   AutoRestore<bool> calledFromJSRestorer(mCalledByJS);
   mCalledByJS = true;
-  AddRangeAndSelectFramesAndNotifyListeners(aRange, aRv);
-}
-
-void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
-                                                          ErrorResult& aRv) {
   RefPtr<Document> document(GetDocument());
-  return AddRangeAndSelectFramesAndNotifyListeners(aRange, document, aRv);
+  AddRangeAndSelectFramesAndNotifyListenersInternal(aRange, document, aRv);
 }
 
 void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
-                                                          Document* aDocument,
                                                           ErrorResult& aRv) {
+  if (NeedsToLogSelectionAPI(*this)) {
+    LogSelectionAPI(this, __FUNCTION__, "aRange", aRange);
+    LogStackForSelectionAPI();
+  }
+
+  RefPtr<Document> document(GetDocument());
+  return AddRangeAndSelectFramesAndNotifyListenersInternal(aRange, document,
+                                                           aRv);
+}
+
+void Selection::AddRangeAndSelectFramesAndNotifyListenersInternal(
+    nsRange& aRange, Document* aDocument, ErrorResult& aRv) {
   RefPtr<nsRange> range = &aRange;
   if (aRange.IsInAnySelection()) {
     if (aRange.IsInSelection(*this)) {
@@ -2087,6 +2266,11 @@ void Selection::AddHighlightRangeAndSelectFramesAndNotifyListeners(
 
 void Selection::RemoveRangeAndUnselectFramesAndNotifyListeners(
     AbstractRange& aRange, ErrorResult& aRv) {
+  if (NeedsToLogSelectionAPI(*this)) {
+    LogSelectionAPI(this, __FUNCTION__, "aRange", aRange);
+    LogStackForSelectionAPI();
+  }
+
   nsresult rv = mStyledRanges.RemoveRangeAndUnregisterSelection(aRange);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
@@ -2160,13 +2344,29 @@ void Selection::RemoveRangeAndUnselectFramesAndNotifyListeners(
  */
 void Selection::CollapseJS(nsINode* aContainer, uint32_t aOffset,
                            ErrorResult& aRv) {
+  if (NeedsToLogSelectionAPI(*this)) {
+    LogSelectionAPI(this, __FUNCTION__, "aContainer", aContainer, "aOffset",
+                    aOffset);
+    LogStackForSelectionAPI();
+  }
+
   AutoRestore<bool> calledFromJSRestorer(mCalledByJS);
   mCalledByJS = true;
   if (!aContainer) {
-    RemoveAllRanges(aRv);
+    RemoveAllRangesInternal(aRv);
     return;
   }
   CollapseInternal(InLimiter::eNo, RawRangeBoundary(aContainer, aOffset), aRv);
+}
+
+void Selection::CollapseInLimiter(const RawRangeBoundary& aPoint,
+                                  ErrorResult& aRv) {
+  if (NeedsToLogSelectionAPI(*this)) {
+    LogSelectionAPI(this, __FUNCTION__, "aPoint", aPoint);
+    LogStackForSelectionAPI();
+  }
+
+  CollapseInternal(InLimiter::eYes, aPoint, aRv);
 }
 
 void Selection::CollapseInternal(InLimiter aInLimiter,
@@ -2284,12 +2484,22 @@ void Selection::CollapseInternal(InLimiter aInLimiter,
  * at the start of the current selection
  */
 void Selection::CollapseToStartJS(ErrorResult& aRv) {
+  if (NeedsToLogSelectionAPI(*this)) {
+    LogSelectionAPI(this, __FUNCTION__);
+    LogStackForSelectionAPI();
+  }
+
   AutoRestore<bool> calledFromJSRestorer(mCalledByJS);
   mCalledByJS = true;
   CollapseToStart(aRv);
 }
 
 void Selection::CollapseToStart(ErrorResult& aRv) {
+  if (!mCalledByJS && NeedsToLogSelectionAPI(*this)) {
+    LogSelectionAPI(this, __FUNCTION__);
+    LogStackForSelectionAPI();
+  }
+
   if (RangeCount() == 0) {
     aRv.ThrowInvalidStateError(kNoRangeExistsError);
     return;
@@ -2320,12 +2530,22 @@ void Selection::CollapseToStart(ErrorResult& aRv) {
  * at the end of the current selection
  */
 void Selection::CollapseToEndJS(ErrorResult& aRv) {
+  if (NeedsToLogSelectionAPI(*this)) {
+    LogSelectionAPI(this, __FUNCTION__);
+    LogStackForSelectionAPI();
+  }
+
   AutoRestore<bool> calledFromJSRestorer(mCalledByJS);
   mCalledByJS = true;
   CollapseToEnd(aRv);
 }
 
 void Selection::CollapseToEnd(ErrorResult& aRv) {
+  if (!mCalledByJS && NeedsToLogSelectionAPI(*this)) {
+    LogSelectionAPI(this, __FUNCTION__);
+    LogStackForSelectionAPI();
+  }
+
   uint32_t cnt = RangeCount();
   if (cnt == 0) {
     aRv.ThrowInvalidStateError(kNoRangeExistsError);
@@ -2459,12 +2679,24 @@ void Selection::AdjustAnchorFocusForMultiRange(nsDirection aDirection) {
  */
 void Selection::ExtendJS(nsINode& aContainer, uint32_t aOffset,
                          ErrorResult& aRv) {
+  if (NeedsToLogSelectionAPI(*this)) {
+    LogSelectionAPI(this, __FUNCTION__, "aContainer", &aContainer, "aOffset",
+                    aOffset);
+    LogStackForSelectionAPI();
+  }
+
   AutoRestore<bool> calledFromJSRestorer(mCalledByJS);
   mCalledByJS = true;
   Extend(aContainer, aOffset, aRv);
 }
 
 nsresult Selection::Extend(nsINode* aContainer, uint32_t aOffset) {
+  if (NeedsToLogSelectionAPI(*this)) {
+    LogSelectionAPI(this, __FUNCTION__, "aContainer", aContainer, "aOffset",
+                    aOffset);
+    LogStackForSelectionAPI();
+  }
+
   if (!aContainer) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -2772,12 +3004,22 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
 }
 
 void Selection::SelectAllChildrenJS(nsINode& aNode, ErrorResult& aRv) {
+  if (NeedsToLogSelectionAPI(*this)) {
+    LogSelectionAPI(this, __FUNCTION__, "aNode", &aNode);
+    LogStackForSelectionAPI();
+  }
+
   AutoRestore<bool> calledFromJSRestorer(mCalledByJS);
   mCalledByJS = true;
   SelectAllChildren(aNode, aRv);
 }
 
 void Selection::SelectAllChildren(nsINode& aNode, ErrorResult& aRv) {
+  if (!mCalledByJS && NeedsToLogSelectionAPI(*this)) {
+    LogSelectionAPI(this, __FUNCTION__, "aNode", &aNode);
+    LogStackForSelectionAPI();
+  }
+
   if (aNode.NodeType() == nsINode::DOCUMENT_TYPE_NODE) {
     aRv.ThrowInvalidNodeTypeError(kNoDocumentTypeNodeError);
     return;
@@ -3347,6 +3589,11 @@ bool Selection::IsBlockingSelectionChangeEvents() const {
 }
 
 void Selection::DeleteFromDocument(ErrorResult& aRv) {
+  if (NeedsToLogSelectionAPI(*this)) {
+    LogSelectionAPI(this, __FUNCTION__);
+    LogStackForSelectionAPI();
+  }
+
   if (mSelectionType != SelectionType::eNormal) {
     return;  // Nothing to do.
   }
@@ -3380,6 +3627,12 @@ void Selection::DeleteFromDocument(ErrorResult& aRv) {
 
 void Selection::Modify(const nsAString& aAlter, const nsAString& aDirection,
                        const nsAString& aGranularity, ErrorResult& aRv) {
+  if (NeedsToLogSelectionAPI(*this)) {
+    LogSelectionAPI(this, __FUNCTION__, "aAlter", aAlter, "aDirection",
+                    aDirection, "aGranularity", aGranularity);
+    LogStackForSelectionAPI();
+  }
+
   if (!mFrameSelection) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return;
@@ -3495,6 +3748,13 @@ void Selection::Modify(const nsAString& aAlter, const nsAString& aDirection,
 void Selection::SetBaseAndExtentJS(nsINode& aAnchorNode, uint32_t aAnchorOffset,
                                    nsINode& aFocusNode, uint32_t aFocusOffset,
                                    ErrorResult& aRv) {
+  if (NeedsToLogSelectionAPI(*this)) {
+    LogSelectionAPI(this, __FUNCTION__, "aAnchorNode", aAnchorNode,
+                    "aAnchorOffset", aAnchorOffset, "aFocusNode", aFocusNode,
+                    "aFocusOffset", aFocusOffset);
+    LogStackForSelectionAPI();
+  }
+
   AutoRestore<bool> calledFromJSRestorer(mCalledByJS);
   mCalledByJS = true;
   SetBaseAndExtent(aAnchorNode, aAnchorOffset, aFocusNode, aFocusOffset, aRv);
@@ -3516,6 +3776,30 @@ void Selection::SetBaseAndExtent(nsINode& aAnchorNode, uint32_t aAnchorOffset,
 
   SetBaseAndExtent(RawRangeBoundary{&aAnchorNode, aAnchorOffset},
                    RawRangeBoundary{&aFocusNode, aFocusOffset}, aRv);
+}
+
+void Selection::SetBaseAndExtent(const RawRangeBoundary& aAnchorRef,
+                                 const RawRangeBoundary& aFocusRef,
+                                 ErrorResult& aRv) {
+  if (!mCalledByJS && NeedsToLogSelectionAPI(*this)) {
+    LogSelectionAPI(this, __FUNCTION__, "aAnchorRef", aAnchorRef, "aFocusRef",
+                    aFocusRef);
+    LogStackForSelectionAPI();
+  }
+
+  SetBaseAndExtentInternal(InLimiter::eNo, aAnchorRef, aFocusRef, aRv);
+}
+
+void Selection::SetBaseAndExtentInLimiter(const RawRangeBoundary& aAnchorRef,
+                                          const RawRangeBoundary& aFocusRef,
+                                          ErrorResult& aRv) {
+  if (NeedsToLogSelectionAPI(*this)) {
+    LogSelectionAPI(this, __FUNCTION__, "aAnchorRef", aAnchorRef, "aFocusRef",
+                    aFocusRef);
+    LogStackForSelectionAPI();
+  }
+
+  SetBaseAndExtentInternal(InLimiter::eYes, aAnchorRef, aFocusRef, aRv);
 }
 
 void Selection::SetBaseAndExtentInternal(InLimiter aInLimiter,
@@ -3555,9 +3839,30 @@ void Selection::SetBaseAndExtentInternal(InLimiter aInLimiter,
   SetStartAndEndInternal(aInLimiter, aFocusRef, aAnchorRef, eDirPrevious, aRv);
 }
 
+void Selection::SetStartAndEndInLimiter(const RawRangeBoundary& aStartRef,
+                                        const RawRangeBoundary& aEndRef,
+                                        ErrorResult& aRv) {
+  if (NeedsToLogSelectionAPI(*this)) {
+    LogSelectionAPI(this, __FUNCTION__, "aStartRef", aStartRef, "aEndRef",
+                    aEndRef);
+    LogStackForSelectionAPI();
+  }
+
+  SetStartAndEndInternal(InLimiter::eYes, aStartRef, aEndRef, eDirNext, aRv);
+}
+
 Result<Ok, nsresult> Selection::SetStartAndEndInLimiter(
     nsINode& aStartContainer, uint32_t aStartOffset, nsINode& aEndContainer,
     uint32_t aEndOffset, nsDirection aDirection, int16_t aReason) {
+  MOZ_ASSERT(aDirection == eDirPrevious || aDirection == eDirNext);
+  if (NeedsToLogSelectionAPI(*this)) {
+    LogSelectionAPI(this, __FUNCTION__, "aStartContainer", aStartContainer,
+                    "aStartOffset", aStartOffset, "aEndContainer",
+                    aEndContainer, "aEndOffset", aEndOffset, "nsDirection",
+                    aDirection, "aReason", aReason);
+    LogStackForSelectionAPI();
+  }
+
   if (mFrameSelection) {
     mFrameSelection->AddChangeReasons(aReason);
   }
@@ -3568,6 +3873,18 @@ Result<Ok, nsresult> Selection::SetStartAndEndInLimiter(
       RawRangeBoundary(&aEndContainer, aEndOffset), aDirection, error);
   MOZ_TRY(error.StealNSResult());
   return Ok();
+}
+
+void Selection::SetStartAndEnd(const RawRangeBoundary& aStartRef,
+                               const RawRangeBoundary& aEndRef,
+                               ErrorResult& aRv) {
+  if (NeedsToLogSelectionAPI(*this)) {
+    LogSelectionAPI(this, __FUNCTION__, "aStartRef", aStartRef, "aEndRef",
+                    aEndRef);
+    LogStackForSelectionAPI();
+  }
+
+  SetStartAndEndInternal(InLimiter::eNo, aStartRef, aEndRef, eDirNext, aRv);
 }
 
 void Selection::SetStartAndEndInternal(InLimiter aInLimiter,
@@ -3601,12 +3918,13 @@ void Selection::SetStartAndEndInternal(InLimiter aInLimiter,
     return;
   }
 
-  RemoveAllRanges(aRv);
+  RemoveAllRangesInternal(aRv);
   if (aRv.Failed()) {
     return;
   }
 
-  AddRangeAndSelectFramesAndNotifyListeners(*newRange, aRv);
+  RefPtr<Document> document(GetDocument());
+  AddRangeAndSelectFramesAndNotifyListenersInternal(*newRange, document, aRv);
   if (aRv.Failed()) {
     return;
   }
