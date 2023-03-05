@@ -108,6 +108,11 @@ pref("floorp.browser.tabbar.multirow.max.enabled", true);
 pref("floorp.browser.tabbar.multirow.newtab-inside.enabled", false);
 pref("floorp.browser.tabbar.multirow.max.row", 3);
 
+// 1つ目はタイトル、2つ目は内容
+pref("floorp.browser.note.memos", "");
+pref("floorp.browser.note.memos.using", -1);
+pref("services.sync.prefs.sync.floorp.browser.note.memos", true);
+
 /*----------------------------------------------------------------------------------------------------------------------------------*/
 
 //検索エンジン

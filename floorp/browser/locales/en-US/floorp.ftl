@@ -660,3 +660,18 @@ open-link-in-external-tab-context-menu = Open in external browser
 open-link-in-external-tab-dialog-title-error = Error
 open-link-in-external-tab-dialog-message-default-browser-not-found = Default browser does not exist or is not configured.
 open-link-in-external-tab-dialog-message-selected-browser-not-found = The selected browser does not exist.
+
+
+######################################################################### Floorp Notes ###############################################################
+
+new-memo = New
+memo-title-input-placeholder = Write a title here
+memo-input-placeholder = Write or paste a memo here
+delete-memo = Delete
+save-memo = Save
+memo-welcome-title = Welcome!
+memo-first-tip = Welcome to Floorp Notes! Here are some instructions on how to use it!
+memo-second-tip = Floorp Notes is a notepad that allows you to store multiple notes that are synchronized across devices. You must sign in to this Floorp with your Firefox account to enable synchronization.
+memo-third-tip = Floorp Notes will be saved in your Floorp settings. Also, Firefox Sync encrypts the contents of the sync with your Firefox account password, so no one but you knows the contents.
+memo-fourth-tip = Firefox Sync is not a backup service. We recommend that you make backups.
+memo-new-title = New Memo
