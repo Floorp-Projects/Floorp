@@ -1584,7 +1584,7 @@ static void VerifyCacheEntry(JSContext* cx, NativeObject* obj, PropertyKey key,
   mozilla::Maybe<PropertyInfo> prop = obj->lookupPure(key);
   MOZ_ASSERT(prop.isSome());
   MOZ_ASSERT(prop->isDataProperty());
-  MOZ_ASSERT(prop->slot() == entry.slot());
+  MOZ_ASSERT(obj->getTaggedSlotOffset(prop->slot()) == entry.slotOffset());
 #endif
 }
 
@@ -1609,8 +1609,9 @@ static MOZ_ALWAYS_INLINE bool GetNativeDataPropertyPureImpl(
         return false;
       }
       if (entry) {
+        TaggedSlotOffset offset = nobj->getTaggedSlotOffset(prop.slot());
         cache.initEntryForDataProperty(entry, receiverShape, id, numHops,
-                                       prop.slot());
+                                       offset);
       }
       *vp = nobj->getSlot(prop.slot());
       return true;
@@ -1670,7 +1671,14 @@ bool GetNativeDataPropertyByNamePure(JSContext* cx, JSObject* obj,
         for (size_t i = 0, numHops = entry->numHops(); i < numHops; i++) {
           nobj = &nobj->staticPrototype()->as<NativeObject>();
         }
-        *vp = nobj->getSlot(entry->slot());
+        uint32_t offset = entry->slotOffset().offset();
+        if (entry->slotOffset().isFixedSlot()) {
+          size_t index = NativeObject::getFixedSlotIndexFromOffset(offset);
+          *vp = nobj->getFixedSlot(index);
+        } else {
+          size_t index = NativeObject::getDynamicSlotIndexFromOffset(offset);
+          *vp = nobj->getDynamicSlot(index);
+        }
         return true;
       }
       if (entry->isMissingProperty()) {
@@ -1848,14 +1856,15 @@ bool HasNativeDataPropertyPure(JSContext* cx, JSObject* obj,
 
     MOZ_ASSERT(!obj->getOpsLookupProperty());
 
+    NativeObject* nobj = &obj->as<NativeObject>();
     uint32_t index;
-    if (PropMap* map =
-            obj->as<NativeObject>().shape()->lookup(cx, id, &index)) {
+    if (PropMap* map = nobj->shape()->lookup(cx, id, &index)) {
       if (JitOptions.enableWatchtowerMegamorphic) {
         PropertyInfo prop = map->getPropertyInfo(index);
         if (prop.isDataProperty()) {
+          TaggedSlotOffset offset = nobj->getTaggedSlotOffset(prop.slot());
           cache.initEntryForDataProperty(entry, receiverShape, id, numHops,
-                                         prop.slot());
+                                         offset);
         }
       }
       vp[1].setBoolean(true);

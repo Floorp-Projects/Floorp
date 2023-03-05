@@ -206,6 +206,9 @@ bool js::NativeObject::isNumFixedSlots(uint32_t nfixed) const {
   return nfixed == numFixedSlotsMaybeForwarded();
 }
 
+uint32_t js::NativeObject::outOfLineNumDynamicSlots() const {
+  return numDynamicSlots();
+}
 #endif /* DEBUG */
 
 mozilla::Maybe<PropertyInfo> js::NativeObject::lookup(JSContext* cx, jsid id) {

@@ -511,6 +511,37 @@ class GCMarker;
 // become sparse instead. The enum below is used for such operations.
 enum class DenseElementResult { Failure, Success, Incomplete };
 
+// Stores a slot offset in bytes relative to either the NativeObject* address
+// (if isFixedSlot) or to NativeObject::slots_ (if !isFixedSlot).
+class TaggedSlotOffset {
+  uint32_t bits_ = 0;
+
+ public:
+  static constexpr size_t OffsetShift = 1;
+  static constexpr size_t IsFixedSlotFlag = 0b1;
+
+  static constexpr size_t MaxOffset = SHAPE_MAXIMUM_SLOT * sizeof(Value);
+  static_assert((uint64_t(MaxOffset) << OffsetShift) <= UINT32_MAX,
+                "maximum slot offset must fit in TaggedSlotOffset");
+
+  constexpr TaggedSlotOffset() = default;
+
+  TaggedSlotOffset(uint32_t offset, bool isFixedSlot)
+      : bits_((offset << OffsetShift) | isFixedSlot) {
+    MOZ_ASSERT(offset <= MaxOffset);
+  }
+
+  uint32_t offset() const { return bits_ >> OffsetShift; }
+  bool isFixedSlot() const { return bits_ & IsFixedSlotFlag; }
+
+  bool operator==(const TaggedSlotOffset& other) const {
+    return bits_ == other.bits_;
+  }
+  bool operator!=(const TaggedSlotOffset& other) const {
+    return !(*this == other);
+  }
+};
+
 /*
  * [SMDOC] NativeObject layout
  *
@@ -915,6 +946,10 @@ class NativeObject : public JSObject {
 
   MOZ_ALWAYS_INLINE uint32_t numDynamicSlots() const;
 
+#ifdef DEBUG
+  uint32_t outOfLineNumDynamicSlots() const;
+#endif
+
   bool empty() const { return shape()->propMapLength() == 0; }
 
   mozilla::Maybe<PropertyInfo> lookup(JSContext* cx, jsid id);
@@ -1224,6 +1259,11 @@ class NativeObject : public JSObject {
   const Value& getFixedSlot(uint32_t slot) const {
     MOZ_ASSERT(slotIsFixed(slot));
     return fixedSlots()[slot];
+  }
+
+  const Value& getDynamicSlot(uint32_t dynamicSlotIndex) const {
+    MOZ_ASSERT(dynamicSlotIndex < outOfLineNumDynamicSlots());
+    return slots_[dynamicSlotIndex];
   }
 
   void setFixedSlot(uint32_t slot, const Value& value) {
@@ -1595,6 +1635,17 @@ class NativeObject : public JSObject {
   // and global.
   JS::Realm* realm() const { return nonCCWRealm(); }
   inline js::GlobalObject& global() const;
+
+  TaggedSlotOffset getTaggedSlotOffset(size_t slot) const {
+    MOZ_ASSERT(slot < slotSpan());
+    uint32_t nfixed = numFixedSlots();
+    if (slot < nfixed) {
+      return TaggedSlotOffset(getFixedSlotOffset(slot),
+                              /* isFixedSlot = */ true);
+    }
+    return TaggedSlotOffset((slot - nfixed) * sizeof(Value),
+                            /* isFixedSlot = */ false);
+  }
 
   /* JIT Accessors */
   static size_t offsetOfElements() { return offsetof(NativeObject, elements_); }
