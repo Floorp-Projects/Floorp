@@ -240,7 +240,7 @@ const bmsController = {
                   `));
                 } else {
                     webpanobject.setAttribute("src", webpanelURL);
-                    if (webpanobject.getAttribute("changeuseragent") != webpanel_userAgent || webpanobject.getAttribute("usercontextid") != wibpanel_usercontext) {
+                    if (webpanobject.getAttribute("changeuseragent") !== String(webpanel_userAgent) || webpanobject.getAttribute("usercontextid") !== String(wibpanel_usercontext)) {
                         webpanobject.setAttribute("usercontextid", wibpanel_usercontext);
                         webpanobject.setAttribute("changeuseragent", String(webpanel_userAgent));
                         webpanobject.reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE)
