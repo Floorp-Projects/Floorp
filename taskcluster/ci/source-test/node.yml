@@ -107,6 +107,8 @@ devtools-tests:
 devtools-verify-bundle:
     description: devtools bundle checker
     platform: linux1804-64/opt
+    attributes:
+        code-review: true
     treeherder:
         symbol: node(devtools-bundle)
         kind: test
@@ -115,6 +117,10 @@ devtools-verify-bundle:
     worker:
         docker-image: {in-tree: "lint"}
         max-run-time: 1200
+        artifacts:
+            - type: file
+              name: public/code-review/devtools-verify-bundle.json
+              path: /builds/worker/devtools-verify-bundle.json
     run:
         using: run-task
         cache-dotcache: true
@@ -130,7 +136,7 @@ devtools-verify-bundle:
             yarn &&
             node bin/bundle.js &&
             cd ../../.. &&
-            ./mach python taskcluster/scripts/misc/verify-devtools-bundle.py
+            ./mach python taskcluster/scripts/misc/verify-devtools-bundle.py --output /builds/worker/devtools-verify-bundle.json
     when:
         files-changed:
             - 'devtools/**'
