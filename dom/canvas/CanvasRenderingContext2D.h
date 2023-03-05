@@ -133,8 +133,6 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
     }
   }
 
-  Maybe<nscolor> ParseColor(const nsACString&);
-
   void GetGlobalCompositeOperation(nsAString& aOp,
                                    mozilla::ErrorResult& aError) override;
   void SetGlobalCompositeOperation(const nsAString& aOp,
@@ -574,6 +572,9 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   void GetStyleAsUnion(OwningUTF8StringOrCanvasGradientOrCanvasPattern& aValue,
                        Style aWhichStyle);
 
+  // Returns whether a color was successfully parsed.
+  bool ParseColor(const nsACString& aString, nscolor* aColor);
+
   static void StyleColorToString(const nscolor& aColor, nsACString& aStr);
 
   // Returns whether a filter was successfully parsed.
@@ -1009,53 +1010,34 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
     return mStyleStack[mStyleStack.Length() - 1];
   }
 
-  struct FontStyleCacheKey {
-    FontStyleCacheKey() = default;
-    FontStyleCacheKey(const nsACString& aFont, uint64_t aGeneration)
+  struct CacheKey {
+    CacheKey() : mFont(), mGeneration(0) {}
+    CacheKey(const nsACString& aFont, uint64_t aGeneration)
         : mFont(aFont), mGeneration(aGeneration) {}
     nsCString mFont;
-    uint64_t mGeneration = 0;
+    uint64_t mGeneration;
   };
 
   struct FontStyleData {
-    FontStyleCacheKey mKey;
+    CacheKey mKey;
     nsCString mUsedFont;
     RefPtr<const ComputedStyle> mStyle;
   };
 
   class FontStyleCache
-      : public MruCache<FontStyleCacheKey, FontStyleData, FontStyleCache> {
+      : public MruCache<CacheKey, FontStyleData, FontStyleCache> {
    public:
-    static HashNumber Hash(const FontStyleCacheKey& aKey) {
+    static HashNumber Hash(const CacheKey& aKey) {
       HashNumber hash = HashString(aKey.mFont);
       return AddToHash(hash, aKey.mGeneration);
     }
-    static bool Match(const FontStyleCacheKey& aKey,
-                      const FontStyleData& aVal) {
+    static bool Match(const CacheKey& aKey, const FontStyleData& aVal) {
       return aVal.mKey.mGeneration == aKey.mGeneration &&
              aVal.mKey.mFont == aKey.mFont;
     }
   };
 
   FontStyleCache mFontStyleCache;
-
-  struct ColorStyleCacheEntry {
-    nsCString mKey;
-    Maybe<nscolor> mColor;
-    bool mWasCurrentColor = false;
-  };
-  class ColorStyleCache
-      : public MruCache<nsACString, ColorStyleCacheEntry, ColorStyleCache> {
-   public:
-    static HashNumber Hash(const nsACString& aKey) { return HashString(aKey); }
-    static bool Match(const nsACString& aKey,
-                      const ColorStyleCacheEntry& aVal) {
-      return aVal.mKey == aKey;
-    }
-  };
-  ColorStyleCache mColorStyleCache;
-
-  ColorStyleCacheEntry ParseColorSlow(const nsACString&);
 
   friend class CanvasGeneralPattern;
   friend class AdjustedTarget;

@@ -108,6 +108,7 @@ class MruCache {
   //    }
   //
   //    auto foo = new Foo();
+  //    mTable.Insert(aKey, foo);
   //    p.Set(foo);
   //    return foo;
   class Entry {
