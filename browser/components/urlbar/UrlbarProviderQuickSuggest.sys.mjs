@@ -351,7 +351,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     // Impression and clicked telemetry are both recorded on engagement. We
     // define "impression" to mean a quick suggest result was present in the
     // view when any result was picked.
-    if (state == "engagement") {
+    if (state == "engagement" && queryContext) {
       // Find the quick suggest result that's currently visible in the view.
       // It's probably the result from the last query so check it first, but due
       // to the async nature of how results are added to the view and made

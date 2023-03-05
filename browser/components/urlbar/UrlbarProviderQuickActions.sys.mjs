@@ -259,7 +259,7 @@ class ProviderQuickActions extends UrlbarProvider {
   onEngagement(isPrivate, state, queryContext, details) {
     let result = this.#resultFromLastQuery;
     this.#resultFromLastQuery = null;
-    if (state == "engagement") {
+    if (state == "engagement" && queryContext) {
       // Find the quickaction result that's currently visible in the view.
       // It's probably the result from the last query so check it first, but due
       // to the async nature of how results are added to the view and made
