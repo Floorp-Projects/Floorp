@@ -17,19 +17,23 @@ The script will only run `hg status devtools/` and check that no change is detec
 mercurial.
 """
 
+import argparse
+import json
 import subprocess
 import sys
 
-overall_failure = False
-
 print("Run `hg status devtools/`")
 status = (
-    subprocess.check_output(["hg", "status", "devtools/"]).decode("utf-8").split("\n")
+    subprocess.check_output(["hg", "status", "-n", "devtools/"])
+    .decode("utf-8")
+    .split("\n")
 )
 print(" status:")
 print("-" * 80)
 
-failures = []
+doc = "https://firefox-source-docs.mozilla.org/devtools/tests/node-tests.html#devtools-bundle"
+
+failures = {}
 for l in status:
     if not l:
         # Ignore empty lines
@@ -40,14 +44,29 @@ for l in status:
         # building bundles.
         continue
 
-    failures.append(l)
-    overall_failure = True
+    failures[l] = [
+        {
+            "path": l,
+            "line": None,
+            "column": None,
+            "level": "error",
+            "message": l
+            + " is outdated and needs to be regenerated, "
+            + f"instructions at: {doc}",
+        }
+    ]
 
 # Revert all the changes created by `node bin/bundle.js`
-subprocess.check_output(["hg", "revert", "-C", "."])
+subprocess.check_output(["hg", "revert", "-C", "devtools/"])
 
-if overall_failure:
-    doc = "https://firefox-source-docs.mozilla.org/devtools/tests/node-tests.html#devtools-bundle"
+parser = argparse.ArgumentParser()
+parser.add_argument("--output", required=True)
+args = parser.parse_args()
+
+with open(args.output, "w") as fp:
+    json.dump(failures, fp, indent=2)
+
+if len(failures) > 0:
     print(
         "TEST-UNEXPECTED-FAIL | devtools-bundle | DevTools bundles need to be regenerated, "
         + f"instructions at: {doc}"
