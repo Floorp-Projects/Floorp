@@ -216,7 +216,14 @@ already_AddRefed<nsISupports> CanvasRenderingContextHelper::GetOrCreateContext(
     mCurrentContext = std::move(context);
     mCurrentContextType = aContextType;
 
-    nsresult rv = UpdateContext(aCx, aContextOptions, aRv);
+    // https://html.spec.whatwg.org/multipage/canvas.html#dom-canvas-getcontext-dev
+    // Step 1. If options is not an object, then set options to null.
+    JS::Rooted<JS::Value> options(RootingCx(), aContextOptions);
+    if (!options.isObject()) {
+      options.setNull();
+    }
+
+    nsresult rv = UpdateContext(aCx, options, aRv);
     if (NS_FAILED(rv)) {
       // See bug 645792 and bug 1215072.
       // We want to throw only if dictionary initialization fails,
