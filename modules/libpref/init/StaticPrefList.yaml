@@ -6534,7 +6534,7 @@
   # Whether to use a video overlay layers for sw decoded video with DirectComposition
 -   name: gfx.webrender.dcomp-video-sw-overlay-win
     type: bool
-    value: @IS_EARLY_BETA_OR_EARLIER@
+    value: true
     mirror: once
 -   name: gfx.webrender.dcomp-video-check-slow-present
     type: RelaxedAtomicBool
