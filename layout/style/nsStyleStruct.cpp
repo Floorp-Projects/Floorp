@@ -3584,6 +3584,12 @@ void StyleCalcNode::ScaleLengthsBy(float aScale) {
       }
       break;
     }
+    case Tag::Hypot: {
+      for (const auto& child : AsHypot().AsSpan()) {
+        ScaleNode(child);
+      }
+      break;
+    }
   }
 }
 
@@ -3711,6 +3717,27 @@ ResultT StyleCalcNode::ResolveInternal(ResultT aPercentageBasis,
         result += child.ResolveInternal(aPercentageBasis, aConverter);
       }
       return result;
+    }
+    case Tag::Hypot: {
+      //  Doing math in CSS pixels to avoid exceeding integer range of app units
+      CSSCoord result = 0;
+      for (const auto& child : AsHypot().AsSpan()) {
+        CSSCoord value;
+        if constexpr (std::is_same_v<ResultT, CSSCoord>) {
+          value = child.ResolveInternal(aPercentageBasis, aConverter);
+        } else {
+          value = CSSPixel::FromAppUnits(
+              child.ResolveInternal(aPercentageBasis, aConverter));
+        }
+        result += std::pow(value, 2);
+      }
+      result = std::sqrt(result);
+
+      if constexpr (std::is_same_v<ResultT, CSSCoord>) {
+        return result;
+      } else {
+        return CSSPixel::ToAppUnits(result);
+      }
     }
   }
 
