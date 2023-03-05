@@ -23,6 +23,7 @@ using VideoBridgeTable =
 
 static StaticDataMutex<VideoBridgeTable> sVideoBridgeFromProcess(
     "VideoBridges");
+static Atomic<bool> sVideoBridgeParentShutDown(false);
 
 VideoBridgeParent::VideoBridgeParent(VideoBridgeSource aSource)
     : mCompositorThreadHolder(CompositorThreadHolder::GetSingleton()),
@@ -90,7 +91,9 @@ TextureHost* VideoBridgeParent::LookupTexture(uint64_t aSerial) {
 }
 
 void VideoBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
-  if (aWhy == AbnormalShutdown) {
+  bool shutdown = sVideoBridgeParentShutDown;
+
+  if (!shutdown && aWhy == AbnormalShutdown) {
     gfxCriticalNote
         << "VideoBridgeParent receives IPC close with reason=AbnormalShutdown";
   }
@@ -100,10 +103,35 @@ void VideoBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
 
 /* static */
 void VideoBridgeParent::Shutdown() {
+  sVideoBridgeParentShutDown = true;
+
   auto videoBridgeFromProcess = sVideoBridgeFromProcess.Lock();
   for (auto& bridgeParent : *videoBridgeFromProcess) {
     if (bridgeParent) {
       bridgeParent->ReleaseCompositorThread();
+    }
+  }
+}
+
+/* static */
+void VideoBridgeParent::UnregisterExternalImages() {
+  MOZ_ASSERT(sVideoBridgeParentShutDown);
+
+  auto videoBridgeFromProcess = sVideoBridgeFromProcess.Lock();
+  for (auto& bridgeParent : *videoBridgeFromProcess) {
+    if (bridgeParent) {
+      bridgeParent->DoUnregisterExternalImages();
+    }
+  }
+}
+
+void VideoBridgeParent::DoUnregisterExternalImages() {
+  const ManagedContainer<PTextureParent>& textures = ManagedPTextureParent();
+  for (const auto& key : textures) {
+    RefPtr<TextureHost> texture = TextureHost::AsTextureHost(key);
+
+    if (texture) {
+      texture->MaybeDestroyRenderTexture();
     }
   }
 }
