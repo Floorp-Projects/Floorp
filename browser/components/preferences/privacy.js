@@ -2486,12 +2486,11 @@ var gPrivacyPane = {
 
   toggleRelayIntegration() {
     const checkbox = document.getElementById("relayIntegration");
+
     if (checkbox.checked) {
       FirefoxRelay.markAsEnabled();
-      FirefoxRelayTelemetry.recordRelayPrefEvent("enabled");
     } else {
       FirefoxRelay.markAsDisabled();
-      FirefoxRelayTelemetry.recordRelayPrefEvent("disabled");
     }
   },
 
