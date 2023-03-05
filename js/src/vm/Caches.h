@@ -83,12 +83,11 @@ class MegamorphicCacheEntry {
   // The atom or symbol property being accessed.
   PropertyKey key_;
 
+  // Slot offset and isFixedSlot flag of the data property.
+  TaggedSlotOffset slotOffset_;
+
   // This entry is valid iff the generation matches the cache's generation.
   uint16_t generation_ = 0;
-
-  // Slot number of the data property.
-  static constexpr size_t MaxSlotNumber = UINT16_MAX;
-  uint16_t slot_ = 0;
 
   // Number of hops on the proto chain to get to the holder object. If this is
   // zero, the property exists on the receiver object. It can also be one of
@@ -103,13 +102,12 @@ class MegamorphicCacheEntry {
   static constexpr uint8_t NumHopsForMissingOwnProperty = UINT8_MAX;
 
   void init(Shape* shape, PropertyKey key, uint16_t generation, uint8_t numHops,
-            uint16_t slot) {
+            TaggedSlotOffset slotOffset) {
     shape_ = shape;
     key_ = key;
+    slotOffset_ = slotOffset;
     generation_ = generation;
-    slot_ = slot;
     numHops_ = numHops;
-    MOZ_ASSERT(slot_ == slot, "slot must fit in slot_");
     MOZ_ASSERT(numHops_ == numHops, "numHops must fit in numHops_");
   }
   bool isMissingProperty() const {
@@ -123,9 +121,9 @@ class MegamorphicCacheEntry {
     MOZ_ASSERT(isDataProperty());
     return numHops_;
   }
-  uint16_t slot() const {
+  TaggedSlotOffset slotOffset() const {
     MOZ_ASSERT(isDataProperty());
-    return slot_;
+    return slotOffset_;
   }
 
   static constexpr size_t offsetOfShape() {
@@ -140,8 +138,8 @@ class MegamorphicCacheEntry {
     return offsetof(MegamorphicCacheEntry, generation_);
   }
 
-  static constexpr size_t offsetOfSlot() {
-    return offsetof(MegamorphicCacheEntry, slot_);
+  static constexpr size_t offsetOfSlotOffset() {
+    return offsetof(MegamorphicCacheEntry, slotOffset_);
   }
 
   static constexpr size_t offsetOfNumHops() {
@@ -222,20 +220,20 @@ class MegamorphicCache {
   }
   void initEntryForMissingProperty(Entry* entry, Shape* shape,
                                    PropertyKey key) {
-    entry->init(shape, key, generation_, Entry::NumHopsForMissingProperty, 0);
+    entry->init(shape, key, generation_, Entry::NumHopsForMissingProperty,
+                TaggedSlotOffset());
   }
   void initEntryForMissingOwnProperty(Entry* entry, Shape* shape,
                                       PropertyKey key) {
     entry->init(shape, key, generation_, Entry::NumHopsForMissingOwnProperty,
-                0);
+                TaggedSlotOffset());
   }
   void initEntryForDataProperty(Entry* entry, Shape* shape, PropertyKey key,
-                                size_t numHops, uint32_t slot) {
-    if (slot > Entry::MaxSlotNumber ||
-        numHops > Entry::MaxHopsForDataProperty) {
+                                size_t numHops, TaggedSlotOffset slotOffset) {
+    if (numHops > Entry::MaxHopsForDataProperty) {
       return;
     }
-    entry->init(shape, key, generation_, numHops, slot);
+    entry->init(shape, key, generation_, numHops, slotOffset);
   }
 
   static constexpr size_t offsetOfEntries() {
