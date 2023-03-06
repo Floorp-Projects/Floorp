@@ -2099,12 +2099,7 @@ static SECStatus
 sftk_HMACCmp(CK_ULONG *copyLen, unsigned char *sig, unsigned int sigLen,
              unsigned char *hash, unsigned int hashLen)
 {
-    if (NSS_SecureMemcmp(sig, hash, *copyLen) == 0) {
-        return SECSuccess;
-    }
-
-    PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
-    return SECFailure;
+    return (NSS_SecureMemcmp(sig, hash, *copyLen) == 0) ? SECSuccess : SECFailure;
 }
 
 /*

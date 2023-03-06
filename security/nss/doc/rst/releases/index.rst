@@ -8,9 +8,7 @@ Releases
    :glob:
    :hidden:
 
-   nss_3_88_1.rst
    nss_3_88.rst
-   nss_3_87_1.rst
    nss_3_87.rst
    nss_3_86.rst
    nss_3_85.rst
@@ -19,8 +17,6 @@ Releases
    nss_3_82.rst
    nss_3_81.rst
    nss_3_80.rst
-   nss_3_79_4.rst
-   nss_3_79_3.rst
    nss_3_79_2.rst
    nss_3_79_1.rst
    nss_3_79.rst
@@ -51,18 +47,14 @@ Releases
 
 .. note::
 
-   **NSS 3.88.1** is the latest version of NSS.
-   Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_88_1_release_notes`
+   **NSS 3.88** is the latest version of NSS.
+   Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_88_release_notes`
 
-   **NSS 3.79.4** is the latest ESR version of NSS.
-   Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_79_4_release_notes`
+   **NSS 3.79.2** is the latest ESR version of NSS.
+   Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_79_2_release_notes`
 
 
 .. container::
-
-   Changes in 3.88.1 included in this release:
-
-   - Bug 1804640 - improve handling of unknown PKCS#12 safe bag types.
 
    Changes in 3.88 included in this release:
 

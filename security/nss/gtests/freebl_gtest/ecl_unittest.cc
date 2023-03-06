@@ -14,7 +14,7 @@ namespace nss_test {
 
 class ECLTest : public ::testing::Test {
  protected:
-  ECCurveName GetCurveName(std::string name) {
+  const ECCurveName GetCurveName(std::string name) {
     if (name == "P256") return ECCurve_NIST_P256;
     if (name == "P384") return ECCurve_NIST_P384;
     if (name == "P521") return ECCurve_NIST_P521;

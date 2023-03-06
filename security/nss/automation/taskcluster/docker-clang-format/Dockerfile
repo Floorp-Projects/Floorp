@@ -1,5 +1,5 @@
 # Minimal image with clang-format 10
-FROM ubuntu:bionic-20221215
+FROM ubuntu:18.04
 LABEL maintainer="Martin Thomson <martin.thomson@gmail.com>"
 
 RUN apt-get update \

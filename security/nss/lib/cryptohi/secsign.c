@@ -15,7 +15,6 @@
 #include "pk11func.h"
 #include "secerr.h"
 #include "keyi.h"
-#include "nss.h"
 
 struct SGNContextStr {
     SECOidTag signalg;
@@ -33,7 +32,6 @@ sgn_NewContext(SECOidTag alg, SECItem *params, SECKEYPrivateKey *key)
     SECOidTag hashalg, signalg;
     KeyType keyType;
     PRUint32 policyFlags;
-    PRInt32 optFlags;
     SECStatus rv;
 
     /* OK, map a PKCS #7 hash and encrypt algorithm into
@@ -57,16 +55,6 @@ sgn_NewContext(SECOidTag alg, SECItem *params, SECKEYPrivateKey *key)
         !((key->keyType == rsaKey) && (keyType == rsaPssKey))) {
         PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
         return NULL;
-    }
-    if (NSS_OptionGet(NSS_KEY_SIZE_POLICY_FLAGS, &optFlags) != SECFailure) {
-        if (optFlags & NSS_KEY_SIZE_POLICY_SIGN_FLAG) {
-            rv = seckey_EnforceKeySize(key->keyType,
-                                       SECKEY_PrivateKeyStrengthInBits(key),
-                                       SEC_ERROR_SIGNATURE_ALGORITHM_DISABLED);
-            if (rv != SECSuccess) {
-                return NULL;
-            }
-        }
     }
     /* check the policy on the hash algorithm */
     if ((NSS_GetAlgorithmPolicy(hashalg, &policyFlags) == SECFailure) ||
@@ -477,20 +465,9 @@ SGN_Digest(SECKEYPrivateKey *privKey,
     SGNDigestInfo *di = 0;
     SECOidTag enctag;
     PRUint32 policyFlags;
-    PRInt32 optFlags;
 
     result->data = 0;
 
-    if (NSS_OptionGet(NSS_KEY_SIZE_POLICY_FLAGS, &optFlags) != SECFailure) {
-        if (optFlags & NSS_KEY_SIZE_POLICY_SIGN_FLAG) {
-            rv = seckey_EnforceKeySize(privKey->keyType,
-                                       SECKEY_PrivateKeyStrengthInBits(privKey),
-                                       SEC_ERROR_SIGNATURE_ALGORITHM_DISABLED);
-            if (rv != SECSuccess) {
-                return SECFailure;
-            }
-        }
-    }
     /* check the policy on the hash algorithm */
     if ((NSS_GetAlgorithmPolicy(algtag, &policyFlags) == SECFailure) ||
         !(policyFlags & NSS_USE_ALG_IN_ANY_SIGNATURE)) {

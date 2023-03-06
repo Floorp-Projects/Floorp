@@ -14,7 +14,6 @@
 #include "secdig.h"
 #include "prtime.h"
 #include "keyi.h"
-#include "nss.h"
 
 SEC_ASN1_MKSUB(SECOID_AlgorithmIDTemplate)
 SEC_ASN1_MKSUB(SEC_IntegerTemplate)
@@ -1041,59 +1040,6 @@ SECKEY_PublicKeyStrengthInBits(const SECKEYPublicKey *pubk)
     return bitSize;
 }
 
-unsigned
-SECKEY_PrivateKeyStrengthInBits(const SECKEYPrivateKey *privk)
-{
-    unsigned bitSize = 0;
-    SECItem params = { siBuffer, NULL, 0 };
-    SECStatus rv;
-
-    if (!privk) {
-        PORT_SetError(SEC_ERROR_INVALID_KEY);
-        return 0;
-    }
-
-    /* interpret modulus length as key strength */
-    switch (privk->keyType) {
-        case rsaKey:
-        case rsaPssKey:
-        case rsaOaepKey:
-            /* some tokens don't export CKA_MODULUS on the private key,
-             * PK11_SignatureLen works around this if necessary */
-            bitSize = PK11_SignatureLen((SECKEYPrivateKey *)privk) * PR_BITS_PER_BYTE;
-            if (bitSize == -1) {
-                bitSize = 0;
-            }
-            return bitSize;
-        case dsaKey:
-        case fortezzaKey:
-        case dhKey:
-        case keaKey:
-            rv = PK11_ReadAttribute(privk->pkcs11Slot, privk->pkcs11ID,
-                                    CKA_PRIME, NULL, &params);
-            if ((rv != SECSuccess) || (params.data == NULL)) {
-                PORT_SetError(SEC_ERROR_INVALID_KEY);
-                return 0;
-            }
-            bitSize = SECKEY_BigIntegerBitLength(&params);
-            PORT_Free(params.data);
-            return bitSize;
-        case ecKey:
-            rv = PK11_ReadAttribute(privk->pkcs11Slot, privk->pkcs11ID,
-                                    CKA_EC_PARAMS, NULL, &params);
-            if ((rv != SECSuccess) || (params.data == NULL)) {
-                return 0;
-            }
-            bitSize = SECKEY_ECParamsToKeySize(&params);
-            PORT_Free(params.data);
-            return bitSize;
-        default:
-            break;
-    }
-    PORT_SetError(SEC_ERROR_INVALID_KEY);
-    return 0;
-}
-
 /* returns signature length in bytes (not bits) */
 unsigned
 SECKEY_SignatureLen(const SECKEYPublicKey *pubk)
@@ -1265,51 +1211,6 @@ SECKEY_CopyPublicKey(const SECKEYPublicKey *pubk)
 
     SECKEY_DestroyPublicKey(copyk);
     return NULL;
-}
-
-/*
- * Check that a given key meets the policy limits for the given key
- * size.
- */
-SECStatus
-seckey_EnforceKeySize(KeyType keyType, unsigned keyLength, SECErrorCodes error)
-{
-    PRInt32 opt = -1;
-    PRInt32 optVal;
-    SECStatus rv;
-
-    switch (keyType) {
-        case rsaKey:
-        case rsaPssKey:
-        case rsaOaepKey:
-            opt = NSS_RSA_MIN_KEY_SIZE;
-            break;
-        case dsaKey:
-        case fortezzaKey:
-            opt = NSS_DSA_MIN_KEY_SIZE;
-            break;
-        case dhKey:
-        case keaKey:
-            opt = NSS_DH_MIN_KEY_SIZE;
-            break;
-        case ecKey:
-            opt = NSS_ECC_MIN_KEY_SIZE;
-            break;
-        case nullKey:
-        default:
-            PORT_SetError(SEC_ERROR_INVALID_KEY);
-            return SECFailure;
-    }
-    PORT_Assert(opt != -1);
-    rv = NSS_OptionGet(opt, &optVal);
-    if (rv != SECSuccess) {
-        return rv;
-    }
-    if (optVal > keyLength) {
-        PORT_SetError(error);
-        return SECFailure;
-    }
-    return SECSuccess;
 }
 
 /*
