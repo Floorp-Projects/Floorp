@@ -23,15 +23,15 @@ bool DecoratorEmitter::emitApplyDecoratorsToElementDefinition(
   // The DecoratorEmitter expects the value to be decorated to be at the top
   // of the stack prior to this call. It will apply the decorators to this
   // value, possibly replacing the value with a value returned by a decorator.
-  //          [stack] CTOR? OBJ CTOR? VAL
+  //          [stack] VAL
 
   // Decorators Proposal
   // https://arai-a.github.io/ecma262-compare/?pr=2417&id=sec-applydecoratorstoelementdefinition.
   // 1. Let decorators be elementRecord.[[Decorators]].
   // 2. If decorators is empty, return unused.
-  if (decorators->empty()) {
-    return true;
-  }
+  // This is checked by the caller.
+  MOZ_ASSERT(!decorators->empty());
+
   // 3. Let key be elementRecord.[[Key]].
   // 4. Let kind be elementRecord.[[Kind]].
   // 5. For each element decorator of decorators, do
@@ -41,111 +41,7 @@ bool DecoratorEmitter::emitApplyDecoratorsToElementDefinition(
       return false;
     }
 
-    // Prepare to call decorator
-    CallOrNewEmitter cone(bce_, JSOp::Call,
-                          CallOrNewEmitter::ArgumentsKind::Other,
-                          ValueUsage::WantValue);
-
-    // DecoratorMemberExpression: IdentifierReference e.g. @dec
-    if (decorator->is<NameNode>()) {
-      if (!cone.emitNameCallee(decorator->as<NameNode>().name())) {
-        //          [stack] CTOR? OBJ CTOR? VAL CALLEE THIS?
-        return false;
-      }
-    } else if (decorator->is<ListNode>()) {
-      // DecoratorMemberExpression: DecoratorMemberExpression . IdentifierName
-      // e.g. @decorators.nested.dec
-      PropOpEmitter& poe = cone.prepareForPropCallee(false);
-      if (!poe.prepareForObj()) {
-        return false;
-      }
-
-      ListNode* ln = &decorator->as<ListNode>();
-      bool first = true;
-      for (ParseNode* node : ln->contentsTo(ln->last())) {
-        // We should have only placed NameNode instances in this list while
-        // parsing.
-        MOZ_ASSERT(node->is<NameNode>());
-
-        if (first) {
-          NameNode* obj = &node->as<NameNode>();
-          if (!bce_->emitGetName(obj)) {
-            return false;
-          }
-          first = false;
-        } else {
-          NameNode* prop = &node->as<NameNode>();
-          GCThingIndex propAtomIndex;
-
-          if (!bce_->makeAtomIndex(prop->atom(), ParserAtom::Atomize::Yes,
-                                   &propAtomIndex)) {
-            return false;
-          }
-
-          if (!bce_->emitAtomOp(JSOp::GetProp, propAtomIndex)) {
-            return false;
-          }
-        }
-      }
-
-      NameNode* prop = &ln->last()->as<NameNode>();
-      if (!poe.emitGet(prop->atom())) {
-        return false;
-      }
-    } else {
-      // DecoratorCallExpression | DecoratorParenthesizedExpression,
-      // e.g. @dec('argument') | @((value, context) => value)
-      if (!cone.prepareForFunctionCallee()) {
-        return false;
-      }
-
-      if (!bce_->emitTree(decorator)) {
-        return false;
-      }
-    }
-
-    if (!cone.emitThis()) {
-      //          [stack] CTOR? OBJ CTOR? VAL CALLEE THIS
-      return false;
-    }
-
-    if (!cone.prepareForNonSpreadArguments()) {
-      return false;
-    }
-
-    //     5.c. Let value be undefined.
-    //     5.d. If kind is method, set value to elementRecord.[[Value]].
-    if (kind == Kind::Method) {
-      // The DecoratorEmitter expects the method to already be on the stack.
-      // We dup the value here so we can use it as an argument to the decorator.
-      if (!bce_->emitDupAt(2)) {
-        //          [stack] CTOR? OBJ CTOR? VAL CALLEE THIS VAL
-        return false;
-      }
-    }
-    //     5.e. Else if kind is getter, set value to elementRecord.[[Get]].
-    //     5.f. Else if kind is setter, set value to elementRecord.[[Set]].
-    // TODO: See https://bugzilla.mozilla.org/show_bug.cgi?id=1793960.
-    //     5.g. Else if kind is accessor, then
-    //         5.g.i. Set value to OrdinaryObjectCreate(%Object.prototype%).
-    //         5.g.ii. Perform ! CreateDataPropertyOrThrow(accessor, "get",
-    //         elementRecord.[[Get]]). 5.g.iii. Perform
-    //         ! CreateDataPropertyOrThrow(accessor, "set",
-    //         elementRecord.[[Set]]).
-    // TODO: See https://bugzilla.mozilla.org/show_bug.cgi?id=1793961.
-    //     5.b. Let context be CreateDecoratorContextObject(kind, key,
-    //     extraInitializers, decorationState, isStatic).
-    if (!emitCreateDecoratorContextObject(kind, key, isStatic,
-                                          decorator->pn_pos)) {
-      //          [stack] CTOR? OBJ CTOR? VAL CALLEE THIS VAL
-      //          context
-      return false;
-    }
-
-    //     5.h. Let newValue be ? Call(decorator, undefined, « value, context
-    //     »).
-    if (!cone.emitEnd(2, decorator->pn_pos.begin)) {
-      //          [stack] CTOR? OBJ CTOR? VAL RETVAL
+    if (!emitCallDecorator(kind, key, isStatic, decorator)) {
       return false;
     }
 
@@ -182,54 +78,36 @@ bool DecoratorEmitter::emitApplyDecoratorsToElementDefinition(
     if (!ie.emitIf(mozilla::Nothing())) {
       return false;
     }
-    if (!bce_->emit1(JSOp::Dup)) {
-      //          [stack] CTOR? OBJ CTOR? VAL RETVAL RETVAL
-      return false;
-    }
-    if (!bce_->emit1(JSOp::Undefined)) {
-      //          [stack] CTOR? OBJ CTOR? VAL RETVAL undefined
-      return false;
-    }
-    if (!bce_->emit1(JSOp::Eq)) {
-      //          [stack] CTOR? OBJ CTOR? VAL RETVAL ISUNDEFINED
+
+    if (!emitCheckIsUndefined()) {
+      //          [stack] VAL RETVAL ISUNDEFINED
       return false;
     }
 
     if (!ie.emitThenElse()) {
-      //          [stack] CTOR? OBJ CTOR? VAL RETVAL
+      //          [stack] VAL RETVAL
       return false;
     }
+
     // Pop the undefined RETVAL from the stack, leaving the original value in
     // place.
     if (!bce_->emitPopN(1)) {
-      //          [stack] CTOR? OBJ CTOR? VAL
+      //          [stack] VAL
       return false;
     }
 
     if (!ie.emitElseIf(mozilla::Nothing())) {
       return false;
     }
+
     //         5.l.i. If IsCallable(newValue) is true, then
-    if (!bce_->emitAtomOp(JSOp::GetIntrinsic,
-                          TaggedParserAtomIndex::WellKnown::IsCallable())) {
-      //            [stack] RETVAL ISCALLABLE
-      return false;
-    }
-    if (!bce_->emit1(JSOp::Undefined)) {
-      //            [stack] RETVAL ISCALLABLE UNDEFINED
-      return false;
-    }
-    if (!bce_->emitDupAt(2)) {
-      //            [stack] RETVAL ISCALLABLE UNDEFINED RETVAL
-      return false;
-    }
-    if (!bce_->emitCall(JSOp::Call, 1)) {
-      //              [stack] RETVAL ISCALLABLE_RESULT
+    if (!emitCheckIsCallable()) {
+      //              [stack] VAL RETVAL ISCALLABLE_RESULT
       return false;
     }
 
     if (!ie.emitThenElse()) {
-      //          [stack] CTOR? OBJ CTOR? VAL RETVAL
+      //          [stack] VAL RETVAL
       return false;
     }
     //             5.l.i.1. Perform MakeMethod(newValue, homeObject).
@@ -237,11 +115,11 @@ bool DecoratorEmitter::emitApplyDecoratorsToElementDefinition(
     // which was an argument to the decorator, and leave the new method
     // returned by the decorator on the stack.
     if (!bce_->emit1(JSOp::Swap)) {
-      //          [stack] CTOR? OBJ CTOR? RETVAL VAL
+      //          [stack] RETVAL VAL
       return false;
     }
     if (!bce_->emitPopN(1)) {
-      //          [stack] CTOR? OBJ CTOR? RETVAL
+      //          [stack] RETVAL
       return false;
     }
     //         5.l.ii. Else if newValue is not undefined, throw a TypeError
@@ -249,9 +127,9 @@ bool DecoratorEmitter::emitApplyDecoratorsToElementDefinition(
     if (!ie.emitElse()) {
       return false;
     }
-    // Pop RETVAL from the stack
+
     if (!bce_->emitPopN(1)) {
-      //          [stack] CTOR? OBJ CTOR? VAL
+      //          [stack] RETVAL
       return false;
     }
 
@@ -278,6 +156,117 @@ bool DecoratorEmitter::emitUpdateDecorationState() {
   return true;
 }
 
+[[nodiscard]] bool DecoratorEmitter::emitCallDecorator(Kind kind,
+                                                       ParseNode* key,
+                                                       bool isStatic,
+                                                       ParseNode* decorator) {
+  // Prepare to call decorator
+  CallOrNewEmitter cone(bce_, JSOp::Call,
+                        CallOrNewEmitter::ArgumentsKind::Other,
+                        ValueUsage::WantValue);
+
+  // DecoratorMemberExpression: IdentifierReference e.g. @dec
+  if (decorator->is<NameNode>()) {
+    if (!cone.emitNameCallee(decorator->as<NameNode>().name())) {
+      //          [stack] VAL CALLEE THIS?
+      return false;
+    }
+  } else if (decorator->is<ListNode>()) {
+    // DecoratorMemberExpression: DecoratorMemberExpression . IdentifierName
+    // e.g. @decorators.nested.dec
+    PropOpEmitter& poe = cone.prepareForPropCallee(false);
+    if (!poe.prepareForObj()) {
+      return false;
+    }
+
+    ListNode* ln = &decorator->as<ListNode>();
+    bool first = true;
+    for (ParseNode* node : ln->contentsTo(ln->last())) {
+      // We should have only placed NameNode instances in this list while
+      // parsing.
+      MOZ_ASSERT(node->is<NameNode>());
+
+      if (first) {
+        NameNode* obj = &node->as<NameNode>();
+        if (!bce_->emitGetName(obj)) {
+          return false;
+        }
+        first = false;
+      } else {
+        NameNode* prop = &node->as<NameNode>();
+        GCThingIndex propAtomIndex;
+
+        if (!bce_->makeAtomIndex(prop->atom(), ParserAtom::Atomize::Yes,
+                                 &propAtomIndex)) {
+          return false;
+        }
+
+        if (!bce_->emitAtomOp(JSOp::GetProp, propAtomIndex)) {
+          return false;
+        }
+      }
+    }
+
+    NameNode* prop = &ln->last()->as<NameNode>();
+    if (!poe.emitGet(prop->atom())) {
+      return false;
+    }
+  } else {
+    // DecoratorCallExpression | DecoratorParenthesizedExpression,
+    // e.g. @dec('argument') | @((value, context) => value)
+    if (!cone.prepareForFunctionCallee()) {
+      return false;
+    }
+
+    if (!bce_->emitTree(decorator)) {
+      return false;
+    }
+  }
+
+  if (!cone.emitThis()) {
+    //          [stack] VAL CALLEE THIS
+    return false;
+  }
+
+  if (!cone.prepareForNonSpreadArguments()) {
+    return false;
+  }
+
+  //     5.c. Let value be undefined.
+  //     5.d. If kind is method, set value to elementRecord.[[Value]].
+  if (kind == Kind::Method) {
+    // The DecoratorEmitter expects the method to already be on the stack.
+    // We dup the value here so we can use it as an argument to the decorator.
+    if (!bce_->emitDupAt(2)) {
+      //          [stack] VAL CALLEE THIS VAL
+      return false;
+    }
+  }
+  //     5.e. Else if kind is getter, set value to elementRecord.[[Get]].
+  //     5.f. Else if kind is setter, set value to elementRecord.[[Set]].
+  // TODO: See https://bugzilla.mozilla.org/show_bug.cgi?id=1793960.
+  //     5.g. Else if kind is accessor, then
+  //         5.g.i. Set value to OrdinaryObjectCreate(%Object.prototype%).
+  //         5.g.ii. Perform ! CreateDataPropertyOrThrow(accessor, "get",
+  //         elementRecord.[[Get]]). 5.g.iii. Perform
+  //         ! CreateDataPropertyOrThrow(accessor, "set",
+  //         elementRecord.[[Set]]).
+  // TODO: See https://bugzilla.mozilla.org/show_bug.cgi?id=1793961.
+  //     5.b. Let context be CreateDecoratorContextObject(kind, key,
+  //     extraInitializers, decorationState, isStatic).
+  if (!emitCreateDecoratorContextObject(kind, key, isStatic,
+                                        decorator->pn_pos)) {
+    //          [stack] VAL CALLEE THIS VAL
+    //          context
+    return false;
+  }
+
+  //     5.h. Let newValue be ? Call(decorator, undefined, « value, context
+  //     »).
+  return cone.emitEnd(2, decorator->pn_pos.begin);
+  //          [stack] VAL RETVAL
+}
+
 bool DecoratorEmitter::emitCreateDecoratorAccessObject() {
   // TODO: See https://bugzilla.mozilla.org/show_bug.cgi?id=1800725.
   ObjectEmitter oe(bce_);
@@ -285,6 +274,43 @@ bool DecoratorEmitter::emitCreateDecoratorAccessObject() {
     return false;
   }
   return oe.emitEnd();
+}
+
+bool DecoratorEmitter::emitCheckIsUndefined() {
+  // This emits code to check if the value at the top of the stack is
+  // undefined. The value is left on the stack.
+  //          [stack] VAL
+  if (!bce_->emit1(JSOp::Dup)) {
+    //          [stack] VAL VAL
+    return false;
+  }
+  if (!bce_->emit1(JSOp::Undefined)) {
+    //          [stack] VAL VAL undefined
+    return false;
+  }
+  return bce_->emit1(JSOp::Eq);
+  //          [stack] VAL ISUNDEFINED
+}
+
+bool DecoratorEmitter::emitCheckIsCallable() {
+  // This emits code to check if the value at the top of the stack is
+  // callable. The value is left on the stack.
+  //            [stack] VAL
+  if (!bce_->emitAtomOp(JSOp::GetIntrinsic,
+                        TaggedParserAtomIndex::WellKnown::IsCallable())) {
+    //            [stack] VAL ISCALLABLE
+    return false;
+  }
+  if (!bce_->emit1(JSOp::Undefined)) {
+    //            [stack] VAL ISCALLABLE UNDEFINED
+    return false;
+  }
+  if (!bce_->emitDupAt(2)) {
+    //            [stack] VAL ISCALLABLE UNDEFINED VAL
+    return false;
+  }
+  return bce_->emitCall(JSOp::Call, 1);
+  //              [stack] VAL ISCALLABLE_RESULT
 }
 
 bool DecoratorEmitter::emitCreateAddInitializerFunction() {
