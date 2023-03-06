@@ -8643,13 +8643,6 @@ bool nsContentUtils::IsPreloadType(nsContentPolicyType aType) {
           aType == nsIContentPolicy::TYPE_INTERNAL_FETCH_PRELOAD);
 }
 
-/* static */
-bool nsContentUtils::IsUpgradableDisplayType(ExtContentPolicyType aType) {
-  MOZ_ASSERT(NS_IsMainThread());
-  return (aType == ExtContentPolicy::TYPE_IMAGE ||
-          aType == ExtContentPolicy::TYPE_MEDIA);
-}
-
 // static
 ReferrerPolicy nsContentUtils::GetReferrerPolicyFromChannel(
     nsIChannel* aChannel) {

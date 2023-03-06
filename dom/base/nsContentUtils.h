@@ -1436,14 +1436,6 @@ class nsContentUtils {
   static bool IsPreloadType(nsContentPolicyType aType);
 
   /**
-   * Returns true if the pref "security.mixed_content.upgrade_display_content"
-   * is true and the content policy type is any of:
-   *   * TYPE_IMAGE
-   *   * TYPE_MEDIA
-   */
-  static bool IsUpgradableDisplayType(ExtContentPolicyType aType);
-
-  /**
    * Quick helper to determine whether there are any mutation listeners
    * of a given type that apply to this content or any of its ancestors.
    * The method has the side effect to call document's MayDispatchMutationEvent

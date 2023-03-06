@@ -265,7 +265,8 @@ LoadInfo::LoadInfo(
            aLoadingContext->OwnerDoc()->GetUpgradeInsecureRequests(true));
     }
 
-    if (nsContentUtils::IsUpgradableDisplayType(externalType)) {
+    if (nsMixedContentBlocker::IsUpgradableContentType(
+            mInternalContentPolicyType)) {
       if (mLoadingPrincipal->SchemeIs("https")) {
         if (StaticPrefs::security_mixed_content_upgrade_display_content()) {
           mBrowserUpgradeInsecureRequests = true;

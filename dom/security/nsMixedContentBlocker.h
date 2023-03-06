@@ -58,6 +58,12 @@ class nsMixedContentBlocker : public nsIContentPolicy,
   static bool IsPotentiallyTrustworthyOnion(nsIURI* aURL);
   static bool IsPotentiallyTrustworthyOrigin(nsIURI* aURI);
 
+  /**
+   * Returns true if the provided content policy type is subject to the
+   * mixed content level 2 upgrading mechanism (audio, video, image).
+   */
+  static bool IsUpgradableContentType(nsContentPolicyType aType);
+
   /* Static version of ShouldLoad() that contains all the Mixed Content Blocker
    * logic.  Called from non-static ShouldLoad().
    * Called directly from imageLib when an insecure redirect exists in a cached
