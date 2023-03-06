@@ -850,8 +850,9 @@ nsresult Http3Session::ProcessOutput(nsIUDPSocket* socket) {
       continue;
     }
     nsresult rv = socket->SendWithAddress(&addr, packetToSend, &written);
-    LOG(("Http3Session::ProcessOutput sending packet rv=%d",
-         static_cast<int32_t>(rv)));
+
+    LOG(("Http3Session::ProcessOutput sending packet rv=%d osError=%d",
+         static_cast<int32_t>(rv), NS_FAILED(rv) ? PR_GetOSError() : 0));
     if (NS_FAILED(rv) && (rv != NS_BASE_STREAM_WOULD_BLOCK)) {
       mSocketError = rv;
       // If there was an error that is not NS_BASE_STREAM_WOULD_BLOCK
