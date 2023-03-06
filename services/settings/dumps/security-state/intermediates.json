@@ -3781,78 +3781,6 @@
       "last_modified": 1666727873549
     },
     {
-      "schema": 1666727352149,
-      "derHash": "znrcGXdXpS5pogFMzgPZgGMlAnZHQsKSPXOAVo4hAKY=",
-      "subject": "CN=E-Tugra Extended Validated CA,OU=E-Tuğra Sertifikasyon Merkezi,O=E-Tuğra EBG Bilişim Teknolojileri ve Hizmetleri A.Ş.,L=Ankara,C=TR",
-      "subjectDN": "MIGxMQswCQYDVQQGEwJUUjEPMA0GA1UEBwwGQW5rYXJhMUAwPgYDVQQKDDdFLVR1xJ9yYSBFQkcgQmlsacWfaW0gVGVrbm9sb2ppbGVyaSB2ZSBIaXptZXRsZXJpIEEuxZ4uMScwJQYDVQQLDB5FLVR1xJ9yYSBTZXJ0aWZpa2FzeW9uIE1lcmtlemkxJjAkBgNVBAMMHUUtVHVncmEgRXh0ZW5kZWQgVmFsaWRhdGVkIENB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "12ff7eb3fc7ad0d030464cfca8808d4239fab2f60c03f47a3f76ec1c962d10f8",
-        "size": 2296,
-        "filename": "CbsSUO015uoyaPW3UoozNFDyIZuKJooRSCguLZLEHjg=.pem",
-        "location": "security-state-staging/intermediates/b4924736-081c-4006-83d9-18747abe70b7.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "CbsSUO015uoyaPW3UoozNFDyIZuKJooRSCguLZLEHjg=",
-      "crlite_enrolled": false,
-      "id": "7c935540-4c03-4352-b768-16756b45aed8",
-      "last_modified": 1666727873533
-    },
-    {
-      "schema": 1666727403051,
-      "derHash": "y2/O5BxV4kd03wK+Nd5tQY6U71gR99sTc6+ICc9wfyo=",
-      "subject": "CN=E-Tugra Domain Validated CA,OU=E-Tuğra Sertifikasyon Merkezi,O=E-Tuğra EBG Bilişim Teknolojileri ve Hizmetleri A.Ş.,L=Ankara,C=TR",
-      "subjectDN": "MIGvMQswCQYDVQQGEwJUUjEPMA0GA1UEBwwGQW5rYXJhMUAwPgYDVQQKDDdFLVR1xJ9yYSBFQkcgQmlsacWfaW0gVGVrbm9sb2ppbGVyaSB2ZSBIaXptZXRsZXJpIEEuxZ4uMScwJQYDVQQLDB5FLVR1xJ9yYSBTZXJ0aWZpa2FzeW9uIE1lcmtlemkxJDAiBgNVBAMMG0UtVHVncmEgRG9tYWluIFZhbGlkYXRlZCBDQQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "c6b2887b29d06c3a32442bacd3087e92f206a5fa698d64deded68c4d8bb5d347",
-        "size": 2296,
-        "filename": "DReMCzHTvlRp8z0vjOXH2lx0lpHIz5iXick53RZbRT8=.pem",
-        "location": "security-state-staging/intermediates/570f1b75-429e-4c79-b0e9-d7653e227ce7.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "DReMCzHTvlRp8z0vjOXH2lx0lpHIz5iXick53RZbRT8=",
-      "crlite_enrolled": false,
-      "id": "feefbefd-6161-49d5-84fd-5b09c850c80c",
-      "last_modified": 1666727873519
-    },
-    {
-      "schema": 1666727403562,
-      "derHash": "EUdT6I0ADnWZYVqZB+Jrc7bYUTF/8rJ6yp24/FBWkqc=",
-      "subject": "CN=E-Tugra Organization Validated CA,OU=E-Tuğra Sertifikasyon Merkezi,O=E-Tuğra EBG Bilişim Teknolojileri ve Hizmetleri A.Ş.,L=Ankara,C=TR",
-      "subjectDN": "MIG1MQswCQYDVQQGEwJUUjEPMA0GA1UEBwwGQW5rYXJhMUAwPgYDVQQKDDdFLVR1xJ9yYSBFQkcgQmlsacWfaW0gVGVrbm9sb2ppbGVyaSB2ZSBIaXptZXRsZXJpIEEuxZ4uMScwJQYDVQQLDB5FLVR1xJ9yYSBTZXJ0aWZpa2FzeW9uIE1lcmtlemkxKjAoBgNVBAMMIUUtVHVncmEgT3JnYW5pemF0aW9uIFZhbGlkYXRlZCBDQQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "c20540a909d14bde73c51dde53da2ff3fea4d75a0c875924065198ab7de00da3",
-        "size": 2304,
-        "filename": "2C9V2-VZ5v93wYg0HupOPel5wBqM8YEDtTLQWSkHjis=.pem",
-        "location": "security-state-staging/intermediates/375b6c2a-70ea-49da-8638-9e7de1fc7e9b.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "2C9V2+VZ5v93wYg0HupOPel5wBqM8YEDtTLQWSkHjis=",
-      "crlite_enrolled": false,
-      "id": "14fdc6a9-ae04-401c-9371-d01b4bbb58b9",
-      "last_modified": 1666727873505
-    },
-    {
-      "schema": 1666727362047,
-      "derHash": "PtCuZ6FDLIPYIQHeabLuXn8gMCcJ2VeQc6MC2pD0hTM=",
-      "subject": "CN=TrustSafe Domain Validated CA,OU=SSL Department,O=Isimtescil Bilisim Anonim Sirketi,L=Istanbul,C=TR",
-      "subjectDN": "MIGNMQswCQYDVQQGEwJUUjERMA8GA1UEBwwISXN0YW5idWwxKjAoBgNVBAoMIUlzaW10ZXNjaWwgQmlsaXNpbSBBbm9uaW0gU2lya2V0aTEXMBUGA1UECwwOU1NMIERlcGFydG1lbnQxJjAkBgNVBAMMHVRydXN0U2FmZSBEb21haW4gVmFsaWRhdGVkIENB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "748834790eb69db784c3f00d7f2ef2b64cf353435e5de3e69ac4ca2c81299276",
-        "size": 2247,
-        "filename": "90w8QxLDw7OA3WHogRdF8WutmwS2zB2cr21T0-Sun5o=.pem",
-        "location": "security-state-staging/intermediates/32d1002c-6eee-400e-a7ec-8b0235165445.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "90w8QxLDw7OA3WHogRdF8WutmwS2zB2cr21T0+Sun5o=",
-      "crlite_enrolled": false,
-      "id": "29a0cb2e-7719-4c2f-9360-00c82a4a3c72",
-      "last_modified": 1666727873491
-    },
-    {
       "schema": 1666727435278,
       "derHash": "YoSgO6+uhhow46JaAwQoMG9+tSvQuld6HZYqgJqDDJ4=",
       "subject": "CN=NetLock Minősített Eat. (Class Q Legal) Tanúsítványkiadó,OU=Tanúsítványkiadók (Certification Services),O=NetLock Kft.,L=Budapest,C=HU",
@@ -5219,24 +5147,6 @@
       "crlite_enrolled": false,
       "id": "1944c7f1-bf0e-4729-a9ec-68ff7ce41381",
       "last_modified": 1666727872407
-    },
-    {
-      "schema": 1666727433888,
-      "derHash": "iegKPtct9z5Y2yN0Tiyj7LwiX3UKYda+JoEk98leRls=",
-      "subject": "CN=TrustSafe Organization Validated CA,OU=SSL Department,O=Isimtescil Bilisim Anonim Sirketi,L=Istanbul,C=TR",
-      "subjectDN": "MIGTMQswCQYDVQQGEwJUUjERMA8GA1UEBwwISXN0YW5idWwxKjAoBgNVBAoMIUlzaW10ZXNjaWwgQmlsaXNpbSBBbm9uaW0gU2lya2V0aTEXMBUGA1UECwwOU1NMIERlcGFydG1lbnQxLDAqBgNVBAMMI1RydXN0U2FmZSBPcmdhbml6YXRpb24gVmFsaWRhdGVkIENB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "741eb73cef38e441d495e385775b23b7e66578c11dcfd91591514ce55e8d824d",
-        "size": 2255,
-        "filename": "F8P6yRGn6PHOPi3LHmd5_Awd3GeSxMlyfUhUwxtVaoU=.pem",
-        "location": "security-state-staging/intermediates/28295eb2-0fa4-40e0-b2af-e05ece3ff066.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "F8P6yRGn6PHOPi3LHmd5/Awd3GeSxMlyfUhUwxtVaoU=",
-      "crlite_enrolled": false,
-      "id": "80b7ece4-c29e-4494-ad88-0dd9d4fd72bc",
-      "last_modified": 1666727872394
     },
     {
       "schema": 1666727374976,
@@ -27451,5 +27361,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1677229023629
+  "timestamp": 1677855423522
 }
