@@ -14,7 +14,7 @@ add_task(async function bookmark_leak_window() {
   let tree = library.document.getElementById("placesList");
   tree.selectItems(["toolbar_____"]);
 
-  await synthesizeClickOnSelectedTreeCell(tree, { type: "mousedown" });
+  await synthesizeClickOnSelectedTreeCell(tree);
   await promiseLibraryClosed(library);
 
   Assert.ok(
