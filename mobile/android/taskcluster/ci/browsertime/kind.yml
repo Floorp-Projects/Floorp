@@ -135,6 +135,7 @@ tasks:
 
     speedometer3:
         description: "Raptor Speedometer 3 Benchmark tests on Fenix"
+        subtest-symbol: sp3
         test-name: speedometer3
         run-visual-metrics: False
         chimera: False
