@@ -89,6 +89,14 @@ const Template = ({ state, dialogMode }) => html`
   </div>
 `;
 
+export const LoadingSkeleton = Template.bind({});
+LoadingSkeleton.args = {
+  dialogMode: true,
+  state: {
+    page: MigrationWizardConstants.PAGES.LOADING,
+  },
+};
+
 export const MainSelectorVariant1 = Template.bind({});
 MainSelectorVariant1.args = {
   dialogMode: true,

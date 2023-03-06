@@ -25,7 +25,19 @@ export class MigrationWizard extends HTMLElement {
     return `
       <template>
         <link rel="stylesheet" href="chrome://browser/skin/migration/migration-wizard.css">
-        <named-deck id="wizard-deck" selected-view="page-selection" aria-live="polite">
+        <named-deck id="wizard-deck" selected-view="page-loading" aria-live="polite" aria-busy="true">
+          <div name="page-loading">
+            <h3 data-l10n-id="migration-wizard-selection-header"></h3>
+            <div class="loading-block large"></div>
+            <div class="loading-block small"></div>
+            <div class="loading-block small"></div>
+            <moz-button-group class="buttons">
+              <!-- If possible, use the same button labels as the SELECTION page with the same strings.
+                   That'll prevent flicker when the load state exits if we then enter the SELECTION page. -->
+              <button class="cancel-close" data-l10n-id="migration-cancel-button-label" disabled></button>
+              <button data-l10n-id="migration-import-button-label" disabled></button>
+            </moz-button-group>
+          </div>
 
           <div name="page-selection">
             <h3 data-l10n-id="migration-wizard-selection-header"></h3>
@@ -94,6 +106,7 @@ export class MigrationWizard extends HTMLElement {
               <button class="primary" id="done-button" data-l10n-id="migration-done-button-label"></button>
             </moz-button-group>
           </div>
+
           <div name="page-safari-permission">
             <h3>TODO: Safari permission page</h3>
           </div>
@@ -108,7 +121,6 @@ export class MigrationWizard extends HTMLElement {
               <button class="cancel-close" data-l10n-id="migration-cancel-button-label"></button>
             </moz-button-group>
           </div>
-          
         </named-deck>
       </template>
     `;
@@ -211,6 +223,10 @@ export class MigrationWizard extends HTMLElement {
       }
     }
 
+    this.#deck.toggleAttribute(
+      "aria-busy",
+      state.page == MigrationWizardConstants.PAGES.LOADING
+    );
     this.#deck.setAttribute("selected-view", `page-${state.page}`);
 
     if (window.IS_STORYBOOK) {
