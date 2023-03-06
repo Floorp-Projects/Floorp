@@ -553,3 +553,74 @@ c</textarea>
   },
   { chrome: true, topLevel: !isWinNoCache, iframe: !isWinNoCache }
 );
+
+/**
+ * Test magic offsets with GetCharacter/RangeExtents.
+ */
+addAccessibleTask(
+  `<input id="input" value="abc">`,
+  async function(browser, docAcc) {
+    const input = findAccessibleChildByID(docAcc, "input", [nsIAccessibleText]);
+    info("Setting caret and focusing input");
+    let focused = waitForEvent(EVENT_FOCUS, input);
+    await invokeContentTask(browser, [], () => {
+      const inputDom = content.document.getElementById("input");
+      inputDom.selectionStart = inputDom.selectionEnd = 1;
+      inputDom.focus();
+    });
+    await focused;
+    let expectedX = {};
+    let expectedY = {};
+    let expectedW = {};
+    let expectedH = {};
+    let magicX = {};
+    let magicY = {};
+    let magicW = {};
+    let magicH = {};
+    input.getCharacterExtents(
+      1,
+      expectedX,
+      expectedY,
+      expectedW,
+      expectedH,
+      COORDTYPE_SCREEN_RELATIVE
+    );
+    input.getCharacterExtents(
+      nsIAccessibleText.TEXT_OFFSET_CARET,
+      magicX,
+      magicY,
+      magicW,
+      magicH,
+      COORDTYPE_SCREEN_RELATIVE
+    );
+    Assert.deepEqual(
+      [magicX.value, magicY.value, magicW.value, magicH.value],
+      [expectedX.value, expectedY.value, expectedW.value, expectedH.value],
+      "GetCharacterExtents correct with TEXT_OFFSET_CARET"
+    );
+    input.getRangeExtents(
+      1,
+      3,
+      expectedX,
+      expectedY,
+      expectedW,
+      expectedH,
+      COORDTYPE_SCREEN_RELATIVE
+    );
+    input.getRangeExtents(
+      nsIAccessibleText.TEXT_OFFSET_CARET,
+      nsIAccessibleText.TEXT_OFFSET_END_OF_TEXT,
+      magicX,
+      magicY,
+      magicW,
+      magicH,
+      COORDTYPE_SCREEN_RELATIVE
+    );
+    Assert.deepEqual(
+      [magicX.value, magicY.value, magicW.value, magicH.value],
+      [expectedX.value, expectedY.value, expectedW.value, expectedH.value],
+      "GetRangeExtents correct with TEXT_OFFSET_CARET/END_OF_TEXT"
+    );
+  },
+  { chrome: true, topLevel: !isWinNoCache, remoteIframe: !isWinNoCache }
+);

@@ -183,10 +183,11 @@ class HyperTextAccessible : public AccessibleWrap,
 
   LayoutDeviceIntRect CharBounds(int32_t aOffset,
                                  uint32_t aCoordType) override {
-    int32_t endOffset = aOffset == static_cast<int32_t>(CharacterCount())
-                            ? aOffset
-                            : aOffset + 1;
-    return TextBounds(aOffset, endOffset, aCoordType);
+    index_t startOffset = ConvertMagicOffset(aOffset);
+    int32_t endOffset = startOffset == CharacterCount()
+                            ? static_cast<int32_t>(startOffset)
+                            : startOffset + 1;
+    return TextBounds(startOffset, endOffset, aCoordType);
   }
 
   /**
