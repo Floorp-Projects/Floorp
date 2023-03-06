@@ -126,18 +126,20 @@ export class CDP {
     }
 
     try {
-      try {
-        await IOUtils.remove(this._activePortPath);
-      } catch (e) {
-        lazy.logger.warn(
-          `Failed to remove ${this._activePortPath} (${e.message})`
-        );
-      }
+      await IOUtils.remove(this._activePortPath);
+    } catch (e) {
+      lazy.logger.warn(
+        `Failed to remove ${this._activePortPath} (${e.message})`
+      );
+    }
 
+    try {
       this.targetList?.destructor();
       this.targetList = null;
 
       lazy.RecommendedPreferences.restorePreferences(RECOMMENDED_PREFS);
+    } catch (e) {
+      lazy.logger.error("Failed to stop protocol", e);
     } finally {
       this._running = false;
     }
