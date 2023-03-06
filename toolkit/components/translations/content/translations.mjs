@@ -325,6 +325,7 @@ class TranslationsUI {
     this.languageTo.addEventListener("input", () => {
       this.state.setToLanguage(this.languageTo.value);
       this.updateOnLanguageChange();
+      this.translationTo.setAttribute("lang", this.languageTo.value);
     });
   }
 

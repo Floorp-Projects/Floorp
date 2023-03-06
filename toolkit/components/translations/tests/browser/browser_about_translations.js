@@ -202,6 +202,11 @@ add_task(async function test_about_translations_translations() {
 
       // The mocked translations make the text uppercase and reports the models used.
       await assertTranslationResult("TEXT TO TRANSLATE. [en to fr]");
+      is(
+        translationResult.getAttribute("lang"),
+        "fr",
+        "The result is listed as in French."
+      );
 
       // Blank out the "to" select so it doesn't try to translate between is to fr.
       toSelect.value = "";
@@ -216,6 +221,11 @@ add_task(async function test_about_translations_translations() {
 
       await assertTranslationResult(
         "THIS IS THE SECOND TRANSLATION. [is to en]"
+      );
+      is(
+        translationResult.getAttribute("lang"),
+        "en",
+        "The result is listed as in English."
       );
     },
   });
