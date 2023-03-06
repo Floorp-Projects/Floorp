@@ -89,6 +89,50 @@ exported_symbols.smokeTest = async function smokeTest() {
   }
 };
 
+exported_symbols.quotaTest = async function() {
+  const storage = navigator.storage;
+  const allowCreate = { create: true };
+
+  {
+    let root = await storage.getDirectory();
+    Assert.ok(root, "Can we access the root directory?");
+
+    const fileHandle = await root.getFileHandle("test.txt", allowCreate);
+    Assert.ok(!!fileHandle, "Can we get file handle?");
+
+    const cachedOriginUsage = await Utils.getCachedOriginUsage();
+
+    const writable = await fileHandle.createWritable();
+    Assert.ok(!!writable, "Can we create writable file stream?");
+
+    const buffer = new ArrayBuffer(42);
+    Assert.ok(!!buffer, "Can we create array buffer?");
+
+    const result = await writable.write(buffer);
+    Assert.equal(result, undefined, "Can we write entire buffer?");
+
+    await writable.close();
+
+    const cachedOriginUsage2 = await Utils.getCachedOriginUsage();
+
+    Assert.equal(
+      cachedOriginUsage2 - cachedOriginUsage,
+      buffer.byteLength,
+      "Is cached origin usage correct after writing?"
+    );
+
+    await root.removeEntry("test.txt");
+
+    const cachedOriginUsage3 = await Utils.getCachedOriginUsage();
+
+    Assert.equal(
+      cachedOriginUsage3,
+      cachedOriginUsage,
+      "Is cached origin usage correct after removing file?"
+    );
+  }
+};
+
 for (const [key, value] of Object.entries(exported_symbols)) {
   Object.defineProperty(value, "name", {
     value: key,
