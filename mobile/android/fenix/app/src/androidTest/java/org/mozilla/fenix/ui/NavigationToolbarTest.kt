@@ -34,6 +34,11 @@ import java.util.Locale
 class NavigationToolbarTest {
     private lateinit var mDevice: UiDevice
     private lateinit var mockWebServer: MockWebServer
+    private val downloadTestPage =
+        "https://storage.googleapis.com/mobile_test_assets/test_app/downloads.html"
+    private val pdfFileName = "washington.pdf"
+    private val pdfFileURL = "storage.googleapis.com/mobile_test_assets/public/washington.pdf"
+    private val pdfFileContent = "Washington Crossing the Delaware"
 
     /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
     @get:Rule
@@ -176,7 +181,38 @@ class NavigationToolbarTest {
             verifyFindPrevInPageResult("1/3")
             enterFindInPageQuery("3")
             verifyFindNextInPageResult("1/1")
-        }.closeFindInPage { }
+        }.closeFindInPageWithCloseButton { }
+    }
+
+    @Test
+    fun pdfFindInPageTest() {
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
+            clickLinkMatchingText(pdfFileName)
+            verifyUrl(pdfFileURL)
+            verifyPageContent(pdfFileContent)
+        }.openThreeDotMenu {
+            verifyThreeDotMenuExists()
+            verifyFindInPageButton()
+        }.openFindInPage {
+            verifyFindInPageNextButton()
+            verifyFindInPagePrevButton()
+            verifyFindInPageCloseButton()
+            enterFindInPageQuery("o")
+            verifyFindNextInPageResult("1/2")
+            clickFindInPageNextButton()
+            verifyFindNextInPageResult("2/2")
+            clickFindInPagePrevButton()
+            verifyFindPrevInPageResult("1/2")
+        }.closeFindInPageWithCloseButton {
+            verifyFindInPageBar(false)
+        }.openThreeDotMenu {
+        }.openFindInPage {
+            enterFindInPageQuery("l")
+            verifyFindNextInPageResult("1/1")
+        }.closeFindInPageWithBackButton {
+            verifyFindInPageBar(false)
+        }
     }
 
     @Test

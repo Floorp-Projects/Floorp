@@ -58,9 +58,20 @@ class FindInPageRobot {
     }
 
     class Transition {
-        fun closeFindInPage(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+        fun closeFindInPageWithCloseButton(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             mDevice.waitForIdle()
             findInPageCloseButton().click()
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
+        fun closeFindInPageWithBackButton(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            mDevice.waitForIdle()
+
+            // Will need to press back 2x, the first will only dismiss the keyboard
+            mDevice.pressBack()
+            mDevice.pressBack()
+
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }

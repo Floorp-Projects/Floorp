@@ -1008,6 +1008,12 @@ class BrowserRobot {
                 it.click()
             }
 
+    fun verifyFindInPageBar(exists: Boolean) =
+        assertItemWithResIdExists(
+            itemWithResId("$packageName:id/findInPageView"),
+            exists = exists,
+        )
+
     class Transition {
         private fun threeDotButton() = onView(
             allOf(
