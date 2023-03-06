@@ -12,6 +12,8 @@
   </menupopup>
 
   <menupopup id="all-panel-context" onpopupshowing="bmsController.eventFunctions.contextMenu.show(event);">
+    <menuitem  id="unloadWebpanelMenu" class="needLoadedWebpanel" data-l10n-id="sidebar2-unload-panel" label="Unload this webpanel" accesskey="U" oncommand="bmsController.eventFunctions.contextMenu.unloadWebpanel();"/>
+    <menuseparator id="context-webpanel-separator"/>
     <menuitem  id="deleteWebpanelMenu" data-l10n-id="sidebar2-delete-panel" accesskey="D" oncommand="bmsController.eventFunctions.contextMenu.deleteWebpanel();"/>
   </menupopup>
 

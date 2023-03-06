@@ -126,7 +126,9 @@ var gBSBPane = {
         document.l10n.setAttributes(removeButton, "sidebar2-pref-delete");
         containerButtons.appendChild(removeButton);
         this._list.insertBefore(item, document.getElementById("BSBSpace"));
-      } else { this._list.insertBefore(document.getElementById(`BSB-${container}`), document.getElementById("BSBSpace")); this.setURL(this.BSBs.data[container].url, document.getElementById(`BSB-${container}`).querySelector(".bsb_label")) }
+      } else { 
+        this._list.insertBefore(document.getElementById(`BSB-${container}`), document.getElementById("BSBSpace")); 
+        this.setURL(this.BSBs.data[container].url, document.getElementById(`BSB-${container}`).querySelector(".bsb_label")) }
     }
     let BSBAll = document.querySelectorAll(".BSB-list")
     let sicon = BSBAll.length

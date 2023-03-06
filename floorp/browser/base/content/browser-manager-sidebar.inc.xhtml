@@ -12,17 +12,5 @@
         <toolbarbutton id="sidebar2-keeppanelwidth" context="width-size-context" class="sidebar2-icon" style="margin-right: 0.5em;" data-l10n-id="sidebar-keepWidth-button"  oncommand="bmsController.eventFunctions.keepWidth();"/>
         <toolbarbutton id="sidebar2-close" class="sidebar2-icon" style="margin-right: 0.5em;" data-l10n-id="sidebar-close-button"  oncommand="bmsController.controllFunctions.changeVisibleWenpanel();"/>
         </box>
-        <browser id="sidebar2"  flex="1" autoscroll="false" disablehistory="true" disablefullscreen="true"
-                 style="max-width: none;" tooltip="aHTMLTooltip"
-                 disableglobalhistory="true" messagemanagergroup="webext-browsers"
-                 webextension-view-type=""
-                 autocompletepopup="PopupAutoComplete" initialBrowsingContextGroupId="40"/> 
-
-        <browser id="TST"  flex="1" autoscroll="false" disablehistory="true" disablefullscreen="true"
-                 style="max-width: none;" tooltip="aHTMLTooltip"
-                 disableglobalhistory="true" messagemanagergroup="webext-browsers"
-                 context="contentAreaContextMenu" webextension-view-type="sidebar"
-                 autocompletepopup="PopupAutoComplete" initialBrowsingContextGroupId="40"
-                 type="content" remote="true" maychangeremoteness="true" /> 
     </vbox>
 <splitter id="sidebar-splitter2" class="browser-sidebar2 chromeclass-extrachrome"  hidden="false"/>
