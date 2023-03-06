@@ -839,20 +839,20 @@ void CanvasGradient::AddColorStop(float aOffset, const nsACString& aColorstr,
     return aRv.ThrowIndexSizeError("Offset out of 0-1.0 range");
   }
 
-  PresShell* presShell = mContext ? mContext->GetPresShell() : nullptr;
-  ServoStyleSet* styleSet = presShell ? presShell->StyleSet() : nullptr;
+  if (!mContext) {
+    return aRv.ThrowSyntaxError("No canvas context");
+  }
 
-  nscolor color;
-  bool ok = ServoCSSParser::ComputeColor(styleSet, NS_RGB(0, 0, 0), aColorstr,
-                                         &color);
-  if (!ok) {
+  auto color = mContext->ParseColor(
+      aColorstr, CanvasRenderingContext2D::ResolveCurrentColor::No);
+  if (!color) {
     return aRv.ThrowSyntaxError("Invalid color");
   }
 
   GradientStop newStop;
 
   newStop.offset = aOffset;
-  newStop.color = ToDeviceColor(color);
+  newStop.color = ToDeviceColor(*color);
 
   mRawStops.AppendElement(newStop);
 }
@@ -1083,32 +1083,44 @@ JSObject* CanvasRenderingContext2D::WrapObject(
   return CanvasRenderingContext2D_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-bool CanvasRenderingContext2D::ParseColor(const nsACString& aString,
-                                          nscolor* aColor) {
+CanvasRenderingContext2D::ColorStyleCacheEntry
+CanvasRenderingContext2D::ParseColorSlow(const nsACString& aString) {
+  ColorStyleCacheEntry result{nsCString(aString)};
   Document* document = mCanvasElement ? mCanvasElement->OwnerDoc() : nullptr;
   css::Loader* loader = document ? document->CSSLoader() : nullptr;
 
   PresShell* presShell = GetPresShell();
   ServoStyleSet* set = presShell ? presShell->StyleSet() : nullptr;
-
-  // First, try computing the color without handling currentcolor.
   bool wasCurrentColor = false;
-  if (!ServoCSSParser::ComputeColor(set, NS_RGB(0, 0, 0), aString, aColor,
-                                    &wasCurrentColor, loader)) {
-    return false;
+  nscolor color;
+  if (ServoCSSParser::ComputeColor(set, NS_RGB(0, 0, 0), aString, &color,
+                                   &wasCurrentColor, loader)) {
+    result.mWasCurrentColor = wasCurrentColor;
+    result.mColor.emplace(color);
   }
 
-  if (wasCurrentColor && mCanvasElement) {
-    // Otherwise, get the value of the color property, flushing style
-    // if necessary.
+  return result;
+}
+
+Maybe<nscolor> CanvasRenderingContext2D::ParseColor(
+    const nsACString& aString, ResolveCurrentColor aResolveCurrentColor) {
+  auto entry = mColorStyleCache.Lookup(aString);
+  if (!entry) {
+    entry.Set(ParseColorSlow(aString));
+  }
+
+  const auto& data = entry.Data();
+  if (data.mWasCurrentColor && mCanvasElement &&
+      aResolveCurrentColor == ResolveCurrentColor::Yes) {
+    // If it was currentColor, get the value of the color property, flushing
+    // style if necessary.
     RefPtr<const ComputedStyle> canvasStyle =
         nsComputedDOMStyle::GetComputedStyle(mCanvasElement);
     if (canvasStyle) {
-      *aColor = canvasStyle->StyleText()->mColor.ToColor();
+      return Some(canvasStyle->StyleText()->mColor.ToColor());
     }
-    // Beware that the presShell could be gone here.
   }
-  return true;
+  return data.mColor;
 }
 
 void CanvasRenderingContext2D::ResetBitmap(bool aFreeBuffer) {
@@ -1171,12 +1183,12 @@ void CanvasRenderingContext2D::SetStyleFromString(const nsACString& aStr,
                                                   Style aWhichStyle) {
   MOZ_ASSERT(!aStr.IsVoid());
 
-  nscolor color;
-  if (!ParseColor(aStr, &color)) {
+  Maybe<nscolor> color = ParseColor(aStr);
+  if (!color) {
     return;
   }
 
-  CurrentState().SetColorStyle(aWhichStyle, color);
+  CurrentState().SetColorStyle(aWhichStyle, *color);
 }
 
 void CanvasRenderingContext2D::GetStyleAsUnion(
@@ -2325,12 +2337,12 @@ already_AddRefed<CanvasPattern> CanvasRenderingContext2D::CreatePattern(
 // shadows
 //
 void CanvasRenderingContext2D::SetShadowColor(const nsACString& aShadowColor) {
-  nscolor color;
-  if (!ParseColor(aShadowColor, &color)) {
+  Maybe<nscolor> color = ParseColor(aShadowColor);
+  if (!color) {
     return;
   }
 
-  CurrentState().shadowColor = color;
+  CurrentState().shadowColor = *color;
 }
 
 //
@@ -3514,7 +3526,7 @@ bool CanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
   }
 
   nsPresContext* c = presShell->GetPresContext();
-  CacheKey key{aFont, c->RestyleManager()->GetRestyleGeneration()};
+  FontStyleCacheKey key{aFont, c->RestyleManager()->GetRestyleGeneration()};
   auto entry = mFontStyleCache.Lookup(key);
   if (!entry) {
     FontStyleData newData;
@@ -5372,8 +5384,8 @@ void CanvasRenderingContext2D::DrawWindow(nsGlobalWindowInner& aWindow,
     return;
   }
 
-  nscolor backgroundColor;
-  if (!ParseColor(aBgColor, &backgroundColor)) {
+  Maybe<nscolor> backgroundColor = ParseColor(aBgColor);
+  if (!backgroundColor) {
     aError.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -5459,7 +5471,7 @@ void CanvasRenderingContext2D::DrawWindow(nsGlobalWindowInner& aWindow,
 
   RefPtr<PresShell> presShell = presContext->PresShell();
 
-  Unused << presShell->RenderDocument(r, renderDocFlags, backgroundColor,
+  Unused << presShell->RenderDocument(r, renderDocFlags, *backgroundColor,
                                       &thebes.ref());
   // If this canvas was contained in the drawn window, the pre-transaction
   // callback may have returned its DT. If so, we must reacquire it here.
