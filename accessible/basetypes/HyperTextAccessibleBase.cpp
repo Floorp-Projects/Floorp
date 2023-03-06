@@ -210,7 +210,11 @@ bool HyperTextAccessibleBase::CharAt(int32_t aOffset, nsAString& aChar,
 
 LayoutDeviceIntRect HyperTextAccessibleBase::CharBounds(int32_t aOffset,
                                                         uint32_t aCoordType) {
-  TextLeafPoint point = ToTextLeafPoint(aOffset, false);
+  index_t offset = ConvertMagicOffset(aOffset);
+  if (!offset.IsValid() || offset > CharacterCount()) {
+    return LayoutDeviceIntRect();
+  }
+  TextLeafPoint point = ToTextLeafPoint(static_cast<int32_t>(offset), false);
   if (!point.mAcc || !point.mAcc->IsRemote() ||
       !point.mAcc->AsRemote()->mCachedFields) {
     return LayoutDeviceIntRect();
@@ -231,7 +235,9 @@ LayoutDeviceIntRect HyperTextAccessibleBase::TextBounds(int32_t aStartOffset,
     return result;
   }
 
-  if (aEndOffset > -1 && aStartOffset >= aEndOffset) {
+  index_t startOffset = ConvertMagicOffset(aStartOffset);
+  index_t endOffset = ConvertMagicOffset(aEndOffset);
+  if (!startOffset.IsValid() || startOffset >= endOffset) {
     return LayoutDeviceIntRect();
   }
 
@@ -240,9 +246,10 @@ LayoutDeviceIntRect HyperTextAccessibleBase::TextBounds(int32_t aStartOffset,
   // lines, and a simple union may yield an incorrect width. We
   // should use the length of the longest spanned line for our width.
 
-  TextLeafPoint startPoint = ToTextLeafPoint(aStartOffset, false);
+  TextLeafPoint startPoint =
+      ToTextLeafPoint(static_cast<int32_t>(startOffset), false);
   TextLeafPoint endPoint =
-      ToTextLeafPoint(ConvertMagicOffset(aEndOffset), true);
+      ToTextLeafPoint(static_cast<int32_t>(endOffset), true);
   if (!endPoint) {
     // The caller provided an invalid offset.
     return LayoutDeviceIntRect();
