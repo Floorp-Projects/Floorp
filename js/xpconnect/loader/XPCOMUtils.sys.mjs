@@ -44,7 +44,20 @@ export var XPCOMUtils = {
    *        only ever be called once.
    */
   defineLazyGetter(aObject, aName, aLambda) {
-    ChromeUtils.defineLazyGetter(aObject, aName, aLambda);
+    let redefining = false;
+    Object.defineProperty(aObject, aName, {
+      get() {
+        if (!redefining) {
+          // Make sure we don't get into an infinite recursion loop if
+          // the getter lambda does something shady.
+          redefining = true;
+          return redefine(aObject, aName, aLambda.apply(aObject));
+        }
+        return undefined;
+      },
+      configurable: true,
+      enumerable: true,
+    });
   },
 
   /**
