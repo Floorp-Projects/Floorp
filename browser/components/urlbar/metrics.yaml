@@ -88,7 +88,7 @@ urlbar:
           `tip_unknown`, `intervention_clear`, `intervention_refresh`,
           `intervention_update`, `intervention_unknown`, `tab_to_search`,
           `top_site`, `calc`, `unit`, `suggest_sponsor`,
-          `suggest_non_sponsor`, `quicksuggest` and `weather`.
+          `suggest_non_sponsor`, and `weather`.
           If the result type did not fall into any of these, this will be
           `unknown` and a bug should be filed to investigate it.
         type: string
@@ -168,8 +168,8 @@ urlbar:
           `tip_onboard`, `tip_persist`, `tip_redirect`, `tip_unknown`,
           `intervention_clear`, `intervention_refresh`, `intervention_update`,
           `intervention_unknown`, `tab_to_search`, `top_site`, `calc`, `unit`,
-          `site_specific_contextual_search`, `quicksuggest`,  `weather`,
-          `experimental_addon`, `suggest_sponsor` and `suggest_non_sponsor`.
+          `site_specific_contextual_search`, `weather`, `experimental_addon`,
+          `suggest_sponsor` and `suggest_non_sponsor`.
           If the result type did not fall into any of these, this will be
           `unknown`.
         type: string
@@ -228,8 +228,8 @@ urlbar:
           `tip_unknown`, `intervention_clear`, `intervention_refresh`,
           `intervention_update`, `intervention_unknown`, `tab_to_search`,
           `top_site`, `calc`, `unit`, `site_specific_contextual_search`,
-          `quicksuggest`, `weather`, `experimental_addon`, `suggest_sponsor`
-          and `suggest_non_sponsor`. If the result type did not fall into any of
+          `weather`, `experimental_addon`, `suggest_sponsor` and
+          `suggest_non_sponsor`. If the result type did not fall into any of
           these, this will be `unknown` and a bug should be filed to investigate
           it. If engagement_type is `drop_go` or `paste_go`, this will be empty
           string because no results are shown.
@@ -324,10 +324,9 @@ urlbar:
           `remote_tab`, `addon`, `tip_onboard`, `tip_persist`, `tip_redirect`,
           `tip_unknown`, `intervention_clear`, `intervention_refresh`,
           `intervention_update`, `intervention_unknown`, `tab_to_search`,
-          `top_site`, `calc`, `unit`, `suggest_sponsor`,
-          `suggest_non_sponsor`, `quicksuggest` and `weather`. If the result
-          type did not fall into any of these, this will be `unknown` and a bug
-          should be filed to investigate it.
+          `top_site`, `calc`, `unit`, `suggest_sponsor`, `suggest_non_sponsor`,
+          and `weather`. If the result type did not fall into any of these,
+          this will be `unknown` and a bug should be filed to investigate it.
         type: string
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1800579
