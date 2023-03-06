@@ -9,6 +9,8 @@
 #include "prtime.h"
 #include "secerr.h"
 #include "ssl.h"
+#include "nss.h"
+#include "blapit.h"
 
 #include "gtest_utils.h"
 #include "tls_agent.h"
@@ -348,38 +350,22 @@ static void GenerateWeakRsaKey(ScopedSECKEYPrivateKey& priv,
   ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
   ASSERT_TRUE(slot);
   PK11RSAGenParams rsaparams;
-  // The absolute minimum size of RSA key that we can use with SHA-256 is
-  // 256bit (hash) + 256bit (salt) + 8 (start byte) + 8 (end byte) = 528.
+// The absolute minimum size of RSA key that we can use with SHA-256 is
+// 256bit (hash) + 256bit (salt) + 8 (start byte) + 8 (end byte) = 528.
+#define RSA_WEAK_KEY 528
+#if RSA_MIN_MODULUS_BITS < RSA_WEAK_KEY
   rsaparams.keySizeInBits = 528;
+#else
+  rsaparams.keySizeInBits = RSA_MIN_MODULUS_BITS + 1;
+#endif
   rsaparams.pe = 65537;
 
-  // Bug 1012786: PK11_GenerateKeyPair can fail if there is insufficient
-  // entropy to generate a random key. We can fake some.
-  for (int retry = 0; retry < 10; ++retry) {
-    SECKEYPublicKey* p_pub = nullptr;
-    priv.reset(PK11_GenerateKeyPair(slot.get(), CKM_RSA_PKCS_KEY_PAIR_GEN,
-                                    &rsaparams, &p_pub, false, false, nullptr));
-    pub.reset(p_pub);
-    if (priv) {
-      return;
-    }
-
-    ASSERT_FALSE(pub);
-    if (PORT_GetError() != SEC_ERROR_PKCS11_FUNCTION_FAILED) {
-      break;
-    }
-
-    // https://xkcd.com/221/
-    static const uint8_t FRESH_ENTROPY[16] = {4};
-    ASSERT_EQ(
-        SECSuccess,
-        PK11_RandomUpdate(
-            const_cast<void*>(reinterpret_cast<const void*>(FRESH_ENTROPY)),
-            sizeof(FRESH_ENTROPY)));
-    break;
-  }
-  ADD_FAILURE() << "Unable to generate an RSA key: "
-                << PORT_ErrorToName(PORT_GetError());
+  SECKEYPublicKey* p_pub = nullptr;
+  priv.reset(PK11_GenerateKeyPair(slot.get(), CKM_RSA_PKCS_KEY_PAIR_GEN,
+                                  &rsaparams, &p_pub, false, false, nullptr));
+  pub.reset(p_pub);
+  PR_ASSERT(priv);
+  return;
 }
 
 // Fail to connect with a weak RSA key.
@@ -390,6 +376,18 @@ TEST_P(TlsConnectTls13, DCWeakKey) {
                                                 ssl_sig_rsa_pss_pss_sha256};
   client_->SetSignatureSchemes(kSchemes, PR_ARRAY_SIZE(kSchemes));
   server_->SetSignatureSchemes(kSchemes, PR_ARRAY_SIZE(kSchemes));
+#if RSA_MIN_MODULUS_BITS > RSA_WEAK_KEY
+  // save the MIN POLICY length.
+  PRInt32 minRsa;
+
+  ASSERT_EQ(SECSuccess, NSS_OptionGet(NSS_RSA_MIN_KEY_SIZE, &minRsa));
+#if RSA_MIN_MODULUS_BITS >= 2048
+  ASSERT_EQ(SECSuccess,
+            NSS_OptionSet(NSS_RSA_MIN_KEY_SIZE, RSA_MIN_MODULUS_BITS + 1024));
+#else
+  ASSERT_EQ(SECSuccess, NSS_OptionSet(NSS_RSA_MIN_KEY_SIZE, 2048));
+#endif
+#endif
 
   ScopedSECKEYPrivateKey dc_priv;
   ScopedSECKEYPublicKey dc_pub;
@@ -412,6 +410,9 @@ TEST_P(TlsConnectTls13, DCWeakKey) {
   auto cfilter = MakeTlsFilter<TlsExtensionCapture>(
       client_, ssl_delegated_credentials_xtn);
   ConnectExpectAlert(client_, kTlsAlertInsufficientSecurity);
+#if RSA_MIN_MODULUS_BITS > RSA_WEAK_KEY
+  ASSERT_EQ(SECSuccess, NSS_OptionSet(NSS_RSA_MIN_KEY_SIZE, minRsa));
+#endif
 }
 
 class ReplaceDCSigScheme : public TlsHandshakeFilter {

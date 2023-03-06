@@ -1313,10 +1313,16 @@ get_blinding_params(RSAPrivateKey *key, mp_int *n, unsigned int modLen,
          * Now, search its list of ready blinding params for a usable one.
          */
         while (0 != (bp = rsabp->bp)) {
-#ifndef UNSAFE_FUZZER_MODE
-            if (--(bp->counter) > 0)
-#endif
-            {
+#ifdef UNSAFE_FUZZER_MODE
+            /* Found a match and there are still remaining uses left */
+            /* Return the parameters */
+            CHECK_MPI_OK(mp_copy(&bp->f, f));
+            CHECK_MPI_OK(mp_copy(&bp->g, g));
+
+            PZ_Unlock(blindingParamsList.lock);
+            return SECSuccess;
+#else
+            if (--(bp->counter) > 0) {
                 /* Found a match and there are still remaining uses left */
                 /* Return the parameters */
                 CHECK_MPI_OK(mp_copy(&bp->f, f));
@@ -1346,6 +1352,7 @@ get_blinding_params(RSAPrivateKey *key, mp_int *n, unsigned int modLen,
             }
             PZ_Unlock(blindingParamsList.lock);
             return SECSuccess;
+#endif
         }
         /* We did not find a usable set of blinding params.  Can we make one? */
         /* Find a free bp struct. */

@@ -18,3 +18,5 @@
  * happens because NSS used to count bit lengths incorrectly. */
 #define SSL_DH_MIN_P_BITS 1023
 #define SSL_DSA_MIN_P_BITS 1023
+/* not really used by SSL, but define it here for consistency */
+#define SSL_ECC_MIN_CURVE_BITS 255

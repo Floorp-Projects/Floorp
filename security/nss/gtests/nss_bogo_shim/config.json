@@ -24,7 +24,6 @@
 
         "*Ed25519*":"Add Ed25519 support (Bug 1325335)",
         "*NoSSL3*":"Test passes but only because of handshake failure, NSS only rejects SSL3 immediately in TLS1.3 clients/servers.",
-        "GREASE-Server-TLS13":"NSS only supports ECH grease.",
         "SendExtensionOnClientCertificate-TLS13":"Bug 1339392",
         "CheckRecordVersion-TLS1":"NSS doesn't check record version field. Bug 1317634",
         "CheckRecordVersion-TLS11":"NSS doesn't check record version field. Bug 1317634",
