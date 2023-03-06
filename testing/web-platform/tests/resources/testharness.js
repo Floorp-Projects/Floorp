@@ -4754,7 +4754,7 @@
         if ('META_TITLE' in global_scope && META_TITLE) {
             return META_TITLE;
         }
-        if ('location' in global_scope) {
+        if ('location' in global_scope && 'pathname' in location) {
             return location.pathname.substring(location.pathname.lastIndexOf('/') + 1, location.pathname.indexOf('.'));
         }
         return "Untitled";
