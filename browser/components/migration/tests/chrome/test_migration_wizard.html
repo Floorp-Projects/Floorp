@@ -58,23 +58,50 @@
     });
 
     /**
-     * Tests that the MigrationWizard:Init event is fired when the <migration-wizard>
-     * is added to the DOM, and then ensures that the starting page is correct.
+     * Tests that the MigrationWizard:RequestState event is fired when the
+     * <migration-wizard> is added to the DOM if the auto-request-state attribute
+     * is set, and then ensures that the starting page is correct.
+     *
+     * This also tests that the MigrationWizard:RequestState is not fired automatically
+     * if the auto-request-state attribute is not set, but is then fired upon calling
+     * requestState().
+     *
      * This uses a dynamically created <migration-wizard> instead of the one already
      * in the content div to make sure that the init event is captured.
      */
     add_task(async function test_init_event() {
+      const REQUEST_STATE_EVENT = "MigrationWizard:RequestState";
+
       let wiz = document.createElement("migration-wizard");
+      wiz.toggleAttribute("auto-request-state", true);
       let content = document.getElementById("content");
       let promise = new Promise(resolve => {
-        content.addEventListener("MigrationWizard:Init", resolve, { once: true });
+        content.addEventListener(REQUEST_STATE_EVENT, resolve, { once: true });
       });
       content.appendChild(wiz);
       await promise;
-      ok(true, "Saw MigrationWizard:Init event.");
+      ok(true, `Saw ${REQUEST_STATE_EVENT} event.`);
       let shadowRoot = wiz.openOrClosedShadowRoot;
       let deck = shadowRoot.querySelector("#wizard-deck");
       is(deck.selectedViewName, "page-loading", "Should have the loading page selected");
+      wiz.remove();
+
+      wiz.toggleAttribute("auto-request-state", false);
+      let sawEvent = false;
+      let handler = () => {
+        sawEvent = true;
+      };
+      content.addEventListener(REQUEST_STATE_EVENT, handler);
+      content.appendChild(wiz);
+      ok(!sawEvent, `Should not have seen ${REQUEST_STATE_EVENT} event.`);
+      content.removeEventListener(REQUEST_STATE_EVENT, handler);
+
+      promise = new Promise(resolve => {
+        content.addEventListener(REQUEST_STATE_EVENT, resolve, { once: true });
+      });
+      wiz.requestState();
+      await promise;
+      ok(true, `Saw ${REQUEST_STATE_EVENT} event.`);
       wiz.remove();
     });
 

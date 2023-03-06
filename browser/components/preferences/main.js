@@ -1727,11 +1727,12 @@ var gMainPane = {
 
     // If we've been opened before, remove the old wizard and insert a
     // new one to put it back into its starting state.
-    migrationWizardDialog.firstElementChild?.remove();
-    let wizard = document.createElement("migration-wizard");
-    wizard.toggleAttribute("dialog-mode", true);
-    migrationWizardDialog.appendChild(wizard);
-
+    if (!migrationWizardDialog.firstElementChild) {
+      let wizard = document.createElement("migration-wizard");
+      wizard.toggleAttribute("dialog-mode", true);
+      migrationWizardDialog.appendChild(wizard);
+    }
+    migrationWizardDialog.firstElementChild.requestState();
     migrationWizardDialog.showModal();
   },
 
