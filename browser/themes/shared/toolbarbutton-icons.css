@@ -395,6 +395,10 @@ toolbar[brighttext]:-moz-lwtheme {
   list-style-image: url("chrome://browser/skin/mail.svg");
 }
 
+#logins-button {
+  list-style-image: url("chrome://browser/skin/login.svg");
+}
+
 #sidebar-button {
   list-style-image: url("chrome://browser/skin/sidebars-right.svg");
 }
