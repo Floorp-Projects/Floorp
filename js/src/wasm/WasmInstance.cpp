@@ -1174,10 +1174,7 @@ static int32_t MemDiscardNotShared(Instance* instance, I byteOffset, I byteLen,
   // The new struct will be allocated in an initial heap as determined by
   // pretenuring logic as set up in `Instance::init`.
   return WasmStructObject::createStruct<true>(
-      cx, typeDefData,
-      typeDefData->clasp == &WasmStructObject::classInline_
-          ? typeDefData->allocSite.initialHeap()
-          : typeDefData->initialHeap);
+      cx, typeDefData, typeDefData->allocSite.initialHeap());
 }
 
 /* static */ void* Instance::structNewUninit(Instance* instance,
@@ -1187,10 +1184,7 @@ static int32_t MemDiscardNotShared(Instance* instance, I byteOffset, I byteLen,
   // The new struct will be allocated in an initial heap as determined by
   // pretenuring logic as set up in `Instance::init`.
   return WasmStructObject::createStruct<false>(
-      cx, typeDefData,
-      typeDefData->clasp == &WasmStructObject::classInline_
-          ? typeDefData->allocSite.initialHeap()
-          : typeDefData->initialHeap);
+      cx, typeDefData, typeDefData->allocSite.initialHeap());
 }
 
 /* static */ void* Instance::arrayNew(Instance* instance, uint32_t numElements,
@@ -1198,9 +1192,9 @@ static int32_t MemDiscardNotShared(Instance* instance, I byteOffset, I byteLen,
   MOZ_ASSERT(SASigArrayNew.failureMode == FailureMode::FailOnNullPtr);
   JSContext* cx = instance->cx();
   // The new array will be allocated in an initial heap as determined by
-  // `Instance::init` alone.
+  // pretenuring logic as set up in `Instance::init`.
   return WasmArrayObject::createArray<true>(
-      cx, typeDefData, typeDefData->initialHeap, numElements);
+      cx, typeDefData, typeDefData->allocSite.initialHeap(), numElements);
 }
 
 /* static */ void* Instance::arrayNewUninit(Instance* instance,
@@ -1209,9 +1203,9 @@ static int32_t MemDiscardNotShared(Instance* instance, I byteOffset, I byteLen,
   MOZ_ASSERT(SASigArrayNew.failureMode == FailureMode::FailOnNullPtr);
   JSContext* cx = instance->cx();
   // The new array will be allocated in an initial heap as determined by
-  // `Instance::init` alone.
+  // pretenuring logic as set up in `Instance::init`.
   return WasmArrayObject::createArray<false>(
-      cx, typeDefData, typeDefData->initialHeap, numElements);
+      cx, typeDefData, typeDefData->allocSite.initialHeap(), numElements);
 }
 
 // Creates an array (WasmArrayObject) containing `numElements` of type
@@ -1245,8 +1239,9 @@ static int32_t MemDiscardNotShared(Instance* instance, I byteOffset, I byteLen,
 
   const TypeDef* typeDef = typeDefData->typeDef;
   Rooted<WasmArrayObject*> arrayObj(
-      cx, WasmArrayObject::createArray(cx, typeDefData,
-                                       typeDefData->initialHeap, numElements));
+      cx,
+      WasmArrayObject::createArray(
+          cx, typeDefData, typeDefData->allocSite.initialHeap(), numElements));
   if (!arrayObj) {
     // WasmArrayObject::createArray will have reported OOM.
     return nullptr;
@@ -1328,8 +1323,9 @@ static int32_t MemDiscardNotShared(Instance* instance, I byteOffset, I byteLen,
   MOZ_RELEASE_ASSERT(typeDef->arrayType().elementType_.size() == sizeof(void*));
 
   Rooted<WasmArrayObject*> arrayObj(
-      cx, WasmArrayObject::createArray(cx, typeDefData,
-                                       typeDefData->initialHeap, numElements));
+      cx,
+      WasmArrayObject::createArray(
+          cx, typeDefData, typeDefData->allocSite.initialHeap(), numElements));
   if (!arrayObj) {
     // WasmArrayObject::createArray will have reported OOM.
     return nullptr;
@@ -1767,7 +1763,6 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
 
       typeDefData->clasp = clasp;
       typeDefData->allocKind = allocKind;
-      typeDefData->initialHeap = GetInitialHeap(GenericObject, clasp);
 
       // Initialize the allocation site for pre-tenuring.
       typeDefData->allocSite.initWasm(zone);
