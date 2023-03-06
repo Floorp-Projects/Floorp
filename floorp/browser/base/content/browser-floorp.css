@@ -2,6 +2,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+   #toolbarItemClock > .toolbarbutton-text {
+    display: block;
+    font-size: 15px;
+  }
+
+  #toolbarItemClock > .toolbarbutton-icon {
+    display: none;
+    list-style-image: url("chrome://browser/skin/history.svg");
+  }
+
+  :root[customizing] #toolbarItemClock::after {
+    content: "Clock";
+    font-size: 10px;
+    display: block !important;
+  }
+
+  #toolbarItemClock::after {
+    display: none;
+  }
+
+  :root[customizing] #toolbarItemClock > .toolbarbutton-icon {
+    display: block !important;
+  }
+
   #sidebar-button2 {
     list-style-image: url("chrome://browser/skin/sidebars.svg");
     fill: rgb(0, 192, 209) !important;

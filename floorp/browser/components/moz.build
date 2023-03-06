@@ -9,6 +9,7 @@ DIRS += [
     "about",
     "search",
     "preferences",
+    "notes",
 ]
 
 EXTRA_JS_MODULES += [
