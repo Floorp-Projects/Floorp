@@ -274,7 +274,8 @@ class DefaultTabsTrayController(
 
         tab?.let {
             val isLastTab = browserStore.state.getNormalOrPrivateTabs(it.content.private).size == 1
-            if (!isLastTab) {
+            val isCurrentTab = browserStore.state.selectedTabId.equals(tabId)
+            if (!isLastTab || !isCurrentTab) {
                 tabsUseCases.removeTab(tabId)
                 showUndoSnackbarForTab(it.content.private)
             } else {

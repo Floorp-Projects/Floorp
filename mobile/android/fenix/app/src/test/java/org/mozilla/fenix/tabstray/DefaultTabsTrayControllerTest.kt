@@ -219,6 +219,7 @@ class DefaultTabsTrayControllerTest {
             mockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
             every { browserStore.state.findTab(any()) } returns tab
             every { browserStore.state.getNormalOrPrivateTabs(any()) } returns listOf(tab)
+            every { browserStore.state.selectedTabId } returns "testTabId"
 
             controller.handleTabDeletion("testTabId", "unknown")
 
@@ -348,13 +349,15 @@ class DefaultTabsTrayControllerTest {
         }
         every { browserStore.state } returns mockk()
         try {
+            val testTabId = "33"
             mockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
             every { browserStore.state.findTab(any()) } returns tab
             every { browserStore.state.getNormalOrPrivateTabs(any()) } returns listOf(tab)
+            every { browserStore.state.selectedTabId } returns testTabId
 
-            controller.handleTabDeletion("33")
+            controller.handleTabDeletion(testTabId)
 
-            verify { controller.dismissTabsTrayAndNavigateHome("33") }
+            verify { controller.dismissTabsTrayAndNavigateHome(testTabId) }
             verify(exactly = 0) { tabsUseCases.removeTab(any()) }
             assertFalse(showUndoSnackbarForTabInvoked)
         } finally {
@@ -863,6 +866,36 @@ class DefaultTabsTrayControllerTest {
 
         verify { tabsUseCases.selectTab(tab.id) }
         verify { controller.handleNavigateToBrowser() }
+    }
+
+    @Test
+    fun `GIVEN a normal tab is selected WHEN the last private tab is deleted THEN that private tab is removed and an undo snackbar is shown and original normal tab is still displayed`() {
+        val currentTab = TabSessionState(content = ContentState(url = "https://simulate.com", private = false), id = "currentTab")
+        val privateTab = TabSessionState(content = ContentState(url = "https://mozilla.com", private = true), id = "privateTab")
+        var showUndoSnackbarForTabInvoked = false
+        var navigateToHomeAndDeleteSessionInvoked = false
+        browserStore = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(currentTab, privateTab),
+                selectedTabId = currentTab.id,
+            ),
+        )
+        val controller = spyk(
+            createController(
+                showUndoSnackbarForTab = {
+                    showUndoSnackbarForTabInvoked = true
+                },
+                navigateToHomeAndDeleteSession = {
+                    navigateToHomeAndDeleteSessionInvoked = true
+                },
+            ),
+        )
+
+        controller.handleTabSelected(currentTab, "source")
+        controller.handleTabDeletion("privateTab")
+
+        assertTrue(showUndoSnackbarForTabInvoked)
+        assertFalse(navigateToHomeAndDeleteSessionInvoked)
     }
 
     private fun createController(
