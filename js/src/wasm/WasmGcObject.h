@@ -163,6 +163,7 @@ class WasmArrayObject : public WasmGcObject {
   // Tracing and finalization
   static void obj_trace(JSTracer* trc, JSObject* object);
   static void obj_finalize(JS::GCContext* gcx, JSObject* object);
+  static size_t obj_moved(JSObject* obj, JSObject* old);
 
   void storeVal(const wasm::Val& val, uint32_t itemIndex);
   void fillVal(const wasm::Val& val, uint32_t itemIndex, uint32_t len);
@@ -254,6 +255,7 @@ class WasmStructObject : public WasmGcObject {
   // Tracing and finalization
   static void obj_trace(JSTracer* trc, JSObject* object);
   static void obj_finalize(JS::GCContext* gcx, JSObject* object);
+  static size_t obj_moved(JSObject* obj, JSObject* old);
 
   void storeVal(const wasm::Val& val, uint32_t fieldIndex);
 };
