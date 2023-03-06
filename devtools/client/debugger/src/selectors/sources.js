@@ -22,6 +22,7 @@ import {
   hasSourceActor,
   getSourceActor,
   getBreakableLinesForSourceActors,
+  isSourceActorWithSourceMap,
 } from "./source-actors";
 import { getSourceTextContent } from "./sources-content";
 
@@ -208,8 +209,13 @@ export function getSourceActorsForSource(state, id) {
 }
 
 export function isSourceWithMap(state, id) {
-  return getSourceActorsForSource(state, id).some(
-    sourceActor => sourceActor.sourceMapURL
+  const actorsInfo = state.sources.actors[id];
+  if (!actorsInfo) {
+    return false;
+  }
+
+  return actorsInfo.some(actorInfo =>
+    isSourceActorWithSourceMap(state, actorInfo.id)
   );
 }
 

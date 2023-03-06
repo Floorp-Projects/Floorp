@@ -29,6 +29,19 @@ export function getSourceActor(state, sourceActorId) {
   return state.sourceActors.mutableSourceActors.get(sourceActorId);
 }
 
+/**
+ * Reports if the Source Actor relates to a valid source map / original source.
+ *
+ * @param {Object} state
+ * @param {String} sourceActorId
+ *        Source Actor ID
+ * @return {Boolean}
+ *        True if it has a valid source map/original object.
+ */
+export function isSourceActorWithSourceMap(state, sourceActorId) {
+  return state.sourceActors.mutableSourceActorsWithSourceMap.has(sourceActorId);
+}
+
 // Used by threads selectors
 /**
  * Get all Source Actor objects for a given thread. See create.js:createSourceActor()

@@ -21,6 +21,13 @@ function initialSourceActorsState() {
     // Breakable lines object is of the form: { state: <"pending"|"fulfilled">, value: Array<Number> }
     // The array is the list of all lines where breakpoints can be set
     mutableBreakableLines: new Map(),
+
+    // Set(Source Actor ID: string)
+    // List of all IDs of source actor which have a valid related source map / original source.
+    // The SourceActor object may have a sourceMapURL attribute set,
+    // but this may be invalid. The source map URL or source map file content may be invalid.
+    // In these scenarios we will remove the source actor from this set.
+    mutableSourceActorsWithSourceMap: new Set(),
   };
 }
 
@@ -31,6 +38,12 @@ export default function update(state = initialSourceActorsState(), action) {
     case "INSERT_SOURCE_ACTORS": {
       for (const sourceActor of action.sourceActors) {
         state.mutableSourceActors.set(sourceActor.id, sourceActor);
+
+        // If the sourceMapURL attribute is set, consider that it is valid.
+        // But this may be revised later and removed from this Set.
+        if (sourceActor.sourceMapURL) {
+          state.mutableSourceActorsWithSourceMap.add(sourceActor.id);
+        }
       }
       return {
         ...state,
@@ -46,6 +59,8 @@ export default function update(state = initialSourceActorsState(), action) {
       for (const sourceActor of state.mutableSourceActors.values()) {
         if (sourceActor.thread == action.threadActorID) {
           state.mutableSourceActors.delete(sourceActor.id);
+          state.mutableBreakableLines.delete(sourceActor.id);
+          state.mutableSourceActorsWithSourceMap.delete(sourceActor.id);
         }
       }
       return {
@@ -57,32 +72,15 @@ export default function update(state = initialSourceActorsState(), action) {
       return updateBreakableLines(state, action);
 
     case "CLEAR_SOURCE_ACTOR_MAP_URL":
-      return clearSourceActorMapURL(state, action.sourceActorId);
+      if (state.mutableSourceActorsWithSourceMap.delete(action.sourceActorId)) {
+        return {
+          ...state,
+        };
+      }
+      return state;
   }
 
   return state;
-}
-
-function clearSourceActorMapURL(state, sourceActorId) {
-  const existingSourceActor = state.mutableSourceActors.get(sourceActorId);
-  if (!existingSourceActor) {
-    return state;
-  }
-
-  // /!\ We end up mutating sourceActor objects here /!\
-  // The `sourceMapURL` attribute isn't reliable and we must query the selectors
-  // each time we try to interpret its value via sourceActor.sourceMapURL!
-  //
-  // We should probably move this attribute into a dedicated map,
-  // and uncouple it from sourceActor object.
-  state.mutableSourceActors.set(sourceActorId, {
-    ...existingSourceActor,
-    sourceMapURL: "",
-  });
-
-  return {
-    ...state,
-  };
 }
 
 function updateBreakableLines(state, action) {
