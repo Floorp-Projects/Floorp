@@ -519,6 +519,13 @@ enum class StyleMozBoxLayout : uint8_t {
   Legacy,
 };
 
+// Whether flexbox visibility: collapse items use legacy -moz-box behavior or
+// not.
+enum class StyleMozBoxCollapse : uint8_t {
+  Flex,
+  Legacy,
+};
+
 // See nsStyleText
 enum class StyleTextCombineUpright : uint8_t {
   None,

@@ -20,6 +20,7 @@
     -moz-control-character-visibility: initial;
     -moz-font-smoothing-background-color: initial;
     -moz-min-font-size-ratio: initial;
+    -moz-box-collapse: initial;
 
     /* -moz-box-layout: initial; is not included in 'all' but it's not needed,
      * because we explicitly specify it below for the top level scrollbar parts

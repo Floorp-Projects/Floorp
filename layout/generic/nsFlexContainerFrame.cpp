@@ -58,11 +58,6 @@ static bool IsLegacyBox(const nsIFrame* aFlexContainer) {
       NS_STATE_FLEX_IS_EMULATING_LEGACY_WEBKIT_BOX);
 }
 
-static bool IsLegacyMozBox(const nsFlexContainerFrame* aFlexContainer) {
-  return aFlexContainer->HasAnyStateBits(
-      NS_STATE_FLEX_IS_EMULATING_LEGACY_MOZ_BOX);
-}
-
 // Returns the OrderState enum we should pass to CSSOrderAwareFrameIterator
 // (depending on whether aFlexContainer has
 // NS_STATE_FLEX_NORMAL_FLOW_CHILDREN_IN_CSS_ORDER state bit).
@@ -3970,7 +3965,8 @@ void nsFlexContainerFrame::GenerateFlexLines(
                        iter.ItemsAreAlreadyInOrder());
 
   bool prevItemRequestedBreakAfter = false;
-  const bool useMozBoxCollapseBehavior = IsLegacyMozBox(this);
+  const bool useMozBoxCollapseBehavior =
+      StyleVisibility()->UseLegacyCollapseBehavior();
 
   for (; !iter.AtEnd(); iter.Next()) {
     nsIFrame* childFrame = *iter;
@@ -4668,7 +4664,8 @@ void nsFlexContainerFrame::UnionInFlowChildOverflow(
   nsRect itemMarginBoxes;
   // Union of relative-positioned margin boxes for the relpos items only.
   nsRect relPosItemMarginBoxes;
-  const bool useMozBoxCollapseBehavior = IsLegacyMozBox(this);
+  const bool useMozBoxCollapseBehavior =
+      StyleVisibility()->UseLegacyCollapseBehavior();
   for (nsIFrame* f : mFrames) {
     if (useMozBoxCollapseBehavior && f->StyleVisibility()->IsCollapse()) {
       continue;
@@ -5096,7 +5093,8 @@ nsFlexContainerFrame::FlexLayoutResult nsFlexContainerFrame::DoFlexLayout(
   // constructor), we can create struts for any flex items with
   // "visibility: collapse" (and restart flex layout).
   // Make sure to only do this if we had no struts.
-  if (aStruts.IsEmpty() && !IsLegacyMozBox(this) && flr.mHasCollapsedItems) {
+  if (aStruts.IsEmpty() && flr.mHasCollapsedItems &&
+      !StyleVisibility()->UseLegacyCollapseBehavior()) {
     BuildStrutInfoFromCollapsedItems(flr.mLines, aStruts);
     if (!aStruts.IsEmpty()) {
       // Restart flex layout, using our struts.
@@ -5617,7 +5615,8 @@ nscoord nsFlexContainerFrame::IntrinsicISize(gfxContext* aRenderingContext,
                                                     NS_UNCONSTRAINEDSIZE);
   }
 
-  const bool useMozBoxCollapseBehavior = IsLegacyMozBox(this);
+  const bool useMozBoxCollapseBehavior =
+      StyleVisibility()->UseLegacyCollapseBehavior();
 
   // The loop below sets aside space for a gap before each item besides the
   // first. This bool helps us handle that special-case.
