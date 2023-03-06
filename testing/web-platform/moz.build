@@ -610,9 +610,6 @@ with Files("tests/preload/**"):
 with Files("tests/presentation-api/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
-with Files("tests/priority-hints/**"):
-    BUG_COMPONENT = ("Core", "DOM: Networking")
-
 with Files("tests/proximity/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
