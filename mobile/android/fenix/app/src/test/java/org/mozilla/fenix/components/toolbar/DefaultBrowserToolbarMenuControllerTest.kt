@@ -5,8 +5,8 @@
 package org.mozilla.fenix.components.toolbar
 
 import android.content.Intent
+import android.view.ViewGroup
 import androidx.navigation.NavController
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import io.mockk.MockKAnnotations
 import io.mockk.Runs
 import io.mockk.coEvery
@@ -87,7 +87,7 @@ class DefaultBrowserToolbarMenuControllerTest {
     @get:Rule
     val gleanTestRule = GleanTestRule(testContext)
 
-    @MockK private lateinit var swipeRefreshLayout: SwipeRefreshLayout
+    @MockK private lateinit var snackbarParent: ViewGroup
 
     @RelaxedMockK private lateinit var activity: HomeActivity
 
@@ -522,7 +522,7 @@ class DefaultBrowserToolbarMenuControllerTest {
 
         every { topSitesUseCase.addPinnedSites } returns addPinnedSiteUseCase
         every {
-            swipeRefreshLayout.context.getString(R.string.snackbar_added_to_shortcuts)
+            snackbarParent.context.getString(R.string.snackbar_added_to_shortcuts)
         } returns "Added to shortcuts!"
 
         val controller = createController(scope = this, store = browserStore)
@@ -550,7 +550,7 @@ class DefaultBrowserToolbarMenuControllerTest {
         coEvery { pinnedSiteStorage.getPinnedSites() } returns listOf(topSite)
         every { topSitesUseCase.removeTopSites } returns removePinnedSiteUseCase
         every {
-            swipeRefreshLayout.context.getString(R.string.snackbar_top_site_removed)
+            snackbarParent.context.getString(R.string.snackbar_top_site_removed)
         } returns snackbarMessage
 
         val controller = createController(scope = this, store = browserStore)
@@ -821,7 +821,7 @@ class DefaultBrowserToolbarMenuControllerTest {
         customTabSessionId = customTabSessionId,
         openInFenixIntent = openInFenixIntent,
         scope = scope,
-        swipeRefresh = swipeRefreshLayout,
+        snackbarParent = snackbarParent,
         tabCollectionStorage = tabCollectionStorage,
         bookmarkTapped = bookmarkTapped,
         readerModeController = readerModeController,

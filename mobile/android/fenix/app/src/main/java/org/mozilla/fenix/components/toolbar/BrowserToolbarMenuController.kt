@@ -5,10 +5,10 @@
 package org.mozilla.fenix.components.toolbar
 
 import android.content.Intent
+import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.navigation.NavController
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -67,7 +67,7 @@ class DefaultBrowserToolbarMenuController(
     private val sessionFeature: ViewBoundFeatureWrapper<SessionFeature>,
     private val findInPageLauncher: () -> Unit,
     private val browserAnimator: BrowserAnimator,
-    private val swipeRefresh: SwipeRefreshLayout,
+    private val snackbarParent: ViewGroup,
     private val customTabSessionId: String?,
     private val openInFenixIntent: Intent,
     private val bookmarkTapped: (String, String) -> Unit,
@@ -251,12 +251,12 @@ class DefaultBrowserToolbarMenuController(
             }
             is ToolbarMenu.Item.AddToTopSites -> {
                 scope.launch {
-                    val context = swipeRefresh.context
+                    val context = snackbarParent.context
                     val numPinnedSites = topSitesStorage.cachedTopSites
                         .filter { it is TopSite.Default || it is TopSite.Pinned }.size
 
                     if (numPinnedSites >= settings.topSitesMaxLimit) {
-                        AlertDialog.Builder(swipeRefresh.context).apply {
+                        AlertDialog.Builder(snackbarParent.context).apply {
                             setTitle(R.string.shortcut_max_limit_title)
                             setMessage(R.string.shortcut_max_limit_content)
                             setPositiveButton(R.string.top_sites_max_limit_confirmation_button) { dialog, _ ->
@@ -274,7 +274,7 @@ class DefaultBrowserToolbarMenuController(
                         }.join()
 
                         FenixSnackbar.make(
-                            view = swipeRefresh,
+                            view = snackbarParent,
                             duration = Snackbar.LENGTH_SHORT,
                             isDisplayedWithBrowserToolbar = true,
                         )
@@ -378,12 +378,12 @@ class DefaultBrowserToolbarMenuController(
                     }
 
                     FenixSnackbar.make(
-                        view = swipeRefresh,
+                        view = snackbarParent,
                         duration = Snackbar.LENGTH_SHORT,
                         isDisplayedWithBrowserToolbar = true,
                     )
                         .setText(
-                            swipeRefresh.context.getString(R.string.snackbar_top_site_removed),
+                            snackbarParent.context.getString(R.string.snackbar_top_site_removed),
                         )
                         .show()
                 }
