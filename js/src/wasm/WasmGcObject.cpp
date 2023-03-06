@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "wasm/WasmGcObject-inl.h"
+#include "wasm/WasmGcObject.h"
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
@@ -241,22 +241,23 @@ bool WasmGcObject::obj_deleteProperty(JSContext* cx, HandleObject obj,
 }
 
 /* static */
-WasmGcObject* WasmGcObject::create(JSContext* cx, const wasm::TypeDef* typeDef,
-                                   const AllocArgs& args) {
-  MOZ_ASSERT(IsWasmGcObjectClass(args.clasp));
-  MOZ_ASSERT(!args.clasp->isNativeObject());
+inline WasmGcObject* WasmGcObject::create(
+    JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
+    js::gc::InitialHeap initialHeap) {
+  MOZ_ASSERT(IsWasmGcObjectClass(typeDefData->clasp));
+  MOZ_ASSERT(!typeDefData->clasp->isNativeObject());
 
-  debugCheckNewObject(args.shape, args.allocKind, args.initialHeap);
+  debugCheckNewObject(typeDefData->shape, typeDefData->allocKind, initialHeap);
 
-  WasmGcObject* obj =
-      cx->newCell<WasmGcObject>(args.allocKind, /* nDynamicSlots = */ 0,
-                                args.initialHeap, args.clasp, args.allocSite);
+  WasmGcObject* obj = cx->newCell<WasmGcObject>(
+      typeDefData->allocKind, /* nDynamicSlots = */ 0, initialHeap,
+      typeDefData->clasp, &typeDefData->allocSite);
   if (!obj) {
     return nullptr;
   }
 
-  obj->initShape(args.shape);
-  obj->typeDef_ = typeDef;
+  obj->initShape(typeDefData->shape);
+  obj->typeDef_ = typeDefData->typeDef;
 
   js::gc::gcprobes::CreateObject(obj);
   probes::CreateObject(cx, obj);
@@ -387,21 +388,11 @@ gc::AllocKind WasmArrayObject::allocKind() {
 }
 
 /* static */
-WasmArrayObject* WasmArrayObject::createArray(JSContext* cx,
-                                              const wasm::TypeDef* typeDef,
-                                              uint32_t numElements) {
-  WasmGcObject::AllocArgs args(cx);
-  if (!WasmGcObject::AllocArgs::compute(cx, typeDef, &args)) {
-    return nullptr;
-  }
-  return createArray(cx, typeDef, numElements, args);
-}
-
-/* static */
 template <bool ZeroFields>
 WasmArrayObject* WasmArrayObject::createArray(
-    JSContext* cx, const wasm::TypeDef* typeDef, uint32_t numElements,
-    const WasmGcObject::AllocArgs& args) {
+    JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
+    js::gc::InitialHeap initialHeap, uint32_t numElements) {
+  const TypeDef* typeDef = typeDefData->typeDef;
   STATIC_ASSERT_WASMARRAYELEMENTS_NUMELEMENTS_IS_U32;
   MOZ_ASSERT(typeDef->kind() == wasm::TypeDefKind::Array);
 
@@ -430,7 +421,8 @@ WasmArrayObject* WasmArrayObject::createArray(
   }
 
   Rooted<WasmArrayObject*> arrayObj(cx);
-  arrayObj = (WasmArrayObject*)WasmGcObject::create(cx, typeDef, args);
+  arrayObj =
+      (WasmArrayObject*)WasmGcObject::create(cx, typeDefData, initialHeap);
   if (!arrayObj) {
     ReportOutOfMemory(cx);
     if (outlineData) {
@@ -451,11 +443,11 @@ WasmArrayObject* WasmArrayObject::createArray(
 }
 
 template WasmArrayObject* WasmArrayObject::createArray<true>(
-    JSContext* cx, const wasm::TypeDef* typeDef, uint32_t numElements,
-    const WasmGcObject::AllocArgs& args);
+    JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
+    js::gc::InitialHeap initialHeap, uint32_t numElements);
 template WasmArrayObject* WasmArrayObject::createArray<false>(
-    JSContext* cx, const wasm::TypeDef* typeDef, uint32_t numElements,
-    const WasmGcObject::AllocArgs& args);
+    JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
+    js::gc::InitialHeap initialHeap, uint32_t numElements);
 
 /* static */
 void WasmArrayObject::obj_trace(JSTracer* trc, JSObject* object) {
@@ -570,20 +562,11 @@ js::gc::AllocKind js::WasmStructObject::allocKindForTypeDef(
 }
 
 /* static */
-WasmStructObject* WasmStructObject::createStruct(JSContext* cx,
-                                                 const wasm::TypeDef* typeDef) {
-  WasmGcObject::AllocArgs args(cx);
-  if (!WasmGcObject::AllocArgs::compute(cx, typeDef, &args)) {
-    return nullptr;
-  }
-  return createStruct(cx, typeDef, args);
-}
-
-/* static */
 template <bool ZeroFields>
 WasmStructObject* WasmStructObject::createStruct(
-    JSContext* cx, const wasm::TypeDef* typeDef,
-    const WasmGcObject::AllocArgs& args) {
+    JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
+    js::gc::InitialHeap initialHeap) {
+  const TypeDef* typeDef = typeDefData->typeDef;
   MOZ_ASSERT(typeDef->kind() == wasm::TypeDefKind::Struct);
 
   uint32_t totalBytes = typeDef->structType().size_;
@@ -602,7 +585,8 @@ WasmStructObject* WasmStructObject::createStruct(
   }
 
   Rooted<WasmStructObject*> structObj(cx);
-  structObj = (WasmStructObject*)WasmGcObject::create(cx, typeDef, args);
+  structObj =
+      (WasmStructObject*)WasmGcObject::create(cx, typeDefData, initialHeap);
   if (!structObj) {
     ReportOutOfMemory(cx);
     if (outlineData) {
@@ -625,11 +609,11 @@ WasmStructObject* WasmStructObject::createStruct(
 }
 
 template WasmStructObject* WasmStructObject::createStruct<true>(
-    JSContext* cx, const wasm::TypeDef* typeDef,
-    const WasmGcObject::AllocArgs& args);
+    JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
+    js::gc::InitialHeap initialHeap);
 template WasmStructObject* WasmStructObject::createStruct<false>(
-    JSContext* cx, const wasm::TypeDef* typeDef,
-    const WasmGcObject::AllocArgs& args);
+    JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
+    js::gc::InitialHeap initialHeap);
 
 /* static */
 void WasmStructObject::obj_trace(JSTracer* trc, JSObject* object) {

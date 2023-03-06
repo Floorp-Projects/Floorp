@@ -101,7 +101,7 @@ class AllocSite {
 
   // Initialize a site to be a wasm site.
   void initWasm(JS::Zone* zone) {
-    MOZ_ASSERT(!zone_ && !scriptAndState);
+    MOZ_ASSERT(!zone_ && scriptAndState == uintptr_t(State::Unknown));
     zone_ = zone;
     nurseryTenuredCount = 0;
     invalidationCount = 0;
