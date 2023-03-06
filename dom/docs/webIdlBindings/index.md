@@ -95,7 +95,7 @@ interface, you need to do the following:
    instance by the compiler via one of that class's non-explicit
    constructors.)
    If many instances of `MyInterface` are expected to be created
-   quicky, the return value of `GetParentObject` should itself inherit
+   quickly, the return value of `GetParentObject` should itself inherit
    from `nsWrapperCache` for optimal performance. Returning null from
    `GetParentObject` is allowed in situations in which it's OK to
    associate the resulting object with a random global object for
@@ -205,7 +205,7 @@ will require these method declarations:
 ``` cpp
 class MyClass
 {
-  void DoSomething(int32_t aNumber);
+  void DoSomething(int32_t a number);
   double DoSomething(MyClass* aOtherInstance);
 
   already_AddRefed<MyInterface> DoSomethingElse(Optional<int32_t> aMaybeNumber,

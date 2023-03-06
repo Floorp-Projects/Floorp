@@ -199,7 +199,7 @@ reformat:
 ::
 
    // clang-format off
-   my code which should not be reformated
+   my code which should not be reformatted
    // clang-format on
 
 You can find an `example of code not
