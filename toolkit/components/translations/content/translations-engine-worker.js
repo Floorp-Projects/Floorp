@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* eslint-env worker */
+/* eslint-env mozilla/chrome-worker */
+"use strict";
 
 /**
  * @typedef {import("../translations").Bergamot} Bergamot
@@ -19,6 +20,11 @@ function log(...args) {
     console.log("Translations:", ...args);
   }
 }
+
+// Throw Promise rejection errors so that they are visible in the console.
+self.addEventListener("unhandledrejection", event => {
+  throw event.reason;
+});
 
 /**
  * The alignment for each file type, file type strings should be same as in the
