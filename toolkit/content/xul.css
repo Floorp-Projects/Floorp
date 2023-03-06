@@ -37,6 +37,7 @@
 *|*:root {
   --animation-easing-function: cubic-bezier(.07, .95, 0, 1);
   -moz-box-flex: 1;
+  -moz-box-collapse: legacy;
 }
 
 :root {

@@ -1120,6 +1120,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleVisibility {
     return mMozBoxLayout == mozilla::StyleMozBoxLayout::Flex;
   }
 
+  bool UseLegacyCollapseBehavior() const {
+    return mMozBoxCollapse == mozilla::StyleMozBoxCollapse::Legacy;
+  }
+
   /**
    * Given an image request, returns the orientation that should be used
    * on the image. The returned orientation may differ from the style
@@ -1152,6 +1156,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleVisibility {
   mozilla::StyleWritingModeProperty mWritingMode;
   mozilla::StyleTextOrientation mTextOrientation;
   mozilla::StyleMozBoxLayout mMozBoxLayout;
+  mozilla::StyleMozBoxCollapse mMozBoxCollapse;
   mozilla::StylePrintColorAdjust mPrintColorAdjust;
 
  private:

@@ -2716,6 +2716,7 @@ nsStyleVisibility::nsStyleVisibility(const Document& aDocument)
       mWritingMode(StyleWritingModeProperty::HorizontalTb),
       mTextOrientation(StyleTextOrientation::Mixed),
       mMozBoxLayout(StyleMozBoxLayout::Flex),
+      mMozBoxCollapse(StyleMozBoxCollapse::Flex),
       mPrintColorAdjust(StylePrintColorAdjust::Economy),
       mImageOrientation(StyleImageOrientation::FromImage) {
   MOZ_COUNT_CTOR(nsStyleVisibility);
@@ -2728,6 +2729,7 @@ nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
       mWritingMode(aSource.mWritingMode),
       mTextOrientation(aSource.mTextOrientation),
       mMozBoxLayout(aSource.mMozBoxLayout),
+      mMozBoxCollapse(aSource.mMozBoxCollapse),
       mPrintColorAdjust(aSource.mPrintColorAdjust),
       mImageOrientation(aSource.mImageOrientation) {
   MOZ_COUNT_CTOR(nsStyleVisibility);
@@ -2755,14 +2757,15 @@ nsChangeHint nsStyleVisibility::CalcDifference(
         aNewData.mVisible == StyleVisibility::Visible) {
       hint |= nsChangeHint_VisibilityChange;
     }
-    if (StyleVisibility::Collapse == mVisible ||
-        StyleVisibility::Collapse == aNewData.mVisible) {
+    if (mVisible == StyleVisibility::Collapse ||
+        aNewData.mVisible == StyleVisibility::Collapse) {
       hint |= NS_STYLE_HINT_REFLOW;
     } else {
       hint |= NS_STYLE_HINT_VISUAL;
     }
   }
-  if (mTextOrientation != aNewData.mTextOrientation) {
+  if (mTextOrientation != aNewData.mTextOrientation ||
+      mMozBoxCollapse != aNewData.mMozBoxCollapse) {
     hint |= NS_STYLE_HINT_REFLOW;
   }
   if (mImageRendering != aNewData.mImageRendering) {
