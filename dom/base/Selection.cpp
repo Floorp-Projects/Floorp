@@ -8,12 +8,12 @@
  * Implementation of mozilla::dom::Selection
  */
 
-#include "mozilla/dom/Selection.h"
+#include "Selection.h"
 
+#include "ErrorList.h"
 #include "LayoutConstants.h"
-#include "mozilla/intl/BidiEmbeddingLevel.h"
-
 #include "mozilla/AccessibleCaretEventHub.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoCopyListener.h"
@@ -27,6 +27,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/IntegerRange.h"
+#include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/Logging.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/RangeBoundary.h"
@@ -1318,7 +1319,7 @@ void Selection::Clear(nsPresContext* aPresContext) {
 
   mStyledRanges.UnregisterSelection();
   for (uint32_t i = 0; i < mStyledRanges.Length(); ++i) {
-    SelectFrames(aPresContext, mStyledRanges.mRanges[i].mRange, false);
+    SelectFrames(aPresContext, *mStyledRanges.mRanges[i].mRange, false);
   }
   mStyledRanges.Clear();
 
@@ -1656,7 +1657,7 @@ void Selection::SelectFramesInAllRanges(nsPresContext* aPresContext) {
   for (size_t i = 0; i < mStyledRanges.Length(); ++i) {
     nsRange* range = mStyledRanges.mRanges[i].mRange->AsDynamicRange();
     MOZ_ASSERT(range->IsInAnySelection());
-    SelectFrames(aPresContext, range, range->IsInAnySelection());
+    SelectFrames(aPresContext, *range, range->IsInAnySelection());
   }
 }
 
@@ -1665,32 +1666,37 @@ void Selection::SelectFramesInAllRanges(nsPresContext* aPresContext) {
  * traversing through the frames
  */
 nsresult Selection::SelectFrames(nsPresContext* aPresContext,
-                                 AbstractRange* aRange, bool aSelect) const {
+                                 AbstractRange& aRange, bool aSelect) const {
   if (!mFrameSelection || !aPresContext || !aPresContext->GetPresShell()) {
     // nothing to do
     return NS_OK;
   }
-  MOZ_ASSERT(aRange && aRange->IsPositioned());
 
-  if (aRange->IsStaticRange() && !aRange->AsStaticRange()->IsValid()) {
+  MOZ_DIAGNOSTIC_ASSERT(aRange.IsPositioned());
+
+  const Document* const document = GetDocument();
+  if (MOZ_UNLIKELY(!document ||
+                   aRange.GetComposedDocOfContainers() != document)) {
+    return NS_OK;  // Do nothing if the range is now in different document.
+  }
+
+  if (aRange.IsStaticRange() && !aRange.AsStaticRange()->IsValid()) {
     // TODO jjaschke: Actions necessary to unselect invalid static ranges?
     return NS_OK;
   }
 
   if (mFrameSelection->IsInTableSelectionMode()) {
-    nsINode* node = aRange->GetClosestCommonInclusiveAncestor();
-    nsIFrame* frame = node->IsContent()
-                          ? node->AsContent()->GetPrimaryFrame()
-                          : aPresContext->PresShell()->GetRootFrame();
+    const nsIContent* const commonAncestorContent =
+        nsIContent::FromNodeOrNull(aRange.GetClosestCommonInclusiveAncestor());
+    nsIFrame* const frame = commonAncestorContent
+                                ? commonAncestorContent->GetPrimaryFrame()
+                                : aPresContext->PresShell()->GetRootFrame();
     if (frame) {
       if (frame->IsTextFrame()) {
-        nsTextFrame* textFrame = static_cast<nsTextFrame*>(frame);
-
-        MOZ_ASSERT(node == aRange->GetStartContainer());
-        MOZ_ASSERT(node == aRange->GetEndContainer());
-        textFrame->SelectionStateChanged(aRange->StartOffset(),
-                                         aRange->EndOffset(), aSelect,
-                                         mSelectionType);
+        MOZ_ASSERT(commonAncestorContent == aRange.GetStartContainer());
+        MOZ_ASSERT(commonAncestorContent == aRange.GetEndContainer());
+        static_cast<nsTextFrame*>(frame)->SelectionStateChanged(
+            aRange.StartOffset(), aRange.EndOffset(), aSelect, mSelectionType);
       } else {
         frame->SelectionStateChanged();
       }
@@ -1701,36 +1707,36 @@ nsresult Selection::SelectFrames(nsPresContext* aPresContext,
 
   // Loop through the content iterator for each content node; for each text
   // node, call SetSelected on it:
-  nsINode* startNode = aRange->GetStartContainer();
-  nsIContent* startContent =
-      startNode->IsContent() ? startNode->AsContent() : nullptr;
-  if (!startContent) {
+  nsIContent* const startContent =
+      nsIContent::FromNodeOrNull(aRange.GetStartContainer());
+  if (MOZ_UNLIKELY(!startContent)) {
     // Don't warn, bug 1055722
     // XXX The range can start from a document node and such range can be
     //     added to Selection with JS.  Therefore, even in such cases,
     //     shouldn't we handle selection in the range?
     return NS_ERROR_UNEXPECTED;
   }
+  MOZ_DIAGNOSTIC_ASSERT(startContent->IsInComposedDoc());
 
   // We must call first one explicitly
-  bool isFirstContentTextNode = startContent->IsText();
-  nsINode* endNode = aRange->GetEndContainer();
+  nsINode* const endNode = aRange.GetEndContainer();
+  if (NS_WARN_IF(!endNode)) {
+    // We null-checked start node above, therefore, end node should also be
+    // non-null here.
+    return NS_ERROR_UNEXPECTED;
+  }
+  const bool isFirstContentTextNode = startContent->IsText();
   if (isFirstContentTextNode) {
-    nsIFrame* frame = startContent->GetPrimaryFrame();
-    // The frame could be an SVG text frame, in which case we don't treat it
-    // as a text frame.
-    if (frame) {
+    if (nsIFrame* const frame = startContent->GetPrimaryFrame()) {
+      // The frame could be an SVG text frame, in which case we don't treat it
+      // as a text frame.
       if (frame->IsTextFrame()) {
-        nsTextFrame* textFrame = static_cast<nsTextFrame*>(frame);
-        uint32_t startOffset = aRange->StartOffset();
-        uint32_t endOffset;
-        if (endNode == startContent) {
-          endOffset = aRange->EndOffset();
-        } else {
-          endOffset = startContent->Length();
-        }
-        textFrame->SelectionStateChanged(startOffset, endOffset, aSelect,
-                                         mSelectionType);
+        const uint32_t startOffset = aRange.StartOffset();
+        const uint32_t endOffset = endNode == startContent
+                                       ? aRange.EndOffset()
+                                       : startContent->Length();
+        static_cast<nsTextFrame*>(frame)->SelectionStateChanged(
+            startOffset, endOffset, aSelect, mSelectionType);
       } else {
         frame->SelectionStateChanged();
       }
@@ -1739,8 +1745,8 @@ nsresult Selection::SelectFrames(nsPresContext* aPresContext,
 
   // If the range is in a node and the node is a leaf node, we don't need to
   // walk the subtree.
-  if (aRange->Collapsed() ||
-      (startNode == endNode && !startNode->HasChildren())) {
+  if (aRange.Collapsed() ||
+      (startContent == endNode && !startContent->HasChildren())) {
     if (!isFirstContentTextNode) {
       SelectFramesOf(startContent, aSelect);
     }
@@ -1748,38 +1754,31 @@ nsresult Selection::SelectFrames(nsPresContext* aPresContext,
   }
 
   ContentSubtreeIterator subtreeIter;
-  subtreeIter.Init(aRange);
+  subtreeIter.Init(&aRange);
   if (isFirstContentTextNode && !subtreeIter.IsDone() &&
-      subtreeIter.GetCurrentNode() == startNode) {
+      subtreeIter.GetCurrentNode() == startContent) {
     subtreeIter.Next();  // first content has already been handled.
   }
   PostContentIterator postOrderIter;
   for (; !subtreeIter.IsDone(); subtreeIter.Next()) {
-    nsINode* node = subtreeIter.GetCurrentNode();
-    MOZ_ASSERT(node);
-    nsIContent* content = node->IsContent() ? node->AsContent() : nullptr;
-    SelectFramesOfInclusiveDescendantsOfContent(postOrderIter, content,
-                                                aSelect);
+    MOZ_DIAGNOSTIC_ASSERT(subtreeIter.GetCurrentNode());
+    if (nsIContent* const content =
+            nsIContent::FromNodeOrNull(subtreeIter.GetCurrentNode())) {
+      SelectFramesOfInclusiveDescendantsOfContent(postOrderIter, content,
+                                                  aSelect);
+    }
   }
 
   // We must now do the last one if it is not the same as the first
-  if (endNode != startNode) {
-    nsIContent* endContent =
-        endNode->IsContent() ? endNode->AsContent() : nullptr;
-    // XXX The range can end at a document node and such range can be
-    //     added to Selection with JS.  Therefore, even in such cases,
-    //     shouldn't we handle selection in the range?
-    if (NS_WARN_IF(!endContent)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    if (endContent->IsText()) {
-      nsIFrame* frame = endContent->GetPrimaryFrame();
-      // The frame could be an SVG text frame, in which case we'll ignore it.
-      if (frame && frame->IsTextFrame()) {
-        nsTextFrame* textFrame = static_cast<nsTextFrame*>(frame);
-        textFrame->SelectionStateChanged(0, aRange->EndOffset(), aSelect,
-                                         mSelectionType);
-      }
+  if (endNode == startContent || !endNode->IsText()) {
+    return NS_OK;
+  }
+
+  if (nsIFrame* const frame = endNode->AsText()->GetPrimaryFrame()) {
+    // The frame could be an SVG text frame, in which case we'll ignore it.
+    if (frame->IsTextFrame()) {
+      static_cast<nsTextFrame*>(frame)->SelectionStateChanged(
+          0, aRange.EndOffset(), aSelect, mSelectionType);
     }
   }
   return NS_OK;
@@ -1909,8 +1908,9 @@ Selection::Repaint(nsPresContext* aPresContext) {
   int32_t i;
 
   for (i = 0; i < arrCount; i++) {
+    MOZ_ASSERT(mStyledRanges.mRanges[i].mRange);
     nsresult rv =
-        SelectFrames(aPresContext, mStyledRanges.mRanges[i].mRange, true);
+        SelectFrames(aPresContext, *mStyledRanges.mRanges[i].mRange, true);
 
     if (NS_FAILED(rv)) {
       return rv;
@@ -2226,7 +2226,7 @@ void Selection::AddRangeAndSelectFramesAndNotifyListenersInternal(
   }
 
   RefPtr<nsPresContext> presContext = GetPresContext();
-  SelectFrames(presContext, range, true);
+  SelectFrames(presContext, *range, true);
 
   // Be aware, this instance may be destroyed after this call.
   NotifySelectionListeners();
@@ -2246,7 +2246,7 @@ void Selection::AddHighlightRangeAndSelectFramesAndNotifyListeners(
   }
 
   RefPtr<nsPresContext> presContext = GetPresContext();
-  SelectFrames(presContext, &aRange, true);
+  SelectFrames(presContext, aRange, true);
 
   // Be aware, this instance may be destroyed after this call.
   NotifySelectionListeners();
@@ -2301,7 +2301,7 @@ void Selection::RemoveRangeAndUnselectFramesAndNotifyListeners(
 
   // clear the selected bit from the removed range's frames
   RefPtr<nsPresContext> presContext = GetPresContext();
-  SelectFrames(presContext, &aRange, false);
+  SelectFrames(presContext, aRange, false);
 
   // add back the selected bit for each range touching our nodes
   nsTArray<AbstractRange*> affectedRanges;
@@ -2312,7 +2312,8 @@ void Selection::RemoveRangeAndUnselectFramesAndNotifyListeners(
     return;
   }
   for (uint32_t i = 0; i < affectedRanges.Length(); i++) {
-    SelectFrames(presContext, affectedRanges[i], true);
+    MOZ_ASSERT(affectedRanges[i]);
+    SelectFrames(presContext, *affectedRanges[i], true);
   }
 
   if (&aRange == mAnchorFocusRange) {
@@ -2472,7 +2473,7 @@ void Selection::CollapseInternal(InLimiter aInLimiter,
     return;
   }
   SetAnchorFocusRange(0);
-  SelectFrames(presContext, range, true);
+  SelectFrames(presContext, *range, true);
 
   RefPtr<Selection> kungFuDeathGrip{this};
   // Be aware, this instance may be destroyed after this call.
@@ -2643,9 +2644,9 @@ void Selection::ReplaceAnchorFocusRange(nsRange* aRange) {
   NS_ENSURE_TRUE_VOID(mAnchorFocusRange);
   RefPtr<nsPresContext> presContext = GetPresContext();
   if (presContext) {
-    SelectFrames(presContext, mAnchorFocusRange, false);
+    SelectFrames(presContext, *mAnchorFocusRange, false);
     SetAnchorFocusToRange(aRange);
-    SelectFrames(presContext, mAnchorFocusRange, true);
+    SelectFrames(presContext, *mAnchorFocusRange, true);
   }
 }
 
@@ -2788,7 +2789,7 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
   // resulting in a range that selects nothing.
   if (shouldClearRange) {
     // Repaint the current range with the selection removed.
-    SelectFrames(presContext, range, false);
+    SelectFrames(presContext, *range, false);
 
     res = range->CollapseTo(&aContainer, aOffset);
     if (NS_FAILED(res)) {
@@ -2818,7 +2819,7 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
         aRv.Throw(res);
         return;
       }
-      SelectFrames(presContext, difRange, true);
+      SelectFrames(presContext, *difRange, true);
       res = SetAnchorFocusToRange(range);
       if (NS_FAILED(res)) {
         aRv.Throw(res);
@@ -2832,7 +2833,7 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
       if (aRv.Failed()) {
         return;
       }
-      SelectFrames(presContext, range, true);
+      SelectFrames(presContext, *range, true);
       res = SetAnchorFocusToRange(range);
       if (NS_FAILED(res)) {
         aRv.Throw(res);
@@ -2857,10 +2858,10 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
         aRv.Throw(res);
         return;
       }
-      SelectFrames(presContext, difRange, false);  // deselect now
+      SelectFrames(presContext, *difRange, false);  // deselect now
       difRange->SetEnd(range->GetEndContainer(), range->EndOffset());
-      SelectFrames(presContext, difRange, true);  // must reselect last node
-                                                  // maybe more
+      SelectFrames(presContext, *difRange, true);  // must reselect last node
+                                                   // maybe more
     } else if (*anchorOldFocusOrder >= 0 &&
                *anchorNewFocusOrder <= 0) {  // 1,a,2 or 1a,2 or 1,a2 or 1a2
       if (GetDirection() == eDirPrevious) {
@@ -2892,7 +2893,7 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
           return;
         }
         // deselect from 1 to a
-        SelectFrames(presContext, difRange, false);
+        SelectFrames(presContext, *difRange, false);
       } else {
         res = SetAnchorFocusToRange(range);
         if (NS_FAILED(res)) {
@@ -2901,7 +2902,7 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
         }
       }
       // select from a to 2
-      SelectFrames(presContext, range, true);
+      SelectFrames(presContext, *range, true);
     } else if (*oldFocusNewFocusOrder <= 0 &&
                *anchorNewFocusOrder >= 0) {  // 1,2,a or 12,a or 1,2a or 12a
       // deselect from 1 to 2
@@ -2922,9 +2923,9 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
         aRv.Throw(res);
         return;
       }
-      SelectFrames(presContext, difRange, false);
+      SelectFrames(presContext, *difRange, false);
       difRange->SetStart(range->GetStartContainer(), range->StartOffset());
-      SelectFrames(presContext, difRange, true);  // must reselect last node
+      SelectFrames(presContext, *difRange, true);  // must reselect last node
     } else if (*anchorNewFocusOrder >= 0 &&
                *anchorOldFocusOrder <= 0) {  // 2,a,1 or 2a,1 or 2,a1 or 2a1
       if (GetDirection() == eDirNext) {
@@ -2948,7 +2949,7 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
           aRv.Throw(res);
           return;
         }
-        SelectFrames(presContext, difRange, false);
+        SelectFrames(presContext, *difRange, false);
       } else {
         res = SetAnchorFocusToRange(range);
         if (NS_FAILED(res)) {
@@ -2957,7 +2958,7 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
         }
       }
       // select from 2 to a
-      SelectFrames(presContext, range, true);
+      SelectFrames(presContext, *range, true);
     } else if (*oldFocusNewFocusOrder >= 0 &&
                *anchorOldFocusOrder >= 0) {  // 2,1,a or 21,a or 2,1a or 21a
       // select from 2 to 1
@@ -2974,7 +2975,7 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
         return;
       }
 
-      SelectFrames(presContext, difRange, true);
+      SelectFrames(presContext, *difRange, true);
       res = SetAnchorFocusToRange(range);
       if (NS_FAILED(res)) {
         aRv.Throw(res);
