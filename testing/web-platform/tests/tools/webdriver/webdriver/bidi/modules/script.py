@@ -160,7 +160,7 @@ class Script(BidiModule):
         return result["realms"]
 
     @command
-    def remove_preload_script(self, script: str) -> None:
+    def remove_preload_script(self, script: str) -> Any:
         params: MutableMapping[str, Any] = {
             "script": script
         }
