@@ -29,6 +29,26 @@ export async function setStoragePrefs(optionalPrefsToSet) {
   await SpecialPowers.pushPrefEnv({ set: prefsToSet });
 }
 
+export async function getUsageForOrigin(principal, fromMemory) {
+  const request = SpecialPowers.Services.qms.getUsageForPrincipal(
+    principal,
+    function() {},
+    fromMemory
+  );
+
+  await new Promise(function(resolve) {
+    request.callback = SpecialPowers.wrapCallback(function() {
+      resolve();
+    });
+  });
+
+  if (request.resultCode != SpecialPowers.Cr.NS_OK) {
+    throw new RequestError(request.resultCode, request.resultName);
+  }
+
+  return request.result;
+}
+
 export async function clearStoragesForOrigin(principal) {
   const request = SpecialPowers.Services.qms.clearStoragesForPrincipal(
     principal

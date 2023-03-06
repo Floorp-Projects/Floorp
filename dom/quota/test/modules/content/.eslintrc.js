@@ -12,6 +12,8 @@ module.exports = {
         "Assert.js",
         "ModuleLoader.js",
         "StorageUtils.js",
+        "Utils.js",
+        "UtilsParent.js",
         "WorkerDriver.js",
       ],
       parserOptions: {

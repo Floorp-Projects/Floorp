@@ -15,11 +15,14 @@ async function require_module(id) {
 
     const { Assert } = await import("/tests/dom/quota/test/modules/Assert.js");
 
+    const { Utils } = await import("/tests/dom/quota/test/modules/Utils.js");
+
     const proto = {
       Assert,
       Cr: SpecialPowers.Cr,
       navigator,
       TextEncoder,
+      Utils,
     };
 
     require_module.moduleLoader = new ModuleLoader(base, depth, proto);
