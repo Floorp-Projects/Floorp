@@ -61,7 +61,6 @@
 #include "gc/StoreBuffer-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
 #include "vm/JSObject-inl.h"
-#include "wasm/WasmGcObject-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -1172,40 +1171,36 @@ static int32_t MemDiscardNotShared(Instance* instance, I byteOffset, I byteLen,
                                        TypeDefInstanceData* typeDefData) {
   MOZ_ASSERT(SASigStructNew.failureMode == FailureMode::FailOnNullPtr);
   JSContext* cx = instance->cx();
-
-  const TypeDef* typeDef = typeDefData->typeDef;
-  WasmGcObject::AllocArgs args(cx, typeDefData);
-  // Update the initial heap to take into account pre-tenuring.
-  if (typeDefData->clasp == &WasmStructObject::classInline_) {
-    args.initialHeap = typeDefData->allocSite.initialHeap();
-  }
-  return WasmStructObject::createStruct(cx, typeDef, args);
+  // The new struct will be allocated in an initial heap as determined by
+  // pretenuring logic as set up in `Instance::init`.
+  return WasmStructObject::createStruct<true>(
+      cx, typeDefData,
+      typeDefData->clasp == &WasmStructObject::classInline_
+          ? typeDefData->allocSite.initialHeap()
+          : typeDefData->initialHeap);
 }
 
 /* static */ void* Instance::structNewUninit(Instance* instance,
                                              TypeDefInstanceData* typeDefData) {
   MOZ_ASSERT(SASigStructNew.failureMode == FailureMode::FailOnNullPtr);
   JSContext* cx = instance->cx();
-
-  const TypeDef* typeDef = typeDefData->typeDef;
-  WasmGcObject::AllocArgs args(cx, typeDefData);
-  // Update the initial heap to take into account pre-tenuring.
-  if (typeDefData->clasp == &WasmStructObject::classInline_) {
-    args.initialHeap = typeDefData->allocSite.initialHeap();
-  }
-  return WasmStructObject::createStruct<false>(cx, typeDef, args);
+  // The new struct will be allocated in an initial heap as determined by
+  // pretenuring logic as set up in `Instance::init`.
+  return WasmStructObject::createStruct<false>(
+      cx, typeDefData,
+      typeDefData->clasp == &WasmStructObject::classInline_
+          ? typeDefData->allocSite.initialHeap()
+          : typeDefData->initialHeap);
 }
 
 /* static */ void* Instance::arrayNew(Instance* instance, uint32_t numElements,
                                       TypeDefInstanceData* typeDefData) {
   MOZ_ASSERT(SASigArrayNew.failureMode == FailureMode::FailOnNullPtr);
   JSContext* cx = instance->cx();
-
-  const TypeDef* typeDef = typeDefData->typeDef;
-  WasmGcObject::AllocArgs args(cx, typeDefData);
-  // Arrays can only be allocated in the tenured heap, so don't use the
-  // allocation site for pretenuring yet.
-  return WasmArrayObject::createArray(cx, typeDef, numElements, args);
+  // The new array will be allocated in an initial heap as determined by
+  // `Instance::init` alone.
+  return WasmArrayObject::createArray<true>(
+      cx, typeDefData, typeDefData->initialHeap, numElements);
 }
 
 /* static */ void* Instance::arrayNewUninit(Instance* instance,
@@ -1213,12 +1208,10 @@ static int32_t MemDiscardNotShared(Instance* instance, I byteOffset, I byteLen,
                                             TypeDefInstanceData* typeDefData) {
   MOZ_ASSERT(SASigArrayNew.failureMode == FailureMode::FailOnNullPtr);
   JSContext* cx = instance->cx();
-
-  const TypeDef* typeDef = typeDefData->typeDef;
-  WasmGcObject::AllocArgs args(cx, typeDefData);
-  // Arrays can only be allocated in the tenured heap, so don't use the
-  // allocation site for pretenuring yet.
-  return WasmArrayObject::createArray<false>(cx, typeDef, numElements, args);
+  // The new array will be allocated in an initial heap as determined by
+  // `Instance::init` alone.
+  return WasmArrayObject::createArray<false>(
+      cx, typeDefData, typeDefData->initialHeap, numElements);
 }
 
 // Creates an array (WasmArrayObject) containing `numElements` of type
@@ -1251,9 +1244,9 @@ static int32_t MemDiscardNotShared(Instance* instance, I byteOffset, I byteLen,
   // are both zero.
 
   const TypeDef* typeDef = typeDefData->typeDef;
-  WasmGcObject::AllocArgs args(cx, typeDefData);
   Rooted<WasmArrayObject*> arrayObj(
-      cx, WasmArrayObject::createArray(cx, typeDef, numElements, args));
+      cx, WasmArrayObject::createArray(cx, typeDefData,
+                                       typeDefData->initialHeap, numElements));
   if (!arrayObj) {
     // WasmArrayObject::createArray will have reported OOM.
     return nullptr;
@@ -1334,9 +1327,9 @@ static int32_t MemDiscardNotShared(Instance* instance, I byteOffset, I byteLen,
   // machine word.
   MOZ_RELEASE_ASSERT(typeDef->arrayType().elementType_.size() == sizeof(void*));
 
-  WasmGcObject::AllocArgs args(cx, typeDefData);
   Rooted<WasmArrayObject*> arrayObj(
-      cx, WasmArrayObject::createArray(cx, typeDef, numElements, args));
+      cx, WasmArrayObject::createArray(cx, typeDefData,
+                                       typeDefData->initialHeap, numElements));
   if (!arrayObj) {
     // WasmArrayObject::createArray will have reported OOM.
     return nullptr;
@@ -1733,32 +1726,56 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
 
   // Initialize type definitions in the instance data.
   const SharedTypeContext& types = metadata().types;
-  WasmGcObject::AllocArgs allocArgs(cx);
   Zone* zone = realm()->zone();
   for (uint32_t typeIndex = 0; typeIndex < types->length(); typeIndex++) {
     const TypeDef& typeDef = types->type(typeIndex);
     TypeDefInstanceData* typeDefData = typeDefInstanceData(typeIndex);
+
+    // Set default field values.
+    new (typeDefData) TypeDefInstanceData();
+
     // Store the runtime type for this type index
     typeDefData->typeDef = &typeDef;
 
-    if (typeDef.kind() == TypeDefKind::Func) {
-      // Functions do not use these fields
-      typeDefData->shape = nullptr;
-      typeDefData->clasp = nullptr;
-      typeDefData->allocKind = gc::AllocKind::LIMIT;
-      typeDefData->initialHeap = gc::DefaultHeap;
-    } else {
-      // Compute the parameters that allocation will use
-      if (!WasmGcObject::AllocArgs::compute(cx, &typeDef, &allocArgs)) {
+    if (typeDef.kind() == TypeDefKind::Struct ||
+        typeDef.kind() == TypeDefKind::Array) {
+      // Compute the parameters that allocation will use.  First, the class
+      // and alloc kind for the type definition.
+      const JSClass* clasp;
+      gc::AllocKind allocKind;
+
+      if (typeDef.kind() == TypeDefKind::Struct) {
+        clasp = WasmStructObject::classForTypeDef(&typeDef);
+        allocKind = WasmStructObject::allocKindForTypeDef(&typeDef);
+      } else {
+        clasp = &WasmArrayObject::class_;
+        allocKind = WasmArrayObject::allocKind();
+      }
+
+      // Move the alloc kind to background if possible
+      if (CanChangeToBackgroundAllocKind(allocKind, clasp)) {
+        allocKind = ForegroundToBackgroundAllocKind(allocKind);
+      }
+
+      // Find the shape using the class and recursion group
+      typeDefData->shape =
+          WasmGCShape::getShape(cx, clasp, cx->realm(), TaggedProto(),
+                                &typeDef.recGroup(), ObjectFlags());
+      if (!typeDefData->shape) {
         return false;
       }
-      typeDefData->shape = allocArgs.shape;
-      typeDefData->clasp = allocArgs.clasp;
-      typeDefData->allocKind = allocArgs.allocKind;
-      typeDefData->initialHeap = allocArgs.initialHeap;
+
+      typeDefData->clasp = clasp;
+      typeDefData->allocKind = allocKind;
+      typeDefData->initialHeap = GetInitialHeap(GenericObject, clasp);
 
       // Initialize the allocation site for pre-tenuring.
       typeDefData->allocSite.initWasm(zone);
+    } else if (typeDef.kind() == TypeDefKind::Func) {
+      // Nothing to do; the default values are OK.
+    } else {
+      MOZ_ASSERT(typeDef.kind() == TypeDefKind::None);
+      MOZ_CRASH();
     }
   }
 
@@ -2493,20 +2510,19 @@ bool Instance::constantRefFunc(uint32_t funcIndex,
 WasmStructObject* Instance::constantStructNewDefault(JSContext* cx,
                                                      uint32_t typeIndex) {
   TypeDefInstanceData* typeDefData = typeDefInstanceData(typeIndex);
-  const TypeDef* typeDef = typeDefData->typeDef;
-  WasmGcObject::AllocArgs args(cx, typeDefData);
-  args.initialHeap = gc::TenuredHeap;
-  return WasmStructObject::createStruct(cx, typeDef, args);
+  // We assume that constant structs will have a long lifetime and hence
+  // allocate them directly in the tenured heap.
+  return WasmStructObject::createStruct(cx, typeDefData, gc::TenuredHeap);
 }
 
 WasmArrayObject* Instance::constantArrayNewDefault(JSContext* cx,
                                                    uint32_t typeIndex,
                                                    uint32_t numElements) {
   TypeDefInstanceData* typeDefData = typeDefInstanceData(typeIndex);
-  const TypeDef* typeDef = typeDefData->typeDef;
-  WasmGcObject::AllocArgs args(cx, typeDefData);
-  args.initialHeap = gc::TenuredHeap;
-  return WasmArrayObject::createArray(cx, typeDef, numElements, args);
+  // We assume that constant arrays will have a long lifetime and hence
+  // allocate them directly in the tenured heap.
+  return WasmArrayObject::createArray(cx, typeDefData, gc::TenuredHeap,
+                                      numElements);
 }
 
 JSAtom* Instance::getFuncDisplayAtom(JSContext* cx, uint32_t funcIndex) const {

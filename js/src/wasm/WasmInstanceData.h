@@ -47,6 +47,14 @@ using ExportFuncPtr = int32_t (*)(ExportArg*, Instance*);
 // Instance.
 
 struct TypeDefInstanceData {
+  TypeDefInstanceData()
+      : typeDef(nullptr),
+        allocSite(nullptr),
+        shape(nullptr),
+        clasp(nullptr),
+        allocKind(gc::AllocKind::LIMIT),
+        initialHeap(gc::DefaultHeap) {}
+
   // The canonicalized pointer to this type definition. This is kept alive by
   // the type context associated with the instance.
   const wasm::TypeDef* typeDef;
@@ -55,7 +63,6 @@ struct TypeDefInstanceData {
   gc::AllocSite allocSite;
 
   // The following fields are only meaningful and used by structs and arrays.
-  // This must be kept in sync with WasmGcObject::AllocArgs.
   GCPtr<Shape*> shape;
   const JSClass* clasp;
   gc::AllocKind allocKind;
