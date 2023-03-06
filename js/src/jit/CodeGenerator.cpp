@@ -11171,6 +11171,7 @@ void JitRuntime::generateLazyLinkStub(MacroAssembler& masm) {
   masm.pushReturnAddress();
 #endif
   masm.Push(FramePointer);
+  masm.moveStackPtrTo(FramePointer);
 
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::Volatile());
   Register temp0 = regs.takeAny();
@@ -11188,8 +11189,9 @@ void JitRuntime::generateLazyLinkStub(MacroAssembler& masm) {
   masm.callWithABI<Fn, LazyLinkTopActivation>(
       MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
-  // Discard exit frame and frame pointer.
-  masm.leaveExitFrame(sizeof(void*));
+  // Discard exit frame and restore frame pointer.
+  masm.leaveExitFrame(0);
+  masm.pop(FramePointer);
 
 #ifdef JS_USE_LINK_REGISTER
   // Restore the return address such that the emitPrologue function of the
@@ -11208,6 +11210,7 @@ void JitRuntime::generateInterpreterStub(MacroAssembler& masm) {
   masm.pushReturnAddress();
 #endif
   masm.Push(FramePointer);
+  masm.moveStackPtrTo(FramePointer);
 
   AllocatableGeneralRegisterSet regs(GeneralRegisterSet::Volatile());
   Register temp0 = regs.takeAny();
@@ -11227,8 +11230,9 @@ void JitRuntime::generateInterpreterStub(MacroAssembler& masm) {
 
   masm.branchIfFalseBool(ReturnReg, masm.failureLabel());
 
-  // Discard exit frame and frame pointer.
-  masm.leaveExitFrame(sizeof(void*));
+  // Discard exit frame and restore frame pointer.
+  masm.leaveExitFrame(0);
+  masm.pop(FramePointer);
 
   // InvokeFromInterpreterStub stores the return value in argv[0], where the
   // caller stored |this|. Subtract |sizeof(void*)| for the frame pointer we
