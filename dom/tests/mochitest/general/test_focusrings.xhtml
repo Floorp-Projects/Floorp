@@ -58,9 +58,11 @@ function runTest()
   // make sure that a focus ring appears on the focused button
   if (kIsMac) {
     var focusedButton = $("b3");
-    ok(compareSnapshots(snapShot(focusedButton), snapShot($("b2")), true)[0], "unfocused shows no ring");
+    const retBefore = compareSnapshots(snapShot(focusedButton), snapShot($("b2")), true);
+    ok(retBefore[0], `unfocused shows no ring,\nRESULT:\n${retBefore[1]}, \nREFERENCE:\n${retBefore[2]}`);
     focusedButton.focus();
-    ok(compareSnapshots(snapShot(focusedButton), snapShot($("b2")), false)[0], "focus shows ring");
+    const retAfter = compareSnapshots(snapShot(focusedButton), snapShot($("b2")), false);
+    ok(retAfter[0], `focus shows ring,\nRESULT:\n${retAfter[1]}, \nREFERENCE:\n${retAfter[2]}`);
   }
 
   checkFocus($("l1"), false, "initial appearance");
