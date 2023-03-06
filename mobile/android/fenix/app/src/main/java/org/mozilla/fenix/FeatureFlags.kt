@@ -58,6 +58,11 @@ object FeatureFlags {
     const val composeTabsTray = false
 
     /**
+     * Enables compose on the top sites.
+     */
+    const val composeTopSites = false
+
+    /**
      * Enables the save to PDF feature.
      */
     const val saveToPDF = true
