@@ -316,7 +316,7 @@ struct MOZ_RAII AutoPrepareFocusRange {
       nsRange* range = ranges[i].mRange->AsDynamicRange();
       if (range->IsGenerated()) {
         range->UnregisterSelection(aSelection);
-        aSelection.SelectFrames(presContext, range, false);
+        aSelection.SelectFrames(presContext, *range, false);
         ranges.RemoveElementAt(i);
       }
     }
