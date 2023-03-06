@@ -171,6 +171,7 @@
   MACRO_(extends, extends, "extends")                                          \
   MACRO_(false, false_, "false")                                               \
   MACRO_(few, few, "few")                                                      \
+  IF_DECORATORS(MACRO_(field, field, "field"))                                 \
   MACRO_(fieldOffsets, fieldOffsets, "fieldOffsets")                           \
   MACRO_(fieldTypes, fieldTypes, "fieldTypes")                                 \
   MACRO_(fileName, fileName, "fileName")                                       \

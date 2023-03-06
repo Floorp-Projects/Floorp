@@ -1513,7 +1513,8 @@
      * except by `JSOp::InitElemArray` and `JSOp::InitElemInc`.
      *
      * `index` must be an integer, `0 <= index <= INT32_MAX`. If `index` is
-     * `INT32_MAX`, this throws a RangeError.
+     * `INT32_MAX`, this throws a RangeError. Unlike `InitElemArray`, it is not
+     * necessary that the `array` length > `index`.
      *
      * This instruction is used when an array literal contains a
      * *SpreadElement*. In `[a, ...b, c]`, `InitElemArray 0` is used to put
