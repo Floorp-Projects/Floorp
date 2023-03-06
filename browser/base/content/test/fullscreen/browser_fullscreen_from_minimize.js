@@ -8,6 +8,24 @@
 // Still, web APIs do allow arbitrary combinations of window calls, and this test
 // exercises some of those combinations.
 
+const restoreWindowToNormal = async () => {
+  // Get the window to normal state by calling window.restore(). This may take
+  // multiple attempts since a call to restore could bring the window to either
+  // NORMAL or MAXIMIZED state.
+  while (window.windowState != window.STATE_NORMAL) {
+    info(
+      `Calling window.restore(), to try to reach "normal" state ${window.STATE_NORMAL}.`
+    );
+    let promiseSizeModeChange = BrowserTestUtils.waitForEvent(
+      window,
+      "sizemodechange"
+    );
+    window.restore();
+    await promiseSizeModeChange;
+    info(`Window reached state ${window.windowState}.`);
+  }
+};
+
 add_task(async function() {
   registerCleanupFunction(function() {
     window.restore();
@@ -17,7 +35,8 @@ add_task(async function() {
   let promiseSizeModeChange;
   let promiseFullscreen;
 
-  ok(!window.fullScreen, "Window should be normal at start of test.");
+  await restoreWindowToNormal();
+  ok(!window.fullScreen, "Window should not be fullscreen at start of test.");
 
   // Get to fullscreen.
   info("Requesting fullscreen.");
@@ -41,16 +60,7 @@ add_task(async function() {
 
   // Whether or not the previous transition worked, restore the window
   // and then minimize it.
-  if (window.windowState != window.STATE_NORMAL) {
-    info("Restoring window.");
-    promiseSizeModeChange = BrowserTestUtils.waitForEvent(
-      window,
-      "sizemodechange"
-    );
-    window.restore();
-    await promiseSizeModeChange;
-    is(window.windowState, window.STATE_NORMAL, "Window should be normal.");
-  }
+  await restoreWindowToNormal();
 
   info("Requesting minimize on a normal window.");
   promiseSizeModeChange = BrowserTestUtils.waitForEvent(
