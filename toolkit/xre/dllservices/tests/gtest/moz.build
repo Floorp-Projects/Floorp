@@ -6,12 +6,8 @@ Library("dllservicestest")
 
 UNIFIED_SOURCES += [
     "TestDLLBlocklist.cpp",
+    "TestUntrustedModules.cpp",
 ]
-
-if CONFIG["CPU_ARCH"] != "x86":
-    UNIFIED_SOURCES += [
-        "TestUntrustedModules.cpp",
-    ]
 
 LOCAL_INCLUDES += [
     "/toolkit/components/telemetry/other",
