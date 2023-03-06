@@ -27,4 +27,59 @@ async function UCTFirst(){
     }
   });
 }
-UCTFirst()
+ UCTFirst();
+
+
+let locale = Cc["@mozilla.org/intl/ospreferences;1"].getService(Ci.mozIOSPreferences).regionalPrefsLocales;
+const options = { month: 'short', day: 'numeric', weekday: 'short'}
+
+function ClockFirst() {
+   let vanilla = "--:--"
+   CustomizableUI.createWidget({
+     id: 'toolbarItemClock',
+     label: vanilla,
+     tooltiptext: vanilla,
+    })
+    setInterval(setNowTime, 1000);
+}
+ 
+function checkBrowserLangForLabel() {
+  let now = new Date();
+
+  if(locale[0] == "ja-JP"){
+    return now.toLocaleDateString('ja-JP', options);
+  } else {
+    return now.toLocaleDateString();
+  }
+}
+
+function checkBrowserLangForToolTipText() {
+  let now = new Date();
+  let year = now.getFullYear();
+  let JPYear = year - 2018;
+
+  if(locale[0] == "ja-JP"){
+    return `${year}年`+`(令和${JPYear}年) `+ now.toLocaleDateString('ja-JP', options);
+  } else {
+    return now.toLocaleDateString();
+  }
+}
+
+function setNowTime() {
+  let now = new Date();
+
+  let hours = now.getHours();
+  let minutes = now.getMinutes();
+  let seconds = now.getSeconds();
+  if (hours < 10) hours = "0" + hours;
+  if (minutes < 10) minutes = "0" + minutes;
+  let dateAndTime = `${checkBrowserLangForLabel()} ${hours}:${minutes}`;
+  let withSeconds = `${checkBrowserLangForToolTipText()} ${hours}:${minutes}:${seconds}`;
+  let clock = document.getElementById("toolbarItemClock");
+  clock.setAttribute("label", dateAndTime);
+  clock.setAttribute("tooltiptext", withSeconds);
+}
+
+if(Services.prefs.getBoolPref("floorp.browser.clock.enabled")) {
+  ClockFirst();  
+}
