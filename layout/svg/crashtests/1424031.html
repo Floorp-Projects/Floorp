@@ -1,0 +1,16 @@
+<script>
+function eh1() {
+  a.setAttribute("points", "1");
+}
+function eh2() {
+  a.addEventListener("DOMSubtreeModified", eh1);
+  a.points.getItem(1).y = 0;
+}
+function go() {
+  window.requestIdleCallback(eh2, {timeout: 62});
+}
+</script>
+<style onload="go()"></style>
+<svg>
+<polygon id="a" points="0 0 58 1 -1 1">
+
