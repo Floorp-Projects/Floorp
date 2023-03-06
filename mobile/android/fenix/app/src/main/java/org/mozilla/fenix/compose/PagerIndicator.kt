@@ -34,10 +34,10 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * indicators to show progress, instead of just showing the current one as active.
  *
  * @param pagerState The state object of your [HorizontalPager] to be used to observe the list's state.
- * @param modifier The modifier to apply to this layout.
  * @param pageCount The size of indicators should be displayed, defaults to [PagerState.pageCount].
  * If you are implementing a looping pager with a much larger [PagerState.pageCount]
  * than indicators should displayed, e.g. [Int.MAX_VALUE], specify you real size in this param.
+ * @param modifier The modifier to apply to this layout.
  * @param activeColor The color of the active page indicator, and the color of previous page
  * indicators in case [leaveTrail] is set to true.
  * @param inactiveColor The color of page indicators that are inactive.
@@ -47,10 +47,10 @@ import org.mozilla.fenix.theme.FirefoxTheme
 @Composable
 fun PagerIndicator(
     pagerState: PagerState,
-    modifier: Modifier = Modifier,
     pageCount: Int,
-    activeColor: Color,
-    inactiveColor: Color,
+    modifier: Modifier = Modifier,
+    activeColor: Color = FirefoxTheme.colors.indicatorActive,
+    inactiveColor: Color = FirefoxTheme.colors.indicatorInactive,
     leaveTrail: Boolean = false,
 ) {
     Row(
@@ -124,6 +124,22 @@ private fun PagerIndicatorPreview() {
                 activeColor = FirefoxTheme.colors.actionPrimary,
                 inactiveColor = FirefoxTheme.colors.actionSecondary,
                 leaveTrail = true,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Default colors",
+                style = FirefoxTheme.typography.caption,
+                color = FirefoxTheme.colors.textPrimary,
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            PagerIndicator(
+                pagerState = rememberPagerState(1),
+                pageCount = 3,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
         }
