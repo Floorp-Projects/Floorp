@@ -75,6 +75,14 @@ search:
     seperatePrivateDefaultUrlbarResultEnabled:
       type: boolean
       description: Whether the urlbar result for the separate private default is shown.
+    cbhStudyUs:
+      type: string
+      setPref: browser.search.param.google_channel_us
+      description: A string pref set by Nimbus tests for US search cohort
+    cbhStudyRow:
+      type: string
+      setPref: browser.search.param.google_channel_row
+      description: A string pref set by Nimbus tests for Rest of World search cohort
 
 urlbar:
   description: The Address Bar
