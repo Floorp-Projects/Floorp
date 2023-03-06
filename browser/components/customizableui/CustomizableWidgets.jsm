@@ -34,6 +34,12 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 
 ChromeUtils.defineModuleGetter(
   lazy,
+  "LoginHelper",
+  "resource://gre/modules/LoginHelper.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  lazy,
   "PanelMultiView",
   "resource:///modules/PanelMultiView.jsm"
 );
@@ -449,6 +455,14 @@ const CustomizableWidgets = [
     onCommand(aEvent) {
       let win = aEvent.view;
       win.MailIntegration.sendLinkForBrowser(win.gBrowser.selectedBrowser);
+    },
+  },
+  {
+    id: "logins-button",
+    l10nId: "toolbar-button-logins",
+    onCommand(aEvent) {
+      let window = aEvent.view;
+      lazy.LoginHelper.openPasswordManager(window, { entryPoint: "toolbar" });
     },
   },
 ];

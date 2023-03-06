@@ -786,6 +786,10 @@ toolbar-button-email-link =
   .label = Email link
   .tooltiptext = Email a link to this page
 
+toolbar-button-logins =
+  .label = Passwords
+  .tooltiptext = View and manage your saved passwords
+
 # Variables:
 #  $shortcut (String): keyboard shortcut to save a copy of the page
 toolbar-button-save-page =
