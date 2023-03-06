@@ -16,6 +16,7 @@
 #include "nsCocoaUtils.h"
 #include "nsTouchBar.h"
 #include <dlfcn.h>
+#include <queue>
 
 class nsCocoaWindow;
 class nsChildView;
@@ -262,8 +263,6 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   virtual void SuppressAnimation(bool aSuppress) override;
   virtual void HideWindowChrome(bool aShouldHide) override;
 
-  void WillEnterFullScreen(bool aFullScreen);
-  void EnteredFullScreen(bool aFullScreen, bool aNativeMode = true);
   virtual bool PrepareForFullscreenTransition(nsISupports** aData) override;
   virtual void PerformFullscreenTransition(FullscreenTransitionStage aStage, uint16_t aDuration,
                                            nsISupports* aData, nsIRunnable* aCallback) override;
@@ -362,6 +361,25 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
                             const ScrollableLayerGuid& aGuid) override;
   void StopAsyncAutoscroll(const ScrollableLayerGuid& aGuid) override;
 
+  // Class method versions of NSWindow/Delegate callbacks which need to
+  // access object state.
+  void CocoaWindowWillEnterFullscreen(bool aFullscreen);
+  void CocoaWindowDidFailFullscreen(bool aAttemptedFullscreen);
+  void CocoaWindowDidResize();
+  void CocoaSendToplevelActivateEvents();
+  void CocoaSendToplevelDeactivateEvents();
+
+  enum class TransitionType {
+    Windowed,
+    Fullscreen,
+    EmulatedFullscreen,
+    Miniaturize,
+    Deminiaturize,
+    Zoom,
+  };
+  void FinishCurrentTransition();
+  void FinishCurrentTransitionIfMatching(const TransitionType& aTransition);
+
  protected:
   virtual ~nsCocoaWindow();
 
@@ -375,7 +393,6 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   void DoResize(double aX, double aY, double aWidth, double aHeight, bool aRepaint,
                 bool aConstrainToCurrentScreen);
 
-  inline bool ShouldToggleNativeFullscreen(bool aFullScreen, bool aUseSystemTransition);
   void UpdateFullscreenState(bool aFullScreen, bool aNativeMode);
   nsresult DoMakeFullScreen(bool aFullScreen, bool aUseSystemTransition);
 
@@ -405,8 +422,33 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
                          // this is used for sibling sheet contention only
   nsSizeMode mSizeMode;
   bool mInFullScreenMode;
-  bool mInFullScreenTransition;  // true from the request to enter/exit fullscreen
-                                 // (MakeFullScreen() call) to EnteredFullScreen()
+  // Whether we are currently using native fullscreen. It could be false because
+  // we are in the emulated fullscreen where we do not use the native fullscreen.
+  bool mInNativeFullScreenMode;
+
+  mozilla::Maybe<TransitionType> mTransitionCurrent;
+  std::queue<TransitionType> mTransitionsPending;
+
+  // Sometimes we add a transition that wasn't requested by a caller. We do this
+  // to manage transitions between states that otherwise would be rejected by
+  // Cocoa. When we do this, it's useful to know when we are handling an added
+  // transition because we don't want to send size mode events when they execute.
+  bool mIsTransitionCurrentAdded = false;
+
+  // Whether we are treating the next resize as the start of a fullscreen transition.
+  // If we are, which direction are we going: Fullscreen or Windowed.
+  mozilla::Maybe<TransitionType> mUpdateFullscreenOnResize;
+
+  bool IsInTransition() { return mTransitionCurrent.isSome(); }
+  void QueueTransition(const TransitionType& aTransition);
+  void ProcessTransitions();
+
+  bool mInProcessTransitions = false;
+
+  // While running an emulated fullscreen transition, we want to suppress sending
+  // size mode events due to window resizing. We fix it up at the end when the
+  // transition is complete.
+  bool mSuppressSizeModeEvents = false;
 
   // Ignore occlusion events caused by displaying the temporary fullscreen
   // window during the fullscreen transition animation because only focused
@@ -415,10 +457,6 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
 
   bool mModal;
   bool mFakeModal;
-
-  // Whether we are currently using native fullscreen. It could be false because
-  // we are in the DOM fullscreen where we do not use the native fullscreen.
-  bool mInNativeFullScreenMode;
 
   bool mIsAnimationSuppressed;
 
