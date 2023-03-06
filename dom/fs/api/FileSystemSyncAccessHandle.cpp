@@ -232,13 +232,23 @@ RefPtr<BoolPromise> FileSystemSyncAccessHandle::BeginClose() {
 
   InvokeAsync(mIOTaskQueue, __func__,
               [selfHolder = fs::TargetPtrHolder(this)]() {
-                QM_TRY(MOZ_TO_RESULT(selfHolder->EnsureStream()),
-                       CreateAndRejectBoolPromise);
+                if (selfHolder->mStream) {
+                  LOG(("%p: Closing", selfHolder->mStream.get()));
 
-                LOG(("%p: Closing", selfHolder->mStream.get()));
+                  selfHolder->mStream->OutputStream()->Close();
+                  selfHolder->mStream = nullptr;
+                } else {
+                  LOG(("Closing (no stream)"));
 
-                selfHolder->mStream->OutputStream()->Close();
-                selfHolder->mStream = nullptr;
+                  // If the stream was not deserialized, `mStreamParams` still
+                  // contains a pre-opened file descriptor which needs to be
+                  // closed here by moving `mStreamParams` to a local variable
+                  // (the file descriptor will be closed for real when
+                  // `streamParams` goes out of scope).
+
+                  mozilla::ipc::RandomAccessStreamParams streamParams(
+                      std::move(selfHolder->mStreamParams));
+                }
 
                 return BoolPromise::CreateAndResolve(true, __func__);
               })
