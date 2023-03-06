@@ -2,12 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* eslint-env worker */
-if (this.Components) {
-  throw new Error(
-    "The language-id-worker should only be loaded in a worker, not in chrome-privileged code."
-  );
-}
+/* eslint-env mozilla/chrome-worker */
+"use strict";
+
+// Throw Promise rejection errors so that they are visible in the console.
+self.addEventListener("unhandledrejection", event => {
+  throw event.reason;
+});
 
 /* global addOnPostRun FastText loadFastText */
 importScripts(
