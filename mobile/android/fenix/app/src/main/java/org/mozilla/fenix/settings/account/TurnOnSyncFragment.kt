@@ -27,6 +27,7 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.databinding.FragmentTurnOnSyncBinding
+import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
@@ -131,6 +132,7 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
             DefaultSyncController(activity = activity as HomeActivity),
         )
 
+        binding.createAccount.increaseTapArea(CREATE_ACCOUNT_EXTRA_DIPS)
         binding.createAccount.apply {
             text = HtmlCompat.fromHtml(
                 getString(R.string.sign_in_create_account_text),
@@ -175,5 +177,9 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
         // session history stack.
         // We could auto-close this tab once we get to the end of the authentication process?
         // Via an interceptor, perhaps.
+    }
+
+    companion object {
+        private const val CREATE_ACCOUNT_EXTRA_DIPS = 16
     }
 }
