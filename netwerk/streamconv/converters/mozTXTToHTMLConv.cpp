@@ -597,7 +597,11 @@ uint32_t mozTXTToHTMLConv::NumberOfMatches(const char16_t* aInString,
                                            LIMTYPE before, LIMTYPE after) {
   uint32_t result = 0;
 
-  const uint32_t len = mozilla::AssertedCast<uint32_t>(aInStringLength);
+  // Limit lookahead length to avoid pathological O(n^2) behavior; looking so
+  // far ahead is unlikely to be important for cases where styling marked-up
+  // fragments is actually useful anyhow.
+  const uint32_t len =
+      std::min(2000u, mozilla::AssertedCast<uint32_t>(aInStringLength));
   GraphemeClusterBreakIteratorUtf16 ci(Span<const char16_t>(aInString, len));
   for (uint32_t pos = 0; pos < len; pos = *ci.Next()) {
     if (ItMatchesDelimited(aInString + pos, aInStringLength - pos, rep, aRepLen,
