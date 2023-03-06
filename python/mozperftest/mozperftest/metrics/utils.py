@@ -39,6 +39,13 @@ def is_number(value):
     return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
+def has_callable_method(obj, method_name):
+    """Determines if an object/class has a callable method."""
+    if obj and hasattr(obj, method_name) and callable(getattr(obj, method_name)):
+        return True
+    return False
+
+
 def open_file(path):
     """Opens a file and returns its contents.
 

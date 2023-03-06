@@ -61,10 +61,12 @@ class MetricsStorage(object):
         self.prefix = prefix
         self.output_path = output_path
         self.stddata = {}
-        p = Path(output_path)
-        p.mkdir(parents=True, exist_ok=True)
+        self.ptnb_config = {}
         self.results = []
         self.logger = logger
+
+        p = Path(output_path)
+        p.mkdir(parents=True, exist_ok=True)
 
     def _parse_results(self, results):
         if isinstance(results, dict):
@@ -165,16 +167,20 @@ class MetricsStorage(object):
             prefix = data_type
             if self.prefix:
                 prefix = "{}-{}".format(self.prefix, data_type)
-            config = {
+
+            # Primarily used to store the transformer used on the data
+            # so that it can also be used for generating things
+            # like summary values for suites, and subtests.
+            self.ptnb_config[data_type] = {
                 "output": self.output_path,
                 "prefix": prefix,
-                "customtransformer": tfm,
+                "custom_transformer": tfm,
                 "file_groups": {data_type: data_info["files"]},
             }
 
             ptnb = PerftestETL(
-                file_groups=config["file_groups"],
-                config=config,
+                file_groups=self.ptnb_config[data_type]["file_groups"],
+                config=self.ptnb_config[data_type],
                 prefix=self.prefix,
                 logger=self.logger,
                 custom_transform=tfm,
@@ -242,6 +248,9 @@ class MetricsStorage(object):
                 if any([met["name"] in res["subtest"] for met in metrics]) and not any(
                     [met in res["subtest"] for met in exclude]
                 ):
+                    res["transformer"] = self.ptnb_config[data_type][
+                        "custom_transformer"
+                    ]
                     newresults.append(res)
             filtered[data_type] = newresults
 
@@ -274,6 +283,10 @@ class MetricsStorage(object):
                         splitres = {key: val for key, val in res.items()}
                         splitres["subtest"] += " " + split
                         splitres["data"] = [res["data"][i] for i in indices]
+                        splitres["transformer"] = self.ptnb_config[data_type][
+                            "custom_transformer"
+                        ]
+
                         newresults.append(splitres)
 
             filtered = newfilt
