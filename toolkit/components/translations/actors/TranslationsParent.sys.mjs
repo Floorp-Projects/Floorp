@@ -57,7 +57,7 @@ export class TranslationsParent extends JSWindowActorParent {
 
   /**
    * A map of the TranslationModelRecord["id"] to the record of the model in Remote Settings.
-   * Used to coordinate the downloads. See `getLanguagePair`
+   * Used to coordinate the downloads.
    *
    * @type {Map<string, TranslationModelRecord>}
    */

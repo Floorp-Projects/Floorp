@@ -7,6 +7,7 @@ toolkit.jar:
     content/global/translations/fasttext.js                   (fasttext/fasttext.js)
     content/global/translations/fasttext_wasm.js              (fasttext/fasttext_wasm.js)
     content/global/translations/language-id-engine-worker.js  (content/language-id-engine-worker.js)
+    content/global/translations/translations-document.sys.mjs (content/translations-document.sys.mjs)
     content/global/translations/translations-engine-worker.js (content/translations-engine-worker.js)
     content/global/translations/translations.html             (content/translations.html)
     content/global/translations/translations.css              (content/translations.css)

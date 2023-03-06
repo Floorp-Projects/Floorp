@@ -225,3 +225,8 @@ interface TranslationsEnginePayload {
   bergamotWasmArrayBuffer: ArrayBuffer,
   languageModelFiles: LanguageModelFiles[]
 }
+
+/**
+ * Nodes that are being translated are given priority according to their visibility.
+ */
+export type NodeVisibility = "in-viewport" | "out-of-viewport" | "hidden";
