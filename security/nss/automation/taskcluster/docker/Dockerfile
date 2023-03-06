@@ -1,5 +1,5 @@
 # Lean image for running the bulk of the NSS CI tests on taskcluster.
-FROM ubuntu:bionic-20221215
+FROM ubuntu:18.04
 LABEL maintainer="Martin Thomson <martin.thomson@gmail.com>"
 
 RUN dpkg --add-architecture i386

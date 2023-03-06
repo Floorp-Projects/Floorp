@@ -1420,33 +1420,22 @@ tls13_ConstructInnerExtensionsFromOuter(sslSocket *ss, sslBuffer *chOuterXtnsBuf
                 }
                 break;
             case ssl_tls13_supported_versions_xtn:
-                /* Only TLS 1.3 and GREASE on CHInner. */
+                /* Only TLS 1.3 on CHInner. */
                 rv = sslBuffer_AppendNumber(chInnerXtns, extensionType, 2);
                 if (rv != SECSuccess) {
                     goto loser;
                 }
-                /* Extension length. */
-                tmpLen = (ss->opt.enableGrease) ? 5 : 3;
-                rv = sslBuffer_AppendNumber(chInnerXtns, tmpLen, 2);
+                rv = sslBuffer_AppendNumber(chInnerXtns, 3, 2);
                 if (rv != SECSuccess) {
                     goto loser;
                 }
-                /* ProtocolVersion length */
-                rv = sslBuffer_AppendNumber(chInnerXtns, tmpLen - 1, 1);
+                rv = sslBuffer_AppendNumber(chInnerXtns, 2, 1);
                 if (rv != SECSuccess) {
                     goto loser;
                 }
-                /* ProtocolVersion TLS 1.3 */
                 rv = sslBuffer_AppendNumber(chInnerXtns, SSL_LIBRARY_VERSION_TLS_1_3, 2);
                 if (rv != SECSuccess) {
                     goto loser;
-                }
-                /* ProtocolVersion GREASE */
-                if (ss->opt.enableGrease) {
-                    rv = sslBuffer_AppendNumber(chInnerXtns, ss->ssl3.hs.grease->idx[grease_version], 2);
-                    if (rv != SECSuccess) {
-                        goto loser;
-                    }
                 }
                 /* Only update state on second invocation of this function */
                 if (shouldCompress) {

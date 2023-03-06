@@ -1015,12 +1015,6 @@ PacketFilter::Action TlsExtensionFilter::FilterExtensions(
   return KEEP;
 }
 
-PacketFilter::Action TlsExtensionOrderCapture::FilterExtension(
-    uint16_t extension_type, const DataBuffer& input, DataBuffer* output) {
-  order.push_back(extension_type);
-  return KEEP;
-}
-
 PacketFilter::Action TlsExtensionCapture::FilterExtension(
     uint16_t extension_type, const DataBuffer& input, DataBuffer* output) {
   if (extension_type == extension_ && (last_ || !captured_)) {
@@ -1205,7 +1199,15 @@ PacketFilter::Action SelectiveRecordDropFilter::FilterRecord(
   return pattern;
 }
 
-PacketFilter::Action TlsMessageVersionSetter::FilterHandshake(
+PacketFilter::Action TlsClientHelloVersionSetter::FilterHandshake(
+    const HandshakeHeader& header, const DataBuffer& input,
+    DataBuffer* output) {
+  *output = input;
+  output->Write(0, version_, 2);
+  return CHANGE;
+}
+
+PacketFilter::Action TlsServerHelloVersionSetter::FilterHandshake(
     const HandshakeHeader& header, const DataBuffer& input,
     DataBuffer* output) {
   *output = input;
@@ -1264,28 +1266,6 @@ PacketFilter::Action ClientHelloPreambleCapture::FilterHandshake(
   // Copy the preamble into a new buffer
   data_ = input;
   data_.Truncate(parser.consumed());
-
-  return KEEP;
-}
-
-PacketFilter::Action ClientHelloCiphersuiteCapture::FilterHandshake(
-    const HandshakeHeader& header, const DataBuffer& input,
-    DataBuffer* output) {
-  EXPECT_TRUE(header.handshake_type() == kTlsHandshakeClientHello);
-
-  if (captured_) {
-    return KEEP;
-  }
-  captured_ = true;
-
-  TlsParser parser(input);
-  EXPECT_TRUE(parser.Skip(2 + 32));     // Version + Random
-  EXPECT_TRUE(parser.SkipVariable(1));  // Session ID
-  if (is_dtls_agent()) {
-    EXPECT_TRUE(parser.SkipVariable(1));  // Cookie
-  }
-
-  EXPECT_TRUE(parser.ReadVariable(&data_, 2));  // Ciphersuites
 
   return KEEP;
 }

@@ -78,14 +78,15 @@ pk11_KeyExchange(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
         if (privKeyHandle == CK_INVALID_HANDLE) {
             PK11RSAGenParams rsaParams;
 
-            if (symKeyLength > 120) /* bytes */ {
-                /* we'd have to generate an RSA key pair > 1024 bits long,
+            if (symKeyLength > 53) /* bytes */ {
+                /* we'd have to generate an RSA key pair > 512 bits long,
                 ** and that's too costly.  Don't even try.
                 */
                 PORT_SetError(SEC_ERROR_CANNOT_MOVE_SENSITIVE_KEY);
                 goto rsa_failed;
             }
-            rsaParams.keySizeInBits = 1024;
+            rsaParams.keySizeInBits =
+                (symKeyLength > 21 || symKeyLength == 0) ? 512 : 256;
             rsaParams.pe = 0x10001;
             privKey = PK11_GenerateKeyPair(slot, CKM_RSA_PKCS_KEY_PAIR_GEN,
                                            &rsaParams, &pubKey, PR_FALSE, PR_TRUE, symKey->cx);
