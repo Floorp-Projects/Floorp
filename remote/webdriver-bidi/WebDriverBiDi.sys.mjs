@@ -218,21 +218,23 @@ export class WebDriverBiDi {
     }
 
     try {
-      try {
-        await IOUtils.remove(this._bidiServerPath);
-      } catch (e) {
-        lazy.logger.warn(
-          `Failed to remove ${this._bidiServerPath} (${e.message})`
-        );
-      }
+      await IOUtils.remove(this._bidiServerPath);
+    } catch (e) {
+      lazy.logger.warn(
+        `Failed to remove ${this._bidiServerPath} (${e.message})`
+      );
+    }
 
+    try {
+      // Close open session
       this.deleteSession();
-
       this.agent.server.registerPathHandler("/session", null);
 
       // Close all open session-less connections
       this._sessionlessConnections.forEach(connection => connection.close());
       this._sessionlessConnections.clear();
+    } catch (e) {
+      lazy.logger.error("Failed to stop protocol", e);
     } finally {
       this._running = false;
     }
