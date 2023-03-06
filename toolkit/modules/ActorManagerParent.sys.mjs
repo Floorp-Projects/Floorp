@@ -503,6 +503,9 @@ let JSWINDOWACTORS = {
       esModuleURI: "resource://gre/actors/TranslationsChild.sys.mjs",
       events: {
         pageshow: {},
+        DOMHeadElementParsed: {},
+        DOMDocElementInserted: {},
+        DOMContentLoaded: {},
       },
     },
     enablePreference: "browser.translations.enable",

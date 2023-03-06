@@ -245,17 +245,18 @@ export class AboutTranslationsChild extends JSWindowActorChild {
 
   /**
    * @param {string[]} messageBatch
+   * @param {number} innerWindowId
    * @returns {Promise<string[]>}
    */
-  AT_translate(messageBatch) {
+  AT_translate(messageBatch, innerWindowId) {
     if (!this.translationsEngine) {
       throw new this.contentWindow.Error(
         "The translations engine was not created."
       );
     }
     const promise = this.#isHtmlTranslation
-      ? this.translationsEngine.translateHTML(messageBatch)
-      : this.translationsEngine.translateText(messageBatch);
+      ? this.translationsEngine.translateHTML(messageBatch, innerWindowId)
+      : this.translationsEngine.translateText(messageBatch, innerWindowId);
 
     return this.#convertToContentPromise(
       promise.then(translations =>
