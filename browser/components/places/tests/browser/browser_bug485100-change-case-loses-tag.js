@@ -79,52 +79,59 @@ add_task(async function test_delayed_apply() {
     set: [["browser.bookmarks.editDialog.delayedApply.enabled", true]],
   });
   const win = await BrowserTestUtils.openNewBrowserWindow();
-  await BrowserTestUtils.openNewForegroundTab({
-    gBrowser: win.gBrowser,
-    url: TEST_URL,
-  });
   registerCleanupFunction(async () => {
     await BrowserTestUtils.closeWindow(win);
   });
-
-  // Init panel
   win.StarUI._createPanelIfNeeded();
-  const panel = win.document.getElementById("editBookmarkPanel");
-  const star = win.BookmarkingUI.star;
-  let shownPromise = promisePopupShown(panel);
-  star.click();
-  await shownPromise;
 
-  // add a tag
-  await fillBookmarkTextField("editBMPanel_tagsField", testTag, win);
-  const doneButton = win.document.getElementById("editBookmarkPanelDoneButton");
-  let promiseNotification = PlacesTestUtils.waitForNotification(
-    "bookmark-tags-changed"
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser: win.gBrowser,
+      url: TEST_URL,
+    },
+    async () => {
+      // Init panel
+      await TestUtils.waitForCondition(
+        () => BookmarkingUI.status !== BookmarkingUI.STATUS_UPDATING
+      );
+      await clickBookmarkStar(win);
+
+      // add a tag
+      await fillBookmarkTextField("editBMPanel_tagsField", testTag, win);
+      let promiseNotification = PlacesTestUtils.waitForNotification(
+        "bookmark-tags-changed"
+      );
+      await hideBookmarksPanel(win);
+      await promiseNotification;
+
+      // test that the tag has been added in the backend
+      is(PlacesUtils.tagging.getTagsForURI(testURI)[0], testTag, "tags match");
+
+      // change the tag
+      await TestUtils.waitForCondition(
+        () => BookmarkingUI.status !== BookmarkingUI.STATUS_UPDATING
+      );
+      await clickBookmarkStar(win);
+      await fillBookmarkTextField("editBMPanel_tagsField", testTagUpper, win);
+      // The old sync API doesn't notify a tags change, and fixing it would be
+      // quite complex, so we just wait for a title change until tags are
+      // refactored.
+      promiseNotification = PlacesTestUtils.waitForNotification(
+        "bookmark-title-changed"
+      );
+      await hideBookmarksPanel(win);
+      await promiseNotification;
+
+      // test that the tag has been added in the backend
+      is(
+        PlacesUtils.tagging.getTagsForURI(testURI)[0],
+        testTagUpper,
+        "tags match"
+      );
+
+      // Cleanup.
+      PlacesUtils.tagging.untagURI(testURI, [testTag]);
+      await PlacesUtils.bookmarks.remove(bm.guid);
+    }
   );
-  doneButton.click();
-  await promiseNotification;
-
-  // test that the tag has been added in the backend
-  is(PlacesUtils.tagging.getTagsForURI(testURI)[0], testTag, "tags match");
-
-  // change the tag
-  shownPromise = promisePopupShown(panel);
-  star.click();
-  await shownPromise;
-  await fillBookmarkTextField("editBMPanel_tagsField", testTagUpper, win);
-  // The old sync API doesn't notify a tags change, and fixing it would be
-  // quite complex, so we just wait for a title change until tags are
-  // refactored.
-  promiseNotification = PlacesTestUtils.waitForNotification(
-    "bookmark-title-changed"
-  );
-  doneButton.click();
-  await promiseNotification;
-
-  // test that the tag has been added in the backend
-  is(PlacesUtils.tagging.getTagsForURI(testURI)[0], testTagUpper, "tags match");
-
-  // Cleanup.
-  PlacesUtils.tagging.untagURI(testURI, [testTag]);
-  await PlacesUtils.bookmarks.remove(bm.guid);
 });
