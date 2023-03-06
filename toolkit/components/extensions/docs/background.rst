@@ -107,7 +107,7 @@ Manifest entries are used for features in which an extension specifies
 some static information that is used when an extension is installed or
 when it starts up (i.e., before it has the chance to run any code to use
 a Javascript API).
-An API may handle a manifest key and implement Javscript functionality,
+An API may handle a manifest key and implement Javascript functionality,
 see the
 `browser action <https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/browserAction>`_
 API for an example.

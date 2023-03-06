@@ -35,7 +35,7 @@ this command will generates a `.webdil` file named `dom/webidl/ExtensionRuntime.
     one that ends ``mach python`` own command line options.
 
 * If a webidl file with the same name already exist, the python script will ask confirmation and
-  offer to print a diff of the changes (or just continue without changin the existing webidl file
+  offer to print a diff of the changes (or just continue without changing the existing webidl file
   if the content is exactly the same):
 
 .. code-block::
