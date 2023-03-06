@@ -315,6 +315,9 @@ balance-memory =
 max-memory = 
     .label = Best Speed and Performance (high memory usage) 
 
+delete-border-and-roundup-option =
+  .label = Delete the border and round up { -brand-short-name }'s corners
+
 ## DualTheme
 dualtheme-enable =
  .label = Enable Dual Theme
@@ -651,6 +654,7 @@ update-portable-notification-failed-redirector-message = Update failed. Restarti
 update-portable-notification-failed-prepare-message = Failed to prepare update.
 
 ##################################################################### Open link in external ###############################################################
+openInExternal-title = Open in External Browser 
 open-link-in-external-enabled-option =
  .label = Enable "Open in external browser" feature
 open-link-in-external-select-browser-option = Choose the browser you want to open in "Open in external browser"

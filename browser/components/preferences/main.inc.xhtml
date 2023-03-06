@@ -285,21 +285,7 @@
       <label class="learnMore" is="text-link" href="https://support.ablaze.one/articles/floorp/mica-for-everyone" data-l10n-id="do-not-track-learn-more"></label>
     </hbox>
 #endif
-
-#if defined(XP_WIN) || defined(XP_LINUX)
-    <checkbox preference="floorp.openLinkInExternal.enabled" data-l10n-id="open-link-in-external-enabled-option" class="needreboot"/>
-    <hbox>
-      <description flex="1" data-l10n-id="open-link-in-external-select-browser-option"/>
-      <menulist id="openLinkInExternalSelectBrowser" preference="floorp.openLinkInExternal.browserId">
-        <menupopup>
-          <menuitem value="" data-l10n-id="open-link-in-external-select-browser-option-default"/>
-          <menuseparator/>
-        </menupopup>
-      </menulist>
-    </hbox>
-#endif
-
-    <checkbox id="disableExtensionCheckCompatibility" data-l10n-id="disable-extension-check-compatibility-option"/>
+<checkbox preference="floorp.delete.browser.border" data-l10n-id="delete-border-and-roundup-option" />
 
     <label>
       <html:h2 data-l10n-id="preferences-theme-appearance-header"/>
@@ -915,6 +901,28 @@
   </vbox>
 </groupbox>
 
+#if defined(XP_WIN) || defined(XP_LINUX)
+ <hbox id="openInExternalCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="paneGeneral">
+   <html:h1 data-l10n-id="openInExternal-title"/>
+ </hbox>
+
+ <groupbox id="openInExternalGroup" data-category="paneGeneral" hidden="true">
+    <checkbox preference="floorp.openLinkInExternal.enabled" data-l10n-id="open-link-in-external-enabled-option" class="needreboot"/>
+    <hbox>
+      <description flex="1" data-l10n-id="open-link-in-external-select-browser-option"/>
+      <menulist id="openLinkInExternalSelectBrowser" preference="floorp.openLinkInExternal.browserId">
+        <menupopup>
+          <menuitem value="" data-l10n-id="open-link-in-external-select-browser-option-default"/>
+          <menuseparator/>
+        </menupopup>
+      </menulist>
+    </hbox>
+ </groupbox>
+#endif
+
 <hbox id="browsingCategory"
       class="subcategory"
       hidden="true"
@@ -976,6 +984,7 @@
     </hbox>  
     <description class="indent tip-caption" data-l10n-id="about-legacy-components"/>
 
+    <checkbox id="disableExtensionCheckCompatibility" data-l10n-id="disable-extension-check-compatibility-option"/>
     <checkbox preference="floorp.browser.rest.mode"
               id="restmode" data-l10n-id="browser-rest-mode"/>
     <checkbox preference="floorp.disable.fullscreen.notification"

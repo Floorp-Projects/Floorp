@@ -43,6 +43,7 @@ pref("floorp.material.effect.enable", false);//マテリアルモードの実装
 pref("floorp.disable.fullscreen.notification", false);//フルスクリーン通知を無効化
 pref("floorp.navbar.bottom", false);
 pref("floorp.tabs.showPinnedTabsTitle", false); //ピン留めされたタブのタイトルを表示
+pref("floorp.delete.browser.border", false); //ブラウザーの枠線削除＆丸くする
 
 pref("floorp.browser.user.interface", 3);// Floorp 10 系以降のインターフェーステーマ設定
 pref("floorp.browser.tabbar.settings", 0);// タブの設定

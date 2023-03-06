@@ -42,6 +42,7 @@ Preferences.addAll([
   { id: "floorp.browser.tabbar.multirow.newtab-inside.enabled", type: "bool"},
   { id: "floorp.openLinkInExternal.enabled", type: "bool" },
   { id: "floorp.openLinkInExternal.browserId", type: "string" },
+  { id: "floorp.delete.browser.border", type: "bool" },
 ]);
 
 window.addEventListener("pageshow", async function() {

@@ -159,6 +159,17 @@ UICustomPrefHandler("floorp.disable.fullscreen.notification", function(event) {
   }
 });
 
+UICustomPrefHandler("floorp.delete.browser.border", function(event) {
+  if (event.prefValue) {
+    var Tag = document.createElement("style");
+    Tag.innerText = `@import url(chrome://browser/skin/options/delete-border.css)`;
+    Tag.setAttribute("id", "floorp-DB");
+    document.head.appendChild(Tag);
+  } else {
+    document.getElementById("floorp-DB")?.remove();
+  }
+});
+
 /*------------------------------------------- sidebar -------------------------------------------*/
 
 UICustomPrefHandler("floorp.browser.sidebar.right", function(event) {
