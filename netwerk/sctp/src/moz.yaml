@@ -49,3 +49,7 @@ vendoring:
     - action: run-script
       script: '{yaml_dir}/restore_mod.sh'
       cwd: '{yaml_dir}'
+
+  patches:
+    - win32-rands.patch
+    - win32-free.patch
