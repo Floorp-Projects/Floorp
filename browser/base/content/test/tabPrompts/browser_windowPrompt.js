@@ -177,8 +177,18 @@ add_task(async function test_check_minimize_response() {
     set: [["prompts.windowPromptSubDialog", true]],
   });
 
+  let promiseSizeModeChange = BrowserTestUtils.waitForEvent(
+    window,
+    "sizemodechange"
+  );
   window.minimize();
+  await promiseSizeModeChange;
   is(window.windowState, window.STATE_MINIMIZED, "Should be minimized.");
+
+  promiseSizeModeChange = BrowserTestUtils.waitForEvent(
+    window,
+    "sizemodechange"
+  );
   let dialogPromise = BrowserTestUtils.promiseAlertDialogOpen();
   // Use an async alert to avoid blocking.
   Services.prompt.asyncAlert(
@@ -188,6 +198,7 @@ add_task(async function test_check_minimize_response() {
     "some message"
   );
   let dialogWin = await dialogPromise;
+  await promiseSizeModeChange;
 
   isnot(
     window.windowState,

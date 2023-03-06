@@ -21,7 +21,9 @@ var fm = Services.focus;
 var is = function(l, r, v) { window.arguments[0].SimpleTest.is(l, r, v); }
 var isnot = function(l, r, v) { window.arguments[0].SimpleTest.isnot(l, r, v); }
 
-function runTest()
+const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+
+async function runTest()
 {
   var menu = document.getElementById("menu");
 
@@ -34,7 +36,12 @@ function runTest()
     menu.open = true;
     return;
   }
+  let promiseSizeModeChange = BrowserTestUtils.waitForEvent(
+    window,
+    "sizemodechange"
+  );
   window.minimize();
+  await promiseSizeModeChange;
   is(window.windowState, window.STATE_MINIMIZED, "window is minimized");
 
   isnot(fm.activeWindow, window, "active window after minimize");
@@ -45,12 +52,17 @@ function runTest()
   setTimeout(runTestAfterMinimize, 0);
 }
 
-function runTestAfterMinimize()
+async function runTestAfterMinimize()
 {
   var menu = document.getElementById("menu");
   is(menu.firstChild.state, "closed", "popup not opened when window minimized");
 
+  let promiseSizeModeChange = BrowserTestUtils.waitForEvent(
+    window,
+    "sizemodechange"
+  );
   window.restore();
+  await promiseSizeModeChange;
   is(window.windowState, window.STATE_NORMAL, "window is restored");
 
   is(fm.activeWindow, window, "active window after restore");
