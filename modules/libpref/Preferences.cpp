@@ -6029,8 +6029,15 @@ struct PrefListEntry {
   size_t mLen;
 };
 
-// These prefs are not useful in child processes - do not send them
-static const PrefListEntry sParentOnlyPrefBranchList[] = {
+// A preference is 'sanitized' (i.e. not sent to web content processes) if
+// one of two criteria are met:
+//   1. The pref name matches one of the prefixes in the following list
+//   2. The pref is dynamically named (i.e. not specified in all.js or
+//      StaticPrefList.yml), a string pref, and it is NOT exempted in
+//      sDynamicPrefOverrideList
+//
+// This behavior is codified in ShouldSanitizePreference() below
+static const PrefListEntry sRestrictFromWebContentProcesses[] = {
     // Remove prefs with user data
     PREF_LIST_ENTRY("datareporting.policy."),
     PREF_LIST_ENTRY("browser.download.lastDir"),
@@ -6168,7 +6175,7 @@ static bool ShouldSanitizePreference(const Pref* const aPref) {
   // The services pref is an annoying one - it's much easier to blocklist
   // the whole branch and then add this one check to let this one annoying
   // pref through.
-  for (const auto& entry : sParentOnlyPrefBranchList) {
+  for (const auto& entry : sRestrictFromWebContentProcesses) {
     if (strncmp(entry.mPrefBranch, prefName, entry.mLen) == 0) {
       const auto* p = prefName;  // This avoids clang-format doing ugly things.
       return !(strncmp("services.settings.clock_skew_seconds", p, 36) == 0 ||
