@@ -35,10 +35,21 @@ js::GCParallelTask::~GCParallelTask() {
   assertIdle();
 }
 
+static bool ShouldMeasureTaskStartDelay() {
+  // We use many tasks during GC so randomly sample a small fraction for the
+  // purposes of recording telemetry.
+  return (rand() % 100) == 0;
+}
+
 void js::GCParallelTask::startWithLockHeld(AutoLockHelperThreadState& lock) {
   MOZ_ASSERT(CanUseExtraThreads());
   MOZ_ASSERT(HelperThreadState().isInitialized(lock));
   assertIdle();
+
+  maybeQueueTime_ = TimeStamp();
+  if (ShouldMeasureTaskStartDelay()) {
+    maybeQueueTime_ = TimeStamp::Now();
+  }
 
   setDispatched(lock);
   HelperThreadState().submitTask(this, lock);
@@ -197,6 +208,11 @@ void GCParallelTask::runTask(JS::GCContext* gcx,
   TimeStamp timeStart = TimeStamp::Now();
   run(lock);
   duration_ = TimeSince(timeStart);
+
+  if (maybeQueueTime_) {
+    TimeDuration delay = timeStart - maybeQueueTime_;
+    gc->rt->metrics().GC_TASK_START_DELAY_US(delay);
+  }
 }
 
 bool js::GCParallelTask::isIdle() const {

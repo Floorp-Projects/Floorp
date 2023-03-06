@@ -66,7 +66,8 @@ class JS_PUBLIC_API JSObject;
   _(GC_EFFECTIVENESS, MemoryDistribution)       \
   _(GC_PARALLEL_MARK_SPEEDUP, Integer)          \
   _(GC_PARALLEL_MARK_UTILIZATION, Percentage)   \
-  _(GC_PARALLEL_MARK_INTERRUPTIONS, Integer)
+  _(GC_PARALLEL_MARK_INTERRUPTIONS, Integer)    \
+  _(GC_TASK_START_DELAY_US, TimeDuration_US)
 
 // clang-format off
 #define ENUM_DEF(NAME, _) NAME,
