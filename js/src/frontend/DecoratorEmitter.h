@@ -30,7 +30,14 @@ class MOZ_STACK_CLASS DecoratorEmitter {
 
   [[nodiscard]] bool emitUpdateDecorationState();
 
+  [[nodiscard]] bool emitCallDecorator(Kind kind, ParseNode* key, bool isStatic,
+                                       ParseNode* decorator);
+
   [[nodiscard]] bool emitCreateDecoratorAccessObject();
+
+  [[nodiscard]] bool emitCheckIsUndefined();
+
+  [[nodiscard]] bool emitCheckIsCallable();
 
   [[nodiscard]] bool emitCreateAddInitializerFunction();
 
