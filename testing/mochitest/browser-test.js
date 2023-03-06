@@ -220,8 +220,8 @@ function Tester(aTests, structuredLogger, aCallback) {
   this.Assert = ChromeUtils.importESModule(
     "resource://testing-common/Assert.sys.mjs"
   ).Assert;
-  this.PerTestCoverageUtils = ChromeUtils.import(
-    "resource://testing-common/PerTestCoverageUtils.jsm"
+  this.PerTestCoverageUtils = ChromeUtils.importESModule(
+    "resource://testing-common/PerTestCoverageUtils.sys.mjs"
   ).PerTestCoverageUtils;
 
   this.PromiseTestUtils.init();

@@ -4,10 +4,6 @@
 
 /* exported PerTestCoverageUtils */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["PerTestCoverageUtils"];
-
 // This is the directory where gcov is emitting the gcda files.
 const gcovPrefixPath = Services.env.get("GCOV_PREFIX");
 // This is the directory where codecoverage.py is expecting to see the gcda files.
@@ -52,7 +48,7 @@ function awaitPromise(promise) {
       complete = true;
     });
   Services.tm.spinEventLoopUntil(
-    "PerTestCoverageUtils.jsm:awaitPromise",
+    "PerTestCoverageUtils.sys.mjs:awaitPromise",
     () => complete
   );
   if (error) {
@@ -75,7 +71,7 @@ function moveDirectoryContents(src, dst) {
   }
 }
 
-var PerTestCoverageUtils = class PerTestCoverageUtilsClass {
+export var PerTestCoverageUtils = class PerTestCoverageUtilsClass {
   // Resets the counters to 0.
   static async beforeTest() {
     if (!PerTestCoverageUtils.enabled) {

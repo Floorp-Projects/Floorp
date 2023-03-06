@@ -48,6 +48,6 @@ remote.jar:
   content/marionette/test.xhtml (chrome/test.xhtml)
   content/marionette/test2.xhtml (chrome/test2.xhtml)
 #ifdef MOZ_CODE_COVERAGE
-  content/marionette/PerTestCoverageUtils.jsm (../../tools/code-coverage/PerTestCoverageUtils.jsm)
+  content/marionette/PerTestCoverageUtils.sys.mjs (../../tools/code-coverage/PerTestCoverageUtils.sys.mjs)
 #endif
 #endif
