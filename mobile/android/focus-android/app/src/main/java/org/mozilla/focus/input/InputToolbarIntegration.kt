@@ -60,6 +60,7 @@ class InputToolbarIntegration(
             hint = ContextCompat.getColor(toolbar.context, R.color.urlBarHintText),
             text = ContextCompat.getColor(toolbar.context, R.color.primaryText),
             clear = ContextCompat.getColor(toolbar.context, R.color.primaryText),
+            suggestionBackground = ContextCompat.getColor(toolbar.context, R.color.autocompleteBackgroundColor),
         )
 
         toolbar.setOnEditListener(

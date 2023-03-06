@@ -76,6 +76,7 @@
     <color name="searchHintTextColor">#ffffffff</color>
     <color name="searchHintBackgroundColor">@color/photonLightGrey05</color>
     <color name="urlBarInactiveBackgroundColor">#480f1126</color>
+    <color name="autocompleteBackgroundColor">#ffbaa8e6</color>
 
     <!-- Onboarding -->
     <color name="onboarding_indicator_default">#7FFFFFFF</color>
