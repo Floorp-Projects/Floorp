@@ -75,6 +75,7 @@ struct DefaultJitOptions {
   bool wasmDelayTier2;
   bool lessDebugCode;
   bool enableWatchtowerMegamorphic;
+  bool onlyInlineSelfHosted;
   bool enableWasmJitExit;
   bool enableWasmJitEntry;
   bool enableWasmIonFastCalls;

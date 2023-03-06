@@ -11299,6 +11299,8 @@ bool InitOptionParser(OptionParser& op) {
                        "The maximum bytecode length of a 'small function' for "
                        "the purpose of inlining.",
                        -1) ||
+      !op.addBoolOption('\0', "only-inline-selfhosted",
+                        "Only inline selfhosted functions") ||
       !op.addBoolOption('\0', "no-asmjs", "Disable asm.js compilation") ||
       !op.addStringOption(
           '\0', "wasm-compiler", "[option]",
@@ -12350,6 +12352,9 @@ bool SetContextJITOptions(JSContext* cx, const OptionParser& op) {
   }
   if (op.getBoolOption("disable-watchtower")) {
     jit::JitOptions.enableWatchtowerMegamorphic = false;
+  }
+  if (op.getBoolOption("only-inline-selfhosted")) {
+    jit::JitOptions.onlyInlineSelfHosted = true;
   }
 
   if (const char* str = op.getStringOption("ion-iterator-indices")) {

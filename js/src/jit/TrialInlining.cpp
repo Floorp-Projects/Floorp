@@ -487,6 +487,10 @@ bool TrialInliner::canInline(JSFunction* target, HandleScript caller,
     JitSpew(JitSpew_WarpTrialInlining, "SKIP: cross-realm call");
     return false;
   }
+  if (JitOptions.onlyInlineSelfHosted && !script->selfHosted()) {
+    JitSpew(JitSpew_WarpTrialInlining, "SKIP: only inlining self hosted");
+    return false;
+  }
 
   uint32_t maxCalleeNumActuals = GetMaxCalleeNumActuals(loc);
   if (script->needsArgsObj() &&
