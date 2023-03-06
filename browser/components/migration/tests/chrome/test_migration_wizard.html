@@ -74,7 +74,7 @@
       ok(true, "Saw MigrationWizard:Init event.");
       let shadowRoot = wiz.openOrClosedShadowRoot;
       let deck = shadowRoot.querySelector("#wizard-deck");
-      is(deck.selectedViewName, "page-selection", "Should have the browser / profile selection page selected");
+      is(deck.selectedViewName, "page-loading", "Should have the loading page selected");
       wiz.remove();
     });
 

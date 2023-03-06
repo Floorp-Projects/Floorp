@@ -15,6 +15,29 @@ h3 {
   min-height: 1em;
 }
 
+div[name="page-loading"] > .buttons > button {
+  color: transparent;
+}
+
+.loading-block {
+  background-color: var(--in-content-button-background);
+  border-radius: 4px;
+  opacity: 0.4;
+  margin-block-start: 16px;
+}
+
+.loading-block.large {
+  height: 36px;
+}
+
+.loading-block.small {
+  height: 16px;
+}
+
+.buttons {
+  margin-block-start: 16px;
+}
+
 fieldset {
   border: 0;
 }
