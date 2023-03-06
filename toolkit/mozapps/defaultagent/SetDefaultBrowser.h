@@ -35,6 +35,23 @@ HRESULT SetDefaultBrowserUserChoice(
     const wchar_t* aAumi, const wchar_t* const* aExtraFileExtensions = nullptr);
 
 /*
+ * Set the default extension handlers for the given file extensions by writing
+ * the UserChoice registry keys.
+ *
+ * @param aAumi The AUMI of the installation to set as default.
+ *
+ * @param aFileExtensions Optional null-terminated list of file association
+ * pairs to set as default, like `{ L".pdf", "FirefoxPDF", nullptr }`.
+ *
+ * @returns S_OK           All associations set and checked successfully.
+ *          MOZ_E_REJECTED UserChoice was set, but checking the default did not
+ *                         return our ProgID.
+ *          E_FAIL         Failed to set at least one association.
+ */
+HRESULT SetDefaultExtensionHandlersUserChoice(
+    const wchar_t* aAumi, const wchar_t* const* aFileExtensions = nullptr);
+
+/*
  * Additional HRESULT error codes from SetDefaultBrowserUserChoice
  *
  * 0x20000000 is set to put these in the customer-defined range.
