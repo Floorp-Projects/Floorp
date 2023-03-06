@@ -1,4 +1,4 @@
-// |jit-test| --no-jit-backend; skip-if: !getBuildConfiguration()['decorators']
+// |jit-test| skip-if: !getBuildConfiguration()['decorators']
 
 load(libdir + "asserts.js");
 
@@ -27,9 +27,9 @@ let decorators = {
   "dec4": (value, context) => {
     return (x) => "decorated: " + x;
   },
-  "more" : {
+  "more": {
     "deeply": {
-      "nested" : {
+      "nested": {
         "dec5": (value, context) => {
           return (x) => "decorated: " + x;
         }
@@ -40,13 +40,13 @@ let decorators = {
 
 function checkDecoratorContext(kind, isPrivate, isStatic, name) {
   return (value, context) => {
-    assertEq(typeof(value.call), "function");
+    assertEq(typeof (value.call), "function");
     assertEq(context.kind, kind);
-    assertEq(typeof(context.access), "object");
+    assertEq(typeof (context.access), "object");
     assertEq(context.private, isPrivate);
     assertEq(context.static, isStatic);
     assertEq(context.name, name);
-    assertEq(typeof(context.addInitializer), "object");
+    assertEq(typeof (context.addInitializer), "object");
   }
 }
 
@@ -57,7 +57,7 @@ class C {
   @dec1 @dec2 @dec3 f4(x) { return "called with: " + x; }
   @decorators.dec4 f5(x) { return "called with: " + x; }
   @decorators.more.deeply.nested.dec5 f6(x) { return "called with: " + x; }
-  @(() => {}) f7(x) { return "called with: " + x; }
+  @(() => { }) f7(x) { return "called with: " + x; }
   @((value, context) => { return (x) => "decorated: " + x; }) f8(x) { return "called with: " + x; }
   @dec4("hello!") f9(x) { return "called with: " + x; }
 
