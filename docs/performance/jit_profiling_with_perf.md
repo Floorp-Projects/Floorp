@@ -112,3 +112,8 @@ It may also be useful to have access to kernel addresses during profiling. These
 ```
 sudo sh -c "echo 0 > /proc/sys/kernel/kptr_restrict"
 ```
+
+The max stack depth is 127 by default. This is often too few. It can be increased with:
+```
+sudo sh -c "echo 4000 > /proc/sys/kernel/perf_event_max_stack"
+```
