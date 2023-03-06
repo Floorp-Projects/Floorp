@@ -2,7 +2,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 import { Session } from "chrome://remote/content/cdp/sessions/Session.sys.mjs";
+
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  Log: "chrome://remote/content/shared/Log.sys.mjs",
+});
+
+XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
+  lazy.Log.get(lazy.Log.TYPES.CDP)
+);
 
 /**
  * A session to communicate with a given tab
@@ -29,20 +41,17 @@ export class TabSession extends Session {
     // Request id => { resolve, reject }
     this.requestPromises = new Map();
 
-    this.mm.addMessageListener("remote:event", this);
-    this.mm.addMessageListener("remote:result", this);
-    this.mm.addMessageListener("remote:error", this);
+    this.registerFramescript(this.mm);
 
-    this.mm.loadFrameScript(
-      "chrome://remote/content/cdp/sessions/frame-script.js",
-      false
-    );
+    this.target.browser.addEventListener("XULFrameLoaderCreated", this);
   }
 
   destructor() {
     super.destructor();
 
     this.requestPromises.clear();
+
+    this.target.browser.removeEventListener("XULFrameLoaderCreated", this);
 
     // this.mm might be null if the browser of the TabTarget was already closed.
     // See Bug 1747301.
@@ -85,6 +94,35 @@ export class TabSession extends Session {
   get browsingContext() {
     return this.target.browsingContext;
   }
+
+  /**
+   * Register the framescript and listeners for the given message manager.
+   *
+   * @param {MessageManager} messageManager
+   *     The message manager to use.
+   */
+  registerFramescript(messageManager) {
+    messageManager.loadFrameScript(
+      "chrome://remote/content/cdp/sessions/frame-script.js",
+      false
+    );
+
+    messageManager.addMessageListener("remote:event", this);
+    messageManager.addMessageListener("remote:result", this);
+    messageManager.addMessageListener("remote:error", this);
+  }
+
+  // Event handler
+  handleEvent = function({ target, type }) {
+    switch (type) {
+      case "XULFrameLoaderCreated":
+        if (target === this.target.browser) {
+          lazy.logger.trace("Remoteness change detected");
+          this.registerFramescript(this.mm);
+        }
+        break;
+    }
+  };
 
   // nsIMessageListener
 
