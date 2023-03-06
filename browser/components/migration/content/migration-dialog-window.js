@@ -51,6 +51,7 @@ const MigrationDialog = {
       args.onResize();
     });
     observer.observe(this._wiz);
+    this._wiz.requestState();
   },
 
   handleEvent(event) {

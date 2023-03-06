@@ -31,8 +31,12 @@ export class MigrationWizardChild extends JSWindowActorChild {
    */
   async handleEvent(event) {
     switch (event.type) {
-      case "MigrationWizard:Init": {
+      case "MigrationWizard:RequestState": {
         this.#wizardEl = event.target;
+        this.setComponentState({
+          page: MigrationWizardConstants.PAGES.LOADING,
+        });
+
         let migrators = await this.sendQuery("GetAvailableMigrators");
         this.setComponentState({
           migrators,

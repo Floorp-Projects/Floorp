@@ -7,6 +7,7 @@
 :host {
   display: flex;
   flex-direction: column;
+  width: 25.54em;
 }
 
 h3 {

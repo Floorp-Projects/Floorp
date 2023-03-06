@@ -185,8 +185,14 @@ export class MigrationWizard extends HTMLElement {
   }
 
   connectedCallback() {
+    if (this.hasAttribute("auto-request-state")) {
+      this.requestState();
+    }
+  }
+
+  requestState() {
     this.dispatchEvent(
-      new CustomEvent("MigrationWizard:Init", { bubbles: true })
+      new CustomEvent("MigrationWizard:RequestState", { bubbles: true })
     );
   }
 
