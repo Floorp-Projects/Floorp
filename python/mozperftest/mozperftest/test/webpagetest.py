@@ -193,7 +193,10 @@ class WebPageTest(Layer):
         self.wpt_browser_metrics = options["browser_metrics"]
         self.pre_run_error_checks(options["test_parameters"], test_list)
         self.create_and_run_wpt_threaded_tests(test_list, metadata)
-        self.test_runs_left_this_month()
+        try:
+            self.test_runs_left_this_month()
+        except Exception:
+            self.warning("testBalance check had an issue, please investigate")
         return metadata
 
     def pre_run_error_checks(self, options, test_list):
