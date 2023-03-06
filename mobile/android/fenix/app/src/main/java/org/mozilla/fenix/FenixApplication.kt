@@ -225,14 +225,14 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             warmBrowsersCache()
 
             initializeWebExtensionSupport()
-            if (FeatureFlags.storageMaintenanceFeature) {
-                // Make sure to call this function before registering a storage worker
-                // (e.g. components.core.historyStorage.registerStorageMaintenanceWorker())
-                // as the storage maintenance worker needs a places storage globally when
-                // it is needed while the app is not running and WorkManager wakes up the app
-                // for the periodic task.
-                GlobalPlacesDependencyProvider.initialize(components.core.historyStorage)
-            }
+
+            // Make sure to call this function before registering a storage worker
+            // (e.g. components.core.historyStorage.registerStorageMaintenanceWorker())
+            // as the storage maintenance worker needs a places storage globally when
+            // it is needed while the app is not running and WorkManager wakes up the app
+            // for the periodic task.
+            GlobalPlacesDependencyProvider.initialize(components.core.historyStorage)
+
             restoreBrowserState()
             restoreDownloads()
             restoreMessaging()
@@ -366,14 +366,12 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         }
 
         fun queueStorageMaintenance() {
-            if (FeatureFlags.storageMaintenanceFeature) {
-                queue.runIfReadyOrQueue {
-                    // Make sure GlobalPlacesDependencyProvider.initialize(components.core.historyStorage)
-                    // is called before this call. When app is not running and WorkManager wakes up
-                    // the app for the periodic task, it will require a globally provided places storage
-                    // to run the maintenance on.
-                    components.core.historyStorage.registerStorageMaintenanceWorker()
-                }
+            queue.runIfReadyOrQueue {
+                // Make sure GlobalPlacesDependencyProvider.initialize(components.core.historyStorage)
+                // is called before this call. When app is not running and WorkManager wakes up
+                // the app for the periodic task, it will require a globally provided places storage
+                // to run the maintenance on.
+                components.core.historyStorage.registerStorageMaintenanceWorker()
             }
         }
 
