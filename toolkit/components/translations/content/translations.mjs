@@ -230,7 +230,7 @@ class TranslationsState {
    */
   setMessageToTranslate(message) {
     if (message !== this.messageToTranslate) {
-      this.identifyLanguage(message);
+      this.identifyLanguage(message).catch(error => AT_logError(error));
       this.messageToTranslate = message;
       this.maybeRequestTranslation();
     }
