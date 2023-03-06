@@ -158,7 +158,8 @@ def _test_xpcshell_perfherder(*mocked):
     # Check some numbers in our data
     assert len(output["suites"]) == 1
     assert len(output["suites"][0]["subtests"]) == 3
-    assert output["suites"][0]["value"] > 0
+    assert "value" not in output["suites"][0]
+    assert any(r > 0 for r in output["suites"][0]["subtests"][0]["replicates"])
 
     for subtest in output["suites"][0]["subtests"]:
         assert subtest["name"].startswith("metrics")
