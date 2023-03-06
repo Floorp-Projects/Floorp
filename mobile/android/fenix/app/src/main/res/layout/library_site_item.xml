@@ -42,7 +42,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
-            android:layout_marginEnd="16dp"
+            android:layout_marginEnd="4dp"
             android:ellipsize="end"
             android:singleLine="true"
             android:textAlignment="viewStart"
@@ -61,7 +61,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
-            android:layout_marginEnd="16dp"
+            android:layout_marginEnd="4dp"
             android:ellipsize="end"
             android:singleLine="true"
             android:textAlignment="viewStart"
@@ -80,10 +80,11 @@
             android:layout_height="wrap_content"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/content_description_menu"
+            android:padding="12dp"
             app:srcCompat="@drawable/ic_menu"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            android:layout_marginEnd="16dp"/>
+            android:layout_marginEnd="4dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

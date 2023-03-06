@@ -16,7 +16,6 @@ import mozilla.components.concept.menu.MenuController
 import mozilla.components.concept.menu.Orientation
 import org.mozilla.fenix.databinding.LibrarySiteItemBinding
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.selection.SelectionInteractor
@@ -41,11 +40,6 @@ class LibrarySiteItemView @JvmOverloads constructor(
     val iconView: ImageView get() = binding.favicon
 
     val overflowView: ImageButton get() = binding.overflowMenu
-
-    init {
-
-        overflowView.increaseTapArea(OVERFLOW_EXTRA_DIPS)
-    }
 
     /**
      * Change visibility of parts of this view based on what type of item is being represented.
@@ -104,9 +98,5 @@ class LibrarySiteItemView @JvmOverloads constructor(
 
     enum class ItemType {
         SITE, FOLDER
-    }
-
-    companion object {
-        private const val OVERFLOW_EXTRA_DIPS = 16
     }
 }
