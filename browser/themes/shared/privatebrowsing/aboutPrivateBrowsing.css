@@ -398,11 +398,53 @@ p {
   align-items: center;
 }
 
+/* The colors for .promo-cta .primary must be kept in sync with the dark mode
+   primary button colors from common-shared.cs */
 .promo-cta .primary {
   padding-block: 11px;
   margin: 8px 0;
   font-weight: 600;
   cursor: pointer;
+  background-color: rgb(0,221,255);
+  color: rgb(43,42,51);
+}
+
+.promo-cta .primary:focus-visible {
+  outline-color: rgb(0,221,255);
+}
+
+.promo-cta .primary:hover {
+  background-color: rgb(128,235,255) !important;
+  color: rgb(43,42,51) !important;
+}
+
+.promo-cta .primary:hover:active {
+  background-color: rgb(170,242,255) !important;
+  color: rgb(43,42,51) !important;
+}
+
+@media (prefers-contrast) {
+  .promo-cta .primary {
+    background-color: ButtonText;
+    color: ButtonFace;
+    border-color: ButtonFace;
+  }
+
+  .promo-cta .primary:focus-visible {
+    outline-color: -moz-DialogText;
+  }
+
+  .promo-cta .primary:hover {
+    background-color: SelectedItem !important;
+    color: SelectedItemText !important;
+    border-color: SelectedItemText;
+  }
+
+  .promo-cta .primary:hover:active {
+    background-color: SelectedItemText !important;
+    color: SelectedItem !important;
+    border-color: SelectedItem;
+  }
 }
 
 .promo.bottom .promo-cta {
