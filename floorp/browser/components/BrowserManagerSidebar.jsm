@@ -32,6 +32,11 @@ const BrowserManagerSidebar = {
             "l10n":`download-sidebar`,
             "defaultWidth":415
         },
+        "floorp//notes":{
+          "url":"chrome://browser/content/notes/notes-bms.html",
+          "l10n":`notes-sidebar`,
+          "defaultWidth":500
+      },
         "floorp//tst":{
             "url":"none",
             "l10n":`TST-sidebar`,
@@ -50,66 +55,6 @@ const BrowserManagerSidebar = {
             defaultPref.index.push(`w${elem}`)
         }
         Services.prefs.getDefaultBranch(null).setStringPref("floorp.browser.sidebar2.data", JSON.stringify( defaultPref))
-
-        /*if(Services.prefs.getPrefType("floorp.browser.sidebar2.customurl2") != 0){
-            if (!Services.prefs.prefHasUserValue("floorp.browser.sidebar2.data") || Services.prefs.getStringPref("floorp.browser.sidebar2.data", "") == "") {
-                let updateObject = { "data": {}, "index": [] }
-                let staticURL = ["floorp//bmt", "floorp//bookmarks", "floorp//history", "floorp//downloads", "floorp//tst"]
-                for (let i = 0; i <= 4; i++) {
-                    let objectInObject = { "url": staticURL[i] }
-                    if (Services.prefs.getIntPref(`floorp.browser.sidebar2.width.mode${i}`, 0) != 0) {
-                        objectInObject["width"] = Services.prefs.getIntPref(`floorp.browser.sidebar2.width.mode${i}`, 0)
-                    } else {
-                        objectInObject["width"] = (i == 0 ? 600 : 415)
-                    }
-                    Services.prefs.clearUserPref(`floorp.browser.sidebar2.width.mode${i}`)
-                    updateObject.data[String(i)] = objectInObject
-                    updateObject.index.push(String(i))
-                }
-                let defaultURL = ["https://freasearch.org","https://translate.google.com"]
-                for (let i = 0; i <= 19; i++) {
-                    let objectInObject = {}
-                    if (Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${i}`, "") != "" || i < 2) {
-                        objectInObject["url"] = Services.prefs.getStringPref(`floorp.browser.sidebar2.customurl${i}`, defaultURL[i] ?? "")
-        
-                        if (Services.prefs.getIntPref(`floorp.browser.sidebar2.customurl${i}.usercontext`, 0) != 0) {
-                            objectInObject["usercontext"] = Services.prefs.getIntPref(`floorp.browser.sidebar2.customurl${i}.usercontext`, 0)
-                        }
-        
-                        if (Services.prefs.getPrefType(`floorp.browser.sidebar2.width.mode${i + 5}`) != 0 && Services.prefs.getIntPref(`floorp.browser.sidebar2.width.mode${i + 5}`, 0) != 0) {
-                            objectInObject["width"] = Services.prefs.getIntPref(`floorp.browser.sidebar2.width.mode${i + 5}`, 0)
-                            Services.prefs.clearUserPref(`floorp.browser.sidebar2.width.mode${i + 5}`)
-                        }
-                    }
-                    Services.prefs.clearUserPref(`floorp.browser.sidebar2.customurl${i}`)
-                    Services.prefs.clearUserPref(`floorp.browser.sidebar2.customurl${i}.usercontext`)
-                    Services.prefs.clearUserPref(`services.sync.prefs.sync.floorp.browser.sidebar2.customurl${i}`)
-                    Services.prefs.clearUserPref(`services.sync.prefs.sync.floorp.browser.sidebar2.customurl${i}.usercontext`)
-                    if (Object.keys(objectInObject).length != 0) {
-                        updateObject.data[`w${String(i)}`] = objectInObject
-                        updateObject.index.push(`w${String(i)}`)
-                    }
-                }
-                if(updateObject.index["floorp.browser.sidebar2.page"] != undefined) Services.prefs.setStringPref(`floorp.browser.sidebar2.page`,updateObject.index["floorp.browser.sidebar2.page"])
-                Services.prefs.setStringPref(`floorp.browser.sidebar2.data`, JSON.stringify(updateObject))
-            } else {
-                for (let i = 0; i <= 4; i++) {
-                    if (Services.prefs.getPrefType(`floorp.browser.sidebar2.width.mode${i}`) != 0) {
-                        Services.prefs.clearUserPref(`floorp.browser.sidebar2.width.mode${i}`)
-                    }
-                }
-              for (let i = 0; i <= 19; i++) {
-                if (Services.prefs.getPrefType(`floorp.browser.sidebar2.width.mode${i + 5}`) != 0) {
-                    Services.prefs.clearUserPref(`floorp.browser.sidebar2.width.mode${i + 5}`)
-                }
-                Services.prefs.clearUserPref(`floorp.browser.sidebar2.customurl${i}`)
-                Services.prefs.clearUserPref(`floorp.browser.sidebar2.customurl${i}.usercontext`)
-                Services.prefs.clearUserPref(`services.sync.prefs.sync.floorp.browser.sidebar2.customurl${i}`)
-                Services.prefs.clearUserPref(`services.sync.prefs.sync.floorp.browser.sidebar2.customurl${i}.usercontext`)
-                Services.prefs.clearUserPref(`floorp.browser.sidebar2.page`)
-              }
-            }
-        }*/
         
     },
     getFavicon:function(sbar_url,elem){

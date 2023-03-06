@@ -173,27 +173,31 @@
   }
   
   [data-l10n-id="show-browser-manager-sidebar"] {
-    list-style-image: url("chrome://browser/skin/lepton/toolbox.svg");
+    --BMSIcon: url("chrome://browser/skin/lepton/toolbox.svg");
   }
   
   [data-l10n-id="show-bookmark-sidebar"]{
-    list-style-image: url("chrome://browser/skin/bookmark.svg");
+    --BMSIcon: url("chrome://browser/skin/bookmark.svg");
   }
   
   [data-l10n-id="show-history-sidebar"] {
-    list-style-image: url("chrome://browser/skin/history.svg");
+    --BMSIcon: url("chrome://browser/skin/history.svg");
   }
   
   #select-syncedtab {
-    list-style-image: url("chrome://browser/skin/tab.svg");
+    --BMSIcon: url("chrome://browser/skin/tab.svg");
   }
   
   [data-l10n-id="show-download-sidebar"] {
-    list-style-image: url("chrome://browser/skin/downloads/downloads.svg");
+    --BMSIcon: url("chrome://browser/skin/downloads/downloads.svg");
   }
   
   [data-l10n-id="show-TST-sidebar"] {
-    list-style-image: url("chrome://browser/skin/TST-dark.svg");
+    --BMSIcon: url("chrome://browser/skin/TST-dark.svg");
+  }
+
+  [data-l10n-id="show-notes-sidebar"] {
+    --BMSIcon: url("chrome://browser/skin/notes.svg");
   }
   
   #select-CustomURL{
@@ -216,7 +220,7 @@
     list-style-image: url("chrome://browser/skin/floorplegacy/newtab.svg");
   }
 
-  .webpanel-icon{
+  .sidepanel-icon{
     list-style-image: var(--BMSIcon,url("chrome://devtools/skin/images/globe.svg"));
   }
   
