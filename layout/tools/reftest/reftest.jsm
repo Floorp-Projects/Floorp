@@ -51,8 +51,8 @@ const { ReadTopManifest, CreateUrls } = ChromeUtils.import(
 const { StructuredLogger } = ChromeUtils.importESModule(
     "resource://reftest/StructuredLog.sys.mjs"
 );
-const { PerTestCoverageUtils } = ChromeUtils.import(
-    "resource://reftest/PerTestCoverageUtils.jsm"
+const { PerTestCoverageUtils } = ChromeUtils.importESModule(
+    "resource://reftest/PerTestCoverageUtils.sys.mjs"
 );
 const { XPCOMUtils } = ChromeUtils.importESModule(
     "resource://gre/modules/XPCOMUtils.sys.mjs"

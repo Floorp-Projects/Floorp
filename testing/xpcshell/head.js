@@ -562,8 +562,8 @@ function _execute_test() {
     this[func] = Assert[func].bind(Assert);
   }
 
-  const { PerTestCoverageUtils } = ChromeUtils.import(
-    "resource://testing-common/PerTestCoverageUtils.jsm"
+  const { PerTestCoverageUtils } = ChromeUtils.importESModule(
+    "resource://testing-common/PerTestCoverageUtils.sys.mjs"
   );
 
   if (runningInParent) {

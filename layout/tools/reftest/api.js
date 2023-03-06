@@ -129,8 +129,8 @@ this.reftest = class extends ExtensionAPI {
       // Close pre-existing window
       win.close();
 
-      const { PerTestCoverageUtils } = ChromeUtils.import(
-        "resource://reftest/PerTestCoverageUtils.jsm"
+      const { PerTestCoverageUtils } = ChromeUtils.importESModule(
+        "resource://reftest/PerTestCoverageUtils.sys.mjs"
       );
       if (PerTestCoverageUtils.enabled) {
         // In PerTestCoverage mode, wait for the process belonging to the window we just closed
