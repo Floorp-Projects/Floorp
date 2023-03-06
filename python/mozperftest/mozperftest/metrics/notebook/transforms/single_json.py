@@ -34,3 +34,23 @@ class SingleJsonRetriever:
 
         self.entry_number = 0
         return merged_data
+
+    def summary(self, suite):
+        """Summarize a suite of perfherder data into a single value.
+
+        Returning None means that there's no summary. Otherwise, an integer
+        or float must be returned.
+
+        Only available in the Perfherder layer.
+        """
+        return None
+
+    def subtest_summary(self, subtest):
+        """Summarize a set of replicates for a given subtest.
+
+        By default, it returns a None so we fall back to using the
+        average of the replicates which is the default.
+
+        Only available in the Perfherder layer.
+        """
+        return None

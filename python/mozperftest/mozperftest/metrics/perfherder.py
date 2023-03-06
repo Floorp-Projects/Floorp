@@ -12,7 +12,9 @@ import jsonschema
 from mozperftest.layers import Layer
 from mozperftest.metrics.common import COMMON_ARGS, filtered_metrics
 from mozperftest.metrics.exceptions import PerfherderValidDataError
-from mozperftest.metrics.utils import is_number, write_json
+from mozperftest.metrics.notebook.constant import Constant
+from mozperftest.metrics.notebook.transformer import get_transformer
+from mozperftest.metrics.utils import has_callable_method, is_number, write_json
 from mozperftest.utils import strtobool
 
 PERFHERDER_SCHEMA = pathlib.Path(
@@ -144,6 +146,7 @@ class Perfherder(Layer):
                 summary=settings.get("value"),
                 framework=settings.get("framework"),
                 metrics_info=metrics,
+                transformer=res[0].get("transformer", None),
             )
 
             if all_perfherder_data is None:
@@ -198,6 +201,7 @@ class Perfherder(Layer):
         unit="ms",
         summary=None,
         metrics_info=None,
+        transformer=None,
     ):
         """Build a PerfHerder data blob from the given subtests.
 
@@ -244,6 +248,10 @@ class Perfherder(Layer):
         :param summary float: The summary value to use in the perfherder
             data blob. By default, the mean of all the subtests will be
             used.
+        :param metrics_info dict: Contains a mapping of metric names to the
+            options that are used on the metric.
+        :param transformer str: The name of a predefined tranformer, a module
+            path to a transform, or a path to the file containing the transformer.
 
         :return dict: The PerfHerder data blob.
         """
@@ -258,11 +266,26 @@ class Perfherder(Layer):
         if metrics_info is None:
             metrics_info = {}
 
+        # Use the transform to produce a suite value
+        const = Constant()
+        tfm_cls = None
+        transformer_obj = None
+        if transformer and transformer in const.predefined_transformers:
+            # A pre-built transformer name was given
+            tfm_cls = const.predefined_transformers[transformer]
+            transformer_obj = tfm_cls()
+        elif transformer is not None:
+            tfm_cls = get_transformer(transformer)
+            transformer_obj = tfm_cls()
+        else:
+            self.warning(
+                "No transformer found for this suite. Cannot produce a summary value."
+            )
+
         perf_subtests = []
         suite = {
             "name": name,
             "type": test_type,
-            "value": None,
             "unit": unit,
             "extraOptions": extra_options,
             "lowerIsBetter": lower_is_better,
@@ -310,16 +333,21 @@ class Perfherder(Layer):
 
                 break
 
-            perf_subtests.append(
-                {
-                    "name": measurement,
-                    "replicates": reps,
-                    "lowerIsBetter": subtest_lower_is_better,
-                    "value": statistics.mean(reps),
-                    "unit": subtest_unit,
-                    "shouldAlert": should_alert or measurement in subtest_should_alert,
-                }
-            )
+            subtest = {
+                "name": measurement,
+                "replicates": reps,
+                "lowerIsBetter": subtest_lower_is_better,
+                "value": None,
+                "unit": subtest_unit,
+                "shouldAlert": should_alert or measurement in subtest_should_alert,
+            }
+
+            if has_callable_method(transformer_obj, "subtest_summary"):
+                subtest["value"] = transformer_obj.subtest_summary(subtest)
+            if subtest["value"] is None:
+                subtest["value"] = statistics.mean(reps)
+
+            perf_subtests.append(subtest)
 
         if len(allvals) == 0:
             raise PerfherderValidDataError(
@@ -337,5 +365,10 @@ class Perfherder(Layer):
             suite["alertThreshold"] = alert_thresholds[0]
 
         suite["extraOptions"] = list(set(suite["extraOptions"]))
-        suite["value"] = statistics.mean(allvals)
+
+        if has_callable_method(transformer_obj, "summary"):
+            val = transformer_obj.summary(suite)
+            if val is not None:
+                suite["value"] = val
+
         return perfherder
