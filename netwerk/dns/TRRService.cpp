@@ -52,6 +52,7 @@ constexpr nsLiteralCString kTRRDomains[] = {
     "private.canadianshield.cira.ca"_ns,
     "doh.xfinity.com"_ns,  // Steered clients
     "dns.shaw.ca"_ns, // Steered clients
+    "dooh.cloudflare-dns.com"_ns, // DNS over Oblivious HTTP
     // clang-format on
 };
 // static
