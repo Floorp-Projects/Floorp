@@ -37,7 +37,7 @@ replace-with = "vendored-sources"
 
 [source."https://github.com/gfx-rs/wgpu"]
 git = "https://github.com/gfx-rs/wgpu"
-rev = "74303308cd6030071889e865c40aa638214ed938"
+rev = "73b4257b17cc62ecc8df6d6aa3730bd9c6cba4b9"
 replace-with = "vendored-sources"
 
 [source."https://github.com/glandium/warp"]
