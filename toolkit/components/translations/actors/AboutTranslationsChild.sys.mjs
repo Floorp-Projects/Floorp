@@ -107,7 +107,7 @@ export class AboutTranslationsChild extends JSWindowActorChild {
       "AT_createLanguageIdEngine",
       "AT_createTranslationsEngine",
       "AT_identifyLanguage",
-      "AT_translate",
+      "AT_translateText",
       "AT_destroyTranslationsEngine",
       "AT_getScriptDirection",
     ];
@@ -243,7 +243,7 @@ export class AboutTranslationsChild extends JSWindowActorChild {
     }
     return this.#convertToContentPromise(
       this.translationsEngine
-        .translate(messageBatch)
+        .translateText(messageBatch)
         .then(translations => Cu.cloneInto(translations, this.contentWindow))
     );
   }
