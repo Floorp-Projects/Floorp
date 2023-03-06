@@ -91,4 +91,5 @@ select.about-translations-select:dir(rtl) {
   inset: 0;
   padding: var(--input-padding);
   box-sizing: border-box;
+  overflow-y: scroll;
 }
