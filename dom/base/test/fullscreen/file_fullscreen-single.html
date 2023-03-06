@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+
+Open one window, focus it and enter fullscreen, then exit fullscreen.
+
+-->
+<head>
+  <title>Simple Fullscreen Enter and Exit Test</title>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="file_fullscreen-utils.js"></script>
+</head>
+<body>
+
+<div id="fullscreen-div"><p>Fullscreen div</p></div>
+
+<script type="application/javascript">
+
+function ok(condition, msg) {
+  opener.ok(condition, "[single] " + msg);
+}
+
+function is(value, expected, msg) {
+  opener.is(value, expected, "[single] " + msg);
+}
+
+function isnot(value, unexpected, msg) {
+  opener.isnot(value, unexpected, "[single] " + msg);
+}
+
+function info(msg) {
+  opener.info("[single] " + msg);
+}
+
+function windowResized() {
+  info(`Window resized to width: ${window.innerWidth}, height: ${window.innerHeight}.`);
+}
+
+async function begin() {
+  window.addEventListener('resize', windowResized);
+
+  info(`Starting window width: ${window.innerWidth}, height: ${window.innerHeight}.`);
+  let windowedWidth = window.innerWidth;
+  let windowedHeight = window.innerHeight;
+
+  info("Requesting fullscreen.");
+  let entryPromise = document.getElementById('fullscreen-div').requestFullscreen()
+  info("Fullscreen requested, waiting for promise to resolve.");
+
+  await entryPromise;
+
+  info("element.requestFullscreen() promise resolved.");
+  info(`Fullscreen window width: ${window.innerWidth}, height: ${window.innerHeight}.`);
+  isnot(document.fullscreenElement, null, "document.fullscreenElement should exist.");
+  ok(window.fullScreen, "window.fullScreen");
+  isnot(windowedWidth, window.innerWidth, "window width should be changed.");
+  isnot(windowedHeight, window.innerHeight, "window height should be changed.");
+
+  info("Requesting fullscreen exit.");
+  let exitPromise = document.exitFullscreen()
+  info("Fullscreen exit requested, waiting for promise to resolve.");
+
+  await exitPromise;
+
+  info("document.exitFullscreen() promise resolved.");
+  info(`Restored window width: ${window.innerWidth}, height: ${window.innerHeight}.`);
+  is(document.fullscreenElement, null, "document.fullscreenElement should be null.");
+  ok(!window.fullScreen, "window.fullScreen should be false.");
+  is(window.innerWidth, windowedWidth, "window width should be restored.");
+  is(window.innerHeight, windowedHeight, "window height should be restored.");
+  opener.nextTest();
+}
+
+</script>
+</pre>
+</body>
+</html>
