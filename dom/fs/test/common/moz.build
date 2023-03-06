@@ -15,6 +15,7 @@ XPCSHELL_TESTS_MANIFESTS += [
 TESTING_JS_MODULES.dom.fs.test.common += [
     "nsresult.js",
     "test_basics.js",
+    "test_fileSystemDirectoryHandle.js",
     "test_syncAccessHandle.js",
     "test_writableFileStream.js",
 ]
