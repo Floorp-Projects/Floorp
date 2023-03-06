@@ -306,7 +306,7 @@ add_task(async function test_pinned_tab_dataloss() {
   await allTabsRestored;
 
   let tabs = gBrowser.tabs;
-  BrowserTestUtils.crashFrame(tabs[17].linkedBrowser);
+  await BrowserTestUtils.crashFrame(tabs[17].linkedBrowser);
 
   await TestUtils.topicObserved("sessionstore-state-write-complete");
 
