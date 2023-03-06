@@ -154,10 +154,34 @@ export class TranslationsEngine {
   }
 
   /**
+   * Translate text without any HTML.
+   *
    * @param {string[]} messageBatch
-   * @returns {Promise<string>}
+   * @returns {Promise<string[]>}
    */
-  translate(messageBatch) {
+  translateText(messageBatch) {
+    return this.#translate(messageBatch, false);
+  }
+
+  /**
+   * Translate valid HTML. Note that this method throws if invalid markup is provided.
+   *
+   * @param {string[]} messageBatch
+   * @returns {Promise<string[]>}
+   */
+  translateHTML(messageBatch) {
+    return this.#translate(messageBatch, true);
+  }
+
+  /**
+   * The implementation for translation. Use translateText or translateHTML for the
+   * public API.
+   *
+   * @param {string[]} messageBatch
+   * @param {boolean} isHTML
+   * @returns {Promise<string[]>}
+   */
+  #translate(messageBatch, isHTML) {
     const messageId = this.#messageId++;
     lazy.console.log("Translating", messageBatch);
 
@@ -182,6 +206,7 @@ export class TranslationsEngine {
 
       this.#translationsWorker.postMessage({
         type: "translation-request",
+        isHTML,
         messageBatch,
         messageId,
       });

@@ -112,9 +112,9 @@ function handleMessages(engine) {
 
       switch (data.type) {
         case "translation-request": {
-          const { messageBatch, messageId } = data;
+          const { messageBatch, messageId, isHTML } = data;
           try {
-            const translations = engine.translate(messageBatch);
+            const translations = engine.translate(messageBatch, isHTML);
             postMessage({
               type: "translation-response",
               translations,
@@ -198,14 +198,16 @@ class Engine {
    * Run the translation models to perform a batch of message translations.
    *
    * @param {string[]} messageBatch
+   * @param {boolean} isHTML
    * @param {boolean} withQualityEstimation
    * @returns {string[]}
    */
-  translate(messageBatch, withQualityEstimation = false) {
+  translate(messageBatch, isHTML, withQualityEstimation = false) {
     let response;
     const { messages, options } = BergamotUtils.getTranslationArgs(
       this.bergamot,
       messageBatch,
+      isHTML,
       withQualityEstimation
     );
     try {
@@ -446,7 +448,12 @@ class BergamotUtils {
    * @param {boolean} withQualityEstimation
    * @returns {{ messages: Bergamot["VectorString"], options: Bergamot["VectorResponseOptions"] }}
    */
-  static getTranslationArgs(bergamot, messageBatch, withQualityEstimation) {
+  static getTranslationArgs(
+    bergamot,
+    messageBatch,
+    isHTML,
+    withQualityEstimation
+  ) {
     const messages = new bergamot.VectorString();
     const options = new bergamot.VectorResponseOptions();
     for (const message of messageBatch) {
@@ -455,14 +462,20 @@ class BergamotUtils {
         continue;
       }
 
-      // TODO (Bug 1813782) - Consider porting the original HTML message escaping behavior.
-      // https://github.com/mozilla/firefox-translations/blob/431e0d21f22694c1cbc0ff965820d9780cdaeea8/extension/controller/translation/translationWorker.js#L146-L158
+      if (withQualityEstimation && !isHTML) {
+        // Bergamot only supports quality estimates with HTML. Purely text content can
+        // be translated by escaping it as HTML. See:
+        // https://github.com/mozilla/firefox-translations/blob/431e0d21f22694c1cbc0ff965820d9780cdaeea8/extension/controller/translation/translationWorker.js#L146-L158
+        throw new Error(
+          "Quality estimates on non-hTML is not curently supported."
+        );
+      }
 
       messages.push_back(message);
       options.push_back({
         qualityScores: withQualityEstimation,
         alignment: true,
-        html: false,
+        html: isHTML,
       });
     }
     return { messages, options };
