@@ -122,8 +122,17 @@ function handleMessages(engine) {
             });
           } catch (error) {
             console.error(error);
+            let message = "An error occurred in the engine worker.";
+            if (typeof error?.message === "string") {
+              message = error.message;
+            }
+            let stack = "(no stack)";
+            if (typeof error?.stack === "string") {
+              stack = error.stack;
+            }
             postMessage({
               type: "translation-error",
+              error: { message, stack },
               messageId,
             });
           }

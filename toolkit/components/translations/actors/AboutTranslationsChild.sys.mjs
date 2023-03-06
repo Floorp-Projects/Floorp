@@ -76,14 +76,15 @@ export class AboutTranslationsChild extends JSWindowActorChild {
       promise.then(resolve, error => {
         // Create an error in the content window, if the content window is still around.
         if (this.contentWindow) {
-          // If the error contains a message or a stack, use those in the content error.
-          const contentError = new this.contentWindow.Error(
-            error?.message ?? "An error occured in the AboutTranslations actor."
-          );
-          if (typeof error?.stack === "string") {
-            contentError.stack = error.stack;
+          let message = "An error occured in the AboutTranslations actor.";
+          if (typeof error?.message === "string") {
+            message = error.message;
           }
-          reject(contentError);
+          if (typeof error?.stack === "string") {
+            message += `\n\nOriginal stack:\n\n${error.stack}\n`;
+          }
+
+          reject(new this.contentWindow.Error(message));
         } else {
           reject();
         }
