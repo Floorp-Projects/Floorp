@@ -96,6 +96,8 @@ static sslOptions ssl_defaults = {
     .enableTls13GreaseEch = PR_FALSE,
     .enableTls13BackendEch = PR_FALSE,
     .callExtensionWriterOnEchInner = PR_FALSE,
+    .enableGrease = PR_FALSE,
+    .enableChXtnPermutation = PR_FALSE
 };
 
 /*
@@ -889,6 +891,14 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRIntn val)
 
         case SSL_SUPPRESS_END_OF_EARLY_DATA:
             ss->opt.suppressEndOfEarlyData = val;
+            break;
+
+        case SSL_ENABLE_GREASE:
+            ss->opt.enableGrease = val;
+            break;
+
+        case SSL_ENABLE_CH_EXTENSION_PERMUTATION:
+            ss->opt.enableChXtnPermutation = val;
             break;
 
         default:

@@ -1,7 +1,7 @@
 .. _mozilla_projects_nss_nss_3_88_1_release_notes:
 
 NSS 3.88.1 release notes
-======================
+========================
 
 `Introduction <#introduction>`__
 --------------------------------
@@ -30,7 +30,7 @@ NSS 3.88.1 release notes
 .. _changes_in_nss_3.88.1:
 
 `Changes in NSS 3.88.1 <#changes_in_nss_3.88.1>`__
-----------------------------------------------------
+--------------------------------------------------
 
 .. container::
 

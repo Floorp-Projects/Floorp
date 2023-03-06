@@ -180,382 +180,310 @@ JSS Provider Notes
             timeframe for fixing them. Meanwhile, the ``org.mozilla.jss.crypto.CryptoStore`` class
             can be used for some of this functionality.
 
-      +---------------------------------------------------------------------------------------------------+
-      | .. rubric:: Cipher                                                                                |
-      |    :name: Cipher_2                                                                                |
-      |                                                                                                   |
-      | .. rubric:: Supported Algorithms                                                                  |
-      |    :name: supported_algorithms                                                                    |
-      |                                                                                                   |
-      | .. rubric:: Notes                                                                                 |
-      |    :name: notes                                                                                   |
-      |                                                                                                   |
-      | -                                                                                                 |
-      |                                                                                                   |
-      |    -  AES                                                                                         |
-      |    -  DES                                                                                         |
-      |    -  DESede (*DES3* )                                                                            |
-      |    -  RC2                                                                                         |
-      |    -  RC4                                                                                         |
-      |    -  RSA                                                                                         |
-      |                                                                                                   |
-      |    -  The following modes and padding schemes are supported:                                      |
-      |                                                                                                   |
-      |                                                                                                   |
-      |    +------------------------------+------------------------------+------------------------------+ |
-      |                                                                                                   |
-      |    | Algorithm                    | Mode                         | Padding                      | |
-      |                                                                                                   |
-      |    +------------------------------+------------------------------+------------------------------+ |
-      |                                                                                                   |
-      |    | DES                          | ECB                          | NoPadding                    | |
-      |                                                                                                   |
-      |    +------------------------------+------------------------------+------------------------------+ |
-      |                                                                                                   |
-      |    |                              | CBC                          | NoPadding                    | |
-      |                                                                                                   |
-      |    +------------------------------+------------------------------+------------------------------+ |
-      |                                                                                                   |
-      |    |                              |                              | PKCS5 Padding                | |
-      |                                                                                                   |
-      |    +------------------------------+------------------------------+------------------------------+ |
-      |                                                                                                   |
-      |    | DESede                       | ECB                          | NoPadding                    | |
-      |                                                                                                   |
-      |    | *DES3*                       |                              |                              | |
-      |                                                                                                   |
-      |    +------------------------------+------------------------------+------------------------------+ |
-      |                                                                                                   |
-      |    |                              | CBC                          | NoPadding                    | |
-      |                                                                                                   |
-      |    +------------------------------+------------------------------+------------------------------+ |
-      |                                                                                                   |
-      |    |                              |                              | PKCS5 Padding                | |
-      |                                                                                                   |
-      |    +------------------------------+------------------------------+------------------------------+ |
-      |                                                                                                   |
-      |    | AES                          | ECB                          | NoPadding                    | |
-      |                                                                                                   |
-      |    +------------------------------+------------------------------+------------------------------+ |
-      |                                                                                                   |
-      |    |                              | CBC                          | NoPadding                    | |
-      |                                                                                                   |
-      |    +------------------------------+------------------------------+------------------------------+ |
-      |                                                                                                   |
-      |    |                              |                              | PKCS5 Padding                | |
-      |                                                                                                   |
-      |    +------------------------------+------------------------------+------------------------------+ |
-      |                                                                                                   |
-      |    | RC4                          | *None*                       | *None*                       | |
-      |                                                                                                   |
-      |    +------------------------------+------------------------------+------------------------------+ |
-      |                                                                                                   |
-      |    | RC2                          | CBC                          | NoPadding                    | |
-      |                                                                                                   |
-      |    +------------------------------+------------------------------+------------------------------+ |
-      |                                                                                                   |
-      |    |                              |                              | PKCS5Padding                 | |
-      |                                                                                                   |
-      |    +------------------------------+------------------------------+------------------------------+ |
-      |                                                                                                   |
-      |    -  The SecureRandom argument passed to ``initSign()`` and ``initVerify()`` is ignored, because |
-      |       NSS does not support specifying an external source of randomness.                           |
-      +---------------------------------------------------------------------------------------------------+
-      | .. rubric:: DSAPrivateKey                                                                         |
-      |    :name: DSAPrivateKey_2                                                                         |
-      |                                                                                                   |
-      | -  ``getX()`` is not supported because NSS does not support extracting data from private keys.    |
-      +---------------------------------------------------------------------------------------------------+
-      | .. rubric:: KeyFactory                                                                            |
-      |    :name: KeyFactory_2                                                                            |
-      |                                                                                                   |
-      | .. rubric:: Supported Algorithms                                                                  |
-      |    :name: supported_algorithms_2                                                                  |
-      |                                                                                                   |
-      | .. rubric:: Notes                                                                                 |
-      |    :name: notes_2                                                                                 |
-      |                                                                                                   |
-      | -                                                                                                 |
-      |                                                                                                   |
-      |    -  DSA                                                                                         |
-      |    -  RSA                                                                                         |
-      |                                                                                                   |
-      |    -  The following transformations are supported for ``generatePublic()`` and                    |
-      |       ``generatePrivate()``:                                                                      |
-      |                                                                                                   |
-      |                                                                                                   |
-      |   +----------------------------------------------+----------------------------------------------+ |
-      |                                                                                                   |
-      |   | From                                         | To                                           | |
-      |                                                                                                   |
-      |   +----------------------------------------------+----------------------------------------------+ |
-      |                                                                                                   |
-      |   | ``RSAPublicKeySpec``                         | ``RSAPublicKey``                             | |
-      |                                                                                                   |
-      |   +----------------------------------------------+----------------------------------------------+ |
-      |                                                                                                   |
-      |   | ``DSAPublicKeySpec``                         | ``DSAPublicKey``                             | |
-      |                                                                                                   |
-      |   +----------------------------------------------+----------------------------------------------+ |
-      |                                                                                                   |
-      |   | ``X509EncodedKeySpec``                       | ``RSAPublicKey``                             | |
-      |                                                                                                   |
-      |   |                                              | ``DSAPublicKey``                             | |
-      |                                                                                                   |
-      |   +----------------------------------------------+----------------------------------------------+ |
-      |                                                                                                   |
-      |   | ``RSAPrivateCrtKeySpec``                     | ``RSAPrivateKey``                            | |
-      |                                                                                                   |
-      |   +----------------------------------------------+----------------------------------------------+ |
-      |                                                                                                   |
-      |   | ``DSAPrivateKeySpec``                        | ``DSAPrivateKey``                            | |
-      |                                                                                                   |
-      |   +----------------------------------------------+----------------------------------------------+ |
-      |                                                                                                   |
-      |   | ``PKCS8EncodedKeySpec``                      | ``RSAPrivateKey``                            | |
-      |                                                                                                   |
-      |   |                                              | ``DSAPrivateKey``                            | |
-      |                                                                                                   |
-      |   +----------------------------------------------+----------------------------------------------+ |
-      |                                                                                                   |
-      |    -  ``getKeySpec()`` is not supported. This method exports key material in plaintext and is     |
-      |       therefore insecure. Note that a public key's data can be accessed directly from the key.    |
-      |    -  ``translateKey()`` simply gets the encoded form of the given key and then tries to import   |
-      |       it by calling ``generatePublic()`` or ``generatePrivate()``. Only ``X509EncodedKeySpec`` is |
-      |       supported for public keys, and only ``PKCS8EncodedKeySpec`` is supported for private keys.  |
-      +---------------------------------------------------------------------------------------------------+
-      | .. rubric:: KeyGenerator                                                                          |
-      |    :name: KeyGenerator_2                                                                          |
-      |                                                                                                   |
-      | .. rubric:: Supported Algorithms                                                                  |
-      |    :name: supported_algorithms_3                                                                  |
-      |                                                                                                   |
-      | .. rubric:: Notes                                                                                 |
-      |    :name: notes_3                                                                                 |
-      |                                                                                                   |
-      | -                                                                                                 |
-      |                                                                                                   |
-      |    -  AES                                                                                         |
-      |    -  DES                                                                                         |
-      |    -  DESede (*DES3* )                                                                            |
-      |    -  RC4                                                                                         |
-      |                                                                                                   |
-      |    -  The SecureRandom argument passed to ``init()`` is ignored, because NSS does not support     |
-      |       specifying an external source of randomness.                                                |
-      |    -  None of the key generation algorithms accepts an ``AlgorithmParameterSpec``.                |
-      +---------------------------------------------------------------------------------------------------+
-      | .. rubric:: KeyPairGenerator                                                                      |
-      |    :name: KeyPairGenerator_2                                                                      |
-      |                                                                                                   |
-      | .. rubric:: Supported Algorithms                                                                  |
-      |    :name: supported_algorithms_4                                                                  |
-      |                                                                                                   |
-      | .. rubric:: Notes                                                                                 |
-      |    :name: notes_4                                                                                 |
-      |                                                                                                   |
-      | -                                                                                                 |
-      |                                                                                                   |
-      |    -  DSA                                                                                         |
-      |    -  RSA                                                                                         |
-      |                                                                                                   |
-      |    -  The SecureRandom argument passed to initialize() is ignored, because NSS does not support   |
-      |       specifying an external source of randomness.                                                |
-      +---------------------------------------------------------------------------------------------------+
-      | .. rubric:: Mac                                                                                   |
-      |    :name: Mac_2                                                                                   |
-      |                                                                                                   |
-      | .. rubric:: Supported Algorithms                                                                  |
-      |    :name: supported_algorithms_5                                                                  |
-      |                                                                                                   |
-      | .. rubric:: Notes                                                                                 |
-      |    :name: notes_5                                                                                 |
-      |                                                                                                   |
-      | -                                                                                                 |
-      |                                                                                                   |
-      |    -  HmacSHA1 (*Hmac-SHA1* )                                                                     |
-      |                                                                                                   |
-      |    -  Any secret key type (AES, DES, etc.) can be used as the MAC key, but it must be a JSS key.  |
-      |       That is, it must be an ``instanceof org.mozilla.jss.crypto.SecretKeyFacade``.               |
-      |    -  The params passed to ``init()`` are ignored.                                                |
-      +---------------------------------------------------------------------------------------------------+
-      | .. rubric:: MessageDigest                                                                         |
-      |    :name: MessageDigest_2                                                                         |
-      |                                                                                                   |
-      | .. rubric:: Supported Algorithms                                                                  |
-      |    :name: supported_algorithms_6                                                                  |
-      |                                                                                                   |
-      | -                                                                                                 |
-      |                                                                                                   |
-      |    -  MD5                                                                                         |
-      |    -  MD2                                                                                         |
-      |    -  SHA-1 (*SHA1, SHA* )                                                                        |
-      +---------------------------------------------------------------------------------------------------+
-      | .. rubric:: RSAPrivateKey                                                                         |
-      |    :name: RSAPrivateKey_2                                                                         |
-      |                                                                                                   |
-      | .. rubric:: Notes                                                                                 |
-      |    :name: notes_6                                                                                 |
-      |                                                                                                   |
-      | -                                                                                                 |
-      |                                                                                                   |
-      |    -  ``getModulus()`` is not supported because NSS does not support extracting data from private |
-      |       keys.                                                                                       |
-      |    -  ``getPrivateExponent()`` is not supported because NSS does not support extracting data from |
-      |       private keys.                                                                               |
-      +---------------------------------------------------------------------------------------------------+
-      | .. rubric:: SecretKeyFactory                                                                      |
-      |    :name: SecretKeyFactory_2                                                                      |
-      |                                                                                                   |
-      | .. rubric:: Supported Algorithms                                                                  |
-      |    :name: supported_algorithms_7                                                                  |
-      |                                                                                                   |
-      | .. rubric:: Notes                                                                                 |
-      |    :name: notes_7                                                                                 |
-      |                                                                                                   |
-      | -                                                                                                 |
-      |                                                                                                   |
-      |    -  AES                                                                                         |
-      |    -  DES                                                                                         |
-      |    -  DESede (*DES3* )                                                                            |
-      |    -  PBAHmacSHA1                                                                                 |
-      |    -  PBEWithMD5AndDES                                                                            |
-      |    -  PBEWithSHA1AndDES                                                                           |
-      |    -  PBEWithSHA1AndDESede (*PBEWithSHA1AndDES3* )                                                |
-      |    -  PBEWithSHA1And128RC4                                                                        |
-      |    -  RC4                                                                                         |
-      |                                                                                                   |
-      |    -  ``generateSecret`` supports the following transformations:                                  |
-      |                                                                                                   |
-      |                                                                                                   |
-      |   +----------------------------------------------+----------------------------------------------+ |
-      |                                                                                                   |
-      |   | KeySpec Class                                | Key Algorithm                                | |
-      |                                                                                                   |
-      |   +----------------------------------------------+----------------------------------------------+ |
-      |                                                                                                   |
-      |   | PBEKeySpec                                   | *Using the appropriate PBE algorithm:*       | |
-      |                                                                                                   |
-      |   | org.mozilla.jss.crypto.PBEKeyGenParams       | DES                                          | |
-      |                                                                                                   |
-      |   |                                              | DESede                                       | |
-      |                                                                                                   |
-      |   |                                              | RC4                                          | |
-      |                                                                                                   |
-      |   +----------------------------------------------+----------------------------------------------+ |
-      |                                                                                                   |
-      |   | DESedeKeySpec                                | DESede                                       | |
-      |                                                                                                   |
-      |   +----------------------------------------------+----------------------------------------------+ |
-      |                                                                                                   |
-      |   | DESKeySpec                                   | DES                                          | |
-      |                                                                                                   |
-      |   +----------------------------------------------+----------------------------------------------+ |
-      |                                                                                                   |
-      |   | SecretKeySpec                                | AES                                          | |
-      |                                                                                                   |
-      |   |                                              | DES                                          | |
-      |                                                                                                   |
-      |   |                                              | DESede                                       | |
-      |                                                                                                   |
-      |   |                                              | RC4                                          | |
-      |                                                                                                   |
-      |   +----------------------------------------------+----------------------------------------------+ |
-      |                                                                                                   |
-      |    -  ``getKeySpec`` supports the following transformations:                                      |
-      |                                                                                                   |
-      |                                                                                                   |
-      |   +----------------------------------------------+----------------------------------------------+ |
-      |                                                                                                   |
-      |   | Key Algorithm                                | KeySpec Class                                | |
-      |                                                                                                   |
-      |   +----------------------------------------------+----------------------------------------------+ |
-      |                                                                                                   |
-      |   | DESede                                       | DESedeKeySpec                                | |
-      |                                                                                                   |
-      |   +----------------------------------------------+----------------------------------------------+ |
-      |                                                                                                   |
-      |   | DES                                          | DESKeySpec                                   | |
-      |                                                                                                   |
-      |   +----------------------------------------------+----------------------------------------------+ |
-      |                                                                                                   |
-      |   | DESede                                       | SecretKeySpec                                | |
-      |                                                                                                   |
-      |   | DES                                          |                                              | |
-      |                                                                                                   |
-      |   | AES                                          |                                              | |
-      |                                                                                                   |
-      |   | RC4                                          |                                              | |
-      |                                                                                                   |
-      |   +----------------------------------------------+----------------------------------------------+ |
-      |                                                                                                   |
-      |    -  For increased security, some SecretKeys may not be extractable from their PKCS #11 token.   |
-      |       In this case, the key should be wrapped (encrypted with another key), and then the          |
-      |       encrypted key might be extractable from the token. This policy varies across PKCS #11       |
-      |       tokens.                                                                                     |
-      |    -  ``translateKey`` tries two approaches to copying keys. First, it tries to copy the key      |
-      |       material directly using NSS calls to PKCS #11. If that fails, it calls ``getEncoded()`` on  |
-      |       the source key, and then tries to create a new key on the target token from the encoded     |
-      |       bits. Both of these operations will fail if the source key is not extractable.              |
-      |    -  The class ``java.security.spec.PBEKeySpec`` in JDK versions earlier than 1.4 does not       |
-      |       contain the salt and iteration fields, which are necessary for PBE key generation. These    |
-      |       fields were added in JDK 1.4. If you are using a JDK (or JRE) version earlier than 1.4, you |
-      |       cannot use class ``java.security.spec.PBEKeySpec``. Instead, you can use                    |
-      |       ``org.mozilla.jss.crypto.PBEKeyGenParams``. If you are using JDK (or JRE) 1.4 or later, you |
-      |       can use ``java.security.spec.PBEKeySpec`` or ``org.mozilla.jss.crypto.PBEKeyGenParams``.    |
-      +---------------------------------------------------------------------------------------------------+
-      | .. rubric:: SecretKey                                                                             |
-      |    :name: SecretKey_2                                                                             |
-      |                                                                                                   |
-      | .. rubric:: Supported Algorithms                                                                  |
-      |    :name: supported_algorithms_8                                                                  |
-      |                                                                                                   |
-      | .. rubric:: Notes                                                                                 |
-      |    :name: notes_8                                                                                 |
-      |                                                                                                   |
-      | -                                                                                                 |
-      |                                                                                                   |
-      |    -  AES                                                                                         |
-      |    -  DES                                                                                         |
-      |    -  DESede (*DES3* )                                                                            |
-      |    -  HmacSHA1                                                                                    |
-      |    -  RC2                                                                                         |
-      |    -  RC4                                                                                         |
-      |                                                                                                   |
-      |    -  ``SecretKey`` is implemented by the class ``org.mozilla.jss.crypto.SecretKeyFacade``, which |
-      |       acts as a wrapper around the JSS class ``SymmetricKey``. Any ``SecretKeys`` handled by JSS  |
-      |       will actually be ``SecretKeyFacades``. This should usually be transparent.                  |
-      +---------------------------------------------------------------------------------------------------+
-      | .. rubric:: SecureRandom                                                                          |
-      |    :name: SecureRandom_2                                                                          |
-      |                                                                                                   |
-      | .. rubric:: Supported Algorithms                                                                  |
-      |    :name: supported_algorithms_9                                                                  |
-      |                                                                                                   |
-      | .. rubric:: Notes                                                                                 |
-      |    :name: notes_9                                                                                 |
-      |                                                                                                   |
-      | -                                                                                                 |
-      |                                                                                                   |
-      |    -  pkcs11prng                                                                                  |
-      |                                                                                                   |
-      |    -  This invokes the NSS internal pseudorandom number generator.                                |
-      +---------------------------------------------------------------------------------------------------+
-      | .. rubric:: Signature                                                                             |
-      |    :name: Signature_2                                                                             |
-      |                                                                                                   |
-      | .. rubric:: Supported Algorithms                                                                  |
-      |    :name: supported_algorithms_10                                                                 |
-      |                                                                                                   |
-      | .. rubric:: Notes                                                                                 |
-      |    :name: notes_10                                                                                |
-      |                                                                                                   |
-      | -                                                                                                 |
-      |                                                                                                   |
-      |    -  SHA1withDSA (*DSA, DSS, SHA/DSA, SHA-1/DSA, SHA1/DSA, DSAWithSHA1, SHAwithDSA* )            |
-      |    -  SHA-1/RSA (*SHA1/RSA, SHA1withRSA* )                                                        |
-      |    -  MD5/RSA (*MD5withRSA* )                                                                     |
-      |    -  MD2/RSA                                                                                     |
-      |                                                                                                   |
-      |    -  The ``SecureRandom`` argument passed to ``initSign()`` and ``initVerify()`` is ignored,     |
-      |       because NSS does not support specifying an external source of randomness.                   |
-      +---------------------------------------------------------------------------------------------------+
+.. rubric:: Cipher
+   :name: Cipher_2
+
+.. rubric:: Supported Algorithms
+   :name: supported_algorithms
+
+.. rubric:: Notes
+   :name: notes
+
+-
+
+   -  AES
+   -  DES
+   -  DESede (*DES3* )
+   -  RC2
+   -  RC4
+   -  RSA
+
+   -  The following modes and padding schemes are supported:
+
+
+   +------------------------------+------------------------------+------------------------------+
+   | Algorithm                    | Mode                         | Padding                      |
+   +------------------------------+------------------------------+------------------------------+
+   | DES                          | ECB                          | NoPadding                    |
+   +------------------------------+------------------------------+------------------------------+
+   |                              | CBC                          | NoPadding                    |
+   +------------------------------+------------------------------+------------------------------+
+   |                              |                              | PKCS5 Padding                |
+   +------------------------------+------------------------------+------------------------------+
+   | DESede                       | ECB                          | NoPadding                    |
+   | *DES3*                       |                              |                              |
+   +------------------------------+------------------------------+------------------------------+
+   |                              | CBC                          | NoPadding                    |
+   +------------------------------+------------------------------+------------------------------+
+   |                              |                              | PKCS5 Padding                |
+   +------------------------------+------------------------------+------------------------------+
+   | AES                          | ECB                          | NoPadding                    |
+   +------------------------------+------------------------------+------------------------------+
+   |                              | CBC                          | NoPadding                    |
+   +------------------------------+------------------------------+------------------------------+
+   |                              |                              | PKCS5 Padding                |
+   +------------------------------+------------------------------+------------------------------+
+   | RC4                          | *None*                       | *None*                       |
+   +------------------------------+------------------------------+------------------------------+
+   | RC2                          | CBC                          | NoPadding                    |
+   +------------------------------+------------------------------+------------------------------+
+   |                              |                              | PKCS5Padding                 |
+   +------------------------------+------------------------------+------------------------------+
+
+   -  The SecureRandom argument passed to ``initSign()`` and ``initVerify()`` is ignored, because
+      NSS does not support specifying an external source of randomness.
+
+.. rubric:: DSAPrivateKey
+   :name: DSAPrivateKey_2
+
+-  ``getX()`` is not supported because NSS does not support extracting data from private keys.
+
+.. rubric:: KeyFactory
+   :name: KeyFactory_2
+
+.. rubric:: Supported Algorithms
+   :name: supported_algorithms_2
+
+.. rubric:: Notes
+   :name: notes_2
+
+-
+
+   -  DSA
+   -  RSA
+
+   -  The following transformations are supported for ``generatePublic()`` and
+      ``generatePrivate()``:
+
+
+  +----------------------------------------------+----------------------------------------------+
+  | From                                         | To                                           |
+  +----------------------------------------------+----------------------------------------------+
+  | ``RSAPublicKeySpec``                         | ``RSAPublicKey``                             |
+  +----------------------------------------------+----------------------------------------------+
+  | ``DSAPublicKeySpec``                         | ``DSAPublicKey``                             |
+  +----------------------------------------------+----------------------------------------------+
+  | ``X509EncodedKeySpec``                       | ``RSAPublicKey``                             |
+  |                                              | ``DSAPublicKey``                             |
+  +----------------------------------------------+----------------------------------------------+
+  | ``RSAPrivateCrtKeySpec``                     | ``RSAPrivateKey``                            |
+  +----------------------------------------------+----------------------------------------------+
+  | ``DSAPrivateKeySpec``                        | ``DSAPrivateKey``                            |
+  +----------------------------------------------+----------------------------------------------+
+  | ``PKCS8EncodedKeySpec``                      | ``RSAPrivateKey``                            |
+  |                                              | ``DSAPrivateKey``                            |
+  +----------------------------------------------+----------------------------------------------+
+
+   -  ``getKeySpec()`` is not supported. This method exports key material in plaintext and is
+      therefore insecure. Note that a public key's data can be accessed directly from the key.
+   -  ``translateKey()`` simply gets the encoded form of the given key and then tries to import
+      it by calling ``generatePublic()`` or ``generatePrivate()``. Only ``X509EncodedKeySpec`` is
+      supported for public keys, and only ``PKCS8EncodedKeySpec`` is supported for private keys.
+
+.. rubric:: KeyGenerator
+   :name: KeyGenerator_2
+
+.. rubric:: Supported Algorithms
+   :name: supported_algorithms_3
+
+.. rubric:: Notes
+   :name: notes_3
+
+-
+
+   -  AES
+   -  DES
+   -  DESede (*DES3* )
+   -  RC4
+
+   -  The SecureRandom argument passed to ``init()`` is ignored, because NSS does not support
+      specifying an external source of randomness.
+   -  None of the key generation algorithms accepts an ``AlgorithmParameterSpec``.
+
+.. rubric:: KeyPairGenerator
+   :name: KeyPairGenerator_2
+
+.. rubric:: Supported Algorithms
+   :name: supported_algorithms_4
+
+.. rubric:: Notes
+   :name: notes_4
+
+-
+
+   -  DSA
+   -  RSA
+
+   -  The SecureRandom argument passed to initialize() is ignored, because NSS does not support
+      specifying an external source of randomness.
+
+.. rubric:: Mac
+   :name: Mac_2
+
+.. rubric:: Supported Algorithms
+   :name: supported_algorithms_5
+
+.. rubric:: Notes
+   :name: notes_5
+
+-
+
+   -  HmacSHA1 (*Hmac-SHA1* )
+
+   -  Any secret key type (AES, DES, etc.) can be used as the MAC key, but it must be a JSS key.
+      That is, it must be an ``instanceof org.mozilla.jss.crypto.SecretKeyFacade``.
+   -  The params passed to ``init()`` are ignored.
+
+.. rubric:: MessageDigest
+   :name: MessageDigest_2
+
+.. rubric:: Supported Algorithms
+   :name: supported_algorithms_6
+
+-
+
+   -  MD5
+   -  MD2
+   -  SHA-1 (*SHA1, SHA* )
+
+.. rubric:: RSAPrivateKey
+   :name: RSAPrivateKey_2
+
+.. rubric:: Notes
+   :name: notes_6
+
+-
+
+   -  ``getModulus()`` is not supported because NSS does not support extracting data from private
+      keys.
+   -  ``getPrivateExponent()`` is not supported because NSS does not support extracting data from
+      private keys.
+
+.. rubric:: SecretKeyFactory
+   :name: SecretKeyFactory_2
+
+.. rubric:: Supported Algorithms
+   :name: supported_algorithms_7
+
+.. rubric:: Notes
+   :name: notes_7
+
+-
+
+   -  AES
+   -  DES
+   -  DESede (*DES3* )
+   -  PBAHmacSHA1
+   -  PBEWithMD5AndDES
+   -  PBEWithSHA1AndDES
+   -  PBEWithSHA1AndDESede (*PBEWithSHA1AndDES3* )
+   -  PBEWithSHA1And128RC4
+   -  RC4
+
+   -  ``generateSecret`` supports the following transformations:
+
+
+  +----------------------------------------------+----------------------------------------------+
+  | KeySpec Class                                | Key Algorithm                                |
+  +----------------------------------------------+----------------------------------------------+
+  | PBEKeySpec                                   | *Using the appropriate PBE algorithm:*       |
+  | org.mozilla.jss.crypto.PBEKeyGenParams       | DES                                          |
+  |                                              | DESede                                       |
+  |                                              | RC4                                          |
+  +----------------------------------------------+----------------------------------------------+
+  | DESedeKeySpec                                | DESede                                       |
+  +----------------------------------------------+----------------------------------------------+
+  | DESKeySpec                                   | DES                                          |
+  +----------------------------------------------+----------------------------------------------+
+  | SecretKeySpec                                | AES                                          |
+  |                                              | DES                                          |
+  |                                              | DESede                                       |
+  |                                              | RC4                                          |
+  +----------------------------------------------+----------------------------------------------+
+
+   -  ``getKeySpec`` supports the following transformations:
+
+
+  +----------------------------------------------+----------------------------------------------+
+  | Key Algorithm                                | KeySpec Class                                |
+  +----------------------------------------------+----------------------------------------------+
+  | DESede                                       | DESedeKeySpec                                |
+  +----------------------------------------------+----------------------------------------------+
+  | DES                                          | DESKeySpec                                   |
+  +----------------------------------------------+----------------------------------------------+
+  | DESede                                       | SecretKeySpec                                |
+  | DES                                          |                                              |
+  | AES                                          |                                              |
+  | RC4                                          |                                              |
+  +----------------------------------------------+----------------------------------------------+
+
+   -  For increased security, some SecretKeys may not be extractable from their PKCS #11 token.
+      In this case, the key should be wrapped (encrypted with another key), and then the
+      encrypted key might be extractable from the token. This policy varies across PKCS #11
+      tokens.
+   -  ``translateKey`` tries two approaches to copying keys. First, it tries to copy the key
+      material directly using NSS calls to PKCS #11. If that fails, it calls ``getEncoded()`` on
+      the source key, and then tries to create a new key on the target token from the encoded
+      bits. Both of these operations will fail if the source key is not extractable.
+   -  The class ``java.security.spec.PBEKeySpec`` in JDK versions earlier than 1.4 does not
+      contain the salt and iteration fields, which are necessary for PBE key generation. These
+      fields were added in JDK 1.4. If you are using a JDK (or JRE) version earlier than 1.4, you
+      cannot use class ``java.security.spec.PBEKeySpec``. Instead, you can use
+      ``org.mozilla.jss.crypto.PBEKeyGenParams``. If you are using JDK (or JRE) 1.4 or later, you
+      can use ``java.security.spec.PBEKeySpec`` or ``org.mozilla.jss.crypto.PBEKeyGenParams``.
+
+.. rubric:: SecretKey
+   :name: SecretKey_2
+
+.. rubric:: Supported Algorithms
+   :name: supported_algorithms_8
+
+.. rubric:: Notes
+   :name: notes_8
+
+-
+
+   -  AES
+   -  DES
+   -  DESede (*DES3* )
+   -  HmacSHA1
+   -  RC2
+   -  RC4
+
+   -  ``SecretKey`` is implemented by the class ``org.mozilla.jss.crypto.SecretKeyFacade``, which
+      acts as a wrapper around the JSS class ``SymmetricKey``. Any ``SecretKeys`` handled by JSS
+      will actually be ``SecretKeyFacades``. This should usually be transparent.
+
+.. rubric:: SecureRandom
+   :name: SecureRandom_2
+
+.. rubric:: Supported Algorithms
+   :name: supported_algorithms_9
+
+.. rubric:: Notes
+   :name: notes_9
+
+-
+
+   -  pkcs11prng
+
+   -  This invokes the NSS internal pseudorandom number generator.
+
+.. rubric:: Signature
+   :name: Signature_2
+
+.. rubric:: Supported Algorithms
+   :name: supported_algorithms_10
+
+.. rubric:: Notes
+   :name: notes_10
+
+-
+
+   -  SHA1withDSA (*DSA, DSS, SHA/DSA, SHA-1/DSA, SHA1/DSA, DSAWithSHA1, SHAwithDSA* )
+   -  SHA-1/RSA (*SHA1/RSA, SHA1withRSA* )
+   -  MD5/RSA (*MD5withRSA* )
+   -  MD2/RSA
+
+   -  The ``SecureRandom`` argument passed to ``initSign()`` and ``initVerify()`` is ignored,
+      because NSS does not support specifying an external source of randomness.

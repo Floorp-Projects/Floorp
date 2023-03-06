@@ -2884,6 +2884,28 @@ TEST_F(TlsConnectStreamTls13Ech, EchPublicNameNotLdh) {
   ValidatePublicNames(kNotLdh, SECFailure);
 }
 
+TEST_F(TlsConnectStreamTls13, EchClientHelloExtensionPermutation) {
+  EnsureTlsSetup();
+  PR_ASSERT(SSL_OptionSet(client_->ssl_fd(),
+                          SSL_ENABLE_CH_EXTENSION_PERMUTATION,
+                          PR_TRUE) == SECSuccess);
+  SetupEch(client_, server_);
+
+  client_->ExpectEch();
+  server_->ExpectEch();
+  Connect();
+}
+
+TEST_F(TlsConnectStreamTls13, EchGreaseClientHelloExtensionPermutation) {
+  EnsureTlsSetup();
+  PR_ASSERT(SSL_OptionSet(client_->ssl_fd(),
+                          SSL_ENABLE_CH_EXTENSION_PERMUTATION,
+                          PR_TRUE) == SECSuccess);
+  PR_ASSERT(SSL_EnableTls13GreaseEch(client_->ssl_fd(), PR_FALSE) ==
+            SECSuccess);
+  Connect();
+}
+
 INSTANTIATE_TEST_SUITE_P(EchAgentTest, TlsAgentEchTest,
                          ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
                                             TlsConnectTestBase::kTlsV13));

@@ -906,6 +906,20 @@ ssl_SendSupportedGroupsXtn(const sslSocket *ss, TLSExtensionData *xtnData,
         }
     }
 
+    /* GREASE SupportedGroups:
+     * A client MAY select one or more GREASE named group values and advertise
+     * them in the "supported_groups" extension, if sent [RFC8701, Section 3.1].
+     */
+    if (!ss->sec.isServer &&
+        ss->opt.enableGrease &&
+        ss->vrange.max >= SSL_LIBRARY_VERSION_TLS_1_3) {
+        rv = sslBuffer_AppendNumber(buf, ss->ssl3.hs.grease->idx[grease_group], 2);
+        if (rv != SECSuccess) {
+            return SECFailure;
+        }
+        found = PR_TRUE;
+    }
+
     if (!found) {
         /* We added nothing, don't send the extension. */
         return SECSuccess;

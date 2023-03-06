@@ -58,7 +58,8 @@
         'tls_ech_unittest.cc',
         'tls_protect.cc',
         'tls_psk_unittest.cc',
-        'tls_subcerts_unittest.cc'
+        'tls_subcerts_unittest.cc',
+        'tls_grease_unittest.cc'
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',
