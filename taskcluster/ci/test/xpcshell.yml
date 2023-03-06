@@ -61,7 +61,7 @@ xpcshell:
                 by-test-platform:
                     .*asan.*: []
                     .*ccov.*: []
-                    (linux1804-64|windows1.*64.*)(-shippable)?-qr/opt: ['trunk']
+                    (linux1804-64|windows11-64.*)(-shippable)?-qr/opt: ['trunk']
                     default: []
             socketprocess_networking+no-fission:
                 by-test-platform:
@@ -70,7 +70,8 @@ xpcshell:
             socketprocess_networking:
                 by-test-platform:
                     (linux1804-64|macosx).*: ['trunk']  # All Linux & Mac variants
-                    ^(?!.*asan).*windows.*: ['trunk']   # All Windows except ASAN
+                    windows7-32.*: ['trunk']
+                    ^(?!.*asan).*windows11.*: ['trunk']   # All Windows11 except ASAN
                     default: []
             no-fission:
                 by-test-platform:
@@ -80,7 +81,6 @@ xpcshell:
                     default: []
             msix:
                 by-test-platform:
-                    windows10-64-2004(-shippable)?-qr/opt: built-projects
                     windows11-64-2009(-shippable)?-qr/opt: built-projects
                     default: []
             default:
