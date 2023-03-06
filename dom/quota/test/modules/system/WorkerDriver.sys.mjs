@@ -13,7 +13,7 @@ export async function runTestInWorker(script, base, listener) {
 
     const worker = new Worker(globalHeadUrl.href);
 
-    worker.onmessage = function(event) {
+    worker.onmessage = async function(event) {
       const data = event.data;
       const moduleName = data.moduleName;
       const objectName = data.objectName;
@@ -26,7 +26,7 @@ export async function runTestInWorker(script, base, listener) {
               ".sys.mjs"
           );
         }
-        modules[moduleName][objectName].OnMessageReceived(worker, data);
+        await modules[moduleName][objectName].OnMessageReceived(worker, data);
         return;
       }
 

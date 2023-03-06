@@ -12,7 +12,7 @@ async function ensureUtilsChild() {
 
   try {
     const { UtilsChild: importedUtilsChild } = await import(
-      "/dom/quota/test/modules/worker/UtilsChild.js"
+      "/tests/dom/quota/test/modules/worker/UtilsChild.js"
     );
 
     UtilsChild = importedUtilsChild;
@@ -23,7 +23,7 @@ async function ensureUtilsChild() {
       throw e;
     }
 
-    importScripts("/dom/quota/test/modules/worker/UtilsChild.js");
+    importScripts("/tests/dom/quota/test/modules/worker/UtilsChild.js");
 
     const { UtilsChild: importedUtilsChild } = globalThis.importUtilsChild();
 
@@ -36,20 +36,6 @@ const Utils = {
     await ensureUtilsChild();
 
     const result = await UtilsChild.getCachedOriginUsage();
-    return result;
-  },
-
-  async shrinkStorageSize(size) {
-    await ensureUtilsChild();
-
-    const result = await UtilsChild.shrinkStorageSize(size);
-    return result;
-  },
-
-  async restoreStorageSize() {
-    await ensureUtilsChild();
-
-    const result = await UtilsChild.restoreStorageSize();
     return result;
   },
 };

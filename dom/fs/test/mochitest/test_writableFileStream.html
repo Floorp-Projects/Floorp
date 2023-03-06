@@ -11,19 +11,18 @@
 
   <script type="text/javascript" src="head.js"></script>
   <script type="text/javascript">
-    // XXX This should be done in a task, but SimpleTest currently doesn't
-    //     support adding new tasks during a task execution.
-    async function init() {
+    add_task(async function init() {
       const testSet = "dom/fs/test/common/test_writableFileStream.js";
 
       const testCases = await require_module(testSet);
 
       Object.values(testCases).forEach(testItem => {
-        add_task(testItem);
+        // We can't shrink storage size in a mochitest.
+        if (testItem.name != "quotaTest") {
+          add_task(testItem);
+        }
       });
-    }
-
-    init();
+    });
   </script>
 </head>
 

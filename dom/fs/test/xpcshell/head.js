@@ -15,6 +15,10 @@ async function require_module(id) {
 
     Cu.importGlobalProperties(["storage"]);
 
+    const { Utils } = ChromeUtils.importESModule(
+      "resource://testing-common/dom/quota/test/modules/Utils.sys.mjs"
+    );
+
     const proto = {
       Assert,
       Cr,
@@ -22,6 +26,7 @@ async function require_module(id) {
         storage,
       },
       TextEncoder,
+      Utils,
     };
 
     require_module.moduleLoader = new ModuleLoader(base, depth, proto);

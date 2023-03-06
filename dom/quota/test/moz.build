@@ -41,6 +41,8 @@ TEST_HARNESS_FILES.testing.mochitest.tests.dom.quota.test.modules += [
     "modules/content/Assert.js",
     "modules/content/ModuleLoader.js",
     "modules/content/StorageUtils.js",
+    "modules/content/Utils.js",
+    "modules/content/UtilsParent.js",
     "modules/content/WorkerDriver.js",
 ]
 
@@ -48,6 +50,8 @@ TEST_HARNESS_FILES.testing.mochitest.tests.dom.quota.test.modules.worker += [
     "modules/content/worker/Assert.js",
     "modules/content/worker/head.js",
     "modules/content/worker/ModuleLoader.js",
+    "modules/content/worker/Utils.js",
+    "modules/content/worker/UtilsChild.js",
 ]
 
 TEST_HARNESS_FILES.xpcshell.dom.quota.test.common += [

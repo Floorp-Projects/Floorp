@@ -3,38 +3,51 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+function _sendMessage(messageBody) {
+  const messageHeader = {
+    moduleName: "UtilsParent",
+    objectName: "UtilsParent",
+  };
+
+  const message = { ...messageHeader, ...messageBody };
+
+  postMessage(message);
+}
+
+function _recvMessage() {
+  return new Promise(function(resolve) {
+    addEventListener("message", async function onMessage(event) {
+      removeEventListener("message", onMessage);
+      const data = event.data;
+      resolve(data);
+    });
+  });
+}
+
 const _UtilsChild = {
+  async getCachedOriginUsage() {
+    _sendMessage({
+      op: "getCachedOriginUsage",
+    });
+
+    return _recvMessage();
+  },
+
   async shrinkStorageSize(size) {
-    postMessage({
-      moduleName: "UtilsParent",
-      objectName: "UtilsParent",
+    _sendMessage({
       op: "shrinkStorageSize",
       size,
     });
 
-    return new Promise(function(resolve) {
-      addEventListener("message", async function onMessage(event) {
-        removeEventListener("message", onMessage);
-        const data = event.data;
-        resolve(data);
-      });
-    });
+    return _recvMessage();
   },
 
   async restoreStorageSize() {
-    postMessage({
-      moduleName: "UtilsParent",
-      objectName: "UtilsParent",
+    _sendMessage({
       op: "restoreStorageSize",
     });
 
-    return new Promise(function(resolve) {
-      addEventListener("message", async function onMessage(event) {
-        removeEventListener("message", onMessage);
-        const data = event.data;
-        resolve(data);
-      });
-    });
+    return _recvMessage();
   },
 };
 

@@ -13,6 +13,8 @@ async function require_module(id) {
 
     importScripts("/tests/dom/quota/test/modules/worker/Assert.js");
 
+    importScripts("/tests/dom/quota/test/modules/worker/Utils.js");
+
     require_module.moduleLoader = new globalThis.ModuleLoader(base, depth);
   }
 

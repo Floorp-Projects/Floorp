@@ -10,10 +10,25 @@ export async function runTestInWorker(script, base, listener) {
       base
     );
 
+    let modules = {};
+
     const worker = new Worker(globalHeadUrl.href);
 
-    worker.onmessage = function(event) {
+    worker.onmessage = async function(event) {
       const data = event.data;
+      const moduleName = data.moduleName;
+      const objectName = data.objectName;
+
+      if (moduleName && objectName) {
+        if (!modules[moduleName]) {
+          // eslint-disable-next-line no-unsanitized/method
+          modules[moduleName] = await import(
+            "/tests/dom/quota/test/modules/" + moduleName + ".js"
+          );
+        }
+        await modules[moduleName][objectName].OnMessageReceived(worker, data);
+        return;
+      }
 
       switch (data.op) {
         case "ok":
