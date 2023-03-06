@@ -160,21 +160,19 @@ the deletion. The cleanest solution is probably to disallow static prefs from
 being deleted.
 
 ### Sanitized Prefs
-We restrict certain prefs from entering certain subprocesses. In subprocesses,
-a preference may be marked as 'Sanitized' to indicate that it may or may not
-have a user value, but that value is not present in this process.  In the
-parent process no pref is marked as Sanitized.
+We restrict certain prefs from entering web content subprocesses. In these
+processes, a preference may be marked as 'Sanitized' to indicate that it may
+or may not have a user value, but that value is not present in this process.
+In the parent process no pref is marked as Sanitized.
 
-Pref Sanitization is overloaded for two purposes:
+Pref Sanitization is used for two purposes:
  1. To protect private user data that may be stored in preferences from a
     Spectre adversary.
- 2. To reduce IPC use for commonly modified preferences.
+ 2. To reduce IPC use and thread wake-ups for commonly modified preferences.
 
 A pref is sanitized from entering the web content process if it matches a
-denylist _or_ it is a dynamically-named string preference.
-
-A pref is sanitized from entering other subprocesses if it matches the
-denylist.
+denylist _or_ it is a dynamically-named string preference (that is not
+exempted via an allowlist).
 
 ### Loading and Saving
 Default pref values are initialized from various pref data files. Notable ones
