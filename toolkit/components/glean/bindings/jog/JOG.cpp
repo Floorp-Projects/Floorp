@@ -11,6 +11,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DataMutex.h"
 #include "mozilla/glean/bindings/jog/jog_ffi_generated.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/Tuple.h"
 #include "nsDirectoryServiceDefs.h"
@@ -20,6 +21,9 @@
 #include "nsTHashSet.h"
 
 namespace mozilla::glean {
+
+using mozilla::LogLevel;
+static mozilla::LazyLogModule sLog("jog");
 
 // Storage
 // Thread Safety: Only used on the main thread.
@@ -43,18 +47,22 @@ bool JOG::EnsureRuntimeMetricsRegistered(bool aForce) {
 #ifdef MOZILLA_OFFICIAL
   // In the event we're an official build we want there to be no chance we might
   // accidentally perform I/O on the main thread.
+  MOZ_LOG(sLog, LogLevel::Verbose, ("MOZILLA_OFFICIAL build. No JOG for you."));
   return false;
 #endif
 
   if (sFoundAndLoadedJogfile) {
     return sFoundAndLoadedJogfile.value();
   }
-  sFoundAndLoadedJogfile.emplace(false);
+  sFoundAndLoadedJogfile = Some(false);
+
+  MOZ_LOG(sLog, LogLevel::Debug, ("Determining whether there's JOG for you."));
 
   if (!mozilla::IsDevelopmentBuild()) {
     // Supporting Artifact Builds is a developer-only thing.
     // We're on the main thread here.
     // Let's not spend any more time than we need to.
+    MOZ_LOG(sLog, LogLevel::Debug, ("!IsDevelopmentBuild. No JOG for you."));
     return false;
   }
   // The metrics we need to process were placed in GreD in jogfile.json
@@ -80,7 +88,11 @@ bool JOG::EnsureRuntimeMetricsRegistered(bool aForce) {
   if (NS_WARN_IF(NS_FAILED(jogfile->GetPath(jogfileString)))) {
     return false;
   }
-  sFoundAndLoadedJogfile.emplace(jog::jog_load_jogfile(&jogfileString));
+  sFoundAndLoadedJogfile = Some(jog::jog_load_jogfile(&jogfileString));
+  MOZ_LOG(sLog, LogLevel::Debug,
+          ("%s", sFoundAndLoadedJogfile.value()
+                     ? "Found and loaded jogfile. Yes! JOG for you!"
+                     : "Couldn't find and load jogfile. No JOG for you."));
   return sFoundAndLoadedJogfile.value();
 }
 
