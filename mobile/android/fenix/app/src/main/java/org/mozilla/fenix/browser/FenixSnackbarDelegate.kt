@@ -6,10 +6,10 @@ package org.mozilla.fenix.browser
 
 import android.view.View
 import androidx.annotation.StringRes
-import mozilla.components.feature.contextmenu.ContextMenuCandidate
+import mozilla.components.support.utils.SnackbarDelegate
 import org.mozilla.fenix.components.FenixSnackbar
 
-class FenixSnackbarDelegate(private val view: View) : ContextMenuCandidate.SnackbarDelegate {
+class FenixSnackbarDelegate(private val view: View) : SnackbarDelegate {
 
     override fun show(
         snackBarParentView: View,

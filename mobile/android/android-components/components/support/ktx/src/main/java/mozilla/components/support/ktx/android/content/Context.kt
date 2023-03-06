@@ -7,6 +7,7 @@ package mozilla.components.support.ktx.android.content
 import android.app.ActivityManager
 import android.content.ActivityNotFoundException
 import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.ACTION_DIAL
@@ -25,6 +26,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Process
 import android.provider.ContactsContract
+import android.view.View
 import android.view.accessibility.AccessibilityManager
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
@@ -35,10 +37,12 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.core.content.FileProvider
 import androidx.core.content.getSystemService
+import com.google.android.material.snackbar.Snackbar
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.R
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
+import mozilla.components.support.utils.SnackbarDelegate
 import mozilla.components.support.utils.ext.getPackageInfoCompat
 import java.io.File
 
@@ -72,6 +76,7 @@ fun Context.isOSOnLowMemory(): Boolean {
 fun Context.isPermissionGranted(permission: Iterable<String>): Boolean {
     return permission.all { checkSelfPermission(this, it) == PERMISSION_GRANTED }
 }
+
 fun Context.isPermissionGranted(vararg permission: String): Boolean {
     return isPermissionGranted(permission.asIterable())
 }
@@ -123,8 +128,11 @@ fun Context.share(text: String, subject: String = getString(R.string.mozac_suppo
 /**
  * Shares content via [ACTION_SEND] intent.
  *
- * @param text the data to be shared [EXTRA_TEXT]
- * @param subject of the intent [EXTRA_TEXT]
+ * @param filePath Path of the copied file.
+ * @param contentType Content type (MIME type) to indicate the media type of the resource.
+ * @param subject of the intent [EXTRA_SUBJECT]
+ * @param message of the intent [EXTRA_TEXT]
+ *
  * @return true it is able to share false otherwise.
  */
 fun Context.shareMedia(
@@ -133,11 +141,7 @@ fun Context.shareMedia(
     subject: String? = null,
     message: String? = null,
 ): Boolean {
-    val contentUri = FileProvider.getUriForFile(
-        this,
-        "${applicationContext.packageName}.feature.downloads.fileprovider", // (packageName + FILE_PROVIDER_EXTENSION)
-        File(filePath),
-    )
+    val contentUri = getContentUriForFile(filePath)
 
     val intent = Intent().apply {
         action = ACTION_SEND
@@ -169,6 +173,44 @@ fun Context.shareMedia(
         false
     }
 }
+
+/**
+ * Creates a content URI for the given [filePath] to add to the device clipboard and maybe displays
+ * confirmation feedback.
+ *
+ * @param filePath Path of the copied file.
+ * @param snackbarParent The view in which to find a suitable parent for displaying the `Snackbar`.
+ * @param snackbarDelegate [SnackbarDelegate] to maybe display a copy confirmation 'Snackbar'.
+ */
+fun Context.copyImage(
+    filePath: String,
+    snackbarParent: View,
+    snackbarDelegate: SnackbarDelegate,
+) {
+    val contentUri = getContentUriForFile(filePath)
+
+    val clipData = ClipData.newUri(contentResolver, "Copied media URI", contentUri)
+    getClipboardManager().setPrimaryClip(clipData)
+
+    // Only show a Snackbar for Android 12 and lower.
+    // See developer.android.com/develop/ui/views/touch-and-input/copy-paste .
+    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2) {
+        snackbarDelegate.show(
+            snackBarParentView = snackbarParent,
+            text = R.string.mozac_support_ktx_snackbar_delegate_image_copied,
+            duration = Snackbar.LENGTH_LONG,
+        )
+    }
+}
+
+private fun Context.getContentUriForFile(filePath: String) = FileProvider.getUriForFile(
+    this,
+    "${applicationContext.packageName}.feature.downloads.fileprovider", // (packageName + FILE_PROVIDER_EXTENSION)
+    File(filePath),
+)
+
+private fun Context.getClipboardManager() =
+    getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
 /**
  * Emails content via [ACTION_SENDTO] intent.

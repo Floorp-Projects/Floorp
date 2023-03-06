@@ -1325,6 +1325,28 @@ sealed class ShareInternetResourceAction : BrowserAction() {
 }
 
 /**
+ * [BrowserAction] implementations related to updating the session state of internet resources to be copied.
+ */
+sealed class CopyInternetResourceAction : BrowserAction() {
+    /**
+     * Starts the copying process of an Internet resource.
+     */
+    data class AddCopyAction(
+        val tabId: String,
+        val internetResource: ShareInternetResourceState,
+    ) : CopyInternetResourceAction()
+
+    /**
+     * Previous copy request is considered completed.
+     * File was successfully copied / user may have aborted the process or the operation
+     * may have failed. In either case the previous copy request is considered completed.
+     */
+    data class ConsumeCopyAction(
+        val tabId: String,
+    ) : CopyInternetResourceAction()
+}
+
+/**
  * [BrowserAction] implementations related to updating [BrowserState.containers]
  */
 sealed class ContainerAction : BrowserAction() {

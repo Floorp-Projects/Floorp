@@ -33,6 +33,7 @@ import mozilla.components.concept.engine.window.WindowRequest
  * @property icon the icon of the page currently loaded by this session.
  * @property download Last unhandled download request.
  * @property share Last unhandled request to share an internet resource that first needs to be downloaded.
+ * @property copy Last unhandled request to copy an internet resource that first needs to be downloaded.
  * @property hitResult the target of the latest long click operation.
  * @property promptRequests current[PromptRequest]s.
  * @property findResults the list of results of the latest "find in page" operation.
@@ -73,6 +74,7 @@ data class ContentState(
     val icon: Bitmap? = null,
     val download: DownloadState? = null,
     val share: ShareInternetResourceState? = null,
+    val copy: ShareInternetResourceState? = null,
     val hitResult: HitResult? = null,
     val promptRequests: List<PromptRequest> = emptyList(),
     val findResults: List<FindResultState> = emptyList(),

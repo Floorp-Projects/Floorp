@@ -4,10 +4,8 @@
 
 package mozilla.components.browser.state.reducer
 
-import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.state.action.ShareInternetResourceAction
 import mozilla.components.browser.state.state.BrowserState
-import mozilla.components.browser.state.state.ContentState
 
 internal object ShareInternetResourceStateReducer {
     fun reduce(state: BrowserState, action: ShareInternetResourceAction): BrowserState {
@@ -19,16 +17,5 @@ internal object ShareInternetResourceStateReducer {
                 it.copy(share = null)
             }
         }
-    }
-}
-
-@VisibleForTesting
-internal inline fun updateTheContentState(
-    state: BrowserState,
-    tabId: String,
-    crossinline update: (ContentState) -> ContentState,
-): BrowserState {
-    return state.updateTabOrCustomTabState(tabId) { current ->
-        current.createCopy(content = update(current.content))
     }
 }

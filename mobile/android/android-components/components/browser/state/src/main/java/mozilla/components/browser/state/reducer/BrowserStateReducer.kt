@@ -8,6 +8,7 @@ import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.ContainerAction
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.CookieBannerAction
+import mozilla.components.browser.state.action.CopyInternetResourceAction
 import mozilla.components.browser.state.action.CrashAction
 import mozilla.components.browser.state.action.CustomTabListAction
 import mozilla.components.browser.state.action.DebugAction
@@ -66,6 +67,7 @@ internal object BrowserStateReducer {
             is LastAccessAction -> LastAccessReducer.reduce(state, action)
             is UndoAction -> UndoReducer.reduce(state, action)
             is ShareInternetResourceAction -> ShareInternetResourceStateReducer.reduce(state, action)
+            is CopyInternetResourceAction -> CopyInternetResourceStateReducer.reduce(state, action)
             is LocaleAction -> LocaleStateReducer.reduce(state, action)
             is HistoryMetadataAction -> HistoryMetadataReducer.reduce(state, action)
             is DebugAction -> DebugReducer.reduce(state, action)

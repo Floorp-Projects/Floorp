@@ -32,6 +32,7 @@ dependencies {
     implementation ComponentsDependencies.androidx_annotation
     implementation ComponentsDependencies.androidx_core
     implementation ComponentsDependencies.androidx_core_ktx
+    implementation ComponentsDependencies.google_material
 
     // We expose the app-compat as API so that consumers get access to the Lifecycle classes automatically
     api ComponentsDependencies.androidx_appcompat

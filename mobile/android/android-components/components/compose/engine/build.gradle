@@ -36,6 +36,8 @@ android {
 dependencies {
     implementation project(":browser-state")
     implementation project(":concept-engine")
+    implementation project(":support-ktx")
+
     implementation ComponentsDependencies.androidx_compose_ui
     implementation ComponentsDependencies.androidx_compose_ui_tooling
     implementation ComponentsDependencies.androidx_compose_foundation

@@ -2,12 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.downloads.share
+package mozilla.components.feature.downloads.temporary
 
 import android.content.Context
 import android.webkit.MimeTypeMap
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.Dispatchers
 import mozilla.components.browser.state.action.ShareInternetResourceAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
@@ -85,7 +84,7 @@ class ShareDownloadFeatureTest {
 
         assertTrue(cacheDir.listFiles()!!.isNotEmpty())
 
-        ShareDownloadFeature(context, mock(), mock(), null, Dispatchers.Main)
+        ShareDownloadFeature(context, mock(), null, mock(), dispatcher)
 
         assertTrue(cacheDir.listFiles()!!.isEmpty())
     }
@@ -99,7 +98,7 @@ class ShareDownloadFeatureTest {
                 ),
             ),
         )
-        val shareFeature = spy(ShareDownloadFeature(context, mock(), store, "123"))
+        val shareFeature = spy(ShareDownloadFeature(context, store, "123", mock(), dispatcher))
         doNothing().`when`(shareFeature).startSharing(any())
         val download = ShareInternetResourceState(url = "testDownload")
         val action = ShareInternetResourceAction.AddShareAction("123", download)
@@ -114,7 +113,7 @@ class ShareDownloadFeatureTest {
 
     @Test
     fun `cleanupCache should delete all files from the cache directory`() = runTestOnMain {
-        val shareFeature = spy(ShareDownloadFeature(context, mock(), mock(), null, Dispatchers.Main))
+        val shareFeature = spy(ShareDownloadFeature(context, mock(), null, mock(), dispatcher))
         val testDir = File(context.cacheDir, cacheDirName).also { dir ->
             dir.mkdirs()
             File(dir, "testFile").also { file ->
@@ -132,7 +131,7 @@ class ShareDownloadFeatureTest {
 
     @Test
     fun `startSharing() will download and then share the selected download`() = runTestOnMain {
-        val shareFeature = spy(ShareDownloadFeature(context, mock(), mock(), null))
+        val shareFeature = spy(ShareDownloadFeature(context, mock(), null, mock(), dispatcher))
         val shareState = ShareInternetResourceState(url = "testUrl", contentType = "contentType")
         val downloadedFile = File("filePath")
         doReturn(downloadedFile).`when`(shareFeature).download(any())
@@ -142,12 +141,11 @@ class ShareDownloadFeatureTest {
 
         verify(shareFeature).download(shareState)
         verify(shareFeature).share(downloadedFile.canonicalPath, "contentType", null, null)
-        Unit
     }
 
     @Test
     fun `download() will persist in cache the response#body() if available`() {
-        val shareFeature = ShareDownloadFeature(context, mock(), mock(), null)
+        val shareFeature = ShareDownloadFeature(context, mock(), null, mock(), dispatcher)
         val inputStream = "test".byteInputStream(StandardCharsets.UTF_8)
         val responseFromShareState = mock<Response>()
         doReturn(Response.Body(inputStream)).`when`(responseFromShareState).body
@@ -165,7 +163,7 @@ class ShareDownloadFeatureTest {
 
     @Test(expected = RuntimeException::class)
     fun `download() will throw an error if the request is not successful`() {
-        val shareFeature = ShareDownloadFeature(context, mock(), mock(), null)
+        val shareFeature = ShareDownloadFeature(context, mock(), null, mock(), dispatcher)
         val inputStream = "test".byteInputStream(StandardCharsets.UTF_8)
         val responseFromShareState = mock<Response>()
         doReturn(Response.Body(inputStream)).`when`(responseFromShareState).body
@@ -182,14 +180,14 @@ class ShareDownloadFeatureTest {
         val inputStream = "clientTest".byteInputStream(StandardCharsets.UTF_8)
         doAnswer { Response("randomUrl", 200, MutableHeaders(), Response.Body(inputStream)) }
             .`when`(client).fetch(any())
-        val shareFeature = ShareDownloadFeature(context, client, mock(), null, Dispatchers.Main)
+        val shareFeature = ShareDownloadFeature(context, mock(), null, client, dispatcher)
         val shareState = ShareInternetResourceState("randomUrl")
 
         val result = shareFeature.download(shareState)
 
         assertTrue(result.exists())
         assertTrue(result.name.endsWith(".$DEFAULT_IMAGE_EXTENSION"))
-        assertEquals(mozilla.components.feature.downloads.share.cacheDirName, result.parentFile!!.name)
+        assertEquals(cacheDirName, result.parentFile!!.name)
         assertEquals("clientTest", result.inputStream().bufferedReader().use { it.readText() })
     }
 
@@ -200,7 +198,7 @@ class ShareDownloadFeatureTest {
         val inputStream = "clientTest".byteInputStream(StandardCharsets.UTF_8)
         doAnswer { Response("randomUrl.png", 200, MutableHeaders(), Response.Body(inputStream)) }
             .`when`(client).fetch(requestCaptor.capture())
-        val shareFeature = ShareDownloadFeature(context, client, mock(), null)
+        val shareFeature = ShareDownloadFeature(context, mock(), null, client, dispatcher)
         val shareState = ShareInternetResourceState("randomUrl.png", private = false)
 
         shareFeature.download(shareState)
@@ -215,7 +213,7 @@ class ShareDownloadFeatureTest {
         val inputStream = "clientTest".byteInputStream(StandardCharsets.UTF_8)
         doAnswer { Response("randomUrl.png", 200, MutableHeaders(), Response.Body(inputStream)) }
             .`when`(client).fetch(requestCaptor.capture())
-        val shareFeature = ShareDownloadFeature(context, client, mock(), null)
+        val shareFeature = ShareDownloadFeature(context, mock(), null, client, dispatcher)
         val shareState = ShareInternetResourceState("randomUrl.png", private = true)
 
         shareFeature.download(shareState)
@@ -225,7 +223,7 @@ class ShareDownloadFeatureTest {
 
     @Test
     fun `getFilename(extension) will return a String with the extension suffix`() {
-        val shareFeature = ShareDownloadFeature(context, mock(), mock(), null)
+        val shareFeature = ShareDownloadFeature(context, mock(), null, mock(), dispatcher)
         val testExtension = "testExtension"
 
         val result = shareFeature.getFilename(testExtension)
@@ -236,7 +234,7 @@ class ShareDownloadFeatureTest {
 
     @Test
     fun `getTempFile(extension) will return a File from the cache dir and with name ending in extension`() {
-        val shareFeature = spy(ShareDownloadFeature(context, mock(), mock(), null))
+        val shareFeature = spy(ShareDownloadFeature(context, mock(), null, mock(), dispatcher))
         val testExtension = "testExtension"
 
         val result = shareFeature.getTempFile(testExtension)
@@ -247,7 +245,7 @@ class ShareDownloadFeatureTest {
 
     @Test
     fun `getCacheDirectory() will return a new directory in the app's cache`() {
-        val shareFeature = ShareDownloadFeature(context, mock(), mock(), null)
+        val shareFeature = ShareDownloadFeature(context, mock(), null, mock(), dispatcher)
 
         val result = shareFeature.getCacheDirectory()
 
@@ -257,7 +255,7 @@ class ShareDownloadFeatureTest {
 
     @Test
     fun `getMediaShareCacheDirectory creates the needed files if they don't exist`() {
-        val shareFeature = spy(ShareDownloadFeature(context, mock(), mock(), null))
+        val shareFeature = spy(ShareDownloadFeature(context, mock(), null, mock(), dispatcher))
         assertFalse(context.cacheDir.exists())
 
         val result = shareFeature.getMediaShareCacheDirectory()
@@ -268,7 +266,7 @@ class ShareDownloadFeatureTest {
 
     @Test
     fun `getFileExtension returns a default extension if one cannot be extracted`() {
-        val shareFeature = ShareDownloadFeature(context, mock(), mock(), null)
+        val shareFeature = ShareDownloadFeature(context, mock(), null, mock(), dispatcher)
 
         val result = shareFeature.getFileExtension(mock(), mock())
 
@@ -277,7 +275,7 @@ class ShareDownloadFeatureTest {
 
     @Test
     fun `getFileExtension returns an extension based on the media type inferred from the stream`() {
-        val shareFeature = ShareDownloadFeature(context, mock(), mock(), null)
+        val shareFeature = ShareDownloadFeature(context, mock(), null, mock(), dispatcher)
         val gifStream = (GIF_HEADER + "testImage").byteInputStream(StandardCharsets.UTF_8)
         // Add the gif mapping to a by default empty shadow of MimeTypeMap.
         shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("gif", "image/gif")
@@ -289,7 +287,7 @@ class ShareDownloadFeatureTest {
 
     @Test
     fun `getFileExtension returns an extension based on the response headers`() {
-        val shareFeature = ShareDownloadFeature(context, mock(), mock(), null)
+        val shareFeature = ShareDownloadFeature(context, mock(), null, mock(), dispatcher)
         val gifHeaders = MutableHeaders().apply {
             set(CONTENT_TYPE, "image/gif")
         }

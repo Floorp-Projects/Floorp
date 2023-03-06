@@ -8,7 +8,8 @@ import android.content.Context
 import android.view.View
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuUseCases
-import mozilla.components.feature.contextmenu.DefaultSnackbarDelegate
+import mozilla.components.support.utils.DefaultSnackbarDelegate
+import mozilla.components.support.utils.SnackbarDelegate
 
 class CustomTabContextMenuCandidate {
     companion object {
@@ -20,7 +21,7 @@ class CustomTabContextMenuCandidate {
             context: Context,
             contextMenuUseCases: ContextMenuUseCases,
             snackBarParentView: View,
-            snackbarDelegate: ContextMenuCandidate.SnackbarDelegate = DefaultSnackbarDelegate(),
+            snackbarDelegate: SnackbarDelegate = DefaultSnackbarDelegate(),
         ): List<ContextMenuCandidate> = listOf(
             ContextMenuCandidate.createCopyLinkCandidate(
                 context,

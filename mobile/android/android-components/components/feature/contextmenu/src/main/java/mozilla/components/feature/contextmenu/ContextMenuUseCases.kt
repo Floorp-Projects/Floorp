@@ -5,6 +5,7 @@
 package mozilla.components.feature.contextmenu
 
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.CopyInternetResourceAction
 import mozilla.components.browser.state.action.ShareInternetResourceAction
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.ShareInternetResourceState
@@ -50,20 +51,35 @@ class ContextMenuUseCases(
     }
 
     /**
-     * Usecase allowing adding a new [ShareInternetResourceState] to the [BrowserStore]
+     * Usecase allowing adding a new 'share' [ShareInternetResourceState] to the [BrowserStore]
      */
     class InjectShareInternetResourceUseCase(
         private val store: BrowserStore,
     ) {
         /**
-         * Adds a specific [ShareInternetResourceState] to the [BrowserStore].
+         * Adds a specific [ShareInternetResourceState] to be shared to the [BrowserStore].
          */
         operator fun invoke(tabId: String, internetResource: ShareInternetResourceState) {
             store.dispatch(ShareInternetResourceAction.AddShareAction(tabId, internetResource))
         }
     }
 
+    /**
+     * Use case allowing adding a new 'copy' [ShareInternetResourceState] to the [BrowserStore]
+     */
+    class InjectCopyInternetResourceUseCase(
+        private val store: BrowserStore,
+    ) {
+        /**
+         * Adds a specific [ShareInternetResourceState] to be copied to the [BrowserStore].
+         */
+        operator fun invoke(tabId: String, internetResource: ShareInternetResourceState) {
+            store.dispatch(CopyInternetResourceAction.AddCopyAction(tabId, internetResource))
+        }
+    }
+
     val consumeHitResult = ConsumeHitResultUseCase(store)
     val injectDownload = InjectDownloadUseCase(store)
     val injectShareFromInternet = InjectShareInternetResourceUseCase(store)
+    val injectCopyFromInternet = InjectCopyInternetResourceUseCase(store)
 }

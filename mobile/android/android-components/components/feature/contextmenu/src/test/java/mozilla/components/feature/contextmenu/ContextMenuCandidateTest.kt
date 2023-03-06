@@ -31,6 +31,7 @@ import mozilla.components.support.test.eq
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.utils.SnackbarDelegate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -61,7 +62,7 @@ class ContextMenuCandidateTest {
         val candidates = ContextMenuCandidate.defaultCandidates(testContext, mock(), mock(), mock())
         // Just a sanity check: When changing the list of default candidates be aware that this will affect all
         // consumers of this component using the default list.
-        assertEquals(13, candidates.size)
+        assertEquals(14, candidates.size)
     }
 
     @Test
@@ -1285,6 +1286,82 @@ class ContextMenuCandidateTest {
     }
 
     @Test
+    fun `Candidate 'Copy image'`() {
+        val store = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(TabSessionState("123", ContentState(url = "https://www.mozilla.org"))),
+            ),
+        )
+        val context = spy(testContext)
+
+        val useCases = spy(ContextMenuUseCases(store))
+        val copyUseCase: ContextMenuUseCases.InjectCopyInternetResourceUseCase = mock()
+        doReturn(copyUseCase).`when`(useCases).injectCopyFromInternet
+        val copyImage = ContextMenuCandidate.createCopyImageCandidate(context, useCases)
+        val shareStateCaptor = argumentCaptor<ShareInternetResourceState>()
+
+        // showFor
+
+        assertTrue(
+            copyImage.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.IMAGE("https://www.mozilla.org"),
+            ),
+        )
+
+        assertTrue(
+            copyImage.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org"),
+            ),
+        )
+
+        assertFalse(
+            copyImage.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.AUDIO("https://www.mozilla.org"),
+            ),
+        )
+
+        // action
+
+        copyImage.action.invoke(
+            store.state.tabs.first(),
+            HitResult.IMAGE_SRC("https://firefox.com", "https://getpocket.com"),
+        )
+
+        verify(copyUseCase).invoke(eq("123"), shareStateCaptor.capture())
+        assertEquals("https://firefox.com", shareStateCaptor.value.url)
+        assertEquals(store.state.tabs.first().content.private, shareStateCaptor.value.private)
+    }
+
+    @Test
+    fun `Candidate 'Copy image' allows for an additional validation for it to be shown`() {
+        val additionalValidation = { _: SessionState, _: HitResult -> false }
+        val copyImage = ContextMenuCandidate.createCopyImageCandidate(
+            testContext,
+            mock(),
+            additionalValidation,
+        )
+
+        // By default in the below cases the candidate will be shown. 'additionalValidation' changes that.
+
+        assertFalse(
+            copyImage.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.IMAGE("https://www.mozilla.org"),
+            ),
+        )
+
+        assertFalse(
+            copyImage.showFor(
+                createTab("https://www.mozilla.org"),
+                HitResult.IMAGE_SRC("https://www.mozilla.org", "https://www.mozilla.org"),
+            ),
+        )
+    }
+
+    @Test
     fun `Candidate 'Copy Link'`() {
         val parentView = CoordinatorLayout(testContext)
 
@@ -1975,7 +2052,7 @@ class ContextMenuCandidateTest {
     }
 }
 
-private class TestSnackbarDelegate : ContextMenuCandidate.SnackbarDelegate {
+private class TestSnackbarDelegate : SnackbarDelegate {
     var hasShownSnackbar = false
     var lastActionListener: ((v: View) -> Unit)? = null
 

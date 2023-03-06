@@ -24,6 +24,8 @@ import mozilla.components.support.ktx.android.content.createChooserExcludingCurr
 import mozilla.components.support.ktx.android.content.share
 import mozilla.components.support.ktx.kotlin.stripMailToProtocol
 import mozilla.components.support.ktx.kotlin.takeOrReplace
+import mozilla.components.support.utils.DefaultSnackbarDelegate
+import mozilla.components.support.utils.SnackbarDelegate
 
 /**
  * A candidate for an item to be displayed in the context menu.
@@ -78,6 +80,10 @@ data class ContextMenuCandidate(
                 tabsUseCases,
                 snackBarParentView,
                 snackbarDelegate,
+            ),
+            createCopyImageCandidate(
+                context,
+                contextMenuUseCases,
             ),
             createSaveImageCandidate(context, contextMenuUseCases),
             createSaveVideoAudioCandidate(context, contextMenuUseCases),
@@ -274,7 +280,7 @@ data class ContextMenuCandidate(
             },
             action = { _, hitResult ->
                 val email = hitResult.getLink().stripMailToProtocol()
-                clipPlaintText(
+                clipPlainText(
                     context,
                     email,
                     email,
@@ -354,6 +360,37 @@ data class ContextMenuCandidate(
                 contextMenuUseCases.injectDownload(
                     tab.id,
                     DownloadState(hitResult.src, skipConfirmation = true, private = tab.content.private),
+                )
+            },
+        )
+
+        /**
+         * Context Menu item: "Copy image".
+         *
+         * @param context [Context] used for various system interactions.
+         * @param contextMenuUseCases [ContextMenuUseCases] used to integrate other features.
+         * @param additionalValidation Callback for the final validation in deciding whether this menu option
+         * will be shown. Will only be called if all the intrinsic validations passed.
+         */
+        fun createCopyImageCandidate(
+            context: Context,
+            contextMenuUseCases: ContextMenuUseCases,
+            additionalValidation: (SessionState, HitResult) -> Boolean = { _, _ -> true },
+        ) = ContextMenuCandidate(
+            id = "mozac.feature.contextmenu.copy_image",
+            label = context.getString(R.string.mozac_feature_contextmenu_copy_image),
+            showFor = { tab, hitResult ->
+                tab.isUrlSchemeAllowed(hitResult.getLink()) &&
+                    hitResult.isImage() &&
+                    additionalValidation(tab, hitResult)
+            },
+            action = { tab, hitResult ->
+                contextMenuUseCases.injectCopyFromInternet(
+                    tab.id,
+                    ShareInternetResourceState(
+                        url = hitResult.src,
+                        private = tab.content.private,
+                    ),
                 )
             },
         )
@@ -501,7 +538,7 @@ data class ContextMenuCandidate(
                     additionalValidation(tab, hitResult)
             },
             action = { _, hitResult ->
-                clipPlaintText(
+                clipPlainText(
                     context,
                     hitResult.getLink(),
                     hitResult.getLink(),
@@ -535,7 +572,7 @@ data class ContextMenuCandidate(
                     additionalValidation(tab, hitResult)
             },
             action = { _, hitResult ->
-                clipPlaintText(
+                clipPlainText(
                     context,
                     hitResult.getLink(),
                     hitResult.src,
@@ -547,7 +584,7 @@ data class ContextMenuCandidate(
         )
 
         @Suppress("LongParameterList")
-        private fun clipPlaintText(
+        private fun clipPlainText(
             context: Context,
             label: String,
             plainText: String,
@@ -566,28 +603,6 @@ data class ContextMenuCandidate(
                 duration = Snackbar.LENGTH_SHORT,
             )
         }
-    }
-
-    /**
-     * Delegate to display a snackbar.
-     */
-    interface SnackbarDelegate {
-        /**
-         * Displays a snackbar.
-         *
-         * @param snackBarParentView The view to find a parent from for displaying the Snackbar.
-         * @param text The text to show. Can be formatted text.
-         * @param duration How long to display the message
-         * @param action String resource to display for the action.
-         * @param listener callback to be invoked when the action is clicked
-         */
-        fun show(
-            snackBarParentView: View,
-            text: Int,
-            duration: Int,
-            action: Int = 0,
-            listener: ((v: View) -> Unit)? = null,
-        )
     }
 }
 
@@ -654,30 +669,5 @@ internal fun SessionState.isUrlSchemeAllowed(url: String): Boolean {
             val urlScheme = Uri.parse(url).normalizeScheme().scheme
             !engineSession.getBlockedSchemes().contains(urlScheme)
         }
-    }
-}
-
-/**
- * Default implementation for [ContextMenuCandidate.SnackbarDelegate]. Will display a standard default Snackbar.
- */
-class DefaultSnackbarDelegate : ContextMenuCandidate.SnackbarDelegate {
-    override fun show(
-        snackBarParentView: View,
-        text: Int,
-        duration: Int,
-        action: Int,
-        listener: ((v: View) -> Unit)?,
-    ) {
-        val snackbar = Snackbar.make(
-            snackBarParentView,
-            text,
-            duration,
-        )
-
-        if (action != 0 && listener != null) {
-            snackbar.setAction(action, listener)
-        }
-
-        snackbar.show()
     }
 }

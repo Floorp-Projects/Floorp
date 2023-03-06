@@ -9,18 +9,19 @@ import android.view.View
 import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuUseCases
-import mozilla.components.feature.contextmenu.DefaultSnackbarDelegate
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.support.utils.DefaultSnackbarDelegate
+import mozilla.components.support.utils.SnackbarDelegate
 
 object ContextMenuCandidates {
-    @Suppress("LongParameterList")
+    @Suppress("LongParameterList", "UndocumentedPublicFunction")
     fun get(
         context: Context,
         tabsUseCases: TabsUseCases,
         contextMenuUseCases: ContextMenuUseCases,
         appLinksUseCases: AppLinksUseCases,
         snackBarParentView: View,
-        snackbarDelegate: ContextMenuCandidate.SnackbarDelegate = DefaultSnackbarDelegate(),
+        snackbarDelegate: SnackbarDelegate = DefaultSnackbarDelegate(),
         isCustomTab: Boolean,
     ): List<ContextMenuCandidate> {
         return if (isCustomTab) {

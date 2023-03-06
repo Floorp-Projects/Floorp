@@ -190,6 +190,7 @@ projects:
     upstream_dependencies:
     - browser-state
     - concept-engine
+    - support-ktx
     - support-test
   compose-tabstray:
     description: A customizable tabs tray using Jetpack Compose.
