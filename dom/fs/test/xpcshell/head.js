@@ -22,6 +22,7 @@ async function require_module(id) {
     const proto = {
       Assert,
       Cr,
+      DOMException,
       navigator: {
         storage,
       },
