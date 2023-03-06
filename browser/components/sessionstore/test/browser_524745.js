@@ -24,7 +24,7 @@ function test() {
 
       // Now minimize window_B. The selected window shouldn't have the secret data
       window_B.minimize();
-      waitForFocus(function() {
+      waitForFocus(async function() {
         state = JSON.parse(ss.getBrowserState());
         selectedWindow = state.windows[state.selectedWindow - 1];
         ok(
@@ -33,7 +33,12 @@ function test() {
         );
 
         // Now minimize the last open window (assumes no other tests left windows open)
+        let promiseSizeModeChange = BrowserTestUtils.waitForEvent(
+          window,
+          "sizemodechange"
+        );
         window.minimize();
+        await promiseSizeModeChange;
         state = JSON.parse(ss.getBrowserState());
         is(
           state.selectedWindow,
