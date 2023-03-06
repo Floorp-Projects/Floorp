@@ -270,6 +270,7 @@ class SessionControlViewTest {
         every { settings.showRecentBookmarksFeature } returns true
         every { settings.historyMetadataUIFeature } returns true
         every { settings.showPocketRecommendationsFeature } returns true
+        every { settings.enableComposeTopSites } returns false
 
         val results = normalModeAdapterItems(
             settings,

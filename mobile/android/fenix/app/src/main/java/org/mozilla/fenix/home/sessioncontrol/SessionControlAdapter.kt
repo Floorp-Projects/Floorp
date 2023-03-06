@@ -36,10 +36,16 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.NoCollectionsMessageVie
 import org.mozilla.fenix.home.sessioncontrol.viewholders.PrivateBrowsingDescriptionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.MessageCardViewHolder
 import org.mozilla.fenix.home.topsites.TopSitePagerViewHolder
+import org.mozilla.fenix.home.topsites.TopSitesViewHolder
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
 sealed class AdapterItem(@LayoutRes val viewType: Int) {
     object TopPlaceholderItem : AdapterItem(TopPlaceholderViewHolder.LAYOUT_ID)
+
+    /**
+     * Top sites.
+     */
+    object TopSites : AdapterItem(TopSitesViewHolder.LAYOUT_ID)
 
     /**
      * Contains a set of [Pair]s where [Pair.first] is the index of the changed [TopSite] and
@@ -274,6 +280,11 @@ class SessionControlAdapter(
                 viewLifecycleOwner = viewLifecycleOwner,
                 interactor = interactor,
             )
+            TopSitesViewHolder.LAYOUT_ID -> return TopSitesViewHolder(
+                composeView = ComposeView(parent.context),
+                viewLifecycleOwner = viewLifecycleOwner,
+                interactor = interactor,
+            )
         }
 
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
@@ -319,6 +330,11 @@ class SessionControlAdapter(
                 // entire Composable destroyed and recreated when this View is scrolled off or on screen again.
                 // This View already listens and maps store updates. Avoid creating and binding new Views.
                 // The composition will live until the ViewTreeLifecycleOwner to which it's attached to is destroyed.
+            }
+            is TopSitesViewHolder -> {
+                // Dispose the underlying composition immediately.
+                // This ViewHolder can be removed / re-added and we need it to show a fresh new composition.
+                holder.composeView.disposeComposition()
             }
             is CollectionViewHolder -> {
                 // Dispose the underlying composition immediately.
@@ -381,6 +397,7 @@ class SessionControlAdapter(
                 val (collection, tab, isLastTab) = item as AdapterItem.TabInCollectionItem
                 holder.bindSession(collection, tab, isLastTab)
             }
+            is TopSitesViewHolder,
             is RecentlyVisitedViewHolder,
             is RecentBookmarksViewHolder,
             is RecentTabViewHolder,

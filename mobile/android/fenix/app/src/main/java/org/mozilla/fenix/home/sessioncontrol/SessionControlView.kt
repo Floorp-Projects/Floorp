@@ -55,7 +55,11 @@ internal fun normalModeAdapterItems(
     }
 
     if (settings.showTopSitesFeature && topSites.isNotEmpty()) {
-        items.add(AdapterItem.TopSitePager(topSites))
+        if (settings.enableComposeTopSites) {
+            items.add(AdapterItem.TopSites)
+        } else {
+            items.add(AdapterItem.TopSitePager(topSites))
+        }
     }
 
     if (showRecentTab) {
