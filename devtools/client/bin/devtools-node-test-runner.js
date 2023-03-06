@@ -127,13 +127,11 @@ function runTests() {
   console.log("[devtools-node-test-runner] Extract suite argument");
   const suiteArg = process.argv.find(arg => arg.includes("suite="));
   const suite = suiteArg.split("=")[1];
-  if (!SUITES[suite]) {
+  if (suite !== "all" && !SUITES[suite]) {
     throw new Error(
       "Invalid suite argument to devtools-node-test-runner: " + suite
     );
   }
-
-  console.log("[devtools-node-test-runner] Found test suite: " + suite);
 
   console.log("[devtools-node-test-runner] Check `yarn` is available");
   try {
@@ -147,46 +145,65 @@ function runTests() {
     return false;
   }
 
-  if (SUITES[suite].dependencies) {
-    console.log("[devtools-node-test-runner] Running `yarn` for dependencies");
-    for (const dep of SUITES[suite].dependencies) {
-      const depPath = path.join(__dirname, dep);
-      chdir(depPath);
+  const failedSuites = [];
+  const suites = suite == "all" ? SUITES : { [suite]: SUITES[suite] };
+  for (const [suiteName, suiteData] of Object.entries(suites)) {
+    console.log("[devtools-node-test-runner] Running suite: " + suiteName);
 
-      console.log("[devtools-node-test-runner] Run `yarn` in " + depPath);
-      execOut(YARN_PROCESS);
+    if (suiteData.dependencies) {
+      console.log(
+        "[devtools-node-test-runner] Running `yarn` for dependencies"
+      );
+      for (const dep of suiteData.dependencies) {
+        const depPath = path.join(__dirname, dep);
+        chdir(depPath);
+
+        console.log("[devtools-node-test-runner] Run `yarn` in " + depPath);
+        execOut(YARN_PROCESS);
+      }
+    }
+
+    const testPath = path.join(__dirname, suiteData.path);
+    chdir(testPath);
+
+    console.log("[devtools-node-test-runner] Run `yarn` in test folder");
+    execOut(YARN_PROCESS);
+
+    console.log(`TEST START | ${suiteData.type} | ${suiteName}`);
+
+    console.log("[devtools-node-test-runner] Run `yarn test` in test folder");
+    const { out, err } = execOut(YARN_PROCESS, ["test-ci"]);
+
+    if (err) {
+      console.log("[devtools-node-test-runner] Error log");
+      console.log(err);
+    }
+
+    console.log("[devtools-node-test-runner] Parse errors from the test logs");
+    const errors = getErrors(suiteName, out, err) || [];
+    if (errors.length) {
+      failedSuites.push(suiteName);
+    }
+    for (const error of errors) {
+      console.log(
+        `TEST-UNEXPECTED-FAIL | ${suiteData.type} | ${suiteName} | ${error}`
+      );
     }
   }
 
-  const testPath = path.join(__dirname, SUITES[suite].path);
-  chdir(testPath);
-
-  console.log("[devtools-node-test-runner] Run `yarn` in test folder");
-  execOut(YARN_PROCESS);
-
-  console.log(`TEST START | ${SUITES[suite].type} | ${suite}`);
-
-  console.log("[devtools-node-test-runner] Run `yarn test` in test folder");
-  const { out, err } = execOut(YARN_PROCESS, ["test-ci"]);
-
-  if (err) {
-    console.log("[devtools-node-test-runner] Error log");
-    console.log(err);
-  }
-
-  console.log("[devtools-node-test-runner] Parse errors from the test logs");
-  const errors = getErrors(suite, out, err) || [];
-  for (const error of errors) {
-    console.log(
-      `TEST-UNEXPECTED-FAIL | ${SUITES[suite].type} | ${suite} | ${error}`
-    );
-  }
-
-  const success = errors.length === 0;
+  const success = failedSuites.length === 0;
   if (success) {
-    console.log(`[devtools-node-test-runner] Test suite [${suite}] succeeded`);
+    console.log(
+      `[devtools-node-test-runner] Test suites [${Object.keys(suites).join(
+        ", "
+      )}] succeeded`
+    );
   } else {
-    console.log(`[devtools-node-test-runner] Test suite [${suite}] failed`);
+    console.log(
+      `[devtools-node-test-runner] Test suites [${failedSuites.join(
+        ", "
+      )}] failed`
+    );
     console.log(
       "[devtools-node-test-runner] You can find documentation about the " +
         "devtools node tests at https://firefox-source-docs.mozilla.org/devtools/tests/node-tests.html"

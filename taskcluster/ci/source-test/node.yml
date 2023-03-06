@@ -89,16 +89,7 @@ devtools-tests:
             ln -s ../tools/lint/eslint/eslint-plugin-mozilla node_modules &&
             ln -s ../tools/lint/eslint/eslint-plugin-spidermonkey-js node_modules &&
             cd devtools/client/bin/ &&
-            node devtools-node-test-runner.js --suite=aboutdebugging &&
-            node devtools-node-test-runner.js --suite=accessibility &&
-            node devtools-node-test-runner.js --suite=application &&
-            node devtools-node-test-runner.js --suite=debugger &&
-            node devtools-node-test-runner.js --suite=compatibility &&
-            node devtools-node-test-runner.js --suite=framework &&
-            node devtools-node-test-runner.js --suite=netmonitor &&
-            node devtools-node-test-runner.js --suite=performance &&
-            node devtools-node-test-runner.js --suite=shared_components &&
-            node devtools-node-test-runner.js --suite=webconsole
+            node devtools-node-test-runner.js --suite=all
     when:
         files-changed:
             - 'devtools/client/**'
