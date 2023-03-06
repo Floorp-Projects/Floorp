@@ -8973,3 +8973,29 @@ review_prompt:
     data_sensitivity:
       - interaction
     expires: 121
+
+private_browsing_shortcut_cfr:
+  add_shortcut:
+    type: event
+    description: |
+      Pivate browsing CFR "Add shortcut" button pressed.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/4658
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1819909
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/1139
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 122
+  cancel:
+    type: event
+    description: |
+      Pivate browsing CFR "No thanks" button pressed.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/4658
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1819909
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/1139
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 122

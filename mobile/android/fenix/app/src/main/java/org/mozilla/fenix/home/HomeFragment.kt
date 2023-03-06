@@ -81,6 +81,7 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.HomeScreen
+import org.mozilla.fenix.GleanMetrics.PrivateBrowsingShortcutCfr
 import org.mozilla.fenix.GleanMetrics.UnifiedSearch
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -911,12 +912,14 @@ class HomeFragment : Fragment() {
                 this.increaseTapArea(CFR_TAP_INCREASE_DPS)
 
                 setOnClickListener {
+                    PrivateBrowsingShortcutCfr.addShortcut.record(NoExtras())
                     PrivateShortcutCreateManager.createPrivateShortcut(context)
                     privateBrowsingRecommend.dismiss()
                 }
             }
             layout.findViewById<Button>(R.id.cfr_neg_button).apply {
                 setOnClickListener {
+                    PrivateBrowsingShortcutCfr.cancel.record()
                     privateBrowsingRecommend.dismiss()
                 }
             }
