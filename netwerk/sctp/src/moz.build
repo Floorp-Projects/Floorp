@@ -8,7 +8,7 @@ EXPORTS.mozilla.net += [
     'usrsctp.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'netinet/sctp_asconf.c',
     'netinet/sctp_auth.c',
     'netinet/sctp_bsd_addr.c',
