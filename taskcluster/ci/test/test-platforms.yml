@@ -135,40 +135,6 @@ windows10-32-qr/opt:
         - browsertime
         - windows-talos
 
-windows10-32-2004-shippable-qr/opt:
-    build-platform: win32-shippable/opt
-    test-sets:
-        - awsy
-        - desktop-screenshot-capture
-        - web-platform-tests
-        - windows32-2004-tests
-
-
-windows10-32-2004-qr/opt:
-    build-platform: win32/opt
-    test-sets:
-        - awsy
-        - desktop-screenshot-capture
-        - web-platform-tests
-        - windows32-2004-tests
-
-windows10-32-2004-qr/debug:
-    build-platform: win32/debug
-    build-signing-label: build-signing-win32/debug
-    test-sets:
-        - web-platform-tests
-        - windows-7-tests
-        - windows32-2004-tests
-
-windows10-32-2004-mingwclang-qr/debug:
-    build-platform: win32-mingwclang/debug
-    test-sets:
-        - mingwclang-win32-tests-debug
-
-windows10-32-2004-mingwclang-qr/opt:
-    build-platform: win32-mingwclang/opt
-    test-sets:
-        - mingwclang-tests-opt
 
 # win11-32
 windows11-32-2009-shippable-qr/opt:
@@ -177,7 +143,7 @@ windows11-32-2009-shippable-qr/opt:
         - awsy
         - desktop-screenshot-capture
         - web-platform-tests
-        - windows32-2004-tests
+        - windows32-2009-tests
 
 
 windows11-32-2009-qr/opt:
@@ -186,7 +152,7 @@ windows11-32-2009-qr/opt:
         - awsy
         - desktop-screenshot-capture
         - web-platform-tests
-        - windows32-2004-tests
+        - windows32-2009-tests
 
 windows11-32-2009-qr/debug:
     build-platform: win32/debug
@@ -194,7 +160,7 @@ windows11-32-2009-qr/debug:
     test-sets:
         - web-platform-tests
         - windows-7-tests
-        - windows32-2004-tests
+        - windows32-2009-tests
 
 windows11-32-2009-mingwclang-qr/debug:
     build-platform: win32-mingwclang/debug
@@ -225,20 +191,10 @@ windows10-64-shippable-qr/opt:
         - browsertime
 
 # win10-64 2004
-windows10-64-2004-ccov-qr/opt:
-    build-platform: win64-ccov/opt
-    build-signing-label: build-signing-win64-ccov/opt
-    test-sets:
-        - desktop-screenshot-capture
-        - ccov-code-coverage-tests
-        - windows10-64-2004-ccov-tests
-        - windows10-2004-tests
-
 windows10-64-2004-qr/debug:
     build-platform: win64/debug
     build-signing-label: build-signing-win64/debug
     test-sets:
-        - web-platform-tests
         - windows10-2004-tests
 
 windows10-64-2004-qr/opt:
@@ -248,12 +204,7 @@ windows10-64-2004-qr/opt:
             msix: repackage-signing-msix-win64/opt
             default: build-signing-win64/opt
     test-sets:
-        - awsy
-        - desktop-screenshot-capture
-        - web-platform-tests
-        - web-platform-tests-backlog
         - windows10-2004-tests
-        - talos-xperf
 
 windows10-64-2004-shippable-qr/opt:
     build-platform: win64-shippable/opt
@@ -262,35 +213,7 @@ windows10-64-2004-shippable-qr/opt:
             msix: repackage-signing-shippable-l10n-msix-win64-shippable/opt
             default: build-signing-win64-shippable/opt
     test-sets:
-        - awsy
-        - desktop-screenshot-capture
-        - web-platform-tests
-        - web-platform-tests-backlog
         - windows10-2004-tests
-        - talos-xperf
-
-windows10-64-2004-devedition-qr/opt:
-    build-platform: win64-devedition/opt
-    build-signing-label: build-signing-win64-devedition/opt
-    test-sets:
-        - desktop-screenshot-capture
-        - web-platform-tests
-        - windows10-2004-tests
-
-windows10-64-2004-asan-qr/opt:
-    build-platform: win64-asan/opt
-    test-sets:
-        - windows10-2004-tests
-
-windows10-64-2004-mingwclang-qr/debug:
-    build-platform: win64-mingwclang/debug
-    test-sets:
-        - mingwclang-tests-debug
-
-windows10-64-2004-mingwclang-qr/opt:
-    build-platform: win64-mingwclang/opt
-    test-sets:
-        - mingwclang-tests-opt
 
 # win11-64 2009
 windows11-64-2009-ccov-qr/opt:
@@ -299,8 +222,8 @@ windows11-64-2009-ccov-qr/opt:
     test-sets:
         - desktop-screenshot-capture
         - ccov-code-coverage-tests
-        - windows10-64-2004-ccov-tests
-        - windows10-2004-tests
+        - windows11-64-2009-ccov-tests
+        - windows11-2009-tests
 
 windows11-64-2009-qr/debug:
     build-platform: win64/debug

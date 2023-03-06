@@ -6264,48 +6264,6 @@ For the sample commands found below, note that the capitalization used is import
 
    * **Test Task**:
 
-   .. list-table:: **test-windows10-64-2004-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **talos-xperf**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **talos-xperf-swr**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-windows10-64-2004-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **talos-xperf**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-      * - **talos-xperf-swr**
-        - ✅
-        - ✅
-        - ❌
-        - ✅
-
-
    .. list-table:: **test-windows11-64-2009-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1

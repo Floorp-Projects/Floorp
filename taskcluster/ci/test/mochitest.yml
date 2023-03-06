@@ -73,13 +73,13 @@ mochitest-plain:
                     .*asan.*: []
                     .*ccov.*: []
                     linux1804-64(-shippable)?-qr/opt: ['trunk']
-                    windows1.*64.*(-shippable)?-qr/opt: ['trunk']
+                    windows11-64.*(-shippable)?-qr/opt: ['trunk']
                     default: []
             xorigin:
                 by-test-platform:
                     .*asan.*: []
                     windows.*ccov.*: []
-                    (linux.*64|macosx.*64|windows1.*)(-shippable)?-qr/(opt|debug): ['trunk']
+                    (linux.*64|macosx.*64|windows11.*)(-shippable)?-qr/(opt|debug): ['trunk']
                     windows.*64-ccov-qr/opt: ['mozilla-central']
                     linux.*64-ccov-qr/opt: ['mozilla-central']
                     default: []
@@ -87,7 +87,7 @@ mochitest-plain:
                 by-test-platform:
                     .*asan.*: []
                     .*ccov.*: []
-                    (linux.*64|macosx.*64|windows1.*-64.*)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
+                    (linux.*64|macosx.*64|windows11-64.*)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
                     default: []
             webrender-sw+no-fission:
                 by-test-platform:
@@ -355,7 +355,7 @@ mochitest-chrome:
                 by-test-platform:
                     .*asan.*: []
                     .*ccov.*: []
-                    (linux.*64|macosx.*64|windows1.*-64.*)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
+                    (linux.*64|macosx.*64|windows11-64.*)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
                     default: []
             webrender-sw+1proc:
                 by-test-platform:
