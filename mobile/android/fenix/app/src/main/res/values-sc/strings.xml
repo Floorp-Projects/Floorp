@@ -1662,6 +1662,9 @@
     <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
     <string name="other_default_search_engine_suggestion_header">Chirca cun %s</string>
 
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Aberi in Firefox in manera automàtica is ligòngios de sitos web, de posta eletrònica e de messàgios.</string>
+
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Boga</string>
 

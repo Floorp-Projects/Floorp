@@ -40,6 +40,8 @@
     <string name="mozac_feature_addons_permissions_clipboard_write_description">Meti datumojn en la tondujon</string>
     <!-- Description for declarativeNetRequest permission. -->
     <string name="mozac_feature_addons_permissions_declarative_net_request_description">Bloki enhavon en iu ajn paĝo</string>
+    <!-- Description for declarativeNetRequestFeedback permission. -->
+    <string name="mozac_feature_addons_permissions_declarative_net_request_feedback_description">Legi vian retuman historion</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Elŝuti dosierojn, legi kaj modifi la elŝutan historion de la retumilo</string>
     <!-- Description for downloads_open permission. -->

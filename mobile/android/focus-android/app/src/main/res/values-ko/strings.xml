@@ -1004,11 +1004,37 @@
 
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">요청하신 사이트는 HTTPS를 지원하지 않습니다</string>
-    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">기본적으로, %1$s는 보안 강화를 위해 HTTPS를 사용한 연결을 시도합니다. 이 설정을 변경하시거나 자세히 알아보려면 설정 &gt; 개인 정보 및 보안 &gt; 보안으로 이동하십시오.</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">요청하신 사이트는 HTTPS를 지원하지 않습니다</string>
 
-    <!-- Sessions List -->
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">이 사이트는 HTTPS를 지원하지 않습니다.</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">기본적으로, %1$s는 보안 강화를 위해 HTTPS를 사용한 연결을 시도합니다. 이 설정을 변경하시거나 자세히 알아보려면 설정 &gt; 개인 정보 및 보안 &gt; 보안으로 이동하십시오.</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s는 보안 강화를 위해 가능할 때마다 HTTPS 연결을 사용하려고 합니다.
+     <a href="%2$s">자세히 알아보기</a> <br/><br/>
+     설정 > 개인 정보 보호 &amp; 보안 > 보안에서 이 설정을 바꿀 수 있습니다.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">안전하지 않은 연결</string>
+
+    <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    이는 서버 구성에 문제가 있거나 서버를 사칭하려는 누군가일 수 있습니다. <br/><br/>
+    과거에 이 서버에 성공적으로 연결했다면 일시적인 오류일 수 있습니다.
+    ]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>누군가가 사이트를 사칭하려고 할 수 있으며 계속 진행하는 것은 위험할 수 있습니다.</label>
+        <br><br>
+        <label>%1$s는 인증서 발급자를 알 수 없거나 인증서가 자체 서명되었거나 서버가 올바른 중간 인증서를 전송하지 않기 때문에 <b>%2$s</b>를 신뢰하지 않습니다.</label>
+    ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">탭 닫기</string>
 
