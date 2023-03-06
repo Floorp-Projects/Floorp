@@ -1840,7 +1840,7 @@ class PromptFeatureTest {
             fragmentManager = fragmentManager,
             exitFullscreenUsecase = exitFullScreenUseCase,
         ) { }
-        val promptRequest = SingleChoice(arrayOf(), {}, {})
+        val promptRequest: Alert = mock()
 
         store.dispatch(ContentAction.UpdatePromptRequestAction("custom-tab", promptRequest)).joinBlocking()
         feature.start()
@@ -1857,7 +1857,7 @@ class PromptFeatureTest {
             fragmentManager = fragmentManager,
             exitFullscreenUsecase = exitFullScreenUseCase,
         ) { }
-        val promptRequest = SingleChoice(arrayOf(), {}, {})
+        val promptRequest: Alert = mock()
 
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, promptRequest)).joinBlocking()
         feature.start()
@@ -1884,7 +1884,7 @@ class PromptFeatureTest {
             fragmentManager = fragmentManager,
             exitFullscreenUsecase = exitFullScreenUseCase,
         ) { }
-        val promptRequest = SingleChoice(arrayOf(), {}, {})
+        val promptRequest: Alert = mock()
 
         store.dispatch(ContentAction.UpdatePromptRequestAction(privateTabId, promptRequest)).joinBlocking()
         feature.start()

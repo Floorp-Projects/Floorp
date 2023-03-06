@@ -9,6 +9,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
 
+* **feature-prompts**:
+  * 🚒 Bug fixed [Bug 1819254](https://bugzilla.mozilla.org/show_bug.cgi?id=1819254). Don't exit fullscreen for user input prompts.
+
 * **service-contile**
   * ⚠️ **This is a breaking change**: Added support for sponsored tiles maximum age specified by the server. `maxCacheAgeInMinutes` changed to `maxCacheAgeInSeconds`, not specifying it leads to using the value provided by the server. [Bug 1811175](https://bugzilla.mozilla.org/show_bug.cgi?id=1811175)
 

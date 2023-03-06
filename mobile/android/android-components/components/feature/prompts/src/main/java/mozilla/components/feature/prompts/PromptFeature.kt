@@ -66,6 +66,7 @@ import mozilla.components.feature.prompts.dialog.Prompter
 import mozilla.components.feature.prompts.dialog.SaveLoginDialogFragment
 import mozilla.components.feature.prompts.dialog.TextPromptDialogFragment
 import mozilla.components.feature.prompts.dialog.TimePickerDialogFragment
+import mozilla.components.feature.prompts.ext.executeIfWindowedPrompt
 import mozilla.components.feature.prompts.facts.emitCreditCardSaveShownFact
 import mozilla.components.feature.prompts.facts.emitSuccessfulAddressAutofillFormDetectedFact
 import mozilla.components.feature.prompts.facts.emitSuccessfulCreditCardAutofillFormDetectedFact
@@ -462,7 +463,7 @@ class PromptFeature private constructor(
         // Some requests are handle with intents
         session.content.promptRequests.lastOrNull()?.let { promptRequest ->
             store.state.findTabOrCustomTabOrSelectedTab(customTabId)?.let {
-                exitFullscreenUsecase(it.id)
+                promptRequest.executeIfWindowedPrompt { exitFullscreenUsecase(it.id) }
             }
 
             when (promptRequest) {
