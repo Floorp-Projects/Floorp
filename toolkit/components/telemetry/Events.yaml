@@ -1316,6 +1316,62 @@ pwmgr:
         Whether or not the saved/updated password was selected by the user choosing a suggested
         value from the autocomplete popup.
 
+# Record telemetry based on individual Firefox relay UI (autocomplete popup, notification panel)
+relay_integration:
+  popup_option:
+    description: >
+      Firefox relay integration autocomplete popup
+    objects: ["offer_relay", "fill_username"]
+    methods: ["shown", "clicked"]
+    bug_numbers: [1804502]
+    expiry_version: "never"
+    products: ["firefox"]
+    record_in_processes: [main]
+    notification_emails: ["passwords-dev@mozilla.org"]
+    extra_keys:
+      scenario: Describes the auth context for now only SignupForm is supported
+      error_code: >
+        The error code after users click the fill username autocomplete entry.
+        Only present if the object is "fill_username".
+        When the event is successful, the error_code  is 0.
+      is_relay_user: >
+        Whether the user is a relay user or not.
+        Only present if the object is "offer_relay"
+  mask_panel:
+    description: >
+      Panels to show the state of the email alias generation
+    objects: ["reuse_panel"]
+    methods: ["shown", "get_unlimited_masks", "reuse_mask"]
+    bug_numbers: [1804502]
+    expiry_version: "never"
+    products: ["firefox"]
+    record_in_processes: [main]
+    notification_emails: ["passwords-dev@mozilla.org"]
+    extra_keys:
+      error_code: >
+        The error code after users click the email alias generation panel.
+        When the event is successful, the error_code  is 0.
+  opt_in_panel:
+    description: >
+      Panel to opt-in Firefox Relay Integration
+    objects: ["opt_in_panel"]
+    methods: ["shown", "enabled", "postponed", "disabled"]
+    bug_numbers: [1804502]
+    expiry_version: "never"
+    products: ["firefox"]
+    record_in_processes: [main]
+    notification_emails: ["passwords-dev@mozilla.org"]
+  pref_change:
+    description: >
+      Checkbox in the settings page to enable/disable relay
+    objects: ["pref_change"]
+    methods: ["enabled", "disabled"]
+    bug_numbers: [1804502]
+    expiry_version: "never"
+    products: ["firefox"]
+    record_in_processes: [main]
+    notification_emails: ["passwords-dev@mozilla.org"]
+
 jsonfile:
   load:
     description: >
@@ -2985,8 +3041,6 @@ security.ui.certerror:
     products:
       - "firefox"
     record_in_processes: ["content"]
-    products:
-      - firefox
     extra_keys:
       is_frame: If the error page is loaded in an iframe.
       has_sts: If the error page is for a site with HSTS headers or with a pinned key.
@@ -3018,8 +3072,6 @@ security.ui.certerror:
     products:
       - "firefox"
     record_in_processes: ["content"]
-    products:
-      - firefox
     extra_keys:
       is_frame: If the error page is loaded in an iframe.
       has_sts: If the error page is for a site with HSTS headers or with a pinned key.
