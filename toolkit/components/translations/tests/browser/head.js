@@ -236,3 +236,40 @@ async function reorderingTranslator(message) {
 
   return [translatedDoc.body.innerHTML];
 }
+
+async function loadTestPage({ runInPage, languagePairs, page }) {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // Enabled by default.
+      ["browser.translations.enable", true],
+      ["browser.translations.logLevel", "All"],
+    ],
+  });
+
+  // Start the tab at about:blank.
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:blank",
+    true // waitForLoad
+  );
+
+  // Before loading the page, handle any mocking of the actor.
+  if (languagePairs) {
+    TranslationsParent.mock(languagePairs);
+  }
+
+  BrowserTestUtils.loadURIString(tab.linkedBrowser, page);
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+
+  await ContentTask.spawn(
+    tab.linkedBrowser,
+    {}, // Data to inject.
+    runInPage
+  );
+
+  if (languagePairs) {
+    TranslationsParent.mock(null);
+  }
+  BrowserTestUtils.removeTab(tab);
+  await SpecialPowers.popPrefEnv();
+}
