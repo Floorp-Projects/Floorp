@@ -29,6 +29,18 @@ export class AboutTranslationsChild extends JSWindowActorChild {
   /** @type {TranslationsEngine | null} */
   translationsEngine = null;
 
+  /**
+   * The translations engine uses text translations by default in about:translations,
+   * but it can be changed to translate HTML by setting this pref to true. This is
+   * useful for manually testing HTML translation behavior, but is not useful to surface
+   * as a user-facing feature.
+   *
+   * @type {bool}
+   */
+  #isHtmlTranslation = Services.prefs.getBoolPref(
+    "browser.translations.useHTML"
+  );
+
   handleEvent(event) {
     if (event.type === "DOMDocElementInserted") {
       this.#exportFunctions();
@@ -107,7 +119,7 @@ export class AboutTranslationsChild extends JSWindowActorChild {
       "AT_createLanguageIdEngine",
       "AT_createTranslationsEngine",
       "AT_identifyLanguage",
-      "AT_translateText",
+      "AT_translate",
       "AT_destroyTranslationsEngine",
       "AT_getScriptDirection",
     ];
@@ -241,10 +253,14 @@ export class AboutTranslationsChild extends JSWindowActorChild {
         "The translations engine was not created."
       );
     }
+    const promise = this.#isHtmlTranslation
+      ? this.translationsEngine.translateHTML(messageBatch)
+      : this.translationsEngine.translateText(messageBatch);
+
     return this.#convertToContentPromise(
-      this.translationsEngine
-        .translateText(messageBatch)
-        .then(translations => Cu.cloneInto(translations, this.contentWindow))
+      promise.then(translations =>
+        Cu.cloneInto(translations, this.contentWindow)
+      )
     );
   }
 
