@@ -56,9 +56,7 @@ class ContileTopSitesProvider(
     // Current state of the cache.
     @VisibleForTesting
     @Volatile
-    internal var cacheState: CacheState = CacheState(
-        shouldUseServerMaxAge = maxCacheAgeInSeconds == -1L,
-    )
+    internal var cacheState: CacheState = CacheState()
 
     /**
      * Fetches from the top sites [endPointURL] to provide a list of provided top sites.
@@ -71,8 +69,8 @@ class ContileTopSitesProvider(
      */
     @Throws(IOException::class)
     override suspend fun getTopSites(allowCache: Boolean): List<TopSite.Provided> {
-        val cachedTopSites = if (allowCache && !isCacheExpired()) {
-            readFromDiskCache()?.topSites
+        val cachedTopSites = if (allowCache) {
+            getCachedTopSitesIfValid(shouldUseServerMaxAge = false)
         } else {
             null
         }
@@ -93,7 +91,7 @@ class ContileTopSitesProvider(
      * if the cache is expired.
      */
     suspend fun refreshTopSitesIfCacheExpired() {
-        if (!isCacheExpired()) return
+        if (!isCacheExpired(shouldUseServerMaxAge = false)) return
 
         getTopSites(allowCache = false)
     }
@@ -124,6 +122,12 @@ class ContileTopSitesProvider(
                     throw IOException(e)
                 }
             } else {
+                // If fetch failed, we should check if the set of top sites is still valid
+                // and use it as fallback.
+                val topSites = getCachedTopSitesIfValid(shouldUseServerMaxAge = true)
+                if (!topSites.isNullOrEmpty()) {
+                    return topSites
+                }
                 val errorMessage =
                     "Failed to fetch contile top sites. Status code: ${response.status}"
                 logger.error(errorMessage)
@@ -169,9 +173,23 @@ class ContileTopSitesProvider(
         }
     }
 
+    /**
+     * Returns the cached top sites if the cached data is not expired, based on the client or server
+     * specified max age, else null is returned. In the case of a server outage, the cached server
+     * max age should be used as fallback.
+     *
+     * @param shouldUseServerMaxAge True if server cache max age should be used.
+     */
+    private fun getCachedTopSitesIfValid(shouldUseServerMaxAge: Boolean) =
+        if (!isCacheExpired(shouldUseServerMaxAge)) {
+            readFromDiskCache()?.topSites
+        } else {
+            null
+        }
+
     @VisibleForTesting
-    internal fun isCacheExpired(): Boolean {
-        cacheState.cacheMaxAge?.let { return Date().time > it }
+    internal fun isCacheExpired(shouldUseServerMaxAge: Boolean): Boolean {
+        cacheState.getCacheMaxAge(shouldUseServerMaxAge)?.let { return Date().time > it }
 
         val file = getBaseCacheFile()
 
@@ -187,7 +205,7 @@ class ContileTopSitesProvider(
             }
 
         // If cache is invalid, we should also consider it as expired
-        return Date().time > (cacheState.cacheMaxAge ?: -1L)
+        return Date().time > (cacheState.getCacheMaxAge(shouldUseServerMaxAge) ?: -1L)
     }
 
     private fun getCacheFile(): AtomicFile = AtomicFile(getBaseCacheFile())
@@ -209,8 +227,6 @@ class ContileTopSitesProvider(
     /**
      * Current state of the cache.
      *
-     * @param shouldUseServerMaxAge Whether or not [serverCacheMaxAge] should be used instead of
-     * [localCacheMaxAge].
      * @param isCacheValid Whether or not the current set of cached top sites is still valid.
      * @param localCacheMaxAge Maximum unix timestamp until the current set of cached top sites
      * is still valid, specified by the client.
@@ -218,17 +234,15 @@ class ContileTopSitesProvider(
      * is still valid, specified by the server.
      */
     internal data class CacheState(
-        val shouldUseServerMaxAge: Boolean,
         val isCacheValid: Boolean = true,
         val localCacheMaxAge: Long? = null,
         val serverCacheMaxAge: Long? = null,
     ) {
-        val cacheMaxAge
-            get() = if (isCacheValid) {
-                if (shouldUseServerMaxAge) serverCacheMaxAge else localCacheMaxAge
-            } else {
-                null
-            }
+        fun getCacheMaxAge(shouldUseServerMaxAge: Boolean = false) = if (isCacheValid) {
+            if (shouldUseServerMaxAge) serverCacheMaxAge else localCacheMaxAge
+        } else {
+            null
+        }
 
         fun invalidate(): CacheState =
             this.copy(isCacheValid = false, localCacheMaxAge = null, serverCacheMaxAge = null)

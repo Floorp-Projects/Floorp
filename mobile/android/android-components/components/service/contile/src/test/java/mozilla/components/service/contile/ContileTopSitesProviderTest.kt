@@ -67,11 +67,30 @@ class ContileTopSitesProviderTest {
         }
 
     @Test(expected = IOException::class)
-    fun `GIVEN a 500 status response WHEN top sites are fetched THEN throw an exception`() =
+    fun `GIVEN a 500 status response WHEN top sites are fetched AND cached top sites are not valid THEN throw an exception`() =
         runTest {
             val client = prepareClient(status = 500)
             val provider = ContileTopSitesProvider(testContext, client)
             provider.getTopSites()
+        }
+
+    @Test
+    fun `GIVEN a 500 status response WHEN top sites are fetched AND cached top sites are valid THEN return the cached top sites`() =
+        runTest {
+            val client = prepareClient(status = 500)
+            val topSites = mock<List<TopSite.Provided>>()
+            val provider =
+                spy(ContileTopSitesProvider(testContext, client, maxCacheAgeInSeconds = 60L))
+            whenever(provider.isCacheExpired(false)).thenReturn(true)
+            whenever(provider.isCacheExpired(true)).thenReturn(false)
+            whenever(provider.readFromDiskCache()).thenReturn(
+                ContileTopSitesProvider.CachedData(
+                    60L,
+                    topSites,
+                ),
+            )
+
+            assertEquals(topSites, provider.getTopSites())
         }
 
     @Test
@@ -83,11 +102,11 @@ class ContileTopSitesProviderTest {
             provider.getTopSites(allowCache = false)
             verify(provider, never()).readFromDiskCache()
 
-            whenever(provider.isCacheExpired()).thenReturn(true)
+            whenever(provider.isCacheExpired(false)).thenReturn(true)
             provider.getTopSites(allowCache = true)
             verify(provider, never()).readFromDiskCache()
 
-            whenever(provider.isCacheExpired()).thenReturn(false)
+            whenever(provider.isCacheExpired(false)).thenReturn(false)
             provider.getTopSites(allowCache = true)
             verify(provider).readFromDiskCache()
         }
@@ -105,31 +124,25 @@ class ContileTopSitesProviderTest {
                 ),
             )
 
-            assertFalse(specifiedProvider.cacheState.shouldUseServerMaxAge)
-
             specifiedProvider.getTopSites()
             verify(specifiedProvider).writeToDiskCache(anyLong(), any())
             assertEquals(
                 specifiedProvider.cacheState.localCacheMaxAge,
-                specifiedProvider.cacheState.cacheMaxAge,
+                specifiedProvider.cacheState.getCacheMaxAge(),
             )
+            assertFalse(specifiedProvider.isCacheExpired(false))
         }
 
     @Test
-    fun `GIVEN cache max age is not specified WHEN top sites are fetched THEN the cache max age is set from the response headers`() =
+    fun `GIVEN cache max age is not specified WHEN top sites are fetched THEN the cache is expired`() =
         runTest {
             val jsonResponse = loadResourceAsString("/contile/contile.json")
             val client = prepareClient(jsonResponse)
             val provider = spy(ContileTopSitesProvider(testContext, client))
 
-            assertTrue(provider.cacheState.shouldUseServerMaxAge)
-
             provider.getTopSites()
             verify(provider).writeToDiskCache(anyLong(), any())
-            assertEquals(
-                provider.cacheState.serverCacheMaxAge,
-                provider.cacheState.cacheMaxAge,
-            )
+            assertTrue(provider.isCacheExpired(false))
         }
 
     @Test
@@ -157,22 +170,32 @@ class ContileTopSitesProviderTest {
             spy(ContileTopSitesProvider(testContext, client = mock()))
 
         provider.cacheState =
-            ContileTopSitesProvider.CacheState(shouldUseServerMaxAge = false, isCacheValid = false)
-        assertTrue(provider.isCacheExpired())
+            ContileTopSitesProvider.CacheState(isCacheValid = false)
+        assertTrue(provider.isCacheExpired(false))
 
         provider.cacheState = ContileTopSitesProvider.CacheState(
-            shouldUseServerMaxAge = false,
             isCacheValid = true,
             localCacheMaxAge = Date().time - 60 * DateUtils.MINUTE_IN_MILLIS,
         )
-        assertTrue(provider.isCacheExpired())
+        assertTrue(provider.isCacheExpired(false))
 
         provider.cacheState = ContileTopSitesProvider.CacheState(
-            shouldUseServerMaxAge = false,
             isCacheValid = true,
             localCacheMaxAge = Date().time + 60 * DateUtils.MINUTE_IN_MILLIS,
         )
-        assertFalse(provider.isCacheExpired())
+        assertFalse(provider.isCacheExpired(false))
+
+        provider.cacheState = ContileTopSitesProvider.CacheState(
+            isCacheValid = true,
+            serverCacheMaxAge = Date().time - 60 * DateUtils.MINUTE_IN_MILLIS,
+        )
+        assertTrue(provider.isCacheExpired(true))
+
+        provider.cacheState = ContileTopSitesProvider.CacheState(
+            isCacheValid = true,
+            serverCacheMaxAge = Date().time + 60 * DateUtils.MINUTE_IN_MILLIS,
+        )
+        assertFalse(provider.isCacheExpired(true))
     }
 
     @Test
@@ -185,7 +208,7 @@ class ContileTopSitesProviderTest {
             ),
         )
 
-        whenever(provider.isCacheExpired()).thenReturn(false)
+        whenever(provider.isCacheExpired(false)).thenReturn(false)
         provider.refreshTopSitesIfCacheExpired()
         verify(provider, never()).getTopSites(allowCache = false)
     }
@@ -201,7 +224,7 @@ class ContileTopSitesProviderTest {
                 ),
             )
 
-            whenever(provider.isCacheExpired()).thenReturn(true)
+            whenever(provider.isCacheExpired(false)).thenReturn(true)
 
             provider.refreshTopSitesIfCacheExpired()
 
@@ -215,12 +238,13 @@ class ContileTopSitesProviderTest {
         val provider = spy(ContileTopSitesProvider(testContext, client))
         val file = mock<File>()
 
-        whenever(provider.isCacheExpired()).thenReturn(true)
+        whenever(provider.isCacheExpired(false)).thenReturn(true)
         whenever(provider.getBaseCacheFile()).thenReturn(file)
         provider.refreshTopSitesIfCacheExpired()
 
         verify(file).delete()
-        assertNull(provider.cacheState.cacheMaxAge)
+        assertNull(provider.cacheState.localCacheMaxAge)
+        assertNull(provider.cacheState.serverCacheMaxAge)
     }
 
     private fun prepareClient(

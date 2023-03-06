@@ -23,7 +23,7 @@ permalink: /changelog/
   * 🚒 Bug fixed [Bug 1819254](https://bugzilla.mozilla.org/show_bug.cgi?id=1819254). Don't exit fullscreen for user input prompts.
 
 * **service-contile**
-  * ⚠️ **This is a breaking change**: Added support for sponsored tiles maximum age specified by the server. `maxCacheAgeInMinutes` changed to `maxCacheAgeInSeconds`, not specifying it leads to using the value provided by the server. [Bug 1811175](https://bugzilla.mozilla.org/show_bug.cgi?id=1811175)
+  * ⚠️ **This is a breaking change**: Added support for sponsored tiles maximum age specified by the server when a Contile outage is detected. `maxCacheAgeInMinutes` changed to `maxCacheAgeInSeconds`. [Bug 1811175](https://bugzilla.mozilla.org/show_bug.cgi?id=1811175)
 
 * **tooling-glean-gradle:**
   * ⚠️ **This is a breaking change**: This wrapper of the Glean plugin is no longer needed and has been removed. Consuming applications can directly depend on the [Glean Gradle plugin](https://github.com/mozilla/glean/tree/main/gradle-plugin/).
