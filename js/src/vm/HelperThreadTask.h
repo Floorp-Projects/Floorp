@@ -7,6 +7,8 @@
 #ifndef vm_HelperThreadTask_h
 #define vm_HelperThreadTask_h
 
+#include "mozilla/TimeStamp.h"
+
 #include "js/Utility.h"
 
 namespace js {

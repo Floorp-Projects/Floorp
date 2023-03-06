@@ -114,6 +114,9 @@ class GCParallelTask : private mozilla::LinkedListElement<GCParallelTask>,
 
   UnprotectedData<State> state_;
 
+  // May be set to the time this task was queued to collect telemetry.
+  mozilla::TimeStamp maybeQueueTime_;
+
   // Amount of time this task took to execute.
   MainThreadOrGCTaskData<mozilla::TimeDuration> duration_;
 

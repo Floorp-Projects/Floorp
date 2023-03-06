@@ -1164,6 +1164,18 @@
     "bug_numbers": [1817741],
     "description": "Number of interruptions/donations per slice during parallel marking."
   },
+  "GC_TASK_START_DELAY_US": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org", "jcoppeard@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 1,
+    "high": 2000,
+    "n_buckets": 50,
+    "bug_numbers": [1817965],
+    "description": "Delay between queuing a GC task and the task starting."
+  },
   "DESERIALIZE_BYTES": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
