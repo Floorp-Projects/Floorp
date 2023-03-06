@@ -1,0 +1,36 @@
+diff --git a/netinet/sctp_asconf.c b/netinet/sctp_asconf.c
+--- a//netinet/sctp_asconf.c
++++ b//netinet/sctp_asconf.c
+@@ -32,6 +32,14 @@
+  * THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
++#if defined(_WIN32)
++// Needed for unified build so that rand_s is available to all unified
++// sources.
++#if !defined(_CRT_RAND_S) && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
++#define _CRT_RAND_S
++#endif
++#endif
++
+ #if defined(__FreeBSD__) && !defined(__Userspace__)
+ #include <sys/cdefs.h>
+ __FBSDID("$FreeBSD$");
+diff --git a/user_environment.h b/user_environment.h
+--- a/user_environment.h
++++ b/user_environment.h
+@@ -30,6 +30,15 @@
+ 
+ #ifndef _USER_ENVIRONMENT_H_
+ #define _USER_ENVIRONMENT_H_
++
++#if defined(_WIN32)
++// Needed for unified build so that rand_s is available to all unified
++// sources.
++#if !defined(_CRT_RAND_S) && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
++#define _CRT_RAND_S
++#endif
++#endif
++
+ /* __Userspace__ */
+ #include <sys/types.h>
