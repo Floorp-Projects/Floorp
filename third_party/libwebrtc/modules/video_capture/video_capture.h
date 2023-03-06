@@ -158,8 +158,13 @@ class VideoCaptureModule : public rtc::RefCountInterface {
   // Mozilla: TrackingId setter for use in profiler markers.
   virtual void SetTrackingId(uint32_t aTrackingIdProcId) {}
 
+  // Mozilla: Diagnostic
+  void NotifyReleasing() { mOkToDestroy = true; }
+
  protected:
   ~VideoCaptureModule() override {}
+
+  std::atomic<bool> mOkToDestroy = {false};
 };
 
 }  // namespace webrtc

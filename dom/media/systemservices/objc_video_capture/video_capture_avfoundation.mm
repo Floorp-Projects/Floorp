@@ -114,6 +114,7 @@ VideoCaptureAvFoundation::VideoCaptureAvFoundation(AVCaptureDevice* _Nonnull aDe
 
 VideoCaptureAvFoundation::~VideoCaptureAvFoundation() {
   // Must block until capture has fully stopped, including async operations.
+  MOZ_RELEASE_ASSERT(mOkToDestroy);
   StopCapture();
 }
 
