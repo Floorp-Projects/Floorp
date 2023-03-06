@@ -494,7 +494,7 @@
     ShellTestEnvironment.prototype.next_default_test_name = function() {
         var suffix = this.name_counter > 0 ? " " + this.name_counter : "";
         this.name_counter++;
-        return "Untitled" + suffix;
+        return get_title() + suffix;
     };
 
     ShellTestEnvironment.prototype.on_new_harness_properties = function() {};
