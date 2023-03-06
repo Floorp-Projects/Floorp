@@ -503,12 +503,16 @@ class MockedEngine {
    * Create a fake translation of the text.
    *
    * @param {string[]} messageBatch
+   * @param {bool} isHTML
    * @returns {string}
    */
-  translate(messageBatch) {
-    return messageBatch.map(
-      message =>
-        `${message.toUpperCase()} [${this.fromLanguage} to ${this.toLanguage}]`
-    );
+  translate(messageBatch, isHTML) {
+    return messageBatch.map(message => {
+      // Note when an HTML translations is requested.
+      let html = isHTML ? ", html" : "";
+      message = message.toUpperCase();
+
+      return `${message} [${this.fromLanguage} to ${this.toLanguage}${html}]`;
+    });
   }
 }

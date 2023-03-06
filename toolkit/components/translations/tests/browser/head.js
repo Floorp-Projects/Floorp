@@ -29,18 +29,23 @@ const { TranslationsParent } = ChromeUtils.importESModule(
  *
  * @param {Array<{ fromLang: string, toLang: string}>} options.languagePairs
  * The translation languages pairs to mock for the test.
+ *
+ * @param {Array<[string, string]>} options.prefs
+ * Prefs to push on for the test.
  */
 async function openAboutTranslations({
   dataForContent,
   disabled,
   runInPage,
   languagePairs,
+  prefs,
 }) {
   await SpecialPowers.pushPrefEnv({
     set: [
       // Enabled by default.
       ["browser.translations.enable", !disabled],
       ["browser.translations.logLevel", "All"],
+      ...(prefs ?? []),
     ],
   });
 

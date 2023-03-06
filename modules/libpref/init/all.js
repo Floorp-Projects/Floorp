@@ -3796,6 +3796,10 @@ pref("browser.sanitizer.loglevel", "Warn");
 pref("browser.translations.enable", false);
 // Set to "All" to see all logs, which are useful for debugging.
 pref("browser.translations.logLevel", "Error");
+// By default the translations engine on about:translations uses text for translation,
+// and the full page translations uses HTML. Set this pref to true to use the HTML
+// translation behavior on about:translations. Requires a page refresh.
+pref("browser.translations.useHTML", false);
 
 // When a user cancels this number of authentication dialogs coming from
 // a single web page in a row, all following authentication dialogs will
