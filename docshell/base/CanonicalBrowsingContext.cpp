@@ -567,7 +567,7 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
   RefPtr<SessionHistoryEntry> entry;
   const LoadingSessionHistoryInfo* existingLoadingInfo =
       aLoadState->GetLoadingSessionHistoryInfo();
-  MOZ_ASSERT(!existingEntry == !existingLoadingInfo);
+  MOZ_ASSERT_IF(!existingLoadingInfo, !existingEntry);
   if (existingLoadingInfo) {
     if (existingEntry) {
       entry = existingEntry;
