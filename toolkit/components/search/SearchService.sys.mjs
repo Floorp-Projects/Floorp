@@ -39,23 +39,12 @@ XPCOMUtils.defineLazyGetter(lazy, "logConsole", () => {
   });
 });
 
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "timerManager",
-  "@mozilla.org/updates/timer-manager;1",
-  "nsIUpdateTimerManager"
-);
-
 const TOPIC_LOCALES_CHANGE = "intl:app-locales-changed";
 const QUIT_APPLICATION_TOPIC = "quit-application";
 
-// The update timer for OpenSearch engines checks in once a day.
-const OPENSEARCH_UPDATE_TIMER_TOPIC = "search-engine-update-timer";
-const OPENSEARCH_UPDATE_TIMER_INTERVAL = 60 * 60 * 24;
-
 // The default engine update interval, in days. This is only used if an engine
 // specifies an updateURL, but not an updateInterval.
-const OPENSEARCH_DEFAULT_UPDATE_INTERVAL = 7;
+const SEARCH_DEFAULT_UPDATE_INTERVAL = 7;
 
 // This is the amount of time we'll be idle for before applying any configuration
 // changes.
@@ -656,7 +645,6 @@ export class SearchService {
         errCode || Cr.NS_ERROR_FAILURE
       );
     }
-    this.#maybeStartOpenSearchUpdateTimer();
     return engine;
   }
 
@@ -911,19 +899,26 @@ export class SearchService {
     );
   }
 
-  /**
-   * This is a nsITimerCallback for the timerManager notification that is
-   * registered for handling updates to search engines. Only OpenSearch engines
-   * have these updates and hence, only those are handled here.
-   */
-  notify() {
+  // nsITimerCallbactk
+  notify(timer) {
     lazy.logConsole.debug("notify: checking for updates");
 
-    // Walk the engine list, looking for engines whose update time has expired.
+    if (
+      !Services.prefs.getBoolPref(
+        lazy.SearchUtils.BROWSER_SEARCH_PREF + "update",
+        true
+      )
+    ) {
+      return;
+    }
+
+    // Our timer has expired, but unfortunately, we can't get any data from it.
+    // Therefore, we need to walk our engine-list, looking for expired engines
     var currentTime = Date.now();
     lazy.logConsole.debug("currentTime:" + currentTime);
-    for (let engine of this._engines.values()) {
-      if (!(engine instanceof lazy.OpenSearchEngine && engine._hasUpdates)) {
+    for (let e of this._engines.values()) {
+      let engine = e.wrappedJSObject;
+      if (!engine._hasUpdates) {
         continue;
       }
 
@@ -1115,13 +1110,6 @@ export class SearchService {
    * @type {boolean}
    */
   #observersAdded = false;
-
-  /**
-   * Keeps track to see if the OpenSearch update timer has been started or not.
-   *
-   * @type {boolean}
-   */
-  #openSearchUpdateTimerStarted = false;
 
   get #sortedEngines() {
     if (!this._cachedSortedEngines) {
@@ -1359,8 +1347,6 @@ export class SearchService {
       await lazy.NimbusFeatures.search.ready();
       this.#checkNimbusPrefs(true);
     });
-
-    this.#maybeStartOpenSearchUpdateTimer();
 
     return this.#initRV;
   }
@@ -3497,43 +3483,11 @@ export class SearchService {
       newCurrentEngine
     );
   }
-
-  /**
-   * Maybe starts the timer for OpenSearch engine updates. This will be set
-   * only if updates are enabled and there are OpenSearch engines installed
-   * which have updates.
-   */
-  #maybeStartOpenSearchUpdateTimer() {
-    if (
-      this.#openSearchUpdateTimerStarted ||
-      !Services.prefs.getBoolPref(
-        lazy.SearchUtils.BROWSER_SEARCH_PREF + "update",
-        true
-      )
-    ) {
-      return;
-    }
-
-    let engineWithUpdates = [...this._engines.values()].find(
-      engine => engine instanceof lazy.OpenSearchEngine && engine._hasUpdates
-    );
-
-    if (engineWithUpdates) {
-      lazy.logConsole.debug("Engine with updates found, setting update timer");
-      lazy.timerManager.registerTimer(
-        OPENSEARCH_UPDATE_TIMER_TOPIC,
-        this,
-        OPENSEARCH_UPDATE_TIMER_INTERVAL,
-        true
-      );
-      this.#openSearchUpdateTimerStarted = true;
-    }
-  }
 } // end SearchService class
 
 var engineUpdateService = {
   scheduleNextUpdate(engine) {
-    var interval = engine._updateInterval || OPENSEARCH_DEFAULT_UPDATE_INTERVAL;
+    var interval = engine._updateInterval || SEARCH_DEFAULT_UPDATE_INTERVAL;
     var milliseconds = interval * 86400000; // |interval| is in days
     engine.setAttr("updateexpir", Date.now() + milliseconds);
   },
