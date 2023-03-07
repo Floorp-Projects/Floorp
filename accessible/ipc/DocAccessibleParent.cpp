@@ -414,10 +414,6 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvStateChangeEvent(
 
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     target->UpdateStateCache(aState, aEnabled);
-    if (nsCOMPtr<nsIObserverService> obsService =
-            services::GetObserverService()) {
-      obsService->NotifyObservers(nullptr, NS_ACCESSIBLE_CACHE_TOPIC, nullptr);
-    }
   }
   ProxyStateChangeEvent(target, aState, aEnabled);
 
