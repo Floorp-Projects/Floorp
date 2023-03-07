@@ -128,6 +128,15 @@ if CONFIG["OS_ARCH"] == "WINNT":
     EXPORTS.mozilla += ["WinHandleWatcher.h"]
     UNIFIED_SOURCES += ["WinHandleWatcher.cpp"]
 
+# Should match the conditions in toolkit/components/backgroundhangmonitor/moz.build
+if (
+    CONFIG["NIGHTLY_BUILD"]
+    and not CONFIG["MOZ_DEBUG"]
+    and not CONFIG["MOZ_TSAN"]
+    and not CONFIG["MOZ_ASAN"]
+):
+    DEFINES["MOZ_ENABLE_BACKGROUND_HANG_MONITOR"] = 1
+
 LOCAL_INCLUDES += [
     "../build",
     "/caps",
