@@ -409,6 +409,10 @@ def run(
         formatter = formatters.get(formatter_name)
 
         out = formatter(result)
+        # We do this only for `json` that is mostly used in automation
+        if not out and formatter_name == "json":
+            out = "{}"
+
         if out:
             fh = open(path, "w") if path else sys.stdout
 
