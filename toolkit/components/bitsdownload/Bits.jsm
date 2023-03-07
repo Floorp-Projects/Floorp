@@ -630,6 +630,24 @@ async function servicePromise(errorAction, observer, actionFn) {
       isProgressEventSink = true;
     } catch (e) {}
 
+    // Check if we are not late in creating new requests.
+    if (
+      Services &&
+      Services.startup &&
+      Services.startup.isInOrBeyondShutdownPhase(
+        Ci.nsIAppStartup.SHUTDOWN_PHASE_APPSHUTDOWNCONFIRMED
+      )
+    ) {
+      let error = new BitsError(
+        lazy.gBits.ERROR_TYPE_BROWSER_SHUTTING_DOWN,
+        errorAction,
+        lazy.gBits.ERROR_STAGE_PRETASK,
+        lazy.gBits.ERROR_CODE_TYPE_NONE
+      );
+      reject(error);
+      return;
+    }
+
     // This will be set to the BitsRequest (wrapping the nsIBitsRequest), once
     // it is available. This prevents a new wrapper from having to be made every
     // time an observer function is called.
