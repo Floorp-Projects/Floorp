@@ -919,7 +919,6 @@ void js::Nursery::renderProfileJSON(JSONPrinter& json) const {
   _("Runtime", 14, "0x%12p", runtime)
 
 #define FOR_EACH_NURSERY_PROFILE_SLICE_METADATA(_)    \
-  FOR_EACH_NURSERY_PROFILE_COMMON_METADATA(_)         \
   _("Timestamp", 10, "%10.6f", timestamp.ToSeconds()) \
   _("Reason", 20, "%-20.20s", reasonStr)              \
   _("PRate", 6, "%5.1f%%", promotionRatePercent)      \

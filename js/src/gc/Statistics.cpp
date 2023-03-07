@@ -1583,7 +1583,6 @@ void Statistics::maybePrintProfileHeaders() {
   _("Runtime", 14, "0x%12p", runtime)
 
 #define FOR_EACH_GC_PROFILE_SLICE_METADATA(_)         \
-  FOR_EACH_GC_PROFILE_COMMON_METADATA(_)              \
   _("Timestamp", 10, "%10.6f", timestamp.ToSeconds()) \
   _("Reason", 20, "%-20.20s", reason)                 \
   _("States", 6, "%6s", formatGCStates(slice))        \
