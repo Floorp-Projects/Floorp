@@ -9,10 +9,12 @@
 #include "nsTransitionManager.h"
 
 #include "mozilla/AnimationEventDispatcher.h"
+#include "mozilla/AnimationUtils.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/ElementAnimationData.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/TimelineCollection.h"
 #include "mozilla/dom/AnimationEffect.h"
 #include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/KeyframeEffect.h"
@@ -213,31 +215,23 @@ static already_AddRefed<dom::AnimationTimeline> GetNamedProgressTimeline(
   // 2. that element’s descendants
   // 3. that element’s following siblings and their descendants
   // https://drafts.csswg.org/scroll-animations-1/#timeline-scope
-  for (Element* curr = aTarget.mElement; curr;
-       curr = curr->GetParentElement()) {
+  for (Element* curr = AnimationUtils::GetElementForRestyle(
+           aTarget.mElement, aTarget.mPseudoType);
+       curr; curr = curr->GetParentElement()) {
     // If multiple elements have declared the same timeline name, the matching
     // timeline is the one declared on the nearest element in tree order, which
     // considers siblings closer than parents.
     // Note: This is fine for parallel traversal because we update animations by
     // SequentialTask.
     for (Element* e = curr; e; e = e->GetPreviousElementSibling()) {
-      // TODO: Look up the named timelines from the corresponding
-      // TimelineCollection in the next patch.
-
-      const ComputedStyle* style = Servo_Element_GetMaybeOutOfDateStyle(e);
-      // The elements in the shadow dom might not be in the flat tree.
-      if (!style) {
-        continue;
-      }
-
-      const nsStyleUIReset* ui = style->StyleUIReset();
       // In case of a name conflict on the same element, scroll progress
       // timelines take precedence over view progress timelines.
-      // TODO: Will reuse named progress timelines in the following patches.
-      for (uint32_t i = 0; i < ui->mScrollTimelineNameCount; ++i) {
-        const auto& timeline = ui->mScrollTimelines[i];
-        if (timeline.GetName() == aName) {
-          return ScrollTimeline::MakeNamed(aDocument, e, timeline);
+      const auto [element, pseudoType] =
+          AnimationUtils::GetElementPseudoPair(e);
+      if (auto* collection =
+              TimelineCollection<ScrollTimeline>::Get(element, pseudoType)) {
+        if (RefPtr<ScrollTimeline> timeline = collection->Lookup(aName)) {
+          return timeline.forget();
         }
       }
 
