@@ -38,6 +38,10 @@ class TimelineCollection final
 
   ~TimelineCollection();
 
+  already_AddRefed<TimelineType> Lookup(const nsAtom* aName) const {
+    return mTimelines.Get(aName).forget();
+  }
+
   already_AddRefed<TimelineType> Extract(const nsAtom* aName) {
     Maybe<RefPtr<TimelineType>> timeline = mTimelines.Extract(aName);
     return timeline ? timeline->forget() : nullptr;
