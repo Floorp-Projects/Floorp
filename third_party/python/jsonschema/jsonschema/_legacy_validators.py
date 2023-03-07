@@ -1,88 +1,49 @@
 from jsonschema import _utils
+from jsonschema.compat import iteritems
 from jsonschema.exceptions import ValidationError
-
-
-def ignore_ref_siblings(schema):
-    """
-    Ignore siblings of ``$ref`` if it is present.
-
-    Otherwise, return all keywords.
-
-    Suitable for use with `create`'s ``applicable_validators`` argument.
-    """
-    ref = schema.get("$ref")
-    if ref is not None:
-        return [("$ref", ref)]
-    else:
-        return schema.items()
 
 
 def dependencies_draft3(validator, dependencies, instance, schema):
     if not validator.is_type(instance, "object"):
         return
 
-    for property, dependency in dependencies.items():
+    for property, dependency in iteritems(dependencies):
         if property not in instance:
             continue
 
         if validator.is_type(dependency, "object"):
-            yield from validator.descend(
+            for error in validator.descend(
                 instance, dependency, schema_path=property,
-            )
+            ):
+                yield error
         elif validator.is_type(dependency, "string"):
             if dependency not in instance:
-                message = f"{dependency!r} is a dependency of {property!r}"
-                yield ValidationError(message)
+                yield ValidationError(
+                    "%r is a dependency of %r" % (dependency, property)
+                )
         else:
             for each in dependency:
                 if each not in instance:
-                    message = f"{each!r} is a dependency of {property!r}"
-                    yield ValidationError(message)
-
-
-def dependencies_draft4_draft6_draft7(
-    validator,
-    dependencies,
-    instance,
-    schema,
-):
-    """
-    Support for the ``dependencies`` keyword from pre-draft 2019-09.
-
-    In later drafts, the keyword was split into separate
-    ``dependentRequired`` and ``dependentSchemas`` validators.
-    """
-    if not validator.is_type(instance, "object"):
-        return
-
-    for property, dependency in dependencies.items():
-        if property not in instance:
-            continue
-
-        if validator.is_type(dependency, "array"):
-            for each in dependency:
-                if each not in instance:
-                    message = f"{each!r} is a dependency of {property!r}"
-                    yield ValidationError(message)
-        else:
-            yield from validator.descend(
-                instance, dependency, schema_path=property,
-            )
+                    message = "%r is a dependency of %r"
+                    yield ValidationError(message % (each, property))
 
 
 def disallow_draft3(validator, disallow, instance, schema):
     for disallowed in _utils.ensure_list(disallow):
-        if validator.evolve(schema={"type": [disallowed]}).is_valid(instance):
-            message = f"{disallowed!r} is disallowed for {instance!r}"
-            yield ValidationError(message)
+        if validator.is_valid(instance, {"type": [disallowed]}):
+            yield ValidationError(
+                "%r is disallowed for %r" % (disallowed, instance)
+            )
 
 
 def extends_draft3(validator, extends, instance, schema):
     if validator.is_type(extends, "object"):
-        yield from validator.descend(instance, extends)
+        for error in validator.descend(instance, extends):
+            yield error
         return
     for index, subschema in enumerate(extends):
-        yield from validator.descend(instance, subschema, schema_path=index)
+        for error in validator.descend(instance, subschema, schema_path=index):
+            yield error
 
 
 def items_draft3_draft4(validator, items, instance, schema):
@@ -91,26 +52,14 @@ def items_draft3_draft4(validator, items, instance, schema):
 
     if validator.is_type(items, "object"):
         for index, item in enumerate(instance):
-            yield from validator.descend(item, items, path=index)
+            for error in validator.descend(item, items, path=index):
+                yield error
     else:
         for (index, item), subschema in zip(enumerate(instance), items):
-            yield from validator.descend(
+            for error in validator.descend(
                 item, subschema, path=index, schema_path=index,
-            )
-
-
-def items_draft6_draft7_draft201909(validator, items, instance, schema):
-    if not validator.is_type(instance, "array"):
-        return
-
-    if validator.is_type(items, "array"):
-        for (index, item), subschema in zip(enumerate(instance), items):
-            yield from validator.descend(
-                item, subschema, path=index, schema_path=index,
-            )
-    else:
-        for index, item in enumerate(instance):
-            yield from validator.descend(item, items, path=index)
+            ):
+                yield error
 
 
 def minimum_draft3_draft4(validator, minimum, instance, schema):
@@ -125,8 +74,9 @@ def minimum_draft3_draft4(validator, minimum, instance, schema):
         cmp = "less than"
 
     if failed:
-        message = f"{instance!r} is {cmp} the minimum of {minimum!r}"
-        yield ValidationError(message)
+        yield ValidationError(
+            "%r is %s the minimum of %r" % (instance, cmp, minimum)
+        )
 
 
 def maximum_draft3_draft4(validator, maximum, instance, schema):
@@ -141,24 +91,26 @@ def maximum_draft3_draft4(validator, maximum, instance, schema):
         cmp = "greater than"
 
     if failed:
-        message = f"{instance!r} is {cmp} the maximum of {maximum!r}"
-        yield ValidationError(message)
+        yield ValidationError(
+            "%r is %s the maximum of %r" % (instance, cmp, maximum)
+        )
 
 
 def properties_draft3(validator, properties, instance, schema):
     if not validator.is_type(instance, "object"):
         return
 
-    for property, subschema in properties.items():
+    for property, subschema in iteritems(properties):
         if property in instance:
-            yield from validator.descend(
+            for error in validator.descend(
                 instance[property],
                 subschema,
                 path=property,
                 schema_path=property,
-            )
+            ):
+                yield error
         elif subschema.get("required", False):
-            error = ValidationError(f"{property!r} is a required property")
+            error = ValidationError("%r is a required property" % property)
             error._set(
                 validator="required",
                 validator_value=subschema["required"],
@@ -184,45 +136,6 @@ def type_draft3(validator, types, instance, schema):
             if validator.is_type(instance, type):
                 return
     else:
-        reprs = []
-        for type in types:
-            try:
-                reprs.append(repr(type["name"]))
-            except Exception:
-                reprs.append(repr(type))
         yield ValidationError(
-            f"{instance!r} is not of type {', '.join(reprs)}",
-            context=all_errors,
+            _utils.types_msg(instance, types), context=all_errors,
         )
-
-
-def contains_draft6_draft7(validator, contains, instance, schema):
-    if not validator.is_type(instance, "array"):
-        return
-
-    if not any(
-        validator.evolve(schema=contains).is_valid(element)
-        for element in instance
-    ):
-        yield ValidationError(
-            f"None of {instance!r} are valid under the given schema",
-        )
-
-
-def recursiveRef(validator, recursiveRef, instance, schema):
-    lookup_url, target = validator.resolver.resolution_scope, validator.schema
-
-    for each in reversed(validator.resolver._scopes_stack[1:]):
-        lookup_url, next_target = validator.resolver.resolve(each)
-        if next_target.get("$recursiveAnchor"):
-            target = next_target
-        else:
-            break
-
-    fragment = recursiveRef.lstrip("#")
-    subschema = validator.resolver.resolve_fragment(target, fragment)
-    # FIXME: This is gutted (and not calling .descend) because it can trigger
-    #        recursion errors, so there's a bug here. Re-enable the tests to
-    #        see it.
-    subschema
-    return []
