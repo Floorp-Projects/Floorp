@@ -4,6 +4,7 @@
 
 /**
  * @typedef {import("../content/translations-document.sys.mjs").TranslationsDocument} TranslationsDocument
+ * @typedef {import("../translations").LanguageIdEngineMockedPayload} LanguageIdEngineMockedPayload
  * @typedef {import("../translations").LanguageIdEnginePayload} LanguageIdEnginePayload
  * @typedef {import("../translations").LanguageTranslationModelFiles} LanguageTranslationModelFiles
  * @typedef {import("../translations").TranslationsEnginePayload} TranslationsEnginePayload
@@ -663,14 +664,31 @@ export class TranslationsChild extends JSWindowActorChild {
   /**
    * Retrieve the payload for creating a LanguageIdEngine.
    *
-   * @returns {LanguageIdEnginePayload}
+   * @returns {Promise<LanguageIdEnginePayload | LanguageIdEngineMockedPayload>}
    */
   async #getLanguageIdEnginePayload() {
+    // If the TranslationsParent has a mocked payload defined for testing purposes,
+    // then we will return the mocked payload, otherwise we will attempt to retrieve
+    // the full payload from Remote Settings.
+    const mockedPayload = await this.sendQuery(
+      "Translations:GetLanguageIdEngineMockedPayload"
+    );
+    if (mockedPayload) {
+      const { languageLabel, confidence } = mockedPayload;
+      return {
+        languageLabel,
+        confidence,
+      };
+    }
+
     const [wasmBuffer, modelBuffer] = await Promise.all([
       this.#getLanguageIdWasmArrayBuffer(),
       this.#getLanguageIdModelArrayBuffer(),
     ]);
-    return { wasmBuffer, modelBuffer };
+    return {
+      modelBuffer,
+      wasmBuffer,
+    };
   }
 
   /**
@@ -697,12 +715,21 @@ export class TranslationsChild extends JSWindowActorChild {
    * @returns {LanguageIdEngine}
    */
   async createLanguageIdEngine() {
-    const data = await this.#getLanguageIdEnginePayload();
-    data.type = "initialize";
-    data.isLoggingEnabled =
-      Services.prefs.getCharPref("browser.translations.logLevel") === "All";
-
-    const engine = new LanguageIdEngine(data);
+    const {
+      confidence,
+      languageLabel,
+      modelBuffer,
+      wasmBuffer,
+    } = await this.#getLanguageIdEnginePayload();
+    const engine = new LanguageIdEngine({
+      type: "initialize",
+      confidence,
+      languageLabel,
+      modelBuffer,
+      wasmBuffer,
+      isLoggingEnabled:
+        Services.prefs.getCharPref("browser.translations.logLevel") === "All",
+    });
     await engine.isReady;
     return engine;
   }
