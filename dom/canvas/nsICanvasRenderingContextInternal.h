@@ -106,7 +106,8 @@ class nsICanvasRenderingContextInternal : public nsISupports,
       mozilla::NotNull<mozilla::gfx::DrawTarget*> aTarget) = 0;
 
   // Creates an image buffer. Returns null on failure.
-  virtual mozilla::UniquePtr<uint8_t[]> GetImageBuffer(int32_t* format) = 0;
+  virtual mozilla::UniquePtr<uint8_t[]> GetImageBuffer(
+      int32_t* out_format, mozilla::gfx::IntSize* out_imageSize) = 0;
 
   // Gives you a stream containing the image represented by this context.
   // The format is given in mimeTime, for example "image/png".

@@ -57,7 +57,8 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
 
   bool InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
                                 layers::CanvasRenderer* aRenderer) override;
-  mozilla::UniquePtr<uint8_t[]> GetImageBuffer(int32_t* aFormat) override;
+  mozilla::UniquePtr<uint8_t[]> GetImageBuffer(
+      int32_t* out_format, gfx::IntSize* out_imageSize) override;
   NS_IMETHOD GetInputStream(const char* aMimeType,
                             const nsAString& aEncoderOptions,
                             nsIInputStream** aStream) override;
