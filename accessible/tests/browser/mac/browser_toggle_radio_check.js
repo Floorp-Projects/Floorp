@@ -126,17 +126,14 @@ addAccessibleTask(
       "Correct checked value"
     );
 
-    // Changing from checked to mixed fires two events. Make sure we wait until
-    // the second so we're asserting based on the latest state.
-    evt = waitForMacEvent("AXValueChanged", (iface, data) => {
-      return (
-        iface.getAttributeValue("AXDOMIdentifier") == "checkbox" &&
-        iface.getAttributeValue("AXValue") == 2
-      );
-    });
+    evt = waitForMacEvent("AXValueChanged", "checkbox");
     checkbox.performAction("AXPress");
     await evt;
-    is(checkbox.getAttributeValue("AXValue"), 2, "Correct checked value");
+    await untilCacheIs(
+      () => checkbox.getAttributeValue("AXValue"),
+      2,
+      "Correct checked value"
+    );
   }
 );
 
