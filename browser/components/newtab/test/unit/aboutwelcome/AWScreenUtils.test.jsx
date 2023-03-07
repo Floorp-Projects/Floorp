@@ -10,6 +10,9 @@ describe("AWScreenUtils", () => {
     globals = new GlobalOverrider();
     globals.set({
       ASRouter,
+      ASRouterTargeting: {
+        Environment: {},
+      },
     });
 
     sandbox = sinon.createSandbox();
@@ -87,8 +90,10 @@ describe("AWScreenUtils", () => {
           },
         };
       });
-      await AWScreenUtils.evaluateTargetingAndRemoveScreens(screens);
-      assert.deepEqual(screens, expectedScreens);
+      const evaluatedStrings = await AWScreenUtils.evaluateTargetingAndRemoveScreens(
+        screens
+      );
+      assert.deepEqual(evaluatedStrings, expectedScreens);
     });
     it("should not remove screens with no targeting", async () => {
       const screens = [
@@ -114,8 +119,10 @@ describe("AWScreenUtils", () => {
           }
           return targeting;
         });
-      await AWScreenUtils.evaluateTargetingAndRemoveScreens(screens);
-      assert.deepEqual(screens, expectedScreens);
+      const evaluatedStrings = await AWScreenUtils.evaluateTargetingAndRemoveScreens(
+        screens
+      );
+      assert.deepEqual(evaluatedStrings, expectedScreens);
     });
   });
 });
