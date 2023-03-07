@@ -47,8 +47,6 @@ class VendorPython(MozbuildObject):
         self.populate_logger()
         self.log_manager.enable_unstructured()
 
-        self.apply_patches()
-
         vendor_dir = Path(self.topsrcdir) / "third_party" / "python"
         requirements_in = vendor_dir / "requirements.in"
         poetry_lockfile = vendor_dir / "poetry.lock"
@@ -163,48 +161,6 @@ class VendorPython(MozbuildObject):
                 # which we don't we don't want.
                 mozfile.move(extracted_package_dir, package_dir)
                 _denormalize_symlinks(package_dir)
-
-    def apply_patches(self):
-        self._patch_poetry_pypi_repository()
-
-    def _patch_poetry_pypi_repository(self):
-        # There is a bug in Poetry 1.2.0a2 caused by a breaking change
-        # on PyPi's end: https://github.com/pypi/warehouse/pull/11775
-        # This bug was fixed in Poetry 1.2.0b3, but 1.2.0b1 dropped
-        # support for Python 3.6, which is a requirement for us.
-        # As a temporary workaround, we can patch the fix into our
-        # virtualenv's copy of Poetry. This patch should be removed
-        # once we switch to using a newer version of Poetry.
-        venv = self.virtualenv_manager._virtualenv
-
-        # Get the last element since on Windows the
-        # first element is the virtualenv root
-        site_packages = Path(venv.site_packages_dirs()[-1])
-        expected_poetry_dist_info = site_packages / "poetry-1.2.0a2.dist-info"
-
-        # If the specific release of poetry isn't in the site-packages directory
-        # we should not attempt to patch.
-        if not expected_poetry_dist_info.exists():
-            print(
-                f'The version of Poetry that needs patching ("{expected_poetry_dist_info.name}") '
-                f'could not be found in the "{self.virtualenv_manager._site_name}" virtualenv. '
-                f"Can this patch be removed?"
-            )
-            return
-
-        file_to_patch = site_packages / "poetry" / "repositories" / "pypi_repository.py"
-
-        with file_to_patch.open(mode="r") as file:
-            contents = file.read()
-
-        contents = contents.replace(
-            'version_info = json_data["releases"][version]',
-            'version_info = json_data["urls"]',
-        )
-
-        print(f'Patching "{file_to_patch}"')
-        with file_to_patch.open(mode="w") as file:
-            file.write(contents)
 
 
 def _sort_requirements_in(requirements_in: Path):
