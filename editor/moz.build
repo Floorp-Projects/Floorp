@@ -27,7 +27,7 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = "editor"
 
 TESTING_JS_MODULES += [
-    "AsyncSpellCheckTestHelper.jsm",
+    "AsyncSpellCheckTestHelper.sys.mjs",
 ]
 
 with Files("**"):

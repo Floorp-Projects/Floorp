@@ -1798,6 +1798,8 @@
     "toolkit/components/pdfjs/content/build/pdf.sandbox.external.js",
   "resource://reftest/AsyncSpellCheckTestHelper.jsm":
     "editor/AsyncSpellCheckTestHelper.jsm",
+  "resource://testing-common/AsyncSpellCheckTestHelper.jsm":
+    "editor/AsyncSpellCheckTestHelper.jsm",
   "resource://reftest/PerTestCoverageUtils.jsm":
     "tools/code-coverage/PerTestCoverageUtils.jsm",
   "resource://reftest/ReftestFissionChild.jsm":

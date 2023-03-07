@@ -18,8 +18,8 @@ const BLANK_URL_FOR_CLEARING = "data:text/html;charset=UTF-8,%3C%21%2D%2DCLEAR%2
 const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
     "resource://gre/modules/Timer.sys.mjs"
 );
-const { onSpellCheck } = ChromeUtils.import(
-    "resource://reftest/AsyncSpellCheckTestHelper.jsm"
+const { onSpellCheck } = ChromeUtils.importESModule(
+    "resource://reftest/AsyncSpellCheckTestHelper.sys.mjs"
 );
 
 // This will load chrome Custom Elements inside chrome documents:
