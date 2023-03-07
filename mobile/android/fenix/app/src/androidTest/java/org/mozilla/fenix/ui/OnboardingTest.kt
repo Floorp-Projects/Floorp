@@ -3,18 +3,15 @@ package org.mozilla.fenix.ui
 import android.content.res.Configuration
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
-import mozilla.components.concept.engine.utils.EngineReleaseChannel
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
-import org.mozilla.fenix.helpers.TestHelper.runWithCondition
 import org.mozilla.fenix.helpers.TestHelper.verifyDarkThemeApplied
 import org.mozilla.fenix.helpers.TestHelper.verifyLightThemeApplied
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -231,19 +228,12 @@ class OnboardingTest {
 
     @Test
     fun youControlYourDataCardTest() {
-        runWithCondition(
-            // Returns the GeckoView channel set for the current version, if a feature is limited to Nightly.
-            // Once this feature lands in Beta/RC we should remove the wrapper.
-            activityTestRule.activity.components.core.engine.version.releaseChannel == EngineReleaseChannel.NIGHTLY ||
-                activityTestRule.activity.components.core.engine.version.releaseChannel == EngineReleaseChannel.BETA,
-        ) {
-            homeScreen {
-                verifyPrivacyNoticeCard()
-            }.clickPrivacyNoticeButton {
-                verifyCustomTabToolbarTitle("Firefox Privacy Notice")
-            }.goBackToOnboardingScreen {
-                verifyPrivacyNoticeCard()
-            }
+        homeScreen {
+            verifyPrivacyNoticeCard()
+        }.clickPrivacyNoticeButton {
+            verifyCustomTabToolbarTitle("Firefox Privacy Notice")
+        }.goBackToOnboardingScreen {
+            verifyPrivacyNoticeCard()
         }
     }
 }
