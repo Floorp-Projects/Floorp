@@ -57,7 +57,6 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["css"] += [
     "injections/css/bug1712833-buskocchi.desuca.co.jp-fix-map-height.css",
     "injections/css/bug1741234-patient.alphalabs.ca-height-fix.css",
     "injections/css/bug1748455-reddit.com-gallery-image-width-fix.css",
-    "injections/css/bug1754473-m.intl.taobao.com-number-arrow-buttons-overlapping-fix.css",
     "injections/css/bug1765947-veniceincoming.com-left-fix.css",
     "injections/css/bug1770962-coldwellbankerhomes.com-image-height.css",
     "injections/css/bug1774490-rainews.it-gallery-fix.css",
@@ -66,12 +65,12 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["css"] += [
     "injections/css/bug1789164-zdnet.com-cropped-section.css",
     "injections/css/bug1799994-www.vivobarefoot.com-product-filters-fix.css",
     "injections/css/bug1800000-www.honda.co.uk-choose-dealer-button-fix.css",
-    "injections/css/bug1800127-www.burgerking.es-webkit-fill-available-fix.css",
     "injections/css/bug1800143-www.nintendo.co.jp-zoomed-in-image-scrolling-fix.css",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
     "injections/js/bug0000000-testbed-js-injection.js",
+    "injections/js/bug1448747-fastclick-shim.js",
     "injections/js/bug1452707-window.controllers-shim-ib.absa.co.za.js",
     "injections/js/bug1457335-histography.io-ua-change.js",
     "injections/js/bug1472075-bankofamerica.com-ua-change.js",
@@ -84,13 +83,16 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
     "injections/js/bug1731825-office365-email-handling-prompt-autohide.js",
     "injections/js/bug1739489-draftjs-beforeinput.js",
     "injections/js/bug1774005-installtrigger-shim.js",
-    "injections/js/bug1778239-m.pji.co.kr-banner-hide.js",
     "injections/js/bug1784302-effectiveType-shim.js",
     "injections/js/bug1795490-www.china-airlines.com-undisable-date-fields-on-mobile.js",
     "injections/js/bug1799968-www.samsung.com-appVersion-linux-fix.js",
     "injections/js/bug1799980-healow.com-infinite-loop-fix.js",
     "injections/js/bug1800131-www.almosafer.com-undisable-date-fields.js",
     "injections/js/bug1803976-www.youtube.com-performance-now-precision.js",
+    "injections/js/bug1818818-fastclick-legacy-shim.js",
+    "injections/js/bug1819450-cmbchina.com-ua-change.js",
+    "injections/js/bug1819476-axisbank.com-webkitSpeechRecognition-shim.js",
+    "injections/js/bug1819678-cnki.net-undisable-search-field.js",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [
