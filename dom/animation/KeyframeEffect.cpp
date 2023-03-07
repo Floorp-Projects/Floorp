@@ -590,7 +590,7 @@ void KeyframeEffect::EnsureBaseStyle(
   if (!aBaseComputedStyle) {
     MOZ_ASSERT(mTarget, "Should have a valid target");
 
-    Element* animatingElement = EffectCompositor::GetElementToRestyle(
+    Element* animatingElement = AnimationUtils::GetElementForRestyle(
         mTarget.mElement, mTarget.mPseudoType);
     if (!animatingElement) {
       return;
@@ -1785,7 +1785,7 @@ KeyframeEffect::CreateComputedStyleForAnimationValue(
              "CreateComputedStyleForAnimationValue needs to be called "
              "with a valid ComputedStyle");
 
-  Element* elementForResolve = EffectCompositor::GetElementToRestyle(
+  Element* elementForResolve = AnimationUtils::GetElementForRestyle(
       mTarget.mElement, mTarget.mPseudoType);
   // The element may be null if, for example, we target a pseudo-element that no
   // longer exists.

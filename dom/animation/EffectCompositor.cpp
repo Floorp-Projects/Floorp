@@ -271,7 +271,8 @@ void EffectCompositor::PostRestyleForAnimation(dom::Element* aElement,
   // have the generated element here, so we failed the wpt.
   //
   // See wpt for more info: web-animations/interfaces/KeyframeEffect/target.html
-  dom::Element* element = GetElementToRestyle(aElement, aPseudoType);
+  Element* element =
+      AnimationUtils::GetElementForRestyle(aElement, aPseudoType);
   if (!element) {
     return;
   }
@@ -513,30 +514,6 @@ bool EffectCompositor::ComposeServoAnimationRuleForEffect(
   return true;
 }
 
-/* static */ dom::Element* EffectCompositor::GetElementToRestyle(
-    dom::Element* aElement, PseudoStyleType aPseudoType) {
-  if (aPseudoType == PseudoStyleType::NotPseudo) {
-    return aElement;
-  }
-
-  if (aPseudoType == PseudoStyleType::before) {
-    return nsLayoutUtils::GetBeforePseudo(aElement);
-  }
-
-  if (aPseudoType == PseudoStyleType::after) {
-    return nsLayoutUtils::GetAfterPseudo(aElement);
-  }
-
-  if (aPseudoType == PseudoStyleType::marker) {
-    return nsLayoutUtils::GetMarkerPseudo(aElement);
-  }
-
-  MOZ_ASSERT_UNREACHABLE(
-      "Should not try to get the element to restyle for "
-      "a pseudo other that :before, :after or ::marker");
-  return nullptr;
-}
-
 bool EffectCompositor::HasPendingStyleUpdates() const {
   for (auto& elementSet : mElementsToRestyle) {
     if (elementSet.Count()) {
@@ -638,8 +615,9 @@ nsCSSPropertyIDSet EffectCompositor::GetOverriddenProperties(
 
   nsCSSPropertyIDSet result;
 
-  Element* elementToRestyle = GetElementToRestyle(aElement, aPseudoType);
-  if (!elementToRestyle) {
+  Element* elementForRestyle =
+      AnimationUtils::GetElementForRestyle(aElement, aPseudoType);
+  if (!elementForRestyle) {
     return result;
   }
 
@@ -669,8 +647,8 @@ nsCSSPropertyIDSet EffectCompositor::GetOverriddenProperties(
     return result;
   }
 
-  Servo_GetProperties_Overriding_Animation(elementToRestyle, &propertiesToTrack,
-                                           &result);
+  Servo_GetProperties_Overriding_Animation(elementForRestyle,
+                                           &propertiesToTrack, &result);
   return result;
 }
 

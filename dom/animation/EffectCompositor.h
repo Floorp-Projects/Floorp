@@ -218,15 +218,6 @@ class EffectCompositor {
   bool NeedsReducing() const { return !mElementsToReduce.empty(); }
   void ReduceAnimations();
 
-  // Returns the target element for restyling.
-  //
-  // If |aPseudoType| is ::after, ::before or ::marker, returns the generated
-  // content element of which |aElement| is the parent. If |aPseudoType| is any
-  // other pseudo type (other than PseudoStyleType::NotPseudo) returns nullptr.
-  // Otherwise, returns |aElement|.
-  static dom::Element* GetElementToRestyle(dom::Element* aElement,
-                                           PseudoStyleType aPseudoType);
-
   // Returns true if any type of compositor animations on |aFrame| allow
   // runnning on the compositor.
   // Sets the reason in |aWarning| if the result is false.

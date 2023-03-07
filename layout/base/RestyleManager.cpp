@@ -6,6 +6,7 @@
 
 #include "mozilla/RestyleManager.h"
 
+#include "mozilla/AnimationUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/AutoRestyleTimelineMarker.h"
 #include "mozilla/AutoTimelineMarker.h"
@@ -2328,7 +2329,7 @@ void RestyleManager::PostRestyleEventForAnimations(Element* aElement,
                                                    PseudoStyleType aPseudoType,
                                                    RestyleHint aRestyleHint) {
   Element* elementToRestyle =
-      EffectCompositor::GetElementToRestyle(aElement, aPseudoType);
+      AnimationUtils::GetElementForRestyle(aElement, aPseudoType);
 
   if (!elementToRestyle) {
     // FIXME: Bug 1371107: When reframing happens,

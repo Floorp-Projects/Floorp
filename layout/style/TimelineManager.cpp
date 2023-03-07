@@ -6,7 +6,7 @@
 
 #include "TimelineManager.h"
 
-#include "mozilla/EffectCompositor.h"
+#include "mozilla/AnimationUtils.h"
 #include "mozilla/ElementAnimationData.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScrollTimeline.h"
@@ -88,7 +88,7 @@ static auto BuildTimelines(nsPresContext* aPresContext, Element* aElement,
 
     RefPtr<TimelineType> dest =
         PopExistingTimeline(timeline.GetName(), aCollection);
-    Element* e = EffectCompositor::GetElementToRestyle(aElement, aPseudoType);
+    Element* e = AnimationUtils::GetElementForRestyle(aElement, aPseudoType);
     if (dest) {
       dest->ReplacePropertiesWith(e, timeline);
     } else {
