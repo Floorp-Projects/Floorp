@@ -13414,6 +13414,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
 
   if (IsCSSPropertyPrefEnabled("layout.css.motion-path-ray.enabled")) {
     gCSSProperties["offset-path"]["other_values"].push(
+      "ray(0deg)",
       "ray(45deg closest-side)",
       "ray(0rad farthest-side)",
       "ray(0.5turn closest-corner contain)",
@@ -13424,7 +13425,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
     );
 
     gCSSProperties["offset-path"]["invalid_values"].push(
-      "ray(0deg)",
       "ray(closest-side)",
       "ray(0deg, closest-side)",
       "ray(contain 0deg closest-side contain)"
