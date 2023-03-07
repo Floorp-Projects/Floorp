@@ -3,9 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import datetime
+import json
 import os
 import tarfile
 import tempfile
+import zipfile
 from contextlib import nullcontext as does_not_raise
 from unittest.mock import MagicMock, call
 
@@ -263,6 +265,65 @@ def test_is_chroot_available(
 
     monkeypatch.setattr(deb.os.path, "isdir", _mock_is_dir)
     assert deb._is_chroot_available(arch) == expected_result
+
+
+_MANIFEST_JSON_DATA = {
+    "langpack_id": "fr",
+    "manifest_version": 2,
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "langpack-fr@devedition.mozilla.org",
+            "strict_min_version": "112.0a1",
+            "strict_max_version": "112.0a1",
+        }
+    },
+    "name": "Language: Français (French)",
+    "description": "Firefox Developer Edition Language Pack for Français (fr) – French",
+    "version": "112.0.20230227.181253",
+    "languages": {
+        "fr": {
+            "version": "20230223164410",
+            "chrome_resources": {
+                "app-marketplace-icons": "browser/chrome/browser/locale/fr/app-marketplace-icons/",
+                "branding": "browser/chrome/fr/locale/branding/",
+                "browser": "browser/chrome/fr/locale/browser/",
+                "browser-region": "browser/chrome/fr/locale/browser-region/",
+                "devtools": "browser/chrome/fr/locale/fr/devtools/client/",
+                "devtools-shared": "browser/chrome/fr/locale/fr/devtools/shared/",
+                "formautofill": "browser/features/formautofill@mozilla.org/fr/locale/fr/",
+                "report-site-issue": "browser/features/webcompat-reporter@mozilla.org/fr/locale/fr/",
+                "alerts": "chrome/fr/locale/fr/alerts/",
+                "autoconfig": "chrome/fr/locale/fr/autoconfig/",
+                "global": "chrome/fr/locale/fr/global/",
+                "global-platform": {
+                    "macosx": "chrome/fr/locale/fr/global-platform/mac/",
+                    "linux": "chrome/fr/locale/fr/global-platform/unix/",
+                    "android": "chrome/fr/locale/fr/global-platform/unix/",
+                    "win": "chrome/fr/locale/fr/global-platform/win/",
+                },
+                "mozapps": "chrome/fr/locale/fr/mozapps/",
+                "necko": "chrome/fr/locale/fr/necko/",
+                "passwordmgr": "chrome/fr/locale/fr/passwordmgr/",
+                "pdf.js": "chrome/fr/locale/pdfviewer/",
+                "pipnss": "chrome/fr/locale/fr/pipnss/",
+                "pippki": "chrome/fr/locale/fr/pippki/",
+                "places": "chrome/fr/locale/fr/places/",
+                "weave": "chrome/fr/locale/fr/services/",
+            },
+        }
+    },
+    "sources": {"browser": {"base_path": "browser/"}},
+    "author": "mozfr.org (contributors: L’équipe francophone)",
+}
+
+
+def test_extract_langpack_metadata():
+    with tempfile.TemporaryDirectory() as d:
+        langpack_path = os.path.join(d, "langpack.xpi")
+        with zipfile.ZipFile(langpack_path, "w") as zip:
+            zip.writestr("manifest.json", json.dumps(_MANIFEST_JSON_DATA))
+
+        assert deb._extract_langpack_metadata(langpack_path) == _MANIFEST_JSON_DATA
 
 
 if __name__ == "__main__":

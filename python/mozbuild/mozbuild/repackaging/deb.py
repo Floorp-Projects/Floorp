@@ -3,11 +3,13 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import datetime
+import json
 import os
 import shutil
 import subprocess
 import tarfile
 import tempfile
+import zipfile
 from email.utils import format_datetime
 from pathlib import Path
 from string import Template
@@ -254,3 +256,15 @@ def _get_command(arch):
 def _is_chroot_available(arch):
     deb_arch = _DEB_ARCH[arch]
     return os.path.isdir(f"/srv/{_DEB_DIST}-{deb_arch}")
+
+
+_MANIFEST_FILE_NAME = "manifest.json"
+
+
+def _extract_langpack_metadata(input_xpi_file):
+    with tempfile.TemporaryDirectory() as d:
+        with zipfile.ZipFile(input_xpi_file) as zip:
+            zip.extract(_MANIFEST_FILE_NAME, path=d)
+
+        with open(mozpath.join(d, _MANIFEST_FILE_NAME)) as f:
+            return json.load(f)
