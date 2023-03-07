@@ -49,26 +49,7 @@ ScrollTimeline::ScrollTimeline(Document* aDocument, const Scroller& aScroller,
       mSource(aScroller),
       mAxis(aAxis) {
   MOZ_ASSERT(aDocument);
-}
-
-/* static */
-already_AddRefed<ScrollTimeline> ScrollTimeline::GetOrCreateScrollTimeline(
-    Document* aDocument, const Scroller& aScroller,
-    const StyleScrollAxis& aAxis) {
-  MOZ_ASSERT(aScroller);
-
-  RefPtr<ScrollTimeline> timeline;
-  auto* set =
-      ScrollTimelineSet::GetOrCreateScrollTimelineSet(aScroller.mElement);
-  auto key = ScrollTimelineSet::Key{aScroller.mType, aAxis};
-  auto p = set->LookupForAdd(key);
-  if (!p) {
-    timeline = new ScrollTimeline(aDocument, aScroller, aAxis);
-    set->Add(p, key, timeline);
-  } else {
-    timeline = p->value();
-  }
-  return timeline.forget();
+  RegisterWithScrollSource();
 }
 
 /* static */
@@ -96,7 +77,15 @@ already_AddRefed<ScrollTimeline> ScrollTimeline::FromAnonymousScroll(
       scroller = Scroller::Nearest(curr ? curr : root);
     }
   }
-  return GetOrCreateScrollTimeline(aDocument, scroller, aAxis);
+
+  // Note: We create new ScrollTimeline for anonymous scroll timeline, i.e.
+  // scroll(). In other words, each anonymous scroll timeline is a different
+  // object per the resolution of this spec issue:
+  // https://github.com/w3c/csswg-drafts/issues/8204
+  //
+  // FIXME: Perhaps it's still possible to reuse scroll(root). Need to revisit
+  // this after we start to work on JS support.
+  return MakeAndAddRef<ScrollTimeline>(aDocument, scroller, aAxis);
 }
 
 /* static*/ already_AddRefed<ScrollTimeline> ScrollTimeline::FromNamedScroll(
@@ -154,8 +143,10 @@ already_AddRefed<ScrollTimeline> ScrollTimeline::FromAnonymousScroll(
   if (!result) {
     return nullptr;
   }
+
+  // TODO: Will reuse named progress timelines in the following patches.
   Scroller scroller = Scroller::Named(result);
-  return GetOrCreateScrollTimeline(aDocument, scroller, axis);
+  return MakeAndAddRef<ScrollTimeline>(aDocument, std::move(scroller), axis);
 }
 
 Nullable<TimeDuration> ScrollTimeline::GetCurrentTimeAsDuration() const {
@@ -233,6 +224,17 @@ bool ScrollTimeline::ScrollingDirectionIsAvailable() const {
   return scrollFrame->GetAvailableScrollingDirections().contains(Axis());
 }
 
+void ScrollTimeline::RegisterWithScrollSource() {
+  if (!mSource) {
+    return;
+  }
+
+  if (ScrollTimelineSet* scrollTimelineSet =
+          ScrollTimelineSet::GetOrCreateScrollTimelineSet(mSource.mElement)) {
+    scrollTimelineSet->AddScrollTimeline(this);
+  }
+}
+
 void ScrollTimeline::UnregisterFromScrollSource() {
   if (!mSource) {
     return;
@@ -240,7 +242,7 @@ void ScrollTimeline::UnregisterFromScrollSource() {
 
   if (ScrollTimelineSet* scrollTimelineSet =
           ScrollTimelineSet::GetScrollTimelineSet(mSource.mElement)) {
-    scrollTimelineSet->Remove(ScrollTimelineSet::Key{mSource.mType, mAxis});
+    scrollTimelineSet->RemoveScrollTimeline(this);
     if (scrollTimelineSet->IsEmpty()) {
       ScrollTimelineSet::DestroyScrollTimelineSet(mSource.mElement);
     }

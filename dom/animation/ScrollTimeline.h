@@ -65,6 +65,9 @@ class Element;
  *     linked to the ScrollTimelines.
  */
 class ScrollTimeline final : public AnimationTimeline {
+  template <typename T, typename... Args>
+  friend already_AddRefed<T> mozilla::MakeAndAddRef(Args&&... aArgs);
+
  public:
   struct Scroller {
     // FIXME: Once we support <custom-ident> for <scroller>, we can use
@@ -187,16 +190,15 @@ class ScrollTimeline final : public AnimationTimeline {
   ScrollTimeline(Document* aDocument, const Scroller& aScroller,
                  StyleScrollAxis aAxis);
 
-  static already_AddRefed<ScrollTimeline> GetOrCreateScrollTimeline(
-      Document* aDocument, const Scroller& aScroller,
-      const StyleScrollAxis& aAxis);
-
   // Note: This function is required to be idempotent, as it can be called from
   // both cycleCollection::Unlink() and ~ScrollTimeline(). When modifying this
   // function, be sure to preserve this property.
   void Teardown() { UnregisterFromScrollSource(); }
 
-  // Unregister this scroll timeline to the element property.
+  // Register this scroll timeline to the element property.
+  void RegisterWithScrollSource();
+
+  // Unregister this scroll timeline from the element property.
   void UnregisterFromScrollSource();
 
   const nsIScrollableFrame* GetScrollFrame() const;
@@ -211,26 +213,19 @@ class ScrollTimeline final : public AnimationTimeline {
 };
 
 /**
- * A wrapper around a hashset of ScrollTimeline objects to handle
- * storing the set as a property of an element (i.e. source).
- * This makes use easier to look up a ScrollTimeline from the element.
+ * A wrapper around a hashset of ScrollTimeline objects to handle the scheduling
+ * of scroll driven animations. This is used for all kinds of progress
+ * timelines, i.e. anonymous/named scroll timelines and anonymous/named view
+ * timelines.
  *
  * Note:
- * 1. "source" is the element which the ScrollTimeline hooks.
- *    Each ScrollTimeline hooks an dom::Element, and a dom::Element may be
- *    registered by multiple ScrollTimelines.
- * 2. Element holds the ScrollTimelineSet as an element property. Also, the
- *    owner document of this Element keeps a linked list of ScrollTimelines
- *    (instead of ScrollTimelineSet).
+ * 1. Each ScrollTimeline hooks an dom::Element (as the scroller), and a
+ *    dom::Element may be registered by multiple ScrollTimelines.
+ * 2. Element holds the ScrollTimelineSet as an element property.
  */
 class ScrollTimelineSet {
  public:
-  // In order to reuse the ScrollTimeline with the same scroller and the same
-  // axis, we define a special key for it.
-  using Key = std::pair<ScrollTimeline::Scroller::Type, StyleScrollAxis>;
-  using NonOwningScrollTimelineMap =
-      HashMap<Key, ScrollTimeline*,
-              PairHasher<ScrollTimeline::Scroller::Type, StyleScrollAxis>>;
+  using NonOwningScrollTimelineSet = HashSet<ScrollTimeline*>;
 
   ~ScrollTimelineSet() = default;
 
@@ -238,20 +233,18 @@ class ScrollTimelineSet {
   static ScrollTimelineSet* GetOrCreateScrollTimelineSet(Element* aElement);
   static void DestroyScrollTimelineSet(Element* aElement);
 
-  NonOwningScrollTimelineMap::AddPtr LookupForAdd(Key aKey) {
-    return mScrollTimelines.lookupForAdd(aKey);
+  void AddScrollTimeline(ScrollTimeline* aScrollTimeline) {
+    Unused << mScrollTimelines.put(aScrollTimeline);
   }
-  void Add(NonOwningScrollTimelineMap::AddPtr& aPtr, Key aKey,
-           ScrollTimeline* aScrollTimeline) {
-    Unused << mScrollTimelines.add(aPtr, aKey, aScrollTimeline);
+  void RemoveScrollTimeline(ScrollTimeline* aScrollTimeline) {
+    mScrollTimelines.remove(aScrollTimeline);
   }
-  void Remove(const Key aKey) { mScrollTimelines.remove(aKey); }
 
   bool IsEmpty() const { return mScrollTimelines.empty(); }
 
   void ScheduleAnimations() const {
     for (auto iter = mScrollTimelines.iter(); !iter.done(); iter.next()) {
-      iter.get().value()->ScheduleAnimations();
+      iter.get()->ScheduleAnimations();
     }
   }
 
@@ -259,16 +252,9 @@ class ScrollTimelineSet {
   ScrollTimelineSet() = default;
 
   // ScrollTimelineSet doesn't own ScrollTimeline. We let Animations own its
-  // scroll timeline. (Note: one ScrollTimeline could be owned by multiple
-  // associated Animations.)
-  // The ScrollTimeline is generated only by CSS, so if all the associated
-  // Animations are gone, we don't need the ScrollTimeline anymore, so
-  // ScrollTimelineSet doesn't have to keep it for the source element.
-  // We rely on ScrollTimeline::Teardown() to remove the unused ScrollTimeline
-  // from this hash map.
-  // FIXME: Bug 1676794: We may have to update here if it's possible to create
-  // ScrollTimeline via script.
-  NonOwningScrollTimelineMap mScrollTimelines;
+  // scroll timeline if it is anonymous. For named progress timelines, they are
+  // managed by TimelineCollection.
+  NonOwningScrollTimelineSet mScrollTimelines;
 };
 
 }  // namespace dom
