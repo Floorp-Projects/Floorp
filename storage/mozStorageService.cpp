@@ -308,6 +308,9 @@ void Service::minimizeMemory() {
 UniquePtr<sqlite3_vfs> ConstructTelemetryVFS(bool);
 const char* GetTelemetryVFSName(bool);
 
+UniquePtr<sqlite3_vfs> ConstructQuotaVFS(const char* aBaseVFSName);
+const char* GetQuotaVFSName();
+
 UniquePtr<sqlite3_vfs> ConstructObfuscatingVFS(const char* aBaseVFSName);
 
 UniquePtr<sqlite3_vfs> ConstructReadOnlyNoLockVFS();
@@ -323,6 +326,26 @@ nsresult Service::initialize() {
     return convertResultCode(rc);
   }
 
+  /**
+   *                    The virtual file system hierarchy
+   *
+   *                                 obfsvfs
+   *                                    |
+   *                                    |
+   *                                    |
+   *                                 quotavfs
+   *                                   / \
+   *                                 /     \
+   *                               /         \
+   *                             /             \
+   *                           /                 \
+   *                  telemetry-vfs-excl   telemetry-vfs
+   *                          / \               / \
+   *                        /     \           /     \
+   *                      /         \       /         \
+   *                 unix-excl     win32  unix       win32
+   */
+
   rc = mTelemetrySqliteVFS.Init(ConstructTelemetryVFS(false));
   if (rc != SQLITE_OK) {
     return convertResultCode(rc);
@@ -333,8 +356,13 @@ nsresult Service::initialize() {
     return convertResultCode(rc);
   }
 
-  rc = mObfuscatingSqliteVFS.Init(ConstructObfuscatingVFS(GetTelemetryVFSName(
+  rc = mQuotaSqliteVFS.Init(ConstructQuotaVFS(GetTelemetryVFSName(
       StaticPrefs::storage_sqlite_exclusiveLock_enabled())));
+  if (rc != SQLITE_OK) {
+    return convertResultCode(rc);
+  }
+
+  rc = mObfuscatingSqliteVFS.Init(ConstructObfuscatingVFS(GetQuotaVFSName()));
   if (rc != SQLITE_OK) {
     return convertResultCode(rc);
   }

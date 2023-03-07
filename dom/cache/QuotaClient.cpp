@@ -127,9 +127,8 @@ Result<int64_t, nsresult> GetPaddingSizeFromDB(
   // CacheDirectoryMetadata) because this method should only be called from
   // QuotaClient::InitOrigin when the temporary storage hasn't been initialized
   // yet. At that time, the in-memory objects (e.g. OriginInfo) are only being
-  // created so it doesn't make sense to tunnel quota information to
-  // TelemetryVFS to get corresponding QuotaObject instance for the SQLite
-  // file).
+  // created so it doesn't make sense to tunnel quota information to QuotaVFS
+  // to get corresponding QuotaObject instance for the SQLite file).
   MOZ_DIAGNOSTIC_ASSERT(directoryMetadata.mDirectoryLockId == -1);
 
 #ifdef DEBUG
