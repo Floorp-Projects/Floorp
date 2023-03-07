@@ -179,9 +179,15 @@ class NavigationToolbarTest {
             verifyFindPrevInPageResult("2/3")
             clickFindInPagePrevButton()
             verifyFindPrevInPageResult("1/3")
+        }.closeFindInPageWithCloseButton {
+            verifyFindInPageBar(false)
+        }.openThreeDotMenu {
+        }.openFindInPage {
             enterFindInPageQuery("3")
             verifyFindNextInPageResult("1/1")
-        }.closeFindInPageWithCloseButton { }
+        }.closeFindInPageWithBackButton {
+            verifyFindInPageBar(false)
+        }
     }
 
     @Test
