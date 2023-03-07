@@ -108,13 +108,7 @@ class ProcessDescriptorFront extends DescriptorMixin(
     this._targetFrontPromise = (async () => {
       let targetFront = null;
       try {
-        // @backward-compat { version 110 } isBrowserToolboxFission is no longer
-        // necessary for servers with version 110 or newer. This can be replaced
-        // with `const targetForm = await super.getTarget();` when 110 reaches
-        // the release channel.
-        const targetForm = await super.getTarget({
-          isBrowserToolboxFission: true,
-        });
+        const targetForm = await super.getTarget();
         targetFront = await this._createProcessTargetFront(targetForm);
       } catch (e) {
         // This is likely to happen if we get a lot of events which drop previous
@@ -132,15 +126,6 @@ class ProcessDescriptorFront extends DescriptorMixin(
       return targetFront;
     })();
     return this._targetFrontPromise;
-  }
-
-  // @backward-compat { version 110 } isBrowserToolboxFission is no longer
-  // necessary for servers with version 110 or newer. This method can be
-  // completely removed from the front when 110 reaches the release channel.
-  getWatcher() {
-    return super.getWatcher({
-      isBrowserToolboxFission: true,
-    });
   }
 
   destroy() {

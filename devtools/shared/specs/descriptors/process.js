@@ -14,23 +14,13 @@ const processDescriptorSpec = generateActorSpec({
 
   methods: {
     getTarget: {
-      // @backward-compat { version 110 } isBrowserToolboxFission is no longer
-      // necessary for servers with version 110 or newer. Replace this with
-      // `request: {},` when 110 reaches the release channel.
-      request: {
-        isBrowserToolboxFission: Option(0, "boolean"),
-      },
+      request: {},
       response: {
         process: RetVal("json"),
       },
     },
     getWatcher: {
-      // @backward-compat { version 110 } isBrowserToolboxFission is no longer
-      // necessary for servers with version 110 or newer. Replace this with
-      // `request: {},` when 110 reaches the release channel.
-      request: {
-        isBrowserToolboxFission: Option(0, "boolean"),
-      },
+      request: {},
       response: RetVal("watcher"),
     },
     reloadDescriptor: {
