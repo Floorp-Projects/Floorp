@@ -11,7 +11,7 @@ var rule = require("../lib/rules/reject-global-this");
 var RuleTester = require("eslint").RuleTester;
 
 // class static block is available from ES2022 = 13.
-const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: 13 } });
+const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: "latest" } });
 
 // ------------------------------------------------------------------------------
 // Tests
