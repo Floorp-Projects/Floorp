@@ -216,7 +216,7 @@ export var BroadcastService = class {
 
       let module;
       try {
-        module = ChromeUtils.import(moduleURI);
+        module = ChromeUtils.importESModule(moduleURI);
       } catch (e) {
         lazy.console.error(
           "receivedBroadcastMessage: couldn't invoke",

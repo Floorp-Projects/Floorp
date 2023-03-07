@@ -575,10 +575,7 @@ function remoteSettingsFunction() {
     );
 
     const moduleInfo = {
-      // TODO: This should be `import.meta.url`, however the push service
-      // does not currently support ES modules, so use the old URI which still
-      // works for ChromeUtils.import. See bug 1817460.
-      moduleURI: "resource://services-settings/remote-settings.js",
+      moduleURI: import.meta.url,
       symbolName: "remoteSettingsBroadcastHandler",
     };
     lazy.pushBroadcastService.addListener(
