@@ -118,7 +118,7 @@ class StructuredHumanFormatter(logging.Formatter):
         self.last_time = None
 
     def format(self, record):
-        formatted_msg = record.msg.format(**record.params)
+        formatted_msg = record.msg.format(**getattr(record, "params", {}))
 
         elapsed_time = (
             format_seconds(self._time(record)) + " " if self.write_times else ""
