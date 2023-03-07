@@ -148,6 +148,40 @@ media::DecodeSupportSet AndroidDecoderModule::SupportsMimeType(
   return AndroidDecoderModule::SupportsMimeType(aMimeType);
 }
 
+bool AndroidDecoderModule::SupportsColorDepth(
+    gfx::ColorDepth aColorDepth, DecoderDoctorDiagnostics* aDiagnostics) const {
+  // 10-bit support is codec dependent so this is not entirely accurate.
+  // Supports() will correct it.
+  return aColorDepth == gfx::ColorDepth::COLOR_8 ||
+         aColorDepth == gfx::ColorDepth::COLOR_10;
+}
+
+// Further check is needed because the base class uses the inaccurate
+// SupportsColorDepth().
+media::DecodeSupportSet AndroidDecoderModule::Supports(
+    const SupportDecoderParams& aParams,
+    DecoderDoctorDiagnostics* aDiagnostics) const {
+  media::DecodeSupportSet support =
+      PlatformDecoderModule::Supports(aParams, aDiagnostics);
+
+  // Short-circuit.
+  if (support == media::DecodeSupport::Unsupported) {
+    return support;
+  }
+
+  // Check 10-bit video.
+  const TrackInfo& trackInfo = aParams.mConfig;
+  const VideoInfo* videoInfo = trackInfo.GetAsVideoInfo();
+  if (!videoInfo || videoInfo->mColorDepth != gfx::ColorDepth::COLOR_10) {
+    return support;
+  }
+
+  return java::HardwareCodecCapabilityUtils::Decodes10Bit(
+             TranslateMimeType(aParams.MimeType()))
+             ? support
+             : media::DecodeSupport::Unsupported;
+}
+
 already_AddRefed<MediaDataDecoder> AndroidDecoderModule::CreateVideoDecoder(
     const CreateDecoderParams& aParams) {
   // Temporary - forces use of VPXDecoder when alpha is present.

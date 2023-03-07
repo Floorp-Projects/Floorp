@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.util;
 
+import android.annotation.SuppressLint;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecInfo.CodecCapabilities;
@@ -261,5 +262,59 @@ public final class HardwareCodecCapabilityUtils {
   public static boolean hasHWH264() {
     return getHWCodecCapability(H264_MIME_TYPE, true)
         && getHWCodecCapability(H264_MIME_TYPE, false);
+  }
+
+  @WrapForJNI
+  @SuppressLint("NewApi")
+  public static boolean decodes10Bit(final String aMimeType) {
+    if (Build.VERSION.SDK_INT < 24) {
+      // Be conservative when we cannot get supported profile.
+      return false;
+    }
+
+    final MediaCodecList codecs = new MediaCodecList(MediaCodecList.REGULAR_CODECS);
+    for (final MediaCodecInfo info : codecs.getCodecInfos()) {
+      if (info.isEncoder()) {
+        continue;
+      }
+      try {
+        for (final MediaCodecInfo.CodecProfileLevel pl :
+            info.getCapabilitiesForType(aMimeType).profileLevels) {
+          if ((aMimeType.equals(H264_MIME_TYPE)
+                  && pl.profile == MediaCodecInfo.CodecProfileLevel.AVCProfileHigh10)
+              || (aMimeType.equals(VP9_MIME_TYPE) && is10BitVP9Profile(pl.profile))) {
+            return true;
+          }
+        }
+      } catch (final IllegalArgumentException e) {
+        // Type not supported.
+        continue;
+      }
+    }
+
+    return false;
+  }
+
+  @SuppressLint("NewApi")
+  private static boolean is10BitVP9Profile(final int profile) {
+    if (Build.VERSION.SDK_INT < 24) {
+      // Be conservative when we cannot get supported profile.
+      return false;
+    }
+
+    if ((profile == MediaCodecInfo.CodecProfileLevel.VP9Profile2)
+        || (profile == MediaCodecInfo.CodecProfileLevel.VP9Profile3)
+        || (profile == MediaCodecInfo.CodecProfileLevel.VP9Profile2HDR)
+        || (profile == MediaCodecInfo.CodecProfileLevel.VP9Profile3HDR)) {
+      return true;
+    }
+
+    if (Build.VERSION.SDK_INT >= 29
+        && ((profile == MediaCodecInfo.CodecProfileLevel.VP9Profile2HDR10Plus)
+            || (profile == MediaCodecInfo.CodecProfileLevel.VP9Profile3HDR10Plus))) {
+      return true;
+    }
+
+    return false;
   }
 }
