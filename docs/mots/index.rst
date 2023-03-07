@@ -1977,6 +1977,8 @@ Storage APIs with a SQLite backend
       -
         | `Andrew Sutherland (asuth) <https://people.mozilla.org/s?query=asuth>`__
         | `Jan Varga (janv) <https://people.mozilla.org/s?query=janv>`__
+    * - Owner(s) Emeritus
+      - Shawn Wilsher
     * - Includes
       -
         | `third_party/sqlite3/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=third_party/sqlite3/\*\*/\*>`__
@@ -2801,8 +2803,14 @@ The bookmarks and history services (Places).
         | `Marco Bonardo (mak) <https://people.mozilla.org/s?query=mak>`__
     * - Peer(s)
       -
-        | `Mark Banner (standard8) <https://people.mozilla.org/s?query=standard8>`__
         | `Drew Willcoxon (adw) <https://people.mozilla.org/s?query=adw>`__
+        | `Daisuke Akatsuka (daisuke) <https://people.mozilla.org/s?query=daisuke>`__
+        | `Lina Butler (lina) <https://people.mozilla.org/s?query=lina>`__
+        | `Mark Banner (standard8) <https://people.mozilla.org/s?query=standard8>`__
+    * - Owner(s) Emeritus
+      - Dietrich Ayala
+    * - Peer(s) Emeritus
+      - Asaf Romano, David Dahl, Shawn Wilsher
     * - Includes
       -
         | `browser/components/places/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=browser/components/places/\*\*/\*>`__
@@ -2873,6 +2881,8 @@ The downloads UI and service.
       -
         | `Gijs <https://people.mozilla.org/s?query=Gijs>`__
         | `Micah Tigley (micah) <https://people.mozilla.org/s?query=micah>`__
+    * - Owner(s) Emeritus
+      - Paolo Amadini, Shawn Wilsher
     * - Includes
       -
         | `browser/components/downloads/\*\*/\* <https://searchfox.org/mozilla-central/search?q=&path=browser/components/downloads/\*\*/\*>`__
