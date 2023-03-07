@@ -31,6 +31,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   CustomizableUI: "resource:///modules/CustomizableUI.jsm",
+  PdfJsDefaultPreferences: "resource://pdf.js/PdfJsDefaultPreferences.jsm",
 });
 
 const PREF_LOGLEVEL = "browser.policies.loglevel";
@@ -1794,7 +1795,23 @@ export var Policies = {
                 // automatically converting these values to booleans.
                 // Since we allow arbitrary prefs now, we have to do
                 // something different. See bug 1666836.
-                if (
+                // Even uglier, because pdfjs prefs are set async, we need
+                // to get their type from PdfJsDefaultPreferences.
+                if (preference.startsWith("pdfjs.")) {
+                  let preferenceTail = preference.replace("pdfjs.", "");
+                  if (
+                    preferenceTail in lazy.PdfJsDefaultPreferences &&
+                    typeof lazy.PdfJsDefaultPreferences[preferenceTail] ==
+                      "number"
+                  ) {
+                    prefBranch.setIntPref(preference, param[preference].Value);
+                  } else {
+                    prefBranch.setBoolPref(
+                      preference,
+                      !!param[preference].Value
+                    );
+                  }
+                } else if (
                   prefBranch.getPrefType(preference) == prefBranch.PREF_INT ||
                   ![0, 1].includes(param[preference].Value)
                 ) {
