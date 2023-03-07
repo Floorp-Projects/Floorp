@@ -520,9 +520,8 @@ function serializeNode(
 
   serialized.childNodeCount = node.childNodes.length;
 
-  let children = null;
   if (maxDepth !== 0) {
-    children = [];
+    const children = [];
     const childDepth = maxDepth !== null ? maxDepth - 1 : null;
     for (const child of node.childNodes) {
       children.push(
@@ -535,8 +534,9 @@ function serializeNode(
         )
       );
     }
+
+    serialized.children = children;
   }
-  serialized.children = children;
 
   if (isElement) {
     serialized.attributes = [...node.attributes].reduce((map, attr) => {
