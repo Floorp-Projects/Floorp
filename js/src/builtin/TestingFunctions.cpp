@@ -2483,6 +2483,33 @@ static bool SetMarkStackLimit(JSContext* cx, unsigned argc, Value* vp) {
 
 #endif /* JS_GC_ZEAL */
 
+static bool SetMallocMaxDirtyPageModifier(JSContext* cx, unsigned argc,
+                                          Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  if (args.length() != 1) {
+    RootedObject callee(cx, &args.callee());
+    ReportUsageErrorASCII(cx, callee, "Wrong number of arguments");
+    return false;
+  }
+
+  constexpr int32_t MinSupportedValue = -5;
+  constexpr int32_t MaxSupportedValue = 16;
+
+  int32_t value;
+  if (!ToInt32(cx, args[0], &value)) {
+    return false;
+  }
+  if (value < MinSupportedValue || value > MaxSupportedValue) {
+    JS_ReportErrorASCII(cx, "Bad argument to setMallocMaxDirtyPageModifier");
+    return false;
+  }
+
+  moz_set_max_dirty_page_modifier(value);
+
+  args.rval().setUndefined();
+  return true;
+}
+
 static bool GCState(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -8525,6 +8552,11 @@ gc::ZealModeHelpText),
     JS_FN_HELP("abortgc", AbortGC, 1, 0,
 "abortgc()",
 "  Abort the current incremental GC."),
+
+    JS_FN_HELP("setMallocMaxDirtyPageModifier", SetMallocMaxDirtyPageModifier, 1, 0,
+"setMallocMaxDirtyPageModifier(value)",
+"  Change the maximum size of jemalloc's page cache. The value should be between\n"
+"  -5 and 16 (inclusive). See moz_set_max_dirty_page_modifier.\n"),
 
     JS_FN_HELP("fullcompartmentchecks", FullCompartmentChecks, 1, 0,
 "fullcompartmentchecks(true|false)",
