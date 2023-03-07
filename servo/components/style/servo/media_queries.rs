@@ -15,7 +15,6 @@ use crate::values::computed::CSSPixelLength;
 use crate::values::specified::font::FONT_MEDIUM_PX;
 use crate::values::KeyframesName;
 use app_units::Au;
-use cssparser::RGBA;
 use euclid::default::Size2D as UntypedSize2D;
 use euclid::{Scale, SideOffsets2D, Size2D};
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};

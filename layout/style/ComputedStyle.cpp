@@ -296,7 +296,7 @@ static nscolor GetVisitedDependentColorInternal(const ComputedStyle& aStyle,
 }
 
 static nscolor ExtractColor(const ComputedStyle& aStyle,
-                            const StyleRGBA& aColor) {
+                            const StyleAbsoluteColor& aColor) {
   return aColor.ToColor();
 }
 

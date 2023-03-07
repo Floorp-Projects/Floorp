@@ -8,7 +8,6 @@
 use crate::media_queries::Device;
 use crate::properties::ComputedValues;
 use crate::ArcSlice;
-use cssparser;
 use servo_arc::Arc;
 use smallvec::SmallVec;
 
@@ -84,7 +83,7 @@ trivial_to_resolved_value!(usize);
 trivial_to_resolved_value!(String);
 trivial_to_resolved_value!(Box<str>);
 trivial_to_resolved_value!(crate::OwnedStr);
-trivial_to_resolved_value!(cssparser::RGBA);
+trivial_to_resolved_value!(crate::color::AbsoluteColor);
 trivial_to_resolved_value!(crate::Atom);
 trivial_to_resolved_value!(crate::values::AtomIdent);
 trivial_to_resolved_value!(app_units::Au);

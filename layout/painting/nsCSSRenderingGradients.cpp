@@ -246,9 +246,9 @@ static float Interpolate(float aF1, float aF2, float aFrac) {
   return aF1 + aFrac * (aF2 - aF1);
 }
 
-static StyleAnimatedRGBA Interpolate(const StyleAnimatedRGBA& aLeft,
-                                     const StyleAnimatedRGBA& aRight,
-                                     float aFrac) {
+static StyleAbsoluteColor Interpolate(const StyleAbsoluteColor& aLeft,
+                                      const StyleAbsoluteColor& aRight,
+                                      float aFrac) {
   // NOTE: This has to match the interpolation method that WebRender uses which
   // right now is sRGB. In the future we should implement interpolation in more
   // gradient color-spaces.
@@ -256,7 +256,7 @@ static StyleAnimatedRGBA Interpolate(const StyleAnimatedRGBA& aLeft,
       StyleColorSpace::Srgb,
       StyleHueInterpolationMethod::Shorter,
   };
-  return Servo_InterpolateColor(&kMethod, &aRight, &aLeft, aFrac);
+  return Servo_InterpolateColor(kMethod, &aRight, &aLeft, aFrac);
 }
 
 static nscoord FindTileStart(nscoord aDirtyCoord, nscoord aTilePos,
@@ -297,7 +297,7 @@ static bool RectIsBeyondLinearGradientEdge(const gfxRect& aRect,
                                            const nsTArray<ColorStop>& aStops,
                                            const gfxPoint& aGradientStart,
                                            const gfxPoint& aGradientEnd,
-                                           StyleAnimatedRGBA* aOutEdgeColor) {
+                                           StyleAbsoluteColor* aOutEdgeColor) {
   gfxFloat topLeft = LinearGradientStopPositionForPoint(
       aGradientStart, aGradientEnd,
       aPatternMatrix.TransformPoint(aRect.TopLeft()));
@@ -393,14 +393,24 @@ static void ResolveMidpoints(nsTArray<ColorStop>& stops) {
           (newStop.mPosition - offset1) / (offset2 - offset1);
       const float multiplier = powf(relativeOffset, logf(.5f) / logf(midpoint));
 
-      const float red = color1.red + multiplier * (color2.red - color1.red);
+      MOZ_ASSERT(color1.color_space == StyleColorSpace::Srgb,
+                 "should be in sRGB");
+      MOZ_ASSERT(color2.color_space == StyleColorSpace::Srgb,
+                 "should be in sRGB");
+
+      const float red =
+          color1.components._0 +
+          multiplier * (color2.components._0 - color1.components._0);
       const float green =
-          color1.green + multiplier * (color2.green - color1.green);
-      const float blue = color1.blue + multiplier * (color2.blue - color1.blue);
+          color1.components._1 +
+          multiplier * (color2.components._1 - color1.components._1);
+      const float blue =
+          color1.components._2 +
+          multiplier * (color2.components._2 - color1.components._2);
       const float alpha =
           color1.alpha + multiplier * (color2.alpha - color1.alpha);
 
-      newStop.mColor = {red, green, blue, alpha};
+      newStop.mColor = StyleAbsoluteColor::Srgb(red, green, blue, alpha);
     }
 
     stops.ReplaceElementsAt(x, 1, newStops, 9);
@@ -408,7 +418,7 @@ static void ResolveMidpoints(nsTArray<ColorStop>& stops) {
   }
 }
 
-static StyleAnimatedRGBA TransparentColor(const StyleAnimatedRGBA& aColor) {
+static StyleAbsoluteColor TransparentColor(const StyleAbsoluteColor& aColor) {
   auto color = aColor;
   color.alpha = 0.0f;
   return color;
@@ -470,7 +480,7 @@ static void ResolvePremultipliedAlpha(nsTArray<ColorStop>& aStops) {
 static ColorStop InterpolateColorStop(const ColorStop& aFirst,
                                       const ColorStop& aSecond,
                                       double aPosition,
-                                      const StyleAnimatedRGBA& aDefault) {
+                                      const StyleAbsoluteColor& aDefault) {
   MOZ_ASSERT(aFirst.mPosition <= aPosition);
   MOZ_ASSERT(aPosition <= aSecond.mPosition);
 
@@ -540,18 +550,17 @@ static void ClampColorStops(nsTArray<ColorStop>& aStops) {
 namespace mozilla {
 
 template <typename T>
-static StyleAnimatedRGBA GetSpecifiedColor(
+static StyleAbsoluteColor GetSpecifiedColor(
     const StyleGenericGradientItem<StyleColor, T>& aItem,
     const ComputedStyle& aStyle) {
   if (aItem.IsInterpolationHint()) {
-    return {0.0f, 0.0f, 0.0f, 0.0f};
+    return StyleAbsoluteColor::Transparent();
   }
   const StyleColor& c = aItem.IsSimpleColorStop()
                             ? aItem.AsSimpleColorStop()
                             : aItem.AsComplexColorStop().color;
-  nscolor color = c.CalcColor(aStyle);
-  return {NS_GET_R(color) / 255.0f, NS_GET_G(color) / 255.0f,
-          NS_GET_B(color) / 255.0f, NS_GET_A(color) / 255.0f};
+
+  return c.ResolveColor(aStyle.StyleText()->mColor);
 }
 
 static Maybe<double> GetSpecifiedGradientPosition(
@@ -1077,7 +1086,7 @@ void nsCSSGradientRenderer::Paint(gfxContext& aContext, const nsRect& aDest,
 
       gfxRect dirtyFillRect = fillRect.Intersect(dirtyAreaToFill);
       gfxRect fillRectRelativeToTile = dirtyFillRect - tileRect.TopLeft();
-      StyleAnimatedRGBA edgeColor{0.0f};
+      auto edgeColor = StyleAbsoluteColor::Transparent();
       if (mGradient->IsLinear() && !isRepeat &&
           RectIsBeyondLinearGradientEdge(fillRectRelativeToTile, matrix, mStops,
                                          gradientStart, gradientEnd,

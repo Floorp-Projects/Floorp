@@ -930,7 +930,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
 
   nsChangeHint CalcDifference(const nsStyleText& aNewData) const;
 
-  mozilla::StyleRGBA mColor;
+  mozilla::StyleAbsoluteColor mColor;
   mozilla::StyleForcedColorAdjust mForcedColorAdjust;
   mozilla::StyleTextTransform mTextTransform;
   mozilla::StyleTextAlign mTextAlign;

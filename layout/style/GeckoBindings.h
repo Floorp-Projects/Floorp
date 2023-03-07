@@ -306,7 +306,7 @@ void Gecko_SetFontPaletteBase(
 
 void Gecko_SetFontPaletteOverride(
     mozilla::gfx::FontPaletteValueSet::PaletteValues* aValues, int32_t aIndex,
-    mozilla::StyleRGBA aColor);
+    mozilla::StyleAbsoluteColor* aColor);
 
 // Visibility style
 void Gecko_SetImageOrientation(nsStyleVisibility* aVisibility,

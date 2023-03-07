@@ -21,7 +21,7 @@ use std::ptr;
 use style::applicable_declarations::ApplicableDeclarationBlock;
 use style::author_styles::AuthorStyles;
 use style::color::mix::ColorInterpolationMethod;
-use style::color::AbsoluteColor;
+use style::color::{AbsoluteColor, ColorSpace};
 use style::context::ThreadLocalStyleContext;
 use style::context::{CascadeInputs, QuirksMode, SharedStyleContext, StyleContext};
 use style::counter_style;
@@ -136,7 +136,6 @@ use style::traversal::resolve_style;
 use style::traversal::DomTraversal;
 use style::traversal_flags::{self, TraversalFlags};
 use style::use_counters::UseCounters;
-use style::values::animated::color::AnimatedRGBA;
 use style::values::animated::{Animate, Procedure, ToAnimatedZero};
 use style::values::computed::easing::ComputedTimingFunction;
 use style::values::computed::font::{
@@ -765,17 +764,17 @@ pub extern "C" fn Servo_AnimationValue_GetColor(
     value: &RawServoAnimationValue,
     foreground_color: structs::nscolor,
 ) -> structs::nscolor {
-    use style::gecko::values::convert_nscolor_to_rgba;
-    use style::gecko::values::convert_rgba_to_nscolor;
-    use style::values::animated::ToAnimatedValue;
+    use style::gecko::values::{
+        convert_absolute_color_to_nscolor, convert_nscolor_to_absolute_color,
+    };
     use style::values::computed::color::Color as ComputedColor;
 
     let value = AnimationValue::as_arc(&value);
     match **value {
         AnimationValue::BackgroundColor(ref color) => {
-            let computed: ComputedColor = ToAnimatedValue::from_animated_value(color.clone());
-            let foreground_color = convert_nscolor_to_rgba(foreground_color);
-            convert_rgba_to_nscolor(&computed.into_rgba(foreground_color))
+            let computed: ComputedColor = color.clone();
+            let foreground_color = convert_nscolor_to_absolute_color(foreground_color);
+            convert_absolute_color_to_nscolor(&computed.resolve_into_absolute(&foreground_color))
         },
         _ => panic!("Other color properties are not supported yet"),
     }
@@ -813,23 +812,17 @@ pub extern "C" fn Servo_AnimationValue_Color(
     color_property: nsCSSPropertyID,
     color: structs::nscolor,
 ) -> Strong<RawServoAnimationValue> {
-    use style::gecko::values::convert_nscolor_to_rgba;
+    use style::gecko::values::convert_nscolor_to_absolute_color;
     use style::values::animated::color::Color;
 
     let property = LonghandId::from_nscsspropertyid(color_property)
         .expect("We don't have shorthand property animation value");
 
-    let rgba = convert_nscolor_to_rgba(color);
+    let animated = convert_nscolor_to_absolute_color(color);
 
-    let animated = AnimatedRGBA::new(
-        rgba.red_f32(),
-        rgba.green_f32(),
-        rgba.blue_f32(),
-        rgba.alpha_f32(),
-    );
     match property {
         LonghandId::BackgroundColor => {
-            Arc::new(AnimationValue::BackgroundColor(Color::rgba(animated))).into_strong()
+            Arc::new(AnimationValue::BackgroundColor(Color::Absolute(animated))).into_strong()
         },
         _ => panic!("Should be background-color property"),
     }
@@ -5638,14 +5631,14 @@ pub extern "C" fn Servo_DeclarationBlock_SetColorValue(
     property: nsCSSPropertyID,
     value: structs::nscolor,
 ) {
-    use style::gecko::values::convert_nscolor_to_rgba;
+    use style::gecko::values::convert_nscolor_to_absolute_color;
     use style::properties::longhands;
     use style::properties::PropertyDeclaration;
     use style::values::specified::Color;
 
     let long = get_longhand_from_id!(property);
-    let rgba = convert_nscolor_to_rgba(value);
-    let color = Color::rgba(rgba);
+    let rgba = convert_nscolor_to_absolute_color(value);
+    let color = Color::from_absolute_color(rgba);
 
     let prop = match_wrap_declared! { long,
         BorderTopColor => color,
@@ -6808,7 +6801,6 @@ pub extern "C" fn Servo_StyleSet_HasDocumentStateDependency(
     data.stylist.has_document_state_dependency(state)
 }
 
-
 fn computed_or_resolved_value(
     style: &ComputedValues,
     prop: nsCSSPropertyID,
@@ -6816,14 +6808,19 @@ fn computed_or_resolved_value(
     value: &mut nsACString,
 ) {
     if let Ok(longhand) = LonghandId::from_nscsspropertyid(prop) {
-        return style.computed_or_resolved_value(longhand, context, value).unwrap();
+        return style
+            .computed_or_resolved_value(longhand, context, value)
+            .unwrap();
     }
 
     let shorthand =
         ShorthandId::from_nscsspropertyid(prop).expect("Not a shorthand nor a longhand?");
     let mut block = PropertyDeclarationBlock::new();
     for longhand in shorthand.longhands() {
-        block.push(style.computed_or_resolved_declaration(longhand, context), Importance::Normal);
+        block.push(
+            style.computed_or_resolved_declaration(longhand, context),
+            Importance::Normal,
+        );
     }
     block.shorthand_to_css(shorthand, value).unwrap();
 }
@@ -7099,23 +7096,30 @@ pub unsafe extern "C" fn Servo_ComputeColor(
         None => return false,
     };
 
-    let current_color = style::gecko::values::convert_nscolor_to_rgba(current_color);
+    let current_color = style::gecko::values::convert_nscolor_to_absolute_color(current_color);
     if !was_current_color.is_null() {
         *was_current_color = computed.is_currentcolor();
     }
 
-    let rgba = computed.into_rgba(current_color);
-    *result_color = style::gecko::values::convert_rgba_to_nscolor(&rgba);
+    let rgba = computed.resolve_into_absolute(&current_color);
+    *result_color = style::gecko::values::convert_absolute_color_to_nscolor(&rgba);
     true
 }
 
 #[no_mangle]
 pub extern "C" fn Servo_ResolveColor(
     color: &computed::Color,
-    foreground: &style::values::RGBA,
-) -> structs::nscolor {
-    use style::gecko::values::convert_rgba_to_nscolor;
-    convert_rgba_to_nscolor(&color.clone().into_rgba(*foreground))
+    foreground: &style::color::AbsoluteColor,
+) -> style::color::AbsoluteColor {
+    color.clone().resolve_into_absolute(foreground)
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ConvertColorSpace(
+    color: &AbsoluteColor,
+    color_space: ColorSpace,
+) -> AbsoluteColor {
+    color.to_color_space(color_space)
 }
 
 #[no_mangle]
@@ -7693,20 +7697,19 @@ pub unsafe extern "C" fn Servo_InvalidateForViewportUnits(
 
 #[no_mangle]
 pub extern "C" fn Servo_InterpolateColor(
-    interpolation: &ColorInterpolationMethod,
-    left: &AnimatedRGBA,
-    right: &AnimatedRGBA,
+    interpolation: ColorInterpolationMethod,
+    left: &AbsoluteColor,
+    right: &AbsoluteColor,
     progress: f32,
-) -> AnimatedRGBA {
+) -> AbsoluteColor {
     style::color::mix::mix(
         interpolation,
-        &AbsoluteColor::from(left.clone()),
+        left,
         progress,
-        &AbsoluteColor::from(right.clone()),
+        right,
         1.0 - progress,
         /* normalize_weights = */ false,
     )
-    .into()
 }
 
 #[no_mangle]
