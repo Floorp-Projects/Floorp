@@ -12285,6 +12285,36 @@
     "kind": "boolean",
     "description": "Accumulates how many downloads are mixed-content (True = The download is MixedContent, False= is not MixedContent)"
   },
+  "MIXED_CONTENT_IMAGES": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "bug_numbers": [1819336],
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "labels": ["ImgUpSuccess", "ImgUpFailure", "ImgNoUpSuccess", "ImgNoUpFailure"],
+    "description": "How often image loads fail in regular mode and in upgrading mode?"
+  },
+  "MIXED_CONTENT_VIDEO": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "bug_numbers": [1819336],
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "labels": ["VideoUpSuccess", "VideoUpFailure", "VideoNoUpSuccess", "VideoNoUpFailure"],
+    "description": "How often video loads fail in regular mode and in upgrading mode?"
+  },
+  "MIXED_CONTENT_AUDIO": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "bug_numbers": [1819336],
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "labels": ["AudioUpSuccess", "AudioUpFailure", "AudioNoUpSuccess", "AudioNoUpFailure"],
+    "description": "How often audio loads fail in regular mode and in upgrading mode?"
+  },
   "CONTENT_SIGNATURE_VERIFICATION_STATUS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "thunderbird"],

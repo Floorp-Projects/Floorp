@@ -7744,6 +7744,54 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
     }
   }
 
+  // Collect specific telemetry for measuring image, video, audio
+  // success/failure rates in regular browsing mode and when auto upgrading of
+  // subresources is enabled. Note that we only evaluate actual image types, not
+  // favicons.
+  nsContentPolicyType internalLoadType;
+  mLoadInfo->GetInternalContentPolicyType(&internalLoadType);
+  bool statusIsSuccess = NS_SUCCEEDED(aStatus);
+  if (internalLoadType == nsIContentPolicy::TYPE_INTERNAL_IMAGE ||
+      internalLoadType == nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD) {
+    if (mLoadInfo->GetBrowserDidUpgradeInsecureRequests()) {
+      Telemetry::AccumulateCategorical(
+          statusIsSuccess
+              ? Telemetry::LABELS_MIXED_CONTENT_IMAGES::ImgUpSuccess
+              : Telemetry::LABELS_MIXED_CONTENT_IMAGES::ImgUpFailure);
+    } else {
+      Telemetry::AccumulateCategorical(
+          statusIsSuccess
+              ? Telemetry::LABELS_MIXED_CONTENT_IMAGES::ImgNoUpSuccess
+              : Telemetry::LABELS_MIXED_CONTENT_IMAGES::ImgNoUpFailure);
+    }
+  }
+  if (internalLoadType == nsIContentPolicy::TYPE_INTERNAL_VIDEO) {
+    if (mLoadInfo->GetBrowserDidUpgradeInsecureRequests()) {
+      Telemetry::AccumulateCategorical(
+          statusIsSuccess
+              ? Telemetry::LABELS_MIXED_CONTENT_VIDEO::VideoUpSuccess
+              : Telemetry::LABELS_MIXED_CONTENT_VIDEO::VideoUpFailure);
+    } else {
+      Telemetry::AccumulateCategorical(
+          statusIsSuccess
+              ? Telemetry::LABELS_MIXED_CONTENT_VIDEO::VideoNoUpSuccess
+              : Telemetry::LABELS_MIXED_CONTENT_VIDEO::VideoNoUpFailure);
+    }
+  }
+  if (internalLoadType == nsIContentPolicy::TYPE_INTERNAL_AUDIO) {
+    if (mLoadInfo->GetBrowserDidUpgradeInsecureRequests()) {
+      Telemetry::AccumulateCategorical(
+          statusIsSuccess
+              ? Telemetry::LABELS_MIXED_CONTENT_AUDIO::AudioUpSuccess
+              : Telemetry::LABELS_MIXED_CONTENT_AUDIO::AudioUpFailure);
+    } else {
+      Telemetry::AccumulateCategorical(
+          statusIsSuccess
+              ? Telemetry::LABELS_MIXED_CONTENT_AUDIO::AudioNoUpSuccess
+              : Telemetry::LABELS_MIXED_CONTENT_AUDIO::AudioNoUpFailure);
+    }
+  }
+
   // if needed, check cache entry has all data we expect
   if (mCacheEntry && mCachePump && LoadConcurrentCacheAccess() &&
       aContentComplete) {
