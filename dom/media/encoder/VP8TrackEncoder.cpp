@@ -551,6 +551,10 @@ nsresult VP8TrackEncoder::Encode(VideoSegment* aSegment) {
 
       MOZ_DIAGNOSTIC_ASSERT(encodedFrame);
 
+      if (mKeyFrameInterval > TimeDuration::FromSeconds(0)) {
+        mDurationSinceLastKeyframe += chunk.GetDuration();
+      }
+
       // Move forward the mEncodedTimestamp.
       mEncodedTimestamp += chunk.GetDuration();
 
