@@ -75,7 +75,7 @@
     <ImageButton
         android:id="@+id/clearHostnameTextButton"
         android:layout_width="48dp"
-        android:layout_height="30dp"
+        android:layout_height="48dp"
         android:layout_marginTop="3dp"
         android:layout_marginBottom="10dp"
         android:background="@null"
