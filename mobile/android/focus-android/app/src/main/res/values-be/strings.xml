@@ -149,6 +149,9 @@
 
     <string name="preference_category_search">Пошук</string>
 
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">Атрымліваць пошукавыя прапановы</string>
+
     <!-- This label is shown below the name of the default search engine in settings -->
     <string name="preference_search_engine_default">Прадвызначана</string>
 
@@ -226,13 +229,23 @@
     <string name="preference_category_privacy">Прыватнасць</string>
     <string name="preference_privacy_block_ads">Блакіраваць рэкламнае сачэнне</string>
 
+    <string name="preference_privacy_block_content">Блакіраваць іншыя трэкеры змесціва</string>
+    <string name="preference_privacy_category_cookies">Блакіраваць кукі</string>
+
     <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
     only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
     <string name="preference_privacy_should_block_cookies_no_option2">Не, дзякуй</string>
 
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Блакіраваць толькі староннія кукі асочвання</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Блакіраваць толькі староннія кукі</string>
+
+    <string name="preference_privacy_should_block_cookies_cross_site_option">Блакіраваць міжсайтавыя кукі</string>
+    <string name="preference_privacy_should_block_cookies_yes_option2">Так, калі ласка</string>
+
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Выкарыстоўвайце адбіткі пальцаў для разблакіравання праграмы</string>
 
+    <string name="preference_category_performance">Прадукцыйнасць</string>
     <string name="preference_performance_block_webfonts">Блакіраваць вэб-шрыфты</string>
     <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
     <string name="preference_performance_block_webfonts_summary">Можа прывесці да адсутнасці значкоў або відарысаў</string>
@@ -321,6 +334,14 @@
     <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
     <string name="content_description_back">Перайсці назад</string>
 
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">Блакіраваць трэкеры</string>
+
+    <string name="your_rights">Вашы правы</string>
+
+    <string name="external_app_prompt_title">Адкрыць спасылку ў іншай праграме</string>
+
     <!-- Snackbar action to immediately open the successfully downloaded file. -->
     <string name="download_snackbar_open">Адкрыць</string>
 
@@ -331,6 +352,9 @@
 
     <!-- New Onboarding flow first screen button label-->
     <string name="onboarding_first_screen_button_text">Пачаць</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">Зрабіць прадвызначаным браўзерам</string>
 
     <!-- New Onboarding flow second screen skip onboarding button label-->
     <string name="onboarding_second_screen_skip_button_text">Прапусціць</string>
@@ -359,6 +383,23 @@
     <string name="dialog_addtohomescreen_action_cancel">Скасаваць</string>
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_no">НЕ</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">Сцерці гісторыю аглядання</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">Сцягнуць Firefox</string>
+
+    <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">Імя карыстальніка</string>
+    <string name="gv_prompt_password_hint">Пароль</string>
+    <string name="gv_prompt_clear">Ачысціць</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">Бяспечнае злучэнне</string>
+    <string name="security_popup_insecure_connection">Небяспечнае злучэнне</string>
 
     <!-- Tips displayed on the home view -->
 

@@ -1005,12 +1005,37 @@
     <string name="preference_follow_device_theme">ตามชุดตกแต่งอุปกรณ์</string>
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">ไซต์ที่คุณร้องขอไม่รองรับ HTTPS</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">ไซต์ที่คุณร้องขอไม่รองรับ HTTPS</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">ไซต์นี้ไม่รองรับ HTTPS</string>
 
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">ตามค่าเริ่มต้น %1$s จะพยายามเชื่อมต่อโดยใช้ HTTPS เพื่อเพิ่มความปลอดภัย เมื่อต้องการเปลี่ยนการตั้งค่านี้หรือเรียนรู้เพิ่มเติม ให้ไปที่ การตั้งค่า &gt; ความเป็นส่วนตัวและความปลอดภัย &gt; ความปลอดภัย</string>
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">ตามค่าเริ่มต้น %1$s จะพยายามเชื่อมต่อโดยใช้ HTTPS เพื่อเพิ่มความปลอดภัย เมื่อต้องการเปลี่ยนการตั้งค่านี้หรือเรียนรู้เพิ่มเติม ให้ไปที่ การตั้งค่า &gt; ความเป็นส่วนตัวและความปลอดภัย &gt; ความปลอดภัย</string>
 
-    <!-- Sessions List -->
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s พยายามใช้การเชื่อมต่อ HTTPS ทุกครั้งที่ทำได้เพื่อความปลอดภัยที่มากขึ้น
+     <a href="%2$s">เรียนรู้เพิ่มเติม</a> <br/><br/>
+     โปรดเปลี่ยนการตั้งค่านี้ใน การตั้งค่า > ความเป็นส่วนตัวและความปลอดภัย > ความปลอดภัย]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">การเชื่อมต่อไม่ปลอดภัย</string>
+
+    <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    สิ่งนี้อาจเป็นปัญหาจากการกำหนดค่าของเซิร์ฟเวอร์ หรืออาจมีใครบางคนกำลังพยายามปลอมแปลงเซิร์ฟเวอร์ <br/><br/>
+    หากคุณเคยเชื่อมต่อกับเซิร์ฟเวอร์นี้สำเร็จมาก่อน ข้อผิดพลาดอาจเกิดขึ้นเพียงชั่วคราว
+    ]]></string>
+
+     <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>อาจมีใครบางคนกำลังพยายามปลอมแปลงไซต์นี้และคุณไม่ควรดำเนินการต่อ</label>
+        <br><br>
+        <label>%1$s ไม่เชื่อถือ <b>%2$s</b> เนื่องจากไม่ทราบผู้ออกใบรับรอง ใบรับรองถูกลงชื่อด้วยตนเอง หรือเซิร์ฟเวอร์ไม่ส่งใบรับรองระดับกลางที่ถูกต้องมาให้</label>
+    ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">ปิดแท็บ</string>
 

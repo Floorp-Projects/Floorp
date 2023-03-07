@@ -6,4 +6,6 @@
     <string name="mozac_support_ktx_menu_email_with">이메일 앱…</string>
     <string name="mozac_support_ktx_menu_share_with">공유…</string>
     <string name="mozac_support_ktx_share_dialog_title">다음으로 공유</string>
+    <!-- Text for confirmation "snackbar" shown after copying an image to the clipboard. -->
+    <string name="mozac_support_ktx_snackbar_delegate_image_copied">클립보드에 이미지 복사됨</string>
 </resources>

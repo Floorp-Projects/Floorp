@@ -15,4 +15,14 @@
     <!-- Alert dialog confirmation before download a file, this is the negative action. -->
     <string name="mozac_feature_downloads_dialog_cancel">ବାତିଲ କରନ୍ତୁ</string>
 
+    <!-- Button that cancels the download when pressed -->
+    <string name="mozac_feature_downloads_button_cancel">ବାତିଲ କରନ୍ତୁ</string>
+    <!-- Button that opens the downloaded file when pressed -->
+    <string name="mozac_feature_downloads_button_open">ଖୋଲନ୍ତୁ</string>
+    <!-- Button that restarts the download after a failed attempt -->
+    <string name="mozac_feature_downloads_button_try_again">ପୁଣିଥରେ ଚେଷ୍ଟା କରନ୍ତୁ</string>
+
+    <!-- Content description for close button -->
+    <string name="mozac_feature_downloads_button_close">ବନ୍ଦ କରନ୍ତୁ</string>
+
     </resources>

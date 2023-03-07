@@ -1003,11 +1003,37 @@
     <string name="preference_follow_device_theme">Følg enhetens tema</string>
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">Nettstedet du ba om støtter ikke HTTPS</string>
-    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">Som standard forsøker %1$s å koble til ved hjelp av HTTPS for økt sikkerhet. For å endre denne innstillingen eller lese mer, gå til Innstillinger &gt; Personvern og sikkerhet &gt; Sikkerhet.</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">Nettstedet du ba om støtter ikke HTTPS</string>
 
-    <!-- Sessions List -->
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Dette nettstedet støtter ikke HTTPS</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Som standard forsøker %1$s å koble til ved hjelp av HTTPS for økt sikkerhet. For å endre denne innstillingen eller lese mer, gå til Innstillinger &gt; Personvern og sikkerhet &gt; Sikkerhet.</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s prøver å bruke en HTTPS-tilkobling når det er mulig for mer sikkerhet.
+     <a href="%2$s">Les mer</a> <br/><br/>
+     Endre denne innstillingen i Innstillinger > Personvern og sikkerhet > Sikkerhet.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Tilkoblingen er ikke sikker</string>
+
+     <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    Dette kan være på grunn av et problem med serverens konfigurasjon, eller det kan være fordi noen forsøker å forfalske tilkoblingen til serveren. <br/><br/>
+    Dersom du har klart å koble til serveren tidligere kan problemet være midlertidig, og du kan prøve igjen senere.
+    ]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Noen kan prøve å etterligne nettstedet, og det kan være risikabelt å fortsette.</label>
+        <br><br>
+        <label>%1$s stoler ikke på <b>%2$s</b> fordi sertifikatutstederen er ukjent, sertifikatet er selvsignert, eller serveren sender ikke de riktige mellomsertifikatene.</label>
+    ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Lukk fane</string>
 

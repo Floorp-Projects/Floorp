@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Browser menu button that creates a new tab -->
+    <string name="mozac_browser_menu_new_tab">ନୂଆ ଟ୍ୟାବ୍</string>
+    <!-- Browser menu button that creates a private tab -->
+    <string name="mozac_browser_menu_new_private_tab">ନୂଆ ବ୍ୟକ୍ତିଗତ ଟ୍ୟାବ୍</string>
+    <!-- Browser menu button to close tab. Closes the current session when pressed. -->
+    <string name="mozac_close_tab">ଟ୍ୟାବ୍ ବନ୍ଦ କରନ୍ତୁ</string>
+    <!-- Menu option to duplicate the current tab -->
+    <string name="mozac_ui_tabcounter_duplicate_tab">ଟ୍ୟାବ୍ ନକଲ କରନ୍ତୁ</string>
+    </resources>

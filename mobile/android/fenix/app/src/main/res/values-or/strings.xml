@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">ଅଧିକ ବିକଳ୍ପ</string>
+    <!-- Label of button in create collection dialog for creating a new collection  -->
+    <string name="tab_tray_add_new_collection">ନୂଆ ସଂଗ୍ରହ ଯୋଡ଼ନ୍ତୁ</string>
+    <!-- Label of editable text in create collection dialog for naming a new collection  -->
+    <string name="tab_tray_add_new_collection_name">ନାମ</string>
+
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">ବରଖାସ୍ତ କରନ୍ତୁ</string>
+
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">ନୂଆ ଟ୍ୟାବ୍</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">ନୂଆ ବ୍ୟକ୍ତିଗତ ଟ୍ୟାବ୍</string>
+
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">ସମସ୍ତଙ୍କୁ ଦର୍ଶାନ୍ତୁ</string>
+
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">ସହାୟତା</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">ସେଟିଂସମୂହ</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_library">ପାଠାଗାର</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">ଡେସ୍କଟପ୍ ସାଇଟ୍</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">ସ୍ଥାପନ କରନ୍ତୁ</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">ପୃଷ୍ଠାରେ ଖୋଜି ପାଆନ୍ତୁ</string>
+
+
+    </resources>

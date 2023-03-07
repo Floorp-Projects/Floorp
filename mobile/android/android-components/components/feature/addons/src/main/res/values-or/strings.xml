@@ -27,7 +27,7 @@
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">ରେଟିଙ୍ଗ୍</string>
     <!-- The settings of the add-on. -->
-    <string name="mozac_feature_addons_settings">ସେଟିଂସ୍</string>
+    <string name="mozac_feature_addons_settings">ସେଟିଂସମୂହ</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_settings_on">ଅନ</string>
     <!-- Indicates the add-on is disabled. -->
@@ -35,7 +35,7 @@
     <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_allow_in_private_browsing">ପ୍ରାଇଭେଟ ବ୍ରାଉଜିଂକୁ ଅନୁମତି ଦିଅନ୍ତୁ</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
-    <string name="mozac_feature_addons_settings_run_in_private_browsing">ପ୍ରାଇଭେଟ ବ୍ରାଉଜିଂରେ ଚଲାନ୍ତୁ</string>
+    <string name="mozac_feature_addons_settings_run_in_private_browsing">ବ୍ୟକ୍ତିଗତ ବ୍ରାଉଜିଂରେ ଚଲାନ୍ତୁ</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">ସକ୍ରିୟ ହେଲା</string>
     <!-- Indicates the add-on is disabled. -->
@@ -66,6 +66,8 @@
     <string name="mozac_feature_addons_install_addon_content_description">ଏଡ-ଅନକୁ ସ୍ଥାପନ କରନ୍ତୁ</string>
     <!-- This is the label of a button to cancel an ongoing add-on installation. -->
     <string name="mozac_feature_addons_install_addon_dialog_cancel">ବାତିଲ କରନ୍ତୁ</string>
+    <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of reviews -->
+    <string name="mozac_feature_addons_user_rating_count_2">ସମୀକ୍ଷା: %1$s</string>
     <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
     <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
     <!-- This is the title of page where all the add-ons are listed-->
@@ -102,6 +104,8 @@
     <string name="mozac_feature_addons_updater_dialog_last_attempt">ଶେଷ ଚେଷ୍ଟା</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
     <string name="mozac_feature_addons_updater_dialog_status">ସ୍ଥିତି:</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
+    <string name="mozac_feature_addons_installed_dialog_title">%1$s କୁ %2$s ରେ ଯୋଗ କରାଯାଇଛି</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_installed_dialog_description">ମେନୁରେ ଖୋଲନ୍ତୁ</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
