@@ -92,6 +92,7 @@ object CookieBannerReEngagementDialogUtils {
         if (status == CookieBannerHandlingStatus.DETECTED &&
             settings.shouldShowCookieBannerReEngagementDialog()
         ) {
+            settings.cookieBannerReEngagementDialogShowsCount.increment()
             settings.lastInteractionWithReEngageCookieBannerDialogInMs = System.currentTimeMillis()
             settings.cookieBannerDetectedPreviously = true
             val directions =

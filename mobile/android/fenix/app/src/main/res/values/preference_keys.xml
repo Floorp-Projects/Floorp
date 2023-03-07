@@ -155,6 +155,7 @@
     <string name="pref_key_cookie_banner_re_engage_dialog_dismissed" translatable="false">pref_key_cookie_banner_re_engage_dialog_dismissed</string>
     <string name="pref_key_cookie_banner_first_banner_detected" translatable="false">pref_key_cookie_banner_first_banner_detected</string>
     <string name="pref_key_cookie_banner_v1" translatable="false">pref_key_cookie_banner_v1</string>
+    <string name="pref_key_cookie_banner_re_engagement_dialog_shows_counter" translatable="false">pref_key_cookie_banner_re_engagement_dialog_shows_counter</string>
 
     <!-- Tracking Protection Settings -->
     <string name="pref_key_etp_learn_more" translatable="false">pref_key_etp_learn_more</string>
