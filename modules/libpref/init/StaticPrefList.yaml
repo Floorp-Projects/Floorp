@@ -3428,7 +3428,7 @@
     do_not_use_directly: true
 
   # Preference that is used to enable the hack for overrriding xFullPathname in
-  # TelemetryVFS.
+  # QuotaVFS.
 -   name: dom.quotaManager.overrideXFullPathname
     type: RelaxedAtomicBool
     value: true

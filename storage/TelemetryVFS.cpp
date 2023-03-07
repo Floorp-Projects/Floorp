@@ -8,17 +8,8 @@
 #include "mozilla/Telemetry.h"
 #include "sqlite3.h"
 #include "nsThreadUtils.h"
-#include "mozilla/dom/quota/PersistenceType.h"
-#include "mozilla/dom/quota/QuotaManager.h"
-#include "mozilla/dom/quota/QuotaObject.h"
 #include "mozilla/net/IOActivityMonitor.h"
 #include "mozilla/IOInterposer.h"
-#include "nsEscape.h"
-#include "mozilla/StaticPrefs_storage.h"
-
-#ifdef XP_WIN
-#  include "mozilla/StaticPrefs_dom.h"
-#endif
 
 // The last VFS version for which this file has been updated.
 #define LAST_KNOWN_VFS_VERSION 3
@@ -29,7 +20,6 @@
 namespace {
 
 using namespace mozilla;
-using namespace mozilla::dom::quota;
 using namespace mozilla::net;
 
 struct Histograms {
@@ -140,51 +130,12 @@ struct telemetry_file {
   // histograms pertaining to this file
   Histograms* histograms;
 
-  // quota object for this file
-  RefPtr<QuotaObject> quotaObject;
-
-  // The chunk size for this file. See the documentation for
-  // sqlite3_file_control() and FCNTL_CHUNK_SIZE.
-  int fileChunkSize;
-
   // The filename
   char* location;
 
   // This contains the vfs that actually does work
   sqlite3_file pReal[1];
 };
-
-already_AddRefed<QuotaObject> GetQuotaObjectFromName(const char* zName) {
-  MOZ_ASSERT(zName);
-
-  const char* directoryLockIdParam =
-      sqlite3_uri_parameter(zName, "directoryLockId");
-  if (!directoryLockIdParam) {
-    return nullptr;
-  }
-
-  nsresult rv;
-  const int64_t directoryLockId =
-      nsDependentCString(directoryLockIdParam).ToInteger64(&rv);
-  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-
-  QuotaManager* quotaManager = QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
-
-  return quotaManager->GetQuotaObject(directoryLockId,
-                                      NS_ConvertUTF8toUTF16(zName));
-}
-
-void MaybeEstablishQuotaControl(const char* zName, telemetry_file* pFile,
-                                int flags) {
-  MOZ_ASSERT(pFile);
-  MOZ_ASSERT(!pFile->quotaObject);
-
-  if (!(flags & (SQLITE_OPEN_URI | SQLITE_OPEN_WAL))) {
-    return;
-  }
-  pFile->quotaObject = GetQuotaObjectFromName(zName);
-}
 
 /*
 ** Close a telemetry_file.
@@ -199,11 +150,7 @@ int xClose(sqlite3_file* pFile) {
   if (rc == SQLITE_OK) {
     delete p->base.pMethods;
     p->base.pMethods = nullptr;
-    p->quotaObject = nullptr;
     delete[] p->location;
-#ifdef DEBUG
-    p->fileChunkSize = 0;
-#endif
   }
   return rc;
 }
@@ -245,29 +192,11 @@ int xWrite(sqlite3_file* pFile, const void* zBuf, int iAmt,
   IOThreadAutoTimer ioTimer(p->histograms->writeMS,
                             IOInterposeObserver::OpWrite);
   int rc;
-  if (p->quotaObject) {
-    MOZ_ASSERT(INT64_MAX - iOfst >= iAmt);
-    if (!p->quotaObject->MaybeUpdateSize(iOfst + iAmt, /* aTruncate */ false)) {
-      return SQLITE_FULL;
-    }
-  }
   rc = p->pReal->pMethods->xWrite(p->pReal, zBuf, iAmt, iOfst);
   if (rc == SQLITE_OK && IOActivityMonitor::IsActive()) {
     IOActivityMonitor::Write(nsDependentCString(p->location), iAmt);
   }
-
   Telemetry::Accumulate(p->histograms->writeB, rc == SQLITE_OK ? iAmt : 0);
-  if (p->quotaObject && rc != SQLITE_OK) {
-    NS_WARNING(
-        "xWrite failed on a quota-controlled file, attempting to "
-        "update its current size...");
-    sqlite_int64 currentSize;
-    if (xFileSize(pFile, &currentSize) == SQLITE_OK) {
-      DebugOnly<bool> res =
-          p->quotaObject->MaybeUpdateSize(currentSize, /* aTruncate */ true);
-      MOZ_ASSERT(res);
-    }
-  }
   return rc;
 }
 
@@ -279,37 +208,7 @@ int xTruncate(sqlite3_file* pFile, sqlite_int64 size) {
   telemetry_file* p = (telemetry_file*)pFile;
   int rc;
   Telemetry::AutoTimer<Telemetry::MOZ_SQLITE_TRUNCATE_MS> timer;
-  if (p->quotaObject) {
-    if (p->fileChunkSize > 0) {
-      // Round up to the smallest multiple of the chunk size that will hold all
-      // the data.
-      size =
-          ((size + p->fileChunkSize - 1) / p->fileChunkSize) * p->fileChunkSize;
-    }
-    if (!p->quotaObject->MaybeUpdateSize(size, /* aTruncate */ true)) {
-      return SQLITE_FULL;
-    }
-  }
   rc = p->pReal->pMethods->xTruncate(p->pReal, size);
-  if (p->quotaObject) {
-    if (rc == SQLITE_OK) {
-#ifdef DEBUG
-      // Make sure xTruncate set the size exactly as we calculated above.
-      sqlite_int64 newSize;
-      MOZ_ASSERT(xFileSize(pFile, &newSize) == SQLITE_OK);
-      MOZ_ASSERT(newSize == size);
-#endif
-    } else {
-      NS_WARNING(
-          "xTruncate failed on a quota-controlled file, attempting to "
-          "update its current size...");
-      if (xFileSize(pFile, &size) == SQLITE_OK) {
-        DebugOnly<bool> res =
-            p->quotaObject->MaybeUpdateSize(size, /* aTruncate */ true);
-        MOZ_ASSERT(res);
-      }
-    }
-  }
   return rc;
 }
 
@@ -357,40 +256,7 @@ int xCheckReservedLock(sqlite3_file* pFile, int* pResOut) {
 */
 int xFileControl(sqlite3_file* pFile, int op, void* pArg) {
   telemetry_file* p = (telemetry_file*)pFile;
-  int rc;
-  // Hook SQLITE_FCNTL_SIZE_HINT for quota-controlled files and do the necessary
-  // work before passing to the SQLite VFS.
-  if (op == SQLITE_FCNTL_SIZE_HINT && p->quotaObject) {
-    sqlite3_int64 hintSize = *static_cast<sqlite3_int64*>(pArg);
-    sqlite3_int64 currentSize;
-    rc = xFileSize(pFile, &currentSize);
-    if (rc != SQLITE_OK) {
-      return rc;
-    }
-    if (hintSize > currentSize) {
-      rc = xTruncate(pFile, hintSize);
-      if (rc != SQLITE_OK) {
-        return rc;
-      }
-    }
-  }
-  rc = p->pReal->pMethods->xFileControl(p->pReal, op, pArg);
-  // Grab the file chunk size after the SQLite VFS has approved.
-  if (op == SQLITE_FCNTL_CHUNK_SIZE && rc == SQLITE_OK) {
-    p->fileChunkSize = *static_cast<int*>(pArg);
-  }
-#ifdef DEBUG
-  if (op == SQLITE_FCNTL_SIZE_HINT && p->quotaObject && rc == SQLITE_OK) {
-    sqlite3_int64 hintSize = *static_cast<sqlite3_int64*>(pArg);
-    if (p->fileChunkSize > 0) {
-      hintSize = ((hintSize + p->fileChunkSize - 1) / p->fileChunkSize) *
-                 p->fileChunkSize;
-    }
-    sqlite3_int64 currentSize;
-    MOZ_ASSERT(xFileSize(pFile, &currentSize) == SQLITE_OK);
-    MOZ_ASSERT(currentSize >= hintSize);
-  }
-#endif
+  int rc = p->pReal->pMethods->xFileControl(p->pReal, op, pArg);
   return rc;
 }
 
@@ -477,8 +343,6 @@ int xOpen(sqlite3_vfs* vfs, const char* zName, sqlite3_file* pFile, int flags,
   }
   p->histograms = h;
 
-  MaybeEstablishQuotaControl(zName, p, flags);
-
   rc = orig_vfs->xOpen(orig_vfs, zName, p->pReal, flags, pOutFlags);
   if (rc != SQLITE_OK) return rc;
 
@@ -536,19 +400,7 @@ int xOpen(sqlite3_vfs* vfs, const char* zName, sqlite3_file* pFile, int flags,
 
 int xDelete(sqlite3_vfs* vfs, const char* zName, int syncDir) {
   sqlite3_vfs* orig_vfs = static_cast<sqlite3_vfs*>(vfs->pAppData);
-  int rc;
-  RefPtr<QuotaObject> quotaObject;
-
-  if (StringEndsWith(nsDependentCString(zName), "-wal"_ns)) {
-    quotaObject = GetQuotaObjectFromName(zName);
-  }
-
-  rc = orig_vfs->xDelete(orig_vfs, zName, syncDir);
-  if (rc == SQLITE_OK && quotaObject) {
-    MOZ_ALWAYS_TRUE(quotaObject->MaybeUpdateSize(0, /* aTruncate */ true));
-  }
-
-  return rc;
+  return orig_vfs->xDelete(orig_vfs, zName, syncDir);
 }
 
 int xAccess(sqlite3_vfs* vfs, const char* zName, int flags, int* pResOut) {
@@ -557,43 +409,6 @@ int xAccess(sqlite3_vfs* vfs, const char* zName, int flags, int* pResOut) {
 }
 
 int xFullPathname(sqlite3_vfs* vfs, const char* zName, int nOut, char* zOut) {
-#if defined(XP_WIN)
-  // SQLite uses GetFullPathnameW which also normailizes file path. If a file
-  // component ends with a dot, it would be removed. However, it's not desired.
-  //
-  // And that would result SQLite uses wrong database and quotaObject.
-  // Note that we are safe to avoid the GetFullPathnameW call for \\?\ prefixed
-  // paths.
-  // And note that this hack will be removed once the issue is fixed directly in
-  // SQLite.
-
-  // zName that starts with "//?/" is the case when a file URI was passed and
-  // zName that starts with "\\?\" is the case when a normal path was passed
-  // (not file URI).
-  if (StaticPrefs::dom_quotaManager_overrideXFullPathname() &&
-      ((zName[0] == '/' && zName[1] == '/' && zName[2] == '?' &&
-        zName[3] == '/') ||
-       (zName[0] == '\\' && zName[1] == '\\' && zName[2] == '?' &&
-        zName[3] == '\\'))) {
-    MOZ_ASSERT(nOut >= vfs->mxPathname);
-    MOZ_ASSERT(static_cast<size_t>(nOut) > strlen(zName));
-
-    size_t index = 0;
-    while (zName[index] != '\0') {
-      if (zName[index] == '/') {
-        zOut[index] = '\\';
-      } else {
-        zOut[index] = zName[index];
-      }
-
-      index++;
-    }
-    zOut[index] = '\0';
-
-    return SQLITE_OK;
-  }
-#endif
-
   sqlite3_vfs* orig_vfs = static_cast<sqlite3_vfs*>(vfs->pAppData);
   return orig_vfs->xFullPathname(orig_vfs, zName, nOut, zOut);
 }
@@ -726,14 +541,6 @@ UniquePtr<sqlite3_vfs> ConstructTelemetryVFS(bool exclusive) {
     tvfs->xNextSystemCall = xNextSystemCall;
   }
   return tvfs;
-}
-
-already_AddRefed<QuotaObject> GetQuotaObjectForFile(sqlite3_file* pFile) {
-  MOZ_ASSERT(pFile);
-
-  telemetry_file* p = (telemetry_file*)pFile;
-  RefPtr<QuotaObject> result = p->quotaObject;
-  return result.forget();
 }
 
 }  // namespace storage

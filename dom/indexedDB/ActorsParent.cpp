@@ -613,8 +613,8 @@ Result<nsCOMPtr<nsIFileURL>, nsresult> GetDatabaseFileURL(
   // - from DatabaseFileManager::InitDirectory when the temporary storage
   //    hasn't been initialized yet. At that time, the in-memory objects (e.g.
   //    OriginInfo) are only being created so it doesn't make sense to tunnel
-  //    quota information to TelemetryVFS to get corresponding QuotaObject
-  //    instances for SQLite files.
+  //    quota information to QuotaVFS to get corresponding QuotaObject instances
+  //    for SQLite files.
   // - from DeleteDatabaseOp::LoadPreviousVersion, since this might require
   //   temporarily exceeding the quota limit before the database can be
   //   deleted.
