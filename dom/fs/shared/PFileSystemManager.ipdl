@@ -245,12 +245,6 @@ union FileSystemMoveEntryResponse
   void_t;
 };
 
-struct FileSystemQuotaRequest
-{
-  FileSystemChildMetadata handle;
-  uint64_t quotaNeeded;
-};
-
 }  // namespace fs
 
 async protocol PFileSystemManager
@@ -405,14 +399,6 @@ async protocol PFileSystemManager
    */
   async RenameEntry(FileSystemRenameEntryRequest request)
       returns(FileSystemMoveEntryResponse response);
-
-  /**
-   * Request for quota needed to finish a write, beyond the amount preallocated
-   * at creation of the AccessHandle. While officially async, this is used in a
-   * sync manner from write() by spinning an event loop.
-   */
-  async NeedQuota(FileSystemQuotaRequest aRequest)
-      returns (uint64_t aQuotaGranted);
 
  child:
   async PFileSystemWritableFileStream();
