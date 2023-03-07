@@ -549,6 +549,10 @@ pocketNewtab:
       description: A comma-separated list of regions that get spocs by default.
       type: string
       setPref: "browser.newtabpage.activity-stream.discoverystream.region-spocs-config"
+    topSitesMaxSponsored:
+      # Defined under `pocketNewtab` as it needs to be used along with other variables
+      type: int
+      description: The maximum number of sponsored Top Sites to be displayed
 
 saveToPocket:
   description: The save to Pocket feature

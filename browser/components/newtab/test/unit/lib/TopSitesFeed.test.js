@@ -115,6 +115,9 @@ describe("Top Sites Feed", () => {
         onUpdate: sinon.stub(),
         off: sinon.stub(),
       },
+      pocketNewtab: {
+        getVariable: sinon.stub(),
+      },
     };
     globals.set({
       PageThumbs: fakePageThumbs,
@@ -2361,6 +2364,60 @@ describe("Top Sites Feed", () => {
       feed._nimbusChangeListener(null, "feature-rollout-loaded");
 
       assert.notCalled(feed._contile.refresh);
+    });
+  });
+
+  describe("#_maybeCapSponsoredLinks", () => {
+    let sponsoredLinks;
+
+    beforeEach(() => {
+      sponsoredLinks = [
+        {
+          url: "https://www.test.com",
+          name: "test",
+          sponsored_position: 1,
+        },
+        {
+          url: "https://www.test1.com",
+          name: "test1",
+          sponsored_position: 2,
+        },
+        {
+          url: "https://www.test2.com",
+          name: "test2",
+          sponsored_position: 3,
+        },
+      ];
+    });
+    afterEach(() => {
+      sandbox.restore();
+    });
+
+    it("should fall back to the default if the Nimbus variable is unspecified", () => {
+      feed._maybeCapSponsoredLinks(sponsoredLinks);
+
+      assert.equal(sponsoredLinks.length, 2);
+    });
+    it("should cap the links if specified by the Nimbus variable", () => {
+      fakeNimbusFeatures.pocketNewtab.getVariable.returns(1);
+
+      feed._maybeCapSponsoredLinks(sponsoredLinks);
+
+      assert.equal(sponsoredLinks.length, 1);
+    });
+    it("should leave all the links if the Nimbus variable is equal to what we have", () => {
+      fakeNimbusFeatures.pocketNewtab.getVariable.returns(3);
+
+      feed._maybeCapSponsoredLinks(sponsoredLinks);
+
+      assert.equal(sponsoredLinks.length, 3);
+    });
+    it("should ignore caps if they are more than what we have", () => {
+      fakeNimbusFeatures.pocketNewtab.getVariable.returns(10);
+
+      feed._maybeCapSponsoredLinks(sponsoredLinks);
+
+      assert.equal(sponsoredLinks.length, 3);
     });
   });
 });
