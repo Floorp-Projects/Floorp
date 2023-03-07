@@ -563,6 +563,8 @@ void Gecko_UpdateAnimations(const Element* aElement,
 
   PseudoStyleType pseudoType = GetPseudoTypeFromElementForAnimation(aElement);
 
+  // TODO: call UpdateTimelines() in the next patch.
+
   if (aTasks & UpdateAnimationsTasks::CSSAnimations) {
     presContext->AnimationManager()->UpdateAnimations(
         const_cast<Element*>(aElement), pseudoType, aComputedData);

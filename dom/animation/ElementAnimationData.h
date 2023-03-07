@@ -17,13 +17,17 @@ enum class PseudoStyleType : uint8_t;
 class EffectSet;
 template <typename Animation>
 class AnimationCollection;
+template <typename TimelineType>
+class TimelineCollection;
 namespace dom {
 class Element;
 class CSSAnimation;
 class CSSTransition;
+class ScrollTimeline;
 }  // namespace dom
 using CSSAnimationCollection = AnimationCollection<dom::CSSAnimation>;
 using CSSTransitionCollection = AnimationCollection<dom::CSSTransition>;
+using ScrollTimelineCollection = TimelineCollection<dom::ScrollTimeline>;
 
 // The animation data for a given element (and its pseudo-elements).
 class ElementAnimationData {
@@ -32,6 +36,17 @@ class ElementAnimationData {
     UniquePtr<CSSAnimationCollection> mAnimations;
     UniquePtr<CSSTransitionCollection> mTransitions;
 
+    // Note: scroll-timeline-name is applied to elements which could be
+    // scroll containers, or replaced elements. view-timeline-name is applied to
+    // all elements. However, the named timeline is referenceable in
+    // animation-timeline by the tree order scope.
+    // Spec: https://drafts.csswg.org/scroll-animations-1/#timeline-scope.
+    //
+    // So it should be fine to create timeline objects only on the elements and
+    // pseudo elements which support animations.
+    UniquePtr<ScrollTimelineCollection> mScrollTimelines;
+    // TODO: Bug 1737920. Add support for ViewTimeline.
+
     PerElementOrPseudoData();
     ~PerElementOrPseudoData();
 
@@ -39,9 +54,12 @@ class ElementAnimationData {
     CSSTransitionCollection& DoEnsureTransitions(dom::Element&,
                                                  PseudoStyleType);
     CSSAnimationCollection& DoEnsureAnimations(dom::Element&, PseudoStyleType);
+    ScrollTimelineCollection& DoEnsureScrollTimelines(dom::Element&,
+                                                      PseudoStyleType);
     void DoClearEffectSet();
     void DoClearTransitions();
     void DoClearAnimations();
+    void DoClearScrollTimelines();
 
     void Traverse(nsCycleCollectionTraversalCallback&);
   };
@@ -143,8 +161,29 @@ class ElementAnimationData {
     return data.DoEnsureAnimations(aOwner, aType);
   }
 
+  ScrollTimelineCollection* GetScrollTimelineCollection(PseudoStyleType aType) {
+    return DataFor(aType).mScrollTimelines.get();
+  }
+
+  void ClearScrollTimelineCollectionFor(PseudoStyleType aType) {
+    auto& data = DataFor(aType);
+    if (data.mScrollTimelines) {
+      data.DoClearScrollTimelines();
+    }
+  }
+
+  ScrollTimelineCollection& EnsureScrollTimelineCollection(
+      dom::Element& aOwner, PseudoStyleType aType) {
+    auto& data = DataFor(aType);
+    if (auto* collection = data.mScrollTimelines.get()) {
+      return *collection;
+    }
+    return data.DoEnsureScrollTimelines(aOwner, aType);
+  }
+
   ElementAnimationData() = default;
 };
+
 }  // namespace mozilla
 
 #endif

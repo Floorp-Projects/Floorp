@@ -182,6 +182,9 @@ class ScrollTimeline final : public AnimationTimeline {
 
   bool ScrollingDirectionIsAvailable() const;
 
+  void ReplacePropertiesWith(const Element* aReferenceElement,
+                             const StyleScrollTimeline& aNew);
+
  protected:
   virtual ~ScrollTimeline() { Teardown(); }
 

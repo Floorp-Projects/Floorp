@@ -221,6 +221,9 @@ static already_AddRefed<dom::AnimationTimeline> GetNamedProgressTimeline(
     // Note: This is fine for parallel traversal because we update animations by
     // SequentialTask.
     for (Element* e = curr; e; e = e->GetPreviousElementSibling()) {
+      // TODO: Look up the named timelines from the corresponding
+      // TimelineCollection in the next patch.
+
       const ComputedStyle* style = Servo_Element_GetMaybeOutOfDateStyle(e);
       // The elements in the shadow dom might not be in the flat tree.
       if (!style) {
