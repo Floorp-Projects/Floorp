@@ -54,6 +54,8 @@ addEventListener("message", handleInitializationMessage);
  * @property {string} data.type - The message type, expects "initialize".
  * @property {ArrayBuffer} data.wasmBuffer - The buffer containing the wasm binary.
  * @property {ArrayBuffer} data.modelBuffer - The buffer containing the language-id model binary.
+ * @property {string} data.languageLabel - The mocked language label value (only present when mocking).
+ * @property {number} data.confidence - The mocked confidence value (only present when mocking).
  * @property {boolean} data.isLoggingEnabled
  */
 async function handleInitializationMessage({ data }) {
@@ -69,7 +71,15 @@ async function handleInitializationMessage({ data }) {
       // Respect the "browser.translations.logLevel" preference.
       _isLoggingEnabled = true;
     }
-    const languageIdEngine = await initializeLanguageIdEngine(data);
+
+    /** @type {LanguageIdEngine | MockedLanguageIdEngine} */
+    let languageIdEngine;
+    if (isMockedDataPayload(data)) {
+      languageIdEngine = initializeMockedLanguageIdEngine(data);
+    } else {
+      languageIdEngine = await initializeLanguageIdEngine(data);
+    }
+
     handleMessages(languageIdEngine);
     postMessage({ type: "initialization-success" });
   } catch (error) {
@@ -78,6 +88,19 @@ async function handleInitializationMessage({ data }) {
   }
 
   removeEventListener("message", handleInitializationMessage);
+}
+
+/**
+ * Returns true if this data payload contains mocked values for the languageLabel
+ * and the confidence, otherwise returns false.
+ *
+ * @property {string} data.languageLabel
+ * @property {number} data.confidence
+ * @returns {boolean}
+ */
+function isMockedDataPayload(data) {
+  let { languageLabel, confidence } = data;
+  return languageLabel && confidence;
 }
 
 /**
@@ -124,6 +147,25 @@ async function initializeLanguageIdEngine(data) {
   }
   const model = await initializeFastTextModel(modelBuffer, wasmBuffer);
   return new LanguageIdEngine(model);
+}
+
+/**
+ * Initialize the MockedLanguageIdEngine from the data payload by loading
+ * assigning it a pre-determined languageLabel and confidence values.
+ *
+ * @param {Object} data
+ * @property {string} data.languageLabel - The pre-determined mocked language label
+ * @property {number} data.confidence - the pre-determined mocked confidence
+ */
+function initializeMockedLanguageIdEngine(data) {
+  const { languageLabel, confidence } = data;
+  if (!languageLabel) {
+    throw new Error('MockedLanguageIdEngine missing "languageLabel"');
+  }
+  if (!confidence) {
+    throw new Error('MockedLanguageIdEngine missing "confidence"');
+  }
+  return new MockedLanguageIdEngine(languageLabel, confidence);
 }
 
 /**
@@ -239,5 +281,34 @@ class LanguageIdEngine {
 
     const [confidence, languageLabel] = mostLikelyLanguageData;
     return [confidence, this.#formatLanguageLabel(languageLabel)];
+  }
+}
+
+/**
+ * For testing purposes, provide a fully mocked engine. This allows for easy integration
+ * testing of the UI, without having to rely on downloading remote models and remote
+ * wasm binaries.
+ */
+class MockedLanguageIdEngine {
+  /** @type {string} */
+  #languageLabel;
+  /** @type {number} */
+  #confidence;
+
+  /**
+   * @param {string} languageLabel
+   * @param {number} confidence
+   */
+  constructor(languageLabel, confidence) {
+    this.#languageLabel = languageLabel;
+    this.#confidence = confidence;
+  }
+
+  /**
+   * Mocks identifying a lgnauge by returning the mocked engine's pre-determined
+   * language label and confidence values.
+   */
+  identifyLanguage(_message) {
+    return [this.#confidence, this.#languageLabel];
   }
 }
