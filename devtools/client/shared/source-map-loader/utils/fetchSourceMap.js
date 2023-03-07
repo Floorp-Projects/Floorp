@@ -72,6 +72,9 @@ async function _resolveAndFetch(generatedSource) {
 
   let fetched = await networkRequest(sourceMapURL, {
     loadFromCache: false,
+    // Blocking redirects on the sourceMappingUrl as its not easy to verify if the
+    // redirect protocol matches the supported ones.
+    allowRedirects: false,
     sourceMapBaseURL: generatedSource.sourceMapBaseURL,
   });
 
