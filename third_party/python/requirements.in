@@ -16,7 +16,7 @@ fluent.migrate==0.11
 fluent.syntax==0.18.1
 glean_parser==7.0.0
 # Pin importlib-metadata to a version compatible with poetry
-importlib-metadata==1.7.0
+importlib-metadata==6.0.0
 jsmin==3.0.0
 json-e==2.7.0
 looseversion==1.0.1
