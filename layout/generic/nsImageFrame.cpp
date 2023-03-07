@@ -2219,13 +2219,10 @@ void nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
   const bool oldImageIsDifferent =
       OldImageHasDifferentRatio(*frame, *mImage, mPrevImage);
 
-  uint32_t flags = imgIContainer::FLAG_NONE;
+  uint32_t flags = aBuilder->GetImageDecodeFlags();
   if (aBuilder->ShouldSyncDecodeImages() || oldImageIsDifferent ||
       frame->mForceSyncDecoding) {
     flags |= imgIContainer::FLAG_SYNC_DECODE;
-  }
-  if (aBuilder->UseHighQualityScaling()) {
-    flags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
   }
 
   ImgDrawResult result = frame->PaintImage(
@@ -2282,13 +2279,10 @@ bool nsDisplayImage::CreateWebRenderCommands(
   const bool oldImageIsDifferent =
       OldImageHasDifferentRatio(*frame, *mImage, mPrevImage);
 
-  uint32_t flags = imgIContainer::FLAG_ASYNC_NOTIFY;
+  uint32_t flags = aDisplayListBuilder->GetImageDecodeFlags();
   if (aDisplayListBuilder->ShouldSyncDecodeImages() || oldImageIsDifferent ||
       frame->mForceSyncDecoding) {
     flags |= imgIContainer::FLAG_SYNC_DECODE;
-  }
-  if (aDisplayListBuilder->UseHighQualityScaling()) {
-    flags |= imgIContainer::FLAG_HIGH_QUALITY_SCALING;
   }
   if (StaticPrefs::image_svg_blob_image() &&
       mImage->GetType() == imgIContainer::TYPE_VECTOR) {
