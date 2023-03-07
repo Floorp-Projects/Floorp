@@ -1,5 +1,3 @@
-// |jit-test| skip-if: !wasmSimdEnabled()
-
 /* Copyright 2021 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -2692,13 +2690,13 @@ assert_invalid(
 
 // ./test/core/simd/simd_lane.wast:450
 assert_invalid(
-  () => instantiate(`(module (func (result v128) (f32x4.replace_lane 4 (v128.const f32x4 0 0 0 0) (f32.const 1))))`),
+  () => instantiate(`(module (func (result v128) (f32x4.replace_lane 4 (v128.const f32x4 0 0 0 0) (i32.const 1))))`),
   `invalid lane index`,
 );
 
 // ./test/core/simd/simd_lane.wast:451
 assert_invalid(
-  () => instantiate(`(module (func (result v128) (f32x4.replace_lane 255 (v128.const f32x4 0 0 0 0) (f32.const 1))))`),
+  () => instantiate(`(module (func (result v128) (f32x4.replace_lane 255 (v128.const f32x4 0 0 0 0) (i32.const 1))))`),
   `invalid lane index`,
 );
 
@@ -2788,7 +2786,7 @@ assert_invalid(
 
 // ./test/core/simd/simd_lane.wast:469
 assert_invalid(
-  () => instantiate(`(module (func (result v128) (f32x4.replace_lane 4 (v128.const i8x16 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0) (f32.const 1))))`),
+  () => instantiate(`(module (func (result v128) (f32x4.replace_lane 4 (v128.const i8x16 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0) (i32.const 1))))`),
   `invalid lane index`,
 );
 

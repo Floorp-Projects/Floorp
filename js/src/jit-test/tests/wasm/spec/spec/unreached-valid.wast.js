@@ -83,3 +83,6 @@ let $1 = instantiate(`(module
     (drop)
   )
 )`);
+
+// ./test/core/unreached-valid.wast:63
+assert_trap(() => invoke($1, `meet-bottom`, []), `unreachable`);

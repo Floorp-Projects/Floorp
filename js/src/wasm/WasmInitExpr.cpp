@@ -311,33 +311,33 @@ class MOZ_STACK_CLASS InitExprInterpreter {
   bool evalRefNull(RefType type) { return pushRef(type, AnyRef::null()); }
 #ifdef ENABLE_WASM_EXTENDED_CONST
   bool evalI32Add() {
-    uint32_t a = popI32();
     uint32_t b = popI32();
+    uint32_t a = popI32();
     return pushI32(a + b);
   }
   bool evalI32Sub() {
-    uint32_t a = popI32();
     uint32_t b = popI32();
+    uint32_t a = popI32();
     return pushI32(a - b);
   }
   bool evalI32Mul() {
-    uint32_t a = popI32();
     uint32_t b = popI32();
+    uint32_t a = popI32();
     return pushI32(a * b);
   }
   bool evalI64Add() {
-    uint64_t a = popI64();
     uint64_t b = popI64();
+    uint64_t a = popI64();
     return pushI64(a + b);
   }
   bool evalI64Sub() {
-    uint64_t a = popI64();
     uint64_t b = popI64();
+    uint64_t a = popI64();
     return pushI64(a - b);
   }
   bool evalI64Mul() {
-    uint64_t a = popI64();
     uint64_t b = popI64();
+    uint64_t a = popI64();
     return pushI64(a * b);
   }
 #endif  // ENABLE_WASM_EXTENDED_CONST

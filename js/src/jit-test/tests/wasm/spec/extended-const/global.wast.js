@@ -32,6 +32,10 @@ let $0 = instantiate(`(module
 
   (global $$z1 i32 (global.get 0))
   (global $$z2 i64 (global.get 1))
+  (global $$z3 i32 (i32.add (i32.sub (i32.mul (i32.const 20) (i32.const 2)) (i32.const 2)) (i32.const 4)))
+  (global $$z4 i64 (i64.add (i64.sub (i64.mul (i64.const 20) (i64.const 2)) (i64.const 2)) (i64.const 5)))
+  (global $$z5 i32 (i32.add (global.get 0) (i32.const 42)))
+  (global $$z6 i64 (i64.add (global.get 1) (i64.const 42)))
 
   (global $$r externref (ref.null extern))
   (global $$mr (mut externref) (ref.null extern))
@@ -45,6 +49,10 @@ let $0 = instantiate(`(module
   (func (export "get-y") (result i64) (global.get $$y))
   (func (export "get-z1") (result i32) (global.get $$z1))
   (func (export "get-z2") (result i64) (global.get $$z2))
+  (func (export "get-z3") (result i32) (global.get $$z3))
+  (func (export "get-z4") (result i64) (global.get $$z4))
+  (func (export "get-z5") (result i32) (global.get $$z5))
+  (func (export "get-z6") (result i64) (global.get $$z6))
   (func (export "set-x") (param i32) (global.set $$x (local.get 0)))
   (func (export "set-y") (param i64) (global.set $$y (local.get 0)))
   (func (export "set-mr") (param externref) (global.set $$mr (local.get 0)))
@@ -209,309 +217,321 @@ let $0 = instantiate(`(module
   )
 )`);
 
-// ./test/core/global.wast:196
+// ./test/core/global.wast:204
 assert_return(() => invoke($0, `get-a`, []), [value("i32", -2)]);
 
-// ./test/core/global.wast:197
+// ./test/core/global.wast:205
 assert_return(() => invoke($0, `get-b`, []), [value("i64", -5n)]);
 
-// ./test/core/global.wast:198
+// ./test/core/global.wast:206
 assert_return(() => invoke($0, `get-r`, []), [value('externref', null)]);
 
-// ./test/core/global.wast:199
+// ./test/core/global.wast:207
 assert_return(() => invoke($0, `get-mr`, []), [value('externref', null)]);
 
-// ./test/core/global.wast:200
+// ./test/core/global.wast:208
 assert_return(() => invoke($0, `get-x`, []), [value("i32", -12)]);
 
-// ./test/core/global.wast:201
+// ./test/core/global.wast:209
 assert_return(() => invoke($0, `get-y`, []), [value("i64", -15n)]);
 
-// ./test/core/global.wast:202
+// ./test/core/global.wast:210
 assert_return(() => invoke($0, `get-z1`, []), [value("i32", 666)]);
 
-// ./test/core/global.wast:203
+// ./test/core/global.wast:211
 assert_return(() => invoke($0, `get-z2`, []), [value("i64", 666n)]);
 
-// ./test/core/global.wast:205
-assert_return(() => invoke($0, `get-3`, []), [value("f32", -3)]);
-
-// ./test/core/global.wast:206
-assert_return(() => invoke($0, `get-4`, []), [value("f64", -4)]);
-
-// ./test/core/global.wast:207
-assert_return(() => invoke($0, `get-7`, []), [value("f32", -13)]);
-
-// ./test/core/global.wast:208
-assert_return(() => invoke($0, `get-8`, []), [value("f64", -14)]);
-
-// ./test/core/global.wast:210
-assert_return(() => invoke($0, `set-x`, [6]), []);
-
-// ./test/core/global.wast:211
-assert_return(() => invoke($0, `set-y`, [7n]), []);
+// ./test/core/global.wast:212
+assert_return(() => invoke($0, `get-z3`, []), [value("i32", 42)]);
 
 // ./test/core/global.wast:213
-assert_return(() => invoke($0, `set-7`, [value("f32", 8)]), []);
+assert_return(() => invoke($0, `get-z4`, []), [value("i64", 43n)]);
 
 // ./test/core/global.wast:214
-assert_return(() => invoke($0, `set-8`, [value("f64", 9)]), []);
+assert_return(() => invoke($0, `get-z5`, []), [value("i32", 708)]);
 
-// ./test/core/global.wast:216
-assert_return(() => invoke($0, `get-x`, []), [value("i32", 6)]);
+// ./test/core/global.wast:215
+assert_return(() => invoke($0, `get-z6`, []), [value("i64", 708n)]);
 
 // ./test/core/global.wast:217
-assert_return(() => invoke($0, `get-y`, []), [value("i64", 7n)]);
+assert_return(() => invoke($0, `get-3`, []), [value("f32", -3)]);
 
 // ./test/core/global.wast:218
-assert_return(() => invoke($0, `get-7`, []), [value("f32", 8)]);
+assert_return(() => invoke($0, `get-4`, []), [value("f64", -4)]);
 
 // ./test/core/global.wast:219
-assert_return(() => invoke($0, `get-8`, []), [value("f64", 9)]);
+assert_return(() => invoke($0, `get-7`, []), [value("f32", -13)]);
 
-// ./test/core/global.wast:221
-assert_return(() => invoke($0, `set-7`, [value("f32", 8)]), []);
+// ./test/core/global.wast:220
+assert_return(() => invoke($0, `get-8`, []), [value("f64", -14)]);
 
 // ./test/core/global.wast:222
-assert_return(() => invoke($0, `set-8`, [value("f64", 9)]), []);
+assert_return(() => invoke($0, `set-x`, [6]), []);
 
 // ./test/core/global.wast:223
-assert_return(() => invoke($0, `set-mr`, [externref(10)]), []);
+assert_return(() => invoke($0, `set-y`, [7n]), []);
 
 // ./test/core/global.wast:225
-assert_return(() => invoke($0, `get-x`, []), [value("i32", 6)]);
+assert_return(() => invoke($0, `set-7`, [value("f32", 8)]), []);
 
 // ./test/core/global.wast:226
-assert_return(() => invoke($0, `get-y`, []), [value("i64", 7n)]);
-
-// ./test/core/global.wast:227
-assert_return(() => invoke($0, `get-7`, []), [value("f32", 8)]);
+assert_return(() => invoke($0, `set-8`, [value("f64", 9)]), []);
 
 // ./test/core/global.wast:228
-assert_return(() => invoke($0, `get-8`, []), [value("f64", 9)]);
+assert_return(() => invoke($0, `get-x`, []), [value("i32", 6)]);
 
 // ./test/core/global.wast:229
-assert_return(() => invoke($0, `get-mr`, []), [value('externref', externref(10))]);
+assert_return(() => invoke($0, `get-y`, []), [value("i64", 7n)]);
+
+// ./test/core/global.wast:230
+assert_return(() => invoke($0, `get-7`, []), [value("f32", 8)]);
 
 // ./test/core/global.wast:231
-assert_return(() => invoke($0, `as-select-first`, []), [value("i32", 6)]);
-
-// ./test/core/global.wast:232
-assert_return(() => invoke($0, `as-select-mid`, []), [value("i32", 2)]);
+assert_return(() => invoke($0, `get-8`, []), [value("f64", 9)]);
 
 // ./test/core/global.wast:233
-assert_return(() => invoke($0, `as-select-last`, []), [value("i32", 2)]);
+assert_return(() => invoke($0, `set-7`, [value("f32", 8)]), []);
+
+// ./test/core/global.wast:234
+assert_return(() => invoke($0, `set-8`, [value("f64", 9)]), []);
 
 // ./test/core/global.wast:235
-assert_return(() => invoke($0, `as-loop-first`, []), [value("i32", 6)]);
-
-// ./test/core/global.wast:236
-assert_return(() => invoke($0, `as-loop-mid`, []), [value("i32", 6)]);
+assert_return(() => invoke($0, `set-mr`, [externref(10)]), []);
 
 // ./test/core/global.wast:237
-assert_return(() => invoke($0, `as-loop-last`, []), [value("i32", 6)]);
+assert_return(() => invoke($0, `get-x`, []), [value("i32", 6)]);
+
+// ./test/core/global.wast:238
+assert_return(() => invoke($0, `get-y`, []), [value("i64", 7n)]);
 
 // ./test/core/global.wast:239
-assert_return(() => invoke($0, `as-if-condition`, []), [value("i32", 2)]);
+assert_return(() => invoke($0, `get-7`, []), [value("f32", 8)]);
 
 // ./test/core/global.wast:240
-assert_return(() => invoke($0, `as-if-then`, []), [value("i32", 6)]);
+assert_return(() => invoke($0, `get-8`, []), [value("f64", 9)]);
 
 // ./test/core/global.wast:241
-assert_return(() => invoke($0, `as-if-else`, []), [value("i32", 6)]);
+assert_return(() => invoke($0, `get-mr`, []), [value('externref', externref(10))]);
 
 // ./test/core/global.wast:243
-assert_return(() => invoke($0, `as-br_if-first`, []), [value("i32", 6)]);
+assert_return(() => invoke($0, `as-select-first`, []), [value("i32", 6)]);
 
 // ./test/core/global.wast:244
-assert_return(() => invoke($0, `as-br_if-last`, []), [value("i32", 2)]);
+assert_return(() => invoke($0, `as-select-mid`, []), [value("i32", 2)]);
 
-// ./test/core/global.wast:246
-assert_return(() => invoke($0, `as-br_table-first`, []), [value("i32", 6)]);
+// ./test/core/global.wast:245
+assert_return(() => invoke($0, `as-select-last`, []), [value("i32", 2)]);
 
 // ./test/core/global.wast:247
-assert_return(() => invoke($0, `as-br_table-last`, []), [value("i32", 2)]);
+assert_return(() => invoke($0, `as-loop-first`, []), [value("i32", 6)]);
+
+// ./test/core/global.wast:248
+assert_return(() => invoke($0, `as-loop-mid`, []), [value("i32", 6)]);
 
 // ./test/core/global.wast:249
-assert_return(() => invoke($0, `as-call_indirect-first`, []), [value("i32", 6)]);
-
-// ./test/core/global.wast:250
-assert_return(() => invoke($0, `as-call_indirect-mid`, []), [value("i32", 2)]);
+assert_return(() => invoke($0, `as-loop-last`, []), [value("i32", 6)]);
 
 // ./test/core/global.wast:251
-assert_trap(() => invoke($0, `as-call_indirect-last`, []), `undefined element`);
+assert_return(() => invoke($0, `as-if-condition`, []), [value("i32", 2)]);
+
+// ./test/core/global.wast:252
+assert_return(() => invoke($0, `as-if-then`, []), [value("i32", 6)]);
 
 // ./test/core/global.wast:253
-assert_return(() => invoke($0, `as-store-first`, []), []);
-
-// ./test/core/global.wast:254
-assert_return(() => invoke($0, `as-store-last`, []), []);
+assert_return(() => invoke($0, `as-if-else`, []), [value("i32", 6)]);
 
 // ./test/core/global.wast:255
-assert_return(() => invoke($0, `as-load-operand`, []), [value("i32", 1)]);
+assert_return(() => invoke($0, `as-br_if-first`, []), [value("i32", 6)]);
 
 // ./test/core/global.wast:256
-assert_return(() => invoke($0, `as-memory.grow-value`, []), [value("i32", 1)]);
+assert_return(() => invoke($0, `as-br_if-last`, []), [value("i32", 2)]);
 
 // ./test/core/global.wast:258
-assert_return(() => invoke($0, `as-call-value`, []), [value("i32", 6)]);
+assert_return(() => invoke($0, `as-br_table-first`, []), [value("i32", 6)]);
 
-// ./test/core/global.wast:260
-assert_return(() => invoke($0, `as-return-value`, []), [value("i32", 6)]);
+// ./test/core/global.wast:259
+assert_return(() => invoke($0, `as-br_table-last`, []), [value("i32", 2)]);
 
 // ./test/core/global.wast:261
-assert_return(() => invoke($0, `as-drop-operand`, []), []);
+assert_return(() => invoke($0, `as-call_indirect-first`, []), [value("i32", 6)]);
 
 // ./test/core/global.wast:262
-assert_return(() => invoke($0, `as-br-value`, []), [value("i32", 6)]);
+assert_return(() => invoke($0, `as-call_indirect-mid`, []), [value("i32", 2)]);
 
-// ./test/core/global.wast:264
-assert_return(() => invoke($0, `as-local.set-value`, [1]), [value("i32", 6)]);
+// ./test/core/global.wast:263
+assert_trap(() => invoke($0, `as-call_indirect-last`, []), `undefined element`);
 
 // ./test/core/global.wast:265
-assert_return(() => invoke($0, `as-local.tee-value`, [1]), [value("i32", 6)]);
+assert_return(() => invoke($0, `as-store-first`, []), []);
 
 // ./test/core/global.wast:266
-assert_return(() => invoke($0, `as-global.set-value`, []), [value("i32", 6)]);
+assert_return(() => invoke($0, `as-store-last`, []), []);
+
+// ./test/core/global.wast:267
+assert_return(() => invoke($0, `as-load-operand`, []), [value("i32", 1)]);
 
 // ./test/core/global.wast:268
-assert_return(() => invoke($0, `as-unary-operand`, []), [value("i32", 0)]);
-
-// ./test/core/global.wast:269
-assert_return(() => invoke($0, `as-binary-operand`, []), [value("i32", 36)]);
+assert_return(() => invoke($0, `as-memory.grow-value`, []), [value("i32", 1)]);
 
 // ./test/core/global.wast:270
-assert_return(() => invoke($0, `as-compare-operand`, []), [value("i32", 1)]);
+assert_return(() => invoke($0, `as-call-value`, []), [value("i32", 6)]);
 
 // ./test/core/global.wast:272
+assert_return(() => invoke($0, `as-return-value`, []), [value("i32", 6)]);
+
+// ./test/core/global.wast:273
+assert_return(() => invoke($0, `as-drop-operand`, []), []);
+
+// ./test/core/global.wast:274
+assert_return(() => invoke($0, `as-br-value`, []), [value("i32", 6)]);
+
+// ./test/core/global.wast:276
+assert_return(() => invoke($0, `as-local.set-value`, [1]), [value("i32", 6)]);
+
+// ./test/core/global.wast:277
+assert_return(() => invoke($0, `as-local.tee-value`, [1]), [value("i32", 6)]);
+
+// ./test/core/global.wast:278
+assert_return(() => invoke($0, `as-global.set-value`, []), [value("i32", 6)]);
+
+// ./test/core/global.wast:280
+assert_return(() => invoke($0, `as-unary-operand`, []), [value("i32", 0)]);
+
+// ./test/core/global.wast:281
+assert_return(() => invoke($0, `as-binary-operand`, []), [value("i32", 36)]);
+
+// ./test/core/global.wast:282
+assert_return(() => invoke($0, `as-compare-operand`, []), [value("i32", 1)]);
+
+// ./test/core/global.wast:284
 assert_invalid(
   () => instantiate(`(module (global f32 (f32.const 0)) (func (global.set 0 (f32.const 1))))`),
   `global is immutable`,
 );
 
-// ./test/core/global.wast:277
+// ./test/core/global.wast:289
 assert_invalid(
   () => instantiate(`(module (import "spectest" "global_i32" (global i32)) (func (global.set 0 (i32.const 1))))`),
   `global is immutable`,
 );
 
-// ./test/core/global.wast:283
+// ./test/core/global.wast:295
 let $1 = instantiate(`(module (global (mut f32) (f32.const 0)) (export "a" (global 0)))`);
 
-// ./test/core/global.wast:284
+// ./test/core/global.wast:296
 let $2 = instantiate(`(module (global (export "a") (mut f32) (f32.const 0)))`);
 
-// ./test/core/global.wast:286
+// ./test/core/global.wast:298
 assert_invalid(
   () => instantiate(`(module (global f32 (f32.neg (f32.const 0))))`),
   `constant expression required`,
 );
 
-// ./test/core/global.wast:291
+// ./test/core/global.wast:303
 assert_invalid(
   () => instantiate(`(module (global f32 (local.get 0)))`),
   `constant expression required`,
 );
 
-// ./test/core/global.wast:296
+// ./test/core/global.wast:308
 assert_invalid(
   () => instantiate(`(module (global f32 (f32.neg (f32.const 1))))`),
   `constant expression required`,
 );
 
-// ./test/core/global.wast:301
+// ./test/core/global.wast:313
 assert_invalid(
   () => instantiate(`(module (global i32 (i32.const 0) (nop)))`),
   `constant expression required`,
 );
 
-// ./test/core/global.wast:306
+// ./test/core/global.wast:318
 assert_invalid(
   () => instantiate(`(module (global i32 (i32.ctz (i32.const 0))))`),
   `constant expression required`,
 );
 
-// ./test/core/global.wast:311
+// ./test/core/global.wast:323
 assert_invalid(
   () => instantiate(`(module (global i32 (nop)))`),
   `constant expression required`,
 );
 
-// ./test/core/global.wast:316
+// ./test/core/global.wast:328
 assert_invalid(() => instantiate(`(module (global i32 (f32.const 0)))`), `type mismatch`);
 
-// ./test/core/global.wast:321
+// ./test/core/global.wast:333
 assert_invalid(
   () => instantiate(`(module (global i32 (i32.const 0) (i32.const 0)))`),
   `type mismatch`,
 );
 
-// ./test/core/global.wast:326
+// ./test/core/global.wast:338
 assert_invalid(
   () => instantiate(`(module (global i32 (;empty instruction sequence;)))`),
   `type mismatch`,
 );
 
-// ./test/core/global.wast:331
+// ./test/core/global.wast:343
 assert_invalid(
   () => instantiate(`(module (global (import "" "") externref) (global funcref (global.get 0)))`),
   `type mismatch`,
 );
 
-// ./test/core/global.wast:336
+// ./test/core/global.wast:348
 assert_invalid(
   () => instantiate(`(module (global (import "test" "global-i32") i32) (global i32 (global.get 0) (global.get 0)))`),
   `type mismatch`,
 );
 
-// ./test/core/global.wast:341
+// ./test/core/global.wast:353
 assert_invalid(
   () => instantiate(`(module (global (import "test" "global-i32") i32) (global i32 (i32.const 0) (global.get 0)))`),
   `type mismatch`,
 );
 
-// ./test/core/global.wast:346
+// ./test/core/global.wast:358
 assert_invalid(
   () => instantiate(`(module (global i32 (global.get 0)))`),
   `unknown global`,
 );
 
-// ./test/core/global.wast:351
+// ./test/core/global.wast:363
 assert_invalid(
   () => instantiate(`(module (global i32 (i32.const 0)) (global i32 (global.get 0)))`),
   `unknown global`,
 );
 
-// ./test/core/global.wast:355
+// ./test/core/global.wast:367
 assert_invalid(
   () => instantiate(`(module (global $$g i32 (i32.const 0)) (global i32 (global.get $$g)))`),
   `unknown global`,
 );
 
-// ./test/core/global.wast:360
+// ./test/core/global.wast:372
 assert_invalid(
   () => instantiate(`(module (global i32 (global.get 1)) (global i32 (i32.const 0)))`),
   `unknown global`,
 );
 
-// ./test/core/global.wast:365
+// ./test/core/global.wast:377
 assert_invalid(
   () => instantiate(`(module (global (import "test" "global-i32") i32) (global i32 (global.get 2)))`),
   `unknown global`,
 );
 
-// ./test/core/global.wast:370
+// ./test/core/global.wast:382
 assert_invalid(
   () => instantiate(`(module (global (import "test" "global-mut-i32") (mut i32)) (global i32 (global.get 0)))`),
   `constant expression required`,
 );
 
-// ./test/core/global.wast:375
+// ./test/core/global.wast:387
 let $3 = instantiate(`(module
   (import "spectest" "global_i32" (global i32))
 )`);
 
-// ./test/core/global.wast:378
+// ./test/core/global.wast:390
 assert_malformed(
   () => instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -526,7 +546,7 @@ assert_malformed(
   `malformed mutability`,
 );
 
-// ./test/core/global.wast:391
+// ./test/core/global.wast:403
 assert_malformed(
   () => instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -541,12 +561,12 @@ assert_malformed(
   `malformed mutability`,
 );
 
-// ./test/core/global.wast:405
+// ./test/core/global.wast:417
 let $4 = instantiate(`(module
   (global i32 (i32.const 0))
 )`);
 
-// ./test/core/global.wast:408
+// ./test/core/global.wast:420
 assert_malformed(
   () => instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -560,7 +580,7 @@ assert_malformed(
   `malformed mutability`,
 );
 
-// ./test/core/global.wast:420
+// ./test/core/global.wast:432
 assert_malformed(
   () => instantiate(`(module binary
     "\\00asm" "\\01\\00\\00\\00"
@@ -574,13 +594,13 @@ assert_malformed(
   `malformed mutability`,
 );
 
-// ./test/core/global.wast:434
+// ./test/core/global.wast:446
 assert_invalid(
   () => instantiate(`(module (func (result i32) (global.get 0)))`),
   `unknown global`,
 );
 
-// ./test/core/global.wast:439
+// ./test/core/global.wast:451
 assert_invalid(
   () => instantiate(`(module
     (global i32 (i32.const 0))
@@ -589,7 +609,7 @@ assert_invalid(
   `unknown global`,
 );
 
-// ./test/core/global.wast:447
+// ./test/core/global.wast:459
 assert_invalid(
   () => instantiate(`(module
     (import "spectest" "global_i32" (global i32))
@@ -598,7 +618,7 @@ assert_invalid(
   `unknown global`,
 );
 
-// ./test/core/global.wast:455
+// ./test/core/global.wast:467
 assert_invalid(
   () => instantiate(`(module
     (import "spectest" "global_i32" (global i32))
@@ -608,13 +628,13 @@ assert_invalid(
   `unknown global`,
 );
 
-// ./test/core/global.wast:465
+// ./test/core/global.wast:477
 assert_invalid(
   () => instantiate(`(module (func (i32.const 0) (global.set 0)))`),
   `unknown global`,
 );
 
-// ./test/core/global.wast:470
+// ./test/core/global.wast:482
 assert_invalid(
   () => instantiate(`(module
     (global i32 (i32.const 0))
@@ -623,7 +643,7 @@ assert_invalid(
   `unknown global`,
 );
 
-// ./test/core/global.wast:478
+// ./test/core/global.wast:490
 assert_invalid(
   () => instantiate(`(module
     (import "spectest" "global_i32" (global i32))
@@ -632,7 +652,7 @@ assert_invalid(
   `unknown global`,
 );
 
-// ./test/core/global.wast:486
+// ./test/core/global.wast:498
 assert_invalid(
   () => instantiate(`(module
     (import "spectest" "global_i32" (global i32))
@@ -642,7 +662,7 @@ assert_invalid(
   `unknown global`,
 );
 
-// ./test/core/global.wast:496
+// ./test/core/global.wast:508
 assert_invalid(
   () => instantiate(`(module
     (global $$x (mut i32) (i32.const 0))
@@ -653,7 +673,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/global.wast:505
+// ./test/core/global.wast:517
 assert_invalid(
   () => instantiate(`(module
     (global $$x (mut i32) (i32.const 0))
@@ -665,7 +685,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/global.wast:515
+// ./test/core/global.wast:527
 assert_invalid(
   () => instantiate(`(module
     (global $$x (mut i32) (i32.const 0))
@@ -677,7 +697,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/global.wast:525
+// ./test/core/global.wast:537
 assert_invalid(
   () => instantiate(`(module
     (global $$x (mut i32) (i32.const 0))
@@ -689,7 +709,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/global.wast:535
+// ./test/core/global.wast:547
 assert_invalid(
   () => instantiate(`(module
     (global $$x (mut i32) (i32.const 0))
@@ -701,7 +721,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/global.wast:545
+// ./test/core/global.wast:557
 assert_invalid(
   () => instantiate(`(module
     (global $$x (mut i32) (i32.const 0))
@@ -713,7 +733,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/global.wast:555
+// ./test/core/global.wast:567
 assert_invalid(
   () => instantiate(`(module
     (global $$x (mut i32) (i32.const 0))
@@ -725,7 +745,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/global.wast:565
+// ./test/core/global.wast:577
 assert_invalid(
   () => instantiate(`(module
     (global $$x (mut i32) (i32.const 0))
@@ -737,7 +757,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/global.wast:575
+// ./test/core/global.wast:587
 assert_invalid(
   () => instantiate(`(module
     (global $$x (mut i32) (i32.const 0))
@@ -748,7 +768,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/global.wast:584
+// ./test/core/global.wast:596
 assert_invalid(
   () => instantiate(`(module
     (global $$x (mut i32) (i32.const 0))
@@ -759,7 +779,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/global.wast:593
+// ./test/core/global.wast:605
 assert_invalid(
   () => instantiate(`(module
     (global $$x (mut i32) (i32.const 0))
@@ -771,7 +791,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/global.wast:603
+// ./test/core/global.wast:615
 assert_invalid(
   () => instantiate(`(module
     (global $$x (mut i32) (i32.const 0))
@@ -789,19 +809,19 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/global.wast:622
+// ./test/core/global.wast:634
 assert_malformed(
   () => instantiate(`(global $$foo i32 (i32.const 0)) (global $$foo i32 (i32.const 0)) `),
   `duplicate global`,
 );
 
-// ./test/core/global.wast:626
+// ./test/core/global.wast:638
 assert_malformed(
   () => instantiate(`(import "" "" (global $$foo i32)) (global $$foo i32 (i32.const 0)) `),
   `duplicate global`,
 );
 
-// ./test/core/global.wast:630
+// ./test/core/global.wast:642
 assert_malformed(
   () => instantiate(`(import "" "" (global $$foo i32)) (import "" "" (global $$foo i32)) `),
   `duplicate global`,

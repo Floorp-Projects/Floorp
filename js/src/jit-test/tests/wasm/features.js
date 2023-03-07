@@ -25,17 +25,6 @@ let nightly = !release_or_beta;
 
 let nightlyOnlyFeatures = [
   [
-    'extended-const',
-    wasmExtendedConstEnabled(),
-    `(module
-      (global i32
-        i32.const 0
-        i32.const 0
-        i32.add
-      )
-    )`
-  ],
-  [
     'function-references',
     wasmFunctionReferencesEnabled(),
     `(module (func (param (ref extern))))`
@@ -82,6 +71,17 @@ let releasedFeatures = [
     'exceptions',
     wasmExceptionsEnabled(),
     `(module (type (func)) (tag (type 0)))`
+  ],
+  [
+    'extended-const',
+    wasmExtendedConstEnabled(),
+    `(module
+      (global i32
+        i32.const 0
+        i32.const 0
+        i32.add
+      )
+    )`
   ],
 ];
 

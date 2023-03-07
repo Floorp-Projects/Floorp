@@ -23,121 +23,117 @@ let $0 = instantiate(`(module
     (table.fill $$t (local.get $$i) (local.get $$r) (local.get $$n))
   )
 
-  (func (export "fill-abbrev") (param $$i i32) (param $$r externref) (param $$n i32)
-    (table.fill (local.get $$i) (local.get $$r) (local.get $$n))
-  )
-
   (func (export "get") (param $$i i32) (result externref)
     (table.get $$t (local.get $$i))
   )
 )`);
 
-// ./test/core/table_fill.wast:17
+// ./test/core/table_fill.wast:13
 assert_return(() => invoke($0, `get`, [1]), [value('externref', null)]);
 
-// ./test/core/table_fill.wast:18
+// ./test/core/table_fill.wast:14
 assert_return(() => invoke($0, `get`, [2]), [value('externref', null)]);
 
-// ./test/core/table_fill.wast:19
+// ./test/core/table_fill.wast:15
 assert_return(() => invoke($0, `get`, [3]), [value('externref', null)]);
 
-// ./test/core/table_fill.wast:20
+// ./test/core/table_fill.wast:16
 assert_return(() => invoke($0, `get`, [4]), [value('externref', null)]);
 
-// ./test/core/table_fill.wast:21
+// ./test/core/table_fill.wast:17
 assert_return(() => invoke($0, `get`, [5]), [value('externref', null)]);
 
-// ./test/core/table_fill.wast:23
+// ./test/core/table_fill.wast:19
 assert_return(() => invoke($0, `fill`, [2, externref(1), 3]), []);
 
-// ./test/core/table_fill.wast:24
+// ./test/core/table_fill.wast:20
 assert_return(() => invoke($0, `get`, [1]), [value('externref', null)]);
 
-// ./test/core/table_fill.wast:25
+// ./test/core/table_fill.wast:21
 assert_return(() => invoke($0, `get`, [2]), [value('externref', externref(1))]);
 
-// ./test/core/table_fill.wast:26
+// ./test/core/table_fill.wast:22
 assert_return(() => invoke($0, `get`, [3]), [value('externref', externref(1))]);
 
-// ./test/core/table_fill.wast:27
+// ./test/core/table_fill.wast:23
 assert_return(() => invoke($0, `get`, [4]), [value('externref', externref(1))]);
 
-// ./test/core/table_fill.wast:28
+// ./test/core/table_fill.wast:24
 assert_return(() => invoke($0, `get`, [5]), [value('externref', null)]);
 
-// ./test/core/table_fill.wast:30
+// ./test/core/table_fill.wast:26
 assert_return(() => invoke($0, `fill`, [4, externref(2), 2]), []);
 
-// ./test/core/table_fill.wast:31
+// ./test/core/table_fill.wast:27
 assert_return(() => invoke($0, `get`, [3]), [value('externref', externref(1))]);
 
-// ./test/core/table_fill.wast:32
+// ./test/core/table_fill.wast:28
 assert_return(() => invoke($0, `get`, [4]), [value('externref', externref(2))]);
 
-// ./test/core/table_fill.wast:33
+// ./test/core/table_fill.wast:29
 assert_return(() => invoke($0, `get`, [5]), [value('externref', externref(2))]);
 
-// ./test/core/table_fill.wast:34
+// ./test/core/table_fill.wast:30
 assert_return(() => invoke($0, `get`, [6]), [value('externref', null)]);
 
-// ./test/core/table_fill.wast:36
+// ./test/core/table_fill.wast:32
 assert_return(() => invoke($0, `fill`, [4, externref(3), 0]), []);
 
-// ./test/core/table_fill.wast:37
+// ./test/core/table_fill.wast:33
 assert_return(() => invoke($0, `get`, [3]), [value('externref', externref(1))]);
 
-// ./test/core/table_fill.wast:38
+// ./test/core/table_fill.wast:34
 assert_return(() => invoke($0, `get`, [4]), [value('externref', externref(2))]);
 
-// ./test/core/table_fill.wast:39
+// ./test/core/table_fill.wast:35
 assert_return(() => invoke($0, `get`, [5]), [value('externref', externref(2))]);
 
-// ./test/core/table_fill.wast:41
+// ./test/core/table_fill.wast:37
 assert_return(() => invoke($0, `fill`, [8, externref(4), 2]), []);
 
-// ./test/core/table_fill.wast:42
+// ./test/core/table_fill.wast:38
 assert_return(() => invoke($0, `get`, [7]), [value('externref', null)]);
+
+// ./test/core/table_fill.wast:39
+assert_return(() => invoke($0, `get`, [8]), [value('externref', externref(4))]);
+
+// ./test/core/table_fill.wast:40
+assert_return(() => invoke($0, `get`, [9]), [value('externref', externref(4))]);
+
+// ./test/core/table_fill.wast:42
+assert_return(() => invoke($0, `fill`, [9, null, 1]), []);
 
 // ./test/core/table_fill.wast:43
 assert_return(() => invoke($0, `get`, [8]), [value('externref', externref(4))]);
 
 // ./test/core/table_fill.wast:44
-assert_return(() => invoke($0, `get`, [9]), [value('externref', externref(4))]);
+assert_return(() => invoke($0, `get`, [9]), [value('externref', null)]);
 
 // ./test/core/table_fill.wast:46
-assert_return(() => invoke($0, `fill-abbrev`, [9, null, 1]), []);
-
-// ./test/core/table_fill.wast:47
-assert_return(() => invoke($0, `get`, [8]), [value('externref', externref(4))]);
-
-// ./test/core/table_fill.wast:48
-assert_return(() => invoke($0, `get`, [9]), [value('externref', null)]);
-
-// ./test/core/table_fill.wast:50
 assert_return(() => invoke($0, `fill`, [10, externref(5), 0]), []);
 
-// ./test/core/table_fill.wast:51
+// ./test/core/table_fill.wast:47
 assert_return(() => invoke($0, `get`, [9]), [value('externref', null)]);
 
-// ./test/core/table_fill.wast:53
+// ./test/core/table_fill.wast:49
 assert_trap(() => invoke($0, `fill`, [8, externref(6), 3]), `out of bounds table access`);
 
-// ./test/core/table_fill.wast:57
+// ./test/core/table_fill.wast:53
 assert_return(() => invoke($0, `get`, [7]), [value('externref', null)]);
 
-// ./test/core/table_fill.wast:58
+// ./test/core/table_fill.wast:54
 assert_return(() => invoke($0, `get`, [8]), [value('externref', externref(4))]);
 
-// ./test/core/table_fill.wast:59
+// ./test/core/table_fill.wast:55
 assert_return(() => invoke($0, `get`, [9]), [value('externref', null)]);
 
-// ./test/core/table_fill.wast:61
+// ./test/core/table_fill.wast:57
 assert_trap(() => invoke($0, `fill`, [11, null, 0]), `out of bounds table access`);
 
-// ./test/core/table_fill.wast:66
+// ./test/core/table_fill.wast:62
 assert_trap(() => invoke($0, `fill`, [11, null, 10]), `out of bounds table access`);
 
-// ./test/core/table_fill.wast:74
+// ./test/core/table_fill.wast:70
 assert_invalid(
   () => instantiate(`(module
     (table $$t 10 externref)
@@ -148,7 +144,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/table_fill.wast:83
+// ./test/core/table_fill.wast:79
 assert_invalid(
   () => instantiate(`(module
     (table $$t 10 externref)
@@ -159,7 +155,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/table_fill.wast:92
+// ./test/core/table_fill.wast:88
 assert_invalid(
   () => instantiate(`(module
     (table $$t 10 externref)
@@ -170,7 +166,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/table_fill.wast:101
+// ./test/core/table_fill.wast:97
 assert_invalid(
   () => instantiate(`(module
     (table $$t 10 externref)
@@ -181,7 +177,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/table_fill.wast:110
+// ./test/core/table_fill.wast:106
 assert_invalid(
   () => instantiate(`(module
     (table $$t 0 externref)
@@ -192,7 +188,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/table_fill.wast:119
+// ./test/core/table_fill.wast:115
 assert_invalid(
   () => instantiate(`(module
     (table $$t 0 funcref)
@@ -203,7 +199,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/table_fill.wast:128
+// ./test/core/table_fill.wast:124
 assert_invalid(
   () => instantiate(`(module
     (table $$t 0 externref)
@@ -214,7 +210,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/table_fill.wast:138
+// ./test/core/table_fill.wast:134
 assert_invalid(
   () => instantiate(`(module
     (table $$t1 1 externref)
@@ -226,7 +222,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/table_fill.wast:149
+// ./test/core/table_fill.wast:145
 assert_invalid(
   () => instantiate(`(module
     (table $$t 1 externref)
