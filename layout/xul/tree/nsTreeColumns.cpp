@@ -433,7 +433,7 @@ void nsTreeColumns::EnsureColumns() {
     if (!colFrame) return;
 
     colFrame = colFrame->GetParent();
-    if (!colFrame) return;
+    if (!colFrame || !colFrame->GetContent()) return;
 
     nsTreeColumn* currCol = nullptr;
 
