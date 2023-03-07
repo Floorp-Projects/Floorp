@@ -19,6 +19,7 @@
 #include "mozilla/gfx/PathSkia.h"
 #include "mozilla/gfx/Swizzle.h"
 #include "mozilla/layers/ImageDataSerializer.h"
+#include "skia/include/core/SkPixmap.h"
 
 #include "ClientWebGLContext.h"
 #include "WebGLChild.h"
@@ -634,7 +635,7 @@ bool DrawTargetWebgl::GenerateComplexClipMask() {
     mClipBounds = *clip;
   } else {
     // If we can't get bounds, then just use the entire viewport.
-    mClipBounds = IntRect(IntPoint(), mSize);
+    mClipBounds = GetRect();
   }
   // If initializing the clip mask, then allocate the entire texture to ensure
   // all pixels get filled with an empty mask regardless. Otherwise, restrict
@@ -672,9 +673,8 @@ bool DrawTargetWebgl::GenerateComplexClipMask() {
   // Finally, upload the texture data and initialize texture storage if
   // necessary.
   if (init && mClipBounds.Size() != mSize) {
-    mSharedContext->UploadSurface(nullptr, SurfaceFormat::A8,
-                                  IntRect(IntPoint(), mSize), IntPoint(), true,
-                                  true);
+    mSharedContext->UploadSurface(nullptr, SurfaceFormat::A8, GetRect(),
+                                  IntPoint(), true, true);
     init = false;
   }
   mSharedContext->UploadSurface(data, SurfaceFormat::A8,
@@ -703,8 +703,8 @@ bool DrawTargetWebgl::SetSimpleClipRect() {
   // trivially discard the draw request.
   // If the clip rect is larger than the viewport, just set it to the
   // viewport.
-  if (!clip->IsEmpty() && clip->Contains(IntRect(IntPoint(), mSize))) {
-    clip = Some(IntRect(IntPoint(), mSize));
+  if (!clip->IsEmpty() && clip->Contains(GetRect())) {
+    clip = Some(GetRect());
   }
   mSharedContext->SetClipRect(*clip);
   mSharedContext->SetNoClipMask();
@@ -716,7 +716,7 @@ bool DrawTargetWebgl::SetSimpleClipRect() {
 bool DrawTargetWebgl::PrepareContext(bool aClipped) {
   if (!aClipped) {
     // If no clipping requested, just set the clip rect to the viewport.
-    mSharedContext->SetClipRect(IntRect(IntPoint(), mSize));
+    mSharedContext->SetClipRect(GetRect());
     mSharedContext->SetNoClipMask();
     // Ensure the clip gets reset if clipping is later requested for the target.
     mRefreshClipState = true;
@@ -984,6 +984,12 @@ bool DrawTargetWebgl::SharedContext::ReadInto(uint8_t* aDstData,
     mWebgl->FramebufferTexture2D(
         LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0, LOCAL_GL_TEXTURE_2D,
         aHandle->GetWebGLTexture(), 0);
+  } else if (mCurrentTarget && mCurrentTarget->mIsClear) {
+    // If reading from a target that is still clear, then avoid the readback by
+    // just clearing the data.
+    SkPixmap(MakeSkiaImageInfo(aBounds.Size(), aFormat), aDstData, aDstStride)
+        .erase(IsOpaque(aFormat) ? SK_ColorBLACK : SK_ColorTRANSPARENT);
+    return true;
   }
 
   webgl::ReadPixelsDesc desc;
@@ -1075,6 +1081,7 @@ bool DrawTargetWebgl::MarkChanged() {
     return false;
   }
   mSkiaValid = false;
+  mIsClear = false;
   return true;
 }
 
@@ -1321,14 +1328,33 @@ bool DrawTargetWebgl::SharedContext::CreateShaders() {
   return true;
 }
 
+inline ColorPattern DrawTargetWebgl::GetClearPattern() const {
+  return ColorPattern(
+      DeviceColor(0.0f, 0.0f, 0.0f, IsOpaque(mFormat) ? 1.0f : 0.0f));
+}
+
 void DrawTargetWebgl::ClearRect(const Rect& aRect) {
   // OP_SOURCE may not be bounded by a mask, so we ensure that a clip is pushed
   // here to avoid a group being pushed for it.
   PushClipRect(aRect);
-  ColorPattern pattern(
-      DeviceColor(0.0f, 0.0f, 0.0f, IsOpaque(mFormat) ? 1.0f : 0.0f));
-  DrawRect(aRect, pattern, DrawOptions(1.0f, CompositionOp::OP_SOURCE));
+  DrawRect(aRect, GetClearPattern(),
+           DrawOptions(1.0f, CompositionOp::OP_SOURCE));
   PopClip();
+
+  // If the clear rectangle encompasses the entire viewport and is not clipped,
+  // then mark the target as entirely clear.
+  if (mTransform.PreservesAxisAlignedRectangles() &&
+      mTransform.TransformBounds(aRect).Contains(Rect(GetRect())) &&
+      mSharedContext->IsCurrentTarget(this) && !mSharedContext->HasClipMask() &&
+      mSharedContext->mClipRect.Contains(GetRect())) {
+    mIsClear = true;
+  }
+}
+
+static inline DeviceColor PremultiplyColor(const DeviceColor& aColor,
+                                           float aAlpha = 1.0f) {
+  float a = aColor.a * aAlpha;
+  return DeviceColor(aColor.r * a, aColor.g * a, aColor.b * a, a);
 }
 
 // Attempts to create the framebuffer used for drawing and also any relevant
@@ -1349,7 +1375,8 @@ bool DrawTargetWebgl::CreateFramebuffer() {
                                 LOCAL_GL_COLOR_ATTACHMENT0, LOCAL_GL_TEXTURE_2D,
                                 mTex, 0);
     webgl->Viewport(0, 0, mSize.width, mSize.height);
-    webgl->ClearColor(0.0f, 0.0f, 0.0f, IsOpaque(mFormat) ? 1.0f : 0.0f);
+    DeviceColor color = PremultiplyColor(GetClearPattern().mColor);
+    webgl->ClearColor(color.b, color.g, color.r, color.a);
     webgl->Clear(LOCAL_GL_COLOR_BUFFER_BIT);
     mSharedContext->ClearTarget();
     mSharedContext->ClearLastTexture();
@@ -1360,9 +1387,17 @@ bool DrawTargetWebgl::CreateFramebuffer() {
 void DrawTargetWebgl::CopySurface(SourceSurface* aSurface,
                                   const IntRect& aSourceRect,
                                   const IntPoint& aDestination) {
+  // Intersect the source and destination rectangles with the viewport bounds.
+  IntRect destRect =
+      IntRect(aDestination, aSourceRect.Size()).SafeIntersect(GetRect());
+  IntRect srcRect = destRect - aDestination + aSourceRect.TopLeft();
+  if (srcRect.IsEmpty()) {
+    return;
+  }
+
   if (mSkiaValid) {
     if (mSkiaLayer) {
-      if (IntRect(aDestination, aSourceRect.Size()).Contains(GetRect())) {
+      if (destRect.Contains(GetRect())) {
         // If the the destination would override the entire layer, discard the
         // layer.
         mSkiaLayer = false;
@@ -1375,15 +1410,36 @@ void DrawTargetWebgl::CopySurface(SourceSurface* aSurface,
       // If there is no layer, copying is safe.
       MarkSkiaChanged();
     }
-    mSkia->CopySurface(aSurface, aSourceRect, aDestination);
+    mSkia->CopySurface(aSurface, srcRect, destRect.TopLeft());
     return;
   }
 
-  Matrix matrix = Matrix::Translation(aDestination - aSourceRect.TopLeft());
+  if (!mSharedContext->IsCompatibleSurface(aSurface)) {
+    // If this data surface completely overwrites the framebuffer, then just
+    // copy it to the Skia target.
+    if (destRect.Contains(GetRect())) {
+      MarkSkiaChanged(true);
+      mSkia->DetachAllSnapshots();
+      mSkiaNoClip->CopySurface(aSurface, srcRect, destRect.TopLeft());
+      return;
+    }
+
+    // If this is a data surface with a matching format, try to upload the data
+    // directly to the backing texture of the framebuffer.
+    if (aSurface->GetFormat() == mFormat && PrepareContext(false) &&
+        MarkChanged()) {
+      if (RefPtr<DataSourceSurface> data = aSurface->GetDataSurface()) {
+        mSharedContext->UploadSurface(data, mFormat, srcRect,
+                                      destRect.TopLeft(), false, false, mTex);
+      }
+      return;
+    }
+  }
+
+  Matrix matrix = Matrix::Translation(destRect.TopLeft() - srcRect.TopLeft());
   SurfacePattern pattern(aSurface, ExtendMode::CLAMP, matrix);
-  DrawRect(Rect(IntRect(aDestination, aSourceRect.Size())), pattern,
-           DrawOptions(1.0f, CompositionOp::OP_SOURCE), Nothing(), nullptr,
-           false, false);
+  DrawRect(Rect(destRect), pattern, DrawOptions(1.0f, CompositionOp::OP_SOURCE),
+           Nothing(), nullptr, false, false);
 }
 
 void DrawTargetWebgl::PushClip(const Path* aPath) {
@@ -1469,6 +1525,11 @@ bool DrawTargetWebgl::SharedContext::SupportsPattern(const Pattern& aPattern) {
         return false;
       }
       if (surfacePattern.mSurface) {
+        // If the surface is already uploaded to a texture, then just use it.
+        if (IsCompatibleSurface(surfacePattern.mSurface)) {
+          return true;
+        }
+
         IntSize size = surfacePattern.mSurface->GetSize();
         // The maximum size a surface can be before triggering a fallback to
         // software. Bound the maximum surface size by the actual texture size
@@ -1607,7 +1668,8 @@ void DrawTargetWebgl::DrawRectFallback(const Rect& aRect,
 }
 
 inline already_AddRefed<WebGLTextureJS>
-DrawTargetWebgl::SharedContext::GetCompatibleSnapshot(SourceSurface* aSurface) {
+DrawTargetWebgl::SharedContext::GetCompatibleSnapshot(
+    SourceSurface* aSurface) const {
   if (aSurface->GetType() == SurfaceType::WEBGL) {
     RefPtr<SourceSurfaceWebgl> webglSurf =
         static_cast<SourceSurfaceWebgl*>(aSurface);
@@ -1630,11 +1692,15 @@ DrawTargetWebgl::SharedContext::GetCompatibleSnapshot(SourceSurface* aSurface) {
   return nullptr;
 }
 
-bool DrawTargetWebgl::SharedContext::UploadSurface(DataSourceSurface* aData,
-                                                   SurfaceFormat aFormat,
-                                                   const IntRect& aSrcRect,
-                                                   const IntPoint& aDstOffset,
-                                                   bool aInit, bool aZero) {
+inline bool DrawTargetWebgl::SharedContext::IsCompatibleSurface(
+    SourceSurface* aSurface) const {
+  return bool(RefPtr<WebGLTextureJS>(GetCompatibleSnapshot(aSurface)));
+}
+
+bool DrawTargetWebgl::SharedContext::UploadSurface(
+    DataSourceSurface* aData, SurfaceFormat aFormat, const IntRect& aSrcRect,
+    const IntPoint& aDstOffset, bool aInit, bool aZero,
+    const RefPtr<WebGLTextureJS>& aTex) {
   webgl::TexUnpackBlobDesc texDesc = {
       LOCAL_GL_TEXTURE_2D,
       {uint32_t(aSrcRect.width), uint32_t(aSrcRect.height), 1}};
@@ -1702,9 +1768,15 @@ bool DrawTargetWebgl::SharedContext::UploadSurface(DataSourceSurface* aData,
       aFormat == SurfaceFormat::A8 ? LOCAL_GL_RED : LOCAL_GL_RGBA;
   webgl::PackingInfo texPI = {extFormat, LOCAL_GL_UNSIGNED_BYTE};
   // Do the (partial) upload for the shared or standalone texture.
+  if (aTex) {
+    mWebgl->BindTexture(LOCAL_GL_TEXTURE_2D, aTex);
+  }
   mWebgl->RawTexImage(0, aInit ? intFormat : 0,
                       {uint32_t(aDstOffset.x), uint32_t(aDstOffset.y), 0},
                       texPI, std::move(texDesc));
+  if (aTex) {
+    mWebgl->BindTexture(LOCAL_GL_TEXTURE_2D, mLastTexture);
+  }
   if (!aData && aZero) {
     mWebgl->BindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
   }
@@ -1810,10 +1882,10 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
         // Only an uncached draw if not using the vertex cache.
         mCurrentTarget->mProfile.OnUncachedDraw();
       }
-      auto color = static_cast<const ColorPattern&>(aPattern).mColor;
-      float a = color.a * aOptions.mAlpha;
-      DeviceColor premulColor(color.r * a, color.g * a, color.b * a, a);
-      if (((a == 1.0f && aOptions.mCompositionOp == CompositionOp::OP_OVER) ||
+      DeviceColor color = PremultiplyColor(
+          static_cast<const ColorPattern&>(aPattern).mColor, aOptions.mAlpha);
+      if (((color.a == 1.0f &&
+            aOptions.mCompositionOp == CompositionOp::OP_OVER) ||
            aOptions.mCompositionOp == CompositionOp::OP_SOURCE) &&
           !aStrokeOptions && !aVertexRange && !HasClipMask()) {
         // Certain color patterns can be mapped to scissored clears. The
@@ -1828,8 +1900,7 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
             mWebgl->Scissor(scissorRect.x, scissorRect.y, scissorRect.width,
                             scissorRect.height);
           }
-          mWebgl->ClearColor(premulColor.b, premulColor.g, premulColor.r,
-                             premulColor.a);
+          mWebgl->ClearColor(color.b, color.g, color.r, color.a);
           mWebgl->Clear(LOCAL_GL_COLOR_BUFFER_BIT);
           success = true;
           break;
@@ -1841,8 +1912,8 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
         // The source operator can support clipping and AA by emulating it with
         // the over op. Supply the color with blend state, and set the shader
         // color to white, to avoid needing dual-source blending.
-        blendColor = Some(premulColor);
-        premulColor = DeviceColor(1, 1, 1, 1);
+        blendColor = Some(color);
+        color = DeviceColor(1, 1, 1, 1);
       }
       SetBlendState(aOptions.mCompositionOp, blendColor);
       // Since it couldn't be mapped to a scissored clear, we need to use the
@@ -1869,8 +1940,7 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
                             {(const uint8_t*)&aaData, sizeof(aaData)});
         mDirtyAA = aaData == 0.0f;
       }
-      float colorData[4] = {premulColor.b, premulColor.g, premulColor.r,
-                            premulColor.a};
+      float colorData[4] = {color.b, color.g, color.r, color.a};
       Matrix xform(aRect.width, 0.0f, 0.0f, aRect.height, aRect.x, aRect.y);
       if (aTransformed) {
         xform *= currentTransform;
@@ -2086,11 +2156,12 @@ bool DrawTargetWebgl::SharedContext::DrawRectAccel(
                             {(const uint8_t*)&aaData, sizeof(aaData)});
         mDirtyAA = aaData == 0.0f;
       }
-      DeviceColor color = aMaskColor && format != SurfaceFormat::A8
-                              ? DeviceColor::Mask(1.0f, aMaskColor->a)
-                              : aMaskColor.valueOr(DeviceColor(1, 1, 1, 1));
-      float a = color.a * aOptions.mAlpha;
-      float colorData[4] = {color.b * a, color.g * a, color.r * a, a};
+      DeviceColor color =
+          PremultiplyColor(aMaskColor && format != SurfaceFormat::A8
+                               ? DeviceColor::Mask(1.0f, aMaskColor->a)
+                               : aMaskColor.valueOr(DeviceColor(1, 1, 1, 1)),
+                           aOptions.mAlpha);
+      float colorData[4] = {color.b, color.g, color.r, color.a};
       float swizzleData =
           aMaskColor && format == SurfaceFormat::A8 ? 1.0f : 0.0f;
       Matrix xform(aRect.width, 0.0f, 0.0f, aRect.height, aRect.x, aRect.y);
@@ -3892,12 +3963,21 @@ void DrawTargetWebgl::MarkSkiaChanged(const DrawOptions& aOptions) {
       if (mWebglValid) {
         mProfile.OnLayer();
         mSkiaLayer = true;
+        mSkiaLayerClear = mIsClear;
         mSkia->DetachAllSnapshots();
-        mSkiaNoClip->ClearRect(Rect(mSkiaNoClip->GetRect()));
+        if (mSkiaLayerClear) {
+          // Avoid blending later by making sure the layer background is filled
+          // with opaque alpha values if necessary.
+          mSkiaNoClip->FillRect(Rect(mSkiaNoClip->GetRect()), GetClearPattern(),
+                                DrawOptions(1.0f, CompositionOp::OP_SOURCE));
+        } else {
+          mSkiaNoClip->ClearRect(Rect(mSkiaNoClip->GetRect()));
+        }
       }
     }
     // The WebGL context is no longer up-to-date.
     mWebglValid = false;
+    mIsClear = false;
   } else {
     // For other composition ops, just overwrite the Skia data.
     MarkSkiaChanged();
@@ -3914,18 +3994,25 @@ void DrawTargetWebgl::ReadIntoSkia() {
     IntSize size;
     int32_t stride;
     SurfaceFormat format;
-    // If there's no existing snapshot and we can successfully map the Skia
-    // target for reading, then try to read into that.
-    if (!mSnapshot && mSkia->LockBits(&data, &size, &stride, &format)) {
-      (void)ReadInto(data, stride);
-      mSkia->ReleaseBits(data);
-    } else if (RefPtr<SourceSurface> snapshot = Snapshot()) {
-      // Otherwise, fall back to getting a snapshot from WebGL if available
-      // and then copying that to Skia.
-      mSkia->CopySurface(snapshot, GetRect(), IntPoint(0, 0));
+    if (mIsClear) {
+      // If the WebGL target is still clear, then just clear the Skia target.
+      mSkia->DetachAllSnapshots();
+      mSkiaNoClip->FillRect(Rect(mSkiaNoClip->GetRect()), GetClearPattern(),
+                            DrawOptions(1.0f, CompositionOp::OP_SOURCE));
+    } else {
+      // If there's no existing snapshot and we can successfully map the Skia
+      // target for reading, then try to read into that.
+      if (!mSnapshot && mSkia->LockBits(&data, &size, &stride, &format)) {
+        (void)ReadInto(data, stride);
+        mSkia->ReleaseBits(data);
+      } else if (RefPtr<SourceSurface> snapshot = Snapshot()) {
+        // Otherwise, fall back to getting a snapshot from WebGL if available
+        // and then copying that to Skia.
+        mSkia->CopySurface(snapshot, GetRect(), IntPoint(0, 0));
+      }
+      // Signal that we've hit a complete software fallback.
+      mProfile.OnFallback();
     }
-    // Signal that we've hit a complete software fallback.
-    mProfile.OnFallback();
   }
   mSkiaValid = true;
   // The Skia data is flat after reading, so disable any layering.
@@ -3937,13 +4024,17 @@ void DrawTargetWebgl::FlattenSkia() {
   if (!mSkiaValid || !mSkiaLayer) {
     return;
   }
+  mSkiaLayer = false;
+  if (mSkiaLayerClear) {
+    // If the WebGL target is clear, then there is nothing to blend.
+    return;
+  }
   if (RefPtr<DataSourceSurface> base = ReadSnapshot()) {
     mSkia->DetachAllSnapshots();
     mSkiaNoClip->DrawSurface(base, Rect(GetRect()), Rect(GetRect()),
                              DrawSurfaceOptions(SamplingFilter::POINT),
                              DrawOptions(1.f, CompositionOp::OP_DEST_OVER));
   }
-  mSkiaLayer = false;
 }
 
 // Attempts to draw the contents of the Skia target into the WebGL context.
@@ -3962,6 +4053,20 @@ bool DrawTargetWebgl::FlushFromSkia() {
   // WebGL target either, so only try to blend if there is a valid Skia target.
   mWebglValid = true;
   if (mSkiaValid) {
+    AutoRestoreContext restore(this);
+
+    // If the Skia target is clear, then there is no need to use a snapshot.
+    // Directly clear the WebGL target instead.
+    if (mIsClear) {
+      if (!DrawRect(Rect(GetRect()), GetClearPattern(),
+                    DrawOptions(1.0f, CompositionOp::OP_SOURCE), Nothing(),
+                    nullptr, false, false, true)) {
+        mWebglValid = false;
+        return false;
+      }
+      return true;
+    }
+
     RefPtr<SourceSurface> skiaSnapshot = mSkia->Snapshot();
     if (!skiaSnapshot) {
       // There's a valid Skia target to draw to, but for some reason there is
@@ -3969,15 +4074,26 @@ bool DrawTargetWebgl::FlushFromSkia() {
       mWebglValid = false;
       return false;
     }
-    AutoRestoreContext restore(this);
+
+    // If there is no layer, then just upload it directly.
+    if (!mSkiaLayer) {
+      if (PrepareContext(false) && MarkChanged()) {
+        if (RefPtr<DataSourceSurface> data = skiaSnapshot->GetDataSurface()) {
+          mSharedContext->UploadSurface(data, mFormat, GetRect(), IntPoint(),
+                                        false, false, mTex);
+          return true;
+        }
+      }
+      // Failed to upload the Skia snapshot.
+      mWebglValid = false;
+      return false;
+    }
+
     SurfacePattern pattern(skiaSnapshot, ExtendMode::CLAMP);
-    // If there is a layer, blend the snapshot with the WebGL context,
-    // otherwise copy it.
+    // If there is a layer, blend the snapshot with the WebGL context.
     if (!DrawRect(Rect(GetRect()), pattern,
-                  DrawOptions(1.0f, mSkiaLayer ? CompositionOp::OP_OVER
-                                               : CompositionOp::OP_SOURCE),
-                  Nothing(), mSkiaLayer ? &mSnapshotTexture : nullptr, false,
-                  false, true, true)) {
+                  DrawOptions(1.0f, CompositionOp::OP_OVER), Nothing(),
+                  &mSnapshotTexture, false, false, true, true)) {
       // If accelerated drawing failed for some reason, then leave the Skia
       // target unchanged.
       mWebglValid = false;
