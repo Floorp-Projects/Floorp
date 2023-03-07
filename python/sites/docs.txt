@@ -11,7 +11,9 @@ pypi:fluent.pygments==1.0
 pypi:fluent.syntax==0.18.1
 pypi:idna==2.10
 pypi:imagesize==1.2.0
+pypi:importlib-resources==3.0.0
 pypi:jmespath==0.10.0
+pypi:jsonschema==3.2.0
 pypi:livereload==2.6.3
 pypi:Markdown==3.3.4
 pypi:MarkupSafe==2.0.1
@@ -52,9 +54,7 @@ pypi:tornado==6.0.4
 vendored:third_party/python/certifi
 vendored:third_party/python/chardet
 vendored:third_party/python/importlib_metadata
-vendored:third_party/python/importlib_resources
 vendored:third_party/python/Jinja2
-vendored:third_party/python/jsonschema
 vendored:third_party/python/packaging
 vendored:third_party/python/requests
 vendored:third_party/python/rsa

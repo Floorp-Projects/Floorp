@@ -1,31 +1,10 @@
-from __future__ import annotations
-
 import numbers
-import typing
 
 from pyrsistent import pmap
 import attr
 
+from jsonschema.compat import int_types, str_types
 from jsonschema.exceptions import UndefinedTypeCheck
-
-
-# unfortunately, the type of pmap is generic, and if used as the attr.ib
-# converter, the generic type is presented to mypy, which then fails to match
-# the concrete type of a type checker mapping
-# this "do nothing" wrapper presents the correct information to mypy
-def _typed_pmap_converter(
-    init_val: typing.Mapping[
-        str,
-        typing.Callable[["TypeChecker", typing.Any], bool],
-    ],
-) -> typing.Mapping[str, typing.Callable[["TypeChecker", typing.Any], bool]]:
-    return typing.cast(
-        typing.Mapping[
-            str,
-            typing.Callable[["TypeChecker", typing.Any], bool],
-        ],
-        pmap(init_val),
-    )
 
 
 def is_array(checker, instance):
@@ -40,7 +19,7 @@ def is_integer(checker, instance):
     # bool inherits from int, so ensure bools aren't reported as ints
     if isinstance(instance, bool):
         return False
-    return isinstance(instance, int)
+    return isinstance(instance, int_types)
 
 
 def is_null(checker, instance):
@@ -59,7 +38,7 @@ def is_object(checker, instance):
 
 
 def is_string(checker, instance):
-    return isinstance(instance, str)
+    return isinstance(instance, str_types)
 
 
 def is_any(checker, instance):
@@ -71,7 +50,7 @@ class TypeChecker(object):
     """
     A ``type`` property checker.
 
-    A `TypeChecker` performs type checking for a `Validator`. Type
+    A `TypeChecker` performs type checking for an `IValidator`. Type
     checks to perform are updated using `TypeChecker.redefine` or
     `TypeChecker.redefine_many` and removed via `TypeChecker.remove`.
     Each of these return a new `TypeChecker` object.
@@ -82,13 +61,7 @@ class TypeChecker(object):
 
             The initial mapping of types to their checking functions.
     """
-
-    _type_checkers: typing.Mapping[
-        str, typing.Callable[["TypeChecker", typing.Any], bool],
-    ] = attr.ib(
-        default=pmap(),
-        converter=_typed_pmap_converter,
-    )
+    _type_checkers = attr.ib(default=pmap(), converter=pmap)
 
     def is_type(self, instance, type):
         """
@@ -117,7 +90,7 @@ class TypeChecker(object):
         try:
             fn = self._type_checkers[type]
         except KeyError:
-            raise UndefinedTypeCheck(type) from None
+            raise UndefinedTypeCheck(type)
 
         return fn(self, instance)
 
@@ -131,7 +104,7 @@ class TypeChecker(object):
 
                 The name of the type to check.
 
-            fn (collections.abc.Callable):
+            fn (collections.Callable):
 
                 A function taking exactly two parameters - the type
                 checker calling the function and the instance to check.
@@ -168,7 +141,7 @@ class TypeChecker(object):
 
         Arguments:
 
-            types (~collections.abc.Iterable):
+            types (~collections.Iterable):
 
                 the names of the types to remove.
 
@@ -194,24 +167,22 @@ class TypeChecker(object):
 
 draft3_type_checker = TypeChecker(
     {
-        "any": is_any,
-        "array": is_array,
-        "boolean": is_bool,
-        "integer": is_integer,
-        "object": is_object,
-        "null": is_null,
-        "number": is_number,
-        "string": is_string,
+        u"any": is_any,
+        u"array": is_array,
+        u"boolean": is_bool,
+        u"integer": is_integer,
+        u"object": is_object,
+        u"null": is_null,
+        u"number": is_number,
+        u"string": is_string,
     },
 )
-draft4_type_checker = draft3_type_checker.remove("any")
+draft4_type_checker = draft3_type_checker.remove(u"any")
 draft6_type_checker = draft4_type_checker.redefine(
-    "integer",
+    u"integer",
     lambda checker, instance: (
-        is_integer(checker, instance)
-        or isinstance(instance, float) and instance.is_integer()
+        is_integer(checker, instance) or
+        isinstance(instance, float) and instance.is_integer()
     ),
 )
 draft7_type_checker = draft6_type_checker
-draft201909_type_checker = draft7_type_checker
-draft202012_type_checker = draft201909_type_checker
