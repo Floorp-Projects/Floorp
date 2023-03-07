@@ -319,10 +319,7 @@ class NetworkEventActor extends Actor {
     }
     this._request.rawHeaders = rawHeaders;
 
-    this._onEventUpdate("requestHeaders", {
-      headers: headers.length,
-      headersSize: this._request.headersSize,
-    });
+    this._onEventUpdate("requestHeaders", {});
   }
 
   /**
@@ -340,7 +337,7 @@ class NetworkEventActor extends Actor {
     this._request.cookies = cookies;
     this._prepareHeaders(cookies);
 
-    this._onEventUpdate("requestCookies", { cookies: cookies.length });
+    this._onEventUpdate("requestCookies", {});
   }
 
   /**
@@ -431,10 +428,7 @@ class NetworkEventActor extends Actor {
     this._response.headers = headers;
     this._prepareHeaders(headers);
 
-    this._onEventUpdate("responseHeaders", {
-      headers: headers.length,
-      headersSize: this._response.headersSize,
-    });
+    this._onEventUpdate("responseHeaders", {});
   }
 
   /**
@@ -452,7 +446,7 @@ class NetworkEventActor extends Actor {
     this._response.cookies = cookies;
     this._prepareHeaders(cookies);
 
-    this._onEventUpdate("responseCookies", { cookies: cookies.length });
+    this._onEventUpdate("responseCookies", {});
   }
 
   /**
