@@ -207,8 +207,8 @@ class NetworkEventWatcher {
 
     for (const child of this.pool.poolChildren()) {
       // Destroy all network events matching the destroyed WindowGlobal
-      if (!child.isNavigationRequest) {
-        if (child.innerWindowId == innerWindowId) {
+      if (!child.isNavigationRequest()) {
+        if (child.getInnerWindowId() == innerWindowId) {
           child.destroy();
         }
         // Avoid destroying the navigation request, which is flagged with previous document's innerWindowId.
@@ -224,8 +224,8 @@ class NetworkEventWatcher {
         // But the frontend will receive it after the navigation begins (after will-navigate) and will display it
         // and try to fetch extra data about it. So, avoid destroying its NetworkEventActor.
       } else if (
-        child.innerWindowId &&
-        child.innerWindowId != innerWindowId &&
+        child.getInnerWindowId() &&
+        child.getInnerWindowId() != innerWindowId &&
         windowGlobal.browsingContext ==
           this.watcherActor.browserElement?.browsingContext
       ) {
@@ -275,12 +275,10 @@ class NetworkEventWatcher {
     return false;
   }
 
-  onNetworkEvent(event) {
-    const { channelId } = event;
-
-    if (this.networkEvents.has(channelId)) {
+  onNetworkEvent(networkEventOptions, channel) {
+    if (this.networkEvents.has(channel.channelId)) {
       throw new Error(
-        `Got notified about channel ${channelId} more than once.`
+        `Got notified about channel ${channel.channelId} more than once.`
       );
     }
 
@@ -291,7 +289,8 @@ class NetworkEventWatcher {
         onNetworkEventUpdate: this.onNetworkEventUpdate.bind(this),
         onNetworkEventDestroy: this.onNetworkEventDestroy.bind(this),
       },
-      event
+      networkEventOptions,
+      channel
     );
     this.pool.manage(actor);
 

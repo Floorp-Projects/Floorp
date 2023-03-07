@@ -719,33 +719,34 @@ export class NetworkObserver {
       };
     }
 
-    // Check the request URL with ones manually blocked by the user in DevTools.
-    // If it's meant to be blocked, we cancel the request and annotate the event.
     if (blockedReason === undefined && this.#shouldBlockChannel(channel)) {
+      // Check the request URL with ones manually blocked by the user in DevTools.
+      // If it's meant to be blocked, we cancel the request and annotate the event.
       channel.cancel(Cr.NS_BINDING_ABORTED);
       blockedReason = "devtools";
     }
 
-    const event = lazy.NetworkUtils.createNetworkEvent(channel, {
-      timestamp,
-      fromCache,
-      fromServiceWorker,
-      rawHeaders,
-      blockedReason,
-      blockingExtension,
-      saveRequestAndResponseBodies: this.#saveRequestAndResponseBodies,
-    });
-
-    httpActivity.isXHR = event.isXHR;
-    httpActivity.private = event.private;
-    httpActivity.fromServiceWorker = fromServiceWorker;
-    httpActivity.owner = this.#onNetworkEvent(event, channel);
+    httpActivity.owner = this.#onNetworkEvent(
+      {
+        timestamp,
+        fromCache,
+        fromServiceWorker,
+        rawHeaders,
+        blockedReason,
+        blockingExtension,
+        discardRequestBody: !this.#saveRequestAndResponseBodies,
+        discardResponseBody: !this.#saveRequestAndResponseBodies,
+      },
+      channel
+    );
 
     // Bug 1489217 - Avoid watching for response content for blocked or in-progress requests
     // as it can't be observed and would throw if we try.
-    const recordRequestContent = !event.blockedReason && !inProgressRequest;
-    if (recordRequestContent) {
-      this.#setupResponseListener(httpActivity, fromCache);
+    if (blockedReason === undefined && !inProgressRequest) {
+      this.#setupResponseListener(httpActivity, {
+        fromCache,
+        fromServiceWorker,
+      });
     }
 
     return httpActivity;
@@ -819,8 +820,11 @@ export class NetworkObserver {
       const win = lazy.NetworkHelper.getWindowForRequest(channel);
       const charset = win ? win.document.characterSet : null;
 
+      // Most of the data needed from the channel is only available via the
+      // nsIHttpChannelInternal interface.
+      channel.QueryInterface(Ci.nsIHttpChannelInternal);
+
       httpActivity = {
-        id: gSequenceId(),
         // The nsIChannel for which this activity object was created.
         channel,
         // See #onRequestBodySent()
@@ -920,7 +924,7 @@ export class NetworkObserver {
    * @param object httpActivity
    *        The HTTP activity object we are tracking.
    */
-  #setupResponseListener(httpActivity, fromCache) {
+  #setupResponseListener(httpActivity, { fromCache, fromServiceWorker }) {
     const channel = httpActivity.channel;
     channel.QueryInterface(Ci.nsITraceableChannel);
 
@@ -944,7 +948,8 @@ export class NetworkObserver {
     // Add listener for the response body.
     const newListener = new lazy.NetworkResponseListener(
       httpActivity,
-      this.#decodedCertificateCache
+      this.#decodedCertificateCache,
+      fromServiceWorker
     );
 
     // Remember the input stream, so it isn't released by GC.
@@ -1598,9 +1603,3 @@ export class NetworkObserver {
     this.#isDestroyed = true;
   }
 }
-
-function gSequenceId() {
-  return gSequenceId.n++;
-}
-
-gSequenceId.n = 1;

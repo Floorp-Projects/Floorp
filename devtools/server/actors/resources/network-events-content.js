@@ -134,18 +134,14 @@ class NetworkEventContentWatcher {
   }
 
   onNetworkEventAvailable(channel, { networkEventOptions, resourceOverrides }) {
-    const event = lazy.NetworkUtils.createNetworkEvent(
-      channel,
-      networkEventOptions
-    );
-
     const actor = new NetworkEventActor(
       this.targetActor.conn,
       this.targetActor.sessionContext,
       {
         onNetworkEventDestroy: this.onNetworkEventDestroyed.bind(this),
       },
-      event
+      networkEventOptions,
+      channel
     );
     this.targetActor.manage(actor);
 
