@@ -78,18 +78,28 @@ class ReEngagementNotificationWorker(
         )
 
         with(applicationContext) {
-            return createBaseNotification(
-                this,
-                channelId,
-                getString(R.string.notification_re_engagement_title),
-                getString(R.string.notification_re_engagement_text, getString(R.string.app_name)),
-                pendingIntent,
-            )
+            val title = when (settings().reEngagementNotificationType) {
+                NOTIFICATION_TYPE_A -> getString(R.string.notification_re_engagement_A_title)
+                NOTIFICATION_TYPE_B -> getString(R.string.notification_re_engagement_B_title)
+                else -> getString(R.string.notification_re_engagement_title)
+            }
+
+            val text = when (settings().reEngagementNotificationType) {
+                NOTIFICATION_TYPE_A ->
+                    getString(R.string.notification_re_engagement_A_text, getString(R.string.app_name))
+                NOTIFICATION_TYPE_B -> getString(R.string.notification_re_engagement_B_text)
+                else -> getString(R.string.notification_re_engagement_text, getString(R.string.app_name))
+            }
+
+            return createBaseNotification(this, channelId, title, text, pendingIntent)
         }
     }
 
     companion object {
         const val NOTIFICATION_TARGET_URL = "https://www.mozilla.org/firefox/privacy/"
+        const val NOTIFICATION_TYPE_A = 1
+        const val NOTIFICATION_TYPE_B = 2
+
         private const val NOTIFICATION_PENDING_INTENT_TAG = "org.mozilla.fenix.re-engagement"
         private const val INTENT_RE_ENGAGEMENT_NOTIFICATION = "org.mozilla.fenix.re-engagement.intent"
         private const val NOTIFICATION_TAG = "org.mozilla.fenix.re-engagement.tag"

@@ -107,13 +107,16 @@ pre-permission-notification-prompt:
       type: boolean
       description: "if true, the pre-permission notification prompt is shown to the user."
 re-engagement-notification:
-  description: A feature that shows the re-enagement notification if the user is inactive.
+  description: A feature that shows the re-engagement notification if the user is inactive.
   hasExposure: true
   exposureDescription: ""
   variables:
     enabled:
       type: boolean
       description: "If true, the re-engagement notification is shown to the inactive user."
+    type:
+      type: int
+      description: The type of re-engagement notification that is shown to the inactive user.
 search-term-groups:
   description: A feature allowing the grouping of URLs around the search term that it came from.
   hasExposure: true

@@ -22,12 +22,14 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.onboarding.ReEngagementNotificationWorker
+import org.mozilla.fenix.utils.Settings
 
 @RunWith(FenixRobolectricTestRunner::class)
-class DefaultBrowserIntentProcessorTest {
+class ReEngagementIntentProcessorTest {
 
     @get:Rule
     val gleanTestRule = GleanTestRule(testContext)
@@ -36,7 +38,8 @@ class DefaultBrowserIntentProcessorTest {
     fun `do not process blank intents`() {
         val navController: NavController = mockk()
         val out: Intent = mockk()
-        val result = DefaultBrowserIntentProcessor(mockk())
+        val settings: Settings = mockk()
+        val result = ReEngagementIntentProcessor(mockk(), settings)
             .process(Intent(), navController, out)
 
         assertFalse(result)
@@ -45,21 +48,23 @@ class DefaultBrowserIntentProcessorTest {
     }
 
     @Test
-    fun `process re-engagement notification intents`() {
+    fun `WHEN re-engagement notification type is type A THEN load target URL`() {
         val navController: NavController = mockk(relaxed = true)
         val out: Intent = mockk()
         val activity: HomeActivity = mockk(relaxed = true)
         val browsingModeManager: BrowsingModeManager = mockk(relaxed = true)
+        val settings: Settings = mockk(relaxed = true)
 
         val intent = Intent().apply {
             putExtra("org.mozilla.fenix.re-engagement.intent", true)
         }
         every { activity.applicationContext } returns testContext
         every { activity.browsingModeManager } returns browsingModeManager
+        every { settings.reEngagementNotificationType } returns ReEngagementNotificationWorker.NOTIFICATION_TYPE_A
 
         assertNull(Events.reEngagementNotifTapped.testGetValue())
 
-        val result = DefaultBrowserIntentProcessor(activity)
+        val result = ReEngagementIntentProcessor(activity, settings)
             .process(intent, navController, out)
 
         assert(result)
@@ -80,5 +85,32 @@ class DefaultBrowserIntentProcessorTest {
         }
         verify { navController wasNot Called }
         verify { out wasNot Called }
+    }
+
+    @Test
+    fun `WHEN re-engagement notification type is 2 THEN open search dialog`() {
+        val navController: NavController = mockk(relaxed = true)
+        val out: Intent = mockk()
+        val activity: HomeActivity = mockk(relaxed = true)
+        val browsingModeManager: BrowsingModeManager = mockk(relaxed = true)
+        val settings: Settings = mockk(relaxed = true)
+
+        val intent = Intent().apply {
+            putExtra("org.mozilla.fenix.re-engagement.intent", true)
+        }
+        every { activity.applicationContext } returns testContext
+        every { activity.browsingModeManager } returns browsingModeManager
+        every { settings.reEngagementNotificationType } returns ReEngagementNotificationWorker.NOTIFICATION_TYPE_B
+
+        assertNull(Events.reEngagementNotifTapped.testGetValue())
+
+        val result = ReEngagementIntentProcessor(activity, settings)
+            .process(intent, navController, out)
+
+        assert(result)
+
+        assertNotNull(Events.reEngagementNotifTapped.testGetValue())
+        val directions = NavGraphDirections.actionGlobalSearchDialog(sessionId = null)
+        verify { navController.navigate(directions, navOptions = any()) }
     }
 }

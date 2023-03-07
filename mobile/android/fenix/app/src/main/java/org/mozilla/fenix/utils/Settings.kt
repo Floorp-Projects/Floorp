@@ -667,6 +667,13 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         featureFlag = true,
     )
 
+    /**
+     * Indicates if the re-engagement notification feature is enabled
+     */
+    public val reEngagementNotificationType: Int
+        get() =
+            FxNimbus.features.reEngagementNotification.value().type
+
     val shouldUseAutoBatteryTheme by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_auto_battery_theme),
         default = false,
