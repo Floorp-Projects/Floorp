@@ -9,13 +9,7 @@
 about-translations-title = Translations
 about-translations-header = { -translations-brand-name }
 about-translations-results-placeholder = Translation
-# Text displayed on from-language dropdown when no language is selected
-about-translations-detect = Detect language
-# Text displayed on from-language dropdown when a language is detected
-# Variables:
-#   $language (string) - The localized display name of the detected language
-about-translations-detect-lang = Detect language ({ $language })
-# Text displayed on to-language dropdown when no language is selected
+# Text displayed on language dropdowns when no language is selected yet
 about-translations-select = Select language
 about-translations-textarea =
   .placeholder = Add text to translate
