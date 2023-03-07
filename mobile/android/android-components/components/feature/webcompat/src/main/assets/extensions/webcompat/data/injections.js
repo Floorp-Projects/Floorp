@@ -399,21 +399,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1754473",
-    platform: "android",
-    domain: "m.intl.taobao.com",
-    bug: "1754473",
-    contentScripts: {
-      matches: ["*://m.intl.taobao.com/*"],
-      css: [
-        {
-          file:
-            "injections/css/bug1754473-m.intl.taobao.com-number-arrow-buttons-overlapping-fix.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1748455",
     platform: "android",
     domain: "reddit.com",
@@ -491,20 +476,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1778239",
-    platform: "all",
-    domain: "m.pji.co.kr",
-    bug: "1778239",
-    contentScripts: {
-      matches: ["*://m.pji.co.kr/*"],
-      js: [
-        {
-          file: "injections/js/bug1778239-m.pji.co.kr-banner-hide.js",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1774005",
     platform: "all",
     domain: "Sites relying on window.InstallTrigger",
@@ -519,6 +490,7 @@ const AVAILABLE_INJECTIONS = [
         "*://mobilevikings.be/*/registration/*", // Bug 1797400
         "*://www.northcountrypublicradio.org/contact/subscribe.html*", // Bug 1778382,
         "*://www.schoolnutritionandfitness.com/*", // Bug 1793761
+        "*://*.ersthelfer.tv/*", // Bug 1817520
       ],
       js: [
         {
@@ -637,8 +609,11 @@ const AVAILABLE_INJECTIONS = [
     contentScripts: {
       matches: [
         "*://*.aptsovation.com/*",
+        "*://*.avanabayview.com/*", // #118617
+        "*://*.breakpointeandcoronado.com/*", // #117735
         "*://*.liveatlasathens.com/*", // #111189
         "*://*.liveobserverpark.com/*", // #105244
+        "*://*.midwayurban.com/*", // #116523
         "*://*.nhcalaska.com/*",
         "*://*.prospectportal.com/*", // #115206
         "*://*.securityproperties.com/*",
@@ -740,21 +715,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1800127",
-    platform: "all",
-    domain: "www.burgerking.es",
-    bug: "1800127",
-    contentScripts: {
-      matches: ["*://www.burgerking.es/*"],
-      css: [
-        {
-          file:
-            "injections/css/bug1800127-www.burgerking.es-webkit-fill-available-fix.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1800131",
     platform: "all",
     domain: "www.almosafer.com",
@@ -801,12 +761,104 @@ const AVAILABLE_INJECTIONS = [
   },
   {
     id: "bug1811325",
-    platform: "all",
+    platform: "desktop",
     domain: "www.bdo.com.ph",
     bug: "1811325",
     customFunc: "acceptLanguageFix",
     data: {
       urls: ["*://www.bdo.com.ph/*", "*://www.inmac-wstore.com/*"],
+    },
+  },
+  {
+    id: "bug1448747",
+    platform: "android",
+    domain: "FastClick breakage",
+    bug: "1448747",
+    contentScripts: {
+      matches: [
+        "*://*.co2meter.com/*", // 10959
+        "*://*.franmar.com/*", // 27273
+        "*://*.themusiclab.org/*", // 49667
+        "*://*.oregonfoodbank.org/*", // 53203
+        "*://*.fourbarrelcoffee.com/*", // 59427
+        "*://bluetokaicoffee.com/*", // 99867
+        "*://bathpublishing.com/*", // 100145
+        "*://dylantalkstone.com/*", // 101356
+        "*://renewd.com.au/*", // 104998
+        "*://gofreeconcepts.de/*", // 105534
+        "*://*.lamudi.co.id/*", // 106767
+        "*://*.thehawksmoor.com/*", // 107549
+        "*://weaversofireland.com/*", // 116816
+        "*://*.iledefrance-mobilites.fr/*", // 117344
+        "*://*.lawnmowerpartsworld.com/*", // 117577
+        "*://*.discountcoffee.co.uk/*", // 118757
+      ],
+      js: [
+        {
+          file: "injections/js/bug1448747-fastclick-shim.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1818818",
+    platform: "android",
+    domain: "FastClick breakage - legacy",
+    bug: "1818818",
+    contentScripts: {
+      matches: [
+        "*://*.chatiw.com/*", // 5544
+        "*://*.marksandspencer.com/*", // 101811
+        "*://*.wellcare.com/*", // 116595
+      ],
+      js: [
+        {
+          file: "injections/js/bug1818818-fastclick-legacy-shim.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1819476",
+    platform: "all",
+    domain: "axisbank.com",
+    bug: "1819476",
+    contentScripts: {
+      matches: ["*://*.axisbank.com/*"],
+      js: [
+        {
+          file:
+            "injections/js/bug1819476-axisbank.com-webkitSpeechRecognition-shim.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1819450",
+    platform: "android",
+    domain: "cmbchina.com",
+    bug: "1819450",
+    contentScripts: {
+      matches: ["*://www.cmbchina.com/*", "*://cmbchina.com/*"],
+      js: [
+        {
+          file: "injections/js/bug1819450-cmbchina.com-ua-change.js",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1819678",
+    platform: "android",
+    domain: "cnki.net",
+    bug: "1819678",
+    contentScripts: {
+      matches: ["*://*.cnki.net/*"],
+      js: [
+        {
+          file: "injections/js/bug1819678-cnki.net-undisable-search-field.js",
+        },
+      ],
     },
   },
 ];

@@ -800,18 +800,6 @@ const AVAILABLE_SHIMS = [
     onlyIfDFPIActive: true,
   },
   {
-    id: "FirebaseSignIn",
-    platform: "all",
-    name: "Firebase Sign-In",
-    bug: "1782772",
-    requestStorageAccessForRedirect: [
-      ["*://*/*", "*://*.firebaseapp.com/*/auth/*signInViaRedirect*"],
-      ["*://*/*", "*://members.rally.allizom.org/*/auth/*signInViaRedirect*"],
-      ["*://*/*", "*://members.rally.mozilla.org/*/auth/*signInViaRedirect*"],
-    ],
-    onlyIfDFPIActive: true,
-  },
-  {
     // keep this below any other shims checking adsafeprotected URLs
     id: "AdSafeProtectedTrackingPixels",
     platform: "all",
