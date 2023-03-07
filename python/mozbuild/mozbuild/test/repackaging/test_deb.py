@@ -72,14 +72,57 @@ def test_extract_application_ini_data_from_directory():
 
 
 @pytest.mark.parametrize(
-    "version, build_number, expected_deb_pkg_version",
+    "version, build_number, package_name_suffix, description_suffix, expected",
     (
-        ("112.0a1", 1, "112.0a1~20230222000000"),
-        ("112.0b1", 1, "112.0b1~build1"),
-        ("112.0", 2, "112.0~build2"),
+        (
+            "112.0a1",
+            1,
+            "",
+            "",
+            {
+                "DEB_DESCRIPTION": "Mozilla Firefox",
+                "DEB_PKG_NAME": "firefox-nightly-try",
+                "DEB_PKG_VERSION": "112.0a1~20230222000000",
+            },
+        ),
+        (
+            "112.0a1",
+            1,
+            "-l10n-fr",
+            " - Language pack for Firefox Nightly for fr",
+            {
+                "DEB_DESCRIPTION": "Mozilla Firefox - Language pack for Firefox Nightly for fr",
+                "DEB_PKG_NAME": "firefox-nightly-try-l10n-fr",
+                "DEB_PKG_VERSION": "112.0a1~20230222000000",
+            },
+        ),
+        (
+            "112.0b1",
+            1,
+            "",
+            "",
+            {
+                "DEB_DESCRIPTION": "Mozilla Firefox",
+                "DEB_PKG_NAME": "firefox-nightly-try",
+                "DEB_PKG_VERSION": "112.0b1~build1",
+            },
+        ),
+        (
+            "112.0",
+            2,
+            "",
+            "",
+            {
+                "DEB_DESCRIPTION": "Mozilla Firefox",
+                "DEB_PKG_NAME": "firefox-nightly-try",
+                "DEB_PKG_VERSION": "112.0~build2",
+            },
+        ),
     ),
 )
-def test_get_build_variables(version, build_number, expected_deb_pkg_version):
+def test_get_build_variables(
+    version, build_number, package_name_suffix, description_suffix, expected
+):
     application_ini_data = {
         "name": "Firefox",
         "display_name": "Firefox",
@@ -94,13 +137,15 @@ def test_get_build_variables(version, build_number, expected_deb_pkg_version):
         version,
         build_number,
         depends="${shlibs:Depends},",
+        package_name_suffix=package_name_suffix,
+        description_suffix=description_suffix,
     ) == {
-        "DEB_DESCRIPTION": "Mozilla Firefox",
-        "DEB_PKG_NAME": "firefox-nightly-try",
-        "DEB_PKG_VERSION": expected_deb_pkg_version,
-        "DEB_CHANGELOG_DATE": "Wed, 22 Feb 2023 00:00:00 -0000",
-        "DEB_ARCH_NAME": "i386",
-        "DEB_DEPENDS": "${shlibs:Depends},",
+        **{
+            "DEB_CHANGELOG_DATE": "Wed, 22 Feb 2023 00:00:00 -0000",
+            "DEB_ARCH_NAME": "i386",
+            "DEB_DEPENDS": "${shlibs:Depends},",
+        },
+        **expected,
     }
 
 

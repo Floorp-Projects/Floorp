@@ -135,6 +135,8 @@ def _get_build_variables(
     version_string,
     build_number,
     depends,
+    package_name_suffix="",
+    description_suffix="",
 ):
     version = GeckoVersion.parse(version_string)
     # Nightlies don't have build numbers
@@ -145,8 +147,9 @@ def _get_build_variables(
     )
 
     return {
-        "DEB_DESCRIPTION": f"{application_ini_data['vendor']} {application_ini_data['display_name']}",
-        "DEB_PKG_NAME": application_ini_data["remoting_name"].lower(),
+        "DEB_DESCRIPTION": f"{application_ini_data['vendor']} {application_ini_data['display_name']}"
+        f"{description_suffix}",
+        "DEB_PKG_NAME": f"{application_ini_data['remoting_name'].lower()}{package_name_suffix}",
         "DEB_PKG_VERSION": deb_pkg_version,
         "DEB_CHANGELOG_DATE": format_datetime(application_ini_data["timestamp"]),
         "DEB_ARCH_NAME": _DEB_ARCH[arch],
