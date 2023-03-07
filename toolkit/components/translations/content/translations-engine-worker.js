@@ -122,6 +122,7 @@ function handleMessages(engine) {
       if (data.type === "initialize") {
         throw new Error("The Translations engine must not be re-initialized.");
       }
+      log("Received message", data);
 
       switch (data.type) {
         case "translation-request": {
