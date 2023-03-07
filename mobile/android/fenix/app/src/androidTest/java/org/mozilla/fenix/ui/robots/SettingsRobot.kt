@@ -50,6 +50,7 @@ import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.click
+import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.ui.robots.SettingsRobot.Companion.DEFAULT_APPS_SETTINGS_ACTION
 
@@ -317,6 +318,18 @@ class SettingsRobot {
 
             SettingsSubMenuOpenLinksInAppsRobot().interact()
             return SettingsSubMenuOpenLinksInAppsRobot.Transition()
+        }
+
+        fun openHttpsOnlyModeMenu(interact: SettingsSubMenuHttpsOnlyModeRobot.() -> Unit): SettingsSubMenuHttpsOnlyModeRobot.Transition {
+            scrollToElementByText("HTTPS-Only Mode")
+            onView(withText(getStringResource(R.string.preferences_https_only_title))).click()
+            mDevice.waitNotNull(
+                Until.findObjects(By.res("$packageName:id/https_only_switch")),
+                waitingTime,
+            )
+
+            SettingsSubMenuHttpsOnlyModeRobot().interact()
+            return SettingsSubMenuHttpsOnlyModeRobot.Transition()
         }
     }
 

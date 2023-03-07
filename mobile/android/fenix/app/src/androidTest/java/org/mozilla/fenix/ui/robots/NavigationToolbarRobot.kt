@@ -44,6 +44,8 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
  * Implementation of Robot Pattern for the URL toolbar.
  */
 class NavigationToolbarRobot {
+    fun verifyUrl(url: String) =
+        onView(withId(R.id.mozac_browser_toolbar_url_view)).check(matches(withText(url)))
 
     fun verifyNoHistoryBookmarks() = assertNoHistoryBookmarks()
 
