@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-03-07T11:35:04.628572'
+updated_at: '2023-03-07T13:31:34.884785'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -73,7 +73,7 @@ people:
     nick: aosmond
   - &aplacitelli
     bmo_id: 579791
-    name: ''
+    name: Alessio Placitelli
     nick: aplacitelli
   - &arai
     bmo_id: 310076
@@ -4050,5 +4050,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: d99ec8c6919dcc6671032c97b2d17995f49a5e07
-  export: 87c76cacf75c72ac94930df445168d4b31d6a9f8
+  config: e018ac365d94851daa0f92229efca3053da0142f
+  export: 9bcf3bb2465c7c73829691d9ab7e87094b968cf2
