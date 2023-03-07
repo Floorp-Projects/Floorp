@@ -90,12 +90,13 @@ already_AddRefed<Selection> Highlight::CreateHighlightSelection(
   selection->SetHighlightName(aHighlightName);
   AutoFrameSelectionBatcher selectionBatcher(__FUNCTION__);
   selectionBatcher.AddFrameSelection(aFrameSelection);
-  // NOLINTNEXTLINE(performance-for-range-copy)
-  for (const RefPtr<AbstractRange> range : mRanges) {
+  for (const RefPtr<AbstractRange>& range : mRanges) {
     if (range->GetComposedDocOfContainers() ==
         aFrameSelection->GetPresShell()->GetDocument()) {
-      selection->AddHighlightRangeAndSelectFramesAndNotifyListeners(*range,
-                                                                    aRv);
+      // since this is run in a context guarded by a selection batcher,
+      // no strong reference is needed to keep `range` alive.
+      selection->AddHighlightRangeAndSelectFramesAndNotifyListeners(
+          MOZ_KnownLive(*range), aRv);
     }
   }
   return selection.forget();
@@ -110,12 +111,14 @@ void Highlight::Add(AbstractRange& aRange, ErrorResult& aRv) {
     mRanges.AppendElement(&aRange);
     AutoFrameSelectionBatcher selectionBatcher(__FUNCTION__,
                                                mHighlightRegistries.Count());
-    for (const RefPtr<HighlightRegistry> registry :
+    for (const RefPtr<HighlightRegistry>& registry :
          mHighlightRegistries.Keys()) {
       auto frameSelection = registry->GetFrameSelection();
       selectionBatcher.AddFrameSelection(frameSelection);
-
-      registry->MaybeAddRangeToHighlightSelection(aRange, *this, aRv);
+      // since this is run in a context guarded by a selection batcher,
+      // no strong reference is needed to keep `registry` alive.
+      MOZ_KnownLive(registry)->MaybeAddRangeToHighlightSelection(aRange, *this,
+                                                                 aRv);
       if (aRv.Failed()) {
         return;
       }
@@ -134,8 +137,8 @@ void Highlight::Clear(ErrorResult& aRv) {
          mHighlightRegistries.Keys()) {
       auto frameSelection = registry->GetFrameSelection();
       selectionBatcher.AddFrameSelection(frameSelection);
-      // Because of the selection batcher, this call does *not* run script.
-      // MOZ_KnownLive() is needed regardless.
+      // since this is run in a context guarded by a selection batcher,
+      // no strong reference is needed to keep `registry` alive.
       MOZ_KnownLive(registry)->RemoveHighlightSelection(*this);
     }
   }
@@ -151,8 +154,8 @@ bool Highlight::Delete(AbstractRange& aRange, ErrorResult& aRv) {
          mHighlightRegistries.Keys()) {
       auto frameSelection = registry->GetFrameSelection();
       selectionBatcher.AddFrameSelection(frameSelection);
-      // Because of the selection batcher, this call does *not* run script.
-      // MOZ_KnownLive() is needed regardless.
+      // since this is run in a context guarded by a selection batcher,
+      // no strong reference is needed to keep `registry` alive.
       MOZ_KnownLive(registry)->MaybeRemoveRangeFromHighlightSelection(aRange,
                                                                       *this);
     }
