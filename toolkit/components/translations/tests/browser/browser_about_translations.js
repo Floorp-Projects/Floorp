@@ -450,6 +450,14 @@ add_task(async function test_about_translations_html() {
       const { document, window } = content;
       Cu.waiveXrays(window).DEBOUNCE_DELAY = 1; // Make the timer run faster for tests.
 
+      await ContentTaskUtils.waitForCondition(() => {
+        const element = document.querySelector(
+          selectors.translationResultBlank
+        );
+        const { visibility } = window.getComputedStyle(element);
+        return visibility === "visible";
+      }, `Waiting for placeholder text to be visible."`);
+
       /** @type {HTMLSelectElement} */
       const fromSelect = document.querySelector(selectors.fromLanguageSelect);
       /** @type {HTMLSelectElement} */
@@ -490,6 +498,92 @@ add_task(async function test_about_translations_html() {
 
       // The mocked translations make the text uppercase and reports the models used.
       await assertTranslationResult("TEXT TO TRANSLATE. [en to fr, html]");
+    },
+  });
+});
+
+add_task(async function test_about_translations_language_identification() {
+  await openAboutTranslations({
+    detectedLanguageLabel: "en",
+    detectedLanguageConfidence: "0.98",
+    languagePairs: [
+      { fromLang: "en", toLang: "fr" },
+      { fromLang: "fr", toLang: "en" },
+    ],
+    runInPage: async ({ selectors }) => {
+      const { document, window } = content;
+      Cu.waiveXrays(window).DEBOUNCE_DELAY = 1; // Make the timer run faster for tests.
+
+      await ContentTaskUtils.waitForCondition(() => {
+        const element = document.querySelector(
+          selectors.translationResultBlank
+        );
+        const { visibility } = window.getComputedStyle(element);
+        return visibility === "visible";
+      }, `Waiting for placeholder text to be visible."`);
+
+      /** @type {HTMLSelectElement} */
+      const fromSelect = document.querySelector(selectors.fromLanguageSelect);
+      /** @type {HTMLSelectElement} */
+      const toSelect = document.querySelector(selectors.toLanguageSelect);
+      /** @type {HTMLTextAreaElement} */
+      const translationTextarea = document.querySelector(
+        selectors.translationTextarea
+      );
+      /** @type {HTMLDivElement} */
+      const translationResult = document.querySelector(
+        selectors.translationResult
+      );
+
+      async function assertTranslationResult(translation) {
+        try {
+          await ContentTaskUtils.waitForCondition(
+            () => translation === translationResult.innerText,
+            `Waiting for: "${translation}"`
+          );
+        } catch (error) {
+          // The result wasn't found, but the assertion below will report the error.
+          console.error(error);
+        }
+        is(
+          translation,
+          translationResult.innerText,
+          "The language identification engine correctly informs the translation."
+        );
+      }
+
+      const fromSelectStartValue = fromSelect.value;
+      const detectStartText = fromSelect.options[0].textContent;
+
+      is(
+        fromSelectStartValue,
+        "detect",
+        'The fromSelect starting value is "detect"'
+      );
+
+      toSelect.value = "fr";
+      toSelect.dispatchEvent(new Event("input"));
+
+      translationTextarea.value = "Text to translate.";
+      translationTextarea.dispatchEvent(new Event("input"));
+
+      const fromSelectFinalValue = fromSelect.value;
+      is(
+        fromSelectFinalValue,
+        fromSelectStartValue,
+        "The fromSelect value has not changed"
+      );
+
+      // The mocked translations make the text uppercase and reports the models used.
+      await assertTranslationResult("TEXT TO TRANSLATE. [en to fr]");
+
+      const detectFinalText = fromSelect.options[0].textContent;
+      is(
+        true,
+        detectFinalText.startsWith(detectStartText) &&
+          detectFinalText.length > detectStartText.length,
+        `fromSelect starting display text (${detectStartText}) should be a substring of the final text (${detectFinalText})`
+      );
     },
   });
 });
