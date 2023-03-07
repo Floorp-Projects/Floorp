@@ -157,8 +157,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
         startForResult = registerForActivityResult { result ->
             result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.first()?.also {
-                toolbarView.view.edit.updateUrl(url = it, shouldHighlight = true)
-                interactor.onTextChanged(it)
+                val updatedUrl = toolbarView.view.edit.updateUrl(url = it, shouldHighlight = true, shouldAppend = true)
+                interactor.onTextChanged(updatedUrl)
                 toolbarView.view.edit.focus()
             }
         }

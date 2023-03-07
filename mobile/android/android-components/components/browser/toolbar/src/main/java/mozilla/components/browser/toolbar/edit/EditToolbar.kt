@@ -264,13 +264,23 @@ class EditToolbar internal constructor(
      * Updates the text of the URL input field. Note: this does *not* affect the value of url itself
      * and is only a visual change
      */
-    fun updateUrl(url: String, shouldAutoComplete: Boolean = false, shouldHighlight: Boolean = false) {
-        views.url.setText(url, shouldAutoComplete)
+    fun updateUrl(
+        url: String,
+        shouldAutoComplete: Boolean = false,
+        shouldHighlight: Boolean = false,
+        shouldAppend: Boolean = false,
+    ): String {
+        if (shouldAppend) {
+            views.url.appendText(url, shouldAutoComplete)
+        } else {
+            views.url.setText(url, shouldAutoComplete)
+        }
         views.clear.isVisible = url.isNotBlank()
 
         if (shouldHighlight) {
-            views.url.setSelection(0, url.length)
+            views.url.setSelection(views.url.text.length - url.length, views.url.text.length)
         }
+        return views.url.text.toString()
     }
 
     /**

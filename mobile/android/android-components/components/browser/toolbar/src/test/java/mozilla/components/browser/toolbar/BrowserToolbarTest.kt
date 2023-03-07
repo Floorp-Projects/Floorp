@@ -126,7 +126,7 @@ class BrowserToolbarTest {
         toolbar.url = "https://www.mozilla.org"
 
         verify(display).url = "https://www.mozilla.org"
-        verify(edit, never()).updateUrl(ArgumentMatchers.anyString(), ArgumentMatchers.anyBoolean(), ArgumentMatchers.anyBoolean())
+        verify(edit, never()).updateUrl(ArgumentMatchers.anyString(), ArgumentMatchers.anyBoolean(), ArgumentMatchers.anyBoolean(), ArgumentMatchers.anyBoolean())
     }
 
     @Test

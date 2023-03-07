@@ -226,6 +226,23 @@ class EditToolbarTest {
     }
 
     @Test
+    fun `WHEN shouldAppend is set to true updateUrl should append text`() {
+        val (_, editToolbar) = createEditToolbar()
+
+        // Initial state
+        editToolbar.updateUrl(url = "what ")
+
+        // Simulate text update with voice input
+        val actual = editToolbar.updateUrl(url = "is this", shouldAppend = true, shouldHighlight = true)
+        val expected = "what is this"
+
+        assertEquals(expected, actual)
+        assertEquals(expected, editToolbar.views.url.text.toString())
+        assertEquals(5, editToolbar.views.url.selectionStart)
+        assertEquals(12, editToolbar.views.url.selectionEnd)
+    }
+
+    @Test
     fun `setIconClickListener sets a click listener on the icon view`() {
         val (_, editToolbar) = createEditToolbar()
         val iconView = editToolbar.views.icon

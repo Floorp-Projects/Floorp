@@ -236,7 +236,6 @@
     <ID>UndocumentedPublicFunction:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$fun setOnSelectionChangedListener(l: OnSelectionChangedListener)</ID>
     <ID>UndocumentedPublicFunction:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$fun setOnTextChangeListener(l: OnTextChangeListener)</ID>
     <ID>UndocumentedPublicFunction:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$fun setOnWindowsFocusChangeListener(l: OnWindowsFocusChangeListener)</ID>
-    <ID>UndocumentedPublicFunction:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$fun setText(text: CharSequence?, shouldAutoComplete: Boolean = true)</ID>
     <ID>UndocumentedPublicFunction:InlineAutocompleteEditText.kt$InlineAutocompleteEditText.AutocompleteResult$fun startsWith(text: String): Boolean</ID>
     <ID>UndocumentedPublicFunction:JSONArray.kt$fun Iterable&lt;Any&gt;.toJSONArray()</ID>
     <ID>UndocumentedPublicFunction:JSONArray.kt$fun JSONArray.asSequence(): Sequence&lt;Any&gt;</ID>

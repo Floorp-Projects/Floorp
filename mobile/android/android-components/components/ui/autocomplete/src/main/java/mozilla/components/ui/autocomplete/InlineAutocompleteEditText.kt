@@ -290,12 +290,31 @@ open class InlineAutocompleteEditText @JvmOverloads constructor(
         resetAutocompleteState()
     }
 
+    /**
+     * Sets the text of the edit text.
+     * @param text The text to set.
+     * @param shouldAutoComplete If false, [TextChangeListener] the text watcher will be disabled for this set.
+     */
     fun setText(text: CharSequence?, shouldAutoComplete: Boolean = true) {
         val wasSettingAutoComplete = settingAutoComplete
 
         // Disable listeners in order to stop auto completion
         settingAutoComplete = !shouldAutoComplete
         setText(text, BufferType.EDITABLE)
+        settingAutoComplete = wasSettingAutoComplete
+    }
+
+    /**
+     * Appends the given text to the end of the current text.
+     * @param text The text to append.
+     * @param shouldAutoComplete If false, [TextChangeListener] text watcher will be disabled for this append.
+     */
+    fun appendText(text: CharSequence?, shouldAutoComplete: Boolean = true) {
+        val wasSettingAutoComplete = settingAutoComplete
+
+        // Disable listeners in order to stop auto completion
+        settingAutoComplete = !shouldAutoComplete
+        append(text)
         settingAutoComplete = wasSettingAutoComplete
     }
 
