@@ -173,7 +173,7 @@ void HTMLDialogElement::FocusDialog() {
   // 5) If control's node document's origin is not the same as the origin of
   // topDocument, then return.
   BrowsingContext* bc = control->OwnerDoc()->GetBrowsingContext();
-  if (bc && bc->SameOriginWithTop()) {
+  if (bc && bc->IsInProcess() && bc->SameOriginWithTop()) {
     if (nsCOMPtr<nsIDocShell> docShell = bc->Top()->GetDocShell()) {
       if (Document* topDocument = docShell->GetExtantDocument()) {
         // 6) Empty topDocument's autofocus candidates.
