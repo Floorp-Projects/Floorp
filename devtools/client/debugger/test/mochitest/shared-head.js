@@ -856,8 +856,35 @@ function deleteExpression(dbg, input) {
  * @static
  */
 async function reload(dbg, ...sources) {
-  // We aren't waiting for load as the page may not load because of a breakpoint
-  await reloadBrowser({ waitForLoad: false });
+  await reloadBrowser();
+  return waitForSources(dbg, ...sources);
+}
+
+// Only use this method when the page is paused by the debugger
+// during page load and we navigate away without resuming.
+//
+// In this particular scenario, the page will never be "loaded".
+// i.e. emit DOCUMENT_EVENT's dom-complete
+// And consequently, debugger panel won't emit "reloaded" event.
+async function reloadWhenPausedBeforePageLoaded(dbg, ...sources) {
+  // But we can at least listen for the next DOCUMENT_EVENT's dom-loading,
+  // which should be fired even if the page is pause the earliest.
+  const { resourceCommand } = dbg.commands;
+  const {
+    onResource: onTopLevelDomLoading,
+  } = await resourceCommand.waitForNextResource(
+    resourceCommand.TYPES.DOCUMENT_EVENT,
+    {
+      ignoreExistingResources: true,
+      predicate: resource =>
+        resource.targetFront.isTopLevel && resource.name === "dom-loading",
+    }
+  );
+
+  gBrowser.reloadTab(gBrowser.selectedTab);
+
+  info("Wait for DOCUMENT_EVENT dom-loading after reload");
+  await onTopLevelDomLoading;
   return waitForSources(dbg, ...sources);
 }
 

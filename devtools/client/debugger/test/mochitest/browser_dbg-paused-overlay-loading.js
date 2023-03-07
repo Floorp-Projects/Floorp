@@ -13,7 +13,7 @@ add_task(async function() {
   );
 
   info("Reload the page to hit the debugger statement while loading");
-  reload(dbg);
+  const onReloaded = reload(dbg);
   await waitForPaused(dbg);
   ok(true, "We're paused");
 
@@ -42,4 +42,7 @@ add_task(async function() {
   });
 
   ok(true, "The overlay is now hidden");
+
+  info("Wait for reload to complete after resume");
+  await onReloaded;
 });

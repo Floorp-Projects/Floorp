@@ -24,7 +24,7 @@ add_task(async function() {
 
   const onBreakpoint = waitForDispatch(dbg.store, "SET_BREAKPOINT");
   info("Reload the page to hit the breakpoint on load");
-  await reload(dbg);
+  const onReloaded = reload(dbg);
   await onBreakpoint;
   await waitForSelectedSource(dbg, "simple2.js");
 
@@ -42,6 +42,9 @@ add_task(async function() {
   // and the helper is expecting to pause again
   await dbg.actions.stepIn(getThreadContext(dbg));
   assertNotPaused(dbg, "Stepping in two times resumes");
+
+  info("Wait for reload to complete after resume");
+  await onReloaded;
 
   await dbg.toolbox.closeToolbox();
 });
