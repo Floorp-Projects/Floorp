@@ -10,8 +10,6 @@
 
 namespace mozilla::dom {
 
-AnimationTimeline::~AnimationTimeline() { mAnimationOrder.clear(); }
-
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(AnimationTimeline)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AnimationTimeline)
@@ -31,6 +29,14 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AnimationTimeline)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
+
+AnimationTimeline::AnimationTimeline(nsIGlobalObject* aWindow,
+                                     RTPCallerType aRTPCallerType)
+    : mWindow(aWindow), mRTPCallerType(aRTPCallerType) {
+  MOZ_ASSERT(mWindow);
+}
+
+AnimationTimeline::~AnimationTimeline() { mAnimationOrder.clear(); }
 
 bool AnimationTimeline::Tick() {
   bool needsTicks = false;

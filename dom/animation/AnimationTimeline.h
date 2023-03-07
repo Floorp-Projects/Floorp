@@ -26,10 +26,7 @@ class ScrollTimeline;
 class AnimationTimeline : public nsISupports, public nsWrapperCache {
  public:
   explicit AnimationTimeline(nsIGlobalObject* aWindow,
-                             RTPCallerType aRTPCallerType)
-      : mWindow(aWindow), mRTPCallerType(aRTPCallerType) {
-    MOZ_ASSERT(mWindow);
-  }
+                             RTPCallerType aRTPCallerType);
 
  protected:
   virtual ~AnimationTimeline();
