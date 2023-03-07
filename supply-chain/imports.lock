@@ -231,6 +231,15 @@ macros), reasonable usage of the crate should output code which meets the above
 criteria."""
 implies = "safe-to-deploy"
 
+[[audits.chromeos.audits.fastrand]]
+who = "George Burgess IV <gbiv@google.com>"
+criteria = ["does-not-implement-crypto", "rule-of-two-safe-to-deploy"]
+version = "1.9.0"
+notes = """
+`does-not-implement-crypto` is certified because this crate explicitly says
+that the RNG here is not cryptographically secure.
+"""
+
 [[audits.chromeos.audits.h2]]
 who = "ChromeOS"
 criteria = "safe-to-run"
