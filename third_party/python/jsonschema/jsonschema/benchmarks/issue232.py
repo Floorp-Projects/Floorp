@@ -1,19 +1,18 @@
-#!/usr/bin/env python
 """
 A performance benchmark using the example from issue #232.
 
-See https://github.com/Julian/jsonschema/pull/232.
+See https://github.com/python-jsonschema/jsonschema/pull/232.
 """
-from twisted.python.filepath import FilePath
+from pathlib import Path
+
 from pyperf import Runner
 from pyrsistent import m
 
 from jsonschema.tests._suite import Version
 import jsonschema
 
-
 issue232 = Version(
-    path=FilePath(__file__).sibling("issue232"),
+    path=Path(__file__).parent / "issue232",
     remotes=m(),
     name="issue232",
 )

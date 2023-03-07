@@ -1,0 +1,14 @@
+README.rst
+setup.cfg
+setup.py
+dlmanager/__init__.py
+dlmanager/fs.py
+dlmanager/manager.py
+dlmanager/persist_limit.py
+dlmanager.egg-info/PKG-INFO
+dlmanager.egg-info/SOURCES.txt
+dlmanager.egg-info/dependency_links.txt
+dlmanager.egg-info/requires.txt
+dlmanager.egg-info/top_level.txt
+tests/test_manager.py
+tests/test_persist_limit.py
