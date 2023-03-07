@@ -213,6 +213,18 @@ def test_generate_deb_archive(
     "arch, is_chroot_available, expected",
     (
         (
+            "all",
+            True,
+            [
+                "chroot",
+                "/srv/jessie-amd64",
+                "bash",
+                "-c",
+                "cd /tmp/*/source; dpkg-buildpackage -us -uc -b",
+            ],
+        ),
+        ("all", False, ["dpkg-buildpackage", "-us", "-uc", "-b"]),
+        (
             "x86",
             True,
             [
@@ -250,6 +262,8 @@ def test_get_command(monkeypatch, arch, is_chroot_available, expected):
 @pytest.mark.parametrize(
     "arch, does_dir_exist, expected_path, expected_result",
     (
+        ("all", False, "/srv/jessie-amd64", False),
+        ("all", True, "/srv/jessie-amd64", True),
         ("x86", False, "/srv/jessie-i386", False),
         ("x86_64", False, "/srv/jessie-amd64", False),
         ("x86", True, "/srv/jessie-i386", True),
@@ -265,6 +279,18 @@ def test_is_chroot_available(
 
     monkeypatch.setattr(deb.os.path, "isdir", _mock_is_dir)
     assert deb._is_chroot_available(arch) == expected_result
+
+
+@pytest.mark.parametrize(
+    "arch, expected",
+    (
+        ("all", "/srv/jessie-amd64"),
+        ("x86", "/srv/jessie-i386"),
+        ("x86_64", "/srv/jessie-amd64"),
+    ),
+)
+def test_get_chroot_path(arch, expected):
+    assert deb._get_chroot_path(arch) == expected
 
 
 _MANIFEST_JSON_DATA = {
