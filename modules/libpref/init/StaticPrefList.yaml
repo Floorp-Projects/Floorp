@@ -3463,7 +3463,7 @@
 # Use a Background Task to delete files at shutdown.
 - name: dom.quotaManager.backgroundTask.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: never
 #endif
 
