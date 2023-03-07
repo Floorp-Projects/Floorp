@@ -25,76 +25,73 @@ let $0 = instantiate(`(module
   (func (export "grow") (param $$sz i32) (param $$init externref) (result i32)
     (table.grow $$t (local.get $$init) (local.get $$sz))
   )
-  (func (export "grow-abbrev") (param $$sz i32) (param $$init externref) (result i32)
-    (table.grow (local.get $$init) (local.get $$sz))
-  )
   (func (export "size") (result i32) (table.size $$t))
 )`);
 
-// ./test/core/table_grow.wast:16
+// ./test/core/table_grow.wast:13
 assert_return(() => invoke($0, `size`, []), [value("i32", 0)]);
 
-// ./test/core/table_grow.wast:17
+// ./test/core/table_grow.wast:14
 assert_trap(() => invoke($0, `set`, [0, externref(2)]), `out of bounds table access`);
 
-// ./test/core/table_grow.wast:18
+// ./test/core/table_grow.wast:15
 assert_trap(() => invoke($0, `get`, [0]), `out of bounds table access`);
 
-// ./test/core/table_grow.wast:20
+// ./test/core/table_grow.wast:17
 assert_return(() => invoke($0, `grow`, [1, null]), [value("i32", 0)]);
 
-// ./test/core/table_grow.wast:21
+// ./test/core/table_grow.wast:18
 assert_return(() => invoke($0, `size`, []), [value("i32", 1)]);
 
-// ./test/core/table_grow.wast:22
+// ./test/core/table_grow.wast:19
 assert_return(() => invoke($0, `get`, [0]), [value('externref', null)]);
 
-// ./test/core/table_grow.wast:23
+// ./test/core/table_grow.wast:20
 assert_return(() => invoke($0, `set`, [0, externref(2)]), []);
 
-// ./test/core/table_grow.wast:24
+// ./test/core/table_grow.wast:21
 assert_return(() => invoke($0, `get`, [0]), [value('externref', externref(2))]);
 
-// ./test/core/table_grow.wast:25
+// ./test/core/table_grow.wast:22
 assert_trap(() => invoke($0, `set`, [1, externref(2)]), `out of bounds table access`);
 
-// ./test/core/table_grow.wast:26
+// ./test/core/table_grow.wast:23
 assert_trap(() => invoke($0, `get`, [1]), `out of bounds table access`);
 
-// ./test/core/table_grow.wast:28
-assert_return(() => invoke($0, `grow-abbrev`, [4, externref(3)]), [value("i32", 1)]);
+// ./test/core/table_grow.wast:25
+assert_return(() => invoke($0, `grow`, [4, externref(3)]), [value("i32", 1)]);
 
-// ./test/core/table_grow.wast:29
+// ./test/core/table_grow.wast:26
 assert_return(() => invoke($0, `size`, []), [value("i32", 5)]);
 
-// ./test/core/table_grow.wast:30
+// ./test/core/table_grow.wast:27
 assert_return(() => invoke($0, `get`, [0]), [value('externref', externref(2))]);
 
-// ./test/core/table_grow.wast:31
+// ./test/core/table_grow.wast:28
 assert_return(() => invoke($0, `set`, [0, externref(2)]), []);
 
-// ./test/core/table_grow.wast:32
+// ./test/core/table_grow.wast:29
 assert_return(() => invoke($0, `get`, [0]), [value('externref', externref(2))]);
 
-// ./test/core/table_grow.wast:33
+// ./test/core/table_grow.wast:30
 assert_return(() => invoke($0, `get`, [1]), [value('externref', externref(3))]);
 
-// ./test/core/table_grow.wast:34
+// ./test/core/table_grow.wast:31
 assert_return(() => invoke($0, `get`, [4]), [value('externref', externref(3))]);
 
-// ./test/core/table_grow.wast:35
+// ./test/core/table_grow.wast:32
 assert_return(() => invoke($0, `set`, [4, externref(4)]), []);
 
-// ./test/core/table_grow.wast:36
+// ./test/core/table_grow.wast:33
 assert_return(() => invoke($0, `get`, [4]), [value('externref', externref(4))]);
 
-// ./test/core/table_grow.wast:37
+// ./test/core/table_grow.wast:34
 assert_trap(() => invoke($0, `set`, [5, externref(2)]), `out of bounds table access`);
 
-// ./test/core/table_grow.wast:38
+// ./test/core/table_grow.wast:35
 assert_trap(() => invoke($0, `get`, [5]), `out of bounds table access`);
 
-// ./test/core/table_grow.wast:42
+// ./test/core/table_grow.wast:39
 let $1 = instantiate(`(module
   (table $$t 0x10 funcref)
   (elem declare func $$f)
@@ -103,10 +100,10 @@ let $1 = instantiate(`(module
   )
 )`);
 
-// ./test/core/table_grow.wast:50
+// ./test/core/table_grow.wast:47
 assert_return(() => invoke($1, `grow`, []), [value("i32", -1)]);
 
-// ./test/core/table_grow.wast:53
+// ./test/core/table_grow.wast:50
 let $2 = instantiate(`(module
   (table $$t 0 externref)
   (func (export "grow") (param i32) (result i32)
@@ -114,22 +111,22 @@ let $2 = instantiate(`(module
   )
 )`);
 
-// ./test/core/table_grow.wast:60
+// ./test/core/table_grow.wast:57
 assert_return(() => invoke($2, `grow`, [0]), [value("i32", 0)]);
 
-// ./test/core/table_grow.wast:61
+// ./test/core/table_grow.wast:58
 assert_return(() => invoke($2, `grow`, [1]), [value("i32", 0)]);
 
-// ./test/core/table_grow.wast:62
+// ./test/core/table_grow.wast:59
 assert_return(() => invoke($2, `grow`, [0]), [value("i32", 1)]);
 
-// ./test/core/table_grow.wast:63
+// ./test/core/table_grow.wast:60
 assert_return(() => invoke($2, `grow`, [2]), [value("i32", 1)]);
 
-// ./test/core/table_grow.wast:64
+// ./test/core/table_grow.wast:61
 assert_return(() => invoke($2, `grow`, [800]), [value("i32", 3)]);
 
-// ./test/core/table_grow.wast:67
+// ./test/core/table_grow.wast:64
 let $3 = instantiate(`(module
   (table $$t 0 10 externref)
   (func (export "grow") (param i32) (result i32)
@@ -137,31 +134,31 @@ let $3 = instantiate(`(module
   )
 )`);
 
-// ./test/core/table_grow.wast:74
+// ./test/core/table_grow.wast:71
 assert_return(() => invoke($3, `grow`, [0]), [value("i32", 0)]);
 
-// ./test/core/table_grow.wast:75
+// ./test/core/table_grow.wast:72
 assert_return(() => invoke($3, `grow`, [1]), [value("i32", 0)]);
 
-// ./test/core/table_grow.wast:76
+// ./test/core/table_grow.wast:73
 assert_return(() => invoke($3, `grow`, [1]), [value("i32", 1)]);
 
-// ./test/core/table_grow.wast:77
+// ./test/core/table_grow.wast:74
 assert_return(() => invoke($3, `grow`, [2]), [value("i32", 2)]);
 
-// ./test/core/table_grow.wast:78
+// ./test/core/table_grow.wast:75
 assert_return(() => invoke($3, `grow`, [6]), [value("i32", 4)]);
 
-// ./test/core/table_grow.wast:79
+// ./test/core/table_grow.wast:76
 assert_return(() => invoke($3, `grow`, [0]), [value("i32", 10)]);
 
-// ./test/core/table_grow.wast:80
+// ./test/core/table_grow.wast:77
 assert_return(() => invoke($3, `grow`, [1]), [value("i32", -1)]);
 
-// ./test/core/table_grow.wast:81
+// ./test/core/table_grow.wast:78
 assert_return(() => invoke($3, `grow`, [65536]), [value("i32", -1)]);
 
-// ./test/core/table_grow.wast:84
+// ./test/core/table_grow.wast:81
 let $4 = instantiate(`(module
   (table $$t 10 funcref)
   (func (export "grow") (param i32) (result i32)
@@ -184,16 +181,16 @@ let $4 = instantiate(`(module
   )
 )`);
 
-// ./test/core/table_grow.wast:106
+// ./test/core/table_grow.wast:103
 assert_return(() => invoke($4, `check-table-null`, [0, 9]), [value('anyfunc', null)]);
 
-// ./test/core/table_grow.wast:107
+// ./test/core/table_grow.wast:104
 assert_return(() => invoke($4, `grow`, [10]), [value("i32", 10)]);
 
-// ./test/core/table_grow.wast:108
+// ./test/core/table_grow.wast:105
 assert_return(() => invoke($4, `check-table-null`, [0, 19]), [value('anyfunc', null)]);
 
-// ./test/core/table_grow.wast:113
+// ./test/core/table_grow.wast:110
 assert_invalid(
   () => instantiate(`(module
     (table $$t 0 externref)
@@ -204,7 +201,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/table_grow.wast:122
+// ./test/core/table_grow.wast:119
 assert_invalid(
   () => instantiate(`(module
     (table $$t 0 externref)
@@ -215,7 +212,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/table_grow.wast:131
+// ./test/core/table_grow.wast:128
 assert_invalid(
   () => instantiate(`(module
     (table $$t 0 externref)
@@ -226,7 +223,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/table_grow.wast:140
+// ./test/core/table_grow.wast:137
 assert_invalid(
   () => instantiate(`(module
     (table $$t 0 externref)
@@ -237,7 +234,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/table_grow.wast:149
+// ./test/core/table_grow.wast:146
 assert_invalid(
   () => instantiate(`(module
     (table $$t 0 funcref)
@@ -248,7 +245,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/table_grow.wast:159
+// ./test/core/table_grow.wast:156
 assert_invalid(
   () => instantiate(`(module
     (table $$t 1 externref)
@@ -259,7 +256,7 @@ assert_invalid(
   `type mismatch`,
 );
 
-// ./test/core/table_grow.wast:168
+// ./test/core/table_grow.wast:165
 assert_invalid(
   () => instantiate(`(module
     (table $$t 1 externref)

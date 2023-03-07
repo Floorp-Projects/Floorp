@@ -1,6 +1,6 @@
 [[repos]]
 name = 'spec'
-commit = 'ffb5e3b4'
+commit = 'b1fbe1a8'
 
 [[repos]]
 name = 'threads'
@@ -25,3 +25,7 @@ commit = 'c4eef9a8'
 [[repos]]
 name = 'relaxed-simd'
 commit = '0018aeb4'
+
+[[repos]]
+name = 'extended-const'
+commit = 'dd72ab96'

@@ -28,7 +28,7 @@ let $0 = instantiate(`(module
   )
 
   (func (export "get-externref") (param $$i i32) (result externref)
-    (table.get (local.get $$i))
+    (table.get $$t2 (local.get $$i))
   )
   (func $$f3 (export "get-funcref") (param $$i i32) (result funcref)
     (table.get $$t3 (local.get $$i))

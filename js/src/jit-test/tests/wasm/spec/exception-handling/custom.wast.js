@@ -110,7 +110,7 @@ assert_malformed(
     "\\00asm" "\\01\\00\\00\\00"
     "\\00\\26\\10" "a custom section" "this is the payload"
   )`),
-  `length out of bounds`,
+  `unexpected end`,
 );
 
 // ./test/core/custom.wast:92
