@@ -37,7 +37,6 @@ XPCOMUtils.defineLazyGetter(lazy, "console", () => {
 /**
  * @typedef {import("../translations").TranslationModelRecord} TranslationModelRecord
  * @typedef {import("../translations").RemoteSettingsClient} RemoteSettingsClient
- * @typedef {import("../translations").LanguageIdEngineMockedPayload} LanguageIdEngineMockedPayload
  * @typedef {import("../translations").LanguageTranslationModelFiles} LanguageTranslationModelFiles
  * @typedef {import("../translations").WasmRecord} WasmRecord
  */
@@ -77,22 +76,6 @@ export class TranslationsParent extends JSWindowActorParent {
    */
   static #mockedLanguagePairs = null;
 
-  /**
-   * The language identification engine can be mocked for testing
-   * by pre-defining this value.
-   *
-   * @type {string | null}
-   */
-  static #mockedLanguageLabel = null;
-
-  /**
-   * The language identification engine can be mocked for testing
-   * by pre-defining this value.
-   *
-   * @type {number | null}
-   */
-  static #mockedLanguageIdConfidence = null;
-
   actorCreated() {
     if (TranslationsParent.#mockedLanguagePairs) {
       this.sendAsyncMessage("Translations:IsMocked", true);
@@ -109,9 +92,6 @@ export class TranslationsParent extends JSWindowActorParent {
       }
       case "Translations:GetLanguageIdWasmArrayBuffer": {
         return this.#getLanguageIdWasmArrayBuffer();
-      }
-      case "Translations:GetLanguageIdEngineMockedPayload": {
-        return this.#getLanguageIdEngineMockedPayload();
       }
       case "Translations:GetLanguageTranslationModelFiles": {
         const { fromLanguage, toLanguage } = data;
@@ -255,25 +235,6 @@ export class TranslationsParent extends JSWindowActorParent {
     );
 
     return buffer;
-  }
-
-  /**
-   * For testing purposes, the LanguageIdEngine can be mocked to always return
-   * a pre-determined language label and confidence value.
-   *
-   * @returns {LanguageIdEngineMockedPayload | null}
-   */
-  #getLanguageIdEngineMockedPayload() {
-    if (
-      !TranslationsParent.#mockedLanguageLabel ||
-      !TranslationsParent.#mockedLanguageIdConfidence
-    ) {
-      return null;
-    }
-    return {
-      languageLabel: TranslationsParent.#mockedLanguageLabel,
-      confidence: TranslationsParent.#mockedLanguageIdConfidence,
-    };
   }
 
   /**
@@ -607,34 +568,12 @@ export class TranslationsParent extends JSWindowActorParent {
    *
    * @param {null | Array<{ fromLang: string, toLang: string }>} languagePairs
    */
-  static mockLanguagePairs(languagePairs) {
+  static mock(languagePairs) {
     TranslationsParent.#mockedLanguagePairs = languagePairs;
     if (languagePairs) {
       lazy.console.log("Mocking language pairs", languagePairs);
     } else {
       lazy.console.log("Removing language pair mocks");
-    }
-  }
-
-  /**
-   * For testing purposes, allow the LanguageIdEngine to be mocked. If called
-   * with `null` in each argument, the mock is removed.
-   *
-   * @param {string} languageLabel - The two-character language label.
-   * @param {number} confidence  - The confidence score of the detected language.
-   */
-  static mockLanguageIdentification(languageLabel, confidence) {
-    TranslationsParent.#mockedLanguageLabel = languageLabel;
-    TranslationsParent.#mockedLanguageIdConfidence = confidence;
-    if (languageLabel) {
-      lazy.console.log("Mocking detected language label", languageLabel);
-    } else {
-      lazy.console.log("Removing detected-language label mock");
-    }
-    if (languageLabel) {
-      lazy.console.log("Mocking detected language confidence", confidence);
-    } else {
-      lazy.console.log("Removing detected-language confidence mock");
     }
   }
 }
