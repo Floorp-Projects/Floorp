@@ -4,6 +4,7 @@
 
 import datetime
 import os
+import tarfile
 import tempfile
 from contextlib import nullcontext as does_not_raise
 from unittest.mock import MagicMock, call
@@ -14,29 +15,58 @@ import pytest
 
 from mozbuild.repackaging import deb
 
-
-def test_extract_application_ini_data_from_directory():
-    with tempfile.TemporaryDirectory() as d:
-        with open(os.path.join(d, "application.ini"), "w") as f:
-            f.write(
-                """
-[App]
+_APPLICATION_INI_CONTENT = """[App]
 Vendor=Mozilla
 Name=Firefox
 RemotingName=firefox-nightly-try
 CodeName=Firefox Nightly
 BuildID=20230222000000
 """
-            )
 
-        assert deb._extract_application_ini_data_from_directory(d) == {
-            "name": "Firefox",
-            "display_name": "Firefox Nightly",
-            "vendor": "Mozilla",
-            "remoting_name": "firefox-nightly-try",
-            "build_id": "20230222000000",
-            "timestamp": datetime.datetime(2023, 2, 22),
-        }
+_APPLICATION_INI_CONTENT_DATA = {
+    "name": "Firefox",
+    "display_name": "Firefox Nightly",
+    "vendor": "Mozilla",
+    "remoting_name": "firefox-nightly-try",
+    "build_id": "20230222000000",
+    "timestamp": datetime.datetime(2023, 2, 22),
+}
+
+
+@pytest.mark.parametrize(
+    "number_of_application_ini_files, expectaction, expected_result",
+    (
+        (0, pytest.raises(ValueError), None),
+        (1, does_not_raise(), _APPLICATION_INI_CONTENT_DATA),
+        (2, pytest.raises(ValueError), None),
+    ),
+)
+def test_extract_application_ini_data(
+    number_of_application_ini_files, expectaction, expected_result
+):
+    with tempfile.TemporaryDirectory() as d:
+        tar_path = os.path.join(d, "input.tar")
+        with tarfile.open(tar_path, "w") as tar:
+            application_ini_path = os.path.join(d, "application.ini")
+            with open(application_ini_path, "w") as application_ini_file:
+                application_ini_file.write(_APPLICATION_INI_CONTENT)
+
+            for i in range(number_of_application_ini_files):
+                tar.add(application_ini_path, f"{i}/application.ini")
+
+        with expectaction:
+            assert deb._extract_application_ini_data(tar_path) == expected_result
+
+
+def test_extract_application_ini_data_from_directory():
+    with tempfile.TemporaryDirectory() as d:
+        with open(os.path.join(d, "application.ini"), "w") as f:
+            f.write(_APPLICATION_INI_CONTENT)
+
+        assert (
+            deb._extract_application_ini_data_from_directory(d)
+            == _APPLICATION_INI_CONTENT_DATA
+        )
 
 
 @pytest.mark.parametrize(
