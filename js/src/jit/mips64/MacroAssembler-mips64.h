@@ -634,6 +634,10 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
     push(ScratchRegister);
   }
   void pushValue(const Address& addr);
+  void pushValue(const BaseIndex& addr, Register scratch) {
+    loadValue(addr, ValueOperand(scratch));
+    pushValue(ValueOperand(scratch));
+  }
 
   void handleFailureWithHandlerTail(Label* profilerExitTail,
                                     Label* bailoutTail);
