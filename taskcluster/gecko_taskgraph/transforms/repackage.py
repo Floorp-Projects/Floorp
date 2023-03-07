@@ -249,6 +249,20 @@ PACKAGE_FORMATS = {
         },
         "output": "target.deb",
     },
+    "deb-l10n": {
+        "args": [
+            "deb-l10n",
+            "--version",
+            "{version_display}",
+            "--build-number",
+            "{build_number}",
+        ],
+        "inputs": {
+            "input-xpi-file": "target.langpack.xpi",
+            "input-tar-file": "target{archive_format}",
+        },
+        "output": "target.deb",
+    },
 }
 MOZHARNESS_EXPANSIONS = [
     "package-name",
@@ -537,12 +551,12 @@ def make_job_description(config, jobs):
             "worker": worker,
             "run": run,
             "fetches": _generate_download_config(
+                config,
                 dep_job,
                 build_platform,
                 signing_task,
                 repackage_signing_task,
                 locale=locale,
-                project=config.params["project"],
                 existing_fetch=job.get("fetches"),
             ),
         }
@@ -565,12 +579,12 @@ def make_job_description(config, jobs):
 
 
 def _generate_download_config(
+    config,
     task,
     build_platform,
     signing_task,
     repackage_signing_task,
     locale=None,
-    project=None,
     existing_fetch=None,
 ):
     locale_path = f"{locale}/" if locale else ""
@@ -585,18 +599,22 @@ def _generate_download_config(
             }
         )
     elif build_platform.startswith("linux") or build_platform.startswith("macosx"):
-        fetch.update(
+        signing_fetch = [
             {
-                signing_task: [
-                    {
-                        "artifact": "{}target{}".format(
-                            locale_path, archive_format(build_platform)
-                        ),
-                        "extract": False,
-                    },
-                ],
-            }
-        )
+                "artifact": "{}target{}".format(
+                    locale_path, archive_format(build_platform)
+                ),
+                "extract": False,
+            },
+        ]
+        if config.kind == "repackage-deb-l10n":
+            signing_fetch.append(
+                {
+                    "artifact": f"{locale_path}target.langpack.xpi",
+                    "extract": False,
+                }
+            )
+        fetch.update({signing_task: signing_fetch})
     elif build_platform.startswith("win"):
         fetch.update(
             {

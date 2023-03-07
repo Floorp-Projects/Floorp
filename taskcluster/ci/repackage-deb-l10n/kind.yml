@@ -1,0 +1,39 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.single_dep:loader
+
+transforms:
+    - gecko_taskgraph.transforms.repackage_l10n:transforms
+    - gecko_taskgraph.transforms.name_sanity:transforms
+    - gecko_taskgraph.transforms.repackage:transforms
+    - gecko_taskgraph.transforms.repackage_routes:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - shippable-l10n-signing
+
+only-for-build-platforms:
+    # Langpacks support all CPU architectures. We just need to pick one
+    - linux64-devedition/opt
+    - linux64-shippable/opt
+
+job-template:
+    worker-type: b-linux-gcp
+    worker:
+        docker-image: {"in-tree": "debian11-repackage"}
+        max-run-time: 600
+    mozharness:
+        run-as-root: true
+        use-caches: false
+        config:
+            by-build-platform:
+                linux64\b.*:
+                    - repackage/base.py
+                    - repackage/linux64_signed.py
+    package-formats:
+        by-build-platform:
+            linux.*: [deb-l10n]
+    treeherder-group: deb-L10n
