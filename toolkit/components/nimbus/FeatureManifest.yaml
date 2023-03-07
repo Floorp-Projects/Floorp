@@ -960,6 +960,40 @@ echPrefs:
       type: int
       setPref: "security.tls.ech.grease_size"
 
+dohPrefs:
+  description: Prefs that control DNS over HTTPS.
+  owner: vgosu@mozilla.com
+  hasExposure: false
+  variables:
+    trrMode:
+      description: Has a value of 2 for TRR first, 3 for TRR only, 0 for off.
+      type: int
+      setPref: "network.trr.mode"
+    trrUri:
+      description: The URL of the DNS over HTTPS endpoint
+      type: string
+      setPref: "network.trr.uri"
+    dohMode:
+      description: Same as trrMode, but set by the DoHController module.
+      type: int
+      setPref: "doh-rollout.mode"
+    dohUri:
+      description: Same as trrUri, but set by the DoHController module.
+      type: string
+      setPref: "doh-rollout.uri"
+    ohttpEnabled:
+      description: Whether to use Oblivious HTTP for the resolution
+      type: boolean
+      setPref: "network.trr.use_ohttp"
+    ohttpRelayUri:
+      description: The URL of the Oblivious HTTP relay
+      type: string
+      setPref: "network.trr.ohttp.relay_uri"
+    ohttpConfigUri:
+      description: The URL used to fetch the configuration of the Oblivious HTTP gateway
+      type: string
+      setPref: "network.trr.ohttp.config_uri"
+
 pingsender:
   description: "In-product usage of the pingsender telemetry reporter."
   owner: nalexander@mozilla.com
