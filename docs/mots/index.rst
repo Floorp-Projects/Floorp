@@ -4004,7 +4004,7 @@ other ping submissions, etc.).
         | `Chris H-C (chutten) <https://people.mozilla.org/s?query=chutten>`__
     * - Peer(s)
       -
-        | `aplacitelli <https://people.mozilla.org/s?query=aplacitelli>`__
+        | `Alessio Placitelli (aplacitelli) <https://people.mozilla.org/s?query=aplacitelli>`__
         | `Jan-Erik Rediger (janerik) <https://people.mozilla.org/s?query=janerik>`__
         | `Perry McManis (perry.mcmanis) <https://people.mozilla.org/s?query=perry.mcmanis>`__
         | `Travis Long (travis_) <https://people.mozilla.org/s?query=travis_>`__
