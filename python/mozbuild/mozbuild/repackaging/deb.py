@@ -31,6 +31,7 @@ class NoDebPackageFound(Exception):
 
 
 _DEB_ARCH = {
+    "all": "all",
     "x86": "i386",
     "x86_64": "amd64",
 }
@@ -48,13 +49,7 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
     if not tarfile.is_tarfile(infile):
         raise Exception("Input file %s is not a valid tarfile." % infile)
 
-    deb_arch = _DEB_ARCH[arch]
-
-    if _is_chroot_available(arch):
-        tmpdir = tempfile.mkdtemp(dir=f"/srv/{_DEB_DIST}-{deb_arch}/tmp")
-    else:
-        tmpdir = tempfile.mkdtemp()
-
+    tmpdir = _create_temporary_directory(arch)
     source_dir = os.path.join(tmpdir, "source")
     try:
         mozfile.extract_tarball(infile, source_dir)
@@ -237,14 +232,16 @@ def _get_command(arch):
         "-us",  # --unsigned-source
         "-uc",  # --unsigned-changes
         "-b",  # --build=binary
-        f"--host-arch={deb_arch}",
     ]
+
+    if deb_arch != "all":
+        command.append(f"--host-arch={deb_arch}")
 
     if _is_chroot_available(arch):
         flattened_command = " ".join(command)
         command = [
             "chroot",
-            f"/srv/{_DEB_DIST}-{deb_arch}",
+            _get_chroot_path(arch),
             "bash",
             "-c",
             f"cd /tmp/*/source; {flattened_command}",
@@ -253,9 +250,20 @@ def _get_command(arch):
     return command
 
 
+def _create_temporary_directory(arch):
+    if _is_chroot_available(arch):
+        return tempfile.mkdtemp(dir=f"{_get_chroot_path(arch)}/tmp")
+    else:
+        return tempfile.mkdtemp()
+
+
 def _is_chroot_available(arch):
-    deb_arch = _DEB_ARCH[arch]
-    return os.path.isdir(f"/srv/{_DEB_DIST}-{deb_arch}")
+    return os.path.isdir(_get_chroot_path(arch))
+
+
+def _get_chroot_path(arch):
+    deb_arch = "amd64" if arch == "all" else _DEB_ARCH[arch]
+    return f"/srv/{_DEB_DIST}-{deb_arch}"
 
 
 _MANIFEST_FILE_NAME = "manifest.json"
