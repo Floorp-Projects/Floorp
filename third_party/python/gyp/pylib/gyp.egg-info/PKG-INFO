@@ -1,0 +1,9 @@
+Metadata-Version: 2.1
+Name: gyp
+Version: 0.1
+Summary: Generate Your Projects
+Home-page: http://code.google.com/p/gyp
+Author: Chromium Authors
+Author-email: chromium-dev@googlegroups.com
+License-File: LICENSE
+License-File: AUTHORS

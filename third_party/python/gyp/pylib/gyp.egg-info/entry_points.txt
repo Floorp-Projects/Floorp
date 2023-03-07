@@ -1,0 +1,2 @@
+[console_scripts]
+gyp = gyp:script_main
