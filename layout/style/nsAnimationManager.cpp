@@ -205,23 +205,65 @@ static void UpdateOldAnimationPropertiesWithNew(
   }
 }
 
+static already_AddRefed<dom::AnimationTimeline> GetNamedProgressTimeline(
+    dom::Document* aDocument, const NonOwningAnimationTarget& aTarget,
+    const nsAtom* aName) {
+  // A named progress timeline is referenceable in animation-timeline by:
+  // 1. the declaring element itself
+  // 2. that element’s descendants
+  // 3. that element’s following siblings and their descendants
+  // https://drafts.csswg.org/scroll-animations-1/#timeline-scope
+  for (Element* curr = aTarget.mElement; curr;
+       curr = curr->GetParentElement()) {
+    // If multiple elements have declared the same timeline name, the matching
+    // timeline is the one declared on the nearest element in tree order, which
+    // considers siblings closer than parents.
+    // Note: This is fine for parallel traversal because we update animations by
+    // SequentialTask.
+    for (Element* e = curr; e; e = e->GetPreviousElementSibling()) {
+      const ComputedStyle* style = Servo_Element_GetMaybeOutOfDateStyle(e);
+      // The elements in the shadow dom might not be in the flat tree.
+      if (!style) {
+        continue;
+      }
+
+      const nsStyleUIReset* ui = style->StyleUIReset();
+      // In case of a name conflict on the same element, scroll progress
+      // timelines take precedence over view progress timelines.
+      // TODO: Will reuse named progress timelines in the following patches.
+      for (uint32_t i = 0; i < ui->mScrollTimelineNameCount; ++i) {
+        const auto& timeline = ui->mScrollTimelines[i];
+        if (timeline.GetName() == aName) {
+          return ScrollTimeline::MakeNamed(aDocument, e, timeline);
+        }
+      }
+
+      // TODO: Bug 1737920. Support view-timeline.
+    }
+  }
+
+  // If we cannot find a matched scroll-timeline-name, this animation is not
+  // associated with a timeline.
+  // https://drafts.csswg.org/css-animations-2/#valdef-animation-timeline-custom-ident
+  return nullptr;
+}
+
 static already_AddRefed<dom::AnimationTimeline> GetTimeline(
     const StyleAnimationTimeline& aStyleTimeline, nsPresContext* aPresContext,
     const NonOwningAnimationTarget& aTarget) {
   switch (aStyleTimeline.tag) {
     case StyleAnimationTimeline::Tag::Timeline: {
-      // Check scroll-timeline-name property.
-      nsAtom* name = aStyleTimeline.AsTimeline().AsAtom();
+      // Check scroll-timeline-name property or view-timeline-property.
+      const nsAtom* name = aStyleTimeline.AsTimeline().AsAtom();
       return name != nsGkAtoms::_empty
-                 ? ScrollTimeline::FromNamedScroll(aPresContext->Document(),
-                                                   aTarget, name)
+                 ? GetNamedProgressTimeline(aPresContext->Document(), aTarget,
+                                            name)
                  : nullptr;
     }
     case StyleAnimationTimeline::Tag::Scroll: {
       const auto& scroll = aStyleTimeline.AsScroll();
-      return ScrollTimeline::FromAnonymousScroll(aPresContext->Document(),
-                                                 aTarget, scroll._0, scroll._1);
-      break;
+      return ScrollTimeline::MakeAnonymous(aPresContext->Document(), aTarget,
+                                           scroll._0, scroll._1);
     }
     case StyleAnimationTimeline::Tag::Auto:
       return do_AddRef(aTarget.mElement->OwnerDoc()->Timeline());

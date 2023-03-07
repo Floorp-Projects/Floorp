@@ -52,8 +52,24 @@ ScrollTimeline::ScrollTimeline(Document* aDocument, const Scroller& aScroller,
   RegisterWithScrollSource();
 }
 
+static Element* FindNearestScroller(const Element* aSubject) {
+  MOZ_ASSERT(aSubject);
+  Element* curr = aSubject->GetFlattenedTreeParentElement();
+  Element* root = aSubject->OwnerDoc()->GetDocumentElement();
+  while (curr && curr != root) {
+    const ComputedStyle* style = Servo_Element_GetMaybeOutOfDateStyle(curr);
+    MOZ_ASSERT(style, "The ancestor should be styled.");
+    if (style->StyleDisplay()->IsScrollableOverflow()) {
+      break;
+    }
+    curr = curr->GetFlattenedTreeParentElement();
+  }
+  // If there is no scroll container, we use root.
+  return curr ? curr : root;
+}
+
 /* static */
-already_AddRefed<ScrollTimeline> ScrollTimeline::FromAnonymousScroll(
+already_AddRefed<ScrollTimeline> ScrollTimeline::MakeAnonymous(
     Document* aDocument, const NonOwningAnimationTarget& aTarget,
     StyleScrollAxis aAxis, StyleScroller aScroller) {
   MOZ_ASSERT(aTarget);
@@ -62,19 +78,10 @@ already_AddRefed<ScrollTimeline> ScrollTimeline::FromAnonymousScroll(
     case StyleScroller::Root:
       scroller = Scroller::Root(aTarget.mElement->OwnerDoc());
       break;
+
     case StyleScroller::Nearest: {
-      Element* curr = aTarget.mElement->GetFlattenedTreeParentElement();
-      Element* root = aTarget.mElement->OwnerDoc()->GetDocumentElement();
-      while (curr && curr != root) {
-        const ComputedStyle* style = Servo_Element_GetMaybeOutOfDateStyle(curr);
-        MOZ_ASSERT(style, "The ancestor should be styled.");
-        if (style->StyleDisplay()->IsScrollableOverflow()) {
-          break;
-        }
-        curr = curr->GetFlattenedTreeParentElement();
-      }
-      // If there is no scroll container, we use root.
-      scroller = Scroller::Nearest(curr ? curr : root);
+      scroller = Scroller::Nearest(FindNearestScroller(aTarget.mElement));
+      break;
     }
   }
 
@@ -88,65 +95,14 @@ already_AddRefed<ScrollTimeline> ScrollTimeline::FromAnonymousScroll(
   return MakeAndAddRef<ScrollTimeline>(aDocument, scroller, aAxis);
 }
 
-/* static*/ already_AddRefed<ScrollTimeline> ScrollTimeline::FromNamedScroll(
-    Document* aDocument, const NonOwningAnimationTarget& aTarget,
-    const nsAtom* aName) {
+/* static*/ already_AddRefed<ScrollTimeline> ScrollTimeline::MakeNamed(
+    Document* aDocument, Element* aReferenceElement,
+    const StyleScrollTimeline& aStyleTimeline) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aTarget);
 
-  // A named scroll progress timeline is referenceable in animation-timeline by:
-  // 1. the declaring element itself
-  // 2. that element’s descendants
-  // 3. that element’s following siblings and their descendants
-  // https://drafts.csswg.org/scroll-animations-1/#timeline-scope
-  Element* result = nullptr;
-  StyleScrollAxis axis = StyleScrollAxis::Block;
-  for (Element* curr = aTarget.mElement; curr;
-       curr = curr->GetParentElement()) {
-    // If multiple elements have declared the same timeline name, the matching
-    // timeline is the one declared on the nearest element in tree order, which
-    // considers siblings closer than parents.
-    // Note: This should be fine for parallel traversal because we update
-    // animations by SequentialTask.
-    for (Element* e = curr; e; e = e->GetPreviousElementSibling()) {
-      const ComputedStyle* style = Servo_Element_GetMaybeOutOfDateStyle(e);
-      // The elements in the shadow dom might not be in the flat tree.
-      if (!style) {
-        continue;
-      }
-
-      const nsStyleUIReset* ui = style->StyleUIReset();
-      // Note: scroll-timeline is a coordinated property list, so we use the
-      // count of the base property, scroll-timeline-name, as the max length.
-      for (uint32_t i = 0; i < ui->mScrollTimelineNameCount; ++i) {
-        const auto& timeline = ui->mScrollTimelines[i];
-        if (timeline.GetName() == aName) {
-          result = e;
-          axis = timeline.GetAxis();
-          break;
-        }
-      }
-
-      if (result) {
-        break;
-      }
-    }
-
-    if (result) {
-      break;
-    }
-  }
-
-  // If we cannot find a matched scroll-timeline-name, this animation is not
-  // associated with a timeline.
-  // https://drafts.csswg.org/css-animations-2/#typedef-timeline-name
-  if (!result) {
-    return nullptr;
-  }
-
-  // TODO: Will reuse named progress timelines in the following patches.
-  Scroller scroller = Scroller::Named(result);
-  return MakeAndAddRef<ScrollTimeline>(aDocument, std::move(scroller), axis);
+  Scroller scroller = Scroller::Named(aReferenceElement);
+  return MakeAndAddRef<ScrollTimeline>(aDocument, std::move(scroller),
+                                       aStyleTimeline.GetAxis());
 }
 
 Nullable<TimeDuration> ScrollTimeline::GetCurrentTimeAsDuration() const {

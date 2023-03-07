@@ -104,13 +104,13 @@ class ScrollTimeline final : public AnimationTimeline {
     }
   };
 
-  static already_AddRefed<ScrollTimeline> FromAnonymousScroll(
+  static already_AddRefed<ScrollTimeline> MakeAnonymous(
       Document* aDocument, const NonOwningAnimationTarget& aTarget,
       StyleScrollAxis aAxis, StyleScroller aScroller);
 
-  static already_AddRefed<ScrollTimeline> FromNamedScroll(
-      Document* aDocument, const NonOwningAnimationTarget& aTarget,
-      const nsAtom* aName);
+  static already_AddRefed<ScrollTimeline> MakeNamed(
+      Document* aDocument, Element* aReferenceElement,
+      const StyleScrollTimeline& aStyleTimeline);
 
   bool operator==(const ScrollTimeline& aOther) const {
     return mDocument == aOther.mDocument && mSource == aOther.mSource &&
