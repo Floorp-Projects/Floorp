@@ -118,7 +118,7 @@
                /* compile predicate  */ WASM_FUNCTION_REFERENCES_ENABLED,     \
                /* compiler predicate */ BaselineAvailable(cx) ||              \
                                         IonAvailable(cx),                     \
-               /* flag predicate     */ !IsFuzzingIon(cx),                    \
+               /* flag predicate     */ true,                                 \
                /* shell flag         */ "function-references",                \
                /* preference name    */ "function_references")                \
   EXPERIMENTAL(/* capitalized name   */ Gc,                                   \
