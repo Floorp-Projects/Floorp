@@ -34,6 +34,7 @@ UNIFIED_SOURCES += [
     "GCAPI.cpp",
     "GCParallelTask.cpp",
     "Heap.cpp",
+    "MallocedBlockCache.cpp",
     "Marking.cpp",
     "Memory.cpp",
     "Nursery.cpp",
