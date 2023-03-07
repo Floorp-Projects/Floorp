@@ -16,13 +16,6 @@ import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.components.metrics.MetricsUtils.getHashedIdentifier
 
 class ActivationPing(private val context: Context) {
-    companion object {
-        // The number of iterations to compute the hash. RFC 2898 suggests
-        // a minimum of 1000 iterations.
-        const val PBKDF2_ITERATIONS = 1000
-        const val PBKDF2_KEY_LEN_BITS = 256
-    }
-
     private val prefs: SharedPreferences by lazy {
         context.getSharedPreferences(
             "${this.javaClass.canonicalName}.prefs",

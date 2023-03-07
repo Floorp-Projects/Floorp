@@ -75,6 +75,7 @@ import org.mozilla.fenix.components.Core
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.metrics.MetricServiceType
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
+import org.mozilla.fenix.components.metrics.clientdeduplication.ClientDeduplicationLifecycleObserver
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.experiments.maybeFetchExperiments
 import org.mozilla.fenix.ext.areNotificationsEnabledSafe
@@ -186,6 +187,12 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         GlobalScope.launch(Dispatchers.IO) {
             setStartupMetrics(store, settings())
         }
+
+        ProcessLifecycleOwner.get().lifecycle.addObserver(
+            ClientDeduplicationLifecycleObserver(
+                this.applicationContext,
+            ),
+        )
     }
 
     @CallSuper
