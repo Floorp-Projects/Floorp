@@ -336,69 +336,69 @@ export class UrlbarInput {
     dueToSessionRestore = false,
     dontShowSearchTerms = false
   ) {
-    if (
-      !dontShowSearchTerms &&
-      (this.window.gBrowser.userTypedValue == null ||
-        this.window.gBrowser.userTypedValue == "")
-    ) {
-      this.window.gBrowser.selectedBrowser.showingSearchTerms = false;
-      if (lazy.UrlbarPrefs.isPersistedSearchTermsEnabled()) {
-        let term = lazy.UrlbarSearchUtils.getSearchTermIfDefaultSerpUri(
+    if (!this.window.gBrowser.userTypedValue) {
+      this.window.gBrowser.selectedBrowser.searchTerms = "";
+      if (
+        !dontShowSearchTerms &&
+        lazy.UrlbarPrefs.isPersistedSearchTermsEnabled()
+      ) {
+        this.window.gBrowser.selectedBrowser.searchTerms = lazy.UrlbarSearchUtils.getSearchTermIfDefaultSerpUri(
           this.window.gBrowser.selectedBrowser.originalURI ?? uri
         );
-        if (term) {
-          this.window.gBrowser.userTypedValue = term;
-          this.window.gBrowser.selectedBrowser.showingSearchTerms = true;
-        }
       }
     }
 
     let value = this.window.gBrowser.userTypedValue;
     let valid = false;
 
-    // Restore the selected browser's current URI if `value` is null or if it's
-    // an empty string and we're switching tabs. In the latter case, when the
-    // user makes the input empty, switches tabs, and switches back, we want the
-    // URI to become visible again so the user knows what URI they're viewing.
+    // If `value` is null or if it's an empty string and we're switching tabs,
+    // set value to either search terms or the browser's current URI. For the latter,
+    // when a user makes the input empty, switches tabs, and switches back, we want
+    // the URI to become visible again so the user knows what URI they're viewing.
     // An exception to this is made in case of an auth request from a different
     // base domain. To avoid auth prompt spoofing we already display the url of
     // the cross domain resource, although the page is not loaded yet.
     // This url will be set/unset by PromptParent. See bug 791594 for reference.
     if (value === null || (!value && dueToTabSwitch)) {
-      uri =
-        this.window.gBrowser.selectedBrowser.currentAuthPromptURI ||
-        uri ||
-        this.window.gBrowser.currentURI;
-      // Strip off usernames and passwords for the location bar
-      try {
-        uri = Services.io.createExposableURI(uri);
-      } catch (e) {}
-
-      // Replace initial page URIs with an empty string
-      // only if there's no opener (bug 370555).
-      if (
-        this.window.isInitialPage(uri) &&
-        lazy.BrowserUIUtils.checkEmptyPageOrigin(
-          this.window.gBrowser.selectedBrowser,
-          uri
-        )
-      ) {
-        value = "";
+      if (this.window.gBrowser.selectedBrowser.searchTerms) {
+        value = this.window.gBrowser.selectedBrowser.searchTerms;
+        valid = !dueToSessionRestore;
       } else {
-        // We should deal with losslessDecodeURI throwing for exotic URIs
+        uri =
+          this.window.gBrowser.selectedBrowser.currentAuthPromptURI ||
+          uri ||
+          this.window.gBrowser.currentURI;
+        // Strip off usernames and passwords for the location bar
         try {
-          value = losslessDecodeURI(uri);
-        } catch (ex) {
-          value = "about:blank";
+          uri = Services.io.createExposableURI(uri);
+        } catch (e) {}
+
+        // Replace initial page URIs with an empty string
+        // only if there's no opener (bug 370555).
+        if (
+          this.window.isInitialPage(uri) &&
+          lazy.BrowserUIUtils.checkEmptyPageOrigin(
+            this.window.gBrowser.selectedBrowser,
+            uri
+          )
+        ) {
+          value = "";
+        } else {
+          // We should deal with losslessDecodeURI throwing for exotic URIs
+          try {
+            value = losslessDecodeURI(uri);
+          } catch (ex) {
+            value = "about:blank";
+          }
         }
+        // If we update the URI while restoring a session, set the proxyState to
+        // invalid, because we don't have a valid security state to show via site
+        // identity yet. See Bug 1746383.
+        valid =
+          !dueToSessionRestore &&
+          (!this.window.isBlankPageURL(uri.spec) ||
+            uri.schemeIs("moz-extension"));
       }
-      // If we update the URI while restoring a session, set the proxyState to
-      // invalid, because we don't have a valid security state to show via site
-      // identity yet. See Bug 1746383.
-      valid =
-        !dueToSessionRestore &&
-        (!this.window.isBlankPageURL(uri.spec) ||
-          uri.schemeIs("moz-extension"));
     } else if (
       this.window.isInitialPage(value) &&
       lazy.BrowserUIUtils.checkEmptyPageOrigin(
@@ -2030,7 +2030,7 @@ export class UrlbarInput {
       return "urlbar-searchmode";
     }
 
-    if (this.window.gBrowser.selectedBrowser.showingSearchTerms && !isOneOff) {
+    if (this.window.gBrowser.selectedBrowser.searchTerms && !isOneOff) {
       return "urlbar-persisted";
     }
 
@@ -3057,6 +3057,16 @@ export class UrlbarInput {
     }
     this._revertOnBlurValue = null;
 
+    // If there were search terms shown in the URL bar and the user
+    // didn't end up modifying the userTypedValue while it was
+    // focused, change back to a valid pageproxystate.
+    if (
+      this.window.gBrowser.selectedBrowser.searchTerms &&
+      this.window.gBrowser.userTypedValue == null
+    ) {
+      this.setPageProxyState("valid", true);
+    }
+
     // We may have hidden popup notifications, show them again if necessary.
     if (
       this.getAttribute("pageproxystate") != "valid" &&
@@ -3110,6 +3120,13 @@ export class UrlbarInput {
   _on_focus(event) {
     if (!this._hideFocus) {
       this.setAttribute("focused", "true");
+    }
+
+    // When the search term matches the SERP, the URL bar is in a valid
+    // pageproxystate. In order to only show the search icon, switch to
+    // an invalid pageproxystate.
+    if (this.window.gBrowser.selectedBrowser.searchTerms) {
+      this.setPageProxyState("invalid", true);
     }
 
     // If the value was trimmed, check whether we should untrim it.

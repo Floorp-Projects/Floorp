@@ -30,29 +30,6 @@ add_setup(async function() {
   });
 });
 
-function assertSearchStringIsInUrlbar(searchString) {
-  Assert.equal(
-    gURLBar.value,
-    searchString,
-    `Search string ${searchString} should be in the url bar`
-  );
-  Assert.equal(
-    gBrowser.userTypedValue,
-    searchString,
-    `${searchString} should be the userTypedValue`
-  );
-  Assert.equal(
-    gURLBar.getAttribute("pageproxystate"),
-    "invalid",
-    "Pageproxystate should be invalid"
-  );
-  Assert.equal(
-    gBrowser.selectedBrowser.showingSearchTerms,
-    true,
-    "showingSearchTerms should be true"
-  );
-}
-
 // If a user opens background tab search from the Urlbar,
 // the search term should show when the tab is focused.
 add_task(async function ctrl_open() {

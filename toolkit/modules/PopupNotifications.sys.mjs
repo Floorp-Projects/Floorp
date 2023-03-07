@@ -1218,10 +1218,7 @@ PopupNotifications.prototype = {
     // terms as a Popup is trying to show. This isn't the best solution
     // since it couples PopupNotifications with browser components, so it
     // should be refactored (Bug 1815769) via dependency injection.
-    if (
-      this.window.gURLBar &&
-      this.tabbrowser.selectedBrowser.showingSearchTerms
-    ) {
+    if (this.window.gURLBar && this.tabbrowser.selectedBrowser.searchTerms) {
       this.window.gURLBar.handleRevert(true);
     }
 

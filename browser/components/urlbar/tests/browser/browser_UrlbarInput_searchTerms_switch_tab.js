@@ -61,29 +61,6 @@ async function searchWithTab(
   return { tab, expectedSearchUrl };
 }
 
-function assertSearchStringIsInUrlbar(searchString) {
-  Assert.equal(
-    gURLBar.value,
-    searchString,
-    `Search string ${searchString} should be in the url bar`
-  );
-  Assert.equal(
-    gBrowser.userTypedValue,
-    searchString,
-    `${searchString} should be the userTypedValue`
-  );
-  Assert.equal(
-    gURLBar.getAttribute("pageproxystate"),
-    "invalid",
-    "Pageproxystate should be invalid"
-  );
-  Assert.equal(
-    gBrowser.selectedBrowser.showingSearchTerms,
-    true,
-    "showingSearchTerms should be true"
-  );
-}
-
 // Users should be able to search, change the tab, and come
 // back to the original tab to see the search term again
 add_task(async function change_tab() {
@@ -137,7 +114,7 @@ add_task(async function user_overwrites_search_term() {
 });
 
 // If a user clears the URL bar, and goes to a different tab,
-// the original tab should show the search term again.
+// and returns to the initial tab, it should show the search term again.
 add_task(async function user_overwrites_search_term() {
   let { tab: tab1 } = await searchWithTab(SEARCH_STRING);
 
@@ -152,7 +129,10 @@ add_task(async function user_overwrites_search_term() {
   let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   await BrowserTestUtils.switchTab(gBrowser, tab1);
 
-  assertSearchStringIsInUrlbar(SEARCH_STRING);
+  assertSearchStringIsInUrlbar(SEARCH_STRING, {
+    pageProxyState: "invalid",
+    userTypedValue: "",
+  });
 
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);

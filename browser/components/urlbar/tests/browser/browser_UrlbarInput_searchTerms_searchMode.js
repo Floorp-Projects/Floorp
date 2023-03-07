@@ -73,9 +73,9 @@ add_task(async function non_default_search() {
     "There should not be a userTypedValue for a search on a non-default search engine"
   );
   Assert.equal(
-    gBrowser.selectedBrowser.showingSearchTerms,
-    false,
-    "showingSearchTerms should be false"
+    gBrowser.selectedBrowser.searchTerms,
+    "",
+    "searchTerms should be empty."
   );
   BrowserTestUtils.removeTab(tab);
 });

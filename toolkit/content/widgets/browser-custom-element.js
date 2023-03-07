@@ -108,7 +108,7 @@
       this._inPermitUnload = new WeakSet();
 
       this._originalURI = null;
-      this._showingSearchTerms = false;
+      this._searchTerms = "";
       // When we open a prompt in reaction to a 401, if this 401 comes from
       // a different base domain, the url of that site will be stored here
       // and will be used for auth prompt spoofing protections.
@@ -244,7 +244,7 @@
 
       this._currentAuthPromptURI = null;
 
-      this._showingSearchTerms = false;
+      this._searchTerms = "";
 
       this._documentContentType = null;
 
@@ -748,12 +748,12 @@
       return this._originalURI;
     }
 
-    set showingSearchTerms(val) {
-      this._showingSearchTerms = !!val;
+    set searchTerms(val) {
+      this._searchTerms = val;
     }
 
-    get showingSearchTerms() {
-      return this._showingSearchTerms;
+    get searchTerms() {
+      return this._searchTerms;
     }
 
     set currentAuthPromptURI(aURI) {

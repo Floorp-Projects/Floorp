@@ -63,19 +63,6 @@ async function searchWithTab(
   return { tab, expectedSearchUrl };
 }
 
-function assertSearchStringIsInUrlbar(searchString) {
-  Assert.equal(
-    gURLBar.value,
-    searchString,
-    `Search string ${searchString} should be in the url bar`
-  );
-  Assert.equal(
-    gURLBar.getAttribute("pageproxystate"),
-    "invalid",
-    "Pageproxystate should be invalid"
-  );
-}
-
 // Search terms should show up in the url bar if the pref is on
 // and the SERP url matches the one constructed in Firefox
 add_task(async function list_of_search_strings() {
@@ -147,6 +134,57 @@ add_task(async function load_url() {
   BrowserTestUtils.loadURIString(tab.linkedBrowser, expectedSearchUrl);
   await browserLoadedPromise;
   assertSearchStringIsInUrlbar(SEARCH_STRING);
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+// Focusing and blurring the urlbar while the search terms
+// persist should change the pageproxystate.
+add_task(async function focus_and_unfocus() {
+  let { tab } = await searchWithTab(SEARCH_STRING);
+
+  gURLBar.focus();
+  Assert.equal(
+    gURLBar.getAttribute("pageproxystate"),
+    "invalid",
+    "Should have matching pageproxystate."
+  );
+
+  gURLBar.blur();
+  Assert.equal(
+    gURLBar.getAttribute("pageproxystate"),
+    "valid",
+    "Should have matching pageproxystate."
+  );
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+// If the user modifies the search term, blurring the
+// urlbar should keep the urlbar in an invalid pageproxystate.
+add_task(async function focus_and_unfocus_modified() {
+  let { tab } = await searchWithTab(SEARCH_STRING);
+
+  gURLBar.focus();
+  Assert.equal(
+    gURLBar.getAttribute("pageproxystate"),
+    "invalid",
+    "Should have matching pageproxystate."
+  );
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus,
+    value: "another search term",
+    fireInputEvent: true,
+  });
+
+  gURLBar.blur();
+  Assert.equal(
+    gURLBar.getAttribute("pageproxystate"),
+    "invalid",
+    "Should have matching pageproxystate."
+  );
 
   BrowserTestUtils.removeTab(tab);
 });
