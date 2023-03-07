@@ -2,8 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Dynamically create an OpenSearch search engine offering search suggestions
- * via searchSuggestions.sjs.
+ * Dynamically create a search engine offering search suggestions via searchSuggestions.sjs.
  *
  * The engine is constructed by passing a JSON object with engine details as the query string.
  */
@@ -34,8 +33,8 @@ function handleRequest(request, response) {
  *   Information about the search engine to write to the response.
  */
 function createOpenSearchEngine(response, engineData) {
-  let params = "";
-  let queryString = "";
+  let params = "",
+    queryString = "";
   if (engineData.method == "POST") {
     params = "<Param name='q' value='{searchTerms}'/>";
   } else {
@@ -48,13 +47,6 @@ function createOpenSearchEngine(response, engineData) {
   let image = "";
   if (engineData.image) {
     image = `<Image width="16" height="16">${engineData.baseURL}${engineData.image}</Image>`;
-  }
-  let updateFile = "";
-  if (engineData.updateFile) {
-    updateFile = `<Url type="application/opensearchdescription+xml"
-      rel="self"
-      template="${engineData.baseURL}${engineData.updateFile}" />
-    `;
   }
 
   let result = `<?xml version='1.0' encoding='utf-8'?>
@@ -70,7 +62,6 @@ function createOpenSearchEngine(response, engineData) {
   </Url>
   <Url type='text/html' method='${engineData.method}'
        template='${engineData.baseURL}${queryString}'/>
-  ${updateFile}
 </OpenSearchDescription>
 `;
   response.write(result);
