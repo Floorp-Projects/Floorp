@@ -35,6 +35,15 @@ class AndroidDecoderModule : public PlatformDecoderModule {
 
   static void SetSupportedMimeTypes(nsTArray<nsCString>&& aSupportedTypes);
 
+  media::DecodeSupportSet Supports(
+      const SupportDecoderParams& aParams,
+      DecoderDoctorDiagnostics* aDiagnostics) const override;
+
+ protected:
+  bool SupportsColorDepth(
+      gfx::ColorDepth aColorDepth,
+      DecoderDoctorDiagnostics* aDiagnostics) const override;
+
  private:
   explicit AndroidDecoderModule(CDMProxy* aProxy = nullptr);
   virtual ~AndroidDecoderModule() = default;
