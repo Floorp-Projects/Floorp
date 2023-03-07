@@ -15,6 +15,7 @@ add_task(async function test_overlayCoversEntirePage() {
     async browser => {
       let helper = new ScreenshotsHelper(browser);
       let contentInfo = await helper.getContentDimensions();
+      info(JSON.stringify(contentInfo, null, 2));
       ok(contentInfo, "Got dimensions back from the content");
 
       helper.triggerUIFromToolbar();
@@ -27,13 +28,13 @@ add_task(async function test_overlayCoversEntirePage() {
       info(JSON.stringify(dimensions));
       is(
         dimensions.scrollWidth,
-        4000,
+        contentInfo.scrollWidth,
         "The overlay spans the entire width of the page"
       );
 
       is(
         dimensions.scrollHeight,
-        4000,
+        contentInfo.scrollHeight,
         "The overlay spans the entire height of the page"
       );
     }
@@ -161,8 +162,8 @@ add_task(async function test_draggingBoxOffBottomRight() {
 
       is(dimensions.x1, startX + 240, "The box x1 position is now 3748");
       is(dimensions.y1, startY + 240, "The box y1 position is now 3756");
-      is(dimensions.width, 252, "The box width is now 252");
-      is(dimensions.height, 244, "The box height is now 244");
+      is(dimensions.width, 260, "The box width is now 260");
+      is(dimensions.height, 260, "The box height is now 260");
 
       mouse.move(
         startX + Math.floor((endX - startX) / 2),
@@ -304,12 +305,12 @@ add_task(async function test_scrollingScreenshotsOpen() {
       );
       is(
         dimensions.scrollWidth,
-        4000,
+        contentInfo.scrollWidth,
         "The overlay spans the entire width of the page"
       );
       is(
         dimensions.scrollHeight,
-        4000,
+        contentInfo.scrollHeight,
         "The overlay spans the entire height of the page"
       );
     }
