@@ -1,4 +1,10 @@
-commit d93c05cd2d786f2c624fbf8f4465238b38a771a1 (HEAD -> refs/heads/firefox-111, refs/remotes/mozilla/firefox-111, refs/heads/master)
+commit aa3a569c8ddc1122d55663749a6db63e48b3033c
+Author: Ashley Hale <ahale@mozilla.com>
+Date:   Wed Mar 1 18:03:04 2023 -0800
+
+    Disable ClearView with scissor on Skylake iGPU because of observed bugs with edge corruption. (#27)
+
+commit d93c05cd2d786f2c624fbf8f4465238b38a771a1
 Author: Kelsey Gilbert <jgilbert@mozilla.com>
 Date:   Thu Sep 8 17:10:21 2022 -0700
 
@@ -79,7 +85,7 @@ Above: cherries picked
 ================================================================================
 Below: merge base from: origin/chromium/5359
 
-commit ceec659ac60b0c8ee9d9c602ca1a878ec1d3a88f (refs/remotes/origin/chromium/5359, refs/heads/chromium/5359)
+commit ceec659ac60b0c8ee9d9c602ca1a878ec1d3a88f
 Author: Shahbaz Youssefi <syoussefi@chromium.org>
 Date:   Mon Oct 31 10:29:45 2022 -0400
 

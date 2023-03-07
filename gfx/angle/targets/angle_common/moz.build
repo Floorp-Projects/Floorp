@@ -195,8 +195,6 @@ if CONFIG["OS_ARCH"] not in ("Darwin", "WINNT"):
 #     "/OPT:ICF",
 #     "/OPT:NOLLDTAILMERGE",
 #     "/OPT:REF",
-#     "/pdbaltpath:%_PDB%",
-#     "/PDBSourcePath:C:/dev/angle/out",
 #     "/PROFILE",
 #     "/TIMESTAMP:1664686800",
 #     "/WX",

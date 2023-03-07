@@ -537,6 +537,11 @@ angle::Result Clear11::clearFramebuffer(const gl::Context *context,
             }
         }
 
+        if (needScissoredClear && mRenderer->getFeatures().scissoredClearArtifacts.enabled)
+        {
+            canClearView = false;
+        }
+
         if ((!canClearView && needScissoredClear) || clearParams.colorType != GL_FLOAT ||
             (formatInfo.redBits > 0 && !r) || (formatInfo.greenBits > 0 && !g) ||
             (formatInfo.blueBits > 0 && !b) || (formatInfo.alphaBits > 0 && !a))

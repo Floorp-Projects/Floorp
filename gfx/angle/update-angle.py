@@ -350,7 +350,7 @@ print("\nRun actions")
 required_files: Set[str] = set()
 required_files.add("//LICENSE")
 
-run_checked("ninja", "-C", str(OUT_DIR), ":angle_commit_id")
+run_checked("ninja", "-C", str(OUT_DIR), ":angle_commit_id", shell=True)
 required_files.add("//out/gen/angle/angle_commit.h")
 
 # -
@@ -465,6 +465,8 @@ def export_target(target_full_name) -> Set[str]:
 
             def_rel_path = list(fixup_paths([def_path]))[0]
             extras["DEFFILE"] = '"{}"'.format(def_rel_path)
+        elif x.startswith("/PDBSourcePath:"):
+            ldflags.remove(x)
 
     os_libs = list(map(lambda x: x[: -len(".lib")], set(desc.get("libs", []))))
 

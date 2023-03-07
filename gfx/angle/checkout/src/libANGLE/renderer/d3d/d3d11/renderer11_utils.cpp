@@ -2512,6 +2512,10 @@ void InitializeFeatures(const Renderer11DeviceCaps &deviceCaps,
     ANGLE_FEATURE_CONDITION(features, preAddTexelFetchOffsets, isIntel);
     ANGLE_FEATURE_CONDITION(features, useSystemMemoryForConstantBuffers, isIntel);
 
+    // ClearView on Skylake seems to incorrectly clear with unaligned rects (edge has saw tooth
+    // pattern instead of straight).
+    ANGLE_FEATURE_CONDITION(features, scissoredClearArtifacts, isIntel && isSkylake);
+
     ANGLE_FEATURE_CONDITION(features, callClearTwice,
                             isIntel && isSkylake && capsVersion >= IntelDriverVersion(160000) &&
                                 capsVersion < IntelDriverVersion(164771));

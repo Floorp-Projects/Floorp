@@ -203,8 +203,6 @@ OS_LIBS += [
 #     "/OPT:ICF",
 #     "/OPT:NOLLDTAILMERGE",
 #     "/OPT:REF",
-#     "/pdbaltpath:%_PDB%",
-#     "/PDBSourcePath:C:/dev/angle/out",
 #     "/PROFILE",
 #     "/SUBSYSTEM:CONSOLE,5.02",
 #     "/TIMESTAMP:1664686800",
