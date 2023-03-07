@@ -17,8 +17,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
 /**
  * @typedef {Object} BaseParameters
  * @property {string=} context
- * @property {boolean} isRedirect
  * @property {Navigation=} navigation
+ * @property {number} redirectCount
  * @property {RequestData} request
  * @property {number} timestamp
  */
@@ -189,8 +189,6 @@ class NetworkModule extends Module {
   #onBeforeRequestSent = (name, data) => {
     const { contextId, requestData, timestamp, redirectCount } = data;
 
-    const isRedirect = redirectCount > 0;
-
     // Bug 1805479: Handle the initiator, including stacktrace details.
     const initiator = {
       type: InitiatorType.Other,
@@ -198,10 +196,9 @@ class NetworkModule extends Module {
 
     const baseParameters = {
       context: contextId,
-      isRedirect,
-      redirectCount,
       // Bug 1805405: Handle the navigation id.
       navigation: null,
+      redirectCount,
       request: requestData,
       timestamp,
     };
@@ -228,14 +225,11 @@ class NetworkModule extends Module {
       redirectCount,
     } = data;
 
-    const isRedirect = redirectCount > 0;
-
     const baseParameters = {
       context: contextId,
-      isRedirect,
-      redirectCount,
       // Bug 1805405: Handle the navigation id.
       navigation: null,
+      redirectCount,
       request: requestData,
       timestamp,
     };
