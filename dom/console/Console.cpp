@@ -14,6 +14,7 @@
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FunctionBinding.h"
@@ -2668,6 +2669,57 @@ already_AddRefed<ConsoleInstance> Console::CreateInstance(
   return console.forget();
 }
 
+void Console::StringifyElement(Element* aElement, nsAString& aOut) {
+  aOut.AppendLiteral("<");
+  aOut.Append(aElement->LocalName());
+  uint32_t attrCount = aElement->GetAttrCount();
+  nsAutoString idAttr;
+  nsAutoString classAttr;
+  nsAutoString nameAttr;
+  nsAutoString otherAttrs;
+  for (uint32_t i = 0; i < attrCount; i++) {
+    BorrowedAttrInfo attrInfo = aElement->GetAttrInfoAt(i);
+    nsAutoString attrValue;
+    attrInfo.mValue->ToString(attrValue);
+
+    const nsAttrName* attrName = attrInfo.mName;
+    if (attrName->Equals(nsGkAtoms::id)) {
+      idAttr.AppendLiteral(" id=\"");
+      idAttr.Append(attrValue);
+      idAttr.AppendLiteral("\"");
+    } else if (attrName->Equals(nsGkAtoms::_class)) {
+      classAttr.AppendLiteral(" class=\"");
+      classAttr.Append(attrValue);
+      classAttr.AppendLiteral("\"");
+    } else if (attrName->Equals(nsGkAtoms::name)) {
+      nameAttr.AppendLiteral(" name=\"");
+      nameAttr.Append(attrValue);
+      nameAttr.AppendLiteral("\"");
+    } else {
+      nsAutoString attrNameStr;
+      attrName->GetQualifiedName(attrNameStr);
+      otherAttrs.AppendLiteral(" ");
+      otherAttrs.Append(attrNameStr);
+      otherAttrs.AppendLiteral("=\"");
+      otherAttrs.Append(attrValue);
+      otherAttrs.AppendLiteral("\"");
+    }
+  }
+  if (!idAttr.IsEmpty()) {
+    aOut.Append(idAttr);
+  }
+  if (!classAttr.IsEmpty()) {
+    aOut.Append(classAttr);
+  }
+  if (!nameAttr.IsEmpty()) {
+    aOut.Append(nameAttr);
+  }
+  if (!otherAttrs.IsEmpty()) {
+    aOut.Append(otherAttrs);
+  }
+  aOut.AppendLiteral(">");
+}
+
 void Console::MaybeExecuteDumpFunction(JSContext* aCx,
                                        const nsAString& aMethodName,
                                        const Sequence<JS::Value>& aData,
@@ -2688,6 +2740,17 @@ void Console::MaybeExecuteDumpFunction(JSContext* aCx,
 
   for (uint32_t i = 0; i < aData.Length(); ++i) {
     JS::Rooted<JS::Value> v(aCx, aData[i]);
+    if (v.isObject()) {
+      Element* element = nullptr;
+      if (NS_SUCCEEDED(UNWRAP_OBJECT(Element, &v, element))) {
+        if (i != 0) {
+          message.AppendLiteral(" ");
+        }
+        StringifyElement(element, message);
+        continue;
+      }
+    }
+
     JS::Rooted<JSString*> jsString(aCx, JS_ValueToSource(aCx, v));
     if (!jsString) {
       continue;

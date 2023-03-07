@@ -354,6 +354,8 @@ class Console final : public nsIObserver, public nsSupportsWeakReference {
                       const Sequence<JS::Value>& aData,
                       DOMHighResTimeStamp* aTimeStamp);
 
+  void StringifyElement(Element* aElement, nsAString& aOut);
+
   MOZ_CAN_RUN_SCRIPT
   void MaybeExecuteDumpFunction(JSContext* aCx, const nsAString& aMethodName,
                                 const Sequence<JS::Value>& aData,
