@@ -13,8 +13,6 @@
 
 namespace mozilla::dom::indexedDB {
 
-namespace {
-
 using IndexedDBCipherStrategy = quota::IPCStreamCipherStrategy;
 using CipherKey = IndexedDBCipherStrategy::KeyType;
 
@@ -46,7 +44,8 @@ class IndexedDBCipherKeyManager {
   DataMutex<PrivateBrowsingInfoHashtable> mPrivateBrowsingInfoHashTable;
 };
 
-}  // namespace
+IndexedDBCipherKeyManager* GetIndexedDBCipherKeyManager();
+
 }  // namespace mozilla::dom::indexedDB
 
 #endif  // IndexedDBCipherKeyManager_h
