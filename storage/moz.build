@@ -74,6 +74,7 @@ UNIFIED_SOURCES += [
     "mozStorageStatementParams.cpp",
     "mozStorageStatementRow.cpp",
     "ObfuscatingVFS.cpp",
+    "QuotaVFS.cpp",
     "ReadOnlyNoLockVFS.cpp",
     "SQLCollations.cpp",
     "StorageBaseStatementInternal.cpp",
