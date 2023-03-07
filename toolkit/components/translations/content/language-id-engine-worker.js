@@ -120,6 +120,23 @@ class LanguageIdWorker {
   }
 
   /**
+   * Formats the language label returned by the language-identification model
+   * to conform to the correct two-character language tags.
+   *
+   * The current model returns labels of the format "__label_xx" where the last
+   * two characters are the two-character language tag.
+   *
+   * As such, this function strips of those final two characters.
+   * Updating the language-identification model may require updating this function.
+   *
+   * @param {string} label
+   * @returns {string}
+   */
+  #formatLanguageLabel(label) {
+    return label.slice(-2);
+  }
+
+  /**
    * Handle any message after the initialization message.
    *
    * @param {Object} data
@@ -149,7 +166,7 @@ class LanguageIdWorker {
 
           postMessage({
             type: "language-id-response",
-            languageLabel,
+            languageLabel: this.#formatLanguageLabel(languageLabel),
             confidence,
             messageId,
           });
