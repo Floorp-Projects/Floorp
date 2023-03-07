@@ -49,6 +49,11 @@ the environment's terminal information when asked. Does its stated purpose and
 no more.
 """
 
+[[audits.bytecode-alliance.audits.block-buffer]]
+who = "Benjamin Bouvier <public@benj.me>"
+criteria = "safe-to-deploy"
+delta = "0.9.0 -> 0.10.2"
+
 [[audits.bytecode-alliance.audits.bumpalo]]
 who = "Nick Fitzgerald <fitzgen@gmail.com>"
 criteria = "safe-to-deploy"
@@ -330,6 +335,11 @@ version = "0.6.0"
 who = "Johan Andersson <opensource@embark-studios.com>"
 criteria = "safe-to-run"
 version = "0.6.0"
+
+[[audits.isrg.audits.block-buffer]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+version = "0.9.0"
 
 [[audits.mozilla.audits.either]]
 who = "Nika Layzell <nika@thelayzells.com>"
