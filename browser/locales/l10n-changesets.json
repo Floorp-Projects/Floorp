@@ -123,7 +123,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "36aaeffbf1a5a8b81448e33b04df3a00bfd15b14"
+        "revision": "4d8364a9302c764dfb9ce980679493cad730a493"
     },
     "bg": {
         "pin": false,
@@ -339,7 +339,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "62321fae7da1268f4b8ad5f30c15df581d7bb35e"
+        "revision": "cfa88d5ba3735ba0f8256fc6411420985f032a9d"
     },
     "da": {
         "pin": false,
@@ -357,7 +357,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "2e60fd1e9fa3d055deed41eec6b101417599c5ec"
+        "revision": "4f3a013545fb850bbf34704976503455f099f6e1"
     },
     "de": {
         "pin": false,
@@ -753,7 +753,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "98b35c76df671e4c8b8d7aeca1b465103e8c70e3"
+        "revision": "d37e2170c0ee12f8828a5986c198164c2957707e"
     },
     "gu-IN": {
         "pin": false,
@@ -789,7 +789,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "7d60be5175fb64cf22606e99d12709ae060c4fda"
+        "revision": "2cd1e60ce0f04b31b42f8933c0723cda209726a9"
     },
     "hi-IN": {
         "pin": false,
@@ -915,7 +915,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "2bbad77391eef37953ff3e711e332a30d41b4b0b"
+        "revision": "d8a48791221406ad24f49532c6a9d220d0771628"
     },
     "id": {
         "pin": false,
@@ -969,7 +969,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "1a6028d7d98009693f91e0d6e42b5daa2317176a"
+        "revision": "8aaffafad9689e3e3abfa5edde46d51f59d9e192"
     },
     "ja": {
         "pin": false,
@@ -1101,7 +1101,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "fe83aee5dece7fab148dceafe89242e2d7a259c2"
+        "revision": "72a8c6829ce963faa6317a50a9fff8dbc284a830"
     },
     "lij": {
         "pin": false,
@@ -1299,7 +1299,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "e284f427b8d73b47b81c647f9dc5c48ea2143f04"
+        "revision": "0b072889fcf128363c3d7f5d6317ff4f2e4cac52"
     },
     "ne-NP": {
         "pin": false,
@@ -1335,7 +1335,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "ed9ed07e3b645adaaf29681b789ec16c220fe22b"
+        "revision": "e229277be8d3f7b5f82b673a66fe5856aaea3ab8"
     },
     "nn-NO": {
         "pin": false,
@@ -1371,7 +1371,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "4cdae5485409ad64b9e78549b37e450d9049ac48"
+        "revision": "f1b85e072862fb13f533a6a9681f38b27f74b304"
     },
     "pa-IN": {
         "pin": false,
@@ -1425,7 +1425,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "e5630e1dd09cda9e426518f665dfb68867339418"
+        "revision": "75974d673adcb30e9109c362b30bef21593c6b07"
     },
     "pt-PT": {
         "pin": false,
@@ -1785,7 +1785,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "1e8cf1e0cfd0e64c76b34800a161ef27afd5eb73"
+        "revision": "26e61a6006411da9ed60f4e3a0c90e3041789a56"
     },
     "th": {
         "pin": false,
@@ -1929,7 +1929,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "5fbc11466709083d98cb6d313417bf328ccf3c47"
+        "revision": "bcd12c43e5fe0c7ccb91877abfca47086f81d315"
     },
     "wo": {
         "pin": false,
@@ -2001,6 +2001,6 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "009494f72ebed524d6f66cc4a6f4145f640e9d35"
+        "revision": "dd60c73d3921a18f2e21b1199f1740e3805325ca"
     }
 }
