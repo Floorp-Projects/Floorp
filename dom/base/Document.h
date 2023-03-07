@@ -2614,7 +2614,7 @@ class Document : public nsINode,
     return !mParentDocument && !mDisplayDocument;
   }
 
-  bool IsDocumentURISchemeChrome() const { return mDocURISchemeIsChrome; }
+  bool ChromeRulesEnabled() const { return mChromeRulesEnabled; }
 
   bool IsInChromeDocShell() const {
     const Document* root = this;
@@ -4650,8 +4650,8 @@ class Document : public nsINode,
   // True if we're an SVG document being used as an image.
   bool mIsBeingUsedAsImage : 1;
 
-  // True if our current document URI's scheme is chrome://
-  bool mDocURISchemeIsChrome : 1;
+  // True if our current document URI's scheme enables privileged CSS rules.
+  bool mChromeRulesEnabled : 1;
 
   // True if we're loaded in a chrome docshell.
   bool mInChromeDocShell : 1;

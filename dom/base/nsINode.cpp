@@ -2977,12 +2977,11 @@ const RawServoSelectorList* nsINode::ParseSelectorList(
     // want to cache the "This is not a valid selector" result.
     //
     // NOTE(emilio): Off-hand, getting a CallerType here might seem like a
-    // better idea than using IsDocumentURISchemeChrome(), but that would mean
+    // better idea than using ChromeRulesEnabled(), but that would mean
     // that we'd need to key the selector cache by that.
-    // IsDocumentURISchemeChrome() gives us the same semantics as any inline
+    // ChromeRulesEnabled() gives us the same semantics as any inline
     // style associated to a document, which seems reasonable.
-    return Servo_SelectorList_Parse(&aSelectorString,
-                                    doc->IsDocumentURISchemeChrome())
+    return Servo_SelectorList_Parse(&aSelectorString, doc->ChromeRulesEnabled())
         .Consume();
   });
 

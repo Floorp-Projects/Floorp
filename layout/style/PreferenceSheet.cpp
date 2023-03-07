@@ -65,7 +65,7 @@ auto PreferenceSheet::PrefsKindFor(const Document& aDoc) -> PrefsKind {
     return PrefsKind::Chrome;
   }
 
-  if (aDoc.IsBeingUsedAsImage() && aDoc.IsDocumentURISchemeChrome()) {
+  if (aDoc.IsBeingUsedAsImage() && aDoc.ChromeRulesEnabled()) {
     return PrefsKind::Chrome;
   }
 
