@@ -6089,9 +6089,11 @@ static const PrefListEntry sRestrictFromWebContentProcesses[] = {
 // StaticPrefList) and would normally by blocklisted but we allow them through
 // anyway, so this override list acts as an allowlist
 static const PrefListEntry sDynamicPrefOverrideList[]{
+    PREF_LIST_ENTRY("app.update.channel"),
     PREF_LIST_ENTRY("apz.subtest"),
     PREF_LIST_ENTRY("autoadmin.global_config_url"),  // Bug 1780575
     PREF_LIST_ENTRY("browser.contentblocking.category"),
+    PREF_LIST_ENTRY("browser.dom.window.dump.file"),
     PREF_LIST_ENTRY("browser.search.region"),
     PREF_LIST_ENTRY(
         "browser.tabs.remote.testOnly.failPBrowserCreation.browsingContext"),
@@ -6134,6 +6136,7 @@ static const PrefListEntry sDynamicPrefOverrideList[]{
     PREF_LIST_ENTRY("media.video_loopback_dev"),
     PREF_LIST_ENTRY("media.webspeech.service.endpoint"),
     PREF_LIST_ENTRY("network.gio.supported-protocols"),
+    PREF_LIST_ENTRY("network.protocol-handler.external."),
     PREF_LIST_ENTRY("network.security.ports.banned"),
     PREF_LIST_ENTRY("nimbus.syncdatastore."),
     PREF_LIST_ENTRY("pdfjs."),
