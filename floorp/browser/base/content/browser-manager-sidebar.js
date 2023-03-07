@@ -56,15 +56,11 @@
          },
          selectSidebarItem:()=>{
              let custom_url_id = event.target.id.replace("select-", "")
- 
-             if (Services.prefs.getStringPref("floorp.browser.sidebar2.page", undefined) != custom_url_id || document.getElementById("sidebar-splitter2").getAttribute("hidden") == "true") {
-                 Services.prefs.setStringPref("floorp.browser.sidebar2.page", custom_url_id);
-                 if (document.getElementById("sidebar-splitter2").getAttribute("hidden") == "true") {
-                    bmsController.controllFunctions.changeVisibleWenpanel();
-                 }
-                 bmsController.controllFunctions.changeCheckPanel(true);
-             } else {
+
+             if(Services.prefs.getStringPref("floorp.browser.sidebar2.page", undefined) == custom_url_id){
                 bmsController.controllFunctions.changeVisibleWenpanel();
+             }else{
+                Services.prefs.setStringPref("floorp.browser.sidebar2.page", custom_url_id)
              }
          },
          sidebarItemMouse:{
@@ -101,10 +97,12 @@
              },
              unloadWebpanel:()=>{
                  let sidebarsplit2 = document.getElementById("sidebar-splitter2");
-                 Services.prefs.setStringPref("floorp.browser.sidebar2.page", "");
+                 if(clickedWebpanel.replace("select-", "") == Services.prefs.getStringPref("floorp.browser.sidebar2.page", "")){
+                    Services.prefs.setStringPref("floorp.browser.sidebar2.page", "");
              
-                 if (sidebarsplit2.getAttribute("hidden") != "true") {
-                    bmsController.controllFunctions.changeVisibleWenpanel();
+                    if (sidebarsplit2.getAttribute("hidden") != "true") {
+                        bmsController.controllFunctions.changeVisibleWenpanel();
+                    }
                  }
                  contextWebpanel.remove();
              },
@@ -148,6 +146,10 @@
              for (let elem of document.getElementsByClassName("webpanels")) {
                  elem.hidden = true;
              }
+             if(document.getElementById("sidebar-splitter2").getAttribute("hidden") == "true"){
+                bmsController.controllFunctions.changeVisibleWenpanel();
+             }
+             bmsController.controllFunctions.changeCheckPanel(document.getElementById("sidebar-splitter2").getAttribute("hidden") != "true");
              if (selectedwebpanel != null) selectedwebpanel.hidden = false;
          },
          setUserContextColorLine:(id)=>{
@@ -176,16 +178,15 @@
              let siderbar2header = document.getElementById("sidebar2-header");
              let sidebarsplit2 = document.getElementById("sidebar-splitter2");
              let sidebar2box = document.getElementById("sidebar2-box");
-             let sidebarSetting = {true:["auto","","","false",false,true,true],false:["0","0","none","true",true,false,false]}
+             let sidebarSetting = {true:["auto","","","false"],false:["0","0","none","true"]}
              let doDisplay = sidebarsplit2.getAttribute("hidden") == "true"
          
              sidebar2box.style.minWidth = sidebarSetting[doDisplay][0];
              sidebar2box.style.maxWidth = sidebarSetting[doDisplay][1];
              siderbar2header.style.display = sidebarSetting[doDisplay][2];
              sidebarsplit2.setAttribute("hidden", sidebarSetting[doDisplay][3]);
-             bmsController.controllFunctions.changeVisibleCommandButton(sidebarSetting[doDisplay][4]);
-             bmsController.controllFunctions.changeCheckPanel(sidebarSetting[doDisplay][5]);
-             Services.prefs.setBoolPref("floorp.browser.sidebar.is.displayed", sidebarSetting[doDisplay][6]);
+             bmsController.controllFunctions.changeCheckPanel(doDisplay);
+             Services.prefs.setBoolPref("floorp.browser.sidebar.is.displayed", doDisplay);
          },
          setSidebarWidth:(webpanel_id)=>{
              if (webpanel_id != "" && BROWSER_SIDEBAR_DATA.index.includes(webpanel_id)) {
