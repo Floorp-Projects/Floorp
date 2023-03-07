@@ -56,7 +56,7 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
     source_dir = os.path.join(tmpdir, "source")
     try:
         mozfile.extract_tarball(infile, source_dir)
-        application_ini_data = _extract_application_ini_data(source_dir)
+        application_ini_data = _extract_application_ini_data_from_directory(source_dir)
         build_variables = _get_build_variables(
             application_ini_data,
             arch,
@@ -87,9 +87,9 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
         shutil.rmtree(tmpdir)
 
 
-def _extract_application_ini_data(application_director):
+def _extract_application_ini_data_from_directory(application_directory):
     values = get_application_ini_values(
-        application_director,
+        application_directory,
         dict(section="App", value="Name"),
         dict(section="App", value="CodeName", fallback="Name"),
         dict(section="App", value="Vendor"),
