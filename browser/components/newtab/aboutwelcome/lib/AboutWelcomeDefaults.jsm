@@ -206,7 +206,9 @@ const MR_ABOUT_WELCOME_DEFAULT = {
     },
     {
       id: "AW_MOBILE_DOWNLOAD",
-      targeting: "isFxASignedIn && sync.mobileDevices > 0",
+      // The mobile download screen should only be shown to users who
+      // are either not logged into FxA, or don't have any mobile devices syncing
+      targeting: "!isFxASignedIn || sync.mobileDevices == 0",
       content: {
         position: "split",
         split_narrow_bkg_position: "-160px",
@@ -385,13 +387,13 @@ function evaluateWelcomeScreenButtonLabel(removeDefault) {
     : "mr2022-onboarding-set-default-primary-button-label";
 }
 
-function prepareMobileDownload(screens) {
-  let mobileContent = screens?.find(
+function prepareMobileDownload(content) {
+  let mobileContent = content?.screens?.find(
     screen => screen.id === "AW_MOBILE_DOWNLOAD"
   )?.content;
 
   if (!mobileContent) {
-    return;
+    return content;
   }
   if (!lazy.BrowserUtils.sendToDeviceEmailsSupported()) {
     // If send to device emails are not supported for a user's locale,
@@ -408,14 +410,12 @@ function prepareMobileDownload(screens) {
       mobileContent.hero_image.url.indexOf(".svg")
     )}-cn.svg`;
   }
+
+  return content;
 }
 
 async function prepareContentForReact(content) {
   const { screens } = content;
-
-  // Remove screens based on screen targeting
-  // by running filter through ASRouter targeting checks
-  await lazy.AWScreenUtils.evaluateTargetingAndRemoveScreens(screens);
 
   if (content?.template === "return_to_amo") {
     return content;
@@ -537,8 +537,7 @@ async function prepareContentForReact(content) {
     );
   }
 
-  prepareMobileDownload(content.screens);
-  return content;
+  return prepareMobileDownload(content);
 }
 
 const AboutWelcomeDefaults = {
