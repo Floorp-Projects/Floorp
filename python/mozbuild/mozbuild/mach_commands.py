@@ -2272,6 +2272,56 @@ def repackage_deb(
     repackage_deb(input, output, template_dir, arch, version, build_number)
 
 
+@SubCommand(
+    "repackage",
+    "deb-l10n",
+    description="Repackage a .xpi langpack file into a .deb for Linux",
+)
+@CommandArgument(
+    "--input-xpi-file", type=str, required=True, help="Path to the XPI file"
+)
+@CommandArgument(
+    "--input-tar-file",
+    type=str,
+    required=True,
+    help="Path to tar archive that contains application.ini",
+)
+@CommandArgument(
+    "--version",
+    type=str,
+    required=True,
+    help="The Firefox version used to create the installer",
+)
+@CommandArgument(
+    "--build-number",
+    type=str,
+    required=True,
+    help="The release's build number",
+)
+@CommandArgument("--output", "-o", type=str, required=True, help="Output filename")
+def repackage_deb_l10n(
+    command_context, input_xpi_file, input_tar_file, output, version, build_number
+):
+    for input_file in (input_xpi_file, input_tar_file):
+        if not os.path.exists(input_file):
+            print("Input file does not exist: %s" % input_file)
+            return 1
+
+    template_dir = os.path.join(
+        command_context.topsrcdir,
+        "browser",
+        "installer",
+        "linux",
+        "debian",
+    )
+
+    from mozbuild.repackaging.deb import repackage_deb_l10n
+
+    repackage_deb_l10n(
+        input_xpi_file, input_tar_file, output, template_dir, version, build_number
+    )
+
+
 @SubCommand("repackage", "dmg", description="Repackage a tar file into a .dmg for OSX")
 @CommandArgument("--input", "-i", type=str, required=True, help="Input filename")
 @CommandArgument("--output", "-o", type=str, required=True, help="Output filename")
