@@ -630,7 +630,7 @@ nsComputedDOMStyle::GetUnanimatedComputedStyleNoFlush(Element* aElement,
              "How in the world did we get a style a few lines above?");
 
   Element* elementOrPseudoElement =
-      EffectCompositor::GetElementToRestyle(aElement, aPseudo);
+      AnimationUtils::GetElementForRestyle(aElement, aPseudo);
   if (!elementOrPseudoElement) {
     return nullptr;
   }
