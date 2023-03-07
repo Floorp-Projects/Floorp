@@ -3,4 +3,13 @@ function f() {
   return { g: () => {} };
 }
 </script>
+<!-- evaluate the same long script to slow down the page load and more easily cause race condition in inline script code -->
+<script src="long.js"></script><script src="long.js"></script><script src="long.js"></script><script src="long.js"></script>
+
+<script>
+function j() {
+  return 42;
+}
+</script>
+
 <span>Here is some random stuff</span><script>function z() { this.f().g() } z();</script>

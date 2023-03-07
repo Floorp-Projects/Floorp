@@ -184,7 +184,7 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
 
     await dispatch(loadSourceText(cx, source, sourceActor));
 
-    await dispatch(setBreakableLines(cx, source.id));
+    await dispatch(setBreakableLines(cx, source, sourceActor));
 
     const loadedSource = getSource(getState(), source.id);
 
