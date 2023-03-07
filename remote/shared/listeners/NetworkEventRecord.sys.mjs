@@ -50,8 +50,8 @@ export class NetworkEventRecord {
     // should be set on this object.
     this.#requestData = {
       bodySize: null,
-      cookies: [],
-      headers: [],
+      cookies: networkEvent.cookies,
+      headers: networkEvent.headers,
       headersSize: networkEvent.headersSize,
       method: networkEvent.method,
       request: this.#requestId,
@@ -72,46 +72,9 @@ export class NetworkEventRecord {
       headersSize: null,
       url: networkEvent.url,
     };
-  }
 
-  /**
-   * Set network request headers.
-   *
-   * Required API for a NetworkObserver event owner.
-   *
-   * It will only be called once per network event record, so
-   * despite the name we will simply store the headers and rawHeaders.
-   *
-   * @param {Array} headers
-   *     The request headers array.
-   * @param {string=} rawHeaders
-   *     The raw headers source.
-   */
-  addRequestHeaders(headers, rawHeaders) {
-    if (typeof headers == "object") {
-      this.#requestData.headers = headers;
-    }
-    this.#requestData.rawHeaders = rawHeaders;
-  }
-
-  /**
-   * Set network request cookies.
-   *
-   * Required API for a NetworkObserver event owner.
-   *
-   * It will only be called once per network event record, so
-   * despite the name we will simply store the cookies.
-   *
-   * @param {Array} cookies
-   *     The request cookies array.
-   */
-  addRequestCookies(cookies) {
-    if (typeof cookies == "object") {
-      this.#requestData.cookies = cookies;
-    }
-
-    // By design, the NetworkObserver will synchronously create a "network event"
-    // then call addRequestHeaders and finally addRequestCookies.
+    // NetworkObserver creates a network event when request headers have been
+    // parsed.
     // According to the BiDi spec, we should emit beforeRequestSent when adding
     // request headers, see https://whatpr.org/fetch/1540.html#http-network-or-cache-fetch
     // step 8.17

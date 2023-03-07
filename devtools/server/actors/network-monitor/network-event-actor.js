@@ -46,13 +46,14 @@ class NetworkEventActor extends Actor {
     this.asResource = this.asResource.bind(this);
 
     this._request = {
-      method: networkEvent.method || null,
-      url: networkEvent.url || null,
-      httpVersion: networkEvent.httpVersion || null,
-      headers: [],
-      cookies: [],
+      cookies: networkEvent.cookies,
+      headers: networkEvent.headers,
       headersSize: networkEvent.headersSize || null,
+      httpVersion: networkEvent.httpVersion || null,
+      method: networkEvent.method || null,
       postData: {},
+      rawHeaders: networkEvent.rawHeaders,
+      url: networkEvent.url || null,
     };
 
     this._response = {
@@ -163,7 +164,11 @@ class NetworkEventActor extends Actor {
     if (!this._channelId) {
       return;
     }
-    this._onNetworkEventDestroy(this._channelId);
+
+    if (this._onNetworkEventDestroy) {
+      this._onNetworkEventDestroy(this._channelId);
+    }
+
     this._channelId = null;
     super.destroy(conn);
   }
@@ -179,10 +184,18 @@ class NetworkEventActor extends Actor {
    *         The response packet - network request headers.
    */
   getRequestHeaders() {
+    let rawHeaders;
+    if (this._request.rawHeaders) {
+      rawHeaders = this._createLongStringActor(this._request.rawHeaders);
+    }
+
     return {
-      headers: this._request.headers,
+      headers: this._request.headers.map(header => ({
+        name: header.name,
+        value: this._createLongStringActor(header.value),
+      })),
       headersSize: this._request.headersSize,
-      rawHeaders: this._request.rawHeaders,
+      rawHeaders,
     };
   }
 
@@ -194,7 +207,10 @@ class NetworkEventActor extends Actor {
    */
   getRequestCookies() {
     return {
-      cookies: this._request.cookies,
+      cookies: this._request.cookies.map(cookie => ({
+        name: cookie.name,
+        value: this._createLongStringActor(cookie.value),
+      })),
     };
   }
 
@@ -292,53 +308,6 @@ class NetworkEventActor extends Actor {
   /** ****************************************************************
    * Listeners for new network event data coming from NetworkMonitor.
    ******************************************************************/
-
-  /**
-   * Add network request headers.
-   *
-   * @param array headers
-   *        The request headers array.
-   * @param string rawHeaders
-   *        The raw headers source.
-   */
-  addRequestHeaders(headers, rawHeaders) {
-    // Ignore calls when this actor is already destroyed
-    if (this.isDestroyed()) {
-      return;
-    }
-
-    this._request.headers = headers;
-    this._prepareHeaders(headers);
-
-    if (rawHeaders) {
-      rawHeaders = new LongStringActor(this.conn, rawHeaders);
-      // bug 1462561 - Use "json" type and manually manage/marshall actors to woraround
-      // protocol.js performance issue
-      this.manage(rawHeaders);
-      rawHeaders = rawHeaders.form();
-    }
-    this._request.rawHeaders = rawHeaders;
-
-    this._onEventUpdate("requestHeaders", {});
-  }
-
-  /**
-   * Add network request cookies.
-   *
-   * @param array cookies
-   *        The request cookies array.
-   */
-  addRequestCookies(cookies) {
-    // Ignore calls when this actor is already destroyed
-    if (this.isDestroyed()) {
-      return;
-    }
-
-    this._request.cookies = cookies;
-    this._prepareHeaders(cookies);
-
-    this._onEventUpdate("requestCookies", {});
-  }
 
   /**
    * Add network request POST data.
@@ -538,6 +507,18 @@ class NetworkEventActor extends Actor {
     }
   }
 
+  _createLongStringActor(string) {
+    if (string?.actorID) {
+      return string;
+    }
+
+    const longStringActor = new LongStringActor(this.conn, string);
+    // bug 1462561 - Use "json" type and manually manage/marshall actors to workaround
+    // protocol.js performance issue
+    this.manage(longStringActor);
+    return longStringActor.form();
+  }
+
   /**
    * Prepare the headers array to be sent to the client by using the
    * LongStringActor for the header values, when needed.
@@ -563,11 +544,13 @@ class NetworkEventActor extends Actor {
    *        The properties that have changed for the event
    */
   _onEventUpdate(updateType, data) {
-    this._onNetworkEventUpdate({
-      resourceId: this._channelId,
-      updateType,
-      ...data,
-    });
+    if (this._onNetworkEventUpdate) {
+      this._onNetworkEventUpdate({
+        resourceId: this._channelId,
+        updateType,
+        ...data,
+      });
+    }
   }
 }
 

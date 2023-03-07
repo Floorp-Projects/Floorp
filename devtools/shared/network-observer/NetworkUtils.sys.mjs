@@ -181,6 +181,7 @@ function createNetworkEvent(
   event.innerWindowId = this.getChannelInnerWindowId(channel);
   event.url = channel.URI.spec;
   event.private = channel.isChannelPrivate;
+  event.rawHeaders = rawHeaders;
   event.headersSize = rawHeaders ? rawHeaders.length : 0;
   event.startedDateTime = (timestamp
     ? new Date(Math.round(timestamp / 1000))
@@ -276,6 +277,10 @@ function createNetworkEvent(
   // of iframes, i.e. the request loading another document in an iframe.
   event.isNavigationRequest =
     channel.isMainDocumentChannel && channel.loadInfo.isTopLevelLoad;
+
+  const { cookies, headers } = fetchRequestHeadersAndCookies(channel);
+  event.headers = headers;
+  event.cookies = cookies;
 
   return event;
 }
