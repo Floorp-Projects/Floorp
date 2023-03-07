@@ -1809,19 +1809,6 @@ void nsCocoaWindow::ProcessTransitions() {
           }
         } else if (mWindow.zoomed) {
           [mWindow zoom:nil];
-
-          // Check if we're still zoomed. If we are, we need to do *something* to make the
-          // window smaller than the zoom size so Cocoa will treat us as being out of the
-          // zoomed state. Otherwise, we could stay zoomed and never be able to be "normal"
-          // from calls to SetSizeMode.
-          if (mWindow.zoomed) {
-            NSRect maximumFrame = mWindow.frame;
-            const CGFloat INSET_OUT_OF_ZOOM = 20.0f;
-            [mWindow setFrame:NSInsetRect(maximumFrame, INSET_OUT_OF_ZOOM, INSET_OUT_OF_ZOOM)
-                      display:YES];
-            MOZ_ASSERT(!mWindow.zoomed,
-                       "We should be able to unzoom by shrinking the frame a bit.");
-          }
         }
         break;
       }
