@@ -141,9 +141,8 @@ ImageBitmapRenderingContext::MatchWithIntrinsicSize() {
 }
 
 mozilla::UniquePtr<uint8_t[]> ImageBitmapRenderingContext::GetImageBuffer(
-    int32_t* aFormat, gfx::IntSize* aImageSize) {
+    int32_t* aFormat) {
   *aFormat = 0;
-  *aImageSize = {};
 
   if (!mImage) {
     return nullptr;
@@ -166,7 +165,6 @@ mozilla::UniquePtr<uint8_t[]> ImageBitmapRenderingContext::GetImageBuffer(
   }
 
   *aFormat = imgIEncoder::INPUT_FORMAT_HOSTARGB;
-  *aImageSize = data->GetSize();
   return gfx::SurfaceToPackedBGRA(data);
 }
 
@@ -182,15 +180,14 @@ ImageBitmapRenderingContext::GetInputStream(const char* aMimeType,
   }
 
   int32_t format = 0;
-  gfx::IntSize imageSize = {};
-  UniquePtr<uint8_t[]> imageBuffer = GetImageBuffer(&format, &imageSize);
+  UniquePtr<uint8_t[]> imageBuffer = GetImageBuffer(&format);
   if (!imageBuffer) {
     return NS_ERROR_FAILURE;
   }
 
-  return ImageEncoder::GetInputStream(imageSize.width, imageSize.height,
-                                      imageBuffer.get(), format, encoder,
-                                      aEncoderOptions, aStream);
+  return ImageEncoder::GetInputStream(mWidth, mHeight, imageBuffer.get(),
+                                      format, encoder, aEncoderOptions,
+                                      aStream);
 }
 
 already_AddRefed<mozilla::gfx::SourceSurface>

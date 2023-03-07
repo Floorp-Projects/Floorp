@@ -1846,11 +1846,10 @@ CanvasRenderingContext2D::SetContextOptions(JSContext* aCx,
 }
 
 UniquePtr<uint8_t[]> CanvasRenderingContext2D::GetImageBuffer(
-    int32_t* out_format, gfx::IntSize* out_imageSize) {
+    int32_t* aFormat) {
   UniquePtr<uint8_t[]> ret;
 
-  *out_format = 0;
-  *out_imageSize = {};
+  *aFormat = 0;
 
   if (!GetBufferProvider() && !EnsureTarget()) {
     return nullptr;
@@ -1860,8 +1859,7 @@ UniquePtr<uint8_t[]> CanvasRenderingContext2D::GetImageBuffer(
   if (snapshot) {
     RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
     if (data && data->GetSize() == GetSize()) {
-      *out_format = imgIEncoder::INPUT_FORMAT_HOSTARGB;
-      *out_imageSize = data->GetSize();
+      *aFormat = imgIEncoder::INPUT_FORMAT_HOSTARGB;
       ret = SurfaceToPackedBGRA(data);
     }
   }
@@ -1883,15 +1881,14 @@ CanvasRenderingContext2D::GetInputStream(const char* aMimeType,
   }
 
   int32_t format = 0;
-  gfx::IntSize imageSize = {};
-  UniquePtr<uint8_t[]> imageBuffer = GetImageBuffer(&format, &imageSize);
+  UniquePtr<uint8_t[]> imageBuffer = GetImageBuffer(&format);
   if (!imageBuffer) {
     return NS_ERROR_FAILURE;
   }
 
-  return ImageEncoder::GetInputStream(imageSize.width, imageSize.height,
-                                      imageBuffer.get(), format, encoder,
-                                      aEncoderOptions, aStream);
+  return ImageEncoder::GetInputStream(mWidth, mHeight, imageBuffer.get(),
+                                      format, encoder, aEncoderOptions,
+                                      aStream);
 }
 
 already_AddRefed<mozilla::gfx::SourceSurface>

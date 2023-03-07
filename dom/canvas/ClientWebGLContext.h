@@ -970,8 +970,7 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
 
   void ResetBitmap() override;
 
-  UniquePtr<uint8_t[]> GetImageBuffer(int32_t* out_format,
-                                      gfx::IntSize* out_imageSize) override;
+  UniquePtr<uint8_t[]> GetImageBuffer(int32_t* out_format) override;
   NS_IMETHOD GetInputStream(const char* mimeType,
                             const nsAString& encoderOptions,
                             nsIInputStream** out_stream) override;

@@ -1170,10 +1170,8 @@ RefPtr<gfx::DataSourceSurface> ClientWebGLContext::BackBufferSnapshot() {
   return surf;
 }
 
-UniquePtr<uint8_t[]> ClientWebGLContext::GetImageBuffer(
-    int32_t* out_format, gfx::IntSize* out_imageSize) {
+UniquePtr<uint8_t[]> ClientWebGLContext::GetImageBuffer(int32_t* out_format) {
   *out_format = 0;
-  *out_imageSize = {};
 
   // Use GetSurfaceSnapshot() to make sure that appropriate y-flip gets applied
   gfxAlphaType any;
@@ -1183,7 +1181,6 @@ UniquePtr<uint8_t[]> ClientWebGLContext::GetImageBuffer(
   RefPtr<gfx::DataSourceSurface> dataSurface = snapshot->GetDataSurface();
 
   const auto& premultAlpha = mNotLost->info.options.premultipliedAlpha;
-  *out_imageSize = dataSurface->GetSize();
   return gfxUtils::GetImageBuffer(dataSurface, premultAlpha, out_format);
 }
 

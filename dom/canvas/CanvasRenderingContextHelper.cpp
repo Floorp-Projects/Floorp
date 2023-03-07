@@ -114,16 +114,15 @@ void CanvasRenderingContextHelper::ToBlob(EncodeCompleteCallback* aCallback,
 
   UniquePtr<uint8_t[]> imageBuffer;
   int32_t format = 0;
-  gfx::IntSize imageSize = {};
   if (mCurrentContext) {
-    imageBuffer = mCurrentContext->GetImageBuffer(&format, &imageSize);
+    imageBuffer = mCurrentContext->GetImageBuffer(&format);
   }
 
   RefPtr<EncodeCompleteCallback> callback = aCallback;
 
   aRv = ImageEncoder::ExtractDataAsync(
       aType, aEncodeOptions, aUsingCustomOptions, std::move(imageBuffer),
-      format, {imageSize.width, imageSize.height}, aUsePlaceholder, callback);
+      format, GetWidthHeight(), aUsePlaceholder, callback);
 }
 
 already_AddRefed<nsICanvasRenderingContextInternal>

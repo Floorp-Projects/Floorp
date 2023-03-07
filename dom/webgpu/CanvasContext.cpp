@@ -159,21 +159,17 @@ bool CanvasContext::InitializeCanvasRenderer(
   return true;
 }
 
-mozilla::UniquePtr<uint8_t[]> CanvasContext::GetImageBuffer(
-    int32_t* out_format, gfx::IntSize* out_imageSize) {
-  *out_format = 0;
-  *out_imageSize = {};
-
+mozilla::UniquePtr<uint8_t[]> CanvasContext::GetImageBuffer(int32_t* aFormat) {
   gfxAlphaType any;
   RefPtr<gfx::SourceSurface> snapshot = GetSurfaceSnapshot(&any);
   if (!snapshot) {
+    *aFormat = 0;
     return nullptr;
   }
 
   RefPtr<gfx::DataSourceSurface> dataSurface = snapshot->GetDataSurface();
-  *out_imageSize = dataSurface->GetSize();
   return gfxUtils::GetImageBuffer(dataSurface, /* aIsAlphaPremultiplied */ true,
-                                  &*out_format);
+                                  aFormat);
 }
 
 NS_IMETHODIMP CanvasContext::GetInputStream(const char* aMimeType,
