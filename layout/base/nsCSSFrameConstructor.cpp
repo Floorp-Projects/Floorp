@@ -2716,7 +2716,7 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
     if (isXUL) {
       return false;
     }
-    if (aDocElement->OwnerDoc()->IsDocumentURISchemeChrome() &&
+    if (aDocElement->OwnerDoc()->ChromeRulesEnabled() &&
         aDocElement->AsElement()->AttrValueIs(
             kNameSpaceID_None, nsGkAtoms::scrolling, nsGkAtoms::_false,
             eCaseMatters)) {
