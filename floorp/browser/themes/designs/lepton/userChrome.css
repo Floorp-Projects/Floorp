@@ -12058,4 +12058,15 @@
       --menuitem-image: url("chrome://browser/skin/onion.svg");
     }
   }
+  
+  /** Floorp *****************************************************************/
+  @supports -moz-bool-pref("userChrome.icon.panel") {
+    #rebootappmenu {
+      list-style-image: url("chrome://browser/skin/lepton/refresh-cw.svg");
+    }
+
+    #usercssloader-menu {
+      --menuitem-image: url("chrome://browser/skin/lepton/developer.svg");
+    }
+  }
 }
