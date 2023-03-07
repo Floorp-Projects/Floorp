@@ -1,4 +1,4 @@
-use crate::consts::{HIDCmd, CID_BROADCAST};
+use crate::consts::{Capability, HIDCmd, CID_BROADCAST};
 use crate::crypto::ECDHSecret;
 use crate::ctap2::commands::get_info::AuthenticatorInfo;
 use crate::transport::{errors::HIDError, Nonce};
@@ -32,6 +32,16 @@ where
     fn get_shared_secret(&self) -> Option<&ECDHSecret>;
     fn clone_device_as_write_only(&self) -> Result<Self, HIDError>;
 
+    fn supports_ctap1(&self) -> bool {
+        // CAPABILITY_NMSG:
+        // If set to 1, authenticator DOES NOT implement U2FHID_MSG function
+        !self.get_device_info().cap_flags.contains(Capability::NMSG)
+    }
+
+    fn supports_ctap2(&self) -> bool {
+        self.get_device_info().cap_flags.contains(Capability::CBOR)
+    }
+
     // Initialize on a protocol-level
     fn initialize(&mut self, noncecmd: Nonce) -> Result<(), HIDError> {
         if self.initialized() {
@@ -49,7 +59,7 @@ where
 
         // Send Init to broadcast address to create a new channel
         self.set_cid(CID_BROADCAST);
-        let (cmd, raw) = self.sendrecv(HIDCmd::Init, &nonce)?;
+        let (cmd, raw) = self.sendrecv(HIDCmd::Init, &nonce, &|| true)?;
         if cmd != HIDCmd::Init {
             return Err(HIDError::DeviceError);
         }
@@ -84,15 +94,37 @@ where
         Ok(())
     }
 
-    fn sendrecv(&mut self, cmd: HIDCmd, send: &[u8]) -> io::Result<(HIDCmd, Vec<u8>)> {
+    fn sendrecv(
+        &mut self,
+        cmd: HIDCmd,
+        send: &[u8],
+        keep_alive: &dyn Fn() -> bool,
+    ) -> io::Result<(HIDCmd, Vec<u8>)> {
         let cmd: u8 = cmd.into();
         self.u2f_write(cmd, send)?;
         loop {
             let (cmd, data) = self.u2f_read()?;
             if cmd != HIDCmd::Keepalive {
-                break Ok((cmd, data));
+                return Ok((cmd, data));
+            }
+            // The authenticator might send us HIDCmd::Keepalive messages indefinitely, e.g. if
+            // it's waiting for user presence. The keep_alive function is used to cancel the
+            // transaction.
+            if !keep_alive() {
+                break;
             }
         }
+
+        // If this is a CTAP2 device we can tell the authenticator to cancel the transaction on its
+        // side as well. There's nothing to do for U2F/CTAP1 devices.
+        if self.supports_ctap2() {
+            self.u2f_write(u8::from(HIDCmd::Cancel), &[])?;
+        }
+        // For CTAP2 devices we expect to read
+        //  (HIDCmd::Cbor, [CTAP2_ERR_KEEPALIVE_CANCEL])
+        // for U2F/CTAP1 we expect to read
+        //  (HIDCmd::Keepalive, [status]).
+        self.u2f_read()
     }
 
     fn u2f_write(&mut self, cmd: u8, send: &[u8]) -> io::Result<()> {
@@ -126,11 +158,5 @@ where
         };
         trace!("u2f_read({:?}) cmd={:?}: {:04X?}", self.id(), cmd, &data);
         Ok((cmd, data))
-    }
-
-    fn cancel(&mut self) -> Result<(), HIDError> {
-        let cancel: u8 = HIDCmd::Cancel.into();
-        self.u2f_write(cancel, &[])?;
-        Ok(())
     }
 }

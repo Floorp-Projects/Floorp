@@ -130,16 +130,6 @@ bitflags! {
     }
 }
 
-impl Capability {
-    pub fn has_fido1(self) -> bool {
-        !self.contains(Capability::NMSG)
-    }
-
-    pub fn has_fido2(self) -> bool {
-        self.contains(Capability::CBOR)
-    }
-}
-
 // Low-level error codes. Return as negatives.
 
 pub const ERR_NONE: u8 = 0x00; // No error

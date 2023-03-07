@@ -21,6 +21,7 @@ pub enum BlinkResult {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DeviceCommand {
     Blink,
+    Cancel,
     Continue,
     Removed,
 }
@@ -190,10 +191,11 @@ impl DeviceSelector {
     }
 
     fn cancel_all(tokens: HashMap<Device, Sender<DeviceCommand>>, exclude: Option<&DeviceID>) {
-        tokens
-            .into_keys()
-            .filter(|x| exclude.map_or(true, |y| y != &x.id()))
-            .for_each(|mut dev| dev.cancel().unwrap()); // TODO
+        for (dev, tx) in tokens.iter() {
+            if Some(&dev.id()) != exclude {
+                let _ = tx.send(DeviceCommand::Cancel);
+            }
+        }
     }
 
     pub fn stop(&mut self) {

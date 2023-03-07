@@ -1,4 +1,4 @@
-use crate::consts::{Capability, HIDCmd};
+use crate::consts::HIDCmd;
 use crate::crypto::ECDHSecret;
 
 use crate::ctap2::commands::client_pin::{GetKeyAgreement, PinAuth};
@@ -76,18 +76,38 @@ pub enum Nonce {
 //           but the goal is to remove U2FDevice entirely and copy over the trait-definition here
 pub trait FidoDevice: HIDDevice {
     fn send_msg<Out, Req: Request<Out>>(&mut self, msg: &Req) -> Result<Out, HIDError> {
+        self.send_msg_cancellable(msg, &|| true)
+    }
+
+    fn send_cbor<Req: RequestCtap2>(&mut self, msg: &Req) -> Result<Req::Output, HIDError> {
+        self.send_cbor_cancellable(msg, &|| true)
+    }
+
+    fn send_ctap1<Req: RequestCtap1>(&mut self, msg: &Req) -> Result<Req::Output, HIDError> {
+        self.send_ctap1_cancellable(msg, &|| true)
+    }
+
+    fn send_msg_cancellable<Out, Req: Request<Out>>(
+        &mut self,
+        msg: &Req,
+        keep_alive: &dyn Fn() -> bool,
+    ) -> Result<Out, HIDError> {
         if !self.initialized() {
             return Err(HIDError::DeviceNotInitialized);
         }
 
         if self.supports_ctap2() && msg.is_ctap2_request() {
-            self.send_cbor(msg)
+            self.send_cbor_cancellable(msg, keep_alive)
         } else {
-            self.send_ctap1(msg)
+            self.send_ctap1_cancellable(msg, keep_alive)
         }
     }
 
-    fn send_cbor<Req: RequestCtap2>(&mut self, msg: &Req) -> Result<Req::Output, HIDError> {
+    fn send_cbor_cancellable<Req: RequestCtap2>(
+        &mut self,
+        msg: &Req,
+        keep_alive: &dyn Fn() -> bool,
+    ) -> Result<Req::Output, HIDError> {
         debug!("sending {:?} to {:?}", msg, self);
 
         let mut data = msg.wire_format(self)?;
@@ -98,7 +118,7 @@ pub trait FidoDevice: HIDDevice {
         buf.append(&mut data);
         let buf = buf;
 
-        let (cmd, resp) = self.sendrecv(HIDCmd::Cbor, &buf)?;
+        let (cmd, resp) = self.sendrecv(HIDCmd::Cbor, &buf, keep_alive)?;
         debug!(
             "got from Device {:?} status={:?}: {:?}",
             self.id(),
@@ -112,12 +132,17 @@ pub trait FidoDevice: HIDDevice {
         }
     }
 
-    fn send_ctap1<Req: RequestCtap1>(&mut self, msg: &Req) -> Result<Req::Output, HIDError> {
+    fn send_ctap1_cancellable<Req: RequestCtap1>(
+        &mut self,
+        msg: &Req,
+        keep_alive: &dyn Fn() -> bool,
+    ) -> Result<Req::Output, HIDError> {
         debug!("sending {:?} to {:?}", msg, self);
         let (data, add_info) = msg.ctap1_format(self)?;
 
-        loop {
-            let (cmd, mut data) = self.sendrecv(HIDCmd::Msg, &data)?;
+        while keep_alive() {
+            // sendrecv will not block with a CTAP1 device
+            let (cmd, mut data) = self.sendrecv(HIDCmd::Msg, &data, &|| true)?;
             debug!(
                 "got from Device {:?} status={:?}: {:?}",
                 self.id(),
@@ -146,6 +171,11 @@ pub trait FidoDevice: HIDDevice {
                 return Err(HIDError::UnexpectedCmd(cmd.into()));
             }
         }
+
+        Err(HIDError::Command(CommandError::StatusCode(
+            StatusCode::KeepaliveCancel,
+            None,
+        )))
     }
 
     // This is ugly as we have 2 init-functions now, but the fastest way currently.
@@ -168,13 +198,13 @@ pub trait FidoDevice: HIDDevice {
         Ok(())
     }
 
-    fn block_and_blink(&mut self) -> BlinkResult {
+    fn block_and_blink(&mut self, keep_alive: &dyn Fn() -> bool) -> BlinkResult {
         let supports_select_cmd = self
             .get_authenticator_info()
             .map_or(false, |i| i.versions.contains(&String::from("FIDO_2_1")));
         let resp = if supports_select_cmd {
             let msg = Selection {};
-            self.send_cbor(&msg)
+            self.send_cbor_cancellable(&msg, keep_alive)
         } else {
             // We need to fake a blink-request, because FIDO2.0 forgot to specify one
             // See: https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html#using-pinToken-in-authenticatorMakeCredential
@@ -190,7 +220,7 @@ pub trait FidoDevice: HIDDevice {
             msg.set_pin_auth(Some(PinAuth::empty_pin_auth()), None);
             info!("Trying to blink: {:?}", &msg);
             // We don't care about the Ok-value, just if it is Ok or not
-            self.send_msg(&msg).map(|_| ())
+            self.send_msg_cancellable(&msg, keep_alive).map(|_| ())
         };
 
         match resp {
@@ -218,15 +248,6 @@ pub trait FidoDevice: HIDDevice {
                 BlinkResult::Cancelled
             }
         }
-    }
-    fn supports_ctap1(&self) -> bool {
-        // CAPABILITY_NMSG:
-        // If set to 1, authenticator DOES NOT implement U2FHID_MSG function
-        !self.get_device_info().cap_flags.contains(Capability::NMSG)
-    }
-
-    fn supports_ctap2(&self) -> bool {
-        self.get_device_info().cap_flags.contains(Capability::CBOR)
     }
 
     fn establish_shared_secret(&mut self) -> Result<(ECDHSecret, AuthenticatorInfo), HIDError> {
