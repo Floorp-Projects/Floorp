@@ -302,6 +302,10 @@
   customElements.define("treecolpicker", MozTreecolPicker);
 
   class MozTreecol extends MozElements.BaseControl {
+    static get observedAttributes() {
+      return ["primary"];
+    }
+
     static get inheritedAttributes() {
       return {
         ".treecol-sortdirection": "sortdirection,hidden=hideheader",
@@ -316,6 +320,19 @@
       `;
     }
 
+    get _tree() {
+      return this.parentNode?.parentNode;
+    }
+
+    _invalidate() {
+      let tree = this._tree;
+      if (!tree || !XULTreeElement.isInstance(tree)) {
+        return;
+      }
+      tree.invalidate();
+      tree.columns?.invalidateColumns();
+    }
+
     constructor() {
       super();
 
@@ -323,7 +340,7 @@
         if (event.button != 0) {
           return;
         }
-        if (this.parentNode.parentNode.enableColumnDrag) {
+        if (this._tree.enableColumnDrag) {
           var XUL_NS =
             "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
           var cols = this.parentNode.getElementsByTagNameNS(XUL_NS, "treecol");
@@ -361,7 +378,7 @@
           return;
         }
 
-        var tree = this.parentNode.parentNode;
+        var tree = this._tree;
         if (tree.columns) {
           tree.view.cycleHeader(tree.columns.getColumnFor(this));
         }
@@ -379,6 +396,20 @@
       if (this.hasAttribute("ordinal")) {
         this.style.MozBoxOrdinalGroup = this.getAttribute("ordinal");
       }
+
+      this._resizeObserver = new ResizeObserver(() => {
+        this._invalidate();
+      });
+      this._resizeObserver.observe(this);
+    }
+
+    disconnectedCallback() {
+      this._resizeObserver?.unobserve(this);
+      this._resizeObserver = null;
+    }
+
+    attributeChangedCallback() {
+      this._invalidate();
     }
 
     set ordinal(val) {
@@ -1198,7 +1229,10 @@
         for (i = 0; i < cols.length; ++i) {
           cols[i].ordinal = parseInt(cols[i].ordinal) - 2;
         }
+      } else {
+        return;
       }
+      this.columns.invalidateColumns();
     }
 
     _getColumnAtX(aX, aThresh, aPos) {
