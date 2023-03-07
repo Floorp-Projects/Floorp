@@ -29,7 +29,12 @@ add_task(async function() {
   ]);
 
   await addBreakpoint(dbg, "doc-inline-script-offset.html", 15, 66);
-  await reload(dbg);
+
+  const onReloaded = reload(dbg);
   await waitForPaused(dbg);
   ok(true, "paused after reloading at column breakpoint");
+
+  await resume(dbg);
+  info("Wait for reload to complete after resume");
+  await onReloaded;
 });

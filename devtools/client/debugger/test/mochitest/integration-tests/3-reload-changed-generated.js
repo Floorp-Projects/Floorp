@@ -76,7 +76,7 @@ addIntegrationTask(async function testReloadingChangedGeneratedSource(
     "SET_BREAKPOINT"
   );
   testServer.switchToNextVersion();
-  await reload(
+  const onReloaded = reload(
     dbg,
     "bundle-with-another-original.js",
     "original-with-no-update.js"
@@ -120,6 +120,7 @@ addIntegrationTask(async function testReloadingChangedGeneratedSource(
       6
     );
   } else {
+    await onReloaded;
     // Assert that it does not pause in commpressed files
     assertNotPaused(dbg);
   }
@@ -167,5 +168,10 @@ addIntegrationTask(async function testReloadingChangedGeneratedSource(
     is(breakpoint.generatedLocation.line, 103);
   }
 
+  if (!isCompressed) {
+    await resume(dbg);
+    info("Wait for reload to complete after resume");
+    await onReloaded;
+  }
   await closeTab(dbg, "bundle-with-another-original.js");
 });

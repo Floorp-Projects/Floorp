@@ -16,7 +16,7 @@
 add_task(async function() {
   const dbg = await initDebugger("doc-debugger-statements.html");
 
-  await reload(dbg, "doc-debugger-statements.html");
+  const onReloaded = reload(dbg, "doc-debugger-statements.html");
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(
     dbg,
@@ -64,6 +64,11 @@ add_task(async function() {
     findSource(dbg, "doc-debugger-statements.html").id,
     18
   );
+
+  await resume(dbg);
+
+  info("Wait for reload to complete after resume");
+  await onReloaded;
 });
 
 function clickButton(dbg, button) {

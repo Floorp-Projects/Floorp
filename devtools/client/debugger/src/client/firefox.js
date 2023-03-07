@@ -177,9 +177,15 @@ function onDocumentEventAvailable(events) {
   for (const event of events) {
     // Only consider top level document, and ignore remote iframes top document
     if (!event.targetFront.isTopLevel) continue;
-    // The debugger doesn't support the iframe dropdown.
+    // The browser toolbox debugger doesn't support the iframe dropdown.
     // you will always see all the sources of all targets of your debugging context.
-    if (event.isFrameSwitching) {
+    //
+    // But still allow it to clear the debugger when reloading the addon, or when
+    // switching between fallback document and other addon document.
+    if (
+      event.isFrameSwitching &&
+      !commands.descriptorFront.isWebExtensionDescriptor
+    ) {
       continue;
     }
     if (event.name == "will-navigate") {
