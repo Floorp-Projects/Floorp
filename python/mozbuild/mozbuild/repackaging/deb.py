@@ -56,7 +56,7 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
     source_dir = os.path.join(tmpdir, "source")
     try:
         mozfile.extract_tarball(infile, source_dir)
-        application_ini_data = _extract_application_ini_data_from_directory(source_dir)
+        application_ini_data = _extract_application_ini_data(infile)
         build_variables = _get_build_variables(
             application_ini_data,
             arch,
@@ -85,6 +85,29 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
 
     finally:
         shutil.rmtree(tmpdir)
+
+
+def _extract_application_ini_data(input_tar_file):
+    with tempfile.TemporaryDirectory() as d:
+        with tarfile.open(input_tar_file) as tar:
+            application_ini_files = [
+                tar_info
+                for tar_info in tar.getmembers()
+                if tar_info.name.endswith("/application.ini")
+            ]
+            if len(application_ini_files) == 0:
+                raise ValueError(
+                    f"Cannot find any application.ini file in archive {input_tar_file}"
+                )
+            if len(application_ini_files) > 1:
+                raise ValueError(
+                    f"Too many application.ini files found in archive {input_tar_file}. "
+                    f"Found: {application_ini_files}"
+                )
+
+            tar.extract(application_ini_files[0], path=d)
+
+        return _extract_application_ini_data_from_directory(d)
 
 
 def _extract_application_ini_data_from_directory(application_directory):
