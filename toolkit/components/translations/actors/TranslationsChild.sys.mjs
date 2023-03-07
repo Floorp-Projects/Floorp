@@ -4,8 +4,6 @@
 
 /**
  * @typedef {import("../content/translations-document.sys.mjs").TranslationsDocument} TranslationsDocument
- * @typedef {import("../translations").LanguageIdEngineMockedPayload} LanguageIdEngineMockedPayload
- * @typedef {import("../translations").LanguageIdEnginePayload} LanguageIdEnginePayload
  * @typedef {import("../translations").LanguageTranslationModelFiles} LanguageTranslationModelFiles
  * @typedef {import("../translations").TranslationsEnginePayload} TranslationsEnginePayload
  */
@@ -44,13 +42,10 @@ export class LanguageIdEngine {
   /**
    * Construct and initialize the language-id worker.
    *
-   * @param {Object} data
-   * @property {string} data.type - The message type, expects "initialize".
-   * @property {ArrayBuffer} data.wasmBuffer - The buffer containing the wasm binary.
-   * @property {ArrayBuffer} data.modelBuffer - The buffer containing the language-id model binary.
-   * @property {boolean} data.isLoggingEnabled
+   * @param {ArrayBuffer} wasmArrayBuffer
+   * @param {ArrayBuffer} languageIdModel
    */
-  constructor(data) {
+  constructor(wasmBuffer, modelBuffer) {
     this.#languageIdWorker = new Worker(
       "chrome://global/content/translations/language-id-engine-worker.js"
     );
@@ -67,7 +62,13 @@ export class LanguageIdEngine {
       this.#languageIdWorker.addEventListener("message", onMessage);
     });
 
-    this.#languageIdWorker.postMessage(data);
+    this.#languageIdWorker.postMessage({
+      type: "initialize",
+      wasmBuffer,
+      modelBuffer,
+      isLoggingEnabled:
+        Services.prefs.getCharPref("browser.translations.logLevel") === "All",
+    });
   }
 
   /**
@@ -662,33 +663,16 @@ export class TranslationsChild extends JSWindowActorChild {
   }
 
   /**
-   * Retrieve the payload for creating a LanguageIdEngine.
-   *
-   * @returns {Promise<LanguageIdEnginePayload | LanguageIdEngineMockedPayload>}
+   * Construct and initialize the LanguageId Engine.
    */
-  async #getLanguageIdEnginePayload() {
-    // If the TranslationsParent has a mocked payload defined for testing purposes,
-    // then we will return the mocked payload, otherwise we will attempt to retrieve
-    // the full payload from Remote Settings.
-    const mockedPayload = await this.sendQuery(
-      "Translations:GetLanguageIdEngineMockedPayload"
-    );
-    if (mockedPayload) {
-      const { languageLabel, confidence } = mockedPayload;
-      return {
-        languageLabel,
-        confidence,
-      };
-    }
-
-    const [wasmBuffer, modelBuffer] = await Promise.all([
+  async createLanguageIdEngine() {
+    const [wasmBuffer, languageIdModelArrayBuffer] = await Promise.all([
       this.#getLanguageIdWasmArrayBuffer(),
       this.#getLanguageIdModelArrayBuffer(),
     ]);
-    return {
-      modelBuffer,
-      wasmBuffer,
-    };
+    const engine = new LanguageIdEngine(wasmBuffer, languageIdModelArrayBuffer);
+    await engine.isReady;
+    return engine;
   }
 
   /**
@@ -707,31 +691,6 @@ export class TranslationsChild extends JSWindowActorChild {
       this.#getLanguageTranslationModelFiles(fromLanguage, toLanguage),
     ]);
     return { bergamotWasmArrayBuffer, languageModelFiles };
-  }
-
-  /**
-   * Construct and initialize the LanguageIdEngine.
-   *
-   * @returns {LanguageIdEngine}
-   */
-  async createLanguageIdEngine() {
-    const {
-      confidence,
-      languageLabel,
-      modelBuffer,
-      wasmBuffer,
-    } = await this.#getLanguageIdEnginePayload();
-    const engine = new LanguageIdEngine({
-      type: "initialize",
-      confidence,
-      languageLabel,
-      modelBuffer,
-      wasmBuffer,
-      isLoggingEnabled:
-        Services.prefs.getCharPref("browser.translations.logLevel") === "All",
-    });
-    await engine.isReady;
-    return engine;
   }
 
   /**
