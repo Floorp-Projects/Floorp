@@ -1,0 +1,12 @@
+LICENSE
+MANIFEST.in
+README.rst
+idna_ssl.py
+setup.cfg
+setup.py
+idna_ssl.egg-info/PKG-INFO
+idna_ssl.egg-info/SOURCES.txt
+idna_ssl.egg-info/dependency_links.txt
+idna_ssl.egg-info/not-zip-safe
+idna_ssl.egg-info/requires.txt
+idna_ssl.egg-info/top_level.txt

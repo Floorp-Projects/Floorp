@@ -79,7 +79,9 @@ vendored:third_party/python/fluent.syntax
 vendored:third_party/python/giturlparse
 vendored:third_party/python/gyp/pylib
 vendored:third_party/python/idna
+vendored:third_party/python/idna-ssl
 vendored:third_party/python/importlib_metadata
+vendored:third_party/python/iso8601
 vendored:third_party/python/Jinja2
 vendored:third_party/python/jinxed
 vendored:third_party/python/jsmin
