@@ -27,14 +27,6 @@ const { TranslationsParent } = ChromeUtils.importESModule(
  * @param {boolean} [options.disabled]
  * Disable the panel through a pref.
  *
- * @param {number} detectedLanguageConfidence
- * This is the value for the MockedLanguageIdEngine to give as a confidence score for
- * the mocked detected language.
- *
- * @param {string} detectedLanguageLabel
- * This is the two-letter language label for the MockedLanguageIdEngine to return as
- * the mocked detected language.
- *
  * @param {Array<{ fromLang: string, toLang: string}>} options.languagePairs
  * The translation languages pairs to mock for the test.
  *
@@ -45,8 +37,6 @@ async function openAboutTranslations({
   dataForContent,
   disabled,
   runInPage,
-  detectedLanguageConfidence,
-  detectedLanguageLabel,
   languagePairs,
   prefs,
 }) {
@@ -80,13 +70,7 @@ async function openAboutTranslations({
 
   // Before loading about:translations, handle any mocking of the actor.
   if (languagePairs) {
-    TranslationsParent.mockLanguagePairs(languagePairs);
-  }
-  if (detectedLanguageLabel && detectedLanguageConfidence) {
-    TranslationsParent.mockLanguageIdentification(
-      detectedLanguageLabel,
-      detectedLanguageConfidence
-    );
+    TranslationsParent.mock(languagePairs);
   }
 
   // Now load the about:translations page, since the actor could be mocked.
@@ -100,10 +84,7 @@ async function openAboutTranslations({
   );
 
   if (languagePairs) {
-    TranslationsParent.mockLanguagePairs(null);
-  }
-  if (detectedLanguageLabel && detectedLanguageConfidence) {
-    TranslationsParent.mockLanguageIdentification(null, null);
+    TranslationsParent.mock(null);
   }
   BrowserTestUtils.removeTab(tab);
   await SpecialPowers.popPrefEnv();
