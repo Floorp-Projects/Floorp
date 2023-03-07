@@ -130,12 +130,39 @@ Maybe<uint32_t> GraphemeClusterBreakIteratorUtf16::Next() {
   const uint32_t kFitzpatrickLowFirst = 0xDFFB;
   const uint32_t kFitzpatrickLowLast = 0xDFFF;
 
-  bool baseIsEmoji = (GetEmojiPresentation(ch) == EmojiDefault) ||
-                     (GetEmojiPresentation(ch) == TextDefault &&
-                      ((mPos < len && mText[mPos] == kVS16) ||
-                       (mPos + 1 < len && mText[mPos] == kFitzpatrickHigh &&
-                        mText[mPos + 1] >= kFitzpatrickLowFirst &&
-                        mText[mPos + 1] <= kFitzpatrickLowLast)));
+  // Checking the emoji-presentation property of the base character is a bit
+  // expensive, so we do it lazily.
+  enum class EmojiStatus : uint8_t {
+    No,
+    Yes,
+    Unknown,
+  } baseIsEmojiStatus = EmojiStatus::Unknown;
+
+  // Remember the base character and the position of the next, in case we need
+  // to evaluate its emoji status.
+  uint32_t baseCh = ch;
+  uint32_t afterBase = mPos;
+
+  auto isFitzpatrickModifierAt = [&](uint32_t aPos) -> bool {
+    return aPos + 1 < len && mText[aPos] == kFitzpatrickHigh &&
+           mText[aPos + 1] >= kFitzpatrickLowFirst &&
+           mText[aPos + 1] <= kFitzpatrickLowLast;
+  };
+
+  auto baseIsEmoji = [&]() -> bool {
+    if (baseIsEmojiStatus == EmojiStatus::Unknown) {
+      auto basePresentation = GetEmojiPresentation(baseCh);
+      baseIsEmojiStatus =
+          basePresentation == EmojiDefault ||
+                  (basePresentation == TextDefault &&
+                   ((afterBase < len && mText[afterBase] == kVS16) ||
+                    isFitzpatrickModifierAt(afterBase)))
+              ? EmojiStatus::Yes
+              : EmojiStatus::No;
+    }
+    return baseIsEmojiStatus == EmojiStatus::Yes;
+  };
+
   bool prevWasZwj = false;
 
   while (mPos < len) {
@@ -152,7 +179,7 @@ Maybe<uint32_t> GraphemeClusterBreakIteratorUtf16::Next() {
 
     bool extendCluster =
         IsClusterExtender(ch) ||
-        (baseIsEmoji && prevWasZwj &&
+        (prevWasZwj && baseIsEmoji() &&
          ((GetEmojiPresentation(ch) == EmojiDefault) ||
           (GetEmojiPresentation(ch) == TextDefault && mPos + chLen < len &&
            mText[mPos + chLen] == kVS16)));
