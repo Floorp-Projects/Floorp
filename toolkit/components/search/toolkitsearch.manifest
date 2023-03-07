@@ -1,2 +1,0 @@
-# 21600 == 6 hours
-category update-timer nsSearchService @mozilla.org/browser/search-service;1,getService,search-engine-update-timer,browser.search.update.interval,21600
