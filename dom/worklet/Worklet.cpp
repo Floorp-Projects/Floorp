@@ -392,9 +392,8 @@ bool ExecutionRunnable::ParseAndLinkModule(
 }
 
 void ExecutionRunnable::RunOnWorkletThread() {
-  WorkletThread* workletThread =
-      static_cast<WorkletThread*>(NS_GetCurrentThread());
-  workletThread->EnsureCycleCollectedJSContext(mParentRuntime);
+  // This can be called on a GraphRunner thread or a DOM Worklet thread.
+  WorkletThread::EnsureCycleCollectedJSContext(mParentRuntime);
 
   WorkletGlobalScope* globalScope = mWorkletImpl->GetGlobalScope();
   if (!globalScope) {

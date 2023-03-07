@@ -1892,8 +1892,9 @@ pref("browser.contentblocking.reportBreakage.url", "https://tracking-protection-
 // Enable Protections report's Lockwise card by default.
 pref("browser.contentblocking.report.lockwise.enabled", true);
 
-// Enable Protections report's Monitor card by default.
-pref("browser.contentblocking.report.monitor.enabled", true);
+// Disable rotections report's Monitor card by default. The new Monitor API does
+// not support this feature as of now. See Bug 1815751.
+pref("browser.contentblocking.report.monitor.enabled", false);
 
 // Disable Protections report's Proxy card by default.
 pref("browser.contentblocking.report.proxy.enabled", false);

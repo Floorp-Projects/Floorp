@@ -30,7 +30,7 @@ class NativeMenuGtk : public NativeMenu {
 
   // NativeMenu
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void ShowAsContextMenu(
-      nsPresContext*, const CSSIntPoint& aPosition) override;
+      nsIFrame* aClickedFrame, const CSSIntPoint& aPosition) override;
   bool Close() override;
   void ActivateItem(dom::Element* aItemElement, Modifiers aModifiers,
                     int16_t aButton, ErrorResult& aRv) override;

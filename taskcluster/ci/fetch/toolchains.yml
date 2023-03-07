@@ -439,15 +439,6 @@ winchecksec:
         repo: https://github.com/trailofbits/winchecksec/
         revision: 93ffe67dbfc757bf6f440d80b8acf88e652ed60a
 
-codeql-2.5.7:
-    description: CodeQL query tools
-    fetch:
-        type: static-url
-        url: https://github.com/github/codeql-cli-binaries/releases/download/v2.5.7/codeql-linux64.zip
-        sha256: b60a5f2929ac69ffdca85b666c50eadde60ad3387bf6953a7bfcd80b59ee4cff
-        size: 261487494
-        artifact-name: codeql.zip
-
 sonatype-nexus:
     description: Sonatype Nexus Maven repository service
     fetch:

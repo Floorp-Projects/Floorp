@@ -3381,6 +3381,9 @@ void QuotaManager::ShutdownInstance() {
     gInstance->Shutdown();
 
     gInstance = nullptr;
+  } else {
+    // If we were never initialized, just set the flag to avoid late creation.
+    gShutdown = true;
   }
 
   RefPtr<Runnable> runnable =
