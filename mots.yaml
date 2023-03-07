@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-02-07T17:52:24.212324'
+updated_at: '2023-03-07T11:35:04.628572'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -216,6 +216,10 @@ people:
     bmo_id: 430528
     name: Chris Peterson
     nick: cpeterson
+  - &daisuke
+    bmo_id: 439222
+    name: Daisuke Akatsuka
+    nick: daisuke
   - &daleharvey
     bmo_id: 389449
     name: Dale Harvey
@@ -2514,6 +2518,8 @@ modules:
       url: http://developer.mozilla.org/en/docs/Storage
       components:
         - Toolkit::Storage, Core::SQL
+      owners_emeritus:
+        - Shawn Wilsher
     owners:
       - *mak
     peers:
@@ -3122,12 +3128,20 @@ modules:
         includes:
           - browser/components/places/**/*
           - toolkit/components/places/**/*
-        meta: {}
+        meta:
+          owners_emeritus:
+            - Dietrich Ayala
+          peers_emeritus:
+            - Asaf Romano
+            - David Dahl
+            - Shawn Wilsher
         owners:
           - *mak
         peers:
-          - *standard8
           - *adw
+          - *daisuke
+          - *lina
+          - *standard8
         machine_name: bookmarks_history
 
       - name: Desktop Theme
@@ -3168,6 +3182,9 @@ modules:
           - toolkit/mozapps/downloads/**/*
           - uriloader/exthandler/**/*
         meta:
+          owners_emeritus:
+            - Paolo Amadini
+            - Shawn Wilsher
         owners:
           - *mak
         peers:
@@ -4033,5 +4050,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: eb1c7127cab45ded7b82c157fa2557b252fc7c0e
-  export: 281744e23b0aa4732edddeca7f4cf915269664b1
+  config: d99ec8c6919dcc6671032c97b2d17995f49a5e07
+  export: 87c76cacf75c72ac94930df445168d4b31d6a9f8
