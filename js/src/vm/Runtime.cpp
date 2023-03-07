@@ -335,6 +335,11 @@ void JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
       gc.nursery().sizeOfMallocedBuffers(mallocSizeOf);
   gc.storeBuffer().addSizeOfExcludingThis(mallocSizeOf, &rtSizes->gc);
 
+  rtSizes->gc.nurseryMallocedBlockCache +=
+      gc.nursery().sizeOfMallocedBlockCache(mallocSizeOf);
+  rtSizes->gc.nurseryTrailerBlockSets +=
+      gc.nursery().sizeOfTrailerBlockSets(mallocSizeOf);
+
   if (isMainRuntime()) {
     rtSizes->sharedImmutableStringsCache +=
         js::SharedImmutableStringsCache::getSingleton().sizeOfExcludingThis(

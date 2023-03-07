@@ -14,6 +14,7 @@
 
 #include "gc/GCParallelTask.h"
 #include "gc/Heap.h"
+#include "gc/MallocedBlockCache.h"
 #include "js/AllocPolicy.h"
 #include "js/Class.h"
 #include "js/GCAPI.h"
@@ -40,6 +41,7 @@
   _(Sweep, "sweep")                           \
   _(UpdateJitActivations, "updtIn")           \
   _(FreeMallocedBuffers, "frSlts")            \
+  _(FreeTrailerBlocks, "frTrBs")              \
   _(ClearStoreBuffer, "clrSB")                \
   _(ClearNursery, "clear")                    \
   _(PurgeStringToAtomCache, "pStoA")          \
@@ -282,6 +284,63 @@ class Nursery {
     return total;
   }
 
+  // Wasm "trailer" (C++-heap-allocated) blocks.
+  //
+  // All involved blocks are allocated/deallocated via this nursery's
+  // `mallocedBlockCache_`.  Hence we must store both the block address and
+  // its freelist ID, wrapped up in a PointerAndUint7.
+  //
+  // Trailer blocks registered here are added to `trailersAdded_`.  Those that
+  // are later deregistered as a result of `obj_moved` calls that indicate
+  // tenuring, should be added to `trailersRemoved_`.
+  //
+  // Unfortunately ::unregisterTrailer cannot be allowed to OOM.  To get
+  // around this we rely on the observation that all deregistered blocks
+  // should previously have been registered, so the deregistered set can never
+  // be larger than the registered set.  Hence ::registerTrailer effectively
+  // preallocates space in `trailersRemoved_` so as to ensure that, in the
+  // worst case, all registered blocks can be handed to ::unregisterTrailer
+  // without needing to resize `trailersRemoved_` in ::unregisterTrailer.
+  //
+  // The downside is that most of the space in `trailersRemoved_` is wasted in
+  // the case where there are few blocks deregistered.  This is unfortunate
+  // but it's hard to see how to avoid it.
+  //
+  // At the end of a minor collection, all blocks in the set `trailersAdded_ -
+  // trailersRemoved_[0 .. trailersRemovedUsed_ - 1]` are handed back to the
+  // `mallocedBlockCache_`.
+  [[nodiscard]] bool registerTrailer(PointerAndUint7 blockAndListID,
+                                     size_t nBytes) {
+    MOZ_ASSERT(trailersAdded_.length() == trailersRemoved_.length());
+    MOZ_ASSERT(nBytes > 0);
+    if (MOZ_UNLIKELY(!trailersAdded_.append(blockAndListID))) {
+      return false;
+    }
+    if (MOZ_UNLIKELY(!trailersRemoved_.append(nullptr))) {
+      return false;
+    }
+
+    // This is a clone of the logic in ::registerMallocedBuffer.  It may be
+    // that some other heuristic is better, once we know more about the
+    // typical behaviour of wasm-GC applications.
+    trailerBytes_ += nBytes;
+    if (MOZ_UNLIKELY(trailerBytes_ > capacity() * 8)) {
+      requestMinorGC(JS::GCReason::NURSERY_TRAILERS);
+    }
+    return true;
+  }
+
+  void unregisterTrailer(void* block) {
+    MOZ_ASSERT(trailersRemovedUsed_ < trailersRemoved_.length());
+    trailersRemoved_[trailersRemovedUsed_] = block;
+    trailersRemovedUsed_++;
+  }
+
+  size_t sizeOfTrailerBlockSets(mozilla::MallocSizeOf mallocSizeOf) const {
+    return trailersAdded_.sizeOfExcludingThis(mallocSizeOf) +
+           trailersRemoved_.sizeOfExcludingThis(mallocSizeOf);
+  }
+
   // The number of bytes from the start position to the end of the nursery.
   // pass maxChunkCount(), allocatedChunkCount() or chunkCountLimit()
   // to calculate the nursery size, current lazy-allocated size or nursery
@@ -379,6 +438,12 @@ class Nursery {
 
   // Round a size in bytes to the nearest valid nursery size.
   static size_t roundSize(size_t size);
+
+  // The malloc'd block cache.
+  gc::MallocedBlockCache& mallocedBlockCache() { return mallocedBlockCache_; }
+  size_t sizeOfMallocedBlockCache(mozilla::MallocSizeOf mallocSizeOf) const {
+    return mallocedBlockCache_.sizeOfExcludingThis(mallocSizeOf);
+  }
 
  private:
   gc::GCRuntime* const gc;
@@ -492,6 +557,15 @@ class Nursery {
   BufferSet mallocedBuffers;
   size_t mallocedBufferBytes = 0;
 
+  // Wasm "trailer" (C++-heap-allocated) blocks.  See comments above on
+  // ::registerTrailer and ::unregisterTrailer.
+  Vector<PointerAndUint7, 0, SystemAllocPolicy> trailersAdded_;
+  Vector<void*, 0, SystemAllocPolicy> trailersRemoved_;
+  size_t trailersRemovedUsed_ = 0;
+  size_t trailerBytes_ = 0;
+
+  void freeTrailerBlocks();
+
   // During a collection most hoisted slot and element buffers indicate their
   // new location with a forwarding pointer at the base. This does not work
   // for buffers whose length is less than pointer width, or when different
@@ -581,6 +655,15 @@ class Nursery {
 
   NurseryDecommitTask decommitTask;
 
+  // A cache of small C++-heap allocated blocks associated with this Nursery.
+  // This provided so as to provide cheap allocation/deallocation of
+  // out-of-line storage areas as used by WasmStructObject and
+  // WasmArrayObject, although the mechanism is general and not specific to
+  // these object types.  Regarding lifetimes, because the cache holds only
+  // blocks that are not currently in use, it can be flushed at any point with
+  // no correctness impact, only a performance impact.
+  gc::MallocedBlockCache mallocedBlockCache_;
+
 #ifdef JS_GC_ZEAL
   struct Canary;
   Canary* lastCanary_;
@@ -633,7 +716,7 @@ class Nursery {
     size_t tenuredBytes;
     size_t tenuredCells;
   };
-  CollectionResult doCollection(JS::GCReason reason);
+  CollectionResult doCollection(JS::GCOptions options, JS::GCReason reason);
   void traceRoots(gc::AutoGCSession& session, TenuringTracer& mover);
 
   size_t doPretenuring(JSRuntime* rt, JS::GCReason reason,

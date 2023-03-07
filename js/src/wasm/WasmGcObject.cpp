@@ -47,6 +47,116 @@ using mozilla::PointerRangeSize;
 using namespace js;
 using namespace wasm;
 
+// [SMDOC] Management of OOL storage areas for Wasm{Array,Struct}Object.
+//
+// WasmArrayObject always has its payload data stored in a block the C++-heap,
+// which is pointed to from the WasmArrayObject.  The same is true for
+// WasmStructObject in the case where the fields cannot fit in the object
+// itself.  These C++ blocks are in some places referred to as "trailer blocks".
+//
+// The presence of trailer blocks complicates the use of generational GC (that
+// is, Nursery allocation) of Wasm{Array,Struct}Object.  In particular:
+//
+// (1) For objects which do not get tenured at minor collection, there must be
+//     a way to free the associated trailer, but there is no way to visit
+//     non-tenured blocks during minor collection.
+//
+// (2) Even if (1) were solved, calling js_malloc/js_free for every object
+//     creation-death cycle is expensive, possibly around 400 machine
+//     instructions, and we expressly want to avoid that in a generational GC
+//     scenario.
+//
+// The following scheme is therefore employed.
+//
+// (a) gc::Nursery maintains a pool of available C++-heap-allocated blocks --
+//     a js::MallocedBlockCache -- and the intention is that trailers are
+//     allocated from this pool and freed back into it whenever possible.
+//
+// (b) WasmArrayObject::createArray and WasmStructObject::createStruct always
+//     request trailer allocation from the nursery's cache (a).  If the cache
+//     cannot honour the request directly it will allocate directly from
+//     js_malloc; we hope this happens only infrequently.
+//
+// (c) The allocated block is returned as a js::PointerAndUint7, a pair that
+//     holds the trailer block pointer and an auxiliary tag that the
+//     js::MallocedBlockCache needs to see when the block is freed.
+//
+//     The raw trailer block pointer (a `void*`) is stored in the
+//     Wasm{Array,Struct}Object OOL data field.  These objects are not aware
+//     of and do not interact with js::PointerAndUint7, and nor does any
+//     JIT-generated code.
+//
+// (d) Still in WasmArrayObject::createArray and
+//     WasmStructObject::createStruct, if the object was allocated in the
+//     nursery, then the resulting js::PointerAndUint7 is "registered" with
+//     the nursery by handing it to Nursery::registerTrailer.
+//
+// (e) When a minor collection happens (Nursery::doCollection), we are
+//     notified of objects that are moved by calls to the ::obj_moved methods
+//     in this file.  For those objects that have been tenured, the raw
+//     trailer pointer is "deregistered" with the nursery by handing it to
+//     Nursery::deregisterTrailer.
+//
+// (f) Still during minor collection: The nursery now knows both the set of
+//     trailer blocks added, and those removed because the corresponding
+//     object has been tenured.  The difference between these two sets (that
+//     is, `added - removed`) is the set of trailer blocks corresponding to
+//     blocks that didn't get tenured.  That set is computed and freed (back
+//     to the nursery's js::MallocedBlockCache) by
+//     :Nursery::freeTrailerBlocks.
+//
+// (g) At the end of minor collection, the added and removed sets are made
+//     empty, and the cycle begins again.
+//
+// (h) Also at the end of minor collection, a call to
+//     `mallocedBlockCache_.preen` hands a few blocks in the cache back to
+//     js_free.  This mechanism exists so as to ensure that unused blocks do
+//     not remain in the cache indefinitely.
+//
+// (i) For objects that got tenured, we are eventually notified of their death
+//     by a call to the ::obj_finalize methods below.  At that point we hand
+//     their block pointers to js_free.
+//
+// (j) When the nursery is eventually destroyed, all blocks in its block cache
+//     are handed to js_free.  Hence, at process exit, provided all nurseries
+//     are first collected and then their destructors run, no C++ heap blocks
+//     are leaked.
+//
+// As a result of this scheme, trailer blocks associated with what we hope is
+// the frequent case -- objects that are allocated but never make it out of
+// the nursery -- are cycled through the nursery's block cache.
+//
+// Trailers associated with tenured blocks cannot participate though; they are
+// always returned to js_free.  It would be possible to enable them to
+// participate by changing their owning object's OOL data pointer to be a
+// js::PointerAndUint7 rather than a raw `void*`, so that then the blocks
+// could be released to the cache in the ::obj_finalize methods.  This would
+// however require changes in the generated code for array element and OOL
+// struct element accesses.
+//
+// Here's a short summary of the trailer block life cycle:
+//
+// * allocated:
+//
+//   - in WasmArrayObject::createArray / WasmStructObject::createStruct
+//
+//   - by calling the nursery's MallocBlockCache alloc method
+//
+// * deallocated:
+//
+//   - for non-tenured objects, in the collector itself,
+//     in Nursery::doCollection calling Nursery::freeTrailerBlocks,
+//     releasing to the nursery's block cache
+//
+//   - for tenured objects, in the ::obj_finalize methods, releasing directly
+//     to js_free
+//
+// If this seems confusing ("why is it ok to allocate from the cache but
+// release to js_free?"), remember that the cache holds blocks previously
+// obtained from js_malloc but which are *not* currently in use.  Hence it is
+// fine to give them back to js_free; that just makes the cache a bit emptier
+// but has no effect on correctness.
+
 //=========================================================================
 // WasmGcObject
 
@@ -411,10 +521,11 @@ WasmArrayObject* WasmArrayObject::createArray(
   // Allocate the outline data before allocating the object so that we can
   // infallibly initialize the pointer on the array object after it is
   // allocated.
-  uint8_t* outlineData = nullptr;
+  Nursery& nursery = cx->nursery();
+  PointerAndUint7 outlineData(nullptr, 0);
   if (outlineBytes.value() > 0) {
-    outlineData = (uint8_t*)js_malloc(outlineBytes.value());
-    if (!outlineData) {
+    outlineData = nursery.mallocedBlockCache().alloc(outlineBytes.value());
+    if (!outlineData.pointer()) {
       ReportOutOfMemory(cx);
       return nullptr;
     }
@@ -428,25 +539,24 @@ WasmArrayObject* WasmArrayObject::createArray(
       (WasmArrayObject*)WasmGcObject::create(cx, typeDefData, initialHeap);
   if (!arrayObj) {
     ReportOutOfMemory(cx);
-    if (outlineData) {
-      js_free(outlineData);
+    if (outlineData.pointer()) {
+      nursery.mallocedBlockCache().free(outlineData);
     }
     return nullptr;
   }
 
   arrayObj->numElements_ = numElements;
-  arrayObj->data_ = outlineData;
-  if (arrayObj->data_) {
+  arrayObj->data_ = (uint8_t*)outlineData.pointer();
+  if (outlineData.pointer()) {
     if constexpr (ZeroFields) {
-      memset(arrayObj->data_, 0, outlineBytes.value());
+      memset(outlineData.pointer(), 0, outlineBytes.value());
     }
     if (js::gc::IsInsideNursery(arrayObj)) {
       // We need to register the OOL area with the nursery, so it will be
       // freed after GCing of the nursery if `arrayObj_` doesn't make it into
       // the tenured heap.
-      if (!cx->nursery().registerMallocedBuffer(arrayObj->data_,
-                                                outlineBytes.value())) {
-        js_free(arrayObj->data_);
+      if (!nursery.registerTrailer(outlineData, outlineBytes.value())) {
+        nursery.mallocedBlockCache().free(outlineData);
         return nullptr;
       }
     }
@@ -506,7 +616,7 @@ size_t WasmArrayObject::obj_moved(JSObject* obj, JSObject* old) {
     WasmArrayObject& arrayObj = obj->as<WasmArrayObject>();
     if (arrayObj.data_) {
       Nursery& nursery = obj->runtimeFromMainThread()->gc.nursery();
-      nursery.removeMallocedBufferDuringMinorGC(arrayObj.data_);
+      nursery.unregisterTrailer(arrayObj.data_);
     }
   }
   return 0;
@@ -603,10 +713,11 @@ WasmStructObject* WasmStructObject::createStruct(
 
   // Allocate the outline data, if any, before allocating the object so that
   // we can infallibly initialize the outline data of structs that require one.
-  uint8_t* outlineData = nullptr;
+  Nursery& nursery = cx->nursery();
+  PointerAndUint7 outlineData(nullptr, 0);
   if (outlineBytes > 0) {
-    outlineData = (uint8_t*)js_malloc(outlineBytes);
-    if (!outlineData) {
+    outlineData = nursery.mallocedBlockCache().alloc(outlineBytes);
+    if (!outlineData.pointer()) {
       ReportOutOfMemory(cx);
       return nullptr;
     }
@@ -618,27 +729,26 @@ WasmStructObject* WasmStructObject::createStruct(
       (WasmStructObject*)WasmGcObject::create(cx, typeDefData, initialHeap);
   if (!structObj) {
     ReportOutOfMemory(cx);
-    if (outlineData) {
-      js_free(outlineData);
+    if (outlineData.pointer()) {
+      nursery.mallocedBlockCache().free(outlineData);
     }
     return nullptr;
   }
 
   // Initialize the outline data field
-  structObj->outlineData_ = outlineData;
+  structObj->outlineData_ = (uint8_t*)outlineData.pointer();
 
   if constexpr (ZeroFields) {
     memset(&(structObj->inlineData_[0]), 0, inlineBytes);
   }
   if (outlineBytes > 0) {
     if constexpr (ZeroFields) {
-      memset(structObj->outlineData_, 0, outlineBytes);
+      memset(outlineData.pointer(), 0, outlineBytes);
     }
-    // See corresponding comment in WasmArrayObject::createArray.
     if (js::gc::IsInsideNursery(structObj)) {
-      if (!cx->nursery().registerMallocedBuffer(structObj->outlineData_,
-                                                outlineBytes)) {
-        js_free(structObj->outlineData_);
+      // See corresponding comment in WasmArrayObject::createArray.
+      if (!nursery.registerTrailer(outlineData, outlineBytes)) {
+        nursery.mallocedBlockCache().free(outlineData);
         return nullptr;
       }
     }
@@ -692,7 +802,7 @@ size_t WasmStructObject::obj_moved(JSObject* obj, JSObject* old) {
     // structs with OOL data.  Hence:
     MOZ_ASSERT(structObj.outlineData_);
     Nursery& nursery = obj->runtimeFromMainThread()->gc.nursery();
-    nursery.removeMallocedBufferDuringMinorGC(structObj.outlineData_);
+    nursery.unregisterTrailer(structObj.outlineData_);
   }
   return 0;
 }
