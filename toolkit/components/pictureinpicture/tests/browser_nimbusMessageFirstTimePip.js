@@ -11,58 +11,6 @@ const PIP_EXPERIMENT_MESSAGE = "Hello world message";
 const PIP_EXPERIMENT_TITLE = "Hello world title";
 
 /**
- * This function will hover over the middle of the video and then
- * hover over the toggle to reveal the first time PiP message
- * @param browser The current browser
- * @param videoID The video element id
- */
-async function hoverToggle(browser, videoID) {
-  await prepareForToggleClick(browser, videoID);
-
-  // Hover the mouse over the video to reveal the toggle.
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    `#${videoID}`,
-    {
-      type: "mousemove",
-    },
-    browser
-  );
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    `#${videoID}`,
-    {
-      type: "mouseover",
-    },
-    browser
-  );
-
-  info("Checking toggle policy");
-  await assertTogglePolicy(browser, videoID, null);
-
-  let toggleClientRect = await getToggleClientRect(browser, videoID);
-
-  info("Hovering the toggle rect now.");
-  let toggleCenterX = toggleClientRect.left + toggleClientRect.width / 2;
-  let toggleCenterY = toggleClientRect.top + toggleClientRect.height / 2;
-
-  await BrowserTestUtils.synthesizeMouseAtPoint(
-    toggleCenterX,
-    toggleCenterY,
-    {
-      type: "mousemove",
-    },
-    browser
-  );
-  await BrowserTestUtils.synthesizeMouseAtPoint(
-    toggleCenterX,
-    toggleCenterY,
-    {
-      type: "mouseover",
-    },
-    browser
-  );
-}
-
-/**
  * This tests that the original DTD string is shown for the PiP toggle
  */
 add_task(async function test_experiment_control() {

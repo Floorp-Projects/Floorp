@@ -12,7 +12,7 @@ const FIRST_TIME_PIP_TOGGLE_STYLES = {
   stages: {
     hoverVideo: {
       opacities: {
-        ".pip-wrapper": 0.8,
+        ".pip-wrapper": DEFAULT_TOGGLE_OPACITY,
       },
       hidden: [],
     },

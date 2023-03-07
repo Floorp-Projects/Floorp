@@ -13,7 +13,7 @@ const TOGGLE_STYLES_LEFT_EXPLAINER = {
     hoverVideo: {
       opacities: {
         ".pip-small": 0.0,
-        ".pip-wrapper": 0.8,
+        ".pip-wrapper": DEFAULT_TOGGLE_OPACITY,
         ".pip-expanded": 1.0,
       },
       hidden: [".pip-icon-label > .pip-icon"],
@@ -36,7 +36,7 @@ const TOGGLE_STYLES_RIGHT_EXPLAINER = {
     hoverVideo: {
       opacities: {
         ".pip-small": 0.0,
-        ".pip-wrapper": 0.8,
+        ".pip-wrapper": DEFAULT_TOGGLE_OPACITY,
         ".pip-expanded": 1.0,
       },
       hidden: [".pip-wrapper > .pip-icon"],
@@ -58,7 +58,7 @@ const TOGGLE_STYLES_LEFT_SMALL = {
   stages: {
     hoverVideo: {
       opacities: {
-        ".pip-wrapper": 0.8,
+        ".pip-wrapper": DEFAULT_TOGGLE_OPACITY,
       },
       hidden: [".pip-expanded"],
     },
@@ -77,7 +77,7 @@ const TOGGLE_STYLES_RIGHT_SMALL = {
   stages: {
     hoverVideo: {
       opacities: {
-        ".pip-wrapper": 0.8,
+        ".pip-wrapper": DEFAULT_TOGGLE_OPACITY,
       },
       hidden: [".pip-expanded"],
     },

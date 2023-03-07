@@ -89,7 +89,7 @@ add_task(async () => {
     stages: {
       hoverVideo: {
         opacities: {
-          ".pip-wrapper": 0.8,
+          ".pip-wrapper": DEFAULT_TOGGLE_OPACITY,
         },
         hidden: [],
       },
@@ -109,7 +109,7 @@ add_task(async () => {
       hoverVideo: {
         opacities: {
           ".pip-small": 0.0,
-          ".pip-wrapper": 0.8,
+          ".pip-wrapper": DEFAULT_TOGGLE_OPACITY,
           ".pip-expanded": 0.0,
         },
         hidden: [".pip-explainer", ".pip-icon-label > .pip-icon"],
