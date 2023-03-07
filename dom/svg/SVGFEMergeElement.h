@@ -16,7 +16,7 @@ namespace mozilla::dom {
 
 using SVGFEMergeElementBase = SVGFE;
 
-class SVGFEMergeElement : public SVGFEMergeElementBase {
+class SVGFEMergeElement final : public SVGFEMergeElementBase {
   friend nsresult(::NS_NewSVGFEMergeElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));

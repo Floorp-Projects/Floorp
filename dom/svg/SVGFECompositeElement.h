@@ -18,7 +18,7 @@ namespace mozilla::dom {
 
 using SVGFECompositeElementBase = SVGFE;
 
-class SVGFECompositeElement : public SVGFECompositeElementBase {
+class SVGFECompositeElement final : public SVGFECompositeElementBase {
   friend nsresult(::NS_NewSVGFECompositeElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));

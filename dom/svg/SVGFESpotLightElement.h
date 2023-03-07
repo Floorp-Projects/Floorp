@@ -17,7 +17,7 @@ namespace mozilla::dom {
 
 using SVGFESpotLightElementBase = SVGFELightElement;
 
-class SVGFESpotLightElement : public SVGFESpotLightElementBase {
+class SVGFESpotLightElement final : public SVGFESpotLightElementBase {
   friend nsresult(::NS_NewSVGFESpotLightElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));

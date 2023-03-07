@@ -25,7 +25,7 @@ class DOMSVGAnimatedBoolean;
 
 using SVGFEConvolveMatrixElementBase = SVGFE;
 
-class SVGFEConvolveMatrixElement : public SVGFEConvolveMatrixElementBase {
+class SVGFEConvolveMatrixElement final : public SVGFEConvolveMatrixElementBase {
   friend nsresult(::NS_NewSVGFEConvolveMatrixElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));

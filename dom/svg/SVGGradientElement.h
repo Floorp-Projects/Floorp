@@ -80,7 +80,7 @@ class SVGGradientElement : public SVGGradientElementBase {
 
 using SVGLinearGradientElementBase = SVGGradientElement;
 
-class SVGLinearGradientElement : public SVGLinearGradientElementBase {
+class SVGLinearGradientElement final : public SVGLinearGradientElementBase {
   friend class mozilla::SVGLinearGradientFrame;
   friend nsresult(::NS_NewSVGLinearGradientElement(
       nsIContent** aResult,
@@ -113,7 +113,7 @@ class SVGLinearGradientElement : public SVGLinearGradientElementBase {
 
 using SVGRadialGradientElementBase = SVGGradientElement;
 
-class SVGRadialGradientElement : public SVGRadialGradientElementBase {
+class SVGRadialGradientElement final : public SVGRadialGradientElementBase {
   friend class mozilla::SVGRadialGradientFrame;
   friend nsresult(::NS_NewSVGRadialGradientElement(
       nsIContent** aResult,

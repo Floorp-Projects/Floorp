@@ -16,7 +16,7 @@ namespace mozilla::dom {
 
 using SVGFETileElementBase = SVGFE;
 
-class SVGFETileElement : public SVGFETileElementBase {
+class SVGFETileElement final : public SVGFETileElementBase {
   friend nsresult(::NS_NewSVGFETileElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));

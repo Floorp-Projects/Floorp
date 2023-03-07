@@ -18,7 +18,7 @@ namespace mozilla::dom {
 
 using SVGFEOffsetElementBase = SVGFE;
 
-class SVGFEOffsetElement : public SVGFEOffsetElementBase {
+class SVGFEOffsetElement final : public SVGFEOffsetElementBase {
   friend nsresult(::NS_NewSVGFEOffsetElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));

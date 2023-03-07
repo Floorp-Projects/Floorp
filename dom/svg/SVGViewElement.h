@@ -25,7 +25,7 @@ class SVGViewportElement;
 
 using SVGViewElementBase = SVGElement;
 
-class SVGViewElement : public SVGViewElementBase {
+class SVGViewElement final : public SVGViewElementBase {
  protected:
   friend class mozilla::SVGFragmentIdentifier;
   friend class mozilla::SVGOuterSVGFrame;

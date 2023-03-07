@@ -16,7 +16,8 @@ namespace mozilla::dom {
 
 using SVGFEComponentTransferElementBase = SVGFE;
 
-class SVGFEComponentTransferElement : public SVGFEComponentTransferElementBase {
+class SVGFEComponentTransferElement final
+    : public SVGFEComponentTransferElementBase {
   friend nsresult(::NS_NewSVGFEComponentTransferElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));

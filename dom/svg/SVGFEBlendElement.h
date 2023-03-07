@@ -16,7 +16,7 @@ namespace mozilla::dom {
 
 using SVGFEBlendElementBase = SVGFE;
 
-class SVGFEBlendElement : public SVGFEBlendElementBase {
+class SVGFEBlendElement final : public SVGFEBlendElementBase {
   friend nsresult(::NS_NewSVGFEBlendElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));

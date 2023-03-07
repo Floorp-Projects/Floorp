@@ -17,7 +17,7 @@ namespace mozilla::dom {
 
 using SVGFEPointLightElementBase = SVGFELightElement;
 
-class SVGFEPointLightElement : public SVGFEPointLightElementBase {
+class SVGFEPointLightElement final : public SVGFEPointLightElementBase {
   friend nsresult(::NS_NewSVGFEPointLightElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));

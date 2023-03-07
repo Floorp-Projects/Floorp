@@ -19,7 +19,7 @@ namespace mozilla::dom {
 
 using SVGFEDropShadowElementBase = SVGFE;
 
-class SVGFEDropShadowElement : public SVGFEDropShadowElementBase {
+class SVGFEDropShadowElement final : public SVGFEDropShadowElementBase {
   friend nsresult(::NS_NewSVGFEDropShadowElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
