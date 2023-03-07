@@ -1,0 +1,36 @@
+/*-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+  
+  .browserStack > * {
+    border: 1px solid var(--chrome-content-separator-color);
+    border-radius: 15px;
+  }
+  
+  .browserContainer {
+    border: solid 5px var(--toolbar-bgcolor);
+    border-top: none;
+  }
+  
+  :root[lwt-default-theme-in-dark-mode] #tabbrowser-tabpanels[flex] {
+    background: var(--toolbar-bgcolor) !important;
+    background-color: var(--toolbar-bgcolor) !important;
+  }
+  
+  #tabbrowser-tabbox {
+    background: var(--toolbar-bgcolor) !important;
+    background-color: var(--toolbar-bgcolor) !important;
+  }
+  
+  #navigator-toolbox {
+    border-bottom: none !important;
+  }
+  
+  #sidebar-select-box {
+    border-left: none !important;
+    border-right: none !important;
+  }
+  
+  #statusBar {
+    border-top: none !important;
+  }

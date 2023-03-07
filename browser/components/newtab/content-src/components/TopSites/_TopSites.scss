@@ -13,12 +13,17 @@ $letter-fallback-color: $white;
 
 .top-sites-list {
   list-style: none;
-  margin: 0 (-$half-base-gutter);
+  margin: 0 -40px!important;
   padding: 0;
+  justify-content: center;
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 
   &:not(.dnd-active) {
     .top-site-outer:is(.active, :focus, :hover) {
-      background: var(--newtab-element-hover-color);
+      background-color: color-mix(in srgb, var(--newtab-element-hover-color) 80%, transparent);
     }
   }
 
@@ -100,6 +105,11 @@ $letter-fallback-color: $white;
 
   display: inline-block;
 
+  background-color: color-mix(in srgb, var(--newtab-background-color) 50%, transparent);
+  border: 1px solid rgba(170, 170, 170, 0.6);
+  backdrop-filter: blur(12px);
+  z-index: 1;
+
   // container for context menu
   .top-site-inner {
     position: relative;
@@ -115,6 +125,10 @@ $letter-fallback-color: $white;
     .context-menu-button {
       opacity: 1;
     }
+  }
+
+  &:is(.active) {
+    z-index: 2;
   }
 
   .context-menu-button {

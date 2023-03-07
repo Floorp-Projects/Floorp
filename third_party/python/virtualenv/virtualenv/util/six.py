@@ -1,6 +1,6 @@
 """Backward compatibility layer with older version of six.
 
-This is used to avoid virtualenv requring a version of six newer than what
+This is used to avoid virtualenv requiring a version of six newer than what
 the system may have.
 """
 from __future__ import absolute_import

@@ -305,10 +305,10 @@ Section "-InstallStartCleanup"
   ${EndIf}
 
   ; setup the application model id registration value
-  ${InitHashAppModelId} "$INSTDIR" "Software\Mozilla\${AppName}\TaskBarIDs"
+  ${InitHashAppModelId} "$INSTDIR" "Software\Ablaze\${AppName}\TaskBarIDs"
 
   ; Remove the updates directory
-  ${CleanUpdateDirectories} "Mozilla\Firefox" "Mozilla\updates"
+  ${CleanUpdateDirectories} "Ablaze\Floorp" "Ablaze\updates"
 
   ${RemoveDeprecatedFiles}
   ${RemovePrecompleteEntries} "false"
@@ -316,6 +316,19 @@ Section "-InstallStartCleanup"
   ${If} ${FileExists} "$INSTDIR\defaults\pref\channel-prefs.js"
     Delete "$INSTDIR\defaults\pref\channel-prefs.js"
   ${EndIf}
+
+  ${If} ${FileExists} "$INSTDIR\distribution\policies.json"
+    Delete "$INSTDIR\distribution\policies.json"
+  ${EndIf}
+
+  ${If} ${FileExists} "$INSTDIR\autoconfig.js"
+    Delete "$INSTDIR\autoconfig.js"
+  ${EndIf}
+
+  ${If} ${FileExists} "$INSTDIR\distribution"
+    RmDir "$INSTDIR\distribution"
+  ${EndIf}
+
   ${If} ${FileExists} "$INSTDIR\defaults\pref"
     RmDir "$INSTDIR\defaults\pref"
   ${EndIf}
@@ -412,25 +425,25 @@ Section "-Application" APP_IDX
 
   ${LogHeader} "Adding Registry Entries"
   SetShellVarContext current  ; Set SHCTX to HKCU
-  ${RegCleanMain} "Software\Mozilla"
+  ${RegCleanMain} "Software\Ablaze"
   ${RegCleanUninstall}
   ${UpdateProtocolHandlers}
 
   ClearErrors
-  WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" "Write Test"
+  WriteRegStr HKLM "Software\Ablaze" "${BrandShortName}InstallerTest" "Write Test"
   ${If} ${Errors}
     StrCpy $TmpVal "HKCU" ; used primarily for logging
   ${Else}
     SetShellVarContext all  ; Set SHCTX to HKLM
-    DeleteRegValue HKLM "Software\Mozilla" "${BrandShortName}InstallerTest"
+    DeleteRegValue HKLM "Software\Ablaze" "${BrandShortName}InstallerTest"
     StrCpy $TmpVal "HKLM" ; used primarily for logging
-    ${RegCleanMain} "Software\Mozilla"
+    ${RegCleanMain} "Software\Ablaze"
     ${RegCleanUninstall}
     ${UpdateProtocolHandlers}
 
-    ReadRegStr $0 HKLM "Software\mozilla.org\Mozilla" "CurrentVersion"
+    ReadRegStr $0 HKLM "Software\Ablaze\Floorp" "CurrentVersion"
     ${If} "$0" != "${GREVersion}"
-      WriteRegStr HKLM "Software\mozilla.org\Mozilla" "CurrentVersion" "${GREVersion}"
+      WriteRegStr HKLM "Software\Ablaze\Floorp" "CurrentVersion" "${GREVersion}"
     ${EndIf}
   ${EndIf}
 
@@ -453,19 +466,19 @@ Section "-Application" APP_IDX
   ; it doesn't cause problems always add them.
   ${SetUninstallKeys}
 
-  ; On install always add the FirefoxHTML-, FirefoxPDF-, and FirefoxURL- keys.
-  ; An empty string is used for the 5th param because FirefoxHTML- is not a
+  ; On install always add the FloorpHTML-, FloorpPDF-, and FloorpURL- keys.
+  ; An empty string is used for the 5th param because FloorpHTML- is not a
   ; protocol handler.
   ${GetLongPath} "$INSTDIR\${FileMainEXE}" $8
   StrCpy $2 "$\"$8$\" -osint -url $\"%1$\""
 
-  ; In Win8, the delegate execute handler picks up the value in FirefoxURL- and
-  ; FirefoxHTML- to launch the desktop browser when it needs to.
-  ${AddDisabledDDEHandlerValues} "FirefoxHTML-$AppUserModelID" "$2" "$8,${IDI_DOCUMENT_ZERO_BASED}" \
+  ; In Win8, the delegate execute handler picks up the value in FloorpURL- and
+  ; FloorpHTML- to launch the desktop browser when it needs to.
+  ${AddDisabledDDEHandlerValues} "FloorpHTML-$AppUserModelID" "$2" "$8,${IDI_DOCUMENT_ZERO_BASED}" \
                                  "${AppRegName} HTML Document" ""
-  ${AddDisabledDDEHandlerValues} "FirefoxPDF-$AppUserModelID" "$2" "$8,${IDI_DOCUMENT_PDF_ZERO_BASED}" \
+  ${AddDisabledDDEHandlerValues} "FloorpPDF-$AppUserModelID" "$2" "$8,${IDI_DOCUMENT_PDF_ZERO_BASED}" \
                                  "${AppRegName} PDF Document" ""
-  ${AddDisabledDDEHandlerValues} "FirefoxURL-$AppUserModelID" "$2" "$8,${IDI_DOCUMENT_ZERO_BASED}" \
+  ${AddDisabledDDEHandlerValues} "FloorpURL-$AppUserModelID" "$2" "$8,${IDI_DOCUMENT_ZERO_BASED}" \
                                  "${AppRegName} URL" "true"
 
   ; For pre win8, the following keys should only be set if we can write to HKLM.
@@ -534,6 +547,10 @@ Section "-Application" APP_IDX
   ; majority of cases.
   WriteRegDWORD HKCU ${MOZ_LAUNCHER_SUBKEY} "$INSTDIR\${FileMainEXE}|Telemetry" 1
 !endif
+
+  ${If} ${AtLeastWin10}
+    ${WriteToastNotificationRegistration} $TmpVal
+  ${EndIf}
 
   ; Create shortcuts
   ${LogHeader} "Adding Shortcuts"
@@ -741,7 +758,7 @@ Section "-Application" APP_IDX
   ${EndIf}
   ; Remember whether we were told to skip registering the agent, so that updates
   ; won't try to create a registration when they don't find an existing one.
-  WriteRegDWORD HKCU "Software\Mozilla\${AppName}\Installer\$AppUserModelID" \
+  WriteRegDWORD HKCU "Software\Ablaze\${AppName}\Installer\$AppUserModelID" \
                      "DidRegisterDefaultBrowserAgent" $RegisterDefaultAgent
 !endif
 SectionEnd
@@ -794,7 +811,7 @@ Section "-InstallEndCleanup"
       ; If we have something other than empty string now, write the value.
       ${If} "$0" != ""
         ClearErrors
-        WriteRegStr HKCU "Software\Mozilla\Firefox" "OldDefaultBrowserCommand" "$0"
+        WriteRegStr HKCU "Software\Ablaze\Floorp" "OldDefaultBrowserCommand" "$0"
       ${EndIf}
 
       ${LogHeader} "Setting as the default browser"
@@ -811,7 +828,7 @@ Section "-InstallEndCleanup"
       StrCpy $SetAsDefault false
       ${LogHeader} "Writing default-browser opt-out"
       ClearErrors
-      WriteRegStr HKCU "Software\Mozilla\Firefox" "DefaultBrowserOptOut" "True"
+      WriteRegStr HKCU "Software\Ablaze\Floorp" "DefaultBrowserOptOut" "True"
       ${If} ${Errors}
         ${LogMsg} "Error writing default-browser opt-out"
       ${EndIf}
@@ -1101,12 +1118,12 @@ Function SendPing
   ${EndIf}
 
   ClearErrors
-  WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" \
+  WriteRegStr HKLM "Software\Ablaze" "${BrandShortName}InstallerTest" \
                    "Write Test"
   ${If} ${Errors}
     nsJSON::Set /tree ping "Data" "admin_user" /value false
   ${Else}
-    DeleteRegValue HKLM "Software\Mozilla" "${BrandShortName}InstallerTest"
+    DeleteRegValue HKLM "Software\Ablaze" "${BrandShortName}InstallerTest"
     nsJSON::Set /tree ping "Data" "admin_user" /value true
   ${EndIf}
 
@@ -1131,7 +1148,7 @@ Function SendPing
     ${If} $1 == $INSTDIR
       nsJSON::Set /tree ping "Data" "new_default" /value true
     ${Else}
-      StrCpy $0 "$0" "" -11 # 11 == length of "firefox.exe"
+      StrCpy $0 "$0" "" -10 # 10 == length of "floorp.exe"
       ${If} "$0" == "${FileMainEXE}"
         nsJSON::Set /tree ping "Data" "old_default" /value true
       ${EndIf}
@@ -1239,12 +1256,12 @@ Function WriteInstallationTelemetryData
   ; Check for write access to HKLM, if successful then report this user
   ; as an (elevated) admin.
   ClearErrors
-  WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" \
+  WriteRegStr HKLM "Software\Ablaze" "${BrandShortName}InstallerTest" \
                    "Write Test"
   ${If} ${Errors}
     StrCpy $1 "false"
   ${Else}
-    DeleteRegValue HKLM "Software\Mozilla" "${BrandShortName}InstallerTest"
+    DeleteRegValue HKLM "Software\Ablaze" "${BrandShortName}InstallerTest"
     StrCpy $1 "true"
   ${EndIf}
   ${JSONSet} "admin_user" /value $1
@@ -1259,7 +1276,7 @@ Function WriteInstallationTelemetryData
   ; Check for top-level profile directory
   ; Note: This is the same check used to set $ExistingProfile in stub.nsi
   ${GetLocalAppDataFolder} $0
-  ${If} ${FileExists} "$0\Mozilla\Firefox"
+  ${If} ${FileExists} "$0\Ablaze\Floorp"
     StrCpy $1 "true"
   ${Else}
     StrCpy $1 "false"
@@ -1477,13 +1494,13 @@ Function preComponents
 
   ; Only show the maintenance service page if we have write access to HKLM
   ClearErrors
-  WriteRegStr HKLM "Software\Mozilla" \
+  WriteRegStr HKLM "Software\Ablaze" \
               "${BrandShortName}InstallerTest" "Write Test"
   ${If} ${Errors}
     ClearErrors
     Abort
   ${Else}
-    DeleteRegValue HKLM "Software\Mozilla" "${BrandShortName}InstallerTest"
+    DeleteRegValue HKLM "Software\Ablaze" "${BrandShortName}InstallerTest"
   ${EndIf}
 
   StrCpy $PageName "Components"
@@ -1662,9 +1679,9 @@ Function preSummary
 
   ; Check if it is possible to write to HKLM
   ClearErrors
-  WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" "Write Test"
+  WriteRegStr HKLM "Software\Ablaze" "${BrandShortName}InstallerTest" "Write Test"
   ${Unless} ${Errors}
-    DeleteRegValue HKLM "Software\Mozilla" "${BrandShortName}InstallerTest"
+    DeleteRegValue HKLM "Software\Ablaze" "${BrandShortName}InstallerTest"
     ; Check if Firefox is the http handler for this user.
     SetShellVarContext current ; Set SHCTX to the current user
     ${IsHandlerForInstallDir} "http" $R9
@@ -1837,10 +1854,10 @@ Function .onInit
 !endif
 
   SetShellVarContext all
-  ${GetFirstInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $0
+  ${GetFirstInstallPath} "Software\Ablaze\${BrandFullNameInternal}" $0
   ${If} "$0" == "false"
     SetShellVarContext current
-    ${GetFirstInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $0
+    ${GetFirstInstallPath} "Software\Ablaze\${BrandFullNameInternal}" $0
     ${If} "$0" == "false"
       StrCpy $HadOldInstall false
     ${Else}

@@ -120,6 +120,10 @@ add_task(async function startup() {
       min: 0,
       max: 50,
     },
+    "media.gmp-provider.enabled": {
+      min: 0,
+      max: 45,
+    },
   };
 
   let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService()

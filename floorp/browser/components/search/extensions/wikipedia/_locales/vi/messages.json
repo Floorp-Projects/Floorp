@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "Wikipedia (vi)"
+  },
+  "extensionDescription": {
+    "message": "Wikipedia, bách khoa toàn thư mở"
+  },
+  "searchUrl": {
+    "message": "https://vi.wikipedia.org/wiki/Đặc_biệt:Tìm_kiếm"
+  },
+  "searchForm": {
+    "message": "https://vi.wikipedia.org/wiki/Đặc_biệt:Tìm_kiếm?search={searchTerms}&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://vi.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "search={searchTerms}&sourceid=Mozilla-search"
+  }
+}

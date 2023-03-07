@@ -239,15 +239,19 @@ SearchService.prototype = {
     Services.obs.addObserver(this, Region.REGION_TOPIC);
 
     try {
+      /*
       // Create the search engine selector.
       this._engineSelector = new SearchEngineSelector(
         this._handleConfigurationUpdated.bind(this)
       );
+      */
 
       // See if we have a settings file so we don't have to parse a bunch of XML.
       let settings = await this._settings.get();
 
+      /* エラーリポートはコンソールに出力するため、黙らせておく。
       this._setupRemoteSettings().catch(Cu.reportError);
+      */
 
       await this._loadEngines(settings);
 
@@ -1180,13 +1184,19 @@ SearchService.prototype = {
       this._settings.setAttribute(key, value);
     }
 
-    let {
-      engines,
-      privateDefault,
-    } = await this._engineSelector.fetchEngineConfiguration(
-      searchEngineSelectorProperties
-    );
+    //通常の検索エンジンの宣言。プライベートウインドウ用もここに記載しておくこと。
+    const engines = [
+      { webExtension: { id: "google@search.mozilla.org" }, orderHint: 100 },
+      { webExtension: { id: "frea@search.mozilla.org" }, orderHint: 90 },
+      { webExtension: { id: "ddg@search.mozilla.org" }, orderHint: 80 },
+      { webExtension: { id: "startpage@search.mozilla.org" }, orderHint: 70 },
+      { webExtension: { id: "you.com@search.mozilla.org" }, orderHint: 60 },
+      { webExtension: { id: "bing@search.mozilla.org" }, orderHint: 50 },
+      { webExtension: { id: "yahoo-jp@search.mozilla.org" }, orderHint: 40 },
+      { webExtension: { id: "wikipedia@search.mozilla.org" }, orderHint: 30 },
+    ]
 
+    // 参考
     for (let e of engines) {
       if (!e.webExtension) {
         e.webExtension = {};
@@ -1194,6 +1204,15 @@ SearchService.prototype = {
       e.webExtension.locale = e.webExtension?.locale ?? SearchUtils.DEFAULT_TAG;
     }
 
+
+   //上のコードを参考に記述。SearchUtils.DEFAULT_TAG; は通常、"en-US" となる。Floorp ではすべて "en-US" となる。全部共通。
+    const privateDefault = {
+      webExtension: { id: "frea@search.mozilla.org" },
+    };
+    privateDefault.webExtension.locale =
+      privateDefault.webExtension?.locale ?? SearchUtils.DEFAULT_TAG;
+
+    // Private 固有の設定が有効な場合、Private 用のエンジンと一緒にデフォルトエンジンの値を返しておく。
     return { engines, privateDefault };
   },
 

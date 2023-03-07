@@ -30,7 +30,7 @@ rev = "4c11f0ffb5d6a10de4aff40a7b81218b33b94e6f"
 [source."https://github.com/mozilla/cubeb-pulse-rs"]
 git = "https://github.com/mozilla/cubeb-pulse-rs"
 replace-with = "vendored-sources"
-rev = "df4dc0288b07b865440f4c7e41ca49ca9ccffc63"
+rev = "1f1fe1e08e01a9a534ec7f079702a583a0899ce7"
 
 [source."https://github.com/mozilla/cubeb-coreaudio-rs"]
 git = "https://github.com/mozilla/cubeb-coreaudio-rs"
@@ -70,7 +70,7 @@ rev = "746743227485a83123784df0c53227ab466612ed"
 [source."https://github.com/hsivonen/packed_simd"]
 git = "https://github.com/hsivonen/packed_simd"
 replace-with = "vendored-sources"
-rev = "f38664024b29d44c506431eada7c112629bb1aa9"
+rev = "90eebb82a107cbec1c8e406d9223819417e96de1"
 
 [source."https://github.com/hsivonen/chardetng_c"]
 git = "https://github.com/hsivonen/chardetng_c"

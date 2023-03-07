@@ -34,7 +34,7 @@ if [ $? -ne 0 ]; then
   fi
 fi
 # Ensure that we're always using the right compression settings
-export XZ_OPT="-T1 -7e"
+export XZ_OPT="-T0 -7e"
 
 # -----------------------------------------------------------------------------
 # Helper routines
