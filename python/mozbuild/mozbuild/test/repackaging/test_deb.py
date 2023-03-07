@@ -185,8 +185,14 @@ def test_render_deb_templates():
         with open(os.path.join(template_dir, "debian_file2.in"), "w") as f:
             f.write("Some hardcoded value")
 
+        with open(os.path.join(template_dir, "ignored_file.in"), "w") as f:
+            f.write("Must not be copied")
+
         deb._render_deb_templates(
-            template_dir, source_dir, {"some_build_variable": "some_value"}
+            template_dir,
+            source_dir,
+            {"some_build_variable": "some_value"},
+            exclude_file_names=["ignored_file.in"],
         )
 
         with open(os.path.join(source_dir, "debian", "debian_file1")) as f:
@@ -194,6 +200,9 @@ def test_render_deb_templates():
 
         with open(os.path.join(source_dir, "debian", "debian_file2")) as f:
             assert f.read() == "Some hardcoded value"
+
+        assert not os.path.exists(os.path.join(source_dir, "debian", "ignored_file"))
+        assert not os.path.exists(os.path.join(source_dir, "debian", "ignored_file.in"))
 
 
 def test_inject_deb_distribution_folder(monkeypatch):
