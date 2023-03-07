@@ -81,6 +81,7 @@ class PresShell;
 class RestyleManager;
 class ServoStyleSet;
 class StaticPresData;
+class TimelineManager;
 struct MediaFeatureChange;
 enum class MediaFeatureChangePropagation : uint8_t;
 enum class ColorScheme : uint8_t;
@@ -283,6 +284,7 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   const nsAnimationManager* AnimationManager() const {
     return mAnimationManager.get();
   }
+  mozilla::TimelineManager* TimelineManager() { return mTimelineManager.get(); }
 
   nsRefreshDriver* RefreshDriver() { return mRefreshDriver; }
 
@@ -1180,6 +1182,7 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   RefPtr<mozilla::EffectCompositor> mEffectCompositor;
   mozilla::UniquePtr<nsTransitionManager> mTransitionManager;
   mozilla::UniquePtr<nsAnimationManager> mAnimationManager;
+  mozilla::UniquePtr<mozilla::TimelineManager> mTimelineManager;
   mozilla::UniquePtr<mozilla::RestyleManager> mRestyleManager;
   RefPtr<mozilla::CounterStyleManager> mCounterStyleManager;
   const nsStaticAtom* mMedium;

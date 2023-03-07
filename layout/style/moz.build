@@ -113,6 +113,8 @@ EXPORTS.mozilla += [
     "StyleSheet.h",
     "StyleSheetInfo.h",
     "StyleSheetInlines.h",
+    "TimelineCollection.h",
+    "TimelineManager.h",
     "URLExtraData.h",
     "UserAgentStyleSheetID.h",
     "UserAgentStyleSheetList.h",
@@ -245,6 +247,8 @@ UNIFIED_SOURCES += [
     "StyleAnimationValue.cpp",
     "StyleColor.cpp",
     "StyleSheet.cpp",
+    "TimelineCollection.cpp",
+    "TimelineManager.cpp",
     "URLExtraData.cpp",
 ]
 

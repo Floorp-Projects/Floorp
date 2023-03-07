@@ -180,6 +180,19 @@ bool ScrollTimeline::ScrollingDirectionIsAvailable() const {
   return scrollFrame->GetAvailableScrollingDirections().contains(Axis());
 }
 
+void ScrollTimeline::ReplacePropertiesWith(const Element* aReferenceElement,
+                                           const StyleScrollTimeline& aNew) {
+  MOZ_ASSERT(aReferenceElement == mSource.mElement);
+  mAxis = aNew.GetAxis();
+
+  for (auto* anim = mAnimationOrder.getFirst(); anim;
+       anim = static_cast<LinkedListElement<Animation>*>(anim)->getNext()) {
+    MOZ_ASSERT(anim->GetTimeline() == this);
+    // Set this so we just PostUpdate() for this animation.
+    anim->SetTimeline(this);
+  }
+}
+
 void ScrollTimeline::RegisterWithScrollSource() {
   if (!mSource) {
     return;

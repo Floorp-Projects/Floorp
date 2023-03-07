@@ -6,9 +6,11 @@
 
 #include "ElementAnimationData.h"
 #include "mozilla/AnimationCollection.h"
+#include "mozilla/TimelineCollection.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/dom/CSSTransition.h"
 #include "mozilla/dom/CSSAnimation.h"
+#include "mozilla/dom/ScrollTimeline.h"
 
 namespace mozilla {
 
@@ -23,6 +25,7 @@ void ElementAnimationData::ClearAllAnimationCollections() {
   for (auto* data : {&mElementData, &mBeforeData, &mAfterData, &mMarkerData}) {
     data->mAnimations = nullptr;
     data->mTransitions = nullptr;
+    data->mScrollTimelines = nullptr;
   }
 }
 
@@ -62,6 +65,14 @@ ElementAnimationData::PerElementOrPseudoData::DoEnsureAnimations(
   return *mAnimations;
 }
 
+ScrollTimelineCollection&
+ElementAnimationData::PerElementOrPseudoData::DoEnsureScrollTimelines(
+    dom::Element& aOwner, PseudoStyleType aType) {
+  MOZ_ASSERT(!mScrollTimelines);
+  mScrollTimelines = MakeUnique<ScrollTimelineCollection>(aOwner, aType);
+  return *mScrollTimelines;
+}
+
 void ElementAnimationData::PerElementOrPseudoData::DoClearEffectSet() {
   MOZ_ASSERT(mEffectSet);
   mEffectSet = nullptr;
@@ -75,6 +86,11 @@ void ElementAnimationData::PerElementOrPseudoData::DoClearTransitions() {
 void ElementAnimationData::PerElementOrPseudoData::DoClearAnimations() {
   MOZ_ASSERT(mAnimations);
   mAnimations = nullptr;
+}
+
+void ElementAnimationData::PerElementOrPseudoData::DoClearScrollTimelines() {
+  MOZ_ASSERT(mScrollTimelines);
+  mScrollTimelines = nullptr;
 }
 
 }  // namespace mozilla
