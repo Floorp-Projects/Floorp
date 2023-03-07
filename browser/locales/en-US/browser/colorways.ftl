@@ -2,13 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-## Colorway collections
-
-colorway-collection-independent-voices = Independent Voices
-colorway-collection-independent-voices-description = Color can change culture. The latest colorways celebrate voices making the world a better place.
-# Used as a subheading for the colorway collection card in about:addons
-colorway-collection-independent-voices-short-description = Colors that change culture.
-
 ## Colorway names and descriptions
 
 playmaker-colorway-name = Playmaker
