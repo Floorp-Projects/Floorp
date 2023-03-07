@@ -1053,6 +1053,68 @@ add_task(async () => {
   await SpecialPowers.popPrefEnv();
 });
 
+add_task(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.gesture.swipe.left", "Browser:BackOrBackDuplicate"],
+      ["browser.gesture.swipe.right", "Browser:ForwardOrForwardDuplicate"],
+      ["widget.disable-swipe-tracker", false],
+      ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
+      ["widget.swipe.success-velocity-contribution", 0.5],
+      ["apz.overscroll.enabled", true],
+      ["apz.content_response_timeout", 0],
+    ],
+  });
+
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:about",
+    true /* waitForLoad */
+  );
+
+  const URL_ROOT = getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content/",
+    "http://mochi.test:8888/"
+  );
+
+  // Load a horizontal scrollable content.
+  BrowserTestUtils.loadURIString(
+    tab.linkedBrowser,
+    URL_ROOT + "helper_swipe_gesture.html"
+  );
+  await BrowserTestUtils.browserLoaded(
+    tab.linkedBrowser,
+    false /* includeSubFrames */,
+    URL_ROOT + "helper_swipe_gesture.html"
+  );
+
+  // Make sure we can go back to the previous page.
+  ok(gBrowser.webNavigation.canGoBack);
+
+  // Shift the horizontal scroll position slightly to make the content
+  // overscrollable.
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
+    content.document.documentElement.scrollLeft = 1;
+    await content.wrappedJSObject.promiseApzFlushedRepaints();
+  });
+
+  // Swipe horizontally to overscroll.
+  await panLeftToRight(tab.linkedBrowser, 1, 100, 1);
+
+  // Swipe again over the overscroll gutter.
+  await panLeftToRight(tab.linkedBrowser, 1, 100, 1);
+
+  // Wait the overscroll gutter is restored.
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
+    // For some reasons promiseTransformEnd() causes "Uncaught exception in
+    // test bound".
+    await content.wrappedJSObject.promiseTopic("APZ:TransformEnd");
+  });
+
+  BrowserTestUtils.removeTab(tab);
+  await SpecialPowers.popPrefEnv();
+});
+
 // NOTE: This test listens wheel events so that it causes an overscroll issue
 // (bug 1800022). To avoid the bug, we need to run this test case at the end
 // of this file.

@@ -454,12 +454,16 @@ APZEventResult InputQueue::ReceivePanGestureInput(
     mActivePanGestureBlock = block;
 
     CancelAnimationsForNewBlock(block);
-    MaybeRequestContentResponse(aTarget, block);
+    const bool waitingForContentResponse =
+        MaybeRequestContentResponse(aTarget, block);
 
     if (event.AllowsSwipe() && !CanScrollTargetHorizontally(event, block)) {
       // We will ask the browser whether this pan event is going to be used for
       // swipe or not, so we need to wait the response.
       block->SetNeedsToWaitForBrowserGestureResponse(true);
+      if (!waitingForContentResponse) {
+        ScheduleMainThreadTimeout(aTarget, block);
+      }
       if (aFlags.mTargetConfirmed) {
         // This event may trigger a swipe gesture, depending on what our caller
         // wants to do it. We need to suspend handling of this block until we
