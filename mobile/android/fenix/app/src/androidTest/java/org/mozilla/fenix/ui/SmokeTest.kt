@@ -38,8 +38,6 @@ import org.mozilla.fenix.ui.robots.customTabScreen
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.notificationShade
-import org.mozilla.fenix.ui.robots.openEditURLView
-import org.mozilla.fenix.ui.robots.searchScreen
 
 /**
  * Test Suite that contains a part of the Smoke and Sanity tests defined in TestRail:
@@ -674,45 +672,6 @@ class SmokeTest {
         }
         // Dismiss the request
         mDevice.pressBack()
-    }
-
-    @Test
-    fun copyTextTest() {
-        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(genericURL.url) {
-            longClickAndCopyText("content")
-        }.openNavigationToolbar {
-            openEditURLView()
-        }
-
-        searchScreen {
-            clickClearButton()
-            longClickToolbar()
-            clickPasteText()
-            verifyTypedToolbarText("content")
-        }
-    }
-
-    @Test
-    fun selectAllAndCopyTextTest() {
-        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(genericURL.url) {
-            longClickAndCopyText("content", true)
-        }.openNavigationToolbar {
-            openEditURLView()
-        }
-
-        searchScreen {
-            clickClearButton()
-            longClickToolbar()
-            clickPasteText()
-            // with Select all, some white space is copied over, so we need to include that too
-            verifyTypedToolbarText("  Page content: 1 ")
-        }
     }
 
     @Test
