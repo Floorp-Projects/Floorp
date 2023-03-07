@@ -65,3 +65,4 @@ job-template:
         toolchain:
             - linux64-mar-tools
             - linux64-upx
+    treeherder-group: L10n-Rpk

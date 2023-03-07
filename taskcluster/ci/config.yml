@@ -141,6 +141,7 @@ treeherder:
         'X-msix': 'Xpcshell tests on msix packages'
         'L10n': 'Localised Repacks'
         'L10n-Rpk': 'Localized Repackaged Repacks'
+        'deb-L10n': 'Localized Debian Repacks'
         'BM': 'Beetmover'
         'BMR': 'Beetmover repackages'
         'c-Up': 'Balrog submission of complete updates'

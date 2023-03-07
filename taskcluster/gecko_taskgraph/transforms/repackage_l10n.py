@@ -20,6 +20,7 @@ def split_locales(config, jobs):
         for locale in dep_job.attributes.get("chunk_locales", []):
             locale_job = copy_task(job)  # don't overwrite dict values here
             treeherder = locale_job.setdefault("treeherder", {})
-            treeherder["symbol"] = f"L10n-Rpk({locale})"
+            treeherder_group = locale_job.pop("treeherder-group")
+            treeherder["symbol"] = f"{treeherder_group}({locale})"
             locale_job["locale"] = locale
             yield locale_job
