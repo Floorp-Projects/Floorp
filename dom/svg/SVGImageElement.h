@@ -24,8 +24,8 @@ class DOMSVGAnimatedPreserveAspectRatio;
 
 using SVGImageElementBase = SVGGeometryElement;
 
-class SVGImageElement : public SVGImageElementBase,
-                        public nsImageLoadingContent {
+class SVGImageElement final : public SVGImageElementBase,
+                              public nsImageLoadingContent {
   friend class mozilla::SVGImageFrame;
 
  protected:

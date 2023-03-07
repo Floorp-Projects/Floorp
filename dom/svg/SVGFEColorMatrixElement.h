@@ -20,7 +20,7 @@ class DOMSVGAnimatedNumberList;
 
 using SVGFEColorMatrixElementBase = SVGFE;
 
-class SVGFEColorMatrixElement : public SVGFEColorMatrixElementBase {
+class SVGFEColorMatrixElement final : public SVGFEColorMatrixElementBase {
   friend nsresult(::NS_NewSVGFEColorMatrixElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));

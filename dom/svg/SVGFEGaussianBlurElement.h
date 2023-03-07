@@ -18,7 +18,7 @@ namespace mozilla::dom {
 
 using SVGFEGaussianBlurElementBase = SVGFE;
 
-class SVGFEGaussianBlurElement : public SVGFEGaussianBlurElementBase {
+class SVGFEGaussianBlurElement final : public SVGFEGaussianBlurElementBase {
   friend nsresult(::NS_NewSVGFEGaussianBlurElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));

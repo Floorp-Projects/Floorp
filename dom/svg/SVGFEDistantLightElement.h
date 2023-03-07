@@ -17,7 +17,7 @@ namespace mozilla::dom {
 
 using SVGFEDistantLightElementBase = SVGFELightElement;
 
-class SVGFEDistantLightElement : public SVGFEDistantLightElementBase {
+class SVGFEDistantLightElement final : public SVGFEDistantLightElementBase {
   friend nsresult(::NS_NewSVGFEDistantLightElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));

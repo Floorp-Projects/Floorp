@@ -24,7 +24,7 @@ class DOMSVGAnimatedLength;
 
 using SVGFilterElementBase = SVGElement;
 
-class SVGFilterElement : public SVGFilterElementBase {
+class SVGFilterElement final : public SVGFilterElementBase {
   friend class mozilla::SVGFilterFrame;
   friend class mozilla::SVGFilterInstance;
 

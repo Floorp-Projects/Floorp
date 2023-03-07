@@ -16,7 +16,7 @@ namespace mozilla::dom {
 
 using SVGFEFloodElementBase = SVGFE;
 
-class SVGFEFloodElement : public SVGFEFloodElementBase {
+class SVGFEFloodElement final : public SVGFEFloodElementBase {
   friend nsresult(::NS_NewSVGFEFloodElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));

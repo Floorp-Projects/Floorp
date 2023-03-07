@@ -19,7 +19,7 @@ namespace mozilla::dom {
 
 using SVGFEMorphologyElementBase = SVGFE;
 
-class SVGFEMorphologyElement : public SVGFEMorphologyElementBase {
+class SVGFEMorphologyElement final : public SVGFEMorphologyElementBase {
   friend nsresult(::NS_NewSVGFEMorphologyElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));

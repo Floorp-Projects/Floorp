@@ -17,7 +17,8 @@ namespace mozilla::dom {
 
 using SVGFEDisplacementMapElementBase = SVGFE;
 
-class SVGFEDisplacementMapElement : public SVGFEDisplacementMapElementBase {
+class SVGFEDisplacementMapElement final
+    : public SVGFEDisplacementMapElementBase {
  protected:
   friend nsresult(::NS_NewSVGFEDisplacementMapElement(
       nsIContent** aResult,

@@ -20,7 +20,7 @@ namespace mozilla::dom {
 
 using SVGFETurbulenceElementBase = SVGFE;
 
-class SVGFETurbulenceElement : public SVGFETurbulenceElementBase {
+class SVGFETurbulenceElement final : public SVGFETurbulenceElementBase {
   friend nsresult(::NS_NewSVGFETurbulenceElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));

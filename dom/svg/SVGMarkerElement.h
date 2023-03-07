@@ -32,7 +32,7 @@ class DOMSVGAnimatedEnumeration;
 
 using SVGMarkerElementBase = SVGElement;
 
-class SVGMarkerElement : public SVGMarkerElementBase {
+class SVGMarkerElement final : public SVGMarkerElementBase {
   friend class mozilla::SVGMarkerFrame;
 
  protected:

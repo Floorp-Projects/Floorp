@@ -18,7 +18,8 @@ namespace mozilla::dom {
 
 using SVGFESpecularLightingElementBase = SVGFELightingElement;
 
-class SVGFESpecularLightingElement : public SVGFESpecularLightingElementBase {
+class SVGFESpecularLightingElement final
+    : public SVGFESpecularLightingElementBase {
   friend nsresult(::NS_NewSVGFESpecularLightingElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));

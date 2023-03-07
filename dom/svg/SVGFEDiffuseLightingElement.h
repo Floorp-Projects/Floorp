@@ -16,7 +16,8 @@ namespace mozilla::dom {
 
 using SVGFEDiffuseLightingElementBase = SVGFELightingElement;
 
-class SVGFEDiffuseLightingElement : public SVGFEDiffuseLightingElementBase {
+class SVGFEDiffuseLightingElement final
+    : public SVGFEDiffuseLightingElementBase {
   friend nsresult(::NS_NewSVGFEDiffuseLightingElement(
       nsIContent** aResult,
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
