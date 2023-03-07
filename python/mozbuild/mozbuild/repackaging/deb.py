@@ -58,7 +58,11 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
         mozfile.extract_tarball(infile, source_dir)
         application_ini_data = _extract_application_ini_data(source_dir)
         build_variables = _get_build_variables(
-            application_ini_data, arch, version, build_number
+            application_ini_data,
+            arch,
+            version,
+            build_number,
+            depends="${shlibs:Depends},",
         )
 
         _copy_plain_deb_config(template_dir, source_dir)
@@ -110,6 +114,7 @@ def _get_build_variables(
     arch,
     version_string,
     build_number,
+    depends,
 ):
     version = GeckoVersion.parse(version_string)
     # Nightlies don't have build numbers
@@ -125,6 +130,7 @@ def _get_build_variables(
         "DEB_PKG_VERSION": deb_pkg_version,
         "DEB_CHANGELOG_DATE": format_datetime(application_ini_data["timestamp"]),
         "DEB_ARCH_NAME": _DEB_ARCH[arch],
+        "DEB_DEPENDS": depends,
     }
 
 
