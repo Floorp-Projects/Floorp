@@ -672,13 +672,14 @@ menulist[popuponly] {
 /********** splitter **********/
 
 .tree-splitter {
-  width: 0;
-  max-width: 0;
+  margin-inline: -4px;
+  width: 8px;
+  max-width: 8px;
+  min-width: 8px;
   appearance: none !important;
-  min-width: 0 !important;
-  min-height: 0 !important;
   border: none !important;
   -moz-box-ordinal-group: 2147483646;
+  z-index: 2147483646;
 }
 
 /******** scrollbar ********/
