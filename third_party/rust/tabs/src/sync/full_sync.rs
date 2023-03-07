@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::{sync::engine::TabsSyncImpl, ApiResult, Result, TabsEngine, TabsStore};
+use crate::{sync::engine::TabsSyncImpl, ApiResult, TabsEngine, TabsStore};
 use error_support::handle_error;
 use interrupt_support::NeverInterrupts;
 use std::sync::Arc;
@@ -11,7 +11,7 @@ use sync15::engine::EngineSyncAssociation;
 use sync15::KeyBundle;
 
 impl TabsStore {
-    #[handle_error]
+    #[handle_error(crate::Error)]
     pub fn reset(self: Arc<Self>) -> ApiResult<()> {
         let mut sync_impl = TabsSyncImpl::new(Arc::clone(&self));
         sync_impl.reset(&EngineSyncAssociation::Disconnected)?;
@@ -19,7 +19,7 @@ impl TabsStore {
     }
 
     /// A convenience wrapper around sync_multiple.
-    #[handle_error]
+    #[handle_error(crate::Error)]
     pub fn sync(
         self: Arc<Self>,
         key_id: String,

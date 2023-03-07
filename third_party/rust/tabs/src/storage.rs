@@ -27,6 +27,8 @@ pub type RemoteTabRecord = RemoteTab;
 
 pub(crate) const TABS_CLIENT_TTL: u32 = 15_552_000; // 180 days, same as CLIENTS_TTL
 const FAR_FUTURE: i64 = 4_102_405_200_000; // 2100/01/01
+const MAX_PAYLOAD_SIZE: usize = 512 * 1024; // Twice as big as desktop, still smaller than server max (2MB)
+const MAX_TITLE_CHAR_LENGTH: usize = 512; // We put an upper limit on title sizes for tabs to reduce memory
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RemoteTab {
@@ -146,30 +148,39 @@ impl TabsStorage {
         self.local_tabs.borrow_mut().replace(local_state);
     }
 
+    // We try our best to fit as many tabs in a payload as possible, this includes
+    // limiting the url history entries, title character count and finally drop enough tabs
+    // until we have small enough payload that the server will accept
     pub fn prepare_local_tabs_for_upload(&self) -> Option<Vec<RemoteTab>> {
         if let Some(local_tabs) = self.local_tabs.borrow().as_ref() {
-            return Some(
-                local_tabs
-                    .iter()
-                    .cloned()
-                    .filter_map(|mut tab| {
-                        if tab.url_history.is_empty() || !is_url_syncable(&tab.url_history[0]) {
-                            return None;
+            let mut sanitized_tabs: Vec<RemoteTab> = local_tabs
+                .iter()
+                .cloned()
+                .filter_map(|mut tab| {
+                    if tab.url_history.is_empty() || !is_url_syncable(&tab.url_history[0]) {
+                        return None;
+                    }
+                    let mut sanitized_history = Vec::with_capacity(TAB_ENTRIES_LIMIT);
+                    for url in tab.url_history {
+                        if sanitized_history.len() == TAB_ENTRIES_LIMIT {
+                            break;
                         }
-                        let mut sanitized_history = Vec::with_capacity(TAB_ENTRIES_LIMIT);
-                        for url in tab.url_history {
-                            if sanitized_history.len() == TAB_ENTRIES_LIMIT {
-                                break;
-                            }
-                            if is_url_syncable(&url) {
-                                sanitized_history.push(url);
-                            }
+                        if is_url_syncable(&url) {
+                            sanitized_history.push(url);
                         }
-                        tab.url_history = sanitized_history;
-                        Some(tab)
-                    })
-                    .collect(),
-            );
+                    }
+
+                    tab.url_history = sanitized_history;
+                    // Potentially truncate the title to some limit
+                    tab.title = slice_up_to(tab.title, MAX_TITLE_CHAR_LENGTH);
+                    Some(tab)
+                })
+                .collect();
+            // Sort the tabs so when we trim tabs it's the oldest tabs
+            sanitized_tabs.sort_by(|a, b| b.last_used.cmp(&a.last_used));
+            // If trimming the tab length failed for some reason, just return the untrimmed tabs
+            trim_tabs_length(&mut sanitized_tabs, MAX_PAYLOAD_SIZE);
+            return Some(sanitized_tabs);
         }
         None
     }
@@ -330,12 +341,11 @@ impl TabsStorage {
     }
 
     pub(crate) fn put_meta(&mut self, key: &str, value: &dyn ToSql) -> Result<()> {
-        if let Some(db) = self.open_if_exists()? {
-            db.execute_cached(
-                "REPLACE INTO moz_meta (key, value) VALUES (:key, :value)",
-                &[(":key", &key as &dyn ToSql), (":value", value)],
-            )?;
-        }
+        let db = self.open_or_create()?;
+        db.execute_cached(
+            "REPLACE INTO moz_meta (key, value) VALUES (:key, :value)",
+            &[(":key", &key as &dyn ToSql), (":value", value)],
+        )?;
         Ok(())
     }
 
@@ -360,6 +370,48 @@ impl TabsStorage {
         }
         Ok(())
     }
+}
+
+// Trim the amount of tabs in a list to fit the specified memory size
+fn trim_tabs_length(tabs: &mut Vec<RemoteTab>, payload_size_max_bytes: usize) {
+    // Ported from https://searchfox.org/mozilla-central/rev/84fb1c4511312a0b9187f647d90059e3a6dd27f8/services/sync/modules/util.sys.mjs#422
+    // See bug 535326 comment 8 for an explanation of the estimation
+    let max_serialized_size = (payload_size_max_bytes / 4) * 3 - 1500;
+    let size = compute_serialized_size(tabs);
+    if size > max_serialized_size {
+        // Estimate a little more than the direct fraction to maximize packing
+        let cutoff = (tabs.len() * max_serialized_size) / size;
+        tabs.truncate(cutoff);
+
+        // Keep dropping off the last entry until the data fits.
+        while compute_serialized_size(tabs) > max_serialized_size {
+            tabs.pop();
+        }
+    }
+}
+
+fn compute_serialized_size(v: &Vec<RemoteTab>) -> usize {
+    serde_json::to_string(v).unwrap_or_default().len()
+}
+
+// Similar to places/utils.js
+// This method ensures we safely truncate a string up to a certain max_len while
+// respecting char bounds to prevent rust panics. If we do end up truncating, we
+// append an ellipsis to the string
+pub fn slice_up_to(s: String, max_len: usize) -> String {
+    if max_len >= s.len() {
+        return s;
+    }
+
+    let ellipsis = '\u{2026}';
+    // Ensure we leave space for the ellipsis while still being under the max
+    let mut idx = max_len - ellipsis.len_utf8();
+    while !s.is_char_boundary(idx) {
+        idx -= 1;
+    }
+    let mut new_str = s[..idx].to_string();
+    new_str.push(ellipsis);
+    new_str
 }
 
 // Try to keep in sync with https://searchfox.org/mozilla-central/rev/2ad13433da20a0749e1e9a10ec0ab49b987c2c8e/modules/libpref/init/all.js#3927
@@ -405,12 +457,15 @@ mod tests {
 
     #[test]
     fn test_tabs_meta() {
-        let mut db = TabsStorage::new_with_mem_path("test");
+        let dir = tempfile::tempdir().unwrap();
+        let db_name = dir.path().join("test_tabs_meta.db");
+        let mut db = TabsStorage::new(db_name);
         let test_key = "TEST KEY A";
         let test_value = "TEST VALUE A";
         let test_key2 = "TEST KEY B";
         let test_value2 = "TEST VALUE B";
 
+        // should automatically make the DB if one doesn't exist
         db.put_meta(test_key, &test_value).unwrap();
         db.put_meta(test_key2, &test_value2).unwrap();
 
@@ -504,6 +559,102 @@ mod tests {
                 },
             ])
         );
+    }
+    #[test]
+    fn test_trimming_tab_title() {
+        let mut storage = TabsStorage::new_with_mem_path("test_prepare_local_tabs_for_upload");
+        assert_eq!(storage.prepare_local_tabs_for_upload(), None);
+        storage.update_local_state(vec![RemoteTab {
+            title: "a".repeat(MAX_TITLE_CHAR_LENGTH + 10), // Fill a string more than max
+            url_history: vec!["https://foo.bar".to_owned()],
+            icon: None,
+            last_used: 0,
+        }]);
+        let ellipsis_char = '\u{2026}';
+        let mut truncated_title = "a".repeat(MAX_TITLE_CHAR_LENGTH - ellipsis_char.len_utf8());
+        truncated_title.push(ellipsis_char);
+        assert_eq!(
+            storage.prepare_local_tabs_for_upload(),
+            Some(vec![
+                // title trimmed to 50 characters
+                RemoteTab {
+                    title: truncated_title, // title was trimmed to only max char length
+                    url_history: vec!["https://foo.bar".to_owned()],
+                    icon: None,
+                    last_used: 0,
+                },
+            ])
+        );
+    }
+    #[test]
+    fn test_utf8_safe_title_trim() {
+        let mut storage = TabsStorage::new_with_mem_path("test_prepare_local_tabs_for_upload");
+        assert_eq!(storage.prepare_local_tabs_for_upload(), None);
+        storage.update_local_state(vec![
+            RemoteTab {
+                title: "😍".repeat(MAX_TITLE_CHAR_LENGTH + 10), // Fill a string more than max
+                url_history: vec!["https://foo.bar".to_owned()],
+                icon: None,
+                last_used: 0,
+            },
+            RemoteTab {
+                title: "を".repeat(MAX_TITLE_CHAR_LENGTH + 5), // Fill a string more than max
+                url_history: vec!["https://foo_jp.bar".to_owned()],
+                icon: None,
+                last_used: 0,
+            },
+        ]);
+        let ellipsis_char = '\u{2026}';
+        // (MAX_TITLE_CHAR_LENGTH - ellipsis / "😍" bytes)
+        let mut truncated_title = "😍".repeat(127);
+        // (MAX_TITLE_CHAR_LENGTH - ellipsis / "を" bytes)
+        let mut truncated_jp_title = "を".repeat(169);
+        truncated_title.push(ellipsis_char);
+        truncated_jp_title.push(ellipsis_char);
+        let remote_tabs = storage.prepare_local_tabs_for_upload().unwrap();
+        assert_eq!(
+            remote_tabs,
+            vec![
+                RemoteTab {
+                    title: truncated_title, // title was trimmed to only max char length
+                    url_history: vec!["https://foo.bar".to_owned()],
+                    icon: None,
+                    last_used: 0,
+                },
+                RemoteTab {
+                    title: truncated_jp_title, // title was trimmed to only max char length
+                    url_history: vec!["https://foo_jp.bar".to_owned()],
+                    icon: None,
+                    last_used: 0,
+                },
+            ]
+        );
+        // We should be less than max
+        assert!(remote_tabs[0].title.chars().count() <= MAX_TITLE_CHAR_LENGTH);
+        assert!(remote_tabs[1].title.chars().count() <= MAX_TITLE_CHAR_LENGTH);
+    }
+    #[test]
+    fn test_trim_tabs_length() {
+        let mut storage = TabsStorage::new_with_mem_path("test_prepare_local_tabs_for_upload");
+        assert_eq!(storage.prepare_local_tabs_for_upload(), None);
+        let mut too_many_tabs: Vec<RemoteTab> = Vec::new();
+        for n in 1..5000 {
+            too_many_tabs.push(RemoteTab {
+                title: "aaaa aaaa aaaa aaaa aaaa aaaa aaaa aaaa aaaa aaaa" //50 characters
+                    .to_owned(),
+                url_history: vec![format!("https://foo{}.bar", n)],
+                icon: None,
+                last_used: 0,
+            });
+        }
+        let tabs_mem_size = compute_serialized_size(&too_many_tabs);
+        // ensure we are definitely over the payload limit
+        assert!(tabs_mem_size > MAX_PAYLOAD_SIZE);
+        // Add our over-the-limit tabs to the local state
+        storage.update_local_state(too_many_tabs.clone());
+        // prepare_local_tabs_for_upload did the trimming we needed to get under payload size
+        let tabs_to_upload = &storage.prepare_local_tabs_for_upload().unwrap();
+        assert!(compute_serialized_size(tabs_to_upload) <= MAX_PAYLOAD_SIZE);
     }
     // Helper struct to model what's stored in the DB
     struct TabsSQLRecord {

@@ -37,6 +37,11 @@ pub use key_bundle::KeyBundle;
 pub use server_timestamp::ServerTimestamp;
 pub use sync_guid::Guid;
 
+// Collection names are almost always `static, so we use a `Cow`:
+// * Either a `String` or a `'static &str` can be `.into()`'d into one of these.
+// * Cloning one with a `'static &str` is extremely cheap and doesn't allocate memory.
+pub type CollectionName = std::borrow::Cow<'static, str>;
+
 // For skip_serializing_if
 fn skip_if_default<T: PartialEq + Default>(v: &T) -> bool {
     *v == T::default()

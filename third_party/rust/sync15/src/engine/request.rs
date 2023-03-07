@@ -1,37 +1,24 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-use crate::{Guid, ServerTimestamp};
-use std::borrow::Cow;
-#[derive(Debug, Clone, PartialEq, Eq)]
+use crate::{CollectionName, Guid, ServerTimestamp};
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct CollectionRequest {
-    pub collection: Cow<'static, str>,
+    pub collection: CollectionName,
     pub full: bool,
     pub ids: Option<Vec<Guid>>,
-    pub limit: usize,
+
+    pub limit: Option<RequestLimit>,
     pub older: Option<ServerTimestamp>,
     pub newer: Option<ServerTimestamp>,
-    pub order: Option<RequestOrder>,
-    pub commit: bool,
-    pub batch: Option<String>,
 }
 
 impl CollectionRequest {
     #[inline]
-    pub fn new<S>(collection: S) -> CollectionRequest
-    where
-        S: Into<Cow<'static, str>>,
-    {
+    pub fn new(collection: CollectionName) -> CollectionRequest {
         CollectionRequest {
-            collection: collection.into(),
-            full: false,
-            ids: None,
-            limit: 0,
-            older: None,
-            newer: None,
-            order: None,
-            commit: false,
-            batch: None,
+            collection,
+            ..Default::default()
         }
     }
 
@@ -64,30 +51,47 @@ impl CollectionRequest {
     }
 
     #[inline]
-    pub fn sort_by(mut self, order: RequestOrder) -> CollectionRequest {
-        self.order = Some(order);
+    pub fn limit(mut self, num: usize, order: RequestOrder) -> CollectionRequest {
+        self.limit = Some(RequestLimit { num, order });
         self
+    }
+}
+
+// This is just used interally - consumers just provide the content, not request params.
+#[cfg(feature = "sync-client")]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub(crate) struct CollectionPost {
+    pub collection: CollectionName,
+    pub commit: bool,
+    pub batch: Option<String>,
+}
+
+#[cfg(feature = "sync-client")]
+impl CollectionPost {
+    #[inline]
+    pub fn new(collection: CollectionName) -> Self {
+        Self {
+            collection,
+            ..Default::default()
+        }
     }
 
     #[inline]
-    pub fn limit(mut self, num: usize) -> CollectionRequest {
-        self.limit = num;
-        self
-    }
-
-    #[inline]
-    pub fn batch(mut self, batch: Option<String>) -> CollectionRequest {
+    pub fn batch(mut self, batch: Option<String>) -> Self {
         self.batch = batch;
         self
     }
 
     #[inline]
-    pub fn commit(mut self, v: bool) -> CollectionRequest {
+    pub fn commit(mut self, v: bool) -> Self {
         self.commit = v;
         self
     }
 }
 
+// Asking for the order of records only makes sense if you are limiting them
+// in some way - consumers don't care about the order otherwise as everything
+// is processed as a set.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub enum RequestOrder {
     Oldest,
@@ -110,4 +114,12 @@ impl std::fmt::Display for RequestOrder {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(self.as_str())
     }
+}
+
+// If you specify a numerical limit you must provide the order so backfilling
+// is possible (ie, so you know which ones you got!)
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Hash)]
+pub struct RequestLimit {
+    pub(crate) num: usize,
+    pub(crate) order: RequestOrder,
 }

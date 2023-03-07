@@ -15,11 +15,6 @@ git = "https://github.com/FirefoxGraphics/wpf-gpu-raster"
 rev = "a6514854d4518b02f2805719ff6cd74dae7dfde6"
 replace-with = "vendored-sources"
 
-[source."https://github.com/bendk/application-services"]
-git = "https://github.com/bendk/application-services"
-rev = "ecb35df5fc40357c49922f90e86bf4147fa52953"
-replace-with = "vendored-sources"
-
 [source."https://github.com/chris-zen/coremidi.git"]
 git = "https://github.com/chris-zen/coremidi.git"
 rev = "fc68464b5445caf111e41f643a2e69ccce0b4f83"
@@ -78,6 +73,11 @@ replace-with = "vendored-sources"
 [source."https://github.com/mozilla-spidermonkey/jsparagus"]
 git = "https://github.com/mozilla-spidermonkey/jsparagus"
 rev = "688a6574cf830b4a3adaf9c5d41efc1f7dd4017f"
+replace-with = "vendored-sources"
+
+[source."https://github.com/mozilla/application-services"]
+git = "https://github.com/mozilla/application-services"
+rev = "fe2867dbe82a2aaa85a856648107be94b1534683"
 replace-with = "vendored-sources"
 
 [source."https://github.com/mozilla/audioipc"]
