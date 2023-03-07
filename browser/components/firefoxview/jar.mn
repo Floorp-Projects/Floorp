@@ -10,11 +10,8 @@ browser.jar:
     content/browser/tab-pickup-container.mjs
     content/browser/tab-pickup-list.mjs
     content/browser/recently-closed-tabs.mjs
-    content/browser/colorways-card.mjs
     content/browser/callout-tab-pickup.svg (content/callout-tab-pickup.svg)
-    content/browser/callout-colorways.svg (content/callout-colorways.svg)
     content/browser/callout-tab-pickup-dark.svg (content/callout-tab-pickup-dark.svg)
-    content/browser/callout-colorways-dark.svg (content/callout-colorways-dark.svg)
     content/browser/cfr-lightning.svg (content/cfr-lightning.svg)
     content/browser/cfr-lightning-dark.svg (content/cfr-lightning-dark.svg)
     content/browser/recently-closed-empty.svg (content/recently-closed-empty.svg)
