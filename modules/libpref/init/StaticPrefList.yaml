@@ -6769,12 +6769,9 @@
 #---------------------------------------------------------------------------
 
 # Turn HTML:inert on or off.
-#
-# Do not enable this by default until there's consensus in:
-# https://github.com/whatwg/html/issues/7796
 - name: html5.inert.enabled
   type: bool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 # Time in milliseconds between the time a network buffer is seen and the timer
