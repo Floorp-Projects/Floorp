@@ -173,12 +173,16 @@ def _copy_plain_deb_config(input_template_dir, source_dir):
         )
 
 
-def _render_deb_templates(input_template_dir, source_dir, build_variables):
+def _render_deb_templates(
+    input_template_dir, source_dir, build_variables, exclude_file_names=None
+):
+    exclude_file_names = [] if exclude_file_names is None else exclude_file_names
+
     template_dir_filenames = os.listdir(input_template_dir)
     template_filenames = [
         mozpath.basename(filename)
         for filename in template_dir_filenames
-        if filename.endswith(".in")
+        if filename.endswith(".in") and filename not in exclude_file_names
     ]
     os.makedirs(mozpath.join(source_dir, "debian"), exist_ok=True)
 
