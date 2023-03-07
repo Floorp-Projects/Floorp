@@ -354,15 +354,24 @@ pub struct SelectorList<Impl: SelectorImpl>(
     #[shmem(field_bound)] pub SmallVec<[Selector<Impl>; 1]>,
 );
 
-/// How to treat invalid selectors in a selector list.
-enum ParseErrorRecovery {
-    /// Discard the entire selector list, this is the default behavior for
-    /// almost all of CSS.
-    DiscardList,
+/// Whether or not we're using forgiving parsing mode
+enum ForgivingParsing {
+    /// Discard the entire selector list upon encountering any invalid selector.
+    /// This is the default behavior for almost all of CSS.
+    No,
     /// Ignore invalid selectors, potentially creating an empty selector list.
     ///
     /// This is the error recovery mode of :is() and :where()
-    IgnoreInvalidSelector,
+    Yes,
+}
+
+/// Flag indicating if we're parsing relative selectors.
+#[derive(Copy, Clone, PartialEq)]
+enum ParseRelative {
+    /// Expect selectors to start with a combinator, assuming descendant combinator if not present.
+    Yes,
+    /// Treat as parse error if any selector begins with a combinator.
+    No,
 }
 
 impl<Impl: SelectorImpl> SelectorList<Impl> {
@@ -381,7 +390,8 @@ impl<Impl: SelectorImpl> SelectorList<Impl> {
             parser,
             input,
             SelectorParsingState::empty(),
-            ParseErrorRecovery::DiscardList,
+            ForgivingParsing::No,
+            ParseRelative::No,
         )
     }
 
@@ -390,23 +400,24 @@ impl<Impl: SelectorImpl> SelectorList<Impl> {
         parser: &P,
         input: &mut CssParser<'i, 't>,
         state: SelectorParsingState,
-        recovery: ParseErrorRecovery,
+        recovery: ForgivingParsing,
+        parse_relative: ParseRelative,
     ) -> Result<Self, ParseError<'i, P::Error>>
     where
         P: Parser<'i, Impl = Impl>,
     {
         let mut values = SmallVec::new();
         loop {
-            let selector = input.parse_until_before(Delimiter::Comma, |input| {
-                parse_selector(parser, input, state)
+            let selector = input.parse_until_before(Delimiter::Comma, |i| {
+                parse_selector(parser, i, state, parse_relative)
             });
 
             let was_ok = selector.is_ok();
             match selector {
                 Ok(selector) => values.push(selector),
                 Err(err) => match recovery {
-                    ParseErrorRecovery::DiscardList => return Err(err),
-                    ParseErrorRecovery::IgnoreInvalidSelector => {
+                    ForgivingParsing::No => return Err(err),
+                    ForgivingParsing::Yes => {
                         if !parser.allow_forgiving_selectors() {
                             return Err(err);
                         }
@@ -447,6 +458,7 @@ where
         parser,
         input,
         state | SelectorParsingState::DISALLOW_PSEUDOS | SelectorParsingState::DISALLOW_COMBINATORS,
+        ParseRelative::No,
     )
 }
 
@@ -891,7 +903,8 @@ impl<Impl: SelectorImpl> Selector<Impl> {
                 PseudoElement(..) |
                 Combinator(..) |
                 Host(None) |
-                Part(..) => component.clone(),
+                Part(..) |
+                RelativeSelectorAnchor => component.clone(),
                 ParentSelector => {
                     specificity += parent_specificity;
                     Is(parent.to_vec().into_boxed_slice())
@@ -1453,6 +1466,12 @@ pub enum Component<Impl: SelectorImpl> {
     PseudoElement(#[shmem(field_bound)] Impl::PseudoElement),
 
     Combinator(Combinator),
+
+    /// Used only for relative selectors, which starts with a combinator
+    /// (With an implied descendant combinator if not specified).
+    ///
+    /// https://drafts.csswg.org/csswg-drafts/selectors-4/#typedef-relative-selector
+    RelativeSelectorAnchor,
 }
 
 impl<Impl: SelectorImpl> Component<Impl> {
@@ -1705,6 +1724,14 @@ impl<Impl: SelectorImpl> ToCss for Selector<Impl> {
             if compound.is_empty() {
                 continue;
             }
+            if let Component::RelativeSelectorAnchor = compound.first().unwrap() {
+                debug_assert!(
+                    compound.len() == 1,
+                    "RelativeLeft should only be a simple selector"
+                );
+                combinators.next().unwrap().to_css_relative(dest)?;
+                continue;
+            }
 
             // 1. If there is only one simple selector in the compound selectors
             //    which is a universal selector, append the result of
@@ -1794,18 +1821,45 @@ impl<Impl: SelectorImpl> ToCss for Selector<Impl> {
     }
 }
 
+impl Combinator {
+    fn to_css_internal<W>(&self, dest: &mut W, prefix_space: bool) -> fmt::Result
+    where
+        W: fmt::Write,
+    {
+        if matches!(
+            *self,
+            Combinator::PseudoElement | Combinator::Part | Combinator::SlotAssignment
+        ) {
+            return Ok(());
+        }
+        if prefix_space {
+            dest.write_char(' ')?;
+        }
+        match *self {
+            Combinator::Child => dest.write_str("> "),
+            Combinator::Descendant => Ok(()),
+            Combinator::NextSibling => dest.write_str("+ "),
+            Combinator::LaterSibling => dest.write_str("~ "),
+            Combinator::PseudoElement | Combinator::Part | Combinator::SlotAssignment => unsafe {
+                debug_unreachable!("Already handled")
+            },
+        }
+    }
+
+    fn to_css_relative<W>(&self, dest: &mut W) -> fmt::Result
+    where
+        W: fmt::Write,
+    {
+        self.to_css_internal(dest, false)
+    }
+}
+
 impl ToCss for Combinator {
     fn to_css<W>(&self, dest: &mut W) -> fmt::Result
     where
         W: fmt::Write,
     {
-        match *self {
-            Combinator::Child => dest.write_str(" > "),
-            Combinator::Descendant => dest.write_str(" "),
-            Combinator::NextSibling => dest.write_str(" + "),
-            Combinator::LaterSibling => dest.write_str(" ~ "),
-            Combinator::PseudoElement | Combinator::Part | Combinator::SlotAssignment => Ok(()),
-        }
+        self.to_css_internal(dest, true)
     }
 }
 
@@ -1935,6 +1989,7 @@ impl<Impl: SelectorImpl> ToCss for Component<Impl> {
                 dest.write_str(")")
             },
             NonTSPseudoClass(ref pseudo) => pseudo.to_css(dest),
+            RelativeSelectorAnchor => Ok(()),
         }
     }
 }
@@ -1994,13 +2049,19 @@ fn parse_selector<'i, 't, P, Impl>(
     parser: &P,
     input: &mut CssParser<'i, 't>,
     mut state: SelectorParsingState,
+    parse_relative: ParseRelative,
 ) -> Result<Selector<Impl>, ParseError<'i, P::Error>>
 where
     P: Parser<'i, Impl = Impl>,
     Impl: SelectorImpl,
 {
     let mut builder = SelectorBuilder::default();
-
+    if parse_relative == ParseRelative::Yes {
+        builder.push_simple_selector(Component::RelativeSelectorAnchor);
+        // Do we see a combinator? If so, push that. Otherwise, push a descendant combinator.
+        builder
+            .push_combinator(parse_combinator::<P, Impl>(input).unwrap_or(Combinator::Descendant));
+    }
     'outer_loop: loop {
         // Parse a sequence of simple selectors.
         let empty = parse_compound_selector(parser, &mut state, input, &mut builder)?;
@@ -2021,37 +2082,11 @@ where
             break;
         }
 
-        // Parse a combinator.
-        let combinator;
-        let mut any_whitespace = false;
-        loop {
-            let before_this_token = input.state();
-            match input.next_including_whitespace() {
-                Err(_e) => break 'outer_loop,
-                Ok(&Token::WhiteSpace(_)) => any_whitespace = true,
-                Ok(&Token::Delim('>')) => {
-                    combinator = Combinator::Child;
-                    break;
-                },
-                Ok(&Token::Delim('+')) => {
-                    combinator = Combinator::NextSibling;
-                    break;
-                },
-                Ok(&Token::Delim('~')) => {
-                    combinator = Combinator::LaterSibling;
-                    break;
-                },
-                Ok(_) => {
-                    input.reset(&before_this_token);
-                    if any_whitespace {
-                        combinator = Combinator::Descendant;
-                        break;
-                    } else {
-                        break 'outer_loop;
-                    }
-                },
-            }
-        }
+        let combinator = if let Ok(c) = parse_combinator::<P, Impl>(input) {
+            c
+        } else {
+            break 'outer_loop;
+        };
 
         if !state.allows_combinators() {
             return Err(input.new_custom_error(SelectorParseErrorKind::InvalidState));
@@ -2059,8 +2094,35 @@ where
 
         builder.push_combinator(combinator);
     }
+    return Ok(Selector(builder.build()));
+}
 
-    Ok(Selector(builder.build()))
+fn parse_combinator<'i, 't, P, Impl>(input: &mut CssParser<'i, 't>) -> Result<Combinator, ()> {
+    let mut any_whitespace = false;
+    loop {
+        let before_this_token = input.state();
+        match input.next_including_whitespace() {
+            Err(_e) => return Err(()),
+            Ok(&Token::WhiteSpace(_)) => any_whitespace = true,
+            Ok(&Token::Delim('>')) => {
+                return Ok(Combinator::Child);
+            },
+            Ok(&Token::Delim('+')) => {
+                return Ok(Combinator::NextSibling);
+            },
+            Ok(&Token::Delim('~')) => {
+                return Ok(Combinator::LaterSibling);
+            },
+            Ok(_) => {
+                input.reset(&before_this_token);
+                if any_whitespace {
+                    return Ok(Combinator::Descendant);
+                } else {
+                    return Err(());
+                }
+            },
+        }
+    }
 }
 
 impl<Impl: SelectorImpl> Selector<Impl> {
@@ -2073,7 +2135,12 @@ impl<Impl: SelectorImpl> Selector<Impl> {
     where
         P: Parser<'i, Impl = Impl>,
     {
-        parse_selector(parser, input, SelectorParsingState::empty())
+        parse_selector(
+            parser,
+            input,
+            SelectorParsingState::empty(),
+            ParseRelative::No,
+        )
     }
 }
 
@@ -2481,7 +2548,8 @@ where
         state |
             SelectorParsingState::SKIP_DEFAULT_NAMESPACE |
             SelectorParsingState::DISALLOW_PSEUDOS,
-        ParseErrorRecovery::DiscardList,
+        ForgivingParsing::No,
+        ParseRelative::No,
     )?;
 
     Ok(Component::Negation(list.0.into_vec().into_boxed_slice()))
@@ -2586,7 +2654,7 @@ where
     Ok(empty)
 }
 
-fn parse_is_where_has<'i, 't, P, Impl>(
+fn parse_is_where<'i, 't, P, Impl>(
     parser: &P,
     input: &mut CssParser<'i, 't>,
     state: SelectorParsingState,
@@ -2608,9 +2676,32 @@ where
         state |
             SelectorParsingState::SKIP_DEFAULT_NAMESPACE |
             SelectorParsingState::DISALLOW_PSEUDOS,
-        ParseErrorRecovery::IgnoreInvalidSelector,
+        ForgivingParsing::Yes,
+        ParseRelative::No,
     )?;
     Ok(component(inner.0.into_vec().into_boxed_slice()))
+}
+
+fn parse_has<'i, 't, P, Impl>(
+    parser: &P,
+    input: &mut CssParser<'i, 't>,
+    state: SelectorParsingState,
+) -> Result<Component<Impl>, ParseError<'i, P::Error>>
+where
+    P: Parser<'i, Impl = Impl>,
+    Impl: SelectorImpl,
+{
+    debug_assert!(parser.parse_has());
+    let inner = SelectorList::parse_with_state(
+        parser,
+        input,
+        state |
+            SelectorParsingState::SKIP_DEFAULT_NAMESPACE |
+            SelectorParsingState::DISALLOW_PSEUDOS,
+        ForgivingParsing::No,
+        ParseRelative::Yes,
+    )?;
+    Ok(Component::Has(inner.0.into_vec().into_boxed_slice()))
 }
 
 fn parse_functional_pseudo_class<'i, 't, P, Impl>(
@@ -2628,9 +2719,9 @@ where
         "nth-of-type" => return parse_nth_pseudo_class(parser, input, state, NthType::OfType),
         "nth-last-child" => return parse_nth_pseudo_class(parser, input, state, NthType::LastChild),
         "nth-last-of-type" => return parse_nth_pseudo_class(parser, input, state, NthType::LastOfType),
-        "is" if parser.parse_is_and_where() => return parse_is_where_has(parser, input, state, Component::Is),
-        "where" if parser.parse_is_and_where() => return parse_is_where_has(parser, input, state, Component::Where),
-        "has" if parser.parse_has() => return parse_is_where_has(parser, input, state, Component::Has),
+        "is" if parser.parse_is_and_where() => return parse_is_where(parser, input, state, Component::Is),
+        "where" if parser.parse_is_and_where() => return parse_is_where(parser, input, state, Component::Where),
+        "has" if parser.parse_has() => return parse_has(parser, input, state),
         "host" => {
             if !state.allows_tree_structural_pseudo_classes() {
                 return Err(input.new_custom_error(SelectorParseErrorKind::InvalidState));
@@ -2644,7 +2735,7 @@ where
     }
 
     if parser.parse_is_and_where() && parser.is_is_alias(&name) {
-        return parse_is_where_has(parser, input, state, Component::Is);
+        return parse_is_where(parser, input, state, Component::Is);
     }
 
     if !state.allows_custom_functional_pseudo_classes() {
@@ -2690,7 +2781,8 @@ where
         state |
             SelectorParsingState::SKIP_DEFAULT_NAMESPACE |
             SelectorParsingState::DISALLOW_PSEUDOS,
-        ParseErrorRecovery::DiscardList,
+        ForgivingParsing::No,
+        ParseRelative::No,
     )?;
     Ok(Component::NthOf(NthOfSelectorData::new(
         &nth_data,
