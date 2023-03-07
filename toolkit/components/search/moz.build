@@ -32,10 +32,6 @@ EXTRA_JS_MODULES += [
     "UserSearchEngine.sys.mjs",
 ]
 
-EXTRA_COMPONENTS += [
-    "toolkitsearch.manifest",
-]
-
 XPCOM_MANIFESTS += [
     "components.conf",
 ]

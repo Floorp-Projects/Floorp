@@ -6,24 +6,70 @@
 "use strict";
 
 const KEYWORD = "keyword";
+let timerManager;
 
 add_task(async function setup() {
   let server = useHttpServer("");
   server.registerContentType("sjs", "sjs");
   await AddonTestUtils.promiseStartupManager();
   await Services.search.init();
+
+  timerManager = Cc["@mozilla.org/updates/timer-manager;1"].getService(
+    Ci.nsIUpdateTimerManager
+  );
 });
 
-add_task(async function test_installEngine() {
+add_task(async function test_installEngine_with_updates_disabled() {
+  const engineData = {
+    baseURL: gDataUrl,
+    name: "test engine",
+    method: "GET",
+    updateFile: "opensearch/simple.xml",
+  };
+
+  Services.prefs.setBoolPref(SearchUtils.BROWSER_SEARCH_PREF + "update", false);
+  Assert.ok(
+    !("search-engine-update-timer" in timerManager.wrappedJSObject._timers),
+    "Should not have registered the update timer already"
+  );
+
+  await SearchTestUtils.promiseNewSearchEngine({
+    url: `${gDataUrl}data/engineMaker.sjs?${JSON.stringify(engineData)}`,
+  });
+
+  Assert.ok(
+    Services.search.getEngineByName("test engine"),
+    "Should have added the test engine."
+  );
+  Assert.ok(
+    !("search-engine-update-timer" in timerManager.wrappedJSObject._timers),
+    "Should have not registered the update timer when updates are disabled"
+  );
+});
+
+add_task(async function test_installEngine_with_updates_enabled() {
   const engineData = {
     baseURL: gDataUrl,
     name: "original engine",
     method: "GET",
     updateFile: "opensearch/simple.xml",
   };
+
+  Services.prefs.setBoolPref(SearchUtils.BROWSER_SEARCH_PREF + "update", true);
+
+  Assert.ok(
+    !("search-engine-update-timer" in timerManager.wrappedJSObject._timers),
+    "Should not have registered the update timer already"
+  );
+
   let engine = await SearchTestUtils.promiseNewSearchEngine({
     url: `${gDataUrl}data/engineMaker.sjs?${JSON.stringify(engineData)}`,
   });
+
+  Assert.ok(
+    "search-engine-update-timer" in timerManager.wrappedJSObject._timers,
+    "Should have registered the update timer"
+  );
 
   engine.alias = KEYWORD;
   await Services.search.moveEngine(engine, 0);
