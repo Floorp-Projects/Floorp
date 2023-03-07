@@ -165,7 +165,7 @@ function createNetworkEvent(
     timestamp,
     fromCache,
     fromServiceWorker,
-    extraStringData,
+    rawHeaders,
     blockedReason,
     blockingExtension = null,
     saveRequestAndResponseBodies = false,
@@ -181,7 +181,7 @@ function createNetworkEvent(
   event.innerWindowId = this.getChannelInnerWindowId(channel);
   event.url = channel.URI.spec;
   event.private = channel.isChannelPrivate;
-  event.headersSize = extraStringData ? extraStringData.length : 0;
+  event.headersSize = rawHeaders ? rawHeaders.length : 0;
   event.startedDateTime = (timestamp
     ? new Date(Math.round(timestamp / 1000))
     : new Date()

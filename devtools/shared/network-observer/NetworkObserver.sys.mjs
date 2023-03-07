@@ -702,7 +702,7 @@ export class NetworkObserver {
     channel,
     {
       timestamp,
-      extraStringData,
+      rawHeaders,
       fromCache,
       fromServiceWorker,
       blockedReason,
@@ -730,7 +730,7 @@ export class NetworkObserver {
       timestamp,
       fromCache,
       fromServiceWorker,
-      extraStringData,
+      rawHeaders,
       blockedReason,
       blockingExtension,
       saveRequestAndResponseBodies: this.#saveRequestAndResponseBodies,
@@ -753,7 +753,7 @@ export class NetworkObserver {
       headers,
     } = lazy.NetworkUtils.fetchRequestHeadersAndCookies(channel);
 
-    httpActivity.owner.addRequestHeaders(headers, extraStringData);
+    httpActivity.owner.addRequestHeaders(headers, rawHeaders);
     httpActivity.owner.addRequestCookies(cookies);
 
     return httpActivity;
@@ -768,17 +768,17 @@ export class NetworkObserver {
    * @private
    * @param nsIHttpChannel channel
    * @param number timestamp
-   * @param string extraStringData
+   * @param string rawHeaders
    * @return void
    */
-  #onRequestHeader(channel, timestamp, extraStringData) {
+  #onRequestHeader(channel, timestamp, rawHeaders) {
     if (this.#ignoreChannelFunction(channel)) {
       return;
     }
 
     this.#createNetworkEvent(channel, {
       timestamp,
-      extraStringData,
+      rawHeaders,
     });
   }
 
