@@ -43,7 +43,7 @@ function log(...args) {
 }
 
 // Wait for the initialization request.
-addEventListener("message", initialize);
+addEventListener("message", handleInitializationMessage);
 
 /**
  * Initialize the engine, and get it ready to handle language identification requests.
@@ -56,7 +56,7 @@ addEventListener("message", initialize);
  * @property {ArrayBuffer} data.modelBuffer - The buffer containing the language-id model binary.
  * @property {boolean} data.isLoggingEnabled
  */
-async function initialize({ data }) {
+async function handleInitializationMessage({ data }) {
   if (data.type !== "initialize") {
     throw new Error(
       "The LanguageIdEngine worker received a message before it was initialized."
@@ -64,59 +64,138 @@ async function initialize({ data }) {
   }
 
   try {
-    const { modelBuffer, wasmBuffer, isLoggingEnabled } = data;
-
-    if (!modelBuffer) {
-      throw new Error('Worker initialization missing "modelBuffer"');
-    }
-    if (!wasmBuffer) {
-      throw new Error('Worker initialization missing "wasmBuffer"');
-    }
+    const { isLoggingEnabled } = data;
     if (isLoggingEnabled) {
       // Respect the "browser.translations.logLevel" preference.
       _isLoggingEnabled = true;
     }
-
-    let promise = new Promise((resolve, reject) => {
-      const initialModule = {
-        onAbort() {
-          reject(new Error("Error loading the fastText Wasm Module"));
-        },
-        onRuntimeInitialized() {
-          addOnPostRun(() => {
-            const ft = new FastText(initialModule);
-            const model = ft.loadModelBinary(modelBuffer);
-            resolve(model);
-          });
-        },
-        wasmBinary: wasmBuffer,
-      };
-      loadFastText(initialModule);
-    });
-
-    let model = await promise;
-    new LanguageIdWorker(model);
+    const languageIdEngine = await initializeLanguageIdEngine(data);
+    handleMessages(languageIdEngine);
     postMessage({ type: "initialization-success" });
   } catch (error) {
     console.error(error);
     postMessage({ type: "initialization-error", error: error?.message });
   }
 
-  removeEventListener("message", initialize);
+  removeEventListener("message", handleInitializationMessage);
 }
 
 /**
- * The LanguageIdWorker listens for messages that contain text for which to identify
- * the human language in which the text is written.
+ * Initializes the fastText wasm runtime and returns the fastText model.
+ *
+ * @param {ArrayBuffer} data.wasmBuffer - The buffer containing the wasm binary.
+ * @param {ArrayBuffer} data.modelBuffer - The buffer containing the language-id model binary.
+ * @returns {FastTextModel}
  */
-class LanguageIdWorker {
+function initializeFastTextModel(modelBuffer, wasmBuffer) {
+  return new Promise((resolve, reject) => {
+    const initialModule = {
+      onAbort() {
+        reject(new Error("Error loading the fastText Wasm Module"));
+      },
+      onRuntimeInitialized() {
+        addOnPostRun(() => {
+          const ft = new FastText(initialModule);
+          const model = ft.loadModelBinary(modelBuffer);
+          resolve(model);
+        });
+      },
+      wasmBinary: wasmBuffer,
+    };
+    loadFastText(initialModule);
+  });
+}
+
+/**
+ * Initialize the LanguageIdEngine from the data payload by loading
+ * the fastText wasm runtime and model and constructing the engine.
+ *
+ * @param {Object} data
+ * @property {ArrayBuffer} data.wasmBuffer - The buffer containing the wasm binary.
+ * @property {ArrayBuffer} data.modelBuffer - The buffer containing the language-id model binary.
+ */
+async function initializeLanguageIdEngine(data) {
+  const { modelBuffer, wasmBuffer } = data;
+  if (!modelBuffer) {
+    throw new Error('LanguageIdEngine initialization missing "modelBuffer"');
+  }
+  if (!wasmBuffer) {
+    throw new Error('LanguageIdEngine initialization missing "wasmBuffer"');
+  }
+  const model = await initializeFastTextModel(modelBuffer, wasmBuffer);
+  return new LanguageIdEngine(model);
+}
+
+/**
+ * Sets up the message handling for the lworker.
+ *
+ * @param {LanguageIdEngine | MockedLanguageIdEngine} languageIdEngine
+ */
+function handleMessages(languageIdEngine) {
+  /**
+   * Handle any message after the initialization message.
+   *
+   * @param {Object} data
+   * @property {string} data.type - The message type.
+   * @property {string} data.message - The message text to identify the language of.
+   * @property {number} data.messageId - The ID of the message.
+   */
+  addEventListener("message", ({ data }) => {
+    try {
+      if (data.type === "initialize") {
+        throw new Error(
+          "The language-identification engine must not be re-initialized."
+        );
+      }
+      switch (data.type) {
+        case "language-id-request": {
+          const { message, messageId } = data;
+          try {
+            const [
+              confidence,
+              languageLabel,
+            ] = languageIdEngine.identifyLanguage(message);
+            postMessage({
+              type: "language-id-response",
+              languageLabel,
+              confidence,
+              messageId,
+            });
+          } catch (error) {
+            console.error(error);
+            postMessage({
+              type: "language-id-error",
+              messageId,
+            });
+          }
+          break;
+        }
+        default: {
+          console.warn("Unknown message type:", data.type);
+        }
+      }
+    } catch (error) {
+      // Ensure the unexpected errors are surfaced in the console.
+      console.error(error);
+    }
+  });
+}
+
+/**
+ * The LanguageIdEngine wraps around a machine-learning model that can identify text
+ * as being written in a given human language. The engine is responsible for invoking
+ * model and returning the language label in the format that is expected by firefox
+ * translations code.
+ */
+class LanguageIdEngine {
+  /** @type {FastTextModel} */
+  #model;
+
   /**
    * @param {FastTextModel} model
    */
   constructor(model) {
-    /** @type {FastTextModel} */
-    this.model = model;
-    addEventListener("message", this.onMessage.bind(this));
+    this.#model = model;
   }
 
   /**
@@ -137,50 +216,28 @@ class LanguageIdWorker {
   }
 
   /**
-   * Handle any message after the initialization message.
+   * Identifies the human language in which the message is written and returns
+   * the two-letter language label of the language it is determined to be along
+   * with a rating of how confident the model is that the label is correct.
    *
-   * @param {Object} data
-   * @property {string} data.type - The message type.
-   * @property {string} data.message - The message text to identify the language of.
-   * @property {number} data.messageId - The ID of the message.
+   * @param {string} message
+   * @returns {Array<number | string>} An array containing the confidence and language label.
+   * The confidence is a number between 0 and 1, representing a percentage.
+   * The language label is a two-character label such as "en" for English.
+   * e.g. [0.87, "en"]
    */
-  onMessage({ data }) {
-    if (data.type === "initialize") {
-      throw new Error("The Language Id engine must not be re-initialized.");
+  identifyLanguage(message) {
+    const mostLikelyLanguageData = this.#model
+      .predict(message.trim(), LANGUAGE_COUNT, CONFIDENCE_THRESHOLD)
+      .get(0);
+
+    // This should never fail as long as
+    // LANGUAGE_COUNT > 1 && CONFIDENCE_THRESHOLD === 0.0
+    if (!mostLikelyLanguageData) {
+      throw new Error("Unable to identify a language");
     }
-    switch (data.type) {
-      case "language-id-request": {
-        const { message, messageId } = data;
-        try {
-          let mostLikelyLanguage = this.model
-            .predict(message.trim(), LANGUAGE_COUNT, CONFIDENCE_THRESHOLD)
-            .get(0);
 
-          // This should never fail as long as
-          // LANGUAGE_COUNT > 1 && CONFIDENCE_THRESHOLD === 0.0
-          if (!mostLikelyLanguage) {
-            throw new Error("Unable to identify a language");
-          }
-
-          const [confidence, languageLabel] = mostLikelyLanguage;
-
-          postMessage({
-            type: "language-id-response",
-            languageLabel: this.#formatLanguageLabel(languageLabel),
-            confidence,
-            messageId,
-          });
-        } catch (error) {
-          console.error(error);
-          postMessage({
-            type: "language-id-error",
-            messageId,
-          });
-        }
-        break;
-      }
-      default:
-        console.warn("Unknown message type:", data.type);
-    }
+    const [confidence, languageLabel] = mostLikelyLanguageData;
+    return [confidence, this.#formatLanguageLabel(languageLabel)];
   }
 }

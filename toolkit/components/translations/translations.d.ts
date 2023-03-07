@@ -227,6 +227,16 @@ interface TranslationsEnginePayload {
 }
 
 /**
+ * These are the files that are downloaded from Remote Settings that are necessary
+ * to start the language-identification engine. These may not be available if running
+ * in tests.
+ */
+interface LanguageIdEnginePayload {
+  wasmBuffer: ArrayBuffer,
+  modelBuffer: ArrayBuffer,
+}
+
+/**
  * Nodes that are being translated are given priority according to their visibility.
  */
 export type NodeVisibility = "in-viewport" | "out-of-viewport" | "hidden";
