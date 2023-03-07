@@ -2933,10 +2933,11 @@ nsChangeHint nsStyleTextReset::CalcDifference(
 // nsStyleText
 //
 
-static StyleRGBA DefaultColor(const Document& aDocument) {
-  return StyleRGBA::FromColor(PreferenceSheet::PrefsFor(aDocument)
-                                  .ColorsFor(aDocument.DefaultColorScheme())
-                                  .mDefault);
+static StyleAbsoluteColor DefaultColor(const Document& aDocument) {
+  return StyleAbsoluteColor::FromColor(
+      PreferenceSheet::PrefsFor(aDocument)
+          .ColorsFor(aDocument.DefaultColorScheme())
+          .mDefault);
 }
 
 nsStyleText::nsStyleText(const Document& aDocument)

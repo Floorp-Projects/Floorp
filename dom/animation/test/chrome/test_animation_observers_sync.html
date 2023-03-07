@@ -834,14 +834,14 @@ function runTest() {
     test(t => {
       // A long transition with a predictable value.
       var div =
-        addDiv(t, { style: "transition: background-color 100s steps(2, end) -51s; " +
-                           "background-color: yellow;" });
+        addDiv(t, { style: "transition: z-index 100s -51s; " +
+                           "z-index: 10;" });
       var observer =
         setupSynchronousObserver(t,
                                  aOptions.subtree ? div.parentNode : div,
                                  aOptions.subtree);
       getComputedStyle(div).transitionProperty;
-      div.style.backgroundColor = "lime";
+      div.style.zIndex = "100";
 
       // The transition should cause the creation of a single Animation.
       var animations = div.getAnimations();
@@ -853,10 +853,10 @@ function runTest() {
         "records after transition start");
 
       // Cancel the transition by setting the current animation value.
-      var value = "rgb(128, 255, 0)";
-      assert_equals(getComputedStyle(div).backgroundColor, value,
+      let value = "83";
+      assert_equals(getComputedStyle(div).zIndex, value,
         "half-way transition value");
-      div.style.backgroundColor = value;
+      div.style.zIndex = value;
       getComputedStyle(div).transitionProperty;
 
       assert_equals_records(observer.takeRecords(),

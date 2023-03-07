@@ -1718,11 +1718,19 @@ DeviceColor ToDeviceColor(nscolor aColor) {
   return ToDeviceColor(sRGBColor::FromABGR(aColor));
 }
 
-DeviceColor ToDeviceColor(const StyleRGBA& aColor) {
+DeviceColor ToDeviceColor(const StyleAbsoluteColor& aColor) {
+  // TODO(tlouw): aColor might not be in sRGB.
+  MOZ_ASSERT(aColor.color_space == StyleColorSpace::Srgb,
+             "color should be in sRGB");
+
   return ToDeviceColor(aColor.ToColor());
 }
 
-sRGBColor ToSRGBColor(const StyleAnimatedRGBA& aColor) {
+sRGBColor ToSRGBColor(const StyleAbsoluteColor& aColor) {
+  // TODO(tlouw): aColor might not be in sRGB.
+  MOZ_ASSERT(aColor.color_space == StyleColorSpace::Srgb,
+             "color should be in sRGB");
+
   const auto ToComponent = [](float aF) -> float {
     float component = std::min(std::max(0.0f, aF), 1.0f);
     if (MOZ_UNLIKELY(!std::isfinite(component))) {
@@ -1730,12 +1738,8 @@ sRGBColor ToSRGBColor(const StyleAnimatedRGBA& aColor) {
     }
     return component;
   };
-  return {ToComponent(aColor.red), ToComponent(aColor.green),
-          ToComponent(aColor.blue), ToComponent(aColor.alpha)};
-}
-
-DeviceColor ToDeviceColor(const StyleAnimatedRGBA& aColor) {
-  return ToDeviceColor(ToSRGBColor(aColor));
+  return {ToComponent(aColor.components._0), ToComponent(aColor.components._1),
+          ToComponent(aColor.components._2), ToComponent(aColor.alpha)};
 }
 
 }  // namespace gfx

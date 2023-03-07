@@ -1057,12 +1057,12 @@ void Gecko_SetFontPaletteBase(gfx::FontPaletteValueSet::PaletteValues* aValues,
 
 void Gecko_SetFontPaletteOverride(
     gfx::FontPaletteValueSet::PaletteValues* aValues, int32_t aIndex,
-    StyleRGBA aColor) {
+    StyleAbsoluteColor* aColor) {
   if (aIndex < 0) {
     return;
   }
   aValues->mOverrides.AppendElement(gfx::FontPaletteValueSet::OverrideColor{
-      uint32_t(aIndex), gfx::sRGBColor::FromABGR(aColor.ToColor())});
+      uint32_t(aIndex), gfx::sRGBColor::FromABGR(aColor->ToColor())});
 }
 
 void Gecko_CounterStyle_ToPtr(const StyleCounterStyle* aStyle,

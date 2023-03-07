@@ -540,6 +540,12 @@ renaming_overrides_prefixing = true
   static inline StyleGenericColor White();
   static inline StyleGenericColor Transparent();
   bool MaybeTransparent() const;
+
+  /**
+   * Compute the final color, taking into account the foreground color.
+   **/
+  StyleAbsoluteColor ResolveColor(const StyleAbsoluteColor&) const;
+
   /**
    * Compute the final color, taking into account the foreground color from the
    * frame's ComputedStyle.
@@ -554,14 +560,26 @@ renaming_overrides_prefixing = true
    * Compute the final color, making the argument the foreground color.
    */
   nscolor CalcColor(nscolor) const;
-  nscolor CalcColor(const StyleRGBA&) const;
+  nscolor CalcColor(const StyleAbsoluteColor&) const;
 """
 
-"RGBA" = """
-  static inline StyleRGBA Transparent();
-  static inline StyleRGBA FromColor(nscolor);
+"AbsoluteColor" = """
+  /**
+   * Create a new AbsoluteColor in the sRGB color space.
+   */
+  static inline StyleAbsoluteColor Srgb(float red, float green, float blue, float alpha);
 
-  inline nscolor ToColor() const;
+  static inline StyleAbsoluteColor Transparent();
+  static inline StyleAbsoluteColor Black();
+  static inline StyleAbsoluteColor White();
+
+  static inline StyleAbsoluteColor FromColor(nscolor);
+
+  /**
+   * Convert this color to an nscolor. The color will be converted to sRGB first
+   * if required.
+   */
+  nscolor ToColor() const;
 """
 
 "OwnedSlice" = """

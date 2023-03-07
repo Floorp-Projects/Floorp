@@ -15,20 +15,34 @@
 
 namespace mozilla {
 
-inline StyleRGBA StyleRGBA::FromColor(nscolor aColor) {
-  return {NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor),
-          NS_GET_A(aColor) / 255.0f};
+inline StyleAbsoluteColor StyleAbsoluteColor::FromColor(nscolor aColor) {
+  return StyleAbsoluteColor::Srgb(
+      NS_GET_R(aColor) / 255.0f, NS_GET_G(aColor) / 255.0f,
+      NS_GET_B(aColor) / 255.0f, NS_GET_A(aColor) / 255.0f);
 }
 
-inline nscolor StyleRGBA::ToColor() const {
-  return NS_RGBA(red, green, blue, nsStyleUtil::FloatToColorComponent(alpha));
+// static
+inline StyleAbsoluteColor StyleAbsoluteColor::Srgb(float red, float green,
+                                                   float blue, float alpha) {
+  return StyleAbsoluteColor{StyleColorComponents{red, green, blue}, alpha,
+                            StyleColorSpace::Srgb, StyleSerializationFlags{0}};
 }
 
-inline StyleRGBA StyleRGBA::Transparent() { return {0, 0, 0, 0}; }
+inline StyleAbsoluteColor StyleAbsoluteColor::Transparent() {
+  return StyleAbsoluteColor::Srgb(0.0f, 0.0f, 0.0f, 0.0f);
+}
+
+inline StyleAbsoluteColor StyleAbsoluteColor::Black() {
+  return StyleAbsoluteColor::Srgb(0.0f, 0.0f, 0.0f, 1.0f);
+}
+
+inline StyleAbsoluteColor StyleAbsoluteColor::White() {
+  return StyleAbsoluteColor::Srgb(1.0f, 1.0f, 1.0f, 1.0f);
+}
 
 template <>
 inline StyleColor StyleColor::FromColor(nscolor aColor) {
-  return StyleColor::Numeric(StyleRGBA::FromColor(aColor));
+  return StyleColor::Absolute(StyleAbsoluteColor::FromColor(aColor));
 }
 
 template <>
@@ -47,7 +61,10 @@ inline StyleColor StyleColor::Transparent() {
 }
 
 template <>
-nscolor StyleColor::CalcColor(const StyleRGBA&) const;
+StyleAbsoluteColor StyleColor::ResolveColor(const StyleAbsoluteColor&) const;
+
+template <>
+nscolor StyleColor::CalcColor(const StyleAbsoluteColor&) const;
 
 template <>
 nscolor StyleColor::CalcColor(nscolor) const;
