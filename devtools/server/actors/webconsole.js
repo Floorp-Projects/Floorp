@@ -165,13 +165,6 @@ class WebConsoleActor extends Actor {
       "changed-toplevel-document",
       this._onChangedToplevelDocument
     );
-    this._onObserverNotification = this._onObserverNotification.bind(this);
-    if (this.parentActor.isRootActor) {
-      Services.obs.addObserver(
-        this._onObserverNotification,
-        "last-pb-context-exited"
-      );
-    }
   }
 
   /**
@@ -353,13 +346,6 @@ class WebConsoleActor extends Actor {
       "changed-toplevel-document",
       this._onChangedToplevelDocument
     );
-
-    if (this.parentActor.isRootActor) {
-      Services.obs.removeObserver(
-        this._onObserverNotification,
-        "last-pb-context-exited"
-      );
-    }
 
     this._webConsoleCommandsCache = null;
     this._lastConsoleInputEvaluation = null;
@@ -1794,22 +1780,6 @@ class WebConsoleActor extends Actor {
     });
 
     return ownProperties;
-  }
-
-  /**
-   * Notification observer for the "last-pb-context-exited" topic.
-   *
-   * @private
-   * @param object subject
-   *        Notification subject - in this case it is the inner window ID that
-   *        was destroyed.
-   * @param string topic
-   *        Notification topic.
-   */
-  _onObserverNotification(subject, topic) {
-    if (topic === "last-pb-context-exited") {
-      this.emit("lastPrivateContextExited");
-    }
   }
 
   /**
