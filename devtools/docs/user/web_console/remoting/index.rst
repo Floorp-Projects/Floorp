@@ -174,24 +174,6 @@ The ``getCachedMessages`` packet allows one to retrieve the cached messages from
 
 Each message in the array is of the same type as when we send typical page errors and console API calls. These will be explained in the following sections of this document.
 
-Private browsing
-----------------
-
-The Browser Console can be used while the user has private windows open. Each page error, console API message and network request is annotated with a ``private`` flag. Private messages are cleared whenever the last private window is closed. The console actor provides the ``lastPrivateContextExited`` notification:
-
-.. code-block:: json
-
-  {
-    "from": "conn0.console19",
-    "type": "lastPrivateContextExited"
-  }
-
-
-This notification is sent only when your client is attached to the global console actor, it does not make sense for tab console actors.
-
-.. note::
-  This notification has been introduced in Firefox 24.
-
 Page errors
 ***********
 

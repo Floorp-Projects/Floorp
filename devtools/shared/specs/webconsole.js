@@ -91,7 +91,6 @@ const webconsoleSpecPrototype = {
     inspectObject: {
       objectActor: Option(0, "json"),
     },
-    lastPrivateContextExited: {},
     documentEvent: {
       name: Option(0, "string"),
       time: Option(0, "string"),

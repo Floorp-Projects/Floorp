@@ -1346,15 +1346,6 @@ loader.lazyRequireGetter(
   ResourceCommand.TYPES.REFLOW,
   "resource://devtools/shared/commands/resource/legacy-listeners/reflow.js"
 );
-// @backward-compat { version 110 } Once Firefox 110 is release, we can:
-// - remove this entry
-// - remove the legacy listener file and the moz.build entry
-// - remove the `lastPrivateContextExited` event from the webconsole spec
-loader.lazyRequireGetter(
-  LegacyListeners,
-  ResourceCommand.TYPES.LAST_PRIVATE_CONTEXT_EXIT,
-  "resource://devtools/shared/commands/resource/legacy-listeners/last-private-context-exit.js"
-);
 
 // Optional transformers for each type of resource.
 // Each module added here should be a function that will receive the resource, the target, …
