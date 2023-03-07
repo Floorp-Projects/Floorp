@@ -57,7 +57,11 @@ def _get_upstream_deps_per_gradle_project(gradle_root, existing_build_config):
         local_dep_match = _LOCAL_DEPENDENCY_PATTERN.search(line)
         if local_dep_match:
             local_dependency_name = local_dep_match.group("local_dependency_name")
-            if local_dependency_name != current_project_name:
+            if (
+                local_dependency_name != current_project_name
+                # These lint rules are not part of android-components
+                and local_dependency_name != "mozilla-lint-rules"
+            ):
                 project_dependencies[current_project_name].add(local_dependency_name)
 
     return {
