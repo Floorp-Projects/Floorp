@@ -71,6 +71,10 @@ class AboutWelcomeChild extends JSWindowActorChild {
       defineAs: "AWSelectTheme",
     });
 
+    Cu.exportFunction(this.AWEvaluateScreenTargeting.bind(this), window, {
+      defineAs: "AWEvaluateScreenTargeting",
+    });
+
     Cu.exportFunction(this.AWSendEventTelemetry.bind(this), window, {
       defineAs: "AWSendEventTelemetry",
     });
@@ -141,6 +145,12 @@ class AboutWelcomeChild extends JSWindowActorChild {
     );
   }
 
+  AWEvaluateScreenTargeting(data) {
+    return this.wrapPromise(
+      this.sendQuery("AWPage:EVALUATE_SCREEN_TARGETING", data)
+    );
+  }
+
   /**
    * Send initial data to page including experiment information
    */
@@ -179,12 +189,16 @@ class AboutWelcomeChild extends JSWindowActorChild {
     // override the default with `null`
     let defaults = lazy.AboutWelcomeDefaults.getDefaults();
 
+    // Removing screens based on their targeting evaluations
+    let screens = featureConfig.screens ?? defaults.screens;
+    screens = await this.AWEvaluateScreenTargeting(screens);
+
     const content = await lazy.AboutWelcomeDefaults.prepareContentForReact({
       ...attributionData,
       ...experimentMetadata,
       ...defaults,
       ...featureConfig,
-      screens: featureConfig.screens ?? defaults.screens,
+      screens,
       backdrop: featureConfig.backdrop ?? defaults.backdrop,
     });
 
