@@ -12,8 +12,9 @@
     border-top: none;
   }
   
-  #tabbrowser-tabpanels[flex] {
+  :root[lwt-default-theme-in-dark-mode] #tabbrowser-tabpanels[flex] {
     background: var(--toolbar-bgcolor) !important;
+    background-color: var(--toolbar-bgcolor) !important;
   }
   
   #tabbrowser-tabbox {
