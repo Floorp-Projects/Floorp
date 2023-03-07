@@ -515,7 +515,8 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
     }
   }
 
-  virtual UniquePtr<uint8_t[]> GetImageBuffer(int32_t* aFormat) override;
+  virtual UniquePtr<uint8_t[]> GetImageBuffer(
+      int32_t* out_format, gfx::IntSize* out_imageSize) override;
 
   virtual void OnShutdown();
 
