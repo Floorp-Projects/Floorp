@@ -237,9 +237,9 @@ const MESSAGES = () => [
               darkModeImageURL:
                 "chrome://browser/content/callout-tab-pickup-dark.svg",
               reducedMotionImageURL:
-                "chrome://browser/content/callout-colorways.svg",
+                "chrome://activity-stream/content/data/content/assets/whatsnew-send-icon.png",
               darkModeReducedMotionImageURL:
-                "chrome://browser/content/callout-colorways-dark.svg",
+                "chrome://activity-stream/content/data/content/assets/protection-report-icon.png",
               alt: "sample alt text",
             },
             hero_text: {

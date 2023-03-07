@@ -14,13 +14,10 @@
     <link rel="localization" href="browser/branding/brandings.ftl"/>
     <link rel="localization" href="browser/branding/sync-brand.ftl">
     <link rel="localization" href="browser/firefoxView.ftl"/>
-    <link rel="localization" href="browser/colorways.ftl">
-    <link rel="localization" href="browser/colorwaycloset.ftl">
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
     <link rel="stylesheet" href="chrome://browser/content/firefoxview.css">
     <script type="module" src="chrome://browser/content/tab-pickup-container.mjs"></script>
     <script type="module" src="chrome://browser/content/firefoxview.mjs"></script>
-    <script type="module" src="chrome://browser/content/colorways-card.mjs"></script>
     <script type="module" src="chrome://browser/content/recently-closed-tabs.mjs"></script>
     <script type="module" src="chrome://browser/content/tab-pickup-list.mjs"></script>
     <script src="chrome://browser/content/contentTheme.js"></script>
@@ -139,18 +136,6 @@
           <button data-action="mobile-promo-dismiss" class="close icon-button ghost-button" data-l10n-id="firefoxview-close-button"></button>
         </div>
       </details>
-
-      <aside id="colorways" is="colorways-card" hidden>
-        <figure role="presentation">
-          <img id="colorways-collection-figure" role="presentation">
-        </figure>
-        <header>
-          <h1 id="colorways-collection-title"></h1>
-          <div id="colorways-collection-expiry-date"><span></span></div>
-        </header>
-        <div id="colorways-collection-description"></div>
-        <button class="primary" id="colorways-button" data-l10n-id="firefoxview-try-colorways-button"></button>
-      </aside>
 
       <details class="content-container" is="recently-closed-tabs-container" id="recently-closed-tabs-container" open>
         <summary id="recently-closed-tabs-header-section" class="page-section-header" data-l10n-id="firefoxview-collapse-button-hide">
