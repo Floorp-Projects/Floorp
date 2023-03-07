@@ -1786,13 +1786,17 @@ void MarkStack::moveWork(MarkStack& dst, MarkStack& src) {
   // owns |src|, and the thread that owns |dst| is blocked waiting on the
   // ParallelMarkTask::resumed condition variable.
 
+  // Limit the size of moves to stop threads with work spending too much time
+  // donating.
+  static const size_t MaxWordsToMove = 4096;
+
   MOZ_ASSERT(src.markColor() == dst.markColor());
   MOZ_ASSERT(!dst.hasEntries(dst.markColor()));
   MOZ_ASSERT(src.canDonateWork());
 
   size_t base = src.basePositionForCurrentColor();
   size_t totalWords = src.position() - base;
-  size_t wordsToMove = totalWords / 2;
+  size_t wordsToMove = std::min(totalWords / 2, MaxWordsToMove);
 
   size_t targetPos = src.position() - wordsToMove;
   MOZ_ASSERT(src.position() >= base);
