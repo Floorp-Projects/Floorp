@@ -4,7 +4,7 @@
 
 use super::{CollectionRequest, IncomingChangeset, OutgoingChangeset};
 use crate::client_types::ClientData;
-use crate::{telemetry, Guid, ServerTimestamp};
+use crate::{telemetry, CollectionName, Guid, ServerTimestamp};
 use anyhow::Result;
 use std::fmt;
 
@@ -104,7 +104,7 @@ impl TryFrom<&str> for SyncEngineId {
 /// Different engines will produce errors of different types.  To accommodate
 /// this, we force them all to return anyhow::Error.
 pub trait SyncEngine {
-    fn collection_name(&self) -> std::borrow::Cow<'static, str>;
+    fn collection_name(&self) -> CollectionName;
 
     /// Prepares the engine for syncing. The tabs engine currently uses this to
     /// store the current list of clients, which it uses to look up device names
@@ -167,7 +167,7 @@ pub trait SyncEngine {
         records_synced: Vec<Guid>,
     ) -> Result<()>;
 
-    /// The engine is responsible for building the collection request. Engines
+    /// The engine is responsible for building collection requests. Engines
     /// typically will store a lastModified timestamp and use that to build a
     /// request saying "give me full records since that date" - however, other
     /// engines might do something fancier. This could even later be extended to
