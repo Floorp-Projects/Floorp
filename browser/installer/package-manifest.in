@@ -171,7 +171,6 @@
 
 ; JavaScript components
 @RESPATH@/browser/components/BrowserComponents.manifest
-@RESPATH@/components/toolkitsearch.manifest
 @RESPATH@/components/extensions.manifest
 #ifdef MOZ_UPDATER
 @RESPATH@/components/nsUpdateService.manifest
