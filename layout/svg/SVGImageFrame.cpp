@@ -207,7 +207,7 @@ nsresult SVGImageFrame::AttributeChanged(int32_t aNameSpaceID,
     }
   }
 
-  return SVGGeometryFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
+  return NS_OK;
 }
 
 void SVGImageFrame::OnVisibilityChange(
