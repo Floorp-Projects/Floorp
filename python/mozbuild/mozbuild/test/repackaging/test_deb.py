@@ -61,12 +61,14 @@ def test_get_build_variables(version, build_number, expected_deb_pkg_version):
         "x86",
         version,
         build_number,
+        depends="${shlibs:Depends},",
     ) == {
         "DEB_DESCRIPTION": "Mozilla Firefox",
         "DEB_PKG_NAME": "firefox-nightly-try",
         "DEB_PKG_VERSION": expected_deb_pkg_version,
         "DEB_CHANGELOG_DATE": "Wed, 22 Feb 2023 00:00:00 -0000",
         "DEB_ARCH_NAME": "i386",
+        "DEB_DEPENDS": "${shlibs:Depends},",
     }
 
 

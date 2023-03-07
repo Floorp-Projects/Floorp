@@ -5,6 +5,6 @@ Section: web
 Build-Depends: debhelper (>= 9)
 
 Package: ${DEB_PKG_NAME}
-Architecture: i386 amd64
-Depends: $${shlibs:Depends},
+Architecture: ${DEB_ARCH_NAME}
+Depends: ${DEB_DEPENDS}
 Description: ${DEB_DESCRIPTION}
