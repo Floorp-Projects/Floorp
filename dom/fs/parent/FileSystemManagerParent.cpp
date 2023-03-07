@@ -449,15 +449,6 @@ IPCResult FileSystemManagerParent::RecvRenameEntry(
   return IPC_OK();
 }
 
-IPCResult FileSystemManagerParent::RecvNeedQuota(
-    FileSystemQuotaRequest&& aRequest, NeedQuotaResolver&& aResolver) {
-  AssertIsOnIOTarget();
-
-  aResolver(0u);
-
-  return IPC_OK();
-}
-
 void FileSystemManagerParent::RequestAllowToClose() {
   ::mozilla::ipc::AssertIsOnBackgroundThread();
 
