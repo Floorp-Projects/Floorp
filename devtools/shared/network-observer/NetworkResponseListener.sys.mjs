@@ -66,6 +66,12 @@ export class NetworkResponseListener {
    */
   #decodedCertificateCache;
   /**
+   * Is the channel from a service worker
+   *
+   * @type {boolean}
+   */
+  #fromServiceWorker;
+  /**
    * See constructor argument of the same name.
    *
    * @type {Object}
@@ -129,9 +135,10 @@ export class NetworkResponseListener {
    */
   #wrappedNotificationCallbacks;
 
-  constructor(httpActivity, decodedCertificateCache) {
+  constructor(httpActivity, decodedCertificateCache, fromServiceWorker) {
     this.#httpActivity = httpActivity;
     this.#decodedCertificateCache = decodedCertificateCache;
+    this.#fromServiceWorker = fromServiceWorker;
 
     // Note that this is really only needed for the non-e10s case.
     // See bug 1309523.
@@ -298,7 +305,7 @@ export class NetworkResponseListener {
     // do that for Service workers as they are run in the child
     // process.
     if (
-      !this.#httpActivity.fromServiceWorker &&
+      !this.#fromServiceWorker &&
       channel instanceof Ci.nsIEncodedChannel &&
       channel.contentEncodings &&
       !channel.applyConversion

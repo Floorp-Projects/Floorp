@@ -154,59 +154,15 @@ function isPreloadRequest(channel) {
 }
 
 /**
- * Creates a network event based on the channel.
+ * Get the channel cause details.
  *
- * @param {*} channel
- * @return {Object} event - The network event
+ * @param {nsIChannel} channel
+ * @returns {Object}
+ *          - loadingDocumentUri {string} uri of the document which created the
+ *            channel
+ *          - type {string} cause type as string
  */
-function createNetworkEvent(
-  channel,
-  {
-    timestamp,
-    fromCache,
-    fromServiceWorker,
-    rawHeaders,
-    blockedReason,
-    blockingExtension = null,
-    saveRequestAndResponseBodies = false,
-  }
-) {
-  channel.QueryInterface(Ci.nsIPrivateBrowsingChannel);
-
-  const event = {};
-  event.method = channel.requestMethod;
-  event.channelId = channel.channelId;
-  event.isFromSystemPrincipal = isChannelFromSystemPrincipal(channel);
-  event.browsingContextID = this.getChannelBrowsingContextID(channel);
-  event.innerWindowId = this.getChannelInnerWindowId(channel);
-  event.url = channel.URI.spec;
-  event.private = channel.isChannelPrivate;
-  event.rawHeaders = rawHeaders;
-  event.headersSize = rawHeaders ? rawHeaders.length : 0;
-  event.startedDateTime = (timestamp
-    ? new Date(Math.round(timestamp / 1000))
-    : new Date()
-  ).toISOString();
-  event.fromCache = fromCache;
-  event.fromServiceWorker = fromServiceWorker;
-  // Only consider channels classified as level-1 to be trackers if our preferences
-  // would not cause such channels to be blocked in strict content blocking mode.
-  // Make sure the value produced here is a boolean.
-  if (channel instanceof Ci.nsIClassifiedChannel) {
-    event.isThirdPartyTrackingResource = !!(
-      channel.isThirdPartyTrackingResource() &&
-      (channel.thirdPartyClassificationFlags & lazy.tpFlagsMask) == 0
-    );
-  }
-  const referrerInfo = channel.referrerInfo;
-  event.referrerPolicy = referrerInfo
-    ? referrerInfo.getReferrerPolicyString()
-    : "";
-
-  if (channel instanceof Ci.nsISupportsPriority) {
-    event.priority = channel.priority;
-  }
-
+function getCauseDetails(channel) {
   // Determine the cause and if this is an XHR request.
   let causeType = Ci.nsIContentPolicy.TYPE_OTHER;
   let causeUri = null;
@@ -219,36 +175,40 @@ function createNetworkEvent(
     }
   }
 
-  // Show the right WebSocket URL in case of WS channel.
-  if (channel.notificationCallbacks) {
-    let wsChannel = null;
-    try {
-      wsChannel = channel.notificationCallbacks.QueryInterface(
-        Ci.nsIWebSocketChannel
-      );
-    } catch (e) {
-      // Not all channels implement nsIWebSocketChannel.
-    }
-    if (wsChannel) {
-      event.url = wsChannel.URI.spec;
-      event.serial = wsChannel.serial;
-    }
-  }
-
-  event.cause = {
-    type: this.causeTypeToString(
+  return {
+    loadingDocumentUri: causeUri,
+    type: causeTypeToString(
       causeType,
       channel.loadFlags,
       channel.loadInfo.internalContentPolicyType
     ),
-    loadingDocumentUri: causeUri,
-    stacktrace: undefined,
   };
+}
 
-  event.isXHR =
-    causeType === Ci.nsIContentPolicy.TYPE_XMLHTTPREQUEST ||
-    causeType === Ci.nsIContentPolicy.TYPE_FETCH;
+/**
+ * Get the channel priority. Priority is a number which typically ranges from
+ * -20 (lowest priority) to 20 (highest priority). Can be null if the channel
+ * does not implement nsISupportsPriority.
+ *
+ * @param {nsIChannel} channel
+ * @returns {number|undefined}
+ */
+function getChannelPriority(channel) {
+  if (channel instanceof Ci.nsISupportsPriority) {
+    return channel.priority;
+  }
 
+  return null;
+}
+
+/**
+ * Get the channel HTTP version as an uppercase string starting with "HTTP/"
+ * (eg "HTTP/2.0").
+ *
+ * @param {nsIChannel} channel
+ * @returns {string}
+ */
+function getHttpVersion(channel) {
   // Determine the HTTP version.
   const httpVersionMaj = {};
   const httpVersionMin = {};
@@ -256,33 +216,84 @@ function createNetworkEvent(
   channel.QueryInterface(Ci.nsIHttpChannelInternal);
   channel.getRequestVersion(httpVersionMaj, httpVersionMin);
 
-  event.httpVersion =
-    "HTTP/" + httpVersionMaj.value + "." + httpVersionMin.value;
+  return "HTTP/" + httpVersionMaj.value + "." + httpVersionMin.value;
+}
 
-  event.discardRequestBody = !saveRequestAndResponseBodies;
-  event.discardResponseBody = !saveRequestAndResponseBodies;
+/**
+ * Get the channel referrer policy as a string
+ * (eg "strict-origin-when-cross-origin").
+ *
+ * @param {nsIChannel} channel
+ * @returns {string}
+ */
+function getReferrerPolicy(channel) {
+  return channel.referrerInfo
+    ? channel.referrerInfo.getReferrerPolicyString()
+    : "";
+}
 
-  if (blockedReason) {
-    event.blockedReason = blockedReason;
-    if (blockingExtension) {
-      event.blockingExtension = blockingExtension;
+/**
+ * Check if the channel is private.
+ *
+ * @param {nsIChannel} channel
+ * @returns {boolean}
+ */
+function isChannelPrivate(channel) {
+  channel.QueryInterface(Ci.nsIPrivateBrowsingChannel);
+  return channel.isChannelPrivate;
+}
+
+/**
+ * isNavigationRequest is true for the one request used to load a new top level
+ * document of a given tab, or top level window. It will typically be false for
+ * navigation requests of iframes, i.e. the request loading another document in
+ * an iframe.
+ *
+ * @param {nsIChannel} channel
+ * @return {boolean}
+ */
+function isNavigationRequest(channel) {
+  return channel.isMainDocumentChannel && channel.loadInfo.isTopLevelLoad;
+}
+
+/**
+ * Returns true  if the channel has been processed by URL-Classifier features
+ * and is considered third-party with the top window URI, and if it has loaded
+ * a resource that is classified as a tracker.
+ *
+ * @param {nsIChannel} channel
+ * @return {boolean}
+ */
+function isThirdPartyTrackingResource(channel) {
+  // Only consider channels classified as level-1 to be trackers if our preferences
+  // would not cause such channels to be blocked in strict content blocking mode.
+  // Make sure the value produced here is a boolean.
+  return !!(
+    channel instanceof Ci.nsIClassifiedChannel &&
+    channel.isThirdPartyTrackingResource() &&
+    (channel.thirdPartyClassificationFlags & lazy.tpFlagsMask) == 0
+  );
+}
+
+/**
+ * Retrieve the websocket channel for the provided channel, if available.
+ * Returns null otherwise.
+ *
+ * @param {nsIChannel} channel
+ * @returns {nsIWebSocketChannel|null}
+ */
+function getWebSocketChannel(channel) {
+  let wsChannel = null;
+  if (channel.notificationCallbacks) {
+    try {
+      wsChannel = channel.notificationCallbacks.QueryInterface(
+        Ci.nsIWebSocketChannel
+      );
+    } catch (e) {
+      // Not all channels implement nsIWebSocketChannel.
     }
-  } else if (blockedReason !== undefined) {
-    // We were definitely blocked, but the blocker didn't say why.
-    event.blockedReason = "unknown";
   }
-
-  // isNavigationRequest is true for the one request used to load a new top level document
-  // of a given tab, or top level window. It will typically be false for navigation requests
-  // of iframes, i.e. the request loading another document in an iframe.
-  event.isNavigationRequest =
-    channel.isMainDocumentChannel && channel.loadInfo.isTopLevelLoad;
-
-  const { cookies, headers } = fetchRequestHeadersAndCookies(channel);
-  event.headers = headers;
-  event.cookies = cookies;
-
-  return event;
+  return wsChannel;
 }
 
 /**
@@ -291,7 +302,7 @@ function createNetworkEvent(
  * This data is passed to the owner, i.e. the NetworkEventActor,
  * so that the frontend can later fetch it via getRequestHeaders/getRequestCookies.
  *
- * @param {*} channel
+ * @param {nsIChannel} channel
  * @return {Object}
  *     An object with two properties:
  *     @property {Array<Object>} cookies
@@ -508,11 +519,19 @@ function getBlockedReason(channel) {
 
 export const NetworkUtils = {
   causeTypeToString,
-  createNetworkEvent,
   fetchRequestHeadersAndCookies,
+  getCauseDetails,
   getChannelBrowsingContextID,
   getChannelInnerWindowId,
+  getChannelPriority,
+  getHttpVersion,
+  getReferrerPolicy,
+  getWebSocketChannel,
+  isChannelFromSystemPrincipal,
+  isChannelPrivate,
+  isNavigationRequest,
   isPreloadRequest,
+  isThirdPartyTrackingResource,
   matchRequest,
   stringToCauseType,
   getBlockedReason,
