@@ -25,6 +25,8 @@ const TEST_PAGE_WITH_WEBVTT = TEST_ROOT + "test-page-with-webvtt.html";
 const WINDOW_TYPE = "Toolkit:PictureInPicture";
 const TOGGLE_POSITION_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.position";
+/* As of Bug 1811312, 80% toggle opacity is for the PiP toggle experiment control. */
+const DEFAULT_TOGGLE_OPACITY = 0.8;
 const HAS_USED_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.has-used";
 const SHARED_DATA_KEY = "PictureInPicture:SiteOverrides";
@@ -73,7 +75,7 @@ const DEFAULT_TOGGLE_STYLES = {
   stages: {
     hoverVideo: {
       opacities: {
-        ".pip-wrapper": 0.8,
+        ".pip-wrapper": DEFAULT_TOGGLE_OPACITY,
       },
       hidden: [".pip-expanded"],
     },
@@ -518,6 +520,58 @@ async function getToggleClientRect(
       height: rect.height,
     };
   });
+}
+
+/**
+ * This function will hover over the middle of the video and then
+ * hover over the toggle.
+ * @param browser The current browser
+ * @param videoID The video element id
+ */
+async function hoverToggle(browser, videoID) {
+  await prepareForToggleClick(browser, videoID);
+
+  // Hover the mouse over the video to reveal the toggle.
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    `#${videoID}`,
+    {
+      type: "mousemove",
+    },
+    browser
+  );
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    `#${videoID}`,
+    {
+      type: "mouseover",
+    },
+    browser
+  );
+
+  info("Checking toggle policy");
+  await assertTogglePolicy(browser, videoID, null);
+
+  let toggleClientRect = await getToggleClientRect(browser, videoID);
+
+  info("Hovering the toggle rect now.");
+  let toggleCenterX = toggleClientRect.left + toggleClientRect.width / 2;
+  let toggleCenterY = toggleClientRect.top + toggleClientRect.height / 2;
+
+  await BrowserTestUtils.synthesizeMouseAtPoint(
+    toggleCenterX,
+    toggleCenterY,
+    {
+      type: "mousemove",
+    },
+    browser
+  );
+  await BrowserTestUtils.synthesizeMouseAtPoint(
+    toggleCenterX,
+    toggleCenterY,
+    {
+      type: "mouseover",
+    },
+    browser
+  );
 }
 
 /**
