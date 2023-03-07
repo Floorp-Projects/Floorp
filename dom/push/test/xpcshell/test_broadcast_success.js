@@ -55,7 +55,7 @@ add_task(async function test_register_success() {
   });
 
   await broadcastService.addListener("broadcast-test", "2018-02-01", {
-    moduleURI: "resource://test/broadcast_handler.jsm",
+    moduleURI: "resource://test/broadcast_handler.sys.mjs",
     symbolName: "broadcastHandler",
   });
 
@@ -155,7 +155,7 @@ add_task(async function test_handle_hello_broadcasts() {
   });
 
   await broadcastService.addListener("broadcast-test", "2018-02-01", {
-    moduleURI: "resource://test/broadcast_handler.jsm",
+    moduleURI: "resource://test/broadcast_handler.sys.mjs",
     symbolName: "broadcastHandler",
   });
 
@@ -228,7 +228,7 @@ add_task(async function test_broadcast_context() {
   const serviceId = "broadcast-test";
   const version = "2018-02-01";
   await broadcastService.addListener(serviceId, version, {
-    moduleURI: "resource://test/broadcast_handler.jsm",
+    moduleURI: "resource://test/broadcast_handler.sys.mjs",
     symbolName: "broadcastHandler",
   });
 
