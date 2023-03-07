@@ -128,6 +128,13 @@ struct FeaturesD3D : FeatureSetBase
         "hang",
         &members, "https://bugzilla.mozilla.org/show_bug.cgi?id=1633628"};
 
+    FeatureInfo scissoredClearArtifacts = {
+        "scissoredClearArtifacts", FeatureCategory::D3DWorkarounds,
+        "On Skylake, calling ClearView with a scissor rect that is not a multiple of 8x4 pixels "
+        "causes corruption of pixels in the 8x4 pixel tiles along the edge which resembles a "
+        "square wave",
+        &members, "https://bugzilla.mozilla.org/show_bug.cgi?id=1817240"};
+
     FeatureInfo useSystemMemoryForConstantBuffers = {
         "useSystemMemoryForConstantBuffers", FeatureCategory::D3DWorkarounds,
         "Copying from staging storage to constant buffer "

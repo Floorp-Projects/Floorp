@@ -126,8 +126,6 @@ USE_LIBS += [
 #     "/OPT:ICF",
 #     "/OPT:NOLLDTAILMERGE",
 #     "/OPT:REF",
-#     "/pdbaltpath:%_PDB%",
-#     "/PDBSourcePath:C:/dev/angle/out",
 #     "/PROFILE",
 #     "/TIMESTAMP:1664686800",
 #     "/WX",
