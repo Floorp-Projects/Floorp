@@ -11,7 +11,7 @@ var rule = require("../lib/rules/use-static-import");
 var RuleTester = require("eslint").RuleTester;
 
 const ruleTester = new RuleTester({
-  parserOptions: { ecmaVersion: 13, sourceType: "module" },
+  parserOptions: { ecmaVersion: "latest", sourceType: "module" },
 });
 
 // ------------------------------------------------------------------------------

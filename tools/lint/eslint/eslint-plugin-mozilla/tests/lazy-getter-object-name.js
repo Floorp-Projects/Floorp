@@ -10,7 +10,7 @@
 var rule = require("../lib/rules/lazy-getter-object-name");
 var RuleTester = require("eslint").RuleTester;
 
-const ruleTester = new RuleTester();
+const ruleTester = new RuleTester({ parserOptions: { ecmaVersion: "latest" } });
 
 // ------------------------------------------------------------------------------
 // Tests
