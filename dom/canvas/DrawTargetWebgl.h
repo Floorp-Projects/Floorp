@@ -83,10 +83,14 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
   mozilla::ipc::Shmem mShmem;
   // The currently cached snapshot of the WebGL context
   RefPtr<DataSourceSurface> mSnapshot;
+  // Whether the framebuffer is still in the initially clear state.
+  bool mIsClear = true;
   // Whether or not the Skia target has valid contents and is being drawn to
   bool mSkiaValid = false;
   // Whether or not Skia layering over the WebGL context is enabled
   bool mSkiaLayer = false;
+  // Whether the WebGL target was clear when the Skia layer was established.
+  bool mSkiaLayerClear = false;
   // Whether or not the WebGL context has valid contents and is being drawn to
   bool mWebglValid = true;
   // Whether or not the clip state has changed since last used by SharedContext.
@@ -297,11 +301,13 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
         const IntRect& aRect, TextureHandle* aHandle = nullptr);
 
     already_AddRefed<WebGLTextureJS> GetCompatibleSnapshot(
-        SourceSurface* aSurface);
+        SourceSurface* aSurface) const;
+    bool IsCompatibleSurface(SourceSurface* aSurface) const;
 
     bool UploadSurface(DataSourceSurface* aData, SurfaceFormat aFormat,
                        const IntRect& aSrcRect, const IntPoint& aDstOffset,
-                       bool aInit, bool aZero = false);
+                       bool aInit, bool aZero = false,
+                       const RefPtr<WebGLTextureJS>& aTex = nullptr);
     bool DrawRectAccel(const Rect& aRect, const Pattern& aPattern,
                        const DrawOptions& aOptions,
                        Maybe<DeviceColor> aMaskColor = Nothing(),
@@ -504,6 +510,8 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
                 bool aAccelOnly = false, bool aForceUpdate = false,
                 const StrokeOptions* aStrokeOptions = nullptr);
 
+  ColorPattern GetClearPattern() const;
+
   bool ShouldAccelPath(const DrawOptions& aOptions,
                        const StrokeOptions* aStrokeOptions);
   void DrawPath(const Path* aPath, const Pattern& aPattern,
@@ -522,14 +530,18 @@ class DrawTargetWebgl : public DrawTarget, public SupportsWeakPtr {
     }
   }
 
-  void MarkSkiaChanged() {
+  void MarkSkiaChanged(bool aOverwrite = false) {
     WaitForShmem();
-    if (!mSkiaValid) {
+    if (aOverwrite) {
+      mSkiaValid = true;
+      mSkiaLayer = false;
+    } else if (!mSkiaValid) {
       ReadIntoSkia();
     } else if (mSkiaLayer) {
       FlattenSkia();
     }
     mWebglValid = false;
+    mIsClear = false;
   }
 
   void MarkSkiaChanged(const DrawOptions& aOptions);
