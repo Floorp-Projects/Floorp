@@ -73,29 +73,6 @@ async function searchWithTab(
   return { tab, expectedSearchUrl };
 }
 
-function assertSearchStringIsInUrlbar(searchString, window) {
-  Assert.equal(
-    window.gURLBar.value,
-    searchString,
-    `Search string ${searchString} should be in the url bar`
-  );
-  Assert.equal(
-    window.gBrowser.userTypedValue,
-    searchString,
-    `${searchString} should be the userTypedValue`
-  );
-  Assert.equal(
-    window.gURLBar.getAttribute("pageproxystate"),
-    "invalid",
-    "Pageproxystate should be invalid"
-  );
-  Assert.equal(
-    window.gBrowser.selectedBrowser.showingSearchTerms,
-    true,
-    "showingSearchTerms should be true"
-  );
-}
-
 // Move a tab showing the search term into its own window.
 add_task(async function move_tab_into_new_window() {
   let { tab, expectedSearchUrl } = await searchWithTab(SEARCH_STRING);
@@ -113,7 +90,8 @@ add_task(async function move_tab_into_new_window() {
   // Move the tab into its own window.
   let newWindow = gBrowser.replaceTabWithWindow(tab);
   await BrowserTestUtils.waitForEvent(tab.linkedBrowser, "SwapDocShells");
-  assertSearchStringIsInUrlbar(SEARCH_STRING, newWindow);
+
+  assertSearchStringIsInUrlbar(SEARCH_STRING, { win: newWindow });
 
   // Clean up.
   await BrowserTestUtils.closeWindow(newWindow);
@@ -148,7 +126,7 @@ add_task(async function move_tab_into_existing_window() {
   // Make the first window adopt and switch to that tab.
   tab = gBrowser.adoptTab(tab);
   await BrowserTestUtils.switchTab(gBrowser, tab);
-  assertSearchStringIsInUrlbar(SEARCH_STRING, window);
+  assertSearchStringIsInUrlbar(SEARCH_STRING);
 
   // Clean up.
   BrowserTestUtils.removeTab(tab);

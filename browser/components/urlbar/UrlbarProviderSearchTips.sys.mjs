@@ -458,8 +458,7 @@ class ProviderSearchTips extends UrlbarProvider {
       // exception because the query is not erased.
       if (
         window.gURLBar.getAttribute("pageproxystate") == "invalid" &&
-        window.gURLBar.value != "" &&
-        tip != TIPS.PERSIST
+        window.gURLBar.value != ""
       ) {
         return;
       }
@@ -467,11 +466,7 @@ class ProviderSearchTips extends UrlbarProvider {
       // The tab that initiated the tip might not be in the same window
       // as the one that is currently at the top. Only apply this search
       // tip to a tab showing a search term.
-      if (
-        tip == TIPS.PERSIST &&
-        (!window.gBrowser.selectedBrowser.showingSearchTerms ||
-          !window.gBrowser.selectedBrowser.userTypedValue)
-      ) {
+      if (tip == TIPS.PERSIST && !window.gBrowser.selectedBrowser.searchTerms) {
         return;
       }
 
@@ -509,9 +504,7 @@ class ProviderSearchTips extends UrlbarProvider {
       this.currentTip = tip;
 
       let value =
-        tip == TIPS.PERSIST
-          ? window.gBrowser.selectedBrowser.userTypedValue
-          : "";
+        tip == TIPS.PERSIST ? window.gBrowser.selectedBrowser.searchTerms : "";
       window.gURLBar.search(value, { focus: tip == TIPS.ONBOARD });
     }, tipDelay);
   }

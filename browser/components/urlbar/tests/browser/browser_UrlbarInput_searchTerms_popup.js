@@ -43,29 +43,6 @@ add_setup(async function() {
   });
 });
 
-function assertSearchStringIsInUrlbar(searchString) {
-  Assert.equal(
-    gURLBar.value,
-    searchString,
-    `Search string ${searchString} should be in the url bar`
-  );
-  Assert.equal(
-    gBrowser.userTypedValue,
-    searchString,
-    `${searchString} should be the userTypedValue`
-  );
-  Assert.equal(
-    gURLBar.getAttribute("pageproxystate"),
-    "invalid",
-    "Pageproxystate should be invalid."
-  );
-  Assert.equal(
-    gBrowser.selectedBrowser.showingSearchTerms,
-    true,
-    "showingSearchTerms should be true."
-  );
-}
-
 async function searchWithTab(
   searchString,
   tab = null,

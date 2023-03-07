@@ -39,22 +39,17 @@ function assertSearchStringIsNotInUrlbar(searchString) {
   Assert.notEqual(
     gURLBar.value,
     searchString,
-    `Search string ${searchString} should not be in the url bar`
+    `Search string ${searchString} should not be in the url bar.`
   );
   Assert.equal(
     gURLBar.getAttribute("pageproxystate"),
     "valid",
-    "Pageproxystate should be valid"
+    "Pageproxystate should be valid."
   );
   Assert.equal(
-    gBrowser.selectedBrowser.showingSearchTerms,
-    false,
-    "showingSearchTerms should be false"
-  );
-  Assert.notEqual(
-    gBrowser.userTypedValue,
-    searchString,
-    `${searchString} should not be the user typed value`
+    gBrowser.selectedBrowser.searchTerms,
+    "",
+    "searchTerms should be blank."
   );
 }
 
