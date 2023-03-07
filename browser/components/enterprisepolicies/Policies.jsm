@@ -1669,7 +1669,7 @@ var Policies = {
 
   Preferences: {
     onBeforeAddons(manager, param) {
-      const allowedPrefixes = [
+      let allowedPrefixes = [
         "accessibility.",
         "app.update.",
         "browser.",
@@ -1695,6 +1695,9 @@ var Policies = {
         "ui.",
         "widget.",
       ];
+      if (!AppConstants.MOZ_REQUIRE_SIGNING) {
+        allowedPrefixes.push("xpinstall.signatures.required");
+      }
       const allowedSecurityPrefs = [
         "security.block_fileuri_script_with_wrong_mime",
         "security.default_personal_cert",
