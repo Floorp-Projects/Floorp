@@ -3415,7 +3415,7 @@
   value: false
   mirror: always
 
-#ifdef XP_WIN
+#if defined(XP_WIN)
   # Preference that is used to set nsILocalFileWin::useDOSDevicePathSyntax
   # attribute for all local file instances created by QuotaManager and its
   # clients. The value of this preference is cached so changing the preference
@@ -3430,6 +3430,13 @@
   # Preference that is used to enable the hack for overrriding xFullPathname in
   # QuotaVFS.
 -   name: dom.quotaManager.overrideXFullPathname
+    type: RelaxedAtomicBool
+    value: true
+    mirror: always
+#elif defined(XP_UNIX)
+  # Preference that is used to enable the overriding of Unix xFullPathname
+  # implementation in QuotaVFS.
+-   name: dom.quotaManager.overrideXFullPathnameUnix
     type: RelaxedAtomicBool
     value: true
     mirror: always
