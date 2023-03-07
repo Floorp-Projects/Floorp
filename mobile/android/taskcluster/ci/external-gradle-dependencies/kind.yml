@@ -46,7 +46,9 @@ task-defaults:
             - type: directory
               name: public/logs/nexus
               path: /opt/sonatype/nexus/logs
-        retry-exit-status: [1]
+        retry-exit-status:
+            - 1     # Test failures (which actually catch any gradle failure)
+            - 17    # Download errors
     worker-type: b-android-large
 
 tasks:
