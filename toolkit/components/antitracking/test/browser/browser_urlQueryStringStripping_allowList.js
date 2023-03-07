@@ -49,6 +49,11 @@ add_setup(async function() {
       ["privacy.query_stripping.enabled", true],
     ],
   });
+
+  let listService = Cc[
+    "@mozilla.org/query-stripping-list-service;1"
+  ].getService(Ci.nsIURLQueryStrippingListService);
+  await listService.testWaitForInit();
 });
 
 add_task(async function doTestsForTabOpen() {
