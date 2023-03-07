@@ -74,6 +74,7 @@ using mozilla::Telemetry::LABELS_SQLITE_STORE_OPEN;
 using mozilla::Telemetry::LABELS_SQLITE_STORE_QUERY;
 
 const char* GetTelemetryVFSName(bool);
+const char* GetQuotaVFSName();
 const char* GetObfuscatingVFSName();
 
 namespace {
@@ -785,20 +786,33 @@ nsresult Connection::initialize(nsIFileURL* aFileURL,
   rv = aFileURL->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool exclusive = StaticPrefs::storage_sqlite_exclusiveLock_enabled();
-
   // If there is a key specified, we need to use the obfuscating VFS.
   nsAutoCString query;
   rv = aFileURL->GetQuery(query);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  const char* const vfs =
-      !URLParams::Parse(query,
-                        [](const nsAString& aName, const nsAString& aValue) {
-                          return !aName.EqualsLiteral("key");
-                        })
-          ? GetObfuscatingVFSName()
-          : GetTelemetryVFSName(exclusive);
+  bool hasKey = false;
+  bool hasDirectoryLockId = false;
+
+  MOZ_ALWAYS_TRUE(URLParams::Parse(
+      query, [&hasKey, &hasDirectoryLockId](const nsAString& aName,
+                                            const nsAString& aValue) {
+        if (aName.EqualsLiteral("key")) {
+          hasKey = true;
+          return true;
+        }
+        if (aName.EqualsLiteral("directoryLockId")) {
+          hasDirectoryLockId = true;
+          return true;
+        }
+        return true;
+      }));
+
+  bool exclusive = StaticPrefs::storage_sqlite_exclusiveLock_enabled();
+
+  const char* const vfs = hasKey               ? GetObfuscatingVFSName()
+                          : hasDirectoryLockId ? GetQuotaVFSName()
+                                               : GetTelemetryVFSName(exclusive);
 
   int srv = ::sqlite3_open_v2(spec.get(), &mDBConn, mFlags, vfs);
   if (srv != SQLITE_OK) {
