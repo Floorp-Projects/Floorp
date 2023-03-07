@@ -13,7 +13,7 @@
 # BHR disabled for TSan builds because of bug 1121216.
 # BHR disabled for ASan builds because of bug 1445441.
 # When changing these conditions, please also change the matching conditions in
-# tools/profiler/public/ProfilerLabels.h.
+# tools/profiler/public/ProfilerLabels.h and xpcom/threads/moz.build.
 if (
     CONFIG["NIGHTLY_BUILD"]
     and not CONFIG["MOZ_DEBUG"]

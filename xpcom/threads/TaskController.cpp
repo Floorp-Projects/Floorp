@@ -467,7 +467,14 @@ void TaskController::ProcessPendingMTTask(bool aMayWait) {
       break;
     }
 
-    BackgroundHangMonitor().NotifyWait();
+#ifdef MOZ_ENABLE_BACKGROUND_HANG_MONITOR
+    // Unlock before calling into the BackgroundHangMonitor API as it uses
+    // the timer API.
+    {
+      MutexAutoUnlock unlock(mGraphMutex);
+      BackgroundHangMonitor().NotifyWait();
+    }
+#endif
 
     {
       // ProcessNextEvent will also have attempted to wait, however we may have
@@ -477,7 +484,12 @@ void TaskController::ProcessPendingMTTask(bool aMayWait) {
       mMainThreadCV.Wait();
     }
 
-    BackgroundHangMonitor().NotifyActivity();
+#ifdef MOZ_ENABLE_BACKGROUND_HANG_MONITOR
+    {
+      MutexAutoUnlock unlock(mGraphMutex);
+      BackgroundHangMonitor().NotifyActivity();
+    }
+#endif
   }
 
   if (mMayHaveMainThreadTask) {
