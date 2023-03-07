@@ -586,10 +586,14 @@ class _ToolbarPanelHub {
   }
 
   /**
-   * @param {object} browser MessageChannel target argument as a response to a user action
+   * @param {object} [browser] MessageChannel target argument as a response to a
+   *   user action. No message is shown if undefined.
    * @param {object[]} messages Messages selected from devtools page
    */
   forceShowMessage(browser, messages) {
+    if (!browser) {
+      return;
+    }
     const win = browser.ownerGlobal;
     const doc = browser.ownerDocument;
     this.removeMessages(win, WHATS_NEW_PANEL_SELECTOR);

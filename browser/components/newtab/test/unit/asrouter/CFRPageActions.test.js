@@ -999,6 +999,17 @@ describe("CFRPageActions", () => {
           )
         );
       });
+      it("should fail and not add a recommendation if the browser does not exist", async () => {
+        assert.isFalse(
+          await CFRPageActions.addRecommendation(
+            undefined,
+            fakeHost,
+            fakeRecommendation,
+            dispatchStub
+          )
+        );
+        assert.isFalse(CFRPageActions.RecommendationMap.has(fakeBrowser));
+      });
       it("should fail and not add a recommendation if the host doesn't match", async () => {
         const someOtherFakeHost = "subdomain.mozilla.com";
         assert.isFalse(

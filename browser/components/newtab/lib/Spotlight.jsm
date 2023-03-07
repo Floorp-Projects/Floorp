@@ -47,8 +47,8 @@ const Spotlight = {
    * @return                    boolean value capturing if spotlight was displayed
    */
   async showSpotlightDialog(browser, message, dispatch = this.defaultDispatch) {
-    const win = browser.ownerGlobal;
-    if (win.gDialogBox.isOpen) {
+    const win = browser?.ownerGlobal;
+    if (!win || win.gDialogBox.isOpen) {
       return false;
     }
     const spotlight_url = "chrome://browser/content/spotlight.html";

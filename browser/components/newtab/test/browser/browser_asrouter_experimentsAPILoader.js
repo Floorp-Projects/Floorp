@@ -516,9 +516,6 @@ add_task(async function test_multiMessageTreatment() {
     p => p.id === "messaging-experiments"
   );
 
-  // Clear all messages
-  ASRouter.setState(() => ({ messages: [] }));
-
   await ASRouter.loadMessagesFromAllProviders([experimentsProvider]);
 
   for (let message of messages) {

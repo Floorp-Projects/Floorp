@@ -244,6 +244,7 @@ describe("ASRouter", () => {
       ASRouterTargeting,
       ASRouterTriggerListeners,
       QueryCache,
+      gBrowser: { selectedBrowser: {} },
       gURLBar: {},
       isSeparateAboutWelcome: true,
       AttributionCode: fakeAttributionCode,
@@ -939,6 +940,69 @@ describe("ASRouter", () => {
         undefined
       );
     });
+    it("should parse the message's messagesLoaded trigger and immediately fire trigger", async () => {
+      setMessageProviderPref([
+        {
+          id: "foo",
+          type: "local",
+          enabled: true,
+          messages: [
+            {
+              id: "bar3",
+              template: "simple_template",
+              trigger: { id: "messagesLoaded" },
+              content: { title: "Bar3", body: "Bar123" },
+            },
+          ],
+        },
+      ]);
+      Router = new _ASRouter(Object.freeze(FAKE_LOCAL_PROVIDERS));
+      sandbox.spy(Router, "sendTriggerMessage");
+      await initASRouter(Router);
+      assert.calledOnce(Router.sendTriggerMessage);
+      assert.calledWith(
+        Router.sendTriggerMessage,
+        sandbox.match({ id: "messagesLoaded" }),
+        true
+      );
+    });
+    it("should gracefully handle messages loading before a window or browser exists", async () => {
+      sandbox.stub(global, "gBrowser").value(undefined);
+      sandbox
+        .stub(global.Services.wm, "getMostRecentBrowserWindow")
+        .returns(undefined);
+      setMessageProviderPref([
+        {
+          id: "foo",
+          type: "local",
+          enabled: true,
+          messages: [
+            "whatsnew_panel_message",
+            "cfr_doorhanger",
+            "toolbar_badge",
+            "update_action",
+            "infobar",
+            "spotlight",
+            "toast_notification",
+          ].map((template, i) => {
+            return {
+              id: `foo${i}`,
+              template,
+              trigger: { id: "messagesLoaded" },
+              content: { title: `Foo${i}`, body: "Bar123" },
+            };
+          }),
+        },
+      ]);
+      Router = new _ASRouter(Object.freeze(FAKE_LOCAL_PROVIDERS));
+      sandbox.spy(Router, "sendTriggerMessage");
+      await initASRouter(Router);
+      assert.calledWith(
+        Router.sendTriggerMessage,
+        sandbox.match({ id: "messagesLoaded" }),
+        true
+      );
+    });
     it("should gracefully handle RemoteSettings blowing up and dispatch undesired event", async () => {
       sandbox
         .stub(MessageLoaderUtils, "_getRemoteSettingsMessages")
@@ -1546,13 +1610,14 @@ describe("ASRouter", () => {
         browser: {},
       });
 
-      assert.calledOnce(startTelemetryStopwatch);
+      // Called once for the messagesLoaded trigger and once for the above call.
+      assert.calledTwice(startTelemetryStopwatch);
       assert.calledWithExactly(
         startTelemetryStopwatch,
         "MS_MESSAGE_REQUEST_TIME_MS",
         { tabId }
       );
-      assert.calledOnce(finishTelemetryStopwatch);
+      assert.calledTwice(finishTelemetryStopwatch);
       assert.calledWithExactly(
         finishTelemetryStopwatch,
         "MS_MESSAGE_REQUEST_TIME_MS",
@@ -1838,13 +1903,13 @@ describe("ASRouter", () => {
         id: "firstRun",
       });
 
-      assert.calledOnce(startTelemetryStopwatch);
+      assert.calledTwice(startTelemetryStopwatch);
       assert.calledWithExactly(
         startTelemetryStopwatch,
         "MS_MESSAGE_REQUEST_TIME_MS",
         { tabId }
       );
-      assert.calledOnce(finishTelemetryStopwatch);
+      assert.calledTwice(finishTelemetryStopwatch);
       assert.calledWithExactly(
         finishTelemetryStopwatch,
         "MS_MESSAGE_REQUEST_TIME_MS",
