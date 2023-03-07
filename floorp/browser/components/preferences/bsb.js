@@ -67,6 +67,7 @@ var gBSBPane = {
     if(elemUrl.startsWith("floorp//")){
       elem.setAttribute("data-l10n-id", "sidebar2-" +  BrowserManagerSidebar.STATIC_SIDEBAR_DATA[elemUrl].l10n);
     }else{
+      elem.removeAttribute("data-l10n-id");
       elem.textContent = elemUrl
     }
     
