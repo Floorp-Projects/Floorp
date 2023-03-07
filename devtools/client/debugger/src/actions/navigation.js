@@ -6,7 +6,8 @@ import { clearDocuments } from "../utils/editor";
 import sourceQueue from "../utils/source-queue";
 
 import { clearWasmStates } from "../utils/wasm";
-import { getMainThread } from "../selectors";
+import { getMainThread, getThreadContext } from "../selectors";
+import { evaluateExpressions } from "../actions/expressions";
 
 /**
  * Redux actions for the navigation state
@@ -44,7 +45,17 @@ export function willNavigate(event) {
  * @static
  */
 export function navigated() {
-  return async function({ dispatch, panel }) {
+  return async function({ getState, dispatch, panel }) {
+    try {
+      // Update the watched expressions once the page is fully loaded
+      const threadcx = getThreadContext(getState());
+      await dispatch(evaluateExpressions(threadcx));
+    } catch (e) {
+      // This may throw if we resume during the page load.
+      // browser_dbg-debugger-buttons.js highlights this, especially on MacOS or when ran many times
+      console.error("Failed to update expression on navigation", e);
+    }
+
     panel.emit("reloaded");
   };
 }
