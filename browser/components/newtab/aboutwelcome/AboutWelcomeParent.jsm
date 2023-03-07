@@ -28,7 +28,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
     "resource://activity-stream/aboutwelcome/lib/AboutWelcomeDefaults.jsm",
   ShellService: "resource:///modules/ShellService.jsm",
   LangPackMatcher: "resource://gre/modules/LangPackMatcher.jsm",
-  AWScreenUtils: "resource://activity-stream/lib/AWScreenUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () => {
@@ -226,8 +225,6 @@ class AboutWelcomeParent extends JSWindowActorParent {
         );
       case "AWPage:GET_APP_AND_SYSTEM_LOCALE_INFO":
         return lazy.LangPackMatcher.getAppAndSystemLocaleInfo();
-      case "AWPage:EVALUATE_SCREEN_TARGETING":
-        return lazy.AWScreenUtils.evaluateTargetingAndRemoveScreens(data);
       case "AWPage:NEGOTIATE_LANGPACK":
         return lazy.LangPackMatcher.negotiateLangPackForLanguageMismatch(data);
       case "AWPage:ENSURE_LANG_PACK_INSTALLED":
