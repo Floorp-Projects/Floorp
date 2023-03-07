@@ -817,6 +817,9 @@ pictureinpicture:
     showIconOnly:
       type: boolean
       description: Whether to show the first time PiP toggle or show the PiP icon only
+    oldToggle:
+      type: boolean
+      description: Whether to show the control style (true) or variant style (false) for the first time PiP toggle
 
 glean:
   description: "The Glean data collection SDK within Firefox Desktop"

@@ -21,6 +21,8 @@ toolkit.jar:
   skin/classic/global/media/imagedoc-darknoise.png         (../../shared/media/imagedoc-darknoise.png)
 
   skin/classic/global/media/videocontrols.css              (../../shared/media/videocontrols.css)
+  skin/classic/global/media/pipToggle.css                  (../../shared/media/pipToggle.css)
+
   skin/classic/global/media/pause-fill.svg                 (../../shared/media/pause-fill.svg)
   skin/classic/global/media/play-fill.svg                  (../../shared/media/play-fill.svg)
   skin/classic/global/media/error.png                      (../../shared/media/error.png)
