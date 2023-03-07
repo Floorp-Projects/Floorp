@@ -5,6 +5,7 @@
 
 
  let { BrowserManagerSidebar } = ChromeUtils.import("resource:///modules/BrowserManagerSidebar.jsm")
+ var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm")
 
  /*---------------------------------------------------------------- browser manager sidebar ----------------------------------------------------------------*/
  
@@ -402,5 +403,11 @@
             BrowserManagerSidebar.STATIC_SIDEBAR_DATA["floorp//tst"].url = await BrowserManagerSidebar.getAdoonSidebarPage("treestyletab@piro.sakura.ne.jp")
          }, 1250);
      })()
+ }
+ 
+ /********************************************************* BETA ********************************************************/
+
+ if(Services.prefs.prefHasUserValue("floorp.browser.note.enabled") == false){
+    Math.random(1,10) > 7 ? Services.prefs.setBoolPref("floorp.browser.note.enabled", true) : Services.prefs.setBoolPref("floorp.browser.note.enabled", false)
  }
  

@@ -10,7 +10,7 @@ const { Services } = ChromeUtils.import(
 );
 const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");
 
-const BrowserManagerSidebar = {
+let BrowserManagerSidebar = {
     STATIC_SIDEBAR_DATA:{
         "floorp//bmt":{
             "url":"chrome://browser/content/places/places.xhtml",
@@ -35,7 +35,8 @@ const BrowserManagerSidebar = {
         "floorp//notes":{
           "url":"chrome://browser/content/notes/notes-bms.html",
           "l10n":`notes-sidebar`,
-          "defaultWidth":500
+          "defaultWidth":500,
+          "enabled": Services.prefs.getBoolPref("floorp.browser.note.enabled", false)
       },
         "floorp//tst":{
             "url":"none",
@@ -43,10 +44,15 @@ const BrowserManagerSidebar = {
             "defaultWidth":415
         },
     },
+
     DEFAULT_WEBPANEL:["https://freasearch.org","https://translate.google.com","https://misskey.io"],
     prefsUpdate:function(){
         let defaultPref = {data:{},index:[]}
         for(let elem in this.STATIC_SIDEBAR_DATA){
+          if(this.STATIC_SIDEBAR_DATA[elem].enabled === false){
+            delete this.STATIC_SIDEBAR_DATA[elem];
+          continue
+          }
             defaultPref.data[elem.replace("//","__")] = {url:elem,width:this.STATIC_SIDEBAR_DATA[elem].defaultWidth}
             defaultPref.index.push(elem.replace("//","__"))
         }
