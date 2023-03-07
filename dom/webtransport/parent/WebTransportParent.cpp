@@ -326,6 +326,24 @@ WebTransportParent::OnSessionReady(uint64_t aSessionId) {
 
   mSessionReady = true;
 
+  // Retarget to socket thread. After this, WebTransportParent and
+  // |mWebTransport| should be only accessed on the socket thread.
+  nsresult rv = mWebTransport->RetargetTo(mSocketThread);
+  if (NS_FAILED(rv)) {
+    mOwningEventTarget->Dispatch(NS_NewRunnableFunction(
+        "WebTransportParent::OnSessionReady Failed",
+        [self = RefPtr{this}, result = rv] {
+          MutexAutoLock lock(self->mMutex);
+          if (!self->mClosed && self->mResolver) {
+            self->mResolver(ResolveType(
+                result, static_cast<uint8_t>(
+                            WebTransportReliabilityMode::Supports_unreliable)));
+            self->mResolver = nullptr;
+          }
+        }));
+    return NS_OK;
+  }
+
   mOwningEventTarget->Dispatch(NS_NewRunnableFunction(
       "WebTransportParent::OnSessionReady", [self = RefPtr{this}] {
         MutexAutoLock lock(self->mMutex);
@@ -347,16 +365,6 @@ WebTransportParent::OnSessionReady(uint64_t aSessionId) {
         }
       }));
 
-  nsresult rv;
-  nsCOMPtr<nsISerialEventTarget> sts =
-      do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // Retarget to socket thread. After this, WebTransportParent and
-  // |mWebTransport| should be only accessed on the socket thread.
-  Unused << mWebTransport->RetargetTo(sts);
   return NS_OK;
 }
 

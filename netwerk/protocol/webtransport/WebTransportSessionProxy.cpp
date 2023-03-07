@@ -133,6 +133,10 @@ nsresult WebTransportSessionProxy::AsyncConnect(
 
 NS_IMETHODIMP
 WebTransportSessionProxy::RetargetTo(nsIEventTarget* aTarget) {
+  if (!aTarget) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   {
     MutexAutoLock lock(mMutex);
     LOG(("WebTransportSessionProxy::RetargetTo mState=%d", mState));
