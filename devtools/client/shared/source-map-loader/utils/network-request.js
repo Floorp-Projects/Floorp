@@ -22,6 +22,7 @@ function networkRequest(url, opts) {
 
   return fetch(url, {
     cache: opts.loadFromCache ? "default" : "no-cache",
+    redirect: opts.allowRedirects ? "follow" : "error",
   }).then(res => {
     if (res.status >= 200 && res.status < 300) {
       if (res.headers.get("Content-Type") === "application/wasm") {
