@@ -3,7 +3,7 @@ import pytest
 URL = "https://business.help.royalmail.com/app/webforms/stampsenquiries"
 
 COOKIES_ACCEPT_CSS = "#consent_prompt_submit"
-POSTCODE_CSS = "input[name='rn_AddressControl_15textbox']"
+POSTCODE_CSS = "input[name='rn_AddressControl_16textbox']"
 OPTION_CSS = "option.addr_pick_line:not(:disabled)"
 ADDY1_CSS = "[name='Incident.CustomFields.c.address1_1']"
 

@@ -928,6 +928,25 @@ const AVAILABLE_UA_OVERRIDES = [
       },
     },
   },
+  {
+    /*
+     * Bug 1819702 - UA override for feelgoodcontacts.com
+     * Webcompat issue #118030 - https://webcompat.com/issues/118030
+     *
+     * Spoof the UA to receive the mobile version instead
+     * of the broken desktop version for Android.
+     */
+    id: "bug1819702",
+    platform: "android",
+    domain: "feelgoodcontacts.com",
+    bug: "1819702",
+    config: {
+      matches: ["*://*.feelgoodcontacts.com/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
 ];
 
 module.exports = AVAILABLE_UA_OVERRIDES;
