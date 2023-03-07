@@ -3,9 +3,17 @@
 
 "use strict";
 
+const { Realm } = ChromeUtils.importESModule(
+  "chrome://remote/content/webdriver-bidi/Realm.sys.mjs"
+);
+const { deserialize, serialize, stringify } = ChromeUtils.importESModule(
+  "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs"
+);
+
 const browser = Services.appShell.createWindowlessBrowser(false);
+const bodyEl = browser.document.body;
 const domEl = browser.document.createElement("div");
-browser.document.body.appendChild(domEl);
+bodyEl.appendChild(domEl);
 
 const PRIMITIVE_TYPES = [
   { value: undefined, serialized: { type: "undefined" } },
@@ -341,14 +349,6 @@ const REMOTE_COMPLEX_VALUES = [
     deserializable: true,
   },
 ];
-
-const { Realm } = ChromeUtils.importESModule(
-  "chrome://remote/content/webdriver-bidi/Realm.sys.mjs"
-);
-
-const { deserialize, serialize, stringify } = ChromeUtils.importESModule(
-  "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs"
-);
 
 add_task(function test_deserializePrimitiveTypes() {
   const realm = new Realm();
@@ -807,6 +807,97 @@ add_task(function test_serializeRemoteComplexValues() {
       serializedWithRoot,
       "Got expected structure, plus a generated handle id"
     );
+  }
+});
+
+add_task(function test_serializeNodeChildren() {
+  const dataSet = [
+    {
+      node: bodyEl,
+      maxDepth: 0,
+      serialized: {
+        type: "node",
+        value: {
+          attributes: {},
+          childNodeCount: 1,
+          localName: "body",
+          namespaceURI: "http://www.w3.org/1999/xhtml",
+          nodeType: 1,
+        },
+      },
+    },
+    {
+      node: bodyEl,
+      maxDepth: 1,
+      serialized: {
+        type: "node",
+        value: {
+          attributes: {},
+          childNodeCount: 1,
+          children: [
+            {
+              type: "node",
+              value: {
+                attributes: {},
+                childNodeCount: 0,
+                localName: "div",
+                namespaceURI: "http://www.w3.org/1999/xhtml",
+                nodeType: 1,
+              },
+            },
+          ],
+          localName: "body",
+          namespaceURI: "http://www.w3.org/1999/xhtml",
+          nodeType: 1,
+        },
+      },
+    },
+    {
+      node: domEl,
+      maxDepth: 0,
+      serialized: {
+        type: "node",
+        value: {
+          attributes: {},
+          childNodeCount: 0,
+          localName: "div",
+          namespaceURI: "http://www.w3.org/1999/xhtml",
+          nodeType: 1,
+        },
+      },
+    },
+    {
+      node: domEl,
+      maxDepth: 1,
+      serialized: {
+        type: "node",
+        value: {
+          attributes: {},
+          childNodeCount: 0,
+          children: [],
+          localName: "div",
+          namespaceURI: "http://www.w3.org/1999/xhtml",
+          nodeType: 1,
+        },
+      },
+    },
+  ];
+
+  for (const { node, maxDepth, serialized } of dataSet) {
+    info(`Checking '${node.localName}' with maxDepth ${maxDepth}`);
+
+    const realm = new Realm();
+    const serializationInternalMap = new Map();
+
+    const serializedValue = serialize(
+      node,
+      maxDepth,
+      "none",
+      serializationInternalMap,
+      realm
+    );
+
+    Assert.deepEqual(serializedValue, serialized, "Got expected structure");
   }
 });
 
