@@ -748,14 +748,6 @@ export class NetworkObserver {
       this.#setupResponseListener(httpActivity, fromCache);
     }
 
-    const {
-      cookies,
-      headers,
-    } = lazy.NetworkUtils.fetchRequestHeadersAndCookies(channel);
-
-    httpActivity.owner.addRequestHeaders(headers, rawHeaders);
-    httpActivity.owner.addRequestCookies(cookies);
-
     return httpActivity;
   }
 

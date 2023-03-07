@@ -296,18 +296,36 @@ class NetworkEventWatcher {
     this.pool.manage(actor);
 
     const resource = actor.asResource();
-
-    this.networkEvents.set(resource.resourceId, {
+    const isBlocked = !!resource.blockedReason;
+    const networkEvent = {
       browsingContextID: resource.browsingContextID,
       innerWindowId: resource.innerWindowId,
       resourceId: resource.resourceId,
       resourceType: resource.resourceType,
-      isBlocked: !!resource.blockedReason,
-      types: [],
-      resourceUpdates: {},
-    });
+      isBlocked,
+      receivedUpdates: [],
+      resourceUpdates: {
+        // Requests already come with request cookies and headers, so those
+        // should always be considered as available. But the client still
+        // heavily relies on those `Available` flags to fetch additional data,
+        // so it is better to keep them for consistency.
+        requestCookiesAvailable: true,
+        requestHeadersAvailable: true,
+      },
+    };
+    this.networkEvents.set(resource.resourceId, networkEvent);
 
     this.onNetworkEventAvailable([resource]);
+
+    // Blocked requests will not receive further updates and should emit an
+    // update packet immediately.
+    // The frontend expects to receive a dedicated update to consider the
+    // request as completed. TODO: lift this restriction so that we can only
+    // emit a resource available notification if no update is needed.
+    if (isBlocked) {
+      this._emitUpdate(networkEvent);
+    }
+
     return actor;
   }
 
@@ -318,15 +336,7 @@ class NetworkEventWatcher {
       return;
     }
 
-    const {
-      browsingContextID,
-      innerWindowId,
-      resourceId,
-      resourceType,
-      resourceUpdates,
-      types,
-      isBlocked,
-    } = networkEvent;
+    const { resourceUpdates, receivedUpdates } = networkEvent;
 
     switch (updateResource.updateType) {
       case "responseStart":
@@ -358,34 +368,26 @@ class NetworkEventWatcher {
     }
 
     resourceUpdates[`${updateResource.updateType}Available`] = true;
-    types.push(updateResource.updateType);
+    receivedUpdates.push(updateResource.updateType);
 
-    if (isBlocked) {
-      // Blocked requests
-      if (
-        !types.includes("requestHeaders") ||
-        !types.includes("requestCookies")
-      ) {
-        return;
-      }
-    } else if (
-      // Un-blocked requests
-      !types.includes("requestHeaders") ||
-      !types.includes("requestCookies") ||
-      !types.includes("eventTimings") ||
-      !types.includes("responseContent") ||
-      !types.includes("securityInfo")
-    ) {
-      return;
+    const isComplete =
+      receivedUpdates.includes("eventTimings") &&
+      receivedUpdates.includes("responseContent") &&
+      receivedUpdates.includes("securityInfo");
+
+    if (isComplete) {
+      this._emitUpdate(networkEvent);
     }
+  }
 
+  _emitUpdate(networkEvent) {
     this.onNetworkEventUpdated([
       {
-        resourceType,
-        resourceId,
-        resourceUpdates,
-        browsingContextID,
-        innerWindowId,
+        resourceType: networkEvent.resourceType,
+        resourceId: networkEvent.resourceId,
+        resourceUpdates: networkEvent.resourceUpdates,
+        browsingContextID: networkEvent.browsingContextID,
+        innerWindowId: networkEvent.innerWindowId,
       },
     ]);
   }

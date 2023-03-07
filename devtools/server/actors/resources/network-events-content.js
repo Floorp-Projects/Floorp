@@ -37,7 +37,10 @@ class NetworkEventContentWatcher {
    *          This would be called multiple times for each resource.
    */
   async watch(targetActor, { onAvailable, onUpdated }) {
-    this._networkEvents = new Map();
+    // Map from channelId to URI strings.
+    // Used to check if we already emitted an event for a cached image, as only
+    // one event should be emitted per URI.
+    this._imageCacheURIs = new Map();
 
     this.targetActor = targetActor;
     this.onAvailable = onAvailable;
@@ -60,7 +63,7 @@ class NetworkEventContentWatcher {
    * Allows clearing of network events
    */
   clear() {
-    this._networkEvents.clear();
+    this._imageCacheURIs.clear();
   }
 
   httpFailedOpeningRequest(subject, topic) {
@@ -86,7 +89,6 @@ class NetworkEventContentWatcher {
         blockedReason: channel.loadInfo.requestBlockingReason,
       },
       resourceOverrides: null,
-      onNetworkEventUpdate: this.onFailedNetworkEventUpdated.bind(this),
     });
   }
 
@@ -109,13 +111,15 @@ class NetworkEventContentWatcher {
     }
 
     // Only one network request should be created per URI for images from the cache
-    const hasNetworkEventForURI = Array.from(this._networkEvents.values()).find(
-      networkEvent => networkEvent.url === channel.URI.spec
+    const hasURI = Array.from(this._imageCacheURIs.values()).some(
+      uri => uri === channel.URI.spec
     );
 
-    if (hasNetworkEventForURI) {
+    if (hasURI) {
       return;
     }
+
+    this._imageCacheURIs.set(channel.channelId, channel.URI.spec);
 
     this.onNetworkEventAvailable(channel, {
       networkEventOptions: { fromCache: true },
@@ -126,14 +130,10 @@ class NetworkEventContentWatcher {
         mimeType: channel.contentType,
         contentSize: channel.contentLength,
       },
-      onNetworkEventUpdate: this.onImageCacheNetworkEventUpdated.bind(this),
     });
   }
 
-  onNetworkEventAvailable(
-    channel,
-    { networkEventOptions, resourceOverrides, onNetworkEventUpdate }
-  ) {
+  onNetworkEventAvailable(channel, { networkEventOptions, resourceOverrides }) {
     const event = lazy.NetworkUtils.createNetworkEvent(
       channel,
       networkEventOptions
@@ -143,7 +143,6 @@ class NetworkEventContentWatcher {
       this.targetActor.conn,
       this.targetActor.sessionContext,
       {
-        onNetworkEventUpdate,
         onNetworkEventDestroy: this.onNetworkEventDestroyed.bind(this),
       },
       event
@@ -151,16 +150,6 @@ class NetworkEventContentWatcher {
     this.targetActor.manage(actor);
 
     const resource = actor.asResource();
-
-    this._networkEvents.set(resource.resourceId, {
-      browsingContextID: resource.browsingContextID,
-      innerWindowId: resource.innerWindowId,
-      resourceId: resource.resourceId,
-      resourceType: resource.resourceType,
-      url: resource.url,
-      types: [],
-      resourceUpdates: {},
-    });
 
     // Override the default resource property values if need be
     if (resourceOverrides) {
@@ -170,70 +159,24 @@ class NetworkEventContentWatcher {
     }
 
     this.onAvailable([resource]);
-    const {
-      cookies,
-      headers,
-    } = lazy.NetworkUtils.fetchRequestHeadersAndCookies(channel);
-    actor.addRequestHeaders(headers);
-    actor.addRequestCookies(cookies);
-  }
 
-  /*
-   * When an update is needed for a network event.
-   *
-   * @param {Object} updateResource
-   *                 The resource to be updated
-   * @param {Array} allRequiredUpdates
-   *                The updates that are essential to be received before notifying
-   *                the client. Other updates may or may not be available.
-   */
-
-  onNetworkEventUpdated(updateResource, allRequiredUpdates) {
-    const networkEvent = this._networkEvents.get(updateResource.resourceId);
-
-    if (!networkEvent) {
-      return;
-    }
-
-    const {
-      browsingContextID,
-      innerWindowId,
-      resourceId,
-      resourceType,
-      resourceUpdates,
-      types,
-    } = networkEvent;
-
-    resourceUpdates[`${updateResource.updateType}Available`] = true;
-    types.push(updateResource.updateType);
-
-    if (allRequiredUpdates.every(header => types.includes(header))) {
-      this.onUpdated([
-        {
-          browsingContextID,
-          innerWindowId,
-          resourceType,
-          resourceId,
-          resourceUpdates,
+    this.onUpdated([
+      {
+        browsingContextID: resource.browsingContextID,
+        innerWindowId: resource.innerWindowId,
+        resourceType: resource.resourceType,
+        resourceId: resource.resourceId,
+        resourceUpdates: {
+          requestCookiesAvailable: true,
+          requestHeadersAvailable: true,
         },
-      ]);
-    }
-  }
-
-  onFailedNetworkEventUpdated(updateResource) {
-    this.onNetworkEventUpdated(updateResource, [
-      "requestHeaders",
-      "requestCookies",
+      },
     ]);
   }
 
-  onImageCacheNetworkEventUpdated(updateResource) {
-    this.onNetworkEventUpdated(updateResource, ["requestHeaders"]);
-  }
-
   onNetworkEventDestroyed(channelId) {
-    if (this._networkEvents.has(channelId)) {
-      this._networkEvents.delete(channelId);
+    if (this._imageCacheURIs.has(channelId)) {
+      this._imageCacheURIs.delete(channelId);
     }
   }
 

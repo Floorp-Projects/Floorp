@@ -57,8 +57,6 @@ function createNetworkEventOwner(event) {
     addResponseCookies: () => {},
     addResponseHeaders: () => {},
     addResponseStart: () => {},
-    addRequestCookies: () => {},
-    addRequestHeaders: () => {},
     addRequestPostData: () => {},
     addSecurityInfo: () => {},
     addServerTimings: () => {},
