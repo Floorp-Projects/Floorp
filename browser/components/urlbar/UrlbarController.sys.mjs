@@ -1090,7 +1090,7 @@ class TelemetryEvent {
       searchMode
     );
     const search_mode = this.#getSearchMode(searchMode);
-    const currentResults = queryContext?.results ?? [];
+    const currentResults = queryContext?.view?.visibleResults ?? [];
     const numResults = currentResults.length;
     const groups = currentResults
       .map(r => lazy.UrlbarUtils.searchEngagementTelemetryGroup(r))
