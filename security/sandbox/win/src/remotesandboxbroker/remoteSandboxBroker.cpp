@@ -103,6 +103,7 @@ bool RemoteSandboxBroker::LaunchApp(
   bool rv = mParent.SendLaunchApp(std::move(mParameters), &ok, &handle) && ok;
   mParameters.shareHandles().Clear();
   if (!rv) {
+    mParent.Shutdown();
     return false;
   }
 
@@ -111,6 +112,7 @@ bool RemoteSandboxBroker::LaunchApp(
   HANDLE ourChildHandle = 0;
   bool dh = mParent.DuplicateFromLauncher((HANDLE)handle, &ourChildHandle);
   if (!dh) {
+    mParent.Shutdown();
     return false;
   }
 
