@@ -1076,15 +1076,43 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
       toggle.removeAttribute("policy");
     }
 
-    const nimbusExperimentVariables = lazy.NimbusFeatures.pictureinpicture.getAllVariables(
-      { defaultValues: { title: null, message: false, showIconOnly: false } }
-    );
     // nimbusExperimentVariables will be defaultValues when the experiment is disabled
+    const nimbusExperimentVariables = lazy.NimbusFeatures.pictureinpicture.getAllVariables(
+      {
+        defaultValues: {
+          oldToggle: true,
+          title: null,
+          message: false,
+          showIconOnly: false,
+        },
+      }
+    );
+
+    /**
+     * If a Nimbus variable exists for the first-time PiP toggle design,
+     * override the old design via a classname "experiment".
+     */
+    if (!nimbusExperimentVariables.oldToggle) {
+      let controlsContainer = shadowRoot.querySelector(".controlsContainer");
+      let pipWrapper = shadowRoot.querySelector(".pip-wrapper");
+
+      controlsContainer.classList.add("experiment");
+      pipWrapper.classList.add("experiment");
+    } else {
+      let controlsContainer = shadowRoot.querySelector(".controlsContainer");
+      let pipWrapper = shadowRoot.querySelector(".pip-wrapper");
+
+      controlsContainer.classList.remove("experiment");
+      pipWrapper.classList.remove("experiment");
+    }
+
     if (nimbusExperimentVariables.title && nimbusExperimentVariables.message) {
       let pipExplainer = shadowRoot.querySelector(".pip-explainer");
       let pipLabel = shadowRoot.querySelector(".pip-label");
 
-      pipExplainer.innerText = nimbusExperimentVariables.message;
+      if (pipExplainer) {
+        pipExplainer.innerText = nimbusExperimentVariables.message;
+      }
       pipLabel.innerText = nimbusExperimentVariables.title;
     } else if (nimbusExperimentVariables.showIconOnly) {
       // We only want to show the PiP icon in this experiment scenario
