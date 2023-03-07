@@ -84,6 +84,52 @@ def repackage_deb(infile, output, template_dir, arch, version, build_number):
         shutil.rmtree(tmpdir)
 
 
+def repackage_deb_l10n(
+    input_xpi_file, input_tar_file, output, template_dir, version, build_number
+):
+    arch = "all"
+
+    tmpdir = _create_temporary_directory(arch)
+    source_dir = os.path.join(tmpdir, "source")
+    try:
+        langpack_metadata = _extract_langpack_metadata(input_xpi_file)
+        langpack_dir = mozpath.join(source_dir, "firefox", "distribution", "extensions")
+        application_ini_data = _extract_application_ini_data(input_tar_file)
+        langpack_id = langpack_metadata["langpack_id"]
+        build_variables = _get_build_variables(
+            application_ini_data,
+            arch,
+            version,
+            build_number,
+            depends=application_ini_data["remoting_name"],
+            # Debian package names are only lowercase
+            package_name_suffix=f"-l10n-{langpack_id.lower()}",
+            description_suffix=f" - {langpack_metadata['description']}",
+        )
+        _copy_plain_deb_config(template_dir, source_dir)
+        _render_deb_templates(
+            template_dir, source_dir, build_variables, exclude_file_names=["links.in"]
+        )
+
+        os.makedirs(langpack_dir, exist_ok=True)
+        shutil.copy(
+            input_xpi_file,
+            mozpath.join(
+                langpack_dir,
+                f"{langpack_metadata['browser_specific_settings']['gecko']['id']}.xpi",
+            ),
+        )
+        _generate_deb_archive(
+            source_dir=source_dir,
+            target_dir=tmpdir,
+            output_file_path=output,
+            build_variables=build_variables,
+            arch=arch,
+        )
+    finally:
+        shutil.rmtree(tmpdir)
+
+
 def _extract_application_ini_data(input_tar_file):
     with tempfile.TemporaryDirectory() as d:
         with tarfile.open(input_tar_file) as tar:
