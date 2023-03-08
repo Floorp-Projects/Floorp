@@ -679,6 +679,12 @@ const SNAPSHOT_SCHEMA = {
         webgl2WSIInfo: {
           type: "string",
         },
+        webgpuDefaultAdapter: {
+          type: "object",
+        },
+        webgpuFallbackAdapter: {
+          type: "object",
+        },
         info: {
           type: "object",
         },
