@@ -583,6 +583,16 @@ class nsDisplayListBuilder {
 
   void Check() { mPool.Check(); }
 
+  /*
+   * Get the paint sequence number of the current paint.
+   */
+  static uint32_t GetPaintSequenceNumber() { return sPaintSequenceNumber; }
+
+  /*
+   * Increment the paint sequence number.
+   */
+  static void IncrementPaintSequenceNumber() { ++sPaintSequenceNumber; }
+
   /**
    * Returns true if merging and flattening of display lists should be
    * performed while computing visibility.
@@ -1881,6 +1891,8 @@ class nsDisplayListBuilder {
   bool mHasGlassItemDuringPartial;
 
   nsDisplayListBuilderMode mMode;
+  static uint32_t sPaintSequenceNumber;
+
   bool mContainsBlendMode;
   bool mIsBuildingScrollbar;
   bool mCurrentScrollbarWillHaveLayer;

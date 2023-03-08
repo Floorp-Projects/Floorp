@@ -876,6 +876,15 @@ bool DisplayPortUtils::MaybeCreateDisplayPortInFirstScrollFrameEncountered(
   }
   if (nsIScrollableFrame* sf = do_QueryFrame(aFrame)) {
     if (MaybeCreateDisplayPort(aBuilder, aFrame, sf, RepaintMode::Repaint)) {
+      // If this was the first displayport found in the first scroll frame
+      // encountered, mark the scroll frame with the current paint sequence
+      // number. This is used later to ensure the displayport created is
+      // never expired. When there is a scrollable frame with a first
+      // scrollable sequence number found that does not match the current
+      // paint sequence number (may occur if the dom was mutated in some way),
+      // the value will be reset.
+      sf->SetIsFirstScrollableFrameSequenceNumber(
+          Some(nsDisplayListBuilder::GetPaintSequenceNumber()));
       return true;
     }
   }

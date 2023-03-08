@@ -620,6 +620,20 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   virtual bool IsRootScrollFrameOfDocument() const = 0;
 
   /**
+   * Returns the paint sequence number if this scroll frame was the first
+   * scrollable frame for the paint.
+   */
+  virtual mozilla::Maybe<uint32_t> IsFirstScrollableFrameSequenceNumber()
+      const = 0;
+
+  /**
+   * Set the paint sequence number for the paint in which this was the first
+   * scrollable frame that was encountered.
+   */
+  virtual void SetIsFirstScrollableFrameSequenceNumber(
+      mozilla::Maybe<uint32_t> aValue) = 0;
+
+  /**
    * Returns the scroll anchor associated with this scrollable frame. This is
    * never null.
    */

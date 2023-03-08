@@ -2389,6 +2389,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
       mScrollParentID(mozilla::layers::ScrollableLayerGuid::NULL_SCROLL_ID),
       mAnchor(this),
       mCurrentAPZScrollAnimationType(APZScrollAnimationType::No),
+      mIsFirstScrollableFrameSequenceNumber(Nothing()),
       mInScrollingGesture(InScrollingGesture::No),
       mAllowScrollOriginDowngrade(false),
       mHadDisplayPortAtLastFrameUpdate(false),
@@ -2958,9 +2959,17 @@ bool ScrollFrameHelper::AllowDisplayPortExpiration() {
   if (IsAlwaysActive()) {
     return false;
   }
+
   if (mIsRoot && mOuter->PresContext()->IsRoot()) {
     return false;
   }
+
+  // If this was the first scrollable frame found, this displayport should
+  // not expire.
+  if (IsFirstScrollableFrameSequenceNumber().isSome()) {
+    return false;
+  }
+
   if (ShouldActivateAllScrollFrames() &&
       mOuter->GetContent()->GetProperty(nsGkAtoms::MinimalDisplayPort)) {
     return false;
@@ -4265,6 +4274,16 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         aBuilder);
 
     if (mWillBuildScrollableLayer && aBuilder->IsPaintingToWindow()) {
+      // If this scroll frame has a first scrollable frame sequence number,
+      // ensure that it matches the current paint sequence number. If it does
+      // not, reset it so that we can expire the displayport. The stored
+      // sequence number will not match that of the current paint if the dom
+      // was mutated in some way that alters the order of scroll frames.
+      if (sf->IsFirstScrollableFrameSequenceNumber().isSome() &&
+          *sf->IsFirstScrollableFrameSequenceNumber() !=
+              nsDisplayListBuilder::GetPaintSequenceNumber()) {
+        sf->SetIsFirstScrollableFrameSequenceNumber(Nothing());
+      }
       asrSetter.EnterScrollFrame(sf);
     }
 
