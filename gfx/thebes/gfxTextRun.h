@@ -982,20 +982,8 @@ class gfxFontGroup final : public gfxTextRunFactory {
    * textrun will copy it.
    * This calls FetchGlyphExtents on the textrun.
    */
-  already_AddRefed<gfxTextRun> MakeTextRun(const char16_t* aString,
-                                           uint32_t aLength,
-                                           const Parameters* aParams,
-                                           mozilla::gfx::ShapedTextFlags aFlags,
-                                           nsTextFrameUtils::Flags aFlags2,
-                                           gfxMissingFontRecorder* aMFR);
-  /**
-   * Make a textrun for a given string.
-   * If aText is not persistent (aFlags & TEXT_IS_PERSISTENT), the
-   * textrun will copy it.
-   * This calls FetchGlyphExtents on the textrun.
-   */
-  already_AddRefed<gfxTextRun> MakeTextRun(const uint8_t* aString,
-                                           uint32_t aLength,
+  template <typename T>
+  already_AddRefed<gfxTextRun> MakeTextRun(const T* aString, uint32_t aLength,
                                            const Parameters* aParams,
                                            mozilla::gfx::ShapedTextFlags aFlags,
                                            nsTextFrameUtils::Flags aFlags2,
