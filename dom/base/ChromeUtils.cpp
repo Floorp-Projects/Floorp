@@ -7,6 +7,7 @@
 #include "ChromeUtils.h"
 
 #include "JSOracleParent.h"
+#include "js/CallAndConstruct.h"  // JS::Call
 #include "js/CharacterEncoding.h"
 #include "js/Object.h"              // JS::GetClass
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_DefinePropertyById, JS_Enumerate, JS_GetProperty, JS_GetPropertyById, JS_SetProperty, JS_SetPropertyById, JS::IdVector
@@ -634,10 +635,15 @@ void ChromeUtils::ImportESModule(
   aRetval.set(moduleNamespace);
 }
 
-namespace module_getter {
+namespace lazy_getter {
 
 static const size_t SLOT_ID = 0;
 static const size_t SLOT_URI = 1;
+static const size_t SLOT_PARAMS = 1;
+
+static const size_t PARAM_INDEX_TARGET = 0;
+static const size_t PARAM_INDEX_LAMBDA = 1;
+static const size_t PARAMS_COUNT = 2;
 
 static bool ExtractArgs(JSContext* aCx, JS::CallArgs& aArgs,
                         JS::MutableHandle<JSObject*> aCallee,
@@ -657,6 +663,90 @@ static bool ExtractArgs(JSContext* aCx, JS::CallArgs& aArgs,
                            js::GetFunctionNativeReserved(aCallee, SLOT_ID));
   MOZ_ALWAYS_TRUE(JS_ValueToId(aCx, id, aId));
   return true;
+}
+
+static bool JSLazyGetter(JSContext* aCx, unsigned aArgc, JS::Value* aVp) {
+  JS::CallArgs args = JS::CallArgsFromVp(aArgc, aVp);
+
+  JS::Rooted<JSObject*> callee(aCx);
+  JS::Rooted<JSObject*> unused(aCx);
+  JS::Rooted<jsid> id(aCx);
+  if (!ExtractArgs(aCx, args, &callee, &unused, &id)) {
+    return false;
+  }
+
+  JS::Rooted<JS::Value> paramsVal(
+      aCx, js::GetFunctionNativeReserved(callee, SLOT_PARAMS));
+  if (paramsVal.isUndefined()) {
+    args.rval().setUndefined();
+    return true;
+  }
+  // Avoid calling the lambda multiple times, in case of:
+  //   * the getter function is retrieved from property descriptor and called
+  //   * the lambda gets the property again
+  //   * the getter function throws and accessed again
+  js::SetFunctionNativeReserved(callee, SLOT_PARAMS, JS::UndefinedHandleValue);
+
+  JS::Rooted<JSObject*> paramsObj(aCx, &paramsVal.toObject());
+
+  JS::Rooted<JS::Value> targetVal(aCx);
+  JS::Rooted<JS::Value> lambdaVal(aCx);
+  if (!JS_GetElement(aCx, paramsObj, PARAM_INDEX_TARGET, &targetVal)) {
+    return false;
+  }
+  if (!JS_GetElement(aCx, paramsObj, PARAM_INDEX_LAMBDA, &lambdaVal)) {
+    return false;
+  }
+
+  JS::Rooted<JSObject*> targetObj(aCx, &targetVal.toObject());
+
+  JS::Rooted<JS::Value> value(aCx);
+  if (!JS::Call(aCx, targetObj, lambdaVal, JS::HandleValueArray::empty(),
+                &value)) {
+    return false;
+  }
+
+  if (!JS_DefinePropertyById(aCx, targetObj, id, value, JSPROP_ENUMERATE)) {
+    return false;
+  }
+
+  args.rval().set(value);
+  return true;
+}
+
+static bool DefineLazyGetter(JSContext* aCx, JS::Handle<JSObject*> aTarget,
+                             JS::Handle<JS::Value> aName,
+                             JS::Handle<JSObject*> aLambda) {
+  JS::Rooted<jsid> id(aCx);
+  if (!JS_ValueToId(aCx, aName, &id)) {
+    return false;
+  }
+
+  JS::Rooted<JSObject*> getter(
+      aCx, JS_GetFunctionObject(
+               js::NewFunctionByIdWithReserved(aCx, JSLazyGetter, 0, 0, id)));
+  if (!getter) {
+    JS_ReportOutOfMemory(aCx);
+    return false;
+  }
+
+  JS::RootedVector<JS::Value> params(aCx);
+  if (!params.resize(PARAMS_COUNT)) {
+    return false;
+  }
+  params[PARAM_INDEX_TARGET].setObject(*aTarget);
+  params[PARAM_INDEX_LAMBDA].setObject(*aLambda);
+  JS::Rooted<JSObject*> paramsObj(aCx, JS::NewArrayObject(aCx, params));
+  if (!paramsObj) {
+    return false;
+  }
+
+  js::SetFunctionNativeReserved(getter, SLOT_ID, aName);
+  js::SetFunctionNativeReserved(getter, SLOT_PARAMS,
+                                JS::ObjectValue(*paramsObj));
+
+  return JS_DefinePropertyById(aCx, aTarget, id, getter, nullptr,
+                               JSPROP_ENUMERATE);
 }
 
 enum class ModuleType { JSM, ESM };
@@ -820,7 +910,21 @@ static bool DefineESModuleGetter(JSContext* aCx, JS::Handle<JSObject*> aTarget,
   return JS_DefinePropertyById(aCx, aTarget, aId, getter, setter,
                                JSPROP_ENUMERATE);
 }
-}  // namespace module_getter
+
+}  // namespace lazy_getter
+
+/* static */
+void ChromeUtils::DefineLazyGetter(const GlobalObject& aGlobal,
+                                   JS::Handle<JSObject*> aTarget,
+                                   JS::Handle<JS::Value> aName,
+                                   JS::Handle<JSObject*> aLambda,
+                                   ErrorResult& aRv) {
+  JSContext* cx = aGlobal.Context();
+  if (!lazy_getter::DefineLazyGetter(cx, aTarget, aName, aLambda)) {
+    aRv.NoteJSContextException(cx);
+    return;
+  }
+}
 
 /* static */
 void ChromeUtils::DefineModuleGetter(const GlobalObject& global,
@@ -828,8 +932,8 @@ void ChromeUtils::DefineModuleGetter(const GlobalObject& global,
                                      const nsAString& id,
                                      const nsAString& resourceURI,
                                      ErrorResult& aRv) {
-  if (!module_getter::DefineJSModuleGetter(global.Context(), target, id,
-                                           resourceURI)) {
+  if (!lazy_getter::DefineJSModuleGetter(global.Context(), target, id,
+                                         resourceURI)) {
     aRv.NoteJSContextException(global.Context());
   }
 }
@@ -839,7 +943,7 @@ void ChromeUtils::DefineESModuleGetters(const GlobalObject& global,
                                         JS::Handle<JSObject*> target,
                                         JS::Handle<JSObject*> modules,
                                         ErrorResult& aRv) {
-  auto cx = global.Context();
+  JSContext* cx = global.Context();
 
   JS::Rooted<JS::IdVector> props(cx, JS::IdVector(cx));
   if (!JS_Enumerate(cx, modules, &props)) {
@@ -862,8 +966,7 @@ void ChromeUtils::DefineESModuleGetters(const GlobalObject& global,
       return;
     }
 
-    if (!module_getter::DefineESModuleGetter(cx, target, prop,
-                                             resourceURIVal)) {
+    if (!lazy_getter::DefineESModuleGetter(cx, target, prop, resourceURIVal)) {
       aRv.NoteJSContextException(cx);
       return;
     }

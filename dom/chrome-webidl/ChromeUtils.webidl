@@ -255,6 +255,21 @@ namespace ChromeUtils {
   double dateNow();
 
   /**
+   * Defines a getter on a specified object that will be created upon first
+   * use.
+   *
+   * @param aTarget
+   *        The object to define the lazy getter on.
+   * @param aName
+   *        The name of the getter to define on aTarget.
+   * @param aLambda
+   *        A function that returns what the getter should return.  This will
+   *        only ever be called once.
+   */
+  [Throws]
+  undefined defineLazyGetter(object aTarget, any aName, object aLambda);
+
+  /**
    * IF YOU ADD NEW METHODS HERE, MAKE SURE THEY ARE THREAD-SAFE.
    */
 };

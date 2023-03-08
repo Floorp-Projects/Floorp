@@ -388,6 +388,11 @@ JS_PUBLIC_API JSFunction* NewFunctionByIdWithReserved(JSContext* cx,
                                                       unsigned nargs,
                                                       unsigned flags, jsid id);
 
+/**
+ * Get or set function's reserved slot value.
+ * `fun` should be a function created with `*WithReserved` API above.
+ * Such functions have 2 reserved slots, and `which` can be either 0 or 1.
+ */
 JS_PUBLIC_API const JS::Value& GetFunctionNativeReserved(JSObject* fun,
                                                          size_t which);
 
