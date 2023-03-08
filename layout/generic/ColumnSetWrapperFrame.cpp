@@ -232,6 +232,53 @@ nscoord ColumnSetWrapperFrame::GetPrefISize(gfxContext* aRenderingContext) {
   return iSize;
 }
 
+template <typename Iterator>
+Maybe<nscoord> ColumnSetWrapperFrame::GetBaselineBOffset(
+    Iterator aStart, Iterator aEnd, WritingMode aWM,
+    BaselineSharingGroup aBaselineGroup) const {
+  // Either forward iterator + first baseline, or reverse iterator + last
+  // baseline
+  MOZ_ASSERT((*aStart == PrincipalChildList().FirstChild() &&
+              aBaselineGroup == BaselineSharingGroup::First) ||
+                 (*aStart == PrincipalChildList().LastChild() &&
+                  aBaselineGroup == BaselineSharingGroup::Last),
+             "Iterator direction must match baseline sharing group.");
+  if (StyleDisplay()->IsContainLayout()) {
+    return Nothing{};
+  }
+
+  // Start from start/end of principal child list, and use the first valid
+  // baseline.
+  for (auto itr = aStart; itr != aEnd; ++itr) {
+    const nsIFrame* kid = *itr;
+    auto kidBaseline = kid->GetNaturalBaselineBOffset(aWM, aBaselineGroup);
+    if (!kidBaseline) {
+      continue;
+    }
+    // Baseline is offset from the kid's rectangle, so find the offset to the
+    // kid's rectangle.
+    LogicalRect kidRect{aWM, kid->GetLogicalNormalPosition(aWM, GetSize()),
+                        kid->GetLogicalSize(aWM)};
+    if (aBaselineGroup == BaselineSharingGroup::First) {
+      *kidBaseline += kidRect.BStart(aWM);
+    } else {
+      *kidBaseline += (GetLogicalSize().BSize(aWM) - kidRect.BEnd(aWM));
+    }
+    return kidBaseline;
+  }
+  return Nothing{};
+}
+
+Maybe<nscoord> ColumnSetWrapperFrame::GetNaturalBaselineBOffset(
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
+  if (aBaselineGroup == BaselineSharingGroup::First) {
+    return GetBaselineBOffset(PrincipalChildList().cbegin(),
+                              PrincipalChildList().cend(), aWM, aBaselineGroup);
+  }
+  return GetBaselineBOffset(PrincipalChildList().crbegin(),
+                            PrincipalChildList().crend(), aWM, aBaselineGroup);
+}
+
 #ifdef DEBUG
 
 /* static */
