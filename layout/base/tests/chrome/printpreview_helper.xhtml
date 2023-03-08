@@ -1689,6 +1689,26 @@ async function runTest55() {
 
 async function runTest56() {
   await compareFiles("printpreview_image_select.html", "printpreview_image_select_ref.html");
+  requestAnimationFrame(() => setTimeout(runTest57));
+}
+
+// Tests that printing with mixed page sizes doesn't crash.
+// These tests can't actually compare any pages after the first, so this only
+// verifies that we don't crash reflowing.
+async function runTest57() {
+  let test = "printpreview_mixed_page_size_001.html";
+  // The params are just to give the file unique URLs.
+  await compareFiles(test + "?test", test + "?ref");
+  requestAnimationFrame(() => setTimeout(runTest58));
+}
+
+// As with runTest57, this is only testing for crashes.
+// This includes fixed-position content, as this is the only way to get content
+// within the same chain of continuations onto pages with different sizes.
+async function runTest58() {
+  let test = "printpreview_mixed_page_size_002.html";
+  // The params are just to give the file unique URLs.
+  await compareFiles(test + "?test", test + "?ref");
   finish();
 }
 
