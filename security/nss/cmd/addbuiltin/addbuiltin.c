@@ -74,7 +74,6 @@ getTrustString(unsigned int trust)
             return "CKT_NSS_MUST_VERIFY_TRUST";
         }
     }
-    return "CKT_NSS_TRUST_UNKNOWN"; /* not reached */
 }
 
 static const SEC_ASN1Template serialTemplate[] = {

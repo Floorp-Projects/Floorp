@@ -999,27 +999,6 @@ TEST_P(TlsConnectClientAuth12, ClientAuthBigRsaCheckSigAlg) {
                  2048);
 }
 
-// Replaces the signature scheme in a CertificateVerify message.
-class TlsReplaceSignatureSchemeFilter : public TlsHandshakeFilter {
- public:
-  TlsReplaceSignatureSchemeFilter(const std::shared_ptr<TlsAgent>& a,
-                                  SSLSignatureScheme scheme)
-      : TlsHandshakeFilter(a, {kTlsHandshakeCertificateVerify}),
-        scheme_(scheme) {}
-
- protected:
-  virtual PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
-                                               const DataBuffer& input,
-                                               DataBuffer* output) {
-    *output = input;
-    output->Write(0, scheme_, 2);
-    return CHANGE;
-  }
-
- private:
-  SSLSignatureScheme scheme_;
-};
-
 // Check if CertificateVerify signed with rsa_pss_rsae_* is properly
 // rejected when the certificate is RSA-PSS.
 //

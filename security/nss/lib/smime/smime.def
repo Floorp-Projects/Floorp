@@ -285,3 +285,9 @@ SEC_PKCS12DecoderRenameCertNicknames;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.89 {    # NSS 3.89 release
+;+    global:
+NSS_CMSSignerInfo_GetDigestAlgTag;
+;+    local:
+;+       *;
+;+};

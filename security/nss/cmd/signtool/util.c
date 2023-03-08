@@ -430,51 +430,9 @@ out_of_memory(void)
 void
 VerifyCertDir(char *dir, char *keyName)
 {
-    char fn[FNSIZE];
-
-    /* don't try verifying if we don't have a local directory */
-    if (strncmp(dir, "multiaccess:", sizeof("multiaccess:") - 1) == 0) {
-        return;
-    }
     /* this function is truly evil. Tools and applications should not have
      * any knowledge of actual cert databases! */
     return;
-
-    /* This code is really broken because it makes underlying assumptions about
-     * how the NSS profile directory is laid out, but these names can change
-     * from release to release. */
-    sprintf(fn, "%s/cert8.db", dir);
-
-    if (PR_Access(fn, PR_ACCESS_EXISTS)) {
-        PR_fprintf(errorFD, "%s: No certificate database in \"%s\"\n",
-                   PROGRAM_NAME, dir);
-        PR_fprintf(errorFD, "%s: Check the -d arguments that you gave\n",
-                   PROGRAM_NAME);
-        errorCount++;
-        exit(ERRX);
-    }
-
-    if (verbosity >= 0) {
-        PR_fprintf(outputFD, "using certificate directory: %s\n", dir);
-    }
-
-    if (keyName == NULL)
-        return;
-
-    /* if the user gave the -k key argument, verify that
-     a key database already exists */
-
-    sprintf(fn, "%s/key3.db", dir);
-
-    if (PR_Access(fn, PR_ACCESS_EXISTS)) {
-        PR_fprintf(errorFD, "%s: No private key database in \"%s\"\n",
-                   PROGRAM_NAME,
-                   dir);
-        PR_fprintf(errorFD, "%s: Check the -d arguments that you gave\n",
-                   PROGRAM_NAME);
-        errorCount++;
-        exit(ERRX);
-    }
 }
 
 /*

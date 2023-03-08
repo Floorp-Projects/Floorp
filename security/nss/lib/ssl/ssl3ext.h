@@ -206,5 +206,7 @@ SECStatus SSLExp_InstallExtensionHooks(
 sslCustomExtensionHooks *ssl_FindCustomExtensionHooks(sslSocket *ss, PRUint16 extension);
 SECStatus ssl_CallCustomExtensionSenders(sslSocket *ss, sslBuffer *buf,
                                          SSLHandshakeType message);
+SECStatus tls_ClientHelloExtensionPermutationSetup(sslSocket *ss);
+void tls_ClientHelloExtensionPermutationDestroy(sslSocket *ss);
 
 #endif

@@ -26,6 +26,8 @@ struct nssOps {
     PRInt32 dtlsVersionMaxPolicy;
     PRInt32 pkcs12DecodeForceUnicode;
     PRInt32 defaultLocks;
+    PRInt32 keySizePolicyFlags;
+    PRInt32 eccMinKeySize;
 };
 
 static struct nssOps nss_ops = {
@@ -37,7 +39,9 @@ static struct nssOps nss_ops = {
     1,
     0xffff,
     PR_FALSE,
-    0
+    0,
+    NSS_KEY_SIZE_POLICY_SSL_FLAG,
+    SSL_ECC_MIN_CURVE_BITS
 };
 
 SECStatus
@@ -77,6 +81,18 @@ NSS_OptionSet(PRInt32 which, PRInt32 value)
             break;
         case NSS_DEFAULT_LOCKS:
             nss_ops.defaultLocks = value;
+            break;
+        case NSS_KEY_SIZE_POLICY_FLAGS:
+            nss_ops.keySizePolicyFlags = value;
+            break;
+        case NSS_KEY_SIZE_POLICY_SET_FLAGS:
+            nss_ops.keySizePolicyFlags |= value;
+            break;
+        case NSS_KEY_SIZE_POLICY_CLEAR_FLAGS:
+            nss_ops.keySizePolicyFlags &= ~value;
+            break;
+        case NSS_ECC_MIN_KEY_SIZE:
+            nss_ops.eccMinKeySize = value;
             break;
         default:
             PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -118,6 +134,16 @@ NSS_OptionGet(PRInt32 which, PRInt32 *value)
             break;
         case NSS_DEFAULT_LOCKS:
             *value = nss_ops.defaultLocks;
+            break;
+        case NSS_KEY_SIZE_POLICY_FLAGS:
+        case NSS_KEY_SIZE_POLICY_SET_FLAGS:
+            *value = nss_ops.keySizePolicyFlags;
+            break;
+        case NSS_KEY_SIZE_POLICY_CLEAR_FLAGS:
+            *value = ~nss_ops.keySizePolicyFlags;
+            break;
+        case NSS_ECC_MIN_KEY_SIZE:
+            *value = nss_ops.eccMinKeySize;
             break;
         default:
             rv = SECFailure;

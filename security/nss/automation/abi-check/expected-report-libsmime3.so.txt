@@ -1,0 +1,5 @@
+
+1 Added function:
+
+  'function SECOidTag NSS_CMSSignerInfo_GetDigestAlgTag(NSSCMSSignerInfo*)'    {NSS_CMSSignerInfo_GetDigestAlgTag@@NSS_3.89}
+

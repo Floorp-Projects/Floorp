@@ -56,6 +56,6 @@ export async function buildTask({name, path}) {
     features: ["dind"],
     maxRunTime: 7200,
     kind: "build",
-    symbol: "I"
+    symbol: `I(${name})`
   };
 }

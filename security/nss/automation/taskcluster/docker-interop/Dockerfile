@@ -1,6 +1,6 @@
 # Dockerfile for running interop tests.
 # This includes Rust, golang, and nodejs.
-FROM ubuntu:20.04
+FROM ubuntu:focal-20221130
 LABEL maintainer="Martin Thomson <martin.thomson@gmail.com>"
 
 RUN dpkg --add-architecture i386
