@@ -103,7 +103,7 @@ Example
 -------
 
 Here is an example of an external linter that shells out to the python flake8 linter,
-let's call the file ``flake8_lint.py`` (`in-tree version <https://searchfox.org/mozilla-central/source/tools/lint/python/flake8.py>`_):
+let's call the file ``flake8_lint.py`` (`in-tree version <https://searchfox.org/mozilla-central/source/tools/lint/python/flake8.py>`__):
 
 .. code-block:: python
 
@@ -299,7 +299,7 @@ complicated as pulling a whole graph of tools, plugins and their dependencies.
 Either way, to reduce the burden on users, linters should strive to provide
 automated bootstrapping of all their dependencies. To help with this,
 ``mozlint`` allows linters to define a ``setup`` config, which has the same
-path object format as an external payload. For example (`in-tree version <https://searchfox.org/mozilla-central/source/tools/lint/flake8.yml>`_):
+path object format as an external payload. For example (`in-tree version <https://searchfox.org/mozilla-central/source/tools/lint/flake8.yml>`__):
 
 .. code-block:: yaml
 
