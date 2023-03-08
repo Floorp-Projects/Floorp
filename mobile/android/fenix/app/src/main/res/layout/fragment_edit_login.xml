@@ -131,12 +131,13 @@
     <ImageButton
         android:id="@+id/clearUsernameTextButton"
         android:layout_width="48dp"
-        android:layout_height="30dp"
+        android:layout_height="@dimen/accessibility_min_height"
         android:layout_marginTop="3dp"
         android:layout_marginBottom="10dp"
         android:background="@null"
         android:contentDescription="@string/saved_login_clear_username"
         app:tint="@color/saved_login_clear_edit_text_tint"
+        app:layout_constraintBottom_toBottomOf="@id/inputLayoutUsername"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/inputLayoutUsername"
         app:srcCompat="@drawable/mozac_ic_clear" />
@@ -163,7 +164,6 @@
         android:id="@+id/inputLayoutPassword"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingBottom="11dp"
         android:colorControlHighlight="?attr/textPrimary"
         android:colorControlActivated="?attr/textPrimary"
         android:textColor="?attr/textPrimary"
@@ -202,11 +202,13 @@
     <ImageButton
         android:id="@+id/revealPasswordButton"
         android:layout_width="48dp"
-        android:layout_height="30dp"
+        android:layout_height="@dimen/accessibility_min_height"
         android:layout_marginTop="3dp"
+        android:layout_marginBottom="10dp"
         android:background="@null"
         android:contentDescription="@string/saved_login_reveal_password"
         app:tint="?attr/textPrimary"
+        app:layout_constraintBottom_toBottomOf="@id/inputLayoutPassword"
         app:layout_constraintEnd_toStartOf="@id/clearPasswordTextButton"
         app:layout_constraintTop_toTopOf="@id/inputLayoutPassword"
         app:srcCompat="@drawable/mozac_ic_password_reveal" />
@@ -214,10 +216,11 @@
     <ImageButton
         android:id="@+id/clearPasswordTextButton"
         android:layout_width="48dp"
-        android:layout_height="30dp"
+        android:layout_height="@dimen/accessibility_min_height"
         android:background="@null"
         android:contentDescription="@string/saved_logins_clear_password"
         app:tint="@color/saved_login_clear_edit_text_tint"
+        app:layout_constraintBottom_toBottomOf="@id/revealPasswordButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/revealPasswordButton"
         app:srcCompat="@drawable/mozac_ic_clear" />
