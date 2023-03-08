@@ -48,8 +48,10 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    *
    * @param {UrlbarQueryContext} context
    *   The query context.
+   * @param {Array} unsortedResults
+   *   The array of UrlbarResult that is not sorted yet.
    */
-  sort(context) {
+  sort(context, unsortedResults) {
     // This method is called multiple times per keystroke, so it should be as
     // fast and efficient as possible.  We do two passes through the results:
     // one to collect state for the second pass, and then a second to build the
@@ -76,7 +78,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       urlToTabResultType: new Map(),
       addedRemoteTabUrls: new Set(),
       addedSwitchTabUrls: new Set(),
-      canShowPrivateSearch: context.results.length > 1,
+      canShowPrivateSearch: unsortedResults.length > 1,
       canShowTailSuggestions: true,
       // Form history and remote suggestions added so far.  Used for deduping
       // suggestions.  Also includes the heuristic query string if the heuristic
@@ -90,7 +92,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     };
 
     // Do the first pass over all results to build some state.
-    for (let result of context.results) {
+    for (let result of unsortedResults) {
       // Add each result to the appropriate `resultsByGroup` map.
       let group = UrlbarUtils.getResultGroup(result);
       let resultsByGroup =

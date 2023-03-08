@@ -380,6 +380,7 @@ class Query {
     // caller and we don't want to port previous query state over.
     this.context.pendingHeuristicProviders.clear();
     this.context.deferUserSelectionProviders.clear();
+    this.unsortedResults = [];
     this.muxer = muxer;
     this.controller = controller;
     this.providers = providers;
@@ -603,7 +604,7 @@ class Query {
 
     result.providerName = provider.name;
     result.providerType = provider.type;
-    this.context.results.push(result);
+    this.unsortedResults.push(result);
 
     this._notifyResultsFromProvider(provider);
   }
@@ -644,7 +645,7 @@ class Query {
   }
 
   _notifyResults() {
-    this.muxer.sort(this.context);
+    this.muxer.sort(this.context, this.unsortedResults);
 
     if (this._heuristicProviderTimer) {
       this._heuristicProviderTimer.cancel().catch(ex => lazy.logger.error(ex));
@@ -656,14 +657,10 @@ class Query {
       this._chunkTimer = null;
     }
 
-    // Before the muxer.sort call above, this.context.results should never be
-    // empty since this method is called when results are added.  But the muxer
-    // may have excluded one or more results from the final sorted list.  For
-    // example, it excludes the "Search in a Private Window" result if it's the
-    // only result that's been added so far.  We don't want to notify consumers
-    // if there are no results since they generally expect at least one result
-    // when notified, so bail, but only after nulling out the chunk timer above
-    // so that it will be restarted the next time results are added.
+    // We don't want to notify consumers if there are no results since they
+    // generally expect at least one result when notified, so bail, but only
+    // after nulling out the chunk timer above so that it will be restarted
+    // the next time results are added.
     if (!this.context.results.length) {
       return;
     }

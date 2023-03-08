@@ -1033,10 +1033,13 @@ class TelemetryEvent {
       1
     );
 
-    if (method === "engagement" && queryContext?.results?.[0].autofill) {
+    if (
+      method === "engagement" &&
+      queryContext?.view?.visibleResults?.[0]?.autofill
+    ) {
       // Record autofill impressions upon engagement.
       const type = lazy.UrlbarUtils.telemetryTypeFromResult(
-        queryContext.results[0]
+        queryContext.view.visibleResults[0]
       );
       Services.telemetry.scalarAdd(`urlbar.impression.${type}`, 1);
     }
