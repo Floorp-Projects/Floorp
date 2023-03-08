@@ -43,7 +43,14 @@ class MozbuildWriter(object):
         self._shared_library = None
 
     def mb_serialize(self, v):
-        if isinstance(v, (bool, list)):
+        if isinstance(v, list):
+            if len(v) <= 1:
+                return repr(v)
+            # Pretty print a list
+            raw = json.dumps(v, indent=self._indent_increment)
+            # Add the indent of the current indentation level
+            return raw.replace("\n", "\n" + self.indent)
+        if isinstance(v, bool):
             return repr(v)
         return '"%s"' % v
 
