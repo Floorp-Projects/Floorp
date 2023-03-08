@@ -61,6 +61,9 @@ already_AddRefed<nsIURI> HTMLImageMapAccessible::AnchorURIAt(
 // HTMLImageMapAccessible: public
 
 void HTMLImageMapAccessible::UpdateChildAreas(bool aDoFireEvents) {
+  if (!mContent || !mContent->GetPrimaryFrame()) {
+    return;
+  }
   nsImageFrame* imageFrame = do_QueryFrame(mContent->GetPrimaryFrame());
 
   // If image map is not initialized yet then we trigger one time more later.
