@@ -63,7 +63,7 @@ add_task(async function test_timeout() {
     submissionPromise = new Promise(resolve => {
       GleanPings.firstStartup.testBeforeNextSubmit(() => {
         Assert.equal(FirstStartup.state, FirstStartup.TIMED_OUT);
-        Assert.notEqual(Glean.firstStartup.elapsed.testGetValue(), null);
+        Assert.ok(Glean.firstStartup.elapsed.testGetValue() > 0);
         resolve();
       });
     });
@@ -71,7 +71,7 @@ add_task(async function test_timeout() {
     submissionPromise = new Promise(resolve => {
       GleanPings.firstStartup.testBeforeNextSubmit(() => {
         Assert.equal(FirstStartup.state, FirstStartup.UNSUPPORTED);
-        Assert.equal(Glean.firstStartup.elapsed.testGetValue(), null);
+        Assert.equal(Glean.firstStartup.elapsed.testGetValue(), 0);
         resolve();
       });
     });
