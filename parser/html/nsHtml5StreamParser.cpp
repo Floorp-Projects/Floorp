@@ -791,7 +791,7 @@ nsresult nsHtml5StreamParser::SniffStreamBytes(Span<const uint8_t> aFromSegment,
       mozilla::MutexAutoLock speculationAutoLock(mSpeculationMutex);
       nsHtml5Speculation* speculation = new nsHtml5Speculation(
           mFirstBuffer, mFirstBuffer->getStart(), mTokenizer->getLineNumber(),
-          mTokenizer->getColumnNumber(), mTreeBuilder->newSnapshot());
+          mTreeBuilder->newSnapshot());
       MOZ_ASSERT(!mFlushTimerArmed, "How did we end up arming the timer?");
       if (mMode == VIEW_SOURCE_HTML) {
         mTokenizer->SetViewSourceOpSink(speculation);
@@ -1999,7 +1999,7 @@ void nsHtml5StreamParser::DiscardMetaSpeculation() {
 
   nsHtml5Speculation* speculation = new nsHtml5Speculation(
       mFirstBuffer, mFirstBuffer->getStart(), mTokenizer->getLineNumber(),
-      mTokenizer->getColumnNumber(), mTreeBuilder->newSnapshot());
+      mTreeBuilder->newSnapshot());
   MOZ_ASSERT(!mFlushTimerArmed, "How did we end up arming the timer?");
   if (mMode == VIEW_SOURCE_HTML) {
     mTokenizer->SetViewSourceOpSink(speculation);
@@ -2486,7 +2486,7 @@ void nsHtml5StreamParser::ParseAvailableData() {
         mozilla::MutexAutoLock speculationAutoLock(mSpeculationMutex);
         nsHtml5Speculation* speculation = new nsHtml5Speculation(
             mFirstBuffer, mFirstBuffer->getStart(), mTokenizer->getLineNumber(),
-            mTokenizer->getColumnNumber(), mTreeBuilder->newSnapshot());
+            mTreeBuilder->newSnapshot());
         mTreeBuilder->AddSnapshotToScript(speculation->GetSnapshot(),
                                           speculation->GetStartLineNumber());
         if (mLookingForMetaCharset) {
@@ -2649,15 +2649,12 @@ void nsHtml5StreamParser::ContinueAfterScriptsOrEncodingCommitment(
       mFirstBuffer = speculation->GetBuffer();
       mFirstBuffer->setStart(speculation->GetStart());
       mTokenizer->setLineNumber(speculation->GetStartLineNumber());
-      mTokenizer->setColumnNumberAndResetNextLine(
-          speculation->GetStartColumnNumber());
 
       nsContentUtils::ReportToConsole(
           nsIScriptError::warningFlag, "DOM Events"_ns,
           mExecutor->GetDocument(), nsContentUtils::eDOM_PROPERTIES,
           "SpeculationFailed2", nsTArray<nsString>(), nullptr, u""_ns,
-          speculation->GetStartLineNumber(),
-          speculation->GetStartColumnNumber());
+          speculation->GetStartLineNumber());
 
       nsHtml5OwningUTF16Buffer* buffer = mFirstBuffer->next;
       while (buffer) {

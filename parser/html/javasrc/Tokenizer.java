@@ -1390,9 +1390,6 @@ public class Tokenizer implements Locator, Locator2 {
     public void start() throws SAXException {
         initializeWithoutStarting();
         tokenHandler.startTokenization(this);
-        // CPPONLY: line = 0;
-        // CPPONLY: col = 1;
-        // CPPONLY: nextCharOnNewLine = true;
         // [NOCPP[
         startErrorReporting();
         // ]NOCPP]
@@ -6331,8 +6328,6 @@ public class Tokenizer implements Locator, Locator2 {
         appendStrBuf('\n');
     }
 
-    // [NOCPP[
-
     @Inline protected void silentCarriageReturn() {
         ++line;
         lastCR = true;
@@ -6341,8 +6336,6 @@ public class Tokenizer implements Locator, Locator2 {
     @Inline protected void silentLineFeed() {
         ++line;
     }
-
-    // ]NOCPP]
 
     private void emitCarriageReturn(@NoLength char[] buf, int pos)
             throws SAXException {
@@ -7161,14 +7154,10 @@ public class Tokenizer implements Locator, Locator2 {
         return suspendAfterCurrentNonTextToken;
     }
 
-    // [NOCPP[
-
     @Inline protected char checkChar(@NoLength char[] buf, int pos)
             throws SAXException {
         return buf[pos];
     }
-
-    // ]NOCPP]
 
     public boolean internalEncodingDeclaration(String internalCharset)
             throws SAXException {
