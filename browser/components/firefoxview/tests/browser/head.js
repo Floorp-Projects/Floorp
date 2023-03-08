@@ -7,7 +7,6 @@ const {
   assertFirefoxViewTabSelected,
   openFirefoxViewTab,
   closeFirefoxViewTab,
-  isFirefoxViewTabSelectedInWindow,
 } = ChromeUtils.importESModule(
   "resource://testing-common/FirefoxViewTestUtils.sys.mjs"
 );
@@ -527,8 +526,4 @@ function cleanup_tab_pickup() {
   Services.prefs.clearUserPref("services.sync.engine.tabs");
   Services.prefs.clearUserPref("services.sync.lastTabFetch");
   Services.prefs.clearUserPref(TAB_PICKUP_STATE_PREF);
-}
-
-function isFirefoxViewTabSelected(win = window) {
-  return isFirefoxViewTabSelectedInWindow(win);
 }
