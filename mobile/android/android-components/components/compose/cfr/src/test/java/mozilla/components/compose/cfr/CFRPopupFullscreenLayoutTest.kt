@@ -5,6 +5,7 @@
 package mozilla.components.compose.cfr
 
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.graphics.PixelFormat
 import android.view.View
 import android.view.ViewManager
@@ -16,24 +17,34 @@ import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.savedstate.findViewTreeSavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceTimeBy
 import mozilla.components.compose.cfr.CFRPopup.PopupAlignment
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.rule.MainCoroutineRule
+import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
+@ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 class CFRPopupFullscreenLayoutTest {
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule()
+
     @Test
-    fun `WHEN the popup is constructed THEN setup lifecycle owners`() {
+    fun `WHEN the popup is shown THEN setup lifecycle owners`() {
         val anchor = View(testContext).apply {
             setViewTreeLifecycleOwner(mock())
             this.setViewTreeSavedStateRegistryOwner(mock())
@@ -48,6 +59,7 @@ class CFRPopupFullscreenLayoutTest {
                 action = { },
             ),
         )
+        popupView.show()
 
         assertNotNull(popupView.findViewTreeLifecycleOwner())
         assertEquals(
@@ -523,5 +535,27 @@ class CFRPopupFullscreenLayoutTest {
 
         assertEquals(710, result.startCoord.value)
         assertEquals(300, result.endCoord.value)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `GIVEN there is a CFR Popup showing WHEN the orientation of the device changes THEN the CFR will be dismissed and shown again after a delay`() = runTestOnMain {
+        val context = spy(testContext)
+        val anchor = View(context).apply {
+            setViewTreeLifecycleOwner(mock())
+            this.setViewTreeSavedStateRegistryOwner(mock())
+        }
+        val popupView = spy(CFRPopupFullscreenLayout(anchor, mock(), mock(), { }, { }))
+        popupView.show()
+
+        testContext.resources.configuration.orientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        popupView.orientationChangeListener.onDisplayChanged(1)
+
+        advanceTimeBy(SHOW_AFTER_SCREEN_ORIENTATION_CHANGE_DELAY)
+        verify(popupView, times(1)).dismiss()
+        verify(popupView, times(1)).show()
+        // Test that show() is called the second time after exactly the expected delay.
+        advanceTimeBy(1)
+        verify(popupView, times(2)).show()
     }
 }

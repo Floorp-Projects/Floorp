@@ -233,7 +233,10 @@ class BrowserToolbarCFRPresenter(
             ),
             onDismiss = {
                 when (it) {
-                    true -> TrackingProtection.tcpCfrExplicitDismissal.record(NoExtras())
+                    true -> {
+                        TrackingProtection.tcpCfrExplicitDismissal.record(NoExtras())
+                        settings.shouldShowTotalCookieProtectionCFR = false
+                    }
                     false -> TrackingProtection.tcpCfrImplicitDismissal.record(NoExtras())
                 }
             },

@@ -33,6 +33,8 @@ import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.savedstate.findViewTreeSavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import mozilla.components.compose.cfr.CFRPopup.IndicatorDirection.DOWN
 import mozilla.components.compose.cfr.CFRPopup.IndicatorDirection.UP
 import mozilla.components.compose.cfr.CFRPopup.PopupAlignment.BODY_CENTERED_IN_SCREEN
@@ -43,8 +45,12 @@ import mozilla.components.compose.cfr.CFRPopupShape.Companion
 import mozilla.components.compose.cfr.helper.DisplayOrientationListener
 import mozilla.components.compose.cfr.helper.ViewDetachedListener
 import mozilla.components.support.ktx.android.util.dpToPx
+import mozilla.components.support.ktx.android.view.toScope
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
+
+@VisibleForTesting
+internal const val SHOW_AFTER_SCREEN_ORIENTATION_CHANGE_DELAY = 500L
 
 /**
  * Value class allowing to easily reason about what an `Int` represents.
@@ -103,20 +109,18 @@ internal class CFRPopupFullscreenLayout(
      * To avoid any improper anchorage the popups are automatically dismissed.
      *
      * Will not inform client about this since the user did not expressly dismissed this popup.
+     *
+     * Since a UX decision has been made here:
+     * [link](https://github.com/mozilla-mobile/fenix/issues/27033#issuecomment-1302363014)
+     * to redisplay any **implicitly** dismissed CFRs, a short delay will be added,
+     * after which the CFR will be shown again.
+     *
      */
-    private val orientationChangeListener = DisplayOrientationListener(anchor.context) {
-        dismiss()
-    }
+    @VisibleForTesting
+    internal lateinit var orientationChangeListener: DisplayOrientationListener
 
     override var shouldCreateCompositionOnAttachedToWindow: Boolean = false
         private set
-
-    init {
-        setViewTreeLifecycleOwner(anchor.findViewTreeLifecycleOwner())
-        this.setViewTreeSavedStateRegistryOwner(anchor.findViewTreeSavedStateRegistryOwner())
-        anchor.addOnAttachStateChangeListener(anchorDetachedListener)
-        orientationChangeListener.start()
-    }
 
     /**
      * Add a new CFR popup to the current window overlaying everything already displayed.
@@ -124,6 +128,12 @@ internal class CFRPopupFullscreenLayout(
      * with such behavior set in [CFRPopupProperties].
      */
     fun show() {
+        setViewTreeLifecycleOwner(anchor.findViewTreeLifecycleOwner())
+        this.setViewTreeSavedStateRegistryOwner(anchor.findViewTreeSavedStateRegistryOwner())
+        anchor.addOnAttachStateChangeListener(anchorDetachedListener)
+        orientationChangeListener = getDisplayOrientationListener(anchor.context).also {
+            it.start()
+        }
         windowManager.addView(this, createLayoutParams())
     }
 
@@ -500,6 +510,14 @@ internal class CFRPopupFullscreenLayout(
             flags = WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                 WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED
         }
+
+    private fun getDisplayOrientationListener(context: Context) = DisplayOrientationListener(context) {
+        dismiss()
+        anchor.toScope().launch {
+            delay(SHOW_AFTER_SCREEN_ORIENTATION_CHANGE_DELAY)
+            show()
+        }
+    }
 
     /**
      * Intended to allow querying the insets of the navigation bar.
