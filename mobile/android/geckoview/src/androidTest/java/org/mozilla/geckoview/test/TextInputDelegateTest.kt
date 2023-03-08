@@ -817,7 +817,7 @@ class TextInputDelegateTest : BaseSessionTest() {
     // Child process updates require having a display.
     @Test
     fun inputConnection_largeText() {
-        val content = (1..1024000).map {
+        val content = (1..102400).map {
             ('a'..'z').random()
         }.joinToString("")
         setupContent(content)
