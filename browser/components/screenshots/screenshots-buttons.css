@@ -10,6 +10,7 @@
   height: 100%;
   min-width: 90px;
   padding: 46px 5px 5px;
+  margin: 2px;
 }
 
 .all-buttons-container button:hover {
