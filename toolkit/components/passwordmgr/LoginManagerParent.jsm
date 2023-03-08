@@ -114,6 +114,30 @@ let gGeneratedPasswordObserver = {
       return;
     }
 
+    // We cache generated passwords in gGeneratedPasswordsByPrincipalOrigin.
+    // When generated password used on the page,
+    // we store a login with generated password and without username.
+    // When user updates that autosaved login with username,
+    // we must clear cached generated password.
+    // This will generate a new password next time user needs it.
+    if (topic == "passwordmgr-storage-changed" && data == "modifyLogin") {
+      const originalLogin = subject.GetElementAt(0);
+      const updatedLogin = subject.GetElementAt(1);
+
+      if (originalLogin && !originalLogin.username && updatedLogin?.username) {
+        const generatedPassword = gGeneratedPasswordsByPrincipalOrigin.get(
+          originalLogin.origin
+        );
+
+        if (
+          originalLogin.password == generatedPassword.value &&
+          updatedLogin.password == generatedPassword.value
+        ) {
+          gGeneratedPasswordsByPrincipalOrigin.delete(originalLogin.origin);
+        }
+      }
+    }
+
     if (
       topic == "passwordmgr-autosaved-login-merged" ||
       (topic == "passwordmgr-storage-changed" && data == "removeLogin")

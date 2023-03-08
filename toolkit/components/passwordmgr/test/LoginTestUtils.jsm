@@ -86,6 +86,15 @@ const LoginTestUtils = {
     return savedLogin;
   },
 
+  async modifyLogin(oldLogin, newLogin) {
+    const storageChangedPromise = TestUtils.topicObserved(
+      "passwordmgr-storage-changed",
+      (_, data) => data == "modifyLogin"
+    );
+    Services.logins.modifyLogin(oldLogin, newLogin);
+    await storageChangedPromise;
+  },
+
   resetGeneratedPasswordsCache() {
     let { LoginManagerParent } = ChromeUtils.import(
       "resource://gre/modules/LoginManagerParent.jsm"
