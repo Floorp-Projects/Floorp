@@ -5,6 +5,7 @@
 import json
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 import buildconfig
@@ -24,7 +25,10 @@ def action(fh, script, target_dir, *args):
     try:
         abs_target_dir = make_absolute(objdir, target_dir)
         abs_script = make_absolute(topsrcdir, script)
-        subprocess.check_call([abs_script] + args, cwd=abs_target_dir)
+        script = [abs_script]
+        if abs_script.suffix == ".py":
+            script = [sys.executable] + script
+        subprocess.check_call(script + args, cwd=abs_target_dir)
     except Exception:
         relative = os.path.relpath(__file__, topsrcdir)
         print(
