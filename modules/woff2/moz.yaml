@@ -1,0 +1,42 @@
+schema: 1
+
+bugzilla:
+  product: Toolkit
+  component: "General"
+
+origin:
+  name: woff2
+  description: font compression
+
+  url: https://github.com/google/woff2
+
+  release: 4721483ad780ee2b63cb787bfee4aa64b61a0446 (2022-03-30T15:59:13Z).
+  revision: 4721483ad780ee2b63cb787bfee4aa64b61a0446
+
+  license: MIT
+
+vendoring:
+  url: https://github.com/google/woff2
+  source-hosting: github
+  tracking: commit
+
+  exclude:
+    - ".*"
+    - CMakeLists.txt
+    - CONTRIBUTING.md
+    - Makefile
+    - brotli
+    - cmake
+    - README.md
+
+  include:
+    - include/
+    - src/
+
+  keep:
+    - "RLBoxWOFF2Sandbox.*"
+    - sources.mozbuild
+
+  patches:
+    - woff2-rlbox.patch
+

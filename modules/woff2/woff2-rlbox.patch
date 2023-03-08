@@ -1,6 +1,6 @@
-diff --git a/modules/woff2/src/woff2_dec.cc b/modules/woff2/src/woff2_dec.cc
---- a/modules/woff2/src/woff2_dec.cc
-+++ b/modules/woff2/src/woff2_dec.cc
+diff --git a/src/woff2_dec.cc b/src/woff2_dec.cc
+--- a/src/woff2_dec.cc
++++ b/src/woff2_dec.cc
 @@ -19,7 +19,6 @@
  #include <memory>
  #include <utility>
