@@ -97,6 +97,10 @@ if CONFIG["OS_TARGET"] == "Linux" or CONFIG["OS_TARGET"] == "Android":
         "m"
     ]
 
+# 32-bit Android doesn't have the log2() stdlib function
+if CONFIG['OS_TARGET'] == 'Android' and not CONFIG['HAVE_64BIT_BUILD']:
+    DEFINES['HAVE_LOG2'] = 0
+
 # Suppress warnings in third-party code.
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CFLAGS += [
