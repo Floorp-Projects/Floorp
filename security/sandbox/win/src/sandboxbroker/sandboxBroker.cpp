@@ -82,6 +82,8 @@ static sandbox::ResultCode AddWin32kLockdownPolicy(
   }
 
   sandbox::MitigationFlags flags = aPolicy->GetProcessMitigations();
+  MOZ_ASSERT(flags,
+             "Mitigations should be set before AddWin32kLockdownPolicy.");
   MOZ_ASSERT(!(flags & sandbox::MITIGATION_WIN32K_DISABLE),
              "Check not enabling twice.  Should not happen.");
 
@@ -466,12 +468,13 @@ static const Maybe<Vector<const wchar_t*>>& GetPrespawnCigExceptionModules() {
 #endif
 }
 
-static sandbox::ResultCode InitSignedPolicyRulesToBypassCig(
-    sandbox::TargetPolicy* aPolicy,
-    const Vector<const wchar_t*>& aExceptionModules) {
+static sandbox::ResultCode AllowProxyLoadFromBinDir(
+    sandbox::TargetPolicy* aPolicy) {
+  // Allow modules in the directory containing the executable such as
+  // mozglue.dll, nss3.dll, etc.
   static UniquePtr<nsString> sInstallDir;
   if (!sInstallDir) {
-    // Since this function is called before sBinDir is initialized,
+    // Since this function can be called before sBinDir is initialized,
     // we cache the install path by ourselves.
     UniquePtr<wchar_t[]> appDirStr;
     if (GetInstallDirectory(appDirStr)) {
@@ -495,21 +498,53 @@ static sandbox::ResultCode InitSignedPolicyRulesToBypassCig(
       return sandbox::SBOX_ERROR_GENERIC;
     }
   }
+  return aPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_SIGNED_BINARY,
+                          sandbox::TargetPolicy::SIGNED_ALLOW_LOAD,
+                          sInstallDir->get());
+}
 
-  // Allow modules in the directory containing the executable such as
-  // mozglue.dll, nss3.dll, etc.
-  auto result = aPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_SIGNED_BINARY,
-                                 sandbox::TargetPolicy::SIGNED_ALLOW_LOAD,
-                                 sInstallDir->get());
+static sandbox::ResultCode AddCigToPolicy(
+    sandbox::TargetPolicy* aPolicy, bool aAlwaysProxyBinDirLoading = false) {
+  const Maybe<Vector<const wchar_t*>>& exceptionModules =
+      GetPrespawnCigExceptionModules();
+  if (exceptionModules.isNothing()) {
+    sandbox::MitigationFlags delayedMitigations =
+        aPolicy->GetDelayedProcessMitigations();
+    MOZ_ASSERT(delayedMitigations,
+               "Delayed mitigations should be set before AddCigToPolicy.");
+    MOZ_ASSERT(!(delayedMitigations & sandbox::MITIGATION_FORCE_MS_SIGNED_BINS),
+               "AddCigToPolicy should not be called twice.");
+
+    delayedMitigations |= sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
+    sandbox::ResultCode result =
+        aPolicy->SetDelayedProcessMitigations(delayedMitigations);
+    if (result != sandbox::SBOX_ALL_OK) {
+      return result;
+    }
+
+    if (aAlwaysProxyBinDirLoading) {
+      result = AllowProxyLoadFromBinDir(aPolicy);
+    }
+    return result;
+  }
+
+  sandbox::MitigationFlags mitigations = aPolicy->GetProcessMitigations();
+  MOZ_ASSERT(mitigations, "Mitigations should be set before AddCigToPolicy.");
+  MOZ_ASSERT(!(mitigations & sandbox::MITIGATION_FORCE_MS_SIGNED_BINS),
+             "AddCigToPolicy should not be called twice.");
+
+  mitigations |= sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
+  sandbox::ResultCode result = aPolicy->SetProcessMitigations(mitigations);
   if (result != sandbox::SBOX_ALL_OK) {
     return result;
   }
 
-  if (aExceptionModules.empty()) {
-    return sandbox::SBOX_ALL_OK;
+  result = AllowProxyLoadFromBinDir(aPolicy);
+  if (result != sandbox::SBOX_ALL_OK) {
+    return result;
   }
 
-  for (const wchar_t* path : aExceptionModules) {
+  for (const wchar_t* path : exceptionModules.ref()) {
     result = aPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_SIGNED_BINARY,
                               sandbox::TargetPolicy::SIGNED_ALLOW_LOAD, path);
     if (result != sandbox::SBOX_ALL_OK) {
@@ -1060,25 +1095,12 @@ bool SandboxBroker::SetSecurityLevelForRDDProcess() {
       sandbox::MITIGATION_DEP_NO_ATL_THUNK | sandbox::MITIGATION_DEP |
       sandbox::MITIGATION_IMAGE_LOAD_PREFER_SYS32;
 
-  const Maybe<Vector<const wchar_t*>>& exceptionModules =
-      GetPrespawnCigExceptionModules();
-  if (exceptionModules.isSome()) {
-    mitigations |= sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
-  }
-
   if (StaticPrefs::security_sandbox_rdd_shadow_stack_enabled()) {
     mitigations |= sandbox::MITIGATION_CET_COMPAT_MODE;
   }
 
   result = mPolicy->SetProcessMitigations(mitigations);
   SANDBOX_ENSURE_SUCCESS(result, "Invalid flags for SetProcessMitigations.");
-
-  if (exceptionModules.isSome()) {
-    // This needs to be called after MITIGATION_FORCE_MS_SIGNED_BINS is set
-    // because of DCHECK in PolicyBase::AddRuleInternal.
-    result = InitSignedPolicyRulesToBypassCig(mPolicy, exceptionModules.ref());
-    SANDBOX_ENSURE_SUCCESS(result, "Failed to initialize signed policy rules.");
-  }
 
   mitigations = sandbox::MITIGATION_STRICT_HANDLE_CHECKS |
                 sandbox::MITIGATION_DLL_SEARCH_ORDER;
@@ -1088,13 +1110,12 @@ bool SandboxBroker::SetSecurityLevelForRDDProcess() {
     mitigations |= DynamicCodeFlagForSystemMediaLibraries();
   }
 
-  if (exceptionModules.isNothing()) {
-    mitigations |= sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
-  }
-
   result = mPolicy->SetDelayedProcessMitigations(mitigations);
   SANDBOX_ENSURE_SUCCESS(result,
                          "Invalid flags for SetDelayedProcessMitigations.");
+
+  result = AddCigToPolicy(mPolicy);
+  SANDBOX_ENSURE_SUCCESS(result, "Failed to initialize signed policy rules.");
 
   // Add the policy for the client side of a pipe. It is just a file
   // in the \pipe\ namespace. We restrict it to pipes that start with
@@ -1178,25 +1199,12 @@ bool SandboxBroker::SetSecurityLevelForSocketProcess() {
       sandbox::MITIGATION_DEP_NO_ATL_THUNK | sandbox::MITIGATION_DEP |
       sandbox::MITIGATION_IMAGE_LOAD_PREFER_SYS32;
 
-  const Maybe<Vector<const wchar_t*>>& exceptionModules =
-      GetPrespawnCigExceptionModules();
-  if (exceptionModules.isSome()) {
-    mitigations |= sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
-  }
-
   if (StaticPrefs::security_sandbox_socket_shadow_stack_enabled()) {
     mitigations |= sandbox::MITIGATION_CET_COMPAT_MODE;
   }
 
   result = mPolicy->SetProcessMitigations(mitigations);
   SANDBOX_ENSURE_SUCCESS(result, "Invalid flags for SetProcessMitigations.");
-
-  if (exceptionModules.isSome()) {
-    // This needs to be called after MITIGATION_FORCE_MS_SIGNED_BINS is set
-    // because of DCHECK in PolicyBase::AddRuleInternal.
-    result = InitSignedPolicyRulesToBypassCig(mPolicy, exceptionModules.ref());
-    SANDBOX_ENSURE_SUCCESS(result, "Failed to initialize signed policy rules.");
-  }
 
   if (StaticPrefs::security_sandbox_socket_win32k_disable()) {
     result = AddWin32kLockdownPolicy(mPolicy, false);
@@ -1207,13 +1215,12 @@ bool SandboxBroker::SetSecurityLevelForSocketProcess() {
                 sandbox::MITIGATION_DLL_SEARCH_ORDER |
                 sandbox::MITIGATION_DYNAMIC_CODE_DISABLE;
 
-  if (exceptionModules.isNothing()) {
-    mitigations |= sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
-  }
-
   result = mPolicy->SetDelayedProcessMitigations(mitigations);
   SANDBOX_ENSURE_SUCCESS(result,
                          "Invalid flags for SetDelayedProcessMitigations.");
+
+  result = AddCigToPolicy(mPolicy);
+  SANDBOX_ENSURE_SUCCESS(result, "Failed to initialize signed policy rules.");
 
   // Add the policy for the client side of a pipe. It is just a file
   // in the \pipe\ namespace. We restrict it to pipes that start with
@@ -1382,52 +1389,25 @@ bool BuildUtilitySandbox(sandbox::TargetPolicy* policy,
   policy->SetLockdownDefaultDacl();
   policy->AddRestrictingRandomSid();
 
-  sandbox::MitigationFlags initialMitigations = us.mInitialMitigations;
-  sandbox::MitigationFlags delayedMitigations = us.mDelayedMitigations;
-
-  if (us.mUseCig) {
-    const Maybe<Vector<const wchar_t*>>& exceptionModules =
-        GetPrespawnCigExceptionModules();
-    if (exceptionModules.isSome()) {
-      initialMitigations |= sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
-    } else {
-      delayedMitigations |= sandbox::MITIGATION_FORCE_MS_SIGNED_BINS;
-    }
-  }
-
-  result = policy->SetProcessMitigations(initialMitigations);
+  result = policy->SetProcessMitigations(us.mInitialMitigations);
   SANDBOX_ENSURE_SUCCESS(result, "Invalid flags for SetProcessMitigations.");
+
+  result = policy->SetDelayedProcessMitigations(us.mDelayedMitigations);
+  SANDBOX_ENSURE_SUCCESS(result,
+                         "Invalid flags for SetDelayedProcessMitigations.");
 
   // Win32k lockdown might not work on earlier versions
   // Bug 1719212, 1769992
-  if (IsWin10FallCreatorsUpdateOrLater() && us.mUseWin32kLockdown) {
+  if (us.mUseWin32kLockdown && IsWin10FallCreatorsUpdateOrLater()) {
     result = AddWin32kLockdownPolicy(policy, false);
     SANDBOX_ENSURE_SUCCESS(result, "Failed to add the win32k lockdown policy");
   }
 
   if (us.mUseCig) {
-    const Maybe<Vector<const wchar_t*>>& exceptionModules =
-        GetPrespawnCigExceptionModules();
-    if (exceptionModules.isSome()) {
-      // This needs to be called after MITIGATION_FORCE_MS_SIGNED_BINS is set
-      // because of DCHECK in PolicyBase::AddRuleInternal.
-      result = InitSignedPolicyRulesToBypassCig(policy, exceptionModules.ref());
-      SANDBOX_ENSURE_SUCCESS(result,
-                             "Failed to initialize signed policy rules.");
-    }
-
-    // Running audio decoder somehow fails on MSIX packages unless we do that
-    if (mozilla::HasPackageIdentity() && exceptionModules.isNothing()) {
-      const Vector<const wchar_t*> emptyVector;
-      result = InitSignedPolicyRulesToBypassCig(policy, emptyVector);
-      SANDBOX_ENSURE_SUCCESS(result,
-                             "Failed to initialize signed policy rules.");
-    }
+    bool alwaysProxyBinDirLoading = mozilla::HasPackageIdentity();
+    result = AddCigToPolicy(policy, alwaysProxyBinDirLoading);
+    SANDBOX_ENSURE_SUCCESS(result, "Failed to initialize signed policy rules.");
   }
-
-  result = policy->SetDelayedProcessMitigations(delayedMitigations);
-  SANDBOX_ENSURE_SUCCESS(result,
-                         "Invalid flags for SetDelayedProcessMitigations.");
 
   // Add the policy for the client side of a pipe. It is just a file
   // in the \pipe\ namespace. We restrict it to pipes that start with
