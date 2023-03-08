@@ -10,8 +10,8 @@ case "$target" in
     dnl $extra_android_flags will be set for us by Python configure.
     LDFLAGS="$extra_android_flags $LDFLAGS"
     CPPFLAGS="$extra_android_flags $CPPFLAGS"
-    CFLAGS="-fno-short-enums -fno-exceptions $CFLAGS"
-    CXXFLAGS="-fno-short-enums -fno-exceptions $CXXFLAGS $stlport_cppflags"
+    CFLAGS="-fno-short-enums $CFLAGS"
+    CXXFLAGS="-fno-short-enums $CXXFLAGS $stlport_cppflags"
     ASFLAGS="$extra_android_flags -DANDROID $ASFLAGS"
     ;;
 esac
