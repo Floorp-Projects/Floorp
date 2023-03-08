@@ -84,10 +84,7 @@ gyp_vars.update({
 })
 
 if os == 'Android':
-    gyp_vars.update(
-        gtest_target_type='executable',
-        android_toolchain=CONFIG.get('ANDROID_TOOLCHAIN', ''),
-    )
+    gyp_vars.update(gtest_target_type='executable')
 
 if CONFIG['ARM_ARCH']:
     if int(CONFIG['ARM_ARCH']) < 7:

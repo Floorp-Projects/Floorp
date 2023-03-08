@@ -90,7 +90,6 @@ def ndk(value):
 
 
 set_config("ANDROID_NDK", ndk)
-add_old_configure_assignment("android_ndk", ndk)
 
 
 @depends(ndk)
@@ -157,9 +156,6 @@ def android_platform(target, android_version, ndk):
         )
 
     return platform_dir
-
-
-set_config("ANDROID_PLATFORM", android_platform)
 
 
 @depends(android_platform, ndk, target)
@@ -249,9 +245,6 @@ def android_toolchain(target, host, ndk, toolchain):
         if isdir(toolchain):
             return toolchain
         die("You have to specify --with-android-toolchain=" "/path/to/ndk/toolchain.")
-
-
-set_config("ANDROID_TOOLCHAIN", android_toolchain)
 
 
 @depends(target, host, ndk, "--with-android-lldb-server")
