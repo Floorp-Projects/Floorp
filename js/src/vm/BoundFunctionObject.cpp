@@ -317,7 +317,6 @@ BoundFunctionObject* BoundFunctionObject::functionBindImpl(
 
   // If this assertion fails, make sure we use the correct AllocKind and that we
   // use all of its slots (consider increasing MaxInlineBoundArgs).
-  constexpr gc::AllocKind allocKind = gc::AllocKind::OBJECT8_BACKGROUND;
   static_assert(gc::GetGCKindSlots(allocKind) == SlotCount);
 
   // ES2023 10.4.1.3 BoundFunctionCreate
@@ -416,6 +415,54 @@ BoundFunctionObject* BoundFunctionObject::functionBindImpl(
 }
 
 // static
+BoundFunctionObject* BoundFunctionObject::createWithTemplate(
+    JSContext* cx, Handle<BoundFunctionObject*> templateObj) {
+  Rooted<SharedShape*> shape(cx, templateObj->sharedShape());
+  JSObject* obj = NativeObject::create(cx, allocKind, gc::DefaultHeap, shape);
+  if (!obj) {
+    return nullptr;
+  }
+  BoundFunctionObject* bound = &obj->as<BoundFunctionObject>();
+  bound->initFlags(templateObj->numBoundArgs(), templateObj->isConstructor());
+  bound->initLength(templateObj->getLengthForInitialShape().toInt32());
+  bound->initName(&templateObj->getNameForInitialShape().toString()->asAtom());
+  return bound;
+}
+
+// static
+BoundFunctionObject* BoundFunctionObject::functionBindSpecializedBaseline(
+    JSContext* cx, Handle<JSObject*> target, Value* args, uint32_t argc,
+    Handle<BoundFunctionObject*> templateObj) {
+  // Root the Values on the stack.
+  RootedExternalValueArray argsRoot(cx, argc, args);
+
+  MOZ_ASSERT(target->is<JSFunction>() || target->is<BoundFunctionObject>());
+  MOZ_ASSERT(target->isCallable());
+  MOZ_ASSERT(target->isConstructor() == templateObj->isConstructor());
+  MOZ_ASSERT(target->staticPrototype() == templateObj->staticPrototype());
+
+  size_t numBoundArgs = argc > 0 ? argc - 1 : 0;
+  MOZ_ASSERT(numBoundArgs <= MaxInlineBoundArgs);
+
+  BoundFunctionObject* bound = createWithTemplate(cx, templateObj);
+  if (!bound) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(bound->lookupPure(cx->names().length)->slot() == LengthSlot);
+  MOZ_ASSERT(bound->lookupPure(cx->names().name)->slot() == NameSlot);
+
+  bound->initReservedSlot(TargetSlot, ObjectValue(*target));
+  if (argc > 0) {
+    bound->initReservedSlot(BoundThisSlot, args[0]);
+  }
+  for (size_t i = 0; i < numBoundArgs; i++) {
+    bound->initReservedSlot(BoundArg0Slot + i, args[i + 1]);
+  }
+  return bound;
+}
+
+// static
 BoundFunctionObject* BoundFunctionObject::createTemplateObject(JSContext* cx) {
   Rooted<JSObject*> proto(cx, &cx->global()->getFunctionPrototype());
   Rooted<BoundFunctionObject*> bound(
@@ -427,6 +474,25 @@ BoundFunctionObject* BoundFunctionObject::createTemplateObject(JSContext* cx) {
     return nullptr;
   }
   return bound;
+}
+
+bool BoundFunctionObject::initTemplateSlotsForSpecializedBind(
+    JSContext* cx, uint32_t numBoundArgs, bool targetIsConstructor,
+    uint32_t targetLength, JSAtom* targetName) {
+  size_t len = 0;
+  if (targetLength > numBoundArgs) {
+    len = targetLength - numBoundArgs;
+  }
+
+  JSAtom* name = AppendBoundFunctionPrefix(cx, targetName);
+  if (!name) {
+    return false;
+  }
+
+  initFlags(numBoundArgs, targetIsConstructor);
+  initLength(len);
+  initName(name);
+  return true;
 }
 
 static const JSClassOps classOps = {

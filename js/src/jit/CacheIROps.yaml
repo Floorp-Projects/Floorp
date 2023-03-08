@@ -1817,6 +1817,15 @@
     argc: UInt32Imm
     templateObject: ObjectField
 
+- name: SpecializedBindFunctionResult
+  shared: false
+  transpile: true
+  cost_estimate: 4
+  args:
+    target: ObjId
+    argc: UInt32Imm
+    templateObject: ObjectField
+
 - name: LoadFixedSlotResult
   shared: false
   transpile: true

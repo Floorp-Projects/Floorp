@@ -221,6 +221,11 @@
   num_temps: 2
   mir_op: true
 
+- name: NewBoundFunction
+  result_type: WordSized
+  num_temps: 1
+  mir_op: true
+
 - name: NewObject
   gen_boilerplate: false
 

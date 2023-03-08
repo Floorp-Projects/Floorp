@@ -592,6 +592,8 @@ class MOZ_RAII InlinableNativeIRGenerator {
   AttachDecision tryAttachDataViewGet(Scalar::Type type);
   AttachDecision tryAttachDataViewSet(Scalar::Type type);
   AttachDecision tryAttachFunctionBind();
+  AttachDecision tryAttachSpecializedFunctionBind(
+      Handle<JSObject*> target, Handle<BoundFunctionObject*> templateObj);
   AttachDecision tryAttachUnsafeGetReservedSlot(InlinableNative native);
   AttachDecision tryAttachUnsafeSetReservedSlot();
   AttachDecision tryAttachIsSuspendedGenerator();

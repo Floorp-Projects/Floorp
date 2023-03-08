@@ -59,6 +59,9 @@ class BoundFunctionObject : public NativeObject {
     SlotCount
   };
 
+  // The AllocKind should match SlotCount. See assertion in functionBindImpl.
+  static constexpr gc::AllocKind allocKind = gc::AllocKind::OBJECT8_BACKGROUND;
+
   void initFlags(size_t numBoundArgs, bool isConstructor) {
     int32_t val = (numBoundArgs << NumBoundArgsShift) | isConstructor;
     initReservedSlot(FlagsSlot, Int32Value(val));
@@ -129,7 +132,18 @@ class BoundFunctionObject : public NativeObject {
       JSContext* cx, Handle<JSObject*> target, Value* args, uint32_t argc,
       Handle<BoundFunctionObject*> maybeBound);
 
+  static BoundFunctionObject* createWithTemplate(
+      JSContext* cx, Handle<BoundFunctionObject*> templateObj);
+  static BoundFunctionObject* functionBindSpecializedBaseline(
+      JSContext* cx, Handle<JSObject*> target, Value* args, uint32_t argc,
+      Handle<BoundFunctionObject*> templateObj);
+
   static BoundFunctionObject* createTemplateObject(JSContext* cx);
+
+  bool initTemplateSlotsForSpecializedBind(JSContext* cx, uint32_t numBoundArgs,
+                                           bool targetIsConstructor,
+                                           uint32_t targetLength,
+                                           JSAtom* targetName);
 
   static constexpr size_t offsetOfTargetSlot() {
     return getFixedSlotOffset(TargetSlot);
@@ -142,6 +156,12 @@ class BoundFunctionObject : public NativeObject {
   }
   static constexpr size_t offsetOfFirstInlineBoundArg() {
     return getFixedSlotOffset(BoundArg0Slot);
+  }
+  static constexpr size_t offsetOfLengthSlot() {
+    return getFixedSlotOffset(LengthSlot);
+  }
+  static constexpr size_t offsetOfNameSlot() {
+    return getFixedSlotOffset(NameSlot);
   }
 
   static constexpr size_t targetSlot() { return TargetSlot; }

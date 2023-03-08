@@ -148,7 +148,10 @@ namespace jit {
   _(FinalSuspend, js::jit::FinalSuspend)                                       \
   _(FreshenLexicalEnv, js::jit::FreshenLexicalEnv)                             \
   _(FunWithProtoOperation, js::FunWithProtoOperation)                          \
+  _(FunctionBindCreate, js::BoundFunctionObject::createWithTemplate)           \
   _(FunctionBindImpl, js::BoundFunctionObject::functionBindImpl)               \
+  _(FunctionBindSpecializedBaseline,                                           \
+    js::BoundFunctionObject::functionBindSpecializedBaseline)                  \
   VMFUNCTION_FUZZILLI_LIST(_)                                                  \
   _(GeneratorThrowOrReturn, js::jit::GeneratorThrowOrReturn)                   \
   _(GetAndClearException, js::GetAndClearException)                            \
