@@ -342,6 +342,14 @@ add_task(function test_NoSuchFrameError() {
   ok(err instanceof error.WebDriverError);
 });
 
+add_task(function test_NoSuchNodeError() {
+  let err = new error.NoSuchNodeError("foo");
+  equal("NoSuchNodeError", err.name);
+  equal("foo", err.message);
+  equal("no such node", err.status);
+  ok(err instanceof error.WebDriverError);
+});
+
 add_task(function test_NoSuchScriptError() {
   let err = new error.NoSuchScriptError("foo");
   equal("NoSuchScriptError", err.name);

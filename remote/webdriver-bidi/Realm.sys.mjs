@@ -62,6 +62,13 @@ export class Realm {
   }
 
   /**
+   * Get the browsing context of the realm instance.
+   */
+  get browsingContext() {
+    return null;
+  }
+
+  /**
    * Get the unique identifier of the realm instance.
    *
    * @return {string} The unique identifier.
@@ -184,6 +191,10 @@ export class WindowRealm extends Realm {
     this.#window = null;
 
     super.destroy();
+  }
+
+  get browsingContext() {
+    return this.#window.browsingContext;
   }
 
   get globalObjectReference() {
