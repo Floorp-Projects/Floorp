@@ -5,6 +5,7 @@
 
 use pkcs11_bindings::nss::*;
 use pkcs11_bindings::*;
+use std::slice;
 
 // We need to expand some PKCS#11 / NSS constants as byte arrays for pattern matching and
 // C_GetAttributeValue queries. We use native endianness, because PKCS#11 sits between an
