@@ -436,6 +436,8 @@ class HomeFragment : Fragment() {
 
         appBarLayout = binding.homeAppBar
 
+        disableAppBarDragging()
+
         activity.themeManager.applyStatusBarTheme(activity)
 
         FxNimbus.features.homescreen.recordExposure()
@@ -502,6 +504,22 @@ class HomeFragment : Fragment() {
                 sessionControlView?.update(it, shouldReportMetrics = true)
             }
         }
+    }
+
+    private fun disableAppBarDragging() {
+        if (binding.homeAppBar.layoutParams != null) {
+            val appBarLayoutParams = binding.homeAppBar.layoutParams as CoordinatorLayout.LayoutParams
+            val appBarBehavior = AppBarLayout.Behavior()
+            appBarBehavior.setDragCallback(
+                object : AppBarLayout.Behavior.DragCallback() {
+                    override fun canDrag(appBarLayout: AppBarLayout): Boolean {
+                        return false
+                    }
+                },
+            )
+            appBarLayoutParams.behavior = appBarBehavior
+        }
+        binding.homeAppBar.setExpanded(true)
     }
 
     private fun updateLayout(view: View) {
@@ -625,7 +643,6 @@ class HomeFragment : Fragment() {
                     adapter.getItemViewType(it) == CollectionHeaderViewHolder.LAYOUT_ID
                 }
                 collectionPosition?.run {
-                    appBarLayout?.setExpanded(false)
                     val linearLayoutManager = recyclerView.layoutManager as LinearLayoutManager
                     smoothScroller.targetPosition = this
                     linearLayoutManager.startSmoothScroll(smoothScroller)
