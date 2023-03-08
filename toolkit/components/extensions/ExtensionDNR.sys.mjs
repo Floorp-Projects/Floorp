@@ -1117,13 +1117,25 @@ class RequestDetails {
    * @param {string} options.type - ResourceType (MozContentPolicyType).
    * @param {string} [options.method] - HTTP method
    * @param {integer} [options.tabId]
+   * @param {BrowsingContext} [options.browsingContext] - The BrowsingContext
+   *   associated with the request. Typically the bc for which the subresource
+   *   request is initiated, if any. For document requests, this is the parent
+   *   (i.e. the parent frame for sub_frame, null for main_frame).
    */
-  constructor({ requestURI, initiatorURI, type, method, tabId }) {
+  constructor({
+    requestURI,
+    initiatorURI,
+    type,
+    method,
+    tabId,
+    browsingContext,
+  }) {
     this.requestURI = requestURI;
     this.initiatorURI = initiatorURI;
     this.type = type;
     this.method = method;
     this.tabId = tabId;
+    this.browsingContext = browsingContext;
 
     this.requestDomain = this.#domainFromURI(requestURI);
     this.initiatorDomain = initiatorURI
@@ -1145,7 +1157,74 @@ class RequestDetails {
       type: channel.type,
       method: channel.method.toLowerCase(),
       tabId,
+      browsingContext: channel.loadInfo.browsingContext,
     });
+  }
+
+  #ancestorRequestDetails;
+  get ancestorRequestDetails() {
+    if (this.#ancestorRequestDetails) {
+      return this.#ancestorRequestDetails;
+    }
+    this.#ancestorRequestDetails = [];
+    if (!this.browsingContext?.ancestorsAreCurrent) {
+      // this.browsingContext is set for real requests (via fromChannelWrapper).
+      // It may be void for testMatchOutcome and for the ancestor requests
+      // simulated below.
+      //
+      // ancestorsAreCurrent being false is unexpected, but could theoretically
+      // happen if the request is triggered from an unloaded (sub)frame. In that
+      // case we don't want to use potentially incorrect ancestor information.
+      //
+      // In any case, nothing left to do.
+      return this.#ancestorRequestDetails;
+    }
+    // Reconstruct the frame hierarchy of the request's document, in order to
+    // retroactively recompute the relevant matches of allowAllRequests rules.
+    //
+    // The allowAllRequests rule is supposedly applying to all subresource
+    // requests. For non-document requests, this is usually the document if any.
+    // In case of document requests, there is some ambiguity:
+    // - Usually, the initiator is the parent document that created the frame.
+    // - Sometimes, the initiator is a different frame or even another window.
+    //
+    // In RequestDetails.fromChannelWrapper, the actual initiator is used and
+    // reflected in initiatorURI, but here we use the document's parent. This
+    // is done because the chain of initiators is unstable (e.g. an opener can
+    // navigate/unload), whereas frame ancestor chain is constant as long as
+    // the leaf BrowsingContext is current. Moreover, allowAllRequests was
+    // originally designed to operate on frame hierarchies (crbug.com/1038831).
+    //
+    // This implementation of "initiator" for "allowAllRequests" is consistent
+    // with Chrome and Safari.
+    for (let bc = this.browsingContext; bc; bc = bc.parent) {
+      // Note: requestURI may differ from the document's initial requestURI,
+      // e.g. due to same-document navigations.
+      const requestURI = bc.currentURI;
+      if (!requestURI.schemeIs("https") && !requestURI.schemeIs("http")) {
+        // DNR is currently only hooked up to http(s) requests. Ignore other
+        // URLs, e.g. about:, blob:, moz-extension:, data:, etc.
+        continue;
+      }
+      const isTop = !bc.parent;
+      const parentPrin = bc.parentWindowContext?.documentPrincipal;
+      const requestDetails = new RequestDetails({
+        requestURI,
+        // Note: initiatorURI differs from RequestDetails.fromChannelWrapper;
+        // See the above comment for more info.
+        initiatorURI: parentPrin?.isContentPrincipal ? parentPrin.URI : null,
+        type: isTop ? "main_frame" : "sub_frame",
+        method: "get", // TODO: Detect POST requests.
+        tabId: this.tabId,
+        // In this loop we are already explicitly accounting for ancestors, so
+        // we intentionally omit browsingContext even though we have |bc|. If
+        // we were to set `browsingContext: bc`, the output would be the same,
+        // but be derived from unnecessarily repeated request evaluations.
+        browsingContext: null,
+      });
+      this.#ancestorRequestDetails.unshift(requestDetails);
+    }
+    return this.#ancestorRequestDetails;
   }
 
   canExtensionModify(extension) {
@@ -1177,6 +1256,7 @@ class RequestEvaluator {
     // These values are initialized by findMatchingRules():
     this.matchedRule = null;
     this.matchedModifyHeadersRules = [];
+    this.didCheckAncestors = false;
     this.findMatchingRules();
   }
 
@@ -1209,7 +1289,6 @@ class RequestEvaluator {
 
     let requestEvaluators = [];
     let finalMatch;
-    let finalAllowAllRequestsMatches = [];
     for (let ruleManager of ruleManagers) {
       // Evaluate request with findMatchingRules():
       const requestEvaluator = new RequestEvaluator(request, ruleManager);
@@ -1217,12 +1296,14 @@ class RequestEvaluator {
       // accepted, to collect modifyHeaders/allow/allowAllRequests actions.
       requestEvaluators.push(requestEvaluator);
       let matchedRule = requestEvaluator.matchedRule;
-      if (matchedRule) {
-        if (matchedRule.rule.action.type === "allowAllRequests") {
-          // Even if a different extension wins the final match, an extension
-          // may want to record the "allowAllRequests" action for the future.
-          finalAllowAllRequestsMatches.push(matchedRule);
-        }
+      if (
+        matchedRule &&
+        (!finalMatch || precedence(matchedRule) < precedence(finalMatch))
+      ) {
+        // Before choosing the matched rule as finalMatch, check whether there
+        // is an allowAllRequests rule override among the ancestors.
+        requestEvaluator.findAncestorRuleOverride();
+        matchedRule = requestEvaluator.matchedRule;
         if (!finalMatch || precedence(matchedRule) < precedence(finalMatch)) {
           finalMatch = matchedRule;
           if (finalMatch.rule.action.type === "block") {
@@ -1241,6 +1322,21 @@ class RequestEvaluator {
       .flat(1);
 
     // ... and collect the allowAllRequests actions:
+    // Note: Only needed for testMatchOutcome, getMatchedRules (bug 1745765) and
+    // onRuleMatchedDebug (bug 1745773). Not for regular requests, since regular
+    // requests do not distinguish between no rule vs allow vs allowAllRequests.
+    let finalAllowAllRequestsMatches = [];
+    for (let requestEvaluator of requestEvaluators) {
+      // TODO bug 1745765 / bug 1745773: Uncomment findAncestorRuleOverride()
+      // when getMatchedRules() or onRuleMatchedDebug are implemented.
+      // requestEvaluator.findAncestorRuleOverride();
+      let matchedRule = requestEvaluator.matchedRule;
+      if (matchedRule && matchedRule.rule.action.type === "allowAllRequests") {
+        // Even if a different extension wins the final match, an extension
+        // may want to record the "allowAllRequests" action for the future.
+        finalAllowAllRequestsMatches.push(matchedRule);
+      }
+    }
     if (finalAllowAllRequestsMatches.length) {
       matchedRules = finalAllowAllRequestsMatches.concat(matchedRules);
     }
@@ -1277,11 +1373,76 @@ class RequestEvaluator {
   }
 
   /**
+   * Find an "allowAllRequests" rule among the ancestors that may override the
+   * current matchedRule and/or matchedModifyHeadersRules rules.
+   */
+  findAncestorRuleOverride() {
+    if (this.didCheckAncestors) {
+      return;
+    }
+    this.didCheckAncestors = true;
+
+    // Now we need to check whether any of the ancestor frames had a matching
+    // allowAllRequests rule. matchedRule and/or matchedModifyHeadersRules
+    // results may be ignored if their priority is lower or equal to the
+    // highest-priority allowAllRequests rule among the frame ancestors.
+    //
+    // In theory, every ancestor may potentially yield an allowAllRequests rule,
+    // and should therefore be checked unconditionally. But logically, if there
+    // are no existing matches, then any matching allowAllRequests rules will
+    // not have any effect on the request outcome. As an optimization, we
+    // therefore skip ancestor checks in this case.
+    if (
+      (!this.matchedRule ||
+        this.matchedRule.rule.isAllowOrAllowAllRequestsAction()) &&
+      !this.matchedModifyHeadersRules.length
+    ) {
+      // Optimization: Do not look up ancestors if no rules were matched.
+      //
+      // TODO bug 1745773: onRuleMatchedDebug is supposed to report when a rule
+      // has been matched. To be pedantic, when there is an onRuleMatchedDebug
+      // listener, the parents need to be checked unconditionally, in order to
+      // report potential allowAllRequests matches among ancestors.
+      // TODO bug 1745765: the above may also apply to getMatchedRules().
+      return;
+    }
+
+    for (let request of this.req.ancestorRequestDetails) {
+      // TODO: Optimize by only evaluating allow/allowAllRequests rules, because
+      // the request being seen here implies that the request was not canceled,
+      // i.e. that there were no block/redirect/upgradeScheme rules in any of
+      // the ancestors (across all extensions!).
+      let requestEvaluator = new RequestEvaluator(request, this.ruleManager);
+      let ancestorMatchedRule = requestEvaluator.matchedRule;
+      if (
+        ancestorMatchedRule &&
+        ancestorMatchedRule.rule.action.type === "allowAllRequests" &&
+        (!this.matchedRule ||
+          compareRule(
+            this.matchedRule.rule,
+            ancestorMatchedRule.rule,
+            this.matchedRule.ruleset,
+            ancestorMatchedRule.ruleset
+          ) > 0)
+      ) {
+        // Found an allowAllRequests rule that takes precedence over whatever
+        // the current rule was.
+        this.matchedRule = ancestorMatchedRule;
+      }
+    }
+  }
+
+  /**
    * Retrieves the list of matched modifyHeaders rules that should apply.
    *
    * @returns {MatchedRule[]}
    */
   getMatchingModifyHeadersRules() {
+    if (this.matchedModifyHeadersRules.length) {
+      // Find parent allowAllRequests rules, if any, to make sure that we can
+      // appropriately ignore same-or-lower-priority modifyHeaders rules.
+      this.findAncestorRuleOverride();
+    }
     // The minimum priority is 1. Defaulting to 0 = include all.
     let priorityThreshold = 0;
     if (this.matchedRule?.rule.isAllowOrAllowAllRequestsAction()) {
