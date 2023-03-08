@@ -1,0 +1,61 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.linear-easing-function-container {
+  height: 100%;
+}
+
+.linear-easing-function-container .display-wrap {
+  --chart-size: 300px;
+  height: 100%;
+  display: grid;
+  grid-template-rows: var(--chart-size) 1fr;
+  justify-items: center;
+  align-items: center;
+  gap: 5px;
+}
+
+.linear-easing-function-container svg.chart {
+  aspect-ratio: 1 / 1;
+  max-height: 100%;
+}
+
+.linear-easing-function-container .chart-grid {
+  stroke: var(--bezier-grid-color);
+  pointer-events: none;
+}
+
+.linear-easing-function-container .chart-linear {
+  -moz-context-properties: stroke;
+  stroke: #4C9ED9;
+}
+
+.linear-easing-function-container .control-point {
+  -moz-context-properties: fill, stroke;
+  fill: var(--grey-55);
+  cursor: pointer;
+}
+
+:root.theme-dark .linear-easing-function-container .control-point {
+  fill: var(--grey-20);
+}
+
+/* Timing Function Preview Widget */
+
+.linear-easing-function-container .timing-function-preview {
+  width: var(--chart-size);
+  /* Draw a background line */
+  background: linear-gradient(0deg, transparent 45%,var(--bezier-grid-color) 45%, var(--bezier-grid-color) 55%,transparent 55%);
+}
+
+.linear-easing-function-container .timing-function-preview .dot::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  border: 2px solid white;
+  background: #4C9ED9;
+}

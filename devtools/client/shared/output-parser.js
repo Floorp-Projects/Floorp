@@ -129,6 +129,7 @@ OutputParser.prototype = {
     options = this._mergeOptions(options);
 
     options.expectCubicBezier = this.supportsType(name, "timing-function");
+    options.expectLinearEasing = this.supportsType(name, "timing-function");
     options.expectDisplay = name === "display";
     options.expectFilter =
       name === "filter" ||
@@ -453,6 +454,11 @@ OutputParser.prototype = {
               if (options.expectCubicBezier && token.text === "cubic-bezier") {
                 this._appendCubicBezier(functionText, options);
               } else if (
+                options.expectLinearEasing &&
+                token.text === "linear"
+              ) {
+                this._appendLinear(functionText, options);
+              } else if (
                 colorOK() &&
                 InspectorUtils.isValidCSSColor(functionText)
               ) {
@@ -479,6 +485,8 @@ OutputParser.prototype = {
             BEZIER_KEYWORDS.includes(token.text)
           ) {
             this._appendCubicBezier(token.text, options);
+          } else if (options.expectLinearEasing && token.text == "linear") {
+            this._appendLinear(token.text, options);
           } else if (this._isDisplayFlex(text, token, options)) {
             this._appendHighlighterToggle(token.text, options.flexClass);
           } else if (this._isDisplayGrid(text, token, options)) {
@@ -698,6 +706,33 @@ OutputParser.prototype = {
         class: options.bezierClass,
       },
       bezier
+    );
+
+    container.appendChild(value);
+    this.parsed.push(container);
+  },
+
+  _appendLinear(text, options) {
+    const container = this._createNode("span", {
+      "data-linear": text,
+    });
+
+    if (options.linearEasingSwatchClass) {
+      const swatch = this._createNode("span", {
+        class: options.linearEasingSwatchClass,
+        tabindex: "0",
+        role: "button",
+        "data-linear": text,
+      });
+      container.appendChild(swatch);
+    }
+
+    const value = this._createNode(
+      "span",
+      {
+        class: options.linearEasingClass,
+      },
+      text
     );
 
     container.appendChild(value);
