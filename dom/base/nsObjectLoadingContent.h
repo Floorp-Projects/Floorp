@@ -24,9 +24,7 @@
 #include "nsIRunnable.h"
 #include "nsFrameLoaderOwner.h"
 
-class nsAsyncInstantiateEvent;
 class nsStopPluginRunnable;
-class AutoSetInstantiatingToFalse;
 class nsIPrincipal;
 class nsFrameLoader;
 
@@ -47,11 +45,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
                                public nsFrameLoaderOwner,
                                public nsIObjectLoadingContent,
                                public nsIChannelEventSink {
-  friend class AutoSetInstantiatingToFalse;
   friend class AutoSetLoadingToFalse;
-  friend class CheckPluginStopEvent;
-  friend class nsStopPluginRunnable;
-  friend class nsAsyncInstantiateEvent;
 
  public:
   // This enum's values must be the same as the constants on
@@ -110,15 +104,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
   // Returns the cached <param> array.
   void GetPluginParameters(
       nsTArray<mozilla::dom::MozPluginParameter>& aParameters);
-
-  /**
-   * Immediately instantiate a plugin instance. This is a no-op if mType !=
-   * eType_Plugin or a plugin is already running.
-   *
-   * aIsLoading indicates that we are in the loading code, and we can bypass
-   * the mIsLoading check.
-   */
-  nsresult InstantiatePluginInstance(bool aIsLoading = false);
 
   /**
    * Notify this class the document state has changed
@@ -368,11 +353,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
    */
   ParameterUpdateFlags UpdateObjectParameters();
 
-  /**
-   * Queue a CheckPluginStopEvent and track it in mPendingCheckPluginStopEvent
-   */
-  void QueueCheckPluginStopEvent();
-
  public:
   bool IsAboutBlankLoadOntoInitialAboutBlank(nsIURI* aURI,
                                              bool aInheritPrincipal,
@@ -502,12 +482,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
   // The final listener for mChannel (uriloader, pluginstreamlistener, etc.)
   nsCOMPtr<nsIStreamListener> mFinalListener;
 
-  // Track if we have a pending AsyncInstantiateEvent
-  nsCOMPtr<nsIRunnable> mPendingInstantiateEvent;
-
-  // Tracks if we have a pending CheckPluginStopEvent
-  nsCOMPtr<nsIRunnable> mPendingCheckPluginStopEvent;
-
   // The content type of our current load target, updated by
   // UpdateObjectParameters(). Takes the channel's type into account once
   // opened.
@@ -545,10 +519,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent,
   // OnStartRequest. Does not get set for channels that are passed directly to
   // the plugin listener.
   bool mChannelLoaded : 1;
-
-  // Whether we are about to call instantiate on our frame. If we aren't,
-  // SetFrame needs to asynchronously call Instantiate.
-  bool mInstantiating : 1;
 
   // True when the object is created for an element which the parser has
   // created using NS_FROM_PARSER_NETWORK flag. If the element is modified,
