@@ -71,9 +71,6 @@ interface BrowsingContext {
 
   sequence<BrowsingContext> getAllBrowsingContextsInSubtree();
 
-  BrowsingContext? findChildWithName(DOMString name, BrowsingContext accessor);
-  BrowsingContext? findWithName(DOMString name);
-
   readonly attribute DOMString name;
 
   readonly attribute BrowsingContext? parent;
