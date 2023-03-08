@@ -927,17 +927,7 @@ ImgDrawResult nsImageRenderer::DrawBorderImageComponent(
     // Retrieve or create the subimage we'll draw.
     nsIntRect srcRect(aSrc.x, aSrc.y, aSrc.width, aSrc.height);
     if (isRequestBacked) {
-      CachedBorderImageData* cachedData =
-          mForFrame->GetProperty(nsIFrame::CachedBorderImageDataProperty());
-      if (!cachedData) {
-        cachedData = new CachedBorderImageData();
-        mForFrame->AddProperty(nsIFrame::CachedBorderImageDataProperty(),
-                               cachedData);
-      }
-      if (!(subImage = cachedData->GetSubImage(aIndex))) {
-        subImage = ImageOps::Clip(mImageContainer, srcRect, aSVGViewportSize);
-        cachedData->SetSubImage(aIndex, subImage);
-      }
+      subImage = ImageOps::Clip(mImageContainer, srcRect, aSVGViewportSize);
     } else {
       // This path, for eStyleImageType_Element, is currently slower than it
       // needs to be because we don't cache anything. (In particular, if we have
@@ -1059,18 +1049,4 @@ bool nsImageRenderer::IsRasterImage() {
 
 already_AddRefed<imgIContainer> nsImageRenderer::GetImage() {
   return do_AddRef(mImageContainer);
-}
-
-void nsImageRenderer::PurgeCacheForViewportChange(
-    const Maybe<nsSize>& aSVGViewportSize, const bool aHasIntrinsicRatio) {
-  // Check if we should flush the cached data - only vector images need to do
-  // the check since they might not have fixed ratio.
-  if (mImageContainer &&
-      mImageContainer->GetType() == imgIContainer::TYPE_VECTOR) {
-    if (auto* cachedData =
-            mForFrame->GetProperty(nsIFrame::CachedBorderImageDataProperty())) {
-      cachedData->PurgeCacheForViewportChange(aSVGViewportSize,
-                                              aHasIntrinsicRatio);
-    }
-  }
 }
