@@ -159,9 +159,9 @@ const InfoBar = {
       return null;
     }
 
-    const win = browser?.ownerGlobal;
+    const win = browser.ownerGlobal;
 
-    if (!win || lazy.PrivateBrowsingUtils.isWindowPrivate(win)) {
+    if (lazy.PrivateBrowsingUtils.isWindowPrivate(win)) {
       return null;
     }
 

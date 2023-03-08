@@ -760,10 +760,6 @@ describe("ToolbarPanelHub", () => {
         assert.calledOnce(removeMessagesSpy);
         assert.calledWithExactly(removeMessagesSpy, fakeWindow, panelSelector);
       });
-      it("should exit gracefully if called before a browser exists", () => {
-        instance.forceShowMessage(null, messages);
-        assert.neverCalledWith(removeMessagesSpy, fakeWindow, panelSelector);
-      });
     });
   });
   describe("#insertProtectionPanelMessage", () => {
