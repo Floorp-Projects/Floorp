@@ -5195,7 +5195,7 @@ bool WarpCacheIRTranspiler::emitBindFunctionResult(
 
   MOZ_ASSERT(callInfo_->argc() == argc);
 
-  auto* bound = MNewBoundFunction::New(alloc(), target, argc, templateObj);
+  auto* bound = MBindFunction::New(alloc(), target, argc, templateObj);
   if (!bound) {
     return false;
   }

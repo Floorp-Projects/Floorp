@@ -286,7 +286,7 @@
 - name: ArrayState
   gen_boilerplate: false
 
-- name: NewBoundFunction
+- name: BindFunction
   gen_boilerplate: false
 
 - name: BoundFunctionNumArgs

@@ -7023,7 +7023,7 @@ void CodeGenerator::visitNewTypedArrayFromArrayBuffer(
   callVM<Fn, js::NewTypedArrayWithTemplateAndBuffer>(lir);
 }
 
-void CodeGenerator::visitNewBoundFunction(LNewBoundFunction* lir) {
+void CodeGenerator::visitBindFunction(LBindFunction* lir) {
   Register target = ToRegister(lir->target());
   Register temp1 = ToRegister(lir->temp0());
   Register temp2 = ToRegister(lir->temp1());

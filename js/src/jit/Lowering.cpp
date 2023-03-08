@@ -202,18 +202,18 @@ void LIRGenerator::visitNewObject(MNewObject* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitNewBoundFunction(MNewBoundFunction* ins) {
+void LIRGenerator::visitBindFunction(MBindFunction* ins) {
   MDefinition* target = ins->target();
   MOZ_ASSERT(target->type() == MIRType::Object);
 
   if (!lowerCallArguments(ins)) {
-    abort(AbortReason::Alloc, "OOM: LIRGenerator::visitNewBoundFunction");
+    abort(AbortReason::Alloc, "OOM: LIRGenerator::visitBindFunction");
     return;
   }
 
   auto* lir = new (alloc())
-      LNewBoundFunction(useFixedAtStart(target, CallTempReg0),
-                        tempFixed(CallTempReg1), tempFixed(CallTempReg2));
+      LBindFunction(useFixedAtStart(target, CallTempReg0),
+                    tempFixed(CallTempReg1), tempFixed(CallTempReg2));
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }
