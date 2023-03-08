@@ -741,6 +741,15 @@ var snapshotFormatters = {
       await addRowFromKey("features", feature);
     }
 
+    featureKeys = ["webgpuDefaultAdapter", "webgpuFallbackAdapter"];
+    for (let feature of featureKeys) {
+      const obj = data[feature];
+      if (obj) {
+        const str = JSON.stringify(obj, null, "  ");
+        await addRow("features", feature, [new Text(str)]);
+      }
+    }
+
     if ("directWriteEnabled" in data) {
       let message = data.directWriteEnabled;
       if ("directWriteVersion" in data) {

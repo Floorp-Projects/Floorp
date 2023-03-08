@@ -557,13 +557,6 @@ var dataProviders = {
       var gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
     } catch (e) {}
 
-    let promises = [];
-    // done will be called upon all pending promises being resolved.
-    // add your pending promise to promises when adding new ones.
-    function completed() {
-      Promise.all(promises).then(() => done(data));
-    }
-
     data.desktopEnvironment = Services.appinfo.desktopEnvironment;
     data.numTotalWindows = 0;
     data.numAcceleratedWindows = 0;
@@ -608,55 +601,53 @@ var dataProviders = {
       data.numAcceleratedWindowsMessage = statusMsgForFeature(feature);
     }
 
-    if (!gfxInfo) {
-      completed();
-      return;
-    }
+    if (gfxInfo) {
+      // keys are the names of attributes on nsIGfxInfo, values become the names
+      // of the corresponding properties in our data object.  A null value means
+      // no change.  This is needed so that the names of properties in the data
+      // object are the same as the names of keys in aboutSupport.properties.
+      let gfxInfoProps = {
+        adapterDescription: null,
+        adapterVendorID: null,
+        adapterDeviceID: null,
+        adapterSubsysID: null,
+        adapterRAM: null,
+        adapterDriver: "adapterDrivers",
+        adapterDriverVendor: "driverVendor",
+        adapterDriverVersion: "driverVersion",
+        adapterDriverDate: "driverDate",
 
-    // keys are the names of attributes on nsIGfxInfo, values become the names
-    // of the corresponding properties in our data object.  A null value means
-    // no change.  This is needed so that the names of properties in the data
-    // object are the same as the names of keys in aboutSupport.properties.
-    let gfxInfoProps = {
-      adapterDescription: null,
-      adapterVendorID: null,
-      adapterDeviceID: null,
-      adapterSubsysID: null,
-      adapterRAM: null,
-      adapterDriver: "adapterDrivers",
-      adapterDriverVendor: "driverVendor",
-      adapterDriverVersion: "driverVersion",
-      adapterDriverDate: "driverDate",
+        adapterDescription2: null,
+        adapterVendorID2: null,
+        adapterDeviceID2: null,
+        adapterSubsysID2: null,
+        adapterRAM2: null,
+        adapterDriver2: "adapterDrivers2",
+        adapterDriverVendor2: "driverVendor2",
+        adapterDriverVersion2: "driverVersion2",
+        adapterDriverDate2: "driverDate2",
+        isGPU2Active: null,
 
-      adapterDescription2: null,
-      adapterVendorID2: null,
-      adapterDeviceID2: null,
-      adapterSubsysID2: null,
-      adapterRAM2: null,
-      adapterDriver2: "adapterDrivers2",
-      adapterDriverVendor2: "driverVendor2",
-      adapterDriverVersion2: "driverVersion2",
-      adapterDriverDate2: "driverDate2",
-      isGPU2Active: null,
+        D2DEnabled: "direct2DEnabled",
+        DWriteEnabled: "directWriteEnabled",
+        DWriteVersion: "directWriteVersion",
+        cleartypeParameters: "clearTypeParameters",
+        TargetFrameRate: "targetFrameRate",
+        windowProtocol: null,
+        desktopEnvironment: null,
+      };
 
-      D2DEnabled: "direct2DEnabled",
-      DWriteEnabled: "directWriteEnabled",
-      DWriteVersion: "directWriteVersion",
-      cleartypeParameters: "clearTypeParameters",
-      TargetFrameRate: "targetFrameRate",
-      windowProtocol: null,
-    };
+      for (let prop in gfxInfoProps) {
+        try {
+          data[gfxInfoProps[prop] || prop] = gfxInfo[prop];
+        } catch (e) {}
+      }
 
-    for (let prop in gfxInfoProps) {
-      try {
-        data[gfxInfoProps[prop] || prop] = gfxInfo[prop];
-      } catch (e) {}
-    }
-
-    if ("direct2DEnabled" in data && !data.direct2DEnabled) {
-      data.direct2DEnabledMessage = statusMsgForFeature(
-        Ci.nsIGfxInfo.FEATURE_DIRECT2D
-      );
+      if ("direct2DEnabled" in data && !data.direct2DEnabled) {
+        data.direct2DEnabledMessage = statusMsgForFeature(
+          Ci.nsIGfxInfo.FEATURE_DIRECT2D
+        );
+      }
     }
 
     let doc = new DOMParser().parseFromString("<html/>", "text/html");
@@ -728,25 +719,103 @@ var dataProviders = {
     GetWebGLInfo(data, "webgl1", "webgl");
     GetWebGLInfo(data, "webgl2", "webgl2");
 
-    let infoInfo = gfxInfo.getInfo();
-    if (infoInfo) {
-      data.info = infoInfo;
-    }
-
-    let failureIndices = {};
-
-    let failures = gfxInfo.getFailures(failureIndices);
-    if (failures.length) {
-      data.failures = failures;
-      if (failureIndices.value.length == failures.length) {
-        data.indices = failureIndices.value;
+    if (gfxInfo) {
+      let infoInfo = gfxInfo.getInfo();
+      if (infoInfo) {
+        data.info = infoInfo;
       }
+
+      let failureIndices = {};
+
+      let failures = gfxInfo.getFailures(failureIndices);
+      if (failures.length) {
+        data.failures = failures;
+        if (failureIndices.value.length == failures.length) {
+          data.indices = failureIndices.value;
+        }
+      }
+
+      data.featureLog = gfxInfo.getFeatureLog();
+      data.crashGuards = gfxInfo.getActiveCrashGuards();
     }
 
-    data.featureLog = gfxInfo.getFeatureLog();
-    data.crashGuards = gfxInfo.getActiveCrashGuards();
+    function getNavigator() {
+      for (let win of Services.ww.getWindowEnumerator()) {
+        let winUtils = win.windowUtils;
+        try {
+          // NOTE: windowless browser's windows should not be reported in the graphics troubleshoot report
+          if (
+            winUtils.layerManagerType == "None" ||
+            !winUtils.layerManagerRemote
+          ) {
+            continue;
+          }
+          const nav = win.navigator;
+          if (nav) {
+            return nav;
+          }
+        } catch (e) {
+          continue;
+        }
+      }
+      throw new Error("No window had window.navigator.");
+    }
 
-    completed();
+    const navigator = getNavigator();
+
+    async function GetWebgpuInfo(adapterOpts) {
+      const ret = {};
+      if (!navigator.gpu) {
+        ret["navigator.gpu"] = null;
+        return ret;
+      }
+
+      const requestAdapterkey = `navigator.gpu.requestAdapter(${JSON.stringify(
+        adapterOpts
+      )})`;
+
+      const adapter = await navigator.gpu.requestAdapter(adapterOpts);
+      if (!adapter) {
+        ret[requestAdapterkey] = null;
+        return ret;
+      }
+      const desc = (ret[requestAdapterkey] = {});
+
+      desc.isFallbackAdapter = adapter.isFallbackAdapter;
+
+      desc.name = adapter.name;
+      if (desc.name === undefined) {
+        desc.name = null; // JSON has no `undefined`.
+      }
+
+      if (adapter.requestAdapterInfo) {
+        // Firefox doesn't have this yet.
+        const info = await adapter.requestAdapterInfo();
+        desc[`requestAdapterInfo()`] = info;
+      } else {
+        desc.requestAdapterInfo = null;
+      }
+
+      desc.features = Array.from(adapter.features).sort();
+
+      desc.limits = {};
+      const keys = Object.keys(Object.getPrototypeOf(adapter.limits)).sort(); // limits not directly enumerable?
+      for (const k of keys) {
+        desc.limits[k] = adapter.limits[k];
+      }
+
+      return ret;
+    }
+
+    // Webgpu info is going to need awaits.
+    (async () => {
+      data.webgpuDefaultAdapter = await GetWebgpuInfo({});
+      data.webgpuFallbackAdapter = await GetWebgpuInfo({
+        forceFallbackAdapter: true,
+      });
+
+      done(data);
+    })();
   },
 
   media: function media(done) {
