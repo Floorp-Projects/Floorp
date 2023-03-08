@@ -74,6 +74,10 @@ class nsColumnSetFrame final : public nsContainerFrame {
                              gfxContext* aCtx, const nsRect& aDirtyRect,
                              const nsPoint& aPt);
 
+  Maybe<nscoord> GetNaturalBaselineBOffset(
+      mozilla::WritingMode aWM,
+      BaselineSharingGroup aBaselineGroup) const override;
+
  protected:
   nscoord mLastBalanceBSize;
   nsReflowStatus mLastFrameStatus;
