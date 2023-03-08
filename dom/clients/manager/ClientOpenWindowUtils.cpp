@@ -328,9 +328,9 @@ void GeckoViewOpenWindow(const ClientOpenWindowArgsParsed& aArgsValidated,
   promiseResult->Then(
       GetMainThreadSerialEventTarget(), __func__,
       [aArgsValidated, promise](nsString sessionId) {
-        // Retrieve the browsing context by using the GeckoSession ID. The
-        // window is named the same as the ID of the GeckoSession it is
-        // associated with.
+        // Retrieve the primary content BrowsingContext using the GeckoSession
+        // ID. The chrome window is named the same as the ID of the GeckoSession
+        // it is associated with.
         RefPtr<BrowsingContext> browsingContext;
         nsresult rv = [&sessionId, &browsingContext]() -> nsresult {
           nsresult rv;
@@ -341,8 +341,12 @@ void GeckoViewOpenWindow(const ClientOpenWindowArgsParsed& aArgsValidated,
           rv = wwatch->GetWindowByName(sessionId, getter_AddRefs(chromeWindow));
           NS_ENSURE_SUCCESS(rv, rv);
           NS_ENSURE_TRUE(chromeWindow, NS_ERROR_FAILURE);
-          browsingContext =
-              nsPIDOMWindowOuter::From(chromeWindow)->GetBrowsingContext();
+          nsCOMPtr<nsIDocShellTreeOwner> treeOwner =
+              nsPIDOMWindowOuter::From(chromeWindow)->GetTreeOwner();
+          NS_ENSURE_TRUE(treeOwner, NS_ERROR_FAILURE);
+          rv = treeOwner->GetPrimaryContentBrowsingContext(
+              getter_AddRefs(browsingContext));
+          NS_ENSURE_SUCCESS(rv, rv);
           NS_ENSURE_TRUE(browsingContext, NS_ERROR_FAILURE);
           return NS_OK;
         }();
