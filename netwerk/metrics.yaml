@@ -9,3 +9,25 @@
 $schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
 $tags:
   - 'Core :: Networking'
+
+networking:
+  speculative_connection_outcome:
+    type: labeled_counter
+    description: >
+      Counts the occurrence of each outcome of a speculative connection
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=909865
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=909865
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - acreskey@mozilla.com
+    expires: never
+    labels:
+      - successful
+      - aborted_socket_limit
+      - aborted_socket_fail
+      - aborted_https_not_enabled
+    telemetry_mirror: NETWORKING_SPECULATIVE_CONNECTION_OUTCOME
