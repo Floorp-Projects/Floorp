@@ -7416,6 +7416,23 @@ progressive_web_app:
     metadata:
       tags:
         - PWA
+  onboarding_cancel:
+    type: event
+    description: |
+      User interacts with the onboarding PWA dialog cancel button which takes
+      them to the website.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1821030
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/1164
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 122
+    metadata:
+      tags:
+        - PWA
 
 tabs:
   setting_opened:

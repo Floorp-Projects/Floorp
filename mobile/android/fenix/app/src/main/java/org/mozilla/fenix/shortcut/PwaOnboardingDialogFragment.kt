@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import org.mozilla.fenix.GleanMetrics.ProgressiveWebApp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.FragmentPwaOnboardingBinding
 import org.mozilla.fenix.ext.requireComponents
@@ -35,7 +36,10 @@ class PwaOnboardingDialogFragment : DialogFragment() {
         val components = requireComponents
         val binding = FragmentPwaOnboardingBinding.bind(view)
 
-        binding.cancelButton.setOnClickListener { dismiss() }
+        binding.cancelButton.setOnClickListener {
+            ProgressiveWebApp.onboardingCancel.record()
+            dismiss()
+        }
         binding.addButton.setOnClickListener {
             viewLifecycleOwner.lifecycleScope.launch {
                 components.useCases.webAppUseCases.addToHomescreen()
