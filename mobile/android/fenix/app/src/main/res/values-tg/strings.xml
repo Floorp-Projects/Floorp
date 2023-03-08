@@ -495,6 +495,12 @@
     <string name="preferences_enable_autocomplete_urls">Пуркунии худкори нишонаҳои URL</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Кушодани пайвандҳо дар барномаҳо</string>
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">Ҳамеша</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">Пурсидан пеш аз кушодан</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">Ҳеҷ гоҳ</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Мудири берунии боргириҳо</string>
     <!-- Preference for add_ons -->

@@ -18,6 +18,8 @@
     <string name="mozac_feature_contextmenu_copy_image_location">ສຳເນົາທີ່ຢູ່ຮູບພາບ</string>
     <!-- Text for context menu item to save / download the image. -->
     <string name="mozac_feature_contextmenu_save_image">ບັນທຶກຮູບພາບ</string>
+    <!-- Text for context menu item to copy the image to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_image">ສຳເນົາຮູບ</string>
     <!-- Text for context menu item to save / download the file. -->
     <string name="mozac_feature_contextmenu_save_file_to_device">ບັນທຶກເອກະສານເຂົ້າໃນອຸປະກອນ</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->

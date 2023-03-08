@@ -296,7 +296,7 @@
     <!-- Notification pre-permission dialog -->
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_title">Upozornenia vám pomôžu vyťažiť a aplikácie %s ešte viac</string>
+    <string name="onboarding_home_enable_notifications_title">Upozornenia vám pomôžu vyťažiť z prehliadača %s ešte viac</string>
     <!-- Enable notification pre permission dialog description with rationale
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="onboarding_home_enable_notifications_description">Synchronizujte svoje karty medzi zariadeniami, spravujte sťahovanie, získajte tipy, ako čo najlepšie využiť ochranu súkromia prehliadača %s a ďalšie.</string>
@@ -501,6 +501,12 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Otvárať odkazy v aplikáciách</string>
 
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">Vždy</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">Pred otvorením sa opýtať</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">Nikdy</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Externý správca sťahovania</string>
     <!-- Preference for add_ons -->

@@ -500,6 +500,12 @@
     <string name="preferences_enable_autocomplete_urls">Auto-completar URLs</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Aperir ligamines in apps</string>
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">Sempre</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">Demandar ante aperir</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">Jammais</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Gestor de discargamento externe</string>
     <!-- Preference for add_ons -->

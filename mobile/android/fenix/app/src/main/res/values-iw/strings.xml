@@ -435,6 +435,12 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">פתיחת קישורים ביישומונים</string>
 
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">תמיד</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">לשאול לפני פתיחת קישורים</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">לעולם לא</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">מנהל הורדות חיצוני</string>
     <!-- Preference for add_ons -->

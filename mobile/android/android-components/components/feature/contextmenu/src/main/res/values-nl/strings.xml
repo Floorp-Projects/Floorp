@@ -18,6 +18,8 @@
     <string name="mozac_feature_contextmenu_copy_image_location">Afbeeldingslocatie kopiëren</string>
     <!-- Text for context menu item to save / download the image. -->
     <string name="mozac_feature_contextmenu_save_image">Afbeelding opslaan</string>
+    <!-- Text for context menu item to copy the image to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_image">Afbeelding kopiëren</string>
     <!-- Text for context menu item to save / download the file. -->
     <string name="mozac_feature_contextmenu_save_file_to_device">Bestand op apparaat opslaan</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->

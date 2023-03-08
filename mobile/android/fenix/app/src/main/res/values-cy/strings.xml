@@ -495,6 +495,12 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Agor dolenni mewn apiau</string>
 
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">Bob tro</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">Gofyn cyn agor</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">Byth</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Rheolwr llwytho i lawr allanol</string>
     <!-- Preference for add_ons -->

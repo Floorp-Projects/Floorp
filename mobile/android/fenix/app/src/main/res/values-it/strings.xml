@@ -500,6 +500,12 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Apri i link nelle app</string>
 
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">Sempre</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">Chiedi prima di aprire</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">Mai</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Gestore download esterno</string>
     <!-- Preference for add_ons -->

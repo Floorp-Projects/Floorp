@@ -501,6 +501,12 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Koppelingen openen in apps</string>
 
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">Altijd</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">Vragen voor openen</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">Nooit</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Externe downloadbeheerder</string>
     <!-- Preference for add_ons -->
@@ -2048,4 +2054,6 @@
     <string name="a11y_action_label_wallpaper_collection_learn_more">koppeling openen voor meer info over deze collectie</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
     <string name="a11y_action_label_read_article">het artikel te lezen</string>
-    </resources>
+    <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
+    <string name="a11y_action_label_pocket_learn_more">de koppeling te openen voor meer info</string>
+</resources>

@@ -6,4 +6,6 @@
     <string name="mozac_support_ktx_menu_email_with">Email với…</string>
     <string name="mozac_support_ktx_menu_share_with">Chia sẽ với…</string>
     <string name="mozac_support_ktx_share_dialog_title">Chia sẻ qua</string>
+    <!-- Text for confirmation "snackbar" shown after copying an image to the clipboard. -->
+    <string name="mozac_support_ktx_snackbar_delegate_image_copied">Đã sao chép hình ảnh vào khay nhớ tạm</string>
 </resources>

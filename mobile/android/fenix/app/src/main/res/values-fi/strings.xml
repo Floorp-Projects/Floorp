@@ -501,6 +501,12 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Avaa linkit sovelluksissa</string>
 
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">Aina</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">Kysy ennen avaamista</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">Ei koskaan</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Erillinen latausten hallinta</string>
     <!-- Preference for add_ons -->
