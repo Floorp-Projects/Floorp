@@ -108,10 +108,13 @@ add_task(async function engagement_before_showing_results() {
 
     // Wait until starting the query and filling expected results.
     const context = await anotherHeuristicProvider.onQueryStarted();
+    const query = UrlbarProvidersManager.queries.get(context);
     await BrowserTestUtils.waitForCondition(
       () =>
-        context.results.some(r => r.providerName === "HeuristicFallback") &&
-        context.results.some(
+        query.unsortedResults.some(
+          r => r.providerName === "HeuristicFallback"
+        ) &&
+        query.unsortedResults.some(
           r => r.providerName === anotherHeuristicProvider.name
         )
     );

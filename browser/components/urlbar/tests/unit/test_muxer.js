@@ -75,8 +75,8 @@ add_task(async function test_muxer() {
     get name() {
       return "TestMuxer";
     }
-    sort(queryContext) {
-      queryContext.results.sort((a, b) => {
+    sort(queryContext, unsortedResults) {
+      queryContext.results = [...unsortedResults].sort((a, b) => {
         if (b.source == UrlbarUtils.RESULT_SOURCE.TABS) {
           return -1;
         }
