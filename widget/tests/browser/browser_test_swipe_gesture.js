@@ -1062,6 +1062,7 @@ add_task(async () => {
       ["widget.swipe.velocity-twitch-tolerance", 0.0000001],
       ["widget.swipe.success-velocity-contribution", 0.5],
       ["apz.overscroll.enabled", true],
+      ["apz.overscroll.damping", 5.0],
       ["apz.content_response_timeout", 0],
     ],
   });
@@ -1106,9 +1107,26 @@ add_task(async () => {
 
   // Wait the overscroll gutter is restored.
   await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
-    // For some reasons promiseTransformEnd() causes "Uncaught exception in
-    // test bound".
-    await content.wrappedJSObject.promiseTopic("APZ:TransformEnd");
+    // For some reasons using functions in apz_test_native_event_utils.js
+    // sometimes causes "TypeError content.wrappedJSObject.XXXX is not a
+    // function" error, so we observe "APZ:TransformEnd" instead of using
+    // promiseTransformEnd().
+    await new Promise((resolve, reject) => {
+      SpecialPowers.Services.obs.addObserver(function observer(
+        subject,
+        topic,
+        data
+      ) {
+        try {
+          SpecialPowers.Services.obs.removeObserver(observer, topic);
+          resolve([subject, data]);
+        } catch (ex) {
+          SpecialPowers.Services.obs.removeObserver(observer, topic);
+          reject(ex);
+        }
+      },
+      "APZ:TransformEnd");
+    });
   });
 
   BrowserTestUtils.removeTab(tab);
