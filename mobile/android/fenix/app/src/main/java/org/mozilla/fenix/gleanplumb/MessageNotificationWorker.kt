@@ -14,20 +14,17 @@ import android.os.Bundle
 import android.os.IBinder
 import androidx.core.app.NotificationManagerCompat
 import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequest
+import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import mozilla.components.support.base.ids.SharedIdsHelper
 import org.mozilla.fenix.ext.areNotificationsEnabledSafe
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.nimbus.MessageSurfaceId
 import org.mozilla.fenix.onboarding.ensureMarketingChannelExists
+import org.mozilla.fenix.perf.runBlockingIncrement
 import org.mozilla.fenix.utils.BootUtils
 import org.mozilla.fenix.utils.IntentUtils
 import org.mozilla.fenix.utils.createBaseNotification
@@ -46,47 +43,47 @@ class MessageNotificationWorker(
     workerParameters: WorkerParameters,
 ) : Worker(context, workerParameters) {
 
-    @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage.
+    @SuppressWarnings("ReturnCount")
     override fun doWork(): Result {
-        GlobalScope.launch(Dispatchers.IO) {
-            val context = applicationContext
-            val nm = NotificationManagerCompat.from(context)
-            if (!nm.areNotificationsEnabledSafe()) {
-                return@launch
-            }
+        val context = applicationContext
 
-            val messagingStorage = context.components.analytics.messagingStorage
-            val messages = messagingStorage.getMessages()
-            val nextMessage =
-                messagingStorage.getNextMessage(MessageSurfaceId.NOTIFICATION, messages)
-                    ?: return@launch
-
-            val currentBootUniqueIdentifier = BootUtils.getBootIdentifier(context)
-            val messageMetadata = nextMessage.metadata
-            //  Device has NOT been power cycled.
-            if (messageMetadata.latestBootIdentifier == currentBootUniqueIdentifier) {
-                return@launch
-            }
-
-            val nimbusMessagingController = NimbusMessagingController(messagingStorage)
-
-            // Update message as displayed.
-            val updatedMessage =
-                nimbusMessagingController.updateMessageAsDisplayed(
-                    nextMessage,
-                    currentBootUniqueIdentifier,
-                )
-            nimbusMessagingController.onMessageDisplayed(updatedMessage)
-
-            nm.notify(
-                MESSAGE_TAG,
-                SharedIdsHelper.getIdForTag(context, updatedMessage.id),
-                buildNotification(
-                    context,
-                    updatedMessage,
-                ),
-            )
+        val nm = NotificationManagerCompat.from(context)
+        if (!nm.areNotificationsEnabledSafe()) {
+            return Result.success()
         }
+
+        val messagingStorage = context.components.analytics.messagingStorage
+        val messages = runBlockingIncrement { messagingStorage.getMessages() }
+        val nextMessage =
+            messagingStorage.getNextMessage(MessageSurfaceId.NOTIFICATION, messages)
+                ?: return Result.success()
+
+        val currentBootUniqueIdentifier = BootUtils.getBootIdentifier(context)
+        val messageMetadata = nextMessage.metadata
+        //  Device has NOT been power cycled.
+        if (messageMetadata.latestBootIdentifier == currentBootUniqueIdentifier) {
+            return Result.success()
+        }
+
+        val nimbusMessagingController = NimbusMessagingController(messagingStorage)
+
+        // Update message as displayed.
+        val updatedMessage =
+            nimbusMessagingController.updateMessageAsDisplayed(
+                nextMessage,
+                currentBootUniqueIdentifier,
+            )
+
+        runBlockingIncrement { nimbusMessagingController.onMessageDisplayed(updatedMessage) }
+
+        nm.notify(
+            MESSAGE_TAG,
+            SharedIdsHelper.getIdForTag(context, updatedMessage.id),
+            buildNotification(
+                context,
+                updatedMessage,
+            ),
+        )
 
         return Result.success()
     }
@@ -154,13 +151,10 @@ class MessageNotificationWorker(
             val notificationConfig = featureConfig.notificationConfig
             val pollingInterval = notificationConfig.refreshInterval.toLong()
 
-            val messageWorkRequest = PeriodicWorkRequest.Builder(
-                MessageNotificationWorker::class.java,
+            val messageWorkRequest = PeriodicWorkRequestBuilder<MessageNotificationWorker>(
                 pollingInterval,
                 TimeUnit.MINUTES,
-            ) // Only start polling after the given interval.
-                .setInitialDelay(pollingInterval, TimeUnit.MINUTES)
-                .build()
+            ).build()
 
             val instanceWorkManager = WorkManager.getInstance(context)
             instanceWorkManager.enqueueUniquePeriodicWork(
@@ -186,21 +180,18 @@ class NotificationDismissedService : Service() {
      */
     override fun onBind(intent: Intent?): IBinder? = null
 
-    @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage.
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        GlobalScope.launch {
-            if (intent != null) {
-                val nimbusMessagingController =
-                    NimbusMessagingController(applicationContext.components.analytics.messagingStorage)
+        if (intent != null) {
+            val nimbusMessagingController =
+                NimbusMessagingController(applicationContext.components.analytics.messagingStorage)
 
-                // Get the relevant message.
-                val messageId = intent.getStringExtra(DISMISSED_MESSAGE_ID)!!
-                val message = nimbusMessagingController.getMessage(messageId)
+            // Get the relevant message.
+            val messageId = intent.getStringExtra(DISMISSED_MESSAGE_ID)!!
+            val message = runBlockingIncrement { nimbusMessagingController.getMessage(messageId) }
 
-                if (message != null) {
-                    // Update message as 'dismissed'.
-                    nimbusMessagingController.onMessageDismissed(message.metadata)
-                }
+            if (message != null) {
+                // Update message as 'dismissed'.
+                runBlockingIncrement { nimbusMessagingController.onMessageDismissed(message.metadata) }
             }
         }
 
@@ -216,30 +207,27 @@ class NotificationDismissedService : Service() {
  */
 class NotificationClickedReceiverActivity : Activity() {
 
-    @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage.
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        GlobalScope.launch {
-            val nimbusMessagingController =
-                NimbusMessagingController(components.analytics.messagingStorage)
+        val nimbusMessagingController =
+            NimbusMessagingController(components.analytics.messagingStorage)
 
-            // Get the relevant message.
-            val messageId = intent.getStringExtra(CLICKED_MESSAGE_ID)!!
-            val message = nimbusMessagingController.getMessage(messageId)
+        // Get the relevant message.
+        val messageId = intent.getStringExtra(CLICKED_MESSAGE_ID)!!
+        val message = runBlockingIncrement { nimbusMessagingController.getMessage(messageId) }
 
-            if (message != null) {
-                // Update message as 'clicked'.
-                nimbusMessagingController.onMessageClicked(message.metadata)
+        if (message != null) {
+            // Update message as 'clicked'.
+            runBlockingIncrement { nimbusMessagingController.onMessageClicked(message.metadata) }
 
-                // Create the intent.
-                val intent = nimbusMessagingController.getIntentForMessageAction(message.action)
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            // Create the intent.
+            val intent = nimbusMessagingController.getIntentForMessageAction(message.action)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
 
-                // Start the message intent.
-                startActivity(intent)
-            }
+            // Start the message intent.
+            startActivity(intent)
         }
 
         // End this activity.
