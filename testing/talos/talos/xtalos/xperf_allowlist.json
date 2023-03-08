@@ -5,6 +5,18 @@
     "minbytes": 0,
     "maxbytes": 8192
   },
+  "c:\\windowsazure": {
+    "ignore": true
+  },
+  "c:\\windowsazure\\logs": {
+    "ignore": true
+  },
+  "c:\\windowsazure\\logs\\aggregatestatus": {
+    "ignore": true
+  },
+  "c:\\worker-runner": {
+    "ignore": true
+  },
   "c:\\$extend\\$usnjrnl:$j": {
     "ignore": true
   },
@@ -14,10 +26,22 @@
   "c:\\$mft": {
     "ignore": true
   },
-  "z:\\$mft": {
+  "z:\\$mft::$bitmap": {
+    "ignore": true
+  },
+  "z:\\$bitmap": {
     "ignore": true
   },
   "c:\\$secure": {
+    "ignore": true
+  },
+  "c:\\$secure:$sds": {
+    "ignore": true
+  },
+  "c:\\$secure:$sii:$index_allocation": {
+    "ignore": true
+  },
+  "c:\\$secure:$sdh:$index_allocation": {
     "ignore": true
   },
   "c:\\program files\\desktop.ini": {
@@ -43,6 +67,12 @@
     "maxcount": 2,
     "minbytes": 2,
     "maxbytes": 2
+  },
+  "c:\\program files\\windows kits\\10\\windows performance toolkit": {
+    "mincount": 0,
+    "maxcount": 2,
+    "minbytes": 0,
+    "maxbytes": 8192
   },
   "c:\\slave\\test\\build\\venv\\lib\\site-packages\\{pip_vendor}": {
     "ignore": true
@@ -73,6 +103,12 @@
   },
   "c:\\windows\\prefetch\\{prefetch}.pf": {
     "ignore": true
+  },
+  "c:\\windows\\system32\\catroot2": {
+    "mincount": 0,
+    "maxcount": 2,
+    "minbytes": 0,
+    "maxbytes": 8192
   },
   "c:\\windows\\system32\\webauthn.dll": {
     "mincount": 0,
