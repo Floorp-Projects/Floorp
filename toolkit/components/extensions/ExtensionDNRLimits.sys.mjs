@@ -35,6 +35,14 @@ const MAX_NUMBER_OF_ENABLED_STATIC_RULESETS = 10;
  */
 const MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES = 5000;
 
+/**
+ * The maximum number of regular expression rules that an extension can add.
+ * Session, dynamic and static rules have their own quota.
+ *
+ * TODO bug 1821033: Bump limit after optimizing regexFilter.
+ */
+const MAX_NUMBER_OF_REGEX_RULES = 1000;
+
 // TODO(Bug 1803370): allow extension to exceed the GUARANTEED_MINIMUM_STATIC_RULES limit.
 //
 // The maximum number of static rules exceeding the per-extension
@@ -47,4 +55,5 @@ export const ExtensionDNRLimits = {
   MAX_NUMBER_OF_STATIC_RULESETS,
   MAX_NUMBER_OF_ENABLED_STATIC_RULESETS,
   MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES,
+  MAX_NUMBER_OF_REGEX_RULES,
 };

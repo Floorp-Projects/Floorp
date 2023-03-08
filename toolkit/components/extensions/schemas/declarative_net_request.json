@@ -368,7 +368,7 @@
                   "regexSubstitution": {
                     "type": "string",
                     "optional": true,
-                    "description": "TODO with regexFilter + Substitution pattern for rules which specify a 'regexFilter'."
+                    "description": "Substitution pattern for rules which specify a 'regexFilter'. The first match of regexFilter within the url will be replaced with this pattern. Within regexSubstitution, backslash-escaped digits (\\1 to \\9) can be used to insert the corresponding capture groups. \\0 refers to the entire matching text."
                   }
                 }
               },
@@ -705,6 +705,10 @@
       "MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES": {
         "type": "number",
         "description": "The maximum number of dynamic and session rules an extension can add. NOTE: in the Firefox we are enforcing this limit to the session and dynamic rules count separately, instead of enforcing it to the rules count for both combined as the Chrome implementation does."
+      },
+      "MAX_NUMBER_OF_REGEX_RULES": {
+        "type": "number",
+        "description": "The maximum number of regular expression rules that an extension can add. This limit is evaluated separately for the set of session rules, dynamic rules and those specified in the rule_resources file."
       },
       "SESSION_RULESET_ID": {
         "type": "string",

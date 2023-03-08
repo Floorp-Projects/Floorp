@@ -787,7 +787,7 @@ add_task(async function match_urlFilter() {
       await dnr.updateSessionRules({
         addRules: [
           // Some patterns that match literally everything:
-          { id: 1, condition: { urlFilter: "*" }, action },
+          { id: 1, condition: { urlFilter: "." }, action },
           { id: 2, condition: { urlFilter: "^" }, action },
           { id: 3, condition: { urlFilter: "|" }, action },
           // Patterns that match the test URLs
@@ -817,6 +817,57 @@ add_task(async function match_urlFilter() {
         { url: "https://example.com/file.txt", type: "font" },
         [1, 2, 3, 4, 5],
         "urlFilter should match when needed, and correctly with requestDomains"
+      );
+
+      browser.test.notifyPass();
+    },
+  });
+});
+
+// Tests: regexFilter. For more comprehensive tests, see
+// toolkit/components/extensions/test/xpcshell/test_ext_dnr_regexFilter.js
+add_task(async function match_regexFilter() {
+  await runAsDNRExtension({
+    background: async dnrTestUtils => {
+      const dnr = browser.declarativeNetRequest;
+      const { makeDummyAction, testMatchesRequest } = dnrTestUtils;
+
+      // "modifyHeaders" is the only action that allows multiple rule matches.
+      const action = makeDummyAction("modifyHeaders");
+
+      await dnr.updateSessionRules({
+        addRules: [
+          // Some patterns that match literally everything:
+          { id: 1, condition: { regexFilter: ".*" }, action },
+          { id: 2, condition: { regexFilter: "^" }, action },
+          // Patterns that match the test URLs
+          { id: 3, condition: { regexFilter: "https://.xample\\." }, action },
+          { id: 4, condition: { regexFilter: "https://example.com" }, action },
+          {
+            // regexFilter matches, requestDomains matches.
+            id: 5,
+            condition: { regexFilter: "$", requestDomains: ["example.com"] },
+            action,
+          },
+          {
+            // regexFilter matches, requestDomains does not match.
+            id: 6,
+            condition: { regexFilter: "$", requestDomains: ["notexample.com"] },
+            action,
+          },
+          {
+            // regexFilter does not match, requestDomains matches.
+            id: 7,
+            condition: { regexFilter: "notm", requestDomains: ["example.com"] },
+            action,
+          },
+        ],
+      });
+
+      await testMatchesRequest(
+        { url: "https://example.com/file.txt", type: "font" },
+        [1, 2, 3, 4, 5],
+        "regexFilter should match when needed, and correctly with requestDomains"
       );
 
       browser.test.notifyPass();
