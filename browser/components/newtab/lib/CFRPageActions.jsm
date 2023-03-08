@@ -925,9 +925,6 @@ const CFRPageActions = {
    * @return                        Did adding the recommendation succeed?
    */
   async forceRecommendation(browser, recommendation, dispatchCFRAction) {
-    if (!browser) {
-      return false;
-    }
     // If we are forcing via the Admin page, the browser comes in a different format
     const win = browser.ownerGlobal;
     const { id, content } = recommendation;
@@ -963,9 +960,6 @@ const CFRPageActions = {
    * @return                        Did adding the recommendation succeed?
    */
   async addRecommendation(browser, host, recommendation, dispatchCFRAction) {
-    if (!browser) {
-      return false;
-    }
     const win = browser.ownerGlobal;
     if (lazy.PrivateBrowsingUtils.isWindowPrivate(win)) {
       return false;
