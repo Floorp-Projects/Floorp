@@ -44,6 +44,7 @@ FINAL_TARGET_FILES.features["pictureinpicture@mozilla.org"]["video-wrappers"] +=
     "video-wrappers/videojsWrapper.js",
     "video-wrappers/voot.js",
     "video-wrappers/washingtonpost.js",
+    "video-wrappers/yahoofinance.js",
     "video-wrappers/youtube.js",
 ]
 

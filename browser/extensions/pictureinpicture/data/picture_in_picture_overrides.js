@@ -212,6 +212,12 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
+    yahoofinance: {
+      "https://*.finance.yahoo.com/*": {
+        videoWrapperScriptPath: "video-wrappers/yahoofinance.js",
+      },
+    },
+
     youtube: {
       /**
        * The threshold of 0.7 is so that users can click on the "Skip Ads"
