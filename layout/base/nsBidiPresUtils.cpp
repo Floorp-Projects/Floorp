@@ -2150,7 +2150,7 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t* aText, size_t aLength,
 
   // Caller should have already replaced any separators in the original text
   // with <space> characters.
-  MOZ_ASSERT(nsDependentString(aText, aLength).FindCharInSet(kSeparators) ==
+  MOZ_ASSERT(nsDependentSubstring(aText, aLength).FindCharInSet(kSeparators) ==
              kNotFound);
 
   for (int nPosResolve = 0; nPosResolve < aPosResolveCount; ++nPosResolve) {
