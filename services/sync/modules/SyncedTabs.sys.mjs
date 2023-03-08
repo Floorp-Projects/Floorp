@@ -174,15 +174,10 @@ let SyncedTabsInternal = {
       );
       return false;
     }
-    // If Sync can't log in we also don't try.
-    if (
-      !(
-        Weave.Status.login === Weave.STATUS_OK ||
-        Weave.Status.login === Weave.LOGIN_SUCCEEDED
-      )
-    ) {
+    // If the primary pass is locked, we should not try to sync
+    if (Weave.Utils.mpLocked()) {
       lazy.log.info(
-        "Can't sync tabs due to the login status",
+        "Can't sync tabs due to the primary password being locked",
         Weave.Status.login
       );
       return false;
