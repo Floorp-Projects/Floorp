@@ -689,9 +689,10 @@ class TopSitesFeed {
           // Change the image URL to request a size tailored for the parent container width
           // Also: force JPEG, quality 60, no upscaling, no EXIF data
           // Uses Thumbor: https://thumbor.readthedocs.io/en/latest/usage.html
-          return `https://img-getpocket.cdn.mozilla.net/${width}x${height}/filters:format(jpeg):quality(60):no_upscale():strip_exif()/${encodeURIComponent(
+          // For now we wrap this in single quotes because this is being used in a url() css rule, and otherwise would cause a parsing error.
+          return `'https://img-getpocket.cdn.mozilla.net/${width}x${height}/filters:format(jpeg):quality(60):no_upscale():strip_exif()/${encodeURIComponent(
             url
-          )}`;
+          )}'`;
         }
 
         // We need to loop through potential spocs and set their positions.
@@ -706,7 +707,7 @@ class TopSitesFeed {
           const positionIndex = discoveryStreamSpocPositions[i].index;
           const spoc = discoveryStreamSpocs[i];
           const link = {
-            customScreenshotURL: reformatImageURL(spoc.raw_image_src, 40, 40),
+            favicon: reformatImageURL(spoc.raw_image_src, 40, 40),
             type: "SPOC",
             label: spoc.title || spoc.sponsor,
             title: spoc.title || spoc.sponsor,
