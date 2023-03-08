@@ -1671,7 +1671,6 @@ bool BuildUtilitySandbox(sandbox::TargetPolicy* policy,
     SANDBOX_ENSURE_SUCCESS(result, "Failed to initialize signed policy rules.");
   }
 
-
   if (!us.mPackagePrefix.IsEmpty()) {
     MOZ_ASSERT(us.mInitialIntegrityLevel == sandbox::INTEGRITY_LEVEL_LAST,
                "Initial integrity level cannot be specified if using an LPAC.");
