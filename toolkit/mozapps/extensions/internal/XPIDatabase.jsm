@@ -2003,6 +2003,20 @@ const XPIDatabase = {
       return this._dbPromise;
     }
 
+    if (lazy.XPIProvider._closing) {
+      // use an Error here so we get a stack trace.
+      let err = new Error(
+        "XPIDatabase.asyncLoadDB attempt after XPIProvider shutdown."
+      );
+      logger.warn("Fail to load AddonDB: ${error}", { error: err });
+      lazy.AddonManagerPrivate.recordSimpleMeasure(
+        "XPIDB_late_load",
+        Log.stackTrace(err)
+      );
+      this._dbPromise = Promise.reject(err);
+      return this._dbPromise;
+    }
+
     logger.debug(`Starting async load of XPI database ${this.jsonFile.path}`);
     this._dbPromise = (async () => {
       try {

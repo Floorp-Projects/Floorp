@@ -1964,11 +1964,24 @@ class BootstrapScope {
       await this.shutdownPromise;
     }
 
-    this.startupPromise = this.callBootstrapMethod(
-      "startup",
-      reason,
-      aExtraParams
-    );
+    if (
+      Services.startup.isInOrBeyondShutdownPhase(
+        Ci.nsIAppStartup.SHUTDOWN_PHASE_APPSHUTDOWNCONFIRMED
+      )
+    ) {
+      let err = new Error(
+        `XPIProvider can't start bootstrap scope for ${this.addon.id} after shutdown was already granted`
+      );
+      logger.warn("BoostrapScope startup failure: ${error}", { error: err });
+      this.startupPromise = Promise.reject(err);
+    } else {
+      this.startupPromise = this.callBootstrapMethod(
+        "startup",
+        reason,
+        aExtraParams
+      );
+    }
+
     return this.startupPromise;
   }
 
