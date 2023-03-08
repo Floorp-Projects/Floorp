@@ -628,6 +628,10 @@
   background-image: url("chrome://devtools/skin/images/angle-swatch.svg");
 }
 
+.ruleview-lineareasingswatch {
+  background-image: url("chrome://devtools/skin/images/linear-easing-swatch.svg");
+}
+
 .ruleview-overridden {
   text-decoration: line-through solid var(--theme-text-color-alt);
 }

@@ -50,6 +50,7 @@ const INLINE_COMPATIBILITY_WARNING_PREF =
 const SHARED_SWATCH_CLASS = "ruleview-swatch";
 const COLOR_SWATCH_CLASS = "ruleview-colorswatch";
 const BEZIER_SWATCH_CLASS = "ruleview-bezierswatch";
+const LINEAR_EASING_SWATCH_CLASS = "ruleview-lineareasingswatch";
 const FILTER_SWATCH_CLASS = "ruleview-filterswatch";
 const ANGLE_SWATCH_CLASS = "ruleview-angleswatch";
 const FONT_FAMILY_CLASS = "ruleview-font-family";
@@ -62,6 +63,7 @@ const SHAPE_SWATCH_CLASS = "ruleview-shapeswatch";
 const ACTIONABLE_ELEMENTS_SELECTORS = [
   `.${COLOR_SWATCH_CLASS}`,
   `.${BEZIER_SWATCH_CLASS}`,
+  `.${LINEAR_EASING_SWATCH_CLASS}`,
   `.${FILTER_SWATCH_CLASS}`,
   `.${ANGLE_SWATCH_CLASS}`,
   "a",
@@ -546,6 +548,9 @@ TextPropertyEditor.prototype = {
       filterSwatchClass: SHARED_SWATCH_CLASS + " " + FILTER_SWATCH_CLASS,
       flexClass: "ruleview-flex js-toggle-flexbox-highlighter",
       gridClass: "ruleview-grid js-toggle-grid-highlighter",
+      linearEasingClass: "ruleview-lineareasing",
+      linearEasingSwatchClass:
+        SHARED_SWATCH_CLASS + " " + LINEAR_EASING_SWATCH_CLASS,
       shapeClass: "ruleview-shape",
       shapeSwatchClass: SHAPE_SWATCH_CLASS,
       // Only ask the parser to convert colors to the default color type specified by the
@@ -670,6 +675,26 @@ TextPropertyEditor.prototype = {
         });
         const title = l10n("rule.bezierSwatch.tooltip");
         span.setAttribute("title", title);
+      }
+    }
+
+    // Attach the linear easing tooltip to the linear easing swatches
+    this._linearEasingSwatchSpans = this.valueSpan.querySelectorAll(
+      "." + LINEAR_EASING_SWATCH_CLASS
+    );
+    if (this.ruleEditor.isEditable) {
+      for (const span of this._linearEasingSwatchSpans) {
+        // Adding this swatch to the list of swatches our colorpicker
+        // knows about
+        this.ruleView.tooltips
+          .getTooltip("linearEaseFunction")
+          .addSwatch(span, {
+            onShow: this._onStartEditing,
+            onPreview: this._onSwatchPreview,
+            onCommit: this._onSwatchCommit,
+            onRevert: this._onSwatchRevert,
+          });
+        span.setAttribute("title", l10n("rule.bezierSwatch.tooltip"));
       }
     }
 

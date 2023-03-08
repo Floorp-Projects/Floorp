@@ -7,6 +7,7 @@
 @import url(chrome://devtools/skin/badge.css);
 @import url(chrome://devtools/content/shared/widgets/cubic-bezier.css);
 @import url(chrome://devtools/content/shared/widgets/filter-widget.css);
+@import url(chrome://devtools/content/shared/widgets/linear-widget.css);
 @import url(chrome://devtools/content/shared/widgets/spectrum.css);
 @import url(chrome://devtools/skin/variables.css);
 
@@ -14,7 +15,7 @@
 
 .theme-dark {
   --bezier-diagonal-color: #eee;
-  --bezier-grid-color: rgba(0, 0, 0, 0.2);
+  --bezier-grid-color: rgba(255, 255, 255, 0.1);
 
   /* Tooltips */
   --theme-tooltip-color: var(--theme-text-color-strong);
