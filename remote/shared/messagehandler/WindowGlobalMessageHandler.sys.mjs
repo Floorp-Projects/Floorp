@@ -59,6 +59,10 @@ export class WindowGlobalMessageHandler extends MessageHandler {
     return this.#innerWindowId;
   }
 
+  get processActor() {
+    return ChromeUtils.domProcessChild.getActor("WebDriverProcessData");
+  }
+
   get window() {
     return this.context.window;
   }

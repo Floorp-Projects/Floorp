@@ -26,6 +26,7 @@ const ERRORS = new Set([
   "NoSuchAlertError",
   "NoSuchElementError",
   "NoSuchFrameError",
+  "NoSuchNodeError",
   "NoSuchScriptError",
   "NoSuchShadowRootError",
   "NoSuchWindowError",
@@ -437,6 +438,17 @@ class NoSuchFrameError extends WebDriverError {
 }
 
 /**
+ * A node as given by its unique shared id could not be found within the cache
+ * of known nodes.
+ */
+class NoSuchNodeError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "no such node";
+  }
+}
+
+/**
  * A command to switch to a window could not be satisfied because
  * the window could not be found.
  */
@@ -547,6 +559,7 @@ const STATUSES = new Map([
   ["no such alert", NoSuchAlertError],
   ["no such element", NoSuchElementError],
   ["no such frame", NoSuchFrameError],
+  ["no such node", NoSuchNodeError],
   ["no such script", NoSuchScriptError],
   ["no such shadow root", NoSuchShadowRootError],
   ["no such window", NoSuchWindowError],

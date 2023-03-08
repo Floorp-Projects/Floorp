@@ -2,9 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const DOCUMENT_FRAGMENT_NODE = 11;
-const ELEMENT_NODE = 1;
-
 /**
  * @typedef {Object} NodeReferenceDetails
  * @property {number} browserId
@@ -52,12 +49,7 @@ export class NodeCache {
    *     The unique node reference for the DOM node.
    */
   getOrCreateNodeReference(node) {
-    if (
-      !node ||
-      ![DOCUMENT_FRAGMENT_NODE, ELEMENT_NODE].includes(node.nodeType) ||
-      (node.nodeType === DOCUMENT_FRAGMENT_NODE &&
-        node.containingShadowRoot !== node)
-    ) {
+    if (!Node.isInstance(node)) {
       throw new TypeError(`Failed to create node reference for ${node}`);
     }
 
@@ -66,7 +58,10 @@ export class NodeCache {
       // For already known nodes return the cached node id.
       nodeId = this.#nodeIdMap.get(node);
     } else {
-      const browsingContext = node.ownerGlobal.browsingContext;
+      // Bug 1820734: For some Node types like `CDATA` no `ownerGlobal`
+      // property is available, and as such they cannot be deserialized
+      // right now.
+      const browsingContext = node.ownerGlobal?.browsingContext;
 
       // For not yet cached nodes generate a unique id without curly braces.
       nodeId = Services.uuid
@@ -75,10 +70,10 @@ export class NodeCache {
         .slice(1, -1);
 
       const details = {
-        browserId: browsingContext.browserId,
-        browsingContextGroupId: browsingContext.group.id,
-        browsingContextId: browsingContext.id,
-        isTopBrowsingContext: browsingContext.parent === null,
+        browserId: browsingContext?.browserId,
+        browsingContextGroupId: browsingContext?.group.id,
+        browsingContextId: browsingContext?.id,
+        isTopBrowsingContext: browsingContext?.parent === null,
         nodeWeakRef: Cu.getWeakReference(node),
       };
 

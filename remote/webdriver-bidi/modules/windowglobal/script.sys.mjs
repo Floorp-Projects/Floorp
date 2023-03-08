@@ -76,7 +76,13 @@ class ScriptModule extends Module {
     }
   }
 
-  #buildExceptionDetails(exception, stack, realm, resultOwnership) {
+  #buildExceptionDetails(
+    exception,
+    stack,
+    realm,
+    resultOwnership,
+    serializeOptions
+  ) {
     exception = this.#toRawObject(exception);
     const frames = lazy.getFramesFromStack(stack) || [];
 
@@ -101,7 +107,8 @@ class ScriptModule extends Module {
         1,
         resultOwnership,
         new Map(),
-        realm
+        realm,
+        serializeOptions
       ),
       lineNumber: stack.line - 1,
       stackTrace: { callFrames },
@@ -109,7 +116,13 @@ class ScriptModule extends Module {
     };
   }
 
-  async #buildReturnValue(rv, realm, awaitPromise, resultOwnership) {
+  async #buildReturnValue(
+    rv,
+    realm,
+    awaitPromise,
+    resultOwnership,
+    serializeOptions
+  ) {
     let evaluationStatus, exception, result, stack;
 
     if ("return" in rv) {
@@ -153,7 +166,8 @@ class ScriptModule extends Module {
             1,
             resultOwnership,
             new Map(),
-            realm
+            realm,
+            serializeOptions
           ),
           realmId: realm.id,
         };
@@ -164,7 +178,8 @@ class ScriptModule extends Module {
             exception,
             stack,
             realm,
-            resultOwnership
+            resultOwnership,
+            serializeOptions
           ),
           realmId: realm.id,
         };
@@ -309,14 +324,19 @@ class ScriptModule extends Module {
     } = options;
 
     const realm = this.#getRealm(realmId, sandboxName);
+    const nodeCache = this.messageHandler.processActor.getNodeCache();
 
     const deserializedArguments =
       commandArguments !== null
-        ? commandArguments.map(arg => lazy.deserialize(realm, arg))
+        ? commandArguments.map(arg =>
+            lazy.deserialize(realm, arg, { nodeCache })
+          )
         : [];
 
     const deserializedThis =
-      thisParameter !== null ? lazy.deserialize(realm, thisParameter) : null;
+      thisParameter !== null
+        ? lazy.deserialize(realm, thisParameter, { nodeCache })
+        : null;
 
     const rv = realm.executeInGlobalWithBindings(
       functionDeclaration,
@@ -324,7 +344,9 @@ class ScriptModule extends Module {
       deserializedThis
     );
 
-    return this.#buildReturnValue(rv, realm, awaitPromise, resultOwnership);
+    return this.#buildReturnValue(rv, realm, awaitPromise, resultOwnership, {
+      nodeCache,
+    });
   }
 
   /**
@@ -380,9 +402,13 @@ class ScriptModule extends Module {
     } = options;
 
     const realm = this.#getRealm(realmId, sandboxName);
+    const nodeCache = this.messageHandler.processActor.getNodeCache();
+
     const rv = realm.executeInGlobal(expression);
 
-    return this.#buildReturnValue(rv, realm, awaitPromise, resultOwnership);
+    return this.#buildReturnValue(rv, realm, awaitPromise, resultOwnership, {
+      nodeCache,
+    });
   }
 
   /**

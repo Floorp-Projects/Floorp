@@ -135,13 +135,16 @@ class LogModule extends Module {
     text += args.map(String).join(" ");
 
     // Serialize each arg as remote value.
+    const nodeCache = this.messageHandler.processActor.getNodeCache();
     const serializedArgs = [];
     for (const arg of args) {
       // Note that we can pass a `null` realm for now since realms are only
       // involved when creating object references, which will not happen with
       // OwnershipModel.None. This will be revisited in Bug 1731589.
       serializedArgs.push(
-        lazy.serialize(arg, 1, lazy.OwnershipModel.None, new Map(), null)
+        lazy.serialize(arg, 1, lazy.OwnershipModel.None, new Map(), null, {
+          nodeCache,
+        })
       );
     }
 
