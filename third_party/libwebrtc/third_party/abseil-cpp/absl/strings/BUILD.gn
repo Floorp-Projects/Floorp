@@ -42,7 +42,6 @@ absl_source_set("strings") {
     "strip.h",
     "substitute.h",
   ]
-  if (!moz_webrtc_build) {
   deps = [
     ":internal",
     "//third_party/abseil-cpp/absl/base",
@@ -56,17 +55,24 @@ absl_source_set("strings") {
     "//third_party/abseil-cpp/absl/numeric:bits",
     "//third_party/abseil-cpp/absl/numeric:int128",
   ]
-  } else {
-  deps = [
-    ":internal",
-    "//third_party/abseil-cpp/absl/base:config",
-    "//third_party/abseil-cpp/absl/base:core_headers",
-    "//third_party/abseil-cpp/absl/base:raw_logging_internal",
-    "//third_party/abseil-cpp/absl/memory",
-    "//third_party/abseil-cpp/absl/meta:type_traits",
-    "//third_party/abseil-cpp/absl/numeric:bits",
-    "//third_party/abseil-cpp/absl/numeric:int128",
-  ]
+  if (moz_webrtc_build) {
+    # Removed for unreachable sources.  See Bug 1820869.
+    sources -= [
+      "charconv.cc",
+      "escaping.cc",
+      "internal/charconv_bigint.cc",
+      "internal/charconv_parse.cc",
+      "numbers.cc",
+      "str_cat.cc",
+      "str_replace.cc",
+      "substitute.cc",
+    ]
+    deps -= [
+      ":internal", # Removed for unreachable sources.  See Bug 1820869.
+      "//third_party/abseil-cpp/absl/base",
+      "//third_party/abseil-cpp/absl/base:endian",
+      "//third_party/abseil-cpp/absl/base:throw_delegate",
+    ]
   }
 }
 

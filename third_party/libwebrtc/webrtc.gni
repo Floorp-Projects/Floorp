@@ -221,7 +221,7 @@ declare_args() {
   # video codecs they depends on will not be included in libwebrtc.{a|lib}
   # (they will still be included in libjingle_peerconnection_so.so and
   # WebRTC.framework)
-  rtc_include_builtin_video_codecs = true
+  rtc_include_builtin_video_codecs = !build_with_mozilla # See Bug 1820869.
 
   # When set to true and in a standalone build, it will undefine UNICODE and
   # _UNICODE (which are always defined globally by the Chromium Windows
