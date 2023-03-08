@@ -35,8 +35,6 @@ add_task(async function test_primary_password_locked() {
     sandbox
       .stub(TabsSetupFlowManager, "syncTabs")
       .returns(Promise.resolve(null));
-    const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
-    syncedTabsMock.returns(Promise.resolve(getMockTabData(syncedTabsData1)));
 
     const { document } = browser.contentWindow;
     Services.obs.notifyObservers(null, UIState.ON_UPDATE);
