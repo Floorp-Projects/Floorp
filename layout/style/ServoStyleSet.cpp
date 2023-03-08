@@ -801,6 +801,12 @@ bool ServoStyleSet::StyleDocument(ServoTraversalFlags aFlags) {
     return false;
   }
 
+  Element* rootElement = mDocument->GetRootElement();
+  if (rootElement && MOZ_UNLIKELY(!rootElement->HasServoData())) {
+    StyleNewSubtree(rootElement);
+    return true;
+  }
+
   PreTraverse(aFlags);
   AutoPrepareTraversal guard(this);
   const SnapshotTable& snapshots = Snapshots();
@@ -808,9 +814,6 @@ bool ServoStyleSet::StyleDocument(ServoTraversalFlags aFlags) {
   // Restyle the document from the root element and each of the document level
   // NAC subtree roots.
   bool postTraversalRequired = false;
-
-  Element* rootElement = mDocument->GetRootElement();
-  MOZ_ASSERT_IF(rootElement, rootElement->HasServoData());
 
   if (ShouldTraverseInParallel()) {
     aFlags |= ServoTraversalFlags::ParallelTraversal;
