@@ -399,10 +399,7 @@ fn main() -> std::io::Result<()> {
             _ => {
                 emit_build_error!(
                     out,
-                    format!(
-                        "Certificate {} in certdata.txt has no CKA_SUBJECT attribute.",
-                        i
-                    )
+                    format!("Certificate {i} in certdata.txt has no CKA_SUBJECT attribute.")
                 );
                 return Ok(());
             }
@@ -420,15 +417,57 @@ fn main() -> std::io::Result<()> {
         "pub const ROOT_LIST_LABEL: &[u8] = b{root_list_label};"
     )?;
 
-    // Output all of the certificates, so we can take take sub-slices for
-    // components of the Root structs later.
+    // Write out arrays for the DER encoded certificate, serial number, and subject of each root.
+    // As of Rust 1.64, we can construct subslices of a static array at compile time using
+    // slice::from_raw_parts. Since the serial number and the subject are in the DER cert, we don't
+    // need to store additional data for them.
     for (i, cert) in certs.iter().enumerate() {
-        let comment = match attr(cert, "COMMENT") {
-            Ck::Empty => &Ck::Comment(""),
-            comment => comment,
+        // Preserve the comment from certdata.txt
+        match attr(cert, "COMMENT") {
+            Ck::Empty => (),
+            comment => write!(out, "{comment}")?,
         };
+
         let der = attr(cert, "CKA_VALUE");
-        writeln!(out, "{comment}static ROOT_{i}: &[u8] = {der};")?;
+        writeln!(out, "static ROOT_{i}: &[u8] = {der};")?;
+
+        // Search for the serial number and subject in the DER cert. We want to search on the raw
+        // bytes, not the octal presentation, so we have to unpack the enums.
+        let der_data = match der {
+            Ck::MultilineOctal(x) => octal_block_to_vec_u8(x),
+            _ => unreachable!(),
+        };
+        let serial_data = match attr(cert, "CKA_SERIAL_NUMBER") {
+            Ck::MultilineOctal(x) => octal_block_to_vec_u8(x),
+            _ => unreachable!(),
+        };
+        let subject_data = match attr(cert, "CKA_SUBJECT") {
+            Ck::MultilineOctal(x) => octal_block_to_vec_u8(x),
+            _ => unreachable!(),
+        };
+
+        let serial_len = serial_data.len();
+        if let Some(serial_offset) = &der_data.windows(serial_len).position(|s| s == serial_data) {
+            writeln!(out, "static SERIAL_{i}: &[u8] = unsafe {{ slice::from_raw_parts(ROOT_{i}.as_ptr().offset({serial_offset}), {serial_len}) }};")?;
+        } else {
+            emit_build_error!(
+                out,
+                format!("Certificate {i} in certdata.txt has a CKA_SERIAL_NUMBER that does not match its CKA_VALUE.")
+            );
+        }
+
+        let subject_len = subject_data.len();
+        if let Some(subject_offset) = &der_data
+            .windows(subject_len)
+            .position(|s| s == subject_data)
+        {
+            writeln!(out, "static SUBJECT_{i}: &[u8] = unsafe {{ slice::from_raw_parts(ROOT_{i}.as_ptr().offset({subject_offset}), {subject_len}) }};")?;
+        } else {
+            emit_build_error!(
+                out,
+                format!("Certificate {i} in certdata.txt has a CKA_SUBJECT that does not match its CKA_VALUE.")
+            );
+        }
     }
 
     writeln!(out, "pub static BUILTINS: &[Root] = &[")?;
@@ -446,7 +485,6 @@ fn main() -> std::io::Result<()> {
             )?;
             return Ok(());
         }
-        let serial = attr(cert, "CKA_SERIAL_NUMBER");
         let mozpol = attr(cert, "CKA_NSS_MOZILLA_CA_POLICY");
         let server_distrust = attr(cert, "CKA_NSS_SERVER_DISTRUST_AFTER");
         let email_distrust = attr(cert, "CKA_NSS_EMAIL_DISTRUST_AFTER");
@@ -469,14 +507,12 @@ fn main() -> std::io::Result<()> {
         let server = attr(trust, "CKA_TRUST_SERVER_AUTH");
         let email = attr(trust, "CKA_TRUST_EMAIL_PROTECTION");
 
-        // TODO(Bug 1794045): We could make the library smaller by encoding der_name and der_serial
-        // as subslices of ROOT_i. Should be possible in rust 1.64 using slice::from_raw_parts.
         writeln!(
             out,
             "        Root {{
             label: {label},
-            der_name: {subject},
-            der_serial: {serial},
+            der_name: SUBJECT_{i},
+            der_serial: SERIAL_{i},
             der_cert: ROOT_{i},
             mozilla_ca_policy: {mozpol},
             server_distrust_after: {server_distrust},
