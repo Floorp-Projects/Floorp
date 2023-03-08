@@ -326,8 +326,11 @@ set_config("MOZ_CLANG_PATH", bindgen_config_paths.clang_path)
     cxx_compiler,
     bindgen_cflags_android,
     bindgen_config_paths.clang_flags,
+    all_arm_flags,
 )
-def basic_bindgen_cflags(target, is_unix, compiler_info, android_cflags, clang_flags):
+def basic_bindgen_cflags(
+    target, is_unix, compiler_info, android_cflags, clang_flags, all_arm_flags
+):
     args = [
         "-x",
         "c++",
@@ -372,7 +375,7 @@ def basic_bindgen_cflags(target, is_unix, compiler_info, android_cflags, clang_f
             "-DHAVE_VISIBILITY_HIDDEN_ATTRIBUTE=1",
         ]
 
-    return args + (clang_flags or [])
+    return args + (clang_flags or []) + (all_arm_flags or [])
 
 
 option(

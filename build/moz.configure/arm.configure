@@ -159,18 +159,18 @@ check_and_add_flag(
     float_abi_option,
     soft_float_option,
 )
-def all_flags(arch, thumb, interwork, fpu, float_abi, soft_float):
+def all_arm_flags(arch, thumb, interwork, fpu, float_abi, soft_float):
     return arch + thumb + interwork + fpu + float_abi + soft_float
 
 
-add_old_configure_assignment("_ARM_FLAGS", all_flags)
+add_old_configure_assignment("_ARM_FLAGS", all_arm_flags)
 add_old_configure_assignment("_THUMB_FLAGS", thumb_option)
 
 
-@depends(configure_cache, c_compiler, all_flags)
+@depends(configure_cache, c_compiler, all_arm_flags)
 @checking("ARM version support in compiler", lambda x: x.arm_arch)
 @imports(_from="textwrap", _import="dedent")
-def arm_target(configure_cache, compiler, all_flags):
+def arm_target(configure_cache, compiler, all_arm_flags):
     # We're going to preprocess the following source to figure out some details
     # about the arm target options we have enabled.
     source = dedent(
@@ -210,7 +210,7 @@ def arm_target(configure_cache, compiler, all_flags):
         [compiler.compiler] + compiler.flags,
         compiler.language,
         source,
-        ["-E"] + all_flags,
+        ["-E"] + all_arm_flags,
         wrapper=compiler.wrapper,
     )
     # Metadata emitted by preprocessors such as GCC with LANG=ja_JP.utf-8 may
