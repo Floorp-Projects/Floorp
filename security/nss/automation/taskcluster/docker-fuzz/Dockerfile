@@ -4,7 +4,7 @@
 # docker invocation or ASAN won't work.
 # On taskcluster for ASAN use `features: ["allowPtrace"]`.
 # See https://github.com/google/sanitizers/issues/764#issuecomment-276700920
-FROM ubuntu:18.04
+FROM ubuntu:bionic-20221215
 LABEL maintainer="Martin Thomson <martin.thomson@gmail.com>"
 
 RUN dpkg --add-architecture i386

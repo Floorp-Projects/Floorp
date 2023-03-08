@@ -434,12 +434,21 @@ static const optionFreeDef sslOptList[] = {
     { CIPHER_NAME("DTLS1.3"), 0x304 },
 };
 
+static const optionFreeDef keySizeFlagsList[] = {
+    { CIPHER_NAME("KEY-SIZE-SSL"), NSS_KEY_SIZE_POLICY_SSL_FLAG },
+    { CIPHER_NAME("KEY-SIZE-SIGN"), NSS_KEY_SIZE_POLICY_SIGN_FLAG },
+    { CIPHER_NAME("KEY-SIZE-VERIFY"), NSS_KEY_SIZE_POLICY_VERIFY_FLAG },
+};
+
 static const optionFreeDef freeOptList[] = {
 
     /* Restrictions for asymetric keys */
     { CIPHER_NAME("RSA-MIN"), NSS_RSA_MIN_KEY_SIZE },
     { CIPHER_NAME("DH-MIN"), NSS_DH_MIN_KEY_SIZE },
     { CIPHER_NAME("DSA-MIN"), NSS_DSA_MIN_KEY_SIZE },
+    { CIPHER_NAME("ECC-MIN"), NSS_ECC_MIN_KEY_SIZE },
+    /* what operations doe the key size apply to */
+    { CIPHER_NAME("KEY-SIZE-FLAGS"), NSS_KEY_SIZE_POLICY_FLAGS },
     /* constraints on SSL Protocols */
     { CIPHER_NAME("TLS-VERSION-MIN"), NSS_TLS_VERSION_MIN_POLICY },
     { CIPHER_NAME("TLS-VERSION-MAX"), NSS_TLS_VERSION_MAX_POLICY },
@@ -548,6 +557,7 @@ secmod_getPolicyOptValue(const char *policyValue, int policyValueLength,
         *result = val;
         return SECSuccess;
     }
+    /* handle any ssl strings */
     for (i = 0; i < PR_ARRAY_SIZE(sslOptList); i++) {
         if (policyValueLength == sslOptList[i].name_size &&
             PORT_Strncasecmp(sslOptList[i].name, policyValue,
@@ -556,7 +566,29 @@ secmod_getPolicyOptValue(const char *policyValue, int policyValueLength,
             return SECSuccess;
         }
     }
-    return SECFailure;
+    /* handle key_size flags. Each flag represents a bit, which
+     * gets or'd together. They can be separated by , | or + */
+    val = 0;
+    while (*policyValue) {
+        PRBool found = PR_FALSE;
+        for (i = 0; i < PR_ARRAY_SIZE(keySizeFlagsList); i++) {
+            if (PORT_Strncasecmp(keySizeFlagsList[i].name, policyValue,
+                                 keySizeFlagsList[i].name_size) == 0) {
+                val |= keySizeFlagsList[i].option;
+                found = PR_TRUE;
+                policyValue += keySizeFlagsList[i].name_size;
+                break;
+            }
+        }
+        if (!found) {
+            return SECFailure;
+        }
+        if (*policyValue == ',' || *policyValue == '|' || *policyValue == '+') {
+            policyValue++;
+        }
+    }
+    *result = val;
+    return SECSuccess;
 }
 
 /* Policy operations:

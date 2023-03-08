@@ -75,6 +75,8 @@ SECStatus tls13_SendCertAuthoritiesXtn(const sslSocket *ss,
 SECStatus tls13_ClientHandleCertAuthoritiesXtn(const sslSocket *ss,
                                                TLSExtensionData *xtnData,
                                                SECItem *data);
+SECStatus tls13_ServerHandleCertAuthoritiesXtn(const sslSocket *ss, TLSExtensionData *xtnData, SECItem *data);
+
 SECStatus tls13_ServerHandleCookieXtn(const sslSocket *ss,
                                       TLSExtensionData *xtnData,
                                       SECItem *data);
@@ -115,5 +117,11 @@ SECStatus tls13_ClientSendDelegatedCredentialsXtn(const sslSocket *ss,
 SECStatus tls13_ServerHandleDelegatedCredentialsXtn(const sslSocket *ss,
                                                     TLSExtensionData *xtnData,
                                                     SECItem *data);
+SECStatus tls13_SendEmptyGreaseXtn(const sslSocket *ss,
+                                   TLSExtensionData *xtnData,
+                                   sslBuffer *buf, PRBool *added);
+SECStatus tls13_SendGreaseXtn(const sslSocket *ss,
+                              TLSExtensionData *xtnData,
+                              sslBuffer *buf, PRBool *added);
 
 #endif

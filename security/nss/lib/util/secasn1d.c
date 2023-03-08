@@ -2207,9 +2207,13 @@ sec_asn1d_next_in_sequence(sec_asn1d_state *state)
                  * In practice this does not happen, but for completeness
                  * sake it should probably be made to work at some point.
                  */
-                PORT_Assert(child_found_tag_number < SEC_ASN1_HIGH_TAG_NUMBER);
-                identifier = (unsigned char)(child_found_tag_modifiers | child_found_tag_number);
-                sec_asn1d_record_any_header(child, (char *)&identifier, 1);
+                if (child_found_tag_modifiers >= SEC_ASN1_HIGH_TAG_NUMBER) {
+                    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+                    state->top->status = decodeError;
+                } else {
+                    identifier = (unsigned char)(child_found_tag_modifiers | child_found_tag_number);
+                    sec_asn1d_record_any_header(child, (char *)&identifier, 1);
+                }
             }
         }
     }

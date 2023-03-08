@@ -878,14 +878,14 @@ async function scheduleFuzzing32() {
 
 async function scheduleWindows(name, base, build_script) {
   base = merge(base, {
-    workerType: "win2012r2",
+    workerType: "b-win2012-azure",
     env: {
       PATH: "c:\\mozilla-build\\bin;c:\\mozilla-build\\python;" +
            "c:\\mozilla-build\\msys\\local\\bin;c:\\mozilla-build\\7zip;" +
            "c:\\mozilla-build\\info-zip;c:\\mozilla-build\\python\\Scripts;" +
            "c:\\mozilla-build\\yasm;c:\\mozilla-build\\msys\\bin;" +
            "c:\\Windows\\system32;c:\\mozilla-build\\upx391w;" +
-           "c:\\mozilla-build\\moztools-x64\\bin;c:\\mozilla-build\\wget",
+           "c:\\mozilla-build\\moztools-x64\\bin;c:\\mozilla-build\\wget;c:\\Program Files\\Mercurial",
       DOMSUF: "localdomain",
       HOST: "localhost",
     },

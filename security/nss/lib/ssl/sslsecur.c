@@ -217,6 +217,10 @@ SSL_ResetHandshake(PRFileDesc *s, PRBool asServer)
         sslBuffer_Clear(&ss->ssl3.hs.greaseEchBuf);
     }
 
+    tls13_ClientGreaseDestroy(ss);
+
+    tls_ClientHelloExtensionPermutationDestroy(ss);
+
     if (!ss->TCPconnected)
         ss->TCPconnected = (PR_SUCCESS == ssl_DefGetpeername(ss, &addr));
 

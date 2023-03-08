@@ -85,7 +85,7 @@
 #include "sechash.h"
 #endif
 
-#define MAX_KEY_LEN 512
+#define MAX_KEY_LEN 1024
 #define PATH_LEN 150
 #define BUFF_SIZE 150
 #define UID_BITS 800

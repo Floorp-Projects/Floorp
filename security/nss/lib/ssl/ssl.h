@@ -346,6 +346,40 @@ SSL_IMPORT PRFileDesc *DTLS_ImportFD(PRFileDesc *model, PRFileDesc *fd);
  */
 #define SSL_SUPPRESS_END_OF_EARLY_DATA 41
 
+/* Enables TLS GREASE (specified in RFC8701, following Chrome 55 implementation
+ * decisions).
+ *
+ * If enabled and the client's ss->vrange.max >= SSL_LIBRARY_VERSION_TLS_1_3 or
+ * the server's ss->version >= SSL_LIBRARY_VERSION_TLS_1_3, this adds random
+ * GREASE values to:
+ *  - ClientHello (Client):
+ *      - A cipher_suite value to the cipher_suites field.
+ *      - An empty and a 1B zeroed payload extension.
+ *      - A named group value to the supported_groups extension and a
+ *        KeyShareEntry value for the added named group.
+ *      - A signature algorithm value to the signature_algorithms extension.
+ *      - A version value to the supported_versions extension.
+ *      - A PskKeyExchangeMode value to the psk_key_exchange_modes extension.
+ *      - A alpn value to the application_layer_protocol_negotiation extension.
+ *
+ *  - CertificateRequest (Server):
+ *      - An empty extension.
+ *      - A signature algorithm value to the signature_algorithms extension.
+ *
+ *  - NewSessionTicket (Server):
+ *      - An empty extension.
+ *
+ * GREASE values MUST nerver be negotiated but ignored.
+ */
+#define SSL_ENABLE_GREASE 42
+
+/* Enables TLS ClientHello Extension Permutation.
+ *
+ * On a TLS ClientHello all extensions but the Psk extension
+ * (which MUST be last) will be sent in randomly shuffeld order.
+ */
+#define SSL_ENABLE_CH_EXTENSION_PERMUTATION 43
+
 #ifdef SSL_DEPRECATED_FUNCTION
 /* Old deprecated function names */
 SSL_IMPORT SECStatus SSL_Enable(PRFileDesc *fd, int option, PRIntn on);

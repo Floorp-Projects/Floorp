@@ -488,6 +488,19 @@ class TlsExtensionFilter : public TlsHandshakeFilter {
                                         DataBuffer* output);
 };
 
+class TlsExtensionOrderCapture : public TlsExtensionFilter {
+ public:
+  TlsExtensionOrderCapture(const std::shared_ptr<TlsAgent>& a, uint8_t message)
+      : TlsExtensionFilter(a, {message}){};
+
+  std::vector<uint16_t> order;
+
+ protected:
+  PacketFilter::Action FilterExtension(uint16_t extension_type,
+                                       const DataBuffer& input,
+                                       DataBuffer* output) override;
+};
+
 class TlsExtensionCapture : public TlsExtensionFilter {
  public:
   TlsExtensionCapture(const std::shared_ptr<TlsAgent>& a, uint16_t ext,
@@ -784,27 +797,16 @@ class SelectiveRecordDropFilter : public TlsRecordFilter {
   uint8_t counter_;
 };
 
-// Set the version number in the ClientHello.
-class TlsClientHelloVersionSetter : public TlsHandshakeFilter {
+// Set the version value in the ClientHello, ServerHello or HelloRetryRequest
+class TlsMessageVersionSetter : public TlsHandshakeFilter {
  public:
-  TlsClientHelloVersionSetter(const std::shared_ptr<TlsAgent>& a,
-                              uint16_t version)
-      : TlsHandshakeFilter(a, {kTlsHandshakeClientHello}), version_(version) {}
-
-  virtual PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
-                                               const DataBuffer& input,
-                                               DataBuffer* output);
-
- private:
-  uint16_t version_;
-};
-
-// Set the version number in the ServerHello.
-class TlsServerHelloVersionSetter : public TlsHandshakeFilter {
- public:
-  TlsServerHelloVersionSetter(const std::shared_ptr<TlsAgent>& a,
-                              uint16_t version)
-      : TlsHandshakeFilter(a, {kTlsHandshakeServerHello}), version_(version) {}
+  TlsMessageVersionSetter(const std::shared_ptr<TlsAgent>& a, uint8_t message,
+                          uint16_t version)
+      : TlsHandshakeFilter(a, {message}), version_(version) {
+    PR_ASSERT(message == kTlsHandshakeClientHello ||
+              message == kTlsHandshakeServerHello ||
+              message == kTlsHandshakeHelloRetryRequest);
+  }
 
   virtual PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
                                                const DataBuffer& input,
@@ -872,6 +874,26 @@ class ClientHelloPreambleCapture : public TlsHandshakeFilter {
   DataBuffer data_;
 };
 
+class ClientHelloCiphersuiteCapture : public TlsHandshakeFilter {
+ public:
+  ClientHelloCiphersuiteCapture(const std::shared_ptr<TlsAgent>& a)
+      : TlsHandshakeFilter(a, {kTlsHandshakeClientHello}),
+        captured_(false),
+        data_() {}
+
+  const DataBuffer& contents() const { return data_; }
+  bool captured() const { return captured_; }
+
+ protected:
+  PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
+                                       const DataBuffer& input,
+                                       DataBuffer* output) override;
+
+ private:
+  bool captured_;
+  DataBuffer data_;
+};
+
 class ServerHelloRandomChanger : public TlsHandshakeFilter {
  public:
   ServerHelloRandomChanger(const std::shared_ptr<TlsAgent>& a)
@@ -881,6 +903,109 @@ class ServerHelloRandomChanger : public TlsHandshakeFilter {
   PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
                                        const DataBuffer& input,
                                        DataBuffer* output) override;
+};
+
+// Replace SignatureAndHashAlgorithm of a SKE.
+class DHEServerKEXSigAlgReplacer : public TlsHandshakeFilter {
+ public:
+  DHEServerKEXSigAlgReplacer(const std::shared_ptr<TlsAgent>& server,
+                             uint16_t sig_scheme)
+      : TlsHandshakeFilter(server, {kTlsHandshakeServerKeyExchange}),
+        sig_scheme_(sig_scheme) {}
+
+ protected:
+  virtual PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
+                                               const DataBuffer& input,
+                                               DataBuffer* output) {
+    *output = input;
+
+    uint32_t len;
+    uint32_t idx = 0;
+    EXPECT_TRUE(output->Read(idx, 2, &len));
+    idx += 2 + len;
+    EXPECT_TRUE(output->Read(idx, 2, &len));
+    idx += 2 + len;
+    EXPECT_TRUE(output->Read(idx, 2, &len));
+    idx += 2 + len;
+    output->Write(idx, sig_scheme_, 2);
+
+    return CHANGE;
+  }
+
+ private:
+  uint16_t sig_scheme_;
+};
+
+// Replace SignatureAndHashAlgorithm of a SKE.
+class ECCServerKEXSigAlgReplacer : public TlsHandshakeFilter {
+ public:
+  ECCServerKEXSigAlgReplacer(const std::shared_ptr<TlsAgent>& server,
+                             uint16_t sig_scheme)
+      : TlsHandshakeFilter(server, {kTlsHandshakeServerKeyExchange}),
+        sig_scheme_(sig_scheme) {}
+
+ protected:
+  virtual PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
+                                               const DataBuffer& input,
+                                               DataBuffer* output) {
+    *output = input;
+
+    uint32_t point_len;
+    EXPECT_TRUE(output->Read(3, 1, &point_len));
+    output->Write(4 + point_len, sig_scheme_, 2);
+
+    return CHANGE;
+  }
+
+ private:
+  uint16_t sig_scheme_;
+};
+
+// Replace NamedCurve of a ECDHE SKE.
+class ECCServerKEXNamedCurveReplacer : public TlsHandshakeFilter {
+ public:
+  ECCServerKEXNamedCurveReplacer(const std::shared_ptr<TlsAgent>& server,
+                                 uint16_t curve_name)
+      : TlsHandshakeFilter(server, {kTlsHandshakeServerKeyExchange}),
+        curve_name_(curve_name) {}
+
+ protected:
+  virtual PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
+                                               const DataBuffer& input,
+                                               DataBuffer* output) {
+    *output = input;
+
+    uint32_t curve_type;
+    EXPECT_TRUE(output->Read(0, 1, &curve_type));
+    EXPECT_EQ(curve_type, ec_type_named);
+    output->Write(1, curve_name_, 2);
+
+    return CHANGE;
+  }
+
+ private:
+  uint16_t curve_name_;
+};
+
+// Replaces the signature scheme in a CertificateVerify message.
+class TlsReplaceSignatureSchemeFilter : public TlsHandshakeFilter {
+ public:
+  TlsReplaceSignatureSchemeFilter(const std::shared_ptr<TlsAgent>& a,
+                                  uint16_t scheme)
+      : TlsHandshakeFilter(a, {kTlsHandshakeCertificateVerify}),
+        scheme_(scheme) {}
+
+ protected:
+  virtual PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
+                                               const DataBuffer& input,
+                                               DataBuffer* output) {
+    *output = input;
+    output->Write(0, scheme_, 2);
+    return CHANGE;
+  }
+
+ private:
+  uint16_t scheme_;
 };
 
 }  // namespace nss_test

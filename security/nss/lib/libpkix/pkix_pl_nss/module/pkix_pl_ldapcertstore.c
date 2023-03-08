@@ -309,7 +309,7 @@ pkix_pl_LdapCertStore_BuildCrlList(
                             }
                             /* pkix crl own the der. */
                             PKIX_CHECK(
-                                pkix_pl_CRL_CreateWithSignedCRL(nssCrl, 
+                                pkix_pl_CRL_CreateWithSignedCRL(nssCrl,
                                        derCrlCopy, NULL, &crl, plContext),
                                 PKIX_CRLCREATEWITHSIGNEDCRLFAILED);
                             /* Left control over memory pointed by derCrlCopy and
@@ -427,7 +427,7 @@ pkix_pl_LdapCertStore_DestroyAVAList(
 static PKIX_Error *
 pkix_pl_LdapCertStore_MakeNameAVAList(
         PLArenaPool *arena,
-        PKIX_PL_X500Name *subjectName, 
+        PKIX_PL_X500Name *subjectName,
         LDAPNameComponent ***pList,
         void *plContext)
 {
@@ -874,55 +874,52 @@ pkix_pl_LdapCertStore_GetCRL(
                         PKIX_LISTGETLENGTHFAILED);
 
                 if (numNames > 0) {
-                        for (thisName = 0; thisName < numNames; thisName++) {
-                                PKIX_CHECK(PKIX_List_GetItem
-                                (issuerNames,
-                                thisName,
-                                (PKIX_PL_Object **)&issuer,
+                        /*
+                                * LDAP Servers don't seem to be able to handle
+                                * requests with more than more than one name.
+                                * So only use first name.
+                                */
+                        PKIX_CHECK(PKIX_List_GetItem
+                        (issuerNames,
+                        thisName,
+                        (PKIX_PL_Object **)&issuer,
+                        plContext),
+                        PKIX_LISTGETITEMFAILED);
+
+                        PKIX_CHECK
+                                (pkix_pl_LdapCertStore_MakeNameAVAList
+                                (requestArena,
+                                issuer,
+                                &(requestParams.nc),
                                 plContext),
-                                PKIX_LISTGETITEMFAILED);
+                                PKIX_LDAPCERTSTOREMAKENAMEAVALISTFAILED);
 
-                                PKIX_CHECK
-                                        (pkix_pl_LdapCertStore_MakeNameAVAList
-                                        (requestArena,
-                                        issuer,
-                                        &(requestParams.nc),
-                                        plContext),
-                                        PKIX_LDAPCERTSTOREMAKENAMEAVALISTFAILED);
+                        PKIX_DECREF(issuer);
 
-                                PKIX_DECREF(issuer);
-
-                                if (*requestParams.nc == NULL) {
-                                        /*
-                                         * The issuer may not include any
-                                         * components that we know how to
-                                         * encode. We do not return an error,
-                                         * because the caller did not
-                                         * necessarily do anything wrong, but
-                                         * we return an empty List.
-                                         */
-                                        PKIX_PL_NSSCALL
-                                                (CERTSTORE, PORT_FreeArena,
-                                                (requestArena, PR_FALSE));
-
-                                        PKIX_CHECK(PKIX_List_Create
-                                                (&filteredCRLs, plContext),
-                                                PKIX_LISTCREATEFAILED);
-
-                                        PKIX_CHECK(PKIX_List_SetImmutable
-                                                (filteredCRLs, plContext),
-                                               PKIX_LISTSETIMMUTABLEFAILED);
-
-                                        *pNBIOContext = NULL;
-                                        *pCrlList = filteredCRLs;
-                                        goto cleanup;
-                                }
-
+                        if (*requestParams.nc == NULL) {
                                 /*
-                                 * LDAP Servers don't seem to be able to handle
-                                 * requests with more than more than one name.
-                                 */
-                                break;
+                                        * The issuer may not include any
+                                        * components that we know how to
+                                        * encode. We do not return an error,
+                                        * because the caller did not
+                                        * necessarily do anything wrong, but
+                                        * we return an empty List.
+                                        */
+                                PKIX_PL_NSSCALL
+                                        (CERTSTORE, PORT_FreeArena,
+                                        (requestArena, PR_FALSE));
+
+                                PKIX_CHECK(PKIX_List_Create
+                                        (&filteredCRLs, plContext),
+                                        PKIX_LISTCREATEFAILED);
+
+                                PKIX_CHECK(PKIX_List_SetImmutable
+                                        (filteredCRLs, plContext),
+                                        PKIX_LISTSETIMMUTABLEFAILED);
+
+                                *pNBIOContext = NULL;
+                                *pCrlList = filteredCRLs;
+                                goto cleanup;
                         }
                 } else {
                         PKIX_ERROR(PKIX_IMPOSSIBLECRITERIONFORCRLQUERY);

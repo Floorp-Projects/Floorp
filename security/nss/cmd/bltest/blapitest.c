@@ -2319,9 +2319,9 @@ cipherInit(bltestCipherInfo *cipherInfo, PRBool encrypt)
         case bltestRC5_CBC:
             SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
                               cipherInfo->input.pBuf.len);
-#endif
             return bltest_rc5_init(cipherInfo, encrypt);
             break;
+#endif
         case bltestAES_ECB:
         case bltestAES_CBC:
         case bltestAES_CTS:

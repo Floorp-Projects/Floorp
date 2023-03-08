@@ -5099,6 +5099,18 @@ ssl3_AppendCipherSuites(sslSocket *ss, PRBool fallbackSCSV, sslBuffer *buf)
             }
         }
     }
+
+    /* GREASE CipherSuites:
+     * A client MAY select one or more GREASE cipher suite values and advertise
+     * them in the "cipher_suites" field [RFC8701, Section 3.1]. */
+    if (ss->opt.enableGrease && ss->vrange.max >= SSL_LIBRARY_VERSION_TLS_1_3) {
+        rv = sslBuffer_AppendNumber(buf, ss->ssl3.hs.grease->idx[grease_cipher],
+                                    sizeof(ssl3CipherSuite));
+        if (rv != SECSuccess) {
+            return SECFailure;
+        }
+    }
+
     if (SSL_ALL_VERSIONS_DISABLED(&ss->vrange) ||
         (SSL_BUFFER_LEN(buf) - saveLen) == 0) {
         PORT_SetError(SSL_ERROR_SSL_DISABLED);
@@ -5515,6 +5527,16 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
 
     if (ss->vrange.max >= SSL_LIBRARY_VERSION_TLS_1_3) {
         rv = tls13_SetupClientHello(ss, type);
+        if (rv != SECSuccess) {
+            goto loser;
+        }
+    }
+
+    /* Setup TLS ClientHello Extension Permutation? */
+    if (type == client_hello_initial &&
+        ss->vrange.max > SSL_LIBRARY_VERSION_3_0 &&
+        ss->opt.enableChXtnPermutation) {
+        rv = tls_ClientHelloExtensionPermutationSetup(ss);
         if (rv != SECSuccess) {
             goto loser;
         }
@@ -7428,7 +7450,8 @@ ssl_HandleDHServerKeyExchange(sslSocket *ss, PRUint8 *b, PRUint32 length)
     SECItem dh_Ys = { siBuffer, NULL, 0 };
     unsigned dh_p_bits;
     unsigned dh_g_bits;
-    PRInt32 minDH;
+    PRInt32 minDH = 0;
+    PRInt32 optval;
 
     SSL3Hashes hashes;
     SECItem signature = { siBuffer, NULL, 0 };
@@ -7439,9 +7462,12 @@ ssl_HandleDHServerKeyExchange(sslSocket *ss, PRUint8 *b, PRUint32 length)
     if (rv != SECSuccess) {
         goto loser; /* malformed. */
     }
+    rv = NSS_OptionGet(NSS_KEY_SIZE_POLICY_FLAGS, &optval);
+    if ((rv == SECSuccess) && (optval & NSS_KEY_SIZE_POLICY_SSL_FLAG)) {
+        (void)NSS_OptionGet(NSS_DH_MIN_KEY_SIZE, &minDH);
+    }
 
-    rv = NSS_OptionGet(NSS_DH_MIN_KEY_SIZE, &minDH);
-    if (rv != SECSuccess || minDH <= 0) {
+    if (minDH <= 0) {
         minDH = SSL_DH_MIN_P_BITS;
     }
     dh_p_bits = SECKEY_BigIntegerBitLength(&dh_p);
@@ -10200,7 +10226,7 @@ ssl3_SendServerKeyExchange(sslSocket *ss)
 
 SECStatus
 ssl3_EncodeSigAlgs(const sslSocket *ss, PRUint16 minVersion, PRBool forCert,
-                   sslBuffer *buf)
+                   PRBool grease, sslBuffer *buf)
 {
     SSLSignatureScheme filtered[MAX_SIGNATURE_SCHEMES] = { 0 };
     unsigned int filteredCount = 0;
@@ -10211,12 +10237,12 @@ ssl3_EncodeSigAlgs(const sslSocket *ss, PRUint16 minVersion, PRBool forCert,
     if (rv != SECSuccess) {
         return SECFailure;
     }
-    return ssl3_EncodeFilteredSigAlgs(ss, filtered, filteredCount, buf);
+    return ssl3_EncodeFilteredSigAlgs(ss, filtered, filteredCount, grease, buf);
 }
 
 SECStatus
 ssl3_EncodeFilteredSigAlgs(const sslSocket *ss, const SSLSignatureScheme *schemes,
-                           PRUint32 numSchemes, sslBuffer *buf)
+                           PRUint32 numSchemes, PRBool grease, sslBuffer *buf)
 {
     if (!numSchemes) {
         PORT_SetError(SSL_ERROR_NO_SUPPORTED_SIGNATURE_ALGORITHM);
@@ -10237,6 +10263,35 @@ ssl3_EncodeFilteredSigAlgs(const sslSocket *ss, const SSLSignatureScheme *scheme
             return SECFailure;
         }
     }
+
+    /* GREASE SignatureAlgorithms:
+     * A client MAY select one or more GREASE signature algorithm values and
+     * advertise them in the "signature_algorithms" or
+     * "signature_algorithms_cert" extensions, if sent [RFC8701, Section 3.1].
+     *
+     * When sending a CertificateRequest in TLS 1.3, a server MAY behave as
+     * follows: [...] A server MAY select one or more GREASE signature
+     * algorithm values and advertise them in the "signature_algorithms" or
+     * "signature_algorithms_cert" extensions, if present
+     * [RFC8701, Section 4.1]. */
+    if (grease &&
+        ((!ss->sec.isServer && ss->vrange.max >= SSL_LIBRARY_VERSION_TLS_1_3) ||
+         (ss->sec.isServer && ss->version >= SSL_LIBRARY_VERSION_TLS_1_3))) {
+        PRUint16 value;
+        if (ss->sec.isServer) {
+            rv = tls13_RandomGreaseValue(&value);
+            if (rv != SECSuccess) {
+                return SECFailure;
+            }
+        } else {
+            value = ss->ssl3.hs.grease->idx[grease_sigalg];
+        }
+        rv = sslBuffer_AppendNumber(buf, value, 2);
+        if (rv != SECSuccess) {
+            return SECFailure;
+        }
+    }
+
     return sslBuffer_InsertLength(buf, lengthOffset, 2);
 }
 
@@ -10328,7 +10383,8 @@ ssl3_SendCertificateRequest(sslSocket *ss)
 
     length = 1 + certTypesLength + 2 + calen;
     if (isTLS12) {
-        rv = ssl3_EncodeSigAlgs(ss, ss->version, PR_TRUE /* forCert */, &sigAlgsBuf);
+        rv = ssl3_EncodeSigAlgs(ss, ss->version, PR_TRUE /* forCert */,
+                                PR_FALSE /* GREASE */, &sigAlgsBuf);
         if (rv != SECSuccess) {
             return rv;
         }
@@ -11483,15 +11539,22 @@ SECStatus
 ssl_SetAuthKeyBits(sslSocket *ss, const SECKEYPublicKey *pubKey)
 {
     SECStatus rv;
-    PRUint32 minKey;
+    PRUint32 minKey = 0;
     PRInt32 optval;
+    PRBool usePolicyLength = PR_TRUE;
+
+    rv = NSS_OptionGet(NSS_KEY_SIZE_POLICY_FLAGS, &optval);
+    if (rv == SECSuccess) {
+        usePolicyLength = (PRBool)((optval & NSS_KEY_SIZE_POLICY_SSL_FLAG) == NSS_KEY_SIZE_POLICY_SSL_FLAG);
+    }
 
     ss->sec.authKeyBits = SECKEY_PublicKeyStrengthInBits(pubKey);
     switch (SECKEY_GetPublicKeyType(pubKey)) {
         case rsaKey:
         case rsaPssKey:
         case rsaOaepKey:
-            rv = NSS_OptionGet(NSS_RSA_MIN_KEY_SIZE, &optval);
+            rv = usePolicyLength ? NSS_OptionGet(NSS_RSA_MIN_KEY_SIZE, &optval)
+                                 : SECFailure;
             if (rv == SECSuccess && optval > 0) {
                 minKey = (PRUint32)optval;
             } else {
@@ -11500,7 +11563,8 @@ ssl_SetAuthKeyBits(sslSocket *ss, const SECKEYPublicKey *pubKey)
             break;
 
         case dsaKey:
-            rv = NSS_OptionGet(NSS_DSA_MIN_KEY_SIZE, &optval);
+            rv = usePolicyLength ? NSS_OptionGet(NSS_DSA_MIN_KEY_SIZE, &optval)
+                                 : SECFailure;
             if (rv == SECSuccess && optval > 0) {
                 minKey = (PRUint32)optval;
             } else {
@@ -11509,7 +11573,8 @@ ssl_SetAuthKeyBits(sslSocket *ss, const SECKEYPublicKey *pubKey)
             break;
 
         case dhKey:
-            rv = NSS_OptionGet(NSS_DH_MIN_KEY_SIZE, &optval);
+            rv = usePolicyLength ? NSS_OptionGet(NSS_DH_MIN_KEY_SIZE, &optval)
+                                 : SECFailure;
             if (rv == SECSuccess && optval > 0) {
                 minKey = (PRUint32)optval;
             } else {
@@ -11518,9 +11583,15 @@ ssl_SetAuthKeyBits(sslSocket *ss, const SECKEYPublicKey *pubKey)
             break;
 
         case ecKey:
-            /* Don't check EC strength here on the understanding that we only
-             * support curves we like. */
-            minKey = ss->sec.authKeyBits;
+            rv = usePolicyLength ? NSS_OptionGet(NSS_ECC_MIN_KEY_SIZE, &optval)
+                                 : SECFailure;
+            if (rv == SECSuccess && optval > 0) {
+                minKey = (PRUint32)optval;
+            } else {
+                /* Don't check EC strength here on the understanding that we
+                 * only support curves we like. */
+                minKey = ss->sec.authKeyBits;
+            }
             break;
 
         default:
@@ -14089,6 +14160,12 @@ ssl3_DestroySSL3Info(sslSocket *ss)
     PK11_HPKE_DestroyContext(ss->ssl3.hs.echHpkeCtx, PR_TRUE);
     PORT_Free((void *)ss->ssl3.hs.echPublicName); /* CONST */
     sslBuffer_Clear(&ss->ssl3.hs.greaseEchBuf);
+
+    /* TLS 1.3 GREASE (client) state. */
+    tls13_ClientGreaseDestroy(ss);
+
+    /* TLS ClientHello Extension Permutation state. */
+    tls_ClientHelloExtensionPermutationDestroy(ss);
 }
 
 /* check if the current cipher spec is FIPS. We only need to
