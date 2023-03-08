@@ -206,7 +206,9 @@ class TabsTrayFragment : AppCompatDialogFragment() {
 
             tabsTrayComposeBinding.root.setContent {
                 FirefoxTheme {
-                    TabsTray()
+                    TabsTray(
+                        tabsTrayStore = tabsTrayStore,
+                    )
                 }
             }
         } else {
