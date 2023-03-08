@@ -40,8 +40,8 @@ const ZERO_PREFIX_SCALAR_ENGAGEMENT = "urlbar.zeroprefix.engagement";
 const ZERO_PREFIX_SCALAR_EXPOSURE = "urlbar.zeroprefix.exposure";
 
 const RESULT_MENU_COMMANDS = {
-  DISMISS: "dismiss",
-  HELP: "help",
+  BLOCK: "block",
+  LEARN_MORE: "learn-more",
 };
 
 const getBoundsWithoutFlushing = element =>
@@ -258,9 +258,7 @@ export class UrlbarView {
    *   The result of the element's row.
    */
   getResultFromElement(element) {
-    return element?.classList.contains("urlbarView-result-menuitem")
-      ? this.#resultMenuResult
-      : this.#getRowFromElement(element)?.result;
+    return this.#getRowFromElement(element)?.result;
   }
 
   /**
@@ -2661,20 +2659,20 @@ export class UrlbarView {
       result.source == lazy.UrlbarUtils.RESULT_SOURCE.HISTORY &&
       !result.autofill
     ) {
-      commands.set(RESULT_MENU_COMMANDS.DISMISS, {
+      commands.set(RESULT_MENU_COMMANDS.BLOCK, {
         l10n: { id: "urlbar-result-menu-remove-from-history" },
       });
-      commands.set(RESULT_MENU_COMMANDS.HELP, {
+      commands.set(RESULT_MENU_COMMANDS.LEARN_MORE, {
         l10n: { id: "urlbar-result-menu-learn-more" },
       });
     }
     if (result.payload.isBlockable) {
-      commands.set(RESULT_MENU_COMMANDS.DISMISS, {
+      commands.set(RESULT_MENU_COMMANDS.BLOCK, {
         l10n: result.payload.blockL10n,
       });
     }
     if (result.payload.helpUrl) {
-      commands.set(RESULT_MENU_COMMANDS.HELP, {
+      commands.set(RESULT_MENU_COMMANDS.LEARN_MORE, {
         l10n: result.payload.helpL10n,
       });
     }
@@ -2693,7 +2691,6 @@ export class UrlbarView {
         "menuitem"
       );
       menuitem.dataset.command = command;
-      menuitem.classList.add("urlbarView-result-menuitem");
       this.#setElementL10n(menuitem, data.l10n);
       this.resultMenu.appendChild(menuitem);
     }
@@ -2971,14 +2968,18 @@ export class UrlbarView {
       this.#resultMenuResult = null;
       let menuitem = event.target;
       switch (menuitem.dataset.command) {
-        case RESULT_MENU_COMMANDS.HELP:
-          menuitem.dataset.url =
+        case RESULT_MENU_COMMANDS.BLOCK:
+          this.controller.handleDeleteEntry(null, result);
+          break;
+        case RESULT_MENU_COMMANDS.LEARN_MORE:
+          this.window.openTrustedLinkIn(
             result.payload.helpUrl ||
-            Services.urlFormatter.formatURLPref("app.support.baseURL") +
-              "awesome-bar-result-menu";
+              Services.urlFormatter.formatURLPref("app.support.baseURL") +
+                "awesome-bar-result-menu",
+            "tab"
+          );
           break;
       }
-      this.input.pickResult(result, event, menuitem);
     }
   }
 

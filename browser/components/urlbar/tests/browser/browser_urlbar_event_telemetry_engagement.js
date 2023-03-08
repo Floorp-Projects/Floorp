@@ -257,25 +257,28 @@ const tests = [
   },
 
   async function(win) {
+    if (UrlbarPrefs.get("resultMenu")) {
+      todo(
+        false,
+        "telemetry for the result menu to be implemented in bug 1790020"
+      );
+      return null;
+    }
     let tipProvider = registerTipProvider();
-    info("Selecting a tip's help option.");
+    info("Selecting a tip's help button, enter.");
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     win.gURLBar.search("x");
     await UrlbarTestUtils.promiseSearchComplete(win);
     EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
     EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
-    if (UrlbarPrefs.get("resultMenu")) {
-      await UrlbarTestUtils.openResultMenuAndPressAccesskey(win, "h");
-    } else {
-      EventUtils.synthesizeKey("KEY_Tab", {}, win);
-      EventUtils.synthesizeKey("VK_RETURN", {}, win);
-    }
+    EventUtils.synthesizeKey("KEY_Tab", {}, win);
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
     unregisterTipProvider(tipProvider);
     return {
       category: "urlbar",
       method: "engagement",
-      object: UrlbarPrefs.get("resultMenu") ? "click" : "enter",
+      object: "enter",
       value: "typed",
       extra: {
         elapsed: val => parseInt(val) > 0,
@@ -1276,11 +1279,6 @@ let tipMatches = [
     UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
     {
       helpUrl: "http://example.com/",
-      helpL10n: {
-        id: UrlbarPrefs.get("resultMenu")
-          ? "urlbar-result-menu-tip-get-help"
-          : "urlbar-tip-help-icon",
-      },
       type: "test",
       titleL10n: { id: "urlbar-search-tips-confirm" },
       buttons: [
