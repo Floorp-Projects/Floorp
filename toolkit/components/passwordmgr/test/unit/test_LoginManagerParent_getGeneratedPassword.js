@@ -85,6 +85,22 @@ add_task(async function test_getGeneratedPassword() {
     "Same password should be returned for the same origin"
   );
 
+  // Updating autosaved login to have username will reset generated password
+  const autoSavedLogin = await LoginTestUtils.addLogin({
+    origin: "https://www.example.com^userContextId=6",
+    username: "",
+    password: password1,
+  });
+  const updatedLogin = autoSavedLogin.clone();
+  updatedLogin.username = "anyone";
+  await LoginTestUtils.modifyLogin(autoSavedLogin, updatedLogin);
+  password2 = await LMP.getGeneratedPassword();
+  notEqual(
+    password1,
+    password2,
+    "New password should be returned for the same origin after login saved"
+  );
+
   info("Changing the documentPrincipal to simulate a navigation in the frame");
   LoginManagerParent._browsingContextGlobal.get.restore();
   sinon
