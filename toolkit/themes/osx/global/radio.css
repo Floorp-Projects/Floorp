@@ -12,7 +12,7 @@ radiogroup {
 radio {
   appearance: auto;
   -moz-default-appearance: radio-container;
-  -moz-box-align: center;
+  align-items: center;
   margin: 4px 2px;
   -moz-user-focus: ignore;
 }

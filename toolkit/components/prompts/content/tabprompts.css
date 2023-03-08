@@ -5,8 +5,8 @@
 /* Tab Modal Prompt boxes */
 
 .tabModalBackground {
-  -moz-box-pack: center;
-  -moz-box-orient: vertical;
+  justify-content: center;
+  flex-direction: column;
 }
 
 .tabModalBackground,

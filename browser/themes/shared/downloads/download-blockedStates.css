@@ -49,7 +49,7 @@
 }
 
 #downloadsPanel-blockedSubview-title {
-  -moz-box-flex: 1;
+  flex: 1;
 }
 
 #downloadsPanel-blockedSubview[verdict="PotentiallyUnwanted"] .downloadsPanel-blockedSubview-image,

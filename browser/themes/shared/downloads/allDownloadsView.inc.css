@@ -42,7 +42,7 @@
 
 .downloadButton {
   appearance: none;
-  -moz-box-align: center;
+  align-items: center;
   background: transparent;
   min-width: 0;
   min-height: 0;

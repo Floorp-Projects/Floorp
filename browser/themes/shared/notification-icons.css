@@ -207,7 +207,7 @@
 }
 
 #webRTC-preview:not([hidden]) {
-  -moz-box-orient: vertical;
+  flex-direction: column;
 }
 
 #webRTC-previewVideo {
@@ -348,7 +348,7 @@
 #notification-popup-box[hidden] {
   /* Override display:none to make the pluginBlockedNotification animation work
      when showing the notification repeatedly. */
-  display: -moz-box;
+  display: flex;
   visibility: collapse;
 }
 

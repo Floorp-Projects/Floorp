@@ -119,7 +119,7 @@
   text-align: center;
   background-color: transparent;
   color: inherit;
-  -moz-box-flex: 1;
+  flex: 1;
   border-width: 0;
   border-inline-start-width: 1px;
   border-style: solid;

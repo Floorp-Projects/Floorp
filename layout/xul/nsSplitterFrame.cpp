@@ -570,7 +570,7 @@ nsresult nsSplitterFrameInner::MouseDown(Event* aMouseEvent) {
       mParentBox, FrameChildListID::Principal,
       CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
       CSSOrderAwareFrameIterator::OrderState::Unknown,
-      CSSOrderAwareFrameIterator::OrderingProperty::BoxOrdinalGroup);
+      CSSOrderAwareFrameIterator::OrderingProperty::Order);
   for (; !iter.AtEnd(); iter.Next()) {
     nsIFrame* childBox = iter.get();
     if (childBox == mOuter) {
