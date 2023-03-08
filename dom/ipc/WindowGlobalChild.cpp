@@ -41,6 +41,7 @@
 #include "mozilla/dom/JSActorService.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIURIMutator.h"
+#include "nsURLHelper.h"
 
 using namespace mozilla::ipc;
 using namespace mozilla::dom::ipc;
@@ -639,6 +640,169 @@ bool WindowGlobalChild::IsSameOriginWith(
 
 bool WindowGlobalChild::SameOriginWithTop() {
   return IsSameOriginWith(WindowContext()->TopWindowContext());
+}
+
+// For historical context, see:
+//
+// Bug 13871:   Prevent frameset spoofing
+// Bug 103638:  Targets with same name in different windows open in wrong
+//              window with javascript
+// Bug 408052:  Adopt "ancestor" frame navigation policy
+// Bug 1570207: Refactor logic to rely on BrowsingContextGroups to enforce
+//              origin attribute isolation
+// Bug 1810619: Crash at null in nsDocShell::ValidateOrigin
+bool WindowGlobalChild::CanNavigate(dom::BrowsingContext* aTarget,
+                                    bool aConsiderOpener) {
+  MOZ_DIAGNOSTIC_ASSERT(WindowContext()->Group() == aTarget->Group(),
+                        "A WindowGlobalChild should never try to navigate a "
+                        "BrowsingContext from another group");
+
+  auto isFileScheme = [](nsIPrincipal* aPrincipal) -> bool {
+    // NOTE: This code previously checked for a file scheme using
+    // `nsIPrincipal::GetURI()` combined with `NS_GetInnermostURI`. We no longer
+    // use GetURI, as it has been deprecated, and it makes more sense to take
+    // advantage of the pre-computed origin, which will already use the
+    // innermost URI (bug 1810619)
+    nsAutoCString origin, scheme;
+    return NS_SUCCEEDED(aPrincipal->GetOriginNoSuffix(origin)) &&
+           NS_SUCCEEDED(net_ExtractURLScheme(origin, scheme)) &&
+           scheme == "file"_ns;
+  };
+
+  // A frame can navigate itself and its own root.
+  if (aTarget == BrowsingContext() || aTarget == BrowsingContext()->Top()) {
+    return true;
+  }
+
+  // If the target frame doesn't yet have a WindowContext, start checking
+  // principals from its direct ancestor instead. It would inherit its principal
+  // from this document upon creation.
+  dom::WindowContext* initialWc = aTarget->GetCurrentWindowContext();
+  if (!initialWc) {
+    initialWc = aTarget->GetParentWindowContext();
+  }
+
+  // A frame can navigate any frame with a same-origin ancestor.
+  bool isFileDocument = isFileScheme(DocumentPrincipal());
+  for (dom::WindowContext* wc = initialWc; wc;
+       wc = wc->GetParentWindowContext()) {
+    dom::WindowGlobalChild* wgc = wc->GetWindowGlobalChild();
+    if (!wgc) {
+      continue;  // out-of process, so not same-origin.
+    }
+
+    if (DocumentPrincipal()->Equals(wgc->DocumentPrincipal())) {
+      return true;
+    }
+
+    // Not strictly equal, special case if both are file: URIs.
+    //
+    // file: URIs are considered the same domain for the purpose of frame
+    // navigation, regardless of script accessibility (bug 420425).
+    if (isFileDocument && isFileScheme(wgc->DocumentPrincipal())) {
+      return true;
+    }
+  }
+
+  // If the target is a top-level document, a frame can navigate it if it can
+  // navigate its opener.
+  if (aConsiderOpener && !aTarget->GetParent()) {
+    if (RefPtr<dom::BrowsingContext> opener = aTarget->GetOpener()) {
+      return CanNavigate(opener, false);
+    }
+  }
+
+  return false;
+}
+
+// FindWithName follows the rules for choosing a browsing context,
+// with the exception of sandboxing for iframes. The implementation
+// for arbitrarily choosing between two browsing contexts with the
+// same name is as follows:
+//
+// 1) The start browsing context, i.e. 'this'
+// 2) Descendants in insertion order
+// 3) The parent
+// 4) Siblings and their children, both in insertion order
+// 5) After this we iteratively follow the parent chain, repeating 3
+//    and 4 until
+// 6) If there is no parent, consider all other top level browsing
+//    contexts and their children, both in insertion order
+//
+// See
+// https://html.spec.whatwg.org/multipage/browsers.html#the-rules-for-choosing-a-browsing-context-given-a-browsing-context-name
+dom::BrowsingContext* WindowGlobalChild::FindBrowsingContextWithName(
+    const nsAString& aName, bool aUseEntryGlobalForAccessCheck) {
+  RefPtr<WindowGlobalChild> requestingContext = this;
+  if (aUseEntryGlobalForAccessCheck) {
+    if (nsGlobalWindowInner* caller = nsContentUtils::EntryInnerWindow()) {
+      if (caller->GetBrowsingContextGroup() == WindowContext()->Group()) {
+        requestingContext = caller->GetWindowGlobalChild();
+      } else {
+        MOZ_RELEASE_ASSERT(caller->GetPrincipal()->IsSystemPrincipal(),
+                           "caller must be either same-group or system");
+      }
+    }
+  }
+  MOZ_ASSERT(requestingContext, "must have a requestingContext");
+
+  dom::BrowsingContext* found = nullptr;
+  if (aName.IsEmpty()) {
+    // You can't find a browsing context with an empty name.
+    found = nullptr;
+  } else if (aName.LowerCaseEqualsLiteral("_blank")) {
+    // Just return null. Caller must handle creating a new window with
+    // a blank name.
+    found = nullptr;
+  } else if (nsContentUtils::IsSpecialName(aName)) {
+    found = BrowsingContext()->FindWithSpecialName(aName, *requestingContext);
+  } else if (dom::BrowsingContext* child =
+                 BrowsingContext()->FindWithNameInSubtree(aName,
+                                                          requestingContext)) {
+    found = child;
+  } else {
+    dom::WindowContext* current = WindowContext();
+
+    do {
+      Span<RefPtr<dom::BrowsingContext>> siblings;
+      dom::WindowContext* parent = current->GetParentWindowContext();
+
+      if (!parent) {
+        // We've reached the root of the tree, consider browsing
+        // contexts in the same browsing context group.
+        siblings = WindowContext()->Group()->Toplevels();
+      } else if (dom::BrowsingContext* bc = parent->GetBrowsingContext();
+                 bc && bc->NameEquals(aName) &&
+                 requestingContext->CanNavigate(bc) && bc->IsTargetable()) {
+        found = bc;
+        break;
+      } else {
+        siblings = parent->NonSyntheticChildren();
+      }
+
+      for (dom::BrowsingContext* sibling : siblings) {
+        if (sibling == current->GetBrowsingContext()) {
+          continue;
+        }
+
+        if (dom::BrowsingContext* relative =
+                sibling->FindWithNameInSubtree(aName, requestingContext)) {
+          found = relative;
+          // Breaks the outer loop
+          parent = nullptr;
+          break;
+        }
+      }
+
+      current = parent;
+    } while (current);
+  }
+
+  // Helpers should perform access control checks, which means that we
+  // only need to assert that we can access found.
+  MOZ_DIAGNOSTIC_ASSERT(!found || requestingContext->CanNavigate(found));
+
+  return found;
 }
 
 void WindowGlobalChild::UnblockBFCacheFor(BFCacheStatus aStatus) {

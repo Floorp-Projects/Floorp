@@ -3966,9 +3966,11 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::GetTopOuter() {
 already_AddRefed<BrowsingContext> nsGlobalWindowOuter::GetChildWindow(
     const nsAString& aName) {
   NS_ENSURE_TRUE(mBrowsingContext, nullptr);
+  NS_ENSURE_TRUE(mInnerWindow, nullptr);
+  NS_ENSURE_TRUE(mInnerWindow->GetWindowGlobalChild(), nullptr);
 
-  return do_AddRef(
-      mBrowsingContext->FindChildWithName(aName, *mBrowsingContext));
+  return do_AddRef(mBrowsingContext->FindChildWithName(
+      aName, *mInnerWindow->GetWindowGlobalChild()));
 }
 
 bool nsGlobalWindowOuter::DispatchCustomEvent(
@@ -4036,7 +4038,10 @@ bool nsGlobalWindowOuter::WindowExists(const nsAString& aName,
            aName.LowerCaseEqualsLiteral("_parent");
   }
 
-  return !!mBrowsingContext->FindWithName(aName, aLookForCallerOnJSStack);
+  if (WindowGlobalChild* wgc = mInnerWindow->GetWindowGlobalChild()) {
+    return wgc->FindBrowsingContextWithName(aName, aLookForCallerOnJSStack);
+  }
+  return false;
 }
 
 already_AddRefed<nsIWidget> nsGlobalWindowOuter::GetMainWidget() {

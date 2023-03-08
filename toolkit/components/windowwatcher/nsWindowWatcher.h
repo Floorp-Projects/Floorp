@@ -56,13 +56,6 @@ class nsWindowWatcher : public nsIWindowWatcher,
                                        uint32_t aChromeFlags,
                                        bool aCalledFromJS, bool aIsForPrinting);
 
-  // Will first look for a caller on the JS stack, and then fall back on
-  // aCurrentContext if it can't find one.
-  // It also knows to not look for things if aForceNoOpener is set.
-  already_AddRefed<mozilla::dom::BrowsingContext> GetBrowsingContextByName(
-      const nsAString& aName, bool aForceNoOpener,
-      mozilla::dom::BrowsingContext* aCurrentContext);
-
   static bool HaveSpecifiedSize(const mozilla::dom::WindowFeatures& features);
 
  protected:
