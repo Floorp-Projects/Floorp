@@ -49,6 +49,7 @@ class HomeActivityTestRule(
         isWallpaperOnboardingEnabled: Boolean = settings.showWallpaperOnboarding,
         isDeleteSitePermissionsEnabled: Boolean = settings.deleteSitePermissions,
         isCookieBannerReductionDialogEnabled: Boolean = !settings.userOptOutOfReEngageCookieBannerDialog,
+        isOpenInAppBannerEnabled: Boolean = settings.shouldShowOpenInAppBanner,
         etpPolicy: ETPPolicy = getETPPolicy(settings),
     ) : this(initialTouchMode, launchActivity, skipOnboarding) {
         this.isHomeOnboardingDialogEnabled = isHomeOnboardingDialogEnabled
@@ -61,6 +62,7 @@ class HomeActivityTestRule(
         this.isWallpaperOnboardingEnabled = isWallpaperOnboardingEnabled
         this.isDeleteSitePermissionsEnabled = isDeleteSitePermissionsEnabled
         this.isCookieBannerReductionDialogEnabled = isCookieBannerReductionDialogEnabled
+        this.isOpenInAppBannerEnabled = isOpenInAppBannerEnabled
         this.etpPolicy = etpPolicy
     }
 
@@ -114,6 +116,7 @@ class HomeActivityTestRule(
             isTCPCFREnabled = false,
             isWallpaperOnboardingEnabled = false,
             isCookieBannerReductionDialogEnabled = false,
+            isOpenInAppBannerEnabled = false,
         )
     }
 }
@@ -150,6 +153,7 @@ class HomeActivityIntentTestRule internal constructor(
         isWallpaperOnboardingEnabled: Boolean = settings.showWallpaperOnboarding,
         isDeleteSitePermissionsEnabled: Boolean = settings.deleteSitePermissions,
         isCookieBannerReductionDialogEnabled: Boolean = !settings.userOptOutOfReEngageCookieBannerDialog,
+        isOpenInAppBannerEnabled: Boolean = settings.shouldShowOpenInAppBanner,
         etpPolicy: ETPPolicy = getETPPolicy(settings),
     ) : this(initialTouchMode, launchActivity, skipOnboarding) {
         this.isHomeOnboardingDialogEnabled = isHomeOnboardingDialogEnabled
@@ -162,6 +166,7 @@ class HomeActivityIntentTestRule internal constructor(
         this.isWallpaperOnboardingEnabled = isWallpaperOnboardingEnabled
         this.isDeleteSitePermissionsEnabled = isDeleteSitePermissionsEnabled
         this.isCookieBannerReductionDialogEnabled = isCookieBannerReductionDialogEnabled
+        this.isOpenInAppBannerEnabled = isOpenInAppBannerEnabled
         this.etpPolicy = etpPolicy
     }
 
@@ -224,6 +229,7 @@ class HomeActivityIntentTestRule internal constructor(
         isWallpaperOnboardingEnabled = settings.showWallpaperOnboarding
         isDeleteSitePermissionsEnabled = settings.deleteSitePermissions
         isCookieBannerReductionDialogEnabled = !settings.userOptOutOfReEngageCookieBannerDialog
+        isOpenInAppBannerEnabled = settings.shouldShowOpenInAppBanner
         etpPolicy = getETPPolicy(settings)
     }
 
@@ -251,6 +257,7 @@ class HomeActivityIntentTestRule internal constructor(
             isTCPCFREnabled = false,
             isWallpaperOnboardingEnabled = false,
             isCookieBannerReductionDialogEnabled = false,
+            isOpenInAppBannerEnabled = false,
         )
     }
 }
