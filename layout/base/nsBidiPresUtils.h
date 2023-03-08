@@ -410,15 +410,15 @@ class nsBidiPresUtils {
 
   /**
    * Simplified form of ProcessText body, used when aText is a single Unicode
-   * character (one UTF-16 codepoint, or a surrogate pair).
+   * character (one UTF-16 codepoint, or a surrogate pair), or a run that is
+   * known to have no bidi content.
    */
-  static void ProcessOneChar(const char16_t* aText, size_t aLength,
-                             mozilla::intl::BidiEmbeddingLevel aBaseLevel,
-                             nsPresContext* aPresContext,
-                             BidiProcessor& aprocessor, Mode aMode,
-                             nsBidiPositionResolve* aPosResolve,
-                             int32_t aPosResolveCount, nscoord* aWidth,
-                             mozilla::intl::Bidi* aBidiEngine);
+  static void ProcessSimpleRun(const char16_t* aText, size_t aLength,
+                               mozilla::intl::BidiEmbeddingLevel aBaseLevel,
+                               nsPresContext* aPresContext,
+                               BidiProcessor& aprocessor, Mode aMode,
+                               nsBidiPositionResolve* aPosResolve,
+                               int32_t aPosResolveCount, nscoord* aWidth);
 
   /**
    * Traverse the child frames of the block element and:
