@@ -2749,8 +2749,6 @@
             ],
             'libraries': [
               '-l<(android_stlport_library)',
-              # Manually link the libgcc.a that the cross compiler uses.
-              '<!(<(android_toolchain)/*-gcc -print-libgcc-file-name)',
               '-lc',
               '-ldl',
               '-lstdc++',
