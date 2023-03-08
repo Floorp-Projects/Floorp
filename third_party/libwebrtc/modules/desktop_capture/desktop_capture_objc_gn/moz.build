@@ -33,6 +33,7 @@ FINAL_LIBRARY = "webrtc"
 
 LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
+    "!/third_party/libwebrtc/gen",
     "/ipc/chromium/src",
     "/third_party/libwebrtc/",
     "/third_party/libwebrtc/sdk/objc/",

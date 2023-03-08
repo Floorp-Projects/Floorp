@@ -22,6 +22,7 @@ FINAL_LIBRARY = "webrtc"
 
 LOCAL_INCLUDES += [
     "!/ipc/ipdl/_ipdlheaders",
+    "!/third_party/libwebrtc/gen",
     "/ipc/chromium/src",
     "/media/libyuv/",
     "/media/libyuv/libyuv/include/",
