@@ -8,10 +8,12 @@ using namespace mozilla;
 
 nsHtml5Speculation::nsHtml5Speculation(nsHtml5OwningUTF16Buffer* aBuffer,
                                        int32_t aStart, int32_t aStartLineNumber,
+                                       int32_t aStartColumnNumber,
                                        nsAHtml5TreeBuilderState* aSnapshot)
     : mBuffer(aBuffer),
       mStart(aStart),
       mStartLineNumber(aStartLineNumber),
+      mStartColumnNumber(aStartColumnNumber),
       mSnapshot(aSnapshot) {
   MOZ_COUNT_CTOR(nsHtml5Speculation);
 }
