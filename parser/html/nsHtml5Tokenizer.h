@@ -429,6 +429,15 @@ class nsHtml5Tokenizer {
     appendStrBuf('\n');
   }
 
+ protected:
+  inline void silentCarriageReturn() {
+    ++line;
+    lastCR = true;
+  }
+
+  inline void silentLineFeed() { ++line; }
+
+ private:
   void emitCarriageReturn(char16_t* buf, int32_t pos);
   void emitReplacementCharacter(char16_t* buf, int32_t pos);
   void maybeEmitReplacementCharacter(char16_t* buf, int32_t pos);
@@ -446,6 +455,9 @@ class nsHtml5Tokenizer {
   void suspendIfRequestedAfterCurrentNonTextToken();
   void suspendAfterCurrentTokenIfNotInText();
   bool suspensionAfterCurrentNonTextTokenPending();
+
+ protected:
+  inline char16_t checkChar(char16_t* buf, int32_t pos) { return buf[pos]; }
 
  public:
   bool internalEncodingDeclaration(nsHtml5String internalCharset);
