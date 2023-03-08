@@ -1754,9 +1754,7 @@ class nsLayoutUtils {
    * Otherwise returns false.
    */
   struct LinePosition {
-    nscoord mBStart{nscoord_MAX};
-    nscoord mBaseline{nscoord_MAX};
-    nscoord mBEnd{nscoord_MAX};
+    nscoord mBStart, mBaseline, mBEnd;
 
     LinePosition operator+(nscoord aOffset) const {
       LinePosition result;
