@@ -41,6 +41,7 @@ class AddToHomeScreenTest {
     }
 
     // Verifies the Add to home screen option in a tab's 3 dot menu
+    @SmokeTest
     @Test
     fun mainMenuAddToHomeScreenTest() {
         val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -69,6 +70,7 @@ class AddToHomeScreenTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun addPrivateBrowsingShortcutTest() {
         homeScreen {
