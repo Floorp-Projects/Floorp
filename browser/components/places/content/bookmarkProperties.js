@@ -522,6 +522,7 @@ var BookmarkPropertiesPanel = {
         bookmarkGuid: parentGuid,
         type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
       },
+      children: info.children,
     });
   },
 };

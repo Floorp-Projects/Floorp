@@ -276,7 +276,7 @@ class BookmarkState {
    *   Existing (if there are any) keyword for bookmark
    * @param {boolean} [options.isFolder]
    *   If the item is a folder.
-   * @param {Array.<nsIURI>} [options.children]
+   * @param {Array<{ title: string; url: nsIURI; }>} [options.children]
    *   The list of child URIs to bookmark within the folder.
    * @param {boolean} [options.autosave]
    *   If changes to bookmark fields should be saved immediately after calling
@@ -417,10 +417,7 @@ class BookmarkState {
     this._guid = await lazy.PlacesTransactions.NewFolder({
       parentGuid: this._newState.parentGuid ?? this._originalState.parentGuid,
       title: this._newState.title ?? this._originalState.title,
-      children: this._children.map(item => ({
-        url: item.uri,
-        title: item.title,
-      })),
+      children: this._children,
       index: this._originalState.index,
     }).transact();
     return this._guid;
