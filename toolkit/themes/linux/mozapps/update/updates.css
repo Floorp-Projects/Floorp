@@ -60,7 +60,7 @@ update {
 }
 
 .update-label-column {
-  align-items: flex-end;
+  -moz-box-align: end;
 }
 
 .update-type {
@@ -80,10 +80,10 @@ update {
 
 #historyItems .update {
   padding: 5px;
-  display: flex;
-  flex-direction: column;
+  display: -moz-box;
+  -moz-box-orient: vertical;
 }
 
 .update-name {
-  flex: 1;
+  -moz-box-flex: 1;
 }

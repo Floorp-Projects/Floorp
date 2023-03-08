@@ -5,9 +5,9 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 #context-navigation > .menuitem-iconic {
-  flex: 1;
-  justify-content: center;
-  align-items: center;
+  -moz-box-flex: 1;
+  -moz-box-pack: center;
+  -moz-box-align: center;
 }
 
 #context-navigation > .menuitem-iconic > .menu-iconic-left {

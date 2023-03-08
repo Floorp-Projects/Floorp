@@ -43,8 +43,8 @@
 }
 
 #label-box:not([native]) {
-  align-items: center;
-  justify-content: center;
+  -moz-box-align: center;
+  -moz-box-pack: center;
   font-weight: 600;
 }
 
@@ -53,7 +53,7 @@ dropmarker {
 }
 
 dropmarker:not([native]) {
-  display: flex;
+  display: -moz-box;
   appearance: none;
   width: 12px;
   height: unset;

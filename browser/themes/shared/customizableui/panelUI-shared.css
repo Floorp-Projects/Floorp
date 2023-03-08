@@ -52,7 +52,7 @@
 }
 
 #PanelUI-menu-button[badge-status] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
-  display: flex;
+  display: -moz-box;
   height: 10px;
   width: 10px;
   background-size: contain;
@@ -139,7 +139,7 @@
 }
 
 panelview {
-  flex-direction: column;
+  -moz-box-orient: vertical;
   background: var(--arrowpanel-background);
   padding: 0;
 }
@@ -155,7 +155,7 @@ panelmultiview[transitioning] > .panel-viewcontainer > .panel-viewstack > panelv
 .panel-subview-body {
   overflow-y: auto;
   overflow-x: hidden;
-  flex: 1;
+  -moz-box-flex: 1;
   padding: var(--panel-subview-body-padding);
 }
 
@@ -169,7 +169,7 @@ toolbarseparator + .panel-subview-body {
 
 .panel-view-body-unscrollable {
   overflow: hidden;
-  flex: 1;
+  -moz-box-flex: 1;
 }
 
 .panel-info-button {
@@ -322,7 +322,7 @@ toolbarbutton menupopup[placespopup] menuseparator::before {
 }
 
 #confirmation-hint::part(content) {
-  align-items: center;
+  -moz-box-align: center;
 }
 
 #confirmation-hint-checkmark-animation-container {
@@ -473,7 +473,7 @@ panelview[id^=PanelUI-webext-] {
 }
 
 toolbarpaletteitem[place="panel"] > .toolbarbutton-1 {
-  flex: 1;
+  -moz-box-flex: 1;
 }
 
 /* Help webextension buttons fit in. */
@@ -487,7 +487,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
 
 #customization-palette .toolbarbutton-1 {
   appearance: none;
-  flex-direction: column;
+  -moz-box-orient: vertical;
   padding: 12px 0 9px;
   margin: 0;
 }
@@ -514,7 +514,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
 
 #appMenu-popup .panel-banner-item,
 #appMenu-popup .addon-banner-item {
-  align-items: flex-start;
+  -moz-box-align: start;
   color: var(--panel-banner-item-color);
   background-color: var(--panel-banner-item-background-color);
   margin-bottom: 4px;
@@ -548,7 +548,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
   width: 16px;
   height: 16px;
   /* Move the icon to appear after the text label. */
-  order: 2;
+  -moz-box-ordinal-group: 2;
 }
 
 .addon-banner-item > .toolbarbutton-icon {
@@ -559,7 +559,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
    added to put their generic notification in. */
 .addon-banner-item::after {
   content: "";
-  display: flex;
+  display: -moz-box;
   background: url(chrome://global/skin/icons/warning.svg) no-repeat center;
   width: 16px;
   height: 16px;
@@ -665,7 +665,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="panel"] > .toolbarbutton-badg
 
 .syncNowBtn {
   visibility: collapse;
-  order: 2;
+  -moz-box-ordinal-group: 2;
 }
 
 .PanelUI-remotetabs-clientcontainer > label[itemtype="client"] {
@@ -981,7 +981,7 @@ panelview .toolbarbutton-1,
 
 .subviewbutton {
   /* toolbarbuttons default to centered, but we don't want that for subviews. */
-  justify-content: flex-start;
+  -moz-box-pack: start;
 }
 
 .subviewbutton[disabled="true"] {
@@ -1097,7 +1097,7 @@ panelview .toolbarbutton-1,
 
 .subviewbutton[shortcut]::after {
   content: attr(shortcut);
-  display: flex;
+  display: -moz-box;
   color: var(--panel-shortcut-color);
 }
 
@@ -1108,7 +1108,7 @@ panelview .toolbarbutton-1,
   content: url(chrome://global/skin/icons/arrow-right.svg);
   fill: currentColor;
   fill-opacity: 0.6;
-  display: flex;
+  display: -moz-box;
 }
 
 #protections-popup-mainView .subviewbutton-nav:not(.notFound):-moz-locale-dir(rtl)::after,
@@ -1139,7 +1139,7 @@ panelview .toolbarbutton-1,
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.6;
-  display: flex;
+  display: -moz-box;
   height: 12px;
   width: 12px;
 }
@@ -1165,8 +1165,8 @@ panelview .toolbarbutton-1,
 
 .toolbaritem-combined-buttons,
 .toolbaritem-menu-buttons {
-  align-items: center;
-  flex-direction: row;
+  -moz-box-align: center;
+  -moz-box-orient: horizontal;
   border: 0;
   border-radius: 0;
 }
@@ -1177,13 +1177,13 @@ panelview .toolbarbutton-1,
 }
 
 panelmultiview .toolbaritem-combined-buttons > label {
-  flex: 1;
+  -moz-box-flex: 1;
   margin: 0;
   padding: 4px 0;
 }
 
 .PanelUI-subView .toolbaritem-combined-buttons > .subviewbutton {
-  flex: none;
+  -moz-box-flex: 0;
   height: auto;
   margin-inline-start: 18px;
   min-width: auto;
@@ -1309,14 +1309,14 @@ toolbarpaletteitem[place="palette"] > #search-container {
 ) > toolbarbutton {
   border: 0;
   margin: 0;
-  flex: 1;
+  -moz-box-flex: 1;
   padding-block: var(--arrowpanel-menuitem-padding-block);
-  flex-direction: row;
+  -moz-box-orient: horizontal;
 }
 
 toolbarpaletteitem[place="panel"],
 toolbarpaletteitem[place="panel"] > toolbaritem {
-  flex: 1;
+  -moz-box-flex: 1;
 }
 
 .toolbaritem-combined-buttons[cui-areatype="panel"] > .toolbarbutton-combined-buttons-dropmarker,
@@ -1343,7 +1343,7 @@ toolbarpaletteitem[place="panel"] > toolbaritem {
   [overflowedItem=true]
 ) > separator {
   appearance: none;
-  align-items: stretch;
+  -moz-box-align: stretch;
   margin: .5em 0;
   width: 1px;
   height: auto;
@@ -1361,8 +1361,8 @@ toolbarpaletteitem[place="panel"] > toolbaritem {
 }
 
 .widget-overflow-list .toolbarbutton-1 {
-  align-items: center;
-  flex-direction: row;
+  -moz-box-align: center;
+  -moz-box-orient: horizontal;
 }
 
 toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
@@ -1402,7 +1402,7 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 }
 
 #panic-button-success-header {
-  align-items: center;
+  -moz-box-align: center;
   margin-bottom: 5px;
 }
 
@@ -1412,7 +1412,7 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 
 .subviewradio {
   appearance: none;
-  align-items: center;
+  -moz-box-align: center;
   padding: 3px;
   margin: 0 0 2px;
   background-color: transparent;
