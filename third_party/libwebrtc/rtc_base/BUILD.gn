@@ -283,6 +283,7 @@ rtc_library("sample_counter") {
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
+if (!build_with_mozilla) { # See Bug 1820869.
 rtc_library("timestamp_aligner") {
   visibility = [ "*" ]
   sources = [
@@ -295,6 +296,7 @@ rtc_library("timestamp_aligner") {
     ":timeutils",
     "system:rtc_export",
   ]
+}
 }
 
 rtc_library("zero_memory") {

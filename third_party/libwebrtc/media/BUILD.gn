@@ -247,7 +247,10 @@ rtc_library("rtc_internal_video_codecs") {
     "../test:fake_video_codecs",
   ]
   if (build_with_mozilla) {
-    deps -= [ "../test:fake_video_codecs" ]
+    deps -= [
+      "../modules/video_coding:webrtc_multiplex", # See Bug 1820869.
+      "../test:fake_video_codecs",
+    ]
   }
 
   if (enable_libaom) {
@@ -282,6 +285,8 @@ rtc_library("rtc_internal_video_codecs") {
     sources -= [
       "engine/fake_video_codec_factory.cc",
       "engine/fake_video_codec_factory.h",
+      "engine/internal_encoder_factory.cc", # See Bug 1820869.
+      "engine/multiplex_codec_factory.cc", # See Bug 1820869.
     ]
   }
 }

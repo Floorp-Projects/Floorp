@@ -350,6 +350,16 @@ rtc_library("call") {
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
   ]
+  if (build_with_mozilla) { # See Bug 1820869.
+    sources -= [
+      "call_factory.cc",
+      "degraded_call.cc",
+    ]
+    deps -= [
+      ":fake_network",
+      ":simulated_network",
+    ]
+  }
 }
 
 rtc_source_set("receive_stream_interface") {

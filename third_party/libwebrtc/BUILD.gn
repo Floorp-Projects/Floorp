@@ -538,6 +538,15 @@ if (!build_with_chromium) {
         "api/video:video_rtp_headers",
         "test:rtp_test_utils",
       ]
+      # Added when we removed deps in other places to avoid building
+      # unreachable sources.  See Bug 1820869.
+      deps += [
+        "api/video_codecs:video_codecs_api",
+        "api/video_codecs:rtc_software_fallback_wrappers",
+        "media:rtc_encoder_simulcast_proxy",
+        "modules/video_coding:webrtc_vp8",
+        "modules/video_coding:webrtc_vp9",
+      ]
     } else {
       deps += [
         "api",
