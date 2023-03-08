@@ -4010,7 +4010,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
     return pattern.forget();
   }
 
-  void DrawText(nscoord aXOffset, nscoord aWidth) override {
+  void DrawText(nscoord aXOffset) override {
     gfx::Point point = mPt;
     bool rtl = mTextRun->IsRightToLeft();
     bool verticalRun = mTextRun->IsVertical();

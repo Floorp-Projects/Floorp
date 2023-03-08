@@ -2236,7 +2236,7 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t* aText, size_t aLength,
         xOffset -= width;
       }
       if (aMode == MODE_DRAW) {
-        aprocessor.DrawText(xOffset, width);
+        aprocessor.DrawText(xOffset);
       }
 
       /*
@@ -2387,7 +2387,7 @@ void nsBidiPresUtils::ProcessOneChar(const char16_t* aText, size_t aLength,
   width = aprocessor.GetWidth();
 
   if (aMode == MODE_DRAW) {
-    aprocessor.DrawText(0, width);
+    aprocessor.DrawText(0);
   }
 
   for (int nPosResolve = 0; nPosResolve < aPosResolveCount; ++nPosResolve) {
@@ -2438,7 +2438,7 @@ class MOZ_STACK_CLASS nsIRenderingContextBidiProcessor final
                                                mTextRunConstructionDrawTarget);
   }
 
-  virtual void DrawText(nscoord aIOffset, nscoord) override {
+  virtual void DrawText(nscoord aIOffset) override {
     nsPoint pt(mPt);
     if (mFontMetrics->GetVertical()) {
       pt.y += aIOffset;

@@ -185,9 +185,8 @@ class nsBidiPresUtils {
      *
      * @param aXOffset The offset of the left side of the substring to be drawn
      *  from the beginning of the overall string passed to ProcessText.
-     * @param aWidth The width returned by GetWidth.
      */
-    virtual void DrawText(nscoord aXOffset, nscoord aWidth) = 0;
+    virtual void DrawText(nscoord aXOffset) = 0;
   };
 
   /**
