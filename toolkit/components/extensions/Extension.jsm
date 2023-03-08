@@ -2676,8 +2676,13 @@ class Extension extends ExtensionData {
     return common == this.baseURL;
   }
 
+  checkLoadURI(uri, options = {}) {
+    return ExtensionCommon.checkLoadURI(uri, this.principal, options);
+  }
+
+  // Note: use checkLoadURI instead of checkLoadURL if you already have a URI.
   checkLoadURL(url, options = {}) {
-    // As an optimization, f the URL starts with the extension's base URL,
+    // As an optimization, if the URL starts with the extension's base URL,
     // don't do any further checks. It's always allowed to load it.
     if (url.startsWith(this.baseURL)) {
       return true;
