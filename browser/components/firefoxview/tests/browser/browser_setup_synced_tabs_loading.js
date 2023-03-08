@@ -132,7 +132,7 @@ add_task(async function test_tab_sync_loading() {
 
 add_task(async function test_tab_no_sync() {
   // Ensure we take down the waiting message if SyncedTabs determines it doesnt need to sync
-  const recentTabsData = [];
+  const recentTabsData = structuredClone(syncedTabsData1[0].tabs);
   const sandbox = setupMocks(recentTabsData);
   // stub syncTabs so it resolves to false - meaning it will not trigger a sync, which is the case
   // we want to cover in this test.

@@ -98,10 +98,15 @@ async function withFirefoxView(
   return result;
 }
 
+function isFirefoxViewTabSelectedInWindow(win) {
+  return win.gBrowser.selectedBrowser.currentURI.spec == "about:firefoxview";
+}
+
 export {
   withFirefoxView,
   assertFirefoxViewTab,
   assertFirefoxViewTabSelected,
   openFirefoxViewTab,
   closeFirefoxViewTab,
+  isFirefoxViewTabSelectedInWindow,
 };
