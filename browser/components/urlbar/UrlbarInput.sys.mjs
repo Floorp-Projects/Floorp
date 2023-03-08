@@ -619,7 +619,10 @@ export class UrlbarInput {
     }
 
     let url;
-    let selType = this.controller.engagementEvent.typeFromElement(element);
+    let selType = this.controller.engagementEvent.typeFromElement(
+      result,
+      element
+    );
     let typedValue = this.value;
     if (oneOffParams?.engine) {
       selType = "oneoff";
@@ -837,7 +840,10 @@ export class UrlbarInput {
       return;
     }
 
-    if (element?.classList.contains("urlbarView-button-block")) {
+    if (
+      element?.classList.contains("urlbarView-button-block") ||
+      element?.dataset.command == "dismiss"
+    ) {
       this.controller.handleDeleteEntry(event, result);
       return;
     }
@@ -1041,7 +1047,8 @@ export class UrlbarInput {
       }
       case lazy.UrlbarUtils.RESULT_TYPE.TIP: {
         let scalarName =
-          element.dataset.name == "help"
+          element.classList.contains("urlbarView-button-help") ||
+          element.dataset.command == "help"
             ? `${result.payload.type}-help`
             : `${result.payload.type}-picked`;
         Services.telemetry.keyedScalarAdd("urlbar.tips", scalarName, 1);
@@ -1088,7 +1095,10 @@ export class UrlbarInput {
             selIndex,
             searchString: this._lastSearchString,
             searchMode,
-            selType: this.controller.engagementEvent.typeFromElement(element),
+            selType: this.controller.engagementEvent.typeFromElement(
+              result,
+              element
+            ),
             provider: result.providerName,
             element,
             startEventInfo,
@@ -1146,7 +1156,7 @@ export class UrlbarInput {
     this.controller.engagementEvent.record(event, {
       searchString: this._lastSearchString,
       selIndex,
-      selType: this.controller.engagementEvent.typeFromElement(element),
+      selType: this.controller.engagementEvent.typeFromElement(result, element),
       provider: result.providerName,
       searchSource: this.getSearchSource(event),
     });
@@ -2994,12 +3004,13 @@ export class UrlbarInput {
 
   _on_command(event) {
     // Something is executing a command, likely causing a focus change. This
-    // should not be recorded as an abandonment. If the user is entering search
-    // mode from a one-off, then they are in the same engagement and we should
-    // not discard.
+    // should not be recorded as an abandonment. If the user is selecting a
+    // result menu item or entering search mode from a one-off, then they are
+    // in the same engagement and we should not discard.
     if (
-      !event.target.classList.contains("searchbar-engine-one-off-item") ||
-      this.searchMode?.entry != "oneoff"
+      !event.target.classList.contains("urlbarView-result-menuitem") &&
+      (!event.target.classList.contains("searchbar-engine-one-off-item") ||
+        this.searchMode?.entry != "oneoff")
     ) {
       this.controller.engagementEvent.discard();
     }

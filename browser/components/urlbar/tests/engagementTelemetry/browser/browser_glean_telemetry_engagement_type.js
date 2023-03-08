@@ -87,14 +87,7 @@ add_task(async function engagement_type_dismiss() {
         () => originalResultCount != UrlbarTestUtils.getResultCount(window)
       );
 
-      if (UrlbarPrefs.get("resultMenu")) {
-        todo(
-          false,
-          "telemetry for the result menu to be implemented in bug 1790020"
-        );
-      } else {
-        assertEngagementTelemetry([{ engagement_type: "dismiss" }]);
-      }
+      assertEngagementTelemetry([{ engagement_type: "dismiss" }]);
     });
 
     await doTest(async browser => {
@@ -136,14 +129,7 @@ add_task(async function engagement_type_help() {
       const tab = await onTabOpened;
       BrowserTestUtils.removeTab(tab);
 
-      if (UrlbarPrefs.get("resultMenu")) {
-        todo(
-          false,
-          "telemetry for the result menu to be implemented in bug 1790020"
-        );
-      } else {
-        assertEngagementTelemetry([{ engagement_type: "help" }]);
-      }
+      assertEngagementTelemetry([{ engagement_type: "help" }]);
     });
 
     await SpecialPowers.popPrefEnv();
