@@ -3,6 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Required Plugins:
+# AccessControl
+#   https://nsis.sourceforge.io/AccessControl_plug-in
 # AppAssocReg
 #   http://nsis.sourceforge.net/Application_Association_Registration_plug-in
 # ApplicationID
@@ -390,6 +392,23 @@ Section "-Application" APP_IDX
   ${EndIf}
 
   ClearErrors
+
+  ${If} ${AtLeastWin10}
+    ; Apply LPAC permissions to install directory.
+    ${LogHeader} "File access permissions"
+    Push "Marker"
+    AccessControl::GrantOnFile \
+      "$INSTDIR" "(${LpacFirefoxInstallFilesSid})" "GenericRead + GenericExecute"
+    Pop $TmpVal ; get "Marker" or error msg
+    ${If} $TmpVal == "Marker"
+      ${LogMsg} "Granted access for LPAC to $INSTDIR"
+    ${Else}
+      ${LogMsg} "** Error granting access for LPAC to $INSTDIR : $TmpVal **"
+      Pop $TmpVal ; get "Marker"
+    ${EndIf}
+
+    ClearErrors
+  ${EndIf}
 
   ; Default for creating Start Menu shortcut
   ; (1 = create, 0 = don't create)
