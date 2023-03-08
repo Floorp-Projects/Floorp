@@ -360,6 +360,10 @@ class FirefoxExternalServices extends _app.DefaultExternalServices {
     const isInAutomation = FirefoxCom.requestSync("isInAutomation");
     return (0, _pdfjsLib.shadow)(this, "isInAutomation", isInAutomation);
   }
+  static get canvasMaxAreaInBytes() {
+    const maxArea = FirefoxCom.requestSync("getCanvasMaxArea");
+    return (0, _pdfjsLib.shadow)(this, "canvasMaxAreaInBytes", maxArea);
+  }
 }
 _app.PDFViewerApplication.externalServices = FirefoxExternalServices;
 document.mozL10n.setExternalLocalizerServices({
@@ -557,6 +561,9 @@ class DefaultExternalServices {
   }
   static updateEditorStates(data) {
     throw new Error("Not implemented: updateEditorStates");
+  }
+  static get canvasMaxAreaInBytes() {
+    return (0, _pdfjsLib.shadow)(this, "canvasMaxAreaInBytes", -1);
   }
 }
 exports.DefaultExternalServices = DefaultExternalServices;
@@ -1086,6 +1093,7 @@ const PDFViewerApplication = {
     Object.assign(_pdfjsLib.GlobalWorkerOptions, workerParams);
     const apiParams = _app_options.AppOptions.getAll(_app_options.OptionKind.API);
     const params = {
+      canvasMaxAreaInBytes: this.externalServices.canvasMaxAreaInBytes,
       ...apiParams,
       ...args
     };
@@ -6020,7 +6028,7 @@ class PDFViewer {
   #onVisibilityChange = null;
   #scaleTimeoutId = null;
   constructor(options) {
-    const viewerVersion = '3.5.10';
+    const viewerVersion = '3.5.34';
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -9428,8 +9436,8 @@ var _ui_utils = __webpack_require__(4);
 var _app_options = __webpack_require__(6);
 var _pdf_link_service = __webpack_require__(8);
 var _app = __webpack_require__(3);
-const pdfjsVersion = '3.5.10';
-const pdfjsBuild = '4e52bcee4';
+const pdfjsVersion = '3.5.34';
+const pdfjsBuild = 'a0ef5a4ae';
 const AppConstants = null;
 exports.PDFViewerApplicationConstants = AppConstants;
 window.PDFViewerApplication = _app.PDFViewerApplication;
