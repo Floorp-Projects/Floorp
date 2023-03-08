@@ -145,14 +145,14 @@
 }
 
 .alertTitle {
-  -moz-box-flex: 1;
+  flex: 1;
   font-weight: bold;
   padding: 6px 8px 0;
   width: 255px;
 }
 
 #alertFooter {
-  -moz-box-align: start;
+  align-items: flex-start;
 }
 
 #alertBox:not([hasOrigin]) > box > #alertTextBox,
@@ -161,7 +161,7 @@
 }
 
 #alertSourceLabel {
-  -moz-box-flex: 1;
+  flex: 1;
   font-size: 83.334%;
   color: GrayText;
 }

@@ -27,7 +27,7 @@ menuitem[appHandlerIcon="plugin"] {
 }
 
 #appList > richlistitem {
-  -moz-box-align: center;
+  align-items: center;
 }
 
 #appList > richlistitem > image {

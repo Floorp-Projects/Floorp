@@ -7,8 +7,8 @@
 /* ::::: splitter (vertical) ::::: */
 
 splitter {
-  -moz-box-align: center;
-  -moz-box-pack: center;
+  align-items: center;
+  justify-content: center;
   cursor: ew-resize;
   min-width: 9px;
   min-height: 9px;

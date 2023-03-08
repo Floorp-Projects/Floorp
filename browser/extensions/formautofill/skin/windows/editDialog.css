@@ -4,7 +4,7 @@
 
 /* The save button should be on the left and cancel on the right for Windows */
 #controlsContainer > #save {
-  order: 0;
+  order: -1;
 }
 
 #controlsContainer > #cancel {

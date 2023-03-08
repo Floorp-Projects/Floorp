@@ -360,31 +360,31 @@
             <!--
               The below code may suggest that 'ordinal' is still a supported XUL
               attribute. It is not. This is a crutch so that we can continue
-              persisting the CSS -moz-box-ordinal-group attribute, which is the
-              appropriate replacement for the ordinal attribute but cannot yet
+              persisting the CSS order attribute, which is the appropriate
+              replacement for the ordinal attribute but cannot yet
               be easily persisted. The code that synchronizes the attribute with
               the CSS lives in toolkit/content/widget/tree.js and is specific to
               tree elements.
             -->
-            <treecol data-l10n-id="places-view-sort-col-name" id="placesContentTitle" anonid="title" style="-moz-box-flex: 5" primary="true" ordinal="1"
+            <treecol data-l10n-id="places-view-sort-col-name" id="placesContentTitle" anonid="title" style="flex: 5 5" primary="true" ordinal="1"
                       persist="width hidden ordinal sortActive sortDirection"/>
             <splitter class="tree-splitter"/>
-            <treecol data-l10n-id="places-view-sort-col-tags" id="placesContentTags" anonid="tags" style="-moz-box-flex: 2"
+            <treecol data-l10n-id="places-view-sort-col-tags" id="placesContentTags" anonid="tags" style="flex: 2 2"
                       persist="width hidden ordinal sortActive sortDirection"/>
             <splitter class="tree-splitter"/>
-            <treecol data-l10n-id="places-view-sort-col-url" id="placesContentUrl" anonid="url" style="-moz-box-flex: 5"
+            <treecol data-l10n-id="places-view-sort-col-url" id="placesContentUrl" anonid="url" style="flex: 5 5"
                       persist="width hidden ordinal sortActive sortDirection"/>
             <splitter class="tree-splitter"/>
-            <treecol data-l10n-id="places-view-sort-col-most-recent-visit" id="placesContentDate" anonid="date" style="-moz-box-flex: 1" hidden="true"
+            <treecol data-l10n-id="places-view-sort-col-most-recent-visit" id="placesContentDate" anonid="date" style="flex: 1" hidden="true"
                       persist="width hidden ordinal sortActive sortDirection"/>
             <splitter class="tree-splitter"/>
-            <treecol data-l10n-id="places-view-sort-col-visit-count" id="placesContentVisitCount" anonid="visitCount" style="-moz-box-flex: 1" hidden="true"
+            <treecol data-l10n-id="places-view-sort-col-visit-count" id="placesContentVisitCount" anonid="visitCount" style="flex: 1" hidden="true"
                       persist="width hidden ordinal sortActive sortDirection"/>
             <splitter class="tree-splitter"/>
-            <treecol data-l10n-id="places-view-sort-col-date-added" id="placesContentDateAdded" anonid="dateAdded" style="-moz-box-flex: 1" hidden="true"
+            <treecol data-l10n-id="places-view-sort-col-date-added" id="placesContentDateAdded" anonid="dateAdded" style="flex: 1" hidden="true"
                       persist="width hidden ordinal sortActive sortDirection"/>
             <splitter class="tree-splitter"/>
-            <treecol data-l10n-id="places-view-sort-col-last-modified" id="placesContentLastModified" anonid="lastModified" style="-moz-box-flex: 1" hidden="true"
+            <treecol data-l10n-id="places-view-sort-col-last-modified" id="placesContentLastModified" anonid="lastModified" style="flex: 1" hidden="true"
                       persist="width hidden ordinal sortActive sortDirection"/>
           </treecols>
           <treechildren flex="1" onclick="ContentTree.onClick(event);"/>
@@ -398,12 +398,12 @@
       </vbox>
       <vbox id="detailsPane">
         <vbox id="itemsCountBox" align="center" flex="1" hidden="true">
-          <spacer style="-moz-box-flex: 3"/>
+          <spacer style="flex: 3 3"/>
           <label id="itemsCountText"/>
           <spacer flex="1"/>
           <description id="selectItemDescription" data-l10n-id="places-details-pane-select-an-item-description">
           </description>
-          <spacer style="-moz-box-flex: 3"/>
+          <spacer style="flex: 3 3"/>
         </vbox>
         <vbox id="infoBox">
 #include editBookmarkPanel.inc.xhtml

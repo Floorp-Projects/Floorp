@@ -13,8 +13,8 @@
 
 box,
 .splitview-nav {
-  -moz-box-flex: 1;
-  -moz-box-orient: vertical;
+  flex: 1;
+  flex-direction: column;
   min-width: 0;
   min-height: 0;
 }
@@ -25,21 +25,21 @@ box,
   margin: 0;
   background-color: var(--theme-sidebar-background);
 
-  display: -moz-box;
+  display: flex;
   overflow-x: hidden;
   overflow-y: auto;
 }
 
 .splitview-nav > li {
   padding-inline-end: 8px;
-  -moz-box-align: center;
+  align-items: center;
   outline: 0;
   vertical-align: bottom;
   border-bottom: 1px solid var(--theme-splitter-color);
 }
 
 .placeholder {
-  -moz-box-flex: 1;
+  flex: 1;
   text-align: center;
 }
 
@@ -72,7 +72,7 @@ box,
 }
 
 .splitview-nav-container {
-  -moz-box-pack: center;
+  justify-content: center;
 }
 
 .loading .splitview-nav-container > .placeholder {
@@ -81,7 +81,7 @@ box,
 
 .splitview-controller,
 .splitview-main {
-  -moz-box-flex: 0;
+  flex: none;
 }
 
 .splitview-controller {
@@ -99,7 +99,7 @@ box,
 
 /* only the active details pane is shown */
 .splitview-side-details > .splitview-active {
-  display: -moz-box;
+  display: flex;
 }
 
 /* filtered items are hidden */
@@ -115,12 +115,12 @@ ol.splitview-nav > li.splitview-filtered {
 }
 .splitview-nav.splitview-all-filtered ~ .splitview-nav.placeholder.all-filtered,
 .splitview-nav:empty ~ .splitview-nav.placeholder.empty {
-  display: -moz-box;
+  display: flex;
 }
 
 @media (width >= 700px) {
   .splitview-root {
-    -moz-box-orient: horizontal;
+    flex-direction: row;
   }
   .splitview-controller {
     max-height: none;
@@ -131,7 +131,7 @@ ol.splitview-nav > li.splitview-filtered {
     display: none;
   }
   .splitview-details.splitview-active {
-    display: -moz-box;
+    display: flex;
   }
 }
 

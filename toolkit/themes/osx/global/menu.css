@@ -12,7 +12,7 @@ menucaption {
   appearance: auto;
   -moz-default-appearance: menuitem;
   -moz-font-smoothing-background-color: -moz-mac-menuitem;
-  -moz-box-align: center;
+  align-items: center;
   list-style-image: none;
   padding: 2px 21px;
 }
@@ -69,7 +69,7 @@ menuitem[image] > .menu-iconic-left > .menu-iconic-icon {
 .menu-right,
 .menu-accel-container {
   margin-inline: 21px -9px;
-  -moz-box-pack: end;
+  justify-content: flex-end;
 }
 
 .menu-right {

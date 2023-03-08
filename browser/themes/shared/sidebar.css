@@ -21,11 +21,11 @@
 #sidebar-spacer {
   /* To ensure the button doesn't expand unnecessarily for short labels, the
      spacer should significantly out-flex the button. */
-  -moz-box-flex: 1000;
+  flex: 1000 1000;
 }
 
 #sidebar {
-  -moz-box-flex: 1;
+  flex: 1;
 }
 
 @media not (-moz-platform: linux) {
@@ -65,7 +65,7 @@
   margin: 0;
   padding: 0;
   padding-inline: 8px 4px;
-  -moz-box-flex: 1;
+  flex: 1;
 }
 
 #sidebar-switcher-arrow {
@@ -87,7 +87,7 @@
   border-radius: var(--toolbarbutton-border-radius);
   border: 1px solid transparent;
   padding: 2px 4px;
-  -moz-box-flex: 1;
+  flex: 1;
 }
 
 #sidebar-switcher-target:hover {

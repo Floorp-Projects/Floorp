@@ -49,7 +49,7 @@
  */
 
 .search-panel-current-engine {
-  -moz-box-align: center;
+  align-items: center;
   border-top: none !important;
   padding-inline: 8px;
 }
@@ -58,7 +58,7 @@
 .search-panel-one-offs-container {
   display: flex;
   flex-direction: row;
-  flex-grow: 1;
+  flex: 1;
 }
 
 .search-panel-one-offs {
@@ -70,7 +70,7 @@
 
 .searchbar-engine-one-off-item {
   appearance: none;
-  display: -moz-inline-box;
+  display: inline-flex;
   background-color: transparent;
   border: none;
   min-width: 32px;
@@ -124,7 +124,7 @@
 }
 
 .search-panel-tree > .autocomplete-richlistitem > .ac-type-icon {
-  display: -moz-box;
+  display: flex;
   width: 14px;
   height: 14px;
   margin-inline-end: 7px;

@@ -6,12 +6,12 @@
   function run() {
     var b = document.getElementById("B");
     getComputedStyle(b, "").width; // flush
-    b.style.MozBoxOrdinalGroup = "2";
+    b.style.order = "2";
     document.documentElement.removeAttribute("class");
   }
 
   ]]></script>
   <label id="B" value="B" />
-  <label id="C" value="C" style="-moz-box-ordinal-group: 2" />
+  <label id="C" value="C" style="order: 2" />
   <label id="A" value="A" />
 </window>

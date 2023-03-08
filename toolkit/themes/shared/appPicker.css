@@ -16,7 +16,7 @@
 }
 
 #app-picker-listbox > richlistitem {
-  -moz-box-align: center;
+  align-items: center;
 }
 
 #content-icon,

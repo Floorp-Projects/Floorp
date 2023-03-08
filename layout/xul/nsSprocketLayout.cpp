@@ -32,9 +32,7 @@ static Maybe<CSSOrderAwareFrameIterator> IterFor(nsIFrame* aBoxFrame) {
   Maybe<CSSOrderAwareFrameIterator> ret;
   if (aBoxFrame->IsXULBoxFrame()) {
     ret.emplace(aBoxFrame, FrameChildListID::Principal,
-                CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
-                CSSOrderAwareFrameIterator::OrderState::Unknown,
-                CSSOrderAwareFrameIterator::OrderingProperty::BoxOrdinalGroup);
+                CSSOrderAwareFrameIterator::ChildFilter::IncludeAll);
   }
   return ret;
 }

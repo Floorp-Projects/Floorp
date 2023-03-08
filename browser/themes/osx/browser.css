@@ -54,7 +54,7 @@
 */
 #navigator-toolbox::after {
   content: "";
-  display: -moz-box;
+  display: flex;
   appearance: auto;
   -moz-default-appearance: toolbox;
   height: 1px;
@@ -66,7 +66,7 @@
 
 #titlebar {
   /* Centrally align content items vertically */
-  -moz-box-pack: center;
+  justify-content: center;
 }
 
 .titlebar-button {
@@ -74,7 +74,7 @@
 }
 
 .titlebar-buttonbox-container {
-  -moz-box-align: center;
+  align-items: center;
 }
 
 /* Hide window controls in fullscreen */
@@ -135,7 +135,7 @@
 
 #nav-bar-customization-target > #wrapper-personal-bookmarks > #personal-bookmarks {
   min-height: 32px;
-  -moz-box-align: center;
+  align-items: center;
 }
 
 /* Workaround for native menubar inheritance */
@@ -333,7 +333,7 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
 
 #tabbrowser-tabs {
   /* overriding tabbox.css */
-  -moz-box-align: stretch;
+  align-items: stretch;
   margin-bottom: 0;
   position: static;
   z-index: auto;

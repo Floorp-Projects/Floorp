@@ -21,7 +21,7 @@ tabpanels {
 }
 
 tabs {
-  -moz-box-align: center;
+  align-items: center;
   font: menu;
   padding: 0 10px;
   margin-bottom: -12px;
@@ -60,5 +60,5 @@ tab:where([visuallyselected="true"]:not(:-moz-window-inactive)) {
 
 .tabs-left,
 .tabs-right  {
-  -moz-box-flex: 1;
+  flex: 1;
 }

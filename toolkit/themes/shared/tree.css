@@ -121,8 +121,8 @@ treecol,
 .tree-columnpicker-button {
   appearance: auto;
   -moz-default-appearance: treeheadercell;
-  -moz-box-align: center;
-  -moz-box-pack: center;
+  align-items: center;
+  justify-content: center;
   color: -moz-ColHeaderText;
   padding: 0 4px;
   margin: 0;
@@ -219,7 +219,7 @@ html|input.tree-input {
   top: 0;
   left: 0;
   appearance: none;
-  -moz-box-flex: 1;
+  flex: 1;
   border: 0;
   border-radius: 2px;
   outline: var(--focus-outline);

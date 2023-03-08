@@ -111,7 +111,7 @@
 }
 
 #userContext-icons {
-  -moz-box-align: center;
+  align-items: center;
 }
 
 .tabbrowser-tab[usercontextid] > .tab-stack > .tab-background > .tab-context-line {

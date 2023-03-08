@@ -5,7 +5,7 @@
 .website-name {
   overflow: hidden; /* Allows equal sizing combined with width="0" */
   padding-inline-start: 7px;
-  -moz-box-align: center;
+  align-items: center;
 }
 
 #permissionsBox {

@@ -11,7 +11,7 @@
 #devtools-menu.devtools-menulist,
 .devtools-toolbarbutton#devtools-menu {
   -moz-appearance: none;
-  -moz-box-align: center;
+  align-items: center;
   min-width: 78px;
   min-height: 22px;
   text-shadow: 0 -1px 0 hsla(210,8%,5%,.45);
@@ -24,7 +24,7 @@
 }
 
 .devtools-toolbarbutton > hbox.toolbarbutton-menubutton-button {
-  -moz-box-orient: horizontal;
+  flex-direction: row;
 }
 
 .devtools-menulist:active,

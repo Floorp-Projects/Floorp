@@ -26,8 +26,8 @@ label {
 /* Label box */
 
 #label-box[native] {
-  -moz-box-align: center;
-  -moz-box-pack: center;
+  align-items: center;
+  justify-content: center;
 }
 
 :host([native]:not([open="true"]):focus) > #label-box {

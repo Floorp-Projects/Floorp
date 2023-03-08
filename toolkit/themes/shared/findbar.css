@@ -16,7 +16,7 @@ findbar {
 
 findbar[hidden] {
   /* Override display:none to make the transition work. */
-  display: -moz-box;
+  display: flex;
   visibility: collapse;
   margin-bottom: -1em;
   opacity: 0;
