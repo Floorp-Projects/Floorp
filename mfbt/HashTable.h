@@ -210,8 +210,9 @@ class HashMap {
   // the empty storage and upon regrowth it will be given the minimum capacity.
   void compact() { mImpl.compact(); }
 
-  // Attempt to reserve enough space to fit at least |aLen| elements. Does
-  // nothing if the map already has sufficient capacity.
+  // Attempt to reserve enough space to fit at least |aLen| elements. This is
+  // total capacity, including elements already present. Does nothing if the
+  // map already has sufficient capacity.
   [[nodiscard]] bool reserve(uint32_t aLen) { return mImpl.reserve(aLen); }
 
   // -- Lookups --------------------------------------------------------------
@@ -506,8 +507,9 @@ class HashSet {
   // the empty storage and upon regrowth it will be given the minimum capacity.
   void compact() { mImpl.compact(); }
 
-  // Attempt to reserve enough space to fit at least |aLen| elements. Does
-  // nothing if the map already has sufficient capacity.
+  // Attempt to reserve enough space to fit at least |aLen| elements. This is
+  // total capacity, including elements already present. Does nothing if the
+  // map already has sufficient capacity.
   [[nodiscard]] bool reserve(uint32_t aLen) { return mImpl.reserve(aLen); }
 
   // -- Lookups --------------------------------------------------------------
