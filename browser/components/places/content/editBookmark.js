@@ -428,7 +428,9 @@ var gEditItemOverlay = {
       }
 
       this._bookmarkState = this.makeNewStateObject({
+        children: aInfo.node?.children,
         index: aInfo.node?.index,
+        isFolder: aInfo.node != null && PlacesUtils.nodeIsFolder(aInfo.node),
       });
       if (isBookmark || bulkTagging) {
         await this._initAllTags();
@@ -656,12 +658,6 @@ var gEditItemOverlay = {
       if (this._paneInfo.isBookmark) {
         options.tags = this._element("tagsField").value;
         options.keyword = this._keyword;
-      }
-
-      const dialogInfo = window.arguments[0];
-      if (typeof dialogInfo === "object" && dialogInfo.type === "folder") {
-        options.isFolder = true;
-        options.children = dialogInfo.URIList;
       }
 
       if (this._paneInfo.bulkTagging) {
