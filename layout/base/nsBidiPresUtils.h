@@ -574,8 +574,8 @@ class nsBidiPresUtils {
    */
   static void RemoveBidiContinuation(BidiParagraphData* aBpd, nsIFrame* aFrame,
                                      int32_t aFirstIndex, int32_t aLastIndex);
-  static void CalculateBidiClass(mozilla::intl::Bidi* aBidiEngine,
-                                 const char16_t* aText, int32_t& aOffset,
+
+  static void CalculateBidiClass(const char16_t* aText, int32_t& aOffset,
                                  int32_t aBidiClassLimit, int32_t& aRunLimit,
                                  int32_t& aRunLength, int32_t& aRunCount,
                                  mozilla::intl::BidiClass& aBidiClass,
