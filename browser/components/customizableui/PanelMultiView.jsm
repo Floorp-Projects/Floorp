@@ -1072,43 +1072,51 @@ var PanelMultiView = class extends AssociatedToNode {
       this._panel.removeAttribute("mainviewshowing");
     }
 
-    this._viewStack.style.transform =
-      "translateX(" + (moveToLeft ? "" : "-") + deltaX + "px)";
+    // Avoid transforming element if the user has prefers-reduced-motion set
+    if (
+      this.window.matchMedia("(prefers-reduced-motion: no-preference)").matches
+    ) {
+      this._viewStack.style.transform =
+        "translateX(" + (moveToLeft ? "" : "-") + deltaX + "px)";
 
-    await new Promise(resolve => {
-      details.resolve = resolve;
-      this._viewContainer.addEventListener(
-        "transitionend",
-        (details.listener = ev => {
-          // It's quite common that `height` on the view container doesn't need
-          // to transition, so we make sure to do all the work on the transform
-          // transition-end, because that is guaranteed to happen.
-          if (ev.target != this._viewStack || ev.propertyName != "transform") {
-            return;
-          }
-          this._viewContainer.removeEventListener(
-            "transitionend",
-            details.listener
-          );
-          delete details.listener;
-          resolve();
-        })
-      );
-      this._viewContainer.addEventListener(
-        "transitioncancel",
-        (details.cancelListener = ev => {
-          if (ev.target != this._viewStack) {
-            return;
-          }
-          this._viewContainer.removeEventListener(
-            "transitioncancel",
-            details.cancelListener
-          );
-          delete details.cancelListener;
-          resolve();
-        })
-      );
-    });
+      await new Promise(resolve => {
+        details.resolve = resolve;
+        this._viewContainer.addEventListener(
+          "transitionend",
+          (details.listener = ev => {
+            // It's quite common that `height` on the view container doesn't need
+            // to transition, so we make sure to do all the work on the transform
+            // transition-end, because that is guaranteed to happen.
+            if (
+              ev.target != this._viewStack ||
+              ev.propertyName != "transform"
+            ) {
+              return;
+            }
+            this._viewContainer.removeEventListener(
+              "transitionend",
+              details.listener
+            );
+            delete details.listener;
+            resolve();
+          })
+        );
+        this._viewContainer.addEventListener(
+          "transitioncancel",
+          (details.cancelListener = ev => {
+            if (ev.target != this._viewStack) {
+              return;
+            }
+            this._viewContainer.removeEventListener(
+              "transitioncancel",
+              details.cancelListener
+            );
+            delete details.cancelListener;
+            resolve();
+          })
+        );
+      });
+    }
 
     // Bail out if the panel was closed during the transition.
     if (!nextPanelView.isOpenIn(this)) {
@@ -1120,7 +1128,11 @@ var PanelMultiView = class extends AssociatedToNode {
     nextPanelView.node.style.removeProperty("width");
     deepestNode.style.removeProperty("outline");
     this._cleanupTransitionPhase();
-
+    // Ensure the newly-visible view has been through a layout flush before we
+    // attempt to focus anything in it.
+    // See https://firefox-source-docs.mozilla.org/performance/bestpractices.html#detecting-and-avoiding-synchronous-reflow
+    // for more information.
+    await this.window.promiseDocumentFlushed(() => {});
     nextPanelView.focusSelectedElement();
   }
 
