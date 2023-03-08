@@ -3845,10 +3845,13 @@ void CanvasRenderingContext2D::GetFontKerning(nsAString& aFontKerning) {
  * with U+0020 SPACE. The whitespace characters are defined as U+0020 SPACE,
  * U+0009 CHARACTER TABULATION (tab), U+000A LINE FEED (LF), U+000B LINE
  * TABULATION, U+000C FORM FEED (FF), and U+000D CARRIAGE RETURN (CR).
+ * We also replace characters with Bidi type Segment Separator or Block
+ * Separator.
  * @param str The string whose whitespace characters to replace.
  */
 static inline void TextReplaceWhitespaceCharacters(nsAutoString& aStr) {
-  aStr.ReplaceChar(u"\x09\x0A\x0B\x0C\x0D", char16_t(' '));
+  aStr.ReplaceChar(u"\x09\x0A\x0B\x0C\x0D\x1C\x1D\x1E\x1F\x85\x2029",
+                   char16_t(' '));
 }
 
 void CanvasRenderingContext2D::FillText(const nsAString& aText, double aX,
