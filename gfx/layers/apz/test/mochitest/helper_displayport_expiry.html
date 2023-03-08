@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for DisplayPort Expiry</title>
+  <meta charset="utf-8">
+  <script src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+<style>
+#first {
+  height: 40vh;
+  width: 100%;
+  background: green;
+  overflow: scroll;
+}
+
+#second {
+  height: 40vh;
+  width: 100%;
+  background: yellow;
+  overflow: scroll;
+}
+
+#inner {
+  height: 20vh;
+  width: 50%;
+  background: red;
+}
+
+.big {
+  height: 100vh;
+  width: 100vw;
+}
+</style>
+</head>
+<body>
+  <div id="first">
+    <div class="big">
+    </div>
+  </div>
+  <br>
+  <div id="second">
+    <div id="inner">
+      <div class="big">
+      </div>
+    </div>
+    <div class="big">
+    </div>
+  </div>
+</body>
+  <script>
+async function test() {
+  await promiseFrame();
+
+  let paintCount = 0;
+  function countPaints(e) {
+    paintCount += 1;
+  }
+
+  window.addEventListener("MozAfterPaint", countPaints);
+
+  await SpecialPowers.promiseTimeout(200);
+
+  window.removeEventListener("MozAfterPaint", countPaints);
+
+  info("paint count: " + paintCount);
+
+  ok(paintCount < 5, "Paint count is within the expect range");
+}
+
+SimpleTest.waitForExplicitFinish();
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+  </script>
+</html>
