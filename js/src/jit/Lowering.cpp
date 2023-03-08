@@ -218,6 +218,12 @@ void LIRGenerator::visitBindFunction(MBindFunction* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitNewBoundFunction(MNewBoundFunction* ins) {
+  auto* lir = new (alloc()) LNewBoundFunction(temp());
+  define(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitNewPlainObject(MNewPlainObject* ins) {
   LNewPlainObject* lir = new (alloc()) LNewPlainObject(temp(), temp(), temp());
   define(lir, ins);

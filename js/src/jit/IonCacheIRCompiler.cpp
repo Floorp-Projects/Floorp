@@ -2018,6 +2018,11 @@ bool IonCacheIRCompiler::emitBindFunctionResult(ObjOperandId targetId,
   MOZ_CRASH("Call ICs not used in ion");
 }
 
+bool IonCacheIRCompiler::emitSpecializedBindFunctionResult(
+    ObjOperandId targetId, uint32_t argc, uint32_t templateObjectOffset) {
+  MOZ_CRASH("Call ICs not used in ion");
+}
+
 bool IonCacheIRCompiler::emitLoadArgumentFixedSlot(ValOperandId resultId,
                                                    uint8_t slotIndex) {
   MOZ_CRASH("Call ICs not used in ion");

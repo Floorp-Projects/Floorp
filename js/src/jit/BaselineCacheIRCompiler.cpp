@@ -3606,6 +3606,8 @@ bool BaselineCacheIRCompiler::emitBindFunctionResult(
 
   Register target = allocator.useRegister(masm, targetId);
 
+  allocator.discardStack(masm);
+
   AutoStubFrame stubFrame(*this);
   stubFrame.enter(masm, scratch);
 
@@ -3630,6 +3632,48 @@ bool BaselineCacheIRCompiler::emitBindFunctionResult(
   masm.storeCallPointerResult(scratch);
 
   masm.tagValue(JSVAL_TYPE_OBJECT, scratch, output.valueReg());
+  return true;
+}
+
+bool BaselineCacheIRCompiler::emitSpecializedBindFunctionResult(
+    ObjOperandId targetId, uint32_t argc, uint32_t templateObjectOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoOutputRegister output(*this);
+  AutoScratchRegisterMaybeOutput scratch1(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+
+  Register target = allocator.useRegister(masm, targetId);
+
+  StubFieldOffset objectField(templateObjectOffset, StubField::Type::JSObject);
+  emitLoadStubField(objectField, scratch2);
+
+  allocator.discardStack(masm);
+
+  AutoStubFrame stubFrame(*this);
+  stubFrame.enter(masm, scratch1);
+
+  // Push the arguments in reverse order.
+  for (uint32_t i = 0; i < argc; i++) {
+    Address argAddress(FramePointer,
+                       BaselineStubFrameLayout::Size() + i * sizeof(Value));
+    masm.pushValue(argAddress);
+  }
+  masm.moveStackPtrTo(scratch1.get());
+
+  masm.Push(scratch2);
+  masm.Push(Imm32(argc));
+  masm.Push(scratch1);
+  masm.Push(target);
+
+  using Fn = BoundFunctionObject* (*)(JSContext*, Handle<JSObject*>, Value*,
+                                      uint32_t, Handle<BoundFunctionObject*>);
+  callVM<Fn, BoundFunctionObject::functionBindSpecializedBaseline>(masm);
+
+  stubFrame.leave(masm);
+  masm.storeCallPointerResult(scratch1);
+
+  masm.tagValue(JSVAL_TYPE_OBJECT, scratch1, output.valueReg());
   return true;
 }
 
