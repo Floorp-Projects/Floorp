@@ -1177,6 +1177,15 @@
     <!-- Text shown in the notification that pops up to re-engage the user.
     %1$s is a placeholder that will be replaced by the app name. -->
     <string name="notification_re_engagement_text">Browse with no saved cookies or history in %1$s</string>
+    <!-- Title A shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_A_title" tools:ignore="UnusedResources">Browse without a trace</string>
+    <!-- Text A shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_A_text" tools:ignore="UnusedResources">Private browsing in %1$s doesn’t save your info.</string>
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title" tools:ignore="UnusedResources">Start your first search</string>
+    <!-- Text B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_text" tools:ignore="UnusedResources">Find something nearby. Or discover something fun.</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
