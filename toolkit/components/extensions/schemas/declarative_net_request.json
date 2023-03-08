@@ -101,6 +101,15 @@
         ]
       },
       {
+        "id": "UnsupportedRegexReason",
+        "type": "string",
+        "description": "Describes the reason why a given regular expression isn't supported.",
+        "enum": [
+          "syntaxError",
+          "memoryLimitExceeded"
+        ]
+      },
+      {
         "id": "MatchedRule",
         "type": "object",
         "properties": {
@@ -604,6 +613,57 @@
                 "type": "array",
                 "items": {
                   "$ref": "Rule"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "isRegexSupported",
+        "type": "function",
+        "description": "Checks if the given regular expression will be supported as a 'regexFilter' rule condition.",
+        "async": "callback",
+        "parameters": [
+          {
+            "name": "regexOptions",
+            "type": "object",
+            "properties": {
+              "regex": {
+                "type": "string",
+                "description": "The regular expresson to check."
+              },
+              "isCaseSensitive": {
+                "type": "boolean",
+                "optional": true,
+                "description": "Whether the 'regex' specified is case sensitive.",
+                "default": false
+              },
+              "requireCapturing": {
+                "type": "boolean",
+                "optional": true,
+                "description": "Whether the 'regex' specified requires capturing. Capturing is only required for redirect rules which specify a 'regexSubstition' action.",
+                "default": false
+              }
+            }
+          },
+          {
+            "name": "callback",
+            "type": "function",
+            "parameters": [
+              {
+                "name": "result",
+                "type": "object",
+                "properties": {
+                  "isSupported": {
+                    "type": "boolean",
+                    "description": "Whether the given regex is supported"
+                  },
+                  "reason": {
+                    "$ref": "UnsupportedRegexReason",
+                    "optional": true,
+                    "description": "Specifies the reason why the regular expression is not supported. Only provided if 'isSupported' is false."
+                  }
                 }
               }
             ]

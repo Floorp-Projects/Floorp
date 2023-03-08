@@ -73,6 +73,14 @@ function makeDnrTestUtils() {
     urlsMatching,
     urlsNonMatching,
   }) {
+    browser.test.assertDeepEq(
+      { isSupported: true },
+      await dnr.isRegexSupported({
+        regex: regexFilter,
+        isCaseSensitive: isUrlFilterCaseSensitive,
+      }),
+      `isRegexSupported should detect support for: ${regexFilter}`
+    );
     await _testRegexFilterOrRedirect({
       description,
       regexFilter,
@@ -91,6 +99,17 @@ function makeDnrTestUtils() {
     inputUrl,
     expectedRedirectUrl,
   }) {
+    browser.test.assertDeepEq(
+      { isSupported: true },
+      await dnr.isRegexSupported({
+        regex: regexFilter,
+        // requireCapturing option not strictly needed, but included to verify
+        // that the method can take the option without issues.
+        requireCapturing: true,
+      }),
+      `isRegexSupported should accept regexFilter: ${regexFilter}`
+    );
+
     await _testRegexFilterOrRedirect({
       description,
       regexFilter,
@@ -102,6 +121,11 @@ function makeDnrTestUtils() {
   }
 
   async function testInvalidRegexFilter(regexFilter, expectedError, msg) {
+    browser.test.assertDeepEq(
+      { isSupported: false, reason: "syntaxError" },
+      await dnr.isRegexSupported({ regex: regexFilter }),
+      `isRegexSupported should detect unsupported regex: ${regexFilter}`
+    );
     await browser.test.assertRejects(
       dnr.updateSessionRules({
         addRules: [

@@ -102,6 +102,32 @@ this.declarativeNetRequest = class extends ExtensionAPI {
           return ExtensionDNR.getRuleManager(extension).getSessionRules();
         },
 
+        isRegexSupported(regexOptions) {
+          const {
+            regex: regexFilter,
+            isCaseSensitive: isUrlFilterCaseSensitive,
+            // requireCapturing: is ignored, as it does not affect validation.
+          } = regexOptions;
+
+          let ruleValidator = new ExtensionDNR.RuleValidator([]);
+          ruleValidator.addRules([
+            {
+              id: 1,
+              condition: { regexFilter, isUrlFilterCaseSensitive },
+              action: { type: "allow" },
+            },
+          ]);
+          let failures = ruleValidator.getFailures();
+          if (failures.length) {
+            // While the UnsupportedRegexReason enum has more entries than just
+            // "syntaxError" (e.g. also "memoryLimitExceeded"), our validation
+            // is currently very permissive, and therefore the only
+            // distinguishable error is "syntaxError".
+            return { isSupported: false, reason: "syntaxError" };
+          }
+          return { isSupported: true };
+        },
+
         async testMatchOutcome(request, options) {
           ensureDNRFeedbackEnabled("declarativeNetRequest.testMatchOutcome");
           let { url, initiator, ...req } = request;
