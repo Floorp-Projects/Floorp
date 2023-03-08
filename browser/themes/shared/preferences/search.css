@@ -45,7 +45,7 @@
 
 /* work around a display: none in Linux's menu.css, see bug 1112310 */
 .searchengine-menuitem > .menu-iconic-left {
-  display: flex;
+  display: -moz-box;
 }
 
 #engineList {

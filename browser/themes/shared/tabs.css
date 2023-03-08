@@ -53,7 +53,7 @@
   padding-inline: var(--tab-overflow-pinned-tabs-width) 0;
   /* Use a bigger flex value than the searchbar to prevent it from
    * taking all the toolbar space. */
-  flex: 1000 1000;
+  -moz-box-flex: 1000;
 }
 
 #tabbrowser-tabpanels {
@@ -95,11 +95,11 @@
   border-width: 0;
   margin: 0;
   padding: 0 2px;
-  align-items: stretch;
+  -moz-box-align: stretch;
   /* Needed so that overflowing content overflows towards the end rather than
      getting centered. That prevents tab opening animation from looking off at
      the start, see bug 1759221. */
-  justify-content: flex-start;
+  -moz-box-pack: start;
   overflow: clip;
   /* Needed to avoid clipping the tab-background shadow, which has a 4px blur
    * (we only have 2px padding in the inline direction) */

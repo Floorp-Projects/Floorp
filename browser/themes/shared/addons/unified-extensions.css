@@ -142,7 +142,7 @@ unified-extensions-item {
 }
 
 toolbaritem.unified-extensions-item .unified-extensions-item-menu-button.subviewbutton {
-  flex: none;
+  -moz-box-flex: 0;
   margin-inline-start: var(--arrowpanel-menuitem-margin-inline);
   padding: 8px;
   border: 1px solid transparent;

@@ -84,7 +84,7 @@
 
 #placesMenu > menu::after {
   content: "";
-  display: flex;
+  display: -moz-box;
   width: 12px;
   height: 12px;
   content: url("chrome://global/skin/icons/arrow-down-12.svg");

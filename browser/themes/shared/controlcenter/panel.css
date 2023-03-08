@@ -332,8 +332,8 @@
 }
 
 #protections-popup-trackersView-list.empty {
-  align-items: center;
-  justify-content: center;
+  -moz-box-align: center;
+  -moz-box-pack: center;
 }
 
 .protections-popup-empty-label {
@@ -566,7 +566,7 @@
 .protections-popup-tp-switch-label-box,
 .protections-popup-tp-switch-box {
   min-height: 40px;
-  justify-content: center;
+  -moz-box-pack: center;
 }
 
 /* This is needed in order to show a correct height if the 'Site not working?'

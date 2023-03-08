@@ -11,7 +11,7 @@
 }
 
 #aboutDialogContainer {
-  flex: 1;
+  -moz-box-flex: 1;
 }
 
 #rightBox {
@@ -81,7 +81,7 @@
    * the dialog, so set the width to a reasonable size, but let it flex to take
    * all available space. */
   width: 430px;
-  flex: 1 auto;
+  -moz-box-flex: 1;
 }
 
 .update-throbber {
