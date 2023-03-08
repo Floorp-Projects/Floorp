@@ -281,15 +281,6 @@ def android_lldb_server(target, host, ndk, lldb):
 set_config("ANDROID_LLDB_SERVER", android_lldb_server)
 
 
-@depends(target)
-def android_toolchain_prefix_base(target):
-    if target.cpu == "x86":
-        # Ideally, the --target should just have the right x86 variant
-        # in the first place.
-        return "i686-linux-android"
-    return target.toolchain
-
-
 option(
     env="STLPORT_CPPFLAGS",
     nargs=1,
@@ -396,17 +387,6 @@ def extra_toolchain_flags(
 
 
 add_old_configure_assignment("extra_android_flags", extra_toolchain_flags)
-
-
-@depends(android_toolchain_prefix_base, android_toolchain)
-def android_toolchain_prefix(prefix_base, toolchain):
-    if toolchain:
-        return "%s/bin/%s-" % (toolchain, prefix_base)
-
-
-imply_option(
-    "--with-toolchain-prefix", android_toolchain_prefix, reason="--with-android-ndk"
-)
 
 
 @depends(extra_toolchain_flags, stlport_cppflags)
