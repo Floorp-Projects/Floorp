@@ -3429,8 +3429,6 @@ ImgDrawResult nsCSSBorderImageRenderer::DrawBorderImage(
   Maybe<nsSize> svgViewportSize =
       intrinsicSize.CanComputeConcreteSize() ? Nothing() : Some(mImageSize);
   bool hasIntrinsicRatio = intrinsicSize.HasRatio();
-  mImageRenderer.PurgeCacheForViewportChange(svgViewportSize,
-                                             hasIntrinsicRatio);
 
   // These helper tables recharacterize the 'slice' and 'width' margins
   // in a more convenient form: they are the x/y/width/height coords

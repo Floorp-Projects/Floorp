@@ -162,44 +162,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont {
   RefPtr<nsAtom> mLanguage;
 };
 
-// TODO(emilio, bug 1564526): Evaluate whether this is still needed.
-struct CachedBorderImageData {
-  ~CachedBorderImageData() { PurgeCachedImages(); }
-
-  // Caller are expected to ensure that the value of aSize is different from the
-  // cached one since the method won't do the check.
-  void SetCachedSVGViewportSize(const mozilla::Maybe<nsSize>& aSize) {
-    mCachedSVGViewportSize = aSize;
-  }
-
-  const mozilla::Maybe<nsSize>& GetCachedSVGViewportSize() const {
-    return mCachedSVGViewportSize;
-  }
-
-  void PurgeCachedImages();
-
-  void SetSubImage(uint8_t aIndex, imgIContainer* aSubImage) {
-    mSubImages.EnsureLengthAtLeast(aIndex + 1);
-    mSubImages[aIndex] = aSubImage;
-  }
-  imgIContainer* GetSubImage(uint8_t aIndex) {
-    return mSubImages.SafeElementAt(aIndex);
-  }
-
-  // These methods are used for the caller to caches the sub images created
-  // during a border-image paint operation
-  void PurgeCacheForViewportChange(
-      const mozilla::Maybe<nsSize>& aSVGViewportSize,
-      const bool aHasIntrinsicRatio);
-
- private:
-  // If this is a SVG border-image, we save the size of the SVG viewport that
-  // we used when rasterizing any cached border-image subimages. (The viewport
-  // size matters for percent-valued sizes & positions in inner SVG doc).
-  mozilla::Maybe<nsSize> mCachedSVGViewportSize;
-  nsTArray<RefPtr<imgIContainer>> mSubImages;
-};
-
 struct nsStyleImageLayers {
   enum class LayerType : uint8_t { Background = 0, Mask };
 

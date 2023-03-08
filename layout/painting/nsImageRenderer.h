@@ -248,8 +248,6 @@ class nsImageRenderer {
   ImgDrawResult PrepareResult() const { return mPrepareResult; }
   void SetExtendMode(mozilla::gfx::ExtendMode aMode) { mExtendMode = aMode; }
   void SetMaskOp(mozilla::StyleMaskMode aMaskOp) { mMaskOp = aMaskOp; }
-  void PurgeCacheForViewportChange(
-      const mozilla::Maybe<nsSize>& aSVGViewportSize, const bool aHasRatio);
   const nsSize& GetSize() const { return mSize; }
   mozilla::StyleImage::Tag GetType() const { return mType; }
   const mozilla::StyleGradient* GetGradientData() const {
