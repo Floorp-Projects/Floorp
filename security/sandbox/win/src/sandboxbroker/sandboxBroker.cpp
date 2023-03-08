@@ -8,6 +8,7 @@
 
 #include "sandboxBroker.h"
 
+#include <aclapi.h>
 #include <shlobj.h>
 #include <string>
 
@@ -20,6 +21,7 @@
 #include "mozilla/Omnijar.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SandboxSettings.h"
+#include "mozilla/SHA1.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/StaticPrefs_widget.h"
@@ -36,14 +38,18 @@
 #include "nsIXULRuntime.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
+#include "nsTArray.h"
 #include "nsTHashtable.h"
+#include "sandbox/win/src/app_container_profile.h"
 #include "sandbox/win/src/sandbox.h"
 #include "sandbox/win/src/security_level.h"
 #include "WinUtils.h"
 
 namespace mozilla {
 
-sandbox::BrokerServices* SandboxBroker::sBrokerService = nullptr;
+constexpr wchar_t kLpacFirefoxInstallFiles[] = L"lpacFirefoxInstallFiles";
+
+sandbox::BrokerServices* sBrokerService = nullptr;
 
 // This is set to true in Initialize when our exe file name has a drive type of
 // DRIVE_REMOTE, so that we can tailor the sandbox policy as some settings break
@@ -638,6 +644,188 @@ static sandbox::ResultCode SetJobLevel(sandbox::TargetPolicy* aPolicy,
   }
 
   return aPolicy->SetJobLevel(sandbox::JOB_NONE, 0);
+}
+
+static void HexEncode(const Span<const uint8_t>& aBytes, nsACString& aEncoded) {
+  static const char kHexChars[] = "0123456789abcdef";
+
+  // Each input byte creates two output hex characters.
+  char* encodedPtr;
+  aEncoded.GetMutableData(&encodedPtr, aBytes.size() * 2);
+
+  for (auto byte : aBytes) {
+    *(encodedPtr++) = kHexChars[byte >> 4];
+    *(encodedPtr++) = kHexChars[byte & 0xf];
+  }
+}
+
+// This is left as a void because we might fail to set the permission for some
+// reason and yet the LPAC permission is already granted. So returning success
+// or failure isn't really that useful.
+static void EnsureLpacPermsissionsOnBinDir() {
+  BYTE sidBytes[SECURITY_MAX_SID_SIZE];
+  PSID lpacFirefoxInstallFilesSid = static_cast<PSID>(sidBytes);
+  if (!sBrokerService->DeriveCapabilitySidFromName(kLpacFirefoxInstallFiles,
+                                                   lpacFirefoxInstallFilesSid,
+                                                   sizeof(sidBytes))) {
+    LOG_E("Failed to derive Firefox install files capability SID.");
+    return;
+  }
+
+  HANDLE hBinDir =
+      ::CreateFileW(sBinDir->get(), WRITE_DAC | READ_CONTROL, 0, NULL,
+                    OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+  if (hBinDir == INVALID_HANDLE_VALUE) {
+    LOG_W("Unable to get binary directory handle.");
+    return;
+  }
+
+  UniquePtr<HANDLE, CloseHandleDeleter> autoHandleCloser(hBinDir);
+  PACL pBinDirAcl = nullptr;
+  PSECURITY_DESCRIPTOR pSD = nullptr;
+  DWORD result =
+      ::GetSecurityInfo(hBinDir, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION,
+                        nullptr, nullptr, &pBinDirAcl, nullptr, &pSD);
+  if (result != ERROR_SUCCESS) {
+    LOG_E("Failed to get DACL for binary directory.");
+    return;
+  }
+
+  UniquePtr<VOID, LocalFreeDeleter> autoFreeSecDesc(pSD);
+  if (!pBinDirAcl) {
+    LOG_E("DACL for binary directory was null.");
+    return;
+  }
+
+  for (DWORD i = 0; i < pBinDirAcl->AceCount; ++i) {
+    VOID* pAce = nullptr;
+    if (!::GetAce(pBinDirAcl, i, &pAce) ||
+        static_cast<PACE_HEADER>(pAce)->AceType != ACCESS_ALLOWED_ACE_TYPE) {
+      continue;
+    }
+
+    auto* pAllowedAce = static_cast<ACCESS_ALLOWED_ACE*>(pAce);
+    if ((pAllowedAce->Mask & (GENERIC_READ | GENERIC_EXECUTE)) !=
+        (GENERIC_READ | GENERIC_EXECUTE)) {
+      continue;
+    }
+
+    PSID aceSID = reinterpret_cast<PSID>(&(pAllowedAce->SidStart));
+    if (::EqualSid(aceSID, lpacFirefoxInstallFilesSid)) {
+      LOG_D("Firefox install files permission found on binary directory.");
+      return;
+    }
+  }
+
+  EXPLICIT_ACCESS_W newAccess = {0};
+  newAccess.grfAccessMode = GRANT_ACCESS;
+  newAccess.grfAccessPermissions = GENERIC_READ | GENERIC_EXECUTE;
+  newAccess.grfInheritance = SUB_CONTAINERS_AND_OBJECTS_INHERIT;
+  ::BuildTrusteeWithSidW(&newAccess.Trustee, lpacFirefoxInstallFilesSid);
+  PACL newDacl = nullptr;
+  if (ERROR_SUCCESS !=
+      ::SetEntriesInAclW(1, &newAccess, pBinDirAcl, &newDacl)) {
+    LOG_E("Failed to create new DACL with Firefox install files SID.");
+    return;
+  }
+
+  UniquePtr<ACL, LocalFreeDeleter> autoFreeAcl(newDacl);
+  if (ERROR_SUCCESS != ::SetSecurityInfo(hBinDir, SE_FILE_OBJECT,
+                                         DACL_SECURITY_INFORMATION, nullptr,
+                                         nullptr, newDacl, nullptr)) {
+    LOG_E("Failed to set new DACL on binary directory.");
+  }
+
+  LOG_D("Firefox install files permission granted on binary directory.");
+}
+
+static bool IsLowPrivilegedAppContainerSupported() {
+  // Chromium doesn't support adding an LPAC before this version due to
+  // incompatibility with some process mitigations.
+  return IsWin10Sep2018UpdateOrLater();
+}
+
+// AddAndConfigureAppContainerProfile deliberately fails if it is called on an
+// unsupported version. This is because for some process types the LPAC is
+// required to provide a sufficiently strong sandbox. Processes where the use of
+// an LPAC is an optional extra should use IsLowPrivilegedAppContainerSupported
+// to check support first.
+static sandbox::ResultCode AddAndConfigureAppContainerProfile(
+    sandbox::TargetPolicy* aPolicy, const nsAString& aPackagePrefix,
+    const nsTArray<sandbox::WellKnownCapabilities>& aWellKnownCapabilites,
+    const nsTArray<const wchar_t*>& aNamedCapabilites) {
+  // CreateAppContainerProfile requires that the profile name is at most 64
+  // characters but 50 on WCOS systems. The size of sha1 is a constant 40,
+  // so validate that the base names are sufficiently short that the total
+  // length is valid on all systems.
+  MOZ_ASSERT(aPackagePrefix.Length() <= 10U,
+             "AppContainer Package prefix too long.");
+
+  if (!IsLowPrivilegedAppContainerSupported()) {
+    return sandbox::SBOX_ERROR_UNSUPPORTED;
+  }
+
+  static nsAutoString uniquePackageStr = []() {
+    // userenv.dll may not have been loaded and some of the chromium sandbox
+    // AppContainer code assumes that it is. Done here to load once.
+    ::LoadLibraryW(L"userenv.dll");
+
+    // Done during the package string initialization so we only do it once.
+    EnsureLpacPermsissionsOnBinDir();
+
+    // This mirrors Edge's use of the exe path for the SHA1 hash to give a
+    // machine unique name per install.
+    nsAutoString ret;
+    char exePathBuf[MAX_PATH];
+    DWORD pathSize = ::GetModuleFileNameA(nullptr, exePathBuf, MAX_PATH);
+    if (!pathSize) {
+      return ret;
+    }
+
+    SHA1Sum sha1Sum;
+    SHA1Sum::Hash sha1Hash;
+    sha1Sum.update(exePathBuf, pathSize);
+    sha1Sum.finish(sha1Hash);
+
+    nsAutoCString hexEncoded;
+    HexEncode(sha1Hash, hexEncoded);
+    ret = NS_ConvertUTF8toUTF16(hexEncoded);
+    return ret;
+  }();
+
+  if (uniquePackageStr.IsEmpty()) {
+    return sandbox::SBOX_ERROR_CREATE_APPCONTAINER_PROFILE;
+  }
+
+  // The bool parameter is called create_profile, but in fact it tries to create
+  // and then opens if it already exists. So always passing true is fine.
+  bool createOrOpenProfile = true;
+  nsAutoString packageName = aPackagePrefix + uniquePackageStr;
+  sandbox::ResultCode result =
+      aPolicy->AddAppContainerProfile(packageName.get(), createOrOpenProfile);
+  if (result != sandbox::SBOX_ALL_OK) {
+    return result;
+  }
+
+  // This looks odd, but unfortunately holding a scoped_refptr and
+  // dereferencing has DCHECKs that cause a linking problem.
+  sandbox::AppContainerProfile* profile =
+      aPolicy->GetAppContainerProfile().get();
+  profile->SetEnableLowPrivilegeAppContainer(true);
+
+  for (auto wkCap : aWellKnownCapabilites) {
+    if (!profile->AddCapability(wkCap)) {
+      return sandbox::SBOX_ERROR_CREATE_APPCONTAINER_PROFILE_CAPABILITY;
+    }
+  }
+
+  for (auto namedCap : aNamedCapabilites) {
+    if (!profile->AddCapability(namedCap)) {
+      return sandbox::SBOX_ERROR_CREATE_APPCONTAINER_PROFILE_CAPABILITY;
+    }
+  }
+
+  return sandbox::SBOX_ALL_OK;
 }
 
 void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
@@ -1266,6 +1454,7 @@ struct UtilitySandboxProps {
       sandbox::INTEGRITY_LEVEL_UNTRUSTED;
 
   bool mUseAlternateWindowStation = true;
+  bool mUseAlternateDesktop = true;
   bool mUseWin32kLockdown = true;
   bool mUseCig = true;
 
@@ -1280,6 +1469,11 @@ struct UtilitySandboxProps {
       sandbox::MITIGATION_STRICT_HANDLE_CHECKS |
       sandbox::MITIGATION_DLL_SEARCH_ORDER |
       sandbox::MITIGATION_DYNAMIC_CODE_DISABLE;
+
+  // Low Privileged Application Container settings;
+  nsString mPackagePrefix;
+  nsTArray<sandbox::WellKnownCapabilities> mWellKnownCapabilites;
+  nsTArray<const wchar_t*> mNamedCapabilites;
 };
 
 struct GenericUtilitySandboxProps : public UtilitySandboxProps {};
@@ -1304,8 +1498,38 @@ struct UtilityMfMediaEngineCdmSandboxProps : public UtilitySandboxProps {
   UtilityMfMediaEngineCdmSandboxProps() {
     mJobLevel = sandbox::JOB_INTERACTIVE;
     mDelayedTokenLevel = sandbox::USER_RESTRICTED_NON_ADMIN;
+    mUseAlternateDesktop = false;
     mUseAlternateWindowStation = false;
-    mDelayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
+    // If we are using an LPAC then we can't set an integrity level and the
+    // process will default to low integrity anyway.
+    if (StaticPrefs::security_sandbox_utility_wmf_cdm_lpac_enabled()) {
+      mInitialIntegrityLevel = sandbox::INTEGRITY_LEVEL_LAST;
+      mDelayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_LAST;
+
+      mPackagePrefix = u"fx.sb.cdm"_ns;
+      mWellKnownCapabilites = {
+          sandbox::WellKnownCapabilities::kPrivateNetworkClientServer,
+          sandbox::WellKnownCapabilities::kInternetClient,
+      };
+      mNamedCapabilites = {
+          L"lpacCom",
+          L"lpacIdentityServices",
+          L"lpacMedia",
+          L"lpacPnPNotifications",
+          L"lpacServicesManagement",
+          L"lpacSessionManagement",
+          L"lpacAppExperience",
+          L"lpacInstrumentation",
+          L"lpacCryptoServices",
+          L"lpacEnterprisePolicyChangeNotifications",
+          L"mediaFoundationCdmFiles",
+          L"lpacMediaFoundationCdmData",
+          L"registryRead",
+          kLpacFirefoxInstallFiles,
+      };
+    } else {
+      mDelayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
+    }
     mUseWin32kLockdown = false;
     mDelayedMitigations = sandbox::MITIGATION_STRICT_HANDLE_CHECKS |
                           sandbox::MITIGATION_DLL_SEARCH_ORDER;
@@ -1327,6 +1551,21 @@ struct WindowsUtilitySandboxProps : public UtilitySandboxProps {
   }
 };
 
+static const char* WellKnownCapabilityNames[] = {
+    "InternetClient",
+    "InternetClientServer",
+    "PrivateNetworkClientServer",
+    "PicturesLibrary",
+    "VideosLibrary",
+    "MusicLibrary",
+    "DocumentsLibrary",
+    "EnterpriseAuthentication",
+    "SharedUserCertificates",
+    "RemovableStorage",
+    "Appointments",
+    "Contacts",
+};
+
 void LogUtilitySandboxProps(const UtilitySandboxProps& us) {
   if (!static_cast<LogModule*>(sSandboxBrokerLog)->ShouldLog(LogLevel::Debug)) {
     return;
@@ -1345,6 +1584,8 @@ void LogUtilitySandboxProps(const UtilitySandboxProps& us) {
                       static_cast<int>(us.mDelayedIntegrityLevel));
   logMsg.AppendPrintf("\tUse Alternate Window Station: %s\n",
                       us.mUseAlternateWindowStation ? "yes" : "no");
+  logMsg.AppendPrintf("\tUse Alternate Desktop: %s\n",
+                      us.mUseAlternateDesktop ? "yes" : "no");
   logMsg.AppendPrintf("\tUse Win32k Lockdown: %s\n",
                       us.mUseWin32kLockdown ? "yes" : "no");
   logMsg.AppendPrintf("\tUse CIG: %s\n", us.mUseCig ? "yes" : "no");
@@ -1352,6 +1593,21 @@ void LogUtilitySandboxProps(const UtilitySandboxProps& us) {
                       static_cast<uint64_t>(us.mInitialMitigations));
   logMsg.AppendPrintf("\tDelayed mitigations: %016llx\n",
                       static_cast<uint64_t>(us.mDelayedMitigations));
+  if (us.mPackagePrefix.IsEmpty()) {
+    logMsg.AppendPrintf("\tNo Low Privileged Application Container\n");
+  } else {
+    logMsg.AppendPrintf("\tLow Privileged Application Container Settings:\n");
+    logMsg.AppendPrintf("\t\tPackage Name Prefix: %S\n",
+                        static_cast<wchar_t*>(us.mPackagePrefix.get()));
+    logMsg.AppendPrintf("\t\tWell Known Capabilities:\n");
+    for (auto wkCap : us.mWellKnownCapabilites) {
+      logMsg.AppendPrintf("\t\t\t%s\n", WellKnownCapabilityNames[wkCap]);
+    }
+    logMsg.AppendPrintf("\t\tNamed Capabilities:\n");
+    for (auto namedCap : us.mNamedCapabilites) {
+      logMsg.AppendPrintf("\t\t\t%S\n", namedCap);
+    }
+  }
 
   LOG_D("%s", logMsg.get());
 }
@@ -1370,21 +1626,27 @@ bool BuildUtilitySandbox(sandbox::TargetPolicy* policy,
       result,
       "SetTokenLevel should never fail with these arguments, what happened?");
 
-  result = policy->SetAlternateDesktop(us.mUseAlternateWindowStation);
-  if (NS_WARN_IF(result != sandbox::SBOX_ALL_OK)) {
-    LOG_W("SetAlternateDesktop failed, result: %i, last error: %lx", result,
-          ::GetLastError());
+  if (us.mInitialIntegrityLevel != sandbox::INTEGRITY_LEVEL_LAST) {
+    result = policy->SetIntegrityLevel(us.mInitialIntegrityLevel);
+    SANDBOX_ENSURE_SUCCESS(result,
+                           "SetIntegrityLevel should never fail with these "
+                           "arguments, what happened?");
   }
 
-  result = policy->SetIntegrityLevel(us.mInitialIntegrityLevel);
-  SANDBOX_ENSURE_SUCCESS(result,
-                         "SetIntegrityLevel should never fail with these "
-                         "arguments, what happened?");
+  if (us.mDelayedIntegrityLevel != sandbox::INTEGRITY_LEVEL_LAST) {
+    result = policy->SetDelayedIntegrityLevel(us.mDelayedIntegrityLevel);
+    SANDBOX_ENSURE_SUCCESS(result,
+                           "SetIntegrityLevel should never fail with these "
+                           "arguments, what happened?");
+  }
 
-  result = policy->SetDelayedIntegrityLevel(us.mDelayedIntegrityLevel);
-  SANDBOX_ENSURE_SUCCESS(result,
-                         "SetDelayedIntegrityLevel should never fail with "
-                         "these arguments, what happened?");
+  if (us.mUseAlternateDesktop) {
+    result = policy->SetAlternateDesktop(us.mUseAlternateWindowStation);
+    if (NS_WARN_IF(result != sandbox::SBOX_ALL_OK)) {
+      LOG_W("SetAlternateDesktop failed, result: %i, last error: %lx", result,
+            ::GetLastError());
+    }
+  }
 
   policy->SetLockdownDefaultDacl();
   policy->AddRestrictingRandomSid();
@@ -1409,6 +1671,16 @@ bool BuildUtilitySandbox(sandbox::TargetPolicy* policy,
     SANDBOX_ENSURE_SUCCESS(result, "Failed to initialize signed policy rules.");
   }
 
+
+  if (!us.mPackagePrefix.IsEmpty()) {
+    MOZ_ASSERT(us.mInitialIntegrityLevel == sandbox::INTEGRITY_LEVEL_LAST,
+               "Initial integrity level cannot be specified if using an LPAC.");
+
+    result = AddAndConfigureAppContainerProfile(policy, us.mPackagePrefix,
+                                                us.mWellKnownCapabilites,
+                                                us.mNamedCapabilites);
+    SANDBOX_ENSURE_SUCCESS(result, "Failed to configure AppContainer profile.");
+  }
   // Add the policy for the client side of a pipe. It is just a file
   // in the \pipe\ namespace. We restrict it to pipes that start with
   // "chrome." so the sandboxed process cannot connect to system services.

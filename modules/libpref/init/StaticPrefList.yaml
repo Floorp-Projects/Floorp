@@ -13378,6 +13378,16 @@
     value: false
     mirror: always
 
+  # Whether a Low Privilege AppContainer (LPAC) is enabled for the relevant
+  # process type.
+
+#if defined(MOZ_WMF_MEDIA_ENGINE)
+-   name: security.sandbox.utility-wmf-cdm.lpac.enabled
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
+#endif
+
   # Whether Arbitrary Code Guard is enabled for the RDD process.
 -   name: security.sandbox.rdd.acg.enabled
     type: RelaxedAtomicBool
