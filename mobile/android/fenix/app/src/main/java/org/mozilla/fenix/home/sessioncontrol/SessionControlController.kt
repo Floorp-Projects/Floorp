@@ -566,6 +566,7 @@ class DefaultSessionControlController(
 
     override fun handleRemoveCollectionsPlaceholder() {
         settings.showCollectionsPlaceholderOnHome = false
+        Collections.placeholderCancel.record()
         appStore.dispatch(AppAction.RemoveCollectionsPlaceholder)
     }
 

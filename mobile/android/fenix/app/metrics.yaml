@@ -4897,6 +4897,23 @@ collections:
     metadata:
       tags:
         - Collections
+  placeholder_cancel:
+    type: event
+    description: |
+      User interacted with the `X` button from the homescreen no collections
+      placeholder.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1821032
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/1167
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 122
+    metadata:
+      tags:
+        - Collections
 
 search_widget:
   new_tab_button:

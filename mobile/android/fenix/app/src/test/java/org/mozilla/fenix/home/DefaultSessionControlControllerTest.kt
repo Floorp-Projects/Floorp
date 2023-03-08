@@ -1050,6 +1050,9 @@ class DefaultSessionControlControllerTest {
     fun handleRemoveCollectionsPlaceholder() {
         createController().handleRemoveCollectionsPlaceholder()
 
+        val recordedEvents = Collections.placeholderCancel.testGetValue()!!
+        assertEquals(1, recordedEvents.size)
+        assertEquals(null, recordedEvents.single().extra)
         verify {
             settings.showCollectionsPlaceholderOnHome = false
             appStore.dispatch(AppAction.RemoveCollectionsPlaceholder)
