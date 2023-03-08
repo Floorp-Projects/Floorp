@@ -137,6 +137,7 @@ async function check_results({
       Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.SEARCH);
       Assert.equal(result.providerName, "SearchSuggestions");
       Assert.equal(result.payload.engine, "basic");
+      Assert.equal(result.payload.trending, true);
     }
   }
 

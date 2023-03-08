@@ -1709,6 +1709,9 @@ export class UrlbarView {
         lazy.UrlbarUtils.ICON.HISTORY) ||
       iconUrlOverride ||
       result.payload.icon ||
+      (result.type == lazy.UrlbarUtils.RESULT_TYPE.SEARCH &&
+        result.payload.trending &&
+        lazy.UrlbarUtils.ICON.TRENDING) ||
       ((result.type == lazy.UrlbarUtils.RESULT_TYPE.SEARCH ||
         result.type == lazy.UrlbarUtils.RESULT_TYPE.KEYWORD) &&
         lazy.UrlbarUtils.ICON.SEARCH_GLASS) ||

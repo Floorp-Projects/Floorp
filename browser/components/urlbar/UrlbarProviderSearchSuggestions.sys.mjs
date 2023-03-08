@@ -435,6 +435,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
                   alias ? alias : undefined,
                   UrlbarUtils.HIGHLIGHT.TYPED,
                 ],
+                trending: entry.trending,
                 query: [searchString.trim(), UrlbarUtils.HIGHLIGHT.NONE],
                 icon: !entry.value ? engine.iconURI?.spec : undefined,
               }
@@ -521,7 +522,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
    *   Whether we should fetch trending results.
    */
   #shouldFetchTrending(queryContext) {
-    return (
+    return !!(
       queryContext.searchString == "" &&
       lazy.UrlbarPrefs.get("trending.featureGate") &&
       (queryContext.searchMode ||

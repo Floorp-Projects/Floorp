@@ -57,11 +57,14 @@ class SearchSuggestionEntry {
    * @param {string} [options.tail]
    *   Represents the suggested part of a tail suggestion. For example, Google
    *   might return "toronto" as the tail for the query "what time is it in t".
+   * @param {boolean} [options.trending]
+   *   Whether this is a trending suggestion.
    */
-  constructor(value, { matchPrefix, tail } = {}) {
+  constructor(value, { matchPrefix, tail, trending } = {}) {
     this.#value = value;
     this.#matchPrefix = matchPrefix;
     this.#tail = tail;
+    this.#trending = trending;
   }
 
   get value() {
@@ -74,6 +77,10 @@ class SearchSuggestionEntry {
 
   get tail() {
     return this.#tail;
+  }
+
+  get trending() {
+    return this.#trending;
   }
 
   get tailOffsetIndex() {
@@ -111,6 +118,7 @@ class SearchSuggestionEntry {
   #value;
   #matchPrefix;
   #tail;
+  #trending;
 }
 
 // Maps each engine name to a unique firstPartyDomain, so that requests to
@@ -663,7 +671,8 @@ export class SearchSuggestionController {
           results.remote.push(
             this.#newSearchSuggestionEntry(
               fullTextSuggestions[i],
-              richSuggestionData?.[i]
+              richSuggestionData?.[i],
+              context.fetchTrending
             )
           );
         }
@@ -742,18 +751,21 @@ export class SearchSuggestionController {
    * @param {object} richSuggestionData
    *   Rich suggestion data returned by the engine. In Google's case, this is
    *   the corresponding entry at "google:suggestdetail".
+   * @param {boolean} trending
+   *   Whether the suggestion is a trending suggestion.
    * @returns {SearchSuggestionEntry}
    */
-  #newSearchSuggestionEntry(suggestion, richSuggestionData) {
+  #newSearchSuggestionEntry(suggestion, richSuggestionData, trending) {
     if (richSuggestionData) {
       // We have valid rich suggestions.
       return new SearchSuggestionEntry(suggestion, {
         matchPrefix: richSuggestionData?.mp,
         tail: richSuggestionData?.t,
+        trending,
       });
     }
     // Return a regular suggestion.
-    return new SearchSuggestionEntry(suggestion);
+    return new SearchSuggestionEntry(suggestion, { trending });
   }
 }
 
