@@ -75,7 +75,7 @@ update {
 }
 
 .update-label-column {
-  -moz-box-align: end;
+  align-items: flex-end;
 }
 
 .update-type {
@@ -95,10 +95,10 @@ update {
 
 #historyItems .update {
   padding: 5px;
-  display: -moz-box;
-  -moz-box-orient: vertical;
+  display: flex;
+  flex-direction: column;
 }
 
 .update-name {
-  -moz-box-flex: 1;
+  flex: 1;
 }

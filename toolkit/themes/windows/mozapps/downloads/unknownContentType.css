@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #type {
-  -moz-box-flex: 1;
+  flex: 1;
   background-color: transparent;
   color: inherit;
 }

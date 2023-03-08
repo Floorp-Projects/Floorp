@@ -45,7 +45,8 @@ panel[titlebar] {
 }
 
 :is(panel, menupopup)::part(content) {
-  display: -moz-box;
+  display: flex;
+  /* TODO: Remove -moz-box-flex once bug 1809084 lands */
   -moz-box-flex: 1;
   -moz-font-smoothing-background-color: var(--panel-background, -moz-mac-menupopup);
   background: var(--panel-background);
@@ -60,7 +61,7 @@ panel[titlebar] {
 }
 
 :is(panel, menupopup)[orient=vertical]::part(content) {
-  -moz-box-orient: vertical;
+  flex-direction: column;
 }
 
 :is(panel, menupopup)[type="arrow"]::part(content) {

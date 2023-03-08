@@ -11,8 +11,8 @@
 /* ::::: splitter (vertical) ::::: */
 
 splitter {
-  -moz-box-align: center;
-  -moz-box-pack: center;
+  align-items: center;
+  justify-content: center;
   cursor: ew-resize;
   border-width: 0 1px;
   border-style: solid;

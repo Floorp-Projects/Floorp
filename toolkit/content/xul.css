@@ -17,8 +17,12 @@
 
 * {
   -moz-user-focus: ignore;
-  display: -moz-box;
+  display: flex;
   box-sizing: border-box;
+  /* By default XUL content isn't allowed to shrink. This is legacy (result of
+   * -moz-box-flex defaulting to zero) and could be removed with some amount of
+   * effort. */
+  flex-shrink: 0;
 }
 
 /* hide the content and destroy the frame */
@@ -36,7 +40,7 @@
  */
 *|*:root {
   --animation-easing-function: cubic-bezier(.07, .95, 0, 1);
-  -moz-box-flex: 1;
+  flex: 1;
   -moz-box-collapse: legacy;
 }
 
@@ -129,13 +133,13 @@ tab:focus {
 
 window {
   overflow: clip;
-  -moz-box-orient: vertical;
+  flex-direction: column;
 }
 
 /******** box *******/
 
 vbox {
-  -moz-box-orient: vertical;
+  flex-direction: column;
 }
 
 /********** label **********/
@@ -155,12 +159,12 @@ label html|span.accesskey {
 
 description:where([value]) {
   /* Preserves legacy behavior, maybe could be removed */
-  display: -moz-box;
+  display: flex;
 }
 
 label:where([value]) {
   /* Preserves legacy behavior, maybe could be removed */
-  display: -moz-inline-box;
+  display: inline-flex;
 }
 
 :is(label, description)[value] {
@@ -211,8 +215,8 @@ label[value=""]::before {
 /********** toolbarbutton **********/
 
 toolbarbutton {
-  -moz-box-align: center;
-  -moz-box-pack: center;
+  align-items: center;
+  justify-content: center;
 }
 
 toolbarbutton.tabbable {
@@ -280,7 +284,7 @@ browser {
 
 /*********** popup notification ************/
 popupnotification {
-  -moz-box-orient: vertical;
+  flex-direction: column;
 }
 
 .popup-notification-menubutton:not([label]) {
@@ -290,13 +294,13 @@ popupnotification {
 /********** radio **********/
 
 radiogroup {
-  -moz-box-orient: vertical;
+  flex-direction: column;
 }
 
 /******** groupbox *********/
 
 groupbox {
-  -moz-box-orient: vertical;
+  flex-direction: column;
 }
 
 /******** draggable elements *********/
@@ -327,7 +331,7 @@ titlebar {
 /******* toolbar *******/
 
 toolbox {
-  -moz-box-orient: vertical;
+  flex-direction: column;
 }
 
 @media (-moz-platform: macos) {
@@ -338,7 +342,7 @@ toolbox {
 }
 
 toolbarspring {
-  -moz-box-flex: 1000;
+  flex: 1000 1000;
 }
 
 /********* menu ***********/
@@ -348,14 +352,14 @@ menubar > menu:empty {
 }
 
 .menu-text {
-  -moz-box-flex: 1;
+  flex: 1;
 }
 
 /********* menupopup, panel, & tooltip ***********/
 
 menupopup,
 panel {
-  -moz-box-orient: vertical;
+  flex-direction: column;
 }
 
 menupopup,
@@ -374,6 +378,7 @@ tooltip {
   -moz-default-appearance: tooltip;
   -moz-font-smoothing-background-color: -moz-mac-tooltip;
 
+  /* TODO: Switch to flex-direction: column once bug 1809084 lands */
   -moz-box-orient: vertical;
   white-space: pre-wrap;
 
@@ -509,16 +514,16 @@ panel[type="arrow"][animating] {
 /******** tree ******/
 
 treecolpicker {
-  -moz-box-ordinal-group: 2147483646;
+  order: 2147483646;
 }
 
 treechildren {
-  display: -moz-box;
-  -moz-box-flex: 1;
+  display: flex;
+  flex: 1;
 }
 
 tree {
-  -moz-box-orient: vertical;
+  flex-direction: column;
 }
 
 tree[hidecolumnpicker="true"] treecolpicker {
@@ -527,11 +532,14 @@ tree[hidecolumnpicker="true"] treecolpicker {
 
 treecol {
   min-width: 16px;
+  /* This preserves the behavior of -moz-box-ordinal-group. To change this we'd
+   * need to migrate the persisted ordinal values etc. */
+  order: 1;
 }
 
 treecol[hidden="true"] {
   visibility: collapse;
-  display: -moz-box;
+  display: flex;
 }
 
 /* ::::: lines connecting cells ::::: */
@@ -588,7 +596,7 @@ stack > *|*:not(:-moz-native-anonymous) {
 /********** tabbox *********/
 
 tabbox {
-  -moz-box-orient: vertical;
+  flex-direction: column;
   min-height: 0;
 }
 
@@ -597,12 +605,12 @@ tabpanels {
 }
 
 tabs {
-  -moz-box-orient: horizontal;
+  flex-direction: row;
 }
 
 tab {
-  -moz-box-align: center;
-  -moz-box-pack: center;
+  align-items: center;
+  justify-content: center;
 }
 
 /********** tooltip *********/
@@ -616,10 +624,11 @@ tooltip[titletip="true"] {
  ********** to an insertion point parent that holds the real kids **************/
 
 .box-inherit {
-  -moz-box-orient: inherit;
-  -moz-box-pack: inherit;
-  -moz-box-align: inherit;
-  -moz-box-direction: inherit;
+  align-items: inherit;
+  justify-content: inherit;
+  flex-grow: inherit;
+  flex-shrink: inherit;
+  flex-direction: inherit;
 }
 
 /********** textbox **********/
@@ -638,12 +647,12 @@ search-textbox {
 .autocomplete-richlistbox {
   -moz-user-focus: ignore;
   overflow-x: hidden !important;
-  -moz-box-flex: 1;
+  flex: 1;
 }
 
 .autocomplete-richlistitem {
-  -moz-box-orient: vertical;
-  -moz-box-align: center;
+  flex-direction: column;
+  align-items: center;
   overflow: clip;
 }
 
@@ -678,7 +687,7 @@ menulist[popuponly] {
   min-width: 8px;
   appearance: none !important;
   border: none !important;
-  -moz-box-ordinal-group: 2147483646;
+  order: 2147483646;
   z-index: 2147483646;
 }
 
@@ -713,15 +722,15 @@ stringbundleset {
 /********** dialog **********/
 
 dialog {
-  -moz-box-flex: 1;
-  -moz-box-orient: vertical;
+  flex: 1;
+  flex-direction: column;
 }
 
 /********** wizard **********/
 
 wizard {
-  -moz-box-flex: 1;
-  -moz-box-orient: vertical;
+  flex: 1;
+  flex-direction: column;
   contain: inline-size;
   min-width: 40em;
   min-height: 30em;
@@ -737,14 +746,14 @@ wizard > wizardpage:not(.selected) {
 }
 
 wizardpage {
-  -moz-box-orient: vertical;
+  flex-direction: column;
   overflow: auto;
 }
 
 /********** Rich Listbox ********/
 
 richlistbox {
-  -moz-box-orient: vertical;
+  flex-direction: column;
   overflow: auto;
   min-width: 0;
   min-height: 0;
@@ -758,7 +767,7 @@ findbar {
 
 /* Some elements that in HTML blocks should be inline-level by default */
 button, image {
-  display: -moz-inline-box;
+  display: inline-flex;
 }
 
 .menu-iconic-highlightable-text:not([highlightable="true"]),
@@ -766,18 +775,18 @@ button, image {
   display: none;
 }
 
-[orient="vertical"] { -moz-box-orient: vertical !important; }
-[orient="horizontal"] { -moz-box-orient: horizontal !important; }
+[orient="vertical"] { flex-direction: column !important; }
+[orient="horizontal"] { flex-direction: row !important; }
 
-[align="start"] { -moz-box-align: start !important; }
-[align="center"] { -moz-box-align: center !important; }
-[align="end"] { -moz-box-align: end !important; }
-[align="baseline"] { -moz-box-align: baseline !important; }
-[align="stretch"] { -moz-box-align: stretch !important; }
+[align="start"] { align-items: flex-start !important; }
+[align="center"] { align-items: center !important; }
+[align="end"] { align-items: flex-end !important; }
+[align="baseline"] { align-items: baseline !important; }
+[align="stretch"] { align-items: stretch !important; }
 
-[pack="start"] { -moz-box-pack: start !important; }
-[pack="center"] { -moz-box-pack: center !important; }
-[pack="end"] { -moz-box-pack: end !important; }
+[pack="start"] { justify-content: start !important; }
+[pack="center"] { justify-content: center !important; }
+[pack="end"] { justify-content: flex-end !important; }
 
-[flex="0"] { -moz-box-flex: 0 !important; }
-[flex="1"] { -moz-box-flex: 1 !important; }
+[flex="0"] { flex: none !important; }
+[flex="1"] { flex-grow: 1 !important; flex-shrink: 1 !important }

@@ -302,7 +302,7 @@
 }
 
 #submitHealthReportBox {
-  display: -moz-inline-box;
+  display: inline-flex;
 }
 
 /* Address bar */

@@ -739,7 +739,7 @@ add_task(async function test_somehidden() {
   while (child) {
     is(
       getComputedStyle(child).display,
-      child.label.indexOf("Visible") > 0 ? "-moz-box" : "none",
+      child.label.indexOf("Visible") > 0 ? "flex" : "none",
       "Item " + idx++ + " is visible"
     );
     child = child.nextElementSibling;

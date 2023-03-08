@@ -18,7 +18,7 @@ dialog {
 
 .contentPane,
 dialog::part(content-box) {
-  -moz-box-flex: 1;
+  flex: 1;
   /* This allows the focus ring to display fully when scrolling is enabled. */
   padding: 4px;
 }

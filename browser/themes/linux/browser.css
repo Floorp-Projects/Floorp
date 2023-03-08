@@ -31,7 +31,7 @@
 }
 
 #menubar-items {
-  -moz-box-orient: vertical; /* for flex hack */
+  flex-direction: column; /* for flex hack */
 }
 
 #navigator-toolbox {
@@ -332,7 +332,7 @@ menuitem.bookmark-item {
    * can swallow those events. */
   .titlebar-buttonbox {
     z-index: 1;
-    -moz-box-align: center;
+    align-items: center;
   }
 
   /* Render titlebar command buttons according to system config.
@@ -340,22 +340,22 @@ menuitem.bookmark-item {
   .titlebar-min {
     appearance: auto;
     -moz-default-appearance: -moz-window-button-minimize;
-    -moz-box-ordinal-group: env(-moz-gtk-csd-minimize-button-position);
+    order: env(-moz-gtk-csd-minimize-button-position);
   }
   .titlebar-max {
     appearance: auto;
     -moz-default-appearance: -moz-window-button-maximize;
-    -moz-box-ordinal-group: env(-moz-gtk-csd-maximize-button-position);
+    order: env(-moz-gtk-csd-maximize-button-position);
   }
   .titlebar-restore {
     appearance: auto;
     -moz-default-appearance: -moz-window-button-restore;
-    -moz-box-ordinal-group: env(-moz-gtk-csd-maximize-button-position);
+    order: env(-moz-gtk-csd-maximize-button-position);
   }
   .titlebar-close {
     appearance: auto;
     -moz-default-appearance: -moz-window-button-close;
-    -moz-box-ordinal-group: env(-moz-gtk-csd-close-button-position);
+    order: env(-moz-gtk-csd-close-button-position);
   }
 
   /* When using lightweight themes, use our own buttons since native ones might
@@ -414,7 +414,7 @@ menuitem.bookmark-item {
 
   @media (-moz-gtk-csd-reversed-placement) {
     .titlebar-buttonbox-container {
-      -moz-box-ordinal-group: 0;
+      order: -1;
     }
   }
 }

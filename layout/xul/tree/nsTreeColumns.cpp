@@ -440,9 +440,7 @@ void nsTreeColumns::EnsureColumns() {
     // Enumerate the columns in visible order
     CSSOrderAwareFrameIterator iter(
         colFrame, FrameChildListID::Principal,
-        CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
-        CSSOrderAwareFrameIterator::OrderState::Unknown,
-        CSSOrderAwareFrameIterator::OrderingProperty::BoxOrdinalGroup);
+        CSSOrderAwareFrameIterator::ChildFilter::IncludeAll);
     for (; !iter.AtEnd(); iter.Next()) {
       nsIFrame* colFrame = iter.get();
       nsIContent* colContent = colFrame->GetContent();

@@ -36,7 +36,7 @@
 .devtools-responsive-container {
   min-width: 0;
   min-height: 0;
-  -moz-box-orient: horizontal;
+  flex-direction: row;
 }
 
 .devtools-main-content {
@@ -62,7 +62,7 @@
 
 @media (max-width: 700px) {
   .devtools-responsive-container {
-    -moz-box-orient: vertical;
+    flex-direction: column;
   }
 
   .devtools-responsive-container > .devtools-side-splitter {
@@ -237,11 +237,11 @@
 /* Aligned values */
 
 .variables-view-container[aligned-values] .title > .separator {
-  -moz-box-flex: 1;
+  flex: 1;
 }
 
 .variables-view-container[aligned-values] .title > .value {
-  -moz-box-flex: 0;
+  flex: none;
   width: 70vw;
 }
 
@@ -252,29 +252,29 @@
 /* Actions first */
 
 .variables-view-open-inspector {
-  -moz-box-ordinal-group: 1;
+  order: 1;
 }
 
 .variables-view-edit,
 .variables-view-add-property {
-  -moz-box-ordinal-group: 2;
+  order: 2;
 }
 
 .variable-or-property-frozen-label,
 .variable-or-property-sealed-label,
 .variable-or-property-non-extensible-label,
 .variable-or-property-non-writable-icon {
-  -moz-box-ordinal-group: 3;
+  order: 3;
 }
 
 .variables-view-delete {
-  -moz-box-ordinal-group: 4;
+  order: 4;
 }
 
 .variables-view-container[actions-first] .variables-view-delete,
 .variables-view-container[actions-first] .variables-view-add-property,
 .variables-view-container[actions-first] .variables-view-open-inspector {
-  -moz-box-ordinal-group: 0;
+  order: 0;
 }
 
 .variables-view-container[actions-first] [invisible] {

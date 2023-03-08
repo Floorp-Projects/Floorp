@@ -8,7 +8,7 @@
  * so the labels of all the items align vertically.
  */
 .actionsMenu > menupopup > menuitem > .menu-iconic-left {
-  display: -moz-box;
+  display: flex;
   min-width: 16px;
 }
 

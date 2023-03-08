@@ -66,7 +66,7 @@
         <html:link rel="stylesheet" href="chrome://global/skin/button.css"/>
         <html:link rel="stylesheet" href="chrome://global/skin/wizard.css"/>
         <hbox class="wizard-header"></hbox>
-        <html:slot name="wizardpage" class="wizard-page-box" style="display: grid; -moz-box-flex: 1;"/>
+        <html:slot name="wizardpage" class="wizard-page-box" style="display: grid; flex: 1;"/>
         <html:slot/>
         <wizard-buttons class="wizard-buttons"></wizard-buttons>
     `)

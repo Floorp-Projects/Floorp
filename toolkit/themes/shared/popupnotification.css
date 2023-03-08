@@ -17,7 +17,8 @@
 .popup-notification-panel > popupnotification:not([hidden]) {
   /* Since the anonymous parent (::part(content)) has display: flex, sizing
    * computations work better with display: block; than with the XUL default
-   * display: -moz-box; */
+   * display: flex;
+   * TODO(emilio): we can probably remove this. */
   display: block;
 }
 
@@ -111,7 +112,7 @@ popupnotificationcontent {
 .popup-notification-dropmarker > .button-box > .button-menu-dropmarker {
   /* This is to override the linux !important */
   appearance: none !important;
-  display: -moz-box;
+  display: flex;
   padding: 0;
   margin: 0;
 }

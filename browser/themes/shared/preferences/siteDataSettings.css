@@ -16,12 +16,12 @@
 
 #sitesList > richlistitem > hbox,
 .item-box > label {
-  -moz-box-flex: 1;
+  flex: 1;
 }
 
 .item-box {
   padding: 5px 8px;
-  -moz-box-align: center;
+  align-items: center;
   width: 50px;
 }
 

@@ -1811,8 +1811,8 @@ function getSortedColumnArray(aTree) {
   }
 
   array.sort(function(a, b) {
-    var o1 = parseInt(a.element.style.MozBoxOrdinalGroup);
-    var o2 = parseInt(b.element.style.MozBoxOrdinalGroup);
+    var o1 = parseInt(a.element.style.order);
+    var o2 = parseInt(b.element.style.order);
     return o1 - o2;
   });
   return array;

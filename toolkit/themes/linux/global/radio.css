@@ -13,7 +13,7 @@
 radio {
   appearance: auto;
   -moz-default-appearance: radio-container;
-  -moz-box-align: center;
+  align-items: center;
   margin: 2px 4px;
 }
 
