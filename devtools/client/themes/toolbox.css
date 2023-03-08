@@ -572,8 +572,8 @@
 /* Toolbox panels */
 
 .toolbox-panel {
-  display: -moz-box;
-  -moz-box-flex: 1;
+  display: flex;
+  flex: 1;
   visibility: collapse;
 }
 
@@ -594,7 +594,7 @@
 
 #toolbox-panel-webconsole {
   min-height: 75px;
-  -moz-box-flex: 1;
+  flex: 1 auto;
 }
 
 #toolbox-panel-webconsole[collapsed],
@@ -623,7 +623,7 @@
 }
 
 #toolbox-container {
-  -moz-box-flex: 1;
+  flex: 1;
   /* Let the component gain focus when a click hits an empty area */
   -moz-user-focus: normal;
 }
@@ -634,7 +634,7 @@
      height set to a small value without flexing to fill up extra
      space. There must be a flex on both to ensure that the console
      panel itself is sized properly */
-  -moz-box-flex: 10000;
+  flex: 10000 10000;
 }
 
 #toolbox-container:focus {

@@ -34,11 +34,11 @@
 }
 
 #UITourTooltipBody {
-  -moz-box-align: start;
+  align-items: flex-start;
 }
 
 #UITourTooltipTitleContainer {
-  -moz-box-align: start;
+  align-items: flex-start;
   margin-bottom: 10px;
 }
 
@@ -81,7 +81,7 @@
 }
 
 #UITourTooltipButtons {
-  -moz-box-pack: end;
+  justify-content: flex-end;
   background-color: var(--arrowpanel-dimmed);
   border-top: 1px solid var(--panel-separator-color);
   margin: 10px -16px -16px;

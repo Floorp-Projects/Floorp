@@ -91,7 +91,7 @@ a {
 /* Text input in storage table */
 #storage-table input {
   appearance: none;
-  -moz-box-flex: 1;
+  flex: 1;
   /* make sure the outline is not cut off */
   position: relative;
   box-sizing: border-box;
@@ -123,11 +123,11 @@ a {
   properly with XUL. Force XUL flexbox instead.
 */
 #storage-toolbar {
-  display: -moz-box;
+  display: flex;
 }
 
 #storage-searchbox {
-  -moz-box-flex: 1;
+  flex: 1;
   margin-inline-start: -3px;
   margin-inline-end: 1px;
 }

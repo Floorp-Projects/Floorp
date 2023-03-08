@@ -311,7 +311,7 @@ checkbox:-moz-focusring {
   border-radius: 2px;
   color: var(--theme-body-color);
   transition: background-color 0.05s ease-in-out;
-  -moz-box-align: center;
+  align-items: center;
   text-shadow: none;
   padding: 2px;
   margin: 1px;

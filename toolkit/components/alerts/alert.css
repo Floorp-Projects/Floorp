@@ -19,8 +19,8 @@
 }
 
 #alertTitleBox {
-  -moz-box-pack: center;
-  -moz-box-align: center;
+  justify-content: center;
+  align-items: center;
 }
 
 .alertText {

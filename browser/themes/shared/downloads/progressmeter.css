@@ -41,7 +41,7 @@ toolbar[brighttext]:-moz-lwtheme {
 
 .downloadProgress {
   appearance: none;
-  display: -moz-box;
+  display: flex;
   margin-block: 5px 1px;
   /* This value is kinda odd, it's used to align with the edge of the badge,
    * if shown, which is inside the edge of the image (the image gets 16px

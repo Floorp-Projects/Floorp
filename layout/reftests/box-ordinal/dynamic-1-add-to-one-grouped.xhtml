@@ -6,7 +6,7 @@
   function run() {
     var c = document.getElementById("C");
     getComputedStyle(c, "").width; // flush
-    c.style.MozBoxOrdinalGroup = "2";
+    c.style.order = "2";
     document.documentElement.removeAttribute("class");
   }
 

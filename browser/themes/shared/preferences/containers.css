@@ -37,7 +37,7 @@
  * by the prefs' find-in-page feature.
  */
 .userContext-label-inprefs {
-  display: -moz-box;
+  display: flex;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

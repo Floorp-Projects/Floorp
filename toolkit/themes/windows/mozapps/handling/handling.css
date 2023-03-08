@@ -8,7 +8,7 @@ richlistitem[type] {
  }
 
 richlistitem {
-  -moz-box-align: center;
+  align-items: center;
 }
 
 richlistbox {

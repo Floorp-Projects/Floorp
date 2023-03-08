@@ -33,7 +33,7 @@ input {
   font: inherit;
   text-shadow: inherit;
   box-sizing: border-box;
-  -moz-box-flex: 1;
+  flex: 1;
   text-align: inherit;
   min-width: 0;
 }
