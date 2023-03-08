@@ -576,6 +576,14 @@ dictionary RemoveOptions {
    * If true, and the target is a directory, recursively remove files.
    */
   boolean recursive = false;
+
+  /**
+   * If true, a failed delete on a readonly file will be retried by first
+   * removing the readonly attribute.
+   *
+   * Only has an effect on Windows.
+   */
+  boolean retryReadonly = false;
 };
 
 /**
