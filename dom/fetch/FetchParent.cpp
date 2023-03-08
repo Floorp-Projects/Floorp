@@ -7,7 +7,6 @@
 #include "FetchService.h"
 #include "InternalRequest.h"
 #include "InternalResponse.h"
-#include "mozilla/SchedulerGroup.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/FetchTypes.h"
@@ -176,23 +175,23 @@ IPCResult FetchParent::RecvFetchOp(FetchOpArgs&& aArgs) {
              self->mID})));
 
     self->mResponsePromises->GetResponseEndPromise()->Then(
-        self->mBackgroundEventTarget, __func__,
+        GetMainThreadSerialEventTarget(), __func__,
         [self](ResponseEndArgs&& aArgs) mutable {
+          AssertIsOnMainThread();
           MOZ_ASSERT(self->mPromise);
           self->mPromise->Resolve(true, __func__);
           self->mResponsePromises = nullptr;
-          self->mPromise = nullptr;
         },
         [self](CopyableErrorResult&& aErr) mutable {
+          AssertIsOnMainThread();
           MOZ_ASSERT(self->mPromise);
           self->mPromise->Reject(aErr.StealNSResult(), __func__);
           self->mResponsePromises = nullptr;
-          self->mPromise = nullptr;
         });
   });
 
   MOZ_ALWAYS_SUCCEEDS(
-      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
+      NS_DispatchToMainThread(r.forget(), nsIThread::DISPATCH_NORMAL));
 
   return IPC_OK();
 }
@@ -217,8 +216,9 @@ IPCResult FetchParent::RecvAbortFetchOp() {
       fetchService->CancelFetch(std::move(self->mResponsePromises));
     }
   });
+
   MOZ_ALWAYS_SUCCEEDS(
-      SchedulerGroup::Dispatch(TaskCategory::Other, r.forget()));
+      NS_DispatchToMainThread(r.forget(), nsIThread::DISPATCH_NORMAL));
 
   return IPC_OK();
 }
