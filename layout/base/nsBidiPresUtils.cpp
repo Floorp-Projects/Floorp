@@ -2075,10 +2075,9 @@ void nsBidiPresUtils::StripBidiControlCharacters(char16_t* aText,
 }
 
 void nsBidiPresUtils::CalculateBidiClass(
-    intl::Bidi* aBidiEngine, const char16_t* aText, int32_t& aOffset,
-    int32_t aBidiClassLimit, int32_t& aRunLimit, int32_t& aRunLength,
-    int32_t& aRunCount, intl::BidiClass& aBidiClass,
-    intl::BidiClass& aPrevBidiClass) {
+    const char16_t* aText, int32_t& aOffset, int32_t aBidiClassLimit,
+    int32_t& aRunLimit, int32_t& aRunLength, int32_t& aRunCount,
+    intl::BidiClass& aBidiClass, intl::BidiClass& aPrevBidiClass) {
   bool strongTypeFound = false;
   int32_t offset;
   intl::BidiClass bidiClass;
@@ -2219,8 +2218,8 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t* aText, size_t aLength,
     while (subRunCount > 0) {
       // CalculateBidiClass can increment subRunCount if the run
       // contains mixed character types
-      CalculateBidiClass(aBidiEngine, text, lineOffset, typeLimit, subRunLimit,
-                         subRunLength, subRunCount, bidiClass, prevClass);
+      CalculateBidiClass(text, lineOffset, typeLimit, subRunLimit, subRunLength,
+                         subRunCount, bidiClass, prevClass);
 
       nsAutoString runVisualText;
       runVisualText.Assign(text + start, subRunLength);
@@ -2371,8 +2370,8 @@ void nsBidiPresUtils::ProcessOneChar(const char16_t* aText, size_t aLength,
 
   int32_t subRunLength = aLength;
   int32_t subRunCount = 1;
-  CalculateBidiClass(aBidiEngine, aText, start, aLength, limit, subRunLength,
-                     subRunCount, bidiClass, prevClass);
+  CalculateBidiClass(aText, start, aLength, limit, subRunLength, subRunCount,
+                     bidiClass, prevClass);
   MOZ_ASSERT(subRunCount == 1, "cannot split single-character run");
 
   nsAutoString runVisualText;
