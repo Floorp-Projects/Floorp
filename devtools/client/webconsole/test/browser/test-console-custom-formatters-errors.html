@@ -153,6 +153,16 @@
           hasBody: (obj) => true,
           body: (obj) => ["span", {"style": "font-family: serif; font-size: 2rem;"}, obj.customFormatHeaderAndBody]
         },
+        {
+          header: (obj) => {
+            if (obj.hasOwnProperty("privileged")) {
+              // This should throw as the hooks should not have privileged access
+              window.windowUtils.garbageCollect();
+              return ["span", {}, "privileged"];
+            }
+            return null;
+          },
+        },
       ];
 
       [
@@ -168,6 +178,7 @@
         {objectTagWithoutObjectAttribute: true},
         {infiniteObjectTag: true},
         {invalidTag: true},
+        {privileged: true},
       ].forEach(variable => console.log(variable));
     </script>
   </body>

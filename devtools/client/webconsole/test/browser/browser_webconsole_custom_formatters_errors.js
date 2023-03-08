@@ -31,6 +31,7 @@ add_task(async function() {
   await testBodyThrowing(hud);
   await testIncorrectObjectTag(hud);
   await testInvalidTagname(hud);
+  await testNoPrivilegedAccess(hud);
   await testErrorsLoggedOnce(hud);
 });
 
@@ -146,6 +147,13 @@ async function testInvalidTagname(hud) {
   info(`Test invalid tagname in the returned JsonML`);
   await testCustomFormatting(hud, {
     messageText: `Custom formatter failed: devtoolsFormatters[14] couldn't be run: tagName should be a string, got number`,
+  });
+}
+
+async function testNoPrivilegedAccess(hud) {
+  info(`Test for denied access to windowUtils from hook`);
+  await testCustomFormatting(hud, {
+    messageText: `Custom formatter failed: devtoolsFormatters[17].header threw: can't access property "garbageCollect", window.windowUtils is undefined`,
   });
 }
 
