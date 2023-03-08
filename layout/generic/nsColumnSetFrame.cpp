@@ -15,6 +15,7 @@
 #include "mozilla/ToString.h"
 #include "nsCSSRendering.h"
 #include "nsDisplayList.h"
+#include "nsIFrameInlines.h"
 #include "nsLayoutUtils.h"
 
 using namespace mozilla;
@@ -1293,6 +1294,32 @@ void nsColumnSetFrame::AppendDirectlyOwnedAnonBoxes(
   MOZ_ASSERT(column->Style()->GetPseudoType() == PseudoStyleType::columnContent,
              "What sort of child is this?");
   aResult.AppendElement(OwnedAnonBox(column));
+}
+
+Maybe<nscoord> nsColumnSetFrame::GetNaturalBaselineBOffset(
+    WritingMode aWM, BaselineSharingGroup aBaselineGroup) const {
+  Maybe<nscoord> result;
+  for (const auto* kid : mFrames) {
+    auto kidBaseline = kid->GetNaturalBaselineBOffset(aWM, aBaselineGroup);
+    if (!kidBaseline) {
+      continue;
+    }
+    // The kid frame may not necessarily be aligned with the columnset frame.
+    LogicalRect kidRect{aWM, kid->GetLogicalNormalPosition(aWM, GetSize()),
+                        kid->GetLogicalSize(aWM)};
+    if (aBaselineGroup == BaselineSharingGroup::First) {
+      *kidBaseline += kidRect.BStart(aWM);
+    } else {
+      *kidBaseline += (GetLogicalSize().BSize(aWM) - kidRect.BEnd(aWM));
+    }
+    // Take the smallest of the baselines (i.e. Closest to border-block-start
+    // for `BaselineSharingGroup::First`, border-block-end for
+    // `BaselineSharingGroup::Last`)
+    if (!result || *kidBaseline < *result) {
+      result = kidBaseline;
+    }
+  }
+  return result;
 }
 
 #ifdef DEBUG

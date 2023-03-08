@@ -5838,8 +5838,7 @@ bool nsLayoutUtils::GetFirstLinePosition(WritingMode aWM,
       return false;
     }
 
-    if (fType == LayoutFrameType::FieldSet ||
-        fType == LayoutFrameType::ColumnSet) {
+    if (fType == LayoutFrameType::FieldSet) {
       LinePosition kidPosition;
       nsIFrame* kid = aFrame->PrincipalChildList().FirstChild();
       // If aFrame is fieldset, kid might be a legend frame here, but that's ok.
@@ -5849,6 +5848,29 @@ bool nsLayoutUtils::GetFirstLinePosition(WritingMode aWM,
         return true;
       }
       return false;
+    }
+
+    if (fType == LayoutFrameType::ColumnSet) {
+      // Note(dshin): This is basically the same as
+      // `nsColumnSetFrame::GetNaturalBaselineBOffset`, but with line start and
+      // end, all stored in `LinePosition`. Field value apart from baseline is
+      // used in one other place
+      // (`nsBlockFrame`) - if that goes away, this becomes a duplication that
+      // should be removed.
+      LinePosition kidPosition;
+      for (const auto* kid : aFrame->PrincipalChildList()) {
+        LinePosition position;
+        if (!GetFirstLinePosition(aWM, kid, &position)) {
+          continue;
+        }
+        if (position.mBaseline < kidPosition.mBaseline) {
+          kidPosition = position;
+        }
+      }
+      if (kidPosition.mBaseline != nscoord_MAX) {
+        *aResult = kidPosition;
+        return true;
+      }
     }
 
     // No baseline.
@@ -5904,6 +5926,21 @@ bool nsLayoutUtils::GetLastLineBaseline(WritingMode aWM, const nsIFrame* aFrame,
       const auto maxBaseline = aFrame->GetLogicalSize(aWM).BSize(aWM);
       // Clamp the last baseline to border (See bug 1791069).
       *aResult = std::clamp(*aResult, 0, maxBaseline);
+      return true;
+    }
+
+    // No need to duplicate the baseline logic (Unlike `GetFirstLinePosition`,
+    // we don't need to return any other value apart from baseline), just defer
+    // to `GetNaturalBaselineBOffset`. Technically, we could do this at
+    // `ColumnSetWrapperFrame` level, but this keeps it symmetric to
+    // `GetFirstLinePosition`.
+    if (aFrame->IsColumnSetFrame()) {
+      const auto baseline =
+          aFrame->GetNaturalBaselineBOffset(aWM, BaselineSharingGroup::Last);
+      if (!baseline) {
+        return false;
+      }
+      *aResult = aFrame->BSize(aWM) - *baseline;
       return true;
     }
     // No baseline.
