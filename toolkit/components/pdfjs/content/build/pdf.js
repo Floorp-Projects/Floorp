@@ -42,7 +42,7 @@ return /******/ (() => { // webpackBootstrap
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.VerbosityLevel = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.UNSUPPORTED_FEATURES = exports.TextRenderingMode = exports.RenderingIntentFlag = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.PageActionEventType = exports.OPS = exports.MissingPDFException = exports.LINE_FACTOR = exports.LINE_DESCENT_FACTOR = exports.InvalidPDFException = exports.ImageKind = exports.IDENTITY_MATRIX = exports.FormatError = exports.FeatureTest = exports.FONT_IDENTITY_MATRIX = exports.DocumentActionEventType = exports.CMapCompressionType = exports.BaseException = exports.BASELINE_FACTOR = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMode = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationEditorType = exports.AnnotationEditorPrefix = exports.AnnotationEditorParamsType = exports.AnnotationBorderStyleType = exports.AnnotationActionEventType = exports.AbortException = void 0;
+exports.VerbosityLevel = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.RenderingIntentFlag = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.PageActionEventType = exports.OPS = exports.MissingPDFException = exports.LINE_FACTOR = exports.LINE_DESCENT_FACTOR = exports.InvalidPDFException = exports.ImageKind = exports.IDENTITY_MATRIX = exports.FormatError = exports.FeatureTest = exports.FONT_IDENTITY_MATRIX = exports.DocumentActionEventType = exports.CMapCompressionType = exports.BaseException = exports.BASELINE_FACTOR = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMode = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationEditorType = exports.AnnotationEditorPrefix = exports.AnnotationEditorParamsType = exports.AnnotationBorderStyleType = exports.AnnotationActionEventType = exports.AbortException = void 0;
 exports.assert = assert;
 exports.bytesToString = bytesToString;
 exports.createPromiseCapability = createPromiseCapability;
@@ -367,8 +367,6 @@ const OPS = {
   constructPath: 91
 };
 exports.OPS = OPS;
-const UNSUPPORTED_FEATURES = null;
-exports.UNSUPPORTED_FEATURES = UNSUPPORTED_FEATURES;
 const PasswordResponses = {
   NEED_PASSWORD: 1,
   INCORRECT_PASSWORD: 2
@@ -885,6 +883,7 @@ function getDocument(src) {
   const maxImageSize = Number.isInteger(src.maxImageSize) && src.maxImageSize > -1 ? src.maxImageSize : -1;
   const isEvalSupported = src.isEvalSupported !== false;
   const isOffscreenCanvasSupported = typeof src.isOffscreenCanvasSupported === "boolean" ? src.isOffscreenCanvasSupported : !_is_node.isNodeJS;
+  const canvasMaxAreaInBytes = Number.isInteger(src.canvasMaxAreaInBytes) ? src.canvasMaxAreaInBytes : -1;
   const disableFontFace = typeof src.disableFontFace === "boolean" ? src.disableFontFace : _is_node.isNodeJS;
   const fontExtraProperties = src.fontExtraProperties === true;
   const enableXfa = src.enableXfa === true;
@@ -928,7 +927,7 @@ function getDocument(src) {
   const docId = task.docId;
   const fetchDocParams = {
     docId,
-    apiVersion: '3.5.10',
+    apiVersion: '3.5.34',
     data,
     password,
     disableAutoFetch,
@@ -942,6 +941,7 @@ function getDocument(src) {
       ignoreErrors,
       isEvalSupported,
       isOffscreenCanvasSupported,
+      canvasMaxAreaInBytes,
       fontExtraProperties,
       useSystemFonts,
       cMapUrl: useWorkerFetch ? cMapUrl : null,
@@ -1019,7 +1019,6 @@ function getDataProp(val) {
 }
 class PDFDocumentLoadingTask {
   static #docId = 0;
-  #onUnsupportedFeature = null;
   constructor() {
     this._capability = (0, _util.createPromiseCapability)();
     this._transport = null;
@@ -1029,10 +1028,6 @@ class PDFDocumentLoadingTask {
     this.onPassword = null;
     this.onProgress = null;
   }
-  get onUnsupportedFeature() {
-    return this.#onUnsupportedFeature;
-  }
-  set onUnsupportedFeature(callback) {}
   get promise() {
     return this._capability.promise;
   }
@@ -1843,7 +1838,6 @@ class WorkerTransport {
     this.loadingTask = loadingTask;
     this.commonObjs = new PDFObjects();
     this.fontLoader = new _font_loader.FontLoader({
-      onUnsupportedFeature: this._onUnsupportedFeature.bind(this),
       ownerDocument: params.ownerDocument,
       styleElement: params.styleElement
     });
@@ -2139,7 +2133,6 @@ class WorkerTransport {
             isEvalSupported: params.isEvalSupported,
             disableFontFace: params.disableFontFace,
             ignoreErrors: params.ignoreErrors,
-            onUnsupportedFeature: this._onUnsupportedFeature.bind(this),
             fontRegistry
           });
           this.fontLoader.bind(font).catch(reason => {
@@ -2155,6 +2148,7 @@ class WorkerTransport {
           break;
         case "FontPath":
         case "Image":
+        case "Pattern":
           this.commonObjs.resolve(id, exportedData);
           break;
         default:
@@ -2224,9 +2218,6 @@ class WorkerTransport {
       return this.standardFontDataFactory.fetch(data);
     });
   }
-  _onUnsupportedFeature({
-    featureId
-  }) {}
   getData() {
     return this.messageHandler.sendWithPromise("GetData", null);
   }
@@ -2604,9 +2595,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.5.10';
+const version = '3.5.34';
 exports.version = version;
-const build = '4e52bcee4';
+const build = 'a0ef5a4ae';
 exports.build = build;
 
 /***/ }),
@@ -3818,7 +3809,7 @@ class FilterFactory {
   }
   addFilter(maps) {
     if (!maps) {
-      return "";
+      return "none";
     }
     let value = this.#cache.get(maps);
     if (value) {
@@ -4546,7 +4537,6 @@ var _util = __w_pdfjs_require__(1);
 var _is_node = __w_pdfjs_require__(10);
 class FontLoader {
   constructor({
-    onUnsupportedFeature,
     ownerDocument = globalThis.document,
     styleElement = null
   }) {
@@ -4627,7 +4617,6 @@ class FontFaceObject {
     isEvalSupported = true,
     disableFontFace = false,
     ignoreErrors = false,
-    onUnsupportedFeature,
     fontRegistry = null
   }) {
     this.compiledGlyphs = Object.create(null);
@@ -4738,6 +4727,7 @@ var _util = __w_pdfjs_require__(1);
 var _display_utils = __w_pdfjs_require__(6);
 var _pattern_helper = __w_pdfjs_require__(12);
 var _image_utils = __w_pdfjs_require__(13);
+var _is_node = __w_pdfjs_require__(10);
 const MIN_FONT_SIZE = 16;
 const MAX_FONT_SIZE = 100;
 const MAX_GROUP_SIZE = 4096;
@@ -5325,7 +5315,7 @@ function putBinaryImageMask(ctx, imgData) {
   }
 }
 function copyCtxState(sourceCtx, destCtx) {
-  const properties = ["strokeStyle", "fillStyle", "fillRule", "globalAlpha", "lineWidth", "lineCap", "lineJoin", "miterLimit", "globalCompositeOperation", "font"];
+  const properties = ["strokeStyle", "fillStyle", "fillRule", "globalAlpha", "lineWidth", "lineCap", "lineJoin", "miterLimit", "globalCompositeOperation", "font", "filter"];
   for (const property of properties) {
     if (sourceCtx[property] !== undefined) {
       destCtx[property] = sourceCtx[property];
@@ -5349,6 +5339,9 @@ function resetCtxToDefault(ctx, foregroundColor) {
   if (ctx.setLineDash !== undefined) {
     ctx.setLineDash([]);
     ctx.lineDashOffset = 0;
+  }
+  if (!_is_node.isNodeJS) {
+    ctx.filter = "none";
   }
 }
 function composeSMaskBackdrop(bytes, r0, g0, b0) {
@@ -5623,11 +5616,11 @@ class CanvasGraphics {
       let newWidth = paintWidth,
         newHeight = paintHeight;
       if (widthScale > 2 && paintWidth > 1) {
-        newWidth = Math.ceil(paintWidth / 2);
+        newWidth = paintWidth >= 16384 ? Math.floor(paintWidth / 2) - 1 || 1 : Math.ceil(paintWidth / 2);
         widthScale /= paintWidth / newWidth;
       }
       if (heightScale > 2 && paintHeight > 1) {
-        newHeight = Math.ceil(paintHeight / 2);
+        newHeight = paintHeight >= 16384 ? Math.floor(paintHeight / 2) - 1 || 1 : Math.ceil(paintHeight) / 2;
         heightScale /= paintHeight / newHeight;
       }
       tmpCanvas = this.cachedCanvases.getCanvas(tmpCanvasId, newWidth, newHeight);
@@ -5783,7 +5776,11 @@ class CanvasGraphics {
           this.checkSMaskState();
           break;
         case "TR":
-          this.current.transferMaps = this.filterFactory ? this.filterFactory.addFilter(value) : value;
+          if (this.filterFactory) {
+            this.ctx.filter = this.current.transferMaps = this.filterFactory.addFilter(value);
+          } else {
+            this.current.transferMaps = value;
+          }
           break;
       }
     }
@@ -6443,7 +6440,7 @@ class CanvasGraphics {
     if (this.cachedPatterns.has(objId)) {
       pattern = this.cachedPatterns.get(objId);
     } else {
-      pattern = (0, _pattern_helper.getShadingPattern)(this.objs.get(objId));
+      pattern = (0, _pattern_helper.getShadingPattern)(this.getObject(objId));
       this.cachedPatterns.set(objId, pattern);
     }
     if (matrix) {
@@ -6774,7 +6771,7 @@ class CanvasGraphics {
     this.paintInlineImageXObjectGroup(imgData, map);
   }
   applyTransferMapsToBitmap(imgData) {
-    if (!this.current.transferMaps) {
+    if (!this.current.transferMaps || this.current.transferMaps === "none") {
       return imgData.bitmap;
     }
     const {
@@ -6786,7 +6783,7 @@ class CanvasGraphics {
     const tmpCtx = tmpCanvas.context;
     tmpCtx.filter = this.current.transferMaps;
     tmpCtx.drawImage(bitmap, 0, 0);
-    tmpCtx.filter = "";
+    tmpCtx.filter = "none";
     return tmpCanvas.canvas;
   }
   paintInlineImageXObject(imgData) {
@@ -6797,6 +6794,9 @@ class CanvasGraphics {
     const height = imgData.height;
     const ctx = this.ctx;
     this.save();
+    if (!_is_node.isNodeJS) {
+      ctx.filter = "none";
+    }
     ctx.scale(1 / width, -1 / height);
     let imgToPaint;
     if (imgData.bitmap) {
@@ -6822,7 +6822,7 @@ class CanvasGraphics {
     const ctx = this.ctx;
     let imgToPaint;
     if (imgData.bitmap) {
-      imgToPaint = this.applyTransferMapsToBitmap(imgData);
+      imgToPaint = imgData.bitmap;
     } else {
       const w = imgData.width;
       const h = imgData.height;
@@ -9626,7 +9626,6 @@ var _editor = __w_pdfjs_require__(4);
 var _pdfjsFitCurve = __w_pdfjs_require__(24);
 var _tools = __w_pdfjs_require__(5);
 const RESIZER_SIZE = 16;
-const TIME_TO_WAIT_BEFORE_FIXING_DIMS = 100;
 class InkEditor extends _editor.AnnotationEditor {
   #aspectRatio = 0;
   #baseHeight = 0;
@@ -10016,17 +10015,9 @@ class InkEditor extends _editor.AnnotationEditor {
     this.ctx = this.canvas.getContext("2d");
   }
   #createObserver() {
-    let timeoutId = null;
     this.#observer = new ResizeObserver(entries => {
       const rect = entries[0].contentRect;
       if (rect.width && rect.height) {
-        if (timeoutId !== null) {
-          clearTimeout(timeoutId);
-        }
-        timeoutId = setTimeout(() => {
-          this.fixDims();
-          timeoutId = null;
-        }, TIME_TO_WAIT_BEFORE_FIXING_DIMS);
         this.setDimensions(rect.width, rect.height);
       }
     });
@@ -10094,6 +10085,7 @@ class InkEditor extends _editor.AnnotationEditor {
     this.#setCanvasDims();
     this.#redraw();
     this.canvas.style.visibility = "visible";
+    this.fixDims();
   }
   #setScaleFactor(width, height) {
     const padding = this.#getPadding();
@@ -10730,6 +10722,9 @@ class AnnotationElement {
     } = this;
     const container = document.createElement("section");
     container.setAttribute("data-annotation-id", data.id);
+    if (data.noRotate) {
+      container.classList.add("norotate");
+    }
     const {
       pageWidth,
       pageHeight,
@@ -10933,7 +10928,7 @@ class AnnotationElement {
     }
     if (!trigger) {
       trigger = document.createElement("div");
-      trigger.className = "popupTriggerArea";
+      trigger.classList.add("popupTriggerArea");
       container.append(trigger);
     }
     const popupElement = new PopupElement({
@@ -10952,7 +10947,7 @@ class AnnotationElement {
   }
   _renderQuadrilaterals(className) {
     for (const quadrilateral of this.quadrilaterals) {
-      quadrilateral.className = className;
+      quadrilateral.classList.add(className);
     }
     return this.quadrilaterals;
   }
@@ -11062,7 +11057,7 @@ class LinkAnnotationElement extends AnnotationElement {
         return quadrilateral;
       });
     }
-    this.container.className = "linkAnnotation";
+    this.container.classList.add("linkAnnotation");
     if (isBound) {
       this.container.append(link);
     }
@@ -11242,7 +11237,7 @@ class TextAnnotationElement extends AnnotationElement {
     });
   }
   render() {
-    this.container.className = "textAnnotation";
+    this.container.classList.add("textAnnotation");
     const image = document.createElement("img");
     image.src = this.imageResourcesPath + "annotation-" + this.data.name.toLowerCase() + ".svg";
     image.alt = "[{{type}} Annotation]";
@@ -11364,7 +11359,7 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
   render() {
     const storage = this.annotationStorage;
     const id = this.data.id;
-    this.container.className = "textWidgetAnnotation";
+    this.container.classList.add("textWidgetAnnotation");
     let element = null;
     if (this.renderForms) {
       const storedData = storage.getValue(id, {
@@ -11658,7 +11653,7 @@ class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
         value
       });
     }
-    this.container.className = "buttonWidgetAnnotation checkBox";
+    this.container.classList.add("buttonWidgetAnnotation", "checkBox");
     const element = document.createElement("input");
     GetElementsByNameSet.add(element);
     element.setAttribute("data-element-id", id);
@@ -11720,7 +11715,7 @@ class RadioButtonWidgetAnnotationElement extends WidgetAnnotationElement {
     });
   }
   render() {
-    this.container.className = "buttonWidgetAnnotation radioButton";
+    this.container.classList.add("buttonWidgetAnnotation", "radioButton");
     const storage = this.annotationStorage;
     const data = this.data;
     const id = data.id;
@@ -11797,7 +11792,7 @@ class PushButtonWidgetAnnotationElement extends LinkAnnotationElement {
   }
   render() {
     const container = super.render();
-    container.className = "buttonWidgetAnnotation pushButton";
+    container.classList.add("buttonWidgetAnnotation", "pushButton");
     if (this.data.alternativeText) {
       container.title = this.data.alternativeText;
     }
@@ -11818,7 +11813,7 @@ class ChoiceWidgetAnnotationElement extends WidgetAnnotationElement {
     });
   }
   render() {
-    this.container.className = "choiceWidgetAnnotation";
+    this.container.classList.add("choiceWidgetAnnotation");
     const storage = this.annotationStorage;
     const id = this.data.id;
     const storedData = storage.getValue(id, {
@@ -12045,7 +12040,7 @@ class PopupAnnotationElement extends AnnotationElement {
     });
   }
   render() {
-    this.container.className = "popupAnnotation";
+    this.container.classList.add("popupAnnotation");
     const parentElements = this.layer.querySelectorAll(`[data-annotation-id="${this.data.parentId}"]`);
     if (parentElements.length === 0) {
       return this.container;
@@ -12090,11 +12085,11 @@ class PopupElement {
   render() {
     const BACKGROUND_ENLIGHT = 0.7;
     const wrapper = document.createElement("div");
-    wrapper.className = "popupWrapper";
+    wrapper.classList.add("popupWrapper");
     this.hideElement = this.hideWrapper ? wrapper : this.container;
     this.hideElement.hidden = true;
     const popup = document.createElement("div");
-    popup.className = "popup";
+    popup.classList.add("popup");
     const color = this.color;
     if (color) {
       const r = BACKGROUND_ENLIGHT * (255 - color[0]) + color[0];
@@ -12109,7 +12104,7 @@ class PopupElement {
     const dateObject = _display_utils.PDFDateString.toDateObject(this.modificationDate);
     if (dateObject) {
       const modificationDate = document.createElement("span");
-      modificationDate.className = "popupDate";
+      modificationDate.classList.add("popupDate");
       modificationDate.textContent = "{{date}}, {{time}}";
       modificationDate.dataset.l10nId = "annotation_date_string";
       modificationDate.dataset.l10nArgs = JSON.stringify({
@@ -12124,7 +12119,7 @@ class PopupElement {
         intent: "richText",
         div: popup
       });
-      popup.lastChild.className = "richText popupContent";
+      popup.lastChild.classList.add("richText", "popupContent");
     } else {
       const contents = this._formatContents(this.contentsObj);
       popup.append(contents);
@@ -12146,7 +12141,7 @@ class PopupElement {
     dir
   }) {
     const p = document.createElement("p");
-    p.className = "popupContent";
+    p.classList.add("popupContent");
     p.dir = dir;
     const lines = str.split(/(?:\r\n?|\n)/);
     for (let i = 0, ii = lines.length; i < ii; ++i) {
@@ -12194,10 +12189,10 @@ class FreeTextAnnotationElement extends AnnotationElement {
     this.textContent = parameters.data.textContent;
   }
   render() {
-    this.container.className = "freeTextAnnotation";
+    this.container.classList.add("freeTextAnnotation");
     if (this.textContent) {
       const content = document.createElement("div");
-      content.className = "annotationTextContent";
+      content.classList.add("annotationTextContent");
       content.setAttribute("role", "comment");
       for (const line of this.textContent) {
         const lineSpan = document.createElement("span");
@@ -12221,7 +12216,7 @@ class LineAnnotationElement extends AnnotationElement {
     });
   }
   render() {
-    this.container.className = "lineAnnotation";
+    this.container.classList.add("lineAnnotation");
     const data = this.data;
     const {
       width,
@@ -12251,7 +12246,7 @@ class SquareAnnotationElement extends AnnotationElement {
     });
   }
   render() {
-    this.container.className = "squareAnnotation";
+    this.container.classList.add("squareAnnotation");
     const data = this.data;
     const {
       width,
@@ -12282,7 +12277,7 @@ class CircleAnnotationElement extends AnnotationElement {
     });
   }
   render() {
-    this.container.className = "circleAnnotation";
+    this.container.classList.add("circleAnnotation");
     const data = this.data;
     const {
       width,
@@ -12315,7 +12310,7 @@ class PolylineAnnotationElement extends AnnotationElement {
     this.svgElementName = "svg:polyline";
   }
   render() {
-    this.container.className = this.containerClassName;
+    this.container.classList.add(this.containerClassName);
     const data = this.data;
     const {
       width,
@@ -12356,7 +12351,7 @@ class CaretAnnotationElement extends AnnotationElement {
     });
   }
   render() {
-    this.container.className = "caretAnnotation";
+    this.container.classList.add("caretAnnotation");
     if (!this.data.hasPopup) {
       this._createPopup(null, this.data);
     }
@@ -12374,7 +12369,7 @@ class InkAnnotationElement extends AnnotationElement {
     this.svgElementName = "svg:polyline";
   }
   render() {
-    this.container.className = this.containerClassName;
+    this.container.classList.add(this.containerClassName);
     const data = this.data;
     const {
       width,
@@ -12417,7 +12412,7 @@ class HighlightAnnotationElement extends AnnotationElement {
     if (this.quadrilaterals) {
       return this._renderQuadrilaterals("highlightAnnotation");
     }
-    this.container.className = "highlightAnnotation";
+    this.container.classList.add("highlightAnnotation");
     return this.container;
   }
 }
@@ -12437,7 +12432,7 @@ class UnderlineAnnotationElement extends AnnotationElement {
     if (this.quadrilaterals) {
       return this._renderQuadrilaterals("underlineAnnotation");
     }
-    this.container.className = "underlineAnnotation";
+    this.container.classList.add("underlineAnnotation");
     return this.container;
   }
 }
@@ -12457,7 +12452,7 @@ class SquigglyAnnotationElement extends AnnotationElement {
     if (this.quadrilaterals) {
       return this._renderQuadrilaterals("squigglyAnnotation");
     }
-    this.container.className = "squigglyAnnotation";
+    this.container.classList.add("squigglyAnnotation");
     return this.container;
   }
 }
@@ -12477,7 +12472,7 @@ class StrikeOutAnnotationElement extends AnnotationElement {
     if (this.quadrilaterals) {
       return this._renderQuadrilaterals("strikeoutAnnotation");
     }
-    this.container.className = "strikeoutAnnotation";
+    this.container.classList.add("strikeoutAnnotation");
     return this.container;
   }
 }
@@ -12490,7 +12485,7 @@ class StampAnnotationElement extends AnnotationElement {
     });
   }
   render() {
-    this.container.className = "stampAnnotation";
+    this.container.classList.add("stampAnnotation");
     if (!this.data.hasPopup) {
       this._createPopup(null, this.data);
     }
@@ -12515,7 +12510,7 @@ class FileAttachmentAnnotationElement extends AnnotationElement {
     });
   }
   render() {
-    this.container.className = "fileAttachmentAnnotation";
+    this.container.classList.add("fileAttachmentAnnotation");
     let trigger;
     if (this.data.hasAppearance) {
       trigger = document.createElement("div");
@@ -12523,7 +12518,7 @@ class FileAttachmentAnnotationElement extends AnnotationElement {
       trigger = document.createElement("img");
       trigger.src = `${this.imageResourcesPath}annotation-${/paperclip/i.test(this.data.name) ? "paperclip" : "pushpin"}.svg`;
     }
-    trigger.className = "popupTriggerArea";
+    trigger.classList.add("popupTriggerArea");
     trigger.addEventListener("dblclick", this._download.bind(this));
     if (!this.data.hasPopup && (this.data.titleObj?.str || this.data.contentsObj?.str || this.data.richText)) {
       this._createPopup(trigger, this.data);
@@ -12567,6 +12562,9 @@ class AnnotationLayer {
     };
     let zIndex = 0;
     for (const data of annotations) {
+      if (data.noHTML) {
+        continue;
+      }
       if (data.annotationType !== _util.AnnotationType.POPUP) {
         const {
           width,
@@ -13094,12 +13092,6 @@ Object.defineProperty(exports, "SVGGraphics", ({
     return _svg.SVGGraphics;
   }
 }));
-Object.defineProperty(exports, "UNSUPPORTED_FEATURES", ({
-  enumerable: true,
-  get: function () {
-    return _util.UNSUPPORTED_FEATURES;
-  }
-}));
 Object.defineProperty(exports, "UnexpectedResponseException", ({
   enumerable: true,
   get: function () {
@@ -13224,8 +13216,8 @@ var _annotation_layer = __w_pdfjs_require__(26);
 var _worker_options = __w_pdfjs_require__(14);
 var _svg = __w_pdfjs_require__(29);
 var _xfa_layer = __w_pdfjs_require__(28);
-const pdfjsVersion = '3.5.10';
-const pdfjsBuild = '4e52bcee4';
+const pdfjsVersion = '3.5.34';
+const pdfjsBuild = 'a0ef5a4ae';
 })();
 
 /******/ 	return __webpack_exports__;
