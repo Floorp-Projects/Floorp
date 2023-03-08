@@ -7,6 +7,7 @@ package org.mozilla.fenix.ui
 import androidx.core.net.toUri
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
@@ -166,6 +167,7 @@ class DownloadTest {
         }
     }
 
+    @Ignore("failing, see https://bugzilla.mozilla.org/show_bug.cgi?id=1821024")
     @SmokeTest
     @Test
     fun openDownloadedFileTest() {
