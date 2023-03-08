@@ -1,17 +1,7 @@
 import pytest
 from webdriver.bidi.modules.script import ContextTarget
 
-page_data = """
-    <div id="deep"><p><span></span></p><br/></div>
-    <div id="text-node"><p></p>Lorem</div>
-    <br/>
-    <svg id="foo"></svg>
-    <div id="comment"><!-- Comment --></div>
-    <script>
-        var svg = document.querySelector("svg");
-        svg.setAttributeNS("http://www.w3.org/2000/svg", "svg:foo", "bar");
-    </script>
-"""
+from ... import any_string, recursive_compare
 
 
 @pytest.mark.asyncio
@@ -24,6 +14,7 @@ page_data = """
             """,
             {
                 "type": "node",
+                "sharedId": any_string,
                 "value": {
                     "attributes": {},
                     "childNodeCount": 0,
@@ -40,9 +31,9 @@ page_data = """
             """,
             {
                 "type": "node",
+                "sharedId": any_string,
                 "value": {
                     "attributes": {
-                        "id": "foo",
                         "svg:foo": "bar",
                     },
                     "childNodeCount": 0,
@@ -55,24 +46,17 @@ page_data = """
         ),
         (   # all children including non-element nodes
             """
-                () => document.querySelector("div#text-node")
+                () => document.querySelector("#with-text-node")
             """,
             {
                 "type": "node",
+                "sharedId": any_string,
                 "value": {
-                    "attributes": {"id": "text-node"},
-                    "childNodeCount": 2,
+                    "attributes": {"id": "with-text-node"},
+                    "childNodeCount": 1,
                     "children": [{
                         "type": "node",
-                        "value": {
-                            "attributes": {},
-                            "childNodeCount": 0,
-                            "localName": "p",
-                            "namespaceURI": "http://www.w3.org/1999/xhtml",
-                            "nodeType": 1
-                        }
-                    }, {
-                        "type": "node",
+                        "sharedId": any_string,
                         "value": {
                             "childNodeCount": 0,
                             "nodeType": 3,
@@ -87,15 +71,17 @@ page_data = """
         ),
         (   # children limited due to max depth
             """
-                () => document.querySelector("div#deep")
+                () => document.querySelector("#with-children")
             """,
             {
                 "type": "node",
+                "sharedId": any_string,
                 "value": {
-                    "attributes": {"id": "deep"},
+                    "attributes": {"id": "with-children"},
                     "childNodeCount": 2,
                     "children": [{
                         "type": "node",
+                        "sharedId": any_string,
                         "value": {
                             "attributes": {},
                             "childNodeCount": 1,
@@ -105,6 +91,7 @@ page_data = """
                         }
                     }, {
                         "type": "node",
+                        "sharedId": any_string,
                         "value": {
                             "attributes": {},
                             "childNodeCount": 0,
@@ -125,6 +112,7 @@ page_data = """
             """,
             {
                 "type": "node",
+                "sharedId": any_string,
                 "value": {
                     "attributes": {},
                     "childNodeCount": 0,
@@ -144,10 +132,10 @@ page_data = """
     ]
 )
 async def test_element_node(
-    bidi_session, inline, top_context, function_declaration, expected
+    bidi_session, get_test_page, top_context, function_declaration, expected
 ):
     await bidi_session.browsing_context.navigate(
-        context=top_context['context'], url=inline(page_data), wait="complete"
+        context=top_context['context'], url=get_test_page(), wait="complete"
     )
 
     result = await bidi_session.script.call_function(
@@ -156,7 +144,7 @@ async def test_element_node(
         await_promise=False,
     )
 
-    assert result == expected
+    recursive_compare(expected, result)
 
 
 @pytest.mark.asyncio
@@ -165,25 +153,27 @@ async def test_element_node(
     [
         (
             """
-                () => document.querySelector("svg").attributes[0]
+                () => document.querySelector("input#button").attributes[0]
             """,
             {
                 "type": "node",
+                "sharedId": any_string,
                 "value": {
                     "childNodeCount": 0,
                     "children": [],
                     "localName": "id",
                     "namespaceURI": None,
                     "nodeType": 2,
-                    "nodeValue": "foo",
+                    "nodeValue": "button",
                 },
             },
         ), (
             """
-                () => document.querySelector("svg").attributes[1]
+                () => document.querySelector("svg").attributes[0]
             """,
             {
                 "type": "node",
+                "sharedId": any_string,
                 "value": {
                     "childNodeCount": 0,
                     "children": [],
@@ -200,10 +190,10 @@ async def test_element_node(
     ]
 )
 async def test_attribute_node(
-    bidi_session, inline, top_context, function_declaration, expected
+    bidi_session, get_test_page, top_context, function_declaration, expected
 ):
     await bidi_session.browsing_context.navigate(
-        context=top_context['context'], url=inline(page_data), wait="complete"
+        context=top_context['context'], url=get_test_page(), wait="complete"
     )
 
     result = await bidi_session.script.call_function(
@@ -212,7 +202,7 @@ async def test_attribute_node(
         await_promise=False,
     )
 
-    assert result == expected
+    recursive_compare(expected, result)
 
 
 @pytest.mark.asyncio
@@ -221,10 +211,11 @@ async def test_attribute_node(
     [
         (
             """
-                () => document.querySelector("div#text-node").childNodes[1]
+                () => document.querySelector("#with-text-node").childNodes[0]
             """,
             {
                 "type": "node",
+                "sharedId": any_string,
                 "value": {
                     "childNodeCount": 0,
                     "children": [],
@@ -237,9 +228,11 @@ async def test_attribute_node(
         "basic",
     ]
 )
-async def test_text_node(bidi_session, inline, top_context, function_declaration, expected):
+async def test_text_node(
+    bidi_session, get_test_page, top_context, function_declaration, expected
+):
     await bidi_session.browsing_context.navigate(
-        context=top_context['context'], url=inline(page_data), wait="complete"
+        context=top_context['context'], url=get_test_page(), wait="complete"
     )
 
     result = await bidi_session.script.call_function(
@@ -248,7 +241,7 @@ async def test_text_node(bidi_session, inline, top_context, function_declaration
         await_promise=False,
     )
 
-    assert result == expected
+    recursive_compare(expected, result)
 
 
 @pytest.mark.asyncio
@@ -261,6 +254,7 @@ async def test_text_node(bidi_session, inline, top_context, function_declaration
             """,
             {
                 "type": "node",
+                "sharedId": any_string,
                 "value": {
                     "childNodeCount": 0,
                     "children": [],
@@ -286,7 +280,7 @@ async def test_cdata_node(bidi_session, inline, new_tab, function_declaration, e
         await_promise=False,
     )
 
-    assert result == expected
+    recursive_compare(expected, result)
 
 
 @pytest.mark.asyncio
@@ -299,6 +293,7 @@ async def test_cdata_node(bidi_session, inline, new_tab, function_declaration, e
             """,
             {
                 "type": "node",
+                "sharedId": any_string,
                 "value": {
                     "childNodeCount": 0,
                     "children": [],
@@ -326,7 +321,7 @@ async def test_processing_instruction_node(
         await_promise=False,
     )
 
-    assert result == expected
+    recursive_compare(expected, result)
 
 
 @pytest.mark.asyncio
@@ -335,10 +330,11 @@ async def test_processing_instruction_node(
     [
         (
             """
-                () => document.querySelector("div#comment").childNodes[0]
+                () => document.querySelector("#with-comment").childNodes[0]
             """,
             {
                 "type": "node",
+                "sharedId": any_string,
                 "value": {
                     "childNodeCount": 0,
                     "children": [],
@@ -352,10 +348,10 @@ async def test_processing_instruction_node(
     ]
 )
 async def test_comment_node(
-    bidi_session, inline, top_context, function_declaration, expected
+    bidi_session, get_test_page, top_context, function_declaration, expected
 ):
     await bidi_session.browsing_context.navigate(
-        context=top_context['context'], url=inline(page_data), wait="complete"
+        context=top_context['context'], url=get_test_page(), wait="complete"
     )
 
     result = await bidi_session.script.call_function(
@@ -364,7 +360,7 @@ async def test_comment_node(
         await_promise=False,
     )
 
-    assert result == expected
+    recursive_compare(expected, result)
 
 
 @pytest.mark.asyncio
@@ -377,16 +373,19 @@ async def test_comment_node(
             """,
             {
                 "type": "node",
+                "sharedId": any_string,
                 "value": {
                     "childNodeCount": 2,
                     "children": [{
                         "type": "node",
+                        "sharedId": any_string,
                         "value": {
                             "childNodeCount": 0,
                             "nodeType": 10
                         }
                     }, {
                         "type": "node",
+                        "sharedId": any_string,
                         "value": {
                             "attributes": {},
                             "childNodeCount": 2,
@@ -404,10 +403,10 @@ async def test_comment_node(
     ]
 )
 async def test_document_node(
-    bidi_session, inline, top_context, function_declaration, expected
+    bidi_session, get_test_page, top_context, function_declaration, expected
 ):
     await bidi_session.browsing_context.navigate(
-        context=top_context['context'], url=inline(page_data), wait="complete"
+        context=top_context['context'], url=get_test_page(), wait="complete"
     )
 
     result = await bidi_session.script.call_function(
@@ -416,7 +415,7 @@ async def test_document_node(
         await_promise=False,
     )
 
-    assert result == expected
+    recursive_compare(expected, result)
 
 
 @pytest.mark.asyncio
@@ -429,6 +428,7 @@ async def test_document_node(
             """,
             {
                 "type": "node",
+                "sharedId": any_string,
                 "value": {
                     "childNodeCount": 0,
                     "children": [],
@@ -441,10 +441,10 @@ async def test_document_node(
     ]
 )
 async def test_doctype_node(
-    bidi_session, inline, top_context, function_declaration, expected
+    bidi_session, get_test_page, top_context, function_declaration, expected
 ):
     await bidi_session.browsing_context.navigate(
-        context=top_context['context'], url=inline(page_data), wait="complete"
+        context=top_context['context'], url=get_test_page(), wait="complete"
     )
 
     result = await bidi_session.script.call_function(
@@ -453,7 +453,7 @@ async def test_doctype_node(
         await_promise=False,
     )
 
-    assert result == expected
+    recursive_compare(expected, result)
 
 
 @pytest.mark.asyncio
@@ -462,10 +462,35 @@ async def test_doctype_node(
     [
         (
             """
-                () => new DocumentFragment()
+                () => document.querySelector("#custom-element").shadowRoot
             """,
             {
                 "type": "node",
+                "sharedId": any_string,
+                "value": {
+                    "childNodeCount": 1,
+                    "children": [{
+                        "type": "node",
+                        "sharedId": any_string,
+                        "value": {
+                            "attributes": {"id": "in-shadow-dom"},
+                            "childNodeCount": 1,
+                            "localName": "div",
+                            "namespaceURI": "http://www.w3.org/1999/xhtml",
+                            "nodeType": 1
+                        }
+                    }],
+                    "nodeType": 11
+                }
+            }
+        ),
+        (
+            """
+                () => document.createDocumentFragment()
+            """,
+            {
+                "type": "node",
+                "sharedId": any_string,
                 "value": {
                     "childNodeCount": 0,
                     "children": [],
@@ -474,14 +499,15 @@ async def test_doctype_node(
             }
         ),
     ], ids=[
-        "basic",
+        "shadow root",
+        "not connected",
     ]
 )
 async def test_document_fragment_node(
-    bidi_session, inline, top_context, function_declaration, expected
+    bidi_session, get_test_page, top_context, function_declaration, expected
 ):
     await bidi_session.browsing_context.navigate(
-        context=top_context['context'], url=inline(page_data), wait="complete"
+        context=top_context['context'], url=get_test_page(), wait="complete"
     )
 
     result = await bidi_session.script.call_function(
@@ -490,30 +516,31 @@ async def test_document_fragment_node(
         await_promise=False,
     )
 
-    assert result == expected
+    recursive_compare(expected, result)
 
 
 @pytest.mark.asyncio
-async def test_node_within_object(bidi_session, inline, top_context):
+async def test_node_within_object(bidi_session, get_test_page, top_context):
     await bidi_session.browsing_context.navigate(
-        context=top_context['context'], url=inline(page_data), wait="complete"
+        context=top_context['context'], url=get_test_page(), wait="complete"
     )
 
     result = await bidi_session.script.call_function(
-        function_declaration="""() => ({"elem": document.querySelector("span")})""",
+        function_declaration="""() => ({"elem": document.querySelector("img")})""",
         target=ContextTarget(top_context["context"]),
         await_promise=False,
     )
 
-    assert result == {
+    expected = {
         "type": "object",
         "value": [
             ["elem", {
                 "type": "node",
+                "sharedId": any_string,
                 "value": {
                     "attributes": {},
                     "childNodeCount": 0,
-                    "localName": "span",
+                    "localName": "img",
                     "namespaceURI": "http://www.w3.org/1999/xhtml",
                     "nodeType": 1
                 }
@@ -521,22 +548,25 @@ async def test_node_within_object(bidi_session, inline, top_context):
         ]
     }
 
+    recursive_compare(expected, result)
+
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "function_declaration, expected",
     [
         (
-            "() => document.getElementsByTagName('span')",
+            "() => document.getElementsByTagName('img')",
             {
                 "type": "htmlcollection",
                 "value": [
                     {
                         "type": "node",
+                        "sharedId": any_string,
                         "value": {
                             "attributes": {},
                             "childNodeCount": 0,
-                            "localName": "span",
+                            "localName": "img",
                             "namespaceURI": "http://www.w3.org/1999/xhtml",
                             "nodeType": 1
                         }
@@ -545,16 +575,17 @@ async def test_node_within_object(bidi_session, inline, top_context):
             }
         ),
         (
-            "() => document.querySelectorAll('span')",
+            "() => document.querySelectorAll('img')",
             {
                 "type": "nodelist",
                 "value": [
                     {
                         "type": "node",
+                        "sharedId": any_string,
                         "value": {
                             "attributes": {},
                             "childNodeCount": 0,
-                            "localName": "span",
+                            "localName": "img",
                             "namespaceURI": "http://www.w3.org/1999/xhtml",
                             "nodeType": 1
                         }
@@ -569,13 +600,13 @@ async def test_node_within_object(bidi_session, inline, top_context):
 )
 async def test_node_within_dom_collection(
     bidi_session,
-    inline,
+    get_test_page,
     top_context,
     function_declaration,
     expected
 ):
     await bidi_session.browsing_context.navigate(
-        context=top_context['context'], url=inline(page_data), wait="complete"
+        context=top_context['context'], url=get_test_page(), wait="complete"
     )
 
     result = await bidi_session.script.call_function(
@@ -584,4 +615,4 @@ async def test_node_within_dom_collection(
         await_promise=False,
     )
 
-    assert result == expected
+    recursive_compare(expected, result)
