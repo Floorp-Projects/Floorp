@@ -31,7 +31,7 @@ internal const val JSON_SPOC_CAPS_FLIGHT_COUNT_KEY = "count"
 
 @VisibleForTesting
 internal const val JSON_SPOC_CAPS_FLIGHT_PERIOD_KEY = "period"
-private const val JSON_SPOC_FLIGHT_ID_KEY = "flight_id"
+private const val JSON_SPOC_ID_KEY = "id"
 private const val JSON_SPOC_TITLE_KEY = "title"
 private const val JSON_SPOC_SPONSOR_KEY = "sponsor"
 private const val JSON_SPOC_URL_KEY = "url"
@@ -61,7 +61,7 @@ internal object SpocsJSONParser {
 
     private fun jsonToSpoc(json: JSONObject): ApiSpoc? = try {
         ApiSpoc(
-            flightId = json.getInt(JSON_SPOC_FLIGHT_ID_KEY),
+            id = json.getInt(JSON_SPOC_ID_KEY),
             title = json.getString(JSON_SPOC_TITLE_KEY),
             sponsor = json.getString(JSON_SPOC_SPONSOR_KEY),
             url = json.getString(JSON_SPOC_URL_KEY),

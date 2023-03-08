@@ -6129,6 +6129,10 @@ pocket:
         type: string
         description: |
           Id of the shown sponsored story.
+          Until version 112 this will be the `flight_id` allowing to
+          identify stories across different campaigns.
+          From version 112 this will be the story `id` identifying a
+          specific story irrespective of the campaign it is part of.
       times_shown:
         type: string
         description: |
@@ -6185,6 +6189,10 @@ pocket:
         type: string
         description: |
           Id of the shown sponsored story.
+          Until version 112 this will be the `flight_id` allowing to
+          identify stories across different campaigns.
+          From version 112 this will be the story `id` identifying a
+          specific story irrespective of the campaign it is part of.
       times_shown:
         type: string
         description: |

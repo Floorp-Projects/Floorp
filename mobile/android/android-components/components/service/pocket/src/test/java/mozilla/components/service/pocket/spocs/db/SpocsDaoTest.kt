@@ -275,7 +275,7 @@ class SpocsDaoTest {
         val story1 = PocketTestResources.dbExpectedPocketSpoc
         val story2 = PocketTestResources.dbExpectedPocketSpoc.copy(id = story1.id * 2)
         val updatedStory1 = story1.copy(
-            id = story1.id * 234,
+            id = story1.id * 3,
         )
         dao.insertSpocs(listOf(story1, story2))
 

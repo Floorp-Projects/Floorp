@@ -7,7 +7,7 @@ package mozilla.components.service.pocket.spocs.api
 /**
  * A Pocket sponsored as downloaded from the sponsored stories endpoint.
  *
- * @property flightId Unique id of this story.
+ * @property id Unique id of this story.
  * @property title the title of the story.
  * @property url 3rd party url containing the original story.
  * @property imageSrc a url to a still image representing the story.
@@ -20,7 +20,7 @@ package mozilla.components.service.pocket.spocs.api
  * @property caps Story caps indented to control the maximum number of times the story should be shown.
  */
 internal data class ApiSpoc(
-    val flightId: Int,
+    val id: Int,
     val title: String,
     val url: String,
     val imageSrc: String,

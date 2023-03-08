@@ -61,7 +61,7 @@ internal fun PocketRecommendedStory.toPartialTimeShownUpdate(): PocketLocalStory
  */
 internal fun ApiSpoc.toLocalSpoc(): SpocEntity =
     SpocEntity(
-        id = flightId,
+        id = id,
         url = url,
         title = title,
         imageUrl = imageSrc,

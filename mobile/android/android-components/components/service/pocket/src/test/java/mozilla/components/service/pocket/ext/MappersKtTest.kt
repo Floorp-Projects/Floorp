@@ -79,7 +79,7 @@ class MappersKtTest {
 
         val result = apiStory.toLocalSpoc()
 
-        assertEquals(apiStory.flightId, result.id)
+        assertEquals(apiStory.id, result.id)
         assertSame(apiStory.title, result.title)
         assertSame(apiStory.url, result.url)
         assertSame(apiStory.imageSrc, result.imageUrl)
