@@ -145,11 +145,12 @@ add_task(async function test_tab_list_ordering() {
   const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
   let mockTabs1 = getMockTabData(syncedTabsData1);
   let mockTabs2 = getMockTabData(syncedTabsData2);
+  let getRecentTabsResult = mockTabs1;
   syncedTabsMock.callsFake(() => {
     info(
-      `Stubbed SyncedTabs.getRecentTabs returning a promise that resolves to ${mockTabs1.length} tabs\n`
+      `Stubbed SyncedTabs.getRecentTabs returning a promise that resolves to ${getRecentTabsResult.length} tabs\n`
     );
-    return Promise.resolve(mockTabs1);
+    return Promise.resolve(getRecentTabsResult);
   });
 
   await withFirefoxView({}, async browser => {
@@ -182,7 +183,7 @@ add_task(async function test_tab_list_ordering() {
       "Last list item in synced-tabs-list is in the correct order"
     );
 
-    syncedTabsMock.returns(mockTabs2);
+    getRecentTabsResult = mockTabs2;
     // Initiate a synced tabs update
     Services.obs.notifyObservers(null, "services.sync.tabs.changed");
 
@@ -223,11 +224,12 @@ add_task(async function test_empty_list_items() {
   const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
   let mockTabs1 = getMockTabData(syncedTabsData3);
   let mockTabs2 = getMockTabData(syncedTabsData4);
+  let getRecentTabsResult = mockTabs1;
   syncedTabsMock.callsFake(() => {
     info(
-      `Stubbed SyncedTabs.getRecentTabs returning a promise that resolves to ${mockTabs1.length} tabs\n`
+      `Stubbed SyncedTabs.getRecentTabs returning a promise that resolves to ${getRecentTabsResult.length} tabs\n`
     );
-    return Promise.resolve(mockTabs1);
+    return Promise.resolve(getRecentTabsResult);
   });
 
   await withFirefoxView({}, async browser => {
@@ -267,7 +269,7 @@ add_task(async function test_empty_list_items() {
       "Last list item in synced-tabs-list should be a placeholder"
     );
 
-    syncedTabsMock.returns(mockTabs2);
+    getRecentTabsResult = mockTabs2;
     // Initiate a synced tabs update
     Services.obs.notifyObservers(null, "services.sync.tabs.changed");
 
@@ -305,11 +307,12 @@ add_task(async function test_empty_list() {
   const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
   let mockTabs1 = getMockTabData([]);
   let mockTabs2 = getMockTabData(syncedTabsData4);
+  let getRecentTabsResult = mockTabs1;
   syncedTabsMock.callsFake(() => {
     info(
-      `Stubbed SyncedTabs.getRecentTabs returning a promise that resolves to ${mockTabs1.length} tabs\n`
+      `Stubbed SyncedTabs.getRecentTabs returning a promise that resolves to ${getRecentTabsResult.length} tabs\n`
     );
-    return Promise.resolve(mockTabs1);
+    return Promise.resolve(getRecentTabsResult);
   });
 
   await withFirefoxView({}, async browser => {
@@ -350,12 +353,7 @@ add_task(async function test_empty_list() {
       { clear: true, process: "parent" }
     );
 
-    syncedTabsMock.callsFake(() => {
-      info(
-        `Stubbed SyncedTabs.getRecentTabs returning a promise that resolves to ${mockTabs2.length} tabs\n`
-      );
-      return Promise.resolve(mockTabs2);
-    });
+    getRecentTabsResult = mockTabs2;
     // Initiate a synced tabs update
     Services.obs.notifyObservers(null, "services.sync.tabs.changed");
 
@@ -387,11 +385,12 @@ add_task(async function test_time_updates_correctly() {
   const sandbox = setupRecentDeviceListMocks();
   const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
   let mockTabs1 = getMockTabData(syncedTabsData5);
+  let getRecentTabsResult = mockTabs1;
   syncedTabsMock.callsFake(() => {
     info(
-      `Stubbed SyncedTabs.getRecentTabs returning a promise that resolves to ${mockTabs1.length} tabs\n`
+      `Stubbed SyncedTabs.getRecentTabs returning a promise that resolves to ${getRecentTabsResult.length} tabs\n`
     );
-    return Promise.resolve(mockTabs1);
+    return Promise.resolve(getRecentTabsResult);
   });
 
   await withFirefoxView({}, async browser => {
@@ -497,11 +496,12 @@ add_task(async function test_tabs_sync_on_user_page_reload() {
   const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
   let mockTabs1 = getMockTabData(syncedTabsData1);
   let expectedTabsAfterReload = getMockTabData(syncedTabsData3);
+  let getRecentTabsResult = mockTabs1;
   syncedTabsMock.callsFake(() => {
     info(
-      `Stubbed SyncedTabs.getRecentTabs returning a promise that resolves to ${mockTabs1.length} tabs\n`
+      `Stubbed SyncedTabs.getRecentTabs returning a promise that resolves to ${getRecentTabsResult.length} tabs\n`
     );
-    return Promise.resolve(mockTabs1);
+    return Promise.resolve(getRecentTabsResult);
   });
 
   await withFirefoxView({}, async browser => {
@@ -518,9 +518,12 @@ add_task(async function test_tabs_sync_on_user_page_reload() {
     ok(true, "Firefox View has been reloaded");
     ok(TabsSetupFlowManager.waitingForTabs, "waitingForTabs is true");
 
-    syncedTabsMock.returns(expectedTabsAfterReload);
+    let waitedForTabs = TestUtils.waitForCondition(() => {
+      return !TabsSetupFlowManager.waitingForTabs;
+    });
+
+    getRecentTabsResult = expectedTabsAfterReload;
     Services.obs.notifyObservers(null, "services.sync.tabs.changed");
-    ok(!TabsSetupFlowManager.waitingForTabs, "waitingForTabs is false");
 
     const syncedTabsList = document.querySelector("ol.synced-tabs-list");
     // The tab pickup list has been updated
@@ -530,6 +533,7 @@ add_task(async function test_tabs_sync_on_user_page_reload() {
       () =>
         syncedTabsList.firstChild.textContent.includes("Sandboxes - Sinon.JS")
     );
+    await waitedForTabs;
 
     sandbox.restore();
     cleanup_tab_pickup();
@@ -542,11 +546,12 @@ add_task(async function test_keyboard_navigation() {
   const sandbox = setupRecentDeviceListMocks();
   const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
   let mockTabs1 = getMockTabData(syncedTabsData1);
+  let getRecentTabsResult = mockTabs1;
   syncedTabsMock.callsFake(() => {
     info(
-      `Stubbed SyncedTabs.getRecentTabs returning a promise that resolves to ${mockTabs1.length} tabs\n`
+      `Stubbed SyncedTabs.getRecentTabs returning a promise that resolves to ${getRecentTabsResult.length} tabs\n`
     );
-    return Promise.resolve(mockTabs1);
+    return Promise.resolve(getRecentTabsResult);
   });
 
   await withFirefoxView({}, async browser => {
@@ -653,11 +658,12 @@ add_task(async function test_duplicate_tab_filter() {
   const sandbox = setupRecentDeviceListMocks();
   const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
   let mockTabs6 = getMockTabData(syncedTabsData6);
+  let getRecentTabsResult = mockTabs6;
   syncedTabsMock.callsFake(() => {
     info(
-      `Stubbed SyncedTabs.getRecentTabs returning a promise that resolves to ${mockTabs6.length} tabs\n`
+      `Stubbed SyncedTabs.getRecentTabs returning a promise that resolves to ${getRecentTabsResult.length} tabs\n`
     );
-    return Promise.resolve(mockTabs6);
+    return Promise.resolve(getRecentTabsResult);
   });
 
   await withFirefoxView({}, async browser => {
@@ -708,11 +714,12 @@ add_task(async function test_tabs_dont_update_unnecessarily() {
   const sandbox = setupRecentDeviceListMocks();
   const syncedTabsMock = sandbox.stub(SyncedTabs, "getRecentTabs");
   let mockTabs1 = getMockTabData(syncedTabsData1);
+  let getRecentTabsResult = mockTabs1;
   syncedTabsMock.callsFake(() => {
     info(
-      `Stubbed SyncedTabs.getRecentTabs returning a promise that resolves to ${mockTabs1.length} tabs\n`
+      `Stubbed SyncedTabs.getRecentTabs returning a promise that resolves to ${getRecentTabsResult.length} tabs\n`
     );
-    return Promise.resolve(mockTabs1);
+    return Promise.resolve(getRecentTabsResult);
   });
 
   await withFirefoxView({}, async browser => {
@@ -753,13 +760,15 @@ add_task(async function test_tabs_dont_update_unnecessarily() {
 
     observer.observe(syncedTabsList, { childList: true, subtree: true });
 
-    syncedTabsMock.returns(mockTabs1);
+    getRecentTabsResult = mockTabs1;
     const tabPickupList = document.querySelector("tab-pickup-list");
     const updateTabsListSpy = sandbox.spy(tabPickupList, "updateTabsList");
 
     // Initiate a synced tabs update
     Services.obs.notifyObservers(null, "services.sync.tabs.changed");
-
+    await TestUtils.waitForCondition(() => {
+      return !TabsSetupFlowManager.waitingForTabs;
+    });
     await TestUtils.waitForCondition(() => updateTabsListSpy.called);
     Assert.ok(!wasMutated, "The synced tabs list was not mutated");
 
