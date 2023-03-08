@@ -641,7 +641,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
   // eslint-disable-next-line complexity
   _canAddResult(result, state) {
     // QuickSuggest results are shown unless a weather result is also present
-    // or they are best matches that duplicate the heuristic.
+    // or they are navigational suggestions that duplicate the heuristic.
     if (result.providerName == lazy.UrlbarProviderQuickSuggest.name) {
       if (state.weatherResult) {
         return false;
@@ -650,8 +650,9 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       let heuristicUrl = state.context.heuristicResult?.payload.url;
       if (
         heuristicUrl &&
-        !lazy.UrlbarPrefs.get("experimental.hideHeuristic") &&
-        result.isBestMatch
+        result.payload.subtype ==
+          lazy.UrlbarProviderQuickSuggest.RESULT_SUBTYPE.NAVIGATIONAL &&
+        !lazy.UrlbarPrefs.get("experimental.hideHeuristic")
       ) {
         let opts = {
           stripHttp: true,
@@ -659,10 +660,10 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
           stripWww: true,
           trimSlash: true,
         };
-        return (
-          UrlbarUtils.stripPrefixAndTrim(heuristicUrl, opts)[0] !=
-          UrlbarUtils.stripPrefixAndTrim(result.payload.url, opts)[0]
-        );
+        result.payload.dupedHeuristic =
+          UrlbarUtils.stripPrefixAndTrim(heuristicUrl, opts)[0] ==
+          UrlbarUtils.stripPrefixAndTrim(result.payload.url, opts)[0];
+        return !result.payload.dupedHeuristic;
       }
       return true;
     }

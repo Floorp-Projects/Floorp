@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* eslint-disable mozilla/valid-lazy */
+
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 import {
@@ -36,7 +38,6 @@ let gTestScope;
 // not happen automatically inside system modules like this one because system
 // module lifetimes are the app's lifetime, unlike individual browser chrome and
 // xpcshell tests.
-/* eslint-disable mozilla/valid-lazy */
 Object.defineProperty(lazy, "UrlbarTestUtils", {
   get: () => {
     if (!lazy._UrlbarTestUtils) {
@@ -60,7 +61,6 @@ Object.defineProperty(lazy, "UrlbarTestUtils", {
 // not happen automatically inside system modules like this one because system
 // module lifetimes are the app's lifetime, unlike individual browser chrome and
 // xpcshell tests.
-/* eslint-disable mozilla/valid-lazy */
 Object.defineProperty(lazy, "MerinoTestUtils", {
   get: () => {
     if (!lazy._MerinoTestUtils) {
@@ -78,7 +78,9 @@ Object.defineProperty(lazy, "MerinoTestUtils", {
   },
 });
 
-const DEFAULT_CONFIG = {
+const DEFAULT_CONFIG = {};
+
+const BEST_MATCH_CONFIG = {
   best_match: {
     blocked_suggestion_ids: [],
     min_search_string_length: 4,
@@ -173,6 +175,11 @@ class _QuickSuggestTestUtils {
   get DEFAULT_CONFIG() {
     // Return a clone so callers can modify it.
     return Cu.cloneInto(DEFAULT_CONFIG, this);
+  }
+
+  get BEST_MATCH_CONFIG() {
+    // Return a clone so callers can modify it.
+    return Cu.cloneInto(BEST_MATCH_CONFIG, this);
   }
 
   /**
@@ -277,7 +284,7 @@ class _QuickSuggestTestUtils {
 
   /**
    * Sets the quick suggest configuration, calls your callback, and restores the
-   * default configuration.
+   * previous configuration.
    *
    * @param {object} options
    *   The options object.
@@ -289,9 +296,10 @@ class _QuickSuggestTestUtils {
    * @see {@link setConfig}
    */
   async withConfig({ config, callback }) {
+    let original = lazy.QuickSuggest.remoteSettings.config;
     this.setConfig(config);
     await callback();
-    this.setConfig(DEFAULT_CONFIG);
+    this.setConfig(original);
   }
 
   /**
@@ -480,35 +488,46 @@ class _QuickSuggestTestUtils {
   }
 
   /**
-   * Checks the values of all the quick suggest telemetry scalars.
+   * Checks the values of all the quick suggest telemetry keyed scalars and,
+   * if provided, other non-quick-suggest keyed scalars. Scalar values are all
+   * assumed to be 1.
    *
-   * @param {object} expectedIndexesByScalarName
-   *   Maps scalar names to the expected 1-based indexes of results. If you
-   *   expect a scalar to be incremented, then include it in this object. If you
-   *   expect a scalar not to be incremented, don't include it.
+   * @param {object} expectedKeysByScalarName
+   *   Maps scalar names to keys that are expected to be recorded. The value for
+   *   each key is assumed to be 1. If you expect a scalar to be incremented,
+   *   include it in this object; otherwise, don't include it.
    */
-  assertScalars(expectedIndexesByScalarName) {
+  assertScalars(expectedKeysByScalarName) {
     let scalars = lazy.TelemetryTestUtils.getProcessScalars(
       "parent",
       true,
       true
     );
+
+    // Check all quick suggest scalars.
+    expectedKeysByScalarName = { ...expectedKeysByScalarName };
     for (let scalarName of Object.values(
       lazy.UrlbarProviderQuickSuggest.TELEMETRY_SCALARS
     )) {
-      if (scalarName in expectedIndexesByScalarName) {
+      if (scalarName in expectedKeysByScalarName) {
         lazy.TelemetryTestUtils.assertKeyedScalar(
           scalars,
           scalarName,
-          expectedIndexesByScalarName[scalarName],
+          expectedKeysByScalarName[scalarName],
           1
         );
+        delete expectedKeysByScalarName[scalarName];
       } else {
         this.Assert.ok(
           !(scalarName in scalars),
           "Scalar should not be present: " + scalarName
         );
       }
+    }
+
+    // Check any other remaining scalars that were passed in.
+    for (let [scalarName, key] of Object.entries(expectedKeysByScalarName)) {
+      lazy.TelemetryTestUtils.assertKeyedScalar(scalars, scalarName, key, 1);
     }
   }
 

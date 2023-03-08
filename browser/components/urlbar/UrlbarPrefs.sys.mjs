@@ -423,6 +423,7 @@ const NIMBUS_DEFAULTS = {
   experimentType: "",
   isBestMatchExperiment: false,
   quickSuggestRemoteSettingsDataType: "data",
+  recordNavigationalSuggestionTelemetry: false,
   weatherKeywords: null,
   weatherKeywordsMinimumLength: 0,
 };

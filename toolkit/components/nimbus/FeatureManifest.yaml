@@ -215,6 +215,9 @@ urlbar:
       description: >-
         The index of sponsored QuickSuggest results within the general group. A
         negative index is relative to the end of the group
+    recordNavigationalSuggestionTelemetry:
+      type: boolean
+      description: Whether to record navigational suggestion telemetry. Defaults to false.
     searchEngagementTelemetryEnabled:
       type: boolean
       fallbackPref: browser.urlbar.searchEngagementTelemetry.enabled

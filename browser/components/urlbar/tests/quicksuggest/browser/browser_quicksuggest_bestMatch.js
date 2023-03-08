@@ -48,6 +48,7 @@ add_setup(async function() {
     remoteSettingsResults: REMOTE_SETTINGS_RESULTS.concat(
       NON_BEST_MATCH_RESULT
     ),
+    config: QuickSuggestTestUtils.BEST_MATCH_CONFIG,
   });
 });
 

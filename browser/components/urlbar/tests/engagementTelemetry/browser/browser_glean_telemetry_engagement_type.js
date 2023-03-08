@@ -54,7 +54,10 @@ add_task(async function engagement_type_paste_go() {
 });
 
 add_task(async function engagement_type_dismiss() {
-  const cleanupQuickSuggest = await ensureQuickSuggestInit();
+  const cleanupQuickSuggest = await ensureQuickSuggestInit({
+    // eslint-disable-next-line mozilla/valid-lazy
+    config: lazy.QuickSuggestTestUtils.BEST_MATCH_CONFIG,
+  });
 
   for (const isBestMatchTest of [true, false]) {
     const prefs = isBestMatchTest

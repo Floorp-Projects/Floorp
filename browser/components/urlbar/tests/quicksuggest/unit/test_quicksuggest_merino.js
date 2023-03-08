@@ -30,6 +30,7 @@ const EXPECTED_REMOTE_SETTINGS_URLBAR_RESULT = {
   source: UrlbarUtils.RESULT_SOURCE.SEARCH,
   heuristic: false,
   payload: {
+    subtype: UrlbarProviderQuickSuggest.RESULT_SUBTYPE.SPONSORED,
     qsSuggestion: SEARCH_STRING,
     title: "frabbits",
     url: "http://test.com/q=frabbits",
@@ -62,6 +63,7 @@ const EXPECTED_MERINO_URLBAR_RESULT = {
   source: UrlbarUtils.RESULT_SOURCE.SEARCH,
   heuristic: false,
   payload: {
+    subtype: UrlbarProviderQuickSuggest.RESULT_SUBTYPE.SPONSORED,
     qsSuggestion: "full_keyword",
     title: "title",
     url: "url",
@@ -468,6 +470,7 @@ add_task(async function multipleMerinoSuggestions() {
         source: UrlbarUtils.RESULT_SOURCE.SEARCH,
         heuristic: false,
         payload: {
+          subtype: UrlbarProviderQuickSuggest.RESULT_SUBTYPE.SPONSORED,
           qsSuggestion: "multipleMerinoSuggestions 1 full_keyword",
           title: "multipleMerinoSuggestions 1 title",
           url: "multipleMerinoSuggestions 1 url",
@@ -644,18 +647,23 @@ add_task(async function bestMatch() {
   expectedResult.isBestMatch = true;
   delete expectedResult.payload.qsSuggestion;
 
-  let context = createContext(SEARCH_STRING, {
-    providers: [UrlbarProviderQuickSuggest.name],
-    isPrivate: false,
-  });
-  await check_results({
-    context,
-    matches: [expectedResult],
-  });
+  await QuickSuggestTestUtils.withConfig({
+    config: QuickSuggestTestUtils.BEST_MATCH_CONFIG,
+    callback: async () => {
+      let context = createContext(SEARCH_STRING, {
+        providers: [UrlbarProviderQuickSuggest.name],
+        isPrivate: false,
+      });
+      await check_results({
+        context,
+        matches: [expectedResult],
+      });
 
-  // This isn't necessary since `check_results()` checks `isBestMatch`, but
-  // check it here explicitly for good measure.
-  Assert.ok(context.results[0].isBestMatch, "Result is a best match");
+      // This isn't necessary since `check_results()` checks `isBestMatch`, but
+      // check it here explicitly for good measure.
+      Assert.ok(context.results[0].isBestMatch, "Result is a best match");
+    },
+  });
 
   UrlbarPrefs.clear("bestMatch.enabled");
   UrlbarPrefs.clear("suggest.bestmatch");
@@ -696,6 +704,7 @@ add_task(async function topPick() {
         heuristic: false,
         isBestMatch: true,
         payload: {
+          subtype: UrlbarProviderQuickSuggest.RESULT_SUBTYPE.NAVIGATIONAL,
           title: "multipleMerinoSuggestions 2 title",
           url: "multipleMerinoSuggestions 2 url",
           originalUrl: "multipleMerinoSuggestions 2 url",

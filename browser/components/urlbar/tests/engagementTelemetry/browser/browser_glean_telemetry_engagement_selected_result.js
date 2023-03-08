@@ -637,3 +637,70 @@ add_task(async function selected_result_weather() {
   cleanupQuickSuggest();
   await SpecialPowers.popPrefEnv();
 });
+
+add_task(async function selected_result_navigational() {
+  const cleanupQuickSuggest = await ensureQuickSuggestInit({
+    merinoSuggestions: [
+      {
+        title: "Navigational suggestion",
+        url: "https://example.com/navigational-suggestion",
+        provider: "top_picks",
+        is_sponsored: false,
+        score: 0.25,
+        block_id: 0,
+        is_top_pick: true,
+      },
+    ],
+  });
+
+  await doTest(async browser => {
+    await openPopup("only match the Merino suggestion");
+    await selectRowByProvider("UrlbarProviderQuickSuggest");
+    await doEnter();
+
+    assertEngagementTelemetry([
+      {
+        selected_result: "navigational",
+        selected_result_subtype: "",
+        provider: "UrlbarProviderQuickSuggest",
+        results: "search_engine,navigational",
+      },
+    ]);
+  });
+
+  cleanupQuickSuggest();
+});
+
+add_task(async function selected_result_dynamic_wikipedia() {
+  const cleanupQuickSuggest = await ensureQuickSuggestInit({
+    merinoSuggestions: [
+      {
+        block_id: 1,
+        url: "https://example.com/dynamic-wikipedia",
+        title: "Dynamic Wikipedia suggestion",
+        click_url: "https://example.com/click",
+        impression_url: "https://example.com/impression",
+        advertiser: "dynamic-wikipedia",
+        provider: "wikipedia",
+        iab_category: "5 - Education",
+      },
+    ],
+  });
+
+  await doTest(async browser => {
+    await openPopup("only match the Merino suggestion");
+    await selectRowByProvider("UrlbarProviderQuickSuggest");
+    await doEnter();
+
+    assertEngagementTelemetry([
+      {
+        selected_result: "dynamic_wikipedia",
+        selected_result_subtype: "",
+        provider: "UrlbarProviderQuickSuggest",
+        results: "search_engine,dynamic_wikipedia",
+      },
+    ]);
+  });
+
+  cleanupQuickSuggest();
+});

@@ -139,12 +139,16 @@ const EXPECTED_GENERAL_INTERVENTION_RESULT = {
 };
 
 function createExpectedQuickSuggestResult(suggest) {
+  let isSponsored = suggest.iab_category !== "5 - Education";
   return {
     providerName: UrlbarProviderQuickSuggest.name,
     type: UrlbarUtils.RESULT_TYPE.URL,
     source: UrlbarUtils.RESULT_SOURCE.SEARCH,
     heuristic: false,
     payload: {
+      subtype: isSponsored
+        ? UrlbarProviderQuickSuggest.RESULT_SUBTYPE.SPONSORED
+        : UrlbarProviderQuickSuggest.RESULT_SUBTYPE.NONSPONSORED,
       qsSuggestion: suggest.keywords[0],
       title: suggest.title,
       url: suggest.url,
@@ -155,7 +159,7 @@ function createExpectedQuickSuggestResult(suggest) {
       sponsoredBlockId: suggest.id,
       sponsoredAdvertiser: suggest.advertiser,
       sponsoredIabCategory: suggest.iab_category,
-      isSponsored: suggest.iab_category !== "5 - Education",
+      isSponsored,
       helpUrl: QuickSuggest.HELP_URL,
       helpL10n: {
         id: UrlbarPrefs.get("resultMenu")

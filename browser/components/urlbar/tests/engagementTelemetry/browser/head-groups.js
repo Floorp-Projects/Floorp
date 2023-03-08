@@ -74,7 +74,10 @@ async function doSearchSuggestTest({ trigger, assert }) {
 }
 
 async function doTopPickTest({ trigger, assert }) {
-  const cleanupQuickSuggest = await ensureQuickSuggestInit();
+  const cleanupQuickSuggest = await ensureQuickSuggestInit({
+    // eslint-disable-next-line mozilla/valid-lazy
+    config: lazy.QuickSuggestTestUtils.BEST_MATCH_CONFIG,
+  });
 
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.bestMatch.enabled", true]],

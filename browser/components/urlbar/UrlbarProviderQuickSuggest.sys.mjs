@@ -19,29 +19,50 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
 });
 
+// The types of quick suggest results supported by this provider.
+//
+// IMPORTANT: These values are used in telemetry, so be careful about changing
+// them. See:
+//
+//   UrlbarUtils.searchEngagementTelemetryType() (Glean telemetry)
+//   UrlbarUtils.telemetryTypeFromResult() (legacy telemetry)
+const RESULT_SUBTYPE = {
+  DYNAMIC_WIKIPEDIA: "dynamic_wikipedia",
+  NAVIGATIONAL: "navigational",
+  NONSPONSORED: "suggest_non_sponsor",
+  SPONSORED: "suggest_sponsor",
+};
+
 const TELEMETRY_PREFIX = "contextual.services.quicksuggest";
 
 const TELEMETRY_SCALARS = {
-  BLOCK_SPONSORED: `${TELEMETRY_PREFIX}.block_sponsored`,
-  BLOCK_SPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.block_sponsored_bestmatch`,
   BLOCK_DYNAMIC_WIKIPEDIA: `${TELEMETRY_PREFIX}.block_dynamic_wikipedia`,
   BLOCK_NONSPONSORED: `${TELEMETRY_PREFIX}.block_nonsponsored`,
   BLOCK_NONSPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.block_nonsponsored_bestmatch`,
-  CLICK_SPONSORED: `${TELEMETRY_PREFIX}.click_sponsored`,
+  BLOCK_SPONSORED: `${TELEMETRY_PREFIX}.block_sponsored`,
+  BLOCK_SPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.block_sponsored_bestmatch`,
+  CLICK_DYNAMIC_WIKIPEDIA: `${TELEMETRY_PREFIX}.click_dynamic_wikipedia`,
+  CLICK_NAV_NOTMATCHED: `${TELEMETRY_PREFIX}.click_nav_notmatched`,
+  CLICK_NAV_SHOWN_HEURISTIC: `${TELEMETRY_PREFIX}.click_nav_shown_heuristic`,
+  CLICK_NAV_SHOWN_NAV: `${TELEMETRY_PREFIX}.click_nav_shown_nav`,
+  CLICK_NAV_SUPERCEDED: `${TELEMETRY_PREFIX}.click_nav_superceded`,
   CLICK_NONSPONSORED: `${TELEMETRY_PREFIX}.click_nonsponsored`,
   CLICK_NONSPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.click_nonsponsored_bestmatch`,
+  CLICK_SPONSORED: `${TELEMETRY_PREFIX}.click_sponsored`,
   CLICK_SPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.click_sponsored_bestmatch`,
-  CLICK_DYNAMIC_WIKIPEDIA: `${TELEMETRY_PREFIX}.click_dynamic_wikipedia`,
-  HELP_SPONSORED: `${TELEMETRY_PREFIX}.help_sponsored`,
+  HELP_DYNAMIC_WIKIPEDIA: `${TELEMETRY_PREFIX}.help_dynamic_wikipedia`,
   HELP_NONSPONSORED: `${TELEMETRY_PREFIX}.help_nonsponsored`,
   HELP_NONSPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.help_nonsponsored_bestmatch`,
+  HELP_SPONSORED: `${TELEMETRY_PREFIX}.help_sponsored`,
   HELP_SPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.help_sponsored_bestmatch`,
-  HELP_DYNAMIC_WIKIPEDIA: `${TELEMETRY_PREFIX}.help_dynamic_wikipedia`,
-  IMPRESSION_SPONSORED: `${TELEMETRY_PREFIX}.impression_sponsored`,
+  IMPRESSION_DYNAMIC_WIKIPEDIA: `${TELEMETRY_PREFIX}.impression_dynamic_wikipedia`,
+  IMPRESSION_NAV_NOTMATCHED: `${TELEMETRY_PREFIX}.impression_nav_notmatched`,
+  IMPRESSION_NAV_SHOWN: `${TELEMETRY_PREFIX}.impression_nav_shown`,
+  IMPRESSION_NAV_SUPERCEDED: `${TELEMETRY_PREFIX}.impression_nav_superceded`,
   IMPRESSION_NONSPONSORED: `${TELEMETRY_PREFIX}.impression_nonsponsored`,
   IMPRESSION_NONSPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.impression_nonsponsored_bestmatch`,
+  IMPRESSION_SPONSORED: `${TELEMETRY_PREFIX}.impression_sponsored`,
   IMPRESSION_SPONSORED_BEST_MATCH: `${TELEMETRY_PREFIX}.impression_sponsored_bestmatch`,
-  IMPRESSION_DYNAMIC_WIKIPEDIA: `${TELEMETRY_PREFIX}.impression_dynamic_wikipedia`,
 };
 
 /**
@@ -65,6 +86,15 @@ class ProviderQuickSuggest extends UrlbarProvider {
    */
   get type() {
     return UrlbarUtils.PROVIDER_TYPE.NETWORK;
+  }
+
+  /**
+   * @returns {object}
+   *   An object containing the types of quick suggest results supported by this
+   *   provider.
+   */
+  get RESULT_SUBTYPE() {
+    return { ...RESULT_SUBTYPE };
   }
 
   /**
@@ -200,6 +230,17 @@ class ProviderQuickSuggest extends UrlbarProvider {
       requestId: suggestion.request_id,
     };
 
+    // Determine the suggestion subtype.
+    if (suggestion.is_top_pick) {
+      payload.subtype = RESULT_SUBTYPE.NAVIGATIONAL;
+    } else if (suggestion.advertiser == "dynamic-wikipedia") {
+      payload.subtype = RESULT_SUBTYPE.DYNAMIC_WIKIPEDIA;
+    } else if (suggestion.is_sponsored) {
+      payload.subtype = RESULT_SUBTYPE.SPONSORED;
+    } else {
+      payload.subtype = RESULT_SUBTYPE.NONSPONSORED;
+    }
+
     // Determine if the suggestion itself is a best match.
     let isSuggestionBestMatch = false;
     if (suggestion.is_top_pick) {
@@ -315,7 +356,10 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
     this.logger.info("Blocking result: " + JSON.stringify(result));
     lazy.QuickSuggest.blockedSuggestions.add(result.payload.originalUrl);
-    this._recordEngagementTelemetry(result, queryContext.isPrivate, "block");
+    this.#recordEngagement(queryContext, queryContext.isPrivate, result, {
+      selType: "block",
+      selIndex: result.rowIndex,
+    });
     return true;
   }
 
@@ -338,7 +382,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
    */
   onEngagement(isPrivate, state, queryContext, details) {
     let result = this.#resultFromLastQuery;
-    this.#resultFromLastQuery = null;
 
     // Reset the Merino session ID when an engagement ends. Per spec, for the
     // user's privacy, we don't keep it around between engagements. It wouldn't
@@ -373,15 +416,10 @@ class ProviderQuickSuggest extends UrlbarProvider {
         );
       }
 
-      // Finally, record telemetry if there's a visible result.
-      if (result) {
-        this._recordEngagementTelemetry(
-          result,
-          isPrivate,
-          details.selIndex == result.rowIndex ? details.selType : ""
-        );
-      }
+      this.#recordEngagement(queryContext, isPrivate, result, details);
     }
+
+    this.#resultFromLastQuery = null;
   }
 
   /**
@@ -389,125 +427,180 @@ class ProviderQuickSuggest extends UrlbarProvider {
    * engagement when a quick suggest result is present or when a quick suggest
    * result is blocked.
    *
-   * @param {UrlbarResult} result
-   *   The quick suggest result that was present (and possibly picked) at the
-   *   end of the engagement or that was blocked.
+   * @param {UrlbarQueryContext} queryContext
+   *   The query context.
    * @param {boolean} isPrivate
    *   Whether the engagement is in a private context.
-   * @param {string} selType
-   *   This parameter indicates the part of the row the user picked, if any, and
-   *   should be one of the following values:
-   *
-   *   - "": The user didn't pick the row or any part of it
-   *   - "quicksuggest": The user picked the main part of the row
-   *   - "help": The user picked the help button
-   *   - "block": The user picked the block button or used the key shortcut
-   *
-   *   An empty string means the user picked some other row to end the
-   *   engagement, not the quick suggest row. In that case only impression
-   *   telemetry will be recorded.
-   *
-   *   A non-empty string means the user picked the quick suggest row or some
-   *   part of it, and both impression and click telemetry will be recorded. The
-   *   non-empty-string values come from the `details.selType` passed in to
-   *   `onEngagement()`; see `TelemetryEvent.typeFromElement()`.
+   * @param {UrlbarResult} result
+   *   The quick suggest result that was present (and possibly picked) at the
+   *   end of the engagement or that was blocked. Null if no quick suggest
+   *   result was present.
+   * @param {object} details
+   *   The `details` object that was passed to `onEngagement()`. It must look
+   *   like this: `{ selType, selIndex }`
    */
-  _recordEngagementTelemetry(result, isPrivate, selType) {
-    // Update impression stats.
-    lazy.QuickSuggest.impressionCaps.updateStats(
-      result.payload.isSponsored ? "sponsored" : "nonsponsored"
-    );
+  #recordEngagement(queryContext, isPrivate, result, details) {
+    // If an element in the result's row was picked, set `resultSelType` to it.
+    // Otherwise set it to an empty string.
+    let resultSelType =
+      result && details.selIndex == result.rowIndex ? details.selType : "";
+
+    // Determine if the main part of the row was clicked, as opposed to a button
+    // like help or block. When the main part of sponsored and non-sponsored
+    // rows is clicked, `selType` will be "quicksuggest". For other rows it will
+    // be one of the `RESULT_SUBTYPE` values.
+    let resultClicked =
+      resultSelType == "quicksuggest" ||
+      Object.values(RESULT_SUBTYPE).includes(resultSelType);
+
+    if (result) {
+      // Update impression stats.
+      lazy.QuickSuggest.impressionCaps.updateStats(
+        result.payload.isSponsored ? "sponsored" : "nonsponsored"
+      );
+
+      // Record engagement scalars, event, and pings.
+      this.#recordEngagementScalars({ result, resultSelType });
+      this.#recordEngagementEvent({ result, resultSelType, resultClicked });
+      if (!isPrivate) {
+        this.#recordEngagementPings({ result, resultSelType, resultClicked });
+      }
+    }
+
+    // Navigational suggestions telemetry requires special handling and does not
+    // depend on a result being visible.
+    if (
+      lazy.UrlbarPrefs.get("recordNavigationalSuggestionTelemetry") &&
+      queryContext.heuristicResult
+    ) {
+      this.#recordNavSuggestionTelemetry({
+        queryContext,
+        result,
+        resultSelType,
+        resultClicked,
+        details,
+      });
+    }
+  }
+
+  /**
+   * Helper for engagement telemetry that records engagement scalars.
+   *
+   * @param {object} options
+   *   Options object
+   * @param {UrlbarResult} options.result
+   *   The quick suggest result related to the engagement. Must not be null.
+   * @param {string} options.resultSelType
+   *   If an element in the result's row was clicked, this should be its
+   *   `selType`. Otherwise it should be an empty string.
+   */
+  #recordEngagementScalars({ result, resultSelType }) {
+    // Navigational suggestion scalars are handled separately.
+    if (result.payload.subtype == RESULT_SUBTYPE.NAVIGATIONAL) {
+      return;
+    }
 
     // Indexes recorded in quick suggest telemetry are 1-based, so add 1 to the
     // 0-based `result.rowIndex`.
     let telemetryResultIndex = result.rowIndex + 1;
-    let isDynamicWikipedia =
-      result.payload.sponsoredAdvertiser == "dynamic-wikipedia";
 
     // impression scalars
-    Services.telemetry.keyedScalarAdd(
-      result.payload.isSponsored
-        ? TELEMETRY_SCALARS.IMPRESSION_SPONSORED
-        : TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED,
-      telemetryResultIndex,
-      1
-    );
-
-    if (isDynamicWikipedia) {
-      Services.telemetry.keyedScalarAdd(
-        TELEMETRY_SCALARS.IMPRESSION_DYNAMIC_WIKIPEDIA,
-        telemetryResultIndex,
-        1
-      );
+    let impressionScalars = [];
+    switch (result.payload.subtype) {
+      case RESULT_SUBTYPE.DYNAMIC_WIKIPEDIA:
+        impressionScalars.push(TELEMETRY_SCALARS.IMPRESSION_DYNAMIC_WIKIPEDIA);
+        break;
+      case RESULT_SUBTYPE.NONSPONSORED:
+        impressionScalars.push(TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED);
+        if (result.isBestMatch) {
+          impressionScalars.push(
+            TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED_BEST_MATCH
+          );
+        }
+        break;
+      case RESULT_SUBTYPE.SPONSORED:
+        impressionScalars.push(TELEMETRY_SCALARS.IMPRESSION_SPONSORED);
+        if (result.isBestMatch) {
+          impressionScalars.push(
+            TELEMETRY_SCALARS.IMPRESSION_SPONSORED_BEST_MATCH
+          );
+        }
+        break;
     }
-    if (result.isBestMatch) {
-      Services.telemetry.keyedScalarAdd(
-        result.payload.isSponsored
-          ? TELEMETRY_SCALARS.IMPRESSION_SPONSORED_BEST_MATCH
-          : TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED_BEST_MATCH,
-        telemetryResultIndex,
-        1
-      );
+    for (let scalar of impressionScalars) {
+      Services.telemetry.keyedScalarAdd(scalar, telemetryResultIndex, 1);
     }
 
     // scalars related to clicking the result and other elements in its row
     let clickScalars = [];
-    switch (selType) {
+    switch (resultSelType) {
+      case RESULT_SUBTYPE.DYNAMIC_WIKIPEDIA:
+        clickScalars.push(TELEMETRY_SCALARS.CLICK_DYNAMIC_WIKIPEDIA);
+        break;
       case "quicksuggest":
-        clickScalars.push(
-          result.payload.isSponsored
-            ? TELEMETRY_SCALARS.CLICK_SPONSORED
-            : TELEMETRY_SCALARS.CLICK_NONSPONSORED
-        );
-        if (isDynamicWikipedia) {
-          clickScalars.push(TELEMETRY_SCALARS.CLICK_DYNAMIC_WIKIPEDIA);
-        }
-        if (result.isBestMatch) {
-          clickScalars.push(
-            result.payload.isSponsored
-              ? TELEMETRY_SCALARS.CLICK_SPONSORED_BEST_MATCH
-              : TELEMETRY_SCALARS.CLICK_NONSPONSORED_BEST_MATCH
-          );
+        // "quicksuggest" is the `selType` for sponsored and non-sponsored
+        // suggestions.
+        switch (result.payload.subtype) {
+          case RESULT_SUBTYPE.NONSPONSORED:
+            clickScalars.push(TELEMETRY_SCALARS.CLICK_NONSPONSORED);
+            if (result.isBestMatch) {
+              clickScalars.push(
+                TELEMETRY_SCALARS.CLICK_NONSPONSORED_BEST_MATCH
+              );
+            }
+            break;
+          case RESULT_SUBTYPE.SPONSORED:
+            clickScalars.push(TELEMETRY_SCALARS.CLICK_SPONSORED);
+            if (result.isBestMatch) {
+              clickScalars.push(TELEMETRY_SCALARS.CLICK_SPONSORED_BEST_MATCH);
+            }
+            break;
         }
         break;
       case "help":
-        clickScalars.push(
-          result.payload.isSponsored
-            ? TELEMETRY_SCALARS.HELP_SPONSORED
-            : TELEMETRY_SCALARS.HELP_NONSPONSORED
-        );
-        if (isDynamicWikipedia) {
-          clickScalars.push(TELEMETRY_SCALARS.HELP_DYNAMIC_WIKIPEDIA);
-        }
-        if (result.isBestMatch) {
-          clickScalars.push(
-            result.payload.isSponsored
-              ? TELEMETRY_SCALARS.HELP_SPONSORED_BEST_MATCH
-              : TELEMETRY_SCALARS.HELP_NONSPONSORED_BEST_MATCH
-          );
+        switch (result.payload.subtype) {
+          case RESULT_SUBTYPE.DYNAMIC_WIKIPEDIA:
+            clickScalars.push(TELEMETRY_SCALARS.HELP_DYNAMIC_WIKIPEDIA);
+            break;
+          case RESULT_SUBTYPE.NONSPONSORED:
+            clickScalars.push(TELEMETRY_SCALARS.HELP_NONSPONSORED);
+            if (result.isBestMatch) {
+              clickScalars.push(TELEMETRY_SCALARS.HELP_NONSPONSORED_BEST_MATCH);
+            }
+            break;
+          case RESULT_SUBTYPE.SPONSORED:
+            clickScalars.push(TELEMETRY_SCALARS.HELP_SPONSORED);
+            if (result.isBestMatch) {
+              clickScalars.push(TELEMETRY_SCALARS.HELP_SPONSORED_BEST_MATCH);
+            }
+            break;
         }
         break;
       case "block":
-        clickScalars.push(
-          result.payload.isSponsored
-            ? TELEMETRY_SCALARS.BLOCK_SPONSORED
-            : TELEMETRY_SCALARS.BLOCK_NONSPONSORED
-        );
-        if (isDynamicWikipedia) {
-          clickScalars.push(TELEMETRY_SCALARS.BLOCK_DYNAMIC_WIKIPEDIA);
-        }
-        if (result.isBestMatch) {
-          clickScalars.push(
-            result.payload.isSponsored
-              ? TELEMETRY_SCALARS.BLOCK_SPONSORED_BEST_MATCH
-              : TELEMETRY_SCALARS.BLOCK_NONSPONSORED_BEST_MATCH
-          );
+        switch (result.payload.subtype) {
+          case RESULT_SUBTYPE.DYNAMIC_WIKIPEDIA:
+            clickScalars.push(TELEMETRY_SCALARS.BLOCK_DYNAMIC_WIKIPEDIA);
+            break;
+          case RESULT_SUBTYPE.NONSPONSORED:
+            clickScalars.push(TELEMETRY_SCALARS.BLOCK_NONSPONSORED);
+            if (result.isBestMatch) {
+              clickScalars.push(
+                TELEMETRY_SCALARS.BLOCK_NONSPONSORED_BEST_MATCH
+              );
+            }
+            break;
+          case RESULT_SUBTYPE.SPONSORED:
+            clickScalars.push(TELEMETRY_SCALARS.BLOCK_SPONSORED);
+            if (result.isBestMatch) {
+              clickScalars.push(TELEMETRY_SCALARS.BLOCK_SPONSORED_BEST_MATCH);
+            }
+            break;
         }
         break;
       default:
-        if (selType) {
+        if (resultSelType) {
           this.logger.error(
-            "Engagement telemetry error, unknown selType: " + selType
+            "Engagement telemetry error, unknown resultSelType " + resultSelType
           );
         }
         break;
@@ -515,42 +608,82 @@ class ProviderQuickSuggest extends UrlbarProvider {
     for (let scalar of clickScalars) {
       Services.telemetry.keyedScalarAdd(scalar, telemetryResultIndex, 1);
     }
+  }
 
-    // engagement event
-    let match_type = result.isBestMatch ? "best-match" : "firefox-suggest";
-    let suggestion_type;
-    if (isDynamicWikipedia) {
-      suggestion_type = "dynamic-wikipedia";
+  /**
+   * Helper for engagement telemetry that records the legacy engagement event.
+   *
+   * @param {object} options
+   *   Options object
+   * @param {UrlbarResult} options.result
+   *   The quick suggest result related to the engagement. Must not be null.
+   * @param {string} options.resultSelType
+   *   If an element in the result's row was clicked, this should be its
+   *   `selType`. Otherwise it should be an empty string.
+   * @param {boolean} options.resultClicked
+   *   True if the main part of the result's row was clicked; false if a button
+   *   like help or block was clicked or if no part of the row was clicked.
+   */
+  #recordEngagementEvent({ result, resultSelType, resultClicked }) {
+    // Determine the event type we should record:
+    //
+    // * "click": The main part of the row was clicked
+    // * `resultSelType`: A button in the row was clicked ("help" or "block")
+    // * "impression_only": No part of the row was clicked
+    let eventType;
+    if (resultClicked) {
+      eventType = "click";
     } else {
-      suggestion_type = result.payload.isSponsored
-        ? "sponsored"
-        : "nonsponsored";
+      eventType = resultSelType || "impression_only";
     }
+
+    let suggestion_type;
+    switch (result.payload.subtype) {
+      case RESULT_SUBTYPE.DYNAMIC_WIKIPEDIA:
+        suggestion_type = "dynamic-wikipedia";
+        break;
+      case RESULT_SUBTYPE.NAVIGATIONAL:
+        suggestion_type = "navigational";
+        break;
+      case RESULT_SUBTYPE.NONSPONSORED:
+        suggestion_type = "nonsponsored";
+        break;
+      case RESULT_SUBTYPE.SPONSORED:
+        suggestion_type = "sponsored";
+        break;
+    }
+
     Services.telemetry.recordEvent(
       lazy.QuickSuggest.TELEMETRY_EVENT_CATEGORY,
       "engagement",
-      selType == "quicksuggest" ? "click" : selType || "impression_only",
+      eventType,
       "",
       {
-        match_type,
-        position: String(telemetryResultIndex),
         suggestion_type,
+        match_type: result.isBestMatch ? "best-match" : "firefox-suggest",
+        // Quick suggest telemetry indexes are 1-based but `rowIndex` is 0-based
+        position: String(result.rowIndex + 1),
         source: result.payload.source,
       }
     );
-
-    // custom engagement pings
-    if (!isPrivate) {
-      this._sendEngagementPings({
-        selType,
-        match_type,
-        result,
-        telemetryResultIndex,
-      });
-    }
   }
 
-  _sendEngagementPings({ selType, match_type, result, telemetryResultIndex }) {
+  /**
+   * Helper for engagement telemetry that records custom contextual services
+   * pings.
+   *
+   * @param {object} options
+   *   Options object
+   * @param {UrlbarResult} options.result
+   *   The quick suggest result related to the engagement. Must not be null.
+   * @param {string} options.resultSelType
+   *   If an element in the result's row was clicked, this should be its
+   *   `selType`. Otherwise it should be an empty string.
+   * @param {boolean} options.resultClicked
+   *   True if the main part of the result's row was clicked; false if a button
+   *   like help or block was clicked or if no part of the row was clicked.
+   */
+  #recordEngagementPings({ result, resultSelType, resultClicked }) {
     // Custom engagement pings are sent only for the main sponsored and non-
     // sponsored suggestions with an advertiser in their payload, not for other
     // types of suggestions like navigational suggestions.
@@ -558,19 +691,16 @@ class ProviderQuickSuggest extends UrlbarProvider {
       return;
     }
 
-    // `is_clicked` is whether the user clicked the suggestion. `selType` will
-    // be "quicksuggest" in that case. See this method's JSDoc for all
-    // possible `selType` values.
-    let is_clicked = selType == "quicksuggest";
     let payload = {
-      match_type,
+      match_type: result.isBestMatch ? "best-match" : "firefox-suggest",
       // Always use lowercase to make the reporting consistent
       advertiser: result.payload.sponsoredAdvertiser.toLocaleLowerCase(),
       block_id: result.payload.sponsoredBlockId,
       improve_suggest_experience_checked: lazy.UrlbarPrefs.get(
         "quicksuggest.dataCollection.enabled"
       ),
-      position: telemetryResultIndex,
+      // Quick suggest telemetry indexes are 1-based but `rowIndex` is 0-based
+      position: result.rowIndex + 1,
       request_id: result.payload.requestId,
       source: result.payload.source,
     };
@@ -579,14 +709,14 @@ class ProviderQuickSuggest extends UrlbarProvider {
     lazy.PartnerLinkAttribution.sendContextualServicesPing(
       {
         ...payload,
-        is_clicked,
+        is_clicked: resultClicked,
         reporting_url: result.payload.sponsoredImpressionUrl,
       },
       lazy.CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION
     );
 
     // click
-    if (is_clicked) {
+    if (resultClicked) {
       lazy.PartnerLinkAttribution.sendContextualServicesPing(
         {
           ...payload,
@@ -597,7 +727,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     }
 
     // block
-    if (selType == "block") {
+    if (resultSelType == "block") {
       lazy.PartnerLinkAttribution.sendContextualServicesPing(
         {
           ...payload,
@@ -605,6 +735,72 @@ class ProviderQuickSuggest extends UrlbarProvider {
         },
         lazy.CONTEXTUAL_SERVICES_PING_TYPES.QS_BLOCK
       );
+    }
+  }
+
+  /**
+   * Helper for engagement telemetry that records telemetry specific to
+   * navigational suggestions.
+   *
+   * @param {object} options
+   *   Options object
+   * @param {UrlbarQueryContext} options.queryContext
+   *   The query context.
+   * @param {UrlbarResult} options.result
+   *   The quick suggest result related to the engagement, or null if no result
+   *   was present.
+   * @param {string} options.resultSelType
+   *   If an element in the result's row was clicked, this should be its
+   *   `selType`. Otherwise it should be an empty string.
+   * @param {boolean} options.resultClicked
+   *   True if the main part of the result's row was clicked; false if a button
+   *   like help or block was clicked or if no part of the row was clicked.
+   * @param {object} options.details
+   *   The `details` object that was passed to `onEngagement()`. It must look
+   *   like this: `{ selType, selIndex }`
+   */
+  #recordNavSuggestionTelemetry({
+    queryContext,
+    result,
+    resultSelType,
+    resultClicked,
+    details,
+  }) {
+    let scalars = [];
+    let heuristicClicked =
+      details.selIndex == 0 && queryContext.heuristicResult;
+
+    if (result?.payload.subtype == RESULT_SUBTYPE.NAVIGATIONAL) {
+      // nav suggestion shown
+      scalars.push(TELEMETRY_SCALARS.IMPRESSION_NAV_SHOWN);
+      if (resultClicked) {
+        scalars.push(TELEMETRY_SCALARS.CLICK_NAV_SHOWN_NAV);
+      } else if (heuristicClicked) {
+        scalars.push(TELEMETRY_SCALARS.CLICK_NAV_SHOWN_HEURISTIC);
+      }
+    } else if (
+      this.#resultFromLastQuery?.payload.subtype ==
+        RESULT_SUBTYPE.NAVIGATIONAL &&
+      this.#resultFromLastQuery?.payload.dupedHeuristic
+    ) {
+      // nav suggestion duped heuristic
+      scalars.push(TELEMETRY_SCALARS.IMPRESSION_NAV_SUPERCEDED);
+      if (heuristicClicked) {
+        scalars.push(TELEMETRY_SCALARS.CLICK_NAV_SUPERCEDED);
+      }
+    } else {
+      // nav suggestion not matched or otherwise not shown
+      scalars.push(TELEMETRY_SCALARS.IMPRESSION_NAV_NOTMATCHED);
+      if (heuristicClicked) {
+        scalars.push(TELEMETRY_SCALARS.CLICK_NAV_NOTMATCHED);
+      }
+    }
+
+    let heuristicType = UrlbarUtils.searchEngagementTelemetryType(
+      queryContext.heuristicResult
+    );
+    for (let scalar of scalars) {
+      Services.telemetry.keyedScalarAdd(scalar, heuristicType, 1);
     }
   }
 

@@ -24,6 +24,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarProviderInterventions:
     "resource:///modules/UrlbarProviderInterventions.sys.mjs",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
+  UrlbarProviderQuickSuggest:
+    "resource:///modules/UrlbarProviderQuickSuggest.sys.mjs",
   UrlbarProviderSearchTips:
     "resource:///modules/UrlbarProviderSearchTips.sys.mjs",
   UrlbarSearchUtils: "resource:///modules/UrlbarSearchUtils.sys.mjs",
@@ -1204,7 +1206,14 @@ export var UrlbarUtils = {
           return "visiturl";
         }
         if (result.providerName == "UrlbarProviderQuickSuggest") {
-          return "quicksuggest";
+          // In legacy telemetry "quicksuggest" is used as the type for both
+          // sponsored and non-sponsored suggestions.
+          return result.payload.subtype ==
+            lazy.UrlbarProviderQuickSuggest.RESULT_SUBTYPE.SPONSORED ||
+            result.payload.subtype ==
+              lazy.UrlbarProviderQuickSuggest.RESULT_SUBTYPE.NONSPONSORED
+            ? "quicksuggest"
+            : result.payload.subtype;
         }
         return result.source == UrlbarUtils.RESULT_SOURCE.BOOKMARKS
           ? "bookmark"
@@ -1392,9 +1401,7 @@ export var UrlbarUtils = {
           return `autofill_${result.autofill.type ?? "unknown"}`;
         }
         if (result.providerName === "UrlbarProviderQuickSuggest") {
-          return result.payload.isSponsored
-            ? "suggest_sponsor"
-            : "suggest_non_sponsor";
+          return result.payload.subtype;
         }
         if (result.providerName === "Weather") {
           return "weather";
@@ -1548,6 +1555,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       displayUrl: {
         type: "string",
       },
+      dupedHeuristic: {
+        type: "boolean",
+      },
       fallbackTitle: {
         type: "string",
       },
@@ -1614,6 +1624,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       },
       sponsoredTileId: {
         type: "number",
+      },
+      subtype: {
+        type: "string",
       },
       tags: {
         type: "array",
