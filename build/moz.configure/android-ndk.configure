@@ -69,9 +69,6 @@ def android_version(value, min_version):
     return version
 
 
-add_old_configure_assignment("android_version", android_version)
-
-
 @depends("--with-android-ndk")
 @imports(_from="os.path", _import="isdir")
 def ndk(value):
@@ -183,9 +180,6 @@ def android_sysroot(android_platform, ndk, target):
     )
 
 
-add_old_configure_assignment("android_sysroot", android_sysroot)
-
-
 @depends(android_platform, ndk, target)
 @checking("for android system directory")
 @imports(_from="os.path", _import="isdir")
@@ -205,9 +199,6 @@ def android_system(android_platform, ndk, target):
             return system_dir
 
     die("Android system directory not found in %s." % str(search_dirs))
-
-
-add_old_configure_assignment("android_system", android_system)
 
 
 @depends(target, host, ndk, "--with-android-toolchain")
@@ -408,6 +399,9 @@ def extra_toolchain_flags(
         "-D__ANDROID_API__=%d" % android_version,
     ]
     return flags
+
+
+add_old_configure_assignment("extra_android_flags", extra_toolchain_flags)
 
 
 @depends(android_toolchain_prefix_base, android_toolchain)
