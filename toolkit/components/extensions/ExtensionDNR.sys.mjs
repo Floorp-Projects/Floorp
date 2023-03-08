@@ -93,6 +93,7 @@ const PRECEDENCE_STATIC_RULESETS_BASE = 3;
 // engine to use one Shape for all Rule instances.
 class RuleCondition {
   #compiledUrlFilter;
+  #compiledRegexFilter;
 
   constructor(cond) {
     this.urlFilter = cond.urlFilter;
@@ -123,11 +124,16 @@ class RuleCondition {
     return this.#compiledUrlFilter.matchesRequest(requestDataForUrlFilter);
   }
 
-  getCompiledUrlFilter() {
-    return this.#compiledUrlFilter;
+  // Used for testing regexFilter matches in RuleEvaluator.#matchRuleCondition
+  // and to get redirect URL from regexSubstitution in applyRegexSubstitution.
+  getCompiledRegexFilter() {
+    return this.#compiledRegexFilter;
   }
-  setCompiledUrlFilter(compiledUrlFilter) {
-    this.#compiledUrlFilter = compiledUrlFilter;
+
+  // RuleValidator compiles regexFilter before this Rule class is instantiated.
+  // To avoid unnecessarily compiling it again, the result is assigned here.
+  setCompiledRegexFilter(compiledRegexFilter) {
+    this.#compiledRegexFilter = compiledRegexFilter;
   }
 }
 
@@ -287,6 +293,45 @@ function applyURLTransform(uri, transform) {
     mut.setRef(transform.fragment);
   }
   return mut.finalize();
+}
+
+/**
+ * @param {nsIURI} uri - Usually a http(s) URL.
+ * @param {MatchedRule} matchedRule - The matched rule with a regexFilter
+ *   condition and regexSubstitution action.
+ * @returns {nsIURI} The new URL derived from the regexSubstitution combined
+ *   with capturing group from regexFilter applied to the input uri.
+ * @throws if the resulting URL is an invalid redirect target.
+ */
+function applyRegexSubstitution(uri, matchedRule) {
+  const rule = matchedRule.rule;
+  const extension = matchedRule.ruleManager.extension;
+  const regexSubstitution = rule.action.redirect.regexSubstitution;
+  const compiledRegexFilter = rule.condition.getCompiledRegexFilter();
+  // This method being called implies that regexFilter matched, so |matches| is
+  // always non-null, i.e. an array of string/undefined values.
+  const matches = compiledRegexFilter.exec(uri.spec);
+
+  let redirectUrl = regexSubstitution.replace(/\\(.)/g, (_, char) => {
+    // #checkActionRedirect ensures that every \ is followed by a \ or digit.
+    return char === "\\" ? char : matches[char] ?? "";
+  });
+
+  // Throws if the URL is invalid:
+  let redirectUri;
+  try {
+    redirectUri = Services.io.newURI(redirectUrl);
+  } catch (e) {
+    throw new Error(
+      `Extension ${extension.id} tried to redirect to an invalid URL: ${redirectUrl}`
+    );
+  }
+  if (!extension.checkLoadURI(redirectUri, { dontReportErrors: true })) {
+    throw new Error(
+      `Extension ${extension.id} may not redirect to: ${redirectUrl}`
+    );
+  }
+  return redirectUri;
 }
 
 /**
@@ -525,12 +570,12 @@ class CompiledUrlFilter {
 // See CompiledUrlFilter for documentation of RequestDataForUrlFilter.
 class RequestDataForUrlFilter {
   /**
-   * @param {nsIURI} requestURI - The URL to match against.
+   * @param {string} requestURIspec - The URL to match against.
    * @returns {object} An object to p
    */
-  constructor(requestURI) {
+  constructor(requestURIspec) {
     // "^" is appended, see CompiledUrlFilter's #initializeUrlFilter.
-    this.urlAnyCase = requestURI.spec + "^";
+    this.urlAnyCase = requestURIspec + "^";
     this.urlLowerCase = this.urlAnyCase.toLowerCase();
     // For "||..." (Domain name anchor): where (sub)domains start in the URL.
     this.domainAnchors = this.#getDomainAnchors(this.urlAnyCase);
@@ -556,6 +601,12 @@ class RequestDataForUrlFilter {
     }
     return domainAnchors;
   }
+}
+
+function compileRegexFilter(regexFilter, isUrlFilterCaseSensitive) {
+  // TODO: Restrict supported regex to avoid perf issues. For discussion on the
+  // desired syntax, see https://github.com/w3c/webextensions/issues/344
+  return new RegExp(regexFilter, isUrlFilterCaseSensitive ? "" : "i");
 }
 
 class ModifyHeadersBase {
@@ -760,10 +811,20 @@ class RuleValidator {
       }
 
       const newRule = new Rule(rule);
+      // #lastCompiledRegexFilter is set if regexFilter is set, and null
+      // otherwise by the above call to #checkCondUrlFilterAndRegexFilter().
+      if (this.#lastCompiledRegexFilter) {
+        newRule.condition.setCompiledRegexFilter(this.#lastCompiledRegexFilter);
+      }
 
       this.rulesMap.set(rule.id, newRule);
     }
   }
+
+  // #checkCondUrlFilterAndRegexFilter() compiles the regexFilter to check its
+  // validity. To avoid having to compile it again when the Rule (RuleCondition)
+  // is constructed, we temporarily cache the result.
+  #lastCompiledRegexFilter;
 
   // Checks: resourceTypes & excludedResourceTypes
   #checkCondResourceTypes(rule) {
@@ -840,10 +901,14 @@ class RuleValidator {
   }
 
   static #regexNonASCII = /[^\x00-\x7F]/; // eslint-disable-line no-control-regex
+  static #regexDigitOrBackslash = /^[0-9\\]$/;
 
   // Checks: urlFilter & regexFilter
   #checkCondUrlFilterAndRegexFilter(rule) {
     const { urlFilter, regexFilter } = rule.condition;
+
+    this.#lastCompiledRegexFilter = null;
+
     const checkEmptyOrNonASCII = (str, prop) => {
       if (!str) {
         this.#collectInvalidRule(rule, `${prop} should not be an empty string`);
@@ -881,9 +946,18 @@ class RuleValidator {
         // #collectInvalidRule already called by checkEmptyOrNonASCII.
         return false;
       }
-      // TODO bug 1745760: accept when regexFilter is a valid regexp.
-      this.#collectInvalidRule(rule, "regexFilter is not supported yet");
-      return false;
+      try {
+        this.#lastCompiledRegexFilter = compileRegexFilter(
+          regexFilter,
+          rule.condition.isUrlFilterCaseSensitive
+        );
+      } catch (e) {
+        this.#collectInvalidRule(
+          rule,
+          "regexFilter is not a valid regular expression"
+        );
+        return false;
+      }
     }
     return true;
   }
@@ -909,28 +983,38 @@ class RuleValidator {
   }
 
   #checkActionRedirect(rule) {
-    const { extensionPath, url, transform } = rule.action.redirect ?? {};
-    if (!url && extensionPath == null && !transform) {
+    const { url, extensionPath, transform, regexSubstitution } =
+      rule.action.redirect ?? {};
+    const hasExtensionPath = extensionPath != null;
+    const hasRegexSubstitution = regexSubstitution != null;
+    const redirectKeyCount =
+      !!url + !!hasExtensionPath + !!transform + !!hasRegexSubstitution;
+    if (redirectKeyCount !== 1) {
+      if (redirectKeyCount === 0) {
+        this.#collectInvalidRule(
+          rule,
+          "A redirect rule must have a non-empty action.redirect object"
+        );
+        return false;
+      }
+      // Side note: Chrome silently ignores excess keys, and skips validation
+      // for ignored keys, in this order:
+      // - url > extensionPath > transform > regexSubstitution
       this.#collectInvalidRule(
         rule,
-        "A redirect rule must have a non-empty action.redirect object"
+        "redirect.url, redirect.extensionPath, redirect.transform and redirect.regexSubstitution are mutually exclusive"
       );
       return false;
     }
-    if (url && extensionPath != null) {
-      this.#collectInvalidRule(
-        rule,
-        "redirect.extensionPath and redirect.url are mutually exclusive"
-      );
-      return false;
-    }
-    if (extensionPath != null && !extensionPath.startsWith("/")) {
+
+    if (hasExtensionPath && !extensionPath.startsWith("/")) {
       this.#collectInvalidRule(
         rule,
         "redirect.extensionPath should start with a '/'"
       );
       return false;
     }
+
     // If specified, the "url" property is described as "format": "url" in the
     // JSON schema, which ensures that the URL is a canonical form, and that
     // the extension is allowed to trigger a navigation to the URL.
@@ -992,7 +1076,28 @@ class RuleValidator {
       }
     }
 
-    // TODO bug 1745760: With regexFilter support, implement regexSubstitution.
+    if (hasRegexSubstitution) {
+      if (!rule.condition.regexFilter) {
+        this.#collectInvalidRule(
+          rule,
+          "redirect.regexSubstitution requires the regexFilter condition to be specified"
+        );
+        return false;
+      }
+      let i = 0;
+      // i will be index after \. Loop breaks if not found (-1+1=0 = false).
+      while ((i = regexSubstitution.indexOf("\\", i) + 1)) {
+        let c = regexSubstitution[i++]; // may be undefined if \ is at end.
+        if (c === undefined || !RuleValidator.#regexDigitOrBackslash.test(c)) {
+          this.#collectInvalidRule(
+            rule,
+            "redirect.regexSubstitution only allows digit or \\ after \\."
+          );
+          return false;
+        }
+      }
+    }
+
     return true;
   }
 
@@ -1053,6 +1158,22 @@ class RuleValidator {
 
   getFailures() {
     return this.failures;
+  }
+}
+
+class RuleQuotaCounter {
+  constructor() {
+    this.ruleCount = 0;
+    this.regexCount = 0;
+  }
+
+  addRules(rules) {
+    this.ruleCount += rules.length;
+    for (let rule of rules) {
+      if (rule.condition.regexFilter) {
+        ++this.regexCount;
+      }
+    }
   }
 }
 
@@ -1142,7 +1263,10 @@ class RequestDetails {
       ? this.#domainFromURI(initiatorURI)
       : null;
 
-    this.requestDataForUrlFilter = new RequestDataForUrlFilter(requestURI);
+    this.requestURIspec = requestURI.spec;
+    this.requestDataForUrlFilter = new RequestDataForUrlFilter(
+      this.requestURIspec
+    );
   }
 
   static fromChannelWrapper(channel) {
@@ -1523,7 +1647,9 @@ class RequestEvaluator {
         return false;
       }
     } else if (cond.regexFilter) {
-      // TODO bug 1745760: check cond.regexFilter + isUrlFilterCaseSensitive
+      if (!cond.getCompiledRegexFilter().test(this.req.requestURIspec)) {
+        return false;
+      }
     }
     if (
       cond.excludedRequestDomains &&
@@ -1735,8 +1861,10 @@ const NetworkIntegration = {
     } else if (redirect.transform) {
       redirectUri = applyURLTransform(channel.finalURI, redirect.transform);
     } else if (redirect.regexSubstitution) {
-      // TODO bug 1745760: Implement along with regexFilter support.
-      throw new Error("regexSubstitution not implemented");
+      // Note: may throw if regexSubstitution results in an invalid redirect.
+      // The error propagates up to handleRequest, which will just allow the
+      // request to continue.
+      redirectUri = applyRegexSubstitution(channel.finalURI, matchedRule);
     } else {
       // #checkActionRedirect ensures that the redirect action is non-empty.
     }
@@ -2051,6 +2179,7 @@ async function updateDynamicRules(extension, updateRuleOptions) {
 // exports used by the DNR API implementation.
 export const ExtensionDNR = {
   RuleValidator,
+  RuleQuotaCounter,
   clearRuleManager,
   ensureInitialized,
   getMatchedRulesForRequest,
