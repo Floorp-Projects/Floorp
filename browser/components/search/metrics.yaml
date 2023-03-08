@@ -21,9 +21,11 @@ newtab.search:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670#c3
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105#c11
     data_sensitivity:
       - interaction
     notification_emails:
@@ -31,7 +33,8 @@ newtab.search:
       - chutten@mozilla.com
       - mmccorquodale@mozilla.com
       - najiang@mozilla.com
-    expires: 113
+      - lina@mozilla.com
+    expires: never
     extra_keys:
       newtab_visit_id: &newtab_visit_id
         description: >
@@ -68,9 +71,11 @@ newtab.search.ad:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670#c3
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105#c11
     data_sensitivity:
       - interaction
     notification_emails:
@@ -78,7 +83,8 @@ newtab.search.ad:
       - chutten@mozilla.com
       - mmccorquodale@mozilla.com
       - najiang@mozilla.com
-    expires: 113
+      - lina@mozilla.com
+    expires: never
     extra_keys:
       newtab_visit_id: *newtab_visit_id
       search_access_point: *search_access_point
@@ -102,9 +108,11 @@ newtab.search.ad:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670#c3
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105#c11
     data_sensitivity:
       - interaction
     notification_emails:
@@ -112,7 +120,8 @@ newtab.search.ad:
       - chutten@mozilla.com
       - mmccorquodale@mozilla.com
       - najiang@mozilla.com
-    expires: 113
+      - lina@mozilla.com
+    expires: never
     extra_keys:
       newtab_visit_id: *newtab_visit_id
       search_access_point: *search_access_point
