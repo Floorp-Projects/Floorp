@@ -350,7 +350,9 @@ let TrackingProtection = new (class TrackingProtection extends ProtectionCategor
       },
       {
         load: null,
-        block: Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT,
+        block:
+          Ci.nsIWebProgressListener.STATE_BLOCKED_TRACKING_CONTENT |
+          Ci.nsIWebProgressListener.STATE_BLOCKED_EMAILTRACKING_CONTENT,
       }
     );
 
@@ -365,8 +367,16 @@ let TrackingProtection = new (class TrackingProtection extends ProtectionCategor
     this.prefTrackingAnnotationTable = "urlclassifier.trackingAnnotationTable";
     this.prefAnnotationsLevel2Enabled =
       "privacy.annotate_channels.strict_list.enabled";
+    this.prefEmailTrackingProtectionEnabled =
+      "privacy.trackingprotection.emailtracking.enabled";
+    this.prefEmailTrackingProtectionEnabledInPrivateWindows =
+      "privacy.trackingprotection.emailtracking.pbmode.enabled";
+
     this.enabledGlobally = false;
+    this.emailTrackingProtectionEnabledGlobally = false;
+
     this.enabledInPrivateWindows = false;
+    this.emailTrackingProtectionEnabledInPrivateWindows = false;
 
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
@@ -393,11 +403,24 @@ let TrackingProtection = new (class TrackingProtection extends ProtectionCategor
 
     Services.prefs.addObserver(this.prefEnabled, this);
     Services.prefs.addObserver(this.prefEnabledInPrivateWindows, this);
+    Services.prefs.addObserver(this.prefEmailTrackingProtectionEnabled, this);
+    Services.prefs.addObserver(
+      this.prefEmailTrackingProtectionEnabledInPrivateWindows,
+      this
+    );
   }
 
   uninit() {
     Services.prefs.removeObserver(this.prefEnabled, this);
     Services.prefs.removeObserver(this.prefEnabledInPrivateWindows, this);
+    Services.prefs.removeObserver(
+      this.prefEmailTrackingProtectionEnabled,
+      this
+    );
+    Services.prefs.removeObserver(
+      this.prefEmailTrackingProtectionEnabledInPrivateWindows,
+      this
+    );
   }
 
   observe() {
@@ -413,8 +436,10 @@ let TrackingProtection = new (class TrackingProtection extends ProtectionCategor
   get enabled() {
     return (
       this.enabledGlobally ||
-      (this.enabledInPrivateWindows &&
-        PrivateBrowsingUtils.isWindowPrivate(window))
+      this.emailTrackingProtectionEnabledGlobally ||
+      (PrivateBrowsingUtils.isWindowPrivate(window) &&
+        (this.enabledInPrivateWindows ||
+          this.emailTrackingProtectionEnabledInPrivateWindows))
     );
   }
 
@@ -422,6 +447,12 @@ let TrackingProtection = new (class TrackingProtection extends ProtectionCategor
     this.enabledGlobally = Services.prefs.getBoolPref(this.prefEnabled);
     this.enabledInPrivateWindows = Services.prefs.getBoolPref(
       this.prefEnabledInPrivateWindows
+    );
+    this.emailTrackingProtectionEnabledGlobally = Services.prefs.getBoolPref(
+      this.prefEmailTrackingProtectionEnabled
+    );
+    this.emailTrackingProtectionEnabledInPrivateWindows = Services.prefs.getBoolPref(
+      this.prefEmailTrackingProtectionEnabledInPrivateWindows
     );
   }
 
