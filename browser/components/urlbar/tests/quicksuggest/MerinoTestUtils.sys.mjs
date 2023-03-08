@@ -40,7 +40,7 @@ const REQUIRED_SEARCH_PARAMS = [
 // We set the client timeout to a large value to avoid intermittent failures in
 // CI, especially TV tests, where the Merino fetch unexpectedly doesn't finish
 // before the default timeout.
-const CLIENT_TIMEOUT_MS = 1000;
+const CLIENT_TIMEOUT_MS = 2000;
 
 const HISTOGRAM_LATENCY = "FX_URLBAR_MERINO_LATENCY_MS";
 const HISTOGRAM_RESPONSE = "FX_URLBAR_MERINO_RESPONSE";
@@ -94,17 +94,25 @@ class _MerinoTestUtils {
    */
   init(scope) {
     if (!scope) {
-      throw new Error("MerinoTestUtils() must be called with a scope");
+      throw new Error("MerinoTestUtils.init() must be called with a scope");
     }
+
+    this.#initDepth++;
+    scope.info?.("MerinoTestUtils init: Depth is now " + this.#initDepth);
+
     for (let p of TEST_SCOPE_PROPERTIES) {
       this[p] = scope[p];
     }
     // If you add other properties to `this`, null them in `uninit()`.
 
-    this.#server = new MockMerinoServer(scope);
+    if (!this.#server) {
+      this.#server = new MockMerinoServer(scope);
+    }
     lazy.UrlbarPrefs.set("merino.timeoutMs", CLIENT_TIMEOUT_MS);
-
-    scope.registerCleanupFunction?.(() => this.uninit());
+    scope.registerCleanupFunction?.(() => {
+      scope.info?.("MerinoTestUtils cleanup function");
+      this.uninit();
+    });
   }
 
   /**
@@ -114,11 +122,20 @@ class _MerinoTestUtils {
    * you'll need to call this.
    */
   uninit() {
+    this.#initDepth--;
+    this.info?.("MerinoTestUtils uninit: Depth is now " + this.#initDepth);
+
+    if (this.#initDepth) {
+      this.info?.("MerinoTestUtils uninit: Bailing because depth > 0");
+      return;
+    }
+    this.info?.("MerinoTestUtils uninit: Now uninitializing");
+
     for (let p of TEST_SCOPE_PROPERTIES) {
       this[p] = null;
     }
-
     this.#server.uninit();
+    this.#server = null;
     lazy.UrlbarPrefs.clear("merino.timeoutMs");
   }
 
@@ -303,6 +320,7 @@ class _MerinoTestUtils {
     });
   }
 
+  #initDepth = 0;
   #server = null;
 }
 
@@ -318,6 +336,8 @@ class MockMerinoServer {
    *   to access test helpers like `Assert` that are available in the scope.
    */
   constructor(scope) {
+    scope.info?.("MockMerinoServer constructor");
+
     for (let p of TEST_SCOPE_PROPERTIES) {
       this[p] = scope[p];
     }
@@ -337,6 +357,7 @@ class MockMerinoServer {
    * Uninitializes the server.
    */
   uninit() {
+    this.info?.("MockMerinoServer uninit");
     for (let p of TEST_SCOPE_PROPERTIES) {
       this[p] = null;
     }

@@ -7100,6 +7100,22 @@ urlbar.picked:
       record_in_processes:
         - main
 
+    dynamic_wikipedia:
+      bug_numbers:
+        - 1819797
+      description: >
+        Counts how many times this result type was picked at a given index.
+      expires: never
+      kind: uint
+      keyed: true
+      notification_emails:
+        - fx-search-telemetry@mozilla.com
+      release_channel_collection: opt-out
+      products:
+        - 'firefox'
+      record_in_processes:
+        - main
+
     extension:
       bug_numbers:
         - 1671508
@@ -7151,6 +7167,22 @@ urlbar.picked:
     keyword:
       bug_numbers:
         - 1671508
+      description: >
+        Counts how many times this result type was picked at a given index.
+      expires: never
+      kind: uint
+      keyed: true
+      notification_emails:
+        - fx-search-telemetry@mozilla.com
+      release_channel_collection: opt-out
+      products:
+        - 'firefox'
+      record_in_processes:
+        - main
+
+    navigational:
+      bug_numbers:
+        - 1819797
       description: >
         Counts how many times this result type was picked at a given index.
       expires: never
@@ -7948,6 +7980,66 @@ contextual.services.quicksuggest:
       - 'firefox'
     record_in_processes:
       - main
+  impression_nav_notmatched:
+    bug_numbers:
+      - 1819797
+    description: >
+      A keyed uint recording how many times a urlbar engagement occurred while a
+      navigational suggestion was absent. The Nimbus variable
+      recordNavigationalSuggestionTelemetry must be true to record this scalar.
+      Its key is the type of heuristic result that was present at the time of
+      the engagement. Key names are the same as the heuristic result type names
+      recorded in Glean telemetry.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - firefox
+    record_in_processes:
+      - main
+  impression_nav_shown:
+    bug_numbers:
+      - 1819797
+    description: >
+      A keyed uint recording how many times a urlbar engagement occurred while a
+      navigational suggestion was present. The Nimbus variable
+      recordNavigationalSuggestionTelemetry must be true to record this scalar.
+      Its key is the type of heuristic result that was present at the time of
+      the engagement. Key names are the same as the heuristic result type names
+      recorded in Glean telemetry.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - firefox
+    record_in_processes:
+      - main
+  impression_nav_superceded:
+    bug_numbers:
+      - 1819797
+    description: >
+      A keyed uint recording how many times a urlbar engagement occurred when a
+      navigational suggestion was matched but superceded by a heuristic result.
+      The Nimbus variable recordNavigationalSuggestionTelemetry must be true to
+      record this scalar. Its key is the type of heuristic result that was
+      present at the time of the engagement. Key names are the same as the
+      heuristic result type names recorded in Glean telemetry.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - firefox
+    record_in_processes:
+      - main
   impression_nonsponsored:
     bug_numbers:
       - 1800993
@@ -8048,6 +8140,85 @@ contextual.services.quicksuggest:
     release_channel_collection: opt-out
     products:
       - 'firefox'
+    record_in_processes:
+      - main
+  click_nav_notmatched:
+    bug_numbers:
+      - 1819797
+    description: >
+      A keyed uint recording how many times a heuristic result was clicked while
+      a navigational suggestion was absent. The Nimbus variable
+      recordNavigationalSuggestionTelemetry must be true to record this
+      scalar. Its key is the type of heuristic result that was clicked. Key
+      names are the same as the heuristic result type names recorded in Glean
+      telemetry.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - firefox
+    record_in_processes:
+      - main
+  click_nav_shown_heuristic:
+    bug_numbers:
+      - 1819797
+    description: >
+      A keyed uint recording how many times a heuristic result was clicked while
+      a navigational suggestion was present. The Nimbus variable
+      recordNavigationalSuggestionTelemetry must be true to record this
+      scalar. Its key is the type of heuristic result that was clicked. Key
+      names are the same as the heuristic result type names recorded in Glean
+      telemetry.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - firefox
+    record_in_processes:
+      - main
+  click_nav_shown_nav:
+    bug_numbers:
+      - 1819797
+    description: >
+      A keyed uint recording how many times a navigational suggestion was
+      clicked. The Nimbus variable recordNavigationalSuggestionTelemetry must be
+      true to record this scalar. Its key is the type of heuristic result that
+      was present at the time of the engagement. Key names are the same as the
+      heuristic result type names recorded in Glean telemetry.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - firefox
+    record_in_processes:
+      - main
+  click_nav_superceded:
+    bug_numbers:
+      - 1819797
+    description: >
+      A keyed uint recording how many times a heuristic result was clicked when
+      a navigational suggestion was matched but superceded by the heuristic.
+      The Nimbus variable recordNavigationalSuggestionTelemetry must be true to
+      record this scalar. Its key is the type of heuristic result that was
+      clicked. Key names are the same as the heuristic result type names
+      recorded in Glean telemetry.
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - firefox
     record_in_processes:
       - main
   click_nonsponsored:

@@ -20,196 +20,334 @@ const MERINO_SUGGESTION = {
   is_top_pick: true,
 };
 
-const suggestion_type = "nonsponsored";
+const suggestion_type = "navigational";
 const index = 1;
 const position = index + 1;
 
 add_setup(async function() {
-  // When `bestMatch.enabled` is true, any suggestion whose keyword is as long
-  // as the threshold defined in the quick suggest config will automatically
-  // become a best match. For navigational suggestions, best matches should be
-  // totally determined by the presence of `is_top_pick` in the suggestion, so
-  // delete the `best_match` part of the config.
-  let config = QuickSuggestTestUtils.DEFAULT_CONFIG;
-  delete config.best_match;
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // `bestMatch.enabled` must be set to show nav suggestions with the best
+      // match UI treatment.
+      ["browser.urlbar.bestMatch.enabled", true],
+      // Disable tab-to-search since like best match it's also shown with
+      // `suggestedIndex` = 1.
+      ["browser.urlbar.suggest.engines", false],
+    ],
+  });
 
   await setUpTelemetryTest({
-    config,
     merinoSuggestions: [MERINO_SUGGESTION],
   });
 });
 
-// non-best match (`bestMatch.enabled` = false)
-add_task(async function navigational() {
-  let match_type = "firefox-suggest";
-  await doTelemetryTest({
-    index,
-    suggestion: MERINO_SUGGESTION,
-    // impression-only
-    impressionOnly: {
-      scalars: {
-        [TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED]: position,
-      },
-      event: {
-        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
-        method: "engagement",
-        object: "impression_only",
-        extra: {
-          suggestion_type,
-          match_type,
-          position: position.toString(),
-        },
-      },
-      ping: null,
+// Clicks the heuristic when a nav suggestion is not matched
+add_task(async function notMatched_clickHeuristic() {
+  await doTest({
+    suggestion: null,
+    shouldBeShown: false,
+    pickRowIndex: 0,
+    scalars: {
+      [TELEMETRY_SCALARS.IMPRESSION_NAV_NOTMATCHED]: "search_engine",
+      [TELEMETRY_SCALARS.CLICK_NAV_NOTMATCHED]: "search_engine",
     },
-    selectables: {
-      // click
-      "urlbarView-row-inner": {
-        scalars: {
-          [TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED]: position,
-          [TELEMETRY_SCALARS.CLICK_NONSPONSORED]: position,
-        },
-        event: {
-          category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
-          method: "engagement",
-          object: "click",
-          extra: {
-            suggestion_type,
-            match_type,
-            position: position.toString(),
-          },
-        },
-        pings: [],
-      },
-      // block
-      "urlbarView-button-block": {
-        scalars: {
-          [TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED]: position,
-          [TELEMETRY_SCALARS.BLOCK_NONSPONSORED]: position,
-        },
-        event: {
-          category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
-          method: "engagement",
-          object: "block",
-          extra: {
-            suggestion_type,
-            match_type,
-            position: position.toString(),
-          },
-        },
-        pings: [],
-      },
-      // help
-      "urlbarView-button-help": {
-        scalars: {
-          [TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED]: position,
-          [TELEMETRY_SCALARS.HELP_NONSPONSORED]: position,
-        },
-        event: {
-          category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
-          method: "engagement",
-          object: "help",
-          extra: {
-            suggestion_type,
-            match_type,
-            position: position.toString(),
-          },
-        },
-        pings: [],
-      },
-    },
+    events: [],
   });
 });
 
-// best match (`bestMatch.enabled` = true)
-add_task(async function navigationalBestMatch() {
-  let match_type = "best-match";
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.bestMatch.enabled", true]],
+// Clicks a non-heuristic row when a nav suggestion is not matched
+add_task(async function notMatched_clickOther() {
+  await PlacesTestUtils.addVisits("http://mochi.test:8888/example");
+  await doTest({
+    suggestion: null,
+    shouldBeShown: false,
+    pickRowIndex: 1,
+    scalars: {
+      [TELEMETRY_SCALARS.IMPRESSION_NAV_NOTMATCHED]: "search_engine",
+    },
+    events: [],
   });
-  await doTelemetryTest({
-    index,
+});
+
+// Clicks the heuristic when a nav suggestion is shown
+add_task(async function shown_clickHeuristic() {
+  await doTest({
     suggestion: MERINO_SUGGESTION,
-    // impression-only
-    impressionOnly: {
-      scalars: {
-        [TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED]: position,
-        [TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED_BEST_MATCH]: position,
-      },
-      event: {
+    shouldBeShown: true,
+    pickRowIndex: 0,
+    scalars: {
+      [TELEMETRY_SCALARS.IMPRESSION_NAV_SHOWN]: "search_engine",
+      [TELEMETRY_SCALARS.CLICK_NAV_SHOWN_HEURISTIC]: "search_engine",
+    },
+    events: [
+      {
         category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
         method: "engagement",
         object: "impression_only",
         extra: {
           suggestion_type,
-          match_type,
+          match_type: "best-match",
           position: position.toString(),
+          source: "merino",
         },
       },
-      ping: null,
+    ],
+  });
+});
+
+// Clicks the nav suggestion
+add_task(async function shown_clickNavSuggestion() {
+  await doTest({
+    suggestion: MERINO_SUGGESTION,
+    shouldBeShown: true,
+    pickRowIndex: index,
+    scalars: {
+      [TELEMETRY_SCALARS.IMPRESSION_NAV_SHOWN]: "search_engine",
+      [TELEMETRY_SCALARS.CLICK_NAV_SHOWN_NAV]: "search_engine",
+      "urlbar.picked.navigational": "1",
     },
-    selectables: {
-      // click
-      "urlbarView-row-inner": {
-        scalars: {
-          [TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED]: position,
-          [TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED_BEST_MATCH]: position,
-          [TELEMETRY_SCALARS.CLICK_NONSPONSORED]: position,
-          [TELEMETRY_SCALARS.CLICK_NONSPONSORED_BEST_MATCH]: position,
+    events: [
+      {
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
+        method: "engagement",
+        object: "click",
+        extra: {
+          suggestion_type,
+          match_type: "best-match",
+          position: position.toString(),
+          source: "merino",
         },
-        event: {
-          category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
-          method: "engagement",
-          object: "click",
-          extra: {
-            suggestion_type,
-            match_type,
-            position: position.toString(),
-          },
-        },
-        pings: [],
       },
-      // block
-      "urlbarView-button-block": {
-        scalars: {
-          [TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED]: position,
-          [TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED_BEST_MATCH]: position,
-          [TELEMETRY_SCALARS.BLOCK_NONSPONSORED]: position,
-          [TELEMETRY_SCALARS.BLOCK_NONSPONSORED_BEST_MATCH]: position,
+    ],
+  });
+});
+
+// Clicks a non-heuristic non-nav-suggestion row when the nav suggestion is
+// shown
+add_task(async function shown_clickOther() {
+  await PlacesTestUtils.addVisits("http://mochi.test:8888/example");
+  await doTest({
+    suggestion: MERINO_SUGGESTION,
+    shouldBeShown: true,
+    pickRowIndex: 2,
+    scalars: {
+      [TELEMETRY_SCALARS.IMPRESSION_NAV_SHOWN]: "search_engine",
+    },
+    events: [
+      {
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
+        method: "engagement",
+        object: "impression_only",
+        extra: {
+          suggestion_type,
+          match_type: "best-match",
+          position: position.toString(),
+          source: "merino",
         },
-        event: {
-          category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
-          method: "engagement",
-          object: "block",
-          extra: {
-            suggestion_type,
-            match_type,
-            position: position.toString(),
-          },
-        },
-        pings: [],
       },
-      // help
-      "urlbarView-button-help": {
-        scalars: {
-          [TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED]: position,
-          [TELEMETRY_SCALARS.IMPRESSION_NONSPONSORED_BEST_MATCH]: position,
-          [TELEMETRY_SCALARS.HELP_NONSPONSORED]: position,
-          [TELEMETRY_SCALARS.HELP_NONSPONSORED_BEST_MATCH]: position,
+    ],
+  });
+});
+
+// Clicks the heuristic when it dupes the nav suggestion
+add_task(async function duped_clickHeuristic() {
+  // Add enough visits to example.com so it autofills.
+  for (let i = 0; i < 5; i++) {
+    await PlacesTestUtils.addVisits("https://example.com/");
+  }
+
+  // Set the nav suggestion's URL to the same URL, example.com.
+  let suggestion = {
+    ...MERINO_SUGGESTION,
+    url: "https://example.com/",
+  };
+
+  await doTest({
+    suggestion,
+    shouldBeShown: false,
+    pickRowIndex: 0,
+    scalars: {
+      [TELEMETRY_SCALARS.IMPRESSION_NAV_SUPERCEDED]: "autofill_origin",
+      [TELEMETRY_SCALARS.CLICK_NAV_SUPERCEDED]: "autofill_origin",
+    },
+    events: [],
+  });
+});
+
+// Clicks a non-heuristic row when the heuristic dupes the nav suggestion
+add_task(async function duped_clickOther() {
+  // Add enough visits to example.com so it autofills.
+  for (let i = 0; i < 5; i++) {
+    await PlacesTestUtils.addVisits("https://example.com/");
+  }
+
+  // Set the nav suggestion's URL to the same URL, example.com.
+  let suggestion = {
+    ...MERINO_SUGGESTION,
+    url: "https://example.com/",
+  };
+
+  // Add a visit to another URL so it appears in the search below.
+  await PlacesTestUtils.addVisits("https://example.com/some-other-url");
+
+  await doTest({
+    suggestion,
+    shouldBeShown: false,
+    pickRowIndex: 1,
+    scalars: {
+      [TELEMETRY_SCALARS.IMPRESSION_NAV_SUPERCEDED]: "autofill_origin",
+    },
+    events: [],
+  });
+});
+
+// Telemetry specific to nav suggestions should not be recorded when the
+// `recordNavigationalSuggestionTelemetry` Nimbus variable is false.
+add_task(async function recordNavigationalSuggestionTelemetry_false() {
+  await doTest({
+    valueOverrides: {
+      recordNavigationalSuggestionTelemetry: false,
+    },
+    suggestion: MERINO_SUGGESTION,
+    shouldBeShown: true,
+    pickRowIndex: index,
+    scalars: {},
+    events: [
+      // The legacy engagement event should still be recorded as it is for all
+      // quick suggest results.
+      {
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
+        method: "engagement",
+        object: "click",
+        extra: {
+          suggestion_type,
+          match_type: "best-match",
+          position: position.toString(),
+          source: "merino",
         },
-        event: {
-          category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
-          method: "engagement",
-          object: "help",
-          extra: {
-            suggestion_type,
-            match_type,
-            position: position.toString(),
-          },
-        },
-        pings: [],
       },
+    ],
+  });
+});
+
+// Telemetry specific to nav suggestions should not be recorded when the
+// `recordNavigationalSuggestionTelemetry` Nimbus variable is left out.
+add_task(async function recordNavigationalSuggestionTelemetry_undefined() {
+  await doTest({
+    valueOverrides: {},
+    suggestion: MERINO_SUGGESTION,
+    shouldBeShown: true,
+    pickRowIndex: index,
+    scalars: {},
+    events: [
+      // The legacy engagement event should still be recorded as it is for all
+      // quick suggest results.
+      {
+        category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,
+        method: "engagement",
+        object: "click",
+        extra: {
+          suggestion_type,
+          match_type: "best-match",
+          position: position.toString(),
+          source: "merino",
+        },
+      },
+    ],
+  });
+});
+
+/**
+ * Does the following:
+ *
+ * 1. Sets up a Merino nav suggestion
+ * 2. Enrolls in a Nimbus experiment with the specified variables
+ * 3. Does a search
+ * 4. Makes sure the nav suggestion is or isn't shown as expected
+ * 5. Clicks a specified row
+ * 6. Makes sure the expected telemetry is recorded
+ *
+ * @param {object} options
+ *   Options object
+ * @param {object} options.suggestion
+ *   The nav suggestion or null if Merino shouldn't serve one.
+ * @param {boolean} options.shouldBeShown
+ *   Whether the nav suggestion is expected to be shown.
+ * @param {number} options.pickRowIndex
+ *   The index of the row to pick.
+ * @param {object} options.scalars
+ *   An object that specifies the nav suggest keyed scalars that are expected to
+ *   be recorded.
+ * @param {Array} options.events
+ *   An object that specifies the legacy engagement events that are expected to
+ *   be recorded.
+ * @param {object} options.valueOverrides
+ *   The Nimbus variables to use.
+ */
+async function doTest({
+  suggestion,
+  shouldBeShown,
+  pickRowIndex,
+  scalars,
+  events,
+  valueOverrides = {
+    recordNavigationalSuggestionTelemetry: true,
+  },
+}) {
+  MerinoTestUtils.server.response.body.suggestions = suggestion
+    ? [suggestion]
+    : [];
+
+  Services.telemetry.clearEvents();
+  let { spy, spyCleanup } = QuickSuggestTestUtils.createTelemetryPingSpy();
+
+  await QuickSuggestTestUtils.withExperiment({
+    valueOverrides,
+    callback: async () => {
+      await BrowserTestUtils.withNewTab("about:blank", async () => {
+        gURLBar.focus();
+        await UrlbarTestUtils.promiseAutocompleteResultPopup({
+          window,
+          value: "example",
+          fireInputEvent: true,
+        });
+
+        if (shouldBeShown) {
+          await QuickSuggestTestUtils.assertIsQuickSuggest({
+            window,
+            index,
+            url: suggestion.url,
+            isBestMatch: true,
+            isSponsored: false,
+          });
+        } else {
+          await QuickSuggestTestUtils.assertNoQuickSuggestResults(window);
+        }
+
+        let loadPromise = BrowserTestUtils.browserLoaded(
+          gBrowser.selectedBrowser
+        );
+        if (pickRowIndex > 0) {
+          info("Arrowing down to row index " + pickRowIndex);
+          EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: pickRowIndex });
+        }
+        info("Pressing Enter and waiting for page load");
+        EventUtils.synthesizeKey("KEY_Enter");
+        await loadPromise;
+      });
     },
   });
-  await SpecialPowers.popPrefEnv();
-});
+
+  info("Checking scalars");
+  QuickSuggestTestUtils.assertScalars(scalars);
+
+  info("Checking events");
+  QuickSuggestTestUtils.assertEvents(events);
+
+  info("Checking pings");
+  QuickSuggestTestUtils.assertPings(spy, []);
+
+  await spyCleanup();
+  await PlacesUtils.history.clear();
+  MerinoTestUtils.server.response.body.suggestions = [MERINO_SUGGESTION];
+}

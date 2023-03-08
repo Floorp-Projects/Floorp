@@ -306,6 +306,8 @@ urlbar.picked.*
   - ``dynamic``
     A specially crafted result, often used in experiments when basic types are
     not flexible enough for a rich layout.
+  - ``dynamic_wikipedia``
+    A dynamic Wikipedia Firefox Suggest result.
   - ``extension``
     Added by an add-on through the omnibox WebExtension API.
   - ``formhistory``
@@ -314,6 +316,8 @@ urlbar.picked.*
     A URL from history.
   - ``keyword``
     A bookmark keyword.
+  - ``navigational``
+    A navigational suggestion Firefox Suggest result.
   - ``quickaction``
     A QuickAction.
   - ``quicksuggest``

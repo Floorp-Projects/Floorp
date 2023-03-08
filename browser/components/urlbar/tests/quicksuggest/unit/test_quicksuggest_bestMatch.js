@@ -29,7 +29,6 @@ const REMOTE_SETTINGS_RESULTS = [
       "fullkeywo",
       "fullkeywor",
       "fullkeyword",
-      "example",
     ],
     click_url: "http://example.com/click",
     impression_url: "http://example.com/impression",
@@ -53,6 +52,7 @@ const EXPECTED_BEST_MATCH_URLBAR_RESULT = {
   heuristic: false,
   isBestMatch: true,
   payload: {
+    subtype: UrlbarProviderQuickSuggest.RESULT_SUBTYPE.SPONSORED,
     url: "http://example.com/",
     originalUrl: "http://example.com/",
     title: "Fullkeyword title",
@@ -84,6 +84,7 @@ const EXPECTED_NON_BEST_MATCH_URLBAR_RESULT = {
   source: UrlbarUtils.RESULT_SOURCE.SEARCH,
   heuristic: false,
   payload: {
+    subtype: UrlbarProviderQuickSuggest.RESULT_SUBTYPE.SPONSORED,
     url: "http://example.com/",
     originalUrl: "http://example.com/",
     title: "Fullkeyword title",
@@ -117,6 +118,7 @@ const EXPECTED_BEST_MATCH_POSITION_URLBAR_RESULT = {
   heuristic: false,
   isBestMatch: true,
   payload: {
+    subtype: UrlbarProviderQuickSuggest.RESULT_SUBTYPE.SPONSORED,
     url: "http://example.com/best-match-position",
     originalUrl: "http://example.com/best-match-position",
     title: `${BEST_MATCH_POSITION_SEARCH_STRING} title`,
@@ -155,6 +157,7 @@ add_task(async function init() {
 
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
     remoteSettingsResults: REMOTE_SETTINGS_RESULTS,
+    config: QuickSuggestTestUtils.BEST_MATCH_CONFIG,
   });
 });
 
@@ -408,7 +411,7 @@ add_task(async function position() {
 
 // Tests a suggestion that is blocked from being a best match.
 add_task(async function blockedAsBestMatch() {
-  let config = QuickSuggestTestUtils.DEFAULT_CONFIG;
+  let config = QuickSuggestTestUtils.BEST_MATCH_CONFIG;
   config.best_match.blocked_suggestion_ids = [1];
   await QuickSuggestTestUtils.withConfig({
     config,
@@ -442,9 +445,56 @@ add_task(async function noConfig() {
   });
 });
 
-// Test that bestMatch results are not shown when there is a heuristic
-// result for the same domain.
-add_task(async function hueristicDeduplication() {
+// Test that bestMatch navigational suggestion results are not shown when there
+// is a heuristic result for the same domain.
+add_task(async function heuristicDeduplication() {
+  UrlbarPrefs.set("merino.enabled", true);
+  UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
+
+  await MerinoTestUtils.server.start();
+  MerinoTestUtils.server.response.body.suggestions = [
+    {
+      title: "Navigational suggestion",
+      url: "http://example.com/",
+      provider: "top_picks",
+      is_sponsored: false,
+      score: 0.25,
+      block_id: 0,
+      is_top_pick: true,
+    },
+  ];
+
+  let expectedNavSuggestResult = {
+    type: UrlbarUtils.RESULT_TYPE.URL,
+    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+    heuristic: false,
+    isBestMatch: true,
+    payload: {
+      subtype: UrlbarProviderQuickSuggest.RESULT_SUBTYPE.NAVIGATIONAL,
+      url: "http://example.com/",
+      originalUrl: "http://example.com/",
+      title: "Navigational suggestion",
+      isSponsored: false,
+      sponsoredBlockId: 0,
+      helpUrl: QuickSuggest.HELP_URL,
+      helpL10n: {
+        id: UrlbarPrefs.get("resultMenu")
+          ? "urlbar-result-menu-learn-more-about-firefox-suggest"
+          : "firefox-suggest-urlbar-learn-more",
+      },
+      isBlockable: false,
+      blockL10n: {
+        id: UrlbarPrefs.get("resultMenu")
+          ? "urlbar-result-menu-dismiss-firefox-suggest"
+          : "firefox-suggest-urlbar-block",
+      },
+      displayUrl: "http://example.com",
+      source: "merino",
+      requestId: "request_id",
+      dupedHeuristic: false,
+    },
+  };
+
   let scenarios = [
     ["http://example.com/", false],
     ["http://www.example.com/", false],
@@ -465,9 +515,13 @@ add_task(async function hueristicDeduplication() {
     await check_results({
       context,
       matches: expectBestMatch
-        ? [EXPECTED_AUTOFILL_RESULT, EXPECTED_BEST_MATCH_URLBAR_RESULT]
+        ? [EXPECTED_AUTOFILL_RESULT, expectedNavSuggestResult]
         : [EXPECTED_AUTOFILL_RESULT],
     });
     await PlacesUtils.history.clear();
   }
+
+  await MerinoTestUtils.server.stop();
+  UrlbarPrefs.clear("merino.enabled");
+  UrlbarPrefs.clear("quicksuggest.dataCollection.enabled");
 });

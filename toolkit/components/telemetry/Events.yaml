@@ -877,7 +877,8 @@ urlbar:
           "autofill", "visit", "bookmark", "history", "keyword", "search",
           "searchsuggestion", "switchtab", "remotetab", "extension", "oneoff",
           "keywordoffer", "canonized", "tip", "tiphelp", "formhistory",
-          "tabtosearch", "quicksuggest", "weather", "none"
+          "tabtosearch", "quicksuggest", "weather", "dynamic-wikipedia",
+          "navigational", "none"
       provider: The name of the provider that presented the result.
   abandonment:
     objects: ["blur"]
@@ -3411,7 +3412,7 @@ contextservices.quicksuggest:
         The index of the suggestion in the list of results (1-based).
       suggestion_type: >
         The type of suggestion, one of: "sponsored", "nonsponsored",
-        "dynamic-wikipedia", "weather"
+        "dynamic-wikipedia", "weather", "navigational"
       source: >
         Where the suggestion came from, one of: "remote-settings", "merino"
     release_channel_collection: opt-out
