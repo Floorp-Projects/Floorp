@@ -62,6 +62,9 @@ class BrokerServicesBase final : public BrokerServices,
   ResultCode GetPolicyDiagnostics(
       std::unique_ptr<PolicyDiagnosticsReceiver> receiver) override;
 
+  bool DeriveCapabilitySidFromName(const wchar_t* name, PSID derived_sid,
+                                   DWORD sid_buffer_length) override;
+
  private:
   // The routine that the worker thread executes. It is in charge of
   // notifications and cleanup-related tasks.

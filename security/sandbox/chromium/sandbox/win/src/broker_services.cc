@@ -735,4 +735,11 @@ ResultCode BrokerServicesBase::GetPolicyDiagnostics(
   return SBOX_ALL_OK;
 }
 
+bool BrokerServicesBase::DeriveCapabilitySidFromName(const wchar_t* name,
+                                                     PSID derived_sid,
+                                                     DWORD sid_buffer_length) {
+  return ::CopySid(sid_buffer_length, derived_sid,
+                   Sid::FromNamedCapability(name).GetPSID());
+}
+
 }  // namespace sandbox

@@ -1,0 +1,74 @@
+# HG changeset patch
+# User Bob Owen <bobowencode@gmail.com>
+# Date 1677499923 0
+#      Mon Feb 27 12:12:03 2023 +0000
+Expose Sid::FromNamedCapability through broker services.
+
+diff --git a/security/sandbox/chromium/sandbox/win/src/broker_services.cc b/security/sandbox/chromium/sandbox/win/src/broker_services.cc
+--- a/security/sandbox/chromium/sandbox/win/src/broker_services.cc
++++ b/security/sandbox/chromium/sandbox/win/src/broker_services.cc
+@@ -730,9 +730,16 @@ ResultCode BrokerServicesBase::GetPolicy
+     return SBOX_ERROR_GENERIC;
+   }
+ 
+   // Ownership has passed to tracker thread.
+   receiver.release();
+   return SBOX_ALL_OK;
+ }
+ 
++bool BrokerServicesBase::DeriveCapabilitySidFromName(const wchar_t* name,
++                                                     PSID derived_sid,
++                                                     DWORD sid_buffer_length) {
++  return ::CopySid(sid_buffer_length, derived_sid,
++                   Sid::FromNamedCapability(name).GetPSID());
++}
++
+ }  // namespace sandbox
+diff --git a/security/sandbox/chromium/sandbox/win/src/broker_services.h b/security/sandbox/chromium/sandbox/win/src/broker_services.h
+--- a/security/sandbox/chromium/sandbox/win/src/broker_services.h
++++ b/security/sandbox/chromium/sandbox/win/src/broker_services.h
+@@ -57,16 +57,19 @@ class BrokerServicesBase final : public 
+   // target processes.  We use this method for the specific purpose of
+   // checking if we can safely duplicate a handle to the supplied process
+   // in DuplicateHandleProxyAction.
+   bool IsSafeDuplicationTarget(DWORD process_id);
+ 
+   ResultCode GetPolicyDiagnostics(
+       std::unique_ptr<PolicyDiagnosticsReceiver> receiver) override;
+ 
++  bool DeriveCapabilitySidFromName(const wchar_t* name, PSID derived_sid,
++                                   DWORD sid_buffer_length) override;
++
+  private:
+   // The routine that the worker thread executes. It is in charge of
+   // notifications and cleanup-related tasks.
+   static DWORD WINAPI TargetEventsThread(PVOID param);
+ 
+   // The completion port used by the job objects to communicate events to
+   // the worker thread.
+   base::win::ScopedHandle job_port_;
+diff --git a/security/sandbox/chromium/sandbox/win/src/sandbox.h b/security/sandbox/chromium/sandbox/win/src/sandbox.h
+--- a/security/sandbox/chromium/sandbox/win/src/sandbox.h
++++ b/security/sandbox/chromium/sandbox/win/src/sandbox.h
+@@ -117,16 +117,21 @@ class BrokerServices {
+   //   called to accept the results of the call.
+   // Returns:
+   //   ALL_OK if the request was dispatched. All other return values
+   //   imply failure, and the responder will not receive its completion
+   //   callback.
+   virtual ResultCode GetPolicyDiagnostics(
+       std::unique_ptr<PolicyDiagnosticsReceiver> receiver) = 0;
+ 
++  // Derive a capability PSID from the given string.
++  virtual bool DeriveCapabilitySidFromName(const wchar_t* name,
++                                           PSID derived_sid,
++                                           DWORD sid_buffer_length) = 0;
++
+  protected:
+   ~BrokerServices() {}
+ };
+ 
+ // TargetServices models the current process from the perspective
+ // of a target process. To obtain a pointer to it use
+ // Sandbox::GetTargetServices(). Note that this call returns a non-null
+ // pointer only if this process is in fact a target. A process is a target

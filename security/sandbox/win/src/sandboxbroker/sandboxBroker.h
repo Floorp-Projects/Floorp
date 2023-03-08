@@ -127,7 +127,6 @@ class SandboxBroker : public AbstractSandboxBroker {
   void ApplyLoggingPolicy();
 
  private:
-  static sandbox::BrokerServices* sBrokerService;
   static bool sRunningFromNetworkDrive;
   sandbox::TargetPolicy* mPolicy;
 };
