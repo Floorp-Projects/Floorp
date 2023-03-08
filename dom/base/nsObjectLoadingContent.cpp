@@ -125,14 +125,6 @@ static bool IsFlashMIME(const nsACString& aMIMEType) {
          nsPluginHost::eSpecialType_Flash;
 }
 
-static bool InActiveDocument(nsIContent* aContent) {
-  if (!aContent->IsInComposedDoc()) {
-    return false;
-  }
-  Document* doc = aContent->OwnerDoc();
-  return (doc && doc->IsActive());
-}
-
 static bool IsPluginType(nsObjectLoadingContent::ObjectType type) {
   return type == nsObjectLoadingContent::eType_Fallback ||
          type == nsObjectLoadingContent::eType_FakePlugin;
@@ -142,112 +134,7 @@ static bool IsPluginType(nsObjectLoadingContent::ObjectType type) {
 /// Runnables and helper classes
 ///
 
-class nsAsyncInstantiateEvent : public Runnable {
- public:
-  explicit nsAsyncInstantiateEvent(nsObjectLoadingContent* aContent)
-      : Runnable("nsAsyncInstantiateEvent"), mContent(aContent) {}
-
-  ~nsAsyncInstantiateEvent() override = default;
-
-  NS_IMETHOD Run() override;
-
- private:
-  nsCOMPtr<nsIObjectLoadingContent> mContent;
-};
-
-NS_IMETHODIMP
-nsAsyncInstantiateEvent::Run() {
-  nsObjectLoadingContent* objLC =
-      static_cast<nsObjectLoadingContent*>(mContent.get());
-
-  // If objLC is no longer tracking this event, we've been canceled or
-  // superseded
-  if (objLC->mPendingInstantiateEvent != this) {
-    return NS_OK;
-  }
-  objLC->mPendingInstantiateEvent = nullptr;
-
-  return objLC->SyncStartPluginInstance();
-}
-
-// Checks to see if the content for a plugin instance should be unloaded
-// (outside an active document) or stopped (in a document but unrendered). This
-// is used to allow scripts to move a plugin around the document hierarchy
-// without re-instantiating it.
-class CheckPluginStopEvent : public Runnable {
- public:
-  explicit CheckPluginStopEvent(nsObjectLoadingContent* aContent)
-      : Runnable("CheckPluginStopEvent"), mContent(aContent) {}
-
-  ~CheckPluginStopEvent() override = default;
-
-  NS_IMETHOD Run() override;
-
- private:
-  nsCOMPtr<nsIObjectLoadingContent> mContent;
-};
-
-NS_IMETHODIMP
-CheckPluginStopEvent::Run() {
-  nsObjectLoadingContent* objLC =
-      static_cast<nsObjectLoadingContent*>(mContent.get());
-
-  // If objLC is no longer tracking this event, we've been canceled or
-  // superseded. We clear this before we finish - either by calling
-  // UnloadObject/StopPluginInstance, or directly if we took no action.
-  if (objLC->mPendingCheckPluginStopEvent != this) {
-    return NS_OK;
-  }
-
-  // CheckPluginStopEvent is queued when we either lose our frame, are removed
-  // from the document, or the document goes inactive. To avoid stopping the
-  // plugin when script is reparenting us or layout is rebuilding, we wait until
-  // this event to decide to stop.
-
-  nsCOMPtr<nsIContent> content =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(objLC));
-  if (!InActiveDocument(content)) {
-    LOG(("OBJLC [%p]: Unloading plugin outside of document", this));
-    objLC->StopPluginInstance();
-    return NS_OK;
-  }
-
-  if (content->GetPrimaryFrame()) {
-    LOG(
-        ("OBJLC [%p]: CheckPluginStopEvent - in active document with frame"
-         ", no action",
-         this));
-    objLC->mPendingCheckPluginStopEvent = nullptr;
-    return NS_OK;
-  }
-
-  // In an active document, but still no frame. Flush layout to see if we can
-  // regain a frame now.
-  LOG(("OBJLC [%p]: CheckPluginStopEvent - No frame, flushing layout", this));
-  Document* composedDoc = content->GetComposedDoc();
-  if (composedDoc) {
-    composedDoc->FlushPendingNotifications(FlushType::Layout);
-    if (objLC->mPendingCheckPluginStopEvent != this) {
-      LOG(("OBJLC [%p]: CheckPluginStopEvent - superseded in layout flush",
-           this));
-      return NS_OK;
-    }
-    if (content->GetPrimaryFrame()) {
-      LOG(("OBJLC [%p]: CheckPluginStopEvent - frame gained in layout flush",
-           this));
-      objLC->mPendingCheckPluginStopEvent = nullptr;
-      return NS_OK;
-    }
-  }
-
-  // Still no frame, suspend plugin.
-  LOG(("OBJLC [%p]: Stopping plugin that lost frame", this));
-  objLC->StopPluginInstance();
-
-  return NS_OK;
-}
-
-// Sets a object's mInstantiating bit to false when destroyed
+// Sets a object's mIsLoading bit to false when destroyed
 class AutoSetLoadingToFalse {
  public:
   explicit AutoSetLoadingToFalse(nsObjectLoadingContent* aContent)
@@ -314,14 +201,6 @@ static bool inline URIEquals(nsIURI* a, nsIURI* b) {
 /// Member Functions
 ///
 
-// Helper to queue a CheckPluginStopEvent for a OBJLC object
-void nsObjectLoadingContent::QueueCheckPluginStopEvent() {
-  nsCOMPtr<nsIRunnable> event = new CheckPluginStopEvent(this);
-  mPendingCheckPluginStopEvent = event;
-
-  NS_DispatchToCurrentThread(event);
-}
-
 // Helper to spawn the frameloader.
 void nsObjectLoadingContent::SetupFrameLoader(int32_t aJSPluginId) {
   nsCOMPtr<nsIContent> thisContent =
@@ -384,7 +263,6 @@ nsObjectLoadingContent::nsObjectLoadingContent()
       mRunID(0),
       mHasRunID(false),
       mChannelLoaded(false),
-      mInstantiating(false),
       mNetworkCreated(true),
       mContentBlockingEnabled(false),
       mSkipFakePlugins(false),
@@ -402,18 +280,8 @@ nsObjectLoadingContent::~nsObjectLoadingContent() {
         "Should not be tearing down frame loaders at this point");
     mFrameLoader->Destroy();
   }
-  if (mInstantiating) {
-    // This is especially bad as delayed stop will try to hold on to this
-    // object...
-    MOZ_ASSERT_UNREACHABLE(
-        "Should not be tearing down a plugin at this point!");
-    StopPluginInstance();
-  }
-  nsImageLoadingContent::Destroy();
-}
 
-nsresult nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading) {
-  return NS_ERROR_FAILURE;
+  nsImageLoadingContent::Destroy();
 }
 
 void nsObjectLoadingContent::GetPluginAttributes(
@@ -427,7 +295,7 @@ void nsObjectLoadingContent::GetPluginParameters(
 }
 
 void nsObjectLoadingContent::GetNestedParams(
-    nsTArray<MozPluginParameter>& aParams) {
+    nsTArray<MozPluginParameter>& aParameters) {
   nsCOMPtr<Element> ourElement =
       do_QueryInterface(static_cast<nsIObjectLoadingContent*>(this));
 
@@ -470,7 +338,7 @@ void nsObjectLoadingContent::GetNestedParams(
       param.mName.Trim(" \n\r\t\b", true, true, false);
       param.mValue.Trim(" \n\r\t\b", true, true, false);
 
-      aParams.AppendElement(param);
+      aParameters.AppendElement(param);
     }
   }
 }
@@ -536,11 +404,6 @@ void nsObjectLoadingContent::NotifyOwnerDocumentActivityChanged() {
   // XXX(johns): We cannot touch plugins or run arbitrary script from this call,
   //             as Document is in a non-reentrant state.
 
-  // If we have a plugin we want to queue an event to stop it unless we are
-  // moved into an active document before returning to the event loop.
-  if (mInstantiating) {
-    QueueCheckPluginStopEvent();
-  }
   nsImageLoadingContent::NotifyOwnerDocumentActivityChanged();
 }
 
@@ -845,7 +708,7 @@ ElementState nsObjectLoadingContent::ObjectState() const {
 
 void nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI,
                                                       nsIURI* aBaseURI,
-                                                      nsIURI** aOutURI) {
+                                                      nsIURI** aRewrittenURI) {
   nsCOMPtr<nsIContent> thisContent =
       do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   NS_ASSERTION(thisContent, "Must be an instance of content");
@@ -927,7 +790,7 @@ void nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI,
   uri.ReplaceSubstring("/v/"_ns, "/embed/"_ns);
   nsAutoString utf16URI = NS_ConvertUTF8toUTF16(uri);
   rv = nsContentUtils::NewURIWithDocumentCharset(
-      aOutURI, utf16URI, thisContent->OwnerDoc(), aBaseURI);
+      aRewrittenURI, utf16URI, thisContent->OwnerDoc(), aBaseURI);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -1595,8 +1458,7 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
 
   // Sanity check: We shouldn't have any loaded resources, pending events, or
   // a final listener at this point
-  if (mFrameLoader || mPendingInstantiateEvent ||
-      mPendingCheckPluginStopEvent || mFinalListener) {
+  if (mFrameLoader || mFinalListener) {
     MOZ_ASSERT_UNREACHABLE("Trying to load new plugin with existing content");
     return NS_OK;
   }
@@ -1967,10 +1829,6 @@ void nsObjectLoadingContent::Destroy() {
     mFrameLoader = nullptr;
   }
 
-  if (mInstantiating) {
-    QueueCheckPluginStopEvent();
-  }
-
   // Reset state so that if the element is re-appended to tree again (e.g.
   // adopting to another document), it will reload resource again.
   UnloadObject();
@@ -2010,19 +1868,12 @@ void nsObjectLoadingContent::UnloadObject(bool aResetState) {
     mOriginalContentType.Truncate();
   }
 
-  // InstantiatePluginInstance checks this after re-entrant calls and aborts if
-  // it was cleared from under it
-  mInstantiating = false;
-
   mScriptRequested = false;
 
   mIsStopping = false;
 
   mCachedAttributes.Clear();
   mCachedParameters.Clear();
-
-  // This call should be last as it may re-enter
-  StopPluginInstance();
 
   mSubdocumentIntrinsicSize.reset();
   mSubdocumentIntrinsicRatio.reset();
@@ -2110,50 +1961,6 @@ void nsObjectLoadingContent::CreateStaticClone(
 }
 
 NS_IMETHODIMP
-nsObjectLoadingContent::SyncStartPluginInstance() {
-  NS_ASSERTION(
-      nsContentUtils::IsSafeToRunScript(),
-      "Must be able to run script in order to instantiate a plugin instance!");
-
-  // Don't even attempt to start an instance unless the content is in
-  // the document and active
-  nsCOMPtr<nsIContent> thisContent =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-  if (!InActiveDocument(thisContent)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIURI> kungFuURIGrip(mURI);
-  mozilla::Unused
-      << kungFuURIGrip;  // This URI is not referred to within this function
-  nsCString contentType(mContentType);
-  return InstantiatePluginInstance();
-}
-
-NS_IMETHODIMP
-nsObjectLoadingContent::AsyncStartPluginInstance() {
-  if (mPendingInstantiateEvent) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIContent> thisContent =
-      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-  Document* doc = thisContent->OwnerDoc();
-  if (doc->IsStaticDocument() || doc->IsBeingUsedAsImage()) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIRunnable> event = new nsAsyncInstantiateEvent(this);
-  nsresult rv = NS_DispatchToCurrentThread(event);
-  if (NS_SUCCEEDED(rv)) {
-    // Track pending events
-    mPendingInstantiateEvent = event;
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP
 nsObjectLoadingContent::GetSrcURI(nsIURI** aURI) {
   NS_IF_ADDREF(*aURI = GetSrcURI());
   return NS_OK;
@@ -2210,20 +2017,6 @@ void nsObjectLoadingContent::ConfigureFallback() {
   if (hasHtmlFallback) {
     mType = eType_Null;
   }
-}
-
-NS_IMETHODIMP
-nsObjectLoadingContent::StopPluginInstance() {
-  AUTO_PROFILER_LABEL("nsObjectLoadingContent::StopPluginInstance", OTHER);
-  // Clear any pending events
-  mPendingInstantiateEvent = nullptr;
-  mPendingCheckPluginStopEvent = nullptr;
-
-  // If we're currently instantiating, clearing this will cause
-  // InstantiatePluginInstance's re-entrance check to destroy the created plugin
-  mInstantiating = false;
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP

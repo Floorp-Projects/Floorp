@@ -69,11 +69,6 @@ interface nsIObjectLoadingContent : nsISupports
    */
   void reload(in boolean aClearActivation);
 
-  [noscript] void stopPluginInstance();
-
-  [noscript] void syncStartPluginInstance();
-  [noscript] void asyncStartPluginInstance();
-
   /**
    * Puts the tag in the "waiting on a channel" state and adopts this
    * channel. This does not override the normal logic of examining attributes
