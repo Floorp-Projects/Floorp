@@ -155,18 +155,15 @@ def android_platform(target, android_version, ndk):
     return platform_dir
 
 
-@depends(android_platform, ndk, target)
+@depends(ndk, target)
 @checking("for android sysroot directory")
 @imports(_from="os.path", _import="isdir")
-def android_sysroot(android_platform, ndk, target):
+def android_sysroot(ndk, target):
     if target.os != "Android":
         return
 
-    # NDK r15 has both unified and non-unified headers, but we only support
-    # non-unified for that NDK, so look for that first.
     search_dirs = [
         # (<if this directory exists>, <return this directory>)
-        (os.path.join(android_platform, "usr", "include"), android_platform),
         (os.path.join(ndk, "sysroot"), os.path.join(ndk, "sysroot")),
     ]
 
@@ -180,17 +177,14 @@ def android_sysroot(android_platform, ndk, target):
     )
 
 
-@depends(android_platform, ndk, target)
+@depends(ndk, target)
 @checking("for android system directory")
 @imports(_from="os.path", _import="isdir")
-def android_system(android_platform, ndk, target):
+def android_system(ndk, target):
     if target.os != "Android":
         return
 
-    # NDK r15 has both unified and non-unified headers, but we only support
-    # non-unified for that NDK, so look for that first.
     search_dirs = [
-        os.path.join(android_platform, "usr", "include"),
         os.path.join(ndk, "sysroot", "usr", "include", target.toolchain),
     ]
 
@@ -415,29 +409,12 @@ imply_option(
 )
 
 
-@depends(
-    extra_toolchain_flags,
-    stlport_cppflags,
-    android_toolchain,
-    android_toolchain_prefix_base,
-)
-@imports(_from="os.path", _import="isdir")
-def bindgen_cflags_android(toolchain_flags, stlport_flags, toolchain, toolchain_prefix):
+@depends(extra_toolchain_flags, stlport_cppflags)
+def bindgen_cflags_android(toolchain_flags, stlport_flags):
     if not toolchain_flags:
         return
 
-    gcc_include = os.path.join(toolchain, "lib", "gcc", toolchain_prefix, "4.9.x")
-    if not isdir(gcc_include):
-        gcc_include = os.path.join(toolchain, "lib", "gcc", toolchain_prefix, "4.9")
-
-    return (
-        toolchain_flags
-        + stlport_flags
-        + [
-            "-I%s" % os.path.join(gcc_include, "include"),
-            "-I%s" % os.path.join(gcc_include, "include-fixed"),
-        ]
-    )
+    return toolchain_flags + stlport_flags
 
 
 @depends("--with-android-googlevr-sdk", target)
