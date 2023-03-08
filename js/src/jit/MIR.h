@@ -3297,12 +3297,12 @@ class MInlineArgumentsSlice
 // Allocates a new BoundFunctionObject and calls
 // BoundFunctionObject::functionBindImpl. This instruction can have arbitrary
 // side-effects because the GetProperty calls for length/name can call into JS.
-class MNewBoundFunction
+class MBindFunction
     : public MVariadicInstruction,
       public MixPolicy<ObjectPolicy<0>, NoFloatPolicyAfter<1>>::Data {
   CompilerGCPointer<JSObject*> templateObj_;
 
-  explicit MNewBoundFunction(JSObject* templateObj)
+  explicit MBindFunction(JSObject* templateObj)
       : MVariadicInstruction(classOpcode), templateObj_(templateObj) {
     setResultType(MIRType::Object);
   }
@@ -3311,9 +3311,9 @@ class MNewBoundFunction
   static const size_t NumNonArgumentOperands = 1;
 
  public:
-  INSTRUCTION_HEADER(NewBoundFunction)
-  static MNewBoundFunction* New(TempAllocator& alloc, MDefinition* target,
-                                uint32_t argc, JSObject* templateObj);
+  INSTRUCTION_HEADER(BindFunction)
+  static MBindFunction* New(TempAllocator& alloc, MDefinition* target,
+                            uint32_t argc, JSObject* templateObj);
   NAMED_OPERANDS((0, target))
 
   JSObject* templateObject() const { return templateObj_; }

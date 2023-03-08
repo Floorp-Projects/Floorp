@@ -213,7 +213,7 @@
   call_instruction: true
   mir_op: true
 
-- name: NewBoundFunction
+- name: BindFunction
   result_type: WordSized
   operands:
     target: WordSized

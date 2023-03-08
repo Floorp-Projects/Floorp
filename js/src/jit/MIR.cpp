@@ -6973,10 +6973,9 @@ MIonToWasmCall* MIonToWasmCall::New(TempAllocator& alloc,
   return ins;
 }
 
-MNewBoundFunction* MNewBoundFunction::New(TempAllocator& alloc,
-                                          MDefinition* target, uint32_t argc,
-                                          JSObject* templateObj) {
-  auto* ins = new (alloc) MNewBoundFunction(templateObj);
+MBindFunction* MBindFunction::New(TempAllocator& alloc, MDefinition* target,
+                                  uint32_t argc, JSObject* templateObj) {
+  auto* ins = new (alloc) MBindFunction(templateObj);
   if (!ins->init(alloc, NumNonArgumentOperands + argc)) {
     return nullptr;
   }
