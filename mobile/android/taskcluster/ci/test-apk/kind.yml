@@ -109,7 +109,7 @@ tasks:
                         "type": "header",
                         "text": {
                           "type": "plain_text",
-                          "text": "Fenix :firefox: ${task.metadata.name} :x:\n "
+                          "text": "firefox-android :firefox: ${task.metadata.name} :x:\n "
                         }
                       },
                       {
@@ -140,7 +140,7 @@ tasks:
                         "type": "section",
                         "text": {
                           "type": "mrkdwn",
-                          "text": "*Test Summary*: <https://firefoxci.taskcluster-artifacts.net/${status.taskId}/0/public/reports/test/testFenixDebugUnitTest/index.html|Results> :debug:"
+                          "text": "*Test Summary*: <https://firefoxci.taskcluster-artifacts.net/${status.taskId}/0/public/reports/index.html|Results> :debug:"
                         }
                       },
                       {
