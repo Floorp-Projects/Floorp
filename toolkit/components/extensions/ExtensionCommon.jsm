@@ -170,7 +170,7 @@ function defineLazyGetter(object, prop, getter) {
   });
 }
 
-function checkLoadURL(url, principal, options) {
+function checkLoadURI(uri, principal, options) {
   let ssm = Services.scriptSecurityManager;
 
   let flags = ssm.STANDARD;
@@ -185,11 +185,19 @@ function checkLoadURL(url, principal, options) {
   }
 
   try {
-    ssm.checkLoadURIWithPrincipal(principal, Services.io.newURI(url), flags);
+    ssm.checkLoadURIWithPrincipal(principal, uri, flags);
   } catch (e) {
     return false;
   }
   return true;
+}
+
+function checkLoadURL(url, principal, options) {
+  try {
+    return checkLoadURI(Services.io.newURI(url), principal, options);
+  } catch (e) {
+    return false; // newURI threw.
+  }
 }
 
 function makeWidgetId(id) {
@@ -2859,6 +2867,7 @@ ExtensionCommon = {
   SchemaAPIInterface,
   SchemaAPIManager,
   SpreadArgs,
+  checkLoadURI,
   checkLoadURL,
   defineLazyGetter,
   getConsole,
