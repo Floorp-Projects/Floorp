@@ -263,7 +263,7 @@ def generate_beetmover_artifact_map(config, job, **kwargs):
         version = read_version_file()
         upload_date = datetime.fromtimestamp(config.params["build_date"])
 
-        if job["attributes"]["build-type"] == "nightly":
+        if job["attributes"]["build-type"] == "fenix-nightly":
             folder_prefix = upload_date.strftime("%Y/%m/%Y-%m-%d-%H-%M-%S-")
             # TODO: Remove this when version.txt has versioning fixed
             version = version.split("-")[0]
