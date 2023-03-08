@@ -99,13 +99,12 @@ export var Log = {
       let output = [];
       while (frame) {
         // Works on frames or exceptions, munges file:// URIs to shorten the paths
-        // FIXME: filename munging is sort of hackish, might be confusing if
-        // there are multiple extensions with similar filenames
+        // FIXME: filename munging is sort of hackish.
         let str = "<file:unknown>";
 
         let file = frame.filename || frame.fileName;
         if (file) {
-          str = file.replace(/^(?:chrome|file):.*?([^\/\.]+\.\w+)$/, "$1");
+          str = file.replace(/^(?:chrome|file):.*?([^\/\.]+(\.\w+)+)$/, "$1");
         }
 
         if (frame.lineNumber) {
@@ -128,7 +127,7 @@ export var Log = {
       let stack = e.stack;
       return (
         "JS Stack trace: " +
-        stack.trim().replace(/@[^@]*?([^\/\.]+\.\w+:)/g, "@$1")
+        stack.trim().replace(/@[^@]*?([^\/\.]+(\.\w+)+:)/g, "@$1")
       );
     }
 
