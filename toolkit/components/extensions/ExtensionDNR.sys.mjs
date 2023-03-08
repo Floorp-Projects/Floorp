@@ -1382,6 +1382,12 @@ class RequestEvaluator {
     }
     this.didCheckAncestors = true;
 
+    if (!this.ruleManager.hasRulesWithAllowAllRequests) {
+      // Optimization: Skip ancestorRequestDetails lookup and/or request
+      // evaluation if there are no allowAllRequests rules.
+      return;
+    }
+
     // Now we need to check whether any of the ancestor frames had a matching
     // allowAllRequests rule. matchedRule and/or matchedModifyHeadersRules
     // results may be ignored if their priority is lower or equal to the
@@ -1765,6 +1771,7 @@ class RuleManager {
 
     this.hasBlockPermission = extension.hasPermission("declarativeNetRequest");
     this.hasRulesWithTabIds = false;
+    this.hasRulesWithAllowAllRequests = false;
   }
 
   get availableStaticRuleCount() {
@@ -1791,11 +1798,13 @@ class RuleManager {
     this.hasRulesWithTabIds = !!this.sessionRules.rules.find(rule => {
       return rule.condition.tabIds || rule.condition.excludedTabIds;
     });
+    this.#updateAllowAllRequestRules();
     NetworkIntegration.maybeUpdateTabIdChecker();
   }
 
   setDynamicRules(validatedDynamicRules) {
     this.dynamicRules.rules = validatedDynamicRules;
+    this.#updateAllowAllRequestRules();
   }
 
   /**
@@ -1814,6 +1823,7 @@ class RuleManager {
       );
     }
     this.enabledStaticRules = rulesets;
+    this.#updateAllowAllRequestRules();
   }
 
   getSessionRules() {
@@ -1822,6 +1832,14 @@ class RuleManager {
 
   getDynamicRules() {
     return this.dynamicRules.rules;
+  }
+
+  #updateAllowAllRequestRules() {
+    const filterAAR = rule => rule.action.type === "allowAllRequests";
+    this.hasRulesWithAllowAllRequests =
+      this.sessionRules.rules.some(filterAAR) ||
+      this.dynamicRules.rules.some(filterAAR) ||
+      this.enabledStaticRules.some(ruleset => ruleset.rules.some(filterAAR));
   }
 }
 
