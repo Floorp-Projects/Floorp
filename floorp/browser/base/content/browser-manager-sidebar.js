@@ -405,10 +405,3 @@
          }, 1250);
      })()
  }
- 
- /********************************************************* BETA ********************************************************/
-
- if(Services.prefs.prefHasUserValue("floorp.browser.note.enabled") == false){
-    Math.random(1,10) > 7 ? Services.prefs.setBoolPref("floorp.browser.note.enabled", true) : Services.prefs.setBoolPref("floorp.browser.note.enabled", false)
- }
- 

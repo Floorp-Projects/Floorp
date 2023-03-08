@@ -113,6 +113,7 @@ pref("floorp.browser.tabbar.multirow.max.row", 3);
 pref("floorp.browser.note.memos", "");
 pref("floorp.browser.note.memos.using", -1);
 pref("services.sync.prefs.sync.floorp.browser.note.memos", true);
+pref("floorp.browser.note.enabled", false);
 
 //Clock
 pref("floorp.browser.clock.enabled", false);
