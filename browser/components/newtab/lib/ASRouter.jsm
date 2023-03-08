@@ -34,7 +34,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   ASRouterTriggerListeners:
     "resource://activity-stream/lib/ASRouterTriggerListeners.jsm",
   KintoHttpClient: "resource://services-common/kinto-http-client.js",
-  RemoteImages: "resource://activity-stream/lib/RemoteImages.jsm",
   RemoteL10n: "resource://activity-stream/lib/RemoteL10n.jsm",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
@@ -721,21 +720,6 @@ class _ASRouter {
       if (!providerIDs.includes(prevProvider.id)) {
         invalidProviders.push(prevProvider.id);
       }
-    }
-
-    {
-      // If the feature IDs of the messaging-experiments provider has changed,
-      // then we need to update which features for which we are listening to
-      // changes.
-      const prevExpts = previousProviders.find(
-        p => p.id === "messaging-experiments"
-      );
-      const expts = providers.find(p => p.id === "messaging-experiments");
-
-      this._onFeatureListChanged(
-        prevExpts?.enabled ? prevExpts.featureIds : [],
-        expts?.enabled ? expts.featureIds : []
-      );
     }
 
     return this.setState(prevState => ({
@@ -2011,88 +1995,7 @@ class _ASRouter {
       return;
     }
 
-    const branch = lazy.ExperimentAPI.getActiveBranch({ slug });
-    const features = branch.features ?? [branch.feature];
-    const featureIds = features.map(feature => feature.featureId);
-
-    this._onFeaturesUpdated(...featureIds);
-
     await this.loadMessagesFromAllProviders([experimentProvider]);
-  }
-
-  /**
-   * Handle a change to the list of featureIds that the messaging-experiments
-   * provider is watching.
-   *
-   * This normally occurs when ASRouter update message providers, which happens
-   * every startup and when the messaging-experiment provider pref changes.
-   *
-   * On startup, |oldFeatures| will be an empty array and we will subscribe to
-   * everything in |newFeatures|.
-   *
-   * When the pref changes, we unsubscribe from |oldFeatures - newFeatures| and
-   * subscribe to |newFeatures - oldFeatures|. Features that are listed in both
-   * sets do not have their subscription status changed. Pref changes are mostly
-   * during unit tests.
-   *
-   * @param {string[]} oldFeatures The list of feature IDs we were previously
-   *                               listening to for new experiments.
-   * @param {string[]} newFeatures The list of feature IDs we are now listening
-   *                               to for new experiments.
-   */
-  _onFeatureListChanged(oldFeatures, newFeatures) {
-    for (const featureId of oldFeatures) {
-      if (!newFeatures.includes(featureId)) {
-        const listener = this._experimentChangedListeners.get(featureId);
-        this._experimentChangedListeners.delete(featureId);
-        lazy.NimbusFeatures[featureId].off(listener);
-      }
-    }
-
-    const newlySubscribed = [];
-
-    for (const featureId of newFeatures) {
-      if (!oldFeatures.includes(featureId)) {
-        const listener = () => this._onFeaturesUpdated(featureId);
-        this._experimentChangedListeners.set(featureId, listener);
-        lazy.NimbusFeatures[featureId].onUpdate(listener);
-
-        newlySubscribed.push(featureId);
-      }
-    }
-
-    // Check for any messages present in the newly subscribed to Nimbus features
-    // so we can prefetch their remote images (if any).
-    this._onFeaturesUpdated(...newlySubscribed);
-  }
-
-  /**
-   * Handle updated experiment features.
-   *
-   * If there are messages for the feature, RemoteImages will prefetch any
-   * images.
-   *
-   * @param {string[]} featureIds The feature IDs that have been updated.
-   */
-  _onFeaturesUpdated(...featureIds) {
-    const messages = [];
-
-    for (const featureId of featureIds) {
-      const featureAPI = lazy.NimbusFeatures[featureId];
-      // If there is no active experiment for the feature, this will return
-      // null.
-      if (lazy.ExperimentAPI.getExperimentMetaData({ featureId })) {
-        // Otherwise, getAllVariables() will return the JSON blob for the
-        // message.
-        messages.push(featureAPI.getAllVariables());
-      }
-    }
-
-    // We are not awaiting this because we want these images to load in the
-    // background.
-    if (messages.length) {
-      lazy.RemoteImages.prefetchImagesFor(messages);
-    }
   }
 
   async forcePBWindow(browser, msg) {

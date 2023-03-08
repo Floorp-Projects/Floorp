@@ -635,8 +635,6 @@
     "browser/components/newtab/lib/PrefsFeed.jsm",
   "resource://activity-stream/lib/RecommendationProvider.jsm":
     "browser/components/newtab/lib/RecommendationProvider.jsm",
-  "resource://activity-stream/lib/RemoteImages.jsm":
-    "browser/components/newtab/lib/RemoteImages.jsm",
   "resource://activity-stream/lib/RemoteL10n.jsm":
     "browser/components/newtab/lib/RemoteL10n.jsm",
   "resource://activity-stream/lib/Screenshots.jsm":
@@ -2025,8 +2023,6 @@
     "browser/components/urlbar/tests/quicksuggest/QuickSuggestTestUtils.jsm",
   "resource://testing-common/RegionTestUtils.jsm":
     "toolkit/modules/tests/xpcshell/RegionTestUtils.jsm",
-  "resource://testing-common/RemoteImagesTestUtils.jsm":
-    "browser/components/newtab/test/RemoteImagesTestUtils.jsm",
   "resource://testing-common/SearchTestUtils.jsm":
     "toolkit/components/search/tests/SearchTestUtils.jsm",
   "resource://testing-common/Sinon.jsm": "testing/modules/Sinon.jsm",
