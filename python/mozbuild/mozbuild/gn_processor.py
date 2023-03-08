@@ -243,7 +243,11 @@ def filter_gn_config(path, gn_result, sandbox_vars, input_vars, gn_target):
                     and "_FORTIFY_SOURCE" not in d
                 ]
             if spec_attr == "include_dirs":
-                spec[spec_attr] = [d for d in spec[spec_attr] if gen_path != Path(d)]
+                # Rebase outputs from an absolute path in the temp dir to a path
+                # relative to the target dir.
+                spec[spec_attr] = [
+                    d if gen_path != Path(d) else "!//gen" for d in spec[spec_attr]
+                ]
 
         gn_out["targets"][target_fullname] = spec
 
@@ -354,19 +358,22 @@ def process_gn_config(
 
         context_attrs["LOCAL_INCLUDES"] = []
         for include in spec.get("include_dirs", []):
-            include = resolve_path(include)
-            # moz.build expects all LOCAL_INCLUDES to exist, so ensure they do.
-            resolved = mozpath.abspath(mozpath.join(topsrcdir, include[1:]))
-            if not os.path.exists(resolved):
-                # GN files may refer to include dirs that are outside of the
-                # tree or we simply didn't vendor. Print a warning in this case.
-                if not resolved.endswith("gn-output/gen"):
-                    print(
-                        "Included path: '%s' does not exist, dropping include from GN "
-                        "configuration." % resolved,
-                        file=sys.stderr,
-                    )
-                continue
+            if include.startswith("!"):
+                include = "!" + resolve_path(include[1:])
+            else:
+                include = resolve_path(include)
+                # moz.build expects all LOCAL_INCLUDES to exist, so ensure they do.
+                resolved = mozpath.abspath(mozpath.join(topsrcdir, include[1:]))
+                if not os.path.exists(resolved):
+                    # GN files may refer to include dirs that are outside of the
+                    # tree or we simply didn't vendor. Print a warning in this case.
+                    if not resolved.endswith("gn-output/gen"):
+                        print(
+                            "Included path: '%s' does not exist, dropping include from GN "
+                            "configuration." % resolved,
+                            file=sys.stderr,
+                        )
+                    continue
             context_attrs["LOCAL_INCLUDES"] += [include]
 
         context_attrs["ASFLAGS"] = spec.get("asflags_mozilla", [])
