@@ -233,7 +233,9 @@ add_task(async function test_setAsDefaultPDFHandler_knownBrowser() {
 
   try {
     const pdfHandlerResult = { registered: true, knownBrowser: true };
-    sinon.stub(ShellService, "getDefaultPDFHandler").returns(pdfHandlerResult);
+    sandbox
+      .stub(ShellService, "getDefaultPDFHandler")
+      .returns(pdfHandlerResult);
 
     info("Testing setAsDefaultPDFHandler(true) when knownBrowser = true");
     ShellService.setAsDefaultPDFHandler(true);
