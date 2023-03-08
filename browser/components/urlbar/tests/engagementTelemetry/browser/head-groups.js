@@ -73,6 +73,20 @@ async function doSearchSuggestTest({ trigger, assert }) {
   await SpecialPowers.popPrefEnv();
 }
 
+async function doTailSearchSuggestTest({ trigger, assert }) {
+  const cleanup = await _useTailSuggestionsEngine();
+
+  await doTest(async browser => {
+    await openPopup("hello");
+    await selectRowByProvider("SearchSuggestions");
+
+    await trigger();
+    await assert();
+  });
+
+  await cleanup();
+}
+
 async function doTopPickTest({ trigger, assert }) {
   const cleanupQuickSuggest = await ensureQuickSuggestInit({
     // eslint-disable-next-line mozilla/valid-lazy
@@ -217,4 +231,64 @@ async function doSuggestedIndexTest({ trigger, assert }) {
   });
 
   await SpecialPowers.popPrefEnv();
+}
+
+/**
+ * Creates a search engine that returns tail suggestions and sets it as the
+ * default engine.
+ *
+ * @returns {Function}
+ *   A cleanup function that will revert the default search engine and stop http
+ *   server.
+ */
+async function _useTailSuggestionsEngine() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.search.suggest.enabled", true],
+      ["browser.urlbar.suggest.searches", true],
+      ["browser.urlbar.richSuggestions.tail", true],
+    ],
+  });
+
+  const engineName = "TailSuggestions";
+  const httpServer = new HttpServer();
+  httpServer.start(-1);
+  httpServer.registerPathHandler("/suggest", (req, resp) => {
+    const params = new URLSearchParams(req.queryString);
+    const searchStr = params.get("q");
+    const suggestions = [
+      searchStr,
+      [searchStr + "-tail"],
+      [],
+      {
+        "google:suggestdetail": [{ t: "-tail", mp: "… " }],
+      },
+    ];
+    resp.setHeader("Content-Type", "application/json", false);
+    resp.write(JSON.stringify(suggestions));
+  });
+
+  await SearchTestUtils.installSearchExtension({
+    name: engineName,
+    search_url: `http://localhost:${httpServer.identity.primaryPort}/search`,
+    suggest_url: `http://localhost:${httpServer.identity.primaryPort}/suggest`,
+    suggest_url_get_params: "?q={searchTerms}",
+    search_form: `http://localhost:${httpServer.identity.primaryPort}/search?q={searchTerms}`,
+  });
+
+  const tailEngine = Services.search.getEngineByName(engineName);
+  const originalEngine = await Services.search.getDefault();
+  Services.search.setDefault(
+    tailEngine,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
+
+  return async () => {
+    Services.search.setDefault(
+      originalEngine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
+    httpServer.stop(() => {});
+    await SpecialPowers.popPrefEnv();
+  };
 }

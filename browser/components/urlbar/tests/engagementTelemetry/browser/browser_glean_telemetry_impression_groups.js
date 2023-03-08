@@ -74,6 +74,19 @@ add_task(async function search_suggest() {
         },
       ]),
   });
+
+  await doTailSearchSuggestTest({
+    trigger: () => waitForPauseImpression(),
+    assert: () =>
+      assertImpressionTelemetry([
+        {
+          reason: "pause",
+          groups: "heuristic,search_suggest",
+          results: "search_engine,search_suggest",
+          n_results: 2,
+        },
+      ]),
+  });
 });
 
 add_task(async function top_pick() {
