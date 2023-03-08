@@ -5,7 +5,6 @@
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Management: "resource://gre/modules/Extension.jsm",
-  XPIProvider: "resource://gre/modules/addons/XPIProvider.jsm",
 });
 
 AddonTestUtils.init(this);
@@ -101,13 +100,99 @@ add_task(async function test_wait_addons_startup_before_granting_quit() {
   await promiseShutdownManager();
 
   info("Test early shutdown while enabled addons are still being started");
-
-  Management.on("startup", (_evt, extension) => {
+  const { XPIProvider } = ChromeUtils.import(
+    "resource://gre/modules/addons/XPIProvider.jsm"
+  );
+  function listener(_evt, extension) {
     ok(
       !XPIProvider._closing,
       `Unxpected addon startup for "${extension.id}" after XPIProvider have been closed and shutting down`
     );
-  });
+  }
+  Management.on("startup", listener);
   promiseStartupManager();
   await promiseShutdownManager();
+
+  info("Uninstall test extensions");
+  Management.off("startup", listener);
+  await promiseStartupManager();
+  await Promise.all(extensions.map(ext => ext.awaitStartup));
+  await Promise.all(
+    extensions.map(ext => {
+      return AddonManager.getAddonByID(ext.id).then(addon =>
+        addon?.uninstall()
+      );
+    })
+  );
+  await promiseShutdownManager();
+});
+
+// Regression test for Bug 1799421.
+add_task(async function test_late_XPIDB_load_rejected() {
+  await AddonTestUtils.promiseStartupManager();
+
+  // Mock a late XPIDB load and expect to be rejected.
+  const { XPIProvider } = ChromeUtils.import(
+    "resource://gre/modules/addons/XPIProvider.jsm"
+  );
+  const { XPIDatabase } = ChromeUtils.import(
+    "resource://gre/modules/addons/XPIDatabase.jsm"
+  );
+
+  XPIProvider._closing = true;
+  XPIDatabase._dbPromise = null;
+  Assert.equal(
+    await XPIDatabase.getAddonByID("test@addon"),
+    null,
+    "Expect a late getAddonByID call to be sucessfully resolved to null"
+  );
+
+  await Assert.rejects(
+    XPIDatabase._dbPromise,
+    /XPIDatabase.asyncLoadDB attempt after XPIProvider shutdown/,
+    "Expect XPIDatebase._dbPromise to be set to the expected rejected promise"
+  );
+  // Cleanup AOM mocked status and shutdown AOM before exit test.
+  XPIProvider._closing = false;
+  XPIDatabase._dbPromise = null;
+  await AddonTestUtils.promiseShutdownManager();
+});
+
+// Regression test for Bug 1799421.
+//
+// NOTE: this test calls Services.startup.advanceShutdownPhase
+// with SHUTDOWN_PHASE_APPSHUTDOWNCONFIRMED to mock the scenario
+// and so using promiseStartupManager/promiseShutdownManager will
+// fail to bring the AddonManager back into a working status
+// because it would be detected as too late on the shutdown path.
+add_task(async function test_late_bootstrapscope_startup_rejected() {
+  await AddonTestUtils.promiseStartupManager();
+
+  const extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      browser_specific_settings: {
+        gecko: { id: "test@addon" },
+      },
+    },
+  });
+
+  await extension.startup();
+  const { addon } = extension;
+  await addon.disable();
+  // Mock a shutdown which already got to shutdown confirmed
+  // and expect a rejection from trying to startup the BootstrapScope
+  // too late on shutdown.
+  Services.startup.advanceShutdownPhase(
+    Services.startup.SHUTDOWN_PHASE_APPSHUTDOWNCONFIRMED
+  );
+
+  await Assert.rejects(
+    addon.enable(),
+    /XPIProvider can't start bootstrap scope for test@addon after shutdown was already granted/,
+    "Got the expected rejection on trying to enable the extension after shutdown granted"
+  );
+
+  info("Cleanup mocked late bootstrap scope before exit test");
+  await AddonTestUtils.promiseShutdownManager();
 });

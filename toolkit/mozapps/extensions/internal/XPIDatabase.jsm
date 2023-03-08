@@ -1995,11 +1995,28 @@ const XPIDatabase = {
    *        (if false, caller is XPIProvider.checkForChanges() which will rebuild)
    * @returns {Promise<AddonDB>}
    *        Resolves to the Map of loaded JSON data stored in
-   *        this.addonDB; never rejects.
+   *        this.addonDB; rejects in case of shutdown.
    */
   asyncLoadDB(aRebuildOnError = true) {
     // Already started (and possibly finished) loading
     if (this._dbPromise) {
+      return this._dbPromise;
+    }
+
+    if (lazy.XPIProvider._closing) {
+      // use an Error here so we get a stack trace.
+      let err = new Error(
+        "XPIDatabase.asyncLoadDB attempt after XPIProvider shutdown."
+      );
+      logger.warn("Fail to load AddonDB: ${error}", { error: err });
+      lazy.AddonManagerPrivate.recordSimpleMeasure(
+        "XPIDB_late_load",
+        Log.stackTrace(err)
+      );
+      this._dbPromise = Promise.reject(err);
+
+      lazy.XPIInternal.resolveDBReady(this._dbPromise);
+
       return this._dbPromise;
     }
 
