@@ -78,6 +78,33 @@
         "IOUtils::remove can recursively remove a directory"
       );
     });
+
+    if (Services.appinfo.OS === "WINNT") {
+      add_task(async function test_remove_retry_readonly() {
+
+        const tmpDir = PathUtils.join(PathUtils.tempDir, "test_ioutils_remove_retry_readonly.tmp.d");
+        const path = PathUtils.join(tmpDir, "file.txt");
+
+        await createDir(tmpDir);
+        await createFile(path, "");
+
+        await IOUtils.setWindowsAttributes(path, { readOnly: true });
+
+        await Assert.rejects(
+          IOUtils.remove(path),
+          /NotAllowedError/,
+          "Cannot remove a readonly file by default"
+        );
+
+        Assert.ok(await fileExists(path), "File should still exist");
+
+        await IOUtils.remove(path, { retryReadonly: true });
+
+        Assert.ok(!await fileExists(path), "File should not exist");
+
+        await IOUtils.remove(tmpDir);
+      });
+    }
   </script>
 </head>
 
