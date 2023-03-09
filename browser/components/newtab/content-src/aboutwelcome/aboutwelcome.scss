@@ -1107,19 +1107,25 @@ html {
     color: #5B5B66;
     font-weight: 400;
     font-size: 14px;
+    text-align: initial;
     transition: var(--transition);
     z-index: 1;
 
     .checkbox-container {
       display: flex;
       margin-bottom: 16px;
-      align-items: center;
     }
   }
 
   @media (prefers-color-scheme: dark) {
     .multi-select-container {
       color: #CFCFD8;
+    }
+  }
+
+  @media only screen and (max-width: 800px) {
+    .multi-select-container {
+      padding: 0 30px;
     }
   }
 
