@@ -70,9 +70,11 @@ class WallpaperSettingsFragment : Fragment() {
                             wallpaperUseCases.loadThumbnail(it)
                         },
                         onSelectWallpaper = {
-                            coroutineScope.launch {
-                                val result = wallpaperUseCases.selectWallpaper(it)
-                                onWallpaperSelected(it, result, requireView())
+                            if (it != currentWallpaper) {
+                                coroutineScope.launch {
+                                    val result = wallpaperUseCases.selectWallpaper(it)
+                                    onWallpaperSelected(it, result, requireView())
+                                }
                             }
                         },
                         onLearnMoreClick = { url, collectionName ->
