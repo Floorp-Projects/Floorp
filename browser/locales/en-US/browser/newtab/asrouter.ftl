@@ -207,11 +207,26 @@ colorways-cfr-header-today = Independent Voices colorways expire today
 
 ## Cookie Banner Handling CFR
 
-cfr-cbh-header = Allow { -brand-short-name } to reject cookie banners?
-cfr-cbh-body = { -brand-short-name } can automatically reject many cookie banner requests.
-cfr-cbh-confirm-button = Reject cookie banners
+# Alternate headline for localization: "See fewer cookie requests"
+cfr-cookiebanner-header = Cookie banners begone!
+cfr-cookiebanner-body = Allow { -brand-short-name } to automatically reject all cookie banner requests when possible.
+cfr-cookiebanner-accept-button-v2 = Reject Requests
   .accesskey = R
-cfr-cbh-dismiss-button = Not now
+cfr-cookiebanner-reject-button = Not Now
+  .accesskey = N
+
+cfr-cookiebanner-header-variant-1 = See fewer cookie pop-ups
+cfr-cookiebanner-body-variant-1 = Let { -brand-short-name } automatically answer cookie pop-ups for you so you can get back to distraction-free browsing. { -brand-short-name } will reject all requests if possible.
+cfr-cookiebanner-accept-button-variant-1 = Dismiss Pop-ups
+  .accesskey = D
+cfr-cookiebanner-reject-button-variant-1 = No Thanks
+  .accesskey = N
+
+cfr-cookiebanner-header-variant-2 = Cookie Banner Reduction
+cfr-cookiebanner-body-variant-2 = Reduce the amount of cookie banners you see by allowing { -brand-short-name } to decline a website’s cookie consent request if possible.
+cfr-cookiebanner-accept-button-variant-2 = Allow
+  .accesskey = A
+cfr-cookiebanner-reject-button-variant-2 = Not Now
   .accesskey = N
 
 ## These strings are used in the Fox doodle Pin/set default spotlights

@@ -579,12 +579,12 @@
           "properties": {
             "type": {
               "type": "string",
-              "enum": ["RELOAD_BROWSER"]
+              "enum": ["ENABLE_CBH"]
             }
           },
           "required": ["type"],
           "additionalProperties": false,
-          "description": "Message action that reloads the current browser"
+          "description": "Message action that enables the cookie banner handling feature"
         }
       ]
     }
