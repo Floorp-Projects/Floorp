@@ -55,6 +55,18 @@ const L10N = new Localization([
 const HOMEPAGE_PREF = "browser.startup.homepage";
 const NEWTAB_PREF = "browser.newtabpage.enabled";
 
+/**
+ * return the retargeting delay in days for the cookiebanner nimbus experiment
+ */
+const cbhRetargetingDelay = () => {
+  const featureVal = lazy.NimbusFeatures.cookieBannerHandling.getVariable(
+    "retargetingDelayInDays"
+  );
+
+  if (!featureVal) return 1;
+  return featureVal;
+};
+
 const BASE_MESSAGES = () => [
   {
     id: "FXA_ACCOUNTS_BADGE",
@@ -1018,58 +1030,24 @@ const BASE_MESSAGES = () => [
       icon_class: "cfr-doorhanger-small-icon",
       persistent_doorhanger: true,
       heading_text: {
-        string_id: "cfr-cbh-header",
+        string_id: "cfr-cookiebanner-header",
       },
       text: {
-        string_id: "cfr-cbh-body",
+        string_id: "cfr-cookiebanner-body",
       },
       buttons: {
         primary: {
           label: {
-            string_id: "cfr-cbh-confirm-button",
+            string_id: "cfr-cookiebanner-accept-button-v2",
           },
           action: {
-            type: "MULTI_ACTION",
-            data: {
-              actions: [
-                {
-                  type: "SET_PREF",
-                  data: {
-                    pref: {
-                      name: "cookiebanners.service.mode",
-                      value: 1,
-                    },
-                  },
-                },
-                {
-                  type: "SET_PREF",
-                  data: {
-                    pref: {
-                      name: "cookiebanners.service.mode.privateBrowsing",
-                      value: 1,
-                    },
-                  },
-                },
-                {
-                  type: "SET_PREF",
-                  data: {
-                    pref: {
-                      name: "cookiebanners.service.detectOnly",
-                      value: false,
-                    },
-                  },
-                },
-                {
-                  type: "RELOAD_BROWSER",
-                },
-              ],
-            },
+            type: "ENABLE_CBH",
           },
         },
         secondary: [
           {
             label: {
-              string_id: "cfr-cbh-dismiss-button",
+              string_id: "cfr-cookiebanner-reject-button",
             },
             action: {
               type: "CANCEL",
@@ -1080,13 +1058,109 @@ const BASE_MESSAGES = () => [
       skip_address_bar_notifier: true,
     },
     frequency: {
-      custom: [{ period: 24 * 60 * 60 * 1000 * 2, cap: 1 }],
+      custom: [{ period: 24 * 60 * 60 * 1000 * cbhRetargetingDelay(), cap: 1 }],
       lifetime: 2,
     },
     trigger: {
       id: "cookieBannerDetected",
     },
-    targeting: `'cookiebanners.ui.desktop.enabled'|preferenceValue == true && 'cookiebanners.service.detectOnly'|preferenceValue == true`,
+    targeting: `'cookiebanners.ui.desktop.enabled'|preferenceValue == true && 'cookiebanners.service.detectOnly'|preferenceValue == true && 'cookiebanners.ui.desktop.cfrVariant'|preferenceValue == 1`,
+  },
+  {
+    id: "CFR_COOKIEBANNER_VARIANT_A",
+    groups: ["cfr"],
+    template: "cfr_doorhanger",
+    content: {
+      bucket_id: "CFR_COOKIEBANNER",
+      anchor_id: "tracking-protection-icon-container",
+      layout: "icon_and_message",
+      icon: "chrome://browser/skin/controlcenter/3rdpartycookies.svg",
+      icon_class: "cfr-doorhanger-small-icon",
+      persistent_doorhanger: true,
+      heading_text: {
+        string_id: "cfr-cookiebanner-header-variant-1",
+      },
+      text: {
+        string_id: "cfr-cookiebanner-body-variant-1",
+      },
+      buttons: {
+        primary: {
+          label: {
+            string_id: "cfr-cookiebanner-accept-button-variant-1",
+          },
+          action: {
+            type: "ENABLE_CBH",
+          },
+        },
+        secondary: [
+          {
+            label: {
+              string_id: "cfr-cookiebanner-reject-button-variant-1",
+            },
+            action: {
+              type: "CANCEL",
+            },
+          },
+        ],
+      },
+      skip_address_bar_notifier: true,
+    },
+    frequency: {
+      custom: [{ period: 24 * 60 * 60 * 1000 * cbhRetargetingDelay(), cap: 1 }],
+      lifetime: 2,
+    },
+    trigger: {
+      id: "cookieBannerDetected",
+    },
+    targeting: `'cookiebanners.ui.desktop.enabled'|preferenceValue == true && 'cookiebanners.service.detectOnly'|preferenceValue == true && 'cookiebanners.ui.desktop.cfrVariant'|preferenceValue == 2`,
+  },
+  {
+    id: "CFR_COOKIEBANNER_VARIANT_B",
+    groups: ["cfr"],
+    template: "cfr_doorhanger",
+    content: {
+      bucket_id: "CFR_COOKIEBANNER",
+      anchor_id: "tracking-protection-icon-container",
+      layout: "icon_and_message",
+      icon: "chrome://browser/skin/controlcenter/3rdpartycookies.svg",
+      icon_class: "cfr-doorhanger-small-icon",
+      persistent_doorhanger: true,
+      heading_text: {
+        string_id: "cfr-cookiebanner-header-variant-2",
+      },
+      text: {
+        string_id: "cfr-cookiebanner-body-variant-2",
+      },
+      buttons: {
+        primary: {
+          label: {
+            string_id: "cfr-cookiebanner-accept-button-variant-2",
+          },
+          action: {
+            type: "ENABLE_CBH",
+          },
+        },
+        secondary: [
+          {
+            label: {
+              string_id: "cfr-cookiebanner-reject-button-variant-2",
+            },
+            action: {
+              type: "CANCEL",
+            },
+          },
+        ],
+      },
+      skip_address_bar_notifier: true,
+    },
+    frequency: {
+      custom: [{ period: 24 * 60 * 60 * 1000 * cbhRetargetingDelay(), cap: 1 }],
+      lifetime: 2,
+    },
+    trigger: {
+      id: "cookieBannerDetected",
+    },
+    targeting: `'cookiebanners.ui.desktop.enabled'|preferenceValue == true && 'cookiebanners.service.detectOnly'|preferenceValue == true && 'cookiebanners.ui.desktop.cfrVariant'|preferenceValue == 3`,
   },
 ];
 
