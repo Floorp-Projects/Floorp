@@ -64,7 +64,10 @@ set -eEo pipefail
 if [ -f $STATE_DIR/rebase_resume_state ]; then
   source $STATE_DIR/rebase_resume_state
 else
-MOZ_TOP_FF=`hg log -r . -T"{node|short}"`
+
+if [ "x" == "x$MOZ_TOP_FF" ]; then
+  MOZ_TOP_FF=`hg log -r . -T"{node|short}"`
+fi
 
 ERROR_HELP=$"
 An error here is likely because no revision for central is found.
