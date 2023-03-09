@@ -236,6 +236,15 @@ class TextLeafPoint final {
   // on given direction.
   TextLeafPoint NeighborLeafPoint(nsDirection aDirection, bool aIsEditable,
                                   bool aIgnoreListItemMarker) const;
+
+  /**
+   * This function assumes mAcc is a LocalAccessible.
+   * It iterates the continuations of mAcc's primary frame until it locates
+   * the continuation containing mOffset (a rendered offset). It then uses
+   * GetScreenRectInAppUnits to compute screen coords for the frame, resizing
+   * such that the resulting rect contains only one character.
+   */
+  LayoutDeviceIntRect ComputeBoundsFromFrame() const;
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(TextLeafPoint::BoundaryFlags)
