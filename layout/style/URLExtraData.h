@@ -13,7 +13,6 @@
 
 #include "mozilla/StaticPtr.h"
 #include "mozilla/UserAgentStyleSheetID.h"
-#include "mozilla/dom/URL.h"
 #include "nsCOMPtr.h"
 #include "nsIPrincipal.h"
 #include "nsIReferrerInfo.h"
@@ -22,9 +21,7 @@
 namespace mozilla {
 
 struct URLExtraData {
-  static bool ChromeRulesEnabled(nsIURI* aURI) {
-    return aURI && (aURI->SchemeIs("chrome") || aURI->SchemeIs("resource"));
-  }
+  static bool ChromeRulesEnabled(nsIURI* aURI);
 
   URLExtraData(already_AddRefed<nsIURI> aBaseURI,
                already_AddRefed<nsIReferrerInfo> aReferrerInfo,

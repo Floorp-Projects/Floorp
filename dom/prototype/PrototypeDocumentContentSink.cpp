@@ -8,6 +8,7 @@
 #include "mozilla/dom/PrototypeDocumentContentSink.h"
 #include "nsIParser.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/URL.h"
 #include "nsIContent.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
