@@ -328,10 +328,7 @@ jobs:
           type: decision-task
           treeherder-symbol: perftest-auto
           target-tasks-method: perftest-on-autoland
-      run-on-projects:
-          - autoland
-      when:
-          - {hour: 4, minute: 00}
+      when: []
 
     - name: scriptworker-canary
       job:
