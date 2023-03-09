@@ -8,62 +8,43 @@ const { ASRouter } = ChromeUtils.import(
 );
 
 let sendTriggerMessageSpy;
+let triggerMatch;
 
 add_setup(function() {
   let sandbox = sinon.createSandbox();
   sendTriggerMessageSpy = sandbox.spy(ASRouter, "sendTriggerMessage");
+  triggerMatch = sandbox.match({ id: "defaultBrowserCheck" });
 
   registerCleanupFunction(() => {
     sandbox.restore();
   });
 });
 
-add_task(async function test_newtab_trigger() {
+async function testPageTrigger(url, waitForLoad, expectedTrigger) {
   sendTriggerMessageSpy.resetHistory();
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    "about:newtab",
-    false // waitForLoad; about:newtab is cached so this would never resolve
+    url,
+    waitForLoad
   );
 
   await BrowserTestUtils.waitForCondition(
-    () => sendTriggerMessageSpy.called,
-    "After about:newtab finishes loading"
+    () => sendTriggerMessageSpy.calledWith(expectedTrigger),
+    `After ${url} finishes loading`
+  );
+  Assert.ok(
+    sendTriggerMessageSpy.calledWith(expectedTrigger),
+    `Found the expected ${expectedTrigger.id} trigger`
   );
 
-  Assert.equal(
-    sendTriggerMessageSpy.firstCall.args[0].id,
-    "defaultBrowserCheck",
-    "Found the expected trigger"
-  );
   BrowserTestUtils.removeTab(tab);
   sendTriggerMessageSpy.resetHistory();
+}
+
+add_task(function test_newtab_trigger() {
+  return testPageTrigger("about:newtab", false, triggerMatch);
 });
 
-add_task(async function test_abouthome_trigger() {
-  sendTriggerMessageSpy.resetHistory();
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home");
-
-  await BrowserTestUtils.waitForCondition(
-    () => sendTriggerMessageSpy.called,
-    "After about:newtab finishes loading"
-  );
-
-  const { callCount } = ASRouter.sendTriggerMessage;
-  ok(callCount >= 1, `sendTriggerMessage was called ${callCount} time(s)`);
-  let defaultCheckCall;
-  for (let i = 0; i < callCount; i++) {
-    const call = sendTriggerMessageSpy.getCall(i);
-    if (call.args[0].id === "defaultBrowserCheck") {
-      defaultCheckCall = call;
-    }
-  }
-
-  Assert.equal(
-    defaultCheckCall.args[0].id,
-    "defaultBrowserCheck",
-    "Found the expected trigger"
-  );
-  BrowserTestUtils.removeTab(tab);
-  sendTriggerMessageSpy.resetHistory();
+add_task(function test_abouthome_trigger() {
+  return testPageTrigger("about:home", true, triggerMatch);
 });

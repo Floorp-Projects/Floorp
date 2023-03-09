@@ -910,7 +910,26 @@ class _ASRouter {
       await this.setState(this._removePreviewEndpoint(newState));
       await this.cleanupImpressions();
     }
+
+    await this._fireMessagesLoadedTrigger();
+
     return this.state;
+  }
+
+  async _fireMessagesLoadedTrigger() {
+    const win = Services.wm.getMostRecentBrowserWindow() ?? null;
+    const browser = win?.gBrowser?.selectedBrowser ?? null;
+    // pass skipLoadingMessages to avoid infinite recursion. pass browser and
+    // window into context so messages that may need a window or browser can
+    // target accordingly.
+    await this.sendTriggerMessage(
+      {
+        id: "messagesLoaded",
+        browser,
+        context: { browser, browserWindow: win },
+      },
+      true
+    );
   }
 
   async _maybeUpdateL10nAttachment() {
@@ -1920,9 +1939,31 @@ class _ASRouter {
     );
   }
 
-  async sendTriggerMessage({ tabId, browser, ...trigger }) {
-    await this.loadMessagesFromAllProviders();
-
+  /**
+   * Fire a trigger, look for a matching message, and route it to the
+   * appropriate message handler/messaging surface.
+   * @param {object} trigger
+   * @param {string} trigger.id the name of the trigger, e.g. "openURL"
+   * @param {object} [trigger.param] an object with host, url, type, etc. keys
+   *   whose values are used to match against the message's trigger params
+   * @param {object} [trigger.context] an object with data about the source of
+   *   the trigger, matched against the message's targeting expression
+   * @param {MozBrowser} trigger.browser the browser to route messages to
+   * @param {number} [trigger.tabId] identifier used only for exposure testing
+   * @param {boolean} [skipLoadingMessages=false] pass true to skip looking for
+   *   new messages. use when calling from loadMessagesFromAllProviders to avoid
+   *   recursion. we call this from loadMessagesFromAllProviders in order to
+   *   fire the messagesLoaded trigger.
+   * @returns {Promise<object>}
+   * @resolves {message} an object with the routed message
+   */
+  async sendTriggerMessage(
+    { tabId, browser, ...trigger },
+    skipLoadingMessages = false
+  ) {
+    if (!skipLoadingMessages) {
+      await this.loadMessagesFromAllProviders();
+    }
     const telemetryObject = { tabId };
     TelemetryStopwatch.start("MS_MESSAGE_REQUEST_TIME_MS", telemetryObject);
     // Return all the messages so that it can record the Reach event
