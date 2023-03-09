@@ -26,6 +26,7 @@ import org.mozilla.fenix.messaging.FenixMessageSurfaceId
 import org.mozilla.fenix.nimbus.OnboardingPanel
 import org.mozilla.fenix.onboarding.HomeCFRPresenter
 import org.mozilla.fenix.onboarding.OnboardingState
+import org.mozilla.fenix.onboarding.view.OnboardingAdapterItem
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.nimbus.Onboarding as OnboardingConfig
 
@@ -133,25 +134,25 @@ private fun privateModeAdapterItems() = listOf(AdapterItem.PrivateBrowsingDescri
 private fun onboardingAdapterItems(
     onboardingState: OnboardingState,
     onboardingConfig: OnboardingConfig,
-): List<AdapterItem> {
-    val items: MutableList<AdapterItem> = mutableListOf(AdapterItem.OnboardingHeader)
+): List<OnboardingAdapterItem> {
+    val items: MutableList<OnboardingAdapterItem> = mutableListOf(OnboardingAdapterItem.OnboardingHeader)
 
     onboardingConfig.order.forEach {
         when (it) {
-            OnboardingPanel.THEMES -> items.add(AdapterItem.OnboardingThemePicker)
-            OnboardingPanel.TOOLBAR_PLACEMENT -> items.add(AdapterItem.OnboardingToolbarPositionPicker)
+            OnboardingPanel.THEMES -> items.add(OnboardingAdapterItem.OnboardingThemePicker)
+            OnboardingPanel.TOOLBAR_PLACEMENT -> items.add(OnboardingAdapterItem.OnboardingToolbarPositionPicker)
             // Customize FxA items based on where we are with the account state:
             OnboardingPanel.SYNC -> if (onboardingState == OnboardingState.SignedOutNoAutoSignIn) {
-                items.add(AdapterItem.OnboardingManualSignIn)
+                items.add(OnboardingAdapterItem.OnboardingManualSignIn)
             }
-            OnboardingPanel.TCP -> items.add(AdapterItem.OnboardingTrackingProtection)
-            OnboardingPanel.PRIVACY_NOTICE -> items.add(AdapterItem.OnboardingPrivacyNotice)
+            OnboardingPanel.TCP -> items.add(OnboardingAdapterItem.OnboardingTrackingProtection)
+            OnboardingPanel.PRIVACY_NOTICE -> items.add(OnboardingAdapterItem.OnboardingPrivacyNotice)
         }
     }
     items.addAll(
         listOf(
-            AdapterItem.OnboardingFinish,
-            AdapterItem.BottomSpacer,
+            OnboardingAdapterItem.OnboardingFinish,
+            OnboardingAdapterItem.BottomSpacer,
         ),
     )
 
