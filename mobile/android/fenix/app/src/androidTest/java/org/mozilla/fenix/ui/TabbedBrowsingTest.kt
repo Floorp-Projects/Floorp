@@ -352,7 +352,7 @@ class TabbedBrowsingTest {
             verifyFocusedNavigationToolbar()
             // dismiss search dialog
             homeScreen { }.pressBack()
-            verifyPrivateSessionMessage()
+            verifyCommonMythsLink()
             verifyNavigationToolbar()
         }
         navigationToolbar {

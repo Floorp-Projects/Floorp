@@ -93,6 +93,13 @@ class HomeScreenRobot {
     fun verifyFocusedNavigationToolbar() = assertFocusedNavigationToolbar()
     fun verifyHomeScreen() = assertItemWithResIdExists(homeScreen)
 
+    fun verifyPrivateBrowsingHomeScreen() {
+        verifyHomeScreenAppBarItems()
+        assertItemContainingTextExists(itemContainingText(privateSessionMessage))
+        verifyCommonMythsLink()
+        verifyNavigationToolbarItems()
+    }
+
     fun verifyHomeScreenAppBarItems() =
         assertItemWithResIdExists(homeScreen, privateBrowsingButton, homepageWordmark)
 
@@ -182,7 +189,7 @@ class HomeScreenRobot {
         assertItemContainingTextExists(conclusionHeader)
     }
 
-    fun verifyNavigationToolbarItems(numberOfOpenTabs: String) {
+    fun verifyNavigationToolbarItems(numberOfOpenTabs: String = "0") {
         assertItemWithResIdExists(navigationToolbar, menuButton)
         assertItemWithResIdAndTextExists(tabCounter(numberOfOpenTabs))
     }
@@ -266,7 +273,8 @@ class HomeScreenRobot {
             .onNodeWithText(getStringResource(R.string.onboarding_home_skip_button))
             .performClick()
 
-    fun verifyPrivateSessionMessage() = assertPrivateSessionMessage()
+    fun verifyCommonMythsLink() =
+        assertItemContainingTextExists(itemContainingText(getStringResource(R.string.private_browsing_common_myths)))
 
     fun verifyExistingTopSitesList() = assertExistingTopSitesList()
     fun verifyNotExistingTopSitesList(title: String) = assertNotExistingTopSitesList(title)
@@ -891,16 +899,6 @@ private fun verifySearchEngineIcon(searchEngineName: String) {
         ?: throw AssertionError("No search engine with name $searchEngineName")
     verifySearchEngineIcon(defaultSearchEngine.icon, defaultSearchEngine.name)
 }
-
-private fun assertPrivateSessionMessage() =
-    assertTrue(
-        mDevice.findObject(
-            UiSelector()
-                .textContains(
-                    getStringResource(R.string.private_browsing_common_myths),
-                ),
-        ).waitForExists(waitingTime),
-    )
 
 private fun collectionTitle(title: String, rule: ComposeTestRule) =
     rule.onNode(hasText(title))

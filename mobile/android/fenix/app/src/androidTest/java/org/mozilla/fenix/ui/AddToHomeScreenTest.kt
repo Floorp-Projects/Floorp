@@ -86,7 +86,7 @@ class AddToHomeScreenTest {
         searchScreen {
             verifySearchView()
         }.dismissSearchBar {
-            verifyPrivateSessionMessage()
+            verifyCommonMythsLink()
         }
     }
 

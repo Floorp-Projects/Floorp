@@ -130,7 +130,7 @@ class CrashReportingTest {
             verifyExistingOpenTabs(secondWebPage.title)
         }.closeTabDrawer {
         }.goToHomescreen {
-            verifyPrivateSessionMessage()
+            verifyCommonMythsLink()
         }.openThreeDotMenu {
             verifySettingsButton()
         }
