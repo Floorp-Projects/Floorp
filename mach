@@ -6,7 +6,11 @@
 import os
 import platform
 import sys
+import subprocess
 from textwrap import dedent
+
+MIN_PYTHON_VERSION = (3, 7)
+MAX_PYTHON_VERSION_TO_CONSIDER = (3, 11)
 
 
 def load_mach(dir_path, mach_path):
@@ -34,12 +38,39 @@ def check_and_get_mach(dir_path):
     return None
 
 
+def try_alternate_python3_executables(args):
+    for i in range(MIN_PYTHON_VERSION[1], MAX_PYTHON_VERSION_TO_CONSIDER[1] + 1):
+        try:
+            potential_python_binary = f"python3.{i}"
+            if os.name == 'nt':
+                potential_python_binary += ".exe"
+
+            out = subprocess.run(
+                [potential_python_binary, "--version"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                encoding="UTF-8")
+
+            binary_minor_version = int(out.stdout[9:11].strip("."))
+
+            if binary_minor_version >= MIN_PYTHON_VERSION[1]:
+                print(f"We found '{potential_python_binary}' and will attempt to re-run Mach with it.")
+                os.execvp(potential_python_binary, [potential_python_binary] + ["mach"] + args)
+
+        except Exception:
+            # We don't really care what goes wrong, just don't let it bubble up
+            # If we can't successfully launch with a different python3 binary
+            # we will just print the normal help messages.
+            pass
+
+
 def main(args):
     # Ensure we are running Python 3.7+. We run this check as soon as
     # possible to avoid a cryptic import/usage error.
-    if sys.version_info < (3, 7):
-        print("Python 3.7+ is required to run mach.")
-        print("You are running Python {0}".format(platform.python_version()))
+    if sys.version_info < MIN_PYTHON_VERSION:
+        print(f"Python {MIN_PYTHON_VERSION[0]}.{MIN_PYTHON_VERSION[1]}+ is required to run mach.")
+        print("You are running Mach with Python {0}".format(platform.python_version()))
+        try_alternate_python3_executables(args)
         if sys.platform.startswith("linux"):
             print(dedent("""
             See https://firefox-source-docs.mozilla.org/setup/linux_build.html#installingpython
