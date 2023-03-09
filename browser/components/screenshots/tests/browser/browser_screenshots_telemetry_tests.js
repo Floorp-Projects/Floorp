@@ -43,6 +43,14 @@ const CONTENT_EVENTS = [
 ];
 
 add_task(async function test_started_and_canceled_events() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.quickactions.enabled", true],
+      ["browser.urlbar.suggest.quickactions", true],
+      ["browser.urlbar.shortcuts.quickactions", true],
+    ],
+  });
+
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
