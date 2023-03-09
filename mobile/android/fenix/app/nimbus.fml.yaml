@@ -105,8 +105,7 @@ features:
           {
             "feature-ui": 0,
             "feature-setting-value": 0,
-            "dialog-re-engage-time": 4,
-            "dialog-text-variant": 0,
+            "dialog-re-engage-time": 4
           }
     defaults:
       - channel: developer
@@ -114,8 +113,7 @@ features:
           "sections-enabled": {
             "feature-ui": 1,
             "feature-setting-value": 0,
-            "dialog-re-engage-time": 4,
-            "dialog-text-variant": 0,
+            "dialog-re-engage-time": 4
           }
         }
       - channel: nightly
@@ -123,8 +121,7 @@ features:
           "sections-enabled": {
             "feature-ui": 1,
             "feature-setting-value": 0,
-            "dialog-re-engage-time": 4,
-            "dialog-text-variant": 0,
+            "dialog-re-engage-time": 4
           }
         }
   unified-search:
@@ -244,10 +241,6 @@ types:
           description: An integer indicating the number of hours that needs to happen before
             the re-engagement dialog shows again since the last seen, for example if set to 4
             that means if the users has seen the dialog, it will see it 4 hours later.
-        dialog-text-variant:
-          description: An integer from 0 to 2, indicating which text variant should be used on the re-engagement dialog.
-            0 to indicate the variant control should be used, 1 indicates the variant 1 should be used,
-            2 indicates the variant 2 should be used, each variant can be found in the mockups for cookie banner handling.
     OnboardingPanel:
       description: The types of onboarding panels in the onboarding page
       variants:

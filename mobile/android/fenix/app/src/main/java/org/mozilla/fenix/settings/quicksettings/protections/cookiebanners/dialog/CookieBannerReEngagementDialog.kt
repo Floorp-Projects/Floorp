@@ -36,12 +36,27 @@ class CookieBannerReEngagementDialog : DialogFragment() {
 
         setContent {
             FirefoxTheme {
-                val cookieBannerDialogSelectedVariant =
-                    CookieBannerReEngagementDialogUtils.getCookieBannerDialogVariants(requireContext())
+                val title =
+                    context.getString(
+                        R.string.reduce_cookie_banner_dialog_title,
+                        context.getString(R.string.app_name),
+                    )
+
+                val message =
+                    context.getString(
+                        R.string.reduce_cookie_banner_dialog_body,
+                        context.getString(R.string.app_name),
+                    )
+
+                val allowButtonText =
+                    context.getString(
+                        R.string.reduce_cookie_banner_dialog_change_setting_button,
+                    )
+
                 CookieBannerReEngagementDialogCompose(
-                    dialogTitle = cookieBannerDialogSelectedVariant.title,
-                    dialogText = cookieBannerDialogSelectedVariant.message,
-                    allowButtonText = cookieBannerDialogSelectedVariant.positiveTextButton,
+                    dialogTitle = title,
+                    dialogText = message,
+                    allowButtonText = allowButtonText,
                     declineButtonText = getString(R.string.reduce_cookie_banner_dialog_not_now_button),
                     onAllowButtonClicked = {
                         CookieBanners.allowReEngagementDialog.record(NoExtras())
