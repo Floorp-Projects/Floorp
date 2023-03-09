@@ -13,8 +13,6 @@
 #include <asm/ioctl.h>
 #include <dlfcn.h>
 #include <fcntl.h>
-#include <gdk/gdkwayland.h>
-#include <gdk/gdkx.h>
 #include <libdrm/drm_fourcc.h>
 #include <linux/types.h>
 #include <spa/param/video/format-utils.h>
@@ -333,12 +331,8 @@ EglDmaBuf::EglDmaBuf() {
     return;
   }
 
-  if (GDK_IS_WAYLAND_DISPLAY(gdk_display_get_default()))
-    egl_.display = EglGetPlatformDisplay(EGL_PLATFORM_WAYLAND_KHR,
-                                         (void*)EGL_DEFAULT_DISPLAY, nullptr);
-  else if (GDK_IS_X11_DISPLAY(gdk_display_get_default()))
-    egl_.display = EglGetPlatformDisplay(EGL_PLATFORM_X11_KHR,
-                                         (void*)EGL_DEFAULT_DISPLAY, nullptr);
+  egl_.display = EglGetPlatformDisplay(EGL_PLATFORM_WAYLAND_KHR,
+                                       (void*)EGL_DEFAULT_DISPLAY, nullptr);
 
   if (egl_.display == EGL_NO_DISPLAY) {
     RTC_LOG(LS_ERROR) << "Failed to obtain default EGL display: "
