@@ -4,19 +4,14 @@
 
 // Constants
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { E10SUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/E10SUtils.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
+import { E10SUtils } from "resource://gre/modules/E10SUtils.sys.mjs";
 
 const DIALOG_URL_APP_CHOOSER =
   "chrome://mozapps/content/handling/appChooser.xhtml";
 const DIALOG_URL_PERMISSION =
   "chrome://mozapps/content/handling/permissionDialog.xhtml";
-
-var EXPORTED_SYMBOLS = ["nsContentDispatchChooser"];
 
 const gPrefs = {};
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -29,7 +24,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 const PROTOCOL_HANDLER_OPEN_PERM_KEY = "open-protocol-handler";
 const PERMISSION_KEY_DELIMITER = "^";
 
-class nsContentDispatchChooser {
+export class nsContentDispatchChooser {
   /**
    * Prompt the user to open an external application.
    * If the triggering principal doesn't have permission to open apps for the

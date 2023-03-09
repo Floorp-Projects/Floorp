@@ -8,7 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Firefox", "File Handling")
 
 EXTRA_JS_MODULES += [
-    "ContentDispatchChooser.jsm",
+    "ContentDispatchChooser.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [
