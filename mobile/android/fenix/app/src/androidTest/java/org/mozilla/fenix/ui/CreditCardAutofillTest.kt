@@ -87,7 +87,7 @@ class CreditCardAutofillTest {
 
     @SmokeTest
     @Test
-    fun deleteSavedCreditCardTest() {
+    fun deleteSavedCreditCardUsingToolbarButtonTest() {
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
@@ -102,9 +102,78 @@ class CreditCardAutofillTest {
             clickManageSavedCreditCardsButton()
             clickSecuredCreditCardsLaterButton()
             clickSavedCreditCard()
-            clickDeleteCreditCardButton()
+            clickDeleteCreditCardToolbarButton()
             clickConfirmDeleteCreditCardButton()
             verifyAddCreditCardsButton()
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun cancelDeleteSavedCreditCardUsingToolbarButtonTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openAutofillSubMenu {
+            clickAddCreditCardButton()
+            fillAndSaveCreditCard(
+                MockCreditCard1.MOCK_CREDIT_CARD_NUMBER,
+                MockCreditCard1.MOCK_NAME_ON_CARD,
+                MockCreditCard1.MOCK_EXPIRATION_MONTH,
+                MockCreditCard1.MOCK_EXPIRATION_YEAR,
+            )
+            clickManageSavedCreditCardsButton()
+            clickSecuredCreditCardsLaterButton()
+            clickSavedCreditCard()
+            clickDeleteCreditCardToolbarButton()
+            clickCancelDeleteCreditCardButton()
+            verifyEditCreditCardToolbarTitle()
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun deleteSavedCreditCardUsingMenuButtonTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openAutofillSubMenu {
+            clickAddCreditCardButton()
+            fillAndSaveCreditCard(
+                MockCreditCard1.MOCK_CREDIT_CARD_NUMBER,
+                MockCreditCard1.MOCK_NAME_ON_CARD,
+                MockCreditCard1.MOCK_EXPIRATION_MONTH,
+                MockCreditCard1.MOCK_EXPIRATION_YEAR,
+            )
+            clickManageSavedCreditCardsButton()
+            clickSecuredCreditCardsLaterButton()
+            clickSavedCreditCard()
+            clickDeleteCreditCardMenuButton()
+            clickConfirmDeleteCreditCardButton()
+            verifyAddCreditCardsButton()
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun cancelDeleteSavedCreditCardUsingMenuButtonTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openAutofillSubMenu {
+            clickAddCreditCardButton()
+            fillAndSaveCreditCard(
+                MockCreditCard1.MOCK_CREDIT_CARD_NUMBER,
+                MockCreditCard1.MOCK_NAME_ON_CARD,
+                MockCreditCard1.MOCK_EXPIRATION_MONTH,
+                MockCreditCard1.MOCK_EXPIRATION_YEAR,
+            )
+            clickManageSavedCreditCardsButton()
+            clickSecuredCreditCardsLaterButton()
+            clickSavedCreditCard()
+            clickDeleteCreditCardMenuButton()
+            clickCancelDeleteCreditCardButton()
+            verifyEditCreditCardToolbarTitle()
         }
     }
 
@@ -299,7 +368,7 @@ class CreditCardAutofillTest {
             )
             clickSavedCreditCard()
             clearCreditCardNumber()
-            clickToolbarSaveCreditCardButton()
+            clickSaveCreditCardToolbarButton()
             verifyEditCreditCardToolbarTitle()
             verifyCreditCardNumberErrorMessage()
         }
@@ -327,7 +396,7 @@ class CreditCardAutofillTest {
             )
             clickSavedCreditCard()
             clearNameOnCreditCard()
-            clickToolbarSaveCreditCardButton()
+            clickSaveCreditCardToolbarButton()
             verifyEditCreditCardToolbarTitle()
             verifyNameOnCreditCardErrorMessage()
         }
