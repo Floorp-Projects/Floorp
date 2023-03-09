@@ -1317,22 +1317,19 @@ class TelemetryEvent {
     if (!element) {
       return "none";
     }
-    if (result?.providerName != "UrlbarProviderTopSites") {
-      // Element handlers go here.
-      if (
-        element.classList.contains("urlbarView-button-help") ||
-        element.dataset.command == "help"
-      ) {
-        return result?.type == lazy.UrlbarUtils.RESULT_TYPE.TIP
-          ? "tiphelp"
-          : "help";
-      }
-      if (
-        element.classList.contains("urlbarView-button-block") ||
-        element.dataset.command == "dismiss"
-      ) {
-        return "block";
-      }
+    if (
+      element.classList.contains("urlbarView-button-help") ||
+      element.dataset.command == "help"
+    ) {
+      return result?.type == lazy.UrlbarUtils.RESULT_TYPE.TIP
+        ? "tiphelp"
+        : "help";
+    }
+    if (
+      element.classList.contains("urlbarView-button-block") ||
+      element.dataset.command == "dismiss"
+    ) {
+      return "block";
     }
     // Now handle the result.
     return lazy.UrlbarUtils.telemetryTypeFromResult(result);
