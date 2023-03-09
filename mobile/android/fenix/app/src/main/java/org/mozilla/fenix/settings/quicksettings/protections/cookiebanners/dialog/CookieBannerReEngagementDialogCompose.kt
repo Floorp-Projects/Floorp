@@ -42,7 +42,7 @@ import org.mozilla.fenix.theme.defaultTypography
 private fun CookieBannerReEngagementDialogComposePreview() {
     FirefoxTheme {
         CookieBannerReEngagementDialogCompose(
-            dialogTitle = "Cookie banners begone!",
+            dialogTitle = "Allow Firefox to reject cookie banners?",
             dialogText =
             "Automatically reject cookie requests, when possible. Otherwise, " +
                 "accept all cookies to dismiss cookie banners.",
@@ -82,35 +82,28 @@ fun CookieBannerReEngagementDialogCompose(
                 .background(color = FirefoxTheme.colors.layer1),
         ) {
             Column {
-                Row(
+                IconButton(
                     modifier = Modifier
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                        .align(Alignment.End)
+                        .size(48.dp),
+                    onClick = onCloseButtonClicked,
                 ) {
-                    Text(
-                        modifier = Modifier.padding(
-                            top = 24.dp,
-                            start = 24.dp,
-                            end = 24.dp,
-                            bottom = 8.dp,
-                        ),
-                        color = FirefoxTheme.colors.textPrimary,
-                        text = dialogTitle,
-                        style = defaultTypography.headline7,
+                    Icon(
+                        painter = painterResource(R.drawable.mozac_ic_close),
+                        contentDescription = stringResource(R.string.content_description_close_button),
+                        tint = FirefoxTheme.colors.iconPrimary,
                     )
-                    IconButton(
-                        modifier = Modifier
-                            .size(48.dp),
-                        onClick = onCloseButtonClicked,
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.mozac_ic_close),
-                            contentDescription = stringResource(R.string.content_description_close_button),
-                            tint = FirefoxTheme.colors.iconPrimary,
-                        )
-                    }
                 }
+                Text(
+                    modifier = Modifier.padding(
+                        start = 24.dp,
+                        end = 24.dp,
+                        bottom = 8.dp,
+                    ),
+                    color = FirefoxTheme.colors.textPrimary,
+                    text = dialogTitle,
+                    style = defaultTypography.headline7,
+                )
                 Text(
                     modifier = Modifier.padding(horizontal = 24.dp),
                     color = FirefoxTheme.colors.textPrimary,
