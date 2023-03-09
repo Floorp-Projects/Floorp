@@ -25,6 +25,14 @@ start = "2019-09-24"
 end = "2024-02-24"
 notes = "The Glean SDKs are maintained by the Glean Team at Mozilla."
 
+[[wildcard-audits.ohttp]]
+who = "Martin Thomson <mt@lowentropy.net>"
+criteria = "safe-to-deploy"
+user-id = 128763
+start = "2022-08-04"
+end = "2024-03-09"
+notes = "This code contains two cryptographic back ends.  No unsafe code is contained if the Rust `hpke` crate is used (the `rust-hpke` feature).  Using NSS (the `nss` feature) involves extensive use of bindings to the native code provided by NSS.  This interface uses wrappers that attempt to add safety to a fundamentally very dangerous library, but those wrappers have only been validated for use following the needs of this crate."
+
 [[audits.aa-stroke]]
 who = "Lee Salzman <lsalzman@mozilla.com>"
 criteria = "safe-to-deploy"
