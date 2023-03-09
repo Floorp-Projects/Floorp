@@ -34,7 +34,7 @@ class AutoTextRun {
   typedef mozilla::gfx::DrawTarget DrawTarget;
 
   AutoTextRun(const nsFontMetrics* aMetrics, DrawTarget* aDrawTarget,
-              const char* aString, int32_t aLength) {
+              const char* aString, uint32_t aLength) {
     mTextRun = aMetrics->GetThebesFontGroup()->MakeTextRun(
         reinterpret_cast<const uint8_t*>(aString), aLength, aDrawTarget,
         aMetrics->AppUnitsPerDevPixel(), ComputeFlags(aMetrics),
@@ -42,7 +42,7 @@ class AutoTextRun {
   }
 
   AutoTextRun(const nsFontMetrics* aMetrics, DrawTarget* aDrawTarget,
-              const char16_t* aString, int32_t aLength) {
+              const char16_t* aString, uint32_t aLength) {
     mTextRun = aMetrics->GetThebesFontGroup()->MakeTextRun(
         aString, aLength, aDrawTarget, aMetrics->AppUnitsPerDevPixel(),
         ComputeFlags(aMetrics), nsTextFrameUtils::Flags(), nullptr);
