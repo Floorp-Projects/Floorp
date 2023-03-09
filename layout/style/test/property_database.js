@@ -12969,8 +12969,13 @@ if (IsCSSPropertyPrefEnabled("layout.css.content-visibility.enabled")) {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: ["visible"],
-    other_values: ["auto", "invisible"],
-    invalid_values: ["partially-visible", "auto auto", "visible invisible"],
+    other_values: ["auto", "hidden"],
+    invalid_values: [
+      "invisible",
+      "partially-visible",
+      "auto auto",
+      "visible hidden",
+    ],
   };
 }
 
