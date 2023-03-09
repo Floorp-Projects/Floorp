@@ -984,6 +984,12 @@ dohPrefs:
       description: Same as trrUri, but set by the DoHController module.
       type: string
       setPref: "doh-rollout.uri"
+
+dooh:
+  description: "DNS over Oblivious HTTP"
+  owner: vgosu@mozilla.com
+  hasExposure: false
+  variables:
     ohttpEnabled:
       description: Whether to use Oblivious HTTP for the resolution
       type: boolean
@@ -996,6 +1002,10 @@ dohPrefs:
       description: The URL used to fetch the configuration of the Oblivious HTTP gateway
       type: string
       setPref: "network.trr.ohttp.config_uri"
+    ohttpUri:
+      description: The URL of the Oblivious DNS over HTTPS target resource
+      type: string
+      setPref: "network.trr.ohttp.uri"
 
 pingsender:
   description: "In-product usage of the pingsender telemetry reporter."
