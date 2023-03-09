@@ -29,6 +29,7 @@ enum SystemDirectories {
   Mac_LocalApplicationsDirectory = 106,
   Mac_UserPreferencesDirectory = 107,
   Mac_PictureDocumentsDirectory = 108,
+  Mac_DefaultScreenshotDirectory = 109,
 
   Win_SystemDirectory = 201,
   Win_WindowsDirectory = 202,

@@ -2453,6 +2453,7 @@ STATIC_ATOMS = [
     Atom("DirectoryService_LocalApplicationsDirectory", "LocApp"),
     Atom("DirectoryService_UserPreferencesDirectory", "UsrPrfs"),
     Atom("DirectoryService_PictureDocumentsDirectory", "Pct"),
+    Atom("DirectoryService_DefaultScreenshotDirectory", "Scrnshts"),
     Atom("DirectoryService_WindowsDirectory", "WinD"),
     Atom("DirectoryService_WindowsProgramFiles", "ProgF"),
     Atom("DirectoryService_Programs", "Progs"),
