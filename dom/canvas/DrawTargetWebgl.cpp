@@ -1334,6 +1334,11 @@ inline ColorPattern DrawTargetWebgl::GetClearPattern() const {
 }
 
 void DrawTargetWebgl::ClearRect(const Rect& aRect) {
+  if (mIsClear) {
+    // No need to clear anything if the entire framebuffer is already clear.
+    return;
+  }
+
   // OP_SOURCE may not be bounded by a mask, so we ensure that a clip is pushed
   // here to avoid a group being pushed for it.
   PushClipRect(aRect);
