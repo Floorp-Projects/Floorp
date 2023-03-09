@@ -12,6 +12,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="aboutDialog"
         windowtype="Browser:About"
+        onload="init(event);"
 #ifdef MOZ_UPDATER
         onunload="onUnload(event);"
 #endif
@@ -31,6 +32,8 @@
     <html:link rel="localization" href="branding/brand.ftl"/>
     <html:link rel="localization" href="browser/aboutDialog.ftl"/>
   </linkset>
+
+  <script src="chrome://browser/content/aboutDialog.js"/>
 
   <html:div id="aboutDialogContainer">
     <hbox id="clientBox">
@@ -150,5 +153,4 @@
     <key keycode="VK_ESCAPE" oncommand="window.close();"/>
   </keyset>
 
-  <script src="chrome://browser/content/aboutDialog.js"/>
 </window>
