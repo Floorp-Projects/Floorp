@@ -34,7 +34,6 @@ import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.appstate.filterOut
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getFilteredStories
-import org.mozilla.fenix.home.CurrentMode
 import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
@@ -53,7 +52,6 @@ class AppStoreTest {
     private lateinit var accountManager: FxaAccountManager
     private lateinit var onboarding: FenixOnboarding
     private lateinit var browsingModeManager: BrowsingModeManager
-    private lateinit var currentMode: CurrentMode
     private lateinit var appState: AppState
     private lateinit var appStore: AppStore
     private lateinit var recentSyncedTabsList: List<RecentSyncedTab>
@@ -78,16 +76,10 @@ class AppStoreTest {
         every { onboarding.userHasBeenOnboarded() } returns true
         every { browsingModeManager.mode } returns BrowsingMode.Normal
 
-        currentMode = CurrentMode(
-            context,
-            onboarding,
-            browsingModeManager,
-        ) {}
-
         appState = AppState(
             collections = emptyList(),
             expandedCollections = emptySet(),
-            mode = currentMode.getCurrentMode(),
+            mode = Mode.fromBrowsingMode(browsingModeManager.mode),
             topSites = emptyList(),
             showCollectionPlaceholder = true,
             recentTabs = emptyList(),

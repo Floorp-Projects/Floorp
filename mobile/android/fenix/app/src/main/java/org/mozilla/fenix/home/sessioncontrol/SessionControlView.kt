@@ -129,6 +129,7 @@ private fun showCollections(
 
 private fun privateModeAdapterItems() = listOf(AdapterItem.PrivateBrowsingDescription)
 
+@Suppress("UnusedPrivateMember")
 private fun onboardingAdapterItems(
     onboardingState: OnboardingState,
     onboardingConfig: OnboardingConfig,
@@ -173,7 +174,6 @@ private fun AppState.toAdapterList(settings: Settings): List<AdapterItem> = when
         firstFrameDrawn,
     )
     is Mode.Private -> privateModeAdapterItems()
-    is Mode.Onboarding -> onboardingAdapterItems(mode.state, mode.config)
 }
 
 private fun collectionTabItems(collection: TabCollection) =
