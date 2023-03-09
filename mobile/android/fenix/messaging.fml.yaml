@@ -156,6 +156,7 @@ features:
               style: NOTIFICATION
               trigger:
                 - I_AM_NOT_DEFAULT_BROWSER
+                - DAY_3_AFTER_INSTALL
               action: MAKE_DEFAULT_BROWSER
 
       - channel: developer
