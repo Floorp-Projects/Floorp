@@ -142,7 +142,7 @@ hg log -T '{rev}:{node|short} {desc|firstline}\n' \
 ed -s $COMMIT_LIST_FILE <<< $'g/- FLOAT -/m$\ng/^~$/d\nw\nq'
 
 MOZ_BOOKMARK=`date "+webrtc-fast-forward-%Y-%m-%d--%H-%M"`
-hg bookmark $MOZ_BOOKMARK
+hg bookmark -r $MOZ_TOP_FF $MOZ_BOOKMARK
 
 hg update $MOZ_NEW_CENTRAL
 
