@@ -44,6 +44,17 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
 class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
     fun verifySecurityPromptForLogins() = assertSavedLoginsView()
 
+    fun verifyEmptySavedLoginsListView() {
+        onView(withText(getStringResource(R.string.preferences_passwords_saved_logins_description_empty_text)))
+            .check(matches(isDisplayed()))
+
+        onView(withText(R.string.preferences_passwords_saved_logins_description_empty_learn_more_link))
+            .check(matches(isDisplayed()))
+
+        onView(withText(R.string.preferences_logins_add_login))
+            .check(matches(isDisplayed()))
+    }
+
     fun verifySavedLoginsAfterSync() {
         mDevice.waitNotNull(
             Until.findObjects(By.text("https://accounts.google.com")),

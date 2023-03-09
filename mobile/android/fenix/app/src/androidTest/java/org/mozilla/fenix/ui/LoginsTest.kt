@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.fenix.ui
 
 import android.os.Build
@@ -22,6 +26,12 @@ import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
+/**
+ * Tests for verifying:
+ * - the Logins and Passwords menu and sub-menus.
+ * - save login prompts.
+ * - saving logins based on the user's preferences.
+ */
 class LoginsTest {
     private lateinit var mockWebServer: MockWebServer
 
@@ -48,25 +58,48 @@ class LoginsTest {
         mockWebServer.shutdown()
     }
 
-    // Tests only for initial state without signing in.
-    // For tests after signing in, see SyncIntegration test suite
+    // Tests the Logins and passwords menu items and default values
     @Test
     fun loginsAndPasswordsSettingsItemsTest() {
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
             // Necessary to scroll a little bit for all screen sizes
-            TestHelper.scrollToElementByText("Logins and passwords")
+            scrollToElementByText("Logins and passwords")
         }.openLoginsAndPasswordSubMenu {
             verifyDefaultView()
-            verifyDefaultValueAutofillLogins(TestHelper.appContext)
-            verifyDefaultValueExceptions()
+            verifyAutofillInFirefoxToggle(true)
+            verifyAutofillLoginsInOtherAppsToggle(false)
+        }
+    }
+
+    // Tests only for initial state without signing in.
+    // For tests after signing in, see SyncIntegration test suite
+    @Test
+    fun savedLoginsMenuItemsTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+            // Necessary to scroll a little bit for all screen sizes
+            scrollToElementByText("Logins and passwords")
+        }.openLoginsAndPasswordSubMenu {
+            verifyDefaultView()
         }.openSavedLogins {
             verifySecurityPromptForLogins()
             tapSetupLater()
             // Verify that logins list is empty
-            // Issue #7272 nothing is shown
-        }.goBack {
+            verifyEmptySavedLoginsListView()
+        }
+    }
+
+    @Test
+    fun syncLoginsMenuItemsTest() {
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+            // Necessary to scroll a little bit for all screen sizes
+            scrollToElementByText("Logins and passwords")
+        }.openLoginsAndPasswordSubMenu {
         }.openSyncLogins {
             verifyReadyToScanOption()
             verifyUseEmailOption()
@@ -98,7 +131,7 @@ class LoginsTest {
         browserScreen {
         }.openThreeDotMenu {
         }.openSettings {
-            TestHelper.scrollToElementByText("Logins and passwords")
+            scrollToElementByText("Logins and passwords")
         }.openLoginsAndPasswordSubMenu {
             verifyDefaultView()
         }.openSavedLogins {
@@ -152,6 +185,7 @@ class LoginsTest {
             verifySecurityPromptForLogins()
             tapSetupLater()
             // Verify that the login list is empty
+            verifyEmptySavedLoginsListView()
             verifyNotSavedLoginFromPrompt()
         }.goBack {
         }.openLoginExceptions {
@@ -376,7 +410,7 @@ class LoginsTest {
             clickDeleteLoginButton()
             verifyLoginDeletionPrompt()
             clickConfirmDeleteLogin()
-            // The account remains displayed, see: https://github.com/mozilla-mobile/fenix/issues/23212
+            // The account remains displayed, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1812431
             // verifyNotSavedLoginFromPrompt()
         }
     }
@@ -426,9 +460,9 @@ class LoginsTest {
         }.openThreeDotMenu {
         }.openSettings {
         }.openLoginsAndPasswordSubMenu {
-            verifyAutofillToggle(true)
-            clickAutofillOption()
-            verifyAutofillToggle(false)
+            verifyAutofillInFirefoxToggle(true)
+            clickAutofillInFirefoxOption()
+            verifyAutofillInFirefoxToggle(false)
         }.goBack {
         }
 
