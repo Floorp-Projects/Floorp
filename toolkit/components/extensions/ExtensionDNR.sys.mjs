@@ -604,8 +604,9 @@ class RequestDataForUrlFilter {
 }
 
 function compileRegexFilter(regexFilter, isUrlFilterCaseSensitive) {
-  // TODO: Restrict supported regex to avoid perf issues. For discussion on the
-  // desired syntax, see https://github.com/w3c/webextensions/issues/344
+  // TODO bug 1821033: Restrict supported regex to avoid perf issues. For
+  // discussion on the desired syntax, see
+  // https://github.com/w3c/webextensions/issues/344
   return new RegExp(regexFilter, isUrlFilterCaseSensitive ? "" : "i");
 }
 
@@ -895,8 +896,6 @@ class RuleValidator {
       );
       return false;
     }
-    // TODO bug 1745764 / bug 1745763: after adding support for dynamic/static
-    // rules, validate that we only have a session ruleset here.
     return true;
   }
 
@@ -1161,22 +1160,6 @@ class RuleValidator {
   }
 }
 
-class RuleQuotaCounter {
-  constructor() {
-    this.ruleCount = 0;
-    this.regexCount = 0;
-  }
-
-  addRules(rules) {
-    this.ruleCount += rules.length;
-    for (let rule of rules) {
-      if (rule.condition.regexFilter) {
-        ++this.regexCount;
-      }
-    }
-  }
-}
-
 /**
  * Compares two rules to determine the relative order of precedence.
  * Rules are only comparable if they are from the same extension!
@@ -1338,7 +1321,7 @@ class RequestDetails {
         // See the above comment for more info.
         initiatorURI: parentPrin?.isContentPrincipal ? parentPrin.URI : null,
         type: isTop ? "main_frame" : "sub_frame",
-        method: "get", // TODO: Detect POST requests.
+        method: "get", // TODO 1821303: Detect POST requests.
         tabId: this.tabId,
         // In this loop we are already explicitly accounting for ancestors, so
         // we intentionally omit browsingContext even though we have |bc|. If
@@ -1807,7 +1790,10 @@ const NetworkIntegration = {
     // If there are multiple rules, then it may be a combination of allow,
     // allowAllRequests and/or modifyHeaders.
 
-    // TODO bug 1797403: Apply allowAllRequests actions.
+    // "modifyHeaders" is handled by onBeforeSendHeaders/onHeadersReceived.
+    // "allow" and "allowAllRequests" require no further action now.
+    // "allowAllRequests" is applied to new requests in the future (if any)
+    // through RequestEvaluator's findAncestorRuleOverride().
 
     return false;
   },
@@ -1890,7 +1876,6 @@ class RuleManager {
       "_session",
       PRECEDENCE_SESSION_RULESET
     );
-    // TODO bug 1745764: support registration of (persistent) dynamic rules.
     this.dynamicRules = this.makeRuleset(
       "_dynamic",
       PRECEDENCE_DYNAMIC_RULESET
@@ -2179,7 +2164,6 @@ async function updateDynamicRules(extension, updateRuleOptions) {
 // exports used by the DNR API implementation.
 export const ExtensionDNR = {
   RuleValidator,
-  RuleQuotaCounter,
   clearRuleManager,
   ensureInitialized,
   getMatchedRulesForRequest,

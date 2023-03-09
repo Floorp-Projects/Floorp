@@ -163,8 +163,7 @@ add_task(async function test_dynamic_rules_count_limits() {
         "Expect no session and no dynamic rules"
       );
 
-      // TODO: consider exposing this as an api namespace property.
-      const MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES = 5000;
+      const { MAX_NUMBER_OF_DYNAMIC_AND_SESSION_RULES } = dnr;
       const DUMMY_RULE = {
         action: { type: "block" },
         condition: { resourceTypes: ["main_frame"] },
