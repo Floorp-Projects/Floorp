@@ -139,10 +139,19 @@ class BaselinePerfSpewer : public PerfSpewer {
 class InlineCachePerfSpewer : public PerfSpewer {
   JS::JitTier GetTier() override { return JS::JitTier::IC; }
   virtual const char* CodeName(unsigned op) override;
+  virtual const char* TierName() = 0;
 
  public:
   void recordInstruction(MacroAssembler& masm, CacheOp op);
   void saveProfile(JitCode* code, const char* name);
+};
+
+class BaselineICPerfSpewer : public InlineCachePerfSpewer {
+  virtual const char* TierName() override { return "BaselineIC"; }
+};
+
+class IonICPerfSpewer : public InlineCachePerfSpewer {
+  virtual const char* TierName() override { return "IonIC"; }
 };
 
 class PerfSpewerRangeRecorder {

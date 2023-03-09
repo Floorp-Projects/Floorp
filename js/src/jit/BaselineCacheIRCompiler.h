@@ -115,7 +115,11 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
                                     uint32_t nargsAndFlagsOffset,
                                     mozilla::Maybe<uint32_t> icScriptOffset);
 
+  BaselineICPerfSpewer perfSpewer_;
+
  public:
+  BaselineICPerfSpewer& perfSpewer() { return perfSpewer_; }
+
   friend class AutoStubFrame;
 
   BaselineCacheIRCompiler(JSContext* cx, TempAllocator& alloc,
