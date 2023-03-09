@@ -702,6 +702,11 @@ nsresult nsGIOService::LaunchFile(const nsACString& aPath) {
   return LaunchPath(aPath);
 }
 
+nsresult nsGIOService::GetIsRunningUnderFlatpak(bool* aResult) {
+  *aResult = mozilla::widget::IsRunningUnderFlatpak();
+  return NS_OK;
+}
+
 static nsresult RevealDirectory(nsIFile* aFile, bool aForce) {
   nsAutoCString path;
   if (bool isDir; NS_SUCCEEDED(aFile->IsDirectory(&isDir)) && isDir) {

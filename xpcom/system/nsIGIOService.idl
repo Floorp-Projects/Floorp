@@ -75,6 +75,7 @@ interface nsIGIOService : nsISupports
   AUTF8String        getDescriptionForMimeType(in AUTF8String mimeType);
 
   /*** Misc. methods ***/
+  [infallible] readonly attribute boolean isRunningUnderFlatpak;
 
   /* Open the given URI in the default application */
   [noscript] void showURI(in nsIURI uri);

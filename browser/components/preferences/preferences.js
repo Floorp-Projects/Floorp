@@ -68,6 +68,17 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   gMIMEService: ["@mozilla.org/mime;1", "nsIMIMEService"],
 });
 
+if (Cc["@mozilla.org/gio-service;1"]) {
+  XPCOMUtils.defineLazyServiceGetter(
+    this,
+    "gGIOService",
+    "@mozilla.org/gio-service;1",
+    "nsIGIOService"
+  );
+} else {
+  this.gGIOService = null;
+}
+
 ChromeUtils.defineESModuleGetters(this, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   ContextualIdentityService:
