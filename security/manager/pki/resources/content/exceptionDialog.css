@@ -4,12 +4,10 @@
 
 :root {
   max-width: 40em;
+  min-width: 35em;
 }
 
-#warningSupplemental {
-  font-weight: bold;
-}
-
+#warningSupplemental,
 .description {
   font-weight: bold;
 }
