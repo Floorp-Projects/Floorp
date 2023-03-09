@@ -79,6 +79,18 @@ it in explicitly:
     exit 1
   fi
   ERROR_HELP=""
+
+  ERROR_HELP=$"
+The topmost commit to be rebased is public but has descendants. If those
+descendants should not be rebased, please rerun the command and pass the commit
+in explicitly:
+  MOZ_TOP_FF=$MOZ_TOP_FF bash $0
+  "
+  if [ "x" != "x$(hg log -r 'descendants(.) and !.' -T'{node|short}')" ]; then
+    echo "$ERROR_HELP"
+    exit 1
+  fi
+  ERROR_HELP=""
 fi
 
 ERROR_HELP=$"
