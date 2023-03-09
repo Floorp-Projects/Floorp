@@ -23,7 +23,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.OnboardingPrivacyNoticeBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import org.mozilla.fenix.home.sessioncontrol.OnboardingInteractor
+import org.mozilla.fenix.onboarding.interactor.OnboardingInteractor
 
 @RunWith(FenixRobolectricTestRunner::class)
 class OnboardingPrivacyNoticeViewHolderTest {

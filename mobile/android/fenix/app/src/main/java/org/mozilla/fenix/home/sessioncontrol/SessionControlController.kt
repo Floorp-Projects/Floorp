@@ -199,7 +199,7 @@ interface SessionControlController {
     fun handleCustomizeHomeTapped()
 
     /**
-     * @see [OnboardingInteractor.showWallpapersOnboardingDialog]
+     * @see [WallpaperInteractor.showWallpapersOnboardingDialog]
      */
     fun handleShowWallpapersOnboardingDialog(state: WallpaperState): Boolean
 

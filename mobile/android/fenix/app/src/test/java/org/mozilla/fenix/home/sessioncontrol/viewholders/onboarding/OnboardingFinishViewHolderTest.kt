@@ -21,7 +21,7 @@ import org.mozilla.fenix.GleanMetrics.Onboarding
 import org.mozilla.fenix.databinding.OnboardingFinishBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import org.mozilla.fenix.home.sessioncontrol.OnboardingInteractor
+import org.mozilla.fenix.onboarding.interactor.OnboardingInteractor
 
 @RunWith(FenixRobolectricTestRunner::class)
 class OnboardingFinishViewHolderTest {
