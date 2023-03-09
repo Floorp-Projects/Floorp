@@ -194,24 +194,18 @@ add_task(async function tip_onResultPicked_helpButton_url_enter() {
     ext.onMessage("onResultPicked received", () => {
       Assert.ok(false, "onResultPicked should not be called");
     });
+    let loadedPromise = BrowserTestUtils.browserLoaded(
+      gBrowser.selectedBrowser
+    );
     if (UrlbarPrefs.get("resultMenu")) {
-      let tabOpenPromise = BrowserTestUtils.waitForNewTab(
-        gBrowser,
-        "http://example.com/"
-      );
       await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "h");
-      info("Waiting for help URL to load in a new tab");
-      await tabOpenPromise;
-      gBrowser.removeCurrentTab();
     } else {
-      let loadedPromise = BrowserTestUtils.browserLoaded(
-        gBrowser.selectedBrowser
-      );
       EventUtils.synthesizeKey("KEY_Tab");
       EventUtils.synthesizeKey("KEY_Enter");
-      await loadedPromise;
-      Assert.equal(gBrowser.currentURI.spec, "http://example.com/");
     }
+    info("Waiting for help URL to load");
+    await loadedPromise;
+    Assert.equal(gBrowser.currentURI.spec, "http://example.com/");
   });
   await ext.unload();
 });
@@ -228,27 +222,21 @@ add_task(async function tip_onResultPicked_helpButton_url_mouse() {
     ext.onMessage("onResultPicked received", () => {
       Assert.ok(false, "onResultPicked should not be called");
     });
+    let loadedPromise = BrowserTestUtils.browserLoaded(
+      gBrowser.selectedBrowser
+    );
     if (UrlbarPrefs.get("resultMenu")) {
-      let tabOpenPromise = BrowserTestUtils.waitForNewTab(
-        gBrowser,
-        "http://example.com/"
-      );
       await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "h", {
         openByMouse: true,
       });
-      info("Waiting for help URL to load in a new tab");
-      await tabOpenPromise;
-      gBrowser.removeCurrentTab();
     } else {
-      let loadedPromise = BrowserTestUtils.browserLoaded(
-        gBrowser.selectedBrowser
-      );
       let helpButton = gURLBar.querySelector(".urlbarView-button-help");
       Assert.ok(helpButton);
       EventUtils.synthesizeMouseAtCenter(helpButton, {});
-      await loadedPromise;
-      Assert.equal(gBrowser.currentURI.spec, "http://example.com/");
     }
+    info("Waiting for help URL to load");
+    await loadedPromise;
+    Assert.equal(gBrowser.currentURI.spec, "http://example.com/");
   });
   await ext.unload();
 });
