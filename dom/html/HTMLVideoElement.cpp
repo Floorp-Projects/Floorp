@@ -421,6 +421,9 @@ bool HTMLVideoElement::ShouldCreateVideoWakeLock() const {
 }
 
 void HTMLVideoElement::CreateVideoWakeLockIfNeeded() {
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+    return;
+  }
   if (!mScreenWakeLock && ShouldCreateVideoWakeLock()) {
     RefPtr<power::PowerManagerService> pmService =
         power::PowerManagerService::GetInstance();
