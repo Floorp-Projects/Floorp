@@ -167,6 +167,9 @@ add_setup(async function() {
  *        Determines whether we expect chooseCertificate to be called.
  * @param {object} options
  *        Optional options object to pass on to the window that gets opened.
+ * @param {string} expectStringInPage
+ *        Optional string that is expected to be in the content of the page
+ *        once it loads.
  */
 async function testHelper(
   prefValue,
@@ -186,18 +189,32 @@ async function testHelper(
     win.gBrowser.selectedBrowser,
     "https://requireclientcert.example.com:443"
   );
+  if (expectedURL) {
+    await BrowserTestUtils.browserLoaded(
+      win.gBrowser.selectedBrowser,
+      false,
+      "https://requireclientcert.example.com/",
+      true
+    );
+    let loadedURL = win.gBrowser.selectedBrowser.documentURI.spec;
+    Assert.ok(
+      loadedURL.startsWith(expectedURL),
+      `Expected and actual URLs should match (got '${loadedURL}', expected '${expectedURL}')`
+    );
+  } else {
+    await new Promise(resolve => {
+      let removeEventListener = BrowserTestUtils.addContentEventListener(
+        win.gBrowser.selectedBrowser,
+        "AboutNetErrorLoad",
+        () => {
+          removeEventListener();
+          resolve();
+        },
+        { capture: false, wantUntrusted: true }
+      );
+    });
+  }
 
-  await BrowserTestUtils.browserLoaded(
-    win.gBrowser.selectedBrowser,
-    false,
-    "https://requireclientcert.example.com/",
-    true
-  );
-  let loadedURL = win.gBrowser.selectedBrowser.documentURI.spec;
-  Assert.ok(
-    loadedURL.startsWith(expectedURL),
-    `Expected and actual URLs should match (got '${loadedURL}', expected '${expectedURL}')`
-  );
   Assert.equal(
     gClientAuthDialogs.chooseCertificateCalled,
     expectCallingChooseCertificate,
@@ -212,7 +229,10 @@ async function testHelper(
         return content.document.body.textContent;
       }
     );
-    Assert.ok(pageContent.includes(expectStringInPage));
+    Assert.ok(
+      pageContent.includes(expectStringInPage),
+      `page should contain the string '${expectStringInPage}' (was '${pageContent}')`
+    );
   }
 
   await win.close();
@@ -243,7 +263,7 @@ add_task(async function testCertNotChosenByUser() {
   gClientAuthDialogs.state = DialogState.RETURN_CERT_NOT_SELECTED;
   await testHelper(
     "Ask Every Time",
-    "about:neterror?e=nssFailure2&u=https%3A//requireclientcert.example.com/",
+    undefined,
     true,
     undefined,
     // bug 1818556: ssltunnel doesn't behave as expected here on Windows
@@ -269,16 +289,8 @@ add_task(async function testCertChosenByUser() {
 add_task(async function testEmptyCertChosenByUser() {
   gClientAuthDialogs.state = DialogState.RETURN_CERT_NOT_SELECTED;
   gClientAuthDialogs.rememberClientAuthCertificate = true;
-  await testHelper(
-    "Ask Every Time",
-    "about:neterror?e=nssFailure2&u=https%3A//requireclientcert.example.com/",
-    true
-  );
-  await testHelper(
-    "Ask Every Time",
-    "about:neterror?e=nssFailure2&u=https%3A//requireclientcert.example.com/",
-    false
-  );
+  await testHelper("Ask Every Time", undefined, true);
+  await testHelper("Ask Every Time", undefined, false);
   cars.clearRememberedDecisions();
 });
 
