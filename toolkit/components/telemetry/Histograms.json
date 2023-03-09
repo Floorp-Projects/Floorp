@@ -2808,17 +2808,6 @@
     "labels": ["AlreadyHTTPS", "NoReasonToUpgrade", "PrefBlockedSTS", "STS", "CSP", "BrowserDisplay"],
     "description": "Was the URL upgraded to HTTPS?"
   },
-  "MIXED_CONTENT_UPGRADE_SUCCESS": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["seceng-telemetry@mozilla.com", "julianwels@mozilla.com", "ckerschbaumer@mozilla.com"],
-    "bug_numbers": [1674926],
-    "releaseChannelCollection": "opt-out",
-    "expires_in_version": "never",
-    "kind": "categorical",
-    "labels": ["ImageSuccess", "ImageFailed", "VideoSuccess", "VideoFailed", "AudioSuccess", "AudioFailed"],
-    "description": "Did the mixed-display-content upgrade succeed?"
-  },
   "HTTP_RESPONSE_STATUS_CODE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
