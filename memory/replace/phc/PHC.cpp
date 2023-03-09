@@ -699,6 +699,12 @@ class GMut {
     return page.mState != AllocPageState::InUse && aNow >= page.mReuseTime;
   }
 
+  // Get the address of the allocation page referred to via an index. Used
+  // when checking pointers against page boundaries.
+  uint8_t* AllocPageBaseAddr(GMutLock, uintptr_t aIndex) {
+    return mAllocPages[aIndex].mBaseAddr;
+  }
+
   Maybe<arena_id_t> PageArena(GMutLock aLock, uintptr_t aIndex) {
     const AllocPageInfo& page = mAllocPages[aIndex];
     AssertAllocPageInUse(aLock, page);
@@ -1367,13 +1373,18 @@ static size_t replace_malloc_usable_size(usable_ptr_t aPtr) {
     GMut::CrashOnGuardPage(const_cast<void*>(aPtr));
   }
 
-  // At this point we know we have an allocation page.
+  // At this point we know aPtr lands within an allocation page, due to the
+  // math done in the PtrKind constructor. But if aPtr points to memory
+  // before the base address of the allocation, we return 0.
   uintptr_t index = pk.AllocPageIndex();
 
   MutexAutoLock lock(GMut::sMutex);
 
-  // Check for malloc_usable_size() of a freed block.
-  gMut->EnsureValidAndInUse(lock, const_cast<void*>(aPtr), index);
+  void* pageBaseAddr = gMut->AllocPageBaseAddr(lock, index);
+
+  if (MOZ_UNLIKELY(aPtr < pageBaseAddr)) {
+    return 0;
+  }
 
   return gMut->PageUsableSize(lock, index);
 }
