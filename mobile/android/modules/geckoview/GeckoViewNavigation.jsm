@@ -193,7 +193,10 @@ class GeckoViewNavigation extends GeckoViewModule {
 
         let triggeringPrincipal, referrerInfo, csp;
         if (referrerSessionId) {
-          const referrerWindow = Services.ww.getWindowByName(referrerSessionId);
+          const referrerWindow = Services.ww.getWindowByName(
+            referrerSessionId,
+            this.window
+          );
           triggeringPrincipal = referrerWindow.browser.contentPrincipal;
           csp = referrerWindow.browser.csp;
 

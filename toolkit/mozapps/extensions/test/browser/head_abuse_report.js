@@ -188,7 +188,7 @@ const AbuseReportTestUtils = {
 
   // Returns the currently open abuse report dialog window (if any).
   getReportDialog() {
-    return Services.ww.getWindowByName("addons-abuse-report-dialog");
+    return Services.ww.getWindowByName("addons-abuse-report-dialog", null);
   },
 
   // Returns the parameters related to the report dialog (if any).

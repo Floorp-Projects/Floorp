@@ -272,6 +272,7 @@ public final class GeckoRuntime implements Parcelable {
                         if (!session.isOpen()) {
                           session.open(sRuntime);
                         }
+                        session.loadUri(url);
                         result.complete(session.getId());
                       } else {
                         result.complete(null);

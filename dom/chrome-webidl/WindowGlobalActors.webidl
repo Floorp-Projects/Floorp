@@ -177,8 +177,6 @@ interface WindowGlobalChild {
 
   static WindowGlobalChild? getByInnerWindowId(unsigned long long innerWIndowId);
 
-  BrowsingContext? findBrowsingContextWithName(DOMString name);
-
   /**
    * Get or create the JSWindowActor with the given name.
    *
