@@ -54,7 +54,7 @@ async function testProvenance(iniFileContents, testFn, telemetryTestFn) {
 }
 
 add_task(async function unableToReadFile() {
-  testProvenance(
+  await testProvenance(
     null,
     provenance => {
       Assert.ok("readProvenanceError" in provenance);
@@ -66,7 +66,7 @@ add_task(async function unableToReadFile() {
 });
 
 add_task(async function expectedMozilla() {
-  testProvenance(
+  await testProvenance(
     `
 [Mozilla]
 fileSystem=NTFS
@@ -108,7 +108,7 @@ HostUrl=https://download-installer.cdn.mozilla.net/pub/firefox/nightly/latest-mo
 });
 
 add_task(async function expectedNonMozilla() {
-  testProvenance(
+  await testProvenance(
     `
 [ZoneTransfer]
 ReferrerUrl=https://mozilla.foobar.org/
@@ -128,7 +128,7 @@ HostUrl=https://download-installer.cdn.mozilla.foobar.net/pub/firefox/nightly/la
 });
 
 add_task(async function readFsError() {
-  testProvenance(
+  await testProvenance(
     `
 [Mozilla]
 readFsError=openFile
@@ -145,7 +145,7 @@ readFsErrorCode=1234
 });
 
 add_task(async function unexpectedReadFsError() {
-  testProvenance(
+  await testProvenance(
     `
 [Mozilla]
 readFsError=openFile
@@ -162,7 +162,7 @@ readFsErrorCode=bazqux
 });
 
 add_task(async function unexpectedReadFsError() {
-  testProvenance(
+  await testProvenance(
     `
 [Mozilla]
 readFsError=foobar
@@ -177,7 +177,7 @@ readFsError=foobar
 });
 
 add_task(async function missingFileSystem() {
-  testProvenance(
+  await testProvenance(
     ``,
     provenance => {
       Assert.equal(provenance.fileSystem, "missing");
@@ -189,7 +189,7 @@ add_task(async function missingFileSystem() {
 });
 
 add_task(async function fileSystem() {
-  testProvenance(
+  await testProvenance(
     `
 [Mozilla]
 fileSystem=ntfs
@@ -204,7 +204,7 @@ fileSystem=ntfs
 });
 
 add_task(async function unexpectedFileSystem() {
-  testProvenance(
+  await testProvenance(
     `
 [Mozilla]
 fileSystem=foobar
@@ -219,7 +219,7 @@ fileSystem=foobar
 });
 
 add_task(async function zoneIdFileSize() {
-  testProvenance(
+  await testProvenance(
     `
 [Mozilla]
 zoneIdFileSize=1234
@@ -232,7 +232,7 @@ zoneIdFileSize=1234
 });
 
 add_task(async function unknownZoneIdFileSize() {
-  testProvenance(
+  await testProvenance(
     `
 [Mozilla]
 zoneIdFileSize=unknown
@@ -245,7 +245,7 @@ zoneIdFileSize=unknown
 });
 
 add_task(async function unexpectedZoneIdFileSize() {
-  testProvenance(
+  await testProvenance(
     `
 [Mozilla]
 zoneIdFileSize=foobar
@@ -258,7 +258,7 @@ zoneIdFileSize=foobar
 });
 
 add_task(async function missingZoneIdFileSize() {
-  testProvenance(
+  await testProvenance(
     ``,
     provenance => {
       Assert.ok(!("zoneIdFileSize" in provenance));
@@ -268,7 +268,7 @@ add_task(async function missingZoneIdFileSize() {
 });
 
 add_task(async function zoneIdBufferLargeEnoughTrue() {
-  testProvenance(
+  await testProvenance(
     `
 [Mozilla]
 zoneIdBufferLargeEnough=TrUe
@@ -281,7 +281,7 @@ zoneIdBufferLargeEnough=TrUe
 });
 
 add_task(async function zoneIdBufferLargeEnoughFalse() {
-  testProvenance(
+  await testProvenance(
     `
 [Mozilla]
 zoneIdBufferLargeEnough=FaLsE
@@ -294,7 +294,7 @@ zoneIdBufferLargeEnough=FaLsE
 });
 
 add_task(async function unknownZoneIdBufferLargeEnough() {
-  testProvenance(
+  await testProvenance(
     `
 [Mozilla]
 zoneIdBufferLargeEnough=unknown
@@ -307,7 +307,7 @@ zoneIdBufferLargeEnough=unknown
 });
 
 add_task(async function unknownZoneIdBufferLargeEnough() {
-  testProvenance(
+  await testProvenance(
     `
 [Mozilla]
 zoneIdBufferLargeEnough=foobar
@@ -320,13 +320,13 @@ zoneIdBufferLargeEnough=foobar
 });
 
 add_task(async function missingZoneIdBufferLargeEnough() {
-  testProvenance(``, provenance => {
+  await testProvenance(``, provenance => {
     Assert.ok(!("zoneIdBufferLargeEnough" in provenance));
   });
 });
 
 add_task(async function zoneIdTruncatedTrue() {
-  testProvenance(
+  await testProvenance(
     `
 [Mozilla]
 zoneIdTruncated=TrUe
@@ -339,7 +339,7 @@ zoneIdTruncated=TrUe
 });
 
 add_task(async function zoneIdTruncatedFalse() {
-  testProvenance(
+  await testProvenance(
     `
 [Mozilla]
 zoneIdTruncated=FaLsE
@@ -352,7 +352,7 @@ zoneIdTruncated=FaLsE
 });
 
 add_task(async function unknownZoneIdTruncated() {
-  testProvenance(
+  await testProvenance(
     `
 [Mozilla]
 zoneIdTruncated=unknown
@@ -365,7 +365,7 @@ zoneIdTruncated=unknown
 });
 
 add_task(async function unexpectedZoneIdTruncated() {
-  testProvenance(
+  await testProvenance(
     `
 [Mozilla]
 zoneIdTruncated=foobar
@@ -378,13 +378,13 @@ zoneIdTruncated=foobar
 });
 
 add_task(async function missingZoneIdTruncated() {
-  testProvenance(``, provenance => {
+  await testProvenance(``, provenance => {
     Assert.ok(!("zoneIdTruncated" in provenance));
   });
 });
 
 add_task(async function readZoneIdError() {
-  testProvenance(
+  await testProvenance(
     `
 [Mozilla]
 readZoneIdError=openFile
@@ -399,7 +399,7 @@ readZoneIdErrorCode=1234
 });
 
 add_task(async function unexpectedReadZoneIdErrorCode() {
-  testProvenance(
+  await testProvenance(
     `
 [Mozilla]
 readZoneIdError=openFile
@@ -414,7 +414,7 @@ readZoneIdErrorCode=bazqux
 });
 
 add_task(async function noAdsOnInstaller() {
-  testProvenance(
+  await testProvenance(
     `
 [Mozilla]
 readZoneIdError=openFile
@@ -431,7 +431,7 @@ readZoneIdErrorCode=2
 });
 
 add_task(async function unexpectedReadZoneIdError() {
-  testProvenance(
+  await testProvenance(
     `
 [Mozilla]
 readZoneIdError=foobar
@@ -444,7 +444,7 @@ readZoneIdError=foobar
 });
 
 add_task(async function missingZoneId() {
-  testProvenance(
+  await testProvenance(
     ``,
     provenance => {
       Assert.equal(provenance.zoneId, "missing");
@@ -454,7 +454,7 @@ add_task(async function missingZoneId() {
 });
 
 add_task(async function unexpectedZoneId() {
-  testProvenance(
+  await testProvenance(
     `
 [ZoneTransfer]
 ZoneId=9999999999
@@ -470,7 +470,7 @@ ZoneId=9999999999
 });
 
 add_task(async function missingReferrerUrl() {
-  testProvenance(
+  await testProvenance(
     ``,
     provenance => {
       Assert.equal(provenance.referrerUrl, "missing");
@@ -483,7 +483,7 @@ add_task(async function missingReferrerUrl() {
 });
 
 add_task(async function unexpectedReferrerUrl() {
-  testProvenance(
+  await testProvenance(
     `
 [ZoneTransfer]
 ReferrerUrl=foobar
@@ -496,7 +496,7 @@ ReferrerUrl=foobar
 });
 
 add_task(async function missingHostUrl() {
-  testProvenance(
+  await testProvenance(
     ``,
     provenance => {
       Assert.equal(provenance.hostUrl, "missing");
@@ -509,7 +509,7 @@ add_task(async function missingHostUrl() {
 });
 
 add_task(async function unexpectedHostUrl() {
-  testProvenance(
+  await testProvenance(
     `
 [ZoneTransfer]
 HostUrl=foobar
