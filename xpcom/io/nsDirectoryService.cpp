@@ -376,6 +376,9 @@ nsDirectoryService::GetFile(const char* aProp, bool* aPersistent,
   } else if (inAtom == nsGkAtoms::DirectoryService_PictureDocumentsDirectory) {
     rv = GetSpecialSystemDirectory(Mac_PictureDocumentsDirectory,
                                    getter_AddRefs(localFile));
+  } else if (inAtom == nsGkAtoms::DirectoryService_DefaultScreenshotDirectory) {
+    rv = GetSpecialSystemDirectory(Mac_DefaultScreenshotDirectory,
+                                   getter_AddRefs(localFile));
   }
 #elif defined(XP_WIN)
   else if (inAtom == nsGkAtoms::DirectoryService_SystemDirectory) {

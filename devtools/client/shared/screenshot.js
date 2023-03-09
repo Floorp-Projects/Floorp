@@ -329,6 +329,30 @@ function saveToClipboard(base64URI) {
   }
 }
 
+let _outputDirectory = null;
+
+/**
+ * Returns the default directory for screenshots.
+ * If a specific directory for screenshots is not defined,
+ * it falls back to the system downloads directory.
+ *
+ * @return {Promise<String>} Resolves the path as a string
+ */
+async function getOutputDirectory() {
+  if (_outputDirectory) {
+    return _outputDirectory;
+  }
+
+  try {
+    // This will throw if there is not a screenshot directory set for the platform
+    _outputDirectory = Services.dirsvc.get("Scrnshts", Ci.nsIFile).path;
+  } catch (e) {
+    _outputDirectory = await lazy.Downloads.getPreferredDownloadsDirectory();
+  }
+
+  return _outputDirectory;
+}
+
 /**
  * Save the screenshot data to disk, returning a promise which is resolved on
  * completion.
@@ -355,14 +379,14 @@ async function saveToFile(window, image) {
     filename += ".png";
   }
 
-  const downloadsDir = await lazy.Downloads.getPreferredDownloadsDirectory();
-  const downloadsDirExists = await IOUtils.exists(downloadsDir);
-  if (downloadsDirExists) {
+  const dir = await getOutputDirectory();
+  const dirExists = await IOUtils.exists(dir);
+  if (dirExists) {
     // If filename is absolute, it will override the downloads directory and
     // still be applied as expected.
     filename = PathUtils.isAbsolute(filename)
       ? filename
-      : PathUtils.joinRelative(downloadsDir, filename);
+      : PathUtils.joinRelative(dir, filename);
   }
 
   const targetFile = new lazy.FileUtils.File(filename);

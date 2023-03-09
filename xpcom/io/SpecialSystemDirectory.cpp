@@ -28,6 +28,7 @@
 #  include <sys/param.h>
 #  include "prenv.h"
 #  if defined(MOZ_WIDGET_COCOA)
+#    include "CFTypeRefPtr.h"
 #    include "CocoaFileUtils.h"
 #  endif
 
@@ -539,6 +540,25 @@ nsresult GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
     }
     case Mac_PictureDocumentsDirectory: {
       return GetOSXFolderType(kUserDomain, kPictureDocumentsFolderType, aFile);
+    }
+    case Mac_DefaultScreenshotDirectory: {
+      auto prefValue = CFTypeRefPtr<CFPropertyListRef>::WrapUnderCreateRule(
+          CFPreferencesCopyAppValue(CFSTR("location"),
+                                    CFSTR("com.apple.screencapture")));
+
+      if (!prefValue || CFGetTypeID(prefValue.get()) != CFStringGetTypeID()) {
+        return GetOSXFolderType(kUserDomain, kPictureDocumentsFolderType,
+                                aFile);
+      }
+
+      nsAutoString path;
+      mozilla::Span<char16_t> data =
+          path.GetMutableData(CFStringGetLength((CFStringRef)prefValue.get()));
+      CFStringGetCharacters((CFStringRef)prefValue.get(),
+                            CFRangeMake(0, data.Length()),
+                            reinterpret_cast<UniChar*>(data.Elements()));
+
+      return NS_NewLocalFile(path, true, aFile);
     }
 #elif defined(XP_WIN)
     case Win_SystemDirectory: {
