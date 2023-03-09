@@ -273,17 +273,17 @@ add_task(async function pickHelpButton() {
     );
 
     if (UrlbarPrefs.get("resultMenu")) {
-      let loadPromise = BrowserTestUtils.browserLoaded(
-        gBrowser.selectedBrowser,
-        false,
+      let tabOpenPromise = BrowserTestUtils.waitForNewTab(
+        gBrowser,
         "http://example.com/"
       );
       await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "h", {
         openByMouse: true,
         resultIndex: 1,
       });
-      info("Waiting for help URL to load in the current tab");
-      await loadPromise;
+      info("Waiting for help URL to load in a new tab");
+      await tabOpenPromise;
+      gBrowser.removeCurrentTab();
     } else {
       let helpButton = element._buttons.get("help");
       Assert.ok(helpButton, "Help button exists");
@@ -297,6 +297,13 @@ add_task(async function pickHelpButton() {
       await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     }
 
+    if (UrlbarPrefs.get("resultMenu")) {
+      todo(
+        false,
+        "help telemetry for the result menu to be implemented in bug 1790020"
+      );
+      return;
+    }
     const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
     TelemetryTestUtils.assertKeyedScalar(
       scalars,

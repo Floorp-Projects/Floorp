@@ -844,7 +844,7 @@ class TelemetryEvent {
    *        for "blur".
    * @param {string} [details.selType] type of the selected element, undefined
    *        for "blur". One of "unknown", "autofill", "visiturl", "bookmark",
-   *        "help", "history", "keyword", "searchengine", "searchsuggestion",
+   *        "history", "keyword", "searchengine", "searchsuggestion",
    *        "switchtab", "remotetab", "extension", "oneoff", "dismiss".
    * @param {string} [details.provider] The name of the provider for the selected
    *        result.
@@ -980,7 +980,7 @@ class TelemetryEvent {
     );
 
     if (details.selType === "dismiss") {
-      // The conventional telemetry doesn't support "dismiss" event.
+      // The conventional telemetry dones't support "dismiss" event.
       return;
     }
 
@@ -1306,36 +1306,29 @@ class TelemetryEvent {
   }
 
   /**
-   * Extracts a telemetry type from a result and the element being interacted
-   * with for event telemetry.
+   * Extracts a telemetry type from an element for event telemetry.
    *
-   * @param {object} result The element to analyze.
    * @param {Element} element The element to analyze.
    * @returns {string} a string type for the telemetry event.
    */
-  typeFromElement(result, element) {
+  typeFromElement(element) {
     if (!element) {
       return "none";
     }
-    if (result?.providerName != "UrlbarProviderTopSites") {
+    let row = element.closest(".urlbarView-row");
+    if (row.result && row.result.providerName != "UrlbarProviderTopSites") {
       // Element handlers go here.
-      if (
-        element.classList.contains("urlbarView-button-help") ||
-        element.dataset.command == "help"
-      ) {
-        return result?.type == lazy.UrlbarUtils.RESULT_TYPE.TIP
+      if (element.classList.contains("urlbarView-button-help")) {
+        return row.result.type == lazy.UrlbarUtils.RESULT_TYPE.TIP
           ? "tiphelp"
           : "help";
       }
-      if (
-        element.classList.contains("urlbarView-button-block") ||
-        element.dataset.command == "dismiss"
-      ) {
+      if (element.classList.contains("urlbarView-button-block")) {
         return "block";
       }
     }
     // Now handle the result.
-    return lazy.UrlbarUtils.telemetryTypeFromResult(result);
+    return lazy.UrlbarUtils.telemetryTypeFromResult(row.result);
   }
 
   /**
