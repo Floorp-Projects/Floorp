@@ -51,11 +51,12 @@ jobs:
     rockylinux8:
         image: rockylinux:8
         pre-commands:
-            - dnf install -y mercurial python3-pip
+            - dnf install -y mercurial python38-pip
     opensuse-leap:
         image: opensuse/leap
         pre-commands:
-            - zypper install -y mercurial python3-pip gzip
+            - zypper install -y mercurial python39-pip python39-curses gzip
+            - ln -s /usr/bin/pip3.9 /usr/bin/pip3
     opensuse-tumbleweed:
         image: opensuse/tumbleweed
         pre-commands:
