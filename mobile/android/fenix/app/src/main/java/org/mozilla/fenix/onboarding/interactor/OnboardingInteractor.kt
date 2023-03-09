@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.onboarding.interactor
 
+import org.mozilla.fenix.onboarding.controller.OnboardingController
+
 /**
  * Interface for onboarding related actions.
  */
@@ -17,4 +19,23 @@ interface OnboardingInteractor {
      * Opens a custom tab to privacy notice url. Called when a user clicks on the "read our privacy notice" button.
      */
     fun onReadPrivacyNoticeClicked()
+}
+
+/**
+ * The default implementation of [OnboardingInteractor].
+ *
+ * @param controller An instance of [OnboardingController] which will be delegated for all user
+ * interactions.
+ */
+class DefaultOnboardingInteractor(
+    private val controller: OnboardingController,
+) : OnboardingInteractor {
+
+    override fun onStartBrowsingClicked() {
+        controller.handleStartBrowsingClicked()
+    }
+
+    override fun onReadPrivacyNoticeClicked() {
+        controller.handleReadPrivacyNoticeClicked()
+    }
 }

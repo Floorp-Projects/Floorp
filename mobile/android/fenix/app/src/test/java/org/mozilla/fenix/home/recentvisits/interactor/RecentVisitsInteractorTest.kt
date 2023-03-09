@@ -34,7 +34,6 @@ class RecentVisitsInteractorTest {
     private val recentVisitsController: RecentVisitsController = mockk(relaxed = true)
     private val pocketStoriesController: PocketStoriesController = mockk(relaxed = true)
     private val privateBrowsingController: PrivateBrowsingController = mockk(relaxed = true)
-    private val onboardingController: OnboardingController = mockk(relaxed = true)
     private val searchSelectorController: SearchSelectorController = mockk(relaxed = true)
     private val toolbarController: ToolbarController = mockk(relaxed = true)
 
@@ -50,7 +49,6 @@ class RecentVisitsInteractorTest {
             recentVisitsController,
             pocketStoriesController,
             privateBrowsingController,
-            onboardingController,
             searchSelectorController,
             toolbarController,
         )

@@ -26,7 +26,6 @@ import org.mozilla.fenix.home.recentvisits.controller.RecentVisitsController
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 import org.mozilla.fenix.home.toolbar.ToolbarController
-import org.mozilla.fenix.onboarding.controller.OnboardingController
 import org.mozilla.fenix.search.toolbar.SearchSelectorController
 
 class SessionControlInteractorTest {
@@ -37,7 +36,6 @@ class SessionControlInteractorTest {
     private val recentBookmarksController: RecentBookmarksController = mockk(relaxed = true)
     private val pocketStoriesController: PocketStoriesController = mockk(relaxed = true)
     private val privateBrowsingController: PrivateBrowsingController = mockk(relaxed = true)
-    private val onboardingController: OnboardingController = mockk(relaxed = true)
     private val searchSelectorController: SearchSelectorController = mockk(relaxed = true)
     private val toolbarController: ToolbarController = mockk(relaxed = true)
 
@@ -56,7 +54,6 @@ class SessionControlInteractorTest {
             recentVisitsController,
             pocketStoriesController,
             privateBrowsingController,
-            onboardingController,
             searchSelectorController,
             toolbarController,
         )
@@ -116,18 +113,6 @@ class SessionControlInteractorTest {
         val collection: TabCollection = mockk(relaxed = true)
         interactor.onRenameCollectionTapped(collection)
         verify { controller.handleRenameCollectionTapped(collection) }
-    }
-
-    @Test
-    fun onStartBrowsingClicked() {
-        interactor.onStartBrowsingClicked()
-        verify { onboardingController.handleStartBrowsingClicked() }
-    }
-
-    @Test
-    fun onReadPrivacyNoticeClicked() {
-        interactor.onReadPrivacyNoticeClicked()
-        verify { onboardingController.handleReadPrivacyNoticeClicked() }
     }
 
     @Test

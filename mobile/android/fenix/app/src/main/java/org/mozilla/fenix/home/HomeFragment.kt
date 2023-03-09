@@ -104,7 +104,6 @@ import org.mozilla.fenix.messaging.DefaultMessageController
 import org.mozilla.fenix.messaging.FenixNimbusMessagingController
 import org.mozilla.fenix.messaging.MessagingFeature
 import org.mozilla.fenix.nimbus.FxNimbus
-import org.mozilla.fenix.onboarding.controller.DefaultOnboardingController
 import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
 import org.mozilla.fenix.perf.runBlockingIncrement
 import org.mozilla.fenix.search.toolbar.DefaultSearchSelectorController
@@ -387,10 +386,6 @@ class HomeFragment : Fragment() {
                 activity = activity,
                 appStore = components.appStore,
                 navController = findNavController(),
-            ),
-            onboardingController = DefaultOnboardingController(
-                activity = activity,
-                hideOnboarding = ::hideOnboardingAndOpenSearch,
             ),
             searchSelectorController = DefaultSearchSelectorController(
                 activity = activity,
@@ -864,6 +859,7 @@ class HomeFragment : Fragment() {
         }
     }
 
+    @Suppress("UnusedPrivateMember")
     private fun hideOnboardingAndOpenSearch() {
         hideOnboardingIfNeeded()
         appBarLayout?.setExpanded(true, true)
