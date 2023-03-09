@@ -25,7 +25,8 @@
 #   MOZ_CURRENT_CENTRAL=cad1bd47c273 \
 #   bash dom/media/webrtc/third_party_build/elm_rebase.sh
 #
-# Assumes the top of the fast-forward stack to rebase is tip.
+# Assumes the top of the fast-forward stack to rebase is the current revision,
+# ".".
 
 function show_error_msg()
 {
@@ -63,7 +64,7 @@ set -eEo pipefail
 if [ -f $STATE_DIR/rebase_resume_state ]; then
   source $STATE_DIR/rebase_resume_state
 else
-MOZ_TOP_FF=`hg log -r tip -T"{node|short}"`
+MOZ_TOP_FF=`hg log -r . -T"{node|short}"`
 
 ERROR_HELP=$"
 An error here is likely because no revision for central is found.
