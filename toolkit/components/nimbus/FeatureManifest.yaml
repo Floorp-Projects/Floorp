@@ -1065,3 +1065,29 @@ legacyHeartbeat:
     survey:
       type: json
       description: The Heartbeat survey parameters.
+
+queryStripping:
+  description: Query parameter stripping anti-tracking feature.
+  owner: pbz@mozilla.com
+  hasExposure: false
+  variables:
+    enabledNormalBrowsing:
+      type: boolean
+      setPref: privacy.query_stripping.enabled
+      description: Enables / disables URL query string stripping in normal browsing mode.
+    enabledPrivateBrowsing:
+      type: boolean
+      setPref: privacy.query_stripping.enabled.pbmode
+      description: Enables / disables URL query string stripping in private browsing mode.
+    allowList:
+      type: string
+      setPref: privacy.query_stripping.allow_list
+      description: >-
+        List of sites exempt from query stripping. This list will be merged with
+        records coming from RemoteSettings.
+    stripList:
+      type: string
+      setPref: privacy.query_stripping.strip_list
+      description: >-
+        List of query params to be stripped from URIs. This list will be merged
+        with records coming from RemoteSettings.
