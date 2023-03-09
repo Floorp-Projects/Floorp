@@ -6,4 +6,6 @@
     <string name="mozac_support_ktx_menu_email_with">Enviar correo con…</string>
     <string name="mozac_support_ktx_menu_share_with">Compartir con…</string>
     <string name="mozac_support_ktx_share_dialog_title">Compartir mediante</string>
+    <!-- Text for confirmation "snackbar" shown after copying an image to the clipboard. -->
+    <string name="mozac_support_ktx_snackbar_delegate_image_copied">Imagen copiada al portapapeles</string>
 </resources>

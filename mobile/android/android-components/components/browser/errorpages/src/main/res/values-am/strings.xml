@@ -6,8 +6,16 @@
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">ጥያቄን ማጠናቀቅ አይቻልም</string>
 
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+      <p>ስለዚህ ችግር ወይም ስህተት ተጨማሪ መረጃ በአሁኑ ጊዜ አይገኝም።</p>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_title">ደህንነቱ የተጠበቀ ግንኙነት አልተሳካም</string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">ደህንነቱ የተጠበቀ ግንኙነት አልተሳካም</string>
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">የላቀ…</string>
@@ -46,11 +54,42 @@
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">ደህንነቱ ያልተጠበቀ የፋይል አይነት</string>
 
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
+      <ul>
+        <li>እባክዎ ይህንን ችግር ለማሳወቅ የድረ-ገፁን ባለቤቶች ያነጋግሩ።</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_title">የተበላሸ የይዘት ስህተት</string>
 
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>ለማየት እየሞከሩት ያለው ገጽ ሊታይ አይችልም ምክንያቱም በመረጃ ስርጭቱ ላይ ስህተት ስለተገኘ።</p>
+      <ul>
+        <li>እባክዎ ይህንን ችግር ለማሳወቅ የድረ-ገፁን ባለቤቶች ያነጋግሩ።</li>
+      </ul>
+    ]]></string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_content_crashed_title">ይዘት ተበላሽቷል</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>ለማየት እየሞከሩት ያለው ገጽ ሊታይ አይችልም ምክንያቱም በመረጃ ስርጭቱ ላይ ስህተት ስለተገኘ።</p>
+      <ul>
+        <li>እባክዎ ይህንን ችግር ለማሳወቅ የድረ-ገፁን ባለቤቶች ያነጋግሩ።</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">የይዘት መቀየር ስህተት</string>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>ለማየት እየሞከሩት ያለው ገጽ ልክ ያልሆነ ወይም የማይደገፍ የማመቅ ዘዴ ስለሚጠቀም ሊታይ አይችልም።</p>
+      <ul>
+        <li>እባክዎ ይህንን ችግር ለማሳወቅ የድረ-ገፁን ባለቤቶች ያነጋግሩ።</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_host_title">አድራሻ አልተገኘም</string>
@@ -64,8 +103,19 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">ልክ ያልሆነ አድራሻ</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>የቀረበው አድራሻ በሚታወቅ ቅርጸት አይደለም። እባክዎ ለስህተቶች የአካባቢ አሞሌን ያረጋግጡ እና እንደገና ይሞክሩ።</p>
+    ]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">አድራሻው ልክ አይደለም</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>የድር አድራሻዎች ብዙውን ጊዜ እንደ <strong>http://www.example.com/</strong></li> ይጻፋሉ
+        <li>እዝባሮችን እየተጠቀሙ መሆንዎን ያረጋግጡ (ማለትም <strong>/</strong>)።</li>
+      </ul>
+    ]]></string>
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_unknown_protocol_title">ያልታወቀ ፕሮቶኮል</string>
@@ -73,4 +123,47 @@
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_file_not_found_title">ሰነዱ አልተገኘም</string>
 
-    </resources>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">የፋይሉ መዳረሻ ተከልክሏል</string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>ተወግዷል፣ ተንቀሳቅሷል ወይም የፋይል ፍቃዶች መዳረሻን እየከለከሉ ሊሆን ይችላል።</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">ተኪ አገልጋይ ግንኙነትን ውድቅ አድርጓል</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">ተኪ አገልጋይ አልተገኘም</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>በ%1$s ያለው ድረ-ገፅ የጥቃት ድረ-ገፅ ተብሎ ሪፖርት ተደርጓል እና በእርስዎ የደህንነት ምርጫዎች መሠረት ታግዷል።</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">የማይፈለግ የድረ-ገፅ ጉዳይ</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">ጎጂ የድረ-ገፅ ጉዳይ</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>በ%1$s ያለው ድረ-ገፅ ጎጂ ሊሆን የሚችል ድረ-ገፅ ተብሎ ሪፖርት ተደርጓል እና በእርስዎ የደህንነት ምርጫዎች መሠረት ታግዷል።</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">አታላይ የድረ-ገፅ ጉዳይ</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>ይህ በ%1$s ላይ ያለው ድረ-ገጽ እንደ አታላይ ድረ-ገጽ ሪፖርት ተደርጓል እና በእርስዎ የደህንነት ምርጫዎች መሠረት ታግዷል።</p>
+    ]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">ደህንነቱ የተጠበቀ ድረ-ገፅ የለም</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[ለተሻሻለ ደህንነት HTTPS-only ሁነታን አንቅተዋል፣ እና የ<em>%1$s</em> HTTPS ስሪት የለም።]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">ወደ HTTP ድረ-ገፅ ይቀጥሉ</string>
+</resources>

@@ -494,6 +494,12 @@
     <string name="preferences_enable_autocomplete_urls">URL адрестерін автотолықтыру</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Сілтемелерді қолданбаларда ашу</string>
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">Әрқашан</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">Ашпас бұрын сұрау</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">Ешқашан</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Сыртқы жүктеу менеджері</string>
     <!-- Preference for add_ons -->

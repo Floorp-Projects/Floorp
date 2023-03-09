@@ -492,6 +492,12 @@
     <string name="preferences_enable_autocomplete_urls">Ինքնալրացում</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Բացել հղումները հավելվածներում</string>
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">Միշտ</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">Հարցրեք բացելուց առաջ</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">Երբեք</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Ներբեռնումների արտաքին հավելված</string>
     <!-- Preference for add_ons -->

@@ -66,14 +66,10 @@
     </string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Foegje in fluchtoets ta om priveeljepblêden fan jo startskerm út te iepenjen.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">Start it folgjende priveeljepblêd mei ien tik.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">Start jo folgjende priveeljepblêd mei ien tik.</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Fluchtoets tafoegje</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Tafoegje oan startskerm</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -501,6 +497,12 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Keppelingen iepenje yn apps</string>
 
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">Altyd</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">Freegje foar iepenjen</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">Nea</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Eksterne downloadbehearder</string>
     <!-- Preference for add_ons -->
@@ -1203,13 +1205,13 @@
     <string name="notification_pbm_delete_text_2">Priveeljepblêden slute</string>
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Marketing</string>
-    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_title">%1$s is fluch en privee</string>
-    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_text">%1$s jo standertbrowser meitsje</string>
 
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_title" tools:ignore="UnusedResources">Firefox is fluch en privee</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_text" tools:ignore="UnusedResources">Firefox jo standertbrowser meitsje</string>
     <!-- Title shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_title">Probearje priveenavigaasje</string>
     <!-- Text shown in the notification that pops up to re-engage the user.
@@ -1352,6 +1354,8 @@
     <string name="onboarding_firefox_account_sync_is_on">Syngronisaasje is ynskeakele</string>
     <!-- Text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header">Standert privacybeskerming</string>
+    <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_old">%1$s soarget der automatysk foar dat bedriuwen jo net stikem folgje op ynternet.</string>
     <!-- Text for the tracking protection card description. -->
     <string name="onboarding_tracking_protection_description">Mei Totale cookiebeskerming om foar te kommen dat trackers cookies brûke om jo stikem op it ynternet te folgjen.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -2039,4 +2043,6 @@
     <string name="a11y_action_label_wallpaper_collection_learn_more">keppeling iepenje foar mear ynfo oer dizze kolleksje</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
     <string name="a11y_action_label_read_article">it artikel te lêzen</string>
+    <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
+    <string name="a11y_action_label_pocket_learn_more">de keppeling te iepenjen foar mear ynfo</string>
 </resources>

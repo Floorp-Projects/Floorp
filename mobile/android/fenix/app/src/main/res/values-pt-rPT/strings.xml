@@ -494,6 +494,12 @@
     <string name="preferences_enable_autocomplete_urls">Conclusão automática de endereços</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Abrir ligações em aplicações</string>
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">Sempre</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">Perguntar antes de abrir</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">Nunca</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Gestor de transferências externo</string>
     <!-- Preference for add_ons -->
@@ -1202,13 +1208,13 @@
     <string name="notification_pbm_delete_text_2">Fechar separadores privados</string>
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Marketing</string>
-    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_title">%1$s é rápido e privado</string>
-    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_text">Escolher o %1$s como o seu navegador predefinido</string>
 
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_title" tools:ignore="UnusedResources">O Firefox é rápido e privado</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_text" tools:ignore="UnusedResources">Torne o Firefox no seu navegador predefinido</string>
     <!-- Title shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_title">Experimente a navegação privada</string>
     <!-- Text shown in the notification that pops up to re-engage the user.

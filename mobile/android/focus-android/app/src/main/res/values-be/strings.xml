@@ -490,6 +490,95 @@
     <!--  Title preference inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
     <string name="cookie_banner_reject_all_option_title">Памяншэнне колькасці банераў кукі</string>
 
+    <!-- CFR for Cookie Banner (Banner Info Message). This text should be the same as the settings text from "cfr_for_cookie_banner". The text should be underlined and should redirect the user to the cookie banner settings screen. -->
+    <string name="cfr_for_cookie_banner_underline_settings" moz:RemovedIn="111" tools:ignore="UnusedResources">налады</string>
+    <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
+    <string name="cfr_cookie_banner_link">налады</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Аўтапрайграванне</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Каб дазволіць гэта:</string>
+
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Перайдзіце ў налады Android</string>
+
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Націсніце <b>Дазволы</b>]]></string>
+
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Перайсці ў налады</string>
+
+    <!-- Third step for allowing a permission. The placeholder will be updated by, for example, "Camera" -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Пераключыце <b>%1$s</b> на УКЛ]]></string>
+
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Камера</string>
+
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Мікрафон</string>
+
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Месцазнаходжанне</string>
+
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Апавяшчэнні</string>
+
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">Змесціва пад DRM кантролем</string>
+
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Запытваць дазвол</string>
+
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Заблакіраваны</string>
+
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Дазволена</string>
+
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Заблакіравана Android</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Дазволіць гук і відэа</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Блакіраваць толькі гук</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Рэкамендавана</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Блакіраваць гук і відэа</string>
+
+    <!-- Preference for studies -->
+    <string name="preference_studies">Даследаванні</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Firefox можа ўсталёўваць і выконваць даследаванні час ад часу.</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Падрабязней</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">Праграма будзе закрыта, каб прымяніць змены</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Выдаліць</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Актыўна</string>
+
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">Скончана</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">Аддаленая адладка праз USB/Wi-Fi</string>
+
+    <!-- Text Button for show biometric prompt -->
+    <string name="show_biometric_button_text">Разблакіраваць</string>
+
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Не</string>
 
