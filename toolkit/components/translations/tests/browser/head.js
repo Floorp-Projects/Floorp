@@ -70,7 +70,7 @@ async function openAboutTranslations({
 
   // Before loading about:translations, handle any mocking of the actor.
   if (languagePairs) {
-    TranslationsParent.mock(languagePairs);
+    TranslationsParent.mockLanguagePairs(languagePairs);
   }
 
   // Now load the about:translations page, since the actor could be mocked.
@@ -84,7 +84,7 @@ async function openAboutTranslations({
   );
 
   if (languagePairs) {
-    TranslationsParent.mock(null);
+    TranslationsParent.mockLanguagePairs(null);
   }
   BrowserTestUtils.removeTab(tab);
   await SpecialPowers.popPrefEnv();
@@ -255,7 +255,7 @@ async function loadTestPage({ runInPage, languagePairs, page }) {
 
   // Before loading the page, handle any mocking of the actor.
   if (languagePairs) {
-    TranslationsParent.mock(languagePairs);
+    TranslationsParent.mockLanguagePairs(languagePairs);
   }
 
   BrowserTestUtils.loadURIString(tab.linkedBrowser, page);
@@ -268,7 +268,7 @@ async function loadTestPage({ runInPage, languagePairs, page }) {
   );
 
   if (languagePairs) {
-    TranslationsParent.mock(null);
+    TranslationsParent.mockLanguagePairs(null);
   }
   BrowserTestUtils.removeTab(tab);
   await SpecialPowers.popPrefEnv();
