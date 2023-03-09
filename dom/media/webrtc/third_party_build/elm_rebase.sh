@@ -141,8 +141,11 @@ echo ""
 for commit in $COMMITS; do
   echo "Processing $commit"
   FULL_COMMIT_LINE=`head -1 $COMMIT_LIST_FILE`
-  echo "Removing from list '$FULL_COMMIT_LINE'"
-  ed -s $COMMIT_LIST_FILE <<< $'1d\nw\nq'
+
+  function remove_commit () {
+    echo "Removing from list '$FULL_COMMIT_LINE'"
+    ed -s $COMMIT_LIST_FILE <<< $'1d\nw\nq'
+  }
 
   IS_BUILD_COMMIT=`hg log -T '{desc|firstline}' -r $commit \
                    | grep "file updates" | wc -l | tr -d " " || true`
@@ -150,6 +153,7 @@ for commit in $COMMITS; do
   if [ "x$IS_BUILD_COMMIT" != "x0" ]; then
     echo "Skipping $commit:"
     hg log -T '{desc|firstline}' -r $commit
+    remove_commit
     continue
   fi
 
@@ -164,11 +168,14 @@ for commit in $COMMITS; do
   echo "Import patch for $commit"
   hg import $TMP_DIR/rebase.patch || \
   ( hg log -T '{desc}' -r $commit > $TMP_DIR/rebase_commit_message.txt ; \
+    remove_commit ; \
     echo "Error importing: '$FULL_COMMIT_LINE'" ; \
     echo "Please fix import errors, then:" ; \
     echo "  hg commit -l $TMP_DIR/rebase_commit_message.txt" ; \
     echo "  bash $0" ; \
     exit 1 )
+
+  remove_commit
 
   if [ "x$IS_SKIP_GEN_COMMIT" != "x0" ]; then
     echo "Skipping build generation for $commit"
