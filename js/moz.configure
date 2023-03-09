@@ -734,20 +734,13 @@ set_define("ENABLE_SHARED_MEMORY", enable_shared_memory)
 # =====================================================
 
 
-@depends(milestone.is_nightly)
-def default_wasm_extended_const(is_nightly):
-    if is_nightly:
-        return True
-
-
 option(
-    "--enable-wasm-extended-const",
-    default=default_wasm_extended_const,
+    "--disable-wasm-extended-const",
     help="{Enable|Disable} WebAssembly extended constant expressions",
 )
 
 
-@depends("--enable-wasm-extended-const", "--wasm-no-experimental")
+@depends("--disable-wasm-extended-const", "--wasm-no-experimental")
 def wasm_extended_const(value, no_experimental):
     if no_experimental:
         return
