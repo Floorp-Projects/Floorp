@@ -472,7 +472,12 @@ class PlacesViewBase {
   }
 
   nodeURIChanged(aPlacesNode, aURIString) {
-    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
+    let elt = this._getDOMNodeForPlacesNode(aPlacesNode, true);
+
+    // There's no DOM node, thus there's nothing to be done when the URI changes.
+    if (!elt) {
+      return;
+    }
 
     // Here we need the <menu>.
     if (elt.localName == "menupopup") {
@@ -486,11 +491,11 @@ class PlacesViewBase {
   }
 
   nodeIconChanged(aPlacesNode) {
-    let elt = this._getDOMNodeForPlacesNode(aPlacesNode);
+    let elt = this._getDOMNodeForPlacesNode(aPlacesNode, true);
 
-    // There's no UI representation for the root node, thus there's nothing to
-    // be done when the icon changes.
-    if (elt == this._rootElt) {
+    // There's no UI representation for the root node, or there's no DOM node,
+    // thus there's nothing to be done when the icon changes.
+    if (!elt || elt == this._rootElt) {
       return;
     }
 
