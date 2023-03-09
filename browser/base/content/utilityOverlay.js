@@ -408,13 +408,13 @@ function openAboutDialog() {
     return;
   }
 
-  var features = "chrome,centerscreen,";
+  var features = "chrome,";
   if (AppConstants.platform == "win") {
-    features += "dependent";
+    features += "centerscreen,dependent";
   } else if (AppConstants.platform == "macosx") {
     features += "resizable=no,minimizable=no";
   } else {
-    features += "dependent,dialog=no";
+    features += "centerscreen,dependent,dialog=no";
   }
 
   window.openDialog("chrome://browser/content/aboutDialog.xhtml", "", features);
