@@ -1022,8 +1022,6 @@ browser[tabmodalPromptShowing], browser[tabDialogShowing] {
 /* Status panel */
 
 #statuspanel:not([hidden]) {
-  display: block;
-
   max-width: calc(100% - 5px);
   pointer-events: none;
 
