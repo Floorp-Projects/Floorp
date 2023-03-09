@@ -21,6 +21,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
+XPCOMUtils.defineLazyModuleGetters(lazy, {
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
+  ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
+});
+
 // When this is set we suppress automatic TRR selection beyond dry-run as well
 // as sending observer notifications during heuristics throttling.
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -235,10 +240,19 @@ export const DoHController = {
     // If we enter this branch it means that no automatic selection was possible.
     // In this case, we try to set a fallback (as defined by DoHConfigController).
     if (!lazy.Preferences.isSet(ROLLOUT_URI_PREF)) {
-      lazy.Preferences.set(
-        ROLLOUT_URI_PREF,
-        lazy.DoHConfigController.currentConfig.fallbackProviderURI
-      );
+      let uri = lazy.DoHConfigController.currentConfig.fallbackProviderURI;
+
+      // If part of the treatment branch use the URL from the experiment.
+      try {
+        let ohttpURI = lazy.NimbusFeatures.dooh.getVariable("ohttpUri");
+        if (ohttpURI) {
+          uri = ohttpURI;
+        }
+      } catch (e) {
+        console.error(`Error getting dooh.ohttpURI: ${e.message}`);
+      }
+
+      lazy.Preferences.set(ROLLOUT_URI_PREF, uri);
     }
     this.runHeuristicsThrottled("startup");
     Services.obs.addObserver(this, kLinkStatusChangedTopic);
@@ -359,7 +373,12 @@ export const DoHController = {
       networkID: getHashedNetworkID(),
     };
 
-    if (results.steeredProvider) {
+    const oHTTPexperiment = lazy.ExperimentAPI.getExperimentMetaData({
+      featureId: "dooh",
+    });
+
+    // When the OHTTP experiment is active we don't want to enable steering.
+    if (results.steeredProvider && !oHTTPexperiment) {
       Services.dns.setDetectedTrrURI(results.steeredProvider.uri);
       resultsForTelemetry.steeredProvider = results.steeredProvider.id;
     }
