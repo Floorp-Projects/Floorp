@@ -641,12 +641,13 @@
 
 #search-container,
 #wrapper-search-container {
-  flex: 175 175;
+  flex: 175 175 auto;
 }
 
 #search-container[width] {
-  /* Take something closer to the explicit width when requested */
-  flex: 1;
+  /* Take something closer to the explicit width when requested. Also important
+   * to use flex-basis auto so that the width is actually honored. */
+  flex: 1 auto;
 }
 
 #search-container[cui-areatype="panel"] > #searchbar:-moz-lwtheme {
