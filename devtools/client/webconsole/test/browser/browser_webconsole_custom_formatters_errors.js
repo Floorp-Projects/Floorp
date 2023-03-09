@@ -13,6 +13,9 @@ add_task(async function() {
   await pushPref("devtools.custom-formatters", true);
   await pushPref("devtools.custom-formatters.enabled", true);
 
+  // enable "can't access property "y", x is undefined" error message
+  await pushPref("javascript.options.property_error_message_fix", true);
+
   const hud = await openNewTabAndConsole(TEST_URI);
 
   // Reload the browser to ensure the custom formatters are picked up
