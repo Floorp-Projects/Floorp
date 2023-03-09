@@ -952,6 +952,14 @@ already_AddRefed<Promise> ReadableStream::IteratorReturn(
       return nullptr;
     }
 
+    MOZ_DIAGNOSTIC_ASSERT(
+        reader->GetStream(),
+        "We shouldn't have a null stream here (bug 1821169).");
+    if (!reader->GetStream()) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
     // Step 4.2. Perform ! ReadableStreamDefaultReaderRelease(reader).
     ReadableStreamDefaultReaderRelease(aCx, reader, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
