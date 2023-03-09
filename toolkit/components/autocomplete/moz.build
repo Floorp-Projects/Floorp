@@ -19,7 +19,7 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = "autocomplete"
 
 EXTRA_JS_MODULES += [
-    "AutoCompleteSimpleSearch.jsm",
+    "AutoCompleteSimpleSearch.sys.mjs",
 ]
 
 UNIFIED_SOURCES += [
