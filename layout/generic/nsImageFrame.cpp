@@ -442,26 +442,8 @@ void nsImageFrame::DeinitOwnedRequest() {
   mOwnedRequest = nullptr;
 }
 
-void nsImageFrame::MaybeRecordContentUrlOnImageTelemetry() {
-  if (mKind != Kind::ImageLoadingContent) {
-    return;
-  }
-  const auto& content = *StyleContent();
-  if (content.ContentCount() != 1) {
-    return;
-  }
-  const auto& item = content.ContentAt(0);
-  if (!item.IsImage()) {
-    return;
-  }
-  PresContext()->Document()->SetUseCounter(
-      eUseCounter_custom_ContentUrlOnImageContent);
-}
-
 void nsImageFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
   nsAtomicContainerFrame::DidSetComputedStyle(aOldStyle);
-
-  MaybeRecordContentUrlOnImageTelemetry();
 
   // A ::marker's default size is calculated from the font's em-size.
   if (IsForMarkerPseudo()) {
