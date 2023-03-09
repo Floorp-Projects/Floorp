@@ -20,6 +20,9 @@ class nsSimpleURI;
 /**
  * A wrapper for an nsIPrincipal that can be used OMT, which has cached
  * information useful for the gfxUserFontSet.
+ *
+ * TODO(emilio): This has grown a bit more complex, but nsIPrincipal is now
+ * thread-safe, re-evaluate the existence of this class.
  */
 class gfxFontSrcPrincipal {
  public:
@@ -27,8 +30,6 @@ class gfxFontSrcPrincipal {
                                nsIPrincipal* aStoragePrincipal);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(gfxFontSrcPrincipal)
-
-  nsIPrincipal* get() const { return NodePrincipal(); }
 
   nsIPrincipal* NodePrincipal() const { return mNodePrincipal; }
 
