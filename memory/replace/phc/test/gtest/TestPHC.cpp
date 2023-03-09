@@ -147,12 +147,13 @@ TEST(PHC, TestPHCInfo)
       PHCInfoEq(phcInfo, phc::AddrInfo::Kind::InUsePage, p, 32ul, true, false));
   ASSERT_EQ(moz_malloc_usable_size(p), 32ul);
   jemalloc_ptr_info(p, &jeInfo);
+  ASSERT_TRUE(JeInfoEq(jeInfo, TagLiveAlloc, p, 32, 0));
 
   // Test an in-use PHC allocation: last byte within it.
   ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(p + 31, &phcInfo));
   ASSERT_TRUE(
       PHCInfoEq(phcInfo, phc::AddrInfo::Kind::InUsePage, p, 32ul, true, false));
-  ASSERT_TRUE(JeInfoEq(jeInfo, TagLiveAlloc, p, 32, 0));
+  ASSERT_EQ(moz_malloc_usable_size(p + 31), 32ul);
   jemalloc_ptr_info(p + 31, &jeInfo);
   ASSERT_TRUE(JeInfoEq(jeInfo, TagLiveAlloc, p, 32, 0));
 
@@ -160,6 +161,7 @@ TEST(PHC, TestPHCInfo)
   ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(p - 1, &phcInfo));
   ASSERT_TRUE(
       PHCInfoEq(phcInfo, phc::AddrInfo::Kind::InUsePage, p, 32ul, true, false));
+  ASSERT_EQ(moz_malloc_usable_size(p - 1), 0ul);
   jemalloc_ptr_info(p - 1, &jeInfo);
   ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
 
