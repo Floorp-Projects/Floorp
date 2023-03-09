@@ -620,3 +620,8 @@ color: var(--in-content-item-selected-text);
 .pictureFolderDisplay{
   display: var(--background-folder-display,inherit);
 }
+
+[preference="floorp.openLinkInExternal.enabled"][disabled="true"] + hbox {
+  opacity: 0.5;
+  pointer-events: none;
+}
