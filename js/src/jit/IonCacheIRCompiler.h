@@ -52,6 +52,8 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
   void assertFloatRegisterAvailable(FloatRegister reg);
 #endif
 
+  IonICPerfSpewer& perfSpewer() { return perfSpewer_; }
+
  private:
   const CacheIRWriter& writer_;
   IonIC* ic_;
@@ -62,6 +64,8 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
   mozilla::Maybe<CodeOffset> stubJitCodeOffset_;
 
   bool savedLiveRegs_;
+
+  IonICPerfSpewer perfSpewer_;
 
   template <typename T>
   T rawPointerStubField(uint32_t offset);

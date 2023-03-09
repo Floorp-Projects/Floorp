@@ -976,7 +976,7 @@ void BaselinePerfSpewer::saveProfile(JSContext* cx, JSScript* script,
   CollectJitCodeInfo(desc, code, profilerRecord, lock);
 }
 
-void InlineCachePerfSpewer::saveProfile(JitCode* code, const char* name) {
+void InlineCachePerfSpewer::saveProfile(JitCode* code, const char* icname) {
   if (!PerfEnabled()) {
     return;
   }
@@ -984,7 +984,7 @@ void InlineCachePerfSpewer::saveProfile(JitCode* code, const char* name) {
 
   JS::JitCodeRecord* profilerRecord = CreateProfilerEntry(lock);
 
-  UniqueChars desc = JS_smprintf("IC: %s", name);
+  UniqueChars desc = JS_smprintf("%s: %s", TierName(), icname);
   if (PerfIREnabled()) {
     saveJitCodeIRInfo(desc.get(), code, profilerRecord, lock);
   }

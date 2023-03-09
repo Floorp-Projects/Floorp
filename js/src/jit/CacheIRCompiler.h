@@ -951,11 +951,6 @@ class MOZ_RAII CacheIRCompiler {
   void assertFloatRegisterAvailable(FloatRegister reg);
 #endif
 
-  InlineCachePerfSpewer perfSpewer_;
-
- public:
-  InlineCachePerfSpewer& perfSpewer() { return perfSpewer_; }
-
   void callVMInternal(MacroAssembler& masm, VMFunctionId id);
   template <typename Fn, Fn fn>
   void callVM(MacroAssembler& masm);
