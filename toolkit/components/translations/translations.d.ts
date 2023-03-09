@@ -237,6 +237,16 @@ interface LanguageIdEnginePayload {
 }
 
 /**
+ * These are the values which a LanguageIdEngine returns after identifying a language.
+ * These values are pre-determined when creating a mocked language-identification engine
+ * and the mocked engine will always return those values.
+ */
+interface LanguageIdEngineMockedPayload {
+  confidence: number,
+  languageLabel: string,
+}
+
+/**
  * Nodes that are being translated are given priority according to their visibility.
  */
 export type NodeVisibility = "in-viewport" | "out-of-viewport" | "hidden";
