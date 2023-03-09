@@ -9,7 +9,6 @@
 #include "mozilla/URLExtraData.h"
 
 #include "mozilla/NullPrincipal.h"
-#include "nsProxyRelease.h"
 #include "ReferrerInfo.h"
 
 namespace mozilla {
@@ -36,11 +35,7 @@ void URLExtraData::Shutdown() {
   sDummyChrome = nullptr;
 }
 
-URLExtraData::~URLExtraData() {
-  if (!NS_IsMainThread()) {
-    NS_ReleaseOnMainThread("URLExtraData::mPrincipal", mPrincipal.forget());
-  }
-}
+URLExtraData::~URLExtraData() = default;
 
 StaticRefPtr<URLExtraData>
     URLExtraData::sShared[size_t(UserAgentStyleSheetID::Count)];

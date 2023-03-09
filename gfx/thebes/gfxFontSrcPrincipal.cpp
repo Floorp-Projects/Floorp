@@ -5,7 +5,6 @@
 
 #include "gfxFontSrcPrincipal.h"
 
-#include "nsProxyRelease.h"
 #include "nsURIHashKey.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/HashFunctions.h"
@@ -29,12 +28,7 @@ gfxFontSrcPrincipal::gfxFontSrcPrincipal(nsIPrincipal* aNodePrincipal,
                              mozilla::HashString(suffix));
 }
 
-gfxFontSrcPrincipal::~gfxFontSrcPrincipal() {
-  NS_ReleaseOnMainThread("gfxFontSrcPrincipal::mNodePrincipal",
-                         mNodePrincipal.forget());
-  NS_ReleaseOnMainThread("gfxFontSrcPrincipal::mStoragePrincipal",
-                         mStoragePrincipal.forget());
-}
+gfxFontSrcPrincipal::~gfxFontSrcPrincipal() = default;
 
 bool gfxFontSrcPrincipal::Equals(gfxFontSrcPrincipal* aOther) {
   return BasePrincipal::Cast(mStoragePrincipal)
