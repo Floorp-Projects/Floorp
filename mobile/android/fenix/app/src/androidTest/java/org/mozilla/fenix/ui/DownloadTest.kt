@@ -110,6 +110,11 @@ class DownloadTest {
     @SmokeTest
     @Test
     fun pauseResumeCancelDownloadTest() {
+        // Clear the "Firefox Fenix default browser notification"
+        notificationShade {
+            cancelAllShownNotifications()
+        }
+
         downloadFile = "1GB.zip"
 
         navigationToolbar {
