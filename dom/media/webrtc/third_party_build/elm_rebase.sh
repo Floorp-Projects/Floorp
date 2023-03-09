@@ -67,6 +67,18 @@ else
 
 if [ "x" == "x$MOZ_TOP_FF" ]; then
   MOZ_TOP_FF=`hg log -r . -T"{node|short}"`
+
+  ERROR_HELP=$"
+The topmost commit to be rebased is not in the public phase. Should it be
+pushed to elm first? If this is intentional, please rerun the command and pass
+it in explicitly:
+  MOZ_TOP_FF=$MOZ_TOP_FF bash $0
+"
+  if [[ $(hg phase -r .) != *public ]]; then
+    echo "$ERROR_HELP"
+    exit 1
+  fi
+  ERROR_HELP=""
 fi
 
 ERROR_HELP=$"
