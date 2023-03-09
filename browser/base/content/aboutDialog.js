@@ -17,7 +17,11 @@ if (AppConstants.MOZ_UPDATER) {
   );
 }
 
-function init() {
+async function init(aEvent) {
+  if (aEvent.target != document) {
+    return;
+  }
+
   let defaults = Services.prefs.getDefaultBranch(null);
   let distroId = defaults.getCharPref("distribution.id", "");
   if (distroId) {
@@ -67,6 +71,8 @@ function init() {
 
   document.l10n.setAttributes(versionField, versionId, versionAttributes);
 
+  await document.l10n.translateElements([versionField]);
+
   // Show a release notes link if we have a URL.
   let relNotesLink = document.getElementById("releasenotes");
   let relNotesPrefType = Services.prefs.getPrefType(
@@ -99,6 +105,13 @@ function init() {
   if (AppConstants.IS_ESR) {
     document.getElementById("release").hidden = false;
   }
-}
 
-init();
+  window.sizeToContent();
+
+  if (AppConstants.platform == "macosx") {
+    window.moveTo(
+      screen.availWidth / 2 - window.outerWidth / 2,
+      screen.availHeight / 5
+    );
+  }
+}
