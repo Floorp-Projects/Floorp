@@ -129,18 +129,22 @@ add_task(async function test_wait_addons_startup_before_granting_quit() {
 
 // Regression test for Bug 1799421.
 add_task(async function test_late_XPIDB_load_rejected() {
+  const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+  const sandbox = sinon.createSandbox();
   await AddonTestUtils.promiseStartupManager();
 
   // Mock a late XPIDB load and expect to be rejected.
-  const { XPIProvider } = ChromeUtils.import(
+  const { XPIProvider, XPIInternal } = ChromeUtils.import(
     "resource://gre/modules/addons/XPIProvider.jsm"
   );
   const { XPIDatabase } = ChromeUtils.import(
     "resource://gre/modules/addons/XPIDatabase.jsm"
   );
 
+  const resolveDBReadySpy = sinon.spy(XPIInternal, "resolveDBReady");
   XPIProvider._closing = true;
   XPIDatabase._dbPromise = null;
+
   Assert.equal(
     await XPIDatabase.getAddonByID("test@addon"),
     null,
@@ -152,7 +156,21 @@ add_task(async function test_late_XPIDB_load_rejected() {
     /XPIDatabase.asyncLoadDB attempt after XPIProvider shutdown/,
     "Expect XPIDatebase._dbPromise to be set to the expected rejected promise"
   );
-  // Cleanup AOM mocked status and shutdown AOM before exit test.
+
+  Assert.equal(
+    resolveDBReadySpy.callCount,
+    1,
+    "Expect resolveDBReadySpy to have been called once"
+  );
+
+  Assert.equal(
+    resolveDBReadySpy.getCall(0).args[0],
+    XPIDatabase._dbPromise,
+    "Got the expected promise instance passed to the XPIProvider.resolveDBReady call"
+  );
+
+  // Cleanup sinon spy, AOM mocked status and shutdown AOM before exit test.
+  sandbox.restore();
   XPIProvider._closing = false;
   XPIDatabase._dbPromise = null;
   await AddonTestUtils.promiseShutdownManager();
