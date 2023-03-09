@@ -321,8 +321,6 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   nsRect PredictedDestRect(const nsRect& aFrameContentBox);
 
  private:
-  void MaybeRecordContentUrlOnImageTelemetry();
-
   // random helpers
   inline void SpecToURI(const nsAString& aSpec, nsIURI** aURI);
 
