@@ -854,7 +854,7 @@ impl BatchBuilder {
                 tile_count_y += 1;
             }
         }
-        let edge_flags = edge_flags.bits() as i32;
+        let edge_flag_bits = edge_flags.bits() as i32;
 
         let main_instance = QuadInstance {
             render_task_address,
@@ -863,7 +863,7 @@ impl BatchBuilder {
             transform_id,
             tile_count_x,
             tile_count_y,
-            edge_flags,
+            edge_flags: edge_flag_bits,
             tile_index_x: 0,
             tile_index_y: 0,
         };
@@ -871,10 +871,10 @@ impl BatchBuilder {
         for y in 0 .. tile_count_y {
             for x in 0 .. tile_count_x {
                 let is_edge =
-                    x == 0 ||
-                    x == tile_count_x-1 ||
-                    y == 0 ||
-                    y == tile_count_y-1;
+                    (edge_flags.contains(EdgeAaSegmentMask::LEFT) && x == 0) ||
+                    (edge_flags.contains(EdgeAaSegmentMask::RIGHT) && x == tile_count_x-1) ||
+                    (edge_flags.contains(EdgeAaSegmentMask::TOP) && y == 0) ||
+                    (edge_flags.contains(EdgeAaSegmentMask::BOTTOM) && y == tile_count_y-1);
 
                 let blend_mode = if is_edge {
                     BlendMode::PremultipliedAlpha
@@ -898,7 +898,7 @@ impl BatchBuilder {
                 let instance = QuadInstance {
                     tile_index_x: x,
                     tile_index_y: y,
-                    edge_flags,
+                    edge_flags: edge_flag_bits,
                     ..main_instance
                 };
                 batch.push(instance.into());

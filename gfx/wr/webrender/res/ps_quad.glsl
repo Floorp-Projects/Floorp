@@ -312,4 +312,15 @@ void main(void) {
 
     oFragColor = color;
 }
+
+#if defined(SWGL_DRAW_SPAN)
+void swgl_drawSpanRGBA8() {
+    swgl_commitSolidRGBA8(v_color);
+}
+
+void swgl_drawSpanR8() {
+    swgl_commitSolidR8(v_color.x);
+}
+#endif
+
 #endif
