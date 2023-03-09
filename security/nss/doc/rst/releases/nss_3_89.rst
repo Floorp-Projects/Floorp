@@ -1,0 +1,83 @@
+.. _mozilla_projects_nss_nss_3_89_release_notes:
+
+NSS 3.89 release notes
+======================
+
+`Introduction <#introduction>`__
+--------------------------------
+
+.. container::
+
+   Network Security Services (NSS) 3.89 was released on *9 March 2023**.
+
+
+.. _distribution_information:
+
+`Distribution Information <#distribution_information>`__
+--------------------------------------------------------
+
+.. container::
+
+   The HG tag is NSS_3_89_RTM. NSS 3.89 requires NSPR 4.35 or newer.
+
+   NSS 3.89 source distributions are available on ftp.mozilla.org for secure HTTPS download:
+
+   -  Source tarballs:
+      https://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_89_RTM/src/
+
+   Other releases are available :ref:`mozilla_projects_nss_releases`.
+
+.. _changes_in_nss_3.89:
+
+`Changes in NSS 3.89 <#changes_in_nss_3.89>`__
+----------------------------------------------------
+
+.. container::
+
+   - Bug 1820834 - revert freebl/softoken RSA_MIN_MODULUS_BITS increase.
+   - Bug 1820175 - PR_STATIC_ASSERT is cursed.
+   - Bug 1767883 - Need to add policy control to keys lengths for signatures.
+   - Bug 1820175 - Fix unreachable code warning in fuzz builds.
+   - Bug 1820175 - Fix various compiler warnings in NSS.
+   - Bug 1820175 - Enable various compiler warnings for clang builds.
+   - Bug 1815136 - set PORT error after sftk_HMACCmp failure.
+   - Bug 1767883 - Need to add policy control to keys lengths for signatures.
+   - Bug 1804662 - remove data length assertion in sec_PKCS7Decrypt.
+   - Bug 1804660 - Make high tag number assertion failure an error.
+   - Bug 1817513 - CKM_SHA384_KEY_DERIVATION correction maximum key length from 284 to 384.
+   - Bug 1815167 - Tolerate certificate_authorities xtn in ClientHello.
+   - Bug 1789436 - Fix build failure on Windows.
+   - Bug 1811337 - migrate Win 2012 tasks to Azure.
+   - Bug 1810702 - fix title length in doc.
+   - Bug 1570615 - Add interop tests for HRR and PSK to GREASE suite.
+   - Bug 1570615 - Add presence/absence tests for TLS GREASE.
+   - Bug 1804688 - Correct addition of GREASE value to ALPN xtn.
+   - Bug 1789436 - CH extension permutation.
+   - Bug 1570615 - TLS GREASE (RFC8701).
+   - Bug 1804640 - improve handling of unknown PKCS#12 safe bag types.
+   - Bug 1815870 - use a different treeherder symbol for each docker image build task.
+   - Bug 1815868 - pin an older version of the ubuntu:18.04 and 20.04 docker images.
+   - Bug 1810702 - remove nested table in rst doc.
+   - Bug 1815246 - Export NSS_CMSSignerInfo_GetDigestAlgTag.
+   - Bug 1812671 - build failure while implicitly casting SECStatus to PRUInt32.
+
+
+`Compatibility <#compatibility>`__
+----------------------------------
+
+.. container::
+
+   NSS 3.89 shared libraries are backwards-compatible with all older NSS 3.x shared
+   libraries. A program linked with older NSS 3.x shared libraries will work with
+   this new version of the shared libraries without recompiling or
+   relinking. Furthermore, applications that restrict their use of NSS APIs to the
+   functions listed in NSS Public Functions will remain compatible with future
+   versions of the NSS shared libraries.
+
+`Feedback <#feedback>`__
+------------------------
+
+.. container::
+
+   Bugs discovered should be reported by filing a bug report on
+   `bugzilla.mozilla.org <https://bugzilla.mozilla.org/enter_bug.cgi?product=NSS>`__ (product NSS).
