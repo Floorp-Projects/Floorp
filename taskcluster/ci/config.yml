@@ -493,6 +493,14 @@ workers:
             implementation: docker-worker
             os: linux
             worker-type: '{alias}'
+        addon:
+            provisioner: scriptworker-k8s
+            implementation: push-addons
+            os: scriptworker
+            worker-type:
+                by-release-level:
+                    production: '{trust-domain}-3-addon'
+                    staging: '{trust-domain}-1-addon'
         balrog:
             provisioner: scriptworker-k8s
             implementation: balrog
