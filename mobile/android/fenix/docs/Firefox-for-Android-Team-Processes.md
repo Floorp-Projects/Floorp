@@ -1,9 +1,11 @@
 
 ## Communication channels
-We have a variety of communication channels for internal dev, and best practices are [documented here](https://docs.google.com/document/d/1Qr-uVqbTO9mGGCvF1IW0s0OM2Cdkr2UYwCzrIzqVdnA/edit#).
+For internal Firefox Android communication start off in #mobile-android-team.
 
-## Creating Features
-See [Feature Workflow](https://github.com/mozilla-mobile/fenix/wiki/Feature-Workflow)
+Dedicated channels on Matrix work as well:
+* [#Fenix](https://matrix.to/#/#fenix:mozilla.org) - Fenix development discussions.
+* [#android-components](https://matrix.to/#/#android-components:mozilla.org) - shared core components for our mobile browsers/projects.
+* [#geckoview](https://matrix.to/#/#geckoview:mozilla.org) - working on the Android layer of Gecko that interfaces with Android Components and Fenix.
 
 ## Design Feasibility
 Who: Design lead, designer, engineering lead, engineer, product lead, product manager
@@ -22,7 +24,8 @@ Purpose: before engineering sprint for a feature starts to discuss:
 * Negotiate scope and discuss changes if tasks are too large for a single sprint
 
 ## Triage
-* The team triages GitHub issues asynchronously. This involves reviewing all new issues (bugs, crashes, and feature requests) to determine whether they should be addressed in MVP or added to backlog for future sprints.
+* The team triages Bugzilla issues asynchronously. This involves reviewing all new issues (bugs, crashes, and feature requests) to determine whether they should be addressed in MVP or added to backlog for future sprints.
+
 ### Process
 * Add appropriate labels for [features](https://github.com/mozilla-mobile/fenix/labels?q=Feature)
 * Add to appropriate Projects ([1](https://github.com/orgs/mozilla-mobile/projects), [2](https://github.com/mozilla-mobile/fenix/projects))
