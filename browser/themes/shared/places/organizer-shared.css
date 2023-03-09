@@ -12,3 +12,8 @@
   min-width: 0;
   min-height: 0;
 }
+
+#placesViewsBox {
+  min-height: 5em;
+  overflow: clip;
+}
