@@ -285,7 +285,7 @@ void ReadableStreamReaderGenericRelease(ReadableStreamGenericReader* aReader,
 
   // Step 4. If stream.[[state]] is "readable", reject reader.[[closedPromise]]
   // with a TypeError exception.
-  if (aReader->GetStream()->State() == ReadableStream::ReaderState::Readable) {
+  if (stream->State() == ReadableStream::ReaderState::Readable) {
     aReader->ClosedPromise()->MaybeRejectWithTypeError(
         "Releasing lock on readable stream");
   } else {
