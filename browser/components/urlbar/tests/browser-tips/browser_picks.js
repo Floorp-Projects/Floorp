@@ -28,7 +28,7 @@ add_task(async function enter_mainButton_noURL() {
   await doTest({ click: false });
 });
 
-add_task(async function enter_helpButton() {
+add_task(async function enter_help() {
   await doTest({ click: false, helpUrl: HELP_URL });
 });
 
@@ -40,7 +40,7 @@ add_task(async function mouse_mainButton_noURL() {
   await doTest({ click: true });
 });
 
-add_task(async function mouse_helpButton() {
+add_task(async function mouse_help() {
   await doTest({ click: true, helpUrl: HELP_URL });
 });
 
@@ -105,14 +105,6 @@ add_task(async function mouse_insideTipButNotOnButtons() {
  *   to pick the main button instead.
  */
 async function doTest({ click, buttonUrl = undefined, helpUrl = undefined }) {
-  if (UrlbarPrefs.get("resultMenu") && helpUrl) {
-    todo(
-      false,
-      "help telemetry for the result menu to be implemented in bug 1790020"
-    );
-    return;
-  }
-
   // Open a new tab for the test if we expect to load a URL.
   let tab;
   if (buttonUrl || helpUrl) {
@@ -144,8 +136,9 @@ async function doTest({ click, buttonUrl = undefined, helpUrl = undefined }) {
   });
   let row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
   let mainButton = row._buttons.get("0");
-  let helpButton = row._buttons.get("help");
-  let target = helpUrl ? helpButton : mainButton;
+  let target = helpUrl
+    ? row._buttons.get(UrlbarPrefs.get("resultMenu") ? "menu" : "help")
+    : mainButton;
 
   // If we're picking the tip with the keyboard, TAB to select the proper
   // target.
@@ -163,7 +156,12 @@ async function doTest({ click, buttonUrl = undefined, helpUrl = undefined }) {
   await Promise.all([
     pickedPromise || BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser),
     UrlbarTestUtils.promisePopupClose(window, () => {
-      if (click) {
+      if (helpUrl && UrlbarPrefs.get("resultMenu")) {
+        UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "h", {
+          openByMouse: click,
+          resultIndex: 0,
+        });
+      } else if (click) {
         EventUtils.synthesizeMouseAtCenter(target, {});
       } else {
         EventUtils.synthesizeKey("KEY_Enter");
@@ -184,7 +182,10 @@ async function doTest({ click, buttonUrl = undefined, helpUrl = undefined }) {
       {
         category: "urlbar",
         method: "engagement",
-        object: click ? "click" : "enter",
+        object:
+          click && !(helpUrl && UrlbarPrefs.get("resultMenu"))
+            ? "click"
+            : "enter",
         value: "typed",
       },
     ],
@@ -212,7 +213,11 @@ function makeTipResult({ buttonUrl, helpUrl }) {
         },
       ],
       helpUrl,
-      helpL10n: { id: "urlbar-search-tips-confirm" },
+      helpL10n: {
+        id: UrlbarPrefs.get("resultMenu")
+          ? "urlbar-result-menu-tip-get-help"
+          : "urlbar-tip-help-icon",
+      },
     }
   );
 }
