@@ -11,11 +11,8 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import io.mockk.mockkObject
 import io.mockk.mockkStatic
-import io.mockk.slot
 import io.mockk.spyk
-import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -958,34 +955,6 @@ class DefaultSessionControlControllerTest {
     }
 
     @Test
-    fun handleStartBrowsingClicked() {
-        var hideOnboardingInvoked = false
-        createController(hideOnboarding = { hideOnboardingInvoked = true }).handleStartBrowsingClicked()
-
-        assertTrue(hideOnboardingInvoked)
-    }
-
-    @Test
-    fun handleReadPrivacyNoticeClicked() {
-        mockkObject(SupportUtils)
-        val urlCaptor = slot<String>()
-        every { SupportUtils.createCustomTabIntent(any(), capture(urlCaptor)) } returns mockk()
-
-        createController().handleReadPrivacyNoticeClicked()
-
-        verify {
-            activity.startActivity(
-                any(),
-            )
-        }
-        assertEquals(
-            SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE),
-            urlCaptor.captured,
-        )
-        unmockkObject(SupportUtils)
-    }
-
-    @Test
     fun handleToggleCollectionExpanded() {
         val collection = mockk<TabCollection>()
         createController().handleToggleCollectionExpanded(collection, true)
@@ -1323,7 +1292,6 @@ class DefaultSessionControlControllerTest {
     }
 
     private fun createController(
-        hideOnboarding: () -> Unit = { },
         registerCollectionStorageObserver: () -> Unit = { },
         showTabTray: () -> Unit = { },
         removeCollectionWithUndo: (tabCollection: TabCollection) -> Unit = { },
@@ -1342,7 +1310,6 @@ class DefaultSessionControlControllerTest {
             appStore = appStore,
             navController = navController,
             viewLifecycleScope = scope,
-            hideOnboarding = hideOnboarding,
             registerCollectionStorageObserver = registerCollectionStorageObserver,
             removeCollectionWithUndo = removeCollectionWithUndo,
             showTabTray = showTabTray,

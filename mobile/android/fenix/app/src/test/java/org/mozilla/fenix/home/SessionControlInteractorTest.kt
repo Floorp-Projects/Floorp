@@ -24,6 +24,7 @@ import org.mozilla.fenix.home.recenttabs.controller.RecentTabController
 import org.mozilla.fenix.home.recentvisits.controller.RecentVisitsController
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
+import org.mozilla.fenix.onboarding.controller.OnboardingController
 
 class SessionControlInteractorTest {
 
@@ -32,6 +33,7 @@ class SessionControlInteractorTest {
     private val recentSyncedTabController: RecentSyncedTabController = mockk(relaxed = true)
     private val recentBookmarksController: RecentBookmarksController = mockk(relaxed = true)
     private val pocketStoriesController: PocketStoriesController = mockk(relaxed = true)
+    private val onboardingController: OnboardingController = mockk(relaxed = true)
 
     // Note: the recent visits tests are handled in [RecentVisitsInteractorTest] and [RecentVisitsControllerTest]
     private val recentVisitsController: RecentVisitsController = mockk(relaxed = true)
@@ -47,6 +49,7 @@ class SessionControlInteractorTest {
             recentBookmarksController,
             recentVisitsController,
             pocketStoriesController,
+            onboardingController,
         )
     }
 
@@ -109,7 +112,13 @@ class SessionControlInteractorTest {
     @Test
     fun onStartBrowsingClicked() {
         interactor.onStartBrowsingClicked()
-        verify { controller.handleStartBrowsingClicked() }
+        verify { onboardingController.handleStartBrowsingClicked() }
+    }
+
+    @Test
+    fun onReadPrivacyNoticeClicked() {
+        interactor.onReadPrivacyNoticeClicked()
+        verify { onboardingController.handleReadPrivacyNoticeClicked() }
     }
 
     @Test

@@ -27,6 +27,7 @@ import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGrou
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
 import org.mozilla.fenix.home.recentvisits.controller.RecentVisitsController
 import org.mozilla.fenix.home.recentvisits.interactor.RecentVisitsInteractor
+import org.mozilla.fenix.onboarding.controller.OnboardingController
 import org.mozilla.fenix.onboarding.interactor.OnboardingInteractor
 import org.mozilla.fenix.search.toolbar.SearchSelectorInteractor
 import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
@@ -234,7 +235,7 @@ interface WallpaperInteractor {
  * ExperimentCardInteractor, RecentTabInteractor, RecentBookmarksInteractor
  * and others.
  */
-@SuppressWarnings("TooManyFunctions")
+@SuppressWarnings("TooManyFunctions", "LongParameterList")
 class SessionControlInteractor(
     private val controller: SessionControlController,
     private val recentTabController: RecentTabController,
@@ -242,6 +243,7 @@ class SessionControlInteractor(
     private val recentBookmarksController: RecentBookmarksController,
     private val recentVisitsController: RecentVisitsController,
     private val pocketStoriesController: PocketStoriesController,
+    private val onboardingController: OnboardingController,
 ) : CollectionInteractor,
     OnboardingInteractor,
     TopSiteInteractor,
@@ -310,11 +312,11 @@ class SessionControlInteractor(
     }
 
     override fun onStartBrowsingClicked() {
-        controller.handleStartBrowsingClicked()
+        onboardingController.handleStartBrowsingClicked()
     }
 
     override fun onReadPrivacyNoticeClicked() {
-        controller.handleReadPrivacyNoticeClicked()
+        onboardingController.handleReadPrivacyNoticeClicked()
     }
 
     override fun showWallpapersOnboardingDialog(state: WallpaperState): Boolean {

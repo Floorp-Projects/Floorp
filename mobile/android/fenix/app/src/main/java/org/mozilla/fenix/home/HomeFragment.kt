@@ -124,6 +124,7 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionHeaderViewHol
 import org.mozilla.fenix.home.topsites.DefaultTopSitesView
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.onboarding.FenixOnboarding
+import org.mozilla.fenix.onboarding.controller.DefaultOnboardingController
 import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
 import org.mozilla.fenix.perf.runBlockingIncrement
 import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
@@ -390,7 +391,6 @@ class HomeFragment : Fragment() {
                 appStore = components.appStore,
                 navController = findNavController(),
                 viewLifecycleScope = viewLifecycleOwner.lifecycleScope,
-                hideOnboarding = ::hideOnboardingAndOpenSearch,
                 registerCollectionStorageObserver = ::registerCollectionStorageObserver,
                 removeCollectionWithUndo = ::removeCollectionWithUndo,
                 showTabTray = ::openTabsTray,
@@ -422,6 +422,10 @@ class HomeFragment : Fragment() {
             pocketStoriesController = DefaultPocketStoriesController(
                 homeActivity = activity,
                 appStore = components.appStore,
+            ),
+            onboardingController = DefaultOnboardingController(
+                activity = activity,
+                hideOnboarding = ::hideOnboardingAndOpenSearch,
             ),
         )
 
