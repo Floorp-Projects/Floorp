@@ -18,6 +18,8 @@
     <string name="mozac_feature_contextmenu_copy_image_location">تصویر مقام نقل کرو</string>
     <!-- Text for context menu item to save / download the image. -->
     <string name="mozac_feature_contextmenu_save_image">تصویر محفوظ کرو</string>
+    <!-- Text for context menu item to copy the image to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_image">تصویر کاپی کرو</string>
     <!-- Text for context menu item to save / download the file. -->
     <string name="mozac_feature_contextmenu_save_file_to_device">فائل ڈیوائس وچ محفوظ کرو</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->

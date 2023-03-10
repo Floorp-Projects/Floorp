@@ -492,6 +492,12 @@
     <string name="preferences_enable_autocomplete_urls">Sjálfvirk útfylling vefslóða</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Opna tengla í smáforritum</string>
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">Alltaf</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">Spyrja áður en er opnað</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">Aldrei</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Utanaðkomandi niðurhalsstjóri</string>
     <!-- Preference for add_ons -->
@@ -1197,13 +1203,13 @@
 
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Markaðssetning</string>
-    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_title">%1$s er hraðvirkur og verndar gögnin þín</string>
-    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_text">Gerðu %1$s að sjálfgefnum vafra</string>
 
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_title" tools:ignore="UnusedResources">Firefox er hraðvirkur og verndar gögnin þín</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_text" tools:ignore="UnusedResources">Gera Firefox að sjálfgefnum vafra</string>
     <!-- Title shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_title">Prófaðu huliðsvafur</string>
     <!-- Text shown in the notification that pops up to re-engage the user.

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_sans_serif_font">ሳንሰ ሰሪፍ</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_sans_serif_font_desc">ሳንሰ ሰሪፍ ቅርጸ-ቁምፊ</string>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">ሰሪፍ</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_serif_font_desc">ሰሪፍ ቅርጸ-ቁምፊ</string>
+
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">የቅርጸ ቁምፊ መጠን ይቀንሳል</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">የቅርጸ ቁምፊ መጠን መጨመር</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">ጠቆር ያለ</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">ጠቆር ያለ ቀለም ንድፍ</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">ቀላ ያለ ቡናማ</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">ቀላ ያለ ቡናማ ቀለም ንድፍ</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">ፈካ ያለ</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">ፈካ ያለ ቀለም ንድፍ</string>
+</resources>

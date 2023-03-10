@@ -6,4 +6,6 @@
     <string name="mozac_support_ktx_menu_email_with">…ਨਾਲ ਈਮੇਲ ਭੇਜੋ</string>
     <string name="mozac_support_ktx_menu_share_with">…ਨਾਲ ਸਾਂਝਾ ਕਰੋ</string>
     <string name="mozac_support_ktx_share_dialog_title">ਇਸ ਰਾਹੀਂ ਸਾਂਝਾ ਕਰੋ</string>
+    <!-- Text for confirmation "snackbar" shown after copying an image to the clipboard. -->
+    <string name="mozac_support_ktx_snackbar_delegate_image_copied">ਚਿੱਤਰ ਨੂੰ ਕਲਿੱਪਬੋਰਡ ਲਈ ਕਾਪੀ ਕੀਤਾ</string>
 </resources>

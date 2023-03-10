@@ -247,4 +247,8 @@
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
     <string name="mozac_browser_errorpages_httpsonly_title">လုံခြုံသောဝဘ်ချိတ်ဆက်မှုမရနိုင်ပါ</string>
-    </resources>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[သင်သည် ပိုမိုကောင်းမွန်သောလုံခြုံမှုအတွက် HTTPS သီးသန့်ပုံစံအားဖွင့်ထားပြီး <em>%1$s</em> ၏ HTTPS ပုံစံသည် မရရှိနိုင်ပါ။]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">HTTP ဝဘ်သို့ဆက်သွားမည်</string>
+</resources>

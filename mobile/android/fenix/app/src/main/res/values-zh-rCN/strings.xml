@@ -504,6 +504,12 @@
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">用外部应用打开链接</string>
 
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">总是</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">打开前询问</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">永不</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">外部下载管理器</string>
     <!-- Preference for add_ons -->

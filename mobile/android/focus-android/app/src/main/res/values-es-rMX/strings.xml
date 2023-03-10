@@ -1014,6 +1014,12 @@
     <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
     <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">De forma predeterminada, %1$s intenta conectarse mediante HTTPS para aumentar la seguridad. Para cambiar esta configuración u obtener más información, ve a Configuración &gt; Privacidad y seguridad &gt; Seguridad.</string>
 
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s intenta usar una conexión HTTPS siempre que sea posible para mayor seguridad.
+     <a href="%2$s">Saber más</a> <br/><br/>
+     Cambia esta configuración en Ajustes > Privacidad &amp; Seguridad > Seguridad.]]></string>
+
     <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">Conexión no segura</string>
 

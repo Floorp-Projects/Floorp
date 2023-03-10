@@ -497,6 +497,12 @@
     <string name="preferences_enable_autocomplete_urls">Autofullfør nettadresser</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Opne lenker i appar</string>
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">Alltid</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">Spør før du opnar</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">Aldri</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Ekstern nedlastingshandsamar</string>
     <!-- Preference for add_ons -->
