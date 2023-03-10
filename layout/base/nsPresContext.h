@@ -1075,7 +1075,7 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
 
   bool UpdateContainerQueryStyles();
 
-  mozilla::intl::Bidi& GetBidiEngine();
+  mozilla::intl::Bidi& BidiEngine();
 
   gfxFontFeatureValueSet* GetFontFeatureValuesLookup() const {
     return mFontFeatureValuesLookup;
