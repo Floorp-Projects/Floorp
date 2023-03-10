@@ -52,8 +52,9 @@
 #include "common/linux/safe_readlink.h"
 
 #if defined(MOZ_OXIDIZED_BREAKPAD)
-#include "mozilla/toolkit/crashreporter/rust_minidump_writer_linux_ffi_generated.h"
-#include "nsString.h"
+#  include "mozilla/toolkit/crashreporter/rust_minidump_writer_linux_ffi_generated.h"
+#  include <sys/signalfd.h>
+#  include "nsString.h"
 #endif
 
 static const char kCommandQuit = 'x';
@@ -272,32 +273,31 @@ CrashGenerationServer::ClientEvent(short revents)
     return true;
 
 #if defined(MOZ_OXIDIZED_BREAKPAD)
-  // HACK: We need to transmute Breakpad's crash context into a crash_handler
-  // one. This operation is hard-coded here. When we drop Breakpad this won't be
-  // needed anymore.
-  InternalCrashContext oxidized_crash_context;
-  memcpy(&oxidized_crash_context.context,
-         crash_context + offsetof(google_breakpad::ExceptionHandler::CrashContext, context),
-         sizeof(oxidized_crash_context.context));
-  memcpy(&oxidized_crash_context.float_state,
-         crash_context + offsetof(google_breakpad::ExceptionHandler::CrashContext, float_state),
-         sizeof(oxidized_crash_context.float_state));
-  memcpy(&oxidized_crash_context.siginfo,
-         crash_context + offsetof(google_breakpad::ExceptionHandler::CrashContext, siginfo),
-         sizeof(oxidized_crash_context.siginfo));
-  oxidized_crash_context.pid = crashing_pid;
-  memcpy(&oxidized_crash_context.tid,
-         crash_context + offsetof(google_breakpad::ExceptionHandler::CrashContext, tid),
-         sizeof(oxidized_crash_context.tid));
+  ExceptionHandler::CrashContext* breakpad_cc =
+      reinterpret_cast<ExceptionHandler::CrashContext*>(crash_context);
+  nsCString error_msg;
+  siginfo_t& si = breakpad_cc->siginfo;
+  signalfd_siginfo signalfd_si = {};
+  signalfd_si.ssi_signo = si.si_signo;
+  signalfd_si.ssi_errno = si.si_errno;
+  signalfd_si.ssi_code = si.si_code;
+
+  switch (si.si_signo) {
+    case SIGILL:
+    case SIGFPE:
+    case SIGSEGV:
+    case SIGBUS:
+    case SIGSYS:
+      signalfd_si.ssi_addr = reinterpret_cast<size_t>(si.si_addr);
+      break;
+  }
 
   // Ignoring the return-value here for now.
-  // The function always creates an empty minidump file even in case of an error.
-  // So we'll report that as well via the callback-functions.
-  nsCString error_msg;
-  bool res = write_minidump_linux_with_context(minidump_filename.c_str(),
-                                               crashing_pid,
-                                               &oxidized_crash_context,
-                                               &error_msg);
+  // The function always creates an empty minidump file even in case of an
+  // error. So we'll report that as well via the callback-functions.
+  bool res = write_minidump_linux_with_context(
+      minidump_filename.c_str(), crashing_pid, &breakpad_cc->context,
+      &breakpad_cc->float_state, &signalfd_si, breakpad_cc->tid, &error_msg);
 #else
   if (!google_breakpad::WriteMinidump(minidump_filename.c_str(),
                                       crashing_pid, crash_context,
