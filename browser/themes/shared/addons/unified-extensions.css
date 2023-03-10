@@ -28,6 +28,10 @@ unified-extensions-item {
   align-items: center;
 }
 
+unified-extensions-item > .subviewbutton {
+  flex-shrink: 1;
+}
+
 #unified-extensions-panel .unified-extensions-item {
   -moz-context-properties: fill;
   fill: currentColor;
