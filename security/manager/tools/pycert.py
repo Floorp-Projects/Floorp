@@ -794,15 +794,6 @@ class Certificate(object):
 # file-like object and a path to a file containing a
 # specification. This will read the specification and output
 # the certificate as PEM.
-# This utility tries as hard as possible to ensure that two
-# runs with the same input will have the same output. This is
-# particularly important when building on OS X, where we
-# generate everything twice for unified builds. During the
-# unification step, if any pair of input files differ, the build
-# system throws an error.
-# The one concrete failure mode is if one run happens before
-# midnight on New Year's Eve and the next run happens after
-# midnight.
 def main(output, inputPath):
     with open(inputPath) as configStream:
         output.write(Certificate(configStream).toPEM() + "\n")
