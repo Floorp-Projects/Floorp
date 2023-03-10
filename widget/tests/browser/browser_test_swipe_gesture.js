@@ -1096,6 +1096,7 @@ add_task(async () => {
   // overscrollable.
   await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
     content.document.documentElement.scrollLeft = 1;
+    content.document.documentElement.getBoundingClientRect();
     await content.wrappedJSObject.promiseApzFlushedRepaints();
   });
 
