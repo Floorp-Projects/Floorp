@@ -2,7 +2,7 @@
 
 [Storybook](https://storybook.js.org/) is a component library to document our
 design system, reusable components, and any specific components you might want
-to test with dummy data.
+to test with dummy data. [Take a look at our Storybook instance!](https://firefoxux.github.io/firefox-desktop-components/?path=/story/docs-reusable-widgets--page)
 
 ## Background
 
