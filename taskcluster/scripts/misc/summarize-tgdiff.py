@@ -7,6 +7,15 @@ import json
 import pathlib
 
 
+def filter_changes(line):
+    # Skip diff headers
+    if line.startswith("---") or line.startswith("+++"):
+        return False
+
+    # Only count lines that changed
+    return line.startswith("-") or line.startswith("+")
+
+
 def run():
 
     parser = argparse.ArgumentParser(
@@ -28,7 +37,7 @@ def run():
     for path in args.path.glob("*.txt"):
 
         with path.open() as f:
-            nb = len(list(filter(None, f.readlines())))
+            nb = len(list(filter(filter_changes, f.readlines())))
 
         out["files"][path.stem] = {
             "nb": nb,
