@@ -39,4 +39,4 @@ job-template:
         message: fxrecord run failed
         emails:
             - "barret@mozilla.com"
-            - "perftest@mozilla.com"
+            - "perftest-alerts@mozilla.com"
