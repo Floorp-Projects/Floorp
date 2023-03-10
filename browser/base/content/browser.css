@@ -451,8 +451,8 @@ toolbarpaletteitem {
     list-style-image: var(--webextension-menupanel-image-dark, inherit);
   }
 
-  .webextension-menuitem {
-    list-style-image: var(--webextension-menuitem-image, inherit) !important;
+  .sidebar-extensions-subviewbutton {
+    list-style-image: var(--webextension-sidebar-subviewbutton-image, inherit) !important;
   }
 }
 
@@ -481,14 +481,9 @@ toolbarpaletteitem {
     list-style-image: var(--webextension-menupanel-image-2x-dark, inherit);
   }
 
-  .webextension-menuitem {
-    list-style-image: var(--webextension-menuitem-image-2x, inherit) !important;
+  .sidebar-extensions-subviewbutton {
+    list-style-image: var(--webextension-sidebar-subviewbutton-image-2x, inherit) !important;
   }
-}
-
-toolbarbutton.webextension-menuitem > .toolbarbutton-icon {
-  width: 16px;
-  height: 16px;
 }
 
 toolbarpaletteitem[removable="false"] {
@@ -1492,7 +1487,7 @@ printpreview-pagination:focus-within,
 
 /* WebExtension Sidebars */
 #sidebar-box[sidebarcommand$="-sidebar-action"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
-  list-style-image: var(--webextension-menuitem-image, inherit);
+  list-style-image: var(--webextension-sidebar-subviewbutton-image, inherit);
   -moz-context-properties: fill;
   fill: currentColor;
   width: 16px;
@@ -1501,7 +1496,7 @@ printpreview-pagination:focus-within,
 
 @media (min-resolution: 1.1dppx) {
   #sidebar-box[sidebarcommand$="-sidebar-action"] > #sidebar-header > #sidebar-switcher-target > #sidebar-icon {
-    list-style-image: var(--webextension-menuitem-image-2x, inherit);
+    list-style-image: var(--webextension-sidebar-subviewbutton-image-2x, inherit);
   }
 }
 

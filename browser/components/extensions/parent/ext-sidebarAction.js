@@ -68,9 +68,9 @@ this.sidebarAction = class extends ExtensionAPI {
 
     this.updateHeader = event => {
       let window = event.target.ownerGlobal;
-      let details = this.tabContext.get(window.gBrowser.selectedTab);
-      let header = window.document.getElementById("sidebar-switcher-target");
       if (window.SidebarUI.currentID === this.id) {
+        let details = this.tabContext.get(window.gBrowser.selectedTab);
+        let header = window.document.getElementById("sidebar-switcher-target");
         this.setMenuIcon(header, details);
       }
     };
@@ -178,42 +178,42 @@ this.sidebarAction = class extends ExtensionAPI {
     menuitem.setAttribute("type", "checkbox");
     menuitem.setAttribute("label", details.title);
     menuitem.setAttribute("oncommand", `SidebarUI.toggle("${this.id}");`);
-    menuitem.setAttribute("class", "menuitem-iconic webextension-menuitem");
     menuitem.setAttribute("key", keyId);
-    this.setMenuIcon(menuitem, details);
 
     // Insert a toolbarbutton for the sidebar dropdown selector.
-    let toolbarbutton = document.createXULElement("toolbarbutton");
-    toolbarbutton.setAttribute("id", this.buttonId);
-    toolbarbutton.setAttribute("label", details.title);
-    toolbarbutton.setAttribute("oncommand", `SidebarUI.show("${this.id}");`);
-    toolbarbutton.setAttribute(
-      "class",
-      "subviewbutton subviewbutton-iconic webextension-menuitem"
+    let button = document.createXULElement("toolbarbutton");
+    button.setAttribute("id", this.buttonId);
+    button.setAttribute("label", details.title);
+    button.setAttribute("oncommand", `SidebarUI.show("${this.id}");`);
+    button.classList.add(
+      "subviewbutton",
+      "subviewbutton-iconic",
+      "sidebar-extensions-subviewbutton"
     );
-    toolbarbutton.setAttribute("key", keyId);
-    this.setMenuIcon(toolbarbutton, details);
+    button.setAttribute("key", keyId);
+    this.setMenuIcon(button, details);
 
     document.getElementById("viewSidebarMenu").appendChild(menuitem);
     let separator = document.getElementById("sidebar-extensions-separator");
-    separator.parentNode.insertBefore(toolbarbutton, separator);
-    SidebarUI.updateShortcut({ button: toolbarbutton });
+    separator.parentNode.insertBefore(button, separator);
+    SidebarUI.updateShortcut({ button });
 
     return menuitem;
   }
 
-  setMenuIcon(menuitem, details) {
+  setMenuIcon(button, details) {
     let getIcon = size =>
       IconDetails.escapeUrl(
         IconDetails.getPreferredIcon(details.icon, this.extension, size).icon
       );
 
-    menuitem.setAttribute(
-      "style",
-      `
-      --webextension-menuitem-image: url("${getIcon(16)}");
-      --webextension-menuitem-image-2x: url("${getIcon(32)}");
-    `
+    button.style.setProperty(
+      "--webextension-sidebar-subviewbutton-image",
+      `url("${getIcon(16)}")`
+    );
+    button.style.setProperty(
+      "--webextension-sidebar-subviewbutton-image-2x",
+      `url("${getIcon(32)}")`
     );
   }
 
@@ -239,7 +239,6 @@ this.sidebarAction = class extends ExtensionAPI {
     }
 
     menu.setAttribute("label", title);
-    this.setMenuIcon(menu, tabData);
 
     let button = document.getElementById(this.buttonId);
     button.setAttribute("label", title);
