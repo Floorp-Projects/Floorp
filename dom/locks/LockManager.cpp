@@ -97,9 +97,13 @@ static bool ValidateRequestArguments(const nsAString& name,
       return false;
     }
     if (options.mSignal.Value().Aborted()) {
-      AutoEntryScript aes(options.mSignal.Value().GetParentObject(),
-                          "LockManager::Request");
-      JSContext* cx = aes.cx();
+      AutoJSAPI jsapi;
+      if (!jsapi.Init(options.mSignal.Value().GetParentObject())) {
+        aRv.ThrowNotSupportedError("Signal's realm isn't active anymore.");
+        return false;
+      }
+
+      JSContext* cx = jsapi.cx();
       JS::Rooted<JS::Value> reason(cx);
       options.mSignal.Value().GetReason(cx, &reason);
       aRv.MightThrowJSException();

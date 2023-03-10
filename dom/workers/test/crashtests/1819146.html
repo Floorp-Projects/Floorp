@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script id="worker1" type="javascript/worker">
+        self.onmessage = async function (e) {
+          const abort = new AbortController()
+          const signal = abort.signal
+          abort.abort()
+          close()
+          try { await fetch(undefined, { signal: signal }) } catch (e) {}
+          await navigator.locks.request("weblock_0", { signal: signal }, () => {})
+          await fetch(undefined, { headers: [] })
+        }
+    </script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const blob = new Blob([document.querySelector('#worker1').textContent], { type: 'text/javascript' })
+        const worker = new Worker(window.URL.createObjectURL(blob))
+        worker.postMessage([], [])
+      })
+    </script>
+</head>
+</html>
