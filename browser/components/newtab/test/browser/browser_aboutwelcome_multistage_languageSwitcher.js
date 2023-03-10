@@ -3,6 +3,12 @@
 const { getAddonAndLocalAPIsMocker } = ChromeUtils.import(
   "resource://testing-common/LangPackMatcherTestUtils.jsm"
 );
+const { AboutWelcomeDefaults } = ChromeUtils.import(
+  "resource://activity-stream/aboutwelcome/lib/AboutWelcomeDefaults.jsm"
+);
+const { AWScreenUtils } = ChromeUtils.import(
+  "resource://activity-stream/lib/AWScreenUtils.jsm"
+);
 
 const sandbox = sinon.createSandbox();
 const mockAddonAndLocaleAPIs = getAddonAndLocalAPIsMocker(this, sandbox);
@@ -52,6 +58,14 @@ async function openAboutWelcome() {
     "resource:///modules/ShellService.jsm"
   );
   sandbox.stub(ShellService, "doesAppNeedPin").returns(false);
+
+  const data = await AboutWelcomeDefaults.getDefaults();
+  const defaultMRArray = data.screens.filter(
+    screen => screen.id !== "AW_EASY_SETUP"
+  );
+  sandbox
+    .stub(AWScreenUtils, "evaluateTargetingAndRemoveScreens")
+    .resolves(defaultMRArray);
 
   info("Opening about:welcome");
   let tab = await BrowserTestUtils.openNewForegroundTab(

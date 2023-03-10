@@ -37,7 +37,93 @@ const MR_ABOUT_WELCOME_DEFAULT = {
     "var(--mr-welcome-background-color) var(--mr-welcome-background-gradient)",
   screens: [
     {
+      id: "AW_EASY_SETUP",
+      targeting:
+        "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin",
+      content: {
+        position: "split",
+        split_narrow_bkg_position: "-60px",
+        image_alt_text: {
+          string_id: "mr2022-onboarding-default-image-alt",
+        },
+        background:
+          "url('chrome://activity-stream/content/data/content/assets/mr-settodefault.svg') var(--mr-secondary-position) no-repeat var(--mr-screen-background-color)",
+        progress_bar: true,
+        logo: {},
+        title: {
+          string_id: "mr2022-onboarding-set-default-title",
+        },
+        subtitle: {
+          string_id: "mr2022-onboarding-set-default-subtitle",
+        },
+        tiles: {
+          type: "multiselect",
+          data: [
+            {
+              id: "checkbox-1",
+              defaultValue: true,
+              label: {
+                string_id:
+                  "mr2022-onboarding-easy-setup-set-default-checkbox-label",
+              },
+              action: {
+                type: "SET_DEFAULT_BROWSER",
+              },
+            },
+            {
+              id: "checkbox-2",
+              defaultValue: true,
+              label: {
+                string_id: "mr2022-onboarding-easy-setup-import-checkbox-label",
+              },
+              action: {
+                type: "SHOW_MIGRATION_WIZARD",
+                data: {},
+              },
+            },
+          ],
+        },
+        primary_button: {
+          label: {
+            string_id: "mr2022-onboarding-easy-setup-primary-button-label",
+          },
+          action: {
+            type: "MULTI_ACTION",
+            collectSelect: true,
+            navigate: true,
+            data: {
+              actions: [],
+            },
+          },
+        },
+        secondary_button: {
+          label: {
+            string_id: "mr2022-onboarding-secondary-skip-button-label",
+          },
+          action: {
+            navigate: true,
+          },
+          has_arrow_icon: true,
+        },
+        secondary_button_top: {
+          label: {
+            string_id: "mr1-onboarding-sign-in-button-label",
+          },
+          action: {
+            data: {
+              entrypoint: "activity-stream-firstrun",
+              where: "tab",
+            },
+            type: "SHOW_FIREFOX_ACCOUNTS",
+            addFlowParams: true,
+          },
+        },
+      },
+    },
+    {
       id: "AW_PIN_FIREFOX",
+      targeting:
+        "!(os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin)",
       content: {
         position: "split",
         split_narrow_bkg_position: "-155px",
@@ -128,6 +214,8 @@ const MR_ABOUT_WELCOME_DEFAULT = {
     },
     {
       id: "AW_SET_DEFAULT",
+      targeting:
+        "!(os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin)",
       content: {
         position: "split",
         split_narrow_bkg_position: "-60px",
@@ -166,6 +254,8 @@ const MR_ABOUT_WELCOME_DEFAULT = {
     },
     {
       id: "AW_IMPORT_SETTINGS",
+      targeting:
+        "!(os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin)",
       content: {
         position: "split",
         split_narrow_bkg_position: "-42px",
