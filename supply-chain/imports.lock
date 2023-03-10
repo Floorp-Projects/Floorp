@@ -1,6 +1,13 @@
 
 # cargo-vet imports lock
 
+[[publisher.bhttp]]
+version = "0.3.1"
+when = "2023-02-23"
+user-id = 128763
+user-login = "martinthomson"
+user-name = "Martin Thomson"
+
 [[publisher.glean]]
 version = "52.3.0"
 when = "2023-02-23"
@@ -14,6 +21,13 @@ when = "2023-02-23"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
+
+[[publisher.ohttp]]
+version = "0.3.1"
+when = "2023-02-23"
+user-id = 128763
+user-login = "martinthomson"
+user-name = "Martin Thomson"
 
 [[audits.bytecode-alliance.audits.arbitrary]]
 who = "Nick Fitzgerald <fitzgen@gmail.com>"

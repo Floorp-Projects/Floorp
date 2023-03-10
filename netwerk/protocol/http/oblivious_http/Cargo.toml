@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 nserror = { path = "../../../../xpcom/rust/nserror" }
-ohttp = { version = "0.2.2", default-features = false, features = ["gecko", "nss", "client", "server"] }
+ohttp = { version = "0.3", default-features = false, features = ["gecko", "nss", "client", "server"] }
 rand = "0.8"
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
 xpcom = { path = "../../../../xpcom/rust/xpcom" }

@@ -33,6 +33,8 @@ use parse::{index_of, trim_ows, COMMA};
 use rw::{read_varint, read_vec};
 #[cfg(feature = "write-bhttp")]
 use rw::{write_len, write_varint, write_vec};
+#[cfg(any(feature = "read-http", feature = "read-bhttp",))]
+use std::borrow::BorrowMut;
 
 #[cfg(feature = "read-http")]
 const CONTENT_LENGTH: &[u8] = b"content-length";
@@ -42,6 +44,10 @@ const TRANSFER_ENCODING: &[u8] = b"transfer-encoding";
 const CHUNKED: &[u8] = b"chunked";
 
 pub type StatusCode = u16;
+
+pub trait ReadSeek: io::BufRead + io::Seek {}
+impl<T> ReadSeek for io::Cursor<T> where T: AsRef<[u8]> {}
+impl<T> ReadSeek for io::BufReader<T> where T: io::Read + io::Seek {}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg(any(feature = "read-bhttp", feature = "write-bhttp"))]
@@ -203,7 +209,11 @@ impl FieldSection {
     }
 
     #[cfg(feature = "read-http")]
-    pub fn read_http(r: &mut impl io::BufRead) -> Res<Self> {
+    pub fn read_http<T, R>(r: &mut T) -> Res<Self>
+    where
+        T: BorrowMut<R> + ?Sized,
+        R: ReadSeek + ?Sized,
+    {
         let mut fields = Vec::new();
         loop {
             let line = read_line(r)?;
@@ -215,7 +225,12 @@ impl FieldSection {
     }
 
     #[cfg(feature = "read-bhttp")]
-    fn read_bhttp_fields(terminator: bool, r: &mut impl io::BufRead) -> Res<Vec<Field>> {
+    fn read_bhttp_fields<T, R>(terminator: bool, r: &mut T) -> Res<Vec<Field>>
+    where
+        T: BorrowMut<R> + ?Sized,
+        R: ReadSeek + ?Sized,
+    {
+        let r = r.borrow_mut();
         let mut fields = Vec::new();
         let mut cookie_index: Option<usize> = None;
         loop {
@@ -245,10 +260,14 @@ impl FieldSection {
     }
 
     #[cfg(feature = "read-bhttp")]
-    pub fn read_bhttp(mode: Mode, r: &mut impl io::BufRead) -> Res<Self> {
+    pub fn read_bhttp<T, R>(mode: Mode, r: &mut T) -> Res<Self>
+    where
+        T: BorrowMut<R> + ?Sized,
+        R: ReadSeek + ?Sized,
+    {
         let fields = if mode == Mode::KnownLength {
             if let Some(buf) = read_vec(r)? {
-                Self::read_bhttp_fields(false, &mut io::BufReader::new(&buf[..]))?
+                Self::read_bhttp_fields(false, &mut io::Cursor::new(&buf[..]))?
             } else {
                 Vec::new()
             }
@@ -406,7 +425,11 @@ impl ControlData {
     }
 
     #[cfg(feature = "read-bhttp")]
-    pub fn read_bhttp(request: bool, r: &mut impl io::BufRead) -> Res<Self> {
+    pub fn read_bhttp<T, R>(request: bool, r: &mut T) -> Res<Self>
+    where
+        T: BorrowMut<R> + ?Sized,
+        R: ReadSeek + ?Sized,
+    {
         let v = if request {
             let method = read_vec(r)?.ok_or(Error::Truncated)?;
             let scheme = read_vec(r)?.ok_or(Error::Truncated)?;
@@ -595,7 +618,11 @@ impl Message {
     }
 
     #[cfg(feature = "read-http")]
-    fn read_chunked(r: &mut impl io::BufRead) -> Res<Vec<u8>> {
+    fn read_chunked<T, R>(r: &mut T) -> Res<Vec<u8>>
+    where
+        T: BorrowMut<R> + ?Sized,
+        R: ReadSeek + ?Sized,
+    {
         let mut content = Vec::new();
         loop {
             let mut line = read_line(r)?;
@@ -608,7 +635,7 @@ impl Message {
                 return Ok(content);
             }
             let mut buf = vec![0; count];
-            r.read_exact(&mut buf)?;
+            r.borrow_mut().read_exact(&mut buf)?;
             assert!(read_line(r)?.is_empty());
             content.append(&mut buf);
         }
@@ -616,7 +643,11 @@ impl Message {
 
     #[cfg(feature = "read-http")]
     #[allow(clippy::read_zero_byte_vec)] // https://github.com/rust-lang/rust-clippy/issues/9274
-    pub fn read_http(r: &mut impl io::BufRead) -> Res<Self> {
+    pub fn read_http<T, R>(r: &mut T) -> Res<Self>
+    where
+        T: BorrowMut<R> + ?Sized,
+        R: ReadSeek + ?Sized,
+    {
         let line = read_line(r)?;
         let mut control = ControlData::read_http(line)?;
         let mut informational = Vec::new();
@@ -644,12 +675,12 @@ impl Message {
                 let cl_int = cl_str.parse::<usize>()?;
                 if cl_int > 0 {
                     content.resize(cl_int, 0);
-                    r.read_exact(&mut content)?;
+                    r.borrow_mut().read_exact(&mut content)?;
                 }
             } else {
                 // Note that for a request, the spec states that the content is
                 // empty, but this just reads all input like for a response.
-                r.read_to_end(&mut content)?;
+                r.borrow_mut().read_to_end(&mut content)?;
             }
             (content, FieldSection::default())
         };
@@ -694,7 +725,11 @@ impl Message {
 
     /// Read a BHTTP message.
     #[cfg(feature = "read-bhttp")]
-    pub fn read_bhttp(r: &mut impl io::BufRead) -> Res<Self> {
+    pub fn read_bhttp<T, R>(r: &mut T) -> Res<Self>
+    where
+        T: BorrowMut<R> + ?Sized,
+        R: ReadSeek + ?Sized,
+    {
         let t = read_varint(r)?.ok_or(Error::Truncated)?;
         let request = t == 0 || t == 2;
         let mode = match t {

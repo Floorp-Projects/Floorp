@@ -1,8 +1,7 @@
 #![allow(dead_code)] // TODO: remove
 
 use super::SymKey;
-use crate::err::Res;
-use crate::hpke::Aead as AeadId;
+use crate::{err::Res, hpke::Aead as AeadId};
 use aead::{AeadMut, Key, NewAead, Nonce, Payload};
 use aes_gcm::{Aes128Gcm, Aes256Gcm};
 use chacha20poly1305::ChaCha20Poly1305;
@@ -120,9 +119,10 @@ impl Aead {
 
 #[cfg(test)]
 mod test {
-    use super::super::super::hpke::Aead as AeadId;
-    use super::super::super::init;
-    use super::{Aead, Mode, SequenceNumber, NONCE_LEN};
+    use super::{
+        super::super::{hpke::Aead as AeadId, init},
+        Aead, Mode, SequenceNumber, NONCE_LEN,
+    };
 
     /// Check that the first invocation of encryption matches expected values.
     /// Also check decryption of the same.

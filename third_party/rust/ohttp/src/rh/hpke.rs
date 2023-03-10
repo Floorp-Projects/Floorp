@@ -281,6 +281,9 @@ impl ReceiverContext {
             Self::X25519HkdfSha256(ReceiverContextX25519HkdfSha256::HkdfSha256(
                 ReceiverContextX25519HkdfSha256HkdfSha256::AesGcm128(context),
             )) => {
+                if ciphertext.len() < AeadTag::<AesGcm128>::size() {
+                    return Err(Error::Truncated);
+                }
                 let (ct, tag) =
                     ciphertext.split_at_mut(ciphertext.len() - AeadTag::<AesGcm128>::size());
                 let tag = AeadTag::<AesGcm128>::from_bytes(tag)?;
@@ -290,6 +293,9 @@ impl ReceiverContext {
             Self::X25519HkdfSha256(ReceiverContextX25519HkdfSha256::HkdfSha256(
                 ReceiverContextX25519HkdfSha256HkdfSha256::ChaCha20Poly1305(context),
             )) => {
+                if ciphertext.len() < AeadTag::<ChaCha20Poly1305>::size() {
+                    return Err(Error::Truncated);
+                }
                 let (ct, tag) =
                     ciphertext.split_at_mut(ciphertext.len() - AeadTag::<ChaCha20Poly1305>::size());
                 let tag = AeadTag::<ChaCha20Poly1305>::from_bytes(tag)?;
@@ -452,8 +458,7 @@ pub fn derive_key_pair(kem: Kem, ikm: &[u8]) -> Res<(PrivateKey, PublicKey)> {
 #[cfg(test)]
 mod test {
     use super::{generate_key_pair, Config, HpkeR, HpkeS};
-    use crate::hpke::Aead;
-    use crate::init;
+    use crate::{hpke::Aead, init};
 
     const INFO: &[u8] = b"info";
     const AAD: &[u8] = b"aad";

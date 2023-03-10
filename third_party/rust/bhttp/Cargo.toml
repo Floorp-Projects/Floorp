@@ -12,15 +12,19 @@
 [package]
 edition = "2021"
 name = "bhttp"
-version = "0.2.3"
+version = "0.3.1"
 authors = ["Martin Thomson <mt@lowentropy.net>"]
 description = "Binary HTTP messages (draft-ietf-httpbis-binary-message)"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/martinthomson/ohttp"
 
+[dependencies.thiserror]
+version = "1"
+
 [dependencies.url]
 version = "2"
+optional = true
 
 [dev-dependencies.hex]
 version = "0.4"
@@ -36,6 +40,6 @@ http = [
     "write-http",
 ]
 read-bhttp = []
-read-http = []
+read-http = ["url"]
 write-bhttp = []
 write-http = []

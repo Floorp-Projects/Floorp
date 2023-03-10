@@ -2,8 +2,7 @@
 #![cfg(all(feature = "http", feature = "bhttp"))]
 
 use bhttp::{Error, Message, Mode};
-use std::io::BufReader;
-use std::mem::drop;
+use std::{io::Cursor, mem::drop};
 
 const CHUNKED_HTTP: &[u8] = b"HTTP/1.1 200 OK\r\n\
                               Transfer-Encoding: camel, chunked\r\n\
@@ -50,22 +49,22 @@ const REQUEST_KNOWN: &[u8] = &[
 
 #[test]
 fn chunked_read() {
-    drop(Message::read_http(&mut BufReader::new(CHUNKED_HTTP)).unwrap());
+    drop(Message::read_http(&mut Cursor::new(CHUNKED_HTTP)).unwrap());
 }
 
 #[test]
 fn chunked_read_known() {
-    drop(Message::read_bhttp(&mut BufReader::new(CHUNKED_KNOWN)).unwrap());
+    drop(Message::read_bhttp(&mut Cursor::new(CHUNKED_KNOWN)).unwrap());
 }
 
 #[test]
 fn chunked_read_indefinite() {
-    drop(Message::read_bhttp(&mut BufReader::new(CHUNKED_INDEFINITE)).unwrap());
+    drop(Message::read_bhttp(&mut Cursor::new(CHUNKED_INDEFINITE)).unwrap());
 }
 
 #[test]
 fn chunked_to_known() {
-    let m = Message::read_http(&mut BufReader::new(CHUNKED_HTTP)).unwrap();
+    let m = Message::read_http(&mut Cursor::new(CHUNKED_HTTP)).unwrap();
     assert!(m.header().get(TRANSFER_ENCODING).is_none());
 
     let mut buf = Vec::new();
@@ -76,7 +75,7 @@ fn chunked_to_known() {
 
 #[test]
 fn chunked_to_indefinite() {
-    let m = Message::read_http(&mut BufReader::new(CHUNKED_HTTP)).unwrap();
+    let m = Message::read_http(&mut Cursor::new(CHUNKED_HTTP)).unwrap();
     assert!(m.header().get(TRANSFER_ENCODING).is_none());
 
     let mut buf = Vec::new();
@@ -87,7 +86,7 @@ fn chunked_to_indefinite() {
 
 #[test]
 fn convert_request() {
-    let m = Message::read_http(&mut BufReader::new(REQUEST)).unwrap();
+    let m = Message::read_http(&mut Cursor::new(REQUEST)).unwrap();
     let mut buf = Vec::new();
     m.write_bhttp(Mode::KnownLength, &mut buf).unwrap();
     println!("result: {}", hex::encode(&buf));
@@ -98,7 +97,7 @@ fn convert_request() {
 fn padded_to_http() {
     let mut padded = Vec::from(REQUEST_KNOWN);
     padded.resize(padded.len() + 100, 0);
-    let m = Message::read_bhttp(&mut BufReader::new(&padded[..])).unwrap();
+    let m = Message::read_bhttp(&mut Cursor::new(&padded[..])).unwrap();
     let mut buf = Vec::new();
     m.write_http(&mut buf).unwrap();
     assert_eq!(&buf[..], REQUEST);
@@ -110,7 +109,7 @@ fn truncated_to_http() {
     assert_eq!(2, padded.iter().rev().take_while(|&x| *x == 0).count());
     padded.truncate(padded.len() - 2);
 
-    let m = Message::read_bhttp(&mut BufReader::new(&padded[..])).unwrap();
+    let m = Message::read_bhttp(&mut Cursor::new(&padded[..])).unwrap();
     let mut buf = Vec::new();
     m.write_http(&mut buf).unwrap();
     assert_eq!(&buf[..], REQUEST);
@@ -122,7 +121,7 @@ fn tiny_request() {
         0x00, 0x03, 0x47, 0x45, 0x54, 0x05, 0x68, 0x74, 0x74, 0x70, 0x73, 0x0b, 0x65, 0x78, 0x61,
         0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d, 0x01, 0x2f,
     ];
-    let m = Message::read_bhttp(&mut BufReader::new(REQUEST)).unwrap();
+    let m = Message::read_bhttp(&mut Cursor::new(REQUEST)).unwrap();
     assert_eq!(m.control().method().unwrap(), b"GET");
     assert_eq!(m.control().scheme().unwrap(), b"https");
     assert_eq!(m.control().authority().unwrap(), b"example.com");
@@ -136,7 +135,7 @@ fn tiny_request() {
 #[test]
 fn tiny_response() {
     const RESPONSE: &[u8] = &[0x01, 0x40, 0xc8];
-    let m = Message::read_bhttp(&mut BufReader::new(RESPONSE)).unwrap();
+    let m = Message::read_bhttp(&mut Cursor::new(RESPONSE)).unwrap();
     assert!(m.informational().is_empty());
     assert_eq!(m.control().status().unwrap(), 200);
     assert!(m.control().method().is_none());
@@ -153,7 +152,7 @@ fn connect_request() {
     const REQUEST: &[u8] = b"CONNECT test.example HTTP/1.1\r\n\
                              Host: example.com\r\n\
                              \r\n";
-    let err = Message::read_http(&mut BufReader::new(REQUEST)).unwrap_err();
+    let err = Message::read_http(&mut Cursor::new(REQUEST)).unwrap_err();
     assert!(matches!(err, Error::ConnectUnsupported));
 }
 
@@ -170,7 +169,7 @@ fn connection_header() {
                              proXy-connection: px\r\n\
                              \r\n";
 
-    let m = Message::read_http(&mut BufReader::new(REQUEST)).unwrap();
+    let m = Message::read_http(&mut Cursor::new(REQUEST)).unwrap();
     assert!(m.header().get(b"other").is_none());
     assert!(m.header().get(b"sample").is_none());
     assert!(m.header().get(b"garbage").is_none());
@@ -190,7 +189,7 @@ fn hop_by_hop() {
                              upgrade: h2c\r\n\
                              \r\n";
 
-    let m = Message::read_http(&mut BufReader::new(REQUEST)).unwrap();
+    let m = Message::read_http(&mut Cursor::new(REQUEST)).unwrap();
     assert!(m.header().get(b"keep-alive").is_none());
     assert!(m.header().get(b"te").is_none());
     assert!(m.header().get(b"trailer").is_none());
@@ -205,6 +204,22 @@ fn bad_chunked() {
                              Transfer-Encoding: chunked\r\n\
                              \r\n";
 
-    let e = Message::read_http(&mut BufReader::new(REQUEST)).unwrap_err();
+    let e = Message::read_http(&mut Cursor::new(REQUEST)).unwrap_err();
+    assert!(matches!(e, Error::Truncated));
+}
+
+/// If a length field overruns the buffer, stop.
+#[test]
+fn oversized() {
+    const REQUEST: &[u8] = &[0x00, 0x01];
+    let e = Message::read_bhttp(&mut Cursor::new(REQUEST)).unwrap_err();
+    assert!(matches!(e, Error::Truncated));
+}
+
+/// If a length field overruns the buffer, stop before over-allocating.
+#[test]
+fn oversized_max() {
+    const REQUEST: &[u8] = &[0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff];
+    let e = Message::read_bhttp(&mut Cursor::new(REQUEST)).unwrap_err();
     assert!(matches!(e, Error::Truncated));
 }
