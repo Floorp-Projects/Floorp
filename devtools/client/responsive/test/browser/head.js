@@ -16,6 +16,16 @@ Services.scriptloader.loadSubScript(
   this
 );
 
+// Load APZ test utils so we properly wait after resize
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/gfx/layers/apz/test/mochitest/apz_test_utils.js",
+  this
+);
+Services.scriptloader.loadSubScript(
+  "chrome://mochikit/content/tests/SimpleTest/paint_listener.js",
+  this
+);
+
 const {
   _loadPreferredDevices,
 } = require("resource://devtools/client/responsive/actions/devices.js");
@@ -91,6 +101,10 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("devtools.responsive.viewport.width");
   await asyncStorage.removeItem("devtools.responsive.deviceState");
   await removeLocalDevices();
+
+  delete window.waitForAllPaintsFlushed;
+  delete window.waitForAllPaints;
+  delete window.promiseAllPaintsDone;
 });
 
 /**
@@ -285,6 +299,7 @@ var setViewportSize = async function(ui, manager, width, height) {
 var setViewportSizeAndAwaitReflow = async function(ui, manager, width, height) {
   await setViewportSize(ui, manager, width, height);
   await promiseContentReflow(ui);
+  await promiseApzFlushedRepaints();
 };
 
 function getViewportDevicePixelRatio(ui) {
