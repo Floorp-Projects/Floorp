@@ -127,3 +127,8 @@ dialog:not([subdialog]) .editAddressForm {
 dialog:not([subdialog]) #country-warning-message {
   display: none;
 }
+
+moz-button-group{
+  margin-inline: 4px;
+  margin-block-end: 4px;
+}
