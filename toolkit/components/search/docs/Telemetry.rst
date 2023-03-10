@@ -12,22 +12,32 @@ Scalars
 -------
 
 browser.searchinit.init_result_status_code
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
   Records the search service initialization code on startup. This is typically
   one of the error values in https://searchfox.org/mozilla-central/source/xpcom/base/ErrorList.py
 
 browser.searchinit.secure_opensearch_engine_count
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
   Records the number of secure (i.e., using https) OpenSearch search
   engines a given user has installed
 
 browser.searchinit.insecure_opensearch_engine_count
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
   Records the number of insecure (i.e., using http) OpenSearch search
   engines a given user has installed
 
 browser.searchinit.secure_opensearch_update_count
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
   Records the number of OpenSearch search engines with secure updates
   enabled (i.e., using https) a given user has installed
 
 browser.searchinit.insecure_opensearch_update_count
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
   Records the number of OpenSearch search engines with insecure updates
   enabled (i.e., using http) a given user has installed
 
@@ -35,6 +45,8 @@ Keyed Scalars
 -------------
 
 browser.searchinit.engine_invalid_webextension
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
   Records the WebExtension ID of a search engine where the saved search engine
   settings do not match the WebExtension.
 
@@ -48,6 +60,8 @@ Histograms
 ----------
 
 SEARCH_SUGGESTIONS_LATENCY_MS
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
   This histogram records the latency in milliseconds of fetches to the
   suggestions endpoints of search engines, or in other words, the time from
   Firefox's request to a suggestions endpoint to the time Firefox receives a
