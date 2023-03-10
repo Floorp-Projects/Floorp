@@ -443,7 +443,7 @@ class BlockRule : public PivotRule {
  public:
   virtual uint16_t Match(Accessible* aAcc) override {
     if (RefPtr<nsAtom>(aAcc->DisplayStyle()) == nsGkAtoms::block ||
-        aAcc->IsHTMLListItem()) {
+        aAcc->IsHTMLListItem() || aAcc->IsTableRow() || aAcc->IsTableCell()) {
       return nsIAccessibleTraversalRule::FILTER_MATCH;
     }
     return nsIAccessibleTraversalRule::FILTER_IGNORE;

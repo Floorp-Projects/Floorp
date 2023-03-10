@@ -459,3 +459,27 @@ Four</li>
   },
   { chrome: true, topLevel: isCacheEnabled, iframe: false, remoteIframe: false }
 );
+
+/**
+ * Test the paragraph boundary on tables.
+ */
+addAccessibleTask(
+  `
+<table id="table">
+  <tr><th>a</th><td>b</td></tr>
+  <tr><td>c</td><td>d</td></tr>
+</table>
+  `,
+  async function(browser, docAcc) {
+    const firstPoint = createTextLeafPoint(docAcc, 0);
+    const lastPoint = createTextLeafPoint(docAcc, kTextEndOffset);
+    testBoundarySequence(
+      firstPoint,
+      BOUNDARY_PARAGRAPH,
+      DIRECTION_NEXT,
+      [["a", 0], ["b", 0], ["c", 0], ["d", 0], readablePoint(lastPoint)],
+      "Forward BOUNDARY_PARAGRAPH sequence is correct"
+    );
+  },
+  { chrome: true, topLevel: isCacheEnabled, iframe: false, remoteIframe: false }
+);
