@@ -68,7 +68,7 @@ const EXPECTED_BEST_MATCH_URLBAR_RESULT = {
         ? "urlbar-result-menu-learn-more-about-firefox-suggest"
         : "firefox-suggest-urlbar-learn-more",
     },
-    isBlockable: false,
+    isBlockable: UrlbarPrefs.get("bestMatchBlockingEnabled"),
     blockL10n: {
       id: UrlbarPrefs.get("resultMenu")
         ? "urlbar-result-menu-dismiss-firefox-suggest"
@@ -101,7 +101,7 @@ const EXPECTED_NON_BEST_MATCH_URLBAR_RESULT = {
         ? "urlbar-result-menu-learn-more-about-firefox-suggest"
         : "firefox-suggest-urlbar-learn-more",
     },
-    isBlockable: false,
+    isBlockable: UrlbarPrefs.get("quickSuggestBlockingEnabled"),
     blockL10n: {
       id: UrlbarPrefs.get("resultMenu")
         ? "urlbar-result-menu-dismiss-firefox-suggest"
@@ -134,7 +134,7 @@ const EXPECTED_BEST_MATCH_POSITION_URLBAR_RESULT = {
         ? "urlbar-result-menu-learn-more-about-firefox-suggest"
         : "firefox-suggest-urlbar-learn-more",
     },
-    isBlockable: false,
+    isBlockable: UrlbarPrefs.get("bestMatchBlockingEnabled"),
     blockL10n: {
       id: UrlbarPrefs.get("resultMenu")
         ? "urlbar-result-menu-dismiss-firefox-suggest"
@@ -482,7 +482,7 @@ add_task(async function heuristicDeduplication() {
           ? "urlbar-result-menu-learn-more-about-firefox-suggest"
           : "firefox-suggest-urlbar-learn-more",
       },
-      isBlockable: false,
+      isBlockable: UrlbarPrefs.get("quickSuggestBlockingEnabled"),
       blockL10n: {
         id: UrlbarPrefs.get("resultMenu")
           ? "urlbar-result-menu-dismiss-firefox-suggest"

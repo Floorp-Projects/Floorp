@@ -468,9 +468,13 @@ pref("browser.urlbar.quicksuggest.impressionCaps.nonSponsoredEnabled", false);
 // caps.
 pref("browser.urlbar.quicksuggest.impressionCaps.sponsoredEnabled", false);
 
+#ifdef EARLY_BETA_OR_EARLIER
 // Whether the usual non-best-match quick suggest results can be blocked. This
 // pref is a fallback for the Nimbus variable `quickSuggestBlockingEnabled`.
+pref("browser.urlbar.quicksuggest.blockingEnabled", true);
+#else
 pref("browser.urlbar.quicksuggest.blockingEnabled", false);
+#endif
 
 // Whether unit conversion is enabled.
 #ifdef NIGHTLY_BUILD
@@ -585,7 +589,11 @@ pref("browser.urlbar.bestMatch.enabled", false);
 
 // Whether best match results can be blocked. This pref is a fallback for the
 // Nimbus variable `bestMatchBlockingEnabled`.
+#ifdef EARLY_BETA_OR_EARLIER
+pref("browser.urlbar.bestMatch.blockingEnabled", true);
+#else
 pref("browser.urlbar.bestMatch.blockingEnabled", false);
+#endif
 
 // Enable site specific search result.
 pref("browser.urlbar.contextualSearch.enabled", false);
