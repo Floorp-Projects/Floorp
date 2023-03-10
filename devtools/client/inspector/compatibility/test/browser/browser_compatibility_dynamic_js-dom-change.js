@@ -14,10 +14,10 @@ const {
 
 // Test the behavior rules are dynamically added
 
-const ISSUE_BINDING = {
+const ISSUE_OUTLINE_RADIUS = {
   type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
-  property: "-moz-binding",
-  url: "https://developer.mozilla.org/docs/Web/CSS/-moz-binding",
+  property: "-moz-outline-radius",
+  url: "https://developer.mozilla.org/docs/Web/CSS/-moz-outline-radius",
   deprecated: true,
   experimental: false,
 };
@@ -34,7 +34,7 @@ const ISSUE_HYPHENS = {
 const TEST_URI = `
   <style>
     .child {
-      -moz-binding: none;
+      -moz-outline-radius: 25px;
     }
   </style>
   <body></body>
@@ -64,8 +64,8 @@ add_task(async function() {
     inspector,
     selectedElementPane,
     allElementsPane,
-    [ISSUE_BINDING],
-    [ISSUE_HYPHENS, ISSUE_BINDING],
+    [ISSUE_OUTLINE_RADIUS],
+    [ISSUE_HYPHENS, ISSUE_OUTLINE_RADIUS],
     async function() {
       const doc = content.document;
       const parent = doc.querySelector("body");

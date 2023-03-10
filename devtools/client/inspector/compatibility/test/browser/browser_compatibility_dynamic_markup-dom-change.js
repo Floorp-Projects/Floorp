@@ -14,10 +14,10 @@ const {
 
 // Test the behavior rules are dynamically added
 
-const ISSUE_BINDING = {
+const ISSUE_OUTLINE_RADIUS = {
   type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
-  property: "-moz-binding",
-  url: "https://developer.mozilla.org/docs/Web/CSS/-moz-binding",
+  property: "-moz-outline-radius",
+  url: "https://developer.mozilla.org/docs/Web/CSS/-moz-outline-radius",
   deprecated: true,
   experimental: false,
 };
@@ -34,7 +34,7 @@ const ISSUE_HYPHENS = {
 const TEST_URI = `
   <style>
     div {
-      -moz-binding: none;
+      -moz-outline-radius: 25px;
     }
   </style>
   <body>
@@ -54,16 +54,20 @@ add_task(async function() {
   const { allElementsPane, inspector } = await openCompatibilityView();
 
   info("Check initial issues");
-  await assertIssueList(allElementsPane, [ISSUE_BINDING, ISSUE_HYPHENS]);
+  await assertIssueList(allElementsPane, [ISSUE_OUTLINE_RADIUS, ISSUE_HYPHENS]);
 
   info("Delete node whose child node has CSS compatibility issue");
-  await testNodeRemoval(".parent", inspector, allElementsPane, [ISSUE_BINDING]);
+  await testNodeRemoval(".parent", inspector, allElementsPane, [
+    ISSUE_OUTLINE_RADIUS,
+  ]);
 
   info("Delete node that has CSS compatibility issue");
   await testNodeRemoval("div", inspector, allElementsPane, []);
 
   info("Add node that has CSS compatibility issue");
-  await testNodeAddition("div", inspector, allElementsPane, [ISSUE_BINDING]);
+  await testNodeAddition("div", inspector, allElementsPane, [
+    ISSUE_OUTLINE_RADIUS,
+  ]);
 
   await removeTab(tab);
 });
