@@ -1837,7 +1837,9 @@ double ChromeUtils::DateNow(GlobalObject&) { return JS_Now() / 1000.0; }
 
 /* static */
 void ChromeUtils::EnsureJSOracleStarted(GlobalObject&) {
-  JSOracleParent::WithJSOracle([](JSOracleParent* aParent) {});
+  if (StaticPrefs::browser_opaqueResponseBlocking_javascriptValidator()) {
+    JSOracleParent::WithJSOracle([](JSOracleParent* aParent) {});
+  }
 }
 
 /* static */
