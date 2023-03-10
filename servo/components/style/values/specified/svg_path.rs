@@ -363,9 +363,9 @@ impl PathCommand {
             },
             HorizontalLineTo { mut x, absolute } => {
                 if !absolute.is_yes() {
-                    x += state.pos.0;
+                    x += state.pos.x;
                 }
-                state.pos.0 = x;
+                state.pos.x = x;
                 HorizontalLineTo {
                     x,
                     absolute: IsAbsolute::Yes,
@@ -373,9 +373,9 @@ impl PathCommand {
             },
             VerticalLineTo { mut y, absolute } => {
                 if !absolute.is_yes() {
-                    y += state.pos.1;
+                    y += state.pos.y;
                 }
-                state.pos.1 = y;
+                state.pos.y = y;
                 VerticalLineTo {
                     y,
                     absolute: IsAbsolute::Yes,
@@ -612,6 +612,7 @@ impl IsAbsolute {
 }
 
 /// The path coord type.
+#[allow(missing_docs)]
 #[derive(
     AddAssign,
     Animate,
@@ -631,13 +632,16 @@ impl IsAbsolute {
     ToShmem,
 )]
 #[repr(C)]
-pub struct CoordPair(CSSFloat, CSSFloat);
+pub struct CoordPair {
+    x: CSSFloat,
+    y: CSSFloat,
+}
 
 impl CoordPair {
     /// Create a CoordPair.
     #[inline]
     pub fn new(x: CSSFloat, y: CSSFloat) -> Self {
-        CoordPair(x, y)
+        CoordPair { x, y }
     }
 }
 
