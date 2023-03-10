@@ -396,6 +396,9 @@
       if (this.hasAttribute("ordinal")) {
         this.style.order = this.getAttribute("ordinal");
       }
+      if (this.hasAttribute("width")) {
+        this.style.width = this.getAttribute("width") + "px";
+      }
 
       this._resizeObserver = new ResizeObserver(() => {
         this._invalidate();
