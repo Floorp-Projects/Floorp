@@ -39,14 +39,13 @@ add_task(async function sidebar_windows() {
     !document.getElementById("sidebar-box").hidden,
     "sidebar box is visible in first window"
   );
-  // Check that the toolbarbutton has our image styling.
-  let button = document.querySelector(".sidebar-extensions-subviewbutton");
-  ok(!!button, "have a toolbarbutton");
-  let style = button.getAttribute("style");
-  ok(
-    style.includes("webextension-sidebar-subviewbutton-image"),
-    "this button has our style"
-  );
+  // Check that the menuitem has our image styling.
+  let elements = document.getElementsByClassName("webextension-menuitem");
+  // ui is in flux, at time of writing we potentially have 3 menuitems, later
+  // it may be two or one, just make sure one is there.
+  ok(!!elements.length, "have a menuitem");
+  let style = elements[0].getAttribute("style");
+  ok(style.includes("webextension-menuitem-image"), "this menu has style");
 
   let secondSidebar = extension.awaitMessage("sidebar");
 
@@ -59,14 +58,11 @@ add_task(async function sidebar_windows() {
     !win.document.getElementById("sidebar-box").hidden,
     "sidebar box is visible in second window"
   );
-
-  button = win.document.querySelector(".sidebar-extensions-subviewbutton");
-  ok(!!button, "have a toolbarbutton");
-  style = button.getAttribute("style");
-  ok(
-    style.includes("webextension-sidebar-subviewbutton-image"),
-    "this button has our style"
-  );
+  // Check that the menuitem has our image styling.
+  elements = win.document.getElementsByClassName("webextension-menuitem");
+  ok(!!elements.length, "have a menuitem");
+  style = elements[0].getAttribute("style");
+  ok(style.includes("webextension-menuitem-image"), "this menu has style");
 
   await extension.unload();
   await BrowserTestUtils.closeWindow(win);
