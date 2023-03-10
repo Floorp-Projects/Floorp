@@ -1,3 +1,4 @@
+import base64
 from typing import Any, Mapping
 
 import pytest
@@ -170,3 +171,34 @@ def get_pdf_content(bidi_session, top_context, load_pdf):
         return result
 
     return get_pdf_content
+
+
+@pytest.fixture
+def render_pdf_to_png_bidi(bidi_session, new_tab, url):
+    """Render a PDF document to png"""
+
+    async def render_pdf_to_png_bidi(
+        encoded_pdf_data, page=1
+    ):
+        await bidi_session.browsing_context.navigate(
+            context=new_tab["context"],
+            url=url(path="/print_pdf_runner.html"),
+            wait="complete",
+        )
+
+        result = await bidi_session.script.call_function(
+            function_declaration=f"""() => {{ return window.render("{encoded_pdf_data}"); }}""",
+            target=ContextTarget(new_tab["context"]),
+            await_promise=True,
+        )
+        value = result["value"]
+        index = page - 1
+
+        assert 0 <= index < len(value)
+
+        image_string = value[index]["value"]
+        image_string_without_data_type = image_string[image_string.find(",") + 1 :]
+
+        return base64.b64decode(image_string_without_data_type)
+
+    return render_pdf_to_png_bidi
