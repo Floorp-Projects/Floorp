@@ -9,7 +9,7 @@
     "message": "https://uz.wikipedia.org/wiki/Maxsus:Search"
   },
   "searchForm": {
-    "message": "https://uz.wikipedia.org/wiki/Maxsus:Search?search={searchTerms}&sourceid=Mozilla-search"
+    "message": "https://uz.wikipedia.org/wiki/Maxsus:Search"
   },
   "suggestUrl": {
     "message": "https://uz.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"

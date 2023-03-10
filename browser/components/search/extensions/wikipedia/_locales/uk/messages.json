@@ -9,7 +9,7 @@
     "message": "https://uk.wikipedia.org/wiki/Спеціальна:Пошук"
   },
   "searchForm": {
-    "message": "https://uk.wikipedia.org/wiki/Спеціальна:Пошук?search={searchTerms}&sourceid=Mozilla-search"
+    "message": "https://uk.wikipedia.org/wiki/Спеціальна:Пошук"
   },
   "suggestUrl": {
     "message": "https://uk.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"

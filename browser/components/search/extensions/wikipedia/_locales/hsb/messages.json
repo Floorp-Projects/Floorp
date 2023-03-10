@@ -9,7 +9,7 @@
     "message": "https://hsb.wikipedia.org/wiki/Specialnje:Pytać"
   },
   "searchForm": {
-    "message": "https://hsb.wikipedia.org/wiki/Specialnje:Pytać?search={searchTerms}&sourceid=Mozilla-search"
+    "message": "https://hsb.wikipedia.org/wiki/Specialnje:Pytać"
   },
   "suggestUrl": {
     "message": "https://hsb.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"

@@ -9,7 +9,7 @@
     "message": "https://www.amazon.com.au/exec/obidos/external-search/"
   },
   "searchForm": {
-    "message": "https://www.amazon.com.au/exec/obidos/external-search/?field-keywords={searchTerms}&ie={inputEncoding}&mode=blended"
+    "message": "https://www.amazon.com.au/exec/obidos/external-search/"
   },
   "searchUrlGetParams": {
     "message": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended"

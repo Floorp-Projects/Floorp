@@ -9,7 +9,7 @@
     "message": "https://hy.wikipedia.org/wiki/Սպասարկող:Որոնել"
   },
   "searchForm": {
-    "message": "https://hy.wikipedia.org/wiki/Սպասարկող:Որոնել?search={searchTerms}&sourceid=Mozilla-search"
+    "message": "https://hy.wikipedia.org/wiki/Սպասարկող:Որոնել"
   },
   "suggestUrl": {
     "message": "https://hy.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"

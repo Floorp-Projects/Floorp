@@ -2,7 +2,7 @@
   "name": "EUdict Eng->Cro",
   "description": "EUdict - englesko-hrvatski rječnik",
   "manifest_version": 2,
-  "version": "1.1",
+  "version": "1.2",
   "browser_specific_settings": {
     "gecko": {
       "id": "eudict@search.mozilla.org"
@@ -19,7 +19,7 @@
     "search_provider": {
       "name": "EUdict Eng->Cro",
       "search_url": "https://eudict.com",
-      "search_form": "https://eudict.com?lang=engcro&word={searchTerms}",
+      "search_form": "https://eudict.com?lang=engcro",
       "search_url_get_params": "lang=engcro&word={searchTerms}"
     }
   }

@@ -9,7 +9,7 @@
     "message": "https://oc.wiktionary.org/wiki/Especial:Recèrca"
   },
   "searchForm": {
-    "message": "https://oc.wiktionary.org/wiki/Especial:Recèrca?search={searchTerms}"
+    "message": "https://oc.wiktionary.org/wiki/Especial:Recèrca"
   },
   "suggestUrl": {
     "message": "https://oc.wiktionary.org/w/api.php?action=opensearch&search={searchTerms}&namespace=0"

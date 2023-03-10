@@ -2,7 +2,7 @@
   "name": "Bing",
   "description": "Microsoft Bing",
   "manifest_version": 2,
-  "version": "1.4",
+  "version": "1.5",
   "browser_specific_settings": {
     "gecko": {
       "id": "bing@search.mozilla.org"
@@ -20,7 +20,7 @@
       "keyword": "@bing",
       "name": "Bing",
       "search_url": "https://www.bing.com/search",
-      "search_form": "https://www.bing.com/search?pc=MOZI&q={searchTerms}",
+      "search_form": "https://www.bing.com/search",
       "search_url_get_params": "pc=MOZI&q={searchTerms}",
       "params": [
         {

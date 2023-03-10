@@ -9,7 +9,7 @@
     "message": "https://www.google.com/search"
   },
   "searchForm": {
-    "message": "https://www.google.com/search?client=firefox-b-d&q={searchTerms}"
+    "message": "https://www.google.com/search"
   },
   "suggestUrl": {
     "message": "https://www.google.com/complete/search?client=firefox&q={searchTerms}"

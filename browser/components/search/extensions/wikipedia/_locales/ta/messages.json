@@ -9,7 +9,7 @@
     "message": "https://ta.wikipedia.org/wiki/சிறப்பு:Search"
   },
   "searchForm": {
-    "message": "https://ta.wikipedia.org/wiki/சிறப்பு:Search?search={searchTerms}&sourceid=Mozilla-search"
+    "message": "https://ta.wikipedia.org/wiki/சிறப்பு:Search"
   },
   "suggestUrl": {
     "message": "https://ta.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"

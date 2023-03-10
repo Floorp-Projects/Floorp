@@ -9,7 +9,7 @@
     "message": "https://zh.wikipedia.org/wiki/Special:搜索"
   },
   "searchForm": {
-    "message": "https://zh.wikipedia.org/wiki/Special:搜索?search={searchTerms}&sourceid=Mozilla-search&variant=zh-tw"
+    "message": "https://zh.wikipedia.org/wiki/Special:搜索?variant=zh-tw"
   },
   "suggestUrl": {
     "message": "https://zh.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
