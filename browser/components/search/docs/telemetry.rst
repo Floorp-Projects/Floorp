@@ -62,6 +62,8 @@ BrowserSearchTelemetry.sys.mjs
 This telemetry is handled by `BrowserSearchTelemetry.sys.mjs`_.
 
 SEARCH_COUNTS - SAP usage
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
   This histogram tracks search engines and Search Access Points. It is augmented
   by multiple SAPs, including the urlbar.
   It's a keyed histogram, the keys are strings made up of search engine names
@@ -87,6 +89,8 @@ SEARCH_COUNTS - SAP usage
     - ``webextension``
 
 browser.engagement.navigation.*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
   These keyed scalars track search through different SAPs, for example the
   urlbar is tracked by ``browser.engagement.navigation.urlbar``.
   It counts loads triggered in a subsession from the specified SAP, broken down
@@ -124,6 +128,8 @@ browser.engagement.navigation.*
       suggestion.
 
 navigation.search (OBSOLETE)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
   This is a legacy and disabled event telemetry that is currently under
   discussion for removal or modernization. It can't be enabled through a pref.
   it's more or less equivalent to browser.engagement.navigation, but can also
@@ -135,6 +141,8 @@ SearchSERPTelemetry.sys.mjs
 This telemetry is handled by `SearchSERPTelemetry.sys.mjs and the associated parent/child actors`_.
 
 browser.search.content.*
+^^^^^^^^^^^^^^^^^^^^^^^^
+
   These keyed scalar track counts of SERP page loads. The key format is
   ``<provider>:[tagged|tagged-follow-on|organic]:[<code>|other|none]``.
 
@@ -156,6 +164,8 @@ browser.search.content.*
   - ``unknown`` Indicates the origin was unknown.
 
 browser.search.withads.*
+^^^^^^^^^^^^^^^^^^^^^^^^
+
   These keyed scalar track counts of SERP pages with adverts displayed. The key
   format is ``<provider>:<tagged|organic>``.
 
@@ -163,6 +173,8 @@ browser.search.withads.*
   is the same as for ``browser.search.content.*``.
 
 browser.search.adclicks.*
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
   This is the same as ```browser.search.withads.*`` but tracks counts for them
   clicks of adverts on SERP pages.
 
