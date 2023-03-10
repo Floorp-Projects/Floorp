@@ -230,19 +230,6 @@ export class BrowserTestUtilsChild extends JSWindowActorChild {
               debug.crashWithOOM();
               break;
             }
-            case "CRASH_SYSCALL": {
-              if (Services.appinfo.OS == "Linux") {
-                let libc = ctypes.open("libc.so.6");
-                let chroot = libc.declare(
-                  "chroot",
-                  ctypes.default_abi,
-                  ctypes.int,
-                  ctypes.char.ptr
-                );
-                chroot("/");
-              }
-              break;
-            }
             case "CRASH_INVALID_POINTER_DEREF": // Fallthrough
             default: {
               // Dereference a bad pointer.
