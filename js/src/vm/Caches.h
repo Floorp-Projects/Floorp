@@ -252,26 +252,24 @@ class MegamorphicSetPropCacheEntry {
   // The atom or symbol property being accessed.
   PropertyKey key_;
 
+  // Slot offset and isFixedSlot flag of the data property.
+  TaggedSlotOffset slotOffset_;
+
   // This entry is valid iff the generation matches the cache's generation.
   uint16_t generation_ = 0;
-
-  // Slot number of the data property.
-  static constexpr size_t MaxSlotNumber = UINT16_MAX;
-  uint16_t slot_ = 0;
 
   friend class MegamorphicSetPropCache;
 
  public:
   void init(Shape* beforeShape, Shape* afterShape, PropertyKey key,
-            uint16_t generation, uint16_t slot) {
+            uint16_t generation, TaggedSlotOffset slotOffset) {
     beforeShape_ = beforeShape;
     afterShape_ = afterShape;
     key_ = key;
+    slotOffset_ = slotOffset;
     generation_ = generation;
-    slot_ = slot;
-    MOZ_ASSERT(slot_ == slot, "slot must fit in slot_");
   }
-  uint16_t slot() const { return slot_; }
+  TaggedSlotOffset slotOffset() const { return slotOffset_; }
   Shape* afterShape() const { return afterShape_; }
 
   static constexpr size_t offsetOfShape() {
@@ -289,8 +287,8 @@ class MegamorphicSetPropCacheEntry {
     return offsetof(MegamorphicSetPropCacheEntry, generation_);
   }
 
-  static constexpr size_t offsetOfSlot() {
-    return offsetof(MegamorphicSetPropCacheEntry, slot_);
+  static constexpr size_t offsetOfSlotOffset() {
+    return offsetof(MegamorphicSetPropCacheEntry, slotOffset_);
   }
 };
 
@@ -332,12 +330,9 @@ class MegamorphicSetPropCache {
     }
   }
   void set(Shape* beforeShape, Shape* afterShape, PropertyKey key,
-           uint32_t slot) {
-    if (slot > Entry::MaxSlotNumber) {
-      return;
-    }
+           TaggedSlotOffset slotOffset) {
     Entry& entry = getEntry(beforeShape, key);
-    entry.init(beforeShape, afterShape, key, generation_, slot);
+    entry.init(beforeShape, afterShape, key, generation_, slotOffset);
   }
 
 #ifdef DEBUG
