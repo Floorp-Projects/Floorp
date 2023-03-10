@@ -645,6 +645,7 @@ void FragmentOrElement::nsExtendedDOMSlots::UnlinkExtendedSlots(
   mSMILOverrideStyle = nullptr;
   mControllers = nullptr;
   mLabelsList = nullptr;
+  mPopoverData = nullptr;
   if (mCustomElementData) {
     mCustomElementData->Unlink();
     mCustomElementData = nullptr;

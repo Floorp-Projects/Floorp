@@ -17,6 +17,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/ValidityState.h"
+#include "mozilla/dom/PopoverData.h"
 
 class nsDOMTokenList;
 class nsIFormControlFrame;
@@ -84,6 +85,12 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   void SetDir(const nsAString& aDir, mozilla::ErrorResult& aError) {
     SetHTMLAttr(nsGkAtoms::dir, aDir, aError);
   }
+  void GetPopover(nsString& aPopover) {
+    GetHTMLEnumAttr(nsGkAtoms::popover, aPopover);
+  }
+  void SetPopover(const nsAString& aPopover, mozilla::ErrorResult& aError) {
+    SetHTMLAttr(nsGkAtoms::popover, aPopover, aError);
+  }
   bool Hidden() const { return GetBoolAttr(nsGkAtoms::hidden); }
   void SetHidden(bool aHidden, mozilla::ErrorResult& aError) {
     SetHTMLBoolAttr(nsGkAtoms::hidden, aHidden, aError);
@@ -142,6 +149,15 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
     }
     return false;
   }
+
+  mozilla::dom::PopoverState GetPopoverState() const;
+  void PopoverPseudoStateUpdate(bool aOpen, bool aNotify);
+  bool PopoverOpen() const;
+  bool CheckPopoverValidity(mozilla::dom::PopoverVisibilityState aExpectedState,
+                            ErrorResult& aRv);
+  void ShowPopover(ErrorResult& aRv);
+  void HidePopover(ErrorResult& aRv);
+  void TogglePopover(bool force, ErrorResult& aRv);
 
   void SetNonce(const nsAString& aNonce) {
     SetProperty(nsGkAtoms::nonce, new nsString(aNonce),

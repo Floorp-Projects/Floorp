@@ -4213,6 +4213,20 @@ ElementAnimationData& Element::CreateAnimationData() {
   return *slots->mAnimations;
 }
 
+PopoverData& Element::CreatePopoverData() {
+  MOZ_ASSERT(!GetPopoverData());
+  auto* slots = ExtendedDOMSlots();
+  slots->mPopoverData = MakeUnique<PopoverData>();
+  return *slots->mPopoverData;
+}
+
+void Element::ClearPopoverData() {
+  nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
+  if (slots) {
+    slots->mPopoverData = nullptr;
+  }
+}
+
 void Element::SetCustomElementData(UniquePtr<CustomElementData> aData) {
   SetHasCustomElementData();
 

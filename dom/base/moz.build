@@ -252,6 +252,7 @@ EXPORTS.mozilla.dom += [
     "PlacesVisitRemoved.h",
     "PlacesVisitTitle.h",
     "PlacesWeakCallbackWrapper.h",
+    "PopoverData.h",
     "PopupBlocker.h",
     "Pose.h",
     "PostMessageEvent.h",

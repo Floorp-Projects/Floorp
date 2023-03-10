@@ -2424,6 +2424,14 @@
   value: false
   mirror: always
 
+# Whether the popover attribute implementation is enabled,
+# see https://html.spec.whatwg.org/#the-popover-attribute
+- name: dom.element.popover.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Controls whether the "focus fixup rule" is enabled. Subject to minor changes
 # based on https://github.com/whatwg/html/pull/8392 and
 # https://github.com/whatwg/html/issues/8225
