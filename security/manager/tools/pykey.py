@@ -946,8 +946,6 @@ def keyFromSpecification(specification):
 # The build harness will call this function with an output file-like
 # object and a path to a file containing a specification. This will
 # read the specification and output the key as ASCII-encoded PKCS #8.
-
-
 def main(output, inputPath):
     with open(inputPath) as configStream:
         output.write(keyFromSpecification(configStream.read().strip()).toPEM() + "\n")
