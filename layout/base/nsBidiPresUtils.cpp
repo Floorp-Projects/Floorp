@@ -2472,9 +2472,11 @@ nsresult nsBidiPresUtils::ProcessTextForRenderingContext(
   nsIRenderingContextBidiProcessor processor(&aRenderingContext,
                                              aTextRunConstructionDrawTarget,
                                              &aFontMetrics, nsPoint(aX, aY));
-  return ProcessText(aText, aLength, aBaseLevel, aPresContext, processor, aMode,
-                     aPosResolve, aPosResolveCount, aWidth,
-                     &aPresContext->GetBidiEngine());
+  nsAutoString text(aText, aLength);
+  text.ReplaceChar(kSeparators, ' ');
+  return ProcessText(text.BeginReading(), text.Length(), aBaseLevel,
+                     aPresContext, processor, aMode, aPosResolve,
+                     aPosResolveCount, aWidth, &aPresContext->GetBidiEngine());
 }
 
 /* static */
