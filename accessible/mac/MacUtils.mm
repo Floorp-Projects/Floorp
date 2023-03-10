@@ -80,6 +80,10 @@ static NSColor* ColorFromColor(const Color& aColor) {
 
 NSDictionary* StringAttributesFromAccAttributes(AccAttributes* aAttributes,
                                                 Accessible* aContainer) {
+  if (!aAttributes) {
+    return @{};
+  }
+
   NSMutableDictionary* attrDict =
       [NSMutableDictionary dictionaryWithCapacity:aAttributes->Count()];
   NSMutableDictionary* fontAttrDict = [[NSMutableDictionary alloc] init];
