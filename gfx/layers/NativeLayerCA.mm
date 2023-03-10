@@ -1036,35 +1036,25 @@ Maybe<gfx::IntRect> NativeLayerCA::ClipRect() {
 void NativeLayerCA::DumpLayer(std::ostream& aOutputStream) {
   MutexAutoLock lock(mMutex);
 
-  auto size = gfx::Size(mSize) / mBackingScale;
+  Maybe<CGRect> scaledClipRect =
+      CalculateClipGeometry(mSize, mPosition, mTransform, mDisplayRect, mClipRect, mBackingScale);
 
-  Maybe<IntRect> clipFromDisplayRect;
-  if (!mDisplayRect.IsEqualInterior(IntRect({}, mSize))) {
-    // When the display rect is a subset of the layer, then we want to guarantee that no
-    // pixels outside that rect are sampled, since they might be uninitialized.
-    // Transforming the display rect into a post-transform clip only maintains this if
-    // it's an integer translation, which is all we support for this case currently.
-    MOZ_ASSERT(mTransform.Is2DIntegerTranslation());
-    clipFromDisplayRect =
-        Some(RoundedToInt(mTransform.TransformBounds(IntRectToRect(mDisplayRect + mPosition))));
+  CGRect useClipRect;
+  if (scaledClipRect.isSome()) {
+    useClipRect = *scaledClipRect;
+  } else {
+    useClipRect = CGRectZero;
   }
-
-  auto effectiveClip = IntersectMaybeRects(mClipRect, clipFromDisplayRect);
-  auto globalClipOrigin = effectiveClip ? effectiveClip->TopLeft() : IntPoint();
-  auto clipToLayerOffset = -globalClipOrigin;
-
-  auto wrappingDivPosition = gfx::Point(globalClipOrigin) / mBackingScale;
 
   aOutputStream << "<div style=\"";
   aOutputStream << "position: absolute; ";
-  aOutputStream << "left: " << wrappingDivPosition.x << "px; ";
-  aOutputStream << "top: " << wrappingDivPosition.y << "px; ";
+  aOutputStream << "left: " << useClipRect.origin.x << "px; ";
+  aOutputStream << "top: " << useClipRect.origin.y << "px; ";
+  aOutputStream << "width: " << useClipRect.size.width << "px; ";
+  aOutputStream << "height: " << useClipRect.size.height << "px; ";
 
-  if (effectiveClip) {
-    auto wrappingDivSize = gfx::Size(effectiveClip->Size()) / mBackingScale;
+  if (scaledClipRect.isSome()) {
     aOutputStream << "overflow: hidden; ";
-    aOutputStream << "width: " << wrappingDivSize.width << "px; ";
-    aOutputStream << "height: " << wrappingDivSize.height << "px; ";
   }
 
   if (mColor) {
@@ -1077,21 +1067,25 @@ void NativeLayerCA::DumpLayer(std::ostream& aOutputStream) {
     return;
   }
 
-  Matrix4x4 transform = mTransform;
-  transform.PreTranslate(mPosition.x, mPosition.y, 0);
-  transform.PostTranslate(clipToLayerOffset.x, clipToLayerOffset.y, 0);
-
-  if (mSurfaceIsFlipped) {
-    transform.PreTranslate(0, mSize.height, 0).PreScale(1, -1, 1);
-  }
-
   aOutputStream << "\">";
+
+  auto size = gfx::Size(mSize) / mBackingScale;
+
   aOutputStream << "<img style=\"";
   aOutputStream << "width: " << size.width << "px; ";
   aOutputStream << "height: " << size.height << "px; ";
 
   if (mSamplingFilter == gfx::SamplingFilter::POINT) {
     aOutputStream << "image-rendering: crisp-edges; ";
+  }
+
+  Matrix4x4 transform = mTransform;
+  transform.PreTranslate(mPosition.x, mPosition.y, 0);
+  transform.PostTranslate((-useClipRect.origin.x * mBackingScale),
+                          (-useClipRect.origin.y * mBackingScale), 0);
+
+  if (mSurfaceIsFlipped) {
+    transform.PreTranslate(0, mSize.height, 0).PreScale(1, -1, 1);
   }
 
   if (!transform.IsIdentity()) {
@@ -1366,6 +1360,31 @@ NativeLayerCA::UpdateType NativeLayerCA::HasUpdate(WhichRepresentation aRepresen
   return GetRepresentation(aRepresentation).HasUpdate(IsVideoAndLocked(lock));
 }
 
+/* static */
+Maybe<CGRect> NativeLayerCA::CalculateClipGeometry(
+    const gfx::IntSize& aSize, const gfx::IntPoint& aPosition, const gfx::Matrix4x4& aTransform,
+    const gfx::IntRect& aDisplayRect, const Maybe<gfx::IntRect>& aClipRect, float aBackingScale) {
+  Maybe<IntRect> clipFromDisplayRect;
+  if (!aDisplayRect.IsEqualInterior(IntRect({}, aSize))) {
+    // When the display rect is a subset of the layer, then we want to guarantee that no
+    // pixels outside that rect are sampled, since they might be uninitialized.
+    // Transforming the display rect into a post-transform clip only maintains this if
+    // it's an integer translation, which is all we support for this case currently.
+    MOZ_ASSERT(aTransform.Is2DIntegerTranslation());
+    clipFromDisplayRect =
+        Some(RoundedToInt(aTransform.TransformBounds(IntRectToRect(aDisplayRect + aPosition))));
+  }
+
+  Maybe<gfx::IntRect> effectiveClip = IntersectMaybeRects(aClipRect, clipFromDisplayRect);
+  if (!effectiveClip) {
+    return Nothing();
+  }
+
+  return Some(CGRectMake(effectiveClip->X() / aBackingScale, effectiveClip->Y() / aBackingScale,
+                         effectiveClip->Width() / aBackingScale,
+                         effectiveClip->Height() / aBackingScale));
+}
+
 bool NativeLayerCA::ApplyChanges(WhichRepresentation aRepresentation,
                                  NativeLayerCA::UpdateType aUpdate) {
   MutexAutoLock lock(mMutex);
@@ -1620,9 +1639,9 @@ bool NativeLayerCA::Representation::ApplyChanges(
   if (!mWrappingCALayer) {
     layerNeedsInitialization = true;
     mWrappingCALayer = [[CALayer layer] retain];
-    mWrappingCALayer.position = NSZeroPoint;
-    mWrappingCALayer.bounds = NSZeroRect;
-    mWrappingCALayer.anchorPoint = NSZeroPoint;
+    mWrappingCALayer.position = CGPointZero;
+    mWrappingCALayer.bounds = CGRectZero;
+    mWrappingCALayer.anchorPoint = CGPointZero;
     mWrappingCALayer.contentsGravity = kCAGravityTopLeft;
     mWrappingCALayer.edgeAntialiasingMask = 0;
 
@@ -1656,8 +1675,8 @@ bool NativeLayerCA::Representation::ApplyChanges(
 #endif
         mContentCALayer = [[CALayer layer] retain];
       }
-      mContentCALayer.position = NSZeroPoint;
-      mContentCALayer.anchorPoint = NSZeroPoint;
+      mContentCALayer.position = CGPointZero;
+      mContentCALayer.anchorPoint = CGPointZero;
       mContentCALayer.contentsGravity = kCAGravityTopLeft;
       mContentCALayer.contentsScale = 1;
       mContentCALayer.bounds = CGRectMake(0, 0, aSize.width, aSize.height);
@@ -1682,9 +1701,9 @@ bool NativeLayerCA::Representation::ApplyChanges(
   bool shouldTintOpaqueness = StaticPrefs::gfx_core_animation_tint_opaque();
   if (shouldTintOpaqueness && !mOpaquenessTintLayer) {
     mOpaquenessTintLayer = [[CALayer layer] retain];
-    mOpaquenessTintLayer.position = NSZeroPoint;
+    mOpaquenessTintLayer.position = CGPointZero;
     mOpaquenessTintLayer.bounds = mContentCALayer.bounds;
-    mOpaquenessTintLayer.anchorPoint = NSZeroPoint;
+    mOpaquenessTintLayer.anchorPoint = CGPointZero;
     mOpaquenessTintLayer.contentsGravity = kCAGravityTopLeft;
     if (aIsOpaque) {
       mOpaquenessTintLayer.backgroundColor =
@@ -1721,36 +1740,25 @@ bool NativeLayerCA::Representation::ApplyChanges(
 
   if (mMutatedBackingScale || mMutatedPosition || mMutatedDisplayRect || mMutatedClipRect ||
       mMutatedTransform || mMutatedSurfaceIsFlipped || mMutatedSize || layerNeedsInitialization) {
-    Maybe<IntRect> clipFromDisplayRect;
-    if (!aDisplayRect.IsEqualInterior(IntRect({}, aSize))) {
-      // When the display rect is a subset of the layer, then we want to guarantee that no
-      // pixels outside that rect are sampled, since they might be uninitialized.
-      // Transforming the display rect into a post-transform clip only maintains this if
-      // it's an integer translation, which is all we support for this case currently.
-      MOZ_ASSERT(aTransform.Is2DIntegerTranslation());
-      clipFromDisplayRect =
-          Some(RoundedToInt(aTransform.TransformBounds(IntRectToRect(aDisplayRect + aPosition))));
-    }
+    Maybe<CGRect> scaledClipRect =
+        CalculateClipGeometry(aSize, aPosition, aTransform, aDisplayRect, aClipRect, aBackingScale);
 
-    auto effectiveClip = IntersectMaybeRects(aClipRect, clipFromDisplayRect);
-    auto globalClipOrigin = effectiveClip ? effectiveClip->TopLeft() : IntPoint();
-    auto clipToLayerOffset = -globalClipOrigin;
-
-    mWrappingCALayer.position =
-        CGPointMake(globalClipOrigin.x / aBackingScale, globalClipOrigin.y / aBackingScale);
-
-    if (effectiveClip) {
-      mWrappingCALayer.masksToBounds = YES;
-      mWrappingCALayer.bounds = CGRectMake(0, 0, effectiveClip->Width() / aBackingScale,
-                                           effectiveClip->Height() / aBackingScale);
+    CGRect useClipRect;
+    if (scaledClipRect.isSome()) {
+      useClipRect = *scaledClipRect;
     } else {
-      mWrappingCALayer.masksToBounds = NO;
+      useClipRect = CGRectZero;
     }
+
+    mWrappingCALayer.position = useClipRect.origin;
+    mWrappingCALayer.bounds = CGRectMake(0, 0, useClipRect.size.width, useClipRect.size.height);
+    mWrappingCALayer.masksToBounds = scaledClipRect.isSome();
 
     if (mContentCALayer) {
       Matrix4x4 transform = aTransform;
       transform.PreTranslate(aPosition.x, aPosition.y, 0);
-      transform.PostTranslate(clipToLayerOffset.x, clipToLayerOffset.y, 0);
+      transform.PostTranslate((-useClipRect.origin.x * aBackingScale),
+                              (-useClipRect.origin.y * aBackingScale), 0);
 
       if (aSurfaceIsFlipped) {
         transform.PreTranslate(0, aSize.height, 0).PreScale(1, -1, 1);
