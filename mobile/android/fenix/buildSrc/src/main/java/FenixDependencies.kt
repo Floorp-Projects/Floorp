@@ -41,8 +41,7 @@ object FenixVersions {
     const val androidx_work = "2.7.1"
     const val androidx_datastore = "1.0.0"
     const val google_material = "1.2.1"
-    const val accompanist_drawablepainter = "0.23.1"
-    const val accompanist_pager = "0.28.0"
+    const val google_accompanist = "0.28.0"
 
     const val adjust = "4.33.0"
     const val installreferrer = "2.2"
@@ -109,10 +108,8 @@ object FenixDependencies {
     const val androidx_work_testing = "androidx.work:work-testing:${FenixVersions.androidx_work}"
     const val androidx_datastore = "androidx.datastore:datastore:${FenixVersions.androidx_datastore}"
     const val google_material = "com.google.android.material:material:${FenixVersions.google_material}"
-    const val google_accompanist_drawablepainter =
-        "com.google.accompanist:accompanist-drawablepainter:${FenixVersions.accompanist_drawablepainter}"
-    const val google_accompanist_pager =
-        "com.google.accompanist:accompanist-pager:${FenixVersions.accompanist_pager}"
+    const val google_accompanist_drawablepainter = "com.google.accompanist:accompanist-drawablepainter:${FenixVersions.google_accompanist}"
+    const val google_accompanist_pager = "com.google.accompanist:accompanist-pager:${FenixVersions.google_accompanist}"
 
     const val protobuf_javalite = "com.google.protobuf:protobuf-javalite:${FenixVersions.protobuf}"
     const val protobuf_compiler = "com.google.protobuf:protoc:${FenixVersions.protobuf}"
