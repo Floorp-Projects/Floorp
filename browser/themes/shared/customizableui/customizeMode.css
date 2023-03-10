@@ -158,6 +158,10 @@ toolbarpaletteitem:not([notransition])[place="toolbar"] {
   transition: border-width var(--drag-drop-transition-duration) ease-in-out;
 }
 
+#widget-overflow-fixed-list > toolbarpaletteitem {
+  flex: none;
+}
+
 toolbarpaletteitem[mousedown] {
   cursor: -moz-grabbing;
 }
