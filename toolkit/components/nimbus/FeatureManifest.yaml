@@ -218,6 +218,10 @@ urlbar:
     recordNavigationalSuggestionTelemetry:
       type: boolean
       description: Whether to record navigational suggestion telemetry. Defaults to false.
+    resultMenu:
+      type: boolean
+      setPref: browser.urlbar.resultMenu
+      description: Enable the per-result three-dot menu with options such as Dismiss and Learn More.
     searchEngagementTelemetryEnabled:
       type: boolean
       fallbackPref: browser.urlbar.searchEngagementTelemetry.enabled
