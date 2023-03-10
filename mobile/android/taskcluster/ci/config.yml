@@ -189,6 +189,11 @@ workers:
             implementation: docker-worker
             os: linux
             worker-type: b-linux-large-gcp
+        b-android-xlarge:
+            provisioner: 'mobile-{level}'
+            implementation: docker-worker
+            os: linux
+            worker-type: b-linux-xlarge-gcp
         beetmover:
             provisioner: scriptworker-k8s
             implementation: scriptworker-beetmover

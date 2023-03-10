@@ -49,7 +49,7 @@ task-defaults:
         retry-exit-status:
             - 1     # Test failures (which actually catch any gradle failure)
             - 17    # Download errors
-    worker-type: b-android-large
+    worker-type: b-android-xlarge
 
 tasks:
     lint-components:
