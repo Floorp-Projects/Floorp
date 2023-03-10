@@ -13,6 +13,7 @@
 #include <asm/ioctl.h>
 #include <dlfcn.h>
 #include <fcntl.h>
+#include <gdk/gdk.h>
 #include <libdrm/drm_fourcc.h>
 #include <linux/types.h>
 #include <spa/param/video/format-utils.h>
@@ -200,6 +201,26 @@ static void CloseLibrary(void* library) {
   }
 }
 
+static bool IsWaylandDisplay() {
+  static auto sGdkWaylandDisplayGetType =
+    (GType (*)(void))dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_type");
+  if (!sGdkWaylandDisplayGetType) {
+    return false;
+  }
+  return (G_TYPE_CHECK_INSTANCE_TYPE ((gdk_display_get_default()),
+                                      sGdkWaylandDisplayGetType()));
+}
+
+static bool IsX11Display() {
+  static auto sGdkX11DisplayGetType =
+    (GType (*)(void))dlsym(RTLD_DEFAULT, "gdk_x11_display_get_type");
+  if (!sGdkX11DisplayGetType) {
+    return false;
+  }
+  return (G_TYPE_CHECK_INSTANCE_TYPE ((gdk_display_get_default()),
+                                      sGdkX11DisplayGetType()));
+}
+
 static void* g_lib_egl = nullptr;
 
 RTC_NO_SANITIZE("cfi-icall")
@@ -331,8 +352,13 @@ EglDmaBuf::EglDmaBuf() {
     return;
   }
 
-  egl_.display = EglGetPlatformDisplay(EGL_PLATFORM_WAYLAND_KHR,
-                                       (void*)EGL_DEFAULT_DISPLAY, nullptr);
+  if (IsWaylandDisplay()) {
+    egl_.display = EglGetPlatformDisplay(EGL_PLATFORM_WAYLAND_KHR,
+                                         (void*)EGL_DEFAULT_DISPLAY, nullptr);
+  } else if (IsX11Display()) {
+    egl_.display = EglGetPlatformDisplay(EGL_PLATFORM_X11_KHR,
+                                         (void*)EGL_DEFAULT_DISPLAY, nullptr);
+  }
 
   if (egl_.display == EGL_NO_DISPLAY) {
     RTC_LOG(LS_ERROR) << "Failed to obtain default EGL display: "
