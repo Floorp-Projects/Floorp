@@ -1008,7 +1008,7 @@ async function doMatchingQuickSuggestTest(pref, isSponsored) {
               ? "urlbar-result-menu-learn-more-about-firefox-suggest"
               : "firefox-suggest-urlbar-learn-more",
           },
-          isBlockable: false,
+          isBlockable: UrlbarPrefs.get("quickSuggestBlockingEnabled"),
           blockL10n: {
             id: UrlbarPrefs.get("resultMenu")
               ? "urlbar-result-menu-dismiss-firefox-suggest"
