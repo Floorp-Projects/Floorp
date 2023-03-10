@@ -9,9 +9,6 @@ const { FirstStartup } = ChromeUtils.importESModule(
 const { NimbusFeatures } = ChromeUtils.import(
   "resource://nimbus/ExperimentAPI.jsm"
 );
-const { EnrollmentsContext } = ChromeUtils.import(
-  "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
-);
 const { PanelTestProvider } = ChromeUtils.import(
   "resource://activity-stream/lib/PanelTestProvider.jsm"
 );
@@ -389,7 +386,7 @@ add_task(async function test_updateRecipes_simpleFeatureInvalidAfterUpdate() {
   };
 
   sinon.spy(loader, "updateRecipes");
-  sinon.spy(EnrollmentsContext.prototype, "_generateVariablesOnlySchema");
+  sinon.spy(loader, "_generateVariablesOnlySchema");
   sinon.stub(loader, "setTimer");
   sinon.stub(loader.remoteSettingsClient, "get").resolves([recipe]);
 
@@ -417,12 +414,12 @@ add_task(async function test_updateRecipes_simpleFeatureInvalidAfterUpdate() {
   );
 
   ok(
-    EnrollmentsContext.prototype._generateVariablesOnlySchema.calledOnce,
+    loader._generateVariablesOnlySchema.calledOnce,
     "Should have generated a schema for testFeature"
   );
 
   Assert.deepEqual(
-    EnrollmentsContext.prototype._generateVariablesOnlySchema.returnValues[0],
+    loader._generateVariablesOnlySchema.returnValues[0],
     EXPECTED_SCHEMA,
     "should have generated a schema with three fields"
   );
@@ -453,8 +450,6 @@ add_task(async function test_updateRecipes_simpleFeatureInvalidAfterUpdate() {
     }),
     "should call .onFinalize with an invalid branch"
   );
-
-  EnrollmentsContext.prototype._generateVariablesOnlySchema.restore();
 });
 
 add_task(async function test_updateRecipes_validationTelemetry() {
@@ -918,10 +913,7 @@ add_task(async function test_updateRecipes_invalidFeature_mismatch() {
   sinon.stub(manager.store, "getAllActiveRollouts").returns([]);
 
   const telemetrySpy = sinon.stub(manager, "sendValidationFailedTelemetry");
-  const targetingSpy = sinon.spy(
-    EnrollmentsContext.prototype,
-    "checkTargeting"
-  );
+  const targetingSpy = sinon.spy(loader, "checkTargeting");
 
   await loader.init();
   ok(targetingSpy.calledOnce, "Should have checked targeting for recipe");
@@ -934,6 +926,4 @@ add_task(async function test_updateRecipes_invalidFeature_mismatch() {
     telemetrySpy.notCalled,
     "Should not have submitted validation failed telemetry"
   );
-
-  targetingSpy.restore();
 });

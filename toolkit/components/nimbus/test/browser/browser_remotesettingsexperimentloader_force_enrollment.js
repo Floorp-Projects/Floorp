@@ -1,4 +1,5 @@
-//creativecommons.org/publicdomain/zero/1.0/ */
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
@@ -26,10 +27,11 @@ async function setup(recipes) {
     "RS is ready"
   );
 
-  return {
-    client,
-    cleanup: () => client.db.clear(),
-  };
+  registerCleanupFunction(async () => {
+    await client.db.clear();
+  });
+
+  return client;
 }
 
 add_setup(async function() {
@@ -50,10 +52,10 @@ add_setup(async function() {
 add_task(async function test_fetch_recipe_and_branch_no_debug() {
   const sandbox = sinon.createSandbox();
   Services.prefs.setBoolPref("nimbus.debug", false);
-  let stub = sandbox.stub(ExperimentManager, "forceEnroll");
+  let stub = sandbox.stub(ExperimentManager, "forceEnroll").returns(true);
   let recipes = [ExperimentFakes.recipe("slug123")];
 
-  const { cleanup } = await setup(recipes);
+  await setup(recipes);
 
   await Assert.rejects(
     RemoteSettingsExperimentLoader.optInToExperiment({
@@ -68,23 +70,23 @@ add_task(async function test_fetch_recipe_and_branch_no_debug() {
 
   Services.prefs.setBoolPref("nimbus.debug", true);
 
-  await RemoteSettingsExperimentLoader.optInToExperiment({
+  const result = await RemoteSettingsExperimentLoader.optInToExperiment({
     slug: "slug123",
     branch: "control",
   });
 
+  Assert.ok(result, "Pref was turned on");
   Assert.ok(stub.called, "forceEnroll is called");
 
   sandbox.restore();
-  await cleanup();
 });
 
 add_task(async function test_fetch_recipe_and_branch_badslug() {
   const sandbox = sinon.createSandbox();
-  let stub = sandbox.stub(ExperimentManager, "forceEnroll");
+  let stub = sandbox.stub(ExperimentManager, "forceEnroll").returns(true);
   let recipes = [ExperimentFakes.recipe("slug123")];
 
-  const { cleanup } = await setup(recipes);
+  await setup(recipes);
 
   await Assert.rejects(
     RemoteSettingsExperimentLoader.optInToExperiment({
@@ -98,15 +100,14 @@ add_task(async function test_fetch_recipe_and_branch_badslug() {
   Assert.ok(stub.notCalled, "forceEnroll is not called");
 
   sandbox.restore();
-  await cleanup();
 });
 
 add_task(async function test_fetch_recipe_and_branch_badbranch() {
   const sandbox = sinon.createSandbox();
-  let stub = sandbox.stub(ExperimentManager, "forceEnroll");
+  let stub = sandbox.stub(ExperimentManager, "forceEnroll").returns(true);
   let recipes = [ExperimentFakes.recipe("slug123")];
 
-  const { cleanup } = await setup(recipes);
+  await setup(recipes);
 
   await Assert.rejects(
     RemoteSettingsExperimentLoader.optInToExperiment({
@@ -120,20 +121,20 @@ add_task(async function test_fetch_recipe_and_branch_badbranch() {
   Assert.ok(stub.notCalled, "forceEnroll is not called");
 
   sandbox.restore();
-  await cleanup();
 });
 
 add_task(async function test_fetch_recipe_and_branch() {
   const sandbox = sinon.createSandbox();
-  let stub = sandbox.stub(ExperimentManager, "forceEnroll");
+  let stub = sandbox.stub(ExperimentManager, "forceEnroll").returns(true);
   let recipes = [ExperimentFakes.recipe("slug_fetch_recipe")];
 
-  const { cleanup } = await setup(recipes);
-  await RemoteSettingsExperimentLoader.optInToExperiment({
+  await setup(recipes);
+  let result = await RemoteSettingsExperimentLoader.optInToExperiment({
     slug: "slug_fetch_recipe",
     branch: "control",
   });
 
+  Assert.ok(result, "Recipe found");
   Assert.ok(stub.called, "Called forceEnroll");
   Assert.deepEqual(stub.firstCall.args[0], recipes[0], "Called with recipe");
   Assert.deepEqual(
@@ -143,108 +144,4 @@ add_task(async function test_fetch_recipe_and_branch() {
   );
 
   sandbox.restore();
-  await cleanup();
-});
-
-add_task(async function test_invalid_recipe() {
-  const sandbox = sinon.createSandbox();
-  const stub = sandbox.stub(ExperimentManager, "forceEnroll");
-  const recipe = ExperimentFakes.recipe("invalid-recipe");
-  delete recipe.branches;
-
-  const { cleanup } = await setup([recipe]);
-
-  await Assert.rejects(
-    RemoteSettingsExperimentLoader.optInToExperiment({
-      slug: "invalid-recipe",
-      branch: "control",
-    }),
-    /failed validation/
-  );
-
-  Assert.ok(stub.notCalled, "forceEnroll not called");
-
-  sandbox.restore();
-  await cleanup();
-});
-
-add_task(async function test_invalid_branch_variablesOnly() {
-  const sandbox = sinon.createSandbox();
-  const stub = sandbox.stub(ExperimentManager, "forceEnroll");
-  const recipe = ExperimentFakes.recipe("invalid-value");
-  recipe.featureIds = ["testFeature"];
-  recipe.branches = [recipe.branches[0]];
-  recipe.branches[0].features[0].featureId = "testFeature";
-  recipe.branches[0].features[0].value = {
-    enabled: "foo",
-    testInt: true,
-    testSetString: 123,
-  };
-
-  const { cleanup } = await setup([recipe]);
-
-  await Assert.rejects(
-    RemoteSettingsExperimentLoader.optInToExperiment({
-      slug: "invalid-value",
-      branch: "control",
-    }),
-    /failed validation/
-  );
-
-  Assert.ok(stub.notCalled, "forceEnroll not called");
-
-  sandbox.restore();
-  await cleanup();
-});
-
-add_task(async function test_invalid_branch_schema() {
-  const sandbox = sinon.createSandbox();
-  const stub = sandbox.stub(ExperimentManager, "forceEnroll");
-
-  const recipe = ExperimentFakes.recipe("invalid-value");
-  recipe.featureIds = ["legacyHeartbeat"];
-  recipe.branches = [recipe.branches[0]];
-  recipe.branches[0].features[0].featureId = "legacyHeartbeat";
-  recipe.branches[0].features[0].value = {
-    foo: "bar",
-  };
-
-  const { cleanup } = await setup([recipe]);
-
-  await Assert.rejects(
-    RemoteSettingsExperimentLoader.optInToExperiment({
-      slug: "invalid-value",
-      branch: "control",
-    }),
-    /failed validation/
-  );
-
-  Assert.ok(stub.notCalled, "forceEnroll not called");
-
-  sandbox.restore();
-  await cleanup();
-});
-
-add_task(async function test_invalid_branch_featureId() {
-  const sandbox = sinon.createSandbox();
-  const stub = sandbox.stub(ExperimentManager, "forceEnroll");
-  const recipe = ExperimentFakes.recipe("invalid-value");
-  recipe.featureIds = ["UNKNOWN"];
-  recipe.branches = [recipe.branches[0]];
-  recipe.branches[0].features[0].featureId = "UNKNOWN";
-
-  const { cleanup } = await setup([recipe]);
-
-  await Assert.rejects(
-    RemoteSettingsExperimentLoader.optInToExperiment({
-      slug: "invalid-value",
-      branch: "control",
-    }),
-    /failed validation/
-  );
-
-  Assert.ok(stub.notCalled, "forceEnroll not called");
-
-  sandbox.restore();
-  await cleanup();
 });

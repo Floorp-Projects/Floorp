@@ -7,7 +7,6 @@
 const EXPORTED_SYMBOLS = [
   "_RemoteSettingsExperimentLoader",
   "RemoteSettingsExperimentLoader",
-  "EnrollmentsContext",
 ];
 
 const { XPCOMUtils } = ChromeUtils.importESModule(
@@ -162,6 +161,60 @@ class _RemoteSettingsExperimentLoader {
     this._updating = false;
   }
 
+  async evaluateJexl(jexlString, customContext) {
+    if (customContext && !customContext.experiment) {
+      throw new Error(
+        "Expected an .experiment property in second param of this function"
+      );
+    }
+
+    if (!customContext.source) {
+      throw new Error(
+        "Expected a .source property that identifies which targeting expression is being evaluated."
+      );
+    }
+
+    const context = lazy.TargetingContext.combineContexts(
+      customContext,
+      this.manager.createTargetingContext(),
+      lazy.ASRouterTargeting.Environment
+    );
+
+    lazy.log.debug("Testing targeting expression:", jexlString);
+    const targetingContext = new lazy.TargetingContext(context, {
+      source: customContext.source,
+    });
+
+    let result = null;
+    try {
+      result = await targetingContext.evalWithDefault(jexlString);
+    } catch (e) {
+      lazy.log.debug("Targeting failed because of an error", e);
+      console.error(e);
+    }
+    return result;
+  }
+
+  /**
+   * Checks targeting of a recipe if it is defined
+   * @param {Recipe} recipe
+   * @param {{[key: string]: any}} customContext A custom filter context
+   * @returns {Promise<boolean>} Should we process the recipe?
+   */
+  async checkTargeting(recipe) {
+    if (!recipe.targeting) {
+      lazy.log.debug("No targeting for recipe, so it matches automatically");
+      return true;
+    }
+
+    const result = await this.evaluateJexl(recipe.targeting, {
+      experiment: recipe,
+      source: recipe.slug,
+    });
+
+    return Boolean(result);
+  }
+
   /**
    * Get all recipes from remote settings
    * @param {string} trigger   What caused the update to occur?
@@ -212,23 +265,113 @@ class _RemoteSettingsExperimentLoader {
       );
     }
 
-    const enrollmentsCtx = new EnrollmentsContext(
-      this.manager,
-      recipeValidator,
-      { validationEnabled, shouldCheckTargeting: true }
-    );
+    let matches = 0;
+    let recipeMismatches = [];
+    let invalidRecipes = [];
+    let invalidBranches = new Map();
+    let invalidFeatures = new Map();
+    let validatorCache = {};
 
     if (recipes && !loadingError) {
-      for (const recipe of recipes) {
-        if (await enrollmentsCtx.checkRecipe(recipe)) {
-          await this.manager.onRecipe(recipe, "rs-loader");
+      for (const r of recipes) {
+        if (r.appId !== "firefox-desktop") {
+          // Skip over recipes not intended for desktop. Experimenter publishes
+          // recipes into a collection per application (desktop goes to
+          // `nimbus-desktop-experiments`) but all preview experiments share the
+          // same collection (`nimbus-preview`).
+          //
+          // This is *not* the same as `lazy.APP_ID` which is used to
+          // distinguish between desktop Firefox and the desktop background
+          // updater.
+          continue;
         }
+
+        const validateFeatures =
+          validationEnabled && !r.featureValidationOptOut;
+
+        if (validationEnabled) {
+          let validation = recipeValidator.validate(r);
+          if (!validation.valid) {
+            console.error(
+              `Could not validate experiment recipe ${r.id}: ${JSON.stringify(
+                validation.errors,
+                undefined,
+                2
+              )}`
+            );
+            if (r.slug) {
+              invalidRecipes.push(r.slug);
+            }
+            continue;
+          }
+        }
+
+        const featureIds =
+          r.featureIds ??
+          r.branches
+            .flatMap(branch => branch.features ?? [branch.feature])
+            .map(featureDef => featureDef.featureId);
+
+        let haveAllFeatures = true;
+
+        for (const featureId of featureIds) {
+          const feature = lazy.NimbusFeatures[featureId];
+
+          // If validation is enabled, we want to catch this later in
+          // _validateBranches to collect the correct stats for telemetry.
+          if (!feature) {
+            continue;
+          }
+
+          if (!feature.applications.includes(lazy.APP_ID)) {
+            lazy.log.debug(
+              `${r.id} uses feature ${featureId} which is not enabled for this application (${lazy.APP_ID}) -- skipping`
+            );
+            haveAllFeatures = false;
+            break;
+          }
+        }
+        if (!haveAllFeatures) {
+          continue;
+        }
+
+        if (!(await this.checkTargeting(r))) {
+          lazy.log.debug(`${r.id} did not match due to targeting`);
+          recipeMismatches.push(r.slug);
+          continue;
+        }
+
+        const type = r.isRollout ? "rollout" : "experiment";
+        lazy.log.debug(`[${type}] ${r.id} matched targeting`);
+        matches++;
+
+        if (validateFeatures) {
+          const result = await this._validateBranches(r, validatorCache);
+          if (!result.valid) {
+            if (result.invalidBranchSlugs.length) {
+              invalidBranches.set(r.slug, result.invalidBranchSlugs);
+            }
+            if (result.invalidFeatureIds.length) {
+              invalidFeatures.set(r.slug, result.invalidFeatureIds);
+            }
+            lazy.log.debug(`${r.id} did not validate`);
+            continue;
+          }
+        }
+
+        await this.manager.onRecipe(r, "rs-loader");
       }
 
       lazy.log.debug(
-        `${enrollmentsCtx.matches} recipes matched. Finalizing ExperimentManager.`
+        `${matches} recipes matched. Finalizing ExperimentManager.`
       );
-      this.manager.onFinalize("rs-loader", enrollmentsCtx.getResults());
+      this.manager.onFinalize("rs-loader", {
+        recipeMismatches,
+        invalidRecipes,
+        invalidBranches,
+        invalidFeatures,
+        validationEnabled,
+      });
     }
 
     if (trigger !== "timer") {
@@ -270,7 +413,7 @@ class _RemoteSettingsExperimentLoader {
       throw new Error("Error getting recipes from remote settings.");
     }
 
-    const recipe = recipes.find(r => r.slug === slug);
+    let recipe = recipes.find(r => r.slug === slug);
 
     if (!recipe) {
       throw new Error(
@@ -279,51 +422,12 @@ class _RemoteSettingsExperimentLoader {
       );
     }
 
-    const recipeValidator = new lazy.JsonSchema.Validator(
-      await SCHEMAS.NimbusExperiment
-    );
-    const enrollmentsCtx = new EnrollmentsContext(
-      this.manager,
-      recipeValidator,
-      {
-        validationEnabled: this.validationEnabled,
-        shouldCheckTargeting: false,
-      }
-    );
-
-    if (!(await enrollmentsCtx.checkRecipe(recipe))) {
-      const results = enrollmentsCtx.getResults();
-
-      if (results.invalidRecipes.length) {
-        console.error(`Recipe ${recipe.slug} did not match recipe schema`);
-      } else if (results.invalidBranches.size) {
-        // There will only be one entry becuase we only validated a single recipe.
-        for (const branches of results.invalidBranches.values()) {
-          for (const branch of branches) {
-            console.error(
-              `Recipe ${recipe.slug} failed feature validation for branch ${branch}`
-            );
-          }
-        }
-      } else if (results.invalidFeatures) {
-        for (const featureIds of results.invalidFeatures.values()) {
-          for (const featureId of featureIds) {
-            console.error(
-              `Recipe ${recipe.slug} references unknown feature ID ${featureId}`
-            );
-          }
-        }
-      }
-
-      throw new Error(`Recipe ${recipe.slug} failed validation`);
-    }
-
     let branch = recipe.branches.find(b => b.slug === branchSlug);
     if (!branch) {
       throw new Error(`Could not find branch slug ${branchSlug} in ${slug}.`);
     }
 
-    await lazy.ExperimentManager.forceEnroll(recipe, branch);
+    return lazy.ExperimentManager.forceEnroll(recipe, branch);
   }
 
   /**
@@ -364,186 +468,6 @@ class _RemoteSettingsExperimentLoader {
     );
     lazy.log.debug("Registered update timer");
   }
-}
-
-class EnrollmentsContext {
-  constructor(
-    experimentManager,
-    recipeValidator,
-    { validationEnabled = true, shouldCheckTargeting = true } = {}
-  ) {
-    this.experimentManager = experimentManager;
-    this.recipeValidator = recipeValidator;
-
-    this.validationEnabled = validationEnabled;
-    this.shouldCheckTargeting = shouldCheckTargeting;
-    this.matches = 0;
-
-    this.recipeMismatches = [];
-    this.invalidRecipes = [];
-    this.invalidBranches = new Map();
-    this.invalidFeatures = new Map();
-    this.validatorCache = {};
-  }
-
-  getResults() {
-    return {
-      recipeMismatches: this.recipeMismatches,
-      invalidRecipes: this.invalidRecipes,
-      invalidBranches: this.invalidBranches,
-      invalidFeatures: this.invalidFeatures,
-      validationEnabled: this.validationEnabled,
-    };
-  }
-
-  async checkRecipe(recipe) {
-    if (recipe.appId !== "firefox-desktop") {
-      // Skip over recipes not intended for desktop. Experimenter publishes
-      // recipes into a collection per application (desktop goes to
-      // `nimbus-desktop-experiments`) but all preview experiments share the
-      // same collection (`nimbus-preview`).
-      //
-      // This is *not* the same as `lazy.APP_ID` which is used to
-      // distinguish between desktop Firefox and the desktop background
-      // updater.
-      return false;
-    }
-
-    const validateFeatures =
-      this.validationEnabled && !recipe.featureValidationOptOut;
-
-    if (this.validationEnabled) {
-      let validation = this.recipeValidator.validate(recipe);
-      if (!validation.valid) {
-        console.error(
-          `Could not validate experiment recipe ${recipe.id}: ${JSON.stringify(
-            validation.errors,
-            null,
-            2
-          )}`
-        );
-        if (recipe.slug) {
-          this.invalidRecipes.push(recipe.slug);
-        }
-        return false;
-      }
-    }
-
-    const featureIds =
-      recipe.featureIds ??
-      recipe.branches
-        .flatMap(branch => branch.features ?? [branch.feature])
-        .map(featureDef => featureDef.featureId);
-
-    let haveAllFeatures = true;
-
-    for (const featureId of featureIds) {
-      const feature = lazy.NimbusFeatures[featureId];
-
-      // If validation is enabled, we want to catch this later in
-      // _validateBranches to collect the correct stats for telemetry.
-      if (!feature) {
-        continue;
-      }
-
-      if (!feature.applications.includes(lazy.APP_ID)) {
-        lazy.log.debug(
-          `${recipe.id} uses feature ${featureId} which is not enabled for this application (${lazy.APP_ID}) -- skipping`
-        );
-        haveAllFeatures = false;
-        break;
-      }
-    }
-
-    if (!haveAllFeatures) {
-      return false;
-    }
-
-    if (this.shouldCheckTargeting) {
-      const match = await this.checkTargeting(recipe);
-
-      if (match) {
-        const type = recipe.isRollout ? "rollout" : "experiment";
-        lazy.log.debug(`[${type}] ${recipe.id} matched targeting`);
-      } else {
-        lazy.log.debug(`${recipe.id} did not match due to targeting`);
-        this.recipeMismatches.push(recipe.slug);
-        return false;
-      }
-    }
-
-    this.matches++;
-
-    if (validateFeatures) {
-      const result = await this._validateBranches(recipe);
-      if (!result.valid) {
-        if (result.invalidBranchSlugs.length) {
-          this.invalidBranches.set(recipe.slug, result.invalidBranchSlugs);
-        }
-        if (result.invalidFeatureIds.length) {
-          this.invalidFeatures.set(recipe.slug, result.invalidFeatureIds);
-        }
-        lazy.log.debug(`${recipe.id} did not validate`);
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  async evaluateJexl(jexlString, customContext) {
-    if (customContext && !customContext.experiment) {
-      throw new Error(
-        "Expected an .experiment property in second param of this function"
-      );
-    }
-
-    if (!customContext.source) {
-      throw new Error(
-        "Expected a .source property that identifies which targeting expression is being evaluated."
-      );
-    }
-
-    const context = lazy.TargetingContext.combineContexts(
-      customContext,
-      this.experimentManager.createTargetingContext(),
-      lazy.ASRouterTargeting.Environment
-    );
-
-    lazy.log.debug("Testing targeting expression:", jexlString);
-    const targetingContext = new lazy.TargetingContext(context, {
-      source: customContext.source,
-    });
-
-    let result = null;
-    try {
-      result = await targetingContext.evalWithDefault(jexlString);
-    } catch (e) {
-      lazy.log.debug("Targeting failed because of an error", e);
-      console.error(e);
-    }
-    return result;
-  }
-
-  /**
-   * Checks targeting of a recipe if it is defined
-   * @param {Recipe} recipe
-   * @param {{[key: string]: any}} customContext A custom filter context
-   * @returns {Promise<boolean>} Should we process the recipe?
-   */
-  async checkTargeting(recipe) {
-    if (!recipe.targeting) {
-      lazy.log.debug("No targeting for recipe, so it matches automatically");
-      return true;
-    }
-
-    const result = await this.evaluateJexl(recipe.targeting, {
-      experiment: recipe,
-      source: recipe.slug,
-    });
-
-    return Boolean(result);
-  }
 
   /**
    * Validate the branches of an experiment using schemas
@@ -555,7 +479,7 @@ class EnrollmentsContext {
    * @returns {object} The lists of invalid branch slugs and invalid feature
    *                   IDs.
    */
-  async _validateBranches({ id, branches }) {
+  async _validateBranches({ id, branches }, validatorCache = {}) {
     const invalidBranchSlugs = [];
     const invalidFeatureIds = new Set();
 
@@ -571,16 +495,15 @@ class EnrollmentsContext {
         }
 
         let validator;
-        if (this.validatorCache[featureId]) {
-          validator = this.validatorCache[featureId];
+        if (validatorCache[featureId]) {
+          validator = validatorCache[featureId];
         } else if (lazy.NimbusFeatures[featureId].manifest.schema?.uri) {
           const uri = lazy.NimbusFeatures[featureId].manifest.schema.uri;
           try {
             const schema = await fetch(uri, { credentials: "omit" }).then(rsp =>
               rsp.json()
             );
-
-            validator = this.validatorCache[
+            validator = validatorCache[
               featureId
             ] = new lazy.JsonSchema.Validator(schema);
           } catch (e) {
@@ -590,11 +513,12 @@ class EnrollmentsContext {
           }
         } else {
           const schema = this._generateVariablesOnlySchema(
-            lazy.NimbusFeatures[featureId]
+            featureId,
+            lazy.NimbusFeatures[featureId].manifest
           );
-          validator = this.validatorCache[
-            featureId
-          ] = new lazy.JsonSchema.Validator(schema);
+          validator = validatorCache[featureId] = new lazy.JsonSchema.Validator(
+            schema
+          );
         }
 
         const result = validator.validate(value);
@@ -618,7 +542,7 @@ class EnrollmentsContext {
     };
   }
 
-  _generateVariablesOnlySchema({ featureId, manifest }) {
+  _generateVariablesOnlySchema(featureId, manifest) {
     // See-also: https://github.com/mozilla/experimenter/blob/main/app/experimenter/features/__init__.py#L21-L64
     const schema = {
       $schema: "https://json-schema.org/draft/2019-09/schema",
