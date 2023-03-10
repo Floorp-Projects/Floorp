@@ -6,7 +6,12 @@ package org.mozilla.fenix.home
 
 import androidx.navigation.NavController
 import io.mockk.mockk
+import io.mockk.spyk
 import io.mockk.verify
+import mozilla.components.browser.state.selector.normalTabs
+import mozilla.components.browser.state.selector.privateTabs
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.createTab
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.ui.tabcounter.TabCounter
 import mozilla.components.ui.tabcounter.TabCounterMenu
@@ -46,7 +51,7 @@ class TabCounterViewTest {
         settings = mockk(relaxed = true)
         modeDidChange = mockk(relaxed = true)
 
-        tabCounter = TabCounter(testContext)
+        tabCounter = spyk(TabCounter(testContext))
 
         browsingModeManager = DefaultBrowsingModeManager(
             _mode = BrowsingMode.Normal,
@@ -90,5 +95,31 @@ class TabCounterViewTest {
         tabCounterView.onItemTapped(TabCounterMenu.Item.NewPrivateTab)
 
         assertEquals(BrowsingMode.Private, browsingModeManager.mode)
+    }
+
+    @Test
+    fun `WHEN tab counter is updated THEN set the tab counter to the correct number of tabs`() {
+        val browserState = BrowserState(
+            tabs = listOf(
+                createTab(url = "https://www.mozilla.org", id = "mozilla"),
+                createTab(url = "https://www.firefox.com", id = "firefox"),
+                createTab(url = "https://getpocket.com", private = true, id = "getpocket"),
+            ),
+            selectedTabId = "mozilla",
+        )
+
+        tabCounterView.update(browserState)
+
+        verify {
+            tabCounter.setCountWithAnimation(browserState.normalTabs.size)
+        }
+
+        browsingModeManager.mode = BrowsingMode.Private
+
+        tabCounterView.update(browserState)
+
+        verify {
+            tabCounter.setCountWithAnimation(browserState.privateTabs.size)
+        }
     }
 }
