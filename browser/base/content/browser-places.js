@@ -1606,7 +1606,7 @@ var BookmarkingUI = {
       ) {
         return true;
       }
-      if (!this.toolbar.hasAttribute("initialized")) {
+      if (!this.toolbar.hasAttribute("initialized") && !this._isCustomizing) {
         // If the bookmarks are here but it's early in startup, show the
         // message. It'll get made visibility: hidden early in startup anyway -
         // it's just to ensure the toolbar has height.
