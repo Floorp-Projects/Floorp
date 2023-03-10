@@ -314,6 +314,27 @@ sm-linux64-wasi/opt:
             - sysroot-x86_64-linux-gnu
             - sysroot-wasm32-wasi
 
+# Like sm-linux64-wasi/opt but with Intl/ICU enabled.
+sm-linux64-wasi-intl/opt:
+    description: "Spidermonkey WASI Intl opt build"
+    index:
+        job-name: sm-linux64-wasi-intl-opt
+    treeherder:
+        platform: linux64/opt
+        symbol: SM(wasi-intl)
+        tier: 2
+    run:
+        spidermonkey-variant: wasi-intl
+    fetches:
+        toolchain:
+            - linux64-clang
+            - linux64-rust
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-pkgconf
+            - sysroot-x86_64-linux-gnu
+            - sysroot-wasm32-wasi
+
 sm-wasm-no-experimental-linux64/debug:
     description: "Spidermonkey WebAssembly No experimental features"
     index:
