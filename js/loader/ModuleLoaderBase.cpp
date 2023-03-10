@@ -633,6 +633,10 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
     // the same as a parse error.
     rv = ResolveRequestedModules(aRequest, nullptr);
     if (NS_FAILED(rv)) {
+      if (!aRequest->IsErrored()) {
+        aRequest->mModuleScript = nullptr;
+        return rv;
+      }
       aRequest->ModuleErrored();
       return NS_OK;
     }
