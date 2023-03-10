@@ -851,6 +851,7 @@ function untilCacheCondition(conditionFunc, argsFunc) {
       },
 
       timeout() {
+        ok(false, "Timeout while waiting for cache update");
         Services.obs.removeObserver(this, "accessible-cache");
         args = argsFunc();
         resolve(args);

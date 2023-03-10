@@ -13,12 +13,17 @@ addAccessibleTask(
     const div = findAccessibleChildByID(accDoc, "div");
     ok(div, "Got accessible with 'div' ID.");
 
-    // We don't await for content task to return because
-    // we want to exercise the untilCacheIs function and
-    // demonstrate that it can await for a passing `is` test.
     let contentPromise = invokeContentTask(browser, [], () => {
       content.document.getElementById("div").id = "foo";
     });
+    // When the cache is enabled, we don't await for content task to return
+    //  because we want to exercise the untilCacheIs function and
+    // demonstrate that it can await for a passing `is` test.
+    if (!isCacheEnabled) {
+      // However, when the cache is disabled, we must await it because there
+      // will never be a cache update.
+      await contentPromise;
+    }
 
     await untilCacheIs(
       () => div.id,
@@ -26,8 +31,10 @@ addAccessibleTask(
       "ID is correct and updated in cache"
     );
 
-    // Don't leave test without the content task promise resolved.
-    await contentPromise;
+    if (isCacheEnabled) {
+      // Don't leave test without the content task promise resolved.
+      await contentPromise;
+    }
   },
   { iframe: true, remoteIframe: true }
 );
