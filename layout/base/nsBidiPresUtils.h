@@ -380,7 +380,7 @@ class nsBidiPresUtils {
                               BidiProcessor& aprocessor, Mode aMode,
                               nsBidiPositionResolve* aPosResolve,
                               int32_t aPosResolveCount, nscoord* aWidth,
-                              mozilla::intl::Bidi* aBidiEngine);
+                              mozilla::intl::Bidi& aBidiEngine);
 
   /**
    * Use style attributes to determine the base paragraph level to pass to the

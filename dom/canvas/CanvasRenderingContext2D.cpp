@@ -4308,7 +4308,7 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
       textToDraw.get(), textToDraw.Length(),
       isRTL ? intl::BidiEmbeddingLevel::RTL() : intl::BidiEmbeddingLevel::LTR(),
       presContext, processor, nsBidiPresUtils::MODE_MEASURE, nullptr, 0,
-      &totalWidthCoord, &mBidiEngine);
+      &totalWidthCoord, mBidiEngine);
   if (aError.Failed()) {
     return nullptr;
   }
@@ -4450,7 +4450,7 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
       textToDraw.get(), textToDraw.Length(),
       isRTL ? intl::BidiEmbeddingLevel::RTL() : intl::BidiEmbeddingLevel::LTR(),
       presContext, processor, nsBidiPresUtils::MODE_DRAW, nullptr, 0, nullptr,
-      &mBidiEngine);
+      mBidiEngine);
 
   if (aError.Failed()) {
     return nullptr;

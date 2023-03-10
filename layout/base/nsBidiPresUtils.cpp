@@ -2142,7 +2142,7 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t* aText, size_t aLength,
                                       BidiProcessor& aprocessor, Mode aMode,
                                       nsBidiPositionResolve* aPosResolve,
                                       int32_t aPosResolveCount, nscoord* aWidth,
-                                      BidiEngine* aBidiEngine) {
+                                      BidiEngine& aBidiEngine) {
   MOZ_ASSERT((aPosResolve == nullptr) != (aPosResolveCount > 0),
              "Incorrect aPosResolve / aPosResolveCount arguments");
 
@@ -2168,11 +2168,11 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t* aText, size_t aLength,
     return NS_OK;
   }
 
-  if (aBidiEngine->SetParagraph(Span(aText, aLength), aBaseLevel).isErr()) {
+  if (aBidiEngine.SetParagraph(Span(aText, aLength), aBaseLevel).isErr()) {
     return NS_ERROR_FAILURE;
   }
 
-  auto result = aBidiEngine->CountRuns();
+  auto result = aBidiEngine.CountRuns();
   if (result.isErr()) {
     return NS_ERROR_FAILURE;
   }
@@ -2187,10 +2187,10 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t* aText, size_t aLength,
   BidiClass prevClass = BidiClass::LeftToRight;
 
   for (i = 0; i < runCount; i++) {
-    BidiDirection dir = aBidiEngine->GetVisualRun(i, &start, &length);
+    BidiDirection dir = aBidiEngine.GetVisualRun(i, &start, &length);
 
     BidiEmbeddingLevel level;
-    aBidiEngine->GetLogicalRun(start, &limit, &level);
+    aBidiEngine.GetLogicalRun(start, &limit, &level);
 
     dir = level.Direction();
     int32_t subRunLength = limit - start;
@@ -2474,7 +2474,7 @@ nsresult nsBidiPresUtils::ProcessTextForRenderingContext(
   text.ReplaceChar(kSeparators, ' ');
   return ProcessText(text.BeginReading(), text.Length(), aBaseLevel,
                      aPresContext, processor, aMode, aPosResolve,
-                     aPosResolveCount, aWidth, &aPresContext->BidiEngine());
+                     aPosResolveCount, aWidth, aPresContext->BidiEngine());
 }
 
 /* static */
