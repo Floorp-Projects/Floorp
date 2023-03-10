@@ -151,16 +151,16 @@ const TEST_DATA = [
   },
   {
     description: "Test for a property defined with prefix",
-    declarations: [{ name: "-moz-binding" }],
+    declarations: [{ name: "-moz-outline-radius" }],
     browsers: [FIREFOX_1, FIREFOX_60, FIREFOX_69],
     expectedIssues: [
       {
         type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
-        property: "-moz-binding",
-        url: "https://developer.mozilla.org/docs/Web/CSS/-moz-binding",
+        property: "-moz-outline-radius",
+        url: "https://developer.mozilla.org/docs/Web/CSS/-moz-outline-radius",
         deprecated: true,
         experimental: false,
-        unsupportedBrowsers: [FIREFOX_69],
+        unsupportedBrowsers: [],
       },
     ],
   },

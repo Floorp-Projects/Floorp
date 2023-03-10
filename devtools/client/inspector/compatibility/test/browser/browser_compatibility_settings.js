@@ -8,10 +8,10 @@
 const TEST_URI = `
   <style>
   body {
-    -moz-binding: none;
+    -moz-outline-radius: 25px;
   }
   div {
-    -moz-binding: none;
+    -moz-outline-radius: 25px;
   }
   </style>
   <body><div></div></body>
