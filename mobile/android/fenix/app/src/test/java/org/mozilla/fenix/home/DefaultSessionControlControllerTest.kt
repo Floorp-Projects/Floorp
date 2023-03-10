@@ -1016,6 +1016,25 @@ class DefaultSessionControlControllerTest {
     }
 
     @Test
+    fun handleNavigateSearch() {
+        assertNull(Events.searchBarTapped.testGetValue())
+
+        createController().handleNavigateSearch()
+
+        assertNotNull(Events.searchBarTapped.testGetValue())
+        val recordedEvents = Events.searchBarTapped.testGetValue()!!
+        assertEquals(1, recordedEvents.size)
+        assertEquals("HOME", recordedEvents.single().extra?.getValue("source"))
+
+        verify {
+            navController.navigate(
+                match<NavDirections> { it.actionId == R.id.action_global_search_dialog },
+                any<NavOptions>(),
+            )
+        }
+    }
+
+    @Test
     fun handleRemoveCollectionsPlaceholder() {
         createController().handleRemoveCollectionsPlaceholder()
 
