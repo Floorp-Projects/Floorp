@@ -594,9 +594,6 @@ JitCode* IonCacheIRCompiler::compile(IonICStub* stub) {
     return nullptr;
   }
 
-  CacheKind stubKind = stub->stubInfo()->kind();
-  perfSpewer_.saveProfile(newStubCode, CacheKindNames[uint8_t(stubKind)]);
-
   for (CodeOffset offset : nextCodeOffsets_) {
     Assembler::PatchDataWithValueCheck(CodeLocationLabel(newStubCode, offset),
                                        ImmPtr(stub->nextCodeRawPtr()),
@@ -1815,6 +1812,11 @@ void IonIC::attachCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
   if (!code) {
     return;
   }
+
+  // Record the stub code if perf spewer is enabled.
+  CacheKind stubKind = newStub->stubInfo()->kind();
+  compiler.perfSpewer().saveProfile(cx, script(), code,
+                                    CacheKindNames[uint8_t(stubKind)]);
 
   // Add an entry to the profiler's code table, so that the profiler can
   // identify this as Ion code.

@@ -80,16 +80,25 @@ class PerfSpewer {
 
   virtual const char* CodeName(unsigned op) = 0;
 
+  void saveDebugInfo(JSScript* script, JitCode* code,
+                     JS::JitCodeRecord* profilerRecord,
+                     AutoLockPerfSpewer& lock);
+
+  void saveProfile(JitCode* code, UniqueChars& desc, JSScript* script);
+
+  void saveJitCodeIRInfo(JitCode* code, JS::JitCodeRecord* profilerRecord,
+                         AutoLockPerfSpewer& lock);
+
+  virtual void saveJitCodeSourceInfo(JSScript* script, JitCode* code,
+                                     JS::JitCodeRecord* record,
+                                     AutoLockPerfSpewer& lock) = 0;
+
  public:
   PerfSpewer() = default;
 
-  static void Init();
-
   void recordOffset(MacroAssembler& masm, const char*);
 
-  void saveJitCodeIRInfo(const char* desc, JitCode* code,
-                         JS::JitCodeRecord* profilerRecord,
-                         AutoLockPerfSpewer& lock);
+  static void Init();
 
   static void CollectJitCodeInfo(UniqueChars& function_name, JitCode* code,
                                  JS::JitCodeRecord*, AutoLockPerfSpewer& lock);
@@ -117,9 +126,9 @@ class IonPerfSpewer : public PerfSpewer {
   void recordInstruction(MacroAssembler& masm, LInstruction* ins);
   void saveProfile(JSContext* cx, JSScript* script, JitCode* code);
 
-  void saveJitCodeSourceInfo(JSScript* script, JitCode* code,
-                             JS::JitCodeRecord* record,
-                             AutoLockPerfSpewer& lock);
+  virtual void saveJitCodeSourceInfo(JSScript* script, JitCode* code,
+                                     JS::JitCodeRecord* record,
+                                     AutoLockPerfSpewer& lock) override;
 };
 
 class BaselinePerfSpewer : public PerfSpewer {
@@ -131,27 +140,35 @@ class BaselinePerfSpewer : public PerfSpewer {
                          CompilerFrameInfo& frame);
   void saveProfile(JSContext* cx, JSScript* script, JitCode* code);
 
-  void saveJitCodeSourceInfo(JSScript* script, JitCode* code,
-                             JS::JitCodeRecord* record,
-                             AutoLockPerfSpewer& lock);
+  virtual void saveJitCodeSourceInfo(JSScript* script, JitCode* code,
+                                     JS::JitCodeRecord* record,
+                                     AutoLockPerfSpewer& lock) override;
 };
 
 class InlineCachePerfSpewer : public PerfSpewer {
   JS::JitTier GetTier() override { return JS::JitTier::IC; }
   virtual const char* CodeName(unsigned op) override;
-  virtual const char* TierName() = 0;
 
  public:
   void recordInstruction(MacroAssembler& masm, CacheOp op);
-  void saveProfile(JitCode* code, const char* name);
+
+  virtual void saveJitCodeSourceInfo(JSScript* script, JitCode* code,
+                                     JS::JitCodeRecord* record,
+                                     AutoLockPerfSpewer& lock) override {
+    // IC stubs have no source code to reference.
+    return;
+  }
 };
 
 class BaselineICPerfSpewer : public InlineCachePerfSpewer {
-  virtual const char* TierName() override { return "BaselineIC"; }
+ public:
+  void saveProfile(JitCode* code, const char* stubName);
 };
 
 class IonICPerfSpewer : public InlineCachePerfSpewer {
-  virtual const char* TierName() override { return "IonIC"; }
+ public:
+  void saveProfile(JSContext* cx, JSScript* script, JitCode* code,
+                   const char* stubName);
 };
 
 class PerfSpewerRangeRecorder {
