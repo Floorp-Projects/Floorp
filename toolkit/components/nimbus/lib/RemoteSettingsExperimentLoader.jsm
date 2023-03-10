@@ -279,12 +279,51 @@ class _RemoteSettingsExperimentLoader {
       );
     }
 
+    const recipeValidator = new lazy.JsonSchema.Validator(
+      await SCHEMAS.NimbusExperiment
+    );
+    const enrollmentsCtx = new EnrollmentsContext(
+      this.manager,
+      recipeValidator,
+      {
+        validationEnabled: this.validationEnabled,
+        shouldCheckTargeting: false,
+      }
+    );
+
+    if (!(await enrollmentsCtx.checkRecipe(recipe))) {
+      const results = enrollmentsCtx.getResults();
+
+      if (results.invalidRecipes.length) {
+        console.error(`Recipe ${recipe.slug} did not match recipe schema`);
+      } else if (results.invalidBranches.size) {
+        // There will only be one entry becuase we only validated a single recipe.
+        for (const branches of results.invalidBranches.values()) {
+          for (const branch of branches) {
+            console.error(
+              `Recipe ${recipe.slug} failed feature validation for branch ${branch}`
+            );
+          }
+        }
+      } else if (results.invalidFeatures) {
+        for (const featureIds of results.invalidFeatures.values()) {
+          for (const featureId of featureIds) {
+            console.error(
+              `Recipe ${recipe.slug} references unknown feature ID ${featureId}`
+            );
+          }
+        }
+      }
+
+      throw new Error(`Recipe ${recipe.slug} failed validation`);
+    }
+
     let branch = recipe.branches.find(b => b.slug === branchSlug);
     if (!branch) {
       throw new Error(`Could not find branch slug ${branchSlug} in ${slug}.`);
     }
 
-    return lazy.ExperimentManager.forceEnroll(recipe, branch);
+    await lazy.ExperimentManager.forceEnroll(recipe, branch);
   }
 
   /**
