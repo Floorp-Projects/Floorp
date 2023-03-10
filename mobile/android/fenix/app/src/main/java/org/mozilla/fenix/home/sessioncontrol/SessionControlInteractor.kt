@@ -27,6 +27,7 @@ import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGrou
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
 import org.mozilla.fenix.home.recentvisits.controller.RecentVisitsController
 import org.mozilla.fenix.home.recentvisits.interactor.RecentVisitsInteractor
+import org.mozilla.fenix.home.toolbar.ToolbarInteractor
 import org.mozilla.fenix.onboarding.controller.OnboardingController
 import org.mozilla.fenix.onboarding.interactor.OnboardingInteractor
 import org.mozilla.fenix.search.toolbar.SearchSelectorInteractor
@@ -135,23 +136,6 @@ interface CollectionInteractor {
      * User has removed the collections placeholder from home.
      */
     fun onRemoveCollectionsPlaceholder()
-}
-
-interface ToolbarInteractor {
-    /**
-     * Navigates to browser with clipboard text.
-     */
-    fun onPasteAndGo(clipboardText: String)
-
-    /**
-     * Navigates to search with clipboard text.
-     */
-    fun onPaste(clipboardText: String)
-
-    /**
-     * Navigates to the search dialog.
-     */
-    fun onNavigateSearch()
 }
 
 interface CustomizeHomeIteractor {
