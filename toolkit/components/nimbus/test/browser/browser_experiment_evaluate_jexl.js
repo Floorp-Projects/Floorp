@@ -1,6 +1,9 @@
 "use strict";
 
-const { RemoteSettingsExperimentLoader } = ChromeUtils.import(
+const {
+  EnrollmentsContext,
+  RemoteSettingsExperimentLoader,
+} = ChromeUtils.import(
   "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
 );
 const { ExperimentManager } = ChromeUtils.import(
@@ -21,7 +24,11 @@ add_setup(async function setup() {
   registerCleanupFunction(async () => {
     await SpecialPowers.popPrefEnv();
   });
+
+  CONTEXT = new EnrollmentsContext(RemoteSettingsExperimentLoader.manager);
 });
+
+let CONTEXT;
 
 const FAKE_CONTEXT = {
   experiment: ExperimentFakes.recipe("fake-test-experiment"),
@@ -30,7 +37,7 @@ const FAKE_CONTEXT = {
 
 add_task(async function test_throws_if_no_experiment_in_context() {
   await Assert.rejects(
-    RemoteSettingsExperimentLoader.evaluateJexl("true", {
+    CONTEXT.evaluateJexl("true", {
       customThing: 1,
       source: "test_throws_if_no_experiment_in_context",
     }),
@@ -41,20 +48,14 @@ add_task(async function test_throws_if_no_experiment_in_context() {
 
 add_task(async function test_evaluate_jexl() {
   Assert.deepEqual(
-    await RemoteSettingsExperimentLoader.evaluateJexl(
-      `["hello"]`,
-      FAKE_CONTEXT
-    ),
+    await CONTEXT.evaluateJexl(`["hello"]`, FAKE_CONTEXT),
     ["hello"],
     "should return the evaluated result of a jexl expression"
   );
 });
 
 add_task(async function test_evaluate_custom_context() {
-  const result = await RemoteSettingsExperimentLoader.evaluateJexl(
-    "experiment.slug",
-    FAKE_CONTEXT
-  );
+  const result = await CONTEXT.evaluateJexl("experiment.slug", FAKE_CONTEXT);
   Assert.equal(
     result,
     "fake-test-experiment",
@@ -63,10 +64,7 @@ add_task(async function test_evaluate_custom_context() {
 });
 
 add_task(async function test_evaluate_active_experiments_isFirstStartup() {
-  const result = await RemoteSettingsExperimentLoader.evaluateJexl(
-    "isFirstStartup",
-    FAKE_CONTEXT
-  );
+  const result = await CONTEXT.evaluateJexl("isFirstStartup", FAKE_CONTEXT);
   Assert.equal(
     typeof result,
     "boolean",
@@ -92,16 +90,13 @@ add_task(async function test_evaluate_active_experiments_activeExperiments() {
   await enrollmentPromise;
 
   Assert.equal(
-    await RemoteSettingsExperimentLoader.evaluateJexl(
-      `"${slug}" in activeExperiments`,
-      FAKE_CONTEXT
-    ),
+    await CONTEXT.evaluateJexl(`"${slug}" in activeExperiments`, FAKE_CONTEXT),
     true,
     "should find an active experiment"
   );
 
   Assert.equal(
-    await RemoteSettingsExperimentLoader.evaluateJexl(
+    await CONTEXT.evaluateJexl(
       `"does-not-exist-fake" in activeExperiments`,
       FAKE_CONTEXT
     ),

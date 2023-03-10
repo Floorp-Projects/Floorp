@@ -7,7 +7,10 @@ const { ExperimentManager } = ChromeUtils.import(
   "resource://nimbus/lib/ExperimentManager.jsm"
 );
 
-const { RemoteSettingsExperimentLoader } = ChromeUtils.import(
+const {
+  RemoteSettingsExperimentLoader,
+  EnrollmentsContext,
+} = ChromeUtils.import(
   "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
 );
 
@@ -205,13 +208,14 @@ add_task(async function test_updateRecipes_forNoneFirstStartup() {
 
 add_task(async function test_checkTargeting() {
   const loader = ExperimentFakes.rsLoader();
+  const ctx = new EnrollmentsContext(loader.manager);
   equal(
-    await loader.checkTargeting({}),
+    await ctx.checkTargeting({}),
     true,
     "should return true if .targeting is not defined"
   );
   equal(
-    await loader.checkTargeting({
+    await ctx.checkTargeting({
       targeting: "'foo'",
       slug: "test_checkTargeting",
     }),
@@ -219,7 +223,7 @@ add_task(async function test_checkTargeting() {
     "should return true for truthy expression"
   );
   equal(
-    await loader.checkTargeting({
+    await ctx.checkTargeting({
       targeting: "aPropertyThatDoesNotExist",
       slug: "test_checkTargeting",
     }),
@@ -230,6 +234,7 @@ add_task(async function test_checkTargeting() {
 
 add_task(async function test_checkExperimentSelfReference() {
   const loader = ExperimentFakes.rsLoader();
+  const ctx = new EnrollmentsContext(loader.manager);
   const PASS_FILTER_RECIPE = ExperimentFakes.recipe("foo", {
     targeting:
       "experiment.slug == 'foo' && experiment.branches[0].slug == 'control'",
@@ -240,12 +245,12 @@ add_task(async function test_checkExperimentSelfReference() {
   });
 
   equal(
-    await loader.checkTargeting(PASS_FILTER_RECIPE),
+    await ctx.checkTargeting(PASS_FILTER_RECIPE),
     true,
     "Should return true for matching on slug name and branch"
   );
   equal(
-    await loader.checkTargeting(FAIL_FILTER_RECIPE),
+    await ctx.checkTargeting(FAIL_FILTER_RECIPE),
     false,
     "Should fail targeting"
   );
