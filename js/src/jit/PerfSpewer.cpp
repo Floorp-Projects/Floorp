@@ -703,7 +703,7 @@ void PerfSpewer::recordOffset(MacroAssembler& masm, const char* msg) {
   }
 }
 
-void PerfSpewer::saveJitCodeIRInfo(JitCode* code,
+void PerfSpewer::saveJitCodeIRInfo(const char* desc, JitCode* code,
                                    JS::JitCodeRecord* profilerRecord,
                                    AutoLockPerfSpewer& lock) {
 #ifdef JS_ION_PERF
@@ -766,7 +766,9 @@ void PerfSpewer::saveJitCodeIRInfo(JitCode* code,
   opcodes_.clear();
 
 #ifdef JS_ION_PERF
-  if (IsPerfProfiling()) {
+  if (desc && IsPerfProfiling()) {
+    // Add the desc as the last line in the file so as to not confuse objdump
+    fprintf(scriptFile, "%s\n", desc);
     fclose(scriptFile);
   }
 #endif
@@ -925,71 +927,15 @@ void IonPerfSpewer::saveJitCodeSourceInfo(JSScript* script, JitCode* code,
   }
 }
 
-static UniqueChars GetFunctionDesc(const char* tierName, JSContext* cx,
-                                   JSScript* script,
-                                   const char* stubName = nullptr) {
-  MOZ_ASSERT(script && tierName && cx);
+static UniqueChars GetFunctionDesc(bool ion, JSContext* cx, JSScript* script) {
   UniqueChars funName;
   if (script->function() && script->function()->displayAtom()) {
     funName = AtomToPrintableString(cx, script->function()->displayAtom());
   }
 
-  if (stubName) {
-    return JS_smprintf("%s: %s : %s (%s:%u:%u)", tierName, stubName,
-                       funName ? funName.get() : "*", script->filename(),
-                       script->lineno(), script->column());
-  }
-  return JS_smprintf("%s: %s (%s:%u:%u)", tierName,
+  return JS_smprintf("%s: %s (%s:%u:%u)", ion ? "Ion" : "Baseline",
                      funName ? funName.get() : "*", script->filename(),
                      script->lineno(), script->column());
-}
-
-void PerfSpewer::saveDebugInfo(JSScript* script, JitCode* code,
-                               JS::JitCodeRecord* profilerRecord,
-                               AutoLockPerfSpewer& lock) {
-  MOZ_ASSERT(code);
-  if (PerfIREnabled()) {
-    saveJitCodeIRInfo(code, profilerRecord, lock);
-  } else if (PerfSrcEnabled() && script) {
-    saveJitCodeSourceInfo(script, code, profilerRecord, lock);
-  }
-}
-
-void PerfSpewer::saveProfile(JitCode* code, UniqueChars& desc,
-                             JSScript* script) {
-  MOZ_ASSERT(PerfEnabled());
-  MOZ_ASSERT(code && desc);
-  AutoLockPerfSpewer lock;
-  JS::JitCodeRecord* profilerRecord = CreateProfilerEntry(lock);
-
-  saveDebugInfo(script, code, profilerRecord, lock);
-  CollectJitCodeInfo(desc, code, profilerRecord, lock);
-}
-
-void IonICPerfSpewer::saveProfile(JSContext* cx, JSScript* script,
-                                  JitCode* code, const char* stubName) {
-  if (!PerfEnabled()) {
-    return;
-  }
-  UniqueChars desc = GetFunctionDesc("IonIC", cx, script, stubName);
-  PerfSpewer::saveProfile(code, desc, nullptr);
-}
-
-void BaselineICPerfSpewer::saveProfile(JitCode* code, const char* stubName) {
-  if (!PerfEnabled()) {
-    return;
-  }
-  UniqueChars desc = JS_smprintf("BaselineIC: %s", stubName);
-  PerfSpewer::saveProfile(code, desc, nullptr);
-}
-
-void BaselinePerfSpewer::saveProfile(JSContext* cx, JSScript* script,
-                                     JitCode* code) {
-  if (!PerfEnabled()) {
-    return;
-  }
-  UniqueChars desc = GetFunctionDesc("Baseline", cx, script);
-  PerfSpewer::saveProfile(code, desc, script);
 }
 
 void IonPerfSpewer::saveProfile(JSContext* cx, JSScript* script,
@@ -997,8 +943,53 @@ void IonPerfSpewer::saveProfile(JSContext* cx, JSScript* script,
   if (!PerfEnabled()) {
     return;
   }
-  UniqueChars desc = GetFunctionDesc("Ion", cx, script);
-  PerfSpewer::saveProfile(code, desc, script);
+  AutoLockPerfSpewer lock;
+
+  JS::JitCodeRecord* profilerRecord = CreateProfilerEntry(lock);
+
+  UniqueChars desc = GetFunctionDesc(/*ion = */ true, cx, script);
+  if (PerfIREnabled()) {
+    saveJitCodeIRInfo(desc.get(), code, profilerRecord, lock);
+  } else if (PerfSrcEnabled()) {
+    saveJitCodeSourceInfo(script, code, profilerRecord, lock);
+  }
+
+  CollectJitCodeInfo(desc, code, profilerRecord, lock);
+}
+
+void BaselinePerfSpewer::saveProfile(JSContext* cx, JSScript* script,
+                                     JitCode* code) {
+  if (!PerfEnabled()) {
+    return;
+  }
+  AutoLockPerfSpewer lock;
+
+  JS::JitCodeRecord* profilerRecord = CreateProfilerEntry(lock);
+
+  UniqueChars desc = GetFunctionDesc(/*ion = */ false, cx, script);
+  if (PerfIREnabled()) {
+    saveJitCodeIRInfo(desc.get(), code, profilerRecord, lock);
+  } else if (PerfSrcEnabled()) {
+    saveJitCodeSourceInfo(script, code, profilerRecord, lock);
+  }
+
+  CollectJitCodeInfo(desc, code, profilerRecord, lock);
+}
+
+void InlineCachePerfSpewer::saveProfile(JitCode* code, const char* icname) {
+  if (!PerfEnabled()) {
+    return;
+  }
+  AutoLockPerfSpewer lock;
+
+  JS::JitCodeRecord* profilerRecord = CreateProfilerEntry(lock);
+
+  UniqueChars desc = JS_smprintf("%s: %s", TierName(), icname);
+  if (PerfIREnabled()) {
+    saveJitCodeIRInfo(desc.get(), code, profilerRecord, lock);
+  }
+
+  CollectJitCodeInfo(desc, code, profilerRecord, lock);
 }
 
 void js::jit::CollectPerfSpewerJitCodeProfile(JitCode* code, const char* msg) {
