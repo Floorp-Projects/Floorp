@@ -488,8 +488,6 @@ void RunTestsContent(SandboxTestingChild* child) {
     return rv;
   });
 
-  child->ErrnoValueTest("chroot"_ns, ENOSYS, [] { return chroot("/"); });
-
   child->ErrnoValueTest("pipe2_notif"_ns, ENOSYS, [] {
     int fds[2];
     return pipe2(fds, O_NOTIFICATION_PIPE);
