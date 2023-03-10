@@ -220,17 +220,29 @@ describe("MultiStageAboutWelcomeProton module", () => {
 
   describe("AboutWelcomeDefaults for proton", () => {
     const getData = () => AboutWelcomeDefaults.getDefaults();
-    async function prepConfig(config) {
+
+    async function prepConfig(config, evalFalseScreenIds) {
+      let data = await getData();
+
+      if (evalFalseScreenIds?.length) {
+        data.screens.forEach(async screen => {
+          if (evalFalseScreenIds.includes(screen.id)) {
+            screen.targeting = false;
+          }
+        });
+        data.screens = await AWScreenUtils.evaluateTargetingAndRemoveScreens(
+          data.screens
+        );
+      }
+
       return AboutWelcomeDefaults.prepareContentForReact({
-        ...(await getData()),
+        ...data,
         ...config,
       });
     }
     beforeEach(() => {
       sandbox.stub(global.Services.prefs, "getBoolPref").returns(true);
-      sandbox
-        .stub(global.AWScreenUtils, "evaluateTargetingAndRemoveScreens")
-        .callsFake(() => AWScreenUtils.evaluateTargetingAndRemoveScreens());
+      sandbox.stub(AWScreenUtils, "evaluateScreenTargeting").returnsArg(0);
       // This is necessary because there are still screens being removed with
       // `removeScreens` in `prepareContentForReact()`. Once we've migrated
       // to using screen targeting instead of manually removing screens,
@@ -242,8 +254,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
         );
     });
     it("should have 'pin' button by default", async () => {
-      const data = await getData();
-
+      const data = await prepConfig({ needPin: true }, ["AW_EASY_SETUP"]);
       assert.propertyVal(
         data.screens[0].content.primary_button.action,
         "type",
@@ -251,7 +262,13 @@ describe("MultiStageAboutWelcomeProton module", () => {
       );
     });
     it("should have 'pin' button if we need default and pin", async () => {
-      const data = await prepConfig({ needDefault: true, needPin: true });
+      const data = await prepConfig(
+        {
+          needDefault: true,
+          needPin: true,
+        },
+        ["AW_EASY_SETUP"]
+      );
 
       assert.propertyVal(
         data.screens[0].content.primary_button.action,
@@ -260,28 +277,28 @@ describe("MultiStageAboutWelcomeProton module", () => {
       );
       assert.propertyVal(data.screens[0], "id", "AW_PIN_FIREFOX");
       assert.propertyVal(data.screens[1], "id", "AW_SET_DEFAULT");
-      assert.lengthOf(data.screens, getData().screens.length - 1);
+      assert.lengthOf(data.screens, getData().screens.length - 2);
     });
     it("should keep 'pin' and remove 'default' if already default", async () => {
-      const data = await prepConfig({ needPin: true });
+      const data = await prepConfig({ needPin: true }, ["AW_EASY_SETUP"]);
 
       assert.propertyVal(data.screens[0], "id", "AW_PIN_FIREFOX");
       assert.propertyVal(data.screens[1], "id", "AW_IMPORT_SETTINGS");
-      assert.lengthOf(data.screens, getData().screens.length - 2);
+      assert.lengthOf(data.screens, getData().screens.length - 3);
     });
     it("should switch to 'default' if already pinned", async () => {
-      const data = await prepConfig({ needDefault: true });
+      const data = await prepConfig({ needDefault: true }, ["AW_EASY_SETUP"]);
 
       assert.propertyVal(data.screens[0], "id", "AW_ONLY_DEFAULT");
       assert.propertyVal(data.screens[1], "id", "AW_IMPORT_SETTINGS");
-      assert.lengthOf(data.screens, getData().screens.length - 2);
+      assert.lengthOf(data.screens, getData().screens.length - 3);
     });
     it("should switch to 'start' if already pinned and default", async () => {
-      const data = await prepConfig();
+      const data = await prepConfig({}, ["AW_EASY_SETUP"]);
 
       assert.propertyVal(data.screens[0], "id", "AW_GET_STARTED");
       assert.propertyVal(data.screens[1], "id", "AW_IMPORT_SETTINGS");
-      assert.lengthOf(data.screens, getData().screens.length - 2);
+      assert.lengthOf(data.screens, getData().screens.length - 3);
     });
     it("should have a FxA button", async () => {
       const data = await prepConfig();

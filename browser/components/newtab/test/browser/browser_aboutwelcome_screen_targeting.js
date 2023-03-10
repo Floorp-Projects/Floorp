@@ -1,5 +1,13 @@
 "use strict";
 
+const { ShellService } = ChromeUtils.import(
+  "resource:///modules/ShellService.jsm"
+);
+
+const { TelemetryEnvironment } = ChromeUtils.importESModule(
+  "resource://gre/modules/TelemetryEnvironment.sys.mjs"
+);
+
 const TEST_DEFAULT_CONTENT = [
   {
     id: "AW_STEP1",
@@ -49,6 +57,16 @@ const TEST_DEFAULT_CONTENT = [
   },
 ];
 
+const sandbox = sinon.createSandbox();
+
+add_setup(function initSandbox() {
+  requestLongerTimeout(2);
+
+  registerCleanupFunction(() => {
+    sandbox.restore();
+  });
+});
+
 const TEST_DEFAULT_JSON = JSON.stringify(TEST_DEFAULT_CONTENT);
 async function openAboutWelcome() {
   await setAboutWelcomePref(true);
@@ -66,7 +84,6 @@ async function openAboutWelcome() {
 }
 
 add_task(async function second_screen_filtered_by_targeting() {
-  const sandbox = sinon.createSandbox();
   let browser = await openAboutWelcome();
   let aboutWelcomeActor = await getAboutWelcomeParent(browser);
   // Stub AboutWelcomeParent Content Message Handler
@@ -92,5 +109,44 @@ add_task(async function second_screen_filtered_by_targeting() {
     ["main.AW_STEP2", "main.AW_STEP1"]
   );
 
+  sandbox.restore();
+  await popPrefs();
+});
+
+/**
+ * Test MR template easy setup content - Browser is pinned and
+ * not set as default and Windows 10 version 1703
+ */
+add_task(async function test_aboutwelcome_mr_template_easy_setup() {
+  if (!AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
+    return;
+  }
+
+  if (
+    //Windows version 1703
+    TelemetryEnvironment.currentEnvironment.system.os.windowsBuildNumber < 15063
+  ) {
+    return;
+  }
+
+  sandbox.stub(ShellService, "doesAppNeedPin").returns(false);
+  sandbox.stub(ShellService, "isDefaultBrowser").returns(false);
+
+  await clearHistoryAndBookmarks();
+
+  const { browser, cleanup } = await openMRAboutWelcome();
+
+  //should render easy setup
+  await test_screen_content(
+    browser,
+    "doesn't render pin, import and set to default",
+    //Expected selectors:
+    ["main.AW_EASY_SETUP"],
+    //Unexpected selectors:
+    ["main.AW_PIN_FIREFOX", "main.AW_SET_DEFAULT", "main.AW_IMPORT_SETTINGS"]
+  );
+
+  await cleanup();
+  await popPrefs();
   sandbox.restore();
 });
