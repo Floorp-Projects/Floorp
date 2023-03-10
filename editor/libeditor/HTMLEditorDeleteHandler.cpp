@@ -5008,6 +5008,7 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
           "failed");
       return result;
     }
+    trackStartOfRightBlock.FlushAndStopTracking();
     if (NS_WARN_IF(!startOfRightContent.IsSet()) ||
         NS_WARN_IF(!startOfRightContent.GetContainer()->IsInComposedDoc())) {
       return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
@@ -5039,6 +5040,7 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
           "MergeFirstLineOfRightBlockElementIntoLeftBlockElement() failed");
       return result;
     }
+    trackStartOfRightBlock.FlushAndStopTracking();
     if (NS_WARN_IF(!startOfRightContent.IsSet()) ||
         NS_WARN_IF(!startOfRightContent.GetContainer()->IsInComposedDoc())) {
       return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
