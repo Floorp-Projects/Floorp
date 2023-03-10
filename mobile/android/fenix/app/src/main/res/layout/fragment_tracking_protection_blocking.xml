@@ -28,7 +28,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?android:attr/selectableItemBackground"
-            android:clickable="true"
+            android:clickable="false"
             android:focusable="true"
             app:categoryItemDescription="@string/etp_social_media_trackers_description"
             app:categoryItemTitle="@string/etp_social_media_trackers_title" />
@@ -38,7 +38,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?android:attr/selectableItemBackground"
-            android:clickable="true"
+            android:clickable="false"
             android:focusable="true"
             app:categoryItemDescription="@string/etp_cookies_description"
             app:categoryItemTitle="@string/etp_cookies_title" />
@@ -48,7 +48,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?android:attr/selectableItemBackground"
-            android:clickable="true"
+            android:clickable="false"
             android:focusable="true"
             app:categoryItemDescription="@string/etp_cryptominers_description"
             app:categoryItemTitle="@string/etp_cryptominers_title" />
@@ -58,7 +58,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?android:attr/selectableItemBackground"
-            android:clickable="true"
+            android:clickable="false"
             android:focusable="true"
             app:categoryItemDescription="@string/etp_fingerprinters_description"
             app:categoryItemTitle="@string/etp_fingerprinters_title" />
@@ -68,7 +68,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?android:attr/selectableItemBackground"
-            android:clickable="true"
+            android:clickable="false"
             android:focusable="true"
             app:categoryItemDescription="@string/etp_tracking_content_description"
             app:categoryItemTitle="@string/etp_tracking_content_title" />
@@ -78,7 +78,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?android:attr/selectableItemBackground"
-            android:clickable="true"
+            android:clickable="false"
             android:focusable="true"
             app:categoryItemDescription="@string/etp_redirect_trackers_description"
             app:categoryItemTitle="@string/etp_redirect_trackers_title" />
