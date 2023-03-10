@@ -1993,7 +1993,7 @@ static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
       mozilla::Maybe<PropertyInfo> prop = obj->lookupPure(key);
       MOZ_ASSERT(prop.isSome());
       MOZ_ASSERT(prop->isDataProperty());
-      MOZ_ASSERT(prop->slot() == entry->slot());
+      MOZ_ASSERT(obj->getTaggedSlotOffset(prop->slot()) == entry->slotOffset());
     }
   }
 #endif
@@ -2008,7 +2008,8 @@ static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
     obj->setSlot(prop.slot(), value);
     *optimized = true;
 
-    cache.set(receiverShape, nullptr, key, prop.slot());
+    TaggedSlotOffset offset = obj->getTaggedSlotOffset(prop.slot());
+    cache.set(receiverShape, nullptr, key, offset);
     return true;
   }
 
@@ -2065,7 +2066,8 @@ static bool TryAddOrSetPlainObjectProperty(JSContext* cx,
       resultSlot < SharedPropMap::MaxPropsForNonDictionary &&
       (resultSlot < obj->numFixedSlots() ||
        (resultSlot - obj->numFixedSlots()) < numDynamic)) {
-    cache.set(receiverShapeRoot, obj->shape(), keyRoot, resultSlot);
+    TaggedSlotOffset offset = obj->getTaggedSlotOffset(resultSlot);
+    cache.set(receiverShapeRoot, obj->shape(), keyRoot, offset);
   }
 
   return res;
