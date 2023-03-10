@@ -34,20 +34,20 @@ task-template:
     worker:
         certificate-alias:
             by-build-type:
-                fenix-nightly: fenix-production
-                fenix-beta: fennec-beta
-                fenix-release: fennec-production
+                fenix-nightly: fenix-nightly
+                fenix-beta: fenix-beta
+                fenix-release: fenix-release
                 default: focus
         commit: true
         channel:
             by-build-type:
-                focus-nightly: nightly
+                focus-nightly: focus-nightly
+                focus-beta: focus-beta
                 focus-release: focus-release
                 klar-release: klar-release
-                focus-beta: beta
-                fenix-nightly: production
-                fenix-release: fennec-production
-                fenix-beta: fennec-beta
+                fenix-nightly: fenix-nightly
+                fenix-beta: fenix-beta
+                fenix-release: fenix-release
         dep:
             by-level:
                 '3': false
