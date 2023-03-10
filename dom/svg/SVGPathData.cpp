@@ -51,10 +51,6 @@ static inline bool IsClosePath(StylePathCommand::Tag aSegType) {
   return aSegType == StylePathCommand::Tag::ClosePath;
 }
 
-static inline Point ToGfxPoint(const StyleCoordPair& aPair) {
-  return {aPair._0, aPair._1};
-}
-
 static inline bool IsCubicType(StylePathCommand::Tag aType) {
   return aType == StylePathCommand::Tag::CurveTo ||
          aType == StylePathCommand::Tag::SmoothCurveTo;
@@ -623,7 +619,7 @@ already_AddRefed<Path> SVGPathData::BuildPath(
         break;
       case StylePathCommand::Tag::MoveTo: {
         MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT;
-        const Point& p = ToGfxPoint(cmd.move_to.point);
+        const Point& p = cmd.move_to.point.ConvertsToGfxPoint();
         pathStart = segEnd =
             cmd.move_to.absolute == StyleIsAbsolute::Yes ? p : segStart + p;
         aBuilder->MoveTo(scale(segEnd));
@@ -631,7 +627,7 @@ already_AddRefed<Path> SVGPathData::BuildPath(
         break;
       }
       case StylePathCommand::Tag::LineTo: {
-        const Point& p = ToGfxPoint(cmd.line_to.point);
+        const Point& p = cmd.line_to.point.ConvertsToGfxPoint();
         segEnd =
             cmd.line_to.absolute == StyleIsAbsolute::Yes ? p : segStart + p;
         if (segEnd != segStart) {
@@ -641,9 +637,9 @@ already_AddRefed<Path> SVGPathData::BuildPath(
         break;
       }
       case StylePathCommand::Tag::CurveTo:
-        cp1 = ToGfxPoint(cmd.curve_to.control1);
-        cp2 = ToGfxPoint(cmd.curve_to.control2);
-        segEnd = ToGfxPoint(cmd.curve_to.point);
+        cp1 = cmd.curve_to.control1.ConvertsToGfxPoint();
+        cp2 = cmd.curve_to.control2.ConvertsToGfxPoint();
+        segEnd = cmd.curve_to.point.ConvertsToGfxPoint();
 
         if (cmd.curve_to.absolute == StyleIsAbsolute::No) {
           cp1 += segStart;
@@ -658,8 +654,8 @@ already_AddRefed<Path> SVGPathData::BuildPath(
         break;
 
       case StylePathCommand::Tag::QuadBezierCurveTo:
-        cp1 = ToGfxPoint(cmd.quad_bezier_curve_to.control1);
-        segEnd = ToGfxPoint(cmd.quad_bezier_curve_to.point);
+        cp1 = cmd.quad_bezier_curve_to.control1.ConvertsToGfxPoint();
+        segEnd = cmd.quad_bezier_curve_to.point.ConvertsToGfxPoint();
 
         if (cmd.quad_bezier_curve_to.absolute == StyleIsAbsolute::No) {
           cp1 += segStart;
@@ -679,7 +675,7 @@ already_AddRefed<Path> SVGPathData::BuildPath(
       case StylePathCommand::Tag::EllipticalArc: {
         const auto& arc = cmd.elliptical_arc;
         Point radii(arc.rx, arc.ry);
-        segEnd = ToGfxPoint(arc.point);
+        segEnd = arc.point.ConvertsToGfxPoint();
         if (arc.absolute == StyleIsAbsolute::No) {
           segEnd += segStart;
         }
@@ -725,8 +721,8 @@ already_AddRefed<Path> SVGPathData::BuildPath(
 
       case StylePathCommand::Tag::SmoothCurveTo:
         cp1 = IsCubicType(prevSegType) ? segStart * 2 - cp2 : segStart;
-        cp2 = ToGfxPoint(cmd.smooth_curve_to.control2);
-        segEnd = ToGfxPoint(cmd.smooth_curve_to.point);
+        cp2 = cmd.smooth_curve_to.control2.ConvertsToGfxPoint();
+        segEnd = cmd.smooth_curve_to.point.ConvertsToGfxPoint();
 
         if (cmd.smooth_curve_to.absolute == StyleIsAbsolute::No) {
           cp2 += segStart;
@@ -744,7 +740,8 @@ already_AddRefed<Path> SVGPathData::BuildPath(
         // Convert quadratic curve to cubic curve:
         tcp1 = segStart + (cp1 - segStart) * 2 / 3;
 
-        const Point& p = ToGfxPoint(cmd.smooth_quad_bezier_curve_to.point);
+        const Point& p =
+            cmd.smooth_quad_bezier_curve_to.point.ConvertsToGfxPoint();
         // set before setting tcp2!
         segEnd =
             cmd.smooth_quad_bezier_curve_to.absolute == StyleIsAbsolute::Yes
@@ -1157,7 +1154,7 @@ void SVGPathData::GetMarkerPositioningData(Span<const StylePathCommand> aPath,
         break;
 
       case StylePathCommand::Tag::MoveTo: {
-        const Point& p = ToGfxPoint(cmd.move_to.point);
+        const Point& p = cmd.move_to.point.ConvertsToGfxPoint();
         pathStart = segEnd =
             cmd.move_to.absolute == StyleIsAbsolute::Yes ? p : segStart + p;
         pathStartIndex = aMarks->Length();
@@ -1167,16 +1164,16 @@ void SVGPathData::GetMarkerPositioningData(Span<const StylePathCommand> aPath,
         break;
       }
       case StylePathCommand::Tag::LineTo: {
-        const Point& p = ToGfxPoint(cmd.line_to.point);
+        const Point& p = cmd.line_to.point.ConvertsToGfxPoint();
         segEnd =
             cmd.line_to.absolute == StyleIsAbsolute::Yes ? p : segStart + p;
         segStartAngle = segEndAngle = AngleOfVector(segEnd, segStart);
         break;
       }
       case StylePathCommand::Tag::CurveTo: {
-        Point cp1 = ToGfxPoint(cmd.curve_to.control1);
-        Point cp2 = ToGfxPoint(cmd.curve_to.control2);
-        segEnd = ToGfxPoint(cmd.curve_to.point);
+        Point cp1 = cmd.curve_to.control1.ConvertsToGfxPoint();
+        Point cp2 = cmd.curve_to.control2.ConvertsToGfxPoint();
+        segEnd = cmd.curve_to.point.ConvertsToGfxPoint();
 
         if (cmd.curve_to.absolute == StyleIsAbsolute::No) {
           cp1 += segStart;
@@ -1192,8 +1189,8 @@ void SVGPathData::GetMarkerPositioningData(Span<const StylePathCommand> aPath,
         break;
       }
       case StylePathCommand::Tag::QuadBezierCurveTo: {
-        Point cp1 = ToGfxPoint(cmd.quad_bezier_curve_to.control1);
-        segEnd = ToGfxPoint(cmd.quad_bezier_curve_to.point);
+        Point cp1 = cmd.quad_bezier_curve_to.control1.ConvertsToGfxPoint();
+        segEnd = cmd.quad_bezier_curve_to.point.ConvertsToGfxPoint();
 
         if (cmd.quad_bezier_curve_to.absolute == StyleIsAbsolute::No) {
           cp1 += segStart;
@@ -1213,7 +1210,7 @@ void SVGPathData::GetMarkerPositioningData(Span<const StylePathCommand> aPath,
         bool largeArcFlag = arc.large_arc_flag._0;
         bool sweepFlag = arc.sweep_flag._0;
         Point radii(arc.rx, arc.ry);
-        segEnd = ToGfxPoint(arc.point);
+        segEnd = arc.point.ConvertsToGfxPoint();
         if (arc.absolute == StyleIsAbsolute::No) {
           segEnd += segStart;
         }
@@ -1268,8 +1265,8 @@ void SVGPathData::GetMarkerPositioningData(Span<const StylePathCommand> aPath,
       }
       case StylePathCommand::Tag::SmoothCurveTo: {
         Point cp1 = IsCubicType(prevSegType) ? segStart * 2 - prevCP : segStart;
-        Point cp2 = ToGfxPoint(cmd.smooth_curve_to.control2);
-        segEnd = ToGfxPoint(cmd.smooth_curve_to.point);
+        Point cp2 = cmd.smooth_curve_to.control2.ConvertsToGfxPoint();
+        segEnd = cmd.smooth_curve_to.point.ConvertsToGfxPoint();
 
         if (cmd.smooth_curve_to.absolute == StyleIsAbsolute::No) {
           cp2 += segStart;
@@ -1288,8 +1285,9 @@ void SVGPathData::GetMarkerPositioningData(Span<const StylePathCommand> aPath,
             IsQuadraticType(prevSegType) ? segStart * 2 - prevCP : segStart;
         segEnd =
             cmd.smooth_quad_bezier_curve_to.absolute == StyleIsAbsolute::Yes
-                ? ToGfxPoint(cmd.smooth_quad_bezier_curve_to.point)
-                : segStart + ToGfxPoint(cmd.smooth_quad_bezier_curve_to.point);
+                ? cmd.smooth_quad_bezier_curve_to.point.ConvertsToGfxPoint()
+                : segStart + cmd.smooth_quad_bezier_curve_to.point
+                                 .ConvertsToGfxPoint();
 
         prevCP = cp1;
         segStartAngle = AngleOfVector(cp1 == segStart ? segEnd : cp1, segStart);

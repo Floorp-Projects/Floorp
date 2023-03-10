@@ -416,16 +416,12 @@ void SVGPathSegUtils::TraversePathSegment(const float* aData,
 /* static */
 void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
                                           SVGPathTraversalState& aState) {
-  auto toGfxPoint = [](const StyleCoordPair& aPair) {
-    return Point(aPair._0, aPair._1);
-  };
-
   switch (aCommand.tag) {
     case StylePathCommand::Tag::ClosePath:
       TraverseClosePath(nullptr, aState);
       break;
     case StylePathCommand::Tag::MoveTo: {
-      const Point& p = toGfxPoint(aCommand.move_to.point);
+      const Point& p = aCommand.move_to.point.ConvertsToGfxPoint();
       aState.start = aState.pos =
           aCommand.move_to.absolute == StyleIsAbsolute::Yes ? p
                                                             : aState.pos + p;
@@ -438,8 +434,8 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
     }
     case StylePathCommand::Tag::LineTo: {
       Point to = aCommand.line_to.absolute == StyleIsAbsolute::Yes
-                     ? toGfxPoint(aCommand.line_to.point)
-                     : aState.pos + toGfxPoint(aCommand.line_to.point);
+                     ? aCommand.line_to.point.ConvertsToGfxPoint()
+                     : aState.pos + aCommand.line_to.point.ConvertsToGfxPoint();
       if (aState.ShouldUpdateLengthAndControlPoints()) {
         aState.length += CalcDistanceBetweenPoints(aState.pos, to);
         aState.cp1 = aState.cp2 = to;
@@ -449,11 +445,12 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
     }
     case StylePathCommand::Tag::CurveTo: {
       const bool isRelative = aCommand.curve_to.absolute == StyleIsAbsolute::No;
-      Point to = isRelative ? aState.pos + toGfxPoint(aCommand.curve_to.point)
-                            : toGfxPoint(aCommand.curve_to.point);
+      Point to = isRelative
+                     ? aState.pos + aCommand.curve_to.point.ConvertsToGfxPoint()
+                     : aCommand.curve_to.point.ConvertsToGfxPoint();
       if (aState.ShouldUpdateLengthAndControlPoints()) {
-        Point cp1 = toGfxPoint(aCommand.curve_to.control1);
-        Point cp2 = toGfxPoint(aCommand.curve_to.control2);
+        Point cp1 = aCommand.curve_to.control1.ConvertsToGfxPoint();
+        Point cp2 = aCommand.curve_to.control2.ConvertsToGfxPoint();
         if (isRelative) {
           cp1 += aState.pos;
           cp2 += aState.pos;
@@ -470,13 +467,15 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
       const bool isRelative = aCommand.curve_to.absolute == StyleIsAbsolute::No;
       Point to =
           isRelative
-              ? aState.pos + toGfxPoint(aCommand.quad_bezier_curve_to.point)
-              : toGfxPoint(aCommand.quad_bezier_curve_to.point);
+              ? aState.pos +
+                    aCommand.quad_bezier_curve_to.point.ConvertsToGfxPoint()
+              : aCommand.quad_bezier_curve_to.point.ConvertsToGfxPoint();
       if (aState.ShouldUpdateLengthAndControlPoints()) {
-        Point cp = isRelative
-                       ? aState.pos +
-                             toGfxPoint(aCommand.quad_bezier_curve_to.control1)
-                       : toGfxPoint(aCommand.quad_bezier_curve_to.control1);
+        Point cp =
+            isRelative
+                ? aState.pos + aCommand.quad_bezier_curve_to.control1
+                                   .ConvertsToGfxPoint()
+                : aCommand.quad_bezier_curve_to.control1.ConvertsToGfxPoint();
         aState.length += (float)CalcLengthOfQuadraticBezier(aState.pos, cp, to);
         aState.cp1 = cp;
         aState.cp2 = to;
@@ -485,9 +484,10 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
       break;
     }
     case StylePathCommand::Tag::EllipticalArc: {
-      Point to = aCommand.elliptical_arc.absolute == StyleIsAbsolute::Yes
-                     ? toGfxPoint(aCommand.elliptical_arc.point)
-                     : aState.pos + toGfxPoint(aCommand.elliptical_arc.point);
+      Point to =
+          aCommand.elliptical_arc.absolute == StyleIsAbsolute::Yes
+              ? aCommand.elliptical_arc.point.ConvertsToGfxPoint()
+              : aState.pos + aCommand.elliptical_arc.point.ConvertsToGfxPoint();
       if (aState.ShouldUpdateLengthAndControlPoints()) {
         const auto& arc = aCommand.elliptical_arc;
         float dist = 0;
@@ -536,15 +536,17 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
     case StylePathCommand::Tag::SmoothCurveTo: {
       const bool isRelative =
           aCommand.smooth_curve_to.absolute == StyleIsAbsolute::No;
-      Point to = isRelative
-                     ? aState.pos + toGfxPoint(aCommand.smooth_curve_to.point)
-                     : toGfxPoint(aCommand.smooth_curve_to.point);
+      Point to =
+          isRelative
+              ? aState.pos + aCommand.smooth_curve_to.point.ConvertsToGfxPoint()
+              : aCommand.smooth_curve_to.point.ConvertsToGfxPoint();
       if (aState.ShouldUpdateLengthAndControlPoints()) {
         Point cp1 = aState.pos - (aState.cp2 - aState.pos);
         Point cp2 =
             isRelative
-                ? aState.pos + toGfxPoint(aCommand.smooth_curve_to.control2)
-                : toGfxPoint(aCommand.smooth_curve_to.control2);
+                ? aState.pos +
+                      aCommand.smooth_curve_to.control2.ConvertsToGfxPoint()
+                : aCommand.smooth_curve_to.control2.ConvertsToGfxPoint();
         aState.length +=
             (float)CalcLengthOfCubicBezier(aState.pos, cp1, cp2, to);
         aState.cp2 = cp2;
@@ -555,8 +557,9 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
     }
     case StylePathCommand::Tag::SmoothQuadBezierCurveTo: {
       Point to = aCommand.smooth_curve_to.absolute == StyleIsAbsolute::Yes
-                     ? toGfxPoint(aCommand.smooth_curve_to.point)
-                     : aState.pos + toGfxPoint(aCommand.smooth_curve_to.point);
+                     ? aCommand.smooth_curve_to.point.ConvertsToGfxPoint()
+                     : aState.pos +
+                           aCommand.smooth_curve_to.point.ConvertsToGfxPoint();
       if (aState.ShouldUpdateLengthAndControlPoints()) {
         Point cp = aState.pos - (aState.cp1 - aState.pos);
         aState.length += (float)CalcLengthOfQuadraticBezier(aState.pos, cp, to);
@@ -697,14 +700,10 @@ Maybe<gfx::Rect> SVGPathToAxisAlignedRect(Span<const StylePathCommand> aPath) {
       {EdgeDir::NONE, EdgeDir::NONE, EdgeDir::NONE, EdgeDir::NONE},
   };
 
-  auto ToGfxPoint = [](const StyleCoordPair& aPair) {
-    return Point(aPair._0, aPair._1);
-  };
-
   for (const StylePathCommand& cmd : aPath) {
     switch (cmd.tag) {
       case StylePathCommand::Tag::MoveTo: {
-        Point to = ToGfxPoint(cmd.move_to.point);
+        Point to = cmd.move_to.point.ConvertsToGfxPoint();
         if (helper.idx != 0) {
           // This is overly strict since empty moveto sequences such as "M 10 12
           // M 3 2 M 0 0" render nothing, but I expect it won't make us miss a
@@ -754,7 +753,7 @@ Maybe<gfx::Rect> SVGPathToAxisAlignedRect(Span<const StylePathCommand> aPath) {
         break;
       }
       case StylePathCommand::Tag::LineTo: {
-        Point to = ToGfxPoint(cmd.line_to.point);
+        Point to = cmd.line_to.point.ConvertsToGfxPoint();
         if (cmd.line_to.absolute == StyleIsAbsolute::No) {
           to = segStart + to;
         }
