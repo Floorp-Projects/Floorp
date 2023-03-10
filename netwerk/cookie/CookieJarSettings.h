@@ -168,6 +168,8 @@ class CookieJarSettings final : public nsICookieJarSettings {
   const nsAString& GetPartitionKey() { return mPartitionKey; };
 
   void SetFingerprintingRandomizationKey(const nsTArray<uint8_t>& aKey) {
+    mFingerprintingRandomKey.reset();
+
     mFingerprintingRandomKey.emplace(aKey.Clone());
   }
 
