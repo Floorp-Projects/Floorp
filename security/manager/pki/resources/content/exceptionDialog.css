@@ -31,5 +31,5 @@
 }
 
 #locationTextBox {
-  -moz-box-flex: 1;
+  flex: 1;
 }
