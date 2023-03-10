@@ -2820,7 +2820,16 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChildWindow() {
 }
 
 - (NSRect)windowWillUseStandardFrame:(NSWindow*)window defaultFrame:(NSRect)newFrame {
-  return newFrame;
+  // This function needs to return a rect representing the frame a window would
+  // have if it is in its "maximized" size mode. The parameter newFrame is supposed
+  // to be a frame representing the maximum window size on the screen where the
+  // window currently appears. However, in practice, newFrame can be a much smaller
+  // size. So, we ignore newframe and instead return the frame of the entire screen
+  // associated with the window. That frame is bigger than the window could actually
+  // be, due to the presence of the menubar and possibly the dock, but we never call
+  // this function directly, and Cocoa callers will shrink it to its true maximum
+  // size.
+  return window.screen.frame;
 }
 
 void nsCocoaWindow::CocoaSendToplevelActivateEvents() {
