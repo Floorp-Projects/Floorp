@@ -19,7 +19,7 @@ from mergedeep import merge
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_GRADLE_COMMAND = ("./gradlew", "--console=plain", "--parallel")
+_DEFAULT_GRADLE_COMMAND = ("./gradlew", "--console=plain", "--no-parallel")
 _LOCAL_DEPENDENCY_PATTERN = re.compile(
     r"(\+|\\)--- project :(?P<local_dependency_name>\S+)\s?.*"
 )
