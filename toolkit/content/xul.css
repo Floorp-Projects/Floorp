@@ -687,6 +687,7 @@ menulist[popuponly] {
   min-width: 8px;
   appearance: none !important;
   border: none !important;
+  background: none !important;
   order: 2147483646;
   z-index: 2147483646;
 }
