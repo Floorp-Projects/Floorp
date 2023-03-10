@@ -1,5 +1,7 @@
 #[cfg(feature = "read-http")]
-use crate::{Error, Res};
+use crate::{Error, ReadSeek, Res};
+#[cfg(feature = "read-http")]
+use std::borrow::BorrowMut;
 
 pub const HTAB: u8 = 0x09;
 #[cfg(feature = "read-http")]
@@ -60,9 +62,13 @@ pub fn split_at(v: u8, mut line: Vec<u8>) -> Option<(Vec<u8>, Vec<u8>)> {
 }
 
 #[cfg(feature = "read-http")]
-pub fn read_line(r: &mut impl std::io::BufRead) -> Res<Vec<u8>> {
+pub fn read_line<T, R>(r: &mut T) -> Res<Vec<u8>>
+where
+    T: BorrowMut<R> + ?Sized,
+    R: ReadSeek + ?Sized,
+{
     let mut buf = Vec::new();
-    r.read_until(NL, &mut buf)?;
+    r.borrow_mut().read_until(NL, &mut buf)?;
     let tail = buf.pop();
     if tail != Some(NL) {
         return Err(Error::Truncated);

@@ -1,8 +1,10 @@
 #![allow(dead_code)] // TODO: remove
 
 use super::SymKey;
-use crate::err::{Error, Res};
-use crate::hpke::{Aead, Kdf};
+use crate::{
+    err::{Error, Res},
+    hpke::{Aead, Kdf},
+};
 use hkdf::Hkdf as HkdfImpl;
 use log::trace;
 use sha2::{Sha256, Sha384, Sha512};
@@ -106,8 +108,7 @@ impl Hkdf {
 
 #[cfg(test)]
 mod test {
-    use super::super::super::hpke::Kdf;
-    use super::Hkdf;
+    use super::{super::super::hpke::Kdf, Hkdf};
     use crate::init;
 
     fn sha256_example(

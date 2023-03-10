@@ -1,12 +1,16 @@
-use super::super::hpke::{Aead, Kdf, Kem};
-use super::err::{sec::SEC_ERROR_INVALID_ARGS, secstatus_to_res, Error};
-use super::p11::{sys, Item, PrivateKey, PublicKey, Slot, SymKey};
+use super::{
+    super::hpke::{Aead, Kdf, Kem},
+    err::{sec::SEC_ERROR_INVALID_ARGS, secstatus_to_res, Error},
+    p11::{sys, Item, PrivateKey, PublicKey, Slot, SymKey},
+};
 use crate::err::Res;
 use log::{log_enabled, trace};
-use std::convert::TryFrom;
-use std::ops::Deref;
-use std::os::raw::c_uint;
-use std::ptr::{addr_of_mut, null, null_mut};
+use std::{
+    convert::TryFrom,
+    ops::Deref,
+    os::raw::c_uint,
+    ptr::{addr_of_mut, null, null_mut},
+};
 
 pub use sys::{HpkeAeadId as AeadId, HpkeKdfId as KdfId, HpkeKemId as KemId};
 
@@ -287,8 +291,7 @@ pub fn generate_key_pair(kem: Kem) -> Res<(PrivateKey, PublicKey)> {
 #[cfg(test)]
 mod test {
     use super::{generate_key_pair, Config, HpkeR, HpkeS};
-    use crate::hpke::Aead;
-    use crate::init;
+    use crate::{hpke::Aead, init};
 
     const INFO: &[u8] = b"info";
     const AAD: &[u8] = b"aad";

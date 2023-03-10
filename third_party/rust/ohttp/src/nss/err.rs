@@ -87,8 +87,10 @@ pub fn secstatus_to_res(rv: SECStatus) -> Res<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::super::{init, SECFailure, SECSuccess};
-    use super::{secstatus_to_res, PRErrorCode, PR_SetError};
+    use super::{
+        super::{init, SECFailure, SECSuccess},
+        secstatus_to_res, PRErrorCode, PR_SetError,
+    };
 
     fn set_error_code(code: PRErrorCode) {
         // This code doesn't work without initializing NSS first.

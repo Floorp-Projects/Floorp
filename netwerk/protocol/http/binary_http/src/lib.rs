@@ -12,6 +12,7 @@ extern crate xpcom;
 use bhttp::{Message, Mode};
 use nserror::{nsresult, NS_ERROR_FAILURE, NS_ERROR_INVALID_ARG, NS_ERROR_UNEXPECTED, NS_OK};
 use nsstring::{nsACString, nsCString};
+use std::io::Cursor;
 use thin_vec::ThinVec;
 use xpcom::interfaces::{nsIBinaryHttpRequest, nsIBinaryHttpResponse};
 use xpcom::RefPtr;
@@ -169,8 +170,8 @@ impl BinaryHttp {
         &self,
         response: &ThinVec<u8>,
     ) -> Result<RefPtr<nsIBinaryHttpResponse>, nsresult> {
-        let decoded =
-            Message::read_bhttp(&mut response.as_slice()).map_err(|_| NS_ERROR_UNEXPECTED)?;
+        let mut cursor = Cursor::new(response);
+        let decoded = Message::read_bhttp(&mut cursor).map_err(|_| NS_ERROR_UNEXPECTED)?;
         let status = decoded.control().status().ok_or(NS_ERROR_UNEXPECTED)?;
         let headers = decoded
             .header()
@@ -193,8 +194,8 @@ impl BinaryHttp {
         &self,
         request: &ThinVec<u8>,
     ) -> Result<RefPtr<nsIBinaryHttpRequest>, nsresult> {
-        let decoded =
-            Message::read_bhttp(&mut request.as_slice()).map_err(|_| NS_ERROR_UNEXPECTED)?;
+        let mut cursor = Cursor::new(request);
+        let decoded = Message::read_bhttp(&mut cursor).map_err(|_| NS_ERROR_UNEXPECTED)?;
         let method = decoded
             .control()
             .method()

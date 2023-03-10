@@ -20,10 +20,12 @@ use crate::hpke::{Aead as AeadId, Kdf, Kem};
 use byteorder::{NetworkEndian, ReadBytesExt, WriteBytesExt};
 use err::Res;
 use log::trace;
-use std::cmp::max;
-use std::convert::TryFrom;
-use std::io::{BufReader, Read};
-use std::mem::size_of;
+use std::{
+    cmp::max,
+    convert::TryFrom,
+    io::{BufReader, Read},
+    mem::size_of,
+};
 
 #[cfg(feature = "nss")]
 use nss::random;
@@ -428,6 +430,13 @@ impl ServerResponse {
     }
 }
 
+#[cfg(feature = "server")]
+impl std::fmt::Debug for ServerResponse {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("ServerResponse")
+    }
+}
+
 /// An object for decapsulating responses.
 /// The only way to obtain one of these is through `ClientRequest::encapsulate()`.
 #[cfg(feature = "client")]
@@ -447,7 +456,11 @@ impl ClientResponse {
 
     /// Consume this object by decapsulating a response.
     pub fn decapsulate(self, enc_response: &[u8]) -> Res<Vec<u8>> {
-        let (response_nonce, ct) = enc_response.split_at(entropy(self.hpke.config()));
+        let mid = entropy(self.hpke.config());
+        if mid >= enc_response.len() {
+            return Err(Error::Truncated);
+        }
+        let (response_nonce, ct) = enc_response.split_at(mid);
         let mut aead = make_aead(
             Mode::Decrypt,
             self.hpke.config(),
@@ -461,9 +474,13 @@ impl ClientResponse {
 
 #[cfg(all(test, feature = "client", feature = "server"))]
 mod test {
-    use crate::hpke::{Aead, Kdf, Kem};
-    use crate::{ClientRequest, KeyConfig, KeyId, Server, SymmetricSuite};
+    use crate::{
+        err::Res,
+        hpke::{Aead, Kdf, Kem},
+        ClientRequest, Error, KeyConfig, KeyId, Server, SymmetricSuite,
+    };
     use log::trace;
+    use std::{fmt::Debug, io::ErrorKind};
 
     const KEY_ID: KeyId = 1;
     const KEM: Kem = Kem::X25519Sha256;
@@ -537,27 +554,77 @@ mod test {
         assert_eq!(&response2[..], RESPONSE);
     }
 
-    #[test]
-    fn response_truncated() {
+    fn assert_truncated<T: Debug>(res: Res<T>) {
+        match res.unwrap_err() {
+            Error::Truncated => {}
+            #[cfg(feature = "rust-hpke")]
+            Error::Aead(_) => {}
+            #[cfg(feature = "nss")]
+            Error::Crypto(_) => {}
+            Error::Io(e) => assert_eq!(e.kind(), ErrorKind::UnexpectedEof),
+            e => panic!("unexpected error type: {e:?}"),
+        }
+    }
+
+    fn request_truncated(cut: usize) {
         init();
 
         let server_config = KeyConfig::new(KEY_ID, KEM, Vec::from(SYMMETRIC)).unwrap();
         let mut server = Server::new(server_config).unwrap();
         let encoded_config = server.config().encode().unwrap();
-        trace!("Config: {}", hex::encode(&encoded_config));
+
+        let client = ClientRequest::new(&encoded_config).unwrap();
+        let (enc_request, _) = client.encapsulate(REQUEST).unwrap();
+
+        let res = server.decapsulate(&enc_request[..cut]);
+        assert_truncated(res);
+    }
+
+    #[test]
+    fn request_truncated_header() {
+        request_truncated(4);
+    }
+
+    #[test]
+    fn request_truncated_enc() {
+        // header is 7, enc is 32
+        request_truncated(24);
+    }
+
+    #[test]
+    fn request_truncated_ct() {
+        // header and enc is 39, aead needs at least 16 more
+        request_truncated(42);
+    }
+
+    fn response_truncated(cut: usize) {
+        init();
+
+        let server_config = KeyConfig::new(KEY_ID, KEM, Vec::from(SYMMETRIC)).unwrap();
+        let mut server = Server::new(server_config).unwrap();
+        let encoded_config = server.config().encode().unwrap();
 
         let client = ClientRequest::new(&encoded_config).unwrap();
         let (enc_request, client_response) = client.encapsulate(REQUEST).unwrap();
-        trace!("Request: {}", hex::encode(REQUEST));
-        trace!("Encapsulated Request: {}", hex::encode(&enc_request));
 
         let (request, server_response) = server.decapsulate(&enc_request).unwrap();
         assert_eq!(&request[..], REQUEST);
 
         let enc_response = server_response.encapsulate(RESPONSE).unwrap();
-        trace!("Encapsulated Response: {}", hex::encode(&enc_response));
 
-        assert!(client_response.decapsulate(&enc_response[..16]).is_err());
+        let res = client_response.decapsulate(&enc_response[..cut]);
+        assert_truncated(res);
+    }
+
+    #[test]
+    fn response_truncated_ct() {
+        // nonce is 16, aead needs at least 16 more
+        response_truncated(20);
+    }
+
+    #[test]
+    fn response_truncated_nonce() {
+        response_truncated(7);
     }
 
     #[cfg(feature = "rust-hpke")]

@@ -6,11 +6,13 @@
 
 use super::err::{secstatus_to_res, Error};
 use crate::err::Res;
-use std::convert::TryFrom;
-use std::marker::PhantomData;
-use std::mem;
-use std::os::raw::{c_int, c_uint};
-use std::ptr::null_mut;
+use std::{
+    convert::TryFrom,
+    marker::PhantomData,
+    mem,
+    os::raw::{c_int, c_uint},
+    ptr::null_mut,
+};
 
 #[allow(
     clippy::pedantic,

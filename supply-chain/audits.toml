@@ -232,12 +232,6 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.13.0 -> 0.13.1"
 
-[[audits.bhttp]]
-who = "Dana Keeler <dkeeler@mozilla.com>"
-criteria = "safe-to-deploy"
-version = "0.2.3"
-notes = "Mozilla-developed package, no unsafe code or powerful imports."
-
 [[audits.bindgen]]
 who = "Emilio Cobos Álvarez <emilio@crisal.io>"
 criteria = "safe-to-deploy"
@@ -1520,21 +1514,6 @@ delta = "0.28.4 -> 0.30.0"
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.30.0 -> 0.30.3"
-
-[[audits.ohttp]]
-who = "Dana Keeler <dkeeler@mozilla.com>"
-criteria = "safe-to-deploy"
-version = "0.2.2"
-notes = """
-Developed and maintained  by Mozilla.
-When configured to use NSS (as we do), this crate uses unsafe blocks to call
-NSS functions. These calls have been audited.
-"""
-
-[[audits.ohttp]]
-who = "Mike Hommey <mh+mozilla@glandium.org>"
-criteria = "safe-to-deploy"
-delta = "0.2.2 -> 0.2.3"
 
 [[audits.once_cell]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"

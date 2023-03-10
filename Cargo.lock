@@ -425,11 +425,11 @@ dependencies = [
 
 [[package]]
 name = "bhttp"
-version = "0.2.3"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a561f43fe82923605345b977ebd5951126f0a1b4575e3c3d53e5954e5822de4"
+checksum = "1300dca7a20730cce82c33fbf8795862556645ef5e9ee835390278c3fe1eb1d0"
 dependencies = [
- "url",
+ "thiserror",
 ]
 
 [[package]]
@@ -3944,9 +3944,9 @@ dependencies = [
 
 [[package]]
 name = "ohttp"
-version = "0.2.3"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3e4e4bdb61a3d6563cfba7344325a9f1e44e7b7d212dcec7afd247ca8deecdf9"
+checksum = "850ce328ec7e4dc1a9446c56aef700d21d914268c8529b96017a2bf10f74b70f"
 dependencies = [
  "bindgen 0.63.0",
  "byteorder",
@@ -3956,6 +3956,7 @@ dependencies = [
  "mozbuild",
  "serde",
  "serde_derive",
+ "thiserror",
  "toml",
 ]
 

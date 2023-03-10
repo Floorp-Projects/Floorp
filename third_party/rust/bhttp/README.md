@@ -1,10 +1,7 @@
 # Binary HTTP Messages
 
 This is a rust implementation of [Binary HTTP
-Messages](https://httpwg.org/http-extensions/draft-ietf-httpbis-binary-message.html).
-
-This work is undergoing active revision in the IETF and so are these
-implementations.  Use at your own risk.
+Messages](https://www.rfc-editor.org/rfc/rfc9292.html).
 
 ## Using
 

@@ -1,16 +1,24 @@
-use super::err::secstatus_to_res;
-use super::p11::sys::{
-    self, PK11Context, PK11_AEADOp, PK11_CreateContextBySymKey, PRBool, CKA_DECRYPT, CKA_ENCRYPT,
-    CKA_NSS_MESSAGE, CKG_GENERATE_COUNTER_XOR, CKG_NO_GENERATE, CKM_AES_GCM, CKM_CHACHA20_POLY1305,
-    CK_ATTRIBUTE_TYPE, CK_GENERATOR_FUNCTION, CK_MECHANISM_TYPE,
+use super::{
+    err::secstatus_to_res,
+    p11::{
+        sys::{
+            self, PK11Context, PK11_AEADOp, PK11_CreateContextBySymKey, PRBool, CKA_DECRYPT,
+            CKA_ENCRYPT, CKA_NSS_MESSAGE, CKG_GENERATE_COUNTER_XOR, CKG_NO_GENERATE, CKM_AES_GCM,
+            CKM_CHACHA20_POLY1305, CK_ATTRIBUTE_TYPE, CK_GENERATOR_FUNCTION, CK_MECHANISM_TYPE,
+        },
+        Item, SymKey,
+    },
 };
-use super::p11::{Item, SymKey};
-use crate::err::{Error, Res};
-use crate::hpke::Aead as AeadId;
+use crate::{
+    err::{Error, Res},
+    hpke::Aead as AeadId,
+};
 use log::trace;
-use std::convert::{TryFrom, TryInto};
-use std::mem;
-use std::os::raw::c_int;
+use std::{
+    convert::{TryFrom, TryInto},
+    mem,
+    os::raw::c_int,
+};
 
 /// All the nonces are the same length.  Exploit that.
 pub const NONCE_LEN: usize = 12;
@@ -183,9 +191,10 @@ impl Aead {
 
 #[cfg(test)]
 mod test {
-    use super::super::super::hpke::Aead as AeadId;
-    use super::super::init;
-    use super::{Aead, Mode, SequenceNumber, NONCE_LEN};
+    use super::{
+        super::{super::hpke::Aead as AeadId, init},
+        Aead, Mode, SequenceNumber, NONCE_LEN,
+    };
 
     /// Check that the first invocation of encryption matches expected values.
     /// Also check decryption of the same.
