@@ -456,7 +456,7 @@ class SearchConfigTest {
       if (rule.codes) {
         this._assertCorrectCodes(location, engine, rule);
       }
-      if (rule.searchUrlCode || rule.searchFormUrlCode || rule.suggestUrlCode) {
+      if (rule.searchUrlCode || rule.suggestUrlCode) {
         this._assertCorrectUrlCode(location, engine, rule);
       }
       if (rule.aliases) {
@@ -571,19 +571,17 @@ class SearchConfigTest {
         submission.uri.query.split("&").includes(rule.searchUrlCode),
         `Expected "${rule.searchUrlCode}" in search url "${submission.uri.spec}"`
       );
+      let uri = engine.searchForm;
+      this.assertOk(
+        !uri.includes(rule.searchUrlCode),
+        `"${rule.searchUrlCode}" should not be in the search form URL.`
+      );
     }
     if (rule.searchUrlCodeNotInQuery) {
       const submission = engine.getSubmission("test", URLTYPE_SEARCH_HTML);
       this.assertOk(
         submission.uri.includes(rule.searchUrlCodeNotInQuery),
         `Expected "${rule.searchUrlCodeNotInQuery}" in search url "${submission.uri.spec}"`
-      );
-    }
-    if (rule.searchFormUrlCode) {
-      const uri = engine.searchForm;
-      this.assertOk(
-        uri.includes(rule.searchFormUrlCode),
-        `Expected "${rule.searchFormUrlCode}" in "${uri}"`
       );
     }
     if (rule.suggestUrlCode) {

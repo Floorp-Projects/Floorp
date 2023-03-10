@@ -107,7 +107,6 @@ const test = new SearchConfigTest({
         newtab: "form=MOZTSB",
       },
       searchUrlCode: AppConstants.IS_ESR ? "pc=MOZR" : "pc=MOZI",
-      searchFormUrlCode: "pc=MOZI",
     },
   ],
 });

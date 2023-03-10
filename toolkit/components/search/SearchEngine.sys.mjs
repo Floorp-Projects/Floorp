@@ -1363,6 +1363,18 @@ export class SearchEngine {
     return this._name;
   }
 
+  /**
+   * The searchForm URL points to the engine's organic search page. This should
+   * not contain neither search term parameters nor partner codes, but may
+   * contain parameters which set the engine in the correct way.
+   *
+   * This URL is typically the prePath and filePath of the search submission URI,
+   * but may vary for different engines. For example, some engines may use a
+   * different domain, e.g. https://sub.example.com for the search URI but
+   * https://example.org/ for the organic search page.
+   *
+   * @returns {string}
+   */
   get searchForm() {
     // First look for a <Url rel="searchform">
     var searchFormURL = this._getURLOfType(
