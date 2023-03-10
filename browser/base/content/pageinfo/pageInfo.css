@@ -74,7 +74,7 @@ td > input,
 
 .table-split-column > label,
 .table-split-column > input {
-  flex-grow: 1;
+  flex: 1 auto;
 }
 
 .table-split-column > button {
