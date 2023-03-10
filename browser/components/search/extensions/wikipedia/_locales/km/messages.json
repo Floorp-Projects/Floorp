@@ -9,7 +9,7 @@
     "message": "https://km.wikipedia.org/wiki/ពិសេស:ស្វែងរក"
   },
   "searchForm": {
-    "message": "https://km.wikipedia.org/wiki/ពិសេស:ស្វែងរក?search={searchTerms}&sourceid=Mozilla-search"
+    "message": "https://km.wikipedia.org/wiki/ពិសេស:ស្វែងរក"
   },
   "suggestUrl": {
     "message": "https://km.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"

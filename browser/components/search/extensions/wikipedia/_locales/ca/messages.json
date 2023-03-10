@@ -9,7 +9,7 @@
     "message": "https://ca.wikipedia.org/wiki/Especial:Cerca"
   },
   "searchForm": {
-    "message": "https://ca.wikipedia.org/wiki/Especial:Cerca?search={searchTerms}&sourceid=Mozilla-search"
+    "message": "https://ca.wikipedia.org/wiki/Especial:Cerca"
   },
   "suggestUrl": {
     "message": "https://ca.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"

@@ -9,7 +9,7 @@
     "message": "https://id.wikipedia.org/wiki/Istimewa:Pencarian"
   },
   "searchForm": {
-    "message": "https://id.wikipedia.org/wiki/Istimewa:Pencarian?search={searchTerms}&sourceid=Mozilla-search"
+    "message": "https://id.wikipedia.org/wiki/Istimewa:Pencarian"
   },
   "suggestUrl": {
     "message": "https://id.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"

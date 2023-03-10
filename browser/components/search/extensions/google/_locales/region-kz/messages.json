@@ -9,7 +9,7 @@
     "message": "https://www.google.kz/search"
   },
   "searchForm": {
-    "message": "https://www.google.kz/search?q={searchTerms}"
+    "message": "https://www.google.kz/search"
   },
   "suggestUrl": {
     "message": "https://www.google.kz/complete/search?client=firefox&q={searchTerms}"

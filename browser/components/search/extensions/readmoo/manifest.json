@@ -2,7 +2,7 @@
   "name": "Readmoo 讀墨電子書",
   "description": "Readmoo 讀墨電子書",
   "manifest_version": 2,
-  "version": "1.1",
+  "version": "1.2",
   "browser_specific_settings": {
     "gecko": {
       "id": "readmoo@search.mozilla.org"
@@ -19,7 +19,7 @@
     "search_provider": {
       "name": "Readmoo 讀墨電子書",
       "search_url": "https://readmoo.com/search/keyword",
-      "search_form": "https://readmoo.com/search/keyword?pi=0&q={searchTerms}&st=true",
+      "search_form": "https://readmoo.com/search/keyword?pi=0&st=true",
       "search_url_get_params": "pi=0&q={searchTerms}&st=true"
     }
   }

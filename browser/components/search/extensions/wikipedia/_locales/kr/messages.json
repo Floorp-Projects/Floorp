@@ -9,7 +9,7 @@
     "message": "https://ko.wikipedia.org/wiki/특수기능:찾기"
   },
   "searchForm": {
-    "message": "https://ko.wikipedia.org/wiki/특수기능:찾기?search={searchTerms}&sourceid=Mozilla-search"
+    "message": "https://ko.wikipedia.org/wiki/특수기능:찾기"
   },
   "suggestUrl": {
     "message": "https://ko.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"

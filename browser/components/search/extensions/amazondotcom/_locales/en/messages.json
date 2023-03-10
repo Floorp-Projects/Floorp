@@ -9,7 +9,7 @@
     "message": "https://www.amazon.com/exec/obidos/external-search/"
   },
   "searchForm": {
-    "message": "https://www.amazon.com/exec/obidos/external-search/?field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=mozilla-20&sourceid=Mozilla-search"
+    "message": "https://www.amazon.com/exec/obidos/external-search/"
   },
   "suggestUrl": {
     "message": "https://completion.amazon.com/search/complete?q={searchTerms}&search-alias=aps&mkt=1"

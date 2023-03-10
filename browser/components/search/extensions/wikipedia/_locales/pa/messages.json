@@ -9,7 +9,7 @@
     "message": "https://pa.wikipedia.org/wiki/ਖ਼ਾਸ:ਖੋਜੋ"
   },
   "searchForm": {
-    "message": "https://pa.wikipedia.org/wiki/ਖ਼ਾਸ:ਖੋਜੋ?search={searchTerms}&sourceid=Mozilla-search"
+    "message": "https://pa.wikipedia.org/wiki/ਖ਼ਾਸ:ਖੋਜੋ"
   },
   "suggestUrl": {
     "message": "https://pa.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"

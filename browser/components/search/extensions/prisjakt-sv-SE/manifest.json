@@ -2,7 +2,7 @@
   "name": "Prisjakt",
   "description": "Prisjakt - jämför priser och produkter",
   "manifest_version": 2,
-  "version": "1.1",
+  "version": "1.2",
   "browser_specific_settings": {
     "gecko": {
       "id": "prisjakt-sv-SE@search.mozilla.org"
@@ -20,7 +20,7 @@
       "name": "Prisjakt",
       "search_url": "https://www.prisjakt.nu/search",
       "search_url_get_params": "search={searchTerms}",
-      "search_form": "https://www.prisjakt.nu/search?search={searchTerms}",
+      "search_form": "https://www.prisjakt.nu/search",
       "suggest_url": "https://www.prisjakt.nu/plugins/opensearch/suggestions.php",
       "suggest_url_get_params": "search={searchTerms}"
     }

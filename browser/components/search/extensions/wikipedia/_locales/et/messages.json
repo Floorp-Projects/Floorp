@@ -9,7 +9,7 @@
     "message": "https://et.wikipedia.org/wiki/Eri:Otsimine"
   },
   "searchForm": {
-    "message": "https://et.wikipedia.org/wiki/Eri:Otsimine?search={searchTerms}&sourceid=Mozilla-search"
+    "message": "https://et.wikipedia.org/wiki/Eri:Otsimine"
   },
   "suggestUrl": {
     "message": "https://et.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"

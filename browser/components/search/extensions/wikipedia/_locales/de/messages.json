@@ -9,7 +9,7 @@
     "message": "https://de.wikipedia.org/wiki/Spezial:Suche"
   },
   "searchForm": {
-    "message": "https://de.wikipedia.org/wiki/Spezial:Suche?search={searchTerms}&sourceid=Mozilla-search"
+    "message": "https://de.wikipedia.org/wiki/Spezial:Suche"
   },
   "suggestUrl": {
     "message": "https://de.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"

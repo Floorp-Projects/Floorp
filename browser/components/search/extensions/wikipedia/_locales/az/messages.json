@@ -9,7 +9,7 @@
     "message": "https://az.wikipedia.org/wiki/Xüsusi:Axtar"
   },
   "searchForm": {
-    "message": "https://az.wikipedia.org/wiki/Xüsusi:Axtar?search={searchTerms}&sourceid=Mozilla-search"
+    "message": "https://az.wikipedia.org/wiki/Xüsusi:Axtar"
   },
   "suggestUrl": {
     "message": "https://az.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"

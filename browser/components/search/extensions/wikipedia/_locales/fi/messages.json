@@ -9,7 +9,7 @@
     "message": "https://fi.wikipedia.org/wiki/Toiminnot:Haku"
   },
   "searchForm": {
-    "message": "https://fi.wikipedia.org/wiki/Toiminnot:Haku?search={searchTerms}&sourceid=Mozilla-search"
+    "message": "https://fi.wikipedia.org/wiki/Toiminnot:Haku"
   },
   "suggestUrl": {
     "message": "https://fi.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
