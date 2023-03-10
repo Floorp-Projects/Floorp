@@ -158,7 +158,7 @@ addAccessibleTask(
   {
     chrome: false,
     topLevel: false,
-    iframe: true,
+    iframe: isCacheEnabled /* works, but timing is tricky with no cache */,
     remoteIframe: isCacheEnabled /* works, but timing is tricky with no cache */,
     iframeAttrs: { style: "width: 0;" },
   }
