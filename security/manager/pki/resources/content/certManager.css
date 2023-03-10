@@ -4,14 +4,11 @@
 
 /* Good enough support for equalsize=always for the cert manager use cases.
  * You probably shouldn't use this as-is elsewhere, this selector is somewhat
- * slow, it relies on stuff having display: -moz-box, and you probably can use
+ * slow, it relies on stuff having display: flex, and you probably can use
  * something simpler if you need this */
 [equalsize="always"] > * {
-  -moz-box-flex: 1;
+  flex: 1;
   contain: inline-size;
-  /* contain: inline-size should be enough, unless you have a legacy XUL layout
-   * box, which don't support it. */
-  width: 0;
 }
 
 #certmanager {
