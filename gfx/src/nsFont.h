@@ -10,7 +10,7 @@
 #include <cstdint>
 #include "gfxFontConstants.h"  // for NS_FONT_KERNING_AUTO, etc
 #include "gfxFontVariations.h"
-#include "mozilla/ServoStyleConstsInlines.h"
+#include "mozilla/ServoStyleConsts.h"
 #include "mozilla/StyleColorInlines.h"  // for StyleAbsoluteColor
 #include "nsTArray.h"                   // for nsTArray
 
