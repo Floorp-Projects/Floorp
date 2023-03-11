@@ -2187,12 +2187,12 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t* aText, size_t aLength,
   BidiClass prevClass = BidiClass::LeftToRight;
 
   for (i = 0; i < runCount; i++) {
-    BidiDirection dir = aBidiEngine.GetVisualRun(i, &start, &length);
+    aBidiEngine.GetVisualRun(i, &start, &length);
 
     BidiEmbeddingLevel level;
     aBidiEngine.GetLogicalRun(start, &limit, &level);
 
-    dir = level.Direction();
+    BidiDirection dir = level.Direction();
     int32_t subRunLength = limit - start;
     int32_t lineOffset = start;
     int32_t typeLimit = std::min(limit, AssertedCast<int32_t>(aLength));
