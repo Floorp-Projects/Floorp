@@ -72,7 +72,7 @@ export class ImpressionStats extends React.PureComponent {
         for (const card of cards) {
           this.props.dispatch(
             ac.OnlyToMain({
-              type: at.TOP_SITES_IMPRESSION_STATS,
+              type: at.TOP_SITES_SPONSORED_IMPRESSION_STATS,
               data: {
                 type: "impression",
                 tile_id: card.id,

@@ -859,9 +859,9 @@ class TelemetryFeed {
     );
   }
 
-  handleTopSitesImpressionStats(action) {
+  handleTopSitesSponsoredImpressionStats(action) {
     const { data } = action;
-    const { type, position, source, advertiser } = data;
+    const { type, position, source } = data;
     let pingType;
 
     const session = this.sessions.get(au.getPortIdOfSender(action));
@@ -875,7 +875,7 @@ class TelemetryFeed {
       if (session) {
         Glean.topsites.impression.record({
           newtab_visit_id: session.session_id,
-          is_sponsored: !!advertiser,
+          is_sponsored: true,
         });
       }
     } else if (type === "click") {
@@ -888,11 +888,11 @@ class TelemetryFeed {
       if (session) {
         Glean.topsites.click.record({
           newtab_visit_id: session.session_id,
-          is_sponsored: !!advertiser,
+          is_sponsored: true,
         });
       }
     } else {
-      console.error("Unknown ping type for TopSites impression");
+      console.error("Unknown ping type for sponsored TopSites impression");
       return;
     }
 
@@ -904,6 +904,32 @@ class TelemetryFeed {
       pingType,
       "1"
     );
+  }
+
+  handleTopSitesOrganicImpressionStats(action) {
+    const session = this.sessions.get(au.getPortIdOfSender(action));
+    if (!session) {
+      return;
+    }
+
+    switch (action.data?.type) {
+      case "impression":
+        Glean.topsites.impression.record({
+          newtab_visit_id: session.session_id,
+          is_sponsored: false,
+        });
+        break;
+
+      case "click":
+        Glean.topsites.click.record({
+          newtab_visit_id: session.session_id,
+          is_sponsored: false,
+        });
+        break;
+
+      default:
+        break;
+    }
   }
 
   handleUserEvent(action) {
@@ -1117,8 +1143,11 @@ class TelemetryFeed {
       case at.AS_ROUTER_TELEMETRY_USER_EVENT:
         this.handleASRouterUserEvent(action);
         break;
-      case at.TOP_SITES_IMPRESSION_STATS:
-        this.handleTopSitesImpressionStats(action);
+      case at.TOP_SITES_SPONSORED_IMPRESSION_STATS:
+        this.handleTopSitesSponsoredImpressionStats(action);
+        break;
+      case at.TOP_SITES_ORGANIC_IMPRESSION_STATS:
+        this.handleTopSitesOrganicImpressionStats(action);
         break;
       case at.UNINIT:
         this.uninit();

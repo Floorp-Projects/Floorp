@@ -252,15 +252,16 @@ topsites:
     type: event
     description: >
       Recorded when topsite tiles are loaded.
-      Presently only happens for sponsored tiles.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1820707
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670#c3
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105#c11
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1820707#c3
     data_sensitivity:
       - interaction
     notification_emails:
@@ -282,17 +283,18 @@ topsites:
     type: event
     description: >
       Recorded when a topsite tile is clicked.
-      Presently only happens for sponsored tiles.
       Only happens on click. Not on middle-click. Not on "Open in new Tab"-like
       options in the context menu.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1820707
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1766887
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786670#c3
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105#c11
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1820707#c3
     data_sensitivity:
       - interaction
     notification_emails:

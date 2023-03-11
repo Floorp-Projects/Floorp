@@ -14,6 +14,10 @@ import {
   TopSiteList,
   TopSitePlaceholder,
 } from "content-src/components/TopSites/TopSite";
+import {
+  INTERSECTION_RATIO,
+  TopSiteImpressionWrapper,
+} from "content-src/components/TopSites/TopSiteImpressionWrapper";
 import { A11yLinkButton } from "content-src/components/A11yLinkButton/A11yLinkButton";
 import { LinkMenu } from "content-src/components/LinkMenu/LinkMenu";
 import React from "react";
@@ -634,6 +638,21 @@ describe("<TopSite>", () => {
     link = { url: "https://foo.com", screenshot: "foo.jpg", hostname: "foo" };
   });
 
+  // Build IntersectionObserver class with the arg `entries` for the intersect callback.
+  function buildIntersectionObserver(entries) {
+    return class {
+      constructor(callback) {
+        this.callback = callback;
+      }
+
+      observe() {
+        this.callback(entries);
+      }
+
+      unobserve() {}
+    };
+  }
+
   it("should render a TopSite", () => {
     const wrapper = shallow(<TopSite link={link} />);
     assert.ok(wrapper.exists());
@@ -705,6 +724,84 @@ describe("<TopSite>", () => {
       "DeleteUrl",
     ]);
   });
+  it("should record impressions for visible organic Top Sites", () => {
+    const dispatch = sinon.stub();
+    const wrapper = shallow(
+      <TopSite
+        link={link}
+        index={3}
+        dispatch={dispatch}
+        IntersectionObserver={buildIntersectionObserver([
+          {
+            isIntersecting: true,
+            intersectionRatio: INTERSECTION_RATIO,
+          },
+        ])}
+        document={{
+          visibilityState: "visible",
+          addEventListener: sinon.stub(),
+          removeEventListener: sinon.stub(),
+        }}
+      />
+    );
+    const linkWrapper = wrapper.find(TopSiteLink).dive();
+    assert.ok(linkWrapper.exists());
+    const impressionWrapper = linkWrapper.find(TopSiteImpressionWrapper).dive();
+    assert.ok(impressionWrapper.exists());
+
+    assert.calledOnce(dispatch);
+
+    let [action] = dispatch.firstCall.args;
+    assert.equal(action.type, at.TOP_SITES_ORGANIC_IMPRESSION_STATS);
+
+    assert.propertyVal(action.data, "type", "impression");
+    assert.propertyVal(action.data, "source", "newtab");
+  });
+  it("should record impressions for visible sponsored Top Sites", () => {
+    const dispatch = sinon.stub();
+    const wrapper = shallow(
+      <TopSite
+        link={Object.assign({}, link, {
+          sponsored_position: 2,
+          sponsored_tile_id: 12345,
+          sponsored_impression_url: "http://impression.example.com/",
+        })}
+        index={3}
+        dispatch={dispatch}
+        IntersectionObserver={buildIntersectionObserver([
+          {
+            isIntersecting: true,
+            intersectionRatio: INTERSECTION_RATIO,
+          },
+        ])}
+        document={{
+          visibilityState: "visible",
+          addEventListener: sinon.stub(),
+          removeEventListener: sinon.stub(),
+        }}
+      />
+    );
+    const linkWrapper = wrapper.find(TopSiteLink).dive();
+    assert.ok(linkWrapper.exists());
+    const impressionWrapper = linkWrapper.find(TopSiteImpressionWrapper).dive();
+    assert.ok(impressionWrapper.exists());
+
+    assert.calledOnce(dispatch);
+
+    let [action] = dispatch.firstCall.args;
+    assert.equal(action.type, at.TOP_SITES_SPONSORED_IMPRESSION_STATS);
+
+    assert.propertyVal(action.data, "type", "impression");
+    assert.propertyVal(action.data, "tile_id", 12345);
+    assert.propertyVal(action.data, "source", "newtab");
+    assert.propertyVal(action.data, "position", 4);
+    assert.propertyVal(
+      action.data,
+      "reporting_url",
+      "http://impression.example.com/"
+    );
+    assert.propertyVal(action.data, "advertiser", "foo");
+  });
 
   describe("#onLinkClick", () => {
     it("should call dispatch when the link is clicked", () => {
@@ -715,7 +812,22 @@ describe("<TopSite>", () => {
 
       wrapper.find(TopSiteLink).simulate("click", { preventDefault() {} });
 
-      assert.calledTwice(dispatch);
+      let [action] = dispatch.firstCall.args;
+      assert.isUserEventAction(action);
+
+      assert.propertyVal(action.data, "event", "CLICK");
+      assert.propertyVal(action.data, "source", "TOP_SITES");
+      assert.propertyVal(action.data, "action_position", 3);
+
+      [action] = dispatch.secondCall.args;
+      assert.propertyVal(action, "type", at.OPEN_LINK);
+
+      // Organic Top Site click event.
+      [action] = dispatch.thirdCall.args;
+      assert.equal(action.type, at.TOP_SITES_ORGANIC_IMPRESSION_STATS);
+
+      assert.propertyVal(action.data, "type", "click");
+      assert.propertyVal(action.data, "source", "newtab");
     });
     it("should dispatch a UserEventAction with the right data", () => {
       const dispatch = sinon.stub();
@@ -807,7 +919,7 @@ describe("<TopSite>", () => {
 
       // Topsite SPOC click event.
       [action] = dispatch.getCall(3).args;
-      assert.equal(action.type, at.TOP_SITES_IMPRESSION_STATS);
+      assert.equal(action.type, at.TOP_SITES_SPONSORED_IMPRESSION_STATS);
 
       assert.propertyVal(action.data, "type", "click");
       assert.propertyVal(action.data, "tile_id", 1);
