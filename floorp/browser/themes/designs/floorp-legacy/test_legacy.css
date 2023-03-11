@@ -1368,11 +1368,6 @@ border-bottom: 1.1px solid var(--toolbar-bgcolor);
   border: 2px solid transparent !important;
 }
 
-#navigator-toolbox :-moz-any(.toolbarbutton-1, .scrollbutton-up, .scrollbutton-down) {
-  height: 32px !important;
-  min-height: 32px !important;
-}
-
 #navigator-toolbox :-moz-any(.toolbarbutton-1, toolbarbutton.bookmark-item:not(.subviewbutton))[disabled],
 /* no ::part workaround - may have side effects */
 #scrollbutton-up[part="scrollbutton-up"]:not(.menupopup-scrollbutton)[disabled],
@@ -1424,25 +1419,6 @@ border-bottom: 1.1px solid var(--toolbar-bgcolor);
 /* #region パーソナルバー*/
 /* EdgeFr-Fox by bmFtZQ - personalbar.css */
 
-#PersonalToolbar {
-  --bookmark-block-padding: 6px !important;
-}
-
-#personal-toolbar-empty-description,
-#PersonalToolbar .toolbarbutton-1,
-toolbarbutton.bookmark-item:not(.subviewbutton) {
-  margin-block: 0 4px !important;
-  padding: var(--bookmark-block-padding) 6px !important;
-  font-size: 12px !important;
-}
-
-#PlacesToolbarItems>toolbarseparator::before {
-  content: "";
-  display: block;
-  border-inline-start: 1px solid var(--toolbarseparator-color) !important;
-  margin-block: 8px !important;
-  border-image-source: none !important;
-}
 
 #PersonalToolbar {
   padding-inline: var(--toolbar-start-end-padding) calc(var(--toolbar-start-end-padding) + 4px) !important;
@@ -1454,6 +1430,13 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
 #OtherBookmarks.bookmark-item[container]>.toolbarbutton-icon {
   margin-inline-end: 6px !important;
 }
+
+    #PersonalToolbar toolbarbutton:not(#PlacesChevron){
+      margin-right: 2px !important;
+      padding-left: 4px !important;
+      padding-right: 4px !important;
+      height: 31.2px;
+    }
 
 /* #endregion*/
 
@@ -1742,7 +1725,7 @@ toolbarbutton[part="scrollbutton-down"] {
   display: block;
   height: 20px;
   left: 0;
-  top: 6px;
+  top: 10px;
   border-left: 1px solid color-mix(in srgb, currentColor 34%, transparent);
 }
 
