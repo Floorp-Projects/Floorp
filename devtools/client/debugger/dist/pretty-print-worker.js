@@ -6259,7 +6259,77 @@ var acorn = __webpack_require__(1103);
 
 var sourceMap = __webpack_require__(632);
 
-var SourceNode = sourceMap.SourceNode; // If any of these tokens are seen before a "[" token, we know that "[" token
+var SourceNode = sourceMap.SourceNode;
+/**
+ * prettyFast is using SourceNode so we can generate a source map.
+ * A SourceNode instance can have multiple children, which may be other SourceNodes or strings.
+ * This means that to generate the source map, we need to traverse all the nodes recursively.
+ * Furthermore, even adding a child SourceNode to a parent can be slower as some checks are
+ * done on the argument (which can be a string, an array or a SourceNode)
+ * These can be slow when we have a lot of mappings to handle (e.g. for big files).
+ *
+ * We are using SourceNode in a much more constrained way:
+ * - we only have a root node
+ * - which only has SourceNode children
+ * - and those children SourceNode only have 1 string child
+ *
+ * So here we can build custom classes based on SourceNode, overriding expensive methods
+ * which are much more straightforward ones given our constraints.
+ */
+
+class RootSourceNode extends SourceNode {
+  /**
+   * Add a LeafSourceNode to the children list
+   *
+   * @override
+   * @param {LeafSourceNode} leafSourceNode
+   */
+  add(leafSourceNode) {
+    this.children.push(leafSourceNode);
+  }
+  /**
+   * Iterate through the node children
+   *
+   * @override
+   * @param {Function} func
+   */
+
+
+  walk(func) {
+    for (let i = 0, len = this.children.length; i < len; i++) {
+      const child = this.children[i];
+      func(child.str, child);
+    }
+  }
+  /**
+   * @override
+   */
+
+
+  walkSourceContents() {// this.sourceContents is never set, so don't do anything (the original method does
+    // iterate over children and sourcesContents, which is wasteful in our case).
+  }
+
+} // We don't extend SourceNode as the constructor initializes an array and calls `add`,
+// which we don't need in our case.
+
+
+class LeafSourceNode {
+  /**
+   * @param {Integer} line
+   * @param {Integer} column
+   * @param {String} source
+   * @param {String} str
+   */
+  constructor(line, column, source, str) {
+    this.str = str;
+    this.line = line;
+    this.column = column;
+    this.source = source;
+    this.name = null;
+  }
+
+} // If any of these tokens are seen before a "[" token, we know that "[" token
 // is the start of an array literal, rather than a property access.
 //
 // The only exception is "}", which would need to be disambiguated by
@@ -6267,6 +6337,7 @@ var SourceNode = sourceMap.SourceNode; // If any of these tokens are seen before
 // curly is going to be an array literal, so we brush the complication under
 // the rug, and handle the ambiguity by always assuming that it will be an
 // array literal.
+
 
 const PRE_ARRAY_LITERAL_TOKENS = new Set(["typeof", "void", "delete", "case", "do", "=", "in", "{", "*", "/", "%", "else", ";", "++", "--", "+", "-", "~", "!", ":", "?", ">>", ">>>", "<<", "||", "&&", "<", ">", "<=", ">=", "instanceof", "&", "^", "|", "==", "!=", "===", "!==", ",", "}"]);
 /**
@@ -6808,9 +6879,9 @@ function addComment(write, indentLevel, options, block, text, line, column, next
 
 function prettyFast(input, options) {
   // The level of indents deep we are.
-  let indentLevel = 0; // We will accumulate the pretty printed code in this SourceNode.
+  let indentLevel = 0; // We will accumulate the pretty printed code in this RootSourceNode.
 
-  const result = new SourceNode();
+  const rootNode = new RootSourceNode();
   /**
    * Write a pretty printed string to the result SourceNode.
    *
@@ -6853,7 +6924,7 @@ function prettyFast(input, options) {
           lineStr += buffer[i];
         }
 
-        result.add(new SourceNode(bufferLine, bufferColumn, options.url, lineStr));
+        rootNode.add(new LeafSourceNode(bufferLine, bufferColumn, options.url, lineStr));
         buffer.splice(0, buffer.length);
         bufferLine = -1;
         bufferColumn = -1;
@@ -7008,7 +7079,7 @@ function prettyFast(input, options) {
     lastToken.isArrayLiteral = token.isArrayLiteral;
   }
 
-  return result.toStringWithSourceMap({
+  return rootNode.toStringWithSourceMap({
     file: options.url
   });
 }
