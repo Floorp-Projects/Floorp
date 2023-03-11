@@ -1558,21 +1558,36 @@ describe("TelemetryFeed", () => {
         data
       );
     });
-    it("should call .handleTopSitesImpressionStats on a TOP_SITES_IMPRESSION_STATS action", () => {
+    it("should call .handleTopSitesSponsoredImpressionStats on a TOP_SITES_SPONSORED_IMPRESSION_STATS action", () => {
       const session = {};
       sandbox.stub(instance.sessions, "get").returns(session);
       const data = { type: "impression", tile_id: 42, position: 1 };
-      const action = { type: at.TOP_SITES_IMPRESSION_STATS, data };
-      sandbox.spy(instance, "handleTopSitesImpressionStats");
+      const action = { type: at.TOP_SITES_SPONSORED_IMPRESSION_STATS, data };
+      sandbox.spy(instance, "handleTopSitesSponsoredImpressionStats");
 
       instance.onAction(ac.AlsoToMain(action));
 
-      assert.calledOnce(instance.handleTopSitesImpressionStats);
+      assert.calledOnce(instance.handleTopSitesSponsoredImpressionStats);
       assert.deepEqual(
-        instance.handleTopSitesImpressionStats.firstCall.args[0].data,
+        instance.handleTopSitesSponsoredImpressionStats.firstCall.args[0].data,
         data
       );
     });
+  });
+  it("should call .handleTopSitesOrganicImpressionStats on a TOP_SITES_ORGANIC_IMPRESSION_STATS action", () => {
+    const session = {};
+    sandbox.stub(instance.sessions, "get").returns(session);
+    const data = { type: "impression", position: 1 };
+    const action = { type: at.TOP_SITES_ORGANIC_IMPRESSION_STATS, data };
+    sandbox.spy(instance, "handleTopSitesOrganicImpressionStats");
+
+    instance.onAction(ac.AlsoToMain(action));
+
+    assert.calledOnce(instance.handleTopSitesOrganicImpressionStats);
+    assert.deepEqual(
+      instance.handleTopSitesOrganicImpressionStats.firstCall.args[0].data,
+      data
+    );
   });
   describe("#handleNewTabInit", () => {
     it("should set the session as preloaded if the browser is preloaded", () => {
@@ -2001,7 +2016,7 @@ describe("TelemetryFeed", () => {
       );
     });
   });
-  describe("#handleTopSitesImpressionStats", () => {
+  describe("#handleTopSitesSponsoredImpressionStats", () => {
     it("should call sendStructuredIngestionEvent on an impression event", async () => {
       const data = {
         type: "impression",
@@ -2014,7 +2029,7 @@ describe("TelemetryFeed", () => {
       sandbox.spy(instance, "sendStructuredIngestionEvent");
       sandbox.spy(Services.telemetry, "keyedScalarAdd");
 
-      await instance.handleTopSitesImpressionStats({ data });
+      await instance.handleTopSitesSponsoredImpressionStats({ data });
 
       // Scalar should be added
       assert.calledOnce(Services.telemetry.keyedScalarAdd);
@@ -2055,7 +2070,7 @@ describe("TelemetryFeed", () => {
       sandbox.spy(instance, "sendStructuredIngestionEvent");
       sandbox.spy(Services.telemetry, "keyedScalarAdd");
 
-      await instance.handleTopSitesImpressionStats({ data });
+      await instance.handleTopSitesSponsoredImpressionStats({ data });
 
       // Scalar should be added
       assert.calledOnce(Services.telemetry.keyedScalarAdd);
@@ -2098,7 +2113,7 @@ describe("TelemetryFeed", () => {
       sandbox.stub(instance.sessions, "get").returns({ session_id });
       sandbox.spy(Glean.topsites.impression, "record");
 
-      await instance.handleTopSitesImpressionStats({ data });
+      await instance.handleTopSitesSponsoredImpressionStats({ data });
 
       // Event should be recorded
       assert.calledOnce(Glean.topsites.impression.record);
@@ -2120,13 +2135,13 @@ describe("TelemetryFeed", () => {
       sandbox.stub(instance.sessions, "get").returns({ session_id });
       sandbox.spy(Glean.topsites.click, "record");
 
-      await instance.handleTopSitesImpressionStats({ data });
+      await instance.handleTopSitesSponsoredImpressionStats({ data });
 
       // Event should be recorded
       assert.calledOnce(Glean.topsites.click.record);
       assert.calledWith(Glean.topsites.click.record, {
         newtab_visit_id: session_id,
-        is_sponsored: false,
+        is_sponsored: true,
       });
     });
     it("should console.error on unknown pingTypes", async () => {
@@ -2134,10 +2149,50 @@ describe("TelemetryFeed", () => {
       instance = new TelemetryFeed();
       sandbox.spy(instance, "sendStructuredIngestionEvent");
 
-      await instance.handleTopSitesImpressionStats({ data });
+      await instance.handleTopSitesSponsoredImpressionStats({ data });
 
       assert.calledOnce(global.console.error);
       assert.notCalled(instance.sendStructuredIngestionEvent);
+    });
+  });
+  describe("#handleTopSitesOrganicImpressionStats", () => {
+    it("should record a Glean topsites.impression event on an impression event", async () => {
+      const data = {
+        type: "impression",
+        source: "newtab",
+        position: 1,
+      };
+      instance = new TelemetryFeed();
+      const session_id = "decafc0ffee";
+      sandbox.stub(instance.sessions, "get").returns({ session_id });
+      sandbox.spy(Glean.topsites.impression, "record");
+
+      await instance.handleTopSitesOrganicImpressionStats({ data });
+
+      assert.calledOnce(Glean.topsites.impression.record);
+      assert.calledWith(Glean.topsites.impression.record, {
+        newtab_visit_id: session_id,
+        is_sponsored: false,
+      });
+    });
+    it("should record a Glean topsites.click event on a click event", async () => {
+      const data = {
+        type: "click",
+        source: "newtab",
+        position: 1,
+      };
+      instance = new TelemetryFeed();
+      const session_id = "decafc0ffee";
+      sandbox.stub(instance.sessions, "get").returns({ session_id });
+      sandbox.spy(Glean.topsites.click, "record");
+
+      await instance.handleTopSitesOrganicImpressionStats({ data });
+
+      assert.calledOnce(Glean.topsites.click.record);
+      assert.calledWith(Glean.topsites.click.record, {
+        newtab_visit_id: session_id,
+        is_sponsored: false,
+      });
     });
   });
   describe("#handleDiscoveryStreamUserEvent", () => {

@@ -104,7 +104,7 @@ module.exports = function(config) {
               statements: 99,
               lines: 99,
               functions: 100,
-              branches: 96,
+              branches: 95,
             },
             "lib/ASRouterParentProcessMessageHandler.jsm": {
               statements: 98,

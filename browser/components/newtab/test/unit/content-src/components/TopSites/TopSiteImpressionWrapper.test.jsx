@@ -35,6 +35,7 @@ describe("<TopSiteImpressionWrapper>", () => {
   }
 
   const DEFAULT_PROPS = {
+    actionType: at.TOP_SITES_SPONSORED_IMPRESSION_STATS,
     tile: {
       tile_id: 1,
       position: 1,
@@ -84,7 +85,7 @@ describe("<TopSiteImpressionWrapper>", () => {
     assert.calledOnce(dispatch);
 
     let [action] = dispatch.firstCall.args;
-    assert.equal(action.type, at.TOP_SITES_IMPRESSION_STATS);
+    assert.equal(action.type, at.TOP_SITES_SPONSORED_IMPRESSION_STATS);
     assert.deepEqual(action.data, {
       type: "impression",
       ...DEFAULT_PROPS.tile,
@@ -107,7 +108,7 @@ describe("<TopSiteImpressionWrapper>", () => {
     assert.calledOnce(dispatch);
 
     const [action] = dispatch.firstCall.args;
-    assert.equal(action.type, at.TOP_SITES_IMPRESSION_STATS);
+    assert.equal(action.type, at.TOP_SITES_SPONSORED_IMPRESSION_STATS);
     assert.deepEqual(action.data, {
       type: "impression",
       ...DEFAULT_PROPS.tile,

@@ -2,10 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  actionCreators as ac,
-  actionTypes as at,
-} from "common/Actions.sys.mjs";
+import { actionCreators as ac } from "common/Actions.sys.mjs";
 import React from "react";
 
 const VISIBLE = "visible";
@@ -27,11 +24,14 @@ export const INTERSECTION_RATIO = 0.5;
  */
 export class TopSiteImpressionWrapper extends React.PureComponent {
   _dispatchImpressionStats() {
-    const { tile } = this.props;
+    const { actionType, tile } = this.props;
+    if (!actionType) {
+      return;
+    }
 
     this.props.dispatch(
       ac.OnlyToMain({
-        type: at.TOP_SITES_IMPRESSION_STATS,
+        type: actionType,
         data: {
           type: "impression",
           ...tile,
@@ -144,5 +144,6 @@ export class TopSiteImpressionWrapper extends React.PureComponent {
 TopSiteImpressionWrapper.defaultProps = {
   IntersectionObserver: global.IntersectionObserver,
   document: global.document,
+  actionType: null,
   tile: null,
 };

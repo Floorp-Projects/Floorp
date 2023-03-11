@@ -225,11 +225,12 @@ for (const type of [
   "TOP_SITES_CANCEL_EDIT",
   "TOP_SITES_CLOSE_SEARCH_SHORTCUTS_MODAL",
   "TOP_SITES_EDIT",
-  "TOP_SITES_IMPRESSION_STATS",
   "TOP_SITES_INSERT",
   "TOP_SITES_OPEN_SEARCH_SHORTCUTS_MODAL",
+  "TOP_SITES_ORGANIC_IMPRESSION_STATS",
   "TOP_SITES_PIN",
   "TOP_SITES_PREFS_UPDATED",
+  "TOP_SITES_SPONSORED_IMPRESSION_STATS",
   "TOP_SITES_UNPIN",
   "TOP_SITES_UPDATED",
   "TOTAL_BOOKMARKS_REQUEST",
@@ -7277,7 +7278,7 @@ class ImpressionStats_ImpressionStats extends (external_React_default()).PureCom
       if (this.props.source === TOP_SITES_SOURCE) {
         for (const card of cards) {
           this.props.dispatch(actionCreators.OnlyToMain({
-            type: actionTypes.TOP_SITES_IMPRESSION_STATS,
+            type: actionTypes.TOP_SITES_SPONSORED_IMPRESSION_STATS,
             data: {
               type: "impression",
               tile_id: card.id,
@@ -11554,10 +11555,16 @@ const TopSiteImpressionWrapper_INTERSECTION_RATIO = 0.5;
 class TopSiteImpressionWrapper extends (external_React_default()).PureComponent {
   _dispatchImpressionStats() {
     const {
+      actionType,
       tile
     } = this.props;
+
+    if (!actionType) {
+      return;
+    }
+
     this.props.dispatch(actionCreators.OnlyToMain({
-      type: actionTypes.TOP_SITES_IMPRESSION_STATS,
+      type: actionType,
       data: {
         type: "impression",
         ...tile
@@ -11654,6 +11661,7 @@ class TopSiteImpressionWrapper extends (external_React_default()).PureComponent 
 TopSiteImpressionWrapper.defaultProps = {
   IntersectionObserver: __webpack_require__.g.IntersectionObserver,
   document: __webpack_require__.g.document,
+  actionType: null,
   tile: null
 };
 ;// CONCATENATED MODULE: ./content-src/components/TopSites/TopSite.jsx
@@ -11939,6 +11947,51 @@ class TopSiteLink extends (external_React_default()).PureComponent {
       };
     }
 
+    let impressionStats = null;
+
+    if (link.type === SPOC_TYPE) {
+      // Record impressions for Pocket tiles.
+      impressionStats = /*#__PURE__*/external_React_default().createElement(ImpressionStats_ImpressionStats, {
+        flightId: link.flightId,
+        rows: [{
+          id: link.id,
+          pos: link.pos,
+          shim: link.shim && link.shim.impression,
+          advertiser: title.toLocaleLowerCase()
+        }],
+        dispatch: this.props.dispatch,
+        source: TOP_SITES_SOURCE
+      });
+    } else if (isSponsored(link)) {
+      // Record impressions for non-Pocket sponsored tiles.
+      impressionStats = /*#__PURE__*/external_React_default().createElement(TopSiteImpressionWrapper, {
+        actionType: actionTypes.TOP_SITES_SPONSORED_IMPRESSION_STATS,
+        tile: {
+          position: this.props.index + 1,
+          tile_id: link.sponsored_tile_id || -1,
+          reporting_url: link.sponsored_impression_url,
+          advertiser: title.toLocaleLowerCase(),
+          source: NEWTAB_SOURCE
+        } // For testing.
+        ,
+        IntersectionObserver: this.props.IntersectionObserver,
+        document: this.props.document,
+        dispatch: this.props.dispatch
+      });
+    } else {
+      // Record impressions for organic tiles.
+      impressionStats = /*#__PURE__*/external_React_default().createElement(TopSiteImpressionWrapper, {
+        actionType: actionTypes.TOP_SITES_ORGANIC_IMPRESSION_STATS,
+        tile: {
+          source: NEWTAB_SOURCE
+        } // For testing.
+        ,
+        IntersectionObserver: this.props.IntersectionObserver,
+        document: this.props.document,
+        dispatch: this.props.dispatch
+      });
+    }
+
     return /*#__PURE__*/external_React_default().createElement("li", TopSite_extends({
       className: topSiteOuterClassName,
       onDrop: this.onDragEvent,
@@ -11982,26 +12035,7 @@ class TopSiteLink extends (external_React_default()).PureComponent {
     }), title || /*#__PURE__*/external_React_default().createElement("br", null), /*#__PURE__*/external_React_default().createElement("span", {
       className: "sponsored-label",
       "data-l10n-id": "newtab-topsite-sponsored"
-    })))), children, link.type === SPOC_TYPE ? /*#__PURE__*/external_React_default().createElement(ImpressionStats_ImpressionStats, {
-      flightId: link.flightId,
-      rows: [{
-        id: link.id,
-        pos: link.pos,
-        shim: link.shim && link.shim.impression,
-        advertiser: title.toLocaleLowerCase()
-      }],
-      dispatch: this.props.dispatch,
-      source: TOP_SITES_SOURCE
-    }) : null, link.sponsored_position ? /*#__PURE__*/external_React_default().createElement(TopSiteImpressionWrapper, {
-      tile: {
-        position: this.props.index + 1,
-        tile_id: link.sponsored_tile_id || -1,
-        reporting_url: link.sponsored_impression_url,
-        advertiser: title.toLocaleLowerCase(),
-        source: NEWTAB_SOURCE
-      },
-      dispatch: this.props.dispatch
-    }) : null));
+    })))), children, impressionStats));
   }
 
 }
@@ -12081,10 +12115,10 @@ class TopSite extends (external_React_default()).PureComponent {
             shiftKey
           }
         })
-      })); // Fire off a spoc specific impression.
+      }));
 
       if (this.props.link.type === SPOC_TYPE) {
-        // Record a Pocket click.
+        // Record a Pocket-specific click.
         this.props.dispatch(actionCreators.ImpressionStats({
           source: TOP_SITES_SOURCE,
           click: 0,
@@ -12093,16 +12127,39 @@ class TopSite extends (external_React_default()).PureComponent {
             pos: this.props.link.pos,
             shim: this.props.link.shim && this.props.link.shim.click
           }]
-        })); // Record a click for sponsored topsites.
+        })); // Record a click for a Pocket sponsored tile.
 
         const title = this.props.link.label || this.props.link.hostname;
         this.props.dispatch(actionCreators.OnlyToMain({
-          type: actionTypes.TOP_SITES_IMPRESSION_STATS,
+          type: actionTypes.TOP_SITES_SPONSORED_IMPRESSION_STATS,
           data: {
             type: "click",
             position: this.props.link.pos + 1,
             tile_id: this.props.link.id,
             advertiser: title.toLocaleLowerCase(),
+            source: NEWTAB_SOURCE
+          }
+        }));
+      } else if (isSponsored(this.props.link)) {
+        // Record a click for a non-Pocket sponsored tile.
+        const title = this.props.link.label || this.props.link.hostname;
+        this.props.dispatch(actionCreators.OnlyToMain({
+          type: actionTypes.TOP_SITES_SPONSORED_IMPRESSION_STATS,
+          data: {
+            type: "click",
+            position: this.props.index + 1,
+            tile_id: this.props.link.sponsored_tile_id || -1,
+            reporting_url: this.props.link.sponsored_click_url,
+            advertiser: title.toLocaleLowerCase(),
+            source: NEWTAB_SOURCE
+          }
+        }));
+      } else {
+        // Record a click for an organic tile.
+        this.props.dispatch(actionCreators.OnlyToMain({
+          type: actionTypes.TOP_SITES_ORGANIC_IMPRESSION_STATS,
+          data: {
+            type: "click",
             source: NEWTAB_SOURCE
           }
         }));
@@ -12114,21 +12171,6 @@ class TopSite extends (external_React_default()).PureComponent {
           data: {
             targetURL: this.props.link.url,
             source: "newtab"
-          }
-        }));
-      }
-
-      if (this.props.link.sponsored_position) {
-        const title = this.props.link.label || this.props.link.hostname;
-        this.props.dispatch(actionCreators.OnlyToMain({
-          type: actionTypes.TOP_SITES_IMPRESSION_STATS,
-          data: {
-            type: "click",
-            position: this.props.index + 1,
-            tile_id: this.props.link.sponsored_tile_id || -1,
-            reporting_url: this.props.link.sponsored_click_url,
-            advertiser: title.toLocaleLowerCase(),
-            source: NEWTAB_SOURCE
           }
         }));
       }
