@@ -249,7 +249,7 @@ bool CreateMinidumpsAndPair(ProcessHandle aTargetPid,
   return false;
 }
 
-bool UnsetRemoteExceptionHandler() { return false; }
+bool UnsetRemoteExceptionHandler(bool wasSet) { return false; }
 
 #if defined(MOZ_WIDGET_ANDROID)
 void SetNotificationPipeForChild(FileHandle childCrashFd) {}
