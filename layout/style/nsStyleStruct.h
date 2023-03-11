@@ -16,7 +16,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/ServoStyleConstsInlines.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WindowButtonType.h"
 #include "nsColor.h"
