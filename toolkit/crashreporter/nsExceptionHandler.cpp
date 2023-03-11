@@ -3835,14 +3835,16 @@ bool CreateMinidumpsAndPair(ProcessHandle aTargetHandle,
   return true;
 }
 
-bool UnsetRemoteExceptionHandler() {
+bool UnsetRemoteExceptionHandler(bool wasSet) {
   // On Linux we don't unset breakpad's exception handler if the sandbox is
   // enabled because it requires invoking `sigaltstack` and we don't want to
   // allow that syscall in the sandbox. See bug 1622452.
 #if !defined(XP_LINUX) || !defined(MOZ_SANDBOX)
-  std::set_terminate(oldTerminateHandler);
-  delete gExceptionHandler;
-  gExceptionHandler = nullptr;
+  if (wasSet) {
+    std::set_terminate(oldTerminateHandler);
+    delete gExceptionHandler;
+    gExceptionHandler = nullptr;
+  }
 #endif
   TeardownAnnotationFacilities();
 

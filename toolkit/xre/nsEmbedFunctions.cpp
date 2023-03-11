@@ -677,9 +677,7 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
     }
   }
 
-  if (exceptionHandlerIsSet) {
-    CrashReporter::UnsetRemoteExceptionHandler();
-  }
+  CrashReporter::UnsetRemoteExceptionHandler(exceptionHandlerIsSet);
 
   return XRE_DeinitCommandLine();
 }

@@ -328,7 +328,7 @@ DWORD WINAPI WerNotifyProc(LPVOID aParameter);
 bool SetRemoteExceptionHandler(
     const char* aCrashPipe = nullptr,
     FileHandle aCrashTimeAnnotationFile = kInvalidFileHandle);
-bool UnsetRemoteExceptionHandler();
+bool UnsetRemoteExceptionHandler(bool wasSet = true);
 
 #if defined(MOZ_WIDGET_ANDROID)
 // Android creates child process as services so we must explicitly set
