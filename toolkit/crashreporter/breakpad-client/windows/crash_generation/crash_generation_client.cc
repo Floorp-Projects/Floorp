@@ -42,7 +42,7 @@ const DWORD kWaitForServerTimeoutMs = INFINITE;
 const DWORD kWaitForServerTimeoutMs = 15000;
 #endif
 
-const int kPipeConnectMaxAttempts = 2;
+const int kPipeConnectMaxAttempts = 6;
 
 const DWORD kPipeDesiredAccess = FILE_READ_DATA |
                                  FILE_WRITE_DATA |
@@ -303,6 +303,7 @@ HANDLE CrashGenerationClient::ConnectToPipe(const wchar_t* pipe_name,
     }
   }
 
+  fprintf(stderr, "ConnectToPipe() failure: GetLastError()=%08lx\n", GetLastError());
   return NULL;
 }
 

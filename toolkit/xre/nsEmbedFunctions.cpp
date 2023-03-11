@@ -409,6 +409,8 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
     if (IsCrashReporterEnabled(crashReporterArg)) {
       exceptionHandlerIsSet = CrashReporter::SetRemoteExceptionHandler(
           crashReporterArg, crashTimeAnnotationFile);
+      MOZ_ASSERT(exceptionHandlerIsSet,
+                 "Should have been able to set remote exception handler");
 
       if (!exceptionHandlerIsSet) {
         // Bug 684322 will add better visibility into this condition
