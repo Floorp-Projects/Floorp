@@ -19,15 +19,16 @@
 #include "js/Vector.h"
 #include "vm/JSScript.h"
 
-namespace {
-struct AutoLockPerfSpewer;
-}
-
 namespace js::jit {
 
 using ProfilerJitCodeVector = Vector<JS::JitCodeRecord, 0, SystemAllocPolicy>;
 
 void ResetPerfSpewer(bool enabled);
+
+struct AutoLockPerfSpewer {
+  AutoLockPerfSpewer();
+  ~AutoLockPerfSpewer();
+};
 
 class MBasicBlock;
 class MacroAssembler;
@@ -80,16 +81,25 @@ class PerfSpewer {
 
   virtual const char* CodeName(unsigned op) = 0;
 
+  virtual void saveJitCodeSourceInfo(JSScript* script, JitCode* code,
+                                     JS::JitCodeRecord* record,
+                                     AutoLockPerfSpewer& lock) = 0;
+
+  void saveDebugInfo(JSScript* script, JitCode* code,
+                     JS::JitCodeRecord* profilerRecord,
+                     AutoLockPerfSpewer& lock);
+
+  void saveProfile(JitCode* code, UniqueChars& desc, JSScript* script);
+
+  void saveJitCodeIRInfo(JitCode* code, JS::JitCodeRecord* profilerRecord,
+                         AutoLockPerfSpewer& lock);
+
  public:
   PerfSpewer() = default;
 
-  static void Init();
-
   void recordOffset(MacroAssembler& masm, const char*);
 
-  void saveJitCodeIRInfo(const char* desc, JitCode* code,
-                         JS::JitCodeRecord* profilerRecord,
-                         AutoLockPerfSpewer& lock);
+  static void Init();
 
   static void CollectJitCodeInfo(UniqueChars& function_name, JitCode* code,
                                  JS::JitCodeRecord*, AutoLockPerfSpewer& lock);
@@ -111,47 +121,55 @@ void CollectPerfSpewerWasmFunctionMap(uintptr_t base, uintptr_t size,
 
 class IonPerfSpewer : public PerfSpewer {
   JS::JitTier GetTier() override { return JS::JitTier::Ion; }
-  virtual const char* CodeName(unsigned op) override;
+  const char* CodeName(unsigned op) override;
+
+  void saveJitCodeSourceInfo(JSScript* script, JitCode* code,
+                             JS::JitCodeRecord* record,
+                             AutoLockPerfSpewer& lock) override;
 
  public:
   void recordInstruction(MacroAssembler& masm, LInstruction* ins);
   void saveProfile(JSContext* cx, JSScript* script, JitCode* code);
-
-  void saveJitCodeSourceInfo(JSScript* script, JitCode* code,
-                             JS::JitCodeRecord* record,
-                             AutoLockPerfSpewer& lock);
 };
 
 class BaselinePerfSpewer : public PerfSpewer {
   JS::JitTier GetTier() override { return JS::JitTier::Baseline; }
-  virtual const char* CodeName(unsigned op) override;
+  const char* CodeName(unsigned op) override;
+
+  void saveJitCodeSourceInfo(JSScript* script, JitCode* code,
+                             JS::JitCodeRecord* record,
+                             AutoLockPerfSpewer& lock) override;
 
  public:
   void recordInstruction(JSContext* cx, MacroAssembler& masm, jsbytecode* pc,
                          CompilerFrameInfo& frame);
   void saveProfile(JSContext* cx, JSScript* script, JitCode* code);
-
-  void saveJitCodeSourceInfo(JSScript* script, JitCode* code,
-                             JS::JitCodeRecord* record,
-                             AutoLockPerfSpewer& lock);
 };
 
 class InlineCachePerfSpewer : public PerfSpewer {
   JS::JitTier GetTier() override { return JS::JitTier::IC; }
-  virtual const char* CodeName(unsigned op) override;
-  virtual const char* TierName() = 0;
+  const char* CodeName(unsigned op) override;
+
+  void saveJitCodeSourceInfo(JSScript* script, JitCode* code,
+                             JS::JitCodeRecord* record,
+                             AutoLockPerfSpewer& lock) override {
+    // IC stubs have no source code to reference.
+    return;
+  }
 
  public:
   void recordInstruction(MacroAssembler& masm, CacheOp op);
-  void saveProfile(JitCode* code, const char* name);
 };
 
 class BaselineICPerfSpewer : public InlineCachePerfSpewer {
-  virtual const char* TierName() override { return "BaselineIC"; }
+ public:
+  void saveProfile(JitCode* code, const char* stubName);
 };
 
 class IonICPerfSpewer : public InlineCachePerfSpewer {
-  virtual const char* TierName() override { return "IonIC"; }
+ public:
+  void saveProfile(JSContext* cx, JSScript* script, JitCode* code,
+                   const char* stubName);
 };
 
 class PerfSpewerRangeRecorder {
