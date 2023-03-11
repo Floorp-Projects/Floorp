@@ -1015,11 +1015,37 @@
 
 
     <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
-    <string name="errorpage_httpsonly_title">Ο ζητούμενος ιστότοπος δεν υποστηρίζει HTTPS</string>
-    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
-    <string name="errorpage_httpsonly_message">Από προεπιλογή, το %1$s επιχειρεί να συνδεθεί μέσω HTTPS για αυξημένη ασφάλεια. Για να αλλάξετε αυτήν τη ρύθμιση ή για να μάθετε περισσότερα, μεταβείτε στις Ρυθμίσεις &gt; Απόρρητο &amp; ασφάλεια &gt; Ασφάλεια.</string>
+    <string name="errorpage_httpsonly_title" moz:RemovedIn="111" tools:ignore="UnusedResources">Ο ζητούμενος ιστότοπος δεν υποστηρίζει HTTPS</string>
 
-    <!-- Sessions List -->
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Αυτός ο ιστότοπος δεν υποστηρίζει HTTPS</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message" moz:RemovedIn="111" tools:ignore="UnusedResources">Από προεπιλογή, το %1$s επιχειρεί να συνδεθεί μέσω HTTPS για αυξημένη ασφάλεια. Για να αλλάξετε αυτήν τη ρύθμιση ή για να μάθετε περισσότερα, μεταβείτε στις Ρυθμίσεις &gt; Απόρρητο &amp; ασφάλεια &gt; Ασφάλεια.</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[Το %1$s προσπαθεί να χρησιμοποιεί σύνδεση HTTPS, όποτε αυτό είναι δυνατό, για περισσότερη ασφάλεια.
+     <a href="%2$s">Μάθετε περισσότερα</a> <br/><br/>
+     Αλλάξτε αυτήν τη ρύθμιση στις Ρυθμίσεις > Απόρρητο και ασφάλεια > Ασφάλεια.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Μη ασφαλής σύνδεση</string>
+
+    <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    Ενδέχεται να υπάρχει πρόβλημα με τη διαμόρφωση του διακομιστή ή κάποιος ίσως προσπαθεί να μιμηθεί τον διακομιστή. <br/><br/>
+    Εάν έχετε συνδεθεί επιτυχώς σε αυτόν τον διακομιστή στο παρελθόν, το σφάλμα είναι μάλλον προσωρινό.
+    ]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Κάποιος ίσως προσπαθεί να μιμηθεί τον ιστότοπο και θα ήταν επικίνδυνο να συνεχίσετε.</label>
+        <br><br>
+        <label>Το %1$s δεν εμπιστεύεται το <b>%2$s</b>, επειδή ο εκδότης του πιστοποιητικού του είναι άγνωστος, το πιστοποιητικό είναι αυτοϋπογεγραμμένο ή ο διακομιστής δεν στέλνει τα σωστά ενδιάμεσα πιστοποιητικά.</label>
+    ]]></string>
+
+     <!-- Sessions List -->
     <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
     <string name="close_tab">Κλείσιμο καρτέλας</string>
 

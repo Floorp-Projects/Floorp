@@ -31,6 +31,8 @@
     <string name="mozac_feature_sitepermissions_always_allow">အမြဲတမ်း</string>
     <!-- Text for a negative button in a permission request dialog. This will never allow and remember the decision of the user, this is the special case of the notification permission, that is only ask one time-->
     <string name="mozac_feature_sitepermissions_never_allow">ဘယ်တော့မှ</string>
+    <!-- Title of a dialog to require to save data in persistent storage. %1$s will be replaced with the URL of the current page -->
+    <string name="mozac_feature_sitepermissions_persistent_storage_title">အမြဲမပြတ်သိုလှောင်မှုတွင် %1$s ကို အချက်အလက်သိမ်းဆည်းခွင့်ပြုမည်လား</string>
     <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
     <string name="mozac_feature_sitepermissions_media_key_system_access_title">DRM ထိန်းချုပ်ထားသော အကြောင်းအရာများကို %1$s အား ဆောင်ရွက် ခွင့်ပြုမည်လား။</string>
-</resources>
+    </resources>

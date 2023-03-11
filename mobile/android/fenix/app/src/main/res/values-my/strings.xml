@@ -37,11 +37,6 @@
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">ရွေးချယ်ပြီး</string>
 
-    <!-- Content description for the recently saved bookmarks section on the home screen. -->
-    <string moz:removedIn="100" name="recently_saved_bookmarks_content_description" tools:ignore="UnusedResources">လတ်တလောသိမ်းထားသောစာမျက်နှာများ</string>
-    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
-    <string moz:removedIn="101" name="recently_saved_show_all" tools:ignore="UnusedResources">အားလုံးပြပါ</string>
-
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ကို Mozilla မှ ထုတ်လုပ်သည်။</string>
 
@@ -52,17 +47,9 @@
         %1$s သည် သင် ပိတ်လိုက်သောအခါ (သို့မဟုတ်) အက်ပ်မှ ထွက်သောအခါ သင်၏ သီးသန့် တပ်ဗ်များမှ ရှာဖွေမှု မှတ်တမ်းများအား ရှင်းပစ်သည်။ ၎င်းသည် ၀က်ဘ်ဆိုက်များ (သို့မဟုတ်) သင်၏ အင်တာနက် ၀န်ဆောင်မှုပေးသူ ထံတွင် သင့်အား အမည်မဖော်လိုသူ အဖြစ် မထားပေးနိုင်သော်လည်း ဤစက်ကိရိယာကို သုံးသော အခြားသူများထံမှ သင် အွန်လိုင်း ပေါ်တွင် လုပ်ဆောင်လိုက်သည်များကို သီးသန့်ထားရန် ပိုမို လွယ်ကူစေသည်။ </string>
     <string name="private_browsing_common_myths">ပုဂ္ဂလိက browsing ဆိုင်ရာ အမြင်မှားများ</string>
 
-    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message">သင့်မူလမြင်ကွင်းမှ သီးသန့်တဗ်များကိုဖွင့်ရန် ဖြတ်လမ်းလုပ်ပါ</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">ဖြတ်လမ်းထည့်ပါ</string>
-    <!-- Text for the negative button -->
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">နေပါစေ</string>
 
-    <!-- Open in App "contextual feature recommendation" (CFR) -->
-    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string moz:RemovedIn="99" name="open_in_app_cfr_info_message" tools:ignore="UnusedResources">အက်ပ် များတွင် လင့်ခ်များကို အလိုအလျောက်ဖွင့်ရန် Firefox ကို သတ်မှတ်နိုင်သည်။</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">ဆက်တင် များသို့ သွားပါ။</string>
     <!-- Text for the negative action button -->
@@ -83,6 +70,23 @@
     <string name="tab_tray_close_tabs_banner_positive_button_text">ရွေးချယ်စရာများ ကို ကြည့်ရန်</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">ပယ်ချ</string>
+
+
+    <!-- Text for the banner message to tell users about our inactive tabs feature. -->
+    <string name="tab_tray_inactive_onboarding_message">သင် နှစ်ပတ်ကြာ ဖွင့်မကြည့်ထားသော တက်ဗ်များအား ဒီနေရာတွင်ရွှေ့ထားသည်။</string>
+
+
+    <!-- Text for the action link to go to Settings for inactive tabs. -->
+    <string name="tab_tray_inactive_onboarding_button_text">ဆက်တင်တွင်ပိတ်မည်</string>
+
+
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">တစ်လအကြာတွင် အလိုအလျောက်ပိတ်လိုပါသလား</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">ပိတ်မည်</string>
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">အလိုအလျောက်ပိတ်ခြင်းအားဖွင့်မည်</string>
 
 
     <!-- Home screen icons - Long press shortcuts -->
@@ -187,17 +191,12 @@
     <string name="search_suggestions_onboarding_title">သီးသန့်အစည်းအဝေးများတွင်ရှာဖွေရေးအကြံပြုချက်များကိုခွင့်ပြုပါ။</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s သည် သင့်သတ်မှတ်ထားသည့်ရှာဖွေရေးအင်ဂျင်နှင့် လိပ်စာဘားတွင် သင်ရိုက်ထည့်သမျှအားလုံးကိုမျှဝေပါလိမ့်မည်။</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string moz:RemovedIn="100" name="search_suggestions_onboarding_learn_more_link" tools:ignore="UnusedResources">ပိုမိုလေ့လာရန်</string>
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">%s ကို ရှာပါ</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">လိပ်စာ ဘားမှ တိုက်ရိုက် ရှာပါ</string>
 
-    <!-- Search Widget -->
-    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
-    <string moz:RemovedIn="99" name="search_widget_content_description" tools:ignore="UnusedResources">Firefox တက်ဗ် အသစ်တစ်ခု ဖွင့်ပါ</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">ရှာပါ</string>
     <!-- Text preview for larger sized widgets -->
@@ -242,6 +241,7 @@
     <string name="preferences_screenshots_in_private_mode_disclaimer">အကယ်၍ ခွင့်ပြုလိုက်လျှင် အက်ပ်များစွာ ပွင့်လာမည်ဖြစ်ပြီး၊ သီးသန့် တပ်ဗ်များကိုပါ တွေ့မြင်ရမည် ဖြစ်သည်။</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">သီးသန့်ရှာဖွေမှုဖြတ်လမ်းပေါင်းထည့်ပါ။</string>
+
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">အသုံးပြုခွင့်</string>
     <!-- Preference to override the Firefox Account server -->
@@ -260,8 +260,6 @@
     <string name="preferences_gestures">လက်ဟန်အမူအရာများ</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">စိတ်ကြိုက်လုပ်ပါ</string>
-    <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">စာမှတ်များ၊မှတ်တမ်းများနှင့်အခြားအရာများကို Firefox အကောင့်ဖြင့် တပ်တူပြုပါ။</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Firefox အကောင့်</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -401,9 +399,6 @@
     <!-- Summary for studies preferences -->
     <string name="preference_experiments_summary_2">Mozilla ကို ထည့်သွင်းစေပြီး လေ့လာခွင့်ပြုပါ</string>
 
-    <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">ထပ်တူပြုခြင်းကိုဖွင့်ပါ</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">ပြန်လည်ချိတ်ဆက်ရန်ဝင်ရောက်ပါ</string>
     <!-- Preference for removing FxA account -->
@@ -510,8 +505,6 @@
     <string name="studies_remove">ဖယ်ရှားပါ</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">လုပ်ဆောင်နေသည်</string>
-    <!-- Description for studies, it indicates why Firefox use studies -->
-    <string moz:RemovedIn="99" name="studies_description" tools:ignore="UnusedResources">Firefox သည် လေ့လာမှုများကို အခါအားလျော်စွာ တပ်ဆင်ပြီး လုပ်ဆောင်နိုင်သည်။</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">ပိုမို လေ့လာရန်</string>
 
@@ -570,8 +563,6 @@
     <string name="open_tabs_menu">တက်ဗ်များ စာရင်းကို ဖွင့်ပါ</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">စုဆောင်းမှု သို့ တက်ဗ်များ သိမ်းရန်</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">တဗ်မန်နူး</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">စုဆောင်းမှုကိုဖျက်ပါ</string>
     <!-- Text for the menu button to rename a collection -->
@@ -743,7 +734,7 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">ခြွင်းချက်များ</string>
     <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">ဖွင့်ပါ</string>
+    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">ဖွင့်ပါ</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">ပိတ်ပါ</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
@@ -829,11 +820,9 @@
     <string name="share_link_all_apps_subheader">လုပ်ရပ်အားလုံး</string>
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">မကြာသေးမီကအသုံးပြုခဲ့သည်</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string name="sync_menu_sign_in">တစ်ပြေးညီ ဖြစ်စေရန် ဝင်ရောက်ပါ</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">တစ်ပြေးညီဖြစ်စေရန် ဝင်ရောက်ပါ</string>
-    <!-- An option from the share dialog to send link to all other sync devices -->
+     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">ကိရိယာများအားလုံးသို့ ပို့ပါ</string>
     <!-- An option from the share dialog to reconnect to sync -->
     <string name="sync_reconnect">ထပ်တူပြုခြင်းနှင့်ပြန်လည်ချိတ်ဆက်ပါ</string>
@@ -863,14 +852,6 @@
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">စျေးကွက်ရှာဖွေရေး</string>
 
-    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_title">%1$s သည် မြန်ဆန်ပြီး သီးသန့် ဖြစ်သည်။</string>
-
-    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_text">%1$s ကို သင့် ပုံသေ ဘရောက်စာ အဖြစ် သတ်မှတ်ပါ</string>
-
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">စုဆောင်းမှုကိုဖျက်လိုက်သည်</string>
@@ -882,8 +863,6 @@
     <string name="snackbar_tabs_closed">Tabs ပိတ်လိုက်တယ်</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">စာမှတ်များ သိမ်းပြီးပါပြီ</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string moz:RemovedIn="101" name="snackbar_added_to_top_sites" tools:ignore="UnusedResources">ထိပ်တန်းဆိုက်များထည့်ပြီး</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">သီးသန့်သုံးတဗ်ကိုပိတ်ခဲ့သည်</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -957,8 +936,6 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">ထွက်ရန်</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">၎င်းကသင့်ရှာဖွေအချက်အလက်များကိုဖျက်လိမ့်မည်။</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s သည် ရွေးချယ်ထားသောရှာဖွေအချက်အလက်ကို ဖျက်လိမ့်မည်။</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -970,49 +947,9 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">ကြည့်ရှုမှုအချက်အလက်များ ဖျက်နေသည်…</string>
 
-    <!-- Tips -->
-    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header" tools:ignore="UnusedResources">Firefox Preview သည် ယခုတွင် Firefox Nightly ဖြစ်သွားသည်</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description" tools:ignore="UnusedResources">
-        Firefox Nightly သည် ညစဉ် ပြုပြင်မွမ်းမံမှု လုပ်ပြီး အင်္ဂါရပ် အသစ်များကို စမ်းသပ်ထားသည်။
-        သို့သော် ၎င်းသည် တည်ငြိမ်မှု လျော့နည်းနိုင်သည်။ ပိုမို တည်ငြိမ်သော အတွေ့အကြုံ အတွက်ကျွန်ုပ်တို့၏ ဘီတာ ဘရောက်စာ ကို ဒေါင်းလုတ် လုပ်ပါ။</string>
-    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_2" tools:ignore="UnusedResources">အန်းဒရိုက် ဘီတာ အတွက် Firefox ရယူပါ</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_installed" tools:ignore="UnusedResources">Firefox Nightly ပြောင်းရွှေ့သွားသည်</string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_installed" tools:ignore="UnusedResources">
-        ဤ အက်ပ် သည် လုံခြုံရေး အပ်ဒိတ်များကို လက်ခံတော့မည် မဟုတ်ပါ။ ဤ အက်ပ် ကို မသုံးဘဲ Nightly အသစ် သို့ ပြောင်းပါ။
-        \ n \ n သင်၏ စာမှတ်များ၊ လော့ဂ်အင်များ နှင့် မှတ်တမ်း တို့ကို အခြား အက်ပ်တစ်ခု သို့လွှဲပြောင်းရန် Firefox အကောင့် တစ်ခု ပြုလုပ်ပါ။</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_installed" tools:ignore="UnusedResources">Nightly အသစ် သို့ ပြောင်းပါ</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_header_preview_not_installed" tools:ignore="UnusedResources">Firefox Nightly ပြောင်းရွှေ့သွားသည် </string>
-    <!-- text for firefox preview moving tip description -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_description_preview_not_installed" tools:ignore="UnusedResources">
-        ဤ အက်ပ် သည် လုံခြုံရေး အပ်ဒိတ်များကို လက်ခံတော့မည် မဟုတ်ပါ။ ဤ အက်ပ် ကို မသုံးဘဲ Nightly အသစ် သို့ ပြောင်းပါ။
-        \ n \ n သင်၏ စာမှတ်များ၊ လော့ဂ်အင်များ နှင့် မှတ်တမ်း တို့ကို အခြား အက်ပ်တစ်ခု သို့ လွှဲပြောင်းရန် Firefox အကောင့် တစ်ခု ပြုလုပ်ပါ။</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string moz:RemovedIn="100" name="tip_firefox_preview_moved_button_preview_not_installed" tools:ignore="UnusedResources">Nightly ကိုရယူပါ</string>
-
-    <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">%s မှကြိုဆိုပါတယ်</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string name="onboarding_account_sign_in_header_1">စက်ကိရိယာများအကြား Firefox ကို တစ်ပြေးညီဖြစ်အောင် ပြုလုပ်ပါ</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in_1">စတင်သုံးရန် စာရင်းသွင်းပါ</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">ထပ်တူပြုခြင်းဖွင့်ထားသည်</string>
 
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_3">လုံခြုံမှုအတွက် အမြဲ အွန် ထားပါ</string>
-    <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
-    <string moz:RemovedIn="99" name="onboarding_tracking_protection_description_3" tools:ignore="UnusedResources">Firefox သည် ကုမ္ပဏီများ သင်ကို ဝက်ဘ်ပေါ်တွင် လျှို့ဝှက်စွာ နောက်လိုက်နေခြင်းအား အလိုအလျောက် ရပ်တန့်စေသည်။ </string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">စံ (ပုံသေ)</string>
     <!-- text for standard blocking option button description -->
@@ -1023,15 +960,7 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">စာမျက်နှာများ ပိုမိုမြန်မြန် လည်ပတ်နိုင်အောင် ခြေရာခံများအား ပိတ်ဆို့ပါ၊ သို့သော် စာမျက်နှာရှိ လုပ်ဆောင်ချက် အချို့ ပျက်သွားနိုင်သည်။</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">သင်၏ တူးဘား နေရာချထားမှုကို ရွေးပါ</string>
-    <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description_1">တူးဘား ကို အလွယ်တကူ တွေ့မြင်နိုင်သော နေရာတွင် ထားပါ။ ၎င်းကို အောက်ခြေ တွင် ထားပါ၊ (သို့မဟုတ်) ထိပ်သို့ ရွှေ့ပါ။</string>
 
-    <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">သင့်အတွက်သီးသန့်လုံခြုံမှု</string>
-
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string name="onboarding_privacy_notice_description2">သင် အွန်လိုင်းတွင် မျှဝေသည်များ နှင့် သင် ကျွန်ုပ်တို့ နှင့် မျှဝေသည်များအပေါ် သင်အား ထိန်းချုပ် ခွင့် ပေးနိုင်ရန် ကျွန်ုပ်တို့သည် %s အား ပုံစံရေးဆွဲထားပါသည်။</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">ကျွန်ုပ်တို့သီးသန့်ထားရှိမှု သတိပေးချက်များကိုဖတ်ပါ။</string>
 
@@ -1332,6 +1261,7 @@
     <string name="preferences_credit_cards_add_credit_card">အကြွေးဝယ်ကတ်များ ကို ထည့်ပါ</string>
     <!-- Preference option for managing saved credit cards -->
     <string name="preferences_credit_cards_manage_saved_cards">သိမ်းထားသော ကတ်များကို စီမံပါ</string>
+
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">ကဒ် ကို ထည့်ပါ</string>
     <!-- Title of the "Edit card" screen -->
@@ -1399,7 +1329,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">အသုံးပြုရန် စာကြောင်းရှာဖွေပါ။</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string formatted="false" name="search_add_custom_engine_search_string_example">စုံစမ်းမှုကို “%s” ဖြင့်အစားထိုးပါ။ ဥပမာ။ \n https://www.google.com/search?q= %s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">စုံစမ်းမှုကို “%s” ဖြင့်အစားထိုးပါ။ ဥပမာ။ \n https://www.google.com/search?q= %s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">ရှာဖွေအင်ဂျင်အသေးစိတ်ကိုစိတ်ကြိုက်ပြင်ဆင်ပါ။</string>
 
@@ -1417,19 +1347,6 @@
     <string name="search_edit_custom_engine_success_message">%s သိမ်းဆည်းခဲ့သည်</string>
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">%s ဖျက်ပြီးပါပြီ</string>
-
-    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_title" tools:ignore="UnusedResources">%s အသစ်ကို ကြိုဆိုပါ။</string>
-    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_description" tools:ignore="UnusedResources">အွန်လိုင်းတွင်ပိုမိုကောင်းမွန်သောစွမ်းဆောင်ရည်၊လုပ်ဆောင်ချက်များနှင့်ဖန်တီးထားသောဘရောက်ဇာကသင့်ကိုစောင့်နေပါတယ် \n\n %s တွင် မွမ်းမံနေသည်ကိုကျေးဇူးပြုပြီးခေတ္တစောင့်ပေးပါ။</string>
-    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string moz:removedIn="100" name="migration_updating_app_button_text" tools:ignore="UnusedResources">%s မွမ်းမံနေသည် …</string>
-    <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string moz:removedIn="100" name="migration_update_app_button" tools:ignore="UnusedResources">%s ကိုစတင်ပါ</string>
-    <!-- Accessibility description text for a completed migration item -->
-    <string moz:removedIn="100" name="migration_icon_description" tools:ignore="UnusedResources">ပြောင်းရွှေ့ပြီးစီးခဲ့သည်</string>
-    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string moz:removedIn="100" name="migration_text_passwords" tools:ignore="UnusedResources">စကားဝှက်များ</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">ခွင့်ပြုရန် -</string>
@@ -1453,8 +1370,6 @@
     <string name="no_site_exceptions">site ချွင်းချက်မရှိပါ</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">ဒီစာမှတ်ကိုဖျက်ရန်သေချာပါသလား။</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string moz:RemovedIn="101" name="browser_menu_add_to_top_sites" tools:ignore="UnusedResources">ထိပ်တန်းဆိုက်များကို ပေါင်းထည့်ပါ</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">%1$s မှစစ်ဆေးပြီး။</string>
@@ -1505,18 +1420,11 @@
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">ဖွင့်ထားသည့် တပ်ဗ်များ မရှိပါ</string>
 
-    <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_title" tools:ignore="UnusedResources">ထိပ်တန်း ဆိုဒ် ကန့်သတ်ချက် သို့ ရောက်ပါပြီ</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string moz:RemovedIn="101" name="top_sites_max_limit_content_2" tools:ignore="UnusedResources">ထိပ်တန်း ဆိုက် အသစ် တစ်ခု ထည့်ရန်၊ တစ်ခုကို ဖယ်ရှားပါ။ ဆိုက်ကို နှိပ်ပြီး ဖိထားပါ၊ ပြီးနောက် ဖယ်ရှားပါ ကို ရွေးပါ။</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">အိုကေ၊ ရပြီ</string>
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">အမည်</string>
 
-    <!-- Hint for renaming title of a top site -->
-	<string moz:RemovedIn="101" name="top_site_name_hint" tools:ignore="UnusedResources">ထိပ်တန်း ဆိုဒ် နာမည်</string>
     <!-- Button caption to confirm the renaming of the top site. -->
 	<string name="top_sites_rename_dialog_ok">အိုကေ</string>
 	<!-- Dialog button text for canceling the rename top site prompt. -->

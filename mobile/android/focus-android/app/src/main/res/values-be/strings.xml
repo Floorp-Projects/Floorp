@@ -437,6 +437,13 @@
     <string name="security_popup_secure_connection">Бяспечнае злучэнне</string>
     <string name="security_popup_insecure_connection">Небяспечнае злучэнне</string>
 
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">Пацверджана: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">Бяспека сайта</string>
+    <string name="preference_autocomplete_duplicate_url_error">URL ўжо існуе</string>
+
     <!-- Label for the Find in page button -->
     <string name="find_in_page">Знайсці на старонцы</string>
 
@@ -579,11 +586,28 @@
     <!-- Text Button for show biometric prompt -->
     <string name="show_biometric_button_text">Разблакіраваць</string>
 
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">Адкрыць спасылку ў новым сеансе</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">Значок адбітка пальца</string>
+
+    <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
+     This is displayed during the authentication flow as the app launches. -->
+    <string name="biometric_auth_not_recognized_error">Адбітак пальца не распазнаны. Паспрабуйце яшчэ.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title2">Паказваць пошукавыя прапановы?</string>
+
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Не</string>
 
     <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_yes">Так</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">Адхіліць</string>
 
     <!-- Tips displayed on the home view -->
 
@@ -601,7 +625,53 @@
     <!-- Menu item to remove existing exceptions. -->
     <string name="preference_exceptions_menu_remove">Выдаліць</string>
 
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">Блакіраваць кукі</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">Вы хочаце заблакіраваць кукі?</string>
+
+    <!-- Label for button to close the tab-->
+    <string name="tab_crash_report_close_tab_button_label">Закрыць картку</string>
+
+    <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">Адправіць справаздачу аб збоі ў Mozilla</string>
+
     <!-- Tracking protection bottom sheet -->
+
+     <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">Заблакіравана трэкераў з %s</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">Змесціва</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">Рэклама</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">Сацыяльныя сеткі</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">Аналітыка</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">Узмоцненая ахова ад сачэння</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">Ахова адключана на гэтым сайце</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">Ахова ўключана на гэтым сайце</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">Бяспечнае злучэнне</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">Небяспечнае злучэнне</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">Вярнуцца</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Выдаліць</string>
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Перайменаваць</string>
+    <!-- Text for the dialog title for renaming a top site -->
+    <string name="rename_top_site">Перайменаваць</string>
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">Назва цэтліка</string>
 
      <!-- Promote SearchWidget Dialog -->
 

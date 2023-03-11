@@ -1385,4 +1385,61 @@
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">ካርዶችን ያመሳስሉ</string>
 
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">አስቀምጥ</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">ተወው</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">አድራሻ ሰርዝ</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message">እርግጠኛ ነዎት ይህን አድራሻ መሰረዝ ይፈልጋሉ?</string>
+    <!-- The text for the positive button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_ok_button">ሰርዝ</string>
+
+    <!-- The text for the negative button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_cancel_button">ተወው</string>
+    <!-- The text for the "Save address" menu item for saving an address -->
+    <string name="address_menu_save_address">አድራሻ አስቀምጥ</string>
+    <!-- The text for the "Delete address" menu item for deleting an address -->
+    <string name="address_menu_delete_address">አድራሻ ሰርዝ</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">የፍለጋ ፍርግም አክል</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">የፍለጋ ፍርግሞችን ያርትዑ</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">ጨምር</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">አስቀምጥ</string>
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">አርትዕ</string>
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">ሰርዝ</string>
+
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">ሌላ</string>
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">ስም</string>
+
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">%s ተፈጠረ</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message"></string>
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">%s ተሰርዟል</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">ለመፍቀድ:-</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. <b>ፍቃዶችን</b>ን መታ ያድርጉ]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. <b>%1$s</b> ን ወደ አብራ ቀይር]]></string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection_2">ግንኙነት ደህንነቱ የተጠበቀ ነው</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection_2">ግንኙነት ደህንነቱ የተጠበቀ አይደለም</string>
+    <!-- Label to clear site data -->
+    <string name="clear_site_data">ኩኪዎች እና የድረ-ገፅ ውሂብ ያጽዱ</string>
+
     </resources>
