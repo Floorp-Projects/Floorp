@@ -1255,7 +1255,20 @@
       "../node_modules/acorn/dist/acorn.mjs": 1103,
       "../packages/pretty-fast/node_modules/acorn/dist/acorn.mjs": 1104,
       "../node_modules/babel-loader/lib/index.js??ref--1!workers/pretty-print/pretty-fast.js": 1105,
-      "../node_modules/acorn/dist/acorn.es.js": 1106
+      "../node_modules/acorn/dist/acorn.es.js": 1106,
+      "../node_modules/@babel/generator/node_modules/source-map/lib/util.js": 1107,
+      "../node_modules/@babel/generator/node_modules/source-map/lib/source-map-generator.js": 1108,
+      "../node_modules/@babel/generator/node_modules/source-map/lib/base64-vlq.js": 1109,
+      "../node_modules/@babel/generator/node_modules/source-map/lib/array-set.js": 1110,
+      "../node_modules/source-map/lib/read-wasm.js": 1111,
+      "../node_modules/@babel/generator/node_modules/source-map/source-map.js": 1112,
+      "../node_modules/@babel/generator/node_modules/source-map/lib/base64.js": 1113,
+      "../node_modules/@babel/generator/node_modules/source-map/lib/mapping-list.js": 1114,
+      "../node_modules/@babel/generator/node_modules/source-map/lib/source-map-consumer.js": 1115,
+      "../node_modules/@babel/generator/node_modules/source-map/lib/binary-search.js": 1116,
+      "../node_modules/@babel/generator/node_modules/source-map/lib/quick-sort.js": 1117,
+      "../node_modules/@babel/generator/node_modules/source-map/lib/source-node.js": 1118,
+      "../node_modules/source-map/lib/wasm.js": 1119
     },
     "usedIds": {
       "0": 0,
@@ -2364,7 +2377,20 @@
       "1103": 1103,
       "1104": 1104,
       "1105": 1105,
-      "1106": 1106
+      "1106": 1106,
+      "1107": 1107,
+      "1108": 1108,
+      "1109": 1109,
+      "1110": 1110,
+      "1111": 1111,
+      "1112": 1112,
+      "1113": 1113,
+      "1114": 1114,
+      "1115": 1115,
+      "1116": 1116,
+      "1117": 1117,
+      "1118": 1118,
+      "1119": 1119
     }
   },
   "chunks": {
@@ -2507,7 +2533,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "0": 0
+          "1": 1
         }
       }
     }
@@ -2528,7 +2554,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "0": 0
+          "1": 1
         }
       }
     }
