@@ -7,7 +7,7 @@ on:
 
 jobs:
   linux:
-    if: (github.event_name == 'schedule' && github.repository == 'Floorp-Projects/Floorp') || (github.event_name != 'schedule')
+    if: (github.event_name == 'schedule' && github.repository_owner == 'Floorp-Projects') || (github.event_name != 'schedule')
 
     name: Linux
     runs-on: ubuntu-22.04
@@ -92,7 +92,7 @@ jobs:
       msedge_stable_ua: ${{ steps.scrape.outputs.msedge_stable_ua }}
 
   output:
-    if: (github.event_name == 'schedule' && github.repository == 'Floorp-Projects/Floorp') || (github.event_name != 'schedule')
+    if: (github.event_name == 'schedule' && github.repository_owner == 'Floorp-Projects') || (github.event_name != 'schedule')
     needs: [linux]
 
     name: Generate JSONP
