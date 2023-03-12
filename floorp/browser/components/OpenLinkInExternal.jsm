@@ -364,8 +364,12 @@ let documentObserver = {
                     });
                     tabContextMenu.addEventListener("popupshowing", function(e) {
                         let window_ = e.currentTarget.ownerGlobal;
-                        let scheme = window_.TabContextMenu.contextTab.linkedBrowser.currentURI.scheme;
-                        e.currentTarget.querySelector("#context_openLinkInExternal").hidden = !/https?/.test(scheme);
+                        let scheme = 
+                            (window_.TabContextMenu.contextTab.linkedBrowser &&
+                             window_.TabContextMenu.contextTab.linkedBrowser.currentURI &&
+                             window_.TabContextMenu.contextTab.linkedBrowser.currentURI.scheme) ||
+                            "";
+                        e.currentTarget.querySelector("#context_openLinkInExternal").hidden = !/^https?$/.test(scheme);
                     });
                     tabContextMenu.querySelector("#context_sendTabToDevice")
                         .insertAdjacentElement("afterend", openLinkInExternal);
@@ -381,12 +385,12 @@ let documentObserver = {
                     });
                     contextMenu.addEventListener("popupshowing", function(e) {
                         let window_ = e.currentTarget.ownerGlobal;
-                        let scheme = window_.gContextMenu.linkURL;
+                        let scheme = (window_.gContextMenu.linkURI && window_.gContextMenu.linkURI.scheme) || "";
                         e.currentTarget.querySelector("#context-openlinkinexternal").hidden =
                             !(
                                 window_.gContextMenu.onSaveableLink ||
                                 window_.gContextMenu.onPlainTextLink
-                            ) || !/https?/.test(scheme);
+                            ) || !/^https?$/.test(scheme);
                     });
                     contextMenu.querySelector("#context-sendlinktodevice")
                         .insertAdjacentElement("afterend", openLinkInExternal);
