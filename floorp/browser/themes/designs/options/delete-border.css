@@ -11,8 +11,7 @@
     border: solid 5px var(--toolbar-bgcolor);
     border-top: none;
   }
-  
-  :root[lwt-default-theme-in-dark-mode] #tabbrowser-tabpanels[flex] {
+   #tabbrowser-tabpanels[flex] {
     background: var(--toolbar-bgcolor) !important;
     background-color: var(--toolbar-bgcolor) !important;
   }
