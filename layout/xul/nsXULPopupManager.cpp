@@ -368,13 +368,14 @@ bool nsXULPopupManager::RollupInternal(RollupKind aKind,
     nsMenuPopupFrame* popupFrame = item->Frame();
     CSSIntRect anchorRect = [&] {
       if (popupFrame->IsAnchored()) {
-        // Check if the popup has a screen anchor rectangle. If not, get the
-        // rectangle from the anchor element.
-        auto r = popupFrame->GetScreenAnchorRect();
-        if (r.x != -1 && r.y != -1) {
-          return r;
+        // Check if the popup has an anchor rectangle. If not, get the rectangle
+        // from the anchor element.
+        auto r = popupFrame->GetUntransformedAnchorRect();
+        if (!r.IsEmpty()) {
+          return CSSIntRect::FromAppUnitsRounded(r);
         }
       }
+
       auto* anchor = Element::FromNodeOrNull(popupFrame->GetAnchor());
       if (!anchor) {
         return CSSIntRect();
