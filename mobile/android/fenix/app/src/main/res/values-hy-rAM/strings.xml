@@ -13,8 +13,10 @@
     <string name="content_description_private_browsing_button">Միացնել գաղտնի դիտարկումը</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Անջատել գաղտնի դիտարկումը</string>
-    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">Մուտքագրեք որոնում կամ կայք</string>
+    <!-- Placeholder text shown in the search bar before a user enters text for a general engine -->
+    <string name="search_hint_general_engine">Որոնել համացանցում</string>
     <!-- Placeholder text shown in search bar when using history search -->
     <string name="history_search_hint">Որոնման պատմություն</string>
     <!-- Placeholder text shown in search bar when using bookmarks search -->
@@ -382,35 +384,42 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s-ը փորձում է ինքնաբար մերժել թխուկների հարցումները աջակցվող կայքերում:</string>
     <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title">Թխուկների ցուցապաստառները վերացել են:</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Թխուկների ցուցապաստառները վերացել են:</string>
+    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_title">Թույլատրե՞լ %1$s-ին մերժել թխուկների պաստառները:</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Հնարավորության դեպքում ինքնաբերաբար մերժել թխուկների հարցումները: Հակառակ դեպքում, ընդունել բոլոր թխուկները՝ թխուկների պաստառները մերժելու համար:</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
     <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Հնարավորության դեպքում ինքնաբերաբար մերժել թխուկների հարցումները:</string>
     <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_2">Թույլատրե՞լ %1$s-ին ինքնաբար մերժել թխուկների հարցումները, երբ դա հնարավոր է:</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">Թույլատրե՞լ %1$s-ին ինքնաբար մերժել թխուկների հարցումները, երբ դա հնարավոր է:</string>
+    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_body">%1$s-ը կարող է ինքնաբար մերժել թխուկների պաստառների հարցումները:</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Ոչ հիմա</string>
     <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button">Անտեսել պաստառները</string>
+    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Անտեսել պաստառները</string>
     <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
     <string name="reduce_cookie_banner_dialog_snackbar_text">Դուք կտեսնեք ավելի քիչ թխուկների հարցումներ</string>
     <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title">Տեսնել ավելի քիչ թխուկների ելնող պատուհաններ</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Տեսնել ավելի քիչ թխուկների ելնող պատուհաններ</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_1_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Ինքնաբար պատասխանել թխուկների ելնող պատուհաններին՝ առանց շեղումների զննումների համար: %1$s-ը կմերժի բոլոր հարցումները, եթե հնարավոր է, կամ կընդունի բոլորը, եթե ոչ:</string>
     <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1">Ինքնաբար պատասխանել թխուկների ելնող պատուհաններին՝ առանց շեղումների զննումների համար: %1$s-ը կմերժի բոլոր հարցումները, եթե հնարավոր է:</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Ինքնաբար պատասխանել թխուկների ելնող պատուհաններին՝ առանց շեղումների զննումների համար: %1$s-ը կմերժի բոլոր հարցումները, եթե հնարավոր է:</string>
     <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button">Բաց թողնել ելնող պատուհանները</string>
+    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Բաց թողնել ելնող պատուհանները</string>
     <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title">Թխուկների դրոշակի կրճատում</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Թխուկների դրոշակի կրճատում</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_variant_2_experiment_dialog_body" moz:RemovedIn="110" tools:ignore="UnusedResources">Թույլատրե՞լ %1$s-ին մերժել կայքի թխուկների թույլտվության հարցումը, եթե հնարավոր է, կամ ընդունել թխուկների մուտքը, երբ դա հնարավոր չէ:</string>
     <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1">Թույլատրե՞լ %1$s-ին մերժել կայքի թխուկների թույլտվության հարցումը, եթե հնարավոր է:</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Թույլատրե՞լ %1$s-ին մերժել կայքի թխուկների թույլտվության հարցումը, եթե հնարավոր է:</string>
     <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Թույլատրել</string>
+    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Թույլատրել</string>
+
+    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
+    <string name="reduce_cookie_banner_dialog_change_setting_button">Թույլատրել</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Ինքնաշխատ կերպով փորձում է միանալ կայքերին՝ օգտագործելով HTTPS գաղտնագրման արձանագրությունը՝ անվտանգության բարձրացման համար:</string>
@@ -1218,6 +1227,16 @@
     %1$s is a placeholder that will be replaced by the app name. -->
     <string name="notification_re_engagement_text">Զննեք առանց պահված թխուկների կամ պատմության %1$s-ում</string>
 
+    <!-- Title A shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_A_title">Դիտարկեք առանց հետք թողնելու</string>
+    <!-- Text A shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_A_text">Մասնավոր զննարկումը %1$s-ում չի պահպանում ձեր տվյալները:</string>
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title">Սկսեք ձեր առաջին որոնումը</string>
+    <!-- Text B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_text">Գտեք մոտակայքում ինչ-որ բան: Կամ բացահայտել ինչ-որ զվարճալի բան:</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Հավաքածուն ջնջվեց</string>
@@ -1433,14 +1452,20 @@
     <string name="preference_enhanced_tracking_protection">Ուժեղացված հետագծման պաշտպանություն</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Դիտարկեք առանց Ձեզ հետևելու</string>
+    <!-- Preference summary for enhanced tracking protection settings on/off switch -->
+    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">Այժմ գործում է Total Cookie Protection-ը, որը մեր ամենահզոր պատնեշն է միջկայքի հետագծերի դեմ:</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation">Ձեր տվյալները պահեք ձեզ մոտ: %s-ը պաշտպանում է ամենատարածված հետագծիչներից, որոնք հետևում են այն ամենին, ինչ որ անում եք առցանց:</string>
+    <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">%s-ը պաշտպանում է ամենատարածված հետագծիչներից, որոնք հետևում են այն ամենին, ինչ որ անում եք առցանց:</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Իմանալ ավելին</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Ստանդարտ (սկզբնադիր)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_4">Հավասարակշռված է գաղտնիության և արտադրողականության միջև: Էջերը նորմալ են բեռնվում:</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">Էջերը նորմալ կբեռնվեն, բայց արգելափակվելու են ավելի քիչ հետագծիչներ:</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Ինչն է արգելափակված հետագծման ստանդարտ պաշտպանությամբ</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
@@ -1448,6 +1473,8 @@
 
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_3">Արգելափակում է ավելի շատ հետագծիչներ, որ էջերը արագ բեռնվեն, բայց էջի որոշ գործույթներ կարող են ընդհատվեն:</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">Ավելի ուժեղ հետագծման պաշտպանություն և ավելի արագ արտադրողականություն, բայց որոշ կայքեր, հնարավոր է, նորմալ չաշխատեն:</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Ինչն է արգելափակված խիստ հետագծման պաշտպանությամբ</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->

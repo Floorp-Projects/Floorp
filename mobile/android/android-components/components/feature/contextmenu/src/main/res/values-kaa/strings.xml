@@ -18,6 +18,8 @@
     <string name="mozac_feature_contextmenu_copy_image_location">Súwrettıń siltemesin kóshirip alıw</string>
     <!-- Text for context menu item to save / download the image. -->
     <string name="mozac_feature_contextmenu_save_image">Súwretti saqlaw</string>
+    <!-- Text for context menu item to copy the image to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_image">Súwretti kóshirip alıw</string>
     <!-- Text for context menu item to save / download the file. -->
     <string name="mozac_feature_contextmenu_save_file_to_device">Fayldı qurılmaǵa saqlaw</string>
     <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->

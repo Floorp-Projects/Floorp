@@ -709,17 +709,71 @@
     <!-- Preference for altering the microphone access for all websites -->
     <string name="preference_phone_feature_microphone">Alb’al yol</string>
 
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Atinb’al at kat axh cheel</string>
+
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Aq’b’al nachb’al</string>
+
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">Aq’on uva’ ni til u DRM</string>
+
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">La jaj ooke’</string>
+
     <!-- Label that indicates that a permission must be blocked -->
     <string name="preference_option_phone_feature_blocked">Majel ve´t ivatz</string>
 
     <!-- Label that indicates that a permission must be allowed -->
     <string name="preference_option_phone_feature_allowed">K´ulel ve´te´</string>
 
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Majel ivatz ta’n u Android</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">La uch aaq’at tuul avi’ as eelpe’ unpasteurized</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">A’ kuxh u tuul vi’e’ la maje’</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">A’e’ b’a’n la b’anb’e</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">La maj ivatz tuul avi’ as eelpe’ unpajte</string>
+
+    <!-- Preference for studies -->
+    <string name="preference_studies">Chusb’al</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">U Firefox la uch taq’at kan as ib’anax chusb’al tul uva’ la uchi.</string>
+
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Ootzi ka´te</string>
 
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">La uch ijupata’ aq’al uva’ la jalpu unq’a kame’ stuul</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Sojsa el</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Ile’ b’a’n ve’te’</string>
+
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">Kat tzojpiya</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Eesamal ve\'t el ta\'n USB/Wi-Fi</string>
+
+    <!-- Text Button for show biometric prompt -->
+    <string name="show_biometric_button_text">Jaj ivatz</string>
+
+    <!-- Title text for biometric prompt pop-up -->
+    <string name="biometric_prompt_title">Ala uva’ a’ u vi’ aq’ab’e’ la b’anb’e</string>
+
+    <!-- Subtitle text for biometric prompt pop-up -->
+    <string name="biometric_prompt_subtitle">La uch ab’anb’et u vi’ aq’ab’e’ aq’al uva’ la yakeb’ axh ti’ ab’anb’et u vaa’.</string>
 
     <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
     <string name="biometric_auth_image_description">Texhlal u vi\' q\'ab\'e\'</string>
