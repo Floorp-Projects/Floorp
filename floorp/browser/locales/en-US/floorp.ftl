@@ -276,6 +276,9 @@ bsb-history-sidebar =
 bsb-download-sidebar =
   .label = { sidebar2-download-sidebar }
 
+bsb-notes-sidebar =
+  .label = { sidebar2-notes-sidebar }
+
 bsb-TST-sidebar =
   .label = { sidebar2-TST-sidebar }
 
@@ -498,6 +501,11 @@ sidebar2-download-sidebar = Download
 
 show-download-sidebar =
   .tooltiptext = Show { sidebar2-download-sidebar } Sidebar
+
+sidebar2-notes-sidebar = Notes
+
+show-notes-sidebar =
+  .tooltiptext = Show { sidebar2-notes-sidebar } Sidebar
 
 sidebar2-TST-sidebar = Tree Style Tab
 
