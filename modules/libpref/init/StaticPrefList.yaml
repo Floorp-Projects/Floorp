@@ -5767,6 +5767,11 @@
 #endif
   mirror: always
 
+- name: gfx.color_management.display_profile
+  type: DataMutexString
+  value: ""
+  mirror: always # But be warned: We cache the result.
+
 - name: gfx.color_management.force_srgb
   type: RelaxedAtomicBool
   value: false
@@ -5774,7 +5779,7 @@
 
 - name: gfx.color_management.native_srgb
   type: RelaxedAtomicBool
-#if defined(XP_MACOSX)
+#if defined(XP_MACOSX) || defined(XP_WIN)
   value: true
 #else
   value: false
@@ -5797,6 +5802,16 @@
 - name: gfx.color_management.rendering_intent
   type: RelaxedAtomicInt32
   value: 0
+  mirror: always
+
+- name: gfx.color_management.rec709_gamma_as_srgb
+  type: RelaxedAtomicBool
+  value: true # Tragic backwards compat.
+  mirror: always
+
+- name: gfx.color_management.rec2020_gamma_as_rec709
+  type: RelaxedAtomicBool
+  value: true # Match naive behavior, but hopefully we can stop soon!
   mirror: always
 
 - name: gfx.compositor.clearstate
