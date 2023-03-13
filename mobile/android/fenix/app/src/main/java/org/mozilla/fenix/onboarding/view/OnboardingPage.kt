@@ -43,22 +43,18 @@ private const val IMAGE_HEIGHT_RATIO = 0.4f
  *
  * @param pageState [OnboardingPageState] The page content that's displayed.
  * @param onDismiss Invoked when the user clicks the close button.
- * @param onPrimaryButtonClick Invoked when the user clicks the primary button.
- * @param onSecondaryButtonClick Invoked when the user clicks the secondary button.
  * @param modifier The modifier to be applied to the Composable.
  */
 @Composable
 fun OnboardingPage(
     pageState: OnboardingPageState,
     onDismiss: () -> Unit,
-    onPrimaryButtonClick: () -> Unit,
-    onSecondaryButtonClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     BoxWithConstraints(
         modifier = Modifier
             .background(FirefoxTheme.colors.layer1)
-            .padding(bottom = if (pageState.secondaryButtonText == null) 32.dp else 24.dp)
+            .padding(bottom = if (pageState.secondaryButton == null) 32.dp else 24.dp)
             .then(modifier),
     ) {
         val boxWithConstraintsScope = this
@@ -115,15 +111,15 @@ fun OnboardingPage(
                 modifier = Modifier.padding(horizontal = 16.dp),
             ) {
                 PrimaryButton(
-                    text = pageState.primaryButtonText,
-                    onClick = onPrimaryButtonClick,
+                    text = pageState.primaryButton.text,
+                    onClick = pageState.primaryButton.onClick,
                 )
 
-                if (pageState.secondaryButtonText != null) {
+                if (pageState.secondaryButton != null) {
                     Spacer(modifier = Modifier.height(8.dp))
                     SecondaryButton(
-                        text = pageState.secondaryButtonText,
-                        onClick = onSecondaryButtonClick,
+                        text = pageState.secondaryButton.text,
+                        onClick = pageState.secondaryButton.onClick,
                     )
                 }
             }
@@ -150,16 +146,18 @@ private fun OnboardingPagePreview() {
                     id = R.string.onboarding_home_enable_notifications_description,
                     formatArgs = arrayOf(stringResource(R.string.app_name)),
                 ),
-                primaryButtonText = stringResource(
-                    id = R.string.onboarding_home_enable_notifications_positive_button,
+                primaryButton = Action(
+                    text = stringResource(
+                        id = R.string.onboarding_home_enable_notifications_positive_button,
+                    ),
+                    onClick = {},
                 ),
-                secondaryButtonText = stringResource(
-                    id = R.string.onboarding_home_enable_notifications_negative_button,
+                secondaryButton = Action(
+                    text = stringResource(id = R.string.onboarding_home_enable_notifications_negative_button),
+                    onClick = {},
                 ),
                 onRecordImpressionEvent = {},
             ),
-            onPrimaryButtonClick = {},
-            onSecondaryButtonClick = {},
             onDismiss = {},
         )
     }

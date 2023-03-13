@@ -91,7 +91,17 @@ private fun UpgradeOnboardingContent(
                     image = R.drawable.ic_onboarding_welcome,
                     title = stringResource(id = R.string.onboarding_home_welcome_title_2),
                     description = stringResource(id = R.string.onboarding_home_welcome_description),
-                    primaryButtonText = stringResource(id = R.string.onboarding_home_get_started_button),
+                    primaryButton = Action(
+                        text = stringResource(id = R.string.onboarding_home_get_started_button),
+                        onClick = {
+                            OnboardingMetrics.welcomeGetStartedClicked.record(NoExtras())
+                            if (isSyncSignIn) {
+                                onDismiss()
+                            } else {
+                                onboardingState = UpgradeOnboardingState.SyncSignIn
+                            }
+                        },
+                    ),
                     onRecordImpressionEvent = {
                         OnboardingMetrics.welcomeCardImpression.record(NoExtras())
                     },
@@ -100,8 +110,20 @@ private fun UpgradeOnboardingContent(
                     image = R.drawable.ic_onboarding_sync,
                     title = stringResource(id = R.string.onboarding_home_sync_title_3),
                     description = stringResource(id = R.string.onboarding_home_sync_description),
-                    primaryButtonText = stringResource(id = R.string.onboarding_home_sign_in_button),
-                    secondaryButtonText = stringResource(id = R.string.onboarding_home_skip_button),
+                    primaryButton = Action(
+                        text = stringResource(id = R.string.onboarding_home_sign_in_button),
+                        onClick = {
+                            OnboardingMetrics.syncSignInClicked.record(NoExtras())
+                            onSignInButtonClick()
+                        },
+                    ),
+                    secondaryButton = Action(
+                        text = stringResource(id = R.string.onboarding_home_skip_button),
+                        onClick = {
+                            OnboardingMetrics.syncSkipClicked.record(NoExtras())
+                            onDismiss()
+                        },
+                    ),
                     onRecordImpressionEvent = {
                         OnboardingMetrics.syncCardImpression.record(NoExtras())
                     },
@@ -113,33 +135,6 @@ private fun UpgradeOnboardingContent(
                     UpgradeOnboardingState.SyncSignIn -> OnboardingMetrics.syncCloseClicked.record(NoExtras())
                 }
                 onDismiss()
-            },
-            onPrimaryButtonClick = {
-                when (onboardingState) {
-                    UpgradeOnboardingState.Welcome -> {
-                        OnboardingMetrics.welcomeGetStartedClicked.record(NoExtras())
-                        if (isSyncSignIn) {
-                            onDismiss()
-                        } else {
-                            onboardingState = UpgradeOnboardingState.SyncSignIn
-                        }
-                    }
-                    UpgradeOnboardingState.SyncSignIn -> {
-                        OnboardingMetrics.syncSignInClicked.record(NoExtras())
-                        onSignInButtonClick()
-                    }
-                }
-            },
-            onSecondaryButtonClick = {
-                when (onboardingState) {
-                    UpgradeOnboardingState.Welcome -> {
-                        // Welcome does not have a secondary button.
-                    }
-                    UpgradeOnboardingState.SyncSignIn -> {
-                        OnboardingMetrics.syncSkipClicked.record(NoExtras())
-                        onDismiss()
-                    }
-                }
             },
             modifier = Modifier.weight(1f),
         )

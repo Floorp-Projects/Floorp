@@ -37,21 +37,25 @@ fun NotificationPermissionDialogScreen(
                 id = R.string.onboarding_home_enable_notifications_description,
                 formatArgs = arrayOf(stringResource(R.string.app_name)),
             ),
-            primaryButtonText = stringResource(id = R.string.onboarding_home_enable_notifications_positive_button),
-            secondaryButtonText = stringResource(id = R.string.onboarding_home_enable_notifications_negative_button),
+            primaryButton = Action(
+                text = stringResource(id = R.string.onboarding_home_enable_notifications_positive_button),
+                onClick = {
+                    grantNotificationPermission()
+                    Onboarding.notifPppPositiveBtnClick.record(NoExtras())
+                },
+            ),
+            secondaryButton = Action(
+                text = stringResource(id = R.string.onboarding_home_enable_notifications_negative_button),
+                onClick = {
+                    onDismiss()
+                    Onboarding.notifPppNegativeBtnClick.record(NoExtras())
+                },
+            ),
             onRecordImpressionEvent = { Onboarding.notifPppImpression.record(NoExtras()) },
         ),
         onDismiss = {
             onDismiss()
             Onboarding.notifPppCloseClick.record(NoExtras())
-        },
-        onPrimaryButtonClick = {
-            grantNotificationPermission()
-            Onboarding.notifPppPositiveBtnClick.record(NoExtras())
-        },
-        onSecondaryButtonClick = {
-            onDismiss()
-            Onboarding.notifPppNegativeBtnClick.record(NoExtras())
         },
         modifier = Modifier
             .statusBarsPadding()
