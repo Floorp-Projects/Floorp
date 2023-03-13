@@ -287,7 +287,7 @@ class TRRServerCode {
     await global.server.listen(port);
 
     global.dnsPacket = require(`${__dirname}/../dns-packet`);
-    global.ip = require(`${__dirname}/../node_ip`);
+    global.ip = require(`${__dirname}/../node-ip`);
 
     let serverPort = global.server.address().port;
 

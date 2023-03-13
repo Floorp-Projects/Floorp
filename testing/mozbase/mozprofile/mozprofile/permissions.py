@@ -234,18 +234,7 @@ class Permissions(object):
         prefs = []
 
         if proxy:
-            dohServerPort = proxy.get("dohServerPort")
-            if dohServerPort is not None:
-                # make sure we don't use proxy
-                user_prefs = [("network.proxy.type", 0)]
-                # Use TRR_ONLY mode
-                user_prefs.append(("network.trr.mode", 3))
-                trrUri = "https://foo.example.com:{}/dns-query".format(dohServerPort)
-                user_prefs.append(("network.trr.uri", trrUri))
-                user_prefs.append(("network.trr.bootstrapAddr", "127.0.0.1"))
-                user_prefs.append(("network.dns.force_use_https_rr", True))
-            else:
-                user_prefs = self.pac_prefs(proxy)
+            user_prefs = self.pac_prefs(proxy)
         else:
             user_prefs = []
 

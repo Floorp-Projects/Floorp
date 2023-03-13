@@ -57,7 +57,6 @@ treeherder:
         'M-headless-nofis': 'Headless Mochitests without fission enabled.'
         'M-headless-spi-nw': 'Headless Mochitests with fission and socketprocess networking.'
         'M-headless-spi-nw-nofis': 'Headless Mochitests with fission and socketprocess networking without fission enabled.'
-        'M-http3': 'Mochitests with Http/3 server'
         'M-aab': 'Mochitests with AAB test_runner.'
         'M-aab-nofis': 'Mochitests with AAB test_runner without fission enabled.'
         'M-1proc': 'Mochitests without e10s or fission'

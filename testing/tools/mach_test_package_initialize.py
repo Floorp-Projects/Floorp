@@ -29,7 +29,6 @@ SEARCH_PATHS = [
     "mozbase/mozprofile",
     "mozbase/mozrunner",
     "mozbase/mozscreenshot",
-    "mozbase/mozserve",
     "mozbase/mozsystemmonitor",
     "mozbase/moztest",
     "mozbase/mozversion",

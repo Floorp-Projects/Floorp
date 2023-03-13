@@ -31,7 +31,7 @@ def test_nw_prefs(perms):
     assert len(user_prefs) == 0
     assert len(prefs) == 0
 
-    prefs, user_prefs = perms.network_prefs({"http": 8888})
+    prefs, user_prefs = perms.network_prefs(True)
     assert len(user_prefs) == 2
     assert user_prefs[0] == ("network.proxy.type", 2)
     assert user_prefs[1][0] == "network.proxy.autoconfig_url"
@@ -49,15 +49,6 @@ def test_nw_prefs(perms):
         "'wss': 'PROXY mochi.test:4443'",
     )
     assert all(c in user_prefs[1][1] for c in proxy_check)
-
-    prefs, user_prefs = perms.network_prefs({"dohServerPort": 443})
-    print(user_prefs)
-    assert len(user_prefs) == 5
-    assert user_prefs[0] == ("network.proxy.type", 0)
-    assert user_prefs[1] == ("network.trr.mode", 3)
-    assert user_prefs[2] == ("network.trr.uri", "https://foo.example.com:443/dns-query")
-    assert user_prefs[3] == ("network.trr.bootstrapAddr", "127.0.0.1")
-    assert user_prefs[4] == ("network.dns.force_use_https_rr", True)
 
 
 if __name__ == "__main__":

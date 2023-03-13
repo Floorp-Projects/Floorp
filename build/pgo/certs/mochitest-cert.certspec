@@ -1,4 +1,0 @@
-issuer: Mochitest Test CA
-subject: Mochitest Test Cert
-validity:20220101-20320101
-extension:subjectAlternativeName:mochi.test,example.com,example.org

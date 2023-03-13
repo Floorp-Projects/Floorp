@@ -1092,10 +1092,6 @@ criteria = "safe-to-deploy"
 version = "1.1.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.signal-hook-registry]]
-version = "1.4.1"
-criteria = "safe-to-run"
-
 [[exemptions.siphasher]]
 version = "0.3.10"
 criteria = "safe-to-deploy"
