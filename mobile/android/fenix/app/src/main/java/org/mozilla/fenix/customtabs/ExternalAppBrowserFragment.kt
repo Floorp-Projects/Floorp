@@ -23,6 +23,7 @@ import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.customtabs.CustomTabWindowFeature
 import mozilla.components.feature.pwa.feature.ManifestUpdateFeature
 import mozilla.components.feature.pwa.feature.WebAppActivityFeature
+import mozilla.components.feature.pwa.feature.WebAppContentFeature
 import mozilla.components.feature.pwa.feature.WebAppHideToolbarFeature
 import mozilla.components.feature.pwa.feature.WebAppSiteControlsFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
@@ -124,6 +125,11 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), UserInteractionHandler
                 WebAppActivityFeature(
                     activity,
                     components.core.icons,
+                    manifest,
+                ),
+                WebAppContentFeature(
+                    store = requireComponents.core.store,
+                    tabId = customTabSessionId,
                     manifest,
                 ),
                 ManifestUpdateFeature(
