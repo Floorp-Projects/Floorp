@@ -107,6 +107,39 @@ NS_IMETHODIMP StartModuleLoadRunnable::RunOnWorkletThread() {
   return request->StartModuleLoad();
 }
 
+StartFetchRunnable::StartFetchRunnable(
+    const nsMainThreadPtrHandle<WorkletFetchHandler>& aHandlerRef, nsIURI* aURI,
+    nsIURI* aReferrer)
+    : Runnable("Worklet::StartFetchRunnable"),
+      mHandlerRef(aHandlerRef),
+      mURI(aURI),
+      mReferrer(aReferrer) {
+  MOZ_ASSERT(!NS_IsMainThread());
+}
+
+NS_IMETHODIMP
+StartFetchRunnable::Run() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIGlobalObject> global =
+      do_QueryInterface(mHandlerRef->mWorklet->GetParentObject());
+  MOZ_ASSERT(global);
+
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.Init(global))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  JSContext* cx = jsapi.cx();
+  nsresult rv = mHandlerRef->StartFetch(cx, mURI, mReferrer);
+  if (NS_FAILED(rv)) {
+    mHandlerRef->HandleFetchFailed(mURI);
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
 class ExecutionRunnable final : public Runnable {
  public:
   ExecutionRunnable(WorkletFetchHandler* aHandler, WorkletImpl* aWorkletImpl,
@@ -302,37 +335,8 @@ already_AddRefed<Promise> WorkletFetchHandler::AddModule(
     }
   }
 
-  RequestOrUSVString requestInput;
-  requestInput.SetAsUSVString().ShareOrDependUpon(aModuleURL);
-
-  RootedDictionary<RequestInit> requestInit(aCx);
-  requestInit.mCredentials.Construct(aOptions.mCredentials);
-
-  SafeRefPtr<Request> request =
-      Request::Constructor(global, aCx, requestInput, requestInit, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  request->OverrideContentPolicyType(aWorklet->Impl()->ContentPolicyType());
-
-  RequestOrUSVString finalRequestInput;
-  finalRequestInput.SetAsRequest() = request.unsafeGetRawPtr();
-
-  RefPtr<Promise> fetchPromise = FetchRequest(
-      global, finalRequestInput, requestInit, CallerType::System, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    // OK to just return null, since caller will ignore return value
-    // anyway if aRv is a failure.
-    return nullptr;
-  }
-
-  RefPtr<WorkletScriptHandler> scriptHandler =
-      new WorkletScriptHandler(aWorklet);
-  fetchPromise->AppendNativeHandler(scriptHandler);
-
   RefPtr<WorkletFetchHandler> handler =
-      new WorkletFetchHandler(aWorklet, promise);
+      new WorkletFetchHandler(aWorklet, promise, aOptions.mCredentials);
 
   nsMainThreadPtrHandle<WorkletFetchHandler> handlerRef{
       new nsMainThreadPtrHolder<WorkletFetchHandler>("FetchHandler", handler)};
@@ -356,8 +360,9 @@ already_AddRefed<Promise> WorkletFetchHandler::AddModule(
   return promise.forget();
 }
 
-WorkletFetchHandler::WorkletFetchHandler(Worklet* aWorklet, Promise* aPromise)
-    : mWorklet(aWorklet), mStatus(ePending) {
+WorkletFetchHandler::WorkletFetchHandler(Worklet* aWorklet, Promise* aPromise,
+                                         RequestCredentials aCredentials)
+    : mWorklet(aWorklet), mStatus(ePending), mCredentials(aCredentials) {
   MOZ_ASSERT(aWorklet);
   MOZ_ASSERT(aPromise);
   MOZ_ASSERT(NS_IsMainThread());
@@ -424,6 +429,53 @@ void WorkletFetchHandler::ResolvePromises() {
   mStatus = eResolved;
   mWorklet = nullptr;
 }
+
+nsresult WorkletFetchHandler::StartFetch(JSContext* aCx, nsIURI* aURI,
+                                         nsIURI* aReferrer) {
+  nsAutoCString spec;
+  nsresult res = aURI->GetSpec(spec);
+  if (NS_WARN_IF(NS_FAILED(res))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  RequestOrUSVString requestInput;
+
+  nsAutoString url;
+  CopyUTF8toUTF16(spec, url);
+  requestInput.SetAsUSVString().ShareOrDependUpon(url);
+
+  RootedDictionary<RequestInit> requestInit(aCx);
+  requestInit.mCredentials.Construct(mCredentials);
+
+  nsCOMPtr<nsIGlobalObject> global =
+      do_QueryInterface(mWorklet->GetParentObject());
+  MOZ_ASSERT(global);
+
+  IgnoredErrorResult rv;
+  SafeRefPtr<Request> request =
+      Request::Constructor(global, aCx, requestInput, requestInit, rv);
+  if (rv.Failed()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  request->OverrideContentPolicyType(mWorklet->Impl()->ContentPolicyType());
+
+  RequestOrUSVString finalRequestInput;
+  finalRequestInput.SetAsRequest() = request.unsafeGetRawPtr();
+
+  RefPtr<Promise> fetchPromise = FetchRequest(
+      global, finalRequestInput, requestInit, CallerType::System, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  RefPtr<WorkletScriptHandler> scriptHandler =
+      new WorkletScriptHandler(mWorklet);
+  fetchPromise->AppendNativeHandler(scriptHandler);
+  return NS_OK;
+}
+
+void WorkletFetchHandler::HandleFetchFailed(nsIURI* aURI) {}
 
 //////////////////////////////////////////////////////////////
 // WorkletScriptHandler

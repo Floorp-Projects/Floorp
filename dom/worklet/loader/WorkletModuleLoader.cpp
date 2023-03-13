@@ -7,6 +7,8 @@
 #include "WorkletModuleLoader.h"
 
 #include "js/loader/ModuleLoadRequest.h"
+#include "mozilla/dom/Worklet.h"
+#include "mozilla/dom/WorkletFetchHandler.h"
 
 using JS::loader::ModuleLoadRequest;
 
@@ -62,7 +64,11 @@ bool WorkletModuleLoader::CanStartLoad(ModuleLoadRequest* aRequest,
 }
 
 nsresult WorkletModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
-  return NS_ERROR_FAILURE;
+  RefPtr<StartFetchRunnable> runnable =
+      new StartFetchRunnable(aRequest->GetWorkletLoadContext()->GetHandlerRef(),
+                             aRequest->mURI, aRequest->mReferrer);
+  NS_DispatchToMainThread(runnable.forget());
+  return NS_OK;
 }
 
 nsresult WorkletModuleLoader::CompileFetchedModule(
