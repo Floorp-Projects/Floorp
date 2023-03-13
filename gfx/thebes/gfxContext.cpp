@@ -94,7 +94,6 @@ mozilla::layout::TextDrawTarget* gfxContext::GetTextDrawer() {
 }
 
 void gfxContext::Save() {
-  mAzureState.transform = mTransform;
   mSavedStates.AppendElement(mAzureState);
   mAzureState.pushedClips.Clear();
 #ifdef DEBUG
@@ -206,7 +205,7 @@ void gfxContext::Rectangle(const gfxRect& rect, bool snapToPixels) {
   if (snapToPixels) {
     gfxRect newRect(rect);
     if (UserToDevicePixelSnapped(newRect, SnapOption::IgnoreScale)) {
-      gfxMatrix mat = ThebesMatrix(mTransform);
+      gfxMatrix mat = CurrentMatrixDouble();
       if (mat.Invert()) {
         // We need the user space rect.
         rec = ToRect(mat.TransformBounds(newRect));
@@ -236,7 +235,7 @@ void gfxContext::SnappedClip(const gfxRect& rect) {
 
   gfxRect newRect(rect);
   if (UserToDevicePixelSnapped(newRect, SnapOption::IgnoreScale)) {
-    gfxMatrix mat = ThebesMatrix(mTransform);
+    gfxMatrix mat = CurrentMatrixDouble();
     if (mat.Invert()) {
       // We need the user space rect.
       rec = ToRect(mat.TransformBounds(newRect));
@@ -256,7 +255,7 @@ void gfxContext::Multiply(const gfxMatrix& matrix) {
 // transform stuff
 void gfxContext::Multiply(const Matrix& matrix) {
   CURRENTSTATE_CHANGED()
-  ChangeTransform(matrix * mTransform);
+  ChangeTransform(matrix * mAzureState.transform);
 }
 
 void gfxContext::SetMatrix(const gfx::Matrix& matrix) {
@@ -268,30 +267,26 @@ void gfxContext::SetMatrixDouble(const gfxMatrix& matrix) {
   SetMatrix(ToMatrix(matrix));
 }
 
-gfx::Matrix gfxContext::CurrentMatrix() const { return mTransform; }
-
-gfxMatrix gfxContext::CurrentMatrixDouble() const {
-  return ThebesMatrix(CurrentMatrix());
-}
-
 gfxPoint gfxContext::DeviceToUser(const gfxPoint& point) const {
-  return ThebesPoint(mTransform.Inverse().TransformPoint(ToPoint(point)));
+  return ThebesPoint(
+      mAzureState.transform.Inverse().TransformPoint(ToPoint(point)));
 }
 
 Size gfxContext::DeviceToUser(const Size& size) const {
-  return mTransform.Inverse().TransformSize(size);
+  return mAzureState.transform.Inverse().TransformSize(size);
 }
 
 gfxRect gfxContext::DeviceToUser(const gfxRect& rect) const {
-  return ThebesRect(mTransform.Inverse().TransformBounds(ToRect(rect)));
+  return ThebesRect(
+      mAzureState.transform.Inverse().TransformBounds(ToRect(rect)));
 }
 
 gfxPoint gfxContext::UserToDevice(const gfxPoint& point) const {
-  return ThebesPoint(mTransform.TransformPoint(ToPoint(point)));
+  return ThebesPoint(mAzureState.transform.TransformPoint(ToPoint(point)));
 }
 
 Size gfxContext::UserToDevice(const Size& size) const {
-  const Matrix& matrix = mTransform;
+  const Matrix& matrix = mAzureState.transform;
 
   Size newSize;
   newSize.width = size.width * matrix._11 + size.height * matrix._12;
@@ -300,7 +295,7 @@ Size gfxContext::UserToDevice(const Size& size) const {
 }
 
 gfxRect gfxContext::UserToDevice(const gfxRect& rect) const {
-  const Matrix& matrix = mTransform;
+  const Matrix& matrix = mAzureState.transform;
   return ThebesRect(matrix.TransformBounds(ToRect(rect)));
 }
 
@@ -315,7 +310,7 @@ bool gfxContext::UserToDevicePixelSnapped(gfxRect& rect,
   // never snap.
   const gfxFloat epsilon = 0.0000001;
 #define WITHIN_E(a, b) (fabs((a) - (b)) < epsilon)
-  Matrix mat = mTransform;
+  Matrix mat = mAzureState.transform;
   if (!aOptions.contains(SnapOption::IgnoreScale) &&
       (!WITHIN_E(mat._11, 1.0) || !WITHIN_E(mat._22, 1.0) ||
        !WITHIN_E(mat._12, 0.0) || !WITHIN_E(mat._21, 0.0))) {
@@ -374,7 +369,7 @@ bool gfxContext::UserToDevicePixelSnapped(gfxPoint& pt,
   // never snap.
   const gfxFloat epsilon = 0.0000001;
 #define WITHIN_E(a, b) (fabs((a) - (b)) < epsilon)
-  Matrix mat = mTransform;
+  Matrix mat = mAzureState.transform;
   if (!ignoreScale && (!WITHIN_E(mat._11, 1.0) || !WITHIN_E(mat._22, 1.0) ||
                        !WITHIN_E(mat._12, 0.0) || !WITHIN_E(mat._21, 0.0))) {
     return false;
@@ -465,7 +460,7 @@ Float gfxContext::CurrentMiterLimit() const {
 
 // clipping
 void gfxContext::Clip(const Rect& rect) {
-  AzureState::PushedClip clip = {nullptr, rect, mTransform};
+  AzureState::PushedClip clip = {nullptr, rect, mAzureState.transform};
   mAzureState.pushedClips.AppendElement(clip);
   mDT->PushClipRect(rect);
   NewPath();
@@ -475,7 +470,7 @@ void gfxContext::Clip(const gfxRect& rect) { Clip(ToRect(rect)); }
 
 void gfxContext::Clip(Path* aPath) {
   mDT->PushClip(aPath);
-  AzureState::PushedClip clip = {aPath, Rect(), mTransform};
+  AzureState::PushedClip clip = {aPath, Rect(), mAzureState.transform};
   mAzureState.pushedClips.AppendElement(clip);
 }
 
@@ -483,13 +478,13 @@ void gfxContext::Clip() {
   if (mPathIsRect) {
     MOZ_ASSERT(!mTransformChanged);
 
-    AzureState::PushedClip clip = {nullptr, mRect, mTransform};
+    AzureState::PushedClip clip = {nullptr, mRect, mAzureState.transform};
     mAzureState.pushedClips.AppendElement(clip);
     mDT->PushClipRect(mRect);
   } else {
     EnsurePath();
     mDT->PushClip(mPath);
-    AzureState::PushedClip clip = {mPath, Rect(), mTransform};
+    AzureState::PushedClip clip = {mPath, Rect(), mAzureState.transform};
     mAzureState.pushedClips.AppendElement(clip);
   }
 }
@@ -509,7 +504,7 @@ gfxRect gfxContext::GetClipExtents(ClipExtentsSpace aSpace) const {
   }
 
   if (aSpace == eUserSpace) {
-    Matrix mat = mTransform;
+    Matrix mat = mAzureState.transform;
     mat.Invert();
     rect = mat.TransformBounds(rect);
   }
@@ -553,7 +548,7 @@ bool gfxContext::ClipContainsRect(const gfxRect& aRect) {
         if (aClip.path || !aClip.transform.IsRectilinear()) {
           return false;
         }
-        Rect clipRect = mTransform.TransformBounds(aClip.rect);
+        Rect clipRect = mAzureState.transform.TransformBounds(aClip.rect);
         clipBounds.IntersectRect(clipBounds, clipRect);
         return true;
       })) {
@@ -606,8 +601,8 @@ already_AddRefed<gfxPattern> gfxContext::GetPattern() {
 // masking
 void gfxContext::Mask(SourceSurface* aSurface, Float aAlpha,
                       const Matrix& aTransform) {
-  Matrix old = mTransform;
-  Matrix mat = aTransform * mTransform;
+  Matrix old = mAzureState.transform;
+  Matrix mat = aTransform * mAzureState.transform;
 
   ChangeTransform(mat);
   mDT->MaskSurface(PatternFromState(this), aSurface, Point(),
@@ -659,7 +654,7 @@ void gfxContext::EnsurePath() {
 
   if (mPath) {
     if (mTransformChanged) {
-      Matrix mat = mTransform;
+      Matrix mat = mAzureState.transform;
       mat.Invert();
       mat = mPathTransform * mat;
       mPathBuilder = mPath->TransformedCopyToBuilder(mat);
@@ -686,7 +681,7 @@ void gfxContext::EnsurePathBuilder() {
       mPathBuilder = mPath->CopyToBuilder();
       mPath = nullptr;
     } else {
-      Matrix invTransform = mTransform;
+      Matrix invTransform = mAzureState.transform;
       invTransform.Invert();
       Matrix toNewUS = mPathTransform * invTransform;
       mPathBuilder = mPath->TransformedCopyToBuilder(toNewUS);
@@ -715,7 +710,7 @@ void gfxContext::EnsurePathBuilder() {
     MOZ_ASSERT(oldPath);
     MOZ_ASSERT(!mPathIsRect);
 
-    Matrix invTransform = mTransform;
+    Matrix invTransform = mAzureState.transform;
     invTransform.Invert();
     Matrix toNewUS = mPathTransform * invTransform;
 
@@ -774,7 +769,7 @@ void gfxContext::ChangeTransform(const Matrix& aNewMatrix,
 
     invMatrix.Invert();
 
-    Matrix toNewUS = mTransform * invMatrix;
+    Matrix toNewUS = mAzureState.transform * invMatrix;
 
     if (toNewUS.IsRectilinear()) {
       mRect = toNewUS.TransformBounds(mRect);
@@ -795,10 +790,10 @@ void gfxContext::ChangeTransform(const Matrix& aNewMatrix,
     mTransformChanged = false;
   } else if ((mPath || mPathBuilder) && !mTransformChanged) {
     mTransformChanged = true;
-    mPathTransform = mTransform;
+    mPathTransform = mAzureState.transform;
   }
 
-  mTransform = aNewMatrix;
+  mAzureState.transform = aNewMatrix;
 
   mDT->SetTransform(GetDTTransform());
 }
@@ -845,7 +840,7 @@ void gfxContext::SetDeviceOffset(const Point& aOffset) {
 }
 
 Matrix gfxContext::GetDTTransform() const {
-  Matrix mat = mTransform;
+  Matrix mat = mAzureState.transform;
   mat._31 -= mAzureState.deviceOffset.x;
   mat._32 -= mAzureState.deviceOffset.y;
   return mat;
