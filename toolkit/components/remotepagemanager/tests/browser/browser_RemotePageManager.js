@@ -67,6 +67,21 @@ function swapDocShells(browser1, browser2) {
   browser2.permanentKey = tmp;
 }
 
+add_setup(async function() {
+  ChromeUtils.registerWindowActor("LegacyRPM", {
+    child: {
+      esModuleURI: getRootDirectory(gTestPath) + "LegacyRPMChild.sys.mjs",
+      events: {
+        DOMDocElementInserted: {},
+      },
+    },
+
+    messageManagerGroups: ["browsers"],
+  });
+
+  registerCleanupFunction(() => ChromeUtils.unregisterWindowActor("LegacyRPM"));
+});
+
 add_task(async function sharedData_aka_initialProcessData() {
   const includesTest = () =>
     Services.cpmm.sharedData.get("RemotePageManager:urls").has(TEST_URL);
