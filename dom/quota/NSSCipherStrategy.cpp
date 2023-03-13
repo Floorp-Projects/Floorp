@@ -100,10 +100,10 @@ nsresult NSSCipherStrategy::Cipher(const Span<uint8_t> aIv,
 
   // XXX make tag a separate parameter
   constexpr size_t tagLen = 16;
-  const auto tag = Span{aIv}.Last(tagLen);
+  const auto tag = aIv.Last(tagLen);
   // tag is const on decrypt, but returned on encrypt
 
-  const auto iv = Span{aIv}.First(12);
+  const auto iv = aIv.First(12);
   MOZ_ASSERT(tag.Length() + iv.Length() <= aIv.Length());
 
   int outLen;
