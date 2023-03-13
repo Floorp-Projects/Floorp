@@ -51,7 +51,25 @@ WorkletModuleLoader::WorkletModuleLoader(WorkletScriptLoader* aScriptLoader,
 
 already_AddRefed<ModuleLoadRequest> WorkletModuleLoader::CreateStaticImport(
     nsIURI* aURI, ModuleLoadRequest* aParent) {
-  return nullptr;
+  const nsMainThreadPtrHandle<WorkletFetchHandler>& handlerRef =
+      aParent->GetWorkletLoadContext()->GetHandlerRef();
+  RefPtr<WorkletLoadContext> loadContext = new WorkletLoadContext(handlerRef);
+
+  // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-the-descendants-of-a-module-script
+  // Step 11. Perform the internal module script graph fetching procedure
+  //
+  // https://html.spec.whatwg.org/multipage/webappapis.html#internal-module-script-graph-fetching-procedure
+  // Step 5. Fetch a single module script with referrer is referringScript's
+  // base URL,
+  nsIURI* referrer = aParent->mURI;
+  RefPtr<ModuleLoadRequest> request = new ModuleLoadRequest(
+      aURI, aParent->mFetchOptions, SRIMetadata(), referrer, loadContext,
+      false, /* is top level */
+      false, /* is dynamic import */
+      this, aParent->mVisitedSet, aParent->GetRootModule());
+
+  request->mURL = request->mURI->GetSpecOrDefault();
+  return request.forget();
 }
 
 already_AddRefed<ModuleLoadRequest> WorkletModuleLoader::CreateDynamicImport(
