@@ -300,7 +300,7 @@ jobs:
               autoland: [{hour: 6, minute: 45}, {hour: 18, minute: 45}]
               mozilla-central: []
               # 3h15m before launch of `daily-releases`
-              mozilla-beta: [{hour: 18, minute: 45}]
+              mozilla-beta: [{hour: 17, minute: 45}]
               # No default
 
     - name: system-symbols
