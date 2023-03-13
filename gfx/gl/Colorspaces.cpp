@@ -199,7 +199,7 @@ mat3 XyzAFromXyzB_BradfordLinear(const vec2 xyA, const vec2 xyB) {
   // From https://www.color.org/specification/ICC.1-2022-05.pdf
   // E.3 "Linearized Bradford transformation":
 
-  constexpr auto M_BFD = mat3{{
+  const auto M_BFD = mat3{{
       vec3{{0.8951, 0.2664f, -0.1614f}},
       vec3{{-0.7502f, 1.7135f, 0.0367f}},
       vec3{{0.0389f, -0.0685f, 1.0296f}},
