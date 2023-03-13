@@ -6,6 +6,39 @@
 
 #include "DCLayerTree.h"
 
+// -
+
+#if (_WIN32_WINNT < _WIN32_WINNT_WIN10)
+
+#  define XSTR(x) STR(x)
+#  define STR(x) #x
+// clang-format off
+
+#  pragma message "IDCompositionFilterEffect in dcomp.h requires _WIN32_WINNT >= _WIN32_WINNT_WIN10."
+// Pedantically, it actually requires _WIN32_WINNT_WINTHRESHOLD, but that's the
+// same as _WIN32_WINNT_WIN10.
+
+#  pragma message "Forcing NTDDI_VERSION " XSTR(NTDDI_VERSION) " -> " XSTR(NTDDI_WIN10)
+#  undef NTDDI_VERSION
+#  define NTDDI_VERSION NTDDI_WIN10
+
+#  pragma message "Forcing _WIN32_WINNT " XSTR(_WIN32_WINNT) " -> " XSTR(_WIN32_WINNT_WIN10)
+#  undef _WIN32_WINNT
+#  define _WIN32_WINNT _WIN32_WINNT_WIN10
+
+// clang-format on
+#  undef STR
+#  undef XSTR
+
+#endif
+
+#include <d3d11.h>
+#include <d3d11_1.h>
+#include <dcomp.h>
+#include <dxgi1_2.h>
+
+// -
+
 #include "gfxWindowsPlatform.h"
 #include "GLContext.h"
 #include "GLContextEGL.h"
@@ -23,20 +56,6 @@
 #include "mozilla/Telemetry.h"
 #include "nsPrintfCString.h"
 #include "WinUtils.h"
-
-#undef _WIN32_WINNT
-#define _WIN32_WINNT _WIN32_WINNT_WINBLUE
-#undef NTDDI_VERSION
-#define NTDDI_VERSION NTDDI_WINBLUE
-
-// We also need this, or dcomp.h won't give us e.g. IDCompositionFilterEffect:
-#undef _WIN32_WINNT_WINTHRESHOLD
-#define _WIN32_WINNT_WINTHRESHOLD _WIN32_WINNT
-
-#include <d3d11.h>
-#include <d3d11_1.h>
-#include <dcomp.h>
-#include <dxgi1_2.h>
 
 namespace mozilla {
 namespace wr {
