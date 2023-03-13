@@ -7,30 +7,14 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
-DIRS += ["loader"]
-
-EXPORTS.mozilla.dom += [
-    "Worklet.h",
-    "WorkletFetchHandler.h",
-    "WorkletGlobalScope.h",
-    "WorkletImpl.h",
-    "WorkletThread.h",
+EXPORTS.mozilla.dom.worklet += [
+    "WorkletModuleLoader.h",
 ]
 
 UNIFIED_SOURCES += [
-    "Worklet.cpp",
-    "WorkletFetchHandler.cpp",
-    "WorkletGlobalScope.cpp",
-    "WorkletImpl.cpp",
-    "WorkletThread.cpp",
-]
-
-LOCAL_INCLUDES += [
-    "/js/xpconnect/src",
+    "WorkletModuleLoader.cpp",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
-
-MOCHITEST_MANIFESTS += ["tests/mochitest.ini"]
 
 FINAL_LIBRARY = "xul"

@@ -22,12 +22,20 @@
     }                                                \
   }
 
+namespace JS::loader {
+class ModuleLoaderBase;
+}
+
 namespace mozilla {
 
 class ErrorResult;
 class WorkletImpl;
 
 namespace dom {
+
+namespace loader {
+class WorkletModuleLoader;
+}
 
 class Console;
 
@@ -65,6 +73,11 @@ class WorkletGlobalScope : public nsIGlobalObject, public nsWrapperCache {
     return duration.ToMilliseconds();
   }
 
+  void InitModuleLoader(loader::WorkletModuleLoader* aModuleLoader);
+
+  JS::loader::ModuleLoaderBase* GetModuleLoader(
+      JSContext* aCx = nullptr) override;
+
   OriginTrials Trials() const override;
   Maybe<nsID> GetAgentClusterId() const override;
   bool IsSharedMemoryAllowed() const override;
@@ -78,6 +91,7 @@ class WorkletGlobalScope : public nsIGlobalObject, public nsWrapperCache {
  private:
   TimeStamp mCreationTimeStamp;
   RefPtr<Console> mConsole;
+  RefPtr<loader::WorkletModuleLoader> mModuleLoader;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(WorkletGlobalScope, WORKLET_IID)
