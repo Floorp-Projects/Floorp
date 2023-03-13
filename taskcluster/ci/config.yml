@@ -204,6 +204,7 @@ treeherder:
         'fxrec': 'Desktop startup recorder (fxrecord)'
         'wc': 'webcompat'
         'Boot': 'Bootstrap'
+        'Attr-L10n': 'todo'
 
 index:
     products:
