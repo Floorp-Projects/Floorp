@@ -1450,6 +1450,27 @@ var gBrowserInit = {
 
   _tabToAdopt: undefined,
 
+  _setupFirstContentWindowPaintPromise() {
+    let lastTransactionId = window.windowUtils.lastTransactionId;
+    let layerTreeListener = () => {
+      if (this.getTabToAdopt()) {
+        // Need to wait until we finish adopting the tab, or we might end
+        // up focusing the initial browser and then losing focus when it
+        // gets swapped out for the tab to adopt.
+        return;
+      }
+      removeEventListener("MozLayerTreeReady", layerTreeListener);
+      let listener = e => {
+        if (e.transactionId > lastTransactionId) {
+          window.removeEventListener("MozAfterPaint", listener);
+          this._firstContentWindowPaintDeferred.resolve();
+        }
+      };
+      addEventListener("MozAfterPaint", listener);
+    };
+    addEventListener("MozLayerTreeReady", layerTreeListener);
+  },
+
   getTabToAdopt() {
     if (this._tabToAdopt !== undefined) {
       return this._tabToAdopt;
@@ -1480,6 +1501,8 @@ var gBrowserInit = {
   },
 
   onBeforeInitialXULLayout() {
+    this._setupFirstContentWindowPaintPromise();
+
     BookmarkingUI.updateEmptyToolbarMessage();
     setToolbarVisibility(
       BookmarkingUI.toolbar,
@@ -2032,7 +2055,8 @@ var gBrowserInit = {
   },
 
   /**
-   * Resolved on the first MozAfterPaint in the first content window.
+   * Resolved on the first MozLayerTreeReady and next MozAfterPaint in the
+   * parent process.
    */
   get firstContentWindowPaintPromise() {
     return this._firstContentWindowPaintDeferred.promise;
@@ -2071,7 +2095,7 @@ var gBrowserInit = {
       // Otherwise use a regular promise to guarantee that mutationobserver
       // microtasks that could affect focusability have run.
       let promise = gBrowser.selectedBrowser.isRemoteBrowser
-        ? this._firstContentWindowPaintDeferred.promise
+        ? this.firstContentWindowPaintPromise
         : Promise.resolve();
 
       promise.then(() => {

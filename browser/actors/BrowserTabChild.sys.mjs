@@ -13,7 +13,6 @@ export class BrowserTabChild extends JSWindowActorChild {
   constructor() {
     super();
     this.rpmInitialized = false;
-    this.handledFirstPaint = false;
   }
 
   actorCreated() {
@@ -29,14 +28,6 @@ export class BrowserTabChild extends JSWindowActorChild {
         // PWindowGlobal due to the initial about:blank document's window global
         // being re-used.
         this.initializeRPM();
-        break;
-
-      case "MozAfterPaint":
-        if (this.handledFirstPaint) {
-          return;
-        }
-        this.handledFirstPaint = true;
-        this.sendAsyncMessage("Browser:FirstPaint", {});
         break;
     }
   }

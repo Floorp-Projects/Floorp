@@ -22,11 +22,6 @@ export class BrowserTabParent extends JSWindowActorParent {
         BrowserWindowTracker.windowCreated(browser);
         break;
       }
-
-      case "Browser:FirstPaint": {
-        browser.ownerGlobal.gBrowserInit._firstContentWindowPaintDeferred.resolve();
-        break;
-      }
     }
   }
 }
