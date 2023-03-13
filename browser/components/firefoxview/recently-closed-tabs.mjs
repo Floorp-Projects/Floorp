@@ -100,34 +100,36 @@ class RecentlyClosedTabsList extends MozLitElement {
   }
 
   openTabAndUpdate(event) {
-    event.preventDefault();
-    if (event.type == "click" && event.altKey) {
-      return;
+    if (
+      (event.type == "click" && !event.altKey) ||
+      (event.type == "keydown" && event.code == "Enter") ||
+      (event.type == "keydown" && event.code == "Space")
+    ) {
+      const item = event.target.closest(".closed-tab-li");
+      // only used for telemetry
+      const position = [...this.tabsList.children].indexOf(item) + 1;
+      const closedId = item.dataset.tabid;
+
+      lazy.SessionStore.undoCloseById(closedId);
+
+      // record telemetry
+      let tabClosedAt = parseInt(
+        item.querySelector(".closed-tab-li-time").getAttribute("data-timestamp")
+      );
+
+      let now = Date.now();
+      let deltaSeconds = (now - tabClosedAt) / 1000;
+      Services.telemetry.recordEvent(
+        "firefoxview",
+        "recently_closed",
+        "tabs",
+        null,
+        {
+          position: position.toString(),
+          delta: deltaSeconds.toString(),
+        }
+      );
     }
-    const item = event.target.closest(".closed-tab-li");
-    // only used for telemetry
-    const position = [...this.tabsList.children].indexOf(item) + 1;
-    const closedId = item.dataset.tabid;
-
-    lazy.SessionStore.undoCloseById(closedId);
-
-    // record telemetry
-    let tabClosedAt = parseInt(
-      item.querySelector(".closed-tab-li-time").getAttribute("data-timestamp")
-    );
-
-    let now = Date.now();
-    let deltaSeconds = (now - tabClosedAt) / 1000;
-    Services.telemetry.recordEvent(
-      "firefoxview",
-      "recently_closed",
-      "tabs",
-      null,
-      {
-        position: position.toString(),
-        delta: deltaSeconds.toString(),
-      }
-    );
   }
 
   dismissTabAndUpdate(event) {
@@ -265,11 +267,12 @@ class RecentlyClosedTabsList extends MozLitElement {
         data-targeturi=${targetURI}
         tabindex=${ifDefined(primary ? null : "-1")}
       >
-        <a
-          class="closed-tab-li-main tab-link"
+        <span
+          class="closed-tab-li-main"
+          role="button"
           tabindex="0"
-          href=${targetURI}
           @click=${e => this.openTabAndUpdate(e)}
+          @keydown=${e => this.openTabAndUpdate(e)}
         >
           <div
             class="favicon"
@@ -291,7 +294,7 @@ class RecentlyClosedTabsList extends MozLitElement {
           <span class="closed-tab-li-time" data-timestamp=${tab.closedAt}>
             ${convertedTime}
           </span>
-        </a>
+        </span>
         <button
           class="closed-tab-li-dismiss"
           data-l10n-id="firefoxview-closed-tabs-dismiss-tab"
