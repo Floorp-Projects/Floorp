@@ -2601,6 +2601,8 @@ version = "0.1.1"
 dependencies = [
  "base64",
  "bindgen 0.63.0",
+ "http",
+ "hyper",
  "log",
  "mio 0.6.23",
  "mio-extras",
@@ -2609,6 +2611,7 @@ dependencies = [
  "neqo-http3",
  "neqo-qpack",
  "neqo-transport",
+ "tokio 1.17.0",
 ]
 
 [[package]]
@@ -4973,6 +4976,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43b2853a4d09f215c24cc5489c992ce46052d359b5109343cbafbf26bc62f8a3"
 
 [[package]]
+name = "signal-hook-registry"
+version = "1.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e51e73328dc4ac0c7ccbda3a494dfa03df1de2f46018127f60c693f2648455b0"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "siphasher"
 version = "0.3.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5467,7 +5479,10 @@ dependencies = [
  "memchr",
  "mio 0.8.0",
  "num_cpus",
+ "once_cell",
+ "parking_lot 0.12.999",
  "pin-project-lite",
+ "signal-hook-registry",
  "socket2",
  "tokio-macros",
  "winapi",
