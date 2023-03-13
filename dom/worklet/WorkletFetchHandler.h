@@ -30,7 +30,7 @@ class WorkletFetchHandler final : public nsISupports {
   // Load a module script on main thread.
   nsresult StartFetch(JSContext* aCx, nsIURI* aURI, nsIURI* aReferrer);
 
-  void ExecutionFailed(nsresult aRv);
+  void ExecutionFailed();
 
   void ExecutionSucceeded();
 
