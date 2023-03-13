@@ -447,6 +447,21 @@ nsresult WorkletFetchHandler::StartFetch(JSContext* aCx, nsIURI* aURI,
   RootedDictionary<RequestInit> requestInit(aCx);
   requestInit.mCredentials.Construct(mCredentials);
 
+  // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-a-single-module-script
+  // Step 8. mode is "cors"
+  requestInit.mMode.Construct(RequestMode::Cors);
+
+  if (aReferrer) {
+    nsAutoString referrer;
+    res = aReferrer->GetSpec(spec);
+    if (NS_WARN_IF(NS_FAILED(res))) {
+      return NS_ERROR_FAILURE;
+    }
+
+    CopyUTF8toUTF16(spec, referrer);
+    requestInit.mReferrer.Construct(referrer);
+  }
+
   nsCOMPtr<nsIGlobalObject> global =
       do_QueryInterface(mWorklet->GetParentObject());
   MOZ_ASSERT(global);
