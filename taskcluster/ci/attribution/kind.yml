@@ -1,0 +1,135 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+transforms:
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    # Windows
+    - repackage-signing
+
+job-defaults:
+    description: Attribute release builds
+    shipping-phase: promote
+    # never run as part of CI
+    run-on-projects: []
+    worker-type: b-linux-gcp
+    fetches:
+        repackage-signing:
+            - target.installer.exe
+    treeherder:
+        symbol: Attr
+        kind: other
+        tier: 1
+    worker:
+        artifacts:
+            - name: public/build
+              type: directory
+              path: /builds/worker/artifacts
+        docker-image:
+            in-tree: "partner-repack"
+        chain-of-trust: true
+        # Each task only processes one installer...this should be quick.
+        max-run-time: 600
+    run:
+        using: run-task
+        cwd: "{checkout}"
+        command:
+            - ./mach
+            - python
+            - python/mozrelease/mozrelease/attribute_builds.py
+            - --attribution
+            - dlsource={attribution_code[json][dlsource]}
+            - --output
+            - /builds/worker/artifacts
+            # All jobs require attribution of target.installer.exe. Some may require
+            # attribution of other files, which they can append themselves.
+            - --input
+            - /builds/worker/fetches/target.installer.exe
+        command-context:
+            from-file: browser/installer/attribution.yml
+
+jobs:
+    win32-devedition/opt:
+        label: attribution-win32-devedition/opt
+        shipping-product: devedition
+        attributes:
+            build_platform: win32-devedition
+            build_type: opt
+        treeherder:
+            platform: win32-devedition/opt
+        fetches:
+            repackage-signing:
+                - target.stub-installer.exe
+        dependencies:
+            repackage-signing: repackage-signing-win32-devedition/opt
+        run:
+            command:
+                - --input
+                - /builds/worker/fetches/target.stub-installer.exe
+
+    win32-shippable/opt:
+        label: attribution-win32-shippable/opt
+        shipping-product: firefox
+        attributes:
+            build_platform: win32-shippable
+            build_type: opt
+        treeherder:
+            platform: win32-shippable/opt
+        fetches:
+            repackage-signing:
+                - target.stub-installer.exe
+        dependencies:
+            repackage-signing: repackage-signing-win32-shippable/opt
+        run:
+            command:
+                - --input
+                - /builds/worker/fetches/target.stub-installer.exe
+
+    win64-devedition/opt:
+        label: attribution-win64-devedition/opt
+        shipping-product: devedition
+        attributes:
+            build_platform: win64-devedition
+            build_type: opt
+        treeherder:
+            platform: win64-devedition/opt
+        dependencies:
+            repackage-signing: repackage-signing-win64-devedition/opt
+
+    win64-shippable/opt:
+        label: attribution-win64-shippable/opt
+        shipping-product: firefox
+        attributes:
+            build_platform: win64-shippable
+            build_type: opt
+        treeherder:
+            platform: win64-shippable/opt
+        dependencies:
+            repackage-signing: repackage-signing-win64-shippable/opt
+
+    win64-aarch64-shippable/opt:
+        label: attribution-win64-aarch64-shippable/opt
+        shipping-product: firefox
+        attributes:
+            build_platform: win64-aarch64-shippable
+            build_type: opt
+        treeherder:
+            platform: win64-aarch64-shippable/opt
+        dependencies:
+            repackage-signing: repackage-signing-win64-aarch64-shippable/opt
+
+    win64-aarch64-devedition/opt:
+        label: attribution-win64-aarch64-devedition/opt
+        shipping-product: devedition
+        attributes:
+            build_platform: win64-aarch64-devedition
+            build_type: opt
+        treeherder:
+            platform: win64-aarch64-devedition/opt
+        dependencies:
+            repackage-signing: repackage-signing-win64-aarch64-devedition/opt
