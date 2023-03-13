@@ -11,7 +11,9 @@ import org.mozilla.fenix.helpers.MatcherHelper.checkedItemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
+import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
+import org.mozilla.fenix.helpers.click
 
 /**
  * Implementation of Robot Pattern for the settings Cookie Banner Reduction sub menu.
@@ -25,7 +27,14 @@ class SettingsSubMenuCookieBannerReductionRobot {
     fun verifyCheckedCookieBannerReductionToggle(isCookieBannerReductionChecked: Boolean) =
         assertCheckedItemWithResIdExists(checkedCookieBannerOptionToggle(isCookieBannerReductionChecked))
 
-    class Transition
+    class Transition {
+        fun goBack(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
+            mDevice.pressBack()
+
+            SettingsRobot().interact()
+            return SettingsRobot.Transition()
+        }
+    }
 }
 
 private val cookieBannerOptionTitle =

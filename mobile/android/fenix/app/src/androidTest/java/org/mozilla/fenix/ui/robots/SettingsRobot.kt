@@ -94,6 +94,18 @@ class SettingsRobot {
                 hasSibling(withText(HTTPSOnlyModeSummary)),
             ),
         ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+
+    fun verifyCookieBannerReductionSummary(cookieBannerReductionSummary: String) {
+        scrollToElementByText(getStringResource(R.string.preferences_cookie_banner_reduction))
+
+        onView(
+            allOf(
+                withText(R.string.preferences_cookie_banner_reduction),
+                hasSibling(withText(cookieBannerReductionSummary)),
+            ),
+        ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    }
+
     fun verifyEnhancedTrackingProtectionButton() = assertEnhancedTrackingProtectionButton()
     fun verifyLoginsAndPasswordsButton() = assertLoginsAndPasswordsButton()
     fun verifyEnhancedTrackingProtectionState(option: String) =
