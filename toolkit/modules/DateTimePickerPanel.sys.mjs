@@ -6,10 +6,10 @@ export var DateTimePickerPanel = class {
   constructor(element) {
     this.element = element;
 
-    this.TIME_PICKER_WIDTH = "12em";
-    this.TIME_PICKER_HEIGHT = "21em";
-    this.DATE_PICKER_WIDTH = "23.1em";
-    this.DATE_PICKER_HEIGHT = "24em";
+    this.TIME_PICKER_WIDTH = "13em";
+    this.TIME_PICKER_HEIGHT = "22em";
+    this.DATE_PICKER_WIDTH = "24em";
+    this.DATE_PICKER_HEIGHT = "25em";
   }
 
   get dateTimePopupFrame() {
