@@ -1526,6 +1526,7 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
 }
 
 .dialogOverlay {
+  align-items: center;
   visibility: hidden;
 }
 
@@ -1616,6 +1617,7 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
 
 .content-prompt-dialog > .dialogOverlay {
   display: grid;
+  align-items: unset;
   place-content: center;
   /* 90% for 5% top/bottom margins, the document height so that
    * smaller dialogs don't become too big. */
