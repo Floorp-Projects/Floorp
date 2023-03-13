@@ -137,6 +137,8 @@ DIRS += [
     "/third_party/libwebrtc/common_video/common_video_gn",
     "/third_party/libwebrtc/common_video/frame_counts_gn",
     "/third_party/libwebrtc/common_video/generic_frame_descriptor/generic_frame_descriptor_gn",
+    "/third_party/libwebrtc/experiments/registered_field_trials_gn",
+    "/third_party/libwebrtc/experiments/registered_field_trials_header_gn",
     "/third_party/libwebrtc/logging/rtc_event_audio_gn",
     "/third_party/libwebrtc/logging/rtc_event_bwe_gn",
     "/third_party/libwebrtc/logging/rtc_event_field_gn",
