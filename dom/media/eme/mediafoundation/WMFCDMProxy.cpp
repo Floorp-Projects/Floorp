@@ -292,6 +292,11 @@ void WMFCDMProxy::OnExpirationChange(const nsAString& aSessionId,
   }
 }
 
+uint64_t WMFCDMProxy::GetCDMProxyId() const {
+  MOZ_DIAGNOSTIC_ASSERT(mCDM);
+  return mCDM->Id();
+}
+
 #undef LOG
 #undef RETURN_IF_SHUTDOWN
 #undef PERFORM_ON_CDM
