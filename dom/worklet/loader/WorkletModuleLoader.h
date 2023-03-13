@@ -46,6 +46,10 @@ class WorkletModuleLoader : public JS::loader::ModuleLoaderBase {
   WorkletModuleLoader(WorkletScriptLoader* aScriptLoader,
                       nsIGlobalObject* aGlobalObject);
 
+  void InsertRequest(nsIURI* aURI, JS::loader::ModuleLoadRequest* aRequest);
+  void RemoveRequest(nsIURI* aURI);
+  JS::loader::ModuleLoadRequest* GetRequest(nsIURI* aURI) const;
+
  private:
   ~WorkletModuleLoader() = default;
 
@@ -69,6 +73,11 @@ class WorkletModuleLoader : public JS::loader::ModuleLoaderBase {
       JS::MutableHandle<JSObject*> aModuleScript) override;
 
   void OnModuleLoadComplete(JS::loader::ModuleLoadRequest* aRequest) override;
+
+  // A hashtable to map a nsIURI(from main thread) to a ModuleLoadRequest(in
+  // worklet thread).
+  nsRefPtrHashtable<nsURIHashKey, JS::loader::ModuleLoadRequest>
+      mFetchingRequests;
 };
 }  // namespace loader
 
