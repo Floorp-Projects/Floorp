@@ -219,6 +219,7 @@ DIRS += [
     "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/rnn_vad_spectral_features_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/rnn_vad_symmetric_matrix_buffer_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/vector_math_gn",
+    "/third_party/libwebrtc/modules/audio_processing/agc2/speech_level_estimator_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/vad_wrapper_gn",
     "/third_party/libwebrtc/modules/audio_processing/api_gn",
     "/third_party/libwebrtc/modules/audio_processing/apm_logging_gn",
