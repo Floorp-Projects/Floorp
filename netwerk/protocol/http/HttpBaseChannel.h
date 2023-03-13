@@ -443,6 +443,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   [[nodiscard]] nsresult OverrideSecurityInfo(
       nsITransportSecurityInfo* aSecurityInfo);
 
+  void LogORBError(const nsAString& aReason);
+
  public: /* Necko internal use only... */
   int64_t GetAltDataLength() { return mAltDataLength; }
   bool IsNavigation();
@@ -643,7 +645,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
       const nsACString& aContentType, bool aNoSniff);
 
   bool NeedOpaqueResponseAllowedCheckAfterSniff() const;
-  void BlockOpaqueResponseAfterSniff();
+  void BlockOpaqueResponseAfterSniff(const nsAString& aReason);
   void AllowOpaqueResponseAfterSniff();
   void SetChannelBlockedByOpaqueResponse();
   bool Http3Allowed() const;
