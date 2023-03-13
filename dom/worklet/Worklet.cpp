@@ -58,7 +58,7 @@ already_AddRefed<Promise> Worklet::AddModule(JSContext* aCx,
                                              CallerType aCallerType,
                                              ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
-  return WorkletFetchHandler::Fetch(this, aCx, aModuleURL, aOptions, aRv);
+  return WorkletFetchHandler::AddModule(this, aCx, aModuleURL, aOptions, aRv);
 }
 
 WorkletFetchHandler* Worklet::GetImportFetchHandler(const nsACString& aURI) {

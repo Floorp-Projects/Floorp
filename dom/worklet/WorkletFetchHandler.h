@@ -21,10 +21,10 @@ class WorkletFetchHandler final : public nsISupports {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  static already_AddRefed<Promise> Fetch(Worklet* aWorklet, JSContext* aCx,
-                                         const nsAString& aModuleURL,
-                                         const WorkletOptions& aOptions,
-                                         ErrorResult& aRv);
+  static already_AddRefed<Promise> AddModule(Worklet* aWorklet, JSContext* aCx,
+                                             const nsAString& aModuleURL,
+                                             const WorkletOptions& aOptions,
+                                             ErrorResult& aRv);
 
   const nsCString& URL() const { return mURL; }
 
