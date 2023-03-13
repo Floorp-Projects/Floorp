@@ -18,6 +18,7 @@
 --editable ../mozbase/mozprofile
 --editable ../mozbase/mozproxy
 --editable ../mozbase/mozrunner
+--editable ../mozbase/mozserve
 --editable ../mozbase/mozscreenshot
 --editable ../mozbase/moztest
 --editable ../mozbase/mozversion

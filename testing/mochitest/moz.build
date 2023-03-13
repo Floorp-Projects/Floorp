@@ -94,6 +94,7 @@ TEST_HARNESS_FILES.testing.mochitest += [
     "chrome-harness.js",
     "chunkifyTests.js",
     "document-builder.sjs",
+    "DoHServer/doh_server.js",
     "favicon.ico",
     "harness.xhtml",
     "leaks.py",
@@ -108,6 +109,12 @@ TEST_HARNESS_FILES.testing.mochitest += [
     "runtestsremote.py",
     "server.js",
     "start_desktop.js",
+]
+
+TEST_HARNESS_FILES.testing.mochitest.DoHServer += [
+    "DoHServer/doh_server.js",
+    "DoHServer/http2-cert.key.pem",
+    "DoHServer/http2-cert.pem",
 ]
 
 TEST_HARNESS_FILES.testing.mochitest.embed += [
