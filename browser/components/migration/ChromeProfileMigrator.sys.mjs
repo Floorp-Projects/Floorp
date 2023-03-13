@@ -32,11 +32,12 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
  * understands.
  *
  * @param {object[]} items Chrome Bookmark items to be inserted on this parent
+ * @param {set} bookmarkURLAccumulator Accumulate all imported bookmark urls to be used for importing favicons
  * @param {Function} errorAccumulator function that gets called with any errors
  *   thrown so we don't drop them on the floor.
  * @returns {object[]}
  */
-function convertBookmarks(items, errorAccumulator) {
+function convertBookmarks(items, bookmarkURLAccumulator, errorAccumulator) {
   let itemsToInsert = [];
   for (let item of items) {
     try {
@@ -52,12 +53,17 @@ function convertBookmarks(items, errorAccumulator) {
           continue;
         }
         itemsToInsert.push({ url: item.url, title: item.name });
+        bookmarkURLAccumulator.add({ url: item.url });
       } else if (item.type == "folder") {
         let folderItem = {
           type: lazy.PlacesUtils.bookmarks.TYPE_FOLDER,
           title: item.name,
         };
-        folderItem.children = convertBookmarks(item.children, errorAccumulator);
+        folderItem.children = convertBookmarks(
+          item.children,
+          bookmarkURLAccumulator,
+          errorAccumulator
+        );
         itemsToInsert.push(folderItem);
       }
     } catch (ex) {
@@ -364,6 +370,7 @@ export class ChromeProfileMigrator extends MigratorBase {
 
 async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
   let bookmarksPath = PathUtils.join(aProfileFolder, "Bookmarks");
+  let faviconsPath = PathUtils.join(aProfileFolder, "Favicons");
 
   if (aBrowserKey === "chromium-360se") {
     let localState = {};
@@ -396,9 +403,41 @@ async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
         let errorGatherer = function() {
           gotErrors = true;
         };
+
+        let faviconRows = [];
+        try {
+          faviconRows = await MigrationUtils.getRowsFromDBWithoutLocks(
+            faviconsPath,
+            "Chrome Bookmark Favicons",
+            `select fav.id, fav.url, map.page_url, bit.image_data FROM favicons as fav 
+              INNER JOIN favicon_bitmaps bit ON (fav.id = bit.icon_id) 
+              INNER JOIN icon_mapping map ON (map.icon_id = bit.icon_id)`
+          );
+        } catch (ex) {
+          console.error(ex);
+        }
+        // Create Hashmap for favicons
+        let faviconMap = new Map();
+        for (let faviconRow of faviconRows) {
+          // First, try to normalize the URI:
+          try {
+            let uri = lazy.NetUtil.newURI(
+              faviconRow.getResultByName("page_url")
+            );
+            faviconMap.set(uri.spec, {
+              faviconData: faviconRow.getResultByName("image_data"),
+              uri,
+            });
+          } catch (e) {
+            // Couldn't parse the URI, so just skip it.
+            continue;
+          }
+        }
+
         // Parse Chrome bookmark file that is JSON format
         let bookmarkJSON = await IOUtils.readJSON(bookmarksPath);
         let roots = bookmarkJSON.roots;
+        let bookmarkURLAccumulator = new Set();
 
         // Importing bookmark bar items
         if (roots.bookmark_bar.children && roots.bookmark_bar.children.length) {
@@ -406,6 +445,7 @@ async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
           let parentGuid = lazy.PlacesUtils.bookmarks.toolbarGuid;
           let bookmarks = convertBookmarks(
             roots.bookmark_bar.children,
+            bookmarkURLAccumulator,
             errorGatherer
           );
           await MigrationUtils.insertManyBookmarksWrapper(
@@ -418,12 +458,34 @@ async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
         if (roots.other.children && roots.other.children.length) {
           // Other Bookmarks
           let parentGuid = lazy.PlacesUtils.bookmarks.unfiledGuid;
-          let bookmarks = convertBookmarks(roots.other.children, errorGatherer);
+          let bookmarks = convertBookmarks(
+            roots.other.children,
+            bookmarkURLAccumulator,
+            errorGatherer
+          );
           await MigrationUtils.insertManyBookmarksWrapper(
             bookmarks,
             parentGuid
           );
         }
+
+        // Find all favicons with associated bookmarks
+        let favicons = [];
+        for (let bookmark of bookmarkURLAccumulator) {
+          try {
+            let uri = lazy.NetUtil.newURI(bookmark.url);
+            let favicon = faviconMap.get(uri.spec);
+            if (favicon) {
+              favicons.push(favicon);
+            }
+          } catch (e) {
+            // Couldn't parse the bookmark URI, so just skip
+            continue;
+          }
+        }
+
+        // Import Bookmark Favicons
+        MigrationUtils.insertManyFavicons(favicons);
         if (gotErrors) {
           throw new Error("The migration included errors.");
         }
