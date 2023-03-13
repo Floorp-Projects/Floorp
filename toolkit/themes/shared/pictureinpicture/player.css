@@ -121,7 +121,10 @@ browser {
   background-color: rgba(255, 255, 255, .25);
 }
 
-#controls:is(:hover, [keying], [showing]) .control-button:disabled {
+#controls:is([keying], [showing]) .control-button:disabled,
+/* Only change opacity on hover events for non-fullscreen mode.
+ * Fullscreen mode uses the `showing` attribute instead. */
+body:not(:fullscreen) #controls:hover .control-button:disabled {
   /* Set `fill-opacity` to the desired opacity in addition to full `opacity`
    * to allow having the button's tooltip in full opacity even if the button is disabled. */
   fill-opacity: 0.4;
