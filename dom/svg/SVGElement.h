@@ -127,7 +127,6 @@ class SVGElement : public SVGElementBase  // nsIContent
 
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
-  static const MappedAttributeEntry sFillStrokeMap[];
   static const MappedAttributeEntry sGraphicsMap[];
   static const MappedAttributeEntry sTextContentElementsMap[];
   static const MappedAttributeEntry sGradientStopMap[];
