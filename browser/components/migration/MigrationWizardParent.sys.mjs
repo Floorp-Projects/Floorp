@@ -63,7 +63,12 @@ export class MigrationWizardParent extends JSWindowActorParent {
         // or an Array of them, so we flatten them out and filter out
         // any that ended up going wrong and returning null from the
         // #getMigratorAndProfiles call.
-        return results.flat().filter(result => result);
+        return results
+          .flat()
+          .filter(result => result)
+          .sort((a, b) => {
+            return b.lastModifiedDate - a.lastModifiedDate;
+          });
       }
 
       case "Migrate": {
@@ -233,6 +238,7 @@ export class MigrationWizardParent extends JSWindowActorParent {
    */
   async #serializeMigratorAndProfile(migrator, profileObj) {
     let profileMigrationData = await migrator.getMigrateData(profileObj);
+    let lastModifiedDate = await migrator.getLastUsedDate();
     let availableResourceTypes = [];
 
     for (let resourceType in MigrationUtils.resourceTypes) {
@@ -259,6 +265,7 @@ export class MigrationWizardParent extends JSWindowActorParent {
       displayName,
       resourceTypes: availableResourceTypes,
       profile: profileObj,
+      lastModifiedDate,
     };
   }
 

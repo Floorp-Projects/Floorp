@@ -135,6 +135,9 @@ export class ChromeProfileMigrator extends MigratorBase {
 
   async getLastUsedDate() {
     let sourceProfiles = await this.getSourceProfiles();
+    if (!sourceProfiles) {
+      return new Date(0);
+    }
     let chromeUserDataPath = await this._getChromeUserDataPathIfExists();
     if (!chromeUserDataPath) {
       return new Date(0);
@@ -145,7 +148,7 @@ export class ChromeProfileMigrator extends MigratorBase {
         async leafName => {
           let path = PathUtils.join(basePath, leafName);
           let info = await IOUtils.stat(path).catch(() => null);
-          return info ? info.lastModificationDate : 0;
+          return info ? info.lastModified : 0;
         }
       );
       let dates = await Promise.all(fileDatePromises);
