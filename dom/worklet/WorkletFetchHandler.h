@@ -16,6 +16,10 @@ class Worklet;
 struct WorkletOptions;
 class WorkletScriptHandler;
 
+namespace loader {
+class AddModuleThrowErrorRunnable;
+}  // namespace loader
+
 // WorkletFetchHandler is used to fetch the module scripts on the main thread,
 // and notifies the result of addModule back to |aWorklet|.
 class WorkletFetchHandler final : public nsISupports {
@@ -31,6 +35,7 @@ class WorkletFetchHandler final : public nsISupports {
   nsresult StartFetch(JSContext* aCx, nsIURI* aURI, nsIURI* aReferrer);
 
   void ExecutionFailed();
+  void ExecutionFailed(JS::Handle<JS::Value> aError);
 
   void ExecutionSucceeded();
 
@@ -45,10 +50,12 @@ class WorkletFetchHandler final : public nsISupports {
   void AddPromise(Promise* aPromise);
 
   void RejectPromises(nsresult aResult);
+  void RejectPromises(JS::Handle<JS::Value> aValue);
 
   void ResolvePromises();
 
   friend class StartFetchRunnable;
+  friend class loader::AddModuleThrowErrorRunnable;
   RefPtr<Worklet> mWorklet;
   nsTArray<RefPtr<Promise>> mPromises;
 
