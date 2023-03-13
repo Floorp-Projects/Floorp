@@ -16,6 +16,8 @@
 
 namespace mozilla {
 
+class MFCDMProxy;
+
 /**
  * MFCDMParent is a wrapper class for the Media Foundation CDM in the utility
  * process.
@@ -66,6 +68,8 @@ class MFCDMParent final : public PMFCDMParent {
   void AssertOnManagerThread() const {
     MOZ_ASSERT(mManagerThread->IsOnCurrentThread());
   }
+
+  already_AddRefed<MFCDMProxy> GetMFCDMProxy();
 
   void Destroy();
 

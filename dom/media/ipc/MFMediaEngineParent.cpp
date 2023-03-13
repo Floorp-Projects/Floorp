@@ -9,6 +9,7 @@
 #include <mfapi.h>
 
 #ifdef MOZ_WMF_CDM
+#  include "MFCDMParent.h"
 #  include "MFContentProtectionManager.h"
 #endif
 
@@ -169,15 +170,6 @@ void MFMediaEngineParent::CreateMediaEngine() {
   RETURN_VOID_IF_FAILED(factory->CreateInstance(
       isLowLatency ? MF_MEDIA_ENGINE_REAL_TIME_MODE : MF_MEDIA_ENGINE_DEFAULT,
       creationAttributes.Get(), &mMediaEngine));
-
-#ifdef MOZ_WMF_CDM
-  // TODO : set the content protection manager to IMFMediaEngineProtectedContent
-  // TODO : only create this for the encrypted content.
-  if (StaticPrefs::media_eme_playready_enabled()) {
-    RETURN_VOID_IF_FAILED(MakeAndInitialize<MFContentProtectionManager>(
-        &mContentProtectionManager));
-  }
-#endif
 
   LOG("Created media engine successfully");
   mIsCreatedMediaEngine = true;
@@ -469,10 +461,38 @@ mozilla::ipc::IPCResult MFMediaEngineParent::RecvSeek(
 
 mozilla::ipc::IPCResult MFMediaEngineParent::RecvSetCDMProxyId(
     uint64_t aProxyId) {
-  if (mMediaEngine) {
-    // TODO : interact with the MFCDMParent andset CDM related stuffs to the
-    // media engine.
+  if (!mMediaEngine) {
+    return IPC_OK();
   }
+#ifdef MOZ_WMF_CDM
+  LOG("SetCDMProxy, Id=%" PRIu64, aProxyId);
+  MFCDMParent* cdmParent = MFCDMParent::GetCDMById(aProxyId);
+  MOZ_DIAGNOSTIC_ASSERT(cdmParent);
+  RETURN_PARAM_IF_FAILED(
+      MakeAndInitialize<MFContentProtectionManager>(&mContentProtectionManager),
+      IPC_OK());
+
+  ComPtr<IMFMediaEngineProtectedContent> protectedMediaEngine;
+  RETURN_PARAM_IF_FAILED(mMediaEngine.As(&protectedMediaEngine), IPC_OK());
+  RETURN_PARAM_IF_FAILED(protectedMediaEngine->SetContentProtectionManager(
+                             mContentProtectionManager.Get()),
+                         IPC_OK());
+
+  RefPtr<MFCDMProxy> proxy = cdmParent->GetMFCDMProxy();
+  if (!proxy) {
+    LOG("Failed to get MFCDMProxy!");
+    return IPC_OK();
+  }
+
+  RETURN_PARAM_IF_FAILED(mContentProtectionManager->SetCDMProxy(proxy),
+                         IPC_OK());
+  // TODO : is it possible to set CDM proxy before creating media source? If so,
+  // handle that as well.
+  if (mMediaSource) {
+    mMediaSource->SetCDMProxy(proxy);
+  }
+  LOG("Set CDM Proxy successfully on the media engine!");
+#endif
   return IPC_OK();
 }
 
@@ -649,16 +669,6 @@ void MFMediaEngineParent::UpdateStatisticsData() {
         StatisticData{totalRenderedFrames, totalDroppedFrames});
   }
 }
-
-#ifdef MOZ_WMF_CDM
-void MFMediaEngineParent::SetCDMProxy(MFCDMProxy* aCDMProxy) {
-  AssertOnManagerThread();
-  MOZ_ASSERT(mContentProtectionManager);
-  MOZ_ASSERT(mMediaSource);
-  RETURN_VOID_IF_FAILED(mContentProtectionManager->SetCDMProxy(aCDMProxy));
-  mMediaSource->SetCDMProxy(aCDMProxy);
-}
-#endif
 
 #undef LOG
 #undef RETURN_IF_FAILED
