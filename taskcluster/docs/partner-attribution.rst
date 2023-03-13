@@ -93,8 +93,8 @@ Attribution
 * platforms: Any Windows, runs on linux
 * upstreams: ``repackage-signing`` ``repackage-signing-l10n``
 
-There is one task, calling out to `python/mozrelease/mozrelease/partner_attribution.py
-<https://hg.mozilla.org/releases/mozilla-release/file/default/python/mozrelease/mozrelease/partner_attribution.py>`_.
+There is one task, calling out to `python/mozrelease/mozrelease/attribute_builds.py
+<https://hg.mozilla.org/releases/mozilla-release/file/default/python/mozrelease/mozrelease/attribute_builds.py>`_.
 
 It takes as input the repackage-signing and repackage-signing-l10n artifacts, which are all
 target.exe full installers. The ``ATTRIBUTION_CONFIG`` environment variable controls the script.
