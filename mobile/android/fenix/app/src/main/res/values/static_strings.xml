@@ -42,8 +42,6 @@
     <string name="preferences_nimbus_use_preview_collection">Use Nimbus Preview Collection (requires restart)</string>
     <!-- Label for enabling the Task Continuity feature -->
     <string name="preferences_debug_settings_task_continuity" translatable="false">Enable Task Continuity</string>
-    <!-- Label for enabling the Unified Search feature -->
-    <string name="preferences_debug_settings_unified_search" translatable="false">Enable Unified Search (requires restart)</string>
     <!-- Label for custom Glean server URL -->
     <string name="preferences_debug_settings_custom_glean_server_url" translatable="false">Custom Glean server URL (requires restart)</string>
     <!-- Label for custom Pocket sponsored stories settings -->

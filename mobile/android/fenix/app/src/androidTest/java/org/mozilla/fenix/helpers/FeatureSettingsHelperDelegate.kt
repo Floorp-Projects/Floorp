@@ -31,6 +31,7 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
         isRecentlyVisitedFeatureEnabled = settings.historyMetadataUIFeature,
         isPWAsPromptEnabled = !settings.userKnowsAboutPwas,
         isTCPCFREnabled = settings.shouldShowTotalCookieProtectionCFR,
+        isUnifiedSearchEnabled = false,
         isWallpaperOnboardingEnabled = settings.showWallpaperOnboarding,
         isDeleteSitePermissionsEnabled = settings.deleteSitePermissions,
         isCookieBannerReductionDialogEnabled = !settings.userOptOutOfReEngageCookieBannerDialog,
@@ -81,6 +82,7 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
         settings.historyMetadataUIFeature = featureFlags.isRecentlyVisitedFeatureEnabled
         settings.userKnowsAboutPwas = !featureFlags.isPWAsPromptEnabled
         settings.shouldShowTotalCookieProtectionCFR = featureFlags.isTCPCFREnabled
+        settings.showUnifiedSearchFeature = featureFlags.isUnifiedSearchEnabled
         settings.showWallpaperOnboarding = featureFlags.isWallpaperOnboardingEnabled
         settings.deleteSitePermissions = featureFlags.isDeleteSitePermissionsEnabled
         settings.userOptOutOfReEngageCookieBannerDialog = !featureFlags.isCookieBannerReductionDialogEnabled
@@ -97,6 +99,7 @@ private data class FeatureFlags(
     var isRecentlyVisitedFeatureEnabled: Boolean,
     var isPWAsPromptEnabled: Boolean,
     var isTCPCFREnabled: Boolean,
+    val isUnifiedSearchEnabled: Boolean,
     var isWallpaperOnboardingEnabled: Boolean,
     var isDeleteSitePermissionsEnabled: Boolean,
     var isCookieBannerReductionDialogEnabled: Boolean,

@@ -134,8 +134,11 @@ features:
     defaults:
       - channel: nightly
         value:
-          enabled: false
-  
+          enabled: true
+      - channel: developer
+        value:
+          enabled: true
+
   client-deduplication:
     description: A feature to control the sending of the client-deduplication ping.
     variables:
