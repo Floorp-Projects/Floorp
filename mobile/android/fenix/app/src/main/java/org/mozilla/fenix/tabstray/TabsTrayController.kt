@@ -430,6 +430,7 @@ class DefaultTabsTrayController(
     override fun handleTabSelected(tab: TabSessionState, source: String?) {
         TabsTray.openedExistingTab.record(TabsTray.OpenedExistingTabExtra(source ?: "unknown"))
         tabsUseCases.selectTab(tab.id)
+        browsingModeManager.mode = BrowsingMode.fromBoolean(tab.content.private)
         handleNavigateToBrowser()
     }
 

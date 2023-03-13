@@ -18,6 +18,7 @@ import io.mockk.spyk
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import io.mockk.verifyOrder
+import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.state.BrowserState
@@ -31,6 +32,7 @@ import mozilla.components.browser.storage.sync.TabEntry
 import mozilla.components.concept.base.profiler.Profiler
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.service.glean.testing.GleanTestRule
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -48,7 +50,9 @@ import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.TabsTray
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
+import org.mozilla.fenix.browser.browsingmode.DefaultBrowsingModeManager
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.ext.maxActiveTime
 import org.mozilla.fenix.ext.potentialInactiveTabs
@@ -866,6 +870,49 @@ class DefaultTabsTrayControllerTest {
 
         verify { tabsUseCases.selectTab(tab.id) }
         verify { controller.handleNavigateToBrowser() }
+    }
+
+    @Test
+    fun `GIVEN a private tab is open and selected with a normal tab also open WHEN the private tab is closed and private home page shown and normal tab is selected from tabs tray THEN normal tab is displayed  `() {
+        val normalTab = TabSessionState(
+            content = ContentState(url = "https://simulate.com", private = false),
+            id = "normalTab",
+        )
+        val privateTab = TabSessionState(
+            content = ContentState(url = "https://mozilla.com", private = true),
+            id = "privateTab",
+        )
+        browserStore = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(normalTab, privateTab),
+            ),
+        )
+        browsingModeManager = spyk(
+            DefaultBrowsingModeManager(
+                _mode = BrowsingMode.Private,
+                settings = settings,
+                modeDidChange = mockk(relaxed = true),
+            ),
+        )
+        val controller = spyk(createController())
+
+        try {
+            mockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
+            browserStore.dispatch(TabListAction.SelectTabAction(privateTab.id)).joinBlocking()
+            controller.handleTabSelected(privateTab, null)
+
+            assertEquals(privateTab.id, browserStore.state.selectedTabId)
+            assertEquals(true, browsingModeManager.mode.isPrivate)
+
+            controller.handleTabDeletion("privateTab")
+            browserStore.dispatch(TabListAction.SelectTabAction(normalTab.id)).joinBlocking()
+            controller.handleTabSelected(normalTab, null)
+
+            assertEquals(normalTab.id, browserStore.state.selectedTabId)
+            assertEquals(false, browsingModeManager.mode.isPrivate)
+        } finally {
+            unmockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
+        }
     }
 
     @Test
