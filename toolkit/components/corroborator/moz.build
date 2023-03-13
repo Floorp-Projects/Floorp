@@ -9,7 +9,7 @@ with Files("**"):
     BUG_COMPONENT = ("Toolkit", "General")
 
 EXTRA_JS_MODULES += [
-    "Corroborate.jsm",
+    "Corroborate.sys.mjs",
 ]
 
 XPCSHELL_TESTS_MANIFESTS += [
