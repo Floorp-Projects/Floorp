@@ -13,11 +13,6 @@ LINUX_WORKER_TYPES = {
 
 # windows worker types keyed by test-platform and virtualization
 WINDOWS_WORKER_TYPES = {
-    "windows10-32-mingwclang-qr": {
-        "virtual": "t-win10-64",
-        "virtual-with-gpu": "t-win10-64-gpu-s",
-        "hardware": "t-win10-64-1803-hw",
-    },
     "windows7-32-qr": {
         "virtual": "t-win7-32",
         "virtual-with-gpu": "t-win7-32-gpu",
@@ -33,37 +28,7 @@ WINDOWS_WORKER_TYPES = {
         "virtual-with-gpu": "t-win7-32-gpu",
         "hardware": "t-win10-64-1803-hw",
     },
-    "windows10-32-qr": {
-        "virtual": "t-win10-64",
-        "virtual-with-gpu": "t-win10-64-gpu-s",
-        "hardware": "t-win10-64-1803-hw",
-    },
-    "windows10-32-shippable-qr": {
-        "virtual": "t-win10-64",
-        "virtual-with-gpu": "t-win10-64-gpu-s",
-        "hardware": "t-win10-64-1803-hw",
-    },
-    "windows10-64": {
-        "virtual": "t-win10-64",
-        "virtual-with-gpu": "t-win10-64-gpu-s",
-        "hardware": "t-win10-64-1803-hw",
-    },
-    "windows10-aarch64-qr": {
-        "virtual": "t-win64-aarch64-laptop",
-        "virtual-with-gpu": "t-win64-aarch64-laptop",
-        "hardware": "t-win64-aarch64-laptop",
-    },
-    "windows10-64-devedition": {
-        "virtual": "t-win10-64",
-        "virtual-with-gpu": "t-win10-64-gpu-s",
-        "hardware": "t-win10-64-1803-hw",
-    },
-    "windows10-64-shippable": {
-        "virtual": "t-win10-64",
-        "virtual-with-gpu": "t-win10-64-gpu-s",
-        "hardware": "t-win10-64-1803-hw",
-    },
-    "windows10-64-qr": {
+    "windows10-64": {  # source-test
         "virtual": "t-win10-64",
         "virtual-with-gpu": "t-win10-64-gpu-s",
         "hardware": "t-win10-64-1803-hw",
@@ -73,75 +38,16 @@ WINDOWS_WORKER_TYPES = {
         "virtual-with-gpu": "t-win10-64-gpu-s",
         "hardware": "t-win10-64-1803-hw",
     },
-    "windows10-64-devedition-qr": {
-        "virtual": "t-win10-64",
-        "virtual-with-gpu": "t-win10-64-gpu-s",
-        "hardware": "t-win10-64-1803-hw",
-    },
-    "windows10-64-asan-qr": {
-        "virtual": "t-win10-64",
-        "virtual-with-gpu": "t-win10-64-gpu-s",
-        "hardware": "t-win10-64-1803-hw",
-    },
-    "windows10-64-mingwclang-qr": {
-        "virtual": "t-win10-64",
-        "virtual-with-gpu": "t-win10-64-gpu-s",
-        "hardware": "t-win10-64-1803-hw",
-    },
     "windows10-64-ref-hw-2017": {
         "virtual": "t-win10-64",
         "virtual-with-gpu": "t-win10-64-gpu-s",
         "hardware": "t-win10-64-ref-hw",
-    },
-    "windows10-32-2004-mingwclang-qr": {
-        "virtual": "win10-64-2004",
-        "virtual-with-gpu": "win10-64-2004-gpu",
-    },
-    "windows10-32-2004-qr": {
-        "virtual": "win10-64-2004",
-        "virtual-with-gpu": "win10-64-2004-gpu",
-    },
-    "windows10-32-2004-shippable-qr": {
-        "virtual": "win10-64-2004",
-        "virtual-with-gpu": "win10-64-2004-gpu",
-    },
-    "windows10-64-2004": {
-        "virtual": "win10-64-2004",
-        "virtual-with-gpu": "win10-64-2004-gpu",
-    },
-    "windows10-64-2004-ccov": {
-        "virtual": "win10-64-2004-ssd",
-        "virtual-with-gpu": "win10-64-2004-ssd-gpu",
-    },
-    "windows10-64-2004-ccov-qr": {
-        "virtual": "win10-64-2004-ssd",
-        "virtual-with-gpu": "win10-64-2004-ssd-gpu",
-    },
-    "windows10-64-2004-devedition": {
-        "virtual": "win10-64-2004",
-        "virtual-with-gpu": "win10-64-2004-gpu",
-    },
-    "windows10-64-2004-shippable": {
-        "virtual": "win10-64-2004",
-        "virtual-with-gpu": "win10-64-2004-gpu",
     },
     "windows10-64-2004-qr": {
         "virtual": "win10-64-2004",
         "virtual-with-gpu": "win10-64-2004-gpu",
     },
     "windows10-64-2004-shippable-qr": {
-        "virtual": "win10-64-2004",
-        "virtual-with-gpu": "win10-64-2004-gpu",
-    },
-    "windows10-64-2004-devedition-qr": {
-        "virtual": "win10-64-2004",
-        "virtual-with-gpu": "win10-64-2004-gpu",
-    },
-    "windows10-64-2004-asan-qr": {
-        "virtual": "win10-64-2004",
-        "virtual-with-gpu": "win10-64-2004-gpu",
-    },
-    "windows10-64-2004-mingwclang-qr": {
         "virtual": "win10-64-2004",
         "virtual-with-gpu": "win10-64-2004-gpu",
     },
@@ -234,10 +140,6 @@ def set_worker_type(config, tasks):
                 if test_platform.startswith("windows10-64-ref-hw-2017"):
                     win_worker_type_platform = WINDOWS_WORKER_TYPES[
                         "windows10-64-ref-hw-2017"
-                    ]
-                elif test_platform.startswith("windows10-aarch64-qr"):
-                    win_worker_type_platform = WINDOWS_WORKER_TYPES[
-                        "windows10-aarch64-qr"
                     ]
                 else:
                     win_worker_type_platform = WINDOWS_WORKER_TYPES["windows10-64"]
