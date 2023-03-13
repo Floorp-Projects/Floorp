@@ -196,21 +196,17 @@ add_task(async function test_fog_custom_distribution_works() {
   );
 });
 
-add_task(
-  /* TODO(bug 1737520): Enable custom ping support on Android */
-  { skip_if: () => AppConstants.platform == "android" },
-  function test_fog_custom_pings() {
-    Assert.ok("onePingOnly" in GleanPings);
-    let submitted = false;
-    Glean.testOnly.onePingOneBool.set(false);
-    GleanPings.onePingOnly.testBeforeNextSubmit(reason => {
-      submitted = true;
-      Assert.equal(false, Glean.testOnly.onePingOneBool.testGetValue());
-    });
-    GleanPings.onePingOnly.submit();
-    Assert.ok(submitted, "Ping was submitted, callback was called.");
-  }
-);
+add_task(function test_fog_custom_pings() {
+  Assert.ok("onePingOnly" in GleanPings);
+  let submitted = false;
+  Glean.testOnly.onePingOneBool.set(false);
+  GleanPings.onePingOnly.testBeforeNextSubmit(reason => {
+    submitted = true;
+    Assert.equal(false, Glean.testOnly.onePingOneBool.testGetValue());
+  });
+  GleanPings.onePingOnly.submit();
+  Assert.ok(submitted, "Ping was submitted, callback was called.");
+});
 
 add_task(async function test_fog_timing_distribution_works() {
   let t1 = Glean.testOnly.whatTimeIsIt.start();

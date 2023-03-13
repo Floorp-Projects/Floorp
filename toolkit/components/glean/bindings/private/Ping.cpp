@@ -6,10 +6,8 @@
 
 #include "mozilla/glean/bindings/Ping.h"
 
-#ifndef MOZ_GLEAN_ANDROID
-#  include "mozilla/AppShutdown.h"
-#  include "mozilla/ClearOnShutdown.h"
-#endif
+#include "mozilla/AppShutdown.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Components.h"
 #include "nsIClassInfoImpl.h"
 #include "nsString.h"
@@ -18,7 +16,6 @@ namespace mozilla::glean {
 
 namespace impl {
 
-#ifndef MOZ_GLEAN_ANDROID
 using CallbackMapType = nsTHashMap<uint32_t, PingTestCallback>;
 using MetricIdToCallbackMutex = StaticDataMutex<UniquePtr<CallbackMapType>>;
 static Maybe<MetricIdToCallbackMutex::AutoLock> GetCallbackMapLock() {
@@ -39,12 +36,8 @@ static Maybe<MetricIdToCallbackMutex::AutoLock> GetCallbackMapLock() {
   }
   return Some(std::move(lock));
 }
-#endif
 
 void Ping::Submit(const nsACString& aReason) const {
-#ifdef MOZ_GLEAN_ANDROID
-  Unused << mId;
-#else
   {
     GetCallbackMapLock().apply([&](auto& lock) {
       auto callback = lock.ref()->Extract(mId);
@@ -54,18 +47,13 @@ void Ping::Submit(const nsACString& aReason) const {
     });
   }
   fog_submit_ping_by_id(mId, &aReason);
-#endif
 }
 
 void Ping::TestBeforeNextSubmit(PingTestCallback&& aCallback) const {
-#ifdef MOZ_GLEAN_ANDROID
-  return;
-#else
   {
     GetCallbackMapLock().apply(
         [&](auto& lock) { lock.ref()->InsertOrUpdate(mId, aCallback); });
   }
-#endif
 }
 
 }  // namespace impl

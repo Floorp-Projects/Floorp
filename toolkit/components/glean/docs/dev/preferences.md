@@ -44,7 +44,6 @@ Defaults to 120 (activity), 1200 (inactivity).
 
 If set, the Glean SDK is assumed to be managed by something other than FOG, meaning:
 * [GIFFT][gifft] is disabled.
-* Custom Pings cannot be submitted via C++ or JS
 * FOG doesn't initialize Glean
 * FOG doesn't relay (in)activity or experiment annotations to Glean
 

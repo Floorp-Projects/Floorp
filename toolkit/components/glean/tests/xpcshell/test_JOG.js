@@ -291,32 +291,28 @@ add_task(async function test_jog_custom_distribution_works() {
   );
 });
 
-add_task(
-  /* TODO: Enable custom ping support on Android */
-  { skip_if: () => AppConstants.platform == "android" },
-  async function test_jog_custom_pings() {
-    Services.fog.testRegisterRuntimeMetric(
-      "boolean",
-      "jog_cat",
-      "jog_ping_bool",
-      ["jog-ping"],
-      `"ping"`,
-      false
-    );
-    Services.fog.testRegisterRuntimePing("jog-ping", true, true, []);
-    Assert.ok("jogPing" in GleanPings);
-    let submitted = false;
-    Glean.jogCat.jogPingBool.set(false);
-    GleanPings.jogPing.testBeforeNextSubmit(reason => {
-      submitted = true;
-      Assert.equal(false, Glean.jogCat.jogPingBool.testGetValue());
-    });
-    GleanPings.jogPing.submit();
-    Assert.ok(submitted, "Ping was submitted, callback was called.");
-    // ping-lifetime value was cleared.
-    Assert.equal(undefined, Glean.jogCat.jogPingBool.testGetValue());
-  }
-);
+add_task(async function test_jog_custom_pings() {
+  Services.fog.testRegisterRuntimeMetric(
+    "boolean",
+    "jog_cat",
+    "jog_ping_bool",
+    ["jog-ping"],
+    `"ping"`,
+    false
+  );
+  Services.fog.testRegisterRuntimePing("jog-ping", true, true, []);
+  Assert.ok("jogPing" in GleanPings);
+  let submitted = false;
+  Glean.jogCat.jogPingBool.set(false);
+  GleanPings.jogPing.testBeforeNextSubmit(reason => {
+    submitted = true;
+    Assert.equal(false, Glean.jogCat.jogPingBool.testGetValue());
+  });
+  GleanPings.jogPing.submit();
+  Assert.ok(submitted, "Ping was submitted, callback was called.");
+  // ping-lifetime value was cleared.
+  Assert.equal(undefined, Glean.jogCat.jogPingBool.testGetValue());
+});
 
 add_task(async function test_jog_timing_distribution_works() {
   Services.fog.testRegisterRuntimeMetric(
@@ -655,21 +651,17 @@ add_task(function test_jog_dotted_categories_work() {
   Assert.equal(314, Glean.jogCatDotted.jogCounter.testGetValue());
 });
 
-add_task(
-  /* TODO: Enable custom ping support on Android */
-  { skip_if: () => AppConstants.platform == "android" },
-  async function test_jog_ping_works() {
-    const kReason = "reason-1";
-    Services.fog.testRegisterRuntimePing("my-ping", true, true, [kReason]);
-    let submitted = false;
-    GleanPings.myPing.testBeforeNextSubmit(reason => {
-      submitted = true;
-      Assert.equal(kReason, reason);
-    });
-    GleanPings.myPing.submit("reason-1");
-    Assert.ok(submitted, "Ping must have been submitted");
-  }
-);
+add_task(async function test_jog_ping_works() {
+  const kReason = "reason-1";
+  Services.fog.testRegisterRuntimePing("my-ping", true, true, [kReason]);
+  let submitted = false;
+  GleanPings.myPing.testBeforeNextSubmit(reason => {
+    submitted = true;
+    Assert.equal(kReason, reason);
+  });
+  GleanPings.myPing.submit("reason-1");
+  Assert.ok(submitted, "Ping must have been submitted");
+});
 
 add_task(function test_jog_name_collision() {
   Assert.ok("aCounter" in Glean.testOnlyJog);
