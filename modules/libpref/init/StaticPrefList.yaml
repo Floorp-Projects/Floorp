@@ -3009,6 +3009,12 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
+# Is support for key events and focus events on disabled elements enabled?
+- name: dom.forms.always_allow_key_and_focus_events.enabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Is support for HTMLInputElement.showPicker enabled?
 - name: dom.input.showPicker
   type: bool

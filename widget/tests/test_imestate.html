@@ -312,7 +312,7 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription) {
                  ", IME shouldn't have focus right now");
           }
         } else {
-          todo(focusEventCount > 0,
+          ok(focusEventCount > 0,
                aDescription + ": " + aTest.description + ", focus event should be fired");
         }
       } else {
@@ -1499,6 +1499,10 @@ async function runEditorReframeTests() {
 async function runTests() {
   if (!kIMEEnabledSupported && !kIMEOpenSupported)
     return;
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.forms.always_allow_key_and_focus_events.enabled", true]],
+  });
 
   // test for normal contents.
   runBasicTest(false, false, "Testing of normal contents");
