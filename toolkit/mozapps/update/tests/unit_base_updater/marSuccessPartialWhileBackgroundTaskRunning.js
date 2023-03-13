@@ -9,8 +9,8 @@ const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
 );
 
-const { BackgroundTasksTestUtils } = ChromeUtils.import(
-  "resource://testing-common/BackgroundTasksTestUtils.jsm"
+const { BackgroundTasksTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/BackgroundTasksTestUtils.sys.mjs"
 );
 BackgroundTasksTestUtils.init(this);
 const do_backgroundtask = BackgroundTasksTestUtils.do_backgroundtask.bind(

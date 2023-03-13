@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  BackgroundUpdate: "resource://gre/modules/BackgroundUpdate.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  BackgroundUpdate: "resource://gre/modules/BackgroundUpdate.sys.mjs",
 });
 
 const transitionPerformedPref = "app.update.background.rolledout";

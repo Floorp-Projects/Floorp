@@ -2,18 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-var EXPORTED_SYMBOLS = ["AUSTLMY"];
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
 const { BitsError, BitsUnknownError } = ChromeUtils.import(
   "resource://gre/modules/Bits.jsm"
 );
 
-var AUSTLMY = {
+export var AUSTLMY = {
   // Telemetry for the application update background update check occurs when
   // the background update timer fires after the update interval which is
   // determined by the app.update.interval preference and its telemetry
@@ -652,4 +647,5 @@ var AUSTLMY = {
     }
   },
 };
+
 Object.freeze(AUSTLMY);

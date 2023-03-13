@@ -3,15 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { FileUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/FileUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
+import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const DIR_UPDATES = "updates";
 const FILE_UPDATE_STATUS = "update.status";
@@ -68,7 +63,7 @@ function getUpdateBaseDirNoCreate() {
   return FileUtils.getDir(KEY_UPDROOT, [], false);
 }
 
-function UpdateServiceStub() {
+export function UpdateServiceStub() {
   let updateDir = getUpdateBaseDirNoCreate();
   let prefUpdateDirMigrated =
     PREF_PREFIX_UPDATE_DIR_MIGRATED + updateDir.leafName;
@@ -114,13 +109,12 @@ function UpdateServiceStub() {
     aus.observe(null, "post-update-processing", "");
   }
 }
+
 UpdateServiceStub.prototype = {
   observe() {},
   classID: Components.ID("{e43b0010-04ba-4da6-b523-1f92580bc150}"),
   QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 };
-
-var EXPORTED_SYMBOLS = ["UpdateServiceStub"];
 
 function deactivateUpdateLogFile() {
   LOG("Application update file logging being automatically turned off");

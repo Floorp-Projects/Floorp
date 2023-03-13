@@ -5,16 +5,12 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.sys.mjs",
+  UpdateListener: "resource://gre/modules/UpdateListener.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(
   this,
   "DownloadUtils",
   "resource://gre/modules/DownloadUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "UpdateListener",
-  "resource://gre/modules/UpdateListener.jsm"
 );
 const { XPIInstall } = ChromeUtils.import(
   "resource://gre/modules/addons/XPIInstall.jsm"
