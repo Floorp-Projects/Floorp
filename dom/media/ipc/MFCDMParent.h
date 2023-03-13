@@ -74,14 +74,8 @@ class MFCDMParent final : public PMFCDMParent {
 
   HRESULT LoadFactory();
 
-  void Register() {
-    MOZ_ASSERT(!sRegisteredCDMs.Contains(this->mId));
-    sRegisteredCDMs.InsertOrUpdate(this->mId, this);
-  }
-  void Unregister() {
-    MOZ_ASSERT(sRegisteredCDMs.Contains(this->mId));
-    sRegisteredCDMs.Remove(this->mId);
-  }
+  void Register();
+  void Unregister();
 
   void ConnectSessionEvents(MFCDMSession* aSession);
 
