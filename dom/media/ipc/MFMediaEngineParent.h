@@ -56,6 +56,7 @@ class MFMediaEngineParent final : public PMFMediaEngineParent {
   mozilla::ipc::IPCResult RecvPlay();
   mozilla::ipc::IPCResult RecvPause();
   mozilla::ipc::IPCResult RecvSeek(double aTargetTimeInSecond);
+  mozilla::ipc::IPCResult RecvSetCDMProxyId(uint64_t aProxyId);
   mozilla::ipc::IPCResult RecvSetVolume(double aVolume);
   mozilla::ipc::IPCResult RecvSetPlaybackRate(double aPlaybackRate);
   mozilla::ipc::IPCResult RecvSetLooping(bool aLooping);

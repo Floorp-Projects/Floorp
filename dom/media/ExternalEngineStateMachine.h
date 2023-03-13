@@ -312,6 +312,7 @@ class ExternalPlaybackEngine {
   virtual media::TimeUnit GetCurrentPosition() = 0;
   virtual void NotifyEndOfStream(TrackInfo::TrackType aType) = 0;
   virtual void SetMediaInfo(const MediaInfo& aInfo) = 0;
+  virtual bool SetCDMProxy(CDMProxy* aProxy) = 0;
 
   ExternalEngineStateMachine* const MOZ_NON_OWNING_REF mOwner;
 };
