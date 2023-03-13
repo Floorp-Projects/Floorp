@@ -4954,57 +4954,6 @@ function openNewUserContextTab(event) {
   });
 }
 
-/**
- * Updates the User Context UI indicators if the browser is in a non-default context
- */
-function updateUserContextUIIndicator() {
-  function replaceContainerClass(classType, element, value) {
-    let prefix = "identity-" + classType + "-";
-    if (value && element.classList.contains(prefix + value)) {
-      return;
-    }
-    for (let className of element.classList) {
-      if (className.startsWith(prefix)) {
-        element.classList.remove(className);
-      }
-    }
-    if (value) {
-      element.classList.add(prefix + value);
-    }
-  }
-
-  let hbox = document.getElementById("userContext-icons");
-
-  let userContextId = gBrowser.selectedBrowser.getAttribute("usercontextid");
-  if (!userContextId) {
-    replaceContainerClass("color", hbox, "");
-    hbox.hidden = true;
-    return;
-  }
-
-  let identity = ContextualIdentityService.getPublicIdentityFromId(
-    userContextId
-  );
-  if (!identity) {
-    replaceContainerClass("color", hbox, "");
-    hbox.hidden = true;
-    return;
-  }
-
-  replaceContainerClass("color", hbox, identity.color);
-
-  let label = ContextualIdentityService.getUserContextLabel(userContextId);
-  document.getElementById("userContext-label").setAttribute("value", label);
-  // Also set the container label as the tooltip so we can only show the icon
-  // in small windows.
-  hbox.setAttribute("tooltiptext", label);
-
-  let indicator = document.getElementById("userContext-indicator");
-  replaceContainerClass("icon", indicator, identity.icon);
-
-  hbox.hidden = false;
-}
-
 var XULBrowserWindow = {
   // Stored Status, Link and Loading values
   status: "",
