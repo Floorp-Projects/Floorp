@@ -704,3 +704,39 @@ add_task(async function selected_result_dynamic_wikipedia() {
 
   cleanupQuickSuggest();
 });
+
+add_task(async function selected_result_search_shortcut_button() {
+  await doTest(async browser => {
+    const oneOffSearchButtons = UrlbarTestUtils.getOneOffSearchButtons(window);
+    await openPopup("x");
+    Assert.ok(!oneOffSearchButtons.selectedButton);
+
+    // Select oneoff button added for test in setup().
+    for (;;) {
+      EventUtils.synthesizeKey("KEY_ArrowDown");
+      if (!oneOffSearchButtons.selectedButton) {
+        continue;
+      }
+
+      if (
+        oneOffSearchButtons.selectedButton.engine.name.includes(
+          "searchSuggestionEngine.xml"
+        )
+      ) {
+        break;
+      }
+    }
+
+    // Search immediately.
+    await doEnter({ shiftKey: true });
+
+    assertEngagementTelemetry([
+      {
+        selected_result: "search_shortcut_button",
+        selected_result_subtype: "",
+        provider: null,
+        results: "search_engine",
+      },
+    ]);
+  });
+});

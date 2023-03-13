@@ -1109,7 +1109,8 @@ class TelemetryEvent {
       if (numResults) {
         const selectedResult = currentResults[selIndex];
         selected_result = lazy.UrlbarUtils.searchEngagementTelemetryType(
-          selectedResult
+          selectedResult,
+          selType
         );
         selected_result_subtype = lazy.UrlbarUtils.searchEngagementTelemetrySubtype(
           selectedResult,

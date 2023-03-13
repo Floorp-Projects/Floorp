@@ -630,6 +630,7 @@ export class UrlbarInput {
       // If there's a selected one-off button then load a search using
       // the button's engine.
       result = this._resultForCurrentValue;
+
       let searchString =
         (result && (result.payload.suggestion || result.payload.query)) ||
         this._lastSearchString;
@@ -679,7 +680,7 @@ export class UrlbarInput {
 
     this.controller.engagementEvent.record(event, {
       searchString: typedValue,
-      selIndex: this.view.selectedRowIndex,
+      selIndex: selectedResult?.rowIndex ?? -1,
       selType,
       provider: selectedResult?.providerName,
     });
