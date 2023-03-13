@@ -41,6 +41,7 @@ class WindowsUIUtils final : public nsIWindowsUIUtils {
   // Use LookAndFeel for a cached getter.
   static bool ComputeOverlayScrollbars();
   static double ComputeTextScaleFactor();
+  static bool ComputeTransparencyEffects();
 
  protected:
   ~WindowsUIUtils();

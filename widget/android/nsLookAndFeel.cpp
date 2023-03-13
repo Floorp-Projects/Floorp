@@ -346,6 +346,10 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = java::GeckoSystemStateListener::PrefersReducedMotion();
       break;
 
+    case IntID::PrefersReducedTransparency:
+      aResult = 0;
+      break;
+
     case IntID::PrimaryPointerCapabilities:
       aResult = java::GeckoAppShell::GetAllPointerCapabilities();
 

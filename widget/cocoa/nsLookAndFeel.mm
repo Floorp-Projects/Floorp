@@ -485,6 +485,9 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::PrefersReducedMotion:
       aResult = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
       break;
+    case IntID::PrefersReducedTransparency:
+      aResult = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceTransparency;
+      break;
     case IntID::UseAccessibilityTheme:
       aResult = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldIncreaseContrast;
       break;
