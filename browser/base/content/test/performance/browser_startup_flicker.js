@@ -18,10 +18,6 @@ add_task(async function() {
   let frames = Cu.cloneInto(startupRecorder.data.frames, {});
   ok(!!frames.length, "Should have captured some frames.");
 
-  let firefoxViewRect = document
-    .getElementById("firefox-view-button")
-    .getBoundingClientRect();
-
   let unexpectedRects = 0;
   let alreadyFocused = false;
   for (let i = 1; i < frames.length; ++i) {
@@ -52,16 +48,6 @@ add_task(async function() {
         /**
          * Please don't add anything new unless justified!
          */
-        {
-          condition(r) {
-            // The firefox view button is an async-decoded png.
-            return (
-              r.w == 16 &&
-              r.h == 16 &&
-              rectInBoundingClientRect(r, firefoxViewRect)
-            );
-          },
-        },
       ];
 
       let rectText = `${rect.toSource()}, window width: ${width}`;

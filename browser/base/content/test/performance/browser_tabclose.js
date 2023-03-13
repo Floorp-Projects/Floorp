@@ -37,9 +37,6 @@ add_task(async function() {
 
   let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
   let newTabButtonRect = gBrowser.tabContainer.newTabButton.getBoundingClientRect();
-  let firefoxViewRect = document
-    .getElementById("firefox-view-button")
-    .getBoundingClientRect();
   let inRange = (val, min, max) => min <= val && val <= max;
 
   // Add a reflow observer and open a new tab.
@@ -100,12 +97,6 @@ add_task(async function() {
               r.y1 >=
                 document.getElementById("appcontent").getBoundingClientRect()
                   .top,
-          },
-          {
-            name:
-              "bug 1820549 - flicker caused by delayed load of Firefox " +
-              "View icon",
-            condition: r => rectInBoundingClientRect(r, firefoxViewRect),
           },
         ],
       },
