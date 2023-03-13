@@ -1639,7 +1639,7 @@ HttpChannelChild::ConnectParent(uint32_t registrarId) {
   if (browserChild) {
     MOZ_ASSERT(browserChild->WebNavigation());
     if (BrowsingContext* bc = browserChild->GetBrowsingContext()) {
-      mTopBrowsingContextId = bc->Top()->Id();
+      mBrowserId = bc->BrowserId();
     }
   }
 
@@ -2168,7 +2168,7 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
       }
     }
     if (BrowsingContext* bc = browserChild->GetBrowsingContext()) {
-      mTopBrowsingContextId = bc->Top()->Id();
+      mBrowserId = bc->BrowserId();
     }
   }
   SetTopLevelContentWindowId(contentWindowId);
@@ -2243,11 +2243,11 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   openArgs.integrityMetadata() = mIntegrityMetadata;
 
   openArgs.contentWindowId() = contentWindowId;
-  openArgs.topBrowsingContextId() = mTopBrowsingContextId;
+  openArgs.browserId() = mBrowserId;
 
   LOG(("HttpChannelChild::ContinueAsyncOpen this=%p gid=%" PRIu64
-       " top bid=%" PRIx64,
-       this, mChannelId, mTopBrowsingContextId));
+       " browser id=%" PRIx64,
+       this, mChannelId, mBrowserId));
 
   if (browserChild && !browserChild->IPCOpen()) {
     return NS_ERROR_FAILURE;

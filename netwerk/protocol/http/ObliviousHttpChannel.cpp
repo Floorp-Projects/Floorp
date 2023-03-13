@@ -54,13 +54,13 @@ ObliviousHttpChannel::SetTopLevelContentWindowId(uint64_t aWindowId) {
 }
 
 NS_IMETHODIMP
-ObliviousHttpChannel::GetTopBrowsingContextId(uint64_t* aWindowId) {
-  return mInnerChannel->GetTopBrowsingContextId(aWindowId);
+ObliviousHttpChannel::GetBrowserId(uint64_t* aWindowId) {
+  return mInnerChannel->GetBrowserId(aWindowId);
 }
 
 NS_IMETHODIMP
-ObliviousHttpChannel::SetTopBrowsingContextId(uint64_t aId) {
-  return mInnerChannel->SetTopBrowsingContextId(aId);
+ObliviousHttpChannel::SetBrowserId(uint64_t aId) {
+  return mInnerChannel->SetBrowserId(aId);
 }
 
 NS_IMETHODIMP

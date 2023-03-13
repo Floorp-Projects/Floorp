@@ -203,7 +203,7 @@ nsresult nsHttpTransaction::Init(
     nsIInputStream* requestBody, uint64_t requestContentLength,
     bool requestBodyHasHeaders, nsIEventTarget* target,
     nsIInterfaceRequestor* callbacks, nsITransportEventSink* eventsink,
-    uint64_t topBrowsingContextId, HttpTrafficCategory trafficCategory,
+    uint64_t browserId, HttpTrafficCategory trafficCategory,
     nsIRequestContext* requestContext, ClassOfService classOfService,
     uint32_t initialRwin, bool responseTimeoutEnabled, uint64_t channelId,
     TransactionObserverFunc&& transactionObserver,
@@ -221,7 +221,7 @@ nsresult nsHttpTransaction::Init(
   mChannelId = channelId;
   mTransactionObserver = std::move(transactionObserver);
   mOnPushCallback = std::move(aOnPushCallback);
-  mTopBrowsingContextId = topBrowsingContextId;
+  mBrowserId = browserId;
 
   mTrafficCategory = trafficCategory;
 
@@ -914,8 +914,7 @@ nsresult nsHttpTransaction::WriteSegments(nsAHttpSegmentWriter* writer,
   }
 
   if (mThrottlingReadAllowance == 0) {  // depleted
-    if (gHttpHandler->ConnMgr()->CurrentTopBrowsingContextId() !=
-        mTopBrowsingContextId) {
+    if (gHttpHandler->ConnMgr()->CurrentBrowserId() != mBrowserId) {
       nsHttp::NotifyActiveTabLoadOptimization();
     }
 

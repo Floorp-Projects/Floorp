@@ -73,14 +73,10 @@ NullHttpChannel::SetTopLevelContentWindowId(uint64_t aWindowId) {
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetTopBrowsingContextId(uint64_t*) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
+NullHttpChannel::GetBrowserId(uint64_t*) { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
-NullHttpChannel::SetTopBrowsingContextId(uint64_t) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
+NullHttpChannel::SetBrowserId(uint64_t) { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
 NullHttpChannel::GetTransferSize(uint64_t* aTransferSize) {

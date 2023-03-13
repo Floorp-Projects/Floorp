@@ -97,7 +97,7 @@ class HttpConnectionMgrShell : public nsISupports {
   // printed to the javascript console
   virtual void PrintDiagnostics() = 0;
 
-  virtual nsresult UpdateCurrentTopBrowsingContextId(uint64_t aId) = 0;
+  virtual nsresult UpdateCurrentBrowserId(uint64_t aId) = 0;
 
   // adds a transaction to the list of managed transactions.
   [[nodiscard]] virtual nsresult AddTransaction(HttpTransactionShell*,
@@ -195,7 +195,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(HttpConnectionMgrShell,
   virtual void AbortAndCloseAllConnections(int32_t, ARefBase*) override;       \
   virtual nsresult UpdateParam(nsParamName name, uint16_t value) override;     \
   virtual void PrintDiagnostics() override;                                    \
-  virtual nsresult UpdateCurrentTopBrowsingContextId(uint64_t aId) override;   \
+  virtual nsresult UpdateCurrentBrowserId(uint64_t aId) override;              \
   virtual nsresult AddTransaction(HttpTransactionShell*, int32_t priority)     \
       override;                                                                \
   virtual nsresult AddTransactionWithStickyConn(                               \

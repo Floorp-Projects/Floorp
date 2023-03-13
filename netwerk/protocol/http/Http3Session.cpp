@@ -67,8 +67,7 @@ Http3Session::Http3Session() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("Http3Session::Http3Session [this=%p]", this));
 
-  mCurrentTopBrowsingContextId =
-      gHttpHandler->ConnMgr()->CurrentTopBrowsingContextId();
+  mCurrentBrowserId = gHttpHandler->ConnMgr()->CurrentBrowserId();
   mThroughCaptivePortal = gHttpHandler->GetThroughCaptivePortal();
 }
 
@@ -974,8 +973,7 @@ bool Http3Session::AddStream(nsAHttpTransaction* aHttpTransaction,
     mHasWebTransportSession = true;
   } else {
     LOG3(("Http3Session::AddStream %p atrans=%p.\n", this, aHttpTransaction));
-    stream = new Http3Stream(aHttpTransaction, this, cos,
-                             mCurrentTopBrowsingContextId);
+    stream = new Http3Stream(aHttpTransaction, this, cos, mCurrentBrowserId);
   }
 
   mStreamTransactionHash.InsertOrUpdate(aHttpTransaction, RefPtr{stream});
@@ -1830,15 +1828,15 @@ void Http3Session::CloseWebTransportConn() {
       NS_DISPATCH_NORMAL);
 }
 
-void Http3Session::TopBrowsingContextIdChanged(uint64_t id) {
+void Http3Session::CurrentBrowserIdChanged(uint64_t id) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  mCurrentTopBrowsingContextId = id;
+  mCurrentBrowserId = id;
 
   for (const auto& stream : mStreamTransactionHash.Values()) {
     RefPtr<Http3Stream> httpStream = stream->GetHttp3Stream();
     if (httpStream) {
-      httpStream->TopBrowsingContextIdChanged(id);
+      httpStream->CurrentBrowserIdChanged(id);
     }
   }
 }

@@ -418,15 +418,8 @@ let JSWINDOWACTORS = {
   },
 
   BrowserTab: {
-    parent: {
-      esModuleURI: "resource:///actors/BrowserTabParent.sys.mjs",
-    },
     child: {
       esModuleURI: "resource:///actors/BrowserTabChild.sys.mjs",
-
-      events: {
-        DOMDocElementInserted: {},
-      },
     },
 
     messageManagerGroups: ["browsers"],

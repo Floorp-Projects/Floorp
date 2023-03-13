@@ -136,12 +136,12 @@ bool HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs) {
           a.blockAuthPrompt(), a.allowStaleCacheContent(),
           a.preferCacheLoadOverBypass(), a.contentTypeHint(), a.requestMode(),
           a.redirectMode(), a.channelId(), a.integrityMetadata(),
-          a.contentWindowId(), a.preferredAlternativeTypes(),
-          a.topBrowsingContextId(), a.launchServiceWorkerStart(),
-          a.launchServiceWorkerEnd(), a.dispatchFetchEventStart(),
-          a.dispatchFetchEventEnd(), a.handleFetchEventStart(),
-          a.handleFetchEventEnd(), a.forceMainDocumentChannel(),
-          a.navigationStartTimeStamp(), a.earlyHintPreloaderId());
+          a.contentWindowId(), a.preferredAlternativeTypes(), a.browserId(),
+          a.launchServiceWorkerStart(), a.launchServiceWorkerEnd(),
+          a.dispatchFetchEventStart(), a.dispatchFetchEventEnd(),
+          a.handleFetchEventStart(), a.handleFetchEventEnd(),
+          a.forceMainDocumentChannel(), a.navigationStartTimeStamp(),
+          a.earlyHintPreloaderId());
     }
     case HttpChannelCreationArgs::THttpChannelConnectArgs: {
       const HttpChannelConnectArgs& cArgs = aArgs.get_HttpChannelConnectArgs();
@@ -396,8 +396,7 @@ bool HttpChannelParent::DoAsyncOpen(
     const nsString& aIntegrityMetadata, const uint64_t& aContentWindowId,
     const nsTArray<PreferredAlternativeDataTypeParams>&
         aPreferredAlternativeTypes,
-    const uint64_t& aTopBrowsingContextId,
-    const TimeStamp& aLaunchServiceWorkerStart,
+    const uint64_t& aBrowserId, const TimeStamp& aLaunchServiceWorkerStart,
     const TimeStamp& aLaunchServiceWorkerEnd,
     const TimeStamp& aDispatchFetchEventStart,
     const TimeStamp& aDispatchFetchEventEnd,
@@ -436,9 +435,8 @@ bool HttpChannelParent::DoAsyncOpen(
   }
 
   LOG(("HttpChannelParent RecvAsyncOpen [this=%p uri=%s, gid=%" PRIu64
-       " top bid=%" PRIx64 "]\n",
-       this, aURI->GetSpecOrDefault().get(), aChannelId,
-       aTopBrowsingContextId));
+       " browserid=%" PRIx64 "]\n",
+       this, aURI->GetSpecOrDefault().get(), aChannelId, aBrowserId));
 
   nsresult rv;
 
@@ -479,7 +477,7 @@ bool HttpChannelParent::DoAsyncOpen(
   // Set the channelId allocated in child to the parent instance
   httpChannel->SetChannelId(aChannelId);
   httpChannel->SetTopLevelContentWindowId(aContentWindowId);
-  httpChannel->SetTopBrowsingContextId(aTopBrowsingContextId);
+  httpChannel->SetBrowserId(aBrowserId);
 
   httpChannel->SetIntegrityMetadata(aIntegrityMetadata);
 

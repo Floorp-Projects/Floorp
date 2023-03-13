@@ -31,15 +31,15 @@ Http3StreamBase::~Http3StreamBase() = default;
 
 Http3Stream::Http3Stream(nsAHttpTransaction* httpTransaction,
                          Http3Session* session, const ClassOfService& cos,
-                         uint64_t bcId)
+                         uint64_t currentBrowserId)
     : Http3StreamBase(httpTransaction, session),
-      mCurrentTopBrowsingContextId(bcId) {
+      mCurrentBrowserId(currentBrowserId) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG3(("Http3Stream::Http3Stream [this=%p]", this));
 
   nsHttpTransaction* trans = mTransaction->QueryHttpTransaction();
   if (trans) {
-    mTransactionTabId = trans->TopBrowsingContextId();
+    mTransactionBrowserId = trans->BrowserId();
   }
 
   SetPriority(cos.Flags());
@@ -142,12 +142,12 @@ nsresult Http3Stream::TryActivating() {
                                  mFlatHttpRequestHeaders, &mStreamId, this);
 }
 
-void Http3Stream::TopBrowsingContextIdChanged(uint64_t id) {
+void Http3Stream::CurrentBrowserIdChanged(uint64_t id) {
   MOZ_ASSERT(gHttpHandler->ActiveTabPriority());
 
-  bool previouslyFocused = (mCurrentTopBrowsingContextId == mTransactionTabId);
-  mCurrentTopBrowsingContextId = id;
-  bool nowFocused = (mCurrentTopBrowsingContextId == mTransactionTabId);
+  bool previouslyFocused = (mCurrentBrowserId == mTransactionBrowserId);
+  mCurrentBrowserId = id;
+  bool nowFocused = (mCurrentBrowserId == mTransactionBrowserId);
 
   if (!StaticPrefs::
           network_http_http3_send_background_tabs_deprioritization() ||
@@ -514,7 +514,7 @@ uint8_t Http3Stream::PriorityUrgency() {
   }
 
   if (StaticPrefs::network_http_http3_send_background_tabs_deprioritization() &&
-      mCurrentTopBrowsingContextId != mTransactionTabId) {
+      mCurrentBrowserId != mTransactionBrowserId) {
     // Low priority
     return 6;
   }

@@ -188,8 +188,7 @@ Http2Session::Http2Session(nsISocketTransport* aSocketTransport,
 
   mPingThreshold = gHttpHandler->SpdyPingThreshold();
   mPreviousPingThreshold = mPingThreshold;
-  mCurrentTopBrowsingContextId =
-      gHttpHandler->ConnMgr()->CurrentTopBrowsingContextId();
+  mCurrentBrowserId = gHttpHandler->ConnMgr()->CurrentBrowserId();
 
   mEnableWebsockets = StaticPrefs::network_http_http2_websockets();
 
@@ -514,8 +513,8 @@ void Http2Session::CreateStream(nsAHttpTransaction* aHttpTransaction,
   RefPtr<Http2StreamBase> refStream;
   switch (streamType) {
     case Http2StreamBaseType::Normal:
-      refStream = new Http2Stream(aHttpTransaction, this, aPriority,
-                                  mCurrentTopBrowsingContextId);
+      refStream =
+          new Http2Stream(aHttpTransaction, this, aPriority, mCurrentBrowserId);
       break;
     case Http2StreamBaseType::WebSocket:
     case Http2StreamBaseType::Tunnel:
@@ -554,7 +553,7 @@ already_AddRefed<nsHttpConnection> Http2Session::CreateTunnelStream(
     nsAHttpTransaction* aHttpTransaction, nsIInterfaceRequestor* aCallbacks,
     PRIntervalTime aRtt, bool aIsWebSocket) {
   RefPtr<Http2StreamTunnel> refStream = CreateTunnelStreamFromConnInfo(
-      this, mCurrentTopBrowsingContextId, aHttpTransaction->ConnectionInfo(),
+      this, mCurrentBrowserId, aHttpTransaction->ConnectionInfo(),
       aIsWebSocket);
 
   RefPtr<nsHttpConnection> newConn =
@@ -1937,7 +1936,7 @@ nsresult Http2Session::RecvPushPromise(Http2Session* self) {
   transactionBuffer->SetConnection(self);
   RefPtr<Http2PushedStream> pushedStream(
       new Http2PushedStream(transactionBuffer, self, associatedStream,
-                            promisedID, self->mCurrentTopBrowsingContextId));
+                            promisedID, self->mCurrentBrowserId));
 
   rv = pushedStream->ConvertPushHeaders(&self->mDecompressor,
                                         self->mDecompressBuffer,
@@ -4434,13 +4433,13 @@ bool Http2Session::RealJoinConnection(const nsACString& hostname, int32_t port,
   return joinedReturn;
 }
 
-void Http2Session::TopBrowsingContextIdChanged(uint64_t id) {
+void Http2Session::CurrentBrowserIdChanged(uint64_t id) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
-  mCurrentTopBrowsingContextId = id;
+  mCurrentBrowserId = id;
 
   for (const auto& stream : mStreamTransactionHash.Values()) {
-    stream->TopBrowsingContextIdChanged(id);
+    stream->CurrentBrowserIdChanged(id);
   }
 }
 

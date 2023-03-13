@@ -459,12 +459,12 @@ interface nsIHttpChannel : nsIIdentChannel
     [must_use] attribute uint64_t topLevelContentWindowId;
 
     /**
-     * ID of the top-level browsing context for this channel.
+     * ID of the browser for this channel.
      *
      * NOTE: The setter of this attribute is currently for xpcshell test only.
      *       Don't alter it otherwise.
      */
-    [must_use] attribute uint64_t topBrowsingContextId;
+    [must_use] attribute uint64_t browserId;
 
     /**
      * In e10s, the information that the CORS response blocks the load is in the

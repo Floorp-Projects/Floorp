@@ -86,7 +86,7 @@ already_AddRefed<HttpConnectionBase> ConnectionHandle::HttpConnection() {
   return rv.forget();
 }
 
-void ConnectionHandle::TopBrowsingContextIdChanged(uint64_t id) {
+void ConnectionHandle::CurrentBrowserIdChanged(uint64_t id) {
   // Do nothing.
 }
 

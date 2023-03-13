@@ -591,7 +591,7 @@ class Http2Session final : public ASpdySession,
 
   nsTHashMap<nsCStringHashKey, bool> mJoinConnectionCache;
 
-  uint64_t mCurrentTopBrowsingContextId;
+  uint64_t mCurrentBrowserId;
 
   uint32_t mCntActivated;
 
