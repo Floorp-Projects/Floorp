@@ -110,8 +110,8 @@ devtools-verify-bundle:
         max-run-time: 1200
         artifacts:
             - type: file
-              name: public/code-review/devtools-verify-bundle.json
-              path: /builds/worker/devtools-verify-bundle.json
+              name: public/code-review/issues.json
+              path: /builds/worker/issues.json
     run:
         using: run-task
         cache-dotcache: true
@@ -127,7 +127,7 @@ devtools-verify-bundle:
             yarn &&
             node bin/bundle.js &&
             cd ../../.. &&
-            ./mach python taskcluster/scripts/misc/verify-devtools-bundle.py --output /builds/worker/devtools-verify-bundle.json
+            ./mach python taskcluster/scripts/misc/verify-devtools-bundle.py --output /builds/worker/issues.json
     when:
         files-changed:
             - 'devtools/**'
