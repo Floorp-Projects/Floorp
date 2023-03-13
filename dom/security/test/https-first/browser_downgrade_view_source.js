@@ -45,9 +45,37 @@ add_task(async function() {
   );
 
   await runTest(
+    "URL with query 'downgrade' should be http and leave query params untouched:",
+    `view-source:${TEST_PATH_HTTP}/file_downgrade_view_source.sjs?downgrade&https://httpsfirst.com`,
+    `view-source:${TEST_PATH_HTTP}/file_downgrade_view_source.sjs?downgrade&https://httpsfirst.com`,
+    "view-source:http://"
+  );
+
+  await runTest(
     "URL with query 'upgrade' should be https:",
     `view-source:${TEST_PATH_HTTP}/file_downgrade_view_source.sjs?upgrade`,
     `view-source:${TEST_PATH_HTTPS}/file_downgrade_view_source.sjs?upgrade`,
+    "view-source:https://"
+  );
+
+  await runTest(
+    "URL with query 'upgrade' should be https:",
+    `view-source:${TEST_PATH_HTTPS}/file_downgrade_view_source.sjs?upgrade`,
+    `view-source:${TEST_PATH_HTTPS}/file_downgrade_view_source.sjs?upgrade`,
+    "view-source:https://"
+  );
+
+  await runTest(
+    "URL with query 'upgrade' should be https and leave query params untouched:",
+    `view-source:${TEST_PATH_HTTP}/file_downgrade_view_source.sjs?upgrade&https://httpsfirst.com`,
+    `view-source:${TEST_PATH_HTTPS}/file_downgrade_view_source.sjs?upgrade&https://httpsfirst.com`,
+    "view-source:https://"
+  );
+
+  await runTest(
+    "URL with query 'upgrade' should be https and leave query params untouched:",
+    `view-source:${TEST_PATH_HTTPS}/file_downgrade_view_source.sjs?upgrade&https://httpsfirst.com`,
+    `view-source:${TEST_PATH_HTTPS}/file_downgrade_view_source.sjs?upgrade&https://httpsfirst.com`,
     "view-source:https://"
   );
 });
