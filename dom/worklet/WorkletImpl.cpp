@@ -16,10 +16,13 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/WorkletBinding.h"
 #include "mozilla/dom/WorkletGlobalScope.h"
+#include "mozilla/dom/worklet/WorkletModuleLoader.h"
 #include "nsGlobalWindowInner.h"
 
-namespace mozilla {
+using mozilla::dom::loader::WorkletModuleLoader;
+using mozilla::dom::loader::WorkletScriptLoader;
 
+namespace mozilla {
 // ---------------------------------------------------------------------------
 // WorkletLoadInfo
 
@@ -92,6 +95,13 @@ dom::WorkletGlobalScope* WorkletImpl::GetGlobalScope() {
   }
 
   JS_FireOnNewGlobalObject(cx, global);
+
+  MOZ_ASSERT(!mGlobalScope->GetModuleLoader(cx));
+
+  RefPtr<WorkletScriptLoader> scriptLoader = new WorkletScriptLoader();
+  RefPtr<WorkletModuleLoader> moduleLoader =
+      new WorkletModuleLoader(scriptLoader, mGlobalScope);
+  mGlobalScope->InitModuleLoader(moduleLoader);
 
   return mGlobalScope;
 }

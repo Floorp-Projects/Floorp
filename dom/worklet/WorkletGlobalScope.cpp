@@ -8,9 +8,13 @@
 #include "mozilla/dom/WorkletGlobalScopeBinding.h"
 #include "mozilla/dom/WorkletImpl.h"
 #include "mozilla/dom/WorkletThread.h"
+#include "mozilla/dom/worklet/WorkletModuleLoader.h"
 #include "mozilla/dom/Console.h"
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
+
+using JS::loader::ModuleLoaderBase;
+using mozilla::dom::loader::WorkletModuleLoader;
 
 namespace mozilla::dom {
 
@@ -19,11 +23,13 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(WorkletGlobalScope)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(WorkletGlobalScope)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsole)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mModuleLoader)
   tmp->UnlinkObjectsInGlobal();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(WorkletGlobalScope)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsole)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mModuleLoader)
   tmp->TraverseObjectsInGlobal(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -61,6 +67,15 @@ already_AddRefed<Console> WorkletGlobalScope::GetConsole(JSContext* aCx,
   RefPtr<Console> console = mConsole;
   return console.forget();
 }
+
+void WorkletGlobalScope::InitModuleLoader(WorkletModuleLoader* aModuleLoader) {
+  MOZ_ASSERT(!mModuleLoader);
+  mModuleLoader = aModuleLoader;
+}
+
+ModuleLoaderBase* WorkletGlobalScope::GetModuleLoader(JSContext* aCx) {
+  return mModuleLoader;
+};
 
 OriginTrials WorkletGlobalScope::Trials() const { return mImpl->Trials(); }
 
