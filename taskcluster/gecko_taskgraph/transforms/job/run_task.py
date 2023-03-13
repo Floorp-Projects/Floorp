@@ -8,10 +8,13 @@ Support for running jobs that are invoked via the `run-task` script.
 
 import os
 
+from mozbuild.util import memoize
 from mozpack import path
 from taskgraph.util.schema import Schema
-from voluptuous import Any, Optional, Required
+from taskgraph.util.yaml import load_yaml
+from voluptuous import Any, Extra, Optional, Required
 
+from gecko_taskgraph import GECKO
 from gecko_taskgraph.transforms.job import run_job_using
 from gecko_taskgraph.transforms.job.common import add_tooltool, support_vcs_checkout
 from gecko_taskgraph.transforms.task import taskref_or_string
@@ -47,7 +50,13 @@ run_task_schema = Schema(
         # Context to substitute into the command using format string
         # substitution (e.g {value}). This is useful if certain aspects of the
         # command need to be generated in transforms.
-        Optional("command-context"): dict,
+        Optional("command-context"): {
+            # If present, loads a set of context variables from an unnested yaml
+            # file. If a value is present in both the provided file and directly
+            # in command-context, the latter will take priority.
+            Optional("from-file"): str,
+            Extra: object,
+        },
         # Base work directory used to set up the task.
         Optional("workdir"): str,
         # If not false, tooltool downloads will be enabled via relengAPIProxy
@@ -92,12 +101,34 @@ worker_defaults = {
 }
 
 
+load_yaml = memoize(load_yaml)
+
+
 def script_url(config, script):
     if "MOZ_AUTOMATION" in os.environ and "TASK_ID" not in os.environ:
         raise Exception("TASK_ID must be defined to use run-task on generic-worker")
     task_id = os.environ.get("TASK_ID", "<TASK_ID>")
     tc_url = "http://firefox-ci-tc.services.mozilla.com"
     return f"{tc_url}/api/queue/v1/task/{task_id}/artifacts/public/{script}"
+
+
+def substitute_command_context(command_context, command):
+    from_file = command_context.pop("from-file", None)
+    full_context = {}
+    if from_file:
+        full_context = load_yaml(os.path.join(GECKO, from_file))
+    else:
+        full_context = {}
+
+    full_context.update(command_context)
+
+    if isinstance(command, list):
+        for i in range(len(command)):
+            command[i] = command[i].format(**full_context)
+    else:
+        command = command.format(**full_context)
+
+    return command
 
 
 @run_job_using(
@@ -123,15 +154,12 @@ def docker_worker_run_task(config, job, taskdesc):
             }
         )
 
-    run_command = run["command"]
-
-    command_context = run.get("command-context")
-    if command_context:
-        if isinstance(run_command, list):
-            for i in range(len(run_command)):
-                run_command[i] = run_command[i].format(**command_context)
-        else:
-            run_command = run_command.format(**command_context)
+    if run.get("command-context"):
+        run_command = substitute_command_context(
+            run.get("command-context"), run["command"]
+        )
+    else:
+        run_command = run["command"]
 
     run_cwd = run.get("cwd")
     if run_cwd and run["checkout"]:
@@ -235,10 +263,10 @@ def generic_worker_run_task(config, job, taskdesc):
                 run_command = f'"{run_command}"'
         run_command = ["bash", "-cx", run_command]
 
-    command_context = run.get("command-context")
-    if command_context:
-        for i in range(len(run_command)):
-            run_command[i] = run_command[i].format(**command_context)
+    if run.get("command-context"):
+        run_command = substitute_command_context(
+            run.get("command-context"), run_command
+        )
 
     if run["comm-checkout"]:
         command.append(
