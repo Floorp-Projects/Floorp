@@ -641,6 +641,12 @@ gf-floorp-hide-statusbar-description = Hide Status Bar
 gf-floorp-toggle-statusbar-name = [Floorp] Toggle Status Bar
 gf-floorp-toggle-statusbar-description = Show or Hide Status Bar
 
+gf-floorp-open-extension-sidebar-name = [Floorp] Open selected add-on of Sidebar
+gf-floorp-open-extension-sidebar-description = Open selected add-on of Sidebar
+gf-floorp-open-extension-sidebar-settings-addons-id = Add-on of Sidebar
+gf-floorp-open-extension-sidebar-settings-addons-id-description = The extension ID of the add-on open of sidebar
+gf-floorp-open-extension-sidebar-settings-list-default = Please select add-on
+gf-floorp-open-extension-sidebar-settings-list-unknwon = Unknwon add-on
 ##################################################################### Floorp System Update Portable Version ###############################################################
 
 update-portable-notification-found-title = Updates found!
