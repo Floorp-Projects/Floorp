@@ -2155,7 +2155,7 @@ FlexItem::FlexItem(nsIFrame* aChildFrame, nscoord aCrossSize,
                    WritingMode aContainerWM,
                    const FlexboxAxisTracker& aAxisTracker)
     : mFrame(aChildFrame),
-      mWM(aContainerWM),
+      mWM(aChildFrame->GetWritingMode()),
       mCBWM(aContainerWM),
       mMainAxis(aAxisTracker.MainAxis()),
       mBorderPadding(mCBWM),
