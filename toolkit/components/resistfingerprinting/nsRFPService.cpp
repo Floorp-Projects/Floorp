@@ -94,17 +94,12 @@ static mozilla::LazyLogModule gResistFingerprintingLog(
   "privacy.resistFingerprinting.reduceTimerPrecision.jitter"
 #define PROFILE_INITIALIZED_TOPIC "profile-initial-state"
 #define LAST_PB_SESSION_EXITED_TOPIC "last-pb-context-exited"
-#define STARTUP_COMPLETE_TOPIC "browser-delayed-startup-finished"
 
 static constexpr uint32_t kVideoFramesPerSec = 30;
 static constexpr uint32_t kVideoDroppedRatio = 5;
 
 #define RFP_DEFAULT_SPOOFING_KEYBOARD_LANG KeyboardLang::EN
 #define RFP_DEFAULT_SPOOFING_KEYBOARD_REGION KeyboardRegion::US
-
-// The number of seconds we will wait after receiving the idle-daily
-// notification before clearing the session keys.
-const uint32_t kIdleObserverTimeSec = 1;
 
 NS_IMPL_ISUPPORTS(nsRFPService, nsIObserver)
 
@@ -657,7 +652,7 @@ nsresult nsRFPService::Init() {
     rv = obs->AddObserver(this, LAST_PB_SESSION_EXITED_TOPIC, false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = obs->AddObserver(this, STARTUP_COMPLETE_TOPIC, false);
+    rv = obs->AddObserver(this, OBSERVER_TOPIC_IDLE_DAILY, false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -753,14 +748,8 @@ void nsRFPService::StartShutdown() {
     obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     if (XRE_IsParentProcess()) {
       obs->RemoveObserver(this, LAST_PB_SESSION_EXITED_TOPIC);
+      obs->RemoveObserver(this, OBSERVER_TOPIC_IDLE_DAILY);
     }
-  }
-
-  nsCOMPtr<nsIUserIdleService> idleService =
-      do_GetService("@mozilla.org/widget/useridleservice;1");
-
-  if (idleService && XRE_IsParentProcess()) {
-    idleService->RemoveIdleObserver(this, kIdleObserverTimeSec);
   }
 
   Preferences::UnregisterCallbacks(nsRFPService::PrefChanged, gCallbackPrefs,
@@ -1093,22 +1082,6 @@ nsRFPService::Observe(nsISupports* aObject, const char* aTopic,
     // Clear the private session key when the private session ends so that we
     // can generate a new key for the new private session.
     ClearSessionKey(true);
-  }
-
-  if (strcmp(STARTUP_COMPLETE_TOPIC, aTopic) == 0) {
-    // Register the idle observer after the startup is finished.
-    nsCOMPtr<nsIUserIdleService> idleService =
-        do_GetService("@mozilla.org/widget/useridleservice;1");
-    NS_ENSURE_TRUE(idleService, NS_ERROR_NOT_AVAILABLE);
-
-    nsresult rv = idleService->AddIdleObserver(this, kIdleObserverTimeSec);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    NS_ENSURE_TRUE(obs, NS_ERROR_NOT_AVAILABLE);
-
-    rv = obs->RemoveObserver(this, STARTUP_COMPLETE_TOPIC);
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   if (!strcmp(OBSERVER_TOPIC_IDLE_DAILY, aTopic)) {
