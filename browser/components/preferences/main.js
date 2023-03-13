@@ -2147,7 +2147,7 @@ var gMainPane = {
     if (enabledHandlers) {
       for (let ext of enabledHandlers.split(",")) {
         internalHandlers.push(
-          new ViewableInternallyHandlerInfoWrapper(ext.trim())
+          new ViewableInternallyHandlerInfoWrapper(null, ext.trim())
         );
       }
     }
@@ -2169,7 +2169,11 @@ var gMainPane = {
       if (type in this._handledTypes) {
         handlerInfoWrapper = this._handledTypes[type];
       } else {
-        handlerInfoWrapper = new HandlerInfoWrapper(type, wrappedHandlerInfo);
+        if (DownloadIntegration.shouldViewDownloadInternally(type)) {
+          handlerInfoWrapper = new ViewableInternallyHandlerInfoWrapper(type);
+        } else {
+          handlerInfoWrapper = new HandlerInfoWrapper(type, wrappedHandlerInfo);
+        }
         this._handledTypes[type] = handlerInfoWrapper;
       }
     }
@@ -3644,10 +3648,6 @@ class PDFHandlerInfoWrapper extends InternalHandlerInfoWrapper {
 }
 
 class ViewableInternallyHandlerInfoWrapper extends InternalHandlerInfoWrapper {
-  constructor(extension) {
-    super(null, extension);
-  }
-
   get enabled() {
     return DownloadIntegration.shouldViewDownloadInternally(this.type);
   }
