@@ -54,10 +54,6 @@ add_task(async function() {
 
   let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
 
-  let firefoxViewRect = document
-    .getElementById("firefox-view-button")
-    .getBoundingClientRect();
-
   function isInTabStrip(r) {
     return (
       r.y1 >= tabStripRect.top &&
@@ -85,21 +81,7 @@ add_task(async function() {
     {
       expectedReflows: EXPECTED_REFLOWS,
       frames: {
-        filter: rects =>
-          rects.filter(r => {
-            if (isInTabStrip(r)) {
-              return false;
-            }
-            // See https://hg.mozilla.org/mozilla-central/rev/07438d7c2372 for rationale.
-            if (
-              r.w == 16 &&
-              r.h == 16 &&
-              rectInBoundingClientRect(r, firefoxViewRect)
-            ) {
-              return false;
-            }
-            return true;
-          }),
+        filter: rects => rects.filter(r => !isInTabStrip(r)),
       },
     }
   );

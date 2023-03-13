@@ -42,9 +42,6 @@ add_task(async function() {
   let menuButtonRect = document
     .getElementById("PanelUI-menu-button")
     .getBoundingClientRect();
-  let firefoxViewRect = document
-    .getElementById("firefox-view-button")
-    .getBoundingClientRect();
   let firstTabRect = gBrowser.selectedTab.getBoundingClientRect();
   let frameExpectations = {
     filter: rects => {
@@ -58,13 +55,6 @@ add_task(async function() {
       {
         name: "the urlbar placeholder moves up and down by a few pixels",
         condition: r => rectInBoundingClientRect(r, textBoxRect),
-      },
-      {
-        name: "Firefox view icon is asynchronously decoded",
-        condition: r =>
-          r.w == 16 &&
-          r.h == 16 &&
-          rectInBoundingClientRect(r, firefoxViewRect),
       },
       {
         name: "bug 1547341 - a first tab gets drawn early",
