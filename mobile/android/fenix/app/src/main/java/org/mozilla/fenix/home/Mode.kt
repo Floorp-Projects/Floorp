@@ -13,6 +13,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.onboarding.FenixOnboarding
+import org.mozilla.fenix.onboarding.OnboardingState
 import org.mozilla.fenix.nimbus.Onboarding as OnboardingConfig
 
 /**
@@ -29,17 +30,6 @@ sealed class Mode {
             BrowsingMode.Private -> Private
         }
     }
-}
-
-/**
- * Describes various onboarding states.
- */
-sealed class OnboardingState {
-    // Signed out, without an option to auto-login using a shared FxA account.
-    object SignedOutNoAutoSignIn : OnboardingState()
-
-    // Signed in.
-    object SignedIn : OnboardingState()
 }
 
 class CurrentMode(

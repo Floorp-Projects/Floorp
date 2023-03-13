@@ -20,12 +20,12 @@ import org.mozilla.fenix.ext.shouldShowRecentSyncedTabs
 import org.mozilla.fenix.ext.shouldShowRecentTabs
 import org.mozilla.fenix.gleanplumb.Message
 import org.mozilla.fenix.home.Mode
-import org.mozilla.fenix.home.OnboardingState
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
 import org.mozilla.fenix.nimbus.MessageSurfaceId
 import org.mozilla.fenix.nimbus.OnboardingPanel
 import org.mozilla.fenix.onboarding.HomeCFRPresenter
+import org.mozilla.fenix.onboarding.OnboardingState
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.nimbus.Onboarding as OnboardingConfig
 
