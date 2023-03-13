@@ -206,6 +206,7 @@ DIRS += [
     "/third_party/libwebrtc/modules/audio_processing/agc2/fixed_digital_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/gain_applier_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/gain_map_gn",
+    "/third_party/libwebrtc/modules/audio_processing/agc2/input_volume_controller_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/input_volume_stats_reporter_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/noise_level_estimator_gn",
     "/third_party/libwebrtc/modules/audio_processing/agc2/rnn_vad/rnn_vad_auto_correlation_gn",
