@@ -137,6 +137,13 @@ interface BrowsingContext {
    */
   [SetterThrows] attribute boolean isAppTab;
 
+  /**
+   * Sets whether this is BC has siblings **at the toplevel** (e.g. in a tabbed
+   * browser environment). Used to determine if web content can resize the top
+   * window. Never set correctly for non-top BCs.
+   */
+  [SetterThrows] attribute boolean hasSiblings;
+
   // The inRDMPane flag indicates whether or not Responsive Design Mode is
   // active for the browsing context.
   [SetterThrows] attribute boolean inRDMPane;

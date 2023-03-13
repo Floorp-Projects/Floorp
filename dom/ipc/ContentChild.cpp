@@ -1154,7 +1154,6 @@ nsresult ContentChild::ProvideWindowCommon(
     nsTArray<FrameScriptInfo> frameScripts(std::move(info.frameScripts()));
     uint32_t maxTouchPoints = info.maxTouchPoints();
     DimensionInfo dimensionInfo = std::move(info.dimensions());
-    bool hasSiblings = info.hasSiblings();
 
     // Once this function exits, we should try to exit the nested event loop.
     ready = true;
@@ -1187,7 +1186,6 @@ nsresult ContentChild::ProvideWindowCommon(
                             newChild->WebWidget()->GetDefaultScale().scale);
 
     newChild->SetMaxTouchPoints(maxTouchPoints);
-    newChild->SetHasSiblings(hasSiblings);
 
     if (aForceNoOpener || !parent) {
       MOZ_DIAGNOSTIC_ASSERT(!browsingContext->HadOriginalOpener());

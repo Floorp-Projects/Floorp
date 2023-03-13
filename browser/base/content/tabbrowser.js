@@ -2056,12 +2056,6 @@
         this.getCachedFindBar(tab).browser = aBrowser;
       }
 
-      tab.linkedBrowser.sendMessageToActor(
-        "Browser:HasSiblings",
-        this.tabs.length > 1,
-        "BrowserTab"
-      );
-
       evt = document.createEvent("Events");
       evt.initEvent("TabRemotenessChange", true, false);
       tab.dispatchEvent(evt);
@@ -2420,22 +2414,10 @@
       // If we transitioned from one browser to two browsers, we need to set
       // hasSiblings=false on both the existing browser and the new browser.
       if (this.tabs.length == 2) {
-        this.tabs[0].linkedBrowser.sendMessageToActor(
-          "Browser:HasSiblings",
-          true,
-          "BrowserTab"
-        );
-        this.tabs[1].linkedBrowser.sendMessageToActor(
-          "Browser:HasSiblings",
-          true,
-          "BrowserTab"
-        );
+        this.tabs[0].linkedBrowser.browsingContext.hasSiblings = true;
+        this.tabs[1].linkedBrowser.browsingContext.hasSiblings = true;
       } else {
-        aTab.linkedBrowser.sendMessageToActor(
-          "Browser:HasSiblings",
-          this.tabs.length > 1,
-          "BrowserTab"
-        );
+        aTab.linkedBrowser.browsingContext.hasSiblings = this.tabs.length > 1;
       }
 
       if (aTab.userContextId) {
@@ -4085,16 +4067,12 @@
       if (this.tabs.length == 2) {
         // We're closing one of our two open tabs, inform the other tab that its
         // sibling is going away.
-        this.tabs[0].linkedBrowser.sendMessageToActor(
-          "Browser:HasSiblings",
-          false,
-          "BrowserTab"
-        );
-        this.tabs[1].linkedBrowser.sendMessageToActor(
-          "Browser:HasSiblings",
-          false,
-          "BrowserTab"
-        );
+        for (let tab of this.tabs) {
+          let bc = tab.linkedBrowser.browsingContext;
+          if (bc) {
+            bc.hasSiblings = false;
+          }
+        }
       }
 
       let notificationBox = this.readNotificationBox(browser);
@@ -6261,12 +6239,6 @@
           if (this.isFindBarInitialized(tab)) {
             this.getCachedFindBar(tab).browser = browser;
           }
-
-          browser.sendMessageToActor(
-            "Browser:HasSiblings",
-            this.tabs.length > 1,
-            "BrowserTab"
-          );
 
           evt = document.createEvent("Events");
           evt.initEvent("TabRemotenessChange", true, false);

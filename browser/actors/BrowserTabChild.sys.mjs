@@ -29,16 +29,6 @@ export class BrowserTabChild extends JSWindowActorChild {
     let docShell = context.docShell;
 
     switch (message.name) {
-      case "Browser:HasSiblings":
-        try {
-          let browserChild = docShell
-            .QueryInterface(Ci.nsIInterfaceRequestor)
-            .getInterface(Ci.nsIBrowserChild);
-          let hasSiblings = message.data;
-          browserChild.hasSiblings = hasSiblings;
-        } catch (e) {}
-        break;
-
       // XXX(nika): Should we try to call this in the parent process instead?
       case "Browser:Reload":
         /* First, we'll try to use the session history object to reload so

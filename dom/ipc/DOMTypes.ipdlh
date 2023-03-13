@@ -207,7 +207,6 @@ struct CreatedWindowInfo
   FrameScriptInfo[] frameScripts;
   uint32_t maxTouchPoints;
   DimensionInfo dimensions;
-  bool hasSiblings;
 };
 
 

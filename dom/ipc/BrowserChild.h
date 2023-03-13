@@ -801,11 +801,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   // actor in a remote browser.
   bool mIsTopLevel : 1;
 
-  // Whether or not this tab has siblings (other tabs in the same window).
-  // This is one factor used when choosing to allow or deny a non-system
-  // script's attempt to resize the window.
-  bool mHasSiblings : 1;
-
   bool mIsTransparent : 1;
   bool mIPCOpen : 1;
 
