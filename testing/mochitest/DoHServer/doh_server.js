@@ -14,8 +14,18 @@ const options = {
 const http2 = require("http2");
 const http = require("http");
 const url = require("url");
-const dnsPacket = require("../../xpcshell/dns-packet");
-const _ = require("lodash");
+
+const path = require("path");
+
+let dnsPacket;
+let libPath = path.join(__dirname, "../../xpcshell/dns-packet");
+if (fs.existsSync(libPath)) {
+  // This is the path of dns-packet when running mochitest locally.
+  dnsPacket = require(libPath);
+} else {
+  // This path is for running mochitest on try.
+  dnsPacket = require(path.join(__dirname, "./dns_packet"));
+}
 
 let serverPort = parseInt(process.argv[2].split("=")[1]);
 let listeningPort = parseInt(process.argv[3].split("=")[1]);
