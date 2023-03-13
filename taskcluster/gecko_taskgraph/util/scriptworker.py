@@ -418,6 +418,12 @@ def generate_beetmover_upstream_artifacts(
         paths = list()
 
         for filename in map_config["mapping"]:
+            resolve_keyed_by(
+                map_config["mapping"][filename],
+                "from",
+                f"beetmover filename {filename}",
+                platform=platform,
+            )
             if dep not in map_config["mapping"][filename]["from"]:
                 continue
             if locale != "en-US" and not map_config["mapping"][filename]["all_locales"]:
@@ -531,6 +537,9 @@ def generate_beetmover_artifact_map(config, job, **kwargs):
         paths = dict()
         for filename in map_config["mapping"]:
             # Relevancy checks
+            resolve_keyed_by(
+                map_config["mapping"][filename], "from", "blah", platform=platform
+            )
             if dep not in map_config["mapping"][filename]["from"]:
                 # We don't get this file from this dependency.
                 continue

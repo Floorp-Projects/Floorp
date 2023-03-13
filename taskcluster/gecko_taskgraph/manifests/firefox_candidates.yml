@@ -50,6 +50,8 @@ tasktype_map:
     repackage-signing-msi: repackage
     repackage-signing-shippable-l10n-msix: signing
     langpack-copy: scriptworker
+    attribution: build
+    attribution-l10n: build
 platform_names:
     path_platform:
         by-platform:
@@ -318,8 +320,10 @@ mapping:
         <<: *default
         description: "Main installer for Windows platforms"
         all_locales: true
+        source_path_modifier: ''
         from:
-            - repackage-signing
+            - attribution
+            - attribution-l10n
         only_for_platforms:
             - win64-shippable
             - win32-shippable
@@ -333,8 +337,9 @@ mapping:
         <<: *default
         description: "Stub installer for Win32 platforms"
         all_locales: true
+        source_path_modifier: ''
         from:
-            - repackage-signing
+            - attribution
         only_for_platforms:
             - win32-shippable
             - win32-devedition

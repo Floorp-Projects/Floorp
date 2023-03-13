@@ -85,12 +85,14 @@ def make_task_description(config, jobs):
         msi_signing_name = "repackage-signing-msi"
         msix_signing_name = "repackage-signing-shippable-l10n-msix"
         mar_signing_name = "mar-signing"
+        attribution_name = "attribution"
         if job.get("locale"):
             signing_name = "shippable-l10n-signing"
             build_name = "shippable-l10n"
             repackage_name = "repackage-l10n"
             repackage_signing_name = "repackage-signing-l10n"
             mar_signing_name = "mar-signing-l10n"
+            attribution_name = "attribution-l10n"
         dependencies = {
             "build": upstream_deps[build_name],
             "repackage": upstream_deps[repackage_name],
@@ -105,6 +107,8 @@ def make_task_description(config, jobs):
             dependencies[msix_signing_name] = upstream_deps[msix_signing_name]
         if repackage_signing_name in upstream_deps:
             dependencies["repackage-signing"] = upstream_deps[repackage_signing_name]
+        if attribution_name in upstream_deps:
+            dependencies[attribution_name] = upstream_deps[attribution_name]
 
         attributes = copy_attributes_from_dependent_job(dep_job)
         attributes.update(job.get("attributes", {}))
