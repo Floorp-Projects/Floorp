@@ -37,17 +37,4 @@ SVGElement::LengthAttributesInfo SVGTSpanElement::GetLengthInfo() {
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGTSpanElement)
 
-//----------------------------------------------------------------------
-// nsIContent methods
-
-NS_IMETHODIMP_(bool)
-SVGTSpanElement::IsAttributeMapped(const nsAtom* name) const {
-  static const MappedAttributeEntry* const map[] = {
-      sColorMap, sFillStrokeMap, sFontSpecificationMap, sGraphicsMap,
-      sTextContentElementsMap};
-
-  return FindAttributeDependence(name, map) ||
-         SVGTSpanElementBase::IsAttributeMapped(name);
-}
-
 }  // namespace mozilla::dom

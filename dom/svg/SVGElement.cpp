@@ -989,19 +989,23 @@ const Element::MappedAttributeEntry SVGElement::sTextContentElementsMap[] = {
     // Properties that we don't support are commented out.
     // { nsGkAtoms::alignment_baseline },
     // { nsGkAtoms::baseline_shift },
-    {nsGkAtoms::direction},       {nsGkAtoms::dominant_baseline},
-    {nsGkAtoms::letter_spacing},  {nsGkAtoms::text_anchor},
-    {nsGkAtoms::text_decoration}, {nsGkAtoms::unicode_bidi},
-    {nsGkAtoms::white_space},     {nsGkAtoms::word_spacing},
-    {nsGkAtoms::writing_mode},    {nullptr}};
-
-// PresentationAttributes-FontSpecification
-/* static */
-const Element::MappedAttributeEntry SVGElement::sFontSpecificationMap[] = {
-    {nsGkAtoms::font_family},      {nsGkAtoms::font_size},
-    {nsGkAtoms::font_size_adjust}, {nsGkAtoms::font_stretch},
-    {nsGkAtoms::font_style},       {nsGkAtoms::font_variant},
-    {nsGkAtoms::fontWeight},       {nullptr}};
+    {nsGkAtoms::direction},
+    {nsGkAtoms::dominant_baseline},
+    {nsGkAtoms::font_family},
+    {nsGkAtoms::font_size},
+    {nsGkAtoms::font_size_adjust},
+    {nsGkAtoms::font_stretch},
+    {nsGkAtoms::font_style},
+    {nsGkAtoms::font_variant},
+    {nsGkAtoms::fontWeight},
+    {nsGkAtoms::letter_spacing},
+    {nsGkAtoms::text_anchor},
+    {nsGkAtoms::text_decoration},
+    {nsGkAtoms::unicode_bidi},
+    {nsGkAtoms::white_space},
+    {nsGkAtoms::word_spacing},
+    {nsGkAtoms::writing_mode},
+    {nullptr}};
 
 // PresentationAttributes-GradientStop
 /* static */
@@ -1013,7 +1017,7 @@ const Element::MappedAttributeEntry SVGElement::sGradientStopMap[] = {
 const Element::MappedAttributeEntry SVGElement::sViewportsMap[] = {
     {nsGkAtoms::overflow}, {nsGkAtoms::clip}, {nullptr}};
 
-// PresentationAttributes-Makers
+// PresentationAttributes-Markers
 /* static */
 const Element::MappedAttributeEntry SVGElement::sMarkersMap[] = {
     {nsGkAtoms::marker_end},

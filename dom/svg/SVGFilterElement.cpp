@@ -94,12 +94,14 @@ already_AddRefed<DOMSVGAnimatedString> SVGFilterElement::Href() {
 
 NS_IMETHODIMP_(bool)
 SVGFilterElement::IsAttributeMapped(const nsAtom* name) const {
-  static const MappedAttributeEntry* const map[] = {
-      sColorMap,        sFEFloodMap,
-      sFiltersMap,      sFontSpecificationMap,
-      sGradientStopMap, sLightingEffectsMap,
-      sMarkersMap,      sTextContentElementsMap,
-      sViewportsMap};
+  static const MappedAttributeEntry* const map[] = {sColorMap,
+                                                    sFEFloodMap,
+                                                    sFiltersMap,
+                                                    sGradientStopMap,
+                                                    sLightingEffectsMap,
+                                                    sMarkersMap,
+                                                    sTextContentElementsMap,
+                                                    sViewportsMap};
   return FindAttributeDependence(name, map) ||
          SVGFilterElementBase::IsAttributeMapped(name);
 }

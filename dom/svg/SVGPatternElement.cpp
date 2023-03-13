@@ -117,17 +117,11 @@ already_AddRefed<DOMSVGAnimatedString> SVGPatternElement::Href() {
 
 NS_IMETHODIMP_(bool)
 SVGPatternElement::IsAttributeMapped(const nsAtom* name) const {
-  static const MappedAttributeEntry* const map[] = {sColorMap,
-                                                    sFEFloodMap,
-                                                    sFillStrokeMap,
-                                                    sFiltersMap,
-                                                    sFontSpecificationMap,
-                                                    sGradientStopMap,
-                                                    sGraphicsMap,
-                                                    sLightingEffectsMap,
-                                                    sMarkersMap,
-                                                    sTextContentElementsMap,
-                                                    sViewportsMap};
+  static const MappedAttributeEntry* const map[] = {
+      sColorMap,           sFEFloodMap,      sFillStrokeMap,
+      sFiltersMap,         sGradientStopMap, sGraphicsMap,
+      sLightingEffectsMap, sMarkersMap,      sTextContentElementsMap,
+      sViewportsMap};
 
   return FindAttributeDependence(name, map) ||
          SVGPatternElementBase::IsAttributeMapped(name);

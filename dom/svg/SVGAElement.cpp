@@ -164,14 +164,10 @@ void SVGAElement::UnbindFromTree(bool aNullParent) {
 
 NS_IMETHODIMP_(bool)
 SVGAElement::IsAttributeMapped(const nsAtom* name) const {
-  static const MappedAttributeEntry* const map[] = {sFEFloodMap,
-                                                    sFiltersMap,
-                                                    sFontSpecificationMap,
-                                                    sGradientStopMap,
-                                                    sLightingEffectsMap,
-                                                    sMarkersMap,
-                                                    sTextContentElementsMap,
-                                                    sViewportsMap};
+  static const MappedAttributeEntry* const map[] = {
+      sFEFloodMap,         sFiltersMap, sGradientStopMap,
+      sLightingEffectsMap, sMarkersMap, sTextContentElementsMap,
+      sViewportsMap};
 
   return FindAttributeDependence(name, map) ||
          SVGAElementBase::IsAttributeMapped(name);

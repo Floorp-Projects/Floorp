@@ -40,8 +40,6 @@ class SVGTextPathElement final : public SVGTextPathElementBase {
 
  public:
   // nsIContent interface
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
-
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   SVGAnimatedPathSegList* GetAnimPathSegList() override { return &mPath; }

@@ -105,17 +105,11 @@ SVGElement::EnumAttributesInfo SVGMaskElement::GetEnumInfo() {
 
 NS_IMETHODIMP_(bool)
 SVGMaskElement::IsAttributeMapped(const nsAtom* name) const {
-  static const MappedAttributeEntry* const map[] = {sColorMap,
-                                                    sFEFloodMap,
-                                                    sFillStrokeMap,
-                                                    sFiltersMap,
-                                                    sFontSpecificationMap,
-                                                    sGradientStopMap,
-                                                    sGraphicsMap,
-                                                    sMarkersMap,
-                                                    sMaskMap,
-                                                    sTextContentElementsMap,
-                                                    sViewportsMap};
+  static const MappedAttributeEntry* const map[] = {
+      sColorMap,    sFEFloodMap,      sFillStrokeMap,
+      sFiltersMap,  sGradientStopMap, sGraphicsMap,
+      sMarkersMap,  sMaskMap,         sTextContentElementsMap,
+      sViewportsMap};
 
   return FindAttributeDependence(name, map) ||
          SVGMaskElementBase::IsAttributeMapped(name);
