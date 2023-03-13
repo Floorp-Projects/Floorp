@@ -748,6 +748,17 @@ def test_category_expansion(
             ),
         ),
         (
+            {"query": "'Pageload 'linux 'firefox"},
+            [8, 2, 2, 5],
+            2,
+            (
+                "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
+                "here once the tests are complete (ensure you select the right framework): "
+                "https://treeherder.mozilla.org/perfherder/compare?originalProject=try&original"
+                "Revision=revision&newProject=try&newRevision=revision\n"
+            ),
+        ),
+        (
             {"dry_run": True},
             [8, 1, 1, 5],
             2,
@@ -760,6 +771,17 @@ def test_category_expansion(
         ),
         (
             {"show_all": True},
+            [1, 2, 2, 3],
+            0,
+            (
+                "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
+                "here once the tests are complete (ensure you select the right framework): "
+                "https://treeherder.mozilla.org/perfherder/compare?originalProject=try&original"
+                "Revision=revision&newProject=try&newRevision=revision\n"
+            ),
+        ),
+        (
+            {"show_all": True, "query": "'shippable !32 speedometer 'firefox"},
             [1, 2, 2, 3],
             0,
             (

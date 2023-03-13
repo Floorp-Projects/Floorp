@@ -481,6 +481,15 @@ class PerfParser(CompareParser):
             },
         ],
         [
+            ["-q", "--query"],
+            {
+                "type": str,
+                "default": None,
+                "help": "Query to run in either the perf-category selector, "
+                "or the fuzzy selector if --show-all is provided.",
+            },
+        ],
+        [
             ["--variants"],
             {
                 "nargs": "*",
@@ -543,13 +552,13 @@ class PerfParser(CompareParser):
         queries.append(query_str)
         return set(tasks)
 
-    def get_perf_tasks(base_cmd, all_tg_tasks, perf_categories):
+    def get_perf_tasks(base_cmd, all_tg_tasks, perf_categories, query=None):
         # Convert the categories to tasks
         selected_tasks = set()
         queries = []
 
         selected_categories = PerfParser.get_tasks(
-            base_cmd, queries, None, perf_categories
+            base_cmd, queries, query, perf_categories
         )
 
         for category, category_info in perf_categories.items():
@@ -1210,6 +1219,7 @@ class PerfParser(CompareParser):
         try_config=None,
         dry_run=False,
         single_run=False,
+        query=None,
         **kwargs,
     ):
         # Setup fzf
@@ -1234,10 +1244,10 @@ class PerfParser(CompareParser):
             # Expand the categories first
             categories = PerfParser.get_categories(**kwargs)
             selected_tasks, selected_categories, queries = PerfParser.get_perf_tasks(
-                base_cmd, all_tasks, categories
+                base_cmd, all_tasks, categories, query=query
             )
         else:
-            selected_tasks = PerfParser.get_tasks(base_cmd, queries, None, all_tasks)
+            selected_tasks = PerfParser.get_tasks(base_cmd, queries, query, all_tasks)
 
         if len(selected_tasks) == 0:
             print("No tasks selected")
