@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 dialog::part(content-box) {
-  flex: 1;
+  -moz-box-flex: 1;
 }
 
 #confirm,
@@ -13,7 +13,7 @@ dialog::part(content-box) {
 }
 
 #certlist {
-  flex: 1;
+  -moz-box-flex: 1;
   min-height: 8em;
   min-width: 35em;
 }

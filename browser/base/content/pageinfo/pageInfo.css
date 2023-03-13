@@ -21,8 +21,8 @@
 }
 
 #viewGroup > radio > .radio-label-box {
-  flex-direction: column;
-  align-items: center;
+  -moz-box-orient: vertical;
+  -moz-box-align: center;
 }
 
 /* Hide the radio button for the section headers */
@@ -74,7 +74,7 @@ td > input,
 
 .table-split-column > label,
 .table-split-column > input {
-  flex: 1 auto;
+  flex-grow: 1;
 }
 
 .table-split-column > button {
@@ -82,6 +82,6 @@ td > input,
 }
 
 #hostText {
-  flex: 1;
+  -moz-box-flex: 1;
   margin-top: 1px; /* same margin as adjacent label */
 }

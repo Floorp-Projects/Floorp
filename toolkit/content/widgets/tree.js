@@ -234,7 +234,7 @@
       menuitem.addEventListener("command", e => {
         let tree = this.parentNode.parentNode;
         tree.stopEditing(true);
-        this.style.order = "";
+        this.style.MozBoxOrdinalGroup = "";
         tree._ensureColumnOrder(tree.NATURAL_ORDER);
         e.preventDefault();
       });
@@ -394,7 +394,7 @@
       this.appendChild(this.constructor.fragment);
       this.initializeAttributeInheritance();
       if (this.hasAttribute("ordinal")) {
-        this.style.order = this.getAttribute("ordinal");
+        this.style.MozBoxOrdinalGroup = this.getAttribute("ordinal");
       }
       if (this.hasAttribute("width")) {
         this.style.width = this.getAttribute("width") + "px";
@@ -416,12 +416,12 @@
     }
 
     set ordinal(val) {
-      this.style.order = val;
+      this.style.MozBoxOrdinalGroup = val;
       this.setAttribute("ordinal", val);
     }
 
     get ordinal() {
-      var val = this.style.order;
+      var val = this.style.MozBoxOrdinalGroup;
       if (val == "") {
         return "1";
       }
@@ -1189,7 +1189,7 @@
         // they are in between columns
         var splitters = this.getElementsByTagName("splitter");
         for (let i = 0; i < splitters.length; ++i) {
-          splitters[i].style.order = (i + 1) * 2;
+          splitters[i].style.MozBoxOrdinalGroup = (i + 1) * 2;
         }
       }
     }

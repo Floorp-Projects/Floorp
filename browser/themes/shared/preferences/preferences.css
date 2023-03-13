@@ -30,8 +30,8 @@
 
 #preferences-body {
   vertical-align: top; /* See bug 1606130 */
-  display: flex;
-  flex-direction: column;
+  display: -moz-box;
+  -moz-box-orient: vertical;
 
   --main-pane-width: 664px;
 }
@@ -174,7 +174,7 @@ checkbox {
 }
 
 .ac-site-icon {
-  display: flex;
+  display: -moz-box;
 }
 
 /* Subcategory title */
@@ -309,7 +309,7 @@ checkbox {
 }
 
 #saveWhere {
-  align-items: center;
+  -moz-box-align: center;
 }
 
 #saveTo {
@@ -317,7 +317,7 @@ checkbox {
 }
 
 #downloadFolder {
-  flex: 1;
+  -moz-box-flex: 1;
   margin-block: 4px;
   margin-inline-start: 0;
   padding-inline-start: 30px;
@@ -346,7 +346,7 @@ checkbox {
 }
 
 #updateDeck > hbox > label {
-  flex: 1;
+  -moz-box-flex: 1;
 }
 
 .manualLink {
@@ -597,7 +597,7 @@ html|dialog,
   color: var(--in-content-page-color);
   /* `transparent` will use the dialogText color in high-contrast themes and
      when page colors are disabled */
-  display: flex;
+  display: -moz-box;
   margin: 0;
   padding: 0;
   overflow-x: auto;
@@ -657,7 +657,7 @@ html|dialog,
 
 .dialogFrame {
   margin: 10px;
-  flex: 1;
+  -moz-box-flex: 1;
   /* Default dialog dimensions */
   min-width: 66ch;
 }
@@ -723,7 +723,7 @@ html|dialog,
 }
 
 #fxaSyncComputerName {
-  flex: 1;
+  -moz-box-flex: 1;
   margin-block: 4px;
   margin-inline-start: 0;
 }
@@ -830,7 +830,7 @@ dialog > .sync-engines-list + hbox {
 }
 
 .sync-engines-list .checkbox-label-box {
-  align-items: center;
+  -moz-box-align: center;
 }
 
 .sync-engines-list {
@@ -1001,7 +1001,7 @@ dialog > .sync-engines-list + hbox {
 }
 
 .sticky-inner-container {
-  flex: 1;
+  -moz-box-flex: 1;
   max-width: var(--main-pane-width);
 }
 
@@ -1056,7 +1056,7 @@ dialog > .sync-engines-list + hbox {
 }
 
 menulist[indicator=true] > menupopup menuitem:not([image]) > .menu-iconic-left {
-  display: flex;
+  display: -moz-box;
   min-width: auto; /* Override the min-width defined in menu.css */
   margin-inline-end: 6px;
 }
@@ -1193,11 +1193,11 @@ richlistitem .text-link:hover {
 
 .featureGateCheckbox {
   font-size: 1.14em;
-  align-items: center;
+  -moz-box-align: center;
 }
 
 .featureGateCheckbox > .checkbox-label-box {
-  align-items: center;
+  -moz-box-align: center;
 }
 
 .featureGateDescription {

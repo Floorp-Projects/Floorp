@@ -22,7 +22,7 @@ menuitem,
 menucaption {
   appearance: auto;
   -moz-default-appearance: menuitem;
-  align-items: center;
+  -moz-box-align: center;
   padding: 4px 6px;
   max-width: 42em;
   list-style-image: none;
@@ -112,7 +112,7 @@ menulist > menupopup > :is(menuitem, menucaption, menu) {
 }
 
 .menu-accel-container {
-  justify-content: flex-end;
+  -moz-box-pack: end;
 }
 
 .menu-iconic-left {

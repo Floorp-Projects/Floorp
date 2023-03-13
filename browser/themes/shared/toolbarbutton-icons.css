@@ -138,6 +138,9 @@ toolbar[brighttext]:-moz-lwtheme {
 #reload-button > .toolbarbutton-animatable-box,
 #stop-button > .toolbarbutton-animatable-box {
   top: calc(50% - 9px); /* Vertically center the 20px tall animatable image, which is 1px higher than other icons */
+  /* Since .toolbarbutton-icon uses a different width than the animatable-box,
+     we need to set a padding relative to the difference in widths. */
+  margin-inline-start: calc((16px + 2 * var(--toolbarbutton-inner-padding) - 20px) / 2);
   width: 20px; /* Width of each frame within the SVG sprite */
   height: 20px; /* Height of each frame within the SVG sprite */
 }
@@ -359,6 +362,9 @@ toolbar[brighttext]:-moz-lwtheme {
 #nav-bar-overflow-button > .toolbarbutton-animatable-box {
   visibility: hidden;
   top: calc(50% - 8px); /* Vertically center the 16px tall animatable image */
+  /* Since .toolbarbutton-icon uses a different width than the animatable box,
+     we need to set a padding relative to the difference in widths. */
+  margin-inline-start: calc((16px + 2 * var(--toolbarbutton-inner-padding) - 16px) / 2);
   width: 16px; /* Width of each frame within the SVG sprite */
   height: 16px; /* Height of each frame within the SVG sprite */
   -moz-context-properties: fill, stroke;

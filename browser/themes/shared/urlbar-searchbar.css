@@ -75,7 +75,7 @@
 #urlbar-input,
 #urlbar-scheme,
 .searchbar-textbox {
-  flex: 1;
+  -moz-box-flex: 1;
   background-color: transparent;
   color: inherit;
   border: none;
@@ -264,12 +264,12 @@
 }
 
 #urlbar-container {
-  align-items: center;
+  -moz-box-align: center;
 }
 
 #urlbar-container,
 #wrapper-urlbar-container {
-  flex: 400 400;
+  -moz-box-flex: 400;
 }
 
 #urlbar-search-splitter {
@@ -513,7 +513,7 @@
   transition-property: background-color, mask-position-x, width, margin-inline-end;
   transition-timing-function: ease-in-out, ease-in-out, step-end, step-end;
   transition-duration: var(--cfr-animation-duration);
-  align-items: center;
+  -moz-box-align: center;
   margin-block: calc((var(--urlbar-min-height) - var(--urlbar-container-padding) - 2px /* border */ - 24px) / 2);
 }
 #cfr-label-container:-moz-locale-dir(rtl) {
@@ -626,7 +626,7 @@
 }
 
 #urlbar-zoom-button > .toolbarbutton-text {
-  display: flex;
+  display: -moz-box;
 }
 
 #urlbar-zoom-button > .toolbarbutton-icon {
@@ -641,13 +641,12 @@
 
 #search-container,
 #wrapper-search-container {
-  flex: 175 175 auto;
+  -moz-box-flex: 175;
 }
 
 #search-container[width] {
-  /* Take something closer to the explicit width when requested. Also important
-   * to use flex-basis auto so that the width is actually honored. */
-  flex: 1 auto;
+  /* Take something closer to the explicit width when requested */
+  -moz-box-flex: 1;
 }
 
 #search-container[cui-areatype="panel"] > #searchbar:-moz-lwtheme {
@@ -664,7 +663,7 @@
 }
 
 .searchbar-search-button {
-  align-items: center;
+  -moz-box-align: center;
   fill: currentColor;
 }
 
@@ -721,7 +720,7 @@ moz-input-box > menupopup .context-menu-add-engine:not([image]) {
 moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left::after {
   content: "";
   position: relative;
-  display: flex;
+  display: -moz-box;
   background: url(chrome://browser/skin/search-indicator-badge-add.svg) no-repeat center;
   height: 11px;
   width: 11px;

@@ -20,9 +20,9 @@
                role="document"
                showheader="true">
       <vbox id="protections-popup-mainView-panel-header-section">
-        <box id="protections-popup-mainView-panel-header"
-             class="panel-header panel-header-with-info-button"
-             onclick="gProtectionsHandler.onHeaderClicked(event);">
+        <hbox id="protections-popup-mainView-panel-header"
+              class="panel-header panel-header-with-info-button"
+              onclick="gProtectionsHandler.onHeaderClicked(event);">
           <html:h1 id="protections-popup-main-header-label"
                  role="heading" aria-level="1">
             <html:span id="protections-popup-mainView-panel-header-span"/>
@@ -33,7 +33,7 @@
           </toolbarbutton>
           <description id="protections-popup-toast-panel-tp-on-desc" data-l10n-id="protections-panel-etp-on-header"></description>
           <description id="protections-popup-toast-panel-tp-off-desc" data-l10n-id="protections-panel-etp-off-header"></description>
-        </box>
+        </hbox>
         <toolbarseparator></toolbarseparator>
 
         <html:div id="messaging-system-message-container" disabled="true">
@@ -393,7 +393,7 @@
                class="PanelUI-subView"
                role="document"
                data-l10n-id="protections-panel-cookie-banner-view-title">
-        <box class="panel-header">
+        <vbox class="panel-header">
           <toolbarbutton class="subviewbutton subviewbutton-iconic subviewbutton-back"
                          data-l10n-id="protections-panel-cookie-banner-view-go-back"
                          closemenu="none"
@@ -403,7 +403,7 @@
             <label class="toolbarbutton-text" crop="right" flex="1"></label>
           </toolbarbutton>
           <h1><span data-l10n-id="protections-panel-cookie-banner-handling-header"></span></h1>
-        </box>
+        </vbox>
         <toolbarseparator />
         <vbox id="protections-popup-cookieBannerView-heading"
               class="protections-popup-description protections-popup-cookiesView-list-section">

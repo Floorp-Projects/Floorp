@@ -57,22 +57,22 @@ body {
  * it's on the side it's a sibling of browserContainer.
  */
 .browserContainer {
-  flex: 10000 10000;
+  -moz-box-flex: 10000;
   /* To contain the status panel */
   position: relative;
 }
 
 .browserStack {
-  flex: 10000 10000;
+  -moz-box-flex: 10000;
   /* Prevent shrinking the page content to 0 height and width */
   min-height: 25px;
   min-width: 25px;
 }
 
 body {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
+  display: -moz-box;
+  -moz-box-orient: vertical;
+  -moz-box-flex: 1;
 }
 
 #navigator-toolbox:-moz-lwtheme {
@@ -145,7 +145,7 @@ body {
 }
 
 panelmultiview {
-  align-items: flex-start;
+  -moz-box-align: start;
   min-width: 0;
   min-height: 0;
 }
@@ -155,7 +155,7 @@ panelmultiview[transitioning] {
 }
 
 panelview {
-  flex-direction: column;
+  -moz-box-orient: vertical;
 }
 
 panelview:not([visible]) {
@@ -190,7 +190,7 @@ panelview:not([visible]) {
   }
   #tabbrowser-tabs:not([overflow="true"])[using-closing-tabs-spacer] ~ #alltabs-button {
     /* temporary space to keep a tab's close button under the cursor */
-    display: flex;
+    display: -moz-box;
     visibility: hidden;
   }
 }
@@ -203,7 +203,7 @@ panelview:not([visible]) {
 }
 
 .tabbrowser-tab:not([pinned]) {
-  flex: 100 100;
+  -moz-box-flex: 100;
   max-width: 225px;
   min-width: var(--tab-min-width);
   width: 0;
@@ -307,7 +307,7 @@ toolbar[customizing] #whats-new-menu-button {
 
 :root:not([chromehidden~="toolbar"]) #nav-bar[nonemptyoverflow] > .overflow-button,
 #nav-bar[customizing] > .overflow-button {
-  display: flex;
+  display: -moz-box;
 }
 
 /* The ids are ugly, but this should be reasonably performant, and
@@ -385,23 +385,23 @@ toolbar[customizing] #whats-new-menu-button {
 
 toolbarpaletteitem {
   -moz-window-dragging: no-drag;
-  justify-content: flex-start;
+  -moz-box-pack: start;
 }
 
 .titlebar-buttonbox-container {
-  order: 1000;
+  -moz-box-ordinal-group: 1000;
 }
 
 @media (-moz-platform: macos) {
   @media not (-moz-mac-rtl) {
     .titlebar-buttonbox-container:-moz-locale-dir(ltr) {
-      order: -1;
+      -moz-box-ordinal-group: 0;
     }
   }
 
   @media (-moz-mac-rtl) {
     .titlebar-buttonbox-container:-moz-locale-dir(rtl) {
-      order: -1;
+      -moz-box-ordinal-group: 0;
     }
   }
 }
@@ -513,7 +513,7 @@ toolbarpaletteitem > #personal-bookmarks > #PlacesToolbar,
 toolbarpaletteitem[place="toolbar"] > #personal-bookmarks > #bookmarks-toolbar-placeholder,
 toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-button,
 #personal-bookmarks:is([overflowedItem=true], [cui-areatype="panel"]) > #bookmarks-toolbar-button {
-  display: flex;
+  display: -moz-box;
 }
 
 #personal-bookmarks {
@@ -549,11 +549,11 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-b
 #nav-bar-customization-target > #personal-bookmarks,
 toolbar:not(#TabsToolbar) > #wrapper-personal-bookmarks,
 toolbar:not(#TabsToolbar) > #personal-bookmarks {
-  flex: 1 auto;
+  -moz-box-flex: 1;
 }
 
 #zoom-controls[cui-areatype="toolbar"]:not([overflowedItem=true]) > #zoom-reset-button > .toolbarbutton-text {
-  display: flex;
+  display: -moz-box;
 }
 
 #reload-button:not([displaystop]) + #stop-button,
@@ -571,7 +571,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 
 /* Ensure stop-button and reload-button are displayed correctly when in the overflow menu */
 .widget-overflow-list > #stop-reload-button > .toolbarbutton-1 {
-  flex: 1;
+  -moz-box-flex: 1;
 }
 
 @media (-moz-platform: macos) {
@@ -708,7 +708,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 }
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="loginsFooter"] {
-  justify-content: center;
+  -moz-box-pack: center;
   color: FieldText;
   min-height: 2.6666em;
   border-top: 1px solid rgba(38,38,38,.15);
@@ -863,14 +863,14 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 /* Flexible spacer sizing (gets overridden in the navbar) */
 toolbarpaletteitem[place=toolbar][id^=wrapper-customizableui-special-spring],
 toolbarspring {
-  flex: 1;
+  -moz-box-flex: 1;
   min-width: 28px;
   max-width: 112px;
 }
 
 #nav-bar toolbarpaletteitem[id^=wrapper-customizableui-special-spring],
 #nav-bar toolbarspring {
-  flex: 80 80;
+  -moz-box-flex: 80;
   /* We shrink the flexible spacers, but not to nothing so they can be
    * manipulated in customize mode; the next rule shrinks them further
    * outside customize mode. */
@@ -1074,7 +1074,7 @@ browser[tabmodalPromptShowing], browser[tabDialogShowing] {
 }
 
 toolbarpaletteitem[place="palette"] > #downloads-button > .toolbarbutton-badge-stack > image.toolbarbutton-icon {
-  display: flex;
+  display: -moz-box;
 }
 
 toolbarpaletteitem[place="palette"] > #downloads-button > .toolbarbutton-badge-stack > #downloads-indicator-anchor {
@@ -1168,7 +1168,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button > .toolbarbutton-badge-s
 }
 
 #customization-container {
-  flex-direction: row;
+  -moz-box-orient: horizontal;
   flex-direction: column;
   min-height: 0;
 }
@@ -1181,7 +1181,7 @@ toolbarpaletteitem[place="palette"] > #downloads-button > .toolbarbutton-badge-s
 
 #customization-content-container {
   display: flex;
-  flex: 1; /* Grow so there isn't empty space below the footer */
+  flex-grow: 1; /* Grow so there isn't empty space below the footer */
   min-height: 0; /* Allow this to shrink so the footer doesn't get pushed out. */
 }
 
@@ -1203,7 +1203,6 @@ toolbarpaletteitem[place="palette"] > #downloads-button > .toolbarbutton-badge-s
 #customization-panelHolder {
   flex-direction: column;
   display: flex;
-  flex-shrink: 1;
   min-height: calc(174px + 9em);
 }
 
@@ -1211,6 +1210,11 @@ toolbarpaletteitem[place="palette"] > #downloads-button > .toolbarbutton-badge-s
   flex: 1;
   height: 0; /* Don't let my contents affect ancestors' content-based sizing */
   align-items: end; /* align to the end on the cross-axis (affects arrow) */
+}
+
+#customization-panelWrapper,
+#customization-panelWrapper > .panel-arrowcontent {
+  -moz-box-flex: 1;
 }
 
 #customization-panel-container {
@@ -1227,7 +1231,7 @@ toolbarpaletteitem[dragover] {
 #customization-palette-container {
   display: flex;
   flex-direction: column;
-  flex: 1;
+  flex-grow: 1;
 }
 
 #customization-palette:not([hidden]) {
@@ -1250,16 +1254,16 @@ toolbarpaletteitem[dragover] {
 }
 
 #customization-toolbar-visibility-button > .box-inherit > .button-menu-dropmarker {
-  display: flex;
+  display: -moz-box;
 }
 
 #customization-lwtheme-button > .box-inherit > .button-menu-dropmarker,
 #customization-uidensity-button > .box-inherit > .button-menu-dropmarker {
-  display: flex;
+  display: -moz-box;
 }
 
 toolbarpaletteitem[place="palette"] {
-  flex-direction: column;
+  -moz-box-orient: vertical;
   width: 7em;
   max-width: 7em;
   /* icon (16) + margin (9 + 12) + 3 lines of text: */
@@ -1267,7 +1271,7 @@ toolbarpaletteitem[place="palette"] {
   margin-bottom: 5px;
   margin-inline-end: 24px;
   overflow: visible;
-  display: inline-flex;
+  display: -moz-inline-box;
   vertical-align: top;
 }
 
@@ -1279,11 +1283,11 @@ toolbarpaletteitem > toolbarbutton,
 toolbarpaletteitem > toolbaritem {
   /* Prevent children from getting events */
   pointer-events: none;
-  justify-content: center;
+  -moz-box-pack: center;
 }
 
 toolbarpaletteitem:not([place="palette"]) > #stop-reload-button {
-  justify-content: inherit;
+  -moz-box-pack: inherit;
 }
 
 :root[customizing=true] .addon-banner-item,
@@ -1535,7 +1539,7 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
 
 .dialogBox {
   background-clip: content-box;
-  display: flex;
+  display: -moz-box;
   margin: 0 3vw;
   padding: 0;
   overflow-x: auto;
@@ -1661,7 +1665,7 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
 
 .dialogFrame {
   margin: 0;
-  flex: 1;
+  -moz-box-flex: 1;
   /* Default dialog dimensions */
   width: 34em;
 }

@@ -28,10 +28,6 @@ unified-extensions-item {
   align-items: center;
 }
 
-unified-extensions-item > .subviewbutton {
-  flex-shrink: 1;
-}
-
 #unified-extensions-panel .unified-extensions-item {
   -moz-context-properties: fill;
   fill: currentColor;
@@ -146,7 +142,7 @@ unified-extensions-item > .subviewbutton {
 }
 
 toolbaritem.unified-extensions-item .unified-extensions-item-menu-button.subviewbutton {
-  flex: none;
+  -moz-box-flex: 0;
   margin-inline-start: var(--arrowpanel-menuitem-margin-inline);
   padding: 8px;
   border: 1px solid transparent;

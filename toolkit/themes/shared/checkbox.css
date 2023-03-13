@@ -7,7 +7,7 @@
 
 checkbox {
   appearance: none;
-  align-items: center;
+  -moz-box-align: center;
   margin: 4px 2px;
 }
 
@@ -95,7 +95,7 @@ checkbox:not([native]):focus-visible > .checkbox-check {
   checkbox:where([native]) {
     appearance: auto;
     -moz-default-appearance: checkbox-container;
-    align-items: center;
+    -moz-box-align: center;
     margin: 2px 4px;
     padding-top: 1px;
     padding-bottom: 1px;
@@ -131,7 +131,7 @@ checkbox:not([native]):focus-visible > .checkbox-check {
   .checkbox-check[native] {
     appearance: auto;
     -moz-default-appearance: checkbox;
-    align-items: center;
+    -moz-box-align: center;
     margin-inline-end: 5px;
   }
 }
@@ -140,7 +140,7 @@ checkbox:not([native]):focus-visible > .checkbox-check {
   checkbox:where([native]) {
     appearance: auto;
     -moz-default-appearance: checkbox-container;
-    align-items: center;
+    -moz-box-align: center;
     margin: 4px 2px;
   }
 
@@ -173,7 +173,7 @@ checkbox:not([native]):focus-visible > .checkbox-check {
   checkbox:where([native]) {
     appearance: auto;
     -moz-default-appearance: checkbox-container;
-    align-items: center;
+    -moz-box-align: center;
     margin: 2px 4px;
   }
 

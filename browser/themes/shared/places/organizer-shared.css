@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #contentView {
-  flex: 4 4;
+  -moz-box-flex: 4;
 }
 
 #contentView,
