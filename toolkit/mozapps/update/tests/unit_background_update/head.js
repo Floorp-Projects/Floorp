@@ -6,8 +6,8 @@
 load("xpcshellUtilsAUS.js");
 gIsServiceTest = false;
 
-const { BackgroundTasksTestUtils } = ChromeUtils.import(
-  "resource://testing-common/BackgroundTasksTestUtils.jsm"
+const { BackgroundTasksTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/BackgroundTasksTestUtils.sys.mjs"
 );
 BackgroundTasksTestUtils.init(this);
 const do_backgroundtask = BackgroundTasksTestUtils.do_backgroundtask.bind(
@@ -31,11 +31,11 @@ async function checkGleanPing() {
   let retval = ["EMPTY"];
   let ping_submitted = false;
 
-  const { maybeSubmitBackgroundUpdatePing } = ChromeUtils.import(
-    "resource://gre/modules/backgroundtasks/BackgroundTask_backgroundupdate.jsm"
+  const { maybeSubmitBackgroundUpdatePing } = ChromeUtils.importESModule(
+    "resource://gre/modules/backgroundtasks/BackgroundTask_backgroundupdate.sys.mjs"
   );
-  const { BackgroundUpdate } = ChromeUtils.import(
-    "resource://gre/modules/BackgroundUpdate.jsm"
+  const { BackgroundUpdate } = ChromeUtils.importESModule(
+    "resource://gre/modules/BackgroundUpdate.sys.mjs"
   );
 
   GleanPings.backgroundUpdate.testBeforeNextSubmit(_ => {

@@ -3,9 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { BackgroundUpdate } = ChromeUtils.import(
-  "resource://gre/modules/BackgroundUpdate.jsm"
-);
+import { BackgroundUpdate } from "resource://gre/modules/BackgroundUpdate.sys.mjs";
+
 const { EXIT_CODE } = BackgroundUpdate;
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
@@ -14,13 +13,13 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AppUpdater: "resource://gre/modules/AppUpdater.sys.mjs",
   BackgroundTasksUtils: "resource://gre/modules/BackgroundTasksUtils.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AppUpdater: "resource://gre/modules/AppUpdater.jsm",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.jsm",
 });
 

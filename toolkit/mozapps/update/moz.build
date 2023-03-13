@@ -24,15 +24,15 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
-    "AppUpdater.jsm",
-    "UpdateListener.jsm",
-    "UpdateService.jsm",
-    "UpdateServiceStub.jsm",
-    "UpdateTelemetry.jsm",
+    "AppUpdater.sys.mjs",
+    "UpdateListener.sys.mjs",
+    "UpdateService.sys.mjs",
+    "UpdateServiceStub.sys.mjs",
+    "UpdateTelemetry.sys.mjs",
 ]
 
 # This is Firefox-only for now simply because the `backgroundupdate` uses
-# `AppUpdater.jsm`, which is Firefox-only.  But there's nothing truly specific
+# `AppUpdater.sys.mjs`, which is Firefox-only.  But there's nothing truly specific
 # to Firefox here: that module could be generalized to toolkit/, or the
 # functionality rewritten to consume App Update Service directly.
 if (
@@ -41,7 +41,7 @@ if (
     and CONFIG["MOZ_UPDATE_AGENT"]
 ):
     EXTRA_JS_MODULES += [
-        "BackgroundUpdate.jsm",
+        "BackgroundUpdate.sys.mjs",
     ]
 
     EXTRA_JS_MODULES.backgroundtasks += [

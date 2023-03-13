@@ -3,23 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["BackgroundUpdate"];
-
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { EXIT_CODE } = ChromeUtils.import(
-  "resource://gre/modules/BackgroundTasksManager.jsm"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { EXIT_CODE } from "resource://gre/modules/BackgroundTasksManager.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  BackgroundTasksUtils: "resource://gre/modules/BackgroundTasksUtils.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
@@ -28,7 +19,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   ASRouterTargeting: "resource://activity-stream/lib/ASRouterTargeting.jsm",
-  BackgroundTasksUtils: "resource://gre/modules/BackgroundTasksUtils.jsm",
   TaskScheduler: "resource://gre/modules/TaskScheduler.jsm",
 });
 
@@ -69,7 +59,7 @@ const TASK_DEF_CURRENT_VERSION = 3;
 const TASK_INSTALLED_VERSION_PREF =
   "app.update.background.lastInstalledTaskVersion";
 
-var BackgroundUpdate = {
+export var BackgroundUpdate = {
   _initialized: false,
 
   get taskId() {

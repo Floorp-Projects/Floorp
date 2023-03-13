@@ -4,26 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { AUSTLMY } from "resource://gre/modules/UpdateTelemetry.sys.mjs";
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { AUSTLMY } = ChromeUtils.import(
-  "resource://gre/modules/UpdateTelemetry.jsm"
-);
 const {
   Bits,
   BitsRequest,
   BitsUnknownError,
   BitsVerificationError,
 } = ChromeUtils.import("resource://gre/modules/Bits.jsm");
-const { FileUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/FileUtils.sys.mjs"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
@@ -2636,7 +2627,7 @@ Update.prototype = {
  * A Service for managing the discovery and installation of software updates.
  * @constructor
  */
-function UpdateService() {
+export function UpdateService() {
   LOG("Creating UpdateService");
   // The observor notification to shut down the service must be before
   // profile-before-change since nsIUpdateManager uses profile-before-change
@@ -4286,7 +4277,7 @@ UpdateService.prototype = {
  * A service to manage active and past updates.
  * @constructor
  */
-function UpdateManager() {
+export function UpdateManager() {
   // Load the active-update.xml file to see if there is an active update.
   let activeUpdates = this._loadXMLFileIntoArray(FILE_ACTIVE_UPDATE_XML);
   if (activeUpdates.length) {
@@ -4359,6 +4350,7 @@ function UpdateManager() {
     );
   }
 }
+
 UpdateManager.prototype = {
   /**
    * The nsIUpdate object for the update that has been downloaded.
@@ -4927,7 +4919,7 @@ UpdateManager.prototype = {
  * made while an equivalent check is already in-progress, they will be coalesced
  * into a single update check request.
  */
-class CheckerService {
+export class CheckerService {
   #nextUpdateCheckId = 1;
 
   // Most of the update checking data is looked up via a "request key". This
@@ -7185,5 +7177,3 @@ class RestartOnLastWindowClosed {
 // we hold the reference to the RestartOnLastWindowClosed instance somewhere.
 // eslint-disable-next-line no-unused-vars
 let restartOnLastWindowClosed = new RestartOnLastWindowClosed();
-
-var EXPORTED_SYMBOLS = ["UpdateService", "CheckerService", "UpdateManager"];

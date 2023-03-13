@@ -10,12 +10,12 @@ const { ASRouterTargeting } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouterTargeting.jsm"
 );
 
-const { BackgroundUpdate } = ChromeUtils.import(
-  "resource://gre/modules/BackgroundUpdate.jsm"
+const { BackgroundUpdate } = ChromeUtils.importESModule(
+  "resource://gre/modules/BackgroundUpdate.sys.mjs"
 );
 
-const { maybeSubmitBackgroundUpdatePing } = ChromeUtils.import(
-  "resource://gre/modules/backgroundtasks/BackgroundTask_backgroundupdate.jsm"
+const { maybeSubmitBackgroundUpdatePing } = ChromeUtils.importESModule(
+  "resource://gre/modules/backgroundtasks/BackgroundTask_backgroundupdate.sys.mjs"
 );
 
 XPCOMUtils.defineLazyServiceGetter(

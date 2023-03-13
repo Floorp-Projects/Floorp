@@ -2,22 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["AppUpdater"];
-
-var { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 var gLogfileOutputStream;
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { FileUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/FileUtils.sys.mjs"
-);
 const PREF_APP_UPDATE_LOG = "app.update.log";
 const PREF_APP_UPDATE_LOG_FILE = "app.update.log.file";
 const KEY_PROFILE_DIR = "ProfD";
@@ -122,7 +112,7 @@ function abortAllPromises() {
  * update, and getting the current update status.  It can also register
  * listeners that will be called back as different stages of updates occur.
  */
-class AppUpdater {
+export class AppUpdater {
   #listeners = new Set();
   #status = AppUpdater.STATUS.NEVER_CHECKED;
   // This will basically be set to `true` when `AppUpdater.check` is called and

@@ -6,8 +6,8 @@
 
 "use strict";
 
-const { BackgroundUpdate } = ChromeUtils.import(
-  "resource://gre/modules/BackgroundUpdate.jsm"
+const { BackgroundUpdate } = ChromeUtils.importESModule(
+  "resource://gre/modules/BackgroundUpdate.sys.mjs"
 );
 
 // These tests use per-installation prefs, and those are a shared resource, so
