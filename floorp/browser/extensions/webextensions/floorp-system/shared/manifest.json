@@ -81,6 +81,14 @@
         "script": "API/IOFile.js",
         "paths": [["IOFile"]]
       }
+    },
+    "sidebar": {
+      "schema": "API/sidebar.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "API/sidebar.js",
+        "paths": [["sidebar"]]
+      }
     }
   },
   "page_action": {
