@@ -244,6 +244,15 @@ class ModuleLoaderBase : public nsISupports {
   // Called when a module script has been loaded, including imports.
   virtual void OnModuleLoadComplete(ModuleLoadRequest* aRequest) = 0;
 
+  // Get the error message when resolving failed. The default is to call
+  // nsContentUtils::FormatLoalizedString. But currently
+  // nsContentUtils::FormatLoalizedString cannot be called on a worklet thread,
+  // see bug 1808301. So WorkletModuleLoader will override this function to
+  // get the error message.
+  virtual nsresult GetResolveFailureMessage(ResolveError aError,
+                                            const nsAString& aSpecifier,
+                                            nsAString& aResult);
+
   // Public API methods.
 
  public:
@@ -330,12 +339,11 @@ class ModuleLoaderBase : public nsISupports {
   ResolveResult ResolveModuleSpecifier(LoadedScript* aScript,
                                        const nsAString& aSpecifier);
 
-  static nsresult HandleResolveFailure(JSContext* aCx, LoadedScript* aScript,
-                                       const nsAString& aSpecifier,
-                                       ResolveError aError,
-                                       uint32_t aLineNumber,
-                                       uint32_t aColumnNumber,
-                                       JS::MutableHandle<JS::Value> aErrorOut);
+  nsresult HandleResolveFailure(JSContext* aCx, LoadedScript* aScript,
+                                const nsAString& aSpecifier,
+                                ResolveError aError, uint32_t aLineNumber,
+                                uint32_t aColumnNumber,
+                                JS::MutableHandle<JS::Value> aErrorOut);
 
   enum class RestartRequest { No, Yes };
   nsresult StartOrRestartModuleLoad(ModuleLoadRequest* aRequest,
