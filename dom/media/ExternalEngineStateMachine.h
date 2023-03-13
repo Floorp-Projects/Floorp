@@ -90,6 +90,8 @@ class ExternalEngineStateMachine final
 
   const char* GetStateStr() const;
 
+  RefPtr<SetCDMPromise> SetCDMProxy(CDMProxy* aProxy) override;
+
  private:
   ~ExternalEngineStateMachine() = default;
 

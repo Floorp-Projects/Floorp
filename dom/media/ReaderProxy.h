@@ -13,6 +13,7 @@
 
 #include "MediaEventSource.h"
 #include "MediaFormatReader.h"
+#include "MediaPromiseDefs.h"
 
 namespace mozilla {
 
@@ -80,7 +81,7 @@ class ReaderProxy {
     return mReader->CanonicalBuffered();
   }
 
-  void SetCDMProxy(CDMProxy* aProxy) { mReader->SetCDMProxy(aProxy); }
+  RefPtr<SetCDMPromise> SetCDMProxy(CDMProxy* aProxy);
 
   void SetVideoBlankDecode(bool aIsBlankDecode);
 
