@@ -24,7 +24,8 @@ class AddModuleThrowErrorRunnable;
 // and notifies the result of addModule back to |aWorklet|.
 class WorkletFetchHandler final : public nsISupports {
  public:
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(WorkletFetchHandler)
 
   static already_AddRefed<Promise> AddModule(Worklet* aWorklet, JSContext* aCx,
                                              const nsAString& aModuleURL,
@@ -45,9 +46,9 @@ class WorkletFetchHandler final : public nsISupports {
   WorkletFetchHandler(Worklet* aWorklet, Promise* aPromise,
                       RequestCredentials aCredentials);
 
-  ~WorkletFetchHandler() = default;
+  ~WorkletFetchHandler();
 
-  void AddPromise(Promise* aPromise);
+  void AddPromise(JSContext* aCx, Promise* aPromise);
 
   void RejectPromises(nsresult aResult);
   void RejectPromises(JS::Handle<JS::Value> aValue);
@@ -62,6 +63,9 @@ class WorkletFetchHandler final : public nsISupports {
   enum { ePending, eRejected, eResolved } mStatus;
 
   RequestCredentials mCredentials;
+
+  bool mHasError = false;
+  JS::Heap<JS::Value> mErrorToRethrow;
 };
 
 // A Runnable to call WorkletFetchHandler::StartFetch on the main thread.
