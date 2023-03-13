@@ -7,7 +7,6 @@
 #include <winerror.h>
 
 #include "MFMediaEngineUtils.h"
-#include "GMPUtils.h"  // ToHexString
 #include "mozilla/EMEUtils.h"
 #include "mozilla/dom/MediaKeyMessageEventBinding.h"
 #include "mozilla/dom/MediaKeyStatusMapBinding.h"
@@ -198,7 +197,7 @@ void MFCDMSession::OnSessionKeysChange() {
 
   static auto ByteArrayFromGUID = [](REFGUID aGuid,
                                      nsTArray<uint8_t>& aByteArrayOut) {
-    aByteArrayOut.SetLength(sizeof(GUID));
+    aByteArrayOut.SetCapacity(sizeof(GUID));
     // GUID is little endian. The byte array in network order is big endian.
     GUID* reversedGuid = reinterpret_cast<GUID*>(aByteArrayOut.Elements());
     *reversedGuid = aGuid;
@@ -243,11 +242,6 @@ void MFCDMSession::OnSessionKeysChange() {
     }
     CopyableTArray<uint8_t> keyId;
     ByteArrayFromGUID(reinterpret_cast<REFGUID>(keyStatus.pbKeyId), keyId);
-
-    nsAutoCString keyIdString(ToHexString(keyId));
-    LOG("Append keyid-sz=%u, keyid=%s, status=%s", keyStatus.cbKeyId,
-        keyIdString.get(),
-        ToMediaKeyStatusStr(ToMediaKeyStatus(keyStatus.eMediaKeyStatus)));
     keyInfos.AppendElement(MFCDMKeyInformation{
         std::move(keyId), ToMediaKeyStatus(keyStatus.eMediaKeyStatus)});
   }

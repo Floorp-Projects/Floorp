@@ -103,11 +103,6 @@ class WMFCDMProxy : public CDMProxy {
   }
 #endif
 
-  WMFCDMProxy* AsWMFCDMProxy() override { return this; }
-
-  // Can only be called after initialization succeeded.
-  uint64_t GetCDMProxyId() const;
-
  private:
   virtual ~WMFCDMProxy();
 

@@ -8,10 +8,6 @@
 #include "RemoteDecoderManagerChild.h"
 #include "mozilla/WindowsVersion.h"
 
-#ifdef MOZ_WMF_CDM
-#  include "WMFCDMProxy.h"
-#endif
-
 namespace mozilla {
 
 #define CLOG(msg, ...)                                                      \
@@ -346,26 +342,6 @@ void MFMediaEngineWrapper::SetMediaInfo(const MediaInfo& aInfo) {
                            aInfo.HasVideo() ? Some(aInfo.mVideo) : Nothing());
         engine->SendNotifyMediaInfo(info);
       }));
-}
-
-bool MFMediaEngineWrapper::SetCDMProxy(CDMProxy* aProxy) {
-#ifdef MOZ_WMF_CDM
-  WMFCDMProxy* proxy = aProxy->AsWMFCDMProxy();
-  if (!proxy) {
-    WLOG("Only WFMCDM Proxy is supported for the media engine!");
-    return false;
-  }
-
-  const uint64_t proxyId = proxy->GetCDMProxyId();
-  WLOG("SetCDMProxy, CDM-Id=%" PRIu64, proxyId);
-  MOZ_ASSERT(IsInited());
-  Unused << ManagerThread()->Dispatch(NS_NewRunnableFunction(
-      "MFMediaEngineWrapper::SetCDMProxy",
-      [engine = mEngine, proxyId] { engine->SendSetCDMProxyId(proxyId); }));
-  return true;
-#else
-  return false;
-#endif
 }
 
 TimeUnit MFMediaEngineWrapper::GetCurrentPosition() {

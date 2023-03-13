@@ -20,9 +20,6 @@ namespace mozilla {
 class ErrorResult;
 class MediaRawData;
 class ChromiumCDMProxy;
-#ifdef MOZ_WMF_CDM
-class WMFCDMProxy;
-#endif
 
 namespace eme {
 enum DecryptStatus {
@@ -248,10 +245,6 @@ class CDMProxy {
 #endif
 
   virtual ChromiumCDMProxy* AsChromiumCDMProxy() { return nullptr; }
-
-#ifdef MOZ_WMF_CDM
-  virtual WMFCDMProxy* AsWMFCDMProxy() { return nullptr; }
-#endif
 
  protected:
   // Main thread only.
