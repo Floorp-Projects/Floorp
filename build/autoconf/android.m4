@@ -11,7 +11,7 @@ case "$target" in
     LDFLAGS="$extra_android_flags $LDFLAGS"
     CPPFLAGS="$extra_android_flags $CPPFLAGS"
     CFLAGS="-fno-short-enums $CFLAGS"
-    CXXFLAGS="-fno-short-enums $CXXFLAGS"
+    CXXFLAGS="-fno-short-enums $CXXFLAGS $stlport_cppflags"
     ASFLAGS="$extra_android_flags -DANDROID $ASFLAGS"
     ;;
 esac
