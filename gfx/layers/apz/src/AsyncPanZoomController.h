@@ -1435,11 +1435,16 @@ class AsyncPanZoomController {
   PanZoomState SetStateNoContentControllerDispatch(PanZoomState aNewState);
 
   /**
-   * Helper to set the current state. Holds the monitor before actually setting
-   * it and fires content controller events based on state changes. Always set
-   * the state using this call, do not set it directly.
+   * Helper to set the current state. Holds mRecursiveMutex before actually
+   * setting it and fires content controller events based on state changes.
+   * Always set the state using this call, do not set it directly.
    */
   void SetState(PanZoomState aNewState);
+  /**
+   * Helper for getting the current state which acquires mRecursiveMutex
+   * before accessing the field.
+   */
+  PanZoomState GetState() const;
   /**
    * Fire content controller notifications about state changes, assuming no
    * StateChangeNotificationBlocker has been activated.
