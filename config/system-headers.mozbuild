@@ -147,8 +147,6 @@ system_headers = [
     'CPDbBMgr.h',
     'CPString.cpp',
     'CPString.h',
-    'crmf.h',
-    'crmft.h',
     'crtdbg.h',
     'crt_externs.h',
     'crypt.h',
