@@ -1724,7 +1724,7 @@
 #if defined(ANDROID)
   value: false
 #else
-  value: @IS_NIGHTLY_BUILD@
+  value: @IS_EARLY_BETA_OR_EARLIER@
 #endif
   mirror: always
 
@@ -1732,7 +1732,7 @@
 # ORB.
 - name: browser.opaqueResponseBlocking.javascriptValidator
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # When this pref is enabled, <object> and <embed> elements will create
