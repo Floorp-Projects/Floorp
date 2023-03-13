@@ -144,6 +144,7 @@ class UtilityProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
 
   RefPtr<GenericNonExclusivePromise::Private> mLaunchPromise{};
   bool mLaunchPromiseSettled = false;
+  bool mLaunchPromiseLaunched = false;
   // Will be set to true if we've exceeded the allowed startup time or if the
   // Utility process as successfully started. This is used to determine if the
   // timeout runnable needs to execute code or not.
