@@ -4659,6 +4659,15 @@ void HTMLInputElement::SanitizeValue(nsAString& aValue,
           aValue);
     } break;
     case FormControlType::InputNumber: {
+      if (!aValue.IsEmpty() &&
+          (aValue.First() == '+' || aValue.Last() == '.')) {
+        // A value with a leading plus or trailing dot should fail to parse.
+        // However, the localized parser accepts this, and when we convert it
+        // back to a Decimal, it disappears. So, we need to check first.
+        aValue.Truncate();
+        return;
+      }
+
       Decimal value;
       bool ok = mInputType->ConvertStringToNumber(aValue, value);
       if (!ok) {
