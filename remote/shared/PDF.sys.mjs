@@ -42,8 +42,6 @@ print.addDefaultSettings = function(settings) {
     orientation = "portrait",
     page = {},
     pageRanges = [],
-    // TODO: Bug 1783086. Remove when marionette supports background argument.
-    printBackground = false,
     scale = 1.0,
     shrinkToFit = true,
   } = settings;
@@ -83,8 +81,6 @@ print.addDefaultSettings = function(settings) {
     orientation,
     page,
     pageRanges,
-    // TODO: Bug 1783086. Remove when marionette supports background argument.
-    printBackground,
     scale,
     shrinkToFit,
   };

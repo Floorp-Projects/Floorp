@@ -3010,6 +3010,9 @@ GeckoDriver.prototype.teardownReftest = function() {
 /**
  * Print page as PDF.
  *
+ * @param {boolean=} background
+ *     Whether or not to print background colors and images.
+ *     Defaults to false, which prints without background graphics.
  * @param {boolean=} landscape
  *     Paper orientation. Defaults to false.
  * @param {number=} margin.bottom
@@ -3027,14 +3030,12 @@ GeckoDriver.prototype.teardownReftest = function() {
  *     Paper height in cm. Defaults to US letter height (27.94cm / 11 inches)
  * @param {number=} page.width
  *     Paper width in cm. Defaults to US letter width (21.59cm / 8.5 inches)
+ * @param {number=} scale
+ *     Scale of the webpage rendering. Defaults to 1.0.
  * @param {boolean=} shrinkToFit
  *     Whether or not to override page size as defined by CSS.
  *     Defaults to true, in which case the content will be scaled
  *     to fit the paper size.
- * @param {boolean=} printBackground
- *     Print background graphics. Defaults to false.
- * @param {number=} scale
- *     Scale of the webpage rendering. Defaults to 1.
  *
  * @return {string}
  *     Base64 encoded PDF representing printed document
@@ -3076,7 +3077,7 @@ GeckoDriver.prototype.print = async function(cmd) {
   )(settings.scale);
   lazy.assert.boolean(settings.shrinkToFit);
   lazy.assert.boolean(settings.landscape);
-  lazy.assert.boolean(settings.printBackground);
+  lazy.assert.boolean(settings.background);
   lazy.assert.array(settings.pageRanges);
 
   const browsingContext = this.curBrowser.tab.linkedBrowser.browsingContext;
