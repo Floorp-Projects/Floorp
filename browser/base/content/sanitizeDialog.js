@@ -158,12 +158,12 @@ var gSanitizePromptDialog = {
   },
 
   /**
-   * Return the boolean prefs that enable/disable clearing of various kinds
-   * of history.  The only pref this excludes is privacy.sanitize.timeSpan.
+   * Return the boolean prefs that correspond to the checkboxes on the dialog.
    */
   _getItemPrefs() {
     return Preferences.getAll().filter(
-      p => p.id !== "privacy.sanitize.timeSpan"
+      p =>
+        p.id !== "privacy.sanitize.timeSpan" && p.id !== "privacy.cpd.downloads"
     );
   },
 
@@ -173,7 +173,9 @@ var gSanitizePromptDialog = {
    */
   onReadGeneric() {
     // Find any other pref that's checked and enabled (except for
-    // privacy.sanitize.timeSpan, which doesn't affect the button's status).
+    // privacy.sanitize.timeSpan, which doesn't affect the button's status
+    // and privacy.cpd.downloads which is not controlled directly by a
+    // checkbox).
     var found = this._getItemPrefs().some(
       pref => !!pref.value && !pref.disabled
     );
