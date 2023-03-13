@@ -142,9 +142,9 @@ async function doDropAndGo(data) {
   await onLoad;
 }
 
-async function doEnter() {
+async function doEnter(modifier = {}) {
   const onLoad = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  EventUtils.synthesizeKey("KEY_Enter");
+  EventUtils.synthesizeKey("KEY_Enter", modifier);
   await onLoad;
 }
 
