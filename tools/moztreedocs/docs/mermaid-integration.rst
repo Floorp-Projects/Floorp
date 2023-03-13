@@ -11,7 +11,8 @@ To add a diagram, simply put something like this into your page:
 
 .. These two examples come from the upstream website (https://mermaid-js.github.io/mermaid/#/)
 
-.. code-block:: shell
+.. code-block:: rst
+    :caption: .rst
 
     .. mermaid::
 
@@ -20,6 +21,17 @@ To add a diagram, simply put something like this into your page:
             A-->C;
             B-->D;
             C-->D;
+
+.. code-block:: md
+    :caption: .md
+
+    ```{mermaid}
+    graph TD;
+        A-->B;
+        A-->C;
+        B-->D;
+        C-->D;
+    ```
 
 The result will be:
 
@@ -33,7 +45,8 @@ The result will be:
 
 Or
 
-.. code-block:: shell
+.. code-block:: rst
+    :caption: .rst
 
     .. mermaid::
 
@@ -48,6 +61,25 @@ Or
              John-->>Alice: Great!
              John->>Bob: How about you?
              Bob-->>John: Jolly good!
+
+.. code-block:: markdown
+    :caption: .md
+
+    ```{mermaid}
+    sequenceDiagram
+        participant Alice
+        participant Bob
+        Alice->>John: Hello John, how are you?
+        loop Healthcheck
+            John->>John: Fight against hypochondria
+        end
+        Note right of John: Rational thoughts <br/>prevail!
+        John-->>Alice: Great!
+        John->>Bob: How about you?
+        Bob-->>John: Jolly good!
+    ```
+
+
 
 will show:
 
