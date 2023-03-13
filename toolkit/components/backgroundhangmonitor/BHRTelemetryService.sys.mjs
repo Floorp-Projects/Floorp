@@ -2,15 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",
 });
 
-function BHRTelemetryService() {
+export function BHRTelemetryService() {
   // Allow tests to get access to this object to verify it works correctly.
   this.wrappedJSObject = this;
 
@@ -161,5 +159,3 @@ BHRTelemetryService.prototype = Object.freeze({
     }
   },
 });
-
-var EXPORTED_SYMBOLS = ["BHRTelemetryService"];
