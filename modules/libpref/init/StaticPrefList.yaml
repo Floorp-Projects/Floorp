@@ -8373,7 +8373,7 @@
 # Whether the `content-visibility` CSS property is enabled
 - name: layout.css.content-visibility.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
   rust: true
 
