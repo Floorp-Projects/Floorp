@@ -44,11 +44,12 @@ add_task(async function test_with_rs_messages() {
   );
   // Reload the provider
   await ASRouter._updateMessageProviders();
+  await ASRouter.loadMessagesFromAllProviders();
   // Wait to load the WNPanel messages
-  await BrowserTestUtils.waitForCondition(async () => {
-    await ASRouter.loadMessagesFromAllProviders();
-    return ASRouter.state.messages.length > initialMessageCount;
-  }, "Messages did not load");
+  await BrowserTestUtils.waitForCondition(
+    () => ASRouter.state.messages.length > initialMessageCount,
+    "Messages did not load"
+  );
 
   await MomentsPageHub.messageRequest({
     triggerId: "momentsUpdate",
@@ -79,10 +80,11 @@ add_task(async function test_with_rs_messages() {
 
   let prevLength = ASRouter.state.messages.length;
   // Wait to load the messages
-  await BrowserTestUtils.waitForCondition(async () => {
-    await ASRouter.loadMessagesFromAllProviders();
-    return ASRouter.state.messages.length > prevLength;
-  }, "Messages did not load");
+  await ASRouter.loadMessagesFromAllProviders();
+  await BrowserTestUtils.waitForCondition(
+    () => ASRouter.state.messages.length > prevLength,
+    "Messages did not load"
+  );
 
   await MomentsPageHub.messageRequest({
     triggerId: "momentsUpdate",
@@ -103,10 +105,11 @@ add_task(async function test_with_rs_messages() {
   await client.db.clear();
   // Wait to reset the WNPanel messages from state
   const previousMessageCount = ASRouter.state.messages.length;
-  await BrowserTestUtils.waitForCondition(async () => {
-    await ASRouter.loadMessagesFromAllProviders();
-    return ASRouter.state.messages.length < previousMessageCount;
-  }, "ASRouter messages should have been removed");
+  await ASRouter.loadMessagesFromAllProviders();
+  await BrowserTestUtils.waitForCondition(
+    () => ASRouter.state.messages.length < previousMessageCount,
+    "ASRouter messages should have been removed"
+  );
   await SpecialPowers.popPrefEnv();
   // Reload the provider
   await ASRouter._updateMessageProviders();
