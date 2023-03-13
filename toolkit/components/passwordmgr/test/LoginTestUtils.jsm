@@ -578,7 +578,7 @@ LoginTestUtils.loginField = {
 
 LoginTestUtils.generation = {
   LENGTH: 15,
-  REGEX: /^[a-km-np-zA-HJ-NP-Z2-9]{15}$/,
+  REGEX: /^[a-km-np-zA-HJ-NP-Z2-9-~!@#$%^&*_+=)}:;"'>,.?\]]{15}$/,
 };
 
 LoginTestUtils.telemetry = {

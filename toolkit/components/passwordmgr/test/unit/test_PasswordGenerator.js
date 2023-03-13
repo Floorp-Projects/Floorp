@@ -26,10 +26,10 @@ add_task(async function test_generatePassword_classes() {
   let password = PasswordGenerator.generatePassword(
     /* REQUIRED_CHARACTER_CLASSES */
 
-    { length: 3 }
+    { length: 4 }
   );
   info(password);
-  equal(password.length, 3, "Check length is correct");
+  equal(password.length, 4, "Check length is correct");
   Assert.ok(
     password.match(/[a-km-np-z]/),
     "Minimal password should include at least one lowercase character"
@@ -43,7 +43,11 @@ add_task(async function test_generatePassword_classes() {
     "Minimal password should include at least one digit"
   );
   Assert.ok(
-    password.match(/^[a-km-np-zA-HJ-NP-Z2-9]+$/),
+    password.match(/[-~!@#$%^&*_+=)}:;"'>,.?\]]/),
+    "Minimal password should include at least one special character"
+  );
+  Assert.ok(
+    password.match(/^[a-km-np-zA-HJ-NP-Z2-9-~!@#$%^&*_+=)}:;"'>,.?\]]+$/),
     "All characters should be in the expected set"
   );
 });
@@ -53,8 +57,8 @@ add_task(async function test_generatePassword_length() {
   info(password);
   equal(password.length, 5, "Check length is correct");
 
-  password = PasswordGenerator.generatePassword({ length: 2 });
-  equal(password.length, 3, "Minimum generated length is 3");
+  password = PasswordGenerator.generatePassword({ length: 3 });
+  equal(password.length, 4, "Minimum generated length is 4");
 
   password = PasswordGenerator.generatePassword({ length: Math.pow(2, 8) });
   equal(
@@ -64,7 +68,7 @@ add_task(async function test_generatePassword_length() {
   );
 
   Assert.ok(
-    password.match(/^[a-km-np-zA-HJ-NP-Z2-9]+$/),
+    password.match(/^[a-km-np-zA-HJ-NP-Z2-9-~!@#$%^&*_+=)}:;"'>,.?\]]+$/),
     "All characters should be in the expected set"
   );
 });
@@ -74,7 +78,7 @@ add_task(async function test_generatePassword_defaultLength() {
   info(password);
   equal(password.length, 15, "Check default length is correct");
   Assert.ok(
-    password.match(/^[a-km-np-zA-HJ-NP-Z2-9]{15}$/),
+    password.match(/^[a-km-np-zA-HJ-NP-Z2-9-~!@#$%^&*_+=)}:;"'>,.?\]]{15}$/),
     "All characters should be in the expected set"
   );
 });
@@ -107,11 +111,11 @@ add_task(
     password = PasswordGenerator.generatePassword({});
     equal(password.length, 15, "Check default length is correct");
     Assert.ok(
-      !password.match(specialCharacters),
-      "Password should not include special character."
+      password.match(specialCharacters),
+      "Password should include special character."
     );
     Assert.ok(
-      password.match(/^[a-km-np-zA-HJ-NP-Z2-9]{15}$/),
+      password.match(/^[a-km-np-zA-HJ-NP-Z2-9-~!@#$%^&*_+=)}:;"'>,.?\]]{15}$/),
       "All characters, minus special characters, should be in the expected set"
     );
   }
