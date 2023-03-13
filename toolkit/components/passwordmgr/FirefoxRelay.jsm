@@ -27,7 +27,7 @@ const { TelemetryUtils } = ChromeUtils.import(
 const lazy = {};
 
 // Static configuration
-const config = (function() {
+const gConfig = (function() {
   const baseUrl = Services.prefs.getStringPref(
     "signon.firefoxRelay.base_url",
     undefined
@@ -66,7 +66,7 @@ if (Services.appinfo.processType !== Services.appinfo.PROCESS_TYPE_DEFAULT) {
 
 async function getRelayTokenAsync() {
   try {
-    return await lazy.fxAccounts.getOAuthToken({ scope: config.scope });
+    return await lazy.fxAccounts.getOAuthToken({ scope: gConfig.scope });
   } catch (e) {
     console.error(`There was an error getting the user's token: ${e.message}`);
     return undefined;
@@ -118,7 +118,7 @@ async function isRelayUserAsync() {
 
   const response = await fetchWithReauth(
     null,
-    headers => new Request(config.profilesUrl, { headers })
+    headers => new Request(gConfig.profilesUrl, { headers })
   );
   if (!response) {
     return false;
@@ -139,7 +139,7 @@ async function getReusableMasksAsync(browser, _origin) {
   const response = await fetchWithReauth(
     browser,
     headers =>
-      new Request(config.addressesUrl, {
+      new Request(gConfig.addressesUrl, {
         method: "GET",
         headers,
       })
@@ -197,7 +197,7 @@ async function showErrorAsync(browser, messageId, messageArgs) {
       autofocus: true,
       removeOnDismissal: true,
       popupIconURL: "page-icon:https://relay.firefox.com",
-      learnMoreURL: config.learnMoreURL,
+      learnMoreURL: gConfig.learnMoreURL,
     }
   );
 }
@@ -255,7 +255,7 @@ async function showReusableMasksAsync(browser, origin, error) {
         "get_unlimited_masks",
         FirefoxRelay.flowId
       );
-      browser.ownerGlobal.openWebLinkIn(config.learnMoreURL, "tab");
+      browser.ownerGlobal.openWebLinkIn(gConfig.learnMoreURL, "tab");
     },
   };
 
@@ -357,7 +357,7 @@ async function generateUsernameAsync(browser, origin) {
   const response = await fetchWithReauth(
     browser,
     headers =>
-      new Request(config.addressesUrl, {
+      new Request(gConfig.addressesUrl, {
         method: "POST",
         headers,
         body,
@@ -477,11 +477,11 @@ class RelayOffered {
       async callback() {
         lazy.log.info("user opted in to Firefox Relay integration");
         feature.markAsEnabled();
-        fillUsername(await generateUsernameAsync(browser, origin));
         FirefoxRelayTelemetry.recordRelayOptInPanelEvent(
           "enabled",
           FirefoxRelay.flowId
         );
+        fillUsername(await generateUsernameAsync(browser, origin));
       },
     };
     const postpone = {
@@ -524,7 +524,7 @@ class RelayOffered {
       {
         autofocus: true,
         removeOnDismissal: true,
-        learnMoreURL: config.learnMoreURL,
+        learnMoreURL: gConfig.learnMoreURL,
         eventCallback: event => {
           switch (event) {
             case "shown":
@@ -599,12 +599,26 @@ class RelayFeature extends OptInFeature {
   static AUTH_TOKEN_ERROR_CODE = 418;
 
   constructor() {
-    super(RelayOffered, RelayEnabled, RelayDisabled, config.relayFeaturePref);
+    super(RelayOffered, RelayEnabled, RelayDisabled, gConfig.relayFeaturePref);
     Services.telemetry.setEventRecordingEnabled("relay_integration", true);
+    // Update the config when the signon.firefoxRelay.base_url pref is changed.
+    // This is added mainly for tests.
+    Services.prefs.addObserver(
+      "signon.firefoxRelay.base_url",
+      this.updateConfig
+    );
   }
 
   get learnMoreUrl() {
-    return config.learnMoreURL;
+    return gConfig.learnMoreURL;
+  }
+
+  updateConfig() {
+    const newBaseUrl = Services.prefs.getStringPref(
+      "signon.firefoxRelay.base_url"
+    );
+    gConfig.addressesUrl = newBaseUrl + `relayaddresses/`;
+    gConfig.profilesUrl = newBaseUrl + `profiles/`;
   }
 
   async autocompleteItemsAsync({ origin, scenarioName, hasInput }) {
