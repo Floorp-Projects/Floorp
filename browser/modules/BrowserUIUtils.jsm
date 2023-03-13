@@ -70,42 +70,6 @@ var BrowserUIUtils = {
   },
 
   /**
-   * Sets the --toolbarbutton-button-height CSS property on the closest
-   * toolbar to the provided element. Useful if you need to vertically
-   * center a position:absolute element within a toolbar that uses
-   * -moz-pack-align:stretch, and thus a height which is dependant on
-   * the font-size.
-   *
-   * @param element An element within the toolbar whose height is desired.
-   */
-  async setToolbarButtonHeightProperty(element) {
-    let window = element.ownerGlobal;
-    let dwu = window.windowUtils;
-    let toolbarItem = element;
-    let urlBarContainer = element.closest("#urlbar-container");
-    if (urlBarContainer) {
-      // The stop-reload-button, which is contained in #urlbar-container,
-      // needs to use #urlbar-container to calculate the bounds.
-      toolbarItem = urlBarContainer;
-    }
-    if (!toolbarItem) {
-      return;
-    }
-    let bounds = dwu.getBoundsWithoutFlushing(toolbarItem);
-    if (!bounds.height) {
-      await window.promiseDocumentFlushed(() => {
-        bounds = dwu.getBoundsWithoutFlushing(toolbarItem);
-      });
-    }
-    if (bounds.height) {
-      toolbarItem.style.setProperty(
-        "--toolbarbutton-height",
-        bounds.height + "px"
-      );
-    }
-  },
-
-  /**
    * Generate a document fragment for a localized string that has DOM
    * node replacements. This avoids using getFormattedString followed
    * by assigning to innerHTML. Fluent can probably replace this when

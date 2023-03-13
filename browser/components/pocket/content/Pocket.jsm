@@ -10,11 +10,6 @@ const lazy = {};
 
 ChromeUtils.defineModuleGetter(
   lazy,
-  "BrowserUIUtils",
-  "resource:///modules/BrowserUIUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  lazy,
   "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm"
 );
@@ -28,13 +23,6 @@ var Pocket = {
   },
 
   _initPanelView(window) {
-    let document = window.document;
-
-    let libraryButton = document.getElementById("library-button");
-    if (libraryButton) {
-      lazy.BrowserUIUtils.setToolbarButtonHeightProperty(libraryButton);
-    }
-
     let urlToSave = Pocket._urlToSave;
     let titleToSave = Pocket._titleToSave;
     Pocket._urlToSave = null;
