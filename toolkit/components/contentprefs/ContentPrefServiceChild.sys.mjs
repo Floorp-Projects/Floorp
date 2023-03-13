@@ -3,18 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["ContentPrefsChild", "ContentPrefServiceChild"];
-
-const {
+import {
   ContentPref,
   _methodsCallableFromChild,
   cbHandleCompletion,
   cbHandleError,
   cbHandleResult,
   safeCallback,
-} = ChromeUtils.import("resource://gre/modules/ContentPrefUtils.jsm");
+} from "resource://gre/modules/ContentPrefUtils.sys.mjs";
 
 // We only need one bit of information out of the context.
 function contextArg(context) {
@@ -48,7 +44,7 @@ CallbackCaller.prototype = {
   },
 };
 
-class ContentPrefsChild extends JSProcessActorChild {
+export class ContentPrefsChild extends JSProcessActorChild {
   constructor() {
     super();
 
@@ -140,7 +136,7 @@ class ContentPrefsChild extends JSProcessActorChild {
   }
 }
 
-var ContentPrefServiceChild = {
+export var ContentPrefServiceChild = {
   QueryInterface: ChromeUtils.generateQI(["nsIContentPrefService2"]),
 
   addObserverForName: (name, observer) => {

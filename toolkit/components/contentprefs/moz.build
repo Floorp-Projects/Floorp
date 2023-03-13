@@ -11,11 +11,11 @@ XPCSHELL_TESTS_MANIFESTS += [
 BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.ini"]
 
 EXTRA_JS_MODULES += [
-    "ContentPrefService2.jsm",
-    "ContentPrefServiceChild.jsm",
-    "ContentPrefServiceParent.jsm",
-    "ContentPrefStore.jsm",
-    "ContentPrefUtils.jsm",
+    "ContentPrefService2.sys.mjs",
+    "ContentPrefServiceChild.sys.mjs",
+    "ContentPrefServiceParent.sys.mjs",
+    "ContentPrefStore.sys.mjs",
+    "ContentPrefUtils.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [

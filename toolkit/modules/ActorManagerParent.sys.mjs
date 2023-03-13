@@ -29,10 +29,10 @@ let JSPROCESSACTORS = {
 
   ContentPrefs: {
     parent: {
-      moduleURI: "resource://gre/modules/ContentPrefServiceParent.jsm",
+      esModuleURI: "resource://gre/modules/ContentPrefServiceParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource://gre/modules/ContentPrefServiceChild.jsm",
+      esModuleURI: "resource://gre/modules/ContentPrefServiceChild.sys.mjs",
     },
   },
 

@@ -3,18 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = [
-  "ContentPref",
-  "cbHandleResult",
-  "cbHandleError",
-  "cbHandleCompletion",
-  "safeCallback",
-  "_methodsCallableFromChild",
-];
-
-function ContentPref(domain, name, value) {
+export function ContentPref(domain, name, value) {
   this.domain = domain;
   this.name = name;
   this.value = value;
@@ -24,19 +13,19 @@ ContentPref.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsIContentPref"]),
 };
 
-function cbHandleResult(callback, pref) {
+export function cbHandleResult(callback, pref) {
   safeCallback(callback, "handleResult", [pref]);
 }
 
-function cbHandleCompletion(callback, reason) {
+export function cbHandleCompletion(callback, reason) {
   safeCallback(callback, "handleCompletion", [reason]);
 }
 
-function cbHandleError(callback, nsresult) {
+export function cbHandleError(callback, nsresult) {
   safeCallback(callback, "handleError", [nsresult]);
 }
 
-function safeCallback(callbackObj, methodName, args) {
+export function safeCallback(callbackObj, methodName, args) {
   if (!callbackObj || typeof callbackObj[methodName] != "function") {
     return;
   }
@@ -47,7 +36,7 @@ function safeCallback(callbackObj, methodName, args) {
   }
 }
 
-const _methodsCallableFromChild = Object.freeze([
+export const _methodsCallableFromChild = Object.freeze([
   ["getByName", ["name", "context", "callback"]],
   ["getByDomainAndName", ["domain", "name", "context", "callback"]],
   ["getBySubdomainAndName", ["domain", "name", "context", "callback"]],

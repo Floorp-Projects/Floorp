@@ -2,15 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {
+import {
   ContentPref,
   cbHandleCompletion,
   cbHandleError,
   cbHandleResult,
-} = ChromeUtils.import("resource://gre/modules/ContentPrefUtils.jsm");
-const { ContentPrefStore } = ChromeUtils.import(
-  "resource://gre/modules/ContentPrefStore.jsm"
-);
+} from "resource://gre/modules/ContentPrefUtils.sys.mjs";
+
+import { ContentPrefStore } from "resource://gre/modules/ContentPrefStore.sys.mjs";
+
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
@@ -25,10 +25,10 @@ const GROUP_CLAUSE = `
         (:includeSubdomains AND name LIKE :pattern ESCAPE '/')
 `;
 
-function ContentPrefService2() {
+export function ContentPrefService2() {
   if (Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_CONTENT) {
-    return ChromeUtils.import(
-      "resource://gre/modules/ContentPrefServiceChild.jsm"
+    return ChromeUtils.importESModule(
+      "resource://gre/modules/ContentPrefServiceChild.sys.mjs"
     ).ContentPrefServiceChild;
   }
 
@@ -1384,5 +1384,3 @@ function invalidArg(msg) {
 }
 
 // XPCOM Plumbing
-
-var EXPORTED_SYMBOLS = ["ContentPrefService2"];
