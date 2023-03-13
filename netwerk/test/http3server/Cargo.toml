@@ -14,9 +14,6 @@ mio = "0.6.17"
 mio-extras = "2.0.5"
 log = "0.4.0"
 base64 = "0.13"
-http = "0.2.8"
-hyper = { version = "0.14", features = ["full"] }
-tokio = { version = "1", features = ["full"] }
 
 [dependencies.neqo-crypto]
 tag = "v0.6.4"

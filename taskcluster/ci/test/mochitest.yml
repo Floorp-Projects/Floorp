@@ -66,7 +66,6 @@ mochitest-plain:
         - webrender-sw
         - headless
         - headless+socketprocess_networking
-        - http3
     run-on-projects:
         by-variant:
             conditioned_profile:
@@ -119,10 +118,6 @@ mochitest-plain:
                     linux1804-64-qr/debug: ['trunk']
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     default: []
-            http3:
-                by-test-platform:
-                    linux1804-64-qr/debug: built-projects
-                    default: []
             default:
                 by-test-platform:
                     android.*: []
@@ -154,31 +149,6 @@ mochitest-plain:
             by-test-platform:
                 android-em.*: false
                 default: true
-    fetches:
-        toolchain:
-            by-test-platform:
-                linux.*:
-                    - linux64-node-12
-                    - linux64-minidump-stackwalk
-                    - linux64-fix-stacks
-                macosx.*:
-                    - macosx64-node-12
-                    - macosx64-minidump-stackwalk
-                    - macosx64-fix-stacks
-                win.*-64.*:
-                    - win64-node-12
-                    - win32-minidump-stackwalk
-                    - win32-fix-stacks
-                win.*32.*:
-                    - win32-node-12
-                    - win32-minidump-stackwalk
-                    - win32-fix-stacks
-                android-em-7.*:
-                    - android-system-image-x86_64-linux
-                    - android-avd-x86_64-linux
-                    - android-emulator-linux
-                    - linux64-node-12
-                    - linux64-minidump-stackwalk
 
 mochitest-a11y:
     description: "Mochitest a11y run"

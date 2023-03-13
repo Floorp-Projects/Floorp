@@ -46,7 +46,6 @@ python_modules = [
     "mozproxy",
     "mozrunner",
     "mozscreenshot",
-    "mozserve",
     "mozsystemmonitor",
     "moztest",
     "mozversion",

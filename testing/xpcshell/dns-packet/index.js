@@ -6,7 +6,7 @@ exports.rcodes = rcodes;
 const opcodes = require('./opcodes')
 const classes = require('./classes')
 const optioncodes = require('./optioncodes')
-const ip = require('../node_ip')
+const ip = require('../node-ip')
 
 const QUERY_FLAG = 0
 const RESPONSE_FLAG = 1 << 15

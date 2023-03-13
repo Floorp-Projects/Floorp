@@ -94,7 +94,6 @@ TEST_HARNESS_FILES.testing.mochitest += [
     "chrome-harness.js",
     "chunkifyTests.js",
     "document-builder.sjs",
-    "DoHServer/doh_server.js",
     "favicon.ico",
     "harness.xhtml",
     "leaks.py",
@@ -109,12 +108,6 @@ TEST_HARNESS_FILES.testing.mochitest += [
     "runtestsremote.py",
     "server.js",
     "start_desktop.js",
-]
-
-TEST_HARNESS_FILES.testing.mochitest.DoHServer += [
-    "DoHServer/doh_server.js",
-    "DoHServer/http2-cert.key.pem",
-    "DoHServer/http2-cert.pem",
 ]
 
 TEST_HARNESS_FILES.testing.mochitest.embed += [
@@ -208,25 +201,6 @@ TEST_HARNESS_FILES.testing.mochitest.iceserver += [
 TEST_HARNESS_FILES.testing.mochitest.websocketprocessbridge += [
     "/testing/tools/websocketprocessbridge/websocketprocessbridge.py",
     "/testing/tools/websocketprocessbridge/websocketprocessbridge_requirements_3.txt",
-]
-
-TEST_HARNESS_FILES.testing.mochitest.DoHServer.dns_packet += [
-    "../xpcshell/dns-packet/classes.js",
-    "../xpcshell/dns-packet/index.js",
-    "../xpcshell/dns-packet/opcodes.js",
-    "../xpcshell/dns-packet/optioncodes.js",
-    "../xpcshell/dns-packet/package.json",
-    "../xpcshell/dns-packet/rcodes.js",
-    "../xpcshell/dns-packet/test.js",
-    "../xpcshell/dns-packet/types.js",
-]
-
-TEST_HARNESS_FILES.testing.mochitest.DoHServer.node_ip += [
-    "../xpcshell/node_ip/package.json",
-]
-
-TEST_HARNESS_FILES.testing.mochitest.DoHServer.node_ip.lib += [
-    "../xpcshell/node_ip/lib/ip.js",
 ]
 
 with Files("**"):
