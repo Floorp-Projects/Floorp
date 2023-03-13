@@ -54,6 +54,12 @@ add_task(async function() {
   );
 
   await runPrefTest(
+    "http://httpsfirst.com/?https://httpsfirst.com",
+    "Should downgrade after error and leave query params untouched.",
+    "http://httpsfirst.com/?https://httpsfirst.com"
+  );
+
+  await runPrefTest(
     "http://domain.does.not.exist",
     "Should not downgrade on dnsNotFound error.",
     "https://"
