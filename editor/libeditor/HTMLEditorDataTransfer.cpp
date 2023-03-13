@@ -831,7 +831,7 @@ Result<EditActionResult, nsresult> HTMLEditor::HTMLWithContextInserter::Run(
   mHTMLEditor.TopLevelEditSubActionDataRef().mNeedsToCleanUpEmptyElements =
       false;
 
-  if (!lastInsertedPoint.inspect().IsSet()) {
+  if (MOZ_UNLIKELY(!lastInsertedPoint.inspect().IsInComposedDoc())) {
     return EditActionResult::HandledResult();
   }
 
@@ -874,6 +874,8 @@ HTMLEditor::HTMLWithContextInserter::InsertContents(
     const EditorDOMPoint& aPointToInsert,
     nsTArray<OwningNonNull<nsIContent>>& aArrayOfTopMostChildContents,
     const nsINode* aFragmentAsNode) {
+  MOZ_ASSERT(aPointToInsert.IsSetAndValidInComposedDoc());
+
   EditorDOMPoint pointToInsert{aPointToInsert};
 
   // Loop over the node list and paste the nodes:
@@ -942,7 +944,7 @@ HTMLEditor::HTMLWithContextInserter::InsertContents(
         inserted = true;
         lastInsertedPoint.Set(child);
         pointToInsert = lastInsertedPoint.NextPoint();
-        MOZ_ASSERT(pointToInsert.IsSet());
+        MOZ_ASSERT(pointToInsert.IsSetAndValidInComposedDoc());
         CreateContentResult unwrappedMoveChildResult = moveChildResult.unwrap();
         unwrappedMoveChildResult.MoveCaretPointTo(
             pointToPutCaret, mHTMLEditor,
@@ -985,7 +987,7 @@ HTMLEditor::HTMLWithContextInserter::InsertContents(
                                  "Insertion point is out of the DOM tree");
             if (pointToInsert.GetContainerParent()) {
               pointToInsert.Set(pointToInsert.GetContainer());
-              MOZ_ASSERT(pointToInsert.IsSet());
+              MOZ_ASSERT(pointToInsert.IsSetAndValidInComposedDoc());
               AutoEditorDOMPointChildInvalidator lockOffset(pointToInsert);
               nsresult rv = mHTMLEditor.DeleteNodeWithTransaction(
                   MOZ_KnownLive(*pointToInsert.GetChild()));
@@ -1026,7 +1028,7 @@ HTMLEditor::HTMLWithContextInserter::InsertContents(
           inserted = true;
           lastInsertedPoint.Set(child);
           pointToInsert = lastInsertedPoint.NextPoint();
-          MOZ_ASSERT(pointToInsert.IsSet());
+          MOZ_ASSERT(pointToInsert.IsSetAndValidInComposedDoc());
           CreateContentResult unwrappedMoveChildResult =
               moveChildResult.unwrap();
           unwrappedMoveChildResult.MoveCaretPointTo(
@@ -1107,7 +1109,7 @@ HTMLEditor::HTMLWithContextInserter::InsertContents(
         inserted = true;
         lastInsertedPoint.Set(child);
         pointToInsert = lastInsertedPoint.NextPoint();
-        MOZ_ASSERT(pointToInsert.IsSet());
+        MOZ_ASSERT(pointToInsert.IsSetAndValidInComposedDoc());
         unwrappedMoveChildResult.MoveCaretPointTo(
             pointToPutCaret, mHTMLEditor,
             {SuggestCaret::OnlyIfHasSuggestion,
@@ -1141,6 +1143,7 @@ HTMLEditor::HTMLWithContextInserter::InsertContents(
       if (MOZ_LIKELY(moveContentResult.isOk())) {
         lastInsertedPoint.Set(content);
         pointToInsert = lastInsertedPoint;
+        MOZ_ASSERT(pointToInsert.IsSetAndValidInComposedDoc());
         nsresult rv = moveContentResult.inspect().SuggestCaretPointTo(
             mHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
                           SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
@@ -1197,6 +1200,7 @@ HTMLEditor::HTMLWithContextInserter::InsertContents(
           }
           insertedContextParentContent = oldParentContent;
           pointToInsert.Set(oldParentContent);
+          MOZ_ASSERT(pointToInsert.IsSetAndValidInComposedDoc());
           nsresult rv = moveParentResult.inspect().SuggestCaretPointTo(
               mHTMLEditor, {SuggestCaret::OnlyIfHasSuggestion,
                             SuggestCaret::OnlyIfTransactionsAllowedToDoIt,
@@ -1221,7 +1225,7 @@ HTMLEditor::HTMLWithContextInserter::InsertContents(
         return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
       }
       pointToInsert = lastInsertedPoint.NextPoint();
-      MOZ_ASSERT(pointToInsert.IsSet());
+      MOZ_ASSERT(pointToInsert.IsSetAndValidInComposedDoc());
     }
   }  // end of the `for` loop
 
