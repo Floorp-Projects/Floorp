@@ -11,6 +11,9 @@
 #include "mozilla/dom/WorkletImpl.h"
 #include "xpcprivate.h"
 
+using JS::loader::ResolveError;
+using JS::loader::ResolveErrorInfo;
+
 namespace mozilla::dom {
 // ---------------------------------------------------------------------------
 // Worklet
@@ -52,12 +55,51 @@ JSObject* Worklet::WrapObject(JSContext* aCx,
   return mImpl->WrapWorklet(aCx, this, aGivenProto);
 }
 
+static bool LoadLocalizedStrings(nsTArray<nsString>& aStrings) {
+  // All enumes in ResolveError.
+  ResolveError errors[] = {ResolveError::Failure,
+                           ResolveError::FailureMayBeBare,
+                           ResolveError::BlockedByNullEntry,
+                           ResolveError::BlockedByAfterPrefix,
+                           ResolveError::BlockedByBacktrackingPrefix,
+                           ResolveError::InvalidBareSpecifier};
+
+  static_assert(
+      ArrayLength(errors) == static_cast<size_t>(ResolveError::Length),
+      "The array 'errors' has missing entries in the enum class ResolveError.");
+
+  for (auto i : errors) {
+    nsAutoString message;
+    nsresult rv = nsContentUtils::GetLocalizedString(
+        nsContentUtils::eDOM_PROPERTIES, ResolveErrorInfo::GetString(i),
+        message);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      if (NS_WARN_IF(!aStrings.AppendElement(EmptyString(), fallible))) {
+        return false;
+      }
+    } else {
+      if (NS_WARN_IF(!aStrings.AppendElement(message, fallible))) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 already_AddRefed<Promise> Worklet::AddModule(JSContext* aCx,
                                              const nsAString& aModuleURL,
                                              const WorkletOptions& aOptions,
                                              CallerType aCallerType,
                                              ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
+  if (mLocalizedStrings.IsEmpty()) {
+    bool result = LoadLocalizedStrings(mLocalizedStrings);
+    if (!result) {
+      return nullptr;
+    }
+  }
+
   return WorkletFetchHandler::AddModule(this, aCx, aModuleURL, aOptions, aRv);
 }
 

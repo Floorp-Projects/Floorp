@@ -50,6 +50,10 @@ class Worklet final : public nsISupports, public nsWrapperCache {
 
   WorkletImpl* Impl() const { return mImpl; }
 
+  const nsTArray<nsString>& GetLocalizedStrings() const {
+    return mLocalizedStrings;
+  }
+
  private:
   ~Worklet();
 
@@ -64,6 +68,8 @@ class Worklet final : public nsISupports, public nsWrapperCache {
   nsRefPtrHashtable<nsCStringHashKey, WorkletFetchHandler> mImportHandlers;
 
   const RefPtr<WorkletImpl> mImpl;
+
+  nsTArray<nsString> mLocalizedStrings;
 
   friend class WorkletFetchHandler;
   friend class WorkletScriptHandler;

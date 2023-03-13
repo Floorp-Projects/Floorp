@@ -19,7 +19,8 @@ enum class ResolveError : uint8_t {
   BlockedByNullEntry,
   BlockedByAfterPrefix,
   BlockedByBacktrackingPrefix,
-  InvalidBareSpecifier
+  InvalidBareSpecifier,
+  Length
 };
 
 struct ResolveErrorInfo {
