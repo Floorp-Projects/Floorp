@@ -8,7 +8,7 @@ with Files("**"):
     BUG_COMPONENT = ("Toolkit", "General")
 
 EXTRA_JS_MODULES += [
-    "MozProtocolHandler.jsm",
+    "MozProtocolHandler.sys.mjs",
 ]
 
 XPCOM_MANIFESTS += [
