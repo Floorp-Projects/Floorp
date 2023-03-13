@@ -4590,7 +4590,6 @@
       let tab = this.getTabForBrowser(browser);
       if (tab) {
         if (userContextId) {
-          ContextualIdentityService.telemetry(userContextId);
           tab.setUserContextId(userContextId);
         }
 
