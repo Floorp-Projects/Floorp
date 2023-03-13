@@ -548,16 +548,22 @@ export class SafariProfileMigrator extends MigratorBase {
     if (this._hasPermissions) {
       return true;
     }
-    // Check if we have access:
-    let target = FileUtils.getDir(
+    // Check if we have access to both bookmarks and favicons:
+    let bookmarkTarget = FileUtils.getDir(
       "ULibDir",
       ["Safari", "Bookmarks.plist"],
+      false
+    );
+    let faviconTarget = FileUtils.getDir(
+      "ULibDir",
+      ["Safari", "Favicon Cache", "favicons.db"],
       false
     );
     try {
       // 'stat' is always allowed, but reading is somehow not, if the user hasn't
       // allowed it:
-      await IOUtils.read(target.path, { maxBytes: 1 });
+      await IOUtils.read(bookmarkTarget.path, { maxBytes: 1 });
+      await IOUtils.read(faviconTarget.path, { maxBytes: 1 });
       this._hasPermissions = true;
       return true;
     } catch (ex) {
@@ -566,24 +572,18 @@ export class SafariProfileMigrator extends MigratorBase {
   }
 
   async getPermissions(win) {
-    // Keep prompting the user until they pick a file that grants us access,
-    // or they cancel out of the file open panel.
+    // Keep prompting the user until they pick something that grants us access
+    // to Safari's bookmarks and favicons or they cancel out of the file open panel.
     while (!(await this.hasPermissions())) {
       let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
       // The title (second arg) is not displayed on macOS, so leave it blank.
-      fp.init(win, "", Ci.nsIFilePicker.modeOpen);
-      // This is a little weird. You'd expect that it matters which file
-      // the user picks, but it doesn't really, as long as it's in this
-      // directory. Anyway, let's not confuse the user: the sensible idea
-      // here is to ask for permissions for Bookmarks.plist, and we'll
-      // silently accept whatever input as long as we can then read the plist.
-      fp.appendFilter("plist", "*.plist");
+      fp.init(win, "", Ci.nsIFilePicker.modeGetFolder);
       fp.filterIndex = 1;
-      fp.displayDirectory = FileUtils.getDir("ULibDir", ["Safari"], false);
+      fp.displayDirectory = FileUtils.getDir("ULibDir", [""], false);
       // Now wait for the filepicker to open and close. If the user picks
-      // any file in this directory, macOS will grant us read access, so
-      // we don't need to check or do anything else with the file returned
-      // by the filepicker.
+      // the Safari folder, macOS will grant us read access to everything
+      // inside, so we don't need to check or do anything else with what's
+      // returned by the filepicker.
       let result = await new Promise(resolve => fp.open(resolve));
       // Bail if the user cancels the dialog:
       if (result == Ci.nsIFilePicker.returnCancel) {
