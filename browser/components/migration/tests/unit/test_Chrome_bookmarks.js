@@ -60,6 +60,19 @@ async function testBookmarks(migratorKey, subDirs) {
     ignoreExisting: true,
   });
 
+  // Copy Favicons database into Default profile
+  const sourcePath = do_get_file(
+    "AppData/Local/Google/Chrome/User Data/Default/Favicons"
+  ).path;
+  await IOUtils.copy(sourcePath, target.path);
+
+  // Get page url for each favicon
+  let faviconURIs = await MigrationUtils.getRowsFromDBWithoutLocks(
+    sourcePath,
+    "Chrome Bookmark Favicons",
+    `select page_url from icon_mapping`
+  );
+
   target.append("Bookmarks");
   await IOUtils.remove(target.path, { ignoreAbsent: true });
 
@@ -162,6 +175,7 @@ async function testBookmarks(migratorKey, subDirs) {
   const postmenuCount = await getFolderItemCount(
     PlacesUtils.bookmarks.menuGuid
   );
+
   Assert.equal(
     postUnfiledCount - initialUnfiledCount,
     105,
@@ -188,15 +202,22 @@ async function testBookmarks(migratorKey, subDirs) {
     "Telemetry reporting correct."
   );
   Assert.ok(observerNotified, "The observer should be notified upon migration");
+  let pageUrls = Array.from(faviconURIs, f =>
+    Services.io.newURI(f.getResultByName("page_url"))
+  );
+  await assertFavicons(pageUrls);
 }
 
 add_task(async function test_Chrome() {
+  // Expire all favicons before the test to make sure favicons are imported
+  PlacesUtils.favicons.expireAllFavicons();
   let subDirs =
     AppConstants.platform == "linux" ? ["google-chrome"] : ["Google", "Chrome"];
   await testBookmarks("chrome", subDirs);
 });
 
 add_task(async function test_ChromiumEdge() {
+  PlacesUtils.favicons.expireAllFavicons();
   if (AppConstants.platform == "linux") {
     // Edge isn't available on Linux.
     return;

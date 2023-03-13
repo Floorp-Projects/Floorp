@@ -89,6 +89,34 @@ async function promiseMigration(
 
   return Promise.all(promises);
 }
+/**
+ * Function that returns a favicon url for a given page url
+ *
+ * @param {string} uri
+ * The Bookmark URI
+ * @returns {string} faviconURI
+ * The Favicon URI
+ */
+async function getFaviconForPageURI(uri) {
+  let faviconURI = await new Promise(resolve => {
+    PlacesUtils.favicons.getFaviconDataForPage(uri, favURI => {
+      resolve(favURI);
+    });
+  });
+  return faviconURI;
+}
+
+/**
+ * Takes an array of page URIs and checks that the favicon was imported for each page URI
+ *
+ * @param {Array} pageURIs An array of page URIs
+ */
+async function assertFavicons(pageURIs) {
+  for (let uri of pageURIs) {
+    let faviconURI = await getFaviconForPageURI(uri);
+    Assert.ok(faviconURI, `Got favicon for ${uri.spec}`);
+  }
+}
 
 /**
  * Replaces a directory service entry with a given nsIFile.
