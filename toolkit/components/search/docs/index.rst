@@ -24,6 +24,7 @@ Contents
 .. toctree::
    :maxdepth: 2
 
+   SearchServiceHighlevelOverview
    SearchEngineConfiguration
    SearchConfigurationSchema
    SearchEngines
