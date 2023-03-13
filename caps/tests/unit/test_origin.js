@@ -127,7 +127,7 @@ function run_test() {
   // nsEP origins should be in lexical order.
   Assert.equal(
     ep.origin,
-    `[Expanded Principal [${exampleOrg.origin}, ${exampleCom.origin}, ${nullPrin.origin}]]`
+    `[Expanded Principal [${exampleCom.origin}, ${nullPrin.origin}, ${exampleOrg.origin}]]`
   );
 
   // Make sure createContentPrincipal does what the rest of gecko does.
