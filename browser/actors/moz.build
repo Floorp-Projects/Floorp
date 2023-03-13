@@ -50,7 +50,6 @@ FINAL_TARGET_FILES.actors += [
     "BlockedSiteParent.sys.mjs",
     "BrowserProcessChild.sys.mjs",
     "BrowserTabChild.sys.mjs",
-    "BrowserTabParent.sys.mjs",
     "ClickHandlerChild.sys.mjs",
     "ClickHandlerParent.sys.mjs",
     "ContentSearchChild.sys.mjs",

@@ -197,7 +197,7 @@ HttpBaseChannel::HttpBaseChannel()
       mEncodedBodySize(0),
       mRequestContextID(0),
       mContentWindowId(0),
-      mTopBrowsingContextId(0),
+      mBrowserId(0),
       mAltDataLength(-1),
       mChannelId(0),
       mReqContentLength(0U),
@@ -1683,14 +1683,14 @@ NS_IMETHODIMP HttpBaseChannel::GetTopLevelContentWindowId(uint64_t* aWindowId) {
   return NS_OK;
 }
 
-NS_IMETHODIMP HttpBaseChannel::SetTopBrowsingContextId(uint64_t aId) {
-  mTopBrowsingContextId = aId;
+NS_IMETHODIMP HttpBaseChannel::SetBrowserId(uint64_t aId) {
+  mBrowserId = aId;
   return NS_OK;
 }
 
-NS_IMETHODIMP HttpBaseChannel::GetTopBrowsingContextId(uint64_t* aId) {
-  EnsureTopBrowsingContextId();
-  *aId = mTopBrowsingContextId;
+NS_IMETHODIMP HttpBaseChannel::GetBrowserId(uint64_t* aId) {
+  EnsureBrowserId();
+  *aId = mBrowserId;
   return NS_OK;
 }
 
@@ -3300,17 +3300,15 @@ void HttpBaseChannel::AllowOpaqueResponseAfterSniff() {
 void HttpBaseChannel::SetChannelBlockedByOpaqueResponse() {
   mChannelBlockedByOpaqueResponse = true;
 
-  RefPtr<dom::CanonicalBrowsingContext> browsingContext =
-      dom::CanonicalBrowsingContext::Get(mTopBrowsingContextId);
+  RefPtr<dom::BrowsingContext> browsingContext =
+      dom::BrowsingContext::GetCurrentTopByBrowserId(mBrowserId);
   if (!browsingContext) {
     return;
   }
 
-  dom::WindowGlobalParent* windowContext =
-      browsingContext->GetTopWindowContext();
-
+  dom::WindowContext* windowContext = browsingContext->GetTopWindowContext();
   if (windowContext) {
-    windowContext->SetHasBlockedOpaqueResponse();
+    windowContext->Canonical()->SetHasBlockedOpaqueResponse();
   }
 }
 
@@ -4832,7 +4830,7 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
 
   // When on the parent process, the channel can't attempt to get it itself.
   // When on the child process, it would be waste to query it again.
-  rv = httpChannel->SetTopBrowsingContextId(mTopBrowsingContextId);
+  rv = httpChannel->SetBrowserId(mBrowserId);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // Not setting this flag would break carrying permissions down to the child
@@ -5642,16 +5640,16 @@ bool HttpBaseChannel::EnsureRequestContext() {
   return static_cast<bool>(mRequestContext);
 }
 
-void HttpBaseChannel::EnsureTopBrowsingContextId() {
-  if (mTopBrowsingContextId) {
+void HttpBaseChannel::EnsureBrowserId() {
+  if (mBrowserId) {
     return;
   }
 
   RefPtr<dom::BrowsingContext> bc;
   MOZ_ALWAYS_SUCCEEDS(mLoadInfo->GetBrowsingContext(getter_AddRefs(bc)));
 
-  if (bc && bc->Top()) {
-    mTopBrowsingContextId = bc->Top()->Id();
+  if (bc) {
+    mBrowserId = bc->GetBrowserId();
   }
 }
 

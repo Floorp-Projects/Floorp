@@ -131,11 +131,10 @@ void HttpConnectionMgrParent::PrintDiagnostics() {
   // socket process.
 }
 
-nsresult HttpConnectionMgrParent::UpdateCurrentTopBrowsingContextId(
-    uint64_t aId) {
+nsresult HttpConnectionMgrParent::UpdateCurrentBrowserId(uint64_t aId) {
   RefPtr<HttpConnectionMgrParent> self = this;
   auto task = [self, aId]() {
-    Unused << self->SendUpdateCurrentTopBrowsingContextId(aId);
+    Unused << self->SendUpdateCurrentBrowserId(aId);
   };
   gIOService->CallOrWaitForSocketProcess(std::move(task));
   return NS_OK;

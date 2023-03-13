@@ -209,7 +209,7 @@ class nsAHttpTransaction : public nsSupportsWeakReference {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  virtual uint64_t TopBrowsingContextId() {
+  virtual uint64_t BrowserId() {
     MOZ_ASSERT(false);
     return 0;
   }

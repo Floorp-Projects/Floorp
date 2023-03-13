@@ -159,7 +159,7 @@ class nsAHttpConnection : public nsISupports {
   virtual HttpVersion Version() = 0;
 
   // A notification of the current active tab id change.
-  virtual void TopBrowsingContextIdChanged(uint64_t id) = 0;
+  virtual void CurrentBrowserIdChanged(uint64_t id) = 0;
 
   // categories set by nsHttpTransaction to identify how this connection is
   // being used.
@@ -190,7 +190,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)
   [[nodiscard]] nsresult PushBack(const char*, uint32_t) override;           \
   already_AddRefed<HttpConnectionBase> TakeHttpConnection() override;        \
   already_AddRefed<HttpConnectionBase> HttpConnection() override;            \
-  void TopBrowsingContextIdChanged(uint64_t id) override;                    \
+  void CurrentBrowserIdChanged(uint64_t id) override;                        \
   /*                                                                         \
      Thes methods below have automatic definitions that just forward the     \
      function to a lower level connection object                             \

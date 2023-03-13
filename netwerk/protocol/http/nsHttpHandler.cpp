@@ -490,8 +490,7 @@ nsresult nsHttpHandler::Init() {
     obsService->AddObserver(this, "network:socket-process-crashed", true);
 
     if (!IsNeckoChild()) {
-      obsService->AddObserver(this, "net:current-top-browsing-context-id",
-                              true);
+      obsService->AddObserver(this, "net:current-browser-id", true);
     }
 
     // disabled as its a nop right now
@@ -2166,7 +2165,7 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
              static_cast<uint32_t>(rv)));
       }
     }
-  } else if (!strcmp(topic, "net:current-top-browsing-context-id")) {
+  } else if (!strcmp(topic, "net:current-browser-id")) {
     // The window id will be updated by HttpConnectionMgrParent.
     if (XRE_IsParentProcess()) {
       nsCOMPtr<nsISupportsPRUint64> wrapper = do_QueryInterface(subject);
@@ -2176,12 +2175,11 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
       wrapper->GetData(&id);
       MOZ_ASSERT(id);
 
-      static uint64_t sCurrentBrowsingContextId = 0;
-      if (sCurrentBrowsingContextId != id) {
-        sCurrentBrowsingContextId = id;
+      static uint64_t sCurrentBrowserId = 0;
+      if (sCurrentBrowserId != id) {
+        sCurrentBrowserId = id;
         if (mConnMgr) {
-          mConnMgr->UpdateCurrentTopBrowsingContextId(
-              sCurrentBrowsingContextId);
+          mConnMgr->UpdateCurrentBrowserId(sCurrentBrowserId);
         }
       }
     }

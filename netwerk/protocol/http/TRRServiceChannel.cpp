@@ -680,7 +680,7 @@ nsresult TRRServiceChannel::SetupTransaction() {
   rv = mTransaction->Init(
       mCaps, mConnectionInfo, &mRequestHead, mUploadStream, mReqContentLength,
       LoadUploadStreamHasHeaders(), mCurrentEventTarget, callbacks, this,
-      mTopBrowsingContextId, HttpTrafficCategory::eInvalid, mRequestContext,
+      mBrowserId, HttpTrafficCategory::eInvalid, mRequestContext,
       mClassOfService, mInitialRwin, LoadResponseTimeoutEnabled(), mChannelId,
       nullptr, std::move(pushCallback), mTransWithPushedStream,
       mPushedStreamId);

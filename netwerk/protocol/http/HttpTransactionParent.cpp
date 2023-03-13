@@ -88,7 +88,7 @@ nsresult HttpTransactionParent::Init(
     nsIInputStream* requestBody, uint64_t requestContentLength,
     bool requestBodyHasHeaders, nsIEventTarget* target,
     nsIInterfaceRequestor* callbacks, nsITransportEventSink* eventsink,
-    uint64_t topLevelOuterContentWindowId, HttpTrafficCategory trafficCategory,
+    uint64_t browserId, HttpTrafficCategory trafficCategory,
     nsIRequestContext* requestContext, ClassOfService classOfService,
     uint32_t initialRwin, bool responseTimeoutEnabled, uint64_t channelId,
     TransactionObserverFunc&& transactionObserver,
@@ -147,7 +147,7 @@ nsresult HttpTransactionParent::Init(
   // TODO: Figure out if we have to implement nsIThreadRetargetableRequest in
   // bug 1544378.
   if (!SendInit(caps, infoArgs, *requestHead, ipcStream, requestContentLength,
-                requestBodyHasHeaders, topLevelOuterContentWindowId,
+                requestBodyHasHeaders, browserId,
                 static_cast<uint8_t>(trafficCategory), requestContextID,
                 classOfService, initialRwin, responseTimeoutEnabled, mChannelId,
                 !!mTransactionObserver, pushedStreamArg, throttleQueue,

@@ -68,9 +68,9 @@ nsresult HttpTransactionChild::InitInternal(
     uint32_t caps, const HttpConnectionInfoCloneArgs& infoArgs,
     nsHttpRequestHead* requestHead, nsIInputStream* requestBody,
     uint64_t requestContentLength, bool requestBodyHasHeaders,
-    uint64_t topLevelOuterContentWindowId, uint8_t httpTrafficCategory,
-    uint64_t requestContextID, ClassOfService classOfService,
-    uint32_t initialRwin, bool responseTimeoutEnabled, uint64_t channelId,
+    uint64_t browserId, uint8_t httpTrafficCategory, uint64_t requestContextID,
+    ClassOfService classOfService, uint32_t initialRwin,
+    bool responseTimeoutEnabled, uint64_t channelId,
     bool aHasTransactionObserver,
     const Maybe<H2PushedStreamArg>& aPushedStreamArg) {
   LOG(("HttpTransactionChild::InitInternal [this=%p caps=%x]\n", this, caps));
@@ -118,10 +118,10 @@ nsresult HttpTransactionChild::InitInternal(
       caps, cinfo, requestHead, requestBody, requestContentLength,
       requestBodyHasHeaders, GetCurrentSerialEventTarget(),
       nullptr,  // TODO: security callback, fix in bug 1512479.
-      this, topLevelOuterContentWindowId,
-      static_cast<HttpTrafficCategory>(httpTrafficCategory), rc, classOfService,
-      initialRwin, responseTimeoutEnabled, channelId, std::move(observer),
-      std::move(pushCallback), transWithPushedStream, pushedStreamId);
+      this, browserId, static_cast<HttpTrafficCategory>(httpTrafficCategory),
+      rc, classOfService, initialRwin, responseTimeoutEnabled, channelId,
+      std::move(observer), std::move(pushCallback), transWithPushedStream,
+      pushedStreamId);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     mTransaction = nullptr;
     return rv;

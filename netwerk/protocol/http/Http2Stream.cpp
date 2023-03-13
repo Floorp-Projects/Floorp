@@ -23,11 +23,10 @@ namespace mozilla::net {
 
 Http2Stream::Http2Stream(nsAHttpTransaction* httpTransaction,
                          Http2Session* session, int32_t priority, uint64_t bcId)
-    : Http2StreamBase(
-          (httpTransaction->QueryHttpTransaction())
-              ? httpTransaction->QueryHttpTransaction()->TopBrowsingContextId()
-              : 0,
-          session, priority, bcId),
+    : Http2StreamBase((httpTransaction->QueryHttpTransaction())
+                          ? httpTransaction->QueryHttpTransaction()->BrowserId()
+                          : 0,
+                      session, priority, bcId),
       mTransaction(httpTransaction) {
   LOG1(("Http2Stream::Http2Stream %p trans=%p", this, httpTransaction));
 }

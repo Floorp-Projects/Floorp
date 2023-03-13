@@ -39,7 +39,7 @@ class Http3Stream final : public nsAHttpSegmentReader,
 
   nsresult TryActivating();
 
-  void TopBrowsingContextIdChanged(uint64_t id);
+  void CurrentBrowserIdChanged(uint64_t id);
 
   [[nodiscard]] nsresult ReadSegments() override;
   [[nodiscard]] nsresult WriteSegments() override;
@@ -137,8 +137,8 @@ class Http3Stream final : public nsAHttpSegmentReader,
   nsCString mFlatHttpRequestHeaders;
   bool mDataReceived{false};
   nsTArray<uint8_t> mFlatResponseHeaders;
-  uint64_t mTransactionTabId{0};
-  uint64_t mCurrentTopBrowsingContextId;
+  uint64_t mTransactionBrowserId{0};
+  uint64_t mCurrentBrowserId;
   uint8_t mPriorityUrgency{3};  // urgency field of http priority
   bool mPriorityIncremental{false};
 

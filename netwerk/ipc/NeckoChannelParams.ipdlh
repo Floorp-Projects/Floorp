@@ -314,7 +314,7 @@ struct HttpChannelOpenArgs
   uint64_t                    requestContextID;
   uint64_t                    channelId;
   uint64_t                    contentWindowId;
-  uint64_t                    topBrowsingContextId;
+  uint64_t                    browserId;
   uint64_t                    earlyHintPreloaderId;
   nsCString                   requestMethod;
   ClassOfService              classOfService;

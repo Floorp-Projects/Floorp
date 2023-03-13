@@ -14,16 +14,6 @@ export class BrowserTabChild extends JSWindowActorChild {
     super();
   }
 
-  actorCreated() {
-    this.sendAsyncMessage("Browser:WindowCreated", {
-      userContextId: this.browsingContext.originAttributes.userContextId,
-    });
-  }
-
-  handleEvent(event) {
-    // DOMDocElementInserted is only used to create the actor.
-  }
-
   receiveMessage(message) {
     let context = this.manager.browsingContext;
     let docShell = context.docShell;

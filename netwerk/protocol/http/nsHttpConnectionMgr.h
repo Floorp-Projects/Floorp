@@ -126,9 +126,7 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   // NOTE: relatively expensive to call, there are two hashtable lookups.
   bool IsConnEntryUnderPressure(nsHttpConnectionInfo*);
 
-  uint64_t CurrentTopBrowsingContextId() {
-    return mCurrentTopBrowsingContextId;
-  }
+  uint64_t CurrentBrowserId() { return mCurrentBrowserId; }
 
   void DoFallbackConnection(SpeculativeTransaction* aTrans, bool aFetchHTTPSRR);
   void DoSpeculativeConnection(SpeculativeTransaction* aTrans,
@@ -329,7 +327,7 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   void OnMsgUpdateRequestTokenBucket(int32_t, ARefBase*);
   void OnMsgVerifyTraffic(int32_t, ARefBase*);
   void OnMsgPruneNoTraffic(int32_t, ARefBase*);
-  void OnMsgUpdateCurrentTopBrowsingContextId(int32_t, ARefBase*);
+  void OnMsgUpdateCurrentBrowserId(int32_t, ARefBase*);
   void OnMsgClearConnectionHistory(int32_t, ARefBase*);
 
   // Total number of active connections in all of the ConnectionEntry objects
@@ -376,7 +374,7 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   void OnMsgPrintDiagnostics(int32_t, ARefBase*);
 
   nsCString mLogData;
-  uint64_t mCurrentTopBrowsingContextId{0};
+  uint64_t mCurrentBrowserId{0};
 
   // Called on a pref change
   void SetThrottlingEnabled(bool aEnable);
@@ -453,10 +451,10 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
 
   // When current active tab is changed, this function uses
   // |previousId| to select background transactions and
-  // |mCurrentTopBrowsingContextId| to select foreground transactions.
+  // |mCurrentBrowserId| to select foreground transactions.
   // Then, it notifies selected transactions' connection of the new active tab
   // id.
-  void NotifyConnectionOfBrowsingContextIdChange(uint64_t previousId);
+  void NotifyConnectionOfBrowserIdChange(uint64_t previousId);
 
   void CheckTransInPendingQueue(nsHttpTransaction* aTrans);
 };

@@ -26,7 +26,7 @@ child:
   async __delete__();
 
   async DoShiftReloadConnectionCleanupWithConnInfo(HttpConnectionInfoCloneArgs aArgs);
-  async UpdateCurrentTopBrowsingContextId(uint64_t aId);
+  async UpdateCurrentBrowserId(uint64_t aId);
   async AddTransaction(PHttpTransaction aTrans, int32_t aPriority);
   async AddTransactionWithStickyConn(PHttpTransaction aTrans, int32_t aPriority,
                                      PHttpTransaction aTransWithStickyConn);
