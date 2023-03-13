@@ -81,7 +81,7 @@ struct PiecewiseGammaDesc final {
         4.5,
     };
   }
-  // static constexpr auto Rec2020_10bit() { return Rec709(); }
+  // FYI: static constexpr auto Rec2020_10bit() { return Rec709(); }
   static constexpr auto Rec2020_12bit() {
     return PiecewiseGammaDesc{
         1.0993,
@@ -704,7 +704,7 @@ mat3 XyzAFromXyzB_BradfordLinear(const vec2 xyA, const vec2 xyB);
 struct ColorProfileDesc {
   // ICC profiles are phrased as PCS-from-encoded (PCS is CIEXYZ-D50)
   // However, all of our colorspaces are D65, so let's normalize to that,
-  // even though it's a reverseable transform.
+  // even though it's a reversible transform.
   color::mat4 rgbFromYcbcr = color::mat4::Identity();
   RgbTransferTables linearFromTf;
   color::mat3 xyzd65FromLinearRgb = color::mat3::Identity();
@@ -743,7 +743,7 @@ inline float SampleInByOut(const C& outByIn, const float out) {
   const auto d_in = float(1) / (outByIn.size() - 1);
   const auto d_out = *(out0_itr + 1) - *out0_itr;
 
-  // printf("%f - (%f / %f) * (%f - %f)\n", in0, d_in, d_out, out, out0);
+  // printf("%f + (%f / %f) * (%f - %f)\n", in0, d_in, d_out, out, out0);
   const auto in = in0 + (d_in / d_out) * (out - out0);
   // printf("SampleInByOut(%f)->%f\n", out, in);
   return in;
@@ -786,10 +786,13 @@ struct TwoPoints {
   } p1;
 
   T y(const T x) const {
-    return p0.y + (x - p0.x) / (p1.x - p0.x) * (p1.y - p0.y);
+    const auto dx = p1.x - p0.x;
+    const auto dy = p1.y - p0.y;
+    return p0.y + dy / dx * (x - p0.x);
   }
 };
 
+/// Fills `vals` with `x:[0..vals.size()-1] => line.y(x)`.
 template <class T>
 static void LinearFill(T& vals, const TwoPoints<float>& line) {
   float x = -1;
@@ -837,7 +840,7 @@ inline void DequantizeMonotonic(const Span<float> vals) {
   // E.g. [0,1,1,2]
   //         ^^^ body
   // => f(0.5)->0.5, f(2.5)->1.5
-  // => f(x) = f(x0) + (x-x0) * (f(x1) - f(x0)) / (x1-x1)
+  // => f(x) = f(x0) + (x-x0) * (f(x1) - f(x0)) / (x1-x0)
   // => f(x) = f(x0) + (x-x0) * dfdx
 
   const auto head_end = *body_first;
